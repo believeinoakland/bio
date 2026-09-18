@@ -360,3 +360,6 @@ m035-census.txt
 # `bio-plane/test/nc-rec100.mjs` keeps per-arm pristine copies of `src/airun.mjs` and
 # `src/store.mjs` here while an arm is armed.
 .rec100-control-pristine/
+# LED-2's negative control pen (bio-plane/test/ledger.control.mjs), 2026-09-18: pristine copies of
+# tools/ledger.mjs, tools/owed.mjs and tools/mintid.mjs. Removed on a clean run, KEPT on a red one.
+.led2-harness/

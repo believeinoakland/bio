@@ -13358,6 +13358,28 @@ green · 14392 assertions, 3 fleet members RAN. Two readers found BROKEN TODAY a
 `rowdesign.control.mjs` arm A1 (names M0-33, expects M0-29) and `tools/.ui59/*.mjs` (a hardcoded worktree path that
 does not exist). The move was simulated only in scratch clones outside this repository.
 
+## CLAIM 2026-09-18 M0 (LED-2 — the archiver and its gate; moves no live row)
+
+Worker spawned by CONDUCT #4, branch `worktree-agent-a6d2b732150e83e8a`. Paths: `tools/ledger.mjs` (new),
+`tools/owed.mjs` (the ONE definition of a closed DEBT row, which the archiver imports), `tools/mintid.mjs`
+(the duplicate check reads the archiver's files), `tools/plancheck.mjs` (arms a/b/c), `tools/gates.mjs` (doc-facing
+derivation), `bio-plane/test/ledger.test.mjs` + `ledger.control.mjs` (new), `bio-plane/test/owed.control.mjs`,
+`bio-plane/test/rowdesign.control.mjs` (A1 anchor, A2b declaration), `bio-plane/test/planning-hygiene.test.mjs`
+(archive-aware `QUEUED <ID>` lookup), `docs/archive/ledgers/QUEUE-closed.md` + `DEBT-closed.md` (new, header only),
+`docs/development/MEASUREMENTS.md` (one M-entry), `docs/DECIDED.md` if regeneration is owed, this block. NOT
+`QUEUE.md` (CONDUCT's), NOT a row of `DEBT.md` (LED-3 migrates; this item moves none).
+
+## CLAIM 2026-09-18 M0 (LED-2) — RELEASED
+
+released: 2026-09-18 by the LED-2 worker, branch `worktree-agent-a6d2b732150e83e8a`. Deliverable: `tools/ledger.mjs`
+(`archive`/`find`/`audit`), the one closed-DEBT definition in `tools/owed.mjs`, `plancheck` section 2h (arms a/b/c),
+`mintid`'s duplicate check reading the archiver's files, `planning-hygiene`'s archive-aware `QUEUED <ID>` lookup,
+`rowdesign.control` A1/A2b corrected, `gates.mjs` following a suite into the tools it names, `ledger.test.mjs` +
+`ledger.control.mjs`, the two new archive files (header only), `MEASUREMENTS.md` M-58 (minted). Two paths beyond the
+claim above, both mechanical: `bio-plane/scripts/coverage.mjs` (REGISTER_FLOOR moved to this branch's own post-commit
+print, with a branch record; CONDUCT re-reads on the merge) and `.gitignore` (the control's pen). **NO LIVE ROW MOVED**:
+the migration is LED-3's, and it was simulated on a copy inside `ledger.test` instead (397 rows, 0 refused).
+
 ## CLAIM 2026-09-18 RECORD (REC-123 — CAN AN `ai` CREDENTIAL ATTEST OR RATIFY? traced by driving, fenced where it could)
 
 Worker spawned by CONDUCT #4 into worktree `agent-ad37cd8c19b30bf8b`, branch

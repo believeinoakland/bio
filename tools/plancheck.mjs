@@ -748,6 +748,74 @@ if (conduct && inbox && !/INBOX/.test(conduct))
   }
 }
 
+/* ------------------------------------------- 2h. THE LEDGERS STAY SMALL, ORDERED AND CURRENT (LED-2)
+
+   Bob, 2026-09-18, through BOB #14's inbox entry. The August roll moved 195 closed QUEUE rows and
+   110 closed DEBT rows to the archive and THE FILES GREW BACK, because it was a one-off cleanup with
+   no standing step — by 2026-09-18 QUEUE.md was 1.17 MB again and 338 of its rows were closed.
+   `tools/ledger.mjs archive <ID>` is the standing step; these arms make forgetting it visible.
+
+     (a) no CLOSED row in a live ledger — "closed" is the archiver's definition, which for DEBT is
+         `owed.mjs`'s `isClosedDebtRow` and nothing else;
+     (b) a size budget per ledger and per OPEN row (QUEUE ≤ 150 KiB, a row ≤ 3 KiB);
+     (c) every open row's `depends-on` resolves — to an open row, a done row (live or archived), or
+         a `tools/status.mjs` claim reading BUILT.
+
+   (a) and (b) WARN until the row that makes them satisfiable is `done` — LED-3 (the migration) for
+   (a), LED-4 (the cut to fields) for (b) — and then FAIL. The switch is READ from the ledger on
+   every run, so nobody has to remember to flip it; a missing arming row is itself a FAIL, because
+   an arm that can never arm is the arm-that-did-not-arm class. (c) FAILs now: measured 2026-09-18,
+   14 dependency ids across the open rows, all resolving. A dependency that names NO id is prose the
+   gate cannot judge, and is printed as such rather than scored. And the module failing to load is
+   a FAIL, not a note: a gate that degrades to green when its predicate is missing is the defect
+   CONDUCT #11 measured in this file's own arms. */
+
+{
+  const L = await import("./ledger.mjs").catch((e) => ({ loadError: e }));
+  if (!L.ledgerAudit) {
+    fail(`LEDGER GATE UNLOADABLE — tools/ledger.mjs could not be imported (${L.loadError?.message || "no ledgerAudit"}),\n`
+       + `        so no closed-row, budget or depends-on arm ran. An unrun gate is not a passing one.`);
+  } else {
+    const a = L.ledgerAudit({ repo: ROOT });
+    for (const u of a.unreadable) fail(`LEDGER UNREADABLE — ${u}. An unreadable ledger is not an empty one.`);
+    for (const [arm, s] of Object.entries(a.arming))
+      if (!s.found) fail(`LEDGER ARM CANNOT ARM — arm "${arm}" is switched by ${s.row}, which is in neither the live\n`
+        + `        ledger nor its archive, so the arm would WARN forever. Repoint ARMING in tools/ledger.mjs.`);
+    const say = (armed) => (armed ? fail : warn);
+    const closedN = Object.values(a.closedLive).reduce((s, v) => s + v.length, 0);
+    if (closedN) {
+      const lines = Object.entries(a.closedLive).filter(([, v]) => v.length)
+        .map(([k, v]) => `          ${k}: ${v.length} — ${v.slice(0, 12).join(", ")}${v.length > 12 ? ", …" : ""}`);
+      say(a.armed.closedLive)(`CLOSED ROWS IN A LIVE LEDGER — ${closedN} (${a.armed.closedLive ? "FAIL: " + ARMING_NOTE(a, "closedLive")
+        : "WARN until " + a.arming.closedLive.row + " is done, now " + a.arming.closedLive.state}):\n`
+        + lines.join("\n")
+        + `\n        Move each with \`node tools/ledger.mjs archive <ID>\`, in the SAME commit as its done flip.`);
+    }
+    const overLedger = a.budget.ledgers.filter((x) => x.over);
+    const rowsOver = a.budget.rowsOver;
+    notes.push(`ledger sizes: ${a.budget.ledgers.map((x) => `${x.ledger} ${x.bytes} B`
+      + (x.budget === null ? " (no whole-file budget named yet)" : ` of ${x.budget}`)).join(", ")}; `
+      + `${rowsOver.length} open row(s) over ${L.BUDGET.QUEUE.row} B`);
+    if (overLedger.length || rowsOver.length)
+      say(a.armed.budget)(`LEDGER OVER BUDGET (${a.armed.budget ? "FAIL: " + ARMING_NOTE(a, "budget")
+        : "WARN until " + a.arming.budget.row + " is done, now " + a.arming.budget.state}) — `
+        + overLedger.map((x) => `${x.file} is ${x.bytes} B against ${x.budget}`).join("; ")
+        + (rowsOver.length ? `${overLedger.length ? "; " : ""}${rowsOver.length} open row(s) over the per-row budget, largest: `
+          + [...rowsOver].sort((p, q) => q.bytes - p.bytes).slice(0, 8).map((r) => `${r.ledger} ${r.id} ${r.bytes} B`).join(", ") : ""));
+    if (!a.claimsReadable)
+      warn(`DEPENDS-ON: docs/architecture/construct-status.json unreadable — a dependency on a status claim cannot resolve this run.`);
+    notes.push(`depends-on: ${a.depends.checked} dependency id(s) checked across the open rows, `
+      + `${a.depends.unresolved.length} unresolved; ${a.depends.prose.length} row(s) name a dependency in PROSE the gate cannot judge`
+      + (a.depends.prose.length ? ` (${a.depends.prose.map((p) => p.id).join(", ")})` : ""));
+    if (a.depends.unresolved.length)
+      fail(`DEPENDS-ON DOES NOT RESOLVE — ${a.depends.unresolved.length}:\n`
+        + a.depends.unresolved.map((u) => `          ${u.id} (QUEUE.md:${u.line}) depends on ${u.dep}: ${u.why}`).join("\n")
+        + `\n        A dependency resolves to an open row, a done row (live or archived: \`node tools/ledger.mjs find <ID>\`),\n`
+        + `        or a \`tools/status.mjs\` claim reading BUILT.`);
+  }
+}
+function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm is armed`; }
+
 /* ---------------------------------- 2f. UNDESIGNED CLAIMS NOBODY HAS RE-READ
 
    D-408, and it is the OTHER DIRECTION from 2e. Every arm in this file is pointed at the

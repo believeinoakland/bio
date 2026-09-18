@@ -101,7 +101,10 @@ const ARMS = [
 
   { id: "A3", title: "the CLOSED-row filter removed — a resolved row goes on being owed forever, "
                    + "which is how a worklist stops being read",
-    from: `    if (/\\bCLOSED\\b|\\bFIXED AND CONFIRMED\\b/i.test(r.disposition) && !RESIDUE_RE.test(r.disposition)) continue;`,
+    /* REPOINTED 2026-09-18 (LED-2): the closed test is now ONE function, `isClosedDebtRow`, which
+       `tools/ledger.mjs` imports so the archiver and this file cannot disagree. The arm still
+       removes the filter at its one call site, which is the property it tests. */
+    from: `    if (isClosedDebtRow(r.disposition)) continue;`,
     to:   `    if (false) continue;`,
     mustBreak: "a CLOSED row is not owed" },
 

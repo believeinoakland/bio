@@ -117,6 +117,9 @@ import { spawnSync } from "node:child_process";
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+/* LED-2 — a closed id's lookup is the ARCHIVER's, so a `QUEUED <ID>` naming a row that
+   `tools/ledger.mjs archive` has moved still resolves (M-57 breakage 3). */
+import { archivedQueueIds } from "../../tools/ledger.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 const REPO = join(DIR, "..", "..");            // bio-plane/test -> repo root
@@ -212,7 +215,15 @@ console.log("\n--- every QUEUED <ID> cross-reference names a real queue item ---
       refs.push({ file, id: m[1] });
   }
   t("there is at least one concrete QUEUED reference to check", refs.length >= 1, true);
-  const dangling = refs.filter((r) => !QUEUE_IDS.has(r.id))
+  /* CORRECTED 2026-09-18 (LED-2), not exempted: the rule was "names an existing queue item" and
+     the id set was the LIVE headings only, which was the same thing while every closed id kept a
+     heading in the live register. Once `tools/ledger.mjs` moves closed rows out, a reference to a
+     `done` item (all three live ones today: FW-6, CAP-4 twice) would read as dangling although
+     the item exists — M-57 measured exactly that break. The set is now live ∪ the ledger archive,
+     read by the archiver's own lookup; an id in NEITHER still fails. */
+  const ARCHIVED_IDS = archivedQueueIds({ repo: REPO });
+  t("the ledger archive yields queue ids (else the archive-aware lookup is vacuous)", ARCHIVED_IDS.size >= 10, true);
+  const dangling = refs.filter((r) => !QUEUE_IDS.has(r.id) && !ARCHIVED_IDS.has(r.id))
     .map((r) => `${r.id} in ${r.file.slice(REPO.length + 1)}`);
   t(`every QUEUED reference (${refs.length}) names an existing queue item`, dangling, []);
 }
