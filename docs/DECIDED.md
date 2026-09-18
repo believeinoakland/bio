@@ -975,7 +975,7 @@ authority is the file named, never this one.
 - **REC-68** · 2026-08-09 — RECOVERED FROM `0ca7640^2` AND AMENDED, NOT RESTORED — AND THE AMENDMENT IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"*.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:110`
 - **REC-68** — REC-68 branch blob, and AMENDED rather than restored verbatim — see the last paragraph of this block for why the original was right when it was written and why putting it back unchanged would have been a second defect.  
-  `docs/development/VERIFICATION.md:254`
+  `docs/development/VERIFICATION.md:277`
 - **REC-69** — `op=airunlog` DECIDED as a SEPARATE surface**, reasoning at the site in decision order: §14a's click opens the TRANSCRIPT and `airun.mjs` states the log is NOT a transcript; the two answer different questions for different readers; the log publishes FOUR vocabularies precisely so its reader holds no copy — a…  
   `docs/archive/ledgers/QUEUE-2026-08.md:1729`
 - **REC-70** — CORRECTED 16 → 17 with a dated reason, never exempted**.  
@@ -1423,7 +1423,7 @@ authority is the file named, never this one.
 - **M0-14** · 2026-08-08 — The two SUPERSEDED READINGS below that row are near-duplicates: both open `120 of 120 — REMEASURED 2026-08-08 by M0-14` and repeat the same four sentences, the second differing only by carrying M0-15's `122 of 122 · 486`.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7434`
 - **M0-14** — M0-14 CORRECTED THE TALLY ITSELF, AND THE WAY IT WAS FOUND IS THE POINT.** M0-13 predicted the register would move **388 → 390** for two arms it had just added, and **it did not move at all.** Four of 120 suites scored ZERO while declaring 48 arms between them, a fifth scored **1 against a real 10**, and nothing…  
-  `docs/development/VERIFICATION.md:219`
+  `docs/development/VERIFICATION.md:242`
 - **M0-15** · 2026-08-08 — RE-MEASURING A TRUE BASELINE: THE RECIPE, CORRECTED 2026-08-08 (M0-15) **Do not use `git stash` to park work while you re-measure at HEAD.** The stack is shared by every worktree in this repository (the row above), so `git stash pop` is a  
   `docs/development/ORCHESTRATION.md:202`
 - **M0-23** — Correct the fixture to the wire shape and delete the phantom keys, with any assertion that read them CORRECTED at its site, never exempted.  
@@ -1495,7 +1495,7 @@ authority is the file named, never this one.
 - **M0-51** · 2026-09-17 — THE ROW'S OWN SCOPE FIGURE IS STALE AND IS CORRECTED HERE RATHER THAN LEFT FOR THE WORKER TO TRIP ON.** The row says TWELVE `*.control.mjs` files have no same-named `.test.mjs` sibling.  
   `docs/archive/ledgers/QUEUE-closed.md:370`
 - **M0-51** · 2026-09-17 — THE RULE, RULED by M0-51 on 2026-09-17 under the determination this row delegated rather than returned.  
-  `docs/development/VERIFICATION.md:450`
+  `docs/development/VERIFICATION.md:473`
 - **M0-54** · 2026-09-17 — GATE PROFILE RULED BY CONDUCT #2 AS `DOCS`, ON A MEASUREMENT AND NOT AS A CONCESSION TO THE DISK:** `gates.mjs` classifies the diff DOCS and CONDUCT verified it at the artifact — four paths, every one under `docs/`, no code — so the doc-facing suites plus `plancheck` were the owed gate and a full battery was never…  
   `docs/archive/ledgers/QUEUE-closed.md:330`
 - **M0-56** · 2026-09-17 — THE SHAPE IS A `pre-push` HOOK THAT REFUSES, SELF-INSTALLED BY `plancheck`, AND THE ARGUMENT THAT DECIDED IT IS COVERAGE RATHER THAN THE MUTATION OBJECTION.** A gate runs BEFORE the commit; a rebase happens AFTER.  
@@ -1511,7 +1511,7 @@ authority is the file named, never this one.
 - **M0-58** · 2026-09-18 — IT CORRECTED CONDUCT'S BRIEF ON THE ONE POINT THE BRIEF LEANED HARDEST ON.** I called the prose-claim gap *the big one* and M0-58's input; **it is substantially ALREADY INSTRUMENTED** — `tools/undesignedclaims.mjs` (D-408, landed the same day, run by `plancheck` 2f) reports **27 claims, 0 unaudited**, every one dated.  
   `docs/archive/ledgers/QUEUE-closed.md:756`
 - **M0-59** · 2026-09-17 — CORRECTED 2026-09-17 by M0-59 (D-406), and the correction is the point rather than a > footnote.** The sentence above said *closed for this clone AND ITS WORKTREES*.  
-  `docs/development/VERIFICATION.md:1324`
+  `docs/development/VERIFICATION.md:1347`
 - **M0-61** · 2026-09-18 — [SUPERSEDED IN PART by M-54, 2026-09-18 (M0-61): the three facts below re-measured true, but the NEWLINE is a correlate, not the cause — 2 of the 3 cross-line trips are genuine claims, and the RECONCILED sentence trips identically on one line.  
   `docs/development/MEASUREMENTS.md:15930`
 
