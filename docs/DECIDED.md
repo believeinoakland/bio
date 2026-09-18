@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1068 rulings across 84 documents.
+1069 rulings across 84 documents.
 
 ## DEC-
 
@@ -1010,6 +1010,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Content_Framework_v0_10.md:3`
 - **REC-99** · 2026-09-15 — CLAIM 2026-09-15 RECORD (REC-99 — the two stale "uncapped" sentences CORRECTED IN PLACE, and D-365's census GRADED so a removed SQL `LIMIT` fails BY NAME) session: rec99-worker (worktree agent-a21fbacbb34bfb1ec) opened: 2026-09-15T00:00:00Z paths:  
   `docs/development/CLAIMS.md:8083`
+- **REC-100** · 2026-09-18 — each now names a referent, CORRECTED with its reason, never exempted. released: 2026-09-18 by the REC-100 worker.  
+  `docs/development/CLAIMS.md:13054`
 - **REC-100** · 2026-09-14 — REC-100 CORRECTED THE BLOCKER AND DID NOT WIDEN THE CHECK: the carve-out STANDS, now resting on a statement that is true.  
   `docs/development/DEBT.md:310`
 - **REC-100** — `bio-plane/test/`: four sites needed correcting, all CORRECTED rather than exempted** — `observation-log.test.mjs` I2 (REC-100's deliberate gap pin, INVERTED at the site that changed, exactly as its author designed it to be) and C6, plus the vocabulary key-set pins in `airun.test.mjs` ARM P6 and…  
