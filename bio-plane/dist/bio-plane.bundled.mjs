@@ -3460,7 +3460,7 @@ var sha256 = async (s) => {
   const b = await crypto.subtle.digest("SHA-256", typeof s === "string" ? new TextEncoder().encode(s) : s);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 };
-async function livefire(env, storeName, { operator = false } = {}) {
+async function livefire(env, storeName) {
   const t0 = Date.now();
   const stub = env.STORE.get(env.STORE.idFromName(storeName));
   const post = async (op, body) => {
@@ -3610,7 +3610,7 @@ rev ${rev}
     assert("R2 exercised without error", false, true);
   }
   const tw = Date.now();
-  const stats = await get(`stats?operator=${operator ? "1" : "0"}`);
+  const stats = await get("stats");
   const dang = await get("dangling");
   const wholeMs = Date.now() - tw;
   const passed = A.filter((a) => a.ok).length;
@@ -47243,13 +47243,20 @@ ${words}`;
       return { ok: true, actor, expires, base: b ? b.bundle_sha : null };
     });
   }
-  /** REC-129 / IC-144 — `operator` IS THE ONE INPUT, and it is the SERVER'S word, never the
-   *  caller's: `index.mjs` sets it from the credential class AFTER copying the caller's
-   *  parameters (op=stats, op=selftest, op=livefire), and `purge` passes it true because its
-   *  before/after ARE the D-113 proof the two keys exist for. It governs exactly two keys, below,
-   *  and nothing else. An absent or unrecognised stamp is `false`, so a door that forgets to
-   *  stamp loses the two keys rather than leaking them. */
-  stats({ operator = false } = {}) {
+  /** REC-131 / IC-148 — THE WIRE'S COUNTS TAKE NO ARGUMENT, so no door and no caller can select
+   *  a wider answer. `op=stats`, `op=selftest` and `op=livefire` all read this, and every class
+   *  receives the same bytes (BOB #15's corrected ruling, `MEMBER-KNOWLEDGE-DESIGN.md` §5). It
+   *  REPLACES REC-129's server-set `operator` stamp (IC-144), which selected an admin-only answer:
+   *  under the corrected ruling there is no second answer to select, and a switch with one
+   *  position reads as a fence while fencing nothing. */
+  stats() {
+    return this.#counts({ proof: false });
+  }
+  /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
+   *  on any key but the two the ruling names. `proof` is PRIVATE: only `purge` passes it, because
+   *  its before/after ARE D-113's proof that it took what it says it took, and that proof stays
+   *  WHOLE (§5: *the purge proof's own count stays whole*). No route reaches this method. */
+  #counts({ proof }) {
     const n = (t) => this.#one(`SELECT count(*) c FROM ${t}`).c;
     return {
       bundles: n("bundles"),
@@ -47389,23 +47396,24 @@ ${words}`;
          counted WHOLE beside it: the log is the coverage record and its size is
          an operator fact, while what any single row was looking for is not. */
       aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,
-      /* REC-129 / IC-144 — `observations` AND `leads` ARE THE OPERATOR'S, AND THE KEY IS ABSENT
-         FOR EVERYONE ELSE. RULED by BOB #15 (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A
-         DISCLOSURE OF EXISTENCE*): a counter whose row set includes rows the caller could not
-         read goes only to a caller who could read them all — for an instance-wide count, the
-         `admin` class. `leads` counts every member's tips, and the whole-log `observations`
-         count moves on every `op=leadlook`, so a member diffing either across a colleague's
-         authoring learned a lead had just been written or followed. The KEY is withheld, never
-         re-meant: one key counting different rows for different callers is two quantities
-         under one name. `aiRunLog` above stays — its row set is `authority_kind = 'run'`, which
-         no lead act writes, and `lead.test.mjs` pins that it never moves across one. */
-      ...operator ? {
-        observations: n("observation_log"),
-        /* the WIRE KEY stays `observations` (a count of observations, and moving it would be an I3 change nobody owed); the TABLE it counts is `observation_log` — renamed by CONDUCT #11 at integration on BOB #11's correction, because one word over three unrelated things is the defect, not the noun */
-        /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
-           PROVE it took them (D-113). What any lead says is not an operator fact. */
-        leads: n("leads")
-      } : {},
+      /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND `observations` COUNTS THE
+         LOG WITHOUT LEAD LOOKS, THE SAME NUMBER FOR EVERY CALLER. BOB #15's CORRECTED ruling
+         (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over
+         rows a caller could not all read goes only to a caller who could read them all, and for
+         leads THAT CALLER DOES NOT EXIST — `#leadVisibleTo` reaches no `class:*` credential and
+         skips the administrator arm on purpose, so the admin token reads no lead either. REC-129
+         (IC-144) handed both keys to the admin class; that was the overclaim, and this supersedes it.
+         `observations` HERE MEANS: rows of `observation_log` whose `authority_kind` is not 'lead' —
+         one meaning for every caller, never re-meant per class. It stays on the wire because
+         OBSERVATION-LOG-DESIGN §6's REC-110 ruling rests on it (premise 1): the three built
+         frontier levels' tallies count no lead row either, so the two answer the same question to
+         the same audience. `purge`'s proof (`proof: true`) keeps the WHOLE log and `leads`, in the
+         positions they always had. `aiRunLog` above is untouched: no lead act writes a 'run' row. */
+      observations: proof ? n("observation_log") : this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'`).c,
+      /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
+         PROVE it took them (D-113). What any lead says is not an operator fact —
+         and since REC-131, neither is how many there are: purge's proof only. */
+      ...proof ? { leads: n("leads") } : {},
       /* PL-1 / IS-1: the inquiry's alternative accounts of its evidence and
          their legs, reported so a purge can PROVE it took them (D-113). A COUNT
          AND NOTHING ELSE, the same line queueState and aiRuns draw: how many
@@ -48699,7 +48707,7 @@ ${words}`;
          holds this list against schema.mjs. */
       "capture_text"
     ];
-    const before = this.stats({ operator: true });
+    const before = this.#counts({ proof: true });
     this.ctx.storage.transactionSync(() => {
       if (bundleId) {
         const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
@@ -48757,7 +48765,7 @@ ${words}`;
         this.sql.exec(`DELETE FROM capture_requests`);
       }
     });
-    const after = this.stats({ operator: true });
+    const after = this.#counts({ proof: true });
     const d = (k) => before[k] - after[k];
     return {
       ok: true,
@@ -61518,7 +61526,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         projectionclear: () => this.projectionClear(body || {}),
         reproject: () => this.reproject(body || {}),
         dangling: () => ({ dangling: this.danglingRefs(url.searchParams.get("viewer")) }),
-        stats: () => this.stats({ operator: url.searchParams.get("operator") === "1" }),
+        stats: () => this.stats(),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
         login: async () => {
@@ -64926,7 +64934,7 @@ var index_default = {
         out.r2 = "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither";
       }
       try {
-        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(`http://x/stats?operator=${cls === "admin" ? "1" : "0"}`));
+        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://x/stats"));
         if (!sOut.answered) {
           out.ok = false;
           out.store = "ERR the store did not answer /stats";
@@ -64966,7 +64974,7 @@ var index_default = {
         }, 400);
     }
     if (op === "livefire") {
-      const out = await livefire(env, storeName, { operator: cls === "admin" });
+      const out = await livefire(env, storeName);
       return json(out, out.ok ? 200 : 500);
     }
     if (op === "runtime") {
@@ -67548,7 +67556,6 @@ var index_default = {
       inner.searchParams.set("address", normalizeAddress(url.searchParams.get("address") || ""));
     if (op === "biasadopt")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
-    if (op === "stats") inner.searchParams.set("operator", cls === "admin" ? "1" : "0");
     if (op === "memberlist")
       inner.searchParams.set(
         "administer",

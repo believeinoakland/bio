@@ -10638,7 +10638,7 @@ test/nc-rec129.mjs statsbaseline|statsopen|statsdropall|statsstamp|selftestopen`
 
 **RESPONSES:** not yet collected.
 
-**SUPERSEDED IN PART, 2026-09-18, BY BOB #15's CORRECTED RULING (`MEMBER-KNOWLEDGE-DESIGN.md` §5), which arrived during this IC's integration. `leads` leaves `op=stats` for EVERY class, the admin token included, and `observations` stays published to every class but excludes lead rows. The admin-class stamp below is therefore NOT the final shape. The correction is REC-131, which carries its own IC; this IC landed as built because it discloses strictly less than the tree before it.** **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 28.0.0 → 29.0.0.** The base was read at resolution: 28.0.0, where IC-142 moved it after this row was proposed against 27.0.0. Member and probe callers lose two keys they received before, so this is breaking by IC-25. **Provisional, and carried to BOB #15 for ruling:** the fence keys on the admin CLASS, so a member whose ROLE is admin, signing in as class `member`, does not receive the counts. The alternative is the `administer` right; reversing it is one line at the stamp. The worker also found that `OBSERVATION-LOG-DESIGN.md` §6's REC-110 ruling rested on the premise this IC removes, and recorded that in the document's Incomplete sections; it is a disclosure call, with BOB.
+**SUPERSEDED IN PART, 2026-09-18, BY BOB #15's CORRECTED RULING (`MEMBER-KNOWLEDGE-DESIGN.md` §5), which arrived during this IC's integration. `leads` leaves `op=stats` for EVERY class, the admin token included, and `observations` stays published to every class but excludes lead rows. The admin-class stamp below is therefore NOT the final shape. The correction is REC-131, which carries its own IC — **IC-148**, below; this IC landed as built because it discloses strictly less than the tree before it.** **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 28.0.0 → 29.0.0.** The base was read at resolution: 28.0.0, where IC-142 moved it after this row was proposed against 27.0.0. Member and probe callers lose two keys they received before, so this is breaking by IC-25. **Provisional, and carried to BOB #15 for ruling:** the fence keys on the admin CLASS, so a member whose ROLE is admin, signing in as class `member`, does not receive the counts. The alternative is the `administer` right; reversing it is one line at the stamp. The worker also found that `OBSERVATION-LOG-DESIGN.md` §6's REC-110 ruling rested on the premise this IC removes, and recorded that in the document's Incomplete sections; it is a disclosure call, with BOB.
 
 ## IC-139 · I3: A RATIFICATION STATES WHO AUTHORISED AND WHO DELIVERED — `op=ratify` / `op=caseratify` answer `deliveredBy`, every read that serves a ratification carries `delivered_by` beside `attestor`, and the PUBLISHED case container moves `bio-case-container/5` → `/6` to carry it · PROPOSED 2026-09-18 (REC-128, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
@@ -10782,3 +10782,87 @@ signature is answered NO_CASE_DOCUMENT and nothing is committed). NEGATIVE CONTR
 arms `founder-standing` and `everyone-admin`, recorded in the suite's `NEGATIVE CONTROL:` line.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR — I3 29.2.0 → 29.3.0**, landing in the same merge as IC-139 and ordered after it. The base was read at resolution; it was proposed against the held merge's 27.1.0. Nothing that answered before is refused; one principal, the founder's own session, is answered where it was refused. REC-130's stranger properties are unchanged: `casesign.control.mjs` e/f/g/h reproduce REC-130's figures, and `deliverer.control.mjs` `everyone-admin` shows a too-broad fix fails. **Not closed here:** D-422, every OTHER session-stamped read still treating the founder as `member:admin`, and `memberAdd` accepting the id `admin`. Both are with BOB #15 for a design pass before they are rowed.
+
+## IC-148 · I3: `op=stats` publishes `leads` to NO class, the admin token included; `observations` is published to EVERY class and counts the log WITHOUT `authority_kind = 'lead'` rows — one meaning for every caller; `op=selftest` and `op=livefire` relay the same answer; SUPERSEDES IC-144's admin-class stamp · PROPOSED 2026-09-18 (REC-131, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`
+  (base `a6bdfcbb`): 29.3.0. Proposed as MAJOR — 29.3.0 → 30.0.0.** **Read the base AT RESOLUTION.**
+- **Proposer:** RECORD, REC-131 worker `agent-aec29069af12e5c3f`, 2026-09-18 — a CORRECTION TO LANDED REC-129 (IC-144),
+  on BOB #15's CORRECTED ruling in `MEMBER-KNOWLEDGE-DESIGN.md` §5 (`852ccc7d`).
+- **Owner to land it:** `RECORD`
+- **Supersedes:** IC-144's class stamp, IN PART. IC-144's substance — no member-class caller receives a lead count —
+  stands and is widened to every class; its MECHANISM (the server-set `operator` stamp, `cls === "admin"`) is removed.
+- **Consumers to answer (MEASURED on this tree, grepped, not recalled):** `UI` (NOT-AFFECTED: `civicos-ui/` calls
+  neither `op=stats`, `op=selftest` nor `op=livefire`), `DIST` (NOT-AFFECTED: `newgroup/src/index.mjs`'s
+  `verifyInstall` reads only `ok` and `bindings.STORE` off `op=selftest`; `release/` carries the old bundle until
+  DIST's next cut, so a deployed instance still answers as it did before IC-144 until then), `SKILL`, `agent-worker`
+  (NOT-AFFECTED, grepped). **Suites that read either key off `op=stats`**: `lead.test.mjs` (read `leads` and the
+  whole-log `observations` with the ADMIN token to prove rows were and were not written — CORRECTED at its sites,
+  below), `observation-log.test.mjs`, `reextract.test.mjs`, `rec93-migrate-probe.mjs` (read `observations` with the
+  admin token over NON-lead rows only — none writes a lead — so their figures do not move; re-run green).
+
+**THE RULING, in the document's own terms.** `#leadVisibleTo` reaches no `class:*` credential and deliberately skips
+`viewerPredicate`'s administrator arm, so **no caller can read every lead** — the admin token included — and a counter
+over leads therefore has no class it may be shown to. `observations` stays on `op=stats` for every class, counting
+only rows without `authority_kind = 'lead'`: the same number for every caller, which is the opposite of the defect
+IC-144 guarded against (one key re-meant per class). `purge`'s D-113 proof is taken from the store's own counts, not
+from the wire op, and stays whole.
+
+**THE SHAPE.**
+- `Store#stats()` takes NO argument. `observations` = `count(*) FROM observation_log WHERE authority_kind <> 'lead'`;
+  `leads` is not a key. The DO `stats` route calls `stats()` and reads no parameter.
+- `purge`'s `before`/`after` come from a PRIVATE `Store#counts({ proof: true })`, unreachable from any route, which
+  carries `leads` and the WHOLE-log `observations` in the positions they always had. **`op=purge`'s answer is
+  byte-for-byte unchanged by this IC.** `stats()` is `#counts({ proof: false })`, so the two cannot drift apart on any
+  other key.
+- `index.mjs`: the REC-129 `operator` stamp on `op=stats` is REMOVED, and `op=selftest`'s relay fetches plain `/stats`.
+  `livefire.mjs`: the `operator` option is REMOVED and it fetches plain `stats`. **Why removed rather than kept:**
+  its readers were grepped (`operator` in `src/`): the stamp's only readers were the DO `stats` route (which it
+  selected between two answers) and `livefire`'s relay. Under the corrected ruling every class receives the same
+  answer, so the stamp would select between two identical answers — a switch with no second position is a mechanism
+  that reads as a fence and fences nothing, and the next session would reasonably "fix" it back into one. Nothing else
+  in `src/` reads it. A caller who still sends `operator=1` is answered byte-identically (asserted, B2).
+- `aiRunLog` is unchanged (its row set is `authority_kind = 'run'`, which no lead act writes).
+
+**WHY MAJOR — the argument both ways, since this IC is a correction whose direction differs per class.**
+- **The `admin` class LOSES a key** (`leads`) that IC-144 returned to it, and its `observations` CHANGES MEANING (whole
+  log → log without lead looks). A removed key is breaking for that class's reader whatever the measured impact
+  (IC-25), and a silent value change inside an unchanged key is breaking on IC-118's rule — *a correct consumer
+  becomes wrong without changing a line*: an operator script differencing `observations` against a known write count
+  now undercounts by the lead looks. Measured impact is ZERO non-test consumers; it is breaking anyway.
+- **`member` and `probe` REGAIN `observations`**, which IC-144 withdrew — additive against 29.x. **But it is not the key
+  they had before IC-144**: before 29.0.0 it counted the whole log; now it excludes lead looks, which is NARROWER. A
+  reader written against 28.x that compared `observations` to the log's true size would read a smaller number under
+  the same name. Against the CURRENT base (29.3.0) the change for member/probe is additive; against the contract
+  they last held the key under, it is a narrower meaning.
+- **The strongest classification governs**, as IC-110/112/114 were folded: MAJOR, 29.3.0 → 30.0.0. **What a lighter
+  reading would argue, stated so it is not re-litigated from silence:** nothing is deployed with IC-144 (DIST has not
+  cut), so 29.0.0 was never served, and relative to the last SERVED contract (28.x) the admin loses only a key that
+  every class then held and every class's `observations` narrows — still a meaning change inside an unchanged key,
+  still MAJOR. There is no reading on which this is MINOR.
+
+**THE SWEEP, and what it could not see.** Matcher: every SQL `count(` over `observation_log` or `leads` in `store.mjs`,
+every op whose answer embeds `stats()` (`op=stats`, `op=selftest`, `op=livefire`, `op=purge`), and every `operator` read
+in `src/`. `op=purge` keeps the whole counts BY THE RULING (its before/after are the D-113 proof; a probe reaches purge
+in SCRATCH only, and every lead act is refused to a machine credential; an admin purging the live store learns the count of leads it destroys,
+which is the residue REC-129 named and the ruling accepts). **Cannot see:** a count computed in JS over rows fetched
+elsewhere, `.length` of an unpublished list, disclosure by TIMING — **and `dbBytes`, which IS a disclosure channel this
+IC does not close**: `op=stats` publishes `ctx.storage.sql.databaseSize` to every class, and a lead of up to one
+passage (128 KiB, C-54.4) grows the database by whole pages, so a member diffing `dbBytes` across a colleague's
+authoring can detect a large lead. The suite's A arm passes because a short lead fits pages already allocated. The
+ruling's scope is COUNTERS over existence-private constructs; `dbBytes` is a size, not a counter, and whether it falls
+under *a count is a disclosure of existence* is a design question — raised as a DESIGN GAP for BOB, not swept.
+
+**Suites:** `bio-plane/test/stats-disclosure.test.mjs` — CORRECTED at its sites with the dated reason (never exempted):
+A the byte-identical headline control for the ADMIN token, member token, a member session and the probe (the probe's
+arm non-discriminating, said); B `leads` absent and `observations` present for every class, including an admin-ROLE
+member's session, and no parameter moves the answer; C THE LIAR ARM — `observations` moves by one on a non-lead
+observation for every live-store caller and for the probe over scratch, and reads the same number for every caller;
+D `op=selftest` and `op=livefire`; E `purge`'s proof whole (`leads` carried; `before.observations` = the wire count + the
+one lead look). `bio-plane/test/lead.test.mjs` — its `op=stats` arms CORRECTED at their sites: `leads` and the lead
+looks are counted through the AUTHOR's own `op=frontier&level=internet` (viewer-scoped: her never-followed leads and
+her looks' tally), the admin's `observations` asserted NOT to move on a lead look, and `purge`'s `removed.leads` as the
+whole-store total. NEGATIVE CONTROL: `node test/nc-rec129.mjs statsbaseline|statsleadrows|statsadminleads|statsdropall|routeproof|purgethin`
+from `bio-plane/`.
+
+**RESPONSES:** not yet collected.
