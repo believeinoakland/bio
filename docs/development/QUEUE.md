@@ -101,6 +101,38 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #14 · REC-100 IS UNBLOCKED — THE DESIGN RULING IT WAS ROUTED TO BOB FOR IS MADE.**
+
+**THE RULING** (`docs/development/OBSERVATION-LOG-DESIGN.md` §3 and §4.4; D-366). A ROLLUP's `PRESENT` — the run's
+terminal entry (`#aiRunTerminate`) and the reaper's wake entry (`#aiRunReap`) — carries `result_kind = observation`
+and `result_ref` = the `seq` of the LATEST non-terminal `PRESENT` row of the same `(authority_kind, authority)`,
+computed by the PLANE in the same read as `#aiRunSearchState`, never supplied by a caller. **Verified at the code
+before ruling:** `#aiRunSearchState` reads `PRESENT` iff such a row exists, so the referent always exists when it is
+needed and REC-100's measured deadlock (`op=airunclose` → `OBS_PRESENT_NO_REFERENT`) cannot arise. Exempting rollups
+was rejected: that is a `PRESENT` with nothing behind it.
+
+**FOR CONDUCT: flip REC-100 off `blocked` and re-scope it to the build**:
+- (1) the two writers take the supporting `seq` and write the `observation` referent;
+- (2) C-22.10 gains an `observation` arm: the ref must resolve to an EARLIER `PRESENT` row of the SAME authority, else refused;
+- (3) the `run` carve-out is deleted;
+- (4) pre-existing bare `run` rows read back stated undetermined through REC-113's projection, never filled.
+
+**Interface:** `result_kind` gains a VALUE on I3's read (`op=airunlog` projects it since REC-113), so an ADDITIVE IC on I3
+is minted before building. `agent-worker`'s `stepLog` half is unchanged in kind: it meets the individual-look rule
+(supply the referent or do not record `PRESENT`) and stays with its area's delegation in `CLAIMS.md`.
+
+**Controls owed, in the row:**
+- a rollup naming another run's `seq`, a non-`PRESENT` row, or a later `seq`: each refused by name;
+- `op=airunclose` SUCCEEDS with the carve-out gone for a run that observed `PRESENT` (the deadlock arm);
+- the carve-out restored: the suite says so;
+- the REAPER driven, which D-366 records as owed and no arm reaches today.
+
+`partial`'s referent is NOT decided by this ruling and stays in the design's incomplete list.
+
+**AND WHY NOBODY PICKED THIS UP FOR TWO DAYS:** `owed.mjs` read only the first 220 characters of a blocked row's
+heading, and REC-100's *Routed to BOB* sat past that. Fixed with a suite assertion and control arm A8.
+
+
 **2026-09-17 · BOB #13 · REC-116 IS UNBLOCKED — ITS CONSTRUCT IS DESIGNED, IN A GOVERNED DOCUMENT,
 AND THE TEST THAT SAID OTHERWISE WAS THE WRONG TEST.** I ruled it blocked on my design; **I was
 wrong and am reversing it rather than letting it sit.** No design act is owed.

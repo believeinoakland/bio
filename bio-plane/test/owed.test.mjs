@@ -26,7 +26,8 @@
  * an arm that found nothing there would satisfy every fixture arm above it.
  *
  * NEGATIVE CONTROL: (all six RUN 2026-09-17 by BOB #13, exit 0, 33 pass / 0 fail, both baselines
- * green; all SEVEN re-RUN 2026-09-18 by BOB #14 with A7 added, exit 0, 38 pass / 0 fail) `node bio-plane/test/owed.control.mjs` from the repo root — seven arms, each armed ALONE
+ * green; all SEVEN re-RUN 2026-09-18 by BOB #14 with A7 added, exit 0, 38 pass / 0 fail;
+ * all EIGHT re-RUN the same day with A8 added) `node bio-plane/test/owed.control.mjs` from the repo root — eight arms, each armed ALONE
  * against a pristine copy in `.d409-harness/`, every restore verified by sha256 AND `cmp` AND a
  * floored byte count.
  *   (A1) the owner test matches the row BODY again -> S1 fails: the measured 58-item defect,
@@ -43,6 +44,8 @@
  *        useless. A sensitivity control does not notice; only this does.
  *   (A7) the owner pattern case-INSENSITIVE again -> S7 fails: Bob the PERSON read as the BOB
  *        lane, which is what all four rows BOB #13 handed over as attributed actually were.
+ *   (A8) the blocked-row heading read to 220 characters again -> S7 fails: REC-100's routing
+ *        to BOB sat past that point and the lane was told it owed nothing.
  *
  * **AND SECTION 7 IS A DISCRIMINATION CONTROL THE TOOL SHIPPED WITHOUT, which is why it was
  * WRONG.** `owed.mjs ZZZNOTALANE` returned ELEVEN items — a lane that does not exist cannot
@@ -226,6 +229,13 @@ section("7 — THE DISCRIMINATION CONTROL. A NONEXISTENT LANE MUST BE ATTRIBUTED
   ]), [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
   t("BOB THE PERSON IS NOT THE BOB LANE — 'is Bob's' attributes nothing, 'IS BOB'S' still does",
     person.attributed.map((i) => i.id), ["D-34"]);
+  /* A BLOCKED QUEUE ROW IS READ TO THE END OF ITS HEADING (2026-09-18). REC-100's routing sat past
+     character 220 of a heading carrying its history, and the truncated read attributed nothing. */
+  const deep = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([]), [SOURCES.decisions]: "",
+    [SOURCES.queue]: "### REC-9 · blocked — " + "history of the row, kept as the record. ".repeat(12)
+                   + "BLOCKED ON A DESIGN RULING. Routed to BOB.\n" }) });
+  t("A ROUTING DEEP IN A LONG BLOCKED HEADING IS STILL OWED — the REC-100 false absence",
+    deep.attributed.map((i) => i.id), ["REC-9"]);
   /* The headline is the thing that was wrong, so the headline is asserted. */
   t("the message counts the two populations APART", 
     /ATTRIBUTED to this lane, plus 2 open residue/.test(owedMessage(real)), true);
