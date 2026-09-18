@@ -10448,3 +10448,82 @@ test/casesign.control.mjs e|f|g|h` from `bio-plane/`, all four as declared (reco
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MAJOR — I3 26.3.0 → 27.0.0.** Base read at resolution (26.3.0; proposed against 26.2.0 — MK-4's IC-136 took a minor meanwhile). A formerly answered anonymous read (an unsigned case document) is refused, with the refusal BYTE-IDENTICAL to a nonexistent id's answer by construction (one function answers both). The builder closed a SECOND disclosure it found at the same boundary: `op=caseratify` refusals (`CASE_RATIFY_STALE`'s document sha, `TESTIMONY_CASE_UNPUBLISHABLE`'s finding ids) told a member of another project that a case existed. **No UI surface loses anything** (`civicos-ui` does not call `op=casedocument`). `release/` and the installer still carry the pre-change bundle until DIST's next cut — like every fix of this session, the exposure is closed on `main` and open on deployed instances until then. UI/SKILL/DIST NOT-AFFECTED at the interface, CONDUCT answering for each.
+
+## IC-142 · I3: THE `testimony` GRADE AXIS — a third axis at D beside capture and connection; every per-axis strength answer gains a `testimony` key; C-2.8 refuses a mis-graded observation leg BY NAME; bare `leg:testimony` becomes AMBIGUOUS and is refused naming both readings · PROPOSED 2026-09-18 (MK-2, minted with `node tools/mintid.mjs IC` at spawn, BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`
+  after merging `origin/main`@`27ad8b4f`: 27.0.0** (IC-141). REC-128 and REC-129 were running when this was written and
+  may land an IC first — **read the base AT RESOLUTION.** **Proposed: MAJOR — 27.0.0 → 28.0.0**, on ONE point, argued
+  both ways below; everything else in this IC is additive and would be MINOR on its own.
+- **Proposer:** RECORD, MK-2 worker (`worktree-agent-a17c98e0548c9fd2d`, resumed on `worktree-agent-af581e59b70a0e83f`), from QUEUE MK-2.
+- **Owner to land it:** `RECORD`.
+- **Consumers to answer:** `UI` (the vocabulary mirror in `civicos-ui/app.html` is updated in this landing; PRESENTING the
+  axis is DELEGATED — see CLAIMS.md), `SKILL` and `DIST` (NOT AFFECTED expected: neither reads a strength answer nor
+  issues a `leg:` query — grepped), `RECORD`.
+- **Design:** `MEMBER-KNOWLEDGE-DESIGN.md` §3 (the axis; BOB #15's decision that an observation leg carries a CONNECTION
+  grade like any leg) and §7 (the refusals); DEC-21 (axes kept apart), DEC-32 (the arithmetic, unchanged in rule).
+
+**THE SHAPE — what is ADDED.**
+
+- **Vocabulary.** `GRADE_AXES` (`bio-checks.mjs`) and `Store.STRENGTH_AXES` are `capture, connection, testimony`;
+  `TESTIMONY_GRADE = 'D'` is exported from the catalogue and is the one letter the axis holds. A basis leg's
+  `grade_axis` may now be `testimony` — ONLY on a leg whose target is an authored observation (MK-1's `op=testify`).
+  `meaningVocabulary()` / `op=searchfields` publish `testimony` as a `leg:axis=` value.
+- **Every per-axis strength answer gains `testimony`**, an axis object in the same shape as the other two (`state`
+  graded/unrated/undetermined, `grade`, `weakest`, members), composed by DEC-32's weakest-leg/strongest-branch rule over
+  ITS OWN population and never folded into capture: `op=inquirystrength`, `strengthOf()`'s consumers (the `op=inquiryground`
+  before/after `strength` report, `op=reevaluations`' per-row `strength`), `op=versionstrength`'s and `op=suggest`'s pairs. A
+  question resting on no observation reads `testimony: {state: "unrated"}` — every existing key and value is unchanged.
+- **`op=earnedbasis`** gains an `earned.testimony` map ONLY when a target asked about IS an authored observation (value
+  mode, from the register's `authored` flag and from nothing else — no attestation is read). A caller asking about no
+  observation gets a byte-identical answer.
+- **`op=testify`'s `axes.testimony`** was `{grade: null, determined: false, why: "…this build does not yet carry that
+  axis (MK-2)"}` and is now `{grade: "D", determined: true, why}` — a value change on an existing key, stated; the key
+  existed to be filled by this item.
+- **The frozen case strength.** A case member whose basis carries a testimony grade freezes a THIRD `published_strength`
+  row (and its grounds) beside capture and connection; C-2.8 requires it (`testimony-axis-unfrozen`). **An ordinary case
+  member freezes exactly the two rows it always did** — an UNRATED testimony axis is not stamped, because "rests on no
+  member's word" is what every earlier edition already says by not carrying the row. The published `cited_edition` on a
+  leg gains `testimony` only where the edition froze one. **No such edition can exist yet:** MK-1's publication fence
+  (C-53.10–.12) refuses an observation and anything resting on one until MK-3 lifts it.
+- **C-2.8 refuses, BY NAME** (`checkTestimonyLeg`): `testimony-leg-capture-graded` (any capture grade on an observation
+  leg), `testimony-grade-not-d`, `testimony-grade-unearned`, `testimony-axis-source` (a testimony grade not sourced
+  `testimony`), `testimony-axis-unconfirmable`, `testimony-axis-not-authored` (testimony on a document that is not an
+  observation), `testimony-axis-no-referent` (testimony on a leg to an inquiry), `testimony-axis-unfrozen`. Inputs that
+  were refused before (a `grade_axis` outside capture/connection) are now refused under a sharper name or, for a correct
+  observation leg, accepted. **A connection-axis grade on an observation leg is NOT refused** (BOB #15, §3).
+- **The bar stays capture + connection.** `op=strengthbar` and the case document's `required_strength` read those two
+  and no testimony key; a project cannot declare a testimony bar, because its only value is fixed by the ruling.
+
+**THE ONE NARROWING, and the classification argument.** `testimony` was already a `grade_source` (a member vouching for a
+CONNECTION between two documents). It is now also a `grade_axis`, so the bare word `leg:testimony` has two honest
+readings — exactly as `leg:capture` has had since DEC-21 — and the query language treats it the same way: **the arm is
+refused with a warning naming both readings** (`say leg:source=testimony or leg:axis=testimony`) rather than guessed.
+`leg:source=testimony` returns exactly the rows bare `leg:testimony` returned before (`meaningquery.test.mjs`, corrected
+at its sites). **MEASURED 2026-09-18 at the compiler, and this is the fact the argument turns on: a refused arm is
+DROPPED and the rest of the query RUNS** — `compile({q: "type:inquiry leg:testimony"})` yields the AST of
+`type:inquiry` alone, so that query now answers EVERY inquiry, with the warning beside it, where it answered only the
+testimony-sourced ones.
+
+- *For MINOR:* the answer is not silent — the warning names both spellings; the treatment is the one DEC-21 established
+  for `leg:capture` and the registry's own comment promises for "a NEW collision"; measured consumers of the bare
+  spelling outside the suites are **zero** (grepped: `civicos-ui/`, `agent-worker/`, `tools/`, the skills, the
+  corpus — only `meaningquery.test.mjs`, QUEUE.md and the design document name it); the frozen-bytes change cannot be
+  reached until MK-3, which carries its own IC.
+- *For MAJOR:* IC-117 / IC-118 / IC-121's rule — **a correct consumer becomes wrong without changing a line.** A caller
+  that issued `type:inquiry leg:testimony` and reads `hits` without reading `warnings` now receives a SUPERSET of what it
+  asked for: the widening direction, which on this surface is an overclaim. A consumer count is a fact about this
+  moment; a contract is a promise about every moment after it.
+
+**Recommendation: MAJOR.** The widening was measured, not reasoned, and this project has four times classified a
+zero-consumer change as breaking on exactly that argument; the MINOR case rests on consumers reading a warning, which is
+the assumption IC-118 declined. Reversing costs one CONDUCT line at resolution either way.
+
+**MEASURED:** `bio-plane/test/testimonyaxis.test.mjs` through the ops; `node test/nc-mk2.mjs` every arm ALONE (recorded
+in the suite's `NEGATIVE CONTROL:` line), including `preitem`, which runs `test/mk2-pristine-probe.mjs` over this tree
+and over the pre-item source and compares an ORDINARY fixture's answers (inquiry strengths, earnedbasis, one published
+case's answer and frozen bytes) BYTE FOR BYTE with the `testimony` keys removed — the claim that nothing else moved.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 27.0.0 → 28.0.0.** The base was read at resolution: 27.0.0 (IC-139 is not on `main`; it is held with REC-128). I agree with the worker's correction of the brief, which had expected MINOR, on the evidence it gives. A bare `leg:testimony` is now refused as ambiguous, and because the arm is dropped while the rest of the query runs, `type:inquiry leg:testimony` returns EVERY inquiry with a warning. A correct caller therefore receives a WIDER answer without changing a line, and IC-117/118/121 settle that as breaking whatever the measured impact (zero callers outside the suites). Everything else here is additive. **Carried, not decided here:** whether an ambiguous arm should refuse the WHOLE query rather than drop itself is a query-language question dating from DEC-21's `leg:capture`. The worker named it as a design gap in `MEMBER-KNOWLEDGE-DESIGN.md` §3 / Incomplete sections. UI delegation (render the testimony axis): open in `CLAIMS.md`.

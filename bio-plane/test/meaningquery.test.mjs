@@ -243,8 +243,15 @@ t("`legs:` the projected count survives beside `leg:` the arm",
      and collides with nothing, so `leg:capture` remains the ONE known collision
      in the whole registry — which is the claim this row actually makes, and it
      is now made over a larger set. */
-  t("the ambiguous bare words are exactly the one known collision", AMB,
-    { leg: ["capture"], resolves: [], concerns: [], content: [], passage: [] });
+  /* CORRECTED BY MK-2 (IC-142), never exempted, and this is the mechanism
+     working as its own comment in query.mjs promised: "a NEW collision fails a
+     suite rather than arriving as a surprise in front of a member". `testimony`
+     joined GRADE_AXES (MEMBER-KNOWLEDGE-DESIGN.md §3) and was already a
+     GRADE_SOURCE, so `leg:testimony` now has two honest readings exactly as
+     `leg:capture` has since DEC-21 — and is refused naming both rather than
+     guessed. The ONE query whose answer this moves is recorded in IC-142. */
+  t("the ambiguous bare words are exactly the two known collisions (capture since DEC-21, testimony since MK-2)", AMB,
+    { leg: ["capture", "testimony"], resolves: [], concerns: [], content: [], passage: [] });
   for (const [arm, ws] of Object.entries(AMB)) for (const w of ws) {
     const p = compile({ q: `${arm}:${w}`, viewer: M });
     t(`\`${arm}:${w}\` is refused with a warning naming BOTH readings, never guessed`,
@@ -446,8 +453,11 @@ t("`has:leg` asks whether the bundle carries any leg at all",
 }
 t("negation composes: `-leg:hunch` is EXCEPT, not a dropped arm",
   hitsOf(compile({ q: "type:inquiry -leg:hunch", viewer: M })).includes("EXCEPT"), true);
-t("OR composes: `leg:hunch OR leg:testimony` is a UNION",
-  hitsOf(compile({ q: "leg:hunch OR leg:testimony", viewer: M })).includes("UNION"), true);
+/* MK-2: the qualified spelling — bare `leg:testimony` is ambiguous since the
+   testimony AXIS joined (IC-142), and an ambiguous arm is dropped, which would
+   leave this UNION with one side and prove nothing about composition. */
+t("OR composes: `leg:hunch OR leg:source=testimony` is a UNION",
+  hitsOf(compile({ q: "leg:hunch OR leg:source=testimony", viewer: M })).includes("UNION"), true);
 t("an arm composes with free text without collapsing into the MATCH",
   compile({ q: "sewer leg:hunch", viewer: M }).match !== null, true);
 
@@ -620,7 +630,9 @@ console.log("\n--- 8. the other questions D-223 named as equally unaskable ---")
 {
   t("`leg:cuts_against` — every inquiry carrying a leg that argues the other way",
     (await idsFor("leg:cuts_against")).ids, TRUTH.cutsAgainst);
-  t("`leg:testimony` — the signed grade-D accounts", (await idsFor("leg:testimony")).ids, TRUTH.testimony);
+  /* CORRECTED BY MK-2 (IC-142): the qualified spelling reaches exactly the rows
+     the bare word reached before the testimony axis existed. */
+  t("`leg:source=testimony` — the signed grade-D accounts", (await idsFor("leg:source=testimony")).ids, TRUTH.testimony);
   t("`leg:ground=*` — every multi-ground basis (REC-42's OR branches)",
     (await idsFor("leg:ground=*")).ids, TRUTH.grounded);
   t("`has:leg` — every inquiry that rests on anything at all", (await idsFor("has:leg")).ids, TRUTH.anyLeg);
@@ -639,9 +651,9 @@ console.log("\n--- 9. it composes with everything the language already had ---")
   t("with a metadata filter", (await idsFor("leg:hunch state:open")).ids, TRUTH.hunch);
   t("with a filter that excludes it", (await idsFor("leg:hunch state:closed")).ids, []);
   t("with OR across two arms",
-    (await idsFor("leg:hunch OR leg:testimony")).ids, [...new Set([...TRUTH.hunch, ...TRUTH.testimony])].sort());
+    (await idsFor("leg:hunch OR leg:source=testimony")).ids, [...new Set([...TRUTH.hunch, ...TRUTH.testimony])].sort());
   t("with parentheses and negation",
-    (await idsFor("(leg:hunch OR leg:testimony) -leg:cuts_against")).ids,
+    (await idsFor("(leg:hunch OR leg:source=testimony) -leg:cuts_against")).ids,
     [...new Set([...TRUTH.hunch, ...TRUTH.testimony])].filter((id) => !TRUTH.cutsAgainst.includes(id)).sort());
   t("with free text, which is a MATCH and not a set arm",
     (await idsFor("leg:hunch transfer")).ids.every((id) => TRUTH.hunch.includes(id)), true);
@@ -783,8 +795,8 @@ console.log("\n--- 11b. the vocabulary is PUBLISHED, through the op a caller act
       [a, Object.fromEntries(Object.entries(m.sub).map(([n, s]) => [n, s.col]))])));
   t("the GRAIN is published in words, so a surface cannot present an arm as a bundle field",
     Object.values(sf?.meaning ?? {}).every((v) => typeof v.grain === "string" && v.grain.length > 0), true);
-  t("the known bare-word collision is published too, not left for a member to discover",
-    sf?.meaning?.leg?.ambiguous, ["capture"]);
+  t("the known bare-word collisions are published too, not left for a member to discover (testimony since MK-2)",
+    sf?.meaning?.leg?.ambiguous, ["capture", "testimony"]);
   t("the syntax help names the arms a member would type",
     (sf?.syntax ?? []).some((l) => l.includes("leg:hunch")), true);
   /* And the arms are NOT smuggled into `fields`, which would let a surface offer

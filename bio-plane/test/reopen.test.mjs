@@ -614,7 +614,14 @@ console.log("\n--- 7. chore (3): a capture-axis grade on an INQ- leg has no refe
     (await promote(HIST, histMd, "inquiry", "open", "mem-rec31", { replay: true })).ok, true);
   const storeSrc = readFileSync(STORE_SRC_PATH, "utf8");
   t("so the derivation's no-referent arm stays, and its comment now points at the refusal instead of at the gap",
-    [/const noReferent = axis === "capture" && isInquiry;/.test(storeSrc),
+    /* CORRECTED BY MK-2 (IC-142), never exempted: this pinned the literal
+       `axis === "capture" && isInquiry`, which was the whole rule while capture
+       was the only axis that ranges over documents. The testimony axis does too
+       (whose word a DOCUMENT is), so the arm now reads the axis list
+       `Store.DOCUMENT_AXES` — and the pin asserts that the list still carries
+       capture, which is what this arm's reasoning is about. */
+    [/const noReferent = Store\.DOCUMENT_AXES\.includes\(axis\) && isInquiry;/.test(storeSrc)
+       && /static DOCUMENT_AXES = \["capture", "testimony"\];/.test(storeSrc),
      /checkInquiryBasis now REFUSES the combination at the/.test(storeSrc)],
     [true, true]);
 }

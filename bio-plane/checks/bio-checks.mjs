@@ -226,17 +226,32 @@ HEADINGS_WHEN.problem = HEADINGS_WHEN.focus = [];
  *   - `op=reopen` clears it with the rest of the publication stamp, so the
  *     reopened-document hole the old pair was built to close stays closed. That
  *     is asserted rather than assumed — see the reopen arm in the suite.
- * The shape is checked, not merely the presence: a two-axis array is what R2
- * requires and what checkPublishedExtension goes on to validate in detail, so a
- * stray `published_strength: []` does not drag a working document into the
- * ceremony. */
+ * The shape is checked, not merely the presence: an array of at least the two
+ * axes R2 requires (three when a member's testimony is frozen, MK-2), which
+ * checkPublishedExtension goes on to validate in detail, so a stray
+ * `published_strength: []` does not drag a working document into the ceremony. */
 export const caseEditionClaimed = (fm) => {
   const e = fm?.case_edition;
   return !(e === undefined || e === null || e === '' || e === 'null');
 };
+/* CORRECTED BY MK-2 (IC-142), never exempted, AND IT IS THE MOST DANGEROUS LINE
+   IN THAT ITEM — found by its own control arm, not by reading. This read
+   `s.length === 2`, which was "the frozen PAIR" while there were two axes. A case
+   member resting on a member's testimony freezes THREE rows (the testimony axis
+   beside capture and connection), and under the old predicate it stopped being a
+   case member at all: checkPublishedExtension never ran over it and op=ratify
+   would have read it as an ordinary inquiry — the ceremony silently unchecked,
+   with every assertion about it passing over nothing. The measured symptom was a
+   frozen block carrying an axis this record does not measure and drawing no
+   finding. So the predicate asks what it always meant — a NON-TRIVIAL frozen
+   array of axis objects, which a stray `published_strength: []` still is not —
+   and leaves WHICH axes, and how many, to checkPublishedExtension, which refuses
+   anything but capture and connection once each and testimony at most once. It
+   FAILS CLOSED: a malformed frozen block is dragged into the ceremony and
+   refused there, rather than let out of it. */
 export const isCaseMemberBytes = (fm) => {
   const s = fm?.published_strength;
-  return Array.isArray(s) && s.length === 2
+  return Array.isArray(s) && s.length >= 2
     && s.every((a) => a && typeof a === 'object' && typeof a.axis === 'string');
 };
 
@@ -1883,8 +1898,8 @@ function checkReleaseAuthority(ctx, findings) {
          a member's own words were not read in from anywhere — so a letter here
          would be true of the bytes (we hold exactly what the member wrote) and
          would read as strength the observation does not have. Its grade is
-         testimony, which is MK-2's axis. RULED RIGHT by BOB #14, 2026-09-18 (§3
-         will say so). `authored === true` is the ONLY
+         testimony, on MK-2's axis (IC-142). RULED RIGHT by BOB #14, 2026-09-18
+         (§3 says so). `authored === true` is the ONLY
          spelling that switches the arm: the store's fence (C-53.8) refuses the
          flag on any document the testimony path did not write, so the catalogue
          can read it as said. */
@@ -2890,10 +2905,32 @@ function checkPublishedExtension(fm, findings) {
      distinguishable from `undetermined` (the walk hit its depth bound) — two
      different frozen facts that a single nullable grade could not tell apart,
      and C-21.2 compares against the right one. */
+  /* MK-2 / IC-142: A THIRD AXIS, FROZEN ONLY WHEN IT CARRIES SOMETHING.
+     capture and connection are REQUIRED exactly once each, as they always were.
+     `testimony` is admitted at most once and is REQUIRED when a leg of this
+     basis carries a testimony grade — the case then rests on a member's word
+     and the frozen bytes must say at what. When nothing in the basis is
+     testimony the row is ABSENT, and that is not an omission: every case
+     frozen before this axis existed reads exactly that way and means exactly
+     "rests on no testimony", so stamping an UNRATED testimony row on new ones
+     would be a second spelling of the same fact across one corpus (D-21) — and
+     would move the signed bytes of every ordinary case for no new information.
+     The case's GRADED testimony axis can also arrive through a cited inquiry
+     rather than a direct leg; `op=publish` freezes it from the derivation in
+     that case too, and this arm checks what the document alone can see. */
   const axes = Array.isArray(fm.published_strength) ? fm.published_strength : null;
-  if (!axes || axes.length !== 2 || !['capture', 'connection'].every((a) => axes.some((x) => x && x.axis === a))) {
-    findings.push(f('C-2.8', 'error', 'a case member requires published_strength carrying BOTH axes, capture and connection: a case does not have "a strength", it has two, and composing them into one letter is the substitution R2 forbids',
-      ['publish through op=publish, which stamps both frozen axis objects into the bytes']));
+  const axisCount = (a) => (axes || []).filter((x) => x && x.axis === a).length;
+  const testimonyLeg = Array.isArray(fm.basis) && fm.basis.some((l) => l && typeof l === 'object'
+    && l.grade_axis === 'testimony' && l.grade !== undefined && l.grade !== null);
+  if (!axes || axisCount('capture') !== 1 || axisCount('connection') !== 1
+      || axisCount('testimony') > 1
+      || axes.some((x) => !x || !GRADE_AXES.includes(x.axis))) {
+    findings.push(f('C-2.8', 'error', `a case member requires published_strength carrying BOTH axes, capture and connection, once each, and nothing but the axes this record measures (${GRADE_AXES.join(', ')}): a case does not have "a strength", it has one per axis, and composing them into one letter is the substitution R2 forbids`,
+      ['publish through op=publish, which stamps the frozen axis objects into the bytes']));
+  } else if (testimonyLeg && axisCount('testimony') !== 1) {
+    findings.push(f('C-2.8', 'error', 'a case member whose basis carries a testimony grade requires a published_strength row for the testimony axis: the case rests on a member\'s word, and the frozen bytes must say at what, beside the capture and connection axes and never folded into either',
+      ['publish through op=publish, which freezes the testimony axis whenever it carries anything'],
+      'testimony-axis-unfrozen'));
   } else {
     for (const a of axes) {
       if (!STRENGTH_STATES.includes(a.state)) {
@@ -3023,7 +3060,26 @@ function checkPublishedExtension(fm, findings) {
    is DISCLOSED and travels with every published case. */
 export const BASIS_ROLES = ['supports', 'cuts_against'];
 export const BASIS_GRADES = ['A', 'B', 'C', 'D'];
-export const GRADE_AXES = ['capture', 'connection'];
+/* MK-2 / D-184 / IC-142: A THIRD AXIS, `testimony` — MEMBER-KNOWLEDGE-DESIGN.md
+   §3, and the reason it is an axis rather than a label is DEC-21's amendment:
+   the capture axis measures THE ACT OF READING A DOCUMENT IN, and a member's
+   own authored words were not read in from anywhere. Grading an observation
+   "capture D" would make one axis mean two things — how faithfully we obtained
+   a source's bytes, and whose word the bytes are — which is the combining
+   DEC-21 exists to prevent. So a leg citing an authored bundle carries its
+   grade on THIS axis, and only at TESTIMONY_GRADE, and its capture axis is not
+   applicable and says so (checkTestimonyLeg below refuses the rest by name).
+   APPENDED, so `connection` keeps index 1 for every reader that addressed it
+   positionally (skilldoctrine.test.mjs does). */
+export const GRADE_AXES = ['capture', 'connection', 'testimony'];
+/* MK-2: THE ONE LETTER A TESTIMONY IS WORTH, declared once so the catalogue's
+   two arms and the store's registry compose it rather than type it (the store
+   holds no grade-letter literal — hygiene.test.mjs detector (C)). The ruling
+   is Bob's, 2026-09-14 (MEMBER-KNOWLEDGE-DESIGN.md §1: "graded as testimony
+   (D)") and DEC-15's ("a hunch is the only authored grade permitted above D");
+   it is a VALUE and not a rank derivation, because "the weakest letter" and
+   "what testimony is worth" are two facts that merely coincide today. */
+export const TESTIMONY_GRADE = 'D';
 /* 'inherited' joins with REC-14: a leg resting on a PUBLISHED case does not
    earn its grade and does not author it — it takes the grade that case froze
    when the group signed it, on the same axis, and says so.
@@ -3267,7 +3323,9 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     }
     if (graded) {
       if (!GRADE_AXES.includes(leg.grade_axis)) {
-        findings.push(f('C-2.8', 'error', `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states whether its grade is capture or connection`));
+        /* MK-2: the axes are LISTED from the vocabulary rather than typed as a
+           pair, so a third one cannot leave this sentence naming two. */
+        findings.push(f('C-2.8', 'error', `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states which axis its grade is on (${GRADE_AXES.join(', ')})`));
       }
       if (!GRADE_SOURCES.includes(leg.grade_source)) {
         findings.push(f('C-2.8', 'error', `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(', ')})`));
@@ -3310,6 +3368,18 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
         ['grade this leg on the connection axis — a leg to another inquiry is a connection',
          'move the capture grade onto the INFO- leg it is actually about']));
     }
+    /* MK-2: THE SAME RULE FOR THE THIRD AXIS, and for REC-31's reason exactly.
+       A testimony grade is a fact about an AUTHORED DOCUMENT — whose words these
+       bytes are — and an inquiry is not a document, so a testimony grade
+       authored on an INQ- leg has no referent. The one case with a referent is
+       admitted as it is on capture: an INHERITED testimony axis, which is the
+       axis a published case froze over its own documents (checkInheritedLeg). */
+    if (leg.grade_axis === 'testimony' && targetType === 'inquiry' && leg.grade_source !== 'inherited') {
+      findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony-axis grade on an inquiry leg: testimony is a property of a member's authored observation, which is a document, and an inquiry is not one, so this grade has no referent`,
+        ['rest this leg on the observation itself (its INFO- id)',
+         'or grade this leg on the connection axis — a leg to another inquiry is a connection'],
+        'testimony-axis-no-referent'));
+    }
     /* REC-18: THE CAPTURE AXIS IS NEVER AUTHORED, and this arm is what closes
        it. Together with checkEarnedLeg's axis pairing (which refuses
        `resolution` here, because a resolution is a §8.1 CONNECTION grade), the
@@ -3339,8 +3409,13 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
         findings.push(f('C-2.8', 'error', `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
       }
     }
-    if (leg.grade_source === 'testimony' && graded && leg.grade !== 'D') {
-      findings.push(f('C-2.8', 'error', `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade D at no other value — a hunch is the only authored grade permitted above D (DEC-15)`));
+    /* MK-2: SILENT ON THE TESTIMONY AXIS, where checkTestimonyLeg refuses the
+       same letter BY NAME and says why in the axis's own terms — a second
+       complaint about one broken leg helps nobody. The rule is unchanged: the
+       letter is TESTIMONY_GRADE on every axis a testimony can sit on. */
+    if (leg.grade_source === 'testimony' && graded && leg.grade !== TESTIMONY_GRADE
+        && leg.grade_axis !== 'testimony') {
+      findings.push(f('C-2.8', 'error', `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade ${TESTIMONY_GRADE} at no other value — a hunch is the only authored grade permitted above ${TESTIMONY_GRADE} (DEC-15)`));
     }
     /* REC-18, the OTHER half of the same rule and it is what makes "always D"
        mean something. The arm above refuses a testimony leg that states A/B/C;
@@ -3367,6 +3442,10 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        resolve, and a member who typed `extent_kind: pdf-pge` should be told so
        in the same pass rather than on the next one. */
     checkLegExtentGrammar(leg, `basis[${i}]`, 'C-2.8', findings);
+    /* MK-2: BEFORE checkEarnedLeg, so a capture letter on an authored
+       observation is refused BY NAME as what it is, rather than as a generic
+       undetermined capture — and checkEarnedLeg stays silent on that one case. */
+    checkTestimonyLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkEarnedLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
   }
@@ -3565,6 +3644,105 @@ function checkGrounds(fm, legs, findings) {
  *  `register`, so it says so rather than passing the leg. Every path a real
  *  caller has — the ratification gate and the store's own write path — injects
  *  the registry. */
+/** MK-2 / D-184 / IC-142: THE TESTIMONY AXIS, AND THE §7 REFUSALS THAT FALL
+ *  TO IT (`MEMBER-KNOWLEDGE-DESIGN.md` §3, §7). Every refusal carries a CODE
+ *  on its C-2.8 finding — the D-206 discriminator within a rule — so each one
+ *  is refused BY NAME and a caller can tell them apart without parsing prose:
+ *
+ *    testimony-grade-not-d        a testimony-axis grade other than
+ *                                 TESTIMONY_GRADE. The ruling is that an
+ *                                 observation stands on the observing member's
+ *                                 trust, and nothing — a second member's
+ *                                 co-signature included — makes it more.
+ *    testimony-grade-unearned     a testimony letter other than the one the
+ *                                 registry holds for that observation (value
+ *                                 mode, resolution's precedent).
+ *    testimony-axis-source        a testimony-axis grade whose source is not a
+ *                                 testimony (or, on a published case, not
+ *                                 inherited): a resolution, a capture or a hunch
+ *                                 is an account of something else.
+ *    testimony-axis-unconfirmable the checker cannot read the register, so it
+ *                                 cannot confirm the target IS an observation
+ *                                 (checkEarnedLeg's posture: an absent registry
+ *                                 is not a way through).
+ *    testimony-axis-not-authored  the target is not a member's authored
+ *                                 observation. A publisher's document graded
+ *                                 as testimony would be a captured source
+ *                                 passing for a member's word — the other
+ *                                 direction of the confusion §2 forbids.
+ *    testimony-leg-capture-graded ANY capture-axis grade on a leg citing an
+ *                                 authored observation, whatever its source:
+ *                                 the capture axis measures reading a document
+ *                                 in (DEC-21), which did not happen, and an A
+ *                                 would be true of the bytes and read as
+ *                                 strength the observation does not have.
+ *
+ *  WHAT DECIDES "AUTHORED" is the registry's `testimony` map, which
+ *  `earnedBasisRegistry` builds from the REGISTER's `authored` flag — a flag
+ *  only `op=testify` can set (C-53.8). Never the leg, never the document: a
+ *  caller cannot make a target an observation by saying so.
+ *
+ *  WHAT IS DELIBERATELY NOT REFUSED: a CONNECTION-axis grade on a leg citing an
+ *  observation. §7 does not list it, and §3 now RULES it (BOB #15, 2026-09-18,
+ *  answering the design gap MK-2 named): a leg on an observation carries a
+ *  connection grade graded exactly as any leg's, neither refused nor exempt —
+ *  testimony says WHOSE WORD, connection says HOW DIRECTLY it bears, and with
+ *  capture not applicable a refused connection grade would leave the leg
+ *  invisible to the bar. nc-mk2.mjs's `overconn` arm pins it. */
+function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
+  if (!graded) return;
+  const target = typeof leg.target === 'string' ? leg.target : null;
+  const observation = registry && registry.earned && registry.earned.testimony && target
+    ? registry.earned.testimony[target] || null : null;
+  if (leg.grade_axis === 'capture' && targetType === 'information' && observation) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states a capture grade of ${leg.grade} for ${target}, which is a member's authored observation: the capture axis measures the act of reading a document in, and nobody read these words in from anywhere — they are the member's own. Its grade is testimony, ${observation.grade}, on the testimony axis, and its capture axis is not applicable`,
+      [`grade basis[${i}] on the testimony axis — grade_axis: testimony, grade: ${observation.grade}, grade_source: testimony`,
+       `or state no grade on basis[${i}] — the leg stays in the basis, present and not yet load-bearing`],
+      'testimony-leg-capture-graded'));
+    return;
+  }
+  if (leg.grade_axis !== 'testimony') return;
+  if (leg.grade !== TESTIMONY_GRADE) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony grade of ${leg.grade}: a member's firsthand observation is graded ${TESTIMONY_GRADE} on the testimony axis and at no other value. It stands on the observing member's trust, and nothing raises it — a second member agreeing with it is a co-signature, not a second observation (a second member who saw the same thing records their own, and the case then rests on two testimonies, each ${TESTIMONY_GRADE})`,
+      [`state grade: ${TESTIMONY_GRADE} on basis[${i}]`],
+      'testimony-grade-not-d'));
+    return;
+  }
+  /* A published case's frozen testimony axis is inherited like any other, and
+     checkInheritedLeg compares it; the no-referent arm above already refused a
+     non-inherited testimony grade on an inquiry leg. */
+  if (leg.grade_source === 'inherited' || targetType === 'inquiry') return;
+  if (leg.grade_source !== 'testimony') {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony-axis grade with grade_source '${leg.grade_source}': a testimony grade comes from a member's own authored observation and from nothing else — a resolution, a capture or a hunch is an account of something other than whose word this is`,
+      [`set grade_source: testimony on basis[${i}]`],
+      'testimony-axis-source'));
+    return;
+  }
+  if (!registry) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony grade for ${target}, but whether that document IS a member's authored observation is held by the register, which cannot be read here: a document is an observation because the act that records one wrote it, never because a leg says so`,
+      ['run this through the ratification gate or op=promote, which read the record'],
+      'testimony-axis-unconfirmable'));
+    return;
+  }
+  if (!observation) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony grade for ${target}, which is not a member's authored observation: the testimony axis grades whose word a document is, and this one's bytes were captured, not authored here. Grading it as testimony would let a captured source pass for a member's own word`,
+      [`grade basis[${i}] on the capture axis, which is what a captured document's grade measures`,
+       'or, if this is your own firsthand knowledge, record it as an observation (op=testify) and cite that'],
+      'testimony-axis-not-authored'));
+    return;
+  }
+  /* mode 'value', on resolution's precedent: the record HOLDS the letter, so
+     the leg states that letter and no other. Compared against the REGISTRY's
+     answer rather than against the constant alone, so the registry is the one
+     authority for what a target earns on this axis and the arm that lets an
+     attestation move it is caught at the write. */
+  if (leg.grade !== observation.grade) {
+    findings.push(f('C-2.8', 'error', `basis[${i}] states a testimony grade of ${leg.grade} for ${target}, but the record holds ${observation.grade} for it. ${observation.why ?? ''}`.trimEnd(),
+      [`state grade: ${observation.grade} on basis[${i}]`],
+      'testimony-grade-unearned'));
+  }
+}
+
 function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   const src = leg.grade_source;
   if (!EARNED_GRADE_SOURCES.includes(src)) return;
@@ -3633,15 +3811,16 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
      * and names it, and never reaches this function at all (the `graded` guard
      * above returns first). That is the gate not pressuring anyone into
      * inventing an attribution. */
+  /* MK-2: A MEMBER'S AUTHORED OBSERVATION IS REFUSED BY NAME IN
+     checkTestimonyLeg, which runs first and says what the document IS and
+     which axis its grade belongs on. Silent here, for the one cause and only
+     for it — the MK-1 repair list this branch used to carry for it (no
+     transcription to measure) moved with the refusal. */
+  if (earned && earned.undetermined_because === 'CAPTURE_AXIS_AUTHORED') return;
   if (earned && earned.mode === 'ceiling' && earned.grade == null) {
     findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ''}`,
       [`state NO capture grade on basis[${i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-       /* MK-1: for a member's AUTHORED observation there is no transcription to
-          measure — the bytes ARE the words — so that repair would send a member
-          to do something that cannot be done. Omitted for that one cause, and
-          only for it. */
-       ...(earned.undetermined_because === 'CAPTURE_AXIS_AUTHORED' ? []
-         : ['or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns']),
+       'or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns',
        'or state this leg as testimony (grade D, with an author and a date) if it is a member\'s own account']));
     return;
   }
@@ -3755,7 +3934,10 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
     return;
   }
   const axis = leg.grade_axis;
-  if (axis !== 'capture' && axis !== 'connection') return;   // C-2.8 named it already
+  /* MK-2: every axis in the vocabulary, not a typed pair — a testimony axis a
+     published case froze is inherited on the same per-axis rule, and one an
+     older edition never froze reads ABSENT below rather than passing. */
+  if (!GRADE_AXES.includes(axis)) return;   // C-2.8 named it already
   const on = frozen[axis];
   if (!on || on.state !== 'graded') {
     findings.push(f('C-21.2', 'error', `basis[${i}] inherits ${axis} grade ${leg.grade} from ${target} edition ${ed}, whose ${axis} axis is ${on ? on.state.toUpperCase() : 'ABSENT'}: ${on && on.state === 'unrated' ? 'nothing on that axis was ever established there, so a grade taken from it would be invented outright' : 'what lies beneath is unknown rather than absent, so a grade taken from it would be a claim about material nobody has seen'}`,
@@ -11180,8 +11362,9 @@ export const TRANSCRIBE_CHECKS = {
  *                        writer could set); an authored document that stops saying
  *                        so (C-53.9).
  *
- * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's;
- * the attribution level on the case act (§4) is MK-3's.
+ * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's
+ * and lives in C-2.8 (`checkTestimonyLeg`, IC-142), not in this family; the
+ * attribution level on the case act (§4) is MK-3's.
  * ===================================================================== */
 export const TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {

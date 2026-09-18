@@ -3703,6 +3703,7 @@ __export(bio_checks_exports, {
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
   TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
+  TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
   TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   UNREACHABLE_CAPTURE_GRADE: () => UNREACHABLE_CAPTURE_GRADE,
@@ -3873,7 +3874,7 @@ var caseEditionClaimed = (fm) => {
 };
 var isCaseMemberBytes = (fm) => {
   const s = fm?.published_strength;
-  return Array.isArray(s) && s.length === 2 && s.every((a) => a && typeof a === "object" && typeof a.axis === "string");
+  return Array.isArray(s) && s.length >= 2 && s.every((a) => a && typeof a === "object" && typeof a.axis === "string");
 };
 var vocabFor = (table, t) => table[t] !== void 0 ? table[t] : table[normalizeType(t)];
 var STATES = {
@@ -5570,12 +5571,22 @@ function checkPublishedExtension(fm, findings) {
     });
   }
   const axes = Array.isArray(fm.published_strength) ? fm.published_strength : null;
-  if (!axes || axes.length !== 2 || !["capture", "connection"].every((a) => axes.some((x) => x && x.axis === a))) {
+  const axisCount = (a) => (axes || []).filter((x) => x && x.axis === a).length;
+  const testimonyLeg = Array.isArray(fm.basis) && fm.basis.some((l) => l && typeof l === "object" && l.grade_axis === "testimony" && l.grade !== void 0 && l.grade !== null);
+  if (!axes || axisCount("capture") !== 1 || axisCount("connection") !== 1 || axisCount("testimony") > 1 || axes.some((x) => !x || !GRADE_AXES.includes(x.axis))) {
     findings.push(f(
       "C-2.8",
       "error",
-      'a case member requires published_strength carrying BOTH axes, capture and connection: a case does not have "a strength", it has two, and composing them into one letter is the substitution R2 forbids',
-      ["publish through op=publish, which stamps both frozen axis objects into the bytes"]
+      `a case member requires published_strength carrying BOTH axes, capture and connection, once each, and nothing but the axes this record measures (${GRADE_AXES.join(", ")}): a case does not have "a strength", it has one per axis, and composing them into one letter is the substitution R2 forbids`,
+      ["publish through op=publish, which stamps the frozen axis objects into the bytes"]
+    ));
+  } else if (testimonyLeg && axisCount("testimony") !== 1) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      "a case member whose basis carries a testimony grade requires a published_strength row for the testimony axis: the case rests on a member's word, and the frozen bytes must say at what, beside the capture and connection axes and never folded into either",
+      ["publish through op=publish, which freezes the testimony axis whenever it carries anything"],
+      "testimony-axis-unfrozen"
     ));
   } else {
     for (const a of axes) {
@@ -5624,7 +5635,8 @@ function checkPublishedExtension(fm, findings) {
 }
 var BASIS_ROLES = ["supports", "cuts_against"];
 var BASIS_GRADES = ["A", "B", "C", "D"];
-var GRADE_AXES = ["capture", "connection"];
+var GRADE_AXES = ["capture", "connection", "testimony"];
+var TESTIMONY_GRADE = "D";
 var GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited", "capture"];
 var EARNED_GRADE_SOURCES = ["resolution", "capture"];
 var EARNED_CAPTURE_CEILING = "B";
@@ -5730,7 +5742,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     }
     if (graded) {
       if (!GRADE_AXES.includes(leg.grade_axis)) {
-        findings.push(f("C-2.8", "error", `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states whether its grade is capture or connection`));
+        findings.push(f("C-2.8", "error", `basis[${i}] carries a grade with no grade_axis: the axis is not derivable from the target, so a graded leg states which axis its grade is on (${GRADE_AXES.join(", ")})`));
       }
       if (!GRADE_SOURCES.includes(leg.grade_source)) {
         findings.push(f("C-2.8", "error", `basis[${i}] carries a grade with no grade_source: a grade with no account of where it came from is an invented one (${GRADE_SOURCES.join(", ")})`));
@@ -5745,6 +5757,18 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
           "grade this leg on the connection axis \u2014 a leg to another inquiry is a connection",
           "move the capture grade onto the INFO- leg it is actually about"
         ]
+      ));
+    }
+    if (leg.grade_axis === "testimony" && targetType === "inquiry" && leg.grade_source !== "inherited") {
+      findings.push(f(
+        "C-2.8",
+        "error",
+        `basis[${i}] states a testimony-axis grade on an inquiry leg: testimony is a property of a member's authored observation, which is a document, and an inquiry is not one, so this grade has no referent`,
+        [
+          "rest this leg on the observation itself (its INFO- id)",
+          "or grade this leg on the connection axis \u2014 a leg to another inquiry is a connection"
+        ],
+        "testimony-axis-no-referent"
       ));
     }
     if (leg.grade_axis === "capture" && graded && (leg.grade_source === "testimony" || leg.grade_source === "hunch")) {
@@ -5766,8 +5790,8 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
         findings.push(f("C-2.8", "error", `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
       }
     }
-    if (leg.grade_source === "testimony" && graded && leg.grade !== "D") {
-      findings.push(f("C-2.8", "error", `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade D at no other value \u2014 a hunch is the only authored grade permitted above D (DEC-15)`));
+    if (leg.grade_source === "testimony" && graded && leg.grade !== TESTIMONY_GRADE && leg.grade_axis !== "testimony") {
+      findings.push(f("C-2.8", "error", `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade ${TESTIMONY_GRADE} at no other value \u2014 a hunch is the only authored grade permitted above ${TESTIMONY_GRADE} (DEC-15)`));
     }
     if ((leg.grade_source === "testimony" || EARNED_GRADE_SOURCES.includes(leg.grade_source)) && !graded) {
       findings.push(f(
@@ -5781,6 +5805,7 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
       findings.push(f("C-2.8", "error", `basis[${i}].note is not a string`));
     }
     checkLegExtentGrammar(leg, `basis[${i}]`, "C-2.8", findings);
+    checkTestimonyLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkEarnedLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
   }
@@ -5885,6 +5910,78 @@ function checkGrounds(fm, legs, findings) {
     }
   }
 }
+function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
+  if (!graded) return;
+  const target = typeof leg.target === "string" ? leg.target : null;
+  const observation = registry && registry.earned && registry.earned.testimony && target ? registry.earned.testimony[target] || null : null;
+  if (leg.grade_axis === "capture" && targetType === "information" && observation) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states a capture grade of ${leg.grade} for ${target}, which is a member's authored observation: the capture axis measures the act of reading a document in, and nobody read these words in from anywhere \u2014 they are the member's own. Its grade is testimony, ${observation.grade}, on the testimony axis, and its capture axis is not applicable`,
+      [
+        `grade basis[${i}] on the testimony axis \u2014 grade_axis: testimony, grade: ${observation.grade}, grade_source: testimony`,
+        `or state no grade on basis[${i}] \u2014 the leg stays in the basis, present and not yet load-bearing`
+      ],
+      "testimony-leg-capture-graded"
+    ));
+    return;
+  }
+  if (leg.grade_axis !== "testimony") return;
+  if (leg.grade !== TESTIMONY_GRADE) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states a testimony grade of ${leg.grade}: a member's firsthand observation is graded ${TESTIMONY_GRADE} on the testimony axis and at no other value. It stands on the observing member's trust, and nothing raises it \u2014 a second member agreeing with it is a co-signature, not a second observation (a second member who saw the same thing records their own, and the case then rests on two testimonies, each ${TESTIMONY_GRADE})`,
+      [`state grade: ${TESTIMONY_GRADE} on basis[${i}]`],
+      "testimony-grade-not-d"
+    ));
+    return;
+  }
+  if (leg.grade_source === "inherited" || targetType === "inquiry") return;
+  if (leg.grade_source !== "testimony") {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states a testimony-axis grade with grade_source '${leg.grade_source}': a testimony grade comes from a member's own authored observation and from nothing else \u2014 a resolution, a capture or a hunch is an account of something other than whose word this is`,
+      [`set grade_source: testimony on basis[${i}]`],
+      "testimony-axis-source"
+    ));
+    return;
+  }
+  if (!registry) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states a testimony grade for ${target}, but whether that document IS a member's authored observation is held by the register, which cannot be read here: a document is an observation because the act that records one wrote it, never because a leg says so`,
+      ["run this through the ratification gate or op=promote, which read the record"],
+      "testimony-axis-unconfirmable"
+    ));
+    return;
+  }
+  if (!observation) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states a testimony grade for ${target}, which is not a member's authored observation: the testimony axis grades whose word a document is, and this one's bytes were captured, not authored here. Grading it as testimony would let a captured source pass for a member's own word`,
+      [
+        `grade basis[${i}] on the capture axis, which is what a captured document's grade measures`,
+        "or, if this is your own firsthand knowledge, record it as an observation (op=testify) and cite that"
+      ],
+      "testimony-axis-not-authored"
+    ));
+    return;
+  }
+  if (leg.grade !== observation.grade) {
+    findings.push(f(
+      "C-2.8",
+      "error",
+      `basis[${i}] states a testimony grade of ${leg.grade} for ${target}, but the record holds ${observation.grade} for it. ${observation.why ?? ""}`.trimEnd(),
+      [`state grade: ${observation.grade} on basis[${i}]`],
+      "testimony-grade-unearned"
+    ));
+  }
+}
 function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   const src = leg.grade_source;
   if (!EARNED_GRADE_SOURCES.includes(src)) return;
@@ -5940,6 +6037,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
     return;
   }
   const earned = registry.earned && registry.earned[wantAxis] ? registry.earned[wantAxis][leg.target] : null;
+  if (earned && earned.undetermined_because === "CAPTURE_AXIS_AUTHORED") return;
   if (earned && earned.mode === "ceiling" && earned.grade == null) {
     findings.push(f(
       "C-2.8",
@@ -5947,11 +6045,7 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
       `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ""}`,
       [
         `state NO capture grade on basis[${i}] \u2014 an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-        /* MK-1: for a member's AUTHORED observation there is no transcription to
-           measure — the bytes ARE the words — so that repair would send a member
-           to do something that cannot be done. Omitted for that one cause, and
-           only for it. */
-        ...earned.undetermined_because === "CAPTURE_AXIS_AUTHORED" ? [] : ["or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns"],
+        "or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns",
         "or state this leg as testimony (grade D, with an author and a date) if it is a member's own account"
       ]
     ));
@@ -6033,7 +6127,7 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
     return;
   }
   const axis = leg.grade_axis;
-  if (axis !== "capture" && axis !== "connection") return;
+  if (!GRADE_AXES.includes(axis)) return;
   const on = frozen[axis];
   if (!on || on.state !== "graded") {
     findings.push(f(
@@ -31634,10 +31728,11 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           `    reason: "${r.reason}"`
         ]) : []
       );
+      const frozenAxes = _Store.STRENGTH_AXES.filter((axis) => axis !== "testimony" || pair[axis] && pair[axis].state !== "unrated");
       text = _Store.#setOrAddBlock(
         text,
         "published_strength",
-        _Store.STRENGTH_AXES.flatMap((axis) => {
+        frozenAxes.flatMap((axis) => {
           const a = pair[axis];
           return [
             `  - axis: ${axis}`,
@@ -31650,7 +31745,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           ];
         })
       );
-      const frozenGrounds = _Store.STRENGTH_AXES.flatMap((axis) => (pair[axis].grounds ?? []).map((g) => [axis, g]));
+      const frozenGrounds = frozenAxes.flatMap((axis) => (pair[axis].grounds ?? []).map((g) => [axis, g]));
       if (frozenGrounds.length)
         text = _Store.#setOrAddBlock(
           text,
@@ -31750,7 +31845,9 @@ Subject position: ${pos} \u2014 ${just}
         edition: memberEditions.get(target2),
         /* PER FINDING, and it stays a per-finding array in the
            answer for the same reason it stays one in the bytes. */
-        strength: _Store.STRENGTH_AXES.map((axis) => ({
+        /* MK-2: the axes THE BYTES froze, so the answer and the
+           signed document name the same set. */
+        strength: frozenAxes.map((axis) => ({
           axis,
           state: pair[axis].state,
           grade: pair[axis].grade,
@@ -33426,7 +33523,7 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
       ...r.statement === null ? [] : [`    statement: "${r.statement}"`]
     ])) : _Store.#removeBlock(text, "grounds");
     text = _Store.#setScalar(text, "last_updated", `"${when}"`);
-    const w = (p) => `capture ${p.capture.state === "graded" ? p.capture.grade : p.capture.state}, connection ${p.connection.state === "graded" ? p.connection.grade : p.connection.state}`;
+    const w = (p) => `capture ${p.capture.state === "graded" ? p.capture.grade : p.capture.state}, connection ${p.connection.state === "graded" ? p.connection.grade : p.connection.state}` + (p.testimony && p.testimony.state !== "unrated" ? `, testimony ${p.testimony.state === "graded" ? p.testimony.grade : p.testimony.state}` : "");
     text = _Store.#appendSessionLog(
       text,
       `### Session ${when} | ${restructure ? "Restructured" : "Grouped"} | ${who}
@@ -33485,9 +33582,11 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
       /* DEC-32 clause 6's noticing material, returned as well as
          recorded. NOT a judgement: the act reports what the pair was and
          what it is, and says nothing about why the member moved. */
+      /* MK-2: every axis, from the one list — a third axis moved by a
+         restructure is the same noticing material as the other two. */
       strength: {
-        before: { capture: before.capture, connection: before.connection },
-        after: { capture: after.capture, connection: after.connection }
+        before: Object.fromEntries(_Store.STRENGTH_AXES.map((a) => [a, before[a]])),
+        after: Object.fromEntries(_Store.STRENGTH_AXES.map((a) => [a, after[a]]))
       },
       next: grouped ? "each group's strength is its weakest leg, and this question's is its strongest group. Every group carries the name and the date of the member who asserted it was enough on its own, and a published case carries the per-group breakdown inside the signed bytes." : "this question reads as its weakest leg again, which is the conservative reading and the one an ungrouped basis always takes."
     };
@@ -33600,7 +33699,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     const declared = { capture: null, connection: null };
     let named = false;
     if (rq && typeof rq === "object")
-      for (const axis of _Store.STRENGTH_AXES) {
+      for (const axis of _Store.STRENGTH_AXES.filter((a) => a !== "testimony")) {
         if (!BASIS_GRADES.includes(rq[axis])) continue;
         declared[axis] = rq[axis];
         named = true;
@@ -38959,13 +39058,14 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *   - the words are the member's AS WRITTEN, after a canonical header of the testimony's id and observed_at (BOB #14, 2026-09-18) — nothing trims, paraphrases
    *     or cleans them. An edit is a new observation, never a rewrite.
    *
-   * HOW IT READS ON THE AXES THAT EXIST TODAY, stated because the testimony axis
-   * (§3) is MK-2's and not built: the CAPTURE axis earns NO letter for an
-   * authored capture — undetermined and stated in `earnedBasisRegistry`
+   * HOW IT READS ON THE THREE AXES (MK-2 built the third, §3): the TESTIMONY
+   * axis earns TESTIMONY_GRADE — `earnedBasisRegistry`'s `testimony` map, from
+   * the register's `authored` flag and from nothing else; the CAPTURE axis earns
+   * NO letter for an authored capture — undetermined and stated
    * (`CAPTURE_AXIS_AUTHORED`) — because the axis measures the act of reading a
    * document in, which did not happen; the CONNECTION axis earns nothing, since
    * no reader ran over the words and nothing resolved them. A leg citing an
-   * observation therefore claims nothing on either, and says why.
+   * observation is graded on the testimony axis or not at all (checkTestimonyLeg).
    * ==================================================================== */
   /** One passage: the same per-unit cap the content-grain text index stores a
    *  unit to, for `TRANSCRIPTION_MAX_BYTES`'s reason — REFUSED over it, never
@@ -39398,10 +39498,14 @@ ${words}`;
           determined: false,
           why: "no reader ran over these words and nothing resolved them to a subject"
         },
+        /* MK-2 / IC-142: CARRIED. It read `grade: null` and "this build does not
+           yet carry that axis (MK-2)" until the axis landed; the letter is the
+           registry's own constant, so this answer and a leg's refusal cannot
+           name different letters. */
         testimony: {
-          grade: null,
-          determined: false,
-          why: "an observation is graded as testimony, D, on the member's trust (the ruling, MEMBER-KNOWLEDGE-DESIGN.md section 3); this build does not yet carry that axis (MK-2), so it is stated rather than shown"
+          grade: TESTIMONY_GRADE,
+          determined: true,
+          why: `an observation is graded as testimony, ${TESTIMONY_GRADE}, on the observing member's trust (MEMBER-KNOWLEDGE-DESIGN.md section 3). A leg citing it carries grade_axis: testimony, grade: ${TESTIMONY_GRADE}, grade_source: testimony, and nothing raises it \u2014 another member agreeing is a co-signature, not a second observation`
         }
       },
       says: `${who} recorded a firsthand observation, observed ${obs}. The words are held exactly as written and are the document; they stand on ${who}'s trust. This record takes the author from the signed-in account and never from the request.`
@@ -43701,6 +43805,13 @@ ${words}`;
       subject_entity: subjectEntity || null,
       subject_label: ent ? ent.label : null,
       subject_known: !!ent,
+      /* MK-2 / IC-142: a `testimony` map joins these two ONLY when a
+         target asked about IS an authored observation (CASE 0 below)
+         — REC-83's `content` precedent, for its reason: a caller who
+         asked about no observation gets an answer byte-identical to
+         the one it got before the axis existed, and every existing
+         consumer is on that path. Readers take its absence as "no
+         target here is an observation", which is exactly what it is. */
       earned: { connection: {}, capture: {} }
     };
     if (!ids.length) return out;
@@ -43748,6 +43859,12 @@ ${words}`;
     }
     for (const [bundleId, e] of perBundle) {
       if (!e.n && e.authored) {
+        (out.earned.testimony ||= {})[bundleId] = {
+          mode: "value",
+          grade: TESTIMONY_GRADE,
+          authored: e.authored,
+          why: `${bundleId} is a member's own firsthand observation, recorded through op=testify: it is graded as testimony, ${TESTIMONY_GRADE}, and stands on the observing member's trust. Nothing raises it \u2014 another member agreeing with it is a co-signature, not a second observation.`
+        };
         out.earned.capture[bundleId] = {
           mode: "ceiling",
           grade: null,
@@ -43755,8 +43872,10 @@ ${words}`;
           authored: e.authored,
           determined: false,
           undetermined_because: "CAPTURE_AXIS_AUTHORED",
-          empty_level: "testimony \u2014 this document is a member's own firsthand observation, graded on that member's trust (MEMBER-KNOWLEDGE-DESIGN.md section 3), and this build does not yet carry that axis",
-          why: `${bundleId} is a member's authored observation: its bytes are the member's own words, recorded through op=testify, and nothing was read in from anywhere. The capture axis measures that act, so it earns no letter here \u2014 a ${EARNED_CAPTURE_CEILING} would be true of the bytes and would read as strength the observation does not have. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter.`
+          /* CORRECTED BY MK-2, never exempted: this read "this build does not
+             yet carry that axis", which was true until the axis landed. */
+          empty_level: `testimony \u2014 this document is a member's own firsthand observation, graded on that member's trust on the testimony axis at ${TESTIMONY_GRADE} (MEMBER-KNOWLEDGE-DESIGN.md section 3); the capture axis does not apply to it`,
+          why: `${bundleId} is a member's authored observation: its bytes are the member's own words, recorded through op=testify, and nothing was read in from anywhere. The capture axis measures that act, so it earns no letter here \u2014 a ${EARNED_CAPTURE_CEILING} would be true of the bytes and would read as strength the observation does not have. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter. Its grade is testimony, ${TESTIMONY_GRADE}, on the testimony axis.`
         };
         continue;
       }
@@ -47425,8 +47544,7 @@ ${words}`;
           strength: (() => {
             const s = this.strengthOf(bundleId);
             return {
-              capture: s.capture,
-              connection: s.connection,
+              ...Object.fromEntries(_Store.STRENGTH_AXES.map((a) => [a, s[a]])),
               depth_bound: s.depth_bound
             };
           })(),
@@ -47663,8 +47781,19 @@ ${words}`;
    * sufficiency is only ever reached by an affirmative, attributed act
    * (checkGrounds in the catalog, enforced at both gates). #axisResult carries
    * the composition and #groundResult the within-branch rule. */
-  /* Named once so no site spells an axis and none can drift. */
-  static STRENGTH_AXES = ["capture", "connection"];
+  /* Named once so no site spells an axis and none can drift.
+     MK-2 / IC-142 APPENDS `testimony` (MEMBER-KNOWLEDGE-DESIGN.md §3): a
+     member's authored observation is graded on the member's trust, and that is
+     not the act of reading a document in, which is what capture measures
+     (DEC-21's amendment). Three measurements over three populations, composed
+     separately by the SAME arithmetic and never combined — DEC-32's rule is
+     unchanged and simply sees one more axis. */
+  static STRENGTH_AXES = ["capture", "connection", "testimony"];
+  /* MK-2: THE AXES THAT RANGE OVER DOCUMENTS — a grade on either, authored on
+     a leg to another INQUIRY, has no referent (REC-31's rule, and the same
+     reason for testimony: whose word a document is, is a fact about a
+     document). */
+  static DOCUMENT_AXES = ["capture", "testimony"];
   /* R1, THE ARITHMETIC HALF of the two defences (#axisResult holds the naming
        half, and they are deliberately separable so each has its own negative
        control). The weakest member of one axis's population by #GRADE_RANK.
@@ -48040,8 +48169,8 @@ ${words}`;
    * preferred. */
   #strengthWalk(bundleId, depth, bound, legsOverride = null, captureBounds = null) {
     const legs = legsOverride ?? (this.basisFor(bundleId).legs ?? []);
-    const members = { capture: [], connection: [] };
-    const exhausted = { capture: [], connection: [] };
+    const members = Object.fromEntries(_Store.STRENGTH_AXES.map((a) => [a, []]));
+    const exhausted = Object.fromEntries(_Store.STRENGTH_AXES.map((a) => [a, []]));
     for (const leg of legs) {
       const isInquiry = normalizeType(leg.target_type) === "inquiry";
       const site = {
@@ -48054,15 +48183,18 @@ ${words}`;
       };
       for (const axis of _Store.STRENGTH_AXES) {
         const onAxis = leg.grade_axis === axis;
-        const noReferent = axis === "capture" && isInquiry;
+        const noReferent = _Store.DOCUMENT_AXES.includes(axis) && isInquiry;
         if (noReferent && !onAxis) continue;
         const stated = onAxis && !noReferent ? leg.grade ?? null : null;
-        const resolved = captureBounds && axis === "capture" && stated != null ? _Store.#capturedAt(stated, captureBounds.get(leg.target_id), leg.target_id) : null;
+        const resolved = captureBounds && axis === "capture" && stated != null ? _Store.#capturedAt(stated, captureBounds.get(leg.target_id), leg.target_id) : axis === "testimony" && stated != null && stated !== TESTIMONY_GRADE ? {
+          grade: TESTIMONY_GRADE,
+          why: `this leg carries testimony at ${stated}, and a member's firsthand observation is graded ${TESTIMONY_GRADE} on the testimony axis and at no other value, so it is read at ${TESTIMONY_GRADE} here`
+        } : null;
         members[axis].push({
           ...site,
           via: "leg",
           grade: resolved ? resolved.grade : stated,
-          why: noReferent ? `the target is an inquiry, not a document, so a capture grade on this leg has no referent` : leg.grade == null ? `the leg carries no grade` : resolved && resolved.why ? resolved.why : onAxis ? null : `the leg's grade is on the ${leg.grade_axis} axis`
+          why: noReferent ? `the target is an inquiry, not a document, so a ${axis} grade on this leg has no referent` : leg.grade == null ? `the leg carries no grade` : resolved && resolved.why ? resolved.why : onAxis ? null : axis === "capture" && leg.grade_axis === "testimony" ? `this leg rests on a member's own firsthand observation, graded as testimony: the capture grade measures how the record read a document in, and these words are the member's own, so it does not apply here` : `the leg's grade is on the ${leg.grade_axis} axis`
         });
       }
       if (!isInquiry) continue;
@@ -48100,15 +48232,13 @@ ${words}`;
         });
       }
     }
-    return {
-      capture: _Store.#axisResult("capture", members.capture, exhausted.capture),
-      connection: _Store.#axisResult("connection", members.connection, exhausted.connection)
-    };
+    return Object.fromEntries(_Store.STRENGTH_AXES.map((axis) => [axis, _Store.#axisResult(axis, members[axis], exhausted[axis])]));
   }
   /** REC-12: the derived PAIR for one inquiry, computed on read.
    *
-   *  Returns { capture, connection } as two independent axis answers and NO
-   *  scalar: there is nothing here for a caller to render as "the strength",
+   *  Returns one independent answer per `Store.STRENGTH_AXES` axis — { capture,
+   *  connection, testimony } since MK-2 / IC-142 (this line said "{ capture,
+   *  connection } as two" until then) — and NO scalar: there is nothing here for a caller to render as "the strength",
    *  because a case does not have one. */
   strengthOf(bundleId) {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
@@ -48125,7 +48255,10 @@ ${words}`;
       bundleId,
       depth_bound: bound,
       capture: pair.capture,
-      connection: pair.connection
+      connection: pair.connection,
+      /* MK-2 / IC-142: the third axis, ADDED beside the two rather than
+         replacing anything — every existing key and value is unchanged. */
+      testimony: pair.testimony
     };
   }
   /* ===================== REC-34 · the gated read of the pair =======   *
@@ -48191,8 +48324,8 @@ ${words}`;
    *    that has to grow a gate later is a read that ships ungated first. */
   /** REC-34: `op=inquirystrength` — REC-12's derived pair, gated.
    *
-   *  Answers `{ capture, connection }` VERBATIM from `strengthOf()` and no
-   *  scalar. `unrated` and `undetermined` are two different states of the
+   *  Answers the per-axis object VERBATIM from `strengthOf()` — capture,
+   *  connection and, since MK-2 / IC-142, testimony — and no scalar. `unrated` and `undetermined` are two different states of the
    *  `state` field and stay two here (DEC-18): the cached columns could not
    *  tell them apart and that is half of why this op exists. */
   inquiryStrength({ id = null, viewer = null } = {}) {
@@ -48220,7 +48353,11 @@ ${words}`;
       target: id,
       depth_bound: s.depth_bound,
       capture: _Store.#redactAxis(s.capture, keep),
-      connection: _Store.#redactAxis(s.connection, keep)
+      connection: _Store.#redactAxis(s.connection, keep),
+      /* MK-2 / IC-142: the third axis, under the SAME redaction — an
+         observation a viewer may not see is withheld from this axis's
+         members and prose exactly as on the other two. */
+      testimony: _Store.#redactAxis(s.testimony, keep)
     };
   }
   /* Every field of a named member (#namedMember's shape) that HOLDS a bundle
@@ -51616,7 +51753,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
           this.#casesOf(r.bundle_id, r.edition).map((c) => ({ case_id: c, edition: r.edition }))
         )?.case_id ?? null,
         capture: byAxis.capture || null,
-        connection: byAxis.connection || null
+        connection: byAxis.connection || null,
+        /* MK-2 / IC-142: the testimony axis ONLY where the edition froze one, so
+           every edition published without it answers byte-identically, and
+           checkInheritedLeg reads its absence as ABSENT rather than as a grade. */
+        ...byAxis.testimony ? { testimony: byAxis.testimony } : {}
       };
       if (Number(r.edition) > e.latest) e.latest = Number(r.edition);
     }
@@ -52758,8 +52899,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      guard fails on the NAME, before anybody has to reason about what the value
      means. A key called `grade` beside the pair is a single letter for a
      question, whatever its author intended.
-     `pair` itself is checked separately and by TOTALITY: it holds the two axes
-     and nothing else, so a third key is caught even if it is called something
+     `pair` itself is checked separately and by TOTALITY: it holds exactly the
+     axes `Store.STRENGTH_AXES` names (three since MK-2 / IC-142 — this line said
+     "the two axes" until then) and nothing else, so an unlisted key is caught even if it is called something
      nobody predicted. The list catches the obvious; the totality catches the
      rest. */
   static #PAIR_COMPOSED_KEYS = [
@@ -52795,20 +52937,20 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       if (Object.prototype.hasOwnProperty.call(out, k))
         return refusal7(
           "VERSION_STRENGTH_COMPOSED",
-          `this answer carries a top-level '${String(k).slice(0, 40)}', which can only be one figure standing for both axes. Strength is a PAIR over two populations \u2014 the capture axis and the connection axis \u2014 and there is no value that is both.`
+          `this answer carries a top-level '${String(k).slice(0, 40)}', which can only be one figure standing for every axis. Strength is one measurement PER AXIS, each over its own population \u2014 ${_Store.STRENGTH_AXES.join(", ")} \u2014 and there is no value that is all of them.`
         );
     const pair = out.pair;
     if (!pair || typeof pair !== "object")
       return refusal7(
         "VERSION_STRENGTH_COMPOSED",
-        "this answer carries no pair at all, so whatever it reports is not the two measurements this record makes."
+        "this answer carries no pair at all, so whatever it reports is not the per-axis measurements this record makes."
       );
     const keys = Object.keys(pair).sort();
     const want = [..._Store.STRENGTH_AXES].sort();
     if (keys.length !== want.length || keys.some((k, i) => k !== want[i]))
       return refusal7(
         "VERSION_STRENGTH_COMPOSED",
-        `the pair holds ${JSON.stringify(keys)} where it must hold exactly ${JSON.stringify(want)}. Two populations, two answers, and nothing beside them that reads as a summary of both.`
+        `the pair holds ${JSON.stringify(keys)} where it must hold exactly ${JSON.stringify(want)}. One answer per population, and nothing beside them that reads as a summary of all of them.`
       );
     if (typeof out.filter !== "string" || out.filter.trim().split(/\s+/).length < 5)
       return refusal7(
@@ -52838,9 +52980,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const reg = this.earnedBasisRegistry(subjectEntity || null, targets);
     const earnedConn = reg && reg.earned && reg.earned.connection || {};
     const earnedCap = reg && reg.earned && reg.earned.capture || {};
+    const earnedTest = reg && reg.earned && reg.earned.testimony || {};
     const named = { ungraded: [], hunches: [], graded: [] };
     const legs = rows.map((r) => {
-      const axis = r.grade_axis === "capture" || r.grade_axis === "connection" ? r.grade_axis : null;
+      const axis = _Store.STRENGTH_AXES.includes(r.grade_axis) ? r.grade_axis : null;
       const authored = typeof r.grade === "string" && r.grade ? r.grade : null;
       const source = typeof r.grade_source === "string" && r.grade_source ? r.grade_source : null;
       const base = {
@@ -52891,6 +53034,13 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
             `${r.target_id} carries a member's own signed account of how it connects to this subject, with its own author and date; the record earns nothing further for it and the machine neither mints that letter nor erases it.`
           );
         return inert(`the record has earned nothing connecting ${r.target_id} to this question's subject, so this leg is present and not yet load-bearing`, "ungraded");
+      }
+      if (axis === "testimony") {
+        if (normalizeType(r.target_type) === "inquiry")
+          return inert(`the target is an inquiry, not a document, so a testimony grade on this leg has no referent`, "ungraded");
+        const t = earnedTest[r.target_id];
+        if (t && t.grade) return carries(t.grade, t.why);
+        return inert(`${r.target_id} is not a member's own firsthand observation, so the record holds no testimony grade for it and this leg is present and not yet load-bearing`, "ungraded");
       }
       const c = earnedCap[r.target_id];
       if (c && c.grade == null && c.undetermined_because)
@@ -53022,10 +53172,14 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       what_if: whatIf,
       filter,
       depth_bound: bound,
-      /* TWO MEASUREMENTS OVER TWO POPULATIONS. There is no third key here and
-         there must never be one; `#refusePairComposed` enforces that by
-         totality below rather than by this comment. */
-      pair: { capture: pair.capture, connection: pair.connection },
+      /* ONE MEASUREMENT PER AXIS, OVER ITS OWN POPULATION. There is no key here
+         but the axes and there must never be one; `#refusePairComposed`
+         enforces that by totality below rather than by this comment.
+         CORRECTED BY MK-2, never exempted: this read "TWO MEASUREMENTS … no
+         third key", which was the axis count and not the rule — the rule is
+         that nothing beside the axes stands for all of them, and the third
+         axis (testimony) is a measurement, not a summary. */
+      pair: Object.fromEntries(_Store.STRENGTH_AXES.map((a2) => [a2, pair[a2]])),
       /* INERT AND NAMED — the second half, and it is a separate fact from the
          first. The arithmetic already excluded these; this is what the reader is
          owed (DEC-18's plural clause: every such leg is named, one or many). */
@@ -53830,16 +53984,16 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const usedLabels = [...new Set(walkLegs.map((l) => l.ground).filter(Boolean))].sort();
     const declaredLabels = [...new Set(declared)].sort();
     const partitionDisagrees = JSON.stringify(usedLabels) !== JSON.stringify(declaredLabels);
-    if (pairError || axisBad(pair?.capture) || axisBad(pair?.connection) || partitionDisagrees)
+    if (pairError || _Store.STRENGTH_AXES.some((a2) => axisBad(pair?.[a2])) || partitionDisagrees)
       return remember(refusal7(
         "SUGGEST_PAIR_DOES_NOT_COMPUTE",
-        pairError ? `the arithmetic could not be run over this reading: ${pairError}` : partitionDisagrees ? `this reading declares [${declaredLabels.join(", ") || "none"}] as its separately sufficient parts and its legs sit in [${usedLabels.join(", ") || "none"}]. A version CARRIES its own structure (\xA73), so the two have to be the same set \u2014 otherwise the maximum is taken over a part nobody declared, or a declared part holds nothing.` : `the pair did not resolve on both axes: capture=${pair?.capture?.state ?? "(none)"}, connection=${pair?.connection?.state ?? "(none)"}.`,
+        pairError ? `the arithmetic could not be run over this reading: ${pairError}` : partitionDisagrees ? `this reading declares [${declaredLabels.join(", ") || "none"}] as its separately sufficient parts and its legs sit in [${usedLabels.join(", ") || "none"}]. A version CARRIES its own structure (\xA73), so the two have to be the same set \u2014 otherwise the maximum is taken over a part nobody declared, or a declared part holds nothing.` : `the pair did not resolve on every axis: ${_Store.STRENGTH_AXES.map((a2) => `${a2}=${pair?.[a2]?.state ?? "(none)"}`).join(", ")}.`,
         {
           target,
           name,
           declared: declaredLabels,
           used: usedLabels,
-          pair: pair ? { capture: pair.capture.state, connection: pair.connection.state } : null
+          pair: pair ? Object.fromEntries(_Store.STRENGTH_AXES.map((a2) => [a2, pair[a2]?.state ?? null])) : null
         }
       ));
     const ind = this.#independenceOf(walkLegs, declaredLabels.length);
@@ -54011,7 +54165,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       rowVersion: promoted.rowVersion
     };
     const derived = {
-      pair: { capture: pair.capture, connection: pair.connection },
+      pair: Object.fromEntries(_Store.STRENGTH_AXES.map((a2) => [a2, pair[a2]])),
       shared_origins: shared,
       origins_complete: originsComplete
     };
@@ -64120,7 +64274,9 @@ var index_default = {
                 ratified_at: cited.ratified_at,
                 case_id: cited.case_id ?? null,
                 capture: cited.capture,
-                connection: cited.connection
+                connection: cited.connection,
+                /* MK-2 / IC-142: present only where the edition froze one. */
+                ...cited.testimony ? { testimony: cited.testimony } : {}
               } : null,
               detail: cited ? "this leg rests on a published finding, so it can be served from this surface." : "this leg is NAMED and not served: what it rests on is not in the published record, so this surface can say the finding cites it and can hand over nothing of it."
             };

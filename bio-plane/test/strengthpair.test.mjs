@@ -351,8 +351,13 @@ console.log("\n--- 1. the pair is never composed into one number — asserted, n
     [r.ok, r.code ?? null, r.check ?? null], [true, null, null]);
   /* TOTALITY BOTH WAYS. Not "contains the two axes" — a check that a composed
      answer carrying a third key would pass. */
-  t("`pair` holds EXACTLY the two axes and nothing else",
-    Object.keys(r.pair ?? {}).sort(), ["capture", "connection"]);
+  /* CORRECTED BY MK-2 (IC-142), never exempted: "EXACTLY the two axes" was the
+     axis COUNT; the rule is TOTALITY over the axes the record measures, and the
+     testimony axis (MEMBER-KNOWLEDGE-DESIGN.md §3) is one of them. Still read
+     from a literal here rather than from Store.STRENGTH_AXES, so this assertion
+     cannot agree with the store for free. */
+  t("`pair` holds EXACTLY the axes and nothing else — capture, connection, testimony",
+    Object.keys(r.pair ?? {}).sort(), ["capture", "connection", "testimony"]);
   t("and no top-level key can read as one figure standing for both",
     ["strength", "grade", "score", "overall", "composed", "letter", "rating", "value"]
       .filter((k) => Object.prototype.hasOwnProperty.call(r, k)), []);
@@ -385,9 +390,12 @@ console.log("\n--- 1. the pair is never composed into one number — asserted, n
   /* AND THE READER IS RE-RUN OVER A SOURCE THAT DOES COMPOSE, and required to
      find it. A walk that reports "no composition" over a corpus it cannot see
      is the failure this repository has measured more than once. */
-  const composed = s.replace("pair: { capture: pair.capture, connection: pair.connection },",
-    "pair: { capture: pair.capture, connection: pair.connection }, strength: \"B\",");
-  const seesIt = (src) => /pair: \{ capture: [^}]*\},\s*strength:/.test(src);
+  /* CORRECTED BY MK-2 (IC-142): the answer's `pair` is now built from the axis
+     list (`Object.fromEntries(Store.STRENGTH_AXES…)`) rather than typed as two
+     keys, so the reader and its planted composition follow that spelling. */
+  const PAIR_SRC = "pair: Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, pair[a]])),";
+  const composed = s.replace(PAIR_SRC, `${PAIR_SRC} strength: "B",`);
+  const seesIt = (src) => /pair: Object\.fromEntries\([^\n]*\),\s*strength:/.test(src);
   t("the same reader run over a source that DOES compose FINDS it — the walk is not blind",
     [seesIt(s), seesIt(composed)], [false, true]);
   t("and DEC-44's refusal is a CATALOGUE ROW with a canned translation, not a comment",

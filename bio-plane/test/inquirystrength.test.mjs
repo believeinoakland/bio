@@ -256,8 +256,13 @@ const MIX = "INQ-2026-0900-mixed";
   t("CONNECTION reads D, naming ITS own — two measurements over two populations (DEC-21)",
     [r.body.result.connection.state, r.body.result.connection.grade, r.body.result.connection.weakest?.target_id ?? null],
     ["graded", "D", CON_D]);
-  t("the answer carries TWO axis objects and NO scalar for a surface to render as 'the strength'",
-    Object.keys(r.body.result).sort(), ["capture", "connection", "depth_bound", "ok", "target"]);
+  /* CORRECTED BY MK-2 (IC-142), never exempted: this read "TWO axis objects" and
+     pinned the key set with two, which was the axis COUNT and not this line's
+     rule. The rule is the second half — NO scalar a surface could render as
+     "the strength" — and it is unchanged. The testimony axis is a third
+     MEASUREMENT (MEMBER-KNOWLEDGE-DESIGN.md §3), not a summary of the two. */
+  t("the answer carries ONE axis object PER AXIS and NO scalar for a surface to render as 'the strength'",
+    Object.keys(r.body.result).sort(), ["capture", "connection", "depth_bound", "ok", "target", "testimony"]);
   t("and no composed letter hides in either axis object",
     [Object.keys(r.body.result.capture).includes("strength"),
      Object.keys(r.body.result.connection).includes("strength")], [false, false]);

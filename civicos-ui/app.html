@@ -1738,7 +1738,20 @@ const NON_BUNDLE_KINDS = ["annotation", "source"];
    in SB-OUTPUT §5.1 and appears nowhere in this file. The word is UNRATED. */
 const BASIS_ROLES = ["supports", "cuts_against"];
 const BASIS_GRADES = ["A", "B", "C", "D"];
-const GRADE_AXES = ["capture", "connection"];
+const GRADE_AXES = ["capture", "connection", "testimony"];
+/* PAIR_AXES: the two axes this page PRESENTS as a strength pair and the only two a
+   publication floor reads (the bar stays capture + connection — MEMBER-KNOWLEDGE-DESIGN.md §3).
+   Split from GRADE_AXES on 2026-09-18 by MK-2 (IC-142), which added `testimony` to the
+   catalogue's vocabulary: this page mirrors the vocabulary above (check-semantics), and every
+   renderer and floor that iterated GRADE_AXES iterates PAIR_AXES so it renders exactly what it
+   rendered before. PRESENTING the testimony axis is NOT built here — it is delegated to UI in
+   CLAIMS.md (MK-2's DELEGATION). No observation can be published yet (C-53.10-.12), so the
+   publication renderers cannot meet one; the live-strength panels can, and omit the axis.
+   NEGATIVE CONTROL (run 2026-09-18, MK-2): put `pubFiltered` back on GRADE_AXES -> the UI
+   harness exits 1, publishedcase.test.mjs 6 FAILED — a floor object has no `testimony` key,
+   `undefined !== "none"`, and every UNFILTERED rendering starts claiming a filter it never
+   performed. A mirror edit alone would have shipped that. */
+const PAIR_AXES = ["capture", "connection"];
 const GRADE_SOURCES = ["resolution", "testimony", "hunch", "inherited", "capture"]; /* capture added 2026-08-04 at REC-18's integration — the drift guard named it, which is the guard working */
 const STRENGTH_STATES = ["graded", "unrated", "undetermined"];
 /* THE MEMBER'S WORDS for each. A role is what the leg DOES to the conclusion;
@@ -1750,8 +1763,9 @@ const ROLE_WORD = { supports: "supports this", cuts_against: "cuts against this"
    document the conclusion reaches; connection over every edge it rests on. They
    are never combined, never averaged, and never reduced to one letter. */
 const AXIS_WORD = { capture: "How directly the record holds the documents",
-                    connection: "How strongly the links between them were established" };
-const AXIS_SHORT = { capture: "Documents", connection: "Links" };
+                    connection: "How strongly the links between them were established",
+                    testimony: "Whose word it is: a member's own account, standing on that member's trust" };
+const AXIS_SHORT = { capture: "Documents", connection: "Links", testimony: "Testimony" };
 /* Grade renders as HOW a leg was established, never as how credible it is. */
 const GRADE_SOURCE_WORD = {
   resolution: "established by the record resolving this document to its subject",
@@ -7689,7 +7703,7 @@ function inquiryPair(fmj){
   const rows = fmj && Array.isArray(fmj.published_strength) ? fmj.published_strength : null;
   if(!rows) return null;
   const out = {};
-  for(const a of rows) if(a && GRADE_AXES.includes(a.axis)) out[a.axis] = a;
+  for(const a of rows) if(a && PAIR_AXES.includes(a.axis)) out[a.axis] = a;
   return (out.capture && out.connection) ? out : null;
 }
 
@@ -7770,12 +7784,12 @@ function strengthPanels(pair, legs){
        surface can read its values yet, and a member who learns the shape here
        learns the right one. */
     return `<h2 class="sec">Strength</h2>${lede}
-      ${GRADE_AXES.map(ax=>`<h3 style="font-family:var(--font-ui);font-size:14px;margin:18px 0 4px">${esc(AXIS_SHORT[ax])} &middot; ${esc(AXIS_WORD[ax].toLowerCase())}</h3>
+      ${PAIR_AXES.map(ax=>`<h3 style="font-family:var(--font-ui);font-size:14px;margin:18px 0 4px">${esc(AXIS_SHORT[ax])} &middot; ${esc(AXIS_WORD[ax].toLowerCase())}</h3>
         <div class="empty">Derived by the record from the legs above, and not published to this page yet. The strength of a question that is still being worked on is computed fresh every time it is asked for — it is not read from a stored number, because a stored one goes stale the moment a leg beneath it is re-graded. It is shown here once a case is set down and published, where it is frozen with the edition it belongs to. This page shows no number in the meantime and does not compute one.</div>`).join("")}
       ${hunchNote}`;
   }
   return `<h2 class="sec">Strength</h2>${lede}
-    ${GRADE_AXES.map(ax=>axisPanel(ax, pair[ax], legs)).join("")}
+    ${PAIR_AXES.map(ax=>axisPanel(ax, pair[ax], legs)).join("")}
     ${hunchNote}`;
 }
 
@@ -9142,7 +9156,7 @@ async function livePair(id){
   if(!a.accepted) return { ok:false, refusal:a.refusal };
   const r = a.result || {};
   const out = {};
-  for(const ax of GRADE_AXES) out[ax] = liveAxis(r[ax]);
+  for(const ax of PAIR_AXES) out[ax] = liveAxis(r[ax]);
   return (out.capture && out.connection) ? { ok:true, pair:out, raw:r } : { ok:false, refusal:null };
 }
 
@@ -9360,7 +9374,7 @@ function concludePaint(){
        when it is a question, its own refusal when it is not. Its words. */
     const own = !on ? "" : !lp ? `<div class="subj-how">Asking the record about this leg&hellip;</div>`
       : lp.ok
-        ? `<div class="subj-how">${GRADE_AXES.map(ax=>`${esc(AXIS_SHORT[ax])}: ${lp.pair[ax] && lp.pair[ax].grade ? `<span class="subj-grade g-est">Grade ${esc(lp.pair[ax].grade)}</span>` : esc(STRENGTH_STATE_WORD[lp.pair[ax] && lp.pair[ax].state] || "no state published")}`).join(" &middot; ")}</div>`
+        ? `<div class="subj-how">${PAIR_AXES.map(ax=>`${esc(AXIS_SHORT[ax])}: ${lp.pair[ax] && lp.pair[ax].grade ? `<span class="subj-grade g-est">Grade ${esc(lp.pair[ax].grade)}</span>` : esc(STRENGTH_STATE_WORD[lp.pair[ax] && lp.pair[ax].state] || "no state published")}`).join(" &middot; ")}</div>`
         : (lp.refusal ? `<div class="subj-how">${esc(lp.refusal.detail || lp.refusal.error || "")}</div>` : "");
     return `<label class="dz-opt${on?" on":""}">
       <input type="checkbox" ${on?"checked":""} onchange="concludeToggle(${esc(JSON.stringify(t))})">
@@ -9376,7 +9390,7 @@ function concludePaint(){
     ? actRefusalHtml(CONCL.pairErr)
     : !CONCL.pair
       ? `<div class="empty">The record has not answered what this question reads at, and this page computes nothing in its place.</div>`
-      : GRADE_AXES.map(ax=>{
+      : PAIR_AXES.map(ax=>{
           const sel = CONCL.sel.map(t=>{
             const c = legConsequence(CONCL.raw ? CONCL.raw[ax] : null, t);
             return c ? `<div class="card cx-leg" style="margin:0 0 8px"><div class="kv"><span class="k mono">${esc(t)}</span></div>${c}</div>` : "";
@@ -9810,7 +9824,7 @@ async function doElicit(){
 function elicReceiptHtml(r){
   const rows = Array.isArray(r.grounds) ? r.grounds : [];
   const pairHtml = (label, p) => `<h3 class="cx-h">${esc(label)}</h3>${
-    GRADE_AXES.map(ax=>axisPanel(ax, liveAxis(p && p[ax]) || {}, ELIC ? ELIC.legs : [])).join("")}`;
+    PAIR_AXES.map(ax=>axisPanel(ax, liveAxis(p && p[ax]) || {}, ELIC ? ELIC.legs : [])).join("")}`;
   return `<h2>${esc(r.act === "restructured" ? "Changed" : "Recorded")}</h2>
     <div class="intent-ok">
       <div>The record holds ${esc(String(r.legs || 0))} reason${r.legs === 1 ? "" : "s"} on <span class="mono">${esc(String(r.target||""))}</span>${
@@ -17454,7 +17468,7 @@ const FLOOR_RANK = { A: 0, B: 1, C: 2, D: 3 };
 function readerFloors(f){
   if(!f || typeof f !== "object") return null;
   const out = {};
-  for(const ax of GRADE_AXES){
+  for(const ax of PAIR_AXES){
     const v = f[ax];
     if(!FLOOR_VALUES.includes(v)) return null;
     out[ax] = v;
@@ -17480,7 +17494,7 @@ function floorShort(f){ return f === "none" ? "none" : `grade ${f}`; }
    from the floors themselves and never from a flag somebody sets, because a
    flag is a thing a later code path can forget to set. */
 function pubFiltered(floors){
-  return !!floors && GRADE_AXES.some(ax => floors[ax] !== "none");
+  return !!floors && PAIR_AXES.some(ax => floors[ax] !== "none");
 }
 /* THE ONE PLACE THIS RENDERING NAMES ITSELF (DEC-40 determination 2). Every
    surface that says what the reader is looking at — the per-page header, the
@@ -17701,7 +17715,7 @@ function pubPair(f){
   const rows = f && Array.isArray(f.strength) ? f.strength : null;
   if(!rows) return null;
   const out = {};
-  for(const a of rows) if(a && GRADE_AXES.includes(a.axis)) out[a.axis] = a;
+  for(const a of rows) if(a && PAIR_AXES.includes(a.axis)) out[a.axis] = a;
   return (out.capture && out.connection) ? out : null;
 }
 /* THE ONLY PRODUCER OF A STRENGTH MARK ON THIS SURFACE, and it is one function
@@ -17712,7 +17726,7 @@ function pubPair(f){
    mark with an empty `data-finding` is a mark about nothing and fails the sweep
    by construction rather than by review. */
 function pubStateBadge(axis, a, fid){
-  if(!GRADE_AXES.includes(axis)) return "";
+  if(!PAIR_AXES.includes(axis)) return "";
   const attrs = `data-axis="${esc(axis)}" data-finding="${esc(String(fid == null ? "" : fid))}"`;
   const label = esc(AXIS_SHORT[axis]);
   if(!a || !STRENGTH_STATES.includes(a.state))
@@ -17727,7 +17741,7 @@ function pubStateBadge(axis, a, fid){
 function pubPairBadges(pair, fid){
   return `<span class="pub-axisrow" data-finding="${esc(String(fid == null ? "" : fid))}"
     ><span class="pub-forfinding">${esc(String(fid == null ? "an unnamed finding" : fid))} &mdash;</span>${
-    GRADE_AXES.map((ax) => pubStateBadge(ax, pair ? pair[ax] : null, fid)).join("")}</span>`;
+    PAIR_AXES.map((ax) => pubStateBadge(ax, pair ? pair[ax] : null, fid)).join("")}</span>`;
 }
 
 /* ============================================================================
@@ -17865,7 +17879,7 @@ function pubQualifiers(f){
   const pair = pubPair(f);
   const legs = (f && Array.isArray(f.basis)) ? f.basis : [];
   if(!pair) return { ids, why };
-  for(const ax of GRADE_AXES){
+  for(const ax of PAIR_AXES){
     const a = pair[ax];
     if(!a) continue;
     if(a.state === "graded" && a.weakest != null){
@@ -17898,7 +17912,7 @@ function pubThreshold(f, floors){
     const id = String(l.target || "");
     if(quals.ids.has(id)){ kept.push({ leg: l, qualifier: true, why: quals.why.get(id) || "" }); continue; }
     const ax = l.grade_axis;
-    if(!GRADE_AXES.includes(ax)){
+    if(!PAIR_AXES.includes(ax)){
       /* No axis, so no floor can be applied to it. Kept, and SAID — a leg
          dropped because nothing could be measured about it is a leg dropped by
          the renderer's convenience. */
@@ -17915,7 +17929,7 @@ function pubThreshold(f, floors){
      performed by silently emptying the axis. */
   const axisFails = [];
   const pair = pubPair(f);
-  if(pair) for(const ax of GRADE_AXES){
+  if(pair) for(const ax of PAIR_AXES){
     const a = pair[ax];
     if(!a || a.state === "graded") continue;
     if(floors[ax] !== "none")
@@ -18751,7 +18765,7 @@ async function pubOpen(id, edition, fromNav){
    resolve the pair to null and the case would refuse to draw, and a control
    that silently produced that state would be a filter nobody asked for. */
 function pubSetFloor(axis, value){
-  if(!GRADE_AXES.includes(axis) || !FLOOR_VALUES.includes(value)) return;
+  if(!PAIR_AXES.includes(axis) || !FLOOR_VALUES.includes(value)) return;
   PUB.floors = { ...PUB.floors, [axis]: value };
   pubPaint();
 }
@@ -18794,7 +18808,7 @@ function pubFloorPickerHtml(floors){
     }</select></label>`;
   return `<div class="eyebrow">Your own floors, if you want them</div>
     <p class="subj-note">This page shows the case whole. If you want to read it under a floor of your own, set one for each axis below — the two are independent, neither is a default for the other, and a floor of <b>no floor</b> is what the case renders at by default. They are applied to every finding's legs separately. <b>The result is not the case.</b> It is a view you constructed, it says so on every page and inside anything you print or copy, and this page has no opinion about what you are doing with it.</p>
-    <div class="pub-stances">${GRADE_AXES.map(one).join("")}</div>`;
+    <div class="pub-stances">${PAIR_AXES.map(one).join("")}</div>`;
 }
 
 /* ---- ONE FINDING, in its own pages. Everything on them is that finding's:
@@ -18824,7 +18838,7 @@ function pubFindingPages(c, f, i, n, floors){
      ${pair ? pubPairBadges(pair, fid) : ""}
      ${pubRoleBadgeHtml(pubRoleOf(f), fid)}
      ${pubCaseBarRefHtml(c, f)}
-     ${pair ? GRADE_AXES.map((ax) => axisPanel(ax, pair[ax], (f.basis || []).map((l) => ({ ...l, target: l.target })), { link: namedLink })).join("")
+     ${pair ? PAIR_AXES.map((ax) => axisPanel(ax, pair[ax], (f.basis || []).map((l) => ({ ...l, target: l.target })), { link: namedLink })).join("")
             : `<div class="empty">This finding published no frozen strength pair, and this page invents neither half of one.</div>`}
      ${th.axisFails.map((x) => `<div class="pub-drop" data-axisfail="${esc(x.axis)}" data-of="${esc(fid)}">${esc(x.detail)}</div>`).join("")}`);
 
