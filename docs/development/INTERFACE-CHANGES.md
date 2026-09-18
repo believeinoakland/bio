@@ -9537,7 +9537,7 @@ never narrowed lands exactly as before — its leg on the same whole-document ro
 NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-86's integration — I3 23.2.0 → 23.3.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.2.0 (FW-19's IC-125 took 23.2.0 in the same wave). SKILL and DIST NOT-AFFECTED — CONDUCT answers FOR both (neither calls a new op; an op nobody asks for cannot be observed), named as such. **UI's act is OWED, not waived:** the NARROW affordance on a leg is delegated in `CLAIMS.md` and, per the worker, also waits on UI-62's page picker. **One scope note recorded at resolution:** REC-86's draft of the content framework's connection-pair row claimed the ON-POINT connection choice built; CONDUCT declined that cell at merge — REC-86 narrows a LEG, and the connection-side choice is `REC-120`.
-## IC-126 · I3 `op=pdfstructure`: the opt-in `ocr=1` flag — read-time re-extraction to tier 3 (D-319, `EXTRACTION-BREADTH-DESIGN.md` §5.1) · PROPOSED 2026-09-18 (CPDF-19) — the version bump and the RESOLUTION are CONDUCT's
+## IC-126 · I3 `op=pdfstructure`: the opt-in `ocr=1` flag — read-time re-extraction to tier 3 (D-319, `EXTRACTION-BREADTH-DESIGN.md` §5.1) · PROPOSED 2026-09-18 (CPDF-19) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I3 23.4.0)**
 
 - **Interface:** I3 (the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
   23.1.0** (IC-120). **Proposed as MINOR — 23.1.0 → 23.2.0, ADDITIVE** — and the base is to be read
@@ -9587,5 +9587,4 @@ sending the parameter.
 not name them, so no caller can reach them except through `op=pdfstructure&ocr=1`, which stamps
 `viewer` and `author` from the credential.
 
-**RESOLUTION:** unresolved at the time of writing. CONDUCT takes the version bump and the RESOLUTION at
-integration, against I3's version AS READ AT RESOLUTION.
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at CPDF-19's integration — I3 23.3.0 → 23.4.0, MINOR (additive, as classed).** **Base read AT RESOLUTION: 23.3.0, not the 23.1.0 proposed against** — FW-19 (IC-125) and REC-86 (IC-123) each took a minor in the same wave, exactly the drift this IC's own header anticipated. Without `ocr=1` the op's answer is byte-identical (pinned by the worker's digest harness), so no existing caller can observe the change. CONDUCT answers FOR SKILL and FRAMEWORK (dormant) and FOR DIST: NOT-AFFECTED — an opt-in flag nobody sends; named as such. **UI's affordance is OWED, not waived.** Two defects in the moved acquire code closed in the same landing and changing one `op=acquire` behaviour: D-417 (the calibration join never fired) and D-418 (`tier3_candidate` stamped on a page-wise-transcribed document).
