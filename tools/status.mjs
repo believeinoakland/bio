@@ -129,6 +129,39 @@ export function evalProbe(p, { repo = ROOT, sets = {} } = {}) {
     }
     return { ok: true, evidence: `no literal UI call of ${p.uinone.join(", ")}` };
   }
+  /* A CENSUS — name-independent. Found 2026-09-18 by CONDUCT #4: an ABSENT probe that searches for
+     the design's NAME goes blind when a builder has a reason to rename (REC-87 could not call its
+     step `member`, so `4.transcribe` read ABSENT over a built construct). Counting an enumeration,
+     or pinning its exact key set, trips on ANY addition under ANY name and forces the review. */
+  if (p.count) {
+    let n = null;
+    if (p.count === "ops") {
+      const b = opsBlock(repo);
+      if (!b) return { ok: false, evidence: "UNREADABLE: no OPS table" };
+      n = [...b.text.slice(b.start).matchAll(/^\s{2}[a-z][a-z0-9]*:\s*\{\s*classes/gm)].length;
+    } else if (p.count === "tables") {
+      const set = new Set();
+      for (const f of ["bio-plane/src/schema.mjs", "bio-plane/src/store.mjs"]) {
+        const t = read(repo, f); if (t === null) return { ok: false, evidence: `UNREADABLE: ${f}` };
+        for (const m of t.matchAll(/CREATE\s+(?:VIRTUAL\s+)?TABLE\s+IF\s+NOT\s+EXISTS\s+([a-z_0-9]+)/g)) set.add(m[1]);
+      }
+      n = set.size;
+    } else return { ok: false, evidence: `unknown census: ${p.count}` };
+    return n === p.equals ? { ok: true, evidence: `census: ${n} ${p.count}` }
+      : { ok: false, evidence: `census: ${n} ${p.count}, the claim says ${p.equals} — something was added or removed; review the ABSENT claims it could express, then update the count` };
+  }
+  if (p.keys) {
+    const t = read(repo, (p.in || [])[0] || "");
+    if (t === null) return { ok: false, evidence: `UNREADABLE: ${(p.in || [])[0]}` };
+    const i = t.indexOf(`export const ${p.keys} = {`);
+    if (i < 0) return { ok: false, evidence: `${p.keys} is not declared in ${p.in[0]}` };
+    const body = t.slice(i, t.indexOf("\n};", i));
+    const got = [...body.matchAll(/^\s{2}'?([A-Za-z_][\w-]*)'?\s*:/gm)].map((m) => m[1]);
+    const want = p.equals || [];
+    const extra = got.filter((k) => !want.includes(k)), gone = want.filter((k) => !got.includes(k));
+    return !extra.length && !gone.length ? { ok: true, evidence: `${p.keys} is exactly {${got.join(", ")}}` }
+      : { ok: false, evidence: `${p.keys} changed —${extra.length ? ` ADDED ${extra.join(", ")}` : ""}${gone.length ? ` REMOVED ${gone.join(", ")}` : ""}; review the claims these could express, then update the set` };
+  }
   return { ok: false, evidence: `unknown probe kind: ${JSON.stringify(p)}` };
 }
 

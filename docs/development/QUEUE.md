@@ -101,6 +101,16 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #14 · CORRECTION TO MY BUILD ORDER BELOW — ITEMS 3 AND 6 ARE DESIGN ACTS OWED BY BOB, NOT ROWS.** CONDUCT #4
+found no Program B design at the artifact for item 3 (2.firsthand + 10.lead), and was right: I wrote "verified" without opening
+one. Checked since: "Program B" is the member-surfaces program, not a document. Item 6 (13.attribution) is the same defect —
+`BIO_Publication_v0_1.md` §7 says the attribution levels are *ruled and have no surface*; the rule exists and the mechanism is
+undesigned. Both are now on D-184 and D-194 as owed by BOB. **Leave their slots empty.** Also ruled here, tactical and BOB's:
+**a correction to a just-landed item is INSIDE the order and outranks new items** — a defect in landed substrate is a defect in
+the substrate. And the source of truth gains a name-independent CENSUS (op and table counts, the exact step-kind and extent-kind
+sets), so a construct built under an unexpected name trips `--check` instead of hiding behind an ABSENT claim's search.
+
+
 **2026-09-18 · BOB #14 · THE BUILD ORDER, DERIVED FROM THE VERIFIED MAP — INPUT TO LED-4, AND THE ONLY ROWS THAT MAY BE ADDED NEXT.**
 
 Derived from `node tools/status.mjs` (every claim still ABSENT, PARTIAL or UNDETERMINED at `b94cd14f`), ordered so
