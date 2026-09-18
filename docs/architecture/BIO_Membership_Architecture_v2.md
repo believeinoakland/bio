@@ -9,6 +9,7 @@
 - §10 — a data-model "sketch"; "Concrete DDL belongs with the implementation."
 - §11 — two cross-document obligations are unenacted: the Technical Architecture §10 annotation pointing here, and the project-name-uniqueness annotation on State Rules §4.3; the list also numbers two items "8."
 - §7 — DEC-72 clause 5 adds an owner-only act (publish) absent here, and D-310/D-311 record that the affordance surface does not yet publish owner-gated publish or the roster acts.
+- §7 — the founder block does not rule on ACTS: the administrator arm is also the see-before-write gate of acts whose only fence on a project target is visibility, so an administrator (enrolled, and now the founder) can act where §7 says administrators "direct nothing" (raised by REC-132, IC-149; with BOB).
 - §7 — the hierarchy is stated in Focus terms "until the rename arc lands"; the live state machine is `inquiry` and the catalog marks `focus` legacy.
 
 **Contents**
@@ -536,6 +537,11 @@ token and not to the founder's session). **Design:**
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
+- **BUILT 2026-09-18 by REC-132 (IC-149).** `sessionCaseViewer` became `resolveSession` (`src/index.mjs`), returning
+  `viewer`, `identity` and the folded `member`; the store asks WHO through one helper, `#positionalMember`, at the lead
+  reads, the internet frontier and D-310's owner fact; `MEMBER_ID_RESERVED` is C-55.1; `op=audit` carries `membership`.
+  The per-site table of which arm governs is IC-149's. All four controls DRIVEN in `bio-plane/test/founder-sight.test.mjs`
+  and `founder-sight.control.mjs`.
 
 **What the skeleton excludes**, for the invited: the project's own
 content, its analysis record, its work product, its evaluations, its

@@ -2587,7 +2587,34 @@ function aiTaskScope(cred, op, spec) {
  * `admin` and `member` bindings are instance-level and read as they read every
  * other piece of working material. An `ai` credential stands as its declared
  * principal, through the same `aiTaskScope` the gated path runs. */
-/* REC-128 x REC-130 — THE ONE PLACE A SIGNED-IN SESSION BECOMES THE VIEWER AN
+/* REC-132 / D-422 / IC-149 — THIS IS NOW THE ONE RESOLVER OF A SESSION FOR EVERY
+ * SESSION-STAMPED READ, and the history below is kept because it is the argument.
+ * Membership Architecture v2 §7, *"THE FOUNDER IS AN ADMINISTRATOR HERE TOO"* (BOB
+ * #15, 2026-09-18). `resolveSession(sess)` returns TWO things, kept apart:
+ *
+ *   viewer    WHAT THE SESSION MAY SEE — the D-15 viewer every visibility gate
+ *             compiles. The FOUNDER's is the bare `admin`, `viewerPredicate`'s
+ *             root-administrator spelling, so it sees every project and every
+ *             participant list (§7.3, §7.8); every other session is `member:<id>`,
+ *             exactly as before.
+ *   identity  WHO THE SESSION IS — `member:<id>`, the founder's being
+ *             `member:admin` — for authorship, ownership, votes and D-310's
+ *             positional facts. It is stamped beside the viewer as `identity`, and a
+ *             store site that asks WHO reads it and never the viewer.
+ *   member    the folded id (`admin` for the founder), the string every author, by,
+ *             actor and looker stamp in this file has always carried.
+ *
+ * THE WIDENING STOPS WHERE A RULING NAMES SOMEONE NARROWER THAN AN ADMINISTRATOR.
+ * A LEAD is readable by its author and by participants it was shared to, never by
+ * administrators (MEMBER-KNOWLEDGE-DESIGN.md §5), so the store's lead predicate
+ * (`#leadReach`) asks the identity: the founder sees its own leads by position and
+ * nobody else's. REC-132's IC-149 carries the per-site table of which arm governs.
+ *
+ * THE FOUNDER IS TOLD APART BY THE SESSION'S ROLE, never by the folded name, and the
+ * id `admin` is now RESERVED (`memberAdd`, C-55.1), so the two cannot collide going
+ * forward; an instance that already holds such a member is REPORTED by op=audit.
+ *
+ * REC-128 x REC-130 — THE ONE PLACE A SIGNED-IN SESSION BECOMES THE VIEWER AN
  * UNSIGNED CASE DOCUMENT ANSWERS TO. Both readers of one — `op=casedocument`
  * (through `caseReader` below) and `op=caseratify`'s facts read — call THIS,
  * so the two cannot disagree about who a session is.
@@ -2621,18 +2648,20 @@ function aiTaskScope(cred, op, spec) {
  * member ENROLLED with the id `admin` has role `member:admin` and stays an
  * ordinary member here.
  *
- * SCOPE, stated so it is not mistaken for a sweep: this is the viewer for the
- * two case-document reads REC-130 gated. Every other session-stamped read in
- * this file still spells `member:` plus `sessMember` — deliberately untouched
- * here, because several of them also ask POSITIONAL questions of that id
- * (D-310), and changing what the founder sees across the corpus is a contract
- * change of its own — rowed as D-422 (MEASURED: the founder session is not shown
- * a project it does not participate in by op=list either), with IC-147 carrying
- * only this half. */
-function sessionCaseViewer(role) {
-  const r = typeof role === "string" ? role : "";
-  if (r === "admin") return "admin";   /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */
-  return `member:${r.startsWith("member:") ? r.slice(7) : r}`;
+ * SCOPE, AS IT WAS (IC-147) AND AS IT IS (IC-149). IC-147 made this the viewer
+ * for the two case-document reads only, and said why the rest waited: several
+ * other session-stamped reads also ask POSITIONAL questions of the same id
+ * (D-310), which a bare `admin` viewer cannot answer. REC-132 closed D-422 by
+ * giving the resolver the SECOND half those questions need (`identity`), and every
+ * session-stamped read in this file now takes its viewer from here. */
+function resolveSession(sess) {
+  const r = sess && typeof sess.role === "string" ? sess.role : "";
+  const member = r.startsWith("member:") ? r.slice(7) : r;
+  return {
+    viewer: r === "admin" ? "admin" : `member:${member}`,   /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */
+    identity: `member:${member}`,
+    member,
+  };
 }
 
 async function caseReader(url, env, storeName) {
@@ -2657,7 +2686,7 @@ async function caseReader(url, env, storeName) {
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: sessionCaseViewer(sess.role) };
+    return { viewer: resolveSession(sess).viewer };
   }
   return { viewer: "" };
 }
@@ -4568,6 +4597,10 @@ export default {
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;
     let sessMember = null, sessRights = null, sessCaps = null;
+    /* REC-132: the two halves of `resolveSession`, set with `sessMember` and never
+       apart from it. `sessViewer` goes wherever a VISIBILITY gate is stamped;
+       `sessIdentity` wherever the question is WHO. */
+    let sessViewer = null, sessIdentity = null;
     let aiCred = null;
     /* PL-11 / IS-5 / D-199 (2) — THE `ai` CLASS RESOLVES AGAINST THE RECORD,
        AND THAT IS THE DETERMINATION RATHER THAN AN IMPLEMENTATION DETAIL.
@@ -4676,7 +4709,7 @@ export default {
             return json({ ok: false, reason: "MACHINE_CREDENTIAL_REQUIRED", ...admissionRow("MACHINE_CREDENTIAL_REQUIRED"),
               error: "this operation requires a machine credential, not a signed-in session", op }, 403);
           cls = kind;
-          sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
+          ({ member: sessMember, viewer: sessViewer, identity: sessIdentity } = resolveSession(sess));
           sessRights = sess;
           viaSession = true;
         }
@@ -4827,7 +4860,9 @@ export default {
       /* REC-25: the D-15 viewer stamp, server-side from the authenticated
          identity exactly as the passthrough reads take it below. An object the
          viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. */
-      const affViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const affViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
+      /* REC-132: D-310's owner fact is POSITIONAL, so it is asked of the identity. */
+      const affIdentity = viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`;
       /* REC-52: `(facts || { reason: "NO_FACTS" })` is site (b)'s shape with a
          different word — a store silence answering "there are no facts about
          that object", which is a claim about the object. What the acts on an
@@ -4835,7 +4870,8 @@ export default {
          of a failure to ask would put a wrong set of affordances in front of a
          member. The store's own NO_SUCH_BUNDLE, and its 404, are untouched. */
       const fOut = await doAnswer(st.fetch(
-        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`));
+        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`
+        + `&identity=${encodeURIComponent(affIdentity)}`));
       if (!fOut.answered) return storeSilent("affordances");
       const facts = fOut.result;
       if (!facts) return storeSilent("affordances");
@@ -4885,7 +4921,7 @@ export default {
     if (op === "queue") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const inner = new URL("http://do/queue");
-      inner.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.set("viewer", viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
       inner.searchParams.set("member", viaSession ? sessMember : "");
       for (const k of ["now", "limit"]) {
         const v = url.searchParams.get(k);
@@ -5273,7 +5309,7 @@ export default {
             detail: `no OCR member is bound to this instance (the OCR_WORKER service binding is absent), `
                   + `so there is no tier 3 to reach. Nothing was read, called or written. An instance `
                   + `that installs the member later can re-read this capture then (D-115, D-319).` }, 501);
-        reViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        reViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
         reAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
         const reStore = env.STORE.get(env.STORE.idFromName(storeName));
         const bOut = await doAnswer(reStore.fetch(
@@ -7481,7 +7517,7 @@ export default {
          also deliberately the answer a bundle the viewer may not SEE gets
          (REC-25's fail-closed read), which made the invented one especially
          convincing. The two are separated; the fail-closed meaning is intact. */
-      const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
+      const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
       if (!imgOut.answered) return storeSilent("monitor");
       const img = imgOut.result;
       if (!img || typeof img["bundle.md"] !== "string")
@@ -7671,7 +7707,7 @@ export default {
         `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
         + `&edition=${encodeURIComponent(String(body.edition))}`
         /* REC-130: the SAME standing `op=casedocument` answers to, resolved by
-           the SAME function (`sessionCaseViewer`). Only a HUMAN's own session
+           the SAME function (`resolveSession`). Only a HUMAN's own session
            reaches this line (the region above) — a member's, or the FOUNDER's,
            which BOB #14 ruled may deliver (D-421). A member without standing in
            the owning project is answered NO_CASE_DOCUMENT exactly as for a case
@@ -7679,7 +7715,7 @@ export default {
            sha. REC-128's merge CORRECTED this comment and the viewer: it said
            "only a member's own session" and stamped `member:` plus sessMember,
            and so answered the founder as a member named admin with no standing. */
-        + `&viewer=${encodeURIComponent(sessionCaseViewer(sessRights.role))}`));
+        + `&viewer=${encodeURIComponent(sessViewer)}`));
       /* REC-53's chokepoint, and the same judgement `op=ratify` records once for
          its whole block: BEFORE the commit a silence refuses the act outright,
          because nothing has been written and 502's sentence — nothing here is a
@@ -7926,7 +7962,7 @@ export default {
       /* REC-25: ratification reads at the RATIFIER'S scope — a bundle the
          caller may not see cannot be assembled for their signature, and the
          answer is the same ABSENT a hidden bundle would give anywhere else. */
-      const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
       /* REC-53: `runGate` does `Object.entries(image || {})`, so a silence here
          handed the gate an EMPTY BUNDLE and the ratification came back
          GATE_REFUSED with the catalog's findings about missing required files —
@@ -8643,6 +8679,10 @@ export default {
                       publish: "publishcase" };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
+    /* REC-132 / D-422: `identity` — WHO is asking, beside `viewer`'s what they may see —
+       is the SERVER's stamp and nothing else. Deleted for every op before anything is
+       stamped, so a caller naming a member here reads as nobody rather than as them. */
+    inner.searchParams.delete("identity");
     /* Who holds a lease is stamped by the server, never taken from the request,
        for BOTH a session and a machine credential — the same impostor rule
        `author`, `by` and `viewer` follow below. A session stamps the member; a
@@ -8695,6 +8735,10 @@ export default {
        would otherwise disclose that a document sits in a project the caller was
        never invited to, by telling them what produced its text. `attesttext`
        is NOT here: it is a WRITE and takes its own member route. */
+    /* REC-132 / D-422: the ops whose store method reads the POSITIONAL `identity` stamp
+       (`#positionalMember`). `affordances` and `queue` build their own inner requests
+       above and stamp it there. A new reader of `identity` joins this list. */
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "frontier"];
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
                                 "textprovenance", "textattest",
                                 /* CPDF-13: the drift obligation's rows NAME the bundle each
@@ -8895,7 +8939,21 @@ export default {
          is not defaulted here, because a viewer this function guessed would be a
          viewer the record cannot account for. */
       inner.searchParams.set("viewer",
-        viaSession ? `member:${sessMember}`
+        viaSession ? sessViewer
+        : cls === "ai" ? aiCred.principal
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+      /* REC-132 / D-422: THE POSITIONAL HALF, stamped beside the viewer for the ops whose
+         store method READS it. It differs from the viewer for exactly ONE principal — the
+         founder's session, whose viewer is the administrator's and whose identity is
+         `member:admin` — and the store reads it only where a ruling names a person: the
+         lead reads (`#leadReach`: author, or a participant it was shared to) and the
+         internet frontier built on them.
+         NAMED OPS, NOT EVERY OP IN THIS LIST, and that is measured rather than tidy: the
+         first build stamped it on every op here and `op=content` — a FIXED-KEY read that
+         refuses any parameter it does not name (D-222) — refused every call, which six
+         content suites caught. A param a route does not read is not free. */
+      if (IDENTITY_READS.includes(op)) inner.searchParams.set("identity",
+        viaSession ? sessIdentity
         : cls === "ai" ? aiCred.principal
         : `${MACHINE_CLASS_PREFIX}${cls}`);
     }
@@ -9123,7 +9181,7 @@ export default {
        is worth nothing if the caller names the credential. */
     if (op === "select" || op === "selection" || op === "selectionlist" ||
         op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
-      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.set("owner", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* Who cited is part of the record, and citing writes a Session Log entry
        carrying the name. Stamped like every other authorship in this file: a
        browser cannot write history as someone else, and a machine credential
@@ -9227,7 +9285,7 @@ export default {
        would silently widen or narrow one of the two. */
     if (op === "airunopen")
       inner.searchParams.set("principal",
-        viaSession ? `member:${sessMember}`
+        viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation

@@ -456,7 +456,9 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
      claims — affordanceFacts' own body — so the pin cannot pass on some other
      method's use of the predicate. */
   const factsRegion = (() => {
-    const s = storeSrc.indexOf("  affordanceFacts({ target, viewer = null } = {}) {");
+    /* CORRECTED 2026-09-18 by REC-132 (D-422, IC-149), never exempted: the method gained
+       `identity` — the POSITIONAL half of the one session resolver — so its signature moved. */
+    const s = storeSrc.indexOf("  affordanceFacts({ target, viewer = null, identity = null } = {}) {");
     return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
   })();
   t("the region under test EXISTS (an empty slice would pass everything below)",
@@ -489,10 +491,22 @@ console.log("\n--- D-310: the position gate is a FACT consumed, never a rule thi
      would fail in the direction that reopens the disagreement — a spelling the
      real parser recognises and the copy does not reads as "no member", the fact
      goes undetermined, and the act is offered again. */
+  /* CORRECTED 2026-09-18 by REC-132 (D-422, IC-149), never exempted, and the property is
+     UNCHANGED — one parser. What moved is WHICH string it parses: the owner fact is POSITIONAL, so
+     it is asked of the control plane's `identity` stamp (who the caller IS) rather than of the
+     viewer (what it may SEE), because the founder's viewer is the bare `admin` and carries no
+     member. The old pin read `gate.member` here; it now reads `#positionalMember(`, and the
+     helper is pinned below to take its member from `viewerPredicate` and nowhere else. */
+  const positional = (() => {
+    const s = storeSrc.indexOf("  #positionalMember(viewer, identity = null) {");
+    return s === -1 ? "" : storeSrc.slice(s, storeSrc.indexOf("\n  }\n", s));
+  })();
   t("the store does not parse the viewer a SECOND time: no `member:` prefix literal and no slice of "
-  + "one inside the facts region — the id comes from the gate the same call already compiled",
-    [/["']member:["']/.test(stripComments(factsRegion)), /gate\.member/.test(factsRegion)],
-    [false, true]);
+  + "one inside the facts region — the id comes from `#positionalMember`, whose ONLY parser is "
+  + "`viewerPredicate`",
+    [/["']member:["']/.test(stripComments(factsRegion)), /#positionalMember\(/.test(factsRegion),
+     positional.length > 50, /viewerPredicate\(/.test(positional), /["']member:["']|slice\(7\)/.test(stripComments(positional))],
+    [false, true, true, true, false]);
   t("and `viewerPredicate` answers the positional question only for an identified session: a machine "
   + "class credential and the operator-internal `admin` spelling both carry NO member",
     [viewerPredicate("member:ruth").member, viewerPredicate(`${MACHINE_CLASS_PREFIX}member`).member,

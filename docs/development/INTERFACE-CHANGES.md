@@ -10967,3 +10967,88 @@ revocation `credential`, draft and comment `undetermined`). NEGATIVE CONTROL: `n
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I5 1.21.0 → 1.22.0.** The base was read at resolution: 1.21.0, where IC-140 moved it after this row was proposed against 1.20.0. Three new tables before `host_governor`, all in `purge`; `review_grants` holds `secret_sha` only.
+
+## IC-149 · I3: ONE session resolver — the FOUNDER's session sees what an administrator sees (every project, every participant list) at every session-stamped read, EXCEPT where a ruling names authors or participants (the lead); positional facts answer by the founder's identity; `op=memberadd` REFUSES the id `admin` (C-55.1); `op=audit` gains `membership` · PROPOSED 2026-09-18 (REC-132, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (origin/main `c1ce709a` merged in): 29.4.0** (IC-145 landed while this was built; proposed against 29.3.0 first).
+  **Proposed MAJOR — 29.4.0 → 30.0.0.** Read the base AT RESOLUTION.
+- **Proposer:** RECORD, worker `agent-a0f6ffd4522bb36bd`, 2026-09-18, spawned by CONDUCT #5 for REC-132 (closes D-422).
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (NOT-AFFECTED as measured: `civicos-ui/app.html` names neither `memberadd` nor
+  `op=audit`; a founder's browser gains projects in `op=list`/`op=index`/search it did not list before, which a surface
+  renders as it renders any administrator's list), `DIST` (newgroup's embedded release carries the old plane until the
+  next cut — the normal lag), `SKILL`, `FRAMEWORK` (NOT-AFFECTED: no reader).
+- **Design:** `BIO_Membership_Architecture_v2.md` §7, *"THE FOUNDER IS AN ADMINISTRATOR HERE TOO"* (BOB #15); §7.3,
+  §7.8, §4.1; `MEMBER-KNOWLEDGE-DESIGN.md` §5 (a lead is never widened to an administrator); D-310 (positional facts).
+
+**THE SHAPE.** `sessionCaseViewer` (IC-147) became `resolveSession(sess)` in `src/index.mjs`, called at the only two
+places a session token is looked up (`caseReader`, and the admission block). It returns `viewer` (the founder's is the
+bare `admin`, `viewerPredicate`'s root-administrator spelling; every other session `member:<id>` as before), `identity`
+(`member:<id>`, the founder's being `member:admin`) and the folded `member`. Every visibility stamp takes `viewer`; the
+passthrough DELETES any caller-supplied `identity` for every op, then stamps it beside the viewer for the four ops whose
+store method reads it (`IDENTITY_READS`: `leadlook`, `leadread`, `leadshare`, `frontier` — NOT every op, because
+`op=content` is a fixed-key read that refuses any parameter it does not name, which six content suites caught); the store
+reads `identity` through one helper, `#positionalMember`, at exactly the three sites that ask WHO: `#leadReach` (lead
+reads and the internet frontier), `leadRead`'s share list, and `affordanceFacts`' D-310 `project_owner`
+(and so `op=queue`'s options, threaded through `#queueOptions`). Absent `identity`, the helper asks the viewer — so every
+machine credential, every `ai` key and every internal read is byte-unchanged.
+
+**THE PER-SITE TABLE — which arm governs, for the FOUNDER's session.** Every other principal is unchanged at every row.
+
+| Site (control plane) | What is stamped | Arm that governs the founder |
+|---|---|---|
+| `caseReader` → `op=casedocument`, and (merged from REC-126) `op=reviewcopy` / `op=reviewcomment`; `op=caseratify`'s facts read | `viewer` | administrator (IC-147, unchanged; `#hasCaseStanding` and the review grant are REC-126's and untouched) |
+| `op=affordances` | `viewer` + `identity` | target visibility: administrator. `project_owner` (D-310): IDENTITY |
+| `op=queue` | `viewer` + `member` | subjects and case names: administrator. Act options' owner fact: IDENTITY (`member:<member>`) |
+| `op=pdfstructure&ocr=1` basis read, `op=monitor` image read, `op=ratify` image + list reads | `viewer` | administrator (see-before-act; each act keeps its own fence — signature, capability) |
+| the passthrough viewer block: `list`, `index`, `projection`, `image`, `file`, `backlinks`, `excludedby`, `reevaluations`, `search`, `meaningrows`, `select`/`selection`, the edge/state/action/structure/version acts, queue acts, run reads, `frontier` (document/content/meaning), `contentaxis`, `versionchain`/`basisversions`/`versionstrength`, `biasmanifest`, `suggest`, `capturerequest(s)`, `proposedispose`, `contentmint`, `extractpropose(s)`, `narrow(candidates)`, the transcription ops, REC-30's reads (incl. `audit`, `strengthbarof`, `projectownerarith`) | `viewer` | administrator — exactly the arm an ENROLLED administrator already passed through `viewerPredicate`'s `members`-row disjunct |
+| `leadlook`, `leadread`, `leadshare`, `frontier&level=internet` | `viewer` + `identity` | the lead RULING (author, or a joined participant it was shared to), by IDENTITY. Never the administrator arm — for the founder or any enrolled administrator. A look's REFERENT is still checked against the viewer (administrator). |
+| `owner` (selections), `principal` (`airunopen`) | `identity` | POSITIONAL (unchanged value, `member:admin`) |
+| `author`, `by`, `actor`, `looker`, `sharer`, `attestor`, `transcriber`, `mintedBy`, `proposedBy`, `who`, `declaredBy`, `decidedBy`, `resolvedBy`, `threadedBy`, `actorMemberId`, `ownerMemberId`, `memberId`, `member`, lease `actor` | folded `member` (`admin`) | POSITIONAL (unchanged). The roster ops' `by` is read by the name-keyed `#isAdminMember`, which already counted the founder — safe now that the id is reserved |
+
+| Site (store, `viewerPredicate` callers) | Arm for the founder |
+|---|---|
+| `projection`, `searchIndexCheck`, `affordanceFacts` (visibility), `conclude`, `actionMove`, `actionCorrespond`, `reopen`, `publishCase` (visibility; publishing is owner-gated by `#isProjectOwner(proj, who)`), `#hasCaseStanding`, `divide`, `groundInquiry`, `strengthBarOf`, `#narrowSource`, `auditPass`, `provenanceChainRebuild`, `provenanceRouteAssess`, `provenanceRoutesMarked`, `listBundles`, `buildIndex`, `#viewerSees`, `#bundleGate`, `#bundleRedactor`, `backlinks`, `#queueAncestors`, `#queueCaseFor`, `proposeDispose`, `excludedBy`, `#moveVersionState` (×2), `suggestVersion` (×2), `captureRequest`, `#frontierDocumentVisible`, `query.mjs` `compile` | administrator (visibility) |
+| `#leadReach` | lead ruling, by `identity` |
+| `leadRead`'s `me` (which shares are listed) | `identity` |
+| `affordanceFacts`' `project_owner` | `identity` (D-310) |
+
+Measured with `grep -an 'viewerPredicate('` over `src/store.mjs` (39,366 lines; 34 code call sites after this change — 35 before, of which `#leadReach` and `leadRead` now ask via `#positionalMember` — each mapped to its
+enclosing method by a script) and `grep -an 'sessMember\|viewer'` over `src/index.mjs`. **What the matcher cannot see:**
+a positional question asked of a viewer string WITHOUT going through `viewerPredicate` (none found by
+`grep -an '=== viewer\|viewer ===\|viewer\.startsWith'`, zero hits), and any module other than `store.mjs`,
+`query.mjs` and `index.mjs`.
+
+**THE RESERVED ID.** `memberAdd` refuses `memberId === "admin"` BY NAME before the EXISTS test and before any write —
+`MEMBER_ID_RESERVED`, C-55.1, family `MEMBER_ID_CHECKS` (C-55 minted with `tools/mintid.mjs`), in DEC-49 region
+`is-member-id-reserved`. Exactly the id: `administrator` is admitted (driven). `op=audit` gains an ALWAYS-PRESENT
+`membership: { reservedId, held, role, status, check, says }`; a held reserved id is REPORTED and never renamed, and it
+does not move `ok`, `tally` or `withErrors` (driven over a store written by a build without the reservation, persisted,
+then read by this one).
+
+**WHY MAJOR** (IC-25's test, read strictly): `op=memberadd` with the id `admin` ANSWERED `ok:true` before and is
+REFUSED now. No consumer sends it (measured: no surface, installer path or skill names `memberadd` with that id), and the
+refused input is the one D-422 names as a defect — but IC-137 set the precedent that refusing a previously-accepted
+input is MAJOR whatever its merit. The founder's widened sight is ADDITIVE for that principal (more rows, nothing
+refused), and `membership` on `op=audit` is an added field. **What a looser reading would rule MINOR, stated so it is not
+re-litigated from silence:** if CONDUCT reads IC-25 as protecting only inputs a legitimate caller could have meant, the
+reservation refuses no legitimate caller and the whole IC is MINOR (29.4.0 → 29.5.0).
+
+**NOT CHANGED, and measured:** the ADMIN token's answers are BYTE-IDENTICAL before and after over thirteen reads
+(`list`, `index`, `image`, `affordances`, `queue`, `projectparticipants`, `memberlist`, `frontier` internet and document,
+`leadread`, `search`, `backlinks`, an empty `memberadd`) — `node test/founder-sight.control.mjs admin-bytes`, base
+`a6bdfcbb`, 0 differ; re-run after merging `c1ce709a` against that base, 0 differ. `op=audit` is excluded from that comparison because it gains `membership` for every caller.
+
+**Suites:** new `bio-plane/test/founder-sight.test.mjs` (41 assertions) and its driver `founder-sight.control.mjs`
+(ten arms, all AS DECLARED, two after a recorded correction of the DECLARATION). `deliverer.control.mjs`'s arms (e) and (f)
+RE-POINTED at `resolveSession`'s visibility line and re-run at their recorded figures.
+
+**A DECISION THIS RAISES (for BOB, running provisionally):** the administrator arm is also the see-before-write gate of
+several ACTS (the edge/state/action acts read their target behind `viewerPredicate`). §7 says administrators *see
+everything and direct nothing*, but where an act's ONLY fence on a project target is that visibility gate, an enrolled
+administrator could already act there, and the founder now can too. Running: parity with an enrolled administrator.
+Alternative: stamp the positional viewer on mutating ops for the founder (one line per stamp site), which would make the
+founder narrower than every enrolled administrator. Recommendation: parity here, and a separate item to give the acts a
+positional fence for EVERY administrator if §7's "direct nothing" is meant to be enforced. Reversing costs a line per site.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 30.0.0 → 31.0.0.** The base was read at resolution: 30.0.0, where IC-148 moved it after this row was proposed against 29.4.0. `op=memberadd` with the id `admin` used to succeed and is now refused (`MEMBER_ID_RESERVED`, C-55.1), which IC-137 settles as breaking whatever the measured impact (no consumer sends that id). The founder's session gains an administrator's SIGHT through ONE resolver, and the POSITIONAL identity is kept apart for leads, the D-310 owner fact and every authorship stamp. `op=audit` always carries a `membership` block. **Carried as its own item:** *administrators direct nothing* is Bob's doctrine (Membership v2 §4), and the acts whose only barrier is the visibility gate are REC-134, ahead of features. DIST: batches (the `admin`-id hazard needs an administrator's own enrolment).

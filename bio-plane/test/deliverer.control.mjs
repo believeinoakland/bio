@@ -66,8 +66,11 @@ const L = {
   veraRead: "STANDING, a member of NO project (vera) is answered",
   veraDeliver: "STANDING, a member of NO project cannot deliver",
 };
-/* The founder's resolution in `sessionCaseViewer`, exactly as it stands. */
-const FOUNDER_LINE = '  if (r === "admin") return "admin";   /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */';
+/* The founder's resolution, exactly as it stands. RE-POINTED 2026-09-18 by REC-132: `sessionCaseViewer`
+   became `resolveSession` (the ONE resolver of a session, D-422/IC-149), whose VISIBILITY half is this one
+   line. Both arms below arm the same variable they armed before — the founder's viewer, then every
+   session's — at its new spelling; the old anchor no longer exists and an arm on it would not arm. */
+const VIEWER_LINE = '    viewer: r === "admin" ? "admin" : `member:${member}`,   /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */';
 
 const ARMS = {
   baseline: { edits: [], mustFail: [] },
@@ -109,7 +112,7 @@ const ARMS = {
      STANDING arms STAY GREEN — she never had standing — and so do the loose
      founder delivery (op=ratify asks no case standing) and gus's. */
   "founder-standing": {
-    edits: [["index", FOUNDER_LINE, "  /* ARMED: founder resolution removed */"]],
+    edits: [["index", VIEWER_LINE, "    viewer: `member:${member}`, /* ARMED: founder resolution removed */"]],
     mustFail: [L.founderRead, L.caseAnswer, L.caseDoc, L.pubcase, L.container, L.containerDone, L.containerWords],
   },
   /* THE OVER-BROAD FIX, the failure in the other direction: every session is
@@ -128,7 +131,7 @@ const ARMS = {
      and writes nothing, and the answer's `deliveredBy` names who delivered THIS
      request (its comment at op=caseratify's answer) while the RECORD names vera. */
   "everyone-admin": {
-    edits: [["index", "  return `member:${r.startsWith(\"member:\") ? r.slice(7) : r}`;", "  return \"admin\"; /* ARMED */"]],
+    edits: [["index", VIEWER_LINE, "    viewer: \"admin\", /* ARMED */"]],
     mustFail: [L.veraRead, L.veraDeliver, L.caseDoc, L.pubcase, L.container],
   },
 };

@@ -243,7 +243,7 @@ arm("(8) THE COMPLETION NOTIFICATION. §4 requires the run waiting on a capture 
   + "notification is the EXISTING catalogued kind with a different subscriber rather than an invented "
   + "channel. Unregister the producer and a completed capture is silent: the run waits on something "
   + "that already happened, which is the failure mode a notification exists to prevent.",
-  [["store", `      ...this.#conditionsCaptureRequested(viewer, now),\n`, ``]],
+  [["store", `      ...this.#conditionsCaptureRequested(viewer, now, identity),\n`, ``]] /* RE-ANCHORED 2026-09-18 by REC-132: the generators gained `identity` */,
   ["a completed request surfaces as an item on the EXISTING catalogued kind"],
   ["a request that can name only ONE principal is refused at the drain BY NAME"]);
 

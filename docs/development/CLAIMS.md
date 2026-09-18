@@ -13980,3 +13980,44 @@ admin class only under a server-set `capacity` stamp; the wire's log count renam
 key on the wire, purge's proof unchanged. `nc-rec129.mjs`: 19 arms, 0 findings. **FOR CONDUCT:** RESOLVE IC-148 against I3
 as read at resolution; operator measurement scripts (`scaling.mjs`, `retrieval-scale.mjs`) now need the ADMIN token to read
 `dbBytes`.
+
+## CLAIM 2026-09-18 RECORD (REC-132 — D-422: ONE session resolver; the founder sees as an administrator except where a ruling names authors or participants; the member id `admin` reserved)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a0f6ffd4522bb36bd`, branch
+`worktree-agent-a0f6ffd4522bb36bd`, base `a6bdfcbb`. `npm ci` in all three packages, each `node_modules` a real
+directory (9.0 GiB free). Design: Membership v2 §7 *"THE FOUNDER IS AN ADMINISTRATOR HERE TOO"*. Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (`sessionCaseViewer` becomes the one session resolver; the session-stamped
+  viewer stamps at `affordances`, `queue`, the `pdfstructure` re-read, `monitor`, `ratify`, `caseratify` and the
+  passthrough viewer block — the viewer stamp ONLY in any handler REC-131 owns); `bio-plane/src/store.mjs`
+  (`affordanceFacts`, `#queueOptions`, the lead reads `#leadFor`/`leadLook`/`leadShare`/`leadRead`, `frontier`'s internet
+  level, `memberAdd`, `auditPass`, and their DO routes); `bio-plane/checks/bio-checks.mjs` (a new refusal family,
+  C-55, minted with `tools/mintid.mjs`).
+- Tests: a new `bio-plane/test/founder-sight.test.mjs` and its control driver; any suite asserting the founder's old
+  narrower sight — CORRECTED with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` and
+  `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-149), `DEBT.md` (D-422's disposition), `BIO_Membership_Architecture_v2.md` front
+  matter and §7's block, `docs/architecture/construct-status.json` if a claim moves, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `op=stats`/`op=selftest`/`op=livefire` beyond a viewer stamp (REC-131's), NOT
+`#hasCaseStanding` (REC-126's), NOT `civicos-ui/` beyond the one floor, NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-132) — RELEASED
+
+released: 2026-09-18 by the REC-132 worker, branch `worktree-agent-a0f6ffd4522bb36bd`, base `a6bdfcbb`, merged with
+origin/main `c1ce709a` (REC-126) before close-out. Baseline at `44074ac7` (pristine but for this claim): **242/243 suites
+green · 14846 assertions** — the one red, `strandedwork.test.mjs`'s `plancheck --local exits 0`, was this worker's own
+unpushed, un-indexed claim commit, and was green once `DECIDED.md` was regenerated and the claim pushed (a first baseline
+was discarded: another session in the same parent wrote to the same scratchpad log path). After, at `fc08c60a`:
+**245/245 suites green · 14950 assertions passing**, no skip; `node scripts/coverage.mjs --strict` exit **0** unpiped,
+REGISTER_FLOOR 1370 -> 1380 / 235 -> 236 / 236 -> 237 / run 198 -> 199 from its print; `node civicos-ui/test/run.mjs`
+exit **0**; `status --check` 0 drift; `corpuscheck` 0 fail. NEGATIVE CONTROL `node test/founder-sight.control.mjs`:
+ten arms AS DECLARED (two after a recorded correction of the DECLARATION), admin-bytes 0 differ. Paths as claimed, plus
+the superseded pins CORRECTED with dated reasons (`affordances.test.mjs`, `current.test.mjs`) and control anchors
+re-pointed (`deliverer.control.mjs`, `d266.control.mjs`, `capturerequests.control.mjs`, `nc-rec129.mjs`), and the
+`9.internet` probe in `construct-status.json` (claim unchanged). IDs minted with `tools/mintid.mjs`: IC-149, C-55.
+**FOR CONDUCT:** (1) RESOLVE IC-149 against I3 as read at resolution (proposed MAJOR on 29.4.0; the MINOR reading is
+argued in the IC). (2) Flip REC-132 and close D-422 at integration. (3) Carry IC-149's DECISION to BOB: whether §7's
+"administrators direct nothing" should be enforced on acts whose only fence on a project target is the visibility gate
+(it is not, for enrolled administrators or now the founder).
