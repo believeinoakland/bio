@@ -13291,6 +13291,7 @@ and a baseline, ALL AS DECLARED, every restore byte-identical (`src/pdfstructure
 The table probe: `node test/table-recognition.probe.mjs --runs 5` from `pdf-worker/` — **NO-GO** (M-55). IDs minted
 with `tools/mintid.mjs`: M-55, D-419, D-420. `bio-plane/src/index.mjs` was NOT edited, so nothing here needs
 sequencing against CPDF-19's moved tier-3 code.
+
 ## CLAIM 2026-09-18 RECORD (REC-100 — the ROLLUP referent BUILT: D-366's ruling, C-22.10's `run` carve-out deleted)
 
 Worker `agent-a249f66820def3efd`, spawned by CONDUCT #4, branch `worktree-agent-a249f66820def3efd`.
@@ -13401,3 +13402,47 @@ unpiped; `node civicos-ui/test/run.mjs` exit 0; `node tools/status.mjs --check` 
 `node test/machine-attest.control.mjs` from `bio-plane/`: baseline 35/0 · ratify 32/3 · caseratify 32/3 ·
 overstrict 33/2, all as declared, every restore byte-identical. Minted: IC-132, D-421 (a DECISION FOR
 BOB — the operator's env-binding tokens still ratify with a member's signature; provisional: not refused).
+## CLAIM 2026-09-18 RECORD (REC-121 — `content:chain=undetermined` stops matching an image cited as its own bytes)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-a835fde7253b57127`, branch
+`worktree-agent-a835fde7253b57127`, base `e09f5be0`. Baseline on this tree before any edit, after `npm ci` in
+all three packages (each `node_modules` a real directory, 5.7 GiB free): **232/232 suites green · 14392
+assertions passing**, no skip. Paths:
+
+- RECORD (own): `bio-plane/src/query.mjs` (the `content:` arm's `chain` sub-field and `rows=content`'s
+  `chain_last` only).
+- Tests: a new `bio-plane/test/rec121-chain-bytes.test.mjs` and `bio-plane/test/nc-rec121.mjs`.
+- Generated: `bio-plane/dist/*` rebuilt.
+- Docs: `INTERFACE-CHANGES.md` (IC-131, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md`
+  (§4.2 and front matter), `docs/DECIDED.md` on regeneration, this block.
+
+NOT `bio-plane/src/store.mjs`, `schema.mjs` or `checks/bio-checks.mjs` (the column and the write path are
+FW-19's and correct), NOT `QUEUE.md` (CONDUCT's), NOT `content-arm.test.mjs` §11 (the over-strictness pin
+is read, never edited).
+
+**AMENDED during the item:** `bio-plane/src/store.mjs` — ONE line added to `searchFields()`'s published
+`syntax` stating the third chain answer (the block above said NOT `store.mjs`; the published grammar is
+where a member learns where an image went, so the claim was one path short). Also
+`bio-plane/test/content-chain-kind.test.mjs` (two pins CORRECTED with the reason at the site),
+`bio-plane/test/nc-rec104.mjs` (the `parseback` arm RE-ANCHORED — its anchor matched zero times after
+`chain_last` became a CASE), and `.gitignore` (the harness's pristine directory).
+
+## CLAIM 2026-09-18 RECORD (REC-121) — RELEASED
+
+released: 2026-09-18 by the REC-121 worker, branch `worktree-agent-a835fde7253b57127`. Baseline before the first
+edit: 232/232 · 14392. PREMISE FALSIFIED BEFORE BUILDING, through `op=search` and `op=meaningrows` on the unedited
+tree: `content:chain=undetermined` named the image-only document, the mixed document and the text document — both
+bytes rows counted as undetermined. One suite added (`rec121-chain-bytes.test.mjs`, 21 assertions); the
+full-battery figure on the FINAL commit is in the worker's report to CONDUCT, because this line is part of that
+commit (the pre-release run read 232/233 · 14415, the one red being `strandedwork`'s `plancheck --local exits 0`
+arm on a `docs/DECIDED.md` this block's own edits had made stale — regenerated). `node scripts/coverage.mjs
+--strict` exit **0** unpiped (no op, no table); `node tools/status.mjs --check` 0 drift; `node
+civicos-ui/test/run.mjs` exit **0**. NEGATIVE CONTROL `node test/nc-rec121.mjs` from `bio-plane/`: five arms and
+a baseline run twice, ALL AS DECLARED, every restore byte-identical (`src/query.mjs` 157,943 B, sha256
+`b813a8163746…`), content-arm's §11 digest `c39f4e8adf1960c2…` over 40 questions IDENTICAL under `preitem`. IDs
+minted with `tools/mintid.mjs`: IC-131. **FOR CONDUCT:** (1) RESOLVE IC-131 against I3 as read at resolution
+(built on 23.6.0, rebased onto `0719e82f` where I3 reads 24.0.0 — see IC-131's base note). The rebase
+conflicted on this file and `INTERFACE-CHANGES.md` (both sides appended) and the markers were first COMMITTED
+unresolved on the local branch — caught by `plancheck --local` before any push, resolved KEEP-BOTH. (2) Row the sibling defect this item measured and did not close: `content:cap=undetermined`
+matches an image cited as bytes, and `rows=content`'s `derivation_cap` shows its NULL unlabelled (measured in
+`rec121-chain-bytes.test.mjs` §4, whose assertion is the one that item must correct).
