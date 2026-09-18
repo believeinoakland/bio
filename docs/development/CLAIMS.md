@@ -13042,3 +13042,18 @@ filter parses `json_extract(chain, '$[#-1].step')` at read time while §4.1 give
 before building. `QUEUE.md` (CONDUCT's), `civicos-ui/**`, `tools/**`, `newgroup/**`.
 
 **open as of 2026-09-18** — the worker is building.
+
+**AMENDED 2026-09-18 (same worker, REC-104):** `bio-plane/src/schema.mjs` is widened by THREE COMMENT
+LINES outside the content block — lines citing REC-90's measurement as `M-21`, which was renumbered to
+`M-23` at integration (M-21 is D-367's diff). Same class as the one inside the claimed block; comment-only,
+no executable byte. Two more sites in files this item does not own still say `M-21` for REC-90's measurement
+and are REPORTED, not edited: `bio-plane/test/passage-axis-probe.mjs` and `bio-plane/test/airuns.test.mjs`.
+`bio-plane/test/nc-rec90.mjs` is also touched: its `pred` arm's declaration named `content:layer`, which this
+item moves onto the ordinary path, so that arm could no longer fail it — corrected, not exempted.
+`bio-plane/test/content-chain-kind.test.mjs` is the new suite (the claim above named only the harness).
+
+**released: 2026-09-18 by the REC-104 worker** — landed on branch `worktree-agent-a697a8fb2a50b3f2f`
+for CONDUCT to integrate. For CONDUCT: flip the REC-104 row; move `REGISTER_FLOOR` in
+`bio-plane/scripts/coverage.mjs` from the MERGED run's own print if it chooses to (this branch printed
+arms 1216/1194 · classified 215/212 · corpus 216/213 and did NOT move it); the stale `M-21` references in
+`passage-axis-probe.mjs` and `airuns.test.mjs` belong to their owners.

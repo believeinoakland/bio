@@ -1343,7 +1343,7 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis(grade_sou
 -- REC-90 -- THE content:cited PREDICATE'S OWN INDEX, AND THIS ONE IS NOT A TUNING
 -- CHOICE. content:cited and content:uncited ask whether ANY leg rests on a content
 -- row, which is an EXISTS over this column for every candidate row -- O(content
--- rows x legs) without it. MEASURED 2026-09-15 (M-21, test/content-index-probe.mjs)
+-- rows x legs) without it. MEASURED 2026-09-15 (M-23, test/content-index-probe.mjs)
 -- at 20,000 bundles / 40,002 content rows / 31,200 legs, 9 reps:
 --   content:uncited  31,614.512 ms -> 9.028 ms  (-100.0%)
 --   content:cited    27,292.571 ms -> 11.881 ms (-100.0%)
@@ -2992,7 +2992,8 @@ CREATE INDEX IF NOT EXISTS content_bundle ON content(bundle_id);
 --
 -- MEASURED 2026-09-15 (test/content-index-probe.mjs, node:sqlite, the statements
 -- DRIVEN out of compile() and every OTHER index DRIVEN out of schema.mjs AND
--- store.mjs rather than typed). MEASUREMENTS.md M-21 carries both corpus sizes,
+-- store.mjs rather than typed). MEASUREMENTS.md M-23 (filed as M-21, renumbered
+-- at integration -- corrected here by REC-104) carries both corpus sizes,
 -- the instrument, the synthetic proportions and what the instrument cannot see.
 -- At 20,000 bundles / 40,002 content rows, 9 reps:
 --   content:pdf-page          4.007 ms -> 2.062 ms  (-48.5%)
@@ -3222,7 +3223,7 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- It holds the LAST step kind of the chain that produced this unit (layer, ocr,
 -- member). Section 4.2 asks the identical question of the content table, whose
 -- chain column holds the WHOLE chain as JSON, and that filter measured as the
--- slowest on the table at M-21 -- so the column here is the same question
+-- slowest on the table at M-23 -- so the column here is the same question
 -- answered the cheap way, and the difference is stated in SEARCH's own
 -- Incomplete list rather than left for a reader to notice.
 --
@@ -3273,7 +3274,7 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- made this whole table worth measuring.
 -- THE HONEST MOVE IS TO LET THE READER BRING IT. The alternative was to raise
 -- that sweep's CEILING by one on a promise, and a ceiling raised for a reader
--- that might arrive is a ceiling that stops meaning anything. M-21's 31.6
+-- that might arrive is a ceiling that stops meaning anything. M-23's 31.6
 -- SECONDS against 9 ms is a real measurement of a DIFFERENT table's column under
 -- a query that exists; quoting it for a query nobody has written would be
 -- borrowing evidence rather than having it. REC-92 adds the index with its own
