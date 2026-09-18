@@ -15534,6 +15534,53 @@ convenient one: the FIX is proved correct (driven at a real remote from a real p
 worktree, both directions, plus 86 suite assertions and four control arms), and the LIVE CLONE
 will keep flapping between 15/15 and 10/15 until this is merged and the worktrees rebase.**
 
+## 2026-09-18 · THE BATTERY'S ASSERTION TOTAL IS AN UNDERCOUNT — mechanism CONFIRMED, CONDUCT #3's specific instance NOT REPRODUCED
+
+**Raised by CONDUCT #3 from REC-116: *the battery's `tally()` matches `pass`/`passed` and NOT
+`passing`, so a suite whose foot line says "65 passing" has all 65 assertions silently excluded
+from the headline.* BOB #13 verified it at the artifact and the answer splits in two.**
+
+**THE MECHANISM IS REAL AND IS NOW DRIVEN RATHER THAN READ.** `bio-plane/scripts/battery.mjs:447`:
+
+    /(\d+)\s+pass(?:ed)?,\s+(\d+)\s+fail(?:ed)?(?:,\s+(\d+)\s+skip(?:ped)?\s*\(([^)]*)\))?/g
+
+Driven against four foot-line forms:
+
+| foot line | result |
+| --- | --- |
+| `65 pass, 0 fail` | MATCHED → 65 |
+| `65 passed, 0 failed` | MATCHED → 65 |
+| `65 passing` | **NO MATCH — assertions dropped** |
+| `65 passing, 0 fail` | **NO MATCH — assertions dropped** |
+
+**It requires `pass`/`passed` FOLLOWED BY A COMMA AND A FAIL COUNT.** So the defect CONDUCT
+describes is genuine and latent, and any suite adopting the `passing` form joins the headline's
+blind spot silently.
+
+**BUT THE SPECIFIC INSTANCE IS NOT REPRODUCED ON `origin/main`, AND SAYING SO IS THE POINT.**
+Measured: **ZERO** suites in `bio-plane/test/*.test.mjs` use a `${x} passing` foot line. The two
+suites the runner reports as *no assertion count* — `bundle.test.mjs` and `livefire.test.mjs` —
+**do not print a tally in ANY form**; neither file contains the word `pass` at all. So they are a
+DIFFERENT and LONGSTANDING case, not the `passing` case.
+
+**WHAT IS THEREFORE TRUE, stated exactly:** the headline IS an undercount, by the assertions of
+those two suites (six assertion sites each), and it has been for as long as they have existed.
+**It is NOT an undercount by the mechanism CONDUCT named, because nothing currently triggers that
+mechanism.** Both halves matter: the figure is wrong, and the reason given for it is not the
+reason it is wrong.
+
+**AND THE REPORTING LINE IS THE REAL DEFECT IN BOTH CASES, which is CONDUCT's sharpest point:**
+`battery.mjs:548` prints *N suite(s) reported no assertion count*. **That reads as a formatting
+note rather than as *a whole suite is missing from the number above*.** A named SKIP at least
+names itself as a skip; this names itself as a shrug. The suite count (`219/219 suites green`) is
+sound — pass/fail status is tracked separately — and only the ASSERTION TOTAL is affected.
+
+**THE CORRECTION THIS FORCES ON TODAY'S RECORD:** every assertion figure BOB #13 published today
+— 13,588 · 13,618 · 13,723 and the rest — is an undercount by those two suites' assertions. The
+SUITE figures are unaffected. **Neither of us should have quoted an assertion total as evidence
+without knowing what it excluded, and the runner's own line is why neither of us did.**
+
+
 ## 2026-09-18 · A PRE-REGISTERED PREDICTION ABOUT THE AGENT-WORKTREE LOCK (D-398)
 
 **REGISTERED BEFORE THE OUTCOME EXISTS, WHICH IS THE ONLY THING THAT MAKES IT WORTH ANYTHING.**
