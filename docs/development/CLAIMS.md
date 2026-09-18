@@ -14021,3 +14021,22 @@ re-pointed (`deliverer.control.mjs`, `d266.control.mjs`, `capturerequests.contro
 argued in the IC). (2) Flip REC-132 and close D-422 at integration. (3) Carry IC-149's DECISION to BOB: whether §7's
 "administrators direct nothing" should be enforced on acts whose only fence on a project target is the visibility gate
 (it is not, for enrolled administrators or now the founder).
+
+## CLAIM 2026-09-18 RECORD (REC-134 — *administrators direct nothing*, enforced: every act that changes a project carries a POSITIONAL check, never the visibility gate alone; §7.13 the one administrator path)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a78e80263e9738d43`, branch `worktree-agent-a78e80263e9738d43`,
+base `12349df0`. `npm ci` in all three packages, each `node_modules` a real directory (5.7 GiB free). Design: Membership
+v2 §7 *"SIGHT IS NOT AUTHORITY"*, §4.9, §7.5, §7.13. IDs minted with `tools/mintid.mjs`: IC-152, C-56. Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (the positional `identity` stamp on the enumerated acts; the `promote` body
+  stamp); `bio-plane/src/store.mjs` (one positional helper and its callers: `promote`'s project-revision arm, `cite`'s
+  project arm, `#edgeTransition`, `#moveVersionState`'s `current` arm, `proposeDispose`'s project arm, `biasAdopt`'s
+  project scope, and `affordanceFacts`' positional fact); `bio-plane/src/affordances.mjs` (the project arm of
+  `cite`/`sever`/`reinstate`); `bio-plane/checks/bio-checks.mjs` (refusal family C-56).
+- Tests: a new `bio-plane/test/project-authority.test.mjs` and its control driver; any suite relying on an administrator
+  (or any non-participant) acting on a project it is not in — CORRECTED at its site with a dated reason, never exempted.
+  `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-152), `BIO_Membership_Architecture_v2.md` front matter and §7's block, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT the review-copy acts (REC-133's), NOT `op=conclude` (REC-124's), NOT `newgroup/`.
