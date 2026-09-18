@@ -10880,3 +10880,69 @@ revocation `credential`, draft and comment `undetermined`). NEGATIVE CONTROL: `n
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I5 1.21.0 → 1.22.0.** The base was read at resolution: 1.21.0, where IC-140 moved it after this row was proposed against 1.20.0. Three new tables before `host_governor`, all in `purge`; `review_grants` holds `secret_sha` only.
+
+## IC-150 · I3: a CONCLUSION belongs to a PROJECT's relationship with the inquiry — `op=conclude` takes `project=` (adopting the claim of the reading that project stands on, NO_CLAIM refused) and `commentary=`; `op=basisversions` answers `conclusion` beside `current` and the inquiry's own `no_project_conclusion` with its claim UNDETERMINED; a FINDING `shared-inquiry-concluded-by-another-project` · PROPOSED 2026-09-18 (REC-124, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 29.4.0. Proposed as MINOR, ADDITIVE — 29.4.0 → 29.5.0.** Read the base AT
+  RESOLUTION (REC-131 may land an I3 MAJOR first). **Why MINOR:** IC-25's test is whether anything that answered
+  before is refused or changes meaning now. Every call that could be made before this lands — `op=conclude`
+  with `target`, `conclusion`, `falsifier`, `no_falsifier` — is judged, written and answered exactly as before
+  (the inquiry's own bytes are byte-identical to what the old act wrote; `conclude.test.mjs` is unedited and
+  green). The new refusals are reachable only through the two NEW parameters: `NO_CLAIM` (C-33.34) with
+  `project=` or with `commentary=` and no project, `CONCLUSION_IS_THE_CLAIM` (C-33.35) with `project=` and a
+  `conclusion=`. `op=basisversions` gains keys and loses none. **What a stricter reading would rule MAJOR, stated
+  so it is not re-litigated from silence:** State Rules §4 as amended by §7.1 changes what an inquiry's own
+  `current_state: concluded` MEANS — it is now the NO-PROJECT relationship's conclusion, and a project's
+  conclusion is not visible there. A consumer that reads the inquiry's own state as "this question is
+  concluded for everyone" is not refused anything, but after a project concludes it would read `open` over a
+  question a team has concluded. No consumer in this repository does that for a project conclusion today,
+  because none can exist before this lands (grepped below).
+- **Proposer:** RECORD, REC-124 worker `agent-a16f5d75eb9d8097c`, 2026-09-18 — building
+  `INVESTIGATIVE-SESSION.md` §7.1 (BOB #15, at Bob's direction).
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` — NOT BROKEN, measured: `civicos-ui/app.html`'s conclude flow
+  (`concludeParams`) sends `target`, `conclusion`, `falsifier`, `no_falsifier` and no `project`, so it reaches
+  the unchanged no-project act; its pre-flight withholds `target` and is judged before any new check;
+  `node civicos-ui/test/run.mjs` exits 0 on this tree. The surface OWES the project-scoped act and the reads —
+  DELEGATION in `CLAIMS.md`. The new FINDING kind renders through the generic queue renderer
+  (`notifications.test.mjs` §1 forbids a per-kind wording table). `DIST`, `SKILL`, `agent-worker`,
+  `newgroup` — NOT-AFFECTED, grepped: none calls `op=conclude` or reads `op=basisversions`' conclusion keys.
+
+**THE SHAPE.**
+- `op=conclude&project=<PROJ>` (optional; absent means the no-project relationship). With a project: the
+  machine fence first (unchanged); `conclusion=` refused `CONCLUSION_IS_THE_CLAIM`; the falsifier rules
+  unchanged (`NO_FALSIFIER`, `no_falsifier=1`, `FALSIFIER_AND_NONE_STATED`); the project must be readable and
+  a project (`NOT_A_PROJECT`); then, inside `DEC-49 REGION is-conclude-claim`, `NO_CLAIM` for a project that
+  does not draw on the question (the `versionAct` predicate, severed excluded), one that stands on no reading
+  (PL-2's `#currentVersionOf`), or one whose reading is not carried, not accepted, or states no claim; then
+  `NO_BASIS` over the ADOPTED reading's legs. The inquiry may be `open`/`surfaced` OR already `concluded`
+  (that state is another relationship's); deferred, dismissed, divided and legacy focus/problem are refused
+  `ILLEGAL_TRANSITION` as before. **It writes ONLY the project:** one `conclusions[]` row in the project's own
+  frontmatter — `inquiry`, `version`, `claim` (frozen verbatim), `falsifier`, `falsifier_override_by/_at`
+  when the override was taken, `commentary` when given, `at`, `by` — re-written in place by a re-conclude, plus
+  a `Concluded` Session Log entry. The inquiry's bytes and state do not move. Answer: `relationship: "project"`,
+  `inquiry_moved: false`, `inquiry_state`, `version`, `claim: {state: "adopted", text, version}`,
+  `commentary: {text, by, at, evidence: false} | null`, `prior` (the row it replaced, or null).
+- `op=conclude` without a project: unchanged, and its answer gains `relationship: "no_project"`,
+  `project: null` and `claim: {state: "undetermined", text: null, version: null, detail}`.
+  `commentary=` without a project is refused `NO_CLAIM` (there is no adopted claim to comment beyond).
+- `op=basisversions&project=<PROJ>` gains `conclusion` (that project's row, through the ONE reader, or null)
+  beside `current`; EVERY answer gains `no_project_conclusion` — the inquiry's own conclusion when its state is
+  `concluded`, with `relationship_established: false` and its claim undetermined (§7.1 item 5), else null.
+- `op=queue` may carry `shared-inquiry-concluded-by-another-project` (FINDING, `queuestate.mjs`), one item per
+  (shared inquiry, concluding project), filed under the OTHER projects drawing on it with the concluding one
+  declared in `case.excluded`; derived on read, no table.
+
+**NOT IN THIS IC — §7.1 item 4 is NOT BUILT.** `op=publish`'s `NOT_CONCLUDED`, `op=reopen` and a leg resting on
+an inquiry still read the INQUIRY's own state, so a project's conclusion cannot yet enter a case. That is the
+case-bytes change (I5 if the case records the adoption) and is routed in REC-124's report as its own row.
+**No I5 IC:** no table or column moves and no case byte carries the adoption.
+
+**Suites:** `bio-plane/test/conclude-project.test.mjs` (new, 43/0; its liar is the shared state echoed per
+project, so the two projects adopt DIFFERENT claims). Negative control: `node test/conclude-project.control.mjs`
+from `bio-plane/` — baseline 43/0, (a) per-project collapsed to one shared state 35/8, (b) NO_CLAIM removed 40/3,
+(c) legacy claim back-filled 41/2, (d) over-strictness 42/1; every restore sha256 MATCH. Corrected at the site:
+`machinefences-dec49.test.mjs` (three new C-33 pins; corpus 49 -> 52 from its print).
+
+**RESPONSES:** not yet collected.

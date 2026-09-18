@@ -378,5 +378,7 @@ console.log("\n--- 3. a legacy (no-project) conclusion reads claim-UNDETERMINED,
     [true, LEGACY_TEXT]);
 }
 
+/* hygiene.test.mjs's rule: every Miniflare instance is disposed, so the process ends on its own result. */
+await mf.dispose();
 console.log(`\n  conclude-project: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

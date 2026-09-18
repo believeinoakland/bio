@@ -13947,3 +13947,29 @@ answer, the queue producer), `bio-plane/src/queuestate.mjs` (one FINDING kind), 
 breaks, corrected at its site, `docs/architecture/construct-status.json` (`8.claim` only),
 `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built/not-built note),
 `docs/development/INTERFACE-CHANGES.md` (this item's IC rows).
+
+### DELEGATION 2026-09-18 RECORD (REC-124) -> UI: **A PROJECT NOW CONCLUDES FOR ITSELF, AND THE SURFACE CANNOT YET SAY SO**
+**open as of 2026-09-18** — nothing on the surface sends `project=` to `op=conclude` or renders the new keys.
+
+`INVESTIGATIVE-SESSION.md` §7.1 is built in the plane (IC-150). The existing conclude flow in `civicos-ui/app.html`
+(`concludeParams`) sends no `project` and is NOT broken — it reaches the unchanged no-project act, and
+`node civicos-ui/test/run.mjs` exits 0. What the surface owes:
+1. **The project's act.** From a project's view of an inquiry it draws on, `op=conclude&target=<INQ>&project=<PROJ>`
+   with the falsifier (or `no_falsifier=1`) and an optional `commentary=`. **Send NO `conclusion=`** beside a project
+   (refused `CONCLUSION_IS_THE_CLAIM`): the claim of the reading the project stands on IS the conclusion. Show that
+   claim to the member BEFORE they commit (read it from `op=basisversions&project=`'s `current` version's `claim`),
+   label the commentary field as the member's own words that are never evidence, and render `NO_CLAIM`'s detail as
+   the door (state a claim on a reading, make it current).
+2. **The reads.** `op=basisversions&project=` answers `conclusion` beside `current` (null when this project concluded
+   nothing — never show another project's); every answer carries `no_project_conclusion`, whose `claim.state` is
+   `undetermined` — render it as UNDETERMINED (the `undeterminedPane` primitive), never as the conclusion text.
+3. **The notice.** `shared-inquiry-concluded-by-another-project` reaches the queue as a FINDING and renders through
+   the generic item renderer (no per-kind wording, `notifications.test.mjs` §1).
+
+## CLAIM 2026-09-18 RECORD (REC-124) — RELEASED
+
+released: 2026-09-18 by the REC-124 worker, branch `worktree-agent-a16f5d75eb9d8097c`, base `e23daea9`. Figures and
+the report are in the commit that carries this block and in REC-124's report. **FOR CONDUCT:** RESOLVE IC-150
+(proposed MINOR, I3 29.4.0 -> 29.5.0, read the base at resolution); no I5 IC (no table, column or case byte moves);
+the UI DELEGATION above is open; §7.1 item 4 (the case path reading a project's conclusion) is unbuilt and wants its
+own row; the no-project adoption gap is recorded in `INVESTIGATIVE-SESSION.md`'s Incomplete sections for BOB.
