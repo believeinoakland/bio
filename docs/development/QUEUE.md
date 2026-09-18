@@ -1041,7 +1041,16 @@ Test-estate work spanning every area. CONDUCT spawns a worker per item with a cl
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
 floor everything else is judged against.
 
-### LED-6 · queued — **THE WORK PIPELINE: `QUEUE.md` BECOMES A CACHE OF THE NEXT SEVERAL ITEMS, a new `BACKLOG.md` holds everything still to do IN ORDER, done work goes to the archive; refill moves rows backlog → cache in the same commit as the done row's archive. FIRST AMONG PROCESS ROWS.** — **EXEMPT FROM THE M0 HOLD BY NAME.**
+### M0-67 · queued — **D-425: CAN THE BATTERY REPORT GREEN OVER A SUITE THAT PRINTED FAIL? A worker's baseline log showed `machinefences-dec49 … FAIL 68 pass, 2 FAIL` under a `245/245 suites green` headline and exit 0; unreproduced. Establish which: two runs interleaved into one log, or a tally that can count a printed FAIL as green.** — **HELD by the M0 hold, and an EXEMPTION IS ASKED OF BOB #15 (2026-09-18), because it questions the gate every other item is verified by.**
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name; the battery is its instrument), with DEBT D-425.
+depends-on: nothing.
+scope: read `bio-plane/scripts/battery.mjs`'s tally against its per-suite lines; try to reproduce (two concurrent batteries writing one log; a suite that re-runs itself; a tally reading a different line than the one printed). If the tally CAN count a printed FAIL as green, fix it, with a negative control, AHEAD of everything. If the log was two runs, say so with the evidence and add a guard (for example the battery refusing a log path another run holds).
+accepts-when: a planted failing suite makes the headline and the exit status both say so; a log with interleaved runs is detected or impossible. How a liar passes it: declaring "cannot reproduce" from one clean run, so the tally code must be READ and the interleaving tried on purpose. NEGATIVE CONTROL: the planted failure.
+added: 2026-09-18 · CONDUCT #5 (from D-425).
+
+### LED-6 · running — **SPAWNED 2026-09-18 by CONDUCT #5 for its TOOL HALF ONLY (WORK-PIPELINE §5 step (1): `ledger.mjs refill`, the `BACKLOG` ledger, `find` across all three, and the five invariant arms, each with a negative control). The MIGRATION, steps (2)–(4), is CONDUCT's own act by hand, now also SCHEDULER's domain once that lane is live; it is NOT in the worker's scope. DEPENDS-ON CHECKED AGAINST THE CODE: LED-3 done (closedLive 0/0). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE WORK PIPELINE: `QUEUE.md` BECOMES A CACHE OF THE NEXT SEVERAL ITEMS, a new `BACKLOG.md` holds everything still to do IN ORDER, done work goes to the archive; refill moves rows backlog → cache in the same commit as the done row's archive. FIRST AMONG PROCESS ROWS.** — **EXEMPT FROM THE M0 HOLD BY NAME.**
 milestone: M0 (process, Bob's direction 2026-09-18)
 interface: none
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name, as LED-3's was), read with `docs/development/WORK-PIPELINE.md` §5, which carries LED-6's scope and accepts-when verbatim (§2–§4 give the model; WORK-PIPELINE is not a governed design document, so it is named as the scope rather than the authority).
