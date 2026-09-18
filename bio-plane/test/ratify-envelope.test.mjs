@@ -215,6 +215,19 @@ const signRatify = (bundleId, bundleSha) => {
 const add = await POST("op=memberadd&token=adm-rec53", { memberId: "sparky", cover: "Bob", role: "admin" });
 await POST("op=enroll", { invite: add.result.invite, handle: "sparky", password: "sparky-passphrase-53" });
 await POST("op=signeradd&token=adm-rec53", { keyB64, memberId: "sparky", comment: "sparky laptop" });
+/* REC-125 / D-421 (IC-137): RE-POINTED, NEVER EXEMPTED. Every ratification here
+   was delivered by the ADMIN_TOKEN bearer ("adm-rec53") carrying sparky's
+   signature. BOB #14 ruled that an ATTESTED act is delivered ONLY by the signing
+   member's OWN AUTHENTICATED SESSION, and the bearer token is now refused by name
+   (C-32.14) at the top of the handler — BEFORE any of the eight Durable Object
+   reads this suite poisons, so left on the token every arm would have measured
+   the fence instead of its site. The same drives go through sparky's own
+   signed-in session. The session lookup (`do/session`) is not one of the poisoned
+   paths, so it answers in every arm and the handler is reached exactly as before.
+   `operator-attest.test.mjs` owns the fence. */
+const SESS = (await POST("op=login", { role: "member:sparky", password: "sparky-passphrase-53" })).result?.token;
+if (!SESS) throw new Error("ratify-envelope: sparky could not sign in, so no ratification below could be delivered");
+const RATQ = `op=ratify&token=${SESS}`;
 
 /* ---- documents ---- */
 const NOW = "2026-07-24T00:00:00Z";
@@ -269,7 +282,7 @@ const build = async (id, { refs = [], seed = 7, reuse = [], n = 1 } = {}) => {
   if (!c.result?.ok) throw new Error(`promote ${id}: ${JSON.stringify(c)}`);
   return { id, capSha, live: c.result.bundleSha };
 };
-const ratify = (b) => RAT("op=ratify&token=adm-rec53",
+const ratify = (b) => RAT(RATQ,
   { bundleId: b.id, expectedSha: b.live, sig: signRatify(b.id, b.live) });
 
 const TARGET = await build("INFO-2026-7301-envelope-target", { seed: 7 });
@@ -356,7 +369,7 @@ console.log("\n--- site 4: do/gatefacts (a TypeError, and a stack trace a publis
      + "bundle genuinely is not there",
      bad.body.reason !== "ABSENT" && bad.body.reason !== "NO_SIGNERS");
   await poison();
-  const absent = await RAT("op=ratify&token=adm-rec53",
+  const absent = await RAT(RATQ,
     { bundleId: "INFO-2026-9999-none", expectedSha: b.live, sig: signRatify("INFO-2026-9999-none", b.live) });
   t("and a bundle that GENUINELY is not there still answers ABSENT", absent.body.reason, "ABSENT");
 }

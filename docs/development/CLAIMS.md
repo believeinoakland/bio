@@ -13468,3 +13468,50 @@ conflicted on this file and `INTERFACE-CHANGES.md` (both sides appended) and the
 unresolved on the local branch — caught by `plancheck --local` before any push, resolved KEEP-BOTH. (2) Row the sibling defect this item measured and did not close: `content:cap=undetermined`
 matches an image cited as bytes, and `rows=content`'s `derivation_cap` shows its NULL unlabelled (measured in
 `rec121-chain-bytes.test.mjs` §4, whose assertion is the one that item must correct).
+
+
+## CLAIM 2026-09-18 RECORD (REC-125 — D-421 DECIDED: the operator's bearer tokens may not deliver an attested act)
+
+Worker spawned by CONDUCT #4 into worktree `agent-aac5bdb9dea9c048e`. Minted with
+`node tools/mintid.mjs IC` BEFORE building: **IC-137** (I3 MAJOR — a formerly accepted delivery is
+refused). The two new rows extend the RECORD-owned C-32 family (`MACHINE_FENCE_CHECKS`) as C-32.14
+and C-32.15, beside REC-123's C-32.12 / C-32.13.
+
+THE PRECONDITION, run before this claim: no documented or live operator procedure submits
+`op=ratify` or `op=caseratify` with a bearer token (the report carries what was searched).
+
+Paths, named precisely:
+
+- `bio-plane/src/index.mjs` — ONLY REC-123's two DEC-49 regions at the top of `op=caseratify` and
+  `op=ratify`, and the `classify()` neighbourhood if a class list is derived there. No OPS row.
+- `bio-plane/checks/bio-checks.mjs` — two rows in `MACHINE_FENCE_CHECKS` (C-32.14, C-32.15).
+- `bio-plane/test/operator-attest.test.mjs`, `bio-plane/test/operator-attest.control.mjs` — new.
+- `bio-plane/test/ratify.test.mjs`, `reuse-ratify.test.mjs`, `ratify-envelope.test.mjs` — re-pointed
+  at a member session with the reason written; and any OTHER suite the fence breaks, corrected at its
+  site, never exempted. `machine-attest.test.mjs` only where it pins the fence's shape.
+- `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/architecture/construct-status.json` (claim `11.machine-fence`),
+  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` (front matter and where the fence's state is
+  stated), `docs/architecture/BIO_System_Design.md` on regeneration, `docs/development/INTERFACE-CHANGES.md`
+  (IC-137), `docs/development/DEBT.md` (D-421's disposition), `docs/DECIDED.md` on regeneration, this block.
+
+**NOT CLAIMED:** `bio-plane/src/store.mjs`, `bio-plane/src/setup.mjs`, `civicos-ui/**` beyond the
+floor table, `docs/development/QUEUE.md` (CONDUCT flips the row), `INTERFACES.md`, `newgroup/**`,
+`tools/**`.
+
+**open as of 2026-09-18** — REC-125 is being built.
+
+## CLAIM 2026-09-18 RECORD (REC-125 — D-421 DECIDED: the operator's bearer tokens may not deliver an attested act) — RELEASED
+
+released: 2026-09-18 by the REC-125 worker, branch `worktree-agent-aac5bdb9dea9c048e`. Every claimed path is
+committed on that branch; `bio-plane/src/store.mjs` and `setup.mjs` were NOT edited. THE PRECONDITION: no
+kickoff, script, tool, installer, DIST procedure or UI submits `op=ratify`/`op=caseratify` with a bearer
+token — the only submitter is the instance page (`setup.mjs` ratifyPanel) through the member's session — so
+it was BUILT. THE TRACE on the pre-item tree: ADMIN, MEMBER and PROBE each ACCEPTED at both acts carrying a
+member's signature; now refused by name (C-32.14 / C-32.15, IC-137), keyed on `!viaSession`. Also corrected at
+its site, never exempted: `machinefences-dec49.test.mjs` (pins + floor 46 -> 48 from the printed figure) and
+REC-123's `machine-attest.control.mjs` declaration (its read-back arms no longer fail: the act is now doubly
+fenced). NEGATIVE CONTROL `node test/operator-attest.control.mjs` from `bio-plane/`: baseline 18/0 · admin 13/5 ·
+member 13/5 · probe 13/5 · overstrict 14/4 · tokenstring 11/7, all as declared, every restore byte-identical.
+Minted: IC-137.

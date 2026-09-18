@@ -91,6 +91,18 @@ const signRatify = (k, bundleId, bundleSha) => {
 const add = await POST("op=memberadd&token=adm-ratify", { memberId: "sparky", cover: "Bob", role: "admin" });
 await POST("op=enroll", { invite: add.result.invite, handle: "sparky", password: "sparky-passphrase" });
 const reg = await POST("op=signeradd&token=adm-ratify", { keyB64: keyB64("sparky"), memberId: "sparky", comment: "sparky laptop" });
+/* REC-125 / D-421 (IC-137): RE-POINTED, NEVER EXEMPTED. Every ratification in
+   this suite used to be delivered by the ADMIN_TOKEN bearer ("adm-ratify")
+   carrying sparky's signature, which was the operator's publication path as
+   built. BOB #14 ruled that an ATTESTED act is delivered ONLY by the signing
+   member's OWN AUTHENTICATED SESSION (Assistant & AI Roles §3 rule 4), so the
+   bearer token is now refused by name (C-32.14) and this suite's subject — the
+   signature, the gate, the published fence, doorbell 7a — is driven through
+   sparky's own signed-in session instead. Nothing it asserts about any of that
+   changed; the token only ever REACHED the surface, and the session is the
+   credential that may reach it now. `operator-attest.test.mjs` owns the fence. */
+const SESS = (await POST("op=login", { role: "member:sparky", password: "sparky-passphrase" })).result.token;
+const RAT = `op=ratify&token=${SESS}`;
 
 console.log("\n--- signer registration ---");
 t("key registers", reg.result.ok, true);
@@ -143,19 +155,19 @@ t("target bundle revised", c2.result.ok, true);
 const LIVE = c2.result.bundleSha;
 
 console.log("\n--- refusals before anything publishes ---");
-t("no signature refused", (await POST("op=ratify&token=adm-ratify", { bundleId: ID, expectedSha: LIVE })).reason, "MALFORMED");
-t("absent bundle refused", (await POST("op=ratify&token=adm-ratify",
+t("no signature refused", (await POST(RAT, { bundleId: ID, expectedSha: LIVE })).reason, "MALFORMED");
+t("absent bundle refused", (await POST(RAT,
   { bundleId: "INFO-2026-9999-none", expectedSha: LIVE, sig: signRatify("sparky", "INFO-2026-9999-none", LIVE) })).reason, "ABSENT");
-t("stale sha refused: you ratify what you read", (await POST("op=ratify&token=adm-ratify",
+t("stale sha refused: you ratify what you read", (await POST(RAT,
   { bundleId: ID, expectedSha: c1.result.bundleSha, sig: signRatify("sparky", ID, c1.result.bundleSha) })).reason, "RATIFY_STALE");
-t("unregistered key refused", (await POST("op=ratify&token=adm-ratify",
+t("unregistered key refused", (await POST(RAT,
   { bundleId: ID, expectedSha: LIVE, sig: signRatify("stranger", ID, LIVE) })).reason, "SIG_UNKNOWN_KEY");
-t("signature over the wrong statement refused", (await POST("op=ratify&token=adm-ratify",
+t("signature over the wrong statement refused", (await POST(RAT,
   { bundleId: ID, expectedSha: LIVE, sig: signRatify("sparky", ID, c1.result.bundleSha) })).reason, "SIG_BAD_SIGNATURE");
 t("nothing has been published by any of that", (await GET(`op=verify&sha256=${LIVE}`)).published, false);
 
 console.log("\n--- ratification ---");
-const rat = await POST("op=ratify&token=adm-ratify", { bundleId: ID, expectedSha: LIVE, sig: signRatify("sparky", ID, LIVE) });
+const rat = await POST(RAT, { bundleId: ID, expectedSha: LIVE, sig: signRatify("sparky", ID, LIVE) });
 t("ratification succeeds", rat.ok, true);
 t("attested by the key's member", rat.attestor, "sparky");
 /* 1.17.0: C-19.1, the task inbox grammar (D-98). CORRECTED rather than
@@ -195,12 +207,12 @@ t("an unratified working revision does not", (await GET(`op=verify&sha256=${c1.r
 t("garbage sha politely refused", (await GET("op=verify&sha256=zz")).ok, false);
 
 console.log("\n--- convergence and the append-only promise ---");
-const again = await POST("op=ratify&token=adm-ratify", { bundleId: ID, expectedSha: LIVE, sig: signRatify("sparky", ID, LIVE) });
+const again = await POST(RAT, { bundleId: ID, expectedSha: LIVE, sig: signRatify("sparky", ID, LIVE) });
 t("re-ratifying the same sha converges", again.existed, true);
 t("nothing re-copied", again.published.copied, 0);
 const md3 = mkMd(3);
 const c3 = await POST("op=promote&token=mem-ratify", { ...pkg(3, LIVE, "20260724T120000Z_cccc3333") });
-const rat3 = await POST("op=ratify&token=adm-ratify", { bundleId: ID, expectedSha: c3.result.bundleSha, sig: signRatify("sparky", ID, c3.result.bundleSha) });
+const rat3 = await POST(RAT, { bundleId: ID, expectedSha: c3.result.bundleSha, sig: signRatify("sparky", ID, c3.result.bundleSha) });
 t("a newer revision ratifies", rat3.ok, true);
 t("the OLD published sha still verifies forever", (await GET(`op=verify&sha256=${LIVE}`)).published, true);
 t("the new sha verifies too", (await GET(`op=verify&sha256=${c3.result.bundleSha}`)).published, true);
@@ -222,7 +234,7 @@ const badPkg = {
   register: [],
 };
 const bc = await POST("op=promote&token=mem-ratify", badPkg);
-const bad = await POST("op=ratify&token=adm-ratify", { bundleId: BAD, expectedSha: bc.result.bundleSha, sig: signRatify("sparky", BAD, bc.result.bundleSha) });
+const bad = await POST(RAT, { bundleId: BAD, expectedSha: bc.result.bundleSha, sig: signRatify("sparky", BAD, bc.result.bundleSha) });
 t("gate refuses", bad.reason, "GATE_REFUSED");
 const checks = bad.findings.map((f) => f.check).sort();
 t("and says exactly why, in the catalog's own vocabulary", checks, ["C-1.1", "C-6.2"]);
@@ -231,16 +243,23 @@ t("the refused bundle published nothing", (await GET(`op=verify&sha256=${bc.resu
 console.log("\n--- revocation stops attestation ---");
 await POST("op=signerset&token=adm-ratify", { keyB64: keyB64("sparky"), status: "revoked" });
 const c4 = await POST("op=promote&token=mem-ratify", { ...pkg(4, c3.result.bundleSha, "20260724T140000Z_eeee5555") });
-const revoked = await POST("op=ratify&token=adm-ratify",
+const revoked = await POST(RAT,
   { bundleId: ID, expectedSha: c4.result.bundleSha, sig: signRatify("sparky", ID, c4.result.bundleSha) });
 t("revoked key cannot ratify", ["SIG_UNKNOWN_KEY", "NO_SIGNERS"].includes(revoked.reason), true);
 await POST("op=signerset&token=adm-ratify", { keyB64: keyB64("sparky"), status: "active" });
-t("reactivated key ratifies again", (await POST("op=ratify&token=adm-ratify",
+t("reactivated key ratifies again", (await POST(RAT,
   { bundleId: ID, expectedSha: c4.result.bundleSha, sig: signRatify("sparky", ID, c4.result.bundleSha) })).ok, true);
+
+console.log("\n--- the session is the ONLY delivery: the operator's bearer token is refused (REC-125) ---");
+const c5 = await POST("op=promote&token=mem-ratify", { ...pkg(5, c4.result.bundleSha, "20260724T150000Z_ffff6666") });
+const viaToken = await POST("op=ratify&token=adm-ratify",
+  { bundleId: ID, expectedSha: c5.result.bundleSha, sig: signRatify("sparky", ID, c5.result.bundleSha) });
+t("the ADMIN_TOKEN bearer carrying sparky's VALID signature is refused by name, naming its class",
+  [viaToken.reason, viaToken.check, viaToken.tokenClass], ["OPERATOR_TOKEN_CANNOT_RATIFY", "C-32.14", "admin"]);
+t("and that revision is not published by it", (await GET(`op=verify&sha256=${c5.result.bundleSha}`)).published, false);
 
 console.log("\n--- a member session can ratify with a valid signature ---");
 const lg = await POST("op=login", { role: "member:sparky", password: "sparky-passphrase" });
-const c5 = await POST("op=promote&token=mem-ratify", { ...pkg(5, c4.result.bundleSha, "20260724T150000Z_ffff6666") });
 const sessRat = await POST("op=ratify&token=" + lg.result.token,
   { bundleId: ID, expectedSha: c5.result.bundleSha, sig: signRatify("sparky", ID, c5.result.bundleSha) });
 t("session ratification succeeds", sessRat.ok, true);

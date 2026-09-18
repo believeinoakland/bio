@@ -10022,3 +10022,70 @@ move"), and `rows=content`'s `derivation_cap` shows the same NULL. Nor does `row
 "does-not-apply"`; no new act. SKILL / FRAMEWORK / DIST expected NOT-AFFECTED (zero readers, above).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MINOR — I3 25.0.0 → 25.1.0.** Base read AT RESOLUTION: 25.0.0 (IC-130 and IC-132 each took a MAJOR meanwhile; IC-130 was measured by the builder not to touch the `content:` arm). **MINOR, not MAJOR, with the reason:** the one answer that NARROWS (`chain:undetermined` no longer returns bytes rows) only stops OVER-REPORTING — it removes rows that were labelled with a question they have no answer to, and every one of them stays reachable under its own stated value `does-not-apply`; no consumer was found (civicos-ui, agent-worker, the pdf and ocr workers, newgroup), so no caller's answer loses a row it could legitimately have wanted. UI answers through IC-125's standing `cited_as` delegation. **Left open and rowed:** the same mislabel on the CAP axis (`content:cap=undetermined` still matches bytes rows) → `REC-127`.
+
+
+## IC-137 · I3: `op=ratify` and `op=caseratify` REFUSE every operator BEARER token BY NAME — `OPERATOR_TOKEN_CANNOT_RATIFY` (C-32.14), `OPERATOR_TOKEN_CANNOT_RATIFY_CASE` (C-32.15); an attested act is delivered ONLY by a signed-in member's own session (D-421 DECIDED) · PROPOSED 2026-09-18 (REC-125, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 25.1.0** (IC-131 ACCEPTED on top of IC-132; read 25.0.0 when rowed, and
+  re-read after merging origin/main d49e71c6 — the base moved underneath this row). **Proposed as MAJOR —
+  25.1.0 → 26.0.0.**
+  No op, field, table or response key is added or removed; two ops that ACCEPTED three classes of caller now
+  REFUSE them. **Read the base AT RESOLUTION.**
+- **Proposer:** RECORD, worker `agent-aac5bdb9dea9c048e`, 2026-09-18, from QUEUE REC-125
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `DIST` (the operator: its ADMIN/MEMBER/PROBE bindings no longer deliver a
+  ratification — measured below, no DIST procedure submits one), `UI` (NOT-AFFECTED measured: the one surface
+  that submits `op=ratify` is the instance page, `bio-plane/src/setup.mjs` ratifyPanel, and it posts with the
+  SESSION from `op=login`; `civicos-ui/app.html` submits neither op), `SKILL` (the pack's boundary layer
+  harvests every `MACHINE_FENCE_CHECKS` row it is pointed at; the two new codes are `OPERATOR_*`, not
+  `MACHINE_CANNOT_*`), `FLEET` (NOT-AFFECTED measured: no `ratify` string in `agent-worker/`).
+- **Design:** `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4, applied by BOB #14 with no new doctrine (D-421
+  DECIDED): *the signature proves who AUTHORISED; the credential that delivers it decides WHEN the record
+  changes, and the record names the actor.*
+
+**THE PRECONDITION, MEASURED AT THE ARTIFACT BEFORE ANY CODE (the row's first act).** Searched for anything
+submitting `op=ratify` / `op=caseratify` with a bearer token (`token=`, `Authorization`, `ADMIN_TOKEN`,
+`MEMBER_TOKEN`, `PROBE_TOKEN`): every kickoff under `docs/development/kickoffs/`, all of `docs/` (live and
+archive), `scripts/`, `tools/`, `newgroup/` (src, scripts, `DEPLOY.md`), `bio-plane/scripts/`, `release/`,
+`civicos-ui/app.html`, `agent-worker/`, and every non-test `.mjs/.js/.html/.sh` in the repository naming
+either op. **Found: no procedure, script, tool or document submits either op with a bearer token.** The
+only live submitter is the instance page (`setup.mjs` `ratifyPanel` → `post("ratify", …)` with the
+`SESSION` from `op=login`); `tools/sign-release.html` and the served `/sign` page only PRODUCE the signature
+and tell the member to paste it into the instance page; `op=caseratify` has NO submitting surface outside
+the test estate. The bearer path existed only in suites.
+
+**WHAT WAS MEASURED, BY DRIVING, on the pre-item tree (fbcefa1b).** `operator-attest.test.mjs` run against
+it: the ADMIN, MEMBER and PROBE bearer tokens, each carrying iris's VALID signature over the exact
+statement, answered `ok: true` at BOTH ops — the case COMMITTED and the finding PUBLISHED, the record naming
+iris. (DAEMON is refused by the op's own OPS row, CLASS_FORBIDDEN, before and after.)
+
+**THE SHAPE.** Directly below REC-123's `ai` fence at the top of each handler, before the payload is read: a
+caller that did NOT arrive through a signed-in session (`!viaSession`) is refused `403 { ok: false, reason,
+code, check, translation, detail, op, tokenClass }` — `OPERATOR_TOKEN_CANNOT_RATIFY` at `op=ratify`,
+`OPERATOR_TOKEN_CANNOT_RATIFY_CASE` at `op=caseratify`, each in its own DEC-49 region (`src/index.mjs fetch >
+is-operator-ratify-bundle`, `… > is-operator-ratify-case`). `tokenClass` and `detail` NAME the refused class.
+**The predicate is HOW THE CALLER ARRIVED, not which token it held:** no class list and no token string
+appear in the guard, so every binding `classify()` resolves is refused today and any binding added
+tomorrow is refused without anyone remembering these lines. Nothing is written. A signed-in member's session
+— of either role — answers exactly as before.
+
+**WHY MAJOR** (IC-25's rule, IC-132's precedent): an input these ops accepted yesterday is refused today. The
+count of legitimate callers broken is zero by the precondition above; three SUITES drove the bearer path
+and are re-pointed at a member session with the reason written at each (`ratify.test.mjs`,
+`reuse-ratify.test.mjs`, `ratify-envelope.test.mjs`).
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.** (1) A session whose role is the bare founder `admin` (the claim-step
+login, not `member:<id>`) still delivers: it is a SESSION, the ruling names bearer tokens, and the
+attestor is taken from the signature either way. Whether "a NAMED member's own session" should exclude that
+role is not decided here and is raised rather than assumed. (2) Other attested ops need no change, read at the code: a
+member's attestation of text (`op=attesttext`, `op=transcriptionattest`) already stamps the attestor from
+the credential (`viaSession ? sessMember : class:<cls>`), so every bearer class is refused there by name
+(C-35.10) — `transcribe.test.mjs` §3 drives it for MEMBER_TOKEN. These two ratifications were the only
+attested acts where a bearer token could deliver a MEMBER's name. (3) `op=attest`, a third party's timestamp, is not an attested act by a member.
+
+**Suites:** `bio-plane/test/operator-attest.test.mjs` (new — the bearer classes DERIVED from `classify()` and
+the OPS table, every one bound and driven at both acts in the scratch store, where the confined probe class
+reaches the handler; the member session's over-strictness arm; a structural pin that the guard names no
+class, binding or token); negative control `node test/operator-attest.control.mjs` from `bio-plane/` — one arm
+per refused class plus over-strictness and the token-string liar, all as declared.

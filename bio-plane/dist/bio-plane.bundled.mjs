@@ -9834,11 +9834,10 @@ var MACHINE_FENCE_CHECKS = {
      thing in front of either, and a broader scope passes a scope check.
      `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4: *"No machine credential
      performs the attested act"*; both acts sit at the `attested` rung.
-     WHAT THESE DO NOT REFUSE, and it is deliberate: the operator's own
-     ENV-BINDING credentials (ADMIN/MEMBER/PROBE tokens), which carry a member's
-     signature on the path `ratify.test.mjs` drives — publication runs through
-     the operator today, and those classes are not the assistant. Only the `ai`
-     class is the machine DEC-24 rule 4 speaks of, and that is what is fenced. */
+     WHAT THESE TWO DO NOT REFUSE: the operator's own ENV-BINDING credentials
+     (ADMIN/MEMBER/PROBE tokens). REC-123 left them open as a provisional and
+     raised D-421; BOB #14 DECIDED it (REFUSE), and C-32.14 / C-32.15 below are
+     that ruling, landed by REC-125. */
   MACHINE_CANNOT_RATIFY: {
     check: "C-32.12",
     where: "src/index.mjs fetch > is-machine-ratify-bundle",
@@ -9848,6 +9847,26 @@ var MACHINE_FENCE_CHECKS = {
     check: "C-32.13",
     where: "src/index.mjs fetch > is-machine-ratify-case",
     translation: "Ratifying a case commits the group's own assertions about it \u2014 its scope, its completeness, its position on the people it concerns \u2014 under a member's signature. The credential that asked here is an assistant's: it can assemble the case document, and it cannot be the one who commits it. Sign in and ratify it yourself."
+  },
+  /* REC-125 / IC-137 — D-421, DECIDED by BOB #14 applying
+     `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (no new doctrine): an
+     ATTESTED act is performed ONLY by a named member's OWN AUTHENTICATED
+     SESSION, and the operator's bearer tokens may no longer deliver one, even
+     carrying a member's valid signature. *The signature proves who AUTHORISED;
+     the credential that delivers it decides WHEN the record changes, and the
+     record names the actor.* ONE ROW PER ACT, like C-32.12 / C-32.13, and ONE
+     ROW FOR EVERY BEARER CLASS rather than one per class: the refusal is keyed
+     on how the caller ARRIVED (not through a session), so the class is named in
+     the answer's `tokenClass` and the rule does not need a row per token. */
+  OPERATOR_TOKEN_CANNOT_RATIFY: {
+    check: "C-32.14",
+    where: "src/index.mjs fetch > is-operator-ratify-bundle",
+    translation: "Ratifying puts a finding into the published record under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for this copy, not a person: a valid signature does not change that, because the credential that carries it in decides when the record changes. Sign in as the member whose key signed it and ratify it there."
+  },
+  OPERATOR_TOKEN_CANNOT_RATIFY_CASE: {
+    check: "C-32.15",
+    where: "src/index.mjs fetch > is-operator-ratify-case",
+    translation: "Ratifying a case commits the group's own assertions about it under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for this copy, not a person, and a valid signature does not change that. Sign in as the member whose key signed it and ratify it there."
   }
 };
 var ACT_SHAPE_CHECKS = {
@@ -64853,6 +64872,15 @@ var index_default = {
           tokenClass: cls,
           detail: "committing a case is a member's signed act. An assistant's credential may assemble the case document and may never commit it, whoever's signature it carries (DEC-24 rule 4)."
         }, 403);
+      if (!viaSession)
+        return json({
+          ok: false,
+          reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",
+          ...machineFenceRow("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"),
+          op,
+          tokenClass: cls,
+          detail: `committing a case is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token: the signature says who authorised the case, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).`
+        }, 403);
       const body2 = await req.json().catch(() => null);
       if (!body2?.caseId || !Number.isInteger(body2?.edition) || !body2?.expectedSha || typeof body2?.sig !== "string")
         return json({
@@ -64965,6 +64993,15 @@ var index_default = {
           op,
           tokenClass: cls,
           detail: "ratifying is a member's signed act. An assistant's credential may prepare the finding and may never carry the signature in, whoever's key made it (DEC-24 rule 4)."
+        }, 403);
+      if (!viaSession)
+        return json({
+          ok: false,
+          reason: "OPERATOR_TOKEN_CANNOT_RATIFY",
+          ...machineFenceRow("OPERATOR_TOKEN_CANNOT_RATIFY"),
+          op,
+          tokenClass: cls,
+          detail: `ratifying is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token: the signature says who authorised publication, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).`
         }, 403);
       const body2 = await req.json().catch(() => null);
       if (!body2?.bundleId || !body2?.expectedSha || typeof body2?.sig !== "string")

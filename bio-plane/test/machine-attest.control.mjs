@@ -54,13 +54,24 @@ const L = {
 
 const ARMS = {
   baseline: { edits: [], mustFail: [] },
-  /* (b) the op=ratify fence removed: the machine PUBLISHES, and the three arms that
-     name op=ratify's refusal fail; op=caseratify's stay green. */
+  /* (b) the op=ratify fence removed: the `ai` refusal BY NAME and the trace verdict
+     fail; op=caseratify's stay green.
+     CORRECTED 2026-09-18 by REC-125 (D-421, IC-137), never exempted: this arm
+     declared a third failure — "the finding is NOT published" — and that was TRUE
+     when REC-123 ran it (32/3), because the `ai` fence was then the only thing in
+     front of the act. REC-125's fence directly below refuses EVERY caller that did
+     not arrive through a signed-in session, and an `ai` credential is one, so with
+     this fence removed the machine is now refused as OPERATOR_TOKEN_CANNOT_RATIFY
+     and nothing is published. The read-back stays green because the act is
+     DOUBLY fenced, and the arm still proves what it exists for: without C-32.12
+     the machine is no longer refused BY ITS OWN NAME. Measured 33/2. */
   ratify: { edits: [[RATIFY_FENCE, open(RATIFY_FENCE)]],
-            mustFail: [L.ratRefused, L.ratNotPublished, L.table] },
-  /* (c) the op=caseratify fence removed: the machine COMMITS THE CASE. */
+            mustFail: [L.ratRefused, L.table] },
+  /* (c) the op=caseratify fence removed: the same correction, the same reason —
+     REC-125's session fence now holds the commit, so only the named refusal and the
+     table fail. Measured 33/2. */
   caseratify: { edits: [[CASE_FENCE, open(CASE_FENCE)]],
-                mustFail: [L.caseRefused, L.caseNotCommitted, L.table] },
+                mustFail: [L.caseRefused, L.table] },
   /* (d) OVER-STRICTNESS: both fences refuse EVERY caller. Only the member arms can
      tell this from a fence holding — every machine refusal must STAY GREEN. */
   overstrict: { edits: [[RATIFY_FENCE, everyone(RATIFY_FENCE)], [CASE_FENCE, everyone(CASE_FENCE)]],

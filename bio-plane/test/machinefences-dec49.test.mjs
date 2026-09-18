@@ -343,6 +343,11 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        written here, which is the pair of arms doing its job. */
     ["C-32.12", "MACHINE_CANNOT_RATIFY"],
     ["C-32.13", "MACHINE_CANNOT_RATIFY_CASE"],
+    /* REC-125 / IC-137, 2026-09-18 — D-421 DECIDED: the operator's BEARER tokens
+       may not deliver either ratification. Same family, same control-plane home,
+       and D-PIN-B failed naming exactly these two until they were written here. */
+    ["C-32.14", "OPERATOR_TOKEN_CANNOT_RATIFY"],
+    ["C-32.15", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"],
     /* ACT_SHAPE_CHECKS — the single-homed tail, plus §14a's capability sentence */
     ["C-33.1", "NO_CONCLUSION"],
     ["C-33.2", "NO_FALSIFIER"],
@@ -458,8 +463,12 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 44 -> 46 on 2026-09-18 (REC-123), FROM THE FIGURE THIS INSTRUMENT PRINTED
      on its corpus line and not by adding to the number in the file: C-32.12
      MACHINE_CANNOT_RATIFY and C-32.13 MACHINE_CANNOT_RATIFY_CASE. */
-  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row and REC-123's two — a "
-    + "walk that lost a family would run fewer arms and every one of them would still pass", rowsSeen, 46);
+  /* MOVED 46 -> 48 on 2026-09-18 (REC-125), FROM THE FIGURE THIS INSTRUMENT PRINTED
+     ("corpus: 48 rows across 2 families") and not by adding to the number in the
+     file: C-32.14 OPERATOR_TOKEN_CANNOT_RATIFY and C-32.15
+     OPERATOR_TOKEN_CANNOT_RATIFY_CASE. */
+  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two and REC-125's two — a "
+    + "walk that lost a family would run fewer arms and every one of them would still pass", rowsSeen, 48);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`
