@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1089 rulings across 84 documents.
+1090 rulings across 84 documents.
 
 ## DEC-
 
@@ -1094,6 +1094,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1875`
 - **REC-119** · 2026-09-18 — THE FREEZE QUESTION IS RULED BY CONDUCT #3 RATHER THAN ROUTED, AND THE RULING IS BRIEFED WITH ITS OWN FALSIFIER: both halves are published and THE ENVELOPE SAYS WHICH IS WHICH.** `inquiry_basis_versions.composition` is **NOT a claim about what the record can support NOW — it is a FROZEN RECORD OF WHAT WAS AUTHORED…  
   `docs/development/QUEUE.md:1955`
+- **REC-125** · 2026-09-18 — CLAIM 2026-09-18 RECORD (REC-125 — D-421 DECIDED: the operator's bearer tokens may not deliver an attested act) Worker spawned by CONDUCT #4 into worktree `agent-aac5bdb9dea9c048e`.  
+  `docs/development/CLAIMS.md:13405`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
