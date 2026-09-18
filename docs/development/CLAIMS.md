@@ -14134,3 +14134,24 @@ IDs minted with `tools/mintid.mjs`: IC-152, C-56, D-426.
 must hold a position in the project (Membership v2 §7 Incomplete sections). (4) Place D-426 (RECORD, a sight defect
 left open on purpose). (5) REC-136 (running) writes conclusion withdrawal: if it adds an act that writes a project's
 conclusion, that act joins `POSITIONAL_ACTS` and asks `#projectAuthority(..., "joined", ...)` — say so at its merge.
+
+## CLAIM 2026-09-18 RECORD (REC-138 — D-426: a project the caller cannot SEE answers every project-targeted act exactly as one that does not exist, and the sight answer comes BEFORE the positional one)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a93cdfa0fe0f8d435`, branch `worktree-agent-a93cdfa0fe0f8d435`,
+base `dd52609b`. `npm ci` in all three packages, each `node_modules` a real directory (4.3 GiB free after install).
+Design: Membership v2 §7.9 (*"Uninvited. The project is not visible at all. Not its existence"*), §7.3, IC-141's
+byte-identity rule, IC-152's `projectAuthority`. IDs minted with `tools/mintid.mjs`: IC-155, D-428. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — ONE shared project not-found and ONE sight predicate, and their callers:
+  `promote`'s revision arm, `cite`'s project lookup, `#edgeTransition`, `projectInvite`, `projectOwnerAdd`,
+  `projectOwnerRemove`, `projectOwnerRescue`, `forkProject`, `#runContextProjects`' project arm, and the DO dispatch
+  rows of those roster acts (the `viewer` they now read); `bio-plane/src/index.mjs` (the `viewer` stamp on the roster
+  acts, and `actorViewer` in `op=promote`'s body, both deleted first).
+- Tests: a new `bio-plane/test/project-sight.test.mjs` and its control driver; `project-authority.test.mjs`'s D-426 pin
+  CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted.
+  `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md` (D-426 closed, D-428 raised), `BIO_Membership_Architecture_v2.md`
+  front matter and §7.9, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `op=caseratify` or the case-ratification path (REC-137's), NOT `newgroup/`.
