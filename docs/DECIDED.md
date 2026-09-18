@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1128 rulings across 89 documents.
+1130 rulings across 89 documents.
 
 ## DEC-
 
@@ -1961,6 +1961,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:13693`
 - arm whose find-string the refactor moves, CORRECTED with the reason, never exempted. - any suite pinning a registry or roster the change moves, corrected with its reason. - `bio-plane/dist/**` rebuilt if the battery requires it. - `docs/architecture/construct-status.json` (`9.internet`, `3.census` reviewed),…  
   `docs/development/CLAIMS.md:13759`
+- `bio-plane/test/stats-disclosure.test.mjs`, `bio-plane/test/nc-rec129.mjs` (its stats arms) — CORRECTED at their sites. - `bio-plane/test/lead.test.mjs` — its op=stats `leads`/`observations` arms, CORRECTED with the reason. - any suite reading `leads`/`observations` off op=stats, corrected with its reason. -…  
+  `docs/development/CLAIMS.md:13880`
+- `bio-plane/test/lead.test.mjs` — its op=stats `leads`/`observations` arms, CORRECTED with the reason. - any suite reading `leads`/`observations` off op=stats, corrected with its reason. - `bio-plane/dist/**` rebuilt. - `docs/development/OBSERVATION-LOG-DESIGN.md` (§6 premise 1, the internet-level paragraph, Status…  
+  `docs/development/CLAIMS.md:13881`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
