@@ -16211,3 +16211,24 @@ the heartbeat no longer calls any session-mutating tool.
 **Also observed at the same opening, bearing on D-405:** two archives of NOT-running sessions succeeded on
 the first call — `remoteControlActive: true` on one (`local_be057cd8…`), false on the other (BOB #13). One
 observation each; it says RC alone did not refuse an idle session, and nothing about a busy one.
+
+
+## 2026-09-18 · D-398 LOCK, DATA POINT 2 — A DEAD HOLDER RELEASES EVERY LOCK, INCLUDING THE ONE THAT WAS LOCKED (CONDUCT #4)
+
+**Instrument:** `git worktree list --porcelain | grep -c '^locked'` and a direct test for
+`$(git rev-parse --git-common-dir)/worktrees/agent-<id>/locked` on each of CONDUCT #3's six agent
+worktrees, read at **2026-09-18T12:45:17Z**, BEFORE `archive_session` and before any `git worktree remove`;
+`list_sessions` for the holder's state; `ps -p 4588` afterwards.
+
+**Reading:** CONDUCT #3 read `isRunning: false`. **ZERO lock files on all six** — including
+`agent-a93ad890406651eff` (M0-58), which DATA POINT 1 above read LOCKED with holder pid 4588 ALIVE.
+`ps -p 4588` now returns no process. The archive then succeeded on the first call; all six trees and
+CONDUCT #3's own were removed after re-verifying clean + ancestor (9.91 → 14.29 GiB free).
+
+**What it establishes, and no more:** when the holding session's PROCESS is gone, its agents' locks are
+gone too, whatever their re-entry history. That bounds the question rather than answering it: **the open
+discriminator is still what decides the lock WHILE the holder lives** (M-47's 7-of-10 unlocked with a live
+holder), and this reading says nothing about that. **It also corrects CONDUCT-NEXT's top-of-file
+statement** that the six were "held ONLY because my process locks them": by the time the successor acted,
+no lock existed — the process was already gone. The controlled resume experiment above is still unrun and
+is still runnable only by the session that spawned the subject.
