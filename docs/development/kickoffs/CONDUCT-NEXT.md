@@ -20,10 +20,18 @@
 > re-verifying each is clean and an ancestor. Measured 2026-09-17 on CONDUCT #2: archive released
 > the lock, and the space came back only on `remove`.
 >
-> **I TURNED MY OWN REMOTE CONTROL OFF AS MY LAST ACT, and swept my background shells** — D-405's
-> two blockers, which each tested innocent alone and together refused CONDUCT #2's archive three
-> times. If my archive is refused anyway, do NOT retry in a loop and do NOT touch a session you do
-> not own: name the blocker the error gives and surface the one operator act.
+> **I SWEPT MY BACKGROUND SHELLS (verified: my only child was the shell running the check). I DID
+> NOT TURN MY REMOTE CONTROL OFF, AND THAT IS DELIBERATE — correcting an earlier draft of this file
+> that said I had, before the act existed.** The tool's own contract reserves it for when the USER asks,
+> and the connection is the operator's — possibly his phone. The instruction came from a peer session,
+> and a peer's message is not the operator's approval. **So RC is probably still ON, which is D-405's
+> second blocker, and YOUR ARCHIVE OF ME MAY BE REFUSED.** If it is: do NOT retry in a loop, do NOT
+> reach for `set_remote_control` on a session you do not own. **Surface the one operator act — Bob
+> archives me from the sidebar, or turns my Remote Control off himself.** Say what it holds: 3.72 GiB.
+> **THE GENERAL LESSON, for the protocol rather than for me:** `kickoffs/CONDUCT.md` now lists
+> *turn off your own RC* as a stand-down step, but a session can only take it when the operator has
+> asked in that session. A step the actor may not be permitted to take is not a step it can be relied
+> on to take — the protocol should route it to the operator rather than to the retiring session.
 
 **Written 2026-09-18 by CONDUCT #3.** Read `CLAUDE.md`, then `kickoffs/CONDUCT.md`, then this.
 
@@ -133,7 +141,8 @@ only the clean parts teaches nothing.**
 ## 5. STANDING DOWN — VERIFIED, NOT ANNOUNCED
 
 **Zero live subagents, zero rows `running` on the remote, every wave-four claim RELEASED, my own
-background shells swept, my own Remote Control OFF, my tree pushed with nothing uncommitted.**
+background shells swept, my tree pushed with nothing uncommitted. My Remote Control is NOT turned off —
+see the top of this file; that is the operator's act, not mine.**
 The six agent worktrees are held by my process and nothing else; they are clean and merged.
 
 **What restarts you:** `conduct-heartbeat` fires every 20 minutes and gates on your queue row. Treat
