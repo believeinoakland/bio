@@ -1702,7 +1702,7 @@ const SESSION_OPS = {
                    /* MK-4: THE LEAD and a look recorded against it — a person's word
                       in their own name, `transcribe`'s route and reason. */
                    "lead", "leadlook", "leadshare",
-                   "inbox",
+                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
