@@ -13438,3 +13438,14 @@ unpiped; `node civicos-ui/test/run.mjs` exit 0; `node tools/status.mjs --check` 
 `node test/machine-attest.control.mjs` from `bio-plane/`: baseline 35/0 · ratify 32/3 · caseratify 32/3 ·
 overstrict 33/2, all as declared, every restore byte-identical. Minted: IC-132, D-421 (a DECISION FOR
 BOB — the operator's env-binding tokens still ratify with a member's signature; provisional: not refused).
+
+## CLAIM 2026-09-18 RECORD (MK-1 — THE AUTHORED BUNDLE) — RELEASED
+
+released: 2026-09-18 by the MK-1 worker. Every claimed path is committed on branch
+`worktree-agent-a1137b844e6d23aed` (origin/main `fbcefa1b` merged in; IC-133's I3 base re-read as
+25.0.0 after IC-132 landed underneath it). The final merged tree ran the battery **234/234 suites green ·
+14509 assertions passing**, `coverage --strict` exit 0 (184/184 ops reached through the control plane,
+register floors re-read and moved from the print, one movement NAMED as REC-123's), UI harness exit 0,
+`plancheck --local` 0 fail, `status --check` 0 drift. `node test/nc-mk1.mjs`: baseline + eleven arms,
+every arm AS DECLARED. No surface is built for `op=testify` — MEMBER-KNOWLEDGE-DESIGN.md §8 says surfaces
+are Program B's and are not rowed, so no UI delegation is raised.
