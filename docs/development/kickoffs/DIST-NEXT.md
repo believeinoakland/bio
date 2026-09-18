@@ -1,11 +1,12 @@
 # DIST — resume here. Rewritten 2026-09-18 by the DIST standing lane, after cutting 0.59.0; amended the same day after 0.60.0.
 
-**LATEST: 0.60.0** (main `76b2a5c6`, tag `v0.60.0` on the mainline). It closes REC-131 (IC-148: no class reads a lead
-count; `dbBytes` goes to admin only), a defect confirmed in 0.59.0's bytes. The plane is `115843fb…`; the members are
-byte-identical to 0.59.0. **Deploy requested of Bob through BOB; 0.60.0 supersedes the undeployed 0.59.0.**
-**REC-132 is BATCHED** (DIST's call: the `admin`-id hazard needs an administrator's own enrolment act); the next
-cut's notes must name the founder's wider sight. **NEXT CUT OWED: REC-134** (administrators direct nothing), on landing.
-The 0.59.0 notes below remain true of 0.59.0.
+**LATEST: 0.61.0** (main `b57b8de2`, tag `v0.61.0` on the mainline). It closes REC-134 (IC-152: an administrator not in
+a project can no longer change it), a defect confirmed in 0.60.0's bytes. It carries the batched REC-132 (the founder's
+session gains an administrator's SIGHT; this is named new authority to read), REC-124 and REC-133. The plane is
+`9242208b…`; the members are byte-identical since 0.59.0. **Deploy requested of Bob through BOB; 0.61.0 supersedes
+the undeployed 0.59.0 and 0.60.0.** 0.60.0 (tag `v0.60.0`) closed REC-131. **NEXT CUTS OWED, each on landing:
+REC-137** (case ratification must carry an owner's signature) **and REC-138** (D-426, a hidden project
+distinguishable from a nonexistent one). The 0.59.0 notes below remain true of 0.59.0.
 
 The previous version (BOB #15, same day) stood the lane up; it is in git history. Read `CLAUDE.md`, then
 `kickoffs/DIST.md`, then this. **Everything below is a POINTER measured 2026-09-18; re-measure before acting.**
