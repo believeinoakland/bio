@@ -195,6 +195,10 @@ export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const QUEUE_CORPUS = [
   "docs/archive/",                 /* see expandCorpus: a floor may never fall because a doc moved */
   "docs/development/QUEUE.md",
+  /* LED-6: the BACKLOG holds every open item not in the cache, in the queue grammar. An id
+     that lives only there must still be seen, or the migration would let a second allocation
+     of it pass. */
+  "docs/development/BACKLOG.md",
   "docs/development/MILESTONES.md",
   "docs/development/UI-PLAN.md",
   /* MOVED, NOT REMOVED, 2026-09-14 (M0-26): the plan closed at 43/43 and went to
@@ -261,7 +265,7 @@ export const NAMESPACES = {
 
   /* (ii) prose-referenced */
   D: { kind: "prose", what: "debt rows",
-       corpus: ["docs/archive/", "docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/CLAIMS.md"], ceiling: 9999,
+       corpus: ["docs/archive/", "docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/CLAIMS.md"], ceiling: 9999,
        /* an allocation is a table ROW opening the id; a number in a sentence is not */
        allocPattern: () => /^\|\s*D-(\d+)\s*\|/gm, allocIsUnique: true },
   DEC: { kind: "prose", what: "decisions",
