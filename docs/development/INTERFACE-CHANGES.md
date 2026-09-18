@@ -11178,3 +11178,105 @@ re-measured (58/5, 62/1, 61/2, 61/2).
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 31.1.0 → 32.0.0.** The base was read at resolution: 31.1.0, where IC-148, IC-149 and IC-150 moved it after this row was proposed against 30.0.0. `op=casedraft` moves from the `publish` capability to `contribute` plus editor POSITION (`#isProjectEditor`: an owner, or a JOINED participant, per Membership v2 §7.5), so an owner holding `publish` without `contribute` could draft before and is refused `NOT_CAPABLE` now. The plane accepts that configuration, so IC-25/IC-117 settle it as breaking whatever the measured impact (no consumer found). **Checked at integration against the row's correction:** revoke is OWNER ONLY in the code (`#reviewRevoke`), and the administrator arm the worker built first was reverted before its tip. Issue is unchanged. "What is missing" is now judged as the person who would PUBLISH would meet the gates, so an editor's draft does not list `NOT_THE_PROJECT_OWNER` over its real gaps.
+
+## IC-152 · I3: SIGHT IS NOT AUTHORITY — every act that changes a project asks the actor's OWN POSITION in it (a JOINED participant for the working acts, an OWNER for the project's bias adoption), never the visibility gate; an administrator (enrolled, or the founder) NOT in a project is REFUSED them by name (C-56); §7.13's add-an-owner is unchanged · PROPOSED 2026-09-18 (REC-134, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (origin/main `f16b9b49` merged in): 32.0.0**
+  (31.0.0 at spawn; IC-150 and IC-151 moved it while this was built). **Proposed MAJOR — 32.0.0 → 33.0.0.** Read the
+  base AT RESOLUTION.
+- **Proposer:** RECORD, worker `agent-a78e80263e9738d43`, 2026-09-18, spawned by CONDUCT #5 for REC-134.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (measured below), `DIST` (newgroup embeds the old plane until the next cut), `SKILL`
+  and `agent-worker` (NOT-AFFECTED as measured: neither names any of these acts on a project).
+- **Design:** `BIO_Membership_Architecture_v2.md` §7, *"SIGHT IS NOT AUTHORITY — and this is Bob's doctrine, not a new
+  ruling"* (BOB #15); §4.9 (*"the custodial role can audit everything and direct nothing"*); §7.5 (working rights are a
+  JOINED member's); §7.13 (the one exception); `BIO_Declared_Bias_v0_1.md` §Bias bundles and adoption (*"Project managers
+  define project bias"*) with DEC-72 clause 5 (manager = owner); `INVESTIGATIVE-SESSION.md` §7 and §7.1 item 1.
+
+**THE DEFECT, MEASURED THROUGH THE OPS.** With the check removed (control arm `no-check`), ruth — an enrolled
+administrator — and the founder's own session, neither in iris's project, each performed every act below on it (25
+assertions go red, every one an act that SUCCEEDED). Three had the visibility gate as their only barrier
+(`versioncurrent`, `proposedispose`, `conclude&project=`) and five had NO barrier on the project at all (`promote` of an
+existing project, `cite`'s project arm, `sever`, `reinstate`, `biasadopt` at project scope — which did not even check
+that the scope id named a project). Every administrator passes the visibility gate everywhere, so every administrator
+could direct every project.
+
+**THE SHAPE.** One helper, `Store#projectAuthority(projectId, identity, need, act)`, asks the POSITIONAL identity
+(IC-149's `identity`, read through `#positionalMember`, never the viewer) whether the actor is a JOINED participant
+(`joined` or `leaving` — §7.5/§7.6, and BOB #14's lead precedent) or an OWNER (`#isProjectOwner`). A `class:*` identity,
+and an absent one (every internal caller), holds no roster position and is NOT asked — machine credentials are unchanged.
+A member-scoped `ai` credential is asked as its PRINCIPAL (D-199 (4)'s rule for sight, applied to acts). The control plane
+stamps `identity` on `POSITIONAL_ACTS` (`cite`, `sever`, `reinstate`, `versioncurrent`, `proposedispose`, `biasadopt`,
+`conclude`) and `actorIdentity` in `op=promote`'s body, both DELETED FIRST, so a caller can name neither (driven: a query
+`identity=` and a body `identity` are both ignored). Refusals: `PROJECT_ACT_NOT_A_PARTICIPANT` (C-56.1) and
+`PROJECT_ACT_NOT_THE_OWNER` (C-56.2), family `PROJECT_AUTHORITY_CHECKS`, DEC-49 region `is-project-authority`, each
+carrying `project`, `act`, `needs` and the canned translation. `op=affordances` gains a POSITIONAL fact
+`project_participant` (three-valued: null on a non-project target and for a `class:*` caller) and withholds `cite`,
+`sever` and `reinstate` on a PROJECT target from a caller who has not joined it (DEC-8); an `ai` credential's affordance
+identity is now its principal, as at the acts (its viewer is unchanged).
+
+**THE PER-ACT TABLE — the position each act that changes a project requires, and its ground.**
+
+| Act | Position required (in THAT project) | Before REC-134 | Ground |
+|---|---|---|---|
+| `op=promote` revising an existing PROJECT bundle | JOINED; OWNER for deactivate/reactivate (unchanged) | none (owner only for the two 7.11 transitions) | §7.5; §7.11 |
+| `op=cite` into a project (project arm) | JOINED | none | §7.5 |
+| `op=sever` / `op=reinstate` (a project's own edges) | JOINED | none | §7.5 |
+| `op=versioncurrent` (the project's stance) | JOINED | visibility only | INVESTIGATIVE-SESSION §7; §7.5 |
+| `op=conclude&project=` (REC-124, landed mid-item) | JOINED | visibility only | INVESTIGATIVE-SESSION §7.1 item 1 (*"beside CURRENT and in the same form"*) |
+| `op=proposedispose` project-scoped | JOINED | visibility only | D-266 (a stance is one project's own property); §7.5 |
+| `op=biasadopt` at `scope=project` | OWNER | none (the scope id was not checked) | Declared Bias §Bias bundles and adoption; DEC-72 (5) |
+| `op=publish` | OWNER | already positional — unchanged | DEC-72 (5) |
+| `op=casedraft` | owner or JOINED (REC-133, IC-151) | already positional — unchanged | Publication §6A.2 |
+| `op=reviewgrant` / `op=reviewrevoke` | OWNER | already positional — unchanged | Publication §6A.2 |
+| `op=projectinvite` / `projectremove` / `projectowneradd` / `projectownerremove` | OWNER (+ 7.10's vote) | already positional — unchanged | §7.2, §7.7, §7.10 |
+| `op=projectjoin` / `projectleave` | the actor's own participation | already positional — unchanged | §7.4, §7.6 |
+| `op=projectfork` | JOINED (+ create_projects) | already positional — unchanged | §7.12 |
+| `op=airunopen` / `airuntick` / `airunclose` | JOINED in a project holding the context | already positional (DEC-63) — unchanged | DEC-63 |
+| `op=leadshare` | the lead's author, JOINED in the target project | already positional — unchanged | MEMBER-KNOWLEDGE-DESIGN §5 (BOB #14) |
+| `op=projectownerrescue` | an ADMINISTRATOR, every owner inactive, a reason — the ONE administrator path | unchanged, and NOT behind C-56 (control arm `rescue-checked`: applying it breaks every rescue arm) | §7.13 |
+| `op=caseratify` | **NOT DETERMINED — DESIGN GAP, not built** | standing (visibility) plus a registered signer's signature | see below |
+
+**NOT PROJECT ACTS, and why each was left alone (stated, not silently scored).** `dispose`, `retire`, `release`,
+`reopen`, `inquirydivide`, `inquiryground`, the five other version acts, `suggest`, `capturerequest`, `narrow` and
+`cite`'s QUESTION arm act on an inquiry or on Information — shared material (INVESTIGATIVE-SESSION §7: the inquiry, its
+claim and all its versions stay shared), which every member sees, so the visibility gate was never an administrator-only
+door there. `actionmove`/`actioncorrespond` act on an Action (the shared corpus; `viewerPredicate` filters project
+bundles only). `linkproject` projects SOURCE-asserted `links_to` edges from a capture, not a member's act on a project.
+The content acts (`contentmint`, `extractpropose`, `transcribe`, `transcriptionattest`, `provenancechain`,
+`provenanceroute`) act on documents. `queuemute`, `queuesnooze` and `select` are personal; `strengthbar` is the group's.
+`taskforward`/`taskresolve` keep their RULED group-admin fallback (D-98 routing): a task is an instance obligation, not a
+project production. `export`, `purge`, `reproject`, the member-roster and signer ops are machine-only or custodial over
+MEMBERSHIP, which §4.9 leaves with administrators.
+
+**What the matcher could and could not see.** Enumerated from every mutating op in `OPS` against the store method it
+reaches, and from every store method that resolves a `project` bundle by a type test or a `NO_SUCH_PROJECT` /
+`NOT_A_PROJECT` refusal (28 methods). It cannot see a project reached WITHOUT a type test — a write into a bundle whose
+type is never checked; the content acts on a document filed inside a project bundle are in that class and are classified
+above as document acts, a judgement stated rather than hidden — nor any module besides `index.mjs`, `store.mjs`,
+`affordances.mjs` and `airun.mjs`.
+
+**DESIGN GAP (for BOB, not built): `op=caseratify`.** Committing a case document takes a member's own session (D-421),
+standing in the owning project (IC-141 — which an administrator has everywhere) and a registered signer's signature. The
+case document was authored by an OWNER (`op=publish`, DEC-72 clause 5), but no document says whether the member who
+DELIVERS the ratification must hold a position in the project, so an administrator not in the project who is also a
+registered signer can commit that project's case. The ruling would be DEC-72 (5) (*the publisher of a project must be a
+manager of the project*) read onto the commit, or D-421 read as position-free; it is not invented here. `op=ratify` (a
+finding) is not a project act; whether a PROJECT bundle can be ratified through it was NOT driven.
+
+**WHY MAJOR** (IC-137's precedent, read strictly): every act in the first seven rows ANSWERED `ok:true` to a caller not in
+the project and now REFUSES — a refusal where none stood. **Measured consumer impact:** `civicos-ui/app.html` calls
+`op=cite`, `op=promote`, `op=versioncurrent`, `op=proposedispose` and `op=conclude` from a member's session; a member who
+has joined the project is unchanged, and one who has not now receives C-56 with its translation. The affordance surface
+stops offering `cite`/`sever`/`reinstate` on a project to a caller who has not joined it. `agent-worker`, the skills and
+`newgroup`'s own code name none of these acts on a project. No machine credential's answer moved (driven: the ADMIN token
+still revises, and the MEMBER token still cites into, a project nobody invited them to).
+
+**Suites:** new `bio-plane/test/project-authority.test.mjs` and its driver `project-authority.control.mjs` (eight arms,
+all AS DECLARED — two after a recorded correction of the DECLARATION or METHOD, not the subject; results in the suite's
+header). CORRECTED at their sites with dated reasons, never exempted: `citeinquiry.test.mjs` (the DO dispatch's
+parameter roster gains the server-stamped `identity`) and `identity-claims.test.mjs` arm (j) (it selected the first stamp
+site whose writes include `proposedispose`, which is now the CLEAR positional stamp; it names the `decidedBy` site it
+always meant). REC-132's `founder-sight` suite is unchanged and green. **Known and NOT closed here:** D-426.
+
+**RESPONSES:** not yet collected.

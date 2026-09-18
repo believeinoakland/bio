@@ -284,6 +284,16 @@ console.log("\n--- 2b. the rule is the POSITION, not the administrator: an ordin
     + "op=cite answers PROJECT_ACT_NOT_A_PARTICIPANT", codeOf(r), NOT_IN);
   t("vera's op=promote of it is refused the same way", codeOf(await ACTS.promote(VERA, P_OUT)), NOT_IN);
 }
+console.log("\n--- 2b'. KNOWN, NOT CLOSED HERE (D-426): cite has no SIGHT gate on its project, so an uninvited member learns a project exists ---");
+{
+  /* PINNED AS MEASURED, so it fails when D-426 is closed and the pin must then be corrected. Before
+     REC-134 the same two ids answered NO_SUCH_PROJECT and a successful edit; the edit is closed, the
+     existence signal (older than this item: NO_SUCH_PROJECT vs NOT_A_PROJECT already told them apart)
+     is not. vera was never invited to P_JOIN. */
+  const hidden = await ACTS.cite(VERA, P_JOIN), absent = await ACTS.cite(VERA, "PROJ-2026-9134-nosuch");
+  t("D-426 (KNOWN): vera's cite into a project she cannot see answers differently from one that does not exist",
+    [codeOf(hidden), codeOf(absent)], [NOT_IN, "NO_SUCH_PROJECT"]);
+}
 console.log("\n--- 2c. JOINED is not OWNER: ruth has joined P_JOIN and is not its owner ---");
 t("ruth may cite into P_JOIN (joined: the working rights, §7.5)", (await ACTS.cite(RUTH, P_JOIN))?.ok, true);
 t("ruth may NOT adopt a bias set into P_JOIN's scope — that is its managers' act (Declared Bias; DEC-72 (5))",

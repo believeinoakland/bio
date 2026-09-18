@@ -43,7 +43,7 @@ const ARMS = {
                "    const who = this.#positionalMember(null, identity);\n    if (who === null || true) return null;"]],
     mustFail: [...REFUSED_ALL, "the refusal carries", "and nothing was written", "and P_OUT stands on nothing",
                "vera is INVITED", "vera's op=promote", "ruth may NOT adopt", "and the rescue did not make ruth",
-               "a caller naming", "nor is an `identity`"],
+               "a caller naming", "nor is an `identity`", "D-426 (KNOWN)"],
   },
 
   /* THE BRIEF'S CONTROL 1: the positional check removed from ONE enumerated act (cite), every other
@@ -53,7 +53,7 @@ const ARMS = {
                "      /* armed: cite's check removed */"]],
     mustFail: ["REFUSED: the founder (not in P_OUT) — op=cite", "REFUSED: ruth (not in P_OUT) — op=cite",
                "the refusal carries", "and nothing was written", "vera is INVITED", "and the rescue did not make ruth",
-               "a caller naming"],
+               "a caller naming", "D-426 (KNOWN)"],
   },
 
   /* THE BRIEF'S CONTROL 2: the positional check APPLIED to §7.13's path. The rescue is the one act an
