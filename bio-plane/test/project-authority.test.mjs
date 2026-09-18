@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-authority.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-authority.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-18 in worktree agent-a78e80263e9738d43 on the merge of origin/main f16b9b49 (real src/index.mjs 657,700 B sha256 5503f0b281c5…, src/store.mjs 2,597,155 B sha256 a7147b680298…, src/affordances.mjs 140,708 B sha256 0b097eebac16…, untouched: YES): (a) baseline 59/0 · (b) no-check 31/28 — every REFUSED arm is an act that SUCCEEDS without the check, which is the pre-fix defect measured · (c) cite-unchecked 50/9 — only cite's arms · (d) rescue-checked 55/4 — the check applied to §7.13 breaks every rescue arm · (e) stamp-dropped 56/3 — versioncurrent opens when the control plane's stamp is removed · (f) position-from-viewer 50/9 · (g) refuse-every-admin 41/18 — every refusal arm stays GREEN (the lie) and the in-project arms catch it · (h) preflight-unnarrowed 57/2. (f) and (g) came back NOT AS DECLARED on the first run and were corrected in the DECLARATION/METHOD, not the subject (reasons at each arm in the driver); re-run, both AS DECLARED. RE-RUN after the D-426 pin and the two literal C-56 arms were added (figures above are that run), every arm AS DECLARED, sources untouched: YES.
+   RE-RUN 2026-09-18 by REC-138 after D-426 closed (the pin corrected to D-426 (CLOSED), which the positional arms can no longer move, so it left the no-check and cite-unchecked declarations): baseline 59/0 · no-check 32/27 · cite-unchecked 51/8 · rescue-checked 55/4 · stamp-dropped 56/3 · position-from-viewer 50/9 · refuse-every-admin 41/18 · preflight-unnarrowed 57/2 — every arm AS DECLARED, sources untouched: YES.
  * =========================================================================
  * REC-134 / IC-152 / C-56 — SIGHT IS NOT AUTHORITY, AT EVERY ACT ON A PROJECT.
  * Membership Architecture v2 §7, the block *"SIGHT IS NOT AUTHORITY — and this is
@@ -291,15 +292,17 @@ console.log("\n--- 2b. the rule is the POSITION, not the administrator: an ordin
     + "op=cite answers PROJECT_ACT_NOT_A_PARTICIPANT", codeOf(r), NOT_IN);
   t("vera's op=promote of it is refused the same way", codeOf(await ACTS.promote(VERA, P_OUT)), NOT_IN);
 }
-console.log("\n--- 2b'. KNOWN, NOT CLOSED HERE (D-426): cite has no SIGHT gate on its project, so an uninvited member learns a project exists ---");
+console.log("\n--- 2b'. D-426, CLOSED by REC-138: an uninvited member's cite into a project she cannot see answers as an absent one ---");
 {
-  /* PINNED AS MEASURED, so it fails when D-426 is closed and the pin must then be corrected. Before
-     REC-134 the same two ids answered NO_SUCH_PROJECT and a successful edit; the edit is closed, the
-     existence signal (older than this item: NO_SUCH_PROJECT vs NOT_A_PROJECT already told them apart)
-     is not. vera was never invited to P_JOIN. */
+  /* CORRECTED 2026-09-18 by REC-138 (IC-155), not exempted. This pinned D-426 AS MEASURED — vera's
+     cite into a project she cannot see answered C-56.1 while an absent id answered NO_SUCH_PROJECT —
+     so that it would fail when D-426 closed. It did: `cite` now asks SIGHT before POSITION
+     (`Store#inSight`), and both ids answer NO_SUCH_PROJECT. The raw byte-identity of that answer, for
+     every project-targeted act, is `project-sight.test.mjs`'s; this arm keeps the codes. vera was never
+     invited to P_JOIN. */
   const hidden = await ACTS.cite(VERA, P_JOIN), absent = await ACTS.cite(VERA, "PROJ-2026-9134-nosuch");
-  t("D-426 (KNOWN): vera's cite into a project she cannot see answers differently from one that does not exist",
-    [codeOf(hidden), codeOf(absent)], [NOT_IN, "NO_SUCH_PROJECT"]);
+  t("D-426 (CLOSED): vera's cite into a project she cannot see answers exactly as one that does not exist",
+    [codeOf(hidden), codeOf(absent)], ["NO_SUCH_PROJECT", "NO_SUCH_PROJECT"]);
 }
 console.log("\n--- 2c. JOINED is not OWNER: ruth has joined P_JOIN and is not its owner ---");
 t("ruth may cite into P_JOIN (joined: the working rights, §7.5)", (await ACTS.cite(RUTH, P_JOIN))?.ok, true);

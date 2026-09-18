@@ -3737,7 +3737,8 @@ export class Store extends DurableObject {
     if (!sel.ok) return sel;
 
     const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
-    if (!p) return { ok: false, reason: "NO_SUCH_PROJECT", project };
+    /* REC-138 / D-426: sight BEFORE position — a project this viewer cannot see answers as absent. */
+    if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);
     if (p.object_type !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", project, got: p.object_type,
                detail: "cites lives on the citing object and this action edits a Project's edges" };
@@ -9970,8 +9971,10 @@ export class Store extends DurableObject {
        caller for a word, and the widening is otherwise invisible to one: the
        same request that cited into a case cites into a question. */
     const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
-    if (!p) return { ok: false, reason: "NO_SUCH_PROJECT", project,
-                     detail: "the citing object must exist before it can cite anything" };
+    /* REC-138 / D-426: sight BEFORE position. A project this viewer cannot see answers exactly as
+       an absent id, through the one shared answer; an inquiry is shared material and always in
+       sight, so the question arm is untouched. */
+    if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);
     /* Through normalizeType, so a legacy focus/problem spelling lands on the
        inquiry arm rather than falling through to the refusal — the MAP RULE. */
     const ontoInquiry = normalizeType(p.object_type) === "inquiry";
@@ -12974,10 +12977,22 @@ export class Store extends DurableObject {
     return this.ctx.storage.transactionSync(() => {
       const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
 
+      /* REC-138 / D-426: a REVISION of a bundle the actor cannot see answers exactly as a revision of
+         one that does not exist — one answer, `#promoteAbsent`, from both branches. Only project
+         bundles are ever out of sight (`viewerPredicate`). Asked of `actorViewer`, the VISIBILITY
+         half the control plane stamps beside `actorIdentity` (both deleted first there), and asked
+         only when that stamp arrived: an internal write (`cite`'s own edit, the version pointer)
+         carries neither and is not a caller. A stamped identity with no viewer fails CLOSED.
+         BEFORE everything that reads `cur` — the title carry, NAME_TAKEN, 7.11's owner test and
+         C-56 — so none of them can speak to a caller who cannot see the project. A CREATION at a
+         hidden id (base null) still answers EXISTS: a shared id space cannot hide that an id is
+         taken, which is D-428's, stated there rather than here. */
+      if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
+        return Store.#promoteAbsent();
       if (cur && base === null)
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
-        return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+        return Store.#promoteAbsent();
 
       /* A title is never LOST by a revision.
        *
@@ -26824,6 +26839,47 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-project-authority */
     return null;
   }
+
+  /* ===== REC-138 / D-426 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT ==
+   *
+   * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project — *"Not its
+   * existence, not its name, not its references, not its participants."* The reads have honoured
+   * that since REC-25 (`viewerPredicate`, D-15's one compilation point). The ACTS did not: `cite`,
+   * `sever`, `reinstate`, `promote`'s revision arm, four roster acts, `forkProject` and the run
+   * gate's project arm resolved their project with a bare lookup, so they answered a nonexistent id
+   * one way and an existing one another — an existence oracle for project ids. REC-134 closed the
+   * EDIT (C-56) and its own refusal became the signal; before it, the edit itself was.
+   *
+   * TWO PIECES, AND EACH IS THE ONLY ONE OF ITS KIND.
+   *   `#inSight(id, viewer)` asks `viewerPredicate` — never a second rule — whether this viewer may
+   *   see this bundle. Only PROJECT rows are ever filtered, so for anything else it answers true to
+   *   every recognised viewer; an absent or unrecognised viewer sees NOTHING (fail closed, the gate's
+   *   own posture), which is why every act that calls it has its viewer stamped by the control plane.
+   *   `Store.#noSuchProject(project)` is THE answer a project-targeted act gives when there is no
+   *   project it may name — returned by the absent branch and the hidden branch alike, and in every
+   *   caller by ONE condition (`!p || !this.#inSight(...)`), so the two cannot drift: there is no
+   *   second string to keep in step. IC-141's `#noCaseDocument` is the precedent, one object over.
+   *
+   * THE ORDER IS THE RULE: SIGHT BEFORE POSITION. Every caller asks `#inSight` BEFORE
+   * `#projectAuthority` or its own owner test, so C-56 and NOT_THE_OWNER are only ever said to a
+   * caller who can already see the project (an invited member, or an administrator, §7.3) — and
+   * say nothing a caller did not already know. Asked the other way round, the positional refusal is
+   * the oracle (the suite's `position-first` control arm measures exactly that). */
+  #inSight(bundleId, viewer) {
+    const g = viewerPredicate(viewer);
+    return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, bundleId, ...g.args);
+  }
+  /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
+     hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
+     "the same answer the absent id gets", and for this act that answer is ABSENT. */
+  static #promoteAbsent() {
+    return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+  }
+  static #noSuchProject(project) {
+    return { ok: false, reason: "NO_SUCH_PROJECT", project: project ?? null,
+             detail: "no project answers to that id here. A project you cannot see is answered exactly as one "
+                   + "that does not exist (Membership Architecture v2 §7.9), so this is not a hint either way." };
+  }
   /** D-310: DOES THIS MEMBER HOLD THE OWNER POSITION ANYWHERE — the question
    *  `op=affordances` has to answer before it offers `publish`, because the
    *  project is a PARAMETER of that act and the pre-flight cannot know which one
@@ -26897,9 +26953,10 @@ export class Store extends DurableObject {
 
   /** 7.2: the owner invites by handle. Administrators may also invite, because
    *  7.7 already gives them authority over participation. */
-  projectInvite({ projectId, handle, by } = {}) {
+  projectInvite({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -26966,9 +27023,10 @@ export class Store extends DurableObject {
    *  Consensus on addition is the load-bearing half, exactly as in 4.7. Without
    *  it one owner recruits confederates and manufactures the majority that then
    *  removes the others, and closing that door is what makes removal safe. */
-  projectOwnerAdd({ projectId, handle, by } = {}) {
+  projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -27028,9 +27086,11 @@ export class Store extends DurableObject {
    *  outright, was considered and rejected in v2: it makes a member's
    *  deactivation silently destroy project state, and hands administrators a way
    *  to empty a project's ownership one member at a time. */
-  projectOwnerRescue({ projectId, handle, by, reason } = {}) {
+  projectOwnerRescue({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    /* REC-138 / D-426: sight BEFORE position — so ADMIN_ONLY is said only to a member who can
+       already see the project (an invited one); an administrator sees every project (§7.3). */
+    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isAdminMember(by))
       return { ok: false, reason: "ADMIN_ONLY",
@@ -27077,9 +27137,10 @@ export class Store extends DurableObject {
   /** 7.10 removal. A majority of all owners, the target in the denominator and
    *  not voting, EXCEPT at exactly two owners where both must agree and the
    *  target is one of them. The floor is one owner. */
-  projectOwnerRemove({ projectId, handle, by, reason } = {}) {
+  projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
+    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -27155,9 +27216,12 @@ export class Store extends DurableObject {
    *
    *  Origin is recorded as `derived_from`, already in the closed relationship
    *  vocabulary of State Rules 5.1, so nothing is added to it. */
-  forkProject({ projectId, newId, title, by } = {}) {
+  forkProject({ projectId, newId, title, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    /* REC-138 / D-426: sight BEFORE position. NOT_A_PARTICIPANT below said *"An uninvited member
+       cannot see that it exists"* while telling them exactly that; it is now said only to a caller
+       who CAN see the project (an administrator not in it). */
+    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
@@ -36175,14 +36239,22 @@ export class Store extends DurableObject {
    *  treats as projectless. That is the honest direction and it is not a hole:
    *  a run's context is not required to be a bundle this store holds, and
    *  refusing on a lookup that came back empty would be refusing on what cannot
-   *  be verified — a claim about the record made from a fact about our index. */
+   *  be verified — a claim about the record made from a fact about our index.
+   *
+   *  REC-138 / D-426 — EXCEPT A CONTEXT THAT SAYS IT IS A PROJECT, which is now that project
+   *  whether or not this store holds it. As built, a PROJECT context the store did not hold read
+   *  as projectless and was PERMITTED, while one it held and the caller had not joined was refused
+   *  — so a member naming `contextType=project` learned from the verdict whether the id existed,
+   *  including for a project they cannot see (§7.9). The answer the paragraph above guards against
+   *  does not arise here: the gate asks the CALLER's participation, and a participation row exists
+   *  only for a project the record holds, so "you have joined no project by that id" is verified
+   *  for an absent id exactly as for a hidden one. A member is now refused both, byte for byte (the
+   *  refusal names only what the caller sent); a machine credential is not asked and is unchanged;
+   *  a question context keeps its projectless reading, because it names no project. */
   #runContextProjects(contextType, contextId) {
     const id = contextId == null ? "" : String(contextId);
     if (!id) return [];
-    if (String(contextType) === "project") {
-      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
-      return b && normalizeType(b.object_type) === "project" ? [id] : [];
-    }
+    if (String(contextType) === "project") return [id];
     return this.#citesInto(id).confirmed.filter((from) => {
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, from);
       return !!b && normalizeType(b.object_type) === "project";
@@ -40190,14 +40262,16 @@ export class Store extends DurableObject {
         adminremove: () => this.adminRemove(body || {}),
         adminarith: () => this.adminArithmetic(),
         projectclaimowner: () => this.projectClaimOwner(body || {}),
+        /* REC-138: `viewer` is the control plane's stamp (sight before position, `#inSight`). */
         projectowneradd: () => this.projectOwnerAdd({ projectId: url.searchParams.get("projectId"),
-          handle: url.searchParams.get("handle"), by: url.searchParams.get("by") }),
+          handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer") }),
         projectownerremove: () => this.projectOwnerRemove({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
-          reason: url.searchParams.get("reason") }),
+          reason: url.searchParams.get("reason"), viewer: url.searchParams.get("viewer") }),
         projectownerrescue: () => this.projectOwnerRescue({ projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
-          reason: url.searchParams.get("reason") }),
+          reason: url.searchParams.get("reason"), viewer: url.searchParams.get("viewer") }),
         projectownerarith: () => this.projectOwnerArithmetic({ projectId: url.searchParams.get("projectId"),
                                                                viewer: url.searchParams.get("viewer") }),
         retire: () => this.retire({ handle: url.searchParams.get("handle"),
@@ -40365,9 +40439,10 @@ export class Store extends DurableObject {
         publishedmanifest: () => this.publishedManifest(),
         projectfork: () => this.forkProject({ projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"), title: url.searchParams.get("title"),
-          by: url.searchParams.get("by") }),
+          by: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),   /* REC-138 */
         projectinvite: () => this.projectInvite({ projectId: url.searchParams.get("projectId"),
-          handle: url.searchParams.get("handle"), by: url.searchParams.get("by") }),
+          handle: url.searchParams.get("handle"), by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer") }),   /* REC-138 */
         projectjoin: () => this.projectJoin({ projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by") }),
         projectleave: () => this.projectLeave({ projectId: url.searchParams.get("projectId"),

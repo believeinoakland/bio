@@ -29255,7 +29255,7 @@ var Store = class _Store extends DurableObject {
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
     if (!sel.ok) return sel;
     const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
-    if (!p) return { ok: false, reason: "NO_SUCH_PROJECT", project };
+    if (!p || !this.#inSight(p.bundle_id, viewer)) return _Store.#noSuchProject(project);
     if (p.object_type !== "project")
       return {
         ok: false,
@@ -35169,12 +35169,7 @@ ${lines.join("\n")}
     const sel = this.selectionResolve({ handle, viewer, owner, weight: "report" });
     if (!sel.ok) return sel;
     const p = this.#one(`SELECT bundle_id, object_type, bundle_sha FROM bundles WHERE bundle_id=?`, project);
-    if (!p) return {
-      ok: false,
-      reason: "NO_SUCH_PROJECT",
-      project,
-      detail: "the citing object must exist before it can cite anything"
-    };
+    if (!p || !this.#inSight(p.bundle_id, viewer)) return _Store.#noSuchProject(project);
     const ontoInquiry = normalizeType(p.object_type) === "inquiry";
     if (p.object_type !== "project" && !ontoInquiry)
       return {
@@ -37944,10 +37939,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     if (!bundleId || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
     return this.ctx.storage.transactionSync(() => {
       const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
+      if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
+        return _Store.#promoteAbsent();
       if (cur && base === null)
         return { ok: false, reason: "EXISTS", detail: "creation attempted against an existing bundle" };
       if (!cur && base !== null)
-        return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+        return _Store.#promoteAbsent();
       if (cur && (meta.title === void 0 || meta.title === null || meta.title === "")) {
         const prev = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId);
         if (prev && prev.title) meta.title = prev.title;
@@ -50517,6 +50514,49 @@ ${words}`;
       );
     return null;
   }
+  /* ===== REC-138 / D-426 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT ==
+   *
+   * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project — *"Not its
+   * existence, not its name, not its references, not its participants."* The reads have honoured
+   * that since REC-25 (`viewerPredicate`, D-15's one compilation point). The ACTS did not: `cite`,
+   * `sever`, `reinstate`, `promote`'s revision arm, four roster acts, `forkProject` and the run
+   * gate's project arm resolved their project with a bare lookup, so they answered a nonexistent id
+   * one way and an existing one another — an existence oracle for project ids. REC-134 closed the
+   * EDIT (C-56) and its own refusal became the signal; before it, the edit itself was.
+   *
+   * TWO PIECES, AND EACH IS THE ONLY ONE OF ITS KIND.
+   *   `#inSight(id, viewer)` asks `viewerPredicate` — never a second rule — whether this viewer may
+   *   see this bundle. Only PROJECT rows are ever filtered, so for anything else it answers true to
+   *   every recognised viewer; an absent or unrecognised viewer sees NOTHING (fail closed, the gate's
+   *   own posture), which is why every act that calls it has its viewer stamped by the control plane.
+   *   `Store.#noSuchProject(project)` is THE answer a project-targeted act gives when there is no
+   *   project it may name — returned by the absent branch and the hidden branch alike, and in every
+   *   caller by ONE condition (`!p || !this.#inSight(...)`), so the two cannot drift: there is no
+   *   second string to keep in step. IC-141's `#noCaseDocument` is the precedent, one object over.
+   *
+   * THE ORDER IS THE RULE: SIGHT BEFORE POSITION. Every caller asks `#inSight` BEFORE
+   * `#projectAuthority` or its own owner test, so C-56 and NOT_THE_OWNER are only ever said to a
+   * caller who can already see the project (an invited member, or an administrator, §7.3) — and
+   * say nothing a caller did not already know. Asked the other way round, the positional refusal is
+   * the oracle (the suite's `position-first` control arm measures exactly that). */
+  #inSight(bundleId, viewer) {
+    const g = viewerPredicate(viewer);
+    return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, bundleId, ...g.args);
+  }
+  /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
+     hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
+     "the same answer the absent id gets", and for this act that answer is ABSENT. */
+  static #promoteAbsent() {
+    return { ok: false, reason: "ABSENT", detail: "update attempted against a bundle that does not exist" };
+  }
+  static #noSuchProject(project) {
+    return {
+      ok: false,
+      reason: "NO_SUCH_PROJECT",
+      project: project ?? null,
+      detail: "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way."
+    };
+  }
   /** D-310: DOES THIS MEMBER HOLD THE OWNER POSITION ANYWHERE — the question
    *  `op=affordances` has to answer before it offers `publish`, because the
    *  project is a PARAMETER of that act and the pre-flight cannot know which one
@@ -50593,9 +50633,9 @@ ${words}`;
   }
   /** 7.2: the owner invites by handle. Administrators may also invite, because
    *  7.7 already gives them authority over participation. */
-  projectInvite({ projectId, handle, by } = {}) {
+  projectInvite({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (!b || !this.#inSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return {
@@ -50687,9 +50727,9 @@ ${words}`;
    *  Consensus on addition is the load-bearing half, exactly as in 4.7. Without
    *  it one owner recruits confederates and manufactures the majority that then
    *  removes the others, and closing that door is what makes removal safe. */
-  projectOwnerAdd({ projectId, handle, by } = {}) {
+  projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (!b || !this.#inSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return {
@@ -50769,9 +50809,9 @@ ${words}`;
    *  outright, was considered and rejected in v2: it makes a member's
    *  deactivation silently destroy project state, and hands administrators a way
    *  to empty a project's ownership one member at a time. */
-  projectOwnerRescue({ projectId, handle, by, reason } = {}) {
+  projectOwnerRescue({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (!b || !this.#inSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isAdminMember(by))
       return {
@@ -50838,9 +50878,9 @@ ${words}`;
   /** 7.10 removal. A majority of all owners, the target in the denominator and
    *  not voting, EXCEPT at exactly two owners where both must agree and the
    *  target is one of them. The floor is one owner. */
-  projectOwnerRemove({ projectId, handle, by, reason } = {}) {
+  projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (!b || !this.#inSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return {
@@ -50945,9 +50985,9 @@ ${words}`;
    *
    *  Origin is recorded as `derived_from`, already in the closed relationship
    *  vocabulary of State Rules 5.1, so nothing is added to it. */
-  forkProject({ projectId, newId, title, by } = {}) {
+  forkProject({ projectId, newId, title, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (!b || !this.#inSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = this.#participation(projectId, by);
     if (!p) return {
@@ -58933,14 +58973,22 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  treats as projectless. That is the honest direction and it is not a hole:
    *  a run's context is not required to be a bundle this store holds, and
    *  refusing on a lookup that came back empty would be refusing on what cannot
-   *  be verified — a claim about the record made from a fact about our index. */
+   *  be verified — a claim about the record made from a fact about our index.
+   *
+   *  REC-138 / D-426 — EXCEPT A CONTEXT THAT SAYS IT IS A PROJECT, which is now that project
+   *  whether or not this store holds it. As built, a PROJECT context the store did not hold read
+   *  as projectless and was PERMITTED, while one it held and the caller had not joined was refused
+   *  — so a member naming `contextType=project` learned from the verdict whether the id existed,
+   *  including for a project they cannot see (§7.9). The answer the paragraph above guards against
+   *  does not arise here: the gate asks the CALLER's participation, and a participation row exists
+   *  only for a project the record holds, so "you have joined no project by that id" is verified
+   *  for an absent id exactly as for a hidden one. A member is now refused both, byte for byte (the
+   *  refusal names only what the caller sent); a machine credential is not asked and is unchanged;
+   *  a question context keeps its projectless reading, because it names no project. */
   #runContextProjects(contextType, contextId) {
     const id = contextId == null ? "" : String(contextId);
     if (!id) return [];
-    if (String(contextType) === "project") {
-      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
-      return b && normalizeType(b.object_type) === "project" ? [id] : [];
-    }
+    if (String(contextType) === "project") return [id];
     return this.#citesInto(id).confirmed.filter((from) => {
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, from);
       return !!b && normalizeType(b.object_type) === "project";
@@ -62896,22 +62944,26 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         adminremove: () => this.adminRemove(body || {}),
         adminarith: () => this.adminArithmetic(),
         projectclaimowner: () => this.projectClaimOwner(body || {}),
+        /* REC-138: `viewer` is the control plane's stamp (sight before position, `#inSight`). */
         projectowneradd: () => this.projectOwnerAdd({
           projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"),
-          by: url.searchParams.get("by")
+          by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer")
         }),
         projectownerremove: () => this.projectOwnerRemove({
           projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"),
           by: url.searchParams.get("by"),
-          reason: url.searchParams.get("reason")
+          reason: url.searchParams.get("reason"),
+          viewer: url.searchParams.get("viewer")
         }),
         projectownerrescue: () => this.projectOwnerRescue({
           projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"),
           by: url.searchParams.get("by"),
-          reason: url.searchParams.get("reason")
+          reason: url.searchParams.get("reason"),
+          viewer: url.searchParams.get("viewer")
         }),
         projectownerarith: () => this.projectOwnerArithmetic({
           projectId: url.searchParams.get("projectId"),
@@ -63114,13 +63166,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           projectId: url.searchParams.get("projectId"),
           newId: url.searchParams.get("newId"),
           title: url.searchParams.get("title"),
-          by: url.searchParams.get("by")
+          by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer")
         }),
+        /* REC-138 */
         projectinvite: () => this.projectInvite({
           projectId: url.searchParams.get("projectId"),
           handle: url.searchParams.get("handle"),
-          by: url.searchParams.get("by")
+          by: url.searchParams.get("by"),
+          viewer: url.searchParams.get("viewer")
         }),
+        /* REC-138 */
         projectjoin: () => this.projectJoin({
           projectId: url.searchParams.get("projectId"),
           by: url.searchParams.get("by")
@@ -69012,7 +69068,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -69091,6 +69147,8 @@ var index_default = {
         } else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
         delete b.actorIdentity;
         b.actorIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+        delete b.actorViewer;
+        b.actorViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           if (!sessCaps.has("create_projects"))
             return json({
