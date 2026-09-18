@@ -2360,6 +2360,11 @@ export class Store extends DurableObject {
         "content:chain=does-not-apply names the images cited as their own bytes -- no transcription stands "
         + "between such a citation and what it points at, so its chain is not undetermined and "
         + "content:chain=undetermined does not match it",
+        /* REC-127 / IC-138: the cap axis's same third answer, stated beside the
+           chain's for the same reason. */
+        "content:cap=does-not-apply names the same images -- with nothing transcribed there is no derivation "
+        + "step for a cap to be the weakest of, so their cap is not undetermined and content:cap=undetermined "
+        + "does not match them",
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
         + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
         "has:leg asks whether the bundle carries any row in the meaning table at all",

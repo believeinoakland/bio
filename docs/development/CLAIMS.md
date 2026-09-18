@@ -13446,3 +13446,21 @@ conflicted on this file and `INTERFACE-CHANGES.md` (both sides appended) and the
 unresolved on the local branch — caught by `plancheck --local` before any push, resolved KEEP-BOTH. (2) Row the sibling defect this item measured and did not close: `content:cap=undetermined`
 matches an image cited as bytes, and `rows=content`'s `derivation_cap` shows its NULL unlabelled (measured in
 `rec121-chain-bytes.test.mjs` §4, whose assertion is the one that item must correct).
+
+## CLAIM 2026-09-18 RECORD (REC-127 — `content:cap=undetermined` stops matching an image cited as its own bytes)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-ab81d2ae5244e06a7`, branch
+`worktree-agent-ab81d2ae5244e06a7`, base `2c4a5c11`. `npm ci` in all three packages, each `node_modules` a real
+directory (4.3 GiB free). Paths:
+
+- RECORD (own): `bio-plane/src/query.mjs` (the `content:` arm's `cap` sub-field, and `rows=content`'s projection
+  of `derivation_cap` only); `bio-plane/src/store.mjs` (ONE line in `searchFields()`'s published `syntax`).
+- Tests: a new `bio-plane/test/rec127-cap-bytes.test.mjs` and `bio-plane/test/nc-rec127.mjs`;
+  `bio-plane/test/rec121-chain-bytes.test.mjs` §4 CORRECTED at its site with the reason.
+- Generated: `bio-plane/dist/*` rebuilt.
+- Docs: `INTERFACE-CHANGES.md` (IC-138, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md`
+  (§4.2 and front matter), `docs/DECIDED.md` on regeneration, `.gitignore` (the harness's pristine directory),
+  this block.
+
+NOT `schema.mjs` or `checks/bio-checks.mjs`, NOT `QUEUE.md` (CONDUCT's), NOT `content-arm.test.mjs` §11 (the
+over-strictness pin is read, never edited).

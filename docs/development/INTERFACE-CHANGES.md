@@ -10022,3 +10022,59 @@ move"), and `rows=content`'s `derivation_cap` shows the same NULL. Nor does `row
 "does-not-apply"`; no new act. SKILL / FRAMEWORK / DIST expected NOT-AFFECTED (zero readers, above).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MINOR — I3 25.0.0 → 25.1.0.** Base read AT RESOLUTION: 25.0.0 (IC-130 and IC-132 each took a MAJOR meanwhile; IC-130 was measured by the builder not to touch the `content:` arm). **MINOR, not MAJOR, with the reason:** the one answer that NARROWS (`chain:undetermined` no longer returns bytes rows) only stops OVER-REPORTING — it removes rows that were labelled with a question they have no answer to, and every one of them stays reachable under its own stated value `does-not-apply`; no consumer was found (civicos-ui, agent-worker, the pdf and ocr workers, newgroup), so no caller's answer loses a row it could legitimately have wanted. UI answers through IC-125's standing `cited_as` delegation. **Left open and rowed:** the same mislabel on the CAP axis (`content:cap=undetermined` still matches bytes rows) → `REC-127`.
+
+---
+
+## IC-138 · I3: THE `content:` ARM'S `cap` FILTER GAINS THE SAME THIRD ANSWER — `content:cap=does-not-apply` names an image cited as its own bytes, `content:cap=undetermined` STOPS matching one, and `rows=content`'s `derivation_cap` says `does-not-apply` on such a row · PROPOSED 2026-09-18 (REC-127, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the query language of `op=search` / `op=meaningrows`, and the `rows=content` row).
+- **Proposer / owner to land it:** RECORD, on the REC-127 row; landed in this branch.
+- **Change class: proposed MINOR, on IC-131's shape exactly — additive in its vocabulary, and ONE ANSWER
+  NARROWS, stated rather than argued down.** Built on I3 **25.1.0** (`2c4a5c11`); CONDUCT reads the base
+  again AT RESOLUTION.
+
+**WHAT MOVES, and only for a row with `cited_as = 'bytes'` (FW-19 / IC-125):**
+
+| question | before | after |
+| --- | --- | --- |
+| `content:cap=undetermined` | `derivation_cap IS NULL` — text rows with no cap AND every image cited as its own bytes | `derivation_cap IS NULL AND cited_as <> 'bytes'` — text rows only |
+| `content:cap=does-not-apply` | not a value (fell through to `derivation_cap = 'DOES-NOT-APPLY'`, matching nothing) | `cited_as = 'bytes'` |
+| `rows=content` → `derivation_cap` on a bytes row | `NULL` (indistinguishable from undetermined) | `"does-not-apply"` |
+| `op=searchfields` → `syntax` | — | one line stating the cap's third answer |
+
+Every text row's answer and every text row's `derivation_cap` is unchanged. **The label is in
+`derivation_cap`'s OWN SLOT, not a new column**, on purpose: a new column would move the shape of every
+`rows=content` row; this moves only a bytes row's VALUE (a new registry key, `rowLabel`, projects a named
+stored column through an expression in its own position). A comparison (`content:cap<=B`, `cap<C`) is
+untouched — a bytes row's NULL compared to nothing before and still does. `does-not-apply` is the
+chain's word (`CAP_DOES_NOT_APPLY` is bound to `CHAIN_DOES_NOT_APPLY`, never typed twice), so one row
+reads one word for one fact on both axes; the value arrives upper-cased (`case: upper`, as `UNDETERMINED`
+does) and travels as a bound ARGUMENT.
+
+**WHY IT NARROWS, and why that is the correction rather than the regression.** A bytes row has no
+transcription, so there is no derivation step for a cap to be the weakest of: its cap is NULL BY MEANING
+(EXTRACTION-BREADTH §3.1). A consumer that used `cap=undetermined` to find "rows whose ceiling is open"
+gets FEWER rows, and every row it loses is one whose ceiling was never open. The images are NOT dropped:
+they answer `cap=does-not-apply`, and `has:content`, `content:image`, `content:chain=does-not-apply`,
+`content:member`, `content:uncited` and `op=content` all still reach them — `rec127-cap-bytes.test.mjs` §3,
+whose `dropall` control arms exactly that liar and fails.
+
+**THE OVER-STRICTNESS PIN.** `content-arm.test.mjs` §11's digest over 40 `content:` questions on a fixture
+with no bytes row is **byte-identical** (`c39f4e8adf1960c2…`, the value IC-131 recorded) on this tree and
+on `src/query.mjs` as at `2c4a5c11` (`node test/nc-rec127.mjs`, arm `preitem`, after `baseline2` shows two
+untouched runs agree).
+
+**CONSUMER IMPACT, MEASURED.** A recursive grep for `rows=content`, `cap=undetermined`, `content:cap` and
+`derivation_cap` over `civicos-ui/`, `agent-worker/`, `pdf-worker/src/`, `ocr-worker/src/` and
+`newgroup/src/` answers ONE reader outside the plane: `civicos-ui/test/meaning-arms.walks.mjs` walks
+`content:cap<C`, a comparison this IC does not move (`newgroup/src/release.mjs` matches only the bundled
+schema text). The plane's own reader is `rec121-chain-bytes.test.mjs` §4, which MEASURED this defect and
+is CORRECTED at its site with the reason, not exempted.
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.** `op=content`'s own `derivation_cap` on a bytes row still reads
+`null`: that op already says `transcription.applies: false` beside it, so the null is labelled there;
+and neither `rows=leg` nor `capture_text` is touched.
+
+**RESPONSES:** not yet collected. UI: the `cited_as` rendering act IC-125 already delegated covers this and
+gains one word it can read, `derivation_cap: "does-not-apply"`; no new act. SKILL / FRAMEWORK / DIST
+expected NOT-AFFECTED (no reader of the moved answer, above).

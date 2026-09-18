@@ -23,11 +23,11 @@
  *   3. THE LIAR'S GREEN IS REFUSED: the images are still reachable through
  *      every other `content:` question, and `op=content` still reads them.
  *
- * WHAT IT DOES NOT CLAIM: `content:cap=undetermined` ALSO matches a bytes row
- * (`derivation_cap IS NULL`), the same class on the cap axis. It is OUT OF
- * THIS ROW'S SCOPE ("no other content: answer may move") and is reported to
- * CONDUCT as a finding rather than fixed here; section 4 MEASURES it, so the
- * day it is fixed this suite's line is the one that must be corrected.
+ * WHAT IT DID NOT CLAIM: `content:cap=undetermined` ALSO matched a bytes row
+ * (`derivation_cap IS NULL`), the same class on the cap axis. It was OUT OF
+ * THIS ROW'S SCOPE ("no other content: answer may move") and was reported to
+ * CONDUCT; section 4 MEASURED it. REC-127 (IC-138) CLOSED it, and section 4's
+ * assertion is CORRECTED at its site with the reason, never exempted.
  */
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";               /* D-186 */
@@ -223,14 +223,22 @@ t("`op=content` still reads the bytes row, and its transcription still says it d
   [(await readRow(IMG_ROW))?.transcription?.applies], [false]);
 
 /* ==================================================================== 4 */
-console.log("\n--- 4. MEASURED, NOT FIXED: the cap axis carries the same class ---");
-/* OUT OF SCOPE (the row: "no other content: answer may move"). Recorded as a
-   measurement so the finding is reproducible from this suite; when a later item
-   gives the cap axis its own does-not-apply answer, THIS assertion is the one it
-   must correct, with the reason. */
-t("REPORTED: `content:cap=undetermined` STILL returns the bytes rows — `derivation_cap IS NULL` "
-+ "is null by meaning on them too (a separate row's defect, not this one's)",
-  await idsOf("content:cap=undetermined"), [DOC_IMG, DOC_MIXED, DOC_TEXT].sort());
+console.log("\n--- 4. the cap axis carries the same class — CLOSED by REC-127 ---");
+/* CORRECTED BY REC-127 (IC-138), NOT EXEMPTED. This assertion was written by
+   REC-121 as a MEASUREMENT of a defect out of its scope: it pinned
+   `content:cap=undetermined` returning [DOC_IMG, DOC_MIXED, DOC_TEXT], because
+   `derivation_cap IS NULL` counted both images cited as their own bytes. That
+   answer was WRONG — a bytes row's cap is null by meaning, not undetermined —
+   and REC-127 gave the cap axis the chain's third answer. So the pin now states
+   the corrected answer: the image-only document LEAVES `cap=undetermined`, and
+   both images answer `cap=does-not-apply`. DOC_MIXED stays under undetermined,
+   and correctly: its TEXT row's chain is a `layer` step, which caps nothing, so
+   that row's cap genuinely is undetermined — the image beside it is not why.
+   The full cap-axis coverage is `rec127-cap-bytes.test.mjs`. */
+t("CORRECTED by REC-127: `content:cap=undetermined` no longer returns the bytes rows — their null cap "
++ "does not apply, and they answer `content:cap=does-not-apply`",
+  [await idsOf("content:cap=undetermined"), await idsOf("content:cap=does-not-apply")],
+  [[DOC_MIXED, DOC_TEXT].sort(), [DOC_IMG, DOC_MIXED].sort()]);
 
 await mf.dispose();
 console.log(`\nrec121-chain-bytes: ${pass} pass, ${fail} fail`);
