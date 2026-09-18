@@ -10045,8 +10045,9 @@ move"), and `rows=content`'s `derivation_cap` shows the same NULL. Nor does `row
 ## IC-136 · I3: THE LEAD — `op=lead` (write one), `op=leadlook` (record following it, as an observation), `op=leadread` (the lead and its looks); C-54 refuses a lead cited as ANY leg BY NAME · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
-  `docs/development/INTERFACES.md`: 25.0.0** (IC-132 ACCEPTED, read after rebasing onto `fbcefa1b`; the
-  first draft read 24.0.0 before REC-123 landed underneath it). **Proposed as MINOR — 25.0.0 → 25.1.0.**
+  `docs/development/INTERFACES.md`: 25.1.0** (IC-131 ACCEPTED, read after rebasing onto `d49e71c6`; this
+  line read 24.0.0 and then 25.0.0 as REC-123 and REC-121 landed underneath it — read it again at
+  resolution). **Proposed as MINOR — 25.1.0 → 25.2.0.**
   Three new ops, one new refusal family **C-54** (`LEAD_CHECKS`, eight rows), and two additive keys on
   existing answers. **ONE EXISTING REFUSAL CHANGES ITS NAME ON ONE INPUT, stated rather than hidden:** a
   leg whose `target` or `content_id` is a `LEAD-…` id was refused before this IC too — as C-2.8 *not a
