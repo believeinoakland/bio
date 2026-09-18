@@ -572,6 +572,13 @@ const OPS = {
      `target` rather than a selection: one conclusion answers one question, and
      a bulk conclude would be the checkbox the construct exists to refuse. */
   conclude:        { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: A PROJECT WITHDRAWS ITS
+     CONCLUSION — an act that APPENDS to the relationship's history and never
+     overwrites it. Conclude's class list for conclude's reason: a machine
+     class REACHES it and is refused by the store (MACHINE_CANNOT_CONCLUDE,
+     the same condition) rather than being absent. One `target` and one
+     `project`: one project's stance on one question moves at a time. */
+  withdrawconclusion: { classes: ["admin", "member", "probe"],   mutating: true  },
   /* REC-31: REOPENING an inquiry the group set down, deferred|dismissed ->
      open. Conclude's class list for conclude's reason — a machine class
      REACHES it and is refused by the store (MACHINE_CANNOT_REOPEN) rather
@@ -1494,7 +1501,14 @@ const EDGE_ACTIONS = ["cite", "sever", "reinstate", "linkproject"];
    author is the member whose name goes on the apportionment — WHO decided where
    each leg went, including every leg that cuts against the case — which is the
    same reason publish's stamp must be the server's. */
-const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "publish", "inquirydivide"];
+/* REC-136 adds `withdrawconclusion` for exactly conclude's reason: it needs both
+   SESSION_OPS lists, the server-side viewer stamp and the server-side author
+   stamp — the author is the member whose name goes on the withdrawal in the
+   project's append-only record, which a caller must not be able to supply. It
+   moves the (project, inquiry) relationship's state, so the array's name stays
+   true. Not selection-backed, so `owner` is inert for it. */
+const STATE_ACTIONS = ["dispose", "retire", "release", "conclude", "reopen", "publish", "inquirydivide",
+                       "withdrawconclusion"];
 /* REC-24: the two ACTION acts, as their own array rather than folded into
    STATE_ACTIONS. They need exactly what that array confers — both SESSION_OPS
    lists, the server-side viewer stamp and the server-side author stamp — and
@@ -1904,6 +1918,10 @@ const NEEDS = {
      stamp, exactly as release's is, because capabilities gate SESSIONS and the
      rule here is about who a session IS. */
   conclude:         "contribute",
+  /* REC-136: withdrawing a conclusion rides `contribute` for conclude's reason
+     — a group holds no separate right to change its mind — and the named-member
+     requirement is the store's, on the author stamp. */
+  withdrawconclusion: "contribute",
   /* REC-31: reopening rides `contribute` like every other corpus write, and
      mints no capability of its own. Disagreeing with a disposition is not a
      separate right a group grants — CAPABILITIES.md §4 is explicit that a
