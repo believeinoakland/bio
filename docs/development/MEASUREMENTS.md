@@ -16354,3 +16354,47 @@ the probe's header. Tree: `origin/main` at `b1cf2aae` plus FW-21's docs-only cha
 **Method note, so the next re-drive does not inherit it:** the arm was applied while this worker's own baseline
 battery was still running in the same tree, for the length of one probe run (not timed). The baseline is therefore NOT cited as
 evidence; the battery was re-run on the final tree after the restore and that run is the one reported.
+
+
+## 2026-09-18 · D-398 LOCK, DATA POINT 3 — THE CONTROLLED RESUME RAN, AND "ACTIVITY" IS FALSIFIED TOO (CONDUCT #4)
+
+**This is the pre-registered controlled experiment above, run by the only session that could: the spawner.**
+Instrument: a direct test for `.git/worktrees/agent-<id>/locked` (and `cat` of it), `git status --porcelain`,
+`git rev-parse HEAD`; the resume by `SendMessage` to the agent id; the agent's own `tool_uses` count from its
+completion notification.
+
+**Subject:** `agent-ad4cf6fb4e08b180f` (FW-19) — finished, its work merged, its task-notification fired EXACTLY
+ONCE and that one read *"stops with no live background children"*. Never resumed for any operational reason, so
+it passes the contamination rule.
+
+| step | time (UTC) | reading |
+| --- | --- | --- |
+| 1. READ, first | 14:09:51 | no lock file |
+| 1. READ, second, independent | 14:10:02 | no lock file · porcelain 0 · tip `c8d9c6cb5dea` |
+| 3. RESUME | ~14:10:05 | instructed to make EXACTLY ONE tool call (`pwd`) and nothing else |
+| during | 14:10:09 → 14:10:34, every 5 s | no lock file at any reading |
+| agent's own report | — | `tool_uses: 1`, `duration_ms: 8821`, output = its worktree path |
+| 4. RE-READ | 14:10:43 | no lock file · porcelain 0 · tip `c8d9c6cb` |
+
+**RESULT: A FINISHED, UNLOCKED AGENT RESUMED AND DID WORK, AND ITS WORKTREE STAYED UNLOCKED.** With CONDUCT #3's
+zero-call resume (DATA POINT 1's sibling), both halves of *re-entered* are now driven and neither creates a lock:
+resuming alone does not, and resuming plus a tool call does not. **The surviving *lock tracks ACTIVITY* reading is
+FALSIFIED as operationalised** — one trivial foreground call is activity by any definition the protocol offered.
+
+**THE SAME READING SURFACED A NEW CANDIDATE, AND IT IS STATED AS A HYPOTHESIS WITH ITS WEAKNESS, NOT A FINDING.**
+At 14:09:51, of this session's five FINISHED agents: the two UNLOCKED (M0-63 `aaa96b17`, FW-19 `ad4cf6fb`) each
+notified with *"stops with no live background children"* only; the three LOCKED (M0-61 `a8dafc35`, M0-62
+`a69fd9c4`, FW-21 `a1f71e7a`, all naming holder pid 24017 = this session) each had at least one notification
+reading *"stopped with background work of its own still running"* — they had armed a Monitor or backgrounded a
+battery and ended a turn while it ran. **HYPOTHESIS, registered before any test: a worktree stays locked iff its
+agent ever ended a turn with live background children.** 5 of 5 consistent, n=5, NO intervention — the evidence
+class this estate has now misread three times. It also re-reads CONDUCT #3's prior: "re-notified more than once"
+and "ended a turn with background work" coincide by construction, because the harness re-notifies exactly when a
+background child finishes. **The test that would settle it: a resumed unlocked agent that arms ONE background task,
+ends its turn while it runs, and is re-read.** Not run here — it has a real cost (a held worktree for the task's
+duration) and it is instrument work while BOB #14's M0 hold stands; recorded so the next spawner can run it in one
+step.
+
+**Operational consequence, which does not wait on the mechanism:** a brief that tells workers to background their
+batteries and wait on a Monitor is, on this hypothesis, a brief that pins every worker's worktree for the life of
+this session. The sweep must read the lock, not assume it.
