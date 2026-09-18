@@ -14058,3 +14058,16 @@ the report are in the commit that carries this block and in REC-124's report. **
 (proposed MINOR, I3 29.4.0 -> 29.5.0, read the base at resolution); no I5 IC (no table, column or case byte moves);
 the UI DELEGATION above is open; §7.1 item 4 (the case path reading a project's conclusion) is unbuilt and wants its
 own row; the no-project adoption gap is recorded in `INVESTIGATIVE-SESSION.md`'s Incomplete sections for BOB.
+
+## CLAIM 2026-09-18 RECORD (REC-136 — a no-project conclusion NAMES its version; withdrawal APPENDS, INVESTIGATIVE-SESSION.md §7.1 items 6-8)
+
+claimed: 2026-09-18 by the REC-136 worker (spawned by CONDUCT #5), branch `worktree-agent-a01b00fb335bbabb8`, base
+`f16b9b49`. Paths: `bio-plane/src/store.mjs` (conclude, the project conclusion writer/reader, a new withdraw act,
+op=basisversions' conclusion keys, the concluded-elsewhere producer), `bio-plane/src/index.mjs` (the new op's OPS row
+and dispatch), `bio-plane/src/affordances.mjs` (only if the new op needs an affordance row),
+`bio-plane/checks/bio-checks.mjs` (C-33 rows; C-5.1's append-only surfaces), `bio-plane/scripts/coverage.mjs` (floors
+only, from its own print), `bio-plane/dist/**` (the rebuilt bundle), `bio-plane/test/conclude-project.test.mjs` and its
+control, plus every suite the no-project version requirement breaks, corrected at its site,
+`civicos-ui/check-refusal-codes.mjs` (floors only, from its own print), `civicos-ui/test/**` fixtures only if the
+harness breaks, `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built note),
+`docs/development/INTERFACE-CHANGES.md` (this item's IC rows).
