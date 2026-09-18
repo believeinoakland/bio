@@ -83,8 +83,8 @@ const ARMS = {
   /* A caller-supplied identity honoured (the stamp no longer the server's). */
   "identity-honoured": {
     patches: [["index.mjs", "    inner.searchParams.delete(\"identity\");", ""],
-              ["index.mjs", "      inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity",
-               "      if (!inner.searchParams.has(\"identity\")) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity"]],
+              ["index.mjs", "      if (IDENTITY_READS.includes(op)) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity",
+               "      if (IDENTITY_READS.includes(op) && !inner.searchParams.has(\"identity\")) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity"]],
     mustFail: ["a caller-supplied `identity=member:iris` on the member TOKEN", "nor does vera's session become iris"],
   },
   /* The audit stops looking. */

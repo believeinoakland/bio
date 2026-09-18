@@ -10898,7 +10898,9 @@ revocation `credential`, draft and comment `undetermined`). NEGATIVE CONTROL: `n
 places a session token is looked up (`caseReader`, and the admission block). It returns `viewer` (the founder's is the
 bare `admin`, `viewerPredicate`'s root-administrator spelling; every other session `member:<id>` as before), `identity`
 (`member:<id>`, the founder's being `member:admin`) and the folded `member`. Every visibility stamp takes `viewer`; the
-passthrough also stamps `identity` beside it (and DELETES any caller-supplied `identity` for every op first); the store
+passthrough DELETES any caller-supplied `identity` for every op, then stamps it beside the viewer for the four ops whose
+store method reads it (`IDENTITY_READS`: `leadlook`, `leadread`, `leadshare`, `frontier` — NOT every op, because
+`op=content` is a fixed-key read that refuses any parameter it does not name, which six content suites caught); the store
 reads `identity` through one helper, `#positionalMember`, at exactly the three sites that ask WHO: `#leadReach` (lead
 reads and the internet frontier), `leadRead`'s share list, and `affordanceFacts`' D-310 `project_owner`
 (and so `op=queue`'s options, threaded through `#queueOptions`). Absent `identity`, the helper asks the viewer — so every
@@ -10948,7 +10950,7 @@ reservation refuses no legitimate caller and the whole IC is MINOR (29.4.0 → 2
 **NOT CHANGED, and measured:** the ADMIN token's answers are BYTE-IDENTICAL before and after over thirteen reads
 (`list`, `index`, `image`, `affordances`, `queue`, `projectparticipants`, `memberlist`, `frontier` internet and document,
 `leadread`, `search`, `backlinks`, an empty `memberadd`) — `node test/founder-sight.control.mjs admin-bytes`, base
-`a6bdfcbb`, 0 differ. `op=audit` is excluded from that comparison because it gains `membership` for every caller.
+`a6bdfcbb`, 0 differ; re-run after merging `c1ce709a` against that base, 0 differ. `op=audit` is excluded from that comparison because it gains `membership` for every caller.
 
 **Suites:** new `bio-plane/test/founder-sight.test.mjs` (41 assertions) and its driver `founder-sight.control.mjs`
 (ten arms, all AS DECLARED, two after a recorded correction of the DECLARATION). `deliverer.control.mjs`'s arms (e) and (f)
