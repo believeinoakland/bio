@@ -348,6 +348,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        and D-PIN-B failed naming exactly these two until they were written here. */
     ["C-32.14", "OPERATOR_TOKEN_CANNOT_RATIFY"],
     ["C-32.15", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"],
+    /* REC-126 / IC-145, 2026-09-18 — the review copy's authoring acts (draft,
+       grant, revoke) share one fence at the store's `#reviewAuthor`. D-PIN-B
+       failed naming exactly this row until it was written here. */
+    ["C-32.16", "MACHINE_CANNOT_REVIEW"],
     /* ACT_SHAPE_CHECKS — the single-homed tail, plus §14a's capability sentence */
     ["C-33.1", "NO_CONCLUSION"],
     ["C-33.2", "NO_FALSIFIER"],
@@ -467,8 +471,12 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
      ("corpus: 48 rows across 2 families") and not by adding to the number in the
      file: C-32.14 OPERATOR_TOKEN_CANNOT_RATIFY and C-32.15
      OPERATOR_TOKEN_CANNOT_RATIFY_CASE. */
-  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two and REC-125's two — a "
-    + "walk that lost a family would run fewer arms and every one of them would still pass", rowsSeen, 48);
+  /* MOVED 48 -> 49 on 2026-09-18 (REC-126), FROM THE FIGURE THIS INSTRUMENT PRINTED
+     ("corpus: 49 rows across 2 families") and not by adding to the number in the
+     file: C-32.16 MACHINE_CANNOT_REVIEW. */
+  t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two and "
+    + "REC-126's one — a walk that lost a family would run fewer arms and every one of them would still pass",
+    rowsSeen, 49);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

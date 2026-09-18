@@ -741,6 +741,13 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "PROJECT's bundle (Store#hasCaseStanding), and a caller without standing is answered exactly "
       + "as for a case that does not exist. The SIGNED half stays public on op=publishedcase's reasoning "
       + "— a stranger verifies it — which is why the op keeps `classes: null`.",
+    /* REC-126 / IC-145, 2026-09-18. `classes: null` because its recipient holds no
+       credential of this instance, and GATED all the same — by a live grant's read
+       secret or by standing in the producing project. */
+    reviewcopy: "REC-126: a DRAFT case is working material. It answers a RECIPIENT only through a LIVE grant's "
+      + "read secret (unrevoked, and bound to the edition the draft still stands at), and a MEMBER only with "
+      + "standing in the producing project (the D-15 predicate, as Store#hasCaseStanding asks it); every other "
+      + "caller receives ONE byte-identical NO_REVIEW_COPY, whatever the cause.",
     /* PL-9 / D-222 option C, 2026-08-07. It is a SEVENTH STATEMENT SHAPE on
        op=search's own compiler, so it inherits op=search's gate rather than
        carrying one — D-15's single compilation point, enforced by the throw in

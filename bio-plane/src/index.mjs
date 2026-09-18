@@ -979,6 +979,29 @@ const OPS = {
      top of the capability. No fifth capability token is minted. */
   casedocument:   { classes: null,                                 mutating: false },
   caseratify:     { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* REC-126 / DEC-31 / IC-145: THE REVIEW COPY (`BIO_Publication_v0_1.md` §6A),
+     an addressed act BESIDE publish that never leaves the instance.
+
+     `casedraft`, `reviewgrant` and `reviewrevoke` are GATED to the classes that
+     reach `publish`, and ride its capability in NEEDS: authoring the group's draft
+     and handing it to a named person is the publication surface, one act short of
+     publishing. The store then asks the project-OWNER question (`publishCase`'s
+     own predicate) and refuses a machine by name, so a machine class reaching the
+     op is refused at the act rather than here.
+
+     `reviewcopy` and `reviewcomment` are UNGATED (`classes: null`) on
+     `casedocument`'s reasoning, because their whole point is a RECIPIENT who
+     holds no credential of this instance — only the grant's read SECRET, which is
+     not a token, is never classified, and cannot reach any other op. A member
+     reaches both with an ordinary session through the same `caseReader` the
+     unsigned case document uses. Both answer every caller without a live grant or
+     standing with ONE set of bytes. `reviewcomment` is `mutating: true` because it
+     writes a row; its NEEDS entry is below with its reason. */
+  casedraft:      { classes: ["admin", "member", "probe"],           mutating: true  },
+  reviewgrant:    { classes: ["admin", "member", "probe"],           mutating: true  },
+  reviewrevoke:   { classes: ["admin", "member", "probe"],           mutating: true  },
+  reviewcopy:     { classes: null,                                   mutating: false },
+  reviewcomment:  { classes: null,                                   mutating: true  },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
@@ -1744,7 +1767,12 @@ const SESSION_OPS = {
                       these are session ops before they are anything else: the only
                       route that produces a name the store will accept is a session,
                       and the store refuses everything else BY SHAPE (C-29.1). */
-                   "aicredentialmint", "aicredentialrevoke"]),
+                   "aicredentialmint", "aicredentialrevoke",
+                   /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. A
+                      session op before anything else, on `aicredentialmint`'s
+                      reasoning: each is attributed to the person who performed it,
+                      and the store refuses every machine shape by name. */
+                   "casedraft", "reviewgrant", "reviewrevoke"]),
   admin:  new Set(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    "caseratify",
                    "attesttext",
@@ -1766,7 +1794,8 @@ const SESSION_OPS = {
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS, "memberadd", "memberset",
                    "signeradd", "signerset", "governorstate", "governorconfig",
-                   "aicredentialmint", "aicredentialrevoke"]),
+                   "aicredentialmint", "aicredentialrevoke",
+                   "casedraft", "reviewgrant", "reviewrevoke"]),
 };
 
 /* ---- capabilities at the op layer. Membership Architecture v2 section 5 ----
@@ -2024,6 +2053,13 @@ const NEEDS = {
      publication surface, and a member who may not publish may not author it
      either. No fifth capability token is minted (CAPABILITIES.md section 4). */
   publish:          "publish",
+  /* REC-126 / DEC-31: the review copy's three authoring acts ride the SAME surface
+     as publish, because they are the act that stands beside it — a member who may
+     not publish may not hand the group's draft to a named outsider either. No
+     fifth capability token is minted. */
+  casedraft:        "publish",
+  reviewgrant:      "publish",
+  reviewrevoke:     "publish",
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it
      rides the publication surface too. Lowering your own bar is legitimate and
      is an authored, dated, on-the-record act; what it may not be is quiet. */
@@ -4152,9 +4188,16 @@ export default {
            exist. */
         const reader = await caseReader(url, env, "bio");
         if (reader.silent) return storeSilent(reader.silent);
+        /* REC-126 / IC-145: A LIVE GRANT HOLDER is the second party §6A.2's
+           precondition admits to an unsigned document. The secret is HASHED HERE
+           and only its fingerprint crosses to the store, which judges it through
+           the review copy's one live-grant predicate. Absent, the parameter is
+           not sent at all and the answer is REC-130's, unchanged. */
+        const docSecret = url.searchParams.has("secret") ? await sha256Hex(url.searchParams.get("secret") || "") : "";
         const out = await doAnswer(stub.fetch(
           `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`
-          + `&viewer=${encodeURIComponent(reader.viewer)}`));
+          + `&viewer=${encodeURIComponent(reader.viewer)}`
+          + (docSecret ? `&secretSha=${docSecret}` : "")));
         if (!out.answered) return storeSilent("casedocument");
         const r = out.result;
         /* THE VERDICT IS DECLARED AS A LITERAL, FIRST, rather than inherited
@@ -4173,6 +4216,51 @@ export default {
                       sign: { namespace: NS_RATIFY,
                               statement: new TextDecoder().decode(
                                 caseRatifyStatement(r.case_id, r.edition, r.doc_sha)) } });
+      }
+
+      /* ===== REC-126 / DEC-31 / IC-145: THE REVIEW COPY'S READ AND COMMENT ======
+
+         UNGATED, because the reader it exists for holds no credential of this
+         instance. Two doors and nothing else:
+           - `secret=` — a RECIPIENT. The value is HASHED HERE and only the
+             fingerprint crosses to the store (`aicredentialmint`'s rule: nothing
+             past this line has ever held the value). ANY presented value takes
+             this door, including an empty or malformed one, so a malformed secret
+             travels the same path as a revoked one and meets the same bytes.
+           - otherwise the caller's session or credential, resolved by
+             `caseReader` exactly as the unsigned case document resolves it, and
+             the store asks standing in the producing project.
+         Every caller who is neither a live grant's holder nor a member with
+         standing receives ONE answer — the store's `#noReviewCopy`, built from no
+         argument — at ONE status, so revoked, never-issued, malformed, a draft
+         that does not exist and a draft the caller cannot see are the same bytes.
+         The inner URL is built from nothing of the caller's but `draft`. */
+      if (op === "reviewcopy" || op === "reviewcomment") {
+        const bySecret = url.searchParams.has("secret");
+        const q = new URLSearchParams();
+        const draftParam = (url.searchParams.get("draft") || "").trim();
+        if (draftParam) q.set("draft", draftParam);
+        if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
+        if (bySecret) {
+          q.set("bySecret", "1");
+          q.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
+        } else {
+          const reader = await caseReader(url, env, "bio");
+          if (reader.silent) return storeSilent(reader.silent);
+          q.set("viewer", reader.viewer);
+        }
+        let commentBody = null;
+        if (op === "reviewcomment") {
+          let b = {};
+          try { b = req.method === "POST" ? JSON.parse((await req.text()) || "{}") : {}; } catch { b = {}; }
+          commentBody = JSON.stringify({ text: typeof b?.text === "string" ? b.text : "" });
+        }
+        const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
+          commentBody === null ? undefined : { method: "POST", body: commentBody }));
+        if (!out.answered) return storeSilent(op);
+        const r = out.result;
+        if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+        return json({ ok: true, ...r }, 200);
       }
 
       if (op === "publishedcase" || op === "publishedbytes") {
@@ -9613,6 +9701,16 @@ export default {
        (C-29.4), which is only possible because the stamp is the server's. */
     if (op === "aicredentialrevoke")
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* REC-126 / DEC-31: WHO AUTHORED THE DRAFT, WHO ISSUED THE GRANT, WHO WITHDREW
+       IT — the three facts §6A.2's "attributed" row demands, so all three are
+       stamped by the server and a caller-supplied `author` is overwritten rather
+       than honoured. A machine arrives honestly named `token:<class>` and the store
+       refuses it BY NAME (MACHINE_CANNOT_REVIEW). `secretSha` is DELETED for the
+       same reason: only the mint below may set it. */
+    if (op === "casedraft" || op === "reviewgrant" || op === "reviewrevoke") {
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+      inner.searchParams.delete("secretSha");
+    }
 
     /* PL-11 / IS-5 / D-199 — THE MINT, AND IT IS NOT A PLAIN FORWARD FOR ONE
      * REASON: THE VALUE IS GENERATED HERE AND IS RETURNED EXACTLY ONCE.
@@ -9655,6 +9753,33 @@ export default {
         tokenIsShownOnce: "This is the only time this instance will show this value. It is not stored "
           + "and cannot be recovered — the record holds the credential's NAME and who created it, "
           + "never the value. If it is lost, withdraw this credential and create another.",
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+
+    /* REC-126 / DEC-31 / IC-145 — THE GRANT'S READ SECRET, GENERATED HERE AND
+     * SHOWN EXACTLY ONCE, on `aicredentialmint`'s pattern one block up and for its
+     * reason: the Durable Object receives the SHA-256 and never the value, so no
+     * method in `store.mjs` can print it because none has ever held it. The value is
+     * a READ credential only (§6A.2): it is not a token, `classify` never admits it,
+     * and the only ops that read it are `reviewcopy`, `reviewcomment` and the
+     * unsigned half of `casedocument`. 32 random bytes, base64url, behind a version
+     * prefix — not an id, and not derivable from one. */
+    if (op === "reviewgrant") {
+      const raw = new Uint8Array(32);
+      crypto.getRandomValues(raw);
+      const secret = "rv1_" + btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      inner.searchParams.set("secretSha", await sha256Hex(secret));
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      if (!issued.answered) return storeSilent("reviewgrant");
+      if (!issued.result || issued.result.ok !== true)
+        return json({ ok: false, ...(issued.result || {}), op, store: storeName, tokenClass: cls }, 403);
+      return json({ ok: true, result: {
+        ...issued.result,
+        secret,
+        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a "
+          + "fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and "
+          + "COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
+        read: "op=reviewcopy&secret=<the value above>",
       }, store: storeName, tokenClass: cls }, 200);
     }
 

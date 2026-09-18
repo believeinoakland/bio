@@ -10783,10 +10783,108 @@ arms `founder-standing` and `everyone-admin`, recorded in the suite's `NEGATIVE 
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR — I3 29.2.0 → 29.3.0**, landing in the same merge as IC-139 and ordered after it. The base was read at resolution; it was proposed against the held merge's 27.1.0. Nothing that answered before is refused; one principal, the founder's own session, is answered where it was refused. REC-130's stranger properties are unchanged: `casesign.control.mjs` e/f/g/h reproduce REC-130's figures, and `deliverer.control.mjs` `everyone-admin` shows a too-broad fix fails. **Not closed here:** D-422, every OTHER session-stamped read still treating the founder as `member:admin`, and `memberAdd` accepting the id `admin`. Both are with BOB #15 for a design pass before they are rowed.
 
+## IC-145 · I3: THE REVIEW COPY — `op=casedraft`, `op=reviewgrant`, `op=reviewrevoke`, `op=reviewcopy`, `op=reviewcomment`; and `op=casedocument` admits a LIVE GRANT HOLDER to the unsigned document of the one case edition the grant is bound to · PROPOSED 2026-09-18 (REC-126, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`
+  when written: 27.0.0** (REC-128's IC-139 is on `conduct/rec-128-merge` and may land first — **read the base AT
+  RESOLUTION**). **Proposed as MINOR, ADDITIVE.** Five ops are added; nothing existing is renamed, reshaped or
+  removed. `op=casedocument` gains an OPTIONAL `secret=` parameter: absent, the answer is REC-130's byte for byte;
+  present, it can only WIDEN who reads an unsigned document, and only to a live grant holder for that exact case
+  edition. No caller that worked yesterday answers differently today.
+- **Proposer:** RECORD, worker `agent-abd7c5e99752beec6`, 2026-09-18, from QUEUE REC-126.
+- **Owner to land it:** `RECORD`.
+- **Consumers to answer:** `UI` (AFFECTED as the builder of the surface, which is DELEGATED — `CLAIMS.md`,
+  REC-126 → UI; no existing surface reads any of these ops, grepped: `civicos-ui/` names none of the five and does
+  not call `op=casedocument`), `SKILL` (NOT-AFFECTED at the interface; the doctrine pack harvests machine fences
+  by code prefix, so C-32.16 reaches it without an edit), `DIST` (NOT-AFFECTED: no procedure reads the ops;
+  `release/` carries the old bundle until DIST's next cut), `FRAMEWORK` (NOT-AFFECTED: no reader).
+- **Design:** `BIO_Publication_v0_1.md` §6A (6A.1–6A.4), and §4 as updated in this landing.
+
+**THE SHAPE.**
+- `POST op=casedraft` (session; NEEDS `publish`; SESSION_OPS): body = the `op=publish` arguments (`project`,
+  `targets`, `caseId`?, `newCase`?, `scope`, `statement`, `excluded`, `subjectPosition`, `subjectJustification`,
+  `biasAcknowledgement`, `roles`), plus `draft` to EDIT an existing draft in place (a review copy is mutable).
+  Answers `{draftId, project, edited, caseId|null, edition, caseIdentity, read}`. The edition is read from the
+  published record, never from the caller; a draft naming no case is a new case at edition 1 whose identity is
+  STATED as not yet allocated. Refusals: `MACHINE_CANNOT_REVIEW` (C-32.16, catalogued), `REVIEW_NOT_PROJECT_OWNER`
+  (not the owner, and not there, are one answer), `REVIEW_NO_PROJECT`, `REVIEW_NO_SUCH_CASE` (a case this
+  project does not own reads as absent), `REVIEW_DRAFT_CHANGES_PROJECT`, `REVIEW_DRAFT_TOO_LARGE`.
+- `POST op=reviewgrant` (session; NEEDS `publish`): `{draft, recipient}`. The READ SECRET is generated AT THE
+  CONTROL PLANE (`rv1_` + 32 random bytes, base64url) and shown ONCE in the answer as `secret`; the store is handed
+  only its SHA-256, on `aicredentialmint`'s pattern. Answers `{grantId, draftId, caseId, edition, recipient,
+  issuedBy, issuedAt, boundTo, secret, secretIsShownOnce, read}`. The grant is BOUND to the case edition the draft
+  stands at when issued. Refusals: C-32.16, `REVIEW_NOT_PROJECT_OWNER`, `REVIEW_NO_RECIPIENT`.
+- `POST op=reviewrevoke` (session; NEEDS `publish`): `{grant}`. Answers `{grantId, existed, revokedBy, revokedAt}`;
+  idempotent (`existed: true` on a repeat). Refusals: C-32.16, `REVIEW_NO_GRANT` (no grant named — a payload
+  complaint that says nothing about what exists), `REVIEW_NOT_PROJECT_OWNER`.
+- `GET op=reviewcopy` (UNGATED, `classes: null`): with `secret=<value>` → the RECIPIENT door; otherwise the
+  caller's session/credential through `caseReader`, with `draft=<id>` → the MEMBER door (standing in the producing
+  project, D-15's predicate). Answers `{kind: "review-copy", marking, published: false, signature: {signed: false},
+  draft, project, reader: "recipient"|"member", case: {case_id, edition, identity}, authored: {...}, findings:
+  [{target, present, object_type, state, role, text}], gates: "passed"|"refused"|"undetermined", missing: [the
+  publish gates' own refusal object, whole], evaluated, comments: [{comment_id, author_kind, author, grant_id,
+  recipient, text, at}], updated_by, updated_at}` plus `grant` (recipient door: its own grant, never others') or
+  `grants` (member door: every grant with `secret_sha`, never the value, and `live`). Both lists are BOUNDED:
+  `limit=` is clamped to [1, 500], the applied value is published as `list_limit`, and `comments_truncated` /
+  `grants_truncated` say whether a list was cut. **`missing` is `publishCase`
+  RUN over the draft inside a transaction that is always rolled back** — the gates' own refusal in their own words,
+  the first one only, which `evaluated` states. Every caller without a live grant or standing receives ONE answer,
+  `NO_REVIEW_COPY` at 404, built from no argument, so revoked / never-issued / malformed / edition-moved / another
+  draft / no standing are byte-identical.
+- `POST op=reviewcomment` (UNGATED): the same two doors, body `{text}`. A recipient's comment is stored with
+  `author_kind: "recipient"`, `author` = the grant id; a member's with `author_kind: "member"`, `author` = the
+  member id. Dead callers get `NO_REVIEW_COPY`, byte-identical to the read's. `REVIEW_NO_COMMENT_TEXT` for an empty
+  or over-long comment.
+- `op=casedocument&secret=<value>`: the unsigned document of `(case, edition)` answers to a LIVE grant bound to
+  exactly that case and edition (REC-130's `#hasCaseStanding` caller now asks `#grantAdmitsCaseEdition` too).
+  Another case, another edition, a revoked or never-issued secret: REC-130's not-found answer, unchanged.
+
+**WHAT THE SECRET IS NOT.** It is not a token: `classify` never admits it, and presented as `token=` to
+`op=publish`, `op=caseratify`, `op=casedraft`, `op=reviewgrant` or `op=list` it is refused as any unknown token is
+(asserted). The recipient never becomes a member (asserted: the roster count is unchanged by issuing grants).
+
+**Suites:** `bio-plane/test/reviewcopy.test.mjs` (new). Instruments that named the new work and were moved from
+their own prints, each with its reason at the site, none exempted: `machinefences-dec49` (C-32.16 in D-PIN, D0
+48 → 49), `machine-fences` (block xiii drives C-32.16 under a complete payload, 12 → 13), `fence-e2e` (12 → 13
+explained on the wire, through the unchanged decoration), `aicredential` (C-32.16 in the sweep), `gate-reads`
+(`reviewcopy` classified GATED), `plane-envelope` (D-240 (f) 2 → 3, `reviewgrant`'s refusal spread is
+`aicredentialmint`'s shape), `bounds` (capped roster 35 → 36: `reviewcopy`, its envelope driven there and its bite
+in `reviewcopy.test.mjs` via DRIVEN_ELSEWHERE), `provenance-marker` (swallow ceiling 26 → 27: the dry run's rollback sentinel,
+rethrowing everything else), `caseproduction` (the `publishCase(` anchor CORRECTED to the definition — a new CALL
+site had put the ratify committer's `INSERT INTO cases` inside its window), and `casesign.control.mjs` arms (e)(f)(g)
+RE-ANCHORED over the three-line gate and re-run at their recorded figures (66/8, 67/7, 72/2). `src/affordances.mjs`
+gains NON_ACTS rows for the three authoring ops and RUNG_ABSENT rows for all four mutating ops (grants and
+revocation `credential`, draft and comment `undetermined`). NEGATIVE CONTROL: `node test/reviewcopy.control.mjs [a|b|c|d]` from
+`bio-plane/`, figures in the driver's foot and the suite's header.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I3 29.3.0 → 29.4.0.** The base was read at resolution: 29.3.0, where MK-2, REC-129 and REC-128 moved it after this row was proposed against 27.0.0. Five new ops, plus an OPTIONAL `secret=` on `op=casedocument` that opens only a live grant's bound edition. Nothing that answered before is refused or changes meaning; a stranger's `op=casedocument` without a live secret is REC-130's byte-identical not-found, unchanged. Driven at the merge with REC-128 (`sessionCaseViewer` and the new secret path meet in `casedocument`): reviewcopy 52/0, deliverer 20/0, casesign 74/0. **PROVISIONAL, carried to BOB #15:** §6A.2 does not say who may issue or revoke a grant, or author a draft. It runs at the PROJECT OWNER (the check `publishCase` uses, with no administrator bypass), the narrowest reading, and widening it is one check.
+
+## IC-146 · I5: three tables for the review copy — `case_drafts`, `review_grants`, `review_comments`, all purged · PROPOSED 2026-09-18 (REC-126, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema). **Version read off THIS TREE: 1.20.0** (REC-128's IC-140 may land first —
+  read the base AT RESOLUTION). **Proposed as MINOR, ADDITIVE:** three new tables before `host_governor`, three
+  indexes; no existing table, column or index is touched.
+- **Proposer / owner:** RECORD, REC-126. **Consumers:** none outside `store.mjs` (grepped).
+- `case_drafts(draft_id PK, project_id, case_id NULL, params JSON, created_by, created_at, updated_by,
+  updated_at)` — the DRAFT CASE; the edition is deliberately NOT stored (read from `published_cases` each time).
+- `review_grants(grant_id PK, draft_id, case_id NULL, edition, recipient, secret_sha UNIQUE, issued_by, issued_at,
+  revoked_by, revoked_at)` — `secret_sha` is the SHA-256 of the read secret, NEVER its value; there is no column
+  that could hold it (asserted structurally).
+- `review_comments(comment_id PK AUTOINCREMENT, draft_id, author_kind CHECK IN ('recipient','member'), author,
+  grant_id NULL, text, at)`.
+- **PURGED, all three, on the whole-store arm** (D-113): a draft is working data, its grants read only it, its
+  comments are about it. `hygiene.test.mjs`'s D-113 pass sees the three `DELETE FROM`s.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I5 1.21.0 → 1.22.0.** The base was read at resolution: 1.21.0, where IC-140 moved it after this row was proposed against 1.20.0. Three new tables before `host_governor`, all in `purge`; `review_grants` holds `secret_sha` only.
+
 ## IC-149 · I3: ONE session resolver — the FOUNDER's session sees what an administrator sees (every project, every participant list) at every session-stamped read, EXCEPT where a ruling names authors or participants (the lead); positional facts answer by the founder's identity; `op=memberadd` REFUSES the id `admin` (C-55.1); `op=audit` gains `membership` · PROPOSED 2026-09-18 (REC-132, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
-- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (origin/main `a6bdfcbb`): 29.3.0.**
-  **Proposed MAJOR — 29.3.0 → 30.0.0.** Read the base AT RESOLUTION.
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (origin/main `c1ce709a` merged in): 29.4.0** (IC-145 landed while this was built; proposed against 29.3.0 first).
+  **Proposed MAJOR — 29.4.0 → 30.0.0.** Read the base AT RESOLUTION.
 - **Proposer:** RECORD, worker `agent-a0f6ffd4522bb36bd`, 2026-09-18, spawned by CONDUCT #5 for REC-132 (closes D-422).
 - **Owner to land it:** `RECORD`
 - **Consumers to answer:** `UI` (NOT-AFFECTED as measured: `civicos-ui/app.html` names neither `memberadd` nor
@@ -10810,7 +10908,7 @@ machine credential, every `ai` key and every internal read is byte-unchanged.
 
 | Site (control plane) | What is stamped | Arm that governs the founder |
 |---|---|---|
-| `caseReader` → `op=casedocument`; `op=caseratify`'s facts read | `viewer` | administrator (IC-147, unchanged; `#hasCaseStanding` is REC-126's and untouched) |
+| `caseReader` → `op=casedocument`, and (merged from REC-126) `op=reviewcopy` / `op=reviewcomment`; `op=caseratify`'s facts read | `viewer` | administrator (IC-147, unchanged; `#hasCaseStanding` and the review grant are REC-126's and untouched) |
 | `op=affordances` | `viewer` + `identity` | target visibility: administrator. `project_owner` (D-310): IDENTITY |
 | `op=queue` | `viewer` + `member` | subjects and case names: administrator. Act options' owner fact: IDENTITY (`member:<member>`) |
 | `op=pdfstructure&ocr=1` basis read, `op=monitor` image read, `op=ratify` image + list reads | `viewer` | administrator (see-before-act; each act keeps its own fence — signature, capability) |
@@ -10845,7 +10943,7 @@ refused input is the one D-422 names as a defect — but IC-137 set the preceden
 input is MAJOR whatever its merit. The founder's widened sight is ADDITIVE for that principal (more rows, nothing
 refused), and `membership` on `op=audit` is an added field. **What a looser reading would rule MINOR, stated so it is not
 re-litigated from silence:** if CONDUCT reads IC-25 as protecting only inputs a legitimate caller could have meant, the
-reservation refuses no legitimate caller and the whole IC is MINOR (29.3.0 → 29.4.0).
+reservation refuses no legitimate caller and the whole IC is MINOR (29.4.0 → 29.5.0).
 
 **NOT CHANGED, and measured:** the ADMIN token's answers are BYTE-IDENTICAL before and after over thirteen reads
 (`list`, `index`, `image`, `affordances`, `queue`, `projectparticipants`, `memberlist`, `frontier` internet and document,

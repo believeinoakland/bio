@@ -209,25 +209,41 @@ const ARMS = {
             + "answers anybody again, so every stranger arm in block 1b (anonymous, unknown token, member of "
             + "another project, probe, another member's agent) and the op=caseratify oracle arm must FAIL",
        apply: () => edit(STORE,
-         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);",
+         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)\n"
+       + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
+       + "      return Store.#noCaseDocument(id, ed);",
          "    if (false) return Store.#noCaseDocument(id, ed);") },
 
+  /* REC-126, 2026-09-18: arms (e), (f) and (g) RE-ANCHORED, not re-thought. The
+     gate line they arm gained a third clause — a LIVE REVIEW GRANT for exactly
+     this case edition is the second party the design's precondition admits — and
+     the single line was split over three. Each arm makes the SAME edit it always
+     made (remove the gate; answer NOT_PERMITTED; drop the ratified test), carried
+     over the new text, and all three were re-run after the move. */
   f: { files: [STORE],
        label: "(f) THE LIAR — a DISTINGUISHABLE refusal. The text is still withheld from every stranger, but "
             + "the answer says NOT_PERMITTED instead of what a missing case says, so an enumerator walking the "
             + "sequence learns exactly which ids are live. The byte-for-byte arms must FAIL; an arm that only "
             + "checked the text was withheld would stay green, which is why none of them does",
        apply: () => edit(STORE,
-         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);",
-         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return { ok: false, reason: \"NOT_PERMITTED\", caseId: id, edition: ed };") },
+         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)\n"
+       + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
+       + "      return Store.#noCaseDocument(id, ed);",
+         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)\n"
+       + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
+       + "      return { ok: false, reason: \"NOT_PERMITTED\", caseId: id, edition: ed };") },
 
   g: { files: [STORE],
        label: "(g) OVER-STRICTNESS ON THE SIGNED SIDE — the gate applied to a RATIFIED document too. The "
             + "stranger-verification path then depends on this instance's goodwill; the signed-public arms "
             + "must FAIL while every unsigned-side arm stays green",
        apply: () => edit(STORE,
-         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);",
-         "    if (!this.#hasCaseStanding(doc, viewer)) return Store.#noCaseDocument(id, ed);") },
+         "    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)\n"
+       + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
+       + "      return Store.#noCaseDocument(id, ed);",
+         "    if (!this.#hasCaseStanding(doc, viewer)\n"
+       + "        && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))\n"
+       + "      return Store.#noCaseDocument(id, ed);") },
 
   h: { files: [STORE],
        label: "(h) OVER-STRICTNESS ON THE UNSIGNED SIDE — standing narrowed to the instance-level machine "
