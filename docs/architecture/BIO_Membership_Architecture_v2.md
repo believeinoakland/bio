@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, not yet built. as of 2026-09-18.
+**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, BUILT the same day by REC-132 (IC-149) on its branch, awaiting integration. as of 2026-09-18.
 
 **Place in the system** · Owns construct 1 of `BIO_System_Design.md` §3 (membership and authority). It supersedes one decision of `BIO_Technical_Architecture_Decisions_v10.md` §10 (per-member tokens) and depends on `BIO_State_Rules_Consistency_v1_5.md` §4.3 (the project object) and §5.1–5.3 (the relationship vocabulary and edge ownership). It adds accountability and access control, not integrity; the store schema realises it.
 
@@ -9,6 +9,7 @@
 - §10 — a data-model "sketch"; "Concrete DDL belongs with the implementation."
 - §11 — two cross-document obligations are unenacted: the Technical Architecture §10 annotation pointing here, and the project-name-uniqueness annotation on State Rules §4.3; the list also numbers two items "8."
 - §7 — DEC-72 clause 5 adds an owner-only act (publish) absent here, and D-310/D-311 record that the affordance surface does not yet publish owner-gated publish or the roster acts.
+- §7 — the founder block does not rule on ACTS: the administrator arm is also the see-before-write gate of acts whose only fence on a project target is visibility, so an administrator (enrolled, and now the founder) can act where §7 says administrators "direct nothing" (raised by REC-132, IC-149; with BOB).
 - §7 — the hierarchy is stated in Focus terms "until the rename arc lands"; the live state machine is `inquiry` and the catalog marks `focus` legacy.
 
 **Contents**
@@ -526,6 +527,11 @@ token and not to the founder's session). **Design:**
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
+- **BUILT 2026-09-18 by REC-132 (IC-149).** `sessionCaseViewer` became `resolveSession` (`src/index.mjs`), returning
+  `viewer`, `identity` and the folded `member`; the store asks WHO through one helper, `#positionalMember`, at the lead
+  reads, the internet frontier and D-310's owner fact; `MEMBER_ID_RESERVED` is C-55.1; `op=audit` carries `membership`.
+  The per-site table of which arm governs is IC-149's. All four controls DRIVEN in `bio-plane/test/founder-sight.test.mjs`
+  and `founder-sight.control.mjs`.
 
 **What the skeleton excludes**, for the invited: the project's own
 content, its analysis record, its work product, its evaluations, its

@@ -435,6 +435,8 @@ import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-ch
    carries — the catalogue's own sync sha256, so the text digest and the content
    address are computed by one implementation. */
 import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
+/* REC-132 / C-55: the reserved member id's refusal row, and the audit's report of it. */
+import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -2494,7 +2496,7 @@ export class Store extends DurableObject {
    *  so the publication and the refusal cannot disagree. The DERIVATION (which
    *  acts those facts admit) happens at the control plane, where NEEDS and
    *  SESSION_OPS live; this method holds no copy of any act rule. */
-  affordanceFacts({ target, viewer = null } = {}) {
+  affordanceFacts({ target, viewer = null, identity = null } = {}) {
     if (!target) return { ok: false, reason: "NO_TARGET",
       detail: "affordances are asked of an object: pass target=<bundle id>" };
     /* REC-25 / F-8: the D-15 viewer gate. An object the viewer may not see
@@ -2646,7 +2648,14 @@ export class Store extends DurableObject {
                 fires first in publishCase()); folding the two into one gate here
                 would make this fence tighter than its rule, which is an
                 undeclared interface change wearing the costume of caution. */
-             project_owner: gate.member === null ? null : this.#ownsAnyProject(gate.member),
+             /* REC-132 / D-422: a POSITIONAL fact, so it is asked of WHO the caller is
+                (`identity`, the control plane's stamp) and never of what it may SEE. The
+                founder's session sees as an administrator (the bare `admin` viewer, which
+                carries no member) and still owns exactly the projects it owns — read
+                through the visibility half, this would answer null and the act catalogue
+                would offer the founder `publish` while it owns nothing. */
+             project_owner: (() => { const who = this.#positionalMember(viewer, identity);
+                                     return who === null ? null : this.#ownsAnyProject(who); })(),
              basis_legs: Array.isArray(docFm.basis)
                ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
              rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length,
@@ -10824,6 +10833,28 @@ export class Store extends DurableObject {
       limit: cap,
       cursor: page.length === cap ? last : null,
       total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n,
+      /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED, NEVER
+         RENAMED. `memberAdd` now refuses the id `admin`, but an instance that enrolled
+         one before the reservation still holds it, and every name-keyed check reads it
+         as the founder. Renaming it here would rewrite who the record says acted, so the
+         audit SAYS it and an administrator decides. ALWAYS PRESENT, so "none held" and
+         "this build does not look" never read alike. A stated finding like `route`
+         above, not a conformance error: `ok`, `tally` and `withErrors` are about
+         bundles and do not move for it. It names only the reserved id, which is public,
+         and that row's role and status. */
+      membership: (() => {
+        const m = this.#one(`SELECT role, status FROM members WHERE member_id = ?`, Store.ROOT_ADMIN);
+        return {
+          reservedId: Store.ROOT_ADMIN, held: !!m, role: m ? m.role : null, status: m ? m.status : null,
+          check: MEMBER_ID_CHECKS.MEMBER_ID_RESERVED.check,
+          says: m
+            ? `a member is enrolled under the reserved id '${Store.ROOT_ADMIN}' (role ${m.role}, status ${m.status}). `
+              + `Every check that asks whether someone administers by name reads it as the founding `
+              + `administrator. It was enrolled before the id was reserved and has NOT been renamed: an `
+              + `administrator should decide what it is and re-enrol the person under another id`
+            : `no member holds the reserved id '${Store.ROOT_ADMIN}'`,
+        };
+      })(),
     };
   }
 
@@ -15723,12 +15754,12 @@ export class Store extends DurableObject {
 
   /** WHICH LEAD, and may this viewer read it. The one visibility decision for
    *  all three acts, so the act, the look and the read cannot disagree. */
-  #leadFor(id, viewer) {
+  #leadFor(id, viewer, identity = null) {
     const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
     const lid = typeof id === "string" ? id.trim() : "";
     const row = lid ? this.#one(
       `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`, lid) : null;
-    const sees = !!row && this.#leadVisibleTo(row, viewer);
+    const sees = !!row && this.#leadVisibleTo(row, viewer, identity);
     /* DEC-49 REGION is-lead-source */
     if (!sees)
       return refusal("LEAD_NOT_FOUND",
@@ -15769,8 +15800,8 @@ export class Store extends DurableObject {
    *  would be the mirror-and-drift class in the one place it would leak, so both
    *  consume the one predicate. The three answers are unchanged: `lead.test.mjs`
    *  and `nc-mk4.mjs`'s visibility arms are re-pointed at this text, not exempted. */
-  #leadVisibleTo(row, viewer) {
-    const reach = this.#leadReach(viewer);
+  #leadVisibleTo(row, viewer, identity = null) {
+    const reach = this.#leadReach(viewer, identity);
     if (!reach) return false;
     return !!this.#one(
       `SELECT 1 AS x FROM leads l WHERE l.lead_id = ? AND ${reach.sql} LIMIT 1`,
@@ -15785,24 +15816,46 @@ export class Store extends DurableObject {
    *  viewer stamp rather than here: a member-scoped `ai` key is stamped as its
    *  member, and a `class:*` credential carries `member: null` and reaches
    *  nothing. `#leadVisibleTo` and `#frontierInternet` are its only callers. */
-  #leadReach(viewer) {
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "DENY" || gate.member == null) return null;
+  #leadReach(viewer, identity = null) {
+    /* REC-132 / D-422: THE RULING NAMES AUTHORS AND PARTICIPANTS, SO IT ASKS WHO THE
+       CALLER IS, NEVER WHAT IT MAY SEE. The founder's session sees as an administrator
+       (the bare `admin` viewer, which carries no member and would reach NOTHING here)
+       and is the author of its own leads by position — so the member this reads is the
+       POSITIONAL identity the control plane stamps beside the viewer. Nothing about the
+       administrator arm reaches this predicate, for the founder or anybody else. */
+    const who = this.#positionalMember(viewer, identity);
+    if (who == null) return null;
     return {
       sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp
               ON pp.project_id = s.bundle_id
              WHERE s.lead_id = l.lead_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))`,
-      args: [gate.member, gate.member],
+      args: [who, who],
     };
+  }
+
+  /** REC-132 / D-422 — WHO IS ASKING, as distinct from WHAT THEY MAY SEE.
+   *  `identity` is the POSITIONAL half of the control plane's one session resolver
+   *  (`resolveSession` in `src/index.mjs`): `member:<id>` for a signed-in session,
+   *  the founder's included (`member:admin`), and the same string as the viewer for
+   *  every credential that is not a session. When it is absent — a caller that never
+   *  stamps it, the store's own internal reads — the viewer is asked, which is exactly
+   *  what every site here asked before, so such a caller is byte-unchanged. A
+   *  `class:*` or unrecognised identity answers null: no roster position, no author.
+   *  EVERY positional question a viewer-carrying read asks in this file goes through
+   *  here, and a visibility question never does. */
+  #positionalMember(viewer, identity = null) {
+    const asked = typeof identity === "string" && identity !== "" ? identity : viewer;
+    const g = viewerPredicate(asked);
+    return g.scope === "DENY" ? null : g.member;
   }
 
   /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
    *  never rewritten. `sharer` is the control plane's stamp. */
-  leadShare({ lead = null, project = null, sharer = null, viewer = null } = {}) {
+  leadShare({ lead = null, project = null, sharer = null, viewer = null, identity = null } = {}) {
     const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
     const who = typeof sharer === "string" ? sharer.trim() : "";
     const pid = typeof project === "string" ? project.trim() : "";
-    const src = this.#leadFor(lead, viewer);
+    const src = this.#leadFor(lead, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     const joined = who && pid ? this.#one(
@@ -15873,7 +15926,7 @@ export class Store extends DurableObject {
 
   /** op=leadlook — FOLLOWING A LEAD, recorded as §4.5's row. */
   leadLook({ lead = null, state = null, resultKind = null, resultRef = null, condition = null,
-             detail = null, looker = null, viewer = null } = {}) {
+             detail = null, looker = null, viewer = null, identity = null } = {}) {
     const refusal = (code, detail, extra) => Store.#leadRefusal(code, detail, extra);
     const who = typeof looker === "string" ? looker.trim() : "";
     const st = typeof state === "string" ? state.trim() : "";
@@ -15886,7 +15939,7 @@ export class Store extends DurableObject {
         who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its `
               + `own run (authority_kind run), never under a member's lead`
             : `this call carries nobody. The plane stamps who looked from the credential that asked`);
-    const src = this.#leadFor(lead, viewer);
+    const src = this.#leadFor(lead, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     if (!Store.LEAD_LOOK_OUTCOMES.includes(st))
@@ -15959,8 +16012,8 @@ export class Store extends DurableObject {
   }
 
   /** op=leadread — the lead and its looks, bounded, the bound published. */
-  leadRead({ id = null, limit = null, viewer = null } = {}) {
-    const src = this.#leadFor(id, viewer);
+  leadRead({ id = null, limit = null, viewer = null, identity = null } = {}) {
+    const src = this.#leadFor(id, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.LEAD_READ_LIMIT_DEFAULT),
@@ -15983,7 +16036,7 @@ export class Store extends DurableObject {
     /* WHERE IT IS SHARED, as far as this viewer may know: the author sees every
        share; a participant sees only the projects they are joined to, so the read
        is no oracle for which OTHER projects a member works in. */
-    const me = viewerPredicate(viewer).member;
+    const me = this.#positionalMember(viewer, identity);
     const sharesRaw = this.#rows(
       `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
         WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
@@ -20923,10 +20976,10 @@ export class Store extends DurableObject {
    *
    *  Union order is ACTS order, preserved: a single-subject item's options are
    *  byte-for-byte op=affordances' `acts`. */
-  #queueOptions(subjectIds, viewer) {
+  #queueOptions(subjectIds, viewer, identity = null) {
     const byId = new Map();
     for (const id of (subjectIds || []).slice(0, Store.QUEUE_OPTION_SUBJECTS_MAX)) {
-      const facts = this.affordanceFacts({ target: id, viewer });
+      const facts = this.affordanceFacts({ target: id, viewer, identity });
       if (!facts || facts.ok !== true) continue;
       for (const a of deriveActs(facts))
         if (!byId.has(a.id)) byId.set(a.id, { id: a.id, label: a.label, weight: a.weight });
@@ -21043,7 +21096,7 @@ export class Store extends DurableObject {
    *  IT RESOLVES BY THE HOLD ENDING, and for everyone at once. There is no act
    *  to take and none is offered: `options[]` are the acts available on the
    *  DOCUMENTS behind it, derived exactly as every other item's are. */
-  #conditionsGovernorHolding(viewer, now) {
+  #conditionsGovernorHolding(viewer, now, identity = null) {
     const out = [];
     for (const r of this.#rows(
       `SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`, now)) {
@@ -21080,7 +21133,7 @@ export class Store extends DurableObject {
                     + "started it, so how long this has been true is not derivable" },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions(subj.ids, viewer),
+        options: this.#queueOptions(subj.ids, viewer, identity),
       });
     }
     return out;
@@ -21107,7 +21160,7 @@ export class Store extends DurableObject {
    *  they were not, the session names no bundle at all (the intake doctrine's
    *  own words), so there is nothing to withhold and the item stands ungrouped
    *  about a capture rather than about a document. */
-  #conditionsPartialCapture(viewer, now) {
+  #conditionsPartialCapture(viewer, now, identity = null) {
     const out = [];
     const nowIso = new Date(now).toISOString().split(".")[0] + "Z";
     const redact = this.#bundleRedactor(viewer);
@@ -21154,7 +21207,7 @@ export class Store extends DurableObject {
               detail: "the session row carries a created stamp this producer cannot read as an instant" },
         assignee: null,
         assignee_role: null,
-        options: bundleId ? this.#queueOptions([bundleId], viewer) : [],
+        options: bundleId ? this.#queueOptions([bundleId], viewer, identity) : [],
       });
     }
     return out;
@@ -21190,7 +21243,7 @@ export class Store extends DurableObject {
    *  order, because `snap_key` is an opaque caller-chosen string and its lexical
    *  order is not a clock: two snapshots stamped at the same instant would
    *  otherwise be ordered by a hash. Same first key, a truthful second one. */
-  #conditionsCaptureUnattended(viewer, now) {
+  #conditionsCaptureUnattended(viewer, now, identity = null) {
     const out = [];
     const machine = `${Store.QUEUE_MACHINE_AUTHOR_PREFIX}*`;
     const seen = this.#bundleGate("m.bundle_id", viewer);
@@ -21239,7 +21292,7 @@ export class Store extends DurableObject {
               detail: "the manifest entry carries a created stamp this producer cannot read as an instant" },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions([b.bundle_id], viewer),
+        options: this.#queueOptions([b.bundle_id], viewer, identity),
       });
     }
     return out;
@@ -21276,7 +21329,7 @@ export class Store extends DurableObject {
    *  authored record act (D-125, DEC-16), and moving one to match a sentence in
    *  a plan would be changing doctrine to fix a citation. The discrepancy is
    *  reported rather than silently absorbed. */
-  #conditionsCaptureRequested(viewer, now) {
+  #conditionsCaptureRequested(viewer, now, identity = null) {
     const out = [];
     const seen = this.#bundleGate("cr.target", viewer);
     for (const r of this.#rows(
@@ -21319,7 +21372,7 @@ export class Store extends DurableObject {
               detail: "the request row carries a completion stamp this producer cannot read as an instant" },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions([r.target], viewer),
+        options: this.#queueOptions([r.target], viewer, identity),
       });
     }
     return out;
@@ -21442,7 +21495,7 @@ export class Store extends DurableObject {
    *  lead a member can act on: the point of D-213's answer is that the DOCUMENT
    *  IS IN THE STORE, and announcing one before the bytes arrive would offer a
    *  member acts over something that may still be refused at the drain. */
-  #findingsOutOfInquiryLead(viewer, now) {
+  #findingsOutOfInquiryLead(viewer, now, identity = null) {
     const out = [];
     const seen = this.#bundleGate("cr.lead_inquiry", viewer);
     for (const r of this.#rows(
@@ -21516,7 +21569,7 @@ export class Store extends DurableObject {
            are real acts a member can actually take rather than a promise the
            surface would have to break. The gap is DECLARED on the item rather
            than hidden by an empty array. */
-        options: this.#queueOptions([r.lead_inquiry], viewer),
+        options: this.#queueOptions([r.lead_inquiry], viewer, identity),
         options_grain: {
           offered: "document",
           missing: "inquiry",
@@ -21734,7 +21787,7 @@ export class Store extends DurableObject {
    *  to know WHICH reading the other team is on to decide whether the
    *  difference matters, and "2 projects differ" is the shape that reads as
    *  disagreement when it may be one project that simply has not caught up. */
-  #findingsStanceDiverged(viewer, now) {
+  #findingsStanceDiverged(viewer, now, identity = null) {
     const out = [];
     const shared = this.#queueSharedInquiryCandidates();
     for (const inq of shared) {
@@ -21825,7 +21878,7 @@ export class Store extends DurableObject {
                       + "is reported as such rather than measured from this read" },
           assignee: null,
           assignee_role: null,
-          options: this.#queueOptions([inq], viewer),
+          options: this.#queueOptions([inq], viewer, identity),
           options_grain: {
             offered: "document",
             missing: "stance",
@@ -21879,7 +21932,7 @@ export class Store extends DurableObject {
    *  HIDDEN VERSIONS ARE INCLUDED AND FLAGGED, NEVER FILTERED (D-214,
    *  DEC-29(b)). Hiding is a display decision one project made; it is not a
    *  reason another project should never learn the reading was proposed. */
-  #findingsVersionFromAnotherTeam(viewer, now) {
+  #findingsVersionFromAnotherTeam(viewer, now, identity = null) {
     const out = [];
     /* D-266 — THE SILENCE, COUNTED. Not attributed: counted.
      *
@@ -22051,7 +22104,7 @@ export class Store extends DurableObject {
                       + "long this reading has been standing unanswered is undetermined" },
           assignee: null,
           assignee_role: null,
-          options: this.#queueOptions([inq], viewer),
+          options: this.#queueOptions([inq], viewer, identity),
           options_grain: {
             offered: "document",
             missing: "version",
@@ -22259,12 +22312,12 @@ export class Store extends DurableObject {
 
   /** The four generators, in catalogue order, and the ONE place a CONDITION
    *  item is minted. Every one of them is a pure read. */
-  #queueConditions(viewer, now) {
+  #queueConditions(viewer, now, identity = null) {
     return [
-      ...this.#conditionsGovernorHolding(viewer, now),
-      ...this.#conditionsPartialCapture(viewer, now),
-      ...this.#conditionsCaptureUnattended(viewer, now),
-      ...this.#conditionsCaptureRequested(viewer, now),
+      ...this.#conditionsGovernorHolding(viewer, now, identity),
+      ...this.#conditionsPartialCapture(viewer, now, identity),
+      ...this.#conditionsCaptureUnattended(viewer, now, identity),
+      ...this.#conditionsCaptureRequested(viewer, now, identity),
     ];
   }
 
@@ -22290,6 +22343,11 @@ export class Store extends DurableObject {
     const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 200)));
     const now = this.#nowMs(nowMs);
     const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    /* REC-132 / D-422: the queue's act options ask D-310's owner fact of the POSITIONAL
+       identity, which is `member` — already the control plane's stamp of who asks —
+       spelled in the viewer grammar. A machine credential stamps no member and keeps
+       the fallback to its viewer, byte-unchanged. */
+    const identity = me ? `member:${me}` : null;
     const items = [];
 
     /* ---------------------------------------------------- OBLIGATION · tasks
@@ -22337,7 +22395,7 @@ export class Store extends DurableObject {
               detail: "the task row carries a created stamp this producer cannot read as an instant" },
         assignee: row.assignee,
         assignee_role: row.assignee_role,
-        options: this.#queueOptions([subject], viewer),
+        options: this.#queueOptions([subject], viewer, identity),
       });
     }
 
@@ -22396,7 +22454,7 @@ export class Store extends DurableObject {
                      + "the temporal signal it does carry is overdue_count on the basis" },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions(subjects, viewer),
+        options: this.#queueOptions(subjects, viewer, identity),
       });
     }
 
@@ -22412,7 +22470,7 @@ export class Store extends DurableObject {
        was NOT working. Stated here because a reader scanning the feed's
        assembly would otherwise have no reason to expect two producers over one
        table to disagree about where their items go. */
-    items.push(...this.#findingsOutOfInquiryLead(viewer, now));
+    items.push(...this.#findingsOutOfInquiryLead(viewer, now, identity));
 
     /* ---------------------------------------- FINDING · PL-13 / IS-3
        THE TWO SHARED-INQUIRY SLUGS, and they are pushed HERE — beside the lead
@@ -22421,13 +22479,13 @@ export class Store extends DurableObject {
        would be a producer nothing checks. Both derive on read and neither
        writes; see their headers for why D-216's per-project answer is what
        makes them necessary rather than optional. */
-    items.push(...this.#findingsStanceDiverged(viewer, now));
+    items.push(...this.#findingsStanceDiverged(viewer, now, identity));
     /* D-266: the second producer's answer is held rather than spread straight
        into `items`, because it carries ONE fact that has no item — how many
        readings of a shared question this read could not attribute to a team.
        An empty item list and an unattributable set are different answers and
        until now they rendered as the same one. */
-    const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
+    const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now, identity);
     items.push(...fromAnotherTeam);
 
     /* ------------------------------------------ CONDITION · REC-32
@@ -22436,7 +22494,7 @@ export class Store extends DurableObject {
        decision is asked of every item whatever its class, and CONDITION is the
        only class a member may ever mute, so this is the first read in which
        that machinery does anything on a live item. */
-    items.push(...this.#queueConditions(viewer, now));
+    items.push(...this.#queueConditions(viewer, now, identity));
 
     /* THE MINT, and PL-15 SWEPT IT FOR THE CLASS RATHER THAN ADDING TO IT.
      *
@@ -26726,6 +26784,20 @@ export class Store extends DurableObject {
     const label = typeof cover === "string" && cover.trim() ? cover : name;
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
       return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+    /* REC-132 / D-422 / C-55.1: the founder's name is not an id anybody else may hold.
+       The pattern above admits it and nothing else reserved it, so a member enrolled as
+       `admin` would have been read as the founder by every name-keyed check
+       (`#isAdminMember`, `#activeAdmins`). Refused BEFORE the EXISTS test and before
+       anything is written, whoever asks and whatever role is asked for. */
+    const refusal = (code, detail) => {
+      const row = MEMBER_ID_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, memberId };
+    };
+    /* DEC-49 REGION is-member-id-reserved */
+    if (memberId === Store.ROOT_ADMIN)
+      return refusal("MEMBER_ID_RESERVED",
+        `'${Store.ROOT_ADMIN}' names this instance's founding administrator; no member may be enrolled under it`);
+    /* END DEC-49 REGION is-member-id-reserved */
     if (!label || typeof label !== "string")
       return { ok: false, reason: "NO_COVER",
                detail: "a cover is the label you use to tell participants apart; it need not be, and often should not be, a legal name" };
@@ -34524,8 +34596,8 @@ export class Store extends DurableObject {
    *  NEVER_LOOKED HERE IS A LEAD NOBODY HAS FOLLOWED — keyed on the LEAD, because
    *  a look is recorded AGAINST a lead (its authority), and §5.1's cause (3) is
    *  established for it (`INTERNET_EVIDENCE_IS_ONE_SIDED`). */
-  #frontierInternet(cap, viewer = null) {
-    const reach = this.#leadReach(viewer);
+  #frontierInternet(cap, viewer = null, identity = null) {
+    const reach = this.#leadReach(viewer, identity);
     const notRead = [
       { subject_kind: "unstated", authority_kind: "run",
         why: "an investigative run's open-internet searches are folded run-log rows whose subject kind was "
@@ -34645,7 +34717,7 @@ export class Store extends DurableObject {
    *  BOUNDED, AND THE BOUND IS PUBLISHED ON EVERY ANSWER INCLUDING THE EMPTY ONE
    *  (REC-70, REC-30): a reader that got nothing must not have to guess which
    *  bound it would have been answered at. */
-  frontier({ level = "document", limit = null, viewer = null } = {}) {
+  frontier({ level = "document", limit = null, viewer = null, identity = null } = {}) {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || Store.FRONTIER_LIMIT_DEFAULT),
                                      Store.FRONTIER_LIMIT_MAX));
     /* REC-94: the content level is BUILT. The arm is its own method rather than
@@ -34665,7 +34737,7 @@ export class Store extends DurableObject {
     /* REC-129 / IC-143: the internet level is BUILT, over its member half (the
        LEAD's looks), fenced by the lead's own visibility rule. Its own method, on
        the reason the other two arms give. */
-    if (level === "internet") return this.#frontierInternet(cap, viewer);
+    if (level === "internet") return this.#frontierInternet(cap, viewer, identity);
     if (level !== "document")
       return { level, found: false, built: false, limit: cap, truncated: false,
                looked: [], never_looked: [], tally: {},
@@ -38720,16 +38792,19 @@ export class Store extends DurableObject {
           detail: body ? body.detail : null,
           looker: url.searchParams.get("looker"),
           viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity"),
         }),
         leadshare: () => this.leadShare({
           lead: (body && body.lead) || url.searchParams.get("lead"),
           project: (body && body.project) || url.searchParams.get("project"),
           sharer: url.searchParams.get("sharer"),
           viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity"),
         }),
         leadread: () => this.leadRead({ id: url.searchParams.get("id"),
                                         limit: url.searchParams.get("limit"),
-                                        viewer: url.searchParams.get("viewer") }),
+                                        viewer: url.searchParams.get("viewer"),
+                                        identity: url.searchParams.get("identity") }),
         suggest: () => this.suggestVersion({
           ...(body || {}),
           target: (body && body.target) || url.searchParams.get("target"),
@@ -38827,6 +38902,7 @@ export class Store extends DurableObject {
            two angles*. Bounded and the bound published, like its neighbour. */
         frontier: () => this.frontier({ level: url.searchParams.get("level") || "document",
                                         viewer: url.searchParams.get("viewer"),
+                                        identity: url.searchParams.get("identity"),
                                         limit: url.searchParams.get("limit") }),
         /* REC-94 / IC-95: the per-capture content-axis read (section 4.2, section
            6 row 2). A FIXED-KEY read of one capture, so it carries no bound and
@@ -38922,7 +38998,8 @@ export class Store extends DurableObject {
            the act list from these; this endpoint only reports what the store
            holds about the object. */
         affordancefacts: () => this.affordanceFacts({ target: url.searchParams.get("target"),
-                                                      viewer: url.searchParams.get("viewer") }),
+                                                      viewer: url.searchParams.get("viewer"),
+                                                      identity: url.searchParams.get("identity") }),
         /* Selections. `viewer` and `owner` are both stamped by the control plane
            from the authenticated credential and are never taken from the
            caller's own parameters there. */

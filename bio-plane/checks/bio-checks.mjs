@@ -11572,6 +11572,29 @@ export const LEAD_CHECKS = {
   },
 };
 
+/* REC-132 / D-422 / C-55 — THE MEMBER ID `admin` IS RESERVED (Membership Architecture v2 §7,
+ * "THE FOUNDER IS AN ADMINISTRATOR HERE TOO", BOB #15, 2026-09-18).
+ *
+ * WHY A REFUSAL AND NOT A CONVENTION. The founding administrator is named `admin`
+ * (`Store.ROOT_ADMIN`) and has no `members` row, and every check that asks whether
+ * someone administers BY NAME (`#isAdminMember`, `#activeAdmins`) answers yes for that
+ * string. So a member ENROLLED with the id `admin` would be read as the founder by every
+ * one of them — votes counted, participant lists opened — without anybody having granted
+ * it anything. `memberAdd` refuses the id, by name, before anything is written; an
+ * instance already holding such a member is REPORTED by `op=audit`, never renamed.
+ * The reservation is the ID, exactly: `administrator`, `admins` and `admin-2` are
+ * ordinary ids. */
+export const MEMBER_ID_CHECKS = {
+  MEMBER_ID_RESERVED: {
+    check: 'C-55.1',
+    where: 'src/store.mjs memberAdd > is-member-id-reserved',
+    translation: 'That member id is reserved. `admin` is the name this instance gives its founding '
+      + 'administrator, and anything that checks whether someone is an administrator by name would '
+      + 'read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id '
+      + 'for this person.',
+  },
+};
+
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
  *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
  *  action basis), so the rule has one spelling and three doors. It asks BOTH

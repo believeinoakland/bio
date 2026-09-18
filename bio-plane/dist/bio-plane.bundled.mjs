@@ -3694,6 +3694,7 @@ __export(bio_checks_exports, {
   MACHINE_STAMP_PREFIXES: () => MACHINE_STAMP_PREFIXES,
   MEANING_READ_CHECKS: () => MEANING_READ_CHECKS,
   MECHANICAL_FIELD_SETS: () => MECHANICAL_FIELD_SETS,
+  MEMBER_ID_CHECKS: () => MEMBER_ID_CHECKS,
   MONITOR_FREQ: () => MONITOR_FREQ,
   NARROW_CHECKS: () => NARROW_CHECKS,
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
@@ -11449,6 +11450,13 @@ var LEAD_CHECKS = {
     check: "C-54.10",
     where: "src/store.mjs leadShare > is-lead-share",
     translation: "Only the member who wrote a lead can share it. A lead is what one person was told; passing someone else's on is theirs to decide."
+  }
+};
+var MEMBER_ID_CHECKS = {
+  MEMBER_ID_RESERVED: {
+    check: "C-55.1",
+    where: "src/store.mjs memberAdd > is-member-id-reserved",
+    translation: "That member id is reserved. `admin` is the name this instance gives its founding administrator, and anything that checks whether someone is an administrator by name would read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id for this person."
   }
 };
 function leadLegFindings(label, leg, findings) {
@@ -27927,7 +27935,7 @@ var Store = class _Store extends DurableObject {
    *  so the publication and the refusal cannot disagree. The DERIVATION (which
    *  acts those facts admit) happens at the control plane, where NEEDS and
    *  SESSION_OPS live; this method holds no copy of any act rule. */
-  affordanceFacts({ target, viewer = null } = {}) {
+  affordanceFacts({ target, viewer = null, identity = null } = {}) {
     if (!target) return {
       ok: false,
       reason: "NO_TARGET",
@@ -28019,7 +28027,16 @@ var Store = class _Store extends DurableObject {
          fires first in publishCase()); folding the two into one gate here
          would make this fence tighter than its rule, which is an
          undeclared interface change wearing the costume of caution. */
-      project_owner: gate.member === null ? null : this.#ownsAnyProject(gate.member),
+      /* REC-132 / D-422: a POSITIONAL fact, so it is asked of WHO the caller is
+         (`identity`, the control plane's stamp) and never of what it may SEE. The
+         founder's session sees as an administrator (the bare `admin` viewer, which
+         carries no member) and still owns exactly the projects it owns — read
+         through the visibility half, this would answer null and the act catalogue
+         would offer the founder `publish` while it owns nothing. */
+      project_owner: (() => {
+        const who = this.#positionalMember(viewer, identity);
+        return who === null ? null : this.#ownsAnyProject(who);
+      })(),
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
       rested_on: {
         working: rested.confirmed.length,
@@ -35656,7 +35673,27 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
          "the first 200 are clean" published the same shape. */
       limit: cap,
       cursor: page.length === cap ? last : null,
-      total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n
+      total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...gate.args).n,
+      /* REC-132 / D-422 / C-55: A MEMBER HOLDING THE RESERVED ID IS REPORTED, NEVER
+         RENAMED. `memberAdd` now refuses the id `admin`, but an instance that enrolled
+         one before the reservation still holds it, and every name-keyed check reads it
+         as the founder. Renaming it here would rewrite who the record says acted, so the
+         audit SAYS it and an administrator decides. ALWAYS PRESENT, so "none held" and
+         "this build does not look" never read alike. A stated finding like `route`
+         above, not a conformance error: `ok`, `tally` and `withErrors` are about
+         bundles and do not move for it. It names only the reserved id, which is public,
+         and that row's role and status. */
+      membership: (() => {
+        const m = this.#one(`SELECT role, status FROM members WHERE member_id = ?`, _Store.ROOT_ADMIN);
+        return {
+          reservedId: _Store.ROOT_ADMIN,
+          held: !!m,
+          role: m ? m.role : null,
+          status: m ? m.status : null,
+          check: MEMBER_ID_CHECKS.MEMBER_ID_RESERVED.check,
+          says: m ? `a member is enrolled under the reserved id '${_Store.ROOT_ADMIN}' (role ${m.role}, status ${m.status}). Every check that asks whether someone administers by name reads it as the founding administrator. It was enrolled before the id was reserved and has NOT been renamed: an administrator should decide what it is and re-enrol the person under another id` : `no member holds the reserved id '${_Store.ROOT_ADMIN}'`
+        };
+      })()
     };
   }
   /* REC-54 / D-200: DERIVE a provenance chain from what the capture record
@@ -39875,14 +39912,14 @@ ${words}`;
   }
   /** WHICH LEAD, and may this viewer read it. The one visibility decision for
    *  all three acts, so the act, the look and the read cannot disagree. */
-  #leadFor(id, viewer) {
+  #leadFor(id, viewer, identity = null) {
     const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
     const lid = typeof id === "string" ? id.trim() : "";
     const row = lid ? this.#one(
       `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`,
       lid
     ) : null;
-    const sees = !!row && this.#leadVisibleTo(row, viewer);
+    const sees = !!row && this.#leadVisibleTo(row, viewer, identity);
     if (!sees)
       return refusal7(
         "LEAD_NOT_FOUND",
@@ -39922,8 +39959,8 @@ ${words}`;
    *  would be the mirror-and-drift class in the one place it would leak, so both
    *  consume the one predicate. The three answers are unchanged: `lead.test.mjs`
    *  and `nc-mk4.mjs`'s visibility arms are re-pointed at this text, not exempted. */
-  #leadVisibleTo(row, viewer) {
-    const reach = this.#leadReach(viewer);
+  #leadVisibleTo(row, viewer, identity = null) {
+    const reach = this.#leadReach(viewer, identity);
     if (!reach) return false;
     return !!this.#one(
       `SELECT 1 AS x FROM leads l WHERE l.lead_id = ? AND ${reach.sql} LIMIT 1`,
@@ -39939,23 +39976,38 @@ ${words}`;
    *  viewer stamp rather than here: a member-scoped `ai` key is stamped as its
    *  member, and a `class:*` credential carries `member: null` and reaches
    *  nothing. `#leadVisibleTo` and `#frontierInternet` are its only callers. */
-  #leadReach(viewer) {
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "DENY" || gate.member == null) return null;
+  #leadReach(viewer, identity = null) {
+    const who = this.#positionalMember(viewer, identity);
+    if (who == null) return null;
     return {
       sql: `(l.author = ? OR EXISTS (SELECT 1 AS x FROM lead_shares s JOIN project_participants pp
               ON pp.project_id = s.bundle_id
              WHERE s.lead_id = l.lead_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))`,
-      args: [gate.member, gate.member]
+      args: [who, who]
     };
+  }
+  /** REC-132 / D-422 — WHO IS ASKING, as distinct from WHAT THEY MAY SEE.
+   *  `identity` is the POSITIONAL half of the control plane's one session resolver
+   *  (`resolveSession` in `src/index.mjs`): `member:<id>` for a signed-in session,
+   *  the founder's included (`member:admin`), and the same string as the viewer for
+   *  every credential that is not a session. When it is absent — a caller that never
+   *  stamps it, the store's own internal reads — the viewer is asked, which is exactly
+   *  what every site here asked before, so such a caller is byte-unchanged. A
+   *  `class:*` or unrecognised identity answers null: no roster position, no author.
+   *  EVERY positional question a viewer-carrying read asks in this file goes through
+   *  here, and a visibility question never does. */
+  #positionalMember(viewer, identity = null) {
+    const asked = typeof identity === "string" && identity !== "" ? identity : viewer;
+    const g = viewerPredicate(asked);
+    return g.scope === "DENY" ? null : g.member;
   }
   /** op=leadshare — THE AUTHOR SHARES ONE LEAD TO ONE PROJECT: authored, dated,
    *  never rewritten. `sharer` is the control plane's stamp. */
-  leadShare({ lead = null, project = null, sharer = null, viewer = null } = {}) {
+  leadShare({ lead = null, project = null, sharer = null, viewer = null, identity = null } = {}) {
     const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
     const who = typeof sharer === "string" ? sharer.trim() : "";
     const pid = typeof project === "string" ? project.trim() : "";
-    const src = this.#leadFor(lead, viewer);
+    const src = this.#leadFor(lead, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     const joined = who && pid ? this.#one(
@@ -40054,7 +40106,8 @@ ${words}`;
     condition = null,
     detail = null,
     looker = null,
-    viewer = null
+    viewer = null,
+    identity = null
   } = {}) {
     const refusal7 = (code, detail2, extra) => _Store.#leadRefusal(code, detail2, extra);
     const who = typeof looker === "string" ? looker.trim() : "";
@@ -40067,7 +40120,7 @@ ${words}`;
         "LEAD_LOOK_NOT_A_MEMBER",
         who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its own run (authority_kind run), never under a member's lead` : `this call carries nobody. The plane stamps who looked from the credential that asked`
       );
-    const src = this.#leadFor(lead, viewer);
+    const src = this.#leadFor(lead, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     if (!_Store.LEAD_LOOK_OUTCOMES.includes(st))
@@ -40154,8 +40207,8 @@ ${words}`;
     return !!r && this.#viewerSees(r.bundle_id, viewer);
   }
   /** op=leadread — the lead and its looks, bounded, the bound published. */
-  leadRead({ id = null, limit = null, viewer = null } = {}) {
-    const src = this.#leadFor(id, viewer);
+  leadRead({ id = null, limit = null, viewer = null, identity = null } = {}) {
+    const src = this.#leadFor(id, viewer, identity);
     if (!src.ok) return src;
     const L = src.row;
     const cap = Math.max(1, Math.min(
@@ -40189,7 +40242,7 @@ ${words}`;
         coverage: observationCoverage({ state: r.state, resultRef: r.result_ref })
       };
     });
-    const me = viewerPredicate(viewer).member;
+    const me = this.#positionalMember(viewer, identity);
     const sharesRaw = this.#rows(
       `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
         WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
@@ -45106,10 +45159,10 @@ ${words}`;
    *
    *  Union order is ACTS order, preserved: a single-subject item's options are
    *  byte-for-byte op=affordances' `acts`. */
-  #queueOptions(subjectIds, viewer) {
+  #queueOptions(subjectIds, viewer, identity = null) {
     const byId = /* @__PURE__ */ new Map();
     for (const id of (subjectIds || []).slice(0, _Store.QUEUE_OPTION_SUBJECTS_MAX)) {
-      const facts = this.affordanceFacts({ target: id, viewer });
+      const facts = this.affordanceFacts({ target: id, viewer, identity });
       if (!facts || facts.ok !== true) continue;
       for (const a of deriveActs(facts))
         if (!byId.has(a.id)) byId.set(a.id, { id: a.id, label: a.label, weight: a.weight });
@@ -45230,7 +45283,7 @@ ${words}`;
    *  IT RESOLVES BY THE HOLD ENDING, and for everyone at once. There is no act
    *  to take and none is offered: `options[]` are the acts available on the
    *  DOCUMENTS behind it, derived exactly as every other item's are. */
-  #conditionsGovernorHolding(viewer, now) {
+  #conditionsGovernorHolding(viewer, now, identity = null) {
     const out = [];
     for (const r of this.#rows(
       `SELECT * FROM host_governor WHERE cooloff_until > ? ORDER BY host`,
@@ -45275,7 +45328,7 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions(subj.ids, viewer)
+        options: this.#queueOptions(subj.ids, viewer, identity)
       });
     }
     return out;
@@ -45301,7 +45354,7 @@ ${words}`;
    *  they were not, the session names no bundle at all (the intake doctrine's
    *  own words), so there is nothing to withhold and the item stands ungrouped
    *  about a capture rather than about a document. */
-  #conditionsPartialCapture(viewer, now) {
+  #conditionsPartialCapture(viewer, now, identity = null) {
     const out = [];
     const nowIso = new Date(now).toISOString().split(".")[0] + "Z";
     const redact = this.#bundleRedactor(viewer);
@@ -45353,7 +45406,7 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: bundleId ? this.#queueOptions([bundleId], viewer) : []
+        options: bundleId ? this.#queueOptions([bundleId], viewer, identity) : []
       });
     }
     return out;
@@ -45388,7 +45441,7 @@ ${words}`;
    *  order, because `snap_key` is an opaque caller-chosen string and its lexical
    *  order is not a clock: two snapshots stamped at the same instant would
    *  otherwise be ordered by a hash. Same first key, a truthful second one. */
-  #conditionsCaptureUnattended(viewer, now) {
+  #conditionsCaptureUnattended(viewer, now, identity = null) {
     const out = [];
     const machine = `${_Store.QUEUE_MACHINE_AUTHOR_PREFIX}*`;
     const seen = this.#bundleGate("m.bundle_id", viewer);
@@ -45445,7 +45498,7 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions([b.bundle_id], viewer)
+        options: this.#queueOptions([b.bundle_id], viewer, identity)
       });
     }
     return out;
@@ -45481,7 +45534,7 @@ ${words}`;
    *  authored record act (D-125, DEC-16), and moving one to match a sentence in
    *  a plan would be changing doctrine to fix a citation. The discrepancy is
    *  reported rather than silently absorbed. */
-  #conditionsCaptureRequested(viewer, now) {
+  #conditionsCaptureRequested(viewer, now, identity = null) {
     const out = [];
     const seen = this.#bundleGate("cr.target", viewer);
     for (const r of this.#rows(
@@ -45521,7 +45574,7 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions([r.target], viewer)
+        options: this.#queueOptions([r.target], viewer, identity)
       });
     }
     return out;
@@ -45647,7 +45700,7 @@ ${words}`;
    *  lead a member can act on: the point of D-213's answer is that the DOCUMENT
    *  IS IN THE STORE, and announcing one before the bytes arrive would offer a
    *  member acts over something that may still be refused at the drain. */
-  #findingsOutOfInquiryLead(viewer, now) {
+  #findingsOutOfInquiryLead(viewer, now, identity = null) {
     const out = [];
     const seen = this.#bundleGate("cr.lead_inquiry", viewer);
     for (const r of this.#rows(
@@ -45714,7 +45767,7 @@ ${words}`;
            are real acts a member can actually take rather than a promise the
            surface would have to break. The gap is DECLARED on the item rather
            than hidden by an empty array. */
-        options: this.#queueOptions([r.lead_inquiry], viewer),
+        options: this.#queueOptions([r.lead_inquiry], viewer, identity),
         options_grain: {
           offered: "document",
           missing: "inquiry",
@@ -45931,7 +45984,7 @@ ${words}`;
    *  to know WHICH reading the other team is on to decide whether the
    *  difference matters, and "2 projects differ" is the shape that reads as
    *  disagreement when it may be one project that simply has not caught up. */
-  #findingsStanceDiverged(viewer, now) {
+  #findingsStanceDiverged(viewer, now, identity = null) {
     const out = [];
     const shared = this.#queueSharedInquiryCandidates();
     for (const inq of shared) {
@@ -46017,7 +46070,7 @@ ${words}`;
           },
           assignee: null,
           assignee_role: null,
-          options: this.#queueOptions([inq], viewer),
+          options: this.#queueOptions([inq], viewer, identity),
           options_grain: {
             offered: "document",
             missing: "stance",
@@ -46065,7 +46118,7 @@ ${words}`;
    *  HIDDEN VERSIONS ARE INCLUDED AND FLAGGED, NEVER FILTERED (D-214,
    *  DEC-29(b)). Hiding is a display decision one project made; it is not a
    *  reason another project should never learn the reading was proposed. */
-  #findingsVersionFromAnotherTeam(viewer, now) {
+  #findingsVersionFromAnotherTeam(viewer, now, identity = null) {
     const out = [];
     let unattributed = 0;
     const unattributedIn = [];
@@ -46180,7 +46233,7 @@ ${words}`;
           },
           assignee: null,
           assignee_role: null,
-          options: this.#queueOptions([inq], viewer),
+          options: this.#queueOptions([inq], viewer, identity),
           options_grain: {
             offered: "document",
             missing: "version",
@@ -46347,12 +46400,12 @@ ${words}`;
   }
   /** The four generators, in catalogue order, and the ONE place a CONDITION
    *  item is minted. Every one of them is a pure read. */
-  #queueConditions(viewer, now) {
+  #queueConditions(viewer, now, identity = null) {
     return [
-      ...this.#conditionsGovernorHolding(viewer, now),
-      ...this.#conditionsPartialCapture(viewer, now),
-      ...this.#conditionsCaptureUnattended(viewer, now),
-      ...this.#conditionsCaptureRequested(viewer, now)
+      ...this.#conditionsGovernorHolding(viewer, now, identity),
+      ...this.#conditionsPartialCapture(viewer, now, identity),
+      ...this.#conditionsCaptureUnattended(viewer, now, identity),
+      ...this.#conditionsCaptureRequested(viewer, now, identity)
     ];
   }
   /** op=queue: the member's ONE feed.
@@ -46377,6 +46430,7 @@ ${words}`;
     const cap = Math.max(1, Math.min(500, Math.floor(Number(limit) || 200)));
     const now = this.#nowMs(nowMs);
     const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    const identity = me ? `member:${me}` : null;
     const items = [];
     const taskSeen = this.#bundleGate("tk.refers_to", viewer);
     for (const row of this.#rows(
@@ -46411,7 +46465,7 @@ ${words}`;
         },
         assignee: row.assignee,
         assignee_role: row.assignee_role,
-        options: this.#queueOptions([subject], viewer)
+        options: this.#queueOptions([subject], viewer, identity)
       });
     }
     const feed = this.proposalsFeed(nowMs);
@@ -46467,14 +46521,14 @@ ${words}`;
         },
         assignee: null,
         assignee_role: null,
-        options: this.#queueOptions(subjects, viewer)
+        options: this.#queueOptions(subjects, viewer, identity)
       });
     }
-    items.push(...this.#findingsOutOfInquiryLead(viewer, now));
-    items.push(...this.#findingsStanceDiverged(viewer, now));
-    const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now);
+    items.push(...this.#findingsOutOfInquiryLead(viewer, now, identity));
+    items.push(...this.#findingsStanceDiverged(viewer, now, identity));
+    const fromAnotherTeam = this.#findingsVersionFromAnotherTeam(viewer, now, identity);
     items.push(...fromAnotherTeam);
-    items.push(...this.#queueConditions(viewer, now));
+    items.push(...this.#queueConditions(viewer, now, identity));
     const refusal7 = (code, detail, extra) => {
       const row = QUEUE_MINT_CHECKS[code];
       return {
@@ -50356,6 +50410,15 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const label = typeof cover === "string" && cover.trim() ? cover : name;
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(memberId || ""))
       return { ok: false, reason: "BAD_MEMBER_ID", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+    const refusal7 = (code, detail) => {
+      const row = MEMBER_ID_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, memberId };
+    };
+    if (memberId === _Store.ROOT_ADMIN)
+      return refusal7(
+        "MEMBER_ID_RESERVED",
+        `'${_Store.ROOT_ADMIN}' names this instance's founding administrator; no member may be enrolled under it`
+      );
     if (!label || typeof label !== "string")
       return {
         ok: false,
@@ -57156,8 +57219,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  NEVER_LOOKED HERE IS A LEAD NOBODY HAS FOLLOWED — keyed on the LEAD, because
    *  a look is recorded AGAINST a lead (its authority), and §5.1's cause (3) is
    *  established for it (`INTERNET_EVIDENCE_IS_ONE_SIDED`). */
-  #frontierInternet(cap, viewer = null) {
-    const reach = this.#leadReach(viewer);
+  #frontierInternet(cap, viewer = null, identity = null) {
+    const reach = this.#leadReach(viewer, identity);
     const notRead = [
       {
         subject_kind: "unstated",
@@ -57302,14 +57365,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  BOUNDED, AND THE BOUND IS PUBLISHED ON EVERY ANSWER INCLUDING THE EMPTY ONE
    *  (REC-70, REC-30): a reader that got nothing must not have to guess which
    *  bound it would have been answered at. */
-  frontier({ level = "document", limit = null, viewer = null } = {}) {
+  frontier({ level = "document", limit = null, viewer = null, identity = null } = {}) {
     const cap = Math.max(1, Math.min(
       Math.floor(Number(limit) || _Store.FRONTIER_LIMIT_DEFAULT),
       _Store.FRONTIER_LIMIT_MAX
     ));
     if (level === "content") return this.#frontierContent(cap, viewer);
     if (level === "meaning") return this.#frontierMeaning(cap, viewer);
-    if (level === "internet") return this.#frontierInternet(cap, viewer);
+    if (level === "internet") return this.#frontierInternet(cap, viewer, identity);
     if (level !== "document")
       return {
         level,
@@ -61191,18 +61254,21 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           condition: body ? body.condition : null,
           detail: body ? body.detail : null,
           looker: url.searchParams.get("looker"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         leadshare: () => this.leadShare({
           lead: body && body.lead || url.searchParams.get("lead"),
           project: body && body.project || url.searchParams.get("project"),
           sharer: url.searchParams.get("sharer"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         leadread: () => this.leadRead({
           id: url.searchParams.get("id"),
           limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         suggest: () => this.suggestVersion({
           ...body || {},
@@ -61322,6 +61388,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         frontier: () => this.frontier({
           level: url.searchParams.get("level") || "document",
           viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity"),
           limit: url.searchParams.get("limit")
         }),
         /* REC-94 / IC-95: the per-capture content-axis read (section 4.2, section
@@ -61431,7 +61498,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            holds about the object. */
         affordancefacts: () => this.affordanceFacts({
           target: url.searchParams.get("target"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          identity: url.searchParams.get("identity")
         }),
         /* Selections. `viewer` and `owner` are both stamped by the control plane
            from the authenticated credential and are never taken from the
@@ -63742,10 +63810,15 @@ function aiTaskScope(cred, op, spec) {
     );
   return { ok: true, viewer: cred.principal };
 }
-function sessionCaseViewer(role) {
-  const r = typeof role === "string" ? role : "";
-  if (r === "admin") return "admin";
-  return `member:${r.startsWith("member:") ? r.slice(7) : r}`;
+function resolveSession(sess) {
+  const r = sess && typeof sess.role === "string" ? sess.role : "";
+  const member = r.startsWith("member:") ? r.slice(7) : r;
+  return {
+    viewer: r === "admin" ? "admin" : `member:${member}`,
+    /* the founder — Store.ROOT_ADMIN, an administrator (7.3) */
+    identity: `member:${member}`,
+    member
+  };
 }
 async function caseReader(url, env, storeName) {
   const t = url.searchParams.get("token");
@@ -63769,7 +63842,7 @@ async function caseReader(url, env, storeName) {
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: sessionCaseViewer(sess.role) };
+    return { viewer: resolveSession(sess).viewer };
   }
   return { viewer: "" };
 }
@@ -64685,6 +64758,7 @@ var index_default = {
     let cls = await classify(url.searchParams.get("token"), env);
     let viaSession = false;
     let sessMember = null, sessRights = null, sessCaps = null;
+    let sessViewer = null, sessIdentity = null;
     let aiCred = null;
     if (!cls) {
       const t = url.searchParams.get("token");
@@ -64725,7 +64799,7 @@ var index_default = {
               op
             }, 403);
           cls = kind;
-          sessMember = sess.role.startsWith("member:") ? sess.role.slice(7) : sess.role;
+          ({ member: sessMember, viewer: sessViewer, identity: sessIdentity } = resolveSession(sess));
           sessRights = sess;
           viaSession = true;
         }
@@ -64807,9 +64881,10 @@ var index_default = {
         }, store: storeName, tokenClass: cls }, 200);
       }
       const st = env.STORE.get(env.STORE.idFromName(storeName));
-      const affViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const affViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
+      const affIdentity = viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`;
       const fOut = await doAnswer(st.fetch(
-        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`
+        `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}&identity=${encodeURIComponent(affIdentity)}`
       ));
       if (!fOut.answered) return storeSilent("affordances");
       const facts = fOut.result;
@@ -64840,7 +64915,7 @@ var index_default = {
     if (op === "queue") {
       const st = env.STORE.get(env.STORE.idFromName(storeName));
       const inner2 = new URL("http://do/queue");
-      inner2.searchParams.set("viewer", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner2.searchParams.set("viewer", viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
       inner2.searchParams.set("member", viaSession ? sessMember : "");
       for (const k of ["now", "limit"]) {
         const v = url.searchParams.get(k);
@@ -65154,7 +65229,7 @@ var index_default = {
             sha256: sha,
             detail: `no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).`
           }, 501);
-        reViewer = viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+        reViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
         reAuthor = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
         const reStore = env.STORE.get(env.STORE.idFromName(storeName));
         const bOut = await doAnswer(reStore.fetch(
@@ -66544,7 +66619,7 @@ var index_default = {
       if (typeof bundleId !== "string" || !bundleId)
         return json({ ok: false, error: "monitor needs a bundleId" }, 400);
       const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
-      const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
+      const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
       if (!imgOut.answered) return storeSilent("monitor");
       const img = imgOut.result;
       if (!img || typeof img["bundle.md"] !== "string")
@@ -66746,7 +66821,7 @@ var index_default = {
           detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
         }, 400);
       const factsOut = await doAnswer(stub.fetch(
-        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(sessionCaseViewer(sessRights.role))}`
+        `http://do/casedocfacts?case=${encodeURIComponent(body2.caseId)}&edition=${encodeURIComponent(String(body2.edition))}&viewer=${encodeURIComponent(sessViewer)}`
       ));
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;
@@ -66941,7 +67016,7 @@ var index_default = {
           tokenClass: cls
         }, 403);
       const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
-      const ratViewer = encodeURIComponent(viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
       const imgOut = await doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(body2.bundleId)}&viewer=${ratViewer}`));
       if (!imgOut.answered) return storeSilent("ratify/image");
       const image = imgOut.result;
@@ -67505,6 +67580,7 @@ var index_default = {
     };
     const inner = new URL("http://x/" + (DO_PATH[op] || op));
     for (const [k, v] of url.searchParams) if (k !== "token" && k !== "op") inner.searchParams.set(k, v);
+    inner.searchParams.delete("identity");
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     const REC30_VIEWER_READS = [
       "dangling",
@@ -67541,7 +67617,11 @@ var index_default = {
     if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
-        viaSession ? `member:${sessMember}` : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+        viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
+      );
+      inner.searchParams.set(
+        "identity",
+        viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
       );
     }
     if (op === "versionchain")
@@ -67581,7 +67661,7 @@ var index_default = {
         viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
     if (op === "select" || op === "selection" || op === "selectionlist" || op === "selectionrelease" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op))
-      inner.searchParams.set("owner", viaSession ? `member:${sessMember}` : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.set("owner", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "provenancechain" || op === "provenanceroute" || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
@@ -67589,7 +67669,7 @@ var index_default = {
     if (op === "airunopen")
       inner.searchParams.set(
         "principal",
-        viaSession ? `member:${sessMember}` : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
+        viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
       );
     if (RUN_VERB_ACTIONS.includes(op)) {
       inner.searchParams.delete("actor");
