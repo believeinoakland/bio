@@ -10278,7 +10278,7 @@ gains one word it can read, `derivation_cap: "does-not-apply"`; no new act. SKIL
 expected NOT-AFFECTED (no reader of the moved answer, above).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 as MINOR — I3 26.0.0 → 26.1.0,** on IC-131's precedent: the narrowing (`cap:undetermined` stops matching bytes rows) only stops over-reporting and every such row stays reachable under `cap:does-not-apply`. Base read at resolution (26.0.0; IC-137 took the MAJOR in the same integration). The only outside reader (`civicos-ui/test/meaning-arms.walks.mjs`, `content:cap<C`) is a comparison this does not move.
-## IC-135 · I5: THE `leads` TABLE — a member's LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5), an authored row that is NEVER evidence · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+## IC-135 · I5: THE `leads` TABLE — a member's LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5), an authored row that is NEVER evidence · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I5 1.20.0)**
 
 - **Interface:** I5 (the store schema). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
   1.18.0** (IC-129 ACCEPTED). **Proposed as MINOR — 1.18.0 → 1.19.0, ADDITIVE.** One new table, no
@@ -10297,7 +10297,9 @@ expected NOT-AFFECTED (no reader of the moved answer, above).
   table's vocabulary already reserved — so `observation_log` is UNCHANGED in shape.
 - **AMENDED 2026-09-18 on BOB #14's visibility ruling:** a SECOND table, `lead_shares` (`lead_id`, `bundle_id` — the PROJECT, `sharer`, `at`; PRIMARY KEY (`lead_id`, `bundle_id`); index on `bundle_id`), the authored dated share. It carries `bundle_id` so it rides `op=purge`'s TABLES list and clears in BOTH arms.
 
-## IC-136 · I3: THE LEAD — `op=lead` (write one), `op=leadlook` (record following it, as an observation), `op=leadread` (the lead and its looks); C-54 refuses a lead cited as ANY leg BY NAME · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-4's integration — I5 1.19.0 → 1.20.0, MINOR (additive: `leads` and `lead_shares`, both purged; `lead_shares` keyed on the project so a project purge clears them).** Base read at resolution (1.19.0; MK-1's IC-134 took it).
+
+## IC-136 · I3: THE LEAD — `op=lead` (write one), `op=leadlook` (record following it, as an observation), `op=leadread` (the lead and its looks); C-54 refuses a lead cited as ANY leg BY NAME · PROPOSED 2026-09-18 (MK-4, minted at spawn with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 (I3 26.3.0)**
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
   `docs/development/INTERFACES.md`: 25.1.0** (IC-131 ACCEPTED, read after rebasing onto `d49e71c6`; this
@@ -10371,3 +10373,5 @@ at}]` — every share for the author, only the viewer's own joined projects for 
 
 **MEASURED:** `bio-plane/test/lead.test.mjs` 69/0 through the ops; `node test/nc-mk4.mjs` thirteen arms,
 every one as declared on the final tree (recorded in the suite's `NEGATIVE CONTROL:` line).
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at MK-4's integration — I3 26.2.0 → 26.3.0, MINOR (additive: `op=lead`, `op=leadlook`, `op=leadread`, `op=leadshare`; C-54 incl. C-54.9/.10).** Base read at resolution (26.2.0; the IC proposed against 25.1.0 — four integrations moved I3 while MK-4 was built and corrected). **MK-4 was HELD OFF `main` once for BOB #14's visibility ruling** and landed with it: the author; a project's JOINED participants after the author's `op=leadshare`; a machine credential only through a member-scoped `ai` key that reaches exactly what its member reaches (instance tokens and org-scoped keys reach no lead); everyone else the byte-identical answer for a lead that does not exist. **The merge onto MK-1 was the session's first real CODE conflict** — both added to the OPS table, the session and capability lists, the affordance tables, the check catalogue and `store.mjs`'s imports — resolved keep-both by hand, the check catalogue's shared comment opener restored so each family keeps its own, and proved by the full battery. UI/SKILL/DIST NOT-AFFECTED, CONDUCT answering for each.
