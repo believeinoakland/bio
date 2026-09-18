@@ -101,6 +101,33 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #14 · THE BUILD ORDER, DERIVED FROM THE VERIFIED MAP — INPUT TO LED-4, AND THE ONLY ROWS THAT MAY BE ADDED NEXT.**
+
+Derived from `node tools/status.mjs` (every claim still ABSENT, PARTIAL or UNDETERMINED at `b94cd14f`), ordered so
+nothing is built before what it rests on. **A row may be queued only where the DESIGN column reads verified**;
+"to verify" means BOB confirms a design exists at the artifact first, and a construct with no design is a design
+act for BOB, never a row. Use it to order LED-4's file, and to decide what fills a freed slot.
+
+| # | claim (status id) | rests on | design | note |
+| --- | --- | --- | --- | --- |
+| 1 | 11.machine-fence — can an `ai` credential attest or ratify? | nothing | n/a (a trace) | a trust-of-the-record question; trace the attest and ratify handlers FIRST |
+| 2 | 8.claim — a distinct claim field that concluding ADOPTS | the inquiry (built) | verified: `BIO_Case_Making_v0_1.md`, What a CLAIM is | everything in the case path rests on it |
+| 3 | 2.firsthand + 10.lead — D-184 and D-194, designed together | intake (built) | verified: Program B, ruled 2026-09-14 (Part II §18 piece 5) | the member's own evidence and the authored frontier |
+| 4 | 4.transcribe — REC-87 | content (built) | verified (REC-87's row) | already queued |
+| 5 | 8.contradiction — Q14 | 2 | verified: `BIO_Case_Making_v0_1.md` §CONTRADICTION | the record-conflict case carries a duty to resolve |
+| 6 | 13.attribution — attribution levels for an observation | 3 | verified: ruled 2026-09-14 (`BIO_Publication_v0_1.md`) | |
+| 7 | 9.internet — the frontier's internet level and search arm | 3 (the LEAD is its writer) | to verify | |
+| 8 | 13.review-copy — DEC-31 | publication (built) | verified: `BIO_Publication_v0_1.md` §6A | |
+| 9 | member surfaces over BUILT substrate: 9.ui (frontier, content axis), 12.check-start, 7.ui (bias) | each plane half is built | UI: to verify per surface against Program B | high member value, low substrate risk |
+| 10 | 11.ui-extract — AI-proposed readings for a member | 11.extract-deployed (a DIST deploy) | to verify | behind Bob's deploy gate |
+| 11 | 8.preflight, 13.ceremony, 12.publish — the publication ceremony | 2, 5, 6 | verified (REC-15, UI-17) | DEC-33: after the substrate beneath it is solid — i.e. after 2, 5 and 6 |
+| — | 8.proof-standard | — | RESEARCH owed, not design | the catalogue of standards by audience and output act |
+| — | 6.identifier-spaces, 7.regrade, 13.directory, 11.pilot | — | to verify — BOB's | not rowable until a design is confirmed |
+| — | 15.installer-bundle, 15.multi-instance | — | — | DIST, and the deploy is Bob's gate |
+
+**Nothing running is superseded.**
+
+
 **2026-09-18 · BOB #14 · THE LEDGERS BECOME SMALL, ORDERED AND ALWAYS CURRENT — BOB'S DIRECTION, DECOMPOSED FOR YOU.**
 
 **BOB, 2026-09-18:** *"the order of items in those documents also matter, as the right order would allow them to

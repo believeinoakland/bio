@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * seven arms plus an opening and closing baseline.
+ * eight arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -101,6 +101,10 @@ const ARMS = [
     from: "    if (cl.state === \"ABSENT\" && !(cl.probes || []).some((p) => p.none || p.uinone))",
     to:   "    if (false && !(cl.probes || []).some((p) => p.none || p.uinone))",
     mustBreak: "AN ABSENT CLAIM RESTING ONLY ON A `hit` DRIFTS" },
+  { id: "A8", title: "a rendering that leaves the Status date behind — main red on bare plancheck",
+    from: "  return head.replace(re, `as of ${today}`) + (end < 0 ? \"\" : text.slice(end));",
+    to:   "  return head + (end < 0 ? \"\" : text.slice(end));",
+    mustBreak: "A RENDERING MOVES THE STATUS DATE" },
 ];
 
 for (const a of ARMS) {
