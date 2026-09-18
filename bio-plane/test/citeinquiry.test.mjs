@@ -371,9 +371,13 @@ t("every leg carries the role the member stated, and no other",
    re-stated below it so a future reader cannot mistake the list for the point. */
 const citeParams = (/cite: \(\) => this\.cite\(\{[\s\S]*?\n        \}\),/.exec(STORE_SRC)[0]
   .match(/^\s+([a-z_]+):/gm) || []).map((x) => x.trim().replace(":", "")).sort();
-t("THE DO dispatch reads project, handle, viewer, owner, note, author, role and (REC-97) extent",
+/* CORRECTED 2026-09-18 BY REC-134, NEVER EXEMPTED: the ninth, `identity`, is the control
+   plane's POSITIONAL stamp (who the actor is), read by the project arm's check that the actor
+   has joined the project it cites into (IC-152, C-56). It is server-stamped, never a
+   member gesture, and it is not a grade — the claim below is untouched. */
+t("THE DO dispatch reads project, handle, viewer, owner, note, author, role, (REC-97) extent and (REC-134) identity",
   citeParams,
-  ["author", "extent", "handle", "note", "owner", "project", "role", "viewer"]);
+  ["author", "extent", "handle", "identity", "note", "owner", "project", "role", "viewer"]);
 t("NO GRADE IS A PARAMETER OF THIS ACT AT ALL — the claim the roster above exists to hold",
   citeParams.filter((p) => /grade/.test(p)), []);
 

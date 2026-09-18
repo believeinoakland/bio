@@ -1664,6 +1664,12 @@ const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capt
    `QUEUE_ACTIONS` and `PROJECT_ACTIONS` keep — a fourth run verb should join
    the gate by being added here, not by somebody remembering. */
 const RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
+/* REC-134 / C-56: the acts that change a project and read the POSITIONAL `identity` stamp for
+   the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
+   carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
+/* REC-136 adds `withdrawconclusion`: it writes the project's own conclusion record, so it is conclude's position. */
+const POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude",
+                         "withdrawconclusion"];
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is
@@ -4891,8 +4897,16 @@ export default {
          identity exactly as the passthrough reads take it below. An object the
          viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. */
       const affViewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
-      /* REC-132: D-310's owner fact is POSITIONAL, so it is asked of the identity. */
-      const affIdentity = viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`;
+      /* REC-132: D-310's owner fact is POSITIONAL, so it is asked of the identity.
+         REC-134: an `ai` credential's identity is its PRINCIPAL here, as it is at every act the
+         positional check reads (`POSITIONAL_ACTS` below) — a member-scoped key acts as its
+         member and is refused where its member would be, so the pre-flight must ask the same
+         member or it offers `cite`/`sever`/`reinstate` the act then refuses (DEC-8). The VIEWER
+         (sight) is unchanged; an organisation-scoped key's principal is `class:ai` and answers
+         null, byte-unchanged. */
+      const affIdentity = viaSession ? sessIdentity
+        : cls === "ai" ? aiCred.principal
+        : `${MACHINE_CLASS_PREFIX}${cls}`;
       /* REC-52: `(facts || { reason: "NO_FACTS" })` is site (b)'s shape with a
          different word — a store silence answering "there are no facts about
          that object", which is a claim about the object. What the acts on an
@@ -9279,6 +9293,21 @@ export default {
            honoured, so the store refuses a machine BY SHAPE (C-50.5). */
         || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* REC-134 / C-56 — SIGHT IS NOT AUTHORITY (Membership v2 §7, BOB #15): the acts that change
+       a project and took the VISIBILITY gate as their only barrier (or none) now ask the actor's
+       OWN POSITION in that project, and the store reads that position from THIS stamp — the
+       POSITIONAL identity, never the viewer. A session stamps `resolveSession`'s identity
+       (`member:<id>`, the founder's `member:admin`); a member-scoped `ai` credential stamps its
+       PRINCIPAL, so an agent is refused exactly where its member would be (D-199 (4)'s rule for
+       sight, applied to acts); every instance credential stamps `class:<cls>`, which holds no
+       roster position and is not asked — machine fences are their own and unchanged. The caller's
+       `identity` was DELETED for every op above, so nothing here can be named by a caller.
+       A new act on a project joins POSITIONAL_ACTS; the suite's arms read it through the ops. */
+    if (POSITIONAL_ACTS.includes(op))
+      inner.searchParams.set("identity",
+        viaSession ? sessIdentity
+        : cls === "ai" ? aiCred.principal
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
        overwritten rather than honoured: "only an owner may remove" is worth
@@ -9391,6 +9420,15 @@ export default {
         delete b.author;
         if (viaSession) { b.author = sessMember; b.actorMemberId = sessMember; }
         else b.author = `${MACHINE_AUTHOR_PREFIX}${cls}`;
+        /* REC-134 / C-56: the POSITIONAL identity a revision of a PROJECT's document is checked
+           against (the actor must have joined it, §7.5) — `POSITIONAL_ACTS`' stamp, in the body
+           because promote's payload is a body. Deleted first and set second, every credential:
+           a session its identity, an `ai` key its principal, an instance credential its class
+           (no roster position, not asked). */
+        delete b.actorIdentity;
+        b.actorIdentity = viaSession ? sessIdentity
+          : cls === "ai" ? aiCred.principal
+          : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {
           /* **THE SECOND SITE OF `NOT_CAPABLE`, AND REC-79 IS SAYING SO RATHER
              THAN HIDING IT.** C-38.5's `where` names the admission region above;
