@@ -12656,6 +12656,7 @@ worker owes, it is in no worker kickoff, and it is found only by paying for it. 
 observation for CONDUCT rather than fixed, since the remedy is a process change and not mine to
 make.
 ## REC-116 · RECORD · the READ op for a standing `LOOKED_INDETERMINATE` marker (the 2026-08-09 delegation, 39 days unbuilt)
+released: 2026-09-18 by CONDUCT #3 at integration, merged at `db1347c2`. **Every path this claim reserved is free.** It was HELD rather than released by the worker so nothing would edit the coverage-floor keys between its report and this merge — the right call, and CONDUCT re-read those floors on the merged tree before releasing it. IC-120 ACCEPTED at I3 23.1.0.
 Opened 2026-09-17 by REC-116's worker (CONDUCT #3), worktree `agent-aa29968dac7cc0e37`.
 **REC-112's measurements are INHERITED (`M-41`) and are NOT re-derived here:** the index
 `provenance_route_marks_finding` was specified FOR this reader, its four existing readers all

@@ -9106,7 +9106,11 @@ moves. Reversing it is deleting `#versionLegsEarned`, dropping its call, and rem
 `composition_grades` from the two publish sites.
 
 **RESOLUTION: (CONDUCT takes the version bump and the resolution.)**
-## IC-120 · I3: `op=provenanceroutes` — THE READ HALF OF THE PROVENANCE-ROUTE MARKER. Which documents in this instance carry a STANDING `LOOKED_INDETERMINATE` marker, with an empty answer that says WHY it is empty · PROPOSED 2026-09-17 (REC-116, building the reader REC-69's 2026-08-09 delegation asked for and nobody built) — the version bump and the RESOLUTION are CONDUCT's
+## IC-120 · I3: `op=provenanceroutes` — THE READ HALF OF THE PROVENANCE-ROUTE MARKER. Which documents in this instance carry a STANDING `LOOKED_INDETERMINATE` marker, with an empty answer that says WHY it is empty · RESOLVED ACCEPTED 2026-09-18 by CONDUCT #3 at integration — I3 23.0.0 → **23.1.0**, MINOR, ADDITIVE 2026-09-17 (REC-116, building the reader REC-69's 2026-08-09 delegation asked for and nobody built) — the version bump and the RESOLUTION are CONDUCT's
+
+> **ACCEPTED AS MINOR. IT PROPOSED AGAINST 22.0.0 AND IS RESOLVED AGAINST 23.0.0 — THE THIRD ITEM TODAY WHOSE PROPOSED BASE WENT STALE WHILE IT WORKED**, after IC-118 (proposed against 19.0.0, resolved against 20.0.0) and IC-121. **The base is read at RESOLUTION and never at proposal**, and three instances in one day is the argument for that rule rather than an embarrassment to it. A NEW READ OP adds and moves nothing, so MINOR is right and no consumer can become wrong by it.
+>
+> **THREE DESIGN DECISIONS ARE THE INTERFACE AND EACH REFUSES A DRIFT RATHER THAN ENABLING A FEATURE.** `finding` is deliberately **NOT a caller parameter** — *an op that cannot be asked for every document with any route row cannot drift into it*, which is the row's own named liar closed by construction. *Standing* means the **LATEST** row, because correction moves forward under DEC-19. And an empty answer **always carries a cause from a four-member ladder, with `never_assessed` published EVEN WHEN THE PAGE IS FULL** — the returned-nothing-versus-no-marker distinction the row demanded, made unconditional so it cannot be true only on the empty path.
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
   `docs/development/INTERFACES.md`, not off the row: 22.0.0** (IC-119 ACCEPTED, 2026-09-17).
