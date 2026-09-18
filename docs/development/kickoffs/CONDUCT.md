@@ -775,6 +775,12 @@ defect it is.
    `strandedwork` judges such a unit `ahead === 0` and stays silent whichever list it reads.
    **Run `git fetch --prune` in your own tree after the delete** anyway, so your next
    `--local` run is reading the world rather than a memory of it.
+2b. **WHEN AN INTEGRATION CLOSES A SECURITY OR DISCLOSURE DEFECT — something a stranger, a machine credential or
+   the wrong member could read or do — SAY SO in the merge commit's subject and `SendMessage` DIST** naming the row
+   and the interface changes it carries. That message is what makes DIST cut now rather than at its next batch
+   (`kickoffs/DIST.md`, *WHEN DIST CUTS*, BOB #15 2026-09-18). The receipt: four such fixes sat on `main` and on no
+   deployed plane for four days, because nothing told DIST and nothing woke it.
+
 3. **Enqueue decompositions from BOB** — you are the GATE that confirms each
    piece is genuinely independent before it becomes runnable. **And test every
    scope you write against CLAUDE.md's "CONTENT IS THE UNIT" section** (added by

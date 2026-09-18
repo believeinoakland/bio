@@ -873,6 +873,8 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
     MACHINE_CANNOT_MOVE_VERSION: ["versionaccept", { target: INQ, version: "opening account" }],
     MACHINE_CANNOT_FORWARD:      ["taskforward", { id: "TASK-2026-0001-x", to: "gus" }],
     MACHINE_CANNOT_RESOLVE:      ["taskresolve", { id: "TASK-2026-0001-x" }],
+    /* REC-126 / C-32.16 — the harvest named it until it was driven here. */
+    MACHINE_CANNOT_REVIEW:       ["casedraft", { project: "PROJ-2026-9000-x" }],
   };
   /* HARVESTED, NEVER TYPED: a thirteenth fence must not arrive unmeasured, and
      the harvest is asserted non-empty BEFORE anything is compared over it — a
@@ -910,8 +912,8 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
   + "so nothing below is about a missing catalog row",
     Object.keys(SHORT).filter((c) => !(REGISTRY[c] || MACHINE_FENCE_CHECKS[c])?.translation), []);
 
-  console.log(`     explained on the wire: ${explained.length} of 12 — ${explained.join(", ") || "(none)"}`);
-  console.log(`     MUTE on the wire:      ${mute.length} of 12 — ${mute.join(", ")}`);
+  console.log(`     explained on the wire: ${explained.length} of ${Object.keys(SHORT).length} — ${explained.join(", ") || "(none)"}`);
+  console.log(`     MUTE on the wire:      ${mute.length} of ${Object.keys(SHORT).length} — ${mute.join(", ")}`);
   /* PINNED AS A SET, floor and ceiling, WITH THE DATE AND THE REASON AT THE SITE
      — REC-73/REC-78's shape. A thirteenth fence written the mute way fails this;
      so does the turn that fixes any of the eleven, which is the point: it must
@@ -928,14 +930,18 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
   t("CORRECTED (was a PIN on D-262's defect, MEASURED 2026-08-09 at one of twelve): ALL TWELVE now "
   + "carry their C-number and canned translation to the caller, so the words REC-64 wrote for them "
   + "reach whoever meets the fence",
-    [mute, explained.length], [[], 12]);
+    /* MOVED 12 -> 13 on 2026-09-18 by REC-126: C-32.16 MACHINE_CANNOT_REVIEW
+       arrived through the same decoration with NO edit to it, which is the
+       mechanism arm below doing exactly what it promised. */
+    [mute, explained.length], [[], 13]);
   t("(and the set is asserted EMPTY by name rather than by count, so a thirteenth fence written the "
   + "mute way lands here as a FAILURE naming itself rather than as a silent fall)",
     mute.includes("MACHINE_CANNOT_PUBLISH"), false);
   t("and it is one MECHANISM rather than twelve conformances — the decoration attaches the catalog "
   + "row on the way out, so a fence added tomorrow is explained without its author knowing this "
   + "rule exists. That is what VF-5's finding bought.",
-    explained.length === 12 && explained.includes("MACHINE_CANNOT_MOVE_VERSION"), true);
+    explained.length === 13 && explained.includes("MACHINE_CANNOT_MOVE_VERSION")
+      && explained.includes("MACHINE_CANNOT_REVIEW"), true);
 }
 
 } finally {

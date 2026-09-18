@@ -13893,3 +13893,72 @@ Battery 243/243 · 14858 at `c23e03f1` (baseline 243/243 · 14847; +11 is stats-
 stats arms (6) all AS DECLARED. **FOR CONDUCT:** RESOLVE IC-148 against I3 as read at resolution and mark IC-144's
 class stamp superseded in the I3 version line; rebuild note — REC-129's admin-ROLE question (class vs `administer`) is
 MOOT under this ruling (no class receives `leads`); the `dbBytes` DESIGN GAP in IC-148's sweep is for BOB.
+
+## CLAIM 2026-09-18 RECORD (REC-126 — THE REVIEW COPY, DEC-31: the draft case, the read-and-comment grant, the per-grant read secret)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-abd7c5e99752beec6`, branch
+`worktree-agent-abd7c5e99752beec6`, base `27ad8b4f`. `npm ci` in all three packages, each `node_modules` a real
+directory (7.4 GiB free). Design authority: `BIO_Publication_v0_1.md` §6A (6A.1–6A.4). Paths:
+
+- RECORD (own): `bio-plane/src/schema.mjs` (three new tables before `host_governor`: the draft case, the grant,
+  the comment); `bio-plane/src/store.mjs` (new methods beside `caseDocument` — the draft act, the grant issue and
+  revoke, the review-copy read and its comment, the live-grant predicate — `#hasCaseStanding`'s caller in
+  `caseDocumentFacts` taught to admit a live grant holder, the DO routes, and `purge`'s whole-store arm);
+  `bio-plane/src/index.mjs` (five OPS rows, their NEEDS entries, the ungated read-and-comment handlers beside
+  `casedocument`, the grant mint at the edge on `aicredentialmint`'s pattern, the author stamp).
+- Tests: a new `bio-plane/test/reviewcopy.test.mjs` and its committed control driver; any suite pinning the OPS
+  or NEEDS totality, corrected with its reason.
+- Generated: `bio-plane/dist/*` rebuilt; `bio-plane/scripts/coverage.mjs` floors moved from its print.
+- Docs: `INTERFACE-CHANGES.md` (an IC minted with `node tools/mintid.mjs IC`), `BIO_Publication_v0_1.md` front
+  matter §6A line and §4, `docs/development/construct-status.json` (`13.review-copy`), this block, and a
+  DELEGATION to UI for the surface.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/` (the surface is DELEGATED), NOT `newgroup/`.
+
+### DELEGATION 2026-09-18 RECORD (REC-126) -> UI: **the REVIEW COPY's surface — the half of REC-126 this worker did not build**
+
+**open as of 2026-09-18** — the plane half landed on branch `worktree-agent-abd7c5e99752beec6` (IC-145, IC-146); nothing in `civicos-ui/**` offers any of it yet (`construct-status.json` 13.review-copy is PARTIAL on exactly that).
+
+THE ACTS, stated as acts with their actor. **UI builds four surfaces**, each rendering the plane's answer verbatim (DEC-49; refusals carry `code` + `translation`, C-32.16 for the machine fence):
+
+1. **Draft a case (the project OWNER, beside the publish entry point).** `POST op=casedraft` with the same body the
+   publish form would send (`project`, `targets`, `roles`, `caseId`/`newCase`, `scope`, `statement`, `excluded`,
+   `subjectPosition`, `subjectJustification`, `biasAcknowledgement`); `draft=<id>` in the body EDITS it in place.
+   **Nothing prefilled and nothing required** beyond the project (DEC-69): a draft with gaps is the normal case — the
+   form must never refuse locally for a missing field the plane would accept into a draft. Show `caseIdentity`.
+2. **Read the copy (owner/participants AND recipients).** `GET op=reviewcopy&draft=<id>` with the session, or
+   `GET op=reviewcopy&secret=<value>` with NO session for a recipient. Render `marking` at the top, unmissably, and
+   `signature.detail`; the authored arguments; each `findings[].text` (a `present: false` finding is shown as
+   `detail` says, never hidden); **`missing` as the list of what a publication would still need, each item's
+   `translation`/`detail` in the gates' own words, and `evaluated` beneath it** (it says the list is the FIRST
+   refusal only — do not render the list as complete). Never call it "pre-publish" (Bob: it may never be published).
+   The one dead answer (`NO_REVIEW_COPY`, 404) must render as ONE neutral message for every cause — never "revoked"
+   or "expired", which the plane deliberately does not say.
+3. **Grant and revoke (the owner).** `POST op=reviewgrant {draft, recipient}` → show `secret` ONCE with
+   `secretIsShownOnce`, and the link form `op=reviewcopy&secret=…`; it is not recoverable afterwards. The member
+   door's `grants[]` lists each grant's recipient, issuer, date, `live`, and `revoked_*` — `POST op=reviewrevoke
+   {grant}` withdraws one. **§6A.3 point 2 is this surface's to say at the act**: exporting or emailing a rendering
+   cannot be revoked; the grant can. A rendering that leaves the instance carries hash, date, author and both
+   threshold floors in-band (DEC-31's bound rule).
+4. **Comment (both doors).** `POST op=reviewcomment` (`draft=` + session, or `secret=`) with `{text}`; render
+   `comments[]` with `author_kind` visible — a recipient's comment is labelled as a recipient's (with `recipient`,
+   the name the issuer gave), never as a member's.
+
+## CLAIM 2026-09-18 RECORD (REC-126 — THE REVIEW COPY) — RELEASED
+
+released: 2026-09-18 by the REC-126 worker, branch `worktree-agent-abd7c5e99752beec6`, base `27ad8b4f`, merged with
+`origin/main` at `9ea2eb02` (REC-128 was NOT on `main` — CONDUCT held it off — so it is NOT merged here). Baseline
+at `27ad8b4f`: **239/239 suites green · 14764 assertions passing**, no suite skipped. After: **240/240 suites green**
+on the tree this block is committed with (the one red of the last full run was `strandedwork`'s plancheck arm on a
+stale `DECIDED.md`, regenerated in this commit); `node scripts/coverage.mjs --strict` exit **0** unpiped (193/193 ops
+reached; REGISTER_FLOOR 1332 -> 1337, classified 230 -> 231, corpus 231 -> 232, run 193 -> 194, from its print);
+`node civicos-ui/test/run.mjs` exit **0**; `node tools/status.mjs --check` 0 drift (13.review-copy ABSENT ->
+PARTIAL; census 188/94 -> 193/97); `node tools/corpuscheck.mjs` 0 fail. NEGATIVE CONTROL `node
+test/reviewcopy.control.mjs` from `bio-plane/`: baseline 52/0, (a) 48/4, (b) 51/1, (c) 50/2, (d) 51/1, every restore
+sha256 MATCH. IDs minted with `tools/mintid.mjs`: IC-145 (I3), IC-146 (I5). C-32.16 added to MACHINE_FENCE_CHECKS.
+Paths as claimed, plus `bio-plane/src/affordances.mjs` (NON_ACTS / RUNG_ABSENT rows), `bio-plane/checks/bio-checks.mjs`
+(C-32.16), `bio-plane/scripts/coverage.mjs` (the floors) and the instrument suites named in IC-145.
+**FOR CONDUCT:** RESOLVE IC-145 (proposed MINOR) and IC-146 (proposed MINOR) against I3 / I5 as read at resolution;
+fold the DESIGN GAP (who may issue a grant — running provisionally at the project OWNER) into
+`BIO_Publication_v0_1.md`'s Incomplete sections if Bob has not ruled (it is already written there); the UI DELEGATION
+above is open.

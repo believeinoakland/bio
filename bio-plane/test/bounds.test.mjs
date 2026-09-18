@@ -490,7 +490,9 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    KEYED read (one lead) whose answer is a list that grows with every look, so it is capped and
    says `truncated`. Its constants sit BELOW its method, on REC-116's finding above. DRIVEN in the
    map below. */
-  OPS.size, 35);
+  /* MOVED 35 -> 36 on 2026-09-18 by REC-126, from the figure this walk PRINTED: op=reviewcopy,
+     born with its bound as a named constant beside `LIMIT ?` (REVIEW_LIST_MAX). */
+  OPS.size, 36);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1239,7 +1241,14 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      signed-in member can write (C-54.2), and this suite drives machine
                                      tokens only. The bite, the clamp and `truncated` both ways are driven
                                      in `test/lead.test.mjs` section 7; the envelope arm is below. */
-                                  "leadread"]);
+                                  "leadread",
+                                  /* REC-126 / IC-145: op=reviewcopy's comments and grants are read under
+                                     REVIEW_LIST_MAX with a caller `limit` clamped to it. Its BITE needs a
+                                     DRAFT with comments, which only a project OWNER in a session can write,
+                                     and this suite drives machine tokens only — so the bite, the clamp and
+                                     `comments_truncated` both ways are driven in `test/reviewcopy.test.mjs`
+                                     section 6, in this file's loop shape. */
+                                  "reviewcopy"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1407,6 +1416,9 @@ const answersByOp = new Map([
   ["provenanceroutes", await GET("op=provenanceroutes&token=mem-r57&limit=1")],
   /* MK-4: the envelope of a keyed read with no lead to key on — an answer object, never an array. */
   ["leadread", await GET("op=leadread&token=mem-r57&id=LEAD-2026-0918-000000000000&limit=1")],
+  /* REC-126: the envelope of the review copy's read with no draft to key on — the ONE dead answer, an
+     object and never an array. The bite is driven in `test/reviewcopy.test.mjs` (DRIVEN_ELSEWHERE). */
+  ["reviewcopy", await GET("op=reviewcopy&token=mem-r57&draft=DRAFT-2026-0000&limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "

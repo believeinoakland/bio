@@ -816,6 +816,27 @@ if (conduct && inbox && !/INBOX/.test(conduct))
 }
 function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm is armed`; }
 
+/* ---------------------------------- 2e'. THE READING BUDGET (`CLAUDE.md` §1; Bob, 2026-09-18)
+
+   The files every session must READ WHOLE — CLAUDE.md, a lane's kickoff, its -NEXT handoff — each
+   have a size budget in `tools/readbudget.mjs`, so a session can hold its whole required reading
+   rather than scan it. Over budget WARNs until that file's cut has landed (it is listed in CUT), then
+   FAILs, the arming `ledger.mjs` uses. QUEUE.md's budget is the ledger gate's, above, not this one's.
+   The module failing to load is a FAIL, for the reason the ledger gate gives. */
+{
+  const R = await import("./readbudget.mjs").catch((e) => ({ loadError: e }));
+  if (!R.check) {
+    fail(`READING BUDGET UNLOADABLE — tools/readbudget.mjs could not be imported (${R.loadError?.message || "no check"}).`);
+  } else {
+    const over = R.check(ROOT);
+    notes.push(`reading budget: ${R.readSet(ROOT).length} read-whole file(s), ${over.length} over budget`);
+    for (const o of over)
+      (o.verdict === "FAIL" ? fail : warn)(`READING BUDGET — ${o.file} is ${o.bytes} B against ${o.budget} B`
+        + (o.verdict === "FAIL" ? ` and its cut has LANDED, so it has grown back. Cut it again.`
+           : `; WARN until its cut lands (then add it to CUT in tools/readbudget.mjs). The owner of the file cuts it.`));
+  }
+}
+
 /* ---------------------------------- 2f. UNDESIGNED CLAIMS NOBODY HAS RE-READ
 
    D-408, and it is the OTHER DIRECTION from 2e. Every arm in this file is pointed at the

@@ -533,6 +533,9 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
     MACHINE_CANNOT_MOVE_VERSION: ["versionaccept", { target: INQ, version: "v1" }],
     MACHINE_CANNOT_FORWARD:      ["taskforward", { id: "TASK-2026-0001-x", to: "anna" }],
     MACHINE_CANNOT_RESOLVE:      ["taskresolve", { id: "TASK-2026-0001-x" }],
+    /* REC-126 / C-32.16: the review copy's authoring fence. The completeness arm
+       below went red naming it until it was driven here. */
+    MACHINE_CANNOT_REVIEW:       ["casedraft", { project: "PROJ-2026-0001-x" }],
   };
   const broad = await mint({ tokenId: "held-open", taskScope: "the negative control's own",
     writes: [...new Set(Object.values(ACTS).map(([op]) => op))] });
