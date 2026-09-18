@@ -12476,3 +12476,47 @@ paths:
   **NOT `civicos-ui/`** — UI-64 is in it.
 
 **open as of 2026-09-17.**
+
+## REC-116 · RECORD · the READ op for a standing `LOOKED_INDETERMINATE` marker (the 2026-08-09 delegation, 39 days unbuilt)
+Opened 2026-09-17 by REC-116's worker (CONDUCT #3), worktree `agent-aa29968dac7cc0e37`.
+**REC-112's measurements are INHERITED (`M-41`) and are NOT re-derived here:** the index
+`provenance_route_marks_finding` was specified FOR this reader, its four existing readers all
+resolve via the PRIMARY KEY autoindex, and `bundle_id` — the index's second column — is this
+plane's after-cursor paging key. **The index is NOT deleted and its annotation is NOT reflowed**
+(`test/nc-rec69-selects.mjs` patches two of its lines as EXACT STRING LITERALS).
+
+- `bio-plane/src/store.mjs` — **by SITE, not by file:** (1) ONE NEW method
+  `provenanceRoutesMarked()` and its private helpers, inserted immediately after
+  `provenanceRouteAssess()`; (2) ONE new line in the op dispatch table beside `provenanceroute`.
+  **`provenanceRouteAssess`, `#latestRouteMark`, `Store.routeFinding`, `auditPass` and
+  `listBundles` are READ AND NOT EDITED** — that is what keeps the readers one rule and what
+  makes the over-strictness arm (every existing provenance-route answer byte-identical) mean
+  something. **NOT `#versionCollections`** (REC-119's region). **NOT the observation-log tally**
+  (REC-110's region). **NOT `meaningRows()`**.
+- `bio-plane/src/index.mjs` — **by SITE:** the `provenanceroutes` row in the op registry, and its
+  name added to the viewer-stamp list beside `provenanceroute`. Nothing else.
+- `bio-plane/test/rec116-route-marked.test.mjs` — new, the driven suite (through the OP, via
+  `dispatchFetch`, never at the store).
+- `bio-plane/test/nc-rec116.mjs` — new, the negative-control driver.
+- `bio-plane/test/airuns.test.mjs` — the unread-index roster's CEILING and FLOOR move 14 → 13 and
+  the by-name pin at :675 is **CORRECTED, NOT EXEMPTED**: `provenance_route_marks_finding` leaves
+  the roster because this item gives it a reader. The `pushesFragment("finding")` POLARITY arm is
+  deliberately left asserting `false` and still passes — this item's predicate is a STATIC SQL
+  literal, not a runtime-composed fragment, so that arm keeps measuring what it was written to.
+- `docs/development/INTERFACES.md` (I3) and `docs/development/INTERFACE-CHANGES.md` (**IC-120**,
+  minted with `node tools/mintid.mjs IC`). **CONDUCT takes the version bump and the RESOLUTION.**
+- `docs/development/MEASUREMENTS.md` — the query-plan measurement, appended as a new row.
+- `docs/development/OBSERVATION-LOG-DESIGN.md` — front matter only (`CORPUS-STANDARD.md`: a
+  landing that changes a construct updates its home document's front matter in the same commit).
+- `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** `bio-plane/src/query.mjs` (it references this table
+ZERO times and this item does not change that — the predicate belongs beside the other three
+route readers in `store.mjs`, not in the search compiler), `bio-plane/src/schema.mjs` (**no table,
+no column, no index, and the REC-112 annotation is not reflowed**), `bio-plane/checks/bio-checks.mjs`
+(**this op REFUSES a finding outside the stored vocabulary and that refusal reuses
+`ROUTE_MARK_CHECKS`' existing family rather than minting a C-number for a read**),
+`bio-plane/src/airun.mjs`, `civicos-ui/**` (UI-64's), `tools/**`, `newgroup/**`.
+**NOT `docs/development/QUEUE.md`** — flipping the REC-116 row is CONDUCT's act (`kickoffs/WORKER.md`).
+
+**open as of 2026-09-17.**
