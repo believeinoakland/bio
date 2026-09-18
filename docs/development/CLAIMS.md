@@ -13034,6 +13034,12 @@ beyond the floor table.
 
 **open as of 2026-09-18** — REC-120 is being built.
 
+released: 2026-09-18 by the REC-120 worker. Every claimed path is committed on branch
+`worktree-agent-adf3ba7d5e1b95c38` (work at `a531311f`); the final tree ran the battery
+227/227 suites green · 14,141 assertions, `coverage --strict` exit 0 (unpiped), UI harness exit 0,
+DEC-49 guard exit 0 (no floor moved — none was invalidated), `plancheck --local` 0 fail. The
+`civicos-ui` floor table was NOT touched. The FRAMEWORK DELEGATION below stays open.
+
 ### DELEGATION 2026-09-18 RECORD (REC-120) -> FRAMEWORK: **FW-21's probe's ground check is stale by REC-120's landing**
 
 **open as of 2026-09-18.** `tools/fw21-onpoint-probe.mjs` exits 2 (`GROUND BROKEN`) on a tree
