@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-409's NEGATIVE CONTROL DRIVER — six arms plus an opening and closing baseline — over
+/* D-409's NEGATIVE CONTROL DRIVER — seven arms plus an opening and closing baseline — over
  * `tools/owed.mjs` and `bio-plane/test/owed.test.mjs`.
  *
  *   node bio-plane/test/owed.control.mjs        (from the repo root)
@@ -125,6 +125,12 @@ const ARMS = [
        stay excluded even with the gate forced open. Measured — the first version expected it
        and was wrong, which is the arm-that-fired-at-the-wrong-thing class one more time. */
     mustBreak: "A ROW THAT ONLY QUOTES BOB IN ITS BODY IS NOT OWED" },
+
+  { id: "A7", title: "the whole owner pattern case-INSENSITIVE again — Bob the PERSON read as the "
+                   + "BOB lane, the measured defect behind all four of BOB #13's attributed rows",
+    from: "  + String.raw`|(?i:is )${lane}(?i:'s)\\b`);",
+    to:   "  + String.raw`|(?i:is )${lane}(?i:'s)\\b`, \"i\");",
+    mustBreak: "BOB THE PERSON IS NOT THE BOB LANE" },
 ];
 
 for (const a of ARMS) {

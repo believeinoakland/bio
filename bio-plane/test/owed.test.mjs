@@ -26,7 +26,7 @@
  * an arm that found nothing there would satisfy every fixture arm above it.
  *
  * NEGATIVE CONTROL: (all six RUN 2026-09-17 by BOB #13, exit 0, 33 pass / 0 fail, both baselines
- * green) `node bio-plane/test/owed.control.mjs` from the repo root — six arms, each armed ALONE
+ * green; all SEVEN re-RUN 2026-09-18 by BOB #14 with A7 added, exit 0, 38 pass / 0 fail) `node bio-plane/test/owed.control.mjs` from the repo root — seven arms, each armed ALONE
  * against a pristine copy in `.d409-harness/`, every restore verified by sha256 AND `cmp` AND a
  * floored byte count.
  *   (A1) the owner test matches the row BODY again -> S1 fails: the measured 58-item defect,
@@ -41,6 +41,8 @@
  *        STOP the lane, and the rule this whole family of instruments turns on.
  *   (A6) THE PRECISION ARM — every judged row returned as owed, so the list is complete and
  *        useless. A sensitivity control does not notice; only this does.
+ *   (A7) the owner pattern case-INSENSITIVE again -> S7 fails: Bob the PERSON read as the BOB
+ *        lane, which is what all four rows BOB #13 handed over as attributed actually were.
  *
  * **AND SECTION 7 IS A DISCRIMINATION CONTROL THE TOOL SHIPPED WITHOUT, which is why it was
  * WRONG.** `owed.mjs ZZZNOTALANE` returned ELEVEN items — a lane that does not exist cannot
@@ -216,6 +218,14 @@ section("7 — THE DISCRIMINATION CONTROL. A NONEXISTENT LANE MUST BE ATTRIBUTED
   + "which this tool cannot determine", fake.residue.some((i) => i.id === "D-32"), true);
   t("...so the totals differ by exactly the attributed item",
     real.counts.owed - fake.counts.owed, 1);
+  /* THE PERSON IS NOT THE LANE (2026-09-18). Under a whole-pattern `i` flag, *is Bob's* matched the
+     BOB lane, and all four rows handed to BOB #14 as attributed were false matches of this kind. */
+  const person = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([
+    "| D-33 | gap | 2026-09-17 | body | M0 · open — the decision about what it MEANS is Bob's or CONDUCT's |",
+    "| D-34 | gap | 2026-09-17 | body | M0 · OPEN — the INTERVENTION IS BOB'S to run |",
+  ]), [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
+  t("BOB THE PERSON IS NOT THE BOB LANE — 'is Bob's' attributes nothing, 'IS BOB'S' still does",
+    person.attributed.map((i) => i.id), ["D-34"]);
   /* The headline is the thing that was wrong, so the headline is asserted. */
   t("the message counts the two populations APART", 
     /ATTRIBUTED to this lane, plus 2 open residue/.test(owedMessage(real)), true);

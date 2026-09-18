@@ -79,12 +79,17 @@ export const SOURCES = {
    that is mostly noise is a worklist nobody reads, which is the failure mode this instrument
    exists to prevent.** So: the DISPOSITION only, and the owner phrases are the ones that assign
    rather than merely mention. A quotation is not an assignment. */
+/* THE LANE TOKEN IS CASE-SENSITIVE; THE PHRASE AROUND IT IS NOT. Found 2026-09-18 by BOB #14: with
+   the whole pattern under `i`, *is Bob's* — the PERSON — matched the BOB LANE, and every one of the
+   four rows BOB #13 handed over as *attributed to BOB* was a false match: two quoted Bob the person
+   (*the decision is Bob's or CONDUCT's*, *Bob's own words*), one named finished work, one a negation.
+   Lane names in this estate are always written in capitals, and the person never is. */
 export const OWNER_RE = (lane) => new RegExp(
-  String.raw`routed to (?:the\s+)?${lane}\b`
-  + String.raw`|owed by (?:the\s+)?${lane}\b`
-  + String.raw`|blocked on (?:the\s+)?${lane}\b`
-  + String.raw`|${lane}(?:'s to |'s call| owns | to decide| to design)`
-  + String.raw`|is ${lane}'s\b`, "i");
+  String.raw`(?i:routed to (?:the\s+)?)${lane}\b`
+  + String.raw`|(?i:owed by (?:the\s+)?)${lane}\b`
+  + String.raw`|(?i:blocked on (?:the\s+)?)${lane}\b`
+  + String.raw`|${lane}(?i:'s to |'s call| owns | to decide| to design)`
+  + String.raw`|(?i:is )${lane}(?i:'s)\b`);
 
 /* TIGHTENED TWICE, BOTH TIMES BY DRIVING IT. A bare `RESIDUE` matched the word wherever it
    appeared in narration — *the residue that is ALREADY THERE*, *residue each* — which is prose

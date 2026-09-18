@@ -16183,3 +16183,31 @@ The census statements beside the page — the gated `GROUP BY` over standing row
 so a third finding arriving in the table would be visible rather than silently missing from
 `assessed`. That is the *invert, do not lengthen a list* rule, and it costs that one statement
 the index. **The index serves the PAGE, which is the read the 2026-08-09 delegation asked for.**
+
+
+## 2026-09-18 · THE HEARTBEAT'S WEDGES WERE AN APPROVAL WAIT, NOT A POLLER — read from its own transcripts (D-402, D-407)
+
+**Instrument:** the run-sessions' JSONL transcripts under `~/.claude/projects/-Users-sparky-Downloads-ClaudeCodeBIO/`,
+read by BOB #14 with python — the tool_use records and whether each has a tool_result — plus
+`list_task_runs conduct-heartbeat` and `get_session`.
+
+- **Run of 18:33:19Z (`fe2b25c6…`):** last tool_use `mcp__ccd_session_mgmt__archive_session` on
+  `local_255cf912…` at **18:35:14Z**; the next record is the rejection written when the run was stopped at
+  21:30 (*"The user doesn't want to proceed with this tool use"*, then *"Request interrupted by user for tool use"*).
+- **Run of 21:30:42Z (`04f35e9c…`):** `retirable.mjs` returned 2 RETIRABLE; two `archive_session` tool_uses
+  at **21:31:23Z and 21:31:24Z**, NO tool_result, still `running` at 01:50Z. `lastRunAt` read 21:30 with
+  `enabled: true` and a future `nextRunAt` throughout.
+- **Permission mode of the run-sessions, from the transcript files:** `"permissionMode":"auto"`, five of
+  five sampled. This lane's own session reads `bypassPermissions` (`get_session self`), and its
+  `archive_session` calls returned at once — five of five this morning.
+
+**Reading:** in `auto`, `archive_session` may wait for an approval; an unattended run has nobody to give it,
+and a scheduled task refuses a new run while one is in progress. D-407 had attributed the 18:33 wedge to an
+unbounded `until` poller — that was never checked against the transcript and is not what happened.
+**What is NOT established:** whether `auto` ALWAYS withholds this tool, or did so on these calls — two of
+two waited; nothing here drives the classifier. The fix removes the dependency rather than betting on it:
+the heartbeat no longer calls any session-mutating tool.
+
+**Also observed at the same opening, bearing on D-405:** two archives of NOT-running sessions succeeded on
+the first call — `remoteControlActive: true` on one (`local_be057cd8…`), false on the other (BOB #13). One
+observation each; it says RC alone did not refuse an idle session, and nothing about a busy one.

@@ -101,6 +101,42 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
 
+**2026-09-18 · BOB #14 · THREE THINGS, ONE OF THEM A NEW ACT IN YOUR LOOP.**
+
+**1 · THE RETIREMENT SWEEP IS NOW YOURS TO PERFORM, NOT THE HEARTBEAT'S (D-402, D-407).** Measured from
+the heartbeat's own transcripts: scheduled runs are launched in `auto` permission mode, and there
+`archive_session` WAITED FOR AN APPROVAL NOBODY WAS PRESENT TO GIVE — 18:35 to 21:30 and 21:31 to 01:50 on
+2026-09-17. A waiting run blocks every later firing, so the driver was dead ~7 hours while `enabled: true`
+read healthy. D-407 had blamed an `until` poller; the transcript shows the archive call. **The heartbeat now
+only JUDGES and puts the RETIRABLE list in its poke; you run in bypass and perform the act** —
+`kickoffs/CONDUCT.md`, "THE RETIREMENT SWEEP IS YOURS TO PERFORM". I stopped the wedged run and swept by
+hand: 4 RETIRABLE archived, 0 HOLD, disk 6.8 to 7.4 GiB.
+
+**AND ONE THING THE SWEEP SURFACED THAT IS YOURS TO DISPOSE OF:** `origin/claude/elated-grothendieck-a10003`
+carries three commits NOT on `main` (`740713f8`, `7ddf2e0c`, `4c6ef789` — the M0-41 census control's arm 2
+anchor and arm 3 finding, plus a CLAIMS.md entry). Its session was RETIRABLE because the work is SAVED; it is
+not LANDED. Integrate it or dispose of it; I have not touched it.
+
+**2 · D-384 IS DECIDED — AND IT IS AN ITEM FOR YOU TO ROW.** Delegated to this lane (instrument design, not
+doctrine). **The derivation class keeps its definition — AMPLIFICATION, not size — and the `for`-header credit
+in `perRowScan` GOES, because a scan in a loop's own header is its row source and runs once.** Rejected:
+widening the class to a linear pass over an unbounded scan (enrols `ncLinear`, which the suite declares out
+by name, and duplicates REC-60's bounded-read question). **The 21 HOIST-FRAGILE members do not leave
+silently:** the item removes the credit and dispositions EACH of the 21 by name — STAYS, with the amplification
+named (a per-row read in a helper the walk cannot see, as REC-93/94/95 admitted `#frontierContent`,
+`#frontierMeaning`, `frontier`), in a by-name roster with its reason; or LEAVES. Scope: `bio-plane/test/
+derivation-bounds.test.mjs` only, no interface touched. Controls owed: `ncLinearInline` must be OUT; re-adding
+the header credit must turn the suite red; REC-88's hoist must no longer move any membership. Milestone M0.
+Depends on nothing.
+
+**3 · `owed.mjs` WAS ATTRIBUTING BOB THE PERSON TO THE BOB LANE.** Its owner pattern was case-insensitive,
+so *is Bob's* matched the lane — all four rows BOB #13 handed me as attributed were false matches. Fixed with
+a suite assertion and control arm A7 (all seven arms re-run, 38/0). **Your own count is unchanged at 3**; I
+diffed old against new for every lane before landing it, and only the two person-matches moved.
+
+**Nothing is superseded and no worker should be stopped.**
+
+
 **2026-09-17 · BOB #13 · REC-116 IS UNBLOCKED — ITS CONSTRUCT IS DESIGNED, IN A GOVERNED DOCUMENT,
 AND THE TEST THAT SAID OTHERWISE WAS THE WRONG TEST.** I ruled it blocked on my design; **I was
 wrong and am reversing it rather than letting it sit.** No design act is owed.

@@ -182,6 +182,12 @@ the artifact and say what it released, measured.
 **Archiving is REVERSIBLE (`unarchive_session`), which is what makes it safe to do without asking.**
 Report the disk you measured before and after. Driven 2026-09-17: 5.4 GiB → 6.1 GiB free.
 
+**THEN SWEEP THE REST OF THE POPULATION, because the heartbeat no longer does (D-402, changed 2026-09-18).** Feed
+`list_sessions` (limit 50) to `node tools/retirable.mjs --self <your id>` and archive exactly what it calls
+RETIRABLE; never a HOLD row. The heartbeat runs in `auto` mode, where `archive_session` waited for an approval
+nobody was present to give and wedged the driver for ~7 hours in one evening. **This lane and CONDUCT run in
+bypass, so the act lives here.** Driven by BOB #14 at opening: 4 retirable, 0 HOLD, 7.4 GiB free after.
+
 ## Opening a BOB turn: surface what is waiting
 
 **Read `docs/development/DECISIONS.md` FIRST and surface every `open` entry to Bob**,

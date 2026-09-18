@@ -9,8 +9,11 @@
  * an area session idle for 21 hours still holding 635 MB. `CLAUDE.md`: *a mechanism that is not
  * in the loop the reader actually runs is not a mechanism*, and nothing executes a kickoff.
  * **Session state lives in the HARNESS, so `plancheck` cannot see it and no suite can reach it
- * — which is exactly why the JUDGEMENT is here, where a suite CAN drive it, while the ACT stays
- * with the heartbeat, the only thing in the loop holding the session tools.** The caller feeds
+ * — which is exactly why the JUDGEMENT is here, where a suite CAN drive it.** The ACT was first
+ * given to the heartbeat and that was WRONG, measured 2026-09-18 (D-402/D-407): the heartbeat runs
+ * in `auto` permission mode, `archive_session` waited there for an approval nobody was present to
+ * give, and a waiting run blocks every later firing. **The heartbeat now JUDGES and carries the
+ * list; CONDUCT and BOB, which run in bypass, PERFORM the act.** The caller feeds
  * this the session list and executes what it returns. Split deliberately: a predicate that
  * cannot be tested is the thing this file exists to replace.
  *

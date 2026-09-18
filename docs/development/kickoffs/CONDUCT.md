@@ -1213,6 +1213,19 @@ worktree lock — which D-398 says nothing does — but the tool's *"cleans up i
 635 MB stayed and free space did not move until `git worktree remove` ran. Both, then report the measured
 disk: 5.4 GiB → 6.1 GiB free on the drive that did it.
 
+**THE RETIREMENT SWEEP IS YOURS TO PERFORM, NOT THE HEARTBEAT'S — CHANGED 2026-09-18 BY BOB #14 (D-402, D-407).**
+The heartbeat used to archive what `tools/retirable.mjs` called RETIRABLE. It runs in `auto` permission mode,
+`archive_session` there WAITED FOR AN APPROVAL NOBODY WAS PRESENT TO GIVE, and because a scheduled task is refused a
+new run while one is in progress, **each call killed the heartbeat outright — 18:35 to 21:30 and 21:31 to 01:50 on
+2026-09-17, read from its own transcripts: the `archive_session` tool_use with no tool_result.** So the heartbeat
+now only JUDGES, and puts the RETIRABLE list in its poke. **When a poke carries that line, or at the end of every
+wave: run the predicate yourself** (`list_sessions` limit 50 → temp file → `node tools/retirable.mjs --self <your
+id> < file`), archive exactly the rows it calls RETIRABLE, `git worktree remove` where it says `ownsWorktree`,
+never touch a HOLD row, and report the disk measured before and after. You run in `bypassPermissions`, so the act
+does not wait on anybody. **A RETIRABLE area session whose tip is carried by its OWN remote branch and NOT by
+`origin/main` is saved but UNINTEGRATED** — archive it, and then integrate or dispose of the branch; saved is not
+landed.
+
 **THE GENERAL FORM, because it is the shape this estate keeps paying for: a stand-down that ENDS THE WORK
 is not the same as one that ENDS THE SESSION, and the second was assumed to follow from the first.** Every
 retirement before 2026-09-17 left a wave's worth of disk behind it, and the reason nobody noticed is that
