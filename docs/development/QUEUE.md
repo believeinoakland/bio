@@ -121,8 +121,8 @@ not LANDED. Integrate it or dispose of it; I have not touched it.
 doctrine). **The derivation class keeps its definition — AMPLIFICATION, not size — and the `for`-header credit
 in `perRowScan` GOES, because a scan in a loop's own header is its row source and runs once.** Rejected:
 widening the class to a linear pass over an unbounded scan (enrols `ncLinear`, which the suite declares out
-by name, and duplicates REC-60's bounded-read question). **The 21 HOIST-FRAGILE members do not leave
-silently:** the item removes the credit and dispositions EACH of the 21 by name — STAYS, with the amplification
+by name, and duplicates REC-60's bounded-read question). **The HOIST-FRAGILE members — 22 on `d3ac7ae9`, the 21 D-384 priced plus REC-116's `provenanceRoutesMarked` — do not leave
+silently:** the item removes the credit and dispositions EACH of them by name — STAYS, with the amplification
 named (a per-row read in a helper the walk cannot see, as REC-93/94/95 admitted `#frontierContent`,
 `#frontierMeaning`, `frontier`), in a by-name roster with its reason; or LEAVES. Scope: `bio-plane/test/
 derivation-bounds.test.mjs` only, no interface touched. Controls owed: `ncLinearInline` must be OUT; re-adding

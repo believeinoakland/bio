@@ -556,8 +556,6 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1232`
 - **D-383** — NOT SETTLED BY THIS BUMP, named so an ACCEPTED interface is not read as a settled design:** **D-383** — `op=meaningrows&rows=leg` publishes a leg's AUTHORED letter uncapped, the pre-REC-105 read surviving in a surface nobody swept, **which corrects REC-105's own census recording that letter as unreachable through…  
   `docs/development/INTERFACE-CHANGES.md:8257`
-- **D-384** · 2026-09-18 — DECIDED 2026-09-18 BY BOB #14, delegated as instrument design rather than doctrine: the class keeps its definition (AMPLIFICATION, not size) and the header credit goes; each of the 21 HOIST-FRAGILE members is dispositioned BY NAME — stays with its amplification named, or leaves.** Widening the class was rejected:…  
-  `docs/development/DEBT.md:332`
 - **D-384** — 2 · D-384 IS DECIDED — AND IT IS AN ITEM FOR YOU TO ROW.** Delegated to this lane (instrument design, not doctrine).  
   `docs/development/QUEUE.md:120`
 - **D-386** — THE FINDING THAT DECIDED IT, VERIFIED AT THE ARTIFACT AND NOT CARRIED FROM D-386:** `op=stats` already publishes `observations` — `count(*)` over the WHOLE `observation_log`, every level — and `aiRunLog`, its `authority_kind = 'run'` slice.  
@@ -1038,6 +1036,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1716`
 - **REC-115** · 2026-09-17 — AMENDED 2026-09-17 by REC-115 — §4.4's *THE QUERY'S OTHER ARMS* NOW BINDS BOTH STATEMENTS, UI-62's DELEGATED FINDING IS DISCHARGED AND ITS INCOMPLETE BULLET IS STRUCK, under `IC-115` on I3.** `meaning({mode:"levels"})` builds its scope from `cte(false, armSet(rowArm))` — the query with the row's own arm STRIPPED —…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:7`
+- **REC-116** · 2026-09-18 — DECIDED 2026-09-18 BY BOB #14, delegated as instrument design rather than doctrine: the class keeps its definition (AMPLIFICATION, not size) and the header credit goes; each HOIST-FRAGILE member — 22 on `d3ac7ae9`, the 21 priced here plus REC-116's `provenanceRoutesMarked` — is dispositioned BY NAME — stays with…  
+  `docs/development/DEBT.md:332`
 - **REC-116** · 2026-09-17 — PRECISION MEASURED AND THEN CORRECTED DOWNWARD — 1 GENUINE OF 3 VERIFIED — and recorded that way because a precision figure that only improves in the telling is worthless.** REC-116 is the true positive: no governed design covers its construct at all, 39 days undetected.  
   `docs/development/DEBT.md:340`
 - **REC-116** · 2026-09-18 — ARM B WAS DECLARED WRONG AND CORRECTED AT THE SITE RATHER THAN RELAXED:** it predicted degradation to a full `SCAN` and measured FALSE — the cursor predicate keeps the PK autoindex available, so `finding` merely leaves the index predicate.  
