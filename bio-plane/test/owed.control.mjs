@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-409's NEGATIVE CONTROL DRIVER — eight arms plus an opening and closing baseline — over
+/* D-409's NEGATIVE CONTROL DRIVER — nine arms plus an opening and closing baseline — over
  * `tools/owed.mjs` and `bio-plane/test/owed.test.mjs`.
  *
  *   node bio-plane/test/owed.control.mjs        (from the repo root)
@@ -131,8 +131,10 @@ const ARMS = [
 
   { id: "A7", title: "the whole owner pattern case-INSENSITIVE again — Bob the PERSON read as the "
                    + "BOB lane, the measured defect behind all four of BOB #13's attributed rows",
-    from: "  + String.raw`|(?i:is )${lane}(?i:'s)\\b`);",
-    to:   "  + String.raw`|(?i:is )${lane}(?i:'s)\\b`, \"i\");",
+    /* Re-aimed 2026-09-18: the line it patched was rewritten by the POSSESSIVE_ENDS fix, and the arm
+       stopped arming — the control reading the source's TEXT, exactly as it should fail loudly. */
+    from: "  + String.raw`|(?i:is )${lane}(?i:'s)` + POSSESSIVE_ENDS);",
+    to:   "  + String.raw`|(?i:is )${lane}(?i:'s)` + POSSESSIVE_ENDS, \"i\");",
     mustBreak: "BOB THE PERSON IS NOT THE BOB LANE" },
 
   { id: "A8", title: "a blocked queue row read only to its first 220 characters again — REC-100's "
@@ -140,6 +142,11 @@ const ARMS = [
     from: "  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.*)$/gm))",
     to:   "  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.{0,220})/gm))",
     mustBreak: "A ROUTING DEEP IN A LONG BLOCKED HEADING IS STILL OWED" },
+
+  { id: "A9", title: "a possessive allowed to be followed by a NOUN — Bob the person's framing read as the BOB lane (D-127)",
+    from: "  + String.raw`|(?i:is )${lane}(?i:'s)` + POSSESSIVE_ENDS);",
+    to:   "  + String.raw`|(?i:is )${lane}(?i:'s)\\b`);",
+    mustBreak: "A POSSESSIVE FOLLOWED BY A NOUN IS NOT AN ASSIGNMENT" },
 ];
 
 for (const a of ARMS) {

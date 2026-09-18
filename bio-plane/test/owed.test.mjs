@@ -46,6 +46,7 @@
  *        lane, which is what all four rows BOB #13 handed over as attributed actually were.
  *   (A8) the blocked-row heading read to 220 characters again -> S7 fails: REC-100's routing
  *        to BOB sat past that point and the lane was told it owed nothing.
+ *   (A9) the possessive allowed to be followed by a noun -> S7 fails: *IS BOB'S FRAMING* read as the BOB lane.
  *
  * **AND SECTION 7 IS A DISCRIMINATION CONTROL THE TOOL SHIPPED WITHOUT, which is why it was
  * WRONG.** `owed.mjs ZZZNOTALANE` returned ELEVEN items — a lane that does not exist cannot
@@ -229,6 +230,16 @@ section("7 — THE DISCRIMINATION CONTROL. A NONEXISTENT LANE MUST BE ATTRIBUTED
   ]), [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
   t("BOB THE PERSON IS NOT THE BOB LANE — 'is Bob's' attributes nothing, 'IS BOB'S' still does",
     person.attributed.map((i) => i.id), ["D-34"]);
+  /* ALL-CAPS PROSE: a possessive followed by a NOUN is the person's possession, not an assignment
+     (D-127 "IS BOB'S FRAMING", D-296 "is CONDUCT's own"); followed by a preposition it IS one
+     (D-283 "the correction is CONDUCT's at integration"). */
+  const caps = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([
+    "| D-35 | gap | 2026-09-18 | body | M0 · open — THIS IS BOB'S FRAMING OF THE PROBLEM |",
+    "| D-36 | gap | 2026-09-18 | body | M0 · open — the correction is BOB's at integration |",
+    "| D-37 | gap | 2026-09-18 | body | M0 · open — THE ACT IS BOB'S, NOT ANYONE ELSE'S |",
+  ]), [SOURCES.decisions]: "", [SOURCES.queue]: "" }) });
+  t("A POSSESSIVE FOLLOWED BY A NOUN IS NOT AN ASSIGNMENT; one followed by a preposition or ending the clause IS",
+    caps.attributed.map((i) => i.id).sort(), ["D-36", "D-37"]);
   /* A BLOCKED QUEUE ROW IS READ TO THE END OF ITS HEADING (2026-09-18). REC-100's routing sat past
      character 220 of a heading carrying its history, and the truncated read attributed nothing. */
   const deep = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([]), [SOURCES.decisions]: "",

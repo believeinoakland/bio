@@ -247,6 +247,13 @@ PROVISIONAL entries in `INTERFACES.md`, appends to `DEBT.md` and `MEASUREMENTS.m
 the `BOB INBOX`, and any kickoff its own change superseded. **What it may not:** the
 queue body below the inbox, and any area's code.
 
+**AND A ROW THIS SESSION CLOSES LEAVES THE LEDGER IN THE SAME COMMIT (LED-5, Bob's direction of 2026-09-18:
+*"As each item is processed, that item can be moved out of that document into an archive"*).** When a `DEBT.md`
+row this lane owns reaches CLOSED, run `node tools/ledger.mjs archive <ID>` in the commit that closes it — never
+a later sweep, which is how August's archiving grew back. `plancheck` §2h fails a closed row left in a live
+ledger, so a forgotten archive is a red gate, not a slow regrowth. `node tools/ledger.mjs find <ID>` finds a row
+wherever it now lives.
+
 **4. Keep the design corpus honest about itself** (Bob, 2026-09-14; `docs/architecture/
 CORPUS-STANDARD.md`). A design document this session writes or changes carries front
 matter — Status with `as of <date>`, Place in the system, an EXPLICIT Incomplete sections
