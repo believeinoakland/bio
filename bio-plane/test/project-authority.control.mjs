@@ -71,8 +71,8 @@ const ARMS = {
      internal-caller rule), so a dropped stamp would silently open that act. This arm is what makes
      "the control plane always stamps it" a measurement rather than a belief. */
   "stamp-dropped": {
-    patches: [["index.mjs", "const POSITIONAL_ACTS = [\"cite\", \"sever\", \"reinstate\", \"versioncurrent\", \"proposedispose\", \"biasadopt\"];",
-               "const POSITIONAL_ACTS = [\"cite\", \"sever\", \"reinstate\", \"proposedispose\", \"biasadopt\"];"]],
+    patches: [["index.mjs", "const POSITIONAL_ACTS = [\"cite\", \"sever\", \"reinstate\", \"versioncurrent\", \"proposedispose\", \"biasadopt\", \"conclude\"];",
+               "const POSITIONAL_ACTS = [\"cite\", \"sever\", \"reinstate\", \"proposedispose\", \"biasadopt\", \"conclude\"];"]],
     mustFail: ["REFUSED: the founder (not in P_OUT) — op=versioncurrent", "REFUSED: ruth (not in P_OUT) — op=versioncurrent",
                "and P_OUT stands on nothing"],
   },
@@ -85,17 +85,25 @@ const ARMS = {
                "    if (POSITIONAL_ACTS.includes(op))\n      inner.searchParams.set(\"identity\",\n        viaSession ? sessViewer"]],
     mustFail: ["REFUSED: the founder (not in P_OUT) — op=cite", "REFUSED: the founder (not in P_OUT) — op=sever",
                "REFUSED: the founder (not in P_OUT) — op=reinstate", "REFUSED: the founder (not in P_OUT) — op=versioncurrent",
-               "REFUSED: the founder (not in P_OUT) — op=proposedispose", "REFUSED: the founder (not in P_OUT) — op=biasadopt"],
+               "REFUSED: the founder (not in P_OUT) — op=proposedispose", "REFUSED: the founder (not in P_OUT) — op=biasadopt",
+               "REFUSED: the founder (not in P_OUT) — op=conclude",
+               /* DECLARATION CORRECTED after the first run (2026-09-18), the subject's own consequence:
+                  the founder's cite and make-current LAND under this arm, so the two nothing-was-
+                  written arms that read P_OUT afterwards fail too. */
+               "and nothing was written", "and P_OUT stands on nothing"],
   },
 
   /* LIAR 1 — OVER-STRICTNESS: every administrator refused everywhere, in the SAME codes. Every
      refusal arm stays green (that is the lie); the in-project arms are what must catch it. */
   "refuse-every-admin": {
-    patches: [["store.mjs", "    const who = this.#positionalMember(null, identity);\n    if (who === null) return null;",
-               "    const who = this.#positionalMember(null, identity);\n    if (who === null) return null;\n"
-               + "    if (this.#isAdminMember(who)) return { ok: false, reason: need === \"owner\" ? \"PROJECT_ACT_NOT_THE_OWNER\" : "
-               + "\"PROJECT_ACT_NOT_A_PARTICIPANT\", code: need === \"owner\" ? \"PROJECT_ACT_NOT_THE_OWNER\" : \"PROJECT_ACT_NOT_A_PARTICIPANT\", "
-               + "check: need === \"owner\" ? \"C-56.2\" : \"C-56.1\" };"]],
+    /* DECLARATION'S METHOD CORRECTED after the first run (2026-09-18): the first draft returned a
+       hand-built refusal WITHOUT the catalogue's translation, so "the refusal carries the canned
+       translation" also failed — a second variable perturbed. It now widens the two real conditions
+       and the real `refusal()` builds the answer, so only the liar's behaviour moves. */
+    patches: [["store.mjs", "    if (need === \"owner\" && !this.#isProjectOwner(projectId, who))",
+               "    if (need === \"owner\" && (this.#isAdminMember(who) || !this.#isProjectOwner(projectId, who)))"],
+              ["store.mjs", "    if (need === \"joined\" && !this.#isJoinedParticipant(projectId, who))",
+               "    if (need === \"joined\" && (this.#isAdminMember(who) || !this.#isJoinedParticipant(projectId, who)))"]],
     mustFail: ["ALLOWED:", "the founder's make-current landed", "ruth may cite into P_JOIN"],
   },
 

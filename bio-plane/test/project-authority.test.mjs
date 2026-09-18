@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-authority.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-authority.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms.
-   RESULTS: recorded by the REC-134 worker in the driver's header and in IC-152 when run.
+   RESULTS, RUN 2026-09-18 in worktree agent-a78e80263e9738d43 on the merge of origin/main f16b9b49 (real src/index.mjs 657,700 B sha256 5503f0b281c5…, src/store.mjs 2,597,155 B sha256 a7147b680298…, src/affordances.mjs 140,708 B sha256 0b097eebac16…, untouched: YES): (a) baseline 56/0 · (b) no-check 31/25 — every REFUSED arm is an act that SUCCEEDS without the check, which is the pre-fix defect measured · (c) cite-unchecked 49/7 — only cite's arms · (d) rescue-checked 52/4 — the check applied to §7.13 breaks every rescue arm · (e) stamp-dropped 53/3 — versioncurrent opens when the control plane's stamp is removed · (f) position-from-viewer 47/9 · (g) refuse-every-admin 38/18 — every refusal arm stays GREEN (the lie) and the in-project arms catch it · (h) preflight-unnarrowed 54/2. (f) and (g) came back NOT AS DECLARED on the first run and were corrected in the DECLARATION/METHOD, not the subject (reasons at each arm in the driver); re-run, both AS DECLARED.
  * =========================================================================
  * REC-134 / IC-152 / C-56 — SIGHT IS NOT AUTHORITY, AT EVERY ACT ON A PROJECT.
  * Membership Architecture v2 §7, the block *"SIGHT IS NOT AUTHORITY — and this is
@@ -120,7 +120,14 @@ const inquiryMd = (id, basis) => ["---",
   "basis:", `  - target: ${basis}`, "    role: supports",
   "basis_versions:", '  - name: "v1"', ...scalar("description", "the ledger reading"),
   ...scalar("relationship", "and"), ...scalar("state", "suggested"), ...scalar("derived_from", null),
-  ...scalar("hidden", false), ...scalar("author", "iris"), ...scalar("at", NOW),
+  ...scalar("hidden", false), ...scalar("claim", "The transfer followed the adopted process."),
+  ...scalar("author", "iris"), ...scalar("at", NOW),
+  /* The reading rests on the ledger, so a conclusion adopting it rests on something (NO_BASIS otherwise). */
+  "basis_version_grounds:", '  - version: "v1"', ...scalar("ground", "g1"), ...scalar("asserted_by", "iris"),
+  ...scalar("at", NOW),
+  "basis_version_legs:", '  - version: "v1"', ...scalar("target", basis), ...scalar("role", "supports"),
+  ...scalar("ground", "g1"),
+  ...scalar("grade", "B"), ...scalar("grade_axis", "capture"), ...scalar("grade_source", "capture"),
   "---", "", "## Question", "", "Did it?", "", "## What It Rests On", "",
   "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
@@ -230,9 +237,13 @@ const ACTS = {
   proposedispose: async (tok, p) => POST(`op=proposedispose&token=${tok}`,
     { project: p, finding: `F-${p}`, to: "deferred", reason: "waiting on the records request" }),
   biasadopt: async (tok, p) => GET(`op=biasadopt&token=${tok}&bundleId=${BIAS}&scope=project&scopeId=${p}`),
+  /* REC-124's per-project conclusion (INVESTIGATIVE-SESSION §7.1), landed while this item ran. It
+     adopts the claim of the reading the project stands on, so on P_IN it follows versioncurrent. */
+  conclude: async (tok, p) => POST(`op=conclude&token=${tok}&target=${E(INQ)}&project=${p}`
+    + `&falsifier=${E("an adopted council minute rescinding the process")}`, {}),
 };
 const NEED = { promote: NOT_IN, cite: NOT_IN, sever: NOT_IN, reinstate: NOT_IN, versioncurrent: NOT_IN,
-               proposedispose: NOT_IN, biasadopt: NOT_OWNER };
+               proposedispose: NOT_IN, biasadopt: NOT_OWNER, conclude: NOT_IN };
 
 /* ======================================================== 1. SIGHT IS UNCHANGED */
 console.log("\n--- 1. sight is unchanged: both administrators SEE the project they are not in (REC-132) ---");
@@ -281,7 +292,7 @@ t("ruth may NOT adopt a bias set into P_JOIN's scope — that is its managers' a
 /* ===================================== 3. IN THE PROJECT WITH THE ROLE: THEY CAN */
 console.log("\n--- 3. IN the project with the required role: the SAME people can (the liar's arm) ---");
 for (const [who, tok] of [["the founder", FOUNDER], ["ruth", RUTH]]) {
-  for (const act of ["promote", "cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt"]) {
+  for (const act of ["promote", "cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude"]) {
     const r = await ACTS[act](tok, P_IN);
     t(`ALLOWED: ${who} (an owner of P_IN) — op=${act} succeeds`,
       [r && r.ok, r && r.ok ? "ok" : codeOf(r)], [true, "ok"]);

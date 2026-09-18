@@ -1653,7 +1653,7 @@ const RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
 /* REC-134 / C-56: the acts that change a project and read the POSITIONAL `identity` stamp for
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
-const POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt"];
+const POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude"];
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is

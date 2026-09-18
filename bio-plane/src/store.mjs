@@ -5004,7 +5004,7 @@ export class Store extends DurableObject {
    * the inquiry's own bytes exactly as before and every read of it states its
    * claim UNDETERMINED (§7.1 item 5) rather than inventing an adoption. */
   conclude({ target, conclusion = "", falsifier = "", noFalsifier = false,
-             project = null, commentary = "", viewer = null, author = null } = {}) {
+             project = null, commentary = "", viewer = null, author = null, identity = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-conclude — REC-64/C-32.2. The fence alone; the
        conclusion's own payload conditions below are governed by nothing here. */
@@ -5155,6 +5155,13 @@ export class Store extends DurableObject {
         return { ok: false, reason: "NOT_A_PROJECT", target, project: pid,
                  detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship `
                        + "with this question to conclude in." };
+      /* REC-134: the gate above is SIGHT, and every administrator sees every project. A
+         conclusion is *"a project-authored, DATED act on the relationship, beside CURRENT and in
+         the same form"* (INVESTIGATIVE-SESSION §7.1 item 1), so it takes CURRENT's position: the
+         actor must have JOINED the project (Membership v2 §7.5). The no-project relationship is
+         untouched — it names no project. */
+      const denied = this.#projectAuthority(pid, identity, "joined", "conclude");
+      if (denied) return denied;
       const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
       if (!pmd || pmd.content === null)
         return { ok: false, reason: "NO_DOCUMENT", target, project: pid,
@@ -40251,7 +40258,8 @@ export class Store extends DurableObject {
           project: url.searchParams.get("project"),
           commentary: url.searchParams.get("commentary"),
           viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author") }),
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity") /* REC-134: server-stamped */ }),
         /* REC-31, conclude's shape exactly: ONE target, no handle and no
            owner, with the viewer and author stamps the control plane sets. */
         reopen: () => this.reopen({ target: url.searchParams.get("target"),

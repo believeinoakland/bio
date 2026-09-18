@@ -30567,7 +30567,8 @@ Mitigation: ${mit}
     project = null,
     commentary = "",
     viewer = null,
-    author = null
+    author = null,
+    identity = null
   } = {}) {
     const who = String(author ?? "").trim();
     if (!who || isMachineIdentity(who))
@@ -30673,6 +30674,8 @@ Mitigation: ${mit}
           project: pid,
           detail: `${pid.slice(0, 60)} is not a project readable here, so there is no relationship with this question to conclude in.`
         };
+      const denied = this.#projectAuthority(pid, identity, "joined", "conclude");
+      if (denied) return denied;
       const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
       if (!pmd || pmd.content === null)
         return {
@@ -62986,7 +62989,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           project: url.searchParams.get("project"),
           commentary: url.searchParams.get("commentary"),
           viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author")
+          author: url.searchParams.get("author"),
+          identity: url.searchParams.get("identity")
+          /* REC-134: server-stamped */
         }),
         /* REC-31, conclude's shape exactly: ONE target, no handle and no
            owner, with the viewer and author stamps the control plane sets. */
@@ -64423,7 +64428,7 @@ var AI_RUN_ACTIONS = [
   "extractpropose"
 ];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
-var POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt"];
+var POSITIONAL_ACTS = ["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude"];
 var BIAS_ACTIONS = ["biasadopt"];
 var RECOGNISER_ACTIONS = ["resolve", "resolvetestify", "resolutions", "concerns"];
 var PROGRESSION_ACTIONS = [
