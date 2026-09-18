@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1042 rulings across 85 documents.
+1043 rulings across 85 documents.
 
 ## DEC-
 
@@ -566,6 +566,8 @@ authority is the file named, never this one.
   `docs/development/DEBT.md:315`
 - **D-398** · 2026-09-17 — CORRECTED 2026-09-17 BY BOB #13, AND THE CORRECTION IS A MECHANISM THIS ROW SAYS DOES NOT EXIST: ARCHIVING THE SESSION RELEASES THE LOCK.** This row and BOB-NEXT's amendment both say the lock does not release when the process exits and becomes a stale lock nothing cleans up, so reclamation was framed as an…  
   `docs/development/DEBT.md:345`
+- **D-398** · 2026-09-17 — SIZED AT FOUR RATHER THAN THREE ON A CORRECTED PREMISE, NOT ON OPTIMISM: `M-47` refuted D-398's universal — 7 of this session's 10 finished agents carried NO LOCK and were reclaimable while the holding process was alive — and a sweep at the end of wave three returned 5.0 GiB, taking the volume from 3.4 GiB/99% to…  
+  `docs/development/QUEUE.md:1560`
 - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
   `docs/development/DEBT.md:336`
 - **D-411** — NOT SETTLED BY THIS ITEM: D-411 / REC-119**, the sixth reader (`#versionCollections`, feeding `op=basisversions` and `op=suggest`).  
@@ -1022,8 +1024,6 @@ authority is the file named, never this one.
   `docs/development/CONTENT-SEARCH-DESIGN.md:7`
 - **REC-116** · 2026-09-17 — PRECISION MEASURED AND THEN CORRECTED DOWNWARD — 1 GENUINE OF 3 VERIFIED — and recorded that way because a precision figure that only improves in the telling is worthless.** REC-116 is the true positive: no governed design covers its construct at all, 39 days undetected.  
   `docs/development/DEBT.md:339`
-- **REC-116** · 2026-09-17 — BLOCKED ON BOB, RULED 2026-09-17 BY BOB #13, AND THE ROW IS KEPT RATHER THAN DELETED BECAUSE THE REASON IS THE VALUABLE PART.** CONDUCT #2 rowed this as runnable; **BOB #13 ruled it is NOT, and took the design instead: *I take the design; the item follows the design, not the other way round.*** The ground is…  
-  `docs/development/QUEUE.md:1620`
 - **REC-117** · 2026-09-17 — One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about…  
   `docs/architecture/BIO_Case_Making_v0_1.md:3`
 - **REC-117** · 2026-09-17 — The threshold argument's SECOND LEG was CORRECTED 2026-09-17 (REC-117) and the section is current on it:** *the falsifier is REQUIRED* was overruled by Bob — `NO_FALSIFIER` is a condition a member may override, stated and attributed, including in the published record — so the leg is REPLACED by *the falsifier is…  
@@ -1034,6 +1034,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1585`
 - **REC-117** · 2026-09-17 — BOB RULED THAT `NO_FALSIFIER` MUST BECOME A STATED, ATTRIBUTED, OVERRIDABLE CONDITION AND `op=conclude` STILL REFUSES OUTRIGHT — so the gate pressures a member into INVENTING a falsifier, which is the exact bug the publication fence was moved off the content axis to avoid.** — waits on nothing; owner RECORD.  
   `docs/development/QUEUE.md:1600`
+- **REC-119** · 2026-09-17 — THE FREEZE QUESTION IS RULED BY CONDUCT #3 RATHER THAN ROUTED, AND THE RULING IS BRIEFED WITH ITS OWN FALSIFIER: both halves are published and THE ENVELOPE SAYS WHICH IS WHICH.** `inquiry_basis_versions.composition` is **NOT a claim about what the record can support NOW — it is a FROZEN RECORD OF WHAT WAS AUTHORED…  
+  `docs/development/QUEUE.md:1680`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
