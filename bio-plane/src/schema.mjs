@@ -2965,7 +2965,7 @@ CREATE TABLE IF NOT EXISTS content (
   content_id     TEXT PRIMARY KEY,  -- sha256 over capture_sha + canonical extent + chain
   capture_sha    TEXT NOT NULL,     -- the document. The register's trust root
   bundle_id      TEXT NOT NULL,     -- purge, and the compiler's join (D-222)
-  extent_kind    TEXT NOT NULL,     -- document | pdf-page | sheet-cell | slide-shape | doc-para
+  extent_kind    TEXT NOT NULL,     -- document | pdf-page | sheet-cell | slide-shape | doc-para | sheet-range | doc-table | image (the last three FW-19)
   extent         TEXT NOT NULL,     -- the per-arm fields as canonical JSON
   ref            TEXT NOT NULL,     -- IC-1's REQUIRED human form, e.g. page 14, top half
   chain          TEXT,              -- the transcription chain over the extent, as it stood at mint
@@ -2973,7 +2973,8 @@ CREATE TABLE IF NOT EXISTS content (
   page_count     INTEGER,           -- the page set the record held at mint. NULL = undetermined, STATED
   minted_by      TEXT NOT NULL,     -- a member id, 'plane', or a machine credential (5.7, DEC-24 rule 3)
   at             TEXT NOT NULL,
-  stale          INTEGER NOT NULL DEFAULT 0  -- the capture's chain moved since mint. The row and its edges still resolve
+  stale          INTEGER NOT NULL DEFAULT 0, -- the capture's chain moved since mint. The row and its edges still resolve
+  cited_as       TEXT    NOT NULL DEFAULT 'text'  -- FW-19 / IC-125: text | bytes. bytes = an image cited as itself, so chain and cap are NULL by meaning and never undetermined
 );
 -- The two reads this table exists to answer, and neither may be a scan. By
 -- CAPTURE: which passages of this document has anybody cited (the content axis
@@ -3219,8 +3220,8 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 -- vocabulary in one place (section 4.3).
 --
 -- WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: a WORKBOOK
--- (a cell is not a passage and a sheet-range does not exist until
--- EXTRACTION-BREADTH section 3.2 lands -- 288 workbooks in M-20's census hold
+-- (a cell is not a passage, and the sheet-range extent arm landed with FW-19 but no unit writer uses it -- written before
+-- that, when EXTRACTION-BREADTH section 3.2 had not landed -- 288 workbooks in M-20 census hold
 -- 72,651,441 bytes of text over 1,056 sheets and not one indexable unit), and
 -- HTML (no dom producer, Part II section 15). Neither is scored zero: the
 -- capture's indexed observation says none with the reason.
@@ -3235,7 +3236,7 @@ CREATE INDEX IF NOT EXISTS proposed_readings_run ON proposed_readings(run);
 CREATE TABLE IF NOT EXISTS capture_text (
   capture_sha  TEXT    NOT NULL,   -- the document. The register's trust root
   bundle_id    TEXT    NOT NULL,   -- the join every query arm makes (section 2)
-  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range when EXTRACTION-BREADTH 3.2 lands
+  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range once a unit writer uses the FW-19 arm
   extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
   ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
   seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so

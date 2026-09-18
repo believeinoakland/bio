@@ -409,7 +409,7 @@ import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
    "what part of a document does this leg mean" is D-164's own lesson arriving
    inside the construct that exists to close it. */
 import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
-         describeExtent, contentIdFor, legContentId } from "../checks/bio-checks.mjs";
+         describeExtent, contentIdFor, legContentId, contentCitedAs } from "../checks/bio-checks.mjs";
 /* REC-97 / IC-90: THE LEG GRAMMAR ITSELF, imported so `op=cite` can route the
    leg it is about to write through the SAME function `checkInquiryBasis` runs
    at C-2.8 and `basisVersionFindings` runs at C-25.10 — REC-84's ONE checker.
@@ -559,7 +559,7 @@ const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
 /* WHICH CONTAINERS HAVE AN INDEXING UNIT ARM AT ALL, which is a DIFFERENT
  * question from whether a given capture produced units and must not be folded
- * into it. A workbook with no `sheet-range` arm and an HTML page with no `dom`
+ * into it. A workbook with no `sheet-range` UNIT writer (the arm is FW-19's) and an HTML page with no `dom`
  * producer are the none-with-a-reason member of the content-axis vocabulary
  * (spelled in `airun.mjs`, never here); a PDF that produced nothing is a
  * PDF whose pages are scans. Both are absences and only one of them is about
@@ -1003,6 +1003,11 @@ export class Store extends DurableObject {
       ["connections", "b_pos_kind", "TEXT"],
       ["connections", "b_pos", "TEXT"],
       ["connections", "b_pos_ref", "TEXT"],
+      /* FW-19 / IC-125: `cited_as` on a content row. Every row that can exist
+         before this column did was minted against a TEXT arm (no `image` kind
+         was admissible), so the default IS the true value for all of them —
+         a backfill by construction, not a guess. */
+      ["content", "cited_as", "TEXT NOT NULL DEFAULT 'text'"],
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -9235,6 +9240,12 @@ export class Store extends DurableObject {
       extent_sheet: "text", extent_cell: "text",
       extent_slide: "int",  extent_shape: "int",
       extent_para: "int",   extent_run: "int",
+      /* FW-19 / IC-125: the two new arms and the image reference. Without
+         these the act would refuse them BY NAME (C-45.7) — honest, but it
+         would leave the composer unable to author an extent the record admits
+         at promote, which is the gap REC-97 was written to close. */
+      extent_range: "text", extent_table: "int",
+      extent_part: "text",  extent_cited_as: "text",
       content_id: "text",
     };
     const bag = extent && typeof extent === "object" ? extent : {};
@@ -12884,8 +12895,13 @@ export class Store extends DurableObject {
         armReason: armed ? null
           : container
             ? `a ${container} has no indexing unit arm in this build `
-              + "(CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage and "
-              + "`sheet-range` waits on EXTRACTION-BREADTH section 3.2; HTML has no `dom` producer)"
+              /* CORRECTED IN PLACE BY FW-19, NOT DELETED: this said `sheet-range`
+                 "waits on EXTRACTION-BREADTH section 3.2", which was true until
+                 the arm landed. What is still absent is the UNIT, not the arm —
+                 nothing writes a workbook's sheet-range units into the index. */
+              + "(CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, and the "
+              + "`sheet-range` extent arm exists (FW-19) but nothing yet writes a workbook's "
+              + "sheet-range units into the index; HTML has no `dom` producer)"
             : "this record does not hold which container this capture is, so it has no unit arm to name",
       });
       this.#observeExtraction(bundleId, sha, reading, { author });
@@ -13612,6 +13628,13 @@ export class Store extends DurableObject {
     const paragraphs = held && Number.isInteger(held.paragraphs) && held.paragraphs > 0
       ? held.paragraphs : null;
     const slides = held && Array.isArray(held.slides) && held.slides.length ? held.slides : null;
+    /* FW-19 / IC-124: the `doc-table` and `image` levels. AN EMPTY LIST IS KEPT
+       AS A MEASURED ZERO here, unlike the three above, because the wire stores
+       these two as NULL whenever nothing was walked (index.mjs states the
+       difference at the site) — so `[]` means "walked, and there are none",
+       and a citation of table 1 of a document with none is refused by name. */
+    const tables = held && Array.isArray(held.tables) ? held.tables : null;
+    const images = held && Array.isArray(held.images) ? held.images : null;
     /* The levels this container itemises AT ALL, from the producer's own answer;
        with no stored figure every level is unreported rather than assumed. */
     const notion = held && Array.isArray(held.levels) ? held.levels : [];
@@ -13619,6 +13642,18 @@ export class Store extends DurableObject {
     if (notion.includes("sheets") && !sheets) missing.push("the workbook's sheet list");
     if (notion.includes("paragraphs") && paragraphs === null) missing.push("the paragraph count");
     if (notion.includes("slides") && !slides) missing.push("the deck's slide list");
+    if (notion.includes("tables") && !tables) missing.push("the document's table list");
+    if (notion.includes("images") && !images) missing.push("the container's image list");
+    /* A capture acquired BEFORE FW-19 carries neither key, so its `levels` has
+       no notion of them — and staying silent would let this answer's `why`
+       claim the container extent is held while the two new arms skip. So the
+       gap is named: a word-processing container (it itemises paragraphs) has a
+       table level whether or not this capture recorded one, and every office
+       container has an image level. */
+    if (held && notion.includes("paragraphs") && !notion.includes("tables"))
+      missing.push("the document's table list (this capture was acquired before the wire carried it — FW-19)");
+    if (held && notion.length && !notion.includes("images"))
+      missing.push("the container's image list (this capture was acquired before the wire carried it — FW-19)");
     /* D-359, and it is reported as an ABSENT FIGURE rather than left silent, so a
        reader is told which half of the question this record can answer.
 
@@ -13647,8 +13682,8 @@ export class Store extends DurableObject {
     if (!held) missing.push("the container's own extent — no sheet list, paragraph count or "
                           + "slide list was persisted for this capture");
     return {
-      sheets, paragraphs, slides,
-      held: !!(sheets || paragraphs !== null || slides),
+      sheets, paragraphs, slides, tables, images,
+      held: !!(sheets || paragraphs !== null || slides || tables || images),
       empty_level: missing.length ? missing.join("; ") : null,
       why: missing.length
         ? `this record does not hold ${missing.join("; ")} for the capture `
@@ -13871,24 +13906,38 @@ export class Store extends DurableObject {
     const ctx = given || this.contentContextFor(captureSha);
     const bad = checkContentExtent(extent, ctx);
     if (bad) return bad;
-    const id = contentIdFor(captureSha, extent, ctx.chain);
+    /* FW-19 / IC-125 — A `bytes` ROW HAS NO CHAIN AND NO CAP, and both are
+       WRITTEN as NULL with `cited_as` saying why (EXTRACTION-BREADTH §3.1): the
+       image is cited as itself, its fidelity is the capture's, and the
+       capture's transcription is about text this row does not point at. The
+       chain is also left OUT of the address for the same reason — a bytes
+       row's id must not move when the capture is re-read, because nothing it
+       points at moved — and `#markContentStale` already skips a NULL chain, so
+       a re-read never stales it. */
+    const citedAs = contentCitedAs(extent);
+    const chain = citedAs === "bytes" ? null : ctx.chain;
+    const id = contentIdFor(captureSha, extent, chain);
     const before = this.#one(`SELECT content_id FROM content WHERE content_id=?`, id);
     if (!before) {
       this.sql.exec(
         `INSERT OR IGNORE INTO content
            (content_id,capture_sha,bundle_id,extent_kind,extent,ref,chain,derivation_cap,
-            page_count,minted_by,at,stale)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,0)`,
+            page_count,minted_by,at,stale,cited_as)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?)`,
         id, captureSha, bundleId, extent.kind, canonicalExtent(extent), describeExtent(extent),
-        ctx.chain == null ? null : JSON.stringify(ctx.chain),
+        chain == null ? null : JSON.stringify(chain),
         /* THE CAP IS ASKED ABOUT THE EXTENT, not about the document — D-252's
            whole point, and `gradeCeiling`'s own reading. A leg citing the OCR'd
            exhibit gets the engine's measured letter and a leg citing the
            text-layer report gets undetermined, each about itself. NULL is
-           undetermined and STATED, never "fine". */
-        derivationCap(ctx.chain,
-          extent.kind === "pdf-page" ? { page: extent.page, rect: extent.rect ?? null } : null),
-        ctx.pageCount, mintedBy, at || new Date().toISOString());
+           undetermined and STATED, never "fine" — except on a `bytes` row,
+           where it is `cited_as` speaking (above). An image cited as TEXT on a
+           PDF page asks about its page and rectangle, like `pdf-page`. */
+        citedAs === "bytes" ? null
+          : derivationCap(chain,
+              extent.kind === "pdf-page" || (extent.kind === "image" && Number.isInteger(extent.page))
+                ? { page: extent.page, rect: extent.rect ?? null } : null),
+        ctx.pageCount, mintedBy, at || new Date().toISOString(), citedAs);
     }
     return { ok: true, content_id: id, minted: !before };
   }
@@ -14536,7 +14585,7 @@ export class Store extends DurableObject {
   contentRow(contentId) {
     const r = this.#one(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
-              derivation_cap, page_count, minted_by, at, stale
+              derivation_cap, page_count, minted_by, at, stale, cited_as
          FROM content WHERE content_id=?`, contentId);
     if (!r) return null;
     return { ...r, extent: safeJson(r.extent), chain: safeJson(r.chain), stale: !!r.stale,
@@ -14601,7 +14650,11 @@ export class Store extends DurableObject {
    *  document's cap, which is the overclaim this whole item is about. */
   static #contentTarget(kind, extent) {
     if (kind === "document") return {};
-    if (kind === "pdf-page")
+    /* FW-19: an `image` on a PDF page is addressed exactly as `pdf-page` is
+       (§3.2: "the same fields as pdf-page"), so its text is asked about the
+       same region. The `{part}` form and the two new text arms answer NULL,
+       REC-85's reason for the three before them. */
+    if (kind === "pdf-page" || (kind === "image" && Number.isInteger(extent && extent.page)))
       return { page: Number.isInteger(extent && extent.page) ? extent.page : null,
                rect: Array.isArray(extent && extent.rect) ? extent.rect : null };
     return null;
@@ -14672,7 +14725,18 @@ export class Store extends DurableObject {
        asked about that target, so there is nothing for this method to decide —
        which is the point: one rule, one implementation, and the refusal at the
        gate and the sentence a member reads cannot disagree. */
-    const transcription = target == null
+    /* FW-19 / IC-125: A `bytes` ROW HAS NO TRANSCRIPTION AXIS, and saying
+       "undetermined" about it would be the exact misreading `cited_as` exists
+       to prevent (§3.1: the null "must not be read as undetermined"). So it
+       says NOT APPLICABLE, and why, and names where its fidelity comes from. */
+    const transcription = r.cited_as === "bytes"
+      ? { ceiling: null, determinant: null, by: [], applies: false,
+          why: `this row cites ${describeExtent(extent)} AS ITSELF — the image's bytes, not text `
+             + `read off it — so no transcription stands between the citation and what it points `
+             + `at. Its fidelity is the capture's own, established on the provenance chain; a `
+             + `transcription ceiling does not apply, which is a different fact from one that is `
+             + `undetermined` }
+      : target == null
       ? { ceiling: null, determinant: null, by: [],
           why: `this plane cannot yet evaluate what a ${r.extent_kind} extent covers, so what a leg `
              + `citing it may claim on the transcription axis is undetermined — stated, and never `
@@ -14713,6 +14777,8 @@ export class Store extends DurableObject {
       extent_kind: r.extent_kind, extent, ref: r.ref, chain,
       derivation_cap: r.derivation_cap, page_count: r.page_count,
       minted_by: r.minted_by, at: r.at, stale: !!r.stale,
+      /* FW-19 / IC-125: text | bytes — what the NULL chain and cap on a bytes row MEAN. */
+      cited_as: r.cited_as ?? "text",
       /* SK-7 / 14.4's 5.7: WHO MARKED THIS PASSAGE CITABLE, in words rather
          than in the control plane's identity grammar. `minted_by` above is kept
          byte-identical beside it — the label does not replace the field, it
@@ -14777,7 +14843,7 @@ export class Store extends DurableObject {
     const marks = ids.map(() => "?").join(",");
     const rows = this.#rows(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
-              derivation_cap, page_count, minted_by, at, stale
+              derivation_cap, page_count, minted_by, at, stale, cited_as
          FROM content WHERE content_id IN (${marks}) LIMIT ?`, ...ids, ids.length);
     if (!rows.length) return out;
     const atts = this.#attestationsOver(rows.map((r) => r.capture_sha));
@@ -14869,7 +14935,7 @@ export class Store extends DurableObject {
       return { ok: false, reason: "NO_ID", detail: "content requires ?id=<content_id>" };
     const r = this.#one(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
-              derivation_cap, page_count, minted_by, at, stale
+              derivation_cap, page_count, minted_by, at, stale, cited_as
          FROM content WHERE content_id=?`, id);
     /* ABSENT AND INVISIBLE ARE ONE ANSWER. The row is read first because the
        gate needs its bundle, and the two refusals are byte-identical so what

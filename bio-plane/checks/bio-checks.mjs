@@ -10134,7 +10134,73 @@ export const CONTENT_EXTENT_KINDS = {
   'sheet-cell':  { landed: true,  human: 'a cell of a spreadsheet' },
   'slide-shape': { landed: true,  human: 'a shape on a slide' },
   'doc-para':    { landed: true,  human: 'a paragraph of a document' },
+  /* FW-19 / IC-125 — EXTRACTION-BREADTH §3.2's two arms and one reference,
+     landed together because the design grows them together. `image` is a
+     REFERENCE rather than an arm of IC-1's text union (§3.2's own table), and
+     it sits in this map anyway because the content table's `extent_kind` is
+     the one vocabulary a row is addressed in: an image cited as itself is
+     content (§3.1) and a row must be able to say so. What makes it different
+     is not its kind but `cited_as` — see `contentCitedAs` below. */
+  'sheet-range': { landed: true,  human: 'a range of cells in a spreadsheet' },
+  'doc-table':   { landed: true,  human: 'a table in a document' },
+  image:         { landed: true,  human: 'an image in a document' },
 };
+
+/** FW-19 / IC-125 — A RANGE IN A1:A1 NOTATION, or one cell standing for a
+ *  one-cell range. `$` markers and case are admitted and normalised away by
+ *  `canonicalExtent` for `CONTENT_EXTENT_A1_RE`'s reason: `$A$1:$C$10` and
+ *  `a1:c10` are one range, and two spellings would mint two rows for it. */
+export const CONTENT_EXTENT_RANGE_RE =
+  /^\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6}(:\$?[A-Za-z]{1,3}\$?[1-9][0-9]{0,6})?$/;
+
+/** A range's two corners, ORDERED (top-left first), 1-based, or null. A range
+ *  spelled bottom-right first names the same cells, so it is reordered rather
+ *  than refused — `normRect`'s rule, in a grid. */
+export function rangeCorners(range) {
+  const t = String(range == null ? '' : range).trim();
+  if (!CONTENT_EXTENT_RANGE_RE.test(t)) return null;
+  const [a, b = a] = t.split(':');
+  const p = a1ToRowCol(a), q = a1ToRowCol(b);
+  if (!p || !q) return null;
+  return { r0: Math.min(p.row, q.row), c0: Math.min(p.col, q.col),
+           r1: Math.max(p.row, q.row), c1: Math.max(p.col, q.col) };
+}
+
+/** 1-based column number -> A1 letters (bijective base 26: 27 -> AA). */
+function a1Letters(n) {
+  let out = '';
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + ((c - 1) % 26)) + out;
+  return out;
+}
+
+/** The canonical spelling of a range: ordered corners, no `$`, upper case,
+ *  and ALWAYS two corners — `B3` and `B3:B3` are one range. */
+export function canonicalRange(range) {
+  const k = rangeCorners(range);
+  if (!k) return null;
+  return `${a1Letters(k.c0)}${k.r0}:${a1Letters(k.c1)}${k.r1}`;
+}
+
+/** FW-19 / IC-125 — `cited_as`, THE COLUMN THAT KEEPS TWO NULLS APART
+ *  (EXTRACTION-BREADTH §3.1, D-129's rule that an absence is never read as a
+ *  value). An image cited AS ITSELF is bytes: it has NO extraction chain and
+ *  no derivation cap, and that null is a fact about what is cited — not an
+ *  undetermined transcription. Any text read off the same image is a
+ *  DIFFERENT content, cited as `text`, and it has a chain or it is refused.
+ *
+ *  THE DEFAULT IS THE KIND'S OWN MEANING, the way an absent `extent_kind` is
+ *  `document` (Bob's 5.3): a citation of an `image` that says nothing more is
+ *  a citation of the image, so `bytes`; every other kind addresses text, so
+ *  `text`. `bytes` on a text kind is REFUSED rather than defaulted away — a
+ *  paragraph cannot be cited as its bytes, and reading the request as `text`
+ *  would silently drop what the member said. Returns the value or the invalid
+ *  input unchanged, for the checker to refuse by name. */
+export function contentCitedAs(extent) {
+  const e = extent && typeof extent === 'object' ? extent : {};
+  const v = e.cited_as;
+  if (v === undefined || v === null || v === '') return e.kind === 'image' ? 'bytes' : 'text';
+  return v;
+}
 
 /** A CELL IN A1 NOTATION, as the container emits it and as a member may paste
  *  it out of a spreadsheet. The `$` absolute markers are ADMITTED and then
@@ -10389,6 +10455,30 @@ export function legExtent(leg) {
     if (l.extent_para !== undefined && l.extent_para !== null) out.para = l.extent_para;
     if (l.extent_run !== undefined && l.extent_run !== null) out.run = l.extent_run;
   }
+  /* FW-19 / IC-125 — the two new arms and the image reference, each over its
+     OWN fields on REC-85's rule. `extent_cell` is SHARED by name between
+     `sheet-cell` and `doc-table` because it is the same notation (A1) naming
+     the same kind of thing (one cell of a grid); each arm reads it only under
+     its own kind, so it cannot leak between them. */
+  if (kind === 'sheet-range') {
+    if (l.extent_sheet !== undefined && l.extent_sheet !== null) out.sheet = l.extent_sheet;
+    if (l.extent_range !== undefined && l.extent_range !== null) out.range = l.extent_range;
+  }
+  if (kind === 'doc-table') {
+    if (l.extent_table !== undefined && l.extent_table !== null) out.table = l.extent_table;
+    if (l.extent_cell !== undefined && l.extent_cell !== null) out.cell = l.extent_cell;
+  }
+  if (kind === 'image') {
+    if (l.extent_part !== undefined && l.extent_part !== null) out.part = l.extent_part;
+    if (l.extent_page !== undefined && l.extent_page !== null) out.page = l.extent_page;
+    if (l.extent_rect !== undefined && l.extent_rect !== null) out.rect = l.extent_rect;
+  }
+  /* `cited_as` is read on EVERY kind, not only on `image`, so that `bytes` on
+     a paragraph reaches the checker and is refused BY NAME rather than being
+     dropped as a stray field — the one field whose silent drop would change
+     what the citation claims. */
+  if (l.extent_cited_as !== undefined && l.extent_cited_as !== null && l.extent_cited_as !== '')
+    out.cited_as = l.extent_cited_as;
   return out;
 }
 
@@ -10408,7 +10498,9 @@ export function legExtent(leg) {
 export function legHasAuthoredExtent(leg) {
   const l = leg && typeof leg === 'object' ? leg : {};
   for (const k of ['extent_kind', 'extent_page', 'extent_rect', 'extent_ref', 'extent_sheet',
-                   'extent_cell', 'extent_slide', 'extent_shape', 'extent_para', 'extent_run']) {
+                   'extent_cell', 'extent_slide', 'extent_shape', 'extent_para', 'extent_run',
+                   /* FW-19 / IC-125 */
+                   'extent_range', 'extent_table', 'extent_part', 'extent_cited_as']) {
     const v = l[k];
     if (v === undefined || v === null || v === '') continue;
     return true;
@@ -10495,6 +10587,36 @@ export function canonicalExtent(extent) {
     return canonicalJson({ kind: 'doc-para',
       para: Number.isInteger(e.para) ? e.para : null,
       run: Number.isInteger(e.run) ? e.run : null });
+  /* FW-19 / IC-125 — the two new arms and the image reference, on REC-85's
+     rule above: fixed fields per arm, absent as null, every alternative
+     spelling of one address collapsed to one string. A range is reordered and
+     given both corners; a doc-table cell is A1-normalised like a sheet cell.
+
+     `cited_as` IS IN THE IMAGE'S ADDRESS, and only there. The image and the
+     text read off it are two contents over one rectangle (§3.1), and they must
+     be two rows: the chain in `contentIdFor` would usually tell them apart, but
+     a `bytes` row hashes a NULL chain BY DESIGN, so leaving `cited_as` out
+     would make the bytes row's address depend on whether the capture happened
+     to have been read. The four older arms do not carry it, which keeps every
+     existing content address byte-identical — they can only ever be `text`. */
+  if (e.kind === 'sheet-range')
+    return canonicalJson({ kind: 'sheet-range',
+      sheet: typeof e.sheet === 'string' && e.sheet.trim() ? e.sheet.trim() : null,
+      range: typeof e.range === 'string' ? canonicalRange(e.range) : null });
+  if (e.kind === 'doc-table')
+    return canonicalJson({ kind: 'doc-table',
+      table: Number.isInteger(e.table) ? e.table : null,
+      cell: typeof e.cell === 'string' && CONTENT_EXTENT_A1_RE.test(e.cell.trim())
+        ? e.cell.trim().replace(/\$/g, '').toUpperCase() : null });
+  if (e.kind === 'image') {
+    const ok = Array.isArray(e.rect) && e.rect.length === 4
+      && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n));
+    return canonicalJson({ kind: 'image', cited_as: contentCitedAs(e),
+      part: typeof e.part === 'string' ? e.part.trim().toLowerCase() : null,
+      page: Number.isInteger(e.page) ? e.page : null,
+      rect: ok ? [Math.min(e.rect[0], e.rect[2]), Math.min(e.rect[1], e.rect[3]),
+                  Math.max(e.rect[0], e.rect[2]), Math.max(e.rect[1], e.rect[3])] : null });
+  }
   /* AN EXTENT NOBODY CAN EVALUATE STILL GETS A CANONICAL FORM, because this
      function is total and `checkContentExtent` is what refuses — but nothing
      ever mints one, so this branch addresses no row. It is kept honest rather
@@ -10547,6 +10669,29 @@ export function describeExtent(extent) {
     return Number.isInteger(e.para) ? `\u00b6${e.para + 1}` : 'a paragraph of this document';
   if (e.kind === 'slide-shape')
     return Number.isInteger(e.slide) ? `slide ${e.slide}` : 'a shape in this deck';
+  /* FW-19 / IC-125 — and the same parity for the new arms: `sheetRangeRef`,
+     `docTableRef` and `imageRef` (`src/formats-xlsx.mjs`, `src/docx.mjs`,
+     `src/ooxml.mjs`) produce exactly these strings for the same address, and
+     the suite pins it against their real output. An image's human form is
+     composed from its ADDRESS (the part's hash) rather than from the member
+     file's name for precisely this reason: this function cannot see the name,
+     and two strings for one address is the drift the parity rule prevents. */
+  if (e.kind === 'sheet-range') {
+    const sheet = typeof e.sheet === 'string' && e.sheet.trim() ? e.sheet.trim() : null;
+    const range = typeof e.range === 'string' ? canonicalRange(e.range) : null;
+    return sheet && range ? `${sheet}!${range}` : 'a range of cells in this spreadsheet';
+  }
+  if (e.kind === 'doc-table') {
+    if (!Number.isInteger(e.table)) return 'a table in this document';
+    const cell = typeof e.cell === 'string' && e.cell.trim()
+      ? e.cell.trim().replace(/\$/g, '').toUpperCase() : null;
+    return `table ${e.table + 1}${cell ? `, ${cell}` : ''}`;
+  }
+  if (e.kind === 'image') {
+    if (typeof e.part === 'string' && e.part.trim()) return `image ${e.part.trim().toLowerCase().slice(0, 12)}`;
+    if (Number.isInteger(e.page)) return `an image on page ${e.page + 1}`;
+    return 'an image in this document';
+  }
   const row = CONTENT_EXTENT_KINDS[e.kind];
   return row ? row.human : 'a part of this document the record cannot name';
 }
@@ -10720,6 +10865,100 @@ export function checkContentExtent(extent, ctx = {}) {
     const outside = coversSlideShape(e, ctx.container);
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
+  /* ==================================================================== *
+     FW-19 / IC-125 — EXTRACTION-BREADTH §3.2's TWO ARMS AND ONE REFERENCE,
+     each in REC-85's two halves (a SHAPE any caller can judge, a CONTAINER
+     half only the record can) and each refused BY NAME under the codes this
+     family already has: an unreadable address is C-45.3, an address outside
+     the container is C-45.1. No fifth code — the facts are the same facts
+     about three more addresses, which is the argument C-45.1's own row makes.
+
+     `cited_as` IS JUDGED FIRST, because it decides whether the chain arm
+     below applies at all. Two values, and `bytes` only on an `image`.
+     ==================================================================== */
+  const citedAs = contentCitedAs(e);
+  if (citedAs !== 'text' && citedAs !== 'bytes')
+    return refusal("CONTENT_EXTENT_UNREADABLE",
+      `cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of `
+      + `text, bytes. This one says '${String(citedAs).slice(0, 40)}'`);
+  if (citedAs === 'bytes' && e.kind !== 'image')
+    return refusal("CONTENT_EXTENT_UNREADABLE",
+      `only an image can be cited as its bytes. A ${e.kind} extent addresses text, and reading `
+      + `'bytes' here as 'text' would silently change what the citation claims, so it is refused`);
+  if (e.kind === 'sheet-range') {
+    if (typeof e.sheet !== 'string' || !e.sheet.trim())
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a sheet-range extent names which sheet, as the workbook spells it. This one names `
+        + `'${String(e.sheet).slice(0, 40)}'`);
+    if (typeof e.range !== 'string' || !rangeCorners(e.range))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one `
+        + `names '${String(e.range).slice(0, 40)}'`);
+    const outside = coversSheetRange(e, ctx.container);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
+  if (e.kind === 'doc-table') {
+    if (!Number.isInteger(e.table) || e.table < 0)
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a doc-table extent names which table, as a 0-based ordinal in document order. This one `
+        + `names '${String(e.table).slice(0, 40)}'`);
+    if (e.cell !== undefined && e.cell !== null
+        && !(typeof e.cell === 'string' && CONTENT_EXTENT_A1_RE.test(e.cell.trim())))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `a doc-table extent's cell is A1 notation over the table's grid (B3) or absent. A cell `
+        + `that is present and unreadable is worse than none, because it looks like one somebody chose`);
+    const outside = coversDocTable(e, ctx.container);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+  }
+  if (e.kind === 'image') {
+    /* EXACTLY ONE ADDRESS FORM: the part's content hash for a container, or
+       the page (and optionally the rectangle) for a PDF. Both at once is one
+       image stated twice where the two can disagree — the `content_id` plus
+       extent rule one construct down — and neither is no address at all. */
+    const hasPart = e.part !== undefined && e.part !== null && e.part !== '';
+    const hasPage = e.page !== undefined && e.page !== null && e.page !== '';
+    if (hasPart === hasPage)
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        hasPart
+          ? `an image extent names EITHER the embedded part's content hash OR a page and rectangle, `
+            + `and this one names both — one image stated twice, where the two can disagree`
+          : `an image extent names the embedded part's content hash (in a container) or the page `
+            + `it is on (in a PDF), and this one names neither`);
+    if (hasPart && !(typeof e.part === 'string' && /^[0-9a-fA-F]{64}$/.test(e.part.trim())))
+      return refusal("CONTENT_EXTENT_UNREADABLE",
+        `an image's part is the SHA-256 of the embedded media member, 64 hexadecimal characters. `
+        + `This one names '${String(e.part).slice(0, 40)}'`);
+    if (hasPage) {
+      if (!Number.isInteger(e.page) || e.page < 0)
+        return refusal("CONTENT_EXTENT_UNREADABLE",
+          `an image extent's page is a 0-based integer. This one names '${String(e.page).slice(0, 40)}'`);
+      if (e.rect !== undefined && e.rect !== null
+          && !(Array.isArray(e.rect) && e.rect.length === 4
+               && e.rect.every((n) => typeof n === 'number' && Number.isFinite(n))))
+        return refusal("CONTENT_EXTENT_UNREADABLE",
+          `an image extent's rect is four finite numbers or absent. A rect that is present and `
+          + `unreadable is worse than none, because it looks like a region somebody chose`);
+      if (ctx.known !== false
+          && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
+        return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
+          `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
+          + `image extent names page ${e.page}`);
+    }
+    const outside = hasPart ? coversImage(e, ctx.container) : null;
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+    /* TEXT READ OFF AN EMBEDDED IMAGE HAS NO CHAIN IN THIS RECORD, and the
+       arm below would not notice: it asks whether the CAPTURE has a chain, and
+       an office container always does — for its text parts, never for its
+       media. Admitting `cited_as: text` on a `{part}` image would therefore
+       mint a row claiming a transcription nobody made. The page form is
+       different: a PDF page's chain (layer or OCR) covers what is on the page. */
+    if (hasPart && citedAs === 'text')
+      return refusal("CONTENT_EXTENT_NO_CHAIN",
+        `this citation asks for the TEXT of an embedded image, and nothing in this record has read `
+        + `text off an embedded image — the container's transcription covers its text parts and `
+        + `never its media. Cite the image as itself (cited_as: bytes), or cite the passage that `
+        + `quotes it`);
+  }
   /* THE CHAIN, LAST, AND IT IS A FACT ABOUT THE CAPTURE RATHER THAN THE EXTENT.
      A content row is an address into TEXT somebody or something produced, and a
      capture nobody has read holds no text to address. A DOCUMENT extent is
@@ -10735,7 +10974,13 @@ export function checkContentExtent(extent, ctx = {}) {
      arm is exactly what REC-82 landed. The same gate sits on the page-set arm
      above, and both are the C-25.10 / C-25.16 split: a shape one document
      answers, and a fact only the store holds. */
-  if (ctx.known !== false
+  /* FW-19 / IC-125: AND A `bytes` ROW IS EXEMPT, for the `document` exemption's
+     own reason one construct along — an image cited as itself is a referent
+     that exists the moment the bytes do, and its fidelity is the capture's
+     (§3.1, §3.4). It carries NO chain and that null is `cited_as` speaking, not
+     an undetermined transcription. The same row as `text` with no chain is
+     still refused here: the two nulls are different facts (§8's control). */
+  if (ctx.known !== false && citedAs !== 'bytes'
       && e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))
     return refusal("CONTENT_EXTENT_NO_CHAIN",
       `this record holds no extraction chain for the capture this leg cites, so there is no `
@@ -10827,6 +11072,79 @@ function coversSlideShape(e, container) {
     return `slide ${e.slide} of this capture holds ${n} shape(s) (0-${n - 1}) and the extent names `
       + `shape ${e.shape}`;
   return null;
+}
+
+/* FW-19 / IC-125 — THE THREE NEW CONTAINER PREDICATES, on the three above's
+ * two rules exactly: the figure comes from the RECORD, and an absent figure is
+ * SKIPPED rather than refused. The container shape grows two levels:
+ *
+ *   container = { ..., tables: [{ rows, cols }] | null,   // doc-table
+ *                      images: [{ part, mime }] | null }  // image {part}
+ *
+ * and ONE DIFFERENCE from the three above, stated because it is easy to "fix"
+ * the wrong way: for these two an EMPTY list is a MEASURED ZERO (the producer
+ * emits NULL whenever it did not walk), so it bounds — table 1 of a document
+ * with no tables is refused. */
+
+/** A range of a named sheet, against the workbook as the record holds it:
+ *  an unknown sheet is refused, and so is a range whose far corner is past
+ *  the sheet's GRID (the `sheet-cell` bound, and the same decision: the grid,
+ *  never the used range — an empty cell exists). Returns a sentence or null. */
+function coversSheetRange(e, container) {
+  /* Spelled `held` rather than `sheets` for its first two lines ON PURPOSE:
+     `nc-rec85.mjs`'s `overstrict` arm anchors on `coversSheetCell`'s own two
+     lines, and a byte-identical copy here made that anchor match 2x, so the
+     REC-85 control stopped arming (measured at FW-19, `ARMED NO`). */
+  const held = container && Array.isArray(container.sheets) ? container.sheets : null;
+  if (!held || !held.length) return null;
+  const sheets = held;
+  const want = String(e.sheet).trim();
+  const sheet = sheets.find((x) => x && typeof x.name === 'string' && x.name === want);
+  if (!sheet)
+    return `this capture's workbook holds ${sheets.length} sheet(s) `
+      + `(${sheets.map((x) => (x && typeof x.name === 'string' ? x.name : '?')).slice(0, 12).join(', ')}`
+      + `${sheets.length > 12 ? ', …' : ''}) and the extent names a sheet called '${want.slice(0, 40)}'`;
+  const k = rangeCorners(e.range);
+  if (!k) return null;
+  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && k.r1 > sheet.rows)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) `
+      + `and the range reaches row ${k.r1}`;
+  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && k.c1 > sheet.cols)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the range `
+      + `reaches column ${k.c1}`;
+  return null;
+}
+
+/** A table (and optionally one cell of it), against the document's table
+ *  list as the record holds it. Returns a sentence or null. */
+function coversDocTable(e, container) {
+  const tables = container && Array.isArray(container.tables) ? container.tables : null;
+  if (!tables) return null;
+  if (e.table >= tables.length)
+    return `this capture's document holds ${tables.length} table(s)`
+      + `${tables.length ? ` (0-${tables.length - 1})` : ''} and the extent names table ${e.table}`;
+  if (typeof e.cell !== 'string' || !e.cell.trim()) return null;
+  const t = tables[e.table] || {};
+  const at = a1ToRowCol(e.cell);
+  if (!at) return null;
+  if (Number.isInteger(t.rows) && t.rows > 0 && at.row > t.rows)
+    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent `
+      + `names row ${at.row}`;
+  if (Number.isInteger(t.cols) && t.cols > 0 && at.col > t.cols)
+    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names `
+      + `column ${at.col}`;
+  return null;
+}
+
+/** An embedded image, by content hash, against the container's image list
+ *  as the record holds it. Returns a sentence or null. */
+function coversImage(e, container) {
+  const images = container && Array.isArray(container.images) ? container.images : null;
+  if (!images) return null;
+  const want = String(e.part).trim().toLowerCase();
+  if (images.some((x) => x && typeof x.part === 'string' && x.part.toLowerCase() === want)) return null;
+  return `this capture's container holds ${images.length} image(s) and none of them has the content `
+    + `hash ${want.slice(0, 16)}… that the extent names`;
 }
 
 /* =========================================================================

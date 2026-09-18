@@ -219,10 +219,16 @@ console.log(`  corpus: 2 captured documents (page sets 3 and 2) + 1 inquiry targ
    worth asserting and it is kept — five kinds in the grammar, and this suite
    states which are evaluable — so the correction is to the roster and not to the
    shape of the check. */
-t("the grammar names five kinds and ALL FIVE are now LANDED (REC-82 two, REC-85 the other three)",
+/* CORRECTED BY FW-19 (IC-125), on the paragraph above's own rule: the roster
+   moves, the totality check does not. Three more kinds landed (`sheet-range`,
+   `doc-table`, `image`). The label moved with the count — a label that says
+   "five" over a roster of eight is the stale-true statement this suite's own
+   correction note warns about — and `nc-rec84.mjs`'s `unlanded` declaration was
+   corrected to the new label in the same commit. */
+t("the grammar names eight kinds and ALL EIGHT are now LANDED (REC-82 two, REC-85 three, FW-19 three)",
   [Object.keys(CONTENT_EXTENT_KINDS).length,
    Object.entries(CONTENT_EXTENT_KINDS).filter(([, v]) => v.landed).map(([k]) => k).sort()],
-  [5, ["doc-para", "document", "pdf-page", "sheet-cell", "slide-shape"]]);
+  [8, ["doc-para", "doc-table", "document", "image", "pdf-page", "sheet-cell", "sheet-range", "slide-shape"]]);
 
 /* ===================== 1. THE FRONTMATTER GRAMMAR ======================= */
 

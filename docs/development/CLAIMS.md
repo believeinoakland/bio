@@ -12721,3 +12721,77 @@ no column, no index, and the REC-112 annotation is not reflowed**), `bio-plane/c
 **NOT `docs/development/QUEUE.md`** — flipping the REC-116 row is CONDUCT's act (`kickoffs/WORKER.md`).
 
 **open as of 2026-09-17.**
+
+## CLAIM 2026-09-18 FRAMEWORK + CONTENT-OFFICE + RECORD (FW-19 — BREADTH §7 row 3: the `sheet-range` and `doc-table` arms and the `image` reference)
+
+Worker spawned by CONDUCT #4, isolated worktree `agent-ad4cf6fb4e08b180f`, branch
+`worktree-agent-ad4cf6fb4e08b180f`. Premise falsified before building: every occurrence of
+`sheet-range` / `doc-table` / `cited_as` in `bio-plane/src` on `92f4c64e` is a comment or a
+published sentence saying the arm WAITS on `EXTRACTION-BREADTH-DESIGN.md` §3.2 — no builder, no
+grammar arm, no column. Paths:
+
+- COFF (producers, I2): `bio-plane/src/ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`,
+  `odf.mjs` — the builders and the `tables` / `range` / `images` keys on `text()`.
+- CAPTURE's acquire wire, ONE block: `bio-plane/src/index.mjs`'s CAP-12/COFF-12 container-extent
+  block (the `containerExtent = {…}` literal) — CAPTURE is dormant; claimed with this note, on
+  COFF-12's precedent of feeding that block from its own producers. Plus the stale "`sheet-range`
+  waits" comments in `index.mjs` / `airun.mjs`, corrected in place.
+- RECORD (I5/I3): `bio-plane/checks/bio-checks.mjs` (the C-45 extent grammar region only),
+  `bio-plane/src/schema.mjs` (the `content` table: one column), `bio-plane/src/store.mjs` (the
+  content writer/reads region, `#containerExtentForCapture`, `op=cite`'s `EXTENT_PARAMS`, the
+  migration list).
+- Tests: a new `bio-plane/test/fw19-extent-arms.test.mjs`, plus corrections to any suite pinning
+  the superseded shape.
+- Docs: `INTERFACE-CHANGES.md` (the minted ICs), `EXTRACTION-BREADTH-DESIGN.md` front matter,
+  `DEBT.md` if residue is filed, `docs/DECIDED.md` on regeneration, this block.
+- Generated: `bio-plane/dist/bio-plane.bundled.mjs` + `bio-plane.bundle.json` via `npm run build`.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `civicos-ui/**`, NOT `textchain.mjs`.
+
+**AMENDED during the item** (paths added, each for a reason found while building): `bio-plane/test/`
+`capture-container-extent`, `cite-extent`, `content-extent-arms`, `content-extent-leg`,
+`content-machine-mint` (assertions superseded by the new kinds and the `cited_as` field — CORRECTED
+with the reason at each site, never exempted); `nc-cap12.mjs`, `nc-rec84.mjs` (a dead anchor and a
+moved label, corrected in place); `bio-plane/test/fw19-rec85-digest.mjs` and `nc-fw19.mjs` (new);
+`.gitignore` (the `.fw19-control-pristine/` pen, named); `docs/architecture/BIO_Content_Framework_v0_10.md`
+(Part II §15's tables/images rows and front matter — FRAMEWORK's, on the row's grant).
+
+### DELEGATION 2026-09-18 FRAMEWORK/RECORD (FW-19) -> UI: **A CONTENT ROW CAN NOW BE `cited_as: bytes`, AND ITS NULL CHAIN AND CAP MUST NOT BE SHOWN AS *UNDETERMINED***
+
+IC-125 adds `cited_as` (`text` | `bytes`) to every content-row projection (`op=content`,
+`earned.content` on `op=earnedbasis`). A `bytes` row is an image cited as itself: its `chain` and
+`derivation_cap` are NULL BY MEANING and its `transcription` block says `applies: false` with a
+sentence. A surface that renders a null cap as "undetermined" tells a member their image citation has
+an unknown fidelity, which is the misreading `EXTRACTION-BREADTH-DESIGN.md` §3.1 names. **What UI owes:**
+render `cited_as`, and for `bytes` render `transcription.why` rather than an undetermined ceiling. The
+three new `extent_kind` values (`sheet-range`, `doc-table`, `image`) arrive with a producer-composed
+`ref`, so a surface rendering `ref` verbatim needs no per-kind code. Nothing is broken today: no
+surface builds a content-row view of these kinds yet. Measured: `civicos-ui` contains no reader of
+`cited_as` and one test (`passage-surface.test.mjs`) that already renders `extent_kind: "sheet-range"`
+through `ref`.
+
+**open as of 2026-09-18.**
+
+**ONE CROSS-AREA TOUCH, NAMED RATHER THAN LEFT TO BE FOUND:** `civicos-ui/app.html`'s mirrored
+`CONTENT_EXTENT_KINDS` key set and `EXTENT_KIND_WORD` (three rows), and one superseded assertion in
+`civicos-ui/test/content-extent.test.mjs` (corrected with the reason at the site). UI is not running
+(no `UI-*` row reads `running` on `92f4c64e`), and `check-semantics.mjs` guards that mirror against
+the catalogue IN BOTH DIRECTIONS, so the row's own accepts-when (`node civicos-ui/test/run.mjs` exit 0)
+cannot be met by a landing that adds a kind without it. It is a key-set sync the table's own header
+predicted ("REC-85's three arms arrive as three rows here and nothing else in this file moves"); no
+rendering changed. **UI should review the three nouns.**
+
+## CLAIM 2026-09-18 FRAMEWORK + CONTENT-OFFICE + RECORD (FW-19) — RELEASED
+
+released: 2026-09-18 by the FW-19 worker. Final tree, class FULL: battery **224/224 suites green ·
+13970 assertions passing** (0 skipped; one suite added, `fw19-extent-arms.test.mjs`, 36
+assertions); `node scripts/coverage.mjs --strict` exit **0** unpiped; `node civicos-ui/test/run.mjs`
+exit **0**; `node tools/plancheck.mjs --local` **0 fail**. The baseline measured at spawn read
+223/223 · 13929 but is **NOT A CLEAN BASELINE**: it was started before this item's first edit and
+ran while the edits landed, so its later suites measured a mixed tree — stated rather than quoted as
+one. NEGATIVE CONTROL `node test/nc-fw19.mjs` from `bio-plane/`: six arms and a baseline, all AS
+DECLARED, every restore byte-identical, 0 held-open assertions broken (figures in the suite's
+`NEGATIVE CONTROL:` line). Sibling harnesses re-run on this tree: `nc-cap12` (notion re-anchored),
+`nc-rec85` (overstrict un-duplicated, onebased's pre-existing throw made a measured FAIL),
+`nc-coff11`, `nc-coff12`, `nc-rec84` — every arm AS DECLARED after the corrections. IDs minted with
+`tools/mintid.mjs`: IC-124, IC-125, D-415, D-416.

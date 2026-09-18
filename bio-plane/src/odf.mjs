@@ -163,10 +163,11 @@ import {
   hasZipMagic, readContainer, readPart, normalizePartName, crc32,
   discriminate, sizeGuard, declaredTextBytes,
   CONTAINER_FLAVOURS, ODF_MIMETYPE_PART, ODF_MANIFEST_PART, ODF_MIMETYPE_MAX_BYTES,
+  withContainerImages,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
-import { docParaRef } from "./docx.mjs";
-import { sheetCellRef } from "./formats-xlsx.mjs";
+import { docParaRef, docTableRef } from "./docx.mjs";
+import { sheetCellRef, usedSheetRange } from "./formats-xlsx.mjs";
 import { slideShapeRef } from "./pptx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
@@ -849,13 +850,58 @@ function odtStructure(parts) {
   };
 }
 
+/** FW-19 — THE TABLES OF AN `<office:text>` BODY, in document order, nested
+ *  ones included and numbered as they OPEN — `docx.mjs`'s
+ *  `walkDocumentTables` for OpenDocument, and the same ordinal `docTableRef`
+ *  addresses. ODF compresses runs (`table:number-columns-repeated`,
+ *  `table:number-rows-repeated`), so both figures are ACCUMULATED through the
+ *  repeats exactly as `walkSheet` does; `cols` is the declared
+ *  `<table:table-column>` grid. A figure the walk did not establish is NULL,
+ *  never 0. */
+function walkOdfTables(bodyXml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  const RE = tokens();
+  const rep = (v) => { const n = parseInt(v ?? "1", 10); return Number.isFinite(n) && n > 0 ? n : 1; };
+  let m;
+  while ((m = RE.exec(bodyXml)) !== null) {
+    if (m[1] === undefined) continue;
+    const name = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const top = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name === "table" && stack.length) {
+        const t = stack.pop();
+        done[t.table] = { table: t.table, rows: t.rows, cols: t.cols > 0 ? t.cols : null };
+      }
+      continue;
+    }
+    if (name === "table") {
+      if (selfClosed) done[next] = { table: next++, rows: 0, cols: null };
+      else stack.push({ table: next++, rows: 0, cols: 0 });
+      continue;
+    }
+    if (!top) continue;
+    const attrs = m[2] && m[2].includes("=") ? attrsOf(m[2]) : {};
+    if (name === "table-column") top.cols += rep(attrs["number-columns-repeated"]);
+    else if (name === "table-row") top.rows += rep(attrs["number-rows-repeated"]);
+  }
+  while (stack.length) {
+    const t = stack.pop();
+    done[t.table] = { table: t.table, rows: t.rows || null, cols: t.cols > 0 ? t.cols : null };
+  }
+  return done.filter(Boolean);
+}
+
 function odtText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
   if (parts.guard) {
     return {
-      ok: true, container: "odt", document: null, paragraphs: [],
+      ok: true, container: "odt", document: null, paragraphs: [], tables: null,
       undetermined: [parts.guard],           // the marker VERBATIM, never a truncation
       counts: { chars: 0, undetermined: 1 },
     };
@@ -864,7 +910,7 @@ function odtText(parts) {
   if (!body) {
     const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
     return {
-      ok: true, container: "odt", document: null, paragraphs: [],
+      ok: true, container: "odt", document: null, paragraphs: [], tables: null,
       undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_text_body" }],
       counts: { chars: 0, undetermined: 1 },
     };
@@ -872,8 +918,15 @@ function odtText(parts) {
   const walk = walkTextBody(body);
   const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `¶${p.para + 1}`, text: p.text }));
   const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  /* FW-19 / IC-124: the `doc-table` units, in docx.mjs's shape and through
+     its builder. An EMPTY list is a real zero; the branches above that walked
+     nothing say `tables: null`. The tracked-changes block is stripped first,
+     for `walkTextBody`'s own reason: a deleted table is not in the document
+     as served, and counting it would renumber every table after it. */
+  const tables = walkOdfTables(stripElement(body, "tracked-changes"))
+    .map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
   return {
-    ok: true, container: "odt", document, paragraphs,
+    ok: true, container: "odt", document, paragraphs, tables,
     undetermined: [],
     counts: { chars: document.length, undetermined: 0 },
   };
@@ -1139,6 +1192,8 @@ function odsText(parts) {
     }
     outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
       rows: null, cols: null, usedRows, usedCols,
+      /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
+      range: usedSheetRange(sheet.name, usedRows, usedCols),
       text, undetermined: [] });
   }
   const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
@@ -1349,9 +1404,17 @@ function entryFor(row, structureOf, textOf) {
     structure: async (partsOrBytes) => structureOf(
       partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
         ? await odfParts(row, partsOrBytes) : partsOrBytes),
-    text: async (partsOrBytes) => textOf(
-      partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
-        ? await odfParts(row, partsOrBytes) : partsOrBytes),
+    /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
+       exhaustive or NULL, through the one enumerator the OOXML entries use.
+       Read off the central directory, so it does NOT depend on
+       META-INF/manifest.xml — the `outside_content_xml_not_read` marker about
+       the manifest stays TRUE and stays emitted: it speaks about `intra`
+       embedded objects, which this does not content-address. */
+    text: async (partsOrBytes) => {
+      const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
+        ? await odfParts(row, partsOrBytes) : partsOrBytes;
+      return withContainerImages(textOf(parts), parts, "Pictures/");
+    },
   };
 }
 

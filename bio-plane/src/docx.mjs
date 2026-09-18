@@ -82,7 +82,7 @@ import { linkWrapper } from "./subresources.mjs";
 import {
   hasZipMagic, readContainer, readPart, normalizePartName,
   discriminate, walkRels, relsPartFor, sizeGuard,
-  CORE_PROPERTIES_PART, readCoreProperties,
+  CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
 } from "./ooxml.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
@@ -106,6 +106,24 @@ export function docParaRef(para, run = null) {
   const ref = { kind: "doc-para", ref: `¶${para + 1}`, para };
   if (run != null) ref.run = run;
   return ref;
+}
+
+/** FW-19 / IC-124 — `{kind:"doc-table", ref:"table <1-based>[, <cell>]",
+ *  table:<0-based>[, cell:<A1>]}` (EXTRACTION-BREADTH §3.2).
+ *
+ *  `table` is the table's ORDINAL in document order — every table, nested
+ *  ones included, counted by the same walk that reports the bound
+ *  (`walkDocumentTables`), so a reference and the figure it is checked against
+ *  cannot be numbered two ways. 0-based in the address and 1-based in `ref`,
+ *  the `doc-para` convention one arm over. `cell` is OPTIONAL and is A1
+ *  notation over the table's own grid (B3 = second column, third row), the
+ *  one cell notation this grammar already has; it is included only when the
+ *  caller genuinely names one. EXPORTED because `odf.mjs`'s `.odt` entry
+ *  emits the same arm — one builder per arm, COFF-10's rule. */
+export function docTableRef(table, cell = null) {
+  const out = { kind: "doc-table", ref: `table ${table + 1}${cell != null ? `, ${cell}` : ""}`, table };
+  if (cell != null) out.cell = cell;
+  return out;
 }
 
 /* ------------------------------------------------------------------ *
@@ -417,6 +435,58 @@ async function docxParts(bytes) {
  * structure() — I2 links + the evidentiary envelope (I7 slot 3)
  * ------------------------------------------------------------------ */
 
+/** FW-19 — THE TABLES OF A WORDPROCESSING BODY, in document order, each with
+ *  its grid: `[{ table, rows, cols }]`. EVERY `<w:tbl>` counts, nested ones
+ *  included, numbered as it OPENS — the ordinal `docTableRef` addresses.
+ *
+ *  `rows` is the table's own `<w:tr>` count (a nested table's rows are its
+ *  own, which the open-table stack keeps apart). `cols` is the declared grid
+ *  — the `<w:gridCol>` count in the table's `<w:tblGrid>` — because a merged
+ *  cell (`w:gridSpan`) makes a row's `<w:tc>` count SMALLER than the grid, and
+ *  bounding by it would refuse a true address. Where a producer wrote no grid
+ *  the widest row's cell count is used, which can only UNDER-state a merged
+ *  table's width; that residue is stated here rather than discovered. A
+ *  figure this walk could not establish is NULL, never 0. */
+export function walkDocumentTables(xml) {
+  const done = [];
+  const stack = [];
+  let next = 0;
+  TOKEN_RE.lastIndex = 0;
+  let m;
+  while ((m = TOKEN_RE.exec(xml)) !== null) {
+    if (m[1] === undefined) continue;
+    const name = localOf(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    const top = stack.length ? stack[stack.length - 1] : null;
+    if (closing) {
+      if (name === "tbl" && stack.length) {
+        const t = stack.pop();
+        done[t.table] = { table: t.table, rows: t.rows,
+          cols: t.gridCols > 0 ? t.gridCols : (t.maxTc > 0 ? t.maxTc : null) };
+      } else if (name === "tr" && top) {
+        if (top.tc > top.maxTc) top.maxTc = top.tc;
+      }
+      continue;
+    }
+    if (name === "tbl" && !selfClosed) stack.push({ table: next++, rows: 0, gridCols: 0, tc: 0, maxTc: 0 });
+    else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null };
+    else if (!top) continue;
+    else if (name === "gridCol") top.gridCols++;
+    else if (name === "tr") { top.rows++; top.tc = 0; }
+    else if (name === "tc") top.tc++;
+  }
+  /* A table the body never closed (a truncated part) is still a table this
+     walk saw open; its figures are what was seen, and its ordinal stands so
+     every later table keeps its number. */
+  while (stack.length) {
+    const t = stack.pop();
+    done[t.table] = { table: t.table, rows: t.rows || null,
+      cols: t.gridCols > 0 ? t.gridCols : (t.maxTc > 0 ? t.maxTc : null) };
+  }
+  return done;
+}
+
 async function docxStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "docx", reason: parts?.why ?? "PARTS_ABSENT" };
@@ -580,7 +650,7 @@ async function docxText(parts) {
     /* Over the bound: the sizeGuard marker carried VERBATIM (COFF-2 shaped it
      * for exactly this), never a silent truncation. */
     return {
-      ok: true, container: "docx", document: null, paragraphs: [],
+      ok: true, container: "docx", document: null, paragraphs: [], tables: null,
       undetermined: [parts.guard],
       counts: { chars: 0, undetermined: 1 },
     };
@@ -588,7 +658,7 @@ async function docxText(parts) {
   if (parts.documentXml == null) {
     const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
     return {
-      ok: true, container: "docx", document: null, paragraphs: [],
+      ok: true, container: "docx", document: null, paragraphs: [], tables: null,
       undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
       counts: { chars: 0, undetermined: 1 },
     };
@@ -596,8 +666,14 @@ async function docxText(parts) {
   const walk = walkDocumentBody(parts.documentXml);
   const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `¶${p.para + 1}`, text: p.text }));
   const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
+  /* FW-19 / IC-124: the `doc-table` units — the bound the arm is checked
+     against. An EMPTY list is a real zero (the body was walked and held no
+     table); the two branches above that walked nothing say `tables: null`. */
+  const tables = walkDocumentTables(parts.documentXml)
+    .filter(Boolean)
+    .map((t) => ({ table: t.table, ref: docTableRef(t.table).ref, rows: t.rows, cols: t.cols }));
   return {
-    ok: true, container: "docx", document, paragraphs,
+    ok: true, container: "docx", document, paragraphs, tables,
     undetermined: [],
     counts: { chars: document.length, undetermined: 0 },
   };
@@ -650,6 +726,8 @@ export const docxEntry = {
     const parts = partsOrBytes instanceof Uint8Array || partsOrBytes instanceof ArrayBuffer
       ? await docxParts(partsOrBytes)
       : partsOrBytes;
-    return docxText(parts);
+    /* FW-19 / IC-124: `images` — every image under word/media/, content-
+       addressed, exhaustive or NULL (ooxml.mjs's `containerImages`). */
+    return withContainerImages(docxText(parts), parts, "word/media/");
   },
 };

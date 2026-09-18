@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1054 rulings across 84 documents.
+1056 rulings across 84 documents.
 
 ## DEC-
 
@@ -1831,6 +1831,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:12612`
 - CORRECTED, NOT EXEMPTED**: `provenance_route_marks_finding` leaves the roster because this item gives it a reader.  
   `docs/development/CLAIMS.md:12697`
+- AMENDED during the item** (paths added, each for a reason found while building): `bio-plane/test/` `capture-container-extent`, `cite-extent`, `content-extent-arms`, `content-extent-leg`, `content-machine-mint` (assertions superseded by the new kinds and the `cited_as` field — CORRECTED with the reason at each site,…  
+  `docs/development/CLAIMS.md:12751`
+- `content-machine-mint` (assertions superseded by the new kinds and the `cited_as` field — CORRECTED with the reason at each site, never exempted); `nc-cap12.mjs`, `nc-rec84.mjs` (a dead anchor and a moved label, corrected in place); `bio-plane/test/fw19-rec85-digest.mjs` and `nc-fw19.mjs` (new); `.gitignore` (the…  
+  `docs/development/CLAIMS.md:12753`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
