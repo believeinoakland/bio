@@ -3408,6 +3408,67 @@ CREATE TABLE IF NOT EXISTS lead_shares (
 CREATE INDEX IF NOT EXISTS lead_shares_bundle ON lead_shares(bundle_id);
 -- =========================================================================
 
+-- REC-126 / DEC-31 / IC-146: THE REVIEW COPY, BIO_Publication_v0_1.md section 6A.
+-- An addressed act BESIDE publish that NEVER LEAVES THE INSTANCE. Three tables,
+-- and none of them is a bucket: the grant is a capability over the private
+-- store, never a third place bytes live (6A.2, never a bucket).
+--
+-- case_drafts IS THE PRODUCTION (6A.4, gap 3): a DRAFT case, identified BEFORE
+-- the publish gates run, holding the arguments op=publish would take as JSON.
+-- It is MUTABLE (Bob, 2026-09-17: only a real publish is not) and it is working
+-- data, so a whole-store purge clears it. case_id is the existing case the draft
+-- would be the next edition of, or NULL for a new case, whose identity is minted
+-- only by publication. The EDITION is not stored: it is read from the published
+-- record every time it is asked, which is what lets a grant bound to one edition
+-- die when that edition is signed.
+CREATE TABLE IF NOT EXISTS case_drafts (
+  draft_id    TEXT PRIMARY KEY,   -- DRAFT-YYYY-NNNN, allocated by the draft act
+  project_id  TEXT NOT NULL,      -- the producing project, whose OWNER authors the draft
+  case_id     TEXT,               -- the existing case named, or NULL for a new case
+  params      TEXT NOT NULL,      -- JSON of the op=publish arguments, the project excepted
+  created_by  TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  updated_by  TEXT NOT NULL,      -- the editor the dry run of the publish gates acts as
+  updated_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_drafts_project ON case_drafts(project_id);
+
+-- THE GRANT (6A.2): scoped to ONE production, revocable, read-and-comment,
+-- attributed. Its READ SECRET is generated at the edge and this table holds only
+-- its SHA-256, never the value -- the ai_credentials shape. It is BOUND TO ONE
+-- CASE EDITION: case_id and edition are the draft's identity at the moment of
+-- issue, and a grant whose draft no longer stands at that edition is dead
+-- exactly as a revoked one is. The recipient is a LABEL the issuer typed, never
+-- a member -- a grant is not an account, not membership, not a weaker member.
+CREATE TABLE IF NOT EXISTS review_grants (
+  grant_id    TEXT PRIMARY KEY,   -- RVG-YYYY-NNNN, the public identity. NEVER the secret
+  draft_id    TEXT NOT NULL,
+  case_id     TEXT,               -- the case edition bound at issue, NULL for a new case
+  edition     INTEGER NOT NULL,
+  recipient   TEXT NOT NULL,      -- to whom, as the issuer named them
+  secret_sha  TEXT NOT NULL UNIQUE, -- SHA-256 of the read secret. NEVER its value
+  issued_by   TEXT NOT NULL,
+  issued_at   TEXT NOT NULL,
+  revoked_by  TEXT,
+  revoked_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS review_grants_draft ON review_grants(draft_id);
+
+-- THE COMMENT: attributed, and a recipient's comment is a RECIPIENT's. author is
+-- the grant id for a recipient and the member id for a member, and author_kind
+-- says which, so no reader can take one for the other.
+CREATE TABLE IF NOT EXISTS review_comments (
+  comment_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+  draft_id    TEXT NOT NULL,
+  author_kind TEXT NOT NULL CHECK (author_kind IN ('recipient','member')),
+  author      TEXT NOT NULL,
+  grant_id    TEXT,               -- the grant that admitted a recipient, NULL for a member
+  text        TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS review_comments_draft ON review_comments(draft_id);
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
@@ -10045,6 +10106,17 @@ var MACHINE_FENCE_CHECKS = {
     check: "C-32.15",
     where: "src/index.mjs fetch > is-operator-ratify-case",
     translation: "Ratifying a case commits the group's own assertions about it under a member's signature, and it is delivered by that member signed in as themselves. The credential that asked here is one of the operator's access tokens for this copy, not a person, and a valid signature does not change that. Sign in as the member whose key signed it and ratify it there."
+  },
+  /* REC-126 / DEC-31 / IC-145 — THE REVIEW COPY's three authoring acts (draft,
+     grant, revoke) share ONE fence, because they are one doctrine: the act is
+     ADDRESSED and ATTRIBUTED (`BIO_Publication_v0_1.md` §6A.2), so the record
+     must name the person who handed the group's draft to somebody. One row, one
+     region: the three acts enter through `reviewAct`, and the fence stands at that
+     door before any act is chosen. */
+  MACHINE_CANNOT_REVIEW: {
+    check: "C-32.16",
+    where: "src/store.mjs reviewAct > is-machine-review",
+    translation: "Handing a draft of the group's case to a named person, or withdrawing it, is an act somebody in the group answers for, and the record names who did it. The credential that asked here is an automated one: it can help prepare the draft, and it cannot address it to anyone. Sign in to do this yourself."
   }
 };
 var ACT_SHAPE_CHECKS = {
@@ -14649,6 +14721,17 @@ var RUNG_ABSENT = {
      later look is a new row, never a rewrite of the earlier one. */
   lead: { ground: "undetermined", is: "a member writes a LEAD in their own words \u2014 what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
   leadshare: { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
+  /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are
+     `credential`: their whole subject is WHO MAY READ one draft, and they write
+     nothing the record asserts. The DRAFT and the COMMENT are `undetermined` on
+     `transcribe`'s measurement: none of their refusals is a missing justification,
+     and they are NOT `reversible` — a draft is edited in place and a comment is
+     answered by another, but no act takes either back. Neither is ever published:
+     publication stays the one irreversible act (§6A.1). */
+  casedraft: { ground: "undetermined", is: "the project's owner holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication \xA76A.4)" },
+  reviewgrant: { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
+  reviewrevoke: { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
+  reviewcomment: { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
   leadlook: { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" }
 };
 var CAPTURE_ACTS = [
@@ -32418,7 +32501,7 @@ Subject position: ${pos} \u2014 ${just}
   
        THE TEXT COMES BACK WHOLE. A ceremony whose subject is "a thing a member
        actually reviewed" cannot hand the member a summary of the thing. */
-  caseDocumentFacts(caseId, edition, viewer) {
+  caseDocumentFacts(caseId, edition, viewer, secretSha = null) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1) return { ok: false, reason: "MALFORMED" };
@@ -32430,7 +32513,8 @@ Subject position: ${pos} \u2014 ${just}
       ed
     );
     if (!doc) return _Store.#noCaseDocument(id, ed);
-    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer)) return _Store.#noCaseDocument(id, ed);
+    if (!doc.ratified_at && !this.#hasCaseStanding(doc, viewer) && !this.#grantAdmitsCaseEdition(secretSha, doc.case_id, doc.edition))
+      return _Store.#noCaseDocument(id, ed);
     return {
       ok: true,
       doc,
@@ -32506,8 +32590,8 @@ Subject position: ${pos} \u2014 ${just}
      down). REC-130 CORRECTED the other half of this comment: it said "scoped to
      nothing" of the UNRATIFIED document too, which was a mechanism choice with
      no ruling behind it. The scoping now lives in `caseDocumentFacts`. */
-  caseDocument(caseId, edition, viewer) {
-    const facts = this.caseDocumentFacts(caseId, edition, viewer);
+  caseDocument(caseId, edition, viewer, secretSha = null) {
+    const facts = this.caseDocumentFacts(caseId, edition, viewer, secretSha);
     if (!facts.ok) return facts;
     const d = facts.doc;
     return {
@@ -32532,6 +32616,476 @@ Subject position: ${pos} \u2014 ${just}
       gate_version: d.gate_version ?? null
     };
   }
+  /* ===== REC-126 / DEC-31 / IC-145 / IC-146: THE REVIEW COPY ================
+  
+       `BIO_Publication_v0_1.md` §6A is the authority, and the one sentence to carry
+       out of it is Bob's: ONE irreversible act, not two. A review copy stands BESIDE
+       publish, NEVER LEAVES THE INSTANCE, is MUTABLE, is MARKED as what it is, is as
+       complete as a publication can be, and NAMES WHAT IS MISSING. It is emphatically
+       not a small publication — nothing below writes the published projection, the
+       PUBLISHED bucket, a case document or a signature.
+  
+       THE THREE OBJECTS (schema: case_drafts, review_grants, review_comments):
+         - THE DRAFT CASE (§6A.4, gap 3) is the production. It holds the arguments
+           `op=publish` would take and is identified BEFORE any gate runs, because
+           `publishCase` refuses an incomplete case and a review copy must not be
+           refused for exactly the gaps it is sent to show.
+         - THE GRANT (§6A.2) is a scoped, revocable, read-and-comment capability over
+           ONE draft, bound to ONE case edition, attributed to its issuer and its
+           recipient. Its READ SECRET is generated at the control plane and this
+           store is handed only the SHA-256 — no method here can print a secret
+           because none has ever held one (`aicredentialmint`'s shape, PL-11).
+         - THE COMMENT is attributed, and a recipient's is a RECIPIENT's.
+  
+       WHO MAY AUTHOR A DRAFT, ISSUE A GRANT AND REVOKE ONE — PROVISIONAL, AND A
+       DESIGN GAP REPORTED RATHER THAN A RULING MADE. §6A says the grant names who
+       issued it and that EDITING needs project permissions; it does not say who may
+       issue. This runs at the NARROWEST authority the record already rules for the
+       sibling act — the project OWNER, DEC-72's publisher, through the same
+       `#isProjectOwner` `publishCase` consults, with no administrator bypass — so a
+       later ruling can only WIDEN it, and widening is one predicate. A machine is
+       refused by name: an addressed act is attributed to a person. */
+  static REVIEW_DRAFT_FIELDS = [
+    "targets",
+    "target",
+    "caseId",
+    "newCase",
+    "scope",
+    "statement",
+    "excluded",
+    "subjectPosition",
+    "subjectJustification",
+    "biasAcknowledgement",
+    "roles"
+  ];
+  static REVIEW_TEXT_MAX = 4e3;
+  static REVIEW_RECIPIENT_MAX = 200;
+  /* THE COPY'S TWO LISTS ARE BOUNDED AND SAY SO. A draft's comments and its grants
+     are read under this cap (one row over it to know), and an answer that hit it
+     carries `comments_truncated` / `grants_truncated` rather than presenting a
+     page as the whole — the costs-nothing rule pointed at a list. */
+  static REVIEW_LIST_MAX = 500;
+  static REVIEW_MARKING = "REVIEW COPY \u2014 NOT A PUBLICATION. This is a draft of a case, shown inside this instance to the people it was addressed to. It is not signed, it is not published, it may still change, and it may never be published at all. What a publication would require that this draft does not yet have is listed under `missing`, in the publish gates' own words.";
+  /* THE ONE DEAD ANSWER. A revoked grant, a grant whose draft has moved to another
+     edition, a secret that never existed, a malformed secret, a draft that does not
+     exist and a draft the caller has no standing in all return THIS — built from no
+     argument at all, so the bytes cannot vary with anything the caller sent or with
+     anything the record holds. `#noCaseDocument`'s rule one altitude over: a
+     refusal that said REVOKED would tell the holder their access had existed. */
+  static #noReviewCopy() {
+    return {
+      ok: false,
+      reason: "NO_REVIEW_COPY",
+      detail: "no review copy answers to this request. A review copy is read through the grant that was issued for it, or by a member with standing in the project that produced it; a grant that was withdrawn, or whose draft has moved to another edition, answers exactly as one that was never issued."
+    };
+  }
+  /* THE THREE AUTHORING ACTS — draft, grant, revoke — ENTER THROUGH ONE DOOR, and
+     the door is where the MACHINE FENCE (C-32.16) stands. That is measured rather
+     than stylistic: the DEC-49 guard wants every MACHINE_CANNOT_* inside ONE named
+     region with a catalogue row pointing at it, and `machine-fences.test.mjs` wants
+     every such site to stand in front of the payload complaints it shadows. One
+     fence at one door satisfies both without a second implementation of the rule.
+     A machine is refused BY NAME before any act is chosen: the act is ADDRESSED
+     and ATTRIBUTED (§6A.2), so the record must name the person who did it. */
+  reviewAct({ act = "", author = null, ...args } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || isMachineIdentity(who))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_REVIEW",
+        detail: "a review copy is an addressed act: somebody in this group hands a draft to a named person and the record says who. A machine credential may prepare the material and may not put the group's draft in front of anyone. Sign in as a member."
+      };
+    if (act === "draft") return this.#caseDraft(who, args);
+    if (act === "grant") return this.#reviewGrant(who, args);
+    if (act === "revoke") return this.#reviewRevoke(who, args);
+    return {
+      ok: false,
+      reason: "REVIEW_UNKNOWN_ACT",
+      act,
+      detail: "the review copy's authoring acts are draft, grant and revoke."
+    };
+  }
+  /* NOT THE OWNER, AND NOT THERE, ARE ONE ANSWER: a caller who does not own the
+     producing project cannot learn from this refusal whether the project, the
+     draft or the grant exists. */
+  static #notReviewOwner() {
+    return {
+      ok: false,
+      reason: "REVIEW_NOT_PROJECT_OWNER",
+      detail: "a review copy is the producing project's own act and is wielded by an OWNER of it, as publishing is (DEC-72). An administrator sees every project and directs none of them. A project, draft or grant you do not own is answered exactly as one that does not exist."
+    };
+  }
+  /* THE EDITION IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and
+     never taken from the caller — `publishCase`'s own rule (DEC-12 as DEC-44
+     rehomes it). A draft naming an existing case stands at that case's next
+     edition; a draft naming none is a new case at edition 1. */
+  #draftIdentity(row) {
+    const named = String(row.case_id ?? "").trim() || null;
+    if (!named) return { caseId: null, edition: 1 };
+    const top = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, named);
+    return { caseId: named, edition: (top && top.m != null ? Number(top.m) : 0) + 1 };
+  }
+  static #caseIdentitySentence(caseId, edition) {
+    return caseId ? `the next edition (${edition}) of ${caseId}` : "a new case, whose identity is not yet allocated \u2014 a case id is minted only by publication";
+  }
+  /* THE DRAFT ACT — create, or edit in place (a review copy is MUTABLE; Bob,
+     2026-09-17: *"An editor must be able to edit"*). */
+  #caseDraft(who, { draft = null, project = null, ...rest } = {}) {
+    const a = { who };
+    const proj = String(project ?? "").trim();
+    const existing = draft ? this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft).trim()) : null;
+    if (draft && !existing) return _Store.#notReviewOwner();
+    const owning = existing ? existing.project_id : proj;
+    if (!owning)
+      return {
+        ok: false,
+        reason: "REVIEW_NO_PROJECT",
+        detail: "a draft case is a production of a project, as a published case is (DEC-72): pass project=<project id>."
+      };
+    if (existing && proj && proj !== existing.project_id)
+      return {
+        ok: false,
+        reason: "REVIEW_DRAFT_CHANGES_PROJECT",
+        detail: `this draft is ${existing.project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.`
+      };
+    if (!this.#isProjectOwner(owning, a.who)) return _Store.#notReviewOwner();
+    const params = {};
+    for (const k of _Store.REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
+    const named = typeof params.caseId === "string" && params.caseId.trim() ? params.caseId.trim() : null;
+    if (named) {
+      const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, named);
+      if (!owned || owned.project_id !== owning)
+        return {
+          ok: false,
+          reason: "REVIEW_NO_SUCH_CASE",
+          caseId: named,
+          detail: `no case of ${owning}'s answers to ${named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.`
+        };
+      params.caseId = named;
+    }
+    const json2 = JSON.stringify(params);
+    if (json2.length > 64 * 1024)
+      return {
+        ok: false,
+        reason: "REVIEW_DRAFT_TOO_LARGE",
+        detail: "a draft's arguments are at most 64 KiB, the size of what op=publish would accept."
+      };
+    const when = (/* @__PURE__ */ new Date()).toISOString();
+    let id;
+    if (existing) {
+      id = existing.draft_id;
+      this.sql.exec(
+        `UPDATE case_drafts SET case_id=?, params=?, updated_by=?, updated_at=? WHERE draft_id=?`,
+        named,
+        json2,
+        a.who,
+        when,
+        id
+      );
+    } else {
+      id = this.allocId("DRAFT", when.slice(0, 4)).id;
+      this.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
+                     updated_by,updated_at) VALUES (?,?,?,?,?,?,?,?)`, id, owning, named, json2, a.who, when, a.who, when);
+    }
+    const ident = this.#draftIdentity({ case_id: named });
+    return {
+      ok: true,
+      draftId: id,
+      project: owning,
+      edited: !!existing,
+      caseId: ident.caseId,
+      edition: ident.edition,
+      caseIdentity: _Store.#caseIdentitySentence(ident.caseId, ident.edition),
+      read: `op=reviewcopy&draft=${id}`
+    };
+  }
+  /* WHAT IS MISSING IS THE PUBLISH GATES' OWN ANSWER (§6A.4). The real act is run
+       over the draft's arguments, as the draft's editor, inside a transaction that is
+       ALWAYS rolled back — so every write it would make (the case document, the
+       member bytes, a minted case id off the sequence) is undone, and what survives
+       is the gates' verdict in the gates' own words. A second implementation of the
+       gates here would be the second vocabulary §6A.4 forbids.
+  
+       ONE REFUSAL, NOT ALL OF THEM, AND IT IS SAID. `publishCase` stops at its first
+       refusal and is not rebuilt to collect them; what lies beyond the first is
+       UNDETERMINED rather than absent, and `evaluated` states that in the copy. */
+  static #ROLLBACK = Symbol("rec126-review-dry-run");
+  #reviewGates(row) {
+    let out = null;
+    try {
+      this.ctx.storage.transactionSync(() => {
+        out = this.publishCase({
+          ...JSON.parse(row.params),
+          project: row.project_id,
+          viewer: `member:${row.updated_by}`,
+          author: row.updated_by
+        });
+        throw _Store.#ROLLBACK;
+      });
+    } catch (e) {
+      if (e !== _Store.#ROLLBACK) throw e;
+    }
+    if (out && out.ok) return {
+      gates: "passed",
+      missing: [],
+      evaluated: "every publish gate was run over this draft and none refused. Nothing was published: publication still needs the act itself and a member's signature over the case document."
+    };
+    if (!out) return {
+      gates: "undetermined",
+      missing: [],
+      evaluated: "the publish gates gave no answer over this draft, so what is missing is UNDETERMINED."
+    };
+    const { ok: _ok, ...refused } = out;
+    return {
+      gates: "refused",
+      missing: [refused],
+      evaluated: "the publish gates run in order and stop at the first refusal, so this is the first refusal only. Whether any later gate would also refuse is UNDETERMINED, not absent."
+    };
+  }
+  /* THE LIVE-GRANT PREDICATE — the one place a grant is judged, read by the review
+     copy, its comment and `op=casedocument` alike, so they cannot disagree. Live
+     means: a grant with this fingerprint exists, it is NOT REVOKED, its draft still
+     exists, and the draft STILL STANDS AT THE CASE EDITION THE GRANT WAS BOUND TO. */
+  #liveReviewGrant(secretSha) {
+    const s = String(secretSha ?? "");
+    if (!/^[0-9a-f]{64}$/.test(s)) return null;
+    const g = this.#one(`SELECT * FROM review_grants WHERE secret_sha=? AND revoked_at IS NULL`, s);
+    if (!g) return null;
+    const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, g.draft_id);
+    if (!d) return null;
+    const now = this.#draftIdentity(d);
+    if ((now.caseId ?? null) !== (g.case_id ?? null) || now.edition !== Number(g.edition)) return null;
+    return { grant: g, draft: d };
+  }
+  #grantAdmitsCaseEdition(secretSha, caseId, edition) {
+    if (!secretSha) return false;
+    const live = this.#liveReviewGrant(secretSha);
+    return !!(live && live.grant.case_id && live.grant.case_id === caseId && Number(live.grant.edition) === Number(edition));
+  }
+  #draftForMember(draftId, viewer) {
+    const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draftId ?? "").trim());
+    if (!d) return null;
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return null;
+    if (gate.scope === "member") return d;
+    return this.#one(
+      `SELECT 1 AS seen FROM bundles b WHERE b.bundle_id=? AND b.object_type='project' AND ${gate.sql}`,
+      d.project_id,
+      ...gate.args
+    ) ? d : null;
+  }
+  #reviewGrant(who, { draft = null, recipient = "", secretSha = null } = {}) {
+    const a = { who };
+    const d = this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(draft ?? "").trim());
+    if (!d || !this.#isProjectOwner(d.project_id, a.who)) return _Store.#notReviewOwner();
+    const to = String(recipient ?? "").trim();
+    if (!to || to.length > _Store.REVIEW_RECIPIENT_MAX || /[\r\n]/.test(to))
+      return {
+        ok: false,
+        reason: "REVIEW_NO_RECIPIENT",
+        detail: `name the person or group this copy is addressed to, in one line of at most ${_Store.REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not attributed, and the grant is the record of who was handed what.`
+      };
+    const s = String(secretSha ?? "");
+    if (!/^[0-9a-f]{64}$/.test(s))
+      return {
+        ok: false,
+        reason: "REVIEW_NO_SECRET",
+        detail: "the read secret's fingerprint is set by the control plane and was absent."
+      };
+    const when = (/* @__PURE__ */ new Date()).toISOString();
+    const ident = this.#draftIdentity(d);
+    const id = this.allocId("RVG", when.slice(0, 4)).id;
+    this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
+                   VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, a.who, when);
+    return {
+      ok: true,
+      grantId: id,
+      draftId: d.draft_id,
+      caseId: ident.caseId,
+      edition: ident.edition,
+      recipient: to,
+      issuedBy: a.who,
+      issuedAt: when,
+      boundTo: `this grant reads ${_Store.#caseIdentitySentence(ident.caseId, ident.edition)} and nothing else. It ends when it is revoked, and when that edition is published and signed.`
+    };
+  }
+  #reviewRevoke(who, { grant = null } = {}) {
+    const a = { who };
+    const gid = String(grant ?? "").trim();
+    if (!gid)
+      return {
+        ok: false,
+        reason: "REVIEW_NO_GRANT",
+        detail: "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>."
+      };
+    const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
+                         WHERE g.grant_id=?`, gid);
+    if (!g || !this.#isProjectOwner(g.project_id, a.who)) return _Store.#notReviewOwner();
+    if (g.revoked_at)
+      return { ok: true, existed: true, grantId: g.grant_id, revokedBy: g.revoked_by, revokedAt: g.revoked_at };
+    const when = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(
+      `UPDATE review_grants SET revoked_by=?, revoked_at=? WHERE grant_id=? AND revoked_at IS NULL`,
+      a.who,
+      when,
+      g.grant_id
+    );
+    return { ok: true, existed: false, grantId: g.grant_id, revokedBy: a.who, revokedAt: when };
+  }
+  /* THE READ. Two doors and one answer for everyone else: a RECIPIENT through a live
+     grant's secret (and only the draft that grant names), or a MEMBER with standing
+     in the producing project — D-15's predicate, as `#hasCaseStanding` asks it.
+     `draft`, when a recipient names one, must be the grant's own. */
+  reviewCopy({ draft = null, secretSha = null, viewer = null, bySecret = false, limit = null } = {}) {
+    let d, reader, grant = null;
+    if (bySecret) {
+      const live = this.#liveReviewGrant(secretSha);
+      if (!live || draft && String(draft).trim() !== live.draft.draft_id) return _Store.#noReviewCopy();
+      d = live.draft;
+      grant = live.grant;
+      reader = "recipient";
+    } else {
+      d = this.#draftForMember(draft, viewer);
+      if (!d) return _Store.#noReviewCopy();
+      reader = "member";
+    }
+    const params = JSON.parse(d.params);
+    const ident = this.#draftIdentity(d);
+    const targets = Array.isArray(params.targets) ? params.targets : typeof params.targets === "string" && params.targets.trim() ? params.targets.split(",") : params.target ? [params.target] : [];
+    const gate = viewerPredicate(`member:${d.updated_by}`);
+    const findings = targets.map((raw) => {
+      const id = String(raw ?? "").trim();
+      const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+                           WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
+      if (!b) return {
+        target: id,
+        present: false,
+        detail: "this draft names a finding its editor cannot read, or one that does not exist."
+      };
+      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+      return {
+        target: id,
+        present: true,
+        object_type: b.object_type,
+        state: b.current_state,
+        role: params.roles && typeof params.roles === "object" ? params.roles[id] ?? null : null,
+        text: md ? md.content : null
+      };
+    });
+    const gates = this.#reviewGates(d);
+    const askedCap = Number.parseInt(String(limit ?? ""), 10);
+    const cap = Number.isInteger(askedCap) && askedCap >= 1 ? Math.min(askedCap, _Store.REVIEW_LIST_MAX) : _Store.REVIEW_LIST_MAX;
+    const commentRows = this.#rows(`SELECT c.comment_id, c.author_kind, c.author, c.grant_id, c.text, c.at,
+                                        g.recipient FROM review_comments c
+                                 LEFT JOIN review_grants g ON g.grant_id=c.grant_id
+                                 WHERE c.draft_id=? ORDER BY c.comment_id LIMIT ?`, d.draft_id, cap + 1);
+    const commentsTruncated = commentRows.length > cap;
+    const comments = commentRows.slice(0, cap).map((c) => ({
+      comment_id: c.comment_id,
+      author_kind: c.author_kind,
+      author: c.author,
+      grant_id: c.grant_id ?? null,
+      recipient: c.author_kind === "recipient" ? c.recipient : null,
+      text: c.text,
+      at: c.at
+    }));
+    let grantPart;
+    if (grant) {
+      grantPart = { grant: {
+        grant_id: grant.grant_id,
+        recipient: grant.recipient,
+        issued_by: grant.issued_by,
+        issued_at: grant.issued_at
+      } };
+    } else {
+      const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,
+                                           revoked_by, revoked_at FROM review_grants WHERE draft_id=?
+                                    ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, cap + 1);
+      const grants = grantRows.slice(0, cap).map((g) => ({
+        ...g,
+        live: !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition
+      }));
+      grantPart = { grants, grants_truncated: grantRows.length > cap };
+    }
+    return {
+      ok: true,
+      kind: "review-copy",
+      marking: _Store.REVIEW_MARKING,
+      published: false,
+      signature: { signed: false, detail: "a review copy is never signed. A signature is given only over a case document at publication (op=caseratify)." },
+      draft: d.draft_id,
+      project: d.project_id,
+      reader,
+      case: {
+        case_id: ident.caseId,
+        edition: ident.edition,
+        identity: _Store.#caseIdentitySentence(ident.caseId, ident.edition)
+      },
+      authored: {
+        scope: params.scope ?? null,
+        statement: params.statement ?? null,
+        excluded: params.excluded ?? null,
+        subjectPosition: params.subjectPosition ?? null,
+        subjectJustification: params.subjectJustification ?? null,
+        biasAcknowledgement: params.biasAcknowledgement ?? null
+      },
+      findings,
+      gates: gates.gates,
+      missing: gates.missing,
+      evaluated: gates.evaluated,
+      comments,
+      comments_truncated: commentsTruncated,
+      list_limit: cap,
+      updated_by: d.updated_by,
+      updated_at: d.updated_at,
+      ...grantPart
+    };
+  }
+  reviewComment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
+    let d, kind, author, grantId = null;
+    if (bySecret) {
+      const live = this.#liveReviewGrant(secretSha);
+      if (!live || draft && String(draft).trim() !== live.draft.draft_id) return _Store.#noReviewCopy();
+      d = live.draft;
+      kind = "recipient";
+      author = live.grant.grant_id;
+      grantId = live.grant.grant_id;
+    } else {
+      const v = String(viewer ?? "");
+      d = v.startsWith("member:") ? this.#draftForMember(draft, v) : null;
+      if (!d) return _Store.#noReviewCopy();
+      kind = "member";
+      author = v.slice("member:".length);
+    }
+    const body = String(text ?? "").trim();
+    if (!body || body.length > _Store.REVIEW_TEXT_MAX)
+      return {
+        ok: false,
+        reason: "REVIEW_NO_COMMENT_TEXT",
+        detail: `a comment says something: at least one character and at most ${_Store.REVIEW_TEXT_MAX}.`
+      };
+    const when = (/* @__PURE__ */ new Date()).toISOString();
+    this.sql.exec(
+      `INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at) VALUES (?,?,?,?,?,?)`,
+      d.draft_id,
+      kind,
+      author,
+      grantId,
+      body,
+      when
+    );
+    const row = this.#one(`SELECT last_insert_rowid() AS id`);
+    return { ok: true, comment: {
+      comment_id: row ? row.id : null,
+      draft_id: d.draft_id,
+      author_kind: kind,
+      author,
+      grant_id: grantId,
+      text: body,
+      at: when
+    } };
+  }
+  /* ===== END REC-126 ====================================================== */
   /* ===== CASE-5b / DEC-72: THE CASE RATIFICATION COMMITTER ==================
   
        THIS IS THE METHOD THE WHOLE ITEM EXISTS FOR. Every case fact this plane
@@ -48727,6 +49281,9 @@ ${words}`;
         this.sql.exec(`DELETE FROM project_participants`);
         this.sql.exec(`DELETE FROM project_owner_votes`);
         this.sql.exec(`DELETE FROM case_documents WHERE ratified_at IS NULL`);
+        this.sql.exec(`DELETE FROM review_comments`);
+        this.sql.exec(`DELETE FROM review_grants`);
+        this.sql.exec(`DELETE FROM case_drafts`);
         this.sql.exec(`DELETE FROM tasks`);
         this.sql.exec(`DELETE FROM task_queue`);
         this.sql.exec(`DELETE FROM source_reachability`);
@@ -61811,8 +62368,39 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         casedocument: () => this.caseDocument(
           url.searchParams.get("case"),
           url.searchParams.get("edition"),
-          url.searchParams.get("viewer")
+          url.searchParams.get("viewer"),
+          url.searchParams.get("secretSha")
         ),
+        /* REC-126: the review copy's five routes. Every identity — `author`,
+           `viewer`, `secretSha`, `bySecret` — is STAMPED by the control plane and
+           spread SECOND, so a body naming one is overwritten, never honoured. */
+        casedraft: () => this.reviewAct({ ...body || {}, act: "draft", author: url.searchParams.get("author") }),
+        reviewgrant: () => this.reviewAct({
+          act: "grant",
+          draft: (body || {}).draft ?? url.searchParams.get("draft"),
+          recipient: (body || {}).recipient ?? url.searchParams.get("recipient"),
+          author: url.searchParams.get("author"),
+          secretSha: url.searchParams.get("secretSha")
+        }),
+        reviewrevoke: () => this.reviewAct({
+          act: "revoke",
+          grant: (body || {}).grant ?? url.searchParams.get("grant"),
+          author: url.searchParams.get("author")
+        }),
+        reviewcopy: () => this.reviewCopy({
+          draft: url.searchParams.get("draft"),
+          secretSha: url.searchParams.get("secretSha"),
+          viewer: url.searchParams.get("viewer"),
+          bySecret: url.searchParams.get("bySecret") === "1",
+          limit: url.searchParams.get("limit")
+        }),
+        reviewcomment: () => this.reviewComment({
+          draft: url.searchParams.get("draft"),
+          secretSha: url.searchParams.get("secretSha"),
+          viewer: url.searchParams.get("viewer"),
+          bySecret: url.searchParams.get("bySecret") === "1",
+          text: (body || {}).text
+        }),
         caseratify: () => this.ratifyCaseDocument(body || {}),
         audit: () => this.auditPass({
           after: url.searchParams.get("after") || "",
@@ -62542,6 +63130,29 @@ var OPS = {
        top of the capability. No fifth capability token is minted. */
   casedocument: { classes: null, mutating: false },
   caseratify: { classes: ["admin", "member", "probe"], mutating: true },
+  /* REC-126 / DEC-31 / IC-145: THE REVIEW COPY (`BIO_Publication_v0_1.md` §6A),
+       an addressed act BESIDE publish that never leaves the instance.
+  
+       `casedraft`, `reviewgrant` and `reviewrevoke` are GATED to the classes that
+       reach `publish`, and ride its capability in NEEDS: authoring the group's draft
+       and handing it to a named person is the publication surface, one act short of
+       publishing. The store then asks the project-OWNER question (`publishCase`'s
+       own predicate) and refuses a machine by name, so a machine class reaching the
+       op is refused at the act rather than here.
+  
+       `reviewcopy` and `reviewcomment` are UNGATED (`classes: null`) on
+       `casedocument`'s reasoning, because their whole point is a RECIPIENT who
+       holds no credential of this instance — only the grant's read SECRET, which is
+       not a token, is never classified, and cannot reach any other op. A member
+       reaches both with an ordinary session through the same `caseReader` the
+       unsigned case document uses. Both answer every caller without a live grant or
+       standing with ONE set of bytes. `reviewcomment` is `mutating: true` because it
+       writes a row; its NEEDS entry is below with its reason. */
+  casedraft: { classes: ["admin", "member", "probe"], mutating: true },
+  reviewgrant: { classes: ["admin", "member", "probe"], mutating: true },
+  reviewrevoke: { classes: ["admin", "member", "probe"], mutating: true },
+  reviewcopy: { classes: null, mutating: false },
+  reviewcomment: { classes: null, mutating: true },
   excludedby: { classes: ["admin", "member", "probe"], mutating: false },
   publishedlist: { classes: ["admin", "member", "probe"], mutating: false },
   inbox: { classes: ["admin", "member", "probe"], mutating: false },
@@ -63127,7 +63738,14 @@ var SESSION_OPS = {
        route that produces a name the store will accept is a session,
        and the store refuses everything else BY SHAPE (C-29.1). */
     "aicredentialmint",
-    "aicredentialrevoke"
+    "aicredentialrevoke",
+    /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. A
+       session op before anything else, on `aicredentialmint`'s
+       reasoning: each is attributed to the person who performed it,
+       and the store refuses every machine shape by name. */
+    "casedraft",
+    "reviewgrant",
+    "reviewrevoke"
   ]),
   admin: /* @__PURE__ */ new Set([
     "promote",
@@ -63185,7 +63803,10 @@ var SESSION_OPS = {
     "governorstate",
     "governorconfig",
     "aicredentialmint",
-    "aicredentialrevoke"
+    "aicredentialrevoke",
+    "casedraft",
+    "reviewgrant",
+    "reviewrevoke"
   ])
 };
 var NEEDS = {
@@ -63423,6 +64044,13 @@ var NEEDS = {
      publication surface, and a member who may not publish may not author it
      either. No fifth capability token is minted (CAPABILITIES.md section 4). */
   publish: "publish",
+  /* REC-126 / DEC-31: the review copy's three authoring acts ride the SAME surface
+     as publish, because they are the act that stands beside it — a member who may
+     not publish may not hand the group's draft to a named outsider either. No
+     fifth capability token is minted. */
+  casedraft: "publish",
+  reviewgrant: "publish",
+  reviewrevoke: "publish",
   /* DEC-17: the group's declared bar is about what publishing REQUIRES, so it
      rides the publication surface too. Lowering your own bar is legitimate and
      is an authored, dated, on-the-record act; what it may not be is quiet. */
@@ -64392,8 +65020,9 @@ var index_default = {
           }, 400);
         const reader = await caseReader(url, env, "bio");
         if (reader.silent) return storeSilent(reader.silent);
+        const docSecret = url.searchParams.has("secret") ? await sha256Hex5(url.searchParams.get("secret") || "") : "";
         const out2 = await doAnswer(stub2.fetch(
-          `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}`
+          `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}` + (docSecret ? `&secretSha=${docSecret}` : "")
         ));
         if (!out2.answered) return storeSilent("casedocument");
         const r = out2.result;
@@ -64413,6 +65042,39 @@ var index_default = {
             )
           }
         });
+      }
+      if (op === "reviewcopy" || op === "reviewcomment") {
+        const bySecret = url.searchParams.has("secret");
+        const q = new URLSearchParams();
+        const draftParam = (url.searchParams.get("draft") || "").trim();
+        if (draftParam) q.set("draft", draftParam);
+        if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
+        if (bySecret) {
+          q.set("bySecret", "1");
+          q.set("secretSha", await sha256Hex5(url.searchParams.get("secret") || ""));
+        } else {
+          const reader = await caseReader(url, env, "bio");
+          if (reader.silent) return storeSilent(reader.silent);
+          q.set("viewer", reader.viewer);
+        }
+        let commentBody = null;
+        if (op === "reviewcomment") {
+          let b = {};
+          try {
+            b = req.method === "POST" ? JSON.parse(await req.text() || "{}") : {};
+          } catch {
+            b = {};
+          }
+          commentBody = JSON.stringify({ text: typeof b?.text === "string" ? b.text : "" });
+        }
+        const out2 = await doAnswer(stub2.fetch(
+          `http://do/${op}?${q}`,
+          commentBody === null ? void 0 : { method: "POST", body: commentBody }
+        ));
+        if (!out2.answered) return storeSilent(op);
+        const r = out2.result;
+        if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+        return json({ ok: true, ...r }, 200);
       }
       if (op === "publishedcase" || op === "publishedbytes") {
         const shaParam = (url.searchParams.get("sha256") || "").toLowerCase();
@@ -67728,6 +68390,10 @@ var index_default = {
     }
     if (op === "aicredentialrevoke")
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "casedraft" || op === "reviewgrant" || op === "reviewrevoke") {
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+      inner.searchParams.delete("secretSha");
+    }
     if (op === "aicredentialmint") {
       let asked = {};
       try {
@@ -67757,6 +68423,22 @@ var index_default = {
            this one, which leaves both acts on the record where they belong. */
         token: secret,
         tokenIsShownOnce: "This is the only time this instance will show this value. It is not stored and cannot be recovered \u2014 the record holds the credential's NAME and who created it, never the value. If it is lost, withdraw this credential and create another."
+      }, store: storeName, tokenClass: cls }, 200);
+    }
+    if (op === "reviewgrant") {
+      const raw = new Uint8Array(32);
+      crypto.getRandomValues(raw);
+      const secret = "rv1_" + btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      inner.searchParams.set("secretSha", await sha256Hex5(secret));
+      const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      if (!issued.answered) return storeSilent("reviewgrant");
+      if (!issued.result || issued.result.ok !== true)
+        return json({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls }, 403);
+      return json({ ok: true, result: {
+        ...issued.result,
+        secret,
+        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
+        read: "op=reviewcopy&secret=<the value above>"
       }, store: storeName, tokenClass: cls }, 200);
     }
     const res = await stub.fetch(new Request(inner, { method: req.method, body: passBody }));

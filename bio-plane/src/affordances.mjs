@@ -925,6 +925,17 @@ export const RUNG_ABSENT = {
      later look is a new row, never a rewrite of the earlier one. */
   lead:                 { ground: "undetermined", is: "a member writes a LEAD in their own words — what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
   leadshare:            { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
+  /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are
+     `credential`: their whole subject is WHO MAY READ one draft, and they write
+     nothing the record asserts. The DRAFT and the COMMENT are `undetermined` on
+     `transcribe`'s measurement: none of their refusals is a missing justification,
+     and they are NOT `reversible` — a draft is edited in place and a comment is
+     answered by another, but no act takes either back. Neither is ever published:
+     publication stays the one irreversible act (§6A.1). */
+  casedraft:            { ground: "undetermined", is: "the project's owner holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication §6A.4)" },
+  reviewgrant:          { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
+  reviewrevoke:         { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
+  reviewcomment:        { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
   leadlook:             { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
 };
 
@@ -1659,6 +1670,15 @@ export const NON_ACTS = {
      `op=publish`; this is the signature that act asks for next, and op=publish's
      own answer names it in `next:`. */
   caseratify: "case publication: its subject is a case edition keyed (case_id, edition) rather than a bundle in a state, and its refusals turn on gate state and signature verification a surface cannot see — op=publish's answer names it in `next:`",
+  /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. Their subject is a
+     DRAFT CASE (keyed draft_id) or a GRANT (keyed grant_id) — neither is a bundle
+     in a state, so no object's affordance block can publish them, and their
+     refusals turn on project ownership the surface reads from the draft itself.
+     The UI surface is DELEGATED (CLAIMS.md, REC-126 -> UI) and reads each act's
+     answer, which names the next one. */
+  casedraft: "review copy: its subject is a DRAFT CASE keyed draft_id, beside publish and never a bundle in a state — the answer names op=reviewcopy",
+  reviewgrant: "review copy: its subject is a DRAFT CASE keyed draft_id and its product is a grant keyed grant_id, not a move of any bundle",
+  reviewrevoke: "review copy: its subject is a GRANT keyed grant_id, not a bundle in a state",
   /* REC-14 / DEC-17. Its subject is the GROUP's own declaration about the
      standard its work is held to — authored before the work, about their own
      intentions — so there is no object in any state for it to appear beside. A

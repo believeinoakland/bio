@@ -3401,6 +3401,67 @@ CREATE TABLE IF NOT EXISTS lead_shares (
 CREATE INDEX IF NOT EXISTS lead_shares_bundle ON lead_shares(bundle_id);
 -- =========================================================================
 
+-- REC-126 / DEC-31 / IC-146: THE REVIEW COPY, BIO_Publication_v0_1.md section 6A.
+-- An addressed act BESIDE publish that NEVER LEAVES THE INSTANCE. Three tables,
+-- and none of them is a bucket: the grant is a capability over the private
+-- store, never a third place bytes live (6A.2, never a bucket).
+--
+-- case_drafts IS THE PRODUCTION (6A.4, gap 3): a DRAFT case, identified BEFORE
+-- the publish gates run, holding the arguments op=publish would take as JSON.
+-- It is MUTABLE (Bob, 2026-09-17: only a real publish is not) and it is working
+-- data, so a whole-store purge clears it. case_id is the existing case the draft
+-- would be the next edition of, or NULL for a new case, whose identity is minted
+-- only by publication. The EDITION is not stored: it is read from the published
+-- record every time it is asked, which is what lets a grant bound to one edition
+-- die when that edition is signed.
+CREATE TABLE IF NOT EXISTS case_drafts (
+  draft_id    TEXT PRIMARY KEY,   -- DRAFT-YYYY-NNNN, allocated by the draft act
+  project_id  TEXT NOT NULL,      -- the producing project, whose OWNER authors the draft
+  case_id     TEXT,               -- the existing case named, or NULL for a new case
+  params      TEXT NOT NULL,      -- JSON of the op=publish arguments, the project excepted
+  created_by  TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  updated_by  TEXT NOT NULL,      -- the editor the dry run of the publish gates acts as
+  updated_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_drafts_project ON case_drafts(project_id);
+
+-- THE GRANT (6A.2): scoped to ONE production, revocable, read-and-comment,
+-- attributed. Its READ SECRET is generated at the edge and this table holds only
+-- its SHA-256, never the value -- the ai_credentials shape. It is BOUND TO ONE
+-- CASE EDITION: case_id and edition are the draft's identity at the moment of
+-- issue, and a grant whose draft no longer stands at that edition is dead
+-- exactly as a revoked one is. The recipient is a LABEL the issuer typed, never
+-- a member -- a grant is not an account, not membership, not a weaker member.
+CREATE TABLE IF NOT EXISTS review_grants (
+  grant_id    TEXT PRIMARY KEY,   -- RVG-YYYY-NNNN, the public identity. NEVER the secret
+  draft_id    TEXT NOT NULL,
+  case_id     TEXT,               -- the case edition bound at issue, NULL for a new case
+  edition     INTEGER NOT NULL,
+  recipient   TEXT NOT NULL,      -- to whom, as the issuer named them
+  secret_sha  TEXT NOT NULL UNIQUE, -- SHA-256 of the read secret. NEVER its value
+  issued_by   TEXT NOT NULL,
+  issued_at   TEXT NOT NULL,
+  revoked_by  TEXT,
+  revoked_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS review_grants_draft ON review_grants(draft_id);
+
+-- THE COMMENT: attributed, and a recipient's comment is a RECIPIENT's. author is
+-- the grant id for a recipient and the member id for a member, and author_kind
+-- says which, so no reader can take one for the other.
+CREATE TABLE IF NOT EXISTS review_comments (
+  comment_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+  draft_id    TEXT NOT NULL,
+  author_kind TEXT NOT NULL CHECK (author_kind IN ('recipient','member')),
+  author      TEXT NOT NULL,
+  grant_id    TEXT,               -- the grant that admitted a recipient, NULL for a member
+  text        TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS review_comments_draft ON review_comments(draft_id);
+-- =========================================================================
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
