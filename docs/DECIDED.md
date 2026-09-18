@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1118 rulings across 87 documents.
+1119 rulings across 87 documents.
 
 ## DEC-
 
@@ -742,6 +742,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:12377`
 - **IC-122** — (grammar arm extended; `codesUsed` CORRECTED, not exempted), `bio-plane/dist/**` (rebuild; `src/signpage.mjs` byte-identical), `docs/development/INTERFACE-CHANGES.md` (IC-122 PROPOSED), the Part II §16 Drive paragraph of `docs/architecture/BIO_Content_Framework_v0_10.md` (one parenthetical; front matter unchanged —…  
   `docs/development/CLAIMS.md:12973`
+- **IC-136** — (IC-136 added `leads` to `op=stats`), RULED by BOB #15 in `MEMBER-KNOWLEDGE-DESIGN.md` §5 (*A COUNT IS A DISCLOSURE OF EXISTENCE*). - **Owner to land it:** `RECORD` - **Consumers to answer:** `UI` (NOT-AFFECTED measured: `civicos-ui/` calls neither `op=stats` nor  
+  `docs/development/INTERFACE-CHANGES.md:10510`
 - **IC-138** — `bio-plane/test/rec121-chain-bytes.test.mjs` §4 CORRECTED at its site with the reason. - Generated: `bio-plane/dist/*` rebuilt. - Docs: `INTERFACE-CHANGES.md` (IC-138, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md` (§4.2 and front matter), `docs/DECIDED.md` on regeneration, `.gitignore` (the…  
   `docs/development/CLAIMS.md:13576`
 ## C-
@@ -1045,15 +1047,15 @@ authority is the file named, never this one.
 - **REC-100** · 2026-09-18 — [SUPERSEDED 2026-09-18: BOB #14 RULED the rollup referent (§3) and REC-100 BUILT it (IC-130 on I3) — the carve-out is DELETED, both rollup writers carry an `observation` referent, and D-366 is CLOSED.  
   `docs/development/OBSERVATION-LOG-DESIGN.md:3`
 - **REC-100** · 2026-09-18 — THE ROLLUP REFERENT IS RULED (2026-09-18, BOB #14) AND BUILT (2026-09-18, REC-100, IC-130 on I3).  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:20`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:22`
 - **REC-100** · 2026-09-18 — [SUPERSEDED 2026-09-18 by REC-100: the ruling was made and the carve-out is deleted — the §3 / §4.4 entry above.]** Byte-identity against a pre-change build is MEASURED rather than self-pinned (`test/rec113-identity.mjs`, 3,236 bytes, sha256 `75a9946f2512…`, identical once the added keys are stripped).  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:21`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:23`
 - **REC-100** · 2026-09-18 — RULED 2026-09-18 by BOB #14 (mechanism, under Bob's standing delegation), closing the gap REC-100 found.  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:123`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:126`
 - **REC-100** · 2026-09-16 — CORRECTED WHILE RUNNING — THREE TIMES, ALL THREE MINE, AND THE ACT IS CONDUCT #1's TO PAY AT INTEGRATION IF THE WORKER'S REPORT DOES NOT ALREADY CARRY THEM** (written as an act with its actor, because a session can be replaced mid-flight and a correction owed by a session that ends is a correction nobody performs).  
   `docs/development/QUEUE.md:1212`
 - **REC-103** · 2026-09-16 — CORRECTED 2026-09-16 by REC-103: the document arm now applies the fence row-whole (IC-105), so the withholding differs across three levels for THREE stated reasons rather than because one arm was never built — the entity partition is deliberately unfenced and still wants a ruling, and that is the only open half of…  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:26`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:28`
 - **REC-103** · 2026-09-16 — added: 2026-09-16 · CONDUCT #1 (draining BOB #12's `§4.3 CORRECTED` entry as an ITEM.  
   `docs/development/QUEUE.md:1796`
 - **REC-104** · 2026-09-18 — AMENDED 2026-09-18 (same worker, REC-104):** `bio-plane/src/schema.mjs` is widened by THREE COMMENT LINES outside the content block — lines citing REC-90's measurement as `M-21`, which was renumbered to `M-23` at integration (M-21 is D-367's diff).  
@@ -1077,7 +1079,7 @@ authority is the file named, never this one.
 - **REC-112** · 2026-09-17 — IT CORRECTED MY BRIEF AND THE CORRECTION MATTERS: I told it the index was the ONLY surviving evidence of intent, and that was HALF WRONG** — the intent also lives in the delegation, in `airuns.test.mjs`'s roster comment, and in a **by-name pin at `airuns.test.mjs:675`.  
   `docs/development/QUEUE.md:1778`
 - **REC-113** — `partial` IS THE ONE STATE WHOSE COVERAGE CLAIM THIS DESIGN HAS NOT DECIDED, AND REC-113 DECLINED TO DECIDE IT SILENTLY.** §3 writes the rule as *"`PRESENT` with no `result_ref` is refused"*, and C-22.10 implements exactly that — it keys on `PRESENT` alone.  
-  `docs/development/OBSERVATION-LOG-DESIGN.md:22`
+  `docs/development/OBSERVATION-LOG-DESIGN.md:24`
 - **REC-113** · 2026-09-17 — IT CORRECTED THE BRIEFED BASELINE AND CAUGHT THE QUIET TRAP DOING IT:** its first pristine run read `213/214 · 1 skipped · 13370`, **exit 0 and a healthy-looking headline with a whole fleet member's 76 assertions missing** — `ocr-worker` unresolvable without `npm ci` in all three packages.  
   `docs/development/QUEUE.md:1798`
 - **REC-114** · 2026-09-17 — CLOSED 2026-09-17 by REC-114 — RULED *EARNED*, WITH THE AUTHORED LETTER PUBLISHED BESIDE IT RATHER THAN ERASED.** The row offered two defensible answers and this is the one taken: `op=meaningrows&rows=leg` now publishes the letter the record can SUPPORT, capped through the SAME `Store.#capturedAt` the strength walk…  

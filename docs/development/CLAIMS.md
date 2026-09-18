@@ -13699,3 +13699,13 @@ Paths ADDED for scope (a), BOB #15's §5 counter ruling (IC-144, minted with `no
   - `bio-plane/test/stats-disclosure.test.mjs` — new; `bio-plane/test/nc-rec129.mjs` gains its arms.
   - `bio-plane/test/derivation-bounds.test.mjs` — the census ratchet and the census-blind roster, moved
     from the printed figures for `#frontierInternet`'s arrival.
+released: 2026-09-18 by the resuming REC-129 worker (`agent-a844762fac5c3f533`), branch `worktree-agent-a844762fac5c3f533`.
+(a) IC-144 (MAJOR proposed): op=stats' `leads`/`observations` to the admin CLASS only, the same stamp on op=selftest
+and op=livefire, purge's proof kept. (b) IC-143 (MINOR proposed): op=frontier&level=internet run for the first time,
+corrected (30/3 -> 33/0) and controlled. Battery 240/241 at `cc7f906f` with the one red `strandedwork.test.mjs`
+caused by `docs/DECIDED.md` staleness, regenerated in this release commit. `node test/nc-rec129.mjs`: 13 arms, all
+AS DECLARED. Floors moved from the printed figures: REGISTER 1345/232/233, RUN 195. **FOR CONDUCT:** RESOLVE
+IC-143 and IC-144 against I3 as read at resolution (27.0.0 when proposed); DECIDE with BOB whether an admin-ROLE
+member (class `member`, `administer` right) should receive the two counts (provisional: no — the ruling names the
+class); fold the two DESIGN GAPS in `OBSERVATION-LOG-DESIGN.md` Incomplete sections (REC-110's tally premise 1;
+§4.5's run/acquire sources with no internet-level arm) — already written there.
