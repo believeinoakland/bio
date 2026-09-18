@@ -141,12 +141,20 @@ const opts = (schema) => ({
 });
 const mf = new Miniflare(opts(OLD_SCHEMA));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
-const raw = async (sql, ...args) => (await (await mf.dispatchFetch("http://x/rawsql",
-  { method: "POST", body: JSON.stringify({ sql, args }) })).json());
-const post = async (op, body, tok = "mem-r104") => rP(await (await mf.dispatchFetch(
-  `http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })).json());
-const get = async (op, qs = "", tok = "mem-r104") => rP(await (await mf.dispatchFetch(
-  `http://x/api/?op=${op}&token=${tok}&${qs}`)).json());
+/* A RESPONSE THAT IS NOT JSON IS AN ANSWER, NOT A CRASH. A Durable Object whose
+   #migrate threw inside blockConcurrencyWhile answers every request with an error
+   page — that is the failure this suite's migration section exists to catch — and
+   `.json()` on it would end the module with no tally, which names nothing
+   (`nc-rec104.mjs` arms `nomigrate` and `xinfo` came back that way on their first
+   run). Parsed as text, so the assertion that wanted a real answer FAILS BY NAME. */
+const asJson = async (res) => { const txt = await res.text();
+  try { return JSON.parse(txt); } catch { return { ok: false, error: `non-JSON ${res.status}: ${txt.slice(0, 160)}` }; } };
+const raw = async (sql, ...args) => asJson(await mf.dispatchFetch("http://x/rawsql",
+  { method: "POST", body: JSON.stringify({ sql, args }) }));
+const post = async (op, body, tok = "mem-r104") => rP(await asJson(await mf.dispatchFetch(
+  `http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })));
+const get = async (op, qs = "", tok = "mem-r104") => rP(await asJson(await mf.dispatchFetch(
+  `http://x/api/?op=${op}&token=${tok}&${qs}`)));
 const ids = async (q) => ((await get("search", `q=${encodeURIComponent(q)}&mode=ids`))?.ids ?? []).sort();
 const rowsOf = async (q) => (await get("meaningrows", `rows=content&q=${encodeURIComponent(q)}`))?.rows ?? [];
 const xinfo = async () => ((await raw("PRAGMA table_xinfo(content)")).rows || []).map((r) => r.name);

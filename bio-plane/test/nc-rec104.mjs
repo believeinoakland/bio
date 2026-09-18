@@ -68,7 +68,10 @@ const runSuite = (file) => {
   const d = /REPORT content-answers sha256 ([0-9a-f]{64}) over (\d+) queries/.exec(out);
   return { file, pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, exit: r.status,
            digest: d ? d[1] : null, queries: d ? +d[2] : 0,
-           failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim()) };
+           failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim()),
+           /* When the suite did not reach its foot, the reason is in its last lines and
+              is printed: a crash is a finding about the SUITE, not a failure by name. */
+           tail: m ? [] : out.trimEnd().split("\n").slice(-6) };
 };
 const SUITES = ["test/content-arm.test.mjs", "test/content-chain-kind.test.mjs"];
 
@@ -205,6 +208,7 @@ for (const name of names) {
     console.log(`  RESULT     ${r.file}: ${r.pass} pass, ${r.fail} fail, exit ${r.exit}`
               + (r.digest ? `  digest ${r.digest.slice(0, 16)}… over ${r.queries} queries` : ""));
     for (const l of r.failing) console.log(`             ${l}`);
+    for (const l of r.tail) console.log(`             NO FOOT | ${l}`);
     fails += Math.max(r.fail, 0) + (r.pass < 0 ? 1 : 0);
     failing.push(...r.failing);
   }
