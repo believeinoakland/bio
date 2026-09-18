@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1050 rulings across 85 documents.
+1053 rulings across 85 documents.
 
 ## DEC-
 
@@ -576,6 +576,8 @@ authority is the file named, never this one.
   `docs/development/QUEUE.md:1640`
 - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
   `docs/development/DEBT.md:336`
+- **D-411** · 2026-09-17 — THE DESIGN QUESTION WAS RULED BY CONDUCT #3 RATHER THAN ROUTED TO BOB, AND IT WAS BRIEFED WITH ITS OWN FALSIFIER: both halves are published and the ENVELOPE SAYS WHICH IS WHICH** — `composition` keeps its authored bytes uncapped and carries a new `composition_grades: "authored"` label, while `legs[]` publishes what…  
+  `docs/development/DEBT.md:326`
 - **D-411** — NOT SETTLED BY THIS ITEM: D-411 / REC-119**, the sixth reader (`#versionCollections`, feeding `op=basisversions` and `op=suggest`).  
   `docs/development/INTERFACE-CHANGES.md:9008`
 ## IC-
@@ -626,6 +628,8 @@ authority is the file named, never this one.
   `docs/development/CONTENT-SEARCH-DESIGN.md:396`
 - **IC-25** · 2026-08-07 — ounds.test.mjs`'s roster (`op=resolutions`, `op=concerns`, `op=connections`, each with `&limit=`), and `IC-25` on I3 is SETTLED (8.1.0 → 9.0.0 → 10.0.0, recorded by CONDUCT 2026-08-07).  
   `docs/development/DEBT.md:185`
+- **IC-25** — One test pins the exact sorted leg key set (`suggest.test.mjs`); it is CORRECTED, not loosened. **SO THE ROW'S PREMISE WAS RIGHT ABOUT THE CONSUMERS AND WRONG ABOUT THE IMPACT: both consumers are real and neither reads the field that moves.** It is breaking anyway, on IC-25's rule and on  
+  `docs/development/INTERFACE-CHANGES.md:9078`
 - **IC-26** · 2026-08-07 — IC-26 taken to SETTLED by CONDUCT as ADDITIVE; I3 10.0.0 -> 10.1.0.** **CONDUCT VERIFIED THE CORRECTION THIS ITEM MADE TO PL-8's HEADER rather than taking it on report**: `#writeReadings` carries no `object_type` gate in its body and its call site is unconditional, so a project bundle CAN carry resolution rows and…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2265`
 - **IC-26** · 2026-08-07 — IC-26 filed and taken to SETTLED by CONDUCT; I3 10.0.0 → 10.1.0, additive.**  
@@ -1821,6 +1825,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:12250`
 - Both are SUPERSEDED by this landing and both are rewritten with the reason at the site, per `CLAUDE.md`'s rule that an exempted test is a rule nobody is enforcing.  
   `docs/development/CLAIMS.md:12253`
+- the census arm at ~:495 is CORRECTED, NOT EXEMPTED:** it asserts `asks_registry: false` against `#versionCollections`, which is this defect PINNED OPEN as a finding.  
+  `docs/development/CLAIMS.md:12612`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

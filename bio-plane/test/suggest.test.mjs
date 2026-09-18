@@ -1440,12 +1440,42 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
   + "about it",
     [quoted.ok, heldQ !== null, disagree, Object.keys(MAP).length >= 9],
     [true, true, [], true]);
+  /* CORRECTED 2026-09-17 BY REC-119 (D-411), NOT EXEMPTED, AND THE OLD
+     EXPECTATION IS WRONG RATHER THAN MERELY OUT OF DATE.
+
+     It pinned the leg's key set at a time when this op published the AUTHORED
+     capture letter RAW — the sixth and last reader of a column REC-105 capped
+     at the walk, REC-114 at the leg listing and REC-118 at `op=reevaluations`.
+     REC-119 resolves it through the same `Store.#capturedAt`, so `grade` is
+     now what the record can SUPPORT and `grade_authored`/`grade_why` carry
+     what the member typed and why the two differ. Both are ALWAYS present, so
+     that a consumer never has to read an absent field as a value.
+
+     THE ARM IS KEPT AT FULL STRENGTH RATHER THAN LOOSENED. An exact sorted key
+     set is what makes it able to catch the field somebody adds tomorrow without
+     saying so, which is the same job `fields_of` does one level up — widening
+     it to a subset check to accommodate this item would have retired the arm to
+     avoid editing it. */
   t("AND THE LEGS ARE THE PROJECTION'S OWN ROWS, ORDINAL AND ALL — the candidate's legs carried no "
   + "`ord`, so the two readers of this one row published leg objects of DIFFERENT SHAPE and a consumer "
-  + "joining them had to know which op it had asked",
+  + "joining them had to know which op it had asked; since REC-119 they also carry the EARNED letter "
+  + "with the AUTHORED one beside it",
     [Array.isArray(quoted.legs), quoted.legs?.length, quoted.legs?.[0]?.ord,
      Object.keys(quoted.legs?.[0] ?? {}).sort().join(",")],
-    [true, 1, 0, "at,grade,grade_axis,grade_source,ground,note,ord,role,target_id,target_type"]);
+    [true, 1, 0, "at,grade,grade_authored,grade_axis,grade_source,grade_why,ground,note,ord,role,"
+     + "target_id,target_type"]);
+  /* REC-119 — AND THE LABEL ON THE HALF THAT CANNOT MOVE. `composition`
+     embeds the AUTHORED letters as text and PL-1 compares it BYTE FOR BYTE, so
+     it keeps its bytes while `legs[]` publishes the earned ones. Two halves of
+     one answer that differ on purpose; this is the field that says which is
+     which, and it sits in the `label` group beside REC-75's `composition_of`
+     because a field whose job is to describe another field is not itself one of
+     the version's facts. */
+  t("REC-119: THE FROZEN HALF IS LABELLED AS AUTHORED, and the label is grouped with the other label "
+  + "rather than smuggled in among the record's own facts",
+    [quoted.composition_grades, quoted.fields_of?.composition_grades,
+     quoted.fields_of?.composition, typeof quoted.composition === "string"],
+    ["authored", "label", "record", true]);
 
   /* ---- (4) THE LABEL, AND IT IS TOTAL --------------------------------------
      THE ARM THAT OUTLIVES THE ITEM. The behavioural arms above catch the fields

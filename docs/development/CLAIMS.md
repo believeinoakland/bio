@@ -12581,3 +12581,77 @@ Traps entry that says such a change *still moves `dist/`*: the remedy is unchang
 stated mechanism is one step off, and a session expecting an artifact diff would chase a build
 problem that does not exist. Recording a number with its date and instrument is a standing
 obligation rather than a widening of this claim.
+## REC-119 · RECORD · D-411 — `#versionCollections` reads the version legs' grade RAW for `op=basisversions` and `op=suggest`
+Opened 2026-09-17 by REC-119's worker (CONDUCT #3), worktree `agent-a5f807eada28ece7f`.
+
+**THIS IS A SWEEP TO A RULING ALREADY MADE, PLUS ONE ENVELOPE DECISION THAT IS THIS ITEM'S OWN.**
+REC-105 capped the walk, REC-114 swept the leg listing, REC-118 swept `op=reevaluations`. The grade
+doctrine is NOT re-litigated. What is this item's own work is the FREEZE half: `composition` embeds
+the AUTHORED letters as text and is byte-compared by PL-1, so it keeps its bytes and is LABELLED as
+a frozen record of what was authored then, while `legs[]` publishes the EARNED letter.
+
+**THE CLAIM IS METHOD-SCOPED, NOT FILE-SCOPED, AND THAT IS NOT A FORMALITY — TWO SIBLINGS ARE IN
+`store.mjs` THIS WAVE:** REC-116 is adding a read op and REC-110 is in the observation-log tally.
+A file-level claim here would collide with both for no reason.
+
+paths:
+  `bio-plane/src/store.mjs` — **BY METHOD, and these methods ONLY:**
+    - `#versionCollections(bundleId, row)` — its leg SELECT and what it returns.
+    - the NEW private resolver added immediately beside it (`#versionLegsEarned`).
+    - `basisVersions()` — **ONLY** the per-version published object's composition label.
+    - `suggestVersion()` — **ONLY** the `fromRecord` group's new key, so `fields_of` stays TOTAL.
+    **`Store.#capturedAt` IS READ AND NOT EDITED** — that is what keeps the readers one rule, and it
+    is the line REC-118 held to as well. **`#legEarnedCapture` (REC-114) and `#reevalLegsEarned`
+    (REC-118) ARE NOT TOUCHED**, and neither is `#versionLegsAsMembers` (REC-88) — the capped twin is
+    the SHAPE I copy, not a surface I edit. **NOT `basisVersionsOf`'s composition builder (~:11056)
+    and NOT the freeze comparison (~:11707)** — this item's whole ruling is that those bytes do not
+    move, so an edit to either would be a defect in it rather than a widening.
+  `bio-plane/test/rec119-version-legs-earned.test.mjs` — NEW, the driven suite, including the
+    fixture that ACTUALLY RECORDS A VERSION (a ceremony REC-114's fixture does not perform).
+  `bio-plane/test/nc-rec119.mjs` — NEW, the negative-control driver.
+  `bio-plane/test/rec114-leg-earned.test.mjs` — **the census arm at ~:495 is CORRECTED, NOT EXEMPTED:**
+    it asserts `asks_registry: false` against `#versionCollections`, which is this defect PINNED OPEN
+    as a finding. This item removes the defect that arm asserts, exactly as REC-114 corrected its own
+    predecessor in `rec108-cache-asof.test.mjs`.
+  `bio-plane/test/suggest.test.mjs` — the exact sorted leg key-set pin at ~:1447 and the `fields_of`
+    partition list at ~:1470 gain the new fields. **No assertion weakened**; the cross-op deep compare
+    of `legs` at ~:1430 must KEEP passing and is what proves both ops moved together.
+  `bio-plane/test/versions.test.mjs` — the only value-level leg-grade assertion in the repo (~:401).
+  `bio-plane/test/rec118-reeval-earned.test.mjs` — **block 5 ONLY**, the drift instrument: it asserts
+    THREE resolvers carry the same three conditions and all three call `#capturedAt`. There are now
+    FOUR. Extending the instrument is owed by the item that adds the fourth reader.
+  `docs/development/INTERFACES.md` (I3), `docs/development/INTERFACE-CHANGES.md` (my IC),
+  `docs/development/DEBT.md` (D-411's disposition ONLY), `docs/development/MEASUREMENTS.md`
+  (new rows appended), `docs/development/CLAIMS.md` (this block), `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED AND DELIBERATELY NOT TOUCHED:** `bio-plane/src/query.mjs` (REC-114's landed surface),
+`bio-plane/src/index.mjs` (no new op and no dispatch change — this item changes what two EXISTING ops
+publish), `bio-plane/src/schema.mjs` (no new table; the cap is a READ-TIME resolution and
+`inquiry_basis_version_legs` is untouched), `civicos-ui/**`, `newgroup/**`, `tools/**` and
+`.git/hooks`. **`docs/development/QUEUE.md` is CONDUCT's sole writer and is not flipped by this
+worker.**
+
+**open as of 2026-09-17.**
+## AMENDMENT 2026-09-17 REC-119 — the plane BUNDLE is added to this item's claim, after the gate caught it
+Amends the `REC-119 · RECORD · D-411` block above. Appended rather than edited into it, per this
+register's append-only rule.
+
+`bio-plane/dist/bio-plane.bundled.mjs` and `bio-plane/dist/bio-plane.bundle.json` — **the
+committed build artifact, REBUILT with `node scripts/build-plane.mjs` because a `src/store.mjs`
+change leaves it stale.** Not signed, not versioned, not deployed: this is keeping a committed
+DERIVED file in step with its source, and it is **not** a release act — `DIST.md`'s gate on
+bumping, signing, tagging and deploying the plane is untouched.
+
+**IT WAS THE GATE THAT CAUGHT THIS AND NOT ME, WHICH IS THE POINT OF THE GATE AND ALSO THE POINT
+OF READING THE COMPLETION LINE.** The full battery read `220/221 suites green` with
+`fleetbundles.test.mjs` at 83 pass / 4 FAIL. **REC-114 and REC-118 both hit this same thing and
+both recorded it** — REC-118's rebuild commit notes that in ITS run the WRAPPER exited 0 while
+the suite was red, so a session scanning the tail for a non-zero exit would have recorded a pass.
+In this run the wrapper exited 1, so the two exits disagree across two runs of one gate: further
+reason the completion line and the suite total are the authority and the exit status is not.
+
+**THAT THIS IS THE THIRD CONSECUTIVE RECORD-LANE ITEM TO REBUILD THIS ARTIFACT BY HAND, EACH
+DISCOVERING IT FROM A RED SUITE, IS ITSELF WORTH SAYING:** it is a step every `src/`-touching
+worker owes, it is in no worker kickoff, and it is found only by paying for it. Named here as an
+observation for CONDUCT rather than fixed, since the remedy is a process change and not mine to
+make.
