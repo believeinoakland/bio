@@ -300,12 +300,23 @@ console.log(`(it filters on json_extract over the chain column, so its two phase
    not an improvement. */
 console.log("\n--- REC-104: the column against the retired parse ---");
 {
+  /* THE WHOLE SET, NOT A PAGE. The first draft compared `statements.page()`, which
+     carries LIMIT 50 — every row read "SAME 50 rows", a comparison of the first
+     page only. It compares the `ids` statement (every id in scope, bounded at
+     IDS_MAX) and the `count` statement, and refuses a set that reached the bound. */
   const both = (q) => {
-    const now = compile({ q, viewer: VIEWER, facets: [] }).statements.page();
-    const old = retiredOf(q);
-    const a = JSON.stringify(db.prepare(now.sql).all(...now.args));
-    const b = JSON.stringify(db.prepare(old.sql).all(...old.args));
-    return [a === b, db.prepare(now.sql).all(...now.args).length];
+    const plan = compile({ q, viewer: VIEWER, facets: [] }).statements;
+    const swap = (st) => {
+      const n = st.sql.split("chain_kind = ?").length - 1;
+      if (n !== 1) throw new Error(`${q}: column predicate occurs ${n}x in a statement -- cannot derive`);
+      return { sql: st.sql.replace("chain_kind = ?", `${RETIRED_PRED} = ?`), args: st.args };
+    };
+    const ids = plan.ids(), cnt = plan.count();
+    const a = db.prepare(ids.sql).all(...ids.args), o = swap(ids);
+    const b = db.prepare(o.sql).all(...o.args);
+    const ca = db.prepare(cnt.sql).get(...cnt.args), oc = swap(cnt), cb = db.prepare(oc.sql).get(...oc.args);
+    if (a.length >= 50000) throw new Error(`${q}: the id set reached IDS_MAX -- not a whole-set comparison`);
+    return [JSON.stringify(a) === JSON.stringify(b) && JSON.stringify(ca) === JSON.stringify(cb), a.length];
   };
   for (const q of [...STEPS.map((x) => `content:${x}`), "content:ocr content:cap<C", "content:layer content:stale"]) {
     const [same, n] = both(q);
