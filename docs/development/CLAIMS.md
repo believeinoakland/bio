@@ -12739,4 +12739,6 @@ Worker spawned by CONDUCT #4 into an isolated `agent-*` worktree. Paths:
 **NOT `bio-plane/src/**`** — no plane byte moves; this is an instrument correction.
 **NOT `bio-plane/test/nc-m040.mjs`** — M0-40's driver, kept as the record of the arms it ran.
 
-**open as of 2026-09-18.**
+released: 2026-09-18 by the M0-63 worker, work at `a9ffa456` on branch `worktree-agent-aaa96b17819fdda02`
+(battery 223/223 green · 13937 assertions on that tree; `coverage.mjs --strict` exit 0; `plancheck --local`
+0 fail). **For CONDUCT:** merge the branch, and flip M0-63 in `QUEUE.md` — both are CONDUCT's acts.
