@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1086 rulings across 84 documents.
+1087 rulings across 84 documents.
 
 ## DEC-
 
@@ -396,6 +396,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:4326`
 - **D-186** · 2026-08-08 — D-186 UNDER GENUINE CONCURRENCY IS SETTLED — the question M0-13 named and could not answer.** Per-process `$TMPDIR` ownership **HOLDS**: 12 truly overlapping processes, distinct sandbox each, `$TMPDIR` redirected in each, every `mkdtemp` nested inside its own, every marker surviving all siblings, no foreign pid's…  
   `docs/archive/ledgers/QUEUE-2026-08.md:19`
+- **D-186** — cell; the first word after the leading tags (`M4 ·`, `ACCEPTED ·`, `DOCTRINE · SKILL ·`) is CLOSED/FIXED/RESOLVED/SUPERSEDED, not *in part*/*half*, and no residue marker anywhere | **59** | errs OPEN by design: D-186 (*M0-8 CLOSED IT*) and D-408 (*SWEPT TO ZERO*) stay live until their dispositions lead with a…  
+  `docs/development/MEASUREMENTS.md:16716`
 - **D-188** · 2026-08-01 — RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT > *Heading corrected 2026-08-05 (D-188 / DEC-46 (d)).  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:304`
 - **D-188** · 2026-08-05 — CORRECTED 2026-08-05 (D-188 / DEC-46 (d)), and this paragraph is where the > whole confusion started.** The sentence it leans on has since been STRUCK by > DEC-20: ordinary bias debt does NOT block, so it can no longer carry the hunch > rule on its back.  

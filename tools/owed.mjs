@@ -128,7 +128,7 @@ export const RESIDUE_RE = /\bowed by this lane\b|\bSTILL OPEN\b|\bSTILL OWED\b|\
    `/\bCLOSED\b/i` anywhere, and as an ARCHIVE predicate that is a mover that deletes open work:
    measured 2026-09-18 over the live DEBT.md it called D-376 (*open, and its BLOCK IS LIFTED …
    CPDF-19 closed D-319*), D-242 (*NARROWED rather than closed*), D-361 (*not yet closed*), D-300,
-   D-161 and D-292 (*DEPLOY HALF CLOSED, INSTALLER HALF IS …*) closed — 12 rows in all. And the
+   D-161 and D-292 (*DEPLOY HALF CLOSED, INSTALLER HALF IS …*) closed — 13 rows in all whose disposition does not lead with a closure word (M-58). And the
    August roll's test, *the cell lacks `open`*, is wrong the other way (M-57: D-330, D-401, D-405
    and D-407 carry a residue and would have left the owed list with nothing going red).
    So: strip the leading classification tags (`M4 ·`, `ACCEPTED ·`, `DOCTRINE · SKILL ·`, the

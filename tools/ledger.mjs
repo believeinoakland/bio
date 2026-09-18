@@ -19,7 +19,7 @@
  * DEBT: `isClosedDebtRow(debtDisposition(line))`, IMPORTED FROM `owed.mjs` AND DEFINED NOWHERE
  * ELSE. M-57 measured why: the August roll's definition (*the last cell lacks `open`*) would have
  * taken D-330, D-401, D-405 and D-407 off the owed list with nothing going red, and `owed.mjs`'s own
- * earlier test (*`CLOSED` anywhere in the cell*) called twelve OPEN rows closed. The definition,
+ * earlier test (*`CLOSED` anywhere in the cell*) called 13 rows closed whose disposition does not lead with a closure word, several plainly open (M-58). The definition,
  * its receipts and why it errs toward OPEN are in `owed.mjs` beside the function.
  *
  * ----------------------------------------------------------------------- WHAT A MOVE IS
