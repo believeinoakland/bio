@@ -1898,8 +1898,8 @@ function checkReleaseAuthority(ctx, findings) {
          a member's own words were not read in from anywhere — so a letter here
          would be true of the bytes (we hold exactly what the member wrote) and
          would read as strength the observation does not have. Its grade is
-         testimony, which is MK-2's axis. RULED RIGHT by BOB #14, 2026-09-18 (§3
-         will say so). `authored === true` is the ONLY
+         testimony, on MK-2's axis (IC-142). RULED RIGHT by BOB #14, 2026-09-18
+         (§3 says so). `authored === true` is the ONLY
          spelling that switches the arm: the store's fence (C-53.8) refuses the
          flag on any document the testimony path did not write, so the catalogue
          can read it as said. */
@@ -3683,9 +3683,12 @@ function checkGrounds(fm, legs, findings) {
  *  caller cannot make a target an observation by saying so.
  *
  *  WHAT IS DELIBERATELY NOT REFUSED: a CONNECTION-axis grade on a leg citing an
- *  observation. §7 does not list it and §3 is silent on it; refusing it here
- *  would be a fence tighter than its rule. Named as a DESIGN GAP in MK-2's
- *  report rather than decided here. */
+ *  observation. §7 does not list it, and §3 now RULES it (BOB #15, 2026-09-18,
+ *  answering the design gap MK-2 named): a leg on an observation carries a
+ *  connection grade graded exactly as any leg's, neither refused nor exempt —
+ *  testimony says WHOSE WORD, connection says HOW DIRECTLY it bears, and with
+ *  capture not applicable a refused connection grade would leave the leg
+ *  invisible to the bar. nc-mk2.mjs's `overconn` arm pins it. */
 function checkTestimonyLeg(leg, i, graded, targetType, registry, findings) {
   if (!graded) return;
   const target = typeof leg.target === 'string' ? leg.target : null;
@@ -11359,8 +11362,9 @@ export const TRANSCRIBE_CHECKS = {
  *                        writer could set); an authored document that stops saying
  *                        so (C-53.9).
  *
- * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's;
- * the attribution level on the case act (§4) is MK-3's.
+ * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's
+ * and lives in C-2.8 (`checkTestimonyLeg`, IC-142), not in this family; the
+ * attribution level on the case act (§4) is MK-3's.
  * ===================================================================== */
 export const TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {

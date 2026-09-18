@@ -13711,3 +13711,26 @@ RESOLUTION), `newgroup/**`, `tools/**`, MK-1's publication fence (C-53.10–.12 
 `worktree-agent-a17c98e0548c9fd2d` holds the WIP commit `mk-2: WIP at stand-down — NOT DONE`, whose body
 says what is built, what is not, and the next step. IC-142 is minted and NOT yet written into
 INTERFACE-CHANGES.md.
+
+**resumed 2026-09-18** by the MK-2 worker spawned by CONDUCT #5 (worktree `agent-af581e59b70a0e83f`, branch
+`worktree-agent-af581e59b70a0e83f`), which merged the WIP branch onto `origin/main`@`27ad8b4f`. The claim is the same,
+plus two comment-only docstring corrections in `store.mjs` (`strengthOf`, `inquiryStrength`, the version-strength
+totality note) that still said "two axes". The cross-area touch to `civicos-ui/app.html` was made and is bounded below.
+
+## DELEGATION 2026-09-18 RECORD (MK-2) -> UI (PRESENT the `testimony` grade axis; IC-142)
+raised-by: MK-2 worker (worktree `agent-af581e59b70a0e83f`, branch `worktree-agent-af581e59b70a0e83f`)
+**open as of 2026-09-18** — raised today; the plane carries the axis and the UI mirrors only its vocabulary.
+what MK-2 did in `civicos-ui/app.html`, and no more: the catalogue mirror (`GRADE_AXES` gains `testimony`; `AXIS_WORD` and
+  `AXIS_SHORT` gain a `testimony` word) because `check-semantics.mjs` guards it in both directions; and a NEW constant
+  `PAIR_AXES = ["capture", "connection"]`, which every renderer and floor that iterated `GRADE_AXES` now iterates, so the
+  page renders exactly what it rendered before (the ungraded-leg line in the publication view stays on `GRADE_AXES`, so a
+  testimony leg is labelled with its own axis rather than as capture).
+what is owed: PRESENTING the axis. Every per-axis strength answer now carries `testimony` (`op=inquirystrength`,
+  `op=inquiryground`, `op=reevaluations`, `op=versionstrength`, `op=suggest`), and a question resting on a member's
+  observation reads `testimony: graded D` there — **the live strength panels (conclude, elicitation, the question page)
+  do not show it today**; they show capture and connection only, so a question resting only on observations shows the
+  pair without the one axis its evidence is graded on (what the surface then prints was NOT measured by MK-2). Decide the presentation (a third panel beside the pair,
+  never folded into either — DEC-21), and whether the publication renderers need it before MK-3 lifts the fence (they
+  cannot meet a testimony row until then: C-53.10–.12). The floors must STAY capture + connection (§3: the bar does).
+why it is yours: surfaces are Program B's (`MEMBER-KNOWLEDGE-DESIGN.md` §8), and the MK-2 row owns the plane half only.
+evidence: IC-142 in `INTERFACE-CHANGES.md`; `bio-plane/test/testimonyaxis.test.mjs`; `app.html`'s `PAIR_AXES` comment.

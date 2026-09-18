@@ -24450,8 +24450,9 @@ export class Store extends DurableObject {
 
   /** REC-12: the derived PAIR for one inquiry, computed on read.
    *
-   *  Returns { capture, connection } as two independent axis answers and NO
-   *  scalar: there is nothing here for a caller to render as "the strength",
+   *  Returns one independent answer per `Store.STRENGTH_AXES` axis — { capture,
+   *  connection, testimony } since MK-2 / IC-142 (this line said "{ capture,
+   *  connection } as two" until then) — and NO scalar: there is nothing here for a caller to render as "the strength",
    *  because a case does not have one. */
   strengthOf(bundleId) {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
@@ -24541,8 +24542,8 @@ export class Store extends DurableObject {
 
   /** REC-34: `op=inquirystrength` — REC-12's derived pair, gated.
    *
-   *  Answers `{ capture, connection }` VERBATIM from `strengthOf()` and no
-   *  scalar. `unrated` and `undetermined` are two different states of the
+   *  Answers the per-axis object VERBATIM from `strengthOf()` — capture,
+   *  connection and, since MK-2 / IC-142, testimony — and no scalar. `unrated` and `undetermined` are two different states of the
    *  `state` field and stay two here (DEC-18): the cached columns could not
    *  tell them apart and that is half of why this op exists. */
   inquiryStrength({ id = null, viewer = null } = {}) {
@@ -29694,8 +29695,9 @@ export class Store extends DurableObject {
      guard fails on the NAME, before anybody has to reason about what the value
      means. A key called `grade` beside the pair is a single letter for a
      question, whatever its author intended.
-     `pair` itself is checked separately and by TOTALITY: it holds the two axes
-     and nothing else, so a third key is caught even if it is called something
+     `pair` itself is checked separately and by TOTALITY: it holds exactly the
+     axes `Store.STRENGTH_AXES` names (three since MK-2 / IC-142 — this line said
+     "the two axes" until then) and nothing else, so an unlisted key is caught even if it is called something
      nobody predicted. The list catches the obvious; the totality catches the
      rest. */
   static #PAIR_COMPOSED_KEYS = ["strength", "grade", "score", "overall",

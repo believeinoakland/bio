@@ -18,12 +18,12 @@
  *
  * ONE ARM IS A MEASUREMENT RATHER THAN A BREAK: `preitem` runs
  * `test/mk2-pristine-probe.mjs` over the working tree AND over the source MK-2
- * was built on (`git archive f426f519 …`, extracted into the pen), removes the
+ * is merged onto (`$BASE` below, extracted into the pen), removes the
  * new tree's `testimony` keys, and requires the two answers BYTE-IDENTICAL —
  * the over-strictness claim ("an ordinary basis reads exactly as before") as a
  * comparison against the thing itself rather than a figure typed into a suite.
  *
- * The pristine copies live in `$MK2_PEN` (default /tmp/conduct4-mk2/pen), a
+ * The pristine copies live in `$MK2_PEN` (default /tmp/mk2-pen-<checkout hash>), a
  * directory only this item uses — not the shared scratchpad, and not the tree.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync, existsSync } from "node:fs";
@@ -35,11 +35,21 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
 const REPO = join(PLANE, "..");
-const SAFE = process.env.MK2_PEN || "/tmp/conduct4-mk2/pen";
+/* The pen is keyed by THIS CHECKOUT's path (a WORKER.md rule: a generic /tmp
+   name is an identity nobody owns — two worktrees running this harness would
+   otherwise share pristine copies). It read "/tmp/conduct4-mk2/pen" until the
+   resumed MK-2 run of 2026-09-18. */
+const SAFE = process.env.MK2_PEN
+  || join("/tmp", `mk2-pen-${createHash("sha256").update(REPO).digest("hex").slice(0, 12)}`);
 mkdirSync(SAFE, { recursive: true });
 const STORE = join(PLANE, "src/store.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
-const BASE = "f426f519";
+/* THE PRE-ITEM SOURCE: the origin/main commit MK-2 is merged onto, i.e. main
+   WITHOUT this item. It read f426f519 while the WIP sat on that base; the
+   resumed run merged onto 27ad8b4f (MK-4 and REC-130 landed between), and a
+   comparison against the older base would attribute THEIR changes to this
+   item. Override with MK2_BASE=<sha> after a further merge. */
+const BASE = process.env.MK2_BASE || "27ad8b4f";
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -214,7 +224,10 @@ const ARMS = {
 function preitem() {
   console.log(`\n===== ARM preitem (a MEASUREMENT, not a break) =====`);
   console.log(`  WHY        an ordinary basis must answer BYTE-IDENTICALLY to the source MK-2 was built on (${BASE}), testimony keys removed`);
-  const root = join(SAFE, "pristine");
+  /* Keyed by BASE: the extraction is cached, and a cache that outlives a
+     change of base would compare against the wrong source while naming the
+     right sha. */
+  const root = join(SAFE, `pristine-${BASE}`);
   if (!existsSync(join(root, "bio-plane", "src", "index.mjs"))) {
     mkdirSync(root, { recursive: true });
     const tar = execFileSync("git", ["-C", REPO, "archive", BASE, "bio-plane/src", "bio-plane/checks", "docprofile"],
