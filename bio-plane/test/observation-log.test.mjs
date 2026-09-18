@@ -1,3 +1,50 @@
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-17, REC-110 / D-386, worktree
+   agent-adcd3110010904330) FOUR arms over section J's pin, RUN in one step through
+   `node test/nc-rec110.mjs [arm|all]` (the driver lives INSIDE this worktree), each armed
+   ALONE with every other defence held open, each DECLARED before it ran, every mutation
+   passing an anchor-occurs-EXACTLY-ONCE guard and a bytes-really-changed guard, and every
+   restore verified by sha256 AND by `cmp` against a PRISTINE copy named UNIQUELY PER ARM
+   with a byte count printed and a 500,000-byte floor guarded. Opening AND closing baseline
+   rows bracket the run, and ALL THREE observation suites are driven on EVERY arm because
+   the ruling is one ruling at three sites. Baseline both ends: log 85/0, content 74/0,
+   meaning 74/0, store.mjs 2,316,117 B sha 465be9dabb76690d, all four restores YES.
+   **WHAT THESE ARMS HAVE TO PROVE IS UNUSUAL AND IT DECIDES THEIR SHAPE.** REC-110 ruled
+   D-386 (a): the tally STAYS UNGATED. A decided-NOT-to-act outcome leaves no new behaviour,
+   so there is no fix to delete and the ordinary arm has nothing to bite on. **The whole
+   value of the ruling is carried by the PIN**, and these arms show the pin fails when a
+   later session quietly changes its mind — which is the thing this row was opened to stop.
+   (a) `gate` — option (b)'s FIRST spelling: a caller who is not the machine credential gets
+       a tally over nothing. Declared MUST FAIL log J1; MUST NOT FAIL log J2. ACTUAL: exactly
+       that — log J1 alone, content and meaning untouched. AS DECLARED.
+   (b) `bound` — option (b)'s SECOND spelling and **THE ARM THAT MATTERS MOST**: the tally
+       computed over an UNGATED but BOUND-CUT list, so it changes what the field MEANS while
+       every viewer still agrees. Declared MUST FAIL log J2; **MUST NOT FAIL log J1**.
+       ACTUAL: log J2 **and J3**, J1 GREEN exactly as declared. **This is the proof J2 carries
+       value J1 cannot** — a pin with J1 alone would have passed over a silent value change
+       inside an unchanged envelope, which is IC-118's rule. The extra J3 is RIGHT TO BE
+       THERE and not an artefact: J3 counts the three whole-level tally reads, and this arm
+       really does stop one of the three being one.
+   (c) `unsay` — the DECISION deleted from `#frontierContent` while the behaviour stays
+       correct, because the row's requirement is that the next reader meets the decision and
+       a pin watching only behaviour would pass over exactly this. Declared MUST FAIL content
+       J3; MUST NOT FAIL any J1/J2. ACTUAL: content J3 **and log J3** — one more than declared
+       and right to be there, since log J3 is the CROSS-SITE arm that counts the ruling at all
+       three sites, and this arm removed one. No behavioural arm moved anywhere, which is the
+       half of the declaration that had to hold.
+   (d) `overstrict` — THE ARM THAT KEEPS THE PIN HONEST: the tally's VALUES changed
+       legitimately (`row.n + 1000`), no gating and no narrowing. Declared MUST NOT FAIL
+       ANYTHING. ACTUAL: GREEN everywhere, 85/74/74. The pin asserts INVARIANCE ACROSS READER
+       AND BOUND and never a particular number, so it will not block correct work later.
+   **THE OVER-STRICTNESS THE ROW ASKED FOR IS SUBSUMED AND THAT IS SAID RATHER THAN DRESSED
+   UP:** the row asks that a viewer entitled to every row see a BYTE-IDENTICAL total. Under
+   ruling (a) that is TRUE BY CONSTRUCTION for every viewer, so on its own it is an equality
+   that costs nothing to produce. What costs something is J0 — the arm proving the uninvited
+   viewer is REALLY being withheld from (at the content level from a named capture, at the
+   meaning level from every capture and reference row) while their tally is still the full
+   one. J1 is only worth anything because J0 ran first.
+   WHAT THESE ARMS CANNOT SEE: they are local to this plane's source under miniflare. Nothing
+   here exercises the real account, a deploy, a second instance, or the control plane's own
+   stamp. */
 /* NEGATIVE CONTROL: (declared and RUN 2026-09-17, REC-113 / IC-116, worktree
    agent-ab3bf809046a052e6) FIVE arms over section I's coverage statement, RUN in one step
    through `node test/nc-rec113.mjs [arm|all]` (the driver lives INSIDE this worktree), each
@@ -1182,6 +1229,111 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
   t("I4: …and it is written to the log as one row, terminal, PRESENT — driven rather than "
   + "read off the method, because a blocker is a claim and nothing here audits one",
     [terminal.length, terminal[0]?.state], [1, "PRESENT"]);
+}
+
+/* ------------------------------------------------------------------------- *
+ *  J · REC-110 / D-386 — THE `tally` IS UNGATED ON PURPOSE, AND THIS SECTION
+ *  IS THE PIN THAT MAKES THAT A DECISION RATHER THAN A DEFECT.
+ *
+ *  THE WHOLE REASONING IS IN `store.mjs` AT THE DOCUMENT ARM'S TALLY and is not
+ *  restated here — the suite's job is to make the ruling FAIL LOUDLY if a later
+ *  session quietly changes its mind, not to re-argue it in a second place where
+ *  the two would drift. In one line: `op=stats` already publishes `count(*)`
+ *  over this whole table to an IDENTICALLY classed audience, `observation_log`
+ *  has no bundle column so the SQL route IS the forbidden second resolver, and
+ *  the per-row route is `derivation-bounds.test.mjs`'s amplification class.
+ *
+ *  **A DECIDED-NOT-TO-ACT OUTCOME IS WORTH EXACTLY WHAT ITS PIN IS WORTH**, so
+ *  these arms close BOTH routes the ruling refused, not just the obvious one:
+ *  J1 catches GATING (the tally shrinking for a viewer), J2 catches NARROWING
+ *  TO THE PAGE (the tally following the bound). An earlier draft had J1 alone
+ *  and it was NOT ENOUGH — changing the field to count this page's states moves
+ *  every viewer's answer together, so a viewer-equality arm stays GREEN over it.
+ *  That hole was found by asking what the OTHER refused route would look like
+ *  here, and it is recorded because the next person to extend this pin will be
+ *  tempted by the same single-arm shape.
+ * ------------------------------------------------------------------------- */
+console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a)) ---");
+
+{
+  const DO = async (op, q = "") => rP(await (await obj.fetch(`http://x/${op}?${q}`)).json());
+  const T = (f) => Object.values(f.tally || {}).reduce((a, b) => a + b, 0);
+  const J = (f) => JSON.stringify(f.tally || {});
+
+  /* THIS SECTION WRITES ITS OWN SUBJECTS RATHER THAN INHERITING WHATEVER THE
+     FILE LEFT BEHIND, AND THAT IS A CORRECTION THIS ARM FORCED RATHER THAN A
+     PREFERENCE. J2 was written against the suite's residue and FAILED on its own
+     third element — section H purges the store two sections up, so by here the
+     log held ONE distinct document subject and a `limit=1` page could not be
+     cut. **The arm was right and the fixture was wrong**, which is the direction
+     this project wants the surprise to come from: an unarmed J2 would have read
+     GREEN on `J(at1) === J(at500)` over a bound that never bit, proving nothing
+     while looking exactly like proof. The `at500.looked.length > 1` element is
+     what refused it, and it stays in the tuple for the next reader. */
+  for (const n of ["alpha", "bravo", "charlie"])
+    await obj.recordCapturedLocator({
+      address: `https://example.gov/rec110-${n}`,
+      addressNorm: `https://example.gov/rec110-${n}`,
+      captureSha: sha(`rec110-${n}`), retrieved: at(90000) });
+
+  const machine  = await DO("frontier", `level=document&limit=500&viewer=class:member`);
+  const uninvited = await DO("frontier", `level=document&limit=500&viewer=member:not-invited`);
+  const nobody   = await DO("frontier", `level=document&limit=500`);
+
+  /* THE DATA ARM FIRST, because a pin armed against a FLAG is REC-94's leak all
+     over again: unless this viewer is REALLY being withheld from, J1 is an
+     equality that costs nothing to produce and proves nothing at all. `nobody`
+     is the DENY scope — section I's I5 already drives it to zero rows in both
+     partitions — so it is the sharpest possible case: a reader who may see NOT
+     ONE ROW, whose tally is nevertheless the full one. */
+  t("J0: THE ARM IS ARMED AGAINST THE DATA — the DENY viewer really does receive zero rows in "
+  + "both partitions while the store really does hold document-level rows. Without this, J1 is "
+  + "an equality between two answers that were never different, which is the costs-nothing rule",
+    [(nobody.looked || []).length, (nobody.never_looked || []).length, T(machine) > 0, machine.built],
+    [0, 0, true, true]);
+
+  t("J1: THE RULING, DRIVEN THROUGH THE OP — the `tally` is BYTE-IDENTICAL for a viewer who may "
+  + "see every row, a member who may see some, and a DENY caller who may see NONE. It counts "
+  + "every row at this level and does not follow the reader. **THE TALLIES ARE IN THE TUPLE ON "
+  + "PURPOSE: if a later session gates this, the failure prints the withheld tally AND the full "
+  + "one together**, because a failure naming one is a failure a reader cannot act on (REC-109's "
+  + "rule, inherited). D-386 is RULED (a) and the reasoning is in `store.mjs`, not here",
+    [J(nobody), J(uninvited)],
+    [J(machine), J(machine)]);
+
+  /* J2 — THE OTHER REFUSED ROUTE, AND THE ARM J1 CANNOT REPLACE. D-386's option
+     (b) had two spellings and the second was *change what the field counts to
+     this page's states*. That is a silent value change inside an unchanged
+     envelope (IC-118: a correct consumer becomes wrong without changing a line),
+     and it moves EVERY viewer's answer together — so it walks straight past J1.
+     What it cannot walk past is the BOUND: a page-scoped tally at `limit=1` can
+     carry at most one row's worth of states. */
+  const at1   = await DO("frontier", `level=document&limit=1&viewer=class:member`);
+  const at500 = await DO("frontier", `level=document&limit=500&viewer=class:member`);
+  t("J2: …AND IT DOES NOT FOLLOW THE BOUND EITHER — the same viewer at `limit=1` and at "
+  + "`limit=500` gets the SAME tally, while the page itself really is cut. This is the arm "
+  + "against D-386's OTHER refused route: narrowing the field to *this page's states* moves "
+  + "every viewer together and J1 stays green over it. The cut page length is in the tuple so "
+  + "the arm cannot pass over a bound that never bit",
+    [J(at1), (at1.looked || []).length <= 1, (at500.looked || []).length > 1],
+    [J(at500), true, true]);
+
+  /* J3 — THE SITE, because the row's requirement is that the DECISION is what
+     the next reader meets. An assertion that the tally is ungated is only half
+     the pin: a session that gated it would delete this comment too, and the arm
+     that notices is the one that reads the SOURCE. This checks the ruling is
+     recorded at ALL THREE sites, which is the gap D-386 itself did not name. */
+  const SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  t("J3: THE RULING IS RECORDED AT ALL THREE TALLY SITES, not at one — REC-103 stated the "
+  + "posture at the document arm ALONE, so a reader arriving at `#frontierContent` or "
+  + "`#frontierMeaning` met an ungated aggregate with nothing beside it. **That was the gap "
+  + "D-386 did not name and it is half of what REC-110 fixed.** Each site names REC-110 and "
+  + "D-386; the two derived arms POINT at the document arm rather than restating it, because "
+  + "one rule with three spellings is the mirror-and-drift class this file refuses for gates",
+    [(SRC.match(/RULED \(a\) BY REC-110/g) || []).length,
+     (SRC.match(/REC-110, 2026-09-17, D-386 CLOSED/g) || []).length,
+     (SRC.match(/SELECT state, COUNT\(\*\) n FROM observation_log/g) || []).length],
+    [1, 2, 3]);
 }
 
 console.log(`\nobservation-log: ${pass} pass, ${fail} fail`);
