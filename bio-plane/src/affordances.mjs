@@ -895,6 +895,16 @@ export const RUNG_ABSENT = {
      act on the record, corrected forward (a proposal is never deleted — IC-83),
      never signed by the thing that made it (C-35.10). */
   extractpropose:       { ground: "undetermined", is: "an EXTRACT run PROPOSES a reading — what the text this record already holds NAMES, carrying an ai(function, version) step, bounded by the run's `mints` allowance and part of a finding only when a member cites it (§7.3)" },
+  /* REC-86 / IC-123 — NARROW, and the ground is the ladder's own gap rather than
+     `reasoned`, on MEASUREMENT: the act refuses a new reading with no account of
+     what changed (C-50.11, `NARROW_NO_DESCRIPTION`), but that code is not in
+     `JUSTIFICATION_REFUSALS` and `rung-ladder.test.mjs` grades `reasoned` by that
+     class ONLY — widening the class to admit it would be this item re-grading the
+     ladder to suit itself. NOT `reversible`: nothing TAKES the reading back; it is
+     hidden or rejected by the existing version acts, which records a second act
+     rather than undoing the first. The act writes a NEW reading, born `suggested`,
+     and moves nothing existing — so it is corrected forward and never signed. */
+  narrow:               { ground: "undetermined", is: "a member writes a NEW reading of a question's evidence with one citation pointing at LESS of its document; the old reading and its citation are untouched, and the new one is born suggested (Bob's 5.3)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1560,6 +1570,15 @@ export const NON_ACTS = {
      there is no bundle state for a surface to offer it against and an applies()
      over `affordanceFacts` would have nothing to read. */
   contentmint: "content-directed: marks a part of a document as citable, keyed by (document, extent); mints an address and no edge",
+  /* REC-86 / IC-123. NOT an object-directed act, for `contentmint`'s reason one
+     row up: its subject is ONE LEG of ONE READING — (inquiry, version, ordinal) —
+     and `affordanceFacts` carries neither readings nor legs, so an applies() over
+     those facts would offer it on every inquiry whether or not it holds a reading
+     with a leg that has a part to narrow into. The surface that offers it is the
+     leg display (UI's, DELEGATED), which is where the leg is in hand. */
+  narrow: "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
+  /* REC-86: the candidate list is a READ, on `extractproposals`' reasoning below. */
+  narrowcandidates: "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labelled machine work and writes nothing",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
      `extractpropose` is keyed by (RUN, document): its subject is a run's

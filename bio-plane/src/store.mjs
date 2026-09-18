@@ -421,6 +421,10 @@ import { checkLegExtentGrammar } from "../checks/bio-checks.mjs";
    Its own family because the question is its own — the extent checks above ask
    whether an address is legal, this asks whether a link REACHES an address. */
 import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers } from "../checks/bio-checks.mjs";
+/* REC-86 / IC-123: NARROW's refusals, its one predicate over two extents, and
+   the version-name grammar its new reading must meet (C-25.2's own regex, so a
+   name this act accepts is one op=promote accepts). */
+import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-checks.mjs";
 
 /* D-309 / DEC-49, `src/airun.mjs`'s precedent exactly. THE CODE IS A STRING
    LITERAL AT ITS SITE and reaches the wire through here, because a code held in
@@ -9567,6 +9571,496 @@ export class Store extends DurableObject {
                                  gradesFilled: filled.filter((l) => l.grade).length,
                                  gradesUndetermined: filled.filter((l) => !l.grade).length }
                              : {}) };
+  }
+
+  /* ======================================================================
+   * REC-86 / IC-123 — NARROW (Bob's 5.3, with his 2026-09-14 second pass on 5.4).
+   *
+   * THE RULING, in the words the record carries: *"citations that just refer to
+   * the document, well, just refer to the whole document. But there should be a
+   * means for a member to make that reference more specific."* And the second
+   * pass: specificity is WORKED FOR — where a citation points at a whole
+   * document the assistant, a member or another means tries to find the specific
+   * passages, and only the passages ON-POINT to the point being made at the
+   * referring end are referred to. A machine's proposal of relevance is labelled
+   * machine work; the member's choice is the authored act.
+   *
+   * SO THIS IS TWO OPS AND THE SPLIT IS THE DOCTRINE:
+   *
+   *   op=narrowcandidates — a READ. The machine's proposals for one leg of one
+   *     reading: the places the plane's own reading of the document recorded a
+   *     reference (with whether it names this question's subject), the passages
+   *     an EXTRACT run proposed, and the rows a machine marked citable — every
+   *     one labelled machine work, every one a PROPOSAL, none of them coverage,
+   *     and none of them written anywhere by being listed.
+   *   op=narrow — the ACT. A named member picks the part (one of the candidates,
+   *     or one they describe themselves) and the record writes a NEW basis
+   *     version derived from the old, identical except that one leg now points
+   *     at the narrower part. The old version is RETAINED byte for byte and its
+   *     leg keeps its row: an authored edge is never moved without a member's act
+   *     (Bob's 5.8), and THIS is the act — but the act makes a new reading, it
+   *     does not rewrite the one somebody may already be standing on.
+   *
+   * WHAT THE ACT REFUSES TO CLAIM, and each is a line below rather than a hope:
+   *   - a part WIDER than, equal to or beside the old one (`extentRelation`);
+   *   - a part in a different document or a later copy of this one (5.8 — that
+   *     is re-anchoring, a different act with its own design, D-394);
+   *   - the old leg's GRADE on the narrowed leg. A grade was earned for what the
+   *     old leg pointed at, and a portion earns only from what is in it (5.1), so
+   *     the narrowed leg lands UNGRADED and the answer says why — inert and
+   *     visible, never a letter borrowed from the whole document;
+   *   - an acceptance. The new reading is born `suggested`: whether it becomes
+   *     the one the question stands on is the existing member act (op=versionaccept),
+   *     and folding it in here would make narrowing a way to skip that ceremony;
+   *   - a machine's hand. A machine credential is refused by name — it may
+   *     propose, it may not choose.
+   * ==================================================================== */
+
+  /** The citation a NARROW names: the inquiry, the version, the leg, and the
+   *  content row that leg resolves to today. Shared by the act and the read so
+   *  "which citation is meant" has ONE answer. */
+  #narrowSource({ target = null, version = null, ord = null, viewer = null } = {}) {
+    const refusal = (code, detail, extra) => {
+      const row = NARROW_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    const tgt = String(target ?? "").trim();
+    const vname = String(version ?? "").trim();
+    const ordRaw = String(ord ?? "").trim();
+    /* DEC-49 REGION is-narrow-source */
+    const gate = viewerPredicate(viewer);
+    const b = tgt ? this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
+       WHERE b.bundle_id=? AND (${gate.sql})`, tgt, ...gate.args) : null;
+    if (!b || normalizeType(b.object_type) !== "inquiry")
+      return refusal("NARROW_NO_INQUIRY",
+        tgt ? `no question by the id '${tgt.slice(0, 60)}' is readable here. A question you may not `
+              + `see answers exactly as one that does not exist.`
+            : `pass target=<INQ-…>: the question whose reading holds the citation.`, { target: tgt || null });
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, b.bundle_id);
+    const fm = md && typeof md.content === "string" ? (parseFrontmatter(md.content).data || {}) : {};
+    const versions = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
+    const vrow = vname
+      ? versions.find((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname) : null;
+    if (!vrow)
+      return refusal("NARROW_NO_SUCH_VERSION",
+        vname ? `${b.bundle_id} holds no reading named '${vname.slice(0, 64)}'.`
+                + (versions.length ? "" : " It holds no readings at all: the live basis is not a reading, and "
+                  + "a citation on it is made more specific by a reading taken from it.")
+              : `pass version=<the name of the reading that holds the citation>.`,
+        { target: b.bundle_id, version: vname || null,
+          known: versions.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) });
+    const legRows = (Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [])
+      .filter((l) => l && typeof l === "object" && String(l.version ?? "").trim() === vname);
+    const k = /^\d+$/.test(ordRaw) ? parseInt(ordRaw, 10) : -1;
+    if (k < 0 || k >= legRows.length)
+      return refusal("NARROW_NO_SUCH_LEG",
+        `the reading '${vname}' has ${legRows.length} piece(s) of evidence, counted from 0, and `
+        + `${ordRaw ? `'${ordRaw.slice(0, 12)}'` : "no position"} was named.`,
+        { target: b.bundle_id, version: vname, ord: ordRaw || null, legs: legRows.length });
+    const leg = legRows[k];
+    /* THE ROW THE RECORD RESOLVED FOR THIS LEG, read off the projection — the
+       version-leg writer (REC-84) is the one place that answers it, and a second
+       derivation here could disagree with what every other read reports. */
+    const proj = this.#one(
+      `SELECT target_id, content_id FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? AND ord=?`,
+      b.bundle_id, vname, k);
+    const row = proj && proj.content_id ? this.contentRow(proj.content_id) : null;
+    if (!proj || proj.target_id !== leg.target || !row)
+      return refusal("NARROW_NO_PART",
+        normalizeType(OBJECT_TYPES[String(leg.target || "").split("-")[0]]) === "inquiry"
+          ? `piece ${k} of '${vname}' rests on another question (${leg.target}), which has no part to name.`
+          : `piece ${k} of '${vname}' rests on ${leg.target}, and this record resolves no part of it — it `
+            + `holds no copy of that document to point into.`,
+        { target: b.bundle_id, version: vname, ord: k, leg_target: leg.target ?? null });
+    /* END DEC-49 REGION is-narrow-source */
+    /* `contentRow` answers the stored canonical extent PARSED, kind included. */
+    const extent = row.extent && typeof row.extent === "object" ? row.extent : { kind: row.extent_kind };
+    return { ok: true, b, fm, text: md.content, vrow, vname, legRows, k, leg, row, extent };
+  }
+
+  /** A content extent as the leg fields `op=cite` and the frontmatter carry. */
+  static #extentLegFields(extent) {
+    const e = extent && typeof extent === "object" ? extent : {};
+    const out = { extent_kind: e.kind };
+    /* NOT named `map`: `scripts/op-claims.mjs` finds the store's DISPATCH table
+       by the first declaration of a const named `map` in this file, and a second one above it made
+       that reader read these eight keys as the route table (measured: op-claims
+       went red on it). */
+    const FIELD_OF = { page: "extent_page", rect: "extent_rect", sheet: "extent_sheet", cell: "extent_cell",
+                       slide: "extent_slide", shape: "extent_shape", para: "extent_para", run: "extent_run" };
+    for (const [f, k] of Object.entries(FIELD_OF))
+      if (e[f] !== undefined && e[f] !== null) out[k] = e[f];
+    return out;
+  }
+
+  /** How many candidates each source may list. A PUBLISHED bound, reported with
+   *  `truncated` when it bites, never a silent cut. */
+  static NARROW_CANDIDATES_MAX = 50;
+
+  /** The machine's proposals for one leg, NARROWER than it, from the same capture. */
+  #narrowCandidateList(src) {
+    const cap = src.row.capture_sha;
+    const subject = typeof src.fm.subject_entity === "string" && src.fm.subject_entity.trim()
+      ? src.fm.subject_entity.trim() : null;
+    const max = Store.NARROW_CANDIDATES_MAX;
+    const out = [];
+    const seen = new Set();
+    let truncated = false;
+    const counts = { reading: 0, extract: 0, marked: 0 };
+    const push = (c) => {
+      /* READY TO SEND: `fields` is what op=narrow takes for a described part, and
+         `content_id` (where a row exists) is what it takes for a held one. */
+      c.fields = c.content_id ? { content_id: c.content_id } : Store.#extentLegFields(c.extent);
+      const key = canonicalExtent(c.extent);
+      if (seen.has(key)) return;
+      if (extentRelation(src.extent, c.extent) !== "narrower") return;
+      seen.add(key);
+      if (counts[c.source] >= max) { truncated = true; return; }
+      counts[c.source] += 1;
+      out.push(c);
+    };
+    /* (1) WHERE THE PLANE'S OWN READING RECORDED A REFERENCE (FW-17). A fact
+       about the text — "a reference was read here" — and nothing about whether
+       it is on point. `mentions_subject` is the one thing the record can add,
+       and it is three-valued: null when the question names no subject, because
+       "does not mention it" would then be a claim about nothing. */
+    const refRows = this.#rows(
+      `SELECT ref, label, pos_kind, pos, pos_ref FROM reading_refs
+        WHERE capture_sha=? AND pos_kind IS NOT NULL ORDER BY ref LIMIT ?`, cap, max * 4 + 1);
+    if (refRows.length > max * 4) truncated = true;
+    const named = subject
+      ? new Set(this.#rows(`SELECT ref FROM resolutions WHERE capture_sha=? AND entity_id=?`, cap, subject)
+          .map((r) => r.ref))
+      : null;
+    for (const r of refRows) {
+      const pos = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
+      if (!pos) continue;
+      push({ source: "reading", ref: pos.ref, extent: { kind: pos.kind, ...Store.#posFields(pos) },
+             reference: r.ref, label: r.label ?? null,
+             mentions_subject: named ? named.has(r.ref) : null,
+             content_id: null, mint: Store.#mintLabel(CONTENT_MINTED_BY_PLANE), machine_work: true,
+             says: `the record's own reading of this document found a reference ('${String(r.ref).slice(0, 80)}') `
+                 + `at ${pos.ref}. That it is there is what the reading says; whether it is on point is yours `
+                 + `to judge.` });
+    }
+    /* (2) WHAT AN EXTRACT RUN PROPOSED (SK-8), with the row it minted if any. */
+    const extRows = this.#rows(
+      `SELECT run, ref, label, pos_kind, pos, pos_ref, content_id, proposed_by FROM proposed_readings
+        WHERE capture_sha=? AND pos_kind IS NOT NULL ORDER BY at DESC, ref LIMIT ?`, cap, max + 1);
+    if (extRows.length > max) truncated = true;
+    for (const r of extRows) {
+      const pos = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
+      if (!pos) continue;
+      push({ source: "extract", ref: pos.ref, extent: { kind: pos.kind, ...Store.#posFields(pos) },
+             reference: r.ref, label: r.label ?? null, run: r.run,
+             mentions_subject: null, content_id: r.content_id ?? null,
+             mint: Store.#mintLabel(r.proposed_by), machine_work: true,
+             says: `a machine proposed this passage in run ${r.run}. It is a PROPOSAL: not part of any `
+                 + `citation, and not coverage, until a member chooses it.` });
+    }
+    /* (3) ROWS A MACHINE MARKED CITABLE directly (SK-7's door). */
+    const markRows = this.#rows(
+      `SELECT content_id, extent_kind, extent, ref, minted_by FROM content
+        WHERE capture_sha=? AND extent_kind <> 'document' ORDER BY at, content_id LIMIT ?`, cap, max * 4 + 1);
+    for (const r of markRows) {
+      if (contentMintState(r.minted_by) !== "machine_marked") continue;
+      push({ source: "marked", ref: r.ref, extent: { kind: r.extent_kind, ...(safeJson(r.extent) || {}) },
+             reference: null, label: null, mentions_subject: null, content_id: r.content_id,
+             mint: Store.#mintLabel(r.minted_by), machine_work: true,
+             says: `a machine marked this passage citable. Nobody has chosen it for this citation.` });
+    }
+    /* Subject mentions first — the one ordering the record can defend — then as read. */
+    out.sort((x, y) => (y.mentions_subject === true) - (x.mentions_subject === true));
+    return { candidates: out, counts, truncated, subject,
+             read: !!this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, cap) };
+  }
+
+  /** op=narrowcandidates — the machine's proposals for making ONE leg more specific. */
+  narrowCandidates({ target = null, version = null, ord = null, viewer = null } = {}) {
+    const src = this.#narrowSource({ target, version, ord, viewer });
+    if (!src.ok) return src;
+    const list = this.#narrowCandidateList(src);
+    const leg = { target: src.leg.target, content_id: src.row.content_id, ref: src.row.ref,
+                  extent: src.extent, capture_sha: src.row.capture_sha };
+    /* THE ABSENCE IS STATED BY LEVEL (CLAUDE.md: sparse is the normal condition,
+       and saying which absence is true is a first-class obligation). */
+    const absence = list.candidates.length ? null
+      : !list.read
+        ? { level: "document", says: "this copy of the document has never been read, so the machine has "
+              + "no passage to propose. You may still name the part yourself." }
+        : { level: "content", says: "the document was read and nothing the machine found lies inside what "
+              + "this citation already points at. That is not evidence there is no better passage — only "
+              + "that none was proposed. You may still name the part yourself." };
+    return { ok: true, target: src.b.bundle_id, version: src.vname, ord: src.k, leg,
+             subject: list.subject, candidates: list.candidates, counts: list.counts,
+             limit: Store.NARROW_CANDIDATES_MAX, truncated: list.truncated, absence,
+             proposal_only: true,
+             says: "every entry here is MACHINE WORK and a PROPOSAL. Listing it wrote nothing and cited "
+                 + "nothing; which passage is on point to this question is the member's judgment, made by "
+                 + "op=narrow in the member's own name." };
+  }
+
+  /** op=narrow — THE ACT. A new basis version, one leg narrower, the old retained. */
+  narrow(a = {}) {
+    const args = a || {};
+    const refusal = (code, detail, extra) => {
+      const row = NARROW_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    const src = this.#narrowSource(args);
+    if (!src.ok) return src;
+    const who = String(args.author ?? "").trim();
+    const name = String(args.name ?? "").trim();
+    const nameWritten = Store.#fmSafe(name);
+    const description = String(args.description ?? "").trim();
+    const EXTENT_FIELDS = {
+      extent_kind: "text", extent_ref: "text", extent_page: "int", extent_rect: "nums",
+      extent_sheet: "text", extent_cell: "text", extent_slide: "int", extent_shape: "int",
+      extent_para: "int", extent_run: "int", content_id: "text",
+    };
+    const bag = args.extent && typeof args.extent === "object" ? args.extent : {};
+    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? "").trim() !== "").sort();
+    const legFields = {};
+    let chosenRow = null;
+    /* DEC-49 REGION is-narrow-extent */
+    if (!who || isMachineIdentity(who))
+      return refusal("NARROW_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. It may propose passages (op=narrowcandidates `
+              + `lists them); choosing which one a citation rests on is a member's act.`
+            : `this act names no member, and a choice nobody made is not a choice.`,
+        { target: src.b.bundle_id });
+    const unknown = Object.keys(bag).filter((k) => !(k in EXTENT_FIELDS)).sort();
+    if (unknown.length)
+      return refusal("NARROW_BAD_EXTENT",
+        `this call names ${unknown.map((k) => `'${k}'`).join(", ")}, which this act does not take. The `
+        + `fields it takes are: ${Object.keys(EXTENT_FIELDS).join(", ")}.`, { got: unknown });
+    if (!authored.length)
+      return refusal("NARROW_NO_EXTENT",
+        "pass extent={…}: the part of the document the citation should now point at, or the content_id "
+        + "of a proposed passage.", { target: src.b.bundle_id });
+    for (const k of authored) {
+      const raw = String(bag[k]).trim();
+      if (raw.length > 200 || /["\\\r\n#]/.test(raw))
+        return refusal("NARROW_BAD_EXTENT",
+          `'${k}' cannot be written into the record as it stands: at most 200 characters, and no quotation `
+          + `mark, backslash, line break or comment mark.`, { field: k });
+      const t = EXTENT_FIELDS[k];
+      if (t === "int" && /^\d+$/.test(raw)) legFields[k] = parseInt(raw, 10);
+      else if (t === "nums") {
+        const parts = raw.replace(/^\[|\]$/g, "").split(",").map((s) => s.trim());
+        const nums = parts.map((s) => (/^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN));
+        legFields[k] = nums.every((n) => Number.isFinite(n)) ? nums : raw;
+      } else legFields[k] = raw;
+    }
+    if (legFields.content_id !== undefined) {
+      if (authored.length > 1)
+        return refusal("NARROW_BAD_EXTENT",
+          "this call names a content id AND describes a part: one fact written twice, which can disagree. "
+          + "Send one or the other.", { got: authored });
+      chosenRow = this.contentRow(String(legFields.content_id));
+      if (!chosenRow)
+        return refusal("NARROW_BAD_EXTENT",
+          `content id '${String(legFields.content_id).slice(0, 16)}…' names no part this record holds.`,
+          { content_id: String(legFields.content_id) });
+      if (chosenRow.bundle_id !== src.leg.target || chosenRow.capture_sha !== src.row.capture_sha)
+        return refusal("NARROW_OTHER_CAPTURE",
+          `the citation rests on ${src.leg.target} as captured at ${src.row.capture_sha.slice(0, 12)}…, and `
+          + `the part named is ${chosenRow.bundle_id === src.leg.target
+            ? `in a DIFFERENT copy of it (${String(chosenRow.capture_sha).slice(0, 12)}…)`
+            : `in a different document (${chosenRow.bundle_id})`}.`,
+          { from_capture: src.row.capture_sha, to_capture: chosenRow.capture_sha,
+            to_bundle: chosenRow.bundle_id });
+    }
+    /* END DEC-49 REGION is-narrow-extent */
+    /* THE GRAMMAR IS REC-84's ONE CHECKER, answered under op=promote's own name —
+       the `op=cite` precedent exactly, and outside the region for its reason. */
+    if (!chosenRow) {
+      const ef = [];
+      checkLegExtentGrammar(legFields, "the part of the document this narrowing names", "C-25.10", ef);
+      const errs = ef.filter((x) => x.severity === "error");
+      if (errs.length)
+        return { ok: false, reason: "BASIS_REFUSED", target: src.b.bundle_id,
+                 findings: errs.map((x) => ({ check: x.check, code: x.code ?? null, detail: x.message,
+                                              repairs: x.repairs ?? [] })),
+                 detail: "the part named is refused by the SAME catalog function op=promote runs at the "
+                       + "write, so nothing was written." };
+    }
+    const newExtent = chosenRow ? chosenRow.extent : legExtent(legFields);
+    const relation = extentRelation(src.extent, newExtent);
+    const existingNames = new Set((Array.isArray(src.fm.basis_versions) ? src.fm.basis_versions : [])
+      .map((r) => String(r?.name ?? "").trim()));
+    /* DEC-49 REGION is-narrow-claim */
+    if (relation !== "narrower")
+      return refusal("NARROW_NOT_NARROWER",
+        `the citation points at ${src.row.ref} and the part named (${describeExtent(newExtent)}) is `
+        + (relation === "same" ? "that same part"
+          : relation === "wider" ? "WIDER than it"
+          : relation === "disjoint" ? "a different place, not a part of it"
+          : "not one this record can compare with it")
+        + ". Narrowing only ever points a citation at less of its document.",
+        { relation, from: src.extent, to: newExtent });
+    if (!name || !VERSION_NAME_RE.test(name) || existingNames.has(nameWritten))
+      return refusal("NARROW_NAME",
+        !name ? "pass name=<a name for the new reading>."
+          : existingNames.has(nameWritten)
+            ? `'${name.slice(0, 64)}' already names a reading of ${src.b.bundle_id}` + (nameWritten === src.vname
+              ? ` — it is the reading being narrowed, and reusing its name would change it in place.` : `.`)
+            : `'${name.slice(0, 64)}' is not a name a reading can carry: letters, digits, space, dot, `
+              + `dash and underscore, starting with a letter or digit, at most 64 characters.`,
+        { name: name || null, taken: existingNames.has(nameWritten) });
+    if (!description || isBoilerplate(description))
+      return refusal("NARROW_NO_DESCRIPTION",
+        "pass description=<what changed and why>: which citation now points at less of its document, and "
+        + "why that part is the one on point.", { name });
+    /* END DEC-49 REGION is-narrow-claim */
+
+    /* THE COMPOSITION — the source version COPIED, one leg re-pointed. Values are
+       emitted TYPED (an integer bare, a rect as an inline array, text quoted),
+       because a quoted page reads back as a string and `canonicalExtent` would
+       then address no page at all — the D-362 class, one field over. */
+    const q = (s) => `"${Store.#fmSafe(String(s ?? ""))}"`;
+    const val = (v) => (typeof v === "number" && Number.isFinite(v)) ? String(v)
+      : typeof v === "boolean" ? String(v)
+      : Array.isArray(v) && v.every((n) => typeof n === "number" && Number.isFinite(n)) ? `[${v.join(", ")}]`
+      : q(v);
+    const nowIso = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const vr = src.vrow;
+    const vRow = [`  - name: ${q(nameWritten)}`,
+                  `    description: ${q(description)}`,
+                  ...(vr.claim === undefined || vr.claim === null || vr.claim === "" ? []
+                      : [`    claim: ${q(vr.claim)}`]),
+                  `    relationship: ${q(vr.relationship)}`,
+                  /* BORN SUGGESTED, written as a literal: acceptance is its own act. */
+                  `    state: "suggested"`,
+                  `    hidden: false`,
+                  `    derived_from: ${q(src.vname)}`,
+                  `    author: ${q(who)}`,
+                  `    at: ${q(nowIso)}`];
+    const gRows = (Array.isArray(src.fm.basis_version_grounds) ? src.fm.basis_version_grounds : [])
+      .filter((g) => g && typeof g === "object" && String(g.version ?? "").trim() === src.vname)
+      .map((g) => [`  - version: ${q(nameWritten)}`, `    ground: ${q(g.ground)}`,
+        /* THE PARTITION IS CARRIED AND ASSERTED IN THE NARROWING MEMBER'S NAME —
+           this reading is theirs, and C-25.6 asks a named member to stand behind
+           each part of it. The old reading's asserter is NOT copied: that would
+           sign somebody else's name to a reading they never saw. */
+        `    asserted_by: ${q(who)}`, `    at: ${q(nowIso)}`,
+        ...(g.statement === undefined || g.statement === null || g.statement === ""
+            ? [] : [`    statement: ${q(g.statement)}`])].join("\n"));
+    const LEG_KEYS = ["target", "role", "ground", "grade", "grade_axis", "grade_source", "note", "date",
+                      "extent_capture", ...Object.keys(EXTENT_FIELDS)];
+    const EXTENT_KEYS = new Set([...Object.keys(EXTENT_FIELDS), "extent_capture"]);
+    const GRADE_KEYS = new Set(["grade", "grade_axis", "grade_source"]);
+    const dropped = {};
+    const lRows = src.legRows.map((l, i) => {
+      const lines = [`  - version: ${q(nameWritten)}`];
+      for (const key of LEG_KEYS) {
+        if (i === src.k && (EXTENT_KEYS.has(key) || GRADE_KEYS.has(key))) {
+          if (GRADE_KEYS.has(key) && l[key] !== undefined && l[key] !== null && l[key] !== "")
+            dropped[key] = l[key];
+          continue;
+        }
+        const v = l[key];
+        if (v === undefined || v === null || v === "") continue;
+        lines.push(`    ${key}: ${val(v)}`);
+      }
+      if (i === src.k) {
+        if (chosenRow) lines.push(`    content_id: ${q(chosenRow.content_id)}`);
+        else {
+          for (const [key, v] of Object.entries(legFields)) lines.push(`    ${key}: ${val(v)}`);
+          /* THE CAPTURE IS PINNED, so the narrower row is minted against the SAME
+             bytes the old one was — never against whichever copy the resolver
+             would pick today (5.8). */
+          lines.push(`    extent_capture: ${q(src.row.capture_sha)}`);
+        }
+      }
+      return lines.join("\n");
+    });
+    let text = Store.#appendFmRows(src.text, "basis_versions", [vRow.join("\n")]);
+    if (text !== null && gRows.length) text = Store.#appendFmRows(text, "basis_version_grounds", gRows);
+    if (text !== null && lRows.length) text = Store.#appendFmRows(text, "basis_version_legs", lRows);
+    /* DEFENSIVE, AND DECLARED UNREACHABLE RATHER THAN CATALOGUED: once the
+       document parsed and the source reading was found in it, its version blocks
+       are in the appendable shape. `op=cite`'s own name for the same condition. */
+    if (text === null)
+      return { ok: false, reason: "UNSPLICEABLE_BASIS", target: src.b.bundle_id,
+               detail: "this question's version block is in a shape the restricted frontmatter grammar "
+                     + "cannot extend in place, so nothing was written." };
+    /* WAS IT ONE OF THE MACHINE'S PROPOSALS? Derived here and never taken from
+       the caller — a provenance hop a caller can hand us is one a caller can
+       invent. It is recorded so the record says the member CHOSE among
+       proposals, which is both halves of the ruling. */
+    const toKey = canonicalExtent(newExtent);
+    const matched = this.#narrowCandidateList(src).candidates
+      .find((c) => canonicalExtent(c.extent) === toKey) || null;
+    text = Store.#setScalar(text, "last_updated", `"${nowIso}"`);
+    text = Store.#appendSessionLog(text,
+      `### Session ${nowIso} | Narrowed a citation | ${who}\n`
+      + `Trigger: op=narrow on ${src.b.bundle_id}\n`
+      + `Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggested; piece ${src.k} `
+      + `(${src.leg.target}) now points at ${Store.#fmSafe(describeExtent(newExtent))} instead of `
+      + `${Store.#fmSafe(src.row.ref)}. '${src.vname}' is unchanged.`
+      + (matched ? ` Chosen from a machine proposal (${matched.source}).` : ` Named by the member.`)
+      + (Object.keys(dropped).length ? ` The old grade was not carried: a part earns only from what is in it.` : ``)
+      + `\n`);
+    const carried = [];
+    for (const r of this.sql.exec(
+      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`,
+      src.b.bundle_id))
+      carried.push(r.content !== null
+        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
+        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
+    const bytes = new TextEncoder().encode(text);
+    const fm0 = src.fm;
+    const promoted = this.promote({
+      bundleId: src.b.bundle_id, base: src.b.bundle_sha,
+      snapKey: `${nowIso.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: who,
+      files: [{ path: "bundle.md", text, bytes: bytes.length,
+                sha256: createSha256().update(bytes).hex() }, ...carried],
+      meta: { object_type: fm0.object_type ?? src.b.object_type, group: fm0.group || "believe-in-oakland",
+              title: fm0.title, current_state: src.b.current_state, prior_state: fm0.prior_state ?? null,
+              created: fm0.created, last_updated: nowIso, criticality: fm0.criticality ?? null },
+    });
+    /* Promote's refusals come back unchanged: it judges the document. */
+    if (!promoted.ok) return { ...promoted, target: src.b.bundle_id, name: nameWritten };
+    const after = this.#one(
+      `SELECT content_id FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? AND ord=?`,
+      src.b.bundle_id, nameWritten, src.k);
+    const toRow = after && after.content_id ? this.contentRow(after.content_id) : null;
+    const fromRow = this.#one(
+      `SELECT content_id FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? AND ord=?`,
+      src.b.bundle_id, src.vname, src.k);
+    return { ok: true, target: src.b.bundle_id, version: nameWritten, derived_from: src.vname,
+             ord: src.k, state: "suggested", author: who,
+             narrowed: {
+               from: { content_id: src.row.content_id, ref: src.row.ref, extent: src.extent,
+                       still_held_by: src.vname,
+                       unchanged: !!fromRow && fromRow.content_id === src.row.content_id },
+               to: toRow
+                 ? { content_id: toRow.content_id, ref: toRow.ref, extent: toRow.extent,
+                     capture_sha: toRow.capture_sha, mint: Store.#mintLabel(toRow.minted_by) }
+                 : { content_id: null, ref: describeExtent(newExtent), extent: newExtent },
+             },
+             chosen_from: matched
+               ? { source: matched.source, machine_work: true, says: matched.says }
+               : null,
+             grade_not_carried: Object.keys(dropped).length
+               ? { was: dropped,
+                   why: "a grade was earned for what the citation pointed at before; a part earns only from "
+                      + "what is in it, so the narrowed piece is left ungraded and stated as such. "
+                      + "op=earnedbasis answers what this part earns." }
+               : null,
+             bundleSha: promoted.bundleSha ?? promoted.bundle_sha ?? null,
+             /* THE RECORD'S OWN READ-BACK of every reading's legs, as op=promote
+                answers it — a SELECT after the projection, so a caller (and the
+                suite) can see the OLD reading's rows beside the new one's
+                without trusting this method's word for either. */
+             version_content: promoted.version_content ?? [],
+             says: `a new reading '${nameWritten}' was written, taken from '${src.vname}', with piece ${src.k} `
+                 + `pointing at less of its document. '${src.vname}' and its citation are exactly as they `
+                 + `were. The new reading is SUGGESTED: standing on it is a separate act.` };
   }
 
   /* Rewrite ONE column-0 scalar inside the frontmatter, leaving every other
@@ -26954,8 +27448,15 @@ export class Store extends DurableObject {
    *  what says the answer was cut. A DISTINCT scan of its own would report parts
    *  belonging to legs this answer does not contain. */
   #versionCollections(bundleId, row) {
+    /* REC-86 / IC-123 closes D-350: `content_id` — WHICH PART each leg rests on —
+       is selected and served. Before this the column was written by REC-84's
+       version-leg writer and answered by NO read, so a reading narrowed to one
+       page displayed exactly like one resting on the whole document: the record
+       holding a precision it would not show. NULL keeps its three stated causes
+       (an inquiry target, no bytes held, a replayed leg) and is published as
+       null, never as a document row minted to avoid it. */
     const legs = this.#versionLegsEarned(this.#rows(
-      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground, content_id
          FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
       bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX));
     const grounds = [...new Set(legs
@@ -36031,6 +36532,24 @@ export class Store extends DurableObject {
            honestly named `token:<class>`, so the branch-assertion refusal can
            recognise it BY SHAPE through REC-46's one predicate, and a caller
            cannot sign a structural claim in a member's name. */
+        /* REC-86 / IC-123: NARROW. `author` and `viewer` are the control plane's
+           stamps and never the caller's; the part arrives as a BAG (`extent`),
+           `op=cite`'s REC-97 shape, so a field the act does not take is refused
+           by name rather than dropped. */
+        narrow: () => this.narrow({
+          target: (body && body.target) || url.searchParams.get("target"),
+          version: (body && body.version) || url.searchParams.get("version"),
+          ord: (body && body.ord !== undefined ? body.ord : null) ?? url.searchParams.get("ord"),
+          name: (body && body.name) || url.searchParams.get("name"),
+          description: (body && body.description) || url.searchParams.get("description"),
+          extent: body && body.extent && typeof body.extent === "object" ? body.extent : null,
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer"),
+        }),
+        narrowcandidates: () => this.narrowCandidates({
+          target: url.searchParams.get("target"), version: url.searchParams.get("version"),
+          ord: url.searchParams.get("ord"), viewer: url.searchParams.get("viewer"),
+        }),
         suggest: () => this.suggestVersion({
           ...(body || {}),
           target: (body && body.target) || url.searchParams.get("target"),

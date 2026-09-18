@@ -756,6 +756,16 @@ const OPS = {
      body's is never read. */
   extractpropose:   { classes: ["admin", "member", "probe"],     mutating: true  },
   extractproposals: { classes: ["admin", "member", "probe"],     mutating: false },
+  /* REC-86 / IC-123 — NARROW (Bob's 5.3). The ACT and its candidate READ, and
+     the class cut is `contentmint`'s: a member (or an admin, or the probe) may
+     reach both. What the ACT refuses to a machine is not decided here — it is
+     the store's `NARROW_NOT_A_MEMBER` (C-50.5), on the author the control plane
+     stamps below, because a machine arrives honestly named `token:<class>` and
+     is refused BY SHAPE rather than by a class list that would also have to
+     keep the probe out. The READ is open to every class that may read: a
+     machine's proposals are listed to whoever may see the question. */
+  narrow:           { classes: ["admin", "member", "probe"],     mutating: true  },
+  narrowcandidates: { classes: ["admin", "member", "probe"],     mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1655,6 +1665,9 @@ const SESSION_OPS = {
                       and a member reviews proposals without holding one, so it
                       is named beside `contentmint`, whose act it reads back. */
                    "extractproposals",
+                   /* REC-86: NARROW and its candidate read — a member's act on a
+                      reading of a question, reached by a signed-in member. */
+                   "narrow", "narrowcandidates",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1679,6 +1692,7 @@ const SESSION_OPS = {
                       and a member reviews proposals without holding one, so it
                       is named beside `contentmint`, whose act it reads back. */
                    "extractproposals",
+                   "narrow", "narrowcandidates",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -1744,6 +1758,13 @@ const NEEDS = {
      act that makes one part of a finding is a member's citation. */
   extractpropose:   "contribute",
   extractproposals: "contribute",
+  /* REC-86: NO FIFTH CAPABILITY TOKEN. Narrowing a citation writes a new reading
+     into the working corpus and rides `contribute` like `cite`, the act that
+     wrote the citation in the first place; the candidate read rides it too, on
+     `extractproposals`' reasoning one line up. Nothing either writes is the
+     group putting its name on anything — the new reading is born `suggested`. */
+  narrow:           "contribute",
+  narrowcandidates: "contribute",
   monitor:          "contribute",
   cite:             "contribute",
   sever:            "contribute",
@@ -8042,6 +8063,11 @@ export default {
            READ answers about documents, so an ungated listing would be the
            identical leak one op over. Fails closed on an absent stamp. */
         || op === "extractpropose" || op === "extractproposals"
+        /* REC-86: NARROW and its candidate read both NAME A QUESTION and read
+           its readings, so a question the caller was never invited to must
+           answer exactly as one that does not exist — the version acts' reason
+           one screen up. Fails closed on an absent stamp. */
+        || op === "narrow" || op === "narrowcandidates"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -8297,7 +8323,11 @@ export default {
            STATEMENT that a document's route cannot be shown, which C-34.1 says
            only a named member may make. Overwritten rather than honoured, for
            the reason one paragraph up: a principal a caller can name is not one. */
-        || op === "provenanceroute")
+        || op === "provenanceroute"
+        /* REC-86: the name that goes against "this passage is the one on point"
+           and against the new reading's partition. Overwritten rather than
+           honoured, so the store refuses a machine BY SHAPE (C-50.5). */
+        || op === "narrow")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is

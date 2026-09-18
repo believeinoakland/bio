@@ -12721,3 +12721,55 @@ no column, no index, and the REC-112 annotation is not reflowed**), `bio-plane/c
 **NOT `docs/development/QUEUE.md`** — flipping the REC-116 row is CONDUCT's act (`kickoffs/WORKER.md`).
 
 **open as of 2026-09-17.**
+
+## CLAIM 2026-09-18 RECORD (REC-86 — NARROW: a member makes an existing citation more specific, choosing from a machine-proposed candidate list)
+
+Worker spawned by CONDUCT #4 into worktree `agent-a3fbd59a3fef1a961`, branch
+`worktree-agent-a3fbd59a3fef1a961`. **IC-123** on I3 minted at spawn (`node tools/mintid.mjs IC`).
+
+Paths, named precisely because `store.mjs` is shared ground:
+
+- `bio-plane/src/store.mjs` — NEW methods `narrow()` and `narrowCandidates()` and their private
+  helpers, in their own DEC-49 regions. No existing function's behaviour is edited.
+- `bio-plane/src/index.mjs` — two OPS rows (`narrow`, `narrowcandidates`) and their dispatch.
+- `bio-plane/checks/bio-checks.mjs` — a NEW refusal family for the act (its own C id) and the
+  one pure predicate `extentNarrows`.
+- `bio-plane/test/narrow.test.mjs`, `bio-plane/test/nc-rec86.mjs` — new.
+- `bio-plane/scripts/coverage.mjs` and any ratchet suite whose printed floor this item moves.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/development/INTERFACE-CHANGES.md` (IC-123), `docs/architecture/BIO_Content_Framework_v0_10.md`
+  (front matter, §14.5 status row, §18.1 frontier sentence), `docs/development/DEBT.md` (D-350's
+  disposition — routed to this item by CONDUCT #11), `docs/DECIDED.md` on regeneration, this block.
+- **AMENDED while building:** `civicos-ui/check-refusal-codes.mjs` — the DEC-49 guard's FLOOR
+  table only, moved to the figures the guard PRINTS on the final tree (WORKER.md: move every floor
+  you invalidate in the same turn; REC-97's precedent for a RECORD item moving these). `.gitignore`
+  — one line for this item's control pen `.rec86-control-pristine/`. `INTERFACES.md` is NOT touched:
+  the I3 version line is CONDUCT's at RESOLUTION. `bio-plane/src/affordances.mjs` — `narrow` in
+  `RUNG_ABSENT` (ground `undetermined`, reason at the row) and both ops in `NON_ACTS`, which
+  `rung-ladder.test.mjs` and `affordances.test.mjs` require of every new op.
+  `bio-plane/test/suggest.test.mjs` and `bio-plane/test/rec119-version-legs-earned.test.mjs` — one
+  exact leg-key-set pin each, CORRECTED (never exempted) for the `content_id` D-350 adds.
+
+**NOT CLAIMED:** `civicos-ui/**` other than the guard's floor table (UI's — the affordance half is
+DELEGATED below), `docs/development/QUEUE.md` (CONDUCT flips the row),
+`newgroup/**`, `tools/**`.
+
+**open as of 2026-09-18** — REC-86 is being built.
+
+### DELEGATION 2026-09-18 RECORD (REC-86) -> UI: **the NARROW affordance on a reading's leg — the half of REC-86's scope this worker did not build**
+
+**open as of 2026-09-18** — the plane half landed on branch `worktree-agent-a3fbd59a3fef1a961` (IC-123); nothing in `civicos-ui/**` offers it yet.
+
+THE ACT, stated as an act with its actor: **UI builds the leg affordance** in `civicos-ui/app.html`
+where a reading's legs are displayed (`op=basisversions` now serves `content_id` per leg — D-350 closed
+by this item — so the display can show which part each leg rests on and offer NARROW only where the
+leg has a part to narrow into). The surface: `GET op=narrowcandidates&target=&version=&ord=` lists the
+machine's proposals, each carrying `fields` ready to send and `machine_work: true` with the plane's
+own `says` sentence (render verbatim, DEC-49; never present a candidate as the member's choice or as
+coverage); the member chooses one or names the part (the page picker UI-61/UI-62 built); a name and a
+description are required; `POST op=narrow` with `{target, version, ord, name, description, extent}`.
+Render `grade_not_carried` and `state: "suggested"` from the answer — a narrowed leg is UNGRADED on
+purpose and the new reading is not the one the question stands on until `op=versionaccept`. Nothing
+prefilled (DEC-69): the extent is chosen, never defaulted to the first candidate. Refusals carry C-50
+canned translations. The candidate list is empty and says why (`absence.level`) where the machine had
+nothing — render the sentence, not a blank.

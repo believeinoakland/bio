@@ -9221,3 +9221,93 @@ itself agrees at zero cost.
 **RESOLUTION:** unresolved at the time of writing. CONDUCT takes the version bump and the
 RESOLUTION at integration, against I3's version AS READ AT RESOLUTION — IC-118's receipt is that
 a proposal's base can move underneath it while the item runs.
+
+## IC-123 · I3: NARROW — `op=narrow` (a member makes an existing citation more specific, as a NEW basis version, the old retained) and `op=narrowcandidates` (the machine's proposals for it, labelled as machine work) · PROPOSED 2026-09-18 (REC-86, minted at spawn with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 23.1.0** (IC-120 ACCEPTED). **Proposed as MINOR —
+  23.1.0 → 23.2.0, ADDITIVE.** Two new ops arrive; no existing op gains, loses or reorders a
+  key; no existing refusal moves. One NEW refusal family, **C-50** (eleven rows,
+  `NARROW_CHECKS`), is reachable only through the two new ops. **Read the base AT RESOLUTION**
+  — three ICs on 2026-09-17/18 proposed against a base that moved underneath them.
+- **Proposer:** RECORD, worker `agent-a3fbd59a3fef1a961`, 2026-09-18, from QUEUE REC-86
+- **Owner to land it:** `RECORD` (owner and proposer)
+- **Consumers to answer:** `UI` (the affordance on the leg — NOT built by this item, see below),
+  `SKILL` (the assistant is the natural producer of candidates; nothing it does changes),
+  `DIST` (NOT-AFFECTED expected: no served surface reads a version), `RECORD`.
+- **Design:** `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` §5.3 (RULED: a citation naming no
+  part means the whole document, and a member may NARROW it by an authored act — a new basis
+  version, the old retained), §5.4's second pass (specificity is WORKED FOR; only ON-POINT
+  passages; a machine's proposal of relevance is labelled machine work, the member's choice is
+  the act), §5.8 (the record never moves an authored edge's target without a member's act);
+  `BIO_Content_Framework_v0_10.md` Part II §14.4. IC-84 named NARROW as NOT in it and owed its own.
+
+**THE SHAPE.**
+
+`GET op=narrowcandidates&target=<INQ>&version=<name>&ord=<n>` — a READ, classes
+admin/member/probe, viewer-stamped (a question the caller may not see answers as absent). Answers
+`{ ok, target, version, ord, leg: {target, content_id, ref, extent, capture_sha}, subject,
+candidates[], counts: {reading, extract, marked}, limit, truncated, absence, proposal_only: true,
+says }`. Each candidate: `{ source, ref, extent, fields, content_id, reference, label,
+mentions_subject, mint, machine_work: true, says }`, where `source` is one of:
+
+- `reading` — a place the plane's own reading of THIS capture recorded a reference (FW-17's
+  `reading_refs` position). `mentions_subject` is `true`/`false` against the question's
+  `subject_entity` through the record's own resolutions, and **`null` when the question names no
+  subject** — "does not mention it" would otherwise be a claim about nothing. Subject mentions are
+  listed first; nothing else is ranked.
+- `extract` — a passage an EXTRACT run proposed (SK-8's `proposed_readings`), with its minted row.
+- `marked` — a row a machine credential marked citable (SK-7's door).
+
+Only candidates STRICTLY NARROWER than the leg's current extent, on the SAME capture, are listed.
+`fields` is exactly what `op=narrow` takes (`{content_id}` where a row exists, else the flattened
+extent scalars). **Listing writes nothing** — no row minted, no byte of the question moved (driven).
+An empty list carries `absence: {level, says}` — `document` when the capture was never read,
+`content` when it was read and nothing inside the leg's extent was proposed — and says that an
+empty list is not evidence there is no better passage.
+
+`POST op=narrow` body `{ target, version, ord, name, description, extent: {…} }` — the ACT,
+classes admin/member/probe, `author` and `viewer` stamped by the control plane (a caller's own is
+overwritten). `extent` is a BAG — `op=cite`'s REC-97 shape — holding either the flattened extent
+scalars (`extent_kind`, `extent_page`, `extent_rect`, …) or a `content_id`, never both. It writes a
+NEW entry in the inquiry's `basis_versions[]` — `derived_from` the source, born `suggested`, author
+the member — whose legs are the source's legs copied, except leg `ord`, which names the narrower
+part (its capture PINNED with `extent_capture` to the old row's capture). The partition is carried
+and **asserted in the narrowing member's name**. Answers `{ ok, target, version, derived_from, ord,
+state: "suggested", author, narrowed: {from: {content_id, ref, extent, still_held_by, unchanged},
+to: {content_id, ref, extent, capture_sha, mint}}, chosen_from, grade_not_carried, bundleSha,
+version_content, says }`. `chosen_from` is DERIVED by the plane (was the chosen part one of the
+machine's proposals?), never taken from the caller.
+
+**WHAT IT REFUSES TO CLAIM, each a named refusal or a structural absence:**
+C-50.9 `NARROW_NOT_NARROWER` for a part that is the SAME, WIDER, or DISJOINT (a different page is
+sideways, not narrower) — the answer carries `relation`; C-50.8 `NARROW_OTHER_CAPTURE` for a part
+of a later copy or another document (that is re-anchoring, D-394's, not narrowing — 5.8); C-50.10
+`NARROW_NAME` for reusing the source's own name (a change in place) or any taken name; C-50.5
+`NARROW_NOT_A_MEMBER` for a machine credential (it may propose, not choose). **The old leg's GRADE
+is NOT carried onto the narrowed leg**: a grade was earned for what the leg pointed at, a part earns
+only from what is in it (5.1), so it lands ungraded and `grade_not_carried` says why. **The new
+reading is NOT accepted**: `op=versionaccept` is the existing act. The extent GRAMMAR is REC-84's
+one checker, answered under `BASIS_REFUSED` as `op=cite` and `op=promote` already answer it.
+
+**WHAT IS DELIBERATELY NOT IN THIS IC.**
+1. **Narrowing a leg of the LIVE `basis:` block.** The live basis is not a version and carries no
+   partition; making a reading out of it would mean the record composing a partition nobody
+   asserted. `op=narrow` refuses it as `NARROW_NO_SUCH_VERSION` with a sentence saying so. Named as
+   a DESIGN GAP in the item's report; the member path today is to author a reading from the basis.
+2. **The UI affordance on the leg.** Not built here (`civicos-ui/**` is UI's) — DELEGATED in
+   `CLAIMS.md` as an act with its actor. The ops are complete without it and are driven through
+   the control plane under a signed-in member.
+
+**CONSUMER IMPACT, MEASURED.** `grep -rn -E 'op=narrow|"narrow"|narrowcandidates' civicos-ui/`
+answers ZERO lines (a bare `narrow` matches 26 lines of `app.html`, every one the English word in a
+comment about recognisers or capture — measured and excluded, not assumed); no consumer can observe
+the new ops without asking for them. `test/narrow.test.mjs`
+drives both ops end to end (49 assertions) and asserts a question promoted with a reading and
+never narrowed lands exactly as before — its leg on the same whole-document row.
+
+**RESPONSES:** not yet collected. UI to answer on the affordance; SKILL and DIST expected
+NOT-AFFECTED.
+
+**RESOLUTION:** unresolved at the time of writing. CONDUCT takes the version bump and the
+RESOLUTION at integration, against I3's version AS READ AT RESOLUTION.
