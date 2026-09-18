@@ -13011,3 +13011,52 @@ released: 2026-09-18 by the REC-86 worker. Every claimed path is committed on br
 `worktree-agent-a3fbd59a3fef1a961`; the final tree ran the battery 224/224 · 13,984 green,
 `coverage --strict` exit 0, UI harness exit 0, `plancheck --local` 0 fail. The UI DELEGATION above
 stays open — it is UI's act, not this claim's.
+## CPDF-19 · CONTENT-PDF + RECORD · D-319 — read-time re-extraction to tier 3, OPT-IN (`EXTRACTION-BREADTH-DESIGN.md` §5.1, §7 row 5)
+released: 2026-09-18 by CPDF-19's worker on its own branch (`worktree-agent-a186b6b601ae91372`), reported and pushed, NOT merged — every path this claim and its addendum reserved is free. **The `REGISTER_FLOOR` keys in `bio-plane/scripts/coverage.mjs` were moved from this branch's own print (1217/215/216/178) and are D-238's case: CONDUCT re-reads them on the MERGED tree.**
+Opened 2026-09-18 by CPDF-19's worker (CONDUCT #4, wave 1), worktree `agent-a186b6b601ae91372`. Ids minted with
+`node tools/mintid.mjs`: **C-51** (the re-extraction refusal family), **IC-126** (I3, the flag, additive), **D-417**
+(the acquire path's tier-3 calibration join addressed the Durable Object by QUERY rather than by PATH, so it never fired —
+found while lifting the seam, closed in the same commit).
+
+- `bio-plane/src/index.mjs` — **by SITE:** (1) the `op === "pdfstructure"` handler gains the `ocr=1` branch after the
+  tier-2 block and nothing before it changes; (2) the acquire path's CPDF-10/D-252/REC-102 **tier-3 block is MOVED, not
+  rewritten**, into one named function both call sites use, and the REC-91 text-units block and the wired-reading
+  assembly likewise — so the read path and the acquire path compose ONE chain and ONE unit list by ONE rule; (3) the
+  calibration join's DO address (D-417). **NOT** the tier-2 blocks (REC-98's regions are read, not edited), **NOT**
+  `layerChainFor` (CAP-10's ground), **NOT** the office units' extent arms (FW-19's ground — the function body is moved
+  verbatim and its arms are untouched).
+- `bio-plane/src/store.mjs` — **by SITE:** `#writeReadings`' per-document body lifted into one private method both
+  promote and the new `reextract` route call; ONE new public method `reextract()`; ONE new DO route beside `reading`; a
+  guard in `#writeReadings` so a re-promotion carrying the PRE-re-extraction copy of the same acquire does not silently
+  revert it. **NOT** `#writeCaptureText`, `#observeExtraction`, `#observeIndexed`, `#markContentStale` (read, not edited).
+- `bio-plane/checks/bio-checks.mjs` — ONE new family `REEXTRACT_CHECKS` (C-51).
+- `bio-plane/test/reextract.test.mjs` + `bio-plane/test/nc-cpdf19.mjs` — new suite and its control driver.
+- `bio-plane/test/ocr-member-e2e.test.mjs` — the D-319 PIN in section 2 is CORRECTED, never exempted.
+- `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` only, from the figures a green `--strict` run prints.
+- `bio-plane/dist/bio-plane.bundled.mjs` + `bio-plane.bundle.json` — `npm run build` output.
+- any suite an instrument FORCES (floors, rosters) — named in an addendum here if it happens.
+- `docs/development/INTERFACES.md` (I3) and `docs/development/INTERFACE-CHANGES.md` (IC-126). CONDUCT takes the bump.
+- `docs/development/DEBT.md` (D-319 closed, D-417), `docs/development/EXTRACTION-BREADTH-DESIGN.md` (§5.1 + front
+  matter), `docs/development/MEASUREMENTS.md` if a measurement is taken, `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED:** `docs/development/QUEUE.md` (the row flip is CONDUCT's), `docprofile/**`, `pdf-worker/**`,
+`ocr-worker/**`, `civicos-ui/**`, `newgroup/**`, `schema.mjs` (no table, no column).
+
+**open as of 2026-09-18 — RELEASED the same day (see the `released:` line above).**
+
+## CLAIM ADDENDUM 2026-09-18 CPDF-19 — paths the claim above did not reserve, and one sentence in it that became false
+- **The claim said REC-98's regions are "read, not edited". FALSE for one of them, corrected here rather
+  than excused:** inside `/*__REC98_TIER2_WIRE_STRUCTURE_START__*/` (the READ path's tier-2 merge) THREE
+  lines were added that COPY what the merge decided (`readT2PerPage`, `readT2Note`) for the `ocr=1`
+  re-read to compose by the acquire path's rule. No existing line in the region changed; the acquire
+  path's REC-98 region is untouched.
+- `bio-plane/test/observation-content.test.mjs` — COMMENTS ONLY, two sentences that said D-319's seam
+  "has no call site on this tree" / "will produce", corrected in place with the date.
+- `bio-plane/src/store.mjs` `#observeExtraction`'s header — the same stale sentence, corrected in place.
+- `docs/development/INTERFACES.md` — besides I3, the OCR member's own section: its "read-time seam
+  (D-319)" bullet marked CLOSED.
+- `docs/architecture/BIO_Content_Framework_v0_10.md` — FRONT MATTER only: the §16 Incomplete bullet that
+  listed D-319 as unbuilt.
+- **The D-418 fix** (`tier3_candidate` no longer set on a successful tier-3 fill) moves ONE line of the
+  acquire path's behaviour — `readingFromWire` takes the seam's `stillWanting` instead of the note's
+  truthiness. Named here because it is a behaviour change on `op=acquire`, not only on the new flag.

@@ -1404,10 +1404,12 @@ reproduced), and 134.6 MB is refused in-isolate as a catchable `RangeError`.
   binding — and the installer learning to install a member that is not one part
   (D-115/D-116). Until then the binding config is landed and the path is dark on any
   live instance, exactly as I6's and I8's were. DELEGATED to DIST.
-- **The read-time seam (D-319).** The Tier-3 branch exists on `op=acquire` only, so a
-  scan captured before an instance installs this member cannot be re-read as text
-  through an op. Whether `op=pdfstructure` gains the seam, and whether it is opt-in, is
-  a decision rather than a patch.
+- **The read-time seam (D-319) — CLOSED 2026-09-18 by CPDF-19 (IC-126, I3).** This line said
+  the Tier-3 branch existed on `op=acquire` only and that whether `op=pdfstructure` gains it,
+  opt-in or not, was a decision. `EXTRACTION-BREADTH-DESIGN.md` §5.1 decided it — OPT-IN —
+  and it is built: `op=pdfstructure&ocr=1` calls this member through the SAME seam function
+  the acquire path calls (`tier3Extend`), and an instance with no member bound refuses the
+  flag BY NAME (C-51.4). The member's own contract did not move.
 - **The route coverage (D-320).** `passthrough-dct` — the publisher's own JPEG, the
   route with the strongest provenance — cannot be decoded in-isolate and is REFUSED BY
   NAME. What share of the image-only class that is has never been measured.

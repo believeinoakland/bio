@@ -312,20 +312,20 @@ console.log("\n--- 2 · what the ACQUIRE path records about the transcription, a
   t("and it is a TIER-3 reading read from text, so the member's text reached the reader",
     [real.reading.read_from_text, real.reading.text_tier], [true, 3]);
 
-  /* A MEASURED GAP, ASSERTED SO IT CANNOT QUIETLY CLOSE OR QUIETLY WIDEN.
-     `op=pdfstructure` is the READ-time structure/text op and it escalates to
-     Tier 2 (`PDF_WORKER`) only — the Tier-3 seam lives on the ACQUIRE path
-     alone. So a scan captured BEFORE an instance installs this member can never
-     be re-read as text through an op; it must be re-acquired. That is D-115's
-     class one tier further on, it is filed as **D-319** rather than fixed here
-     (this item's claim excludes `bio-plane/src/**`, and whether that op gains
-     the seam automatically or opt-in is a decision, not a patch), and it is
-     PINNED here because a gap nothing asserts is a gap the next reader has to
-     re-discover. The text pins on this page live in the MEMBER's own suite,
-     where the engine's output is read directly. */
+  /* CORRECTED 2026-09-18 BY CPDF-19, NEVER EXEMPTED — and what the pin guards
+     changed meaning rather than vanishing. This arm pinned D-319 as a GAP:
+     `op=pdfstructure` escalated to Tier 2 only, so a scan captured before an
+     instance installed this member could never be re-read as text through an op.
+     CPDF-19 closed it the way `EXTRACTION-BREADTH-DESIGN.md` §5.1 decided — the
+     seam is lifted into the read op OPT-IN, behind `ocr=1`, never automatic,
+     because a read that grows a ~10 s engine call must not do so unasked. So the
+     assertion below is UNCHANGED IN VALUE and its reason is new: the PLAIN read
+     still stops short of Tier 3, now as the opt-out half of the design rather
+     than as a hole. The opt-in half is driven on this real engine in section 10,
+     and every refusal and write is `reextract.test.mjs`'s. */
   const st = await api(`op=pdfstructure&token=mem-e2e&sha256=${real.capture.sha256}`);
   t("op=pdfstructure answers for this capture", st.ok, true);
-  t("it does NOT reach Tier 3 — the read-time op has no OCR seam (a stated gap, not a silent one)",
+  t("the PLAIN read does NOT reach Tier 3 — the seam is opt-in (ocr=1), never automatic (D-319, CPDF-19)",
     st.tier !== 3, true);
   t("and it says what it could not do, per page, rather than returning an empty document",
     (st.text?.undetermined || [])[0]?.reason, "no_text_layer");
@@ -531,6 +531,26 @@ console.log("\n--- 9 · THE FLOOR: a region the engine itself could barely read 
     floored.reading.read_from_text, false);
   t("while the SAME page through the SAME member with no measured floor DID read — so the difference is the floor and nothing else",
     [real.reading.read_from_text, real.reading.text_tier], [true, 3]);
+}
+
+console.log("\n--- 10 · THE READ-TIME RE-READ, on the REAL engine (CPDF-19 / D-319) ---");
+{
+  /* The half section 2 now points at. The capture was filed in section 4, so the
+     record holds a reading of it; `ocr=1` asks the read op to run the SAME seam the
+     acquire path runs, over the bytes the record already holds, through the real
+     binding to the real engine. What this section proves that `reextract.test.mjs`
+     cannot is that the lifted seam reaches a REAL member and composes the chain from
+     its REAL answer; the refusals, the stale mark and the observation are driven
+     there against a stub, deliberately, and are not repeated here. */
+  const re = await api(`op=pdfstructure&token=mem-e2e&sha256=${real.capture.sha256}&ocr=1`);
+  t("the read op now REACHES TIER 3 when asked", [re.ok, re.tier], [true, 3]);
+  t("it was performed and written", [re.reextraction?.performed, re.reextraction?.written], [true, true]);
+  t("the chain names each step, from the real engine's answer",
+    (re.reextraction?.text_source || []).map((x) => x.step), ["pixels", "ocr"]);
+  t("naming the real engine and version",
+    [re.reextraction?.engine?.engine, re.reextraction?.engine?.version], ["tesseract-wasm", "0.11.0"]);
+  t("and the text it answers is the engine's, not empty",
+    typeof re.text?.document === "string" && re.text.document.length > 0, true);
 }
 
 footReached = true;

@@ -13281,6 +13281,49 @@ export class Store extends DurableObject {
       const sha = doc && doc.capture && doc.capture.sha256;
       const reading = doc && doc.reading;
       if (typeof sha !== "string" || !sha || !reading || typeof reading !== "object") continue;
+      /* CPDF-19 / D-319 — A RE-PROMOTION CARRYING THE PRE-RE-EXTRACTION COPY OF
+         THE SAME ACQUIRE DOES NOT SILENTLY UNDO THE RE-EXTRACTION.
+         *
+         * A read-time re-extraction (`reextract` below) replaces this capture's
+         * reading and its projections WITHOUT minting a new version of the bundle,
+         * because it is a re-read of bytes the record already holds and not an
+         * edit of the finding. So the bundle's own `data/provenance.json` still
+         * carries the reading the ACQUIRE produced — and the next ordinary revision
+         * of that bundle (a member editing its summary) re-submits that file, and
+         * this loop would re-derive the OLDER chain from it: every row minted under
+         * the tier-3 chain staled, the units put back to the empty layer, and the
+         * member's act gone with nothing saying so.
+         *
+         * THE TEST IS NARROW ON PURPOSE: the stored reading carries a
+         * `reextracted` stamp, the incoming one does not, and both are readings of
+         * the SAME RETRIEVAL (`at` is the capture instant, which a re-extraction
+         * keeps). A NEW acquire of the document carries a new `at` and replaces
+         * as it always did; a reading that itself says it was re-extracted
+         * replaces as it always did. Only the stale copy of the one retrieval is
+         * held back, and nothing else about this promotion changes. */
+      if (this.#heldByReextraction(sha, reading)) continue;
+      this.#writeOneReading(bundleId, sha, doc, reading, author);
+    }
+  }
+
+  /* CPDF-19 — the guard's one read. A primary-key lookup, and only for a
+     capture that has a reading at all. */
+  #heldByReextraction(sha, reading) {
+    if (reading && reading.reextracted) return false;
+    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
+    const prior = row ? safeJson(row.reading) : null;
+    return !!(prior && prior.reextracted && typeof prior.at === "string"
+              && typeof reading.at === "string" && prior.at === reading.at);
+  }
+
+  /* CPDF-19: THE PER-CAPTURE BODY OF `#writeReadings`, MOVED VERBATIM into its
+     own method so the read-time re-extraction (`reextract`, D-319) persists a
+     reading through EXACTLY the writer promote uses — the chain projection, the
+     stale mark (REC-82), the text units (REC-91), the content-level observations
+     (REC-94) and the reference index — rather than a second copy of the sequence
+     that would drift from it. It returns what each of those did, which only the
+     re-extraction reads. */
+  #writeOneReading(bundleId, sha, doc, reading, author) {
       const entities = Array.isArray(reading.entities) ? reading.entities : [];
       /* Replace, so a re-promotion carries no orphan references. REC-36's term
          projection goes with them: it is derived from `label`, so a stale term
@@ -13307,7 +13350,7 @@ export class Store extends DurableObject {
          Distinct from the lines above in the direction that matters: this one
          must NOT be a delete-then-rebuild, and writing it as one is exactly how
          the rule would be lost to a pattern the surrounding code establishes. */
-      this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
+      const staled = this.#markContentStale(sha, Array.isArray(reading.text_source) ? reading.text_source : null);
       /* REC-94 / IC-95 — THE CONTENT-LEVEL OBSERVATION, written HERE, in
          promote's one transaction, beside the reading it is about and beside the
          stale mark it is not.
@@ -13402,7 +13445,7 @@ export class Store extends DurableObject {
               + "sheet-range units into the index; HTML has no `dom` producer)"
             : "this record does not hold which container this capture is, so it has no unit arm to name",
       });
-      this.#observeExtraction(bundleId, sha, reading, { author });
+      const extraction = this.#observeExtraction(bundleId, sha, reading, { author });
       /* REC-95 — THE MEANING-LEVEL OBSERVATION, written HERE for the reason the
        * content-level one above is written here, and kept a SEPARATE ROW from it
        * on purpose.
@@ -13470,7 +13513,82 @@ export class Store extends DurableObject {
               `INSERT OR REPLACE INTO reading_ref_terms (capture_sha,bundle_id,ref,src,term) VALUES (?,?,?,?,?)`,
               sha, bundleId, ref, src, term);
       }
-    }
+      return { staled, indexed, extraction };
+  }
+
+  /* ===================================================================== *
+   * CPDF-19 / D-319 — READ-TIME RE-EXTRACTION, THE STORE'S HALF.
+   * ===================================================================== *
+   *
+   * `EXTRACTION-BREADTH-DESIGN.md` §5.1: a member asks `op=pdfstructure` with
+   * `ocr=1`, the control plane runs the tier-3 seam over bytes the record
+   * already holds, and the NEW reading replaces this capture's — so its text
+   * units are replaced (REC-91), its content rows go `stale` by REC-82's
+   * mechanism, and a content-level observation says who asked, when, under
+   * which engine (REC-94). **This method adds no writer.** It hands the new
+   * reading to `#writeOneReading`, which is promote's own per-capture body,
+   * so every one of those effects happens by the rule that already governs a
+   * re-promotion with a moved chain — the design's own sentence for it.
+   *
+   * WHY NOT A NEW BUNDLE VERSION. A re-read of bytes the record already holds
+   * is not an edit of the finding: the member's words, legs and state do not
+   * move, and minting a version would flag every case pinning the finding for
+   * a change in nothing it says. What moved is the record's READING of the
+   * evidence, which is exactly what the stale mark exists to surface (Bob's
+   * 5.8: a member who cited page 14 under `layer` sees the flag and nothing
+   * moves under them). The cost of that choice is that the bundle's
+   * `data/provenance.json` still carries the acquire-time reading, and
+   * `#heldByReextraction` is what stops an ordinary revision from quietly
+   * undoing the re-read with it. That residue is stated in the design's
+   * Incomplete sections rather than here alone.
+   *
+   * D-15 AT THIS DOOR: a capture whose bundle the viewer may not see answers
+   * exactly as a capture the record never read. Re-reading is a write, and a
+   * write that answered differently for a hidden document would be an oracle
+   * for its existence. */
+  reextractBasis({ captureSha = null, viewer = null } = {}) {
+    const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
+    const row = sha ? this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha) : null;
+    if (!row || !this.#viewerSees(row.bundle_id, viewer)) return { held: false };
+    /* THE LOCATOR THE ACQUIRE READ THE DOCUMENT UNDER, from the bundle's own
+       provenance document by its primary key — so the re-read hands the content
+       type recognisers the same context the first read had, rather than a
+       context this re-read invented. Absent is stated as null, never guessed. */
+    const f = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, row.bundle_id);
+    const docs = (safeJson(f && f.content) || {}).documents;
+    const doc = Array.isArray(docs)
+      ? docs.find((d) => d && d.capture && d.capture.sha256 === sha) : null;
+    return { held: true, reading: safeJson(row.reading) || {},
+             locator: doc && typeof doc.locator === "string" ? doc.locator : null };
+  }
+
+  reextract(pkg = {}) {
+    const sha = typeof pkg.captureSha === "string" ? pkg.captureSha.trim().toLowerCase() : "";
+    const reading = pkg.reading;
+    /* The control plane stamps `reextracted` and composes the reading; a body
+       without one did not come from the re-extraction and is not written as
+       one. Refused rather than repaired, because a reading this method
+       completed would be a reading nobody composed. */
+    if (!sha || !reading || typeof reading !== "object" || !reading.reextracted)
+      return { ok: false, held: false };
+    return this.ctx.storage.transactionSync(() => {
+      const row = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, sha);
+      if (!row || !this.#viewerSees(row.bundle_id, pkg.viewer)) return { ok: false, held: false };
+      const doc = { capture: { sha256: sha }, reading,
+                    ...(Array.isArray(pkg.textUnits) ? { text_units: pkg.textUnits } : {}),
+                    ...(Number.isInteger(pkg.textUnitsOverBound) && pkg.textUnitsOverBound > 0
+                      ? { text_units_over_bound: pkg.textUnitsOverBound } : {}) };
+      const author = typeof pkg.author === "string" && pkg.author ? pkg.author : null;
+      const out = this.#writeOneReading(row.bundle_id, sha, doc, reading, author);
+      const ex = out.extraction || {};
+      return { ok: true, held: true,
+               staled: out.staled || 0,
+               indexed: out.indexed ? { written: out.indexed.written ?? 0, offered: out.indexed.offered ?? 0,
+                                        over_bound: out.indexed.over_bound ?? 0 } : null,
+               observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
+                           refused: Array.isArray(ex.refused) ? ex.refused.length : 0,
+                           unclassified: ex.unclassified ?? null } };
+    });
   }
 
   /* CPDF-10: PROJECT THE TRANSCRIPTION CHAIN INTO COLUMNS.
@@ -31258,10 +31376,12 @@ export class Store extends DurableObject {
    *  field that says who looked.
    *
    *  THIS IS ALSO THE DOOR A READ-TIME RE-EXTRACTION COMES THROUGH (D-319,
-   *  `EXTRACTION-BREADTH-DESIGN.md` section 5.1). That seam is CPDF-19's and
-   *  does not exist on this tree — verified by grep rather than inherited from a
-   *  ledger: the read-time structure op stops at tier 2 and there is no call
-   *  site. What section 5.1 requires of the WRITER is here and driven: a new
+   *  `EXTRACTION-BREADTH-DESIGN.md` section 5.1). CORRECTED 2026-09-18 by CPDF-19,
+   *  which built that seam: this sentence read *"does not exist on this tree"*,
+   *  true when REC-94 wrote it and false from `op=pdfstructure&ocr=1` onward — the
+   *  store's `reextract` path hands the re-read to `#writeOneReading`, which calls
+   *  THIS method, so the prediction below held with no change here. What section
+   *  5.1 requires of the WRITER is here and driven: a new
    *  chain arriving for a capture that already has rows writes a NEW row under
    *  `authority_kind = extract` with the member who asked as `actor`, which is
    *  exactly what a re-promotion with a moved chain does today. `reextraction`
@@ -36273,6 +36393,12 @@ export class Store extends DurableObject {
            caller's own parameters there, and an absent one fails closed — the
            bundle back-reference is withheld rather than the answer refused. */
         reading: () => this.readingFor(url.searchParams.get("sha256"), url.searchParams.get("viewer")),
+        /* CPDF-19 / D-319: the read-time re-extraction's two DO paths. Neither is an
+           op a caller can name — `op=pdfstructure` with `ocr=1` is the only route,
+           and the control plane stamps `viewer` and `author` from the credential. */
+        reextractbasis: () => this.reextractBasis({ captureSha: url.searchParams.get("sha256"),
+                                                    viewer: url.searchParams.get("viewer") }),
+        reextract: () => this.reextract(body || {}),
         readingref: () => this.documentsByReference(url.searchParams.get("ref"), url.searchParams.get("viewer")),
         /* CPDF-10. Three arms, and the split is the item's own doctrine.
            `textprovenance` READS which documents' text a machine produced — the

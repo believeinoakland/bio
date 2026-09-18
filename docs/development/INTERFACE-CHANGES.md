@@ -9537,3 +9537,55 @@ never narrowed lands exactly as before — its leg on the same whole-document ro
 NOT-AFFECTED.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at REC-86's integration — I3 23.2.0 → 23.3.0, MINOR (additive, as classed).** Base read AT RESOLUTION: 23.2.0 (FW-19's IC-125 took 23.2.0 in the same wave). SKILL and DIST NOT-AFFECTED — CONDUCT answers FOR both (neither calls a new op; an op nobody asks for cannot be observed), named as such. **UI's act is OWED, not waived:** the NARROW affordance on a leg is delegated in `CLAIMS.md` and, per the worker, also waits on UI-62's page picker. **One scope note recorded at resolution:** REC-86's draft of the content framework's connection-pair row claimed the ON-POINT connection choice built; CONDUCT declined that cell at merge — REC-86 narrows a LEG, and the connection-side choice is `REC-120`.
+## IC-126 · I3 `op=pdfstructure`: the opt-in `ocr=1` flag — read-time re-extraction to tier 3 (D-319, `EXTRACTION-BREADTH-DESIGN.md` §5.1) · PROPOSED 2026-09-18 (CPDF-19) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
+  23.1.0** (IC-120). **Proposed as MINOR — 23.1.0 → 23.2.0, ADDITIVE** — and the base is to be read
+  again at RESOLUTION, because IC-118, IC-120 and IC-121 all resolved against a base that moved while
+  they worked.
+- **Proposer:** CONTENT-PDF + RECORD, CPDF-19's worker (`agent-a186b6b601ae91372`), from QUEUE CPDF-19.
+- **Owner to land it:** RECORD (I3's owner); the seam is CONTENT-PDF's.
+- **Consumers to answer:** `UI` (the affordance), `SKILL` (the assistant's surface), `FRAMEWORK`
+  (FW-20 builds on it), `DIST`.
+
+**WHAT MOVES — ONLY UNDER THE FLAG.** `op=pdfstructure` gains ONE optional request parameter, `ocr`.
+**Without it the answer is BYTE-IDENTICAL to the pre-item answer** — measured, not argued: a digest of
+the plain read of a scan and of a text-layer document was taken by running the PRE-ITEM build
+(origin/main `92f4c64e`) over the suite's fixtures and is pinned in `reextract.test.mjs` section 1,
+and the new build answers the same bytes; control arm `overstrict` adds one key to the plain read and
+exactly those two arms fail. So a consumer written against 23.1.0 cannot observe this change without
+sending the parameter.
+
+**With `ocr=1`:**
+
+- **the answer** is the ordinary structure object with `text` and `tier` reflecting the re-read, plus
+  ONE new key, `reextraction`: `{ performed, written, cost, pages, engine: {engine, version,
+  calibration}, text_source, chain, reading: {content_type, read_from_text, found, entities,
+  text_tier}, staled, units, observed, candidates }` when the member transcribed something, and
+  `{ performed: false, written: false, cost, candidate, why }` when it did not (no image-only page, or
+  the member declined/failed) — the absence of a re-read is STATED with its reason, never an empty key.
+- **the op WRITES**, which is the part of this IC a consumer most needs to know: the capture's reading
+  is replaced through promote's own per-capture writer — the chain projection, the text units (REC-91),
+  the stale mark on content rows minted under the old chain (REC-82: marked, still resolving), and a
+  content-level observation under `authority_kind = extract` with the asking member as `actor`
+  (REC-94). **No bundle version is minted.** The OPS row stays `mutating: false`, deliberately: the op
+  is a read and every write it can do is gated at the flag by the five refusals below rather than by
+  re-classifying the whole op: `mutating: true` would make every PLAIN read a write in the admission
+  gate — refused to a signed-in session unless listed in `SESSION_OPS`, and gated on `contribute` for a
+  read that writes nothing — a fence tighter than its rule.
+- **five NEW refusals, family C-51 (`REEXTRACT_CHECKS`), each with its canned translation on the wire**:
+  `REEXTRACT_FLAG_MALFORMED` (C-51.1, 400 — any value but `1`), `REEXTRACT_AGENT_REFUSED` (C-51.2, 403 —
+  an `ai` credential; the op is declared a read so no task scope can name it as a write),
+  `REEXTRACT_NOT_CAPABLE` (C-51.3, 403 — a session without `contribute`, with `needs`/`held`),
+  `REEXTRACT_NO_OCR_MEMBER` (C-51.4, 501 — no `OCR_WORKER` bound: the design's *refused by name with no
+  member bound*), `REEXTRACT_NOT_READ` (C-51.5, 409 — no persisted reading this caller may see; a hidden
+  project answers exactly as never-filed, D-15). Every one fires BEFORE a byte is read or an engine
+  called, and `reextract.test.mjs` section 2 asserts none of them called the engine, wrote an
+  observation or touched the reading.
+
+**Two Durable Object paths are added, `reextractbasis` and `reextract`. Neither is an op**: `OPS` does
+not name them, so no caller can reach them except through `op=pdfstructure&ocr=1`, which stamps
+`viewer` and `author` from the credential.
+
+**RESOLUTION:** unresolved at the time of writing. CONDUCT takes the version bump and the RESOLUTION at
+integration, against I3's version AS READ AT RESOLUTION.
