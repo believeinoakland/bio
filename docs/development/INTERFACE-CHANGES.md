@@ -9373,3 +9373,77 @@ digest for REC-85's three (`fw19-rec85-digest.mjs`, 144 rows) and for REC-82's t
 - **SKILL / FRAMEWORK / DIST:** NOT-AFFECTED by measurement (no reader of the new kinds).
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #4 at FW-19's integration — I5 1.16.0 → 1.17.0, I3 23.1.0 → 23.2.0, both MINOR (additive, as classed).** SKILL / FRAMEWORK / DIST NOT-AFFECTED by measurement as stated; CONDUCT answers FOR FRAMEWORK (dormant), named as such. **UI's act is OWED, not waived:** the `cited_as` rendering delegation stands in `CLAIMS.md` until a UI item discharges it. REC-86 is concurrently changing I3; it resolves against 23.2.0 or later, read at its own resolution.
+## IC-122 · I2: THE CHAIN GRAMMAR GAINS A STEP KIND — `convert(producer, format)`, a conversion the serving host made BEFORE any text was read, emitted AHEAD of `layer` with cap UNDETERMINED for every Google Drive export · PROPOSED 2026-09-18 (CAP-10, enacting DEC-75 act 1) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I2 (content → framework), currently **2.2.0 STABLE**
+- **Proposer:** CAPTURE, worker `worktree-agent-ad1b1996bfd2046a7`, 2026-09-18, from QUEUE CAP-10
+- **Owner to land it:** `FRAMEWORK` owns I2 and is DORMANT; the row scopes the landing to this worker
+  (`textchain.mjs` is the ONE place a step kind is defined), so CAPTURE lands it and CONDUCT answers
+  for FRAMEWORK in writing, protocol step 3.
+- **Consumers to answer:** `FRAMEWORK` (dormant — CONDUCT answers FOR it, never as it agreeing).
+- **The id was MINTED with `node tools/mintid.mjs IC`** (floor IC-121).
+
+### THE CHANGE
+
+`reading.text_source` — the ordered chain CPDF-10 made of FW-15's token (IC-39, I2 2.0.0) — may now
+carry a SIXTH step kind, and only at its HEAD:
+
+```
+{ step: "convert", engine: "google-export", format: "odt" | "ods" | "odp",
+  cap: null, measured_by: "unmeasured: …(DEC-75; CAP-11 measures, a calibration row raises it)…",
+  calibration: null }
+```
+
+followed by the chain the reading already built (`layer`, and `layer -> ocr(<product>)` where D-251
+applies, or a D-252 mixed chain). It is emitted by `op=acquire` for a capture the Drive recogniser
+(CAP-8, IC-85) diverted to an export, and for NOTHING else — an ordinary OpenDocument file on a city
+host, a PDF, and an archive-sourced capture record byte-identical chains (digest-pinned against the
+pristine tree 92f4c64e in `test/drive-convert.test.mjs`).
+
+**`convert(producer, format)` is carried with the producer on `engine`, deliberately.** `engine` is
+the one field this grammar already has for *what performed a derivation*; it is what CPDF-13's
+calibration is OF, what `reading_text_source.engines` projects (so `op=textprovenance` lists
+`google-export` without a store edit), and what `describeChain` prints. A second field name for the
+same fact would have split each of those joins in two. `format` is new and read only for this kind.
+
+### THE RULES THAT COME WITH IT, declared on the kind rather than tested against its name
+
+1. **`names: ["engine", "format"]`** — a convert step naming neither is refused **C-35.5
+   (`TEXT_CHAIN_STEP_UNNAMED`)**, rule 1's collapse one level down. Reused, not minted: it is the
+   same condition the `ocr`/`ai` steps already meet.
+2. **`letter: "calibrated"`** — a convert step may carry a letter only beside a readable
+   `calibration` id. Otherwise **C-35.13 (`TEXT_CHAIN_LETTER_UNCALIBRATED`, NEW)**. This is DEC-75's
+   *"undetermined now, raised later by a calibration row"* as a refusal: an unmeasured step may not
+   claim a letter. Kind-declared, so a `layer` step with a letter and no calibration stays LEGAL
+   (C-35.12's over-strictness rule, undisturbed and asserted).
+3. **`unmeasured: "undetermined"`** — `derivationCap` returns UNDETERMINED for a chain whose head
+   conversion is unmeasured, **even when a later step carries a measured letter.** This is the one
+   departure from the landed sequence rule (*an unmeasured unscoped step neither raises nor lowers*),
+   and it is why the row's *"`captureBound` reads it as any other step with no code beyond the kind"*
+   needed ONE declared property rather than none: every step after a conversion measured the
+   CONVERTED text against the CONVERTED bytes, so no downstream measurement bounds what the
+   conversion lost. **Today it changes no value the record holds** — `LAYER_FIDELITY_CAP` is null,
+   so every chain is already undetermined — and it is what keeps a Drive leg UNDETERMINED the day a
+   text layer is calibrated. `captureBound` itself is untouched.
+4. **Rule 2 across the head** — `convertedChain(step, chain)`, the builder, runs every derivation
+   step of the chain through `appendStep([step], s)`, so a step claiming a stronger letter than a
+   (future, calibrated) conversion is refused **C-35.6** at its existing region.
+5. **`tier: null`** — a conversion is not a rung on the extraction ladder (`tiersEvidenced` skips it,
+   REC-94's declared-off-the-ladder case, like `ai` and `attested`).
+
+### WHY IT IS ADDITIVE, AND THE ONE PLACE A CONSUMER COULD MISREAD
+
+No existing step changes, no field is renamed or re-typed, and no chain the record holds changes
+(the pins). A consumer that switches on `step` and has no `convert` arm — `checkChain` did, and
+refused it as `TEXT_CHAIN_STEP_UNKNOWN` — now meets a known kind. **The misread to name:** a
+consumer that reads `chain[0]` as *the extraction* (`layer` / `pixels`) would read a Drive export's
+first step as the conversion. Nothing under `src/` does: `terminalStep` reads the LAST step,
+`query.mjs`'s `chain:` filter reads `$[#-1]`, and `tiersEvidenced` walks all steps by declared tier.
+`op=textprovenance`'s published `kinds` gains `convert` (it is `Object.keys(STEP_KINDS)`), as does
+`content:chain`'s vocabulary — both derived, neither a copy.
+
+### ANSWERS REQUESTED
+
+- `FRAMEWORK` (dormant): CONDUCT to answer FOR it. Proposed version: **I2 2.2.0 → 2.3.0, MINOR,
+  ADDITIVE** (the 1.2.0 `calibration` field and the 1.3.0 D-251 second step are the precedent: a new
+  optional thing a chain may carry, one refusal added).

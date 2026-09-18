@@ -9418,6 +9418,20 @@ export const TEXT_CHAIN_CHECKS = {
       + 'readable as one. A measurement nobody can look up is not a measurement this record can '
       + 'stand behind — and a broken pointer is worse than none, because it looks like one that works.',
   },
+  /* CAP-10 / DEC-75 / IC-122. A step kind that declares its letter must be
+     CALIBRATED (`STEP_KINDS[k].letter`) — today only `convert`, a conversion
+     the serving host made before any text was read — may carry a letter only
+     beside the calibration it rests on. The permitted move is UNDETERMINED
+     now, raised later by a calibration row (CAP-11 measures, a row raises);
+     a letter written now and lowered later is the move Bob's 5.8 forbids. */
+  TEXT_CHAIN_LETTER_UNCALIBRATED: {
+    check: 'C-35.13',
+    where: 'src/textchain.mjs checkChain > is-text-chain-shape',
+    translation: 'This step says how faithful a conversion of the document was, but nobody has '
+      + 'measured that. When a site hands us its own converted copy of a file, the record cannot '
+      + 'tell what the conversion changed until it has compared the copies — so until then it says '
+      + '"not yet determined" rather than giving a grade it has not earned.',
+  },
 };
 
 /* ============================================================================

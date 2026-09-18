@@ -1803,7 +1803,7 @@ those bytes. **What the conversion is worth is DEC-4 applied, decided 2026-09-14
 keeps capture grade B for the fetch path, and the conversion is a derivation step in the chain —
 `convert(google-export, <format>)` ahead of `layer`, cap undetermined and stated until calibrated —
 so a leg on a Drive export claims no more than that weakest link (REC-88's bound). No third scale,
-no new letter; a calibration of the export step raises it later without a migration.** Building it was two acts on the format axis, **and both are DONE as of 2026-09-14**:
+no new letter; a calibration of the export step raises it later without a migration.** (The step is BUILT as of 2026-09-18 — CAP-10, IC-122: `STEP_KINDS.convert` in `textchain.mjs`, emitted by `op=acquire` for every Drive export; an unmeasured conversion keeps the document's derivation cap undetermined even when a later step is measured, and a letter on it is refused without a calibration, C-35.13. The calibration itself is CAP-11's measurement.) Building it was two acts on the format axis, **and both are DONE as of 2026-09-14**:
 the OpenDocument flavour row in the container reader (COFF-9, `d791aa7` — `ODF_FLAVOURS` in
 `ooxml.mjs`, discriminating on the first-and-stored `mimetype`), and the three OpenDocument
 readers (`.ods`, `.odt`, `.odp` — one `content.xml` part each, smaller than their OOXML

@@ -60,7 +60,7 @@ import { createHash } from "node:crypto";
 import {
   layerChain, appendStep, checkChain, derivationCap, describeChain, isTranscribed,
   terminalStep, checkConfidence, applyConfidenceFloor, checkAnchor, checkAttestation,
-  extentCovers, gradeCeiling, captureBound, weaker, STEP_KINDS, CONFIDENCE_BASES,
+  extentCovers, gradeCeiling, captureBound, weaker, STEP_KINDS, CONFIDENCE_BASES, convertedChain,
   mergedChain, stepCovers, calibrationsOf,
 } from "../src/textchain.mjs";
 import { TEXT_CHAIN_CHECKS, BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
@@ -489,7 +489,13 @@ const codesUsed = ["TEXT_CHAIN_COLLAPSED", "TEXT_CHAIN_EMPTY", "TEXT_CHAIN_STEP_
      CALIBRATION REFERENCE that is present and unreadable, so the list was wrong
      the moment that refusal landed and the totality assertion below caught it
      rather than the author remembering. The arm that drives it is in CHECK_ARMS. */
-  "TEXT_CHAIN_CAL_REF"];
+  "TEXT_CHAIN_CAL_REF",
+  /* CORRECTED 2026-09-18 by CAP-10 (DEC-75, IC-122), never exempted, for the same
+     reason as the line above: `checkChain` now refuses a letter on a step kind
+     that declares its letter must be CALIBRATED (`convert`) when no calibration
+     is named. The totality assertion below is what would have caught the list
+     going stale. */
+  "TEXT_CHAIN_LETTER_UNCALIBRATED"];
 t("every code this module can mint has a row", codesUsed.filter((c) => !TEXT_CHAIN_CHECKS[c]), []);
 t("every row carries a C-number", Object.values(TEXT_CHAIN_CHECKS).filter((r) => !/^C-35\.\d+$/.test(r.check)).length, 0);
 t("every row carries a member-facing translation",
@@ -524,6 +530,9 @@ const CHECK_ARMS = [
      is asserted as such two lines below, because the over-strictness direction
      here is the one that would have broken every chain written before CPDF-13. */
   ["C-35.12", () => checkChain([{ step: "layer", cap: "C", calibration: { id: "CAL-1" } }])],
+  /* CAP-10 / DEC-75. A CONVERSION claiming a letter with no measurement behind
+     it — the move Bob's 5.8 forbids (a letter now, lowered later). */
+  ["C-35.13", () => checkChain([{ step: "convert", engine: "google-export", format: "odt", cap: "B" }])],
 ];
 for (const [number, drive] of CHECK_ARMS) {
   const r = drive();
@@ -547,6 +556,40 @@ t("and a chain reports the calibrations it names, deduped and in order",
   ["CAL-4", "CAL-9"]);
 t("a chain naming none answers the empty set, which is not the same as a broken chain",
   calibrationsOf([{ step: "layer", cap: "C" }]), []);
+
+/* CAP-10 / DEC-75 / IC-122 — THE `convert` STEP KIND'S GRAMMAR ARM, both
+   directions. The refusals first, then the over-strictness that matters most:
+   the calibrated-letter rule is DECLARED ON THE KIND, so the pre-CPDF-13 shape
+   (a `layer` step with a letter and no calibration) stays exactly as legal as
+   the C-35.12 arm above says it is. */
+t("`convert` is a known DERIVATION kind, off the extraction ladder",
+  [STEP_KINDS.convert?.role, STEP_KINDS.convert?.tier], ["derivation", null]);
+t("a convert step naming no producer is refused C-35.5 — rule 1's collapse one level down",
+  checkChain([{ step: "convert", format: "odt" }])?.check, "C-35.5");
+t("a convert step naming no FORMAT is refused C-35.5 too — it must say what it produced",
+  checkChain([{ step: "convert", engine: "google-export" }])?.check, "C-35.5");
+t("an UNMEASURED convert step (cap null) is legal — undetermined is first-class",
+  checkChain([{ step: "convert", engine: "google-export", format: "odt", cap: null }]), null);
+t("a convert step with a letter AND a calibration is legal — the route a calibration row takes",
+  checkChain([{ step: "convert", engine: "google-export", format: "odt", cap: "C", calibration: "CAL-7" }]), null);
+t("OVER-STRICTNESS: a LAYER step with a letter and no calibration is still legal — the rule is the kind's",
+  checkChain([{ step: "layer", cap: "C" }]), null);
+{
+  const conv = { step: "convert", engine: "google-export", format: "odt", cap: null };
+  const layer = [{ step: "layer", tier: 1, container: "odt", cap: null }];
+  t("convertedChain puts the conversion at the HEAD, and leaves the chain it was handed untouched",
+    [convertedChain(conv, layer).map((s) => s.step), layer.length], [["convert", "layer"], 1]);
+  t("rule 2 holds across the head: a step stronger than a CALIBRATED conversion is refused C-35.6",
+    convertedChain({ ...conv, cap: "C", calibration: "CAL-7" },
+                   [{ step: "layer", cap: "B", calibration: "CAL-8" }])?.check, "C-35.6");
+  t("the head-conversion rule: an unmeasured conversion keeps a measured layer UNDETERMINED",
+    [derivationCap([{ step: "layer", cap: "C" }]), derivationCap([conv, { step: "layer", cap: "C" }])],
+    ["C", null]);
+  t("and a CALIBRATED conversion bounds by the weakest link like any other step",
+    derivationCap([{ ...conv, cap: "D", calibration: "CAL-7" }, { step: "layer", cap: "D" }]), "D");
+  t("OVER-STRICTNESS: an unmeasured `ai` step still neither raises nor lowers — the rule is the kind's",
+    derivationCap([{ step: "layer", cap: "C" }, { step: "ai", engine: "m", version: "1" }]), "C");
+}
 
 /* AND THE REACH ARM: every row in the family was driven above. A per-code loop
    that silently skipped one would look identical to one that covered them all,

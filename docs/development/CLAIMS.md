@@ -12917,3 +12917,38 @@ DECLARED, every restore byte-identical, 0 held-open assertions broken (figures i
 `nc-rec85` (overstrict un-duplicated, onebased's pre-existing throw made a measured FAIL),
 `nc-coff11`, `nc-coff12`, `nc-rec84` — every arm AS DECLARED after the corrections. IDs minted with
 `tools/mintid.mjs`: IC-124, IC-125, D-415, D-416.
+
+## CLAIM 2026-09-18 CAPTURE (CAP-10 — DEC-75 act 1: the `convert(producer, format)` step kind on I2, emitted ahead of `layer` with cap UNDETERMINED for every Drive export)
+
+Worker spawned by CONDUCT #4 into `worktree-agent-ad1b1996bfd2046a7`. **IC-122** minted with
+`node tools/mintid.mjs IC` (I2, PROPOSED by this worker; the RESOLUTION and bump are CONDUCT's,
+answering for dormant FRAMEWORK). Paths:
+
+- `bio-plane/src/textchain.mjs` — the step kind, the ONE place a kind is defined (the row's scope).
+- `bio-plane/src/drive.mjs` — the convert step's facts, DERIVED from the recognised address (D-112).
+- `bio-plane/src/index.mjs` — `op=acquire`'s reading wire prepends the step for a Drive capture only.
+- `bio-plane/checks/bio-checks.mjs` — one new row in `TEXT_CHAIN_CHECKS` if the grammar needs one.
+- `bio-plane/test/drive-convert.test.mjs` (new), `bio-plane/test/drive-convert.control.mjs` (new),
+  `bio-plane/test/textchain.test.mjs` (grammar arm extended, never exempted), and any suite whose
+  count or roster pins the step-kind vocabulary or the check catalogue (corrected, not exempted).
+- `bio-plane/dist/**` on rebuild if `fleetbundles.test.mjs` requires it; `bio-plane/scripts/coverage.mjs`'s
+  register floor if `--strict` requires the move.
+- `docs/development/INTERFACE-CHANGES.md` (IC-122), `docs/development/INTERFACES.md` (I2 note only;
+  the bump is CONDUCT's), `docs/architecture/BIO_Content_Framework_v0_10.md` (Part II §16 front matter
+  if its stated completeness moves), `docs/development/DEBT.md` if a row is narrowed or raised,
+  `docs/DECIDED.md` on regeneration, this block.
+
+**NOT `docs/development/QUEUE.md`** — flipping CAP-10 is CONDUCT's act.
+
+**open as of 2026-09-18.**
+
+released: 2026-09-18 CAPTURE (CAP-10) — landed on branch `worktree-agent-ad1b1996bfd2046a7`, pushed under its own
+name, NOT merged (CONDUCT merges and flips the row). Paths actually touched: `bio-plane/src/textchain.mjs`,
+`bio-plane/src/drive.mjs`, `bio-plane/src/index.mjs`, `bio-plane/checks/bio-checks.mjs` (C-35.13, one row),
+`bio-plane/test/drive-convert.test.mjs` + `drive-convert.control.mjs` (new), `bio-plane/test/textchain.test.mjs`
+(grammar arm extended; `codesUsed` CORRECTED, not exempted), `bio-plane/dist/**` (rebuild; `src/signpage.mjs`
+byte-identical), `docs/development/INTERFACE-CHANGES.md` (IC-122 PROPOSED), the Part II §16 Drive paragraph of
+`docs/architecture/BIO_Content_Framework_v0_10.md` (one parenthetical; front matter unchanged — it never listed
+this step as incomplete), `docs/DECIDED.md` (regenerated). NOT touched: `INTERFACES.md` (the I2 bump is
+CONDUCT's at resolution), `DEBT.md` (no row names this step), `bio-plane/scripts/coverage.mjs` (strict exit 0,
+no floor moved).

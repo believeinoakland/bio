@@ -289,6 +289,42 @@ export function driveHop(drive, { retrieved, resolved = null, detected = null } 
   };
 }
 
+/* ================================================================== *
+ * CAP-10 / DEC-75 / IC-122 — THE CONVERSION, ON THE TEXT CHAIN
+ * ================================================================== *
+ *
+ * The hop above says Google SERVED a conversion. This says the TEXT the record
+ * then read passed through that conversion first — which is DEC-75's ruling:
+ * capture grade is about the fetch path (the hop stays `direct`, grade B), and
+ * a conversion is a derivation step in the chain, where every derivation
+ * weakens and an unmeasured one is UNDETERMINED, stated, never a letter.
+ *
+ * DERIVED HERE, from the recognised address, and never from a request — the
+ * same D-112 discipline as the hop, and the same source for the format, so the
+ * chain and the hop cannot disagree about what the fetch produced.
+ *
+ * `engine` carries the producer (`textchain.mjs`'s `STEP_KINDS.convert` says
+ * why: it is the one field a calibration joins on). The name is a machine
+ * identifier distinct from `DRIVE_PRODUCER`'s prose, because it is what a
+ * CAP-11 calibration row will be OF and must not change when prose is edited. */
+export const DRIVE_CONVERT_ENGINE = "google-export";
+/* NULL — UNDETERMINED, STATED. Not "not yet filled in": the step is raised by a
+   calibration row naming a measurement (C-35.13 refuses a letter without one),
+   and CAP-11 is the measurement. A letter typed here is the move Bob's 5.8
+   forbids — a letter now, lowered later under authored legs. */
+const DRIVE_CONVERT_CAP = null;
+const DRIVE_CONVERT_SOURCE = "unmeasured: Google's export is a conversion made at fetch time of a "
+  + "stored original nobody outside Google has seen, and its text stability and fidelity across "
+  + "fetches have not been measured (DEC-75; CAP-11 measures, a calibration row raises it; the "
+  + "byte instability is D-351's)";
+
+/** The `convert(google-export, <format>)` step for a recognised, harvestable
+ *  Drive address. Pure, like everything in this module. */
+export function driveConvertStep(drive) {
+  return { step: "convert", engine: DRIVE_CONVERT_ENGINE, format: drive.format,
+           cap: DRIVE_CONVERT_CAP, measured_by: DRIVE_CONVERT_SOURCE, calibration: null };
+}
+
 /** The keys a caller may NOT put on an `op=acquire` body, and the ONE place they
  *  are named. D-112: a hop a caller can hand us is a hop a caller can invent, so
  *  a body carrying one is refused BY NAME rather than having the field quietly

@@ -145,6 +145,43 @@ export const STEP_KINDS = {
   /* A member checked the text against the image and said so, over a stated
      extent. Not a derivation: see the header. */
   attested: { role: "verification", label: "a member checked it against the image", tier: null },
+  /* CAP-10 / DEC-75 / IC-122 — A CONVERSION OF THE DOCUMENT, MADE BY WHOEVER
+     SERVED IT, BEFORE ANY TEXT WAS READ OUT OF IT. The case it exists for is a
+     Google Drive export: the record fetched Google's OpenDocument RENDERING of
+     a file nobody outside Google has seen, made at fetch time and not
+     reproducible (D-351). Capture grade is about the FETCH PATH and stays
+     `direct`/B (DEC-75); what Google did to the document is a transformation
+     of the TEXT, so it is a derivation step here and rule 2 governs it.
+
+     `convert(producer, format)` is carried as `{ step: "convert", engine:
+     <producer>, format: <format> }`. THE PRODUCER RIDES `engine` DELIBERATELY:
+     `engine` is the one field this grammar already has for "what performed a
+     derivation", and it is what a calibration is OF (CPDF-13), what
+     `#writeTextSource` projects into `engines`, and what `describeChain`
+     prints. A second field name for the same fact would split every one of
+     those joins in two.
+
+     THREE DECLARED PROPERTIES, and each is read by a rule below rather than by
+     a test against the word "convert":
+
+       `names`      the fields the step must carry, non-empty. A conversion that
+                    does not say who converted, or into what, is rule 1's collapse
+                    one level down (C-35.5).
+       `unmeasured` "undetermined": an UNMEASURED conversion makes the whole
+                    document's cap UNDETERMINED, instead of the landed sequence
+                    rule where an unmeasured step neither raises nor lowers. The
+                    reason is where the step sits. Every later step measured the
+                    CONVERTED text against the CONVERTED bytes; none of them saw
+                    the original, so no downstream measurement bounds what the
+                    conversion lost. `derivationCap` explains it at the site.
+       `letter`     "calibrated": a letter on this step must NAME the calibration
+                    it rests on (C-35.13). DEC-75: the step is raised by a
+                    calibration row, never by a caller writing a letter.
+
+     `tier: null` — a conversion is not a rung on the extraction ladder. It is
+     how the BYTES came to be; the `layer` step after it is the extraction. */
+  convert:  { role: "derivation", label: "the document as converted by the host that served it",
+              tier: null, names: ["engine", "format"], unmeasured: "undetermined", letter: "calibrated" },
 };
 
 /** The BASES a per-region confidence number may have, and this enum IS the
@@ -358,6 +395,16 @@ export function checkChain(chain) {
         `the ${step.step} step names no engine. What performed a derivation is the fact the chain `
         + `exists to carry — a calibration is OF an engine and a version, and neither can be `
         + `recovered from the word '${step.step}'`);
+    /* CAP-10 / IC-122: a kind that DECLARES the fields it must name. Read from
+       `STEP_KINDS`, so the rule follows the kind rather than a spelling. */
+    const mustName = STEP_KINDS[step.step].names || [];
+    const unnamed = mustName.filter((f) => !(typeof step[f] === "string" && step[f].trim()));
+    if (unnamed.length)
+      return refusal("TEXT_CHAIN_STEP_UNNAMED",
+        `the ${step.step} step does not name its ${unnamed.join(" or ")}. Who performed a `
+        + `derivation, and what it produced, are the facts the chain exists to carry — a `
+        + `calibration is OF a named producer and format, and neither can be recovered from the `
+        + `word '${step.step}'`);
     /* CPDF-13 / D-253 — THE CALIBRATION REFERENCE. Optional, and read the
        comment in the checks catalogue for why it is optional rather than
        required: every chain written before this rule existed carries a `cap`
@@ -373,6 +420,17 @@ export function checkChain(chain) {
         + `(${JSON.stringify(step.calibration)}). A transcription names the MEASUREMENT its grade `
         + `rests on so a superseded measurement can name exactly the transcriptions resting on it; `
         + `a pointer nothing can resolve breaks that join while looking like it works`);
+    /* CAP-10 / DEC-75: a kind whose letter must be CALIBRATED may carry one only
+       beside the calibration it rests on. An unmeasured step may not claim a
+       letter — the move Bob's 5.8 forbids is a letter now, lowered later under
+       authored legs; the permitted one is undetermined now, raised later by a
+       calibration row without a migration. */
+    if (STEP_KINDS[step.step].letter === "calibrated" && step.cap != null
+        && !(typeof step.calibration === "string" && step.calibration.trim()))
+      return refusal("TEXT_CHAIN_LETTER_UNCALIBRATED",
+        `the ${step.step} step claims fidelity ${JSON.stringify(step.cap)} and names no calibration. `
+        + `A ${step.step} step's cap is UNDETERMINED until a measurement of it exists, and a letter `
+        + `written here without one would be the record claiming a fidelity nobody measured`);
   }
   /* END DEC-49 REGION is-text-chain-shape */
   return null;
@@ -415,6 +473,38 @@ export function appendStep(chain, step) {
 export function layerChain({ tier = null, container = null, cap = null, measured_by = null,
                              calibration = null } = {}) {
   return [{ step: "layer", tier, container, cap, measured_by, calibration }];
+}
+
+/** CAP-10 / DEC-75 / IC-122 — PUT A CONVERSION AT THE HEAD OF A CHAIN.
+ *
+ *  The chain a reading already built says how text came out of the bytes; a
+ *  conversion says how the BYTES came to be, so it goes AHEAD of every step
+ *  rather than after the last one — `convert -> layer`, never `layer ->
+ *  convert`. That is why this is a separate builder and not `appendStep`.
+ *
+ *  RULE 2 STILL HOLDS AND IS CHECKED, NOT ASSUMED: every derivation step in the
+ *  chain now received the conversion's output, so each is run through
+ *  `appendStep([step], s)` — the one monotone comparison this module has, at
+ *  its own DEC-49 region — and a step claiming a stronger letter than the
+ *  conversion is refused there. With the conversion unmeasured (every Drive
+ *  export today) nothing can be stronger than undetermined and no refusal is
+ *  possible; the check is what holds the day a calibration raises the step.
+ *
+ *  The chain is returned WHOLE and UNSCOPED at the head: a conversion is of the
+ *  whole document, and a mixed chain's parts (D-252) keep their own extents.
+ *  Neither input is mutated. A refusal is returned as-is, so a caller never
+ *  holds half a chain. */
+export function convertedChain(step, chain) {
+  const one = checkChain([step]);
+  if (one) return one;
+  const bad = checkChain(chain);
+  if (bad) return bad;
+  for (const s of chain) {
+    if (STEP_KINDS[s.step].role !== "derivation") continue;
+    const r = appendStep([step], s);
+    if (!Array.isArray(r)) return r;
+  }
+  return [{ ...step }, ...chain.map((s) => ({ ...s }))];
 }
 
 /* ------------------------------------------------------------------ *
@@ -471,6 +561,21 @@ export function derivationCap(chain, target = null) {
     if (STEP_KINDS[step.step].role !== "derivation") continue;
     const ext = extentOf(step);
     if (ext === "unreadable") { unreadable = true; continue; }
+    /* CAP-10 / DEC-75 — A KIND THAT DECLARES `unmeasured: "undetermined"`, and
+       the one place the sequence rule below does NOT hold. That rule says an
+       unmeasured step neither raises nor lowers, because the text it touched
+       is still bounded by a step that WAS measured. A conversion at the head
+       of the chain breaks the premise: every step after it measured the
+       CONVERTED text against the CONVERTED bytes, and none of them saw the
+       original, so nothing downstream bounds what the conversion lost. An
+       unmeasured one therefore makes the answer UNDETERMINED, stated — which
+       is also what the item requires of every Drive export until CAP-11's
+       measurement lets a calibration row raise it. Today the `layer` step's
+       own cap is null too, so this changes no value the record holds; it is
+       what keeps the answer honest the day a text-layer letter is measured. */
+    if (STEP_KINDS[step.step].unmeasured === "undetermined" && measured(step) == null
+        && (page == null || ext === "all" || ext.includes(page)))
+      unreadable = true;
     if (page != null) {
       /* ASKING ABOUT ONE PAGE. Only a step that covers it bounds it — which is
          the read a basis leg citing that page needs, and the reason a mixed
@@ -497,7 +602,9 @@ export function derivationCap(chain, target = null) {
   }
   /* An extent this module could not read covers nothing it can name, so it could
      be covering the page in hand or a stretch of the document nothing else
-     measured. Either way the answer is UNDETERMINED, stated. */
+     measured. Either way the answer is UNDETERMINED, stated. (CAP-10: so does an
+     unmeasured head conversion, above — the flag is shared because the answer is
+     the same sentence.) */
   if (unreadable) return null;
   if (page != null) return cap;
   /* THE MIXED DOCUMENT'S CAP: the weakest over the parts, and a part with NO
@@ -624,7 +731,11 @@ export function describeChain(chain) {
   if (checkChain(chain)) return "this text's provenance was not recorded";
   return chain.map((s) => {
     const base = STEP_KINDS[s.step].label;
-    const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""})` : "";
+    /* CAP-10: a kind that declares a `format` says what it produced, beside who
+       produced it — "(google-export to odt)". Every other kind's sentence is the
+       sentence it was. */
+    const into = (STEP_KINDS[s.step].names || []).includes("format") && s.format ? ` to ${s.format}` : "";
+    const who = s.engine ? ` (${s.engine}${s.version ? ` ${s.version}` : ""}${into})` : "";
     const by = s.step === "attested" && s.member ? ` (${s.member}${s.at ? `, ${s.at}` : ""})` : "";
     /* D-252: a SCOPED step says which pages it covers, and it has to. Without
        it a mixed document's chain reads as a sequence — "the text layer was
