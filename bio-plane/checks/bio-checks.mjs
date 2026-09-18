@@ -8874,6 +8874,38 @@ export const MACHINE_FENCE_CHECKS = {
       + 'one — it may surface the work and prepare what it needs, and closing work that is '
       + 'nobody\'s is still closing it. Sign in to resolve it.',
   },
+  /* REC-123 / IC-132 — THE TWO RATIFICATIONS, and they are the first of this
+     family that live in the CONTROL PLANE rather than at the top of a store
+     method, because both handlers do their work there: the signature is
+     verified and the gate run in `index.mjs`, and the store is handed only the
+     verified attestor. TRACED BY DRIVING, 2026-09-18: an `ai` credential whose
+     member-authored scope named op=ratify / op=caseratify, carrying a registered
+     member's VALID signature, PUBLISHED the finding and COMMITTED the case, and
+     the record named the MEMBER as having done it. The scope check was the only
+     thing in front of either, and a broader scope passes a scope check.
+     `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4: *"No machine credential
+     performs the attested act"*; both acts sit at the `attested` rung.
+     WHAT THESE DO NOT REFUSE, and it is deliberate: the operator's own
+     ENV-BINDING credentials (ADMIN/MEMBER/PROBE tokens), which carry a member's
+     signature on the path `ratify.test.mjs` drives — publication runs through
+     the operator today, and those classes are not the assistant. Only the `ai`
+     class is the machine DEC-24 rule 4 speaks of, and that is what is fenced. */
+  MACHINE_CANNOT_RATIFY: {
+    check: 'C-32.12',
+    where: 'src/index.mjs fetch > is-machine-ratify-bundle',
+    translation: 'Ratifying puts a finding into the published record under a member\'s signature, '
+      + 'and the member whose key signed it has to be the one who does it. The credential that asked '
+      + 'here is an assistant\'s: it can prepare the finding and lay out what will be signed, and it '
+      + 'cannot carry the signature in for you. Sign in and ratify it yourself.',
+  },
+  MACHINE_CANNOT_RATIFY_CASE: {
+    check: 'C-32.13',
+    where: 'src/index.mjs fetch > is-machine-ratify-case',
+    translation: 'Ratifying a case commits the group\'s own assertions about it — its scope, its '
+      + 'completeness, its position on the people it concerns — under a member\'s signature. The '
+      + 'credential that asked here is an assistant\'s: it can assemble the case document, and it '
+      + 'cannot be the one who commits it. Sign in and ratify it yourself.',
+  },
 };
 
 /* =========================================================================
