@@ -9,7 +9,7 @@
 - §10 — a data-model "sketch"; "Concrete DDL belongs with the implementation."
 - §11 — two cross-document obligations are unenacted: the Technical Architecture §10 annotation pointing here, and the project-name-uniqueness annotation on State Rules §4.3; the list also numbers two items "8."
 - §7 — DEC-72 clause 5 adds an owner-only act (publish) absent here, and D-310/D-311 record that the affordance surface does not yet publish owner-gated publish or the roster acts.
-- §7 — ONE act's required position is not stated anywhere: whether the member who DELIVERS `op=caseratify` (commits a case an owner authored) must hold a position in the project; today an administrator who is a registered signer can commit a case of a project it is not in (raised by REC-134, IC-152; with BOB). The rest of *direct nothing* is enforced (REC-134).
+- §7 — `op=caseratify`'s required position is DECIDED (the bullet *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18) and UNBUILT: whether the plane requires an OWNER's signature, and refuses delivery by an enrolled administrator with no role in the project, is REC-137's to verify at the code and build. The rest of *direct nothing* is enforced (REC-134).
 - §7 — the hierarchy is stated in Focus terms "until the rename arc lands"; the live state machine is `inquiry` and the catalog marks `focus` legacy.
 
 **Contents**
@@ -541,8 +541,17 @@ token and not to the founder's session). **Design:**
   (`biasadopt`, *"Project managers define project bias"* with DEC-72 (5)). Refusals C-56.1/.2. The acts that already asked a
   position (roster, publish, the review copy, the run verbs, the lead share) are unchanged; §7.13 is not behind the check,
   and a control proves that applying it there breaks the rescue. Machine credentials hold no position and are unchanged. The
-  per-act table is IC-152's. OPEN: `op=caseratify`'s position (Incomplete sections). Driven in
+  per-act table is IC-152's. `op=caseratify`'s position is DECIDED in the next bullet and is REC-137's to build. Driven in
   `bio-plane/test/project-authority.test.mjs` and `project-authority.control.mjs`.
+- **A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it** (decided 2026-09-18 by BOB #15 on REC-134's gap; it
+  reconciles two of Bob's rulings rather than making a new one). **The authority is the SIGNATURES, and they must include
+  an OWNER of the publishing project** — DEC-72 clause 5 makes publishing the owner's act; the handler today asks only
+  for the instance-wide `publish` capability, so the builder verifies at the code whether an owner signature is required
+  and adds it if not. **Delivering is carriage, not direction** (AI Roles rule 4: the record states signer and deliverer
+  apart): a member with a role in the project may deliver, and so may the FOUNDER, as DEC-33's interim publishing route
+  (*"publishing currently runs through the group's operator"*) until the member-facing ceremony exists. **An enrolled
+  administrator with no role in the project may not deliver** — DEC-33 names the group's operator, not every
+  administrator, and administrators direct nothing (§4).
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
