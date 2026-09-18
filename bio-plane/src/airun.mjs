@@ -140,7 +140,10 @@ export const DEFINITIVE_STATES = new Set(["LOOKED_ABSENT", "PRESENT"]);
  * STATED as undetermined"* -- UNSATISFIABLE, and said exactly why: `aiRunLog`'s
  * SELECT projected neither `result_kind` nor `result_ref`, so a field the read
  * never returns cannot be stated as anything. This is the READ half, and only
- * that half: nothing here widens C-22.10's `run` carve-out, which stands.
+ * that half: nothing here widens C-22.10's `run` carve-out, which stood until
+ * REC-100 deleted it on 2026-09-18 (IC-130). Since then no NEW row can reach
+ * `undetermined` -- a bare PRESENT is refused at the append -- so this value is
+ * what the rows written BEFORE that landing read as, never filled.
  *
  * WHY THIS IS A THIRD FIELD AND NOT TWO NULLABLE COLUMNS, WHICH IS THE ONE
  * PLACE THIS ITEM DEPARTS FROM THE LETTER OF ITS ROW AND IS REPORTED AS SUCH.
@@ -183,7 +186,8 @@ export const OBSERVATION_COVERAGE = {
 };
 
 /** The value that is NOT one of the two above, and it is the whole point of
- *  this item. A `PRESENT` row under the `run` carve-out asserts *we looked and
+ *  this item. A `PRESENT` row written under the `run` carve-out (deleted by
+ *  REC-100, 2026-09-18 -- so only rows that predate it) asserts *we looked and
  *  it is there* while naming nothing -- so the record cannot tell it from a row
  *  backed by a capture, and the honest answer is to say so at the read. It is a
  *  constant for the reason every vocabulary here is one: a later reader must
@@ -197,6 +201,12 @@ export const OBSERVATION_COVERAGE_UNDETERMINED = "undetermined";
  *  inside a single answer. */
 export function observationCoverage({ state, resultRef } = {}) {
   const named = resultRef != null && String(resultRef) !== "";
+  /* A ROLLUP'S `observation` referent (REC-100, IC-130) reads `backed` BY THIS
+     SAME ROW-ALONE RULE: it names a row the check proved is an earlier PRESENT
+     row of the same run. What it does NOT say is whether THAT row is backed —
+     a legacy bare PRESENT stays `undetermined` on its own line, and following
+     the pointer is the reader's step, deliberately not folded in here (the
+     design's Incomplete sections carry the question). */
   if (named) return "backed";
   /* C-22.10's condition, and ONLY it. See the DESIGN GAP note above for
      `partial`, which this deliberately does not claim to have decided. */
@@ -1572,9 +1582,61 @@ export const RUN_CONTEXTS = {
    check and a separate statement-builder would put the sentence and the verdict
    in two places that can disagree. */
 
-function refusal(key, detail) {
+function refusal(key, detail, extra = null) {
   const row = AI_RUN_CHECKS[key];
-  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
+  return { ok: false, code: key, check: row.check, translation: row.translation, detail,
+           ...(extra && typeof extra === "object" ? extra : {}) };
+}
+
+/* REC-100 / IC-130 — C-22.10's `observation` ARM, AND WHY IT HAS A VOCABULARY.
+ *
+ * `OBSERVATION-LOG-DESIGN.md` §3, RULED 2026-09-18 by BOB #14: *"A ROLLUP's
+ * `PRESENT` refers to the row that makes it `PRESENT`"* — `result_kind =
+ * observation`, `result_ref` = the `seq` of the latest non-terminal `PRESENT`
+ * row of the same `(authority_kind, authority)`, computed by the plane — and
+ * *"an `observation` referent must resolve to an EARLIER row of the SAME
+ * authority whose state is `PRESENT`, or the row is refused."*
+ *
+ * That sentence has FOUR ways to be false, and they are different facts with
+ * different causes, so each is NAMED on the refusal (`referent_fault`) rather
+ * than collapsed into one code a caller cannot act on. They stay under ONE code
+ * and ONE C-number (C-22.10) on purpose: the ruling says C-22.10 GAINS AN ARM,
+ * not that a new condition exists — every one of the four is *"a PRESENT whose
+ * referent does not back it"*, which is exactly the condition C-22.10 refuses —
+ * and `civicos-ui/check-refusal-codes.mjs` refuses two codes behind one
+ * C-number. The fault is the NAME within the condition.
+ *
+ * THE ORDER IS A JUDGEMENT AND IS STATED. `not_earlier` is tested before
+ * `unresolved` because `seq` is SQLite's rowid and nothing deletes a row but the
+ * whole-store purge: a `seq` at or past the one this row will take CANNOT exist
+ * yet, so calling it merely unresolved would hide the one fact the caller got
+ * wrong. */
+export const OBSERVATION_REFERENT_FAULTS = {
+  not_earlier:     "the referent names a row at or after the one being written, and a rollup can only "
+                 + "rest on a look that already happened",
+  unresolved:      "the referent names no row this log holds",
+  other_authority: "the referent is a row of a different authority, and a run's rollup can rest only on "
+                 + "its own looks",
+  not_present:     "the referent row does not read PRESENT, so it cannot be what makes this row PRESENT",
+};
+
+/** THE ONE JUDGEMENT OF AN `observation` REFERENT. Pure: the STORE resolves
+ *  the row (`referent`) and hands it in, because a pure function cannot read
+ *  the log and a store-side judgement would be a second copy of the rule.
+ *  `referent` is `{ found, seq, next_seq, authority_kind, authority, state }`
+ *  or absent; ABSENT FAILS CLOSED as `unresolved`, so a caller that forgot to
+ *  resolve is refused rather than waved through. Returns the fault key or null. */
+export function observationReferentFault(entry, referent) {
+  const e = entry && typeof entry === "object" ? entry : {};
+  const ref = e.result_ref == null ? "" : String(e.result_ref);
+  const r = referent && typeof referent === "object" ? referent : null;
+  if (/^[1-9][0-9]*$/.test(ref) && r && Number.isFinite(Number(r.next_seq))
+      && Number(ref) >= Number(r.next_seq)) return "not_earlier";
+  if (!r || r.found !== true || String(r.seq) !== ref) return "unresolved";
+  if (String(r.authority_kind) !== String(e.authority_kind ?? "")
+      || String(r.authority ?? "") !== String(e.authority ?? "")) return "other_authority";
+  if (r.state !== "PRESENT") return "not_present";
+  return null;
 }
 
 /** C-22.1 / C-22.2 / C-22.3 / C-22.6 / C-22.9 / C-22.10 — ONE OBSERVATION.
@@ -1589,8 +1651,15 @@ function refusal(key, detail) {
  *  the run's refusals and become the table's. The function did not move and its
  *  run-log behaviour did not change -- every entry that passed before this
  *  landing still passes, which is the property `op=airuntick`'s callers depend
- *  on and the one the over-strictness arm measures. */
-export function checkObservation(entry, conditionKinds) {
+ *  on and the one the over-strictness arm measures.
+ *
+ *  SUPERSEDED IN ONE RESPECT BY REC-100 (2026-09-18, IC-130), and said here
+ *  rather than left to read as still true: a `run` PRESENT that names nothing
+ *  PASSED until then and is REFUSED now — C-22.10's `run` carve-out is deleted
+ *  under D-366's ruling. `referent` is the third argument that ruling needed: the
+ *  store's resolution of an `observation` referent (see
+ *  `observationReferentFault`), absent for every other kind. */
+export function checkObservation(entry, conditionKinds, referent = null) {
   const e = entry && typeof entry === "object" ? entry : {};
 
   /* C-22.6 first, because it is about WHERE the entry is going and the others
@@ -1658,63 +1727,50 @@ export function checkObservation(entry, conditionKinds) {
      point at is a coverage claim with no evidence under it -- the false-coverage
      hazard C-22.3 refuses one shape of, arriving from the other direction.
 
-     THE CARVE-OUT FOR `run`, STATED HERE RATHER THAN DISCOVERED, and it is a
-     DESIGN GAP reported against section 3. Section 3 writes this refusal
-     unconditionally and section 4.4 requires `ai_run_log`'s rows to fold in and
-     read back UNCHANGED. Those two cannot both hold: `ai_run_log` HAS NO
-     `result_ref` COLUMN, so not one row ever written to it can satisfy this, and
-     `op=airuntick` accepts a caller-supplied `PRESENT` today. Enforcing it over
-     `run` would therefore either drop rows out of a coverage record or force the
-     fold to INVENT a referent, and inventing one to pass a gate is the failure
-     the standing rule names by name. So the fold is admitted UNDER THE WEAKER
-     RULE IT WAS WRITTEN UNDER and every other authority carries the refusal.
-     The carve-out is a DEBT row, not a permanent shape.
+     IT APPLIES TO EVERY AUTHORITY, `run` INCLUDED, SINCE REC-100 (2026-09-18,
+     IC-130, D-366 CLOSED). Until then it did not fire on `authority_kind = run`,
+     and the carve-out's history is kept because the next reader will be tempted
+     to re-open it. REC-93 admitted the fold under the weaker rule it was written
+     under (`ai_run_log` never had a `result_ref` column). REC-100 (2026-09-16)
+     then MEASURED what deleting it would cost and found three live writers of a
+     bare `run` PRESENT: `#aiRunTerminate` and the wake entry, both ROLLUPS from
+     `#aiRunSearchState` with nothing single to point at, and `agent-worker`'s
+     `stepLog`. Deleting the condition then deadlocked the lifecycle --
+     `op=airunclose` answered this code and the terminal entry was never written.
 
-     WHAT CLOSES IT WAS WRONG HERE FOR TWO DAYS AND IS CORRECTED BY MEASUREMENT
-     (REC-100, 2026-09-16). This comment said it closes at *"REC-95's meaning
-     level"*. REC-95 LANDED, and it does not close: **REC-95's three writers
-     write under `authority_kind = derive`, not `run`** — REC-95 read the tree
-     and said so itself, and the correction was owed here. Believing the sentence
-     would have widened this refusal over three live writers that cannot satisfy
-     it. The THREE that actually emit a bare `run` PRESENT, each verified in the
-     source rather than inherited from a ledger:
+     BOB #14 RULED THE ROLLUP (`OBSERVATION-LOG-DESIGN.md` §3, 2026-09-18): a
+     rollup's PRESENT carries `result_kind = observation` pointing at the latest
+     non-terminal PRESENT row of the same authority, COMPUTED BY THE PLANE in the
+     same read as the state (`store.mjs #aiRunSearchState`). The deadlock cannot
+     return because the reducer reads PRESENT IF AND ONLY IF such a row exists --
+     re-verified on this tree before building, and asserted in section K of
+     `observation-log.test.mjs`. So the carve-out is gone and one arm is added:
+     an `observation` referent must RESOLVE to an EARLIER PRESENT row of the SAME
+     authority, and each way it can fail is NAMED (`OBSERVATION_REFERENT_FAULTS`).
 
-       1. `#aiRunTerminate` — the run's TERMINAL entry, and
-       2. `#aiRunReap`      — the reaper's wake entry.
-          BOTH take their state from `#aiRunSearchState`, which REDUCES a whole
-          run's log to one word. **A rollup PRESENT has no referent BY
-          CONSTRUCTION**: it does not report a look, it summarises many, so there
-          is no single thing for it to point at and no writer-side work produces
-          one. This is a DESIGN GAP against §3 (which writes the rule over
-          individual looks) and §4.4, not a defect in these two methods.
-       3. `op=airuntick`'s external caller — `agent-worker`'s `stepLog`, which
-          composes NO referent field at all while `observed` sits in `JUDGEABLE`,
-          so a model's judgement can set `PRESENT`. That is another area's path
-          and is DELEGATED rather than edited.
-
-     THE WRITE DOOR IS ALREADY OPEN, which nothing recorded: `aiRunTick` passes
-     the caller's entry straight to `#aiRunAppend`, which reads `entry.result_ref`
-     — driven, `appended: 1, refused: []`. The half that is missing is at the
-     READ: `aiRunLog`'s SELECT does not project `result_kind` or `result_ref`, so
-     a referent that IS stored cannot be seen through `op=airunlog` (additive, an
-     IC on I3). Section I of `observation-log.test.mjs` drives them. **EVIDENCE
-     GRADES DIFFER AND ARE LABELLED: `#aiRunTerminate` is DRIVEN there (and the
-     `overstrict` arm now DECLARES it, so it grades rather than prints);
-     `#aiRunReap` is READ — same rollup, same absent `resultRef`, so the same
-     shape by construction, but no arm reaches it because the reaper needs an
-     expired lease. An arm that drives the reaper is OWED and is not REC-100's.**
-     **DRIVEN CONSEQUENCE, the reason this is not a tightened fence:** with the
-     carve-out widened, `op=airunclose` answers `terminated: false, ok: false,
-     code: OBS_PRESENT_NO_REFERENT` and the terminal entry is NEVER WRITTEN — a
-     run that observed anything PRESENT CANNOT BE CLOSED AT ALL. */
-  if (state === "PRESENT" && authorityKind !== "run"
-      && (e.result_ref == null || String(e.result_ref) === ""))
+     WHAT THIS DOES NOT DO. It does not fill legacy rows: a bare `run` PRESENT
+     written before this landing stays in the log, unbacked, and REC-113's read
+     STATES it `undetermined`. It does not decide `partial` (still open in §3).
+     And `agent-worker`'s `stepLog` -- another area's path -- is now refused BY
+     NAME when a model judges PRESENT with no referent, which is the design's
+     individual-look rule (§4.4) and the delegation in `CLAIMS.md`. */
+  const resultKind = typeof e.result_kind === "string" && e.result_kind ? e.result_kind : null;
+  if (state === "PRESENT" && (e.result_ref == null || String(e.result_ref) === ""))
     return refusal("OBS_PRESENT_NO_REFERENT",
       `a PRESENT observation under authority '${authorityKind}' names nothing it found. `
       + `PRESENT asserts the subject IS there, so the row must point at what was produced `
-      + `(the capture_sha, the content id, the entity) -- a revisit that omits its referent `
-      + `loses which subject the bytes came from, which is the WARC lesson this refusal carries`);
-
+      + `(the capture_sha, the content id, the entity, or for a rollup the observation that makes `
+      + `it PRESENT) -- a revisit that omits its referent loses which subject the bytes came from, `
+      + `which is the WARC lesson this refusal carries`);
+  if (resultKind === "observation") {
+    const fault = observationReferentFault(e, referent);
+    if (fault)
+      return refusal("OBS_PRESENT_NO_REFERENT",
+        `this row's referent is observation '${e.result_ref == null ? "(absent)" : String(e.result_ref)}' `
+        + `and it does not back the row: ${OBSERVATION_REFERENT_FAULTS[fault]} `
+        + `(OBSERVATION-LOG-DESIGN.md section 3, the rollup ruling)`,
+        { referent_fault: fault });
+  }
   const badCondition = checkCondition(condition, conditionKinds);
   if (badCondition) return badCondition;
 

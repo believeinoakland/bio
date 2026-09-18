@@ -31450,7 +31450,7 @@ export class Store extends DurableObject {
       state, governed: governed === true, condition, bound,
       result_kind: resultKind, result_ref: resultRef, detail, bundle,
     };
-    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS);
+    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));
     if (bad) return bad;
     const now = at || new Date().toISOString().split(".")[0] + "Z";
     /* `seq` is assigned by SQLite as the rowid, which is store-wide and
@@ -31479,6 +31479,26 @@ export class Store extends DurableObject {
       entry.result_ref == null || entry.result_ref === "" ? null : String(entry.result_ref),
       entry.detail == null ? null : String(entry.detail));
     return null;
+  }
+
+  /** REC-100 / IC-130 — RESOLVE AN `observation` REFERENT FOR THE CHECKER, and
+   *  decide nothing. `checkObservation` in `airun.mjs` is pure and holds the
+   *  whole judgement (`observationReferentFault`); this reads the one row the
+   *  referent names plus the `seq` the new row will take, so the checker can say
+   *  which of the four faults it is. Any other `result_kind` resolves nothing
+   *  and costs no read. A referent that is not a positive integer is answered
+   *  `found: false` WITHOUT a query — it cannot name a row. */
+  #observationReferent(entry) {
+    if (!entry || entry.result_kind !== "observation") return null;
+    const ref = entry.result_ref == null ? "" : String(entry.result_ref);
+    const top = this.#one(`SELECT MAX(seq) m FROM observation_log`);
+    const next_seq = (top && top.m != null ? Number(top.m) : 0) + 1;
+    if (!/^[1-9][0-9]*$/.test(ref)) return { found: false, seq: null, next_seq };
+    const row = this.#one(
+      `SELECT seq, authority_kind, authority, state FROM observation_log WHERE seq = ?`, Number(ref));
+    return row ? { found: true, seq: String(row.seq), next_seq, authority_kind: row.authority_kind,
+                   authority: row.authority, state: row.state }
+               : { found: false, seq: null, next_seq };
   }
 
   /** REC-94 / IC-95 — THE CONTENT-LEVEL WRITER. `OBSERVATION-LOG-DESIGN.md`
@@ -33096,8 +33116,10 @@ export class Store extends DurableObject {
    *  ITS BEHAVIOUR DID NOT CHANGE AND THAT IS ASSERTED RATHER THAN CLAIMED:
    *  every entry that was accepted before this landing is accepted now, the
    *  refusal object comes back in the same shape, and `op=airunlog` answers
-   *  byte-identically over rows written before the fold. C-22.10 deliberately
-   *  does not fire on `run` for exactly this reason — see its catalogue row. */
+   *  byte-identically over rows written before the fold. C-22.10 did not fire
+   *  on `run` for exactly this reason UNTIL REC-100 (2026-09-18, IC-130): the
+   *  rollup ruling gave the run's two rollup writers a referent, and a bare
+   *  `run` PRESENT is now refused here like any other — see its catalogue row. */
   #aiRunAppend(run, entry, at, terminal = 0, actor = null) {
     return this.#observe({
       actorClass: "machine",
@@ -33157,17 +33179,35 @@ export class Store extends DurableObject {
    *  NEVER_LOOKED both become LOOKED_INDETERMINATE on a bounded stop. PRESENT
    *  survives, because a document the run did hold does not stop existing
    *  because the run ran out of time afterwards. */
+  /*  REC-100 / IC-130 — AND THE ROLLUP'S REFERENT COMES OUT OF THE SAME READ.
+   *  `OBSERVATION-LOG-DESIGN.md` §3, RULED 2026-09-18 by BOB #14: a rollup's
+   *  PRESENT carries `result_kind = observation` and `result_ref` = the `seq` of
+   *  the LATEST non-terminal PRESENT row of this run, computed HERE and never
+   *  supplied by a caller. So this returns `{ state, result_kind, result_ref }`
+   *  and both rollup writers (`#aiRunTerminate`, `#aiRunWake`) spread it, rather
+   *  than each deriving the pointer beside a state derived elsewhere.
+   *
+   *  THE INVARIANT THE RULING RESTS ON, and it is structural rather than
+   *  checked: `state` is PRESENT exactly when the grouped read returned a PRESENT
+   *  group, and that group's `MAX(seq)` IS the referent — one row of one query,
+   *  so there is no second read for the two to disagree across. The bound
+   *  override below only ever turns LOOKED_ABSENT / NEVER_LOOKED into
+   *  LOOKED_INDETERMINATE and never produces or removes PRESENT. A rollup that
+   *  is not PRESENT owes no referent and carries none. */
   #aiRunSearchState(run, stoppedByBound) {
-    const seen = new Set(this.#rows(
-      `SELECT DISTINCT state FROM observation_log
-        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0`, run).map((r) => r.state));
-    let s = seen.has("PRESENT") ? "PRESENT"
-          : seen.has("partial") ? "partial"
-          : seen.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE"
-          : seen.has("LOOKED_ABSENT") ? "LOOKED_ABSENT"
+    const latest = new Map(this.#rows(
+      `SELECT state, MAX(seq) seq FROM observation_log
+        WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
+        GROUP BY state`, run).map((r) => [r.state, r.seq]));
+    let s = latest.has("PRESENT") ? "PRESENT"
+          : latest.has("partial") ? "partial"
+          : latest.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE"
+          : latest.has("LOOKED_ABSENT") ? "LOOKED_ABSENT"
           : "NEVER_LOOKED";
     if (stoppedByBound && (s === "LOOKED_ABSENT" || s === "NEVER_LOOKED")) s = "LOOKED_INDETERMINATE";
-    return s;
+    return s === "PRESENT"
+      ? { state: s, result_kind: "observation", result_ref: String(latest.get("PRESENT")) }
+      : { state: s, result_kind: null, result_ref: null };
   }
 
   /** THE ONE EXIT. Every ending goes through here, and the terminal log entry
@@ -33216,7 +33256,8 @@ export class Store extends DurableObject {
     if (badCondition) return { run, found: true, terminated: false, ...badCondition };
 
     const stoppedByBound = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, bound);
-    const state = this.#aiRunSearchState(run, stoppedByBound);
+    const rollup = this.#aiRunSearchState(run, stoppedByBound);
+    const state = rollup.state;
     const last = this.#one(
       `SELECT level FROM observation_log
         WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
@@ -33230,7 +33271,9 @@ export class Store extends DurableObject {
       const bad = this.#aiRunAppend(run, {
         level: last ? last.level : "document",
         subject: row.context_id,
-        state,
+        /* `state`, `result_kind`, `result_ref` — the rollup and its referent
+           from ONE read (REC-100; see `#aiRunSearchState`). */
+        ...rollup,
         governed: false,
         condition,
         bound,
@@ -33872,7 +33915,10 @@ export class Store extends DurableObject {
         const refusal = this.#aiRunAppend(r.run, {
           level: "internet",
           subject: r.context_id,
-          state: this.#aiRunSearchState(r.run, false),
+          /* The rollup AND its `observation` referent (REC-100, IC-130): a wake
+             entry is a rollup like the terminal one, so it points at the latest
+             PRESENT look it restates, computed in the same read. */
+          ...this.#aiRunSearchState(r.run, false),
           governed: false,
           detail: `the daemon answered ${done.length} capture request(s) this run was waiting on `
                 + `(${captured} captured, ${refused} refused). The run is resumable: its own log `
@@ -34508,7 +34554,10 @@ export class Store extends DurableObject {
        code: OBS_PRESENT_NO_REFERENT` and a run that observed anything PRESENT
        CANNOT BE CLOSED AT ALL — a lifecycle deadlock blocked on a design ruling
        about what a ROLLUP's referent is. That ruling is not this item's and the
-       carve-out STANDS. What this item fixes is that the reader could not even
+       carve-out STANDS. [SUPERSEDED 2026-09-18 by REC-100 / IC-130: BOB #14
+       ruled the rollup referent and the carve-out is DELETED, so a new bare
+       `run` PRESENT is refused at the append and `undetermined` is now what the
+       rows written BEFORE that read as.] What this item fixes is that the reader could not even
        SEE the condition: D-366's whole cost is *"a later reader cannot tell that
        row's coverage claim from one backed by a capture"*, and until now the
        read made that true by construction.
@@ -34523,12 +34572,27 @@ export class Store extends DurableObject {
               result_kind, result_ref
        FROM observation_log WHERE authority_kind = 'run' AND authority = ?
        ORDER BY seq LIMIT ?`, run, cap + 1);
+    /* REC-100 / IC-130 — A ROLLUP'S `observation` REFERENT IS RE-EXPRESSED IN
+       THIS OP'S OWN `seq`, for the reason the note above gives for `seq` itself.
+       The column stores the STORE-WIDE seq (§3, and what `op=frontier` publishes
+       beside its store-wide `seq`); this op publishes the PER-RUN ordinal, so a
+       store-wide number here would point at no entry in the same answer — a
+       pointer a reader cannot follow, which is the one thing the rollup ruling
+       says the referent must be. EXACT, NOT APPROXIMATE: C-22.10's arm admits an
+       `observation` referent only to an EARLIER row of the SAME run, and the page
+       is a PREFIX of the run's rows in `seq` order, so the referent is always in
+       `ordinal`. The fallback keeps the stored value rather than inventing or
+       dropping one, and is unreachable while that check stands. */
+    const ordinal = new Map(page.slice(0, cap).map((e, i) => [String(e.seq), i + 1]));
     const entries = page.slice(0, cap)
       .map((e, i) => ({ ...e, seq: i + 1, governed: e.governed === 1, terminal: e.terminal === 1,
                         /* NULL IS NORMALISED TO `null` RATHER THAN LEFT AS `undefined`:
                            a key that serialises away is the absence-with-two-causes this
                            whole item is about, one layer down. */
-                        result_kind: e.result_kind ?? null, result_ref: e.result_ref ?? null,
+                        result_kind: e.result_kind ?? null,
+                        result_ref: e.result_kind === "observation" && ordinal.has(String(e.result_ref))
+                          ? String(ordinal.get(String(e.result_ref)))
+                          : (e.result_ref ?? null),
                         coverage: observationCoverage({ state: e.state, resultRef: e.result_ref }) }));
     return { run, found: true, status: row.status, entries,
              limit: cap, truncated: page.length > cap,

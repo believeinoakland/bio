@@ -3117,7 +3117,7 @@ CREATE TABLE IF NOT EXISTS observation_log (
   condition      TEXT,              -- queuestate.mjs vocabulary, and no new words
   bound          TEXT,              -- which bound stopped it, if one did
   terminal       INTEGER NOT NULL DEFAULT 0,
-  result_kind    TEXT,              -- capture | content | entity | reading. What the look produced, if anything
+  result_kind    TEXT,              -- capture | content | entity | reading | observation (a rollup, REC-100). What the look produced, if anything
   result_ref     TEXT,              -- THE BACK-REFERENCE: the capture_sha, content_id, entity id
   detail         TEXT               -- unchanged | changed | the reason | the reader name
 );

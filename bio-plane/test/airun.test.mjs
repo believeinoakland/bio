@@ -417,7 +417,12 @@ const KILLED = "RUN-2026-0807-killed";
     log: [
       { level: "meaning", subject: "observation:sewer-transfers-finding", state: "NEVER_LOOKED",
         detail: "the framework layer holds no finding about sewer fund transfers; nothing was extracted to derive one from" },
+      /* REC-100 (2026-09-18, IC-130): the PRESENT now NAMES what it found —
+         C-22.10's `run` carve-out is deleted, so a bare one is refused. That
+         makes this arm the second driven REAPER arm: K5 below now also reads the
+         rollup's `observation` referent. */
       { level: "document", subject: "observation:budget-2024", state: "PRESENT",
+        result_kind: "capture", result_ref: SHA_A,
         detail: "the store holds the adopted 2024 budget and it names the transfer line" },
       { level: "internet", subject: "observation:controller-portal", state: "LOOKED_INDETERMINATE",
         governed: true, condition: "governor-holding-host",
@@ -459,6 +464,10 @@ const KILLED = "RUN-2026-0807-killed";
   t("ARM K5: the killed run's search state is PRESENT — it did find something before it died, and "
     + "a bound reached afterwards does not un-find it",
     terminal.length === 1 ? terminal[0].state : null, "PRESENT");
+  t("ARM K5c (REC-100): and the reaped run's rollup PRESENT names the look that makes it PRESENT — "
+    + "an `observation` referent to the budget-2024 row, by op=airunlog's own seq",
+    terminal.length === 1 ? [terminal[0].result_kind, terminal[0].result_ref] : null,
+    ["observation", String(log.entries.find((e) => e.subject === "observation:budget-2024")?.seq)]);
   t("ARM K5b: and the terminal entry SAYS which bound in words, not only in a field",
     terminal.length === 1 && terminal[0].detail.includes("'lease'"), true);
   t("ARM K6: the run is out of `running`", log.status, "stopped");
@@ -924,7 +933,11 @@ const RESUMED = "RUN-2026-0807-resumed";
     state: { queue: ["a", "b", "c"], done: [] }, leaseMs: 60000, at: T0 });
   await POST(`op=airuntick&token=${TOK}`, { run: RESUMED, at: at(T0, 1000), leaseMs: 60000,
     state: { queue: ["b", "c"], done: ["a"] }, consume: { fetches: 1 },
+    /* The referent is REC-100's correction (2026-09-18, IC-130), not an
+       exemption: C-22.10's `run` carve-out is deleted, so a run's PRESENT names
+       what it found or is refused. The arm's subject — resumption — is unchanged. */
     log: [{ level: "document", subject: "observation:a", state: "PRESENT",
+            result_kind: "capture", result_ref: SHA_A,
             detail: "the first document on the work list is in the store and was read" }] });
 
   /* THE RESUMPTION. A new invocation reads the run and its log, and continues
