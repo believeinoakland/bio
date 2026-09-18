@@ -231,9 +231,19 @@ console.log("\n--- 2. STRUCTURAL: no edge, no relation, no supersedes column, no
     columnsOf("captured_locators"),
     ["address_norm", "address", "capture_sha", "via", "retrieval_locator",
      "first_retrieved", "last_retrieved", "observations"]);
-  t("NO NEW COLUMN: register carries EXACTLY the six it carried before this item",
+  /* CORRECTED BY MK-1 (IC-134, 2026-09-18), NOT EXEMPTED. This pinned the six
+     columns `register` carried when this item landed, and its purpose was that
+     THIS item added no column to a table its join reads. MK-1 then added three —
+     `authored`, `author`, `observed_at` — by an accepted-for-proposal I5 change
+     of its own, so "exactly the six" became a statement about the wrong era
+     rather than a rule anyone meant. The set is moved to the nine, and it still
+     fails on ANY further column under any name, which is the property it was
+     written for. The versionchain join reads `capture_sha` and `bundle_id` only,
+     and neither moved. */
+  t("NO NEW COLUMN: register carries EXACTLY its nine (the six this item found, plus MK-1's three, IC-134)",
     columnsOf("register"),
-    ["capture_sha", "bundle_id", "path", "encoding", "bytes", "registered"]);
+    ["capture_sha", "bundle_id", "path", "encoding", "bytes", "registered",
+     "authored", "author", "observed_at"]);
   t("NO NEW COLUMN (GUARD): the same reader SEES a column when one is there",
     columnsOf("register") && columnsOf("register").includes("bundle_id"), true);
 

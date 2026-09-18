@@ -914,6 +914,11 @@ export const RUNG_ABSENT = {
      attestation is superseded by the same attestor's later one, never withdrawn. */
   transcribe:           { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
   transcriptionattest:  { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" },
+  /* MK-1 / IC-133 — TESTIFY. Ground `undetermined` on `transcribe`'s measurement:
+     none of its refusals is a missing justification (an empty observation, C-53.3,
+     is not one). NOT `reversible`: nothing takes an observation back — a member
+     records a new one, never a rewrite (MEMBER-KNOWLEDGE-DESIGN.md section 2). */
+  testify:              { ground: "undetermined", is: "a member records a firsthand observation in their own words; it becomes an authored document standing on that member's trust, the author stamped from the session and the words kept exactly as written (D-184)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1598,6 +1603,11 @@ export const NON_ACTS = {
   transcribe: "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge",
   transcriptionattest: "content-directed: a second member attests another member's typing, keyed by content id; the typist's own attestation is refused",
   transcription: "read: one member's typing by content id — the text, who typed it, who attested it, and what a leg citing it may claim",
+  /* MK-1 / IC-133. TESTIFY is NOT an object-directed act: it acts on no existing
+     bundle — it CREATES one, from the member's own words — so there is no object
+     in a state for `applies()` to offer it against. The surface that offers it is
+     Program B's (MEMBER-KNOWLEDGE-DESIGN.md section 8: surfaces are not rowed). */
+  testify: "creation: a member records a firsthand observation, which becomes a NEW authored document; acts on no existing bundle",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
      `extractpropose` is keyed by (RUN, document): its subject is a run's

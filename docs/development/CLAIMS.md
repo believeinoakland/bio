@@ -13343,6 +13343,43 @@ rebased tree.
 
 released: 2026-09-18 by the REC-100 worker — the consumer migration is BUILT and committed on `worktree-agent-a249f66820def3efd` (rebased onto `2d51e5d3` first). `stepLog` records a model-judged PRESENT as `LOOKED_INDETERMINATE` with the judgement stated; the drive loop reads `refused[]` and publishes `log_refused` / `present_unbacked`; section R drives the tick against the REAL plane. Controls `aw-steplog` and `aw-refused` AS DECLARED (the second after a first-run finding about the arm and R2b, recorded at both sites). REC-100's 2026-09-16 DELEGATION is DISCHARGED above.
 
+## CLAIM 2026-09-18 RECORD (MK-1 — THE AUTHORED BUNDLE: a member's firsthand observation IS a document, D-184)
+
+Worker spawned by CONDUCT #4 into worktree `agent-a1137b844e6d23aed`, branch
+`worktree-agent-a1137b844e6d23aed`. Design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §2 and §7, read
+at the artifact before building (§8's condition). Minted BEFORE building with `node tools/mintid.mjs`:
+**IC-133** (I3 — the testimony op), **IC-134** (I5 — the register's `authored` flag and its two stamps),
+**C-53** (the act's and the fence's refusal family).
+
+Paths, named precisely because `store.mjs` and `schema.mjs` are shared ground with MK-4 (the LEAD),
+building concurrently:
+
+- `bio-plane/src/store.mjs` — a NEW method `testify()` and a NEW private `#testimonyFence()` in their
+  own DEC-49 regions; `promote()` edited ONLY to call the fence before its first write and to write the
+  register's three new columns; `earnedBasisRegistry()` edited ONLY so an authored capture earns no
+  capture letter (undetermined, stated — the testimony axis is MK-2's); the additive-column list gains
+  the register's three columns; `CAPTURE_TEXT_UNIT_CONTAINERS` gains `text`; the DO dispatch gains
+  `testify`.
+- `bio-plane/src/schema.mjs` — the `register` table gains three columns. No new table.
+- `bio-plane/src/index.mjs` — one OPS row (`testify`), its SESSION_OPS/NEEDS entries, viewer and
+  author stamps; nothing else.
+- `bio-plane/src/affordances.mjs` — the new op in the ground / non-act tables only.
+- `bio-plane/checks/bio-checks.mjs` — `TESTIMONY_CHECKS` (C-53) and C-18.1's authored arm.
+- `bio-plane/test/testify.test.mjs`, `bio-plane/test/nc-mk1.mjs` — new. Any existing suite pinning a
+  vocabulary this item grows is CORRECTED at its site, never exempted.
+- `bio-plane/scripts/coverage.mjs`, `civicos-ui/check-refusal-codes.mjs` — floor tables only, from
+  printed figures.
+- `bio-plane/dist/**` — `npm run build` output.
+- `docs/architecture/construct-status.json` (`2.firsthand`, `3.census`) and what
+  `node tools/status.mjs --write` renders; `docs/development/INTERFACE-CHANGES.md` (IC-133, IC-134);
+  `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` (front matter only, where MK-1's state is stated);
+  `docs/DECIDED.md` on regeneration; this block.
+
+**NOT CLAIMED:** `civicos-ui/**` other than the guard's floor table, `docs/development/QUEUE.md`
+(CONDUCT flips the row), `INTERFACES.md` (CONDUCT's at RESOLUTION), `newgroup/**`, `tools/**`.
+
+**open as of 2026-09-18** — MK-1 is being built.
+
 ## CLAIM 2026-09-18 M0 (LED-1 — the ledger reader audit; moves no row)
 
 Worker spawned by CONDUCT #4, branch `worktree-agent-a811f19cc02e2aa59`. Paths: `docs/development/MEASUREMENTS.md`
@@ -13424,6 +13461,18 @@ unpiped; `node civicos-ui/test/run.mjs` exit 0; `node tools/status.mjs --check` 
 `node test/machine-attest.control.mjs` from `bio-plane/`: baseline 35/0 · ratify 32/3 · caseratify 32/3 ·
 overstrict 33/2, all as declared, every restore byte-identical. Minted: IC-132, D-421 (a DECISION FOR
 BOB — the operator's env-binding tokens still ratify with a member's signature; provisional: not refused).
+
+## CLAIM 2026-09-18 RECORD (MK-1 — THE AUTHORED BUNDLE) — RELEASED
+
+released: 2026-09-18 by the MK-1 worker. Every claimed path is committed on branch
+`worktree-agent-a1137b844e6d23aed` (origin/main `fbcefa1b` merged in; IC-133's I3 base re-read as
+25.0.0 after IC-132 landed underneath it). The final merged tree ran the battery **234/234 suites green ·
+14509 assertions passing**, `coverage --strict` exit 0 (184/184 ops reached through the control plane,
+register floors re-read and moved from the print, one movement NAMED as REC-123's), UI harness exit 0,
+`plancheck --local` 0 fail, `status --check` 0 drift. `node test/nc-mk1.mjs`: baseline + eleven arms,
+every arm AS DECLARED. No surface is built for `op=testify` — MEMBER-KNOWLEDGE-DESIGN.md §8 says surfaces
+are Program B's and are not rowed, so no UI delegation is raised.
+
 ## CLAIM 2026-09-18 RECORD (REC-121 — `content:chain=undetermined` stops matching an image cited as its own bytes)
 
 Worker spawned by CONDUCT #4, isolated worktree `agent-a835fde7253b57127`, branch
@@ -13546,3 +13595,13 @@ test/nc-rec127.mjs` from `bio-plane/`: five arms and a baseline run twice, ALL A
 byte-identical, content-arm's §11 digest `c39f4e8adf1960c2…` IDENTICAL under `preitem`; sibling harnesses
 `nc-rec121`, `nc-rec90 pred`, `nc-rec104` all AS DECLARED. IDs minted with `tools/mintid.mjs`: IC-138. **FOR
 CONDUCT:** RESOLVE IC-138 against I3 as read at resolution (built on 25.1.0, proposed MINOR on IC-131's shape).
+### ADDENDUM 2026-09-18 RECORD (MK-1) — CONDUCT #4 corrections (A) and (B), inside the same landing
+
+The MK-1 claim was re-opened on CONDUCT #4's instruction for two corrections, over the SAME paths plus
+`bio-plane/test/mk1-publish-probe.mjs` (new, the measurement for (A)) and the two `op=ratify`/`op=caseratify`
+regions of `bio-plane/src/index.mjs` (`is-testimony-publish-bundle`, `is-testimony-publish-case`). (A) the
+PUBLICATION FENCE, C-53.10–.12, after the probe DROVE an observation into the published bucket; (B) BOB #14's
+canonical header on the authored bytes, C-53.6 narrowed. origin/main `2c4a5c11` merged first.
+
+released: 2026-09-18 by the MK-1 worker — every path committed on `worktree-agent-a1137b844e6d23aed`; the
+final figures are in the worker's report and in `testify.test.mjs`'s NEGATIVE CONTROL line.

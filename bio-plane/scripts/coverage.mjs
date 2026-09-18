@@ -1236,13 +1236,19 @@ const REGISTER_FLOOR = {
      failure mode (a dropped floor move goes SLACK, not broken). classified and corpus are
      UNMOVED and that is stated rather than implied: the arriving arm joined an already-counted
      declaration rather than adding a suite. */
-  arms: 1295,
+  arms: 1302,
   // [CONDUCT #4 at REC-125 + REC-127's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1295/1284 · classified 228/226 · corpus (suites read) 229/227`, `floor 191/189 reproducible`.
+  // [branch record | MK-1 after CONDUCT #4's (A)/(B), on origin/main 2c4a5c11] MOVED 1281 -> 1292, classified 225 -> 226, corpus 226 -> 227, run 188 -> 189, from the post-commit `--strict` print (`arms 1292/1281 · classified 226/225 · corpus (suites read) 226/225 · GREW by 11`, `floor 189/188 reproducible`). The arrivals: MK-1's own declaration grew from 12 to 18 arms (+6: header, pubbundle, pubcited, pubcase, pubdirect, pubover), and REC-121's `rec121-chain-bytes.test.mjs` came in on main with its declaration (the +1 suite and the other arms). ONE KEY SET. CONDUCT re-reads on the merged tree.
+  // [branch record | MK-1, after merging origin/main fbcefa1b] MOVED AGAIN 1276 -> 1281, classified 224 -> 225, corpus 225 -> 226, run 187 -> 188, from the merged tree's own post-commit `--strict` print (`arms 1281/1276 · classified 225/224 · corpus (suites read) 226/225 · GREW by 5`, `floor 188/187 reproducible`). The +5/+1/+1/+1 is NOT MK-1's: it is REC-123's `test/machine-attest.test.mjs`, which arrived on main without this key moving — a floor with slack is not one, so it is moved here and NAMED rather than left for the next reader to find.
+  // [CONDUCT #4 at REC-121's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1269/1264 · classified 224/223 · corpus (suites read) 225/224` and `floor 187/186 reproducible`.
+  // [MK-1 at its second merge, origin/main 2c4a5c11] ONE KEY SET, collapsed: main's 1269 is REC-123's +5 on 1264 (the move MK-1 named above); MK-1's own suite adds 12 on top, so the merged figure is 1281, re-read from the merged tree's post-commit print before pushing.
   // [CONDUCT #4 at LED-2's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1284/1279 · classified 226/225 · corpus (suites read) 227/226`, `floor 189/188 reproducible`.
   // [CONDUCT #4 at REC-121's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1269/1264 · classified 224/223 · corpus (suites read) 225/224` and `floor 187/186 reproducible`.
   // [branch record | LED-2 after merging origin/main at 37cbc810] re-read on the MERGED tree: `--strict` exit 0 printed `arms 1279/1274 · classified 225/224 · corpus (suites read) 226/225 · GREW by 5 arm(s)` and `floor 188/187 reproducible` — the +5 / +1 / +1 / +1 is REC-123's `test/machine-attest.test.mjs`, which main integrated without moving this floor.
   // [branch record | LED-2 read arms 1274 on its own tree] LED-2, 2026-09-18: 1264 -> 1274 / 223 -> 224 / 224 -> 225 / run 186 -> 187, ALL FOUR from THIS item's own green --strict run PRINTED AFTER its commit 612860fe (`REGISTER FLOOR  arms 1274/1264 · classified 224/223 · corpus (suites read) 225/224 · GREW by 10 arm(s)` and `floor 187/186 reproducible · GREW by 1`), never by adding. The arrival is ONE suite, `test/ledger.test.mjs` (ten ordinal arms, driven by `test/ledger.control.mjs`, RUN 2026-09-18). CONDUCT re-reads on the MERGED tree.
+  // [MK-1 at its fourth merge, origin/main 442c01f4] ONE KEY SET, collapsed again: main carries 1284 (LED-2's ledger suite on top of REC-121/REC-123); MK-1's suite adds its 18 arms on top; the key is set from the merged tree's own post-commit print, not from this sum: `arms 1302/1292 · classified 227/226 · corpus (suites read) 228/227 · GREW by 10`, `floor 190/189 reproducible` — the +10/+1/+1/+1 is LED-2's `test/ledger.test.mjs`, so ALL FOUR keys move to 1302/227/228/190.
   // [CONDUCT #4 at REC-100's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1264/1262 · classified 223/223 · corpus (suites read) 224/224` and `floor 186/185 reproducible`.
+  // [branch record | MK-1, 2026-09-18] MOVED 1264 -> 1276, classified 223 -> 224, corpus 224 -> 225, run 186 -> 187, from the figures a green `--strict` run PRINTED AFTER COMMITTING (`arms 1276/1264 · classified 224/223 · corpus (suites read) 225/224 · GREW by 12`, `floor 187/186 reproducible · GREW by 1`), never by adding. The whole growth is ONE new suite, `test/testify.test.mjs`, whose declaration states TWELVE arms — a baseline plus eleven, driven by `test/nc-mk1.mjs` and every one RUN. ONE KEY SET. CONDUCT re-reads this on the MERGED tree (MK-4 is landing beside it).
   // [CONDUCT #4 at REC-87 + CPDF-18's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1262/1243 · classified 223/220 · corpus (suites read) 224/221` and `floor 185/184 reproducible`.
   // [CONDUCT #4 at REC-120's merge] 2026-09-18: re-read on the merged tree (REC-104 + BOB's construct-status + REC-120) — `--strict` exit 0 printed `arms 1243/1234 · classified 220/218 · corpus (suites read) 221/219` and `floor 184/182 reproducible`.
   // [CONDUCT #4 at REC-104's merge] 2026-09-18: re-read on the merged tree — `--strict` exit 0 printed `arms 1234/1226 · classified 218/217 · corpus (suites read) 219/218` and `floor 182/181 reproducible`; REC-104 left the move to CONDUCT on purpose (its own tree printed 1234/1215).
@@ -1304,8 +1310,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 228,
-  corpus: 229,
+  classified: 227,
+  corpus: 228,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1333,7 +1339,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 191,
+  run: 190,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

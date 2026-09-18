@@ -9910,6 +9910,130 @@ rather than a mock, with a negative control per half. **agent-worker's answer ga
 `log_refused` and `present_unbacked`, and `logged` now counts appended entries rather than ticks** —
 equal whenever nothing is refused, which was every case before this IC.
 
+## IC-133 · I3: TESTIFY — `op=testify`, a member records a firsthand observation, which becomes an authored INFO bundle whose bytes are their words (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's
+  `docs/development/INTERFACES.md`: 25.0.0** (IC-132 ACCEPTED — re-read after merging `origin/main` at
+  `fbcefa1b`; the brief's 24.0.0 was the base at spawn and IC-132 landed underneath it). **Proposed as
+  MINOR — 25.0.0 → 25.1.0, ADDITIVE.** One new op; one new refusal family **C-53** (`TESTIMONY_CHECKS`, nine rows), six reachable
+  through the new op and three through `op=promote` (below); `op=earnedbasis`'s capture-axis entry gains
+  ONE new `undetermined_because` value on documents that could not exist before this IC. **Read the base
+  AT RESOLUTION** — MK-4 is proposing against I3 concurrently.
+- **Proposer:** RECORD, worker `agent-a1137b844e6d23aed`, 2026-09-18, from QUEUE MK-1
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (the surface is Program B's and is NOT rowed —
+  `MEMBER-KNOWLEDGE-DESIGN.md` §8), `SKILL` and `DIST` (NOT-AFFECTED expected: neither calls the new op
+  nor writes a provenance document with an `authored` key), `RECORD`.
+- **Design:** `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §2 (the mechanism) and §7 (the refusals),
+  read at the artifact before building. Register half: IC-134.
+
+**THE SHAPE.** `POST op=testify` body `{ words, observedAt, title? }` — classes admin/member,
+`mutating: true`, SESSION route, capability `contribute`. `author` is STAMPED by the control plane from
+the session and OVERWRITES any `?author=` the caller sent; a machine credential stamps `class:<cls>`.
+`observedAt` is required — a real calendar date `YYYY-MM-DD` or a UTC instant
+`YYYY-MM-DDTHH:MM[:SS]Z`, not later than the record's clock — and is kept AS WRITTEN; the record's own
+time of writing (`recorded_at`) is the server's clock and is not taken from the caller. `title` is
+optional (control characters stripped, 200 characters); absent, it is `Firsthand observation, observed
+<date>`. Answers `{ ok, bundle_id, bundle_sha, capture_sha, file, bytes, content_id, authored: true,
+origin: "member", actor_class: "member", author, observed_at, recorded_at, axes: {capture, connection,
+testimony} (each {grade: null, determined: false, why}), says }`.
+
+What it writes, through `promote` (the one write path) in ONE transaction: an INFO bundle under a
+canonical id `INFO-<year>-<n>-observation` (the slug is fixed, so an id says what KIND of thing it names
+and nothing of what it says); the words, byte-for-byte, at `snapshots/observation-<sha16>.txt`; a
+`data/provenance.json` document with `authored: true`, `author`, `observed_at`, `recorded_at`,
+`origin: {kind: "member"}`, `capture.actor_class: "member"` and **NO `capture.grade`**; a register row
+(IC-134) with `authored = 1`; ONE `capture_text` unit over the whole words at the `document` extent (so
+`passage:` search finds it) with its `indexed` observation; and ONE `document` content row minted by the
+member (so a leg cites it by `content_id` as any row). **No reading is written**, because no reader ran
+over the words — a meaning-level row saying one had looked would be a look nobody took.
+
+**WHAT MOVES ON EXISTING OPS.**
+- `op=earnedbasis` (and the promote-time earned registry): a target whose ONLY registered capture is
+  authored gets `earned.capture[id] = { mode: "ceiling", grade: null, captures: 0, authored: <n>,
+  determined: false, undetermined_because: "CAPTURE_AXIS_AUTHORED", empty_level, why }` — present and
+  NULL on CASE 2's rule, not absent. So a leg citing an observation and claiming a capture letter is
+  refused C-2.8 (as for any undetermined capture), and C-2.8's repair list omits "have the transcription
+  measured" for this one cause, because there is no transcription. **Every other document's entry is
+  unchanged**, measured: a member-UPLOADED document still earns the fetch ceiling, and the suite pins it.
+- `op=promote`: three new refusals (C-53.7/.8/.9, below), and the register write became an UPSERT that
+  keeps `authored`/`author`/`observed_at` on a re-registration under the SAME bundle (REPLACE would have
+  reset them — the flag cleared by any writer). The five pre-existing columns move exactly as before.
+  The success answer gains a `testimony` key ONLY on the testimony path, which is a method of the store,
+  so no existing caller's answer changes.
+- C-18.1 (the catalogue, at release): a document with `authored: true` must carry NO capture grade,
+  actor class `member` and origin `member`; every other document is held to the A/B/C rule exactly as
+  before.
+
+**WHAT IT REFUSES, C-53:** `TESTIMONY_NOT_A_MEMBER` (.1, any machine stamp or none),
+`TESTIMONY_AUTHOR_SUPPLIED` (.2, **the body names an author** under any of `author`, `observer`,
+`authoredBy`, `authored_by`, `by`, `member`, `memberId` — refused rather than silently overridden),
+`TESTIMONY_NO_WORDS` (.3), `TESTIMONY_WORDS_TOO_LONG` (.4, over `CAPTURE_TEXT_UNIT_CAP`, refused never
+cut), `TESTIMONY_OBSERVED_AT_INVALID` (.5), `TESTIMONY_WORDS_REGISTERED` (.6, the exact bytes already
+registered — the register is keyed by bytes, so recording them would re-file the existing row; the
+answer does not name the bundle that holds them, D-15). At `op=promote`, region `is-testimony-fence`:
+`TESTIMONY_ORIGIN_NOT_MEMBER` (.7, **an authored document claiming an origin or actor other than
+`member`**), `TESTIMONY_AUTHORED_UNEARNED` (.8, **a document claiming `authored` — in any truthy
+spelling — that the testimony path did not write, or a register entry re-filing an authored
+observation's bytes under another bundle: THE LIAR**), `TESTIMONY_AUTHORED_DROPPED` (.9, an authored
+document whose revision stops saying so or drops `data/provenance.json`).
+
+**WHY IT IS ADDITIVE.** A new op; refusals reachable only on documents that claim a key no document
+carried before this IC, or on bundles only this op can create; an earned-registry value on the same
+documents. A member-uploaded document (origin `member`, NOT authored) and `authored: false` are
+accepted exactly as today — pinned by the over-strictness arms.
+
+**ADDENDUM, same landing, on CONDUCT #4's two corrections (2026-09-18):**
+- **THE AUTHORED BYTES ARE A CANONICAL HEADER THEN THE WORDS** (BOB #14's ruling): `bio-testimony/1\n`,
+  `id: <bundle id>\n`, `observed_at: <as accepted>\n`, one empty line, then the words exactly as written —
+  defined once at `Store.testimonyBytes`, permanent once on main. No author identity is in the bytes.
+  `capture_sha` is over the whole file; the answer gains `words_bytes` beside `bytes`. The passage index holds
+  the WORDS only. Two members' identical words are now two bundles with two shas. **C-53.6 is NARROWED**, not
+  removed: it now fires only when somebody registered the next testimony's exact bytes in advance (the id is
+  sequential), in region `is-testify-bytes`.
+- **THE PUBLICATION FENCE (C-53.10–.12), measured necessary before it was built** (`test/mk1-publish-probe.mjs`:
+  an observation whose bytes were in the working bucket RATIFIED and published its words, its provenance
+  document and the observer's handle; a finding resting on one ratified; a case over it ratified).
+  `op=ratify` refuses `TESTIMONY_UNPUBLISHABLE` (the bundle is an observation) and
+  `TESTIMONY_CITED_UNPUBLISHABLE` (its basis or version legs reach one at any depth, with `rests_on`);
+  `op=caseratify` refuses `TESTIMONY_CASE_UNPUBLISHABLE` (a finding the document names reaches one). All
+  three below the scope check and the machine fence, before the signature is weighed, 409. The facts come
+  from the store (`gatefacts` and `casedocfacts` gain a `testimony` key, from `Store.testimonyReach`).
+  **Lifting the fence is MK-3's act**, once its projection honours §4's attribution level. Every ordinary
+  document, finding and case publishes exactly as before (driven in `testify.test.mjs` §6).
+
+**ANSWERS REQUESTED:** UI — NOT-AFFECTED today (no caller; Program B's surface) — but a surface offering
+ratify on a finding now meets three new refusal codes, each with its canned sentence; SKILL, DIST —
+NOT-AFFECTED expected.
+
+## IC-134 · I5: the register gains `authored`, `author`, `observed_at` — a member's own words are registered like any capture and never pass for one (D-184) · PROPOSED 2026-09-18 (MK-1, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
+  1.18.0.** **Proposed as MINOR — 1.18.0 → 1.19.0, ADDITIVE.** Three columns on `register`; no new
+  table, so nothing joins `purge`'s list (the register is already there). **Read the base AT
+  RESOLUTION** — MK-4 is proposing against I5 concurrently.
+- **Proposer:** RECORD, worker `agent-a1137b844e6d23aed`, 2026-09-18, from QUEUE MK-1
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** every reader of `register` — all in `bio-plane/src/store.mjs` and
+  `index.mjs`, all NAMING their columns (measured: no `SELECT *` and no positional `INSERT` on
+  `register` in this tree), so none sees a new column it did not ask for.
+
+**THE SHAPE.** `authored INTEGER NOT NULL DEFAULT 0` — 1 when the bytes are a member's own words written
+through `op=testify`; `author TEXT` — the member, stamped from the session; `observed_at TEXT` — the
+member's own statement of when they saw it. Added to the `CREATE TABLE` and to the additive-column
+migration list, so a fresh install and a store migrated forward present the same table. **The default
+IS the true value for every existing row** — no route could author a bundle before this IC — so it is a
+backfill by construction (`content.cited_as`'s reasoning). `author` and `observed_at` are NULL on every
+row that is not authored, which is what they mean.
+
+**WHO WRITES IT.** Only `promote`, and only from the testimony path's own key — a module-private
+`Symbol` that no JSON body can carry — so a caller's register entry may carry an `authored` field and
+it is never read. The fence (IC-133, C-53.8) reads "authored" FROM THIS COLUMN, never from the
+document's claim, which is what makes the column the one fact in the check a caller cannot have
+produced.
+
+**ANSWERS REQUESTED:** RECORD (self). No other area reads `register`.
+
 
 ## IC-132 · I3: `op=ratify` and `op=caseratify` REFUSE an `ai` credential BY NAME — `MACHINE_CANNOT_RATIFY` (C-32.12), `MACHINE_CANNOT_RATIFY_CASE` (C-32.13) · PROPOSED 2026-09-18 (REC-123, minted with `node tools/mintid.mjs IC` BEFORE the fix) — the version bump and the RESOLUTION are CONDUCT's · **RESOLVED ACCEPTED 2026-09-18 by CONDUCT #4 — MAJOR, I3 25.0.0**
 

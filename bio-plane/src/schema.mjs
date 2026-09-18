@@ -88,7 +88,21 @@ CREATE TABLE IF NOT EXISTS register (
   path        TEXT NOT NULL,
   encoding    TEXT NOT NULL,
   bytes       INTEGER NOT NULL,
-  registered  TEXT NOT NULL
+  registered  TEXT NOT NULL,
+  -- MK-1 / D-184 / IC-134 (MEMBER-KNOWLEDGE-DESIGN.md section 2). 1 when these
+  -- bytes are a MEMBER'S OWN WORDS authored through op=testify, never a capture
+  -- of something published. ONLY the testimony path writes 1, and promote's
+  -- fence (C-53.8) refuses the flag on any document it did not write, so a
+  -- caller cannot set it and cannot clear it. 0 is the true value for every row
+  -- that existed before this column did, because no authored bundle could.
+  authored    INTEGER NOT NULL DEFAULT 0,
+  -- The member who authored the words, STAMPED by the plane from the session
+  -- and never taken from the caller. NULL on every row that is not authored.
+  author      TEXT,
+  -- When the member says they OBSERVED it, which is THEIR statement. The
+  -- record's own time of writing is registered above, and the two are kept
+  -- apart as correspondence keeps them. NULL on every row that is not authored.
+  observed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS register_bundle ON register(bundle_id);
 

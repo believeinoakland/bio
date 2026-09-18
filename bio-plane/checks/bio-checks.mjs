@@ -1877,10 +1877,30 @@ function checkReleaseAuthority(ctx, findings) {
     if (!cap || typeof cap !== 'object') findings.push(f('C-18.1', 'error', `provenance documents[${i}] missing capture block`));
     else {
       if (!cap.method) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture missing 'method'`));
-      if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
+      /* MK-1 / D-184 (`MEMBER-KNOWLEDGE-DESIGN.md` §3): AN AUTHORED DOCUMENT
+         CARRIES NO CAPTURE GRADE, and the absence is the statement. The capture
+         axis measures the act of reading a document in (DEC-21's amendment), and
+         a member's own words were not read in from anywhere — so a letter here
+         would be true of the bytes (we hold exactly what the member wrote) and
+         would read as strength the observation does not have. Its grade is
+         testimony, which is MK-2's axis. RULED RIGHT by BOB #14, 2026-09-18 (§3
+         will say so). `authored === true` is the ONLY
+         spelling that switches the arm: the store's fence (C-53.8) refuses the
+         flag on any document the testimony path did not write, so the catalogue
+         can read it as said. */
+      if (d.authored === true) {
+        if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md §3)`));
+        if (cap.actor_class !== 'member') findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(', ')}`));
     }
     const or = d.origin;
+    /* MK-1: the design's first §7 refusal, stated in the catalogue as well as
+       fenced at the write (C-53.7) — an authored observation's origin is the
+       member who made it. */
+    if (d.authored === true && (!or || typeof or !== 'object' || or.kind !== 'member')) {
+      findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === 'object' ? or.kind : or}', not 'member'`));
+    }
     if (!or || typeof or !== 'object' || !ORIGIN_KINDS.includes(or.kind)) {
       findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(', ')}`));
     } else if (or.kind === 'sweep') {
@@ -3613,7 +3633,12 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
   if (earned && earned.mode === 'ceiling' && earned.grade == null) {
     findings.push(f('C-2.8', 'error', `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ''}`,
       [`state NO capture grade on basis[${i}] — an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-       'or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns',
+       /* MK-1: for a member's AUTHORED observation there is no transcription to
+          measure — the bytes ARE the words — so that repair would send a member
+          to do something that cannot be done. Omitted for that one cause, and
+          only for it. */
+       ...(earned.undetermined_because === 'CAPTURE_AXIS_AUTHORED' ? []
+         : ['or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns']),
        'or state this leg as testimony (grade D, with an author and a date) if it is a member\'s own account']));
     return;
   }
@@ -11115,6 +11140,145 @@ export const TRANSCRIBE_CHECKS = {
     translation: 'You typed this transcription, so you cannot be the one who attests it. An '
       + 'attestation is a SECOND person checking the text against the page; your own agreement with '
       + 'your own typing costs nothing and proves nothing. Ask another member to check it.',
+  },
+};
+
+/* =====================================================================
+ * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE (`MEMBER-KNOWLEDGE-
+ * DESIGN.md` §2 and §7): a member's firsthand observation IS a document — an
+ * INFO bundle whose bytes are a canonical header then the member's words, registered like any
+ * capture and flagged `authored`. C-53, minted with `node tools/mintid.mjs C`.
+ *
+ * ITS OWN FAMILY, because the subject is its own: the ways a member's own
+ * statement could be made to pass for a captured document (or a captured
+ * document for a member's statement), and the ways the act could be performed
+ * in somebody else's name. The design's words: the register must never let one
+ * pass for the other.
+ *
+ *   is-testify-act       who is testifying — a signed-in member, stamped by the
+ *                        plane; a machine, or a caller naming the author, refused
+ *   is-testify-words     the words and the date the member says they observed it
+ *   is-testify-bytes     whether the canonical bytes (header + words) are already
+ *                        registered — reachable only by pre-registering them
+ *   is-testimony-publish-bundle / is-testimony-publish-case (src/index.mjs)
+ *                        THE PUBLICATION FENCE (C-53.10–.12): an observation, a
+ *                        finding resting on one, or a case over such a finding
+ *                        does not cross until MK-3's attribution does
+ *   is-testimony-fence  THE REFUSALS THE ITEM EXISTS FOR, at op=promote — the one
+ *                        write path — so no route but op=testify can set the flag,
+ *                        and no revision can quietly change what it says: an
+ *                        authored document claiming an origin or actor other than
+ *                        `member` (C-53.7); a document claiming `authored` that the
+ *                        testimony path did not write (C-53.8, THE LIAR: a flag any
+ *                        writer could set); an authored document that stops saying
+ *                        so (C-53.9).
+ *
+ * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's;
+ * the attribution level on the case act (§4) is MK-3's.
+ * ===================================================================== */
+export const TESTIMONY_CHECKS = {
+  TESTIMONY_NOT_A_MEMBER: {
+    check: 'C-53.1',
+    where: 'src/store.mjs testify > is-testify-act',
+    translation: 'A firsthand observation is a person saying what they saw, in their own name, and it '
+      + 'stands on that person\'s trust. The credential that asked is an automated one, and it has no '
+      + 'eyes to have seen anything with. Sign in and record it yourself.',
+  },
+  TESTIMONY_AUTHOR_SUPPLIED: {
+    check: 'C-53.2',
+    where: 'src/store.mjs testify > is-testify-act',
+    translation: 'That request names who the author is. The record takes the author of an observation '
+      + 'from the account that is signed in, never from the request — a request that names its own '
+      + 'author could sign as somebody else. Send the observation without an author and it is recorded '
+      + 'as yours.',
+  },
+  TESTIMONY_NO_WORDS: {
+    check: 'C-53.3',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'The observation is empty. Write what you saw, in your own words; nothing is filled in '
+      + 'for you.',
+  },
+  TESTIMONY_WORDS_TOO_LONG: {
+    check: 'C-53.4',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'The observation is longer than one passage this record stores. Record it as more than '
+      + 'one observation; each is kept exactly as written and each can be cited.',
+  },
+  TESTIMONY_OBSERVED_AT_INVALID: {
+    check: 'C-53.5',
+    where: 'src/store.mjs testify > is-testify-words',
+    translation: 'An observation needs the date you saw it, as a calendar date (for example 2026-09-10) '
+      + 'or a date and time, and not a date later than now. The record keeps that date apart from the '
+      + 'moment you wrote it down, because they are two different facts.',
+  },
+  /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
+     second member's IDENTICAL words, because the register is keyed by bytes.
+     The ruling: two identical observations are two testimonies, and the bytes
+     carry a canonical header holding the testimony's own id — so identical
+     words never collide. What is left is the case only an adversary produces:
+     somebody registering, ahead of time, the exact bytes the NEXT testimony
+     will have (the id is sequential, so it can be predicted). Recording over
+     them would re-file their register row under the observation. */
+  TESTIMONY_WORDS_REGISTERED: {
+    check: 'C-53.6',
+    where: 'src/store.mjs testify > is-testify-bytes',
+    translation: 'The record already holds, under another document, the exact bytes this observation '
+      + 'would be stored as — which can only happen if somebody registered them in advance. Nothing was '
+      + 'recorded. Try again: the next attempt is stored under a new identifier and new bytes.',
+  },
+  TESTIMONY_ORIGIN_NOT_MEMBER: {
+    check: 'C-53.7',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document is a member\'s own observation, and this revision of its record claims it '
+      + 'came from somewhere else — a fetch, a sweep, or a machine. That would let a member\'s word pass '
+      + 'for a captured publication. An observation\'s origin is the member who made it, and that cannot '
+      + 'be revised.',
+  },
+  TESTIMONY_AUTHORED_UNEARNED: {
+    check: 'C-53.8',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document claims to be a member\'s own firsthand observation, but it did not come '
+      + 'through the act that records one. Only that act can mark a document as an observation, because '
+      + 'only that act takes the author from the signed-in account. Record the observation through it, '
+      + 'or remove the claim.',
+  },
+  TESTIMONY_AUTHORED_DROPPED: {
+    check: 'C-53.9',
+    where: 'src/store.mjs #testimonyFence > is-testimony-fence',
+    translation: 'This document is a member\'s own observation, and this revision no longer says so. '
+      + 'Removing that would let a member\'s word read as a captured document. What the document is '
+      + 'cannot be revised; to withdraw an observation, record a new one.',
+  },
+  /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
+     (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes were
+     in the working bucket PUBLISHED its words, its provenance document and the
+     observer's handle; a finding resting on one, and a case over that finding,
+     ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
+     of a member's observation at the attesting member's chosen level, and that
+     is MK-3's — so until MK-3's projection honours it, nothing carrying an
+     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
+  TESTIMONY_UNPUBLISHABLE: {
+    check: 'C-53.10',
+    where: 'src/index.mjs fetch > is-testimony-publish-bundle',
+    translation: 'This document is a member\'s own firsthand observation, and it cannot be published yet. '
+      + 'What a published case shows of an observation — the group, the project, the member\'s cover or '
+      + 'their name — is the observing member\'s choice, and the record cannot yet honour that choice in '
+      + 'what it publishes. Until it can, publishing the observation would publish its author.',
+  },
+  TESTIMONY_CITED_UNPUBLISHABLE: {
+    check: 'C-53.11',
+    where: 'src/index.mjs fetch > is-testimony-publish-bundle',
+    translation: 'This finding rests, directly or through another finding, on a member\'s own firsthand '
+      + 'observation, and it cannot be published yet. How a published case attributes an observation is '
+      + 'the observing member\'s choice, and the record cannot yet honour that choice. Publish the finding '
+      + 'without that observation in its basis, or wait until attribution is supported.',
+  },
+  TESTIMONY_CASE_UNPUBLISHABLE: {
+    check: 'C-53.12',
+    where: 'src/index.mjs fetch > is-testimony-publish-case',
+    translation: 'A finding in this case rests, directly or through another finding, on a member\'s own '
+      + 'firsthand observation, so the case cannot be published yet. How a published case attributes an '
+      + 'observation is the observing member\'s choice, and the record cannot yet honour that choice.',
   },
 };
 

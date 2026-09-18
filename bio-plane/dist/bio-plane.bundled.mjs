@@ -95,7 +95,21 @@ CREATE TABLE IF NOT EXISTS register (
   path        TEXT NOT NULL,
   encoding    TEXT NOT NULL,
   bytes       INTEGER NOT NULL,
-  registered  TEXT NOT NULL
+  registered  TEXT NOT NULL,
+  -- MK-1 / D-184 / IC-134 (MEMBER-KNOWLEDGE-DESIGN.md section 2). 1 when these
+  -- bytes are a MEMBER'S OWN WORDS authored through op=testify, never a capture
+  -- of something published. ONLY the testimony path writes 1, and promote's
+  -- fence (C-53.8) refuses the flag on any document it did not write, so a
+  -- caller cannot set it and cannot clear it. 0 is the true value for every row
+  -- that existed before this column did, because no authored bundle could.
+  authored    INTEGER NOT NULL DEFAULT 0,
+  -- The member who authored the words, STAMPED by the plane from the session
+  -- and never taken from the caller. NULL on every row that is not authored.
+  author      TEXT,
+  -- When the member says they OBSERVED it, which is THEIR statement. The
+  -- record's own time of writing is registered above, and the two are kept
+  -- apart as correspondence keeps them. NULL on every row that is not authored.
+  observed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS register_bundle ON register(bundle_id);
 
@@ -3643,6 +3657,7 @@ __export(bio_checks_exports, {
   SUGGEST_CHECKS: () => SUGGEST_CHECKS,
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
+  TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
   TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   UNREACHABLE_CAPTURE_GRADE: () => UNREACHABLE_CAPTURE_GRADE,
@@ -4873,10 +4888,16 @@ function checkReleaseAuthority(ctx, findings) {
     if (!cap || typeof cap !== "object") findings.push(f("C-18.1", "error", `provenance documents[${i}] missing capture block`));
     else {
       if (!cap.method) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture missing 'method'`));
-      if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
+      if (d.authored === true) {
+        if (cap.grade !== void 0 && cap.grade !== null) findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md \xA73)`));
+        if (cap.actor_class !== "member") findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+      } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(", ")}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f("C-18.1", "error", `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(", ")}`));
     }
     const or = d.origin;
+    if (d.authored === true && (!or || typeof or !== "object" || or.kind !== "member")) {
+      findings.push(f("C-18.1", "error", `provenance documents[${i}] is a member's authored observation and its origin.kind is '${or && typeof or === "object" ? or.kind : or}', not 'member'`));
+    }
     if (!or || typeof or !== "object" || !ORIGIN_KINDS.includes(or.kind)) {
       findings.push(f("C-18.1", "error", `provenance documents[${i}].origin.kind must be one of: ${ORIGIN_KINDS.join(", ")}`));
     } else if (or.kind === "sweep") {
@@ -5879,7 +5900,11 @@ function checkEarnedLeg(leg, i, graded, targetType, registry, findings) {
       `basis[${i}] states an EARNED capture grade of ${leg.grade} for ${leg.target}, but what that document's capture can support is UNDETERMINED, not ${leg.grade}. ${earned.why ?? ""}`,
       [
         `state NO capture grade on basis[${i}] \u2014 an undetermined axis is stated, not filled in, and the leg stays in the basis naming what it rests on`,
-        "or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns",
+        /* MK-1: for a member's AUTHORED observation there is no transcription to
+           measure — the bytes ARE the words — so that repair would send a member
+           to do something that cannot be done. Omitted for that one cause, and
+           only for it. */
+        ...earned.undetermined_because === "CAPTURE_AXIS_AUTHORED" ? [] : ["or have the transcription measured (MEASUREMENTS.md, per engine, per version) and state the letter the record then earns"],
         "or state this leg as testimony (grade D, with an author and a date) if it is a member's own account"
       ]
     ));
@@ -11140,6 +11165,84 @@ var TRANSCRIBE_CHECKS = {
     translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
+var TESTIMONY_CHECKS = {
+  TESTIMONY_NOT_A_MEMBER: {
+    check: "C-53.1",
+    where: "src/store.mjs testify > is-testify-act",
+    translation: "A firsthand observation is a person saying what they saw, in their own name, and it stands on that person's trust. The credential that asked is an automated one, and it has no eyes to have seen anything with. Sign in and record it yourself."
+  },
+  TESTIMONY_AUTHOR_SUPPLIED: {
+    check: "C-53.2",
+    where: "src/store.mjs testify > is-testify-act",
+    translation: "That request names who the author is. The record takes the author of an observation from the account that is signed in, never from the request \u2014 a request that names its own author could sign as somebody else. Send the observation without an author and it is recorded as yours."
+  },
+  TESTIMONY_NO_WORDS: {
+    check: "C-53.3",
+    where: "src/store.mjs testify > is-testify-words",
+    translation: "The observation is empty. Write what you saw, in your own words; nothing is filled in for you."
+  },
+  TESTIMONY_WORDS_TOO_LONG: {
+    check: "C-53.4",
+    where: "src/store.mjs testify > is-testify-words",
+    translation: "The observation is longer than one passage this record stores. Record it as more than one observation; each is kept exactly as written and each can be cited."
+  },
+  TESTIMONY_OBSERVED_AT_INVALID: {
+    check: "C-53.5",
+    where: "src/store.mjs testify > is-testify-words",
+    translation: "An observation needs the date you saw it, as a calendar date (for example 2026-09-10) or a date and time, and not a date later than now. The record keeps that date apart from the moment you wrote it down, because they are two different facts."
+  },
+  /* NARROWED BY BOB #14's RULING (2026-09-18), NOT DELETED. This refused a
+     second member's IDENTICAL words, because the register is keyed by bytes.
+     The ruling: two identical observations are two testimonies, and the bytes
+     carry a canonical header holding the testimony's own id — so identical
+     words never collide. What is left is the case only an adversary produces:
+     somebody registering, ahead of time, the exact bytes the NEXT testimony
+     will have (the id is sequential, so it can be predicted). Recording over
+     them would re-file their register row under the observation. */
+  TESTIMONY_WORDS_REGISTERED: {
+    check: "C-53.6",
+    where: "src/store.mjs testify > is-testify-bytes",
+    translation: "The record already holds, under another document, the exact bytes this observation would be stored as \u2014 which can only happen if somebody registered them in advance. Nothing was recorded. Try again: the next attempt is stored under a new identifier and new bytes."
+  },
+  TESTIMONY_ORIGIN_NOT_MEMBER: {
+    check: "C-53.7",
+    where: "src/store.mjs #testimonyFence > is-testimony-fence",
+    translation: "This document is a member's own observation, and this revision of its record claims it came from somewhere else \u2014 a fetch, a sweep, or a machine. That would let a member's word pass for a captured publication. An observation's origin is the member who made it, and that cannot be revised."
+  },
+  TESTIMONY_AUTHORED_UNEARNED: {
+    check: "C-53.8",
+    where: "src/store.mjs #testimonyFence > is-testimony-fence",
+    translation: "This document claims to be a member's own firsthand observation, but it did not come through the act that records one. Only that act can mark a document as an observation, because only that act takes the author from the signed-in account. Record the observation through it, or remove the claim."
+  },
+  TESTIMONY_AUTHORED_DROPPED: {
+    check: "C-53.9",
+    where: "src/store.mjs #testimonyFence > is-testimony-fence",
+    translation: "This document is a member's own observation, and this revision no longer says so. Removing that would let a member's word read as a captured document. What the document is cannot be revised; to withdraw an observation, record a new one."
+  },
+  /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
+     (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes were
+     in the working bucket PUBLISHED its words, its provenance document and the
+     observer's handle; a finding resting on one, and a case over that finding,
+     ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
+     of a member's observation at the attesting member's chosen level, and that
+     is MK-3's — so until MK-3's projection honours it, nothing carrying an
+     observation crosses. LIFTING THESE THREE IS MK-3's ACT, not a caller's. */
+  TESTIMONY_UNPUBLISHABLE: {
+    check: "C-53.10",
+    where: "src/index.mjs fetch > is-testimony-publish-bundle",
+    translation: "This document is a member's own firsthand observation, and it cannot be published yet. What a published case shows of an observation \u2014 the group, the project, the member's cover or their name \u2014 is the observing member's choice, and the record cannot yet honour that choice in what it publishes. Until it can, publishing the observation would publish its author."
+  },
+  TESTIMONY_CITED_UNPUBLISHABLE: {
+    check: "C-53.11",
+    where: "src/index.mjs fetch > is-testimony-publish-bundle",
+    translation: "This finding rests, directly or through another finding, on a member's own firsthand observation, and it cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice. Publish the finding without that observation in its basis, or wait until attribution is supported."
+  },
+  TESTIMONY_CASE_UNPUBLISHABLE: {
+    check: "C-53.12",
+    where: "src/index.mjs fetch > is-testimony-publish-case",
+    translation: "A finding in this case rests, directly or through another finding, on a member's own firsthand observation, so the case cannot be published yet. How a published case attributes an observation is the observing member's choice, and the record cannot yet honour that choice."
+  }
+};
 function checkContentExtent(extent, ctx = {}) {
   const e = extent && typeof extent === "object" ? extent : null;
   if (!e)
@@ -14292,7 +14395,12 @@ var RUNG_ABSENT = {
      typing back — a member types again, which is a DIFFERENT content row, and an
      attestation is superseded by the same attestor's later one, never withdrawn. */
   transcribe: { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
-  transcriptionattest: { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" }
+  transcriptionattest: { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" },
+  /* MK-1 / IC-133 — TESTIFY. Ground `undetermined` on `transcribe`'s measurement:
+     none of its refusals is a missing justification (an empty observation, C-53.3,
+     is not one). NOT `reversible`: nothing takes an observation back — a member
+     records a new one, never a rewrite (MEMBER-KNOWLEDGE-DESIGN.md section 2). */
+  testify: { ground: "undetermined", is: "a member records a firsthand observation in their own words; it becomes an authored document standing on that member's trust, the author stamped from the session and the words kept exactly as written (D-184)" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -26039,6 +26147,7 @@ function mintRatio({ minted = 0, cited = 0 } = {}) {
 }
 
 // src/store.mjs
+var TESTIMONY_PATH = Symbol("mk1-testimony-path");
 function refusal6(key, extra = {}) {
   const row = CASE_DERIVATION_CHECKS[key];
   return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
@@ -26403,7 +26512,16 @@ var Store = class _Store extends DurableObject {
          before this column did was minted against a TEXT arm (no `image` kind
          was admissible), so the default IS the true value for all of them —
          a backfill by construction, not a guess. */
-      ["content", "cited_as", "TEXT NOT NULL DEFAULT 'text'"]
+      ["content", "cited_as", "TEXT NOT NULL DEFAULT 'text'"],
+      /* MK-1 / D-184 / IC-134: the register's `authored` flag and its two
+         stamps. The default IS the true value for every row that can exist
+         before this column did — no route could author a bundle until
+         op=testify existed — so it is a backfill by construction, `cited_as`'s
+         reasoning one table over. `author` and `observed_at` are NULL on every
+         row that is not authored, which is what they mean. */
+      ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
+      ["register", "author", "TEXT"],
+      ["register", "observed_at", "TEXT"]
     ]) {
       const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
       if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
@@ -32052,7 +32170,15 @@ Subject position: ${pos} \u2014 ${just}
           WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
         id,
         ed
-      )
+      ),
+      /* MK-1 (A): whether any finding THIS DOCUMENT names rests on a member's
+         authored observation (C-53.12). The roster is read from the document's
+         own bytes — `case_findings`, the same field `ratifyCaseDocument` commits
+         from — so the fence judges exactly what the signature would publish. */
+      testimony: this.testimonyReach((() => {
+        const cf = (parseFrontmatter(doc.text).data || {}).case_findings;
+        return (Array.isArray(cf) ? cf : []).map((x) => String(x ?? "").trim());
+      })())
     };
   }
   /* Read-only, for the member who is about to sign. Scoped to nothing, because
@@ -36474,6 +36600,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
+      const testimony = pkg[TESTIMONY_PATH] || null;
+      const fenced = this.#testimonyFence(bundleId, files, register2, testimony);
+      if (fenced) return fenced;
       for (const f2 of files) {
         if (f2.text !== void 0 && f2.text.length > INLINE_MAX)
           return { ok: false, reason: "OVERSIZE_INLINE", path: f2.path, bytes: f2.text.length };
@@ -37245,20 +37374,33 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
            empty string" are the same fact and the column states it once. */
         basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim() ? basisFm.subject_entity.trim() : null
       );
-      for (const c of register2)
+      for (const c of register2) {
+        const own = testimony && testimony.captureSha === c.sha256;
         this.sql.exec(
-          `INSERT OR REPLACE INTO register (capture_sha,bundle_id,path,encoding,bytes,registered) VALUES (?,?,?,?,?,?)`,
+          `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,authored,author,observed_at)
+           VALUES (?,?,?,?,?,?,?,?,?)
+           ON CONFLICT(capture_sha) DO UPDATE SET
+             bundle_id=excluded.bundle_id, path=excluded.path, encoding=excluded.encoding,
+             bytes=excluded.bytes, registered=excluded.registered,
+             authored=MAX(register.authored, excluded.authored),
+             author=COALESCE(excluded.author, register.author),
+             observed_at=COALESCE(excluded.observed_at, register.observed_at)`,
           c.sha256,
           bundleId,
           c.path,
           c.encoding ?? "utf8",
           c.bytes,
-          (/* @__PURE__ */ new Date()).toISOString()
+          (/* @__PURE__ */ new Date()).toISOString(),
+          own ? 1 : 0,
+          own ? testimony.author : null,
+          own ? testimony.observedAt : null
         );
+      }
       const bundleMd = files.find((f2) => f2.path === "bundle.md");
       this.#writeProjection(bundleId, bundleMd?.text ?? null);
       this.#writeText(bundleId, files);
       this.#writeReadings(bundleId, files, author);
+      const testimonyWrote = testimony ? testimony.within(bundleId) : null;
       const ownerMemberId = typeof pkg.ownerMemberId === "string" && pkg.ownerMemberId ? pkg.ownerMemberId : null;
       let owner = null;
       if (!cur && ownerMemberId && meta.object_type === "project") {
@@ -37286,6 +37428,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         bundleSha: after.bundle_sha,
         rowVersion: after.row_version,
         owner,
+        /* MK-1: present ONLY on the testimony path, which is a method of this
+           class, so no existing caller's answer gains a key. */
+        ...testimonyWrote ? { testimony: testimonyWrote } : {},
         /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
            write path's own surface. A mechanism believed on the strength of its
            EXISTENCE rather than its behaviour is the defect this project meets
@@ -38600,6 +38745,486 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       {},
       this.#transcriptionsOver([contentId])
     );
+  }
+  /* ==================================================================== *
+   * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE.
+   *
+   * `MEMBER-KNOWLEDGE-DESIGN.md` §2, read at the artifact before this was built
+   * (§8's condition): *an observation is an authored INFORMATION bundle whose
+   * bytes are exactly the member's words, registered like any capture, so that it
+   * IS content in the record's one sense of the word … and every reader already
+   * built works on it unchanged.* Bob's ruling it serves (§1, quoted there): *a
+   * member's own eyewitness knowledge can be evidence — though it stands on the
+   * trust held by that member.*
+   *
+   * WHAT IT IS, BUILT OUT OF WHAT EXISTED. An INFO bundle, written through
+   * `promote` — the one write path — with the member's words — below the canonical header (`Store.testimonyBytes`) — as a file under
+   * `snapshots/`, a `data/provenance.json` document declaring origin `member`,
+   * actor class `member` and `authored: true`, and a register row over the
+   * words' bytes. In the SAME transaction: one passage-index unit over the whole
+   * words (so `passage:` search finds them) and one `document` content row
+   * (so a leg can cite them by `content_id` exactly as it cites any row).
+   *
+   * WHAT KEEPS IT HONEST, and it is the half that matters (§2): a capture of a
+   * publisher's document and a member's authored statement are different acts
+   * and the register must never let one pass for the other.
+   *   - the `authored` flag is settable ONLY here — `TESTIMONY_PATH` is a Symbol,
+   *     which no JSON body can carry — and `#testimonyFence` refuses it at
+   *     `promote` on anything this method did not write (C-53.8);
+   *   - the author is STAMPED by the control plane from the session; a caller
+   *     naming one is refused (C-53.2), and a machine is refused (C-53.1);
+   *   - two dates, kept apart: `observed_at` is the member's statement,
+   *     `recorded_at` is this record's own clock and is not taken from the caller;
+   *   - the words are the member's AS WRITTEN, after a canonical header of the testimony's id and observed_at (BOB #14, 2026-09-18) — nothing trims, paraphrases
+   *     or cleans them. An edit is a new observation, never a rewrite.
+   *
+   * HOW IT READS ON THE AXES THAT EXIST TODAY, stated because the testimony axis
+   * (§3) is MK-2's and not built: the CAPTURE axis earns NO letter for an
+   * authored capture — undetermined and stated in `earnedBasisRegistry`
+   * (`CAPTURE_AXIS_AUTHORED`) — because the axis measures the act of reading a
+   * document in, which did not happen; the CONNECTION axis earns nothing, since
+   * no reader ran over the words and nothing resolved them. A leg citing an
+   * observation therefore claims nothing on either, and says why.
+   * ==================================================================== */
+  /** One passage: the same per-unit cap the content-grain text index stores a
+   *  unit to, for `TRANSCRIPTION_MAX_BYTES`'s reason — REFUSED over it, never
+   *  cut, because words silently truncated are words the member did not write. */
+  static TESTIMONY_MAX_BYTES = CAPTURE_TEXT_UNIT_CAP;
+  /** THE CANONICAL AUTHORED BYTES — PERMANENT ONCE ON MAIN, so stated exactly.
+   *
+   *  Ruled by BOB #14, 2026-09-18 (MK-1 design gap 1): identical words from two
+   *  members are two testimonies, and the register is keyed by the bytes' sha,
+   *  so the bytes carry a header that makes them unique per testimony. The
+   *  format, byte for byte, UTF-8:
+   *
+   *      bio-testimony/1\n
+   *      id: <the testimony's own bundle id>\n
+   *      observed_at: <the member's observedAt, exactly as accepted>\n
+   *      \n
+   *      <the member's words, exactly as written — nothing added after them>
+   *
+   *  Three header lines in THIS order, each `key: value` with one space, LF line
+   *  ends, then ONE empty line; the words begin at the first byte after the first
+   *  "\n\n" and run to the end of the file. `bio-testimony/1` names the format so
+   *  a later one is a new version line, never a silent change. Both values are
+   *  single-line by construction (`id` is canonical, `observed_at` is validated
+   *  to a date or instant), so the header cannot be forged from inside the words.
+   *
+   *  NO AUTHOR IDENTITY IS IN THE BYTES, by the same ruling: who the author is
+   *  and what a published case shows of them is the attribution level's to
+   *  govern (§4), and bytes are what verification publishes. The author is in
+   *  the register and the provenance document, where MK-3's projection decides
+   *  what crosses. */
+  static TESTIMONY_FORMAT = "bio-testimony/1";
+  static testimonyBytes({ id, observedAt, words }) {
+    return `${_Store.TESTIMONY_FORMAT}
+id: ${id}
+observed_at: ${observedAt}
+
+${words}`;
+  }
+  /** MK-1 (A) — WHAT WOULD CARRY A MEMBER'S AUTHORED OBSERVATION INTO THE
+   *  PUBLISHED RECORD, for the publication fence at op=ratify / op=caseratify
+   *  (C-53.10–.12, `src/index.mjs`).
+   *
+   *  From each root, the evidence graph is walked through every basis leg AND
+   *  every version leg — a finding resting on a finding that rests on an
+   *  observation carries it just as surely, and an older reading of the basis is
+   *  still bytes a published finding can point at. An observation is a bundle
+   *  holding an AUTHORED register row, read from the register's flag, which only
+   *  the testimony path writes. `self` names roots that ARE observations; `via`
+   *  names a finding and the observation it rests on.
+   *
+   *  ONE bounded statement: the roots travel as one JSON array (D-36), the walk
+   *  stops at depth 64 (a basis is acyclic by C-2.8, so this is a guard, not a
+   *  bound anyone meets), and the answer is capped at 200 rows — enough to NAME
+   *  why a publication is refused, which is all the fence needs; one row refuses. */
+  testimonyReach(ids) {
+    const roots = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x))].slice(0, 200);
+    if (!roots.length) return { self: [], via: [] };
+    const rows = this.#rows(
+      `WITH RECURSIVE reach(root, id, depth) AS (
+         SELECT value, value, 0 FROM json_each(?)
+         UNION
+         SELECT r.root, e.target_id, r.depth + 1 FROM reach r
+           JOIN (SELECT bundle_id, target_id FROM inquiry_basis
+                 UNION SELECT bundle_id, target_id FROM inquiry_basis_version_legs) e
+             ON e.bundle_id = r.id
+          WHERE r.depth < 64)
+       SELECT DISTINCT reach.root AS root, reach.id AS observation, MIN(reach.depth) AS depth
+         FROM reach JOIN register g ON g.bundle_id = reach.id AND g.authored = 1
+        GROUP BY reach.root, reach.id
+        LIMIT ?`,
+      JSON.stringify(roots),
+      200
+    );
+    return {
+      self: rows.filter((r) => r.depth === 0).map((r) => r.root),
+      via: rows.filter((r) => r.depth > 0).map((r) => ({ finding: r.root, observation: r.observation }))
+    };
+  }
+  /** When the member says they observed it: a calendar date or a UTC instant,
+   *  a real one (2026-02-31 is refused, not rolled over), as epoch ms — or null.
+   *  REQUIRED, and that STANDS by BOB #14's ruling of 2026-09-18: the record does
+   *  not date a member's observation for them. */
+  static #observedMs(v) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?Z)?$/.exec(v);
+    if (!m) return null;
+    const ms = Date.parse(m[4] === void 0 ? `${v}T00:00:00Z` : v);
+    if (!Number.isFinite(ms)) return null;
+    const back = new Date(ms).toISOString();
+    if (back.slice(0, 10) !== v.slice(0, 10)) return null;
+    return ms;
+  }
+  /** THE AUTHORED FLAG'S FENCE, run by `promote` before its first write.
+   *
+   *  THREE REFUSALS, and each is a way the register could let a member's word
+   *  pass for a captured document or the other way round (§7):
+   *   (1) a document claiming `authored` that this record did not author through
+   *       the testimony path — including a register entry that would re-file an
+   *       authored capture's bytes under a DIFFERENT bundle (C-53.8, THE LIAR);
+   *   (2) an authored document whose origin or actor class is not `member`
+   *       (C-53.7) — reachable only by a REVISION, since `testify` writes both;
+   *   (3) an authored document that stops saying `authored: true`, or whose
+   *       provenance document is gone from the revision (C-53.9).
+   *
+   *  IMPORT AND REPLAY GO THROUGH THE TESTIMONY PATH (BOB #14, 2026-09-18, §7):
+   *  there is no replay exemption here, so a migration carrying an authored
+   *  bundle must re-author it through `testify`, never promote it verbatim.
+   *
+   *  "AUTHORED" IS READ FROM THE REGISTER, NEVER FROM THE DOCUMENT. The register
+   *  row's flag is written only under `TESTIMONY_PATH`, so it is the one fact
+   *  here a caller cannot have produced; the document's `authored` field is the
+   *  CLAIM being judged against it. ONE read, whatever the package holds: the
+   *  shas travel as one bound JSON array (D-36's ~100-variable ceiling). */
+  #testimonyFence(bundleId, files, register2, testimony) {
+    const refusal7 = (code, detail, extra) => {
+      const row = TESTIMONY_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const prov = Array.isArray(files) ? files.find((f2) => f2 && f2.path === "data/provenance.json") : null;
+    let docs = [], unreadable = false;
+    if (prov) {
+      const j = typeof prov.text === "string" ? safeJson(prov.text) : null;
+      if (j === null) unreadable = true;
+      else docs = Array.isArray(j.documents) ? j.documents : [];
+    }
+    const shaOf = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
+    const regs = Array.isArray(register2) ? register2.filter((c) => c && typeof c.sha256 === "string") : [];
+    const asked = [.../* @__PURE__ */ new Set([...docs.map(shaOf).filter(Boolean), ...regs.map((c) => c.sha256)])];
+    const held = this.#rows(
+      `SELECT capture_sha, bundle_id FROM register
+        WHERE authored = 1 AND (bundle_id = ? OR capture_sha IN (SELECT value FROM json_each(?)))
+        LIMIT ?`,
+      bundleId,
+      JSON.stringify(asked),
+      asked.length + 1
+    );
+    const here = new Set(held.filter((r) => r.bundle_id === bundleId).map((r) => r.capture_sha));
+    const elsewhere = new Set(held.filter((r) => r.bundle_id !== bundleId).map((r) => r.capture_sha));
+    const own = (s) => !!(testimony && testimony.captureSha === s && !elsewhere.has(s));
+    for (const c of regs)
+      if (elsewhere.has(c.sha256))
+        return refusal7(
+          "TESTIMONY_AUTHORED_UNEARNED",
+          `this promotion registers capture ${c.sha256.slice(0, 16)}\u2026 under ${bundleId}, and those bytes are already registered as ANOTHER bundle's authored observation. Re-filing them here would move a member's word under a document that is not theirs`,
+          { bundleId, capture_sha: c.sha256 }
+        );
+    for (let i = 0; i < docs.length; i++) {
+      const d = docs[i];
+      if (!d || typeof d !== "object") continue;
+      const s = shaOf(d);
+      const claims = d.authored !== void 0 && d.authored !== null && d.authored !== false;
+      const authored = s != null && (here.has(s) || own(s));
+      if (claims && !authored)
+        return refusal7(
+          "TESTIMONY_AUTHORED_UNEARNED",
+          `data/provenance.json documents[${i}] claims authored: ${JSON.stringify(d.authored).slice(0, 40)}, and ${s ? `capture ${s.slice(0, 16)}\u2026 was not authored through op=testify` : `names no capture at all`}. Only the testimony act marks a document as a member's own observation`,
+          { bundleId, index: i }
+        );
+      if (!authored) continue;
+      if (d.authored !== true)
+        return refusal7(
+          "TESTIMONY_AUTHORED_DROPPED",
+          `data/provenance.json documents[${i}] is the member's authored observation ${s.slice(0, 16)}\u2026 and this revision sets authored to ${JSON.stringify(d.authored ?? null).slice(0, 40)}`,
+          { bundleId, index: i }
+        );
+      const origin = d.origin && typeof d.origin === "object" ? d.origin.kind : void 0;
+      const actor = d.capture.actor_class;
+      if (origin !== "member" || actor !== "member")
+        return refusal7(
+          "TESTIMONY_ORIGIN_NOT_MEMBER",
+          `data/provenance.json documents[${i}] is the member's authored observation ${s.slice(0, 16)}\u2026 and claims origin '${String(origin).slice(0, 40)}', actor class '${String(actor).slice(0, 40)}' \u2014 both must be 'member'`,
+          { bundleId, index: i, origin: origin ?? null, actor_class: actor ?? null }
+        );
+    }
+    const stated = new Set(docs.filter((d) => d && typeof d === "object" && d.authored === true).map(shaOf).filter(Boolean));
+    for (const s of here)
+      if (!stated.has(s))
+        return refusal7(
+          "TESTIMONY_AUTHORED_DROPPED",
+          unreadable ? `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json cannot be read, so it cannot be shown to still say so` : `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json no longer carries it as authored`,
+          { bundleId, capture_sha: s }
+        );
+    return null;
+  }
+  /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION. */
+  testify({ words = null, observedAt = null, title = null, author = null, claimedAuthor = null } = {}) {
+    const refusal7 = (code, detail, extra) => {
+      const row = TESTIMONY_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const who = typeof author === "string" ? author.trim() : "";
+    if (!who || isMachineIdentity(who))
+      return refusal7(
+        "TESTIMONY_NOT_A_MEMBER",
+        who ? `'${who.slice(0, 60)}' is a machine credential. A firsthand observation is a person's word about what they saw, and it stands on that person's trust` : `this call carries nobody. The plane stamps the author from the credential that asked, so an empty one means the act arrived by a route that does not attribute it`
+      );
+    if (claimedAuthor !== null && claimedAuthor !== void 0)
+      return refusal7(
+        "TESTIMONY_AUTHOR_SUPPLIED",
+        `the request names an author (${JSON.stringify(claimedAuthor).slice(0, 60)}). The author of an observation is the signed-in member, stamped by the plane, and is never taken from the request`
+      );
+    const text = typeof words === "string" ? words : "";
+    const bytes = new TextEncoder().encode(text);
+    const recorded = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
+    const obs = typeof observedAt === "string" ? observedAt.trim() : "";
+    const obsMs = _Store.#observedMs(obs);
+    if (!text.trim())
+      return refusal7(
+        "TESTIMONY_NO_WORDS",
+        `the observation is empty. Nothing is prefilled: the words are what the member saw, in theirs`
+      );
+    if (bytes.length > _Store.TESTIMONY_MAX_BYTES)
+      return refusal7(
+        "TESTIMONY_WORDS_TOO_LONG",
+        `${bytes.length} B written, over the ${_Store.TESTIMONY_MAX_BYTES} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut: words silently truncated would be words the member did not write, standing in their name`,
+        { bytes: bytes.length, limit: _Store.TESTIMONY_MAX_BYTES }
+      );
+    if (obsMs == null || obsMs > Date.parse(recorded))
+      return refusal7(
+        "TESTIMONY_OBSERVED_AT_INVALID",
+        obsMs == null ? `observedAt ${obs ? `'${obs.slice(0, 40)}' is not a real calendar date (YYYY-MM-DD) or UTC instant (YYYY-MM-DDTHH:MM[:SS]Z)` : `was not given`}. It is the member's own statement of when they saw it, and the record does not supply one` : `observedAt '${obs}' is later than this record's own clock (${recorded})`,
+        { observed_at: obs || null }
+      );
+    const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
+    const id = `${this.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
+    const fileText = _Store.testimonyBytes({ id, observedAt: obs, words: text });
+    const fileBytes = new TextEncoder().encode(fileText);
+    const sha = createSha256().update(fileBytes).hex();
+    if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha))
+      return refusal7(
+        "TESTIMONY_WORDS_REGISTERED",
+        `the canonical bytes of ${id} (${sha.slice(0, 16)}\u2026) are already registered in this record`
+      );
+    const file = `snapshots/observation-${sha.slice(0, 16)}.txt`;
+    const locator = "a member's firsthand observation, authored in this record";
+    const md = [
+      "---",
+      `id: ${id}`,
+      "object_type: information",
+      "schema: information@1",
+      `title: ${JSON.stringify(heading)}`,
+      "current_state: collected",
+      "prior_state: null",
+      `created: "${recorded}"`,
+      `last_updated: "${recorded}"`,
+      "produced_by:",
+      "  mode: human",
+      "  capability_tier: session",
+      "group: believe-in-oakland",
+      "references: []",
+      "state_history: []",
+      "annotations_open: 0",
+      "reeval_pending:",
+      "  flag: false",
+      "  since: null",
+      "  source: null",
+      "visuals: []",
+      "criticality: supporting",
+      "source_status: unchanged",
+      "source:",
+      `  locator: ${JSON.stringify(locator)}`,
+      "  authority: the observing member",
+      `  retrieved: ${recorded}`,
+      "monitoring:",
+      "  enabled: false",
+      "  frequency: none",
+      "---",
+      "",
+      "## Summary",
+      "",
+      `A member's firsthand observation. Their words are \`${file}\`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.`,
+      "",
+      "## Provenance Notes",
+      "",
+      `Authored through op=testify. Observed ${obs}, in the member's own statement; recorded ${recorded}, by this record's clock. The author is stamped by the plane from the signed-in session. It stands on that member's trust, graded as testimony (MEMBER-KNOWLEDGE-DESIGN.md section 3).`,
+      "",
+      "## Session Log",
+      "",
+      `### Session ${recorded} | Authored | ${who}`,
+      "Trigger: testify",
+      "Changes: created as a member's authored observation.",
+      "",
+      "## Review Notes",
+      ""
+    ].join("\n");
+    const doc = {
+      file,
+      locator,
+      retrieved: recorded,
+      /* THE THREE THE DESIGN NAMES, in the register entry. `authored` is honoured
+         only because this method wrote it (the fence reads the register's flag,
+         not this field); the author is the STAMP; the two dates are apart. */
+      authored: true,
+      author: who,
+      observed_at: obs,
+      recorded_at: recorded,
+      authority: "the observing member",
+      authority_state: "determined",
+      authority_basis: `the author of these bytes is the signed-in member the plane stamped from the session at op=testify, ${recorded}; the request could not name it`,
+      provenance_chain: [{
+        who: "the observing member (stamped from the session)",
+        asserts: `these are my own words, as written, about what I observed at ${obs}`,
+        evidence: "authored through op=testify under a signed-in member session, hashed at receipt",
+        bound: false
+      }],
+      capture: {
+        method: "authored by a member through op=testify; the bytes are a canonical header (bio-testimony/1: id, observed_at) and then the member's words as written, hashed at receipt",
+        /* NO `grade`, and the absence is the statement (§3, and C-18.1's authored
+           arm): the capture axis measures reading a document in, and nothing was
+           read in. */
+        actor_class: "member",
+        sha256: sha,
+        encoding: "utf8",
+        bytes: fileBytes.length,
+        content_type: "text/plain; charset=utf-8"
+      },
+      origin: { kind: "member" },
+      attestation_attempts: []
+    };
+    const provText = JSON.stringify({ documents: [doc] }, null, 2);
+    const enc2 = (t) => {
+      const b = new TextEncoder().encode(t);
+      return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
+    };
+    const unit = [{ extent: { kind: "document" }, text, seq: 0 }];
+    const extentBad = checkContentExtent({ kind: "document" }, this.contentContextFor(sha));
+    if (extentBad) return extentBad;
+    const promoted = this.promote({
+      bundleId: id,
+      base: null,
+      snapKey: `${recorded.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
+      author: who,
+      files: [
+        { path: "bundle.md", ...enc2(md) },
+        { path: "data/provenance.json", ...enc2(provText) },
+        { path: file, text: fileText, bytes: fileBytes.length, sha256: sha }
+      ],
+      meta: {
+        object_type: "information",
+        group: "believe-in-oakland",
+        title: heading,
+        current_state: "collected",
+        prior_state: null,
+        created: recorded,
+        last_updated: recorded,
+        criticality: "supporting"
+      },
+      register: [{ sha256: sha, path: file, encoding: "utf8", bytes: fileBytes.length }],
+      [TESTIMONY_PATH]: {
+        captureSha: sha,
+        author: who,
+        observedAt: obs,
+        /* Inside promote's transaction. ONE unit over the whole words, at the
+           `document` extent — the content row below is minted at that same
+           extent under that same (null) chain, so a `passage:` hit and a
+           citation address one passage under one id. The index observation
+           reads PRESENT because it is: the words are the whole document. No
+           READING is written, because no reader ran over the words — a
+           meaning-level row saying one looked would be a look nobody took. */
+        within: (bid) => {
+          const indexed = this.#writeCaptureText(bid, sha, unit, null);
+          this.#observeIndexed(bid, sha, indexed, { author: who, hadText: true, unitArm: true });
+          const m = this.mintContent({
+            bundleId: bid,
+            captureSha: sha,
+            extent: { kind: "document" },
+            mintedBy: who,
+            at: recorded
+          });
+          if (!m.ok) throw new Error(`MK-1: the observation's content row was refused after the extent was checked: ${m.code || m.reason}`);
+          const bad = this.#observe({
+            actorClass: "member",
+            actor: who,
+            authorityKind: "extract",
+            authority: bid,
+            level: "content",
+            subjectKind: "capture",
+            subject: sha,
+            state: "PRESENT",
+            condition: null,
+            resultKind: "content",
+            resultRef: m.content_id,
+            detail: "first extraction; a member's authored observation \u2014 its bytes ARE its text, as written, so the whole document is text and no extraction step stands between them"
+          });
+          if (bad) throw new Error(`MK-1: the observation's extraction row was refused: ${JSON.stringify(bad).slice(0, 200)}`);
+          return { content_id: m.content_id, indexed: indexed.written };
+        }
+      }
+    });
+    if (!promoted.ok) return promoted;
+    return {
+      ok: true,
+      bundle_id: id,
+      bundle_sha: promoted.bundleSha ?? null,
+      capture_sha: sha,
+      file,
+      bytes: fileBytes.length,
+      words_bytes: bytes.length,
+      content_id: promoted.testimony ? promoted.testimony.content_id : null,
+      authored: true,
+      origin: "member",
+      actor_class: "member",
+      author: who,
+      observed_at: obs,
+      recorded_at: recorded,
+      axes: {
+        capture: {
+          grade: null,
+          determined: false,
+          undetermined_because: "CAPTURE_AXIS_AUTHORED",
+          why: "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here"
+        },
+        connection: {
+          grade: null,
+          determined: false,
+          why: "no reader ran over these words and nothing resolved them to a subject"
+        },
+        testimony: {
+          grade: null,
+          determined: false,
+          why: "an observation is graded as testimony, D, on the member's trust (the ruling, MEMBER-KNOWLEDGE-DESIGN.md section 3); this build does not yet carry that axis (MK-2), so it is stated rather than shown"
+        }
+      },
+      says: `${who} recorded a firsthand observation, observed ${obs}. The words are held exactly as written and are the document; they stand on ${who}'s trust. This record takes the author from the signed-in account and never from the request.`
+    };
   }
   /** THE BOUND ON ONE TYPING: the per-unit cap the content-grain text index
    *  already stores one passage to (`CAPTURE_TEXT_UNIT_CAP`, M-20's figure).
@@ -42529,7 +43154,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const marks = ids.map(() => "?").join(",");
     const perBundle = /* @__PURE__ */ new Map();
     for (const r of this.#rows(
-      `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain FROM (
+      `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain,
+              (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored FROM (
          SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${marks})
          UNION
          SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${marks})
@@ -42539,8 +43165,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     )) {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
-        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0 });
+        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0 });
       const e = perBundle.get(r.bundle_id);
+      if (r.authored === 1) {
+        e.authored++;
+        continue;
+      }
       e.n++;
       const chain2 = safeJson(r.chain);
       const b = captureBound(chain2, EARNED_CAPTURE_CEILING);
@@ -42549,6 +43179,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       e.bound = e.bound == null ? b : BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.bound) ? b : e.bound;
     }
     for (const [bundleId, e] of perBundle) {
+      if (!e.n && e.authored) {
+        out.earned.capture[bundleId] = {
+          mode: "ceiling",
+          grade: null,
+          captures: 0,
+          authored: e.authored,
+          determined: false,
+          undetermined_because: "CAPTURE_AXIS_AUTHORED",
+          empty_level: "testimony \u2014 this document is a member's own firsthand observation, graded on that member's trust (MEMBER-KNOWLEDGE-DESIGN.md section 3), and this build does not yet carry that axis",
+          why: `${bundleId} is a member's authored observation: its bytes are the member's own words, recorded through op=testify, and nothing was read in from anywhere. The capture axis measures that act, so it earns no letter here \u2014 a ${EARNED_CAPTURE_CEILING} would be true of the bytes and would read as strength the observation does not have. A leg may state NO capture grade, which suspends the axis and names it; it may not state a letter.`
+        };
+        continue;
+      }
       if (!e.n) continue;
       const captureWord = `${bundleId} holds ${e.n} capture(s) in the record`;
       const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a chain-of-custody web archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
@@ -49129,6 +49772,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created`, bundleId),
       history: this.#rows(`SELECT snap_key, sha256 FROM history WHERE bundle_id=? AND path='bundle.md'`, bundleId),
       registers: this.#rows(`SELECT capture_sha, path, bytes FROM register WHERE bundle_id=?`, bundleId),
+      /* MK-1 (A): whether this bundle IS, or RESTS ON, a member's authored
+         observation — the publication fence's one fact (C-53.10/.11). */
+      testimony: this.testimonyReach([bundleId]),
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`,
@@ -59467,6 +60113,18 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            QUERY STRING, where the control plane stamped them, and never from the
            body — `attesttext`'s correction, taken from the start rather than
            re-learned: a body field a caller can fill is a name a machine can post. */
+        /* MK-1 / IC-133: TESTIFY. The AUTHOR comes from the QUERY STRING, where the
+           control plane stamped it over anything the caller put there. The body's
+           own author field is read ONLY to be REFUSED (C-53.2): every spelling a
+           caller could use to name the person is collected, so naming it under a
+           synonym is not a way round the refusal. */
+        testify: () => this.testify({
+          words: body ? body.words : null,
+          observedAt: body ? body.observedAt : null,
+          title: body ? body.title : null,
+          author: url.searchParams.get("author"),
+          claimedAuthor: body ? ["author", "observer", "authoredBy", "authored_by", "by", "member", "memberId"].map((k) => body[k]).find((v) => v !== void 0 && v !== null) ?? null : null
+        }),
         transcribe: () => this.transcribe({
           bundleId: body && body.bundleId || null,
           extent: body && body.extent !== void 0 ? body.extent : null,
@@ -60904,6 +61562,16 @@ var OPS = {
   transcribe: { classes: ["admin", "member"], mutating: true },
   transcriptionattest: { classes: ["admin", "member"], mutating: true },
   transcription: { classes: ["admin", "member", "probe"], mutating: false },
+  /* MK-1 / D-184 / IC-133 — TESTIFY: a member records a firsthand observation,
+     which becomes an authored INFO bundle whose bytes are their words
+     (MEMBER-KNOWLEDGE-DESIGN.md section 2). The class cut is `transcribe`'s one
+     row up and for its reason: a person's word in their own name. NAMED `testify`
+     because `op=claim` is the instance-claim op and the design's own word for
+     the route is "the testimony path"; `resolvetestify` is a DIFFERENT act (a
+     member's grade-D testimony that a document concerns a subject), and the two
+     share the verb because both are a member's word standing on their trust. The
+     store refuses a machine stamp BY NAME (C-53.1) — two fences, `transcribe`'s. */
+  testify: { classes: ["admin", "member"], mutating: true },
   /* CPDF-13 — THE CALIBRATION SURFACE (D-183, D-253), and the class split is a
        different cut from CPDF-10's above because a different thing is at stake.
   
@@ -61328,6 +61996,8 @@ var SESSION_OPS = {
        word in their own name, `attesttext`'s route and reason. */
     "transcribe",
     "transcriptionattest",
+    /* MK-1: TESTIFY — a member's own word, `transcribe`'s route. */
+    "testify",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -61384,6 +62054,7 @@ var SESSION_OPS = {
     "narrowcandidates",
     "transcribe",
     "transcriptionattest",
+    "testify",
     "inbox",
     "inboxget",
     "inboxresolve",
@@ -61468,6 +62139,10 @@ var NEEDS = {
   transcribe: "contribute",
   transcriptionattest: "contribute",
   transcription: null,
+  /* MK-1: an observation is written into the working corpus as an INFO bundle —
+     `contribute`, as capturing a document is. Nothing it writes is the group
+     putting its name on anything; attribution in a published case is MK-3's. */
+  testify: "contribute",
   monitor: "contribute",
   cite: "contribute",
   sever: "contribute",
@@ -62049,6 +62724,12 @@ var reextractRow = (code) => {
   const row = REEXTRACT_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`reextractRow: ${code} has no REEXTRACT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+var testimonyFenceRow = (code) => {
+  const row = TESTIMONY_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`testimonyFenceRow: ${code} has no TESTIMONY_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row.check, translation: row.translation };
 };
 var machineFenceRow = (code) => {
@@ -64927,6 +65608,18 @@ var index_default = {
       if (!factsOut.answered) return storeSilent("caseratify/facts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
+      if (facts.testimony && facts.testimony.via.concat(facts.testimony.self).length)
+        return json({
+          ok: false,
+          reason: "TESTIMONY_CASE_UNPUBLISHABLE",
+          ...testimonyFenceRow("TESTIMONY_CASE_UNPUBLISHABLE"),
+          caseId: facts.doc.case_id,
+          edition: facts.doc.edition,
+          rests_on: facts.testimony.via,
+          detail: `a finding in ${facts.doc.case_id} rests on a member's authored observation (${[...facts.testimony.via.map((v) => `${v.finding} -> ${v.observation}`), ...facts.testimony.self].slice(0, 5).join(", ")}); what a published case shows of an observation is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md \xA74), and this build cannot yet honour it (MK-3)`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
       if (facts.doc.doc_sha !== body2.expectedSha)
         return json({
           ok: false,
@@ -65043,6 +65736,27 @@ var index_default = {
       if (!factsOut.answered) return storeSilent("ratify/gatefacts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
+      if (facts.testimony && facts.testimony.self.length)
+        return json({
+          ok: false,
+          reason: "TESTIMONY_UNPUBLISHABLE",
+          ...testimonyFenceRow("TESTIMONY_UNPUBLISHABLE"),
+          bundleId: body2.bundleId,
+          detail: `${body2.bundleId} is a member's authored observation; what a published case shows of it is the attesting member's choice (MEMBER-KNOWLEDGE-DESIGN.md \xA74), and this build cannot yet honour it (MK-3)`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
+      if (facts.testimony && facts.testimony.via.length)
+        return json({
+          ok: false,
+          reason: "TESTIMONY_CITED_UNPUBLISHABLE",
+          ...testimonyFenceRow("TESTIMONY_CITED_UNPUBLISHABLE"),
+          bundleId: body2.bundleId,
+          rests_on: facts.testimony.via,
+          detail: `${body2.bundleId} rests on a member's authored observation (${facts.testimony.via.slice(0, 5).map((v) => v.observation).join(", ")}); what a published case shows of it is the attesting member's choice, and this build cannot yet honour it (MK-3)`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
       if (facts.row.bundle_sha !== body2.expectedSha)
         return json({
           ok: false,
@@ -65678,6 +66392,8 @@ var index_default = {
       inner.searchParams.set("transcriber", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "transcriptionattest")
       inner.searchParams.set("attestor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (op === "testify")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "contentmint")
       inner.searchParams.set(
         "mintedBy",
