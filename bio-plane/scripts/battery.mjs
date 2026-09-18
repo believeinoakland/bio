@@ -92,8 +92,9 @@
  * that can put a file into this tree without a commit, which is now known to
  * include an ordinary `git stash pop`. */
 
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { fstatSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
@@ -114,6 +115,99 @@ import { reportResidue, sampleHeld, scanShared, shallowNames, sharedTempRoots } 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const filters = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const QUIET = process.argv.includes("--quiet");
+
+/* ---- M0-67 / D-425: ONE LOG, ONE RUN ----------------------------------------
+ *
+ * THE OBSERVATION. A worker's baseline log printed `machinefences-dec49 … 68 pass,
+ * 2 FAIL` above a completion line reading `245/245 suites green`, and the battery
+ * exited 0. MEASURED, NOT INFERRED: that worker's tree (REC-133 at d5aa3ec9) runs
+ * the suite at 67 assertions and cannot print 70. REC-124's IN-FLIGHT tree — its
+ * source with three new refusal rows, its suite's floor not yet moved, the state
+ * it was in during that same window — prints `68 pass, 2 fail` exactly. And two
+ * batteries started onto ONE file reproduce the whole shape on demand: the other
+ * run's `FAIL … 68 pass, 2 FAIL` line lands above THIS run's green completion line,
+ * and THIS run's exit is 0, because the exit belongs to the process and the log
+ * belongs to whoever wrote it last. With `>` the two runs overwrite each other at
+ * independent offsets and SPLICE lines mid-word; with `>>` they interleave whole
+ * lines and the file carries two headers. Neither the tally nor the exit status
+ * can see it: nothing was wrong with either run, only with the file.
+ *
+ * SO THIS RUN STAMPS ITSELF AND GUARDS ITS FILE, three ways:
+ *   - a RUN ID on the header and on the completion line, so a reader can tell one
+ *     run from two in any capture, including a pipe the guard below cannot see;
+ *   - at START, if stdout is a regular file another battery process has open, this
+ *     run REFUSES (exit 3) before running a suite, naming the other pid;
+ *   - at the END, it reads its own file back and names anything after its own header
+ *     that is not its own — another run's header or completion line, a refusal, NUL
+ *     bytes left by a truncating open — and the run exits non-zero: the verdict of the
+ *     suites is still printed and still its own, but the FILE is no longer one run's
+ *     record and nobody should quote it as one.
+ *
+ * WHAT IT CANNOT SEE, stated rather than left to be found: stdout that is a PIPE or a
+ * TTY (`| tee log` puts the file behind a process this run cannot inspect — the run id
+ * is the only defence there); a platform without `lsof` (the start refusal and the
+ * path lookup are best effort, the same rule the D-186 sweep follows, and the line
+ * says UNVERIFIED); and a writer to the file that is not a battery. "Another battery"
+ * is recognised POSITIONALLY — the executable is node and argv[1] is a `battery.mjs` —
+ * which is `tools/waitquiet.mjs`'s rule and for its reason: a shell whose command line
+ * merely MENTIONS the runner (the harness's own wrapper holds the same file) must not
+ * match. */
+const RUN_ID = `${process.pid}.${randomBytes(3).toString("hex")}`;
+const quietly = (cmd, args) => {
+  try {
+    const r = spawnSync(cmd, args, { encoding: "utf8", timeout: 10_000 });
+    return r.error ? null : (r.stdout || "");
+  } catch { return null; }
+};
+/* The path behind fd 1, when fd 1 is a regular file. `null` = not a file (nothing to
+   guard); `undefined` = a file this run could not name (UNVERIFIED). */
+const LOG_PATH = (() => {
+  let st;
+  try { st = fstatSync(1); } catch { return null; }
+  if (!st.isFile()) return null;
+  const out = quietly("lsof", ["-a", "-p", String(process.pid), "-d", "1", "-Fn"]);
+  const n = out && out.split("\n").find((l) => l.startsWith("n/"));
+  return n ? n.slice(1) : undefined;
+})();
+const otherBatteriesOn = (path) => {
+  const out = quietly("lsof", ["-t", "--", path]);
+  if (out === null) return null;
+  const pids = [...new Set(out.split(/\s+/).filter(Boolean).map(Number))]
+    .filter((p) => Number.isInteger(p) && p > 0 && p !== process.pid);
+  if (!pids.length) return [];
+  const ps = quietly("ps", ["-o", "pid=,args=", "-p", pids.join(",")]) || "";
+  return ps.split("\n").map((l) => l.trim().split(/\s+/)).filter((w) => w.length >= 2)
+    .filter(([, exe, script]) => /(^|\/)node$/.test(exe) && /(^|\/)battery\.mjs$/.test(script || ""))
+    .map(([pid]) => Number(pid));
+};
+if (LOG_PATH) {
+  const others = otherBatteriesOn(LOG_PATH);
+  if (others && others.length) {
+    console.error(`\nbattery: D-425: REFUSED — this run's output file is already being written by another battery`
+      + ` (pid ${others.join(", pid ")}): ${LOG_PATH}. Two runs in one file interleave, and the other run's FAIL`
+      + ` lines then sit above this run's green completion line. Write each run to its own file. No suite was run.`);
+    process.exit(3);
+  }
+}
+/* Read this run's own file back: everything from this run's header onward must be this
+   run's. Returns the intrusions found, [] for a clean file, or null when it could not look. */
+const logIntrusions = () => {
+  if (!LOG_PATH) return null;
+  let text;
+  try { text = readFileSync(LOG_PATH, "latin1"); } catch { return null; }
+  const found = [];
+  const mine = text.search(new RegExp(`^battery: .*· run ${RUN_ID.replace(".", "\\.")}$`, "m"));
+  if (mine < 0) found.push("this run's own header is not in the file — another writer truncated or overwrote it");
+  const tail = mine < 0 ? text : text.slice(mine);
+  const alien = new Set();
+  for (const m of tail.matchAll(/^(?:battery: .*|\d+\/\d+ suites green .*)· run (\S+)$/gm)) if (m[1] !== RUN_ID) alien.add(m[1]);
+  if (alien.size) found.push(`another run's header or completion line is in it (run ${[...alien].join(", run ")})`);
+  if (/^battery: D-425: REFUSED/m.test(tail)) found.push("a refused battery wrote its refusal into it");
+  if (tail.includes("\0")) found.push("it holds NUL bytes, the mark of a second writer truncating it under this run");
+  const still = otherBatteriesOn(LOG_PATH);
+  if (still && still.length) found.push(`another battery still has it open (pid ${still.join(", pid ")})`);
+  return found;
+};
 
 /* ---- D-186: the temp-directory leak, swept and then ASSERTED ----------------
  *
@@ -499,7 +593,7 @@ const fleetDepSkip = (entry, out) => {
        + `THE MEMBER'S SUITE DID NOT RUN.`;
 };
 
-console.log(`\nbattery: ${suites.length} suites (${planeSuites.length} plane · ${fleetSuites.length} fleet)\n`);
+console.log(`\nbattery: ${suites.length} suites (${planeSuites.length} plane · ${fleetSuites.length} fleet) · run ${RUN_ID}\n`);
 const results = [];
 for (const entry of suites) {
   const file = entry.label;
@@ -514,25 +608,36 @@ for (const entry of suites) {
     shallowBefore = now;
   }
   const t = tally(r.out);
-  const skip = (r.code === 0 ? skipReason(r.out) : null) || fleetDepSkip(entry, r.out);
-  results.push({ ...r, file, fleet: entry.fleet, tally: skip ? null : t, skip,
+  /* M0-67 / D-425: THE VERDICT READS THE PRINTED TALLY AS WELL AS THE EXIT STATUS.
+     Until this line the verdict was the exit status ALONE: the tally below was read
+     and PRINTED — `68 pass, 2 FAIL`, uppercase and all — but its fail count never
+     reached `failed`, so a suite that printed failures and exited 0 read `ok` and
+     counted green. The sweep found no suite doing that today (MEASUREMENTS.md, M0-67);
+     it takes one exit path that forgets its counter to start. A suite that PRINTED a
+     failure is RED whatever it exited, and the disagreement is NAMED. It also beats a
+     SKIPPED marker: a suite that printed failures did not merely skip. */
+  const lied = r.code === 0 && t !== null && t.fail > 0;
+  const skip = lied ? null : (r.code === 0 ? skipReason(r.out) : null) || fleetDepSkip(entry, r.out);
+  results.push({ ...r, file, fleet: entry.fleet, tally: skip ? null : t, skip, lied,
     /* M0-15: the path a COMMIT would have to carry for this suite to be
        reproducible anywhere but here. Recorded per suite at the moment it RAN,
        so the provenance line below describes what was actually counted rather
        than what the directory holds afterwards. */
     repoRel: relative(REPO, join(entry.cwd, entry.rel)) });
-  const failedRun = r.code !== 0 && !skip;
+  const failedRun = (r.code !== 0 && !skip) || lied;
   const status = failedRun ? "FAIL" : skip ? "skip" : "ok  ";
   const counts = skip
     ? `SKIPPED — ${skip}`
     : t
       ? `${t.pass} pass${t.fail ? `, ${t.fail} FAIL` : ""}${t.skip ? `, ${t.skip} skipped` : ""}`
+        + (lied ? ` — and EXITED 0 (D-425: counted RED)` : "")
       : "assertions unknown";
   console.log(`  ${status}  ${file.padEnd(34)} ${String(r.ms).padStart(6)}ms  ${counts}`);
   if (failedRun && !QUIET) console.log(r.out.split("\n").filter((l) => /FAIL|Error|error/.test(l)).slice(0, 8).map((l) => `          ${l}`).join("\n"));
 }
 
-const failed = results.filter((r) => r.code !== 0 && !r.skip);
+const failed = results.filter((r) => (r.code !== 0 && !r.skip) || r.lied);
+const lied = results.filter((r) => r.lied);
 const skips = results.filter((r) => r.skip);
 const partial = results.filter((r) => r.tally && r.tally.skip > 0);
 const unknown = results.filter((r) => r.tally === null && !r.skip);
@@ -542,11 +647,13 @@ const green = results.length - failed.length - skips.length;
 
 console.log(`\n${green}/${results.length} suites green · `
   + (skips.length ? `${skips.length} skipped · ` : "")
-  + `${assertions} assertions passing · ${(ms / 1000).toFixed(1)}s`);
+  + `${assertions} assertions passing · ${(ms / 1000).toFixed(1)}s · run ${RUN_ID}`);
 if (skips.length) console.log(`  SKIPPED (named): ${skips.map((r) => `${r.file} — ${r.skip}`).join("\n                   ")}`);
 if (partial.length) console.log(`  ran short (named): ${partial.map((r) => `${r.file} skipped ${r.tally.skip} — ${r.tally.skipWhat}`).join("\n                     ")}`);
 if (unknown.length) console.log(`  ${unknown.length} suite(s) reported no assertion count: ${unknown.map((r) => r.file).join(", ")}`);
 if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")}`);
+for (const r of lied) console.log(`  EXIT/TALLY DISAGREE (D-425): ${r.file} printed ${r.tally.fail} fail and exited 0`
+  + ` — counted RED whatever the exit said; the suite's exit path does not follow its own counter.`);
 
 /* VF-3: the fleet's own line, printed even when every member ran, so the figure
    cannot hold still while a member goes dark. `coverage.mjs --strict` reads each
@@ -555,7 +662,7 @@ if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")
 {
   const fleetRes = results.filter((r) => r.fleet);
   const byMember = [...new Set(fleetRes.map((r) => r.fleet))];
-  const ranMembers = [...new Set(fleetRes.filter((r) => !r.skip && r.code === 0).map((r) => r.fleet))];
+  const ranMembers = [...new Set(fleetRes.filter((r) => !r.skip && r.code === 0 && !r.lied).map((r) => r.fleet))];
   console.log(`fleet: ${byMember.length} member${byMember.length === 1 ? "" : "s"} beside the plane · `
     + `${fleetRes.length} suite(s) discovered · ${ranMembers.length} member(s) actually RAN`
     + `${byMember.length !== ranMembers.length
@@ -687,4 +794,18 @@ reportResidue({
 });
 console.log("");
 
-process.exit(Math.min(failed.length + (leaking ? 1 : 0), 125));
+/* M0-67 / D-425: the file this run wrote, read back. Printed LAST so it is the last
+   thing a reader of the file sees, and it fails the run: the suites' verdict above
+   is still this run's own, but a shared file is not one run's record. */
+const intrusions = logIntrusions();
+const sharedLog = !!(intrusions && intrusions.length);
+if (LOG_PATH === undefined) console.log(`log: stdout is a file this run could not name (no lsof?) — whether another run`
+  + ` wrote into it is UNVERIFIED (D-425). run ${RUN_ID}`);
+else if (intrusions === null && LOG_PATH) console.log(`log: could not read ${LOG_PATH} back — whether another run wrote into it`
+  + ` is UNVERIFIED (D-425). run ${RUN_ID}`);
+else if (sharedLog) {
+  console.log(`LOG SHARED (D-425): ${LOG_PATH} is not one run's record — ${intrusions.join("; ")}.`);
+  console.log(`  every line above that does not belong to run ${RUN_ID} is another run's. Re-run into a file of its own.`);
+} else if (LOG_PATH) console.log(`log: ${LOG_PATH} holds this run alone from its header on (run ${RUN_ID}).`);
+
+process.exit(Math.min(failed.length + (leaking ? 1 : 0) + (sharedLog ? 1 : 0), 125));
