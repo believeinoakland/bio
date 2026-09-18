@@ -13492,4 +13492,4 @@ paths (edits kept LOCAL — MK-1 is concurrently in `store.mjs` / `schema.mjs`):
     op list requires it, `docs/DECIDED.md` (regenerated only).
   **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`,
   no version bump.
-released:
+released: 2026-09-18 by the MK-4 worker. Every claimed path is committed on branch `worktree-agent-a6de3e82fcfd8bd2a` (rebased onto `fbcefa1b`). BUILT: the `leads` table (IC-135, I5), op=lead / op=leadlook / op=leadread (IC-136, I3), C-54 (eight rows), the lead-as-leg refusal C-54.1 at basis[], version legs and action basis. Also touched, beyond the list above: `civicos-ui` was NOT edited; `bio-plane/test/bounds.test.mjs` and `gate-reads.test.mjs` each gained the new read op (roster 34 -> 35 from the arm's own failure output; one GATED classification). The row flip, the IC resolutions and D-194's disposition are CONDUCT's acts, named in the report.

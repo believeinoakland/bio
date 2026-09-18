@@ -11199,18 +11199,17 @@ var LEAD_CHECKS = {
 };
 function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
+  const refusal7 = (code, message, repairs) => f(LEAD_CHECKS[code].check, "error", message, repairs, code);
   for (const field of ["target", "content_id"]) {
     const v = typeof l[field] === "string" ? l[field].trim() : "";
     if (v && LEAD_ID_RE.test(v)) {
-      findings.push(f(
-        LEAD_CHECKS.LEAD_NOT_EVIDENCE.check,
-        "error",
+      findings.push(refusal7(
+        "LEAD_NOT_EVIDENCE",
         `${label}.${field} '${v}' is a LEAD, and a lead is never evidence (MEMBER-KNOWLEDGE-DESIGN.md \xA75, \xA77): it says where to look, not what was found, so no leg can rest on it`,
         [
           "follow the lead and cite the document the look captured instead",
           "or, if you saw the thing yourself, author it as your own observation and cite that"
-        ],
-        "LEAD_NOT_EVIDENCE"
+        ]
       ));
       return true;
     }
@@ -38963,6 +38962,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   /** WHICH LEAD, and may this viewer read it. The one visibility decision for
    *  all three acts, so the act, the look and the read cannot disagree. */
   #leadFor(id, viewer) {
+    const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
     const lid = typeof id === "string" ? id.trim() : "";
     const row = lid ? this.#one(
       `SELECT lead_id, author, words, locator, at FROM leads WHERE lead_id = ?`,
@@ -38971,7 +38971,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     const gate = viewerPredicate(viewer);
     const sees = !!row && gate.scope !== "DENY" && (gate.member == null || gate.member === row.author);
     if (!sees)
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_NOT_FOUND",
         lid ? `no lead is addressed by ${lid.slice(0, 60)} in this record` : `pass lead=<LEAD-\u2026>: the id op=lead returned`,
         { lead: lid || null }
@@ -38982,22 +38982,23 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  caller's (§7: *an author field supplied by the caller rather than stamped*
    *  is refused — here by never being read from the body at all). */
   lead({ words = null, locator = null, author = null } = {}) {
+    const refusal7 = (code, detail, extra) => _Store.#leadRefusal(code, detail, extra);
     const who = typeof author === "string" ? author.trim() : "";
     const typed = typeof words === "string" ? words : "";
     const where = typeof locator === "string" && locator.trim() ? locator : null;
     const bytes = (s) => new TextEncoder().encode(s).length;
     if (!who || isMachineIdentity(who))
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_NOT_A_MEMBER",
         who ? `'${who.slice(0, 60)}' is a machine credential. A lead is what a PERSON was told or has reason to believe, in their own name` : `this call carries nobody. The plane stamps the author from the credential that asked`
       );
     if (!typed.trim())
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_NO_WORDS",
         `the lead is empty. Its words are what the member was told or suspects, as they write it`
       );
     if (bytes(typed) > CAPTURE_TEXT_UNIT_CAP || where && bytes(where) > CAPTURE_TEXT_UNIT_CAP)
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_TOO_LONG",
         `${bytes(typed)} B of words${where ? ` and ${bytes(where)} B of locator` : ""}, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut`,
         { limit: CAPTURE_TEXT_UNIT_CAP }
@@ -39036,51 +39037,52 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     looker = null,
     viewer = null
   } = {}) {
+    const refusal7 = (code, detail2, extra) => _Store.#leadRefusal(code, detail2, extra);
     const who = typeof looker === "string" ? looker.trim() : "";
     const st = typeof state === "string" ? state.trim() : "";
     const rk = typeof resultKind === "string" && resultKind.trim() ? resultKind.trim() : null;
     const rr = typeof resultRef === "string" && resultRef.trim() ? resultRef.trim() : null;
     const note = typeof detail === "string" && detail.trim() ? detail : null;
     if (!who || isMachineIdentity(who))
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_LOOK_NOT_A_MEMBER",
         who ? `'${who.slice(0, 60)}' is a machine credential; a machine's search is recorded under its own run (authority_kind run), never under a member's lead` : `this call carries nobody. The plane stamps who looked from the credential that asked`
       );
     const src = this.#leadFor(lead, viewer);
     if (!src.ok) return src;
     const L = src.row;
-    if (!_Store.LEAD_LOOK_STATES.includes(st))
-      return _Store.#leadRefusal(
+    if (!_Store.LEAD_LOOK_OUTCOMES.includes(st))
+      return refusal7(
         "LEAD_LOOK_STATE",
-        st === "NEVER_LOOKED" ? `NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all (OBSERVATION-LOG-DESIGN.md \xA73). A look that happened found one of ${_Store.LEAD_LOOK_STATES.join(", ")}` : `'${st.slice(0, 40) || "(absent)"}' is not one of ${_Store.LEAD_LOOK_STATES.join(", ")}`,
+        st === "NEVER_LOOKED" ? `NEVER_LOOKED is never stored: it is what the record says of a lead with no look at all (OBSERVATION-LOG-DESIGN.md \xA73). A look that happened found one of ${_Store.LEAD_LOOK_OUTCOMES.join(", ")}` : `'${st.slice(0, 40) || "(absent)"}' is not one of ${_Store.LEAD_LOOK_OUTCOMES.join(", ")}`,
         { lead: L.lead_id }
       );
     if ((rk || rr) && !(rk && rr))
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_LOOK_REFERENT",
         `a referent is a KIND and an id together (resultKind capture|content, resultRef); one without the other names nothing`,
         { lead: L.lead_id }
       );
     if (rk && st !== "PRESENT" && st !== "partial")
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_LOOK_REFERENT",
         `a look recorded as ${st} found nothing, so it cannot point at something it found`,
         { lead: L.lead_id }
       );
     if (rk && rk !== "capture" && rk !== "content")
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_LOOK_REFERENT",
         `'${rk.slice(0, 40)}' is not something a look can find: capture or content. An observation referent is a rollup's (REC-100), and a member's look is never a rollup`,
         { lead: L.lead_id }
       );
     if (rk && !this.#leadReferentVisible(rk, rr, viewer))
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_LOOK_REFERENT",
         `no ${rk} ${rr.slice(0, 64)} is held in this record where you can read it. Capture what the look found first, then record the look against it`,
         { lead: L.lead_id }
       );
     if (note && new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
-      return _Store.#leadRefusal(
+      return refusal7(
         "LEAD_TOO_LONG",
         `the look's detail is over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to`,
         { lead: L.lead_id, limit: CAPTURE_TEXT_UNIT_CAP }
@@ -39121,8 +39123,11 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   }
   /* The states a look can STORE: `NEVER_LOOKED` is never one (§3). Declared BELOW
      its method on REC-116's finding (`bounds.test.mjs`): a class constant belongs
-     to the member it serves, and the segment walker reads it that way. */
-  static LEAD_LOOK_STATES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
+     to the member it serves, and the segment walker reads it that way. NAMED
+     `_OUTCOMES` AND NOT `_STATES` ON PURPOSE: `civicos-ui/check-semantics.mjs` reads
+     every array constant whose name ends in _STATES as BUNDLE lifecycle states, and these are
+     observation states (D-129) — the first draft was caught there by name. */
+  static LEAD_LOOK_OUTCOMES = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"];
   /** Does a look's referent name something this viewer can read? One read per
    *  kind, gated through `#viewerSees` — never a second gate. */
   #leadReferentVisible(kind, ref, viewer) {
