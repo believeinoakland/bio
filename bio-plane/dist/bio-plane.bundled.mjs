@@ -33105,13 +33105,16 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       out.push(c);
     };
     const refRows = this.#rows(
-      `SELECT ref, label, pos_kind, pos, pos_ref FROM reading_refs
-        WHERE capture_sha=? AND pos_kind IS NOT NULL ORDER BY ref LIMIT ?`,
+      `SELECT rr.ref AS ref, rr.label AS label, rr.pos_kind AS pos_kind, rr.pos AS pos, rr.pos_ref AS pos_ref,
+              EXISTS (SELECT 1 FROM resolutions r
+                       WHERE r.capture_sha = rr.capture_sha AND r.ref = rr.ref AND r.entity_id = ?) AS named
+         FROM reading_refs rr
+        WHERE rr.capture_sha=? AND rr.pos_kind IS NOT NULL ORDER BY rr.ref LIMIT ?`,
+      subject ?? "",
       cap,
       max * 4 + 1
     );
     if (refRows.length > max * 4) truncated = true;
-    const named = subject ? new Set(this.#rows(`SELECT ref FROM resolutions WHERE capture_sha=? AND entity_id=?`, cap, subject).map((r) => r.ref)) : null;
     for (const r of refRows) {
       const pos = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
       if (!pos) continue;
@@ -33121,7 +33124,7 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
         extent: { kind: pos.kind, ..._Store.#posFields(pos) },
         reference: r.ref,
         label: r.label ?? null,
-        mentions_subject: named ? named.has(r.ref) : null,
+        mentions_subject: subject ? !!r.named : null,
         content_id: null,
         mint: _Store.#mintLabel(CONTENT_MINTED_BY_PLANE),
         machine_work: true,

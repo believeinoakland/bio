@@ -9726,20 +9726,24 @@ export class Store extends DurableObject {
        it is on point. `mentions_subject` is the one thing the record can add,
        and it is three-valued: null when the question names no subject, because
        "does not mention it" would then be a claim about nothing. */
+    /* ONE BOUNDED READ, the subject test folded in as an EXISTS per row rather than
+       a second SELECT over `resolutions`: that second read had no LIMIT, and
+       `derivation-bounds.test.mjs`'s census caught it the first battery it met —
+       a candidate list published with a bound while holding an unbounded scan is
+       exactly the shape D-365 and D-369 name. */
     const refRows = this.#rows(
-      `SELECT ref, label, pos_kind, pos, pos_ref FROM reading_refs
-        WHERE capture_sha=? AND pos_kind IS NOT NULL ORDER BY ref LIMIT ?`, cap, max * 4 + 1);
+      `SELECT rr.ref AS ref, rr.label AS label, rr.pos_kind AS pos_kind, rr.pos AS pos, rr.pos_ref AS pos_ref,
+              EXISTS (SELECT 1 FROM resolutions r
+                       WHERE r.capture_sha = rr.capture_sha AND r.ref = rr.ref AND r.entity_id = ?) AS named
+         FROM reading_refs rr
+        WHERE rr.capture_sha=? AND rr.pos_kind IS NOT NULL ORDER BY rr.ref LIMIT ?`, subject ?? "", cap, max * 4 + 1);
     if (refRows.length > max * 4) truncated = true;
-    const named = subject
-      ? new Set(this.#rows(`SELECT ref FROM resolutions WHERE capture_sha=? AND entity_id=?`, cap, subject)
-          .map((r) => r.ref))
-      : null;
     for (const r of refRows) {
       const pos = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
       if (!pos) continue;
       push({ source: "reading", ref: pos.ref, extent: { kind: pos.kind, ...Store.#posFields(pos) },
              reference: r.ref, label: r.label ?? null,
-             mentions_subject: named ? named.has(r.ref) : null,
+             mentions_subject: subject ? !!r.named : null,
              content_id: null, mint: Store.#mintLabel(CONTENT_MINTED_BY_PLANE), machine_work: true,
              says: `the record's own reading of this document found a reference ('${String(r.ref).slice(0, 80)}') `
                  + `at ${pos.ref}. That it is there is what the reading says; whether it is on point is yours `

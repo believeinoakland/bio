@@ -883,6 +883,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
        the item that adds it. It is the first READ this table has ever had: for
        39 days `op=provenanceroute` was `mutating: true` and nothing read the
        marks at all. */
+    narrowcandidates: "REC-86: the machine's proposals for making ONE leg of ONE reading more specific. "
+      + "GATED: it names a QUESTION and answers about the document its leg rests on, so it takes the "
+      + "fail-closed viewer stamp beside op=narrow in index.mjs and answers a question the caller may not "
+      + "see exactly as an absent one (NARROW_NO_INQUIRY), before any leg or candidate is read. The "
+      + "candidates are drawn only from the capture that one leg already rests on, so a caller who can "
+      + "see the question can already read that leg's document; nothing wider is reached.",
     provenanceroutes: "REC-116: which documents in this instance carry a STANDING LOOKED_INDETERMINATE "
       + "marker — the roster REC-69's 2026-08-09 delegation asked for and nobody built. GATED, and the "
       + "disclosure is worth naming precisely: each row names a DOCUMENT the group holds and says the "
