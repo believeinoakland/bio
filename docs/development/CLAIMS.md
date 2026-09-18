@@ -14110,3 +14110,28 @@ control, plus every suite the no-project version requirement breaks, corrected a
 `civicos-ui/check-refusal-codes.mjs` (floors only, from its own print), `civicos-ui/test/**` fixtures only if the
 harness breaks, `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built note),
 `docs/development/INTERFACE-CHANGES.md` (this item's IC rows).
+
+### DELEGATION 2026-09-18 RECORD (REC-136) -> UI: **A NO-PROJECT CONCLUSION NOW NAMES ITS READING, AND A PROJECT CAN WITHDRAW — THE SURFACE CAN DO NEITHER**
+**open as of 2026-09-18** — `app.html`'s conclude flow sends no `version`, so every no-project conclude a member commits from the surface is refused `NO_CLAIM`; nothing on the surface reaches `op=withdrawconclusion`.
+
+`INVESTIGATIVE-SESSION.md` §7.1 items 6-7 are built in the plane (IC-153, proposed MAJOR). What the surface owes:
+1. **The reading a conclusion adopts (item 6).** `concludeParams` must send `version=<reading>`: the accepted reading
+   (with a claim) of the question that the member chooses — read the candidates from `op=basisversions` (state
+   `accepted`, non-empty `claim`), SHOW the claim before commit (the claim is what is concluded), and never default one
+   (a default reading is the plane choosing the answer). With none available, render `NO_CLAIM`'s detail as the door.
+   **When this lands, `civicos-ui/test/conclude-nofalsifier.test.mjs`'s REC-136 STAND-IN (the transport supplying the
+   reading, and its foot assertion that the surface sent none) FAILS BY DESIGN — remove the stand-in in the same turn.**
+2. **The project's stance and its history (item 7).** From a project's view of a question it concluded: render
+   `op=basisversions&project=`'s `conclusion_history` (every conclusion and withdrawal, dated and authored, in order)
+   and `conclusion_stance`, and offer `op=withdrawconclusion&target=&project=&reason=` with a REQUIRED reason, worded so
+   a member knows the conclusion stays in the record. Strike `withdrawconclusion`'s row from
+   `surface-registry.test.mjs`'s `ACTS_AWAITING_SURFACE` when it is hosted.
+3. **The legacy read.** `no_project_conclusion.claim.state` is `adopted` or `undetermined`; render undetermined through
+   the `undeterminedPane` primitive, never as the conclusion text.
+
+## CLAIM 2026-09-18 RECORD (REC-136) — RELEASED
+
+released: 2026-09-18 by the REC-136 worker, branch `worktree-agent-a01b00fb335bbabb8`. Figures are in the commit that
+carries this block and in REC-136's report. **FOR CONDUCT:** RESOLVE IC-153 (proposed MAJOR, BREAKING; read I3's base
+at resolution); the UI DELEGATION above is open; §7.1 item 4 (REC-135) is unbuilt; the DESIGN GAPS (a)-(c) are in
+`INVESTIGATIVE-SESSION.md`'s Incomplete sections.

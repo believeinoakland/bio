@@ -123,7 +123,17 @@ const ARMS = {
                      "    if (want && (!v || v.state !== \"accepted\" || !claimText))");
          edit(STORE, "    adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };",
                      "    adopted = v ? { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 }\n"
-                   + "                : { version: \"\", claim: \"\", leg_count: legs.length };");
+                   + "                : { version: \"\", claim: \"\", leg_count: (Array.isArray(fm.basis) ? fm.basis.length : 0) };");
+         /* and no adoption is written when none was named — REC-124's bytes. */
+         edit(STORE, "    text = Store.#setOrAddScalar(text, \"conclusion_version\", `\"${Store.#fmSafe(adopted.version)}\"`);",
+                     "    if (adopted.version) text = Store.#setOrAddScalar(text, \"conclusion_version\", `\"${Store.#fmSafe(adopted.version)}\"`);");
+         edit(STORE, "    text = Store.#setOrAddScalar(text, \"conclusion_claim\", `\"${Store.#fmSafe(adopted.claim)}\"`);",
+                     "    if (adopted.version) text = Store.#setOrAddScalar(text, \"conclusion_claim\", `\"${Store.#fmSafe(adopted.claim)}\"`);");
+         /* RECORDED 2026-09-18: this arm's FIRST draft used `legs.length` here,
+            which is declared later in conclude() — so the armed call threw a
+            ReferenceError, the suite read `[false, null, false]` for the one
+            arm and NOTHING-WAS-WRITTEN stayed green. A surprising green found
+            the ARM wrong, not the subject; `fm.basis` is what `legs` reads. */
        } },
 
   g: { files: [CHECKS],
