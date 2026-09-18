@@ -13690,3 +13690,14 @@ byte-identical. Found and fixed on the way: the first spelling of the `case_docu
 with `tools/mintid.mjs`: IC-139, IC-140. **FOR CONDUCT:** RESOLVE IC-139 against I3 and IC-140 against I5 as read at
 resolution (built on I3 26.1.0 and I5 1.18.0, both proposed MINOR); the PUBLISHED container format moved `/5` -> `/6`
 and IC-139 argues it separately. **FOR UI:** the DELEGATION above (render the deliverer).
+
+### ADDENDUM 2026-09-18 RECORD (REC-128) — merged with origin/main `e1434b06` after release
+
+origin/main moved while REC-128 was verifying (MK-1 / MK-4 integration, BOB #14's rule-4 paragraph). Merged into
+the branch rather than rebased (no force-push). Conflicts resolved keep-both by hand: `store.mjs`'s additive-column
+list, `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (BOB's paragraph kept whole; the stale "named member's own"
+wording above it corrected; REC-128's sentence placed after it as BUILT), and the append-only `CLAIMS.md` /
+`INTERFACE-CHANGES.md`. IC-139 / IC-140 bases RE-READ on the merged tree: I3 26.3.0 (proposed 26.4.0), I5 1.20.0
+(proposed 1.21.0). On the merged commit `cf0480a5`: **240/240 suites green · 14774 assertions passing**, no skip;
+coverage `--strict` exit 0 unpiped; UI harness exit 0; `status --check` 0 drift; `plancheck --local` 0 fail; the
+deliverer control re-run, all four arms as declared, restores byte-identical.
