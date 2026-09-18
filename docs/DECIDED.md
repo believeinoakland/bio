@@ -535,7 +535,7 @@ authority is the file named, never this one.
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/archive/ledgers/DEBT-closed.md:53`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
-  `docs/development/QUEUE.md:1256`
+  `docs/development/QUEUE.md:1245`
 - **D-330** · 2026-09-13 — AMENDED MID-ITEM, 2026-09-13: `docs/development/DEBT.md` gains a SECOND row beyond D-330's disposition — **D-333**, the class this item's measurement establishes and its repair does not close: a driver's declared TALLY decays while every one of its anchors stays live, and no static check can see the difference…  
   `docs/development/CLAIMS.md:3273`
 - **D-331** · 2026-09-13 — RULED AS THIS ROW RECOMMENDED, AND THE RULING DECLINES BOTH HALVES OF THE FALSE CHOICE: A THROWING DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.** `scripts/armdecay.mjs`'s `preflight()` is the shared dry pass — it counts every arm's quote in the file that arm will write, prints the WHOLE table, and only…  
@@ -1134,10 +1134,10 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2285`
 - **REC-129** · 2026-09-18 — A CORRECTION TO JUST-LANDED REC-129 (IC-144), ON BOB #15's CORRECTED RULING — FIRST AMONG EQUALS: `leads` LEAVES `op=stats` FOR EVERY CLASS, THE ADMIN TOKEN INCLUDED; `observations` STAYS ON `op=stats` FOR EVERY CLASS BUT COUNTS ONLY ROWS WITHOUT `authority_kind='lead'`, THE SAME MEANING FOR EVERY CALLER.** — owner…  
   `docs/development/QUEUE.md:1103`
+- **REC-130** · 2026-09-18 — ALL THREE DECIDED BY BOB #14 the same hour, as applications of existing doctrine; BOB is writing them into `BIO_Publication_v0_1.md` §6A — this row UNBLOCKS against that text.** (1) unsigned case documents were readable anonymously → `REC-130`, which goes FIRST; (2) a non-member recipient reaches the copy by a…  
+  `docs/archive/ledgers/QUEUE-closed.md:2305`
 - **REC-130** — CORRECTED by BOB #15: fixed on `main` by REC-130 at `a32fda24`, 17 minutes before this file was written**; CONDUCT #4's handoff adds REC-125 and MK-1, so FOUR exposures are fixed on `main` and open on any plane running 0.58.0).  
   `docs/development/kickoffs/BOB-NEXT.md:29`
-- **REC-130** · 2026-09-18 — ALL THREE DECIDED BY BOB #14 the same hour, as applications of existing doctrine; BOB is writing them into `BIO_Publication_v0_1.md` §6A — this row UNBLOCKS against that text.** (1) unsigned case documents were readable anonymously → `REC-130`, which goes FIRST; (2) a non-member recipient reaches the copy by a…  
-  `docs/development/QUEUE.md:1112`
 - **REC-131** · 2026-09-18 — SUPERSEDED IN PART, 2026-09-18, BY BOB #15's CORRECTED RULING (`MEMBER-KNOWLEDGE-DESIGN.md` §5), which arrived during this IC's integration.  
   `docs/development/INTERFACE-CHANGES.md:10641`
 ## UI-
@@ -2248,7 +2248,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - version that the content is extracted from."* RULED, folded into Part II §16.  
   `docs/development/QUEUE.md:896`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
-  `docs/development/QUEUE.md:1220`
+  `docs/development/QUEUE.md:1209`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

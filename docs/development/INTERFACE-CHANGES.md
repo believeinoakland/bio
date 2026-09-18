@@ -10859,6 +10859,8 @@ revocation `credential`, draft and comment `undetermined`). NEGATIVE CONTROL: `n
 
 **RESPONSES:** not yet collected.
 
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I3 29.3.0 → 29.4.0.** The base was read at resolution: 29.3.0, where MK-2, REC-129 and REC-128 moved it after this row was proposed against 27.0.0. Five new ops, plus an OPTIONAL `secret=` on `op=casedocument` that opens only a live grant's bound edition. Nothing that answered before is refused or changes meaning; a stranger's `op=casedocument` without a live secret is REC-130's byte-identical not-found, unchanged. Driven at the merge with REC-128 (`sessionCaseViewer` and the new secret path meet in `casedocument`): reviewcopy 52/0, deliverer 20/0, casesign 74/0. **PROVISIONAL, carried to BOB #15:** §6A.2 does not say who may issue or revoke a grant, or author a draft. It runs at the PROJECT OWNER (the check `publishCase` uses, with no administrator bypass), the narrowest reading, and widening it is one check.
+
 ## IC-146 · I5: three tables for the review copy — `case_drafts`, `review_grants`, `review_comments`, all purged · PROPOSED 2026-09-18 (REC-126, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I5 (the store schema). **Version read off THIS TREE: 1.20.0** (REC-128's IC-140 may land first —
@@ -10876,3 +10878,5 @@ revocation `credential`, draft and comment `undetermined`). NEGATIVE CONTROL: `n
   comments are about it. `hygiene.test.mjs`'s D-113 pass sees the three `DELETE FROM`s.
 
 **RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MINOR, ADDITIVE — I5 1.21.0 → 1.22.0.** The base was read at resolution: 1.21.0, where IC-140 moved it after this row was proposed against 1.20.0. Three new tables before `host_governor`, all in `purge`; `review_grants` holds `secret_sha` only.
