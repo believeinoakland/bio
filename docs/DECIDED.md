@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1043 rulings across 85 documents.
+1044 rulings across 85 documents.
 
 ## DEC-
 
@@ -1807,6 +1807,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:12250`
 - Both are SUPERSEDED by this landing and both are rewritten with the reason at the site, per `CLAUDE.md`'s rule that an exempted test is a rule nobody is enforcing.  
   `docs/development/CLAIMS.md:12253`
+- the census arm at ~:495 is CORRECTED, NOT EXEMPTED:** it asserts `asks_registry: false` against `#versionCollections`, which is this defect PINNED OPEN as a finding.  
+  `docs/development/CLAIMS.md:12507`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
