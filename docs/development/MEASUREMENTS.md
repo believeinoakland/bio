@@ -16581,3 +16581,119 @@ walk (`extractPdfStructure` over each file, 2026-09-18): agenda 1 image on 1 of 
 gets for free. **Three of `73545` p6's five images are SLIVERS** (0.12 pt wide or tall — rules drawn as images): the
 walk reports what is painted and does not judge what is a "figure", which is stated here so nobody reads a count of
 images as a count of pictures. The suite pins the agenda, `73545` and `73550`.
+
+## M-57 · 2026-09-18 · LED-1 — THE LEDGER READER AUDIT: WHO READS `QUEUE.md` AND `DEBT.md`, WHAT EACH NEEDS, AND WHAT BREAKS WHEN CLOSED ROWS MOVE — MEASURED BY MOVING THEM IN A SCRATCH COPY, NOT ONLY BY READING
+
+**Instrument.** Two halves, and the second is what makes the first worth believing. (1) **The grep, which is
+this audit's falsifier** — re-run it and any reader absent from the table below is a miss:
+
+    grep -arlE 'QUEUE\.md|QUEUE-|DEBT\.md|DEBT-closed|archive/ledgers' --include='*.mjs' --include='*.js' \
+      --include='*.cjs' --include='*.json' --include='*.jsonc' --include='*.sh' --include='*.py' --include='*.ts' \
+      --include='*.html' tools bio-plane civicos-ui agent-worker pdf-worker ocr-worker scripts newgroup .claude .github
+    grep -arnE "QUEUE|DEBT" <same roots>      # then filtered for a path built from a constant: `QUEUE` imported, `{QUEUE`, `QUEUE,`
+    grep -arnoE "(tools/|TOOLS, ?['\"])(owed|nc-m039|mintid|plancheck|rowdesign|decided|mergecarry|attribution|rowsubstrate|corpuscheck|status|statussweep|strandedwork|retirable|gates|delegations|undesignedclaims|pushguard)\.mjs" bio-plane/test bio-plane/scripts civicos-ui tools
+    grep -arlE 'readdirSync' bio-plane/test tools bio-plane/scripts civicos-ui/test | xargs grep -alE docs   # walkers that reach a ledger unnamed
+
+**`-a` IS LOAD-BEARING HERE, and the first pass paid for it:** without it, `grep` (ugrep on this machine) returned
+NO match in `bio-plane/scripts/op-claims.mjs` or `armdecay.mjs`, both of which name `DEBT.md`/`QUEUE-2026-08.md`,
+because their non-ASCII bytes make them read as binary. 39 files match the first grep; each was read and classified.
+(2) **A MOVE SIMULATION** in two `git clone`s of this branch at `6e50b260` in the scratchpad — never this worktree.
+**C** is the unmodified control; **D** has every QUEUE row whose heading state is `done`/`superseded` (336 rows, the
+August register stubs included) and every DEBT row whose last cell lacks the word `open` (53 rows, the 2026-08-10
+roll's own definition) moved whole and unedited to new files under `docs/archive/ledgers/`, `DECIDED.md` regenerated,
+and the result committed. The same 16 ledger-relevant suites and `plancheck --local` ran in both, so **the move is
+the only variable** (CONDUCT #11's rule: a copy with no `.git` was tried first and made `mintid`, `strandedwork` and
+`register-grammar` fail in BOTH arms, so it could not measure them — it was replaced rather than read). QUEUE goes
+1,156,976 → 209,049 B (−82 %) and DEBT 789,236 → 558,398 B. Baseline in this worktree before anything:
+`232/232 suites green · 14392 assertions passing`, 3 fleet members RAN.
+
+**What the move broke, C → D (every other suite identical in both):**
+- `planning-hygiene` — `every QUEUED reference (3) names an existing queue item`. All three live `QUEUED <ID>`
+  references (`CONSTRUCTS.md` → FW-6; `CAPTURE-SCALING.md` → CAP-4 twice) point at `done` rows, which resolve TODAY
+  only through the CLOSED ITEMS register stubs.
+- `mintid.test` — 6 new failures: `no registered collision has quietly stopped being one (["D-124","CPDF-9","FW-15","M0-16"])`,
+  `the six pre-existing collisions ... still present`, and four `--audit` arms (the audit exits non-zero on the stale
+  register). One more failure, `the REAL ledger's filesystem honours the exclusive create`, fails in C as well and is
+  the scratch clone's environment rather than the move.
+- `plancheck --local` — `STALE COLLISION REGISTER — 4 id(s)`, exit 1. Hence also `strandedwork.test`'s
+  `...and plancheck --local exits 0`, a downstream failure and not a second cause.
+- `owed` — no suite went red, and **that is the finding: the move lost live work without a failure.** `owed by BOB`
+  residue 17 → 13 and `owed by CONDUCT` 15 → 11: **D-330, D-401, D-405, D-407** left the lists. Each is a row whose
+  disposition says resolved/fixed/cleared or does not use the word `open`, but still carries a residue marker
+  (`OUTSTANDING` and similar) that `owed.mjs` counts. **So "not `open`" is the WRONG definition of closed** for
+  anything `owed` reads, and the August roll used it.
+- `decided` — of **1,080 rulings**, **0 lost, 0 gained, 0 re-attributed to a different id, 0 re-dated**, and 104 changed
+  file. The whole-row move is safe for the index; `plancheck`'s `decided --check` goes STALE until it is regenerated
+  (measured in D before regenerating).
+- Unchanged in D, checked rather than assumed: `m025-arm-anchor-witness` (24/0), `op-claims` (35/0), `corpuscheck`
+  (108/0), `rowsubstrate`, `statussweep`, `undesignedclaims`, `register-grammar`, `pushguard`, `status`, `retirable`,
+  `scheduler`, and the `owed`/`owed-controls` suites. mintid **floors unchanged for every namespace** (`corpusFloor`
+  expands `docs/archive/`); duplicate-detection sites **835 → 464**, just above `mintid.test`'s pin of `> 400`;
+  prefixes 18 → 13 (the pin is `>= 10`).
+
+**THE TABLE.** "Needs closed?" asks whether the reader, as written, depends on a closed row being present in the
+LIVE file. "Archive?" was verified in the code, not recalled.
+
+| reader | ledger | what it reads | needs closed rows? | what LED-2 must preserve | reads the archive? |
+| --- | --- | --- | --- | --- | --- |
+| `tools/mintid.mjs` `corpusFloor` | both | every id-shaped mention across `NAMESPACES[ns].corpus` | no, because the floor expands `docs/archive/` | move closed rows INTO `docs/archive/**/*.md` (any `.md` below it counts) | **YES** (`expandCorpus`) |
+| `tools/mintid.mjs` `allocations()`/`collisions()` | both | allocation sites (`### NS-n ·`, `\| NS-n \|`, `\| D-n \|`) with file:line; the `KNOWN_COLLISIONS` ratchet (exact, no slack) | **YES**, for the register: D-124, CPDF-9, FW-15, M0-16 are pairs with one half closed. The August snapshot also duplicates 190 live headings | keep both halves of every registered collision in ONE file, or teach `allocations()` the archive **and** de-duplicate the 190 snapshot/stub pairs first (expanding the directory today would report ~190 false duplicates) | **NO**, and this is a defect today: it iterates `spec.corpus` raw, `readFileSync("docs/archive/")` throws, and the path lands in `missing`. 109 D, 195 queue and 55 DEC allocations already sit outside duplicate detection |
+| `tools/mintid.mjs` `unregisteredNamespaces()` | QUEUE | item-heading prefixes across `QUEUE_CORPUS` | no (it reads prefixes; 18 → 13, pin `>= 10`) | nothing | **NO** (same raw iteration) |
+| `tools/plancheck.mjs` §2 | both | `## AREA — ACTIVE`, `behind-interface:`, `milestone:`, `## BOB INBOX`; DEBT's last cell per `\| D-n \|` (token/resolved) | no. The `PROVISIONAL … no queue item references it` warn and the idle-milestones note read ALL rows, so they can newly fire. That is correct behaviour, not a break | the area headings, `## BOB INBOX`, the field names at line start, and DEBT's pipe-table shape with the disposition in the LAST cell | no |
+| `tools/plancheck.mjs` (imports) | both | runs mintid, mergecarry, attribution, decided `--check`, rowdesign, owed, delegations, status, strandedwork | through mintid's collision register (above) | regenerate `DECIDED.md` in the same commit as any move | through mintid/decided |
+| `tools/rowdesign.mjs` | QUEUE | `### ID · state` rows ended by the next `###`/`##`; judges `queued`/`running` on `milestone:`/`interface:`/`behind-interface:`/`design:`/`scope:` | no | the heading grammar `### <ID> · <state>`, the four field names at line start, and `##` as a row boundary | no |
+| `tools/rowsubstrate.mjs` **(missed by the list)** | QUEUE | `rowdesign`'s `QUEUE`/`openRows`; judged rows' backticked symbols; run by `corpuscheck` | no | as rowdesign | no |
+| `tools/owed.mjs` | both | DEBT: `\| D-` lines with 6 or more cells, `cells[4]` body and `cells[5]` disposition, skipping `CLOSED`/`FIXED AND CONFIRMED` unless `RESIDUE_RE`; QUEUE: the whole `### ID · blocked` line | no, BUT the archiver's closed test must equal owed's (closed AND no residue), or live work vanishes silently. Measured above: 4 rows | the 5-column DEBT table (body in the 4th cell, disposition in the 5th); the `blocked` heading line whole | no |
+| `tools/decided.mjs` | both | every `.md`/`.html` under `docs/` plus `CLAUDE.md`; marker sentences; id from the sentence or its line; file:line | no | move WHOLE rows unedited (0 re-attributions measured). A row split from its heading could lose its id for rulings in the body lines. Regenerate `DECIDED.md`. Dedup is by the first 110 chars of the text, so a COPY (the snapshot pattern) is folded silently rather than double-counted | **YES** (`ROOTS = ["docs", …]`) |
+| `tools/attribution.mjs` **(missed by the list)** | both | actor-to-citation bindings in every non-excluded file, the live ledgers included | no, it grades them. Moved rows simply stop being graded | nothing required. Note that archived rows leave the gate | **NO** for the corpus (`docs/archive/` is EXCLUDED on purpose); YES for `DECISIONS-2026-08.md` as a register |
+| `tools/nc-m039.mjs` (on-demand driver, not in the battery) | both | copies QUEUE.md into a worktree; plants into DEBT.md and requires 10,000 bytes or more; requires `plancheck --local` exit 0 on the clean tree | no | DEBT.md stays at least 10 kB (558 kB projected) | no |
+| `tools/mergecarry.mjs` | DEBT (path only) | git merge history; a DECLARED drop keyed `{merge:"1c5d96a", path:"docs/development/DEBT.md"}` | no | the path `docs/development/DEBT.md` (do not rename it). The move itself is one ordinary whole-file edit | n/a (git) |
+| `bio-plane/scripts/op-claims.mjs` | both | whole working tree; `op=` claims; `LEDGER` pins EXACT per-file counts, including 2 entries for `docs/archive/ledgers/QUEUE-2026-08.md` and 8 for `CLAIMS-2026-08.md`; none for live QUEUE/DEBT | no | write NEW archive files; do not append into `QUEUE-2026-08.md`/`CLAIMS-2026-08.md`, whose counts are pinned exactly | **YES** (whole tree) |
+| `bio-plane/scripts/armdecay.mjs` | neither (comment only) | a library whose caller passes the corpus; the label half EXCLUDES `docs/` because DEBT's D-329 row quotes the stale fragment | no | nothing | n/a |
+| `planning-hygiene.test` | both | QUEUE_IDS from live `### ID ·` headings; every `QUEUED <ID>` in `docs/development`+`docs/architecture` resolves against them; each `\| D-n \|` row's token; floors `QUEUE_IDS >= 10`, `DEBT rows >= 20`, `open >= 5`; plancheck's open/total counts equal its own | **YES**: FW-6 and CAP-4 (measured break) | keep a heading stub for every closed id that is `QUEUED`-referenced (the August register), or teach QUEUE_IDS the archive | no (its walk does not reach `docs/archive/`) |
+| `mintid.test` | both | fixtures plus live: `collisions().sites > 400`, no stale collision, prefixes `>= 10`, every namespace floor non-zero | **YES**, via the collision register (6 failures measured) | as mintid; the `> 400` pin has 64 of slack after the move | through mintid |
+| `corpuscheck.test` | both | `coverage({pop:["docs/development/QUEUE.md"]})` (path); `^\| D-388 \|` must be in LIVE DEBT.md | no, but D-388 must stay live while its routing assertion names it | the paths. If D-388 closes, that assertion must be corrected | no |
+| `corpuscheck.control` | neither directly | anchors CORPUS-STANDARD §6's `docs/development/QUEUE.md` ledger row | no | the file name `QUEUE.md`. Also: `corpuscheck` FAILS on any unclassified `.md` under `docs/development/**`, so an index/stub file placed THERE needs a §6 row; `docs/archive/` is outside the population | no |
+| `m025-arm-anchor-witness.test` | both | anchor liveness over `docs/development/*.md` among others | no (measured unchanged) | nothing | no |
+| `m041-instrument-census.control` | QUEUE | anchor `## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)` plus a newline, exactly once today | no | that area heading VERBATIM (LED-4's reorder), or repoint the anchor in the same commit | no |
+| `rowdesign.control` | QUEUE | A1 anchor: the first `design:` line citing VERIFICATION.md §"A THROWING…"; A2b: `>= 50` closed rows with no `design:` in the LIVE queue | **YES** (A2b, measured false after the move) | A2b needs correcting to match the archive design | no. **BROKEN TODAY**, see below |
+| `op-claims.test` | QUEUE (path) | `docs/development/QUEUE.md` is in the walk | no | the path | n/a |
+| `owed.test` / `owed-controls.test` **(missed)** | both | the live arm through `owedFor("BOB")`: readable, `owed > 0` | no | as owed | no |
+| `strandedwork.test` **(missed)** | via plancheck | `plancheck --local exits 0` | through plancheck | as plancheck | no |
+| `tools/.ui59/*.mjs` (6 scripts, UI-59's) **(missed)** | QUEUE | `### UI-n · state` over the whole file, register included | YES | n/a | no. **BROKEN TODAY**, see below |
+| `m041-instrument-census.mjs`, `gates.mjs`, `pushguard.mjs`, `m035-refiter-census.mjs`, `declared-source.mjs`, `waitquiet.mjs` | transitive | import or run mintid / plancheck / decided | through those | through those | through those |
+| **`depends-on:` (CONDUCT, by hand; NO instrument parses it)** | QUEUE | an open row's dependency ids | **YES**: 11 of 16 queue-id dependencies in the 23 open rows point at `done` rows (M0-44→M0-38, M0-33→M0-29, REC-122→REC-120, REC-121→FW-19 and REC-104, REC-100→REC-95, REC-15→REC-14, CPDF-3→CAP-1, CAP-11→CAP-10, FW-20→CPDF-19, UI-17→UI-11) | a closed row must stay findable by id in one step (a stub, or a documented archive lookup) | n/a |
+| prose citations `QUEUE.md <ID>` / `DEBT.md D-n` / `QUEUE.md:NNN` | both | human readers: 56 in `docs/development`, 14 in plane source/tests/UI, 231 in the archive; plus 56 hand-written `QUEUE.md:`/`DEBT.md:` line citations | yes, for a human | line citations are already stale by drift. An id citation survives if the id stays findable | n/a |
+
+**Named in the brief and NOT readers** (the file is named only in a comment; checked by reading what each opens):
+`acquire`, `check-firing` (its estate walk has no `docs/` root), `publish`, `scheduler`, `refselectivity.control`,
+`caseflip`, `dec65-strength-reach.control`, `derivation-bounds`, `airun`, `connections-sidebar`; also the plane
+source, `bio-checks.mjs`, `app.html` and the built bundles. `m025-arm-anchor-witness` IS a reader, but through its
+`docs/development` walk, not through the D-329 comment the brief cited. **Checked and NOT readers:** `status`,
+`statussweep`, `strandedwork`, `retirable`, `gates` (0 mentions each; they reach the ledgers only by running
+plancheck), `delegations` (reads CLAIMS), `register-grammar` (reads VERIFICATION.md). CORPUS-STANDARD.md §6 names
+`register-grammar` and `mergecarry` as the ledgers' row-by-row checks; neither reads a ledger's rows.
+
+**BROKEN TODAY, REPORTED AND NOT FIXED (the brief's instruction):**
+1. **`bio-plane/test/rowdesign.control.mjs` arm A1**: `want ["M0-29"] got ["M0-33"]`, 24 pass 1 fail, run in clone C.
+   M0-29 is now `done`, and the first line matching A1's anchor now belongs to queued M0-33. It is the anchor-on-a-
+   row-state class `m041-instrument-census.control`'s header already records. Not in the battery, so nothing is red.
+2. **`tools/.ui59/*.mjs` (six scripts)** hardcode `ROOT` to a worktree under `/Users/sparky/ClaudeCodeBIO/bio/`, which does
+   not exist on this machine. `node tools/.ui59/completeness.mjs` exits 1 on `ENOENT`. Nothing invokes them.
+3. **`mintid`'s duplicate detector does not read `docs/archive/`** although every ledger namespace's corpus lists it.
+   The file's own comment states the raw iteration. The consequence it does not state: `CORPUS-STANDARD.md` §6 says
+   `decided.mjs` and `mintid` *scan it*, which is true of mintid's FLOOR and false of its COLLISION check. That is the
+   widened-claim class. Not a failure today; it becomes one the moment LED-3 moves half of a registered pair.
+
+**WHAT LED-2 MUST DECIDE BEFORE LED-3 MOVES A ROW, from the measurements above:**
+(a) **the definition of closed.** It must be owed's (`CLOSED`/`FIXED AND CONFIRMED`, or a resolved token) AND no
+`RESIDUE_RE` match, not "the cell lacks `open`" (4 live rows lost). (b) **a findable-by-id stub per closed id** (the
+August register's shape) or an archive-aware `QUEUE_IDS`/depends-on lookup: planning-hygiene and 11 dependencies
+need it. (c) **the collision register**: keep registered pairs together (the D-124 precedent), or make `allocations()`
+expand the archive after removing the 190 snapshot duplicates. (d) **move whole rows unedited, regenerate
+`DECIDED.md` in the same commit, and write NEW archive files under `docs/archive/`** (op-claims pins the August files
+exactly; a file under `docs/development/` needs a CORPUS-STANDARD §6 row). (e) **LED-4's cut-to-fields** must keep
+`### <ID> · <state>`, the field names at line start, the 5-cell DEBT row with the disposition last, the `##` area
+headings verbatim (m041's anchor), and `## BOB INBOX`. (f) three pins to correct in the same commit that moves rows:
+`rowdesign.control` A2b (`>= 50` closed rows live), `mintid.test` `sites > 400` (464 after), and `corpuscheck.test`'s
+D-388 if that row ever closes.

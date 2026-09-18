@@ -13267,3 +13267,18 @@ and a baseline, ALL AS DECLARED, every restore byte-identical (`src/pdfstructure
 The table probe: `node test/table-recognition.probe.mjs --runs 5` from `pdf-worker/` — **NO-GO** (M-55). IDs minted
 with `tools/mintid.mjs`: M-55, D-419, D-420. `bio-plane/src/index.mjs` was NOT edited, so nothing here needs
 sequencing against CPDF-19's moved tier-3 code.
+
+## CLAIM 2026-09-18 M0 (LED-1 — the ledger reader audit; moves no row)
+
+Worker spawned by CONDUCT #4, branch `worktree-agent-a811f19cc02e2aa59`. Paths: `docs/development/MEASUREMENTS.md`
+(one new M-entry, minted), `docs/DECIDED.md` only if regeneration is owed, this block. NOT `QUEUE.md` (CONDUCT's),
+NOT `DEBT.md` (no row moves in this item), no code unless a reader is found broken today — and then reported, not
+silently fixed.
+
+## CLAIM 2026-09-18 M0 (LED-1) — RELEASED
+
+released: 2026-09-18 by the LED-1 worker, branch `worktree-agent-a811f19cc02e2aa59`. Deliverable: `MEASUREMENTS.md`
+M-57 (minted with `tools/mintid.mjs M`). NO row moved; no code changed. Baseline before the first edit: 232/232 suites
+green · 14392 assertions, 3 fleet members RAN. Two readers found BROKEN TODAY and reported, not fixed:
+`rowdesign.control.mjs` arm A1 (names M0-33, expects M0-29) and `tools/.ui59/*.mjs` (a hardcoded worktree path that
+does not exist). The move was simulated only in scratch clones outside this repository.
