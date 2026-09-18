@@ -346,3 +346,8 @@ m035-census.txt
 # `bio-plane/test/nc-rec86.mjs` keeps a per-arm pristine copy of `src/store.mjs` and
 # `checks/bio-checks.mjs` here and restores from it, verified by sha256 AND by content.
 .rec86-control-pristine/
+# REC-100's pen, named for its item on the rule at `.rec84-control-pristine/`: a glob over
+# `.*-control-pristine/` would silently cover a pen nobody declared.
+# `bio-plane/test/nc-rec100.mjs` keeps per-arm pristine copies of `src/airun.mjs` and
+# `src/store.mjs` here while an arm is armed.
+.rec100-control-pristine/

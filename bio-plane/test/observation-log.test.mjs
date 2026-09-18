@@ -1,3 +1,43 @@
+/* NEGATIVE CONTROL: (declared and RUN 2026-09-18, REC-100 / IC-130 / D-366 CLOSED, worktree
+   agent-a249f66820def3efd) NINE arms plus a baseline at BOTH ends, RUN in one step through
+   `node test/nc-rec100.mjs [arm]` from `bio-plane/`. THREE SUITES ON EVERY ARM — this one,
+   `airun.test.mjs` and `scheduler.test.mjs` — because the rollup has three writer paths (the
+   close, the reaper, the wake) and each is driven in a different suite. Each arm armed ALONE,
+   DECLARED must-fail AND must-not-fail before it ran, anchor-occurs-EXACTLY-ONCE and
+   bytes-really-changed guarded, and every restore verified by sha256 AND by content against a
+   per-arm pristine copy (`airun.mjs` 125,429 B sha256 `25e128cc9260…`, `store.mjs` 2,384,428 B
+   sha256 `c0aa882ba742…`, all restores YES). Baseline both ends: 101 / 127 / 49 pass, 0 fail.
+   FINAL RUN: EVERY ARM AS DECLARED.
+   (1) `carveout` — THE ROW'S OWN ARM: C-22.10's `run` carve-out RESTORED. Declared MUST FAIL B17
+       I2b; MUST NOT FAIL K3 K4 K6. ACTUAL: B17 I2b **and I4** — right to be there: the re-admitted
+       bare row becomes the run's latest PRESENT, so the terminal points at it instead.
+   (2) `noreferent` — THE DEADLOCK RETURNED: the rollup writers carry no referent, carve-out still
+       deleted. Declared MUST FAIL I3 K3 K4 K6d, `airun` K5c, the scheduler's wake arm. AS DECLARED,
+       plus I4 K0 K3b and 12 `airun` / 8 `scheduler` reds — the close, the reaper AND the wake all
+       deadlock, which is REC-100's 2026-09-16 measurement reproduced on purpose.
+   (3) `noarm` — C-22.10's `observation` arm removed. MUST FAIL K2 K2b K2c K2d K2f; MUST NOT FAIL
+       K1a K3 K4. AS DECLARED, plus K3c (the other run's forged row was accepted, so that run no
+       longer closes non-PRESENT — the consequence, right to be there).
+   (4) `authority` · (5) `present` · (6) `earlier` — ONE FAULT AT A TIME, each caught by its OWN
+       arm and not by a neighbour: K2d · K2 · K2b respectively, AS DECLARED. **`authority`'s FIRST
+       RUN came back GREEN and it was the ARM:** `false && A || B` is `B`, so half the test still
+       fired; the arm now empties the branch's consequence. **`present`'s FIRST RUN reddened K2b
+       too, and that was the SUITE:** K2b's self-reference read the count before K2's tick, so
+       when K2's entry got through it took the seq K2b named. K2b now reads the count at the moment
+       of use. Both corrections are in the driver / below, with their reasons.
+   (7) `translate` — op=airunlog publishes the referent in the STORE-WIDE seq. MUST FAIL K3b K4
+       and the scheduler's wake arm, AS DECLARED. **`airun` K5c was declared too and stayed GREEN —
+       the killed run's rows are its store's first, so the two numberings coincide there**; dropped
+       from the declaration with that reason rather than kept as a false witness.
+   (8) `fill` — the read FILLS a legacy bare row. MUST FAIL K6c K6d. AS DECLARED.
+   (9) `overstrict` — every `observation` referent refused. Declared first as K1a alone; **the
+       first run found it re-creates the deadlock on every writer** (the plane's rollups pass the
+       same check as a caller's), so I3 K3 K4 K6d, `airun` K5 and the wake arm are declared too.
+   `test/nc-rec93.mjs`'s `overstrict` arm is RETIRED (its anchor, the carve-out, is gone); its
+   declaration said it would become the gate on D-366, and it did.
+   WHAT THESE ARMS CANNOT SEE: `agent-worker`'s `stepLog`, whose suites MOCK `op=airuntick` — a
+   model-judged bare PRESENT from it is now refused and it does not read `refused[]` (IC-130,
+   the DELEGATION in `CLAIMS.md`). Nothing here exercises a deploy or a second instance. */
 /* NEGATIVE CONTROL: (declared and RUN 2026-09-17, REC-110 / D-386, worktree
    agent-adcd3110010904330) FOUR arms over section J's pin, RUN in one step through
    `node test/nc-rec110.mjs [arm|all]` (the driver lives INSIDE this worktree), each armed
@@ -236,6 +276,11 @@
  *      measured rather than inherited: the write door is already open, the READ
  *      does not project the referent, and the run's terminal entry is a ROLLUP
  *      whose PRESENT has nothing to point at by construction.
+ *   J. REC-110 — the frontier's `tally` is ungated ON PURPOSE (D-386).
+ *   K. REC-100 (appended 2026-09-18, IC-130) — the rollup referent BUILT under
+ *      BOB #14's ruling: the falsifier pinned, forged referents refused by name,
+ *      the close and the reaper driven, legacy bare rows stated undetermined.
+ *      Section I's gap-pins went red at their sites and were CORRECTED there.
  *
  * THE SECTION LIST SAID "SEVEN SECTIONS" AND NAMED SIX while H was already in
  * the file — corrected here rather than left, since a header that miscounts its
@@ -244,16 +289,21 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
 import { OBSERVATION_AUTHORITY_KINDS, OBSERVATION_SUBJECT_KINDS,
          OBSERVATION_ACTOR_CLASSES, checkObservation,
          /* REC-113 / IC-116: section I2e drives the READ's rule and the REFUSAL's
             side by side, so the suite holds them together rather than trusting
             that somebody kept two literals in step. */
-         observationCoverage } from "../src/airun.mjs";
+         observationCoverage,
+         /* REC-100 / IC-130: section K names each referent fault BY THE KEY the
+            checker publishes, read from here rather than typed. */
+         OBSERVATION_REFERENT_FAULTS } from "../src/airun.mjs";
 import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -471,20 +521,34 @@ t("B9: the subject kinds are §3's five plus `unstated`, which the FOLD needs, p
      exercises a pure function the store has quietly stopped calling is testing
      something else — which is exactly how C-22.4's control was absorbed by a
      second copy of the rule and left a suite green at 98/98. */
+  /* CORRECTED 2026-09-18 BY REC-100 (IC-130), NOT EXEMPTED: the call gained a
+     THIRD argument, the store's resolution of an `observation` referent, which
+     the rollup ruling's check needs and a pure function cannot read for itself.
+     The pin is widened to that exact third argument rather than to "anything",
+     so a call that quietly dropped the resolution still fails here. */
   t("B16: #observe calls THIS checker with THIS live vocabulary — so B10..B15 are "
   + "about the live path and not a parallel one",
-    /#observe\([\s\S]{0,3000}?checkObservation\(entry, QUEUE_CONDITION_KINDS\)/.test(SRC_STORE), true);
+    /#observe\([\s\S]{0,3000}?checkObservation\(entry, QUEUE_CONDITION_KINDS, this\.#observationReferent\(entry\)\)/
+      .test(SRC_STORE), true);
 
-  /* THE OVER-STRICTNESS FIXTURE, IN THE SUITE rather than only in the driver:
-     a run-log PRESENT with no referent is CORRECT WORK in a spelling C-22.10
-     could easily have refused, and §4.4 requires it to pass. An arm that only
-     ever proves a refusal fires cannot tell a fence from a wall. */
+  /* B17 — INVERTED 2026-09-18 BY REC-100 (IC-130, D-366 CLOSED), and this is
+     the CORRECTION rather than an exemption. It read *"OVER-STRICTNESS — a `run`
+     PRESENT with no referent is ACCEPTED, because ai_run_log never had that
+     column and §4.4 folds its rows in unchanged"*, and that was true while
+     C-22.10 carried its `run` carve-out. BOB #14 ruled the rollup referent
+     (`OBSERVATION-LOG-DESIGN.md` §3) and the carve-out is DELETED, so the same
+     entry is now refused BY NAME. Rows ALREADY in the log are not touched — the
+     fold's rows stay as written and read back `undetermined` (section K). The
+     over-strictness direction this arm guarded moved to section K too: a
+     correctly-backed `run` PRESENT, and a correct `observation` referent, are
+     both ACCEPTED there. */
   const runPresent = checkObservation({
     authority_kind: "run", authority: "RUN-x", level: "document", subject_kind: "unstated",
     subject: "observation:something", state: "PRESENT" }, CK);
-  t("B17: OVER-STRICTNESS — a `run` PRESENT with no referent is ACCEPTED, because "
-  + "ai_run_log never had that column and §4.4 folds its rows in unchanged",
-    runPresent, null);
+  t("B17: a `run` PRESENT with no referent is now REFUSED BY NAME (C-22.10) — the `run` carve-out "
+  + "is deleted under the rollup ruling (REC-100, D-366 closed)",
+    [runPresent && runPresent.code, runPresent && runPresent.check],
+    ["OBS_PRESENT_NO_REFERENT", "C-22.10"]);
 }
 
 /* ========================================================================= *
@@ -513,11 +577,15 @@ const ticked = await POST(`op=airuntick&token=${TOK}`, {
   log: [
     { level: "meaning", subject: "observation:fold-finding", state: "NEVER_LOOKED",
       detail: "nothing has been derived here, which may only mean nothing was extracted" },
-    /* A run-log PRESENT WITH NO REFERENT — the shape C-22.10 deliberately does
-       not refuse under `authority_kind = run`, because `ai_run_log` never had a
-       `result_ref` column and §4.4 requires its rows to fold in unchanged. This
-       entry is the over-strictness fixture standing in the suite itself. */
+    /* CORRECTED 2026-09-18 BY REC-100 (IC-130): this was a run-log PRESENT
+       WITH NO REFERENT, the shape C-22.10's `run` carve-out admitted. The
+       carve-out is deleted, so the fixture now names what it found — which is
+       what the fold's PRESENT should always have said. The fold's own claim
+       (three entries in, per-run `seq`, states intact) is unchanged; the
+       byte-identity pin above never recomputed this answer's digest (REC-113's
+       note) and `rec113-identity.mjs` is where that property lives. */
     { level: "document", subject: "observation:budget-2026", state: "PRESENT",
+      result_kind: "capture", result_ref: SHA_B,
       detail: "the store holds the adopted 2026 budget" },
     { level: "internet", subject: "observation:controller-portal", state: "LOOKED_INDETERMINATE",
       governed: true, condition: "governor-holding-host",
@@ -1128,6 +1196,15 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
      order, with its state intact), and NEVER INFERRED FROM A SIBLING ROW — which
      is why this run already contains a row that IS backed, so a read that
      borrowed a neighbour's referent would answer `backed` here and fail. */
+  /* CORRECTED 2026-09-18 BY REC-100 (IC-130), NOT EXEMPTED. I2b appended a
+     bare `run` PRESENT through `op=airuntick` and asserted it was ACCEPTED and
+     read back `undetermined` — true while C-22.10 carried the `run` carve-out.
+     The carve-out is DELETED under the rollup ruling, so the same tick is now
+     REFUSED BY NAME and nothing is appended. The half of I2b that is still owed
+     — a bare `run` PRESENT that is ALREADY IN THE LOG reads back `undetermined`,
+     never filled — cannot be produced by the live build any more, so it moved to
+     section K6, which writes the row with a build carrying the old rule and reads
+     it back through this one over the SAME persisted store. */
   const bare = await POST(`op=airuntick&token=${TOK}`, {
     run: R2, at: at(6000), leaseMs: 600000, consume: { fetches: 1 },
     log: [{ level: "document", subject: "observation:budget-2025", state: "PRESENT",
@@ -1135,12 +1212,11 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
   });
   const back2 = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
   const bareRow = back2.entries.find((e) => e.subject === "observation:budget-2025");
-  t("I2b: a pre-existing bare `run` PRESENT is accepted (the carve-out STANDS — this item did "
-  + "not touch `checkObservation`) and reads back STATED as undetermined: not filled, not "
-  + "dropped, and not inferred from the backed sibling one row above it",
-    [bare && bare.appended, (bare && bare.refused || []).length,
-     bareRow?.state, bareRow?.result_kind, bareRow?.result_ref, bareRow?.coverage],
-    [1, 0, "PRESENT", null, null, "undetermined"]);
+  t("I2b: a NEW bare `run` PRESENT is REFUSED BY NAME at the tick (the carve-out is deleted, "
+  + "REC-100) and NOTHING is appended — the pre-existing half of this arm is K6",
+    [bare && bare.appended, (bare && bare.refused || []).map((r) => [r.code, r.check]),
+     bareRow ?? "(absent)"],
+    [0, [["OBS_PRESENT_NO_REFERENT", "C-22.10"]], "(absent)"]);
 
   /* I2c IS LOAD-BEARING AND THE NEGATIVE CONTROL IS WHAT PROVED IT, which is
      worth knowing before anyone decides it duplicates I2b.
@@ -1199,9 +1275,12 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
         actor_class: "machine", authority_kind: "sweep", authority: "SWEEP-1" },
       QUEUE_CONDITION_KINDS));
     const saysUndetermined = matrix.map((m) => observationCoverage(m) === "undetermined");
-    t("I2e: the read's `undetermined` fires on EXACTLY the rows C-22.10 refuses elsewhere — "
+    /* Label CORRECTED 2026-09-18 by REC-100: it ended *"and the carve-out
+       itself is UNTOUCHED"*, which REC-100 deleted. The assertion is unchanged
+       and still holds — the refusal now fires under `run` too (B17). */
+    t("I2e: the read's `undetermined` fires on EXACTLY the rows C-22.10 refuses — "
     + "the read and the refusal share one rule instead of two literals somebody must keep "
-    + "in step, and the carve-out itself is UNTOUCHED",
+    + "in step",
       saysUndetermined, refusesUnderSweep);
     t("I2f: …and that agreement is not free — the matrix genuinely contains both answers, so "
     + "two all-false lists cannot pass it (an equality that costs nothing is not evidence)",
@@ -1220,15 +1299,23 @@ console.log("\n--- I · REC-100: the three live `run` PRESENT writers (D-366) --
   const closed = await POST(`op=airunclose&token=${TOK}`, {
     run: R2, at: at(9000), bound: "completed",
   });
-  t("I3: the run's TERMINAL entry is a bare `run` PRESENT — `#aiRunSearchState` ROLLS UP the "
-  + "run's whole log, and a summary PRESENT has no referent BY CONSTRUCTION, so no writer "
-  + "change can satisfy C-22.10 here (a DESIGN GAP against §3, not a defect in the writer)",
-    closed && closed.state, "PRESENT");
+  /* I3/I4 — CORRECTED 2026-09-18 BY REC-100 (IC-130). They pinned the GAP: the
+     terminal entry was a bare `run` PRESENT with no referent by construction.
+     BOB #14 ruled what a rollup's referent is (§3), and it is built: the same
+     close now writes a terminal PRESENT carrying `result_kind = observation`
+     pointing at the run's latest PRESENT look. They went red AT THE SITE THAT
+     CHANGED, exactly as REC-100's first pass built them to. */
+  t("I3: the run's TERMINAL entry is a rollup PRESENT and it CLOSES — the deadlock the carve-out "
+  + "was guarding against does not arise, because the rollup now carries its referent",
+    [closed && closed.terminated, closed && closed.state], [true, "PRESENT"]);
   const after = await GET(`op=airunlog&token=${TOK}&run=${R2}`);
   const terminal = after.entries.filter((e) => e.terminal === true);
-  t("I4: …and it is written to the log as one row, terminal, PRESENT — driven rather than "
-  + "read off the method, because a blocker is a claim and nothing here audits one",
-    [terminal.length, terminal[0]?.state], [1, "PRESENT"]);
+  const backedLook = after.entries.find((e) => e.subject === "observation:budget-2026");
+  t("I4: …and it is written to the log as one row, terminal, PRESENT, with an `observation` "
+  + "referent naming the run's one PRESENT look BY THIS OP'S OWN `seq`",
+    [terminal.length, terminal[0]?.state, terminal[0]?.result_kind, terminal[0]?.result_ref,
+     terminal[0]?.coverage],
+    [1, "PRESENT", "observation", String(backedLook?.seq), "backed"]);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -1334,6 +1421,267 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
      (SRC.match(/REC-110, 2026-09-17, D-386 CLOSED/g) || []).length,
      (SRC.match(/SELECT state, COUNT\(\*\) n FROM observation_log/g) || []).length],
     [1, 2, 3]);
+}
+
+/* ------------------------------------------------------------------------- *
+ *  K · REC-100 (2026-09-18, IC-130) — THE ROLLUP REFERENT, BUILT. D-366 CLOSED.
+ *
+ *  `OBSERVATION-LOG-DESIGN.md` §3, RULED by BOB #14: a rollup's PRESENT
+ *  carries `result_kind = observation`, `result_ref` = the `seq` of the LATEST
+ *  non-terminal PRESENT row of the same run, computed by the PLANE; C-22.10
+ *  gains an arm refusing an `observation` referent that is not an EARLIER
+ *  PRESENT row of the SAME authority; the `run` carve-out is DELETED; legacy
+ *  bare rows are STATED undetermined, never filled.
+ *
+ *  WHY THE SEQ ARITHMETIC BELOW IS SOUND, since the suite has no door onto the
+ *  store-wide `seq` (a probe method would be a second append site — see B): H
+ *  purged the WHOLE store, `seq` is SQLite's rowid (the next is MAX + 1, and 1
+ *  on an empty table) and B4 pins that nothing else ever DELETEs a row — so from
+ *  H on, the store-wide `seq` of the newest row IS the row count `op=stats`
+ *  publishes. K1a is the arm that PROVES it rather than assuming it: it points a
+ *  caller-supplied referent at `count + 1` and must be ACCEPTED, which it cannot
+ *  be unless that number names the run's own PRESENT look.
+ * ------------------------------------------------------------------------- */
+console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---");
+
+{
+  const KB = "INQ-2026-0918-rec100";
+  const KA = "RUN-2026-0918-rec100-a";
+  const KX = "RUN-2026-0918-rec100-other";
+  const KR = "RUN-2026-0918-rec100-reaped";
+  await POST(`op=promote&token=${TOK}`, {
+    bundleId: KB, base: null, snapKey: "20260918T090000Z_inbox", author: "ruth",
+    meta: { object_type: "inquiry", group: "believe-in-oakland",
+            title: "what does the rollup rest on?", current_state: "open",
+            created: T0, last_updated: T0 },
+    files: [{ path: "bundle.md", text: `---\nid: ${KB}\n---\n\n## Question\n\nRests on what?\n`,
+              bytes: 90, sha256: SHA_A }],
+    register: [],
+  });
+  const openRun = (run, plus, leaseMs = 600000) => POST(`op=airunopen&token=${TOK}`, {
+    run, contextType: "inquiry", contextId: KB, label: "REC-100's build fixture", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs, at: at(plus) });
+  const tick = (run, plus, log, leaseMs = 600000) => POST(`op=airuntick&token=${TOK}`,
+    { run, at: at(plus), leaseMs, consume: { fetches: 1 }, log });
+  const logOf = (run) => GET(`op=airunlog&token=${TOK}&run=${run}`);
+  const refusedAs = (tk) => (tk?.refused || []).map((r) => [r.code, r.check, r.referent_fault ?? null]);
+  const obsRef = (subject, ref) =>
+    ({ level: "document", subject, state: "PRESENT", result_kind: "observation", result_ref: ref,
+       detail: "a caller-supplied observation referent" });
+
+  /* K0 — THE FALSIFIER, RE-VERIFIED ON THIS TREE BEFORE ANYTHING WAS BUILT, and
+     pinned here so it cannot silently stop being true. The ruling rests on
+     `#aiRunSearchState` reading PRESENT IF AND ONLY IF a non-terminal PRESENT
+     row of the run exists; if it could read PRESENT with no such row the
+     referent would be absent exactly when owed, and the deadlock would return.
+     It holds by construction: the state and the referent come out of ONE grouped
+     read, PRESENT is chosen iff that read returned a PRESENT group, and the
+     group's MAX(seq) is the referent. K1/K4 then drive it. */
+  {
+    const i = SRC_STORE.indexOf("  #aiRunSearchState(run, stoppedByBound) {");
+    const body = SRC_STORE.slice(i, SRC_STORE.indexOf("\n  }\n", i));
+    t("K0: THE FALSIFIER — the rollup's state and its referent come from ONE grouped read over the "
+    + "run's non-terminal rows, PRESENT iff that read has a PRESENT group, and the referent is that "
+    + "group's latest seq; the bound override never produces PRESENT",
+      [i > -1, /WHERE authority_kind = 'run' AND authority = \? AND terminal = 0\s+GROUP BY state/.test(body),
+       /latest\.has\("PRESENT"\) \? "PRESENT"/.test(body),
+       /s === "PRESENT"\s*\?\s*\{ state: s, result_kind: "observation", result_ref: String\(latest\.get\("PRESENT"\)\) \}/.test(body),
+       /s = "LOOKED_INDETERMINATE"/.test(body) && !/s = "PRESENT"/.test(body)],
+      [true, true, true, true, true]);
+  }
+
+  await openRun(KA, 100000);
+  const n0 = await obsCount();
+  const a1 = await tick(KA, 101000, [{ level: "document", subject: "observation:k-a1", state: "PRESENT",
+    result_kind: "capture", result_ref: SHA_A, detail: "a look that found the 2024 budget" }]);
+  /* K1a — THE OVER-STRICTNESS DIRECTION AND THE ARITHMETIC'S PROOF IN ONE ARM.
+     An `observation` referent naming an EARLIER PRESENT row of the SAME run is
+     correct work and is ACCEPTED — a check that refused it would be a wall. And
+     it can only be accepted if `n0 + 1` really is k-a1's store-wide seq. */
+  const a2 = await tick(KA, 102000, [obsRef("observation:k-a2", String(n0 + 1))]);
+  t("K1a: a correct `observation` referent — an EARLIER PRESENT row of the SAME run — is ACCEPTED "
+  + "(the over-strictness direction), which also proves the seq arithmetic this section rests on",
+    [a1?.appended, a2?.appended, refusedAs(a2)], [1, 1, []]);
+  await tick(KA, 103000, [{ level: "document", subject: "observation:k-a3", state: "LOOKED_ABSENT",
+    detail: "positively gone" }]);                                           /* seq n0 + 3 */
+
+  /* K2 — THE CONTROLS THE ROW OWES, EACH REFUSED BY NAME: the code and the
+     C-number say WHICH rule, and `referent_fault` says which of its four ways it
+     failed. A referent naming a non-PRESENT row; a LATER seq (the row's OWN seq,
+     the tightest later there is, and one far past the end); a seq that names
+     nothing; and ANOTHER RUN's PRESENT look. */
+  /* The count is re-read IMMEDIATELY before the self-reference, and that is a
+     correction REC-100's own `present` control arm forced: the first draft read
+     it once, before K2's tick, so when that arm let K2's entry through it took
+     the very seq the self-reference named — and K2b then pointed at an EARLIER
+     PRESENT row and was accepted. The arm was right: K2b's input depended on
+     another arm's outcome, which makes it a statement about K2 rather than about
+     "later". Read at the moment of use, `count + 1` IS the row's own seq. */
+  const notPresent = await tick(KA, 104000, [obsRef("observation:k-x1", String(n0 + 3))]);
+  const nNow = await obsCount();
+  const selfRef    = await tick(KA, 104100, [obsRef("observation:k-x2", String(nNow + 1))]);
+  const farLater   = await tick(KA, 104200, [obsRef("observation:k-x3", String(nNow + 500))]);
+  const nothing    = await tick(KA, 104300, [obsRef("observation:k-x4", "seq-seven")]);
+  await openRun(KX, 104400);
+  const otherRun   = await tick(KX, 104500, [obsRef("observation:k-x5", String(n0 + 1))]);
+  const C = ["OBS_PRESENT_NO_REFERENT", "C-22.10"];
+  t("K2: a referent naming a row that is NOT PRESENT is refused BY NAME",
+    refusedAs(notPresent), [[...C, "not_present"]]);
+  t("K2b: a LATER seq is refused BY NAME — the row's OWN seq (a self-reference) and one far past the end",
+    [refusedAs(selfRef), refusedAs(farLater)], [[[...C, "not_earlier"]], [[...C, "not_earlier"]]]);
+  t("K2c: a referent that names NO row is refused BY NAME",
+    refusedAs(nothing), [[...C, "unresolved"]]);
+  t("K2d: ANOTHER RUN's PRESENT look is refused BY NAME — a rollup rests only on its own run's looks",
+    refusedAs(otherRun), [[...C, "other_authority"]]);
+  t("K2e: and the four faults driven are EXACTLY the vocabulary the checker publishes — a fifth added "
+  + "later without an arm here fails this line",
+    ["not_present", "not_earlier", "unresolved", "other_authority"].sort(),
+    Object.keys(OBSERVATION_REFERENT_FAULTS).sort());
+  t("K2f: none of the refused entries was appended — a refusal that still wrote the row is a label",
+    [notPresent?.appended, selfRef?.appended, farLater?.appended, nothing?.appended, otherRun?.appended],
+    [0, 0, 0, 0, 0]);
+
+  /* K3 — THE DEADLOCK ARM, AND THE LATEST-LOOK RULE. With the carve-out GONE,
+     `op=airunclose` SUCCEEDS for a run that observed PRESENT — REC-100's
+     2026-09-16 measurement was that it answered `OBS_PRESENT_NO_REFERENT` and
+     never wrote the terminal entry. The run has THREE PRESENT rows (k-a1, the
+     observation row k-a2, k-a4); the referent is the LATEST. */
+  await tick(KA, 105000, [{ level: "document", subject: "observation:k-a4", state: "PRESENT",
+    result_kind: "capture", result_ref: SHA_B, detail: "a later look that found the 2025 budget" }]);
+  const closedA = await POST(`op=airunclose&token=${TOK}`, { run: KA, at: at(106000), bound: "completed" });
+  t("K3: THE DEADLOCK ARM — `op=airunclose` SUCCEEDS for a run that observed PRESENT, with the "
+  + "carve-out deleted (REC-100 measured this answering OBS_PRESENT_NO_REFERENT on 2026-09-16)",
+    [closedA?.terminated, closedA?.state, closedA?.code ?? null], [true, "PRESENT", null]);
+  const logA = await logOf(KA);
+  const termA = logA.entries.filter((e) => e.terminal === true);
+  const a4 = logA.entries.find((e) => e.subject === "observation:k-a4");
+  t("K3b: the terminal row points at the LATEST non-terminal PRESENT row, by op=airunlog's own seq, and "
+  + "that row really is PRESENT and earlier — a pointer a reader can follow inside the same answer",
+    [termA.length, termA[0]?.result_kind, termA[0]?.result_ref, a4?.state,
+     Number(termA[0]?.result_ref) < termA[0]?.seq, termA[0]?.coverage],
+    [1, "observation", String(a4?.seq), "PRESENT", true, "backed"]);
+
+  /* K3c — THE OTHER HALF OF THE IFF: a run that observed NOTHING PRESENT writes
+     a terminal entry that is not PRESENT and owes no referent, exactly as
+     before. A writer that pointed anyway would be inventing support. */
+  await tick(KX, 107000, [{ level: "document", subject: "observation:k-x6", state: "LOOKED_ABSENT",
+    detail: "positively gone" }]);
+  const closedX = await POST(`op=airunclose&token=${TOK}`, { run: KX, at: at(108000), bound: "completed" });
+  const termX = (await logOf(KX)).entries.filter((e) => e.terminal === true);
+  t("K3c: a run with NO PRESENT look closes on a non-PRESENT rollup carrying NO referent, stated `none_owed`",
+    [closedX?.terminated, closedX?.state, termX[0]?.result_kind, termX[0]?.result_ref, termX[0]?.coverage],
+    [true, "LOOKED_ABSENT", null, null, "none_owed"]);
+
+  /* K4 — THE REAPER, DRIVEN. D-366 recorded this as OWED: `#aiRunReap` was READ
+     and never reached, because it needs an expired lease. It is reached here
+     through the alarm's own body — `onAlarm(now)`, which is what workerd calls —
+     exactly as `airun.test.mjs` arm K drives it. */
+  await openRun(KR, 200000, 60000);
+  await tick(KR, 201000, [{ level: "document", subject: "observation:k-r1", state: "PRESENT",
+    result_kind: "capture", result_ref: SHA_A, detail: "the look the run made before it died" }], 60000);
+  const alarm = await obj.onAlarm(Date.parse(at(400000)));
+  const logR = await logOf(KR);
+  const termR = logR.entries.filter((e) => e.terminal === true);
+  const r1 = logR.entries.find((e) => e.subject === "observation:k-r1");
+  t("K4: THE REAPER, DRIVEN — a killed run that observed PRESENT is reaped (not deadlocked), and its "
+  + "terminal rollup carries an `observation` referent naming the look it made before it died",
+    [(alarm?.airunreap?.reaped || []).find((x) => x.run === KR) ?? null,
+     termR.length, termR[0]?.state, termR[0]?.bound, termR[0]?.result_kind, termR[0]?.result_ref,
+     termR[0]?.coverage],
+    [{ run: KR, terminated: true, bound: "lease" }, 1, "PRESENT", "lease", "observation",
+     String(r1?.seq), "backed"]);
+
+  /* K6 — A PRE-EXISTING BARE `run` PRESENT IS STATED UNDETERMINED AND NEVER
+     FILLED, and it cannot deadlock its run either. The live build can no longer
+     WRITE such a row, so it is written by a build carrying the OLD rule — this
+     tree's own source with the carve-out restored at the one append site, over a
+     PERSISTED store — and then read and closed by THIS build over the same bytes
+     on disk, which is the path a real instance takes on its next boot.
+     `inquiry.test.mjs` block 6 is the precedent for writing a legacy row with a
+     neutered copy of the live source. */
+  {
+    const root = mkdtempSync(join(tmpdir(), "rec100-legacy-"));
+    try {
+      const PLANE = fileURLToPath(new URL("..", import.meta.url));
+      const REPO = fileURLToPath(new URL("../..", import.meta.url));
+      cpSync(join(PLANE, "src"), join(root, "bio-plane", "src"), { recursive: true });
+      cpSync(join(PLANE, "checks"), join(root, "bio-plane", "checks"), { recursive: true });
+      cpSync(join(REPO, "docprofile"), join(root, "docprofile"), { recursive: true });
+      const ANCHOR = "    const bad = checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));";
+      const LEGACY = "    const bad = (entry.authority_kind === \"run\" && entry.state === \"PRESENT\" "
+        + "&& (entry.result_ref == null || entry.result_ref === \"\")) ? null "
+        + ": checkObservation(entry, QUEUE_CONDITION_KINDS, this.#observationReferent(entry));";
+      const storePath = join(root, "bio-plane", "src", "store.mjs");
+      const src = readFileSync(storePath, "utf8");
+      const occurrences = src.split(ANCHOR).length - 1;
+      writeFileSync(storePath, src.replace(ANCHOR, LEGACY));
+      t("K6a: the legacy build is armed — the append-site anchor occurs EXACTLY ONCE and was replaced "
+      + "(a legacy arm that did not arm proves nothing about legacy rows)",
+        [occurrences, readFileSync(storePath, "utf8").includes(LEGACY)], [1, true]);
+
+      const persist = join(root, "persist");
+      const planeAt = (idx) => new Miniflare({
+        modules: true, modulesRoot: "/", scriptPath: idx, script: readFileSync(idx, "utf8"),
+        compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+        durableObjects: { STORE: { className: "Store", useSQLite: true } },
+        durableObjectsPersist: persist,
+        r2Buckets: ["CAPTURES", "PUBLISHED"],
+        bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: TOK, PROBE_TOKEN: "prb-rec93",
+                    VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" } });
+      const on = (m) => ({
+        POST: async (q, b) => rP(await (await m.dispatchFetch(`http://x/api/?${q}`,
+          { method: "POST", body: JSON.stringify(b ?? {}) })).json()),
+        GET: async (q) => rP(await (await m.dispatchFetch(`http://x/api/?${q}`)).json()) });
+      const KL = "RUN-2026-0918-rec100-legacy";
+
+      const old = planeAt(join(root, "bio-plane", "src", "index.mjs"));
+      let legacyTick;
+      try {
+        const o = on(old);
+        await o.POST(`op=promote&token=${TOK}`, {
+          bundleId: KB, base: null, snapKey: "20260918T090000Z_inbox", author: "ruth",
+          meta: { object_type: "inquiry", group: "believe-in-oakland",
+                  title: "what does the rollup rest on?", current_state: "open",
+                  created: T0, last_updated: T0 },
+          files: [{ path: "bundle.md", text: `---\nid: ${KB}\n---\n\n## Question\n\nRests on what?\n`,
+                    bytes: 90, sha256: SHA_A }],
+          register: [] });
+        await o.POST(`op=airunopen&token=${TOK}`, {
+          run: KL, contextType: "inquiry", contextId: KB, label: "a run written under the old rule",
+          mode: "check", principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+          skillVersion: "investigative-session@1", biasManifest: null,
+          bounds: [{ bound: "fetches", allowed: 40, unit: "requests" }], leaseMs: 600000, at: T0 });
+        legacyTick = await o.POST(`op=airuntick&token=${TOK}`, {
+          run: KL, at: at(1000), leaseMs: 600000, consume: { fetches: 1 },
+          log: [{ level: "document", subject: "observation:legacy-bare", state: "PRESENT",
+                  detail: "a run PRESENT that names nothing, written before the carve-out was deleted" }] });
+      } finally { await old.dispose(); }
+      t("K6b: the OLD rule admitted the bare `run` PRESENT — this is the row a real instance already holds",
+        [legacyTick?.appended, (legacyTick?.refused || []).length], [1, 0]);
+
+      const live = planeAt(IDX);
+      try {
+        const l = on(live);
+        const before = await l.GET(`op=airunlog&token=${TOK}&run=${KL}`);
+        const bareBefore = before.entries?.find((e) => e.subject === "observation:legacy-bare");
+        t("K6c: THIS build reads the legacy row back STATED `undetermined` — not filled, not dropped",
+          [bareBefore?.state, bareBefore?.result_kind, bareBefore?.result_ref, bareBefore?.coverage],
+          ["PRESENT", null, null, "undetermined"]);
+        const closedL = await l.POST(`op=airunclose&token=${TOK}`, { run: KL, at: at(2000), bound: "completed" });
+        const afterL = await l.GET(`op=airunlog&token=${TOK}&run=${KL}`);
+        const termL = (afterL.entries || []).filter((e) => e.terminal === true);
+        const bareAfter = (afterL.entries || []).find((e) => e.subject === "observation:legacy-bare");
+        t("K6d: a run holding ONLY a legacy bare PRESENT still CLOSES — its rollup points at that row, which "
+        + "IS an earlier PRESENT row of the same run — and the legacy row is STILL `undetermined` "
+        + "afterwards: the pointer does not launder it",
+          [closedL?.terminated, termL[0]?.state, termL[0]?.result_kind, termL[0]?.result_ref,
+           bareAfter?.coverage, bareAfter?.result_ref],
+          [true, "PRESENT", "observation", String(bareAfter?.seq), "undetermined", null]);
+      } finally { await live.dispose(); }
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  }
 }
 
 console.log(`\nobservation-log: ${pass} pass, ${fail} fail`);
