@@ -775,6 +775,47 @@ export const CONTENT_EVIDENCE_IS_ONE_SIDED = {
   capture: false,     /* `readings` holds a row whether or not text was produced */
 };
 
+/** REC-129 / IC-143 — THE INTERNET LEVEL'S SIDEDNESS, in the same shape as the
+ *  two above, for the one subject kind its frontier reads: a member's LEAD
+ *  (`description`, §4.5). `false`, and NOT because some table holds a row
+ *  whatever the look found — because §5.1's cause (1) CANNOT ARISE for a lead at
+ *  all. A lead is written by `op=lead` into a schema that already carries
+ *  `observation_log`, so no lead predates the log; a look at it is written by
+ *  `op=leadlook` through the one append site; and only the WHOLE-STORE purge
+ *  deletes either, and it deletes BOTH (`purge`'s `leads` arm beside the log's).
+ *  So a lead standing with no look is cause (3), established — MK-4's own reading
+ *  in `leadRead` ("the strong answer is licensed here"), consumed rather than
+ *  re-derived. Declared rather than left undeclared, because an undeclared kind
+ *  takes the WIDE set (`causesNotRuledOut`) and would publish two causes this
+ *  record has ruled out. */
+export const INTERNET_EVIDENCE_IS_ONE_SIDED = {
+  description: false,  /* no pre-log window: a lead and its looks are born after the log and purged with it */
+};
+
+/** REC-129 — WHY AN INTERNET-LEVEL FRONTIER ANSWER IS EMPTY, as a ladder taken in
+ *  order. Every rung is computed over what THIS VIEWER may read and nothing else,
+ *  because a rung decided on the whole level would be an existence signal for a
+ *  lead the viewer cannot see — BOB #14's ruling (2026-09-18) that everyone
+ *  outside a lead's reach is answered exactly as for a lead that does not exist.
+ *  So `no_leads_visible` is DELIBERATELY the same answer for "there are no leads"
+ *  and "there are leads you may not read": those two must be indistinguishable.
+ *  The liar this refuses is an empty answer with no cause — a frontier that says
+ *  nothing reads exactly like one that looked and found nothing. */
+export const INTERNET_FRONTIER_EMPTY_CAUSES = {
+  no_member:        "this credential carries no member, and a lead is readable only by its author, by the "
+                  + "joined participants of a project its author shared it to, and by a machine key only "
+                  + "within the scope a member minted for it. So no lead is reachable from here, and this "
+                  + "says NOTHING about whether any lead exists or was followed",
+  no_leads_visible: "there is no lead this viewer may read — none they wrote, and none shared into a project "
+                  + "they have joined. The internet level's member half is EMPTY FOR YOU, which says nothing "
+                  + "about leads you may not read and nothing about whether anybody looked at the open "
+                  + "internet by another authority",
+  never_followed:   "there are leads this viewer may read and NOT ONE has been followed: no look is recorded "
+                  + "against any of them. This is NEVER_LOOKED, established rather than inferred (a lead and "
+                  + "its looks are only ever cleared together) — it is NOT a finding that what they describe "
+                  + "is absent. They are listed in `never_looked`",
+};
+
 /** REC-107 — **THE CAUSES THIS RECORD COULD NOT RULE OUT, PUBLISHED AS A SET ON
  *  THE ROW RATHER THAN LEFT FOR THE CALLER TO WIDEN.**
  *

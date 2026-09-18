@@ -13655,3 +13655,4 @@ paths:
     §3 (rendered only), `docs/development/OBSERVATION-LOG-DESIGN.md` (§5.1 / §6 / Status / Incomplete),
     `docs/development/INTERFACE-CHANGES.md` (IC-143), `docs/DECIDED.md` (regenerated only).
   **NOT** `docs/development/QUEUE.md` (CONDUCT's), **NOT** `civicos-ui/**`, **NOT** `newgroup/**`, no version bump.
+addendum 2026-09-18: STOPPED AT STAND-DOWN (CONDUCT #4). The claim stays OPEN; branch `worktree-agent-af99c832f7860f664` holds the WIP commit. IC-143 stays reserved to REC-129.

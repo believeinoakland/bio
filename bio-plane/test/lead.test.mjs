@@ -418,9 +418,16 @@ t("op=stats' run slice (aiRunLog) never moved across every lead act", s5.aiRunLo
 const fd = await get("frontier", "level=document", "mem-mk4");
 t("the document frontier's tally holds no internet-level row",
   fd && fd.tally && Object.values(fd.tally).reduce((a, b) => a + b, 0), 0);
+/* CORRECTED 2026-09-18 BY REC-129 (IC-143), NEVER EXEMPTED. This asserted the
+   internet level's READ was still not-built; REC-129 built it. What the arm was
+   FOR is unchanged and is asserted instead: the member TOKEN is an unfiltered
+   machine credential nobody minted a scope for, so the built read reaches NO lead
+   through it and says why — never an empty list with no cause. The frontier's own
+   visibility arms are `frontier-internet.test.mjs`'s. */
 const fi = await get("frontier", "level=internet", "mem-mk4");
-t("the internet level's READ is still stated not-built (not an empty list), and names the lead's writer",
-  [fi && fi.built, fi && fi.found, /op=leadlook/.test(fi && fi.note || "")], [false, false, true]);
+t("the internet level's READ is built, and the member TOKEN reaches no lead through it — said, with a cause",
+  [fi && fi.built, fi && fi.looked && fi.looked.length, fi && fi.empty && fi.empty.cause],
+  [true, 0, "no_member"]);
 
 /* ===================== 7. THE BOUND (bounds.test.mjs's DRIVEN_ELSEWHERE) === */
 console.log("\n--- 7. op=leadread is capped, and says so ---");

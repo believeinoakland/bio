@@ -645,10 +645,15 @@ t("E3: THE EARLIER ROW WAS NOT REWRITTEN — the log is append-only (§3) and th
  * ========================================================================= */
 console.log("\n--- F · the bounded meaning frontier, its three partitions and its fence ---");
 
+/* CORRECTED 2026-09-18 BY REC-129 (IC-143), NEVER EXEMPTED: this asked the
+   `internet` level, which was the one level with no READ; REC-129 built it, so the
+   arm asserted that a built level must not answer. The rule it pins is unchanged —
+   the not-built branch still answers in words for a level this reader does not
+   read — and it is now asked of a level that does not exist, the only input left. */
 t("F1: the meaning level answers BUILT — and REC-93's not-built branch is still the answer for "
-+ "the ONE level that still has no writer, so this arm can go red in both directions",
++ "a level this reader does not read, so this arm can go red in both directions",
   await (async () => { const m = await meaning();
-    const i = await DO("frontier", `level=internet&viewer=class:member`);
+    const i = await DO("frontier", `level=cosmos&viewer=class:member`);
     return [m.built, m.found, i.built, typeof i.note === "string" && i.note.length > 40]; })(),
   [true, true, false, true]);
 
