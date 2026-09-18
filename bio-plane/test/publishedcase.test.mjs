@@ -547,7 +547,8 @@ console.log("\n--- 4. DEC-34: the container is a zip, served by the MANIFEST's h
      failure mode this assertion exists to prevent. */
   t("the manifest itself answers by its own hash, to anyone",
     [m.status, manifest.format, manifest.case, manifest.edition],
-    [200, "bio-case-container/5", e1.caseId, 1]);
+    /* CORRECTED 2026-09-18, REC-128: `/5` -> `/6`, AND THE OLD ASSERTION WAS RIGHT WHEN IT WAS WRITTEN. `/6` carries `delivered_by` beside every `attestor` (who DELIVERED the signature, from the session: a member or the founder), and the version moves for the reason every bump here moved it — a `/5` container that never recorded a deliverer and a `/6` one whose deliverer was not recorded must not read alike. The pin still demands an EXACT version. */
+    [200, "bio-case-container/6", e1.caseId, 1]);
   t("the manifest names the case's SCOPE and carries EVERY finding, each with its own signature and its own pair",
     [typeof manifest.scope, manifest.findings.map((x) => x.bundle_id),
      manifest.findings.every((x) => x.signature.armored.startsWith("-----BEGIN SSH SIGNATURE-----")),
