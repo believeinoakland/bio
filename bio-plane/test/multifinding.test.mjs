@@ -51,6 +51,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -124,9 +125,17 @@ const caseSign = async (pub) =>
    standing in its owning project, and a stranger gets NO_CASE_DOCUMENT. */
 const caseDocOf = async (caseId, edition) =>
   rP(await GET(`op=casedocument&case=${encodeURIComponent(caseId)}&edition=${edition}`));
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM with nothing written. This
+   helper concluded with no reading because the act took none; the three
+   findings it concludes (FIND_A, FIND_B, FIND_C) now carry one
+   (`withAdoptableReading`, ungraded legs, so no frozen pair moves) and the
+   call names it. */
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 const reopen = async (tok, target, reason) =>
   rP(await GET(`op=reopen&token=${tok}&target=${encodeURIComponent(target)}&reason=${encodeURIComponent(reason)}`));
 const listRow = async (id) => ((await GET("op=list&token=mem-rec44")).result || [])
@@ -261,11 +270,11 @@ await mustPromote(INFO_TEST, infoMd(INFO_TEST), "information", "collected");
 
 /* FIND_A: capture GRADED B (earned from the capture record) and connection
    GRADED C (a hunch, announced with its author and date — DEC-15). */
-await mustPromote(FIND_A, inquiryMd(FIND_A, { question: "Was the FY2024 sewer transfer authorised?",
+await mustPromote(FIND_A, withAdoptableReading(inquiryMd(FIND_A, { question: "Was the FY2024 sewer transfer authorised?",
   refs: [INFO_CAP, INFO_CONN],
   legs: [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
          { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
-           author: "wren", date: "2026-08-04" }] }), "inquiry", "open", null, {
+           author: "wren", date: "2026-08-04" }] })), "inquiry", "open", null, {
   files: [{ path: "snapshots/memo.bin", blobSha: CAP_SHA, bytes: CAPTURE.length, sha256: CAP_SHA }],
   register: [{ path: "snapshots/memo.bin", sha256: CAP_SHA, bytes: CAPTURE.length, encoding: "binary" }],
 });
@@ -274,10 +283,10 @@ await mustPromote(FIND_A, inquiryMd(FIND_A, { question: "Was the FY2024 sewer tr
    at D, the honest grade for testimony. Its pair matches FIND_A's on neither
    axis, on neither STATE and on neither GRADE, which is the whole point of the
    fixture. */
-await mustPromote(FIND_B, inquiryMd(FIND_B, { question: "Did anyone with delegated authority sign it?",
+await mustPromote(FIND_B, withAdoptableReading(inquiryMd(FIND_B, { question: "Did anyone with delegated authority sign it?",
   refs: [INFO_TEST],
   legs: [{ target: INFO_TEST, grade: "D", axis: "connection", source: "testimony",
-           author: "wren", date: "2026-08-04" }] }), "inquiry", "open");
+           author: "wren", date: "2026-08-04" }] })), "inquiry", "open");
 
 for (const [id, conclusion, falsifier] of [
   [FIND_A, "The transfer rests on a memo nobody adopted.",
@@ -327,9 +336,9 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
   /* EVERY MEMBER IS JUDGED BEFORE ANY MEMBER MOVES. A case that published two
      of three findings and then refused the third would leave the record
      asserting a case that does not exist. */
-  await mustPromote(FIND_C, inquiryMd(FIND_C, { question: "Was notice given?", refs: [INFO_TEST],
+  await mustPromote(FIND_C, withAdoptableReading(inquiryMd(FIND_C, { question: "Was notice given?", refs: [INFO_TEST],
     legs: [{ target: INFO_TEST, grade: "D", axis: "connection", source: "testimony",
-             author: "wren", date: "2026-08-04" }] }), "inquiry", "open");
+             author: "wren", date: "2026-08-04" }] })), "inquiry", "open");
   const partial = await publish(WREN, { targets: [FIND_A, FIND_C], scope: SCOPE1, statement: STMT1,
     excluded: [], subjectPosition: "sought_and_answered", subjectJustification: JUST1,
     biasAcknowledgement: BACK1 });

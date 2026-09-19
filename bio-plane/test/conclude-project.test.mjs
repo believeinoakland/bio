@@ -4,6 +4,12 @@
    (c) BACK-FILL THE LEGACY CLAIM — `#undeterminedClaim` answers the conclusion text as the claim. MUST FAIL: §3. MUST NOT FAIL: §1, §2.
    (d) OVER-STRICTNESS: the suite's over-strictness arm, which PASSES on the real code — a project concluding an inquiry whose OWN state is already `concluded` (a legacy/no-project conclusion) is accepted and the inquiry's own conclusion is untouched — is armed by making the fence tighter than its rule (the `pid && current_state === concluded` allowance removed). MUST FAIL: that arm alone. MUST NOT FAIL: everything else.
    RUN 2026-09-18 by the REC-124 worker (`node test/conclude-project.control.mjs` from `bio-plane/`), every restore sha256 MATCH and content IDENTICAL: baseline 43/0 · (a) 35/8 — A's own read, the two-reads-differ arm, the concluded-nothing-reads-null arm, the item-3 notice arms, the commentary arm, the re-conclude arm and E/D-read-nothing all FAILED; B's own read PASSED under the arm, because the collapsed shared state happened to BE B's (ORDER BY bundle_id picks `budget`), which is exactly why the suite asserts BOTH projects and the difference between them rather than either alone · (b) 40/3 — the no-claim-on-the-reading refusal, nothing-was-written and E-reads-nothing FAILED, as declared · (c) 41/2 — both §3 claim arms FAILED, as declared · (d) 42/1 — the over-strictness arm FAILED, which is the proof the arm can see a fence tighter than its rule. Every arm AS DECLARED; the MUST-NOT halves held.
+   REC-136 (§7.1 items 6-7) EXTENDED THIS CONTROL, arms re-anchored (a, c) and added (e, f, g); DECLARED before arming, each ALONE:
+   (a)-(d) as above, over the REC-136 suite. (a) MUST FAIL the two-project arms and the history arms that read a project's own record; (b) MUST FAIL §2's claimless-reading arm; (c) MUST FAIL §3's two claim arms; (d) MUST FAIL the over-strictness arm alone.
+   (e) RESTORE REPLACE-THE-ROW — `#appendConclusionEntry` replaces the project's earlier entry for the question instead of appending (REC-124's writer). MUST FAIL: §1's both-conclusions-readable arms and §5's THREE-ENTRIES arm (the history arm). MUST NOT FAIL: §2's refusals, §3, §3b.
+   (f) DROP THE VERSION REQUIREMENT — the no-project `!vname` refusal removed and the adoption check skipped when no reading is named, so a no-project conclude with no reading concludes (REC-124's behaviour). MUST FAIL: §2's "NO PROJECT AND NO VERSION NAMED" arm and its nothing-was-written arm (INQ's own state then moves, which may cascade into later §1-style reads of INQ). MUST NOT FAIL: §3b, §5's project-history arms.
+   (g) C-5.1 BLIND TO `conclusions` — the append-only check reads `state_history` only. MUST FAIL: §5's op=audit arm alone.
+   RUN 2026-09-18 by the REC-136 worker (`node test/conclude-project.control.mjs` from `bio-plane/`), every restore sha256 MATCH and content IDENTICAL: baseline 75/0 · (a) 64/11 — the two-project reads, the notices, the re-conclude and NOTHING-WAS-ERASED arms, never-concluded-has-NOTHING_TO_WITHDRAW and the withdrawn-notice arm FAILED (the echoed shared state is one project's record read as everyone's) · (b) 69/6 — every claimless/suggested-reading door and both nothing-written arms FAILED · (c) 73/2 — both §3 claim arms · (d) 74/1 — the over-strictness arm alone · (e) 66/9 — NOTHING-WAS-ERASED, A's-bytes-carry-both, THREE-ENTRIES-IN-ORDER, dated-and-authored, stance-is-last, B's-bytes-carry-three, conclude-again, and the tamper's own fixture and audit arms FAILED: the history arms see the liar the stance arms cannot · (f) 72/3 — the no-version arm, NOTHING-WAS-WRITTEN, and (cascade, as declared) the next door on the now-concluded INQ · (g) 74/1 — the op=audit arm alone. Every arm AS DECLARED. ARM (f) CAME BACK WRONG FIRST: its first draft referenced `legs` before conclude() declares it, the armed call threw, and NOTHING-WAS-WRITTEN stayed green — found by that surprising green, corrected in the driver (the finding is recorded at the arm).
  * ========================================================================= */
 /* REC-124 — A CONCLUSION BELONGS TO THE PROJECT'S RELATIONSHIP WITH THE
  * INQUIRY (INVESTIGATIVE-SESSION.md §7.1, BOB #15, 2026-09-18).
@@ -30,6 +36,23 @@
  *     never back-filled from its conclusion text; no project inherits it.
  *  4. Commentary is attributed, labelled not-evidence, and never enters the
  *     strength pair or the legs.
+ *
+ * REC-136 (§7.1 items 6-8, BOB #15, 2026-09-18) added, driven the same way:
+ *  2. (more doors) A NO-PROJECT conclude naming no reading, an uncarried one, an
+ *     accepted one with no claim, or one only suggested is refused NO_CLAIM and
+ *     writes nothing; a project naming a reading other than the one it stands
+ *     on is refused too.
+ *  3b. A no-project conclusion NAMING its reading adopts that reading's claim
+ *     word for word (answer, read and bytes); no project inherits it; a
+ *     HAND-AUTHORED adoption its reading does not bear out reads UNDETERMINED.
+ *  5. Conclude, WITHDRAW, conclude again leaves THREE entries readable in
+ *     order, each dated and authored, the stance the last. HOW A LIAR PASSES:
+ *     keep only the latest entry — every "the stance is right" assertion still
+ *     passes. So the arm reads the WHOLE history, and §1's re-conclude reads
+ *     both of A's conclusions. The withdrawal's refusals (no reason, a machine,
+ *     no project, nothing to withdraw, withdrawing twice) write nothing; the
+ *     other projects stop being told; and a promote that rewrites the history
+ *     is named by op=audit (C-5.1).
  *
  * WHAT IT CANNOT SEE: op=publish / op=caseratify still read the INQUIRY's own
  * state (§7.1 item 4 is NOT built by REC-124 — said in the report), so nothing
@@ -95,7 +118,9 @@ const scalar = (k, v) => v === null ? [`    ${k}: null`]
 const versionLines = (versions) => {
   const rows = versions.map((v) => ['  - name: "' + v.name + '"',
     ...scalar("description", v.description), ...scalar("relationship", "and"),
-    ...scalar("state", "suggested"), ...scalar("derived_from", null), ...scalar("hidden", false),
+    ...scalar("state", v.state ?? "suggested"),
+    ...(v.state === "accepted" ? [...scalar("state_by", "ruth"), ...scalar("state_at", NOW)] : []),
+    ...scalar("derived_from", null), ...scalar("hidden", false),
     ...scalar("claim", v.claim), ...scalar("author", "ruth"), ...scalar("at", NOW)].join("\n"));
   const grounds = versions.flatMap((v) => (v.grounds ?? []).map((g) =>
     ['  - version: "' + v.name + '"', ...scalar("ground", g),
@@ -109,10 +134,18 @@ const versionLines = (versions) => {
           ...(grounds.length ? ["basis_version_grounds:", ...grounds] : []),
           ...(legs.length ? ["basis_version_legs:", ...legs] : [])];
 };
-const inquiryMd = (id, { versions = [], basis = [] } = {}) => ["---",
+/* REC-136: `concluded` authors a conclusion INTO THE BYTES, the way an inquiry
+   concluded before §7.1 item 6 carries one — the legacy shape, which the act
+   can no longer produce (it now refuses a no-project conclusion that names no
+   reading). `extra` is raw frontmatter lines, for a hand-authored adoption. */
+const inquiryMd = (id, { versions = [], basis = [], concluded = null, extra = [] } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "Did the sewer fund transfer follow the adopted process?"`,
-  "current_state: open", "prior_state: null",
+  ...(concluded
+    ? ["current_state: concluded", "prior_state: open", `conclusion: "${concluded.conclusion}"`,
+       `falsifier: "${concluded.falsifier}"`]
+    : ["current_state: open", "prior_state: null"]),
+  ...extra,
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland",
@@ -149,17 +182,17 @@ const projectMd = (id, { title, cites = [] } = {}) => ["---",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 
 let snapSeq = 0;
-const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
-  bundleId: id, base: null,
+const promote = async (id, text, type, state = null, base = null) => POST(`op=promote&token=${RUTH}`, {
+  bundleId: id, base,
   snapKey: `${id}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
   meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
-          current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
+          current_state: state ?? (type === "inquiry" ? "open" : type === "project" ? "forming" : "collected"),
           created: NOW, last_updated: LATER } });
-const mustPromote = async (id, text, type) => {
-  const r = await promote(id, text, type);
+const mustPromote = async (id, text, type, state = null) => {
+  const r = await promote(id, text, type, state);
   if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 800)}`);
   return r;
 };
@@ -201,7 +234,34 @@ await mustPromote(C, projectMd(C, { title: "Unrelated" }), "project");
 await mustPromote(D, projectMd(D, { title: "Undecided", cites: [INQ] }), "project");
 await mustPromote(E, projectMd(E, { title: "Claimless", cites: [INQ] }), "project");
 await mustPromote(INQ, inquiryMd(INQ, { versions: [VA, VB, VN], basis: [LEDGER, MINUTES] }), "inquiry");
-await mustPromote(LEG, inquiryMd(LEG, { versions: [VL], basis: [LEDGER] }), "inquiry");
+/* REC-136: LEG is concluded IN ITS OWN BYTES, the way every conclusion written
+   before §7.1 item 6 is — the act can no longer write one that names no
+   reading. Its reading VL is authored accepted so project A can stand on it. */
+const LEGACY_TEXT = "The legacy transfer was authorised.";
+await mustPromote(LEG, inquiryMd(LEG, { versions: [{ ...VL, state: "accepted" }], basis: [LEDGER],
+  concluded: { conclusion: LEGACY_TEXT, falsifier: "a rescinding minute" } }), "inquiry", "concluded");
+/* NP is concluded by the act with NO project, naming reading VNP (§7.1 item 6);
+   NP2 carries the readings the refusal arms name — one accepted with no claim,
+   one only suggested. FORGED is concluded in its bytes with an adoption its
+   named reading does not bear out. */
+const NP = "INQ-2026-4136-no-project", NP2 = "INQ-2026-4136-no-project-refusals",
+      FORGED = "INQ-2026-4136-forged-adoption";
+const CLAIM_NP = "The ledger shows the transfer was booked before the council met.";
+const VNP = { name: "booked early", claim: CLAIM_NP, state: "accepted",
+  description: "The ledger alone, read for the booking date.",
+  grounds: ["the ledger alone"], legs: [{ target: LEDGER, ground: "the ledger alone" }] };
+const VNP_NOCLAIM = { name: "unclaimed", claim: undefined, state: "accepted",
+  description: "A reading nobody has stated a claim for.",
+  grounds: ["the ledger alone"], legs: [{ target: LEDGER, ground: "the ledger alone" }] };
+const VNP_SUGGESTED = { name: "only suggested", claim: "A claim nobody has accepted yet.",
+  description: "A reading still only suggested.",
+  grounds: ["the ledger alone"], legs: [{ target: LEDGER, ground: "the ledger alone" }] };
+await mustPromote(NP, inquiryMd(NP, { versions: [VNP], basis: [LEDGER] }), "inquiry");
+await mustPromote(NP2, inquiryMd(NP2, { versions: [VNP_NOCLAIM, VNP_SUGGESTED], basis: [LEDGER] }), "inquiry");
+await mustPromote(FORGED, inquiryMd(FORGED, { versions: [VNP], basis: [LEDGER],
+  concluded: { conclusion: "It was booked early.", falsifier: "a later booking entry" },
+  extra: [`conclusion_version: "booked early"`, `conclusion_claim: "A claim the reading never stated."`] }),
+  "inquiry", "concluded");
 
 const enc = encodeURIComponent;
 const accept = async (version, target = INQ) =>
@@ -217,10 +277,14 @@ const conclusionOf = async (project, id = INQ) => {
   const r = await versionsOf(id, project) || {};
   return Object.prototype.hasOwnProperty.call(r, "conclusion") ? r.conclusion : "FIELD-ABSENT";
 };
+/* REC-136: the number of conclusion-record ENTRIES for the shared question in a
+   project's bytes. An entry is an `- inquiry:` row whose next line is its `act`
+   — the project's CURRENT pointer block carries `- inquiry:` rows too, which is
+   why REC-124's count of the bare row read ">= 2" rather than an exact figure. */
+const entriesIn = (text) => (String(text).match(/  - inquiry: "INQ-2026-4124-sewer-transfers"\n    act: "/g) || []).length;
 const mustOk = (label, r) => { if (!r || r.ok !== true) throw new Error(`${label}: ${JSON.stringify(r).slice(0, 600)}`); return r; };
 
 for (const v of [VA.name, VB.name, VN.name]) mustOk(`accept ${v}`, await accept(v));
-mustOk("accept legacy", await accept(VL.name, LEG));
 mustOk("A stands on VA", await makeCurrent(A, VA.name));
 mustOk("B stands on VB", await makeCurrent(B, VB.name));
 mustOk("E stands on VN", await makeCurrent(E, VN.name));
@@ -267,7 +331,8 @@ console.log("\n--- 1. two projects, one shared question, each concludes with ITS
 
   const aText = await textOf(A) || "";
   t("the conclusion is a DATED, AUTHORED row in the PROJECT's own frontmatter — never a settings row",
-    [/\nconclusions:\n  - inquiry: "INQ-2026-4124-sewer-transfers"\n    version: "paper trail"\n    claim: "The transfer followed the process the council adopted in 2024\."/.test(aText),
+    /* REC-136: every entry now carries its `act` (item 7's append-only history). */
+    [/\nconclusions:\n  - inquiry: "INQ-2026-4124-sewer-transfers"\n    act: "concluded"\n    version: "paper trail"\n    claim: "The transfer followed the process the council adopted in 2024\."/.test(aText),
      /\n    by: "ruth"\n/.test(aText), /\n    at: "20\d\d-/.test(aText)], [true, true, true]);
   t("and the act is in A's Session Log, naming the claim adopted",
     /### Session [^\n]+ \| Concluded \| ruth\nTrigger: op=conclude on INQ-2026-4124-sewer-transfers for PROJ-2026-4124-oversight\n[^\n]*\nClaim: The transfer followed/.test(aText), true);
@@ -310,14 +375,26 @@ console.log("\n--- 1. two projects, one shared question, each concludes with ITS
   t("B concluded with no commentary, and reads null rather than an empty string",
     cb?.commentary, null);
 
-  /* ---- a RE-conclude replaces the row and names what it replaced */
+  /* ---- a RE-conclude APPENDS and names the entry it follows.
+     CORRECTED 2026-09-18 by REC-136 (INVESTIGATIVE-SESSION.md §7.1 item 7, BOB
+     #15). This arm read "a RE-conclude replaces the row" and asserted ONE row
+     per question — it pinned the defect: replacing the row ERASED the
+     conclusion it replaced, and DEC-19 as Bob ruled it keeps "a record of the
+     attestation and reversal". It now asserts that BOTH conclusions stay
+     readable, in order, and that the stance is the later one. */
   mustOk("A moves to VB", await makeCurrent(A, VB.name));
   const ra2 = await conclude({ target: INQ, project: A, falsifier: "a recorded council vote on the transfer" });
-  t("A re-concluding on a different reading adopts THAT claim and names the one it replaced",
-    [ra2.ok, ra2.claim?.text, ra2.prior?.claim, ra2.prior?.version], [true, CLAIM_B, CLAIM_A, VA.name]);
-  t("one row per question: A's frontmatter carries one conclusions row for INQ, now VB's",
-    [((await textOf(A)) || "").split('  - inquiry: "INQ-2026-4124-sewer-transfers"').length - 1 >= 2,
-     (await conclusionOf(A))?.version], [true, VB.name]);
+  t("A re-concluding on a different reading adopts THAT claim and names the entry it FOLLOWS",
+    [ra2.ok, ra2.claim?.text, ra2.prior?.act, ra2.prior?.claim, ra2.prior?.version, ra2.history_length],
+    [true, CLAIM_B, "concluded", CLAIM_A, VA.name, 2]);
+  const ha = (await versionsOf(INQ, A)) || {};
+  t("NOTHING WAS ERASED: A's history carries BOTH conclusions, in the order made, and the stance is the later",
+    [(ha.conclusion_history || []).map((e) => [e.act, e.version, e.claim]), ha.conclusion_stance,
+     ha.conclusion?.version],
+    [[["concluded", VA.name, CLAIM_A], ["concluded", VB.name, CLAIM_B]], "concluded", VB.name]);
+  t("and A's own bytes carry both entries for INQ, the first one byte-for-byte where it was",
+    [entriesIn((await textOf(A)) || ""), ((await textOf(A)) || "").includes('    claim: "' + CLAIM_A + '"')],
+    [2, true]);
   t("and B was not moved by A's second act either", (await conclusionOf(B))?.claim, CLAIM_B);
 }
 
@@ -331,7 +408,14 @@ console.log("\n--- 2. concluding with no claim is refused NO_CLAIM, and nothing 
     ["a project that stands on NO reading", { target: INQ, project: D, falsifier: "x" }],
     ["a project whose reading states NO CLAIM", { target: INQ, project: E, falsifier: "x" }],
     ["commentary with no project (nothing adopted to comment beyond)",
-      { target: INQ, conclusion: "It did.", falsifier: "x", commentary: "a note" }],
+      { target: INQ, conclusion: "It did.", falsifier: "x", commentary: "a note", version: VA.name }],
+    /* REC-136 / §7.1 item 6: A NO-PROJECT CONCLUSION NAMES ITS READING. */
+    ["NO PROJECT AND NO VERSION NAMED (§7.1 item 6 — the arm the version requirement's control breaks)",
+      { target: INQ, conclusion: "It did.", falsifier: "x" }],
+    ["no project, naming a reading the inquiry does not carry",
+      { target: INQ, conclusion: "It did.", falsifier: "x", version: "no such reading" }],
+    ["a project naming a reading OTHER than the one it stands on",
+      { target: INQ, project: B, falsifier: "x", version: VA.name }],
   ];
   for (const [label, p] of cases) {
     const r = await conclude(p);
@@ -343,6 +427,15 @@ console.log("\n--- 2. concluding with no claim is refused NO_CLAIM, and nothing 
     [free?.ok, free?.reason], [false, "CONCLUSION_IS_THE_CLAIM"]);
   t("NOTHING WAS WRITTEN: the question and every project named above are byte-identical",
     JSON.stringify(await shas()) === JSON.stringify(before), true);
+  /* REC-136: the no-project doors on a question whose readings are the problem. */
+  const np2Before = await shaOf(NP2);
+  for (const [label, name] of [["an ACCEPTED reading that states NO claim", VNP_NOCLAIM.name],
+                               ["a reading only SUGGESTED, never accepted", VNP_SUGGESTED.name]]) {
+    const r = await conclude({ target: NP2, conclusion: "It was.", falsifier: "x", version: name });
+    t(`no project, naming ${label}: refused NO_CLAIM`, [r?.ok, r?.reason, r?.version], [false, "NO_CLAIM", name]);
+  }
+  t("and NP2 was not written, nor moved from open", [await shaOf(NP2) === np2Before, await stateOf(NP2)],
+    [true, "open"]);
   t("E reads no conclusion, and neither does D", [await conclusionOf(E), await conclusionOf(D)], [null, null]);
   t("B's conclusion survived the refused free-text attempt unchanged", (await conclusionOf(B))?.claim, CLAIM_B);
   const mach = await conclude({ target: INQ, project: B, falsifier: "x" }, "mem-r124");
@@ -353,12 +446,14 @@ console.log("\n--- 2. concluding with no claim is refused NO_CLAIM, and nothing 
 /* ====================================================================== 3 */
 console.log("\n--- 3. a legacy (no-project) conclusion reads claim-UNDETERMINED, never back-filled ---");
 {
-  const LEGACY_TEXT = "The legacy transfer was authorised.";
-  const r = await conclude({ target: LEG, conclusion: LEGACY_TEXT, falsifier: "a rescinding minute" });
-  t("the no-project act concludes as it always did — the inquiry's own state moves",
-    [r?.ok, r?.relationship, r?.project, await stateOf(LEG)], [true, "no_project", null, "concluded"]);
-  t("and its answer STATES the claim undetermined, with no text and no version",
-    [r?.claim?.state, r?.claim?.text, r?.claim?.version], ["undetermined", null, null]);
+  /* CORRECTED 2026-09-18 by REC-136: this arm CONCLUDED LEG with no project
+     and no reading and expected it accepted with its claim undetermined. §7.1
+     item 6 (BOB #15) refuses exactly that now — an undetermined claim asserts
+     nothing a reader can check — so the legacy conclusion is AUTHORED into the
+     bytes at promote, which is where every such conclusion in a real record
+     came from, and this block reads it. The act's new path is §3b. */
+  t("the legacy question is concluded in its own bytes (the pre-§7.1-item-6 shape)",
+    await stateOf(LEG), "concluded");
   const own = (await versionsOf(LEG))?.no_project_conclusion;
   t("the read gives it as the no-project relationship's, relationship NOT established, claim UNDETERMINED",
     [own?.relationship, own?.relationship_established, own?.conclusion, own?.claim?.state, own?.claim?.text],
@@ -376,6 +471,133 @@ console.log("\n--- 3. a legacy (no-project) conclusion reads claim-UNDETERMINED,
   t("and the legacy conclusion in the inquiry's own bytes is untouched",
     [await shaOf(LEG) === legSha, (await versionsOf(LEG))?.no_project_conclusion?.conclusion],
     [true, LEGACY_TEXT]);
+}
+
+/* ===================================================================== 3b */
+console.log("\n--- 3b. §7.1 item 6: a NO-PROJECT conclusion names its reading and ADOPTS its claim verbatim ---");
+{
+  const r = await conclude({ target: NP, conclusion: "It was booked before the meeting.",
+                             falsifier: "a booking entry dated after the meeting", version: VNP.name });
+  t("the no-project act, NAMING its reading, concludes and the inquiry's own state moves",
+    [r?.ok, r?.relationship, r?.project, await stateOf(NP)], [true, "no_project", null, "concluded"]);
+  t("its answer ADOPTS the named reading's claim WORD FOR WORD — not the conclusion text",
+    [r?.claim?.state, r?.claim?.text, r?.claim?.version, r?.version], ["adopted", CLAIM_NP, VNP.name, VNP.name]);
+  const own = (await versionsOf(NP))?.no_project_conclusion;
+  t("the read gives the adoption: no-project relationship, claim ADOPTED, verbatim, naming its reading",
+    [own?.relationship, own?.claim?.state, own?.claim?.text, own?.claim?.version, own?.conclusion],
+    ["no_project", "adopted", CLAIM_NP, VNP.name, "It was booked before the meeting."]);
+  const npText = (await textOf(NP)) || "";
+  t("the adoption is in the inquiry's own bytes, beside the conclusion, and its Session Log names it",
+    [npText.includes(`conclusion_version: "${VNP.name}"`), npText.includes(`conclusion_claim: "${CLAIM_NP}"`),
+     npText.includes(`Adopted: reading '${VNP.name}', claim: ${CLAIM_NP}`)], [true, true, true]);
+  t("and no project inherits it (§7.1 item 8: it counts only for the relationship that made it)",
+    await conclusionOf(A, NP), null);
+  const fg = (await versionsOf(FORGED))?.no_project_conclusion;
+  t("a HAND-AUTHORED adoption its named reading does not bear out reads UNDETERMINED, with the reason",
+    [fg?.claim?.state, fg?.claim?.text, /does not state the claim recorded/.test(fg?.claim?.detail || "")],
+    ["undetermined", null, true]);
+}
+
+/* ====================================================================== 5 */
+console.log("\n--- 5. §7.1 item 7: WITHDRAWAL APPENDS — conclude, withdraw, conclude again, THREE entries ---");
+{
+  const withdraw = async (params, tok = RUTH) =>
+    POST(`op=withdrawconclusion&token=${tok}&` + Object.entries(params).map(([k, v]) => `${k}=${enc(v)}`).join("&"), {});
+  const WHY = "The audit was superseded by a corrected edition.";
+  const bBefore = (await versionsOf(INQ, B)) || {};
+  t("B starts with ONE entry, its conclusion on VB, and stands on it",
+    [(bBefore.conclusion_history || []).length, bBefore.conclusion_stance], [1, "concluded"]);
+  /* refusals first, each writing nothing */
+  const bSha = await shaOf(B);
+  const noWhy = await withdraw({ target: INQ, project: B });
+  t("a withdrawal with NO reason is refused NO_REASON", [noWhy?.ok, noWhy?.reason], [false, "NO_REASON"]);
+  const mach = await withdraw({ target: INQ, project: B, reason: WHY }, "mem-r124");
+  t("a MACHINE may not withdraw: the conclude fence's condition, by name",
+    [mach?.ok, mach?.reason], [false, "MACHINE_CANNOT_CONCLUDE"]);
+  const noProj = await withdraw({ target: INQ, reason: WHY });
+  t("a withdrawal names its project; with none it is refused NOT_A_PROJECT, naming op=reopen's door",
+    [noProj?.ok, noProj?.reason, /op=reopen/.test(noProj?.detail || "")], [false, "NOT_A_PROJECT", true]);
+  const never = await withdraw({ target: INQ, project: D, reason: WHY });
+  t("a project that never concluded has NOTHING_TO_WITHDRAW", [never?.ok, never?.reason, never?.stance],
+    [false, "NOTHING_TO_WITHDRAW", "none"]);
+  t("and none of those wrote anything to B", await shaOf(B) === bSha, true);
+
+  const w = await withdraw({ target: INQ, project: B, reason: WHY });
+  t("B WITHDRAWS: accepted, the shared inquiry unmoved, and it names what it withdrew",
+    [w?.ok, w?.act, w?.inquiry_moved, w?.withdraws?.version, w?.withdraws?.claim, w?.reason, w?.history_length],
+    [true, "withdrawn", false, VB.name, CLAIM_B, WHY, 2]);
+  const again = await withdraw({ target: INQ, project: B, reason: WHY });
+  t("withdrawing AGAIN is refused NOTHING_TO_WITHDRAW — it would add an entry recording nothing",
+    [again?.ok, again?.reason, again?.stance], [false, "NOTHING_TO_WITHDRAW", "withdrawn"]);
+  const mid = (await versionsOf(INQ, B)) || {};
+  t("after the withdrawal B stands on NO conclusion — and says WITHDRAWN, not never-concluded",
+    [mid.conclusion, mid.conclusion_stance], [null, "withdrawn"]);
+  const q1 = await GET(`op=queue&token=${RUTH}&limit=500`);
+  const items1 = (q1 && Array.isArray(q1.items) ? q1.items : [])
+    .filter((i) => i && i.kind === "shared-inquiry-concluded-by-another-project");
+  t("the other projects are no longer told B concluded, and A's notice shows B as WITHDRAWN",
+    [items1.some((i) => i.subject?.id === B),
+     (items1.find((i) => i.subject?.id === A)?.basis?.elsewhere || []).find((e) => e.project === B)?.state],
+    [false, "withdrawn"]);
+
+  const rc = await conclude({ target: INQ, project: B, falsifier: "a recorded council vote on the transfer",
+                              commentary: "Concluded again on the corrected audit." });
+  t("B CONCLUDES AGAIN: accepted, following the withdrawal", [rc?.ok, rc?.prior?.act, rc?.history_length],
+    [true, "withdrawn", 3]);
+
+  /* THE ARM A LIAR FAILS. Keeping only the latest entry passes every
+     "stance is right" assertion; this reads the WHOLE history. */
+  const hb = (await versionsOf(INQ, B)) || {};
+  const hist = hb.conclusion_history || [];
+  t("THREE ENTRIES, READABLE IN ORDER: concluded, withdrawn, concluded",
+    hist.map((e) => [e.act, e.version]),
+    [["concluded", VB.name], ["withdrawn", VB.name], ["concluded", VB.name]]);
+  t("each entry is DATED and AUTHORED, and the withdrawal carries its reason and what it withdrew",
+    [hist.every((e) => e.by === "ruth" && /^20\d\d-/.test(e.at || "")), hist[1]?.reason,
+     hist[1]?.withdraws_at === hist[0]?.at, hist[0]?.claim, hist[2]?.commentary?.text],
+    [true, WHY, true, CLAIM_B, "Concluded again on the corrected audit."]);
+  t("the STANCE is the LAST entry", [hb.conclusion_stance, hb.conclusion?.at === hist[2]?.at,
+    hb.conclusion?.commentary?.text], ["concluded", true, "Concluded again on the corrected audit."]);
+  const bText = (await textOf(B)) || "";
+  t("B's own bytes carry all three entries for INQ, and its Session Log records the withdrawal",
+    [entriesIn(bText),
+     /\| Conclusion withdrawn \| ruth\nTrigger: op=withdrawconclusion on INQ-2026-4124-sewer-transfers for PROJ-2026-4124-budget\n/.test(bText)],
+    [3, true]);
+  t("and A was not moved by any of B's acts", (await conclusionOf(A))?.version, VB.name);
+
+  /* STRUCTURAL, not conventional: a promote that REWRITES the history is
+     NAMED by the catalog (C-5.1 now holds `conclusions` append-only, beside
+     `state_history`). C-5.1 is an AUDIT check — `promote` does not run the
+     catalogue, it writes and snapshots — so the rewrite LANDS and op=audit
+     names it, exactly as it names a rewritten state_history. Measured, not
+     assumed: the first draft of this arm expected promote to refuse, and it
+     did not. */
+  /* op=audit over B ALONE (the page after the id just below B's), read as its
+     tally — an offender's error list is capped, and B's fixture draws unrelated
+     core-field findings that would fill it. BEFORE and AFTER, so the C-5.1
+     finding is attributed to the rewrite rather than to the fixture. */
+  const auditB = async () => (await GET(`op=audit&token=${RUTH}&after=${enc("PROJ-2026-4124-buda")}&limit=1`)) || {};
+  const beforeAudit = await auditB();
+  const cut = bText.replace(/\nconclusions:\n  - inquiry: "INQ-2026-4124-sewer-transfers"\n(    [^\n]*\n)+?(?=  - inquiry)/, "\nconclusions:\n");
+  /* The snapshot key SORTS LAST on purpose: C-5.1 compares against the
+     lexicographically latest `_history/` snapshot, and this suite's fixture keys
+     (`PROJ-…`) sort after the acts' date keys — a tamper filed under a key that
+     sorted early would be compared with the project's FIRST edition, which had
+     no entries, and pass for a reason that has nothing to do with the rule. */
+  const tamper = await POST(`op=promote&token=${RUTH}`, {
+    bundleId: B, base: await shaOf(B), snapKey: "99991231T235959Z_tamper",
+    files: [{ path: "bundle.md", text: cut, bytes: cut.length, sha256: sha(cut) }], register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: "Budget",
+            current_state: "forming", created: NOW, last_updated: LATER } });
+  t("the fixture's cut really removed an entry (else the next arm proves nothing)", entriesIn(cut), 2);
+  t("the rewrite lands (promote gates on shape, not on the catalogue's history rules)", tamper?.ok, true);
+  const afterAudit = await auditB();
+  t("the audit page is B's alone, before and after",
+    [beforeAudit.checked, (beforeAudit.offenders || []).map((o) => o.bundleId),
+     afterAudit.checked, (afterAudit.offenders || []).map((o) => o.bundleId)],
+    [1, [B], 1, [B]]);
+  t("op=audit NAMES THE REWRITE: B carried NO C-5.1 finding before it and carries one after (C-5.1)",
+    [beforeAudit.tally?.["C-5.1"] ?? 0, afterAudit.tally?.["C-5.1"] ?? 0], [0, 1]);
 }
 
 /* hygiene.test.mjs's rule: every Miniflare instance is disposed, so the process ends on its own result. */

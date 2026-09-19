@@ -56,6 +56,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { MACHINE_FENCE_CHECKS, AI_CREDENTIAL_CHECKS } from "../checks/bio-checks.mjs";
 import { RUNGS } from "../src/affordances.mjs";
 
@@ -281,10 +282,16 @@ const PROJECT = await makePublishingProject({ post: POST, mf, sha, machineToken:
   id: "PROJ-2026-9123-auditor", created: NOW, updated: LATER });
 const INFO = "INFO-2026-9123-memo", LEAD = "INQ-2026-9123-lead";
 await promoteAs(ADM, INFO, infoMd(INFO), "information", "collected");
-await promoteAs(ADM, LEAD, inquiryMd(LEAD, "Was the transfer authorised?", INFO), "inquiry", "open");
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM with nothing written. This
+   fixture concluded with no reading because the act took none; the inquiry now
+   carries one (`withAdoptableReading`) and the call names it. Fixture, not subject. */
+await promoteAs(ADM, LEAD, withAdoptableReading(inquiryMd(LEAD, "Was the transfer authorised?", INFO)), "inquiry", "open");
 const cc = await GET(`op=conclude&token=${IRIS}&target=${LEAD}`
   + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-  + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
+  + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+  + adoptedVersionParam());
 if (!cc || cc.ok === false) throw new Error(`conclude: ${JSON.stringify(cc)}`);
 const pub = await POST(`op=publish&token=${IRIS}`, {
   project: PROJECT, targets: [LEAD], roles: allLoadBearing({ targets: [LEAD] }),

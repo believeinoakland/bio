@@ -14223,3 +14223,47 @@ IDs minted with `tools/mintid.mjs`: IC-155, D-428.
 §7.9, and whether project ids should be plane-minted. (4) Tell DIST: a DISCLOSURE closing, open on deployed instances
 until the next cut. (5) REC-137 runs beside this: if it adds an act that names a project, it asks `Store#inSight` BEFORE
 `#projectAuthority` and returns `Store.#noSuchProject` — say so at its merge.
+
+## CLAIM 2026-09-18 RECORD (REC-136 — a no-project conclusion NAMES its version; withdrawal APPENDS, INVESTIGATIVE-SESSION.md §7.1 items 6-8)
+
+claimed: 2026-09-18 by the REC-136 worker (spawned by CONDUCT #5), branch `worktree-agent-a01b00fb335bbabb8`, base
+`f16b9b49`. Paths: `bio-plane/src/store.mjs` (conclude, the project conclusion writer/reader, a new withdraw act,
+op=basisversions' conclusion keys, the concluded-elsewhere producer), `bio-plane/src/index.mjs` (the new op's OPS row
+and dispatch), `bio-plane/src/affordances.mjs` (only if the new op needs an affordance row),
+`bio-plane/checks/bio-checks.mjs` (C-33 rows; C-5.1's append-only surfaces), `bio-plane/scripts/coverage.mjs` (floors
+only, from its own print), `bio-plane/dist/**` (the rebuilt bundle), `bio-plane/test/conclude-project.test.mjs` and its
+control, plus every suite the no-project version requirement breaks, corrected at its site,
+`civicos-ui/check-refusal-codes.mjs` (floors only, from its own print), `civicos-ui/test/**` fixtures only if the
+harness breaks, `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built note),
+`docs/development/INTERFACE-CHANGES.md` (this item's IC rows). Added at the merge of REC-134: `bio-plane/test/project-authority.test.mjs` and its control (`withdrawconclusion` joins the act table, one anchor re-pointed).
+
+### DELEGATION 2026-09-18 RECORD (REC-136) -> UI: **A NO-PROJECT CONCLUSION NOW NAMES ITS READING, AND A PROJECT CAN WITHDRAW — THE SURFACE CAN DO NEITHER**
+**open as of 2026-09-18** — `app.html`'s conclude flow sends no `version`, so every no-project conclude a member commits from the surface is refused `NO_CLAIM`; nothing on the surface reaches `op=withdrawconclusion`.
+
+`INVESTIGATIVE-SESSION.md` §7.1 items 6-7 are built in the plane (IC-153, proposed MAJOR). What the surface owes:
+1. **The reading a conclusion adopts (item 6).** `concludeParams` must send `version=<reading>`: the accepted reading
+   (with a claim) of the question that the member chooses — read the candidates from `op=basisversions` (state
+   `accepted`, non-empty `claim`), SHOW the claim before commit (the claim is what is concluded), and never default one
+   (a default reading is the plane choosing the answer). With none available, render `NO_CLAIM`'s detail as the door.
+   **When this lands, `civicos-ui/test/conclude-nofalsifier.test.mjs`'s REC-136 STAND-IN (the transport supplying the
+   reading, and its foot assertion that the surface sent none) FAILS BY DESIGN — remove the stand-in in the same turn.**
+2. **The project's stance and its history (item 7).** From a project's view of a question it concluded: render
+   `op=basisversions&project=`'s `conclusion_history` (every conclusion and withdrawal, dated and authored, in order)
+   and `conclusion_stance`, and offer `op=withdrawconclusion&target=&project=&reason=` with a REQUIRED reason, worded so
+   a member knows the conclusion stays in the record. Strike `withdrawconclusion`'s row from
+   `surface-registry.test.mjs`'s `ACTS_AWAITING_SURFACE` when it is hosted.
+3. **The legacy read.** `no_project_conclusion.claim.state` is `adopted` or `undetermined`; render undetermined through
+   the `undeterminedPane` primitive, never as the conclusion text.
+
+## CLAIM 2026-09-18 RECORD (REC-136) — RELEASED
+
+released: 2026-09-18 by the REC-136 worker, branch `worktree-agent-a01b00fb335bbabb8`, base `f16b9b49`, merged with
+`origin/main` at `dd52609b` (REC-133 and REC-134) and again at `b4330caf` (M0-67, DIST 0.61.0). Baseline at `ec766ef9`: 240/247 in the run, the other 7 contaminated by
+this worker's own mid-run edit of `src/` (a parse error, loud) and each green re-run alone on pristine source; none
+skipped. After, at `5ca64227`: **249/249 suites green · 15174 assertions passing**, no suite skipped, no printed FAIL;
+`node scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER FLOOR 1407 -> 1410 from its print); `node
+civicos-ui/test/run.mjs` exit **0**; `status --check` 0; `corpuscheck` 0. NEGATIVE CONTROL `node
+test/conclude-project.control.mjs`: baseline 75/0, (a) 64/11, (b) 69/6, (c) 73/2, (d) 74/1, (e) 66/9, (f) 72/3, (g) 74/1,
+every restore sha256 MATCH; plus divide.test (1 arm) and project-authority.test (3 arms) recorded at their sites. **FOR CONDUCT:** RESOLVE IC-153 (proposed MAJOR, BREAKING; read I3's base
+at resolution); the UI DELEGATION above is open; §7.1 item 4 (REC-135) is unbuilt; the DESIGN GAPS (a)-(c) are in
+`INVESTIGATIVE-SESSION.md`'s Incomplete sections.

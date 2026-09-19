@@ -101,6 +101,7 @@
 
 import "./stdio.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -258,9 +259,15 @@ const mustPromote = async (...a) => {
   if (r.ok === false) throw new Error(`promote ${a[0]}: ${JSON.stringify(r)}`);
   return r;
 };
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none; the inquiries it concludes (ALPHA, BETA,
+   LOOSE — all three) now carry one (`withAdoptableReading`) and the call names it. */
 const conclude = async (target, conclusion, falsifier) =>
   rP(await GET(`op=conclude&token=${ROSA}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 const reopen = async (target, reason) =>
   rP(await GET(`op=reopen&token=${ROSA}&target=${encodeURIComponent(target)}&reason=${encodeURIComponent(reason)}`));
 
@@ -305,8 +312,8 @@ await mustPromote(INFO_A, infoMd(INFO_A), "information", "collected",
   [{ path: "snapshots/source.bin", sha256: sha("caseflip-INFO_A-bytes"), bytes: 512, encoding: "binary" }]);
 await mustPromote(INFO_B, infoMd(INFO_B), "information", "collected");
 for (const id of [ALPHA, BETA, LOOSE])
-  await mustPromote(id, inquiryMd(id, { question: `Was the ${id} transfer authorised?`,
-    refs: [INFO_A], legs: BOTH_AXES.map((l) => ({ ...l, target: INFO_A })) }), "inquiry");
+  await mustPromote(id, withAdoptableReading(inquiryMd(id, { question: `Was the ${id} transfer authorised?`,
+    refs: [INFO_A], legs: BOTH_AXES.map((l) => ({ ...l, target: INFO_A })) })), "inquiry");   /* REC-136: all three are concluded */
 
 const mustConclude = async (id) => {
   const c = await conclude(id, `${id} rests on a memo nobody adopted.`,

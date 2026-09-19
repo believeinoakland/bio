@@ -74,8 +74,11 @@ const ARMS = {
      internal-caller rule), so a dropped stamp would silently open that act. This arm is what makes
      "the control plane always stamps it" a measurement rather than a belief. */
   "stamp-dropped": {
-    patches: [["index.mjs", "const POSITIONAL_ACTS = [\"cite\", \"sever\", \"reinstate\", \"versioncurrent\", \"proposedispose\", \"biasadopt\", \"conclude\"];",
-               "const POSITIONAL_ACTS = [\"cite\", \"sever\", \"reinstate\", \"proposedispose\", \"biasadopt\", \"conclude\"];"]],
+    /* RE-ANCHORED 2026-09-18 by REC-136, which added `withdrawconclusion` to the list (and so
+       wrapped the line): the arm is unchanged — `versioncurrent` is still the act whose stamp
+       is dropped. */
+    patches: [["index.mjs", "const POSITIONAL_ACTS = [\"cite\", \"sever\", \"reinstate\", \"versioncurrent\", \"proposedispose\", \"biasadopt\", \"conclude\",\n",
+               "const POSITIONAL_ACTS = [\"cite\", \"sever\", \"reinstate\", \"proposedispose\", \"biasadopt\", \"conclude\",\n"]],
     mustFail: ["REFUSED: the founder (not in P_OUT) — op=versioncurrent", "REFUSED: ruth (not in P_OUT) — op=versioncurrent",
                "and P_OUT stands on nothing"],
   },
