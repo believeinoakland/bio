@@ -20,6 +20,29 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
+**2026-09-19 · BOB #16 · CONTRADICTION'S IDENTIFY IS DESIGNED — THREE ITEMS, IN ORDER (BOB-NEXT §3 4a; SCHEDULER's
+order audit `cd9d7c86` held 8.contradiction unrowable until this existed).** Design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md`
+(level 2 beneath `BIO_Case_Making_v0_1.md` §CONTRADICTION; governed from this commit). Every table and column it names
+was read at the code. M9 (a member can state what they found). No queue item is superseded.
+
+1. **RECORD — the pairing read** (I3, an IC): §4's four keys (K1 one inquiry/opposite roles; K2 one subject/two held
+   claims; K3 one referent/two held claims; K4 one entity/two sources of different doctype or date), viewer-gated
+   (§7.9, §7 item 7.14), bounded PER KEY with `limit`/`truncated`, the §6 empty-level statement (four distinct "none"
+   facts, never a bare empty list), and a count of pairs NOT formed because a date or doctype was undetermined. No
+   judgement, no write. **The cheap defeat:** a key that silently widens its join to find more pairs makes the fixture's
+   per-key figures incomparable — the suite pins each key's join by a fixture whose pair count is exact.
+2. **M0 / VERIFY — the fixture and the first measurement, BEFORE anything a member sees** (after 1): §7's labelled
+   corpus (precision, world in both of Bob's shapes, record, unrelated), the false-conflict rate and recall per key,
+   the THRESHOLD recorded in `MEASUREMENTS.md` with its corpus size, and §7's three negative controls (disable K2; an
+   always-`world` judgement must fail the gate by name; an empty record returns case (a)). The measurement needs a
+   judgement to measure, so this item builds the fixture and the harness and measures a candidate judgement run
+   OFF-RECORD (no table write).
+3. **RECORD + the investigative session's skill — the judgement and the candidate table**, after 2 and only if 2's
+   gate is met: §5's five labels as labelled machine work through ONE append site, §8's row (both referents at their
+   versions, the key, the run, the label and reason, state `proposed`), idempotent over unchanged referents.
+
+**Not rowed, on purpose:** PRESENT and RESOLVE are the next design act, after item 2's first measurement.
+
 **2026-09-19 · BOB #16 · THREE DESIGNS AT THEIR HOMES — D-431 IS SPAWNABLE; DISCOVERABLE-OR-HIDDEN (4 items); DEC-63 AS
 AMENDED (1 item); THE REVIEW-COPY SURFACE VERIFIED (3 items).** Every design below is on `main` in its home document in
 this commit, read at the code before it was written. Nothing here is Bob's to answer; he is told the two decisions he may
