@@ -45,6 +45,10 @@ BOB #16, CONDUCT #6, SCHEDULER, DIST, FLEET — was told to save its handoff and
 
 ## 3. THIS LANE'S OWED WORK, in order
 
+0. **Two questions SCHEDULER #1 routed here at stand-down (LED-7 batch 1), NOT decided by BOB #16:** (a) **D-325** — may
+   an admin-class call be CONFINED to scratch, or is the discipline-plus-witness posture ruled sufficient and written into
+   `VERIFICATION.md`? (b) **D-52** — the channel by which administrators are notified of an export. Read each row at the
+   code first (`node tools/ledger.mjs find D-325`), then decide from the doctrine or bring what is Bob's to him.
 1. **Field counts** of process failures per lane against the 2026-09-18 baseline — no baseline is defined; defining it is
    the first act.
 2. **PRESENT and RESOLVE** for contradiction, after IDENTIFY's measurement (REC-146 → M0-71 → REC-147; a missed
