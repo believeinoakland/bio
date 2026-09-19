@@ -4,6 +4,9 @@
  * the tool, so nothing on disk needs restoring: (a) a budget set BELOW a file's size -> the file must be
  * NAMED with its byte count; (b) the same over-budget file marked CUT -> its verdict must be FAIL, and
  * unmarked it must be WARN. Break the tool instead (make `check` return []) and sections 1, 2 and 4 fail.
+ * RUN 2026-09-19 by BOB #16 on the budget-key fix: `check` put back to recomputing the budget from the filename
+ * -> exactly "...and check() judges it at that budget, not the kickoff's" FAILS (11 pass, 1 fail); restored by cp,
+ * verified by sha256 (0d520d6f6e1ab758 before and after), 12 pass.
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -50,7 +53,12 @@ console.log("3 — what is in the read-whole set, and what is not");
 }
 console.log("4 — the budgets, declared once, and the live CLAUDE.md is inside its own");
 {
-  t("the budgets", BUDGET, { "CLAUDE.md": 16384, kickoff: 24576, next: 12288 });
+  /* CORRECTED 2026-09-19 (BOB #16): the construct map joined the read set with its own budget, so the declared table
+     gained `map`; the old assertion pinned three keys because there were three classes then, not because a fourth
+     was wrong. */
+  t("the budgets", BUDGET, { "CLAUDE.md": 16384, kickoff: 24576, next: 12288, map: 49152 });
+  t("the construct map is read whole, at its own budget", readSet(ROOT).find((r) => r.file === "docs/architecture/BIO_System_Design.md")?.budget, BUDGET.map);
+  t("...and check() judges it at that budget, not the kickoff's", check(ROOT).some((o) => o.file === "docs/architecture/BIO_System_Design.md"), false);
   t("CLAUDE.md is marked CUT", CUT.has("CLAUDE.md"), true);
   t("the live CLAUDE.md is NOT over its budget", check(ROOT).some((o) => o.file === "CLAUDE.md"), false);
 }
