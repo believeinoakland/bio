@@ -16919,3 +16919,32 @@ half for `>`; the exit status is the only part of a run's verdict a `>` collisio
 see:** a pipe (`| tee log`: the run id is the only defence), no `lsof` (says UNVERIFIED), a non-battery writer.
 
 **After, on the committed tree:** see the close-out figures in the M0-67 claim block (`CLAIMS.md`).
+
+## M-63 · 2026-09-19 · THE READINESS EXAM FOR CONDUCT — the cut kickoff (20.7 KB) against the old (96.8 KB) and against none (BOB #16)
+
+**Why.** M-60 owed the exam per lane; BOB-NEXT §3.1 made it the condition for landing `kickoffs/CONDUCT.md`'s cut.
+
+**Instrument.** M-60's, with ONE variable moved. 21 questions, each from a failure the old file records (the flip-before-
+spawn, the piped rebase, the dropped file, the keep-both duplicate, prune-on-merge, the disk criterion, the reap, the
+integration-owed correction, the release-note sweep, the self-wake, the checkout, the budget …), keyed to the act. Every
+arm is a fresh `claude -p --model claude-opus-5 --allowedTools Read` in an empty directory OUTSIDE the repository (no
+user-level CLAUDE.md exists; checked), holding today's `CLAUDE.md` (auto-loaded) and `kickoffs/SCHEDULER.md` — so the arms
+differ ONLY in CONDUCT.md: **NEW** = the cut (20,701 B); **OLD** = the file as of 2026-09-18 (96,800 B, now
+`docs/archive/CONDUCT-kickoff-2026-09-19.md`); **CTRL** = no CONDUCT.md — the negative control, which here measures what
+CLAUDE.md and SCHEDULER.md already carry, a sharper control than M-60's empty one. Graded BLIND by a fourth clean-room
+session: the answer sets shuffled to A/B/C (A=NEW, B=CTRL, C=OLD, unmasked after grading), scored 2/1/0 per question.
+
+| arm | score /42 | cache tokens created (≈ reading) | turns | cost |
+| --- | --- | --- | --- | --- |
+| CTRL (no CONDUCT.md) | **27** | 23,995 (baseline) | 4 | $0.56 |
+| NEW | **42** | 31,920 → the kickoff ≈ **7.9k tokens** | 4 | $0.58 |
+| OLD | **42** | 62,687 → the kickoff ≈ **38.7k tokens** | 10 | $1.17 |
+
+**What it establishes.** The control loses 15 points and the grader names where (Q3/Q8 the record read instead of the
+content, Q7 no merge trailer, Q11 no prune-on-merge, Q17 a guessed cron, Q21 a wrong budget), so the exam measures what
+CONDUCT.md adds. The cut kept every measured act at about a fifth of the reading and less than half the turns. **What it
+does not establish:** NEW and OLD both hit the ceiling, so the exam cannot rank them; it shows the cut LOST nothing it
+asks, not that it gained anything. The questions, the key and the cut have one author (BOB #16), which the blind grader
+and the OLD arm limit and do not remove. Retention over a long session is not measured; this is fidelity at the start.
+The suites that read CONDUCT.md by content (mintid, strandedwork, mergecarry test and control arm 7, corpuscheck,
+planning-hygiene) were driven over the cut before it landed.

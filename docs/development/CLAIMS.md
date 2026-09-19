@@ -47,6 +47,7 @@ The format is the one `PARALLELISM.md` fixes:
 Paths: `docs/development/kickoffs/CONDUCT.md`, `docs/archive/CONDUCT-kickoff-2026-09-19.md` (new, the verbatim archive),
 `tools/readbudget.mjs` (CONDUCT.md into CUT once it fits), `docs/development/MEASUREMENTS.md` (the CONDUCT exam, appended).
 CONDUCT does not edit `kickoffs/CONDUCT.md` while this claim is open; CONDUCT reviews the cut before it lands.
+**released: 2026-09-19 BOB #16** — landed: CONDUCT.md 96,800 B → 21,064 B, reviewed by CONDUCT #6 (three additions taken), exam M-63 (NEW 42/42 · OLD 42/42 · CTRL 27/42), CONDUCT.md and BOB.md armed in `readbudget` CUT.
 
 ## CLAIM 2026-09-18 DIST (the embed hazard, then the cut after 0.58.0)
 released:
@@ -14432,3 +14433,12 @@ landed before close-out and was merged in (`67c6cc09`..`79f59f14`): `ratify-auth
 `withAdoptableReading(...)` / `adoptedVersionParam()`, and the figures above were re-taken on that merge (see the
 report). IC-157 re-based to I3 37.0.0 (proposed 38.0.0). **DIST is told:** an AUTHORITY and
 DISCLOSURE closing on `op=ratify`.
+
+## CLAIM 2026-09-18 SCHEDULER (LED-6 step (2) — QUEUE.md's non-row blocks to the archive; one control anchor the move supersedes)
+
+claimed: 2026-09-18 by SCHEDULER, worktree `.claude/worktrees/scheduler`. Paths: `docs/development/QUEUE.md` and
+`docs/archive/ledgers/*` (the lane's own, named here for the archive half); and, OUTSIDE the lane, ONE LINE of
+`bio-plane/test/m041-instrument-census.control.mjs` — arm (2)'s `anchorGraded`, which planted a row after QUEUE.md's
+`## M0 — VERIFICATION` heading. The migration moves that heading to the archive, so the anchor goes to zero
+(`m025-arm-anchor-witness` A4 named it); the anchor is CORRECTED to a heading the cache keeps, with a dated reason at the
+site, and the control is re-run on a clean committed tree. Nothing else in `bio-plane/**` is touched.
