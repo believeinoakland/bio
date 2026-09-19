@@ -137,7 +137,7 @@ authority is the file named, never this one.
 - **DEC-34** · 2026-08-07 — `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden alternatives]` — resolved, so do not re-open it.  
   `docs/archive/ledgers/QUEUE-2026-08.md:297`
 - **DEC-34** · 2026-08-07 — — the container carries each included finding's current version with its ground partition, description, NAME in DEC-34's header, and DEC-54's policy pin; `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden alternatives]` — resolved. | **NC: DEC-44's** — publish a case of two findings with…  
-  `docs/development/INVESTIGATIVE-SESSION.md:1328`
+  `docs/development/INVESTIGATIVE-SESSION.md:1344`
 - **DEC-35** · 2026-08-04 — PLACEMENT RE-BASED BY DEC-35 (2026-08-04, superseding the 2026-08-03 service-first note): in-plane and pdf-worker stay RULED OUT by bundle size; the IN-ACCOUNT path is the DEFAULT and its engine is now TESSERACT AS A FLEET MEMBER pending CPDF-12's deployed probe (DEC-42: Moondream returned NO-GO on coordinates;…  
   `docs/archive/ledgers/QUEUE-closed.md:1351`
 - **DEC-36** · 2026-08-04 — RULED 2026-08-04 (DEC-36): an INVISIBLE ancestor in the set is stated as an incompleteness and disclosed as nothing else.** D-15 §7.9 ("not its existence") and the truncation-honesty rule above pointed opposite ways on one bit, and Bob reconciled them BY SCOPE rather than one overriding the other: **D-15 governs…  
@@ -207,11 +207,11 @@ authority is the file named, never this one.
 - **DEC-52** · 2026-08-07 — conduct), `[BOB-4 — RULED 2026-08-07, PROVISIONAL pending Bob's confirmation]` (DEC-52's remaining yes/no). A member with an inquiry presses a button and a **skilled AI session** runs against that  
   `docs/development/INVESTIGATIVE-SESSION.md:88`
 - **DEC-52** · 2026-08-07 — What post-processing may WRITE: the MECHANISM is ruled; the yes/no is `[BOB-4 — RULED 2026-08-07, PROVISIONAL: Bob's mechanical-standing principle is recorded on DEC-52, pending his confirmation; the sidebar approval (identify → present → member approves) remains the act of record for the constitutive fields]`.** Bob:  
-  `docs/development/INVESTIGATIVE-SESSION.md:911`
+  `docs/development/INVESTIGATIVE-SESSION.md:927`
 - **DEC-52** · 2026-08-07 — RULED, 2026-08-07: robots.txt disallows do not bar capture of publicly available documents, and the member-browser UA from inquiry creation is permitted for these fetches (DEC-52; SOURCE-ACCESS.md amended).**  
-  `docs/development/INVESTIGATIVE-SESSION.md:962`
+  `docs/development/INVESTIGATIVE-SESSION.md:978`
 - **DEC-52** · 2026-08-07 — `[BOB-4 — RULED 2026-08-07, PROVISIONAL]`** — DEC-52's remaining yes/no: Bob's mechanical-standing principle recorded on DEC-52, pending his confirmation; the sidebar approval remains the act of record for the constitutive fields (§14a). 8.  
-  `docs/development/INVESTIGATIVE-SESSION.md:1292`
+  `docs/development/INVESTIGATIVE-SESSION.md:1308`
 - **DEC-52** · 2026-08-07 — IN RESERVE with a named trigger, not adopted pre-emptively *(AMENDED 2026-08-07: for publicly available documents fetched as part of the workflow, the member-browser UA is now PERMITTED by ruling — see the amendment note above; DEC-52, IS-SWEEP §4c)*.  
   `docs/development/SOURCE-ACCESS.md:285`
 - **DEC-53** — "Why do we want to count the number of times that a user approves a candidate?  
@@ -227,7 +227,7 @@ authority is the file named, never this one.
 - **DEC-60** · 2026-08-07 — It carries the reasoning for DEC-60 (proactive claim formulation), DEC-61 (device-local transcripts) and DEC-62 (pursue and investigate are one session), inline `[BOB-2/3/4]` rulings of 2026-08-07 and four SETTLED delegations; §16 lists fifteen withdrawn positions and §18's hold sentence is struck as SUPERSEDED.  
   `docs/development/INVESTIGATIVE-SESSION.md:3`
 - **DEC-61** · 2026-08-06 — TRANSCRIPT RETENTION — RULED, Bob 2026-08-06, now DEC-61 in the register: DEVICE-LOCAL, with a TTL, AND deleted as part of the PUBLICATION process.  
-  `docs/development/INVESTIGATIVE-SESSION.md:853`
+  `docs/development/INVESTIGATIVE-SESSION.md:869`
 - **DEC-62** — CORRECTED, not lifted** (the pilot is read-only and its credential mints nothing; that fence is built and stays); EXTRACT runs in DEC-62's run object, which already bounds, logs, resumes and checks plane-side — **no new runtime, no new credential class, no new fence**; its productions are…  
   `docs/archive/ledgers/BOB-INBOX-drained.md:346`
 - **DEC-62** · 2026-09-14 — The decision this row was waiting on was taken in the construct's home (`BIO_Assistant_and_AI_Roles_v0_1.md` §7.3, BOB #11: EXTRACT runs in DEC-62's RUN, the pilot's exclusion CORRECTED and not lifted), and SK-8 built the caller the same day: `op=extractpropose` produces a proposed reading inside a member-opened…  
@@ -313,7 +313,7 @@ authority is the file named, never this one.
 - **D-84** · 2026-08-01 — §Statement anatomy — the subject lists are superseded; both defer to the registry vocabulary (RULED 2026-08-01). - §Bias bundles and adoption — "The manifest waits on `object_type: bias` (D-84)"; the plane now carries both while the debt row still reads open — one record is stale. - §Integration with the epistemics…  
   `docs/architecture/BIO_Declared_Bias_v0_1.md:9`
 - **D-84** — — the bias manifest in force (RULED — §3; until D-84 lands, "no manifest was in force," stated), the launching project's declared standard pair, the claim and version set as it stood, and the SKILL VERSION it ran under (§14a).  
-  `docs/development/INVESTIGATIVE-SESSION.md:657`
+  `docs/development/INVESTIGATIVE-SESSION.md:673`
 - **D-90** · 2026-07-30 — RULED by Bob, by pointing at the principle already written: the measure never edits the statement, so a measure that may not edit a statement certainly may not block work resting on one.  
   `docs/development/DEBT.md:78`
 - **D-91** · 2026-07-30 — RULED by Bob: content should be identified and processed in other document types exactly as it is in HTML.  
@@ -327,7 +327,7 @@ authority is the file named, never this one.
 - **D-98** · 2026-07-30 — RULED: undetermined authority becomes a task for the project manager, falling back to a group admin where a project has no manager, forwardable to a member better placed to attest.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:63`
 - **D-98** — and the RULED routing order, with every cited precedent verified present before the claim was written; D-98 is now a build task.  
-  `docs/development/CIVICOS_UI_STATE.md:975`
+  `docs/development/CIVICOS_UI_STATE.md:1015`
 - **D-98** · 2026-07-30 — §RULED 2026-07-30 — STALE in its closing paragraph.  
   `docs/development/INBOX-GRAMMAR.md:8`
 - **D-98** — `taskforward`/`taskresolve` keep their RULED group-admin fallback (D-98 routing): a task is an instance obligation, not a project production.  
@@ -461,7 +461,7 @@ authority is the file named, never this one.
 - **D-225** · 2026-09-15 — CAPPED — this row read "uncapped (D-225)" until 2026-09-15 and is CORRECTED IN PLACE rather than deleted, because what it recorded was a real gap and the gap CLOSING is the news** | `documentsConcerning`, `resolutionsForCapture`, `connectionsFor` in `store.mjs`, named by SYMBOL and not by line (`CORPUS-STANDARD.md`…  
   `docs/architecture/BIO_Content_Framework_v0_10.md:2172`
 - **D-225** · 2026-08-07 — Related finding, raised as D-225 on 2026-08-07 and since CLOSED — CORRECTED IN PLACE on 2026-09-15 by REC-99, never deleted, because the gap this paragraph recorded was real and the gap CLOSING is the news:** the existing meaning-layer reads — `concerns`, `resolutions`, `connections` — **WERE uncapped** on the day…  
-  `docs/development/INVESTIGATIVE-SESSION.md:1210`
+  `docs/development/INVESTIGATIVE-SESSION.md:1226`
 - **D-227** — `bio-plane/test/versions.test.mjs` — ONE superseded pin CORRECTED, and it was not predicted:** that suite's D-227 bound arm demanded exactly THREE `#rows(` inside a 4,600-character slice of `basisVersions`, which pinned the reader's TOPOLOGY rather than its rule, and this item's helper extraction moved it.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4788`
 - **D-227** — SETTLED. I3 10.0.0 → 10.1.0.** I5 NOT touched. Open against it: nothing. **Related and NOT closed by it: D-227** — these suites assert the statement carries its `LIMIT` and that the published cap is the applied cap, which is the HONESTY half; **an unbounded derivation feeding a bounded answer would still pass**,…  
@@ -649,7 +649,7 @@ authority is the file named, never this one.
 - **D-429** — CORRECTED at their sites with a dated reason, never exempted: `case-authority.test.mjs` §7 (the D-429 pin — PUBLISHED under gus's name — now the C-58.1 refusal) and §6 (C-57.1's `where`), and `case-authority.control.mjs`'s anchors (the helper's).  
   `docs/development/INTERFACE-CHANGES.md:11667`
 - **D-430** — split makes stale, CORRECTED with their reason: `bio-plane/test/ledger.test.mjs` §12's vacuity guard (it required more than 5 non-running rows in the cache, which the split caps at 8 with the running rows in it) and `bio-plane/test/planning-hygiene.test.mjs`' queue-id set (read from `QUEUE.md` alone — D-430's class…  
-  `docs/development/CLAIMS.md:14945`
+  `docs/development/CLAIMS.md:14972`
 - **D-431** · 2026-09-19 — DECIDED 2026-09-19 by BOB #16 (D-431) — nothing crosses outside a ratified case; decided from this rule and rule 1, not returned to Bob.** Verified at the code first: `ratifyCaseDocument` commits the case and its pins BEFORE any member signs a finding (`awaiting` = pinned minus `published_bundles`), so *case…  
   `docs/architecture/BIO_Publication_v0_1.md:70`
 - **D-431** · 2026-09-19 — 2026-09-19 · BOB #16 · D-431 RULED; FLEET'S TWO SCRATCH QUESTIONS ANSWERED — THREE ITEMS, M8 and M0.** Decided by this lane from rulings already made, each read before deciding: `BIO_Publication_v0_1.md` §3 rule 2 (*"Only findings that are part of a project can be published"*, DEC-72) and its D-429 note; §3 rule 1…  
@@ -815,13 +815,13 @@ authority is the file named, never this one.
 - **IC-148** · 2026-09-18 — IC-148 AMENDED IN PLACE (MAJOR, 29.4.0 → 30.0.0): `dbBytes` for the admin class only under a server-set `capacity` stamp; the wire's log count renamed `observationsNonLead`, no `observations` key on the wire, purge's proof unchanged.  
   `docs/development/CLAIMS.md:13992`
 - **IC-153** — `conclude-act.test.mjs`'s mock CORRECTED to IC-153 (answers `basisversions`, refuses a no-version commit `NO_CLAIM` where the store does) and its journey picks a reading (93/0); `conclude-nofalsifier.test.mjs`'s REC-136 transport stand-in REMOVED, its journey now picks from the rendered picker (79/0);…  
-  `docs/development/CIVICOS_UI_STATE.md:105`
+  `docs/development/CIVICOS_UI_STATE.md:145`
 - **IC-155** — CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md`…  
   `docs/development/CLAIMS.md:14228`
 - **IC-162** · 2026-09-19 — IC-162 · I3: DEC-63 AS AMENDED — a run whose context is a QUESTION consults NO project: `airunopen` / `airuntick` / `airunclose` no longer refuse `AI_RUN_NOT_PROJECT_MEMBER` (C-22.8) over an inquiry; `projectGate.ground` over a question is `INQUIRY` (the value `PROJECTLESS` is removed, and `PARTICIPANT` is now said…  
   `docs/development/INTERFACE-CHANGES.md:11798`
 - **IC-164** — suite that pinned a sequential `CASE`/`DRAFT`/`RVG`/`TASK` id CORRECTED at its site with a dated reason. `bio-plane/scripts/coverage.mjs` floors only, from its own print. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-164), `MEASUREMENTS.md` (the…  
-  `docs/development/CLAIMS.md:14969`
+  `docs/development/CLAIMS.md:14996`
 - **IC-165** · 2026-09-19 — `TASK`'s gating is RULED CORRECT by BOB #17 (`63926201`, 2026-09-19) and STAYS.** It was raised as a question at this resolution — Membership v2 §7 enumerated CASE/DRAFT/RVG/PROJ — and BOB answered that the rule is the PREDICATE preceding that list (*every prefix whose objects a read withholds from some caller*),…  
   `docs/development/INTERFACE-CHANGES.md:12061`
 ## C-
@@ -861,7 +861,7 @@ authority is the file named, never this one.
 - **C-18.5** — C-18.5's pattern copied field-for-field, the routing is the RULED order, and the tests are the both-ways C-18.5 tests with TASK fixtures.  
   `docs/development/INBOX-GRAMMAR.md:168`
 - **C-18.9** — conformant); C-18.9 implements the RULED publication fence and refused an undetermined document at verified in a both-ways test.  
-  `docs/development/CIVICOS_UI_STATE.md:1038`
+  `docs/development/CIVICOS_UI_STATE.md:1078`
 - **C-19.1** — resolves each queued capture through `register`, applies the RULED routing order (`#routeTask`, `:6754-6780`), runs the C-19.1 grammar, writes or FOLDS a task | `tasks` rows; `created`/`folded`/`refused`/`waiting` lists | **OBLIGATION** (member task) | **YES** |  
   `docs/archive/research/MACHINE-PROCESSES.md:75`
 - **C-19.1** — resolves each queued capture, applies the RULED routing order, runs the C-19.1 grammar, writes or FOLDS a task | `tasks` | **OBLIGATION** | (`taskdrain` exists as an op; the alarm does not use it) | the one alarm | BUILT — the **only** notification generator with a producer | M1 · landed |  
@@ -875,7 +875,7 @@ authority is the file named, never this one.
 - **C-22** — CORRECTED, never exempted**, with the reason at the site: the family grew to TEN and, more to the point, CHANGED SUBJECT.  
   `docs/development/CLAIMS.md:7398`
 - **C-22** — the claim, each a ratchet that failed naming itself and was CORRECTED, never exempted: `bio-plane/test/airun.test.mjs` ARM D1 (the C-22 family) and `bio-plane/test/run-conditions.test.mjs` ARM W3 (`#aiRunInSight` classified AUTHORISES); `docs/DECIDED.md` regenerated.  
-  `docs/development/CLAIMS.md:15018`
+  `docs/development/CLAIMS.md:15045`
 - **C-22** — Two ratchets CORRECTED from their own failure output, never exempted: `airun.test.mjs` ARM D1 (the C-22 family: C-22.12 added; C-22.11 is REC-153's and joins at integration) and `run-conditions.test.mjs` ARM W3 (a new reader of `ai_runs`, `#aiRunInSight`, classified AUTHORISES).  
   `docs/development/INTERFACE-CHANGES.md:12105`
 - **C-22.9** — has now fired on three consecutive items — was CORRECTED, never exempted. - **C-22.9 `OBS_AUTHORITY_UNNAMED`** — a look the record cannot say WHY it made is not recorded.  
@@ -1033,7 +1033,7 @@ authority is the file named, never this one.
 - **REC-60** · 2026-08-07 — plied none — `op=resolutions`, `op=concerns`, `op=connections` · PROPOSED, RESPONSES, RESOLUTION, CHANGING, CHANGED AND SETTLED 2026-08-07 (REC-60, D-225)  
   `docs/development/INTERFACE-CHANGES.md:1420`
 - **REC-60** · 2026-08-07 — (SETTLED, I3 8.1.0 → 9.0.0 → 10.0.0): `resolutionsForCapture`, `documentsConcerning` and `connectionsFor` each clamp to 500 by default and 5,000 at the ceiling, and publish `limit` AFTER clamping beside `truncated`.  
-  `docs/development/INVESTIGATIVE-SESSION.md:1212`
+  `docs/development/INVESTIGATIVE-SESSION.md:1228`
 - **REC-64** · 2026-08-07 — enactment drafted: see IS-SWEEP-2026-08-07.md §6 (the decisions audit, 'DECIDED NOT ENACTED' table) for what enactment owes. enacted: 2026-08-07 · CONDUCT — **REC-64 queued**: every refusable condition carries an error code with a canned translation, and **an untranslated code FAILS THE HARNESS**, which the ruling…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3010`
 - **REC-64** · 2026-08-08 — BUILD-TIME vs RUNTIME DECIDED AND REASONED AT THE SITE: RUNTIME, from the checks module** — a baked map is a copy, **and a sovereign instance on an older surface would freeze the sentence at ITS build, so two instances would tell a member different things.** That is the distribution model deciding an implementation…  
@@ -1343,7 +1343,7 @@ authority is the file named, never this one.
 - **UI-64** · 2026-09-17 — THREE DEFECTS IN ITS OWN INSTRUMENT, CORRECTED RATHER THAN DECLARED AWAY:** the suite was calling the handler DIRECTLY, so arm A left sections 4–5 green with the door gone; `rc.includes(at)` was **an equality that cost nothing, because the two timestamps are the same value**; and `clickRendered` THREW instead of…  
   `docs/archive/ledgers/QUEUE-closed.md:776`
 - **UI-65** · 2026-09-18 — `project-workspace.test.mjs` §6's fork arm, which drove a typed `newId`, is CORRECTED, not exempted. v92, 2026-09-18 session, thread UI, UI-65.  
-  `docs/development/CIVICOS_UI_STATE.md:74`
+  `docs/development/CIVICOS_UI_STATE.md:114`
 - **UI-66** — Every caller that chose a project id is CORRECTED at its site with its reason, never exempted.  
   `docs/archive/ledgers/QUEUE-closed.md:2524`
 ## FW-
@@ -1505,7 +1505,7 @@ authority is the file named, never this one.
 - **IS-5** · 2026-08-07 — THE NEGATIVE CONTROL WAS CORRECTED 2026-08-07 BECAUSE THE FIRST DRAFT WOULD HAVE PASSED VACUOUSLY, and that correction is the most important sentence in this item.** `VERIFICATION.md` rule 3a: a rule enforced in N places carries an assertion at EACH place — and **an `ai` credential refused at the CREDENTIAL layer…  
   `docs/archive/ledgers/QUEUE-2026-08.md:240`
 - **IS-8** · 2026-08-07 — RULED NO, 2026-08-07: the published case carries the current version only and states nothing about hidden alternatives — prune already only hides, so the record itself loses nothing.**  
-  `docs/development/INVESTIGATIVE-SESSION.md:765`
+  `docs/development/INVESTIGATIVE-SESSION.md:781`
 - **IS-9** — SUPERSEDED, kept for its wave history: slot A = **FL-3** (the run harness, IS-9 — W7, and all four of its dependencies PL-3/PL-5/PL-9/FL-2 have landed); slot B = **REC-75** (D-234 — the substance gate defeated by a quotation mark).  
   `docs/archive/ledgers/QUEUE-2026-08.md:468`
 ## M0-
@@ -1966,17 +1966,17 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-31** — "RULED" and "open question" about one thing is how a settled decision comes to be doubted later, and Bob doubted it on 2026-07-31 for exactly this reason.  
   `docs/development/CAPTURE-SCALING.md:451`
 - TWO CLAIMS THIS SURFACE WAS ALREADY MAKING WERE CORRECTED, not extended: the `finder` registry declared `content` among its levels and promised "documents and their extracted content" while reaching no captured text at all, and the FIND recipe made the same promise in one step — now two steps, because they are two…  
-  `docs/development/CIVICOS_UI_STATE.md:205`
+  `docs/development/CIVICOS_UI_STATE.md:245`
 - ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.  
-  `docs/development/CIVICOS_UI_STATE.md:409`
+  `docs/development/CIVICOS_UI_STATE.md:449`
 - `handle` DECIDED PRODUCT-WIDE AND KEPT, WITH THE DRIFT ASSERTION AS THE ITEM — the naming is settled by a machine-guarded assertion rather than by a note, so the next session cannot re-litigate it by accident.  
-  `docs/development/CIVICOS_UI_STATE.md:642`
+  `docs/development/CIVICOS_UI_STATE.md:682`
 - BOB'S THREE RULINGS AT THE END OF THE SESSION, AND THE MEASUREMENT THAT SETTLED THEM.  
-  `docs/development/CIVICOS_UI_STATE.md:1204`
+  `docs/development/CIVICOS_UI_STATE.md:1244`
 - and a document REPLACED or WITHDRAWN are events; a body being renamed is a notice; a document ARRIVING and a meeting being scheduled are routine, because those are the normal course of business.  
-  `docs/development/CIVICOS_UI_STATE.md:1448`
+  `docs/development/CIVICOS_UI_STATE.md:1488`
 - RULINGS SETTLED THIS SESSION, do not re-ask.  
-  `docs/development/CIVICOS_UI_STATE.md:1554`
+  `docs/development/CIVICOS_UI_STATE.md:1594`
 - **2026-09-19** — deployed and live-verified); the `latest` pointer mechanism and 17 lessons in `kickoffs/DIST.md`; `migrate-released`'s WITHDRAWN correction.  
   `docs/development/CLAIMS.md:53`
 - is CORRECTED, never exempted. No other arm touched. `.gitignore` — one pattern (`.ui*-harness/`) for negative-control pens, in the block that already documents transient harness directories under `civicos-ui/`. `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not  
@@ -2176,13 +2176,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - ratified a bundle outside a ratified case, CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs:…  
   `docs/development/CLAIMS.md:14497`
 - CORRECTED; every suite that chose a project id CORRECTED at its site with a dated reason, never exempted (including the shared fixture `bio-plane/test/publishingproject.mjs`); `civicos-ui/test/**` fixtures only where a plane-backed fixture chose a project id.  
-  `docs/development/CLAIMS.md:14704`
+  `docs/development/CLAIMS.md:14731`
 - this merge) CORRECTED for minted ids and its control re-run AS DECLARED with identical figures.  
-  `docs/development/CLAIMS.md:14769`
+  `docs/development/CLAIMS.md:14796`
 - driver; `civicos-ui/test/project-workspace.test.mjs` §6's fork arm CORRECTED (it drove a typed `newId`); `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own print on a committed tree. - Docs: `docs/development/CIVICOS_UI_STATE.md` (prepend), `BIO_Membership_Architecture_v2.md` front matter and §7's…  
-  `docs/development/CLAIMS.md:14797`
+  `docs/development/CLAIMS.md:14824`
 - Tests: `bio-plane/test/project-mint.test.mjs` §6 CORRECTED (it read the PROJ counter through `op=allocid`, which now refuses PROJ) and its control driver; a new `bio-plane/test/opaque-ids.test.mjs` and `opaque-ids.control.mjs`; any suite that pinned a sequential `CASE`/`DRAFT`/`RVG`/`TASK` id CORRECTED at its site…  
-  `docs/development/CLAIMS.md:14967`
+  `docs/development/CLAIMS.md:14994`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2366,17 +2366,17 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-07** — `[BOB-2 — RULED NO 2026-08-07: current version only, no disclosure of hidden alternatives]` — §13. 3b.  
   `docs/development/INVESTIGATIVE-SESSION.md:389`
 - **2026-08-07** — `[BOB-2 — RULED NO 2026-08-07 (SWEEP §4c)]` — WHAT THE PUBLISHED CASE SAYS ABOUT PRUNED ALTERNATIVES.** R4's division rule is that a published child names its parent and its siblings, because division without disclosure is *"a laundering path with a tidy name"* — and a published case that discloses  
-  `docs/development/INVESTIGATIVE-SESSION.md:757`
+  `docs/development/INVESTIGATIVE-SESSION.md:773`
 - **2026-08-07** — `[BOB-3 — RULED 2026-08-07 (SWEEP §4c)]` — robots.txt and "areas anybody can go through."** Measured: Oakland's robots.txt carries 82 Disallow rules of which **63 are Public Ethics Commission publications**, including sixteen years of annual reports.  
-  `docs/development/INVESTIGATIVE-SESSION.md:956`
+  `docs/development/INVESTIGATIVE-SESSION.md:972`
 - 16 · Positions taken and WITHDRAWN | withdrawn | why it fell | | --- | --- |  
-  `docs/development/INVESTIGATIVE-SESSION.md:1232`
+  `docs/development/INVESTIGATIVE-SESSION.md:1248`
 - **2026-08-07** — robots.txt, which is `[BOB-3 — RULED 2026-08-07: disallows do not bar capture of public documents]`** (§14a). 4. ~~Review burden.~~ **ANSWERED** — D-217a's derivation tree with the prune offer (§6.3a, prune hides per SWEEP §4b), plus the proposal rules: aggregate never multiply, age  
-  `docs/development/INVESTIGATIVE-SESSION.md:1283`
+  `docs/development/INVESTIGATIVE-SESSION.md:1299`
 - **2026-08-07** — `[BOB-2 — RULED NO 2026-08-07]`** — the published case carries the current version only, no disclosure of hidden alternatives (§13). 7.  
-  `docs/development/INVESTIGATIVE-SESSION.md:1290`
+  `docs/development/INVESTIGATIVE-SESSION.md:1306`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
-  `docs/development/INVESTIGATIVE-SESSION.md:1302`
+  `docs/development/INVESTIGATIVE-SESSION.md:1318`
 - FLEET's 574 MB was WITHDRAWN: disk recovered to 9.5 GiB with zero gates running.  
   `docs/development/kickoffs/BOB-NEXT.md:53`
 - WHAT BOB #17 DECIDED — all folded into home documents; `decided.mjs` finds every one **Rulings, each with the sentence that decides it:** - **TASK stays gated** (Membership v2 §7) — the set is a PREDICATE, not a list.  

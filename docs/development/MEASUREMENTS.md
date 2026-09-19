@@ -17199,3 +17199,39 @@ Corroborated by artifact rather than by the one tool: `bio-plane/test/projection
 remote branch list, which is D-288's own stated reason for leaving 134 inherited branches alone. **Bound: this judges
 these three only** — not the nine unmerged branches `CONDUCT-NEXT.md` lists, whose content is still unjudged, and not
 any branch created after this reading.
+
+## 2026-09-19 · UI-67 — the UI harness baseline, and `bound-sweep` ARM G across this landing
+
+Measured on `ui-67-question-page-npc`, base `origin/main` @ `4dd314ff`, worktree
+`.claude/worktrees/hungry-liskov-e0108c`, `npm ci` fresh in `bio-plane/`, `pdf-worker/` and `ocr-worker/` (30 / 25 / 26
+entries, each a real directory), disk 8.0 GiB free after the three installs.
+
+**Instrument: `node civicos-ui/test/run.mjs` from the repo root, exit read UNPIPED.** The baseline was taken by writing
+`git show HEAD:civicos-ui/app.html` over the working file with this session's copy held aside, and restored by `cp` and
+verified by sha256 AND `cmp` — `git checkout --` was NOT used (`CLAUDE.md` §7).
+
+- **BASELINE, `app.html` at `4dd314ff`: 55 suites PASS, 0 FAIL, exit 0.** This corrects the figure carried in the UI-65
+  claim block (54 PASS, 2026-09-18) — one suite has been added to the estate since, and the number is re-measured rather
+  than carried, which is the practice that found it.
+- **AFTER this landing's `app.html` change, before the new suite: 55 PASS, 0 FAIL, exit 0** — no existing suite moved.
+- **FINAL, with `question-npc.test.mjs` added: 56 PASS, 0 FAIL, exit 0.** Delta attributed per suite by re-running the
+  baseline, never by subtraction: the whole of the +1 is the new suite.
+
+**Instrument: `node civicos-ui/test/bound-sweep.test.mjs`, ARM G's own printed buckets.** The concern the row names is
+that a new read of the no-project conclusion would land in ARM G's `CARRIED-OUT-WHOLE` bucket, whose membership is pinned
+by name.
+
+- **Before and after this landing, identical:** 6 files · 720 named functions · 21 unconditionally-capped ops on the
+  plane's roster · 15 call sites reaching one · buckets `CARRIED-OUT-WHOLE 3 · CARRIED-BY-CALLEE 2 · STATED-BY-CALLEE 5
+  · STATED-HERE 5` · findings 0. Reach deltas unchanged (synthetic 0 -> 1; the five bound statements removed 0 -> 6).
+- **Why it did not move, and it is a fact about the change rather than luck:** the question's page reads
+  `no_project_conclusion` off `getProjection`, which it already called. The landing adds **no `recR` call at all**, so
+  ARM G's walk — which anchors on `recR("<op>"` — sees exactly what it saw before. No exemption was added, and none
+  would have been the fix.
+
+**Instrument: `node civicos-ui/test/question-npc.control.mjs`.** Six arms, each alone, each restored from a pristine copy
+verified by sha256 and `cmp` (`a6c5181a…`, 1403728 bytes, clean after every arm). All six AS DECLARED, exit 0 — BASELINE
+49/0 · A 47/2 · B 37/12 · C 41/8 · D 44/5 · E (over-strictness) 49/0. **A finding about the instrument:** the first run
+returned 48 for arms B and D against a baseline of 49, because one assertion sat inside a bare `if` and was SKIPPED under
+those mutations rather than failed. Only comparing arm totals to the baseline's showed it. That is the second time this
+estate has paid for that shape (`bound-sweep` ARM G records the first).

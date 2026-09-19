@@ -14574,7 +14574,34 @@ docs and `tools/readbudget.mjs` only) at `3147a25a`: **254/254 suites green · 1
 REC-142 -> UI DELEGATION (the question's page) is open.
 
 ### DELEGATION 2026-09-18 RECORD (REC-142) -> UI: **ON A QUESTION CONCLUDED WITH NO PROJECT, THE QUESTION'S PAGE NOW RECEIVES `conclude` FOR A MEMBER OF A CITING PROJECT — AND ITS NO-PROJECT DIALOG WILL BE REFUSED THERE**
-**open as of 2026-09-18** — REC-142 (IC-159) publishes `conclude`'s PROJECT arm on a concluded inquiry; the question's page hosts `conclude` as the NO-PROJECT act, and that relationship cannot conclude twice.
+**DISCHARGED 2026-09-19 by UI-67 (branch `ui-67-question-page-npc`, no IC — and the reason there is none is the
+finding)** — UI took the SECOND of the two shapes offered: the control is ROUTED at the member's project
+relationship instead of opening the no-project dialog. `actBarHtml` gained an `opts.routed` map beside its
+`elsewhere` list; `openInquiry` passes `conclude` into it, and the act is still NAMED to the member under the
+plane's own label, with a working `stanceOpen(<PROJ>, <INQ>)` control per project the record's OWN reverse index
+(`op=backlinks`, already read by this page, gated to this credential) names as drawing on the question. Where the
+index names none, the sentence says so rather than inventing an address, and the page never claims which of them
+the member has joined — the record does not publish that here.
+
+**WHAT DECIDES THE ROUTING IS THE PLANE'S ANSWER, NOT THE QUESTION'S STATE, and that is the part this delegation
+named as the trap.** The block below says UI must not *"decide from the question's state on its own that the
+no-project arm is unavailable"*, and offers: *"If UI needs the relationship PUBLISHED per act, say so back to
+RECORD: that is a further I3 change."* **It is already published, and it arrived while this delegation was open.**
+REC-144 (IC-160, 2026-09-19, UI-67's own dependency) puts `no_project_conclusion` on the single-bundle
+`op=projection` — the no-project RELATIONSHIP as an object (`relationship: "no_project"`, `state: "concluded"`),
+computed by `#noProjectConclusionOf` under the gate the row already passed. That is the relationship field the
+delegation offered to build, reaching the surface from a different read, so **no further I3 change is needed and
+none is proposed.** The surface reads a published relationship; it computes no rule.
+
+Driven end to end against the real plane in `civicos-ui/test/question-npc.test.mjs` §4 (49/0): the plane's refusal
+is DRIVEN (`op=conclude` with no `project=` on the concluded question -> `ILLEGAL_TRANSITION`), `op=affordances` is
+confirmed to publish `conclude` there for that member (REC-142's arm, so the page is not routing an act nobody was
+offered), no rendered control routes to the no-project dialog, the act is still named with the plane's label, the
+routed control is DRIVEN and opens the project's own view with its `conclude` box carried — and the
+over-strictness arm holds that on an UNCONCLUDED question the same member is still offered the working dialog, so
+the fix is not "never offer `conclude`". Negative control arm (D) removes the routing and fails those arms by name.
+(It was open because REC-142 (IC-159) publishes `conclude`'s PROJECT arm on a concluded inquiry, while the question's
+page hosts `conclude` as the NO-PROJECT act — and that relationship cannot conclude twice.)
 
 Measured at the code on `rec142/affordances-concluded` (base `3dee1fdb`): `civicos-ui/app.html`'s surface registry places
 `conclude` on TWO surfaces (*"the question's page carries the no-project act, this one the project's"*). The stance
@@ -15073,3 +15100,38 @@ why: REC-152 (IC-165, `airuntick`/`airunclose` are the run's principal's acts �
   REC-153 (IC-163, `aiRunOpen` checks the context kind — AUTHORITY) are on `main` and in NO release. CONDUCT #7
   named REC-152 a security/disclosure closing at integration, which makes this a CUT NOW under WHEN DIST CUTS,
   not a batch. Bob's "cut and deploy nothing new before the account moves" is satisfied: this IS that account.
+
+## CLAIM 2026-09-19 UI (UI-67 — the question's page reads the no-project conclusion from `op=projection`, invalidates its cached projection on a conclusion or a withdrawal, and offers no no-project dialog the plane then refuses)
+
+Worker spawned by CONDUCT #7, isolated worktree `.claude/worktrees/hungry-liskov-e0108c`, branch
+**`ui-67-question-page-npc`**, base `origin/main` @ `4dd314ff`. `npm ci` in `bio-plane/`, `pdf-worker/` and
+`ocr-worker/`, each `node_modules` verified a real directory (30 / 25 / 26 entries), `df -h` 8.0 GiB free after.
+Design authority: `docs/development/INVESTIGATIVE-SESSION.md` §7.1, the paragraph *"The question's page reads the
+no-project conclusion from `op=projection`"* (BOB #16, `7c150df0`) and the REC-144 built paragraph under it.
+Claimed BY SITE:
+
+- `civicos-ui/app.html` — `getProjection`/`PROJ_CACHE` (one added invalidator, `projForget`); `openInquiry`'s
+  render only (one added section, between the falsifier section and "What relies on this", plus the act-bar
+  `opts`); `actBarHtml`'s `opts` handling (one added `routed` set, no change to what the plane publishes);
+  `doConclude` and `stanceConclude` / `stanceWithdraw` (the invalidation call only); the comment block above
+  `noProjectConclusionHtml`. **NOT** the body of `noProjectConclusionHtml` itself, NOT `openConclude` /
+  `concludePaint` / `concludeParams`, NOT the version-review region, NOT the queue block, NOT the elicitation,
+  NOT `SURFACES` (no new surface and no newly-surfaced act), NOT any other surface.
+- `civicos-ui/test/question-npc.test.mjs` and `civicos-ui/test/question-npc.control.mjs` — both NEW.
+- `docs/development/CIVICOS_UI_STATE.md` (a prepended entry), `docs/development/MEASUREMENTS.md` (an appended
+  entry), this block, and the **DISCHARGED** line written inside the `DELEGATION 2026-09-18 RECORD (REC-142) -> UI`
+  block above (that block only — nothing else in REC-142's claim).
+- `docs/DECIDED.md` on regeneration only (`node tools/decided.mjs`) — it was FRESH on `origin/main` @ `4dd314ff`
+  and this landing's inserted prose moved 32 citation line numbers. Never merged; regenerated.
+- `docs/development/DEBT.md` — ONE appended row, **D-433** (id minted with `node tools/mintid.mjs D`), the
+  instrument defect this landing MEASURED in `civicos-ui/check-refusal-codes.mjs` ARM B rule R3, with its fix
+  named on the row. Nothing else in that file is touched. **FOR SCHEDULER, through CONDUCT:** D-433 is a defect
+  found in passing, diagnosed to a named fix and routed rather than parked (`CLAUDE.md` §4); it is UI's own file
+  and UI's own owner, and it wants a row in the build plan, not a place on a list.
+- ADDENDUM: `docs/development/INVESTIGATIVE-SESSION.md` front matter and §7.1's built paragraph — the UI half's
+  "Built" sentence only.
+
+**NOT CLAIMED:** all of `bio-plane/**` (REC-144 is the plane half and is consumed, not edited, and the canned
+translation D-433's measurement brushes against is RECORD's `checks/bio-checks.mjs`, not touched here),
+`docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `newgroup/**`, `release/**`, and
+`civicos-ui/check-refusal-codes.mjs` itself — D-433 is REPORTED, not fixed under this claim.
