@@ -14395,3 +14395,27 @@ publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no contr
 with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
 concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
 either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.
+
+## CLAIM 2026-09-18 RECORD (REC-142 — `op=affordances` publishes a PROJECT's `conclude` on a question whose own state is already `concluded`; discharges the DELEGATION 2026-09-18 UI (UI-65) -> RECORD)
+
+claimed: 2026-09-18 by the REC-142 worker (spawned by CONDUCT #6), branch `rec142/affordances-concluded`, base
+`3dee1fdb`. Paths: `bio-plane/src/affordances.mjs` (the `conclude` ACTS entry only), `bio-plane/src/store.mjs`
+(`affordanceFacts` — one new FACT — and one new predicate beside `#isJoinedParticipant`; `conclude()` is NOT edited),
+`bio-plane/dist/**` (the rebuilt bundle), a NEW suite `bio-plane/test/conclude-project-arm.test.mjs` and its
+`.control.mjs`, `bio-plane/scripts/coverage.mjs` (floors only, from its own print), `docs/development/INTERFACE-CHANGES.md`
+(this item's IC row), `docs/development/INVESTIGATIVE-SESSION.md` (§7.1's built note and front matter), and the UI-65
+DELEGATION block above (its discharge, in its own block). NOT claimed: `bio-plane/src/index.mjs` (REC-141 is live there),
+`civicos-ui/**`, `QUEUE.md`, `release/`, `newgroup/`.
+
+**REC-142 DECIDED, ON THIS CLAIM, BEFORE ANY CODE — the shape: `conclude` IS PUBLISHED ON A CONCLUDED INQUIRY (its PROJECT
+arm); NO separate act id.** Why: (1) it is ONE act through ONE op — `op=conclude&project=` is the write the store
+already accepts there (REC-124), and the relationship is the act's PARAMETER exactly as `withdrawconclusion` and
+`versioncurrent` leave WHICH project to theirs; (2) every table that decorates an act keys it BY ITS OP ID (`NEEDS`,
+`SESSION_OPS`, `RUNGS`, `POSITIONAL_ACTS`), so a separate act id is either a SECOND OP for the same write — two doors
+for one act, this repository's most-repeated drift class — or an act id that names no op, breaking the id = op
+invariant every consumer reads; (3) the surface consumes it with NO change (UI-65 already hosts `conclude` on the
+stance surface). The arm is NARROWED by a new positional FACT, D-310's shape: offered on a concluded inquiry only to a
+caller who has JOINED some project it can see that LIVE-cites the question — the weakest fact under which no `project=`
+could succeed is excluded (a stranger), and nothing tighter (reading, current, claim stay act-time refusals the store
+words, the release precedent). The liar refused: NO `concluded -> concluded` edge; the no-project relationship still
+cannot conclude twice, asserted through the op. IC: additive (an act published where none was).

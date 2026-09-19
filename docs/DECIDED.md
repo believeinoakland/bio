@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1176 rulings across 92 documents.
+1177 rulings across 92 documents.
 
 ## DEC-
 
@@ -1174,6 +1174,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Membership_Architecture_v2.md:15`
 - **REC-139** — NOT BUILT, AND REPORTED AS A DESIGN GAP RATHER THAN DECIDED:** *"The plane MINTS project ids (a caller no longer chooses one)"* does not say whether a caller-supplied id for a NEW project is REFUSED or IGNORED, and REC-139's row says STOP on that.  
   `docs/development/INTERFACE-CHANGES.md:11488`
+- **REC-142** — REC-142 DECIDED, ON THIS CLAIM, BEFORE ANY CODE — the shape: `conclude` IS PUBLISHED ON A CONCLUDED INQUIRY (its PROJECT arm); NO separate act id.** Why: (1) it is ONE act through ONE op — `op=conclude&project=` is the write the store already accepts there (REC-124), and the relationship is the act's PARAMETER…  
+  `docs/development/CLAIMS.md:14410`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
