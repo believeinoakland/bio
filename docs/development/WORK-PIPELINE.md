@@ -18,7 +18,7 @@ narrative. `DEBT.md` 504 KB holding 222 open rows averaging 2.3 KB. No session c
 | file | holds | size | read |
 | --- | --- | --- | --- |
 | `docs/development/QUEUE.md` — **the cache** | the BOB INBOX's UNDRAINED entries; then at most **8** rows: those `running`, then the next `queued` rows whose `depends-on` is met, in order | ≤ 40 KB; a row ≤ 3 KB | **WHOLE, by every session** |
-| `docs/development/BACKLOG.md` — **everything still to do** | every open item NOT in the cache, in the order it will be processed (top = next), `blocked` rows included with what unblocks them | ≤ 150 KB; a row ≤ 2 KB | **WHOLE, by CONDUCT at every refill and by BOB when ordering**; by id otherwise |
+| `docs/development/BACKLOG.md` — **everything still to do** | every open item NOT in the cache, in the order it will be processed (top = next), `blocked` rows included with what unblocks them | ≤ 150 KB; a row ≤ 2 KB | **WHOLE, by SCHEDULER at every replenish and when ordering** (corrected 2026-09-19 by BOB #16: it read CONDUCT, before SCHEDULER existed); by id otherwise |
 | `docs/archive/ledgers/QUEUE-closed*.md` — **what has been done** | every `done` / `superseded` row, verbatim, as it stood when it closed | unbounded | **LOOKED UP** (`node tools/ledger.mjs find <ID>`) |
 
 A row is FIELDS, not narrative: id · state · title (one line) · milestone · interface · design (a SECTION) ·
@@ -82,7 +82,7 @@ new backlog items.
 LED-4 (*open rows cut to their fields and ordered*) is subsumed: its cut and its ordering are steps 2–3 of the migration
 below. LED-7 (the fold, §3) follows LED-6, since it writes into the backlog LED-6 creates. The QUEUE budget in `tools/ledger.mjs` (150 KB) moves to `BACKLOG.md`; the cache gets 40 KB.
 
-## 5. The migration — one item, CONDUCT's own act on CONDUCT's own files, performed by hand with the tool
+## 5. The migration — one item, SCHEDULER's act on its own files, performed by hand with the tool (transferred from CONDUCT 2026-09-18, `kickoffs/SCHEDULER.md`)
 
 **LED-6.** (1) Build `ledger.mjs refill`, the `BACKLOG` ledger, `find` across all three, and the five invariant arms,
 each with a negative control. (2) Move every non-row block of `QUEUE.md` (handover, per-area narrative, drained inbox
