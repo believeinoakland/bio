@@ -552,6 +552,15 @@ token and not to the founder's session). **Design:**
   (*"publishing currently runs through the group's operator"*) until the member-facing ceremony exists. **An enrolled
   administrator with no role in the project may not deliver** — DEC-33 names the group's operator, not every
   administrator, and administrators direct nothing (§4).
+- **What a refusal may say about a project the caller cannot see** (decided 2026-09-18 by BOB #15 from REC-138/D-428,
+  except the one point marked OPEN). A refusal never names or describes a project the caller cannot see: `NAME_TAKEN`
+  echoes neither the other project's id nor its title. **The plane MINTS project ids** (a caller no longer chooses one),
+  which closes the `EXISTS` channel outright. An inquiry run's report lists only the citing projects its member can
+  see, and counts none of the others: DEC-63 decides who may START a run and requires no such disclosure, so a run naming
+  a hidden project is a §7.9 defect, not a conflict between rulings. **OPEN, and Bob's (two of his July 26 rulings meet):**
+  under §7.1's instance-wide uniqueness, refusing a name tells an uninvited member that a project with THAT name exists,
+  which §7.9 says it may not learn. Running provisionally: uniqueness holds, and the refusal reveals only the name the
+  caller supplied.
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
