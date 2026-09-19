@@ -90,4 +90,7 @@ entries) VERBATIM to the archive, conserving line multisets as LED-3 did. (3) Cu
 text moving verbatim to the archive — and order them (BOB checks the order against `status.mjs` before it lands). (4)
 Split: `running` + the first runnable rows to the cache, the rest to `BACKLOG.md`.
 **Accepts when:** every invariant arm passes and fails on its control; the id multiset of open ∪ archived is identical
-before and after; `QUEUE.md` ≤ 40 KB; `tools/readbudget.mjs` adds `QUEUE.md` to the read-whole set.
+before and after; `QUEUE.md` ≤ 40 KB. **CORRECTED 2026-09-19 by BOB #16 at LED-6's close:** this clause first said `tools/readbudget.mjs`
+adds `QUEUE.md` to the read-whole set; it does NOT, because `ledger.mjs`'s P5 already produces the cache's budget and a
+second producer of one quantity is the defect `BOB.md` rule 7 names. `QUEUE.md` is read whole by `CLAUDE.md` §1 and bounded
+by P5 alone.
