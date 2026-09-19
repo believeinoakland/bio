@@ -307,6 +307,16 @@ function harvest(o){
   if (!o || typeof o !== "object") return;
   if (typeof o.detail === "string" && o.detail) SAID.add(o.detail);
   if (typeof o.error === "string" && o.error) SAID.add(o.error);
+  /* CORRECTED 2026-09-19 (UI-72), never exempted. This corpus held `detail` and
+     `error` and NOT `translation`, and that was wrong from the day DEC-49 landed:
+     the question section 7 asks is whether a sentence the member read CAME OVER
+     THE WIRE, and a canned `translation` comes over the wire on the same answer,
+     from the plane's own check row. Until UI-72 the omission was invisible because
+     no surface rendered a translation; the moment `actRefusalHtml` preferred one,
+     this sweep reported the PLANE'S OWN SENTENCE as "invented" by the surface —
+     an instrument naming the wrong culprit rather than a defect. The arm still
+     bites: a sentence app.html composes is in neither field. */
+  if (typeof o.translation === "string" && o.translation) SAID.add(o.translation);
   for (const v of Object.values(o)) if (v && typeof v === "object") harvest(v);
 }
 const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,
@@ -422,11 +432,22 @@ ok("and the commit is ABSENT, as it was before this item", !commitPresent(d0));
    own order, is the one this item is about. */
 await U.concludeAuthor("conclusion", "Nothing in the record shows a concern was raised, and nothing shows one was not.");
 const d1 = capture(dlg());
+/* CORRECTED 2026-09-19 (UI-72), never exempted: pinned on `translation`, not on
+   `detail`. THE OLD ASSERTION WAS RIGHT ABOUT THE RULE AND WRONG ABOUT THE FIELD.
+   Both are the plane's own sentences — nothing here is composed — but `detail` is
+   written for A CALLER OF THE OP and this one ends by naming the query parameter
+   `no_falsifier=1`, which is what a member was being shown at the one place a
+   person meets the record. DEC-49 licenses the canned `translation`, which is the
+   plane's MEMBER-FACING sentence for the same code, and `actRefusalHtml` now
+   prefers it on every act surface. The byte-for-byte clause is unchanged and is
+   the load-bearing half: whichever field is rendered, it is rendered whole. */
 ok("THE CONDITION IS SURFACED: the plane's NO_FALSIFIER refusal is rendered to the member",
-  /NO_FALSIFIER/.test(d1) && d1.includes(U.esc(PLANE_NO_FALSIFIER.detail)),
-  `the plane said ${JSON.stringify(PLANE_NO_FALSIFIER.detail)}`);
+  /NO_FALSIFIER/.test(d1) && d1.includes(U.esc(PLANE_NO_FALSIFIER.translation)),
+  `the plane's member-facing sentence is ${JSON.stringify(PLANE_NO_FALSIFIER.translation)}`);
 ok("and it is rendered BYTE-FOR-BYTE as the plane sent it — the surface writes no sentence of its own about the condition",
-  d1.includes(`<div class="intent-ref-why">${U.esc(PLANE_NO_FALSIFIER.detail)}</div>`));
+  d1.includes(`<div class="intent-ref-why">${U.esc(PLANE_NO_FALSIFIER.translation)}</div>`));
+ok("and the CALLER'S sentence — the one naming the op's own `no_falsifier=1` parameter — is NOT what the member reads",
+  !d1.includes(U.esc(PLANE_NO_FALSIFIER.detail)));
 ok("THE DOOR IS OFFERED, and it is offered HERE — under the refusal that names it", doorOffered(d1));
 ok("the commit is still ABSENT while the plane refuses", !commitPresent(d1));
 ok("nothing has been written: the question is still open",
@@ -472,7 +493,7 @@ await clickRendered(d2, "cx-nofals");      // the rendered control, run the way 
 const d3 = capture(dlg());
 ok("THE OVERRIDE IS TAKEN and the commit becomes reachable", overrideStanding(d3) && commitPresent(d3));
 ok("THE CONDITION IS STILL ON SCREEN AT THE MOMENT OF COMMIT, in the plane's own words — not shown once and hidden",
-  d3.includes(`<div class="intent-ref-why">${U.esc(PLANE_NO_FALSIFIER.detail)}</div>`),
+  d3.includes(`<div class="intent-ref-why">${U.esc(PLANE_NO_FALSIFIER.translation)}</div>`),   /* UI-72: the member-facing sentence, as above */
   `the standing block rendered: ${JSON.stringify((/data-nofals="taken"[\s\S]*?(?=<button class="btn" id="cx-go")/.exec(d3) || [""])[0].slice(0, 400))}`);
 ok("the way back is offered beside it — an override a member cannot withdraw is a gate wearing the other costume",
   /id="cx-nofals-off"/.test(d3));
@@ -490,7 +511,7 @@ ok("the falsifier the surface composes is genuinely EMPTY — the override is no
 await U.concludeAuthor("falsifier", "A ledger export showing the concern in writing.");
 const d4 = capture(dlg());
 ok("stating a falsifier while the override stands is refused BY THE PLANE, in the plane's words",
-  /FALSIFIER_AND_NONE_STATED/.test(d4) && d4.includes(U.esc(PLANE_BOTH.detail)));
+  /FALSIFIER_AND_NONE_STATED/.test(d4) && d4.includes(U.esc(PLANE_BOTH.translation)));   /* UI-72: as above */
 ok("and the surface clears NEITHER statement on the member's behalf",
   overrideStanding(d4) && U.CONCL().falsifierText === "A ledger export showing the concern in writing.");
 ok("the commit is absent while those two statements stand together", !commitPresent(d4));
@@ -649,8 +670,10 @@ const invented = RENDERED.filter((s) => ![...SAID].some((d) => U.esc(d) === s));
 ok(`every refusal sentence rendered came back over the wire${invented.length ? ` — invented: ${JSON.stringify(invented)}` : ""}`,
   invented.length === 0);
 ok("the plane's NO_FALSIFIER sentence is NOWHERE in app.html — the surface renders it, it does not know it",
-  !APP.includes(PLANE_NO_FALSIFIER.detail));
-ok("nor is the plane's both-at-once sentence", !APP.includes(PLANE_BOTH.detail));
+  !APP.includes(PLANE_NO_FALSIFIER.detail) && !APP.includes(PLANE_NO_FALSIFIER.translation));
+ok("nor is the plane's both-at-once sentence",
+  !APP.includes(PLANE_BOTH.detail) && !APP.includes(PLANE_BOTH.translation));   /* UI-72: BOTH fields, since
+  the surface now renders the translation — an absence assertion over the field nobody renders proves nothing. */
 ok("and the surface still names only the ONE reason code it provokes by withholding a field",
   APP.includes('a.refusal.reason === "NO_TARGET"'));
 /* THE ONE CODE THIS ITEM ADDS TO THE SURFACE'S VOCABULARY IS A READ, NOT A

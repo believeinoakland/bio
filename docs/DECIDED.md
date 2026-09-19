@@ -34,6 +34,10 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:1543`
 - **DEC-8** — ballotPreflight recorded as the FOURTH pre-DEC-8 residue → UI-22; the queue-routes-projects-to-openBundle gap → UI-22 chore; the D-173 class sweep → UI-23 queued; the stale owns-projection delegation WITHDRAWN with reasoning.  
   `docs/archive/ledgers/QUEUE-2026-08.md:1898`
+- **DEC-8** — Four suites went red and every one was CORRECTED at its site, never exempted.** `conclude-nofalsifier`, `conclude-reading` and `question-npc` each build a DEC-8 sweep corpus from the wire's `detail` and `error` and NOT its `translation`, so the moment the surface rendered a translation the sweep reported THE…  
+  `docs/development/CIVICOS_UI_STATE.md:77`
+- **DEC-8** — All CORRECTED at the site with a dated reason |  
+  `docs/development/MEASUREMENTS.md:17273`
 - **DEC-10** — P-88, which is RULED by DEC-10 and MISSING**: does this instance connect to an inquiry or a project.  
   `docs/archive/research/BUILD-ORDER.md:503`
 - **DEC-10** · 2026-08-01 — (`DECISIONS.md:414+`), RULED 2026-08-01 | **NO.** The scan notices; nothing filters or notifies |  
@@ -327,7 +331,7 @@ authority is the file named, never this one.
 - **D-98** · 2026-07-30 — RULED: undetermined authority becomes a task for the project manager, falling back to a group admin where a project has no manager, forwardable to a member better placed to attest.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:63`
 - **D-98** — and the RULED routing order, with every cited precedent verified present before the claim was written; D-98 is now a build task.  
-  `docs/development/CIVICOS_UI_STATE.md:1015`
+  `docs/development/CIVICOS_UI_STATE.md:1052`
 - **D-98** · 2026-07-30 — §RULED 2026-07-30 — STALE in its closing paragraph.  
   `docs/development/INBOX-GRAMMAR.md:8`
 - **D-98** — `taskforward`/`taskresolve` keep their RULED group-admin fallback (D-98 routing): a task is an instance obligation, not a project production.  
@@ -817,7 +821,7 @@ authority is the file named, never this one.
 - **IC-148** · 2026-09-18 — IC-148 AMENDED IN PLACE (MAJOR, 29.4.0 → 30.0.0): `dbBytes` for the admin class only under a server-set `capacity` stamp; the wire's log count renamed `observationsNonLead`, no `observations` key on the wire, purge's proof unchanged.  
   `docs/development/CLAIMS.md:13992`
 - **IC-153** — `conclude-act.test.mjs`'s mock CORRECTED to IC-153 (answers `basisversions`, refuses a no-version commit `NO_CLAIM` where the store does) and its journey picks a reading (93/0); `conclude-nofalsifier.test.mjs`'s REC-136 transport stand-in REMOVED, its journey now picks from the rendered picker (79/0);…  
-  `docs/development/CIVICOS_UI_STATE.md:145`
+  `docs/development/CIVICOS_UI_STATE.md:182`
 - **IC-155** — CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md`…  
   `docs/development/CLAIMS.md:14228`
 - **IC-162** · 2026-09-19 — IC-162 · I3: DEC-63 AS AMENDED — a run whose context is a QUESTION consults NO project: `airunopen` / `airuntick` / `airunclose` no longer refuse `AI_RUN_NOT_PROJECT_MEMBER` (C-22.8) over an inquiry; `projectGate.ground` over a question is `INQUIRY` (the value `PROJECTLESS` is removed, and `PARTICIPANT` is now said…  
@@ -863,7 +867,7 @@ authority is the file named, never this one.
 - **C-18.5** — C-18.5's pattern copied field-for-field, the routing is the RULED order, and the tests are the both-ways C-18.5 tests with TASK fixtures.  
   `docs/development/INBOX-GRAMMAR.md:168`
 - **C-18.9** — conformant); C-18.9 implements the RULED publication fence and refused an undetermined document at verified in a both-ways test.  
-  `docs/development/CIVICOS_UI_STATE.md:1078`
+  `docs/development/CIVICOS_UI_STATE.md:1115`
 - **C-19.1** — resolves each queued capture through `register`, applies the RULED routing order (`#routeTask`, `:6754-6780`), runs the C-19.1 grammar, writes or FOLDS a task | `tasks` rows; `created`/`folded`/`refused`/`waiting` lists | **OBLIGATION** (member task) | **YES** |  
   `docs/archive/research/MACHINE-PROCESSES.md:75`
 - **C-19.1** — resolves each queued capture, applies the RULED routing order, runs the C-19.1 grammar, writes or FOLDS a task | `tasks` | **OBLIGATION** | (`taskdrain` exists as an op; the alarm does not use it) | the one alarm | BUILT — the **only** notification generator with a producer | M1 · landed |  
@@ -888,6 +892,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:2410`
 - **C-25.19** — — roster/classification/ratchet/pin rows for the six new ops and the three new columns, each CORRECTED with a dated reason, never exempted.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2579`
+- **C-25.19** — CORRECTED and never exempted**: the fixture invented a translation and named `C-25.19` where the plane's row is `C-25.18`, and §7 pinned the `detail` of a refusal whose `translation` the member now reads. - `docs/development/CIVICOS_UI_STATE.md` (PREPENDED), `docs/development/MEASUREMENTS.md` (appended) and this…  
+  `docs/development/CLAIMS.md:15346`
 - **C-25.34** — Two superseded assertions CORRECTED, never exempted** — CASE-1's `version_sha is NULL` (now the pin) and `versionstate`'s registry-equality floor, which caught the new code immediately and was working as designed; CASE-1's control driver re-run, all five arms still red.  
   `docs/archive/ledgers/QUEUE-closed.md:1147`
 - **C-27** — Plus roster/ratchet/pin rows in whichever of `bio-plane/test/{bounds,meaning-bounds,capability,gate-reads,hygiene,versions,conformance}.test.mjs` the change makes owed, each CORRECTED with a dated reason and never exempted.  
@@ -1349,7 +1355,7 @@ authority is the file named, never this one.
 - **UI-64** · 2026-09-17 — THREE DEFECTS IN ITS OWN INSTRUMENT, CORRECTED RATHER THAN DECLARED AWAY:** the suite was calling the handler DIRECTLY, so arm A left sections 4–5 green with the door gone; `rc.includes(at)` was **an equality that cost nothing, because the two timestamps are the same value**; and `clickRendered` THREW instead of…  
   `docs/archive/ledgers/QUEUE-closed.md:776`
 - **UI-65** · 2026-09-18 — `project-workspace.test.mjs` §6's fork arm, which drove a typed `newId`, is CORRECTED, not exempted. v92, 2026-09-18 session, thread UI, UI-65.  
-  `docs/development/CIVICOS_UI_STATE.md:114`
+  `docs/development/CIVICOS_UI_STATE.md:151`
 - **UI-66** — Every caller that chose a project id is CORRECTED at its site with its reason, never exempted.  
   `docs/archive/ledgers/QUEUE-closed.md:2524`
 ## FW-
@@ -1972,17 +1978,17 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-31** — "RULED" and "open question" about one thing is how a settled decision comes to be doubted later, and Bob doubted it on 2026-07-31 for exactly this reason.  
   `docs/development/CAPTURE-SCALING.md:451`
 - TWO CLAIMS THIS SURFACE WAS ALREADY MAKING WERE CORRECTED, not extended: the `finder` registry declared `content` among its levels and promised "documents and their extracted content" while reaching no captured text at all, and the FIND recipe made the same promise in one step — now two steps, because they are two…  
-  `docs/development/CIVICOS_UI_STATE.md:245`
+  `docs/development/CIVICOS_UI_STATE.md:282`
 - ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.  
-  `docs/development/CIVICOS_UI_STATE.md:449`
+  `docs/development/CIVICOS_UI_STATE.md:486`
 - `handle` DECIDED PRODUCT-WIDE AND KEPT, WITH THE DRIFT ASSERTION AS THE ITEM — the naming is settled by a machine-guarded assertion rather than by a note, so the next session cannot re-litigate it by accident.  
-  `docs/development/CIVICOS_UI_STATE.md:682`
+  `docs/development/CIVICOS_UI_STATE.md:719`
 - BOB'S THREE RULINGS AT THE END OF THE SESSION, AND THE MEASUREMENT THAT SETTLED THEM.  
-  `docs/development/CIVICOS_UI_STATE.md:1244`
+  `docs/development/CIVICOS_UI_STATE.md:1281`
 - and a document REPLACED or WITHDRAWN are events; a body being renamed is a notice; a document ARRIVING and a meeting being scheduled are routine, because those are the normal course of business.  
-  `docs/development/CIVICOS_UI_STATE.md:1488`
+  `docs/development/CIVICOS_UI_STATE.md:1525`
 - RULINGS SETTLED THIS SESSION, do not re-ask.  
-  `docs/development/CIVICOS_UI_STATE.md:1594`
+  `docs/development/CIVICOS_UI_STATE.md:1631`
 - **2026-09-19** — deployed and live-verified); the `latest` pointer mechanism and 17 lessons in `kickoffs/DIST.md`; `migrate-released`'s WITHDRAWN correction.  
   `docs/development/CLAIMS.md:53`
 - is CORRECTED, never exempted. No other arm touched. `.gitignore` — one pattern (`.ui*-harness/`) for negative-control pens, in the block that already documents transient harness directories under `civicos-ui/`. `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not  

@@ -17367,3 +17367,27 @@ credential and are NAMED on every run rather than assumed absent — they are D-
 `op=publishedbytes` keep their bare sha256 strings for that reason. Refusals returned as raw bytes or
 HTML rather than through `json()` are outside the walk. It is not a live probe: a green harness is not
 a serving build (D-108).
+## M-72 · 2026-09-19 · UI-72 — the refusal-rendering estate: how many sites, and how many fixtures can see the field
+
+**Instrument:** `civicos-ui/app.html` counted by its own suite (`refusal-translation-surface.test.mjs` ARM 2 prints the
+two call-site figures on every run, so they cannot go stale silently), and a one-pass census over
+`civicos-ui/test/*.mjs` cross-referenced against every `translation`-bearing row the plane exports from
+`bio-plane/checks/bio-checks.mjs`. Measured on `ui-72-refusal-translation`, base `origin/main` @ `5d6e4803`.
+
+| What | Measured | Why it is that and not a guess |
+| --- | --- | --- |
+| act surfaces reaching `actRefusalHtml` | **27** call sites | counted in the suite from the merged source at run time, printed in its completion line; UI-66 moved two of them and reported the other twenty-five as a class change |
+| member-facing panes reaching `intentRefusalHtml` | **10** call sites | the byte-identical twin the row did not name; found by sweeping the class rather than the row |
+| hand-written refusal fixtures in `civicos-ui/test/` | **198** across 37 of 82 files | every `ok:false` object literal in the estate |
+| of those, fixtures carrying a `translation` at all | **13** | so **185 of 198 cannot see this field** — their `detail` pins stayed green by ABSENCE, not by agreement, which is the liar this item's row named in advance |
+| distinct refusal codes those fixtures name | **39** | read from `reason:`/`code:` literals inside the fixture |
+| of those, codes the PLANE has a canned translation for | **6** | joined against the check catalogue's rows, not against a list |
+| codes whose fixture OMITS the translation the plane would send | **4** — `KIND_NOT_PERSONAL`, `NOT_CAPABLE`, `NO_ACKNOWLEDGMENT`, `NO_SUCH_SELECTION` | a fixture narrower than the wire (M0-23's class). NAMED rather than scored zero; each is another suite's estate and is reported with its fix, not changed here |
+| suites that went red on the change | **4** of 56 | `conclude-nofalsifier`, `conclude-reading`, `question-npc` (all three: a DEC-8 sweep whose corpus read `detail`+`error` and not `translation`) and `version-review` §7 (a `detail` pin). All CORRECTED at the site with a dated reason |
+| further member-facing `detail` readers outside the two renderers | **11**, each named in `CIVICOS_UI_STATE.md` `v95` | the residue of the class sweep, reported with its fix and not fixed under this row |
+
+**WHAT THIS CENSUS CANNOT SEE, stated rather than left to be found.** The fixture walk matches `ok:false` object
+literals and the `reason:`/`code:` string literals within 400 characters of one, so a refusal a suite builds from a
+variable, or receives from the real plane in miniflare, is outside it entirely — the twelve plane-driven UI suites
+carry real translations the walk never counts. And it says a fixture CANNOT REPRESENT a translation, never that any
+assertion reads one.

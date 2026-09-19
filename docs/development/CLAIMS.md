@@ -15374,3 +15374,54 @@ most-churned file and other sessions are live in it:
 
 **NOT** `bio-plane/src/store.mjs`. **NOT** `civicos-ui/app.html`. **NOT** `docs/development/QUEUE.md`.
 **NOT** `newgroup/**`. **NOT** `main`.
+## CLAIM 2026-09-19 UI (UI-72 — a refusal carrying a canned `translation` reaches the member in THAT sentence on EVERY act surface, not on the two UI-66 owned)
+
+Worker spawned by CONDUCT #7. **Own worktree** `.claude/worktrees/ui72-ui`, branch
+**`ui-72-refusal-translation`**, base `origin/main` @ `5d6e4803`. `npm ci` in `bio-plane/`, `pdf-worker/` and
+`ocr-worker/`, each `node_modules` verified a REAL DIRECTORY (30 / 25 / 26 entries), `df -h` 6.3 GiB free after.
+Design authority: **DEC-49** (Bob, 2026-08-06, as it amends DEC-8 in `docs/archive/ledgers/DECISIONS-2026-08.md`
+§DEC-8), restated as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 10. Claimed BY SITE in
+`civicos-ui/app.html`:
+
+- **NEW `refusalWords(r)`**, declared immediately above `actRefusalHtml` inside `/*__ACT_SOURCE_START__*/` —
+  the one place the order is decided (canned `translation` first, `detail` behind it).
+- **`actRefusalHtml`** — its `const words = …` line ONLY. Its markup, its code line and its
+  said-nothing-further fallback are untouched.
+- **`intentRefusalHtml`** — the SAME line, found by the class sweep: a byte-identical twin of
+  `actRefusalHtml`'s body serving ten member-facing panes.
+- **`refusalTranslated` DELETED**, and its two call sites (`doRosterAct`, `addGo`) unwrapped. It was UI-66's
+  per-site shim and is exactly what this row replaces; leaving it would be two spellings of one rule.
+
+**NOT TOUCHED in `app.html`:** every other marked region and every `SURFACES` key; `acquireWhy` (already
+correct, REC-79); `planeSaid`, `queueReason`, `teach`, `addGo`'s `findings[]` map and the other per-site
+`detail` readers — REPORTED with named fixes, not fixed here.
+
+- `civicos-ui/test/refusal-translation-surface.test.mjs` and `civicos-ui/test/refusal-translation-surface.control.mjs`
+  — both NEW. The suite drives the REAL plane in miniflare.
+- `civicos-ui/test/version-review.test.mjs` — §7's three assertions and its `basisversions` refusal fixture
+  ONLY, **CORRECTED and never exempted**: the fixture invented a translation and named `C-25.19` where the
+  plane's row is `C-25.18`, and §7 pinned the `detail` of a refusal whose `translation` the member now reads.
+- `docs/development/CIVICOS_UI_STATE.md` (PREPENDED), `docs/development/MEASUREMENTS.md` (appended) and this block.
+- `docs/DECIDED.md` — GENERATED, never hand-edited, regenerated LAST after every prose edit in this item
+  (`node tools/decided.mjs`). It is claimed because this item's own prose moved it: the battery's ONE red on
+  `5d6e4803` + this change was `strandedwork.test.mjs`' `plancheck --local exits 0` arm, cause STALE index —
+  the same cause and the same suite CONDUCT #7 recorded against REC-153, which is why the order matters.
+
+**NOT CLAIMED:** `bio-plane/src/index.mjs` and `bio-plane/checks/bio-checks.mjs` (D-270's worker is live in
+them), all of `bio-plane/**`, `docs/development/QUEUE.md` (CONDUCT's word), `docs/development/DEBT.md`,
+`docs/development/kickoffs/UI.md`, `newgroup/**`, `release/**`, and every other suite in `civicos-ui/test/`.
+
+**FOR CONDUCT, AN ACT AND NOT A NOTE (`kickoffs/WORKER.md`: never leave an owed act in prose).** ROUTE TO SCHEDULER
+a follow-up row, *"the eleven remaining member-facing `detail` readers outside the two refusal renderers"*, owner UI,
+fix named: each reads a plane refusal's `detail` directly — `teach()` (the gate's `#g-err`), `queueReason`, `planeSaid`
+(the published case page), the finder's per-subject error list, the release / attest / capture receipts, the proposal
+pre-flight, the forward picker, the leg pre-flight's `subj-how`, and `INTENT_VOCAB.words` — and each becomes correct by
+reading `refusalWords(r)` instead, the helper this row lands. It is NOT one edit: `teach()` is pinned by
+`preauth-vocabulary.test.mjs`'s DEC-49 SUBJECT arm, whose figures move when the gate's rendered sentence changes, so the
+row must carry that arm's re-read. **And SECOND**, four fixtures in the estate are narrower than the wire on this field
+(`KIND_NOT_PERSONAL` in `queue.test.mjs`, `NO_ACKNOWLEDGMENT` in `release-flow.test.mjs`, `NO_SUCH_SELECTION` in
+`act-dispose.test.mjs`, `NOT_CAPABLE`): the plane sends a canned translation for each and the fixture omits it, so those
+suites' `detail` pins are green by absence. Fix: carry the catalogue row's `translation` in the fixture and re-read the
+pin. Measured in `MEASUREMENTS.md` M-72.
+
+**open as of 2026-09-19** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.

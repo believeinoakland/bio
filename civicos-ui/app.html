@@ -7285,24 +7285,47 @@ async function actAsk(op, params){
   }
   return (r && r.ok === false) ? { accepted:false, refusal:r } : { accepted:true, result:r };
 }
+/* THE WORDS A MEMBER READS FOR A REFUSAL, DECIDED IN ONE PLACE (UI-72).
+
+   **THE ORDER IS THE PLANE'S BOTH WAYS.** DEC-49 (Bob, 2026-08-06, amending
+   DEC-8) licenses a surface to render an AUTHORED translation keyed on a code
+   the plane SENT; DEC-8 still forbids a surface COMPUTING a refusal. A canned
+   `translation` is the plane's own MEMBER-FACING sentence and comes first;
+   `detail` is the plane's sentence too, but it is written for A CALLER OF THE
+   OP — "send the fork with no newId", "pass id=<INQ-…>" — so a member reading
+   it is being shown something true of the op and false of their own situation.
+   `acquireWhy` has had this rule since REC-79; this is the same rule one layer
+   up, at the place every act surface meets it.
+
+   **WHY IT IS HERE AND NOT AT A LIST OF CALL SITES.** UI-66 applied the
+   preference at the two sites it owned and said so in its own comment: moving
+   it inside `actRefusalHtml` was *"a class change, reported, not made here"*.
+   UI-72 IS that change. It is made in ONE function deliberately — a preference
+   applied per site is the thirteen-surfaces drift DEC-49's option (b) was
+   rejected for, and twenty-seven act surfaces reach `actRefusalHtml` while ten
+   more reach `intentRefusalHtml`, which carried a byte-identical copy of this
+   line until this item swept the class and found it.
+
+   **AN EMPTY OR NON-STRING `translation` IS NOT A SENTENCE** and falls through
+   to `detail`. That is the `translation: undefined` defect one shape over, and
+   taking it as the answer would blank a member — the same two shapes
+   `admission-translation.test.mjs` pins for `acquireWhy`, pinned here by
+   `refusal-translation-surface.test.mjs`. */
+function refusalWords(r){
+  if(!r || typeof r !== "object") return "";
+  if(typeof r.translation === "string" && r.translation) return r.translation;
+  return r.detail || r.error || "";
+}
 /* A refusal, IN THE PLANE'S OWN WORDS and never re-worded here. DEC-8's
    acceptance clause for this item is that every refusal string rendered is one
    the plane returned — so this function has no default sentence of its own
    beyond stating that the record said nothing further. */
 function actRefusalHtml(r){
   if(!r) return "";
-  const words = r.detail || r.error || "";
+  const words = refusalWords(r);
   return `<div class="intent-ref"><div class="intent-ref-why">${esc(words || "The record refused this and said nothing further.")}</div>`
     + (r.reason ? `<div class="intent-ref-code mono">${esc(r.reason)}</div>` : "")
     + `</div>`;
-}
-/* UI-66. A refusal carrying a canned `translation` (DEC-49), rendered in THAT — the plane's own member-facing
-   sentence, received and never composed — in place of its `detail`, which is written for a caller of the op
-   (C-59.3's says "send the fork with no newId"). `acquireWhy`'s rule. Applied at the two sites UI-66 owns
-   (`addGo`'s promote, `doRosterAct`) rather than inside `actRefusalHtml`, whose other callers pin `detail`
-   (version-review §7): moving every act surface to the translation is a class change, reported, not made here. */
-function refusalTranslated(r){
-  return (r && typeof r.translation === "string" && r.translation) ? { ...r, detail: r.translation } : r;
 }
 /* The acts the plane publishes for ONE object as it stands. A refusal (an
    object this credential may not see answers NO_SUCH_BUNDLE, identical to an
@@ -8382,7 +8405,7 @@ async function doRosterAct(){
   const r = await actAsk(a.op, params);
   if(!r.accepted){
     const err = $("#ra-err");
-    if(err){ err.innerHTML = actRefusalHtml(refusalTranslated(r.refusal)); err.classList.remove("hidden"); }
+    if(err){ err.innerHTML = actRefusalHtml(r.refusal); err.classList.remove("hidden"); }   /* UI-72: the translation is `actRefusalHtml`'s own rule now, for every act surface and not these two. */
     if(go){ go.disabled = false; go.textContent = a.label; }
     return { refused:true, reason: r.refusal && r.refusal.reason };
   }
@@ -14710,10 +14733,18 @@ async function intentAsk(op, body){
 }
 
 /* A refusal, in the PLANE'S OWN WORDS and never re-worded here. The refusals
-   teach: they name the requirement, and the requirement is the record's. */
+   teach: they name the requirement, and the requirement is the record's.
+
+   **FOUND BY UI-72'S CLASS SWEEP AND CORRECTED WITH ITS TWIN, not after it.**
+   This function's body was BYTE-IDENTICAL to `actRefusalHtml`'s — same markup,
+   same code line, same `r.detail || r.error || ""` — and it serves the ten
+   intent panes. UI-72's row named `actRefusalHtml`; fixing only what was
+   reported would have left the same defect at a sibling site serving surfaces a
+   member reaches the same way. Both now read `refusalWords`, so the rule is
+   written once and a third copy cannot drift from it. */
 function intentRefusalHtml(r){
   if(!r) return "";
-  const words = r.detail || r.error || "";
+  const words = refusalWords(r);
   return `<div class="intent-ref"><div class="intent-ref-why">${esc(words || "The record refused this and said nothing further.")}</div>`
     + (r.reason ? `<div class="intent-ref-code mono">${esc(r.reason)}</div>` : "")
     + `</div>`;
@@ -17272,7 +17303,7 @@ async function addGo(){
            — the machine word DEC-49 keeps away from members, with the plane's own sentence thrown away. It
            is rendered through `actRefusalHtml`, the plane's words verbatim (its canned translation first). */
         : (res && (res.translation || res.detail))
-          ? `<b>The record refused this and nothing was written.</b>` + actRefusalHtml(refusalTranslated(res))
+          ? `<b>The record refused this and nothing was written.</b>` + actRefusalHtml(res)
           : `Refused: ${esc(why)}. Nothing was written.`);
       return;
     }

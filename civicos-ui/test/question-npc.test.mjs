@@ -300,6 +300,15 @@ function harvest(o){
   if (!o || typeof o !== "object") return;
   if (typeof o.detail === "string" && o.detail) SAID.add(o.detail);
   if (typeof o.error === "string" && o.error) SAID.add(o.error);
+  /* CORRECTED 2026-09-19 (UI-72), never exempted. The sweep below asks whether a
+     sentence the member read CAME OVER THE WIRE; a canned `translation` (DEC-49)
+     arrives on the same answer, from the plane's own check row, and belongs in the
+     corpus for the same reason `detail` does. It was invisible while no surface
+     rendered one — the moment `actRefusalHtml` preferred the translation, this
+     sweep called the PLANE'S own sentence foreign, which is an instrument naming
+     the wrong culprit and not a defect. A sentence app.html composes is in neither
+     field, so the arm still bites. */
+  if (typeof o.translation === "string" && o.translation) SAID.add(o.translation);
   for (const v of Object.values(o)) if (v && typeof v === "object") harvest(v);
 }
 const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,
