@@ -15127,3 +15127,44 @@ reproducible corpus counts only suites in the commit — a floor moved from that
 tree no other checkout reproduces (D-238). `regionLines` is untouched: this item adds no DEC-49 region and its
 changes to `publishCase()` sit outside every region marker in that function (verified by line number against
 `is-machine-publish`, `is-publish-statement` and `case-identity-derivation`).
+
+## DELEGATION 2026-09-19 RECORD (REC-135) -> BOB, then SCHEDULER — **DEC-12'S SECOND-EDITION ROUTE IS UNREACHABLE FOR A FINDING PUBLISHED ON A PROJECT-ARM CONCLUSION, and REC-135's own landing is what makes that reachable enough to matter**
+
+**open as of 2026-09-19** — raised by the REC-135 worker at its close; needs a DESIGN answer before it can be a row, so it goes to BOB first (CLAUDE.md §4) and to SCHEDULER after.
+
+**MEASURED THROUGH THE OPS, not reasoned** (a throwaway probe over REC-135's own fixtures, branch
+`rec-135-project-conclusion-to-case`): project A concludes shared question Q through
+`op=conclude&project=A` and publishes a case. Q's own state is still `open`, which is the whole point of
+§7.1. Then:
+
+- `op=reopen` on Q → **`ILLEGAL_TRANSITION`, from `open`.** The case-member arm of `NOT_SET_DOWN` passes,
+  and the catalog's machine has no `open -> open` edge, so the act cannot complete.
+- `op=withdrawconclusion&project=A` → ok. `op=conclude&project=A` again → ok.
+- `op=publish&project=A` → **`ALREADY_A_CASE_MEMBER`.**
+
+**BOTH DOORS SHUT, and each is correct on its own terms.** `op=reopen` moves the INQUIRY's own state and
+that state never moved, because a project's conclusion is written on the PROJECT (REC-124). And
+`#caseRelationOf`'s pin is the member's `bundle_sha`, which also never moved — so its sentence, *"there is
+nothing here a new edition would say differently"*, is false in exactly one new way: the PROJECT'S ADOPTED
+CLAIM moved, and the case records that claim (REC-135/IC-166) while the finding's bytes do not.
+
+**WHY THIS IS NOT A REGRESSION AND IS STILL THIS ITEM'S TO RAISE.** Before REC-135 a project-arm
+conclusion could not publish AT ALL, so the route it lacks did not exist to be unreachable. The legacy
+path is untouched and still works: there the question's own state IS `concluded`, `concluded -> open` is a
+legal edge, and reopen → work → conclude → publish runs as DEC-12 built it.
+
+**THE QUESTION FOR BOB, and it is a design question rather than a defect with an obvious fix:** what
+warrants a new EDITION when the finding's bytes are unchanged and the PROJECT'S adoption has moved? DEC-12
+says an edition is a separate document carrying its own conclusion — and under §7.1 the conclusion is now
+the relationship's, not the document's. **The candidate fix the measurement points at:**
+`ALREADY_A_CASE_MEMBER` is asked per-relationship, exactly as `NOT_CONCLUDED` now is — a new edition is
+warranted when the publishing project's conclusion has moved since the edition the pin names, even where
+`bundle_sha` has not. `op=reopen` then needs no change and should get none; it is the shared object's act
+and REC-136 already ruled the per-project reversal is `op=withdrawconclusion`'s.
+**The alternative, named so it is a real choice:** leave it, and say in the refusal that a second edition
+of a project-arm publication is not yet expressible — which is honest and leaves DEC-12 with a route no
+caller can travel for this class, the shape `op=reopen`'s own header calls *the state machine lying*.
+
+**ACT, WITH ITS ACTOR:** CONDUCT carries this to BOB in the BOB lane at REC-135's integration; on BOB's
+ruling SCHEDULER places the row. It is NOT parked on a list: this block is the drained channel, and the
+state line above is re-affirmed or discharged here.
