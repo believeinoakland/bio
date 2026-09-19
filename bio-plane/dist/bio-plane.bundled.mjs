@@ -3767,6 +3767,7 @@ __export(bio_checks_exports, {
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
+  REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
@@ -10670,14 +10671,63 @@ var ADMISSION_CHECKS = {
     translation: "The credential you sent is not one this operation accepts. Credentials here are issued for a particular purpose, and widening this one is not the way through: use the credential meant for this work."
   },
   /* The mirror of the row above, and it exists separately because the two are
-     opposite facts about the caller. This one is a PERSON asking for something
-     only an unattended writer does; the row above is a credential of the wrong
-     kind entirely. One refusal covering both would tell neither caller anything
-     they could act on — DEC-49's own argument, and PL-18's. */
+       opposite facts about the caller. This one is a PERSON asking for something
+       only an unattended writer does; the row above is a credential of the wrong
+       kind entirely. One refusal covering both would tell neither caller anything
+       they could act on — DEC-49's own argument, and PL-18's.
+  
+       **NARROWED 2026-09-19 BY D-270, AND THE `where` MOVED WITH THE SITE.** This
+       row is a DESIGN CLAIM — it tells a person that a verb is not for people —
+       and BOB #17 ruled that the plane may make it ONLY where such a decision is
+       recorded. Until D-270 this one sentence answered THREE different facts and
+       was FALSE for two of them: it went to five ops an administrator's own
+       browser performs, and to ops whose OPS rows say in as many words that they
+       are a named member's judgement. The site is now `sessionOpGate`, which
+       sends this row only for an op named in `UNATTENDED_BY_DECISION`, and the
+       refusal carries the citation in `recorded`, so the claim and its warrant
+       travel together. The rule's home is
+       `docs/architecture/BIO_Membership_Architecture_v2.md` §4 (the §4.7 block). */
   MACHINE_CREDENTIAL_REQUIRED: {
     check: "C-38.3",
-    where: "src/index.mjs fetch > is-admission",
-    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued."
+    where: "src/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued. This instance holds a recorded decision to that effect and names it beside this message."
+  },
+  /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
+     OUTCOMES, and the one the plane could ALWAYS have said: it is about the
+     CALLER rather than about the design, so it needs no recorded decision to be
+     sayable. Five ops — `governorconfig`, `memberadd`, `memberset`, `signeradd`,
+     `signerset` — were answered with the row above, which told a member to go
+     and find a machine credential for an act an administrator performs from
+     their own browser. There is no such credential to find. This sentence names
+     the person to ask instead, because that is the action actually available. */
+  SESSION_ROLE_CANNOT_REACH_OP: {
+    check: "C-38.7",
+    where: "src/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "A signed-in person does perform this operation, but an administrator of this group, and this session is not one. No machine credential is needed and finding one is not the way through: ask an administrator."
+  },
+  /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
+       otherwise have to cover a case neither is true of.
+  
+       **THE ARGUMENT, AND IT IS THIS ROW'S WHOLE REASON.** A false rationale
+       SUPPRESSES ITS OWN BUG REPORT: a member told that an absence is a DECISION
+       will not report it as a gap, so the sentence recruits the one person who
+       could have caught it into believing there is nothing to catch. The measured
+       case is D-136's — `adminendorse`, `adminremove` and `membercaps` are
+       reachable by no session, and Membership Architecture §4.7 assigns that very
+       vote to a person. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
+       independently that the old sentence told an administrator the act §4.9
+       assigns them needs a credential §4.8 says somebody else holds, and that
+       there is no action a member can take from it.
+  
+       SO THIS ROW STATES THE FACT AND INVENTS NO RATIONALE. It says what is true
+       — no session route exists — and says plainly that the record holds no
+       decision explaining it, which is an INVITATION to report the gap rather
+       than a wall in front of it. A refusal may state only what the system can
+       support. */
+  SESSION_ROUTE_NOT_RECORDED: {
+    check: "C-38.8",
+    where: "src/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "No signed-in session reaches this operation, and this instance holds no recorded decision saying it is not meant for a person. That is a gap in the record rather than a rule you have run into, and it is worth reporting as one."
   },
   /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
      ENOUGH, and the translation says so, because a member refused here will
@@ -10712,6 +10762,16 @@ var ADMISSION_CHECKS = {
     check: "C-38.6",
     where: "src/index.mjs fetch > is-admission",
     translation: "That credential is allowed to act, but not on the part of the record this request named. It is confined to its own namespace and this request reached outside it."
+  }
+};
+var REQUIRED_ARGUMENT_CHECKS = {
+  /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
+     tell a refused request from a half-applied one has to go and look, and this
+     is the one refusal in the plane most likely to be met by a script. */
+  REQUIRED_ARGUMENT_MISSING: {
+    check: "C-61.1",
+    where: "src/index.mjs requiredArgument > is-required-argument",
+    translation: "This request left out an argument the operation cannot run without, or sent one in a shape it does not accept. Nothing was changed. The argument and the shape it must take are named beside this message."
   }
 };
 var DRIVE_CAPTURE_CHECKS = {
@@ -67407,6 +67467,57 @@ var admissionRow = (code) => {
     throw new Error(`admissionRow: ${code} has no ADMISSION_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+var requiredArgumentRow = (code) => {
+  const row = REQUIRED_ARGUMENT_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+var UNATTENDED_BY_DECISION = {
+  purge: "src/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside SESSION_OPS, purge above all, still requires a machine credential.'",
+  cpuprobe: "src/index.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the runtime cuts it off. Probe and admin only: it belongs nowhere near a member's session.'",
+  capturerequestdrain: "src/index.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'",
+  taskdrain: "src/index.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S \u2014 a member reaching for it by hand would be a person doing the daemon's job with the daemon's conduct rules applied to them.'"
+};
+function sessionOpGate(kind, op, spec, method) {
+  const refusal7 = (code, error, detail, extra) => json({ ok: false, reason: code, ...admissionRow(code), error, detail, op, ...extra || {} }, 403);
+  if (!spec.mutating || op === "capture" && method === "GET" || SESSION_OPS[kind].has(op))
+    return null;
+  if (SESSION_OPS.admin.has(op) || SESSION_OPS.member.has(op))
+    return refusal7(
+      "SESSION_ROLE_CANNOT_REACH_OP",
+      "this operation is reserved to an administrator of this group",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only an administrator's, and this session's role is '${String(kind).slice(0, 20)}'. There is no machine credential to go and find: an administrator performs this from their own browser. This is section 4's role boundary rather than a credential boundary, and the plane said otherwise until D-270 measured the difference.`,
+      { role: kind }
+    );
+  const recorded = UNATTENDED_BY_DECISION[op];
+  if (recorded)
+    return refusal7(
+      "MACHINE_CREDENTIAL_REQUIRED",
+      /* THE LEGACY SENTENCE, BYTE-IDENTICAL. It is TRUE of these, and keeping
+         it is what makes the code purely additive for them. */
+      "this operation requires a machine credential, not a signed-in session",
+      `'${String(op).slice(0, 60)}' is on the unattended path. No signed-in session of any role reaches it, the founder's included; it answers to a credential held in the hosting account. This instance holds a decision on record saying so, cited in 'recorded' so you can check it. Nothing here says a machine is trusted more than a person (DEC-52 rules the opposite): it says which credential this verb is addressed to.`,
+      { recorded }
+    );
+  return refusal7(
+    "SESSION_ROUTE_NOT_RECORDED",
+    "no signed-in session reaches this operation, and no decision on record says why",
+    `'${String(op).slice(0, 60)}' is reachable by no session of any role, and this instance holds no recorded decision that it is not meant for a person. The plane will not invent one: a member told an absence is a decision stops reporting it as the gap it may well be. If you expected to perform this, that expectation is worth filing rather than working around.`
+  );
+}
+function requiredArgument(op, argument, shape, error) {
+  return {
+    ok: false,
+    reason: "REQUIRED_ARGUMENT_MISSING",
+    ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
+    error,
+    op,
+    argument,
+    shape,
+    detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was changed.`
+  };
+}
 var StoreSilent = class extends Error {
   constructor(op) {
     super(`the store did not answer ${op}`);
@@ -68275,14 +68386,8 @@ var index_default = {
               op,
               detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a signed-in session, and not in-app administrator status. A session is derived from a password; the root of trust is the token held in the hosting account. This refuses the founder's own browser too, which is the one place in this system where being the founder is not enough. The published record needs no credential at all: see op=publishedmanifest."
             }, 403);
-          if (spec.mutating && !(op === "capture" && req.method === "GET") && !SESSION_OPS[kind].has(op))
-            return json({
-              ok: false,
-              reason: "MACHINE_CREDENTIAL_REQUIRED",
-              ...admissionRow("MACHINE_CREDENTIAL_REQUIRED"),
-              error: "this operation requires a machine credential, not a signed-in session",
-              op
-            }, 403);
+          const gated = sessionOpGate(kind, op, spec, req.method);
+          if (gated) return gated;
           cls = kind;
           ({ member: sessMember, viewer: sessViewer, identity: sessIdentity } = resolveSession(sess));
           sessRights = sess;
@@ -68634,7 +68739,12 @@ var index_default = {
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, error: "capture requires sha256=<64 lowercase hex>" }, 400);
+        return json({ ok: false, ...requiredArgument(
+          "capture",
+          "sha256",
+          "<64 lowercase hex>",
+          "capture requires sha256=<64 lowercase hex>"
+        ) }, 400);
       const key = captureKey(storeName, sha);
       if (req.method === "PUT" || req.method === "POST") {
         const body2 = new Uint8Array(await req.arrayBuffer());
@@ -68675,7 +68785,12 @@ var index_default = {
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, error: "pdfstructure requires sha256=<64 lowercase hex>" }, 400);
+        return json({ ok: false, ...requiredArgument(
+          "pdfstructure",
+          "sha256",
+          "<64 lowercase hex>",
+          "pdfstructure requires sha256=<64 lowercase hex>"
+        ) }, 400);
       const ocrAsked = url.searchParams.has("ocr");
       let reBasis = null, reAuthor = null, reViewer = null;
       if (ocrAsked) {
@@ -70102,7 +70217,12 @@ var index_default = {
       const body2 = await req.json().catch(() => null);
       const bundleId = body2?.bundleId;
       if (typeof bundleId !== "string" || !bundleId)
-        return json({ ok: false, error: "monitor needs a bundleId" }, 400);
+        return json({ ok: false, ...requiredArgument(
+          "monitor",
+          "bundleId",
+          "a non-empty string in the POST body",
+          "monitor needs a bundleId"
+        ) }, 400);
       const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
       const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
       if (!imgOut.answered) return storeSilent("monitor");

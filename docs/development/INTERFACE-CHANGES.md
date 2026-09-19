@@ -12248,3 +12248,119 @@ legacy-path arms). The battery-wide cost of the strict reading was NOT measured 
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #7 as MINOR, ADDITIVE — I3 44.0.0 → 44.1.0.** Base RE-READ at resolution off the integration tree: 44.0.0. **IC-166 and IC-167 LAND IN THE SAME WAVE and were both proposed against 44.0.0, so the interface moves ONCE and the strongest classification governs** — this file's own precedent, IC-110 + IC-112 + IC-114 at 19.0.0. Both are additive and neither breaks a caller: `op=contradictionpairs` is a NEW read that answered nothing before. Consumer impact measured at ZERO by the proposer (`grep -rn contradictionpairs` over `civicos-ui/`, `agent-worker/`, `newgroup/`, `pdf-worker/`, `ocr-worker/` returns nothing) and it writes nothing: `judgement.state` is `NOT_REACHED`, `wrote` is `false`. I5 does not move — `schema.mjs` untouched. **The arm that decides the item is `level`**: replacing the ladder search with a constant leaves every pair-forming assertion GREEN and takes down only the level arms — a detector can be exactly right about what it compared and lying about what it found nothing in, which is CLAUDE.md §2's rule reaching the wire. Two design gaps were decided and shipped into the design's Incomplete sections: `viewer` is now a LEVEL named FIRST (an outage must not read as a sparse record), and K3's NULL `content_id` is excluded by meaning.
+
+## IC-55 · I3: the session gate splits into THREE refusals, not one and not two — for five ops its sentence was FALSE and for ten more it was an INVENTED RATIONALE; and three codeless argument complaints gain a code · RE-PROPOSED 2026-09-19 (D-270) — **MAJOR, BREAKING**
+
+**THE NUMBER IS NOT NEW.** IC-55 was minted 2026-08-09 by D-270's first attempt on
+`origin/worktree-agent-aafee89563a3f2d42`, PROPOSED and never resolved; that branch is 1573 commits
+behind `main` and is carried as EVIDENCE, never merged. `node tools/ledger.mjs find IC-55` returns
+not-found and no landed IC on `main` holds the number, so it is still D-270's and is kept rather
+than re-minted — the work is the same work. **The C-numbers are `C-38.7` and `C-38.8` (sub-numbers of
+the EXISTING admission family, which already owns this exact site) and `C-61.1` from one
+`node tools/mintid.mjs C` (MINTED C-61, floor C-60).**
+
+### 1 · PROPOSED
+
+**INTERFACE: I3, the op contracts.** I3 read **44.1.0** when this was written; the base is re-read at
+RESOLUTION by CONDUCT, not here — three stale proposed bases in one day is why that rule exists.
+
+**THE RULING THIS ENACTS IS BOB'S, 2026-09-19, and its home is CITED ONCE rather than restated:**
+`docs/architecture/BIO_Membership_Architecture_v2.md` §4, the §4.7 block. The generating rule is one
+line — **a refusal may state only what the system can support.**
+
+**(a) ADDITIVE — three codeless refusals gain a DEC-49 code and its row.** `op=capture`,
+`op=pdfstructure` and `op=monitor` answered `{ ok: false, error: "<sentence>" }` and nothing else.
+They now carry `reason`, `code`, `check`, `translation`, `detail`, `argument` and `shape` **beside an
+`error` that is BYTE-IDENTICAL at all three**, passed in from each site rather than rebuilt from a
+template. One code (`REQUIRED_ARGUMENT_MISSING`, C-61.1) for one condition, its producers told apart
+by `argument` — `AI_BEYOND_TASK_SCOPE`'s standing precedent.
+
+**(b) BREAKING — the session gate becomes three refusals.** It was one, and it was answering three
+different facts:
+
+| condition | code | `error` |
+| --- | --- | --- |
+| no session of any role reaches it **AND a decision is on record** — `purge`, `cpuprobe`, `capturerequestdrain`, `taskdrain` | `MACHINE_CREDENTIAL_REQUIRED` (C-38.3) | **byte-identical**, plus a new `recorded` key citing the decision |
+| a signed-in session reaches it but only an ADMINISTRATOR's — `governorconfig`, `memberadd`, `memberset`, `signeradd`, `signerset` | `SESSION_ROLE_CANNOT_REACH_OP` (C-38.7) | **NEW** — *"this operation is reserved to an administrator of this group"* |
+| no session reaches it and **NO decision is on record** — 10 ops, incl. `adminendorse`, `adminremove`, `membercaps`, `provenancechain`, `provenanceroute` | `SESSION_ROUTE_NOT_RECORDED` (C-38.8) | **NEW** — *"no signed-in session reaches this operation, and no decision on record says why"* |
+
+**WHERE THIS DIFFERS FROM IC-55 AS PROPOSED IN 2026-08, AND IT IS THE WHOLE RE-CLASSIFICATION.**
+
+1. **IT IS THREE SENTENCES, NOT TWO.** The 2026-08 proposal split the gate into *"not for a person"*
+   and *"your credential does not reach this verb"* and put ELEVEN ops in the first. BOB's ruling adds
+   a third for an OMISSION: **neither sentence — state the fact and invent no rationale.** The
+   two-way split would have written *"this verb is not for a person"* onto `adminendorse`,
+   `adminremove` and `membercaps`, which is FALSE: §4.7 assigns that very vote to a person and D-136
+   exists to give it a session route. **A false rationale suppresses its own bug report** — a member
+   told an absence is a decision stops reporting it as a gap — so the two-way split would have
+   recruited the one person who could have caught it into believing there was nothing to catch.
+   `docs/archive/research/CAPABILITIES.md` (F-4) recorded that defect independently.
+2. **THE BREAKING SURFACE IS FIFTEEN OPS, NOT FIVE.** The 2026-08 proposal called itself *"MOSTLY
+   ADDITIVE, ONE SENTENCE CHANGES"* and named five. The omission arm changes the sentence for **ten
+   more**. Understating that was a property of the two-way split, not of the measurement.
+3. **`MACHINE_CREDENTIAL_REQUIRED`'s CANNED TRANSLATION CHANGES** (one sentence added: the instance
+   holds a recorded decision and names it). A surface rendering `translation` shows different text.
+   **`where` moves too**, from `fetch > is-admission` to `sessionOpGate > is-session-op-gate`.
+4. **THE CLASS GATE IS NOT TOUCHED.** The 2026-08 proposal minted a fourth code
+   (`TOKEN_CLASS_CANNOT_REACH_OP`) for `forbidden for token class`. On today's `main` REC-79 already
+   coded that as `CLASS_FORBIDDEN` (C-38.2), so minting a second code for it would have been two
+   authorities for one condition. Dropped, deliberately.
+5. **THE DESIGN CLAIM NOW CARRIES ITS WARRANT.** `MACHINE_CREDENTIAL_REQUIRED` is sent only for an op
+   named in the plane's own `UNATTENDED_BY_DECISION`, and the refusal serves the citation in
+   `recorded`. An op absent from that table gets the omission answer automatically, so **the default
+   claims nothing** and a new op cannot acquire an invented rationale by drift.
+
+**WHAT IT IS NOT.** No field is removed or re-typed. No success answer changes. **No op moves between
+`SESSION_OPS`' sets and no class list moves — exactly the same callers are refused exactly the same
+verbs.** No HTTP status moves (403 / 403 / 400 as before). `error` survives at every site.
+
+**MEASURED CONSUMER IMPACT — measured over this tree on 2026-09-19, not surveyed.**
+
+- **`civicos-ui/app.html`** — **33 reads of `.error`, of which 15 are explicit `reason || error` /
+  `error || reason` disjunctions; ZERO occurrences of the literal old sentence.** Nothing in the
+  surface switches on the string that changes. A refusal gaining `reason` moves none of them.
+- **`agent-worker/src`, `pdf-worker`, `ocr-worker`** — **zero occurrences** of any of the sentences.
+- **`newgroup`** — no source consumer. The single hit is `newgroup/src/release.mjs` (3.86 MB), which
+  CARRIES the plane bundle as an artifact and does not read the field. **DIST regenerates it**, and
+  `newgroup/**` was out of bounds for this item.
+- **The battery** — the suites asserting the old sentence were `members.test.mjs` (five assertions,
+  **two of them pinning the FALSE sentence in place**, all CORRECTED with the reason beside them and
+  never exempted), `admission-gate.test.mjs` (whose C-38.3 arm uses `op=purge` and is UNCHANGED,
+  because purge is one of the four with a recorded decision), `browse.test.mjs` (see below) and one
+  COMMENT in `shadowed-refusals.test.mjs`, corrected because a comment describing a mechanism the
+  tree does not carry is this project's most-repeated defect.
+- **AND A FOURTH SUITE THIS SURVEY'S FIRST PASS COULD NOT SEE, stated because the miss is the useful
+  part.** The sweep searched for the LITERAL SENTENCE. `browse.test.mjs` asserts
+  `.error.includes("machine credential")` — a SUBSTRING — so it was invisible to a full-sentence
+  matcher and was found by the BATTERY instead, which is the instrument that does not care how a
+  consumer spells its dependency. Its `op=livefire` line **was pinning an invented rationale in
+  place** and is corrected; its `op=purge` line on the very next row is UNCHANGED and still passes,
+  and the two sitting side by side are now the whole distinction this item draws. **What a
+  sentence-matcher can and cannot see: it finds a consumer that compares the whole string and misses
+  every consumer that tests a fragment of it, reads it case-insensitively, or matches it by regex.**
+- **The DEC-49 guard** — exit 0, nine floors moved in the same turn from the figures it printed, with
+  the pre-existing slack measured against pristine sources. `reachGap` unmoved at 40: all three codes
+  arrive TRANSLATED. `inheritedVerdicts` unmoved at 4 — see `MEASUREMENTS.md`, the guard refused this
+  item's first shape and was right.
+
+**THE ONE THING A CONSUMER MUST KNOW AND CANNOT INFER:** a consumer that today shows a member the
+`error` string for any of those fifteen ops has been showing them a statement that is either false or
+an invented reason. After this it shows a true one. If any consumer BRANCHED on that string it was
+branching on a wrong fact; none in this repository does, measured above. New code should switch on
+`reason`/`code` and render `translation`, which is what DEC-49 licenses.
+
+### 2 · RESPONSES
+
+*(To be answered by the consumer areas. RECORD's own position: **ACCEPT.** Half (a) can only add keys.
+Half (b) replaces sentences that were untrue or unwarranted with ones the plane can support, on
+fifteen ops, with no consumer in the repository switching on any of them.)*
+
+### 3 · RESOLUTION
+
+*(CONDUCT's. The I3 version bump and the re-read of the base at RESOLUTION are CONDUCT's — IC-25's,
+IC-42's and IC-48's precedent. **UI is the one area with a live interest**: the three codes are
+renderable today via `translation`, and nothing is owed for correctness — but a surface that wants to
+offer "ask an administrator" as an ACTION now has a code to key on, which it did not before.)*
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #7 as MAJOR, BREAKING — I3 44.1.0 → 45.0.0.** Base RE-READ at resolution off the integration tree: 44.1.0 (the row was first proposed 2026-08-09 against a base 1573 commits behind, and re-proposed on current main by D-270 — the base that governs is this one). Breaking by IC-137's rule: a call that succeeded is not refused, but **the SENTENCE a caller receives changes for fifteen ops**, and one that carried a single generic `MACHINE_CREDENTIAL_REQUIRED` now carries one of three outcomes — `MACHINE_CREDENTIAL_REQUIRED` NARROWED to ops named in `UNATTENDED_BY_DECISION` and citing its warrant in `recorded` (four, each read at the artifact), `SESSION_ROLE_CANNOT_REACH_OP` (C-38.7) COMPUTED from `SESSION_OPS` so it cannot become false, and `SESSION_ROUTE_NOT_RECORDED` (C-38.8, ten ops). A consumer branching on the old code for any of the ten becomes wrong without changing a line, which is IC-118's reason for calling such a move breaking. **No op moves between session sets and no class list moves**: the same callers are refused the same verbs; what changes is what they are told. `capture`/`pdfstructure`/`monitor` gain `REQUIRED_ARGUMENT_MISSING` (C-61.1). **The re-classification from FIVE ops to FIFTEEN is the finding**: the 2026-08 two-way split concealed the omission arm, and the proposer's fourth code (`TOKEN_CLASS_CANNOT_REACH_OP`) is DROPPED because REC-79 already codes that condition as `CLASS_FORBIDDEN` and a second code for one condition is two authorities for one fact. **The declaration is a PROPERTY, not a list** — an op absent from it receives the omission answer automatically, so the default claims nothing, which is BOB #17's sentence (c) built rather than restated. An AUTHORITY-adjacent closing of the class CLAUDE.md §2 ranks first: **a false rationale suppresses its own bug report**, and the sequence check found the two-way split would have written one onto the very three ops D-136 exists to fix. DIST told.
+

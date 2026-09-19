@@ -249,10 +249,35 @@ console.log("\n--- a session cites, and the record says who did it ---");
 }
 
 console.log("\n--- what a session may never do ---");
-t("session cannot purge", (await GET(`op=purge&confirm=bio&${S}`)).error, "this operation requires a machine credential, not a signed-in session");
-t("session cannot livefire", (await GET(`op=livefire&${S}`)).error, "this operation requires a machine credential, not a signed-in session");
-t("member session cannot manage the roster", (await POST(`op=memberadd&${S}`, { memberId: "x", name: "x" })).error, "this operation requires a machine credential, not a signed-in session");
-t("member session cannot register keys", (await POST(`op=signeradd&${S}`, { keyB64: "AAAAtest", memberId: "ruth" })).error, "this operation requires a machine credential, not a signed-in session");
+/* CORRECTED 2026-09-19 BY D-270, NEVER EXEMPTED, AND THE REASON IS THAT TWO OF
+   THESE FOUR WERE PINNING A FALSE SENTENCE IN PLACE.
+   All four asserted the ONE sentence the session gate used to send. That
+   sentence answered three different facts and was true of one of them:
+     · `purge` — TRUE, and it keeps the byte-identical sentence. A decision is on
+       record that it is not for a person, and the refusal now cites it.
+     · `livefire` — the refusal is real but the RATIONALE was invented: nothing on
+       record says this verb is not for a person. It now says so and stops.
+     · `memberadd` and `signeradd` — THE SENTENCE WAS SIMPLY FALSE. An
+       administrator's own session performs both. The old assertions were pinning
+       that falsehood, which is why they had to be corrected rather than relaxed:
+       a test asserting a wrong answer is the mechanism by which a wrong answer
+       survives review.
+   WHAT IS ASSERTED NOW is the same fact these lines existed for — the session is
+   REFUSED — plus the code, so a future collapse back to one sentence fails here
+   too rather than only in D-270's own suite. */
+t("session cannot purge, and the sentence is the byte-identical one, because a decision IS on "
++ "record for this verb", (await GET(`op=purge&confirm=bio&${S}`)).error,
+  "this operation requires a machine credential, not a signed-in session");
+t("session cannot purge, under the code that carries that recorded decision",
+  (await GET(`op=purge&confirm=bio&${S}`)).reason, "MACHINE_CREDENTIAL_REQUIRED");
+t("session cannot livefire — still refused, but the plane no longer invents a reason it has not "
++ "recorded", (await GET(`op=livefire&${S}`)).reason, "SESSION_ROUTE_NOT_RECORDED");
+t("member session cannot manage the roster — and is told the TRUE reason, that this is an "
++ "administrator's act and not a machine's (the old assertion pinned the false one)",
+  (await POST(`op=memberadd&${S}`, { memberId: "x", name: "x" })).reason, "SESSION_ROLE_CANNOT_REACH_OP");
+t("member session cannot register keys — same correction, same reason",
+  (await POST(`op=signeradd&${S}`, { keyB64: "AAAAtest", memberId: "ruth" })).reason,
+  "SESSION_ROLE_CANNOT_REACH_OP");
 
 /* op=signerlist is the READ over the signer roster and, before this, no suite
    reached it through the control plane — a real caller's only route (D-43). The
@@ -271,6 +296,18 @@ const A = "token=" + alg.result.token;
 const add2 = await POST(`op=memberadd&${A}`, { memberId: "meilan", cover: "Meilan" });
 t("admin session invites a member", add2.result.ok, true);
 t("admin session still cannot purge", (await GET(`op=purge&confirm=bio&${A}`)).error, "this operation requires a machine credential, not a signed-in session");
+/* D-270: and THIS is the arm that makes the line above mean what it says. `purge`
+   is refused to a REAL administrator's session — `op=claim` + `op=login` with
+   `role: "admin"`, not an enrolled member whose roster row reads administrator —
+   so it is genuinely on the unattended path rather than merely role-gated, and
+   the code says which of those two facts refused the caller. Until D-270 the
+   plane could not tell them apart and neither could this suite. */
+t("and it is the RECORDED-DECISION refusal rather than the role one, which is what distinguishes "
++ "a verb no person reaches from one only an administrator reaches",
+  (await GET(`op=purge&confirm=bio&${A}`)).reason, "MACHINE_CREDENTIAL_REQUIRED");
+t("and the refusal CITES the decision that licenses the claim, so a member can check the plane's "
++ "design claim at its source instead of taking it on trust",
+  /index\.mjs/.test((await GET(`op=purge&confirm=bio&${A}`)).recorded || ""), true);
 
 console.log("\n--- revocation closes every door ---");
 /* Revocation is demonstrated on an ORDINARY member. Ruth is an administrator

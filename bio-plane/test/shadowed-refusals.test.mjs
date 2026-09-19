@@ -48,7 +48,12 @@
  *   (a) `NO_AUTHOR` IS UNREACHABLE THROUGH ITS OP, and this suite pins the
  *       unreachability rather than pretending to a pin. `op=provenancechain` is
  *       NOT in SESSION_OPS, so a signed-in member is refused it outright
- *       ("requires a machine credential"); every machine class that CAN reach it
+ *       (CORRECTED 2026-09-19 by D-270: the refusal is now
+ *       `SESSION_ROUTE_NOT_RECORDED`, not "requires a machine credential" — the
+ *       old sentence was a design claim this plane holds no decision behind, and
+ *       op=provenancechain's own OPS row says the opposite of it in as many
+ *       words. The unreachability this paragraph rests on is UNCHANGED; only the
+ *       words the caller meets have moved); every machine class that CAN reach it
  *       arrives stamped `token:<class>` by the control plane, which is never
  *       blank. So no caller of the op can make the store's `!who` true. It is
  *       driven here at the Durable Object route where it IS reachable, and the

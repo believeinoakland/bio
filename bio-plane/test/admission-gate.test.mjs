@@ -143,6 +143,48 @@ console.log("\n--- C-38.3 · A PERSON ASKING FOR SOMETHING ONLY AN UNATTENDED WR
     m.reason === "MACHINE_CREDENTIAL_REQUIRED", false);
 }
 
+/* D-270, 2026-09-19. THE TWO ARMS BELOW EXIST BECAUSE THE ROW ABOVE USED TO
+   ANSWER THEIR CONDITIONS TOO, and was false for both. One sentence was doing
+   three jobs: the C-38.3 arm above is the one job it was right about. */
+console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY AN ADMINISTRATOR DOES ---");
+{
+  /* `ada` is enrolled with `role: "admin"` but holds `member:ada`, so the plane
+     reads this session's KIND as member — which is exactly the caller this
+     refusal is for, and exactly the distinction a harness that used a roster row
+     instead of a session kind could not see (D-270 measured that twice). */
+  const r = await POST(`op=memberadd&${CAI}`, { memberId: "zed", cover: "Zed" });
+  admits("a member's session on an op only an administrator's session reaches", r, "SESSION_ROLE_CANNOT_REACH_OP");
+  t("and it says there is nothing to go and find, rather than sending them after a credential "
+  + "that would not help — the old sentence sent them after one",
+    /ask an administrator/i.test(r.translation || ""), true);
+  t("and it names the role it judged, so a caller can tell which fact refused them",
+    r.role, "member");
+  /* THE MIRROR. Without it this arm passes over a gate that refuses everybody. */
+  const m = await POST("op=memberadd&token=t-admin-1", { memberId: "zeta", cover: "Zeta" });
+  t("NEGATIVE CONTROL: the same op is NOT refused admission to a credential that reaches it",
+    m.reason === "SESSION_ROLE_CANNOT_REACH_OP", false);
+}
+
+console.log("\n--- C-38.8 · AN OMISSION, STATED AS ONE AND GIVEN NO INVENTED RATIONALE ---");
+{
+  const r = await POST(`op=membercaps&${CAI}`, { memberId: "cai", capabilities: [] });
+  admits("a member's session on an op no session reaches and no decision explains", r, "SESSION_ROUTE_NOT_RECORDED");
+  /* THE ASSERTION THIS ROW EXISTS FOR, and it is a NEGATIVE about the wording
+     rather than a positive about the code. `op=membercaps` is D-136's: §4.7
+     assigns that vote to a person, so telling a member the absence is a DECISION
+     is both false and self-concealing — a member told an absence is deliberate
+     stops reporting it. The plane must say the fact and stop. */
+  t("and it makes NO design claim — it never says the verb is not for a person, because §4.7 says "
+  + "the opposite and a false rationale suppresses its own bug report",
+    /not for a person|unattended writer|not by a person/i.test(`${r.translation} ${r.detail}`), false);
+  t("and it says plainly that the record holds no decision, which is an invitation to report the "
+  + "gap rather than a wall in front of it",
+    /no recorded decision/i.test(r.translation || ""), true);
+  const m = await POST("op=membercaps&token=t-admin-1", { memberId: "cai", capabilities: [] });
+  t("NEGATIVE CONTROL: the same op is NOT refused admission to the machine credential",
+    m.reason === "SESSION_ROUTE_NOT_RECORDED", false);
+}
+
 console.log("\n--- C-38.4 · THE ONE PLACE WHERE BEING THE FOUNDER IS NOT ENOUGH (8.1) ---");
 {
   const r = await POST(`op=export&${ADA}`);
@@ -221,8 +263,12 @@ console.log("\n--- C-38.6 · A CREDENTIAL THAT MAY ACT, BUT NOT HERE ---");
  * here — which is the whole difference between a family that is enforced and a
  * family that merely exists. */
 console.log("\n--- C-38 · TOTALITY: every row in the family was DRIVEN above ---");
+/* +2 by D-270 (2026-09-19): the session gate split into three, and this set is
+   what forced both new rows to be DRIVEN rather than merely catalogued — it went
+   red the moment the rows landed, which is the family working as designed. */
 const DRIVEN = new Set(["NOT_AUTHENTICATED", "CLASS_FORBIDDEN", "MACHINE_CREDENTIAL_REQUIRED",
-                        "ROOT_OF_TRUST_REQUIRED", "NOT_CAPABLE", "SCOPE_REFUSED"]);
+                        "ROOT_OF_TRUST_REQUIRED", "NOT_CAPABLE", "SCOPE_REFUSED",
+                        "SESSION_ROLE_CANNOT_REACH_OP", "SESSION_ROUTE_NOT_RECORDED"]);
 t("no C-38 row is left undriven", CODES.filter((c) => !DRIVEN.has(c)), []);
 t("and nothing is claimed driven that is not a row", [...DRIVEN].filter((c) => !ADMISSION_CHECKS[c]), []);
 /* Two rows may not share a wording: two sentences for one condition is the
