@@ -86,6 +86,23 @@ and live-verified here** — RULED BY BOB 2026-09-18: *"The release may be deplo
 groups can update to the latest release if they choose."* So the installer's `/update` offers a release only once DIST has
 deployed it and live-verified it on this instance; cutting and pushing a signed release no longer offers it to anyone.
 The mechanism is DIST's: a `latest` pointer DIST advances after the live check (option a), with the installer reading it.
+**THE MECHANISM, DECIDED BY DIST 2026-09-19: `main`'s `release/` IS THE `latest` POINTER, AND A CUT LIVES ON A BRANCH
+UNTIL IT IS LIVE.** Every installer, including every copy already deployed, reads `main/release/RELEASE.json`
+(`newgroup/src/index.mjs`, `CFG.RELEASE_LATEST`). So the pointer that needs no installer change, and leaves no old
+reader behind, is `main`'s own `release/`, held equal to the last release deployed and live-verified on `biosmoke7`:
+1. **Cut on a branch.** `git switch -c dist/cut-X.Y.Z origin/main`; bump the version sites; build; `release-assemble
+   --sign`; run the five ssh-keygen controls; `npm run embed`; run the full gate PLUS the upgrade arm; commit; tag
+   `vX.Y.Z` on the branch; push the branch and the tag. **Nothing on `main` changes**, so `/update` offers nothing new.
+2. **Deploy from the tagged tree** (a worktree at `vX.Y.Z`), in the fleet's order; verify the bytes read back,
+   `/version` serving, the headline closings live in scratch (swept after), and `op=audit`.
+3. **Only then advance the pointer:** merge `dist/cut-X.Y.Z` into `main` and push. The tag becomes an ancestor of `main`,
+   so tags stay on the mainline. Then deploy the installer embedding the same release.
+4. **If the live check fails:** roll back to the previous deployment (`wrangler rollback <previous version id>`,
+   measured working 2026-09-19), and never merge the branch. Nothing was offered to anyone.
+The withdrawal of 2026-09-19 (`d86b27ea`) already put `main` in this state: `release/` holds 0.58.0, which is what is live.
+**A blind spot measured in the same incident:** `deploy.mjs` reads back `/workers/scripts/<slug>`, which returns the
+LATEST UPLOAD, not the ACTIVE version. After a rollback it reports the rolled-away bytes. Establish what is serving
+from the deployments API and `/version`, not from that read-back.
 
 ## Why this area exists
 
