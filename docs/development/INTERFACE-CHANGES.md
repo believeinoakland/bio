@@ -11720,3 +11720,45 @@ from `bio-plane/` (arms patch COPIES, real sources hashed before and after): bas
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MINOR — I3 38.0.0 → 38.1.0.** Base RE-READ at resolution off `origin/main`: 38.0.0 (IC-157, REC-140). Additive by IC-137: nothing that committed now refuses, no key moves; one affordance is offered where none was (`conclude` on a concluded question, to a joined member of a citing project, fact `concludes_for_project`), and the no-project relationship still cannot conclude twice (`ILLEGAL_TRANSITION`, asserted through the op). UI's consequence is a DELEGATION in `CLAIMS.md` (REC-142 → UI): the question page's no-project conclude dialog would now be offered and refused on a concluded question.
+
+## IC-162 · I3: DEC-63 AS AMENDED — a run whose context is a QUESTION consults NO project: `airunopen` / `airuntick` / `airunclose` no longer refuse `AI_RUN_NOT_PROJECT_MEMBER` (C-22.8) over an inquiry; `projectGate.ground` over a question is `INQUIRY` (the value `PROJECTLESS` is removed, and `PARTICIPANT` is now said only over a project); C-22.8's translation speaks of a project · PROPOSED 2026-09-19 (REC-145, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  (base `1d439e31`): 38.1.0. Proposed as MAJOR — 38.1.0 → 39.0.0.** Read the base AT RESOLUTION. **Why not additive, by
+  IC-137's rule:** a call that was refused now succeeds (a member who has joined no citing project, running over a
+  question), and a wire VALUE disappears (`projectGate.ground: "PROJECTLESS"`) while another narrows its meaning
+  (`"PARTICIPANT"` is no longer said over a question). No key is added or removed; the `projectGate` object keeps its
+  four keys (`applied`, `ground`, `why`, `projects`), and `projects` is REC-139's sighted count, UNCHANGED.
+- **Proposer:** RECORD, REC-145 worker, branch `worktree-agent-a3372f65d0555dbd9`, 2026-09-19 — Membership v2 §7, the
+  DEC-63 ruling bullet, "How it applies at the code" (BOB #16).
+- **Owner to land it:** `RECORD`
+- **What changed, measured through the op** (`project-disclosure.test.mjs` §3, `airun-projectgate.test.mjs`):
+
+| call | before (base `1d439e31`) | after |
+| --- | --- | --- |
+| sam over a question ONLY a project he cannot see cites | refused `AI_RUN_NOT_PROJECT_MEMBER` — the one bit §7.9 forbids | started, `ground: INQUIRY`, `projects: 0` |
+| nora (no project) over a question two projects she cannot see cite | refused | started, `INQUIRY`, `projects: 0`, raw answer BYTE-IDENTICAL to her answer over an uncited question |
+| a member over a question NO project cites | `applied: false, ground: PROJECTLESS` | `applied: false, ground: INQUIRY` |
+| a joined member over a question their project cites | `applied: true, ground: PARTICIPANT` | `applied: false, ground: INQUIRY` (count unchanged) |
+| a non-joined member over a PROJECT context (invited, uninvited, leaving, an administrator) | refused C-22.8 | refused C-22.8 — UNCHANGED (the liar's arm) |
+| a machine credential | `NO_MEMBER_BEHIND_CALLER` | UNCHANGED |
+
+  One consequence the ruling did not state, pinned as built and reported as a DESIGN GAP: the three verbs share one
+  gate, so over a question a member holding `contribute` may TICK and CLOSE another member's run (ARM H6).
+- **Consumers to answer:** `UI` — NOT-AFFECTED, grepped: `civicos-ui` reads neither `projectGate` nor any ground, and
+  never calls `op=airunopen` (its own comments say so, `app.html` ~19602/19736); `check-refusal-codes.mjs` names C-22.8
+  only in a count comment, and harvests translations by shape (the new one is a sentence, as required).
+  `agent-worker` — NOT-AFFECTED: it runs on a machine credential (`NO_MEMBER_BEHIND_CALLER`, unchanged) and reads no
+  ground. `DIST`, `SKILL`, `newgroup` — NOT-AFFECTED (`release/` and `newgroup/` carry the plane's bundle as bytes).
+
+**Suites:** `project-disclosure.test.mjs` §3 CORRECTED and extended (21 → 27): the only-hidden question is PERMITTED
+with count 0; nora's accept arm and its byte-identity arm; the project-context refusal (olga invited-not-joined over the
+hidden project, nora over sam's); sam over his own project (over-strictness). `airun-projectgate.test.mjs` CORRECTED
+(47 → 52): every arm that drove the refusal over a question is RE-AIMED at the project context with a dated reason;
+B0, G3/G4, H6, L3 and the pure P4 are new. Negative controls: `node test/project-disclosure.control.mjs` —
+**`inquiry-consults-projects` (the row's control) 24/3, the PERMITTED arms by name**; `gate-dropped-everywhere` (the
+row's liar) 26/1, the project-context arm; `consult-unless-inquiry` (over-strictness) 27/0; every arm AS DECLARED, real
+sources untouched. `node test/nc-pl18.mjs` re-run: (e) the same control 39/13 as declared; full table in the suite's
+`NEGATIVE CONTROL:` line.
+
+**RESPONSES:** not yet collected.
