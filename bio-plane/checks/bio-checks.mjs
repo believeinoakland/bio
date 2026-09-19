@@ -6576,12 +6576,17 @@ export const AI_RUN_CHECKS = {
      project may not be entitled to learn it exists — the skeleton-visibility
      rule (7.12) — so the canned sentence a surface renders says what happened
      and what to do, and the refusal's own `detail`, composed at the site, names
-     only what the caller already put in their own request. */
+     only what the caller already put in their own request.
+
+     CORRECTED 2026-09-19 by REC-145 (DEC-63 as amended by Bob, 2026-09-18): this refusal is now said
+     ONLY over a run whose context is a PROJECT. A run over a question consults no project, so the old
+     first sentence (*"asking the system to look into a question is work inside the project that
+     question belongs to"*) stated the ruling Bob reversed — *a project does not own a line of inquiry*. */
   AI_RUN_NOT_PROJECT_MEMBER: {
     check: 'C-22.8',
     where: 'src/airun.mjs projectGate, called from store.mjs aiRunOpen/aiRunTick/aiRunClose',
-    translation: 'Asking the system to look into a question is work inside the project that question '
-      + 'belongs to, and this account is not one of that project\'s participants. This is not about '
+    translation: 'Asking the system to look into a project is work inside that project, and this '
+      + 'account is not one of that project\'s participants. This is not about '
       + 'what the account is allowed to do in general — it is about which piece of work it is part '
       + 'of. Someone who owns that project can invite you to it.',
   },

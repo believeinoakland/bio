@@ -8603,11 +8603,16 @@ var AI_RUN_CHECKS = {
        project may not be entitled to learn it exists — the skeleton-visibility
        rule (7.12) — so the canned sentence a surface renders says what happened
        and what to do, and the refusal's own `detail`, composed at the site, names
-       only what the caller already put in their own request. */
+       only what the caller already put in their own request.
+  
+       CORRECTED 2026-09-19 by REC-145 (DEC-63 as amended by Bob, 2026-09-18): this refusal is now said
+       ONLY over a run whose context is a PROJECT. A run over a question consults no project, so the old
+       first sentence (*"asking the system to look into a question is work inside the project that
+       question belongs to"*) stated the ruling Bob reversed — *a project does not own a line of inquiry*. */
   AI_RUN_NOT_PROJECT_MEMBER: {
     check: "C-22.8",
     where: "src/airun.mjs projectGate, called from store.mjs aiRunOpen/aiRunTick/aiRunClose",
-    translation: "Asking the system to look into a question is work inside the project that question belongs to, and this account is not one of that project's participants. This is not about what the account is allowed to do in general \u2014 it is about which piece of work it is part of. Someone who owns that project can invite you to it."
+    translation: "Asking the system to look into a project is work inside that project, and this account is not one of that project's participants. This is not about what the account is allowed to do in general \u2014 it is about which piece of work it is part of. Someone who owns that project can invite you to it."
   },
   /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
        `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
@@ -25921,15 +25926,22 @@ var PROJECT_GATE_GROUNDS = {
      *"any narrowing happens at the credential layer"* — IS-5's `ai` credential
      scope, which can only narrow what a machine may reach. */
   NO_MEMBER_BEHIND_CALLER: "the caller is a machine credential, so there is no participation to check",
-  /* DEC-17, VERBATIM: *"An inquiry outside any project has no bar and inherits
-     none."* So an inquiry in no project is PERMITTED and the permission is
-     STATED. Deciding it the other way would invent a constraint the model does
-     not carry — and answering it with a silent allow would be the same defect
-     one layer down, because nobody reading the answer could tell a projectless
-     inquiry from a gate that failed to run. */
-  PROJECTLESS: "this question is in no project, and DEC-17 puts no bar on one that is not",
-  PARTICIPANT: "the account participates in at least one project this question belongs to"
+  /* REC-145 (2026-09-19) — DEC-63 AS AMENDED BY BOB, 2026-09-18: *"A project doesn't own an area of
+     enquiry to the exclusion of others."* A run whose context is a QUESTION consults no project for its
+     verdict (Membership v2 §7, the DEC-63 ruling bullet, "How it applies at the code", BOB #16). ONE
+     GROUND for every question, whoever cites it, and that is the §7.9 half of the ruling rather than
+     tidiness. The ground this REPLACES, `PROJECTLESS` (PL-18, from DEC-17: *"An inquiry outside any
+     project has no bar and inherits none"*), was said only when NO project cited the question, so its
+     ABSENCE told a member that some project — possibly one hidden from them — did; a second permitting
+     ground keyed on the citers would carry the same bit. DEC-17's case is not lost: a question in no
+     project is still a question, permitted and STATED on this ground. And it is not a silent allow: the
+     answer still says WHY the run was allowed, which is what PL-18's vocabulary exists for. */
+  INQUIRY: "this run is over a question, and a project does not own a line of inquiry: the verdict consults no project (DEC-63 as amended, 2026-09-18)",
+  PARTICIPANT: "the account has joined the project this run is over"
 };
+function runConsultsProjects(contextType) {
+  return String(contextType ?? "") === "project";
+}
 function projectGate({
   actor = null,
   contextType = null,
@@ -25949,13 +25961,13 @@ function projectGate({
       why: PROJECT_GATE_GROUNDS.NO_MEMBER_BEHIND_CALLER,
       projects: all.length
     };
-  if (all.length === 0)
+  if (!runConsultsProjects(contextType))
     return {
       permitted: true,
       applied: false,
-      ground: "PROJECTLESS",
-      why: PROJECT_GATE_GROUNDS.PROJECTLESS,
-      projects: 0
+      ground: "INQUIRY",
+      why: PROJECT_GATE_GROUNDS.INQUIRY,
+      projects: all.length
     };
   if (mine.length > 0)
     return {
@@ -25967,7 +25979,7 @@ function projectGate({
     };
   return refusal3(
     "AI_RUN_NOT_PROJECT_MEMBER",
-    `starting or continuing a run over ${label} is work inside the project it belongs to, and this account has joined none of them (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
+    `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
   );
 }
 function finishedBound(bounds, { expired = false, offered = null } = {}) {
@@ -59424,6 +59436,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   /** WHICH PROJECTS HOLD THIS CONTEXT — the run's context resolved to the
    *  projects whose participants may work on it.
    *
+   *  [REC-145, 2026-09-19: for a QUESTION this set no longer licenses anything. DEC-63 as amended by
+   *  Bob (*"a project doesn't own an area of enquiry"*) means the verdict over an inquiry consults no
+   *  project; the set is read only for the report's SIGHTED count (REC-139). The inquiry paragraph
+   *  below is kept as the record of PL-18's reading, and its "licenses" sentence is superseded.]
+   *
    *  A `project` context is its own project, and nothing else: a run opened
    *  over a project is work in that project by definition.
    *
@@ -59478,7 +59495,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
   #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects = this.#runContextProjects(contextType, contextId);
     const who = actor == null ? "" : String(actor).trim();
-    const joined = who ? projects.filter((p) => {
+    const joined = who && runConsultsProjects(contextType) ? projects.filter((p) => {
       const part = this.#participation(p, who);
       return !!part && part.state === "joined";
     }) : [];
@@ -59561,7 +59578,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         check: gate.check,
         translation: gate.translation,
         detail: gate.detail,
-        note: "starting an investigation is licensed by PARTICIPATION IN THE PROJECT the question belongs to (DEC-63, Bob 2026-08-09), and the contribute capability is only the floor beneath that. These are two different facts about an account and they are refused separately so each names its own remedy"
+        note: "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as amended 2026-09-18), and the contribute capability is only the floor beneath that. These are two different facts about an account and they are refused separately so each names its own remedy"
       };
     if (!principalPlane || !principalClaude)
       return {
@@ -59683,7 +59700,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         check: gate.check,
         translation: gate.translation,
         detail: gate.detail,
-        note: "continuing a run is licensed by PARTICIPATION IN THE PROJECT the run's question belongs to (DEC-63), and the contribute capability is only the floor beneath that. Nothing was appended and no budget was spent"
+        note: "continuing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. Nothing was appended and no budget was spent"
       };
     if (row.status !== "running")
       return {
@@ -59761,7 +59778,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           check: gate.check,
           translation: gate.translation,
           detail: gate.detail,
-          note: "closing a run is licensed by PARTICIPATION IN THE PROJECT the run's question belongs to (DEC-63), and the contribute capability is only the floor beneath that. The run is untouched and is still running"
+          note: "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. The run is untouched and is still running"
         };
     }
     return this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });

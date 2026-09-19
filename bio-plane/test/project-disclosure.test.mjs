@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-disclosure.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-disclosure.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
+   RESULTS, RE-RUN 2026-09-19 by REC-145 in worktree agent-a3372f65d0555dbd9 on base 1d439e31 + this item (real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,642,854 B sha256 478f0bf051b4…, src/airun.mjs 130,844 B sha256 eeee9cc93b75…, untouched: YES), every arm AS DECLARED: baseline 27/0 · restore-title 24/3 · restore-title-fork 25/2 · count-hidden 21/6 (REC-139's three plus REC-145's three §3 count arms — declaration widened from this run, see the driver) · report-nothing 23/4 · **inquiry-consults-projects — REC-145's CONTROL, the project consult restored for an inquiry context -> 24/3: THE LIAR'S ARM (ground back to PARTICIPANT), sam's only-hidden-question PERMITTED arm and nora's PERMITTED arm, by name; nora's byte-identity arm stays GREEN (both her runs are then refused identically — it proves no bit, not the permission)** · gate-dropped-everywhere (the row's liar) -> 26/1, only the PROJECT-CONTEXT refusal arm · consult-unless-inquiry (over-strictness, the same rule spelled the other way) -> 27/0 · run-stamp-dropped 23/4 · sight-via-redactor 27/0. REC-139's "gate-over-sight" arm is RETIRED (a no-op once the verdict consults no project over a question; stated in the driver).
    RESULTS, RUN 2026-09-18 in worktree agent-a590a3b1c261bf1ff on base ee9f201c (real src/index.mjs 659,412 B sha256 a1c37a51e595…, src/store.mjs 2,607,068 B sha256 0406cea9a0c7…, untouched: YES), every arm AS DECLARED: (a) baseline 21/0 · (b) restore-title — promote's NAME_TAKEN carries the other project's id and title again -> 18/3, the two CREATE payload arms and ONE ANSWER, fork's held green · (c) restore-title-fork — the same at forkProject alone -> 19/2, the two FORK arms · (d) count-hidden — the run report counts every citing project again -> 18/3, sam's open and tick byte-identity arms and THE LIAR'S ARM, with olga's, ruth's and the machine's counts green (they see both) · (e) report-nothing, the liar — zero projects to everyone -> 17/4, every byte-identity arm GREEN (the lie) and the liar's, olga's, ruth's and the machine's count arms red · (f) gate-over-sight, the second liar — DEC-63's verdict computed over sight too -> 20/1, only §3's refusal arm · (g) run-stamp-dropped — the control plane's viewer stamp removed from the three run verbs -> 17/4, fails CLOSED (no project stated, never every one): the four visible-count arms · (h) sight-via-redactor, the over-strictness arm -> 21/0. NOT AN ARM: *"let a caller-chosen id through"* — plane-minted ids were not built (design gap), so there is no fence to remove; §4 pins EXISTS as KNOWN.
  * =========================================================================
  * REC-139 / D-428 / IC-156 — A REFUSAL, OR A REPORT, NEVER NAMES OR DESCRIBES A PROJECT THE CALLER
@@ -11,7 +12,9 @@
  *       uniqueness still holds: the refusal is still said, and it reveals only the name the caller typed.
  *   (3) An inquiry RUN's report (`projectGate`, on `airunopen` / `airuntick`) counts ONLY the citing
  *       projects its caller can see. DEC-63 decides who may START a run and is unchanged: the gate's
- *       verdict is still computed over every citing project.
+ *       verdict is still computed over every citing project. [SUPERSEDED 2026-09-19 by REC-145: Bob
+ *       amended DEC-63 — over a question the verdict consults NO project; a project context keeps the
+ *       joined gate. §3 is corrected and carries REC-145's arms. The count is unchanged.]
  * THE THIRD, plane-minted project ids (which closes `EXISTS`), is NOT built: the design does not say
  * whether a caller-supplied id for a new project is refused or ignored, and REC-139's row says STOP on
  * that. §4 below pins the creation's EXISTS as KNOWN so a change to it is noticed.
@@ -30,6 +33,8 @@
  *       count all of them.
  *   (c) keep the count honest by dropping the GATE's use of the hidden project (so a question cited only
  *       by a project the caller cannot see reads as projectless and is permitted). §3 pins DEC-63's verdict.
+ *       [REC-145, 2026-09-19: that "liar" is now the RULING, as Bob amended DEC-63. The liar REC-145's row
+ *       names instead is (d): drop the gate for EVERY context — §3's project-context arm catches it.]
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -93,6 +98,7 @@ const IRIS = await enrol("iris", "member");   /* owns the HIDDEN project */
 const VERA = await enrol("vera", "member");   /* NEVER invited to it: the caller who cannot see it */
 const SAM  = await enrol("sam", "member");    /* owns the VISIBLE project; never invited to the hidden one */
 const OLGA = await enrol("olga", "member");   /* joins sam's project, and is INVITED (not joined) to iris's */
+const NORA = await enrol("nora", "member");   /* REC-145: in NO project at all, invited to none */
 
 const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "Question ${id}"`, "current_state: open", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -220,8 +226,12 @@ t("sam (never invited to the hidden project): airunopen's raw answer is BYTE-IDE
   norm(after.sam, RUN_AFTER.sam), norm(before.sam, RUN_BEFORE.sam));
 t("sam: airuntick's raw answer is BYTE-IDENTICAL too (each run ticked once after its open)",
   norm(tickAfter, RUN_AFTER.sam), norm(tickBefore, RUN_BEFORE.sam));
+/* CORRECTED 2026-09-19 by REC-145 (DEC-63 as amended by Bob; Membership v2 §7, BOB #16), never
+   exempted: this pinned `applied: true, ground: "PARTICIPANT"` — sam admitted BECAUSE he joined the
+   citing project. Over a question the verdict now consults no project, so the ground is INQUIRY and the
+   gate did not apply. What the arm exists for is unchanged: sam's own citing project is still COUNTED. */
 t("THE LIAR'S ARM: sam's OWN citing project is still counted — the report is not emptied",
-  gateOf(after.sam), { applied: true, ground: "PARTICIPANT", why: gateOf(before.sam)?.why ?? null, projects: 1 });
+  gateOf(after.sam), { applied: false, ground: "INQUIRY", why: gateOf(before.sam)?.why ?? null, projects: 1 });
 t("SEES IT: olga (INVITED to the hidden project — the skeleton shows what it cites, §7.9) counts it: 1 then 2",
   [gateOf(before.olga)?.projects, gateOf(after.olga)?.projects], [1, 2]);
 t("SEES IT: ruth (an administrator, §7.3) counts it: 1 then 2",
@@ -232,18 +242,68 @@ t("MACHINE CREDENTIAL (the admin token, unfiltered): counts every citing project
 t("no report names the hidden project anywhere in its raw body",
   [after.sam, after.olga, after.ruth, tickAfter].map((r) => r.body.includes(HIDDEN)), [false, false, false, false]);
 
-/* ======================================================== 3. DEC-63 IS UNCHANGED */
-console.log("\n--- 3. DEC-63's verdict still reads every citing project (who may START is not a disclosure rule) ---");
+/* ======================================================== 3. DEC-63 AS AMENDED (REC-145) */
+/* CORRECTED 2026-09-19 by REC-145, never exempted. This section was titled *"DEC-63 IS UNCHANGED"* and
+   pinned sam REFUSED `AI_RUN_NOT_PROJECT_MEMBER` over a question only a project he cannot see cites —
+   REC-139's reading, under which who may START a run was not a disclosure rule. Bob amended DEC-63 on
+   2026-09-18 (*"a project doesn't own an area of enquiry to the exclusion of others"*), and BOB #16 read
+   it at the code: a run whose context is an INQUIRY consults no project, so that refusal is never said
+   over a question — and the refusal was itself the one bit §7.9 forbids (it told sam a hidden project
+   cites the question). A PROJECT context keeps the joined gate. REC-145's row is this section's contract.
+   PREMISE THE TREE DOES NOT MEET, stated: the row's accept names a DISCOVERABLE project beside a hidden
+   one. §7.14 (discoverable-or-hidden) is designed and NOT built — no store code knows the word — so today
+   every project a member was not invited to is hidden from them, and nora's two unseen projects below
+   are iris's (hidden) and sam's (uninvited, therefore equally unseen). */
+console.log("\n--- 3. DEC-63 as amended: a run over a question consults NO project; a project context keeps its gate ---");
 {
+  const openCtx = (tok, run, contextType, contextId) => RAW(`op=airunopen&token=${tok}`, {
+    run, contextType, contextId, label: "evidence sweep", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }],
+    leaseMs: 600000, at: RUN_AT });
+  /* The run id and the question id are the only things two opens differ in by construction. */
+  const normQ = (r, run, ctx) => ({ status: r.status, type: r.type, sha: sha(r.body.split(run).join("RUN").split(ctx).join("CTX")) });
+
   const Q2 = "INQ-2026-9139-only-hidden";
   must("a second question", parse(await create(ADM, Q2, "inquiry", "Only the hidden project asks this")));
   must("only the HIDDEN project cites it", await cite(IRIS, HIDDEN, [Q2]));
-  const r = parse(await RAW(`op=airunopen&token=${SAM}`, { run: `RUN-rec139-q2-${++runSeq}`, contextType: "inquiry",
-    contextId: Q2, principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
-    skillVersion: "investigative-session@1", bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 }));
-  t("sam over a question ONLY a project he cannot see cites is still REFUSED by DEC-63's gate (not read as projectless)",
-    [r?.started, codeOf(r)], [false, "AI_RUN_NOT_PROJECT_MEMBER"]);
-  t("and that refusal names no project", JSON.stringify(r).includes(HIDDEN), false);
+  const r = parse(await openCtx(SAM, `RUN-rec139-q2-${++runSeq}`, "inquiry", Q2));
+  t("sam over a question ONLY a project he cannot see cites is PERMITTED (REC-145), and the count names it not",
+    [r?.started, codeOf(r) === "AI_RUN_NOT_PROJECT_MEMBER", r?.projectGate?.projects],
+    [true, false, 0]);
+  t("and that answer names no project", JSON.stringify(r).includes(HIDDEN), false);
+
+  /* THE ROW'S ACCEPT: a member in NO project, over a question cited by TWO projects she cannot see, is
+     permitted with a count naming neither — and the answer is BYTE-IDENTICAL to the one over a question
+     NO project cites, which is what "carries no bit" means when it is measured rather than asserted. */
+  const Q3 = "INQ-2026-9145-uncited";
+  must("a question no project cites", parse(await create(ADM, Q3, "inquiry", "Nobody's project asks this")));
+  const backQ = ((await POST(`op=backlinks&token=${ADM}&target=${E(Q)}`))?.backlinks ?? []).map((x) => x.from).sort();
+  t("FIXTURE READ-BACK (admin token): the question nora asks is cited by BOTH projects, neither of them hers",
+    backQ, [HIDDEN, VISIBLE].sort());
+  const runCited = `RUN-rec145-nora-${++runSeq}`, runBare = `RUN-rec145-nora-${++runSeq}`;
+  const cited = await openCtx(NORA, runCited, "inquiry", Q);
+  const bare = await openCtx(NORA, runBare, "inquiry", Q3);
+  show("nora over the question two unseen projects cite", cited);
+  t("REC-145 PERMITTED: nora (no project) runs over a question a hidden AND an unseen project cite — it STARTS, "
+    + "on the INQUIRY ground, and the count names neither",
+    [parse(cited)?.started, codeOf(parse(cited)), gateOf(cited)?.ground, gateOf(cited)?.projects],
+    [true, null, "INQUIRY", 0]);
+  t("REC-145 NO BIT: nora's answer over the cited question is BYTE-IDENTICAL to her answer over an uncited one",
+    normQ(cited, runCited, Q), normQ(bare, runBare, Q3));
+  t("REC-145: neither cited project's id appears in nora's raw answer",
+    [cited.body.includes(HIDDEN), cited.body.includes(VISIBLE)], [false, false]);
+
+  /* THE LIAR'S ARM (the row's: *"dropping the gate for every context"*). A run whose context is the
+     PROJECT ITSELF is still refused to a non-participant — olga SEES iris's project (invited, not joined)
+     and nora sees neither; both are refused by the same code. */
+  const oh = parse(await openCtx(OLGA, `RUN-rec145-olga-${++runSeq}`, "project", HIDDEN));
+  const nv = parse(await openCtx(NORA, `RUN-rec145-norap-${++runSeq}`, "project", VISIBLE));
+  t("REC-145 PROJECT CONTEXT KEEPS THE GATE: olga (invited, not joined) over the hidden project, and nora over "
+    + "sam's, are both REFUSED AI_RUN_NOT_PROJECT_MEMBER",
+    [oh?.started, codeOf(oh), nv?.started, codeOf(nv)], [false, "AI_RUN_NOT_PROJECT_MEMBER", false, "AI_RUN_NOT_PROJECT_MEMBER"]);
+  t("REC-145 OVER-STRICTNESS: sam, who JOINED his own project, still runs over it (the gate is not a wall)",
+    [parse(await openCtx(SAM, `RUN-rec145-samp-${++runSeq}`, "project", VISIBLE))?.started], [true]);
 }
 
 /* ======================================================== 4. KNOWN, NOT CLOSED HERE */
