@@ -15073,3 +15073,19 @@ why: REC-152 (IC-165, `airuntick`/`airunclose` are the run's principal's acts �
   REC-153 (IC-163, `aiRunOpen` checks the context kind — AUTHORITY) are on `main` and in NO release. CONDUCT #7
   named REC-152 a security/disclosure closing at integration, which makes this a CUT NOW under WHEN DIST CUTS,
   not a batch. Bob's "cut and deploy nothing new before the account moves" is satisfied: this IS that account.
+
+## CLAIM 2026-09-19 DIST (DIST #2 — cut 0.67.0, REC-151)
+
+session: DIST standing lane, DIST #2 [5a3e7f], worktree `intelligent-neumann-30d8e7`, Sparky-Air
+opened: 2026-09-19
+branch: `dist/cut-0.67.0` (the cut lives on a branch until it is deployed and live-verified; `main`'s `release/` is
+  the `latest` pointer and is NOT advanced until then)
+paths: `release/**`, `newgroup/**` (the generated `src/release.mjs` and `dist/` via `npm run build`), the version in
+  `bio-plane/package.json` and `bio-plane/wrangler.jsonc` and the same two sites in `agent-worker/`, `pdf-worker/`
+  and `ocr-worker/`, `bio-plane/test/migrate-released.test.mjs` (the upgrade arm's `RELEASES` row for 0.66.0),
+  `docs/development/kickoffs/DIST-NEXT.md`, and appended entries in `MEASUREMENTS.md` for what this lane lands. All tags.
+why: REC-151 (`cd4b5375`, integrated `5b717355`, IC-164) is a THIRD authority/disclosure closing and is in no release —
+  `op=allocid` refuses every gated prefix with `ALLOCID_PREFIX_GATED` (C-59.5) allocating nothing, and case/draft/
+  grant/task ids mint opaque through one CSPRNG minter, closing the §7.9 disclosure that a sequential id counted
+  objects a caller cannot see. Verified in the BYTES, not from the row: `ALLOCID_PREFIX_GATED` occurs 0 times in
+  0.66.0's signed bundle and twice in `origin/main`'s `store.mjs`. Under WHEN DIST CUTS that is a CUT NOW.

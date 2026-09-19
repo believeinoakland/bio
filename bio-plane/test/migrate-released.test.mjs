@@ -83,6 +83,10 @@ const RELEASES = [
      REC-141 + UI-66); the commit is dist/cut-0.65.0's cut, whose release/ holds it (DIST).
      It boots every store above, so it belongs in RELEASES and NOT in WITHDRAWN. */
   ["0.65.0", "22a72fa1454e4f801fd78d486c111a86f69452a9"],
+  /* 0.66.0: deployed and live-verified 2026-09-19 (REC-152 and REC-153, two AUTHORITY
+     closings, REC-152 also DISCLOSURE); the commit is dist/cut-0.66.0's cut, whose
+     release/ holds it (DIST). It boots every store above: RELEASES, NOT WITHDRAWN. */
+  ["0.66.0", "75069c8115f09821688722825ebf9fb10029891a"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
