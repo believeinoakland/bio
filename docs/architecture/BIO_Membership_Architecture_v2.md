@@ -660,6 +660,14 @@ token and not to the founder's session). **Design:**
   named bundle's type, so a run labelled `inquiry` over a PROJECT's id consulted no project — a way around the project
   context's gate that predates REC-145 (such an id is cited by nothing, so it read PROJECTLESS). A run's `contextType`
   must equal the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent. NOT BUILT.
+  **Two more, decided 2026-09-19 by BOB #16 on REC-153's findings:** (i) **a machine credential sees no more than its
+  principal member** — the lead rule, *a machine credential only within a member's minted scope, never unfiltered* — so
+  an `ai` credential's open over an id its principal cannot see answers as absent, exactly as that member's own open
+  does, whatever kind it names; (ii) **the context kind is the closed vocabulary `RUN_CONTEXTS` (`inquiry`, `project`)**,
+  and any other word is REFUSED, never matched against the bundle's type (a closed vocabulary refuses, it does not
+  ignore — `EXPERTISE_IS_NOT_ASSIGNED`'s precedent). Runs already stored under a mislabelled kind are never rewritten
+  (the log is append-only); the builder COUNTS them in the record namespace and states the number, UNDETERMINED until
+  counted.
 - **RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents
   might be private, though the existence of the project may not be. In this way, somebody who sees the project can ask to
   be added as a member of the project"*; asked whether every project or each project, Bob: *"2, each project chooses"*.
