@@ -60,6 +60,16 @@ scope: read each member's version back THROUGH THE SERVICE BINDING, after instal
 accepts-when: an install against a fleet where ONE member serves a stale build names THAT member and does not report success; the same probe after a fleet deploy names the member that answered stale. How a liar passes it: probing a member's own endpoint instead of through the binding, which tests a path the plane does not use — so the probe goes through the binding the plane actually calls. NEGATIVE CONTROL: pin one member at the previous version, and the arm fails naming it.
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id).
 
+### LED-8 · queued — **SIX REGISTERED ID COLLISIONS, AND `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two unrelated OPEN debt rows; IC-30 two different PROPOSED interface changes; M0-16 a duplicated heading. Registered by `mintid --audit`, so no gate breaks — the lookup CLAUDE.md §1 rests on answers ambiguously. — owner M0.
+order: after D-116, above the features: it defeats §1's single-source lookup rather than member-facing behaviour, and the tools REFUSE rather than corrupt — but it blocks LED-7's own disposal of D-121 and D-124, measured: `archive D-121 --dry-run` refuses NOT_CLOSED and prints BOTH dispositions in one message (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/kickoffs/CONDUCT.md`'s rule that deleting either copy LOSES a defect, so the repair is a fresh id and a renumber carrying its references — with CLAUDE.md §1, the single source that can be CONSISTENTLY searched.
+depends-on: none.
+scope: repair THE WHOLE REGISTER AT ONCE against freshly minted ids, never one pair at a time. D-124's first row reads "(renumbered from a colliding D-122 by CONDUCT 2026-07-31)" — **a renumber has already landed ON another collision**, which is the evidence that the one-at-a-time repair is what failed. Every reference to a renumbered id moves with it (prose, suites, ledgers, archives). M0-16's duplicate is an empty-bodied merge artefact, not two items, and is DELETED rather than renumbered; say which of the six each is before touching any.
+accepts-when: `mintid --audit --base origin/main` reads ZERO registered collisions, not six; `ledger.mjs find` returns exactly ONE row for every id in every namespace. How a liar passes it: deleting a copy, which loses a defect — so the DEBT row count must RISE by the number of renumbers, asserted. NEGATIVE CONTROL: plant a seventh collision, and the audit names it.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 4; found by CONDUCT #7 comparing DEBT counts; `node tools/mintid.mjs LED`).
+
 ### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's and are NOT rowed.
 order: rests on MK-3's attribution (SCHEDULER, first order audit, 2026-09-18)
 milestone: M3 — the member's own knowledge enters the record as what it is
