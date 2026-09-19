@@ -161,7 +161,9 @@ const GROUP = "believe-in-oakland";
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 /* ADDED 2026-08-10 BY CASE-2: the publishing project. Declared at this scope
    rather than inside the block because the corrected assertions below name it. */
-const PUBLISHING_PROJECT = "PROJ-2026-0100-caseobject";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7), so
+   this holds the id makePublishingProject RETURNS below; the old literal is now the fixture's name. */
+let PUBLISHING_PROJECT = null;
 let CASE_ROW = null, MEMBER_ROW = null;
 /* CASE-3 (2026-08-10): the sha that went into the signed `bio-ratify` statement,
    hoisted here so block 3 can compare the PIN against the SIGNATURE rather than
@@ -186,9 +188,9 @@ let SIGNED_SHA = null;
   await enrol("gus", "admin", ["contribute", "publish"]);
   /* CASE-2 / DEC-72: publication is a production of a project and RUTH must own
      it. Declaring NO bar keeps this block measuring the SCHEMA and not a gate. */
-  await makePublishingProject({
+  PUBLISHING_PROJECT = await makePublishingProject({
     post: POST, mf, sha, machineToken: "adm-case1", owner: "ruth",
-    id: PUBLISHING_PROJECT, created: NOW, updated: LATER });
+    name: "PROJ-2026-0100-caseobject", created: NOW, updated: LATER });
 
   const infoMd = (id) => ["---",
     `id: ${id}`, "object_type: information", "schema: information@1",

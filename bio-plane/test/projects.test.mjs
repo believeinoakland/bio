@@ -40,13 +40,17 @@ const mf = new Miniflare({
 const call = async (p, b) => (await (await mf.dispatchFetch("http://x" + p,
   b ? { method: "POST", body: JSON.stringify(b) } : {})).json()).result;
 
-const md = (id, type) => `---\nid: ${id}\nobject_type: ${type}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
-const mk = (id, type) => call("/promote", {
-  bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
-  files: [{ path: "bundle.md", text: md(id, type), bytes: md(id, type).length, sha256: sha(md(id, type)) }],
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a PROJECT's id is MINTED by the plane (Membership v2 §7). A creation
+   naming one is refused PROJECT_ID_SUPPLIED (C-59.1) and creation bytes carrying `id:` are refused
+   PROJECT_ID_IN_BYTES (C-59.2), so `mk` creates a project with NO bundleId and no id line (its label is kept as
+   the title) and the suite reads the id from the answer. Information and problems still choose their ids. */
+const md = (id, type) => `---\n${id === null ? "" : `id: ${id}\n`}object_type: ${type}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
+const mk = (id, type) => { const docId = type === "project" ? null : id; return call("/promote", {
+  ...(docId === null ? {} : { bundleId: id }), base: null, snapKey: `${id}-new`, author: "suite",
+  files: [{ path: "bundle.md", text: md(docId, type), bytes: md(docId, type).length, sha256: sha(md(docId, type)) }],
   meta: { object_type: type, group: "believe-in-oakland", title: id,
           current_state: type === "project" ? "forming" : "collected",
-          created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+          created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } }); };
 
 /* Two members, one project, one shared piece of evidence. */
 await call("/setpassword", { role: "admin", password: "founder-passphrase-1" });
@@ -67,8 +71,12 @@ for (const [id, role] of [["alice", "admin"], ["carol", "member"], ["dave", "mem
 }
 await mk("INFO-2026-0001-shared", "information");
 await mk("PROB-2026-0001-shared", "problem");
-await mk("PROJ-2026-0001-secret", "project");
-await call("/projectclaimowner", { projectId: "PROJ-2026-0001-secret", memberId: "carol" });
+/* CORRECTED 2026-09-18 (REC-141, IC-158): SECRET is the id the plane minted, used everywhere this suite named
+   "PROJ-2026-0001-secret"; FORK1 and STRANDED are likewise read from the answers that created them (7.12, 7.13). */
+const SECRET = (await mk("PROJ-2026-0001-secret", "project")).bundleId;
+if (typeof SECRET !== "string" || !SECRET.startsWith("PROJ-")) throw new Error(`the project was not minted: ${SECRET}`);
+let FORK1, STRANDED;
+await call("/projectclaimowner", { projectId: SECRET, memberId: "carol" });
 
 const visible = async (who) =>
   (await call(`/search?q=&viewer=${encodeURIComponent(who)}&owner=${encodeURIComponent(who)}&facets=none&limit=50`))
@@ -79,36 +87,36 @@ console.log("\n--- an uninvited member does not see the project at all (7.9) ---
   const seen = await visible("member:dave");
   t("dave sees the shared evidence", seen.includes("INFO-2026-0001-shared"), true);
   t("and the shared problem", seen.includes("PROB-2026-0001-shared"), true);
-  t("but not the project he was never invited to", seen.includes("PROJ-2026-0001-secret"), false);
+  t("but not the project he was never invited to", seen.includes(SECRET), false);
   t("not its existence in any form", seen, ["INFO-2026-0001-shared", "PROB-2026-0001-shared"]);
 }
 
 console.log("\n--- the owner sees it, and an administrator sees everything ---");
 {
-  t("carol, the owner, sees her project", (await visible("member:carol")).includes("PROJ-2026-0001-secret"), true);
+  t("carol, the owner, sees her project", (await visible("member:carol")).includes(SECRET), true);
   /* bob is an administrator and was never invited: 7.3 says administrators see
      all projects. */
-  t("alice, an administrator, sees it uninvited", (await visible("member:alice")).includes("PROJ-2026-0001-secret"), true);
-  t("a machine credential is not filtered", (await visible("class:member")).includes("PROJ-2026-0001-secret"), true);
+  t("alice, an administrator, sees it uninvited", (await visible("member:alice")).includes(SECRET), true);
+  t("a machine credential is not filtered", (await visible("class:member")).includes(SECRET), true);
 }
 
 console.log("\n--- invitation makes it visible, and 7.4 joining needs no ceremony ---");
 {
-  const bad = await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=dave&by=dave`);
+  const bad = await call(`/projectinvite?projectId=${SECRET}&handle=dave&by=dave`);
   t("a non-owner cannot invite", bad.reason, "NOT_THE_OWNER");
-  const inv = await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`);
+  const inv = await call(`/projectinvite?projectId=${SECRET}&handle=dave&by=carol`);
   t("the owner invites by handle", inv.state, "invited");
-  t("and now dave can see the project exists", (await visible("member:dave")).includes("PROJ-2026-0001-secret"), true);
-  t("an unknown handle is refused", (await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=ghost&by=carol`)).reason, "NO_SUCH_HANDLE");
-  t("joining is just joining", (await call(`/projectjoin?projectId=PROJ-2026-0001-secret&by=dave`)).state, "joined");
+  t("and now dave can see the project exists", (await visible("member:dave")).includes(SECRET), true);
+  t("an unknown handle is refused", (await call(`/projectinvite?projectId=${SECRET}&handle=ghost&by=carol`)).reason, "NO_SUCH_HANDLE");
+  t("joining is just joining", (await call(`/projectjoin?projectId=${SECRET}&by=dave`)).state, "joined");
 }
 
 console.log("\n--- 7.6: unchecking the box is a REQUEST, and removes nobody ---");
 {
-  const lv = await call(`/projectleave?projectId=PROJ-2026-0001-secret&by=dave&comment=${encodeURIComponent("too busy")}`);
+  const lv = await call(`/projectleave?projectId=${SECRET}&by=dave&comment=${encodeURIComponent("too busy")}`);
   t("leaving is recorded as a request", lv.state, "leaving");
   t("with the member's comment", lv.comment, "too busy");
-  t("and they are still a participant", (await visible("member:dave")).includes("PROJ-2026-0001-secret"), true);
+  t("and they are still a participant", (await visible("member:dave")).includes(SECRET), true);
 }
 
 console.log("\n--- 7.7 REVERSED in v2: only an OWNER removes, and administrators never do ---");
@@ -119,14 +127,14 @@ console.log("\n--- 7.7 REVERSED in v2: only an OWNER removes, and administrators
    standing lesson 3: a rule that breaks old tests is doing its job. */
 {
   t("an administrator cannot remove a participant",
-    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
+    (await call(`/projectremove?projectId=${SECRET}&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
   t("nor can the founder, who holds ADMIN_TOKEN and is above the membership model everywhere else",
-    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=admin`)).reason, "NOT_THE_OWNER");
-  const r = await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`);
+    (await call(`/projectremove?projectId=${SECRET}&handle=dave&by=admin`)).reason, "NOT_THE_OWNER");
+  const r = await call(`/projectremove?projectId=${SECRET}&handle=dave&by=carol`);
   t("the owner can", r.removed, true);
-  t("and the project vanishes for him again", (await visible("member:dave")).includes("PROJ-2026-0001-secret"), false);
+  t("and the project vanishes for him again", (await visible("member:dave")).includes(SECRET), false);
   t("an owner is not removed by this action; ownership moves by 7.10",
-    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=carol&by=carol`)).reason, "OWNER");
+    (await call(`/projectremove?projectId=${SECRET}&handle=carol&by=carol`)).reason, "OWNER");
 }
 
 console.log("\n--- 7.2 in v2: only owners invite, administrators do not ---");
@@ -135,15 +143,15 @@ console.log("\n--- 7.2 in v2: only owners invite, administrators do not ---");
    so the bypass could have been removed or kept without any test noticing. */
 {
   t("an administrator cannot invite to a project",
-    (await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
+    (await call(`/projectinvite?projectId=${SECRET}&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
   t("the owner still can",
-    (await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).state, "invited");
+    (await call(`/projectinvite?projectId=${SECRET}&handle=dave&by=carol`)).state, "invited");
   /* Put the fixture back. The 7.8 assertions below need dave OUT of this
      project, and the first version of this block left him in, which failed four
      assertions two sections later rather than here. A suite that shares one
      fixture across sections owes the next section the state it was handed. */
   t("and the fixture is restored for what follows",
-    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).removed, true);
+    (await call(`/projectremove?projectId=${SECRET}&handle=dave&by=carol`)).removed, true);
 }
 
 console.log("\n--- 7.10: ownership is a SET, and its arithmetic diverges from 4.7 at two ---");
@@ -173,42 +181,42 @@ console.log("\n--- 7.10: ownership is a SET, and its arithmetic diverges from 4.
 console.log("\n--- 7.10: addition, and consensus past the second ---");
 {
   t("a non-owner cannot propose an owner",
-    (await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=dave`)).reason, "NOT_THE_OWNER");
+    (await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=dave`)).reason, "NOT_THE_OWNER");
   t("nor can an administrator, who holds no authority over projects",
-    (await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
+    (await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=alice`)).reason, "NOT_THE_OWNER");
   t("someone who is not on the project cannot be made its owner",
-    (await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).reason, "NOT_A_PARTICIPANT");
-  await call(`/projectinvite?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`);
-  await call(`/projectjoin?projectId=PROJ-2026-0001-secret&by=dave`);
-  const add = await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`);
+    (await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=carol`)).reason, "NOT_A_PARTICIPANT");
+  await call(`/projectinvite?projectId=${SECRET}&handle=dave&by=carol`);
+  await call(`/projectjoin?projectId=${SECRET}&by=dave`);
+  const add = await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=carol`);
   t("the SOLE owner adds a second unilaterally", add.owner, true);
   t("and there are now two", add.owners, ["carol", "dave"]);
   t("adding someone already an owner is refused",
-    (await call(`/projectowneradd?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).reason, "ALREADY_AN_OWNER");
+    (await call(`/projectowneradd?projectId=${SECRET}&handle=dave&by=carol`)).reason, "ALREADY_AN_OWNER");
 }
 
 console.log("\n--- 7.10: removal at TWO takes both, the departing owner included ---");
 {
   t("removals carry a reason",
-    (await call(`/projectownerremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).reason, "NO_REASON");
-  const one = await call(`/projectownerremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol&reason=${encodeURIComponent("moving on")}`);
+    (await call(`/projectownerremove?projectId=${SECRET}&handle=dave&by=carol`)).reason, "NO_REASON");
+  const one = await call(`/projectownerremove?projectId=${SECRET}&handle=dave&by=carol&reason=${encodeURIComponent("moving on")}`);
   t("one owner's vote is not enough", one.reason, "VOTES_SHORT");
   t("and it says how far short", [one.have, one.need], [1, 2]);
   /* The divergence, exercised rather than described: at three owners this call
      would be TARGET_CANNOT_VOTE. At two it is exactly how the rule is carried,
      because at two the act is a resignation with the other owner's assent. */
-  const two = await call(`/projectownerremove?projectId=PROJ-2026-0001-secret&handle=dave&by=dave&reason=${encodeURIComponent("agreed")}`);
+  const two = await call(`/projectownerremove?projectId=${SECRET}&handle=dave&by=dave&reason=${encodeURIComponent("agreed")}`);
   t("the TARGET's own vote carries it at two", two.ok, true);
   t("one owner remains", two.owners, ["carol"]);
   t("and the former owner is STILL a participant, per 7.10", two.stillAParticipant, true);
-  t("confirmed on the participant list", (await call(`/projectparticipants?projectId=PROJ-2026-0001-secret&by=carol`))
+  t("confirmed on the participant list", (await call(`/projectparticipants?projectId=${SECRET}&by=carol`))
     .participants.filter((x) => x.handle === "dave").map((x) => x.owner), [0]);
   t("the last owner is not removable, because one is the floor",
-    (await call(`/projectownerremove?projectId=PROJ-2026-0001-secret&handle=carol&by=carol&reason=${encodeURIComponent("x")}`)).reason,
+    (await call(`/projectownerremove?projectId=${SECRET}&handle=carol&by=carol&reason=${encodeURIComponent("x")}`)).reason,
     "LAST_OWNER");
   /* Put the fixture back for 7.8 below, which needs dave off the project. */
   t("fixture restored",
-    (await call(`/projectremove?projectId=PROJ-2026-0001-secret&handle=dave&by=carol`)).removed, true);
+    (await call(`/projectremove?projectId=${SECRET}&handle=dave&by=carol`)).removed, true);
 }
 
 console.log("\n--- 7.11: only an OWNER deactivates or reactivates, and the rule is NARROW ---");
@@ -246,7 +254,7 @@ console.log("\n--- 7.11: only an OWNER deactivates or reactivates, and the rule 
               ...(closedReason ? { closed_reason: closedReason } : {}),
               created: "2026-07-01T00:00:00Z", last_updated: "2026-07-02T00:00:00Z" } });
   };
-  const P = "PROJ-2026-0001-secret";
+  const P = SECRET;
 
   t("a non-owner participant cannot deactivate",
     (await promoteState(P, "closed", "abandoned", "dave")).reason, "NOT_THE_OWNER");
@@ -286,27 +294,32 @@ console.log("\n--- 7.11: only an OWNER deactivates or reactivates, and the rule 
 
 console.log("\n--- 7.12: fork, and the three things that keep it from being an escalation route ---");
 {
-  const P = "PROJ-2026-0001-secret";
+  const P = SECRET;
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): every fork here named its clone's id (`newId`), which the plane now
+     refuses PROJECT_FORK_ID_SUPPLIED (C-59.3); the clone's id is MINTED and read from the answer's `newId`. */
   t("an uninvited member cannot fork what they cannot see",
-    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0002-fork&title=Fork+one&by=dave`)).reason,
+    (await call(`/projectfork?projectId=${P}&title=Fork+one&by=dave`)).reason,
     "NOT_A_PARTICIPANT");
   await call(`/projectinvite?projectId=${P}&handle=dave&by=carol`);
   /* INVITED IS NOT ENOUGH. An invited member sees the skeleton only, so a fork
      by them would copy material they cannot read. This is the assertion that
      makes fork mean one thing. */
   t("an INVITED member who has not joined cannot fork either",
-    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0002-fork&title=Fork+one&by=dave`)).reason,
+    (await call(`/projectfork?projectId=${P}&title=Fork+one&by=dave`)).reason,
     "NOT_JOINED");
   await call(`/projectjoin?projectId=${P}&by=dave`);
 
-  const f = await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0002-fork&title=Fork+one&by=dave`);
+  const f = await call(`/projectfork?projectId=${P}&title=Fork+one&by=dave`);
   t("a JOINED participant forks it", f.ok, true);
+  FORK1 = f.newId;
+  t("and the clone's id is one the plane minted, not the origin's", [typeof FORK1, FORK1?.startsWith("PROJ-"), FORK1 !== P],
+    ["string", true, true]);
   /* THE RECORD, not the return value. The first version asserted `f.rel`, which
      is a literal this method returns, and the method did not in fact write the
      edge: a fork with no provenance passed the assertion. Read the document and
      the projected refs instead. */
   {
-    const doc = (await call(`/image?id=PROJ-2026-0002-fork&viewer=class:member`))["bundle.md"] || "";
+    const doc = (await call(`/image?id=${FORK1}&viewer=class:member`))["bundle.md"] || "";
     t("the clone's frontmatter carries a references block", /references:/.test(doc), true);
     t("with a derived_from edge, already in the closed vocabulary", /rel: derived_from/.test(doc), true);
     t("pointing at the origin", new RegExp(`target: ${P}`).test(doc), true);
@@ -315,14 +328,14 @@ console.log("\n--- 7.12: fork, and the three things that keep it from being an e
        the table the derived reverse view reads. No route exposes that table, so
        measure the count it feeds, across a fork, which is the same evidence. */
     const refsBefore = (await call(`/stats`)).refs;
-    const f2 = await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0004-fork&title=Fork+three&by=dave`);
+    const f2 = await call(`/projectfork?projectId=${P}&title=Fork+three&by=dave`);
     t("a second fork lands", f2.ok, true);
     t("and the refs PROJECTION grew by exactly one, so the edge is really there",
       (await call(`/stats`)).refs - refsBefore, 1);
   }
   t("the forker is the clone's sole owner, whoever owned the origin", f.owner, "dave");
   t("and NO participants were copied", f.participantsCopied, 0);
-  const parts = await call(`/projectparticipants?projectId=PROJ-2026-0002-fork&by=dave`);
+  const parts = await call(`/projectparticipants?projectId=${FORK1}&by=dave`);
   t("confirmed on the clone's participant list: one person", parts.participants.length, 1);
   t("who is the forker, as its owner", [parts.participants[0].handle, parts.participants[0].owner], ["dave", 1]);
   t("carol, who owns the ORIGIN, is not on the clone",
@@ -332,20 +345,20 @@ console.log("\n--- 7.12: fork, and the three things that keep it from being an e
      unique index over the trimmed string is how handles work and would let these
      two coexist, which is the collision the rule exists to stop. */
   t("a second fork cannot take the same name",
-    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0003-fork&title=Fork+one&by=dave`)).reason,
+    (await call(`/projectfork?projectId=${P}&title=Fork+one&by=dave`)).reason,
     "NAME_TAKEN");
   t("nor a differently-cased one",
-    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0003-fork&title=FORK+ONE&by=dave`)).reason,
+    (await call(`/projectfork?projectId=${P}&title=FORK+ONE&by=dave`)).reason,
     "NAME_TAKEN");
   t("nor one differing only in whitespace",
-    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0003-fork&title=Fork++one&by=dave`)).reason,
+    (await call(`/projectfork?projectId=${P}&title=Fork++one&by=dave`)).reason,
     "NAME_TAKEN");
   t("a genuinely different name is fine",
-    (await call(`/projectfork?projectId=${P}&newId=PROJ-2026-0003-fork&title=Fork+two&by=dave`)).ok, true);
+    (await call(`/projectfork?projectId=${P}&title=Fork+two&by=dave`)).ok, true);
 
   /* A fork starts at the beginning of the lifecycle. Inheriting `matured` would
      claim a readiness the clone has not earned. */
-  const st = ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === "PROJ-2026-0002-fork");
+  const st = ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === FORK1);
   t("the clone starts at the beginning of the lifecycle", st?.current_state, "forming");
   t("and carries its own name", st?.title, "Fork one");
 
@@ -359,14 +372,17 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
      the ORDINARY path could still collide. That was D-48. The write path is
      where it has to live, because fork is one of several ways a project is
      born. */
-  const mkNamed = (id, title) => {
-    const doc = `---\nid: ${id}\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
-    return call("/promote", { bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a creation sends NO bundleId and no `id:` line (the plane mints the
+     id, Membership v2 §7); `label` only keys the snapshot, and a created project's id is read from the answer. */
+  const mkNamed = (label, title) => {
+    const doc = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+    return call("/promote", { base: null, snapKey: `${label}-new`, author: "suite",
       files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
       meta: { object_type: "project", group: "believe-in-oakland", title,
               current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
   };
-  t("a project with a fresh name is created", (await mkNamed("PROJ-2026-0100-a", "Sewer Fund Transfers")).ok, true);
+  const A = await mkNamed("PROJ-2026-0100-a", "Sewer Fund Transfers");
+  t("a project with a fresh name is created", A.ok, true);
   t("an identical name is refused on the ORDINARY promote path",
     (await mkNamed("PROJ-2026-0101-b", "Sewer Fund Transfers")).reason, "NAME_TAKEN");
   t("case does not rescue it", (await mkNamed("PROJ-2026-0102-c", "SEWER FUND TRANSFERS")).reason, "NAME_TAKEN");
@@ -379,14 +395,15 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
   t("and the refusal names NEITHER the project already holding it NOR its title (Membership v2 §7)",
     ((r) => [r.reason, "bundleId" in r, "title" in r])(await mkNamed("PROJ-2026-0104-e", "sewer fund transfers")),
     ["NAME_TAKEN", false, false]);
-  t("a different name is fine", (await mkNamed("PROJ-2026-0105-f", "Franchise Fee Diversion")).ok, true);
+  const F = await mkNamed("PROJ-2026-0105-f", "Franchise Fee Diversion");
+  t("a different name is fine", F.ok, true);
 
   /* Held across every lifecycle state. A deactivated project has not gone
      anywhere: it is still cited, and its name must still resolve to what was
      cited, or a later project silently inherits an earlier one's references. */
   const cur = async (id) => ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === id)?.bundle_sha;
-  const doc2 = `---\nid: PROJ-2026-0105-f\nobject_type: project\ncurrent_state: closed\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-03T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
-  await call("/promote", { bundleId: "PROJ-2026-0105-f", base: await cur("PROJ-2026-0105-f"),
+  const doc2 = `---\nid: ${F.bundleId}\nobject_type: project\ncurrent_state: closed\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-03T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  await call("/promote", { bundleId: F.bundleId, base: await cur(F.bundleId),
     snapKey: "f-closed", author: "suite",
     files: [{ path: "bundle.md", text: doc2, bytes: doc2.length, sha256: sha(doc2) }],
     meta: { object_type: "project", group: "believe-in-oakland", title: "Franchise Fee Diversion",
@@ -397,9 +414,9 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
 
   /* A project may still be revised without tripping over ITSELF, which is the
      obvious way to get this wrong. */
-  const doc3 = `---\nid: PROJ-2026-0100-a\nobject_type: project\ncurrent_state: investigating\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-04T00:00:00Z"\n---\n\n## Summary\n\nY.\n`;
+  const doc3 = `---\nid: ${A.bundleId}\nobject_type: project\ncurrent_state: investigating\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-04T00:00:00Z"\n---\n\n## Summary\n\nY.\n`;
   t("and a project keeps its own name across a revision",
-    (await call("/promote", { bundleId: "PROJ-2026-0100-a", base: await cur("PROJ-2026-0100-a"),
+    (await call("/promote", { bundleId: A.bundleId, base: await cur(A.bundleId),
       snapKey: "a-rev", author: "suite",
       files: [{ path: "bundle.md", text: doc3, bytes: doc3.length, sha256: sha(doc3) }],
       meta: { object_type: "project", group: "believe-in-oakland", title: "Sewer Fund Transfers",
@@ -424,18 +441,22 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
      being re-promoted with title undefined and silently blanked in the
      projection. An update that does not mention the title is not a request to
      remove it. */
-  const untitled = `---\nid: PROJ-2026-0107-h\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
-  await call("/promote", { bundleId: "PROJ-2026-0107-h", base: null, snapKey: "h-new", author: "suite",
-    files: [{ path: "bundle.md", text: untitled, bytes: untitled.length, sha256: sha(untitled) }],
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): created with no bundleId and no id line (the plane mints H); the
+     revision's bytes carry the minted id, as this document's two promotions both carried its id before. */
+  const untitledOf = (id) => `---\n${id === null ? "" : `id: ${id}\n`}object_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  const untitled0 = untitledOf(null);
+  const H = (await call("/promote", { base: null, snapKey: "h-new", author: "suite",
+    files: [{ path: "bundle.md", text: untitled0, bytes: untitled0.length, sha256: sha(untitled0) }],
     meta: { object_type: "project", group: "believe-in-oakland", title: "Kept Name",
-            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
-  await call("/promote", { bundleId: "PROJ-2026-0107-h", base: await cur("PROJ-2026-0107-h"),
+            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } })).bundleId;
+  const untitled = untitledOf(H);
+  await call("/promote", { bundleId: H, base: await cur(H),
     snapKey: "h-rev", author: "suite",
     files: [{ path: "bundle.md", text: untitled, bytes: untitled.length, sha256: sha(untitled) }],
     meta: { object_type: "project", group: "believe-in-oakland",
             current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-05T00:00:00Z" } });
   t("a revision that omits the title carries the old one forward",
-    ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === "PROJ-2026-0107-h")?.title, "Kept Name");
+    ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === H)?.title, "Kept Name");
   t("and the name is still held against a later collision",
     (await mkNamed("PROJ-2026-0108-i", "kept name")).reason, "NAME_TAKEN");
 }
@@ -447,12 +468,12 @@ console.log("\n--- 7.13: the ONE participation power an administrator has, and i
      project. An administrator can end the access of a project's only owner and
      then be unable to touch the project, which accepts no new participants,
      cannot be reactivated, and cannot change hands. */
-  const P = "PROJ-2026-0200-stranded";
-  const doc = `---\nid: ${P}\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
-  await call("/promote", { bundleId: P, base: null, snapKey: `${P}-new`, author: "suite",
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): created with no bundleId and no id line; P is the minted id. */
+  const doc = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  const P = STRANDED = (await call("/promote", { base: null, snapKey: "PROJ-2026-0200-stranded-new", author: "suite",
     files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
     meta: { object_type: "project", group: "believe-in-oakland", title: "Stranded Project",
-            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+            current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } })).bundleId;
   await call("/projectclaimowner", { projectId: P, memberId: "carol" });
 
   t("while the owner is ACTIVE an administrator may not add an owner",
@@ -488,9 +509,9 @@ console.log("\n--- 7.13: the ONE participation power an administrator has, and i
 
 console.log("\n--- 7.8: participants see each other, non-participants see nothing ---");
 {
-  const p = await call(`/projectparticipants?projectId=PROJ-2026-0001-secret&by=carol`);
+  const p = await call(`/projectparticipants?projectId=${SECRET}&by=carol`);
   t("a participant sees the list", p.participants.map((x) => x.handle), ["carol"]);
-  const out = await call(`/projectparticipants?projectId=PROJ-2026-0001-secret&by=dave`);
+  const out = await call(`/projectparticipants?projectId=${SECRET}&by=dave`);
   t("a non-participant is refused", out.reason, "NO_SUCH_PROJECT");
   /* And refused in the SAME WORDS as for a project that does not exist, because
      7.9 says an uninvited member cannot see that a project exists. */
@@ -517,21 +538,21 @@ console.log("\n--- REC-27 / D-137: a purge takes the participation graph with th
   /* Leave a PENDING owner vote so the whole-store purge has a vote row to prove
      it cleared: the stranded project has two active owners, and one owner's
      removal vote at two is deliberately not enough (7.10). */
-  const pend = await call(`/projectownerremove?projectId=PROJ-2026-0200-stranded&handle=dave&by=carol&reason=${encodeURIComponent("left pending on purpose")}`);
+  const pend = await call(`/projectownerremove?projectId=${STRANDED}&handle=dave&by=carol&reason=${encodeURIComponent("left pending on purpose")}`);
   t("a pending owner vote is on the books", pend.reason, "VOTES_SHORT");
   const s0 = await stats();
   t("participants are counted before the purge", s0.projectParticipants > 0, true);
   t("and so is the pending vote", s0.projectOwnerVotes > 0, true);
 
   /* PER-BUNDLE: purging ONE project takes ITS participant rows and no others.
-     PROJ-2026-0002-fork has exactly one participant, dave, its owner. */
-  const p1 = await call(`/purge?bundleId=PROJ-2026-0002-fork`);
-  t("a per-bundle purge names its scope", p1.scope, "PROJ-2026-0002-fork");
+     FORK1 (7.12's first clone) has exactly one participant, dave, its owner. */
+  const p1 = await call(`/purge?bundleId=${FORK1}`);
+  t("a per-bundle purge names its scope", p1.scope, FORK1);
   t("and reports the participant row it took", p1.removed.projectParticipants, 1);
   const s1 = await stats();
   t("exactly one participant row went with the project", s0.projectParticipants - s1.projectParticipants, 1);
   t("other projects' participants are untouched",
-    (await call(`/projectparticipants?projectId=PROJ-2026-0200-stranded&by=dave`)).participants.length > 0, true);
+    (await call(`/projectparticipants?projectId=${STRANDED}&by=dave`)).participants.length > 0, true);
 
   /* WHOLE-STORE: scope ALL leaves NO participation graph standing. Before
      REC-27 both counts survived this call — the exact D-113 silent-leftover. */

@@ -1277,7 +1277,14 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    fetched at `cap + 1` (graded by name below as `#frontierInternet:page`), while the viewer-scoped
    TALLY is one GROUP BY over the readable looks and deliberately unbounded, as the other three
    levels' tallies are. */
-const SCANNING_MEASURED_2026_09_15 = 108;
+/* D-431 / IC-161, 2026-09-19: 108 -> 109, TAKEN FROM THE CORPUS LINE THIS RUN PRINTED
+   (`109 methods scanning UNBOUNDED`), not by adding one. The arrival is `#ratifiedFindingsRestingOn`,
+   and there is no departure: it reads the roster of every RATIFIED case's pinned members to ask which of
+   them rests on the bundle being ratified. Its set is bounded by the cases ever ratified — a roster, never
+   a walk of the corpus — and it is deliberately NOT paged: a page that stopped before the one resting
+   finding would refuse evidence a ratified case rests on, the over-strictness failure the D-431 suite's
+   `refuse-every-evidence` arm measures. It is not in the amplification class (24 is unchanged). */
+const SCANNING_MEASURED_2026_09_15 = 109;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "

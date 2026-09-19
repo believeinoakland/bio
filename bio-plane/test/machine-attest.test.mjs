@@ -278,8 +278,10 @@ const inquiryMd = (id, question, target) => ["---",
   "## Session Log", "", `### Session ${LATER} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); the
+   fixture takes a `name` and returns the minted id, which is what PROJECT holds. */
 const PROJECT = await makePublishingProject({ post: POST, mf, sha, machineToken: ADM, owner: "iris",
-  id: "PROJ-2026-9123-auditor", created: NOW, updated: LATER });
+  name: "PROJ-2026-9123-auditor", created: NOW, updated: LATER });
 const INFO = "INFO-2026-9123-memo", LEAD = "INQ-2026-9123-lead";
 await promoteAs(ADM, INFO, infoMd(INFO), "information", "collected");
 /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a

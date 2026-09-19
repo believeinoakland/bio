@@ -75,10 +75,17 @@ const VERA  = await member("vera",  []);                                // view 
 const PIA   = await member("pia",   ["contribute", "create_projects"]); // may create projects
 
 let seq = 0;
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED, so a project creation sends NO bundleId (its `id`
+   here is only the title's label) and each site reads the id from the answer. Its bundle.md now opens
+   with a front matter block, because the plane writes the minted id into it and refuses a creation it
+   cannot write into (PROJECT_DOCUMENT_UNREADABLE). Its `references` is an inline scalar the grammar cannot
+   extend, so 7.12's fork arm below is still refused UNSPLICEABLE_REFERENCES as it was when the fixture had
+   no front matter at all (#spliceReferences opens a missing key, so an absent block no longer refuses). */
 const bundle = (id, type = "information") => {
-  const md = `# ${id}\n`;
+  const md = type === "project" ? `---\nobject_type: project\nreferences: none\n---\n# ${id}\n` : `# ${id}\n`;
   return {
-    bundleId: id, base: null, snapKey: `20260726T1200${String(++seq).padStart(2, "0")}Z_aaaa1111`,
+    ...(type === "project" ? {} : { bundleId: id }), base: null, snapKey: `20260726T1200${String(++seq).padStart(2, "0")}Z_aaaa1111`,
     meta: { object_type: type, group: "believe-in-oakland", title: `title for ${id}`,
             current_state: type === "project" ? "forming" : "collected",
             created: "2026-07-26T00:00:00Z", last_updated: "2026-07-26T00:00:00Z" },
@@ -113,9 +120,10 @@ t("the same member may still promote ordinary material",
   (await POST(`op=promote&${SAM}`, bundle("INFO-2026-9004-sam"))).result?.ok, true);
 const proj = await POST(`op=promote&${PIA}`, bundle("PROJ-2026-9002-pia", "project"));
 t("a member WITH create_projects creates one", proj.result?.ok, true);
+const PIA_PROJ = proj.result?.bundleId;   // CORRECTED 2026-09-18 (REC-141): the MINTED id, was "PROJ-2026-9002-pia"
 
 console.log("\n--- 7.1: the creator becomes the owner, in the same write ---");
-const parts = await GET(`op=projectparticipants&projectId=PROJ-2026-9002-pia&${PIA}`);
+const parts = await GET(`op=projectparticipants&projectId=${PIA_PROJ}&${PIA}`);
 t("the project has exactly one participant", parts.result?.participants?.length, 1);
 t("who is the creator", parts.result?.participants?.[0]?.handle, "pia");
 t("and is its owner", parts.result?.participants?.[0]?.owner, 1);
@@ -125,11 +133,13 @@ console.log("\n--- 7.12: fork requires create_projects, at the control plane ---
    projects they were not trusted to create, simply by forking one they are on.
    Asserted HERE and not only in projects.test.mjs, because the capability lives
    on the session and the Durable Object never sees one. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a fork's id is MINTED too — a `newId` is refused
+   PROJECT_FORK_ID_SUPPLIED (C-59.3) — so every fork below names none. */
 t("a joined participant WITHOUT create_projects cannot fork",
-  (await POST(`op=projectfork&projectId=PROJ-2026-9002-pia&newId=PROJ-2026-9099-x&title=Anything&${SAM}`)).needs,
+  (await POST(`op=projectfork&projectId=${PIA_PROJ}&title=Anything&${SAM}`)).needs,
   "create_projects");
 t("and is refused for the capability, not for anything about the project",
-  (await POST(`op=projectfork&projectId=PROJ-2026-9002-pia&newId=PROJ-2026-9099-x&title=Anything&${SAM}`)).reason,
+  (await POST(`op=projectfork&projectId=${PIA_PROJ}&title=Anything&${SAM}`)).reason,
   "NOT_CAPABLE");
 /* NEGATIVE CONTROL: holding the capability is not on its own enough, and a gate
    that refused everyone would pass the assertion above while saying nothing. pia
@@ -137,11 +147,12 @@ t("and is refused for the capability, not for anything about the project",
    and is then judged on section 7 and on the document.
 
    She is refused, and the refusal is the POINT: this fixture writes bundle.md
-   with no frontmatter at all, so there is no references block to extend and the
-   clone would have no recorded origin. A fork with no provenance is not written.
+   with an inline-scalar `references` (CORRECTED 2026-09-18, REC-141: it had no
+   frontmatter at all, which a project creation may no longer have), so there is
+   no references block to extend and the clone would have no recorded origin. A fork with no provenance is not written.
    What matters here is that her refusal is not NOT_CAPABLE. */
 {
-  const r = await POST(`op=projectfork&projectId=PROJ-2026-9002-pia&newId=PROJ-2026-9098-y&title=Pia+fork&${PIA}`);
+  const r = await POST(`op=projectfork&projectId=${PIA_PROJ}&title=Pia+fork&${PIA}`);
   t("a member WITH create_projects is past the capability gate", r.reason === "NOT_CAPABLE", false);
   t("and is judged on the record instead", r.result?.reason, "UNSPLICEABLE_REFERENCES");
 }
@@ -152,17 +163,18 @@ console.log("\n--- capabilities gate a SESSION, never a machine credential ---")
    member behind it and therefore no capabilities to hold. */
 t("MEMBER_TOKEN promotes, uncapability-gated",
   (await POST("op=promote&token=t-member-1", bundle("INFO-2026-9005-machine"))).result?.ok, true);
-t("and cannot forge a project owner",
-  (await POST("op=promote&token=t-member-1",
-     { ...bundle("PROJ-2026-9003-machine", "project"), ownerMemberId: "pia" })).result?.ok, true);
+const machineProj = await POST("op=promote&token=t-member-1",
+  { ...bundle("PROJ-2026-9003-machine", "project"), ownerMemberId: "pia" });
+t("and cannot forge a project owner", machineProj.result?.ok, true);
+const MACHINE_PROJ = machineProj.result?.bundleId;   // CORRECTED 2026-09-18 (REC-141): the MINTED id
 /* Asked as an admin SESSION, not with ADMIN_TOKEN: `by` is stamped `class:admin`
    for a machine credential, which is not a member id and matches no
    administrator, so the store answers NO_SUCH_PROJECT. That is the fail-closed
    behaviour the stamp exists for, and it is asserted just below. */
-const forged = await GET(`op=projectparticipants&projectId=PROJ-2026-9003-machine&${RUTH}`);
+const forged = await GET(`op=projectparticipants&projectId=${MACHINE_PROJ}&${RUTH}`);
 t("the machine-created project has no owner at all", forged.result?.participants?.length, 0);
 t("and a machine credential cannot read a participant list, having no member behind it",
-  (await GET(`op=projectparticipants&projectId=PROJ-2026-9002-pia&token=t-admin-1`)).result?.reason,
+  (await GET(`op=projectparticipants&projectId=${PIA_PROJ}&token=t-admin-1`)).result?.reason,
   "NO_SUCH_PROJECT");
 
 console.log("\n--- an administrator holds every working capability (v2 section 5) ---");

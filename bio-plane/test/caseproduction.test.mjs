@@ -236,9 +236,12 @@ const infoMd = (id) => ["---",
   '  retrieved: "2026-06-01T00:00:00Z"', "  method: capture",
   "---", "", "## What This Is", "", "A document.", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
-const projectMd = (id, { refs = [], bar = null } = {}) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Project ${id}"`, "current_state: investigating", "prior_state: null",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7) and creation bytes carrying an `id:` line are refused
+   PROJECT_ID_IN_BYTES, so `id` null writes no id line; `name` keeps the title. */
+const projectMd = (id, { refs = [], bar = null, name = id } = {}) => ["---",
+  ...(id ? [`id: ${id}`] : []), "object_type: project", "schema: project@1",
+  `title: "Project ${name}"`, "current_state: investigating", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", ...refLines(refs), "state_history: []",
@@ -261,6 +264,18 @@ const promote = async (id, md, type, state, tok = PILAR, base = null) => rP(awai
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
     : [],
 }));
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED; the
+   creation sends no bundleId and the id is read from the answer. */
+const createProject = async (name, md, tok = PILAR) => {
+  const r = rP(await POST(`op=promote&token=${tok}`, {
+    base: null, snapKey: `20260810T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
+    meta: { object_type: "project", group: "believe-in-oakland", title: `t ${name}`,
+            current_state: "investigating", created: NOW, last_updated: LATER },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));
+  if (r.ok === false || !r.bundleId) throw new Error(`create project ${name}: ${JSON.stringify(r)}`);
+  return r.bundleId;
+};
 const mustPromote = async (...a) => {
   const r = await promote(...a);
   if (r.ok === false) throw new Error(`promote ${a[0]}: ${JSON.stringify(r)}`);
@@ -272,8 +287,8 @@ console.log("\n--- 1. the fixture: two projects, one owner who is not the creato
 
 const INFO_CAP = "INFO-2026-2200-capture-b";
 const INFO_CONN = "INFO-2026-2200-connection-c";
-const PROJ = "PROJ-2026-2200-auditor";
-const PROJ_OTHER = "PROJ-2026-2200-other";
+/* CORRECTED 2026-09-18 (REC-141): minted below by createProject, not chosen. */
+let PROJ, PROJ_OTHER;
 /* STRONG derives (capture B, connection B) and WEAK derives (capture B,
    connection C). The project's bar is (B, B). So STRONG clears it and WEAK does
    NOT — on the CONNECTION axis only, which is deliberate: a single-axis
@@ -327,8 +342,10 @@ await mustPromote(INQ_BAR_B, inquiryMd(INQ_BAR_B,
   { question: "Did the clerk acknowledge it?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }), "inquiry", "open");
 
 const BAR = { capture: "B", connection: "B", author: "nadia", at: "2026-07-03T00:00:00Z" };
-await mustPromote(PROJ, projectMd(PROJ, { bar: BAR }), "project", "investigating", NADIA);
-await mustPromote(PROJ_OTHER, projectMd(PROJ_OTHER), "project", "investigating", NADIA);
+PROJ = await createProject("PROJ-2026-2200-auditor",
+  projectMd(null, { bar: BAR, name: "PROJ-2026-2200-auditor" }), NADIA);
+PROJ_OTHER = await createProject("PROJ-2026-2200-other",
+  projectMd(null, { name: "PROJ-2026-2200-other" }), NADIA);
 
 /* THE ROSTER, PERFORMED THROUGH THE PLANE'S OWN ACTS rather than written into a
    table. `op=promote` made NADIA the owner (Membership Architecture v2 7.1: the
@@ -674,10 +691,11 @@ console.log("\n--- 5. THE PAIR: the SAME finding, below the SAME bar, refused as
     /case_roles:\n\s+- target: INQ-2026-2200-strong\n\s+role: load_bearing\n[\s\S]{0,120}?- target: INQ-2026-2200-weak\n\s+role: supporting/
       .test(caseDoc), true);
   t("and whose PRODUCTION it is, in the same document, for the same reason",
-    /\ncase_project: PROJ-2026-2200-auditor\n/.test(caseDoc), true);
+    /* CORRECTED 2026-09-18 (REC-141): re-pointed from the literal id at the minted one. */
+    new RegExp(`\\ncase_project: ${PROJ}\\n`).test(caseDoc), true);
   t("the bar names the project it came from and is stated ONCE — the bar is the CASE's property, so "
   + "two members held to different standards is a state this act cannot produce",
-    /required_strength:[\s\S]{0,200}?project: PROJ-2026-2200-auditor/.test(caseDoc), true);
+    new RegExp(`required_strength:[\\s\\S]{0,200}?project: ${PROJ}`).test(caseDoc), true);
   t("and NEITHER member's bytes carry any of it — the partition, the producing project and the bar "
   + "moved rather than being written in two places, which is what makes one authority one authority",
     [weakBytes, strongBytes].map((b) => ["case_roles:", "case_project:", "required_strength:"]

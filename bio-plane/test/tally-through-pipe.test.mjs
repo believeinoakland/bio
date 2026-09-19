@@ -39,10 +39,15 @@ const t = (label, got, want) => {
    this repository's most-repeated finding, so arm E asserts character for
    character that it is still the literal `battery.mjs` uses. A suite asserting
    that a tally is readable by a reader nobody runs would prove nothing. */
-const TALLY_RE = /(\d+)\s+pass(?:ed)?,\s+(\d+)\s+fail(?:ed)?(?:,\s+(\d+)\s+skip(?:ped)?\s*\(([^)]*)\))?/g;
+/* CORRECTED 2026-09-19 by M0-65 (D-413): the runner's pattern was widened to read
+   `N passing` and `N passing, M failing` beside the two older forms, with a filter that
+   keeps a bare `N passed` out; this copy follows it, filter included, because arm E is
+   what says the copy is the runner's and a stale copy is exactly what it exists to catch. */
+const TALLY_RE = /(\d+)\s+(pass(?:ed)?|passing)\b(?:,\s+(\d+)\s+fail(?:ed|ing)?)?(?:,\s+(\d+)\s+skip(?:ped)?\s*\(([^)]*)\))?/g;
 const tally = (out) => {
-  const m = [...out.matchAll(new RegExp(TALLY_RE.source, "g"))].pop();
-  return m ? { pass: +m[1], fail: +m[2] } : null;
+  const m = [...out.matchAll(new RegExp(TALLY_RE.source, "g"))]
+    .filter((x) => x[3] !== undefined || x[2] === "passing").pop();
+  return m ? { pass: +m[1], fail: m[3] === undefined ? null : +m[3] } : null;
 };
 
 /* ---- the flooding fixture --------------------------------------------------

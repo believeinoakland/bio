@@ -133,7 +133,9 @@ const actionMd = (id) => ["---",
 /* NO `references` BLOCK WITH ANYTHING IN IT, EVER. This is the whole discipline
    of the file: PL-2's fixture hand-authored the edge, which is why its suite
    drove this gate without discovering the gate has no door. */
-const projectMd = (id) => ["---", `id: ${id}`, "object_type: project",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): creation bytes of a project carry no `id:` line
+   (PROJECT_ID_IN_BYTES); the plane mints the id and writes it. */
+const projectMd = () => ["---", "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
@@ -153,21 +155,34 @@ const mustPromote = async (id, text, type, state) => {
   return r;
 };
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7)
+   and a creation naming one is refused PROJECT_ID_SUPPLIED; the creation names no bundleId and the
+   id is read from the answer. `name` keeps the title the chosen id used to give it. */
+const createProject = async (name) => {
+  const text = projectMd();
+  const r = await POST(`op=promote&token=${RUTH}`, {
+    base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+            current_state: "forming", created: NOW, last_updated: LATER } });
+  if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 700)}`);
+  return r.bundleId;
+};
+
 const QUESTION = "INQ-2026-7200-sewer-transfers";
 const QUESTION2 = "INQ-2026-7200-process";
 const DOC = "INFO-2026-7200-ledger";
 const DOC_Q_ONLY = "INFO-2026-7200-cited-by-a-question-only";
 const ACTION = "ACTN-2026-7200-cpra";
-const CASE_A = "PROJ-2026-7200-oversight";
-const CASE_B = "PROJ-2026-7200-budget";
+let CASE_A, CASE_B; /* minted below (REC-141) */
 
 await mustPromote(QUESTION, inquiryMd(QUESTION), "inquiry", "open");
 await mustPromote(QUESTION2, inquiryMd(QUESTION2), "inquiry", "open");
 await mustPromote(DOC, infoMd(DOC), "information", "collected");
 await mustPromote(DOC_Q_ONLY, infoMd(DOC_Q_ONLY), "information", "collected");
 await mustPromote(ACTION, actionMd(ACTION), "action", "planned");
-await mustPromote(CASE_A, projectMd(CASE_A), "project", "forming");
-await mustPromote(CASE_B, projectMd(CASE_B), "project", "forming");
+CASE_A = await createProject("PROJ-2026-7200-oversight");
+CASE_B = await createProject("PROJ-2026-7200-budget");
 
 const selectIds = async (ids) => {
   const r = await POST(`op=select&token=${RUTH}`, { ids });

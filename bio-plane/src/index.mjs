@@ -8230,17 +8230,11 @@ export default {
                                published: the rule is "names them while serving
                                neither", which is about the disclosure and not
                                about what happens to be reachable. */
-      const fmRefs = Array.isArray(ratifiedFm.references) ? ratifiedFm.references : [];
-      const edges = [
-        ...fmRefs.filter((r) => r && typeof r.target === "string")
-          .map((r) => ({ to: r.target, kind: typeof r.rel === "string" && r.rel ? r.rel : "cites",
-                         disclosure: "serve" })),
-        ...(typeof ratifiedFm.division_parent === "string" && ratifiedFm.division_parent !== "null"
-          ? [{ to: ratifiedFm.division_parent, kind: "division_parent", disclosure: "name" }] : []),
-        ...(Array.isArray(ratifiedFm.division_siblings) ? ratifiedFm.division_siblings : [])
-          .filter((s) => typeof s === "string" && s)
-          .map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" })),
-      ];
+      /* D-431: THE CLASSIFICATION ABOVE NOW LIVES IN ONE PLACE, `Store.publishedGraphEdges`, moved there
+         verbatim — because the same edge set is what a ratified case's finding RESTS ON, and the store's
+         refusal of a bundle outside a ratified case reads it too (BIO_Publication_v0_1.md §3 rule 2: the
+         refusal and the serving read one quantity). Do not spell the list here again. */
+      const edges = Store.publishedGraphEdges(ratifiedFm);
 
       /* REC-53: THE COMMIT, and the last site that may refuse. A silence here
          synthesised `reason:"PUBLISH_FAILED"` at HTTP 500 — a ternary fallback,
@@ -8292,7 +8286,11 @@ export default {
                                C-56.1 through REC-134's one check) — the REQUEST was refused,
                                which is what 409 says; `op=caseratify` relays the same two. */
                             || pub.reason === "CASE_SIGNER_NOT_AN_OWNER"
-                            || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT") ? 409 : 500);
+                            || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT"
+                            /* D-431: nothing crosses outside a ratified case (C-58.2, C-58.3) — the
+                               REQUEST was refused, 409, as the other C-58 refusal answers. */
+                            || pub.reason === "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE"
+                            || pub.reason === "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE") ? 409 : 500);
 
       /* The fence: ratified bytes land content-addressed in the published
          bucket, so the published corpus is self-contained. Existing keys

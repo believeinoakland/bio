@@ -282,9 +282,11 @@ const reopen = async (target, reason) =>
    exactly as one that does not exist. `allLoadBearing` designates every target load-bearing,
    which is what this suite means — it is about the PIN, and a supporting member would
    be an unrelated variable in a freeze test. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); the
+   old id is the fixture's name and PUBLISHING_PROJECT is the returned, minted id. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case3", owner: "vera",
-  id: "PROJ-2026-0300-casepin", created: NOW, updated: LATER });
+  name: "PROJ-2026-0300-casepin", created: NOW, updated: LATER });
 /* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER. `op=publish` now AUTHORS a case
    document and commits nothing case-side — the case's identity, roster, PINS,
    partition, scope, bar and acknowledgement are committed when a member SIGNS
@@ -362,7 +364,16 @@ const e1 = await publishCase({ target: PUB, statement: STMT1,
                      + "public session; edition 1 reads the FY2024 record through it." });
 if (!e1.ok) throw new Error(`publishcase edition 1: ${JSON.stringify(e1)}`);
 const rat1 = await ratify(PUB);
-if (!rat1.ok) throw new Error(`ratify edition 1: ${JSON.stringify(rat1)}`);
+/* CORRECTED 2026-09-19 by the D-431 worker: a NAMED FAILURE and the suite's own foot, never a bare throw. Since
+   D-431 a finding is ratified only at a sha a RATIFIED case PINS, so control arm (a) — the pin never written —
+   is now refused HERE, C-58.2, and the throw this line was ended the module with no tally (the arm read "died
+   before its own summary", which names nothing — D-93's class). Now it fails by name and reaches the foot. */
+if (!rat1.ok) {
+  t("THE FREEZE: edition 1's finding ratifies — at the sha its RATIFIED case pinned (a finding at an unpinned sha is refused C-58.2)",
+    [rat1.ok, rat1.reason ?? null], [true, null]);
+  console.log(`\ncasepin: ${pass} passed, ${fail} failed`);
+  process.exit(1);
+}
 /* THE EXPECTATION, TAKEN FROM THE SIGNATURE. This is the sha that went into the
    `bio-ratify` statement ssh-keygen signed — captured before anything read a pin
    and independent of every line this item wrote. */
@@ -726,6 +737,12 @@ console.log("\n--- 6. the expectation is parsed from CASE-AS-PRODUCTION.md, not 
  *       honest response was a second arm that reaches the property behaviourally
  *       rather than a louder claim about the first.  MEASURED 31/2, failing
  *       exactly the two assertions that say the pinned version did not move.
+ *
+ * RE-RUN 2026-09-19 by the D-431 worker, every restore sha256 MATCH: on the PRISTINE base 7042404e the arms
+ * read baseline 34/0 · a 23/11 · b 34/0 · c 30/4 · d 31/3 · e 29/5 · f 32/2 (the b and figure drifts
+ * predate D-431). On D-431's tree arm (a) first DIED with no tally — the unpinned finding is refused
+ * C-58.2 at edition 1's ratification and a bare throw ended the module — so that throw became a named
+ * assertion that reaches the foot: a 0/1, naming "THE FREEZE"; every other arm identical to the base.
  *
  * THE BASELINE ARM ran first and measured 33 passed, 0 failed. It carries no
  * ordinal because it arms nothing, and it is not decoration: it is what

@@ -67,9 +67,10 @@ Changes: collected.
 
 `;
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
+   creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
 const projMd = (id) => `---
-id: ${id}
-object_type: project
+${id === null ? "" : `id: ${id}\n`}object_type: project
 schema: project@1
 title: "Scale"
 current_state: forming
@@ -116,7 +117,8 @@ Changes: created.
 `;
 
 const promoteRaw = (id, text, meta, base = null) => call("/promote", {
-  bundleId: id, base, snapKey: `${id}-${base ? Date.now() + Math.random() : "new"}`,
+  ...(id === null ? {} : { bundleId: id }), base,
+  snapKey: `${id ?? `proj-${Date.now()}-${Math.random()}`}-${base ? Date.now() + Math.random() : "new"}`,
   author: "probe",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta,
@@ -142,8 +144,8 @@ console.log(" done");
 console.log("\n  n      select     cite      bundle.md    outcome");
 console.log("  -----  ---------  --------  -----------  -------------------------------");
 for (const n of [1000, 2500, 5000, 7500, 10000].filter((x) => x <= N)) {
-  const proj = `PROJ-2026-${String(n).padStart(4, "0")}-scale`;
-  await promoteRaw(proj, projMd(proj), projMeta);
+  const proj = (await promoteRaw(null, projMd(null), projMeta))?.bundleId;
+  if (typeof proj !== "string") { console.log(`  ${String(n).padEnd(5)}  project promote returned no minted id`); continue; }
 
   const t0 = Date.now();
   const sel = await call(`/select?${STAMP}`, { ids: ids.slice(0, n) });
@@ -172,8 +174,8 @@ for (const n of [1000, 2500, 5000, 7500, 10000].filter((x) => x <= N)) {
    a guard nothing can reach is a guard nothing has tested. */
 if (N >= 10000) {
   console.log("\n  cumulative: citing repeatedly into one Project");
-  const proj = "PROJ-2026-9999-cumulative";
-  await promoteRaw(proj, projMd(proj), projMeta);
+  const proj = (await promoteRaw(null, projMd(null), { ...projMeta, title: "Cumulative" }))?.bundleId;
+  if (typeof proj !== "string") throw new Error("cumulative: project promote returned no minted id");
   let total = 0;
   for (let round = 0; round < 8; round++) {
     const slice = ids.slice(round * 3000, round * 3000 + 3000);

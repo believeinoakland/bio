@@ -3762,6 +3762,7 @@ __export(bio_checks_exports, {
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
+  PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
@@ -11630,6 +11631,46 @@ var RATIFY_SCOPE_CHECKS = {
     check: "C-58.1",
     where: "src/index.mjs fetch > is-ratify-project-bundle",
     translation: "A project's own document is not published. A project publishes through its cases: publish a case from the project, have an owner sign the case document, and then ratify the findings in it. Nothing was published."
+  },
+  /* D-431 (2026-09-19, IC-161): `op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE
+   * (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16). REC-140 measured three
+   * publications outside a case and pinned them as measured: an information bundle in no case, a
+   * concluded inquiry in no case, and a finding prepared into a case whose document was not yet
+   * ratified. Both codes are refused in `Store#publish`, in its transaction, before the edition
+   * refusals and the retry, and ONE region carries both, because the one condition — no ratified
+   * case pins this sha and none of their pinned findings rests on this bundle — is split only by
+   * what the bundle IS. */
+  RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE: {
+    check: "C-58.2",
+    where: "src/store.mjs publish > is-ratify-outside-a-case",
+    translation: "A finding is published only as part of a case its project has ratified, and no ratified case holds this version of it. Publish it into a case from its project, have an owner of the project sign the case document first, and then ratify this finding at the version the case holds. Nothing was published."
+  },
+  RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: {
+    check: "C-58.3",
+    where: "src/store.mjs publish > is-ratify-outside-a-case",
+    translation: "This is published only as evidence for a case, and no finding in any ratified case rests on it. Cite it from a finding, publish that finding's case and have an owner of the project sign the case document; an owner of that project can then sign this. Nothing was published."
+  }
+};
+var PROJECT_ID_CHECKS = {
+  PROJECT_ID_SUPPLIED: {
+    check: "C-59.1",
+    where: "src/store.mjs promote > is-project-id-supplied",
+    translation: "A new project is given its id by the record; it is not chosen. This request named an id, so nothing was created. Send it again without one, and the record will answer with the id it gave the project."
+  },
+  PROJECT_ID_IN_BYTES: {
+    check: "C-59.2",
+    where: "src/store.mjs promote > is-project-id-bytes",
+    translation: "A new project's document must not carry an id line: the record writes the project's id into the document itself when it creates it. Remove the id line and send it again. Nothing was created."
+  },
+  PROJECT_FORK_ID_SUPPLIED: {
+    check: "C-59.3",
+    where: "src/store.mjs forkProject > is-project-fork-id-supplied",
+    translation: "A fork is given its id by the record; it is not chosen. This request named one, so nothing was forked. Send it again without an id, and the record will answer with the id it gave the fork."
+  },
+  PROJECT_DOCUMENT_UNREADABLE: {
+    check: "C-59.4",
+    where: "src/store.mjs promote > is-project-id-bytes",
+    translation: "The record could not write the new project's id into its document, because the document sent is not text that begins with a front matter block. Nothing was created."
   }
 };
 function leadLegFindings(label, leg, findings) {
@@ -12886,7 +12927,9 @@ const stamp = ()=>{
    prose section carries what the member wrote, and the rest are present and
    empty, which is what the catalog asks for. */
 const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
-  const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
+  /* REC-141: a PROJECT's id is minted by the plane, which writes it into these bytes and refuses
+     bytes already carrying one, so a project's document is sent with no id line (id is null). */
+  const fm = ["---",...(id === null ? [] : ["id: "+id]),"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
     "produced_by:","  mode: assisted","  capability_tier: session",
@@ -13055,8 +13098,11 @@ $("#n-save").addEventListener("click", async ()=>{
   $("#n-save").disabled = true;
   try {
     const year = String(new Date().getFullYear());
-    const a = await rec("allocid", { prefix: PREFIX[type], year });
-    const id = a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    /* REC-141 (Membership v2 section 7): a new project names no id. The plane mints it and answers with
+       it; a creation that names one is refused. Every other type still allocates its own. */
+    const minted = type === "project";
+    const a = minted ? null : await rec("allocid", { prefix: PREFIX[type], year });
+    let id = minted ? null : a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const state = FIRST_STATE[type];
     const now = new Date().toISOString().split(".")[0] + "Z";
     /* Capture first, because a failed fetch should not leave a half-made bundle
@@ -13084,7 +13130,7 @@ $("#n-save").addEventListener("click", async ()=>{
     const text = mdFor(id, type, state, title, body, now, !!doc,
       doc && doc.capture ? { content_hash: doc.capture.sha256 } : null, act);
     const r = await post("promote", {
-      bundleId: id, base: null, snapKey: stamp(), author: WHO,
+      ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
       files: await docFiles(text, doc, await sha256Text(text)),
       register: doc ? [...(Array.isArray(doc.parts) && doc.parts.length
@@ -13096,6 +13142,7 @@ $("#n-save").addEventListener("click", async ()=>{
                          sha256: a.sha256, path: a.file, encoding: "binary", bytes: a.bytes }))] : [],
     });
     if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+    if (minted) id = r.result.bundleId;
     $("#n-title").value = ""; $("#n-body").value = "";
     if ($("#n-loc")) { $("#n-loc").value = ""; $("#n-auth").value = ""; }
     openBundle(id);
@@ -27479,7 +27526,13 @@ var Store = class _Store extends DurableObject {
         bundleId,
         ...gate.args
       );
-      return row && normalizeType(row.object_type) === "action" ? { ...row, action: this.#actionDerived(row, nowMs) } : row;
+      if (!row) return row;
+      const type = normalizeType(row.object_type);
+      return {
+        ...row,
+        ...type === "action" ? { action: this.#actionDerived(row, nowMs) } : {},
+        no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null
+      };
     }
     const asked = Number(limit);
     const cap = Number.isFinite(asked) && asked > 0 ? Math.min(_Store.PROJECTION_LIMIT_MAX, Math.floor(asked)) : _Store.PROJECTION_LIMIT_DEFAULT;
@@ -38302,7 +38355,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    */
   promote(pkg) {
     if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
-    const { bundleId, base, files, meta, snapKey, author, register: register2 = [] } = pkg;
+    const { base, meta, snapKey, author, register: register2 = [] } = pkg;
+    let { bundleId, files } = pkg;
     const writer = pkg.writer === "mechanical" ? "mechanical" : null;
     const operation = writer ? pkg.operation : null;
     if (writer && !(operation in MECHANICAL_FIELD_SETS))
@@ -38324,8 +38378,48 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         reason: "BASIS_IN_PAYLOAD",
         detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field"
       };
-    if (!bundleId || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    const idSupplied = bundleId !== void 0 && bundleId !== null && bundleId !== "";
+    const creatingProject = base === null && !!meta && typeof meta === "object" && (normalizeType(meta.object_type) === "project" || typeof bundleId === "string" && /^PROJ-/.test(bundleId));
+    const refusal7 = (code, detail) => {
+      const row = PROJECT_ID_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+    };
+    let projectMd = null;
+    if (creatingProject) {
+      if (idSupplied)
+        return refusal7(
+          "PROJECT_ID_SUPPLIED",
+          "a new project's id is minted by the plane and returned; send the creation with no bundleId. A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created."
+        );
+      projectMd = Array.isArray(files) ? files.find((f2) => f2 && f2.path === "bundle.md") : null;
+      const fmNew = projectMd && typeof projectMd.text === "string" ? parseFrontmatter(projectMd.text).data : null;
+      if (!fmNew)
+        return refusal7(
+          "PROJECT_DOCUMENT_UNREADABLE",
+          "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, because the plane writes the minted id into it. Nothing was created."
+        );
+      if (Object.prototype.hasOwnProperty.call(fmNew, "id"))
+        return refusal7(
+          "PROJECT_ID_IN_BYTES",
+          "the new project's bundle.md already carries a top-level id: line. The plane writes the id it mints; remove the line and send it again. Nothing was created."
+        );
+    }
+    if (!bundleId && !creatingProject || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
     return this.ctx.storage.transactionSync(() => {
+      if (creatingProject) {
+        bundleId = this.#mintProjectId(meta.title);
+        if (!bundleId) return {
+          ok: false,
+          reason: "MINT_EXHAUSTED",
+          detail: "the plane could not find a free project id in the current sequence"
+        };
+        const lines = projectMd.text.split("\n");
+        lines.splice(1, 0, `id: ${bundleId}`);
+        const text = lines.join("\n");
+        const bytes = new TextEncoder().encode(text);
+        const written = { ...projectMd, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
+        files = files.map((f2) => f2 === projectMd ? written : f2);
+      }
       const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
         return _Store.#promoteAbsent();
@@ -48768,13 +48862,43 @@ ${words}`;
   }
   /* ---- coordination: what LockService and the nextSeq race did ---- */
   allocId(prefix, year) {
-    return this.ctx.storage.transactionSync(() => {
-      const scope = `${prefix}-${year}`;
-      const cur = this.#one(`SELECT next FROM seq WHERE scope=?`, scope);
-      const n = cur ? cur.next : 1;
-      this.sql.exec(`INSERT INTO seq (scope,next) VALUES (?,?) ON CONFLICT(scope) DO UPDATE SET next=?`, scope, n + 1, n + 1);
-      return { id: `${prefix}-${year}-${String(n).padStart(4, "0")}` };
-    });
+    return this.ctx.storage.transactionSync(() => this.#nextSeq(prefix, year));
+  }
+  /* The sequence step itself, with no transaction of its own, so a caller already inside one (REC-141's
+     project mint, inside `promote`'s) takes the same step `op=allocid` takes. */
+  #nextSeq(prefix, year) {
+    const scope = `${prefix}-${year}`;
+    const cur = this.#one(`SELECT next FROM seq WHERE scope=?`, scope);
+    const n = cur ? cur.next : 1;
+    this.sql.exec(`INSERT INTO seq (scope,next) VALUES (?,?) ON CONFLICT(scope) DO UPDATE SET next=?`, scope, n + 1, n + 1);
+    return { id: `${prefix}-${year}-${String(n).padStart(4, "0")}` };
+  }
+  /** REC-141: a NEW project's id — `PROJ-<year>-<rand>-<slug>`, the slug from the project's name the way
+   *  both intake surfaces already slugged a title, in `BUNDLE_ID_RE`'s shape.
+   *
+   *  `<rand>` IS OPAQUE AND NEVER A COUNTER (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16,
+   *  2026-09-19). `allocId`'s sequence is per prefix per year, so a counted suffix told a creator how many
+   *  projects were minted before theirs, hidden ones included. So the suffix is four digits drawn from the
+   *  runtime's CSPRNG (`crypto.getRandomValues`, rejection-sampled so every value 0000-9999 is equally
+   *  likely), fixed length because `BUNDLE_ID_RE` requires `\d{4}` there, and `allocId` is NOT read or
+   *  stepped. Uniqueness is checked against `bundles` inside the caller's (promote's) transaction and a
+   *  collision draws again; the full id includes the slug, so a collision needs the same name AND the
+   *  same draw. Null only if 64 draws all collide. */
+  #mintProjectId(title) {
+    const year = (/* @__PURE__ */ new Date()).toISOString().slice(0, 4);
+    const slug = String(title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "") || "project";
+    const draw = () => {
+      const u = new Uint16Array(1);
+      for (; ; ) {
+        crypto.getRandomValues(u);
+        if (u[0] < 6e4) return String(u[0] % 1e4).padStart(4, "0");
+      }
+    };
+    for (let i = 0; i < 64; i++) {
+      const id = `PROJ-${year}-${draw()}-${slug}`;
+      if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id)) return id;
+    }
+    return null;
   }
   acquireLease(bundleId, actor, ttlMs) {
     if (typeof actor !== "string" || !actor.trim())
@@ -51460,6 +51584,17 @@ ${words}`;
    *  Origin is recorded as `derived_from`, already in the closed relationship
    *  vocabulary of State Rules 5.1, so nothing is added to it. */
   forkProject({ projectId, newId, title, by, viewer = null } = {}) {
+    if (newId !== void 0 && newId !== null && newId !== "") {
+      const row = PROJECT_ID_CHECKS.PROJECT_FORK_ID_SUPPLIED;
+      return {
+        ok: false,
+        reason: "PROJECT_FORK_ID_SUPPLIED",
+        code: "PROJECT_FORK_ID_SUPPLIED",
+        check: row.check,
+        translation: row.translation,
+        detail: "a fork's id is minted by the plane and returned as newId; send the fork with no newId. Nothing was forked."
+      };
+    }
     const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, projectId);
     if (!b || !this.#rosterInSight(projectId, viewer)) return _Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
@@ -51475,9 +51610,6 @@ ${words}`;
       state: p.state,
       detail: "an invited member who has not joined sees the project's skeleton only, so there is nothing for them to fork. Join it first."
     };
-    if (!newId || typeof newId !== "string") return { ok: false, reason: "MALFORMED", detail: "newId is required" };
-    if (this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, newId))
-      return { ok: false, reason: "EXISTS", bundleId: newId };
     const want = _Store.projectNameKey(title);
     if (!want) return { ok: false, reason: "NO_TITLE", detail: "a fork needs a name of its own" };
     const clash = this.#rows(`SELECT bundle_id, title FROM bundles WHERE object_type='project'`).find((r) => _Store.projectNameKey(r.title) === want);
@@ -51505,8 +51637,7 @@ ${words}`;
         projectId,
         detail: "the origin's references block is not in a shape this grammar can extend in place, so the clone could not be given a recorded origin. A fork with no provenance is not written."
       };
-    let text = withEdge;
-    text = _Store.#setScalar(text, "id", newId);
+    let text = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
     text = _Store.#setScalar(text, "title", JSON.stringify(title));
     text = _Store.#setScalar(text, "current_state", "forming");
     text = _Store.#setScalar(text, "last_updated", `"${when}"`);
@@ -51529,7 +51660,6 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       carried.push(r.content !== null ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 } : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
     const fbytes = new TextEncoder().encode(text);
     const promoted = this.promote({
-      bundleId: newId,
       base: null,
       snapKey: `${when.replace(/[-:]/g, "")}_${_Store.#rand(4)}`,
       author: by,
@@ -51553,7 +51683,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     return {
       ok: true,
       projectId,
-      newId,
+      newId: promoted.bundleId,
       title,
       origin: projectId,
       rel: "derived_from",
@@ -52516,6 +52646,47 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
             signer: attestorMember,
             act: "ratify",
             subject: `finding ${bundleId}, a member of case ${byProject.get(pid).join(", ")},`,
+            extra: { bundleId }
+          });
+          if (!denied) {
+            refused = null;
+            break;
+          }
+          refused = refused || denied;
+        }
+        if (refused) return refused;
+      }
+      if (!pinnedBy.length) {
+        const resting = this.#ratifiedFindingsRestingOn(bundleId);
+        if (!resting.length) {
+          const kind = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+          const refusal7 = (code, detail) => {
+            const row = RATIFY_SCOPE_CHECKS[code];
+            return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, bundleId };
+          };
+          if (kind && normalizeType(kind.object_type) === "inquiry")
+            return refusal7(
+              "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE",
+              `${bundleId} at ${String(bundleSha).slice(0, 12)} is not a finding any RATIFIED case pins, and a finding is published only as a member of a ratified case (BIO_Publication_v0_1.md \xA73 rule 2). Publish it into a case from its project (op=publish), have an owner of that project sign the case document (op=caseratify) FIRST, and then ratify this finding at the version the case pinned. Nothing was published.`
+            );
+          return refusal7(
+            "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE",
+            `no finding of a RATIFIED case rests on ${bundleId}, and anything that is not a finding crosses only as the evidence a ratified case's finding rests on (BIO_Publication_v0_1.md \xA73 rule 2). Cite it from a finding, publish that finding's case and have an owner sign the case document (op=caseratify); then an owner of that project may sign this. Nothing was published.`
+          );
+        }
+        const byProject = /* @__PURE__ */ new Map();
+        for (const r of resting) {
+          if (!byProject.has(r.project)) byProject.set(r.project, []);
+          byProject.get(r.project).push(`${r.finding} of case ${r.case_id}`);
+        }
+        let refused = null;
+        for (const pid of [...byProject.keys()].sort()) {
+          const denied = this.#caseAuthority({
+            project: pid,
+            deliveredBy,
+            signer: attestorMember,
+            act: "ratify",
+            subject: `${bundleId}, the evidence ${byProject.get(pid).join(", ")} rests on,`,
             extra: { bundleId }
           });
           if (!denied) {
@@ -53530,6 +53701,70 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
        other D-309 site takes, so "how many cases is this member in" has one answer
        across the file. The JOIN on `published_cases` is unchanged and still does its
        job: only case editions that exist are membership. */
+  /* ===== D-431 — WHAT A FINDING "RESTS ON", NAMED ONCE, AND READ BY BOTH THE SERVING AND THE REFUSAL =====
+     BIO_Publication_v0_1.md §3 rule 2, the second note (BOB #16, 2026-09-19): *"Rests on is the edge set the
+     published graph already uses to decide it may serve an edge, named by the builder from the code and proved
+     identical at both sites."* NAMED FROM THE CODE: the published graph is written by `#publishEdges` from the
+     edges `op=ratify` reads out of the RATIFIED BYTES, and it SERVES an edge only when the edge is of the
+     `serve` class and its target is itself published. The `serve` class is every `references[]` entry (its
+     `rel` as the kind, `cites` when none is authored); the two division disclosures are NAME-ONLY by kind and
+     are never served. So a finding RESTS ON exactly the targets of its `serve`-class edges.
+     This one static IS that edge set: the control plane builds the graph it hands `#publishEdges` from it
+     (`op=ratify`), and `#ratifiedFindingsRestingOn` asks it of each pinned finding's bytes — one function,
+     two readers, so the refusal and the serving cannot come to read different quantities.
+     `ratify-authority.test.mjs` §8 pins the behaviour (what the refusal admits is what the graph serves) and
+     the two call sites. Moved here VERBATIM from `op=ratify`'s inline array; a second spelling of this list
+     anywhere is the defect it exists to prevent. */
+  static publishedGraphEdges(fm) {
+    const d = fm && typeof fm === "object" ? fm : {};
+    const refs = Array.isArray(d.references) ? d.references : [];
+    return [
+      ...refs.filter((r) => r && typeof r.target === "string").map((r) => ({
+        to: r.target,
+        kind: typeof r.rel === "string" && r.rel ? r.rel : "cites",
+        disclosure: "serve"
+      })),
+      ...typeof d.division_parent === "string" && d.division_parent !== "null" ? [{ to: d.division_parent, kind: "division_parent", disclosure: "name" }] : [],
+      ...(Array.isArray(d.division_siblings) ? d.division_siblings : []).filter((s) => typeof s === "string" && s).map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" }))
+    ];
+  }
+  /* D-431 (b): WHICH FINDINGS OF A RATIFIED CASE REST ON THIS BUNDLE, and each one's publishing project.
+     Asked over every roster row a RATIFIED case edition PINNED (`version_sha` set, joined to
+     `published_cases`, which only `ratifyCaseDocument` writes), at the PINNED bytes — the bytes the case
+     froze and the finding will be signed at, never whatever `bundle.md` says today (the working `refs`
+     table is a projection of today's document and would be a second edge set). The bytes are read from the
+     live file when it is still at the pin and from `history` when the finding has moved since. PINNED BYTES
+     THIS STORE CANNOT READ rest on nothing here: the question is then undeterminable, and admitting a
+     bundle on an undetermined answer is the direction this defect runs in. The rows are a roster, bounded
+     by the cases ever ratified, and never a walk of the corpus. */
+  #ratifiedFindingsRestingOn(bundleId) {
+    const pins = this.#rows(
+      `SELECT DISTINCT m.case_id, m.bundle_id, m.version_sha, cs.project_id
+         FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+         LEFT JOIN cases cs ON cs.case_id=m.case_id
+        WHERE m.version_sha IS NOT NULL AND m.bundle_id<>?
+        ORDER BY m.case_id, m.bundle_id`,
+      bundleId
+    );
+    const out = [];
+    for (const p of pins) {
+      const at = this.#one(
+        `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md' AND sha256=?`,
+        p.bundle_id,
+        p.version_sha
+      ) || this.#one(
+        `SELECT content FROM history WHERE bundle_id=? AND path='bundle.md' AND sha256=? LIMIT 1`,
+        p.bundle_id,
+        p.version_sha
+      );
+      if (!at || typeof at.content !== "string") continue;
+      const fm = parseFrontmatter(at.content).data || {};
+      if (_Store.publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === bundleId))
+        out.push({ case_id: p.case_id, finding: p.bundle_id, project: p.project_id ?? null });
+    }
+    return out;
+  }
   #pinnedCaseEditionsOf(bundleId, bundleSha) {
     const rels = this.#rows(
       `SELECT m.case_id, m.edition, m.role FROM published_case_members m
@@ -69186,16 +69421,7 @@ var index_default = {
         author: ratifiedFm.completeness?.author ?? null,
         at: ratifiedFm.completeness?.at ?? null
       } : null;
-      const fmRefs = Array.isArray(ratifiedFm.references) ? ratifiedFm.references : [];
-      const edges = [
-        ...fmRefs.filter((r) => r && typeof r.target === "string").map((r) => ({
-          to: r.target,
-          kind: typeof r.rel === "string" && r.rel ? r.rel : "cites",
-          disclosure: "serve"
-        })),
-        ...typeof ratifiedFm.division_parent === "string" && ratifiedFm.division_parent !== "null" ? [{ to: ratifiedFm.division_parent, kind: "division_parent", disclosure: "name" }] : [],
-        ...(Array.isArray(ratifiedFm.division_siblings) ? ratifiedFm.division_siblings : []).filter((s) => typeof s === "string" && s).map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" }))
-      ];
+      const edges = Store.publishedGraphEdges(ratifiedFm);
       const deliveredBy = deliveringPrincipal(sessRights);
       const pubOut = await doAnswer(stub.fetch(new Request("http://do/publish", {
         method: "POST",
@@ -69235,7 +69461,7 @@ var index_default = {
             store: storeName,
             tokenClass: cls
           },
-          pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF" || pub.reason === "CASE_SIGNER_NOT_AN_OWNER" || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT") ? 409 : 500
+          pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF" || pub.reason === "CASE_SIGNER_NOT_AN_OWNER" || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT" || pub.reason === "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE" || pub.reason === "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE") ? 409 : 500
         );
       let copied = 0, present = 0, r2state = "not configured";
       if (typeof env.PUBLISHED?.put === "function" && r2) {

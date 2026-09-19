@@ -75,6 +75,10 @@
    suite was given a member that has genuinely moved on, which is the arm that now
    fails. A fixture where the two agree cannot see this defect, and that is an
    instrument limit rather than a defence holding.
+   RE-RUN 2026-09-19 by the D-431 worker after CORRECTING that arm (the moved member is now refused C-58.2
+   rather than published loose): `node test/casesign.control.mjs`, every arm, real sources verified by
+   sha256 after — baseline 74/0 · a 34/1 · b 73/1 · 2b 0/1 · c 34/1 · **d 73/1, naming the corrected
+   "THE PIN IS WHAT RESOLVES A MEMBER" arm** · e 66/8 · f 67/7 · g 72/2 · h 13/7.
 
    (e) REC-130's FIRST OF FOUR — (e) through (h) were RUN 2026-09-18 against THIS
    file with the driver, each armed ALONE, every restore of `src/store.mjs` sha256
@@ -272,12 +276,14 @@ const imageOf = async (id) => {
   return String(im?.files?.["bundle.md"] ?? im?.["bundle.md"] ?? "");
 };
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   the fixture takes a `name` and returns the minted id. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-c5b", owner: "iris",
-  id: "PROJ-2026-7700-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  name: "PROJ-2026-7700-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 const VICS_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-c5b", owner: "vic",
-  id: "PROJ-2026-7701-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  name: "PROJ-2026-7701-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
 /* REC-130: THE RAW ANSWER — status, content type and the BODY'S BYTES, read as
    text and never parsed. "The same response" means the same bytes; two JSON
@@ -822,10 +828,16 @@ const ratifyMember = async (id) => {
     [movedSha !== r2.bundleSha, /^[0-9a-f]{64}$/.test(movedSha)], [true, true]);
   const movedRat = rP(await POST(`op=ratify&token=${IRIS}`,
     { bundleId: SUPP, expectedSha: movedSha, sig: signRatify("iris", SUPP, movedSha) }));
-  if (!movedRat.ok) bail("ratify the revised member", movedRat);
-  t("THE PIN IS WHAT RESOLVES A MEMBER: the revised version ratifies as ITSELF, at its OWN next edition, "
-  + "and is NOT placed into the case — the case committed to a VERSION and not to an id",
-    [movedRat.ok, movedRat.edition, movedRat.caseId ?? null], [true, 2, null]);
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted. This arm expected the revised version to ratify "as ITSELF, at its OWN next edition" — a finding
+     published at a sha NO ratified case pins, i.e. outside any case, which is what D-431 closes (C-58.2). The
+     arm's subject is unchanged and is now asserted more strongly: the pin is what resolves a member, so a
+     version the case did not freeze is not placed into the case AND, being in no ratified case, is not
+     published at all. Control arm (d) (the roster matched by id alone) still sees it: the widened match
+     would call these bytes pinned and publish them into the case. */
+  t("THE PIN IS WHAT RESOLVES A MEMBER: the revised version is NOT placed into the case — the case committed "
+  + "to a VERSION and not to an id — and, pinned by no ratified case, it is not published at all (C-58.2)",
+    [movedRat.ok, movedRat.reason, movedRat.caseId ?? null], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", null]);
   /* AND THE CASE IS UNMOVED, which is the half worth stating plainly: it goes on
      serving the version it FROZE. `awaiting` stays empty because that version is
      still published and still answerable — a revision does not unpublish what was

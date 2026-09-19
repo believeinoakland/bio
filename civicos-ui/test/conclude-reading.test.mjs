@@ -123,7 +123,7 @@ const INQ_PICK = "INQ-2026-6500-pick";        /* two adoptable readings, two tha
 const INQ_NONE = "INQ-2026-6500-none";        /* no reading at all */
 const INQ_LEGACY = "INQ-2026-6500-legacy";    /* concluded in its bytes before item 6 */
 const INQ_PROJ = "INQ-2026-6500-shared";      /* the project's question */
-const PROJ = "PROJ-2026-6500-oversight";
+/* PROJ, the project, is MINTED by the plane at its creation below (REC-141). */
 
 /* THE CLAIMS ARE DISTINCT, NON-EMPTY AND LONG ENOUGH that "word for word" is a
    comparison that could fail. */
@@ -183,8 +183,10 @@ const infoMd = (id) => ["---",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "---", "", "## Summary", "", "A captured record.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
+   creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
 const projectMd = (id) => ["---",
-  `id: ${id}`, "object_type: project", `title: "Oversight"`,
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Oversight"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references:", `  - target: ${INQ_PROJ}`, "    rel: cites", "    status: confirmed",
   "required_strength:", "  capture: B", "  connection: C",
@@ -193,8 +195,8 @@ const projectMd = (id) => ["---",
 let seq = 0;
 const promote = async (id, md, type, state, token = "mem-ui65") => {
   const r = rP(await POST(`op=promote&token=${token}`, {
-    bundleId: id, base: null, snapKey: `${id}-${++seq}`, author: "seed",
-    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+    ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${id ?? type}-${++seq}`, author: "seed",
+    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id ?? "oversight"}`,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: [],
@@ -220,7 +222,8 @@ await promote(INQ_PROJ, inquiryMd(INQ_PROJ, "Did the sewer fund transfer follow 
 /* THE PROJECT IS CREATED BY THE CONCLUDING MEMBER, so she is its owner and a
    JOINED participant (Membership 7.1) — REC-134's positional check is met by
    the record, not bypassed by the fixture. */
-await promote(PROJ, projectMd(PROJ), "project", "forming", PILAR);
+const PROJ = (await promote(null, projectMd(null), "project", "forming", PILAR)).bundleId;
+if (typeof PROJ !== "string") throw new Error("promote project: the plane returned no minted id");
 
 const bvOf = async (id, project) => rP(await GET(`op=basisversions&token=${PILAR}&id=${enc(id)}&limit=50`
   + (project ? `&project=${enc(project)}` : "")));

@@ -150,11 +150,12 @@ Changes: created.
 ## Review Notes
 `;
 
-const projMd = (id) => `---
-id: ${id}
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's creation bytes carry NO `id:` line — the plane mints
+   the id and writes it (Membership v2 §7), refusing bytes that name one (C-59.2). `name` is the title's label. */
+const projMd = (name) => `---
 object_type: project
 schema: project@1
-title: "Project ${id}"
+title: "Project ${name}"
 current_state: forming
 prior_state: null
 created: "2026-07-01T00:00:00Z"
@@ -207,15 +208,21 @@ const mkInfo = async (id, mark) => {
             last_updated: "2026-07-02T00:00:00Z", criticality: "supporting" },
   });
 };
-const mkProj = async (id) => {
-  const text = projMd(id);
-  return call("/promote", {
-    bundleId: id, base: null, snapKey: `${id}-new`, author: "suite",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane and a creation naming one is
+   refused PROJECT_ID_SUPPLIED (C-59.1), so this sends NO bundleId and RETURNS the minted id; `name` is kept as
+   the title's label so each project stays distinct. */
+const mkProj = async (name) => {
+  const text = projMd(name);
+  const r = await call("/promote", {
+    base: null, snapKey: `${name}-new`, author: "suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${id}`,
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${name}`,
             current_state: "forming", prior_state: null, created: "2026-07-01T00:00:00Z",
             last_updated: "2026-07-02T00:00:00Z" },
   });
+  const made = (r && typeof r === "object" && "result" in r) ? r.result : r;
+  if (typeof made?.bundleId !== "string") throw new Error(`mkProj ${name}: ${JSON.stringify(r)}`);
+  return made.bundleId;
 };
 
 const stateOf = async (id) => (await call(`/projection?id=${id}&viewer=class:member`)).current_state;
@@ -370,11 +377,11 @@ console.log("\n--- an enumerated selection's behaviour is unmoved at every calle
    query selection can have. */
 console.log("\n--- cite's Session Log states the drift a query selection actually has ---");
 {
-  await mkProj("PROJ-2026-0700-quiet");
+  const QUIET = await mkProj("PROJ-2026-0700-quiet");
   for (const n of [1, 2]) await mkInfo(`INFO-2026-070${n}-citefixture`, "citefixture");
   const quiet = await selectQuery("state:collected citefixture");
-  t("an unchanged query selection is cited", (await cite("PROJ-2026-0700-quiet", quiet.handle)).ok, true);
-  const quietDoc = await docOf("PROJ-2026-0700-quiet");
+  t("an unchanged query selection is cited", (await cite(QUIET, quiet.handle)).ok, true);
+  const quietDoc = await docOf(QUIET);
   /* Polarity both ways: the clause must be ABSENT when nothing changed, or its
      presence in the moved case would say nothing at all. */
   t("and the entry carries NO drift clause, because nothing had moved",
@@ -382,7 +389,7 @@ console.log("\n--- cite's Session Log states the drift a query selection actuall
   t("while the entry itself is there and names the selection",
     quietDoc.includes(`Trigger: selection ${quiet.handle}`), true);
 
-  await mkProj("PROJ-2026-0701-swapped");
+  const SWAPPED = await mkProj("PROJ-2026-0701-swapped");
   for (const n of [3, 4]) await mkInfo(`INFO-2026-070${n}-swapcite`, "swapcite");
   const s = await selectQuery("state:collected swapcite");
   t("a query selection over two", s.n, 2);
@@ -391,11 +398,11 @@ console.log("\n--- cite's Session Log states the drift a query selection actuall
   const rep = await resolve(s.handle, "report");
   t("swapped at a constant count", [rep.n, rep.moved, rep.drift?.digestChanged], [2, false, true]);
 
-  const c = await cite("PROJ-2026-0701-swapped", s.handle);
+  const c = await cite(SWAPPED, s.handle);
   t("citing proceeds, because report-weight survives drift", c.ok, true);
   t("and the PUBLISHED `moved` still reports per-row movement honestly — no row moved",
     c.moved, false);
-  const doc = await docOf("PROJ-2026-0701-swapped");
+  const doc = await docOf(SWAPPED);
   t("THE RECORD SAYS THE SET HAD MOVED — the entry is not silent over a set that changed",
     /Trigger: selection sel-\w+ \(the set had moved since it was made; citing is report-weight and proceeded\)/.test(doc),
     true);

@@ -11764,6 +11764,66 @@ export const RATIFY_SCOPE_CHECKS = {
       + 'publish a case from the project, have an owner sign the case document, and then ratify the '
       + 'findings in it. Nothing was published.',
   },
+  /* D-431 (2026-09-19, IC-161): `op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE
+   * (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16). REC-140 measured three
+   * publications outside a case and pinned them as measured: an information bundle in no case, a
+   * concluded inquiry in no case, and a finding prepared into a case whose document was not yet
+   * ratified. Both codes are refused in `Store#publish`, in its transaction, before the edition
+   * refusals and the retry, and ONE region carries both, because the one condition — no ratified
+   * case pins this sha and none of their pinned findings rests on this bundle — is split only by
+   * what the bundle IS. */
+  RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE: {
+    check: 'C-58.2',
+    where: 'src/store.mjs publish > is-ratify-outside-a-case',
+    translation: 'A finding is published only as part of a case its project has ratified, and no ratified '
+      + 'case holds this version of it. Publish it into a case from its project, have an owner of the '
+      + 'project sign the case document first, and then ratify this finding at the version the case '
+      + 'holds. Nothing was published.',
+  },
+  RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: {
+    check: 'C-58.3',
+    where: 'src/store.mjs publish > is-ratify-outside-a-case',
+    translation: 'This is published only as evidence for a case, and no finding in any ratified case '
+      + 'rests on it. Cite it from a finding, publish that finding\'s case and have an owner of the '
+      + 'project sign the case document; an owner of that project can then sign this. Nothing was '
+      + 'published.',
+  },
+};
+
+/* REC-141 / C-59 — THE PLANE MINTS PROJECT IDS (Membership Architecture v2 §7, the bullet *"HOW the
+ * plane mints a project id"*, BOB #15, 2026-09-18; §7.9 *"not its existence"*). A creation that NAMED
+ * its project's id answered `EXISTS` at a hidden project's id and CREATED at a free one, so the answer
+ * said whether a project the caller could not see existed (D-428's creation half). A caller-supplied id
+ * for a NEW project — or any creation in the `PROJ-` namespace, or a fork's `newId` — is now refused
+ * BEFORE any id is looked up, with one answer whether or not the id is taken, and the answer echoes no
+ * id. The plane mints the id (`allocId`'s pattern) and writes it into the document's own `id:` before
+ * the bytes are hashed and registered, so a document that already carries one is refused. */
+export const PROJECT_ID_CHECKS = {
+  PROJECT_ID_SUPPLIED: {
+    check: 'C-59.1',
+    where: 'src/store.mjs promote > is-project-id-supplied',
+    translation: 'A new project is given its id by the record; it is not chosen. This request named an id, '
+      + 'so nothing was created. Send it again without one, and the record will answer with the id it gave '
+      + 'the project.',
+  },
+  PROJECT_ID_IN_BYTES: {
+    check: 'C-59.2',
+    where: 'src/store.mjs promote > is-project-id-bytes',
+    translation: 'A new project\'s document must not carry an id line: the record writes the project\'s id '
+      + 'into the document itself when it creates it. Remove the id line and send it again. Nothing was created.',
+  },
+  PROJECT_FORK_ID_SUPPLIED: {
+    check: 'C-59.3',
+    where: 'src/store.mjs forkProject > is-project-fork-id-supplied',
+    translation: 'A fork is given its id by the record; it is not chosen. This request named one, so nothing '
+      + 'was forked. Send it again without an id, and the record will answer with the id it gave the fork.',
+  },
+  PROJECT_DOCUMENT_UNREADABLE: {
+    check: 'C-59.4',
+    where: 'src/store.mjs promote > is-project-id-bytes',
+    translation: 'The record could not write the new project\'s id into its document, because the document '
+      + 'sent is not text that begins with a front matter block. Nothing was created.',
+  },
 };
 
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every

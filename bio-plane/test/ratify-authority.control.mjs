@@ -36,8 +36,12 @@ const DELIVERY = "    if (project && deliveredBy !== \"founder\") {\n"
   + "      const denied = this.#projectAuthority(project, deliveredBy, \"joined\", act);\n"
   + "      if (denied) return denied;\n    }\n";
 const OWNER = "    if (!project || !this.#isProjectOwner(project, signer))";
-/* op=ratify's call into it, in `publish()`. */
-const FINDING_CALL = "        if (refused) return refused;\n      }\n      const top = this.#one(";
+/* op=ratify's call into it, in `publish()`. CORRECTED 2026-09-19 by the D-431 worker: the pinned-finding branch is
+   now followed by D-431's outside-a-case block rather than by the edition read, so the anchor names what follows it
+   now; the arm still patches the PINNED branch only (the evidence branch ends in its own marked line). */
+const FINDING_CALL = "        if (refused) return refused;\n      }\n      /* ===== D-431";
+/* D-431: the outside-a-case block's opening (`Store#publish`). */
+const RESTING = "        const resting = this.#ratifiedFindingsRestingOn(bundleId);\n";
 
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
@@ -91,6 +95,35 @@ const ARMS = {
                "      const pinnedBy = this.#pinnedCaseEditionsOf(bundleId, bundleSha);\n"
                + "      if (pinnedBy.length && !this.#one(`SELECT 1 AS x FROM published_bundles WHERE bundle_id=? AND bundle_sha=?`, bundleId, bundleSha)) {"]],
     mustFail: ["RETRY: ruth re-sends"],
+  },
+
+  /* D-431 — THE ROW'S CONTROL 1: an UNPINNED finding re-admitted. The (a) refusal is skipped for an
+     inquiry no ratified case rests on, so it falls through to the commit. Only the (a) arms may go red
+     (the loose inquiry and P's prepared finding publish; iris's second attempt at P is then a retry). */
+  "readmit-unpinned-finding": {
+    patches: [["store.mjs", RESTING + "        if (!resting.length) {\n",
+               RESTING + "        if (!resting.length && normalizeType((this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId) || {}).object_type) !== \"inquiry\") {\n"]],
+    mustFail: ["OUTSIDE A CASE (a)"],
+  },
+
+  /* D-431 — THE ROW'S CONTROL 2: the refusal reads a DIFFERENT edge set from the serving — the finding's
+     BASIS legs instead of `Store.publishedGraphEdges`. Every bundle G's finding only REFERENCES is then
+     refused C-58.3: the identity arms (behavioural and structural) MUST go red, with the evidence arms over
+     those bundles and 8b's two (both referenced only). */
+  "rests-on-reads-basis": {
+    patches: [["store.mjs", "if (Store.publishedGraphEdges(fm).some((e) => e.disclosure === \"serve\" && e.to === bundleId))",
+               "if ((Array.isArray(fm.basis) ? fm.basis : []).some((l) => l && l.target === bundleId))"]],
+    mustFail: ["IDENTITY", "EVIDENCE ALLOWED: gus", "EVIDENCE NON-OWNER", "EVIDENCE OUTSIDE ADMINISTRATOR", "EVIDENCE UNINVITED", "ANY OWNER"],
+  },
+
+  /* D-431 — THE LIAR THE ROW NAMES, on the evidence side: refuse every bundle outside a pinned finding.
+     Every (a)/(b) refusal arm STAYS GREEN (that is the lie); every evidence arm that must COMMIT goes red,
+     the authority arms over evidence (now answered C-58.3 instead of by the case's authority) and the
+     graph identity. */
+  "refuse-every-evidence": {
+    patches: [["store.mjs", RESTING + "        if (!resting.length) {\n", RESTING + "        if (true) {\n"]],
+    mustFail: ["EVIDENCE ALLOWED", "EVIDENCE NON-OWNER", "EVIDENCE OUTSIDE ADMINISTRATOR", "EVIDENCE UNINVITED",
+               "IDENTITY (ALLOWED", "ANY OWNER"],
   },
 };
 

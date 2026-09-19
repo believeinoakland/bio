@@ -288,13 +288,15 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
-const projectMd = (id) => ["---", `id: ${id}`, "object_type: project",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
+   creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
+const projectMd = (id) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "---", "", "## Summary", "", "A project.", ""].join("\n");
 
 const promote = async (id, text, type, base = null, tok = RUTH) => POST(`op=promote&token=${tok}`, {
-  bundleId: id, base,
-  snapKey: `${id}-${Math.random().toString(36).slice(2, 8)}`,
+  ...(id === null ? {} : { bundleId: id }), base,
+  snapKey: `${id ?? "project"}-${Math.random().toString(36).slice(2, 8)}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
@@ -316,8 +318,7 @@ const mustPromote = async (...a) => {
 const LEDGER = "INFO-2026-1000-ledger", MINUTES = "INFO-2026-1000-minutes";
 const AUDIT = "INFO-2026-1000-audit", EMAIL = "INFO-2026-1000-email";
 for (const d of [LEDGER, MINUTES, AUDIT, EMAIL]) await mustPromote(d, infoMd(d), "information");
-const PROJ = "PROJ-2026-1000-oversight";
-await mustPromote(PROJ, projectMd(PROJ), "project");
+const PROJ = (await mustPromote(null, projectMd(null), "project")).bundleId;
 
 const INQ = "INQ-2026-1000-sewer-transfers";
 const versionsOf = async (id, extra = "", tok = RUTH) =>

@@ -17052,3 +17052,55 @@ this run's two controls did the same and read nothing (per its report). So M-63 
 five runs (`examroom/new`, `new2`, `old`, `none`, `grade` under BOB #15's scratchpad) each read only inside their own directory. **The corrected instrument:** add
 `--disallowedTools Bash Glob Grep` to every arm and every grader, and keep each arm's directory out of reach of the keys
 (sibling directories, never children of one that holds a key).
+
+## M-66 · 2026-09-19 · D-431 (c): THE `published_bundles` ROWS THE NEW RULE WOULD NOW REFUSE, IN THE RECORD NAMESPACE — 0, OF 0 (D-431 worker)
+
+**Instrument:** `curl` of `op=publishedmanifest` (credential-free; pinned to the `bio` store, the record namespace —
+`BIO_Publication_v0_1.md` §3 rule 10; it selects EVERY `published_bundles` row, `Store#publishedManifest`) at
+2026-09-19T03:52Z, against the two instances this account serves a plane on: `biosmoke7` (`BIO_INSTANCE` in `.env`) and
+`civicos`. Both answered `ok: true, scope: "published"` with `published: []`, `cases: []`, `caseMembers: []`, `shas: []`.
+`bio-plane` and `biosmoke5` answered Cloudflare error 1042 (no worker serving there), so they hold no record to count.
+
+**Result:** the record holds **zero** published rows on either instance, so the number of rows D-431's (a) and (b)
+would now refuse is **0 — counted, not assumed**: there is nothing on the published surface outside a ratified case
+because there is nothing on it at all. Nothing is retracted (rule 1); there was nothing to retract.
+
+**What this cannot see, stated:** an instance installed into ANOTHER group's Cloudflare account by `newgroup` is not
+reachable from this account and is not counted; a scratch namespace is deliberately unreadable on this path and is not
+the record. The count is of the two instances named, at the instant named.
+## M-67 · 2026-09-19 · M0-65 — THE BATTERY'S ASSERTION TOTAL NAMES WHAT IT EXCLUDES, AND READS THE `passing` FORMS (worktree `agent-ac2acc663da2165ca`, base `7042404e`, D-413)
+
+**Instrument:** `node scripts/battery.mjs` from `bio-plane/`, each run into its own log, read by its completion line and
+its own `BATTERY EXIT=` (never through a pipe); per-suite counts extracted from each run's `ok|FAIL|skip` lines and
+diffed. Machine BUSY throughout (`waitquiet --check`: 12 processes, 4 other batteries) — counts, not timings, are the figures.
+
+- **Baseline** (HEAD `14885f40`, pre-change): `254/254 suites green · 15643 assertions passing · 1032.2s · run 80058.e10f2c`,
+  exit 0, then `2 suite(s) reported no assertion count: bundle.test.mjs, livefire.test.mjs`. **Re-measured on this tree:
+  the two untallied suites are exactly the two D-413 named.** Both print `livefire: <summary>` and no tally in any form.
+- **Post-fix** (HEAD `6d81dc5d`, pre-merge): `252/254 … 15655 assertions passing · EXCLUDES 2 untallied suite(s) · … run
+  47194.92c141`. Per-suite diff against the baseline moved THREE suites and no others: `battery-verdict` 27 → 41 (the new
+  §2b arms — attributable, not drift); `tally-through-pipe` 13 → 12 pass, 1 FAIL — its arm E holds a COPY of the runner's
+  regex to the runner character for character, and went red at the widening, which is that arm working (copy corrected at
+  the site, 13/0 after); `strandedwork` 88 → 87/1 — it runs `plancheck --local`, which was STALE on `docs/DECIDED.md`
+  after the VERIFICATION.md edit (regenerated). **No suite's count moved because of the widened tally**: every other of
+  the 251 lines is identical, so no suite in the estate had been silently dropped by the old pattern.
+- **Merged** (`48eb64db`, origin/main merged in): `255/256 · 15715 · EXCLUDES 2 untallied suite(s) · run 89920.faa258` —
+  the one red `strandedwork` again, now for VERIFICATION.md 165 B over its reading budget (main cut the file the same day);
+  the addition was shortened in the closing commit. Final green figure: in CLAIMS.md's `released:` line for M0-65.
+
+**Class sweep.** Every copy of the tally pattern outside the runner (`grep -rn 'pass(?:ed)?'` over `*.mjs|*.js|*.sh`, not
+`node_modules`, not `docs/archive`): 12 sites. ONE is a copy that claims to BE the runner's (`tally-through-pipe.test.mjs`,
+corrected). The other eleven are controls parsing their OWN subject suite's foot (`current.control.mjs`, `d310.control.mjs`,
+`leadslug.control.mjs`, `nc-rec100.mjs`, …, `civicos-ui/test/case6.control.mjs`) — each reads one known suite that prints the
+`pass, fail` form, so they are not the runner's reader and were left alone; two are comments (`current.test.mjs:958`,
+`rec116-route-marked.test.mjs:423`) describing the pattern as of their day. **What the sweep cannot see:** a reader that
+parses the no-count line or the headline by a pattern not containing those literals; the grep for `reported no assertion
+count`, `suites green` and `assertions passing` over `tools/`, `bio-plane/`, `civicos-ui/` found three code readers
+(`battery-verdict.test.mjs`, `tally-through-pipe.control.mjs` — both corrected — and `fieldread.control.mjs:427`, whose
+`(\d+) assertions passing` still matches the new headline, unchanged).
+
+**Controls** (scratch driver patching one anchor, asserted matched once; restored from a per-arm copy, sha256 `61b485f0…`,
+51,166 B, MATCH and `cmp` identical every arm) on `battery-verdict.test.mjs`: baseline 41/0; `widening` reverted → 33/8 as
+declared (the `passing` and `passing, failing` fixtures fail by name, the sum reads 9 not 27); `reportline` reverted → 37/4
+as declared (the EXCLUDES segment and EXCLUDED line absent, the old shrug present); `liar` (every group optional, the row's
+liar clause built) → 23/18. `tally-through-pipe.control.mjs d93` → 1 of 1 AS DECLARED on the new wording.

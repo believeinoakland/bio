@@ -536,10 +536,26 @@ const run = ({ cwd, rel, label }) => new Promise((resolve) => {
    The optional third group is a NAMED skip count on the same line ("..., 2 skip
    (fresh signature verifies; ...)"): a suite that honestly ran fewer assertions
    says so and says WHICH, so the runner can surface it instead of the number
-   looking like a full green. */
+   looking like a full green.
+
+   M0-65 / D-413: THE ACCEPTED FORMS, stated as the four they are and no wider:
+     `N pass, M fail`   `N passed, M failed`   `N passing`   `N passing, M failing`
+   Until this item the pattern REQUIRED `pass`/`passed` then a comma and a fail count,
+   so a suite footing with `65 passing, 0 failing` (REC-116's branch printed exactly
+   that before its worker caught it) had all 65 dropped from the headline and was
+   reported only as "no assertion count". The fail count is optional for the
+   `passing` form ONLY: a bare `3 passed` or `3 pass` is ordinary prose far too often
+   to be read as a suite's whole tally, so it is NOT accepted and a suite ending that
+   way stays UNCOUNTED and NAMED below. Where no fail count was printed the tally says
+   so (`fail: null`, not 0): the exit status alone decides such a suite's verdict, as
+   it did before. The LAST accepted match is the suite's, as it always was, and a
+   rejected form never displaces an earlier accepted one. The `fail` word carries no
+   trailing \b on purpose — the old pattern matched `0 failures` as `0 fail`, and
+   suite counts must not move. */
 const tally = (out) => {
-  const m = [...out.matchAll(/(\d+)\s+pass(?:ed)?,\s+(\d+)\s+fail(?:ed)?(?:,\s+(\d+)\s+skip(?:ped)?\s*\(([^)]*)\))?/g)].pop();
-  return m ? { pass: +m[1], fail: +m[2], skip: m[3] ? +m[3] : 0, skipWhat: m[4] || "" } : null;
+  const m = [...out.matchAll(/(\d+)\s+(pass(?:ed)?|passing)\b(?:,\s+(\d+)\s+fail(?:ed|ing)?)?(?:,\s+(\d+)\s+skip(?:ped)?\s*\(([^)]*)\))?/g)]
+    .filter((x) => x[3] !== undefined || x[2] === "passing").pop();
+  return m ? { pass: +m[1], fail: m[3] === undefined ? null : +m[3], skip: m[4] ? +m[4] : 0, skipWhat: m[5] || "" } : null;
 };
 
 /* A suite that cannot run at all prints a wholesale marker ("name: SKIPPED —
@@ -645,12 +661,32 @@ const assertions = results.reduce((n, r) => n + (r.tally ? r.tally.pass : 0), 0)
 const ms = results.reduce((n, r) => n + r.ms, 0);
 const green = results.length - failed.length - skips.length;
 
+/* M0-65 / D-413: THE ASSERTION TOTAL IS A SUM OVER THE SUITES THAT PRINTED A TALLY, AND
+   IT NOW SAYS SO WHEN THAT IS NOT EVERY SUITE. Until this line the only trace of a
+   suite with no tally was `N suite(s) reported no assertion count: …`, printed BELOW
+   the headline — a sentence that reads as a formatting note, while every assertion
+   figure quoted from the headline silently left those suites out (`bundle.test.mjs`
+   and `livefire.test.mjs` on every run, measured 2026-09-19). A named SKIP names
+   itself as a skip; that line named itself as a shrug. So the exclusion is stated
+   TWICE, and both are load-bearing: in the HEADLINE, as a segment of its own right
+   after the figure it qualifies, because the headline is the line people quote; and
+   on the line below, which NAMES each excluded suite and says what is and is not
+   counted. The headline's shape is otherwise unchanged — `N/N suites green · M
+   assertions passing · … · run <id>` still parses for every reader of it (fieldread's
+   control, battery-verdict's run-id arm), and the segment appears ONLY when a suite
+   was excluded, so a fully tallied run prints exactly what it printed before. */
 console.log(`\n${green}/${results.length} suites green · `
   + (skips.length ? `${skips.length} skipped · ` : "")
-  + `${assertions} assertions passing · ${(ms / 1000).toFixed(1)}s · run ${RUN_ID}`);
+  + `${assertions} assertions passing · `
+  + (unknown.length ? `EXCLUDES ${unknown.length} untallied suite(s) · ` : "")
+  + `${(ms / 1000).toFixed(1)}s · run ${RUN_ID}`);
 if (skips.length) console.log(`  SKIPPED (named): ${skips.map((r) => `${r.file} — ${r.skip}`).join("\n                   ")}`);
 if (partial.length) console.log(`  ran short (named): ${partial.map((r) => `${r.file} skipped ${r.tally.skip} — ${r.tally.skipWhat}`).join("\n                     ")}`);
-if (unknown.length) console.log(`  ${unknown.length} suite(s) reported no assertion count: ${unknown.map((r) => r.file).join(", ")}`);
+if (unknown.length) {
+  console.log(`  EXCLUDED FROM THE ASSERTION TOTAL (D-413): ${unknown.length} suite(s) printed no tally, so the`
+    + ` ${assertions} above counts NONE of their assertions: ${unknown.map((r) => r.file).join(", ")}`);
+  console.log(`  their pass/fail IS in the suite figure; their assertions are in no figure this run prints.`);
+}
 if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")}`);
 for (const r of lied) console.log(`  EXIT/TALLY DISAGREE (D-425): ${r.file} printed ${r.tally.fail} fail and exited 0`
   + ` — counted RED whatever the exit said; the suite's exit path does not follow its own counter.`);

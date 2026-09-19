@@ -160,8 +160,11 @@ const inquiryMd = (id, question, legs) => ["---",
   "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and
+   creation bytes carrying an `id:` line are refused PROJECT_ID_IN_BYTES (C-59.2); `id` null builds the
+   creation's bytes with no id line. */
 const projectMd = (id, cites) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
   `title: "Sewer Fund"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
@@ -172,13 +175,15 @@ const projectMd = (id, cites) => ["---",
   "---", "", "## Summary", "", "The sewer fund investigation.", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): `id` null creates a PROJECT with NO bundleId (a creation naming
+   one is refused PROJECT_ID_SUPPLIED, C-59.1); the minted id is read from the answer's bundleId. */
 const promote = async (id, text, type, state, tok = MACHINE, register = [], base = null,
                        updated = NOW) => {
   const r = await POST(`op=promote&token=${tok}`, {
-    bundleId: id, base, snapKey: `${id}-${sha(text).slice(0, 8)}`,
+    ...(id === null ? {} : { bundleId: id }), base, snapKey: `${id ?? "PROJ-sewer-fund"}-${sha(text).slice(0, 8)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id ?? "Sewer Fund"}`,
             current_state: state, created: NOW, last_updated: updated } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   return r;
@@ -211,7 +216,8 @@ const dave = await member("dave", ["contribute"]);
 const INFO88 = "INFO-2026-0088-controller-memo";
 const INQ2 = "INQ-2026-0002-transfer-authorised";
 const INQ1 = "INQ-2026-0001-sewer-fund-misused";
-const PROJ = "PROJ-2026-0001-sewer-fund";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): the project's id is MINTED by the plane (Membership v2 §7), not
+   chosen; PROJ is the id the creation answered with. */
 const CAP88 = sha("rec32-agenda-capture");
 const CAPPROJ = sha("rec32-project-capture");
 
@@ -227,8 +233,8 @@ await doPost("recordcapturedlocator", { address: AGENDA, addressNorm: AGENDA,
 /* DEC-16's worked example above it, so a condition has a real case set. */
 await promote(INQ2, inquiryMd(INQ2, "Was the $2.1m transfer authorised?", [INFO88]), "inquiry", "open");
 await promote(INQ1, inquiryMd(INQ1, "Was the sewer fund misused?", [INQ2]), "inquiry", "open");
-await promote(PROJ, projectMd(PROJ, [INFO88]), "project", "forming", carol,
-  [{ sha256: CAPPROJ, path: "snapshots/board-packet.pdf", encoding: "binary", bytes: 10 }]);
+const PROJ = (await promote(null, projectMd(null, [INFO88]), "project", "forming", carol,
+  [{ sha256: CAPPROJ, path: "snapshots/board-packet.pdf", encoding: "binary", bytes: 10 }])).bundleId;
 
 /* An OBLIGATION on the same case, so the "untouched" clause has a real subject. */
 await doPost("taskenqueue", { kind: "authority-undetermined", captureSha: CAP88,

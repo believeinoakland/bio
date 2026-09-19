@@ -98,9 +98,18 @@ const ARMS = {
      founder's `admin` role into a bare string, so the founder's deliveries read
      `member:admin` while gus's stay right. Only the founder arms can tell this
      from the session row. */
+  /* DECLARATION CORRECTED 2026-09-19 by the D-431 worker, MEASURED ON BOTH TREES before correcting (this
+     driver run against the pristine base 7042404e in a scratch worktree, and against D-431's tree), and the
+     correction is the instrument's, not the subject's. (1) ALREADY STALE ON THE BASE (11/9, NOT AS DECLARED):
+     containerDone and containerWords fail too, because since REC-140 the founder's `member:admin` delivery of
+     the case document is refused (no such member has a role), the case is never ratified, and the container is
+     never assembled. (2) D-431's OWN MOVE: with the case unratified, gus's delivery of the FINDING (ratAnswer,
+     list, editions) used to PUBLISH LOOSE — the finding in no ratified case — and is now refused C-58.2. That
+     "green" was D-431's third measured publication outside a case; the arm now reads it as the failure it is. */
   "session-member": {
     edits: bothActs("`member:${sessMember}`"),
-    mustFail: [L.structActs, L.caseAnswer, L.caseDoc, L.pubcase, L.container, L.looseAnswer, L.looseReads],
+    mustFail: [L.structActs, L.caseAnswer, L.caseDoc, L.ratAnswer, L.list, L.editions, L.pubcase, L.container,
+               L.containerDone, L.containerWords, L.looseAnswer, L.looseReads],
   },
   /* REC-128's merge onto REC-130 — THE FOUNDER'S STANDING REVERTED, and ONLY
      that: `sessionCaseViewer` loses its founder line, so a founder session folds
@@ -111,9 +120,15 @@ const ARMS = {
      never complete (pubcase, container, containerDone, containerWords). vera's two
      STANDING arms STAY GREEN — she never had standing — and so do the loose
      founder delivery (op=ratify asks no case standing) and gus's. */
+  /* DECLARATION CORRECTED 2026-09-19 by the D-431 worker (13/7 AS DECLARED on the base 7042404e, measured):
+     the sentence above that "the loose founder delivery (op=ratify asks no case standing) and gus's" stay green
+     was true only while op=ratify published outside a ratified case. With the case document never ratified,
+     gus's FINDING is in no ratified case (C-58.2), and §5's founder delivery is now of the CASE'S EVIDENCE,
+     which no ratified case rests on either (C-58.3) — so both go red, and rightly. */
   "founder-standing": {
     edits: [["index", VIEWER_LINE, "    viewer: `member:${member}`, /* ARMED: founder resolution removed */"]],
-    mustFail: [L.founderRead, L.caseAnswer, L.caseDoc, L.pubcase, L.container, L.containerDone, L.containerWords],
+    mustFail: [L.founderRead, L.caseAnswer, L.caseDoc, L.ratAnswer, L.list, L.editions, L.pubcase, L.container,
+               L.containerDone, L.containerWords, L.looseAnswer, L.looseReads],
   },
   /* THE OVER-BROAD FIX, the failure in the other direction: every session is
      resolved to the root-administrator viewer, so standing is everybody's. The
@@ -130,9 +145,15 @@ const ARMS = {
      founder's retry carries the SAME signature, the store answers `existed: true`
      and writes nothing, and the answer's `deliveredBy` names who delivered THIS
      request (its comment at op=caseratify's answer) while the RECORD names vera. */
+  /* DECLARATION CORRECTED 2026-09-19 by the D-431 worker, and NOT D-431's move: measured 18/2 NOT AS DECLARED
+     on the pristine base 7042404e and identically on D-431's tree. Since REC-140 (C-56.1 at op=caseratify's
+     delivery, IC-154) vera — in no project — is REFUSED delivery of iris's case signature even when every
+     session reads as an administrator, so the case document is ratified by the FOUNDER as intended and the three
+     downstream reads (caseDoc, pubcase, container) stay green. Only vera's two STANDING arms can tell this arm
+     from the right fix, which was this arm's original claim before its first correction. */
   "everyone-admin": {
     edits: [["index", VIEWER_LINE, "    viewer: \"admin\", /* ARMED */"]],
-    mustFail: [L.veraRead, L.veraDeliver, L.caseDoc, L.pubcase, L.container],
+    mustFail: [L.veraRead, L.veraDeliver],
   },
 };
 

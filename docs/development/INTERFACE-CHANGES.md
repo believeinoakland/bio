@@ -11673,6 +11673,80 @@ report and in the claim's release.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #6 as MAJOR — I3 37.0.0 → 38.0.0.** Base RE-READ at resolution off `origin/main` `d036094b`: 37.0.0 (IC-153, REC-136 + UI-65), so the worker's re-based proposal stands. Breaking by IC-137: three acts that committed now refuse (a project bundle at `op=ratify`, C-58.1; a pinned finding under a non-owner's signature, C-57.1; one delivered by an administrator with no role, C-56.1), and a caller who cannot see a project bundle now receives the never-minted 404 `ABSENT` instead of 409 `RATIFY_STALE`/`GATE_REFUSED` (IC-25). No first-party surface affected (`civicos-ui/` names `op=ratify` nowhere, re-grepped at integration); the instance page's `ratifyPanel` renders the new codes through its existing fallback. An AUTHORITY and DISCLOSURE closing — DIST told; it rides 0.64.0 with REC-143 (DIST's ruling: no cut without the P0 fix). D-431 (what `op=ratify` still publishes outside a case) carried to BOB.
 
+## IC-161 · I3: `op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE — a finding at a sha no ratified case pins is REFUSED (C-58.2 `RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE`, naming `op=caseratify` as the act to take first); any other bundle crosses only as EVIDENCE a ratified case's pinned finding rests on, under that case's authority (C-57.1 / C-56.1), else REFUSED (C-58.3 `RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE`) · PROPOSED 2026-09-19 (D-431, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE: 38.1.0** (38.0.0 at spawn on `7042404e`; IC-159 (REC-142) moved it and was merged in before close-out).
+  **Proposed MAJOR — 38.1.0 → 39.0.0**, by IC-137's precedent: two refusals where a publish stood. Read the base AT
+  RESOLUTION.
+- **Proposer:** RECORD, worker `agent-af4cb02e310604e39`, 2026-09-19, spawned by CONDUCT #6 for D-431.
+- **Owner to land it:** `RECORD`
+- **Design:** `BIO_Publication_v0_1.md` §3 rule 2, its second note (BOB #16, D-431) and rule 1; IC-157 (`Store#caseAuthority`,
+  C-58.1).
+- **Consumers to answer:** `UI` (measured NOT-AFFECTED: `civicos-ui/` names `op=ratify` nowhere — grepped); the instance
+  page `bio-plane/src/setup.mjs` (`ratifyPanel` submits `op=ratify` for any bundle id; a loose information bundle, a
+  no-case inquiry and a finding before its case document now render through its existing fallback as *"Refused:
+  <code>"* — the canned `translation` travels on the wire, as IC-157 recorded for the page's other codes); `DIST` (newgroup
+  embeds the old plane until the next cut); `SKILL` and `agent-worker` (NOT-AFFECTED: neither submits `op=ratify`).
+
+**WHAT THE CODE DID BEFORE — pinned by REC-140 AS MEASURED** (`ratify-authority.test.mjs` §7 on `7042404e`, 32/0 with the
+three arms asserting PUBLISHED): an information bundle in no case, published by any member holding a registered key; a
+concluded inquiry in no case and no project, the same; and a finding PREPARED into a case whose document was not yet
+ratified, published LOOSE under a non-owner's key — the ceremony's order (case document first) not enforced, and
+IC-157's owner/delivery rule side-stepped by ratifying early.
+
+**THE SHAPE.** In `Store#publish`, first in its transaction (before the edition refusals and the idempotent retry, so
+nothing is written on a refusal and a retry of bytes that crossed before this rule answers nobody):
+
+| The bundle at this sha | Answer | Code |
+|---|---|---|
+| a finding a RATIFIED case pins | IC-157's `#caseAuthority` (unchanged) | C-57.1 / C-56.1 |
+| anything else that a RATIFIED case's pinned finding RESTS ON | `#caseAuthority` for that case's project; several projects: an owner of ANY may sign (first refusal by id otherwise) | C-57.1 / C-56.1 |
+| an inquiry nothing ratified rests on | refused; the detail names `op=caseratify` first | `RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE` C-58.2 |
+| any other bundle nothing ratified rests on | refused | `RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE` C-58.3 |
+
+Both codes: family `RATIFY_SCOPE_CHECKS`, one DEC-49 region `publish > is-ratify-outside-a-case`, relayed by `op=ratify`
+at **409** (added to its list beside C-57.1/C-56.1; a store refusal outside the list answered 500).
+
+**"RESTS ON", NAMED FROM THE CODE.** The published graph serves an edge only of the `serve` class (every `references[]`
+entry of the RATIFIED bytes; the two division disclosures are name-only) and only to a published target (`#publishEdges`).
+That classification was an inline array in `op=ratify`; it is now **`Store.publishedGraphEdges(fm)`, moved verbatim**, and
+BOTH the graph `op=ratify` hands `#publishEdges` and the refusal's `#ratifiedFindingsRestingOn` (every ratified case's
+pinned member, at its PINNED bytes — live file or `history`) read it. Pinned bytes the store cannot read rest on nothing
+(undeterminable, so refused — the safe direction for this defect).
+
+**SIGHT.** Only project rows are ever hidden (`#inSight`), and the gate facts are read at the ratifier's viewer (IC-157).
+The refusal consults RATIFIED cases only, which are public, so a bundle no ratified case rests on answers the same bytes
+whether or not a project the caller cannot see is preparing a case over it (driven: §8c, byte-identical before and after
+the hidden project exists).
+
+**WHY MAJOR.** Three acts that COMMITTED now REFUSE, with new codes (IC-137 read strictly). The retry of a bundle that
+crossed before this rule is also now refused rather than answered `existed` — nothing is retracted (rule 1).
+
+**What already crossed (the ruling's (c)):** counted in the record namespace — **0 rows** on `biosmoke7` and on `civicos`,
+each of which holds no published row at all (`MEASUREMENTS.md` M-66).
+
+**A REFUSAL THIS SHADOWS, stated:** `EDITION_NOT_INCREMENTED` was reachable through `op=ratify` only by an edition
+AUTHORED into hand-written revision bytes; those bytes are now a finding no ratified case pins, refused C-58.2 first. The
+guard stays in the committer and is driven there (`shadowed-refusals.test.mjs` (viii), corrected).
+
+**Suites:** `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, §8/8b/8c new (32 → 51 assertions);
+its control driver gains three arms (the row's two controls and the evidence-side liar), all ten AS DECLARED on the first
+run. A new shared fixture `test/ratified-evidence.mjs`. CORRECTED at their sites with dated reasons, never exempted:
+`ratify`, `reuse-ratify`, `ratify-envelope`, `publishedcase` §8 (loose bundles made evidence of a ratified case),
+`deliverer` §5/§6, `testify` (case document before finding), `casesign` (a moved member is now refused, not published
+loose), `publish` 6b (C-58.2 before the edition), `shadowed-refusals` (viii), `derivation-bounds` (census 108 → 109, the
+arrival `#ratifiedFindingsRestingOn`), and `casepin` (edition 1's throw became a named failure, because control arm
+(a) — no pin written — is now refused C-58.2 and died with no tally). Controls re-run on the corrected suites, every
+restore verified: `casesign` (d) 73/1 names the corrected arm; `shadowed-refusals` 11/11 as declared; `deliverer` six as
+declared after three declarations were corrected (two stale since REC-140, measured on the base); `nc-mk1` `pubbundle`
+corrected (its "nothing published" half is now held by C-58.3 — defence in depth); `casepin` (a) 0/1;
+`case-authority` and `machine-attest` unchanged and as declared. `operator-attest.control.mjs` reads four arms NOT AS
+DECLARED identically on the base and on this tree — pre-existing, not this item's, reported for CONDUCT.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 39.0.0 → 40.0.0.** Base RE-READ at resolution off the integration tree: 39.0.0. Breaking by IC-137: op=ratify refuses what it published — a finding no RATIFIED case pins (C-58.2 RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE, naming op=caseratify) and any other bundle that is not evidence a ratified case's pinned finding rests on (C-58.3); 'rests on' is the published graph's own edge set, read through one Store.publishedGraphEdges. The (c) count of already-crossed rows was MEASURED at 0 on biosmoke7 and civicos (M-66); other instances unmeasured. A DISCLOSURE AND AUTHORITY closing — DIST told.
+
 ## IC-159 · I3: `op=affordances` publishes `conclude` on a question whose OWN state is already `concluded` — its PROJECT arm — to a caller who has JOINED some project it can see that LIVE-cites the question · PROPOSED 2026-09-18 (REC-142, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
@@ -11764,6 +11838,102 @@ sources untouched. `node test/nc-pl18.mjs` re-run: (e) the same control 39/13 as
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 38.1.0 → 39.0.0.** Base RE-READ at resolution off `origin/main`: 38.1.0 (IC-159, REC-142). Breaking: the wire value `PROJECTLESS` is gone (every inquiry-context run answers ground `INQUIRY`), and a call that was refused `AI_RUN_NOT_PROJECT_MEMBER` over a question now starts. It is breaking in the direction that removes a disclosure: the refusal told a member that a hidden project cites the question (§7.9). No first-party consumer reads a ground (the UI never calls `airunopen`; `agent-worker` runs on a machine credential). REC-141's IC-158, proposed on the same base, is re-based when it lands. A §7.9 DISCLOSURE closing — DIST told.
+
+## IC-158 · I3: THE PLANE MINTS PROJECT IDS — a creation of a project (or any creation in the `PROJ-` namespace) that names a `bundleId`, and a fork that names a `newId`, are REFUSED with one answer whether or not the id exists (C-59.1, C-59.3); the plane writes `id:` into the bytes before hashing and answers the minted `bundleId`/`newId` and the final `bundleSha`; bytes already carrying `id:` are refused (C-59.2) · PROPOSED 2026-09-18 (REC-141 / D-428's creation half, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (after merging `origin/main` at `1d439e31`):
+  38.1.0** (IC-159; it read 38.0.0 at the first merge). **Proposed MAJOR — 38.1.0 → 39.0.0**, BREAKING by IC-137's rule:
+  a create that succeeded before is now REFUSED. Read the base AT RESOLUTION.
+- **Proposer:** RECORD, worker `agent-a12cdccbace704eb6`, 2026-09-18, spawned by CONDUCT #6 for REC-141.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` — **BROKEN, measured:** `civicos-ui/app.html`'s Add surface creates a project by
+  `op=allocid` + a browser-built id + `bundleId`, and the fork form sends `newId`; both are now refused. UI-66 is the
+  surface half, DELEGATED in `CLAIMS.md`, and must land WITH this. `DIST` (newgroup embeds the old plane until the next
+  cut; the installer's intake page `bio-plane/src/setup.mjs` is corrected in this landing). `agent-worker` and the skill
+  pack: NOT-AFFECTED (grepped: neither creates a project nor forks one).
+- **Design:** `BIO_Membership_Architecture_v2.md` §7, the bullet *"HOW the plane mints a project id"* (BOB #15), with
+  §7.9 (*"not its existence"*); precedent the `bio-testimony/1` header the plane already writes.
+
+**THE DEFECT, MEASURED BEFORE ANY EDIT** (`3dee1fdb`, `project-sight.test.mjs` §6's KNOWN pin): a member who cannot see
+a project, creating a project at its id, answered `EXISTS`; at a never-minted id the same request CREATED the bundle —
+an existence oracle for project ids (D-428's creation half).
+
+**What changes, per op.**
+- `op=promote` (and the DO door `/promote`), `base: null`: when `meta.object_type` normalises to `project`, OR the
+  supplied `bundleId` begins `PROJ-` (whatever type is claimed — a creation of an `information` bundle at a hidden
+  project's id answered `EXISTS` too): a `bundleId` that is present and non-empty is refused
+  `PROJECT_ID_SUPPLIED` (C-59.1) BEFORE any id is looked up — one payload, no id echoed. With none, `bundle.md` must be
+  inline text with a frontmatter block (else `PROJECT_DOCUMENT_UNREADABLE`, C-59.4) and no top-level `id:` key (else
+  `PROJECT_ID_IN_BYTES`, C-59.2; a nested key or a body line is not one). The plane mints
+  `PROJ-<year>-<rand>-<slug of meta.title>` inside the promote transaction — `<rand>` four digits from the runtime
+  CSPRNG (`crypto.getRandomValues`, rejection-sampled), NEVER `allocId`'s counter (BOB #16, 2026-09-19, *"A MINTED ID
+  CARRIES NO COUNT"*; CORRECTED from the first build, which read the counter), checked unique and redrawn on collision, writes `id: <minted>` as the first frontmatter
+  line, recomputes `bytes` and `sha256`, and the answer's `bundleId` and `bundleSha` are the minted id and the sha of
+  the registered bytes. Every other type still names its own id — unchanged.
+- `op=projectfork`: a `newId` that is present and non-empty is refused `PROJECT_FORK_ID_SUPPLIED` (C-59.3), FIRST. With
+  none, the clone's origin `id:` is removed and the fork is minted by the same path; the answer's `newId` is the minted
+  id, `bundleSha` the registered sha. The old `MALFORMED` ("newId is required") and `EXISTS` answers are gone.
+- Each C-59 refusal carries `code`, `check` and a canned `translation` (DEC-49).
+
+**Classification: MAJOR.** A creation and a fork that succeeded are now refused; a member-facing surface breaks until
+UI-66 lands. For MINOR, and it does not govern: nothing is removed from a success answer.
+
+**Residuals named, not closed:** a project created BEFORE this under a non-canonical id (not `PROJ-`-prefixed) still
+answers `EXISTS` to a creation of another type at that id — BOB #16's stated LIMITATION; how many such ids the live record
+holds is UNDETERMINED (this worker has no access to a deployed record). The count disclosure the first build carried
+(the suffix WAS the PROJ counter) is CLOSED by the opaque suffix; `op=allocid` still hands out PROJ counter values, and
+`CASE`/`DRAFT`/`RVG` ids are still counted — both are the separate SCHEDULER item BOB #16's ruling names, not this one.
+Minted ids no longer sort in creation order (a suite that relied on that, `d280-strengthbar`, is corrected).
+
+**Suites:** new `bio-plane/test/project-mint.test.mjs` (45 assertions, §6 the no-count arms) and `project-mint.control.mjs`
+(seven arms, all AS DECLARED on the 2026-09-19 tree: baseline 45/0 · accept-supplied-id 37/8 · hash-before-id 42/3 ·
+fork-ignores-newid 41/4 · counter-restored 42/3 (BOB #16's control, exactly the three NO COUNT arms) · id-anywhere 43/2 ·
+id-key-other-spelling 45/0; every NOT-AS-DECLARED first run was the instrument or its declaration,
+recorded in the suite's header). CORRECTED at their sites with dated reasons, never exempted: `project-sight.test.mjs` §6 (the KNOWN `EXISTS`
+pin, now the refusal and byte-identical to a never-minted id; its control re-run, every arm AS DECLARED),
+`project-disclosure.test.mjs` §4, `ratify-authority.test.mjs` (REC-140's, control re-run AS DECLARED), the shared
+fixture `publishingproject.mjs`, and every other plane suite, probe and `civicos-ui/test/conclude-reading.test.mjs`
+that chose a project id (the list is the landing's diff).
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 40.0.0 → 41.0.0.** Base RE-READ at resolution off the integration tree: 40.0.0. Breaking by IC-137: a creation of a project (or any creation in the PROJ- namespace) that names a bundleId, and a fork that names a newId, are now REFUSED with one answer whether or not the id exists (C-59.1, C-59.3), closing the creation half of D-428's existence oracle; the minted id carries an OPAQUE CSPRNG suffix, never allocId's counter (BOB #16, d7ce3f86 — the owed act on the row, verified: project-mint §6 and its counter-restored control). LANDED TOGETHER WITH UI-66, so no deployed surface meets the refusal without the id-less Add and fork. A §7.9 DISCLOSURE closing — DIST told.
+
+## IC-160 · I3: `op=projection&id=<id>` (the SINGLE-BUNDLE form) publishes `no_project_conclusion` — for an inquiry, the inquiry's own no-project conclusion computed by the ONE reader `op=basisversions` uses (`#noProjectConclusionOf`), null when unconcluded; null on every non-inquiry; NEVER on the list form · PROPOSED 2026-09-19 (REC-144, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE after merging `origin/main` (`8ab8f48f`,
+  which carries REC-142's IC-159): 38.1.0 (38.0.0 at spawn on `5871a991`). Proposed MINOR, ADDITIVE — 38.1.0 → 38.2.0.**
+  Read the base AT RESOLUTION. **Why MINOR:** IC-25's test — nothing that answered before is refused or changes
+  meaning. The single-bundle answer GAINS one key and loses none; an action's `action` block is unchanged; an invisible
+  or absent bundle still answers `null`; the list form (paged and filtered) is byte-unchanged.
+- **Proposer:** RECORD, worker `agent-af0ecccecaa170e90`, 2026-09-19, spawned by CONDUCT #6 for REC-144.
+- **Owner to land it:** `RECORD`
+- **Design:** `INVESTIGATIVE-SESSION.md` §7.1, the paragraph "The question's page reads the no-project conclusion from
+  `op=projection`" (BOB #16, 2026-09-19, `7c150df0`).
+- **Consumers to answer:** `UI` — NOT BROKEN (an additive key; `getProjection` caches the row and reads named fields),
+  and the CONSUMER this exists for: **UI-67** renders it on the question's page with `noProjectConclusionHtml` and
+  invalidates `PROJ_CACHE` for the inquiry when a conclusion or a withdrawal lands. `DIST` (newgroup embeds the old
+  plane until the next cut), `SKILL`, `agent-worker` — NOT-AFFECTED, grepped: none reads `op=projection`'s single row.
+
+**THE SHAPE.** `op=projection&id=<id>`, when the row passes the viewer gate: the row as before, plus
+`no_project_conclusion` — for an inquiry, EXACTLY what `op=basisversions&id=<id>` publishes under the same key for the
+same viewer (`{project: null, inquiry, relationship: "no_project", state: "concluded", relationship_established: false,
+relationship_detail, conclusion, falsifier, claim: {state: "adopted"|"undetermined", …}}`), or null when the inquiry is
+not concluded; null for every other type. The list form carries no such key.
+
+**ONE READER, TWO READS.** The single-bundle arm calls `#noProjectConclusionOf` — the reader is not copied, so the two
+reads cannot disagree. `bio-plane/test/projection-noproject.test.mjs` (new, 26/0) proves the field byte-identical to
+`op=basisversions`' for two viewers over an ADOPTED and an UNDETERMINED conclusion (non-null, so the equality is not two
+nulls agreeing), null for an open inquiry and two non-inquiries, absent from the paged and the filtered list forms, and
+ONE reader off the source (exactly one definition, exactly two call sites, the reader's tokens once across `src/`).
+Negative control `node test/projection-noproject.control.mjs`: baseline 26/0 · (a) a copied reader differing in one
+unreached branch 23/3 — the ONE-READER arms fail by name while every byte-identity arm passes (the liar the row names) ·
+(b) the field on the list form 22/4 · (c) over-strictness 26/0; every restore sha256 MATCH. Before the change: 12/14.
+**No I5 IC:** no table or column moves.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MINOR — I3 41.0.0 → 41.1.0.** Base RE-READ at resolution off the integration tree: 41.0.0. Additive: the single-bundle op=projection for an inquiry carries no_project_conclusion from the ONE existing reader (#noProjectConclusionOf, the same op=basisversions calls); null for an unconcluded inquiry and for any other type; the list form unchanged. Nothing refused, no key moved. UI-67 renders it.
 
 ## IC-163 · I3: A RUN'S CONTEXT IS THE KIND IT NAMES — `airunopen` REFUSES a `contextType` that is not the named bundle's type (C-22.11 `AI_RUN_NO_SUCH_CONTEXT`), and a member's open over an id they cannot see, under any kind but `project`, answers exactly as a never-minted id · PROPOSED 2026-09-19 (REC-153, minted with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
 

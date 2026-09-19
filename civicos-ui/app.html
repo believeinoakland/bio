@@ -3038,7 +3038,11 @@ function mdFor(id, type, state, title, body, now, hasDoc, src, act){
      surface says which of the two it is, and the missing half is a delegation
      rather than a leg this function invents a role for. */
   const refs = (act && Array.isArray(act.refs) ? act.refs : []).filter(r=>r && r.target);
-  const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
+  /* UI-66 (REC-141, IC-158; Membership v2 §7, "HOW the plane mints a project id"): a NEW PROJECT's id is
+     the plane's to mint, and the plane writes it into these bytes itself and REFUSES bytes that already
+     carry one (C-59.2). So `id` is null for a new project and the line is OMITTED — never written empty,
+     never a placeholder. Every other caller still passes the id it allocated and gets the line it got. */
+  const fm = ["---",...(id == null ? [] : ["id: "+id]),"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
     "produced_by:","  mode: assisted","  capability_tier: session",
@@ -7262,6 +7266,14 @@ function actRefusalHtml(r){
     + (r.reason ? `<div class="intent-ref-code mono">${esc(r.reason)}</div>` : "")
     + `</div>`;
 }
+/* UI-66. A refusal carrying a canned `translation` (DEC-49), rendered in THAT — the plane's own member-facing
+   sentence, received and never composed — in place of its `detail`, which is written for a caller of the op
+   (C-59.3's says "send the fork with no newId"). `acquireWhy`'s rule. Applied at the two sites UI-66 owns
+   (`addGo`'s promote, `doRosterAct`) rather than inside `actRefusalHtml`, whose other callers pin `detail`
+   (version-review §7): moving every act surface to the translation is a class change, reported, not made here. */
+function refusalTranslated(r){
+  return (r && typeof r.translation === "string" && r.translation) ? { ...r, detail: r.translation } : r;
+}
 /* The acts the plane publishes for ONE object as it stands. A refusal (an
    object this credential may not see answers NO_SUCH_BUNDLE, identical to an
    absent one) is carried back whole so the caller renders the plane's words. */
@@ -8222,7 +8234,9 @@ const ROSTER_ACTS = {
     fields:[["handle","Their handle","required"],["reason","Your reason","required"]],
     what:"The single exception to administrators holding no authority over projects. The record judges whether this project is stranded; this page does not, and does not guess.",
     where: p => p.administers },
-  projectfork: { label:"Fork this project", op:"projectfork", fields:[["newId","The new project's id","required"],["title","Its name","required"]],
+  /* UI-66 (REC-141, IC-158): NO id field. A fork's id is minted by the plane, which refuses a named `newId`
+     (C-59.3); the receipt below renders the `newId` the plane ANSWERS. The member names the fork, nothing else. */
+  projectfork: { label:"Fork this project", op:"projectfork", fields:[["title","Its name","required"]],
     what:"A fork is a clone with a recorded origin. Participants are not copied.",
     where: p => p.joined && p.forks },
 };
@@ -8288,7 +8302,7 @@ async function doRosterAct(){
   const r = await actAsk(a.op, params);
   if(!r.accepted){
     const err = $("#ra-err");
-    if(err){ err.innerHTML = actRefusalHtml(r.refusal); err.classList.remove("hidden"); }
+    if(err){ err.innerHTML = actRefusalHtml(refusalTranslated(r.refusal)); err.classList.remove("hidden"); }
     if(go){ go.disabled = false; go.textContent = a.label; }
     return { refused:true, reason: r.refusal && r.refusal.reason };
   }
@@ -17042,9 +17056,19 @@ async function addGo(){
     }
     addSay(`<p class="count-line">Writing it into the record&hellip;</p>`);
     const now = new Date().toISOString().split(".")[0] + "Z";
-    const a = await recR("allocid", { prefix: vocabFor(PREFIX, type), year: String(new Date().getFullYear()) });
-    const stem = a && a.id;
-    const id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    /* UI-66 (REC-141, IC-158). A PROJECT'S ID IS NOT CHOSEN HERE, and not asked of the member either: the
+       plane mints it, writes it into the document, and REFUSES a creation that names one (C-59.1) — one
+       answer whether or not the id is taken, which is what closes the existence oracle D-428 found. So for
+       a project nothing is allocated, no `bundleId` is sent and `mdFor` writes no `id:` line; the id this
+       surface shows and opens is the one the plane ANSWERS (`bundleId`), read back below. Every other type
+       still allocates and names its own id, unchanged. */
+    const minted = normalizeType(type) === "project";
+    let id = null;
+    if(!minted){
+      const a = await recR("allocid", { prefix: vocabFor(PREFIX, type), year: String(new Date().getFullYear()) });
+      const stem = a && a.id;
+      id = stem + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    }
     /* UI-39. The held-check's REACH is part of what this document is, so it goes
        into the body beside the changed-from note and through the same mechanism.
        A duplicate the record can explain is a different object from a duplicate
@@ -17097,7 +17121,7 @@ async function addGo(){
       }
     }
     const res = await recPostR("promote", {
-      bundleId: id, base: null, snapKey: stamp(), author: who,
+      ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: who,
       meta: { object_type: type, group:"believe-in-oakland", title,
               current_state: vocabFor(FIRST_STATE, type), created: now, last_updated: now },
       files, register: registerFor(doc),
@@ -17121,8 +17145,19 @@ async function addGo(){
               + (Array.isArray(f.repairs)&&f.repairs.length
                   ? `<ul>${f.repairs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "")
               + (f.check?`<div class="intent-ref-code mono">${esc(f.check)}</div>`:"")+`</div>`).join("")
-        : `Refused: ${esc(why)}. Nothing was written.`);
+        /* UI-66: a refusal with no findings used to render as its CODE alone ("Refused: PROJECT_ID_SUPPLIED")
+           — the machine word DEC-49 keeps away from members, with the plane's own sentence thrown away. It
+           is rendered through `actRefusalHtml`, the plane's words verbatim (its canned translation first). */
+        : (res && (res.translation || res.detail))
+          ? `<b>The record refused this and nothing was written.</b>` + actRefusalHtml(refusalTranslated(res))
+          : `Refused: ${esc(why)}. Nothing was written.`);
       return;
+    }
+    /* UI-66: for a project, the id is the one the plane MINTED and answered — never one composed here. An
+       accepted creation that answers no id is not shown as a success under an id nobody gave it. */
+    if(minted){
+      id = (res && typeof res.bundleId === "string" && res.bundleId) || null;
+      if(!id){ addSay(""); addErr(`The record accepted this but did not say which id it gave the project.`); return; }
     }
     IMG_CACHE.delete(id); PROJ_CACHE.delete(id); RECORD_CACHE = null;
     NONRESPONSE_FROM = null;   // the carry is spent; a second question is a second decision

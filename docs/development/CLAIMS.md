@@ -14481,6 +14481,56 @@ session: FLEET (worktree `sweet-goldberg-04a9ed`). Scope: `docs/development/kick
 sentences corrected to `CLAUDE.md` §3 as it reads on `origin/main`: the build plan's order goes to SCHEDULER and
 running work to CONDUCT (was "CONDUCT (sequencing)"); Bob's decisions go to BOB (was "via CONDUCT"). Claimed and
 released in the same commit.
+
+## CLAIM 2026-09-19 RECORD (D-431 — `op=ratify` publishes NOTHING outside a RATIFIED case: a finding only at a sha a ratified case pins; anything else only as evidence a pinned finding rests on, under that case's authority)
+
+Worker spawned by CONDUCT #6, isolated worktree `agent-af4cb02e310604e39`, branch `worktree-agent-af4cb02e310604e39`,
+base `7042404e` (= origin/main at spawn, carrying the D-431 flip to `running`). `npm ci` in all three packages, each
+`node_modules` a real directory. Baseline on the pristine base: **254/254 suites green · 15643 assertions passing · run
+93460.afef8e**. Design: `BIO_Publication_v0_1.md` §3 rule 2, its second note (BOB #16, D-431), and rule 1. IDs minted with
+`tools/mintid.mjs`: IC-161. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` (`publish`'s opening block; a new `static publishedGraphEdges` and
+  `#ratifiedFindingsRestingOn`); `bio-plane/src/index.mjs` (`op=ratify`'s handler only: the graph's edges built by the one
+  static, two codes on its 409 list); `bio-plane/checks/bio-checks.mjs` (`RATIFY_SCOPE_CHECKS` C-58.2, C-58.3).
+- Tests: `bio-plane/test/ratify-authority.test.mjs` §7 CORRECTED and §8 new, and its control driver; any suite that
+  ratified a bundle outside a ratified case, CORRECTED at its site with a dated reason, never exempted.
+  `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-161), `BIO_Publication_v0_1.md` front matter, §3 rule 2 and §4,
+  `construct-status.json` (13.fence), `DEBT.md` (D-431 closed and archived), `MEASUREMENTS.md` (the (c) count), this block.
+
+NOT `QUEUE.md`, NOT `release/`, NOT `newgroup/`, NOT `affordances.mjs` (REC-142), NOT REC-141's id-minting sites.
+
+## CLAIM 2026-09-19 RECORD (D-431) — RELEASED
+
+released: 2026-09-19 by the D-431 worker, branch `worktree-agent-af4cb02e310604e39`, base `7042404e`, merged with
+origin/main `f61d071d` (REC-142 / IC-159 — I3 38.1.0; D-430) before close-out; IC-161 re-based to 38.1.0 (proposed MAJOR
+→ 39.0.0). On the COMMITTED merge `1d8dff0e`: **256/256 suites green · 15721 assertions passing · run 78266.8bbdeb**, 0
+skipped (own baseline on `7042404e`: 254/254 · 15643 · run 93460.afef8e; `ratify-authority` 32 → 51). `coverage.mjs
+--strict` exit 0 unpiped, REGISTER_FLOOR collapsed to ONE key and re-read from its print (1446 branch / 1452 main →
+**1456**, classified 247, corpus 248, run 210). `node civicos-ui/test/run.mjs` exit 0 ("all harnesses green");
+`civicos-ui/check-refusal-codes.mjs` exit 0 with the new region `publish > is-ratify-outside-a-case` read (2 judged, 2
+checked), its floors not moved (below the print). `derivation-bounds` census 108 → 109 from its print. Paths as claimed,
+plus control-declaration corrections in `deliverer.control.mjs`, `nc-mk1.mjs` and `casepin.test.mjs`'s foot, each with a
+measured, dated reason. **(c): 0 rows** (M-66). IDs minted: IC-161, M-66. D-431's DEBT row CLOSED and archived.
+NEGATIVE CONTROLS (`node test/ratify-authority.control.mjs`, sources untouched: YES): baseline 51/0 · the row's control 1
+`readmit-unpinned-finding` 47/4 · the row's control 2 `rests-on-reads-basis` (the refusal reads the basis, not the
+graph's edge set) 42/9, the IDENTITY arms among them · the liar `refuse-every-evidence` 42/9 · REC-140's seven re-run,
+all ten AS DECLARED on the first run.
+**FOR CONDUCT:** (1) RESOLVE IC-161 against I3 as read at resolution (proposed MAJOR 38.1.0 → 39.0.0). (2) Flip D-431's
+QUEUE row to done (its DEBT row is already closed and archived). (3) `operator-attest.control.mjs` reads admin, member,
+probe and tokenstring NOT AS DECLARED ("the case is still NOT ratified" does not fail) IDENTICALLY on the pristine base
+`7042404e` and on this branch — pre-existing, not D-431's; place it. (4) I touched governed region
+`publish > is-ratify-outside-a-case` (new) in `store.mjs`; re-read `regionLines` at merge. **FOR DIST:** a new cut carries a
+breaking I3 change (two refusal codes where a publish stood); the record namespaces measured hold no published rows, so
+nothing already published is affected. **FOR BOB:** a DESIGN GAP, stated in `BIO_Publication_v0_1.md` §3 rule 2 and its
+front matter — a finding ratified before its evidence never serves the edge to it (the published graph admits a serve
+edge only to an already-published target and does not refresh), and C-21.2 forces that order for a GRADED leg on an
+information bundle (no frozen strength to inherit), so a case's graded evidence crosses but is not linked from its
+finding on the published graph. **FOR UI:** nothing to build; the instance page's ratify panel renders the two codes
+through its existing fallback (the canned `translation` travels on the wire and is not yet rendered there).
+
 ## CLAIM 2026-09-18 RECORD (REC-142 — `op=affordances` publishes a PROJECT's `conclude` on a question whose own state is already `concluded`; discharges the DELEGATION 2026-09-18 UI (UI-65) -> RECORD)
 
 claimed: 2026-09-18 by the REC-142 worker (spawned by CONDUCT #6), branch `rec142/affordances-concluded`, base
@@ -14604,6 +14654,189 @@ REGION marker was touched (the refusal site is `projectGate`, its body changed a
 project cites a question).
 **FOR BOB (a DESIGN GAP, not decided here):** over a question any member holding contribute may now tick and close
 ANOTHER member's run, because the three verbs share one gate (pinned as built, ARM H6).
+## CLAIM 2026-09-18 RECORD (REC-141 — THE PLANE MINTS PROJECT IDS: a caller-supplied id on a new project or a fork is refused with one answer; the plane writes `id:` into the bytes before it hashes and registers them)
+
+Worker spawned by CONDUCT #6, isolated worktree `agent-a12cdccbace704eb6`, branch `worktree-agent-a12cdccbace704eb6`,
+base `3dee1fdb`. `npm ci` in all three packages, each `node_modules` a real directory (5.0 GiB free). Design: Membership
+v2 §7, the bullet *"HOW the plane mints a project id"* (BOB #15), with §7.9. IDs minted with `tools/mintid.mjs`: IC-158,
+C-59. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — `promote`'s creation arm, `forkProject`, `allocId`'s sequence (a shared
+  private step), the DO door's `promote` row; `bio-plane/src/index.mjs` — `op=promote`'s and `op=projectfork`'s
+  handling of a caller-supplied id; `bio-plane/checks/bio-checks.mjs` — a new C-59 family.
+- Tests: a new `bio-plane/test/project-mint.test.mjs` and its control driver; `project-sight.test.mjs` §6's KNOWN pin
+  CORRECTED; every suite that chose a project id CORRECTED at its site with a dated reason, never exempted (including
+  the shared fixture `bio-plane/test/publishingproject.mjs`); `civicos-ui/test/**` fixtures only where a plane-backed
+  fixture chose a project id. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-158), `DEBT.md` (D-428's creation half), `BIO_Membership_Architecture_v2.md` front
+  matter and §7, `construct-status.json` if a construct's state moves, this block.
+
+NOT `QUEUE.md` (CONDUCT's/SCHEDULER's), NOT `civicos-ui/app.html` (UI-66's, DELEGATED below), NOT `release/`, NOT
+`newgroup/`.
+
+### DELEGATION 2026-09-18 RECORD (REC-141) -> UI: **THE ADD SURFACE AND THE FORK FORM MUST STOP SENDING A PROJECT ID — THE PLANE NOW MINTS IT AND REFUSES ONE (UI-66)**
+**DISCHARGED 2026-09-19 by UI-66 (branch `worktree-agent-a50d25200c5cb65b6`, carrying REC-141)** — all three: (1) the Add
+surface's project arm calls no `op=allocid`, sends no `bundleId`, writes no `id:` line (`mdFor` omits it when given no
+id), and opens the `bundleId` the plane answers; the proposal-adoption flow is `inquiry`-only (`PROP_ADOPT_KINDS`) and
+was not touched; (2) the fork form's `newId` field is REMOVED and the receipt shows the `newId` the plane answers;
+(3) a C-59 refusal renders its canned `translation` at both sites (`refusalTranslated`), and the Add surface's
+findings-less refusal renders the plane's sentence instead of its bare code. `check-refusal-codes.mjs`' floors did not
+move (read from its print in the UI harness). Driven against the real plane in `civicos-ui/test/project-id-surface.test.mjs`.
+
+Measured at the code on `worktree-agent-a12cdccbace704eb6` (base `3dee1fdb`). What `civicos-ui/app.html` must stop sending:
+1. **The Add surface, for a PROJECT** (the create flow that calls `recR("allocid", { prefix: vocabFor(PREFIX, type), ... })`,
+   builds `id = stem + "-" + slug`, passes it to `mdFor(id, ...)` and sends `op=promote` with `bundleId: id`; and any other
+   create path — e.g. the proposal-adoption flow's `allocid` — whenever the type is `project`): send NO `bundleId`, do
+   NOT call `op=allocid` for it, and build `bundle.md` with NO `id:` line. The answer carries the minted id as `bundleId`
+   and the registered sha as `bundleSha`; the surface shows and opens THAT id (and uses that sha as the base of any
+   revision). A creation naming an id is refused `PROJECT_ID_SUPPLIED` (C-59.1); bytes carrying `id:` are refused
+   `PROJECT_ID_IN_BYTES` (C-59.2); unparseable bytes `PROJECT_DOCUMENT_UNREADABLE` (C-59.4). Every other type still
+   allocates and names its own id — unchanged.
+2. **The fork form** (`projectfork: { ..., fields: [["newId", "The new project's id", "required"], ["title", ...]] }`):
+   remove the `newId` field and send no `newId`; read the fork's id from the answer's `newId`. A named `newId` is refused
+   `PROJECT_FORK_ID_SUPPLIED` (C-59.3).
+3. Each C-59 refusal carries `code`, `check` and a canned `translation`; render the translation (DEC-49), and move
+   `civicos-ui/check-refusal-codes.mjs`' floors only from its own print if they move.
+The plane's own installer intake page (`bio-plane/src/setup.mjs`) was corrected by REC-141 itself.
+
+## CLAIM 2026-09-18 RECORD (REC-141) — RELEASED
+
+released: 2026-09-18 by the REC-141 worker, branch `worktree-agent-a12cdccbace704eb6`, base `3dee1fdb`, merged with
+`origin/main` twice (at `8e39602a`, REC-140 in; at `5871a991`, REC-143 in). Paths as claimed, PLUS `bio-plane/src/setup.mjs`'s
+intake create handler (the installer's own page chose a project id and is corrected), `ratify-authority.test.mjs`
+(REC-140's, arrived at the first merge) and two plane-backed UI suites (`intent-write`, `ai-session-context`).
+Baseline at `3dee1fdb`, NOT pristine and said so: **250/252 · 15402 assertions** — `mintid.test.mjs` failed on the tree as
+fetched (a D floor driven by QUEUE.md prose, not this item's) and `strandedwork.test.mjs` on this worker's own untracked
+log and claim edit landing mid-run. Final, at `c27e5caa`: **255/255 suites green · 15681 assertions passing · run
+95151.9aa825**, exit 0, provenance 258/258 at HEAD; `coverage.mjs --strict` exit **0** unpiped, CHECKS 341/341 named,
+REGISTER_FLOOR moved 1437 -> 1443 -> collapsed at the REC-143 merge to **1449 / 246 / 247, run 209** from the committed
+tree's own print; UI harness exit **0** (54 PASS). NEGATIVE CONTROLS: `node test/project-mint.control.mjs` six arms AS
+DECLARED (baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 · id-anywhere 39/2 ·
+id-key-other-spelling 41/0; restores verified by sha256, sources untouched); re-run after correcting their suites:
+`project-sight.control.mjs` (7 arms), `ratify-authority.control.mjs` (7 arms), `founder-sight.control.mjs` (9 arms) — all
+AS DECLARED. IDs minted with `tools/mintid.mjs`: IC-158, C-59.
+**FOR CONDUCT:** (1) RESOLVE IC-158 against I3 as read at resolution (proposed MAJOR on 38.0.0 -> 39.0.0; BREAKING — a
+create that named a project id, and a fork that named a newId, are now refused). (2) Land UI-66 WITH this (the DELEGATION
+above): until it lands the member surface's project creation and fork are REFUSED. (3) Flip REC-141 at integration and
+archive it; D-428's creation half is recorded closed on its row, the name half stays open with Bob. (4) Tell DIST: a
+DISCLOSURE closing (and a breaking I3 change), open on deployed instances until the next cut. (5) Carry to BOB the
+DESIGN GAP in the IC and in Membership v2's front matter: the minted sequence number tells a creator how many project ids
+were minted before theirs, hidden projects included. (6) To SCHEDULER, a pre-existing defect found in passing, NOT this
+item's: `bio-plane/test/curated-producer.probe.mjs`' read-side check looks for `entry.status === "severed"` inside
+`#restsOnLive`, which D-267 moved into `#refEdgeSevered` — the probe fails 9/1 on HEAD before and after this item; its fix
+is to point the source read at `#refEdgeSevered`.
+**SUPERSEDING FIGURES, after a THIRD merge with `origin/main` at `1d439e31` (REC-142 IC-159 in):** at `f9fbf157`,
+**256/256 suites green · 15703 assertions passing · run 42543.8b5036**, exit 0, provenance 259/259 at HEAD;
+`coverage.mjs --strict` exit **0**, REGISTER_FLOOR collapsed again and re-read from the committed merge's print to
+**1454 / 247 / 248, run 210**; UI harness exit **0** (54 PASS). `conclude-project-arm.test.mjs` (REC-142's, arrived at
+this merge) CORRECTED for minted ids and its control re-run AS DECLARED with identical figures. I3 on this tree reads
+**38.1.0** (IC-159), so IC-158's proposal is **38.1.0 -> 39.0.0** — read the base at resolution.
+**SUPERSEDING FIGURES, 2026-09-19, after CONDUCT #6's correction on BOB #16's ruling (Membership v2 §7, *"A MINTED ID
+CARRIES NO COUNT"*):** the PROJ suffix is now four digits from the CSPRNG (`crypto.getRandomValues`, rejection-sampled),
+redrawn on collision inside the promote transaction, NEVER read from or stepping `allocId` (CASE/DRAFT/RVG and
+`op=allocid` untouched — REC-151's). `project-mint.test.mjs` §6 asserts the counter moves only by allocid's own step, the
+suffix is not the counter's value, and five consecutive mints are not a +1 run; `project-mint.control.mjs`'s new
+`counter-restored` arm fails exactly those three (42/3), every other arm AS DECLARED (baseline 45/0). `project-sight` and
+`ratify-authority` no longer predict the minted id (never-minted read at a shaped id, each read's own id normalised) —
+controls re-run AS DECLARED; `d280-strengthbar`'s routing pair ordered by minted id; `conclude-project` and
+`airun-projectgate` expectations that assumed creation order corrected (the battery caught both), and every corrected
+suite re-run 4x (76 suites, 0 failing runs). Merged `origin/main` at `f61d071d`. At `28757640`: **257/257 suites green ·
+15744 assertions passing · run 65259.1fc098**, exit 0; `coverage.mjs --strict` exit **0**, REGISTER_FLOOR **1458 / 248 /
+249, run 211** (re-read from the committed merge's print); UI harness exit **0**. The live record's count of legacy
+non-`PROJ-` project ids (BOB #16's legacy residue) is UNDETERMINED — this worker has no access to a deployed record.
+
+## CLAIM 2026-09-19 UI (UI-66 — the Add surface and the fork form stop asking a member for a project id; the id the plane returns is the one shown)
+
+Worker spawned by CONDUCT #6, isolated worktree `agent-a50d25200c5cb65b6`, branch `worktree-agent-a50d25200c5cb65b6`,
+built ON REC-141's branch (`worktree-agent-a12cdccbace704eb6` @ `817a8f85`, merged in at `328c2c45`) so the two land
+together. Design: Membership v2 §7, the bullet *"HOW the plane mints a project id"*, and REC-141's DELEGATION above.
+Paths, by SITE in `civicos-ui/app.html`:
+
+- UI (own): `mdFor` (the `id:` line becomes optional — omitted only when no id is given); `addGo`'s allocation and
+  promote for the `project` type, and its no-findings refusal arm; `ROSTER_ACTS.projectfork`'s fields and
+  `doRosterAct`'s receipt; `actRefusalHtml` (renders a refusal's canned `translation` first, DEC-49). NOT touched: every
+  other `ROSTER_ACTS` entry, `doProposalAdopt` (its kind is `inquiry` only — `PROP_ADOPT_KINDS`), any DEC-49 REGION.
+- Tests: a new `civicos-ui/test/project-id-surface.test.mjs` (drives the REAL plane in miniflare) and its control
+  driver; `civicos-ui/test/project-workspace.test.mjs` §6's fork arm CORRECTED (it drove a typed `newId`);
+  `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own print on a committed tree.
+- Docs: `docs/development/CIVICOS_UI_STATE.md` (prepend), `BIO_Membership_Architecture_v2.md` front matter and §7's
+  "surface half" line, `construct-status.json` if a construct's state moves, REC-141's DELEGATION's discharge (in its
+  own block), this block.
+
+NOT `QUEUE.md`, NOT `bio-plane/src/**` (REC-141's), NOT `release/`, NOT `newgroup/`, NOT `kickoffs/CONDUCT.md`.
+
+## CLAIM 2026-09-19 UI (UI-66) — RELEASED
+
+released: 2026-09-19 by the UI-66 worker, branch `worktree-agent-a50d25200c5cb65b6`, carrying REC-141 at `817a8f85`
+(merged at `328c2c45`) and `origin/main` at `f61d071d` (merged at `e1763f3d`). Paths as claimed; `app.html` sites:
+`mdFor`, `addGo`, `ROSTER_ACTS.projectfork`, `doRosterAct`, and a new `refusalTranslated` beside `actRefusalHtml`
+(`actRefusalHtml` itself is UNCHANGED — moving it to translations broke `version-review` §7's pinned detail, so the
+class change is reported, not made). No DEC-49 REGION touched. Final, gated at `d9e63d34`: battery **257/257 suites
+green · 15740 assertions passing · run 85224.fe9a87**, exit 0, provenance 260/260 at HEAD; `coverage.mjs --strict`
+exit **0** unpiped, REGISTER_FLOOR collapsed (1454 REC-141's vs 1452 main's) and re-read from the committed merge
+`e1763f3d`'s print to **1458 / 248 / 249, run 211** (then `1458/1458 · 248/248 · 249/249 · floor 211/211` at
+`d9e63d34`); UI harness exit **0**, **55 PASS** (54 + the new `project-id-surface.test.mjs`, 29 assertions);
+`check-refusal-codes` floors unmoved (reported GREW, not failed); `plancheck --local` 0 fail. An earlier battery at
+`5d95f316` read 256/257 — `strandedwork` failed on `plancheck --local`'s STALE `DECIDED.md` (regenerated) while this
+worker's own untracked battery log sat in the tree; not re-counted. NEGATIVE CONTROL `node
+civicos-ui/test/project-id-surface.control.mjs`: **5/5 AS DECLARED** at `5d95f316` and again at `d9e63d34` — baseline
+GREEN 29/29; (A) fork id field restored RED 20/29, naming C-59.3's sentence; (B) client-side project id restored RED
+9/29, naming C-59.1's; (C) the liar, an id in the bytes only, RED 11/29, naming C-59.2's; (D) `bundleId: undefined`
+GREEN 29/29; app.html restored to `21bcfa63…` by sha256 and `cmp` after every arm. REC-141's DELEGATION to UI
+DISCHARGED in its block. No id minted.
+## CLAIM 2026-09-19 RECORD (REC-144 — the single-bundle `op=projection&id=<inquiry>` publishes `no_project_conclusion` through the ONE reader `#noProjectConclusionOf`; never on the list form)
+
+claimed: 2026-09-19 by the REC-144 worker (spawned by CONDUCT #6), branch `worktree-agent-af0ecccecaa170e90`, base
+`5871a991`. Paths: `bio-plane/src/store.mjs` (`projection()`'s single-bundle arm ONLY), `bio-plane/dist/**` (the rebuilt
+bundle), `bio-plane/test/projection-noproject.test.mjs` (new) and its `.control.mjs`, `docs/development/INTERFACE-CHANGES.md`
+(IC-160, new row), `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built line),
+`docs/architecture/construct-status.json` (8.claim's text and probes), `bio-plane/scripts/coverage.mjs` (floors only,
+from its own print, if any move). NOT `civicos-ui/app.html` — the surface half is UI-67's.
+
+## CLAIM 2026-09-19 RECORD (REC-144) — RELEASED
+
+released: 2026-09-19 by the REC-144 worker, branch `worktree-agent-af0ecccecaa170e90`, base `5871a991`, merged with
+`origin/main` `8ab8f48f` (REC-142 landed; I3 38.1.0). Paths as claimed. `projection()`'s single-bundle arm publishes
+`no_project_conclusion` by CALLING `#noProjectConclusionOf` (null on an unconcluded inquiry and every non-inquiry; never on
+the list form). IC-160, I3 MINOR additive, proposed 38.1.0 → 38.2.0. Suite `bio-plane/test/projection-noproject.test.mjs`
+26/0 (12/14 over the pristine store). NEGATIVE CONTROL `node test/projection-noproject.control.mjs`: baseline 26/0, (a)
+copied reader differing in one unreached branch 23/3 — the three ONE-READER arms by name, every byte-identity arm green
+under it, (b) field on the list form 22/4, (c) over-strictness 26/0; every restore sha256 MATCH. Battery own-baseline
+**254/254 · 15643** at `5871a991`; final **256/256 suites green · 15694 assertions passing · run 37606.463b55** at
+`dc7e9294` (the merge brings REC-142's suite; this item's own delta is +1 suite, +26 assertions). `coverage.mjs --strict`
+exit **0** unpiped, REGISTER FLOOR arms 1448 → 1451, classified 246 → 247, corpus 247 → 248, run 209 → 210, from its
+print on the committed tree; after merging `origin/main` `f61d071d` (D-430 in) the collided floor was collapsed and
+re-read on the committed merge `43ae8967`: arms **1455**, classified **248**, corpus **249**, run **211**. `node civicos-ui/test/run.mjs` exit **0**. **FOR CONDUCT:** resolve IC-160 (read the base at
+resolution) and flip REC-144 on integration. **FOR UI (UI-67):** the read is on the wire — render `no_project_conclusion`
+from `getProjection` with `noProjectConclusionHtml`, and drop `PROJ_CACHE` for the inquiry when a conclusion or a
+withdrawal lands.
+## CLAIM 2026-09-19 M0 (M0-65 — D-413: the battery's assertion total silently excludes every suite that prints no tally; the report line says so, and the tally accepts the `passing` forms)
+
+claimed: 2026-09-19 by the M0-65 worker (spawned by CONDUCT #6), branch `worktree-agent-ac2acc663da2165ca`, base
+`7042404e`. Paths: `bio-plane/scripts/battery.mjs` (the tally, the headline's assertion segment and the no-count report
+line ONLY), `bio-plane/test/battery-verdict.test.mjs` (the tally arms added; its superseded no-count assertion corrected
+at the site), `bio-plane/test/tally-through-pipe.control.mjs` (its reading of the no-count line, corrected at the site),
+`bio-plane/scripts/coverage.mjs` (floors only, from its own print, if any move), `docs/development/DEBT.md` (D-413's
+row, closed), `docs/development/VERIFICATION.md` (the sentence stating which tally forms the runner reads),
+`docs/development/MEASUREMENTS.md` (the before/after and the controls).
+
+## CLAIM 2026-09-19 M0 (M0-65) — RELEASED
+
+released: 2026-09-19 by the M0-65 worker, branch `worktree-agent-ac2acc663da2165ca`, base `7042404e`, origin/main merged
+in (never rebased). `battery.mjs`: the completion line carries `· EXCLUDES N untallied suite(s) ·` after the figure and the
+line below, `EXCLUDED FROM THE ASSERTION TOTAL (D-413)`, names each suite (was `N suite(s) reported no assertion count`);
+the tally reads `N pass, M fail`, `N passed, M failed`, `N passing`, `N passing, M failing`, never a bare `N passed`.
+Baseline `254/254 suites green · 15643 assertions passing · run 80058.e10f2c`; final, on a8b5dee2:
+**`256/256 suites green · 15715 assertions passing · EXCLUDES 2 untallied suite(s) · 1096.2s · run 75902.445512`**
+(bundle.test.mjs, livefire.test.mjs), exit 0. Per-suite diff baseline→post-fix: only battery-verdict 27→41 moved by
+this item; no suite's count moved from the widened tally. `coverage.mjs --strict` exit 0 unpiped, REGISTER FLOOR arms
+1452 → 1455 from its print on 7638dd5d (classified 247, corpus 248, run 210 unchanged); `node civicos-ui/test/run.mjs`
+exit 0; `plancheck --local` 0 fail. NEGATIVE CONTROL on battery-verdict.test.mjs: baseline 41/0, widening 33/8,
+reportline 37/4, liar 23/18, every restore sha256 MATCH + cmp identical. Readers corrected at their sites:
+tally-through-pipe.test.mjs (the runner-regex copy, arm E), tally-through-pipe.control.mjs (d93 arm, AS DECLARED).
+D-413 closed and archived; MEASUREMENTS M-67. **FOR CONDUCT:** flip M0-65 on integration; re-read REGISTER_FLOOR on the
+merged tree.
 
 ## CLAIM 2026-09-19 RECORD (REC-153 — `aiRunOpen` refuses a `contextType` that does not match the named bundle's type; an id the caller cannot see answers as absent; an authority defect)
 

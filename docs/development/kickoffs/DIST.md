@@ -29,8 +29,8 @@ PROTECTED however long it idles (`STANDING_LANES`, negative-control arm A6b). **
 ended their turns on a question — *"Standing by for your sequencing"*, *"may I push it?"* — addressed to a human
 who was not in the session. Nobody read either; both were archived idle four hours later; no release was cut for
 four days while four disclosure fixes sat on `main`. **So: never end a turn on a question.** Pushing is not gated
-(`CLAUDE.md`); decide what is yours; route what is genuinely another lane's by `SendMessage` to CONDUCT (sequencing)
-or BOB (design, doctrine) and continue with the rest. A question only Bob can answer goes to BOB, which carries it.
+(`CLAUDE.md`); decide what is yours; route what is genuinely another lane's by `SendMessage` to SCHEDULER (the build plan's
+order, `CLAUDE.md` §3), CONDUCT (running and integrating work) or BOB (design, doctrine) and continue with the rest. A question only Bob can answer goes to BOB, which carries it.
 
 **Refresh, when context is too full:** write `<LANE>-NEXT.md` from the measured state, push it, verify it on the
 remote, and tell BOB — whose successor protocol retires a predecessor only after D-398's three conditions hold.
@@ -62,9 +62,10 @@ to"*).** It replaces the per-release approval this paragraph used to require: 0.
 while the fixes they carried stayed live. **Read as:** DIST deploys each release it cuts under WHEN DIST CUTS, in the
 order the fleet requires, with the whole gate — bytes read back, `/version` SERVING, the headline closings live-verified
 through the ops a caller uses in a scratch namespace swept after, `op=audit` clean — and then REPORTS THE LANDING to the
-BOB session with that evidence (`CLAUDE.md`: report the landing, not the intention). **What still goes to Bob first,
-through BOB:** a release that WIDENS who may read or do something (REC-126's review copy and REC-132's founder sight were
-such) is named in the report so he knows, and anything the gate cannot establish is never deployed on a guess.
+BOB session with that evidence (`CLAUDE.md`: report the landing, not the intention). **One reading, decided 2026-09-19:** a release that WIDENS who may read or do something (REC-126's review copy and
+REC-132's founder sight were such) is deployed under the standing permission and NAMED IN THE LANDING REPORT, after.
+Only doctrine, or a risk carrying Bob's name, goes to Bob BEFORE the deploy, through BOB. Anything the gate cannot
+establish is never deployed on a guess.
 
 **FIRST CHECK FOR THE NEXT CUT — found 2026-09-16 by the last DIST session and recorded nowhere until now:**
 `newgroup`'s `npm test` and `build` both run `npm run embed` (`scripts/embed-release.mjs`), which the session
@@ -154,7 +155,9 @@ In order, and all of it on the merged `main`:
    release's signature against the new bytes. All four must fail to verify. A
    signature accepted without controls is a signature nobody has checked.
 6. **`node scripts/deploy.mjs <slug> <version> ../release/bio-plane.bundled.mjs
-   --thread DIST`**. It refuses without the baton, believes only the bytes it
+   --thread DIST`**. It refuses without the RELEASE BATON (read from
+   `kickoffs/BATON.md` on the remote; measured live 2026-09-19: `baton: held by DIST`). That is the release channel's
+   own check, not the development lock `CLAUDE.md` §4 says was removed. It believes only the bytes it
    reads back, and then WAITS for the version to serve. If it prints ROLLOUT NOT
    CONFIRMED, do not verify behaviour yet.
 7. **Live-verify** the release's headline change through the op a real caller
@@ -164,7 +167,15 @@ In order, and all of it on the merged `main`:
    back from the account and confirm the embedded version AND that
    `bindings: []` is still empty. That empty binding set is a structural
    security guarantee, not a detail.
-10. **Tag and push**, tag and branch both.
+10. **Advance the pointer:** merge `dist/cut-X.Y.Z` into `main` and push. The TAG was already made on the branch, BEFORE
+    the deploy (the mechanism below); the merge puts it on the mainline. Never before the live check.
+11. **Add the release to the upgrade arm:** a row `["X.Y.Z", "<the commit whose release/ holds it>"]` in
+    `bio-plane/test/migrate-released.test.mjs`'s `RELEASES`, in the NEXT cut. A release absent from that table is never
+    tested as an upgrade source (REC-143's worker, 2026-09-19).
+12. **The UI worker `civicos` moves with the plane** (`civicos-ui/deploy-ui.mjs`; build it from the tag per
+    `CIVICOS_UI_STATE.md` "Build and deploy the dev worker", with the v12 build-id injection). It is in no RELEASE.json,
+    and until 2026-09-19 no release carried it: the live UI was `app.html` of 2026-08-04 (build `74cc1646044b`). A plane
+    whose ops the old surface calls differently (IC-153's conclude) must not go live without it.
 
 A release that fails any step is not a release. Nothing here is skippable
 because the change looked small; 0.52.0's near miss was a one-line-looking

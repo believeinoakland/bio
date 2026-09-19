@@ -1,6 +1,7 @@
 /* ==== SUPERSEDED IN PART, 2026-08-10, BY CASE-2 UNDER DEC-72 — READ THIS BEFORE THE DECLARATION BELOW ====
    **ARMS (A), (C), (C2) AND (E) BELOW ARE NO LONGER RUNNABLE AS WRITTEN, AND THEY ARE KEPT RATHER THAN DELETED BECAUSE THEY ARE THE RECORD OF WHAT THE OLD MODEL DID.** Every one of them edits `#requiredStrengthFor`, which CASE-2 REMOVED: `CASE-AS-PRODUCTION.md`'s supersession table retires DEC-17's strictest-across-citers composition and calls D-280's fix "moot rather than wrong — the code it fixed is removed with the composition". There is no longer a bar read on this path to arm. Their MEASUREMENTS stand as history and their reasoning about faithful copies and over-strictness is still the best statement of why §7 counts call sites off the source.
    **STILL RUNNABLE AND STILL THIS SUITE'S CONTROLS: (B) the routing site and (D) the projection read**, whose sites #routeTask and restingOn are untouched by DEC-72 and are driven by §5 and §6. (G) BASELINE is unchanged in kind; its NUMBERS moved with the correction and are re-measured by CASE-2 rather than carried.
+   RE-RUN 2026-09-19 by REC-141 after §5's routing pair was re-built for opaque minted ids (ordered by their minted ids, then revised to carry their edges): (B) d280-strengthbar 31/4 — the routing arm, its basis arm and the two structural pins, as declared for THIS suite; (D) 33/2, the two restson arms; (G) baseline 35/0. The driver's own verdict line still reads NOT as declared for all three, and that is NOT this change: every miss is in severedhomes.test.mjs's expected STRUCTURAL/OVER-STRICTNESS arms, and in (C2), which the header above records as no longer runnable since CASE-2. Reported to SCHEDULER as a stale control.
    **WHERE THE PREDICATE'S WIDTH IS NOW PINNED:** `severedhomes.test.mjs` §4 (D-267's own suite) drives all four severance spellings through the homes walk. This suite's §3 no longer can, and says so in its own block rather than here.
    **CASE-2'S OWN CONTROLS FOR WHAT REPLACED THIS ARE IN `caseproduction.control.mjs`**, including the arm that would catch the composition being restored.
    ======================================================================================================= */
@@ -198,9 +199,11 @@ const inquiryMd = (id, question, { refs = [], legs = [] } = {}) => ["---",
    authored, dated, promoted, append-only act. `bar` is a PARAMETER here for the
    same reason `status` is: a project citing without declaring one must not
    contribute, and that has to be a fixture the suite can build. */
-const projectMd = (id, refs, bar = null) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Project ${id}"`, "current_state: forming", "prior_state: null",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): creation bytes of a project carry no `id:` line
+   (PROJECT_ID_IN_BYTES), so `id` null writes none; `name` keeps the title the chosen id gave it. */
+const projectMd = (id, refs, bar = null, name = id) => ["---",
+  ...(id ? [`id: ${id}`] : []), "object_type: project", "schema: project@1",
+  `title: "Project ${name}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", ...refLines(refs), "state_history: []",
@@ -222,6 +225,22 @@ const promote = async (id, text, type, state, register = []) => {
             current_state: state, created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 900)}`);
   return r;
+};
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7)
+   and a creation naming one is refused PROJECT_ID_SUPPLIED. The creation names no bundleId and the
+   minted id is returned. `name` (the id the suite used to choose) keeps the title and snapshot key.
+   CORRECTED 2026-09-19: minted ids carry NO count (BOB #16), so creation order is NOT id order —
+   block 5 orders its two routing projects by their minted ids instead. */
+const createProject = async (name, refs, bar = null) => {
+  const text = projectMd(null, refs, bar, name);
+  const r = await POST(`op=promote&token=${MACHINE}`, {
+    base: null, snapKey: `${name}-new`, author: "d280-suite",
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+            current_state: "forming", created: NOW, last_updated: NOW } });
+  if (!r || r.ok === false || typeof r.bundleId !== "string")
+    throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 900)}`);
+  return r.bundleId;
 };
 
 const member = async (id, caps, role = "member") => {
@@ -282,40 +301,32 @@ for (const s of SUBJECTS) await promote(s, infoMd(s), "information", "collected"
 const STRICT = { capture: "A", connection: "A", author: "nadia", at: "2026-08-01T00:00:00Z" };
 const LOOSE = { capture: "B", connection: "B", author: "nadia", at: "2026-08-01T00:00:00Z" };
 
-const P_LIVE = "PROJ-2026-9201-still-citing";
-const P_WITHDRAWN = "PROJ-2026-9202-withdrawn";
-const P_MIXED_LIVE = "PROJ-2026-9203-mixed-live";
-const P_MIXED_GONE = "PROJ-2026-9204-mixed-withdrawn";
-const P_NOSTATUS = "PROJ-2026-9205-no-status-key";
-const P_ODDSTATUS = "PROJ-2026-9206-unrecognised-status";
-const P_PADSTATUS = "PROJ-2026-9207-padded-status";
-const P_OTHERREL = "PROJ-2026-9208-other-relation-severed";
+let P_LIVE; /* minted below (REC-141) */
+let P_WITHDRAWN; /* minted below (REC-141) */
+let P_MIXED_LIVE; /* minted below (REC-141) */
+let P_MIXED_GONE; /* minted below (REC-141) */
+let P_NOSTATUS; /* minted below (REC-141) */
+let P_ODDSTATUS; /* minted below (REC-141) */
+let P_PADSTATUS; /* minted below (REC-141) */
+let P_OTHERREL; /* minted below (REC-141) */
 
-await promote(P_LIVE, projectMd(P_LIVE, [{ target: SUBJ_LIVE, status: "confirmed" }], LOOSE),
-  "project", "forming");
-await promote(P_WITHDRAWN, projectMd(P_WITHDRAWN,
-  [{ target: SUBJ_WITHDRAWN_ONLY, status: "severed" }], STRICT), "project", "forming");
-await promote(P_MIXED_LIVE, projectMd(P_MIXED_LIVE, [{ target: SUBJ_MIXED, status: "confirmed" }], LOOSE),
-  "project", "forming");
-await promote(P_MIXED_GONE, projectMd(P_MIXED_GONE, [{ target: SUBJ_MIXED, status: "severed" }], STRICT),
-  "project", "forming");
+P_LIVE = await createProject("PROJ-2026-9201-still-citing", [{ target: SUBJ_LIVE, status: "confirmed" }], LOOSE);
+P_WITHDRAWN = await createProject("PROJ-2026-9202-withdrawn", [{ target: SUBJ_WITHDRAWN_ONLY, status: "severed" }], STRICT);
+P_MIXED_LIVE = await createProject("PROJ-2026-9203-mixed-live", [{ target: SUBJ_MIXED, status: "confirmed" }], LOOSE);
+P_MIXED_GONE = await createProject("PROJ-2026-9204-mixed-withdrawn", [{ target: SUBJ_MIXED, status: "severed" }], STRICT);
 
 /* §3 — THE SPELLINGS THIS ITEM DID NOT ANTICIPATE, every one of them LIVE, and
    every one of them declaring the STRICT bar so a wrongly-withdrawn citer is
    visible as a MISSING bar rather than as a changed letter. */
-await promote(P_NOSTATUS, projectMd(P_NOSTATUS, [{ target: SUBJ_NOSTATUS, status: undefined }], STRICT),
-  "project", "forming");
-await promote(P_ODDSTATUS, projectMd(P_ODDSTATUS, [{ target: SUBJ_ODDSTATUS, status: "Severed" }], STRICT),
-  "project", "forming");
-await promote(P_PADSTATUS, projectMd(P_PADSTATUS, [{ target: SUBJ_PADSTATUS, status: '"severed "' }], STRICT),
-  "project", "forming");
+P_NOSTATUS = await createProject("PROJ-2026-9205-no-status-key", [{ target: SUBJ_NOSTATUS, status: undefined }], STRICT);
+P_ODDSTATUS = await createProject("PROJ-2026-9206-unrecognised-status", [{ target: SUBJ_ODDSTATUS, status: "Severed" }], STRICT);
+P_PADSTATUS = await createProject("PROJ-2026-9207-padded-status", [{ target: SUBJ_PADSTATUS, status: '"severed "' }], STRICT);
 /* THE OR ACROSS EDGE KINDS, and it is the arm that separates ALL-severed from
    ANY-severed. One project, two relations to one target: the `relates_to` is
    withdrawn and the `cites` is not. Withdrawing a `relates_to` is not
    withdrawing a citation. */
-await promote(P_OTHERREL, projectMd(P_OTHERREL,
-  [{ target: SUBJ_OTHERREL, rel: "relates_to", status: "severed" },
-   { target: SUBJ_OTHERREL, rel: "cites", status: "confirmed" }], STRICT), "project", "forming");
+P_OTHERREL = await createProject("PROJ-2026-9208-other-relation-severed", [{ target: SUBJ_OTHERREL, rel: "relates_to", status: "severed" },
+   { target: SUBJ_OTHERREL, rel: "cites", status: "confirmed" }], STRICT);
 
 /* ADDED 2026-08-10 by CASE-2 (DEC-72): A PROJECT THAT DECLARES NO BAR AT ALL.
    D-280's corpus had no such project because it did not need one — under the old
@@ -325,9 +336,8 @@ await promote(P_OTHERREL, projectMd(P_OTHERREL,
    "the group default is NOT a fallback publication bar" a measurement instead of
    a claim, because the group HAS declared `C` and a fall-through would be
    visible as `C` rather than as an absent bar. */
-const P_UNDECLARED = "PROJ-2026-9209-declares-no-bar";
-await promote(P_UNDECLARED, projectMd(P_UNDECLARED,
-  [{ target: SUBJ_LIVE, status: "confirmed" }]), "project", "forming");
+let P_UNDECLARED; /* minted below (REC-141) */
+P_UNDECLARED = await createProject("PROJ-2026-9209-declares-no-bar", [{ target: SUBJ_LIVE, status: "confirmed" }]);
 
 const PROJECTS = [P_LIVE, P_WITHDRAWN, P_MIXED_LIVE, P_MIXED_GONE, P_NOSTATUS, P_ODDSTATUS,
                   P_PADSTATUS, P_OTHERREL, P_UNDECLARED];
@@ -540,12 +550,33 @@ console.log("\n--- 5. #routeTask: an obligation is not addressed to the owner of
   /* TWO citing projects over ONE bundle. The WITHDRAWN one sorts FIRST by id,
      which is the order `#routeTask` reads in — so before the fix the obligation
      went to carol, who withdrew, and the live project's owner never saw it. */
-  const P_GONE = "PROJ-2026-9281-withdrawn-router";
-  const P_HERE = "PROJ-2026-9282-still-citing-router";
-  await promote(P_GONE, projectMd(P_GONE, [{ target: SUBJ_ROUTING, status: "severed" }]),
-    "project", "forming");
-  await promote(P_HERE, projectMd(P_HERE, [{ target: SUBJ_ROUTING, status: "confirmed" }]),
-    "project", "forming");
+  /* CORRECTED 2026-09-19 (REC-141, BOB #16's *"A MINTED ID CARRIES NO COUNT"*): minted ids are opaque, so
+     neither the literal the suite once chose nor creation order decides which sorts first. Both projects are
+     minted citing NOTHING, the lower minted id becomes the WITHDRAWN one and the higher the live one, and each is
+     then REVISED (base = the sha the plane returned) to carry its edge — so the withdrawn one sorts first by
+     construction, and the guard below still asserts it. */
+  const reviseRefs = async (id, made, name, refs) => {
+    const text = projectMd(id, refs, null, name);
+    const r = await POST(`op=promote&token=${MACHINE}`, {
+      bundleId: id, base: made.sha, snapKey: `${name}-refs`, author: "d280-suite",
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+              current_state: "forming", created: NOW, last_updated: NOW } });
+    if (!r || r.ok === false) throw new Error(`revise ${name}: ${JSON.stringify(r).slice(0, 900)}`);
+  };
+  const shaOfId = async (id) => ((await GET(`op=list&token=${MACHINE}&limit=1000`)) || []).find?.((b) => b.bundle_id === id)?.bundle_sha
+    ?? ((await GET(`op=list&token=${MACHINE}&limit=1000`))?.bundles ?? []).find((b) => b.bundle_id === id)?.bundle_sha;
+  const pair = [];
+  for (const name of ["PROJ-2026-9281-router-a", "PROJ-2026-9282-router-b"]) {
+    const id = await createProject(name, []);
+    pair.push({ id, name, sha: await shaOfId(id) });
+  }
+  pair.sort((a, b) => (a.id < b.id ? -1 : 1));
+  const P_GONE = pair[0].id, P_HERE = pair[1].id;
+  await reviseRefs(P_GONE, pair[0], pair[0].name, [{ target: SUBJ_ROUTING, status: "severed" }]);
+  await reviseRefs(P_HERE, pair[1], pair[1].name, [{ target: SUBJ_ROUTING, status: "confirmed" }]);
+  t("FIXTURE GUARD: the withdrawn router project's MINTED id sorts before the live one's",
+    P_GONE < P_HERE, true);
   /* 7.1 gives ownership to the promoting MEMBER, and these were promoted by a
      machine credential — which is exactly the obstacle D-280's row reported and
      said it could not get past in the time available. The Durable Object's own

@@ -223,14 +223,17 @@ console.log("\n--- a session can work the retrieval surface it is given ---");
 
 console.log("\n--- a session cites, and the record says who did it ---");
 {
-  const pid = "PROJ-2026-0001-session";
-  const pmd = `---\nid: ${pid}\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-24T00:00:00Z"\nlast_updated: "2026-07-24T00:00:00Z"\n---\n\n## Session Log\n\n### Session 2026-07-24T00:00:00Z | Formation | interactive_agentic\nTrigger: elevation\nChanges: created.\n`;
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+     creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1), or PROJECT_ID_IN_BYTES (C-59.2) for an
+     `id:` line; the creation names neither and `pid` is read from the answer. */
+  const pmd = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-24T00:00:00Z"\nlast_updated: "2026-07-24T00:00:00Z"\n---\n\n## Session Log\n\n### Session 2026-07-24T00:00:00Z | Formation | interactive_agentic\nTrigger: elevation\nChanges: created.\n`;
   const cr = await POST(`op=promote&${S}`, {
-    bundleId: pid, base: null, snapKey: "20260724T130000Z_bbbb2222", author: "ruth",
+    base: null, snapKey: "20260724T130000Z_bbbb2222", author: "ruth",
     meta: { object_type: "project", group: "believe-in-oakland", title: "session project",
             current_state: "forming", created: "2026-07-24T00:00:00Z", last_updated: "2026-07-24T00:00:00Z" },
     files: [{ path: "bundle.md", text: pmd, bytes: pmd.length, sha256: sha(pmd) }], register: [] });
   t("the project exists", cr.result.ok, true);
+  const pid = cr.result.bundleId;
 
   const sel = await POST(`op=select&${S}`, { ids: [id] });
   /* author is supplied and must be IGNORED, the same impostor rule promote and

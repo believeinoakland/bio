@@ -19,10 +19,7 @@
     ],
     "ask": [
       "Write(.env)",
-      "Edit(.env)",
-      "Bash(node scripts/deploy.mjs:*)",
-      "Bash(node bio-plane/scripts/deploy.mjs:*)",
-      "Bash(npx wrangler deploy:*)"
+      "Edit(.env)"
     ]
   }
 }

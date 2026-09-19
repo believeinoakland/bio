@@ -213,8 +213,10 @@ const infoMd = (id) => ["---",
    ONLY by authoring `references[]` and calling `op=promote`. Every arm below is
    about what the plane does with the edge; NOTHING here says a member can make
    one. `status: severed` is authored the same way, and §4 drives it. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): creation bytes of a project carry no `id:` line
+   (PROJECT_ID_IN_BYTES), so `id` null writes none; the plane mints the id and writes it. */
 const projectMd = (id, { title, cites = [], severed = [], current = [] } = {}) => ["---",
-  `id: ${id}`, "object_type: project", `title: "${title}"`,
+  ...(id ? [`id: ${id}`] : []), "object_type: project", `title: "${title}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length || severed.length
     ? ["references:",
@@ -245,6 +247,18 @@ const mustPromote = async (id, text, type, base = null) => {
   if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 800)}`);
   return r;
 };
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7)
+   and a creation naming one is refused PROJECT_ID_SUPPLIED. The creation names no bundleId; the id
+   is read from the answer. `name` (the id the suite used to choose) keeps the meta title and key. */
+const createProject = async (name, text) => {
+  const r = await POST(`op=promote&token=${RUTH}`, {
+    base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+            current_state: "forming", created: NOW, last_updated: LATER } });
+  if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 800)}`);
+  return r.bundleId;
+};
 const shaOf = async (id) => (await GET(`op=list&token=${RUTH}&limit=1000`))
   ?.bundles?.find((b) => b.bundle_id === id)?.bundle_sha ?? null;
 const textOf = async (id) => S((await GET(`op=file&token=${RUTH}&id=${id}&path=bundle.md`))?.text);
@@ -256,8 +270,7 @@ for (const d of [LEDGER, MINUTES, AUDIT]) await mustPromote(d, infoMd(d), "infor
 /* THE PROJECTS. A and B share the question; C never cites it (the
    over-strictness arm that keeps "a project may stand on a reading" from being
    unconditional); S cites it with `status: severed` — it withdrew. */
-const A = "PROJ-2026-4000-oversight", B = "PROJ-2026-4000-budget",
-      C = "PROJ-2026-4000-unrelated", SEV = "PROJ-2026-4000-withdrawn";
+let A, B, C, SEV; /* minted below (REC-141) */
 const INQ = "INQ-2026-4000-sewer-transfers";
 /* A SECOND, LEGACY-TYPED shared question. The MAP RULE arm: a `focus` document
    is an inquiry by another spelling, and a producer keying on the literal
@@ -309,10 +322,10 @@ const V4 = { name: "read under an unrelated project", run: RUN_C, at: "2026-07-0
   grounds: ["the ledger alone"], legs: [{ target: LEDGER, ground: "the ledger alone" }] };
 
 /* PROJECTS FIRST: the run's context must exist before a run can name it. */
-await mustPromote(A, projectMd(A, { title: "Oversight", cites: [INQ, FOC] }), "project");
-await mustPromote(B, projectMd(B, { title: "Budget", cites: [INQ, FOC] }), "project");
-await mustPromote(C, projectMd(C, { title: "Unrelated" }), "project");
-await mustPromote(SEV, projectMd(SEV, { title: "Withdrawn", severed: [INQ] }), "project");
+A = await createProject("PROJ-2026-4000-oversight", projectMd(null, { title: "Oversight", cites: [INQ, FOC] }));
+B = await createProject("PROJ-2026-4000-budget", projectMd(null, { title: "Budget", cites: [INQ, FOC] }));
+C = await createProject("PROJ-2026-4000-unrelated", projectMd(null, { title: "Unrelated" }));
+SEV = await createProject("PROJ-2026-4000-withdrawn", projectMd(null, { title: "Withdrawn", severed: [INQ] }));
 await openRun(RUN_A, A);
 await openRun(RUN_B, B);
 await openRun(RUN_C, C);

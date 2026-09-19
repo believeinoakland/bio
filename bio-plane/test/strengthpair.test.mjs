@@ -206,7 +206,9 @@ const infoMd = (id) => ["---",
   "monitoring:", "  enabled: false", "  frequency: none",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-const projectMd = (id, refs = []) => ["---", `id: ${id}`, "object_type: project",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
+   creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
+const projectMd = (id, refs = []) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(refs.length ? ["references:", ...refs.flatMap((x) => [`  - rel: cites`,
       `    status: confirmed`, `    target: ${x}`])] : ["references: []"]),
@@ -220,7 +222,7 @@ const promote = async (id, text, type, { base = null, register = [], reading = n
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
   }
   return POST(`op=promote&token=${RUTH}`, {
-    bundleId: id, base,
+    ...(id === null ? {} : { bundleId: id }), base,
     snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
@@ -282,8 +284,7 @@ for (const d of [DOC_A1, DOC_A2, DOC_C1, DOC_HUNCH])
    this file. Every grade this suite later asserts is compared against THIS, so
    a fixture that stopped earning what it thinks it earns fails here first. */
 const INQ = "INQ-2026-3000-sewer-transfers";
-const PROJ = "PROJ-2026-3000-oversight";
-await mustPromote(PROJ, projectMd(PROJ, [INQ]), "project");
+const PROJ = (await mustPromote(null, projectMd(null, [INQ]), "project")).bundleId;
 
 const V_MIXED = {
   name: "the mixed reading", relationship: "or",

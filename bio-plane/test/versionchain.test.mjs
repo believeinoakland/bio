@@ -397,12 +397,14 @@ const infoMd = (id, locator, prose) => ["---",
   "---", "", "## Summary", "", prose, "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
-const projectMd = (id) => ["---", `id: ${id}`, "object_type: project",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
+   creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
+const projectMd = (id) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "---", "", "## Summary", "", "A project the uninvited must not learn about.", ""].join("\n");
 
 const promote = async (id, text, type, register = [], tok = "mem-pl10") => await post("promote", {
-  bundleId: id, base: null, snapKey: `${id}-new`, author: "pl10",
+  ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${id ?? "project"}-new`, author: "pl10",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
           current_state: type === "project" ? "forming" : "collected",
@@ -483,9 +485,8 @@ const HIDDEN_SHA = sha("the budget, second version, filed inside a project\n");
 await promote("INFO-2026-0995-budget", infoMd("INFO-2026-0995-budget", GATED, "The budget."), "information",
   [{ sha256: OPEN_SHA, path: "documents/budget.pdf", encoding: "binary", bytes: 900 }]);
 await recordLocator({ address: GATED, addressNorm: GATED, captureSha: OPEN_SHA, retrieved: "2026-01-05T09:00:00Z" });
-const PROJ = "PROJ-2026-0995-private";
 {
-  const r = await promote(PROJ, projectMd(PROJ), "project",
+  const r = await promote(null, projectMd(null), "project",
     [{ sha256: HIDDEN_SHA, path: "documents/budget.pdf", encoding: "binary", bytes: 950 }], carol);
   t("MEASURED, not assumed: a PROJECT bundle really can carry a register entry, so the withheld version "
   + "below is a row a real uninvited member really cannot see", r?.ok, true);

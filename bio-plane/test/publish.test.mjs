@@ -291,9 +291,12 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
-const projectMd = (id, { refs = [], bar = null } = {}) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Project ${id}"`, "current_state: investigating", "prior_state: null",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and
+   creation bytes carrying an `id:` line are refused PROJECT_ID_IN_BYTES (C-59.2), so a CREATION passes
+   `id` null (no id line) and a REVISION passes the minted id; `name` is the title's label. */
+const projectMd = (id, { refs = [], bar = null, name = id } = {}) => ["---",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
+  `title: "Project ${name}"`, "current_state: investigating", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", ...refLines(refs), "state_history: []",
@@ -315,10 +318,12 @@ let snapSeq = 0;
    authored capture grades over them, which is precisely the shape the earned
    rule exists to refuse. Registering makes the fixture what it always claimed
    to be: a captured document. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): `id` null creates a PROJECT with NO bundleId — the plane mints
+   the id and a creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1); the id is read from the answer. */
 const promote = async (id, md, type, state, tok = PILAR, base = null) => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
-    bundleId: id, base, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
+    ...(id === null ? {} : { bundleId: id }), base, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
+    meta: { object_type: type, group: "believe-in-oakland", title: `t ${id ?? PROJ_NAME}`,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
     register: type === "information"
@@ -355,7 +360,10 @@ const INQ_CASE = "INQ-2026-1400-case";
 const INQ_THIN = "INQ-2026-1400-thin";
 const INQ_USER = "INQ-2026-1400-user";
 const INQ_OPEN = "INQ-2026-1400-open";
-const PROJ = "PROJ-2026-1400-auditor";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): the project's id is MINTED at its creation below; PROJ_NAME is
+   the label its title is built from, and PROJ holds the id the plane answered with. */
+const PROJ_NAME = "PROJ-2026-1400-auditor";
+let PROJ;
 
 await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected");
 await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected");
@@ -411,7 +419,9 @@ await mustPromote(INQ_OPEN, inquiryMd(INQ_OPEN, { question: "Does this recur?",
    Durable Object's `projectclaimowner` surface — which is how `projects.test.mjs`
    and `d280-strengthbar.test.mjs` both establish it, there being no
    control-plane op for it. */
-await mustPromote(PROJ, projectMd(PROJ, { refs: [INQ_CASE] }), "project", "investigating", NADIA);
+PROJ = (await mustPromote(null, projectMd(null, { refs: [INQ_CASE], name: PROJ_NAME }),
+  "project", "investigating", NADIA)).bundleId;
+if (typeof PROJ !== "string") throw new Error(`the project's creation answered no minted id: ${PROJ}`);
 {
   /* THE REAL CEREMONY, PERFORMED RATHER THAN SHORT-CIRCUITED — and it is worth
      the three calls. `op=promote` already made NADIA the owner (7.1: the creator
@@ -749,7 +759,7 @@ console.log("\n--- 4. DEC-17: the declared bar, stamped beside the derived pair 
      rule. The bar is set to the pair this case genuinely meets; the REFUSAL and
      its supporting-member complement are armed in `caseproduction.test.mjs`,
      where they are the subject rather than an accident of a fixture. */
-  await mustPromote(PROJ, projectMd(PROJ, { refs: [INQ_CASE],
+  await mustPromote(PROJ, projectMd(PROJ, { refs: [INQ_CASE], name: PROJ_NAME,
     bar: { capture: "B", connection: "C", author: "nadia", at: "2026-07-03T00:00:00Z" } }),
     "project", "investigating", NADIA, await shaOf(PROJ));
   const pbar = await barOfProject(PROJ);
@@ -1008,13 +1018,20 @@ console.log("\n--- 6b. a republish that does not increment the edition is refuse
   const backdated = md.replace(/^edition: 3$/m, "edition: 2");
   await promote(INQ_CASE, backdated, "inquiry", "published", PILAR, await shaOf(INQ_CASE));
   const r = await ratify(INQ_CASE);
-  t("ratifying different bytes under an edition already published is refused BY NAME",
-    [r.ok, r.reason, r.highest], [false, "EDITION_EXISTS", undefined]);
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted. These hand-written bytes are a finding at a sha NO ratified case pins — the case pinned the bytes
+     op=publish stamped, and a hand revision moves the sha off the pin — so op=ratify now refuses them C-58.2
+     BEFORE the edition is read: publishing them would be publication outside a case. They are still refused BY
+     NAME and nothing is overwritten (asserted below, unchanged); the edition refusals stay in the committer and
+     are driven where an authored edition can still reach them (`shadowed-refusals.test.mjs` (viii), and
+     EDITION_EXISTS at a PINNED sha in `caseflip`/`multifinding`/`casepin`). */
+  t("ratifying different bytes under an edition already published is refused BY NAME (C-58.2: no ratified case pins them)",
+    [r.ok, r.reason, r.highest], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", undefined]);
   const backwards = md.replace(/^edition: 3$/m, "edition: 1");
   await promote(INQ_CASE, backwards, "inquiry", "published", PILAR, await shaOf(INQ_CASE));
   const r2 = await ratify(INQ_CASE);
-  t("and so is a republish that moves the edition BACKWARDS",
-    [r2.ok, r2.reason], [false, "EDITION_EXISTS"]);
+  t("and so is a republish that moves the edition BACKWARDS (C-58.2, for the same reason)",
+    [r2.ok, r2.reason], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE"]);
   t("after both refusals the published projection is untouched: three editions, none overwritten",
     (await editionsOf(INQ_CASE)).editions.map((e) => e.edition), [1, 2, 3]);
 }

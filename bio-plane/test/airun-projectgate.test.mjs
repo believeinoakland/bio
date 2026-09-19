@@ -133,7 +133,10 @@ const inquiryMd = (id) => ["---",
   "---", "", "## Question", "", "Did it?", "", "## What It Rests On", "",
   "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
-const projectMd = (id) => ["---", `id: ${id}`, "object_type: project",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7): a
+   creation names no bundleId (PROJECT_ID_SUPPLIED) and its bytes carry no id line (PROJECT_ID_IN_BYTES);
+   the id is read from the answer. For a project, `id` below is only the title's label. */
+const projectMd = (id) => ["---", "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
@@ -142,7 +145,7 @@ let seq = 0;
 const bundle = (id, type) => {
   const md = type === "project" ? projectMd(id) : inquiryMd(id);
   return {
-    bundleId: id, base: null, snapKey: `20260809T1200${String(++seq).padStart(2, "0")}Z_aaaa1111`,
+    ...(type === "project" ? {} : { bundleId: id }), base: null, snapKey: `20260809T1200${String(++seq).padStart(2, "0")}Z_aaaa1111`,
     meta: { object_type: type, group: "believe-in-oakland", title: `title for ${id}`,
             current_state: type === "project" ? "forming" : "open",
             created: NOW, last_updated: LATER },
@@ -151,8 +154,9 @@ const bundle = (id, type) => {
 };
 const promote = async (tok, id, type) => rP(await POST(`op=promote&${tok}`, bundle(id, type)));
 
-const P1 = "PROJ-2026-8001-sewer";
-const P2 = "PROJ-2026-8002-water";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): P1/P2 are the MINTED ids, read from the creation answers below. */
+let P1 = "sewer";
+let P2 = "water";
 const INQ_IN   = "INQ-2026-8010-transfers";   // cited by P1
 const INQ_BOTH = "INQ-2026-8011-shared";      // cited by P1 AND P2
 const INQ_LOOSE = "INQ-2026-8012-loose";      // cited by nobody — DEC-17's case
@@ -161,7 +165,9 @@ console.log("\n--- FIXTURE: two projects, three inquiries, and NOT ONE HAND-AUTH
 {
   const mk = [];
   mk.push(await promote(RUTH, P1, "project"));
+  P1 = mk[0]?.bundleId;
   mk.push(await promote(GUS,  P2, "project"));
+  P2 = mk[1]?.bundleId;
   mk.push(await promote(RUTH, INQ_IN, "inquiry"));
   mk.push(await promote(RUTH, INQ_BOTH, "inquiry"));
   mk.push(await promote(RUTH, INQ_LOOSE, "inquiry"));
@@ -190,7 +196,8 @@ const cite = async (tok, project, ids) => {
      wrote it is an equality that costs nothing to produce. */
   const back = rP(await GET(`op=backlinks&${RUTH}&target=${encodeURIComponent(INQ_BOTH)}`));
   t("FIXTURE READ-BACK through op=backlinks: BOTH projects draw on the shared question",
-    (back?.backlinks ?? []).map((x) => x.from).sort(), [P1, P2]);
+    /* CORRECTED 2026-09-19 (REC-141, BOB #16): minted ids are opaque, so the expected pair is sorted too. */
+    (back?.backlinks ?? []).map((x) => x.from).sort(), [P1, P2].sort());
   const none = rP(await GET(`op=backlinks&${RUTH}&target=${encodeURIComponent(INQ_LOOSE)}`));
   t("FIXTURE READ-BACK: the loose question is cited by NOBODY — DEC-17's case is real here, "
     + "and this arm is what stops the projectless assertions passing over a mis-built fixture",

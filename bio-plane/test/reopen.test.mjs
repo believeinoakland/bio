@@ -536,9 +536,13 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
     const G2 = async (q) => (await mf2.dispatchFetch(`http://x/api/?${q}`)).json();
     const P2 = async (q, b) => (await mf2.dispatchFetch(`http://x/api/?${q}`,
       { method: "POST", body: JSON.stringify(b ?? {}) })).json();
-    const LEGACY_PROJ = "PROJ-2026-1400-dossier";
     const CITED = "INFO-2026-1400-cited";
-    const projMdFor = (id, spelling, cites) => ["---", `id: ${id}`, `object_type: ${spelling}`, "schema: project@1",
+    /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) — a
+       creation in the PROJ- namespace naming an id is refused PROJECT_ID_SUPPLIED (C-59.1) whatever type it
+       claims, and creation bytes carrying `id:` are refused (C-59.2). So the three projects below are created
+       with NO bundleId and no id line (the patched catalog maps `dossier` to project, so the legacy spelling
+       mints too), and each constant holds the id the plane answered with. */
+    const projMdFor = (spelling, cites) => ["---", `object_type: ${spelling}`, "schema: project@1",
       `title: "Legacy dossier"`, "current_state: forming", "prior_state: null",
       `created: "${NOW}"`, `last_updated: "${LATER}"`,
       "produced_by:", "  mode: agent", "  capability_tier: high",
@@ -552,12 +556,19 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
       meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
               current_state: state, created: NOW, last_updated: LATER },
       files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));
-    const BARE_PROJ = "PROJ-2026-1400-dossier-bare";
-    const CANON_PROJ = "PROJ-2026-1400-canonical";
+    const mkProj = async (name, md, type) => {
+      const r = rP(await P2(`op=promote&token=mem-x`, {
+        base: null, snapKey: `${name}-new`, author: "seed",
+        meta: { object_type: type, group: "believe-in-oakland", title: `t ${name}`,
+                current_state: "forming", created: NOW, last_updated: LATER },
+        files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }));
+      if (typeof r?.bundleId !== "string") throw new Error(`mkProj ${name}: ${JSON.stringify(r)}`);
+      return r.bundleId;
+    };
     await mk(CITED, infoMd(CITED), "information", "collected");
-    await mk(LEGACY_PROJ, projMdFor(LEGACY_PROJ, "dossier", true), "dossier", "forming");
-    await mk(BARE_PROJ, projMdFor(BARE_PROJ, "dossier", false), "dossier", "forming");
-    await mk(CANON_PROJ, projMdFor(CANON_PROJ, "project", true), "project", "forming");
+    const LEGACY_PROJ = await mkProj("PROJ-2026-1400-dossier", projMdFor("dossier", true), "dossier");
+    const BARE_PROJ = await mkProj("PROJ-2026-1400-dossier-bare", projMdFor("dossier", false), "dossier");
+    const CANON_PROJ = await mkProj("PROJ-2026-1400-canonical", projMdFor("project", true), "project");
     const actsOf = async (id) => ((await G2(`op=affordances&token=mem-x&target=${id}`)).result?.acts ?? [])
       .map((a) => a.id).sort();
     const aff = await G2(`op=affordances&token=mem-x&target=${LEGACY_PROJ}`);
