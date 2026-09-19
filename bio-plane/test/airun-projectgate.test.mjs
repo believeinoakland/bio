@@ -196,7 +196,8 @@ const cite = async (tok, project, ids) => {
      wrote it is an equality that costs nothing to produce. */
   const back = rP(await GET(`op=backlinks&${RUTH}&target=${encodeURIComponent(INQ_BOTH)}`));
   t("FIXTURE READ-BACK through op=backlinks: BOTH projects draw on the shared question",
-    (back?.backlinks ?? []).map((x) => x.from).sort(), [P1, P2]);
+    /* CORRECTED 2026-09-19 (REC-141, BOB #16): minted ids are opaque, so the expected pair is sorted too. */
+    (back?.backlinks ?? []).map((x) => x.from).sort(), [P1, P2].sort());
   const none = rP(await GET(`op=backlinks&${RUTH}&target=${encodeURIComponent(INQ_LOOSE)}`));
   t("FIXTURE READ-BACK: the loose question is cited by NOBODY — DEC-17's case is real here, "
     + "and this arm is what stops the projectless assertions passing over a mis-built fixture",

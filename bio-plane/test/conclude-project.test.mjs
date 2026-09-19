@@ -371,7 +371,9 @@ console.log("\n--- 1. two projects, one shared question, each concludes with ITS
   t("and it enumerates where the others stand — B concluded on a different reading, D has not concluded",
     (aboutA?.basis?.elsewhere || []).filter((e) => e.project === B || e.project === D)
       .map((e) => [e.project, e.state, e.version]).sort(),
-    [[B, "concluded", VB.name], [D, "not_concluded", null]]);
+    /* CORRECTED 2026-09-19 (REC-141, BOB #16): minted ids are OPAQUE, so B and D no longer sort in creation order —
+       both sides are sorted; the claim is WHICH projects stand where, not their order. */
+    [[B, "concluded", VB.name], [D, "not_concluded", null]].sort());
   const mute = await POST(`op=queuemute&token=${RUTH}`, { case: B, kinds: ["shared-inquiry-concluded-by-another-project"] });
   t("a member CANNOT mute it: op=queuemute refuses a FINDING kind", mute?.ok, false);
   t("and being told moved nothing: B's stance and conclusion are exactly as B left them",
