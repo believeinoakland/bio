@@ -126,7 +126,7 @@
     { "n": 15, "name": "Distribution: installer, releases, fleet, multi-instance", "claims": [
       {"id": "15.fleet-source", "state": "BUILT", "text": "the installer's source installs the signed fleet", "probes": [{"hit": "fleetSig", "in": ["newgroup/src/index.mjs"]}, {"hit": "ARMED_SIGNERS", "in": ["newgroup/src/index.mjs"]}]},
       {"id": "15.release", "state": "BUILT", "text": "the plane release is signed and carries the fleet", "probes": [{"hit": "fleetSig", "in": ["release/RELEASE.json"]}]},
-      {"id": "15.installer-bundle", "state": "ABSENT", "text": "the COMMITTED installer bundle predates the fleet (0.56.0-era) — the fleet-installing installer is not built into the artifact, and deploying it is Bob's gate", "probes": [{"none": ["fleetSig"], "in": ["newgroup/dist/newgroup.bundled.mjs"]}]},
+      {"id": "15.installer-bundle", "state": "BUILT", "text": "the COMMITTED installer bundle installs the signed fleet \u2014 rebuilt at the 0.66.0 cut (DIST #2, 2026-09-19); the old ABSENT claim described a 0.56.0-era artifact and its \"deploying it is Bob's gate\" clause is superseded by Bob's standing permission of 2026-09-18 that DIST deploys", "probes": [{"hit": "fleetSig", "in": ["newgroup/dist/newgroup.bundled.mjs"]}]},
       {"id": "15.multi-instance", "state": "ABSENT", "text": "multi-instance isolation — account-global names are still fixed", "probes": [{"hit": "bucket_name: \"bio-captures\"", "in": ["newgroup/src/index.mjs"]}, {"none": ["bio-captures-\\$\\{", "\"bio-captures-\""], "in": ["newgroup/src/index.mjs"]}]}
     ]}
   ]
