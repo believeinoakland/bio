@@ -12115,3 +12115,90 @@ AS DECLARED, real sources untouched. `node test/nc-pl18.mjs` re-run, eleven rows
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 42.0.0 → 43.0.0.** Base RE-READ at resolution off the integration tree: 42.0.0. Breaking by IC-137: op=airuntick and op=airunclose now REFUSE (C-22.12 AI_RUN_NOT_PRINCIPAL) every caller who is not the run's stamped principal (ai_runs.principal_plane — the member, or a machine credential that member minted), co-participants and administrators included; a caller who cannot see the run's context gets the byte-identical answer for a run that does not exist, which also closes a §7.9 disclosure (tick/close told such a caller the run existed and its status). The reaper is unchanged. Compared against the control plane's STAMP, never a sent field (the forged-actor arm). Combined at integration with REC-153's C-22.11 (the C-22 family is TWELVE; airun.test ARM D1 carries both). An AUTHORITY and DISCLOSURE closing — DIST told.
+
+## IC-166 · I3: `op=publish`'s `NOT_CONCLUDED` IS ASKED OF THE PUBLISHING PROJECT'S RELATIONSHIP, and the case document RECORDS the conclusion it rests on — a project that concluded a shared question through `op=conclude&project=` can now publish it although the question's own state is `open`; the refusal gains the relationship and a `why` that keeps NEVER-CONCLUDED, WITHDREW, UNDETERMINED and SET-DOWN apart; `op=affordances` offers `publish` on the same widened condition; the case document gains `case_conclusions:` and a prose section naming WHOSE conclusion each member entered on · PROPOSED 2026-09-19 (REC-135, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (branch
+  `rec-135-project-conclusion-to-case`, base `origin/main` @ `fe0529f3`): 44.0.0, IC-164's resolution.
+  Proposed MINOR, ADDITIVE — 44.0.0 → 44.1.0. Read the base AT RESOLUTION**, by this file's own rule, and
+  IC-164's own resolution is the receipt for why (its proposed base was stale by one landing).
+  **Why MINOR, by IC-25's test — nothing that answered before is refused or changes meaning:**
+  a publication that SUCCEEDED before still succeeds. The old gate passed exactly when the inquiry's own
+  state read `concluded`, and that remains one of the two ways to pass (§7.1 item 5 reads such a
+  conclusion as the NO-PROJECT relationship's). What is ADDED is the second way: the publishing project's
+  own `conclusions[]` stance. Every refusal keeps its NAME — no code is minted and none is removed — and
+  gains fields. Nothing that succeeded is refused: the states the old expression excluded
+  (`deferred`, `dismissed`, `divided`, legacy `published`) are still excluded, by a condition now said on
+  purpose rather than falling out of a word.
+- **Proposer:** RECORD, REC-135 worker, 2026-09-19, spawned by CONDUCT #7.
+- **Owner to land it:** `RECORD`
+- **Design:** `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 4 (BOB #15, 2026-09-18), with
+  `BIO_State_Rules_Consistency_v1_5.md`'s amendment of the same day and `BIO_Case_Making_v0_1.md`
+  §"What a CLAIM is" (a conclusion is the inquiry ADOPTING a claim; the claim is what was concluded).
+- **Consumers to answer:** `UI` — NOT BROKEN and this is the consumer it exists for: a member whose team
+  concluded a shared question through `op=conclude&project=` was offered no `publish` act anywhere,
+  because the act's predicate read the question's own state. `DIST` (newgroup embeds the last cut plane
+  until the next), `SKILL`, `agent-worker` — NOT-AFFECTED, grepped: none reads `op=publish`'s refusal
+  fields or the case document's frontmatter.
+
+**THE SHAPE.** `op=publish&project=P` over member M asks ONE reader — `#caseConclusionFor(P, M, viewer,
+state)` — which answers `{state: "concluded"|"not_concluded", relationship: "project"|"no_project",
+project, inquiry, version, claim: {state, text, version, detail}, falsifier, falsifier_override, by, at,
+detail}` and, when not concluded, also `why`, `stance`, `history_length`, `inquiry_state`,
+`concluded_elsewhere` and `concluded_elsewhere_bounds`. It passes when EITHER P's own `conclusions[]`
+stance is a conclusion (REC-124/REC-136's append-only history; a WITHDRAWN stance is never a standing
+answer) OR the inquiry's own bytes read `concluded` — and in both cases only while the question's own
+state is one a case can rest on (`open`, `surfaced`, `concluded`).
+
+`NOT_CONCLUDED` keeps its name and gains `project`, `relationship`, `why`, `stance`,
+`concluded_elsewhere` and `concluded_elsewhere_bounds`. `why` is one of
+`project_has_never_concluded`, `project_withdrew_its_conclusion`, `project_stance_undetermined`,
+`question_not_case_bearing`, `no_project_named` — because "not concluded" is five different facts and a
+caller told only the name cannot act (CLAUDE.md §2: sparse is normal, and saying WHICH is a first-class
+obligation). `concluded_elsewhere` names the OTHER projects this viewer can see that have concluded the
+same shared question — information, never this project's stance (§7.1 item 8) — and publishes its own
+bound, so an ABSENCE over a truncated or gated set is not read as a finding.
+
+`op=affordances` offers `publish` when `current_state === "concluded"` OR the new positional fact
+`concluded_for_project === true` (a project the caller has JOINED, can SEE, that live-cites the question,
+and that stands on a conclusion of it — asked through the same `#conclusionOf` the refusal runs).
+Three-valued exactly as `project_owner` and `concludes_for_project` are: null for a non-inquiry target and
+for a caller with no roster position, so a machine credential's published act set is byte-unchanged.
+
+**THE CASE DOCUMENT.** A new top-level `case_conclusions:` — an ARRAY OF FLAT OBJECTS, `case_roles`'s
+shape for the grammar's own reason — one row per roster member in roster order: `target`, `relationship`,
+`project`, `version`, `claim_state` (`adopted` | `undetermined`), `claim`, `claim_detail`, `falsifier`,
+`falsifier_override_by`, `falsifier_override_at`, `concluded_by`, `concluded_at`. And a prose section,
+`## The Conclusions This Case Records`, for the reason `## What Was Searched` is in prose: a member
+reviews and signs the BODY, and a block of key-value pairs is not a thing anybody reviewed.
+
+**WHY THIS IS NOT A SECOND SOURCE OF TRUTH.** The rows are the SAME answer the gate was decided on,
+carried on the prepared member rather than re-read — a second read is how a document comes to record a
+conclusion the gate did not admit.
+
+**`CASE_DOCUMENT_FORMAT` IS DELIBERATELY NOT BUMPED, and the reason is the row's own acceptance
+condition.** C-41.1 tests `fm.format !== CASE_DOCUMENT_FORMAT` against ONE value — there is no accepted
+set — so moving to `bio-case-document/2` would fail that check for every case document already signed in
+this record, which is precisely the "a legacy published case verifies byte-identically" condition. The
+addition is purely additive and a reader of `/1` that ignores an unknown key is unaffected. A FORMAT BUMP
+BECOMES OWED THE MOMENT A KEY IS REMOVED OR CHANGES MEANING, and C-41 would need an accepted-set arm
+first; that is named here so the next builder does not have to re-derive it.
+
+**No I5 IC:** no table and no column moves. The document lives in `case_documents.text`, which already
+holds it, and `#noProjectConclusionOf` / `#conclusionOf` are CALLED rather than copied.
+
+**A DECISION FOR BOB TRAVELS WITH THIS ROW, and the build ships the reversible arm.** §7.1 item 8 says a
+no-project conclusion *"is visible as information and is never read as P's"*; read strictly, that refuses
+publication to every project whose finding was concluded before the project arm existed — which is every
+published case in this record and every publishing caller in the battery, since `op=conclude` had no
+project arm before 2026-09-18. Item 5 rules the other way about the same bytes (*"read as … the
+no-project relationship's — stated as such"*), and item 6's aside that *"a case needs a project (DEC-72),
+so a no-project conclusion is never published"* is FALSE of the code as built. WHAT RUNS PROVISIONALLY:
+the disjunction, with the relationship DISCLOSED per member in the signed bytes. THE ALTERNATIVE: the
+strict reading. RECOMMENDATION: keep the disjunction; the disclosure is what makes it honest, and the
+record gains a discriminator it did not have. WHAT REVERSING IT COSTS: one arm of `#caseConclusionFor`
+and a refusal message — measured, not estimated, as arm (e) of
+`bio-plane/test/case-project-conclusion.control.mjs` (22 pass / 3 fail; the three are exactly the
+legacy-path arms). The battery-wide cost of the strict reading was NOT measured and is larger.
+
+**RESPONSES:** not yet collected.

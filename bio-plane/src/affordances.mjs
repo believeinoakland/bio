@@ -1291,9 +1291,25 @@ export const ACTS = [
      no longer saying it to somebody for whom NO parameter could succeed. The
      per-pair question (may this viewer publish for THIS project) is a different
      fact and a different item, D-311, argued at NON_ACTS' roster rows below. */
+  /* REC-135 / INVESTIGATIVE-SESSION.md §7.1 item 4, 2026-09-19: `concluded` IS
+     ASKED OF A RELATIONSHIP, SO THE STATE WORD IS NO LONGER THE WHOLE OF IT.
+     `op=conclude&project=` writes the project's adoption onto the PROJECT and
+     deliberately leaves the shared question's own state where it was (§7: one
+     team's decision never moves another's). So a member whose team HAS concluded
+     a shared question sees `current_state: open` on it, and this predicate — the
+     affordance-layer half of publishCase()'s NOT_CONCLUDED sentence, which the
+     paragraph above says the two must AGREE on — would have gone on hiding the
+     act from exactly the member item 4 exists for.
+     A DISJUNCTION AND NOT A REPLACEMENT, because both relationships publish: the
+     no-project conclusion in a question's own bytes still admits a case (item 5
+     reads it as the no-project relationship's and the case document now SAYS so),
+     and `concluded_for_project` adds the project's own. `=== true` is the whole
+     of the three-valued handling: a machine-class credential answers null there,
+     does not widen, and keeps its own fence (MACHINE_CANNOT_PUBLISH). */
   { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && f.current_state === "concluded" && !f.case_member
-                     && f.project_owner !== false },
+    applies: (f, ty) => ty === "inquiry"
+                     && (f.current_state === "concluded" || f.concluded_for_project === true)
+                     && !f.case_member && f.project_owner !== false },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
      `single`, conclude's precedent: one question is divided at a time.

@@ -15073,3 +15073,48 @@ why: REC-152 (IC-165, `airuntick`/`airunclose` are the run's principal's acts �
   REC-153 (IC-163, `aiRunOpen` checks the context kind — AUTHORITY) are on `main` and in NO release. CONDUCT #7
   named REC-152 a security/disclosure closing at integration, which makes this a CUT NOW under WHEN DIST CUTS,
   not a batch. Bob's "cut and deploy nothing new before the account moves" is satisfied: this IS that account.
+
+## CLAIM 2026-09-19 RECORD (REC-135 — §7.1 item 4: a project's conclusion reaches the case; `op=publish`'s `NOT_CONCLUDED` reads the PUBLISHING PROJECT'S relationship, and the case records the adopted claim)
+
+Worker spawned by CONDUCT #7. **Its first worktree was NOT its own**: CONDUCT handed it
+`.claude/worktrees/hungry-liskov-e0108c`, which the UI-67 worker had already claimed and was editing live
+(`docs/development/CLAIMS.md` and `civicos-ui/app.html` appeared as uncommitted changes there DURING this
+session's first ten minutes). That is DEC-3's one-session-per-tree hazard, recorded in this file's own
+2026-08-10 FINDING. This worker moved out rather than share it: own worktree
+`.claude/worktrees/rec135-record`, branch **`rec-135-project-conclusion-to-case`**, base `origin/main` @
+`fe0529f3`, `npm ci` run in `bio-plane/`, `pdf-worker/` and `ocr-worker/` (each `node_modules` verified a real
+directory — 30 / 25 / 26 entries), `df -h` 7.3 GiB free after. Nothing of UI-67's was touched; one stray log
+this worker had written into that tree was removed and that tree's `git status` re-read to confirm it.
+
+Design authority: `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 4, with `BIO_Case_Making_v0_1.md`
+§"What a CLAIM is" and `BIO_State_Rules_Consistency_v1_5.md`'s 2026-09-18 amendment. Claimed BY SITE:
+
+- `bio-plane/src/store.mjs` — the new `#caseConclusionFor` reader beside `#conclusionOf` / `#noProjectConclusionOf`;
+  `publishCase()`'s `NOT_CONCLUDED` arm and the per-member record it collects; the `#caseDocumentText` call and
+  that method's new `conclusions` parameter and section; `affordanceFacts`'s new `concluded_for_project` fact.
+  **NOT** `conclude()`, **NOT** `withdrawConclusion()`, **NOT** `#conclusionRecordOf` / `#conclusionOf` /
+  `#noProjectConclusionOf` themselves (called, never copied — BOB #16's one-reader rule at REC-144),
+  **NOT** `reopen()` (see the report: reopen reads the shared state BY DESIGN), **NOT** the strength walk.
+- `bio-plane/src/affordances.mjs` — the `publish` act's predicate only (one added disjunct).
+- `bio-plane/test/case-project-conclusion.test.mjs` and `bio-plane/test/case-project-conclusion.control.mjs` — both NEW.
+- `docs/development/INTERFACE-CHANGES.md` (IC-166, appended), `docs/development/INVESTIGATIVE-SESSION.md`
+  (front matter + §7.1's built paragraph), `docs/architecture/construct-status.json` if a claim moves, and this block.
+
+**NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT's word), `docs/development/DEBT.md`, `civicos-ui/**`,
+`newgroup/**`, `release/**`, `bio-plane/checks/bio-checks.mjs` (no new refusal code is minted and
+`CASE_DOCUMENT_FORMAT` is deliberately NOT bumped — see IC-166).
+
+**ADDENDUM 2026-09-19 (same claim, REC-135):** `bio-plane/test/projection-noproject.test.mjs` — the ONE READER pin
+ONLY (`count(store, "this.#noProjectConclusionOf(")`), CORRECTED from 2 to 3 with the reason at the site. That suite's
+own comment instructs it: *"A third call site is not wrong; it is somebody who must come here and say which."* This
+item is that somebody, and the correction names `#caseConclusionFor`. Nothing else in REC-144's suite is touched, and
+the arm that would catch a hand-written COPY of the reader (its tokens occurring once across `store.mjs` and
+`index.mjs`) is left exactly as it was — it is the arm that still holds the rule the count only counts.
+
+**ADDENDUM 2026-09-19 (same claim, REC-135):** `bio-plane/test/caselifecycle.control.mjs` — ARM (c)'s ANCHOR ONLY,
+re-anchored from `b.current_state !== "concluded"` to `conc.state !== "concluded"` with the reason at the site. The
+arm is unchanged in what it breaks (the `NOT_CONCLUDED` refusal) and in the damage it names; only the line that
+expresses the refusal moved. **Found by the instrument, not by memory:** `m025-arm-anchor-witness.test.mjs` arm A4
+went red on the dead anchor (the D-276 class — a line changed in place under a quote that was not moved with it), and
+arm (c) was re-run afterwards (58 pass / 10 fail, restore sha256 MATCH and content IDENTICAL) rather than assumed to
+still arm. Nothing else in `caselifecycle.control.mjs` is touched.
