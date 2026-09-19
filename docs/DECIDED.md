@@ -2282,7 +2282,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - WHEN A RELEASE REACHES OTHER GROUPS — RULED by Bob:** *"The release may be deployed, obviously.  
   `docs/development/kickoffs/BOB-NEXT.md:39`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
-  `docs/development/kickoffs/BOB.md:77`
+  `docs/development/kickoffs/BOB.md:78`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  

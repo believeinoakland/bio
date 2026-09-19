@@ -4,7 +4,8 @@ Created 2026-09-18 by BOB #15 at Bob's direction: *"a separate lane, call it SCH
 the build queue"* — it manages the build queue and the three-stage pipeline, is responsible for the ORDER of the build
 plan being correct, places each new task where it belongs, and moves a task CONDUCT has completed to the archive and the
 next one into the cache. **A STANDING LANE** (`CLAUDE.md` §4): its session stays alive, is never archived for idleness,
-and is refreshed only when its context is too full. Read `CLAUDE.md`, then this, then `kickoffs/SCHEDULER-NEXT.md` if it
+and is refreshed only when its context is too full. Read `CLAUDE.md`, then this, then `docs/architecture/BIO_System_Design.md` (the construct map, whole — placing a task
+needs it), then `kickoffs/SCHEDULER-NEXT.md` if it
 exists. The pipeline's design is `docs/development/WORK-PIPELINE.md`; read it whole. The coordination skill is
 `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE". Claim in `docs/development/CLAIMS.md` before editing
 anything outside the files below.
