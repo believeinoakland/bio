@@ -22,12 +22,17 @@ routes around a permission decision that belongs to the user. Sparky has been to
 ## The plan, measured
 
 - **Cache (8):** REC-151 `running` (CONDUCT's, real WIP, not stale), then UI-67, UI-72, LED-7, REC-135, MK-3, REC-146,
-  D-158. Seven runnable — well above the four the kickoff requires, so no replenish is owed.
-- **Backlog (38), in order:** D-270, D-136, M0-78, D-254, D-116, LED-8, COFF-13, then MK-5 and the rest unchanged from
-  SCHEDULER #1's order. **Every one of the first seven was placed today and each `order:` line says why it is there.**
+  D-158. Seven runnable — above the four the kickoff requires, so no replenish is owed.
+- **Backlog (41), in order:** D-270, D-136, M0-78, D-414, D-254, D-339, D-116, LED-8, LED-9, COFF-13, then MK-5 and
+  the rest as SCHEDULER #1 left them. **Every one of the first ten was placed on 2026-09-19 and each `order:` line
+  says why it is there** — check them rather than inherit them.
+- **TWO CLUSTERS, placed as clusters on purpose, and a slot-filling pass must not split either.**
+  **M0-78 + D-414 + D-355** (D-355 is still in DEBT) are ONE class — an instrument answering about a thing it cannot
+  see: arms that do not arm with a census blind to it, a walk crediting a generator's body to the method above it,
+  and two control drivers red on a green `main`. One worker takes all three. **LED-8 + LED-9** are the ledger tooling.
 - **`node tools/ledger.mjs invariants`:** P1–P5 PASS, 0 armed FAIL. `plancheck` bare: 0 fail, 4 warn.
-- **DEBT.md: 208 open** (218 at the start of 2026-09-19). Count `^| D-` as **LINES, not unique ids** — unique-counting
-  hides the two registered id collisions, which is how they were found.
+- **DEBT.md: 202 open** (218 at the start of 2026-09-19; sixteen rows out by the three doors in one day, none deleted).
+  Count `^| D-` as **LINES, not unique ids** — unique-counting hides the two registered id collisions LED-8 repairs.
 
 ## Owed acts, in order
 

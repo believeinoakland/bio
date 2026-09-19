@@ -1892,6 +1892,19 @@ answers per page. Anything making a per-page claim reads the chain, never this f
 `text_tier` and `text_container`; this ruling keeps them frozen, so no interface change is owed and no
 consumer moves.
 
+**A CONTENT LEG MAY CARRY NO PAGE COUNT, AND THAT IS PERMANENT AND STATED RATHER THAN A BACKFILL
+ANYBODY OWES — RULED 2026-09-19 by BOB #17 (D-356).** A reading written before CAP-9 has no
+`page_count`, so `#pageSetForCapture` falls back to the union derived from the chain — and for a wholly
+text-layer or wholly scanned document that union is EMPTY, so the leg mints with `page_count` NULL and is
+deliberately NOT refused. **That is the correct behaviour, not a gap:** NULL here means UNDETERMINED,
+STATED, which is what this record does with a fact it does not hold, and refusing the leg would lose a true
+citation to protect a summary. **A backfill is refused as the answer** because it would repair a
+population that is empty — measured on this instance 2026-09-19: 31 bundles, 88 distinct `capture_sha`,
+**none lacking a page count** — while leaving the live path that produces NULL exactly as it is. The path
+is what a reader needs to know about, and a backfill would not touch it. **What a consumer must therefore
+not do:** read a NULL `page_count` as zero pages, or as an error. It means the record does not know, and
+the chain is where a per-page question is answered.
+
 **The chain, composed as the path walks.** The chain starts null and stays null until a text
 surface answers, so a document that never reached one carries no chain rather than one
 claiming a layer it lacks. A mixed document's chain is the concatenation of its parts, each
