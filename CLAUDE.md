@@ -136,14 +136,12 @@ design, doctrine, anything for Bob → BOB) and continue.
   effect, suspect a second cause before recording a refutation.
 - **Correct superseded tests, never exempt them**, with a comment saying why the old assertion was wrong.
 - **Test through the op, and verify live** in your own instance's scratch namespace, swept after; a
-  store-level test is not evidence a caller can reach the feature. **NAME `store=scratch` ON EVERY CALL — the
-  namespace is not fenced for you** (D-325, ruled 2026-09-19 by BOB #17 at `index.mjs scopeFor`): only the PROBE
-  class is confined, by refusal; every other class, the ADMIN token included, is placed in `bio` when it asks and
-  when it says nothing. `scopeFor` honours `store=scratch` from ANY class, so the binding exists per CALL and an
-  instrument that omits the parameter addresses the REAL record. So a live verification's no-write guarantee is
-  the naming plus the WITNESS — the real record's counters read before and after every arm (VF-4's 13, identical)
-  — and never a plane fence. RESIDUE, stated: no credential can be bound to scratch for its whole life; a sticky
-  confinement is RECORD's ground and is NOT built. **A deploy verified is not a build
+  store-level test is not evidence a caller can reach the feature. **NAME `store=scratch` ON EVERY CALL — the namespace is
+  not fenced for you** (D-325, 2026-09-19, at `index.mjs scopeFor`): only PROBE is confined; every other class, ADMIN
+  included, lands in `bio` when it asks and when it says nothing. `scopeFor` honours `store=scratch` from ANY class,
+  so the binding exists per CALL and an instrument omitting it addresses the REAL record. A live verification's
+  no-write guarantee is the naming plus the WITNESS — the record's counters read before and after every arm — never a
+  plane fence. RESIDUE: no credential binds to scratch for life; a sticky confinement is RECORD's and is NOT built. **A deploy verified is not a build
   serving**: rollout is per-isolate — if a live probe contradicts the suite, establish which build answered.
 - **A fix verified only where you changed it is not verified.** Ask who else reads it — the gate's note,
   the suite's assertion, the row that cites it, the kickoff that quotes it — and check THERE. **And re-run the
@@ -165,6 +163,11 @@ each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not
 ## 7. Traps no instrument names yet
 
 - **Commit messages via a heredoc (`git commit -F -`)** — never `-m` with backticks, never `printf` (a `%` truncates it, exit 0).
+- **`git add -A` after a merge marks a conflicted file resolved WITH ITS MARKERS IN IT, and makes
+  `git diff --diff-filter=U` read EMPTY** — the verification is disabled by the act it verifies, and a check that
+  cannot fail is worse than none. Cost CONDUCT #7 a battery on 2026-09-19 (260/263) on a GENERATED file it had not
+  read. **Check the FILES, not the index: `git grep -c "^<<<<<<<"`, before the gate** — the push guard catches
+  markers only after ten minutes of measuring an unsound tree.
 - **`git checkout -- <file>` restores HEAD and discards your work.** To undo a control arm, `cp` the file
   aside and back, then verify by hash.
 - **Anchor every shell command with an absolute path**; a session's working directory can revert between
