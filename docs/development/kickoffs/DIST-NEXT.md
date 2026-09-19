@@ -8,7 +8,12 @@ rolled `biosmoke7` back to version `057316e4` (0.58.0; it serves, selftest and b
 `f1919416`, and **withdrew `release/` on main to the signed 0.58.0** (`d86b27ea`). agent-worker, pdf-worker and
 ocr-worker serve 0.62.0. The version sites read 0.63.0, so `newgroup`'s `npm test` refuses at embed until the fixed
 cut, by design. `op=audit`: 10 of 31 fail C-18.9 (old INFO bundles with no provenance_chain); the baseline is UNDETERMINED.
-**OWED: CONDUCT's P0 fix plus a suite booting a 0.58.0-shaped store, then cut 0.64.0 and bring a NEW deploy request.**
+**OWED: REC-143** (the P0 fix, rowed and running at `4b4c2e70`, integrated by CONDUCT #6), **then cut 0.64.0 and bring
+a NEW deploy request.** Before cutting, confirm REC-143's suite boots a 0.58.0-shaped store built from git's bytes, and
+that its negative control is this bug. 0.64.0's notes must name, since the live 0.58.0: everything 0.59.0 to 0.63.0
+closed (REC-123, REC-125, REC-129, REC-130, SK-7, REC-131, REC-134, REC-138, REC-137); REC-139 (`9030b9be`) and
+REC-140 when landed; the new sight and read paths (REC-126 review copy, REC-132 founder's sight); and **the conclude
+change, REC-136 + UI-65** (landed together at `67c6cc09`, IC-153, I3 37.0.0).
 The approval for 0.62.0 is spent.
 **RULE UNTIL BOB RULES:** every installer's `/update` reads `main/release/RELEASE.json`, so pushing `release/` to main
 DISTRIBUTES to existing groups. It is gated like a deploy. Cut and sign, but do not advance main's `release/` without
