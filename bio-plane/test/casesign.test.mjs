@@ -75,6 +75,10 @@
    suite was given a member that has genuinely moved on, which is the arm that now
    fails. A fixture where the two agree cannot see this defect, and that is an
    instrument limit rather than a defence holding.
+   RE-RUN 2026-09-19 by the D-431 worker after CORRECTING that arm (the moved member is now refused C-58.2
+   rather than published loose): `node test/casesign.control.mjs`, every arm, real sources verified by
+   sha256 after — baseline 74/0 · a 34/1 · b 73/1 · 2b 0/1 · c 34/1 · **d 73/1, naming the corrected
+   "THE PIN IS WHAT RESOLVES A MEMBER" arm** · e 66/8 · f 67/7 · g 72/2 · h 13/7.
 
    (e) REC-130's FIRST OF FOUR — (e) through (h) were RUN 2026-09-18 against THIS
    file with the driver, each armed ALONE, every restore of `src/store.mjs` sha256
