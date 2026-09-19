@@ -111,7 +111,7 @@
  * runtime, and catches the drift at the moment it is made.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 /* M0-18 — ONE mechanism, imported. The reason is at `allDocs()`. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
@@ -174,9 +174,15 @@ const debt = read(join(DEV, "DEBT.md"));
 /* The queue ids, read out of QUEUE.md's own item headings (`### <ID> · <state>`)
    rather than hand-listed, so an id renamed there is seen here without a second
    edit — the same reason coverage.mjs reads the OPS table from source. */
+/* CORRECTED 2026-09-19 by SCHEDULER at LED-6's migration: the set was read from QUEUE.md ALONE, which
+   was the whole plan until the split. Now QUEUE.md is the cache (at most 8 rows) and every other open
+   row is in BACKLOG.md, so a reader of QUEUE.md alone would score every backlog id as a DANGLING
+   reference — D-430's class (a reader that does not follow the rows into the backlog). Both live files
+   of the queue grammar are read. */
+const backlogText = existsSync(join(DEV, "BACKLOG.md")) ? read(join(DEV, "BACKLOG.md")) : "";
 const QUEUE_IDS = new Set(
-  [...queue.matchAll(/^###\s+([A-Z][A-Z0-9]*-\d+)\s+·/gm)].map((m) => m[1]));
-t("QUEUE.md declares a non-trivial set of item ids", QUEUE_IDS.size >= 10, true);
+  [...(queue + "\n" + backlogText).matchAll(/^###\s+([A-Z][A-Z0-9]*-\d+)\s+·/gm)].map((m) => m[1]));
+t("QUEUE.md and BACKLOG.md together declare a non-trivial set of item ids", QUEUE_IDS.size >= 10, true);
 
 /* --------------------------------------- 1. every open DEBT row has a token */
 /* The exact predicate plancheck.mjs enforces, ported so a session that runs only
@@ -503,7 +509,7 @@ console.log("\n--- every open queue row names the design it builds from (CORPUS-
   /* `openRows` is exported and driven directly so a future refactor cannot quietly stop
      parsing the file that QUEUE_IDS above is read from. */
   t("the row parser agrees with this suite's own heading scan on the id set",
-    openRows(queue).length >= QUEUE_IDS.size, true);
+    openRows(queue + "\n" + backlogText).length >= QUEUE_IDS.size, true);
 }
 
 /* ---------------- 5. every DELEGATION block in CLAIMS.md states its own state, DATED */

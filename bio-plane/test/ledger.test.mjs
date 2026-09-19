@@ -592,7 +592,14 @@ section("12 — LED-6 OVER THE REAL LEDGERS: P1 and P2 hold on the cache and bac
   const cache0 = read(root, L.LEDGERS.QUEUE.live), backlog0 = read(root, L.LEDGERS.BACKLOG.live);
   const lines = cache0.split("\n");
   const leave = L.queueRows(cache0).filter((r) => r.open && r.state !== "running");
-  t("the real cache has non-running open rows to split out (else the simulation is vacuous)", leave.length > 5, true);
+  /* CORRECTED 2026-09-19 by SCHEDULER at LED-6's migration: this guard required MORE THAN 5 non-running
+     rows in the cache, which was true while the cache held the whole plan. The split made it false by
+     design — the cache now holds at most 8 rows, the running ones among them, and the rest of the plan
+     is in the backlog. The simulation's subject is unchanged (rows leave the cache, refill brings the
+     runnable ones back, conserving); what keeps it from being vacuous is that it moves at least ONE row
+     and the pipeline it runs over is not small. */
+  t("the real cache has non-running open rows to split out, over a pipeline that is not small (else the simulation is vacuous)",
+    leave.length > 0 && P.cacheRows + P.backlogRows > 5, true);
   const blocks = leave.map((r) => lines.slice(r.start, r.end).join("\n"));
   const kept = lines.slice();
   for (const r of [...leave].sort((x, y) => y.start - x.start)) kept.splice(r.start, r.end - r.start);

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1216 rulings across 95 documents.
+1218 rulings across 97 documents.
 
 ## DEC-
 
@@ -557,7 +557,7 @@ authority is the file named, never this one.
 - **D-353** — D-353 RULED by CONDUCT (mechanism): the sweep joins the periodic census as its third shape — rowed as M0-33; the two pre-existing mode-(b) reds outside D-343 (`civicos-ui/test/refusal-partition.control.mjs` exit 1, 2 of 18 sub-checks, AND it leaves a ~4 MB `.rec79-control-pristine/` pen behind on a non-zero exit;…  
   `docs/archive/ledgers/QUEUE-closed.md:490`
 - **D-353** — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): decay mode (c) joins the periodic census as its THIRD shape — `tools/modec-sweep.mjs` runs beside `m025-arm-census.mjs`'s two, its dated adjudication table the record, an unadjudicated candidate a finding that carries the exit code and an adjudicated one…  
-  `docs/development/QUEUE.md:466`
+  `docs/archive/ledgers/QUEUE-cut-2026-09-19.md:172`
 - **D-358** · 2026-09-14 — DECIDED 2026-09-14** (D-358 answered: the run, not the pilot).  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:10`
 - **D-358** · 2026-09-14 — RULED and **BUILT, with a CALLER as of 2026-09-14** — `op=contentmint`, the four-state MINT LABEL on every content-row projection and on the leg surface, the attest fence made reachable (SK-7); D-358 ANSWERED at §7.3 — the caller is a RUN, not the pilot, whose exclusion is corrected rather than lifted; SK-8 landed…  
@@ -634,6 +634,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:14261`
 - **D-429** — CORRECTED at their sites with a dated reason, never exempted: `case-authority.test.mjs` §7 (the D-429 pin — PUBLISHED under gus's name — now the C-58.1 refusal) and §6 (C-57.1's `where`), and `case-authority.control.mjs`'s anchors (the helper's).  
   `docs/development/INTERFACE-CHANGES.md:11667`
+- **D-430** — split makes stale, CORRECTED with their reason: `bio-plane/test/ledger.test.mjs` §12's vacuity guard (it required more than 5 non-running rows in the cache, which the split caps at 8 with the running rows in it) and `bio-plane/test/planning-hygiene.test.mjs`' queue-id set (read from `QUEUE.md` alone — D-430's class…  
+  `docs/development/CLAIMS.md:14881`
 - **D-431** · 2026-09-19 — DECIDED 2026-09-19 by BOB #16 (D-431) — nothing crosses outside a ratified case; decided from this rule and rule 1, not returned to Bob.** Verified at the code first: `ratifyCaseDocument` commits the case and its pins BEFORE any member signs a finding (`awaiting` = pinned minus `published_bundles`), so *case…  
   `docs/architecture/BIO_Publication_v0_1.md:70`
 - **D-431** · 2026-09-19 — 2026-09-19 · BOB #16 · D-431 RULED; FLEET'S TWO SCRATCH QUESTIONS ANSWERED — THREE ITEMS, M8 and M0.** Decided by this lane from rulings already made, each read before deciding: `BIO_Publication_v0_1.md` §3 rule 2 (*"Only findings that are part of a project can be published"*, DEC-72) and its D-429 note; §3 rule 1…  
@@ -1544,6 +1546,8 @@ authority is the file named, never this one.
   `docs/development/CONTENT-SEARCH-DESIGN.md:149`
 - **M0-32** · 2026-09-14 — Found by M0-32's worker (2026-09-14) while reading the instrument rather than its output, and CONFIRMED at integration: `tools/decided.mjs`'s `MARKER` is `/\b(RULED|DECIDED|AMENDED|CORRECTED|OVERTURNED|SETTLED|SUPERSEDED|WITHDRAWN|CONCEDED)\b/` and **`.` IS A WORD BOUNDARY**, so the literal string `DECIDED.md`…  
   `docs/archive/ledgers/DEBT-closed.md:62`
+- **M0-33** · 2026-09-18 — M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold) milestone: M0 (background lane, holds no slot) — the test estate's own instrument interface: none — control drivers and the census only  
+  `docs/development/BACKLOG.md:294`
 - **M0-34** · 2026-09-15 — `RULED by Bob` means DOCTRINE no session may revisit; a session's own name means MECHANISM a later session MAY revisit on evidence.  
   `docs/archive/ledgers/QUEUE-closed.md:405`
 - **M0-35** · 2026-09-16 — CLAIM AMENDED 2026-09-16 M0 (M0-35 — three paths the original block did not name) session: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch `worktree-agent-af799694331ecc8d3`) **Appended rather than edited in place**, per this file's own rule.  
@@ -1581,7 +1585,7 @@ authority is the file named, never this one.
 - **M0-61** · 2026-09-18 — [SUPERSEDED IN PART by M-54, 2026-09-18 (M0-61): the three facts below re-measured true, but the NEWLINE is a correlate, not the cause — 2 of the 3 cross-line trips are genuine claims, and the RECONCILED sentence trips identically on one line.  
   `docs/development/MEASUREMENTS.md:15930`
 - **M0-68** · 2026-09-19 — A superseded test is CORRECTED, never exempted. — owner M0 (the test estate).  
-  `docs/development/QUEUE.md:352`
+  `docs/development/BACKLOG.md:190`
 - **M0-69** · 2026-09-19 — §6 rung 6 — the scratch sweep taking scratch IDENTITY is DECIDED (BOB #16, 2026-09-19) and NOT BUILT: today `op=purge` clears the record tables only (row M0-69). - §7 — multi-instance isolation is planned, not built, and no queue row exists; the collision table and ordering constraints live in…  
   `docs/architecture/BIO_Distribution_v0_1.md:8`
 
@@ -2420,9 +2424,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
 - scope: compare the caller to the STAMPED `principal_plane`, never a sent field; ARM H6 CORRECTED with its reason, never exempted. accepts-when: a second member with `contribute` is refused tick and close both over a question and over a project context (co-participants included); the principal and the reaper still…  
-  `docs/development/QUEUE.md:92`
+  `docs/development/QUEUE.md:46`
 - ends one (as `acquireWhy` does), the `detail` only where no translation exists; `version-review` §7's pinned wording is CORRECTED in the same change with its reason.  
-  `docs/development/QUEUE.md:122`
+  `docs/development/QUEUE.md:76`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  
