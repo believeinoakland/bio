@@ -28,11 +28,11 @@ BOB appends a designed item, a correction or an order change here, with its inte
 
 | # | item | was | state | why it is here |
 | --- | --- | --- | --- | --- |
-| 1 | D-431 | new | queued | SPAWNABLE: REC-140 is on main (63d6d8a5) and BOB folded Publication §3 rule 2 (09ec7a86); a disclosure and authority defect, ahead of features |
+| 1 | D-431 | new | running | SPAWNABLE: REC-140 is on main (63d6d8a5) and BOB folded Publication §3 rule 2 (09ec7a86); a disclosure and authority defect, ahead of features |
 | 2 | REC-141 | new | running | first queued: a §7.9 disclosure defect (D-428's existence oracle) whose fix BOB #15 has now designed; disclosure outranks features |
 | 3 | UI-66 | new | queued | with REC-141: REC-141 makes the surface's current create REFUSED, so the surface half lands with it |
 | 4 | REC-142 | new | running | a correction to just-landed work (REC-124, REC-136, UI-65); its dependency REC-136 is ON MAIN since c7f2df67 |
-| 5 | REC-144 | new | queued | UI-65's other follow-up, beside REC-142: the question page cannot show a no-project conclusion without this read |
+| 5 | REC-144 | new | running | UI-65's other follow-up, beside REC-142: the question page cannot show a no-project conclusion without this read |
 | 6 | UI-67 | new | queued | after REC-144, whose read it renders |
 | 7 | REC-145 | new | queued | a §7.9 disclosure: the refusal it removes tells a member a hidden project cites the question; with the disclosure rows |
 | 8 | D-430 | new | running | the precondition of LED-6's step (4); exempt from the M0 hold with LED-6 |
@@ -56,7 +56,7 @@ BOB appends a designed item, a correction or an order change here, with its inte
 | 26 | FW-20 | 19 | queued | runnable since CPDF-19 landed (M2 breadth); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) |
 | 27 | CPDF-3 | 16 | queued | unblocked at this audit (its deploy blocker is false); an M2 live verification, after the product rows above |
 | 28 | DIST-5 | 22 | queued | DIST's own reconciliation, ACCEPTED by DIST 2026-09-18 and queued in its session behind the REC-143 P0; holds no general slot |
-| 29 | M0-65 | 13 | queued | M0, first among M0 rows by BOB #15's lift of the hold (2026-09-18): the battery's published assertion total misstates what it counts — the record overclaiming about its own verification |
+| 29 | M0-65 | 13 | running | M0, first among M0 rows by BOB #15's lift of the hold (2026-09-18): the battery's published assertion total misstates what it counts — the record overclaiming about its own verification |
 | 30 | M0-68 | new | queued | M0, right after the battery tally: an instrument asserting a closed defect fails against every current plane — a correction to a superseded test |
 | 31 | M0-72 | new | queued | M0; a negative control reporting a false FAIL, with M0-68's class of test corrections |
 | 32 | M0-69 | new | queued | M0, after the battery tally and M0-68: a live verification whose scratch keeps member rows stops measuring the same subject twice |
@@ -71,7 +71,7 @@ BOB appends a designed item, a correction or an order change here, with its inte
 | 41 | REC-15 | 15 | blocked | blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 |
 | 42 | UI-17 | 23 | blocked | blocked: rests on REC-15 |
 
-### D-431 · queued — **`op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE (BOB #16, 2026-09-19): (a) a FINDING is ratified only at a `bundle_sha` a RATIFIED case pins, under `Store#caseAuthority`; (b) any OTHER bundle crosses only as EVIDENCE a ratified case's finding RESTS ON; (c) what has already crossed stays crossed and is COUNTED. A DISCLOSURE AND AUTHORITY DEFECT, ahead of features.** — owner RECORD. The row keeps its `D-` id (WORK-PIPELINE §3, door 2).
+### D-431 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: REC-140's `Store#caseAuthority` is on `main` (61ceb109) and BOB's fold of Publication §3 rule 2 is on `main` (09ec7a86); no pinned-finding refusal code exists yet. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE (BOB #16, 2026-09-19): (a) a FINDING is ratified only at a `bundle_sha` a RATIFIED case pins, under `Store#caseAuthority`; (b) any OTHER bundle crosses only as EVIDENCE a ratified case's finding RESTS ON; (c) what has already crossed stays crossed and is COUNTED. A DISCLOSURE AND AUTHORITY DEFECT, ahead of features.** — owner RECORD. The row keeps its `D-` id (WORK-PIPELINE §3, door 2).
 order: 1 · SPAWNABLE: REC-140 is on main (63d6d8a5) and BOB folded Publication §3 rule 2 (09ec7a86); a disclosure and authority defect, ahead of features (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 (an IC minted with `node tools/mintid.mjs IC` BEFORE building; a new refusal code where a publish stood, so breaking by IC-137)
@@ -111,7 +111,7 @@ scope: give `conclude`'s affordance its PROJECT arm, the way `withdrawconclusion
 accepts-when: on a question concluded with no project, `op=affordances` offers the project's conclude to a member of a citing project and not to a stranger; the member concludes through the op and the project's stance reads it; the no-project conclusion is unchanged. How a liar passes it: adding a `concluded -> concluded` edge to the inquiry machine, which re-opens a no-project conclusion to itself, so the arm asserts the no-project relationship CANNOT conclude twice. NEGATIVE CONTROL: remove the project arm, and the affordance arm fails naming it.
 added: 2026-09-18 · SCHEDULER (UI-65's DELEGATION to RECORD, reported owed by CONDUCT #5; id minted with `node tools/mintid.mjs REC`).
 
-### REC-144 · queued — **`op=projection&id=<inquiry>` PUBLISHES `no_project_conclusion` THROUGH `#noProjectConclusionOf`, on the single-bundle form only, under the gate the row already passed — so the question's page can show a no-project conclusion from an UNCAPPED read (UI-65's follow-up; BOB #16, 2026-09-19).** — owner RECORD.
+### REC-144 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: REC-136's `#noProjectConclusionOf` is on `main`; `op=projection` carries no `no_project_conclusion` yet. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`op=projection&id=<inquiry>` PUBLISHES `no_project_conclusion` THROUGH `#noProjectConclusionOf`, on the single-bundle form only, under the gate the row already passed — so the question's page can show a no-project conclusion from an UNCAPPED read (UI-65's follow-up; BOB #16, 2026-09-19).** — owner RECORD.
 order: 5 · UI-65's other follow-up, beside REC-142: the question page cannot show a no-project conclusion without this read (SCHEDULER, 2026-09-19)
 milestone: M9
 interface: I3 additive (an IC minted with `node tools/mintid.mjs IC` before building)
@@ -357,7 +357,7 @@ accepts-when: the disagreement is RESOLVED WITH EVIDENCE FROM `D-297` ITSELF —
 NEGATIVE CONTROL: run and recorded — or the row states plainly that no instrument reads either record and this is therefore a DISCIPLINE rather than a gate, which is the shape this project distrusts and is the honest outcome rather than a shortfall.
 added: 2026-09-17 · CONDUCT #2 (auditing seven undrained BOB INBOX entries at the artifact rather than draining them on BOB's word — BOB #12 declined to answer from memory about entries it did not write, and was right to. **Rowed rather than drained BECAUSE BOB VERIFIED IT IS NOT DONE**, against `BIO_Distribution_v0_1.md` §8 on the tree today; id minted with `node tools/mintid.mjs DIST`)
 
-### M0-65 · queued — **D-413: THE BATTERY'S ASSERTION TOTAL SILENTLY EXCLUDES EVERY SUITE THAT PRINTS NO TALLY, AND THE LINE THAT SAYS SO READS AS A SHRUG — `bundle.test.mjs` and `livefire.test.mjs` are missing from every assertion figure published this week.** — waits on nothing; the M0 background lane holds no slot.
+### M0-65 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: none; `bio-plane/scripts/battery.mjs` still prints the no-count line without saying the total EXCLUDES those suites. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **D-413: THE BATTERY'S ASSERTION TOTAL SILENTLY EXCLUDES EVERY SUITE THAT PRINTS NO TALLY, AND THE LINE THAT SAYS SO READS AS A SHRUG — `bundle.test.mjs` and `livefire.test.mjs` are missing from every assertion figure published this week.** — waits on nothing; the M0 background lane holds no slot.
 order: 29 · M0, first among M0 rows by BOB #15's lift of the hold (2026-09-18): the battery's published assertion total misstates what it counts — the record overclaiming about its own verification (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot) — a headline that omits suites without saying it omits them is the quiet-skip class one step over
 interface: none — `bio-plane/scripts/battery.mjs` (the tally and its report line)
