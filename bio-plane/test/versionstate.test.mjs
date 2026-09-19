@@ -92,6 +92,7 @@ import { checkBundle, parseFrontmatter, VERSION_STATES, VERSION_MACHINE,
          VERSION_REASON_REQUIRED, versionNeedsReason,
          VERSION_ACT_CHECKS, BASIS_VERSION_CHECKS, STATES } from "../checks/bio-checks.mjs";
 import { VOCABULARIES, ACTS, NON_ACTS } from "../src/affordances.mjs";
+import { ADOPTED_READING, ADOPTED_CLAIM, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
@@ -176,7 +177,10 @@ const versionLines = (versions) => {
     ...scalar("author", v.author === undefined ? "ruth" : v.author),
     ...scalar("at", v.at === undefined ? NOW : v.at),
     ...scalar("state_by", v.state_by), ...scalar("state_at", v.state_at),
-    ...scalar("state_reason", v.state_reason)].join("\n"));
+    ...scalar("state_reason", v.state_reason),
+    /* REC-136: a reading may state its CLAIM. Absent unless a fixture sets it,
+       so every row this suite wrote before is byte-identical. */
+    ...scalar("claim", v.claim)].join("\n"));
   const grounds = versions.flatMap((v) => (v.grounds ?? []).map((g) =>
     ["  - version: \"" + v.name + "\"", ...scalar("ground", g.ground),
      ...scalar("asserted_by", g.asserted_by === undefined ? "ruth" : g.asserted_by),
@@ -1163,8 +1167,25 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
      line: `op=conclude` answers NO_BASIS because "concluding one that rests on
      nothing would put the record's name to an assertion nothing supports". The
      version rows are a reading OF a basis and are not one. */
-  await mustPromote(PUBD, inquiryMd(PUBD, { refs: [LEDGER], basis: [{ target: LEDGER }], versions: [V1] }),
-    "inquiry");
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM. PUBD was concluded with no
+     reading because the act took none, and its only reading (V1) is SUGGESTED
+     and claimless — so it cannot be the one adopted, and it must STAY suggested,
+     because the accept driven on it below is what reaches
+     PUBLISHED_CANNOT_MOVE_VERSION. PUBD therefore carries a SECOND reading,
+     written here by hand (the shared helper refuses a document that already has
+     `basis_versions`): accepted by ruth, stating a claim, one ungraded leg on the
+     ledger its basis cites. The conclude names it. */
+  const PUBD_ADOPTED = {
+    name: ADOPTED_READING, relationship: "and", claim: ADOPTED_CLAIM,
+    description: "The reading the finding's own basis states, adopted when it was concluded.",
+    state: "accepted", state_by: "ruth", state_at: NOW,
+    grounds: [{ ground: "the cited record" }],
+    legs: [{ target: LEDGER, ground: "the cited record" }],
+  };
+  await mustPromote(PUBD, inquiryMd(PUBD, { refs: [LEDGER], basis: [{ target: LEDGER }],
+    versions: [V1, PUBD_ADOPTED] }), "inquiry");
   /* THE SETUP STEP'S RESULT IS CHECKED. REC-18 recorded the cost of not doing
      it: a conclude that silently failed surfaced later as an ILLEGAL_TRANSITION
      at publish, and the assertion that depended on it read as a defect in the
@@ -1172,7 +1193,8 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
      run, which is why the check is here. */
   const concluded = rP(await GET(`op=conclude&token=${RUTH}&target=${encodeURIComponent(PUBD)}`
     + `&conclusion=${encodeURIComponent("The ledger and the minutes carry the transfer.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`));
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+    + adoptedVersionParam()));
   if (!concluded?.ok) throw new Error(`conclude ${PUBD}: ${JSON.stringify(concluded).slice(0, 400)}`);
   /* CORRECTED 2026-08-10 AT THE CASE-2/CASE-3 INTEGRATION, NEVER EXEMPTED, AND THE OLD
      CALL WAS RIGHT WHEN IT WAS WRITTEN. It published with no `project` and no `roles`,

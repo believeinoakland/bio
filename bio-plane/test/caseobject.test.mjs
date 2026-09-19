@@ -66,6 +66,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { tmpdir } from "node:os";
 
@@ -256,12 +257,18 @@ let SIGNED_SHA = null;
     `  - target: ${CAP}`, "    role: supports", "    grade: B", "    grade_axis: capture", "    grade_source: capture",
     `  - target: ${CONN}`, "    role: supports", "    grade: C", "    grade_axis: connection",
     "    grade_source: hunch", "    author: ruth", "    date: 2026-08-04"].join("\n");
-  const md = inquiryMd(INQ, { question: "Was the FY2024 sewer transfer authorised?", refs: [CAP, CONN] })
-    .replace("---\n\n## Question", `${legs}\n---\n\n## Question`);
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM. This conclude named none
+     because the act took none; the inquiry now carries an accepted reading
+     (`withAdoptableReading`, over the two legs above) and the call names it. */
+  const md = withAdoptableReading(inquiryMd(INQ, { question: "Was the FY2024 sewer transfer authorised?", refs: [CAP, CONN] })
+    .replace("---\n\n## Question", `${legs}\n---\n\n## Question`));
   await mustPromote(INQ, md, "inquiry");
   const cn = await GET(`op=conclude&token=${RUTH}&target=${INQ}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+    + adoptedVersionParam());
   if (!cn.ok) throw new Error(`conclude: ${JSON.stringify(cn).slice(0, 400)}`);
 
   const pub = await POST(`op=publish&token=${RUTH}`, { target: INQ,

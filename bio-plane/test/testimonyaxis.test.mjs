@@ -51,6 +51,7 @@ import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { GRADE_AXES, TESTIMONY_GRADE, TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, BASIS_GRADES,
          checkInquiryBasis, checkBundle, isCaseMemberBytes, parseFrontmatter } from "../checks/bio-checks.mjs";
 
@@ -361,8 +362,20 @@ t("RECURSION: a question resting on a question that rests on testimony carries t
 
 /* ===================== 5. THE CASE ======================================== */
 console.log("\n--- 5. the case document's frozen strength (op=publish), and the fence MK-1 built still standing ---");
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none; the two findings it concludes (FT, FP) are
+   now promoted carrying one (`withAdoptableReading`, one ungraded leg per basis
+   target, so no strength read moves) and the call names it. Every other
+   question in this suite is left exactly as it was. */
 const concl = (id) => get("conclude", `target=${id}&conclusion=${encodeURIComponent("It was stamped first.")}`
-  + `&falsifier=${encodeURIComponent("A received-log showing a later stamp would overturn this.")}`, RUTH);
+  + `&falsifier=${encodeURIComponent("A received-log showing a later stamp would overturn this.")}`
+  + adoptedVersionParam(), RUTH);
+const promoteConcludable = (id, legs) => post("promote", { bundleId: id, base: null, snapKey: snapKey(),
+  meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
+          current_state: "open", created: NOW, last_updated: NOW },
+  files: [fileOf("bundle.md", withAdoptableReading(qMd(id, legs)))] }, RUTH);
 const PROJECT = await makePublishingProject({ post: (q, b) => rP(mf.dispatchFetch(`http://x/api/?${q}`,
     { method: "POST", body: JSON.stringify(b ?? {}) }).then((r) => r.json())), mf, sha, machineToken: "adm-mk2",
   owner: "ruth", id: "PROJ-2026-5302-publisher", created: NOW, updated: NOW });
@@ -386,9 +399,9 @@ const frozenRows = async (id) => {
   return rows;
 };
 const FT = "INQ-2026-5302-case-testimony", FP = "INQ-2026-5302-case-plain";
-const ft = await promoteQ(FT, [{ target: UP, grade: EARNED_CAPTURE_CEILING, axis: "capture", source: "capture" },
+const ft = await promoteConcludable(FT, [{ target: UP, grade: EARNED_CAPTURE_CEILING, axis: "capture", source: "capture" },
                                { target: OBS, grade: "D", axis: "testimony", source: "testimony" }]);
-const fp = await promoteQ(FP, [{ target: UP, grade: EARNED_CAPTURE_CEILING, axis: "capture", source: "capture" }]);
+const fp = await promoteConcludable(FP, [{ target: UP, grade: EARNED_CAPTURE_CEILING, axis: "capture", source: "capture" }]);
 const cc = [await concl(FT), await concl(FP)];
 const pT = await post("publish", pubBody([FT]), RUTH);
 const pP = await post("publish", pubBody([FP]), RUTH);

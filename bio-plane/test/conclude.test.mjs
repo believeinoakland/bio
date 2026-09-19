@@ -73,6 +73,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, STATES } from "../checks/bio-checks.mjs";
+import { withAdoptableReading, ADOPTED_READING, ADOPTED_CLAIM } from "./adoptable-reading.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -99,7 +100,14 @@ const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
    route, and the literal `op=conclude` uninterpolated so coverage credits it
    there (D-43: op=invitelook shipped with a ReferenceError while 1276
    store-level assertions passed). */
-const conclude = async (tok, { target, conclusion, falsifier, noFalsifier }) =>
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts (`version=`), and an unnamed one is refused NO_CLAIM with nothing
+   written. This helper sent no version because the act took none; it now names
+   ADOPTED_READING by default, and every inquiry this suite concludes carries that
+   reading (`withAdoptableReading`, or by hand for INQ_STANDING — see its seed).
+   `version: null` sends none, for an arm that means to omit it. */
+const conclude = async (tok, { target, conclusion, falsifier, noFalsifier, version = ADOPTED_READING }) =>
   rP(await GET(`op=conclude&token=${tok}`
     + (target !== undefined ? `&target=${encodeURIComponent(target)}` : "")
     + (conclusion !== undefined ? `&conclusion=${encodeURIComponent(conclusion)}` : "")
@@ -107,7 +115,8 @@ const conclude = async (tok, { target, conclusion, falsifier, noFalsifier }) =>
     /* REC-117: the override rides the SAME query string a real caller uses. It
        is only appended when the caller asks for it, so every pre-existing call
        site in this suite produces a byte-identical request. */
-    + (noFalsifier !== undefined ? `&no_falsifier=${encodeURIComponent(noFalsifier)}` : "")));
+    + (noFalsifier !== undefined ? `&no_falsifier=${encodeURIComponent(noFalsifier)}` : "")
+    + (version !== null ? `&version=${encodeURIComponent(version)}` : "")));
 const affordances = async (target, tok = "mem-rec13") =>
   await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(target)}`);
 const actIds = (r) => (r.result?.acts ?? []).map((a) => a.id).sort();
@@ -248,26 +257,46 @@ const INQ_TWIN_B = "INQ-2026-1300-twin-b";
 
 const withBasis = { refs: [DOC], legs: [{ target: DOC, role: "supports" }] };
 
+/* REC-136: every inquiry this suite CONCLUDES (or means to reach a refusal that
+   sits past the claim check) carries an accepted reading to adopt. INQ_DEFERRED
+   and FOCUS_LEGACY are refused ILLEGAL_TRANSITION before any reading is looked
+   at, so they are left exactly as they were. */
+const W = withAdoptableReading;
+/* INQ_STANDING's reading is written BY HAND because it has no `basis:` block for
+   the helper to rest legs on — and that is the point of it. It is still DEC-22's
+   standing objective: a CLAIM with no legs, which the plane's own NO_CLAIM
+   translation calls legal ("a claim nothing supports yet is allowed"). Without a
+   named, accepted, claimed reading the conclude below is refused NO_CLAIM before
+   the basis is ever read, and NO_BASIS — this block's subject — would be
+   undriven. */
+const standingReading = (md) => md.replace("\n---\n\n## Question", "\n" + [
+  "basis_versions:",
+  `  - name: "${ADOPTED_READING}"`,
+  `    description: "A claim the group means to pursue, with nothing under it yet."`,
+  `    relationship: "and"`, `    state: "accepted"`, `    state_by: "nadia"`, `    state_at: "${NOW}"`,
+  `    derived_from: null`, `    hidden: false`, `    claim: "${ADOPTED_CLAIM}"`,
+  `    author: "nadia"`, `    at: "${NOW}"`].join("\n") + "\n---\n\n## Question");
+
 await promote(DOC, infoMd(DOC), "information", "collected");
-await promote(INQ_MAIN, inquiryMd(INQ_MAIN, withBasis), "inquiry", "open");
-await promote(INQ_STANDING, inquiryMd(INQ_STANDING,
-  { question: "Who authorised the transfer, if anyone?" }), "inquiry", "open");
-await promote(INQ_ALIAS, inquiryMd(INQ_ALIAS,
-  { question: "Does the transfer recur next cycle?", state: "surfaced", ...withBasis }), "inquiry", "surfaced");
-await promote(INQ_SECOND, inquiryMd(INQ_SECOND,
-  { question: "What did the memo actually authorize?", ...withBasis }), "inquiry", "open");
+await promote(INQ_MAIN, W(inquiryMd(INQ_MAIN, withBasis)), "inquiry", "open");
+await promote(INQ_STANDING, standingReading(inquiryMd(INQ_STANDING,
+  { question: "Who authorised the transfer, if anyone?" })), "inquiry", "open");
+await promote(INQ_ALIAS, W(inquiryMd(INQ_ALIAS,
+  { question: "Does the transfer recur next cycle?", state: "surfaced", ...withBasis })), "inquiry", "surfaced");
+await promote(INQ_SECOND, W(inquiryMd(INQ_SECOND,
+  { question: "What did the memo actually authorize?", ...withBasis })), "inquiry", "open");
 await promote(FOCUS_LEGACY, focusMd(FOCUS_LEGACY, withBasis), "focus", "surfaced");
 /* REC-117. The QUESTION on the subject fixture is chosen to be one for which no
    honest falsifier exists, because that is the situation Bob's ruling is about:
    it is not that the member could not be bothered, it is that demanding one
    would make them invent it. */
-await promote(INQ_NOFALS, inquiryMd(INQ_NOFALS,
-  { question: "Did anyone raise a concern about the transfer that was never written down?", ...withBasis }),
+await promote(INQ_NOFALS, W(inquiryMd(INQ_NOFALS,
+  { question: "Did anyone raise a concern about the transfer that was never written down?", ...withBasis })),
   "inquiry", "open");
-await promote(INQ_TWIN_A, inquiryMd(INQ_TWIN_A,
-  { question: "What did the memo actually authorize?", ...withBasis }), "inquiry", "open");
-await promote(INQ_TWIN_B, inquiryMd(INQ_TWIN_B,
-  { question: "What did the memo actually authorize?", ...withBasis }), "inquiry", "open");
+await promote(INQ_TWIN_A, W(inquiryMd(INQ_TWIN_A,
+  { question: "What did the memo actually authorize?", ...withBasis })), "inquiry", "open");
+await promote(INQ_TWIN_B, W(inquiryMd(INQ_TWIN_B,
+  { question: "What did the memo actually authorize?", ...withBasis })), "inquiry", "open");
 
 /* ------------------------------------------------- 1. DEC-22, the bound */
 console.log("\n--- 1. DEC-22: an OPEN inquiry may rest on nothing — legal, readable, never auto-anything ---");
@@ -286,8 +315,16 @@ console.log("\n--- 1. DEC-22: an OPEN inquiry may rest on nothing — legal, rea
      TYPE-only, so the act is published at every inquiry state exactly as it has
      always been published on a RETIRED information bundle. Nothing about the
      state-machine acts this block is really about has changed. */
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     no-project conclusion now names an accepted reading, so INQ_STANDING carries
+     one (a claim with no legs — still DEC-22's standing objective), and the acts
+     an inquiry with an accepted reading publishes join the set: PL-2's reading
+     acts and REC-136's `withdrawconclusion` (a PROJECT's act, offered on the same
+     predicate as `versioncurrent`). The subject is unchanged and still exact:
+     it is worked on, and neither `inquirydivide` nor `inquiryground` — the two
+     acts that need a leg — is published on a question resting on nothing. */
   t("op=affordances still publishes its acts: an unsupported question is worked on, not frozen",
-    actIds(await affordances(INQ_STANDING)), ["cite", "conclude", "dispose"]);
+    actIds(await affordances(INQ_STANDING)), ["cite", "conclude", "dispose", "versionconsider", "versioncurrent", "versionhide", "versionreject", "withdrawconclusion"].sort());
 }
 
 /* ------------------------------------------------------- 2. the act */
@@ -462,8 +499,13 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
      which rests on nothing, still publishes exactly {conclude, dispose} — which
      is what shows this act's basis-count condition is real rather than
      incidental, exactly as it does for the divide act above. */
+  /* CORRECTED 2026-09-18 (REC-136): INQ_SECOND is concluded in block 7, so it
+     now carries the accepted reading that conclusion adopts (§7.1 item 6), and
+     the acts an inquiry with an accepted reading publishes join the set — the
+     same five as on INQ_STANDING above. `conclude` beside `dispose` is still the
+     subject and still exact. */
   t("an OPEN inquiry publishes conclude beside dispose", actIds(openAff),
-    ["cite", "conclude", "dispose", "inquirydivide", "inquiryground"]);
+    ["cite", "conclude", "dispose", "inquirydivide", "inquiryground", "versionconsider", "versioncurrent", "versionhide", "versionreject", "withdrawconclusion"].sort());
   const concludedAff = await affordances(INQ_MAIN);
   /* CORRECTED 2026-08-04 (REC-14), never exempted: a concluded inquiry now
    publishes `publish` as well, which is the state this whole ladder exists to
@@ -473,9 +515,14 @@ console.log("\n--- 5. op=affordances publishes conclude from the ONE edge table,
    inquiry is exactly where dividing is most likely to be right — the answer is
    in and the weakest leg is now visible in the frozen pair — and DEC-28 makes
    `concluded -> divided` a legal edge. */
+  /* CORRECTED 2026-09-18 (REC-136): a no-project conclusion now ADOPTS an
+     accepted reading (§7.1 item 6), so INQ_MAIN carries one, and the acts a
+     question with an accepted reading publishes — PL-2's reading acts and
+     REC-136's `withdrawconclusion` — join the set. `conclude` is still absent
+     and `dispose` still present, which is what this assertion is about. */
 t("a CONCLUDED inquiry publishes exactly the legal acts: dispose, divide and publish — and a conclusion nobody publishes still ages (D-79)",
     actIds(concludedAff),
-    ["cite", "dispose", "inquirydivide", "inquiryground", "publish"]);   // REC-37/REC-45, 2026-08-04 (see the notes above)
+    ["cite", "dispose", "inquirydivide", "inquiryground", "publish", "versionconsider", "versioncurrent", "versionhide", "versionreject", "withdrawconclusion"].sort());   // REC-37/REC-45, 2026-08-04 (see the notes above)
   t("conclude is UNPUBLISHED there, and the store agrees by name — publication and refusal cannot disagree",
     (await conclude(NADIA, { target: INQ_MAIN, conclusion: CONCL, falsifier: FALS })).reason,
     "ILLEGAL_TRANSITION");

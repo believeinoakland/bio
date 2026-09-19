@@ -764,6 +764,13 @@ const ACTS_AWAITING_SURFACE = [
      budget book. Until that surface exists the act is reachable only through the
      API, which is the honest state and is what this row records. */
   { id: "attesttext",      published_by: "CPDF-10 (the Tier-3 OCR path)", owed_by: "UI — the transcription check: the page image beside the transcribed text, with the member marking the extent they checked", since: "2026-08-08" },
+  /* REC-136 (INVESTIGATIVE-SESSION.md §7.1 item 7). A PROJECT withdraws its
+     conclusion, and the withdrawal APPENDS — the conclusion stays readable
+     beside it. Registered as a DEBT, DELEGATED in `CLAIMS.md` (REC-136 -> UI):
+     the surface is the project's view of a question it concluded, showing the
+     whole history (`op=basisversions&project=`'s `conclusion_history`) and
+     offering the withdrawal with its required reason. */
+  { id: "withdrawconclusion", published_by: "REC-136 (§7.1 item 7)", owed_by: "UI — the project's stance on a question: its conclusion history, and withdrawing with a reason", since: "2026-09-18" },
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls

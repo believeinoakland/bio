@@ -71,6 +71,7 @@ import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- publishedcase ---");
@@ -134,11 +135,17 @@ const publish = async (tok, body, { sign = true } = {}) => {
   return r;
 };
 /* REC-117: `noFalsifier` appended ONLY when asked for, so every pre-existing
-   call site in this suite produces a byte-identical request. */
+   call site in this suite produces a byte-identical request.
+   CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none; every inquiry this suite concludes now
+   carries one (`withAdoptableReading`) and the call names it. */
 const conclude = async (tok, { target, conclusion, falsifier, noFalsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
     + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
-    + (noFalsifier !== undefined ? `&no_falsifier=${encodeURIComponent(noFalsifier)}` : "")));
+    + (noFalsifier !== undefined ? `&no_falsifier=${encodeURIComponent(noFalsifier)}` : "")
+    + adoptedVersionParam()));
 const divide = async (tok, { target, ...body }) =>
   rP(await POST(`op=inquirydivide&token=${tok}&target=${encodeURIComponent(target)}`, body));
 const reopen = async (tok, target, reason) =>
@@ -299,7 +306,8 @@ await mustPromote(INFO_LEFTOUT, infoMd(INFO_LEFTOUT), "information", "collected"
 /* The case rests on one CAPTURE-graded leg at B and one CONNECTION-graded leg at
    C, so its frozen pair is two DIFFERENT letters on two axes — which is what
    makes "both frozen strengths, never one" checkable rather than agreeable. */
-await mustPromote(CASE, inquiryMd(CASE, { question: "Was the sewer transfer authorised?",
+/* REC-136: CASE is concluded (twice), so it carries an accepted reading to adopt. */
+await mustPromote(CASE, withAdoptableReading(inquiryMd(CASE, { question: "Was the sewer transfer authorised?",
   refs: [INFO_CAP, INFO_CONN],
   /* CORRECTED 2026-08-04 (REC-18), never exempted. The frozen pair is unchanged
      at (capture B, connection C); what changed is where each letter comes from.
@@ -310,7 +318,7 @@ await mustPromote(CASE, inquiryMd(CASE, { question: "Was the sewer transfer auth
      authored connection grade and the only authored source above D (DEC-15). */
   legs: [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
          { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
-           author: "vera", date: "2026-08-04" }] }), "inquiry", "open",
+           author: "vera", date: "2026-08-04" }] })), "inquiry", "open",
   VERA, null, {
     /* THE CAPTURED PART TRAVELS WITH THE CASE, so the published container holds
        a blob and not only text — the file manifest states per-file sha AND
@@ -675,10 +683,11 @@ console.log("\n--- 5. DEC-12: edition 2 publishes and edition 1 stays fetchable 
 /* ================================ 6. R4: named, and served to nobody */
 console.log("\n--- 6. R4: a published child NAMES its parent and its siblings and can serve neither ---");
 {
-  await mustPromote(PARENT, inquiryMd(PARENT, {
+  /* REC-136: PARENT is concluded before it is divided, so it carries an accepted reading. */
+  await mustPromote(PARENT, withAdoptableReading(inquiryMd(PARENT, {
     question: "Was the sewer transfer authorised, and did anyone with authority sign it?",
     refs: [INFO_CAP, INFO_CONN],
-    legs: [{ target: INFO_CAP, role: "supports" }, { target: INFO_CONN, role: "cuts_against" }] }),
+    legs: [{ target: INFO_CAP, role: "supports" }, { target: INFO_CONN, role: "cuts_against" }] })),
     "inquiry", "open");
   await conclude(VERA, { target: PARENT,
     conclusion: "The transfer rests on a memo nobody adopted and the signature question is unresolved.",
@@ -1003,7 +1012,8 @@ console.log("\n--- REC-117 / BOB 2026-09-17: a finding concluded with NO falsifi
    silent override on the one surface where silence costs most. */
 {
   const NOFALS = "INQ-2026-2200-nofalsifier";
-  await mustPromote(NOFALS, inquiryMd(NOFALS, {
+  /* REC-136: NOFALS is concluded, so it carries an accepted reading to adopt. */
+  await mustPromote(NOFALS, withAdoptableReading(inquiryMd(NOFALS, {
     question: "Did anyone raise a concern about the transfer that was never written down?",
     /* `source: hunch` with an author and a date, because DEC-15 makes that the
        honest name for an authored connection grade and the only authored source
@@ -1012,7 +1022,7 @@ console.log("\n--- REC-117 / BOB 2026-09-17: a finding concluded with NO falsifi
        of this fixture came back BASIS_REFUSED for exactly that. */
     refs: [INFO_CONN], legs: [{ target: INFO_CONN, role: "supports", grade: "C", axis: "connection",
                                 source: "hunch", author: "vera", date: "2026-08-04" }],
-  }), "inquiry", "open");
+  })), "inquiry", "open");
 
   const cc = await conclude(VERA, { target: NOFALS,
     conclusion: "No written record of any objection exists and no officer recalls one.",

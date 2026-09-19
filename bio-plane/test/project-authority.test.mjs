@@ -242,9 +242,22 @@ const ACTS = {
      adopts the claim of the reading the project stands on, so on P_IN it follows versioncurrent. */
   conclude: async (tok, p) => POST(`op=conclude&token=${tok}&target=${E(INQ)}&project=${p}`
     + `&falsifier=${E("an adopted council minute rescinding the process")}`, {}),
+  /* REC-136 (§7.1 item 7): a project WITHDRAWS its conclusion — conclude's position, JOINED.
+     Added by REC-136 at its merge of this item, as CONDUCT #5 required: §2 is the arm proving a
+     non-participant administrator (ruth, and the founder) is refused; §3 runs it on P_IN right
+     after `conclude`, so the owners withdraw a conclusion that exists.
+     REC-136's CONTROLS, RUN 2026-09-18, each armed ALONE and restored (sha256 MATCH, content
+     IDENTICAL), baseline 63/0: (i) `withdrawconclusion` removed from index.mjs POSITIONAL_ACTS
+     (the stamp not set) -> 61/2, both withdraw REFUSED arms; (ii) the `#projectAuthority` call in
+     store.mjs #withdrawConclusion replaced by `null` -> 61/2, the same two; (iii) THE MIS-MERGE
+     REPLAYED — conclude's dispatch without its `identity` line, which is what git's textual merge
+     of this item produced (store.mjs's dispatch comment records it) -> 61/2, both CONCLUDE
+     refused arms: this suite would have caught it. */
+  withdrawconclusion: async (tok, p) => POST(`op=withdrawconclusion&token=${tok}&target=${E(INQ)}&project=${p}`
+    + `&reason=${E("the minute we relied on was superseded")}`, {}),
 };
 const NEED = { promote: NOT_IN, cite: NOT_IN, sever: NOT_IN, reinstate: NOT_IN, versioncurrent: NOT_IN,
-               proposedispose: NOT_IN, biasadopt: NOT_OWNER, conclude: NOT_IN };
+               proposedispose: NOT_IN, biasadopt: NOT_OWNER, conclude: NOT_IN, withdrawconclusion: NOT_IN };
 
 /* ======================================================== 1. SIGHT IS UNCHANGED */
 console.log("\n--- 1. sight is unchanged: both administrators SEE the project they are not in (REC-132) ---");
@@ -312,7 +325,8 @@ t("ruth may NOT adopt a bias set into P_JOIN's scope — that is its managers' a
 /* ===================================== 3. IN THE PROJECT WITH THE ROLE: THEY CAN */
 console.log("\n--- 3. IN the project with the required role: the SAME people can (the liar's arm) ---");
 for (const [who, tok] of [["the founder", FOUNDER], ["ruth", RUTH]]) {
-  for (const act of ["promote", "cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude"]) {
+  for (const act of ["promote", "cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude",
+                     "withdrawconclusion"]) {
     const r = await ACTS[act](tok, P_IN);
     t(`ALLOWED: ${who} (an owner of P_IN) — op=${act} succeeds`,
       [r && r.ok, r && r.ok ? "ok" : codeOf(r)], [true, "ok"]);
