@@ -14587,7 +14587,8 @@ under it, (b) field on the list form 22/4, (c) over-strictness 26/0; every resto
 **254/254 · 15643** at `5871a991`; final **256/256 suites green · 15694 assertions passing · run 37606.463b55** at
 `dc7e9294` (the merge brings REC-142's suite; this item's own delta is +1 suite, +26 assertions). `coverage.mjs --strict`
 exit **0** unpiped, REGISTER FLOOR arms 1448 → 1451, classified 246 → 247, corpus 247 → 248, run 209 → 210, from its
-print on the committed tree. `node civicos-ui/test/run.mjs` exit **0**. **FOR CONDUCT:** resolve IC-160 (read the base at
+print on the committed tree; after merging `origin/main` `f61d071d` (D-430 in) the collided floor was collapsed and
+re-read on the committed merge `43ae8967`: arms **1455**, classified **248**, corpus **249**, run **211**. `node civicos-ui/test/run.mjs` exit **0**. **FOR CONDUCT:** resolve IC-160 (read the base at
 resolution) and flip REC-144 on integration. **FOR UI (UI-67):** the read is on the wire — render `no_project_conclusion`
 from `getProjection` with `noProjectConclusionHtml`, and drop `PROJ_CACHE` for the inquiry when a conclusion or a
 withdrawal lands.
