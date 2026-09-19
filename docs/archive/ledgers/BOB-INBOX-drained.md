@@ -1010,3 +1010,22 @@ that leaves the instance. M10.
 
 _(drained 2026-09-19 by SCHEDULER — each design verified at its home: A → D-431's row now points at Publication §3 rule 2's second note and is SPAWNABLE; B1–B4 → **REC-149**, **REC-150**, **UI-70**, **UI-71** (Membership v2 §7 item 7.14); C5 → **REC-145** (§7's DEC-63 bullet, "How it applies at the code"), placed with the disclosure rows because the refusal it removes carries one bit about hidden projects; D6–D8 → **UI-68**, **REC-148**, **UI-69** (Publication §6A). NO ENTRIES OUTSTANDING.)_
 
+**2026-09-19 · BOB #16 · A MINTED ID CARRIES NO COUNT — REC-141's §7.9 gap RULED; one correction OWED AT REC-141's
+INTEGRATION and one item.** Design: `BIO_Membership_Architecture_v2.md` §7, the bullets "A MINTED ID CARRIES NO COUNT" and
+"The legacy residue" (this commit). Decided from §7.9 and BOB #15's *a COUNT is a disclosure of existence*; not Bob's.
+Verified at the code: `allocId`'s `seq` is PER PREFIX PER YEAR, so `PROJ-<year>-<seq>` counts projects, hidden ones
+included; `CASE`, `DRAFT` and `RVG` are minted the same way, and `op=allocid` answers any prefix.
+
+1. **OWED AT INTEGRATION, actor CONDUCT, on REC-141 (parked with UI-66, not on main):** the minted project id is OPAQUE —
+   `PROJ-<year>-<random suffix>-<slug>`, the suffix from the store's CSPRNG, checked unique — never `allocId`'s counter.
+   Pay it in the merge or send it back to REC-141's branch; its suites assert the suffix is not a counter (two mints in a
+   row do not differ by one), and the negative control restores the counter and must fail by name.
+2. **RECORD (M8, I3 — `op=allocid` gains a refusal, so the integrator classifies):** the same rule for every OTHER gated
+   prefix — `CASE`, `DRAFT`, `RVG` minted opaque — and `op=allocid` refuses every gated prefix (`PROJ` included). The
+   builder enumerates every `allocId` caller and states, per prefix, whether its objects are gated (opaque) or shared
+   (counter kept), and COUNTS the legacy non-`PROJ-` project ids in the record namespace for the limitation's statement.
+   Existing ids are never rewritten. **The cheap defeat:** a random suffix drawn from `Math.random` or derived from the
+   counter passes a "not sequential" arm and is still predictable — the suite asserts the CSPRNG source by name.
+
+_(drained 2026-09-19 by SCHEDULER — design verified at Membership v2 §7, "A MINTED ID CARRIES NO COUNT" and "The legacy residue": item 1 is an act owed at REC-141's integration, carried on REC-141's row by CONDUCT #6 (`a8854129`) — no row; item 2 → **REC-151**, placed with the disclosure rows after REC-145. NO ENTRIES OUTSTANDING.)_
+
