@@ -14613,7 +14613,7 @@ claimed: 2026-09-19 by the REC-153 worker (worktree `agent-a7fe9ecc71d7b4add`, b
 before the gate relay, and one new private helper beside `#aiRunProjectGate` — no other line);
 `bio-plane/checks/bio-checks.mjs` (one new `AI_RUN_CHECKS` row, C-22.11, and the family header's count);
 `bio-plane/test/` — a new suite for this item, and any existing suite that opens a run over a context of another kind
-(CORRECTED with its reason, never exempted); `bio-plane/dist/` (the rebuilt bundle); `bio-plane/scripts/coverage.mjs`
+(each fixed with a dated reason written at the site); `bio-plane/dist/` (the rebuilt bundle); `bio-plane/scripts/coverage.mjs`
 (`REGISTER_FLOOR`, from the print only); `docs/development/INTERFACE-CHANGES.md` (one new IC);
 `docs/architecture/BIO_Membership_Architecture_v2.md` (front matter and the "AND THE CONTEXT KIND IS CHECKED"
 sentence's NOT BUILT); `docs/architecture/construct-status.json` if a claim there names the gate. NOT `QUEUE.md`,
