@@ -14041,7 +14041,7 @@ breaks, corrected at its site, `docs/architecture/construct-status.json` (`8.cla
 `docs/development/INTERFACE-CHANGES.md` (this item's IC rows).
 
 ### DELEGATION 2026-09-18 RECORD (REC-124) -> UI: **A PROJECT NOW CONCLUDES FOR ITSELF, AND THE SURFACE CANNOT YET SAY SO**
-**open as of 2026-09-18** — nothing on the surface sends `project=` to `op=conclude` or renders the new keys.
+**DISCHARGED 2026-09-18 by UI-65 (branch `ui-65-conclude`)** — all three: (1) the project's act is on the stance surface (`#stands/<PROJ>/<INQ>`), sending `project=` and NO `conclusion=`, the claim of the reading the project stands on shown verbatim before the commit (read from `op=basisversions&project=`), commentary labelled the member's own words and never evidence, `NO_CLAIM` rendered as the plane's sentence; (2) `conclusion` and `no_project_conclusion` are rendered, the latter's undetermined claim through `undeterminedPane`, never as the conclusion text; (3) the notice was already generic-rendered and is untouched. Driven against the real plane by `civicos-ui/test/conclude-reading.test.mjs` §3-§4. ONE GAP REMAINS AND IS RECORD'S, delegated below: on a question already concluded with no project, `op=affordances` publishes no `conclude`, so the project's act has no control there.
 
 `INVESTIGATIVE-SESSION.md` §7.1 is built in the plane (IC-150). The existing conclude flow in `civicos-ui/app.html`
 (`concludeParams`) sends no `project` and is NOT broken — it reaches the unchanged no-project act, and
@@ -14238,7 +14238,7 @@ harness breaks, `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §
 `docs/development/INTERFACE-CHANGES.md` (this item's IC rows). Added at the merge of REC-134: `bio-plane/test/project-authority.test.mjs` and its control (`withdrawconclusion` joins the act table, one anchor re-pointed).
 
 ### DELEGATION 2026-09-18 RECORD (REC-136) -> UI: **A NO-PROJECT CONCLUSION NOW NAMES ITS READING, AND A PROJECT CAN WITHDRAW — THE SURFACE CAN DO NEITHER**
-**open as of 2026-09-18** — `app.html`'s conclude flow sends no `version`, so every no-project conclude a member commits from the surface is refused `NO_CLAIM`; nothing on the surface reaches `op=withdrawconclusion`.
+**DISCHARGED 2026-09-18 by UI-65 (branch `ui-65-conclude`)** — all three: (1) `concludeParams` sends `version=` only when the member PICKED an adoptable reading (accepted, a claim, legs >= 1, from `op=basisversions`), the claim shown verbatim before commit, none ever defaulted; `conclude-nofalsifier.test.mjs`'s REC-136 STAND-IN is REMOVED in the same turn and its foot assertion corrected; (2) `conclusion_stance` and the whole `conclusion_history` render on the stance surface, and `op=withdrawconclusion` is offered there with the member's reason; `withdrawconclusion` is struck from `ACTS_AWAITING_SURFACE`; (3) `no_project_conclusion.claim` renders adopted or undetermined (`undeterminedPane`). `conclude-reading.test.mjs` and its `.control.mjs` (five arms).
 
 `INVESTIGATIVE-SESSION.md` §7.1 items 6-7 are built in the plane (IC-153, proposed MAJOR). What the surface owes:
 1. **The reading a conclusion adopts (item 6).** `concludeParams` must send `version=<reading>`: the accepted reading
@@ -14286,6 +14286,24 @@ in all three packages, each `node_modules` a real directory. Design authority: `
   `civicos-ui/test/conclude-reading.test.mjs` and its `.control.mjs`, and `surface-registry.test.mjs`'s
   `ACTS_AWAITING_SURFACE` row for `withdrawconclusion` (and the floors that row moves).
 - `docs/development/CIVICOS_UI_STATE.md` (a prepended entry), this block, `docs/DECIDED.md` on regeneration.
+- ADDENDUM: `docs/development/INVESTIGATIVE-SESSION.md` front matter, the §7.1 Incomplete entry only (one appended
+  sentence saying what the surface now carries and the one gap that is the plane's), and `civicos-ui/test/conclude-reading.control.mjs` (NEW).
 
 **NOT CLAIMED:** all of `bio-plane/**` (REC-136 is the held plane half and is consumed, not edited),
 `docs/development/QUEUE.md` (CONDUCT's).
+
+### DELEGATION 2026-09-18 UI (UI-65) -> RECORD: **A PROJECT CANNOT CONCLUDE FROM THE SURFACE ON A QUESTION ALREADY CONCLUDED WITH NO PROJECT — `op=affordances` DOES NOT PUBLISH THE ACT THE STORE ACCEPTS**
+**open as of 2026-09-18** — `conclude`'s affordance is keyed on the catalog's edge table alone, and that table has no `concluded -> concluded` edge.
+
+Measured at the code on `ui-65-conclude` (held REC-136 + main `9cc814d6`): `bio-plane/src/affordances.mjs`'s
+`conclude` entry applies when `edgesFrom(f).includes("concluded")`; `checks/bio-checks.mjs`' inquiry machine gives
+`concluded: ['open', 'surfaced', 'deferred', 'dismissed', 'divided']`, so on a question whose OWN state is `concluded`
+(a no-project conclusion, or a legacy one) the act is not published. The store accepts it for a project there on
+purpose (`store.mjs` `conclude`, REC-124: *"a PROJECT may conclude an inquiry whose OWN state already reads
+`concluded`, because that state is the no-project relationship's"*). The surface renders an act only where the plane
+publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no control on such a question — §7.1 item 8's
+"a conclusion counts only for the relationship that made it" is honoured by the store and not reachable by a member.
+**What is needed:** the affordance's project arm, the way `withdrawconclusion`'s affordance is offered on a question
+with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
+concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
+either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.

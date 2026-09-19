@@ -358,6 +358,13 @@ ok("and the commit is present, because the plane has nothing left to refuse befo
 await U.doConclude();
 const r1 = capture(dlg());
 const C1 = lastOf("conclude");
+/* THE ARM THE BRIEF NAMES FIRST lands here: were the picked reading not sent,
+   this is where the plane's NO_CLAIM would be rendered, in its own words (the
+   DEC-8 sweep in section 6 is what proves the words are the plane's). */
+ok("THE COMMIT WAS ACCEPTED — the record's receipt stands where a refusal would",
+  /<h2>Concluded<\/h2>/.test(r1), (/<div class="intent-ref-why">([^<]*)<\/div>/.exec(r1) || ["", "<no refusal>"])[1]);
+ok("NO NO_CLAIM WAS RENDERED — had the picked reading not been sent, the plane's NO_CLAIM sentence would stand here",
+  !/intent-ref-code mono">NO_CLAIM</.test(r1));
 ok("the commit named the PICKED reading on the wire, and the target with it",
   C1.params.target === INQ_PICK && C1.params.version === R2, JSON.stringify(C1.params));
 ok("the surface shows the record's receipt, and the claim in it is read off the plane's answer",
