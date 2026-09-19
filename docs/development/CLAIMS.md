@@ -14877,3 +14877,28 @@ participation, so to keep a hidden id answering as absent it may open a run labe
 from that member. It gains no authority (a machine is not gated under `project` either), but the record then holds a
 run whose kind is not the thing it names. Also: a kind outside the two-word vocabulary that EQUALS a seen bundle's type
 (`information` over an Information bundle) still opens — REC-69's delegation, narrowed not closed.
+
+## CLAIM 2026-09-19 RECORD (REC-153) — RELEASED AGAIN, with BOB #16's three corrections (`7d03e852`)
+
+released: 2026-09-19 by the REC-153 worker, branch `worktree-agent-a7fe9ecc71d7b4add`, after CONDUCT #6 sent the item
+back with BOB #16's ruling. Paths ADDED to the claim for this pass: `bio-plane/test/airun-projectgate.test.mjs`,
+`project-disclosure.test.mjs`, `project-disclosure.control.mjs`, `observation-log.test.mjs`,
+`docs/development/MEASUREMENTS.md` (M-68), and ONE CROSS-AREA FIXTURE FIX, declared here: `civicos-ui/test/
+ai-session-wire.test.mjs` — its fixture project named its own id, which REC-141 already refused, and a machine's run over
+the missing id opened until this item; now the project is created with no id and the minted one is read back (UI's path;
+a dated reason at the site; nothing the suite asserts changed). Merged `origin/main` twice (`cd48a160`, `ef0d759b`).
+**Battery on the committed merge `ef0d759b`: 259/259 suites green · 15863 assertions passing** (EXCLUDES 2 untallied,
+D-413), provenance 262/262 in the commit at HEAD. `node scripts/coverage.mjs --strict` exit **0** unpiped; REGISTER_FLOOR
+arms 1480 -> 1482, classified 249 -> 250, corpus 250 -> 251, run 212 -> 213 from the print on `ef0d759b`.
+`node civicos-ui/test/run.mjs`: first run exit 1 (`ai-session-wire` ARM N0b/N5, the fixture above), green after the fix —
+final exit in the report. NEGATIVE CONTROL `node test/airun-contextkind.control.mjs`, every arm AS DECLARED on its first
+run: **kind-check-dropped 22/22**; refuse-every-inquiry 38/6; **vocabulary-open (BOB #16 (2) undone) 42/2**;
+**machine-carve-out (BOB #16 (1) undone) 38/6**; unseen-permitted 34/10; sight-not-asked 40/4; mismatch-names-kind 43/1;
+sight-via-roster-form 44/0. `project-disclosure.control.mjs` all AS DECLARED after widening `run-stamp-dropped` (19/9,
+reason at the arm: the kind check fails CLOSED without the viewer stamp); `nc-pl18.mjs` re-run, eleven rows as before.
+**(3) stored mislabelled runs: UNDETERMINED, not counted** (MEASUREMENTS M-68). IC-163 re-based: I3 41.1.0 -> 42.0.0.
+**FOR CONDUCT:** resolve IC-163; flip REC-153; `regionLines` — no DEC-49 REGION marker touched; tell UI of the declared
+fixture edit in its path. **FOR DIST (or whoever holds an operator credential):** close M-68 — `op=stats` → `aiRuns` on
+`biosmoke7` and `civicos`; 0 closes it. **FOR BOB:** no op enumerates runs, so a non-zero `aiRuns` can only be floored,
+never counted, by ops (M-68) — a design act if the full count is wanted. PL-18's "a context need not be a bundle this
+store holds" is superseded for the open by the ruling; stated in IC-163.
