@@ -405,9 +405,14 @@ const ROSTER_OP = { projectinvite:"projectinvite", projectjoin:"projectjoin", pr
   d = await drive("projectleave", { comment:"handing over" });
   ok("op=projectleave is reached with the note", !!d.call && d.call.params.comment==="handing over");
 
-  d = await drive("projectfork", { newId:"PROJ-2026-0007", title:"The marina money, harbour half" });
-  ok("op=projectfork is reached with the new id and name",
-     !!d.call && d.call.params.newId==="PROJ-2026-0007" && /harbour half/.test(d.call.params.title));
+  /* CORRECTED 2026-09-19 (UI-66, on REC-141 / IC-158): this drove a member-TYPED `newId` and asserted it was
+     sent. That was the defect, not the behaviour: a fork's id is MINTED by the plane (Membership v2 §7), which
+     now refuses a named `newId` (C-59.3). The form carries no id field, so the fork is reached with the NAME
+     alone and no `newId` key at all. The real-plane arm — the id shown is the id in the registered bytes — is
+     `project-id-surface.test.mjs`; this mock cannot say anything about a minted id and does not pretend to. */
+  d = await drive("projectfork", { title:"The marina money, harbour half" });
+  ok("op=projectfork is reached with the name and NO id (the plane mints the fork's id — UI-66)",
+     !!d.call && !("newId" in d.call.params) && /harbour half/.test(d.call.params.title));
 
   /* the receipt renders the record's own fields, and nothing composed */
   ok("the roster receipt renders the record's own fields", /Recorded\./.test(dlg()) && dlg().includes("projectfork"));

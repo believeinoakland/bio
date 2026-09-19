@@ -14590,6 +14590,13 @@ NOT `QUEUE.md` (CONDUCT's/SCHEDULER's), NOT `civicos-ui/app.html` (UI-66's, DELE
 
 ### DELEGATION 2026-09-18 RECORD (REC-141) -> UI: **THE ADD SURFACE AND THE FORK FORM MUST STOP SENDING A PROJECT ID — THE PLANE NOW MINTS IT AND REFUSES ONE (UI-66)**
 **open as of 2026-09-18** — REC-141 (IC-158) makes the surface's current project creation and fork REFUSED; UI-66 is the surface half and lands WITH REC-141.
+**DISCHARGED 2026-09-19 by UI-66 (branch `worktree-agent-a50d25200c5cb65b6`, carrying REC-141)** — all three: (1) the Add
+surface's project arm calls no `op=allocid`, sends no `bundleId`, writes no `id:` line (`mdFor` omits it when given no
+id), and opens the `bundleId` the plane answers; the proposal-adoption flow is `inquiry`-only (`PROP_ADOPT_KINDS`) and
+was not touched; (2) the fork form's `newId` field is REMOVED and the receipt shows the `newId` the plane answers;
+(3) a C-59 refusal renders its canned `translation` at both sites (`refusalTranslated`), and the Add surface's
+findings-less refusal renders the plane's sentence instead of its bare code. `check-refusal-codes.mjs`' floors did not
+move (read from its print in the UI harness). Driven against the real plane in `civicos-ui/test/project-id-surface.test.mjs`.
 
 Measured at the code on `worktree-agent-a12cdccbace704eb6` (base `3dee1fdb`). What `civicos-ui/app.html` must stop sending:
 1. **The Add surface, for a PROJECT** (the create flow that calls `recR("allocid", { prefix: vocabFor(PREFIX, type), ... })`,
