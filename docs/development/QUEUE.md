@@ -54,22 +54,23 @@ BOB appends a designed item, a correction or an order change here, with its inte
 | 24 | FW-20 | 19 | queued | runnable since CPDF-19 landed (M2 breadth); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) |
 | 25 | CPDF-3 | 16 | queued | unblocked at this audit (its deploy blocker is false); an M2 live verification, after the product rows above |
 | 26 | DIST-5 | 22 | queued | DIST's own reconciliation, ACCEPTED by DIST 2026-09-18 and queued in its session behind the REC-143 P0; holds no general slot |
-| 27 | M0-68 | new | queued | M0, right after the battery tally: an instrument asserting a closed defect fails against every current plane — a correction to a superseded test |
-| 28 | M0-72 | new | queued | M0; a negative control reporting a false FAIL, with M0-68's class of test corrections |
-| 29 | M0-74 | new | queued | M0; a probe failing on main for a moved check, with the other instrument corrections |
-| 30 | M0-75 | new | queued | M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment |
-| 31 | M0-76 | new | queued | M0, with the instrument corrections; ruled by BOB #16 |
-| 32 | M0-69 | new | queued | M0, after the battery tally and M0-68: a live verification whose scratch keeps member rows stops measuring the same subject twice |
-| 33 | M0-70 | new | queued | M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 |
-| 34 | VF-7 | 17 | queued | M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it |
-| 35 | M0-66 | 14 | queued | M0; an instrument producing false findings |
-| 36 | M0-64 | 12 | queued | M0; a control arm proving less than it declares |
-| 37 | M0-44 | 3 | queued | M0; seven truncated claims invisible to the bounds instrument |
-| 38 | M0-33 | 4 | queued | M0; a third census shape |
-| 39 | SK-5 | 21 | blocked | blocked: no plane op publishes the surface registry |
-| 40 | UI-60 | 20 | blocked | blocked: waits on Bob's re-prioritisation of UI |
-| 41 | REC-15 | 15 | blocked | blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 |
-| 42 | UI-17 | 23 | blocked | blocked: rests on REC-15 |
+| 27 | M0-77 | new | queued | first of the queued M0 rows: a silent exit 0 in the id allocator every lane uses is a costs-nothing green |
+| 28 | M0-68 | new | queued | M0, right after the battery tally: an instrument asserting a closed defect fails against every current plane — a correction to a superseded test |
+| 29 | M0-72 | new | queued | M0; a negative control reporting a false FAIL, with M0-68's class of test corrections |
+| 30 | M0-74 | new | queued | M0; a probe failing on main for a moved check, with the other instrument corrections |
+| 31 | M0-75 | new | queued | M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment |
+| 32 | M0-76 | new | queued | M0, with the instrument corrections; ruled by BOB #16 |
+| 33 | M0-69 | new | queued | M0, after the battery tally and M0-68: a live verification whose scratch keeps member rows stops measuring the same subject twice |
+| 34 | M0-70 | new | queued | M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 |
+| 35 | VF-7 | 17 | queued | M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it |
+| 36 | M0-66 | 14 | queued | M0; an instrument producing false findings |
+| 37 | M0-64 | 12 | queued | M0; a control arm proving less than it declares |
+| 38 | M0-44 | 3 | queued | M0; seven truncated claims invisible to the bounds instrument |
+| 39 | M0-33 | 4 | queued | M0; a third census shape |
+| 40 | SK-5 | 21 | blocked | blocked: no plane op publishes the surface registry |
+| 41 | UI-60 | 20 | blocked | blocked: waits on Bob's re-prioritisation of UI |
+| 42 | REC-15 | 15 | blocked | blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 |
+| 43 | UI-17 | 23 | blocked | blocked: rests on REC-15 |
 
 ### REC-153 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: REC-145 is on `main` (c02d7f91, `runConsultsProjects`); `aiRunOpen` does not compare `contextType` with the bundle's type. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`aiRunOpen` REFUSES a `contextType` that does not match the named bundle's type; an id the caller cannot see answers as absent (BOB #16, 2026-09-19).** An `inquiry`-labelled run over a project id reads PROJECTLESS and walks around the project-context joined gate — an AUTHORITY DEFECT, ahead of features. — owner RECORD.
 order: 1 · an authority defect (a mislabelled context walks around the joined gate); REC-145 is ON MAIN (c5d3788a), so runnable (SCHEDULER, 2026-09-19)
@@ -338,8 +339,18 @@ accepts-when: the disagreement is RESOLVED WITH EVIDENCE FROM `D-297` ITSELF —
 NEGATIVE CONTROL: run and recorded — or the row states plainly that no instrument reads either record and this is therefore a DISCIPLINE rather than a gate, which is the shape this project distrusts and is the honest outcome rather than a shortfall.
 added: 2026-09-17 · CONDUCT #2 (auditing seven undrained BOB INBOX entries at the artifact rather than draining them on BOB's word — BOB #12 declined to answer from memory about entries it did not write, and was right to. **Rowed rather than drained BECAUSE BOB VERIFIED IT IS NOT DONE**, against `BIO_Distribution_v0_1.md` §8 on the tree today; id minted with `node tools/mintid.mjs DIST`)
 
+### M0-77 · queued — **`tools/mintid.mjs`' MAIN-GUARD COMPARES `resolve(process.argv[1])` WITH `import.meta.url`, WHICH NODE REALPATHS — so `mintid` invoked through a SYMLINKED path (macOS's temp dir is one) silently runs NOTHING and EXITS 0: a costs-nothing green in the id allocator every lane uses.** Found by M0-73's worker, routed by CONDUCT #6, 2026-09-19; fix named. A CLASS: SCHEDULER measured 25 `.mjs` files that read both `process.argv[1]` and `import.meta.url` (a candidate list, not a verdict — some may already realpath). — owner M0.
+order: 27 · first of the queued M0 rows: a silent exit 0 in the id allocator every lane uses is a costs-nothing green (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — tools' entry guards
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): *verify by the positive artifact, never the absence of an error*; an exit 0 that ran nothing is the class it names.
+depends-on: none.
+scope: `mintid.mjs` compares `realpathSync(process.argv[1])` with `fileURLToPath(import.meta.url)`; SWEEP the class (`git grep -l 'process.argv\[1\]' -- '*.mjs' | xargs grep -l import.meta.url`), fixing each guard of the same shape and listing every file judged with its verdict. `newgroup/**` is out of bounds: any hit there is reported to DIST, not edited.
+accepts-when: `mintid` run through a symlinked path prints its MINTED line and exits 0, and one run through a path that is not the script exits non-zero or prints nothing BY DESIGN, stated; every swept file's verdict is in the landing; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: a guard removed entirely (always runs), which breaks importing the module — so an arm IMPORTS each fixed tool and asserts its main did not run. NEGATIVE CONTROL: restore `resolve()` in `mintid`, and the symlinked-path arm fails by name.
+added: 2026-09-19 · SCHEDULER (M0-73's worker's finding via CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
+
 ### M0-68 · queued — **`bio-plane/test/vf4-live-scratch.mjs` ARM 4b-ii STILL ASSERTS D-323's REFUSAL, and D-323 is CLOSED: against any current plane it fails 4 assertions for the fix working, not for a regression.** Measured by FLEET on biosmoke7 at 0.58.0 with the VF-4 live-scratch instrument, 2026-09-19, routed by CONDUCT #5. A superseded test is CORRECTED, never exempted. — owner M0 (the test estate).
-order: 27 · M0, right after the battery tally: an instrument asserting a closed defect fails against every current plane — a correction to a superseded test (SCHEDULER, 2026-09-18)
+order: 28 · M0, right after the battery tally: an instrument asserting a closed defect fails against every current plane — a correction to a superseded test (SCHEDULER, 2026-09-18)
 milestone: M0 (background lane, holds no slot)
 interface: none — a live-scratch instrument's arm; no plane source moves
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with the file's own DATED NOTE of 2026-09-13 (D-323), which names the two choices: RE-PIN arm 4b-ii to `level-empty-<reporting level>` and say so, dated, in the note; or RETIRE it to `agent-worker/test/wire-vocabulary.test.mjs`, whose W8 block already drives the same question locally.
@@ -349,7 +360,7 @@ accepts-when: arm 4b-ii passes against the current plane with the new spelling a
 added: 2026-09-18 · SCHEDULER (FLEET's measurement of 2026-09-19, routed by CONDUCT #5; id minted with `node tools/mintid.mjs M0`).
 
 ### M0-72 · queued — **`mergecarry.control.mjs` ARM 5 REPORTS A FALSE FAIL: its declared mustFail name "the register is the three the sweep found" no longer exists — `mergecarry.test.mjs` renamed the assertion to "…the register is the FIVE the sweeps found, not a longer list" when KNOWN_HISTORICAL_DROPS grew.** The arm ARMS and the suite goes red correctly; only the name is stale. Measured by BOB #16 on 2026-09-19. — owner M0.
-order: 28 · M0; a negative control reporting a false FAIL, with M0-68's class of test corrections (SCHEDULER, 2026-09-19)
+order: 29 · M0; a negative control reporting a false FAIL, with M0-68's class of test corrections (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — a control driver
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name).
@@ -359,7 +370,7 @@ accepts-when: `node bio-plane/test/mergecarry.control.mjs` reads all 7 arms AS D
 added: 2026-09-19 · SCHEDULER (BOB #16's message; the fix was named).
 
 ### M0-74 · queued — **`bio-plane/test/curated-producer.probe.mjs` FAILS 9/1 ON `main`: it reads the severance check from `#restsOnLive`'s definition, and D-267 moved that check into `#refEdgeSevered`.** The probe is not in the battery, which is why `main` stays green. Measured by CONDUCT #6 and re-measured by SCHEDULER, 2026-09-19 (`curated-producer sweep: 9 pass, 1 fail`). — owner M0.
-order: 29 · M0; a probe failing on main for a moved check, with the other instrument corrections (SCHEDULER, 2026-09-19)
+order: 30 · M0; a probe failing on main for a moved check, with the other instrument corrections (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — a probe's source read
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-267 (`node tools/ledger.mjs find D-267`), which moved the check.
@@ -369,7 +380,7 @@ accepts-when: `node bio-plane/test/curated-producer.probe.mjs` from `bio-plane/`
 added: 2026-09-19 · SCHEDULER (CONDUCT #6's report; fix named; id minted with `node tools/mintid.mjs M0`).
 
 ### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)" segment; give each a standard tally, and the segment leaves the headline.** Suggested by M0-65's worker, routed by CONDUCT #6, 2026-09-19. **It MOVES the assertion total** — the landing states the old and new totals and attributes the delta to the two suites. — owner M0.
-order: 30 · M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
+order: 31 · M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — two suites' report lines
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and `bio-plane/scripts/battery.mjs`' accepted tally forms.
@@ -379,7 +390,7 @@ accepts-when: a full battery's headline carries no EXCLUDES segment, and its ass
 added: 2026-09-19 · SCHEDULER (M0-65's worker's suggestion, routed by CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
 
 ### M0-76 · queued — **`d280-strengthbar.control.mjs` READS NOT AS DECLARED ON EVERY RUN (arm C2 and the severedhomes arms), and D-280's site (a) — the bar read — is covered by NO arm.** Ruled by BOB #16 (2026-09-19) from existing decisions: what an absent, capitalised or padded `status` means is ALREADY pinned once, in D-267's `#refEdgeSevered` ("unrecorded is LIVE") and `severedhomes.test.mjs` §4; `d280-strengthbar.test.mjs` §4 must NOT re-assert it (a second copy absorbs the control meant to prove the first). — owner M0.
-order: 31 · M0, with the instrument corrections; ruled by BOB #16 (SCHEDULER, 2026-09-19)
+order: 32 · M0, with the instrument corrections; ruled by BOB #16 (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — a control driver and one suite's arm
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name; its one-copy rule), with D-267 and D-280 (`node tools/ledger.mjs find D-267`, `D-280`) and the control's own header (2026-09-13, M0-25), which states the gap.
@@ -389,7 +400,7 @@ accepts-when: `node bio-plane/test/d280-strengthbar.control.mjs` reads EVERY arm
 added: 2026-09-19 · SCHEDULER (BOB #16's ruling on the stale C2 arm raised at REC-141's integration; id minted with `node tools/mintid.mjs M0`).
 
 ### M0-69 · queued — **A WHOLE-STORE PURGE OF THE SCRATCH STORE CLEARS THE IDENTITY TABLES; A PURGE OF THE RECORD STORE NEVER DOES, structurally (BOB #16, 2026-09-19).** FLEET measured on biosmoke7 (0.58.0) that `op=purge&confirm=scratch` leaves `members` untouched; scratch holds 7 VF-4 member rows, and `#activeAdmins` and the consensus count read that table, so each live run changes the next run's membership arithmetic. — owner M0 (the purge op's scratch behaviour; I3 behaviour at scratch only).
-order: 32 · M0, after the battery tally and M0-68: a live verification whose scratch keeps member rows stops measuring the same subject twice (SCHEDULER, 2026-09-19)
+order: 33 · M0, after the battery tally and M0-68: a live verification whose scratch keeps member rows stops measuring the same subject twice (SCHEDULER, 2026-09-19)
 milestone: M0 (a live verification that stops measuring the same subject twice is the verification defect)
 interface: I3 — behaviour at scratch only; an IC if the op's published answer changes (the integrator classifies)
 design: `docs/architecture/BIO_Distribution_v0_1.md` §6 rung 6, "What 'swept after' means" (BOB #16, folded at `331e3758`; the front matter lists it decided and not built), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
@@ -399,7 +410,7 @@ accepts-when: a scratch purge leaves every enumerated identity table empty; a re
 added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry, item 2; id minted with `node tools/mintid.mjs M0`).
 
 ### M0-70 · queued — **VF-4's LIVE-SCRATCH INSTRUMENT STATES ON ITS OWN OUTPUT THAT ARM 2a LEAVES A `proposed` MEMBER BY DESIGN (Membership v2 §4.7), AND PURGES SCRATCH AFTER ITSELF once M0-69 lands.** A refused `memberadd` leaving a proposal is CORRECT (BOB #16, 2026-09-19): the proposal is what the administrators endorse; no member-removal op is owed. — owner M0.
-order: 33 · M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 (SCHEDULER, 2026-09-19)
+order: 34 · M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — the instrument `bio-plane/test/vf4-live-scratch.mjs`
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 (administrator consensus) and `docs/development/VERIFICATION.md`, read with BOB #16's ruling, verbatim in `docs/archive/ledgers/BOB-INBOX-drained.md` (the 2026-09-19 entry, item 3).
@@ -409,7 +420,7 @@ accepts-when: a run's output carries the statement at arm 2a; after the run, scr
 added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry, item 3; id minted with `node tools/mintid.mjs M0`).
 
 ### VF-7 · queued — **ITS DEPENDENCY IS MET, found at the first order audit (SCHEDULER, 2026-09-18): the deploy it waits for happened — 0.58.0 through `deploy.mjs`'s derive-bindings path, 2026-09-14, `SELF` and the members bound and read back from the account (`MEASUREMENTS.md`, "D-297/IC-82 — release 0.58.0 deployed"). The first armed ticks were ASSERTED there, not watched; the watch is now a read-back of the ticks already taken, and the row is runnable when the M0 hold lifts.** Prior headline kept: **CANNOT RUN until the next DIST deploy; queued now so the future act is an ITEM the deploy's integration meets, not a telling a future session must remember (the 2026-09-14 rule applied to two advance tellings the same day it was written).**
-order: 34 · M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+order: 35 · M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (VERIFY lane, holds no slot)
 interface: none — it watches, it does not publish a shape
 design: `docs/development/SCHEDULER.md` §"The mechanism, and how the next consumer joins" (the `monitor-cadence` consumer whose first live arming this watches) and `docs/development/ARCHIVE-FALLBACK.md` §"Shape on the capture" (CAP-3's fallback), both governed; `docs/development/VERIFICATION.md` is the VERIFY lane's own authority for what a live watch must establish (a process document, ungoverned by `CORPUS-STANDARD.md` §6).
@@ -420,7 +431,7 @@ NEGATIVE CONTROL: (on running) the watch itself must be falsifiable — assert t
 added: 2026-09-14 · CONDUCT (two advance tellings converted to one item at IC-82's integration; the tellings stay in CLAIMS.md as the record of who told whom)
 
 ### M0-66 · queued — **`m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a driver's block comment that names an anchor-bearing shape in backticks reads as a live anchor, and produced TWO FALSE A4 findings on 2026-09-17.** — waits on nothing; the M0 background lane holds no slot.
-order: 35 · M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+order: 36 · M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot) — an instrument that penalises a driver for documenting how it arms punishes the one habit this estate most wants
 interface: none — `bio-plane/test/m025-arm-anchor-witness.test.mjs`
 design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with the DELEGATION of 2026-09-17 in `CLAIMS.md` (M0-41's control → CONDUCT) that measured it, and the suite's own arm S10, which already closes the LABEL half with `stripComments`.
@@ -431,7 +442,7 @@ NEGATIVE CONTROL: run and recorded in the suite's own `NEGATIVE CONTROL:` line (
 added: 2026-09-18 · CONDUCT #4 (**DISCHARGES the second DELEGATION on `elated-grothendieck-a10003`'s claim, integrated the same turn.** Id minted with `node tools/mintid.mjs M0`, run bare.)
 
 ### M0-64 · queued — **M0-41's CONTROL ARM 3 NO LONGER HAS A SUBJECT: `M` IS NOW GRADED (M0-39 declared its allocation site, `f2fc2b89`), SO THE ARM REPORTS *NOT AS DECLARED* — AND ITS FIRST CLAUSE PASSES FOR A CHANGED REASON, WHICH IS THE WORSE HALF.** — waits on nothing; the M0 background lane holds no slot.
-order: 36 · M0; a control arm proving less than it declares (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+order: 37 · M0; a control arm proving less than it declares (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot) — an arm that measures something other than what it declares is a control that proves strictly less than it says
 interface: none — `bio-plane/test/m041-instrument-census.control.mjs` (a `.control.mjs`, not discovered by the battery)
 design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with commit `4c6ef789`'s own account (on `main` since CONDUCT #4 integrated `elated-grothendieck-a10003`), which measured the falsification and routed the ruling rather than relaxing the judge.
@@ -442,7 +453,7 @@ NEGATIVE CONTROL: this row IS a control's correction — record in the file's `N
 added: 2026-09-18 · CONDUCT #4 (**ROUTED BY `4c6ef789`, which left the arm RED on purpose and named CONDUCT as the ruler.** BOB #14's inbox asked CONDUCT to read that commit before deciding; the branch was integrated and this is the ruling. Id minted with `node tools/mintid.mjs M0`, run bare.)
 
 ### M0-44 · queued — **FLIPPED TO `running` AND REVERTED WITHIN THE HOUR, 2026-09-17, by CONDUCT #1, and the reversal is recorded rather than silently undone.** The wave was flipped, gated and pushed; three workers were spawned; then CONDUCT #1 was directed to stand down at a clean boundary on context budget. **The three live workers were stopped at SETUP — none had committed anything, none had claimed a path, and nothing was lost** — and these rows were returned to `queued` in the same turn, because a row claiming `running` with no worker is the queue lying about the world, which is this file's own most-repeated defect. **Nothing about the scope or the dependencies changed; this row is runnable and unclaimed.** **D-378: `TRUNC_RE` READS ONE SPELLING, so SEVEN `truncated` claims sit in no roster the bounds instrument has ever printed** — three OFFSET forms, two `>=`, one leading-disjunct, one non-length. **The proof it was owed is exact: D-369 names `biasManifest`, and `biasManifest` publishes an offset form — a DEBT ROW was that figure's only witness.** — waits on nothing; sequenced WITH OR AFTER M0-40, which shares the file and the class.
-order: 37 · M0; seven truncated claims invisible to the bounds instrument (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+order: 38 · M0; seven truncated claims invisible to the bounds instrument (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot)
 interface: none — a reader's pattern and the rosters derived from it; no plane source moves
 design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with `bio-plane/test/derivation-bounds.test.mjs`'s own header, which states what its walk can and cannot see, and with D-378 in `DEBT.md`
@@ -453,7 +464,7 @@ NEGATIVE CONTROL: run and recorded — each newly-read spelling planted as a mis
 added: 2026-09-15 · CONDUCT #11 (M0-38 raised D-378 and named it as an ACT with an actor; converted to a row in the same integration turn. **The sequencing note is the load-bearing part of this row**, not the pattern.)
 
 ### M0-33 · queued — **D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): decay mode (c) joins the periodic census as its THIRD shape — `tools/modec-sweep.mjs` runs beside `m025-arm-census.mjs`'s two, its dated adjudication table the record, an unadjudicated candidate a finding that carries the exit code and an adjudicated one a note; nothing else re-takes the measurement.**
-order: 38 · M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+order: 39 · M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot) — the test estate's own instrument
 interface: none — control drivers and the census only
 design: `docs/development/VERIFICATION.md` §"A THROWING CONTROL DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING (D-331, 2026-09-14)" — D-333's three decay modes, of which (c) is the one M0-25's census and D-333's tally comparison do not see; D-353 is the ledger row that measured it (M0-29, `13ee07f`)
@@ -464,7 +475,7 @@ NEGATIVE CONTROL: run and recorded — a path literal in one driver renamed to a
 added: 2026-09-14 · CONDUCT #11 (M0-29's report's act 3 converted to a row at integration — the sweep-volume-and-cadence question was the mechanism half D-333 left open; the ruling is on D-353 and this row is its enactment)
 
 ### SK-5 · blocked — **RE-STATED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18): the row said *NOT schedulable* while reading `queued`; its blocker is TRUE at the code — no plane op publishes the surface registry (a grep of `bio-plane/src/index.mjs` and `civicos-ui` for one finds none) — so it reads `blocked`, the state that says so.**
-order: 39 · blocked: no plane op publishes the surface registry (SCHEDULER, first order audit, 2026-09-18)
+order: 40 · blocked: no plane op publishes the surface registry (SCHEDULER, first order audit, 2026-09-18)
 milestone: M9
 interface: I3 — **it needs the plane to PUBLISH the surface registry, which nothing does today; that is the item's whole blocker.** File the IC before building.
 design: `docs/development/ASSISTANT-PILOT.md` §1 (the five-layer training pack — the **Recipes** row is this layer, and it is the row that makes build-time validation the thing worth having) and §7 step 1, whose front matter names SK-5 as the blocker on the pack's `absent` recipe layer
@@ -475,7 +486,7 @@ NEGATIVE CONTROL: (on unblocking) point a recipe step at a surface id that does 
 added: 2026-08-10 · CONDUCT (SK-4's report — the third item to inherit it. Enqueued rather than left in three file headers, because a promise carried in prose is not an item.)
 
 ### UI-60 · blocked — **RESTORED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18): `8017dac5` spliced this row into the SKILL section's prose on 2026-09-14, where `ledger.mjs find UI-60` could not see it (*not found in the cache, the backlog, the live DEBT ledger or any archive file*) and LED-6's migration would have dropped it; a `landed:` line belonging to REC-81 rode under it and is moved to REC-81 in the archive. It reads `blocked` because it waits on Bob's re-prioritisation of UI, outside the queue.** — **a POINTER row, not slot-eligible while content is the priority (Bob, 2026-09-15): the residue is decomposed into scoped rows at UI's next activation, and this row exists so the plan items stop living only in a MILESTONES gap-table line.** — **UI-PLAN's unrowed residue, named by UI-58's retrofit: U13 (phone parity beyond the viewing MVP), U14 (the hardening pass — keyboard and screen-reader coverage, 500+-bundle performance, deploy-token rotation), expertise and licences (no surface), verified export (no surface, §8), the doorbell (`op=inbox`/`inboxget`/`inboxresolve` unsurfaced) — plus UI-43's undrained version acts (`ACTS_AWAITING_SURFACE`'s `attesttext` row says `owed_by: "UI"` with no item id; UI-43 was rowed in `IS-BUILD-PLAN.md`, partly ran, and never drained its rows).**
-order: 40 · blocked: waits on Bob's re-prioritisation of UI (SCHEDULER, first order audit, 2026-09-18)
+order: 41 · blocked: waits on Bob's re-prioritisation of UI (SCHEDULER, first order audit, 2026-09-18)
 milestone: M8
 interface: none
 depends-on: Bob's re-prioritisation of UI (DEC-33's deferral and the 2026-09-15 content direction stand)
@@ -485,7 +496,7 @@ NEGATIVE CONTROL: (at decomposition) each row carries its own; this pointer has 
 added: 2026-09-14 · CONDUCT #10 (a worker report's owed act converted to a row in the same integration turn — the 2026-09-14 sweep rule)
 
 ### REC-15 · blocked
-order: 41 · blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 (SCHEDULER, first order audit, 2026-09-18)
+order: 42 · blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 (SCHEDULER, first order audit, 2026-09-18)
 milestone: M10
 scope: **`op=publishpreflight` — the ceremony's ordering argument in one op. DEFERRED by DEC-33** (Bob, 2026-08-03: the publication ceremony process is deferred; publication runs through the operator for now). Trigger: Bob reopens the case-making thread. Recorded for when it wakes, so the deferral loses nothing: base scope as `BUILD-ORDER.md` §2 (REC-15) with `RECONCILED.md` §3.2's C-4 correction (`NO_SIGNERS` is INSTANCE-WIDE — the refusal detail must never say "for you", D-57); **DEC-15** — refuse `UNCLEARED_HUNCH` naming every hunch leg, in the same list as `NO_SIGNERS`, before any signature exists; **DEC-20** — only a hunch blocks publication on bias grounds; ordinary bias is DISCLOSED (the manifest SHOWN in the artifact, not merely cited) and refused on nothing; **DEC-17** — refuse `BELOW_PROJECT_STRENGTH` naming the axis; **D-158** bounds the per-member signing-key pre-flight (a signer row for a never-enrolled member reads `active` and is refused by ratify — fix at `signerAdd` write, assert the other view); §4 Q11 measured YES — `op=signerlist` + `op=whoami` make the per-member pre-flight computable client-side, an ADDITION to instance-wide `NO_SIGNERS`, not a replacement, until D-158 closes.
 behind-interface: I3
@@ -494,7 +505,7 @@ accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight re
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
 
 ### UI-17 · blocked
-order: 42 · blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
+order: 43 · blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
 milestone: M10
 scope: **O1 THE PUBLICATION CEREMONY — DEFERRED by DEC-33** (Bob, 2026-08-03: the process is deferred; publication runs through the operator for now; UI-17a ships in its place). Trigger: Bob reopens the case-making thread. Recorded for when it wakes: base scope as `research/RECONCILED.md` §3.1 (UI-17) — the pair shown in step 2, the C-9 picker, the Q5 re-keyed basis-leg panel (an assembly keyed on the SUBJECT is permitted; keyed on the ANSWER-SHAPE it performs generation by selection — the panel shows the case's own basis legs, the COMPLEMENT of the field's content), instance-wide `NO_SIGNERS` wording — plus **DEC-19 as amended** (publishing is IRREVERSIBLE; correction moves forward; the ceremony states this) and **DEC-13** (the subject-position stage, ordered BEFORE signing since authoring it changes the sha). D-158 bounds the per-member pre-flight.
 behind-interface: I3
