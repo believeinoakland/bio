@@ -20,6 +20,24 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
+**2026-09-19 · BOB #16 · REC-145's TWO FINDINGS RULED — two items, both disclosure/authority class.** Design:
+`BIO_Membership_Architecture_v2.md` §7, the DEC-63 ruling bullet, "WHO MAY TICK AND CLOSE A RUN" and "AND THE CONTEXT KIND
+IS CHECKED" (this commit). Verified at the code: `ai_runs.principal_plane` is stamped at open; `#aiRunReap` ends lapsed
+runs; an inquiry-labelled run over a project id read PROJECTLESS before REC-145 too. REC-145 lands as built; its ARM H6
+(pinned as built) is corrected by item 1, with the reason.
+
+1. **RECORD (M8, I3 — a refusal added, so the integrator classifies):** `airuntick` and `airunclose` are the run's
+   principal's acts (`principal_plane`, a member or that member's minted machine credential); anyone else is refused
+   positionally when they can see the run's context and answered as for an absent run when they cannot; the reaper is
+   unchanged. **Accepts when** a second member with `contribute` is refused both over a question and over a project context
+   (co-participants included), the principal and the reaper still end the run, and ARM H6 is CORRECTED with its reason.
+   **The cheap defeat:** comparing the caller to the run's `actor` field as SENT rather than as stamped passes the arm and
+   is forgeable, so the suite drives a caller that sends another member's id.
+2. **RECORD (M8, I3):** `aiRunOpen` refuses a `contextType` that does not match the named bundle's type; an id the caller
+   cannot see answers as absent. **Accepts when** an `inquiry`-labelled open over a project id the member has not joined
+   is refused, and the same open labelled `project` still meets the joined gate. Place it ahead of features: it is a way
+   around a gate.
+
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit. **Nothing is waiting.**
 
 ## THE BUILD ORDER — every open row, in the order it will be processed (SCHEDULER, first order audit, 2026-09-18)
