@@ -14041,7 +14041,7 @@ breaks, corrected at its site, `docs/architecture/construct-status.json` (`8.cla
 `docs/development/INTERFACE-CHANGES.md` (this item's IC rows).
 
 ### DELEGATION 2026-09-18 RECORD (REC-124) -> UI: **A PROJECT NOW CONCLUDES FOR ITSELF, AND THE SURFACE CANNOT YET SAY SO**
-**DISCHARGED 2026-09-18 by UI-65 (branch `ui-65-conclude`)** — all three: (1) the project's act is on the stance surface (`#stands/<PROJ>/<INQ>`), sending `project=` and NO `conclusion=`, the claim of the reading the project stands on shown verbatim before the commit (read from `op=basisversions&project=`), commentary labelled the member's own words and never evidence, `NO_CLAIM` rendered as the plane's sentence; (2) `conclusion` and `no_project_conclusion` are rendered, the latter's undetermined claim through `undeterminedPane`, never as the conclusion text; (3) the notice was already generic-rendered and is untouched. Driven against the real plane by `civicos-ui/test/conclude-reading.test.mjs` §3-§4. ONE GAP REMAINS AND IS RECORD'S, delegated below: on a question already concluded with no project, `op=affordances` publishes no `conclude`, so the project's act has no control there.
+**DISCHARGED 2026-09-18 by UI-65 (branch `ui-65-conclude`)** — all three: (1) the project's act is on the stance surface (`#stands/<PROJ>/<INQ>`), sending `project=` and NO `conclusion=`, the claim of the reading the project stands on shown verbatim before the commit (read from `op=basisversions&project=`), commentary labelled the member's own words and never evidence, `NO_CLAIM` rendered as the plane's sentence; (2) `conclusion` and `no_project_conclusion` are rendered ON THE STANCE SURFACE (not the question's page — `bound-sweep` ARM G refused a capped read there that states no bound), the latter's undetermined claim through `undeterminedPane`, never as the conclusion text; (3) the notice was already generic-rendered and is untouched. Driven against the real plane by `civicos-ui/test/conclude-reading.test.mjs` §3-§4. ONE GAP REMAINS AND IS RECORD'S, delegated below: on a question already concluded with no project, `op=affordances` publishes no `conclude`, so the project's act has no control there.
 
 `INVESTIGATIVE-SESSION.md` §7.1 is built in the plane (IC-150). The existing conclude flow in `civicos-ui/app.html`
 (`concludeParams`) sends no `project` and is NOT broken — it reaches the unchanged no-project act, and
@@ -14279,15 +14279,16 @@ in all three packages, each `node_modules` a real directory. Design authority: `
 
 - `civicos-ui/app.html` — the conclude act region (`CONCL`, `concludeParams`, `openConclude`, `concludePaint`,
   `doConclude`, `concludeReceiptHtml`, up to `/*__CONCLUDE_ACT_END__*/`); in `/*__NOTIFICATIONS_START__*/`
-  ONLY section (5), the stance surface (`STANCE`, `stance*` functions); `openInquiry`'s render (one new
-  section, the no-project conclusion); `SURFACES.inquiry` and `SURFACES["inquiry-stance"]` entries. NOT the
+  ONLY section (5), the stance surface (`STANCE`, `stance*` functions); `openInquiry`'s render (a section was added
+  and then REMOVED, net untouched: bound-sweep ARM G); `SURFACES.inquiry` and `SURFACES["inquiry-stance"]` entries. NOT the
   queue block, NOT the version-review region, NOT the elicitation, NOT any other surface.
 - `civicos-ui/test/conclude-nofalsifier.test.mjs` (the REC-136 stand-in removed), a NEW
   `civicos-ui/test/conclude-reading.test.mjs` and its `.control.mjs`, and `surface-registry.test.mjs`'s
   `ACTS_AWAITING_SURFACE` row for `withdrawconclusion` (and the floors that row moves).
 - `docs/development/CIVICOS_UI_STATE.md` (a prepended entry), this block, `docs/DECIDED.md` on regeneration.
 - ADDENDUM: `docs/development/INVESTIGATIVE-SESSION.md` front matter, the §7.1 Incomplete entry only (one appended
-  sentence saying what the surface now carries and the one gap that is the plane's), and `civicos-ui/test/conclude-reading.control.mjs` (NEW).
+  sentence saying what the surface now carries and the one gap that is the plane's), `civicos-ui/test/conclude-reading.control.mjs` (NEW), and
+  `civicos-ui/test/conclude-act.test.mjs` (its mock corrected to IC-153).
 
 **NOT CLAIMED:** all of `bio-plane/**` (REC-136 is the held plane half and is consumed, not edited),
 `docs/development/QUEUE.md` (CONDUCT's).

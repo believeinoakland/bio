@@ -2135,8 +2135,8 @@ const SURFACES = {
        the first run, over the author's own description. */
     acts: ["conclude", "reopen", "inquirydivide", "inquiryground", "publish"],
     /* UI-65: `basisversions` — the conclude dialog's reading picker (the
-       accepted readings a no-project conclusion may adopt) and the page's
-       no-project conclusion with its claim adopted or UNDETERMINED. */
+       accepted readings a no-project conclusion may adopt), read through the
+       version-review door so the bound the plane applied is stated with it. */
     reads: ["image", "inquirystrength", "inquiryground", "resolutions", "basisversions"],
   },
   project: {
@@ -7873,12 +7873,6 @@ async function openInquiry(id, fromNav){
        pinned against. */
     let REF = null;
     try{ REF = await recR("earnedbasis", { id }); }catch(_){ REF = null; }
-    /* UI-65 — WHAT IT CONCLUDED WITH NO PROJECT, read from `op=basisversions`'
-       `no_project_conclusion` (REC-124/REC-136). Its failure is its own, for
-       REF's reason above: where it answers nothing the page renders exactly as
-       before and says nothing about a conclusion. */
-    let NPC = null;
-    try{ const bv = await recR("basisversions", { id, limit: "1" }); NPC = (bv && bv.ok !== false) ? (bv.no_project_conclusion || null) : null; }catch(_){ NPC = null; }
     let back = null, backErr = null, actsR = null, runs = "";
     try{
       const [b, a, r] = await Promise.all([
@@ -7933,7 +7927,6 @@ async function openInquiry(id, fromNav){
       <p class="subj-note">Every leg the question rests on, in the order it was recorded, with what it does to the conclusion and how its grade was established. A leg that cuts against the conclusion is a leg like any other and is counted on its own axis exactly as a supporting one is — the record keeps what it found, not only what it hoped for.</p>
       ${legsPane}
       ${strengthPanels(pair, legs)}
-      ${NPC ? `<h2 class="sec">What it concluded</h2>${noProjectConclusionHtml(NPC)}` : ""}
       ${pubEntry}
       ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR, pubEntry ? { elsewhere:["publish"] } : undefined)}
       <h2 class="sec">What would falsify it</h2>
@@ -9605,6 +9598,17 @@ function concludeReceiptHtml(r){
    AND IT IS NEVER A PROJECT'S. The plane's `relationship_detail` says so in
    its own words and is rendered beside it, because §7.1 item 8 makes a
    no-project conclusion information for a project and never its answer.
+
+   WHERE IT RENDERS, AND WHERE IT DOES NOT, measured rather than chosen. It is
+   rendered on the stance surface, whose read of `op=basisversions` already
+   states the bound the plane applied. It was first ALSO rendered on the
+   question's page, and `bound-sweep.test.mjs` ARM G caught that site reading a
+   capped op and dropping its bound. The page uses one uncapped field of that
+   answer, not the capped list — but satisfying the walk by routing the read
+   through a bound-stating helper and then not rendering the bound would be the
+   exact shape ARM G exists to refuse. So the question's page does not show it
+   until the plane publishes the no-project conclusion on a read that carries no
+   list bound (reported by UI-65; the plane is RECORD's).
    ============================================================ */
 function noProjectConclusionHtml(npc){
   if(!npc || typeof npc !== "object") return "";

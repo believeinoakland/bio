@@ -277,7 +277,7 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
   } };
 ctx.globalThis = ctx; vm.createContext(ctx);
 vm.runInContext(appScript() + ";globalThis.__U = {" + [
-  "PLANE", "esc", "openConclude", "concludeAuthor", "doConclude", "openInquiry",
+  "PLANE", "esc", "openConclude", "concludeAuthor", "doConclude",
   "stanceOpen", "stanceCxField", "stanceWdField",
 ].join(",") + ", CONCL: () => CONCL, STANCE: () => STANCE };", ctx);
 const U = ctx.__U;
@@ -417,22 +417,28 @@ ok("the commit sent no version, because nothing was picked", !("version" in last
 ok("and nothing was written: the question is still open", fmScalar(await imageOf(INQ_NONE), "current_state") === "open");
 
 /* ============================================================
-   3. THE QUESTION'S PAGE: A NO-PROJECT CONCLUSION, ADOPTED OR UNDETERMINED
+   3. A NO-PROJECT CONCLUSION, ADOPTED OR UNDETERMINED — read on the project's
+   view of the question, the surface whose read of `op=basisversions` states the
+   bound. (It is NOT on the question's page: bound-sweep ARM G refused that
+   site, and app.html's `noProjectConclusionHtml` comment says why.)
    ============================================================ */
-console.log("\n--- 3. the question's page: the claim adopted, or UNDETERMINED and stated ---");
+console.log("\n--- 3. a no-project conclusion: the claim adopted, or UNDETERMINED and stated ---");
 
-await U.openInquiry(INQ_PICK, true);
+await U.stanceOpen(PROJ, INQ_PICK);
 const q1 = page();
 const NPCBLOCK = /data-npc-claim="adopted">([^<]*)</.exec(q1);
 ok("the page renders what the question concluded with no project, with its claim ADOPTED, verbatim",
-  /What it concluded/.test(q1) && !!NPCBLOCK && unent(NPCBLOCK[1]) === CLAIM_R2, NPCBLOCK ? NPCBLOCK[1] : q1.slice(0, 400));
-ok("and it says, in the plane's words, that no project drew it", !!NPC1 && q1.includes(U.esc(NPC1.relationship_detail)));
+  /Concluded with no project/.test(q1) && !!NPCBLOCK && unent(NPCBLOCK[1]) === CLAIM_R2, NPCBLOCK ? NPCBLOCK[1] : q1.slice(0, 400));
+ok("and it says, in the plane's words, that no project drew it — it is never this project's conclusion",
+  !!NPC1 && q1.includes(U.esc(NPC1.relationship_detail)) && /data-conc-stance="none"/.test(q1));
+ok("and the bound the plane applied to that read is stated on the same page",
+  /The record answered for this question with at most \d+ reading\(s\)/.test(q1));
 
 const NPCL = (await bvOf(INQ_LEGACY)).no_project_conclusion;
 ok("the plane reads the legacy conclusion's claim as UNDETERMINED, with its own sentence",
   NPCL && NPCL.claim && NPCL.claim.state === "undetermined" && typeof NPCL.claim.detail === "string",
   JSON.stringify(NPCL && NPCL.claim));
-await U.openInquiry(INQ_LEGACY, true);
+await U.stanceOpen(PROJ, INQ_LEGACY);
 const q2 = page();
 ok("THE LEGACY CLAIM IS RENDERED UNDETERMINED — the primitive, with the plane's basis sentence",
   /data-npc-claim="undetermined"/.test(q2) && /class="card undet"/.test(q2)
@@ -440,8 +446,8 @@ ok("THE LEGACY CLAIM IS RENDERED UNDETERMINED — the primitive, with the plane'
 ok("AND NEVER FILLED IN: the conclusion text is not rendered as the claim, and no adopted claim appears",
   !/data-npc-claim="adopted"/.test(q2) && q2.includes(U.esc(LEGACY_TEXT))
   && !new RegExp(`data-npc-claim="[^"]*">\\s*${U.esc(LEGACY_TEXT).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(q2));
-await U.openInquiry(INQ_NONE, true);
-ok("a question that concluded nothing says nothing about a conclusion", !/What it concluded/.test(page()));
+await U.stanceOpen(PROJ, INQ_NONE);
+ok("a question that concluded nothing says nothing about a no-project conclusion", !/Concluded with no project/.test(page()));
 
 /* ============================================================
    4. THE PROJECT'S ACT — ON THE READING IT STANDS ON
