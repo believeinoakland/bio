@@ -14476,6 +14476,21 @@ could succeed is excluded (a stranger), and nothing tighter (reading, current, c
 words, the release precedent). The liar refused: NO `concluded -> concluded` edge; the no-project relationship still
 cannot conclude twice, asserted through the op. IC: additive (an act published where none was).
 
+## CLAIM 2026-09-18 RECORD (REC-142) — RELEASED
+
+released: 2026-09-18 by the REC-142 worker, branch `rec142/affordances-concluded`, base `3dee1fdb`, merged with
+`origin/main` at `09ec7a86` (REC-140 / IC-157, I3 38.0.0; LED-6 step 2; BOB #16) in `afc32149`. Baseline at `3a269810`
+(claim only): 251/252, 15403 assertions — the one red was `mintid.test.mjs` "no live floor is driven by prose (D)", a
+D-431 mention in `QUEUE.md` on `main`, not this item's, and green again after the merge. After, at `7bc18040`:
+**254/254 suites green · 15459 assertions passing**, no suite skipped, provenance 257/257 in the commit at HEAD; `node
+scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER FLOOR 1434/244/245/207 on `c3afce3e`, then collapsed at the
+merge and re-read 1441/245/246/208 from the print on `afc32149`); `node civicos-ui/test/run.mjs` exit **0**; `status
+--check` 0 drift; `plancheck --local` 0 fail. NEGATIVE CONTROL `node test/conclude-project-arm.control.mjs`: baseline
+17/0 · (a) no-project-arm 14/3 · (b) liar-edge 10/7 · (c) fact-unnarrowed 13/4 · (d) owners-only 16/1 — every arm AS
+DECLARED, real sources untouched (sha256 before = after). **FOR CONDUCT:** RESOLVE IC-159 (proposed MINOR, ADDITIVE, I3
+38.0.0 → 38.1.0; read the base at resolution); the UI-65 -> RECORD DELEGATION is DISCHARGED in its own block; the
+REC-142 -> UI DELEGATION (the question's page) is open.
+
 ### DELEGATION 2026-09-18 RECORD (REC-142) -> UI: **ON A QUESTION CONCLUDED WITH NO PROJECT, THE QUESTION'S PAGE NOW RECEIVES `conclude` FOR A MEMBER OF A CITING PROJECT — AND ITS NO-PROJECT DIALOG WILL BE REFUSED THERE**
 **open as of 2026-09-18** — REC-142 (IC-159) publishes `conclude`'s PROJECT arm on a concluded inquiry; the question's page hosts `conclude` as the NO-PROJECT act, and that relationship cannot conclude twice.
 
