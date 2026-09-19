@@ -20,6 +20,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### M0-78 · queued — **TWO NEGATIVE CONTROLS MEASURE NOTHING: `caseproduction.control.mjs` arms (C) and (H) THROW INSIDE THE FIXTURE, on the old sources too, so their declared `mustFail` assertions are never evaluated and the control line claims coverage the evidence base does not have.** CONDUCT #7, 2026-09-19. — owner M0 / VERIFY.
+order: AHEAD OF FEATURES though its prefix is M0 — a control that cannot fail makes the record claim more than it can support, which CLAUDE.md §2 grades worse than a missing feature. BOB #16's M0-last rule was written for M0 BUILD items, not an evidence-base hole. Placed HIGH **provisionally**; the doctrine call is ROUTED TO BOB (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md`'s negative-control process with CLAUDE.md §5 — a control is evidence only when it FAILS at a NAMED assertion.
+depends-on: none. Verified at the code by SCHEDULER #2: both arms are registered in `bio-plane/test/caseproduction.control.mjs`, validated only by `preflight` from `bio-plane/scripts/armdecay.mjs`.
+scope: diagnose the fixture-level throw; repair (C) and (H) so each arms and fails BY NAME with `mustNotFail` green. **AND WIDEN THE DETECTOR, the larger half:** `preflight` counts an arm's own QUOTE in the file it writes — it proves the ANCHOR is live and can never prove the FIXTURE runs, so this class is invisible BY CONSTRUCTION to the census built to catch dead arms. Arm (H) already records having silently stopped arming once (M0-25).
+accepts-when: (C) and (H) run ALONE each fail at their declared named assertion, `mustNotFail` green; a fixture-level throw in ANY arm is reported as a DEAD ARM, not passed; restores verified by sha256 AND `cmp`. How a liar passes it: deleting or exempting the two arms, so the registered-arm count is asserted too. NEGATIVE CONTROL: break a healthy arm's fixture the same way, and the census names it.
+added: 2026-09-19 · SCHEDULER #2 (CONDUCT #7's finding, verified at the code; `node tools/mintid.mjs M0`).
+
 ### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's and are NOT rowed.
 order: rests on MK-3's attribution (SCHEDULER, first order audit, 2026-09-18)
 milestone: M3 — the member's own knowledge enters the record as what it is
@@ -157,15 +167,6 @@ behind-interface: I1
 depends-on: CAP-1 (done), a DIST deploy
 added: 2026-07-31 · CONDUCT
 landed:
-
-### DIST-5 · queued — `BIO_Distribution_v0_1.md` §8 FINDS DS-1 AND DS-2 SATISFIED BY D-297's CLOSING WHILE THE BUILD-PLAN TABLE DOES NOT MARK THEM DONE — two records of one fact disagreeing, with no actor.
-order: DIST's own reconciliation, ACCEPTED by DIST 2026-09-18 and queued in its session behind the REC-143 P0; holds no general slot (SCHEDULER, 2026-09-18)
-milestone: M7
-interface: none — a reconciliation between a design document's own finding and a build-plan table
-design: `docs/architecture/BIO_Distribution_v0_1.md` §8, read against the build plan's table and `D-297` in `DEBT.md`, which is the closing the section rests its finding on
-depends-on: none — but it is NOT runnable by a non-DIST session and should not be spawned into a general slot
-accepts-when: the disagreement is RESOLVED WITH EVIDENCE FROM `D-297` ITSELF — the losing record corrected and the reason stated at the site, or both records found correct about different questions and the ambiguity named; **an "it looks done" reading does not close this row**; `node tools/plancheck.mjs --local`, then BARE after committing; the home design's front matter moves in the SAME COMMIT if its stated completeness changes.
-cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «DIST-5». A worker READS IT before building.
 
 ### M0-77 · queued — **`tools/mintid.mjs`' MAIN-GUARD COMPARES `resolve(process.argv[1])` WITH `import.meta.url`, WHICH NODE REALPATHS — so `mintid` invoked through a SYMLINKED path (macOS's temp dir is one) silently runs NOTHING and EXITS 0: a costs-nothing green in the id allocator every lane uses.** Found by M0-73's worker, routed by CONDUCT #6, 2026-09-19; fix named. A CLASS: SCHEDULER measured 25 `.mjs` files that read both `process.argv[1]` and `import.meta.url` (a candidate list, not a verdict — some may already realpath). — owner M0.
 order: first of the queued M0 rows: a silent exit 0 in the id allocator every lane uses is a costs-nothing green (SCHEDULER, 2026-09-19)
