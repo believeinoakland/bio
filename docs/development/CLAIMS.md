@@ -14566,3 +14566,16 @@ fail. REGISTER_FLOOR 1443 -> 1447 / 245 -> 246 / 246 -> 247 / run 208 -> 209, fr
 `8b2c926e` and `6ca8bd21`, in a scratch worktree, every restore byte-identical. **Built:** `ledger.mjs` `pipelineRows`
 and `strayHeadings`; `rowdesign.mjs` `planRows` and `planFieldAudit`; `rowdesign`, `rowsubstrate` and plancheck §2's
 field checks read only the lister. DEBT D-430 closed and archived. **Not done:** the QUEUE row's `done` flip (CONDUCT's).
+
+## CLAIM 2026-09-19 M0 (M0-73 — D-430's two same-class readers: `owed.mjs` reads blocked rows through `pipelineRows`; `mintid.mjs`' DEC, IC and M corpora read `BACKLOG.md`)
+
+Worker spawned by CONDUCT #6, worktree `agent-a8e2c1c3d9c1cc711`, branch `worktree-agent-a8e2c1c3d9c1cc711`, base
+`243bcbce`. Design: `VERIFICATION.md` (admitted for M0), `WORK-PIPELINE.md` §2, D-430's landing (`ledger.mjs`
+`pipelineRows`). Paths:
+
+- M0 (own): `tools/owed.mjs` (the blocked-row read only); `tools/mintid.mjs` (the DEC, IC and M corpus lists only).
+- Tests: `bio-plane/test/owed.test.mjs`, `owed.control.mjs` (A8's anchor, repointed), `pipeline-readers.test.mjs` §6
+  and its control driver, `mintid.test.mjs`; `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own print.
+- Docs: this block; `DECIDED.md` if regenerated.
+
+NOT `QUEUE.md`, NOT `BACKLOG.md` (no row is planted in the live file), NOT `bio-plane/scripts/battery.mjs` (M0-65's).
