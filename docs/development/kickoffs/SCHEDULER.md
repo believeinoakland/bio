@@ -138,6 +138,27 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
   **A reverted row looks exactly like a row you kept** — the id is present, the state is plausible, and nothing fails.
   After any ledger carry, compare the touched rows' LENGTHS against the remote, not just their presence.
 
+- **TRIAGING A ROW: ASK THE QUESTION THE ROW DOES NOT OFFER — *is this limitation stated where a reader of the DESIGN
+  would meet it?*** A row presents its own options and they are rarely the whole set. Twice on 2026-09-19 a row's real
+  defect was NEITHER option it offered, and both had the same shape: **a true thing stated only where an instrument
+  prints it.** D-284's per-page/document-level limitation lived in `MEASUREMENTS.md`, `DEBT.md`, `INTERFACE-CHANGES.md`
+  and `CLAIMS.md` and in NO file under `docs/architecture/`; D-306's accuracy-vs-agreement distinction lived only in
+  CPDF-14's column headings, so its honesty depended on every future reader rediscovering it from a probe's output.
+  **A limitation that lives only in an instrument's output is one discipline away from being lost.** Both closed
+  through the THIRD DOOR once the statement was written into a governed design — and neither option they offered
+  would have closed them.
+
+- **FRONT MATTER IS A FIRST-CLASS SOURCE, AND ALMOST NOBODY READS IT.** D-359 was closed in fact on 2026-09-19 because
+  `BIO_Content_Framework_v0_10.md`'s front matter had said *"closing D-359"* since 2026-09-15 while the DEBT row still
+  read open — two records of one fact disagreeing for four days, DIST-5's shape. **The row would never have told you.**
+  When a row's subject has a home document, read that document's front matter before believing the row.
+
+- **BATCH THE QUESTIONS TO BOB IN GROUPS OF THREE OR FOUR, never one at a time** (BOB #17, 2026-09-19). Ruling several
+  in one sitting costs him far less context than the same rulings spread across separate messages, and **context is
+  BOB's binding constraint the way disk is CONDUCT's and weekly usage is the fleet's.** Send them together, each with
+  its single stated question, and expect them answered together. A row whose question is not yet sharp waits for the
+  next group rather than going early and half-formed.
+
 ## Checks before every push
 
 `node tools/plancheck.mjs` (0 fail), `node tools/readbudget.mjs`, and — once LED-6 lands — its five pipeline invariants.

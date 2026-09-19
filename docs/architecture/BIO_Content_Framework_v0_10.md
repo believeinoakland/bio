@@ -1857,6 +1857,24 @@ group's instance has no OCR member until the fleet is deployed to it, and takes 
 branch that claims nothing about a scan's text. Some code comments still describe tier 3 as
 untaken; they are stale and rowed for correction.
 
+**EVERY CORPUS-SCALE FIDELITY FIGURE IS AGREEMENT, NOT ACCURACY — A STATED, PERMANENT LIMITATION AS OF
+2026-09-19 (BOB #17, D-306), and the purchase that would close it is NOT FUNDED on DEC-74's own pattern.**
+Human ground truth exists for exactly ONE page in this project (`GT_PAGE2`, 2,687 normalised characters,
+hand-transcribed 2026-08-03). So one page carries true character and digit ACCURACY, and **every other page
+carries AGREEMENT WITH A LOCAL TESSERACT READING THE SAME CROP** — a different claim wearing similar digits.
+**Where both engines are wrong the same way, the agreement figure reads high and nothing notices.** A reader
+meeting any corpus-scale fidelity number must read it as agreement unless its own column says accuracy.
+CPDF-14 handles this correctly at the instrument — it names its columns apart (`agree w/ floor`, `digits
+DIVERGING from the floor`) and never mixes them — and this paragraph exists so the honest handling does not
+depend on each future reader rediscovering it from a probe's output. **WHY NOT FUNDED:** closing it costs
+roughly an hour of adjudicated hand transcription PER PAGE and buys a MEASUREMENT rather than a capability a
+member uses; the population where it bites is 13 image-only pages of 1,458 censused; and nothing over-claims
+today. This is DEC-74's answer applied to the same shape of purchase. **REOPENED WHEN — and the trigger is
+precise, not "if it matters":** a GO/NO-GO that needs accuracy and agreement AT ONCE, which is exactly what
+cannot be had today. Concretely, an engine comparison that would change a deployed tier, or an image-only
+document becoming load-bearing evidence (DEC-74's own trigger). Until then n=1 on accuracy and n>1 on
+agreement is the honest state, stated here rather than rediscovered.
+
 **`reading.text_tier` IS A DOCUMENT-LEVEL FLOOR, NOT A PER-PAGE FACT — RULED by BOB #17 (D-284).**
 The limitation is stated HERE because as of 2026-09-19 it was stated in no governed design at all. A merged
 document is stamped with the HIGHEST tier that contributed, so a document whose single scanned page went

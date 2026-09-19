@@ -19,36 +19,36 @@ checkout means stale permissions.
 
 ## 1. THE STATE AT HANDOFF — measured 2026-09-19, re-measure before resting anything on it
 
-- **All four standing lanes are UP and working:** SCHEDULER #2, CONDUCT #7, DIST #2, FLEET #2, each started from its
-  own `-NEXT.md` handoff, each with its self-wake and renewal armed. Contexts 15–30%, weekly usage 3%, 5-hour 6%.
-- **Disk is the binding constraint, not the plan.** 8.8 GiB free at 96%, having fallen from 12 GiB in the first hour
-  as four lanes took worktrees. The arithmetic is M-70: a worktree is 70 MB bare and ~644 MB installed, the three
-  `node_modules` are 574 MB, each concurrent gate wants ~1 GiB. **It moved a GiB in thirty minutes — re-measure, never
-  carry it.**
-- **0.66.0 is DEPLOYED and live-verified** on biosmoke7 (plane + three members), the serving build proved by an error
-  string absent from 0.65.0's bundle rather than by a version label. SAFE state: `main`'s `release/` still reads
-  0.65.0, so no installer offers 0.66.0 to anyone; only the `latest` pointer is unadvanced. `DIST-NEXT.md` is its
-  authority.
+- **All four standing lanes are UP**, each from its own `-NEXT.md`, each with self-wake and renewal armed.
+- **Disk is the binding constraint, not the plan.** ~8.8 GiB free at 96%, down from 12 GiB in the first hour. The
+  arithmetic is M-70. **It moved a GiB in thirty minutes — re-measure, never carry it.**
+- **0.66.0 is DEPLOYED and live-verified** on biosmoke7, the serving build proved by an error string absent from
+  0.65.0's bundle rather than by a version label. SAFE: `main`'s `release/` still reads 0.65.0, so no installer offers
+  it; only the `latest` pointer is unadvanced. `DIST-NEXT.md` is its authority.
 
 ## 2. BOB'S OPEN CALLS — BOTH ARE HARNESS PERMISSIONS, NEITHER IS DESIGN
 
 1. **CONDUCT #7 CANNOT `git push` — THE ESTATE'S BIGGEST PROBLEM.** Refused by the Claude Code AUTO-MODE classifier
-   (`[Data Exfiltration]`; DIST later got `[Production Deploy]` for `HEAD:main`). The HARNESS's gate, not the repo's:
-   no `ask` rule on push exists and `CLAUDE.md` §4 says pushing is not gated. **Measured:** BOB, SCHEDULER and FLEET
+   (`[Data Exfiltration]`; DIST got `[Production Deploy]` for `HEAD:main`). The HARNESS's gate, not the repo's: no
+   `ask` rule on push exists and `CLAUDE.md` §4 says pushing is not gated. **Measured:** BOB, SCHEDULER and FLEET
    pushed fine in the same window; CONDUCT never could; DIST could, then could not, mid-session — so neither
-   per-session-static nor command-shape (CONDUCT's control was a plain named-branch push writing nothing to `main`,
-   refused identically). Likely lever: the committed settings declare `defaultMode: bypassPermissions` while the app
-   launches sessions in `auto`. **Only Bob can change it; no lane may push for another** — that launders a permission
-   decision. While it holds, REC-151 cannot land and CONDUCT spawns NO workers, since a worker inherits the gate.
-   **The data loss is SMALL and measured — not a countdown:** `git rev-list d03e08ea --not origin/main b69d7b26` = **3
-   commits**, one with original non-merge content; all ten `rec-151:` commits are already on the remote at `b69d7b26`.
-   It is a THROUGHPUT blocker.
+   per-session-static nor command-shape (its control was a plain named-branch push writing nothing to `main`, refused
+   identically). Likely lever: the committed settings say `bypassPermissions` while the app launches sessions in
+   `auto`. **Only Bob can change it; no lane may push for another** — that launders a permission decision. While it
+   holds, REC-151 cannot land and CONDUCT spawns NO workers, since a worker inherits the gate. **The data loss is
+   SMALL and measured — not a countdown:** `git rev-list d03e08ea --not origin/main b69d7b26` = **3 commits**, one
+   with original content; all ten `rec-151:` commits are already on the remote. A THROUGHPUT blocker.
 2. **FLEET needs approval to delete 574 MB of `node_modules` in its own worktree** — its gate declined it. It offers
    14 seconds to reinstall. Smaller, and unblocked by nothing else.
 
 ## 3. THIS LANE'S OWED WORK, in order
 
-0. **Three design rows routed here by SCHEDULER's LED-7 fold and NOT started** — these are real design acts, not
+0. **D-226 IS QUEUED AND UNSTARTED — take it first.** Four words mean different things in two documents a builder
+   must read together ("finding" in three senses, "version" in six, the IS design's "leg" materially thinner than the
+   register's, "ground" both a DEC-32-banned surface word and a real `inquiry_basis` column). The act is deciding
+   which sense wins and which document yields — a CORPUS decision under CORPUS-STANDARD, not a rename SCHEDULER can
+   sequence. It is the largest of the rows on this desk and needs a clear sitting; nothing in the plan depends on it.
+0b. **Two more design rows routed here and NOT started** — these are real design acts, not
    rulings, and each needs its own sitting:
    - **D-55** (DOCTRINE, Bob ruled) — **NARROWED at the schema; read the row, not its headline.** The precondition
      stands; the premise does not. The register already holds per-origin (`site_assets.host`/`address`), the join
@@ -61,50 +61,48 @@ checkout means stale permissions.
      Relates to 8.contradiction and to §3 item 2 below.
    - **D-126**: ~30 notification generators, no catalogue, no classes, no item contract. **D-52's channel question is
      a SUB-QUESTION of this one** — ruling them apart invents the thirty-first ad-hoc wording. Sequence together at M7.
-1. **BOB #16's list, untouched by me:** field counts of process failures per lane against a 2026-09-18 baseline that
-   does not exist (defining it is the first act); PRESENT and RESOLVE for contradiction after IDENTIFY's measurement;
-   `CONTENT-PDF.md` over budget — its OWNER cuts it; the corrected exam instrument (M-65); the checks suites read BY
-   NAME.
+1. **BOB #16's list, untouched:** field counts of process failures per lane against a 2026-09-18 baseline that does
+   not exist (define it first); PRESENT and RESOLVE for contradiction; `CONTENT-PDF.md` over budget (its OWNER cuts
+   it); the corrected exam instrument (M-65); the checks suites read BY NAME.
 2. **`VERIFICATION.md` had 45 bytes of headroom** against its budget, which is why D-325's ruling went into
    `CLAUDE.md` §5 instead. Anything added there must be paid for by a cut.
 
-## 4. WHAT BOB #17 DECIDED (each folded into its home document; `decided.mjs` finds them)
+## 4. WHAT BOB #17 DECIDED — each folded into its home document; `decided.mjs` finds them
 
-- **TASK stays gated** — the "a minted id carries no count" set is the PREDICATE ("every prefix whose objects a read
-  withholds from some caller"), not the four-name list. REC-151's worker followed the rule rather than widening it;
-  the lag was the document's. Membership v2 §7. The set is PROJ, CASE, DRAFT, RVG, TASK.
-- **D-325 — discipline-plus-witness is SUFFICIENT, and the rule is stronger than the row asked for.** `scopeFor`
-  confines only `probe`, but honours `store=scratch` from ANY class, so the self-binding already existed PER CALL and
-  nothing REQUIRED it. A live verification now NAMES `store=scratch` on every call; the record's counters before and
-  after each arm are the detector. Written into `CLAUDE.md` §5, where the false assumption actually lived — NOT
-  `VERIFICATION.md` as the row said. **RESIDUE, open:** no credential can be bound to scratch for life; a sticky
-  confinement is RECORD's ground and is not built. The row stays OPEN — `ledger.mjs` refuses to archive a row with
-  residue, and it is right.
-- **D-52 — NARROWED, not closed.** No notification channel exists anywhere (verified at the code). §8.1 no longer
-  reads as a description of behaviour. The CHANNEL is Bob's, at M7, with D-126.
-- **D-136 — the missing session reach is an OMISSION, and the fix is NAMED (so it is placeable).** `adminendorse` and
-  `adminremove` are bearer-only and `by` is server-stamped only for `PROJECT_ACTIONS`, so the one path that can cast a
-  §4.7 governance vote is the path where THE CALLER NAMES THE VOTER. D-421's class. **The fix is ONE item:** stamp `by`
-  from the session AND grant session reach in the same landing — either alone is worse than neither. Membership v2 §4.7.
-- **D-134 ordered BEHIND D-136**, not beside it: a surface over an unfenced act is a second path to it.
-- **IC-55 / D-262 — the plane must distinguish THREE sentences, not two:** *this verb is not for a person* is a design
-  claim, sayable only where such a decision exists; *your credential does not reach this verb* is a fact; and for an
-  OMISSION, neither — state the fact, invent no rationale. A false rationale SUPPRESSES ITS OWN BUG REPORT.
+- **TASK stays gated** (Membership v2 §7). The "a minted id carries no count" set is a PREDICATE — *every prefix whose
+  objects a read withholds from some caller* — not the four-name list. REC-151's worker followed the rule; the lag was
+  the document's. The set is PROJ, CASE, DRAFT, RVG, TASK.
+- **D-325 — discipline-plus-witness is SUFFICIENT, and the rule is STRONGER than the row asked.** `scopeFor` confines
+  only `probe` but honours `store=scratch` from ANY class, so the binding already existed PER CALL and nothing
+  REQUIRED it. A live verification now NAMES `store=scratch` on every call; the record's counters before and after
+  each arm are the detector. Written into `CLAUDE.md` §5, where the false assumption lived, NOT `VERIFICATION.md`.
+  **RESIDUE, open:** no credential can be bound to scratch for life. The row stays OPEN — `ledger.mjs` refuses to
+  archive a row with residue, and it is right.
+- **D-52 NARROWED** (no notification channel exists; §8.1 no longer reads as behaviour; the CHANNEL is Bob's at M7,
+  with D-126).
+- **D-136 — the missing session reach is an OMISSION; the fix is NAMED** (Membership v2 §4.7). `by` is server-stamped
+  only for `PROJECT_ACTIONS`, so the one path that can cast a §4.7 vote is the path where THE CALLER NAMES THE VOTER.
+  **ONE item:** stamp `by` from the session AND grant session reach together — either alone is worse than neither.
+  **D-134 is ordered BEHIND it**: a surface over an unfenced act is a second path to it.
+- **IC-55 / D-262 — THREE sentences, not two:** *not for a person* is a design claim, sayable only where a decision
+  exists; *your credential does not reach this* is a fact; for an OMISSION, neither — state the fact, invent no
+  rationale. **A false rationale SUPPRESSES ITS OWN BUG REPORT.**
 - **M0-78 and D-270 placements CONFIRMED** ahead of features. "M0 last" governs M0 BUILD items, never a live defect in
-  the verification substrate. `preflight()` in `armdecay.mjs` validates an arm by counting ITS OWN QUOTE in the target
-  file, so it proves the ANCHOR and can never prove the FIXTURE runs — the census built to catch dead arms is blind to
-  this class BY CONSTRUCTION, so the population size is unknown.
-- **The area's LAW or its `-NEXT` is a CHANNEL CHOICE** (ORCHESTRATION.md, "COMMUNICATING A CHANGE"): a `-NEXT` is
-  consumed once by one successor; `<AREA>.md` is read in full by every session that ever holds the lane. FLEET taught
-  me this by correcting me.
-- **THE INFORMATION LADDER IS ONE-WAY — no `verified -> collected` edge** (D-203/D-200), folded into
-  `BIO_State_Rules_Consistency_v1_5.md`'s Lifecycle block from that section's OWN design: `verified` is an authored act
-  and authored acts bind (DEC-24); the section already solves what a back-edge would solve on a second axis
-  (`source_status: modified`, both versions kept); and `retired` is "preserved, never deleted", so a reversal is the
-  only operation that loses a fact. A weaker-than-today verification is STATED, not reverted. **D-200 wants a route the
-  design deliberately lacks and does not need** — its ten documents reconstruct.
-- **D-203 CLOSED IN FACT and archived.** Its two "surviving" advice strings are REC-56's own COMMENT PROSE from
-  2026-08-05, quoting what it replaced. Measured with comments stripped: **0 live**.
+  the verification substrate. `preflight()` in `armdecay.mjs` counts an arm's OWN QUOTE, so it proves the ANCHOR and
+  can never prove the FIXTURE runs — the census is blind to this class BY CONSTRUCTION, so the population is unknown.
+- **The information ladder is ONE-WAY — no `verified -> collected` edge** (`BIO_State_Rules_Consistency_v1_5.md`,
+  Lifecycle): `verified` is an authored act and authored acts bind; the section already solves what a back-edge would
+  solve on a second axis (`source_status: modified`); `retired` is "preserved, never deleted". **D-200 wants a route
+  the design deliberately lacks and does not need** — its ten documents reconstruct.
+- **D-203, D-284 and D-306 CLOSED and archived.** D-203: the two "surviving" advice strings are REC-56's COMMENT
+  PROSE; with comments stripped, **0 live**. D-284: `text_tier` stays the highest contributing tier — DEC-32's
+  weakest-governs over a document's pages, not a compromise. D-306: the ground-truth purchase is NOT FUNDED on
+  DEC-74's pattern, reopened when a GO/NO-GO needs accuracy and agreement AT ONCE.
+- **TWICE the real defect was NEITHER option the row offered, and both times the same shape:** a true limitation
+  stated only where an INSTRUMENT prints it, nowhere a reader of the DESIGN would meet it. Ask that of every row that
+  hands you options.
+- **The area's LAW or its `-NEXT` is a CHANNEL CHOICE** (ORCHESTRATION.md): a `-NEXT` is consumed once; `<AREA>.md` is
+  read by every session that holds the lane. FLEET taught me this by correcting me.
 - **M-70** — the disk at the account switch, and the content verdict clearing `plancheck`'s three stranded branches.
 
 ## 5. HOW I WAS WRONG — each caught by someone else or by an instrument
@@ -120,12 +118,13 @@ checkout means stale permissions.
 - **I told CONDUCT to "rebase before your gate."** Wrong twice: never change the tree mid-gate, and CONDUCT integrates
   by MERGING, never rebasing, because a rebase over a merge flattens it.
 - **I tried to archive D-325 while its disposition declared residue.** `ledger.mjs` refused. The tool was right.
-- **THE WRONG-UNIT ERROR IS THIS ESTATE'S MOST REPEATED DEFECT — it was caught FIVE times on 2026-09-19 alone**, by
-  three different lanes, and twice the wrong unit was a MEASUREMENT rather than the code: stranded branches (commit
-  COUNT for REACHABILITY); D-325 (whether an instrument CAN bind itself vs whether anything REQUIRES it); D-134's
-  figure; D-254 (a ROW NAMES NO DESIGN failure that was really a MILESTONE error); and D-203 (a STRING COUNT standing
-  in for LIVE ADVICE, where the survivors were comments quoting the defect they fixed). **Ask what unit the question
-  is about before answering it, and when the answer is a count, ask what the count cannot see.**
+- **THE WRONG-UNIT ERROR IS THIS ESTATE'S MOST REPEATED DEFECT — caught SIX times on 2026-09-19 alone**, by three
+  lanes, and three times the wrong unit was a MEASUREMENT rather than the code: stranded branches (commit COUNT for
+  REACHABILITY); D-325 (CAN an instrument bind itself vs does anything REQUIRE it); D-134's figure; D-254 (a ROW NAMES
+  NO DESIGN failure that was a MILESTONE error); D-203 (a STRING COUNT for LIVE ADVICE — the survivors were comments
+  quoting the defect they fixed); and **both SCHEDULER and I reporting ESTIMATED context as measured**. **Ask what
+  unit the question is about, and when the answer is a count, ask what the count cannot see — including of yourself:
+  `get_usage` is the only honest source for your own context.**
 - **A LEDGER REBASE IS THE `QUEUE.md` TRAP IN EVERY LEDGER, AND PRESENCE IS NOT THE CHECK — LENGTH IS.** A `DEBT.md`
   conflict had SCHEDULER's rewritten D-182 (458 -> 946 chars) and D-199 (4044 -> 4784) on one side and my archived
   D-203 on the other; taking my side whole would have reverted both rewrites silently. **A reverted row looks exactly
