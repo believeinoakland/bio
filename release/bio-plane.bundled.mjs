@@ -8702,6 +8702,52 @@ var AI_RUN_CHECKS = {
     check: "C-22.10",
     where: "src/airun.mjs checkObservation, called from store.mjs #observe",
     translation: "That observation says the thing is there without saying what was found. A record that something is present has to point at what it found \u2014 the captured document, the passage, the entity \u2014 or nobody can check it later, and a claim of coverage that cannot be checked is worse than no claim at all."
+  },
+  /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
+       DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
+       the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
+       Once REC-145 made the run verdict turn on the KIND (a question consults no project), a run labelled
+       `inquiry` over a PROJECT's id opened for a member who had not joined that project — the joined gate
+       walked around by a word the caller chose.
+  
+       ONE CODE FOR THE MISMATCH, THE ABSENT ID AND THE HIDDEN ONE, and that is the §7.9 half of the ruling
+       rather than economy. A second code for *"that is a project, not a question"* would be said over a
+       project the caller can see and withheld over one they cannot, so the difference between the two codes
+       would be the bit. The refusal is built from what the caller SENT and nothing else, which makes the
+       three one object by construction (`#noSuchProject`'s discipline, one act over). It is one condition —
+       *nothing of the kind you named answers to that id for you* — not two behind one number.
+  
+       CORRECTED THE SAME DAY on BOB #16's ruling (`7d03e852`), which the first build did not have: (i) A MACHINE
+       SEES NO MORE THAN ITS PRINCIPAL — an `ai` credential's open over an id its member cannot see is that member's
+       own absent answer, and an operator credential's open over a never-minted id is refused as absent too (the
+       first build let a machine through for an id the store did not hold, on PL-18's word); (ii) THE KIND IS
+       `RUN_CONTEXTS`' CLOSED VOCABULARY — any other word is refused HERE before any bundle is looked at, rather
+       than matched against the bundle's type. Both are this row's one condition: the kind and id the caller named
+       do not resolve to a context they can run in. A new code for (ii) was weighed and declined: C-22.12 is
+       REC-152's, and the word refused is the caller's own, so the refusal can say which failed without a second
+       code carrying any bit. */
+  AI_RUN_NO_SUCH_CONTEXT: {
+    check: "C-22.11",
+    where: "src/airun.mjs checkRunContextKind, called from store.mjs aiRunOpen",
+    translation: "Nothing of the kind this run names answers to that id here. A run is over a question or a project, nothing else; a run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
+  },
+  /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
+       AND CLOSE A RUN", BOB #16). C-22.12 and not C-22.11: CONDUCT #6 assigned C-22.11 to REC-153, which is
+       on its own branch, so this number was taken with the gap left for it.
+  
+       WHY IT IS ITS OWN CODE AND NOT C-22.8's. *You are not in this project* and *this is not your run* are
+       DIFFERENT FACTS with different remedies: the first is answered by an owner inviting you, the second by
+       nobody — the run is its principal's, and one nobody drives ends on its own lease. A co-participant who
+       is fully joined meets this and never C-22.8, and a single refusal covering both would tell them to ask
+       for an invitation they already hold.
+  
+       SAID ONLY TO SOMEBODY WHO CAN SEE THE RUN'S CONTEXT. A caller who cannot is answered as for a run that
+       does not exist, before this is reached (§7.9), so the sentence names nobody — neither the principal
+       nor the caller — and the store's `detail` names only the rule. */
+  AI_RUN_NOT_PRINCIPAL: {
+    check: "C-22.12",
+    where: "src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose",
+    translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -26027,6 +26073,34 @@ function projectGate({
   return refusal3(
     "AI_RUN_NOT_PROJECT_MEMBER",
     `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
+  );
+}
+function checkRunContextKind({ contextType = null, contextId = null, found = null } = {}) {
+  const said = String(contextType ?? "");
+  const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
+  if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said))
+    return refusal3(
+      "AI_RUN_NO_SUCH_CONTEXT",
+      `${JSON.stringify(said.slice(0, 60))} is not a kind of run context: a run is over a question ("inquiry") or a project ("project"), and nothing else, so no run over ${id} was opened`
+    );
+  if (found !== null && found !== void 0 && found === said) return null;
+  return refusal3(
+    "AI_RUN_NO_SUCH_CONTEXT",
+    `no ${JSON.stringify(said)} answers to ${id} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
+  );
+}
+function runPrincipalOf(principal) {
+  const s = principal == null ? "" : String(principal).trim();
+  if (!s.startsWith("member:")) return s;
+  const i = s.indexOf("/");
+  return i < 0 ? s : s.slice(0, i);
+}
+function runPrincipalGate({ caller = null, principal = null } = {}) {
+  const who = runPrincipalOf(caller), owner = runPrincipalOf(principal);
+  if (who && owner && who === owner) return null;
+  return refusal3(
+    "AI_RUN_NOT_PRINCIPAL",
+    "ticking or closing a run is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds"
   );
 }
 function finishedBound(bounds, { expired = false, offered = null } = {}) {
@@ -59700,6 +59774,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  a run's context is not required to be a bundle this store holds, and
    *  refusing on a lookup that came back empty would be refusing on what cannot
    *  be verified — a claim about the record made from a fact about our index.
+   *  [SUPERSEDED FOR THE OPEN 2026-09-19 by REC-153 (BOB #16, `7d03e852`): a run's context must now be a
+   *  bundle this record holds, of the kind named, that the caller can SEE — refused at the open by
+   *  `checkRunContextKind` before this is asked, for every caller including a machine. This reading of an
+   *  empty set survives only for runs stored before REC-153, which tick and close still read.]
    *
    *  REC-138 / D-426 — EXCEPT A CONTEXT THAT SAYS IT IS A PROJECT, which is now that project
    *  whether or not this store holds it. As built, a PROJECT context the store did not hold read
@@ -59719,6 +59797,22 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, from);
       return !!b && normalizeType(b.object_type) === "project";
     }).sort();
+  }
+  /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
+   *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
+   *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
+   *  `#inSight`, the one predicate, and it FAILS CLOSED on an absent viewer — the run verbs' posture
+   *  (`RUN_VERB_ACTIONS` in `index.mjs`: "fails closed on an absent stamp"). The first draft did not ask a
+   *  viewer that was never sent, on `#rosterInSight`'s precedent; REC-145's `run-stamp-dropped` control
+   *  showed that with the control plane's stamp removed the check then SAW every project — sight failing
+   *  open. No caller reaches the open without the stamp (measured: no suite drives the store directly).
+   *  The type is normalised (`problem`/`focus` read `inquiry`). */
+  #runContextKind(contextId, viewer) {
+    const id = contextId == null ? "" : String(contextId);
+    const b = id ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id) : null;
+    if (!b) return null;
+    if (!this.#inSight(id, viewer)) return null;
+    return normalizeType(b.object_type);
   }
   /** The gate, as the three run verbs call it. Returns `projectGate`'s verdict
    *  object — `refusal` null or built, and a `ground` that is stated either way.
@@ -59803,6 +59897,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         check: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.check,
         translation: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
         note: "a run needs an id and the context it runs in (an inquiry or a project): a run nothing is in the context of has nowhere to be visible"
+      };
+    const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer) });
+    if (kind)
+      return {
+        run,
+        started: false,
+        code: kind.code,
+        check: kind.check,
+        translation: kind.translation,
+        detail: kind.detail,
+        note: "a run's context kind is checked against the thing it names, and a thing the caller cannot see answers as one that does not exist (Membership Architecture v2 \xA77, BOB #16, 2026-09-19): the project gate turns on the kind, so the kind cannot be the caller's word"
       };
     const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
     if (!gate.permitted)
@@ -59893,6 +59998,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ..._Store.#aiRunGateStated(gate)
     };
   }
+  /** REC-152 — CAN THIS VIEWER SEE THIS RUN? `aiRunRead`'s own predicate (D-15's `#bundleGate` over the
+   *  run's context), asked of one run id, so the tick and the close hide exactly what `op=airun` hides. An
+   *  absent stamp fails closed, as it does there. */
+  #aiRunInSight(run, viewer) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    return !!this.#one(`SELECT 1 AS x FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
+  }
   /** op=airuntick. The heartbeat, the work list, and the log — one call.
    *
    *  A tick does four things and the order matters: it appends what the run
@@ -59914,7 +60026,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     leaseMs = null,
     at = null,
     actor = null,
-    viewer = null
+    viewer = null,
+    /* REC-152: the caller's PRINCIPAL, stamped server-side by `index.mjs` in the form the open
+       stamps `principal_plane` in — never a caller's word. */
+    caller = null
   } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = _Store.#aiIso(nowMs);
@@ -59924,6 +60039,24 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       found: false,
       note: "no such run: it either never existed or was purged"
     };
+    if (!this.#aiRunInSight(run, viewer)) return {
+      run: run || null,
+      found: false,
+      note: "no such run: it either never existed or was purged"
+    };
+    const notPrincipal = runPrincipalGate({ caller, principal: row.principal_plane });
+    if (notPrincipal)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row.status,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        note: "a run is driven by its principal alone. Nothing was appended and no budget was spent"
+      };
     const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
     if (!gate.permitted)
       return {
@@ -59998,10 +60131,37 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
    *  to the one exit, and a caller who names no bound is refused by C-22.5
    *  rather than having "completed" inferred from its silence. */
-  aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null } = {}) {
+  aiRunClose({
+    run,
+    bound = null,
+    condition = null,
+    at = null,
+    actor = null,
+    viewer = null,
+    /* REC-152: the caller's PRINCIPAL, stamped server-side — see `aiRunTick`. */
+    caller = null
+  } = {}) {
     const now = at ? _Store.#aiIso(Date.parse(at)) : _Store.#aiIso(Date.now());
-    const row = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, run);
+    const row = this.#one(`SELECT context_type, context_id, principal_plane FROM ai_runs WHERE run = ?`, run);
     if (row) {
+      if (!this.#aiRunInSight(run, viewer)) return {
+        run,
+        found: false,
+        note: "no such run: it either never existed or was purged"
+      };
+      const notPrincipal = runPrincipalGate({ caller, principal: row.principal_plane });
+      if (notPrincipal)
+        return {
+          run,
+          terminated: false,
+          found: true,
+          ok: false,
+          code: notPrincipal.code,
+          check: notPrincipal.check,
+          translation: notPrincipal.translation,
+          detail: notPrincipal.detail,
+          note: "a run is ended by its principal, or by its own lease and bounds. The run is untouched and is still running"
+        };
       const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
       if (!gate.permitted)
         return {
@@ -63415,15 +63575,19 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           actor: url.searchParams.get("actor"),
           viewer: url.searchParams.get("viewer")
         }),
+        /* REC-152: `caller` is the fifth stamp — the caller's PRINCIPAL, from the QUERY and set AFTER the
+           body's spread, so a `caller` in the body is overwritten rather than believed. */
         airuntick: () => this.aiRunTick({
           ...body || {},
           actor: url.searchParams.get("actor"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          caller: url.searchParams.get("principal")
         }),
         airunclose: () => this.aiRunClose({
           ...body || {},
           actor: url.searchParams.get("actor"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          caller: url.searchParams.get("principal")
         }),
         airun: () => this.aiRunRead({
           run: url.searchParams.get("run"),
@@ -69926,7 +70090,7 @@ var index_default = {
       );
     if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "airunopen")
+    if (RUN_VERB_ACTIONS.includes(op))
       inner.searchParams.set(
         "principal",
         viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
