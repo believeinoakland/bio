@@ -16,6 +16,17 @@
  * did (plancheck still names ZZ-41; the backlog fixture arms green), and §6 FAILS naming the copy (its
  * grammar, its ledger-file literal, its own read), 30/6 = the plant's three live arms + three structural.
  * (NC4) OVER-STRICTNESS — only the correct ZZ-45 planted -> plancheck names no ZZ row, this suite 36/0.
+ * M0-73 (D-430's two same-class readers, §6's owed arms and §7) — RUN 2026-09-19 by the M0-73 worker, same
+ * driver, **61 of 61 checks, exit 0**, baseline 49/0, NC1–NC4 re-run unchanged in effect. M0-73 PLANT (ZZ-60,
+ * spaced ZZ-61, correct ZZ-63 citing DEC-4242/IC-4243/M-424 in the scratch BACKLOG.md): `owed.mjs BOB` lists
+ * ZZ-60 and ZZ-61, `mintid --list` reads DEC 75 -> 4242, IC 159 -> 4243, M 65 -> 424, this suite 49/0.
+ * (NC5) owed.mjs's own pre-M0-73 walk restored -> on disk ZZ-60 STILL listed (the old walk already read the
+ * backlog) and ZZ-61 LOST; this suite FAILS naming "owed's blocked rows ARE the lister's" and §6's owed
+ * grammar and import arms, 46/3.
+ * (NC6a) mintid's DEC corpus without BACKLOG.md -> DEC floor 4242 -> 75; FAILS naming "DEC: an id mentioned
+ * ONLY in BACKLOG.md raises the floor" and THE CLASS arm, 47/2.
+ * (NC6b) the same for IC -> 4243 -> 159; FAILS naming "IC: …" and THE CLASS, 47/2.
+ * (NC6c) the same for M -> 424 -> 65; FAILS naming "M: …" and THE CLASS, 47/2. Every restore byte-identical.
  *
  * THE DEFECT (DEBT D-430, found by LED-6's tool-half worker): `tools/rowdesign.mjs` and `plancheck` §2's
  * MILESTONE, INTERFACE and UNKNOWN-ROW-STATE checks read `QUEUE.md` only. WORK-PIPELINE §1–§2 make
@@ -33,6 +44,10 @@
  * either file's grammar moves, and nothing would say so. So section 6 asserts STRUCTURE: the readers
  * carry no row grammar and read no ledger file of their own, and their rows ARE the lister's rows.
  *
+ * SECTION 7 (M0-73) is the same class one reader further: `tools/owed.mjs` read the plan's BLOCKED rows with
+ * a heading grammar of its own, and `tools/mintid.mjs`' DEC, IC and M corpora read `QUEUE.md` but not
+ * `BACKLOG.md`, so after LED-6's split an id mentioned only in the backlog would set no floor.
+ *
  * The fixtures use the synthetic namespace `ZZ`, which allocates nothing (`mintid`'s corpora are
  * `docs/` files; this is not one). No row is ever written into the live `BACKLOG.md`: the planted rows
  * reach the readers through the lister's injectable `texts`, and the on-disk plant is the control
@@ -41,7 +56,7 @@
 import "./stdio.mjs";      /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";    /* D-186: the temp directory section 1 mints is owned and swept */
 import { spawnSync } from "node:child_process";
-import { readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -50,6 +65,8 @@ const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const { pipelineRows, strayHeadings, PIPELINE } = await import(join(REPO, "tools/ledger.mjs"));
 const { rowDesignAudit, rowMessage, planRows, planFieldAudit } = await import(join(REPO, "tools/rowdesign.mjs"));
 const { substrateAudit } = await import(join(REPO, "tools/rowsubstrate.mjs"));
+const { owedFor, SOURCES } = await import(join(REPO, "tools/owed.mjs"));
+const { corpusFloor, NAMESPACES } = await import(join(REPO, "tools/mintid.mjs"));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -226,6 +243,67 @@ console.log("\n--- 6. no reader carries a row grammar or reads a ledger file of 
     /BACKLOG\.md/.test(pc), false);
   t("plancheck.mjs's §2 goes through planRows and planFieldAudit",
     [/\bplanRows\(/.test(pc), /\bplanFieldAudit\(/.test(pc)], [true, true]);
+  /* M0-73: owed.mjs is the same reader one arm over — it reads the plan's BLOCKED rows. Its own grammar
+     was spelled differently from the lister's (`[A-Z0-9-]+`), so ITEM_GRAMMAR alone cannot see it; the
+     arm asks what makes it a walk in principle — a heading pattern of its own over `###`. The one it
+     keeps, `### DEC-n ·`, reads DECISIONS.md, which is not the plan. */
+  const ow = code("tools/owed.mjs");
+  t("owed.mjs carries NO plan-row heading grammar of its own (only DECISIONS.md's `### DEC-n`)",
+    [ITEM_GRAMMAR.test(ow), /\/\^###(?! \(DEC-)/.test(ow)], [false, false]);
+  t("owed.mjs names NO plan ledger file to read (its paths are ledger.mjs')", LEDGER_FILE.test(ow), false);
+  t("owed.mjs takes the plan's rows from ledger.mjs' pipelineRows",
+    [/import\s*\{[^}]*\bpipelineRows\b[^}]*\}\s*from\s*"\.\/ledger\.mjs"/.test(ow), /\bpipelineRows\(/.test(ow)], [true, true]);
+}
+
+/* ------------------------------ 7. D-430's TWO SAME-CLASS READERS (M0-73): owed and mintid */
+console.log("\n--- 7. owed's blocked rows and mintid's DEC, IC and M floors read the backlog (M0-73) ---");
+{
+  /* (a) owed. A plain blocked backlog row was already read before M0-73 (LED-6 added the backlog to owed's
+     own walk), so it cannot discriminate the fix. The two rows that DO are the edges where owed's old
+     grammar and the lister's disagreed: ZZ-51 is spaced as the lister reads it and the old walk missed it;
+     ZZ-52-1 is a heading the lister cannot read (NAMED as a stray) and the old walk attributed it. */
+  const OB = [
+    `# BACKLOG — fixture`, ``,
+    `### ZZ-50 · blocked — waits on a design ruling. Routed to BOB.`, `milestone: M8`, ``,
+    `### ZZ-51  ·  blocked — spaced as the lister reads it. Routed to BOB.`, `milestone: M8`, ``,
+    `### ZZ-52-1 · blocked — a heading the lister cannot read. Routed to BOB.`, `milestone: M8`, ``,
+    `### ZZ-53 · blocked — waits on RECORD's other item`, `milestone: M8`, ``,
+    `### ZZ-54 · queued — blocked on BOB is only prose here`, `milestone: M8`, ``,
+  ].join("\n");
+  const files = { [SOURCES.debt]: "| id | type | date | body | disposition |", [SOURCES.decisions]: "",
+                  [SOURCES.queue]: "", [SOURCES.backlog]: OB };
+  const o = owedFor("BOB", { reader: (p) => (p in files ? files[p] : null) });
+  t("a blocked BACKLOG row routed to the lane appears in owed, sourced BACKLOG",
+    o.attributed.filter((i) => i.id === "ZZ-50").map((i) => `${i.source} ${i.id}`), ["BACKLOG ZZ-50"]);
+  t("owed's blocked rows ARE the lister's — the spaced ZZ-51 in, the unreadable ZZ-52-1 out",
+    o.attributed.map((i) => i.id), ["ZZ-50", "ZZ-51"]);
+  const lp = pipelineRows({ texts: { QUEUE: "", BACKLOG: OB } });
+  t("...and the lister NAMES the heading it cannot read, so it is not silently lost",
+    [lp.rows.filter((r) => r.state === "blocked").map((r) => r.id), lp.strays.map((s) => s.heading.slice(4, 11))],
+    [["ZZ-50", "ZZ-51", "ZZ-53"], ["ZZ-52-1"]]);
+  t("an unreadable BACKLOG is still NAMED by owed (the reader, not the lister, reads the file)",
+    owedFor("BOB", { reader: (p) => (p === SOURCES.backlog ? null : (files[p] ?? null)) }).unreadable, [SOURCES.backlog]);
+  const live = owedFor("BOB", { repo: REPO });
+  const blocked = new Set(LIVE.rows.filter((r) => r.state === "blocked").map((r) => `${r.ledger} ${r.id}`));
+  t("LIVE: every plan item owed lists is a blocked row the lister reads",
+    live.items.filter((i) => i.source === "QUEUE" || i.source === "BACKLOG").map((i) => `${i.source} ${i.id}`)
+      .filter((k) => !blocked.has(k)), []);
+
+  /* (b) mintid. A scratch repo holding ONLY a BACKLOG.md that mentions one id of each namespace: every
+     other corpus file is absent (and reported `missing`), so the floor can come from nowhere else. */
+  const root = mkdtempSync(join(tmpdir(), "m073-mintid-"));
+  mkdirSync(join(root, "docs/development"), { recursive: true });
+  writeFileSync(join(root, BACKLOG_PATH), "# BACKLOG — fixture\n\n### ZZ-60 · queued — cites DEC-4242, IC-4243 and M-424\n");
+  for (const [ns, want] of [["DEC", 4242], ["IC", 4243], ["M", 424]]) {
+    const f = corpusFloor(ns, { repo: root });
+    t(`${ns}: an id mentioned ONLY in BACKLOG.md raises the floor`, [f.floor, f.from], [want, BACKLOG_PATH]);
+  }
+  rmSync(root, { recursive: true, force: true });
+  t("THE CLASS: no mintid corpus names the cache without the backlog",
+    Object.entries(NAMESPACES).filter(([, s]) => s.corpus.includes(QUEUE_PATH) && !s.corpus.includes(BACKLOG_PATH))
+      .map(([ns]) => ns), []);
+  t("...over a corpus that is not empty: this many namespaces read the cache",
+    Object.values(NAMESPACES).filter((s) => s.corpus.includes(QUEUE_PATH)).length >= 20, true);
 }
 
 console.log(`\npipeline-readers: ${pass} pass, ${fail} fail`);

@@ -47,6 +47,9 @@
  *   (A8) the blocked-row heading read to 220 characters again -> S7 fails: REC-100's routing
  *        to BOB sat past that point and the lane was told it owed nothing.
  *   (A9) the possessive allowed to be followed by a noun -> S7 fails: *IS BOB'S FRAMING* read as the BOB lane.
+ *   (All nine RE-RUN 2026-09-19 by the M0-73 worker after A8's anchor was repointed to the lister-fed
+ *   `rest` — owed's blocked rows now come from `ledger.mjs`' `pipelineRows` — exit 0, 48 pass / 0 fail,
+ *   suite 42/0 at both baselines, restore verified by sha256.)
  *
  * **AND SECTION 7 IS A DISCRIMINATION CONTROL THE TOOL SHIPPED WITHOUT, which is why it was
  * WRONG.** `owed.mjs ZZZNOTALANE` returned ELEVEN items — a lane that does not exist cannot
