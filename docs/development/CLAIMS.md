@@ -14041,7 +14041,7 @@ breaks, corrected at its site, `docs/architecture/construct-status.json` (`8.cla
 `docs/development/INTERFACE-CHANGES.md` (this item's IC rows).
 
 ### DELEGATION 2026-09-18 RECORD (REC-124) -> UI: **A PROJECT NOW CONCLUDES FOR ITSELF, AND THE SURFACE CANNOT YET SAY SO**
-**open as of 2026-09-18** — nothing on the surface sends `project=` to `op=conclude` or renders the new keys.
+**DISCHARGED 2026-09-18 by UI-65 (branch `ui-65-conclude`)** — all three: (1) the project's act is on the stance surface (`#stands/<PROJ>/<INQ>`), sending `project=` and NO `conclusion=`, the claim of the reading the project stands on shown verbatim before the commit (read from `op=basisversions&project=`), commentary labelled the member's own words and never evidence, `NO_CLAIM` rendered as the plane's sentence; (2) `conclusion` and `no_project_conclusion` are rendered ON THE STANCE SURFACE (not the question's page — `bound-sweep` ARM G refused a capped read there that states no bound), the latter's undetermined claim through `undeterminedPane`, never as the conclusion text; (3) the notice was already generic-rendered and is untouched. Driven against the real plane by `civicos-ui/test/conclude-reading.test.mjs` §3-§4. ONE GAP REMAINS AND IS RECORD'S, delegated below: on a question already concluded with no project, `op=affordances` publishes no `conclude`, so the project's act has no control there.
 
 `INVESTIGATIVE-SESSION.md` §7.1 is built in the plane (IC-150). The existing conclude flow in `civicos-ui/app.html`
 (`concludeParams`) sends no `project` and is NOT broken — it reaches the unchanged no-project act, and
@@ -14296,6 +14296,99 @@ in Membership v2 §7 (*"The plane MINTS project ids"* does not say whether a cal
 refused or ignored, nor whether `op=projectfork`'s `newId` is minted, nor how the minted id reaches the document's `id:`)
 and D-428 (c), whether DEC-63's run VERDICT is itself a §7.9 disclosure. (4) Tell DIST: a DISCLOSURE closing, open on
 deployed instances until the next cut.
+
+## CLAIM 2026-09-18 RECORD (REC-136 — a no-project conclusion NAMES its version; withdrawal APPENDS, INVESTIGATIVE-SESSION.md §7.1 items 6-8)
+
+claimed: 2026-09-18 by the REC-136 worker (spawned by CONDUCT #5), branch `worktree-agent-a01b00fb335bbabb8`, base
+`f16b9b49`. Paths: `bio-plane/src/store.mjs` (conclude, the project conclusion writer/reader, a new withdraw act,
+op=basisversions' conclusion keys, the concluded-elsewhere producer), `bio-plane/src/index.mjs` (the new op's OPS row
+and dispatch), `bio-plane/src/affordances.mjs` (only if the new op needs an affordance row),
+`bio-plane/checks/bio-checks.mjs` (C-33 rows; C-5.1's append-only surfaces), `bio-plane/scripts/coverage.mjs` (floors
+only, from its own print), `bio-plane/dist/**` (the rebuilt bundle), `bio-plane/test/conclude-project.test.mjs` and its
+control, plus every suite the no-project version requirement breaks, corrected at its site,
+`civicos-ui/check-refusal-codes.mjs` (floors only, from its own print), `civicos-ui/test/**` fixtures only if the
+harness breaks, `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built note),
+`docs/development/INTERFACE-CHANGES.md` (this item's IC rows). Added at the merge of REC-134: `bio-plane/test/project-authority.test.mjs` and its control (`withdrawconclusion` joins the act table, one anchor re-pointed).
+
+### DELEGATION 2026-09-18 RECORD (REC-136) -> UI: **A NO-PROJECT CONCLUSION NOW NAMES ITS READING, AND A PROJECT CAN WITHDRAW — THE SURFACE CAN DO NEITHER**
+**DISCHARGED 2026-09-18 by UI-65 (branch `ui-65-conclude`)** — all three: (1) `concludeParams` sends `version=` only when the member PICKED an adoptable reading (accepted, a claim, legs >= 1, from `op=basisversions`), the claim shown verbatim before commit, none ever defaulted; `conclude-nofalsifier.test.mjs`'s REC-136 STAND-IN is REMOVED in the same turn and its foot assertion corrected; (2) `conclusion_stance` and the whole `conclusion_history` render on the stance surface, and `op=withdrawconclusion` is offered there with the member's reason; `withdrawconclusion` is struck from `ACTS_AWAITING_SURFACE`; (3) `no_project_conclusion.claim` renders adopted or undetermined (`undeterminedPane`). `conclude-reading.test.mjs` and its `.control.mjs` (five arms).
+
+`INVESTIGATIVE-SESSION.md` §7.1 items 6-7 are built in the plane (IC-153, proposed MAJOR). What the surface owes:
+1. **The reading a conclusion adopts (item 6).** `concludeParams` must send `version=<reading>`: the accepted reading
+   (with a claim) of the question that the member chooses — read the candidates from `op=basisversions` (state
+   `accepted`, non-empty `claim`), SHOW the claim before commit (the claim is what is concluded), and never default one
+   (a default reading is the plane choosing the answer). With none available, render `NO_CLAIM`'s detail as the door.
+   **When this lands, `civicos-ui/test/conclude-nofalsifier.test.mjs`'s REC-136 STAND-IN (the transport supplying the
+   reading, and its foot assertion that the surface sent none) FAILS BY DESIGN — remove the stand-in in the same turn.**
+2. **The project's stance and its history (item 7).** From a project's view of a question it concluded: render
+   `op=basisversions&project=`'s `conclusion_history` (every conclusion and withdrawal, dated and authored, in order)
+   and `conclusion_stance`, and offer `op=withdrawconclusion&target=&project=&reason=` with a REQUIRED reason, worded so
+   a member knows the conclusion stays in the record. Strike `withdrawconclusion`'s row from
+   `surface-registry.test.mjs`'s `ACTS_AWAITING_SURFACE` when it is hosted.
+3. **The legacy read.** `no_project_conclusion.claim.state` is `adopted` or `undetermined`; render undetermined through
+   the `undeterminedPane` primitive, never as the conclusion text.
+
+## CLAIM 2026-09-18 RECORD (REC-136) — RELEASED
+
+released: 2026-09-18 by the REC-136 worker, branch `worktree-agent-a01b00fb335bbabb8`, base `f16b9b49`, merged with
+`origin/main` at `dd52609b` (REC-133 and REC-134) and again at `b4330caf` (M0-67, DIST 0.61.0). Baseline at `ec766ef9`: 240/247 in the run, the other 7 contaminated by
+this worker's own mid-run edit of `src/` (a parse error, loud) and each green re-run alone on pristine source; none
+skipped. After, at `5ca64227`: **249/249 suites green · 15174 assertions passing**, no suite skipped, no printed FAIL;
+`node scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER FLOOR 1407 -> 1410 from its print); `node
+civicos-ui/test/run.mjs` exit **0**; `status --check` 0; `corpuscheck` 0. NEGATIVE CONTROL `node
+test/conclude-project.control.mjs`: baseline 75/0, (a) 64/11, (b) 69/6, (c) 73/2, (d) 74/1, (e) 66/9, (f) 72/3, (g) 74/1,
+every restore sha256 MATCH; plus divide.test (1 arm) and project-authority.test (3 arms) recorded at their sites. **FOR CONDUCT:** RESOLVE IC-153 (proposed MAJOR, BREAKING; read I3's base
+at resolution); the UI DELEGATION above is open; §7.1 item 4 (REC-135) is unbuilt; the DESIGN GAPS (a)-(c) are in
+`INVESTIGATIVE-SESSION.md`'s Incomplete sections.
+
+## CLAIM 2026-09-18 UI (UI-65 — the conclude surface after REC-136: the reading picker, the adopted claim before commit, the project's act, withdrawal, stance and history)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-aaafef192b74592eb`, branch **`ui-65-conclude`**,
+built ON the held branch `conduct/rec-136-held` @ `783054ac` merged with `origin/main` @ `9cc814d6`. (An
+earlier branch, `ui-65-conclude-surface`, carries a merge that DROPPED the held branch's QUEUE.md change;
+plancheck caught it, the merge was redone here, and that branch is SUPERSEDED — never merge it.) `npm ci`
+in all three packages, each `node_modules` a real directory. Design authority: `INVESTIGATIVE-SESSION.md`
+§7.1 items 1-8, with the REC-124 and REC-136 DELEGATIONs above. Claimed BY SITE:
+
+- `civicos-ui/app.html` — the conclude act region (`CONCL`, `concludeParams`, `openConclude`, `concludePaint`,
+  `doConclude`, `concludeReceiptHtml`, up to `/*__CONCLUDE_ACT_END__*/`); in `/*__NOTIFICATIONS_START__*/`
+  ONLY section (5), the stance surface (`STANCE`, `stance*` functions); `openInquiry`'s render (a section was added
+  and then REMOVED, net untouched: bound-sweep ARM G); `SURFACES.inquiry` and `SURFACES["inquiry-stance"]` entries. NOT the
+  queue block, NOT the version-review region, NOT the elicitation, NOT any other surface.
+- `civicos-ui/test/conclude-nofalsifier.test.mjs` (the REC-136 stand-in removed), a NEW
+  `civicos-ui/test/conclude-reading.test.mjs` and its `.control.mjs`, and `surface-registry.test.mjs`'s
+  `ACTS_AWAITING_SURFACE` row for `withdrawconclusion` (and the floors that row moves).
+- `docs/development/CIVICOS_UI_STATE.md` (a prepended entry), this block, `docs/DECIDED.md` on regeneration.
+- ADDENDUM: `docs/development/INVESTIGATIVE-SESSION.md` front matter, the §7.1 Incomplete entry only (one appended
+  sentence saying what the surface now carries and the one gap that is the plane's), `civicos-ui/test/conclude-reading.control.mjs` (NEW), and
+  `civicos-ui/test/conclude-act.test.mjs` (its mock corrected to IC-153).
+
+**NOT CLAIMED:** all of `bio-plane/**` (REC-136 is the held plane half and is consumed, not edited),
+`docs/development/QUEUE.md` (CONDUCT's).
+
+## CLAIM 2026-09-18 UI (UI-65) — RELEASED
+
+released: 2026-09-18 by the UI-65 worker, branch `ui-65-conclude` (held REC-136 `783054ac` + main `9cc814d6`).
+Every path the claim reserved is free. Figures are in UI-65's report and `CIVICOS_UI_STATE.md` v92. **FOR CONDUCT:**
+land `ui-65-conclude` TOGETHER with REC-136 (it contains `783054ac`); `ui-65-conclude-surface` is SUPERSEDED (its
+merge dropped the held branch's QUEUE.md change) and must not be merged; the DELEGATION to RECORD below is open;
+no IC (UI-65 consumes IC-150/IC-153 and needs no new read).
+
+### DELEGATION 2026-09-18 UI (UI-65) -> RECORD: **A PROJECT CANNOT CONCLUDE FROM THE SURFACE ON A QUESTION ALREADY CONCLUDED WITH NO PROJECT — `op=affordances` DOES NOT PUBLISH THE ACT THE STORE ACCEPTS**
+**open as of 2026-09-18** — `conclude`'s affordance is keyed on the catalog's edge table alone, and that table has no `concluded -> concluded` edge.
+
+Measured at the code on `ui-65-conclude` (held REC-136 + main `9cc814d6`): `bio-plane/src/affordances.mjs`'s
+`conclude` entry applies when `edgesFrom(f).includes("concluded")`; `checks/bio-checks.mjs`' inquiry machine gives
+`concluded: ['open', 'surfaced', 'deferred', 'dismissed', 'divided']`, so on a question whose OWN state is `concluded`
+(a no-project conclusion, or a legacy one) the act is not published. The store accepts it for a project there on
+purpose (`store.mjs` `conclude`, REC-124: *"a PROJECT may conclude an inquiry whose OWN state already reads
+`concluded`, because that state is the no-project relationship's"*). The surface renders an act only where the plane
+publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no control on such a question — §7.1 item 8's
+"a conclusion counts only for the relationship that made it" is honoured by the store and not reachable by a member.
+**What is needed:** the affordance's project arm, the way `withdrawconclusion`'s affordance is offered on a question
+with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
+concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
+either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.
 ## CLAIM 2026-09-18 RECORD (REC-140 — D-429: `op=ratify` REFUSES a project bundle; a finding it ratifies takes case ratification's owner-signer and joined-deliverer rules; a caller who cannot see the project is answered as for one that does not exist)
 
 Worker spawned by CONDUCT #5, isolated worktree `agent-a761302b28f105764`, branch `worktree-agent-a761302b28f105764`,
@@ -14326,11 +14419,10 @@ harness exit 0 ("all harnesses green"). `civicos-ui/check-refusal-codes.mjs` gre
 figures it prints, as REC-137 also found). IDs minted with `tools/mintid.mjs`: C-58, IC-157, D-431. Paths as claimed, plus
 `bio-plane/test/deliverer.test.mjs` CORRECTED at its site (gus made a joined participant before delivering a pinned
 finding's signature). D-429 CLOSED and archived.
-**FOR CONDUCT:** (1) RESOLVE IC-157 against I3 as read at resolution (proposed MAJOR on 36.0.0; 38.0.0 if REC-136 lands
-at 37.0.0 first). (2) Flip REC-140 at integration. (3) Carry D-431 to BOB: `op=ratify` still publishes an information
+**FOR CONDUCT:** (1) RESOLVE IC-157 against I3 as read at resolution (proposed MAJOR on 37.0.0 → 38.0.0). (2) Flip REC-140 at integration. (3) Carry D-431 to BOB: `op=ratify` still publishes an information
 bundle, an inquiry in no case, and a finding PREPARED into a not-yet-ratified case (the last under a NON-owner's key, which
-side-steps this item's rule by ratifying early) — Publication rule 2 permits none; recommendation in the row. (4) At
-REC-136's merge: `ratify-authority.test.mjs` concludes inquiries with NO project (its `makeCase` and §7), so it needs
-`withAdoptableReading(...)` / `adoptedVersionParam()` exactly as `case-authority.test.mjs` and `deliverer.test.mjs` do —
-REC-136 was NOT on main when this branch closed, so it could not be applied here. **DIST is told:** an AUTHORITY and
+side-steps this item's rule by ratifying early) — Publication rule 2 permits none; recommendation in the row. (4) REC-136
+landed before close-out and was merged in (`67c6cc09`..`79f59f14`): `ratify-authority.test.mjs` now concludes through
+`withAdoptableReading(...)` / `adoptedVersionParam()`, and the figures above were re-taken on that merge (see the
+report). IC-157 re-based to I3 37.0.0 (proposed 38.0.0). **DIST is told:** an AUTHORITY and
 DISCLOSURE closing on `op=ratify`.

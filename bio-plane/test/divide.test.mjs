@@ -81,6 +81,7 @@ import { createHash } from "node:crypto";
 import { checkBundle, STATES, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { DIVIDE_PROMPT, ACTS } from "../src/affordances.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -109,9 +110,15 @@ const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
    store-level assertions passed). */
 const divide = async (tok, { target, ...body }) =>
   rP(await POST(`op=inquirydivide&token=${tok}&target=${encodeURIComponent(target ?? "")}`, body));
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM with nothing written. This
+   helper concluded with no reading because the act took none; the inquiries it
+   concludes now carry one (`withAdoptableReading`) and the call names it. */
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 /* REC-44 / DEC-44 (2026-08-04): op=publish now requires an authored `scope` —
    a published case is a CONTAINER over one or more FINDINGS and states what
    brought them together. The helper supplies a default so every assertion below
@@ -259,9 +266,10 @@ await mustPromote(AGAINST, infoMd(AGAINST), "information", "collected");
 const PARENT_LEGS = [{ target: AUTH, role: "supports" },
                      { target: SIGNED, role: "supports" },
                      { target: AGAINST, role: "cuts_against" }];
-await mustPromote(PARENT, inquiryMd(PARENT, {
+/* REC-136: PARENT is concluded below, so it carries an accepted reading to adopt. */
+await mustPromote(PARENT, withAdoptableReading(inquiryMd(PARENT, {
   question: "Was the sewer transfer authorised, and did anyone with authority sign it?",
-  refs: [AUTH, SIGNED, AGAINST], legs: PARENT_LEGS }), "inquiry", "open");
+  refs: [AUTH, SIGNED, AGAINST], legs: PARENT_LEGS })), "inquiry", "open");
 
 const WHY = "This was two questions: whether the transfer was authorised at all, and who signed it. "
           + "The answer to the first does not settle the second, and mixing them held both down.";
@@ -384,9 +392,17 @@ console.log("\n--- 4. TERMINAL: the catalog's edge table says so, and every act 
      the widened arm is TYPE-only, so the act publishes regardless of state,
      exactly as it already did on a RETIRED information bundle. What each
      assertion below is really about — which STATE-MACHINE acts a question
-     offers — is unchanged. */
+     offers — is unchanged.
+     CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     no-project conclusion now ADOPTS an accepted reading, so PARENT was
+     concluded carrying one, and the READING acts a question with an accepted
+     reading publishes (PL-2's version acts, REC-136's `withdrawconclusion`)
+     join the list. None is a state-machine act — their predicates read the
+     reading's state, not the inquiry's — so the subject is unchanged and still
+     exact: NO state-machine act is offered on a divided parent. */
   t("op=affordances publishes NO state-machine act for it, and that list is honest because the store refuses each by name",
-    actIds(await affordances(PARENT)), ["cite"]);
+    actIds(await affordances(PARENT)), ["cite", "versionconsider", "versioncurrent", "versionhide", "versionreject",
+                                        "withdrawconclusion"]);
 }
 
 /* =============================================== 5. the CHILDREN and the disclosure */
@@ -407,6 +423,16 @@ console.log("\n--- 5. each child names its PARENT and EVERY SIBLING, and superse
     t(`${id} inherits NOTHING it did not earn: no conclusion, no falsifier, an empty history`,
       [fm.conclusion, fm.falsifier, fm.state_history, fm.current_state, fm.prior_state],
       ["", "", [], "open", null]);
+    /* REC-136 (§7.1 item 6): the parent's conclusion now ADOPTS a reading, and
+       which reading it adopted is the parent's answer as much as its text is.
+       Found at this suite's correction: the division cleared `conclusion` and
+       `falsifier` and carried `conclusion_version`/`conclusion_claim` over.
+       NEGATIVE CONTROL, RUN 2026-09-18 by the REC-136 worker: the two
+       `#setScalar(..., "conclusion_version"/"conclusion_claim", "")` lines in
+       store.mjs divide() removed -> 82 pass, 2 FAIL (this arm, for both children);
+       restored by cp and verified by cmp -> 84 pass, 0 fail. */
+    t(`${id} does not inherit the reading the parent's conclusion ADOPTED either`,
+      [fm.conclusion_version ?? "", fm.conclusion_claim ?? ""], ["", ""]);
     t(`${id} states the disclosure in the BODY too, where a person reads it`,
       [md.includes(`Divided out of ${PARENT}`), md.includes(`stays on the record: ${sib}`)], [true, true]);
     t(`${id} AUDITS CLEAN against the catalog`, await errorsOf(id, md), []);
@@ -534,8 +560,9 @@ console.log("\n--- 8. the catalog's `divided` ENTRY REQUIREMENTS: the account is
 console.log("\n--- 9. a PUBLISHED case refuses PUBLISHED_CANNOT_DIVIDE — an edition is not a malformation ---");
 {
   const PUB = "INQ-2026-1600-published";
-  await mustPromote(PUB, inquiryMd(PUB, { question: "Was the FY2023 transfer authorised?",
-    refs: [AUTH, AGAINST], legs: [{ target: AUTH }, { target: AGAINST, role: "cuts_against" }] }),
+  /* REC-136: PUB is concluded, so it carries an accepted reading to adopt. */
+  await mustPromote(PUB, withAdoptableReading(inquiryMd(PUB, { question: "Was the FY2023 transfer authorised?",
+    refs: [AUTH, AGAINST], legs: [{ target: AUTH }, { target: AGAINST, role: "cuts_against" }] })),
     "inquiry", "open");
   await conclude(PILAR, { target: PUB, conclusion: "The FY2023 transfer rests on the same unadopted memo.",
     falsifier: "An adopted FY2023 resolution would overturn this." });

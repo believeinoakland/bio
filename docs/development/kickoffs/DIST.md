@@ -57,11 +57,14 @@ recurring self-wake with `CronCreate` (every 6 hours) whose prompt is *"DIST: ap
 also messages it on integrating a security fix. On each wake, apply the rule; if nothing is owed, end the turn
 with one line saying so.
 
-**THE ONE GATED ACT, AND WHERE ITS QUESTION GOES.** Cutting, signing and tagging are DIST's and need nobody.
-**Deploying the plane and the installer are gated by `CLAUDE.md`**, and Bob is not in this session — so DIST
-brings the deploy to him THROUGH BOB: `SendMessage` to the BOB session naming the version, what it closes,
-the members that move with it, and the gate's evidence. BOB carries it into Bob's conversation. **Never end a
-turn waiting on that answer**; the cut, signature and tag are already landed either way.
+**DEPLOYING IS DIST'S, BY BOB'S STANDING PERMISSION (2026-09-18: *"DIST has standing permission to deploy when asked
+to"*).** It replaces the per-release approval this paragraph used to require: 0.59.0 → 0.62.0 were each held for a yes
+while the fixes they carried stayed live. **Read as:** DIST deploys each release it cuts under WHEN DIST CUTS, in the
+order the fleet requires, with the whole gate — bytes read back, `/version` SERVING, the headline closings live-verified
+through the ops a caller uses in a scratch namespace swept after, `op=audit` clean — and then REPORTS THE LANDING to the
+BOB session with that evidence (`CLAUDE.md`: report the landing, not the intention). **What still goes to Bob first,
+through BOB:** a release that WIDENS who may read or do something (REC-126's review copy and REC-132's founder sight were
+such) is named in the report so he knows, and anything the gate cannot establish is never deployed on a guess.
 
 **FIRST CHECK FOR THE NEXT CUT — found 2026-09-16 by the last DIST session and recorded nowhere until now:**
 `newgroup`'s `npm test` and `build` both run `npm run embed` (`scripts/embed-release.mjs`), which the session

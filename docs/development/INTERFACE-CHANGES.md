@@ -11501,12 +11501,96 @@ header). CORRECTED at its site with a dated reason, never exempted: `airun-proje
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 35.0.0 → 36.0.0.** The base was read at resolution: 35.0.0, where IC-154 moved it after this row was proposed against 34.0.0. `NAME_TAKEN` (at `promote` and `projectfork`) loses the other project's id and title for EVERY caller, and a run report's `projectGate.projects` counts only the citing projects in the caller's sight. Two fields were removed and a published count re-meant, so it is breaking by IC-25 and IC-118; measured consumers are zero. DEC-63's verdict is unchanged. **NOT BUILT, and carried in D-428 with BOB #15:** plane-minted project ids (a create at a hidden id still answers `EXISTS`; the design does not say refuse-or-ignore, fork's `newId`, or how the id reaches the document's own `id:`), and whether DEC-63's verdict leaks a bit. **A DISCLOSURE CLOSING: DIST is told.**
+
+## IC-153 · I3: a NO-PROJECT conclusion NAMES the reading it adopts (`op=conclude` without `project=` REQUIRES `version=`, refused `NO_CLAIM` otherwise); a project's conclusion record is an APPEND-ONLY history — `op=withdrawconclusion` (new) and `op=basisversions&project=`'s `conclusion_history`/`conclusion_stance` · PROPOSED 2026-09-18 (REC-136, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  after merging `origin/main` at `dd52609b`: 33.0.0 (IC-151 and IC-152 moved it after this item was spawned against
+  31.1.0). Proposed as MAJOR, BREAKING — 33.0.0 → 34.0.0.** Read the base AT RESOLUTION. **Why BREAKING, by IC-137's rule:** a call that
+  succeeded before is now REFUSED — `op=conclude&target=&conclusion=&falsifier=` with no `project` and no `version`
+  answered `ok: true` and moved the inquiry to `concluded`; it now answers `NO_CLAIM` (C-33.34) and writes nothing.
+  Two answers also change MEANING without a key disappearing: the no-project conclude's `claim` was always
+  `{state: "undetermined"}` and is now `{state: "adopted", text, version}`; and a re-conclude with `project=` no longer
+  REPLACES the project's row — its `prior` is now the entry it FOLLOWS (a conclusion or a withdrawal, with `act`), and
+  the project's frontmatter keeps every earlier entry.
+- **Proposer:** RECORD, REC-136 worker `agent-a01b00fb335bbabb8`, 2026-09-18 — building `INVESTIGATIVE-SESSION.md`
+  §7.1 items 6, 7 and 8 (BOB #15).
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` — **BROKEN, measured:** `civicos-ui/app.html`'s conclude flow (`concludeParams`) sends
+  `target`, `conclusion`, `falsifier`, `no_falsifier` and no `version`, so every conclude a member commits from the
+  surface is now refused `NO_CLAIM`. `node civicos-ui/test/run.mjs` went red on `conclude-nofalsifier.test.mjs` (63/12)
+  and is green again only through a FIXTURE stand-in: the harness's transport supplies the fixture's reading on a
+  conclude that carries none, AFTER recording what the surface sent, and an assertion at the suite's foot states that
+  the surface sent none — so it fails the day the surface sends its own. The surface's reading picker, and the
+  withdrawal surface (`withdrawconclusion` registered in `surface-registry.test.mjs`'s `ACTS_AWAITING_SURFACE` as a debt),
+  are DELEGATED in `CLAIMS.md` (REC-136 -> UI). `DIST`, `SKILL`, `agent-worker`, `newgroup` — NOT-AFFECTED, grepped: none
+  calls `op=conclude` or `op=withdrawconclusion` (newgroup carries the plane's bundle as bytes, never a call).
+
+**THE SHAPE.**
+- `op=conclude` WITHOUT `project=` takes `version=<reading>` and REQUIRES it: the named reading must be carried by the
+  inquiry, `accepted`, and state a `claim`, else `NO_CLAIM` (C-33.34, inside `DEC-49 REGION is-conclude-claim`) and
+  nothing is written. `NO_BASIS` now also applies over the ADOPTED reading's legs (and still over the live `basis[]`,
+  which C-2.8 requires of the inquiry's own bytes). On success the inquiry's bytes gain `conclusion_version` and
+  `conclusion_claim` (frozen verbatim) beside `conclusion`, and the Session Log entry an `Adopted:` line. Answer gains
+  `version`; `claim` is `{state: "adopted", text, version}`. `conclusion=` stays required and free for this relationship
+  (a DESIGN GAP, stated in `INVESTIGATIVE-SESSION.md`'s Incomplete sections); `commentary=` without a project stays
+  refused `NO_CLAIM`.
+- `op=conclude&project=` with `version=` naming a reading OTHER than the one the project stands on is refused
+  `NO_CLAIM` (never honoured as a second pointer, never ignored). Without `version=` it is unchanged except that it
+  APPENDS: `conclusions[]` entries now carry `act: "concluded"`, `prior` is the preceding entry (`act`, `version`,
+  `claim`, `at`, `by`) or null, and the answer gains `history_length`.
+- **NEW `op=withdrawconclusion&target=<INQ>&project=<PROJ>&reason=<why>`** (NEEDS `contribute`; STATE_ACTIONS' viewer
+  and author stamps; classes admin/member/probe; in REC-134's `POSITIONAL_ACTS`, so it carries the server-set
+  `identity` stamp). Enters THROUGH `conclude`'s machine fence, so a machine is refused `MACHINE_CANNOT_CONCLUDE` (C-32.2,
+  the same condition). Refused `NO_REASON`, `BAD_REASON`, `NO_TARGET`, `NO_SUCH_BUNDLE`, `NOT_AN_INQUIRY`,
+  `NOT_A_PROJECT` (no project, or one not readable — its detail names op=reopen as the no-project relationship's
+  door), `PROJECT_ACT_NOT_A_PARTICIPANT` (C-56.1, REC-134's check, conclude's position: the actor must have JOINED the
+  project — an administrator who has not is refused) and `NOTHING_TO_WITHDRAW` (C-33.37, NEW: the project stands on no conclusion —
+  never concluded, already withdrawn, or an entry this plane cannot read). On success APPENDS `{inquiry, act:
+  "withdrawn", withdraws_version, withdraws_at, reason, at, by}` to the project's `conclusions[]` and a `Conclusion
+  withdrawn` Session Log entry; the shared inquiry does not move. Answer: `act: "withdrawn"`, `inquiry_moved: false`,
+  `withdraws: {version, claim, at, by}`, `reason`, `history_length`, `author`, `at`.
+- `op=basisversions&project=` gains `conclusion_stance` (`concluded` | `withdrawn` | `undetermined` | `none`) and
+  `conclusion_history` (every entry for the question, in the order written). `conclusion` is the STANCE when it is a
+  conclusion, else null — so it reads null after a withdrawal. `no_project_conclusion.claim` reads `adopted` for a
+  conclusion that names a reading the inquiry carries with that claim, else undetermined with its reason (a
+  hand-authored adoption the reading does not bear out is never taken on the frontmatter's word).
+- `op=queue`'s `shared-inquiry-concluded-by-another-project` follows the stance: no item for a project that withdrew,
+  and `basis.elsewhere[].state` may read `withdrawn`.
+- `op=affordances` publishes `withdrawconclusion` on an inquiry carrying an accepted reading (the catalogue: 19 → 20).
+- The catalogue: C-5.1 holds a project's `conclusions` append-only against the latest snapshot, as it holds
+  `state_history` (an AUDIT finding; `promote` does not run it).
+
+**No I5 IC:** no table or column moves. The history is the project's own frontmatter list, for the reason §7 gives for
+CURRENT (a project-authored, dated field, never a settings row), and because it then travels in the project's bytes,
+is snapshotted with every edition, and needs no purge arm (D-113).
+- `op=inquirydivide`: a divided child no longer inherits the parent conclusion's `conclusion_version`/`conclusion_claim`
+  (cleared beside `conclusion`/`falsifier`; found at `divide.test.mjs`'s correction, with its own control arm).
+
+**Suites:** `bio-plane/test/conclude-project.test.mjs` (43 → 75 assertions; the history arm reads the WHOLE history,
+because keeping only the latest entry passes every stance arm). Negative control: `node test/conclude-project.control.mjs`
+from `bio-plane/` — baseline 75/0, (a) 64/11, (b) 69/6, (c) 73/2, (d) 74/1, (e) replace-the-row restored 66/9,
+(f) the version requirement dropped 72/3, (g) C-5.1 blind to `conclusions` 74/1; every restore sha256 MATCH.
+**Corrected at the site, never exempted** (27 plane suites concluded with no project and no reading, each now naming
+an accepted reading through `test/adoptable-reading.mjs`, with a dated reason): action-loop, caseflip, caselifecycle,
+caseobject, casepin, caseproduction, casesign, conclude, deliverer, divide, fence-e2e, founder-sight, grounds,
+inquiryground, machine-attest, machine-fences, multifinding, operator-attest, publish, publishedcase, reevaluation,
+reopen, reviewcopy, shadowed-refusals, testify, testimonyaxis, versionstate; plus affordances (catalogue 19 → 20) and
+machinefences-dec49 (C-33.37 pinned; corpus 52 → 53 from its print). UI: `conclude-nofalsifier.test.mjs` (the stand-in
+above) and `surface-registry.test.mjs` (`withdrawconclusion` registered as owed). REC-134's
+`project-authority.test.mjs` gains `withdrawconclusion` in its act table (refused for a non-participant administrator
+and the founder, allowed for P_IN's owners; 59 → 63), with three controls recorded at the site — including the
+MIS-MERGE this item's merge of REC-134 produced (git moved conclude's `identity` stamp line onto the withdraw dispatch;
+found by reading the merged dispatch, replayed as an arm: the suite fails 61/2 on it).
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 36.0.0 → 37.0.0**, RE-RESOLVED AT LANDING. It was first resolved 34.0.0 → 35.0.0 on the HELD branch `conduct/rec-136-held`, which DIST kept off `main` until UI-65 could land with it. By the time it landed, IC-154 and IC-156 had taken 35.0.0 and 36.0.0, so the base was RE-READ at landing (36.0.0) and not carried. It landed TOGETHER WITH UI-65 (the conclude surface), so no deployed surface meets the `NO_CLAIM` refusal without the reading picker. The no-project `op=conclude` now REFUSES `NO_CLAIM` what it accepted (it must name `version=`), and a re-conclusion no longer replaces the earlier row, so it is breaking by IC-137. `op=withdrawconclusion` APPENDS (C-33.37 `NOTHING_TO_WITHDRAW`), is in `POSITIONAL_ACTS`, and was checked at integration to resolve its project through the VIEWER gate BEFORE `projectAuthority`, so a hidden and an absent project answer alike. That is REC-138's order; the act did not exist on REC-138's base. **A LIVE-SURFACE CONSEQUENCE, stated:** `civicos-ui/app.html`'s conclude flow sends no `version`, so after deploy a member's no-project conclude from the surface is REFUSED until UI-65 (the reading picker and the withdrawal surface) lands. DIST is told, so it does not ship this without it.
 ## IC-157 · I3: `op=ratify` UNDER PUBLICATION RULE 2 — a PROJECT bundle is REFUSED outright (C-58.1 `RATIFY_PROJECT_BUNDLE`); a finding a RATIFIED case pins is published only under an OWNER's signature (C-57.1) delivered by the founder or a JOINED member (C-56.1), through the SAME helper `op=caseratify` asks; a caller who cannot see the bundle is answered as for one never minted · PROPOSED 2026-09-18 (REC-140 / D-429, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
-- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE: 36.0.0** (35.0.0 at spawn on `ff3a4cea`;
-  IC-156, REC-139, moved it and was merged in before close-out). **Proposed MAJOR — 36.0.0 → 37.0.0**, by IC-137's
-  precedent: refusals where none stood. Read the base AT RESOLUTION: CONDUCT #5 reports REC-136/UI-65 landing at 37.0.0,
-  in which case this is 38.0.0.
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE: 37.0.0** (35.0.0 at spawn on `ff3a4cea`;
+  IC-156 (REC-139) and REC-136/UI-65 moved it and were merged in before close-out). **Proposed MAJOR — 37.0.0 → 38.0.0**,
+  by IC-137's precedent: refusals where none stood. Read the base AT RESOLUTION.
 - **Proposer:** RECORD, worker `agent-a761302b28f105764`, 2026-09-18, spawned by CONDUCT #5 for REC-140.
 - **Owner to land it:** `RECORD`
 - **Consumers to answer:** `UI` (measured NOT-AFFECTED: `civicos-ui/` names `op=ratify` nowhere — grepped), the instance

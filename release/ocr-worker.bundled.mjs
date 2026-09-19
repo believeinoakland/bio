@@ -531,11 +531,6 @@ var OCR_PRODUCER_MARKERS = Object.freeze([
      unrelated word that merely contains the letters does not fire. */
   Object.freeze({ marker: "ocr", re: /(^|[^0-9a-z])ocr([^0-9a-z]|$)/i })
 ]);
-var IMAGE_FILE_MIME = Object.freeze({
-  DCTDecode: "image/jpeg",
-  DCT: "image/jpeg",
-  JPXDecode: "image/jp2"
-});
 
 // ../pdf-worker/src/pagepixels.mjs
 var LATIN12 = new TextDecoder("latin1");

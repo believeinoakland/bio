@@ -123,6 +123,10 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
+/* REC-136 (INVESTIGATIVE-SESSION.md §7.1 item 6): the RECORD area's one fixture
+   helper for a no-project conclusion's reading — imported rather than copied so
+   the reading this harness supplies is the one the plane's own suites use. */
+import { withAdoptableReading, ADOPTED_READING } from "../../bio-plane/test/adoptable-reading.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -239,12 +243,19 @@ await promote(DOC, infoMd(DOC), "information", "collected");
    EXISTS — REC-117's own fixture reasoning, kept because it is the situation
    Bob's ruling is about. It is not that the member could not be bothered; it is
    that demanding one would make them invent it. */
-await promote(INQ_NOFALS, inquiryMd(INQ_NOFALS,
-  "Did anyone raise a concern about the transfer that was never written down?"), "inquiry", "open");
-await promote(INQ_STATED, inquiryMd(INQ_STATED,
-  "Did money from the sewer enterprise fund pay for marina construction?"), "inquiry", "open");
-await promote(INQ_GUARD, inquiryMd(INQ_GUARD,
-  "Who authorised the transfer, if anyone?"), "inquiry", "open");
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and one naming none is refused NO_CLAIM. So each question carries an
+   accepted reading to adopt — a FIXTURE change only. UI-65 CORRECTED the
+   second half: the surface now picks that reading itself (the member picks it,
+   from the rendered picker), and the transport stand-in that supplied it is
+   GONE — see `pickRendered` below and the foot. */
+await promote(INQ_NOFALS, withAdoptableReading(inquiryMd(INQ_NOFALS,
+  "Did anyone raise a concern about the transfer that was never written down?")), "inquiry", "open");
+await promote(INQ_STATED, withAdoptableReading(inquiryMd(INQ_STATED,
+  "Did money from the sewer enterprise fund pay for marina construction?")), "inquiry", "open");
+await promote(INQ_GUARD, withAdoptableReading(inquiryMd(INQ_GUARD,
+  "Who authorised the transfer, if anyone?")), "inquiry", "open");
 
 ok("the plane really holds three open questions, each resting on a real leg",
   (await Promise.all([INQ_NOFALS, INQ_STATED, INQ_GUARD].map(async (id) => {
@@ -310,6 +321,11 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
   fetch: async (u, opts) => {
     const url = new URL(u, "http://x");
     WIRE.push({ op: url.searchParams.get("op"), url, params: Object.fromEntries(url.searchParams.entries()) });
+    /* UI-65 REMOVED REC-136's STAND-IN HERE, as its own foot assertion
+       demanded: this transport used to add `version=` to every conclude the
+       surface sent without one. The surface now sends the reading the member
+       picked, and the request reaches the plane exactly as the surface wrote
+       it. */
     const r = await mf.dispatchFetch(url.toString(), opts);
     try { harvest(await r.clone().json()); } catch (_) {}
     return r;
@@ -318,6 +334,7 @@ ctx.globalThis = ctx; vm.createContext(ctx);
 vm.runInContext(appScript() + ";globalThis.__U = {" + [
   "PLANE", "esc", "openConclude", "concludeAuthor", "concludeToggle",
   "concludeNoFalsifier", "doConclude", "concludeParams", "concludeFalsifier",
+  "concludePick",
 ].join(",") + ", CONCL: () => CONCL };", ctx);
 const U = ctx.__U;
 U.PLANE.token = PILAR_TOKEN;
@@ -359,6 +376,19 @@ function clickRendered(html, id){
   ok(`the surface RENDERED a control with id="${id}" for the member to use — a click needs something to land on`, !!m);
   if (!m) return undefined;
   return vm.runInContext(m[1], ctx);
+}
+/* UI-65 — THE MEMBER PICKS THE READING FROM WHAT WAS RENDERED. The radio's
+   `onchange` is pulled out of the markup and run in the page's scope, entity-
+   decoded the way a browser decodes an attribute, for `clickRendered`'s reason:
+   a pick asserted against a handler would pass with the picker gone. */
+const unent = (s) => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<")
+  .replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+function pickRendered(html, name){
+  const at = html.indexOf(`data-cx-reading="${U.esc(name)}"`);
+  const m = at === -1 ? null : /<input type="radio"[^>]*onchange="([^"]*)"/.exec(html.slice(at));
+  ok(`the surface RENDERED the reading '${name}' as a choice for the member`, !!m);
+  if (!m) return undefined;
+  return vm.runInContext(unent(m[1]), ctx);
 }
 const wireFor = (op) => WIRE.filter((w) => w.op === op);
 const lastConclude = () => wireFor("conclude").slice(-1)[0];
@@ -489,6 +519,7 @@ ok("taking it again from the rendered door returns the member to a committable d
    ============================================================ */
 console.log("\n--- 5. the act, and what the RECORD then carries ---");
 
+pickRendered(capture(dlg()), ADOPTED_READING);
 await U.doConclude();
 const rc = capture(dlg());
 const before = wireFor("conclude").length;
@@ -552,6 +583,7 @@ ok("the surface still shows what will be recorded, verbatim, unchanged by this i
 ok("THE EMPTY-FALSIFIER HINT NO LONGER STATES THE RECORD'S GATE AS ABSOLUTE — the one line of the ordinary journey this item legitimately moved, corrected because REC-117 made it FALSE",
   /Nothing yet\.<\/div>/.test(s1) && !/The record refuses a conclusion that says nothing would overturn it/.test(s1 + s2));
 
+pickRendered(capture(dlg()), ADOPTED_READING);
 await U.doConclude();
 const sr = capture(dlg());
 const STATEDCALLS = WIRE.slice(wireBefore).filter((w) => w.op === "conclude");
@@ -596,6 +628,7 @@ ok("TICKING A LEG STATES A FALSIFIER, and the textarea is still empty — the de
 ok("THE ADDED PATH CLOSES FOR THEM TOO — a door keyed on the textarea rather than on the plane's answer would still be standing open here",
   !/data-nofals/.test(b2) && !/cx-nofals/.test(b2));
 ok("and their commit is present, because the plane has nothing left to refuse", commitPresent(b2));
+pickRendered(b2, ADOPTED_READING);
 await U.doConclude();
 const POINTDOC = await imageOf(INQ_GUARD);
 ok("the record carries the leg they pointed at as the falsifier, verbatim",
@@ -655,6 +688,17 @@ console.log(`  pubFalsifierHtml: ${PUBF ? sha(PUBF[0]) : "<absent>"}  (${PUBF ? 
    THE FOOT. A `TypeError` inside an assertion goes through NO assertion at all
    and ends the module while the tally still reads clean, so the run is only
    believable if it reached here and said so. */
+/* CORRECTED 2026-09-18 by UI-65, and the old assertion was RIGHT UNTIL NOW:
+   it read "the SURFACE sent no reading on any conclude, and the harness
+   supplied it" — REC-136's stand-in, stated rather than silent, built to fail
+   the day the surface gained its picker. The stand-in is gone, so what is
+   asserted now is the surface's OWN wire: every COMMIT (a conclude carrying a
+   target) names the reading the member picked, and nothing supplied it on the
+   way. */
+const COMMITS = WIRE.filter(w => w.op === "conclude" && w.params.target);
+ok("UI-65: every conclude the SURFACE committed names the reading the member PICKED — the transport supplies nothing",
+   COMMITS.length >= 3 && COMMITS.every(w => w.params.version === ADOPTED_READING),
+   JSON.stringify(COMMITS.map(w => w.params.version)));
 console.log(`\nconclude-nofalsifier: ${pass} pass, ${fail} fail`);
 /* `process.exit` would leave miniflare holding the event loop open and the
    process would hang after a green run; dispose first, then set the code. */

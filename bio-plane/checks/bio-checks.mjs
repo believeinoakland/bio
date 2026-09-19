@@ -1996,15 +1996,21 @@ function checkAppendOnly(ctx, findings) {
   if (!snapPath || !ctx.fm) return; // nothing to compare against yet
   const snap = parseFrontmatter(asText(ctx.files.get(snapPath)));
   if (!snap.data) return; // a malformed snapshot is C-12's problem
-  const prior = Array.isArray(snap.data.state_history) ? snap.data.state_history : [];
-  const live = Array.isArray(ctx.fm.state_history) ? ctx.fm.state_history : [];
-  if (live.length < prior.length) {
-    findings.push(f('C-5.1', 'error', `state_history shrank from ${prior.length} to ${live.length} entries vs. the latest snapshot`, ['restore from _history and re-append new material']));
-  } else {
-    for (let i = 0; i < prior.length; i++) {
-      if (JSON.stringify(prior[i]) !== JSON.stringify(live[i])) {
-        findings.push(f('C-5.1', 'error', `state_history[${i}] was modified retroactively (append-only surface)`, ['restore from _history and re-append new material']));
-        break;
+  /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: a project's `conclusions`
+     is the SAME kind of surface as `state_history` — every conclusion and
+     withdrawal a project made, readable forever (DEC-19) — so it is held by the
+     same rule, structurally rather than by the writer's convention. */
+  for (const key of ['state_history', 'conclusions']) {
+    const prior = Array.isArray(snap.data[key]) ? snap.data[key] : [];
+    const live = Array.isArray(ctx.fm[key]) ? ctx.fm[key] : [];
+    if (live.length < prior.length) {
+      findings.push(f('C-5.1', 'error', `${key} shrank from ${prior.length} to ${live.length} entries vs. the latest snapshot`, ['restore from _history and re-append new material']));
+    } else {
+      for (let i = 0; i < prior.length; i++) {
+        if (JSON.stringify(prior[i]) !== JSON.stringify(live[i])) {
+          findings.push(f('C-5.1', 'error', `${key}[${i}] was modified retroactively (append-only surface)`, ['restore from _history and re-append new material']));
+          break;
+        }
       }
     }
   }
@@ -9232,13 +9238,16 @@ export const ACT_SHAPE_CHECKS = {
      was concluded. NO_CLAIM is every door to "there is nothing to adopt" — the
      project stands on no reading, the reading is not accepted or states no
      claim, or commentary arrives with no adopted claim to comment beyond. */
+  /* REC-136 / §7.1 item 6: a conclusion drawn with NO project names the
+     reading it adopts, and an unnamed reading is this condition too. The
+     translation was project-only and now covers both relationships. */
   NO_CLAIM: {
     check: 'C-33.34',
     where: 'src/store.mjs conclude > is-conclude-claim',
-    translation: 'Concluding for a project adopts the claim of the reading the project stands on, and '
-      + 'that claim is what the group concluded. There is no claim to adopt here. State the claim on a '
-      + 'reading first — a claim nothing supports yet is allowed — make that reading the one the project '
-      + 'stands on, and conclude again.',
+    translation: 'Concluding adopts the claim of an accepted reading, and that claim is what the group '
+      + 'concluded. There is no claim to adopt here. For a project, the reading is the one the project '
+      + 'stands on; with no project, name the reading. State the claim on a reading first — a claim '
+      + 'nothing supports yet is allowed — and conclude again.',
   },
   /* REC-124 / §7.1 item 2. A free conclusion text beside a project could say
      what no claim said; the member is told the door rather than having their
@@ -9254,6 +9263,16 @@ export const ACT_SHAPE_CHECKS = {
   /* REC-124. The project's own frontmatter could not take the conclusion row
      in place, so nothing was written — the make-current writer's condition, on
      the conclusion row. */
+  /* REC-136 / §7.1 item 7. A project withdraws only a conclusion it currently
+     stands on; a second withdrawal, or one with nothing concluded, would add
+     an entry that records nothing. */
+  NOTHING_TO_WITHDRAW: {
+    check: 'C-33.37',
+    where: 'src/store.mjs #withdrawConclusion > is-withdraw-stance',
+    translation: 'There is no conclusion here to withdraw: this project has not concluded this question, or '
+      + 'has already withdrawn its latest conclusion. Everything it concluded and withdrew before stays in '
+      + 'the record.',
+  },
   UNSPLICEABLE_CONCLUSIONS: {
     check: 'C-33.36',
     where: 'src/store.mjs #setProjectConclusion > is-conclusion-row',

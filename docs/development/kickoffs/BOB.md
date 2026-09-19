@@ -41,7 +41,9 @@ Bob can answer sends it here, and this session carries it into his conversation.
    <your id>`; archive exactly what it calls RETIRABLE, never a HOLD row. **The standing lanes — CONDUCT,
    BOB, DIST, FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18); the tool protects their newest
    session, so do not archive one by hand on an idle reading.
-4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.**
+4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.** And **measure every
+   live session's context** (`get_usage` per session): any over 60% is refreshed (Bob, 2026-09-18) — tell it to write its
+   handoff, then file its successor's chip. Include yourself.
 5. **Read `docs/development/DECISIONS.md` and surface every `open` entry to Bob**, as written: question,
    what runs provisionally, the alternative, the recommendation, what reversing costs. When he answers,
    write `response:` and `decided:` and set it `answered`; CONDUCT enacts. An open decision never blocks

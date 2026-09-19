@@ -16837,8 +16837,12 @@ FLEET or workers (untested); the OLD arm's 4 lost points are mostly rules added 
 it is not a fair score of the old corpus on its own terms; and the questions and the new corpus have one author (BOB #15),
 which the blind grader and the old-corpus arm limit and do not remove. **RE-RUN after the two corrections (same instrument, a fresh NEW arm on the corrected files): Q1 and Q9 both answered
 with the key action** — Q1 *"the BOB lane is Bob's room, so I bring the question into this conversation now"*; Q9 *"…and I
-re-run the subject's negative control"*. **Owed:** the same exam per lane, and field counts of process failures per lane
-against this day's baseline.
+re-run the subject's negative control"*. **A CORRECTION TO HOW THIS WAS FRAMED, measured the same day:** the session tool reports a **1,000,000-token** context
+window, and SCHEDULER, after reading its orientation set (including the 215 KB `QUEUE.md`), stood at **116,234 tokens,
+12%** — messages 62,566, system tools 33,230, MCP tools 19,129, memory files 4,279. So at today's sizes the required
+reading FITS; the binding constraint is not capacity but FIDELITY — what a session retains and applies — and that is what
+the exam above measures. Smaller reading still matters, for that reason, not because the files could not be held.
+**Owed:** the same exam per lane, and field counts of process failures per lane against this day's baseline.
 
 
 ## M-61 · 2026-09-18 · M0-67 — CAN THE BATTERY REPORT GREEN OVER A SUITE THAT PRINTED FAIL? BOTH MECHANISMS DRIVEN; THE OBSERVED LINE WAS TWO RUNS IN ONE FILE (worktree `agent-aeae827f6d7997fa5`, base `30f1bd6b`, D-425)

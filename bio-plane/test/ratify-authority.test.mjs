@@ -38,6 +38,8 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { projectFixtureMd, allLoadBearing } from "./publishingproject.mjs";
+/* REC-136 (INVESTIGATIVE-SESSION §7.1 item 6): a no-project conclude must NAME the reading it adopts. */
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- ratify-authority ---");
@@ -205,10 +207,11 @@ const makeCase = async ({ inviteWen = false, ratifyTheCase = true } = {}) => {
   must("gus joins", await POST(`op=projectjoin&token=${GUS}&projectId=${project}`));
   if (inviteWen) must("iris invites wen", await POST(`op=projectinvite&token=${IRIS}&projectId=${project}&handle=wen`));
   await promote(info, infoMd(info), "information", "collected");
-  await promote(lead, inquiryMd(lead, `Was the transfer ${lead} authorised?`, info), "inquiry", "open");
+  await promote(lead, withAdoptableReading(inquiryMd(lead, `Was the transfer ${lead} authorised?`, info)), "inquiry", "open");
   must(`conclude ${lead}`, await GET(`op=conclude&token=${IRIS}&target=${lead}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`));
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+    + adoptedVersionParam()));
   const pub = await POST(`op=publish&token=${IRIS}`, {
     project, targets: [lead], roles: allLoadBearing({ targets: [lead] }),
     scope: "Whether the FY2024 transfer was authorised, on the documents in hand.",
@@ -358,10 +361,11 @@ console.log("\n--- 7. what op=ratify publishes OUTSIDE a case (the ruling does n
     .replace("criticality: supporting", "criticality: supporting\nsource_status: unchanged"), "information", "collected");
   /* The inquiry is minted BEFORE its information is published, because a leg on a
      published bundle must be inherited (C-21.2) — which is not this arm's subject. */
-  await promote(lead, inquiryMd(lead, "Was the loose transfer authorised?", info), "inquiry", "open");
+  await promote(lead, withAdoptableReading(inquiryMd(lead, "Was the loose transfer authorised?", info)), "inquiry", "open");
   must(`conclude ${lead}`, await GET(`op=conclude&token=${IRIS}&target=${lead}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`));
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+    + adoptedVersionParam()));
   /* The inquiry first: once its information is published, the gate asks for an
      inherited leg (C-21.2), which is not this arm's subject. */
   const l = await ratify(VIC, "vic", lead);

@@ -45,6 +45,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { checkBundle, parseFrontmatter, ACTION_KINDS, ACTION_BASIS_KINDS,
          CORRESPONDENCE_DIRECTIONS, RFC_RESPONSE_WINDOW_PRECEDENT,
          consequenceState } from "../checks/bio-checks.mjs";
@@ -319,11 +320,17 @@ const ACT = "ACTN-2026-2400-records-request";
 console.log("--- 1. the ground: a concluded finding ---");
 {
   await promote(NADIA, DOC, infoMd(DOC), "information", "collected");
-  const text = inquiryMd(INQ, { refs: [DOC], legs: [{ target: DOC, role: "supports" }] });
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM. This conclude named none
+     because the act took none; the inquiry now carries an accepted reading
+     (`withAdoptableReading`) and the call names it. */
+  const text = withAdoptableReading(inquiryMd(INQ, { refs: [DOC], legs: [{ target: DOC, role: "supports" }] }));
   t("the inquiry promotes", (await promote(NADIA, INQ, text, "inquiry", "open")).ok, true);
   const c = rP(await GET(`op=conclude&token=${NADIA}&target=${encodeURIComponent(INQ)}`
     + `&conclusion=${encodeURIComponent("The transfer rests on an administrative memo, not an ordinance.")}`
-    + `&falsifier=${encodeURIComponent("An ordinance authorizing the transfer.")}`));
+    + `&falsifier=${encodeURIComponent("An ordinance authorizing the transfer.")}`
+    + adoptedVersionParam()));
   t("it concludes, so the action rests on a FINDING and not on an open question",
     [c.ok, await stateOf(INQ, NADIA)], [true, "concluded"]);
 }

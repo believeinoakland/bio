@@ -581,10 +581,9 @@ token and not to the founder's session). **Design:**
   echoes neither the other project's id nor its title. **The plane MINTS project ids** (a caller no longer chooses one),
   which closes the `EXISTS` channel outright. An inquiry run's report lists only the citing projects its member can
   see, and counts none of the others: DEC-63 decides who may START a run and requires no such disclosure, so a run naming
-  a hidden project is a §7.9 defect, not a conflict between rulings. **OPEN, and Bob's (two of his July 26 rulings meet):**
-  under §7.1's instance-wide uniqueness, refusing a name tells an uninvited member that a project with THAT name exists,
-  which §7.9 says it may not learn. Running provisionally: uniqueness holds, and the refusal reveals only the name the
-  caller supplied.
+  a hidden project is a §7.9 defect, not a conflict between rulings. **RULED BY BOB, 2026-09-18 (two of his July 26 rulings met):**
+  *"Keep project names unique across instances."* Refusing a name therefore tells an uninvited member that a project with
+  THAT name exists — the one thing §7.9 yields to §7.1 — and the refusal reveals nothing beyond the name the caller supplied.
   **BUILT 2026-09-18 by REC-139 (IC-156), in part.** `NAME_TAKEN` (at `promote` and `forkProject`) carries neither the other
   project's id nor its title, for every caller — one payload, so no sight question is asked. The three run verbs'
   `projectGate.projects` counts only the citing projects in the caller's sight (`Store#inSight`, the viewer stamped by the

@@ -225,9 +225,17 @@ const PAIR_0009 = {
 const DOCS = {
   "INQ-2026-0001": { state:"open", title:"Did the sewer fund pay for the marina?", legs:MIXED_LEGS,
     q:"Did money from the sewer enterprise fund pay for marina construction?",
-    f:"A general-ledger export showing no transfer from fund 601." },
+    f:"A general-ledger export showing no transfer from fund 601.",
+    /* CORRECTED 2026-09-18 (UI-65), not exempted: IC-153 (REC-136) makes a
+       no-project conclusion NAME the accepted reading whose claim it adopts, so
+       each question the journey concludes carries one, and `op=basisversions`
+       answers it. */
+    readings:[{ name:"the ledger reading", state:"accepted", leg_count:4,
+                claim:"The sewer fund paid for marina construction in the 2024 cycle." }] },
   "INQ-2026-0005": { state:"open", title:"Where did the 2025 surplus go?", legs:[],
-    q:"Where did the 2025 general-fund surplus go?", f:"" },
+    q:"Where did the 2025 general-fund surplus go?", f:"",
+    readings:[{ name:"the surplus reading", state:"accepted", leg_count:1,
+                claim:"The surplus went to the marina." }] },
   "INFO-2026-0100": { state:"verified", title:"Sewer fund ledger", legs:[], q:"", f:"", type:"information" },
 };
 
@@ -239,6 +247,7 @@ const REF = {
   NO_SUCH_BUNDLE: "no question with that name is visible to this credential.",
   NO_BASIS:       "a conclusion rests on something, and this question rests on nothing at all.",
   MACHINE_CANNOT_CONCLUDE: "a machine credential may gather and may never author the answer.",
+  NO_CLAIM:       "a conclusion adopts the claim of a reading, so name the accepted reading it adopts.",
 };
 const refuse = (reason, extra) => { SAID.push(REF[reason]); return { ok:false, reason, detail:REF[reason], ...(extra||{}) }; };
 
@@ -290,9 +299,18 @@ function mockFetch(u){
     return W({ ok:false, reason:"NOT_AN_INQUIRY", target:p.id,
                detail:"a document has no basis to derive a strength from." });
   }
+  /* UI-65: the readings the conclude dialog offers (IC-153). The bound is
+     published because the plane always publishes it. */
+  if(op==="basisversions"){
+    const d = DOCS[p.id]; const v = (d && d.readings) || [];
+    return W({ ok:true, inquiry:p.id, versions:v, count:v.length, total:v.length, limit:200, offset:0,
+               truncated:false, no_project_conclusion:null });
+  }
   if(op==="conclude"){
     /* THE STORE'S OWN ORDER (store.mjs conclude()), mirrored exactly, because
-       the order is the thing the pre-flight design turns on. */
+       the order is the thing the pre-flight design turns on. UI-65 added
+       NO_CLAIM where IC-153 put it: after the target resolves and before
+       NO_BASIS, for a no-project conclusion naming no adoptable reading. */
     if(PREFLIGHT_ACCEPTS && !p.target) return W({ ok:true, target:null, from:"open", to:"concluded" });
     if(AS_MACHINE) return W(refuse("MACHINE_CANNOT_CONCLUDE"));
     const c = String(p.conclusion||"").trim(), f = String(p.falsifier||"").trim();
@@ -302,6 +320,8 @@ function mockFetch(u){
     if(!p.target) return W(refuse("NO_TARGET"));
     const d = DOCS[p.target];
     if(!d) return W(refuse("NO_SUCH_BUNDLE", { target:p.target }));
+    const rd = (d.readings||[]).find(r => r.name === p.version && r.state === "accepted" && r.claim);
+    if(!p.project && !rd) return W(refuse("NO_CLAIM", { target:p.target }));
     if((d.legs||[]).length < 1) return W(refuse("NO_BASIS", { target:p.target }));
     d.state = "concluded";
     return W({ ok:true, target:p.target, from:"open", to:"concluded", conclusion:c, falsifier:f,
@@ -338,6 +358,14 @@ ctx.__PLANE.session = true;
 ctx.__PLANE.me = { member:"m_alice", session:true, administer:false, capabilities:["contribute"] };
 
 const page = () => els.get("#content")._html;
+/* UI-65: a pick is the rendered radio's own onchange, entity-decoded and run
+   in the page's scope — never a call on the handler. */
+function pickReading(html, name){
+  const at = html.indexOf(`data-cx-reading="${name}"`);
+  const m = at === -1 ? null : /<input type="radio"[^>]*onchange="([^"]*)"/.exec(html.slice(at));
+  if(!m) return ok(`the reading '${name}' was rendered for the member to pick`, false);
+  vm.runInContext(m[1].replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,"&"), ctx);
+}
 const dlg  = () => els.get("#dlg")._html;
 async function openPage(id){ ctx.__PROJ_CACHE.clear(); ctx.__IMG_CACHE.clear(); await ctx.__openInquiry(id); return page(); }
 /* The live preview's own slice of the dialog, between its heading and the next. */
@@ -553,10 +581,16 @@ ok("no rung is MARKED, because the record declares none for this act", !/wl-rung
 ok("and the absence is stated rather than read as lightness", /declares no weight for this act/.test(d4));
 
 /* ============ (7) THE ACT, AND THE RECEIPT — THE PLANE'S TRANSITION AND ITS STAMP ============ */
+/* UI-65: the member picks the reading the conclusion adopts, from the rendered
+   picker (its onchange run the way a browser runs it); nothing was picked for
+   them. `conclude-reading.test.mjs` drives this against the real plane. */
+ok("no reading is picked for the member", !/name="cx-reading" checked/.test(d4) && ctx.__CONCL().version === "");
+pickReading(d4, "the ledger reading");
 await ctx.__do();
 const rc = dlg();
 const commit = CALLS.filter(c=>c.op==="conclude").pop();
 ok("the commit named the target — the one field every pre-flight withheld", commit.params.target === "INQ-2026-0001");
+ok("UI-65: the commit named the reading the member picked", commit.params.version === "the ledger reading");
 ok("the commit sent the member's own conclusion, unmodified",
    commit.params.conclusion === "The sewer fund paid for marina construction in the 2024 cycle.");
 ok("the browser never sends an author (the plane stamps it)",
@@ -579,6 +613,7 @@ await ctx.__author("conclusion", "The surplus went to the marina.");
 await ctx.__author("falsifier", "a ledger showing otherwise");
 ok("the pre-flight clears — NO_BASIS is BELOW the withheld field in the store's order and cannot be probed",
    ctx.__CONCL().pf.clear === true);
+pickReading(dlg(), "the surplus reading");
 await ctx.__do();
 ok("so the plane refuses at commit, and ITS words are what appear",
    dlg().includes(REF.NO_BASIS) && /NO_BASIS/.test(dlg()));

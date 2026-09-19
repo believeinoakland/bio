@@ -166,6 +166,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { checkCaseDocument, CASE_DOCUMENT_FAMILY, CASE_DOCUMENT_FORMAT,
          parseFrontmatter } from "../checks/bio-checks.mjs";
 
@@ -369,14 +370,21 @@ const LEGS = [{ target: INFO, grade: "D", axis: "connection", source: "testimony
 
 await mustPromote(INFO, infoMd(INFO), "information", "collected");
 await mustPromote(LEFT, infoMd(LEFT), "information", "collected");
-await mustPromote(LEAD, inquiryMd(LEAD, { question: "Was the transfer authorised?",
-  refs: [INFO], legs: LEGS }), "inquiry", "open");
-await mustPromote(SUPP, inquiryMd(SUPP, { question: "Was notice given?",
-  refs: [INFO], legs: LEGS }), "inquiry", "open");
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. `conclude` below concluded
+   with no reading because the act took none; every inquiry it concludes (LEAD,
+   SUPP, and block 6's SOLO) now carries one (`withAdoptableReading`) and the call
+   names it. */
+await mustPromote(LEAD, withAdoptableReading(inquiryMd(LEAD, { question: "Was the transfer authorised?",
+  refs: [INFO], legs: LEGS })), "inquiry", "open");
+await mustPromote(SUPP, withAdoptableReading(inquiryMd(SUPP, { question: "Was notice given?",
+  refs: [INFO], legs: LEGS })), "inquiry", "open");
 
 const conclude = async (target, conclusion, falsifier) =>
   rP(await GET(`op=conclude&token=${IRIS}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 for (const [id, c, fz] of [[LEAD, "The transfer rests on a memo nobody adopted.",
                             "An adopted resolution naming the transfer would overturn this."],
                            [SUPP, "No notice was published before the transfer.",
@@ -922,7 +930,8 @@ console.log("\n--- 5. a stranger verifies the CASE and its members with the inst
 console.log("\n--- 6. OVER-STRICTNESS: a legitimately signed case publishes, and DEC-44's one-finding case stays legal ---");
 {
   const SOLO = "INQ-2026-7700-solo";
-  await mustPromote(SOLO, inquiryMd(SOLO, { question: "Was the index kept?", refs: [INFO], legs: LEGS }), "inquiry", "open");
+  await mustPromote(SOLO, withAdoptableReading(inquiryMd(SOLO, { question: "Was the index kept?", refs: [INFO], legs: LEGS })),
+    "inquiry", "open");   /* REC-136: concluded below, so it carries a reading to adopt */
   const cn = await conclude(SOLO, "The clerk's index omits the transfer.",
                             "An index entry naming the transfer would overturn this.");
   if (!cn.ok) bail("conclude SOLO", cn);

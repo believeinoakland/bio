@@ -44,6 +44,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { projectFixtureMd, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- deliverer ---");
@@ -232,10 +233,17 @@ const authorCase = async (project, lead, info, st = S) => {
   const jn = await POST(`op=projectjoin&token=${GUS}${st}&projectId=${project}`);
   if (!jn || jn.ok !== true) throw new Error(`projectjoin gus: ${JSON.stringify(jn)}`);
   await promote(info, infoMd(info), "information", "collected", st);
-  await promote(lead, inquiryMd(lead, `Was the transfer ${lead} authorised?`, info), "inquiry", "open", st);
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM. This conclude named none
+     because the act took none; the lead inquiry now carries an accepted reading
+     (`withAdoptableReading`) and the call names it. */
+  await promote(lead, withAdoptableReading(inquiryMd(lead, `Was the transfer ${lead} authorised?`, info)),
+    "inquiry", "open", st);
   const cc = await GET(`op=conclude&token=${IRIS}${st}&target=${lead}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+    + adoptedVersionParam());
   if (!cc || cc.ok === false) throw new Error(`conclude ${lead}: ${JSON.stringify(cc)}`);
   const pub = await POST(`op=publish&token=${IRIS}${st}`, {
     project, targets: [lead], roles: allLoadBearing({ targets: [lead] }),

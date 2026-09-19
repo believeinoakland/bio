@@ -570,10 +570,15 @@ const cat = await affordances(null);
    appear or vanish without a turn saying so, and a `>=` would have made it stop
    doing that. It moved by exactly the number of object-directed ops PL-2 added,
    which is the totality check's companion working. */
-t("no target -> the whole catalogue: nineteen acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-09-18 (REC-136): TWENTY, with `withdrawconclusion` — a
+   project withdrawing its conclusion, the act INVESTIGATIVE-SESSION.md §7.1
+   item 7 rules APPENDS to the relationship's history. Corrected, not loosened,
+   for every note above's reason; it moved by exactly the one object-directed
+   op REC-136 added. */
+t("no target -> the whole catalogue: twenty acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 19, true]);
+  [true, 20, true]);
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
    one it is the PUBLISHED constant — so a surface that has the control

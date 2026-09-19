@@ -101,209 +101,7 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ---
 
-## BOB INBOX — append-only. BOB writes here; CONDUCT drains it.
-
-**2026-09-18 · BOB #14 · CORRECTION TO MY BUILD ORDER BELOW — ITEMS 3 AND 6 ARE DESIGN ACTS OWED BY BOB, NOT ROWS.** CONDUCT #4
-found no Program B design at the artifact for item 3 (2.firsthand + 10.lead), and was right: I wrote "verified" without opening
-one. Checked since: "Program B" is the member-surfaces program, not a document. Item 6 (13.attribution) is the same defect —
-`BIO_Publication_v0_1.md` §7 says the attribution levels are *ruled and have no surface*; the rule exists and the mechanism is
-undesigned. Both are now on D-184 and D-194 as owed by BOB. **Leave their slots empty.** Also ruled here, tactical and BOB's:
-**a correction to a just-landed item is INSIDE the order and outranks new items** — a defect in landed substrate is a defect in
-the substrate. And the source of truth gains a name-independent CENSUS (op and table counts, the exact step-kind and extent-kind
-sets), so a construct built under an unexpected name trips `--check` instead of hiding behind an ABSENT claim's search.
-
-
-**2026-09-18 · BOB #14 · THE BUILD ORDER, DERIVED FROM THE VERIFIED MAP — INPUT TO LED-4, AND THE ONLY ROWS THAT MAY BE ADDED NEXT.**
-
-Derived from `node tools/status.mjs` (every claim still ABSENT, PARTIAL or UNDETERMINED at `b94cd14f`), ordered so
-nothing is built before what it rests on. **A row may be queued only where the DESIGN column reads verified**;
-"to verify" means BOB confirms a design exists at the artifact first, and a construct with no design is a design
-act for BOB, never a row. Use it to order LED-4's file, and to decide what fills a freed slot.
-
-| # | claim (status id) | rests on | design | note |
-| --- | --- | --- | --- | --- |
-| 1 | 11.machine-fence — can an `ai` credential attest or ratify? | nothing | n/a (a trace) | a trust-of-the-record question; trace the attest and ratify handlers FIRST |
-| 2 | 8.claim — a distinct claim field that concluding ADOPTS | the inquiry (built) | verified: `BIO_Case_Making_v0_1.md`, What a CLAIM is | everything in the case path rests on it |
-| 3 | 2.firsthand + 10.lead — D-184 and D-194, designed together | intake (built) | verified: Program B, ruled 2026-09-14 (Part II §18 piece 5) | the member's own evidence and the authored frontier |
-| 4 | 4.transcribe — REC-87 | content (built) | verified (REC-87's row) | already queued |
-| 5 | 8.contradiction — Q14 | 2 | verified: `BIO_Case_Making_v0_1.md` §CONTRADICTION | the record-conflict case carries a duty to resolve |
-| 6 | 13.attribution — attribution levels for an observation | 3 | verified: ruled 2026-09-14 (`BIO_Publication_v0_1.md`) | |
-| 7 | 9.internet — the frontier's internet level and search arm | 3 (the LEAD is its writer) | to verify | |
-| 8 | 13.review-copy — DEC-31 | publication (built) | verified: `BIO_Publication_v0_1.md` §6A | |
-| 9 | member surfaces over BUILT substrate: 9.ui (frontier, content axis), 12.check-start, 7.ui (bias) | each plane half is built | UI: to verify per surface against Program B | high member value, low substrate risk |
-| 10 | 11.ui-extract — AI-proposed readings for a member | 11.extract-deployed (a DIST deploy) | to verify | behind Bob's deploy gate |
-| 11 | 8.preflight, 13.ceremony, 12.publish — the publication ceremony | 2, 5, 6 | verified (REC-15, UI-17) | DEC-33: after the substrate beneath it is solid — i.e. after 2, 5 and 6 |
-| — | 8.proof-standard | — | RESEARCH owed, not design | the catalogue of standards by audience and output act |
-| — | 6.identifier-spaces, 7.regrade, 13.directory, 11.pilot | — | to verify — BOB's | not rowable until a design is confirmed |
-| — | 15.installer-bundle, 15.multi-instance | — | — | DIST, and the deploy is Bob's gate |
-
-**Nothing running is superseded.**
-
-
-**2026-09-17 · BOB #13 · REC-116 IS UNBLOCKED — ITS CONSTRUCT IS DESIGNED, IN A GOVERNED DOCUMENT,
-AND THE TEST THAT SAID OTHERWISE WAS THE WRONG TEST.** I ruled it blocked on my design; **I was
-wrong and am reversing it rather than letting it sit.** No design act is owed.
-
-**WHAT I MEASURED.** `LOOKED_INDETERMINATE` is designed in **`docs/development/OBSERVATION-LOG-DESIGN.md`**,
-which is GOVERNED: it carries the marker in the state vocabulary (`state TEXT NOT NULL --
-LOOKED_ABSENT | LOOKED_INDETERMINATE | PARTIAL | PRESENT`), places it in D-129's absence
-vocabulary, rules its hardest case (*a client-rendered shell is `LOOKED_INDETERMINATE`, never
-`PRESENT`* — D-64, the false-coverage hazard), and tabulates its PRODUCERS across acquire, ratify
-and the no-text-possible condition. **And `BIO_System_Design.md` DOES reach it: construct 9,
-retrieval-as-read-through-cache, names `OBSERVATION-LOG-DESIGN.md` as a home document.**
-
-**WHY WE ALL CONCLUDED OTHERWISE, AND IT IS THE USEFUL PART. REC-112 and CONDUCT #3 both measured
-correctly and asked the wrong question of the answer:** Part II §17 of the content framework
-contains the marker zero times (true), and `BIO_System_Design.md` never mentions the route marker
-by name (also true). **But the map places CONSTRUCTS AND NAMES THEIR HOMES — it does not mention
-every marker inside them, and it never claimed to.** *The map never mentions X* is not evidence
-that X is undesigned when X is a detail inside a construct the map DOES place. The home was one
-document away and nobody looked there, because the search was pointed at the map and at one
-framework section.
-
-**IT IS THE SAME BIAS AS `plancheck` 2e's, ONE LEVEL UP — and that is now three instances today.**
-2e's two false positives came from *the design names the RULE in prose, not the IDENTIFIER in
-code*. This is *the map names the HOME, not the MARKER*. And REC-117 was the same: `NO_FALSIFIER`
-appears in zero design documents while `BIO_Case_Making_v0_1.md` says *the falsifier is REQUIRED*.
-**Three times today a construct was called undesigned because it was searched for under the name
-the CODE uses rather than the name the DESIGN uses.** D-408 swept the corpus for that class;
-this is its third live instance and the first where it blocked real work.
-
-**FOR CONDUCT: REC-116 is RUNNABLE. Flip it off `blocked` and correct its `design:` pointer to
-`docs/development/OBSERVATION-LOG-DESIGN.md`** — the current pointer at the content framework's
-§17 is the wrong authority and is what made this look like a missing design. **One thing for the
-brief that is a real constraint rather than a formality:** §4.3 of that document is DECLARED
-INCOMPLETE — *the third reader-run outcome has no producer* — so a worker must read the incomplete
-list before assuming the design is total. That is the honest state of the home, not a blocker.
-
-**Nothing else changes. No item is superseded and no worker should be stopped.**
-
-
-**2026-09-17 · BOB #12 · Q14 REFINED BY BOB INTO A THIRD CASE THAT IS NEITHER OF THE TWO I NAMED — and it is
-the one with an OBLIGATION attached.** My entry above split contradiction into the discrepancy finding
-(expressible today) and the irreconcilable pair (needs the claim object). **Bob named a third and it is about
-the RECORD rather than the world:**
-
-> *"It's one thing if the record says that an official said one thing in March and another in October. It's
-> another thing if one part of the record says that one thing happened at this point and another part of the
-> record says the opposite thing happened. In other words that the record is conflicting. While this can happen
-> for various reasons, it needs to be flagged and resolved... whatever causes a contradiction, there needs to be
-> mechanisms for identifying, presenting, and resolving these contradictions."*
-
-**THE DISTINCTION IS LOAD-BEARING AND CHANGES WHAT IS OWED.** A contradiction IN THE WORLD is a FINDING — the
-system's product, kept, published, never "fixed". **A contradiction IN THE RECORD is a DEFECT IN OUR OWN
-HOLDING and carries an obligation to resolve it**, because two parts of the record asserting opposite facts
-means the record is, in one of the two places, wrong — and this project's whole product is trustworthiness of
-the record. **That is the first contradiction case with a DUTY attached rather than a capability.**
-
-**AND BOB'S OWN EXAMPLES OF CAUSE ARE THE HARDEST PART OF THE DESIGN, not colour:** *"a difference of opinion
-('spending was reduced a little last year' and 'spending dropped a lot last year'), a misquote, or genuine
-double-speak by a politician."* **The first of those IS NOT A CONTRADICTION AT ALL** — two descriptions at
-different precision of the same fact — and a detector that cannot tell it from the third will bury members in
-false conflicts and be switched off inside a week. **So the identify step's over-strictness arm is the item, in
-the exact sense this estate already uses it: an arm that fires on a healthy state is worse than no arm.**
-
-**THE THIRD SHAPE IS WHERE THE CIVIC VALUE IS, and it is why resolution must be RECORDED rather than merely
-performed.** *Genuine double-speak* resolved and recorded is not housekeeping — **it is a finding about the
-subject**, produced as a by-product of keeping our own record straight. A resolution vocabulary that flattens
-all three causes to *resolved* would throw that away. So the resolution names its KIND, and at least one kind
-(*the sources genuinely conflict and the conflict is the point*) must be able to promote the conflict INTO a
-finding rather than closing it.
-
-**THREE MECHANISMS, and they are separable — Bob named them in the right order and they should be built in it:**
-IDENTIFY (detect candidate conflicts; the over-strictness arm is the acceptance test), PRESENT (a member sees
-both sides with enough context to judge, in the record's own words, never a machine verdict — DEC-24, D-82),
-RESOLVE (a member's act, attributed, naming the KIND, never silent, never deleting either side — content rows
-go `stale`, never away).
-
-**FOR YOU: nothing to row yet and I am saying so rather than letting it look drained.** The design act is mine
-and comes next; **what I want on the record now is that this is a THIRD case with an obligation, so nobody
-folds it into the discrepancy detector I described in the entry above.** They share a detector and they do not
-share a duty. No queue item is superseded and no worker should be stopped.
-
-
-> **PARTIALLY DRAINED 2026-09-17 by CONDUCT #3 — ANNOTATED RATHER THAN DELETED, AND THE REASON IS THE POINT.**
-> The loop says *enact, then delete*. **Deleting this entry would have destroyed rulings 1 and 2, which are NOT enacted
-> and cannot be** — the entry itself forbids rowing them until BOB's design acts land. So the entry stays and says which
-> half is which.
-> - **Ruling 3 (the falsifier override) → `REC-117`, rowed.** Refusal verified at the artifact first (`store.mjs:4792`),
->   and its construct confirmed to HAVE a governed home, which is the check REC-116 failed.
-> - **Ruling 4(a) (the `corpuscheck` arm) → `M0-57`, rowed. Ruling 4(b) (the sweep) → `M0-58`, rowed and sequenced BEHIND
->   it**, because the entry says (a) before (b) and the reason is sound.
-> - **Ruling 1 (DEC-31, the review copy) — STILL OWED, BLOCKED ON A DESIGN ACT IN `BIO_Publication_v0_1.md`.** Not rowed
->   on purpose: the entry says *do not row the build until the design lands*, and one determination in it is Bob's to
->   overturn.
-> - **Ruling 2 (Q14's contradiction case) — STILL OWED, BLOCKED ON PLACEMENT.** `BIO_System_Design.md` mentions
->   contradiction ZERO times, so the construct is not placed; the content framework mentions it 12 times, so whether a
->   governed home already exists is genuinely UNDETERMINED and is BOB's call, not CONDUCT's.
->
-> **WHY THIS ANNOTATION EXISTS AT ALL, measured rather than asserted:** this inbox has NEVER been drained in the window
-> git can show — 516 lines on 2026-09-15, 746 today, monotonic across 45 commits to this file, never once shrinking. It
-> holds enacted-but-undeleted entries AND never-enacted ones, **indistinguishable by reading**. That is `D-404`'s shape
-> one level out: a reader concluding a value from an absence with two causes, where the absence is of a deletion and the
-> causes are *done* and *forgotten*. **A bulk delete was refused on cost asymmetry** — a wrongly retained entry is
-> clutter, a wrongly deleted one silently destroys an obligation Bob stated in his own words.
-
-**2026-09-17 · BOB #12 · FOUR RULINGS FROM BOB, ONE OF WHICH OVERTURNS A PARKED PREMISE AND IS THE MOST VALUABLE
-THING IN THIS ENTRY.** Doctrine is his; the scope determinations are mine under standing delegation. **Ids, gating
-and sequencing yours. Nothing here supersedes a queue item and no worker should be stopped.**
-
-**1 · DEC-31 IS ANSWERED — the review copy stands beside publish.** Read the entry; it is written in full. The two
-acts owed here are a DESIGN act (mine, in `BIO_Publication_v0_1.md`) and then items. **Do not row the build until the
-design lands** — the shape rests on one determination that Bob may overturn: **a review copy is PUBLISHED-BUT-UNLISTED,
-not confidential**, because the two-bucket fence is structural and there is no third bucket that is both outside the
-instance and private. **Comment yes, EDIT NO**, and the artifact is immutable and versioned — that is what answers
-*when does a rendering someone acted on become a record*. Naming is back with Bob (`advance copy` / `review copy`
-recommended over *pre-publish*, which asserts a future that may not happen).
-
-**2 · Q14's CONTRADICTION CASE IS NO LONGER PARKED — BOB SUPPLIED THE CONSUMER, AND HE INVERTED THE PREMISE.**
-The record has said for six weeks that *the contradiction shape has no consumer and stays honestly undesigned*.
-Bob, 2026-09-17: *"Why CAN'T a record hold two findings that flatly contradict each other... A situation like that
-might be the very thing that the investigation is searching for. The regulation that says one thing but action that
-doesn't conform. The city department saying one thing in March and other in October. I contend that contradictions
-are golden nuggets that shouldn't be 'fixed', but rather drawn attention to."* **That is doctrine and it reverses the
-sign: contradiction is not an edge case the model must tolerate, it is an OUTPUT the system exists to find.**
-
-**THE SCOPE DETERMINATION MATTERS MORE THAN THE RULING HERE, because it decides whether this is a small capability or
-a change to the centre of the design. THE TWO CASES ARE NOT THE SAME AND ONLY ONE NEEDS AN OBJECT:**
-- **THE DISCREPANCY FINDING — both of Bob's examples — IS EXPRESSIBLE TODAY.** *The rule requires X and the department
-  did not-X*, and *the department said X in March and Y in October*, are each ONE inquiry whose CONCLUSION IS THE
-  DISCREPANCY, supported by legs on both sides. Nothing structural is missing. **What is missing is that nothing
-  PROPOSES one and nothing DRAWS ATTENTION to it** — which is exactly what Bob asked for, and it is a detection and
-  surfacing capability, not an architecture change.
-- **THE IRRECONCILABLE PAIR still needs the object**: two findings about ONE question, each well supported, that
-  cannot both be true, where the record declines to choose and keeps both. `role: cuts_against` is one leg's polarity
-  and cannot express it. `BIO_Case_Making_v0_1.md` says *"if a claim ever becomes an object, this is the reason it
-  will"* — **that is now live, and it is the one thing here I will bring back to Bob rather than decide.**
-
-**So: the golden nuggets are reachable WITHOUT reopening claim-as-field, and I recommend taking them first.** The
-design act is mine; expect a level-2 document naming the discrepancy detector's inputs (the entity axis, the
-progression's supposed-versus-actual, version chains across time) and what it may PROPOSE under DEC-24 — never mint,
-never conclude, a member's act throughout.
-
-**3 · THE FALSIFIER IS NO LONGER A HARD REFUSAL.** Bob: *"NO_FALSIFIER is a condition that should be surfaced. But I
-think it should also be something a member can override either temporarily or in the published record."* **Today
-`op=conclude` REFUSES outright** (`store.mjs`, `reason: "NO_FALSIFIER"`). **This is consistent with doctrine already
-here rather than a loosening of it:** undetermined is first-class and must be STATED, and a gate that pressures a
-member into inventing a value is a bug in the gate — the publication fence moved off the content axis for exactly
-this reason, and DEC-69 forbids compelling a member. **Requiring a falsifier pressures a member into inventing one.**
-The shape, and it is the one this record uses everywhere: **the refusal becomes a STATED, ATTRIBUTED, OVERRIDABLE
-condition** — the finding concludes, carries *no falsifier stated* as a first-class value that is never blank and
-never inferred, the override names WHO and WHEN, and it is visible on every surface the finding appears on
-**including the published record**, because Bob named that case specifically. **A silent override is the only wrong
-answer.** One item; it touches a refusal, so it is an interface change.
-
-**4 · ONE AUTHORITY ON DESIGN STATUS, AND A SWEEP FOR THE REST.** Bob agreed the construct map is the single
-authority and asked for *"other areas to confirm that there aren't multiple sources of truth elsewhere in the
-record."* **The receipt is my own error of this morning:** I told Bob the claim class was undesigned, because
-`BIO_Content_Framework_v0_10.md` §18's table lists it as a piece still to be designed while the design has existed in
-`BIO_Case_Making_v0_1.md` since 2026-08-03. **A to-do list that restates status is a second authority, and this
-project's own rule is that restating content creates a copy that immediately starts rotting.** Two items: (a) a
-`corpuscheck` arm — a document that claims a construct is UNDESIGNED fails when the construct map names a home
-document that covers it, which makes the staleness impossible to carry; and (b) a SWEEP of the governed set for other
-places where two documents state the same status, **reporting what it finds rather than fixing it**, because which
-copy is the authority is a judgement per case. **(a) before (b)**: build the instrument, then let it find them.
-
+## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
 **2026-09-16 · BOB #12 · §4.3 CORRECTED — ONE ITEM OWED, and the correction itself is LANDED so nothing
 waits on you to read it.** `CONTENT-SEARCH-DESIGN.md` §4.3's per-capture bound was wrong in THREE
@@ -1052,20 +850,30 @@ mechanism", arriving one altitude up.)_
 | 11 | MK-3 | 9 | queued | BOB #14's items 3 and 6 (2.firsthand, 13.attribution); MK-1 is done; its first act keeps an off-the-record account from leaking at publication |
 | 12 | MK-5 | 10 | queued | rests on MK-3's attribution |
 | 13 | REC-122 | 11 | queued | runnable product work (M4, D-161's last act); REC-120 is done; not on BOB #14's list, which governs only rows added after it |
-| 14 | CAP-11 | 18 | queued | runnable since CAP-10 landed (M2 measurement); not on BOB #14's list — provisional, sent to BOB |
-| 15 | FW-20 | 19 | queued | runnable since CPDF-19 landed (M2 breadth); reverted by CONDUCT #4 for not being on BOB #14's list — provisional, sent to BOB |
+| 14 | CAP-11 | 18 | queued | runnable since CAP-10 landed (M2 measurement); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) |
+| 15 | FW-20 | 19 | queued | runnable since CPDF-19 landed (M2 breadth); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) |
 | 16 | CPDF-3 | 16 | queued | unblocked at this audit (its deploy blocker is false); an M2 live verification, after the product rows above |
 | 17 | DIST-5 | 22 | queued | DIST's own reconciliation, run in DIST's session and holding no general slot; routed to DIST |
-| 18 | VF-7 | 17 | queued | M0 VERIFY lane, HELD by BOB #14's M0 hold; first of the held rows because it watches a credential class (DEC-43's zero) |
-| 19 | M0-65 | 13 | queued | M0, held; the battery's published assertion total misstates what it counts — the record overclaiming about its own verification |
-| 20 | M0-66 | 14 | queued | M0, held; an instrument producing false findings |
-| 21 | M0-64 | 12 | queued | M0, held; a control arm proving less than it declares |
-| 22 | M0-44 | 3 | queued | M0, held; seven truncated claims invisible to the bounds instrument |
-| 23 | M0-33 | 4 | queued | M0, held; a third census shape |
+| 18 | M0-65 | 13 | queued | M0, first among M0 rows by BOB #15's lift of the hold (2026-09-18): the battery's published assertion total misstates what it counts — the record overclaiming about its own verification |
+| 19 | VF-7 | 17 | queued | M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it |
+| 20 | M0-66 | 14 | queued | M0; an instrument producing false findings |
+| 21 | M0-64 | 12 | queued | M0; a control arm proving less than it declares |
+| 22 | M0-44 | 3 | queued | M0; seven truncated claims invisible to the bounds instrument |
+| 23 | M0-33 | 4 | queued | M0; a third census shape |
 | 24 | SK-5 | 21 | blocked | blocked: no plane op publishes the surface registry |
 | 25 | UI-60 | 20 | blocked | blocked: waits on Bob's re-prioritisation of UI |
 | 26 | REC-15 | 15 | blocked | blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 |
 | 27 | UI-17 | 23 | blocked | blocked: rests on REC-15 |
+
+### REC-143 · running — **SPAWNED 2026-09-18 by CONDUCT #5 AS A P0, AHEAD OF THE ORDER (SCHEDULER re-places it at its next act; told). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **P0 — EVERY RELEASE SINCE 0.58.0 BRICKS AN EXISTING STORE (DIST, measured live on biosmoke7 at 0.62.0): `#migrate` executes the WHOLE schema before its additive ALTER list, and the schema carries `CREATE INDEX IF NOT EXISTS inquiry_basis_content ON inquiry_basis(content_id)` (REC-90, eff23189, 2026-09-15) whose column only the later ALTER adds, so on a pre-REC-90 store the index throws `no such column: content_id` inside `blockConcurrencyWhile` and the Durable Object answers nothing. DIST rolled biosmoke7 and the installer back and withdrew 0.59.0–0.63.0 from `release/`.** — owner RECORD.
+order: 0 · P0 — a released build bricks every existing store; ahead of everything (CONDUCT #5, 2026-09-18; SCHEDULER re-numbers)
+milestone: M0
+interface: I5 (the migration order; no schema SHAPE changes, so an IC only if a table or column moves — say which)
+design: `bio-plane/src/store.mjs` `#migrate` (its own comments name this failure mode: the DROP loop's note, and the `chain_kind` block that runs BEFORE THE SCHEMA for exactly this reason), with `docs/development/VERIFICATION.md` (the battery builds only fresh stores, which is why nothing saw it).
+depends-on: nothing.
+scope: (1) every additive column that a SCHEMA INDEX (or any schema statement) depends on is added BEFORE the schema runs, following the `chain_kind` pattern — SWEEP ALL of them, not only `inquiry_basis(content_id)`: DIST names `inquiry_basis_version_legs_content` and `transcriptions(capture_sha, content_id)` as likely; read every `CREATE INDEX` in `schema.mjs` against the additive list and state the table. (2) A REGRESSION SUITE that boots the store on a 0.58.0-SHAPED database (take the 0.58.0 schema from `db7589b8`, the 0.58.0 manifest), runs the NEW `#migrate`, and asserts it ANSWERS (selftest, bootstrap, stats) and that every added column and index exists afterwards. (3) If feasible, the same boot from EACH withdrawn release's shape (0.59.0–0.63.0 tags), since a group may hold any of them.
+accepts-when: the regression suite boots a 0.58.0-shaped store and it answers. NEGATIVE CONTROL: THIS EXACT BUG — move the `content_id` ALTER back after the schema and the suite fails naming `no such column: content_id`. How a liar passes it: a suite that builds a FRESH store (what the battery always did), so the fixture must be the OLD schema's bytes, read from git at `db7589b8`, never re-typed.
+added: 2026-09-18 · CONDUCT #5 (DIST's P0).
 
 ### REC-140 · running — **SPAWNED 2026-09-18 by CONDUCT #5. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: REC-137's C-57.1 and delivery check and REC-138's `Store#inSight` are on `main` at `6bba8a1f`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **D-429: `op=ratify` REFUSES A PROJECT BUNDLE OUTRIGHT (a project publishes through its cases, Publication rule 2: *"Only findings that are part of a project can be published"*); wherever `op=ratify` ratifies a finding it takes `op=caseratify`'s rules — an OWNER among the signers (C-57.1's shape) and a founder or JOINED deliverer (C-56.1's shape); a caller who cannot see the project gets exactly the nonexistent answer, never "bundle.md is missing". A DISCLOSURE AND AUTHORITY DEFECT, ahead of features (BOB #15).** — owner RECORD.
 order: 1 · running — a disclosure and authority defect (D-429); security and disclosure outrank features (SCHEDULER, first order audit, 2026-09-18)
@@ -1076,16 +884,6 @@ depends-on: REC-137 (landed; C-57.1 and the delivery check at caseratify) and RE
 scope: VERIFY AT THE CODE FIRST that `op=ratify` publishes NOTHING outside a case, and report what it can publish today. Refuse a project bundle at `op=ratify`. Apply the owner-signer and joined-deliverer rules through the SAME checks REC-137 uses (never a second copy). Make the sight answer byte-identical to a nonexistent bundle's. Every suite that ratified a project bundle, or a finding without an owner signature, is corrected at its site with its reason.
 accepts-when: a project bundle at `op=ratify` is refused; a finding signed by non-owners is refused; an outside administrator's delivery is refused; the founder and a joined member deliver an owner's signature; an uninvited member's ratify on a hidden project's bundle is byte-identical to a never-minted one. How a liar passes it: refusing every ratify, so the owner-signed, joined-delivered arm must COMMIT. NEGATIVE CONTROLS: re-admit project bundles; drop the owner check; drop the delivery check; each makes its arm fail.
 added: 2026-09-18 · CONDUCT #5 (D-429, decided by BOB #15).
-
-### REC-136 · running — **DONE-AWAITING-INTEGRATION, HELD OFF `main` AT DIST'S REQUEST (2026-09-18) until UI-65 can land WITH it or AHEAD of it.** The worker finished at `a67c102a`. CONDUCT #5 merged and gated it onto REC-138 and PARKED that merge on the remote branch `conduct/rec-136-held` @ `783054ac`, where IC-153 is resolved MAJOR (I3 35.0.0 on that line; re-read the base when it lands). DIST's reasons: once on main, every later security cut would carry the surface's `NO_CLAIM` refusal to the live UI until UI-65; and a cut from a side commit would put the tag off the mainline (the v0.58.0 defect). The worker is finished; nothing is running. **Prior note kept:** **SPAWNED 2026-09-18 by CONDUCT #5. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: REC-124's `conclusions[]` and `op=conclude&project=` are on `main` at `7fd7adca` (`conclude-project.test.mjs` present); BOB's §7.1 items 6–8 are on `main` at `46ee55a3`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **A CORRECTION TO JUST-LANDED REC-124, PLACED IMMEDIATELY AFTER IT (BOB #15, `INVESTIGATIVE-SESSION.md` §7.1 items 6 and 7): (6) a NO-PROJECT conclusion NAMES the version whose claim it adopts, and an unnamed version or one with no claim is refused `NO_CLAIM`; (7) WITHDRAWAL is a dated, authored act that APPENDS to the relationship's history, where the latest entry is the stance and every conclusion and withdrawal stays readable (DEC-19). As built, a second conclusion REPLACES the row, which ERASES THE RECORD: a defect.** — owner RECORD.
-order: 2 · running (held, landing WITH UI-65) — a correction to just-landed REC-124, which outranks new work (SCHEDULER, first order audit, 2026-09-18)
-milestone: M8
-interface: I3 (an IC minted with `node tools/mintid.mjs IC`; the no-project conclude now REFUSES what it accepted, so it is breaking by IC-137), and I5 if the history needs schema.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §7.1 items 6 and 7 (BOB #15, 2026-09-18, at `46ee55a3`), with DEC-19 (`node tools/decided.mjs "DEC-19"`).
-depends-on: REC-124 (landed; `conclusions[]` and `op=conclude&project=` on `main`) — CHECKED AT THE CODE at spawn.
-scope: (6) the no-project `op=conclude` takes the version it adopts; unnamed, or naming a version with no claim, is refused `NO_CLAIM`; existing no-project conclusions read claim-UNDETERMINED and SAY so. Every caller this breaks (REC-124 counted 34 conclude callers) is CORRECTED at its site with its reason, never exempted, and the UI's conclude flow is DELEGATED if it breaks. (7) the per-project record becomes an APPEND-ONLY history of conclusions and withdrawals, each dated and authored; a new act withdraws (never deletes); the stance is the latest entry; reads return the stance AND the history.
-accepts-when: concluding, withdrawing and concluding again leaves THREE entries readable in order, with the stance the last. How a liar passes it: keeping only the latest entry passes a "stance is correct" arm, so the suite reads the WHOLE history. A no-project conclude without a version is refused and writes nothing. NEGATIVE CONTROLS: restore replace-the-row, and the history arm fails; drop the version requirement, and the no-project `NO_CLAIM` arm fails.
-added: 2026-09-18 · CONDUCT #5 (BOB #15's §7.1 items 6–7; the withdrawal half is a defect in REC-124, too large to fix inside the merge).
 
 ### UI-65 · running — **SPAWNED 2026-09-18 by CONDUCT #5, building ON the held branch `conduct/rec-136-held` @ `783054ac` (REC-136 is there and NOT on main). It lands WITH REC-136, never before it. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE CONCLUDE SURFACE, AFTER REC-136: a member picks the ACCEPTED READING whose claim the conclusion adopts (`version=`), sees that claim before committing, and can WITHDRAW a project's conclusion with a reason. Until this lands, the surface's no-project conclude is REFUSED `NO_CLAIM` on any plane carrying IC-153.** — owner UI.
 order: 3 · running — lands with REC-136, never before it (DIST) (SCHEDULER, first order audit, 2026-09-18)
@@ -1201,7 +999,7 @@ NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with t
 added: 2026-09-18 · CONDUCT #4 (REC-120's own row said act (3) is written only once acts (1)–(2) land; they have. Id minted with `node tools/mintid.mjs REC`, run bare.)
 
 ### CAP-11 · queued — **DEC-75 ENACTED, act 3 — the export step's CALIBRATION: a measurement item over the census's Drive targets (CAP-7's 22 distinct targets in 16 documents), text stability and fidelity across fetches recorded per format in MEASUREMENTS.md, so the `convert` step's UNDETERMINED cap can later be raised by a calibration row without a migration.** — waits on CAP-10 (the step must exist to be calibrated).
-order: 14 · runnable since CAP-10 landed (M2 measurement); not on BOB #14's list — provisional, sent to BOB (SCHEDULER, first order audit, 2026-09-18)
+order: 14 · runnable since CAP-10 landed (M2 measurement); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) (SCHEDULER, first order audit, 2026-09-18)
 milestone: M2 — a measurement before a letter (CLAUDE.md: measure, do not assume)
 interface: none — a measurement; if the calibration record needs a home in the chain, that is CPDF-13's calibration shape, reused
 design: `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §14.3 (the content-axis staleness rule — when a calibration goes stale) and §16 (the Drive paragraph DEC-75 was folded into); DEC-75's answer is what makes the calibration the act that raises the cap; D-351 (the byte-instability half already taken: `.ods` `content.xml` byte-identical across three exports, `.odt` differing by one style name)
@@ -1212,7 +1010,7 @@ NEGATIVE CONTROL: run and recorded — the measurement script on a target that a
 added: 2026-09-14 · CONDUCT #11 (DEC-75's "for CONDUCT to enact" converted to rows at the drain)
 
 ### FW-20 · queued — **FLIPPED TO `running` AND REVERTED WITHIN THE HOUR, 2026-09-18, by CONDUCT #4, BEFORE ANY SPAWN — recorded rather than silently undone.** BOB #14's build order (`8008cde3`, the BOB INBOX) landed between the flip and the spawn and says what fills a freed slot; FW-20 (breadth) is not on it. Its depends-on (CPDF-19's reextract seam) remains verified in the code. — **D-376: THE STAFF DIRECTORY CLASS IS NOT A CONTENT-TYPE GAP, IT IS A TIER-3 GAP WEARING ONE** — 0 of 30 name-matched directory PDFs decode at Tier 1, and a fixed-seed walk of 300 decoded 45 and found none, so `readText` refuses those documents outright and no content type is ever consulted. — waits on CPDF-19 (D-319's read-time re-extraction seam); owner FRAMEWORK.
-order: 15 · runnable since CPDF-19 landed (M2 breadth); reverted by CONDUCT #4 for not being on BOB #14's list — provisional, sent to BOB (SCHEDULER, first order audit, 2026-09-18)
+order: 15 · runnable since CPDF-19 landed (M2 breadth); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) (SCHEDULER, first order audit, 2026-09-18)
 milestone: M2 — one content type per measured class (BREADTH §7 row 2), completed
 interface: none expected — a content type and its registration; if a reference shape moves it is I2 and the IC is minted before building
 design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §2 and its §7 row 2, with §8's controls; M0-32's census in `MEASUREMENTS.md` sets the order and this is its fourth and last class; D-376 in `DEBT.md` carries the measurement
@@ -1243,19 +1041,8 @@ accepts-when: the disagreement is RESOLVED WITH EVIDENCE FROM `D-297` ITSELF —
 NEGATIVE CONTROL: run and recorded — or the row states plainly that no instrument reads either record and this is therefore a DISCIPLINE rather than a gate, which is the shape this project distrusts and is the honest outcome rather than a shortfall.
 added: 2026-09-17 · CONDUCT #2 (auditing seven undrained BOB INBOX entries at the artifact rather than draining them on BOB's word — BOB #12 declined to answer from memory about entries it did not write, and was right to. **Rowed rather than drained BECAUSE BOB VERIFIED IT IS NOT DONE**, against `BIO_Distribution_v0_1.md` §8 on the tree today; id minted with `node tools/mintid.mjs DIST`)
 
-### VF-7 · queued — **ITS DEPENDENCY IS MET, found at the first order audit (SCHEDULER, 2026-09-18): the deploy it waits for happened — 0.58.0 through `deploy.mjs`'s derive-bindings path, 2026-09-14, `SELF` and the members bound and read back from the account (`MEASUREMENTS.md`, "D-297/IC-82 — release 0.58.0 deployed"). The first armed ticks were ASSERTED there, not watched; the watch is now a read-back of the ticks already taken, and the row is runnable when the M0 hold lifts.** Prior headline kept: **CANNOT RUN until the next DIST deploy; queued now so the future act is an ITEM the deploy's integration meets, not a telling a future session must remember (the 2026-09-14 rule applied to two advance tellings the same day it was written).**
-order: 18 · M0 VERIFY lane, HELD by BOB #14's M0 hold; first of the held rows because it watches a credential class (DEC-43's zero) (SCHEDULER, first order audit, 2026-09-18)
-milestone: M0 (VERIFY lane, holds no slot)
-interface: none — it watches, it does not publish a shape
-design: `docs/development/SCHEDULER.md` §"The mechanism, and how the next consumer joins" (the `monitor-cadence` consumer whose first live arming this watches) and `docs/development/ARCHIVE-FALLBACK.md` §"Shape on the capture" (CAP-3's fallback), both governed; `docs/development/VERIFICATION.md` is the VERIFY lane's own authority for what a live watch must establish (a process document, ungoverned by `CORPUS-STANDARD.md` §6).
-depends-on: **the next plane deploy through `deploy.mjs`** (DIST's next cut — D-297's release is the likely carrier)
-scope: **D-202's TWO ADVANCE TELLINGS, enacted as the watch they imply (CLAIMS.md, DELEGATION 2026-09-14 DIST (D-202) → RECORD and → CAPTURE).** `deploy.mjs` now derives bindings from `wrangler.jsonc` (D-292), so the next deploy of any plane instance SENDS the config's service bindings — including `SELF`, which makes `#monitorConfigured()` true and **arms REC-26's monitor cadence for the first time outside a harness**, and the same deploy **arms CAP-3's archive fallback**. On biosmoke7 the daemon credential is bound and live (DIST-4), so the first armed tick spends the SCOPED class, not the root of trust — VERIFY that: after the deploy, watch the first monitor tick and the first archive-fallback path on the smoke instance, confirm the tick runs under the daemon class (never ADMIN_TOKEN — DEC-43's zero must survive its first live consumer), confirm D-334's posture honesty holds under real arming, and record both first-activation behaviours in MEASUREMENTS.md with the build named. An anomaly STOPS at the finding (the 0.52.0/0.51.0 rule: establish which build answered before believing either).
-accepts-when: (on the deploy landing) both first activations measured and recorded with the serving build named; the first armed tick attributed to the scoped class; `op=audit` clean after; any anomaly filed as a finding rather than worked around.
-NEGATIVE CONTROL: (on running) the watch itself must be falsifiable — assert the tick DID run (a cadence that silently never fires must read as a failure of the arming, not as a quiet pass), and the archive fallback driven at least once in scratch.
-added: 2026-09-14 · CONDUCT (two advance tellings converted to one item at IC-82's integration; the tellings stay in CLAIMS.md as the record of who told whom)
-
 ### M0-65 · queued — **D-413: THE BATTERY'S ASSERTION TOTAL SILENTLY EXCLUDES EVERY SUITE THAT PRINTS NO TALLY, AND THE LINE THAT SAYS SO READS AS A SHRUG — `bundle.test.mjs` and `livefire.test.mjs` are missing from every assertion figure published this week.** — waits on nothing; the M0 background lane holds no slot.
-order: 19 · M0, held; the battery's published assertion total misstates what it counts — the record overclaiming about its own verification (SCHEDULER, first order audit, 2026-09-18)
+order: 18 · M0, first among M0 rows by BOB #15's lift of the hold (2026-09-18): the battery's published assertion total misstates what it counts — the record overclaiming about its own verification (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot) — a headline that omits suites without saying it omits them is the quiet-skip class one step over
 interface: none — `bio-plane/scripts/battery.mjs` (the tally and its report line)
 design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with `DEBT.md` D-413, which drove the regex and separated the latent half from the live one.
@@ -1265,8 +1052,19 @@ accepts-when: a suite printing a tally in EACH accepted form (`N pass, M fail`, 
 NEGATIVE CONTROL: run and recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — revert the widening → the `passing` fixture's assertions drop and the arm FAILS naming it; revert the report line → the exclusion wording is absent and the arm FAILS. **State how a liar would satisfy this before stating what it checks:** the cheapest green is a regex so wide it matches and counts nothing — `(\d+)?` everywhere — or a report line reworded but still not naming the excluded suites. *A widened regex that silently counts nothing is the same defect wearing the fix's clothes.*
 added: 2026-09-18 · CONDUCT #4 (**from D-413, raised by CONDUCT #3 and reconciled by BOB; CONDUCT #3's handoff named it "worth a row" and it had none.** Id minted with `node tools/mintid.mjs M0`, run bare.)
 
+### VF-7 · queued — **ITS DEPENDENCY IS MET, found at the first order audit (SCHEDULER, 2026-09-18): the deploy it waits for happened — 0.58.0 through `deploy.mjs`'s derive-bindings path, 2026-09-14, `SELF` and the members bound and read back from the account (`MEASUREMENTS.md`, "D-297/IC-82 — release 0.58.0 deployed"). The first armed ticks were ASSERTED there, not watched; the watch is now a read-back of the ticks already taken, and the row is runnable when the M0 hold lifts.** Prior headline kept: **CANNOT RUN until the next DIST deploy; queued now so the future act is an ITEM the deploy's integration meets, not a telling a future session must remember (the 2026-09-14 rule applied to two advance tellings the same day it was written).**
+order: 19 · M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+milestone: M0 (VERIFY lane, holds no slot)
+interface: none — it watches, it does not publish a shape
+design: `docs/development/SCHEDULER.md` §"The mechanism, and how the next consumer joins" (the `monitor-cadence` consumer whose first live arming this watches) and `docs/development/ARCHIVE-FALLBACK.md` §"Shape on the capture" (CAP-3's fallback), both governed; `docs/development/VERIFICATION.md` is the VERIFY lane's own authority for what a live watch must establish (a process document, ungoverned by `CORPUS-STANDARD.md` §6).
+depends-on: **the next plane deploy through `deploy.mjs`** (DIST's next cut — D-297's release is the likely carrier)
+scope: **D-202's TWO ADVANCE TELLINGS, enacted as the watch they imply (CLAIMS.md, DELEGATION 2026-09-14 DIST (D-202) → RECORD and → CAPTURE).** `deploy.mjs` now derives bindings from `wrangler.jsonc` (D-292), so the next deploy of any plane instance SENDS the config's service bindings — including `SELF`, which makes `#monitorConfigured()` true and **arms REC-26's monitor cadence for the first time outside a harness**, and the same deploy **arms CAP-3's archive fallback**. On biosmoke7 the daemon credential is bound and live (DIST-4), so the first armed tick spends the SCOPED class, not the root of trust — VERIFY that: after the deploy, watch the first monitor tick and the first archive-fallback path on the smoke instance, confirm the tick runs under the daemon class (never ADMIN_TOKEN — DEC-43's zero must survive its first live consumer), confirm D-334's posture honesty holds under real arming, and record both first-activation behaviours in MEASUREMENTS.md with the build named. An anomaly STOPS at the finding (the 0.52.0/0.51.0 rule: establish which build answered before believing either).
+accepts-when: (on the deploy landing) both first activations measured and recorded with the serving build named; the first armed tick attributed to the scoped class; `op=audit` clean after; any anomaly filed as a finding rather than worked around.
+NEGATIVE CONTROL: (on running) the watch itself must be falsifiable — assert the tick DID run (a cadence that silently never fires must read as a failure of the arming, not as a quiet pass), and the archive fallback driven at least once in scratch.
+added: 2026-09-14 · CONDUCT (two advance tellings converted to one item at IC-82's integration; the tellings stay in CLAIMS.md as the record of who told whom)
+
 ### M0-66 · queued — **`m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a driver's block comment that names an anchor-bearing shape in backticks reads as a live anchor, and produced TWO FALSE A4 findings on 2026-09-17.** — waits on nothing; the M0 background lane holds no slot.
-order: 20 · M0, held; an instrument producing false findings (SCHEDULER, first order audit, 2026-09-18)
+order: 20 · M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot) — an instrument that penalises a driver for documenting how it arms punishes the one habit this estate most wants
 interface: none — `bio-plane/test/m025-arm-anchor-witness.test.mjs`
 design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with the DELEGATION of 2026-09-17 in `CLAIMS.md` (M0-41's control → CONDUCT) that measured it, and the suite's own arm S10, which already closes the LABEL half with `stripComments`.
@@ -1277,7 +1075,7 @@ NEGATIVE CONTROL: run and recorded in the suite's own `NEGATIVE CONTROL:` line (
 added: 2026-09-18 · CONDUCT #4 (**DISCHARGES the second DELEGATION on `elated-grothendieck-a10003`'s claim, integrated the same turn.** Id minted with `node tools/mintid.mjs M0`, run bare.)
 
 ### M0-64 · queued — **M0-41's CONTROL ARM 3 NO LONGER HAS A SUBJECT: `M` IS NOW GRADED (M0-39 declared its allocation site, `f2fc2b89`), SO THE ARM REPORTS *NOT AS DECLARED* — AND ITS FIRST CLAUSE PASSES FOR A CHANGED REASON, WHICH IS THE WORSE HALF.** — waits on nothing; the M0 background lane holds no slot.
-order: 21 · M0, held; a control arm proving less than it declares (SCHEDULER, first order audit, 2026-09-18)
+order: 21 · M0; a control arm proving less than it declares (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot) — an arm that measures something other than what it declares is a control that proves strictly less than it says
 interface: none — `bio-plane/test/m041-instrument-census.control.mjs` (a `.control.mjs`, not discovered by the battery)
 design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with commit `4c6ef789`'s own account (on `main` since CONDUCT #4 integrated `elated-grothendieck-a10003`), which measured the falsification and routed the ruling rather than relaxing the judge.
@@ -1288,7 +1086,7 @@ NEGATIVE CONTROL: this row IS a control's correction — record in the file's `N
 added: 2026-09-18 · CONDUCT #4 (**ROUTED BY `4c6ef789`, which left the arm RED on purpose and named CONDUCT as the ruler.** BOB #14's inbox asked CONDUCT to read that commit before deciding; the branch was integrated and this is the ruling. Id minted with `node tools/mintid.mjs M0`, run bare.)
 
 ### M0-44 · queued — **FLIPPED TO `running` AND REVERTED WITHIN THE HOUR, 2026-09-17, by CONDUCT #1, and the reversal is recorded rather than silently undone.** The wave was flipped, gated and pushed; three workers were spawned; then CONDUCT #1 was directed to stand down at a clean boundary on context budget. **The three live workers were stopped at SETUP — none had committed anything, none had claimed a path, and nothing was lost** — and these rows were returned to `queued` in the same turn, because a row claiming `running` with no worker is the queue lying about the world, which is this file's own most-repeated defect. **Nothing about the scope or the dependencies changed; this row is runnable and unclaimed.** **D-378: `TRUNC_RE` READS ONE SPELLING, so SEVEN `truncated` claims sit in no roster the bounds instrument has ever printed** — three OFFSET forms, two `>=`, one leading-disjunct, one non-length. **The proof it was owed is exact: D-369 names `biasManifest`, and `biasManifest` publishes an offset form — a DEBT ROW was that figure's only witness.** — waits on nothing; sequenced WITH OR AFTER M0-40, which shares the file and the class.
-order: 22 · M0, held; seven truncated claims invisible to the bounds instrument (SCHEDULER, first order audit, 2026-09-18)
+order: 22 · M0; seven truncated claims invisible to the bounds instrument (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot)
 interface: none — a reader's pattern and the rosters derived from it; no plane source moves
 design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY NAME by `tools/rowdesign.mjs`; read with `bio-plane/test/derivation-bounds.test.mjs`'s own header, which states what its walk can and cannot see, and with D-378 in `DEBT.md`
@@ -1299,7 +1097,7 @@ NEGATIVE CONTROL: run and recorded — each newly-read spelling planted as a mis
 added: 2026-09-15 · CONDUCT #11 (M0-38 raised D-378 and named it as an ACT with an actor; converted to a row in the same integration turn. **The sequencing note is the load-bearing part of this row**, not the pattern.)
 
 ### M0-33 · queued — **D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): decay mode (c) joins the periodic census as its THIRD shape — `tools/modec-sweep.mjs` runs beside `m025-arm-census.mjs`'s two, its dated adjudication table the record, an unadjudicated candidate a finding that carries the exit code and an adjudicated one a note; nothing else re-takes the measurement.**
-order: 23 · M0, held; a third census shape (SCHEDULER, first order audit, 2026-09-18)
+order: 23 · M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
 milestone: M0 (background lane, holds no slot) — the test estate's own instrument
 interface: none — control drivers and the census only
 design: `docs/development/VERIFICATION.md` §"A THROWING CONTROL DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING (D-331, 2026-09-14)" — D-333's three decay modes, of which (c) is the one M0-25's census and D-333's tally comparison do not see; D-353 is the ledger row that measured it (M0-29, `13ee07f`)
@@ -1351,6 +1149,8 @@ added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
 ## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)
 
 **HELD 2026-09-18 BY BOB #14 (sequencing is BOB's): NO M0 ROW IS SPAWNED UNTIL THE BUILD PLAN IS RE-DERIVED FROM CODE-VERIFIED CONSTRUCT STATUS.** Bob's concern: over three days about half of completions (16 of 37) and half of new rows (15 of 30) were M0 while the product substrate kept surprising us. Holding M0 costs nothing a member sees. **Until lifted, a freed slot is refilled ONE-FOR-ONE with a PRODUCT row (M1–M10) only, and only after its depends-on is checked AGAINST THE CODE at spawn time, with that check named in the spawn sentence; if none passes, the slot stays EMPTY and CONDUCT says so in one line.** Rows already running when this was written (M0-61, M0-62, M0-63) finish and are integrated as normal. Lifted only by BOB or Bob, in writing here.
+
+**LIFTED 2026-09-18 BY BOB #15, in writing to SCHEDULER:** the first order audit (`cd9d7c86`) is the re-derivation this hold waited for — every open row's depends-on read at the artifact through `status.mjs`/`ledger.mjs`. The M0 rows are ordered on their merits in THE BUILD ORDER, the battery-tally row FIRST among them (BOB named it "M0-67"; M0-67 is `done` — `node tools/ledger.mjs find M0-67` — and the open battery-tally row is M0-65, D-413).
 
 Test-estate work spanning every area. CONDUCT spawns a worker per item with a claim on
 the specific files. These are cheap, they touch no plane behaviour, and they raise the
