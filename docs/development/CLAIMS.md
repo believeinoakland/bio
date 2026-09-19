@@ -14581,3 +14581,26 @@ refusal NOTES at the three run verbs' gate relays in `aiRunOpen` / `aiRunTick` /
 new IC); `docs/architecture/BIO_Membership_Architecture_v2.md` (front matter and the DEC-63 bullet's NOT BUILT
 sentence); `docs/architecture/construct-status.json` if a claim there names the gate. NOT `QUEUE.md`, `release/`,
 `newgroup/`, `civicos-ui/app.html`, `kickoffs/CONDUCT.md`.
+
+## CLAIM 2026-09-19 RECORD (REC-145) — RELEASED
+
+released: 2026-09-19 by the REC-145 worker, branch `worktree-agent-a3372f65d0555dbd9`, base `1d439e31`, merged with
+`origin/main` at `f61d071d` (D-430, BOB #16's minted-id ruling) in `de91bc63`. Baseline at `9863b065` (claim only):
+**255/255 suites green · 15665 assertions passing**. After, at `0a44e3e1` (the committed merge + floor): **256/256
+suites green · 15713 assertions passing**, provenance 259/259 in the commit at HEAD; per suite on the pre-merge tree
+`airun-projectgate` 47 -> 52 and `project-disclosure` 21 -> 27, every other suite unchanged (one red there,
+`strandedwork`'s *"plancheck --local exits 0"*, was the stale `DECIDED.md` this item's design edit caused: regenerated,
+green alone 88/0). `node scripts/coverage.mjs --strict` exit **0** unpiped; REGISTER_FLOOR arms 1448 -> 1460 from the
+print on `81c99d46`, then collapsed at the merge and re-read `arms 1464/1464 · classified 247/247 · corpus 248/248 ·
+floor 210/210` on `de91bc63`. `node civicos-ui/test/run.mjs` exit **0**. `plancheck --local` 0 fail. NEGATIVE CONTROL
+`node test/project-disclosure.control.mjs`: **`inquiry-consults-projects` (the project consult restored for an inquiry
+context) 24/3 — the PERMITTED arms fail by name**; `gate-dropped-everywhere` (the liar) 26/1; `consult-unless-inquiry`
+(over-strictness) 27/0; every arm AS DECLARED, real `index.mjs`/`store.mjs`/`airun.mjs` untouched. `node
+test/nc-pl18.mjs` re-run, eleven rows, restores verified by sha256 + `cmp`: (e) the same control 39/13 as declared.
+IC-162 proposed MAJOR, I3 38.1.0 -> 39.0.0.
+**FOR CONDUCT:** RESOLVE IC-162 (read the base at resolution); flip REC-145 in `QUEUE.md`; `regionLines` — no DEC-49
+REGION marker was touched (the refusal site is `projectGate`, its body changed above the refusal).
+**FOR DIST:** a §7.9 disclosure closes at the next plane release (the run gate no longer tells a member a hidden
+project cites a question).
+**FOR BOB (a DESIGN GAP, not decided here):** over a question any member holding contribute may now tick and close
+ANOTHER member's run, because the three verbs share one gate (pinned as built, ARM H6).
