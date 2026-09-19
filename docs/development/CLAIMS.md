@@ -14576,3 +14576,20 @@ at the site), `bio-plane/test/tally-through-pipe.control.mjs` (its reading of th
 `bio-plane/scripts/coverage.mjs` (floors only, from its own print, if any move), `docs/development/DEBT.md` (D-413's
 row, closed), `docs/development/VERIFICATION.md` (the sentence stating which tally forms the runner reads),
 `docs/development/MEASUREMENTS.md` (the before/after and the controls).
+
+## CLAIM 2026-09-19 M0 (M0-65) — RELEASED
+
+released: 2026-09-19 by the M0-65 worker, branch `worktree-agent-ac2acc663da2165ca`, base `7042404e`, origin/main merged
+in (never rebased). `battery.mjs`: the completion line carries `· EXCLUDES N untallied suite(s) ·` after the figure and the
+line below, `EXCLUDED FROM THE ASSERTION TOTAL (D-413)`, names each suite (was `N suite(s) reported no assertion count`);
+the tally reads `N pass, M fail`, `N passed, M failed`, `N passing`, `N passing, M failing`, never a bare `N passed`.
+Baseline `254/254 suites green · 15643 assertions passing · run 80058.e10f2c`; final, on a8b5dee2:
+**`256/256 suites green · 15715 assertions passing · EXCLUDES 2 untallied suite(s) · 1096.2s · run 75902.445512`**
+(bundle.test.mjs, livefire.test.mjs), exit 0. Per-suite diff baseline→post-fix: only battery-verdict 27→41 moved by
+this item; no suite's count moved from the widened tally. `coverage.mjs --strict` exit 0 unpiped, REGISTER FLOOR arms
+1452 → 1455 from its print on 7638dd5d (classified 247, corpus 248, run 210 unchanged); `node civicos-ui/test/run.mjs`
+exit 0; `plancheck --local` 0 fail. NEGATIVE CONTROL on battery-verdict.test.mjs: baseline 41/0, widening 33/8,
+reportline 37/4, liar 23/18, every restore sha256 MATCH + cmp identical. Readers corrected at their sites:
+tally-through-pipe.test.mjs (the runner-regex copy, arm E), tally-through-pipe.control.mjs (d93 arm, AS DECLARED).
+D-413 closed and archived; MEASUREMENTS M-67. **FOR CONDUCT:** flip M0-65 on integration; re-read REGISTER_FLOOR on the
+merged tree.
