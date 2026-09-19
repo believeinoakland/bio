@@ -1244,7 +1244,7 @@ const REGISTER_FLOOR = {
   // [branch record | MK-2 resumed, on origin/main 27ad8b4f] MOVED 1332 -> 1346, classified 230 -> 231, corpus 231 -> 232, run 193 -> 194, from this item's own `--strict` print on the committed tree 8fe3fc8e (`arms 1346/1332 · classified 231/230 · corpus (suites read) 232/231 · GREW by 14 arm(s)`, `floor 194/193 reproducible`), exit 0. Cause: ONE new suite, `testimonyaxis.test.mjs`, whose declaration the register counts at 14 arms. ONE KEY SET.
   // [REC-134] 2026-09-18: MOVED 1392 -> 1400, classified 238 -> 239, corpus 239 -> 240, run 201 -> 202, from this item's own `--strict` print on its committed tree 254404d1 (`arms 1400/1392 · classified 239/238 · corpus (suites read) 240/239 · GREW by 8 arm(s)`, `floor 202/201 reproducible`). Cause: ONE new suite, project-authority.test.mjs, driven by project-authority.control.mjs. ONE KEY SET.
   // [REC-137] 2026-09-18: MOVED 1414 -> 1419, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its COMMITTED MERGE with origin/main (REC-138 in) b7a06bd5 (`arms 1419/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 5 arm(s)`, `floor 205/204 reproducible`), exit 0. Cause: ONE new suite, case-authority.test.mjs, driven by case-authority.control.mjs. Its two earlier branch readings (1405, 1412) were each replaced at a merge, never added. ONE KEY SET.
-  arms: 1430,
+  arms: 1434,
   // [CONDUCT #5 at the UI-65 + REC-136 landing] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1430/1427 · classified 243/243 · corpus (suites read) 244/244 · GREW by 3`, `floor 206/206 reproducible`, from the print; the held branch's 1417 and UI-65's own figure are replaced, never added.
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
@@ -1344,8 +1344,9 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 243,
-  corpus: 244,
+  // [D-430] 2026-09-18: read on the COMMITTED tree `1b096956` — `arms 1434/1430 · classified 244/243 · corpus (suites read) 245/244 · GREW by 4`, `floor 207/206 reproducible`, from the print; one new suite, `pipeline-readers.test.mjs`, whose declaration states four arms (NC1–NC4). Nothing FELL.
+  classified: 244,
+  corpus: 245,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1373,7 +1374,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 206,
+  run: 207,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
