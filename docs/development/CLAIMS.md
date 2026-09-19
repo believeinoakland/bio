@@ -14837,3 +14837,18 @@ reportline 37/4, liar 23/18, every restore sha256 MATCH + cmp identical. Readers
 tally-through-pipe.test.mjs (the runner-regex copy, arm E), tally-through-pipe.control.mjs (d93 arm, AS DECLARED).
 D-413 closed and archived; MEASUREMENTS M-67. **FOR CONDUCT:** flip M0-65 on integration; re-read REGISTER_FLOOR on the
 merged tree.
+
+## CLAIM 2026-09-19 RECORD (REC-152 — `airuntick` and `airunclose` are the run's PRINCIPAL's acts: anyone else is refused positionally when they can see the run's context and answered as for an absent run when they cannot; the reaper is unchanged)
+
+claimed: 2026-09-19 by the REC-152 worker (worktree `agent-a8cfbd5a2893e6b93`, branch
+`worktree-agent-a8cfbd5a2893e6b93`, base `0cb784ab`). Paths, named by function because `store.mjs` and `airun.mjs` are
+shared with REC-153 (which edits `aiRunOpen`): `bio-plane/src/airun.mjs` (one new pure predicate beside `projectGate`);
+`bio-plane/src/store.mjs` (`aiRunTick` and `aiRunClose` only — NOT `aiRunOpen`, NOT `#aiRunTerminate`, NOT the reaper);
+`bio-plane/src/index.mjs` (the `principal` stamp beside `airunopen`'s, widened to the tick and the close);
+`bio-plane/checks/bio-checks.mjs` (one new C-22 row, C-22.12, and the family header's count);
+`bio-plane/test/airun-projectgate.test.mjs` (ARM H corrected, never exempted), `nc-pl18.mjs` if its anchors move, one
+new suite `bio-plane/test/airun-principal.test.mjs`; `bio-plane/dist/` (the rebuilt bundle);
+`bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR`, from the print only); `docs/development/INTERFACE-CHANGES.md` (one
+new IC); `docs/architecture/BIO_Membership_Architecture_v2.md` (front matter and the "WHO MAY TICK AND CLOSE" bullet's
+state); `docs/architecture/construct-status.json` if a claim there names it. NOT `QUEUE.md`, `release/`, `newgroup/`,
+`civicos-ui/app.html`, `kickoffs/CONDUCT.md`.
