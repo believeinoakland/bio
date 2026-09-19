@@ -14837,3 +14837,30 @@ reportline 37/4, liar 23/18, every restore sha256 MATCH + cmp identical. Readers
 tally-through-pipe.test.mjs (the runner-regex copy, arm E), tally-through-pipe.control.mjs (d93 arm, AS DECLARED).
 D-413 closed and archived; MEASUREMENTS M-67. **FOR CONDUCT:** flip M0-65 on integration; re-read REGISTER_FLOOR on the
 merged tree.
+
+## CLAIM 2026-09-19 RECORD (REC-151 — A MINTED ID CARRIES NO COUNT for every gated prefix: `CASE`, `DRAFT`, `RVG` (and `TASK`, below) minted OPAQUE from the CSPRNG, checked unique; `op=allocid` REFUSES every gated prefix, `PROJ` included)
+
+claimed: 2026-09-19 by the REC-151 worker (spawned by CONDUCT #6), worktree `agent-a59a4cdfa1b3d4dd3`, branch
+`worktree-agent-a59a4cdfa1b3d4dd3`, base `0cb784ab`. Design: Membership v2 §7, the bullets "A MINTED ID CARRIES NO COUNT"
+and "The legacy residue" (BOB #16, `d7ce3f86`). IDs minted with `tools/mintid.mjs`: IC-164. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — REC-141's `#mintProjectId` (its draw lifted into ONE shared opaque minter), the
+  three gated mint sites (`publishCase`'s `CASE` mint, `#caseDraft`'s `DRAFT` mint, `#reviewGrant`'s `RVG` mint), and the
+  DO door's `allocid` row (the gated-prefix refusal); `bio-plane/src/index.mjs` — the REC-130 comment on `allocid`'s OPS
+  row (superseded by BOB #16, corrected at the site); `bio-plane/checks/bio-checks.mjs` — C-59.5 in the existing C-59
+  family (the plane mints ids).
+- CAPTURE's `taskDrain`, ONE EXPRESSION ONLY: the `TASK` mint (`this.allocId("TASK", year)`). Named rather than taken
+  quietly: tasks are withheld from a viewer by REC-30's `#bundleGate`, so by the design's own criterion ("every prefix
+  whose objects a read withholds from some caller") `TASK` is gated, and the row's scope is every `allocId` caller.
+  Nothing else in the task machinery is touched.
+- Tests: `bio-plane/test/project-mint.test.mjs` §6 CORRECTED (it read the PROJ counter through `op=allocid`, which now
+  refuses PROJ) and its control driver; a new `bio-plane/test/opaque-ids.test.mjs` and `opaque-ids.control.mjs`; any
+  suite that pinned a sequential `CASE`/`DRAFT`/`RVG`/`TASK` id CORRECTED at its site with a dated reason.
+  `bio-plane/scripts/coverage.mjs` floors only, from its own print.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-164), `MEASUREMENTS.md` (the legacy count), `DEBT.md` (a purge-reissue row if
+  minted), `BIO_Membership_Architecture_v2.md` front matter and §7, `construct-status.json` if a construct's state
+  moves, this block.
+
+NOT `QUEUE.md`, NOT `civicos-ui/app.html` (a DELEGATION if it calls `op=allocid` for a gated prefix), NOT `release/`,
+NOT `newgroup/`, NOT `kickoffs/CONDUCT.md`.
