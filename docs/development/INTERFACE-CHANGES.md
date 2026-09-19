@@ -11934,3 +11934,70 @@ unreached branch 23/3 — the ONE-READER arms fail by name while every byte-iden
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MINOR — I3 41.0.0 → 41.1.0.** Base RE-READ at resolution off the integration tree: 41.0.0. Additive: the single-bundle op=projection for an inquiry carries no_project_conclusion from the ONE existing reader (#noProjectConclusionOf, the same op=basisversions calls); null for an unconcluded inquiry and for any other type; the list form unchanged. Nothing refused, no key moved. UI-67 renders it.
+
+## IC-164 · I3: A MINTED ID CARRIES NO COUNT, FOR EVERY GATED PREFIX — `op=allocid` REFUSES `PROJ`, `CASE`, `DRAFT`, `RVG` and `TASK` (`ALLOCID_PREFIX_GATED`, C-59.5, allocating nothing); a new case's, draft's, grant's and task's id is minted OPAQUE (`<P>-<year>-<four CSPRNG digits>[-slug]`), never off `allocId`'s counter · PROPOSED 2026-09-19 (REC-151, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  (base `0cb784ab`): 41.1.0. Proposed as MAJOR — 41.1.0 → 42.0.0.** Read the base AT RESOLUTION. **Why not additive:** a
+  call that succeeded is now refused (`op=allocid` with a gated prefix), and the id shape's MEANING changes — the four
+  digits of a `CASE`/`DRAFT`/`RVG`/`TASK` id no longer order or count anything, so a consumer sorting or comparing by id
+  to recover minting order becomes wrong without changing a line. The SHAPE (`<P>-<year>-\d{4}[-slug]`) is unchanged,
+  so `BUNDLE_ID_RE`, C-19.1's TASK grammar and every reader of the shape still hold.
+- **Proposer:** RECORD, REC-151 worker, branch `worktree-agent-a59a4cdfa1b3d4dd3`, 2026-09-19 — Membership v2 §7, the
+  bullets "A MINTED ID CARRIES NO COUNT" and "The legacy residue" (BOB #16, `d7ce3f86`).
+- **Owner to land it:** `RECORD`
+- **Every `allocId` caller, per prefix** (enumerated at the code on `0cb784ab`; `allocId(` and `#nextSeq(` in
+  `bio-plane/src/**`, plus every `op=allocid` caller in `bio-plane/src/`, `civicos-ui/app.html` and the tests):
+
+| prefix | minted by | the read that withholds its objects | rule after REC-151 |
+| --- | --- | --- | --- |
+| `PROJ` | `Store#promote` / `forkProject` (`#mintProjectId`) | a project out of an uninvited member's sight (`viewerPredicate`, §7.9) | GATED — opaque since REC-141; now through the ONE minter `#mintOpaqueId`; `op=allocid` refuses it |
+| `CASE` | `Store#publishCase` (a new case) | an unratified case answers as absent without standing (REC-130) | GATED — opaque, unique against `cases`, `published_cases`, `case_documents`, `published_case_members`; refused at `op=allocid` |
+| `DRAFT` | `Store#caseDraft` (a new draft) | a draft is read by the producing project's editors only (§6A) | GATED — opaque, unique against `case_drafts` and `review_grants.draft_id`; refused at `op=allocid` |
+| `RVG` | `Store#reviewGrant` | a grant is its project owner's (§6A.2) | GATED — opaque, unique against `review_grants`; refused at `op=allocid` |
+| `TASK` | `Store#taskDrain` (CAPTURE's function; the one mint expression only) | a task naming a bundle the viewer cannot see is withheld (REC-30, `taskList`'s `#bundleGate`) | GATED — opaque with its slug, unique against `tasks`; on exhaustion the event is KEPT; refused at `op=allocid`. **NOT in the design's named list** — classified by the design's own criterion; see DESIGN GAP below |
+| `INFO` | `Store#testify`'s observation (`-observation`), and callers through `op=allocid` | none — the evidence corpus, which `viewerPredicate` never filters | SHARED — counter kept |
+| `ENT` | `Store#createEntity` | none — the shared subject registry | SHARED — counter kept |
+| `REL` | `Store#declareRelation` | none — the shared subject registry | SHARED — counter kept |
+| `INQ`, `ACTN`, `FOCUS`, `PROB`, `BIAS` | callers through `op=allocid`: `civicos-ui/app.html` (the Add surface, behind `!minted`; the proposal adoption, `inquiry` only) and `src/setup.mjs`' intake (behind `!minted`) | none — not project bundles, so `viewerPredicate` does not filter them | SHARED — counter kept; still allocated through `op=allocid` |
+| `LFIRE` | `src/livefire.mjs` through `op=allocid` | none — a live-fire probe's own scratch prefix | SHARED — counter kept |
+
+- **What changed, measured through the op** (`opaque-ids.test.mjs`, 34 assertions, on a fresh store):
+  three `op=publish` / `op=casedraft` / `op=reviewgrant` / `op=taskdrain` mints of each gated prefix are NOT the counter's
+  `0001, 0002, 0003` and no adjacent pair differs by one; `op=allocid&prefix=<gated>` answers `ok: false`,
+  `code: ALLOCID_PREFIX_GATED`, `check: C-59.5`, a canned `translation`, and no `id`; `prefix=CASE-<year>` (the dash moved
+  into the prefix) is refused the same way — the gate reads the counter's SCOPE; `prefix=INFO` still counts (+1) and
+  `prefix=PROJECTX` still allocates. The CSPRNG source is asserted BY NAME (`crypto.getRandomValues`, no `Math.random`,
+  no `allocId`/`#nextSeq`/`seq` in the minter), because no behavioural probe tells a counter-derived or `Math.random`
+  suffix from a CSPRNG one — the control's `math-random` and `counter-derived` arms prove it (both go green on every
+  behavioural arm and red only on the source pins).
+- **Existing ids are never rewritten.** Nothing touches a stored id; the rule binds new mints only, and ordering by id
+  carries no meaning from here on.
+- **The legacy residue, counted** (MEASUREMENTS M-69): legacy non-`PROJ-` project ids in the record namespace — **0** on
+  `biosmoke7` and **0** on `civicos` (each holds one project, `PROJ-2026-0001-sewer-franchise-diversion`), read with
+  `op=list&type=project` under the admin credential at 2026-09-19T11:17Z; `bio-plane` and `biosmoke5` serve no worker.
+- **Consumers to answer:** `UI` — NOT-AFFECTED, read at the code: `civicos-ui/app.html` calls `op=allocid` at two sites,
+  the Add surface (only behind `if(!minted)`, and `minted` is exactly `type === project`, UI-66) and the proposal
+  adoption (`PROP_ADOPT_KINDS`, `inquiry` only); no UI site allocates `CASE`/`DRAFT`/`RVG`/`TASK`. UI's harness mocks that
+  answer `allocid` with an `INFO`/`INQ`/`ACTN` id are unaffected; the UI fixtures naming `CASE-2026-0001` are mock data,
+  never minted by the plane. `src/setup.mjs` (the installer's intake page, the plane's own) — NOT-AFFECTED, behind
+  `!minted`. `agent-worker`, `DIST`, `SKILL`, `newgroup` — NOT-AFFECTED (no `op=allocid` caller; `release/` and
+  `newgroup/` carry the plane's bundle as bytes).
+- **DESIGN GAP (Membership v2 §7, the bullet "A MINTED ID CARRIES NO COUNT"):** the bullet names the gated prefixes as
+  `CASE`, `DRAFT`, `RVG`, `PROJ` and the shared ones as `INFO`, `ENT`, `REL`; `allocId` has a seventh caller, `TASK`,
+  which the bullet does not name. By the bullet's own criterion (*"every prefix whose objects a read withholds from some
+  caller"*) `TASK` is gated — REC-30 withholds a task whose subject the viewer cannot see — so it is minted opaque and
+  refused here. If Bob rules tasks shared, the reversal is one entry in `Store.GATED_ID_PREFIXES` and the TASK mint line.
+- **A defect found and minted, not closed here:** D-432 — the opaque minter's uniqueness is against the LIVE rows, so an
+  id minted before a whole-store purge can be drawn again after it (the counter never could, because `purge` keeps
+  `seq`). REC-141's PROJ mint already had this. Fix named in the row.
+
+**Suites:** NEW `bio-plane/test/opaque-ids.test.mjs` (34) and `opaque-ids.control.mjs` (seven arms, all AS DECLARED).
+CORRECTED at their sites with dated reasons, never exempted: `project-mint.test.mjs` §6 (it read the PROJ counter
+through `op=allocid`) and its control's `counter-restored` anchor; `casesign.test.mjs` (it PREDICTED the case id as
+`CASE-<year>-0001`; the never-minted reads are now taken at an id the minter cannot draw, compared with the id
+replaced — `ratify-authority.test.mjs` §0's precedent); `multifinding.test.mjs` (FIND_C's case named as the literal
+`CASE-2026-0002`); `reviewcopy.test.mjs` (a dry-run arm read the next case as the counter's `0002`).
+**No I5 IC:** no table or column moves.
+
+**RESPONSES:** not yet collected.

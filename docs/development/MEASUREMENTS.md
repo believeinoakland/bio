@@ -17104,3 +17104,25 @@ count`, `suites green` and `assertions passing` over `tools/`, `bio-plane/`, `ci
 declared (the `passing` and `passing, failing` fixtures fail by name, the sum reads 9 not 27); `reportline` reverted → 37/4
 as declared (the EXCLUDES segment and EXCLUDED line absent, the old shrug present); `liar` (every group optional, the row's
 liar clause built) → 23/18. `tally-through-pipe.control.mjs d93` → 1 of 1 AS DECLARED on the new wording.
+
+## M-69 · 2026-09-19 · REC-151: THE LEGACY NON-`PROJ-` PROJECT IDS IN THE RECORD NAMESPACE — 0 ON `biosmoke7`, 0 ON `civicos` (REC-151 worker)
+
+**Instrument:** a read-only scratch script (never printing a credential) calling `op=list&type=project` with the
+operator's admin credential (`BIO_ADMIN_TOKEN` in `.env`; the `admin` class compiles unfiltered in `viewerPredicate`, so
+hidden projects are counted) against the default `bio` store — the record namespace (`scopeFor` in `src/index.mjs`),
+at 2026-09-19T11:17:47Z. `op=list` over `type=project` is the unbounded bare-array arm (REC-60's KEEP), so the answer is
+every project row, not a page. Asked of the four instance names this account has used: `biosmoke7` and `civicos`
+answered HTTP 200; `bio-plane` and `biosmoke5` answered HTTP 404 (no worker serving there), so they hold no record to
+count.
+
+**Result:** `biosmoke7` — 1 project bundle, `PROJ-2026-0001-sewer-franchise-diversion`; legacy non-`PROJ-` ids **0**.
+`civicos` — 1 project bundle, the same id; legacy non-`PROJ-` ids **0**. So the legacy residue Membership v2 §7 states
+(a caller-chosen, non-`PROJ-` project id answering `EXISTS` to a creation of another type) has **no instance** in either
+record today — **counted, not assumed**. The one project there carries a counter-minted `0001` suffix from before
+REC-141; it is inside the `PROJ-` namespace, where a creation naming any id is refused `PROJECT_ID_SUPPLIED` before
+lookup, so it is not an oracle, and it is not rewritten (ids are cited).
+
+**What this cannot see, stated:** an instance installed into ANOTHER group's Cloudflare account by `newgroup` is not
+reachable from this account and is not counted; a scratch namespace is not the record and is not counted. The two
+instances answered identical project lists; whether they are one store behind two names was not established. The count
+is of the two instances named, at the instant named.

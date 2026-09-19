@@ -633,10 +633,15 @@ t("A REVOKED grant holder is the stranger again",
 const pubNew = rP(await POST(`op=publish&token=${IRIS}`, withRoles({ ...args(1), targets: [LEAD5] })));
 if (pubNew.ok === false) bail("publish a new case", pubNew);
 const C2 = pubNew.caseDocument.case_id;
-t("THE DRY RUNS ROLLED BACK THE CASE-ID SEQUENCE TOO: the passing new-case draft had its every gate run — "
-+ "which mints a case id inside the act — each time it was read, and the next real case is still the second "
-+ "id ever minted",
-  [O5?.gates, C2.slice(-4)], ["passed", "0002"]);
+/* CORRECTED 2026-09-19 (REC-151, IC-164): this arm asserted the dry runs ROLLED BACK `allocId`'s CASE counter by
+   reading the next real case's id as the second number ever minted ("0002"). There is no CASE counter any more — a
+   new case's id is OPAQUE, drawn from the CSPRNG and checked unique (Membership v2 §7, *"A MINTED ID CARRIES NO
+   COUNT"*) — so a dry run has no sequence to burn, and the old reading would now pass or fail by chance. What
+   stays true and is asserted: the dry run's gates passed, and the real case minted after them is a well-formed id
+   that is not the first case's. The minter itself is pinned in `opaque-ids.test.mjs`. */
+t("THE DRY RUNS LEAVE NO CASE BEHIND: the passing new-case draft had its every gate run (which mints a case id "
++ "inside the act) each time it was read, and the next real case is a fresh, well-formed id of its own",
+  [O5?.gates, /^CASE-\d{4}-\d{4}$/.test(C2), C2 !== C1], ["passed", true, true]);
 t("NOT ANOTHER CASE: the secret reads another case's unsigned document exactly as a stranger does",
   (await rawOf(`op=casedocument&case=${C2}&edition=1&secret=${encodeURIComponent(S1)}`)).body,
   (await rawOf(`op=casedocument&case=${C2}&edition=1`)).body);

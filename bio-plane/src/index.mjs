@@ -783,15 +783,15 @@ const OPS = {
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
-  /* REC-130's sweep, stated at the site because the row asked for it: `allocid`
-     with `prefix=CASE` tells its caller the NEXT number off the CASE sequence, so
-     it discloses how many case identities this year has minted. It does NOT fall
-     under the unsigned-case rule, and the reason is the rule's own: that rule is
-     about a stranger learning a case's EXISTENCE AND CONTENT, and this op is
-     gated to the instance's own members (never anonymous), names no case, carries
-     no scope, roster or title, and burns the number it reveals. A count of
-     sequence draws is the same disclosure for every namespace (INQ, INFO, …) and
-     is instance-level knowledge a member already holds. */
+  /* REC-130's sweep said here that `allocid` with `prefix=CASE` disclosing how
+     many case identities this year had minted was acceptable — instance-level
+     knowledge a member already holds. SUPERSEDED 2026-09-19 by BOB #16 (Membership
+     v2 §7, *"A MINTED ID CARRIES NO COUNT"*): a count is a disclosure of existence,
+     and "`op=allocid` exposing the same counts … is the same defect, not a reason
+     to accept it". REC-151: the plane mints every GATED prefix (PROJ, CASE, DRAFT,
+     RVG, TASK) opaque, and this op REFUSES those prefixes (`Store#allocIdOp`,
+     C-59.5). A shared prefix (INFO, INQ, …) still counts: everyone may see those
+     objects, so counting them discloses nothing. */
   allocid:    { classes: ["admin", "member", "probe"],           mutating: true  },
   lease:     { classes: ["admin", "member", "probe"],           mutating: true  },
   purge:      { classes: ["admin", "probe"],                     mutating: true  },

@@ -433,14 +433,22 @@ console.log("\n--- 1. op=publish authors a case document and commits NOT ONE cas
    does not exist, from the same op, at the same id and edition, so block 1b can
    compare bytes against it with nothing substituted. The prediction is ASSERTED
    below rather than trusted: if the id comes out different the fixture says so. */
-const PREDICTED = `CASE-${new Date().toISOString().slice(0, 4)}-0001`;
-const NEVER_READ = await rawOf(`op=casedocument&case=${PREDICTED}&edition=1`);
-const NEVER_RATIFY = await rawOf(`op=caseratify&token=${VIC}`, { method: "POST",
-  body: JSON.stringify({ caseId: PREDICTED, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }) });
+/* CORRECTED 2026-09-19 (REC-151, IC-164 — Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16): the
+   id was PREDICTED here as `CASE-<year>-0001` off `allocId`'s counter — and the predictability was, as the comment
+   above says, the whole exposure. A new case's id is now OPAQUE (a CSPRNG suffix), so it cannot be predicted and
+   the never-minted reads are taken at NEVER_ID, an id of the case shape that names nothing and that the minter
+   can never draw (its suffix is not four digits). Every comparison replaces each answer's OWN id with one
+   placeholder — the only thing the two differ in by construction (`ratify-authority.test.mjs` §0's precedent);
+   every other byte must match. */
+const NEVER_ID = `CASE-${new Date().toISOString().slice(0, 4)}-never`;
+const idless = (raw, id) => ({ ...raw, body: String(raw.body).split(id).join("<CASE-ID>") });
+const NEVER_READ = idless(await rawOf(`op=casedocument&case=${NEVER_ID}&edition=1`), NEVER_ID);
+const NEVER_RATIFY = idless(await rawOf(`op=caseratify&token=${VIC}`, { method: "POST",
+  body: JSON.stringify({ caseId: NEVER_ID, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }) }), NEVER_ID);
 const pub = await publish({ targets: [LEAD, SUPP],
   roles: { [LEAD]: "load_bearing", [SUPP]: "supporting" } });
 if (!pub.ok) bail("publish the two-finding case", pub);
-if (pub.caseId !== PREDICTED) bail(`the minted case id was not the predicted ${PREDICTED}`, pub.caseId);
+if (!/^CASE-\d{4}-\d{4}$/.test(String(pub.caseId))) bail(`the minted case id is not of the case shape`, pub.caseId);
 /* AND THE ANSWER MUST CARRY A CASE DOCUMENT, checked HERE rather than let to throw
    forty lines down. Control arm (2b) removes the ceremony entirely, and on its
    first run this suite died with NO TALLY AT ALL —
@@ -513,7 +521,7 @@ console.log("\n--- 1b. an unsigned case answers only to standing; a stranger can
   ];
   for (const [who, tok] of strangers)
     t(`${who}: the unsigned case answers BYTE FOR BYTE as the same id did before it existed`,
-      await rawOf(`op=casedocument${tok}&case=${CASE}&edition=1`), NEVER_READ);
+      idless(await rawOf(`op=casedocument${tok}&case=${CASE}&edition=1`), CASE), NEVER_READ);
   /* THE `ai` CLASS STANDS AS ITS DECLARED PRINCIPAL (D-199 (4)) — so an agent a
      member of another project minted is a stranger, and one the owner minted
      reads what the owner reads. Both arms, because either alone is satisfied by
@@ -526,7 +534,7 @@ console.log("\n--- 1b. an unsigned case answers only to standing; a stranger can
     bail("mint the two member-scoped agent credentials", { vicAgent, irisAgent });
   t("an AGENT credential whose principal is the member of another project answers BYTE FOR BYTE as for "
   + "a case that did not exist",
-    await rawOf(`op=casedocument&token=${vicAgent.token}&case=${CASE}&edition=1`), NEVER_READ);
+    idless(await rawOf(`op=casedocument&token=${vicAgent.token}&case=${CASE}&edition=1`), CASE), NEVER_READ);
   t("while an agent credential whose principal is the OWNER reads the unsigned document",
     rP(await GET(`op=casedocument&token=${irisAgent.token}&case=${CASE}&edition=1`)).ratified, false);
   t("and a stranger's answer carries NOTHING the document says — not the scope, not a finding id",
@@ -537,8 +545,8 @@ console.log("\n--- 1b. an unsigned case answers only to standing; a stranger can
      document's own sha in `expected` — an existence oracle behind a login. */
   t("`op=caseratify` from a member of another project answers BYTE FOR BYTE as for a case that did not "
   + "exist — not CASE_RATIFY_STALE, and not the document's sha",
-    await rawOf(`op=caseratify&token=${VIC}`, { method: "POST",
-      body: JSON.stringify({ caseId: CASE, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }) }),
+    idless(await rawOf(`op=caseratify&token=${VIC}`, { method: "POST",
+      body: JSON.stringify({ caseId: CASE, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }) }), CASE),
     NEVER_RATIFY);
   /* OVER-STRICTNESS: standing is D-15's, not a narrower rule invented here. */
   const reads = async (tok) => {
@@ -562,7 +570,7 @@ console.log("\n--- 1b. an unsigned case answers only to standing; a stranger can
   t("while the member of another project — who OWNS a project of her own — still cannot, so the rule "
   + "is standing in THIS case's project and not being an owner somewhere",
     [VICS_PROJECT !== PUBLISHING_PROJECT,
-     JSON.stringify(await rawOf(`op=casedocument&token=${VIC}&case=${CASE}&edition=1`)) === JSON.stringify(NEVER_READ)],
+     JSON.stringify(idless(await rawOf(`op=casedocument&token=${VIC}&case=${CASE}&edition=1`), CASE)) === JSON.stringify(NEVER_READ)],
     [true, true]);
 }
 

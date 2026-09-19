@@ -11797,6 +11797,16 @@ export const PROJECT_ID_CHECKS = {
     translation: 'The record could not write the new project\'s id into its document, because the document '
       + 'sent is not text that begins with a front matter block. Nothing was created.',
   },
+  /* REC-151 (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16, 2026-09-19): an id of a GATED
+     object (PROJ, CASE, DRAFT, RVG, TASK) is minted opaque by the act that creates it, and no caller
+     allocates one — a counter read through op=allocid would say how many exist, hidden ones included. */
+  ALLOCID_PREFIX_GATED: {
+    check: 'C-59.5',
+    where: 'src/store.mjs allocIdOp > is-allocid-prefix-gated',
+    translation: 'Ids of this kind are given by the record when the thing itself is created, and are not '
+      + 'handed out in advance. Create the project, case, draft, grant or task through its own action and '
+      + 'the record will answer with its id. Nothing was allocated.',
+  },
 };
 
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every

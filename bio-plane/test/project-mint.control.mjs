@@ -61,10 +61,13 @@ const ARMS = {
 
   /* BOB #16's CONTROL (CONDUCT #6, 2026-09-19): the COUNTER RESTORED — the suffix taken from allocId's PROJ
      sequence again, as REC-141 first built it. §6's count arms must fail by name, and nothing else. */
+  /* CORRECTED 2026-09-19 (REC-151): the draw moved into the one opaque minter `#mintOpaqueId`, so the arm now
+     replaces `#mintProjectId`'s call of it with the counter; §6's first arm (op=allocid refuses PROJ) is a
+     different defence and MUST stay green. */
   "counter-restored": {
-    patches: [["store.mjs", "      const id = `PROJ-${year}-${draw()}-${slug}`;",
-               "      const id = `${this.#nextSeq(\"PROJ\", year).id}-${slug}`;"]],
-    mustFail: ["NO COUNT: the mint neither read nor stepped", "NO COUNT: and the minted suffix is not the counter",
+    patches: [["store.mjs", "    return this.#mintOpaqueId(\"PROJ\", year, `-${slug}`,",
+               "    return (() => `${this.#nextSeq(\"PROJ\", year).id}-${slug}`)("]],
+    mustFail: ["NO COUNT: and the PROJ mint takes its suffix from the one opaque minter",
                "NO COUNT: five consecutive mints do NOT differ by one"],
   },
 

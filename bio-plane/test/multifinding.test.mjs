@@ -494,6 +494,10 @@ console.log("\n--- 1. op=publish takes a SET: two findings, one case, one editio
 }
 const E1 = globalThis.__E1;
 const CASE_ID = E1.caseId;
+/* CORRECTED 2026-09-19 (REC-151, IC-164): block 6 named FIND_C's own case as the literal "CASE-2026-0002" — the
+   second number off `allocId`'s CASE counter. A new case's id is now OPAQUE (Membership v2 §7, *"A MINTED ID
+   CARRIES NO COUNT"*), so block 2b records the id the plane minted and block 6 reads it from here. */
+let FIND_C_CASE = null;
 
 /* ================================================ 2. MEMBERSHIP, AND THE CONTAINER */
 console.log("\n--- 2. a case edition is COMPLETE when its last member ratifies, and the container carries them all ---");
@@ -736,6 +740,7 @@ console.log("\n--- 2b. a member cannot assert the case, and the one divergence t
     biasAcknowledgement: "The group's declared position on public adoption applies to the notice question too, "
                        + "and this case is read through it." }, { sign: false });
   if (!own.ok) throw new Error(`publish FIND_C: ${JSON.stringify(own)}`);
+  FIND_C_CASE = own.caseId;
   t("(fixture) FIND_C publishes into a case of its OWN, which is minted separately",
     [own.ok, own.minted, own.caseId !== CASE_ID], [true, true, true]);
   /* ===== THE UNSIGNED WINDOW, DRIVEN — CASE-5b's own before/after, taken here
@@ -1259,9 +1264,9 @@ console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own froz
      against four RATIFIED rows is exactly that difference, which CASE-1's schema
      comment names as the only thing that can say an edition is incomplete. */
   t("the fixture the sweep ran over: three case editions (one of them awaiting), five rostered members, four ratified findings",
-    [(nowIdx.cases || []).map((c) => `${c.case_id}@${c.edition}`),
+    [(nowIdx.cases || []).map((c) => `${c.case_id}@${c.edition}`).sort(),   /* sorted both sides: the ids are opaque (REC-151), so their order is not the minting order */
      (nowIdx.caseMembers || []).length, (nowIdx.published || []).length],
-    [[`${CASE_ID}@1`, `${CASE_ID}@2`, "CASE-2026-0002@1"], 5, 4]);
+    [[`${CASE_ID}@1`, `${CASE_ID}@2`, `${FIND_C_CASE}@1`].sort(), 5, 4]);
 
   const pairOf = (idx, id, ed) => ((idx.published || [])
     .find((p) => p.bundle_id === id && Number(p.edition) === ed) || {}).strength;
@@ -1320,7 +1325,7 @@ console.log("\n--- 6. REC-49: the INDEX carries every RATIFIED member's own froz
     (nowIdx.cases || []).filter((c) => c.case_id !== CASE_ID)
       .map((c) => [c.case_id, (nowIdx.caseMembers || [])
         .filter((m) => m.case_id === c.case_id).map((m) => m.bundle_id), !!c.manifest_sha]),
-    [["CASE-2026-0002", [FIND_C], false]]);
+    [[FIND_C_CASE, [FIND_C], false]]);
   /* AND THE UNSIGNED HALF OF THE RULE IS DRIVEN IN BLOCK 2b, at the one moment
      it is observable — see the BEFORE/AFTER pair there. It is not re-asserted
      here against an id nothing created, because an absence that costs nothing to

@@ -11648,6 +11648,14 @@ var PROJECT_ID_CHECKS = {
     check: "C-59.4",
     where: "src/store.mjs promote > is-project-id-bytes",
     translation: "The record could not write the new project's id into its document, because the document sent is not text that begins with a front matter block. Nothing was created."
+  },
+  /* REC-151 (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16, 2026-09-19): an id of a GATED
+     object (PROJ, CASE, DRAFT, RVG, TASK) is minted opaque by the act that creates it, and no caller
+     allocates one — a counter read through op=allocid would say how many exist, hidden ones included. */
+  ALLOCID_PREFIX_GATED: {
+    check: "C-59.5",
+    where: "src/store.mjs allocIdOp > is-allocid-prefix-gated",
+    translation: "Ids of this kind are given by the record when the thing itself is created, and are not handed out in advance. Create the project, case, draft, grant or task through its own action and the record will answer with its id. Nothing was allocated."
   }
 };
 function leadLegFindings(label, leg, findings) {
@@ -32606,7 +32614,14 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         detail: `no published case answers to ${theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.`
       };
     const minted = !theCase;
-    if (minted) theCase = this.allocId("CASE", (/* @__PURE__ */ new Date()).toISOString().slice(0, 4)).id;
+    if (minted) {
+      theCase = this.#mintOpaqueId("CASE", (/* @__PURE__ */ new Date()).toISOString().slice(0, 4), "", (id) => !!(this.#one(`SELECT 1 FROM cases WHERE case_id=?`, id) || this.#one(`SELECT 1 FROM published_cases WHERE case_id=? LIMIT 1`, id) || this.#one(`SELECT 1 FROM case_documents WHERE case_id=? LIMIT 1`, id) || this.#one(`SELECT 1 FROM published_case_members WHERE case_id=? LIMIT 1`, id)));
+      if (!theCase) return {
+        ok: false,
+        reason: "MINT_EXHAUSTED",
+        detail: "the plane could not find a free case id; nothing was published"
+      };
+    }
     const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
     const claimedProject = ownedBy ? ownedBy.project_id : [...new Set(prepared.map((p) => typeof p.fm.case_project === "string" && p.fm.case_project !== "null" ? p.fm.case_project : null).filter(Boolean))][0] || null;
     if (claimedProject && claimedProject !== proj)
@@ -33640,7 +33655,12 @@ Subject position: ${pos} \u2014 ${just}
         id
       );
     } else {
-      id = this.allocId("DRAFT", when.slice(0, 4)).id;
+      id = this.#mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) => !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d) || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
+      if (!id) return {
+        ok: false,
+        reason: "MINT_EXHAUSTED",
+        detail: "the plane could not find a free draft id; nothing was written"
+      };
       this.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
                      updated_by,updated_at) VALUES (?,?,?,?,?,?,?,?)`, id, owning, named, json2, a.who, when, a.who, when);
     }
@@ -33768,7 +33788,17 @@ Subject position: ${pos} \u2014 ${just}
       };
     const when = (/* @__PURE__ */ new Date()).toISOString();
     const ident = this.#draftIdentity(d);
-    const id = this.allocId("RVG", when.slice(0, 4)).id;
+    const id = this.#mintOpaqueId(
+      "RVG",
+      when.slice(0, 4),
+      "",
+      (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g)
+    );
+    if (!id) return {
+      ok: false,
+      reason: "MINT_EXHAUSTED",
+      detail: "the plane could not find a free grant id; nothing was issued"
+    };
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, a.who, when);
     return {
@@ -48831,6 +48861,28 @@ ${words}`;
   allocId(prefix, year) {
     return this.ctx.storage.transactionSync(() => this.#nextSeq(prefix, year));
   }
+  /** REC-151 / C-59.5: `op=allocid`, the door a CALLER allocates through. It refuses every gated prefix
+   *  (`Store.GATED_ID_PREFIXES`): the plane mints those opaque and no caller allocates one, and a counter read
+   *  here would tell the caller how many objects of a gated kind exist, hidden ones included (Membership v2 §7).
+   *  Decided on the counter's SCOPE (`<prefix>-<year>`, `#nextSeq`'s key), so a caller cannot reach a gated
+   *  counter by moving the dash into the prefix; a prefix that merely BEGINS with a gated one's letters
+   *  (`PROJECTX`) keys a different scope and is not gated. The answer echoes only what the caller sent. */
+  allocIdOp(prefix, year) {
+    const scope = `${prefix}-${year}`;
+    const gated = _Store.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));
+    if (gated) {
+      const row = PROJECT_ID_CHECKS.ALLOCID_PREFIX_GATED;
+      return {
+        ok: false,
+        reason: "ALLOCID_PREFIX_GATED",
+        code: "ALLOCID_PREFIX_GATED",
+        check: row.check,
+        translation: row.translation,
+        detail: `${gated}- ids are minted by the plane, opaque, by the act that creates the object; op=allocid allocates only a prefix whose objects every caller may see. Nothing was allocated.`
+      };
+    }
+    return this.allocId(prefix, year);
+  }
   /* The sequence step itself, with no transaction of its own, so a caller already inside one (REC-141's
      project mint, inside `promote`'s) takes the same step `op=allocid` takes. */
   #nextSeq(prefix, year) {
@@ -48854,6 +48906,37 @@ ${words}`;
   #mintProjectId(title) {
     const year = (/* @__PURE__ */ new Date()).toISOString().slice(0, 4);
     const slug = String(title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "") || "project";
+    return this.#mintOpaqueId(
+      "PROJ",
+      year,
+      `-${slug}`,
+      (id) => !!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id)
+    );
+  }
+  /** REC-151 (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16, 2026-09-19): THE PREFIXES WHOSE OBJECTS
+   *  A READ WITHHOLDS FROM SOME CALLER. Their ids are minted by `#mintOpaqueId` and never from `allocId`'s counter,
+   *  and `op=allocid` refuses them (C-59.5), because a counted suffix tells its reader how many were minted before,
+   *  hidden ones included. The read that withholds each:
+   *    PROJ  — a project out of an uninvited member's sight (`viewerPredicate`, §7.9)
+   *    CASE  — an unratified case answers as absent without standing (REC-130)
+   *    DRAFT — a draft is read by the producing project's editors only (§6A)
+   *    RVG   — a review grant is its project owner's (§6A.2)
+   *    TASK  — a task naming a bundle the viewer cannot see is withheld (REC-30, `taskList`'s `#bundleGate`)
+   *  Every other prefix keeps its counter: INFO, ENT and REL (the shared evidence corpus, which `viewerPredicate`
+   *  never filters) and the caller-allocated bundle prefixes (INQ, ACTN, FOCUS, PROB, BIAS …), whose objects are
+   *  not project bundles. ONE list: the allocid refusal and the pin in `opaque-ids.test.mjs` both read it. */
+  static GATED_ID_PREFIXES = Object.freeze(["PROJ", "CASE", "DRAFT", "RVG", "TASK"]);
+  /** REC-151: THE ONE OPAQUE MINTER — REC-141's draw, lifted out of `#mintProjectId` so every gated prefix takes
+   *  the same step. `<prefix>-<year>-<rand><tail>`: `<rand>` is four digits from the runtime's CSPRNG
+   *  (`crypto.getRandomValues`, rejection-sampled so every value 0000-9999 is equally likely), fixed length so the
+   *  shape every reader already knows (`BUNDLE_ID_RE`, C-19.1's TASK grammar) still holds. `allocId`, `#nextSeq`
+   *  and `seq` are NOT read or stepped. `taken(id)` is asked of every draw inside the caller's own synchronous act
+   *  (nothing awaits between the draw and the write), and a collision draws again. Null only if 64 draws all
+   *  collide; each caller answers `MINT_EXHAUSTED`, as REC-141's did.
+   *  WHAT IT CANNOT PROMISE, stated: uniqueness is against the LIVE rows `taken` reads. A whole-store `op=purge`
+   *  deletes those rows (it keeps `seq`, so the counter never reissued), so an id minted before such a purge can be
+   *  drawn again after it — REC-141's PROJ mint already had this property. D-432, with its fix. */
+  #mintOpaqueId(prefix, year, tail, taken) {
     const draw = () => {
       const u = new Uint16Array(1);
       for (; ; ) {
@@ -48862,8 +48945,8 @@ ${words}`;
       }
     };
     for (let i = 0; i < 64; i++) {
-      const id = `PROJ-${year}-${draw()}-${slug}`;
-      if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id)) return id;
+      const id = `${prefix}-${year}-${draw()}${tail}`;
+      if (!taken(id)) return id;
     }
     return null;
   }
@@ -61287,9 +61370,22 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const route = this.#routeTask(reg.bundle_id);
       const year = at.slice(0, 4);
       const slug = taskSlug(q.subject);
-      const alloc = this.allocId("TASK", year);
+      const taskId = this.#mintOpaqueId(
+        "TASK",
+        year,
+        `-${slug}`,
+        (id) => !!this.#one(`SELECT 1 FROM tasks WHERE id=?`, id)
+      );
+      if (!taskId) {
+        out.waiting.push({
+          captureSha: q.capture_sha,
+          attempts: q.attempts,
+          detail: "the plane could not find a free task id (MINT_EXHAUSTED); the event is kept, not dropped"
+        });
+        continue;
+      }
       const task = {
-        id: `${alloc.id}-${slug}`,
+        id: taskId,
         kind: q.kind,
         refers_to: reg.bundle_id,
         subject: { text: q.subject },
@@ -62700,7 +62796,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           }
           return r;
         },
-        allocid: () => this.allocId(url.searchParams.get("prefix"), url.searchParams.get("year")),
+        allocid: () => this.allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => this.acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 3e5),
         /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
            reads. `viewer` is stamped by the control plane, never taken from a
@@ -64546,15 +64642,15 @@ var OPS = {
   dangling: { classes: ["admin", "member", "probe"], mutating: false },
   stats: { classes: ["admin", "member", "probe"], mutating: false },
   promote: { classes: ["admin", "member", "probe"], mutating: true },
-  /* REC-130's sweep, stated at the site because the row asked for it: `allocid`
-     with `prefix=CASE` tells its caller the NEXT number off the CASE sequence, so
-     it discloses how many case identities this year has minted. It does NOT fall
-     under the unsigned-case rule, and the reason is the rule's own: that rule is
-     about a stranger learning a case's EXISTENCE AND CONTENT, and this op is
-     gated to the instance's own members (never anonymous), names no case, carries
-     no scope, roster or title, and burns the number it reveals. A count of
-     sequence draws is the same disclosure for every namespace (INQ, INFO, …) and
-     is instance-level knowledge a member already holds. */
+  /* REC-130's sweep said here that `allocid` with `prefix=CASE` disclosing how
+     many case identities this year had minted was acceptable — instance-level
+     knowledge a member already holds. SUPERSEDED 2026-09-19 by BOB #16 (Membership
+     v2 §7, *"A MINTED ID CARRIES NO COUNT"*): a count is a disclosure of existence,
+     and "`op=allocid` exposing the same counts … is the same defect, not a reason
+     to accept it". REC-151: the plane mints every GATED prefix (PROJ, CASE, DRAFT,
+     RVG, TASK) opaque, and this op REFUSES those prefixes (`Store#allocIdOp`,
+     C-59.5). A shared prefix (INFO, INQ, …) still counts: everyone may see those
+     objects, so counting them discloses nothing. */
   allocid: { classes: ["admin", "member", "probe"], mutating: true },
   lease: { classes: ["admin", "member", "probe"], mutating: true },
   purge: { classes: ["admin", "probe"], mutating: true },
