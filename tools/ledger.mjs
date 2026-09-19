@@ -301,7 +301,8 @@ export function archivedQueueIds({ repo = ROOT } = {}) {
 /* ------------------------------------------------ the plan's ONE row lister (D-430) */
 
 /* A heading SHAPED like a row — `### <token> · <state>` — that `QHEAD` cannot read: `### CASE-5b · done`,
-   `### D-329+D-331+D-333 · done`, `### UI-17a · done` (three, all in the cache, measured 2026-09-18). The
+   `### D-329+D-331+D-333 · done`, `### UI-17a · done` (three, all `done`, in the cache at `3dee1fdb`; LED-6's step (2), `12983f6f`, moved
+   those blocks to the archive, and the merged tree holds none — measured 2026-09-18 both times). The
    grammar folds nothing under them (`queueRows` ends the row above at ANY heading), so their fields are
    read by NO arm: not the row-design check, not the milestone or interface check, not P1/P2. They are
    NAMED here rather than silently scored zero — a thing the matcher does not understand must be named. */

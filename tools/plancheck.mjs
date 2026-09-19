@@ -166,7 +166,8 @@ if (queue && register) {
    unregistered interface would have passed. The rows now come from `rowdesign.mjs`' `planRows`, which
    is `ledger.mjs`' one lister, and the fields are judged by `planFieldAudit` there — never a second
    walk here (`pipeline-readers.test.mjs` §6 pins that this file scans no ledger text for them).
-   What the switch trades is measured in `planFieldAudit`'s comment: three field lines under row-shaped
+   What the switch traded at its base is measured in `planFieldAudit`'s comment (none since LED-6's
+   step (2) archived them): three field lines under row-shaped
    headings the grammar cannot read, now NAMED below instead of read. */
 {
   const { planRows, planFieldAudit, whereOf } = await import("./rowdesign.mjs").catch(() => ({}));

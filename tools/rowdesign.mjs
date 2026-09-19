@@ -135,7 +135,9 @@ export function planRows({ repo = ROOT, queue = null, backlog = null } = {}) {
    the whole-text scan also reached three field lines under the row-shaped headings the grammar
    cannot read (`CASE-5b`, `D-329+D-331+D-333`, `UI-17a` — all `done`, all naming known
    milestones and I3); those are now NAMED as strays rather than read. No other field line in
-   QUEUE.md lay outside a row. The registries are READ (`### M<n> ·` in MILESTONES.md, `## I<n> —`
+   QUEUE.md lay outside a row. (Measured at `3dee1fdb`; LED-6's step (2), `12983f6f`, then moved
+   those three blocks to the archive, so on the merged tree nothing is traded — but the next
+   unreadable heading will be named, not silently skipped.) The registries are READ (`### M<n> ·` in MILESTONES.md, `## I<n> —`
    in INTERFACES.md), never listed. Either registry null: its half is not run, and says so. */
 export const MILESTONE_FIELD = /^milestone:\s*(M\d+)/;
 export const BEHIND_FIELD = /^behind-interface:\s*(.+)$/;
