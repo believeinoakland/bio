@@ -60,6 +60,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle } from "../checks/bio-checks.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
@@ -624,11 +625,18 @@ console.log("\n--- 6. through the OP (D-43), byte-equal, with the branches swept
 console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, clause (e)) ---");
 {
   const CASE = "INQ-2026-1015-case";
-  await mustPromote(CASE, inquiryMd(CASE, { refs: targetsOf(TWO_GROUNDS), legs: TWO_GROUNDS,
-                                            grounds: GROUND_ROWS }), "inquiry");
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM with nothing written. CASE
+     and PLAIN concluded with no reading because the act took none; each now
+     carries one (`withAdoptableReading`, ungraded legs, so no strength read
+     moves) and the call names it. Fixture, not subject. */
+  await mustPromote(CASE, withAdoptableReading(inquiryMd(CASE, { refs: targetsOf(TWO_GROUNDS), legs: TWO_GROUNDS,
+                                            grounds: GROUND_ROWS })), "inquiry");
   const c = await GET(`op=conclude&token=${CAROL}&target=${CASE}`
     + `&conclusion=${encodeURIComponent("The transfer was authorised.")}`
-    + `&falsifier=${encodeURIComponent("A charter provision or a code section forbidding it.")}`);
+    + `&falsifier=${encodeURIComponent("A charter provision or a code section forbidding it.")}`
+    + adoptedVersionParam());
   t("the case concludes", c.ok, true);
   /* REC-44 / DEC-44 (2026-08-04): `scope` is authored per case per edition and
      required — what brought these findings together. The rest of this block is
@@ -687,10 +695,12 @@ console.log("\n--- 7. the frozen pair freezes the STRUCTURED result (REC-14, cla
      member authored structure. */
   const PLAIN = "INQ-2026-1016-plain-case";
   const plainLegs = TWO_GROUNDS.map((l) => { const { ground, ...rest } = l; return rest; });
-  await mustPromote(PLAIN, inquiryMd(PLAIN, { refs: targetsOf(plainLegs), legs: plainLegs }), "inquiry");
+  await mustPromote(PLAIN, withAdoptableReading(inquiryMd(PLAIN, { refs: targetsOf(plainLegs), legs: plainLegs })),
+    "inquiry");
   await GET(`op=conclude&token=${CAROL}&target=${PLAIN}`
     + `&conclusion=${encodeURIComponent("The transfer was authorised.")}`
-    + `&falsifier=${encodeURIComponent("A charter provision forbidding it.")}`);
+    + `&falsifier=${encodeURIComponent("A charter provision forbidding it.")}`
+    + adoptedVersionParam());
   const pub2 = await POST(`op=publish&token=${CAROL}`, { target: PLAIN,
     /* ADDED 2026-08-10, CASE-2 / DEC-72: a case is a PRODUCTION OF A PROJECT and
        every member carries an AUTHORED designation. Fixture, not this suite's

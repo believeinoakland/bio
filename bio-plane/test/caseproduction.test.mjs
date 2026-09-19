@@ -67,6 +67,7 @@
  * not on PATH rather than dying mid-run (publish.test.mjs's precedent, D-93).
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -130,9 +131,16 @@ const publish = async (tok, body, { sign = true } = {}) => {
     await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "pilar", token: tok });
   return r;
 };
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none; every inquiry it concludes (all seven INQ_*
+   fixtures) now carries one (`withAdoptableReading`, see `inquiryMd`) and the
+   call names it. */
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 const strengthbar = async (tok, body) => rP(await POST(`op=strengthbar&token=${tok}`, body));
 const shaOf = async (id) => ((await GET("op=list&token=mem-case2")).result || [])
   .find((b) => b.bundle_id === id)?.bundle_sha;
@@ -190,7 +198,10 @@ const legLines = (legs) => legs.length
       ...(l.author ? [`    author: ${l.author}`] : []),
       ...(l.date ? [`    date: ${l.date}`] : [])])]
   : [];
-const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
+/* REC-136: every inquiry this suite builds is concluded, so every one carries
+   the accepted reading its conclusion adopts — see `conclude` above. */
+const inquiryMd = (id, opts) => withAdoptableReading(inquiryMdBare(id, opts));
+const inquiryMdBare = (id, { question = `What does ${id} rest on?`, state = "open",
                          refs = [], legs = [] } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, `current_state: ${state}`, "prior_state: null",

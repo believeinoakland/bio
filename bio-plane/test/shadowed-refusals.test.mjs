@@ -110,6 +110,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -606,10 +607,17 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
     "    grade_source: hunch", "    author: ruth", "    date: 2026-08-04"].join("\n");
   const md = inquiryMd(INQ, { question: "Was the sewer transfer authorised?", refs: [CAP, CONN] })
     .replace("---\n\n## Question", `${legs}\n---\n\n## Question`);
-  await mustPromote(INQ, md, "inquiry");
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM. This fixture concluded with
+     no reading because the act took none; the inquiry now carries one
+     (`withAdoptableReading`, legs on its own two basis targets) and the call
+     names it. Fixture, not subject: the refusal pinned below is unchanged. */
+  await mustPromote(INQ, withAdoptableReading(md), "inquiry");
   const cn = await GET(`op=conclude&token=${RUTH}&target=${INQ}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+    + adoptedVersionParam());
   if (!cn.ok) throw new Error(`conclude: ${JSON.stringify(cn).slice(0, 400)}`);
   /* ADDED 2026-08-10, CASE-2 / DEC-72: publication is a PRODUCTION OF A PROJECT
      and is fenced to a project OWNER. Fixture, not subject — this block's

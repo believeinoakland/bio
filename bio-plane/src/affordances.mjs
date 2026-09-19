@@ -700,6 +700,7 @@ export const RUNGS = {
   sever:              "reasoned",   // Constructs:243 · NO_REASON (#edgeTransition)
   reinstate:          "reasoned",   // Constructs:243 · NO_REASON (#edgeTransition)
   conclude:           "reasoned",   // NO_CONCLUSION + NO_FALSIFIER
+  withdrawconclusion: "reasoned",   // NO_REASON (REC-136: a withdrawal says why)
   reopen:             "reasoned",   // NO_REASON
   inquirydivide:      "reasoned",   // NO_REASON (one authored reason per division, DEC-29)
   inquiryground:      "reasoned",   // NO_REASON
@@ -1505,6 +1506,17 @@ export const ACTS = [
      the store refuses an unnamed one — the dispose precedent, where the target
      state is a parameter rather than a second act. */
   { id: "versioncurrent", label: "Stand this project on a reading", weight: "single", types: ["inquiry"],
+    applies: (f, ty) => ty === "inquiry" && (f.basis_version_states ?? []).includes("accepted") },
+  /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: a PROJECT withdraws its
+     conclusion, and the withdrawal APPENDS — the conclusion stays in the record.
+     Offered on make-current's condition for make-current's reason: a project's
+     conclusion adopts an ACCEPTED reading, so a question with none can carry no
+     project conclusion to withdraw. WHICH project is the act's parameter, and
+     the store refuses one that stands on no conclusion (NOTHING_TO_WITHDRAW) —
+     the release precedent: publishing the act says the machine permits the
+     move, not that this caller's parameters will pass. */
+  { id: "withdrawconclusion", label: "Withdraw this project's conclusion (it stays in the record)",
+    weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry" && (f.basis_version_states ?? []).includes("accepted") },
   /* HIDE is offered wherever a reading exists AT ALL, in any state, and that
      breadth is deliberate rather than an omission: the prune offer's whole point

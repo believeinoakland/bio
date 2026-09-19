@@ -411,6 +411,9 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.34", "NO_CLAIM"],
     ["C-33.35", "CONCLUSION_IS_THE_CLAIM"],
     ["C-33.36", "UNSPLICEABLE_CONCLUSIONS"],
+    /* REC-136 / §7.1 item 7, 2026-09-18: a project withdraws only a conclusion
+       it stands on. D-PIN-B failed on it when it landed — the arm doing its job. */
+    ["C-33.37", "NOTHING_TO_WITHDRAW"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -487,10 +490,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
      ("corpus: 52 rows across 2 families") and not by adding to the number in the
      file: C-33.34 NO_CLAIM, C-33.35 CONCLUSION_IS_THE_CLAIM and C-33.36
      UNSPLICEABLE_CONCLUSIONS. */
+  /* MOVED 52 -> 53 on 2026-09-18 (REC-136), FROM THE FIGURE THIS INSTRUMENT PRINTED
+     ("got 53" on the item's tree) and not by adding to the number in the file:
+     C-33.37 NOTHING_TO_WITHDRAW. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one and REC-124's three — a walk that lost a family would run fewer arms and every one of them "
-    + "would still pass",
-    rowsSeen, 52);
+    + "REC-126's one, REC-124's three and REC-136's one — a walk that lost a family would run fewer arms and "
+    + "every one of them would still pass",
+    rowsSeen, 53);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

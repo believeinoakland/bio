@@ -123,6 +123,10 @@ import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
+/* REC-136 (INVESTIGATIVE-SESSION.md §7.1 item 6): the RECORD area's one fixture
+   helper for a no-project conclusion's reading — imported rather than copied so
+   the reading this harness supplies is the one the plane's own suites use. */
+import { withAdoptableReading, ADOPTED_READING } from "../../bio-plane/test/adoptable-reading.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -239,12 +243,17 @@ await promote(DOC, infoMd(DOC), "information", "collected");
    EXISTS — REC-117's own fixture reasoning, kept because it is the situation
    Bob's ruling is about. It is not that the member could not be bothered; it is
    that demanding one would make them invent it. */
-await promote(INQ_NOFALS, inquiryMd(INQ_NOFALS,
-  "Did anyone raise a concern about the transfer that was never written down?"), "inquiry", "open");
-await promote(INQ_STATED, inquiryMd(INQ_STATED,
-  "Did money from the sewer enterprise fund pay for marina construction?"), "inquiry", "open");
-await promote(INQ_GUARD, inquiryMd(INQ_GUARD,
-  "Who authorised the transfer, if anyone?"), "inquiry", "open");
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and one naming none is refused NO_CLAIM. So each question carries an
+   accepted reading to adopt — a FIXTURE change only; see the transport below
+   for the half the surface cannot yet do. */
+await promote(INQ_NOFALS, withAdoptableReading(inquiryMd(INQ_NOFALS,
+  "Did anyone raise a concern about the transfer that was never written down?")), "inquiry", "open");
+await promote(INQ_STATED, withAdoptableReading(inquiryMd(INQ_STATED,
+  "Did money from the sewer enterprise fund pay for marina construction?")), "inquiry", "open");
+await promote(INQ_GUARD, withAdoptableReading(inquiryMd(INQ_GUARD,
+  "Who authorised the transfer, if anyone?")), "inquiry", "open");
 
 ok("the plane really holds three open questions, each resting on a real leg",
   (await Promise.all([INQ_NOFALS, INQ_STATED, INQ_GUARD].map(async (id) => {
@@ -291,6 +300,7 @@ const $$ = (s) => { if (!els.has(s)) els.set(s, el()); return els.get(s); };
    consumed once, and a harness that drank it would starve the thing it is
    watching. */
 const WIRE = [];
+const SUPPLIED = [];   /* REC-136: see the transport's stand-in */
 const SAID = new Set();
 function harvest(o){
   if (!o || typeof o !== "object") return;
@@ -310,6 +320,20 @@ const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number
   fetch: async (u, opts) => {
     const url = new URL(u, "http://x");
     WIRE.push({ op: url.searchParams.get("op"), url, params: Object.fromEntries(url.searchParams.entries()) });
+    /* REC-136 — THE ONE THING THIS HARNESS SUPPLIES THAT THE SURFACE DOES NOT.
+       The plane now requires a no-project conclusion to NAME its reading
+       (§7.1 item 6), and `app.html`'s conclude flow has no way to choose one
+       yet — that surface is DELEGATED to UI in `CLAIMS.md` (REC-136 -> UI). So a
+       conclude request reaching the plane with no `version` and no `project`
+       gets the fixture's one reading added HERE, AFTER `WIRE` recorded what the
+       surface actually sent, and the addition is counted in `SUPPLIED` and
+       asserted at the foot — so this stand-in is visible, and the day the
+       surface sends its own reading that assertion fails and this block goes. */
+    if (url.searchParams.get("op") === "conclude" && !url.searchParams.get("version")
+        && !url.searchParams.get("project")) {
+      url.searchParams.set("version", ADOPTED_READING);
+      SUPPLIED.push(url.searchParams.get("target"));
+    }
     const r = await mf.dispatchFetch(url.toString(), opts);
     try { harvest(await r.clone().json()); } catch (_) {}
     return r;
@@ -655,6 +679,13 @@ console.log(`  pubFalsifierHtml: ${PUBF ? sha(PUBF[0]) : "<absent>"}  (${PUBF ? 
    THE FOOT. A `TypeError` inside an assertion goes through NO assertion at all
    and ends the module while the tally still reads clean, so the run is only
    believable if it reached here and said so. */
+/* REC-136: the stand-in above, stated rather than silent. Every conclude the
+   SURFACE sent carried no reading, and this harness supplied one to each that
+   reached the plane. When the surface gains its reading picker this fails, and
+   the stand-in is removed with the delegation discharged. */
+ok("REC-136 STAND-IN: the SURFACE sent no reading on any conclude (the picker is owed to UI), and the harness supplied it",
+   WIRE.filter(w => w.op === "conclude").every(w => !w.params.version) && SUPPLIED.length >= 1,
+   `supplied for ${SUPPLIED.length} request(s)`);
 console.log(`\nconclude-nofalsifier: ${pass} pass, ${fail} fail`);
 /* `process.exit` would leave miniflare holding the event loop open and the
    process would hang after a green run; dispose first, then set the code. */

@@ -57,6 +57,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { checkBundle, STATES } from "../checks/bio-checks.mjs";
 import { ACTS, DISPOSITIONS, REOPENABLE_FROM } from "../src/affordances.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const AFF_SRC_PATH = fileURLToPath(new URL("../src/affordances.mjs", import.meta.url));
@@ -88,9 +89,15 @@ const reopen = async (tok, { target, reason }) =>
   rP(await GET(`op=reopen&token=${tok}`
     + (target !== undefined ? `&target=${encodeURIComponent(target)}` : "")
     + (reason !== undefined ? `&reason=${encodeURIComponent(reason)}` : "")));
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none; the inquiries it concludes now carry one
+   (`withAdoptableReading`) and the call names it. */
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 const affordances = async (target, tok = "mem-rec31") =>
   await GET(`op=affordances&token=${tok}&target=${encodeURIComponent(target)}`);
 const actIds = (r) => (r.result?.acts ?? []).map((a) => a.id).sort();
@@ -237,8 +244,13 @@ const FALS = "A rescinding resolution, or a finance memo naming a different auth
    what block 7 is testing. */
 await seed(DOC, infoMd(DOC), "information", "collected", "mem-rec31",
   { register: [{ path: "snapshots/memo.bin", sha256: sha(`capture-of-${DOC}`), encoding: "binary", bytes: 10 }] });
-for (const id of [INQ_DEF, INQ_DISM, INQ_HELD, INQ_OPEN, INQ_CONCL])
-  await seed(id, inquiryMd(id, { question: `What does ${id} rest on?`, ...withBasis }), "inquiry", "open");
+/* REC-136: the two inquiries this suite CONCLUDES carry an accepted reading to
+   adopt (§7.1 item 6); the others do not, so the act sets they publish are
+   exactly what they were. */
+for (const id of [INQ_DEF, INQ_DISM, INQ_HELD, INQ_OPEN, INQ_CONCL]) {
+  const md = inquiryMd(id, { question: `What does ${id} rest on?`, ...withBasis });
+  await seed(id, (id === INQ_DEF || id === INQ_CONCL) ? withAdoptableReading(md) : md, "inquiry", "open");
+}
 await seed(FOCUS_LEGACY, focusMd(FOCUS_LEGACY), "focus", "surfaced");
 
 /* The dispositions are taken through op=dispose — the act that created the
@@ -431,11 +443,17 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
      among them, and the store refuses it by the name the publication implies.
      CORRECTED AGAIN 2026-08-04 (REC-16), same reason one act along: dividing is
      legal from `concluded` as well as from `open`, so `inquirydivide` joins the
-     forward-moving acts here. `reopen` is still not one of them. */
+     forward-moving acts here. `reopen` is still not one of them.
+     CORRECTED 2026-09-18 (REC-136): a no-project conclusion now ADOPTS an
+     accepted reading (§7.1 item 6), so INQ_CONCL carries one, and the acts a
+     question with an accepted reading publishes — the reading acts PL-2 added
+     and REC-136's `withdrawconclusion` — join the set. The assertion's subject
+     is unchanged and still exact: `reopen` is not among them. */
   t("a CONCLUDED inquiry does NOT publish reopen — it publishes the act that moves it forward — and the store agrees",
     [actIds(await affordances(INQ_CONCL)),
      (await reopen(NADIA, { target: INQ_CONCL, reason: REOPEN_WHY })).reason],
-    [["cite", "dispose", "inquirydivide", "inquiryground", "publish"], "NOT_SET_DOWN"]);   // REC-37, 2026-08-04: cite joins every inquiry
+    [["cite", "dispose", "inquirydivide", "inquiryground", "publish", "versionconsider", "versioncurrent",
+      "versionhide", "versionreject", "withdrawconclusion"], "NOT_SET_DOWN"]);   // REC-37, 2026-08-04: cite joins every inquiry
   t("the deferred LEGACY focus does not publish it either: the derivation asks the DECLARED vocabulary too",
     actIds(await affordances(FOCUS_LEGACY)), ["cite", "dispose"]);   // REC-37, 2026-08-04: cite joins every inquiry
   t("an information bundle never publishes reopen", actIds(await affordances(DOC)).includes("reopen"), false);
