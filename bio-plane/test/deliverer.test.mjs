@@ -221,6 +221,17 @@ const authorCase = async (project, lead, info, st = S) => {
   await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating", st);
   const c = await DOIN(storeName, "projectclaimowner", { projectId: project, memberId: "iris" });
   if (!c || c.ok !== true) throw new Error(`projectclaimowner: ${JSON.stringify(c)}`);
+  /* CORRECTED 2026-09-18 by REC-140 (IC-157, D-429), at its site and not exempted. §3 has
+     GUS's session deliver iris's signature on the case's FINDING through op=ratify, and gus
+     had no role in the project — which was fine when op=ratify asked no deliverer's position.
+     Publication rule 2 as BOB #15 applied it now gives a finding a ratified case pins case
+     ratification's delivery rule (the founder or a JOINED member), so an outsider's delivery
+     is refused C-56.1. This suite's subject is WHO the record names as deliverer, not whether
+     an outsider may deliver, so gus is made what §7 requires: a joined participant. */
+  const inv = await POST(`op=projectinvite&token=${IRIS}${st}&projectId=${project}&handle=gus`);
+  if (!inv || inv.ok !== true) throw new Error(`projectinvite gus: ${JSON.stringify(inv)}`);
+  const jn = await POST(`op=projectjoin&token=${GUS}${st}&projectId=${project}`);
+  if (!jn || jn.ok !== true) throw new Error(`projectjoin gus: ${JSON.stringify(jn)}`);
   await promote(info, infoMd(info), "information", "collected", st);
   /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
      conclusion drawn with no project NAMES the accepted reading whose claim it

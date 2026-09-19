@@ -8757,23 +8757,11 @@ export class Store extends DurableObject {
              project has no owner to sign it and is refused by the same rule — DEC-72
              removed the project-less case, so this is a legacy document, and an absent
              publisher is not a publisher of none. */
-      if (project && deliveredBy !== "founder") {   /* a project-less document is (2)'s to refuse, by name */
-        const denied = this.#projectAuthority(project, deliveredBy, "joined", "caseratify");
-        if (denied) return denied;
-      }
-      const refusal = (code, detail) => {
-        const row = CASE_AUTHORITY_CHECKS[code];
-        return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
-                 caseId: id, edition: ed, project, signer: attestorMember ?? null };
-      };
-      /* DEC-49 REGION is-case-signer-owner */
-      if (!project || !this.#isProjectOwner(project, attestorMember))
-        return refusal("CASE_SIGNER_NOT_AN_OWNER",
-          `case ${id} edition ${ed} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} `
-          + `production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). `
-          + `The signature is ${attestorMember ?? "an unnamed signer"}'s, who is not an owner of it. Being a `
-          + `registered signer of this instance is not authority over a project. Nothing was committed.`);
-      /* END DEC-49 REGION is-case-signer-owner */
+      /* REC-140: both questions now live in `#caseAuthority`, which `op=ratify` asks too for a
+         finding a ratified case pins — MOVED there, not restated, so there is one rule. */
+      const denied = this.#caseAuthority({ project, deliveredBy, signer: attestorMember, act: "caseratify",
+                                           subject: `case ${id} edition ${ed}`, extra: { caseId: id, edition: ed } });
+      if (denied) return denied;
       /* ===== END REC-137 ================================================================ */
       if (doc.ratified_at) {
         if (doc.sig_armored === sigArmored) return { ok: true, existed: true, caseId: id, edition: ed };
@@ -27142,6 +27130,52 @@ export class Store extends DurableObject {
     return null;
   }
 
+  /* ===== REC-137 / REC-140 — WHO AUTHORISES A PUBLICATION IN A PROJECT'S NAME, AND WHO MAY CARRY IT IN ==
+   *
+   * Membership Architecture v2 §7, *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*
+   * (BOB #15). REC-137 built the two questions inside `ratifyCaseDocument`; REC-140 (D-429, Publication
+   * rule 2 as BOB #15 applied it) MOVED them here because `op=ratify` asks them too, of a finding a
+   * ratified case pins — one rule with two doors, never a second copy of it. Asked in this order:
+   *
+   * (1) DELIVERY IS CARRIAGE, NOT DIRECTION (AI Roles §3 rule 4: the record states signer and
+   *     deliverer apart). A member with a role in the project may deliver, and so may the FOUNDER, as
+   *     DEC-33's interim publishing route; an enrolled administrator with no role in the project may
+   *     NOT — administrators direct nothing (§4.9). The member half is REC-134's ONE positional check,
+   *     consumed and never restated: `deliveredBy` is the control plane's reading of the SESSION ROW
+   *     (`deliveringPrincipal`, REC-128), `member:<id>` for a member's session and `founder` for the
+   *     founder's. The founder is told apart HERE by that principal and never by the folded name: a
+   *     member ENROLLED as `admin` delivers as `member:admin`, is asked, and is not the founder. An
+   *     ABSENT deliverer is every internal caller (a store-level committer, the legacy arms), not
+   *     asked, as at every REC-134 act. A project-less subject is (2)'s to refuse, by name.
+   * (2) THE AUTHORITY IS THE SIGNATURE, AND IT MUST BE AN OWNER'S (DEC-72 clause 5: publishing is the
+   *     project owner's act). Asked through `#isProjectOwner`, §7's one owner predicate. A subject
+   *     naming no project has no owner to sign it and is refused by the same rule — DEC-72 removed the
+   *     project-less case, so it is a legacy document, and an absent publisher is not a publisher of
+   *     none.
+   *
+   * Returns null to proceed, or the refusal. `extra` carries the caller's own identifying fields,
+   * placed where `ratifyCaseDocument`'s refusal always carried them, so its answer is unchanged. */
+  #caseAuthority({ project, deliveredBy = null, signer = null, act, subject, extra = {} }) {
+    if (project && deliveredBy !== "founder") {
+      const denied = this.#projectAuthority(project, deliveredBy, "joined", act);
+      if (denied) return denied;
+    }
+    const refusal = (code, detail) => {
+      const row = CASE_AUTHORITY_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+               ...extra, project, signer: signer ?? null };
+    };
+    /* DEC-49 REGION is-case-signer-owner */
+    if (!project || !this.#isProjectOwner(project, signer))
+      return refusal("CASE_SIGNER_NOT_AN_OWNER",
+        `${subject} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} `
+        + `production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). `
+        + `The signature is ${signer ?? "an unnamed signer"}'s, who is not an owner of it. Being a `
+        + `registered signer of this instance is not authority over a project. Nothing was committed.`);
+    /* END DEC-49 REGION is-case-signer-owner */
+    return null;
+  }
+
   /* ===== REC-138 / D-426 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT ==
    *
    * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project — *"Not its
@@ -28462,10 +28496,20 @@ export class Store extends DurableObject {
      still returned because the migrate tool and the older gate consumed them;
      plane-gate/1.0 reads all of that out of the image instead, since the catalog
      wants the bundle as a filesystem rather than as query results. */
-  gateFacts(bundleId) {
+  /* REC-140 (D-429): SIGHT FIRST, AND ONE ANSWER FOR ABSENT AND HIDDEN. `op=ratify` sends
+     the ratifier's viewer, and a bundle that viewer cannot see answers with the SAME object
+     a never-minted id does, through ONE condition — IC-155's `#noSuchProject` discipline at
+     the bundle level (only project rows are ever filtered by `viewerPredicate`, so in
+     practice this is a hidden PROJECT). Before, the facts were read with no viewer and the
+     hidden bundle leaked twice: RATIFY_STALE echoed its real sha, and the ratifier-scoped
+     image came back empty and was reported as "bundle.md is missing". A viewer that was
+     NOT SENT (null) is not asked, on `#rosterInSight`'s precedent: every other reader of
+     these facts is a tool, not a caller. */
+  gateFacts(bundleId, viewer = null) {
     const row = this.#one(
       `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`, bundleId);
-    if (!row) return { ok: false, reason: "ABSENT", bundleId };
+    if (!row || (viewer !== null && viewer !== undefined && !this.#inSight(bundleId, viewer)))
+      return { ok: false, reason: "ABSENT", bundleId };
     return {
       ok: true, row,
       manifest: this.#rows(`SELECT snap_key, kind, base, created FROM manifest WHERE bundle_id=? ORDER BY created`, bundleId),
@@ -28540,6 +28584,43 @@ export class Store extends DurableObject {
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
     return this.ctx.storage.transactionSync(() => {
+      /* ===== REC-140 / D-429 — A FINDING A RATIFIED CASE PINS IS PUBLISHED UNDER THE CASE'S RULES ====
+         BIO_Publication_v0_1.md §3 rule 2, as BOB #15 applied it: *wherever op=ratify ratifies a
+         finding it takes case ratification's rules* — an OWNER of the publishing project signs, and
+         the deliverer is the founder or a JOINED member. Asked through `#caseAuthority`, the one
+         helper `ratifyCaseDocument` asks, FIRST in this transaction: before the edition refusals and
+         before the idempotent retry, so nothing is written on a refusal and a retry is never an
+         authority answer to somebody with none.
+         WHICH FINDINGS: those whose bytes a RATIFIED case edition pins (`#pinnedCaseEditionsOf`, the
+         same relation this method commits against below). A ratified case document is public, so the
+         project a refusal names is already public — nothing here needs a sight answer.
+         WHAT THIS DOES NOT REACH, stated rather than implied, and reported for a ruling (REC-140): a
+         bundle no ratified case pins — an information bundle, a concluded inquiry in no case, and a
+         finding PREPARED into a case whose document is not yet ratified — is published exactly as
+         before. Each is publication OUTSIDE a case, which rule 2 does not permit and the ruling does
+         not say how to close; `test/ratify-authority.test.mjs` §7 pins all three as measured.
+         SEVERAL PROJECTS: a finding two projects' cases pin is published if SOME publishing project
+         passes both questions (its owner signed, its member or the founder delivered); otherwise the
+         answer is the first project's refusal, in id order, so it is deterministic. */
+      const pinnedBy = this.#pinnedCaseEditionsOf(bundleId, bundleSha);
+      if (pinnedBy.length) {
+        const byProject = new Map();
+        for (const pin of pinnedBy) {
+          const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, pin.case_id);
+          const pid = owner ? owner.project_id : null;
+          if (!byProject.has(pid)) byProject.set(pid, []);
+          byProject.get(pid).push(`${pin.case_id} edition ${Number(pin.edition)}`);
+        }
+        let refused = null;
+        for (const pid of [...byProject.keys()].sort()) {
+          const denied = this.#caseAuthority({ project: pid, deliveredBy, signer: attestorMember, act: "ratify",
+            subject: `finding ${bundleId}, a member of case ${byProject.get(pid).join(", ")},`,
+            extra: { bundleId } });
+          if (!denied) { refused = null; break; }
+          refused = refused || denied;
+        }
+        if (refused) return refused;
+      }
       const top = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, bundleId);
       const highest = top && top.m != null ? Number(top.m) : 0;
       /* Re-ratifying bytes that are ALREADY published is a retry, not a
@@ -40819,7 +40900,9 @@ export class Store extends DurableObject {
         signeradd: () => this.signerAdd(body || {}),
         signerlist: () => this.signerList(),
         signerset: () => this.signerSet(body || {}),
-        gatefacts: () => this.gateFacts(url.searchParams.get("id")),
+        /* REC-140: the ratifier's viewer, when sent, is asked for sight (`gateFacts`). */
+        gatefacts: () => this.gateFacts(url.searchParams.get("id"),
+          url.searchParams.has("viewer") ? url.searchParams.get("viewer") : null),
         /* CASE-5b: the case ceremony's three hops, beside `gatefacts` and
            `publish` because they are the same three acts one altitude up —
            hand out the facts, read the document, commit from the signed bytes. */

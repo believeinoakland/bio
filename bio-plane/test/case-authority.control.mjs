@@ -30,7 +30,14 @@ const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 
 const REAL = ["src/index.mjs", "src/store.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
-const DELIVERY = "      if (project && deliveredBy !== \"founder\") {   /* a project-less document is (2)'s to refuse, by name */\n"
+/* REC-140 (2026-09-18): the two REC-137 questions MOVED into `#caseAuthority`, which
+   `op=ratify` asks too, so the anchors are the helper's. `DELIVERY` is the helper's
+   delivery question; `DELIVERY_AT_CASERATIFY` is the same question spelled at
+   `ratifyCaseDocument`'s scope, used only by the arm that re-inserts it BELOW the retry. */
+const DELIVERY = "    if (project && deliveredBy !== \"founder\") {\n"
+  + "      const denied = this.#projectAuthority(project, deliveredBy, \"joined\", act);\n"
+  + "      if (denied) return denied;\n    }\n";
+const DELIVERY_AT_CASERATIFY = "      if (project && deliveredBy !== \"founder\") {\n"
   + "        const denied = this.#projectAuthority(project, deliveredBy, \"joined\", \"caseratify\");\n"
   + "        if (denied) return denied;\n      }\n";
 
@@ -39,8 +46,8 @@ const ARMS = {
 
   /* THE BRIEF'S CONTROL 1: the owner-signer check dropped. A non-owner's signature commits. */
   "no-owner-signer": {
-    patches: [["store.mjs", "      if (!project || !this.#isProjectOwner(project, attestorMember))",
-               "      if (!project)"]],
+    patches: [["store.mjs", "    if (!project || !this.#isProjectOwner(project, signer))",
+               "    if (!project)"]],
     mustFail: ["NON-OWNERS:"],
   },
 
@@ -48,7 +55,7 @@ const ARMS = {
      with iris's valid signature; the invited-not-joined arm then meets an already-ratified
      edition carrying the same bytes (a retry), and the outside retry answers `existed`. */
   "no-delivery-check": {
-    patches: [["store.mjs", DELIVERY, "      /* armed: the delivery check removed */\n"]],
+    patches: [["store.mjs", DELIVERY, "    /* armed: the delivery check removed */\n"]],
     mustFail: ["OUTSIDE ADMINISTRATOR:", "INVITED, NOT JOINED:", "RETRY: ruth re-sends"],
   },
 
@@ -60,10 +67,10 @@ const ARMS = {
      refusal instead of the signer refusal. */
   "refuse-every-admin": {
     patches: [["store.mjs", DELIVERY,
-               "      if (project) {\n"
-               + "        const liarWho = deliveredBy === \"founder\" ? \"admin\" : String(deliveredBy ?? \"\").replace(/^member:/, \"\");\n"
-               + "        const denied = this.#projectAuthority(project, this.#isAdminMember(liarWho) ? \"member:__nobody__\" : deliveredBy, \"joined\", \"caseratify\");\n"
-               + "        if (denied) return denied;\n      }\n"]],
+               "    if (project) {\n"
+               + "      const liarWho = deliveredBy === \"founder\" ? \"admin\" : String(deliveredBy ?? \"\").replace(/^member:/, \"\");\n"
+               + "      const denied = this.#projectAuthority(project, this.#isAdminMember(liarWho) ? \"member:__nobody__\" : deliveredBy, \"joined\", act);\n"
+               + "      if (denied) return denied;\n    }\n"]],
     mustFail: ["ALLOWED: the FOUNDER delivers", "ALLOWED (founder):", "ALLOWED: ruth, an enrolled administrator JOINED",
                "ALLOWED (joined administrator):", "NON-OWNERS: the FOUNDER delivering ruth's signature"],
   },
@@ -71,9 +78,9 @@ const ARMS = {
   /* The delivery check moved BELOW the idempotent retry: an outside administrator re-sending a
      committed signature is answered `existed: true`. Only the retry arm may go red. */
   "delivery-after-retry": {
-    patches: [["store.mjs", DELIVERY, "      /* armed: the delivery check moved below the retry */\n"],
+    patches: [["store.mjs", DELIVERY, "    /* armed: the delivery check moved below the retry */\n"],
               ["store.mjs", "      const now = new Date().toISOString();\n      /* CASE-2's INVARIANT, UNCHANGED AND NOW ASKED ONCE.",
-               DELIVERY + "      const now = new Date().toISOString();\n      /* CASE-2's INVARIANT, UNCHANGED AND NOW ASKED ONCE."]],
+               DELIVERY_AT_CASERATIFY + "      const now = new Date().toISOString();\n      /* CASE-2's INVARIANT, UNCHANGED AND NOW ASKED ONCE."]],
     mustFail: ["RETRY: ruth re-sends"],
   },
 };

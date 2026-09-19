@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/case-authority.control.mjs` — deliberately NOT a `.test.mjs`, because it runs this suite against PATCHED COPIES of the sources and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/case-authority.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms. (a) `baseline` — nothing armed, MUST be green. (b) `no-owner-signer` — the owner-signer condition dropped: the NON-OWNERS arms commit, so they MUST fail, and nothing else. (c) `no-delivery-check` — the delivery check dropped: the OUTSIDE ADMINISTRATOR arms (and the invited-not-joined arm) commit, so they MUST fail, and nothing else. (d) `refuse-every-admin` — the liar the row names: every administrator refused as a deliverer, founder included: every refusal arm STAYS GREEN (that is the lie) and the FOUNDER and joined-administrator arms MUST fail. (e) `delivery-after-retry` — the delivery check moved below the idempotent retry: only the retry arm MUST fail.
-   RESULTS, RUN 2026-09-18 by the REC-137 worker (worktree agent-aee812fe065a38e23, base 39785cda + this item; real src/index.mjs 657,700 B sha256 5503f0b281c5, src/store.mjs 2,600,997 B sha256 594c06d9ea45, untouched: YES): (a) baseline 23/0 · (b) no-owner-signer 18/5 · (c) no-delivery-check 17/6 · (d) refuse-every-admin 18/5 · (e) delivery-after-retry 22/1 — every arm AS DECLARED on its first run. RE-RUN 2026-09-18 after §0 (SIGHT before role, three arms, asked for by CONDUCT #5 for REC-138's ordering) was added: (a) 26/0 · (b) 21/5 · (c) 20/6 · (d) 21/5 · (e) 25/1, all AS DECLARED, sources untouched: YES. That re-run first read (b) NOT AS DECLARED 18/8 — §0 then ran AFTER §1, and the arm's own commit of E made E public; a finding about the ARM's order, corrected by moving §0 first, not by widening the declaration. §0's ordering is REC-130's standing check at the facts read, upstream of this item, and no arm here breaks it. RE-RUN 2026-09-18 on the MERGE with origin/main carrying REC-138 (IC-155, sight before role everywhere; real src/index.mjs 658,971 B sha256 176cbfa2cb58, src/store.mjs 2,608,442 B sha256 a495ace2a1f2, untouched: YES): (a) 26/0 · (b) 21/5 · (c) 20/6 · (d) 21/5 · (e) 25/1, all AS DECLARED. THE PRE-ITEM MEASUREMENT (the suite run with CASE_AUTHORITY_SRC at the pristine src/ of 39785cda): 12 pass / 11 fail — gus, a joined NON-owner, signed and delivered E's case and it COMMITTED (ok:true, attestor gus, published); ruth, an enrolled administrator with no role, delivered iris's signature on A and it COMMITTED; the invited-not-joined wen and ruth's retry were then answered `ok:true` (existed) off that commit.
+   RESULTS, RUN 2026-09-18 by the REC-137 worker (worktree agent-aee812fe065a38e23, base 39785cda + this item; real src/index.mjs 657,700 B sha256 5503f0b281c5, src/store.mjs 2,600,997 B sha256 594c06d9ea45, untouched: YES): (a) baseline 23/0 · (b) no-owner-signer 18/5 · (c) no-delivery-check 17/6 · (d) refuse-every-admin 18/5 · (e) delivery-after-retry 22/1 — every arm AS DECLARED on its first run. RE-RUN 2026-09-18 after §0 (SIGHT before role, three arms, asked for by CONDUCT #5 for REC-138's ordering) was added: (a) 26/0 · (b) 21/5 · (c) 20/6 · (d) 21/5 · (e) 25/1, all AS DECLARED, sources untouched: YES. That re-run first read (b) NOT AS DECLARED 18/8 — §0 then ran AFTER §1, and the arm's own commit of E made E public; a finding about the ARM's order, corrected by moving §0 first, not by widening the declaration. §0's ordering is REC-130's standing check at the facts read, upstream of this item, and no arm here breaks it. RE-RUN 2026-09-18 on the MERGE with origin/main carrying REC-138 (IC-155, sight before role everywhere; real src/index.mjs 658,971 B sha256 176cbfa2cb58, src/store.mjs 2,608,442 B sha256 a495ace2a1f2, untouched: YES): (a) 26/0 · (b) 21/5 · (c) 20/6 · (d) 21/5 · (e) 25/1, all AS DECLARED. RE-RUN 2026-09-18 by REC-140 after the two questions MOVED into `Store#caseAuthority` (the anchors are now the helper's; `delivery-after-retry` re-inserts the question at ratifyCaseDocument's scope) and §7 was CORRECTED to the C-58.1 refusal (real src/index.mjs 661,904 B sha256 a1c6cb7448bb, src/store.mjs 2,614,766 B sha256 e20e357f1a7c, untouched: YES): (a) 26/0 · (b) 21/5 · (c) 20/6 · (d) 21/5 · (e) 25/1, all AS DECLARED. THE PRE-ITEM MEASUREMENT (the suite run with CASE_AUTHORITY_SRC at the pristine src/ of 39785cda): 12 pass / 11 fail — gus, a joined NON-owner, signed and delivered E's case and it COMMITTED (ok:true, attestor gus, published); ruth, an enrolled administrator with no role, delivered iris's signature on A and it COMMITTED; the invited-not-joined wen and ruth's retry were then answered `ok:true` (existed) off that commit.
  * =========================================================================
  * REC-137 / IC-154 / C-57 — A CASE RATIFICATION: WHO AUTHORISES IT, AND WHO MAY
  * DELIVER IT. Membership Architecture v2 §7, the bullet of that name (BOB #15,
@@ -348,25 +348,29 @@ console.log("\n--- 5. the idempotent retry does not answer an outside administra
 
 /* ================================= 6. THE REFUSALS ARE NAMED BY LITERAL */
 console.log("\n--- 6. the catalogue rows ---");
-t("C-57.1 is catalogued with its region: CASE_SIGNER_NOT_AN_OWNER in ratifyCaseDocument > is-case-signer-owner",
+/* CORRECTED 2026-09-18 by REC-140: the region MOVED into `#caseAuthority`, the one helper
+   `ratifyCaseDocument` and `op=ratify`'s pinned-finding path both call (D-429). The old
+   `where` named the function the rule used to live in, and would now point at no region. */
+t("C-57.1 is catalogued with its region: CASE_SIGNER_NOT_AN_OWNER in #caseAuthority > is-case-signer-owner",
   [CASE_AUTHORITY_CHECKS.CASE_SIGNER_NOT_AN_OWNER.check, CASE_AUTHORITY_CHECKS.CASE_SIGNER_NOT_AN_OWNER.where],
-  ["C-57.1", "src/store.mjs ratifyCaseDocument > is-case-signer-owner"]);
+  ["C-57.1", "src/store.mjs #caseAuthority > is-case-signer-owner"]);
 
-/* ================= 7. op=ratify OF A PROJECT BUNDLE — MEASURED, NOT CLOSED (D-429) */
+/* ================= 7. op=ratify OF A PROJECT BUNDLE — CLOSED BY REC-140 (D-429) */
 console.log("\n--- 7. op=ratify of a PROJECT BUNDLE, driven against the same rule (the brief's third question) ---");
 {
-  /* REC-134 left this undriven. Driven here, and the answer is that the SAME
-     rule does NOT hold at op=ratify: an enrolled administrator with no role in a
-     project carries a signature by a member with no role in it either — neither
-     an owner nor a participant — and the PROJECT'S OWN DOCUMENT is PUBLISHED,
-     naming that member as its attestor. It is NOT closed here, on purpose: the
-     §7 bullet decides a CASE ratification, and whether a project's own bundle may
-     be published at all (it is the group's THINKING, §7.9, which the skeleton
-     rule hides even from the invited) and if so by whom is a question the design
-     does not answer (D-429, carried to BOB). So it is PINNED AS MEASURED: when it
-     is closed this arm goes red and is corrected at its site, never exempted.
-     `updated` equals `created` so the catalog owes no Session Log entry (C-13.2)
-     and the arm reaches the act rather than the gate. */
+  /* CORRECTED 2026-09-18 by REC-140, at its site and not exempted. This arm was
+     written by REC-137 to PIN D-429 AS MEASURED: an enrolled administrator with no
+     role in a project carried the signature of a member with no role in it either,
+     and the PROJECT'S OWN DOCUMENT was PUBLISHED under that member's name. It was
+     right when written — the §7 bullet decided a CASE ratification and the design
+     did not say whether a project bundle may be published at all. BOB #15 then
+     ruled (BIO_Publication_v0_1.md §3 rule 2 and its note): a project's document is
+     not a finding, a project publishes through its cases, so op=ratify REFUSES a
+     project bundle outright (C-58.1 RATIFY_PROJECT_BUNDLE) — whoever signs. The
+     same act therefore now answers that refusal and publishes nothing; the full
+     treatment (the owner herself refused, sight before type, the finding rules) is
+     `ratify-authority.test.mjs`'s. `updated` equals `created` so the catalog owes
+     no Session Log entry (C-13.2) and the arm would reach the act, not the gate. */
   const P = "PROJ-2026-9399-bundle";
   await promote(P, projectFixtureMd(P, { created: NOW, updated: NOW }), "project", "investigating");
   must(`projectclaimowner ${P}`, await DO("projectclaimowner", { projectId: P, memberId: "iris" }));
@@ -376,8 +380,9 @@ console.log("\n--- 7. op=ratify of a PROJECT BUNDLE, driven against the same rul
   writeFileSync(f, `bio-ratify ${P} ${s}\n`);
   execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(dir, "gus"), "-n", "bio-ratify", f], { stdio: ["ignore", "ignore", "ignore"] });
   const r = await POST(`op=ratify&token=${RUTH}`, { bundleId: P, expectedSha: s, sig: readFileSync(f + ".sig", "utf8") });
-  t("D-429 (KNOWN, MEASURED — not closed by this item): ruth (an enrolled administrator in NO role in the project) delivers gus's signature (NOT an owner, NOT a participant) over a PROJECT bundle through op=ratify, and the project's own document is PUBLISHED under gus's name",
-    [r && r.ok, r && r.attestor, r && r.deliveredBy && r.deliveredBy.member], [true, "gus", "ruth"]);
+  const eds = await GET(`op=publishededitions&token=${ADM}&id=${P}`);
+  t("D-429 CLOSED (REC-140): ruth (an enrolled administrator in NO role in the project) delivering gus's signature (NOT an owner, NOT a participant) over a PROJECT bundle through op=ratify is REFUSED RATIFY_PROJECT_BUNDLE, and nothing is published",
+    [r && r.ok, codeOf(r), r && r.check, ((eds && eds.editions) || []).length], [false, "RATIFY_PROJECT_BUNDLE", "C-58.1", 0]);
 }
 
 } catch (e) {
