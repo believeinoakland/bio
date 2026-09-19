@@ -93,7 +93,9 @@ reader behind, is `main`'s own `release/`, held equal to the last release deploy
 1. **Cut on a branch.** `git switch -c dist/cut-X.Y.Z origin/main`; bump the version sites; build; `release-assemble
    --sign`; run the five ssh-keygen controls; `npm run embed`; run the full gate PLUS the upgrade arm; commit; tag
    `vX.Y.Z` on the branch; push the branch and the tag. **Nothing on `main` changes**, so `/update` offers nothing new.
-2. **Deploy from the tagged tree** (a worktree at `vX.Y.Z`), in the fleet's order; verify the bytes read back,
+2. **Deploy from the tagged tree** (a worktree at `vX.Y.Z`), in the fleet's order: **agent-worker FIRST or in the same act
+   as the plane, never the plane first** (IC-130); then pdf-worker, ocr-worker, and any order an IC since the last
+   release adds. Verify the bytes read back,
    `/version` serving, the headline closings live in scratch (swept after), and `op=audit`.
 3. **Only then advance the pointer:** merge `dist/cut-X.Y.Z` into `main` and push. The tag becomes an ancestor of `main`,
    so tags stay on the mainline. Then deploy the installer embedding the same release.
