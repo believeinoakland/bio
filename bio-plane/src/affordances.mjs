@@ -1666,6 +1666,16 @@ export const NON_ACTS = {
   narrow: "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
   /* REC-86: the candidate list is a READ, on `extractproposals`' reasoning below. */
   narrowcandidates: "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labelled machine work and writes nothing",
+  /* REC-146: the CONTRADICTION pairing read is a NON_ACT for a reason one step
+     stronger than `narrowcandidates`' above, and it is worth stating because the
+     surfacing item (PRESENT) will be tempted to make it one. It is not
+     object-directed because its subject is a PAIR — two assertions in different
+     questions, or two documents — and `affordanceFacts` carries neither. But the
+     deeper reason is DEC-24 and this design's own section 2: what the pairing
+     returns is not something to DO, it is something to LOOK AT, and nothing may act
+     on a pair until a member has judged it. An affordance rendered beside a bundle
+     would offer the act before the judgement that licenses it exists. */
+  contradictionpairs: "read: which of the record's own assertions are worth comparing, by the four named keys; forms candidate pairs, judges none of them and writes nothing",
   /* REC-87 / IC-128. TRANSCRIBE is NOT an object-directed act, on `contentmint`'s
      reason: its subject is a PORTION of a document — (document, extent) — and
      `affordanceFacts` carries no page and no region, so an applies() over those

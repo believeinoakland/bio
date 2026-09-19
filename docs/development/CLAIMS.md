@@ -15278,3 +15278,42 @@ caller can travel for this class, the shape `op=reopen`'s own header calls *the 
 **ACT, WITH ITS ACTOR:** CONDUCT carries this to BOB in the BOB lane at REC-135's integration; on BOB's
 ruling SCHEDULER places the row. It is NOT parked on a list: this block is the drained channel, and the
 state line above is re-affirmed or discharged here.
+
+## CLAIM 2026-09-19 RECORD (REC-146 — CONTRADICTION's IDENTIFY, 1 of 3: THE PAIRING READ)
+
+Worker spawned by CONDUCT #7. **Own worktree** `.claude/worktrees/rec146-record`, branch
+**`rec-146-contradiction-pairing`**, base `origin/main` @ `93e56472`. `npm ci` in `bio-plane/`, `pdf-worker/`
+and `ocr-worker/`, each `node_modules` verified a REAL DIRECTORY (30 / 25 / 26 entries), `df -h` 6.6 GiB free
+after. Design authority: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §2, §4, §6 and §9 item 1, beneath
+`docs/architecture/BIO_Case_Making_v0_1.md` §CONTRADICTION. Claimed BY SITE:
+
+- `bio-plane/src/store.mjs` — NEW `contradictionPairs()` and its private helpers (`#contradictionK1`…`#contradictionK4`,
+  `#contradictionLevels`, `#contradictionDoc`), the `static CONTRADICTION_PAIRS_MAX` constant beside them, and ONE
+  added line in the op dispatch table. **NOTHING EXISTING IS EDITED** — no write path, no schema, no purge arm.
+- `bio-plane/src/index.mjs` — the `contradictionpairs` row in OPS, its two viewer-stamp list entries (member, admin),
+  its `CAPABILITIES` row, and its clause in the fail-closed viewer-stamp condition. Four additions, no edits.
+- `bio-plane/src/affordances.mjs` — one `NON_ACTS` entry (the totality check's requirement for a new op).
+- `bio-plane/checks/bio-checks.mjs` — NEW `CONTRADICTION_PAIR_CHECKS` family at **C-60** (minted `tools/mintid.mjs C`).
+- `bio-plane/test/contradictionpairs.test.mjs` and `bio-plane/test/nc-rec146.mjs` — both NEW.
+- `bio-plane/test/gate-reads.test.mjs` — ONE added classification entry for the new read op (that map only).
+- `bio-plane/test/derivation-bounds.test.mjs` — **ONE added row in the UNREAD_FORMS roster, and nothing else**.
+  ADDED TO THIS CLAIM AFTER THE FACT, on 2026-09-19, when the suite went red and instructed it: `#contradictionK3`
+  publishes the disjunction of two arms' `truncated` figures, which the grader's `X.length > Y` spelling cannot read,
+  and that suite's own assertion requires a new such form to be DECLARED before it can pass. **It is a GOVERNED
+  ROSTER and CONDUCT re-reads it at integration.** Both disjuncts are graded by name in the same run
+  (`#contradictionK3Same:rows`, `#contradictionK3Doc:rows`); the CENSUS figure did NOT move (109, ceiling and floor
+  both green) and no floor was invalidated.
+- `bio-plane/dist/bio-plane.bundled.mjs` / `bio-plane/dist/bio-plane.bundle.json` — the rebuild every `src/`-touching
+  worker owes (`kickoffs/WORKER.md` step 0).
+- `docs/architecture/construct-status.json` — the `8.contradiction` row only (ABSENT -> PARTIAL, probes re-aimed).
+- `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` — front matter Status/Incomplete sections and §9 item 1's
+  BUILT sentence only (CORPUS-STANDARD: a landing that changes a construct updates its home document's front matter
+  in the same commit).
+- `docs/development/INTERFACE-CHANGES.md` (**IC-167**, appended), `docs/development/MEASUREMENTS.md` (appended),
+  `docs/development/kickoffs/RECORD.md` (appended, never rewritten — other RECORD workers are live), and this block.
+
+**NOT CLAIMED:** `bio-plane/src/schema.mjs` (this item adds NO table — §9 item 1 is "no judgement, no table write"),
+all of `civicos-ui/**`, `docs/development/QUEUE.md` (CONDUCT's word), `docs/development/DEBT.md`, `newgroup/**`,
+`release/**`, and every other suite in `bio-plane/test/`.
+
+**open as of 2026-09-19** — LANDED AND PUSHED, awaiting CONDUCT's integration. Branch `rec-146-contradiction-pairing` @ `8d51d57c`, verified from the REMOTE with `git ls-remote --heads origin`. Gate on that tree: battery **262/262 suites green / 16022 assertions / exit 0** (baseline on the same tree before the change 261/261 / 15976 / exit 0), `coverage.mjs --strict` **exit 0** (195/195 ops reached through the control plane, 347/347 checks named, 254/254 suites declaring a control), `civicos-ui/test/run.mjs` **exit 0**, `plancheck` clean but for UNPUSHED-to-main. Negative control **6/6 arms AS DECLARED**, baseline 43/0. **REGISTER_FLOOR moved** to arms 1511 / classified 253 / corpus 254 / run 216, read off this item's own post-commit green `--strict` print — **CONDUCT re-reads it on the merged tree**, as it re-reads the one row added to `derivation-bounds.test.mjs`'s UNREAD_FORMS roster. The claim stays OPEN until CONDUCT merges; the paths are free to a later worker the moment it does.

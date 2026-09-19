@@ -780,6 +780,13 @@ const OPS = {
      machine's proposals are listed to whoever may see the question. */
   narrow:           { classes: ["admin", "member", "probe"],     mutating: true  },
   narrowcandidates: { classes: ["admin", "member", "probe"],     mutating: false },
+  /* REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A pure read on
+     `narrowcandidates`' class cut exactly: whoever may READ the record may ask which of
+     its assertions are worth comparing. It writes nothing, judges nothing and mints
+     nothing, so there is no act here to fence to a person — what it DOES need is the
+     viewer, which it takes fail-closed in the stamp block below, because the pairing
+     runs AS A MEMBER and pairs only what that member may see. */
+  contradictionpairs: { classes: ["admin", "member", "probe"], mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1768,6 +1775,11 @@ const SESSION_OPS = {
                    /* REC-86: NARROW and its candidate read — a member's act on a
                       reading of a question, reached by a signed-in member. */
                    "narrow", "narrowcandidates",
+                   /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
+                      their accepted readings and the documents those rest on, so the
+                      viewer decides what it may pair at all — the session route is the
+                      only one that produces a member the gate can filter by. */
+                   "contradictionpairs",
                    /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
                       word in their own name, `attesttext`'s route and reason. */
                    "transcribe", "transcriptionattest",
@@ -1806,6 +1818,7 @@ const SESSION_OPS = {
                       is named beside `contentmint`, whose act it reads back. */
                    "extractproposals",
                    "narrow", "narrowcandidates",
+                   "contradictionpairs",
                    "transcribe", "transcriptionattest",
                    "testify",
                    "lead", "leadlook", "leadshare",
@@ -1882,6 +1895,13 @@ const NEEDS = {
      group putting its name on anything — the new reading is born `suggested`. */
   narrow:           "contribute",
   narrowcandidates: "contribute",
+  /* REC-146: NO CAPABILITY. The pairing read takes none, on `op=content`'s and
+     `op=transcription`'s reasoning: asking which of the record's own assertions are
+     worth comparing is READING the record. It writes nothing into the working corpus
+     and puts nobody's name on anything, so there is no contribution to gate — and a
+     capability here would mean a member could be shown a question and refused the
+     answer to "what else does this record say about it". */
+  contradictionpairs: null,
   /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
      row and its text into the working corpus, and attesting a typing is
      `attesttext`'s act on different text — both ride `contribute`, as
@@ -8994,6 +9014,13 @@ export default {
            answer exactly as one that does not exist — the version acts' reason
            one screen up. Fails closed on an absent stamp. */
         || op === "narrow" || op === "narrowcandidates"
+        /* REC-146: THE PAIRING READ names no single object and is gated for a wider
+           reason than the two above — it ENUMERATES, across every question and every
+           cited document, and section 6 of its design requires it to pair only what
+           the viewer may see and never to enter a project's contents uninvited. An
+           absent stamp therefore fails CLOSED to `scope: DENY`, and the answer SAYS
+           it compared nothing rather than reading as a record with no conflicts. */
+        || op === "contradictionpairs"
         /* REC-87: all three TRANSCRIBE ops name a DOCUMENT (the act) or a content
            row filed in one (the attestation and the read), so a document the
            caller was never invited to must answer exactly as one that does not

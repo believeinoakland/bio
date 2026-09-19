@@ -184,7 +184,11 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             against `schema.mjs`. A format string written in two files is a
             format string that drifts, and the gate refuses on the catalog's
             copy while this file writes its own. */
-         CASE_DOCUMENT_FORMAT } from "../checks/bio-checks.mjs";
+         CASE_DOCUMENT_FORMAT,
+         /* REC-146 / C-60: the pairing read's one refusal family, consumed from the
+            catalogue rather than restated here. DEC-49: the C-number, the wire code and
+            the canned translation are ONE ROW read from one place. */
+         CONTRADICTION_PAIR_CHECKS } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* D-334: THE GATE'S OWN LIVENESS PREDICATE, imported rather than re-derived.
    `#monitorToken()` selects the credential the unattended consumers SPEND, and
@@ -11456,6 +11460,636 @@ export class Store extends DurableObject {
              says: "every entry here is MACHINE WORK and a PROPOSAL. Listing it wrote nothing and cited "
                  + "nothing; which passage is on point to this question is the member's judgment, made by "
                  + "op=narrow in the member's own name." };
+  }
+
+
+  /* =======================================================================
+   * REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, 1 of 3: THE PAIRING READ.
+   * `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` section 9 item 1, beneath
+   * `BIO_Case_Making_v0_1.md` section CONTRADICTION (Bob, 2026-09-17).
+   *
+   * WHAT THIS IS AND, MORE IMPORTANTLY, WHAT IT IS NOT. Section 2 splits the
+   * detector in two and the split is the whole audit story: PAIRING — which two
+   * assertions are worth comparing — is deterministic, in the plane, and
+   * auditable; JUDGEMENT — whether a pair conflicts, and how — is the machine's,
+   * inside a run, labelled machine work, and is NOT BUILT. This method is the
+   * first half ALONE. It judges nothing, labels nothing, and writes nothing.
+   *
+   * WHY THE SPLIT IS WORTH THE TWO ITEMS, in section 2's own words: *a single
+   * machine pass over "everything" can neither be bounded nor audited. Nobody
+   * could say what it compared, so nobody could say what it missed, and a silent
+   * result would read as no contradictions.* So *what was compared* is a plane
+   * fact, published here per key with its bound, and *what was concluded about
+   * it* is a labelled proposal that does not exist yet and SAYS SO.
+   *
+   * THE ONE THING THIS SURFACE CAN GET WRONG THAT NOTHING ELSE CAN.
+   * `CLAUDE.md`: *sparse is normal at every level, and absence at one level is
+   * not evidence of absence at the next. Saying WHICH is true is a first-class
+   * obligation.* An empty pair list here is SIX different facts — nobody has
+   * asked a question; the questions hold no readings; the readings state no
+   * claim; the claims share no subject; the sources cannot be told apart for
+   * want of a date nobody recorded; or this caller was shown nothing at all.
+   * Printed bare, every one of them reads as THE RECORD IS CONSISTENT, which is
+   * the record claiming more than it can support — worse than a missing feature.
+   * So no key ever returns a bare zero: `absence` names the LEVEL and the
+   * ladder that found it is published beside it.
+   * ======================================================================= */
+
+  /** The per-key bound. Section 6: *it is bounded, and the bound is stated* —
+   *  a capped answer that drops its bound reads as COMPLETENESS. */
+  static CONTRADICTION_PAIRS_MAX = 50;
+
+  /** The keys, section 4, as the VOCABULARY rather than as four spellings in
+   *  four places (PL-17's rule: the vocabulary travels with the answer, so a
+   *  surface renders what the plane holds instead of a literal it learned once).
+   *  Section 4: *keys are ADDED, not tuned* — a fifth key is a design change and
+   *  a new row, never a widened join inside an existing key, because a key whose
+   *  meaning drifts makes the per-key figures incomparable across runs. */
+  static CONTRADICTION_KEYS = {
+    K1: { key: "K1", name: "one inquiry, opposite roles", feeds: "world",
+          join: "a supports leg and a cuts_against leg of the SAME inquiry, each resting on a passage",
+          why: "the inquiry already holds both sides; what is missing is anyone proposing the "
+             + "discrepancy itself as the conclusion shape" },
+    K2: { key: "K2", name: "one subject, two held claims", feeds: "record",
+          join: "two inquiries with the same subject entity, each with an ACCEPTED reading carrying a claim",
+          why: "two things the group HOLDS about one subject — the case that carries a duty" },
+    K3: { key: "K3", name: "one referent, two held claims", feeds: "record",
+          join: "two accepted readings, of different inquiries, whose legs rest on the SAME passage "
+              + "(or, where no passage is named, the same captured document)",
+          why: "we read the same text two ways" },
+    K4: { key: "K4", name: "one entity, two sources of different kind or date", feeds: "world",
+          join: "two cited passages whose documents RESOLVE (established) to the same entity, from "
+              + "different doctypes, or with different dates, AS THEIR READERS STATE THEM",
+          why: "Bob's two examples: the rule against the action, March against October" },
+  };
+
+  /** The doctype and the document DATE for one capture, AS THE READER STATES
+   *  THEM — never as this method infers them.
+   *
+   *  BOTH ARE THREE-VALUED AND THE THIRD VALUE IS THE POINT (section 4): *a
+   *  document date or a doctype that its reader does not state is UNDETERMINED,
+   *  and a pair that needs one is not formed on a guess.* `CLAUDE.md`: never
+   *  invent a figure to get past a gate. So `null` here is returned and counted,
+   *  and it is THREE different facts kept apart by `read`: no reading row at all
+   *  (nobody has read this document), a reading that states no date, and a
+   *  reading whose stored JSON will not parse.
+   *
+   *  THE DATE IS READ OFF THE READING'S OWN TOP-LEVEL `date`, which is where
+   *  every doctype that has one puts it (`docprofile/doctypes/`: the agenda, the
+   *  minutes, the staff report). A doctype that states none simply has none, and
+   *  that is a fact about the READER rather than about the document — which is
+   *  exactly why it may not be filled in from `content.at` or from the capture's
+   *  registration time. Those are facts about US. */
+  #contradictionDoc(captureSha, memo) {
+    if (memo.has(captureSha)) return memo.get(captureSha);
+    const row = this.#one(
+      `SELECT content_type, reading FROM readings WHERE capture_sha=? LIMIT 1`, captureSha);
+    const reading = row ? safeJson(row.reading) : null;
+    const s = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    const out = {
+      read: !!row,
+      doctype: row ? s(row.content_type) : null,
+      date: reading ? s(reading.date) : null,
+      parsed: row ? reading !== null : null,
+    };
+    memo.set(captureSha, out);
+    return out;
+  }
+
+  /** K1 — one inquiry, opposite roles. A `supports` leg and a `cuts_against` leg
+   *  of the SAME inquiry, each with a content referent.
+   *
+   *  BOUNDED AT THE SQL AND NOT IN JAVASCRIPT, which is D-365's distinction and
+   *  the one `derivation-bounds.test.mjs` grades: a published `truncated` over a
+   *  scan that read everything is an envelope staying perfectly honest about a
+   *  read that was not bounded at all. The statement OVER-FETCHES BY ONE so
+   *  truncation is OBSERVED rather than inferred from equality with the bound. */
+  #contradictionK1(viewer, cap) {
+    const g = this.#bundleGate("s.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT s.bundle_id AS inquiry, s.ord AS a_ord, s.target_id AS a_target,
+              s.content_id AS a_content, s.note AS a_note,
+              c.ord AS b_ord, c.target_id AS b_target, c.content_id AS b_content, c.note AS b_note
+         FROM inquiry_basis s
+         JOIN inquiry_basis c ON c.bundle_id = s.bundle_id
+        WHERE s.role = 'supports' AND c.role = 'cuts_against'
+          AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
+          AND (${g.sql})
+        ORDER BY s.bundle_id, s.ord, c.ord
+        LIMIT ?`, ...g.args, cap + 1);
+    const truncated = rows.length > cap;
+    const page = truncated ? rows.slice(0, cap) : rows;
+    const pairs = page.map((r) => ({
+      key: "K1", inquiry: r.inquiry,
+      a: this.#contradictionExtent("leg", { inquiry: r.inquiry, ord: r.a_ord, role: "supports",
+                                            target: r.a_target, content_id: r.a_content, note: r.a_note }),
+      b: this.#contradictionExtent("leg", { inquiry: r.inquiry, ord: r.b_ord, role: "cuts_against",
+                                            target: r.b_target, content_id: r.b_content, note: r.b_note }),
+      why: "one question already rests on both of these, one supporting it and one cutting against it. "
+         + "What they SAY about each other is not read here",
+    }));
+    return { pairs, truncated, undetermined: 0, notes: [] };
+  }
+
+  /** K2 — one subject, two held claims. Two inquiries with the same
+   *  `bundles.inquiry_subject_entity`, each with an ACCEPTED reading carrying a
+   *  `claim`.
+   *
+   *  `hidden = 0` AND `state = 'accepted'` ARE BOTH REQUIRED AND THEY ARE
+   *  DIFFERENT RULES. Section 3: *a `suggested`, `considering` or `rejected`
+   *  version is not held* — that is the state test. A HIDDEN accepted version is
+   *  a reading the group PRUNED (`inquiry_basis_versions.hidden`, the prune flag,
+   *  where hiding is not deleting), and pairing a pruned reading would propose a
+   *  record defect out of something the group has already set aside.
+   *
+   *  `bundle_id >` RATHER THAN `<>` IS WHAT MAKES A PAIR ONE PAIR. Without it
+   *  every pair appears twice, once from each side, and a count of candidates
+   *  would be double what was actually compared — a figure that costs nothing to
+   *  produce and means nothing. */
+  #contradictionK2(viewer, cap) {
+    const ga = this.#bundleGate("v1.bundle_id", viewer);
+    const gb = this.#bundleGate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim,
+              d1.inquiry_subject_entity AS entity_id, d1.title AS a_title, d2.title AS b_title
+         FROM inquiry_basis_versions v1
+         JOIN bundles d1 ON d1.bundle_id = v1.bundle_id
+         JOIN bundles d2 ON d2.inquiry_subject_entity = d1.inquiry_subject_entity
+                        AND d2.bundle_id > d1.bundle_id
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = d2.bundle_id
+        WHERE v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND d1.inquiry_subject_entity IS NOT NULL AND d1.inquiry_subject_entity <> ''
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY d1.inquiry_subject_entity, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`, ...ga.args, ...gb.args, cap + 1);
+    const truncated = rows.length > cap;
+    const page = truncated ? rows.slice(0, cap) : rows;
+    const pairs = page.map((r) => ({
+      key: "K2", subject_entity: r.entity_id,
+      a: { kind: "claim", inquiry: r.a_inquiry, title: r.a_title ?? null,
+           version: r.a_version, claim: r.a_claim },
+      b: { kind: "claim", inquiry: r.b_inquiry, title: r.b_title ?? null,
+           version: r.b_version, claim: r.b_claim },
+      why: "two questions about the same registered subject, each with a reading the group ACCEPTED "
+         + "and a claim it therefore holds. Whether they can both be so is not read here",
+    }));
+    return { pairs, truncated, undetermined: 0, notes: [] };
+  }
+
+  /** K3 arm (a) — two accepted readings, of DIFFERENT inquiries, whose legs rest
+   *  on the SAME content row. */
+  #contradictionK3Same(viewer, cap) {
+    const ga = this.#bundleGate("v1.bundle_id", viewer);
+    const gb = this.#bundleGate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim, l1.ord AS a_ord,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim, l2.ord AS b_ord,
+              l1.content_id AS content_id
+         FROM inquiry_basis_version_legs l1
+         JOIN inquiry_basis_versions v1 ON v1.bundle_id = l1.bundle_id AND v1.name = l1.name
+         JOIN inquiry_basis_version_legs l2 ON l2.content_id = l1.content_id
+                                           AND l2.bundle_id > l1.bundle_id
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
+        WHERE l1.content_id IS NOT NULL
+          AND v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY l1.content_id, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`, ...ga.args, ...gb.args, cap + 1);
+    const truncated = rows.length > cap;
+    return { rows: truncated ? rows.slice(0, cap) : rows, truncated };
+  }
+
+  /** K3 arm (b) — THE SAME QUESTION WHERE NO PASSAGE IS NAMED, and it is a
+   *  SECOND STATEMENT rather than a `UNION` for two reasons, both measured
+   *  elsewhere in this file: D-36's workerd ceiling of five compound terms is
+   *  low enough that a union here would be one step from a shape no bench
+   *  predicted, and a union publishes ONE figure over two joins that mean
+   *  different things — which is the arm the per-key census exists to keep apart.
+   *
+   *  WHAT A NULL `content_id` IS, and the arm is written against the schema's
+   *  own three causes rather than against a guess: the leg rests on an INQUIRY
+   *  (no capture and no part to point at), the record holds no bytes of the
+   *  information object, or the row is a REPLAY of a leg written under rules that
+   *  did not exist. Only the last two name a DOCUMENT, so this arm requires
+   *  `target_type = 'information'` and the first cause is excluded BY MEANING —
+   *  two claims resting on the same sub-QUESTION are not two readings of one
+   *  text, which is what K3 is about. */
+  #contradictionK3Doc(viewer, cap) {
+    const ga = this.#bundleGate("v1.bundle_id", viewer);
+    const gb = this.#bundleGate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim, l1.ord AS a_ord,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim, l2.ord AS b_ord,
+              l1.target_id AS target_id
+         FROM inquiry_basis_version_legs l1
+         JOIN inquiry_basis_versions v1 ON v1.bundle_id = l1.bundle_id AND v1.name = l1.name
+         JOIN inquiry_basis_version_legs l2 ON l2.target_id = l1.target_id
+                                           AND l2.bundle_id > l1.bundle_id
+                                           AND l2.content_id IS NULL
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
+        WHERE l1.content_id IS NULL AND l1.target_type = 'information'
+          AND l2.target_type = 'information'
+          AND v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY l1.target_id, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`, ...ga.args, ...gb.args, cap + 1);
+    const truncated = rows.length > cap;
+    return { rows: truncated ? rows.slice(0, cap) : rows, truncated };
+  }
+
+  /** K3, both arms, each bounded on its own and each SAID. */
+  #contradictionK3(viewer, cap) {
+    const same = this.#contradictionK3Same(viewer, cap);
+    const doc = this.#contradictionK3Doc(viewer, cap);
+    const mk = (r, referent) => ({
+      key: "K3", ...referent,
+      a: { kind: "claim", inquiry: r.a_inquiry, version: r.a_version, claim: r.a_claim, ord: r.a_ord },
+      b: { kind: "claim", inquiry: r.b_inquiry, version: r.b_version, claim: r.b_claim, ord: r.b_ord },
+      why: referent.content_id
+        ? "two questions whose accepted readings rest on the SAME passage, each holding a claim. "
+        + "What that passage supports is the thing they may disagree about"
+        : "two questions whose accepted readings rest on the same DOCUMENT with no passage named on "
+        + "either side, each holding a claim. The passage grain is absent on both, not chosen",
+    });
+    const pairs = [
+      ...same.rows.map((r) => mk(r, { content_id: r.content_id, referent_grain: "passage" })),
+      ...doc.rows.map((r) => mk(r, { content_id: null, document: r.target_id, referent_grain: "document" })),
+    ];
+    return { pairs, truncated: same.truncated || doc.truncated, undetermined: 0,
+             arms: { passage: { formed: same.rows.length, truncated: same.truncated },
+                     document: { formed: doc.rows.length, truncated: doc.truncated } },
+             notes: [] };
+  }
+
+  /** One leg's side of a pair, with the passage it rests on RESOLVED — the ref
+   *  a member reads and the capture it is a part of. The leg alone names a
+   *  content id, which is a hash and tells a reader nothing about what was
+   *  cited. Section 5 requires both sides to travel with their referents. */
+  #contradictionExtent(kind, side) {
+    const row = side.content_id
+      ? this.#one(`SELECT capture_sha, ref, extent_kind, stale FROM content WHERE content_id=? LIMIT 1`,
+                  side.content_id)
+      : null;
+    return { kind, ...side,
+             capture_sha: row ? row.capture_sha : null,
+             ref: row ? row.ref : null,
+             extent_kind: row ? row.extent_kind : null,
+             stale: row ? !!row.stale : null };
+  }
+
+  /** K4 — one entity, two sources of different kind or DATE.
+   *
+   *  THE SQL FINDS CANDIDATES AND THE JAVASCRIPT DECIDES, and the division is
+   *  the item's honesty requirement rather than a convenience. The join can say
+   *  *these two documents resolve, established, to one entity, and somebody has
+   *  cited a passage of each.* It CANNOT say whether their kinds or their dates
+   *  differ, because a reader's date lives inside the reading's JSON and a
+   *  doctype that a reader does not state is absent rather than empty. So the
+   *  discriminator is applied here, where the third answer — UNDETERMINED — can
+   *  be COUNTED and the pair left unformed.
+   *
+   *  `established = 1` ON BOTH ENDS IS SECTION 4's WORD AND IT IS LOAD-BEARING.
+   *  An `established` resolution is one graded A or B at both ends; a C-tier
+   *  correspondence is expressly *flagged for a member to confirm*. Pairing on
+   *  an unconfirmed correspondence would manufacture a world-contradiction
+   *  candidate out of two documents nobody has yet agreed are about one thing —
+   *  *an equality that costs nothing to produce is not evidence*, arriving where
+   *  it would do the most damage.
+   *
+   *  `DISTINCT` IS NOT COSMETIC: `resolutions` is keyed `(capture_sha, ref,
+   *  entity_id)`, so one document naming a subject five times holds five rows to
+   *  it, and without `DISTINCT` one candidate pair would be counted five times.
+   *  A per-key figure inflated by how often a document repeats a name is a figure
+   *  about the document's prose, not about what was compared. */
+  #contradictionK4(viewer, cap) {
+    const ga = this.#bundleGate("c1.bundle_id", viewer);
+    const gb = this.#bundleGate("c2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT DISTINCT c1.content_id AS a_content, c1.capture_sha AS a_capture, c1.ref AS a_ref,
+              c1.extent_kind AS a_kind,
+              c2.content_id AS b_content, c2.capture_sha AS b_capture, c2.ref AS b_ref,
+              c2.extent_kind AS b_kind, r1.entity_id AS entity_id
+         FROM content c1
+         JOIN resolutions r1 ON r1.capture_sha = c1.capture_sha AND r1.established = 1
+         JOIN resolutions r2 ON r2.entity_id = r1.entity_id AND r2.established = 1
+                            AND r2.capture_sha > r1.capture_sha
+         JOIN content c2 ON c2.capture_sha = r2.capture_sha
+        WHERE (EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = c1.content_id)
+               OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = c1.content_id))
+          AND (EXISTS (SELECT 1 FROM inquiry_basis ib2 WHERE ib2.content_id = c2.content_id)
+               OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl2 WHERE vl2.content_id = c2.content_id))
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY r1.entity_id, c1.content_id, c2.content_id
+        LIMIT ?`, ...ga.args, ...gb.args, cap + 1);
+    const truncated = rows.length > cap;
+    const page = truncated ? rows.slice(0, cap) : rows;
+    const memo = new Map();
+    const pairs = []; let undetermined = 0, indistinct = 0;
+    const missing = { never_read: 0, no_doctype: 0, no_date: 0 };
+    for (const r of page) {
+      const da = this.#contradictionDoc(r.a_capture, memo);
+      const db = this.#contradictionDoc(r.b_capture, memo);
+      const kindsKnown = !!da.doctype && !!db.doctype;
+      const datesKnown = !!da.date && !!db.date;
+      const discriminator = kindsKnown && da.doctype !== db.doctype ? "doctype"
+                          : datesKnown && da.date !== db.date ? "date" : null;
+      if (discriminator) {
+        pairs.push({
+          key: "K4", entity_id: r.entity_id, discriminator,
+          a: { kind: "extent", content_id: r.a_content, capture_sha: r.a_capture, ref: r.a_ref,
+               extent_kind: r.a_kind, doctype: da.doctype, date: da.date, read: da.read },
+          b: { kind: "extent", content_id: r.b_content, capture_sha: r.b_capture, ref: r.b_ref,
+               extent_kind: r.b_kind, doctype: db.doctype, date: db.date, read: db.read },
+          why: discriminator === "doctype"
+            ? "two documents the record has established are about the same subject, of different kinds "
+            + "as their readers state them — the shape of a rule against the act it governs"
+            : "two documents the record has established are about the same subject, dated differently "
+            + "as their readers state them — the shape of one body saying X then Y",
+        });
+        continue;
+      }
+      if (kindsKnown && datesKnown) { indistinct += 1; continue; }
+      /* UNDETERMINED, AND IT IS COUNTED RATHER THAN ROUNDED TO EITHER NEIGHBOUR.
+         Section 4: *a pair that needs a date or a doctype its reader does not
+         state is not formed on a guess*, and the count is what stops that
+         refusal reading as "these two agree". */
+      undetermined += 1;
+      if (!da.read || !db.read) missing.never_read += 1;
+      else if (!kindsKnown) missing.no_doctype += 1;
+      else missing.no_date += 1;
+    }
+    return { pairs, truncated, undetermined, indistinct, missing,
+             notes: undetermined
+               ? [`${undetermined} candidate pair(s) were NOT formed because a doctype or a document `
+                + `date their readers never stated was needed to tell them apart `
+                + `(${missing.never_read} where a document has not been read at all, `
+                + `${missing.no_doctype} where a reader stated no kind, ${missing.no_date} where a `
+                + `reader stated no date). That is not evidence the two agree`]
+               : [] };
+  }
+
+  /** WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED — section 6,
+   *  and `CLAUDE.md`'s rule that this whole arm exists to serve.
+   *
+   *  A LADDER OF EXISTENCE PROBES, AND EXISTENCE IS DELIBERATELY NOT A COUNT.
+   *  The obligation is to say WHICH level was empty, which is a question about
+   *  existence; a census would answer a question nobody asked and would cost an
+   *  unbounded scan per rung on the one surface whose whole subject is that the
+   *  record is sparse. Each probe is `LIMIT 1` and rides the same viewer gate as
+   *  the key's own join, so a rung can never report material this caller may not
+   *  see — a ladder answered ungated would tell an uninvited reader that the
+   *  level below is populated, which is the disclosure the gate is for.
+   *
+   *  THE FIRST RUNG THAT IS EMPTY IS THE ANSWER, because absence at one level is
+   *  not evidence of absence at the next. A key that returns nothing because
+   *  nobody has asked a question is a DIFFERENT FACT from one that returns
+   *  nothing because the questions hold no accepted reading, and the next move
+   *  differs: go and look, versus go and read what you hold.
+   *
+   *  `viewer` IS A RUNG AND IT IS THE FIRST ONE, and section 6 does not list it.
+   *  REPORTED AS A DESIGN GAP. Section 6 names four empty-causes and every one
+   *  of them is a statement about the RECORD; a read made with no viewer stamp,
+   *  or one the gate does not recognise, is empty for a reason that is not about
+   *  the record at all. Folding it into "the key had nothing to join" would make
+   *  an outage read as a sparse record — the exact substitution of one absence
+   *  for another this section forbids — so it is named, and it is named FIRST
+   *  because nothing below it can be believed when it fires. */
+  #contradictionLadder(key, viewer, scope) {
+    const rung = (level, sql, ...args) => ({ level, present: !!this.#one(sql, ...args) });
+    if (scope === "DENY")
+      return [{ level: "viewer", present: false }];
+    const gi = this.#bundleGate("ib.bundle_id", viewer);
+    const gv = this.#bundleGate("v.bundle_id", viewer);
+    const gs = this.#bundleGate("s.bundle_id", viewer);
+    const vp = viewerPredicate(viewer);
+    const anyInquiry = () => rung("inquiry",
+      `SELECT 1 AS x FROM bundles b WHERE b.object_type='inquiry' AND (${vp.sql}) LIMIT 1`, ...vp.args);
+    const heldReading = (extra) => this.#one(
+      `SELECT 1 AS x FROM inquiry_basis_versions v
+        WHERE v.state='accepted' AND v.hidden=0 ${extra} AND (${gv.sql}) LIMIT 1`, ...gv.args);
+    if (key === "K1") return [
+      { level: "viewer", present: true }, anyInquiry(),
+      rung("leg", `SELECT 1 AS x FROM inquiry_basis ib WHERE (${gi.sql}) LIMIT 1`, ...gi.args),
+      rung("role", `SELECT 1 AS x FROM inquiry_basis s JOIN inquiry_basis c ON c.bundle_id=s.bundle_id
+                     WHERE s.role='supports' AND c.role='cuts_against' AND (${gs.sql}) LIMIT 1`, ...gs.args),
+      rung("referent", `SELECT 1 AS x FROM inquiry_basis s JOIN inquiry_basis c ON c.bundle_id=s.bundle_id
+                         WHERE s.role='supports' AND c.role='cuts_against'
+                           AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
+                           AND (${gs.sql}) LIMIT 1`, ...gs.args),
+    ];
+    if (key === "K2") return [
+      { level: "viewer", present: true }, anyInquiry(),
+      rung("subject", `SELECT 1 AS x FROM bundles b WHERE b.inquiry_subject_entity IS NOT NULL
+                        AND b.inquiry_subject_entity <> '' AND (${vp.sql}) LIMIT 1`, ...vp.args),
+      { level: "reading", present: !!heldReading("") },
+      { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") },
+    ];
+    if (key === "K3") return [
+      { level: "viewer", present: true }, anyInquiry(),
+      { level: "reading", present: !!heldReading("") },
+      { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") },
+      rung("referent", `SELECT 1 AS x FROM inquiry_basis_version_legs l
+                         JOIN inquiry_basis_versions v ON v.bundle_id=l.bundle_id AND v.name=l.name
+                        WHERE v.state='accepted' AND v.hidden=0
+                          AND v.claim IS NOT NULL AND v.claim <> ''
+                          AND (l.content_id IS NOT NULL OR l.target_type='information')
+                          AND (${gv.sql}) LIMIT 1`, ...gv.args),
+    ];
+    const gc = this.#bundleGate("c.bundle_id", viewer);
+    return [
+      { level: "viewer", present: true },
+      rung("content", `SELECT 1 AS x FROM content c WHERE (${gc.sql}) LIMIT 1`, ...gc.args),
+      rung("cited", `SELECT 1 AS x FROM content c
+                      WHERE (EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id=c.content_id)
+                             OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl
+                                         WHERE vl.content_id=c.content_id))
+                        AND (${gc.sql}) LIMIT 1`, ...gc.args),
+      rung("resolution", `SELECT 1 AS x FROM content c
+                           JOIN resolutions r ON r.capture_sha=c.capture_sha AND r.established=1
+                          WHERE (${gc.sql}) LIMIT 1`, ...gc.args),
+      rung("shared_entity", `SELECT 1 AS x FROM resolutions r1
+                              JOIN resolutions r2 ON r2.entity_id=r1.entity_id AND r2.established=1
+                                                 AND r2.capture_sha > r1.capture_sha
+                             WHERE r1.established=1 LIMIT 1`),
+    ];
+  }
+
+  /** The sentence a member reads when a key found nothing. ONE place, so a
+   *  surface renders what the plane holds and never composes this itself — the
+   *  second place a distinction is made is the first place it can drift. */
+  static #CONTRADICTION_ABSENCE = {
+    viewer: "this read was made with NO VIEWER the record recognises, so it compared nothing and "
+          + "every key below is empty for want of a reader rather than for want of material. This is "
+          + "an outage, not a statement about the record: ask again with a member's session",
+    inquiry: "no question is in scope at all. Nothing has been asked here yet, so there is nothing "
+           + "for any key to pair — the record is EMPTY at the question level and says nothing "
+           + "whatever about whether the world contains contradictions",
+    leg: "questions exist and NONE of them rests on anything. Nothing has been cited, so there are "
+       + "no two sides to put beside each other",
+    role: "questions rest on material, but not ONE of them holds both a leg that supports it and a "
+        + "leg that cuts against it. That is a fact about how the questions are argued, not about "
+        + "whether the record contains a discrepancy",
+    referent: "both sides exist, but the legs name no PASSAGE — they rest on a whole document, on a "
+            + "sub-question, or on bytes this record does not hold. A pair whose sides cannot be "
+            + "quoted is not a pair a member could judge, so none was formed",
+    subject: "questions exist and NONE of them names a registered subject. K2 pairs by subject, so "
+           + "this is absence at the SUBJECT level: the claims may well disagree and nothing here "
+           + "can see it",
+    reading: "questions exist and none of them holds an ACCEPTED reading. A suggested, considering "
+           + "or rejected reading is not something the group HOLDS, so there is no held assertion "
+           + "to pair. Nothing is claimed about what the questions would say if they were read",
+    claim: "accepted readings exist and none of them carries a CLAIM. What the group holds is "
+         + "therefore unstated in the one field this key can read, which is absence in OUR record "
+         + "rather than agreement in it",
+    shared_entity: "cited passages and established resolutions exist, but no two documents resolve "
+                 + "to the SAME subject. There is nothing about one entity to compare",
+    content: "no passage of any document has been cited or marked citable. Nothing has been "
+           + "extracted at the content level, which says nothing about what the documents say",
+    cited: "passages exist and none of them is cited by any reading. This key compares what the "
+         + "record RESTS ON, and it rests on none of them",
+    resolution: "cited passages exist and their documents carry no ESTABLISHED resolution to any "
+              + "subject. Nobody has confirmed what these documents are about, so there is no "
+              + "entity to pair them under — the next move is to resolve them, not to conclude "
+              + "they are unrelated",
+    shared_side: "questions hold both a supporting and a cutting leg, and each names a passage, but "
+               + "no ONE question holds both at once. The two sides of this key are the two sides of a "
+               + "SINGLE question, and none has them",
+    shared_subject: "held claims and registered subjects both exist, and no two accepted claims share "
+                  + "a subject. Every subject is spoken to once, so there is nothing about one subject "
+                  + "for the record to disagree with itself about",
+    shared_referent: "held claims rest on passages, and no two claims of DIFFERENT questions rest on "
+                   + "the same one. Each passage is read by at most one held claim, so no text is read "
+                   + "two ways here",
+    discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by "
+                 + "kind or by date. Either the readers state the same kind and the same date on "
+                 + "both, or they state neither — and where a value is missing the pair was left "
+                 + "unformed rather than guessed. The counts beside this say which",
+  };
+
+  /** op=contradictionpairs — THE PAIRING READ (REC-146 / IC-167).
+   *
+   *  A READ. It judges nothing and writes nothing, and both are said in the
+   *  answer rather than left to a reader of this comment: `judgement.state` is
+   *  `NOT_REACHED` and names the item that will reach it, and `wrote` is false.
+   *
+   *  WHY `judgement` IS PUBLISHED AS A FIELD AT ALL, since nothing fills it.
+   *  Because the alternative is an answer that lists candidate pairs and says
+   *  nothing about whether anybody has looked at them — and a list of pairs with
+   *  no verdict beside it reads as a list of CONTRADICTIONS. Section 1: a
+   *  detector that cannot tell imprecision from double-speak buries members in
+   *  false conflicts and is switched off inside a week. This surface must not
+   *  begin that way by implication, so it states in its own answer that the
+   *  labelling step does not exist.
+   *
+   *  NO LABEL VOCABULARY IS PUBLISHED HERE, deliberately, and it is the same
+   *  decision one step stricter. Section 5's five labels are the JUDGEMENT's
+   *  output; publishing them from a surface that assigns none would let a
+   *  consumer render the vocabulary beside the pairs and read as a detector that
+   *  had declined to label. The vocabulary arrives with its writer.
+   *
+   *  EACH KEY IS RUN EXACTLY ONCE and its result feeds both the per-key envelope
+   *  and the flat pair list. The first draft of this method ran every key TWICE —
+   *  once for the census and once for the pairs — which is a doubled read AND a
+   *  correctness hazard: two runs of one key over a store being written between
+   *  them would publish a `formed` figure that does not match the pairs beside
+   *  it, and nothing would fail. */
+  contradictionPairs({ key = null, limit = null, viewer = null } = {}) {
+    const catalogue = Store.CONTRADICTION_KEYS;
+    const names = Object.keys(catalogue);
+    const asked = key == null || String(key).trim() === "" ? null : String(key).trim().toUpperCase();
+    /* DEC-49 REGION is-contradiction-key-unknown */
+    if (asked !== null && !Object.prototype.hasOwnProperty.call(catalogue, asked)) {
+      const row = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
+      return { ok: false, reason: "CONTRADICTION_KEY_UNKNOWN", code: "CONTRADICTION_KEY_UNKNOWN",
+               check: row.check, translation: row.translation, keys: names,
+               detail: `the record pairs by ${names.join(", ")} and holds no key `
+                     + `'${String(key).slice(0, 40)}'` };
+    }
+    /* END DEC-49 REGION is-contradiction-key-unknown */
+    /* THE BOUND IS CLAMPED AND PUBLISHED, never refused: a caller asking for
+       more than the plane gives is answered with what it gives and told the
+       figure. `truncated` is then a fact about THIS answer at THIS bound. */
+    const max = Store.CONTRADICTION_PAIRS_MAX;
+    const n = Number(limit);
+    const cap = Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), max) : max;
+    const gate = viewerPredicate(viewer);
+    const denied = gate.scope === "DENY";
+    const run = new Set(asked ? [asked] : names);
+    const pairs = [];
+
+    const keys = names.map((name) => {
+      const spec = catalogue[name];
+      if (!run.has(name))
+        return { ...spec, ran: false, formed: 0, limit: cap, truncated: false, levels: null, notes: [],
+                 absence: { level: "not_run",
+                            says: `this key was not run: the request named ${asked}. Nothing here is a `
+                                + `statement about what ${name} would have found` } };
+      const out = denied ? { pairs: [], truncated: false, notes: [] }
+        : name === "K1" ? this.#contradictionK1(viewer, cap)
+        : name === "K2" ? this.#contradictionK2(viewer, cap)
+        : name === "K3" ? this.#contradictionK3(viewer, cap)
+        : this.#contradictionK4(viewer, cap);
+      pairs.push(...out.pairs);
+      const ladder = this.#contradictionLadder(name, viewer, gate.scope);
+      /* THE FIRST EMPTY RUNG IS THE ANSWER. Where every rung is populated and the
+         key still formed nothing, the join itself is what came back empty and the
+         key's own last level names it — never a bare zero. */
+      const empty = ladder.find((r) => !r.present);
+      const level = out.pairs.length ? null
+        : empty ? empty.level
+        : name === "K1" ? "shared_side"
+        : name === "K2" ? "shared_subject"
+        : name === "K3" ? "shared_referent"
+        : "discriminator";
+      return { ...spec, ran: true, formed: out.pairs.length, limit: cap, truncated: out.truncated,
+               levels: ladder, notes: out.notes,
+               absence: level === null ? null
+                 : { level, says: Store.#CONTRADICTION_ABSENCE[level] },
+               ...(out.arms ? { arms: out.arms } : {}),
+               ...(name === "K4" && !denied
+                 ? { undetermined: out.undetermined, indistinct: out.indistinct,
+                     undetermined_detail: out.missing }
+                 : {}) };
+    });
+
+    const formed = pairs.length;
+    const undetermined = keys.reduce((a, k) => a + (k.undetermined || 0), 0);
+    return {
+      ok: true, wrote: false, pairs_formed: formed, limit: cap, bound: max, bounded: true,
+      viewer_scope: gate.scope, keys, pairs,
+      judgement: {
+        state: "NOT_REACHED",
+        by: "the machine, inside an investigative run, as labelled machine work (DEC-24)",
+        item: "CONTRADICTION-IDENTIFY-DESIGN.md section 9 item 3",
+        why: "whether either side of a pair here CONTRADICTS the other — and whether that would be a "
+           + "contradiction in the WORLD, one in OUR RECORD, or merely the same fact stated at two "
+           + "precisions — is semantic work this plane cannot do and has not done. NOTHING here is a "
+           + "finding, and a pair is not a claim that its two sides disagree: it is a claim that they "
+           + "are WORTH COMPARING, by the named key, and nothing more",
+      },
+      says: denied
+        ? "this read compared NOTHING, because no viewer the record recognises was stamped on it. That "
+        + "is an outage and not a statement about the record: every key below reads empty for want of "
+        + "a reader, and none of them looked"
+        : `${formed} candidate pair(s) over ${[...run].join(", ")}, each carrying the KEY that brought `
+        + `its two sides together`
+        + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a date or a `
+                        + `doctype their readers never stated was needed to tell the two apart, and `
+                        + `that is COUNTED rather than rounded to agreement` : "")
+        + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is `
+        + `never evidence of absence at the next, and a key with nothing to join says the record is `
+        + `SPARSE there, not that it is consistent`,
+    };
   }
 
   /** op=narrow — THE ACT. A new basis version, one leg narrower, the old retained. */
@@ -41060,6 +41694,16 @@ export class Store extends DurableObject {
         narrowcandidates: () => this.narrowCandidates({
           target: url.searchParams.get("target"), version: url.searchParams.get("version"),
           ord: url.searchParams.get("ord"), viewer: url.searchParams.get("viewer"),
+        }),
+        /* REC-146 / IC-167: THE CONTRADICTION PAIRING READ. `viewer` is the control
+           plane's stamp and never the caller's — the pairing runs AS A MEMBER
+           (CONTRADICTION-IDENTIFY-DESIGN.md section 6) and a caller-supplied viewer
+           would be the impostor hole REC-29 measured. `key` and `limit` are the
+           caller's, and both are answered rather than trusted: an unknown key is
+           refused BY NAME and a limit out of range is clamped to the published bound. */
+        contradictionpairs: () => this.contradictionPairs({
+          key: url.searchParams.get("key"), limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer"),
         }),
         /* REC-87 / IC-128: TRANSCRIBE. The TYPIST and the ATTESTOR come from the
            QUERY STRING, where the control plane stamped them, and never from the
