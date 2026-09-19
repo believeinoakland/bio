@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1245 rulings across 100 documents.
+1244 rulings across 100 documents.
 
 ## DEC-
 
@@ -2391,14 +2391,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
-- carrying BOTH sides, DECIDED regenerated).  
-  `docs/development/kickoffs/DIST-NEXT.md:21`
-- NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. 0.65.0 was added in this cut and its control was RE-RUN, not inferred: arm `alterafter` measured **169 pass / 66 fail** against the declared baseline 135/66 — the failure set is unchanged because it is bounded by `WITHDRAWN`, while the pass count…  
-  `docs/development/kickoffs/DIST-NEXT.md:72`
-- against the declared baseline 135/66 — the failure set is unchanged because it is bounded by `WITHDRAWN`, while the pass count rose from the releases added.  
-  `docs/development/kickoffs/DIST-NEXT.md:74`
-- `v0.59.0`–`v0.63.0` are signed and WITHDRAWN (they brick existing stores): history only. **DELETED from this list as STALE:** "the installer does not install fleet member bundles".  
-  `docs/development/kickoffs/DIST-NEXT.md:82`
+- NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. 0.65.0 was added in this cut and its control was RE-RUN rather than inferred: arm `alterafter` measured **169 pass / 66 fail** against the declared baseline 135/66 — the failure set is unchanged because it is bounded by `WITHDRAWN`, while the pass…  
+  `docs/development/kickoffs/DIST-NEXT.md:58`
+- 135/66 — the failure set is unchanged because it is bounded by `WITHDRAWN`, while the pass count rose from the releases added.  
+  `docs/development/kickoffs/DIST-NEXT.md:60`
+- `v0.59.0`–`v0.63.0` are signed and WITHDRAWN (they brick existing stores): history only. **DELETED as STALE:** "the installer does not install fleet member bundles".  
+  `docs/development/kickoffs/DIST-NEXT.md:69`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  
