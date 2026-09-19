@@ -921,7 +921,13 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
   t("and the case completes: no adversary reached it, and the second member ratifies on the bytes it "
   + "actually signed", r2.ok, true);
   const man = rP(await GET(`op=publishedmanifest&token=${PILAR}`));
-  const theCase = (man.cases || []).find((c) => c.project_id === PROJ);
+  /* CORRECTED 2026-09-19 (REC-151, IC-164): this read took the FIRST of PROJ's cases on the index, which was the
+     two-member case only because `op=publishedmanifest` orders by case id and the CASE counter minted it first.
+     Case ids are now OPAQUE (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*) and ordering by id means nothing,
+     so §6's single-member case (INQ_SPARE) came first about half the time and this arm read the wrong case. It
+     now names the case it means — still keyed on the project too, so arm (H)'s literal project finds nothing,
+     exactly as before. */
+  const theCase = (man.cases || []).find((c) => c.project_id === PROJ && c.case_id === TWO_MEMBER_CASE?.caseId);
   t("THE `cases` ROW IS WRITTEN, AND IT NAMES THE PUBLISHING PROJECT — CASE-1 built the table and "
   + "said CASE-2 would be what first writes it; this is that, driven through op=ratify",
     [theCase != null, theCase?.project_id], [true, PROJ]);
