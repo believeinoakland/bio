@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1221 rulings across 98 documents.
+1223 rulings across 98 documents.
 
 ## DEC-
 
@@ -786,8 +786,6 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:12393`
 - **IC-122** — (grammar arm extended; `codesUsed` CORRECTED, not exempted), `bio-plane/dist/**` (rebuild; `src/signpage.mjs` byte-identical), `docs/development/INTERFACE-CHANGES.md` (IC-122 PROPOSED), the Part II §16 Drive paragraph of `docs/architecture/BIO_Content_Framework_v0_10.md` (one parenthetical; front matter unchanged —…  
   `docs/development/CLAIMS.md:12989`
-- **IC-130** · 2026-09-19 — SUPERSEDED 2026-09-19 by the 0.64.0 deploy: see the LIVE header above.** (It read: the live plane and members are on 0.58.0.)  
-  `docs/development/kickoffs/DIST-NEXT.md:37`
 - **IC-136** — (IC-136 added `leads` to `op=stats`), RULED by BOB #15 in `MEMBER-KNOWLEDGE-DESIGN.md` §5 (*A COUNT IS A DISCLOSURE OF EXISTENCE*). - **Owner to land it:** `RECORD` - **Consumers to answer:** `UI` (NOT-AFFECTED measured: `civicos-ui/` calls neither `op=stats` nor  
   `docs/development/INTERFACE-CHANGES.md:10591`
 - **IC-138** — `bio-plane/test/rec121-chain-bytes.test.mjs` §4 CORRECTED at its site with the reason. - Generated: `bio-plane/dist/*` rebuilt. - Docs: `INTERFACE-CHANGES.md` (IC-138, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md` (§4.2 and front matter), `docs/DECIDED.md` on regeneration, `.gitignore` (the…  
@@ -1943,6 +1941,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CIVICOS_UI_STATE.md:1448`
 - RULINGS SETTLED THIS SESSION, do not re-ask.  
   `docs/development/CIVICOS_UI_STATE.md:1554`
+- **2026-09-19** — deployed and live-verified); the `latest` pointer mechanism and 17 lessons in `kickoffs/DIST.md`; `migrate-released`'s WITHDRAWN correction.  
+  `docs/development/CLAIMS.md:53`
 - is CORRECTED, never exempted. No other arm touched. `.gitignore` — one pattern (`.ui*-harness/`) for negative-control pens, in the block that already documents transient harness directories under `civicos-ui/`. `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not  
   `docs/development/CLAIMS.md:106`
 - **2026-08-10** — AMENDED 2026-08-10 (same session), because a claim that does not name what was really edited is not a claim.** Three paths beyond the list above were touched and each is licensed by ORCHESTRATION rule 6 — *correct what your change superseded, in the SAME turn, yourself*:  
@@ -2349,14 +2349,18 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
-- Put ONLY withdrawn releases in its `WITHDRAWN` set: that loop asserts a release BRICKS 0.58.0, corrected in 0.65.0's cut.  
-  `docs/development/kickoffs/DIST-NEXT.md:10`
+- (NOT to `WITHDRAWN`). - Rebuild the closings list from `git log v0.65.0..origin/main` and confirm each in 0.65.0's BYTES. - Check each IC since 0.65.0 for fleet members and for `civicos-ui/app.html` changes (lesson 6). 2.  
+  `docs/development/kickoffs/DIST-NEXT.md:46`
+- `v0.59.0`–`v0.63.0` are signed and WITHDRAWN (they brick existing stores): history only. ## What happened, briefly (the reasoning is in the commits and in M-59)  
+  `docs/development/kickoffs/DIST-NEXT.md:54`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  
   `docs/development/kickoffs/DIST.md:86`
 - **2026-09-19** — THE MECHANISM, DECIDED BY DIST 2026-09-19: `main`'s `release/` IS THE `latest` POINTER, AND A CUT LIVES ON A BRANCH UNTIL IT IS LIVE.** Every installer, including every copy already deployed, reads `main/release/RELEASE.json` (`newgroup/src/index.mjs`, `CFG.RELEASE_LATEST`).  
   `docs/development/kickoffs/DIST.md:90`
+- goes in its `WITHDRAWN` set**, because that loop asserts the release BRICKS a 0.58.0 store.  
+  `docs/development/kickoffs/DIST.md:206`
 - **2026-09-16** — RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather than by an instrument.** He stands development down in one account — the BOB session retires itself and every lane and worker under it — and only once that account confirms everything is stopped does he open the other…  
   `docs/development/kickoffs/NEW-MACHINE.md:59`
 - `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  
