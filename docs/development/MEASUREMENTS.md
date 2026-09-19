@@ -17048,7 +17048,7 @@ confine an arm: the user-level `permissions.defaultMode: "auto"` let every arm r
 listed the parent directory, where other arms' files and the keys were. **Read at the transcripts** (each headless run's
 `session_id` names a `.jsonl` under `~/.claude/projects/`): in M-63 and M-64 EVERY arm used Bash (`cat`, `sed`, `ls`), and
 **NONE read a file outside its own directory**. M-64's CTRL ran `ls -la ..` and saw the key's NAME, and read nothing there;
-this run's two controls did the same and read nothing (per its report). So M-63 and M-64 stand. **M-60 is UNDETERMINED**,
-because its arms' transcripts were not checked (BOB #15's run). **The corrected instrument:** add
+this run's two controls did the same and read nothing (per its report). So M-63 and M-64 stand. **M-60 also stands, checked the same way the same day**: its
+five runs (`examroom/new`, `new2`, `old`, `none`, `grade` under BOB #15's scratchpad) each read only inside their own directory. **The corrected instrument:** add
 `--disallowedTools Bash Glob Grep` to every arm and every grader, and keep each arm's directory out of reach of the keys
 (sibling directories, never children of one that holds a key).

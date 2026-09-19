@@ -54,8 +54,8 @@ lands; see §2), then this. **Everything below is a POINTER measured at writing;
 
 1. **Field counts** of process failures per lane against the 2026-09-18 baseline (M-60's "owed"). No baseline is defined
    anywhere I found; defining it (which failures count, read from which ledgers) is the first act.
-2. **Re-run M-60 with the corrected instrument** (`--disallowedTools Bash Glob Grep`, arms in sibling directories), or
-   check its transcripts, since it is UNDETERMINED whether its arms read outside their directories (M-65).
+2. **Use the corrected exam instrument from now on** (`--disallowedTools Bash Glob Grep`, arms in sibling directories,
+   M-65). M-60, M-63 and M-64 were checked back at their transcripts and stand.
 3. **PRESENT and RESOLVE** for contradiction, after IDENTIFY's M0-71 measures (SCHEDULER: REC-146 → M0-71 → REC-147; a
    missed threshold comes back here).
 4. **RECORD.md (32 KB) and CONTENT-PDF.md (26 KB)** are over budget; their owners cut them. Route via SCHEDULER when those
