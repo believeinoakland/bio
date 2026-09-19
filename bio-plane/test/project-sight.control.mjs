@@ -71,21 +71,25 @@ const ARMS = {
     mustFail: ["SEES, NO ROLE:", "JOINED:"],
   },
 
-  /* THE ROSTER STAMP DROPPED at the control plane: the roster acts receive no viewer, and the store
-     fails CLOSED — every person is answered NO_SUCH_PROJECT on them, the owner included. That is what
-     makes "the control plane always stamps it, and the store fails closed without it" a measurement. */
+  /* THE ROSTER STAMP DROPPED at the control plane: the roster acts receive no viewer. The store reads
+     a viewer never SENT as a direct internal call and does not ask (`Store#rosterInSight`, on
+     `#projectAuthority`'s absent-identity precedent), so the five roster acts fall back to
+     DISCLOSING — their byte-identity and never-positional arms go red and nothing else does. That is
+     what makes "the control plane always stamps it" a measurement rather than a belief.
+     DECLARATION REWRITTEN 2026-09-18 when the store's absent-viewer rule changed from fail-closed to
+     not-asked (the first rule broke every suite that drives the roster straight at the store — nine
+     of them, UI suites included — and the second is REC-134's rule for the same population). The
+     forged-viewer row was already in the first declaration's corrected form: without the stamp a
+     caller's own `viewer=class:admin` reaches the store and is believed. */
   "roster-stamp-dropped": {
     patches: [["index.mjs", "        || PROJECT_ACTIONS.includes(op)\n        || REC30_VIEWER_READS.includes(op)) {",
                "        || REC30_VIEWER_READS.includes(op)) {"]],
-    mustFail: ["olga — op=projectinvite", "olga — op=projectowneradd", "olga — op=projectownerremove",
-               "olga — op=projectownerrescue", "olga — op=projectfork", "ruth — op=projectfork", "ruth — op=projectownerrescue",
-               "the founder — op=projectinvite", "JOINED: iris invites pam", "JOINED: iris's op=projectowneradd",
-               "JOINED: iris's op=projectownerremove", "JOINED: iris forks it",
-               /* DECLARATION CORRECTED after the first run (2026-09-18), the subject's own consequence
-                  and a finding worth keeping: the stamp is ALSO what overwrites a caller's forged
-                  `viewer=`. Without it the forged `class:admin` reaches the store, vera SEES the
-                  project and is told NOT_THE_OWNER — so the forged-viewer rows go red too. */
-               "op=projectinvite with a FORGED viewer="],
+    /* §1's and §2's labels ONLY, so a SEES-NO-ROLE or JOINED arm that went red would be UNDECLARED. */
+    mustFail: ["raw (status, content type, body): op=projectinvite", "UNSIGHTED: op=projectinvite",
+               "raw (status, content type, body): op=projectowneradd", "UNSIGHTED: op=projectowneradd",
+               "raw (status, content type, body): op=projectownerremove", "UNSIGHTED: op=projectownerremove",
+               "raw (status, content type, body): op=projectownerrescue", "UNSIGHTED: op=projectownerrescue",
+               "raw (status, content type, body): op=projectfork", "UNSIGHTED: op=projectfork"],
   },
 
   /* THE PROMOTE STAMP DROPPED: `actorIdentity` still arrives, `actorViewer` does not, so the revision

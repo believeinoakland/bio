@@ -8948,7 +8948,10 @@ export default {
         /* REC-138 / D-426: the ROSTER acts name a project, so one the caller cannot see must
            answer exactly as one that does not exist — asked of SIGHT before any positional test
            (`Store#inSight`). `by` (below) stays the positional half; this is the visibility half.
-           The store fails closed on an absent stamp, like every op in this list. */
+           ONE DIFFERENCE from the rest of this list, stated at `Store#rosterInSight`: the store
+           treats a viewer that was never SENT as a direct internal call and does not ask, on
+           `#projectAuthority`'s absent-identity precedent — so this stamp is load-bearing, and the
+           `roster-stamp-dropped` control arm measures what removing it discloses. */
         || PROJECT_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S

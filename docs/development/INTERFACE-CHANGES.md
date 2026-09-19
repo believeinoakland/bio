@@ -11282,3 +11282,100 @@ always meant). REC-132's `founder-sight` suite is unchanged and green. **Known a
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 32.0.0 → 33.0.0.** The base was read at resolution: 32.0.0, unchanged since the proposal. Acts that SUCCEEDED for an administrator (enrolled or the founder) on a project it is not in are now REFUSED (C-56.1 `PROJECT_ACT_NOT_A_PARTICIPANT`, C-56.2 `PROJECT_ACT_NOT_THE_OWNER`), which IC-137 settles as breaking. Bob's doctrine that administrators direct nothing (Membership v2 §4) is now ENFORCED by one `Store#projectAuthority`, read from REC-132's POSITIONAL identity, which the control plane stamps and never takes from the caller. §7.13's rescue is deliberately outside it. Machine tokens are unchanged, measured. **Carried:** `op=caseratify`'s delivering member holding no role in the project is a design gap, raised to Bob through BOB #15; D-426 (cite, sever and reinstate distinguish a hidden project from a nonexistent one, which predates this item). **A DISCLOSURE AND AUTHORITY CLOSING: DIST is told (CONDUCT.md step 2b).**
+
+## IC-155 · I3: A PROJECT THE CALLER CANNOT SEE ANSWERS EVERY PROJECT-TARGETED ACT EXACTLY AS ONE THAT DOES NOT EXIST — sight is asked BEFORE position, so C-56 and the roster refusals are said only to a caller who can see the project; a member's run over a PROJECT context the store does not hold is refused as for a hidden one · PROPOSED 2026-09-18 (REC-138 / D-426, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (`dd52609b`): 33.0.0** (IC-152).
+  **Proposed MAJOR — 33.0.0 → 34.0.0**, argued below. Read the base AT RESOLUTION: REC-137 is running beside this.
+- **Proposer:** RECORD, worker `agent-a93cdfa0fe0f8d435`, 2026-09-18, spawned by CONDUCT #5 for REC-138.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (NOT-AFFECTED as measured below), `DIST` (newgroup embeds the old plane until the next
+  cut), `SKILL` and `agent-worker` (NOT-AFFECTED: neither calls a roster act, and neither opens a run over a PROJECT
+  context — grepped; `agent-worker` names `airunopen` only in comments).
+- **Design:** `BIO_Membership_Architecture_v2.md` §7.9 (*"Uninvited. The project is not visible at all. Not its
+  existence…"*), §7.3 (administrators see every project), §7.5; IC-141's rule that a caller without standing receives
+  the BYTE-IDENTICAL answer a nonexistent id receives, compared RAW; IC-152's `projectAuthority`, which this runs before.
+
+**THE DEFECT, MEASURED THROUGH THE OPS BEFORE ANY EDIT** (`dd52609b` plus the claim). Each act was driven by an
+uninvited member (vera) TWICE with the same request — once while the project id named nothing, once after the ADMIN
+token minted it as iris's project — and the two RAW answers (status, content type, body) compared. 29 acts; TEN differed:
+
+| Act | Never-minted id | Hidden project | Now |
+|---|---|---|---|
+| `op=promote` (a revision, `base`=a sha) | `ABSENT` | `PROJECT_ACT_NOT_A_PARTICIPANT` (C-56.1) | `ABSENT`, byte-identical |
+| `op=cite` (project arm) | `NO_SUCH_PROJECT` | C-56.1 | `NO_SUCH_PROJECT`, byte-identical |
+| `op=sever` / `op=reinstate` | `NO_SUCH_PROJECT` | C-56.1 | `NO_SUCH_PROJECT`, byte-identical |
+| `op=projectinvite` / `projectowneradd` / `projectownerremove` | `NO_SUCH_PROJECT` | `NOT_THE_OWNER` | `NO_SUCH_PROJECT`, byte-identical |
+| `op=projectownerrescue` (a non-administrator) | `NO_SUCH_PROJECT` | `ADMIN_ONLY` | `NO_SUCH_PROJECT`, byte-identical |
+| `op=projectfork` | `NO_SUCH_PROJECT` | `NOT_A_PARTICIPANT` (whose own detail read *"An uninvited member cannot see that it exists"*) | `NO_SUCH_PROJECT`, byte-identical |
+| `op=airunopen` over `contextType=project` | PERMITTED as projectless (reached the next check) | `AI_RUN_NOT_PROJECT_MEMBER` | `AI_RUN_NOT_PROJECT_MEMBER`, byte-identical |
+
+The nineteen that already matched, pinned so they stay so: `versioncurrent`, `conclude&project=`, `proposedispose`,
+`biasadopt`, `biasmanifest`, `basisversions`, `versionstrength`, `strengthbarof`, `publish`, `casedraft`, `airuns`,
+`projectjoin`, `projectleave`, `projectremove`, `projectownerarith`, `projectparticipants`, `affordances`, `image`,
+`file`. Several were closed ON PURPOSE by earlier items (REC-25, REC-30, REC-124, CASE-2) and say so at their sites.
+
+**C-56 WAS ITSELF THE ORACLE, as the brief suspected, and measured so:** for `promote`, `cite`, `sever` and `reinstate`
+the hidden-project answer WAS C-56.1. REC-134 closed the edit and its refusal became the existence signal.
+
+**THE SHAPE.**
+- ONE sight predicate, `Store#inSight(bundleId, viewer)` — `viewerPredicate` (D-15's one compilation point) asked of
+  one id; only PROJECT rows are ever filtered, and an absent viewer sees nothing (fail closed).
+- ONE not-found, `Store.#noSuchProject(project)`, returned by the absent branch and the hidden branch through ONE
+  condition (`!p || !this.#inSight(...)`), so the two cannot drift — IC-141's `#noCaseDocument` one object over. It
+  now carries `project` and one `detail` for every act that uses it (cite's detail sentence and the roster acts' bare
+  `{reason}` are replaced by it: the REASON CODE is unchanged). `promote`'s not-found is bundle-level, so its revision
+  arm shares `Store.#promoteAbsent()` with its absent branch instead.
+- THE ORDER: sight BEFORE position, everywhere. So C-56.1, `NOT_THE_OWNER`, `ADMIN_ONLY` and `NOT_A_PARTICIPANT` are
+  said only to a caller who can already SEE the project — an invited member, an administrator, the founder — and tell
+  them nothing new.
+- STAMPS. The control plane stamps `viewer` on the roster acts (`PROJECT_ACTIONS`) and `actorViewer` in `op=promote`'s
+  body beside `actorIdentity`, both SET over anything the caller sent (`actorViewer` deleted first). `promote` asks sight
+  only when `actorIdentity` arrived (an internal write carries neither) and fails CLOSED on a stamped identity with no
+  viewer. `cite`/`sever`/`reinstate` fail closed on an absent viewer (they always had one stamped). The ROSTER acts read a
+  viewer that was never SENT as a direct internal call and do not ask (`Store#rosterInSight`) — `#projectAuthority`'s
+  absent-identity precedent, taken after a fail-closed first build broke every suite (nine, UI suites included) that
+  drives the roster straight at the store; the control arm `roster-stamp-dropped` measures that the stamp is then
+  load-bearing. The founder's viewer is the administrator's (IC-149), so it sees every project and is answered
+  positionally.
+- `#runContextProjects`: a `contextType=project` context IS that project whether or not the store holds it. A member
+  is refused `AI_RUN_NOT_PROJECT_MEMBER` for an absent id exactly as for a hidden one (a participation row exists only
+  for a held project, so "you have joined no project by that id" is verified either way); a machine credential is not
+  asked and is unchanged; a QUESTION context keeps its projectless reading.
+
+**WHY MAJOR, argued both ways.** For MINOR: every changed answer was ALREADY a refusal except one, only its reason code
+moved, and only for a caller who could not see the project — no legitimate member flow reaches a project it cannot see,
+because no read lists one to it. For MAJOR, and it governs: (1) `op=airunopen` by a member over a `contextType=project`
+id the store does not hold was PERMITTED and is now REFUSED — a refusal where none stood, IC-137's precedent read
+strictly; (2) a consumer branching on `NOT_THE_OWNER`, `ADMIN_ONLY`, `NOT_A_PARTICIPANT` or C-56.1 for these acts now
+receives `NO_SUCH_PROJECT` for a class of callers (IC-25: a code is contract); (3) the `NO_SUCH_PROJECT` answer of
+`cite`, `sever`, `reinstate` and the roster acts gained keys and changed its `detail`. **Measured consumer impact:
+NONE.** `civicos-ui/app.html` calls the roster acts and the edge acts only on projects its own reads listed to the member
+(so a visible caller, whose answers are unchanged); its refusal-order mirror (`NO_SUCH_PROJECT -> NOT_A_PROJECT ->
+NOT_THE_OWNER -> NO_SUCH_HANDLE`) is still the order a visible caller meets; it never calls `op=airunopen`. No
+`civicos-ui` string matches `actorViewer`.
+
+**What the sweep could and could not see.** Enumerated three ways: every DO route that reads a `project`/`projectId`/
+`scopeId`/`contextId` parameter (22 routes), IC-152's per-act table, and every `NO_SUCH_PROJECT`/`NOT_A_PROJECT` site in
+`store.mjs`; then DRIVEN — 29 acts, plus two forged-stamp variants. It cannot see: an act reached with a project id
+under a parameter name none of those three lists spell; `op=leadshare`'s project arm past its lead resolution (driven
+only with no lead, so both reads stop at the lead — its site states one answer for absent, hidden and not-joined by
+construction, and that was NOT driven here); a member-scoped `ai` credential (its viewer and identity are both its
+principal, so it takes its member's answer — asserted by construction, not driven); `op=caseratify` (REC-137's).
+
+**KNOWN AND NOT CLOSED — D-428, and it is inherent rather than overlooked.** A CREATION at a taken id answers `EXISTS`
+(a never-minted id is CREATED, so no answer can match it), and 7.1's instance-wide name uniqueness answers
+`NAME_TAKEN` naming the other project's id and title. Both say that a project exists; the second says more than it
+needs to. §7.1 (*"Uniqueness that a reader cannot see is not uniqueness"*) and §7.9 pull against each other there, and
+that is Bob's to rule, so it is raised rather than built.
+
+**Suites:** new `bio-plane/test/project-sight.test.mjs` (92 assertions: 31 raw byte-identity arms against the same id
+read before it was minted; 31 never-positional-to-the-unsighted arms; the SEES-NO-ROLE arms for an invited member, an
+enrolled administrator and the founder; the JOINED arms for the owner; machine credentials unchanged; D-428 pinned as
+KNOWN) and its driver `project-sight.control.mjs` (seven arms, all AS DECLARED: one act's distinguishing answer restored
+90/2; the order swapped 88/4; not-found-to-everyone 72/20 with every byte arm green; roster stamp dropped 80/12; promote
+stamp dropped 88/4; the over-strictness arm 92/0 — two after a recorded correction of the arm's METHOD or DECLARATION,
+not the subject; results in the suite's header). CORRECTED at its site with a dated
+reason, never exempted: `project-authority.test.mjs` §2b' (the D-426 pin, now CLOSED) and its driver's declarations.
+
+**RESPONSES:** not yet collected.

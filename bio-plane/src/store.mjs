@@ -26869,6 +26869,17 @@ export class Store extends DurableObject {
     const g = viewerPredicate(viewer);
     return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, bundleId, ...g.args);
   }
+  /* THE ROSTER ACTS' form of the same question, and the one difference is stated rather than hidden.
+     Their positional half is `by`, and they have always been driven straight at the store by callers
+     that are not requests (setup, fixtures, the store's own suites) — the same population
+     `#projectAuthority` answers "not asked" for an ABSENT identity. So an ABSENT viewer (the
+     parameter not sent at all: null) is NOT ASKED here, on that precedent; ANY viewer that was sent,
+     including an empty one, is asked through `#inSight` and fails closed. The control plane stamps
+     every roster act (`PROJECT_ACTIONS`), and the suite's `roster-stamp-dropped` arm is what makes
+     that a measurement: without the stamp these acts fall back to disclosing, and its arms go red. */
+  #rosterInSight(projectId, viewer) {
+    return viewer === null || viewer === undefined || this.#inSight(projectId, viewer);
+  }
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
      hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
@@ -26956,7 +26967,7 @@ export class Store extends DurableObject {
   projectInvite({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
-    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -27026,7 +27037,7 @@ export class Store extends DurableObject {
   projectOwnerAdd({ projectId, handle, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
-    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -27090,7 +27101,7 @@ export class Store extends DurableObject {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position — so ADMIN_ONLY is said only to a member who can
        already see the project (an invited one); an administrator sees every project (§7.3). */
-    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isAdminMember(by))
       return { ok: false, reason: "ADMIN_ONLY",
@@ -27140,7 +27151,7 @@ export class Store extends DurableObject {
   projectOwnerRemove({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
-    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.#isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -27221,7 +27232,7 @@ export class Store extends DurableObject {
     /* REC-138 / D-426: sight BEFORE position. NOT_A_PARTICIPANT below said *"An uninvited member
        cannot see that it exists"* while telling them exactly that; it is now said only to a caller
        who CAN see the project (an administrator not in it). */
-    if (!b || !this.#inSight(projectId, viewer)) return Store.#noSuchProject(projectId);
+    if (!b || !this.#rosterInSight(projectId, viewer)) return Store.#noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = this.#participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
