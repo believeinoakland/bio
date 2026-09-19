@@ -62,6 +62,11 @@ lands; see §2), then this. **Everything below is a POINTER measured at writing;
   spawns nothing new from 93%, running work finishes; (c) throttle to one worker; (d) extra usage (disabled; costs money).
   Recommended (b). When he answers, tell CONDUCT and SCHEDULER. **Re-measured ~11:05Z: 88%, 3d6h left — 3 points in ~6h,
   so the pace fell as waves shrank to the disk ceiling.** Re-measure before relying on either figure.
+  **~12:45Z: 91%, 3d5h left; CONDUCT #6 SPAWNS NOTHING NEW** (a worker runs 200–540k tokens, so a spawn would cross 93%
+  mid-run). Queue behind the stop: UI-67, UI-72, LED-7, REC-135, MK-3. LED-6 is DONE (`c25cac55`). 0.65.0 is live.
+- **CONDUCT #6 is handing off**: when its CONDUCT-NEXT sha arrives (line 1 naming #7), FILE THE CONDUCT #7 CHIP. The
+  prompt must say: do not archive CONDUCT #6 until REC-151's branch is on the remote with a `released:` line; integrate
+  from the pushed branch; then archive under D-398.
 - **REC-153's findings ruled** (`7d03e852`): a machine's run open answers absent where its principal cannot see; the kind
   is refused outside `RUN_CONTEXTS`; stored mislabelled runs counted. Owed at REC-153's integration (CONDUCT told).
 - **Later rulings, all rowed**: REC-145's findings (REC-153 context kind, REC-152 tick/close by principal); the minted-id
