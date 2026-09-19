@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/case-authority.control.mjs` — deliberately NOT a `.test.mjs`, because it runs this suite against PATCHED COPIES of the sources and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/case-authority.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms. (a) `baseline` — nothing armed, MUST be green. (b) `no-owner-signer` — the owner-signer condition dropped: the NON-OWNERS arms commit, so they MUST fail, and nothing else. (c) `no-delivery-check` — the delivery check dropped: the OUTSIDE ADMINISTRATOR arms (and the invited-not-joined arm) commit, so they MUST fail, and nothing else. (d) `refuse-every-admin` — the liar the row names: every administrator refused as a deliverer, founder included: every refusal arm STAYS GREEN (that is the lie) and the FOUNDER and joined-administrator arms MUST fail. (e) `delivery-after-retry` — the delivery check moved below the idempotent retry: only the retry arm MUST fail.
-   RESULTS, RUN 2026-09-18 by the REC-137 worker (worktree agent-aee812fe065a38e23, base 39785cda + this item; real src/index.mjs 657,700 B sha256 5503f0b281c5, src/store.mjs 2,600,997 B sha256 594c06d9ea45, untouched: YES): (a) baseline 23/0 · (b) no-owner-signer 18/5 · (c) no-delivery-check 17/6 · (d) refuse-every-admin 18/5 · (e) delivery-after-retry 22/1 — every arm AS DECLARED on its first run. THE PRE-ITEM MEASUREMENT (the suite run with CASE_AUTHORITY_SRC at the pristine src/ of 39785cda): 12 pass / 11 fail — gus, a joined NON-owner, signed and delivered E's case and it COMMITTED (ok:true, attestor gus, published); ruth, an enrolled administrator with no role, delivered iris's signature on A and it COMMITTED; the invited-not-joined wen and ruth's retry were then answered `ok:true` (existed) off that commit.
+   RESULTS, RUN 2026-09-18 by the REC-137 worker (worktree agent-aee812fe065a38e23, base 39785cda + this item; real src/index.mjs 657,700 B sha256 5503f0b281c5, src/store.mjs 2,600,997 B sha256 594c06d9ea45, untouched: YES): (a) baseline 23/0 · (b) no-owner-signer 18/5 · (c) no-delivery-check 17/6 · (d) refuse-every-admin 18/5 · (e) delivery-after-retry 22/1 — every arm AS DECLARED on its first run. RE-RUN 2026-09-18 after §0 (SIGHT before role, three arms, asked for by CONDUCT #5 for REC-138's ordering) was added: (a) 26/0 · (b) 21/5 · (c) 20/6 · (d) 21/5 · (e) 25/1, all AS DECLARED, sources untouched: YES. That re-run first read (b) NOT AS DECLARED 18/8 — §0 then ran AFTER §1, and the arm's own commit of E made E public; a finding about the ARM's order, corrected by moving §0 first, not by widening the declaration. §0's ordering is REC-130's standing check at the facts read, upstream of this item, and no arm here breaks it. THE PRE-ITEM MEASUREMENT (the suite run with CASE_AUTHORITY_SRC at the pristine src/ of 39785cda): 12 pass / 11 fail — gus, a joined NON-owner, signed and delivered E's case and it COMMITTED (ok:true, attestor gus, published); ruth, an enrolled administrator with no role, delivered iris's signature on A and it COMMITTED; the invited-not-joined wen and ruth's retry were then answered `ok:true` (existed) off that commit.
  * =========================================================================
  * REC-137 / IC-154 / C-57 — A CASE RATIFICATION: WHO AUTHORISES IT, AND WHO MAY
  * DELIVER IT. Membership Architecture v2 §7, the bullet of that name (BOB #15,
@@ -137,6 +137,9 @@ const RUTH = await enrol("ruth", "admin", ["contribute", "publish", "create_proj
 const IRIS = await enrol("iris", "member", ["contribute", "publish"]);
 const GUS = await enrol("gus", "member", ["contribute", "publish"]);
 const WEN = await enrol("wen", "member", ["contribute", "publish"]);
+/* VIC: a member in NO project here, holding `publish` — the caller a hidden
+   project must read to exactly as a project that does not exist. */
+const VIC = await enrol("vic", "member", ["contribute", "publish"]);
 for (const who of ["iris", "gus", "ruth"]) {
   const reg = await POST(`op=signeradd&token=${ADM}`, { keyB64: mkKey(who), memberId: who, comment: `${who} laptop` });
   if (!reg || reg.ok === false) throw new Error(`signeradd ${who}: ${JSON.stringify(reg)}`);
@@ -236,9 +239,35 @@ const C = await authorCase({ joinRuth: true });
 const Dc = await authorCase();
 /* E is the NON-OWNERS arms' own case, so a control arm that lets one of them
    commit cannot move any other arm's answer (break only the thing). */
+/* SIGHT BEFORE ROLE (REC-138's ordering, asked for at REC-137's close by CONDUCT #5):
+   a caller who cannot SEE the project must get the answer a never-minted case gets,
+   byte for byte, so neither of this item's refusals may be reached by them. The
+   never-minted answer is taken for E's id BEFORE E exists — the prediction is
+   asserted below, not trusted — so the two are compared with nothing substituted. */
+const rawOf = async (q, body) => {
+  const r = await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body) });
+  return { status: r.status, body: await r.text() };
+};
+const PREDICTED_E = `CASE-${new Date().toISOString().slice(0, 4)}-0005`;
+const NEVER = await rawOf(`op=caseratify&token=${VIC}`, { caseId: PREDICTED_E, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" });
 const E = await authorCase();
+if (E.case_id !== PREDICTED_E) throw new Error(`E was minted ${E.case_id}, not the predicted ${PREDICTED_E}`);
 t("the ground: five unsigned case documents authored by iris, each its own project's production, none committed",
   await Promise.all([A, B, C, Dc, E].map(stateOf)), [UNTOUCHED, UNTOUCHED, UNTOUCHED, UNTOUCHED, UNTOUCHED]);
+
+/* ========================================= 0. SIGHT COMES BEFORE BOTH */
+/* FIRST, while E is still unsigned: a ratified document is public and answers anybody,
+   so this arm run after any commit of E would be measuring something else. */
+console.log("\n--- 0. a caller who cannot SEE the project is answered as for a case that does not exist ---");
+{
+  const hidden = await rawOf(`op=caseratify&token=${VIC}`, { caseId: E.case_id, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" });
+  t("SIGHT: vic (a member of NO project) asking to ratify E's UNSIGNED case answers BYTE FOR BYTE as for a case id never minted — neither C-56.1 nor C-57.1 is reachable by somebody who cannot see the project",
+    [hidden.status, hidden.body === NEVER.body, /NO_CASE_DOCUMENT/.test(hidden.body)], [NEVER.status, true, true]);
+  const withSig = await ratify(VIC, "iris", E);
+  t("SIGHT: and carrying iris's VALID owner signature changes nothing — still the not-found, never a role refusal",
+    [withSig && withSig.ok, codeOf(withSig)], [false, "NO_CASE_DOCUMENT"]);
+  t("SIGHT: and nothing was written", await stateOf(E), UNTOUCHED);
+}
 
 /* ======================================= 1. AUTHORITY — NON-OWNERS ONLY */
 console.log("\n--- 1. AUTHORITY — a case signed by NON-OWNERS only is refused, whoever delivers it ---");
