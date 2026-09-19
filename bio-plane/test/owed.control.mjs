@@ -139,8 +139,10 @@ const ARMS = [
 
   { id: "A8", title: "a blocked queue row read only to its first 220 characters again — REC-100's "
                    + "routing to BOB sat past that point and the lane was told it owed nothing",
-    from: "  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.*)$/gm))",
-    to:   "  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.{0,220})/gm))",
+    /* REPOINTED 2026-09-19 (M0-73): the blocked rows now come from `ledger.mjs`' `pipelineRows`, and the
+       heading's remainder after its state is `rest` — the arm truncates THAT, the property it tests. */
+    from: "    if (owner.test(rest)) items.push(",
+    to:   "    if (owner.test(rest.slice(0, 220))) items.push(",
     mustBreak: "A ROUTING DEEP IN A LONG BLOCKED HEADING IS STILL OWED" },
 
   { id: "A9", title: "a possessive allowed to be followed by a NOUN — Bob the person's framing read as the BOB lane (D-127)",

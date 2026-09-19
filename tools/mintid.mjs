@@ -268,11 +268,15 @@ export const NAMESPACES = {
        corpus: ["docs/archive/", "docs/development/DEBT.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md", "docs/development/CLAIMS.md"], ceiling: 9999,
        /* an allocation is a table ROW opening the id; a number in a sentence is not */
        allocPattern: () => /^\|\s*D-(\d+)\s*\|/gm, allocIsUnique: true },
+  /* M0-73: DEC, IC and M read `BACKLOG.md` beside `QUEUE.md`, as D and the queue families already did
+     (LED-6). The floor counts a MENTION, and after LED-6's split a row citing an id may live only in the
+     backlog — an id mentioned nowhere else would set no floor and could be handed out a second time.
+     `pipeline-readers.test.mjs` §7 asserts the class: no corpus names the cache without the backlog. */
   DEC: { kind: "prose", what: "decisions",
-         corpus: ["docs/archive/", "docs/development/DECISIONS.md", "docs/development/QUEUE.md"], ceiling: 9999,
+         corpus: ["docs/archive/", "docs/development/DECISIONS.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md"], ceiling: 9999,
          allocPattern: () => /^###\s+DEC-(\d+)\s+·/gm, allocIsUnique: true },
   IC: { kind: "prose", what: "interface-change entries",
-        corpus: ["docs/archive/", "docs/development/INTERFACE-CHANGES.md", "docs/development/QUEUE.md"], ceiling: 9999,
+        corpus: ["docs/archive/", "docs/development/INTERFACE-CHANGES.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md"], ceiling: 9999,
         /* `## IC-n ·` opens the entry; the `### IC-n · RESPONSES / RESOLUTION /
            CONFIRM` blocks beneath it are that entry's own sub-sections and are not
            allocations — measured: IC-2 carries four of them. */
@@ -322,7 +326,7 @@ export const NAMESPACES = {
          queue's three-hash item heading is deliberately outside it. `M-8`..`M-24` have no
          queue rows at all, which is why this costs nothing today and is stated anyway. */
   M: { kind: "prose", what: "measurement entries",
-       corpus: ["docs/archive/", "docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md"], ceiling: 999,
+       corpus: ["docs/archive/", "docs/development/MEASUREMENTS.md", "docs/development/QUEUE.md", "docs/development/BACKLOG.md"], ceiling: 999,
        allocPattern: () => /^##\s+M-(\d+)\s+·/gm, allocIsUnique: true },
 
   /* (ii) prose-referenced — the queue item families, one corpus between them.
