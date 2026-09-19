@@ -14989,3 +14989,11 @@ deployed driver that ticks or closes a run under a credential other than its pri
 **FOR BOB:** nothing owed; one reading stated rather than decided silently — an organisation-kind `ai` key and a token
 class are compared WHOLE (two org keys are two principals), because the ruling's parenthesis names only *that member's*
 minted credential.
+
+## CLAIM 2026-09-19 FLEET (FLEET #2 — recording the new account's first fleet measurement in `kickoffs/FLEET.md`)
+
+Paths: `docs/development/kickoffs/FLEET.md` (a dated stand-up section, the file's own form).
+Scope is one appended section: the live fleet measurement, the staleness answer, and the correction of two
+receipts in `FLEET-NEXT.md` of 2026-09-19 whose conclusions hold but whose evidence did not. No fleet source,
+bundle, manifest or tool is touched; no other area's paths are in scope.
+**released: 2026-09-19 FLEET #2** — landed in the same commit as the section it covers.
