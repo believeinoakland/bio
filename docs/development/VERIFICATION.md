@@ -47,10 +47,9 @@ instance could (D-40). **Correct a wrong fixture; never relax the assertion.**
 `cd bio-plane && npm run test:battery` (≡ `npm test`, both `node scripts/battery.mjs`; a subset by name
 fragment: `node scripts/battery.mjs <fragment>`). Suites are DISCOVERED from the directory, never listed
 (D-93). A suite whose tally cannot be read is *unknown*, never zero. A suite needing stock `ssh-keygen`
-SKIPS loudly with a named reason; read the SKIP COUNT, not only the exit status (`CLAUDE.md` §6). A tally is read in four forms — `N pass, M fail`, `N passed, M failed`, `N passing`,
-`N passing, M failing` — never a bare `N passed` (M0-65). **The assertion total counts only TALLIED suites, and
-says so:** the completion line carries `· EXCLUDES N untallied suite(s) ·` after `M assertions passing`, and the
-line below it, `EXCLUDED FROM THE ASSERTION TOTAL (D-413)`, names each one. **Quote that segment with the figure.**
+SKIPS loudly with a named reason; read the SKIP COUNT, not only the exit status (`CLAUDE.md` §6).
+Tallies read: `N pass, M fail`, `N passed, M failed`, `N passing[, M failing]`. **The assertion total omits
+untallied suites and says so** (`· EXCLUDES N untallied suite(s) ·`, then a line naming them, D-413): quote it.
 
 ### A printed failure is a failure, and one log holds one run (M0-67, D-425)
 
