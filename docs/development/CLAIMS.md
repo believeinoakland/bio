@@ -14315,3 +14315,22 @@ Membership v2 §7's case-ratification bullet; IC-154, IC-155. IDs minted with `t
   and the sections named, `DEBT.md` (D-429's disposition), this block.
 
 NOT `QUEUE.md` (CONDUCT's), NOT `#projectAuthority`'s or `#inSight`'s bodies (consumed unchanged), NOT `newgroup/`.
+## CLAIM 2026-09-18 RECORD (REC-140) — RELEASED
+
+released: 2026-09-18 by the REC-140 worker, branch `worktree-agent-a761302b28f105764`, base `ff3a4cea`, merged with
+origin/main `cd9d7c86` (REC-139 IC-156 — I3 36.0.0; DIST 0.63.0) before close-out; IC-157 re-based to 36.0.0. On the
+committed merge `cf3e1034`: **253/253 suites green · 15400 assertions passing · run 26049.1083be**; `coverage.mjs --strict`
+exit 0 with REGISTER_FLOOR moved from its own print (1427 -> 1434 · 243 -> 244 · 244 -> 245 · run 206 -> 207); the UI
+harness exit 0 ("all harnesses green"). `civicos-ui/check-refusal-codes.mjs` green with both governed regions read
+(`fetch > is-ratify-project-bundle`, `#caseAuthority > is-case-signer-owner`); its floors NOT moved (they sit below the
+figures it prints, as REC-137 also found). IDs minted with `tools/mintid.mjs`: C-58, IC-157, D-431. Paths as claimed, plus
+`bio-plane/test/deliverer.test.mjs` CORRECTED at its site (gus made a joined participant before delivering a pinned
+finding's signature). D-429 CLOSED and archived.
+**FOR CONDUCT:** (1) RESOLVE IC-157 against I3 as read at resolution (proposed MAJOR on 36.0.0; 38.0.0 if REC-136 lands
+at 37.0.0 first). (2) Flip REC-140 at integration. (3) Carry D-431 to BOB: `op=ratify` still publishes an information
+bundle, an inquiry in no case, and a finding PREPARED into a not-yet-ratified case (the last under a NON-owner's key, which
+side-steps this item's rule by ratifying early) — Publication rule 2 permits none; recommendation in the row. (4) At
+REC-136's merge: `ratify-authority.test.mjs` concludes inquiries with NO project (its `makeCase` and §7), so it needs
+`withAdoptableReading(...)` / `adoptedVersionParam()` exactly as `case-authority.test.mjs` and `deliverer.test.mjs` do —
+REC-136 was NOT on main when this branch closed, so it could not be applied here. **DIST is told:** an AUTHORITY and
+DISCLOSURE closing on `op=ratify`.
