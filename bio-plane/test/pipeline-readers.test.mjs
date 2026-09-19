@@ -38,6 +38,8 @@
  * reach the readers through the lister's injectable `texts`, and the on-disk plant is the control
  * driver's, in a scratch worktree.
  */
+import "./stdio.mjs";      /* D-282: a suite's own exit must not discard the suite's own output */
+import "./sandbox.mjs";    /* D-186: the temp directory section 1 mints is owned and swept */
 import { spawnSync } from "node:child_process";
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
