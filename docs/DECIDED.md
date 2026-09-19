@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1197 rulings across 94 documents.
+1200 rulings across 94 documents.
 
 ## DEC-
 
@@ -226,7 +226,7 @@ authority is the file named, never this one.
   `docs/archive/ledgers/BOB-INBOX-drained.md:346`
 - **DEC-62** · 2026-09-14 — The decision this row was waiting on was taken in the construct's home (`BIO_Assistant_and_AI_Roles_v0_1.md` §7.3, BOB #11: EXTRACT runs in DEC-62's RUN, the pilot's exclusion CORRECTED and not lifted), and SK-8 built the caller the same day: `op=extractpropose` produces a proposed reading inside a member-opened…  
   `docs/archive/ledgers/DEBT-closed.md:60`
-- **DEC-63** · 2026-09-18 — §7 — DEC-63's run verdict: RULED by Bob (2026-09-18, a project does not own a line of inquiry) — over a question the verdict consults no project; a project context keeps its gate.  
+- **DEC-63** · 2026-09-18 — §7 — DEC-63's run verdict: RULED by Bob (2026-09-18) and BUILT by REC-145 (IC-162).  
   `docs/architecture/BIO_Membership_Architecture_v2.md:16`
 - **DEC-63** · 2026-09-18 — DEC-63 AS AMENDED BY BOB (2026-09-18: a project does not own a line of inquiry)** — recorded by BOB #15 and never rowed; the application is now at its home: Membership v2 §7, the ruling bullet, "How it applies at the code".  
   `docs/archive/ledgers/BOB-INBOX-drained.md:988`
@@ -802,6 +802,8 @@ authority is the file named, never this one.
   `docs/development/CIVICOS_UI_STATE.md:82`
 - **IC-155** — CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md`…  
   `docs/development/CLAIMS.md:14228`
+- **IC-162** · 2026-09-19 — IC-162 · I3: DEC-63 AS AMENDED — a run whose context is a QUESTION consults NO project: `airunopen` / `airuntick` / `airunclose` no longer refuse `AI_RUN_NOT_PROJECT_MEMBER` (C-22.8) over an inquiry; `projectGate.ground` over a question is `INQUIRY` (the value `PROJECTLESS` is removed, and `PARTICIPANT` is now said…  
+  `docs/development/INTERFACE-CHANGES.md:11724`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -1648,7 +1650,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — a project does not own a line of inquiry.** *"Anybody can ask a question related to anything - even something also being explored in a project they're not a member of.  
   `docs/architecture/BIO_Membership_Architecture_v2.md:599`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents might be private, though the existence of the project may not be.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:609`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:614`
 - CORRECTED the same day by BOB #15 — the first version said *the owner or any administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the exception"*).  
   `docs/architecture/BIO_Publication_v0_1.md:180`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
@@ -2269,6 +2271,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:11437`
 - CORRECTED at its site with a dated reason, never exempted: `airun-projectgate.test.mjs` ARM G1, which pinned `projects: 2` for a member never invited to one of the two. **RESPONSES:** not yet collected.  
   `docs/development/INTERFACE-CHANGES.md:11498`
+- `project-disclosure.test.mjs` §3 CORRECTED and extended (21 → 27): the only-hidden question is PERMITTED with count 0; nora's accept arm and its byte-identity arm; the project-context refusal (olga invited-not-joined over the hidden project, nora over sam's); sam over his own project (over-strictness).  
+  `docs/development/INTERFACE-CHANGES.md:11754`
+- `airun-projectgate.test.mjs` CORRECTED (47 → 52): every arm that drove the refusal over a question is RE-AIMED at the project context with a dated reason; B0, G3/G4, H6, L3 and the pure P4 are new.  
+  `docs/development/INTERFACE-CHANGES.md:11756`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
