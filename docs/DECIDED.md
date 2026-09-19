@@ -554,8 +554,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed.md:52`
 - **D-325** · 2026-09-19 — M0 · open — RULED 2026-09-19 by BOB #17, the POSTURE half settled and a RESIDUE left open, verified at `index.mjs scopeFor`: the discipline-plus-witness posture is SUFFICIENT and is now written where the assumption actually lived, `CLAUDE.md` §5's live-verify rule, not only in VERIFICATION.md.  
   `docs/development/DEBT.md:177`
-- **D-325** — WHAT BOB #17 DECIDED — each folded into its home document; `decided.mjs` finds them - **D-325 — discipline-plus-witness is SUFFICIENT** (`CLAUDE.md` §5): `scopeFor` honours `store=scratch` from ANY class, so the binding existed PER CALL and nothing REQUIRED it.  
-  `docs/development/kickoffs/BOB-NEXT.md:74`
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/archive/ledgers/DEBT-closed.md:53`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
@@ -2380,7 +2378,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1302`
 - FLEET's 574 MB was WITHDRAWN: disk recovered to 9.5 GiB with zero gates running.  
-  `docs/development/kickoffs/BOB-NEXT.md:47`
+  `docs/development/kickoffs/BOB-NEXT.md:53`
+- WHAT BOB #17 DECIDED — all folded into home documents; `decided.mjs` finds every one **Rulings, each with the sentence that decides it:** - **TASK stays gated** (Membership v2 §7) — the set is a PREDICATE, not a list.  
+  `docs/development/kickoffs/BOB-NEXT.md:79`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:86`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
