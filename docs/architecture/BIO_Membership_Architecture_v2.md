@@ -591,12 +591,20 @@ token and not to the founder's session). **Design:**
   hashes and registers the bytes, refusing bytes that already carry one, and returns the id and the final sha (the
   precedent is the testimony header the plane already writes, `bio-testimony/1`). The Add surface and the fork form
   stop asking a member for an id (a UI task).
-- **OPEN, and Bob's — DEC-63's run verdict meets §7.9.** DEC-63 gates a run on participation in the project the inquiry
-  belongs to; as built, a member is REFUSED a run over a question cited ONLY by projects they cannot see and PERMITTED one
-  over a question nobody cites, and that difference tells them a hidden project exists. Recommended to Bob: the verdict
-  is the same in both cases — refused for a member who participates in no project they can see citing it, PERMITTED
-  for the question's own author either way — so it discloses nothing and a stranger still cannot spend a hidden
-  project's runs. Running provisionally as built until he rules.
+- **RULED BY BOB, 2026-09-18 — a project does not own a line of inquiry.** *"Anybody can ask a question related to
+  anything - even something also being explored in a project they're not a member of. A project doesn't own an area of
+  enquiry to the exclusion of others."* So any member may ask any question and run an investigation on any question they
+  can see; **the run verdict never consults a project the member cannot see**, which closes the one-bit disclosure REC-139
+  found. DEC-63 is amended accordingly: project participation no longer gates a run over a question the member can see.
+- **RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents
+  might be private, though the existence of the project may not be. In this way, somebody who sees the project can ask to
+  be added as a member of the project"*; asked whether every project or each project, Bob: *"2, each project chooses"*.
+  **This amends §7.9's *Uninvited* row.** A DISCOVERABLE project shows every member its existence and name (its contents
+  stay private to participants) and accepts a REQUEST TO JOIN, which its owners grant or decline (§7: owners manage
+  participation; the request and the answer are recorded). A HIDDEN project is exactly §7.9 as written — invisible to the
+  uninvited, answering as if it did not exist — and everything built for that stays correct for it. **Recommended default:
+  DISCOVERABLE** (BOB #15; the setting is the owner's, recorded and dated). The setting, the join request, and each surface
+  that lists projects are design work for the next BOB session to decompose.
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.

@@ -77,6 +77,16 @@ signature-verified asset from `release/` and builds nothing; `embed.test.mjs` ca
 gate below, the wizard is embedded only AFTER step 5 signs — `newgroup`'s `npm test` refuses between the bump
 and the signature, which is correct.
 
+**EVERY RELEASE BOOTS A STORE THE PREVIOUS RELEASE CREATED — measured the hard way 2026-09-18 (DIST, 0.62.0).** Five
+signed releases (0.59.0–0.63.0) created an index on `inquiry_basis.content_id` before the migration added that column, so
+any store older than REC-90 could not boot; the battery builds FRESH stores only, and the live check on biosmoke7 caught it
+after the deploy. The gate now includes an UPGRADE arm: a store created by the last released version, then booted by the
+candidate (its negative control: this exact defect). **And a release reaches other groups only after it has been deployed
+and live-verified here** — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously. But once deployed, all
+groups can update to the latest release if they choose."* So the installer's `/update` offers a release only once DIST has
+deployed it and live-verified it on this instance; cutting and pushing a signed release no longer offers it to anyone.
+The mechanism is DIST's: a `latest` pointer DIST advances after the live check (option a), with the installer reading it.
+
 ## Why this area exists
 
 Cutting a plane release is five indivisible acts on GLOBAL state: bump the

@@ -36,10 +36,19 @@ you act on it.** Nothing is mid-flight in this lane: every design act is pushed,
 
 ## 2. WHAT BOB HAS PENDING — bring ONCE, in the README shape
 
-- **The investigation-run verdict (DEC-63 meets §7.9)** — Bob said *"I don't understand the question"*; it was re-put as an
-  example (Alice, a hidden project "Sewer Fund", an inquiry it cites) and is **UNANSWERED**. Recommendation: the same answer
-  in both cases — refused unless the member is in a project THEY CAN SEE that uses the inquiry, or wrote it; the cost is that
-  an inquiry no project uses can be run only by its author. `BIO_Membership_Architecture_v2.md` §7 marks it OPEN.
+- **WHEN A RELEASE REACHES OTHER GROUPS — RULED by Bob:** *"The release may be deployed, obviously. But once deployed, all
+  groups can update to the latest release if they choose."* Recorded in `kickoffs/DIST.md`; DIST builds the `latest`
+  pointer (option a). The history, kept: Every installer's `/update` fetches main's
+  `release/RELEASE.json`, so a signed release reaches every group the moment it is pushed — before any live check. On
+  2026-09-18 that offered five store-bricking releases (0.59.0–0.63.0) to every group for ~3½ hours (18:10–21:35) before
+  DIST withdrew them (`d86b27ea`); whether any group ran `/update` in that window is UNDETERMINED. Options: (a) installers
+  follow a separate `latest` pointer DIST moves only after the release is deployed and live-verified on our own instance;
+  (b) RELEASE.json on main advances only after that check; (c) as is. (a) was recommended and Bob's answer is (a) in substance;
+  BOB #15 told DIST and FLEET; the installer change is DIST's. Also: CONDUCT has the P0 fix (move the columns ahead of the index + an upgrade
+  suite), then DIST cuts 0.64.0 and deploys under standing permission.
+- **ANSWERED this session, recorded in Membership v2 §7:** anyone may ask/investigate any question (the run verdict never
+  consults unseen projects); each project chooses DISCOVERABLE or HIDDEN, with a request-to-join (the setting, the request
+  and the listing surfaces are THIS LANE'S NEXT DESIGN ACT, before any row).
 - **Weekly usage** was at **74%** with 3d16h to reset (5-hour 15%). Told to Bob as information; if he wants work paced,
   tell SCHEDULER and CONDUCT.
 
@@ -56,6 +65,7 @@ you act on it.** Nothing is mid-flight in this lane: every design act is pushed,
    mechanisms, not the detector); (b) verify the review-copy SURFACE against Program B before SCHEDULER rows it (REC-126 →
    UI delegation in CLAIMS.md); (c) design the bounded read the question page needs to show a no-project conclusion
    (UI-65's follow-up). Also decided and handed to SCHEDULER: the M0 hold is LIFTED (its audit was the re-derivation).
+   **Correction:** the battery-tally row I called M0-67 is DONE; the open one is **M0-65** (D-413), placed first (SCHEDULER).
 5. **Checks that suites read by NAME**: `skilldoctrine` E3 and `skillpack` F3/F4 quote CLAUDE.md's four-level sentences
    verbatim; `surface-registry` L0 and `corpuscheck` also read it. Change those sentences only together.
 
