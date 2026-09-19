@@ -1,6 +1,6 @@
 # Believe in Oakland
 
-**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). as of 2026-09-18.
+**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. as of 2026-09-19.
 
 **Place in the system** · Owns construct 3 of `BIO_System_Design.md` §3 (the record): bundle shape and the rules the plane checks. `BIO_Intake_Doctrine_v1_1.md` defers to it for shape; `BIO_Membership_Architecture_v2.md` builds on its §4.3 and §5.1–5.3; the intake provenance register and I-18 realise the intake doctrine inside it. README calls it "the most operationally load-bearing document in the corpus."
 
@@ -678,6 +678,23 @@ last_checked: "2026-07-09T12:00:00Z"
 Lifecycle (current_state): collected → verified (hash recorded, snapshot
 archived) → retired (superseded or no longer relevant; preserved, never
 deleted).
+
+**THE LADDER IS ONE-WAY AND GAINS NO `verified -> collected` EDGE — RULED 2026-09-19 by BOB #17
+(D-203/D-200), from this section's own design rather than as a new rule.** Three things decide it.
+**(1) `verified` is an AUTHORED ACT**: the `collected -> verified` transition is a named member's
+decision, AI-assisted but member-made, and authored acts BIND (DEC-24). A back-edge silently un-makes
+one, and erases the fact that a named member once made it. **(2) THIS SECTION ALREADY SOLVES THE
+PROBLEM A BACK-EDGE WOULD SOLVE, on a second axis**: `source_status` is an independent axis, so a
+verified item whose source moves becomes `source_status: modified` with BOTH versions preserved — the
+established answer to *"this verified thing is no longer what we verified"* is to RECORD it beside the
+state, never to walk the state back. **(3) `retired` is "preserved, never deleted"**, so the ladder's
+own end is preservation; a reversal is the only operation in the machine that would lose a fact.
+**So a verification resting on a weaker check than today's is STATED, not reverted** — undetermined is
+first-class, and "this was verified before check X existed" is exactly the kind of thing this record
+says out loud. The repairs available are the two the catalogue already advises: fix the bundle WHERE IT
+STANDS (an edit needs no state move), or `verified -> retired` with the reason recorded. A member who
+believes a document should never have been verified retires it and re-collects the source as a new
+bundle, which keeps both facts.
 
 source_status is an independent axis maintained by change detection: a
 verified item whose source changes becomes source_status: modified with
