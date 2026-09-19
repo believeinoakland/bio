@@ -298,6 +298,47 @@ export function archivedQueueIds({ repo = ROOT } = {}) {
   return ids;
 }
 
+/* ------------------------------------------------ the plan's ONE row lister (D-430) */
+
+/* A heading SHAPED like a row — `### <token> · <state>` — that `QHEAD` cannot read: `### CASE-5b · done`,
+   `### D-329+D-331+D-333 · done`, `### UI-17a · done` (three, all `done`, in the cache at `3dee1fdb`; LED-6's step (2), `12983f6f`, moved
+   those blocks to the archive, and the merged tree holds none — measured 2026-09-18 both times). The
+   grammar folds nothing under them (`queueRows` ends the row above at ANY heading), so their fields are
+   read by NO arm: not the row-design check, not the milestone or interface check, not P1/P2. They are
+   NAMED here rather than silently scored zero — a thing the matcher does not understand must be named. */
+const ROWLIKE = /^###\s+\S+\s+·\s/;
+export function strayHeadings(text) {
+  const { lines, limit } = linesOf(text);
+  const out = [];
+  for (let i = 0; i < limit; i++)
+    if (ROWLIKE.test(lines[i]) && !QHEAD.test(lines[i]))
+      out.push({ heading: lines[i].slice(0, 120), line: i + 1,
+                 closed: /·\s+(done|superseded)\b/.test(lines[i]) });
+  return out;
+}
+
+/** THE ONE READER OF THE PLAN'S LIVE ROWS: cache ∪ backlog (`PIPELINE`), each row as `queueRows` reads
+    it, tagged with the file it is in. D-430: `tools/rowdesign.mjs`, `tools/rowsubstrate.mjs` and
+    `plancheck` §2's milestone and interface checks read `QUEUE.md` only, so a row LED-6's migration
+    moved into `BACKLOG.md` would have gone unchecked by all of them. They now read THIS, and nothing
+    else — never a second walk, because a copy of the QUEUE reader pointed at the backlog agrees with
+    this one today and drifts the day either file's grammar moves (`pipeline-readers.test.mjs` pins
+    that the readers carry no grammar of their own). `texts` is injectable ({ QUEUE, BACKLOG }; a
+    missing key reads as an EMPTY file) so a suite can drive a planted backlog row without writing one
+    into the live `BACKLOG.md`. An unreadable file is NAMED in `unreadable`, never read as empty. */
+export function pipelineRows({ repo = ROOT, texts = null } = {}) {
+  const rows = [], strays = [], unreadable = [], read = [];
+  for (const l of PIPELINE) {
+    const t = texts ? (texts[l.name] ?? "") : readRel(repo, l.live);
+    if (t === null) { unreadable.push(l.live); continue; }
+    read.push(l.live);
+    for (const r of queueRows(t)) rows.push({ ...r, file: l.live, where: l.where, ledger: l.name });
+    for (const s of strayHeadings(t)) strays.push({ ...s, file: l.live, where: l.where });
+  }
+  const count = (w) => rows.filter((r) => r.where === w).length;
+  return { rows, strays, unreadable, read, cacheRows: count("cache"), backlogRows: count("backlog") };
+}
+
 /* ------------------------------------------------------------------------------ the move */
 
 export const ARCHIVE_HEADER = {
