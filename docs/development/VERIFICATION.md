@@ -113,10 +113,24 @@ node scripts/battery.mjs search cite       # a subset, by name fragment
 
 Suites are **discovered from the directory**, so a suite added later cannot fall out
 of the battery by not being mentioned. The runner reads each suite's own
-`N pass, M fail` line; a suite whose count cannot be read is reported as *unknown*
+tally line, in any of four forms — `N pass, M fail`, `N passed, M failed`, `N passing`,
+`N passing, M failing` (M0-65, 2026-09-19; before it only the first two were read, so a
+`passing` foot dropped its whole suite from the total) — and a bare `N passed` is NOT one of
+them. A suite whose count cannot be read is reported as *unknown*
 rather than as zero, because an unreadable number and no assertions are different
 claims — the `sshsig` 16-versus-18 case in D-93 is what happens when they are
 collapsed.
+
+**The assertion total is a sum over the suites that printed a tally, and the completion
+line SAYS SO when that is not every suite (M0-65, D-413).** Until 2026-09-19 an untallied
+suite surfaced only as *N suite(s) reported no assertion count*, below the headline, which
+read as a formatting note while every quoted assertion figure silently left it out
+(`bundle.test.mjs` and `livefire.test.mjs`, every run). The headline now carries a segment
+`· EXCLUDES N untallied suite(s) ·` right after `M assertions passing`, and the line below
+it begins `EXCLUDED FROM THE ASSERTION TOTAL (D-413)` and names each one. **When you quote
+the assertion figure, quote the EXCLUDES segment with it.** A fully tallied run prints the
+headline exactly as before, and `N/N suites green · M assertions passing · … · run <id>`
+still parses either way.
 
 ### A printed failure is a failure, and one log holds one run (M0-67, D-425)
 
