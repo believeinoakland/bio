@@ -14466,3 +14466,9 @@ civicos-ui/test/run.mjs` exit **0**; `status --check` 0. Reproduction and sweep:
 CONDUCT:** flip REC-143 on integration; **FOR DIST:** 0.64.0 may be cut from a `main` carrying this — the suite is the
 upgrade gate the battery lacked, and it only drives releases listed in its `RELEASES` table, so a new release that
 must be upgradable-from gets a row there when it is cut.
+
+## CLAIM 2026-09-19 FLEET (FLEET.md routing — two lines BOB #16's M-65 named) — RELEASED
+session: FLEET (worktree `sweet-goldberg-04a9ed`). Scope: `docs/development/kickoffs/FLEET.md` only. Two routing
+sentences corrected to `CLAUDE.md` §3 as it reads on `origin/main`: the build plan's order goes to SCHEDULER and
+running work to CONDUCT (was "CONDUCT (sequencing)"); Bob's decisions go to BOB (was "via CONDUCT"). Claimed and
+released in the same commit.

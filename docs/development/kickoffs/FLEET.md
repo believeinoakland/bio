@@ -16,8 +16,8 @@ PROTECTED however long it idles (`STANDING_LANES`, negative-control arm A6b). **
 ended their turns on a question — *"Standing by for your sequencing"*, *"may I push it?"* — addressed to a human
 who was not in the session. Nobody read either; both were archived idle four hours later; no release was cut for
 four days while four disclosure fixes sat on `main`. **So: never end a turn on a question.** Pushing is not gated
-(`CLAUDE.md`); decide what is yours; route what is genuinely another lane's by `SendMessage` to CONDUCT (sequencing)
-or BOB (design, doctrine) and continue with the rest. A question only Bob can answer goes to BOB, which carries it.
+(`CLAUDE.md`); decide what is yours; route what is genuinely another lane's by `SendMessage` — the build plan's order to SCHEDULER, running
+work to CONDUCT, design and doctrine to BOB (`CLAUDE.md` §3) — and continue with the rest. A question only Bob can answer goes to BOB, which carries it.
 
 **Refresh, when context is too full:** write `<LANE>-NEXT.md` from the measured state, push it, verify it on the
 remote, and tell BOB — whose successor protocol retires a predecessor only after D-398's three conditions hold.
@@ -66,7 +66,7 @@ Claim before editing (`CLAIMS.md`); delegate rather than edit another area's pat
 interfaces change only through `INTERFACE-CHANGES.md`; run in your own worktree
 (`claude --worktree FLEET`); publish and verify from the remote — the repository is
 the channel; `node tools/plancheck.mjs` before any handoff. Decisions that are
-genuinely Bob's go through `DECISIONS.md` via CONDUCT; tactical calls are yours —
+genuinely Bob's go to BOB, which carries them into his conversation (`CLAUDE.md` §3); tactical calls are yours —
 never block on him.
 
 ## Stand-up, 2026-09-10 — the area session's first turn, measured rather than believed
