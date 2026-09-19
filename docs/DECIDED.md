@@ -2490,6 +2490,6 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-29** — RULED by Bob, 2026-07-29. Continuing a capture must know what has already been captured; parts may have to be obtained from the host again, and that is refilling the cache rather than rewriting the record.  
   `docs/development/UI-PLAN.md:346`
 - **2026-09-19** — CORRECTED 2026-09-19 by BOB #16 at LED-6's close:** this clause first said `tools/readbudget.mjs` adds `QUEUE.md` to the read-whole set; it does NOT, because `ledger.mjs`'s P5 already produces the cache's budget and a second producer of one quantity is the defect `BOB.md` rule 7 names.  
-  `docs/development/WORK-PIPELINE.md:93`
+  `docs/development/WORK-PIPELINE.md:95`
 - **2026-07-27** — Bulk release, S-11 step 5: BOB DECIDED IN THE 2026-07-27 SESSION THAT IT WILL BE BUILT.** His use case: a collection of 20 or 100 job applications of interest to a project, where per-document release is tedium without protection.  
   `docs/SESSION-KICKOFF.md:142`

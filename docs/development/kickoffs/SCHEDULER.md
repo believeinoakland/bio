@@ -75,8 +75,13 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
 - **LED-6 — the pipeline migration** (`WORK-PIPELINE.md` §5), transferred from CONDUCT to this lane: the files are
   now this lane's. The tool half (`ledger.mjs` replenish, the backlog ledger, the invariant arms) is a build task for a
   worker CONDUCT spawns; the file migration is this lane's own act, performed with the tool.
-- **LED-7 — the debt fold** (`WORK-PIPELINE.md` §3): the triage is done by workers CONDUCT spawns in batches; placing
-  every resulting task in order is this lane's.
+- **LED-7 — the debt fold** (`WORK-PIPELINE.md` §3) — **THIS LANE DRIVES IT, actively** (Bob, 2026-09-19: *"Scheduler
+  should be actively involved in moving debt rows into the build plan (in the proper order)."*). Take DEBT.md's open rows
+  in batches of about 20, security and disclosure rows first, then corrections to landed work, then the rest oldest
+  first. Verify each at the code yourself (a row is a claim about the day it was written), and send it out by one of the
+  three doors in the same commit: CLOSED IN FACT with its evidence, a BACKLOG task placed in order, or a stated
+  LIMITATION in its home document. A row whose verification needs a build or a long code trace may go to a worker
+  through CONDUCT; this lane does not wait on workers to keep the fold moving. Report each batch's counts to BOB.
 
 ## Checks before every push
 

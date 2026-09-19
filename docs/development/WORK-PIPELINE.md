@@ -72,10 +72,12 @@ BACKLOG item in build order** (class `defect`, a `D-` id minted as today; Bob: *
 can be identified and properly added (in the correct order) in the build plan"*; a fix that needs design goes to BOB
 first) — there is no second list for work to wait in. `DEBT.md` is archived whole once empty; `owed.mjs`, `plancheck`'s
 disposition arm and `ledger.mjs` are retargeted to the backlog in the same item, and `CLAUDE.md` §4's *write it in
-DEBT.md* changes to the backlog in LED-7's own landing, not before. **Performed in batches of ~20 rows** by workers
-under CONDUCT, each row verified at the code; **accepts when** every open row has left by one of the three doors with its
-evidence, the id multiset (live, archive and backlog together) is identical before and after, and BOB has ordered the
-new backlog items.
+DEBT.md* changes to the backlog in LED-7's own landing, not before. **Performed in batches of ~20 rows by SCHEDULER itself** (Bob,
+2026-09-19: *"Scheduler should be actively involved in moving debt rows into the build plan (in the proper order)"* —
+corrected by BOB #16; this read *by workers under CONDUCT*), each row verified at the code, with a worker through CONDUCT
+only for a row whose verification needs a build; **accepts when** every open row has left by one of the three doors with
+its evidence, the id multiset (live, archive and backlog together) is identical before and after, and every new backlog
+task is placed in order by SCHEDULER.
 
 ## 4. What this replaces
 
