@@ -50,6 +50,46 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v94, 2026-09-19 session, thread UI, UI-67. Landed on `ui-67-question-page-npc` (base `origin/main` @ `4dd314ff`).
+SURFACE: `app.html` — the QUESTION's page (`openInquiry`), the act bar (`actBarHtml`), and the three sites that land a
+conclusion or a withdrawal (`doConclude`, `stanceConclude`, `stanceWithdraw`). **THE QUESTION'S PAGE NOW SHOWS WHAT THE
+QUESTION CONCLUDED WITH NO PROJECT, AND STOPS OFFERING A DIALOG THE PLANE REFUSES.**
+
+**What a member now sees.** Opening a question the record concluded outside any project: a section carrying that
+conclusion — the claim it adopted, word for word, marked adopted; or, where the record cannot establish which claim was
+concluded, the UNDETERMINED primitive with the PLANE's own basis sentence and never the conclusion text filled in for it;
+the member's own words under their own label; what would falsify it; and the plane's sentence saying no project drew it.
+It is rendered by `noProjectConclusionHtml`, the SAME helper the stance surface uses — one helper, two surfaces, so the
+two cannot drift into saying different things. And on that same page the `conclude` act the record publishes there
+(REC-142's PROJECT arm) is no longer a button into a refusal: it is NAMED under the plane's own label with a control per
+project the record's reverse index says draws on the question, opening that project's own view (`#stands/<PROJ>/<INQ>`),
+which is where a project's conclusion is taken.
+
+**Why it could be built now, and it is the whole of the item's substrate.** UI-65 wanted this section and `bound-sweep`
+ARM G refused it: the only read carrying `no_project_conclusion` was `op=basisversions`, a CAPPED list read, and this page
+renders no list whose bound it could state. BOB #16 designed the answer (§7.1) and REC-144 (IC-160) built it — the field
+moved onto the UNCAPPED single-bundle `op=projection`, computed by the same `#noProjectConclusionOf`. So the page reads it
+off the projection it ALREADY takes, adds no `recR` call at all, and **ARM G is untouched with no new CARRIED-OUT-WHOLE
+entry and no exemption**: buckets unchanged at CARRIED-OUT-WHOLE 3, findings 0.
+
+**The cache was the other half.** `PROJ_CACHE` never expires, so a page reading a RELATIONSHIP off a cached row would show
+a member the record as it stood before their own act. `projForget` is the one invalidator, called at every site that lands
+a conclusion or a withdrawal and at none that does not; a walk over `app.html` holds that set to exactly four
+(`concludePreflight` writes nothing and must NOT forget).
+
+**Proved** against the REAL plane by `civicos-ui/test/question-npc.test.mjs` (49 assertions): the member concludes through
+the page's own dialog, the page asks the record again and renders the plane's own answer read back independently; the
+refusal REC-142 exposed is DRIVEN at the plane and `op=affordances` is confirmed to publish the act there, so the routing
+is real on both sides; and an INSTRUMENT arm in every cache section proves the cache exists, without which "it asked
+again" measures nothing. Control: `question-npc.control.mjs`, 6 arms ALL AS DECLARED — and its first run found the
+INSTRUMENT rather than the subject, an assertion inside a bare `if` being SKIPPED rather than failed under two arms
+(tally 48 against a baseline of 49); the else branch is that fix.
+
+**What it could NOT do, stated.** The row's *"a withdrawal clears it"* names something the record cannot do:
+`op=withdrawconclusion` is a PROJECT's act and refuses `NOT_A_PROJECT` with no `project=`, and `op=reopen` refuses a
+concluded question that is in no case. Both are MEASURED in the suite rather than quoted (§7.1's own DESIGN GAP (b)), and
+the withdrawal arm asserts the RE-READ and the render, never a disappearance.
+
 v93, 2026-09-19 session, thread UI, UI-66. Landed on `worktree-agent-a50d25200c5cb65b6` (built ON
 REC-141's `worktree-agent-a12cdccbace704eb6` @ `817a8f85`; the two land TOGETHER).
 SURFACE: `app.html` — the Add surface's project creation (`addGo`, `mdFor`) and the project workspace's fork

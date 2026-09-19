@@ -14574,7 +14574,34 @@ docs and `tools/readbudget.mjs` only) at `3147a25a`: **254/254 suites green · 1
 REC-142 -> UI DELEGATION (the question's page) is open.
 
 ### DELEGATION 2026-09-18 RECORD (REC-142) -> UI: **ON A QUESTION CONCLUDED WITH NO PROJECT, THE QUESTION'S PAGE NOW RECEIVES `conclude` FOR A MEMBER OF A CITING PROJECT — AND ITS NO-PROJECT DIALOG WILL BE REFUSED THERE**
-**open as of 2026-09-18** — REC-142 (IC-159) publishes `conclude`'s PROJECT arm on a concluded inquiry; the question's page hosts `conclude` as the NO-PROJECT act, and that relationship cannot conclude twice.
+**DISCHARGED 2026-09-19 by UI-67 (branch `ui-67-question-page-npc`, no IC — and the reason there is none is the
+finding)** — UI took the SECOND of the two shapes offered: the control is ROUTED at the member's project
+relationship instead of opening the no-project dialog. `actBarHtml` gained an `opts.routed` map beside its
+`elsewhere` list; `openInquiry` passes `conclude` into it, and the act is still NAMED to the member under the
+plane's own label, with a working `stanceOpen(<PROJ>, <INQ>)` control per project the record's OWN reverse index
+(`op=backlinks`, already read by this page, gated to this credential) names as drawing on the question. Where the
+index names none, the sentence says so rather than inventing an address, and the page never claims which of them
+the member has joined — the record does not publish that here.
+
+**WHAT DECIDES THE ROUTING IS THE PLANE'S ANSWER, NOT THE QUESTION'S STATE, and that is the part this delegation
+named as the trap.** The block below says UI must not *"decide from the question's state on its own that the
+no-project arm is unavailable"*, and offers: *"If UI needs the relationship PUBLISHED per act, say so back to
+RECORD: that is a further I3 change."* **It is already published, and it arrived while this delegation was open.**
+REC-144 (IC-160, 2026-09-19, UI-67's own dependency) puts `no_project_conclusion` on the single-bundle
+`op=projection` — the no-project RELATIONSHIP as an object (`relationship: "no_project"`, `state: "concluded"`),
+computed by `#noProjectConclusionOf` under the gate the row already passed. That is the relationship field the
+delegation offered to build, reaching the surface from a different read, so **no further I3 change is needed and
+none is proposed.** The surface reads a published relationship; it computes no rule.
+
+Driven end to end against the real plane in `civicos-ui/test/question-npc.test.mjs` §4 (49/0): the plane's refusal
+is DRIVEN (`op=conclude` with no `project=` on the concluded question -> `ILLEGAL_TRANSITION`), `op=affordances` is
+confirmed to publish `conclude` there for that member (REC-142's arm, so the page is not routing an act nobody was
+offered), no rendered control routes to the no-project dialog, the act is still named with the plane's label, the
+routed control is DRIVEN and opens the project's own view with its `conclude` box carried — and the
+over-strictness arm holds that on an UNCONCLUDED question the same member is still offered the working dialog, so
+the fix is not "never offer `conclude`". Negative control arm (D) removes the routing and fails those arms by name.
+(It was open because REC-142 (IC-159) publishes `conclude`'s PROJECT arm on a concluded inquiry, while the question's
+page hosts `conclude` as the NO-PROJECT act — and that relationship cannot conclude twice.)
 
 Measured at the code on `rec142/affordances-concluded` (base `3dee1fdb`): `civicos-ui/app.html`'s surface registry places
 `conclude` on TWO surfaces (*"the question's page carries the no-project act, this one the project's"*). The stance
@@ -15089,3 +15116,71 @@ why: REC-151 (`cd4b5375`, integrated `5b717355`, IC-164) is a THIRD authority/di
   grant/task ids mint opaque through one CSPRNG minter, closing the §7.9 disclosure that a sequential id counted
   objects a caller cannot see. Verified in the BYTES, not from the row: `ALLOCID_PREFIX_GATED` occurs 0 times in
   0.66.0's signed bundle and twice in `origin/main`'s `store.mjs`. Under WHEN DIST CUTS that is a CUT NOW.
+## CLAIM 2026-09-19 UI (UI-67 — the question's page reads the no-project conclusion from `op=projection`, invalidates its cached projection on a conclusion or a withdrawal, and offers no no-project dialog the plane then refuses)
+
+Worker spawned by CONDUCT #7, isolated worktree `.claude/worktrees/hungry-liskov-e0108c`, branch
+**`ui-67-question-page-npc`**, base `origin/main` @ `4dd314ff`. `npm ci` in `bio-plane/`, `pdf-worker/` and
+`ocr-worker/`, each `node_modules` verified a real directory (30 / 25 / 26 entries), `df -h` 8.0 GiB free after.
+Design authority: `docs/development/INVESTIGATIVE-SESSION.md` §7.1, the paragraph *"The question's page reads the
+no-project conclusion from `op=projection`"* (BOB #16, `7c150df0`) and the REC-144 built paragraph under it.
+Claimed BY SITE:
+
+- `civicos-ui/app.html` — `getProjection`/`PROJ_CACHE` (one added invalidator, `projForget`); `openInquiry`'s
+  render only (one added section, between the falsifier section and "What relies on this", plus the act-bar
+  `opts`); `actBarHtml`'s `opts` handling (one added `routed` set, no change to what the plane publishes);
+  `doConclude` and `stanceConclude` / `stanceWithdraw` (the invalidation call only); the comment block above
+  `noProjectConclusionHtml`. **NOT** the body of `noProjectConclusionHtml` itself, NOT `openConclude` /
+  `concludePaint` / `concludeParams`, NOT the version-review region, NOT the queue block, NOT the elicitation,
+  NOT `SURFACES` (no new surface and no newly-surfaced act), NOT any other surface.
+- `civicos-ui/test/question-npc.test.mjs` and `civicos-ui/test/question-npc.control.mjs` — both NEW.
+- `docs/development/CIVICOS_UI_STATE.md` (a prepended entry), `docs/development/MEASUREMENTS.md` (an appended
+  entry), this block, and the **DISCHARGED** line written inside the `DELEGATION 2026-09-18 RECORD (REC-142) -> UI`
+  block above (that block only — nothing else in REC-142's claim).
+- `docs/DECIDED.md` on regeneration only (`node tools/decided.mjs`) — it was FRESH on `origin/main` @ `4dd314ff`
+  and this landing's inserted prose moved 32 citation line numbers. Never merged; regenerated.
+- `docs/development/DEBT.md` — ONE appended row, **D-433** (id minted with `node tools/mintid.mjs D`), the
+  instrument defect this landing MEASURED in `civicos-ui/check-refusal-codes.mjs` ARM B rule R3, with its fix
+  named on the row. Nothing else in that file is touched. **FOR SCHEDULER, through CONDUCT:** D-433 is a defect
+  found in passing, diagnosed to a named fix and routed rather than parked (`CLAUDE.md` §4); it is UI's own file
+  and UI's own owner, and it wants a row in the build plan, not a place on a list.
+- ADDENDUM: `docs/development/INVESTIGATIVE-SESSION.md` front matter and §7.1's built paragraph — the UI half's
+  "Built" sentence only.
+
+**NOT CLAIMED:** all of `bio-plane/**` (REC-144 is the plane half and is consumed, not edited, and the canned
+translation D-433's measurement brushes against is RECORD's `checks/bio-checks.mjs`, not touched here),
+`docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `newgroup/**`, `release/**`, and
+`civicos-ui/check-refusal-codes.mjs` itself — D-433 is REPORTED, not fixed under this claim.
+
+## CLAIM 2026-09-19 UI (UI-67) — RELEASED
+
+released: 2026-09-19 by the UI-67 worker, branch **`ui-67-question-page-npc`** @ `fad05e42`, base `origin/main`
+@ `4dd314ff`. **VERIFIED ON THE REMOTE, not from this tree** (D-288): `git ls-remote --heads origin
+ui-67-question-page-npc` answers `fad05e423a34600655b166e53802ebcebaa3935f`. Every path this claim reserved is
+free.
+
+**Gated on the COMMITTED tree, each run DIRECTLY with its exit status read UNPIPED:**
+- battery **261/261 suites green · 15961 assertions passing** · EXCLUDES 2 untallied suite(s) (`bundle.test.mjs`,
+  `livefire.test.mjs`) · 530.1s · run `42603.393b46`; provenance **264 of 264** discovered item(s) in the commit at
+  HEAD (`fad05e42`); fleet 3 members, 3 RAN; no suite skipped. **Own baseline measured, not carried:** the same
+  battery on the pre-commit tree read 261/261 · **15960**, and the whole of the +1 is attributed PER SUITE by
+  re-running rather than by subtraction — `planning-hygiene.test.mjs` 282 → 283, which is the D-433 row.
+- `node bio-plane/scripts/coverage.mjs --strict` **exit 0**, floors EXACT and NONE moved (REGISTER FLOOR arms
+  1505/1505 · classified 252/252 · corpus 253/253); `civicos-ui/test` control census 34/55 → **35/56 declaring**
+  (reported, not gated).
+- UI harness `node civicos-ui/test/run.mjs` from the repo root, **exit 0, 56 PASS / 0 FAIL**. **BASELINE
+  RE-MEASURED AND THE BRIEFED FIGURE WAS STALE:** `app.html` at `4dd314ff` reads **55 PASS**, not the 54 the UI-65
+  block carries. `question-npc.test.mjs` 49 assertions is the whole of the delta.
+- `node tools/plancheck.mjs` — **0 fail** but for UNPUSHED before the push; 4 pre-existing WARNs (DEBT row budget,
+  two READING BUDGET files, stranded work), none of them this landing's.
+- `bound-sweep` ARM G **unmoved across the landing**: CARRIED-OUT-WHOLE 3 · CARRIED-BY-CALLEE 2 · STATED-BY-CALLEE
+  5 · STATED-HERE 5, findings 0, 15 call sites, reach deltas unchanged. No new entry and **no exemption**.
+- `question-npc.control.mjs` six arms, each alone, **all AS DECLARED**, exit 0; app.html restored to
+  `a6c5181a…` / 1403728 bytes by sha256 AND `cmp` after every one.
+
+**FOR CONDUCT:** **no IC** — I3 read at 44.0.0 on this tree and nothing on the wire moved; REC-142's delegation
+asked whether UI needed the relationship published per act and it ALREADY IS, through REC-144's `op=projection`.
+The `DELEGATION 2026-09-18 RECORD (REC-142) -> UI` block above is **DISCHARGED in its own block**. **D-433 is
+minted in `DEBT.md` with its fix named and wants a row from SCHEDULER** — it is a defect in
+`civicos-ui/check-refusal-codes.mjs`' own reach walk, found by measurement, and it will recur for every future
+real-plane UI suite. `CIVICOS_UI_STATE.md` gains `v94`; `MEASUREMENTS.md` gains this landing's figures;
+`INVESTIGATIVE-SESSION.md` §7.1 and its front matter record the surface half as BUILT.
