@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1238 rulings across 100 documents.
+1239 rulings across 100 documents.
 
 ## DEC-
 
@@ -430,6 +430,8 @@ authority is the file named, never this one.
   `docs/development/MEASUREMENTS.md:15954`
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
+- **D-203** · 2026-09-19 — RE-MEASURED 2026-09-19 by LED-7 batch 5 (SCHEDULER #2): STILL TRUE, WITH A CORRECTED FIGURE.** The row measured FIVE catalogue strings advising *“return the bundle to collected”*; **there are TWO today** in `bio-plane/checks/bio-checks.mjs`, so three were fixed without closing the row.  
+  `docs/development/DEBT.md:156`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
   `docs/archive/ledgers/QUEUE-2026-08.md:162`
 - **D-212** · 2026-08-05 — SUPERSEDED 2026-08-05 by the VERSIONS design — the question this row asked turned out not to be a record question at all.** The row went through three drafts and each was wrong in an instructive way, so the history is kept rather than deleted.  
