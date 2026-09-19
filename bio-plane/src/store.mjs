@@ -2743,6 +2743,17 @@ export class Store extends DurableObject {
                if (normalizeType(b.object_type) !== "inquiry") return null;
                const who = this.#positionalMember(viewer, identity);
                return who === null ? null : this.#joinedCitingProjectOf(b.bundle_id, viewer, who); })(),
+             /* REC-135 / §7.1 item 4: WHETHER A PROJECT THIS CALLER HAS JOINED STANDS ON A
+                CONCLUSION OF THIS QUESTION — `concludes_for_project`'s shape exactly, one line
+                up, and THREE-VALUED for its reason: null on a target that is not an inquiry and
+                for a caller with no roster position, whose published act set is therefore
+                byte-unchanged. The rule that consumes it is `publish`'s entry in the act
+                catalogue, which widens on `=== true` and never narrows on a null. */
+             concluded_for_project: (() => {
+               if (normalizeType(b.object_type) !== "inquiry") return null;
+               const who = this.#positionalMember(viewer, identity);
+               return who === null ? null
+                 : this.#concludedForJoinedProjectOf(b.bundle_id, viewer, who); })(),
              basis_legs: Array.isArray(docFm.basis)
                ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
              rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length,
@@ -5738,6 +5749,129 @@ export class Store extends DurableObject {
              claim };
   }
 
+  /* ===== REC-135 / INVESTIGATIVE-SESSION.md §7.1 item 4 (BOB #15, 2026-09-18) —
+   * IS THIS QUESTION CONCLUDED, AND FOR WHOSE RELATIONSHIP? THE ONE READER THE
+   * CASE PATH ASKS.
+   *
+   * "Everything that asked 'is this inquiry concluded?' asks it FOR A PROJECT."
+   * Before this, publishCase() asked bundles.current_state === 'concluded' —
+   * the INQUIRY'S OWN SHARED STATE — which is the single stance §7 forbids: on a
+   * shared question one team's conclusion admitted every team's case, and a team
+   * that HAD concluded through op=conclude&project= could not publish at all,
+   * because the project arm deliberately never moves the inquiry's state
+   * (conclude(), THE PROJECT'S CONCLUSION IS WRITTEN ON THE PROJECT AND NOWHERE
+   * ELSE). Both halves of that are corrected here.
+   *
+   * IT CALLS THE EXISTING READERS AND COPIES NEITHER. #conclusionOf is the
+   * project half (REC-124/REC-136: the stance, and only while it is a conclusion
+   * — a withdrawal is never a standing answer) and #noProjectConclusionOf is the
+   * inquiry's-own-bytes half (REC-124 item 5, REC-136 item 6). BOB #16's
+   * one-reader rule at REC-144: two reads of one quantity must be the same
+   * function, or the record can disagree with itself about what a project
+   * concluded.
+   *
+   * THE DISJUNCTION IS A PROVISIONAL AND IT IS ARGUED RATHER THAN ASSUMED, and
+   * the alternative is named so reversing it is one edit. §7.1 item 8 says a
+   * no-project conclusion is visible as information and is never read as P's,
+   * and read strictly that refuses publication to every project whose finding was
+   * concluded before the project arm existed — which is EVERY published case in
+   * this record and every publishing caller in the battery, since op=conclude had
+   * no project arm before 2026-09-18. Item 5 rules the opposite way about the
+   * same bytes: they are read as the conclusion of the relationship that
+   * concluded them, or of the no-project relationship where none can be
+   * established — STATED AS SUCH. So the no-project conclusion still admits a
+   * case, and what makes that honest rather than lax is the second half of this
+   * item: WHICH relationship the case rests on is written into the case document
+   * and into this act's answer, PER MEMBER, instead of being left to a reader to
+   * assume it was the publisher's. Tightening later is one arm of this function
+   * and a refusal message; it is not a migration.
+   * (Item 6's aside — a case needs a project (DEC-72), so a no-project conclusion
+   * is never published — is FALSE of the code as built, and is reported to BOB
+   * rather than quietly made true in either direction.)
+   *
+   * not_concluded IS NOT ONE FACT AND IS NEVER RETURNED AS ONE (CLAUDE.md §2:
+   * sparse is normal, and saying WHICH is a first-class obligation). The project
+   * may have concluded and WITHDRAWN (REC-136's history), may have written an act
+   * this plane does not recognise (undetermined, never guessed), may have done
+   * nothing — and another project may have concluded the same shared question,
+   * which is information and is never this project's stance (item 8). Each is
+   * named, and the other-projects read publishes its own bound, because an
+   * ABSENCE over a truncated set is not a finding.
+   *
+   * THE STATE FLOOR SURVIVES, and dropping it would have been this item opening a
+   * hole while closing one. current_state no longer decides whether the
+   * relationship concluded, but it still decides whether the QUESTION can bear a
+   * case at all: conclude() refuses a deferred, dismissed or divided question,
+   * yet a project's conclusions[] row written while the question was open
+   * SURVIVES the group later setting it down or dividing it (DEC-28: divided is
+   * terminal and its legs were re-homed onto children). A case asserted over one
+   * of those would rest on a question the group has carried forward or put away,
+   * which the old expression refused as a side effect and this refuses on
+   * purpose. */
+  static CASE_BEARING_STATES = ["open", "surfaced", "concluded"];
+
+  #caseConclusionFor(projectId, inquiryId, viewer, currentState) {
+    const pid = String(projectId ?? "").trim();
+    const inq = String(inquiryId ?? "").trim();
+    const bearing = Store.CASE_BEARING_STATES.includes(currentState);
+
+    const own = pid && bearing ? this.#conclusionOf(pid, inq, viewer) : null;
+    if (own)
+      return { state: "concluded", relationship: "project", project: pid, inquiry: inq,
+               version: own.version ?? null,
+               claim: { state: own.claim ? "adopted" : "undetermined", text: own.claim ?? null,
+                        version: own.version ?? null, detail: null },
+               falsifier: own.falsifier ?? "", falsifier_override: own.falsifier_override ?? null,
+               by: own.by ?? null, at: own.at ?? null,
+               detail: `${pid} concluded this question on reading '${own.version ?? "(unnamed)"}' and still `
+                     + `stands on it, so this case records that project's own adopted claim (7.1 items 1-2).` };
+
+    const np = bearing ? this.#noProjectConclusionOf(inq) : null;
+    if (np)
+      return { state: "concluded", relationship: "no_project", project: null, inquiry: inq,
+               version: np.claim && np.claim.version ? np.claim.version : null,
+               claim: { state: np.claim ? np.claim.state : "undetermined",
+                        text: np.claim && np.claim.state === "adopted" ? np.claim.text : null,
+                        version: np.claim && np.claim.version ? np.claim.version : null,
+                        detail: np.claim && np.claim.state !== "adopted" ? np.claim.detail ?? null : null },
+               falsifier: np.falsifier ?? "", falsifier_override: null, by: null, at: null,
+               detail: np.relationship_detail };
+
+    /* WHY IT IS NOT CONCLUDED FOR THIS RELATIONSHIP — the states the project
+       could be in, and what any OTHER project has done, kept apart. */
+    const rec = pid ? this.#conclusionRecordOf(pid, inq, viewer) : { history: [], stance: null };
+    const st = rec.stance;
+    const why = !bearing ? "question_not_case_bearing"
+              : !pid ? "no_project_named"
+              : !st ? "project_has_never_concluded"
+              : st.act === "withdrawn" ? "project_withdrew_its_conclusion"
+              : st.act === "concluded" ? "project_has_never_concluded"
+              : "project_stance_undetermined";
+    const others = [];
+    let othersBound = null, othersTruncated = null;
+    if (bearing) {
+      const drawing = this.#projectsDrawingOn(inq, viewer);
+      othersBound = drawing.bound ?? null;
+      othersTruncated = drawing.truncated === true;
+      for (const p of drawing) {
+        if (p.id === pid) continue;
+        const c = this.#conclusionOf(p.id, inq, viewer);
+        if (c) others.push({ project: p.id, version: c.version ?? null, at: c.at ?? null });
+      }
+    }
+    return { state: "not_concluded", relationship: pid ? "project" : "no_project", project: pid || null,
+             inquiry: inq, why, claim: { state: "undetermined", text: null, version: null, detail: null },
+             stance: st ? { act: st.act, version: st.version ?? null, at: st.at ?? null } : null,
+             history_length: rec.history.length,
+             inquiry_state: currentState ?? null,
+             concluded_elsewhere: others,
+             concluded_elsewhere_bounds: { projects_bound: othersBound, projects_truncated: othersTruncated,
+                                           detail: "a bounded number of projects drawing on this question are "
+                                                 + "read, and only those this viewer may see. A conclusion "
+                                                 + "reported here is still true; an ABSENCE over a truncated "
+                                                 + "or gated set is not." } };
+  }
+
   /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7 (BOB #15, 2026-09-18) —
    * A PROJECT WITHDRAWS ITS CONCLUSION, and the withdrawal is a dated, authored
    * act that APPENDS to the relationship's history. It never deletes and never
@@ -6847,15 +6981,66 @@ export class Store extends DurableObject {
          refused here too, exactly as it was before: it has no `concluded` state
          at all, so its documents cannot satisfy this and are told what is
          missing rather than told a move is illegal. */
-      if (b.current_state !== "concluded")
-        return { ok: false, reason: "NOT_CONCLUDED", target: id,
+      /* ===== REC-135 / §7.1 item 4: WHOSE CONCLUSION THIS REFUSAL IS ABOUT.
+         The sentence above is UNCHANGED — only a CONCLUDED finding may be a case
+         member — and what moved is who "concluded" is asked of. It used to be
+         b.current_state, the shared inquiry's own word, which on a question two
+         projects draw on is the single stance §7 forbids: the team that
+         concluded through op=conclude&project= was refused (its act never moves
+         that word) and the team that had concluded nothing was admitted. The
+         reader is #caseConclusionFor and its header carries the reasoning,
+         including why a no-project conclusion still admits a case and what
+         tightening it would cost.
+         THE REFUSAL KEEPS ITS NAME. No code is minted: NOT_CONCLUDED still means
+         exactly what it said, and a caller matching on the name is unaffected.
+         What is ADDED is the relationship it was asked of and WHY the answer was
+         no — never_concluded, withdrew, undetermined, or a question the group has
+         set down or divided — because "not concluded" is four different facts and
+         a caller told only the name cannot act (CLAUDE.md §2). */
+      const conc = this.#caseConclusionFor(proj, id, viewer, b.current_state);
+      if (conc.state !== "concluded")
+        return { ok: false, reason: "NOT_CONCLUDED", target: id, project: proj,
                  from: b.current_state, object_type: fm.object_type ?? b.object_type,
-                 detail: "only a CONCLUDED finding may be a case member: a material set cannot be asserted "
-                       + "over a question with no conclusion. Conclude it first (op=conclude). A finding "
-                       + "already in a published case is REOPENED first (op=reopen) and concluded again, "
-                       + "which is what makes the next edition a separate document carrying its own "
-                       + "conclusion, its own falsifier and its own freshly authored completeness "
-                       + "(DEC-12, DEC-72)." };
+                 relationship: conc.relationship, why: conc.why,
+                 stance: conc.stance, concluded_elsewhere: conc.concluded_elsewhere,
+                 concluded_elsewhere_bounds: conc.concluded_elsewhere_bounds,
+                 /* THE RULE'S OWN SENTENCE LEADS EVERY BRANCH, and it is not decoration.
+                    "only a CONCLUDED finding may be a case member" is CASE-AS-PRODUCTION's
+                    supersession table VERBATIM, and `caselifecycle.test.mjs` asserts that the
+                    document and the plane print the SAME words so the two cannot drift. The
+                    first draft of this item wrote a per-branch detail and dropped it, and that
+                    suite went red at a named assertion — recorded because it is the instrument
+                    doing exactly what it was built for. What the branch adds is WHICH fact was
+                    met; what the rule says is unchanged. */
+                 detail: "only a CONCLUDED finding may be a case member: a material set cannot be "
+                   + "asserted over a question with no conclusion, and `concluded` is asked of the "
+                   + "PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). "
+                   + (conc.why === "question_not_case_bearing"
+                   ? `This question is ${b.current_state}, and a case cannot be asserted over one the group `
+                     + `has set down or carried forward. Reopen it (op=reopen) or work the children a `
+                     + `division produced (DEC-28); a conclusion a project wrote while the question was `
+                     + `open does not survive the question leaving the states a case can rest on. `
+                   : conc.why === "project_withdrew_its_conclusion"
+                   ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none `
+                     + `today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the `
+                     + `stance). Conclude it again for this project (op=conclude&project=${proj}). `
+                   : conc.why === "project_stance_undetermined"
+                   ? `${proj}'s latest entry about this question names an act this plane does not know, so `
+                     + `what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. `
+                   : `${proj} has not concluded this question. A conclusion belongs to the project's `
+                     + `relationship with the inquiry (§7.1): another team's conclusion, and a conclusion `
+                     + `written in the question's own bytes with no project, are both readable here and `
+                     + `neither is this project's. Conclude it for this project `
+                     + `(op=conclude&project=${proj}&version=<reading>). `)
+                   + (conc.concluded_elsewhere.length
+                     ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE `
+                       + `concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) — `
+                       + `information, never this project's stance (§7.1 item 8). `
+                     : "")
+                   + "A finding already in a published case is REOPENED first (op=reopen) and concluded "
+                   + "again, which is what makes the next edition a separate document carrying its own "
+                   + "conclusion, its own falsifier and its own freshly authored completeness "
+                   + "(DEC-12, DEC-72)." };
       /* ===== CASE-4 / DEC-72: THE SECOND HALF OF THE PRECONDITION, AND IT IS
          HERE BECAUSE THE STATE WAS CARRYING IT TOO.
          Before this item, `concluded -> published` was the only edge in, so a
@@ -6886,7 +7071,7 @@ export class Store extends DurableObject {
                        + "rather than a record of what changed. Reopen it (op=reopen), work it, "
                        + "conclude it again, and publish that — which is the route DEC-12 built and the "
                        + "one that leaves a reader able to see what moved." };
-      prepared.push({ id, b, fm, text: liveMd.content });
+      prepared.push({ id, b, fm, text: liveMd.content, conclusion: conc });
     }
 
     /* ==== CASE-2 / DEC-72 clause 4: THE AUTHORED LOAD-BEARING PARTITION =====
@@ -7696,11 +7881,17 @@ export class Store extends DurableObject {
                detail: `the case document's searched section could not be computed: ${searched.why}. `
                      + `A case document publishes what was looked for beside what it claims to cover `
                      + `(D-196); it does not publish the claim with the record of the looking left blank.` };
+    /* REC-135 / §7.1 item 4, second half — THE CASE RECORDS THE ADOPTED CLAIM AS
+       IT STOOD. Read at the same moment the pins are taken, from the SAME answer
+       the NOT_CONCLUDED gate above was decided on (carried on `prepared`, never
+       re-read), so the document cannot record a conclusion the gate did not
+       admit — the failure mode a second read invites. */
+    const conclusionRows = prepared.map((p) => ({ target: p.id, ...p.conclusion }));
     const docText = Store.#caseDocumentText({
       caseId: theCase, edition, project: proj, scope: scp, bias: back, bar,
       roster: members, roles: memberRoles, pins: pinOf,
       statement: stmt, position: pos, justification: just, excluded: rows,
-      author: who, at: when, searched,
+      author: who, at: when, searched, conclusions: conclusionRows,
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -7816,8 +8007,16 @@ export class Store extends DurableObject {
                                 optional — a case document that cannot say what was searched must
                                 fail the ceremony rather than publish a completeness statement
                                 with the same silence D-196 exists to name. */
-                             searched }) {
+                             /* REC-135 / IC-166: the per-member conclusion the case RESTS ON,
+                                computed by the caller for the same reason `searched` is — this
+                                method is pure and static and the answer needs the store. One row
+                                per roster member, in roster order, each naming WHOSE relationship
+                                concluded the question (the publishing project's, or the no-project
+                                relationship's where the conclusion is in the question's own bytes
+                                and names nobody, §7.1 item 5). */
+                             searched, conclusions = [] }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
+    const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
     const fm = [
       "---",
       `format: ${CASE_DOCUMENT_FORMAT}`,
@@ -7832,6 +8031,40 @@ export class Store extends DurableObject {
         `  - target: ${m}`,
         `    role: ${roleOf.get(m) ?? "null"}`,
         `    version_sha: ${pins.get(m) ?? "null"}`]),
+      /* REC-135 / §7.1 item 4 — THE CONCLUSION EACH MEMBER ENTERED THIS CASE ON,
+         AND WHOSE IT WAS. An ARRAY OF FLAT OBJECTS, `case_roles`'s shape, for the
+         grammar's own reason (two levels, no map inside an array).
+         WHY `relationship` IS THE FIRST FIELD AFTER THE TARGET. Before this item
+         a case document recorded NO conclusion at all — a reader holding the
+         bytes could see which findings were in and at which hashes, and had to
+         assume that whoever published had also concluded. On a shared question
+         that assumption is exactly what §7 forbids, and it is the reader outside
+         this project who pays for it. So the bytes now say which relationship's
+         conclusion the case rests on, and a `no_project` row is a DISCLOSURE and
+         not a defect: it means the question was concluded in its own bytes with
+         nobody named, which §7.1 item 5 rules is read as the no-project
+         relationship's and STATED as such.
+         `claim_state: undetermined` IS A FIRST-CLASS ANSWER and is never an
+         empty claim. A conclusion written before §7.1 item 6 names no reading, so
+         WHICH claim was concluded cannot be established from the record — the
+         document says so, with the reason, rather than publishing a blank. */
+      "case_conclusions:",
+      ...roster.flatMap((m) => {
+        const c = concOf.get(m) || null;
+        return [
+          `  - target: ${m}`,
+          `    relationship: ${c ? c.relationship : "null"}`,
+          `    project: ${c && c.project ? c.project : "null"}`,
+          `    version: ${c && c.version ? c.version : "null"}`,
+          `    claim_state: ${c && c.claim ? c.claim.state : "null"}`,
+          `    claim: "${Store.#fmSafe(c && c.claim && c.claim.text ? c.claim.text : "")}"`,
+          `    claim_detail: "${Store.#fmSafe(c && c.claim && c.claim.detail ? c.claim.detail : "")}"`,
+          `    falsifier: "${Store.#fmSafe(c && c.falsifier ? c.falsifier : "")}"`,
+          `    falsifier_override_by: ${c && c.falsifier_override ? c.falsifier_override.by : "null"}`,
+          `    falsifier_override_at: "${Store.#fmSafe(c && c.falsifier_override ? c.falsifier_override.at : "")}"`,
+          `    concluded_by: ${c && c.by ? c.by : "null"}`,
+          `    concluded_at: "${Store.#fmSafe(c && c.at ? c.at : "")}"`];
+      }),
       "completeness:",
       `  statement: "${Store.#fmSafe(statement)}"`,
       `  subject_position: ${position}`,
@@ -7898,6 +8131,46 @@ export class Store extends DurableObject {
          that asserts it, which half claims what. */
       "A LOAD-BEARING finding is one this case rests on, and the standard of evidence below was asked of it.",
       "A SUPPORTING finding travels with the case and is not presented as carrying it.",
+      "",
+      /* REC-135 / §7.1 item 4 — IN THE BODY AND IN PROSE, for the reason the
+         `searched` section is: a member reviews and signs THIS, and a block of
+         key-value pairs they have to decode is not a thing anybody reviewed. */
+      "## The Conclusions This Case Records",
+      "",
+      "A conclusion belongs to a PROJECT'S RELATIONSHIP with a question, never to the question alone "
+      + "(INVESTIGATIVE-SESSION.md §7.1): an inquiry can be shared, and one team concluding it does not "
+      + "move another team's stance. Each member below is named with the relationship whose conclusion "
+      + "this case rests on, and with the claim that relationship adopted, frozen as it stood at "
+      + "publication.",
+      "",
+      ...roster.map((m) => {
+        const c = concOf.get(m) || null;
+        const whose = !c ? "NO CONCLUSION WAS RECORDED FOR THIS MEMBER"
+          : c.relationship === "project"
+          ? `concluded by ${c.project}${c.by ? ` (${c.by})` : ""}${c.at ? ` on ${c.at}` : ""} on reading `
+            + `'${c.version ?? "(unnamed)"}'`
+          : "concluded in the question's own bytes, naming no project — read as the NO-PROJECT "
+            + "relationship's conclusion, which is not this project's (§7.1 item 5)";
+        const claim = !c || !c.claim ? "" : c.claim.state === "adopted"
+          ? ` The claim adopted: ${c.claim.text}`
+          : ` The claim is UNDETERMINED: ${c.claim.detail
+              || "this conclusion names no reading, so which claim was concluded cannot be established "
+               + "from the record. It is stated rather than filled in."}`;
+        const fals = !c ? "" : c.falsifier
+          ? ` What would falsify it: ${c.falsifier}`
+          : c.falsifier_override
+          ? ` NO FALSIFIER STATED — recorded by ${c.falsifier_override.by} at ${c.falsifier_override.at}.`
+          : " NO FALSIFIER IS RECORDED for this conclusion.";
+        return `- **${m}** — ${whose}.${claim}${fals}`;
+      }),
+      "",
+      roster.every((m) => (concOf.get(m) || {}).relationship === "project")
+        ? `Every conclusion this case records is ${project}'s own.`
+        : "AT LEAST ONE MEMBER ENTERED THIS CASE ON A CONCLUSION THAT IS NOT THIS PROJECT'S OWN. That is "
+          + "disclosed rather than smoothed: a conclusion written in a question's own bytes names no "
+          + "project, so the relationship that drew it cannot be established and it is read as the "
+          + "no-project relationship's. A reader weighing this case should know which findings this "
+          + "project concluded for itself and which it took as the record already answered.",
       "",
       "## What This Excludes",
       "",
@@ -27324,6 +27597,37 @@ export class Store extends DurableObject {
       const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
       if (!p || normalizeType(p.object_type) !== "project") continue;
       if (this.#inSight(pid, viewer) && this.#isJoinedParticipant(pid, memberId)) return true;
+    }
+    return false;
+  }
+
+  /* REC-135 / §7.1 item 4 — DOES A PROJECT THIS CALLER HAS JOINED STAND ON A
+   * CONCLUSION OF THIS QUESTION? `#joinedCitingProjectOf`'s walk with the one
+   * extra question, asked through `#conclusionOf` — the SAME reader
+   * `publishCase()`'s own gate runs, so the act this fact fronts and the refusal
+   * cannot disagree about what a project concluded (DEC-8, the whole reason
+   * affordances.mjs exists).
+   *
+   * IT IS A FACT AND NEVER A RULE. It says only that SOME joined project has a
+   * standing conclusion here; whether THIS caller may publish for THAT project is
+   * the per-pair question D-311 names, and the act still refuses on its own terms
+   * (`NOT_THE_PROJECT_OWNER`, `NOT_CONCLUDED` for the project actually named).
+   * That is every act's posture in this file: the record permits the move, not
+   * that this caller's parameters will pass.
+   *
+   * WHY IT HAD TO ARRIVE WITH THE REFUSAL. `publish` was derived from
+   * `current_state === 'concluded'` alone, and its own comment says that
+   * expression is the affordance-layer half of publishCase()'s NOT_CONCLUDED
+   * sentence and the two MUST agree. Moving the refusal to the project's
+   * relationship without this fact would have left the surface silent for exactly
+   * the member §7.1 item 4 exists for — the one whose team concluded a shared
+   * question through op=conclude&project=, which never moves that word. */
+  #concludedForJoinedProjectOf(inquiryId, viewer, memberId) {
+    for (const pid of this.#citesInto(inquiryId).confirmed) {
+      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
+      if (!p || normalizeType(p.object_type) !== "project") continue;
+      if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
+      if (this.#conclusionOf(pid, inquiryId, viewer)) return true;
     }
     return false;
   }

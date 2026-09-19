@@ -131,9 +131,20 @@ const ARMS = {
             + "about: the old guard `legalFrom.includes(\"published\")` is false from every state once the "
             + "edge is gone, so anyone repairing that noise by deleting the guard lets an UNCONCLUDED "
             + "finding into a case — a material set asserted over a question nobody has answered",
+       /* RE-ANCHORED 2026-09-19 by REC-135, and the anchor MOVED because the SUBJECT
+          moved, not because the arm was wrong. §7.1 item 4 makes `concluded` a
+          question about the PUBLISHING PROJECT'S relationship, so the refusal now
+          tests `conc.state` — the answer of the one reader `#caseConclusionFor` —
+          where it used to test the inquiry's own `b.current_state`. THE ARM IS
+          UNCHANGED IN WHAT IT BREAKS: the NOT_CONCLUDED refusal is still what is
+          deleted, and the damage it names is still an unconcluded finding admitted
+          to a case. Found by `m025-arm-anchor-witness.test.mjs` arm A4 (a line
+          CHANGED IN PLACE under a quote that was not moved with it, the D-276
+          class) rather than by anybody remembering to look, which is the instrument
+          doing exactly what it exists for. */
        apply: () => edit(STORE,
-         '      if (b.current_state !== "concluded")',
-         '      if (false && b.current_state !== "concluded")') },
+         '      if (conc.state !== "concluded")',
+         '      if (false && conc.state !== "concluded")') },
 
   d: { files: [STORE],
        label: "(d) OVER-STRICTNESS — the case relation is widened to every `concluded` finding, so the "

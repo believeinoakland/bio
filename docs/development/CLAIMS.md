@@ -15184,3 +15184,97 @@ minted in `DEBT.md` with its fix named and wants a row from SCHEDULER** — it i
 `civicos-ui/check-refusal-codes.mjs`' own reach walk, found by measurement, and it will recur for every future
 real-plane UI suite. `CIVICOS_UI_STATE.md` gains `v94`; `MEASUREMENTS.md` gains this landing's figures;
 `INVESTIGATIVE-SESSION.md` §7.1 and its front matter record the surface half as BUILT.
+## CLAIM 2026-09-19 RECORD (REC-135 — §7.1 item 4: a project's conclusion reaches the case; `op=publish`'s `NOT_CONCLUDED` reads the PUBLISHING PROJECT'S relationship, and the case records the adopted claim)
+
+Worker spawned by CONDUCT #7. **Its first worktree was NOT its own**: CONDUCT handed it
+`.claude/worktrees/hungry-liskov-e0108c`, which the UI-67 worker had already claimed and was editing live
+(`docs/development/CLAIMS.md` and `civicos-ui/app.html` appeared as uncommitted changes there DURING this
+session's first ten minutes). That is DEC-3's one-session-per-tree hazard, recorded in this file's own
+2026-08-10 FINDING. This worker moved out rather than share it: own worktree
+`.claude/worktrees/rec135-record`, branch **`rec-135-project-conclusion-to-case`**, base `origin/main` @
+`fe0529f3`, `npm ci` run in `bio-plane/`, `pdf-worker/` and `ocr-worker/` (each `node_modules` verified a real
+directory — 30 / 25 / 26 entries), `df -h` 7.3 GiB free after. Nothing of UI-67's was touched; one stray log
+this worker had written into that tree was removed and that tree's `git status` re-read to confirm it.
+
+Design authority: `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 4, with `BIO_Case_Making_v0_1.md`
+§"What a CLAIM is" and `BIO_State_Rules_Consistency_v1_5.md`'s 2026-09-18 amendment. Claimed BY SITE:
+
+- `bio-plane/src/store.mjs` — the new `#caseConclusionFor` reader beside `#conclusionOf` / `#noProjectConclusionOf`;
+  `publishCase()`'s `NOT_CONCLUDED` arm and the per-member record it collects; the `#caseDocumentText` call and
+  that method's new `conclusions` parameter and section; `affordanceFacts`'s new `concluded_for_project` fact.
+  **NOT** `conclude()`, **NOT** `withdrawConclusion()`, **NOT** `#conclusionRecordOf` / `#conclusionOf` /
+  `#noProjectConclusionOf` themselves (called, never copied — BOB #16's one-reader rule at REC-144),
+  **NOT** `reopen()` (see the report: reopen reads the shared state BY DESIGN), **NOT** the strength walk.
+- `bio-plane/src/affordances.mjs` — the `publish` act's predicate only (one added disjunct).
+- `bio-plane/test/case-project-conclusion.test.mjs` and `bio-plane/test/case-project-conclusion.control.mjs` — both NEW.
+- `docs/development/INTERFACE-CHANGES.md` (IC-166, appended), `docs/development/INVESTIGATIVE-SESSION.md`
+  (front matter + §7.1's built paragraph), `docs/architecture/construct-status.json` if a claim moves, and this block.
+
+**NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT's word), `docs/development/DEBT.md`, `civicos-ui/**`,
+`newgroup/**`, `release/**`, `bio-plane/checks/bio-checks.mjs` (no new refusal code is minted and
+`CASE_DOCUMENT_FORMAT` is deliberately NOT bumped — see IC-166).
+
+**ADDENDUM 2026-09-19 (same claim, REC-135):** `bio-plane/test/projection-noproject.test.mjs` — the ONE READER pin
+ONLY (`count(store, "this.#noProjectConclusionOf(")`), CORRECTED from 2 to 3 with the reason at the site. That suite's
+own comment instructs it: *"A third call site is not wrong; it is somebody who must come here and say which."* This
+item is that somebody, and the correction names `#caseConclusionFor`. Nothing else in REC-144's suite is touched, and
+the arm that would catch a hand-written COPY of the reader (its tokens occurring once across `store.mjs` and
+`index.mjs`) is left exactly as it was — it is the arm that still holds the rule the count only counts.
+
+**ADDENDUM 2026-09-19 (same claim, REC-135):** `bio-plane/test/caselifecycle.control.mjs` — ARM (c)'s ANCHOR ONLY,
+re-anchored from `b.current_state !== "concluded"` to `conc.state !== "concluded"` with the reason at the site. The
+arm is unchanged in what it breaks (the `NOT_CONCLUDED` refusal) and in the damage it names; only the line that
+expresses the refusal moved. **Found by the instrument, not by memory:** `m025-arm-anchor-witness.test.mjs` arm A4
+went red on the dead anchor (the D-276 class — a line changed in place under a quote that was not moved with it), and
+arm (c) was re-run afterwards (58 pass / 10 fail, restore sha256 MATCH and content IDENTICAL) rather than assumed to
+still arm. Nothing else in `caselifecycle.control.mjs` is touched.
+
+**ADDENDUM 2026-09-19 (same claim, REC-135):** `bio-plane/scripts/coverage.mjs` — the ONE `REGISTER_FLOOR` key set
+only (`arms`, `classified`, `corpus`, `run`), moved together from the instrument's own printed figures on the
+COMMITTED tree, with the record above the `arms` key. **The floors were deliberately read AFTER the commit:** while
+the new suite was untracked the strict run printed `254/253`-style figures with no slack at all, because the
+reproducible corpus counts only suites in the commit — a floor moved from that print would have been moved from a
+tree no other checkout reproduces (D-238). `regionLines` is untouched: this item adds no DEC-49 region and its
+changes to `publishCase()` sit outside every region marker in that function (verified by line number against
+`is-machine-publish`, `is-publish-statement` and `case-identity-derivation`).
+
+## DELEGATION 2026-09-19 RECORD (REC-135) -> BOB, then SCHEDULER — **DEC-12'S SECOND-EDITION ROUTE IS UNREACHABLE FOR A FINDING PUBLISHED ON A PROJECT-ARM CONCLUSION, and REC-135's own landing is what makes that reachable enough to matter**
+
+**open as of 2026-09-19** — raised by the REC-135 worker at its close; needs a DESIGN answer before it can be a row, so it goes to BOB first (CLAUDE.md §4) and to SCHEDULER after.
+
+**MEASURED THROUGH THE OPS, not reasoned** (a throwaway probe over REC-135's own fixtures, branch
+`rec-135-project-conclusion-to-case`): project A concludes shared question Q through
+`op=conclude&project=A` and publishes a case. Q's own state is still `open`, which is the whole point of
+§7.1. Then:
+
+- `op=reopen` on Q → **`ILLEGAL_TRANSITION`, from `open`.** The case-member arm of `NOT_SET_DOWN` passes,
+  and the catalog's machine has no `open -> open` edge, so the act cannot complete.
+- `op=withdrawconclusion&project=A` → ok. `op=conclude&project=A` again → ok.
+- `op=publish&project=A` → **`ALREADY_A_CASE_MEMBER`.**
+
+**BOTH DOORS SHUT, and each is correct on its own terms.** `op=reopen` moves the INQUIRY's own state and
+that state never moved, because a project's conclusion is written on the PROJECT (REC-124). And
+`#caseRelationOf`'s pin is the member's `bundle_sha`, which also never moved — so its sentence, *"there is
+nothing here a new edition would say differently"*, is false in exactly one new way: the PROJECT'S ADOPTED
+CLAIM moved, and the case records that claim (REC-135/IC-166) while the finding's bytes do not.
+
+**WHY THIS IS NOT A REGRESSION AND IS STILL THIS ITEM'S TO RAISE.** Before REC-135 a project-arm
+conclusion could not publish AT ALL, so the route it lacks did not exist to be unreachable. The legacy
+path is untouched and still works: there the question's own state IS `concluded`, `concluded -> open` is a
+legal edge, and reopen → work → conclude → publish runs as DEC-12 built it.
+
+**THE QUESTION FOR BOB, and it is a design question rather than a defect with an obvious fix:** what
+warrants a new EDITION when the finding's bytes are unchanged and the PROJECT'S adoption has moved? DEC-12
+says an edition is a separate document carrying its own conclusion — and under §7.1 the conclusion is now
+the relationship's, not the document's. **The candidate fix the measurement points at:**
+`ALREADY_A_CASE_MEMBER` is asked per-relationship, exactly as `NOT_CONCLUDED` now is — a new edition is
+warranted when the publishing project's conclusion has moved since the edition the pin names, even where
+`bundle_sha` has not. `op=reopen` then needs no change and should get none; it is the shared object's act
+and REC-136 already ruled the per-project reversal is `op=withdrawconclusion`'s.
+**The alternative, named so it is a real choice:** leave it, and say in the refusal that a second edition
+of a project-arm publication is not yet expressible — which is honest and leaves DEC-12 with a route no
+caller can travel for this class, the shape `op=reopen`'s own header calls *the state machine lying*.
+
+**ACT, WITH ITS ACTOR:** CONDUCT carries this to BOB in the BOB lane at REC-135's integration; on BOB's
+ruling SCHEDULER places the row. It is NOT parked on a list: this block is the drained channel, and the
+state line above is re-affirmed or discharged here.
