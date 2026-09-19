@@ -19,10 +19,9 @@ checkout means stale permissions.
 
 ## 1. THE STATE AT HANDOFF — measured 2026-09-19, re-measure before resting anything on it
 
-- **SCHEDULER #2 STOOD DOWN at 59% and its successor's CHIP IS FILED AND WAITING FOR BOB'S CLICK** ("Start SCHEDULER
-  #3"). It is NOT archived and its worktree is kept — **SCHEDULER #3 archives it under D-398's three conditions,
-  re-checked at the moment it acts**; its self-wake stays armed until then. If the chip is gone and no SCHEDULER #3
-  exists, file it again: its handoff is on the remote and the gate line is SCHEDULER-NEXT.md's line 1.
+- **SCHEDULER #2 STOOD DOWN at 59%; its successor's CHIP IS FILED AND WAITING.** Not archived, worktree kept,
+  self-wake armed — **SCHEDULER #3 archives it under D-398's three conditions**, re-checked when it acts. If the chip
+  is gone and no #3 exists, file it again; the gate is SCHEDULER-NEXT.md's line 1.
 - **CONDUCT #7, DIST #2 and FLEET #2 are UP**, each from its own `-NEXT.md`, each with self-wake and renewal armed.
 - **Disk is the binding constraint, not the plan.** ~8.8 GiB free at 96%, down from 12 GiB in the first hour. The
   arithmetic is M-70. **It moved a GiB in thirty minutes — re-measure, never carry it.**
@@ -43,8 +42,14 @@ checkout means stale permissions.
    sessions in `auto`. **Only Bob can change it; NO LANE MAY RUN A COMMAND ANOTHER SESSION'S GATE REFUSED** — three
    lanes have now declined to, which is why work is visibly STALLED rather than quietly done wrong. While it holds,
    REC-151 cannot land, D-432 is unplaceable, 0.66.0 is deployed while `main` reads 0.65.0, and CONDUCT spawns NO
-   workers since a worker inherits the gate. **The data loss is SMALL and measured — not a countdown:** `git rev-list
-   d03e08ea --not origin/main b69d7b26` = **3 commits**, one with original content. A THROUGHPUT blocker.
+   workers since a worker inherits the gate. **A THROUGHPUT blocker, not data loss — but the exposure GROWS while it holds, so
+   re-measure it, never quote this figure.** `git rev-list <CONDUCT's tip> --not origin/main b69d7b26` read **3
+   commits / 1 non-merge** at 14:00Z and **21 / 4** at 17:30Z (CONDUCT #7, verified here) — main has moved EIGHTEEN
+   times under that integration, and the seventeen merge commits each carry a RESOLUTION, so the reconstruction cost
+   is re-deriving eighteen merges, not re-running one figure move. REC-151's substance is still safe on origin at
+   `b69d7b26`. **The estate is now turning over AROUND the stall:** SCHEDULER has been replaced and this lane
+   refreshed, while the cache's top row `REC-151 · running` still belongs to a session that cannot land it — true row,
+   real worker, no route.
 2. **FLEET needs approval to delete 574 MB of `node_modules` in its own worktree** — its gate declined it. It offers
    14 seconds to reinstall. Smaller, and unblocked by nothing else.
 
@@ -62,20 +67,19 @@ checkout means stale permissions.
      AUTHORITY VALUE at that grain is owed. **The link I did NOT trace, which the design checks first:** whether a
      content row can be minted over subresource bytes and joins to `site_asset_refs`.
    - **D-80** (Bob ruled: contradiction is to FIND, not prevent): what remains is detecting CONTACT between
-     aspirations, never contradiction — judging whether two prose commitments contradict would violate invariant 5.
-     Relates to 8.contradiction and to §3 item 2 below.
-   - **D-126**: ~30 notification generators, no catalogue, no classes, no item contract. **D-52's channel question is
-     a SUB-QUESTION of this one** — ruling them apart invents the thirty-first ad-hoc wording. Sequence together at M7.
+     aspirations, never contradiction — judging whether two prose commitments contradict violates invariant 5.
+   - **D-126**: ~30 notification generators, no catalogue or item contract. **D-52's channel question is a
+     SUB-QUESTION of it** — ruling them apart invents the thirty-first ad-hoc wording. Sequence together at M7.
 1. **BOB #16's list, untouched:** field counts of process failures per lane against a 2026-09-18 baseline that does
    not exist (define it first); PRESENT and RESOLVE for contradiction; `CONTENT-PDF.md` over budget (its OWNER cuts
    it); the corrected exam instrument (M-65); the checks suites read BY NAME.
-2. **`VERIFICATION.md` had 45 bytes of headroom** against its budget, which is why D-325's ruling went into
-   `CLAUDE.md` §5 instead. Anything added there must be paid for by a cut.
+2. **`VERIFICATION.md` had 45 bytes of headroom**, which is why D-325's ruling went into `CLAUDE.md` §5. Anything
+   added there is paid for by a cut.
 
 ## 4. WHAT BOB #17 DECIDED — each folded into its home document; `decided.mjs` finds them
 
-- **TASK stays gated** (Membership v2 §7): the set is a PREDICATE — *every prefix whose objects a read withholds from
-  some caller* — not the four-name list. PROJ, CASE, DRAFT, RVG, TASK.
+- **TASK stays gated** (Membership v2 §7): the set is a PREDICATE — *every prefix whose objects a read withholds
+  from some caller* — not a list. PROJ, CASE, DRAFT, RVG, TASK.
 - **D-325 — discipline-plus-witness is SUFFICIENT, and stronger than the row asked** (`CLAUDE.md` §5). `scopeFor`
   honours `store=scratch` from ANY class, so the binding existed PER CALL and nothing REQUIRED it; a live verification
   now NAMES it, with the record's counters as detector. **RESIDUE, open:** no credential binds to scratch for life.
@@ -90,22 +94,18 @@ checkout means stale permissions.
 - **The information ladder is ONE-WAY — no `verified -> collected` edge** (State Rules, Lifecycle): `verified` is an
   authored act; `source_status` already solves what a back-edge would. **D-200 wants a route the design lacks and does
   not need.**
-- **D-203, D-284, D-306, D-356 CLOSED and archived.** D-203: the "surviving" advice strings are COMMENT PROSE, 0
-  live with comments stripped. D-284: `text_tier` is DEC-32's weakest-governs over a document's pages. D-306: the
-  ground-truth purchase NOT FUNDED on DEC-74's pattern. D-356: NULL `page_count` is UNDETERMINED, STATED — **a
-  backfill sized at zero is not a small job, it is the wrong job.**
-- **TWICE the real defect was NEITHER option the row offered:** a true limitation stated only where an INSTRUMENT
-  prints it. Ask that of every row that hands you options.
-- **The area's LAW or its `-NEXT` is a CHANNEL CHOICE** (ORCHESTRATION.md): a `-NEXT` is read once; `<AREA>.md` by
-  every session that holds the lane.
+- **D-203, D-284, D-306, D-356 CLOSED and archived.** D-203: the "surviving" strings are COMMENT PROSE, 0 live with
+  comments stripped. D-284: `text_tier` is DEC-32's weakest-governs over a document's pages. D-306: NOT FUNDED on
+  DEC-74's pattern. D-356: NULL `page_count` is UNDETERMINED, STATED — **a backfill sized at zero is the wrong job.**
+- **TWICE the real defect was NEITHER option the row offered:** a limitation stated only where an INSTRUMENT prints
+  it. Ask that of every row handing you options.
 - **D-353 — a stated limitation of the census, NOT a recurring adjudication:** a cadence nobody honours reads as
-  covered. **RESIDUE, open:** M0-29's figure must carry its DATE and BOUND wherever cited, enforced nowhere yet.
+  covered. **RESIDUE, open:** M0-29's figure must carry its DATE and BOUND wherever cited — enforced nowhere yet.
 - **D-404 — BUILD the instrument** (placed as LED-9): the arm does not JUDGE builtness, it READS `status.mjs`, which
   §2 already names as the authority. **Its bound must print in the arm's own output.**
-- **Two rules landed into `SCHEDULER.md`:** the GAP and the INSTRUMENT that closes it are different objects (mint a
-  new id); a CITATION INVENTED TO PASS A CHECK is worse than the gap it hides.
-- **The heartbeat's run-sessions self-archive only INTERMITTENTLY** (4 of 9) — in `BOB.md` step 3.
-- **M-70** — the disk at the account switch, and the content verdict clearing `plancheck`'s three stranded branches.
+- **In `SCHEDULER.md`:** the GAP and the INSTRUMENT that closes it are different objects (mint a new id); a CITATION
+  INVENTED TO PASS A CHECK is worse than the gap it hides.
+- **M-70** — the disk at the account switch, and the verdict clearing `plancheck`'s three stranded branches.
 
 ## 5. HOW I WAS WRONG — each caught by someone else or by an instrument
 
