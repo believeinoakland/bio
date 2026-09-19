@@ -14397,3 +14397,19 @@ claimed: 2026-09-18 by the REC-143 worker (spawned by CONDUCT #5), branch `workt
 the schema), `bio-plane/dist/**` (the rebuilt bundle), `bio-plane/test/migrate-released.test.mjs` (new) and its
 control, `bio-plane/scripts/coverage.mjs` (floors only, from its own print, if any move),
 `docs/development/MEASUREMENTS.md` (the reproduction and the sweep).
+
+## CLAIM 2026-09-18 RECORD (REC-143) — RELEASED
+
+released: 2026-09-18 by the REC-143 worker, branch `worktree-agent-a70dee1231b11c76d`, base `4b4c2e70`. The fix is
+`#migrate`'s additive list as `ADDITIVE_COLUMNS`, applied by one `addColumns()` before the schema (existing tables) and
+again after it; no table or column moves, so NO I5 IC (a pure order change). The regression suite
+`bio-plane/test/migrate-released.test.mjs` boots the SIGNED release bundles read from git: a store born on each of
+0.58.0-0.63.0, and 0.58.0 -> each withdrawn release -> 0.58.0 -> current (201 pass). NEGATIVE CONTROL
+`node test/migrate-released.control.mjs`: baseline 201/0, alterafter 135/66 naming `no such column: content_id`,
+nosecondpass 176/25, percolumn (over-strictness) 201/0, every restore sha256 MATCH. Battery at the fix (pre-floor):
+**253/253 suites green · 15608 assertions passing · run 27061.c4b4fd**, no suite skipped; `coverage.mjs --strict` exit
+**0** unpiped, REGISTER FLOOR 1430 -> 1436 / 243 -> 244 / 244 -> 245, run 206 -> 207 from its print; `node
+civicos-ui/test/run.mjs` exit **0**; `status --check` 0. Reproduction and sweep: `MEASUREMENTS.md` M-62. **FOR
+CONDUCT:** flip REC-143 on integration; **FOR DIST:** 0.64.0 may be cut from a `main` carrying this — the suite is the
+upgrade gate the battery lacked, and it only drives releases listed in its `RELEASES` table, so a new release that
+must be upgradable-from gets a row there when it is cut.
