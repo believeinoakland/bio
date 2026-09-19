@@ -1386,8 +1386,25 @@ const RUN = "RUN-2026-0807-rec70";
 {
   /* CORRECTED 2026-09-19 by REC-153, never exempted: the context was the INFORMATION bundle
      `INFO-2026-0001-r60` labelled `inquiry`, which the open now refuses (a run's context must be the kind
-     it names — Membership v2 §7, BOB #16). The run is only a log for a bound to bite on, so it names a
-     question id this store does not hold, which a machine credential may still open over (PL-18). */
+     it names — Membership v2 §7, BOB #16), and an id this store does not hold is refused to a machine as
+     absent (BOB #16, `7d03e852`). The run is only a log for a bound to bite on, so it runs over a QUESTION
+     promoted here for it. */
+  {
+    const q = "INQ-2026-0807-rec70-runs";
+    const md = ["---", `id: ${q}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${q}"`,
+      "current_state: open", "prior_state: null", `created: "${NOW}"`, `last_updated: "${NOW}"`, "produced_by:",
+      "  mode: assisted", "  capability_tier: session", "group: believe-in-oakland", "references: []",
+      "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
+      "  source: null", "visuals: []", "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "",
+      "Did it?", "", "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+      "## Session Log", "", "## Review Notes", ""].join("\n");
+    const p = await POST("op=promote&token=mem-r60", {
+      bundleId: q, base: null, snapKey: `${q}-new`, author: "r60",
+      files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: createHash("sha256").update(md).digest("hex") }],
+      register: [], meta: { object_type: "inquiry", group: "believe-in-oakland", title: q, current_state: "open",
+                            created: NOW, last_updated: NOW } });
+    if (p?.ok !== true) throw new Error(`REC-153 fixture promote ${q}: ${JSON.stringify(p).slice(0, 600)}`);
+  }
   const opened = await POST("op=airunopen&token=mem-r60", {
     run: RUN, contextType: "inquiry", contextId: "INQ-2026-0807-rec70-runs",
     label: "REC-70 fixture — a log long enough for a bound to bite", mode: "check",
@@ -1496,7 +1513,10 @@ t("RIDER: AND THAT IS THE LICENCE — the bare arm is COMPLETE. It returns every
 + "TOTALS, so the array IS the answer and there is no applied bound being withheld. A bare array "
 + "is honest only while it is whole; the day this arm quietly caps, THIS assertion fails and the "
 + "exception goes with it",
-  [Array.isArray(listBare) ? listBare.length : "NOT AN ARRAY", listPaged.total], [4, 4]);
+  /* CORRECTED 2026-09-19 by REC-153: 4 -> 5, because the REC-70 run above now runs over a QUESTION this
+     suite promotes (an unheld context id is refused as absent, BOB #16). The assertion is the EQUALITY of
+     the two arms; the number is the fixture's size and moved with it. */
+  [Array.isArray(listBare) ? listBare.length : "NOT AN ARRAY", listPaged.total], [5, 5]);
 t("RIDER: the two defects are SEPARATE, and this is what decides it. op=projection's corpus arm "
 + "APPLIED a bound and published none (dishonest); this arm applies none at all (honest but "
 + "unbounded) — so the paged arm publishes a bound and the bare arm has none to publish",

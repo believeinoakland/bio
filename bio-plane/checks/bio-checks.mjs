@@ -6699,14 +6699,20 @@ export const AI_RUN_CHECKS = {
      three one object by construction (`#noSuchProject`'s discipline, one act over). It is one condition —
      *nothing of the kind you named answers to that id for you* — not two behind one number.
 
-     WHAT IT DOES NOT REFUSE, stated: a MACHINE credential's run over an id this store does not hold (no
-     person is behind it, so there is no participation to walk around and no sight to leak — REC-138's
-     posture for the project arm), and a run over a PROJECT id the member cannot see (the joined gate,
-     C-22.8, answers that one, absent and hidden alike, exactly as before). */
+     CORRECTED THE SAME DAY on BOB #16's ruling (`7d03e852`), which the first build did not have: (i) A MACHINE
+     SEES NO MORE THAN ITS PRINCIPAL — an `ai` credential's open over an id its member cannot see is that member's
+     own absent answer, and an operator credential's open over a never-minted id is refused as absent too (the
+     first build let a machine through for an id the store did not hold, on PL-18's word); (ii) THE KIND IS
+     `RUN_CONTEXTS`' CLOSED VOCABULARY — any other word is refused HERE before any bundle is looked at, rather
+     than matched against the bundle's type. Both are this row's one condition: the kind and id the caller named
+     do not resolve to a context they can run in. A new code for (ii) was weighed and declined: C-22.12 is
+     REC-152's, and the word refused is the caller's own, so the refusal can say which failed without a second
+     code carrying any bit. */
   AI_RUN_NO_SUCH_CONTEXT: {
     check: 'C-22.11',
     where: 'src/airun.mjs checkRunContextKind, called from store.mjs aiRunOpen',
-    translation: 'Nothing of the kind this run names answers to that id here. A run over a question has to '
+    translation: 'Nothing of the kind this run names answers to that id here. A run is over a question or a '
+      + 'project, nothing else; a run over a question has to '
       + 'name a question, and a run over a project has to name a project. Something you cannot see is '
       + 'answered exactly as something that does not exist, so this says nothing about whether anything '
       + 'else goes by that id.',

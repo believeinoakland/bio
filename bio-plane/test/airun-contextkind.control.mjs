@@ -29,75 +29,90 @@ const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 
 const REAL = ["src/index.mjs", "src/store.mjs", "src/airun.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
-const CALL = "    const kind = checkRunContextKind({ contextType, contextId,\n"
-           + "      found: this.#runContextKind(contextId, viewer), member: !!(actor != null && String(actor).trim()) });\n";
-const MISLABELLED = ["REC-153 MISLABELLED: olga", "REC-153 MISLABELLED: ruth", "REC-153 MISLABELLED: sam",
-                     "REC-153 MISLABELLED: a machine", "REC-153 MISLABELLED: olga opening it as `Project`",
-                     "REC-153 MISLABELLED: and as a kind", "REC-153 MISLABELLED: sam opening the QUESTION",
-                     "the refusal carries its C-number", "a refused open WRITES NOTHING", "ORDER: a mislabelled open"];
-const UNSEEN = ["REC-153 UNSEEN REFUSED: vera opening", "REC-153 UNSEEN REFUSED: and a never-minted"];
+const CALL = "    const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer) });\n";
+const MATCH = "  if (found !== null && found !== undefined && found === said) return null;\n";
+const SIGHT = "    if (!this.#inSight(id, viewer)) return null;\n";
+const MISLABELLED = ["REC-153 MISLABELLED:", "the refusal carries its C-number", "a refused open WRITES NOTHING",
+                     "ORDER: a mislabelled open"];
+const VOCAB_REFUSED = ["REC-153 VOCABULARY: `information` over", "REC-153 VOCABULARY: and the refusal says",
+                       "REC-153 VOCABULARY: `Project`", "REC-153 VOCABULARY: `Inquiry`"];
+const UNSEEN = ["REC-153 UNSEEN REFUSED:"];
+const MACHINE = ["REC-153 MACHINE ABSENT:"];
+const AGENT = ["REC-153 AGENT SIGHT:"];
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
 
-  /* THE ROW'S NEGATIVE CONTROL: drop the kind check — the call in `aiRunOpen` answers "no refusal" for
-     every open. Every MISLABELLED arm must fail by name, and the two UNSEEN-REFUSED arms with them. The
-     byte-identity arms are DECLARED TO STAY GREEN, and that is a finding about those arms stated before
-     the run: without the check, vera's opens over the hidden project and over a never-minted id are both
-     PERMITTED on the INQUIRY ground with a count of 0 — identical bytes — so a byte arm proves NO BIT and
-     only the REFUSED arms prove the refusal (the suite's liar (c)). */
+  /* THE ROW'S NEGATIVE CONTROL: drop the kind check — the call in `aiRunOpen` answers "no refusal" for every
+     open. Every MISLABELLED, VOCABULARY-refused, UNSEEN-refused, MACHINE and AGENT arm must fail by name. The
+     member byte-identity arms are DECLARED TO STAY GREEN, a finding about those arms stated before the run:
+     without the check vera's opens over the hidden project and a never-minted id are both PERMITTED alike, so
+     a byte arm proves NO BIT and only the REFUSED arms prove the refusal (the suite's liar (c)). */
   "kind-check-dropped": {
     patches: [["store.mjs", CALL, "    const kind = null;\n"]],
-    mustFail: [...MISLABELLED, ...UNSEEN],
+    mustFail: [...MISLABELLED, ...VOCAB_REFUSED, ...UNSEEN, ...MACHINE, ...AGENT],
   },
 
-  /* THE ROW'S LIAR: refuse every `inquiry`-context open. The liar's arms must fail, and every arm that
-     expects an `inquiry` open to START (the machine's never-minted id, the agent's). Everything that
-     already refused keeps refusing by the same code, which is the lie's cover — so every byte arm, which
-     compares two refusals, stays green. */
+  /* THE ROW'S LIAR: refuse every `inquiry`-context open. The liar's arms must fail, and every arm that expects
+     an `inquiry` open to START. Everything that already refused keeps refusing by the same code — the lie's
+     cover — so every byte arm, which compares two refusals of one kind, stays green. */
   "refuse-every-inquiry": {
     patches: [["airun.mjs", "  const said = String(contextType ?? \"\");\n",
                "  const said = String(contextType ?? \"\");\n  if (said === \"inquiry\") return refusal(\"AI_RUN_NO_SUCH_CONTEXT\", \"no\");\n"]],
-    mustFail: ["REC-153 LIAR'S ARM", "FIXTURE: an `ai` credential", "MACHINE: an `inquiry` run over a never-minted",
-               "REC-153 AGENT SIGHT", "ORDER: a correctly labelled open"],
+    mustFail: ["REC-153 LIAR'S ARM", "FIXTURE: an `ai` credential", "ORDER: a correctly labelled open"],
   },
 
-  /* LIAR (b): refuse only the SEEN mismatch; an unseen id goes through for everybody. vera's
-     UNSEEN-REFUSED arms must fail; vera's byte arms stay green (both permitted — liar (c) again).
-     DECLARATION WIDENED 2026-09-19 from this arm's own first run (32/3, NOT AS DECLARED): olga's ONE ANSWER
-     arm fails too, and correctly — her SEEN mismatch is refused while her never-minted id is now permitted,
-     so the two answers differ. The arm was right and the declaration was short; a third catcher of the same
-     defect, not a new one. */
+  /* BOB #16 (2) — THE FIRST BUILD'S OPEN VOCABULARY RESTORED: the word is matched against the bundle's type
+     instead of refused when it is not `inquiry`/`project`. `information` over the Information bundle must
+     OPEN, so the two VOCABULARY arms about it fail; `Project`/`Inquiry` still meet a mismatch and refuse by
+     the same code, and vera's byte arm stays green (her unseen id and her mismatched question answer alike). */
+  "vocabulary-open": {
+    patches: [["airun.mjs", "  if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said))\n", "  if (false)\n"]],
+    mustFail: ["REC-153 VOCABULARY: `information` over", "REC-153 VOCABULARY: and the refusal says"],
+  },
+
+  /* BOB #16 (1) — THE FIRST BUILD'S MACHINE CARVE-OUT RESTORED: a caller with no member behind it is let
+     through for an id it cannot see. THREE patches for ONE variable (the carve-out needs the `member` fact
+     passed and read). Every MACHINE ABSENT arm and every AGENT SIGHT arm must fail; nothing a member does moves. */
+  "machine-carve-out": {
+    patches: [["airun.mjs", "export function checkRunContextKind({ contextType = null, contextId = null, found = null } = {}) {\n",
+               "export function checkRunContextKind({ contextType = null, contextId = null, found = null, member = false } = {}) {\n"],
+              ["airun.mjs", MATCH, MATCH + "  if ((found === null || found === undefined) && !member) return null;\n"],
+              ["store.mjs", CALL, "    const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer), member: !!(actor != null && String(actor).trim()) });\n"]],
+    mustFail: [...MACHINE, ...AGENT],
+  },
+
+  /* LIAR (b): refuse only the SEEN mismatch; an unseen id goes through for everybody (to the gate). Every
+     UNSEEN-REFUSED, MACHINE and AGENT arm fails, and olga's ONE ANSWER (her seen mismatch refused, her
+     never-minted id permitted). vera's inquiry byte arms stay green — both permitted alike, liar (c). */
   "unseen-permitted": {
-    patches: [["airun.mjs", "  if (!seen && (!member || runConsultsProjects(said))) return null;\n", "  if (!seen) return null;\n"]],
-    mustFail: [...UNSEEN, "ONE ANSWER:"],
+    patches: [["airun.mjs", MATCH, "  if (found === null || found === undefined || found === said) return null;\n"]],
+    mustFail: [...UNSEEN, ...MACHINE, ...AGENT, "ONE ANSWER:"],
   },
 
-  /* SIGHT NOT ASKED: the bundle's type read with no viewer, so a project hidden from the caller is
-     "seen" as a project. For a MEMBER nothing moves (the refusal is one object whichever branch builds
-     it — by construction), so the member byte arms stay green; the `ai` credential, which carries a
-     member's sight and no actor, is where sight changes the answer: its open over the hidden project is
-     then REFUSED while its never-minted open is PERMITTED — the refusal is the bit. */
+  /* SIGHT NOT ASKED: the bundle's type read with no viewer, so a project hidden from the caller is "seen" as a
+     project. Under `inquiry` nothing moves for a member (a mismatch and an absent id are one object — by
+     construction); under `project` the hidden project reaches the joined gate while the never-minted id is
+     refused as absent — the refusal is the bit — and vera's AGENT, not asked about participation, OPENS a run
+     over a project its principal cannot see. */
   "sight-not-asked": {
-    patches: [["store.mjs", "    if (viewer !== null && viewer !== undefined && !this.#inSight(id, viewer)) return null;\n", ""]],
-    mustFail: ["REC-153 AGENT SIGHT"],
+    patches: [["store.mjs", SIGHT, ""]],
+    mustFail: ["REC-153 UNSEEN REFUSED: under `project`", ...AGENT],
   },
 
-  /* ONE ANSWER BROKEN: the mismatch branch says what the bundle IS. Only the arm comparing a SEEN
-     mismatch with a never-minted id may fail (olga's); vera sees neither project, so her byte arms stay
-     green, and the machine's and agent's arms never reach the mismatch branch with a hidden id. */
+  /* ONE ANSWER BROKEN: the mismatch branch says what the bundle IS. Only olga's arm comparing a SEEN mismatch
+     with a never-minted id may fail; vera sees neither project, so her byte arms stay green. */
   "mismatch-names-kind": {
-    patches: [["airun.mjs", "  if (seen && found === said) return null;\n",
-               "  if (seen && found === said) return null;\n"
-               + "  if (seen) return refusal(\"AI_RUN_NO_SUCH_CONTEXT\", `that is a ${found}, not a ${said}`);\n"]],
+    patches: [["airun.mjs", MATCH,
+               MATCH + "  if (found !== null && found !== undefined) return refusal(\"AI_RUN_NO_SUCH_CONTEXT\", `that is a ${found}, not a ${said}`);\n"]],
     mustFail: ["ONE ANSWER:"],
   },
 
-  /* OVER-STRICTNESS: the same rule in a spelling the suite did not anticipate — the store asks sight
-     through the roster acts' form (`#rosterInSight`), which answers "not asked" only for a viewer that was
-     never sent; the control plane always sends one on the run verbs. Nothing may fail. */
+  /* OVER-STRICTNESS: the same rule in a spelling the suite did not anticipate — sight asked through the roster
+     acts' form (`#rosterInSight`), which differs only for a viewer that was never sent; the control plane
+     always sends one on the run verbs, so over this suite nothing may fail. (It is NOT the shipped form: the
+     open fails closed on an absent stamp — see `Store#runContextKind`.) */
   "sight-via-roster-form": {
-    patches: [["store.mjs", "    if (viewer !== null && viewer !== undefined && !this.#inSight(id, viewer)) return null;\n",
-               "    if (!this.#rosterInSight(id, viewer)) return null;\n"]],
+    patches: [["store.mjs", SIGHT, "    if (!this.#rosterInSight(id, viewer)) return null;\n"]],
     mustFail: [],
   },
 };

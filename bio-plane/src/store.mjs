@@ -36958,9 +36958,10 @@ export class Store extends DurableObject {
    *  a run's context is not required to be a bundle this store holds, and
    *  refusing on a lookup that came back empty would be refusing on what cannot
    *  be verified — a claim about the record made from a fact about our index.
-   *  [NARROWED 2026-09-19 by REC-153: that still holds for a MACHINE credential. A MEMBER's run over an id
-   *  they cannot see, under any kind but `project`, is now refused at the open by `checkRunContextKind`
-   *  before this is asked — permitting the absent id would have forced permitting a hidden project's.]
+   *  [SUPERSEDED FOR THE OPEN 2026-09-19 by REC-153 (BOB #16, `7d03e852`): a run's context must now be a
+   *  bundle this record holds, of the kind named, that the caller can SEE — refused at the open by
+   *  `checkRunContextKind` before this is asked, for every caller including a machine. This reading of an
+   *  empty set survives only for runs stored before REC-153, which tick and close still read.]
    *
    *  REC-138 / D-426 — EXCEPT A CONTEXT THAT SAYS IT IS A PROJECT, which is now that project
    *  whether or not this store holds it. As built, a PROJECT context the store did not hold read
@@ -36985,14 +36986,17 @@ export class Store extends DurableObject {
   /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
    *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
    *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
-   *  `#inSight`, the one predicate; a viewer that was NOT SENT (null) is not asked, on `gateFacts`' and
-   *  `#rosterInSight`'s precedent — the control plane stamps every run verb (`RUN_VERB_ACTIONS`), so only a
-   *  direct store caller arrives without one. The type is normalised (`problem`/`focus` read `inquiry`). */
+   *  `#inSight`, the one predicate, and it FAILS CLOSED on an absent viewer — the run verbs' posture
+   *  (`RUN_VERB_ACTIONS` in `index.mjs`: "fails closed on an absent stamp"). The first draft did not ask a
+   *  viewer that was never sent, on `#rosterInSight`'s precedent; REC-145's `run-stamp-dropped` control
+   *  showed that with the control plane's stamp removed the check then SAW every project — sight failing
+   *  open. No caller reaches the open without the stamp (measured: no suite drives the store directly).
+   *  The type is normalised (`problem`/`focus` read `inquiry`). */
   #runContextKind(contextId, viewer) {
     const id = contextId == null ? "" : String(contextId);
     const b = id ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id) : null;
     if (!b) return null;
-    if (viewer !== null && viewer !== undefined && !this.#inSight(id, viewer)) return null;
+    if (!this.#inSight(id, viewer)) return null;
     return normalizeType(b.object_type);
   }
 
@@ -37129,8 +37133,7 @@ export class Store extends DurableObject {
        id opened for a member who had not joined it. A RELAY, like the gate's below and C-22.7's: the refusal
        is minted in `airun.mjs checkRunContextKind`, whose catalogue row names that site. Only the CONTEXT's
        open is checked; tick and close read the stored kind, which is now checked at the door it came in by. */
-    const kind = checkRunContextKind({ contextType, contextId,
-      found: this.#runContextKind(contextId, viewer), member: !!(actor != null && String(actor).trim()) });
+    const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer) });
     if (kind)
       return { run, started: false,
                code: kind.code, check: kind.check,

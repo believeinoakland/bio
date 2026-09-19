@@ -750,8 +750,24 @@ t("FIXTURE ARMS THE TRAP: one capture carries TWO resolutions, so op=resolutions
 /* CORRECTED 2026-09-19 by REC-153, never exempted: these runs named the INFORMATION bundle
    `INFO-2026-0001-r57` (and `INFO-2026-0002-r57`) as an `inquiry` context, and the open now refuses a
    context that is not the kind it names (Membership v2 §7, BOB #16). The runs are only ever a population
-   for the caps below, so they now name question ids this store does not hold — which a MACHINE credential
-   (`mem-r57`) may still open over, a run's context need not be a bundle held here (PL-18). */
+   for the caps below, so they now run over two QUESTIONS promoted here for them. (The first correction
+   named question ids this store did not hold; BOB #16's `7d03e852` then ruled that a machine sees no more
+   than a member, so an unheld id is refused to `mem-r57` as absent too.) */
+for (const q of ["INQ-2026-0807-bounds-runs", "INQ-2026-0807-bounds-runs-elsewhere"]) {
+  const md = ["---", `id: ${q}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${q}"`,
+    "current_state: open", "prior_state: null", `created: ${NOW}`, `last_updated: ${NOW}`, "produced_by:",
+    "  mode: assisted", "  capability_tier: session", "group: believe-in-oakland", "references: []",
+    "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
+    "  source: null", "visuals: []", "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "",
+    "Did it?", "", "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+    "## Session Log", "", "## Review Notes", ""].join("\n");
+  const r = await POST("op=promote&token=mem-r57", {
+    bundleId: q, base: null, snapKey: `${q}-new`, author: "r57",
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: q, current_state: "open",
+            created: NOW, last_updated: NOW } });
+  if (r?.ok !== true) throw new Error(`REC-153 fixture promote ${q}: ${JSON.stringify(r).slice(0, 600)}`);
+}
 const R70_RUN = "RUN-2026-0807-bounds70";
 {
   const opened = await POST(`op=airunopen&token=mem-r57`, {

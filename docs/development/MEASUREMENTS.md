@@ -17104,3 +17104,29 @@ count`, `suites green` and `assertions passing` over `tools/`, `bio-plane/`, `ci
 declared (the `passing` and `passing, failing` fixtures fail by name, the sum reads 9 not 27); `reportline` reverted → 37/4
 as declared (the EXCLUDES segment and EXCLUDED line absent, the old shrug present); `liar` (every group optional, the row's
 liar clause built) → 23/18. `tally-through-pipe.control.mjs d93` → 1 of 1 AS DECLARED on the new wording.
+
+## M-68 · 2026-09-19 · REC-153 (3): THE STORED RUNS WHOSE CONTEXT KIND IS NOT WHAT THEY NAME, IN THE RECORD NAMESPACE — UNDETERMINED, NOT COUNTED (REC-153 worker, worktree `agent-a7fe9ecc71d7b4add`)
+
+**What was to be counted** (BOB #16, `7d03e852`): the `ai_runs` rows already stored whose `context_type` is outside
+`RUN_CONTEXTS` {`inquiry`, `project`}, or names a bundle of another type, or names no held bundle. They are never
+rewritten; the number is to be stated, and it is UNDETERMINED until counted.
+
+**Result: UNDETERMINED. No instance was counted, and this is not 0.**
+
+**Why, stated as the instrument's limits rather than as an obstacle:**
+- **No read op enumerates runs.** Measured by grep of `bio-plane/src/store.mjs` for `FROM ai_runs`: every read is keyed
+  by one `run` id, or by one `(context_type, context_id)` pair (`op=airuns`), or selects `running` rows for the reaper
+  and the wake. So the ops can reach a mislabelled run only as: the TOTAL (`op=stats` → `aiRuns`, a count), then, per
+  held bundle, `op=airuns` under each of the two vocabulary words. `op=airuns` REFUSES any other word (C-36.2) and
+  finds nothing for an id no bundle holds — so a run stored under `information`, `Inquiry` or an unheld id is
+  unreachable by any op, and a per-context enumeration can only give a FLOOR.
+- **Every one of those ops needs an operator credential, and the plane takes it only as a `token=` query parameter**
+  (`index.mjs`, `url.searchParams.get("token")`). This worker declined to put a credential into a URL; D-431's M-66 used
+  a credential-free op, which does not exist for runs.
+
+**The act that closes it, and whose it is (named in the landing for CONDUCT, with DIST as the natural actor):** on each
+instance this account serves (`biosmoke7`, `civicos` per M-66), read `op=stats` → `aiRuns`. **If it is 0, the count is
+0, determined.** If it is not, the ops give only a floor (per held bundle, `op=airuns&contextType=inquiry|project`, a run
+listed under a kind other than its bundle's type), and the full count needs a new read — every `ai_runs` row's
+`context_type` against `bundles.object_type` — which is a design act (a new op, or an operator console query), not
+this item's. **What this cannot see:** an instance another group installed with `newgroup`; a scratch namespace.

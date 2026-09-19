@@ -304,9 +304,13 @@ console.log("\n--- 3. DEC-63 as amended: a run over a question consults NO proje
      and nora sees neither; both are refused by the same code. */
   const oh = parse(await openCtx(OLGA, `RUN-rec145-olga-${++runSeq}`, "project", HIDDEN));
   const nv = parse(await openCtx(NORA, `RUN-rec145-norap-${++runSeq}`, "project", VISIBLE));
-  t("REC-145 PROJECT CONTEXT KEEPS THE GATE: olga (invited, not joined) over the hidden project, and nora over "
-    + "sam's, are both REFUSED AI_RUN_NOT_PROJECT_MEMBER",
-    [oh?.started, codeOf(oh), nv?.started, codeOf(nv)], [false, "AI_RUN_NOT_PROJECT_MEMBER", false, "AI_RUN_NOT_PROJECT_MEMBER"]);
+  /* CORRECTED 2026-09-19 by REC-153 (BOB #16, `7d03e852`), never exempted: nora cannot SEE sam's project, and
+     the open now asks sight before position — a project the caller cannot see answers as one that does not
+     exist (`AI_RUN_NO_SUCH_CONTEXT`, C-22.11). She is still REFUSED, never started; C-22.8 is now said only to a
+     caller who sees the project, which olga's half keeps (and which the gate-dropped control still catches). */
+  t("REC-145 PROJECT CONTEXT KEEPS THE GATE: olga (invited, not joined) over the hidden project is REFUSED "
+    + "AI_RUN_NOT_PROJECT_MEMBER, and nora over sam's (which she cannot see) is refused as for an absent project",
+    [oh?.started, codeOf(oh), nv?.started, codeOf(nv)], [false, "AI_RUN_NOT_PROJECT_MEMBER", false, "AI_RUN_NO_SUCH_CONTEXT"]);
   t("REC-145 OVER-STRICTNESS: sam, who JOINED his own project, still runs over it (the gate is not a wall)",
     [parse(await openCtx(SAM, `RUN-rec145-samp-${++runSeq}`, "project", VISIBLE))?.started], [true]);
 }

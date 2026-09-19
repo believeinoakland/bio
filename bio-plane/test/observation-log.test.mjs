@@ -898,7 +898,7 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
     const r = await POST(`op=promote&token=${TOK}`, {
       ...(mint ? {} : { bundleId: id }), base: null, snapKey: `20260916T0900${id.length % 10}0Z_${sha(id).slice(0, 8)}`,
       meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
-              current_state: type === "project" ? "forming" : "collected",
+              current_state: type === "project" ? "forming" : type === "inquiry" ? "open" : "collected",
               created: T0, last_updated: T0 },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
       register: reg(capture) });
@@ -906,6 +906,9 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
     return r.bundleId;
   };
   await mk(OPEN, "information", SHA_OPEN);
+  /* REC-153 (2026-09-19): the open run below needs a QUESTION to run over — see the note at the loop. */
+  const OPEN_Q = "INQ-2026-0916-rec103-open";
+  await mk(OPEN_Q, "inquiry", SHA_OPEN);
   const SECRET = await mk(SECRET_LABEL, "project", SHA_SECRET);
 
   /* THE THREE VECTORS, EACH THROUGH ITS OWN REAL WRITER rather than through one
@@ -1056,14 +1059,19 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
      mirror-and-drift class — so it is the one that most needs driving, and I8's
      unresolvable fixture only exercises the closed half. Two real runs, one in
      each kind of context, and the rows are otherwise identical. */
-  for (const [run, ctxType, ctx] of [["RUN-2026-0916-rec103-open", "information", OPEN],
+  /* CORRECTED 2026-09-19 by REC-153, never exempted: the open run's context was the INFORMATION bundle OPEN
+     under the kind `information`, which is not a kind of run context — the open REFUSED it (C-22.11; BOB #16,
+     `7d03e852`: the kind is `RUN_CONTEXTS`' closed vocabulary), and this loop did not notice, because it
+     checked `o.ok === false` and a refused open answers `started: false`. It now runs over a QUESTION every
+     member sees (OPEN_Q), and it throws unless the run STARTED. The row's label says `inquiry` accordingly. */
+  for (const [run, ctxType, ctx] of [["RUN-2026-0916-rec103-open", "inquiry", OPEN_Q],
                                      ["RUN-2026-0916-rec103-secret", "project", SECRET]]) {
     const o = await POST(`op=airunopen&token=${TOK}`, {
       run, contextType: ctxType, contextId: ctx, label: "REC-103's fence fixture", mode: "check",
       principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
       skillVersion: "investigative-session@1", biasManifest: null,
       bounds: [{ bound: "fetches", allowed: 4, unit: "requests" }], leaseMs: 600000, at: at(90000) });
-    if (!o || o.ok === false) throw new Error(`airunopen ${run}: ${JSON.stringify(o).slice(0, 300)}`);
+    if (!o || o.started !== true) throw new Error(`airunopen ${run}: ${JSON.stringify(o).slice(0, 300)}`);
     await obj.recordCapturedLocator({
       address: `https://example.gov/rec103-run-${ctxType}`,
       addressNorm: `https://example.gov/rec103-run-${ctxType}`,
@@ -1074,15 +1082,15 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
 
   t("I9: THE RUN REFERENT ARMED — both rows were written under a `run` authority over the SAME "
   + "capture, so the run's context is the only thing that differs between them",
-    [subj(m3).includes("https://example.gov/rec103-run-information"),
+    [subj(m3).includes("https://example.gov/rec103-run-inquiry"),
      subj(m3).includes("https://example.gov/rec103-run-project")], [true, true]);
 
   t("I9b: A ROW UNDER A RUN IS GATED ON THAT RUN'S CONTEXT, and the gate is DELEGATED to "
   + "`aiRunLog` rather than re-implemented — handing a run id to a caller who cannot see its "
-  + "context is `op=airuns`' disclosure by a new door. The information-context row is published "
+  + "context is `op=airuns`' disclosure by a new door. The question-context row is published "
   + "to the uninvited member and the project-context row is not, which is the fence proving it "
   + "is a fence rather than a refusal of everything",
-    [subj(u3).includes("https://example.gov/rec103-run-information"),
+    [subj(u3).includes("https://example.gov/rec103-run-inquiry"),
      subj(u3).includes("https://example.gov/rec103-run-project"),
      JSON.stringify(u3).includes("RUN-2026-0916-rec103-secret")],
     [true, false, false]);

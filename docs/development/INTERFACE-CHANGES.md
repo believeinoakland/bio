@@ -11935,47 +11935,53 @@ unreached branch 23/3 — the ONE-READER arms fail by name while every byte-iden
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MINOR — I3 41.0.0 → 41.1.0.** Base RE-READ at resolution off the integration tree: 41.0.0. Additive: the single-bundle op=projection for an inquiry carries no_project_conclusion from the ONE existing reader (#noProjectConclusionOf, the same op=basisversions calls); null for an unconcluded inquiry and for any other type; the list form unchanged. Nothing refused, no key moved. UI-67 renders it.
 
-## IC-163 · I3: A RUN'S CONTEXT IS THE KIND IT NAMES — `airunopen` REFUSES a `contextType` that is not the named bundle's type (C-22.11 `AI_RUN_NO_SUCH_CONTEXT`), and a member's open over an id they cannot see, under any kind but `project`, answers exactly as a never-minted id · PROPOSED 2026-09-19 (REC-153, minted with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+## IC-163 · I3: A RUN'S CONTEXT IS WHAT IT NAMES — `airunopen` REFUSES (C-22.11 `AI_RUN_NO_SUCH_CONTEXT`) a kind outside `RUN_CONTEXTS` {`inquiry`, `project`}, an id the CALLER cannot see (never minted, or hidden — for every caller; a machine sees no more than its principal), and a seen bundle of another type; C-22.8 is now said only over a project the caller can see · PROPOSED 2026-09-19 (REC-153, minted with `node tools/mintid.mjs IC`; corrected the same day on BOB #16's `7d03e852`) — the version bump and the RESOLUTION are CONDUCT's
 
-- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
-  (base `52218bdd`): 39.0.0. Proposed as MAJOR — 39.0.0 → 40.0.0.** Read the base AT RESOLUTION. **Why not additive, by
-  IC-137's rule:** calls that STARTED now refuse — a run labelled `inquiry` over a project, information or other
-  non-question bundle; a run labelled `project` over a question; a member's run over an id they cannot see under a kind
-  other than `project`; any kind spelled otherwise than the bundle's type (`Inquiry`, `Project`). One wire code is added.
-  No key is added to or removed from any success answer.
+- **Interface:** I3 (plane → UI, the op contracts). **Base RE-READ off this tree after merging `origin/main` (`cd48a160`):
+  41.1.0. Proposed as MAJOR — 41.1.0 → 42.0.0.** Read the base AT RESOLUTION. **Why not additive, by IC-137's rule:**
+  calls that STARTED now refuse (the table), and a refusal CHANGES CODE: a member's run labelled `project` over a project
+  they cannot see answered C-22.8 `AI_RUN_NOT_PROJECT_MEMBER` (REC-138's byte-identical absent/hidden answer) and now
+  answers C-22.11 — still byte-identical for absent and hidden, now by sight BEFORE position (`#noSuchProject`'s order).
+  One wire code is added. No key is added to or removed from any success answer.
 - **Proposer:** RECORD, REC-153 worker, branch `worktree-agent-a7fe9ecc71d7b4add`, 2026-09-19 — Membership v2 §7, the
-  DEC-63 ruling bullet, "AND THE CONTEXT KIND IS CHECKED" (BOB #16, `ed249814`).
+  DEC-63 ruling bullet, "AND THE CONTEXT KIND IS CHECKED" (BOB #16, `ed249814`), and its two further points (`7d03e852`).
 - **Owner to land it:** `RECORD`
-- **What changed, measured through the op** (`bio-plane/test/airun-contextkind.test.mjs`; before = the same suite on
-  the unedited tree, 23/12):
+- **What changed, measured through the op** (`bio-plane/test/airun-contextkind.test.mjs`, 44; before = the first draft of
+  that suite on the unedited tree `52218bdd`):
 
-| call | before (base `52218bdd`) | after |
+| call | before | after |
 | --- | --- | --- |
-| olga (invited, NOT joined) opens sam's PROJECT labelled `inquiry` | STARTED, ground `INQUIRY` — the joined gate walked around | refused `AI_RUN_NO_SUCH_CONTEXT` (C-22.11) |
+| olga (invited, NOT joined) opens sam's PROJECT labelled `inquiry` | STARTED, ground `INQUIRY` — the joined gate walked around | refused C-22.11 |
 | the same by sam (joined), by an administrator, by a machine credential | started | refused C-22.11 — a mismatch is refused whoever asks |
-| the same labelled `Project` or `information` | started (consulted no project) | refused C-22.11 |
-| a QUESTION labelled `project` | started (joined gate over a project nobody holds) | refused C-22.11 |
+| a QUESTION labelled `project`; an Information bundle labelled `inquiry` | started | refused C-22.11 |
+| any word outside {`inquiry`,`project`} (`information` over an Information bundle, `Inquiry`, `Project`) | started | refused C-22.11 before any bundle is read |
 | vera (uninvited) over a project HIDDEN from her, labelled `inquiry` | started | refused C-22.11, raw answer BYTE-IDENTICAL to a never-minted id |
-| a member over a never-minted id labelled `inquiry` | started, `INQUIRY` | refused C-22.11 |
-| any caller over a PROJECT id labelled `project` | the joined gate | UNCHANGED (C-22.8 for a non-participant; absent and hidden alike, REC-138) |
+| a member over a hidden or never-minted id labelled `project` | refused C-22.8 (byte-identical, REC-138) | refused C-22.11 (byte-identical) — sight before position |
+| a machine credential over a never-minted id, either kind | started (PL-18: a context need not be held) | refused C-22.11, byte-identical to the member's answer |
+| an `ai` credential over a project hidden from its principal, either kind | started | refused C-22.11; its answer byte-identical to that member's own (the envelope's `tokenClass` differs, the caller's own class) |
+| a member who SEES a project and has not joined it, labelled `project` | C-22.8 | C-22.8 — UNCHANGED |
 | any caller over a question labelled `inquiry` | started | UNCHANGED (the liar's arm) |
-| a machine credential over an id this store does not hold | started | UNCHANGED (no participation to walk around; a context need not be held here, PL-18) |
-| an `ai` credential (its principal's sight, no actor) over a project hidden from its principal | started | UNCHANGED, and byte-identical to its never-minted open — sight is asked, so the hidden id is absent to it |
 
-- **Consumers to answer:** `UI` — NOT-AFFECTED, grepped: `civicos-ui` never calls `op=airunopen` (its own comments say
-  so, `app.html` ~19602/19736); `check-refusal-codes.mjs` harvests the new translation by shape. `agent-worker` —
-  NOT-AFFECTED, grepped: it opens no run (`airunopen` appears only in comments in `agent-worker/src/`). `DIST`, `SKILL`,
-  `newgroup` — NOT-AFFECTED (`release/` and `newgroup/` carry the plane's bundle as bytes).
+- **A PREMISE SUPERSEDED, stated:** PL-18's "a run's context need not be a bundle this store holds" no longer holds for
+  the OPEN — BOB #16 ruled a machine's never-minted id answers ABSENT, as the member's own. It survives only in how tick
+  and close read runs stored before this landing (`#runContextProjects`' empty set), which are never rewritten.
+- **Consumers to answer:** `UI` — NOT-AFFECTED, grepped: `civicos-ui` never calls `op=airunopen`. `agent-worker` —
+  NOT-AFFECTED, grepped: it opens no run. `DIST`, `SKILL`, `newgroup` — NOT-AFFECTED (bundle as bytes). A caller that
+  opened runs over ids the store does not hold (only suites did) must now name a held question or project.
 
-**Suites:** `airun-contextkind.test.mjs` NEW (35 assertions). CORRECTED with dated reasons, never exempted:
-`airun.test.mjs` (ARM D1's family count TEN → ELEVEN; ARM C's run labelled `project` over an inquiry now names
-`inquiry`), `airuns.test.mjs` (its second context was an INFORMATION bundle opened as `inquiry` — now a question; ARM R
-pinned that a run OPENED as `Inquiry` was accepted — it is now refused, and the read's casing tolerance, kept for
-pre-REC-153 rows, is no longer driven), `bounds.test.mjs` and `meaning-bounds.test.mjs` (runs over INFO bundles labelled
-`inquiry` now name question ids the store does not hold, under a machine credential). Negative control `node
-test/airun-contextkind.control.mjs`: **`kind-check-dropped` (the row's control) 23/12 — every mislabelled arm and both
-unseen-refused arms fail by name**; `refuse-every-inquiry` (the row's liar) 26/9; `unseen-permitted` 32/3;
-`sight-not-asked` 33/2; `mismatch-names-kind` 34/1; `sight-via-roster-form` (over-strictness) 35/0; real sources
-untouched. REC-145's `project-disclosure.control.mjs` re-run on this tree: every arm AS DECLARED.
+**Suites:** `airun-contextkind.test.mjs` NEW (44). CORRECTED with dated reasons, never exempted: `airun` (family count;
+ARM C's kind), `airuns` (its INFO context now a question; ARM R's `Inquiry` now refused), `bounds` and `meaning-bounds`
+(runs over INFO bundles now run over questions promoted for them; one fixture-size count 4 → 5), `observation-log` (its
+run over an Information bundle under the kind `information` had been silently REFUSED — the loop read `o.ok === false`
+and a refused open answers `started: false`; now over a question, and it throws unless the run started),
+`airun-projectgate` (ARMS B, C, E2, S re-aimed from pia, who cannot see P1, to ines, who can; G4 pins both answers),
+`project-disclosure` (nora over sam's unseen project now absent), and REC-145's `project-disclosure.control.mjs`
+(`run-stamp-dropped` declaration widened: the kind check fails CLOSED without the viewer stamp). Negative control `node
+test/airun-contextkind.control.mjs`: **`kind-check-dropped` 22/22 — every mislabelled, vocabulary, unseen, machine and
+agent arm fails by name**; `refuse-every-inquiry` (liar) 38/6; `vocabulary-open` (BOB #16 (2) undone) 42/2;
+`machine-carve-out` (BOB #16 (1) undone) 38/6; `unseen-permitted` 34/10; `sight-not-asked` 40/4; `mismatch-names-kind`
+43/1; `sight-via-roster-form` (over-strictness) 44/0; every arm AS DECLARED, real sources untouched.
+`project-disclosure.control.mjs` and `nc-pl18.mjs` re-run on this tree: as declared.
+**Stored runs:** never rewritten. Their count in the record namespace is **UNDETERMINED** — see MEASUREMENTS M-68.
 
 **RESPONSES:** not yet collected.
