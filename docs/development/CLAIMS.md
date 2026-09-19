@@ -14267,3 +14267,23 @@ test/conclude-project.control.mjs`: baseline 75/0, (a) 64/11, (b) 69/6, (c) 73/2
 every restore sha256 MATCH; plus divide.test (1 arm) and project-authority.test (3 arms) recorded at their sites. **FOR CONDUCT:** RESOLVE IC-153 (proposed MAJOR, BREAKING; read I3's base
 at resolution); the UI DELEGATION above is open; §7.1 item 4 (REC-135) is unbuilt; the DESIGN GAPS (a)-(c) are in
 `INVESTIGATIVE-SESSION.md`'s Incomplete sections.
+
+## CLAIM 2026-09-18 UI (UI-65 — the conclude surface after REC-136: the reading picker, the adopted claim before commit, the project's act, withdrawal, stance and history)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-aaafef192b74592eb`, branch `ui-65-conclude-surface`,
+built ON the held branch `conduct/rec-136-held` @ `783054ac` merged with `origin/main` @ `ee9f201c`. `npm ci`
+in all three packages, each `node_modules` a real directory. Design authority: `INVESTIGATIVE-SESSION.md`
+§7.1 items 1-8, with the REC-124 and REC-136 DELEGATIONs above. Claimed BY SITE:
+
+- `civicos-ui/app.html` — the conclude act region (`CONCL`, `concludeParams`, `openConclude`, `concludePaint`,
+  `doConclude`, `concludeReceiptHtml`, up to `/*__CONCLUDE_ACT_END__*/`); in `/*__NOTIFICATIONS_START__*/`
+  ONLY section (5), the stance surface (`STANCE`, `stance*` functions); `openInquiry`'s render (one new
+  section, the no-project conclusion); `SURFACES.inquiry` and `SURFACES["inquiry-stance"]` entries. NOT the
+  queue block, NOT the version-review region, NOT the elicitation, NOT any other surface.
+- `civicos-ui/test/conclude-nofalsifier.test.mjs` (the REC-136 stand-in removed), a NEW
+  `civicos-ui/test/conclude-reading.test.mjs` and its `.control.mjs`, and `surface-registry.test.mjs`'s
+  `ACTS_AWAITING_SURFACE` row for `withdrawconclusion` (and the floors that row moves).
+- `docs/development/CIVICOS_UI_STATE.md` (a prepended entry), this block, `docs/DECIDED.md` on regeneration.
+
+**NOT CLAIMED:** all of `bio-plane/**` (REC-136 is the held plane half and is consumed, not edited),
+`docs/development/QUEUE.md` (CONDUCT's).
