@@ -386,11 +386,16 @@ console.log("\n--- ARM G · OVER-STRICTNESS: joined to ONE of the projects that 
      the project*, not *of every project*, and `#moveVersionState` already
      states that an inquiry can sit beneath several projects. */
   const r = await open(OTTO, INQ_BOTH);
-  t("ARM G1: otto joined P2 and declined P1; the question is drawn on by BOTH — the run STARTS. "
-    + "Requiring participation in every project touching a question would be a fence tighter "
-    + "than the rule it enforces",
+  /* CORRECTED 2026-09-18 by REC-139 (D-428, Membership v2 §7, BOB #15), never exempted: this pinned
+     `projects: 2`, and otto was never invited to P1 — so the answer was COUNTING A PROJECT HE CANNOT
+     SEE, which §7.9 forbids (*"not its existence"*) and BOB #15 ruled out for a run's report by name.
+     The VERDICT is unchanged (DEC-63 still reads both projects: he starts because he joined P2); the
+     stated count is the projects in his sight, which is P2 alone. */
+  t("ARM G1: otto joined P2 and was never invited to P1; the question is drawn on by BOTH — the run "
+    + "STARTS. Requiring participation in every project touching a question would be a fence tighter "
+    + "than the rule it enforces. The stated count is the ONE project otto can see (REC-139)",
     [r?.started, r?.projectGate?.ground, r?.projectGate?.projects],
-    [true, "PARTICIPANT", 2]);
+    [true, "PARTICIPANT", 1]);
   t("ARM G2 (the same arm from the other side): sam joined P1 and not P2, and reaches the same "
     + "shared question — so ARM G1 is about the RULE and not about otto",
     [(await open(SAM, INQ_BOTH))?.started], [true]);
