@@ -14389,3 +14389,11 @@ publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no contr
 with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
 concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
 either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.
+
+## CLAIM 2026-09-18 RECORD (REC-143 — P0: every release since 0.58.0 bricks an existing store; `#migrate` runs the schema's `content_id` index before the ALTER that adds the column)
+
+claimed: 2026-09-18 by the REC-143 worker (spawned by CONDUCT #5), branch `worktree-agent-a70dee1231b11c76d`, base
+`4b4c2e70`. Paths: `bio-plane/src/store.mjs` (`#migrate` ONLY — the additive column list and its position relative to
+the schema), `bio-plane/dist/**` (the rebuilt bundle), `bio-plane/test/migrate-released.test.mjs` (new) and its
+control, `bio-plane/scripts/coverage.mjs` (floors only, from its own print, if any move),
+`docs/development/MEASUREMENTS.md` (the reproduction and the sweep).
