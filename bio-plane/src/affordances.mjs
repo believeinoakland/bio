@@ -1153,9 +1153,26 @@ export const ACTS = [
      no falsifier can honestly be given IS the authored account, and it is
      attributed. The one thing that would drop this rung is an override the
      plane could take SILENTLY, and that is the case C-2.8 and the store both
-     refuse by name. */
+     refuse by name.
+     REC-142 / INVESTIGATIVE-SESSION.md §7.1 item 8 — THE PROJECT ARM, and it is the store's own
+     condition read from the other side. `store.conclude` accepts a PROJECT's conclusion on a
+     question whose OWN state already reads `concluded` (REC-124: that state is the no-project
+     relationship's, and one relationship's conclusion must not bar another's), but the edge table
+     has no `concluded -> concluded` edge, so keyed on it alone the act the store accepts was never
+     published there — the surface renders only what the plane publishes (DEC-8), and §7.1 item 8
+     was honoured by the store and unreachable by a member (UI-65's DELEGATION).
+     ONE ACT, NOT A SECOND ID (decided on REC-142's claim): the relationship is `project=`, the
+     act's PARAMETER, as `withdrawconclusion` and `versioncurrent` leave WHICH project to theirs.
+     `concludes_for_project` is the positional fact (D-310's shape) — the caller has JOINED some
+     project it can see that live-cites the question — so a stranger, an invited member who never
+     joined, an administrator who sees every project and joined none, and a machine credential
+     (null) are not offered what the store would refuse them for every `project=` they could name.
+     NO EDGE IS ADDED, AND THAT IS THE LIAR THIS REFUSES: a `concluded -> concluded` edge would
+     publish the act to everybody and let the NO-PROJECT relationship conclude twice, re-opening a
+     conclusion to itself. `conclude-project-arm.test.mjs` asserts both, through the op. */
   { id: "conclude", label: "Conclude", weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("concluded") },
+    applies: (f, ty) => ty === "inquiry" && (edgesFrom(f).includes("concluded")
+                     || (f.current_state === "concluded" && f.concludes_for_project === true)) },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
      back to `open`. TWO conditions and no third: the FROM state is in the
      published DISPOSITIONS array — the one array that says what "set down"

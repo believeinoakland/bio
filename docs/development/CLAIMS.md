@@ -14382,7 +14382,15 @@ merge dropped the held branch's QUEUE.md change) and must not be merged; the DEL
 no IC (UI-65 consumes IC-150/IC-153 and needs no new read).
 
 ### DELEGATION 2026-09-18 UI (UI-65) -> RECORD: **A PROJECT CANNOT CONCLUDE FROM THE SURFACE ON A QUESTION ALREADY CONCLUDED WITH NO PROJECT — `op=affordances` DOES NOT PUBLISH THE ACT THE STORE ACCEPTS**
-**open as of 2026-09-18** — `conclude`'s affordance is keyed on the catalog's edge table alone, and that table has no `concluded -> concluded` edge.
+**DISCHARGED 2026-09-18 by REC-142 (branch `rec142/affordances-concluded`, IC-159)** — the shape chosen is the FIRST
+of the two named: `conclude` itself is published on a concluded inquiry (its PROJECT arm), no separate act id, so the
+surface consumes it with NO change at all. `affordances.mjs`' `conclude` entry now applies when the edge table offers
+`concluded` OR when the question is at `concluded` and the new store fact `concludes_for_project` is true — the caller
+has JOINED some project it can see that LIVE-cites the question (`Store#joinedCitingProjectOf`, over `#citesInto`,
+`#inSight`, `#isJoinedParticipant`). No `concluded -> concluded` edge: the no-project relationship still cannot conclude
+twice. Driven through the ops in `bio-plane/test/conclude-project-arm.test.mjs` (17/0; control 4 arms AS DECLARED). One
+consequence on the QUESTION's page is UI's to decide — the DELEGATION 2026-09-18 RECORD (REC-142) -> UI below.
+(It was open because `conclude`'s affordance was keyed on the catalog's edge table alone, which has no `concluded -> concluded` edge.)
 
 Measured at the code on `ui-65-conclude` (held REC-136 + main `9cc814d6`): `bio-plane/src/affordances.mjs`'s
 `conclude` entry applies when `edgesFrom(f).includes("concluded")`; `checks/bio-checks.mjs`' inquiry machine gives
@@ -14396,6 +14404,7 @@ publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no contr
 with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
 concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
 either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.
+
 ## CLAIM 2026-09-18 RECORD (REC-140 — D-429: `op=ratify` REFUSES a project bundle; a finding it ratifies takes case ratification's owner-signer and joined-deliverer rules; a caller who cannot see the project is answered as for one that does not exist)
 
 Worker spawned by CONDUCT #5, isolated worktree `agent-a761302b28f105764`, branch `worktree-agent-a761302b28f105764`,
@@ -14472,6 +14481,62 @@ session: FLEET (worktree `sweet-goldberg-04a9ed`). Scope: `docs/development/kick
 sentences corrected to `CLAUDE.md` §3 as it reads on `origin/main`: the build plan's order goes to SCHEDULER and
 running work to CONDUCT (was "CONDUCT (sequencing)"); Bob's decisions go to BOB (was "via CONDUCT"). Claimed and
 released in the same commit.
+## CLAIM 2026-09-18 RECORD (REC-142 — `op=affordances` publishes a PROJECT's `conclude` on a question whose own state is already `concluded`; discharges the DELEGATION 2026-09-18 UI (UI-65) -> RECORD)
+
+claimed: 2026-09-18 by the REC-142 worker (spawned by CONDUCT #6), branch `rec142/affordances-concluded`, base
+`3dee1fdb`. Paths: `bio-plane/src/affordances.mjs` (the `conclude` ACTS entry only), `bio-plane/src/store.mjs`
+(`affordanceFacts` — one new FACT — and one new predicate beside `#isJoinedParticipant`; `conclude()` is NOT edited),
+`bio-plane/dist/**` (the rebuilt bundle), a NEW suite `bio-plane/test/conclude-project-arm.test.mjs` and its
+`.control.mjs`, `bio-plane/scripts/coverage.mjs` (floors only, from its own print), `docs/development/INTERFACE-CHANGES.md`
+(this item's IC row), `docs/development/INVESTIGATIVE-SESSION.md` (§7.1's built note and front matter), and the UI-65
+DELEGATION block above (its discharge, in its own block). NOT claimed: `bio-plane/src/index.mjs` (REC-141 is live there),
+`civicos-ui/**`, `QUEUE.md`, `release/`, `newgroup/`.
+
+**REC-142 DECIDED, ON THIS CLAIM, BEFORE ANY CODE — the shape: `conclude` IS PUBLISHED ON A CONCLUDED INQUIRY (its PROJECT
+arm); NO separate act id.** Why: (1) it is ONE act through ONE op — `op=conclude&project=` is the write the store
+already accepts there (REC-124), and the relationship is the act's PARAMETER exactly as `withdrawconclusion` and
+`versioncurrent` leave WHICH project to theirs; (2) every table that decorates an act keys it BY ITS OP ID (`NEEDS`,
+`SESSION_OPS`, `RUNGS`, `POSITIONAL_ACTS`), so a separate act id is either a SECOND OP for the same write — two doors
+for one act, this repository's most-repeated drift class — or an act id that names no op, breaking the id = op
+invariant every consumer reads; (3) the surface consumes it with NO change (UI-65 already hosts `conclude` on the
+stance surface). The arm is NARROWED by a new positional FACT, D-310's shape: offered on a concluded inquiry only to a
+caller who has JOINED some project it can see that LIVE-cites the question — the weakest fact under which no `project=`
+could succeed is excluded (a stranger), and nothing tighter (reading, current, claim stay act-time refusals the store
+words, the release precedent). The liar refused: NO `concluded -> concluded` edge; the no-project relationship still
+cannot conclude twice, asserted through the op. IC: additive (an act published where none was).
+
+## CLAIM 2026-09-18 RECORD (REC-142) — RELEASED
+
+released: 2026-09-18 by the REC-142 worker, branch `rec142/affordances-concluded`, base `3dee1fdb`, merged with
+`origin/main` at `09ec7a86` (REC-140 / IC-157, I3 38.0.0; LED-6 step 2; BOB #16) in `afc32149`. Baseline at `3a269810`
+(claim only): 251/252, 15403 assertions — the one red was `mintid.test.mjs` "no live floor is driven by prose (D)", a
+D-431 mention in `QUEUE.md` on `main`, not this item's, and green again after the merge. After, at `7bc18040`:
+**254/254 suites green · 15459 assertions passing**, no suite skipped, provenance 257/257 in the commit at HEAD; `node
+scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER FLOOR 1434/244/245/207 on `c3afce3e`, then collapsed at the
+merge and re-read 1441/245/246/208 from the print on `afc32149`); `node civicos-ui/test/run.mjs` exit **0**; `status
+--check` 0 drift; `plancheck --local` 0 fail. NEGATIVE CONTROL `node test/conclude-project-arm.control.mjs`: baseline
+17/0 · (a) no-project-arm 14/3 · (b) liar-edge 10/7 · (c) fact-unnarrowed 13/4 · (d) owners-only 16/1 — every arm AS
+DECLARED, real sources untouched (sha256 before = after). RE-GATED after a second merge of `origin/main` (`0afa7f61`,
+docs and `tools/readbudget.mjs` only) at `3147a25a`: **254/254 suites green · 15459 assertions passing**, provenance
+257/257; `--strict` exit 0 with the floors EXACT (1441/245/246, run 208); UI harness exit 0; `plancheck --local` 0 fail.
+**FOR CONDUCT:** RESOLVE IC-159 (proposed MINOR, ADDITIVE, I3
+38.0.0 → 38.1.0; read the base at resolution); the UI-65 -> RECORD DELEGATION is DISCHARGED in its own block; the
+REC-142 -> UI DELEGATION (the question's page) is open.
+
+### DELEGATION 2026-09-18 RECORD (REC-142) -> UI: **ON A QUESTION CONCLUDED WITH NO PROJECT, THE QUESTION'S PAGE NOW RECEIVES `conclude` FOR A MEMBER OF A CITING PROJECT — AND ITS NO-PROJECT DIALOG WILL BE REFUSED THERE**
+**open as of 2026-09-18** — REC-142 (IC-159) publishes `conclude`'s PROJECT arm on a concluded inquiry; the question's page hosts `conclude` as the NO-PROJECT act, and that relationship cannot conclude twice.
+
+Measured at the code on `rec142/affordances-concluded` (base `3dee1fdb`): `civicos-ui/app.html`'s surface registry places
+`conclude` on TWO surfaces (*"the question's page carries the no-project act, this one the project's"*). The stance
+surface now works with no change (`stanceConclusionSectionHtml` renders off the published act). But the question's page
+will ALSO render `conclude` on a concluded question for a member who has joined a project that cites it, and its dialog
+(`openConclude`) sends no `project=`, so the plane refuses the submit `ILLEGAL_TRANSITION` in its own words — a
+parameter refusal (the release precedent), never a wrong write, and nothing is written. **What is needed, UI's to
+choose:** keep it (the refusal names the door), or point that control at the member's project relationship
+(`#stands/<PROJ>/<INQ>`) rather than opening the no-project dialog. **What UI must NOT do:** decide from the question's
+state on its own that the no-project arm is unavailable — that is the surface computing a rule (DEC-8). If UI needs the
+relationship PUBLISHED per act, say so back to RECORD: that is a further I3 change (an act-level field), not built here.
+`civicos-ui/test/run.mjs` exits 0 on this branch (its harness mocks the plane, so it cannot see this).
 
 ## CLAIM 2026-09-19 RECORD (REC-144 — the single-bundle `op=projection&id=<inquiry>` publishes `no_project_conclusion` through the ONE reader `#noProjectConclusionOf`; never on the list form)
 

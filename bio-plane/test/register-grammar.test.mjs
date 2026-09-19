@@ -33,6 +33,9 @@
  * in which the register admits it cannot prove a run -> C7b FAILS BY NAME, because
  * an instrument that quietly drops its own caveat keeps printing the figure while
  * the reader stops being told what it is worth.
+ * RUN 2026-09-19 by BOB #16 via `node test/register-grammar.control.mjs` after VERIFICATION.md was cut to
+ * 24,309 bytes and the driver's VERIF floor lowered to 16,000: eleven of eleven armed and run, eleven as
+ * declared, every restore sha256 and content EQUAL, suite 29 pass.
  * RUN 2026-09-16 by M0-42 via `node test/register-grammar.control.mjs`, all eleven
  * arms armed ALONE with the others held open, every restore verified by sha256 AND
  * by content against per-arm pristine copies under a byte floor. RESULTS: 11 of 11
