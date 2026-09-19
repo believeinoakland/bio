@@ -755,53 +755,61 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    no standing step — by 2026-09-18 QUEUE.md was 1.17 MB again and 338 of its rows were closed.
    `tools/ledger.mjs archive <ID>` is the standing step; these arms make forgetting it visible.
 
-     (a) no CLOSED row in a live ledger — "closed" is the archiver's definition, which for DEBT is
-         `owed.mjs`'s `isClosedDebtRow` and nothing else;
-     (b) a size budget per ledger and per OPEN row (QUEUE ≤ 150 KiB, a row ≤ 3 KiB);
+     (a) no CLOSED row in the live DEBT ledger — "closed" is the archiver's definition, which for DEBT
+         is `owed.mjs`'s `isClosedDebtRow` and nothing else (its QUEUE half is now P2, below);
+     (b) a size budget per open DEBT row (≤ 3 KiB; its QUEUE half is now P5, below);
      (c) every open row's `depends-on` resolves — to an open row, a done row (live or archived), or
-         a `tools/status.mjs` claim reading BUILT.
+         a `tools/status.mjs` claim reading BUILT — across the cache AND the backlog.
 
    (a) and (b) WARN until the row that makes them satisfiable is `done` — LED-3 (the migration) for
-   (a), LED-4 (the cut to fields) for (b) — and then FAIL. The switch is READ from the ledger on
-   every run, so nobody has to remember to flip it; a missing arming row is itself a FAIL, because
-   an arm that can never arm is the arm-that-did-not-arm class. (c) FAILs now: measured 2026-09-18,
-   14 dependency ids across the open rows, all resolving. A dependency that names NO id is prose the
-   gate cannot judge, and is printed as such rather than scored. And the module failing to load is
-   a FAIL, not a note: a gate that degrades to green when its predicate is missing is the defect
-   CONDUCT #11 measured in this file's own arms. */
+   (a), LED-7 (the fold) for (b) — and then FAIL. The switch is READ from the ledger on every run,
+   so nobody has to remember to flip it; a missing arming row is itself a FAIL, because an arm that
+   can never arm is the arm-that-did-not-arm class — and so, since LED-6, is an arming row that is
+   `superseded`: (b) was keyed on LED-4, LED-4 was superseded, so it could never arm and nothing
+   said so. (c) FAILs now. A dependency that names NO id is prose the gate cannot judge, and is
+   printed as such rather than scored. And the module failing to load is a FAIL, not a note: a gate
+   that degrades to green when its predicate is missing is the defect CONDUCT #11 measured in this
+   file's own arms.
+
+   THE WORK PIPELINE'S FIVE INVARIANTS (LED-6, `WORK-PIPELINE.md` §2), each its own arm, computed
+   by `ledger.mjs`'s `pipelineInvariants` over the cache (`QUEUE.md`) and the backlog (`BACKLOG.md`):
+     P1 every open id in EXACTLY ONE of the two — FAILs now (it holds on the real ledgers);
+     P2 no closed row in either — armed with (a)'s LED-3, as the QUEUE half of (a) always was;
+     P3 the cache ≤ 8 rows, none `blocked`; P4 every open cache row's depends-on MET; P5 both files
+     within budget (cache 40 KiB / row 3 KiB, backlog 150 KiB / row 2 KiB) — WARN until LED-6 is
+     done, because none can hold before the migration (§5 steps 2–4), then FAIL. */
 
 {
   const L = await import("./ledger.mjs").catch((e) => ({ loadError: e }));
   if (!L.ledgerAudit) {
     fail(`LEDGER GATE UNLOADABLE — tools/ledger.mjs could not be imported (${L.loadError?.message || "no ledgerAudit"}),\n`
-       + `        so no closed-row, budget or depends-on arm ran. An unrun gate is not a passing one.`);
+       + `        so no closed-row, budget, depends-on or pipeline arm ran. An unrun gate is not a passing one.`);
   } else {
     const a = L.ledgerAudit({ repo: ROOT });
     for (const u of a.unreadable) fail(`LEDGER UNREADABLE — ${u}. An unreadable ledger is not an empty one.`);
-    for (const [arm, s] of Object.entries(a.arming))
+    for (const [arm, s] of Object.entries(a.arming)) {
       if (!s.found) fail(`LEDGER ARM CANNOT ARM — arm "${arm}" is switched by ${s.row}, which is in neither the live\n`
         + `        ledger nor its archive, so the arm would WARN forever. Repoint ARMING in tools/ledger.mjs.`);
-    const say = (armed) => (armed ? fail : warn);
-    const closedN = Object.values(a.closedLive).reduce((s, v) => s + v.length, 0);
-    if (closedN) {
-      const lines = Object.entries(a.closedLive).filter(([, v]) => v.length)
-        .map(([k, v]) => `          ${k}: ${v.length} — ${v.slice(0, 12).join(", ")}${v.length > 12 ? ", …" : ""}`);
-      say(a.armed.closedLive)(`CLOSED ROWS IN A LIVE LEDGER — ${closedN} (${a.armed.closedLive ? "FAIL: " + ARMING_NOTE(a, "closedLive")
-        : "WARN until " + a.arming.closedLive.row + " is done, now " + a.arming.closedLive.state}):\n`
-        + lines.join("\n")
-        + `\n        Move each with \`node tools/ledger.mjs archive <ID>\`, in the SAME commit as its done flip.`);
+      else if (s.state.split("/").every((x) => x === "superseded"))
+        fail(`LEDGER ARM CANNOT ARM — arm "${arm}" is switched by ${s.row}, which is SUPERSEDED and so can never be\n`
+          + `        done; the arm would WARN forever. Repoint ARMING in tools/ledger.mjs to the row that replaced it.`);
     }
-    const overLedger = a.budget.ledgers.filter((x) => x.over);
-    const rowsOver = a.budget.rowsOver;
+    const say = (armed) => (armed ? fail : warn);
+    const debtClosed = a.closedLive.DEBT || [];
+    if (debtClosed.length)
+      say(a.armed.closedLive)(`CLOSED ROWS IN THE LIVE DEBT LEDGER — ${debtClosed.length} (${a.armed.closedLive ? "FAIL: " + ARMING_NOTE(a, "closedLive")
+        : "WARN until " + a.arming.closedLive.row + " is done, now " + a.arming.closedLive.state}):\n`
+        + `          DEBT: ${debtClosed.slice(0, 12).join(", ")}${debtClosed.length > 12 ? ", …" : ""}`
+        + `\n        Move each with \`node tools/ledger.mjs archive <ID>\`, in the SAME commit as its done flip.`);
+    const debtOver = a.budget.rowsOver.filter((r) => r.ledger === "DEBT");
     notes.push(`ledger sizes: ${a.budget.ledgers.map((x) => `${x.ledger} ${x.bytes} B`
-      + (x.budget === null ? " (no whole-file budget named yet)" : ` of ${x.budget}`)).join(", ")}; `
-      + `${rowsOver.length} open row(s) over ${L.BUDGET.QUEUE.row} B`);
-    if (overLedger.length || rowsOver.length)
-      say(a.armed.budget)(`LEDGER OVER BUDGET (${a.armed.budget ? "FAIL: " + ARMING_NOTE(a, "budget")
-        : "WARN until " + a.arming.budget.row + " is done, now " + a.arming.budget.state}) — `
-        + overLedger.map((x) => `${x.file} is ${x.bytes} B against ${x.budget}`).join("; ")
-        + (rowsOver.length ? `${overLedger.length ? "; " : ""}${rowsOver.length} open row(s) over the per-row budget, largest: `
-          + [...rowsOver].sort((p, q) => q.bytes - p.bytes).slice(0, 8).map((r) => `${r.ledger} ${r.id} ${r.bytes} B`).join(", ") : ""));
+      + (x.budget === null ? " (no whole-file budget named)" : ` of ${x.budget}`)).join(", ")}; `
+      + `${debtOver.length} open DEBT row(s) over ${L.BUDGET.DEBT.row} B`);
+    if (debtOver.length)
+      say(a.armed.debtBudget)(`DEBT ROWS OVER BUDGET (${a.armed.debtBudget ? "FAIL: " + ARMING_NOTE(a, "debtBudget")
+        : "WARN until " + a.arming.debtBudget.row + " is done, now " + a.arming.debtBudget.state}) — `
+        + `${debtOver.length} open row(s) over ${L.BUDGET.DEBT.row} B, largest: `
+        + [...debtOver].sort((p, q) => q.bytes - p.bytes).slice(0, 8).map((r) => `${r.id} ${r.bytes} B`).join(", "));
     if (!a.claimsReadable)
       warn(`DEPENDS-ON: docs/architecture/construct-status.json unreadable — a dependency on a status claim cannot resolve this run.`);
     notes.push(`depends-on: ${a.depends.checked} dependency id(s) checked across the open rows, `
@@ -809,9 +817,24 @@ if (conduct && inbox && !/INBOX/.test(conduct))
       + (a.depends.prose.length ? ` (${a.depends.prose.map((p) => p.id).join(", ")})` : ""));
     if (a.depends.unresolved.length)
       fail(`DEPENDS-ON DOES NOT RESOLVE — ${a.depends.unresolved.length}:\n`
-        + a.depends.unresolved.map((u) => `          ${u.id} (QUEUE.md:${u.line}) depends on ${u.dep}: ${u.why}`).join("\n")
+        + a.depends.unresolved.map((u) => `          ${u.id} (${u.file}:${u.line}) depends on ${u.dep}: ${u.why}`).join("\n")
         + `\n        A dependency resolves to an open row, a done row (live or archived: \`node tools/ledger.mjs find <ID>\`),\n`
         + `        or a \`tools/status.mjs\` claim reading BUILT.`);
+    if (a.pipeline) {
+      const P = a.pipeline;
+      notes.push(`pipeline: cache ${P.cacheRows} row(s), backlog ${P.backlogRows} row(s); `
+        + Object.entries(P.arms).map(([k, x]) => `${k} ${x.violations.length ? (x.armed ? "FAIL" : "WARN") : "pass"}`).join(", "));
+      for (const [k, x] of Object.entries(P.arms)) {
+        if (!x.violations.length) continue;
+        say(x.armed)(`PIPELINE INVARIANT ${k} — ${x.title}: ${x.violations.length} violation(s) (`
+          + (x.armed ? "FAIL" : `WARN until ${L.ARMING.pipeline} is done — the migration makes it satisfiable`) + `):\n`
+          + x.violations.slice(0, 8).map((v) => `          ${L.describeViolation(k, v)}`).join("\n")
+          + (x.violations.length > 8 ? `\n          … ${x.violations.length - 8} more (node tools/ledger.mjs invariants)` : ""));
+      }
+      if (P.unjudged.length)
+        warn(`PIPELINE: ${P.unjudged.length} row(s) carry a state that is neither open nor closed, so P1 and P2 cannot judge them: `
+          + P.unjudged.map((u) => `${u.id} · ${u.state} (${u.where}:${u.line})`).join(", "));
+    }
   }
 }
 function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm is armed`; }

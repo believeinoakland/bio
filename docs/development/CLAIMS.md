@@ -14156,3 +14156,31 @@ exit 0, `log: … holds this run alone`; `node scripts/coverage.mjs --strict` ex
 `node tools/plancheck.mjs --local` 0 fail; `node tools/decided.mjs` regenerated. D-425 CLOSED and archived; M-61 records
 the measurement. **FOR CONDUCT:** `battery.mjs`'s headline now ends `· run <id>` and a new exit status 3 means REFUSED
 (another battery holds the output file); `REGISTER_FLOOR` in `coverage.mjs` moved — re-read on the merged tree.
+
+## CLAIM 2026-09-18 M0 (LED-6, TOOL HALF ONLY — `ledger.mjs refill`, the BACKLOG ledger, `find` across three, the five pipeline invariants)
+
+Worker spawned by CONDUCT #5, worktree `agent-a59411b6b0b421aa5`, branch `worktree-agent-a59411b6b0b421aa5`, base
+`bf9704a9`. Design: `WORK-PIPELINE.md` §1, §2 and §5 step (1). Paths:
+
+- M0 (own): `tools/ledger.mjs`; `tools/plancheck.mjs` §2h only (the ledger gate's arms); `tools/mintid.mjs` and
+  `tools/owed.mjs` only to add `BACKLOG.md` to what they read (a reader blind to the backlog is the migration's hazard).
+- Tests: `bio-plane/test/ledger.test.mjs`, `bio-plane/test/ledger.control.mjs`; any suite pinning what they change,
+  corrected with its reason.
+- Docs: `docs/development/BACKLOG.md` created EMPTY with its header (no row); this block.
+
+NOT a row of `QUEUE.md` (CONDUCT's / SCHEDULER's), NOT steps (2)–(4) of §5 (the migration is by hand), NOT `DEBT.md`.
+
+## CLAIM 2026-09-18 M0 (LED-6, TOOL HALF) — RELEASED
+
+released: 2026-09-18 by the LED-6 worker, branch `worktree-agent-a59411b6b0b421aa5`, base `bf9704a9`, tool commit
+`d5103a78`. Baseline at `3634a038`: **247/247 suites green · 15043 assertions passing**, no suite skipped. After, at
+`d5103a78`: **247/247 suites green · 15123 assertions passing**, no suite skipped (+78 `ledger.test`, +2 `owed.test`);
+`node scripts/coverage.mjs --strict` exit **0** unpiped; `node civicos-ui/test/run.mjs` exit **0**; `plancheck --local`
+0 fail. NEGATIVE CONTROL `node bio-plane/test/ledger.control.mjs` from the repo root: 28 arms (10 LED-2, 18 LED-6),
+exit 0, 156 pass / 0 fail, 28 restores byte-identical. Also touched beyond the claim's first list, both to keep
+`plancheck` green: `docs/architecture/CORPUS-STANDARD.md` §6 (BACKLOG.md classified as a ledger, Status line dated).
+**Built:** `ledger.mjs refill [--dry-run]`, `find` across cache/backlog/archive, `invariants`, the five arms in
+`plancheck` §2h; `BACKLOG.md` created EMPTY. **Not done (out of scope):** WORK-PIPELINE §5 steps (2)–(4).
+**FOR CONDUCT / SCHEDULER, before step (4) moves rows into the backlog:** `tools/rowdesign.mjs` and `plancheck` §2's
+milestone, interface and UNKNOWN-ROW-STATE checks read `QUEUE.md` only, so backlog rows would go unchecked by them;
+`mintid.mjs` and `owed.mjs` were retargeted here, those were not.
