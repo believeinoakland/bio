@@ -16997,3 +16997,27 @@ asks, not that it gained anything. The questions, the key and the cut have one a
 and the OLD arm limit and do not remove. Retention over a long session is not measured; this is fidelity at the start.
 The suites that read CONDUCT.md by content (mintid, strandedwork, mergecarry test and control arm 7, corpuscheck,
 planning-hygiene) were driven over the cut before it landed.
+
+## M-64 · 2026-09-19 · THE READINESS EXAM FOR SCHEDULER — its required reading against none (BOB #16)
+
+**Instrument.** M-63's, for the SCHEDULER lane. 20 questions keyed to `kickoffs/SCHEDULER.md`, `WORK-PIPELINE.md` and
+`CLAUDE.md` (the inbox drain, the one-commit close, the cache's size and order, a row's fields, the defect-with-its-fix rule,
+the placement order, provisional placement, blocked rows, `ledger.mjs`, dependencies by `status.mjs`, the self-wake, the
+refresh, the gates, LED-7's three doors, blockers as claims, who owns the order). Two arms, each a fresh
+`claude -p --model claude-opus-5 --allowedTools Read` in an empty directory outside the repository with today's
+`CLAUDE.md` auto-loaded: **NEW** = + `kickoffs/SCHEDULER.md` (7,026 B) + `WORK-PIPELINE.md`; **CTRL** = `CLAUDE.md` only.
+No OLD arm: the kickoff is one day old and has no prior version. Graded BLIND (A/B shuffled; A=NEW, B=CTRL).
+
+| arm | score /40 | cache tokens created | turns | cost |
+| --- | --- | --- | --- | --- |
+| CTRL (CLAUDE.md only) | **28** | 22,917 | 4 | $0.47 |
+| NEW | **39** | 26,602 → the lane's reading ≈ **3.7k tokens** | 4 | $0.43 |
+
+**What it establishes.** The lane's reading adds 11 points for about 3.7k tokens. The control reasons correctly from
+`CLAUDE.md` alone on doctrine (defect triage, provisional placement, blockers as claims, the refresh) and fails on the
+lane's concrete mechanics: the cache's size and order, a row's fields, LED-7's doors, and the replenish in the closing
+commit. **The one point NEW lost is a gap in the reading, not in the reader:** neither `SCHEDULER.md` nor
+`WORK-PIPELINE.md` says that `ledger.mjs` REFUSES any move that does not conserve the id multiset of cache, backlog and
+archive — only `BACKLOG.md`'s own preamble does. Sent to SCHEDULER to add to its kickoff. **What it does not establish:**
+retention over a long session, and anything about DIST, FLEET or workers (still owed). One author wrote the questions
+and the key.

@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132; and §4's *direct nothing* ENFORCED at every act that changes a project, built by REC-134 (IC-152, C-56) — a positional check, never the visibility gate, with §7.13 the one administrator path; and §7.9's *uninvited* position ENFORCED at every project-targeted ACT, built by REC-138 (IC-155, D-426) — a project the caller cannot see answers exactly as one that does not exist, and sight is asked before position; and §7's case-ratification bullet BUILT by REC-137 (IC-154, C-57): a case is committed only under an OWNER's signature, and delivered only by a joined participant of the project or the founder; and BOB #15's *what a refusal may say about a project the caller cannot see* PARTLY BUILT by REC-139 (IC-156, D-428) — `NAME_TAKEN` names no other project, a run's report counts only the citing projects its caller can see; plane-minted project ids decided and not built; and the case-ratification bullet applied at `op=ratify` by REC-140 (IC-157, D-429): a project bundle is refused outright, and a finding a ratified case pins takes the same two questions through one helper. as of 2026-09-18.
+**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132; and §4's *direct nothing* ENFORCED at every act that changes a project, built by REC-134 (IC-152, C-56) — a positional check, never the visibility gate, with §7.13 the one administrator path; and §7.9's *uninvited* position ENFORCED at every project-targeted ACT, built by REC-138 (IC-155, D-426) — a project the caller cannot see answers exactly as one that does not exist, and sight is asked before position; and §7's case-ratification bullet BUILT by REC-137 (IC-154, C-57): a case is committed only under an OWNER's signature, and delivered only by a joined participant of the project or the founder; and BOB #15's *what a refusal may say about a project the caller cannot see* PARTLY BUILT by REC-139 (IC-156, D-428) — `NAME_TAKEN` names no other project, a run's report counts only the citing projects its caller can see; plane-minted project ids decided and not built; and the case-ratification bullet applied at `op=ratify` by REC-140 (IC-157, D-429): a project bundle is refused outright, and a finding a ratified case pins takes the same two questions through one helper. §7.14 designs Bob's DISCOVERABLE-or-HIDDEN ruling and the request to join (BOB #16, 2026-09-19), not built; the DEC-63 amendment's application is stated in §7 and not built. as of 2026-09-19.
 
 **Place in the system** · Owns construct 1 of `BIO_System_Design.md` §3 (membership and authority). It supersedes one decision of `BIO_Technical_Architecture_Decisions_v10.md` §10 (per-member tokens) and depends on `BIO_State_Rules_Consistency_v1_5.md` §4.3 (the project object) and §5.1–5.3 (the relationship vocabulary and edge ownership). It adds accountability and access control, not integrity; the store schema realises it.
 
@@ -11,9 +11,10 @@
 - §7 — DEC-72 clause 5 adds an owner-only act (publish) absent here, and D-310/D-311 record that the affordance surface does not yet publish owner-gated publish or the roster acts.
 - §7 — whether a PROJECT's own bundle may be published through `op=ratify` at all, and if so under whose signature and by whose delivery, is UNDECIDED (D-429): the case-ratification bullet decides a CASE, and REC-137 measured that an administrator with no role can publish a project's own document under a non-owner's signature. `op=caseratify` itself is BUILT (REC-137, IC-154).
 - §7 — the hierarchy is stated in Focus terms "until the rename arc lands"; the live state machine is `inquiry` and the catalog marks `focus` legacy.
-- §7 — 7.1 against 7.9 is OPEN for Bob (D-428): under instance-wide name uniqueness, refusing a name tells an uninvited member that SOME project holds it. Provisionally uniqueness holds and `NAME_TAKEN` reveals only the name the caller typed (REC-139 removed the other project's id and title).
+- §7 — 7.1 against 7.9 is RULED by Bob (2026-09-18, *"Keep project names unique"*): refusing a name tells an uninvited member only that a project with THAT name exists; `NAME_TAKEN` names nothing else (REC-139). Plane-minted ids are decided and not built (next line).
 - §7 — *"The plane MINTS project ids"* is DECIDED (BOB #15) and UNBUILT, because it does not say whether a caller-supplied id for a NEW project is REFUSED or IGNORED, whether `op=projectfork`'s `newId` (typed by the member in `civicos-ui` today) is minted too, or how the minted id reaches the document's own `id:` scalar. REC-139 stopped there on its row's instruction; until it is said, a CREATION at a hidden project's id still answers `EXISTS` (D-428).
-- §7 — whether DEC-63's run VERDICT is itself a §7.9 disclosure is not said: a member is refused a run over a question cited ONLY by projects they cannot see and permitted (as projectless) over one nobody cites, so the verdict carries one bit about unseen projects. The bullet below rules DEC-63 governs who may START; raised by REC-139 (D-428).
+- §7 — DEC-63's run verdict: RULED by Bob (2026-09-18, a project does not own a line of inquiry) — over a question the verdict consults no project; a project context keeps its gate. NOT BUILT (the §7 ruling bullet says how it applies).
+- §7 (item 7.14) — DISCOVERABLE or HIDDEN and the request to join: DESIGNED (BOB #16, 2026-09-19), NOT BUILT; every existing project reads HIDDEN.
 
 **Contents**
 - [1. Why membership exists](#1-why-membership-exists)
@@ -600,6 +601,11 @@ token and not to the founder's session). **Design:**
   enquiry to the exclusion of others."* So any member may ask any question and run an investigation on any question they
   can see; **the run verdict never consults a project the member cannot see**, which closes the one-bit disclosure REC-139
   found. DEC-63 is amended accordingly: project participation no longer gates a run over a question the member can see.
+  **How it applies at the code (BOB #16, 2026-09-19, read at `airun.mjs projectGate` and `Store#aiRunProjectGate`):** a
+  run whose context is an INQUIRY consults no project for its verdict — `AI_RUN_NOT_PROJECT_MEMBER` is never said over a
+  question — and its stated count stays the citing projects the caller can see; a run whose context is a PROJECT keeps
+  the joined-participant gate, because a project's contents are private to its participants. NOT BUILT: the verdict
+  still refuses over a question cited only by projects the member has not joined.
 - **RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents
   might be private, though the existence of the project may not be. In this way, somebody who sees the project can ask to
   be added as a member of the project"*; asked whether every project or each project, Bob: *"2, each project chooses"*.
@@ -607,8 +613,8 @@ token and not to the founder's session). **Design:**
   stay private to participants) and accepts a REQUEST TO JOIN, which its owners grant or decline (§7: owners manage
   participation; the request and the answer are recorded). A HIDDEN project is exactly §7.9 as written — invisible to the
   uninvited, answering as if it did not exist — and everything built for that stays correct for it. **Recommended default:
-  DISCOVERABLE** (BOB #15; the setting is the owner's, recorded and dated). The setting, the join request, and each surface
-  that lists projects are design work for the next BOB session to decompose.
+  DISCOVERABLE** (BOB #15; the setting is the owner's, recorded and dated). The setting, the join request, and each surface that lists projects are DESIGNED in §7.14 (BOB #16,
+  2026-09-19), which replaces the recommended default with a choice the creator is asked to make.
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
@@ -774,6 +780,81 @@ The narrower alternative, that deactivating a member vacates their ownership
 outright, was considered and rejected: it makes a member's deactivation silently
 destroy project state, and it hands administrators the ability to empty a
 project's ownership one member at a time.
+
+**7.14 Discoverable or hidden, and the request to join.** Designed 2026-09-19 by BOB #16 from Bob's ruling of 2026-09-18
+(the §7.9 bullet above: *"each project chooses"*; *"somebody who sees the project can ask to be added as a member"*). It
+decides mechanism only; where a choice touches people outside the project it follows an existing ruling, named.
+
+**The setting.** A project is DISCOVERABLE or HIDDEN, and nothing else.
+- **HIDDEN is §7.9 exactly as written and built** (REC-138): the uninvited see nothing, and every act and read answers
+  them as for a project that does not exist. Nothing built for §7.9 changes for a hidden project.
+- **DISCOVERABLE adds ONE thing for the uninvited: the project's EXISTENCE and NAME** (its `title`, §7.1), and the one
+  act that existence is for — asking to join. Its contents stay private exactly as for a hidden project: not its
+  references, not its Focuses, its Information or its Actions, not its participants or owners, not its lifecycle
+  state, and not its presence in any derived reverse edge (the interest-graph rule above is unchanged). Bob's words
+  are the boundary: *"the project's contents might be private, though the existence of the project may not be."*
+- **Only an OWNER sets it** (the opening of §7: owners hold authority over a project; administrators direct nothing).
+  It is NOT a field of the project document, because a JOINED participant may revise that document (REC-134) and
+  would then set an owner's choice. It is an owner's ACT, recorded append-only with the owner, the date and an
+  optional reason (Bob: the setting is recorded and dated); the current setting is the latest record. Administrators
+  and the founder see the setting and its history (sight, §7.3) and cannot change it. §7.13's rescue does not set it.
+- **Every project that exists when this is built is HIDDEN.** Each was created under §7.9's promise that the uninvited
+  see *"not its existence"*; making it discoverable without its owner choosing would break that promise to people who
+  relied on it. Its owners may change it. So a project with no visibility record reads HIDDEN, and no migration writes one.
+- **A new project is created with its setting CHOSEN.** The create and fork surfaces ask the creator, with NEITHER option
+  preselected — *each project chooses* is taken literally, and a preselection would be the surface choosing. BOB #15
+  had recommended DISCOVERABLE as the default; that recommendation is superseded by the forced choice, and Bob may
+  overrule it. **At the plane, a creation or fork that carries no setting is HIDDEN** (fail closed: a machine
+  credential, a legacy caller, or a forgotten field discloses nothing). A fork does not inherit the original's
+  setting; it is a creation (§7.12) and its forker chooses.
+
+**Sight, now three levels, still ONE predicate.** `#inSight` answers NONE, EXISTENCE, or the invited/joined sight it
+answers today. EXISTENCE is returned only for a DISCOVERABLE project to a member SESSION outside its participants.
+Machine credentials are unchanged (they already see every bundle); administrators and the founder are unchanged (they
+already see everything). Because every project-targeted act asks this one predicate (REC-138), the change lands at one
+point, and at every act:
+- NONE → `#noSuchProject`, byte for byte, as today.
+- EXISTENCE → the join request is permitted; every other act is refused POSITIONALLY with a new code saying the caller
+  is not a participant, carrying the project's id and name and NOTHING else. A "does not exist" answer here would be
+  a false statement about a project the directory has just shown the caller — the record claiming what is untrue.
+- The invited/joined levels → as today.
+**Record reads do not widen.** `viewerPredicate` is NOT changed: a discoverable project stays out of every record read,
+search, citation list, reverse edge and run report of the uninvited, because those reads return CONTENTS. Existence
+reaches the uninvited through exactly one new read, the DIRECTORY, and through the positional refusal above.
+
+**The directory.** One read, for a member session: the DISCOVERABLE projects the caller does not participate in —
+each project's id and name, and the state of the caller's OWN request to it if any. Nothing else. A hidden project is
+never in it, so its absence from the directory is the same answer for "hidden" and "does not exist".
+
+**The request to join.**
+- **Who may ask:** a member session with EXISTENCE sight of the project — uninvited, active, not already a participant.
+  At most ONE OPEN request per member per project. The request may carry a short comment (§7.6's precedent).
+  A request to a HIDDEN project, or to one the caller cannot see, is answered `#noSuchProject`, byte for byte.
+- **Who answers:** an OWNER (§7.2: only owners invite). GRANT is an invitation: it writes the requester's participation
+  as `invited` with `invited_by` = the granting owner, exactly as §7.2's invite does, and the requester then JOINS by the
+  checkbox (§7.4) — a grant is not a join, because §7.4 makes joining the member's own act. DECLINE is recorded with an
+  optional comment. Administrators see requests (§7.3) and answer none.
+- **Who sees a request:** the requester (their own, always — it is their act), the project's owners, and administrators.
+  Not other participants: a pending requester is not a participant (§7.8 lists participants).
+- **The requester may withdraw** an open request. After a decline or a withdrawal they may ask again; owners decline
+  again. Ownership is the remedy for a nuisance, not a cooldown nobody ruled.
+- **Setting a project HIDDEN LAPSES every open request to it**, recorded as lapsed. The directory stops listing it, and
+  every act answers the lapsed requester as NONE — except that a requester keeps sight of their OWN request record,
+  which names only what they already saw.
+- **A project whose owners are all inactive** still records requests; they wait for an owner, and §7.13 is the remedy.
+  The requester is told the request is open, never why it is unanswered.
+- **Recorded, append-only**: the request, its comment, its answer, the answering owner, the dates.
+
+**What this does not change:** §7.1's name uniqueness (a hidden project's name still refuses a new project's by
+`NAME_TAKEN`, which names nothing, REC-139); DEC-63 as amended (the run verdict consults no unseen project, and a
+discoverable project is unseen for that purpose, since only its existence is visible); §7.12's fork (joined only); the
+reverse-edge filter; the evidence corpus, which stays shared.
+
+**Decomposition** (the BOB INBOX, 2026-09-19): (1) the setting, the three-level sight at the one predicate, the directory
+and the positional refusal — plane, I3, one IC; (2) the request lifecycle — plane, I3, one IC, after (1); (3) the create
+and fork surfaces' forced choice and the owner's setting control — UI, after (1); (4) the directory, the request, the
+owner's request queue and the requester's own requests — UI, after (1) and (2). Each builder boots a predecessor's store
+(every existing project reads HIDDEN) and drives the negative controls in the inbox entry.
 
 ## 8. Secure verified export
 
