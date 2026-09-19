@@ -473,17 +473,21 @@ console.log("\n--- every open queue row names the design it builds from (CORPUS-
     [verdict(PLANT, [...governed(), "docs/development/PLANTED-DESIGN.md"]).by.get("ZZ-12"),
      verdict(PLANT, governed()).by.get("ZZ-12")], [true, false]);
 
-  /* THE LIVE QUEUE. The cheap-and-early copy of the plancheck gate. */
+  /* THE LIVE PLAN — cache ∪ backlog since D-430 (2026-09-18): the audit reads `ledger.mjs`' one
+     lister, so these labels said "QUEUE.md" of a set that now includes BACKLOG.md. Relabelled, not
+     re-asserted; the backlog half is driven by fixtures in `pipeline-readers.test.mjs`. The
+     cheap-and-early copy of the plancheck gate. */
   const LIVE = rowDesignAudit({ repo: REPO });
-  console.log(`  queue design pointers: ${LIVE.open.length} open row(s) judged of ${LIVE.rows.length}, `
+  console.log(`  queue design pointers: ${LIVE.open.length} open row(s) judged of ${LIVE.rows.length} `
+    + `(cache ${LIVE.cacheRows}, backlog ${LIVE.backlogRows}), `
     + `${LIVE.skipped.length} closed, ${LIVE.unknownState.length} unrecognised state(s), `
     + `${LIVE.findings.length} naming no design`);
-  t("QUEUE.md has open rows to judge (a totality assertion over an empty corpus proves nothing)",
+  t("the plan has open rows to judge (a totality assertion over an empty corpus proves nothing)",
     LIVE.open.length >= 5, true);
-  t("every OPEN row in QUEUE.md names a governed design, an IC, or an explicitly routed gap",
-    LIVE.findings.map((f) => `${f.id} (QUEUE.md:${f.line})`), []);
-  t("every row state in QUEUE.md is one this rule recognises — an unrecognised state is NAMED, "
-  + "never silently unjudged", LIVE.unknownState.map((r) => `${r.id} · ${r.state}`), []);
+  t("every OPEN plan row (QUEUE.md ∪ BACKLOG.md) names a governed design, an IC, or an explicitly routed gap",
+    LIVE.findings.map((f) => `${f.id} (${f.file}:${f.line})`), []);
+  t("every plan row's state is one this rule recognises — an unrecognised state is NAMED, "
+  + "never silently unjudged", LIVE.unknownState.map((r) => `${r.id} · ${r.state} (${r.file})`), []);
 
   /* THE MECHANISM IS IN THE LOOP. `plancheck` is what CONDUCT runs before every push, and a
      check that lives only in this battery would not reach the act that writes a row. Grepping
