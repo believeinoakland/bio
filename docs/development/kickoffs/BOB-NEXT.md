@@ -19,7 +19,11 @@ checkout means stale permissions.
 
 ## 1. THE STATE AT HANDOFF — measured 2026-09-19, re-measure before resting anything on it
 
-- **All four standing lanes are UP**, each from its own `-NEXT.md`, each with self-wake and renewal armed.
+- **SCHEDULER #2 STOOD DOWN at 59% and its successor's CHIP IS FILED AND WAITING FOR BOB'S CLICK** ("Start SCHEDULER
+  #3"). It is NOT archived and its worktree is kept — **SCHEDULER #3 archives it under D-398's three conditions,
+  re-checked at the moment it acts**; its self-wake stays armed until then. If the chip is gone and no SCHEDULER #3
+  exists, file it again: its handoff is on the remote and the gate line is SCHEDULER-NEXT.md's line 1.
+- **CONDUCT #7, DIST #2 and FLEET #2 are UP**, each from its own `-NEXT.md`, each with self-wake and renewal armed.
 - **Disk is the binding constraint, not the plan.** ~8.8 GiB free at 96%, down from 12 GiB in the first hour. The
   arithmetic is M-70. **It moved a GiB in thirty minutes — re-measure, never carry it.**
 - **0.66.0 is DEPLOYED and live-verified** on biosmoke7, the serving build proved by an error string absent from
@@ -28,16 +32,19 @@ checkout means stale permissions.
 
 ## 2. BOB'S OPEN CALLS — BOTH ARE HARNESS PERMISSIONS, NEITHER IS DESIGN
 
-1. **CONDUCT #7 CANNOT `git push` — THE ESTATE'S BIGGEST PROBLEM.** Refused by the Claude Code AUTO-MODE classifier
-   (`[Data Exfiltration]`; DIST got `[Production Deploy]` for `HEAD:main`). The HARNESS's gate, not the repo's: no
-   `ask` rule on push exists and `CLAUDE.md` §4 says pushing is not gated. **Measured:** BOB, SCHEDULER and FLEET
-   pushed fine in the same window; CONDUCT never could; DIST could, then could not, mid-session — so neither
-   per-session-static nor command-shape (its control was a plain named-branch push writing nothing to `main`, refused
-   identically). Likely lever: the committed settings say `bypassPermissions` while the app launches sessions in
-   `auto`. **Only Bob can change it; no lane may push for another** — that launders a permission decision. While it
-   holds, REC-151 cannot land and CONDUCT spawns NO workers, since a worker inherits the gate. **The data loss is
-   SMALL and measured — not a countdown:** `git rev-list d03e08ea --not origin/main b69d7b26` = **3 commits**, one
-   with original content; all ten `rec-151:` commits are already on the remote. A THROUGHPUT blocker.
+1. **THREE LANES STALLED ON ONE CLASS OF HARNESS GATE — THE ESTATE'S BIGGEST PROBLEM, AND NOT ONLY PUSH.** CONDUCT #7
+   cannot `git push` at all; DIST #2 cannot advance the `latest` pointer AND was refused `wrangler deploy --dry-run
+   --outdir`, a READ-ONLY build — the least privileged thing in that family, so this is a CLASS, not three incidents.
+   Refused by the Claude Code AUTO-MODE classifier (`[Data Exfiltration]`, `[Production Deploy]`). The HARNESS's gate,
+   not the repo's: no `ask` rule on push exists and `CLAUDE.md` §4 says pushing is not gated. **Measured:** BOB,
+   SCHEDULER and FLEET pushed fine in the same window; CONDUCT never could; DIST could, then could not, mid-session —
+   so neither per-session-static nor command-shape (its control was a plain named-branch push writing nothing to
+   `main`, refused identically). Likely lever: the committed settings say `bypassPermissions` while the app launches
+   sessions in `auto`. **Only Bob can change it; NO LANE MAY RUN A COMMAND ANOTHER SESSION'S GATE REFUSED** — three
+   lanes have now declined to, which is why work is visibly STALLED rather than quietly done wrong. While it holds,
+   REC-151 cannot land, D-432 is unplaceable, 0.66.0 is deployed while `main` reads 0.65.0, and CONDUCT spawns NO
+   workers since a worker inherits the gate. **The data loss is SMALL and measured — not a countdown:** `git rev-list
+   d03e08ea --not origin/main b69d7b26` = **3 commits**, one with original content. A THROUGHPUT blocker.
 2. **FLEET needs approval to delete 574 MB of `node_modules` in its own worktree** — its gate declined it. It offers
    14 seconds to reinstall. Smaller, and unblocked by nothing else.
 
@@ -51,11 +58,9 @@ checkout means stale permissions.
 0b. **Two more design rows routed here and NOT started** — these are real design acts, not
    rulings, and each needs its own sitting:
    - **D-55** (DOCTRINE, Bob ruled) — **NARROWED at the schema; read the row, not its headline.** The precondition
-     stands; the premise does not. The register already holds per-origin (`site_assets.host`/`address`), the join
-     (`site_asset_refs` keyed `(host, address_norm, primary_sha)`) and sub-document grain (`content`, eight extents),
-     so no new register shape is owed — only an AUTHORITY VALUE at that grain and the rule that third-party bytes take
-     that origin's authority. **The link I did NOT trace, which the design checks first:** whether a content row can
-     be minted over subresource bytes and joins to `site_asset_refs`. If not, that join IS the item.
+     stands, the premise does not: the register already holds per-origin, the join and sub-document grain, so only an
+     AUTHORITY VALUE at that grain is owed. **The link I did NOT trace, which the design checks first:** whether a
+     content row can be minted over subresource bytes and joins to `site_asset_refs`.
    - **D-80** (Bob ruled: contradiction is to FIND, not prevent): what remains is detecting CONTACT between
      aspirations, never contradiction — judging whether two prose commitments contradict would violate invariant 5.
      Relates to 8.contradiction and to §3 item 2 below.
@@ -69,47 +74,44 @@ checkout means stale permissions.
 
 ## 4. WHAT BOB #17 DECIDED — each folded into its home document; `decided.mjs` finds them
 
-- **TASK stays gated** (Membership v2 §7). The "a minted id carries no count" set is a PREDICATE — *every prefix whose
-  objects a read withholds from some caller* — not the four-name list. REC-151's worker followed the rule; the lag was
-  the document's. The set is PROJ, CASE, DRAFT, RVG, TASK.
-- **D-325 — discipline-plus-witness is SUFFICIENT, and the rule is STRONGER than the row asked.** `scopeFor` confines
-  only `probe` but honours `store=scratch` from ANY class, so the binding already existed PER CALL and nothing
-  REQUIRED it. A live verification now NAMES `store=scratch` on every call; the record's counters before and after
-  each arm are the detector. Written into `CLAUDE.md` §5, where the false assumption lived, NOT `VERIFICATION.md`.
-  **RESIDUE, open:** no credential can be bound to scratch for life. The row stays OPEN — `ledger.mjs` refuses to
-  archive a row with residue, and it is right.
-- **D-52 NARROWED** (no notification channel exists; §8.1 no longer reads as behaviour; the CHANNEL is Bob's at M7,
-  with D-126).
-- **D-136 — the missing session reach is an OMISSION; the fix is NAMED** (Membership v2 §4.7). `by` is server-stamped
-  only for `PROJECT_ACTIONS`, so the one path that can cast a §4.7 vote is the path where THE CALLER NAMES THE VOTER.
-  **ONE item:** stamp `by` from the session AND grant session reach together — either alone is worse than neither.
-  **D-134 is ordered BEHIND it**: a surface over an unfenced act is a second path to it.
-- **IC-55 / D-262 — THREE sentences, not two:** *not for a person* is a design claim, sayable only where a decision
-  exists; *your credential does not reach this* is a fact; for an OMISSION, neither — state the fact, invent no
-  rationale. **A false rationale SUPPRESSES ITS OWN BUG REPORT.**
-- **M0-78 and D-270 placements CONFIRMED** ahead of features. "M0 last" governs M0 BUILD items, never a live defect in
-  the verification substrate. `preflight()` in `armdecay.mjs` counts an arm's OWN QUOTE, so it proves the ANCHOR and
-  can never prove the FIXTURE runs — the census is blind to this class BY CONSTRUCTION, so the population is unknown.
-- **The information ladder is ONE-WAY — no `verified -> collected` edge** (`BIO_State_Rules_Consistency_v1_5.md`,
-  Lifecycle): `verified` is an authored act and authored acts bind; the section already solves what a back-edge would
-  solve on a second axis (`source_status: modified`); `retired` is "preserved, never deleted". **D-200 wants a route
-  the design deliberately lacks and does not need** — its ten documents reconstruct.
-- **D-203, D-284 and D-306 CLOSED and archived.** D-203: the two "surviving" advice strings are REC-56's COMMENT
-  PROSE; with comments stripped, **0 live**. D-284: `text_tier` stays the highest contributing tier — DEC-32's
-  weakest-governs over a document's pages, not a compromise. D-306: the ground-truth purchase is NOT FUNDED on
-  DEC-74's pattern, reopened when a GO/NO-GO needs accuracy and agreement AT ONCE.
-- **TWICE the real defect was NEITHER option the row offered, and both times the same shape:** a true limitation
-  stated only where an INSTRUMENT prints it, nowhere a reader of the DESIGN would meet it. Ask that of every row that
-  hands you options.
-- **The area's LAW or its `-NEXT` is a CHANNEL CHOICE** (ORCHESTRATION.md): a `-NEXT` is consumed once; `<AREA>.md` is
-  read by every session that holds the lane. FLEET taught me this by correcting me.
+- **TASK stays gated** (Membership v2 §7): the set is a PREDICATE — *every prefix whose objects a read withholds from
+  some caller* — not the four-name list. PROJ, CASE, DRAFT, RVG, TASK.
+- **D-325 — discipline-plus-witness is SUFFICIENT, and stronger than the row asked** (`CLAUDE.md` §5). `scopeFor`
+  honours `store=scratch` from ANY class, so the binding existed PER CALL and nothing REQUIRED it; a live verification
+  now NAMES it, with the record's counters as detector. **RESIDUE, open:** no credential binds to scratch for life.
+- **D-52 NARROWED** (no notification channel exists; the CHANNEL is Bob's at M7, with D-126).
+- **D-136 — the missing session reach is an OMISSION; the fix is NAMED** (Membership v2 §4.7): the one path that can
+  cast a §4.7 vote is the path where THE CALLER NAMES THE VOTER. **ONE item** — stamp `by` from the session AND grant
+  session reach together. **D-134 is ordered BEHIND it.**
+- **IC-55 / D-262 — THREE sentences, not two:** *not for a person* is a design claim; *your credential does not reach
+  this* is a fact; for an OMISSION, neither. **A false rationale SUPPRESSES ITS OWN BUG REPORT.**
+- **M0-78 and D-270 placements CONFIRMED** ahead of features: "M0 last" governs M0 BUILD items, never a live defect in
+  the verification substrate. `preflight()` counts an arm's OWN QUOTE, proving the ANCHOR and never the FIXTURE.
+- **The information ladder is ONE-WAY — no `verified -> collected` edge** (State Rules, Lifecycle): `verified` is an
+  authored act; `source_status` already solves what a back-edge would. **D-200 wants a route the design lacks and does
+  not need.**
+- **D-203, D-284, D-306, D-356 CLOSED and archived.** D-203: the "surviving" advice strings are COMMENT PROSE, 0
+  live with comments stripped. D-284: `text_tier` is DEC-32's weakest-governs over a document's pages. D-306: the
+  ground-truth purchase NOT FUNDED on DEC-74's pattern. D-356: NULL `page_count` is UNDETERMINED, STATED — **a
+  backfill sized at zero is not a small job, it is the wrong job.**
+- **TWICE the real defect was NEITHER option the row offered:** a true limitation stated only where an INSTRUMENT
+  prints it. Ask that of every row that hands you options.
+- **The area's LAW or its `-NEXT` is a CHANNEL CHOICE** (ORCHESTRATION.md): a `-NEXT` is read once; `<AREA>.md` by
+  every session that holds the lane.
+- **D-353 — a stated limitation of the census, NOT a recurring adjudication:** a cadence nobody honours reads as
+  covered. **RESIDUE, open:** M0-29's figure must carry its DATE and BOUND wherever cited, enforced nowhere yet.
+- **D-404 — BUILD the instrument** (placed as LED-9): the arm does not JUDGE builtness, it READS `status.mjs`, which
+  §2 already names as the authority. **Its bound must print in the arm's own output.**
+- **Two rules landed into `SCHEDULER.md`:** the GAP and the INSTRUMENT that closes it are different objects (mint a
+  new id); a CITATION INVENTED TO PASS A CHECK is worse than the gap it hides.
+- **The heartbeat's run-sessions self-archive only INTERMITTENTLY** (4 of 9) — in `BOB.md` step 3.
 - **M-70** — the disk at the account switch, and the content verdict clearing `plancheck`'s three stranded branches.
 
 ## 5. HOW I WAS WRONG — each caught by someone else or by an instrument
 
-- **I read a background task's "exit code 0" as the gate's verdict. The gate was RED.** The 0 was my own trailing
-  `echo` in a compound command. This is `CLAUDE.md` §7's wrapper trap arriving in a new costume: **read the completion
-  line (`N/N suites green`) and `gates: GREEN`, never a wrapper's status.**
+- **I read a background task's "exit code 0" as the gate's verdict. The gate was RED** — the 0 was my own trailing
+  `echo`. `CLAUDE.md` §7's wrapper trap in a new costume: **read the completion line and `gates: GREEN`, never a
+  wrapper's status.**
 - **I stated "npm ci is installed" as a fact about the machine in four lane chips.** I had measured the MAIN CHECKOUT;
   every lane gets a fresh worktree where it is absent. True of the wrong unit. DIST caught it.
 - **I told FLEET to put durable lessons in its handoff.** Wrong: the law is read every time, a handoff once. FLEET
@@ -119,14 +121,12 @@ checkout means stale permissions.
   by MERGING, never rebasing, because a rebase over a merge flattens it.
 - **I tried to archive D-325 while its disposition declared residue.** `ledger.mjs` refused. The tool was right.
 - **THE WRONG-UNIT ERROR IS THIS ESTATE'S MOST REPEATED DEFECT — caught SIX times on 2026-09-19 alone**, by three
-  lanes, and three times the wrong unit was a MEASUREMENT rather than the code: stranded branches (commit COUNT for
-  REACHABILITY); D-325 (CAN an instrument bind itself vs does anything REQUIRE it); D-134's figure; D-254 (a ROW NAMES
-  NO DESIGN failure that was a MILESTONE error); D-203 (a STRING COUNT for LIVE ADVICE — the survivors were comments
-  quoting the defect they fixed); and **both SCHEDULER and I reporting ESTIMATED context as measured**. **Ask what
-  unit the question is about, and when the answer is a count, ask what the count cannot see — including of yourself:
-  `get_usage` is the only honest source for your own context.**
+  lanes, three of them where the wrong unit was a MEASUREMENT rather than the code: stranded branches (commit COUNT
+  for REACHABILITY); D-325 (CAN an instrument bind itself vs does anything REQUIRE it); D-134's figure; D-254 (a ROW
+  NAMES NO DESIGN failure that was a MILESTONE error); D-203 (a STRING COUNT for LIVE ADVICE); and **both SCHEDULER
+  and I reporting ESTIMATED context as measured.** **When the answer is a count, ask what the count cannot see —
+  including of yourself: `get_usage` is the only honest source for your own context.**
 - **A LEDGER REBASE IS THE `QUEUE.md` TRAP IN EVERY LEDGER, AND PRESENCE IS NOT THE CHECK — LENGTH IS.** A `DEBT.md`
-  conflict had SCHEDULER's rewritten D-182 (458 -> 946 chars) and D-199 (4044 -> 4784) on one side and my archived
-  D-203 on the other; taking my side whole would have reverted both rewrites silently. **A reverted row looks exactly
-  like a row you kept** — the id is present, the state plausible, no gate fails. Carry the hunks, then compare the
-  touched rows' character counts against the REMOTE.
+  conflict had SCHEDULER's rewritten D-182 and D-199 on one side and my archived D-203 on the other; taking my side
+  whole would have reverted both silently. **A reverted row looks exactly like a row you kept.** Carry the hunks, then
+  compare the touched rows' lengths against the REMOTE.
