@@ -11586,6 +11586,7 @@ found by reading the merged dispatch, replayed as an arm: the suite fails 61/2 o
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 36.0.0 → 37.0.0**, RE-RESOLVED AT LANDING. It was first resolved 34.0.0 → 35.0.0 on the HELD branch `conduct/rec-136-held`, which DIST kept off `main` until UI-65 could land with it. By the time it landed, IC-154 and IC-156 had taken 35.0.0 and 36.0.0, so the base was RE-READ at landing (36.0.0) and not carried. It landed TOGETHER WITH UI-65 (the conclude surface), so no deployed surface meets the `NO_CLAIM` refusal without the reading picker. The no-project `op=conclude` now REFUSES `NO_CLAIM` what it accepted (it must name `version=`), and a re-conclusion no longer replaces the earlier row, so it is breaking by IC-137. `op=withdrawconclusion` APPENDS (C-33.37 `NOTHING_TO_WITHDRAW`), is in `POSITIONAL_ACTS`, and was checked at integration to resolve its project through the VIEWER gate BEFORE `projectAuthority`, so a hidden and an absent project answer alike. That is REC-138's order; the act did not exist on REC-138's base. **A LIVE-SURFACE CONSEQUENCE, stated:** `civicos-ui/app.html`'s conclude flow sends no `version`, so after deploy a member's no-project conclude from the surface is REFUSED until UI-65 (the reading picker and the withdrawal surface) lands. DIST is told, so it does not ship this without it.
+
 ## IC-157 · I3: `op=ratify` UNDER PUBLICATION RULE 2 — a PROJECT bundle is REFUSED outright (C-58.1 `RATIFY_PROJECT_BUNDLE`); a finding a RATIFIED case pins is published only under an OWNER's signature (C-57.1) delivered by the founder or a JOINED member (C-56.1), through the SAME helper `op=caseratify` asks; a caller who cannot see the bundle is answered as for one never minted · PROPOSED 2026-09-18 (REC-140 / D-429, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE: 37.0.0** (35.0.0 at spawn on `ff3a4cea`;
@@ -11671,3 +11672,95 @@ report and in the claim's release.
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #6 as MAJOR — I3 37.0.0 → 38.0.0.** Base RE-READ at resolution off `origin/main` `d036094b`: 37.0.0 (IC-153, REC-136 + UI-65), so the worker's re-based proposal stands. Breaking by IC-137: three acts that committed now refuse (a project bundle at `op=ratify`, C-58.1; a pinned finding under a non-owner's signature, C-57.1; one delivered by an administrator with no role, C-56.1), and a caller who cannot see a project bundle now receives the never-minted 404 `ABSENT` instead of 409 `RATIFY_STALE`/`GATE_REFUSED` (IC-25). No first-party surface affected (`civicos-ui/` names `op=ratify` nowhere, re-grepped at integration); the instance page's `ratifyPanel` renders the new codes through its existing fallback. An AUTHORITY and DISCLOSURE closing — DIST told; it rides 0.64.0 with REC-143 (DIST's ruling: no cut without the P0 fix). D-431 (what `op=ratify` still publishes outside a case) carried to BOB.
+
+## IC-159 · I3: `op=affordances` publishes `conclude` on a question whose OWN state is already `concluded` — its PROJECT arm — to a caller who has JOINED some project it can see that LIVE-cites the question · PROPOSED 2026-09-18 (REC-142, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  (after merging `origin/main` at `09ec7a86`, REC-140 in): 38.0.0 (37.0.0 at spawn on `3dee1fdb`; IC-157 moved it).
+  Proposed as MINOR, ADDITIVE — 38.0.0 → 38.1.0.** Read the base AT RESOLUTION. **Why ADDITIVE, by IC-137's rule:** no
+  call that succeeded is refused, no call that was refused succeeds (`op=conclude` is NOT edited — the store already
+  accepted a project's conclusion here, REC-124), no key moves or disappears, and the act catalogue is unchanged (still
+  one `conclude` entry, same id, label, weight, rung, needs, mode). What changes is that an act the op accepts is
+  PUBLISHED where it was not: `acts[]` for an inquiry at `concluded` now contains `conclude` for a caller whose
+  `concludes_for_project` fact is true. For every other caller — a machine credential (fact null), a member who has
+  joined no citing project, an administrator who sees every project and joined none — the act set is byte-unchanged.
+  `op=queue`'s `options[]` follow, by construction (the same `deriveActs` over the same facts).
+- **Proposer:** RECORD, REC-142 worker, branch `rec142/affordances-concluded`, 2026-09-18 — closing the DELEGATION
+  2026-09-18 UI (UI-65) -> RECORD (`INVESTIGATIVE-SESSION.md` §7.1 item 8).
+- **Owner to land it:** `RECORD`
+- **The shape, and the alternative not taken:** ONE act — `conclude` published on a concluded inquiry, the relationship
+  left to the act's `project=` PARAMETER as `withdrawconclusion` and `versioncurrent` leave theirs — NOT a separate act
+  id. Every table that decorates an act keys it by its OP id (`NEEDS`, `SESSION_OPS`, `RUNGS`, `POSITIONAL_ACTS`), so a
+  second id is either a second op for the same write (two doors for one act) or an id that names no op. The store
+  fact `concludes_for_project` (`affordanceFacts`, three-valued, `project_owner`'s shape) is asked of `identity`
+  through `Store#joinedCitingProjectOf`, which consumes `#citesInto` (live cites only — a severed citer is refused
+  `NO_CLAIM` at the act), `#inSight` (the project gate `conclude` takes) and `#isJoinedParticipant` (C-56's rule). NO
+  `concluded -> concluded` edge is added: the no-project relationship still cannot conclude twice (ILLEGAL_TRANSITION,
+  asserted through the op).
+- **Consumers to answer:** `UI` — **the stance surface is FIXED with no change, measured:** `civicos-ui/app.html`'s
+  `stanceConclusionSectionHtml` renders the project's conclude box off `actNamed(STANCE.acts, "conclude")`, so on a
+  question concluded with no project a joined member of a citing project now gets the control (UI-65 hosted it; the
+  plane never published it there). **ONE CONSEQUENCE FOR UI TO DECIDE, stated:** the QUESTION's page also hosts
+  `conclude` (surface registry: *"the question's page carries the no-project act"*), so for that same member it will now
+  render `conclude` on a concluded question, and its no-project dialog's submit is refused `ILLEGAL_TRANSITION` by the
+  plane in the plane's own words — a parameter refusal under the release precedent, never a wrong write. DELEGATED
+  (REC-142 -> UI) in `CLAIMS.md`. `node civicos-ui/test/run.mjs` exit 0 on this tree (the harness mocks the plane).
+  `DIST`, `SKILL`, `agent-worker`, `newgroup` — NOT-AFFECTED, grepped: no caller of `op=affordances` outside the plane
+  and `civicos-ui` (newgroup and `release/` carry the plane's bundle as bytes).
+
+**Suites:** NEW `bio-plane/test/conclude-project-arm.test.mjs` (17 assertions): offered to an OWNER and to a JOINED
+non-owner of a citing project; NOT offered to an invited-never-joined member, a member whose projects do not cite or
+SEVERED the question, an administrator, or the ADMIN token; unchanged on an OPEN question; the member concludes through
+the op, the project's stance reads it, the no-project conclusion is byte-unchanged; the pre-flight agrees with C-56 and
+NO_CLAIM; the no-project relationship cannot conclude twice. Negative control `node test/conclude-project-arm.control.mjs`
+from `bio-plane/` (arms patch COPIES, real sources hashed before and after): baseline 17/0 · (a) project arm removed
+14/3 · (b) the liar's `concluded -> concluded` edge 10/7 · (c) fact ignored 13/4 · (d) owners-only (over-strictness)
+16/1 — every arm AS DECLARED.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MINOR — I3 38.0.0 → 38.1.0.** Base RE-READ at resolution off `origin/main`: 38.0.0 (IC-157, REC-140). Additive by IC-137: nothing that committed now refuses, no key moves; one affordance is offered where none was (`conclude` on a concluded question, to a joined member of a citing project, fact `concludes_for_project`), and the no-project relationship still cannot conclude twice (`ILLEGAL_TRANSITION`, asserted through the op). UI's consequence is a DELEGATION in `CLAIMS.md` (REC-142 → UI): the question page's no-project conclude dialog would now be offered and refused on a concluded question.
+
+## IC-162 · I3: DEC-63 AS AMENDED — a run whose context is a QUESTION consults NO project: `airunopen` / `airuntick` / `airunclose` no longer refuse `AI_RUN_NOT_PROJECT_MEMBER` (C-22.8) over an inquiry; `projectGate.ground` over a question is `INQUIRY` (the value `PROJECTLESS` is removed, and `PARTICIPANT` is now said only over a project); C-22.8's translation speaks of a project · PROPOSED 2026-09-19 (REC-145, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  (base `1d439e31`): 38.1.0. Proposed as MAJOR — 38.1.0 → 39.0.0.** Read the base AT RESOLUTION. **Why not additive, by
+  IC-137's rule:** a call that was refused now succeeds (a member who has joined no citing project, running over a
+  question), and a wire VALUE disappears (`projectGate.ground: "PROJECTLESS"`) while another narrows its meaning
+  (`"PARTICIPANT"` is no longer said over a question). No key is added or removed; the `projectGate` object keeps its
+  four keys (`applied`, `ground`, `why`, `projects`), and `projects` is REC-139's sighted count, UNCHANGED.
+- **Proposer:** RECORD, REC-145 worker, branch `worktree-agent-a3372f65d0555dbd9`, 2026-09-19 — Membership v2 §7, the
+  DEC-63 ruling bullet, "How it applies at the code" (BOB #16).
+- **Owner to land it:** `RECORD`
+- **What changed, measured through the op** (`project-disclosure.test.mjs` §3, `airun-projectgate.test.mjs`):
+
+| call | before (base `1d439e31`) | after |
+| --- | --- | --- |
+| sam over a question ONLY a project he cannot see cites | refused `AI_RUN_NOT_PROJECT_MEMBER` — the one bit §7.9 forbids | started, `ground: INQUIRY`, `projects: 0` |
+| nora (no project) over a question two projects she cannot see cite | refused | started, `INQUIRY`, `projects: 0`, raw answer BYTE-IDENTICAL to her answer over an uncited question |
+| a member over a question NO project cites | `applied: false, ground: PROJECTLESS` | `applied: false, ground: INQUIRY` |
+| a joined member over a question their project cites | `applied: true, ground: PARTICIPANT` | `applied: false, ground: INQUIRY` (count unchanged) |
+| a non-joined member over a PROJECT context (invited, uninvited, leaving, an administrator) | refused C-22.8 | refused C-22.8 — UNCHANGED (the liar's arm) |
+| a machine credential | `NO_MEMBER_BEHIND_CALLER` | UNCHANGED |
+
+  One consequence the ruling did not state, pinned as built and reported as a DESIGN GAP: the three verbs share one
+  gate, so over a question a member holding `contribute` may TICK and CLOSE another member's run (ARM H6).
+- **Consumers to answer:** `UI` — NOT-AFFECTED, grepped: `civicos-ui` reads neither `projectGate` nor any ground, and
+  never calls `op=airunopen` (its own comments say so, `app.html` ~19602/19736); `check-refusal-codes.mjs` names C-22.8
+  only in a count comment, and harvests translations by shape (the new one is a sentence, as required).
+  `agent-worker` — NOT-AFFECTED: it runs on a machine credential (`NO_MEMBER_BEHIND_CALLER`, unchanged) and reads no
+  ground. `DIST`, `SKILL`, `newgroup` — NOT-AFFECTED (`release/` and `newgroup/` carry the plane's bundle as bytes).
+
+**Suites:** `project-disclosure.test.mjs` §3 CORRECTED and extended (21 → 27): the only-hidden question is PERMITTED
+with count 0; nora's accept arm and its byte-identity arm; the project-context refusal (olga invited-not-joined over the
+hidden project, nora over sam's); sam over his own project (over-strictness). `airun-projectgate.test.mjs` CORRECTED
+(47 → 52): every arm that drove the refusal over a question is RE-AIMED at the project context with a dated reason;
+B0, G3/G4, H6, L3 and the pure P4 are new. Negative controls: `node test/project-disclosure.control.mjs` —
+**`inquiry-consults-projects` (the row's control) 24/3, the PERMITTED arms by name**; `gate-dropped-everywhere` (the
+row's liar) 26/1, the project-context arm; `consult-unless-inquiry` (over-strictness) 27/0; every arm AS DECLARED, real
+sources untouched. `node test/nc-pl18.mjs` re-run: (e) the same control 39/13 as declared; full table in the suite's
+`NEGATIVE CONTROL:` line.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 38.1.0 → 39.0.0.** Base RE-READ at resolution off `origin/main`: 38.1.0 (IC-159, REC-142). Breaking: the wire value `PROJECTLESS` is gone (every inquiry-context run answers ground `INQUIRY`), and a call that was refused `AI_RUN_NOT_PROJECT_MEMBER` over a question now starts. It is breaking in the direction that removes a disclosure: the refusal told a member that a hidden project cites the question (§7.9). No first-party consumer reads a ground (the UI never calls `airunopen`; `agent-worker` runs on a machine credential). REC-141's IC-158, proposed on the same base, is re-based when it lands. A §7.9 DISCLOSURE closing — DIST told.

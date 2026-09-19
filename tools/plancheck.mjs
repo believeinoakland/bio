@@ -160,29 +160,46 @@ if (queue && register) {
   }
 }
 
-if (queue && interfaces) {
-  const known = new Set([...interfaces.matchAll(/^##\s+(I\d+)\s+—/gm)].map((m) => m[1]));
-  for (const m of queue.matchAll(/^behind-interface:\s*(.+)$/gm)) {
-    for (const id of (m[1].match(/\bI\d+\b/g) || []))
-      if (!known.has(id))
-        fail(`UNREGISTERED INTERFACE — QUEUE.md has an item behind ${id}, which is not in\n`
-           + `        INTERFACES.md. An interface not in the registry does not exist and nothing\n`
-           + `        may be built against it (PARALLELISM.md).`);
+/* THE MILESTONE AND INTERFACE FIELDS OF EVERY PLAN ROW — cache ∪ backlog (D-430, 2026-09-18). These
+   two checks matched `^milestone:` and `^behind-interface:` over QUEUE.md's text alone, so once LED-6's
+   migration moved the open rows into BACKLOG.md, a backlog row naming an unknown milestone or an
+   unregistered interface would have passed. The rows now come from `rowdesign.mjs`' `planRows`, which
+   is `ledger.mjs`' one lister, and the fields are judged by `planFieldAudit` there — never a second
+   walk here (`pipeline-readers.test.mjs` §6 pins that this file scans no ledger text for them).
+   What the switch traded at its base is measured in `planFieldAudit`'s comment (none since LED-6's
+   step (2) archived them): three field lines under row-shaped
+   headings the grammar cannot read, now NAMED below instead of read. */
+{
+  const { planRows, planFieldAudit, whereOf } = await import("./rowdesign.mjs").catch(() => ({}));
+  if (!planRows) {
+    warn(`rowdesign.mjs could not be loaded — the plan's milestone and interface fields are UNVERIFIED this run.`);
+  } else {
+    const plan = planRows({ repo: ROOT });
+    for (const u of plan.unreadable)
+      fail(`UNREADABLE PLAN FILE — ${u} could not be read, so its rows' milestone, interface and design\n`
+         + `        fields are UNVERIFIED. An unreadable ledger is not an empty one.`);
+    if (plan.strays.length)
+      warn(`ROW-SHAPED HEADING THE GRAMMAR CANNOT READ — ${plan.strays.length} heading(s) in the plan look like\n`
+         + `        rows and are not read as rows, so NO arm judges their fields (design, milestone, interface,\n`
+         + `        state; P1/P2 cannot see them either):\n`
+         + plan.strays.map((s) => `          ${s.heading.slice(0, 60)} (${whereOf(s)})`).join("\n"));
+    const fa = planFieldAudit(plan.rows, { milestones, interfaces });
+    for (const u of fa.unregisteredInterface)
+      fail(`UNREGISTERED INTERFACE — ${u.id} (${whereOf(u)}) is an item behind ${u.interface}, which is not in\n`
+         + `        INTERFACES.md. An interface not in the registry does not exist and nothing\n`
+         + `        may be built against it (PARALLELISM.md).`);
+    if (fa.knownInterfaces)
+      notes.push(`interfaces registered: ${[...fa.knownInterfaces].sort().join(", ") || "none"}`);
+    for (const u of fa.unknownMilestone)
+      fail(`UNKNOWN MILESTONE — ${u.id} (${whereOf(u)}) names ${u.milestone}, which MILESTONES.md does not define.`);
+    if (fa.knownMilestones) {
+      const idle = [...fa.knownMilestones].filter((k) => !fa.used.has(k)).sort();
+      if (idle.length)
+        notes.push(`milestones with no queued item (normal for later rungs): ${idle.join(", ")}`);
+    }
+    notes.push(`plan fields: ${fa.rowsRead} row(s) read (cache ${plan.cacheRows}, backlog ${plan.backlogRows}) — `
+      + `every milestone and behind-interface line judged`);
   }
-  notes.push(`interfaces registered: ${[...known].sort().join(", ") || "none"}`);
-}
-
-if (queue && milestones) {
-  const known = new Set([...milestones.matchAll(/^###\s+(M\d+)\s+·/gm)].map((m) => m[1]));
-  const used = new Set();
-  for (const m of queue.matchAll(/^milestone:\s*(M\d+)/gm)) {
-    used.add(m[1]);
-    if (!known.has(m[1]))
-      fail(`UNKNOWN MILESTONE — QUEUE.md names ${m[1]}, which MILESTONES.md does not define.`);
-  }
-  const idle = [...known].filter((k) => !used.has(k)).sort();
-  if (idle.length)
-    notes.push(`milestones with no queued item (normal for later rungs): ${idle.join(", ")}`);
 }
 
 if (debt) {
@@ -679,22 +696,25 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    behind it. */
 
 {
-  const { rowDesignAudit, rowMessage } = await import("./rowdesign.mjs").catch(() => ({}));
+  /* The rows are the PLAN's — cache ∪ backlog through `ledger.mjs`' one lister (D-430); the note
+     prints both files' counts so a reader can see the backlog was read. */
+  const { rowDesignAudit, rowMessage, whereOf } = await import("./rowdesign.mjs").catch(() => ({}));
   if (!rowDesignAudit) {
-    warn(`rowdesign.mjs could not be loaded — QUEUE.md's design pointers are UNVERIFIED this run.`);
+    warn(`rowdesign.mjs could not be loaded — the plan's design pointers are UNVERIFIED this run.`);
   } else {
     const a = rowDesignAudit({ repo: ROOT });
     const routed = a.open.filter((r) => r.routed).length;
-    notes.push(`queue design pointers: ${a.open.length} open row(s) judged of ${a.rows.length}, `
+    notes.push(`queue design pointers: ${a.open.length} open row(s) judged of ${a.rows.length} `
+      + `(cache ${a.cacheRows}, backlog ${a.backlogRows}), `
       + `${a.skipped.length} closed row(s) not judged, ${a.findings.length} naming no design`
       + (routed ? `, ${routed} explicitly ROUTED as a missing design` : "")
       + ` (governed set: ${a.governedCount} document(s), read from CORPUS-STANDARD.md §5)`);
     /* A state this file does not understand is NAMED, never scored zero — a row typo'd into
        an unjudged state is exactly how a rule stops applying without anyone deciding it. */
     if (a.unknownState.length)
-      warn(`UNKNOWN ROW STATE — ${a.unknownState.length} QUEUE.md row(s) carry a state token that is\n`
+      warn(`UNKNOWN ROW STATE — ${a.unknownState.length} plan row(s) carry a state token that is\n`
          + `        neither judged nor explicitly closed, so the §4.7 check does not reach them:\n`
-         + a.unknownState.map((r) => `          ${r.id} · ${r.state} (QUEUE.md:${r.line})`).join("\n"));
+         + a.unknownState.map((r) => `          ${r.id} · ${r.state} (${whereOf(r)})`).join("\n"));
     if (a.findings.length) fail(rowMessage(a.findings));
   }
 }

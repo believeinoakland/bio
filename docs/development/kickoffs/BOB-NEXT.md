@@ -1,90 +1,92 @@
-# BOB — resume here. Written 2026-09-18 by BOB #15, refreshing at 61% context (Bob: "Always refresh sessions with context windows that are more than 60% full").
+# BOB — resume here. Written 2026-09-19 by BOB #16 (session "Start BOB #16 — architecture lane (standing)", worktree `modest-bartik-920017`).
 
-Read `CLAUDE.md`, then `kickoffs/BOB.md`, then this. **Everything below is a POINTER measured at writing; re-measure before
-you act on it.** Nothing is mid-flight in this lane: every design act is pushed, nothing is unpushed.
+Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` (once readbudget's map change
+lands; see §2), then this. **Everything below is a POINTER measured at writing; re-measure before you act on it.**
 
 ## 0. YOUR FIRST ACTS
 
-1. **Archive BOB #15** (session title "BOB #15"; worktree `zealous-dirac-90a441`) under D-398's three conditions, checked at
-   the moment you act; then `git worktree remove`; report the disk.
-2. **Measure every live session's context** (`get_usage`). Over 60% → it writes its handoff and you file its successor's
-   chip. At writing: **CONDUCT #5 was at 70% and was told to stand down and write CONDUCT-NEXT.md**; when its sha arrives,
-   file the CONDUCT #6 chip (its prompt must refuse if `CONDUCT-NEXT.md` line 1 does not name #6). DIST 26%, SCHEDULER 12%,
-   FLEET 10%.
-3. `node tools/owed.mjs BOB`, `node tools/plancheck.mjs`, `node tools/status.mjs --check`. Tell CONDUCT, SCHEDULER, DIST and
-   FLEET you are up.
+1. **Archive BOB #16** under D-398's three conditions checked at the moment you act (not running; its worktree
+   `modest-bartik-920017` porcelain EMPTY; its tip an ANCESTOR of `origin/main`), then `git worktree remove`, and report
+   the disk measured before and after. The volume was at **2.2–2.9 GiB free** during this session. Watch it.
+2. **Measure every live session's context** (`get_usage`); over 60% → it writes its handoff and you file its successor.
+3. `node tools/owed.mjs BOB`, `node tools/plancheck.mjs`, `node tools/status.mjs --check`; tell CONDUCT, SCHEDULER,
+   DIST and FLEET you are up.
 
-## 1. THE ESTATE AS IT NOW RUNS (built this session; each in `CLAUDE.md` or its kickoff)
+## 1. WHAT THIS SESSION LANDED (each on `main`; `git log --oneline --grep "bob #16"`)
 
-- **Five standing lanes**, never archived for idleness, refreshed at >60% context: **CONDUCT** (spawns, integrates; writes
-  only `queued → running`), **SCHEDULER** (owns the build plan's ORDER, the cache, the backlog, the BOB INBOX drain, done +
-  archive + replenish — `kickoffs/SCHEDULER.md`), **DIST** (cuts and — by Bob's STANDING permission — DEPLOYS; reports the
-  landing to you), **FLEET**, and **BOB**. `tools/retirable.mjs` `STANDING_LANES` enforces the never-idle-archived half.
-- **Nobody ends a turn on a question nobody reads.** Questions for Bob come to you; you bring them to him in the
-  `kickoffs/README.md` shape, once, and keep working.
-- **The work pipeline** (`WORK-PIPELINE.md`): QUEUE.md becomes a CACHE of ≤8 tasks, `BACKLOG.md` the full ordered plan, the
-  archive what is done. **LED-6** (the migration; tool half built by a worker, file half SCHEDULER's) and **LED-7** (DEBT.md
-  folded into the plan: every row triaged at the code into closed / a backlog task / a stated limitation; then DEBT.md
-  retired) — both SCHEDULER's to drive. A NEW DEFECT is placed only with its FIX identified (Bob).
-- **The reading budget** (`tools/readbudget.mjs` in `plancheck`): CLAUDE.md ≤16 KB, a kickoff ≤24 KB, a `-NEXT` ≤12 KB. At
-  writing, **CONDUCT.md (97 KB), RECORD.md (32 KB), CONTENT-PDF.md (26 KB) are over** — cutting CONDUCT.md is THIS LANE'S
-  NEXT DESIGN ACT (§3). Not yet in the budget: VERIFICATION.md (105 KB), ORCHESTRATION.md (35 KB), `BIO_System_Design.md`.
-- **Measured, not assumed — M-60** (`MEASUREMENTS.md`): a clean-room readiness exam (fresh headless sessions in empty
-  directories outside the repo; a no-reading control; blind grading). NEW 38/40, OLD 36/40, CONTROL 3/40; the reading ≈
-  11.9k vs 33.9k tokens. Both findings corrected and re-run. **The window is 1,000,000 tokens**: capacity is not the binding
-  constraint, FIDELITY is. The instrument (`exam.md` + key) is reproduced in M-60; extend it per lane.
+- **D-431 RULED** and folded into `BIO_Publication_v0_1.md` §3 rule 2 (second note): `op=ratify` publishes a FINDING only at
+  a sha a RATIFIED case pins; any other bundle only as EVIDENCE a pinned finding rests on; what crossed stays, COUNTED.
+- **FLEET's scratch questions**: a scratch purge takes scratch IDENTITY, a record purge never does — home
+  `BIO_Distribution_v0_1.md` §6 rung 6 (M0-69); a refused `memberadd`'s `proposed` row is §4.7's design (M0-70 states it).
+- **Membership v2 §7 item 7.14 — DISCOVERABLE or HIDDEN and the request to join**, designed: owner's recorded act, not a
+  document field; every existing project HIDDEN; creator ASKED with nothing preselected (this supersedes BOB #15's
+  recommended DISCOVERABLE default — told to Bob as his to overrule); plane fails closed to HIDDEN; three sight levels at
+  the ONE predicate; a DIRECTORY read; grant = invitation, the requester joins by checkbox.
+- **DEC-63 as amended** (BOB #15 recorded it and never rowed it): over an INQUIRY the run verdict consults no project; a
+  PROJECT context keeps its gate. Home: Membership v2 §7, the ruling bullet.
+- **A MINTED ID CARRIES NO COUNT** (REC-141's §7.9 gap, `d7ce3f86`, Membership v2 §7): gated prefixes (PROJ, CASE, DRAFT,
+  RVG) minted opaque from a CSPRNG; `op=allocid` refuses them; the legacy `EXISTS` residue is a stated limitation. The PROJ
+  half is an act owed at REC-141's integration, recorded on its row (`a8854129`) and sent back to its worker; the rest is
+  SCHEDULER's item.
+- **The review-copy surface VERIFIED** (not Program B's): rowable now WITHOUT export; export waits on DEC-31's in-band
+  quartet on `op=reviewcopy` (measured absent: no hash, no floors). Publication §6A.3.
+- **The question page's no-project conclusion**: `op=projection`'s single-bundle form publishes it via the one reader
+  (`INVESTIGATIVE-SESSION.md` §7.1).
+- **CONTRADICTION's IDENTIFY** designed at level 2: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` (governed) —
+  pairing in the plane by four keys, judgement as labelled machine work, the false-conflict rate over a fixture as the
+  gate. PRESENT and RESOLVE are the NEXT design act, after its item 2's first measurement.
+- **Reading budget:** `kickoffs/CONDUCT.md` 96,800 → 21,064 B (M-63: NEW 42 · OLD 42 · control 27 of 42; reviewed by
+  CONDUCT #6); `ORCHESTRATION.md` 35,375 → 15,540 B and brought current, read whole and armed; `BOB.md` armed.
+  M-64: SCHEDULER exam NEW 39/40 · control 28/40 (its gap is now in SCHEDULER.md step 5). M-65: DIST, FLEET, WORKER each
+  40/40 · controls 23–24; and the instrument's own defect (`--allowedTools Read` does not confine an arm), checked back.
+- **BOB INBOX — every entry DRAINED by SCHEDULER (0afa7f61)** into rows: D-431 (at 2, spawnable); M0-69/M0-70; the
+  no-project conclusion; REC-149/REC-150/UI-70/UI-71 (7.14); REC-145 (DEC-63); UI-68/REC-148/UI-69 (review copy, export last);
+  REC-146 → M0-71 → REC-147 (IDENTIFY); M0-72 (mergecarry control arm 5's stale name).
 
-## 2. WHAT BOB HAS PENDING — bring ONCE, in the README shape
+## 2. IN FLIGHT AT WRITING — verify each at the artifact
 
-- **WHEN A RELEASE REACHES OTHER GROUPS — RULED by Bob:** *"The release may be deployed, obviously. But once deployed, all
-  groups can update to the latest release if they choose."* Recorded in `kickoffs/DIST.md`; DIST builds the `latest`
-  pointer (option a). The history, kept: Every installer's `/update` fetches main's
-  `release/RELEASE.json`, so a signed release reaches every group the moment it is pushed — before any live check. On
-  2026-09-18 that offered five store-bricking releases (0.59.0–0.63.0) to every group for ~3½ hours (18:10–21:35) before
-  DIST withdrew them (`d86b27ea`); whether any group ran `/update` in that window is UNDETERMINED. Options: (a) installers
-  follow a separate `latest` pointer DIST moves only after the release is deployed and live-verified on our own instance;
-  (b) RELEASE.json on main advances only after that check; (c) as is. (a) was recommended and Bob's answer is (a) in substance;
-  BOB #15 told DIST and FLEET; the installer change is DIST's. Also: CONDUCT has the P0 fix (move the columns ahead of the index + an upgrade
-  suite), then DIST cuts 0.64.0 and deploys under standing permission.
-- **ANSWERED this session, recorded in Membership v2 §7:** anyone may ask/investigate any question (the run verdict never
-  consults unseen projects); each project chooses DISCOVERABLE or HIDDEN, with a request-to-join (the setting, the request
-  and the listing surfaces are THIS LANE'S NEXT DESIGN ACT, before any row).
-- **Weekly usage** was at **74%** with 3d16h to reset (5-hour 15%). Told to Bob as information; if he wants work paced,
-  tell SCHEDULER and CONDUCT.
+- **LANDED 2026-09-19: `bob16-verif`**, merged by CONDUCT #6 at `0a4ef56d` (on main at `111f4027`; gate 255/255 · 15665,
+  `--strict` 0, UI green, plancheck 0; `register-grammar.control` 11/11 on its tree; both `bob16-*` branches deleted). So
+  VERIFICATION.md (24,309 B) and the construct map (48 KB budget) are now READ WHOLE and armed; readbudget reads 24 files.
+- **DIST and FLEET corrected** their kickoffs' stale lines (FLEET `8a585611`; DIST on its 0.64.0 cut branch).
+
+- **BOB'S PENDING CALL — weekly usage PACING** (brought 2026-09-19 ~05:15Z, once, in the README shape): 85% used at
+  ~3 points/hour, resets 2026-09-22 18:00 UTC. Options (a) keep pace and stop hard; (b) PROVISIONAL, in force: CONDUCT
+  spawns nothing new from 93%, running work finishes; (c) throttle to one worker; (d) extra usage (disabled; costs money).
+  Recommended (b). When he answers, tell CONDUCT and SCHEDULER.
+- **Later rulings, all rowed**: REC-145's findings (REC-153 context kind, REC-152 tick/close by principal); the minted-id
+  rule (REC-141's owed act + REC-151); the d280 control repair (M0-76). Top of the order at `038e1745`: D-431,
+  REC-141+UI-66, REC-144, REC-153, REC-152, REC-151, then UI-67, UI-72.
 
 ## 3. THIS LANE'S OWED WORK, in order
 
-1. **Cut `kickoffs/CONDUCT.md` to its 24 KB budget** — archived verbatim, CONDUCT reviews for anything it relies on, and the
-   M-60 exam built for CONDUCT and run old-vs-new before it lands. Much of it is superseded by the SCHEDULER handover.
-2. **VERIFICATION.md and ORCHESTRATION.md**: fold the rules a session must follow into CLAUDE.md / the kickoffs, archive
-   the narrative, add both to `readbudget`. Budget `BIO_System_Design.md` and require it of BOB, SCHEDULER, CONDUCT.
-3. **The exam per lane** (SCHEDULER, DIST, FLEET, workers) and **field counts** of process failures per lane against the
-   2026-09-18 baseline.
-4. **Three design acts SCHEDULER's order audit (cd9d7c86) routed here, none rowable until done:** (a) 8.contradiction —
-   IDENTIFY's detector inputs, the level-2 document this lane promised 2026-09-17 (Case_Making §CONTRADICTION names the three
-   mechanisms, not the detector); (b) verify the review-copy SURFACE against Program B before SCHEDULER rows it (REC-126 →
-   UI delegation in CLAIMS.md); (c) design the bounded read the question page needs to show a no-project conclusion
-   (UI-65's follow-up). Also decided and handed to SCHEDULER: the M0 hold is LIFTED (its audit was the re-derivation).
-   **Correction:** the battery-tally row I called M0-67 is DONE; the open one is **M0-65** (D-413), placed first (SCHEDULER).
+1. **Field counts** of process failures per lane against the 2026-09-18 baseline (M-60's "owed"). No baseline is defined
+   anywhere I found; defining it (which failures count, read from which ledgers) is the first act.
+2. **Use the corrected exam instrument from now on** (`--disallowedTools Bash Glob Grep`, arms in sibling directories,
+   M-65). M-60, M-63 and M-64 were checked back at their transcripts and stand.
+3. **PRESENT and RESOLVE** for contradiction, after IDENTIFY's M0-71 measures (SCHEDULER: REC-146 → M0-71 → REC-147; a
+   missed threshold comes back here).
+4. **RECORD.md (32 KB) and CONTENT-PDF.md (26 KB)** are over budget; their owners cut them. Route via SCHEDULER when those
+   areas next wake.
 5. **Checks that suites read by NAME**: `skilldoctrine` E3 and `skillpack` F3/F4 quote CLAUDE.md's four-level sentences
-   verbatim; `surface-registry` L0 and `corpuscheck` also read it. Change those sentences only together.
+   verbatim; `surface-registry` L0 and `corpuscheck` also read it. CONDUCT.md's phrases (mintid, strandedwork, mergecarry
+   test and control arm 7) are listed in M-63; VERIFICATION.md's (the D-263 block, `register-grammar` B1–B6, the control's
+   anchors) are in `bob16-verif`'s commit.
 
-## 4. DECISIONS MADE THIS SESSION (all in their home documents; `decided.mjs` finds them)
+## 4. DECIDED THIS SESSION, told to Bob as his to overrule
 
-Conclusion ownership (INVESTIGATIVE-SESSION §7.1 items 1–8); lead counters and `dbBytes` (MEMBER-KNOWLEDGE §5, corrected
-once — no class reads every lead); observation legs carry a connection grade (§3); D-422 founder sight, "administrators
-direct nothing" enforced for every administrator, case-ratification signer/deliverer, plane-minted project ids, refusals
-never describe an unseen project (Membership v2 §7); review-copy grant authority, revoke owner-only (Publication §6A.2, corrected
-once); project documents not publishable (Publication rule 2's note). **Bob ruled:** project names unique across the
-instance; DIST deploys by standing permission; refresh at >60%; SCHEDULER exists; DEBT folds into the plan.
+- A new project's creator CHOOSES discoverable or hidden, with neither preselected (supersedes BOB #15's recommended default).
+- Every project existing today stays HIDDEN until its owner changes it (§7.9's promise to the people who created them).
 
 ## 5. HOW I WAS WRONG — so you are not
 
-1. **Two decisions of mine contradicted Bob's doctrine and were corrected within the hour** (admin lead counts; admin revoke).
-   Before deciding a design gap, run `decided.mjs` AND read the construct's doctrine section — "follows a ruling" needs the ruling read.
-2. **I rebased while a gate was running** and had to discard the run. Never change the tree under a gate.
-3. **An unquoted heredoc deleted every backticked word** from an edit; restored by hash. Write edits as Python files or quoted heredocs.
-4. **My first search for CLAUDE.md's readers missed two suites** (`skilldoctrine`, `skillpack`); the full gate caught them.
-   A search for readers is a claim too — the gate is the artifact.
-5. **A string-replace silently did not match** Bob's own defect rule; caught only because I checked each edit's effect. Assert
-   every replacement's count.
+1. **My inbox entry named D-431 before its register row reached main**, which drove mintid's D floor off prose and turned
+   `main` red until REC-140 landed. Exactly the trap the old CONDUCT.md recorded. Name a new D- id in the inbox only once
+   its row is on main, or mint it and write the row in the same commit.
+2. **`retirable.mjs` reads STDIN**, not a path argument; my first call hung for two minutes.
+3. **A wrapped line defeats an exact string replace** (Membership v2's ruling bullet); use a whitespace-tolerant match
+   and assert the count.
+4. **I wrote "below" about an inbox entry SCHEDULER had already drained** — caught before the push by checking. A pointer
+   to the inbox is a pointer to a moving file.
+5. **The push guard fired three times on a stale `DECIDED.md`**: CLAIMS.md and QUEUE.md are in the ruling corpus.
+   Regenerate immediately before every push, after the last rebase.

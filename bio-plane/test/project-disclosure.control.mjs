@@ -30,7 +30,8 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "project-disclosure.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs"].map((f) => join(PLANE, f));
+/* REC-145 added `src/airun.mjs`: three of its arms patch a copy of it, so the real one is hashed too. */
+const REAL = ["src/index.mjs", "src/store.mjs", "src/airun.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 const COUNT_LINE = "    return { ...g, projects: projects.filter((p) => this.#inSight(p, viewer)).length };";
@@ -55,9 +56,15 @@ const ARMS = {
   /* THE BRIEF'S CONTROL 2: count hidden projects in the run report again. sam's two byte-identity arms
      and the liar's arm (which pins his count at 1) must go red; olga's, ruth's and the machine's counts
      are the same either way, so they must stay green. */
+  /* DECLARATION WIDENED 2026-09-19 by REC-145, from its own run (21/6): REC-145's §3 arms state a
+     count too, over questions only UNSEEN projects cite (sam's only-hidden question: 1, not 0; nora's
+     doubly-cited one: 2, not 0), so they catch this arm as well — nora's byte-identity arm included,
+     because her uncited question still reads 0. Three more catchers of the same defect, not a new one. */
   "count-hidden": {
     patches: [["store.mjs", COUNT_LINE, "    return g;"]],
-    mustFail: ["sam (never invited to the hidden project): airunopen", "sam: airuntick", "THE LIAR'S ARM"],
+    mustFail: ["sam (never invited to the hidden project): airunopen", "sam: airuntick", "THE LIAR'S ARM",
+               "sam over a question ONLY a project he cannot see cites is PERMITTED", "REC-145 PERMITTED: nora",
+               "REC-145 NO BIT: nora"],
   },
 
   /* THE LIAR (b): report ZERO projects to everyone. Every byte-identity arm stays GREEN — that is the
@@ -67,13 +74,39 @@ const ARMS = {
     mustFail: ["THE LIAR'S ARM", "SEES IT: olga", "SEES IT: ruth", "MACHINE CREDENTIAL"],
   },
 
-  /* THE LIAR (c): make the count honest by making the GATE blind too — the verdict computed over the
-     projects in sight only, so a question cited only by a project the caller cannot see reads as
-     projectless and is PERMITTED. DEC-63's arm in §3 must catch it, and nothing else may move. */
-  "gate-over-sight": {
-    patches: [["store.mjs", "  #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {\n    const projects = this.#runContextProjects(contextType, contextId);",
-               "  #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {\n    const projects = this.#runContextProjects(contextType, contextId).filter((p) => this.#inSight(p, viewer));"]],
-    mustFail: ["still REFUSED by DEC-63's gate"],
+  /* RETIRED 2026-09-19 by REC-145: REC-139's arm "gate-over-sight" (the verdict computed over the
+     projects in sight only) was a LIAR under REC-139's reading of DEC-63 and is a no-op under Bob's
+     amendment — over a question the verdict consults no project at all, and over a project context the
+     one project is asked for participation, which sight does not change. An arm that can no longer fail
+     is not a control; it is replaced by the two below, which break what REC-145 built. */
+
+  /* REC-145 — THE ROW'S NEGATIVE CONTROL: restore the project consult for an inquiry context (the one
+     predicate both the store and the pure gate read answers "consult" for EVERY kind). The PERMITTED arms
+     must fail by name: sam over the only-hidden question, nora over the doubly-cited one, and the liar's
+     arm in §2 (whose ground goes back to PARTICIPANT). Nora's byte-identity arm is declared to STAY
+     GREEN, and it is a finding about that arm, recorded rather than smoothed: restored, the consult
+     refuses her over the cited question AND over the uncited one (she joined nothing, and with no
+     PROJECTLESS ground left an empty set refuses too), so the two answers are identical refusals. The
+     byte arm proves NO BIT; only the PERMITTED arm proves the permission. RUN 2026-09-19: 24/3, as declared. */
+  "inquiry-consults-projects": {
+    patches: [["airun.mjs", "  return String(contextType ?? \"\") === \"project\";\n}", "  return true;\n}"]],
+    mustFail: ["THE LIAR'S ARM", "sam over a question ONLY a project he cannot see cites is PERMITTED",
+               "REC-145 PERMITTED: nora"],
+  },
+
+  /* REC-145 — THE ROW'S LIAR: drop the gate for EVERY context. Every permitted arm stays green (that is
+     the lie); the project-context refusal must catch it, and nothing else may move. */
+  "gate-dropped-everywhere": {
+    patches: [["airun.mjs", "  return String(contextType ?? \"\") === \"project\";\n}", "  return false;\n}"]],
+    mustFail: ["REC-145 PROJECT CONTEXT KEEPS THE GATE"],
+  },
+
+  /* REC-145 OVER-STRICTNESS: the same rule in a spelling the suite did not anticipate — gate every kind
+     that is NOT a question, rather than only the kind that IS a project. Over the two vocabularied kinds
+     the two spellings agree, so nothing may fail. */
+  "consult-unless-inquiry": {
+    patches: [["airun.mjs", "  return String(contextType ?? \"\") === \"project\";\n}", "  return String(contextType ?? \"\") !== \"inquiry\";\n}"]],
+    mustFail: [],
   },
 
   /* THE CONTROL PLANE'S STAMP DROPPED: the three run verbs receive no viewer, the store fails closed and
