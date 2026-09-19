@@ -1248,7 +1248,8 @@ const REGISTER_FLOOR = {
   // [CONDUCT #5 at the UI-65 + REC-136 landing] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1430/1427 · classified 243/243 · corpus (suites read) 244/244 · GREW by 3`, `floor 206/206 reproducible`, from the print; the held branch's 1417 and UI-65's own figure are replaced, never added.
   // [REC-140] 2026-09-18: MOVED 1427 -> 1434, classified 243 -> 244, corpus 244 -> 245, run 206 -> 207, from this item's own `--strict` print on its COMMITTED MERGE with origin/main (REC-139 in) cf3e1034 (`arms 1434/1427 · classified 244/243 · corpus (suites read) 245/244 · GREW by 7`, `floor 207/206 reproducible`) — the arrival is ratify-authority.test.mjs (seven arms, (a)-(g)).
   // [REC-140 at its merge with UI-65 + REC-136] 2026-09-18: the two moves collided (1434 mine, 1430 theirs); collapsed to ONE key and re-read on the committed merge ecc73ddb from the `--strict` print: `arms 1437/1437 · classified 244/244 · corpus (suites read) 245/245`, `floor 207/207 reproducible`.
-  arms: 1437,
+  // [CONDUCT #6 at REC-143's merge over REC-140] 2026-09-18: the two moves collided (1436 REC-143's, 1437 main's); collapsed to ONE key and re-read on the COMMITTED merge 4a32c72f from the `--strict` print: `arms 1443/1437 · classified 245/244 · corpus (suites read) 246/245 · GREW by 6`, `floor 208/207 reproducible`.
+  arms: 1443,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.
@@ -1347,8 +1348,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] reported the suite as NOT IN ANY COMMIT and refused to count work no other
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
-  classified: 244,
-  corpus: 245,
+  classified: 245,
+  corpus: 246,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1376,7 +1377,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 207,
+  run: 208,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose
