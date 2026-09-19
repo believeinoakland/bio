@@ -52,6 +52,12 @@ Three consequences give the construct its shape. The record must be able to prov
 
 1. **One-way.** Publication cannot be undone; below it, acts *"cannot be undone SILENTLY"* and a correction always moves forward (DEC-19). A claim can be removed from a finding, rescinding it to an inquiry; the published edition stays.
 2. **Only a project publishes, and only its manager.** *"Only findings that are part of a project can be published"*; the publisher is a manager of the project, by default its owner; a case requires at least one load-bearing member (DEC-72).
+   **Applied 2026-09-18 by BOB #15 to D-429 (REC-137 found it):** a PROJECT's own document is not a finding, so
+   `op=ratify` refuses a project bundle outright; a project publishes through its cases. Wherever `op=ratify` ratifies a
+   finding it takes case ratification's rules (Membership v2 §7): an OWNER among the signers, and a deliverer who is the
+   founder or a JOINED member. A caller who cannot see the project is answered exactly as for one that does not exist,
+   never with a statement about its contents (REC-138's class). The builder verifies at the code that `op=ratify`
+   publishes nothing outside a case.
 3. **The fence is on the provenance chain, not the content axis.** A bundle at or past `verified` carries a chain per captured document; every hop names WHO; content authority may be undetermined but must be *"STATED, dated, and carried into what the public reads. Silence is refused"* (C-18.9; Bob, 2026-07-31). What a published hash claims is *"these bytes, this address, this date, this chain of custody"* — and no more. The fence moved here from the content axis so that a gate never pressures anyone into inventing an attribution.
 4. **Bias is public; hunches are cleared first.** *"Not all bias needs to be cleared before a piece is published. The only bias type that must be clear before publication is hunches"* (DEC-20); hunch debt is publication-disqualifying (`schema.mjs`), and since PL-8 it is enumerable (`leg:hunch`).
 5. **Inheritance is per axis.** A leg on a published case says `grade_source: inherited`, names an edition, and cannot be stronger than the case beneath it on either axis (C-21.2).
