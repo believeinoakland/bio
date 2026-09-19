@@ -20,16 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-270 · queued — **SIX OPS ANSWER WITH NO REFUSAL CODE AT ALL, so DEC-49 cannot reach them — and for FIVE of them the session gate's sentence is FALSE** (the machine-credential sentence, sent where that is not the reason). Measured 2026-08-09. — owner RECORD.
-order: FIRST, CONFIRMED by BOB #17: a false rationale SUPPRESSES ITS OWN BUG REPORT — a member told the absence is a DECISION will not report it as a gap. Above M0-78 because it reaches a MEMBER (SCHEDULER #2, 2026-09-19)
-milestone: M8
-interface: I3 — IC-55 is PROPOSED on the branch (2026-08-09), NEVER RESOLVED. The integrator re-reads its base and re-classifies.
-design: DEC-49 with DEC-37/DEC-52's split. **RULED by BOB #17, 2026-09-19 — THREE sentences, not two:** (a) "not for a person" ONLY where that decision is recorded; (b) "your credential does not reach this verb", always sayable; (c) for an OMISSION, neither — state the fact, invent no rationale. Cite his folded home once on main.
-depends-on: none. **SEQUENCE CHECK (BOB #17):** D-136's fix DELETES the refusal this row rewords, for its ops. When re-deriving, REPORT the intersection of these five with D-136's three to SCHEDULER before rewording; disjoint, and this order stands.
-scope: **THE BRANCH IS EVIDENCE, NOT A MERGEABLE ARTIFACT.** `origin/worktree-agent-aafee89563a3f2d42` (`484ed359`) is **1573 commits BEHIND main**, its 180 lines in `index.mjs`. Read its suite, control and MEASUREMENTS; re-derive on current main. Still open: `C-39.2`/`C-39.3` are ZERO times in main's catalogue.
-accepts-when: each of the six answers with a DEC-49 row (`code`, `check`, `translation`); the five send a true sentence under the three-sentence rule; `refusal-wire.test.mjs`' set-pin is CORRECTED with its reason and still fails BOTH ways. How a liar passes it: one generic code for all six, so each op's is pinned by name. NEGATIVE CONTROL: restore the single condition, and the five-op arm fails naming them.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found by CONDUCT #7; keeps its `D-` id).
-
 ### D-136 · queued — **THE §4.7 VOTE CANNOT BE CAST BY A PERSON, AND ON THE ONE REACHABLE PATH THE CALLER NAMES THE VOTER.** `adminendorse`, `adminremove` and `membercaps` are `["admin","probe"]`, in no session set; `by` is stamped only for `PROJECT_ACTIONS` plus two. Seven releases of governance arithmetic rest on attributions the caller supplies. — owner RECORD.
 order: SECOND. A forgeable governance vote outranks the hole below it. Below D-270 on the GOVERNED TEXT, not my judgement — §4.7's *"Until it lands, the plane must not tell a member that this absence is a decision"* IS D-270's sentence (c), so D-270 precedes it (SCHEDULER #2, 2026-09-19)
 milestone: M8
@@ -39,6 +29,16 @@ depends-on: none. **D-134 is NOT beside this row:** its surface is placeable onl
 scope: **ONE LANDING; THIS ROW REFUSES TO BE SPLIT.** Server-stamp `by` from the session on `adminendorse`, `adminremove` AND `membercaps` (§4.9's capability edit, same bearer-only state) and give all three session reach, together. Either half alone is worse than neither: stamping without reach makes the vote unreachable; reach without stamping leaves it forgeable. D-421's class (C-32.14/C-32.15).
 accepts-when: a signed-in administrator casts an endorsement, a removal vote and a capability edit, each stamped as THEM by the server; a bearer credential naming another administrator as `by` is REFUSED; the arithmetic still refuses an addition without consensus. How a liar passes it: honouring a sent `by` for a session caller, so the suite drives one sending another's id. NEGATIVE CONTROL: drop the stamp, and the forged-voter arm fails by name.
 added: 2026-09-19 · SCHEDULER #2 (LED-7; BOB #17's ruling `95fb3e4c`; keeps its `D-` id).
+
+### D-432 · queued — **AN OPAQUE ID CAN BE REISSUED ACROSS A WHOLE-STORE PURGE, so a citation of the purged object silently resolves to a NEW one.** `allocId`'s counter never reissued, because `purge` keeps `seq`; `Store#mintOpaqueId` checks uniqueness against LIVE rows only, and a purge deletes those rows. A single-bundle purge does the same for its `PROJ` id. — owner RECORD.
+order: THIRD, above M0-78. A correction to JUST-LANDED work, which outranks new work — and the failure is SILENT: a citation keeps resolving and answers the WRONG object, which outranks the instruments below it, blind rather than wrong. 1 in 10,000 per draw per prior id of that prefix and year: rare, not improbable (SCHEDULER #2, 2026-09-19)
+milestone: M8
+interface: I5 — one IC; the minter gains a table it consults.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7's minted-id rules, with the `op=purge` comment that is the precedent extended — *"allocid must never reissue an identifier that has already existed"* — and §7's legacy-residue bullet: **citations must keep resolving.**
+depends-on: none. REC-151 (`8e14effe`) and REC-141 (`11aa7b13`) are on `origin/main`; this corrects the minter they landed.
+scope: the row names the whole fix — a purge-exempt `minted_ids` table beside `seq`, written in the MINTER'S CALLER'S transaction, exempt from `purge` on `seq`'s reasoning, listed in `hygiene.test.mjs`' exemptions; and `#mintOpaqueId`'s `taken` asks it as well as the live rows. New tables go before the `host_governor` block.
+accepts-when: an id minted, purged, then redrawn under a FORCED collision is refused by the ledger rather than reissued; `purge`'s own proof still passes with the table exempt. How a liar passes it: exempting the table without the minter reading it, so the arm FORCES a collision rather than trusting the write. NEGATIVE CONTROL: drop the ledger from `taken`, and that arm fails by name.
+added: 2026-09-19 · SCHEDULER #2 (at REC-151's close, which made its `D-` id citable; keeps that id).
 
 ### M0-78 · queued — **TWO NEGATIVE CONTROLS MEASURE NOTHING: `caseproduction.control.mjs` arms (C) and (H) THROW INSIDE THE FIXTURE, on the old sources too, so their declared `mustFail` assertions are never evaluated and the control line claims coverage the evidence base does not have.** CONDUCT #7, 2026-09-19. — owner M0 / VERIFY.
 order: AHEAD OF FEATURES though its prefix is M0 — a control that cannot fail makes the record claim more than it can support, which CLAUDE.md §2 grades worse than a missing feature. BOB #16's M0-last rule was written for M0 BUILD items, not an evidence-base hole. Placed HIGH **provisionally**; the doctrine call is ROUTED TO BOB (SCHEDULER #2, 2026-09-19)
