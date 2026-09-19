@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1197 rulings across 94 documents.
+1200 rulings across 94 documents.
 
 ## DEC-
 
@@ -624,6 +624,8 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:11378`
 - **D-428** — PLUS `bio-plane/test/projects.test.mjs` (one assertion that pinned NAME_TAKEN's `bundleId` CORRECTED with a dated reason) and `bio-plane/test/project-sight.test.mjs` (a comment's cross-reference to D-428 brought current).  
   `docs/development/CLAIMS.md:14293`
+- **D-428** · 2026-09-18 — `project-sight.test.mjs` §6's KNOWN pin and `project-disclosure.test.mjs` §4's are CORRECTED; driven in `bio-plane/test/project-mint.test.mjs` (both row controls AS DECLARED).  
+  `docs/development/DEBT.md:296`
 - **D-428** · 2026-09-18 — es, whose sha is the returned sha; bytes already carrying `id:` are refused; `project-sight.test.mjs` §6's KNOWN pin is CORRECTED with its reason; D-428 CLOSED on its row — its name half was RULED by Bob on 2026-09-18 (Membership v2 §7: names stay unique across the instance and the refusal reveals only the name the…  
   `docs/development/QUEUE.md:90`
 - **D-429** · 2026-09-19 — §3 rule 2's note (D-429, BOB #15) is BUILT for a project bundle and for a finding a ratified case pins (REC-140, IC-157); what `op=ratify` still publishes OUTSIDE a case is D-431, DECIDED by BOB #16 (2026-09-19, §3 rule 2's second note) and not built. §6A's surface is verified rowable (BOB #16, 2026-09-19):…  
@@ -1195,13 +1197,13 @@ authority is the file named, never this one.
 - **REC-136** — land `ui-65-conclude` TOGETHER with REC-136 (it contains `783054ac`); `ui-65-conclude-surface` is SUPERSEDED (its merge dropped the held branch's QUEUE.md change) and must not be merged; the DELEGATION to RECORD below is open; no IC (UI-65 consumes IC-150/IC-153 and needs no new read).  
   `docs/development/CLAIMS.md:14380`
 - **REC-137** — `op=caseratify`'s position is DECIDED in the next bullet and BUILT by REC-137 (IC-154).  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:557`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:558`
 - **REC-139** · 2026-09-18 — §7 — 7.1 against 7.9 is RULED by Bob (2026-09-18, *"Keep project names unique"*): refusing a name tells an uninvited member only that a project with THAT name exists; `NAME_TAKEN` names nothing else (REC-139).  
   `docs/architecture/BIO_Membership_Architecture_v2.md:14`
-- **REC-139** — §7 — *"The plane MINTS project ids"* is DECIDED (BOB #15) and UNBUILT, because it does not say whether a caller-supplied id for a NEW project is REFUSED or IGNORED, whether `op=projectfork`'s `newId` (typed by the member in `civicos-ui` today) is minted too, or how the minted id reaches the document's own `id:` scalar.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:15`
 - **REC-139** — NOT BUILT, AND REPORTED AS A DESIGN GAP RATHER THAN DECIDED:** *"The plane MINTS project ids (a caller no longer chooses one)"* does not say whether a caller-supplied id for a NEW project is REFUSED or IGNORED, and REC-139's row says STOP on that.  
   `docs/development/INTERFACE-CHANGES.md:11488`
+- **REC-140** — CORRECTED at their sites with dated reasons, never exempted: `project-sight.test.mjs` §6 (the KNOWN `EXISTS` pin, now the refusal and byte-identical to a never-minted id; its control re-run, every arm AS DECLARED), `project-disclosure.test.mjs` §4, `ratify-authority.test.mjs` (REC-140's, control re-run AS…  
+  `docs/development/INTERFACE-CHANGES.md:11770`
 - **REC-142** — REC-142 DECIDED, ON THIS CLAIM, BEFORE ANY CODE — the shape: `conclude` IS PUBLISHED ON A CONCLUDED INQUIRY (its PROJECT arm); NO separate act id.** Why: (1) it is ONE act through ONE op — `op=conclude&project=` is the write the store already accepts there (REC-124), and the relationship is the act's PARAMETER…  
   `docs/development/CLAIMS.md:14495`
 ## UI-
@@ -1644,11 +1646,11 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-10** — ⚠ SUPERSEDED BY v2, July 26 2026. DO NOT WORK FROM THIS FILE. > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said since July** — a reader who opens this document  
   `docs/architecture/BIO_Membership_Architecture_v1.md:32`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 (two of his July 26 rulings met):** *"Keep project names unique across instances."* Refusing a name therefore tells an uninvited member that a project with THAT name exists — the one thing §7.9 yields to §7.1 — and the refusal reveals nothing beyond the name the caller supplied. **BUILT…  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:585`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:586`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — a project does not own a line of inquiry.** *"Anybody can ask a question related to anything - even something also being explored in a project they're not a member of.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:599`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:611`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents might be private, though the existence of the project may not be.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:609`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:621`
 - CORRECTED the same day by BOB #15 — the first version said *the owner or any administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the exception"*).  
   `docs/architecture/BIO_Publication_v0_1.md:180`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
@@ -2113,6 +2115,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:14436`
 - (`m025-arm-anchor-witness` A4 named it); the anchor is CORRECTED to a heading the cache keeps, with a dated reason at the site, and the control is re-run on a clean committed tree.  
   `docs/development/CLAIMS.md:14452`
+- CORRECTED; every suite that chose a project id CORRECTED at its site with a dated reason, never exempted (including the shared fixture `bio-plane/test/publishingproject.mjs`); `civicos-ui/test/**` fixtures only where a plane-backed fixture chose a project id.  
+  `docs/development/CLAIMS.md:14551`
+- this merge) CORRECTED for minted ids and its control re-run AS DECLARED with identical figures.  
+  `docs/development/CLAIMS.md:14610`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

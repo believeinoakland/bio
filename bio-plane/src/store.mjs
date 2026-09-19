@@ -441,6 +441,8 @@ import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
 import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
+import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -13269,7 +13271,9 @@ export class Store extends DurableObject {
    */
   promote(pkg) {
     if (!pkg || typeof pkg !== "object") return { ok: false, reason: "NO_BODY", detail: "promote requires a POSTed package" };
-    const { bundleId, base, files, meta, snapKey, author, register = [] } = pkg;
+    const { base, meta, snapKey, author, register = [] } = pkg;
+    /* REC-141: `let`, because a NEW project's id and its document are the plane's to write (below). */
+    let { bundleId, files } = pkg;
     /* A mechanical writer must name an operation the catalog knows, because
        C-20.1 holds it to that operation's declared field set and refuses one
        that names nothing. Validated here so a daemon cannot write an
@@ -13295,8 +13299,62 @@ export class Store extends DurableObject {
     if (Array.isArray(pkg.basis) && pkg.basis.length)
       return { ok: false, reason: "BASIS_IN_PAYLOAD",
                detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field" };
-    if (!bundleId || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    /* ===== REC-141 / C-59 — THE PLANE MINTS PROJECT IDS (Membership v2 §7, *"HOW the plane mints a
+       project id"*, BOB #15; §7.9 *"not its existence"*). A creation that named its project's id answered
+       EXISTS at a hidden project's id and CREATED at a free one — D-428's creation half. So a NEW project
+       (base null, typed `project`) and ANY creation in the `PROJ-` namespace, whatever type it claims, is
+       refused if it names an id, and the refusal is decided HERE, before any id is looked up: one answer,
+       taken or not, echoing no id. Never silently ignored — a caller who named one is told. With no id the
+       plane mints one inside the transaction below and WRITES it into the document's `id:` before the
+       bytes are hashed and registered, so the sha it returns is the sha of what it holds; a document that
+       already carries a top-level `id:` is refused (the catalog's own parser decides what one is, so a
+       nested key or a body line is not one). Every other type still names its own id, unchanged. */
+    const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
+    const creatingProject = base === null && !!meta && typeof meta === "object"
+      && (normalizeType(meta.object_type) === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
+    const refusal = (code, detail) => {
+      const row = PROJECT_ID_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+    };
+    let projectMd = null;
+    if (creatingProject) {
+      /* DEC-49 REGION is-project-id-supplied */
+      if (idSupplied)
+        return refusal("PROJECT_ID_SUPPLIED",
+          "a new project's id is minted by the plane and returned; send the creation with no bundleId. "
+          + "A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created.");
+      /* END DEC-49 REGION is-project-id-supplied */
+      /* DEC-49 REGION is-project-id-bytes */
+      projectMd = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
+      const fmNew = projectMd && typeof projectMd.text === "string" ? parseFrontmatter(projectMd.text).data : null;
+      if (!fmNew)
+        return refusal("PROJECT_DOCUMENT_UNREADABLE",
+          "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, "
+          + "because the plane writes the minted id into it. Nothing was created.");
+      if (Object.prototype.hasOwnProperty.call(fmNew, "id"))
+        return refusal("PROJECT_ID_IN_BYTES",
+          "the new project's bundle.md already carries a top-level id: line. The plane writes the id it mints; "
+          + "remove the line and send it again. Nothing was created.");
+      /* END DEC-49 REGION is-project-id-bytes */
+    }
+    /* ===== END REC-141 (the mint itself is the first act inside the transaction) ===== */
+    if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
     return this.ctx.storage.transactionSync(() => {
+      /* REC-141: MINT, WRITE, THEN HASH. The id goes in as the first line after the opening fence; the
+         bytes and their sha256 are recomputed from the written text, and THAT sha is what the files row,
+         the bundle's head and the answer carry — the caller's own sha of an id-less document is never
+         registered. Inside the transaction, so the sequence step and the write are one act. */
+      if (creatingProject) {
+        bundleId = this.#mintProjectId(meta.title);
+        if (!bundleId) return { ok: false, reason: "MINT_EXHAUSTED",
+                                detail: "the plane could not find a free project id in the current sequence" };
+        const lines = projectMd.text.split("\n");
+        lines.splice(1, 0, `id: ${bundleId}`);
+        const text = lines.join("\n");
+        const bytes = new TextEncoder().encode(text);
+        const written = { ...projectMd, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
+        files = files.map((f) => f === projectMd ? written : f);
+      }
       const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
 
       /* REC-138 / D-426: a REVISION of a bundle the actor cannot see answers exactly as a revision of
@@ -24546,13 +24604,32 @@ export class Store extends DurableObject {
   /* ---- coordination: what LockService and the nextSeq race did ---- */
 
   allocId(prefix, year) {
-    return this.ctx.storage.transactionSync(() => {
-      const scope = `${prefix}-${year}`;
-      const cur = this.#one(`SELECT next FROM seq WHERE scope=?`, scope);
-      const n = cur ? cur.next : 1;
-      this.sql.exec(`INSERT INTO seq (scope,next) VALUES (?,?) ON CONFLICT(scope) DO UPDATE SET next=?`, scope, n + 1, n + 1);
-      return { id: `${prefix}-${year}-${String(n).padStart(4, "0")}` };
-    });
+    return this.ctx.storage.transactionSync(() => this.#nextSeq(prefix, year));
+  }
+
+  /* The sequence step itself, with no transaction of its own, so a caller already inside one (REC-141's
+     project mint, inside `promote`'s) takes the same step `op=allocid` takes. */
+  #nextSeq(prefix, year) {
+    const scope = `${prefix}-${year}`;
+    const cur = this.#one(`SELECT next FROM seq WHERE scope=?`, scope);
+    const n = cur ? cur.next : 1;
+    this.sql.exec(`INSERT INTO seq (scope,next) VALUES (?,?) ON CONFLICT(scope) DO UPDATE SET next=?`, scope, n + 1, n + 1);
+    return { id: `${prefix}-${year}-${String(n).padStart(4, "0")}` };
+  }
+
+  /** REC-141: a NEW project's id, minted in `allocId`'s pattern — `PROJ-<year>-<seq>-<slug>`, the slug
+   *  from the project's name the way both intake surfaces already slugged a title (`BUNDLE_ID_RE`'s
+   *  shape). A sequence number already held by an id someone CHOSE before ids were minted is stepped
+   *  past, inside the plane, so the caller learns nothing from it. Null only if 64 steps all collide. */
+  #mintProjectId(title) {
+    const year = new Date().toISOString().slice(0, 4);
+    const slug = String(title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+      .slice(0, 40).replace(/-+$/, "") || "project";
+    for (let i = 0; i < 64; i++) {
+      const id = `${this.#nextSeq("PROJ", year).id}-${slug}`;
+      if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id)) return id;
+    }
+    return null;
   }
 
   acquireLease(bundleId, actor, ttlMs) {
@@ -27634,6 +27711,17 @@ export class Store extends DurableObject {
    *  Origin is recorded as `derived_from`, already in the closed relationship
    *  vocabulary of State Rules 5.1, so nothing is added to it. */
   forkProject({ projectId, newId, title, by, viewer = null } = {}) {
+    /* REC-141 / C-59.3: a fork's id is MINTED, as a new project's is (Membership v2 §7, BOB #15). A named
+       `newId` is refused FIRST — before the origin, the participation or the id is looked up — so the
+       answer is one answer whether the named id is taken or free, and it echoes no id. */
+    /* DEC-49 REGION is-project-fork-id-supplied */
+    if (newId !== undefined && newId !== null && newId !== "") {
+      const row = PROJECT_ID_CHECKS.PROJECT_FORK_ID_SUPPLIED;
+      return { ok: false, reason: "PROJECT_FORK_ID_SUPPLIED", code: "PROJECT_FORK_ID_SUPPLIED", check: row.check,
+               translation: row.translation,
+               detail: "a fork's id is minted by the plane and returned as newId; send the fork with no newId. Nothing was forked." };
+    }
+    /* END DEC-49 REGION is-project-fork-id-supplied */
     const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position. NOT_A_PARTICIPANT below said *"An uninvited member
        cannot see that it exists"* while telling them exactly that; it is now said only to a caller
@@ -27646,9 +27734,6 @@ export class Store extends DurableObject {
     if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state,
       detail: "an invited member who has not joined sees the project's skeleton only, so there is nothing "
             + "for them to fork. Join it first." };
-    if (!newId || typeof newId !== "string") return { ok: false, reason: "MALFORMED", detail: "newId is required" };
-    if (this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, newId))
-      return { ok: false, reason: "EXISTS", bundleId: newId };
 
     /* 7.1: a project's name is unique across the instance, compared
        case-insensitively with runs of whitespace collapsed. A plain unique index
@@ -27689,8 +27774,9 @@ export class Store extends DurableObject {
                detail: "the origin's references block is not in a shape this grammar can extend in place, "
                      + "so the clone could not be given a recorded origin. A fork with no provenance is "
                      + "not written." };
-    let text = withEdge;
-    text = Store.#setScalar(text, "id", newId);
+    /* REC-141: the origin's `id:` line is REMOVED, not rewritten — `promote` mints the fork's id and writes
+       it into these bytes before it hashes them, and refuses bytes that already carry one. */
+    let text = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
     text = Store.#setScalar(text, "title", JSON.stringify(title));
     /* A fork starts at the beginning of the lifecycle regardless of where the
        origin had got to. Inheriting `matured` would claim a readiness the clone
@@ -27719,7 +27805,7 @@ export class Store extends DurableObject {
 
     const fbytes = new TextEncoder().encode(text);
     const promoted = this.promote({
-      bundleId: newId, base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
+      base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
       author: by, ownerMemberId: by,
       files: [{ path: "bundle.md", text, bytes: fbytes.length,
                 sha256: createSha256().update(fbytes).hex() }, ...carried],
@@ -27727,7 +27813,7 @@ export class Store extends DurableObject {
               current_state: "forming", created: when, last_updated: when },
     });
     if (!promoted.ok) return promoted;
-    return { ok: true, projectId, newId, title, origin: projectId, rel: "derived_from",
+    return { ok: true, projectId, newId: promoted.bundleId, title, origin: projectId, rel: "derived_from",
              owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha };
   }
 

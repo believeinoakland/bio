@@ -218,8 +218,23 @@ const promote = async (id, text, objectType, state) => {
 };
 /* `makePublishingProject` claims ownership in `bio` by construction; this suite's
    ground is `scratch`, so the same two steps are taken there. */
-const PROJECT = "PROJ-2026-9125-auditor";
-await promote(PROJECT, projectFixtureMd(PROJECT, { created: NOW, updated: LATER }), "project", "investigating");
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1); the creation names no bundleId, its bytes
+   carry no `id:` line, and PROJECT is read from the answer. */
+let PROJECT;
+{
+  const label = "PROJ-2026-9125-auditor";
+  const text = projectFixtureMd(null, { created: NOW, updated: LATER, name: label });
+  const r = await POST(`op=promote&token=${ADM}${S}`, {
+    base: null,
+    snapKey: `20260918T${String(600000 + (++snapSeq)).slice(-6)}Z_${sha(label).slice(0, 8)}`,
+    meta: { object_type: "project", group: "believe-in-oakland", title: `t ${label}`,
+            current_state: "investigating", created: NOW, last_updated: LATER },
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+    register: [] });
+  if (!r || r.ok === false || !r.bundleId) throw new Error(`promote ${label}: ${JSON.stringify(r).slice(0, 800)}`);
+  PROJECT = r.bundleId;
+}
 {
   const ns = await mf.getDurableObjectNamespace("STORE");
   const c = rP(await (await ns.get(ns.idFromName("scratch")).fetch("http://x/projectclaimowner",

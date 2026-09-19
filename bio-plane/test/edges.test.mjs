@@ -110,8 +110,9 @@ Changes: collected.
 
 `;
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7) — creation bytes carry no `id:` line (PROJECT_ID_IN_BYTES). */
 const projMd = (p) => `---
-id: ${p.id}
 object_type: project
 schema: project@1
 title: "${p.title}"
@@ -158,8 +159,11 @@ Changes: created.
 
 `;
 
+/* CORRECTED 2026-09-18 (REC-141): a null id sends NO bundleId — a project's
+   creation naming one is refused PROJECT_ID_SUPPLIED; the answer carries the minted id. */
 const promoteRaw = async (id, text, meta, base = null, extra = []) => call("/promote", {
-  bundleId: id, base, snapKey: `${id}-${base ? Date.now() + Math.random() : "new"}`,
+  ...(id === null ? {} : { bundleId: id }), base,
+  snapKey: `${id ?? "PROJ-edges"}-${base ? Date.now() + Math.random() : "new"}`,
   author: "suite",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extra],
   meta,
@@ -185,13 +189,18 @@ for (let i = 0; i < 4; i++) INFOS.push({
 /* Created but deliberately NEVER cited, so "exists but carries no edge" is a
    distinct case from "does not exist at all". */
 const UNCITED = { id: "INFO-2026-8009-uncited", title: "Never cited", body: "Unused." };
-const PROJ = { id: "PROJ-2026-0001-edges", title: "Edge lifecycle" };
+/* CORRECTED 2026-09-18 (REC-141, IC-158): PROJ.id is the id the plane MINTS at
+   creation below, not a chosen one. */
+const PROJ = { id: null, title: "Edge lifecycle" };
 
 for (const b of [...INFOS, UNCITED]) await promoteRaw(b.id, infoMd(b), infoMeta(b));
 {
   const text = projMd(PROJ);
-  await promoteRaw(PROJ.id, text, projMeta(PROJ), null,
+  const created = await promoteRaw(null, text, projMeta(PROJ), null,
     [{ path: "data/keep.json", text: KEEP, bytes: KEEP.length, sha256: sha(KEEP) }]);
+  if (!created || created.ok !== true || typeof created.bundleId !== "string")
+    throw new Error(`project creation: ${JSON.stringify(created)}`);
+  PROJ.id = created.bundleId;
 }
 
 const sel = async (ids) => (await call(`/select?${STAMP}`, { ids })).handle;

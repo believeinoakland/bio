@@ -373,12 +373,17 @@ const infoMd = (id, prose = "A captured document about the sewer fund.") => ["--
   "---", "", "## Summary", "", prose, "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
-const projectMd = (id) => ["---", `id: ${id}`, "object_type: project",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7). A
+   creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1), and bytes carrying an `id:` line
+   PROJECT_ID_IN_BYTES (C-59.2). So the project document carries no id, `promote` sends no bundleId for a
+   project (its `id` argument is then only the label for the snapKey and title), and the minted id is
+   read from the answer. */
+const projectMd = () => ["---", "object_type: project",
   `current_state: forming`, `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "---", "", "## Summary", "", "A project the uninvited must not learn about.", ""].join("\n");
 
 const promote = async (id, text, type, extraFiles = [], register = [], tok = "mem-pl9") => rP(await post("promote", {
-  bundleId: id, base: null, snapKey: `${id}-new`, author: "pl9",
+  ...(type === "project" ? {} : { bundleId: id }), base: null, snapKey: `${id}-new`, author: "pl9",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extraFiles],
   meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
           current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
@@ -408,7 +413,9 @@ const DOC_GONE = "INFO-2026-0900-withdrawn";
 const DOC_R = "INFO-2026-0900-resolved";
 const HUNCH_1 = "INQ-2026-0900-transfer", HUNCH_2 = "INQ-2026-0900-vendor";
 const CLEAN_1 = "INQ-2026-0900-earned", LEGLESS = "INQ-2026-0900-legless";
-const PROJ = "PROJ-2026-0900-secret";
+/* CORRECTED 2026-09-18 (REC-141): the label the project is created under; PROJ is its MINTED id, set below. */
+const PROJ_LABEL = "PROJ-2026-0900-secret";
+let PROJ = null;
 
 const FIXTURE = [
   { id: HUNCH_1, refs: [DOC_A, DOC_B, DOC_GONE], legs: [
@@ -471,9 +478,11 @@ const readingFile = (capSha) => {
   const [files, reg] = readingFile(CAP_P);
   /* CAROL's session promotes it, so the control plane stamps her as owner and
      dave is genuinely uninvited rather than merely unnamed. */
+  const pr = await promote(PROJ_LABEL, projectMd(), "project", files, reg, carol);
+  PROJ = pr?.bundleId ?? null;
   t("the PROJECT promoted with a capture and a reading — and THIS is what `meaningquery.test.mjs` "
   + "says cannot happen: `#writeReadings` has no object_type test",
-    (await promote(PROJ, projectMd(PROJ), "project", files, reg, carol))?.ok, true);
+    [pr?.ok, typeof PROJ === "string" && PROJ.startsWith("PROJ-")], [true, true]);
 }
 const resI = rP(await post("resolve", { captureSha: CAP_I, resolvedBy: "pl9" }));
 const resP = rP(await post("resolve", { captureSha: CAP_P, resolvedBy: "pl9" }));

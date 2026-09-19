@@ -117,7 +117,11 @@ const RUTH = await enrol("ruth", "admin");
 const IRIS = await enrol("iris", "member");
 const VERA = await enrol("vera", "member");
 
-const projectMd = (id) => projectFixtureMd(id, { created: NOW, updated: LATER });
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7): creation bytes carry no `id:` line and a PROJECT creation
+   sends no bundleId (refused PROJECT_ID_SUPPLIED) — the label is only the title's
+   name, and each project constant below is the id read from the answer. */
+const projectMd = (name) => projectFixtureMd(null, { created: NOW, updated: LATER, name });
 const infoMd = (id) => ["---",
   `id: ${id}`, "object_type: information", "schema: information@1",
   `title: "Info ${id}"`, "current_state: collected", "prior_state: null",
@@ -151,7 +155,7 @@ const inquiryMd = (id, target) => ["---",
 let snapSeq = 0;
 const promote = async (id, text, objectType, state) => {
   const r = await POST(`op=promote&token=${ADM}`, {
-    bundleId: id, base: null,
+    ...(objectType === "project" ? {} : { bundleId: id }), base: null,
     snapKey: `20260918T${String(320000 + (++snapSeq)).slice(-6)}Z_${sha(id).slice(0, 8)}`,
     meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
             current_state: state, created: NOW, last_updated: LATER },
@@ -161,8 +165,7 @@ const promote = async (id, text, objectType, state) => {
   return r;
 };
 /* IRIS'S project: the founder was never invited to it. */
-const PROJ = "PROJ-2026-9132-iris";
-await promote(PROJ, projectMd(PROJ), "project", "investigating");
+const PROJ = (await promote("PROJ-2026-9132-iris", projectMd("PROJ-2026-9132-iris"), "project", "investigating")).bundleId;
 const own = await DO("projectclaimowner", { projectId: PROJ, memberId: "iris" });
 if (!own || own.ok !== true) throw new Error(`projectclaimowner: ${JSON.stringify(own)}`);
 const INFO = "INFO-2026-9132-memo", INQ = "INQ-2026-9132-q";
@@ -253,8 +256,7 @@ t("the founder OWNS NO project, so `publish` is NOT offered on the concluded inq
   (await acts(FOUNDER)).some((a) => a.id === "publish"), false);
 t("iris owns a project, so `publish` IS offered to her (the ground)",
   (await acts(IRIS)).some((a) => a.id === "publish"), true);
-const FPROJ = "PROJ-2026-9132-founder";
-await promote(FPROJ, projectMd(FPROJ), "project", "investigating");
+const FPROJ = (await promote("PROJ-2026-9132-founder", projectMd("PROJ-2026-9132-founder"), "project", "investigating")).bundleId;
 const fown = await DO("projectclaimowner", { projectId: FPROJ, memberId: "admin" });
 t("the founder is made an owner of a second project (the fixture step)", fown && fown.ok, true);
 t("now `publish` IS offered to the founder — the fact was asked of `admin`, in both directions",

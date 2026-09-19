@@ -883,24 +883,30 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
 
 {
   const DO = async (op, q = "") => rP(await (await obj.fetch(`http://x/${op}?${q}`)).json());
-  const SECRET = "PRJ-2026-0916-rec103-secret";
+  const SECRET_LABEL = "PRJ-2026-0916-rec103-secret";
   const OPEN = "INF-2026-0916-rec103-open";
   const SHA_SECRET = "e".repeat(64);
   const SHA_OPEN = "f".repeat(64);
   const reg = (s) => [{ sha256: s, path: `data/${s.slice(0, 4)}.pdf`, encoding: "binary", bytes: 10 }];
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+     project creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1), or PROJECT_ID_IN_BYTES (C-59.2)
+     for an `id:` line. A project is created with neither, `id` is only its label, and `mk` returns the
+     id the record holds it under — SECRET is the minted one. */
   const mk = async (id, type, capture) => {
-    const text = `---\nid: ${id}\nobject_type: ${type}\n---\n\n## Summary\n\n${id}\n`;
+    const mint = type === "project";
+    const text = `---\n${mint ? "" : `id: ${id}\n`}object_type: ${type}\n---\n\n## Summary\n\n${id}\n`;
     const r = await POST(`op=promote&token=${TOK}`, {
-      bundleId: id, base: null, snapKey: `20260916T0900${id.length % 10}0Z_${sha(id).slice(0, 8)}`,
+      ...(mint ? {} : { bundleId: id }), base: null, snapKey: `20260916T0900${id.length % 10}0Z_${sha(id).slice(0, 8)}`,
       meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
               current_state: type === "project" ? "forming" : "collected",
               created: T0, last_updated: T0 },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
       register: reg(capture) });
-    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 400)}`);
+    if (r.ok === false || !r.bundleId) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 400)}`);
+    return r.bundleId;
   };
   await mk(OPEN, "information", SHA_OPEN);
-  await mk(SECRET, "project", SHA_SECRET);
+  const SECRET = await mk(SECRET_LABEL, "project", SHA_SECRET);
 
   /* THE THREE VECTORS, EACH THROUGH ITS OWN REAL WRITER rather than through one
      that happens to be convenient — the leak arrives by three doors and a suite

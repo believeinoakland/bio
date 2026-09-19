@@ -192,9 +192,11 @@ const carol = await member("carol", ["contribute", "create_projects"]);
 const dave = await member("dave", ["contribute"]);
 
 /* ------------------------------------------------- captured documents + readings */
-const bundleMd = (id, type) => [
-  "---", `id: ${id}`, `object_type: ${type}`, `schema: ${type}@1`,
-  `title: "${id}"`, `current_state: ${type === "project" ? "forming" : "collected"}`,
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's creation bytes carry NO `id:` line (the plane mints
+   the id and refuses bytes naming one, C-59.2), so `id` null omits it; `name` is the title's label. */
+const bundleMd = (id, type, name = id) => [
+  "---", ...(id === null ? [] : [`id: ${id}`]), `object_type: ${type}`, `schema: ${type}@1`,
+  `title: "${name}"`, `current_state: ${type === "project" ? "forming" : "collected"}`,
   "prior_state: null", `created: ${NOW}`, `last_updated: ${NOW}`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []",
@@ -218,8 +220,12 @@ let bseq = 0;
    document whose reference KEY is is the B tier, and neither can be arranged
    while every fixture reference is composed from one literal. */
 const doc = async (type, tok, key, label, ref = null) => {
-  const id = `${type === "project" ? "PROJ" : "INFO"}-2026-${String(++bseq).padStart(4, "0")}-r36`;
-  const md = bundleMd(id, type);
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a PROJECT's id is MINTED by the plane (Membership v2 §7) and a
+     creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1). The tag is kept as the title (so each
+     stays unique) and the project's id is read from the answer; an INFORMATION id is still chosen. */
+  const tag = `${type === "project" ? "PROJ" : "INFO"}-2026-${String(++bseq).padStart(4, "0")}-r36`;
+  const minted = type === "project";
+  const md = bundleMd(minted ? null : tag, type, tag);
   const capture = sha(`r36-${key}`);
   const prov = JSON.stringify({ documents: [{
     capture: { sha256: capture, encoding: "binary", bytes: 10 },
@@ -230,12 +236,14 @@ const doc = async (type, tok, key, label, ref = null) => {
     { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
   ];
   const r = await post("promote", {
-    bundleId: id, base: null, snapKey: `${id}-new`, author: "r36", files,
+    ...(minted ? {} : { bundleId: tag }), base: null, snapKey: `${tag}-new`, author: "r36", files,
     register: [{ sha256: capture, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
-    meta: { object_type: type, group: "believe-in-oakland", title: id,
+    meta: { object_type: type, group: "believe-in-oakland", title: tag,
             current_state: type === "project" ? "forming" : "collected",
             created: NOW, last_updated: NOW } }, tok);
-  if (r?.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
+  if (r?.ok === false) throw new Error(`promote ${tag}: ${JSON.stringify(r)}`);
+  const id = minted ? r?.bundleId : tag;
+  if (typeof id !== "string") throw new Error(`promote ${tag} answered no id: ${JSON.stringify(r)}`);
   return { id, capture };
 };
 

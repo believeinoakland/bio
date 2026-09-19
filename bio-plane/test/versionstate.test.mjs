@@ -236,22 +236,30 @@ const infoMd = (id) => ["---",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 /* A project whose `references[]` names the question, in a DIFFERENT field order
    from anything this item writes — the over-strictness arm's own fixture. */
-const projectMd = (id, refs = []) => ["---", `id: ${id}`, "object_type: project",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
+   creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
+const projectMd = (id, refs = []) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(refs.length ? ["references:", ...refs.flatMap((x) => [`  - rel: cites`,
       `    status: confirmed`, `    target: ${x}`])] : ["references: []"]),
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 
-const promote = async (id, text, type, base = null, tok = RUTH) => POST(`op=promote&token=${tok}`, {
-  bundleId: id, base,
-  snapKey: `${id}-${Math.random().toString(36).slice(2, 8)}`,
+const promote = async (id, text, type, base = null, tok = RUTH, name = id) => POST(`op=promote&token=${tok}`, {
+  ...(id === null ? {} : { bundleId: id }), base,
+  snapKey: `${id ?? name}-${Math.random().toString(36).slice(2, 8)}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
     : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${name}`,
           current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
           created: NOW, last_updated: LATER } });
+/* A project CREATION: no id sent, the minted one read from the answer (REC-141). `name` keeps titles distinct. */
+const mintProject = async (name, refs) => {
+  const r = await promote(null, projectMd(null, refs), "project", null, RUTH, name);
+  if (!r.ok || typeof r.bundleId !== "string") throw new Error(`promote project ${name}: ${JSON.stringify(r).slice(0, 700)}`);
+  return r.bundleId;
+};
 const mustPromote = async (...a) => {
   const r = await promote(...a);
   if (!r.ok) throw new Error(`promote ${a[0]}: ${JSON.stringify(r).slice(0, 700)}`);
@@ -963,10 +971,12 @@ console.log("\n--- 9. the implementation-count pin, and the three layers of the 
  * MAKE-CURRENT — §7, THE PROJECT'S OWN DATED DECLARATION.
  * ==================================================================== */
 console.log("\n--- 10. make-current: the PROJECT's dated pointer, never a settings row ---");
+/* CORRECTED 2026-09-18 (REC-141, IC-158): these projects' ids are MINTED (see `mintProject`); §11 and the
+   publication fixture below reach the SAME projects through these two, where they used to retype the literals. */
+let OVERSIGHT = null, UNRELATED = null;
 {
-  const PROJ = "PROJ-2026-2000-oversight", OTHER = "PROJ-2026-2000-budget";
-  await mustPromote(PROJ, projectMd(PROJ, [INQ]), "project");
-  await mustPromote(OTHER, projectMd(OTHER, [INQ]), "project");
+  const PROJ = OVERSIGHT = await mintProject("oversight", [INQ]);
+  const OTHER = await mintProject("budget", [INQ]);
   const noProj = await act("current", { version: "opening account" });
   t("NO DEFAULT PROJECT, and that is §7's whole point: a question can sit beneath several teams and "
   + "one team's decision must never quietly move another's",
@@ -975,8 +985,7 @@ console.log("\n--- 10. make-current: the PROJECT's dated pointer, never a settin
   t("CURRENT IMPLIES ACCEPTED (§6 rule 5): an unsettled reading is explored by CALCULATING OVER IT, "
   + "never by making it what a whole team stands on",
     [notAcc.ok, codeOf(notAcc), notAcc.from], [false, "VERSION_NOT_ACCEPTED", "considering"]);
-  const STRANGER = "PROJ-2026-2000-unrelated";
-  await mustPromote(STRANGER, projectMd(STRANGER, []), "project");
+  const STRANGER = UNRELATED = await mintProject("unrelated", []);
   const unrelated = await act("current", { version: "opening account", q: `&project=${STRANGER}` });
   t("and a project that does not draw on the question has no stance here to move",
     [unrelated.ok, codeOf(unrelated)], [false, "VERSION_CURRENT_UNRELATED"]);
@@ -1128,9 +1137,9 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
   drive(await act("revert", { version: "opening account" }));
   drive(await act("reject", { version: "the audit alone" }));
   drive(await act("accept", { target: "INQ-2026-2000-cycle-a", version: "resting on what rests on me" }));
-  drive(await act("current", { version: "the audit alone", q: "&project=PROJ-2026-2000-oversight" }));
+  drive(await act("current", { version: "the audit alone", q: `&project=${OVERSIGHT}` }));
   drive(await act("current", { version: "opening account" }));
-  drive(await act("current", { version: "opening account", q: "&project=PROJ-2026-2000-unrelated" }));
+  drive(await act("current", { version: "opening account", q: `&project=${UNRELATED}` }));
   /* C-25.32, driven the same way as every other row here: by making the plane
      refuse, never by typing the code. A reason that arrived and cannot be
      stored — this one carries a double quote the restricted frontmatter grammar
@@ -1206,7 +1215,7 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
      for its `current` arms; the finding is designated load_bearing because CASE-2
      requires at least one and a default would be a designation nobody authored. */
   const pubd = await POST(`op=publish&token=${RUTH}&target=${encodeURIComponent(PUBD)}`, {
-    project: "PROJ-2026-2000-oversight",
+    project: OVERSIGHT,
     roles: { [PUBD]: "load_bearing" },
     scope: "Whether the sewer transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",

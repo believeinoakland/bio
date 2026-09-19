@@ -11720,3 +11720,57 @@ from `bio-plane/` (arms patch COPIES, real sources hashed before and after): bas
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MINOR — I3 38.0.0 → 38.1.0.** Base RE-READ at resolution off `origin/main`: 38.0.0 (IC-157, REC-140). Additive by IC-137: nothing that committed now refuses, no key moves; one affordance is offered where none was (`conclude` on a concluded question, to a joined member of a citing project, fact `concludes_for_project`), and the no-project relationship still cannot conclude twice (`ILLEGAL_TRANSITION`, asserted through the op). UI's consequence is a DELEGATION in `CLAIMS.md` (REC-142 → UI): the question page's no-project conclude dialog would now be offered and refused on a concluded question.
+## IC-158 · I3: THE PLANE MINTS PROJECT IDS — a creation of a project (or any creation in the `PROJ-` namespace) that names a `bundleId`, and a fork that names a `newId`, are REFUSED with one answer whether or not the id exists (C-59.1, C-59.3); the plane writes `id:` into the bytes before hashing and answers the minted `bundleId`/`newId` and the final `bundleSha`; bytes already carrying `id:` are refused (C-59.2) · PROPOSED 2026-09-18 (REC-141 / D-428's creation half, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (after merging `origin/main` at `1d439e31`):
+  38.1.0** (IC-159; it read 38.0.0 at the first merge). **Proposed MAJOR — 38.1.0 → 39.0.0**, BREAKING by IC-137's rule:
+  a create that succeeded before is now REFUSED. Read the base AT RESOLUTION.
+- **Proposer:** RECORD, worker `agent-a12cdccbace704eb6`, 2026-09-18, spawned by CONDUCT #6 for REC-141.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` — **BROKEN, measured:** `civicos-ui/app.html`'s Add surface creates a project by
+  `op=allocid` + a browser-built id + `bundleId`, and the fork form sends `newId`; both are now refused. UI-66 is the
+  surface half, DELEGATED in `CLAIMS.md`, and must land WITH this. `DIST` (newgroup embeds the old plane until the next
+  cut; the installer's intake page `bio-plane/src/setup.mjs` is corrected in this landing). `agent-worker` and the skill
+  pack: NOT-AFFECTED (grepped: neither creates a project nor forks one).
+- **Design:** `BIO_Membership_Architecture_v2.md` §7, the bullet *"HOW the plane mints a project id"* (BOB #15), with
+  §7.9 (*"not its existence"*); precedent the `bio-testimony/1` header the plane already writes.
+
+**THE DEFECT, MEASURED BEFORE ANY EDIT** (`3dee1fdb`, `project-sight.test.mjs` §6's KNOWN pin): a member who cannot see
+a project, creating a project at its id, answered `EXISTS`; at a never-minted id the same request CREATED the bundle —
+an existence oracle for project ids (D-428's creation half).
+
+**What changes, per op.**
+- `op=promote` (and the DO door `/promote`), `base: null`: when `meta.object_type` normalises to `project`, OR the
+  supplied `bundleId` begins `PROJ-` (whatever type is claimed — a creation of an `information` bundle at a hidden
+  project's id answered `EXISTS` too): a `bundleId` that is present and non-empty is refused
+  `PROJECT_ID_SUPPLIED` (C-59.1) BEFORE any id is looked up — one payload, no id echoed. With none, `bundle.md` must be
+  inline text with a frontmatter block (else `PROJECT_DOCUMENT_UNREADABLE`, C-59.4) and no top-level `id:` key (else
+  `PROJECT_ID_IN_BYTES`, C-59.2; a nested key or a body line is not one). The plane mints
+  `PROJ-<year>-<seq>-<slug of meta.title>` from `allocId`'s sequence (shared with `op=allocid`) inside the promote
+  transaction, stepping past any number already held by a chosen id, writes `id: <minted>` as the first frontmatter
+  line, recomputes `bytes` and `sha256`, and the answer's `bundleId` and `bundleSha` are the minted id and the sha of
+  the registered bytes. Every other type still names its own id — unchanged.
+- `op=projectfork`: a `newId` that is present and non-empty is refused `PROJECT_FORK_ID_SUPPLIED` (C-59.3), FIRST. With
+  none, the clone's origin `id:` is removed and the fork is minted by the same path; the answer's `newId` is the minted
+  id, `bundleSha` the registered sha. The old `MALFORMED` ("newId is required") and `EXISTS` answers are gone.
+- Each C-59 refusal carries `code`, `check` and a canned `translation` (DEC-49).
+
+**Classification: MAJOR.** A creation and a fork that succeeded are now refused; a member-facing surface breaks until
+UI-66 lands. For MINOR, and it does not govern: nothing is removed from a success answer.
+
+**Residuals named, not closed:** a project created BEFORE this under a non-canonical id (not `PROJ-`-prefixed) still
+answers `EXISTS` to a creation of another type at that id; and the minted sequence number (as `op=allocid` already did)
+tells a creator how many project ids were minted before theirs, hidden projects included — whether that count is a
+§7.9 disclosure is a DESIGN GAP for BOB. A refused creation after the mint step (e.g. `NAME_TAKEN`) consumes a sequence
+number (gaps, no disclosure beyond the count).
+
+**Suites:** new `bio-plane/test/project-mint.test.mjs` (41 assertions) and `project-mint.control.mjs` (six arms, all AS
+DECLARED on the merged tree: baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 ·
+id-anywhere 39/2 · id-key-other-spelling 41/0; every NOT-AS-DECLARED first run was the instrument or its declaration,
+recorded in the suite's header). CORRECTED at their sites with dated reasons, never exempted: `project-sight.test.mjs` §6 (the KNOWN `EXISTS`
+pin, now the refusal and byte-identical to a never-minted id; its control re-run, every arm AS DECLARED),
+`project-disclosure.test.mjs` §4, `ratify-authority.test.mjs` (REC-140's, control re-run AS DECLARED), the shared
+fixture `publishingproject.mjs`, and every other plane suite, probe and `civicos-ui/test/conclude-reading.test.mjs`
+that chose a project id (the list is the landing's diff).
+
+**RESPONSES:** not yet collected.

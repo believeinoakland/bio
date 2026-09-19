@@ -126,11 +126,15 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 /* CASE-2 / DEC-72: publication is a production of a project, owned by CAROL who
    publishes the one case in block 6. NO BAR is declared, so nothing here is
    newly gated — this suite's subject is op=inquiryground. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED;
+   the fixture takes the old id string as its `name` (the title label) and the
+   suite uses the id it RETURNS. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: async (q, bd) => await mf.dispatchFetch(`http://x/api/?${q}`,
     { method: "POST", body: JSON.stringify(bd ?? {}) }).then((r) => r.json()),
   mf, sha, machineToken: "adm-rec45", owner: "carol",
-  id: "PROJ-2026-4500-inquiryground", created: NOW, updated: LATER });
+  name: "PROJ-2026-4500-inquiryground", created: NOW, updated: LATER });
 /* THE ATTRIBUTION THE CALLER TRIES TO HAND US. A perfectly well-formed member
    name that belongs to nobody, and a perfectly well-formed timestamp from six
    years before the act — which is exactly why REC-42's gate cannot catch it and

@@ -773,7 +773,9 @@ const stamp = ()=>{
    prose section carries what the member wrote, and the rest are present and
    empty, which is what the catalog asks for. */
 const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
-  const fm = ["---","id: "+id,"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
+  /* REC-141: a PROJECT's id is minted by the plane, which writes it into these bytes and refuses
+     bytes already carrying one, so a project's document is sent with no id line (id is null). */
+  const fm = ["---",...(id === null ? [] : ["id: "+id]),"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
     "produced_by:","  mode: assisted","  capability_tier: session",
@@ -942,8 +944,11 @@ $("#n-save").addEventListener("click", async ()=>{
   $("#n-save").disabled = true;
   try {
     const year = String(new Date().getFullYear());
-    const a = await rec("allocid", { prefix: PREFIX[type], year });
-    const id = a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    /* REC-141 (Membership v2 section 7): a new project names no id. The plane mints it and answers with
+       it; a creation that names one is refused. Every other type still allocates its own. */
+    const minted = type === "project";
+    const a = minted ? null : await rec("allocid", { prefix: PREFIX[type], year });
+    let id = minted ? null : a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
     const state = FIRST_STATE[type];
     const now = new Date().toISOString().split(".")[0] + "Z";
     /* Capture first, because a failed fetch should not leave a half-made bundle
@@ -971,7 +976,7 @@ $("#n-save").addEventListener("click", async ()=>{
     const text = mdFor(id, type, state, title, body, now, !!doc,
       doc && doc.capture ? { content_hash: doc.capture.sha256 } : null, act);
     const r = await post("promote", {
-      bundleId: id, base: null, snapKey: stamp(), author: WHO,
+      ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: WHO,
       meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
       files: await docFiles(text, doc, await sha256Text(text)),
       register: doc ? [...(Array.isArray(doc.parts) && doc.parts.length
@@ -983,6 +988,7 @@ $("#n-save").addEventListener("click", async ()=>{
                          sha256: a.sha256, path: a.file, encoding: "binary", bytes: a.bytes }))] : [],
     });
     if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+    if (minted) id = r.result.bundleId;
     $("#n-title").value = ""; $("#n-body").value = "";
     if ($("#n-loc")) { $("#n-loc").value = ""; $("#n-auth").value = ""; }
     openBundle(id);

@@ -334,12 +334,17 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
      the condition the catalog treats as an error, at whatever scale the
      operator selected. So a cited piece is refused and the citing Projects are
      named, because the operator needs to know who relies on it. */
-  const proj = "PROJ-2026-0300-cites";
-  const pdoc = `---\nid: ${proj}\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\nreferences:\n  - rel: cites\n    target: ${infoIds[0]}\n    status: confirmed\n    note: ""\n---\n\n## Summary\n\nX.\n`;
-  await call("/promote", { bundleId: proj, base: null, snapKey: `${proj}-new`, author: "suite",
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+     (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED;
+     the bytes carry no `id:` line, no bundleId is sent, and the id is read from
+     the answer. */
+  const pdoc = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\nreferences:\n  - rel: cites\n    target: ${infoIds[0]}\n    status: confirmed\n    note: ""\n---\n\n## Summary\n\nX.\n`;
+  const created = await call("/promote", { base: null, snapKey: "PROJ-cites-new", author: "suite",
     files: [{ path: "bundle.md", text: pdoc, bytes: pdoc.length, sha256: sha(pdoc) }],
     meta: { object_type: "project", group: "believe-in-oakland", title: "Citing Project",
             current_state: "forming", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+  const proj = created.bundleId;
+  t("the citing Project is created at a plane-minted id", /^PROJ-\d{4}-\d{4}-/.test(String(proj)), true);
   {
     const h = await select(infoIds);
     const r = await call(`/retire?handle=${h}&reason=${encodeURIComponent("superseded")}&${STAMP}`);

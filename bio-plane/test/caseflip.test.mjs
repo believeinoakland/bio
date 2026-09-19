@@ -277,7 +277,9 @@ const reopen = async (target, reason) =>
    a project owned by anybody else answers NO_SUCH_PROJECT. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case5", owner: "rosa",
-  id: "PROJ-2026-0500-caseflip", created: NOW, updated: LATER,
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+     the old id is the fixture's name and PUBLISHING_PROJECT is the returned, minted id. */
+  name: "PROJ-2026-0500-caseflip", created: NOW, updated: LATER,
   /* A DECLARED BAR, deliberately — unlike every other suite's fixture, which
      leaves it absent so the fixture adds a publisher and never a gate. This suite
      is partly ABOUT the bar: DEC-72 clause 2 makes it a property of the CASE, and

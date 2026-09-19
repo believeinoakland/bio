@@ -11734,6 +11734,42 @@ export const RATIFY_SCOPE_CHECKS = {
   },
 };
 
+/* REC-141 / C-59 — THE PLANE MINTS PROJECT IDS (Membership Architecture v2 §7, the bullet *"HOW the
+ * plane mints a project id"*, BOB #15, 2026-09-18; §7.9 *"not its existence"*). A creation that NAMED
+ * its project's id answered `EXISTS` at a hidden project's id and CREATED at a free one, so the answer
+ * said whether a project the caller could not see existed (D-428's creation half). A caller-supplied id
+ * for a NEW project — or any creation in the `PROJ-` namespace, or a fork's `newId` — is now refused
+ * BEFORE any id is looked up, with one answer whether or not the id is taken, and the answer echoes no
+ * id. The plane mints the id (`allocId`'s pattern) and writes it into the document's own `id:` before
+ * the bytes are hashed and registered, so a document that already carries one is refused. */
+export const PROJECT_ID_CHECKS = {
+  PROJECT_ID_SUPPLIED: {
+    check: 'C-59.1',
+    where: 'src/store.mjs promote > is-project-id-supplied',
+    translation: 'A new project is given its id by the record; it is not chosen. This request named an id, '
+      + 'so nothing was created. Send it again without one, and the record will answer with the id it gave '
+      + 'the project.',
+  },
+  PROJECT_ID_IN_BYTES: {
+    check: 'C-59.2',
+    where: 'src/store.mjs promote > is-project-id-bytes',
+    translation: 'A new project\'s document must not carry an id line: the record writes the project\'s id '
+      + 'into the document itself when it creates it. Remove the id line and send it again. Nothing was created.',
+  },
+  PROJECT_FORK_ID_SUPPLIED: {
+    check: 'C-59.3',
+    where: 'src/store.mjs forkProject > is-project-fork-id-supplied',
+    translation: 'A fork is given its id by the record; it is not chosen. This request named one, so nothing '
+      + 'was forked. Send it again without an id, and the record will answer with the id it gave the fork.',
+  },
+  PROJECT_DOCUMENT_UNREADABLE: {
+    check: 'C-59.4',
+    where: 'src/store.mjs promote > is-project-id-bytes',
+    translation: 'The record could not write the new project\'s id into its document, because the document '
+      + 'sent is not text that begins with a front matter block. Nothing was created.',
+  },
+};
+
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
  *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
  *  action basis), so the rule has one spelling and three doors. It asks BOTH

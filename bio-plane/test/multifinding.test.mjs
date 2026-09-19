@@ -182,7 +182,9 @@ const LATER = "2026-07-02T00:00:00Z";
    NO BAR is declared, so nothing this suite publishes is newly gated. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-rec44", owner: "wren",
-  id: "PROJ-2026-4400-multifinding", created: NOW, updated: LATER });
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+     the fixture takes a `name` and returns the minted id. */
+  name: "PROJ-2026-4400-multifinding", created: NOW, updated: LATER });
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
   : ["references: []"];

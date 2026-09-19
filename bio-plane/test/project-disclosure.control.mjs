@@ -15,7 +15,8 @@
  *
  * NOT AN ARM, and stated rather than skipped: *"let a caller-chosen id through"*. REC-139 did not build
  * plane-minted project ids (the design does not say whether a supplied id is refused or ignored), so
- * there is no fence to remove; the suite's §4 pins the creation's EXISTS as KNOWN instead.
+ * there is no fence to remove; the suite's §4 pinned the creation's EXISTS as KNOWN instead. REC-141 (2026-09-18)
+ * built the mint and its fence; that fence's control is `project-mint.control.mjs`, not this driver.
  *
  * RESULTS: see the header of `test/project-disclosure.test.mjs` and IC-156.
  */

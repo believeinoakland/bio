@@ -113,7 +113,11 @@ const infoMd = (id) => ["---",
   "monitoring:", "  enabled: false", "  frequency: none",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-const projMd = (id) => ["---", `id: ${id}`, "object_type: project", "current_state: forming",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7): creation bytes carry no `id:` line (PROJECT_ID_IN_BYTES) and a
+   PROJECT creation sends no bundleId (PROJECT_ID_SUPPLIED); P1 and P3 below are the
+   ids read from the answers, the old strings surviving only as title labels. */
+const projMd = () => ["---", "object_type: project", "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
 const readingOf = (captureSha) => ({
@@ -128,7 +132,7 @@ const promote = async (id, text, type, tok, { readings = [], state = "collected"
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
   }
   const r = await post("promote", {
-    bundleId: id, base: null,
+    ...(type === "project" ? {} : { bundleId: id }), base: null,
     snapKey: `20260918T${String(600000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland", title: `title for ${id}`,
             current_state: state, created: NOW, last_updated: LATER },
@@ -142,9 +146,9 @@ const SHA_OPEN = sha("rec129-the-clerks-march-agenda");
 const SHA_SECRET = sha("rec129-a-document-filed-in-ruths-own-project");
 await promote("INFO-2026-0918-agenda129", infoMd("INFO-2026-0918-agenda129"), "information", RUTH,
               { readings: [readingOf(SHA_OPEN)] });
-const P1 = "PROJ-2026-0918-shared129", P3 = "PROJ-2026-0918-ruthonly129";
-await promote(P1, projMd(P1), "project", RUTH, { state: "forming" });
-await promote(P3, projMd(P3), "project", RUTH, { state: "forming", readings: [readingOf(SHA_SECRET)] });
+const P1 = (await promote("PROJ-2026-0918-shared129", projMd(), "project", RUTH, { state: "forming" })).bundleId;
+const P3 = (await promote("PROJ-2026-0918-ruthonly129", projMd(), "project", RUTH,
+  { state: "forming", readings: [readingOf(SHA_SECRET)] })).bundleId;
 const inv = async (owner, p, handle) => get("projectinvite", `projectId=${p}&handle=${handle}`, owner);
 const joinP = async (tok, p) => get("projectjoin", `projectId=${p}`, tok);
 const i1 = await inv(RUTH, P1, "sam"), j1 = await joinP(SAM, P1), i2 = await inv(RUTH, P1, "vera");
