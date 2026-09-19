@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1214 rulings across 94 documents.
+1217 rulings across 94 documents.
 
 ## DEC-
 
@@ -804,6 +804,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:14228`
 - **IC-162** · 2026-09-19 — IC-162 · I3: DEC-63 AS AMENDED — a run whose context is a QUESTION consults NO project: `airunopen` / `airuntick` / `airunclose` no longer refuse `AI_RUN_NOT_PROJECT_MEMBER` (C-22.8) over an inquiry; `projectGate.ground` over a question is `INQUIRY` (the value `PROJECTLESS` is removed, and `PARTICIPANT` is now said…  
   `docs/development/INTERFACE-CHANGES.md:11798`
+- **IC-164** — suite that pinned a sequential `CASE`/`DRAFT`/`RVG`/`TASK` id CORRECTED at its site with a dated reason. `bio-plane/scripts/coverage.mjs` floors only, from its own print. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-164), `MEASUREMENTS.md` (the…  
+  `docs/development/CLAIMS.md:14858`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -1654,9 +1656,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-18** — RULED BY BOB, 2026-09-18 (two of his July 26 rulings met):** *"Keep project names unique across instances."* Refusing a name therefore tells an uninvited member that a project with THAT name exists — the one thing §7.9 yields to §7.1 — and the refusal reveals nothing beyond the name the caller supplied. **BUILT…  
   `docs/architecture/BIO_Membership_Architecture_v2.md:587`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — a project does not own a line of inquiry.** *"Anybody can ask a question related to anything - even something also being explored in a project they're not a member of.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:635`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:646`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents might be private, though the existence of the project may not be.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:671`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:682`
 - CORRECTED the same day by BOB #15 — the first version said *the owner or any administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the exception"*).  
   `docs/architecture/BIO_Publication_v0_1.md:192`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
@@ -2135,6 +2137,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:14733`
 - driver; `civicos-ui/test/project-workspace.test.mjs` §6's fork arm CORRECTED (it drove a typed `newId`); `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own print on a committed tree. - Docs: `docs/development/CIVICOS_UI_STATE.md` (prepend), `BIO_Membership_Architecture_v2.md` front matter and §7's…  
   `docs/development/CLAIMS.md:14761`
+- Tests: `bio-plane/test/project-mint.test.mjs` §6 CORRECTED (it read the PROJ counter through `op=allocid`, which now refuses PROJ) and its control driver; a new `bio-plane/test/opaque-ids.test.mjs` and `opaque-ids.control.mjs`; any suite that pinned a sequential `CASE`/`DRAFT`/`RVG`/`TASK` id CORRECTED at its site…  
+  `docs/development/CLAIMS.md:14856`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2301,6 +2305,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:11830`
 - CARRIES NO COUNT"*; CORRECTED from the first build, which read the counter), checked unique and redrawn on collision, writes `id: <minted>` as the first frontmatter line, recomputes `bytes` and `sha256`, and the answer's `bundleId` and `bundleSha` are the minted id and the sha of the registered bytes.  
   `docs/development/INTERFACE-CHANGES.md:11870`
+- CORRECTED at their sites with dated reasons, never exempted: `project-mint.test.mjs` §6 (it read the PROJ counter through `op=allocid`) and its control's `counter-restored` anchor; `casesign.test.mjs` (it PREDICTED the case id as `CASE-<year>-0001`; the never-minted reads are now taken at an id the minter cannot…  
+  `docs/development/INTERFACE-CHANGES.md:11996`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
