@@ -38279,26 +38279,26 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       };
     const idSupplied = bundleId !== void 0 && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object" && (normalizeType(meta.object_type) === "project" || typeof bundleId === "string" && /^PROJ-/.test(bundleId));
-    const idRefusal = (code, detail) => {
+    const refusal7 = (code, detail) => {
       const row = PROJECT_ID_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
     };
     let projectMd = null;
     if (creatingProject) {
       if (idSupplied)
-        return idRefusal(
+        return refusal7(
           "PROJECT_ID_SUPPLIED",
           "a new project's id is minted by the plane and returned; send the creation with no bundleId. A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created."
         );
       projectMd = Array.isArray(files) ? files.find((f2) => f2 && f2.path === "bundle.md") : null;
       const fmNew = projectMd && typeof projectMd.text === "string" ? parseFrontmatter(projectMd.text).data : null;
       if (!fmNew)
-        return idRefusal(
+        return refusal7(
           "PROJECT_DOCUMENT_UNREADABLE",
           "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, because the plane writes the minted id into it. Nothing was created."
         );
       if (Object.prototype.hasOwnProperty.call(fmNew, "id"))
-        return idRefusal(
+        return refusal7(
           "PROJECT_ID_IN_BYTES",
           "the new project's bundle.md already carries a top-level id: line. The plane writes the id it mints; remove the line and send it again. Nothing was created."
         );

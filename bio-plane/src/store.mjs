@@ -13269,7 +13269,7 @@ export class Store extends DurableObject {
     const idSupplied = bundleId !== undefined && bundleId !== null && bundleId !== "";
     const creatingProject = base === null && !!meta && typeof meta === "object"
       && (normalizeType(meta.object_type) === "project" || (typeof bundleId === "string" && /^PROJ-/.test(bundleId)));
-    const idRefusal = (code, detail) => {
+    const refusal = (code, detail) => {
       const row = PROJECT_ID_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
     };
@@ -13277,7 +13277,7 @@ export class Store extends DurableObject {
     if (creatingProject) {
       /* DEC-49 REGION is-project-id-supplied */
       if (idSupplied)
-        return idRefusal("PROJECT_ID_SUPPLIED",
+        return refusal("PROJECT_ID_SUPPLIED",
           "a new project's id is minted by the plane and returned; send the creation with no bundleId. "
           + "A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created.");
       /* END DEC-49 REGION is-project-id-supplied */
@@ -13285,11 +13285,11 @@ export class Store extends DurableObject {
       projectMd = Array.isArray(files) ? files.find((f) => f && f.path === "bundle.md") : null;
       const fmNew = projectMd && typeof projectMd.text === "string" ? parseFrontmatter(projectMd.text).data : null;
       if (!fmNew)
-        return idRefusal("PROJECT_DOCUMENT_UNREADABLE",
+        return refusal("PROJECT_DOCUMENT_UNREADABLE",
           "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, "
           + "because the plane writes the minted id into it. Nothing was created.");
       if (Object.prototype.hasOwnProperty.call(fmNew, "id"))
-        return idRefusal("PROJECT_ID_IN_BYTES",
+        return refusal("PROJECT_ID_IN_BYTES",
           "the new project's bundle.md already carries a top-level id: line. The plane writes the id it mints; "
           + "remove the line and send it again. Nothing was created.");
       /* END DEC-49 REGION is-project-id-bytes */
