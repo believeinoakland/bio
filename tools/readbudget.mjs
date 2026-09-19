@@ -40,10 +40,11 @@ export const BUDGET = {
 
 /* Files whose cut has landed, by repo-relative path: over budget again is a FAIL, not a WARN. */
 export const CUT = new Set(["CLAUDE.md", "docs/development/kickoffs/BOB.md", "docs/development/kickoffs/CONDUCT.md",
-                            "docs/development/ORCHESTRATION.md", "docs/architecture/BIO_System_Design.md"]);
+                            "docs/development/ORCHESTRATION.md", "docs/architecture/BIO_System_Design.md",
+                            "docs/development/VERIFICATION.md"]);
 
 /* Read-whole documents outside the kickoffs directory. */
-export const READ_WHOLE_DOCS = ["docs/development/ORCHESTRATION.md"];
+export const READ_WHOLE_DOCS = ["docs/development/ORCHESTRATION.md", "docs/development/VERIFICATION.md"];
 export const MAP = "docs/architecture/BIO_System_Design.md";
 
 export function readSet(root = ROOT) {

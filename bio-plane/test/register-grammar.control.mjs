@@ -39,7 +39,9 @@ const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b
 
 /* A per-file floor. A "restore" proved equal over two empty files is the receipt
    this guard exists for. */
-const FLOOR = { [REGISTER]: 8_000, [VERIF]: 40_000,
+/* [VERIF] 40_000 -> 16_000 on 2026-09-19 (BOB #16): VERIFICATION.md was cut to the reading budget (24,309 B) with
+   the D-263 block kept verbatim; the floor guards a restore over an EMPTY file, and 16 KB still refuses that. */
+const FLOOR = { [REGISTER]: 8_000, [VERIF]: 16_000,
                 [ADMISSION]: 10_000, [AFFORD]: 40_000, [COVERAGE]: 90_000 };
 
 /* ------------------------------------------------------------------ the arms */
