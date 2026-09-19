@@ -11,6 +11,8 @@ recorded. All lanes should end up completely stopped, as once they are developme
 transition to the other CC account."* (`CLAUDE.md` §4: one account develops at a time.) Every lane of the old account —
 BOB #16, CONDUCT #6, SCHEDULER, DIST, FLEET — was told to save its handoff and stop; §1 says what each reported.
 
+0. **Read `kickoffs/NEW-MACHINE.md`** (current as of 2026-09-19 in §6, §7, §9.1, §9.2): the account/machine switch
+   runbook — layout, `.env`, installs, settings, memory seed.
 1. **Confirm the old account is stopped** before anything runs here: no session of it running, its CONDUCT heartbeat
    DISABLED (it was, 2026-09-19 ~12:50Z). Two accounts developing at once is the one thing Bob forbade.
 2. **Recreate the machinery that lived outside the repository:**
