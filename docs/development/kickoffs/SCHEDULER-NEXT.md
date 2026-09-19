@@ -54,9 +54,19 @@ routes around a permission decision that belongs to the user. Sparky has been to
   that inherits a claim exactly as it binds the row.
 - **I counted text and called it behaviour** (D-203): a grep over a file that is half commentary answers a question
   about text. Stripping comments gave 0 live hits and the row was closable. Both mechanics are now in `SCHEDULER.md`.
+- **THREE TIMES IN ONE DAY AN INSTRUMENT WAS RIGHT AND ITS OPERATOR WAS ABOUT TO OVERRULE IT** — twice here and
+  once in BOB's own lane, where the gate caught him writing the exact defect he was fixing. **The tempting move is
+  always to soften the words.** Do not.
 - **The tool refused me twice on one row and was right both times** (D-359). `archive` rejects a disposition declaring
   residue — including residue words inside a PRIOR disposition you appended. The fix is the documented one: move the
   prior disposition VERBATIM into the description cell, and row the real residue under its own id first.
+
+## How this lane talks to BOB
+
+**Batch his questions in groups of THREE OR FOUR, never one at a time** (his instruction, 2026-09-19): several rulings
+in one sitting cost him far less context than the same rulings spread across messages, and **context is BOB's binding
+constraint the way disk is CONDUCT's.** Each question arrives as a single stated sentence; a row whose question is not
+yet sharp waits for the next group. He answered eight rows today on that basis.
 
 ## Your first acts
 
