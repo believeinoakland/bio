@@ -14603,3 +14603,9 @@ were minted before theirs, hidden projects included. (6) To SCHEDULER, a pre-exi
 item's: `bio-plane/test/curated-producer.probe.mjs`' read-side check looks for `entry.status === "severed"` inside
 `#restsOnLive`, which D-267 moved into `#refEdgeSevered` — the probe fails 9/1 on HEAD before and after this item; its fix
 is to point the source read at `#refEdgeSevered`.
+**SUPERSEDING FIGURES, after a THIRD merge with `origin/main` at `1d439e31` (REC-142 IC-159 in):** at `f9fbf157`,
+**256/256 suites green · 15703 assertions passing · run 42543.8b5036**, exit 0, provenance 259/259 at HEAD;
+`coverage.mjs --strict` exit **0**, REGISTER_FLOOR collapsed again and re-read from the committed merge's print to
+**1454 / 247 / 248, run 210**; UI harness exit **0** (54 PASS). `conclude-project-arm.test.mjs` (REC-142's, arrived at
+this merge) CORRECTED for minted ids and its control re-run AS DECLARED with identical figures. I3 on this tree reads
+**38.1.0** (IC-159), so IC-158's proposal is **38.1.0 -> 39.0.0** — read the base at resolution.

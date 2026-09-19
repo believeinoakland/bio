@@ -11722,9 +11722,9 @@ from `bio-plane/` (arms patch COPIES, real sources hashed before and after): bas
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MINOR — I3 38.0.0 → 38.1.0.** Base RE-READ at resolution off `origin/main`: 38.0.0 (IC-157, REC-140). Additive by IC-137: nothing that committed now refuses, no key moves; one affordance is offered where none was (`conclude` on a concluded question, to a joined member of a citing project, fact `concludes_for_project`), and the no-project relationship still cannot conclude twice (`ILLEGAL_TRANSITION`, asserted through the op). UI's consequence is a DELEGATION in `CLAIMS.md` (REC-142 → UI): the question page's no-project conclude dialog would now be offered and refused on a concluded question.
 ## IC-158 · I3: THE PLANE MINTS PROJECT IDS — a creation of a project (or any creation in the `PROJ-` namespace) that names a `bundleId`, and a fork that names a `newId`, are REFUSED with one answer whether or not the id exists (C-59.1, C-59.3); the plane writes `id:` into the bytes before hashing and answers the minted `bundleId`/`newId` and the final `bundleSha`; bytes already carrying `id:` are refused (C-59.2) · PROPOSED 2026-09-18 (REC-141 / D-428's creation half, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
-- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (after merging `origin/main` at `8e39602a`):
-  38.0.0** (IC-157). **Proposed MAJOR — 38.0.0 → 39.0.0**, BREAKING by IC-137's rule: a create that succeeded before is
-  now REFUSED. Read the base AT RESOLUTION.
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (after merging `origin/main` at `1d439e31`):
+  38.1.0** (IC-159; it read 38.0.0 at the first merge). **Proposed MAJOR — 38.1.0 → 39.0.0**, BREAKING by IC-137's rule:
+  a create that succeeded before is now REFUSED. Read the base AT RESOLUTION.
 - **Proposer:** RECORD, worker `agent-a12cdccbace704eb6`, 2026-09-18, spawned by CONDUCT #6 for REC-141.
 - **Owner to land it:** `RECORD`
 - **Consumers to answer:** `UI` — **BROKEN, measured:** `civicos-ui/app.html`'s Add surface creates a project by
