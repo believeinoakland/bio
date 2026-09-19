@@ -14261,6 +14261,41 @@ REC-138's merge: its `inSight` precedes `#projectAuthority`; `op=caseratify`'s s
 facts read, upstream of both REC-137 refusals, pinned byte for byte in `case-authority.test.mjs` §0 — re-run that suite on
 the merged tree.
 
+## CLAIM 2026-09-18 RECORD (REC-139 — D-428's decided remainder: a refusal never names or describes a project the caller cannot see — `NAME_TAKEN` drops the other project's id and title; an inquiry run reports only the citing projects its member can see; plane-minted project ids)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a590a3b1c261bf1ff`, branch `worktree-agent-a590a3b1c261bf1ff`,
+base `ee9f201c`. `npm ci` in all three packages, each `node_modules` a real directory (6.4 GiB free after install).
+Design: Membership v2 §7 (BOB #15 at `7b733d07`, *"What a refusal may say about a project the caller cannot see"*),
+§7.9, DEC-63. Builds on IC-155's `Store#inSight`. IDs minted with `tools/mintid.mjs`: IC-156. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — `promote`'s and `forkProject`'s `NAME_TAKEN` payloads, `#aiRunProjectGate`
+  and the three run verbs' DO dispatch rows (the `viewer` they now read); `bio-plane/src/index.mjs` (the `viewer` stamp
+  on the three run verbs).
+- Tests: a new `bio-plane/test/project-disclosure.test.mjs` and its control driver; `airun-projectgate.test.mjs`'s
+  ARM G1 count CORRECTED at its site with a dated reason; any other suite pinning the old payload CORRECTED, never
+  exempted. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-156), `DEBT.md` (D-428's disposition), `BIO_Membership_Architecture_v2.md` front
+  matter and §7, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `op=caseratify` or the case-ratification path (REC-137's), NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-139) — RELEASED
+
+released: 2026-09-18 by the REC-139 worker, branch `worktree-agent-a590a3b1c261bf1ff`, base `ee9f201c`. Paths as claimed,
+PLUS `bio-plane/test/projects.test.mjs` (one assertion that pinned NAME_TAKEN's `bundleId` CORRECTED with a dated reason)
+and `bio-plane/test/project-sight.test.mjs` (a comment's cross-reference to D-428 brought current). Baseline, NOT pristine
+and said so: the run at `a50d0fd7` read **247/250 · 15308 assertions**, and all three failures were this item's own edits
+landing while it ran (`projects.test.mjs` on the NAME_TAKEN change; `owed-controls` and `strandedwork` on a dirty tree).
+Final, at `eb858a02`: **251/251 suites green · 15335 assertions · run 24855.172395**, exit 0, no member skipped;
+`coverage.mjs --strict` exit 0 with REGISTER_FLOOR moved from its own print (1414 -> 1422 · 241 -> 242 · 242 -> 243 · run
+204 -> 205); UI harness exit 0. IDs minted with `tools/mintid.mjs`: IC-156.
+**FOR CONDUCT:** (1) RESOLVE IC-156 against I3 as read at resolution (proposed MAJOR on 34.0.0; REC-137 runs beside it).
+(2) Flip REC-139 at integration — as PARTLY done: plane-minted project ids are NOT built. (3) Carry to BOB the design gap
+in Membership v2 §7 (*"The plane MINTS project ids"* does not say whether a caller-supplied id for a new project is
+refused or ignored, nor whether `op=projectfork`'s `newId` is minted, nor how the minted id reaches the document's `id:`)
+and D-428 (c), whether DEC-63's run VERDICT is itself a §7.9 disclosure. (4) Tell DIST: a DISCLOSURE closing, open on
+deployed instances until the next cut.
 ## CLAIM 2026-09-18 RECORD (REC-140 — D-429: `op=ratify` REFUSES a project bundle; a finding it ratifies takes case ratification's owner-signer and joined-deliverer rules; a caller who cannot see the project is answered as for one that does not exist)
 
 Worker spawned by CONDUCT #5, isolated worktree `agent-a761302b28f105764`, branch `worktree-agent-a761302b28f105764`,

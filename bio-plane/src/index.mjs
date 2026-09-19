@@ -8881,6 +8881,11 @@ export default {
            nonexistent run does — REC-25/REC-30's leak, one object over. The
            store fails closed on an absent stamp, like every op in this list. */
         || op === "airun" || op === "airunlog" || op === "airunspawn"
+        /* REC-139 / D-428: the three RUN VERBS state how many projects draw on the run's question
+           (`projectGate.projects`), and that count may include only projects the caller can SEE
+           (Membership v2 §7, BOB #15). The stamp is what the store counts in; DEC-63's verdict is
+           not read from it. Fails closed on an absent stamp: no project is stated, never every one. */
+        || RUN_VERB_ACTIONS.includes(op)
         /* REC-93: the frontier's subjects are addresses a project went looking
            for, which is the same disclosure a run is — §6 says REC-36's
            withholding applies row-whole across the fence. Stamped here so the

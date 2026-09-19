@@ -13083,8 +13083,15 @@ export class Store extends DurableObject {
         const clash = this.#rows(
           `SELECT bundle_id, title FROM bundles WHERE object_type='project' AND bundle_id<>?`, bundleId)
           .find((r) => Store.projectNameKey(r.title) === key);
+        /* REC-139 / D-428 (Membership v2 §7, BOB #15, 2026-09-18): the refusal names NEITHER the
+           other project's id NOR its title. A caller who cannot see that project may learn nothing of
+           it (§7.9, *"not its existence, not its name"*); one who can already knows both. So the
+           payload is the same for every caller and there is no sight question to ask here — which is
+           why this does not call `#inSight`. Uniqueness itself still holds, PROVISIONALLY: it is the
+           one point BOB #15 left OPEN for Bob, and refusing tells the caller only that SOME project
+           holds the name they typed. */
         if (clash)
-          return { ok: false, reason: "NAME_TAKEN", bundleId: clash.bundle_id, title: clash.title,
+          return { ok: false, reason: "NAME_TAKEN",
                    detail: "a project by that name already exists on this instance, compared without regard "
                          + "to case or spacing. This holds for deactivated projects too, because their "
                          + "names are still cited." };
@@ -27338,7 +27345,8 @@ export class Store extends DurableObject {
     if (!want) return { ok: false, reason: "NO_TITLE", detail: "a fork needs a name of its own" };
     const clash = this.#rows(`SELECT bundle_id, title FROM bundles WHERE object_type='project'`)
       .find((r) => Store.projectNameKey(r.title) === want);
-    if (clash) return { ok: false, reason: "NAME_TAKEN", bundleId: clash.bundle_id, title: clash.title,
+    /* REC-139 / D-428: names neither the other project's id nor its title — `promote`'s reason, stated there. */
+    if (clash) return { ok: false, reason: "NAME_TAKEN",
       detail: "a project by that name already exists on this instance, and project names are unique. "
             + "This holds for deactivated projects too, because their names are still cited." };
     /* The clone is a real bundle, written through `promote` like every other
@@ -36409,7 +36417,7 @@ export class Store extends DurableObject {
    *  CALLED rather than reimplemented, for the reason its own header gives: the
    *  admin bypass came to sit on invite and remove with different shapes
    *  because the test had two copies. */
-  #aiRunProjectGate({ actor, contextType, contextId }) {
+  #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects = this.#runContextProjects(contextType, contextId);
     const who = actor == null ? "" : String(actor).trim();
     const joined = who
@@ -36418,7 +36426,18 @@ export class Store extends DurableObject {
           return !!part && part.state === "joined";
         })
       : [];
-    return projectGate({ actor: who, contextType, contextId, projects, projectsJoined: joined });
+    const g = projectGate({ actor: who, contextType, contextId, projects, projectsJoined: joined });
+    /* REC-139 / D-428 (Membership v2 §7, BOB #15, 2026-09-18): THE REPORT COUNTS ONLY THE CITING
+       PROJECTS ITS CALLER CAN SEE, and none of the others. The VERDICT above is DEC-63's and is
+       computed over EVERY citing project, unchanged — who may START a run is that ruling's question,
+       and it requires no disclosure. What changes is the number the answer STATES: it counted a
+       project the caller cannot see, so a member's run over a question read `projects: 2` the moment
+       a project hidden from them cited it (§7.9, *"not its existence"*). Asked through `#inSight`,
+       the one sight predicate, never a second copy; its absent-viewer posture is fail closed, so a
+       caller the control plane did not stamp is stated no project rather than every one. A refusal
+       carries no count and is returned as built. */
+    if (!g.permitted) return g;
+    return { ...g, projects: projects.filter((p) => this.#inSight(p, viewer)).length };
   }
 
   /** The gate's outcome as it travels on a SUCCESS answer. The refusal is
@@ -36460,7 +36479,10 @@ export class Store extends DurableObject {
                  `index.mjs` and empty for a machine credential. Never a
                  caller's word — a principal a caller can name is not one, which
                  is the rule the two `principal*` fields above already follow. */
-              actor = null } = {}) {
+              actor = null,
+              /* REC-139: WHOSE SIGHT the report's project count is taken in, stamped server-side
+                 beside `actor` and read only by `#aiRunProjectGate`'s stated count. */
+              viewer = null } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = Store.#aiIso(nowMs);
     /* `started`, deliberately NOT `opened`. REC-58's consumer walk in
@@ -36507,7 +36529,7 @@ export class Store extends DurableObject {
        name for precisely that: *a defence that is documented and not wired is
        worse than a missing one.* The code stays a string literal where it is
        written, which is the rule the marker exists to serve. */
-    const gate = this.#aiRunProjectGate({ actor, contextType, contextId });
+    const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
     if (!gate.permitted)
       return { run, started: false,
                code: gate.code, check: gate.check,
@@ -36620,7 +36642,7 @@ export class Store extends DurableObject {
    *  is a fact about the run's state, and a late tick from a straggling
    *  sub-session must not resurrect a run whose log is already closed. */
   aiRunTick({ run, state = null, consume = null, log = null, leaseMs = null, at = null,
-              actor = null } = {}) {
+              actor = null, viewer = null } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = Store.#aiIso(nowMs);
     const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
@@ -36647,7 +36669,7 @@ export class Store extends DurableObject {
        widened. The verdict of this return is that the tick did not happen.
 
        A RELAY, not a governed site — see the note at `aiRunOpen`'s gate. */
-    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id });
+    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
     if (!gate.permitted)
       return { run, ticked: false, found: true, status: row.status,
                code: gate.code, check: gate.check,
@@ -36707,7 +36729,7 @@ export class Store extends DurableObject {
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
    *  to the one exit, and a caller who names no bound is refused by C-22.5
    *  rather than having "completed" inferred from its silence. */
-  aiRunClose({ run, bound = null, condition = null, at = null, actor = null } = {}) {
+  aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null } = {}) {
     const now = at ? Store.#aiIso(Date.parse(at)) : Store.#aiIso(Date.now());
     /* PL-18 / DEC-63 — THE GATE, AND IT IS HERE RATHER THAN IN
        `#aiRunTerminate` FOR A REASON WORTH STATING: that function is the ONE
@@ -36725,7 +36747,7 @@ export class Store extends DurableObject {
        A RELAY, not a governed site — see the note at `aiRunOpen`'s gate. */
     const row = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, run);
     if (row) {
-      const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id });
+      const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
       if (!gate.permitted)
         /* THE SHAPE IS `#aiRunTerminate`'S OWN — `found` / `terminated`, with
            the refusal spread beside them — because this refusal comes out of
@@ -40145,13 +40167,19 @@ export class Store extends DurableObject {
            exactly the reason `principal` is — a body is the caller's, and a
            gate that trusts the caller's word about who they are is not a
            gate. Empty means no member is behind this call. */
+        /* REC-139: `viewer` is the fourth, from the QUERY for the same reason and set AFTER the body's
+           spread, so a caller's own `viewer` in the body is overwritten rather than believed. It is
+           read only for the count of citing projects the answer states (§7.9). */
         airunopen: () => this.aiRunOpen({ ...(body || {}),
                                           principalPlane: url.searchParams.get("principal"),
-                                          actor: url.searchParams.get("actor") }),
+                                          actor: url.searchParams.get("actor"),
+                                          viewer: url.searchParams.get("viewer") }),
         airuntick: () => this.aiRunTick({ ...(body || {}),
-                                          actor: url.searchParams.get("actor") }),
+                                          actor: url.searchParams.get("actor"),
+                                          viewer: url.searchParams.get("viewer") }),
         airunclose: () => this.aiRunClose({ ...(body || {}),
-                                            actor: url.searchParams.get("actor") }),
+                                            actor: url.searchParams.get("actor"),
+                                            viewer: url.searchParams.get("viewer") }),
         airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
                                       viewer: url.searchParams.get("viewer") }),
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),

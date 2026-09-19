@@ -11445,11 +11445,68 @@ measured by running each (`caseflip`, `casepin`, `casesearched`, `caseproduction
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 34.0.0 → 35.0.0.** The base was read at resolution: 34.0.0 on main. IC-153 (REC-136) also resolved to 35.0.0 on the HELD branch `conduct/rec-136-held`, so when REC-136 lands its IC is re-read against this base, and not carried. A case whose signatures include no OWNER of the publishing project is refused (C-57.1 `CASE_SIGNER_NOT_AN_OWNER`), and a delivery by an enrolled administrator with no role in the project is refused (C-56.1, through REC-134's one check). Both commits used to succeed, so this is breaking by IC-137. The founder's delivery (DEC-33) and a joined member's are kept. Sight before role holds: REC-130's standing check runs first, byte-identical to a never-minted case. **An AUTHORITY closing: DIST is told.** **Carried:** D-429 (the same shape at `op=ratify` of a project BUNDLE; with Bob via BOB #15).
+
+## IC-156 · I3: A REFUSAL OR A RUN'S REPORT NO LONGER DESCRIBES A PROJECT THE CALLER CANNOT SEE — `NAME_TAKEN` (at `op=promote` and `op=projectfork`) drops the other project's `bundleId` and `title`; the three run verbs' `projectGate.projects` counts only the citing projects the caller can see · PROPOSED 2026-09-18 (REC-139 / D-428, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (`ee9f201c`): 34.0.0** (IC-155).
+  **Proposed MAJOR — 34.0.0 → 35.0.0**, argued below. Read the base AT RESOLUTION: REC-137 is running beside this.
+- **Proposer:** RECORD, worker `agent-a590a3b1c261bf1ff`, 2026-09-18, spawned by CONDUCT #5 for REC-139.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (NOT-AFFECTED as measured below), `DIST` (newgroup embeds the old plane until the next
+  cut), `SKILL` and `agent-worker` (NOT-AFFECTED: neither names `NAME_TAKEN` or `projectGate` — grepped).
+- **Design:** `BIO_Membership_Architecture_v2.md` §7, *"What a refusal may say about a project the caller cannot see"*
+  (BOB #15, 2026-09-18, at `7b733d07`), §7.9 (*"Not its existence, not its name"*); DEC-63 (who may START a run —
+  unchanged); IC-155's `Store#inSight`, which this asks and does not copy.
+
+**THE DEFECT, MEASURED THROUGH THE OPS BEFORE ANY EDIT** (`ee9f201c` plus the claim), raw — status, content type, body:
+
+| act, by a member who cannot see iris's project | before | after |
+| --- | --- | --- |
+| `op=promote` creating a project named like it (typed in another case) | 200 JSON, `NAME_TAKEN` with `bundleId: "PROJ-2026-9139-hidden"`, `title: "Sewer Fund Transfers"` | 200 JSON, `NAME_TAKEN` with neither; byte-identical to a collision with a project the caller CAN see |
+| `op=projectfork` under that name | 200 JSON, `NAME_TAKEN` with the same two fields | 200 JSON, `NAME_TAKEN` with neither |
+| `op=airunopen` over a question sam's project cites, then again once the hidden project also cites it | `projectGate.projects` 1, then **2** | 1, then 1 — the raw answers byte-identical (run id normalised) |
+| `op=airuntick` on such a run | `projects` 1, then **2** | 1, then 1, byte-identical |
+| `op=promote` CREATING at the hidden project's id | 200 JSON, `EXISTS` | UNCHANGED — plane-minted ids NOT built (design gap below) |
+
+**What changes, per field.** (1) `NAME_TAKEN` loses `bundleId` and `title` for EVERY caller, at both sites. One payload
+for everyone rather than a sight-dependent one: a caller who can see the other project already knows both, so there is no
+sight question to ask and no second copy of the rule. Uniqueness itself still holds — PROVISIONALLY, the one point BOB #15
+left OPEN for Bob. (2) `projectGate.projects` on `airunopen`/`airuntick` (`airunclose` states no count; its gate is only asked) is the number
+of citing projects IN THE CALLER'S SIGHT, asked through `Store#inSight` with the viewer the control plane now stamps on the
+three run verbs (`RUN_VERB_ACTIONS` added to the viewer-stamped list; the store reads it from the query, after the body's
+spread, so a caller's own `viewer` is overwritten). An invited member (the skeleton shows what a project cites) and an
+administrator count the project; an uninvited member does not; an unfiltered machine credential counts every one; an
+absent stamp fails CLOSED (no project stated, never every one). **DEC-63's VERDICT IS UNCHANGED** — it is still computed
+over every citing project, so a member over a question ONLY a hidden project cites is still refused (pinned).
+
+**Classification: MAJOR, and the consumer count does not argue it down (IC-25's rule, IC-117's precedent).** Two fields a
+consumer could read are REMOVED from `NAME_TAKEN`, and a published count MOVES for a caller who cannot see every citing
+project — a correct consumer reading either becomes wrong without changing a line. Measured consumers: ZERO outside the
+plane's own suites (`civicos-ui/`, `agent-worker/`, `newgroup/src/` other than its embedded bundle: no `NAME_TAKEN` or
+`projectGate` read — grepped). For MINOR, and it does not govern: no measured consumer reads either field.
+
+**NOT BUILT, AND REPORTED AS A DESIGN GAP RATHER THAN DECIDED:** *"The plane MINTS project ids (a caller no longer chooses
+one)"* does not say whether a caller-supplied id for a NEW project is REFUSED or IGNORED, and REC-139's row says STOP on
+that. Two further unstated points travel with it: whether `op=projectfork`'s `newId` is minted too, and how the minted id
+reaches the document's own `id:` scalar (the plane would rewrite `bundle.md` and recompute its sha, as the D-78 restamp
+already does). The creation's `EXISTS` at a hidden id is therefore unchanged and pinned as KNOWN.
+
+**Suites:** new `bio-plane/test/project-disclosure.test.mjs` (21 assertions) and its driver
+`project-disclosure.control.mjs` (eight rows, all AS DECLARED: restore the title in promote's NAME_TAKEN 18/3, in fork's
+19/2; count hidden projects 18/3; the liar reporting nothing 17/4 with every byte arm green; the second liar blinding
+DEC-63's verdict 20/1; the run stamp dropped 17/4, failing closed; the over-strictness arm 21/0; results in the suite's
+header). CORRECTED at its site with a dated reason, never exempted: `airun-projectgate.test.mjs` ARM G1, which pinned
+`projects: 2` for a member never invited to one of the two.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 35.0.0 → 36.0.0.** The base was read at resolution: 35.0.0, where IC-154 moved it after this row was proposed against 34.0.0. `NAME_TAKEN` (at `promote` and `projectfork`) loses the other project's id and title for EVERY caller, and a run report's `projectGate.projects` counts only the citing projects in the caller's sight. Two fields were removed and a published count re-meant, so it is breaking by IC-25 and IC-118; measured consumers are zero. DEC-63's verdict is unchanged. **NOT BUILT, and carried in D-428 with BOB #15:** plane-minted project ids (a create at a hidden id still answers `EXISTS`; the design does not say refuse-or-ignore, fork's `newId`, or how the id reaches the document's own `id:`), and whether DEC-63's verdict leaks a bit. **A DISCLOSURE CLOSING: DIST is told.**
 ## IC-157 · I3: `op=ratify` UNDER PUBLICATION RULE 2 — a PROJECT bundle is REFUSED outright (C-58.1 `RATIFY_PROJECT_BUNDLE`); a finding a RATIFIED case pins is published only under an OWNER's signature (C-57.1) delivered by the founder or a JOINED member (C-56.1), through the SAME helper `op=caseratify` asks; a caller who cannot see the bundle is answered as for one never minted · PROPOSED 2026-09-18 (REC-140 / D-429, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
 
-- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (`ff3a4cea`): 35.0.0** (IC-154).
-  **Proposed MAJOR — 35.0.0 → 36.0.0**, by IC-137's precedent: refusals where none stood. Read the base AT RESOLUTION
-  (REC-139 runs beside this and also proposes a MAJOR on I3).
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE: 36.0.0** (35.0.0 at spawn on `ff3a4cea`;
+  IC-156, REC-139, moved it and was merged in before close-out). **Proposed MAJOR — 36.0.0 → 37.0.0**, by IC-137's
+  precedent: refusals where none stood. Read the base AT RESOLUTION: CONDUCT #5 reports REC-136/UI-65 landing at 37.0.0,
+  in which case this is 38.0.0.
 - **Proposer:** RECORD, worker `agent-a761302b28f105764`, 2026-09-18, spawned by CONDUCT #5 for REC-140.
 - **Owner to land it:** `RECORD`
 - **Consumers to answer:** `UI` (measured NOT-AFFECTED: `civicos-ui/` names `op=ratify` nowhere — grepped), the instance

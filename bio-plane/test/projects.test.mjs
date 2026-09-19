@@ -371,8 +371,14 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
     (await mkNamed("PROJ-2026-0101-b", "Sewer Fund Transfers")).reason, "NAME_TAKEN");
   t("case does not rescue it", (await mkNamed("PROJ-2026-0102-c", "SEWER FUND TRANSFERS")).reason, "NAME_TAKEN");
   t("nor does whitespace", (await mkNamed("PROJ-2026-0103-d", "Sewer  Fund   Transfers ")).reason, "NAME_TAKEN");
-  t("and the refusal names the project already holding it",
-    (await mkNamed("PROJ-2026-0104-e", "sewer fund transfers")).bundleId, "PROJ-2026-0100-a");
+  /* CORRECTED 2026-09-18 by REC-139 (D-428, IC-156), never exempted: this asserted that the refusal
+     NAMES the project already holding the name (`bundleId`). Membership v2 §7 (BOB #15) rules the
+     opposite — a refusal never names or describes a project the caller may not be able to see, and
+     NAME_TAKEN "echoes neither the other project's id nor its title" — so the old assertion pinned the
+     disclosure. It now pins its absence; the refusal itself (the three arms above) still stands. */
+  t("and the refusal names NEITHER the project already holding it NOR its title (Membership v2 §7)",
+    ((r) => [r.reason, "bundleId" in r, "title" in r])(await mkNamed("PROJ-2026-0104-e", "sewer fund transfers")),
+    ["NAME_TAKEN", false, false]);
   t("a different name is fine", (await mkNamed("PROJ-2026-0105-f", "Franchise Fee Diversion")).ok, true);
 
   /* Held across every lifecycle state. A deactivated project has not gone

@@ -1,0 +1,267 @@
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-disclosure.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-disclosure.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
+   RESULTS, RUN 2026-09-18 in worktree agent-a590a3b1c261bf1ff on base ee9f201c (real src/index.mjs 659,412 B sha256 a1c37a51e595…, src/store.mjs 2,607,068 B sha256 0406cea9a0c7…, untouched: YES), every arm AS DECLARED: (a) baseline 21/0 · (b) restore-title — promote's NAME_TAKEN carries the other project's id and title again -> 18/3, the two CREATE payload arms and ONE ANSWER, fork's held green · (c) restore-title-fork — the same at forkProject alone -> 19/2, the two FORK arms · (d) count-hidden — the run report counts every citing project again -> 18/3, sam's open and tick byte-identity arms and THE LIAR'S ARM, with olga's, ruth's and the machine's counts green (they see both) · (e) report-nothing, the liar — zero projects to everyone -> 17/4, every byte-identity arm GREEN (the lie) and the liar's, olga's, ruth's and the machine's count arms red · (f) gate-over-sight, the second liar — DEC-63's verdict computed over sight too -> 20/1, only §3's refusal arm · (g) run-stamp-dropped — the control plane's viewer stamp removed from the three run verbs -> 17/4, fails CLOSED (no project stated, never every one): the four visible-count arms · (h) sight-via-redactor, the over-strictness arm -> 21/0. NOT AN ARM: *"let a caller-chosen id through"* — plane-minted ids were not built (design gap), so there is no fence to remove; §4 pins EXISTS as KNOWN.
+ * =========================================================================
+ * REC-139 / D-428 / IC-156 — A REFUSAL, OR A REPORT, NEVER NAMES OR DESCRIBES A PROJECT THE CALLER
+ * CANNOT SEE. Membership Architecture v2 §7 (BOB #15, 2026-09-18, at `7b733d07`, *"What a refusal may
+ * say about a project the caller cannot see"*) and §7.9 (*"Not its existence, not its name"*).
+ *
+ * TWO OF THE RULING'S THREE POINTS ARE BUILT AND DRIVEN HERE:
+ *   (1) `NAME_TAKEN` (7.1's instance-wide name uniqueness, at `promote` and at `forkProject`) carries
+ *       neither the other project's id nor its title. PROVISIONALLY, while the point is OPEN for Bob,
+ *       uniqueness still holds: the refusal is still said, and it reveals only the name the caller typed.
+ *   (3) An inquiry RUN's report (`projectGate`, on `airunopen` / `airuntick`) counts ONLY the citing
+ *       projects its caller can see. DEC-63 decides who may START a run and is unchanged: the gate's
+ *       verdict is still computed over every citing project.
+ * THE THIRD, plane-minted project ids (which closes `EXISTS`), is NOT built: the design does not say
+ * whether a caller-supplied id for a new project is refused or ignored, and REC-139's row says STOP on
+ * that. §4 below pins the creation's EXISTS as KNOWN so a change to it is noticed.
+ *
+ * WHAT WAS WRONG, measured on the unedited tree (`ee9f201c` + the claim), raw:
+ *   - vera (never invited) creating a project named like iris's hidden one: 200, NAME_TAKEN, with
+ *     `bundleId` = the hidden project's id and `title` = its canonical title.
+ *   - the same through `op=projectfork`: NAME_TAKEN with the same two fields.
+ *   - sam's run over a question his project cites answered `projectGate.projects: 1`, and `2` once a
+ *     project he cannot see also cited it.
+ *
+ * HOW A LIAR PASSES THE OBVIOUS TEST, stated before what this checks:
+ *   (a) drop uniqueness, so no NAME_TAKEN is said at all. §1 still requires the refusal.
+ *   (b) report ZERO projects to everyone. §2 requires a VISIBLE citing project to be counted — sam's own,
+ *       an invited member's skeleton view, and an administrator's sight — and a machine credential to
+ *       count all of them.
+ *   (c) keep the count honest by dropping the GATE's use of the hidden project (so a question cited only
+ *       by a project the caller cannot see reads as projectless and is permitted). §3 pins DEC-63's verdict.
+ * ========================================================================= */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
+import { Miniflare } from "miniflare";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
+import { join } from "node:path";
+
+/* The control driver points this at an armed copy of the sources. */
+const SRC_DIR = process.env.PROJECT_DISCLOSURE_SRC || fileURLToPath(new URL("../src", import.meta.url));
+const IDX = join(SRC_DIR, "index.mjs");
+const SHOW = process.env.PROJECT_DISCLOSURE_SHOW === "1";   /* print the raw answers (the before-table) */
+
+let pass = 0, fail = 0;
+const t = (label, got, want) => {
+  const ok = JSON.stringify(got) === JSON.stringify(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  ok ? pass++ : fail++;
+};
+
+const ADM = "adm-rec139", MEM = "mem-rec139";
+const mf = new Miniflare({
+  modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+  durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],
+  bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, VERSION: "test" },
+});
+const sha = (v) => createHash("sha256").update(v).digest("hex");
+const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+/* THE RAW ANSWER: status, content type and the body's exact bytes — nothing parsed away. */
+const RAW = async (q, body) => {
+  const res = await mf.dispatchFetch(`http://x/api/?${q}`,
+    body === undefined ? {} : { method: "POST", body: JSON.stringify(body) });
+  return { status: res.status, type: res.headers.get("content-type"), body: await res.text() };
+};
+const parse = (r) => { try { return rP(JSON.parse(r.body)); } catch { return null; } };
+const POST = async (q, body) => parse(await RAW(q, body ?? {}));
+const show = (label, r) => { if (SHOW) console.log(`  RAW ${label}: ${r.status} ${r.type} ${r.body}`); };
+const codeOf = (r) => (r && typeof r.code === "string") ? r.code : (r && r.reason) || null;
+const E = encodeURIComponent;
+const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
+const must = (l, r) => { if (!r || r.ok === false) throw new Error(`${l}: ${JSON.stringify(r).slice(0, 700)}`); return r; };
+
+try {
+
+/* ============================================================== FIXTURE */
+must("claim", await POST("op=claim", { bootstrapToken: ADM, password: "founder-passphrase-139" }));
+const CAPS = ["contribute", "publish", "create_projects"];
+const enrol = async (memberId, role) => {
+  const add = await POST(`op=memberadd&token=${ADM}`, { memberId, cover: `cover for ${memberId}`, role, capabilities: CAPS });
+  must(`enroll ${memberId}`, await POST("op=enroll", { invite: add && add.invite, handle: memberId, password: `${memberId}-pass-139` }));
+  const lg = await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-pass-139` });
+  if (!lg || !lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg)}`);
+  return lg.token;
+};
+/* The founder counts as the first administrator, so the second must be one too (ADMINS_FIRST). */
+const RUTH = await enrol("ruth", "admin");    /* an administrator: sees every project (§7.3) */
+const IRIS = await enrol("iris", "member");   /* owns the HIDDEN project */
+const VERA = await enrol("vera", "member");   /* NEVER invited to it: the caller who cannot see it */
+const SAM  = await enrol("sam", "member");    /* owns the VISIBLE project; never invited to the hidden one */
+const OLGA = await enrol("olga", "member");   /* joins sam's project, and is INVITED (not joined) to iris's */
+
+const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
+  `title: "Question ${id}"`, "current_state: open", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "produced_by:", "  mode: agent", "  capability_tier: high", "group: believe-in-oakland", "references: []",
+  "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+  "visuals: []", "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "", "Did it?", "",
+  "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+  "## Review Notes", ""].join("\n");
+const projectMd = (id, title) => ["---", `id: ${id}`, "object_type: project", `title: "${title}"`,
+  "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
+  "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
+let seq = 0;
+const create = (tok, id, type, title) => {
+  const md = type === "project" ? projectMd(id, title) : inquiryMd(id);
+  return RAW(`op=promote&token=${tok}`, {
+    bundleId: id, base: null, snapKey: `20260701T0000${String(++seq).padStart(2, "0")}Z_rec139`,
+    meta: { object_type: type, group: "believe-in-oakland", title,
+            current_state: type === "project" ? "forming" : "open", created: NOW, last_updated: LATER },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] });
+};
+const cite = async (tok, project, ids) => {
+  const handle = (await POST(`op=select&token=${tok}&kind=enumerated`, { ids }))?.handle;
+  if (!handle) throw new Error(`select for ${project}`);
+  return POST(`op=cite&token=${tok}&project=${E(project)}&handle=${handle}&note=${E("drawn on")}`, {});
+};
+
+const HIDDEN = "PROJ-2026-9139-hidden", H_TITLE = "Sewer Fund Transfers";
+const VISIBLE = "PROJ-2026-9139-visible", V_TITLE = "Franchise Fee Diversion";
+const VERAS = "PROJ-2026-9139-veras", VERAS_TITLE = "Vera's own project";
+const Q = "INQ-2026-9139-transfers";
+must("iris creates the hidden project", parse(await create(IRIS, HIDDEN, "project", H_TITLE)));
+must("sam creates the visible project", parse(await create(SAM, VISIBLE, "project", V_TITLE)));
+must("vera creates her own project", parse(await create(VERA, VERAS, "project", VERAS_TITLE)));
+must("the question", parse(await create(ADM, Q, "inquiry", "Did the transfer follow the adopted process?")));
+must("sam invites olga", await POST(`op=projectinvite&token=${SAM}&projectId=${VISIBLE}&handle=olga`));
+must("olga joins sam's project", await POST(`op=projectjoin&token=${OLGA}&projectId=${VISIBLE}`));
+must("iris invites olga (she never joins)", await POST(`op=projectinvite&token=${IRIS}&projectId=${HIDDEN}&handle=olga`));
+must("ruth is invited to sam's project", await POST(`op=projectinvite&token=${SAM}&projectId=${VISIBLE}&handle=ruth`));
+must("ruth joins it", await POST(`op=projectjoin&token=${RUTH}&projectId=${VISIBLE}`));
+must("sam's project cites the question", await cite(SAM, VISIBLE, [Q]));
+
+/* FIXTURE READ-BACK through ops other than the ones that wrote it: the hidden project is hidden from
+   vera and sam and visible to olga and ruth, so every arm below measures the viewer it names. */
+const listed = async (tok) => ((await POST(`op=list&token=${tok}&limit=1000`))?.bundles ?? []).map((b) => b.bundle_id);
+t("FIXTURE: vera and sam do NOT see the hidden project; olga (invited) and ruth (administrator) DO",
+  [(await listed(VERA)).includes(HIDDEN), (await listed(SAM)).includes(HIDDEN),
+   (await listed(OLGA)).includes(HIDDEN), (await listed(RUTH)).includes(HIDDEN)], [false, false, true, true]);
+
+/* ======================================================== 1. NAME_TAKEN */
+console.log("\n--- 1. NAME_TAKEN names neither the other project's id nor its title ---");
+{
+  /* A differently-cased spelling on purpose: echoing the STORED title would disclose its casing too. */
+  const TYPED = "sewer  FUND transfers";
+  const viaCreate = await create(VERA, "PROJ-2026-9139-vera-clash", "project", TYPED);
+  show("vera creates a project named like the hidden one", viaCreate);
+  const c = parse(viaCreate);
+  t("CREATE: uniqueness still holds (provisional, OPEN for Bob) — vera is refused NAME_TAKEN", codeOf(c), "NAME_TAKEN");
+  t("CREATE: the refusal carries NO bundleId and NO title", [c && "bundleId" in c, c && "title" in c], [false, false]);
+  t("CREATE: neither the hidden id nor its stored title appears ANYWHERE in the raw body",
+    [viaCreate.body.includes(HIDDEN), viaCreate.body.includes(H_TITLE)], [false, false]);
+
+  const viaFork = await RAW(`op=projectfork&token=${VERA}&projectId=${VERAS}&newId=PROJ-2026-9139-vfork&title=${E(TYPED)}`);
+  show("vera forks her own project under the hidden one's name", viaFork);
+  const f = parse(viaFork);
+  t("FORK: uniqueness still holds — NAME_TAKEN", codeOf(f), "NAME_TAKEN");
+  t("FORK: the refusal carries NO bundleId and NO title", [f && "bundleId" in f, f && "title" in f], [false, false]);
+  t("FORK: neither the hidden id nor its stored title appears in the raw body",
+    [viaFork.body.includes(HIDDEN), viaFork.body.includes(H_TITLE)], [false, false]);
+
+  /* ONE ANSWER, whichever project holds the name: vera colliding with a project she CAN see (her own)
+     gets the same bytes as colliding with one she cannot. */
+  const own = await create(VERA, "PROJ-2026-9139-vera-clash", "project", VERAS_TITLE);
+  t("ONE ANSWER: a collision with a project vera CAN see is byte-identical to one with a project she cannot",
+    { status: own.status, type: own.type, sha: sha(own.body) },
+    { status: viaCreate.status, type: viaCreate.type, sha: sha(viaCreate.body) });
+  t("OVER-STRICTNESS: a name nobody holds is NOT refused (uniqueness is not a blanket refusal)",
+    parse(await create(VERA, "PROJ-2026-9139-vera-new", "project", "Sewer Fund Transfers, revisited"))?.ok, true);
+}
+
+/* ======================================================== 2. THE RUN REPORT */
+console.log("\n--- 2. an inquiry run's report counts only the citing projects its caller can see ---");
+let runSeq = 0;
+/* A FIXED clock one day AHEAD of the wall clock, so both reads compute the same lease expiry and no
+   run lapses to the reaper between them (a run opened in the past is reaped and its tick then reports
+   `stopped`, which carries no gate — measured on the first draft of this suite). */
+const RUN_AT = new Date(Math.floor(Date.now() / 3600000) * 3600000 + 86400000).toISOString().replace(/\.\d{3}Z$/, "Z");
+const openRaw = (tok, run) => RAW(`op=airunopen&token=${tok}`, {
+  run, contextType: "inquiry", contextId: Q, label: "evidence sweep", mode: "check",
+  principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+  skillVersion: "investigative-session@1", bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }],
+  leaseMs: 600000, at: RUN_AT });
+const tickRaw = (tok, run) => RAW(`op=airuntick&token=${tok}`, { run, at: RUN_AT });
+const gateOf = (r) => parse(r)?.projectGate ?? null;
+/* The run id is the only thing the two reads differ in by construction, so it is the only thing
+   normalised; every other byte is compared. */
+const norm = (r, run) => ({ status: r.status, type: r.type, sha: sha(r.body.split(run).join("RUN")) });
+
+const RUN_BEFORE = { sam: `RUN-rec139-sam-${++runSeq}`, olga: `RUN-rec139-olga-${++runSeq}`,
+                     ruth: `RUN-rec139-ruth-${++runSeq}`, adm: `RUN-rec139-adm-${++runSeq}` };
+const before = {
+  sam: await openRaw(SAM, RUN_BEFORE.sam), olga: await openRaw(OLGA, RUN_BEFORE.olga),
+  ruth: await openRaw(RUTH, RUN_BEFORE.ruth), adm: await openRaw(ADM, RUN_BEFORE.adm) };
+const tickBefore = await tickRaw(SAM, RUN_BEFORE.sam);
+show("sam opens a run, ONLY his project citing", before.sam);
+
+must("iris's HIDDEN project now cites the same question", await cite(IRIS, HIDDEN, [Q]));
+const back = ((await POST(`op=backlinks&token=${ADM}&target=${E(Q)}`))?.backlinks ?? []).map((x) => x.from).sort();
+t("FIXTURE READ-BACK (the admin token, op=backlinks): BOTH projects now draw on the question", back, [HIDDEN, VISIBLE].sort());
+
+const RUN_AFTER = { sam: `RUN-rec139-sam-${++runSeq}`, olga: `RUN-rec139-olga-${++runSeq}`,
+                    ruth: `RUN-rec139-ruth-${++runSeq}`, adm: `RUN-rec139-adm-${++runSeq}` };
+const after = {
+  sam: await openRaw(SAM, RUN_AFTER.sam), olga: await openRaw(OLGA, RUN_AFTER.olga),
+  ruth: await openRaw(RUTH, RUN_AFTER.ruth), adm: await openRaw(ADM, RUN_AFTER.adm) };
+/* Each run is ticked ONCE after its open, so the two ticks carry the same `ticks` count; ticking the
+   first run twice moved that counter, which is the run and not the report (measured, first draft). */
+const tickAfter = await tickRaw(SAM, RUN_AFTER.sam);
+show("sam opens a run, his project AND the hidden one citing", after.sam);
+show("sam's tick before", tickBefore);
+show("sam's tick after", tickAfter);
+
+t("THE RUN STARTED both times (the report is a SUCCESS answer; a refusal would measure nothing)",
+  [parse(before.sam)?.started, parse(after.sam)?.started], [true, true]);
+t("sam (never invited to the hidden project): airunopen's raw answer is BYTE-IDENTICAL whether or not it cites",
+  norm(after.sam, RUN_AFTER.sam), norm(before.sam, RUN_BEFORE.sam));
+t("sam: airuntick's raw answer is BYTE-IDENTICAL too (each run ticked once after its open)",
+  norm(tickAfter, RUN_AFTER.sam), norm(tickBefore, RUN_BEFORE.sam));
+t("THE LIAR'S ARM: sam's OWN citing project is still counted — the report is not emptied",
+  gateOf(after.sam), { applied: true, ground: "PARTICIPANT", why: gateOf(before.sam)?.why ?? null, projects: 1 });
+t("SEES IT: olga (INVITED to the hidden project — the skeleton shows what it cites, §7.9) counts it: 1 then 2",
+  [gateOf(before.olga)?.projects, gateOf(after.olga)?.projects], [1, 2]);
+t("SEES IT: ruth (an administrator, §7.3) counts it: 1 then 2",
+  [gateOf(before.ruth)?.projects, gateOf(after.ruth)?.projects], [1, 2]);
+t("MACHINE CREDENTIAL (the admin token, unfiltered): counts every citing project, 1 then 2",
+  [gateOf(before.adm)?.ground, gateOf(before.adm)?.projects, gateOf(after.adm)?.projects],
+  ["NO_MEMBER_BEHIND_CALLER", 1, 2]);
+t("no report names the hidden project anywhere in its raw body",
+  [after.sam, after.olga, after.ruth, tickAfter].map((r) => r.body.includes(HIDDEN)), [false, false, false, false]);
+
+/* ======================================================== 3. DEC-63 IS UNCHANGED */
+console.log("\n--- 3. DEC-63's verdict still reads every citing project (who may START is not a disclosure rule) ---");
+{
+  const Q2 = "INQ-2026-9139-only-hidden";
+  must("a second question", parse(await create(ADM, Q2, "inquiry", "Only the hidden project asks this")));
+  must("only the HIDDEN project cites it", await cite(IRIS, HIDDEN, [Q2]));
+  const r = parse(await RAW(`op=airunopen&token=${SAM}`, { run: `RUN-rec139-q2-${++runSeq}`, contextType: "inquiry",
+    contextId: Q2, principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 }));
+  t("sam over a question ONLY a project he cannot see cites is still REFUSED by DEC-63's gate (not read as projectless)",
+    [r?.started, codeOf(r)], [false, "AI_RUN_NOT_PROJECT_MEMBER"]);
+  t("and that refusal names no project", JSON.stringify(r).includes(HIDDEN), false);
+}
+
+/* ======================================================== 4. KNOWN, NOT CLOSED HERE */
+console.log("\n--- 4. KNOWN, NOT CLOSED HERE: a CREATION at a hidden project's id still answers EXISTS ---");
+{
+  /* PINNED AS MEASURED so a change to it is noticed. BOB #15 decided the plane mints project ids, which
+     closes this; the design does not say whether a caller-supplied id for a NEW project is REFUSED or
+     IGNORED, and REC-139's row says STOP on that, so it is reported as a design gap rather than built. */
+  const r = await create(VERA, HIDDEN, "project", "Anything at all");
+  show("vera creates at the hidden project's id", r);
+  t("KNOWN (D-428, the plane-minted-id half): vera's CREATION at the hidden id answers EXISTS", codeOf(parse(r)), "EXISTS");
+}
+
+} catch (e) {
+  console.log(`  FAIL  the suite threw before its foot: ${e && e.stack || e}`);
+  fail++;
+} finally {
+  await mf.dispose();
+}
+console.log(`\nproject-disclosure: ${pass} passed, ${fail} failed`);
+process.exit(fail ? 1 : 0);
