@@ -14665,3 +14665,23 @@ Paths, by SITE in `civicos-ui/app.html`:
   own block), this block.
 
 NOT `QUEUE.md`, NOT `bio-plane/src/**` (REC-141's), NOT `release/`, NOT `newgroup/`, NOT `kickoffs/CONDUCT.md`.
+
+## CLAIM 2026-09-19 UI (UI-66) — RELEASED
+
+released: 2026-09-19 by the UI-66 worker, branch `worktree-agent-a50d25200c5cb65b6`, carrying REC-141 at `817a8f85`
+(merged at `328c2c45`) and `origin/main` at `f61d071d` (merged at `e1763f3d`). Paths as claimed; `app.html` sites:
+`mdFor`, `addGo`, `ROSTER_ACTS.projectfork`, `doRosterAct`, and a new `refusalTranslated` beside `actRefusalHtml`
+(`actRefusalHtml` itself is UNCHANGED — moving it to translations broke `version-review` §7's pinned detail, so the
+class change is reported, not made). No DEC-49 REGION touched. Final, gated at `d9e63d34`: battery **257/257 suites
+green · 15740 assertions passing · run 85224.fe9a87**, exit 0, provenance 260/260 at HEAD; `coverage.mjs --strict`
+exit **0** unpiped, REGISTER_FLOOR collapsed (1454 REC-141's vs 1452 main's) and re-read from the committed merge
+`e1763f3d`'s print to **1458 / 248 / 249, run 211** (then `1458/1458 · 248/248 · 249/249 · floor 211/211` at
+`d9e63d34`); UI harness exit **0**, **55 PASS** (54 + the new `project-id-surface.test.mjs`, 29 assertions);
+`check-refusal-codes` floors unmoved (reported GREW, not failed); `plancheck --local` 0 fail. An earlier battery at
+`5d95f316` read 256/257 — `strandedwork` failed on `plancheck --local`'s STALE `DECIDED.md` (regenerated) while this
+worker's own untracked battery log sat in the tree; not re-counted. NEGATIVE CONTROL `node
+civicos-ui/test/project-id-surface.control.mjs`: **5/5 AS DECLARED** at `5d95f316` and again at `d9e63d34` — baseline
+GREEN 29/29; (A) fork id field restored RED 20/29, naming C-59.3's sentence; (B) client-side project id restored RED
+9/29, naming C-59.1's; (C) the liar, an id in the bytes only, RED 11/29, naming C-59.2's; (D) `bundleId: undefined`
+GREEN 29/29; app.html restored to `21bcfa63…` by sha256 and `cmp` after every arm. REC-141's DELEGATION to UI
+DISCHARGED in its block. No id minted.
