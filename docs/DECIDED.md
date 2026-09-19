@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1244 rulings across 100 documents.
+1245 rulings across 100 documents.
 
 ## DEC-
 
@@ -2371,8 +2371,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1290`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1302`
+- **2026-09-19** — FLEET's 574 MB was WITHDRAWN 2026-09-19: disk had recovered to 9.5 GiB with zero gates running, so the constraint that made it worth a human's attention was gone. FLEET armed its 6-hourly self-wake to re-raise it only if free space falls under ~4 GiB WITH work running, with the measurement attached — an instrument…  
+  `docs/development/kickoffs/BOB-NEXT.md:44`
 - WHAT BOB #17 DECIDED — each folded into its home document; `decided.mjs` finds them - **TASK stays gated** (Membership v2 §7): the set is a PREDICATE — *every prefix whose objects a read withholds from some caller* — not a list.  
-  `docs/development/kickoffs/BOB-NEXT.md:79`
+  `docs/development/kickoffs/BOB-NEXT.md:72`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:86`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
