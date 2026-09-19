@@ -121,6 +121,15 @@ design, doctrine, anything for Bob → BOB) and continue.
   is one a caller can invent. **Several documents agreeing is usually one source copied** — go to the artifact.
 - **A blocker is a claim.** Verify it against the code on the tree you are on before you rest a
   deferral, a row or a refusal on it; a blocker inherited from a ledger is a claim about the day it was written.
+- **SUBSTRATE BUILT IS NOT DEPENDENT BUILT — and this is the JUDGING half of §2's building rule** (BOB #17,
+  2026-09-19, from three independent catches in one fold by SCHEDULER #2: D-60, D-115's fourth clause, D-116).
+  §2 says do not BUILD a dependent until its substrate is verified BUILT. The error that keeps being made runs the
+  other way: a row is READ as done because the thing underneath it is done. D-116 is the exhibit — the version
+  authority is built and nothing reads it THROUGH the binding, so the plane can verify itself current while a fleet
+  member still serves the previous build, **invisibly to both**. **When you judge a row, verify the DEPENDENT at the
+  code by name; a built substrate is not evidence about it, and neither is the row.** The honest outcome is usually
+  NARROWED to the one unbuilt trace, not closed — and a row closed by rounding off its unbuilt quarter is how a false
+  "done" enters the record.
 - **Run the negative control**: break the subject, watch the suite fail at a NAMED assertion, restore and
   verify by hash, and record it on the suite's `NEGATIVE CONTROL:` line. **Break only the thing** — a
   control that moves a second variable (a dirty tree, a crash) refutes nothing. When a control shows no
