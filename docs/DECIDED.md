@@ -1152,9 +1152,7 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2353`
 - **REC-133** · 2026-09-18 — ADDENDUM 2026-09-18 RECORD (REC-133, IC-151) — point 1's AUTHORITY line above is SUPERSEDED by `BIO_Publication_v0_1.md` §6A.2 as built:** the draft form is offered to the project's EDITORS — an owner or a JOINED participant holding `contribute` — not to the owner alone.  
   `docs/development/CLAIMS.md:13956`
-- **REC-137** · 2026-09-18 — §7 — `op=caseratify`'s required position is DECIDED (the bullet *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18) and UNBUILT: whether the plane requires an OWNER's signature, and refuses delivery by an enrolled administrator with no role in the project, is REC-137's to verify…  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:12`
-- **REC-137** — `op=caseratify`'s position is DECIDED in the next bullet and is REC-137's to build.  
+- **REC-137** — `op=caseratify`'s position is DECIDED in the next bullet and BUILT by REC-137 (IC-154).  
   `docs/architecture/BIO_Membership_Architecture_v2.md:544`
 ## UI-
 
@@ -2159,6 +2157,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:11171`
 - CORRECTED at their sites with dated reasons, never exempted: `citeinquiry.test.mjs` (the DO dispatch's parameter roster gains the server-stamped `identity`) and `identity-claims.test.mjs` arm (j) (it selected the first stamp site whose writes include `proposedispose`, which is now the CLEAR positional stamp; it…  
   `docs/development/INTERFACE-CHANGES.md:11277`
+- CORRECTED at its site with a dated reason, never exempted: `casesign.test.mjs` (its second-attestation arm delivered and signed as omar, an enrolled administrator with no role in the project; it now makes omar a second OWNER through the roster ops, so it still reaches `CASE_EDITION_ALREADY_RATIFIED`).  
+  `docs/development/INTERFACE-CHANGES.md:11338`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
