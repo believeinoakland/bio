@@ -75,8 +75,41 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
 - **LED-6 — the pipeline migration** (`WORK-PIPELINE.md` §5), transferred from CONDUCT to this lane: the files are
   now this lane's. The tool half (`ledger.mjs` replenish, the backlog ledger, the invariant arms) is a build task for a
   worker CONDUCT spawns; the file migration is this lane's own act, performed with the tool.
-- **LED-7 — the debt fold** (`WORK-PIPELINE.md` §3): the triage is done by workers CONDUCT spawns in batches; placing
-  every resulting task in order is this lane's.
+- **LED-7 — the debt fold** (`WORK-PIPELINE.md` §3) — **THIS LANE DRIVES IT, actively** (Bob, 2026-09-19: *"Scheduler
+  should be actively involved in moving debt rows into the build plan (in the proper order)."*). Take DEBT.md's open rows
+  in batches of about 20, security and disclosure rows first, then corrections to landed work, then the rest oldest
+  first. Verify each at the code yourself (a row is a claim about the day it was written), and send it out by one of the
+  three doors in the same commit: CLOSED IN FACT with its evidence, a BACKLOG task placed in order, or a stated
+  LIMITATION in its home document. A row whose verification needs a build or a long code trace may go to a worker
+  through CONDUCT; this lane does not wait on workers to keep the fold moving. Report each batch's counts to BOB.
+
+## Mechanics learned by SCHEDULER #1 (2026-09-18/19) — durable, read before your first commit
+
+- **A completion is ONE commit:** flip the row `done` with its landing sha verified (`git merge-base --is-ancestor <sha>
+  origin/main`), `node tools/ledger.mjs archive <ID>`, then `node tools/ledger.mjs refill` (it moves only `queued` rows
+  whose depends-on are MET, and skips the rest with a reason), then `node tools/ledger.mjs invariants` (0 armed FAIL).
+- **A new row** is written at its place in `BACKLOG.md` by hand (the tools move rows OUT of the backlog, never into it),
+  with an `order:` line saying why it is there. The order IS file position: cache first, then backlog top to bottom.
+- **Every rebase that touches `QUEUE.md`/`BACKLOG.md`:** list upstream's hunks (`git diff <merge-base> origin/main --
+  <file>`), carry them onto yours, and run the carry under `set -e` with the push as a SEPARATE step after you compare
+  the `running` rows with `origin/main`. Chaining `…; git push` once published a failed carry and reverted CONDUCT's
+  flips twice (`12983f6f`, `60180168`; repaired `8e39602a`, `830f6648`). `docs/DECIDED.md` conflicts are regenerated,
+  never merged; the push guard refuses a stale one.
+- **A row's `design:` must name a governed home.** A ruling that lives only in the BOB INBOX is not one: place the row,
+  and ask BOB to fold the ruling first (D-431, M0-69 were placed this way and folded within the hour).
+- **A peer's message is a pointer.** Verify ids and shas (BOB once named M0-67 for the open M0-65); a defect is placed
+  only with its fix named, and one whose fix needs a decision goes to BOB and stays where it is.
+- **The DEBT fold (LED-7):** close a row by leading its disposition with `CLOSED <date> IN FACT by LED-7 batch N` and the
+  evidence, then `ledger.mjs archive`. `isClosedDebtRow`'s residue pattern (`STILL OPEN`, `OUTSTANDING`, …) scans the
+  WHOLE disposition, so a prior disposition carrying one moves verbatim into the description cell. A PLACED row is
+  archived from DEBT as *CLOSED … AS A DEBT ROW — PLACED*, and its backlog row keeps the `D-` id (the MET rule reads a
+  closed DEBT row with an open row of the same id as not met).
+- **`ledger.mjs` cannot see ids with a letter suffix or compound headings** (`CASE-5b`, `D-329+D-331+D-333`); move them
+  by hand and say so. Never write `### <ID> ·` at the start of a line in an archive block (it is an allocation site);
+  prefix quoted rows with `> `.
+- **Gates:** a docs-only change runs `node tools/gates.mjs` (DOCS, ~4–6 min); any `bio-plane/test` edit makes it FULL
+  (~13 min). Never run a `.control.mjs` while a gate runs (controls edit and commit the tree). `timeout` does not exist
+  on macOS. Naming a `D-` id in prose before its DEBT row exists fails `mintid.test`'s prose-floor arm.
 
 ## Checks before every push
 

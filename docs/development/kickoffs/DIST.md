@@ -195,3 +195,50 @@ deliberately at the end of a work item, not a separate agent. The point of doing
 it that way first is to find out whether the gate above is right before anyone
 depends on it. Split it into its own session once two development areas are live
 and both want to ship.
+
+## LESSONS FROM THE 0.59.0–0.65.0 CUTS (2026-09-18/19), recorded at the stand-down — each one cost time or nearly shipped a defect
+
+1. **A signed release on `main` IS distribution.** Every installer's `/update` reads `main/release/RELEASE.json`. That is
+   why the pointer mechanism above exists. Never push `release/` to `main` except by merging a live-verified cut branch.
+2. **The battery builds FRESH stores; production stores are OLD.** 0.59.0–0.63.0 passed every suite and bricked every
+   existing store. `migrate-released.test.mjs` is the upgrade arm. **Each cut adds the PREVIOUS release to its `RELEASES`**
+   (version, and the commit whose `release/` holds it: the cut commit on the branch). **Only a withdrawn, bricking release
+   goes in its `WITHDRAWN` set**, because that loop asserts the release BRICKS a 0.58.0 store. A fixed release put there
+   fails the gate (0.65.0's first gate, corrected).
+3. **Record rollback targets BEFORE deploying:** `wrangler deployments list --name <worker>`, the `(100%)` version id,
+   for `biosmoke7`, `civicos` and `newgroup`. Roll back with `wrangler rollback <id> --name <worker> -m "<why>" -y`.
+   Measured working 2026-09-19. Restoring the last known-good version is part of a failed deploy, not a new deploy.
+4. **What is SERVING is read from the deployments API and `/version`, never from `/workers/scripts/<slug>`** (it
+   returns the latest UPLOAD, and `content/v2?version=` ignores the version). After a rollback, `deploy.mjs`'s read-back
+   reports the rolled-away bytes.
+5. **Find a live failure with `wrangler tail <worker> --format json`**, bounded (start it, wait for it to connect, send one
+   request, kill it by PID). "error code: 1101" is an uncaught exception, and `STORE_DID_NOT_ANSWER` means the Durable
+   Object threw. The tail gave the exact SQL error within a minute.
+6. **The UI worker `civicos` is not in `RELEASE.json`** and moves with the plane (gate step 12). Before a release carries
+   an interface change the surface calls (IC-153, IC-158), check `civicos-ui/app.html`'s diff since the last tag.
+7. **Fleet members deploy from SOURCE through wrangler**, so their served bytes are not `release/`'s bundle. Verify them by
+   byte-comparing the account's script against `wrangler deploy --dry-run --outdir` of the same tagged tree, and
+   ocr-worker's parts against `release/ocr-worker/assets/*`.
+8. **The installer's embed is re-escaped by esbuild**, so a substring search for the signed source finds nothing. Parse the
+   `RELEASE_SOURCE` literal out of the account's script, evaluate it, and hash the value. It must equal `RELEASE.json`'s
+   sha256. Then check `bindings: []` from `/settings`.
+9. **Before a live probe, read the handler for where it takes its parameters.** `op=projectfork` reads `projectId` and
+   `newId` from the QUERY STRING; a JSON body is ignored and answers something else (a false result, caught 2026-09-19).
+   Operator tokens travel as the plane's `token` query parameter over HTTPS; never print the URL.
+10. **Deploy from a worktree at the TAG**, never from the working tree: `deploy.mjs` checks the tree's version sites. When
+   the lockfiles are unchanged since the last tag, symlinking the installed `node_modules` into it is sound (for deploy
+   tooling only, never a test run). Remove the worktree after.
+11. **Re-cutting before the tag costs nothing.** If `main` gains closings while a cut is gating, stop the gate
+   (`TaskStop`), save the authored edits aside, `git switch -f -C dist/cut-X.Y.Z origin/main`, restore them, and
+   regenerate the rest.
+12. **Batch closings only with a bound:** a one-shot `CronCreate` wake at the bound, so an authority fix never waits
+   indefinitely on a batch.
+13. **A committed `.claude/settings.json` `ask` rule overrides bypass mode.** Rules on `deploy.mjs` and on `npx wrangler
+   deploy` held the plane step for about 2 hours on a prompt nobody saw. Bob had them removed (7e9ef2f9). If a deploy step
+   hangs, check the settings your WORKTREE reads (its own copy), and rebase first.
+14. **zsh treats `$var:x` as a history modifier**: `git show $c:path` silently becomes `$c` with `:p`/`:r`/`:c` applied.
+   Write `"${c}:path"`.
+15. **`op=audit` on biosmoke7 is never fully clean:** 10 C-18.9 findings are D-200, record state since 2026-08-04. The gate
+   step means "no finding the previous release did not have". Compare against D-200's ten, by bundle id.
+16. **The battery's completion line excludes untallied suites** (D-413: `bundle`, `livefire`). Read the `EXCLUDES` clause.
+17. **A self-wake cron is session-only and expires after 7 days.** Record the arm date in DIST-NEXT, and re-arm after 5 days.

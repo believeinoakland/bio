@@ -20,6 +20,14 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-158 · queued — **A signing key registered for a member who never ENROLLED reads `active` on `op=signerlist` while `op=ratify` refuses it (`SIG_UNKNOWN_KEY`): the roster claims more than the gate grants.** Folded from DEBT.md by LED-7 batch 1 (SCHEDULER, 2026-09-19), keeping its id; verified not yet fixed at the code. — owner RECORD.
+order: LED-7 batch 1: a correction to landed work where the record overclaims (a key reads active that ratify refuses), so ahead of features; small (SCHEDULER, 2026-09-19)
+milestone: M10
+interface: I3 — a refusal added at `op=signeradd` (IC minted with `node tools/mintid.mjs IC`; the integrator classifies)
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` (enrolment, and signing keys as a member's), with the row's own analysis in `docs/archive/ledgers/DEBT-closed.md` («D-158», `node tools/ledger.mjs find D-158`): refusing at write is preferred over joining `members` at read.
+depends-on: none.
+accepts-when: `op=signeradd` for a member whose status is `invited` is refused by name; the same key after enrolment is added and reads `active`, and `op=ratify` accepts its signature; `op=signerlist` never shows `active` for a key `op=ratify` would refuse, asserted against the other view. NEGATIVE CONTROL: drop the enrolment check, and the invited-member arm fails by name. Battery green own-baseline by its COMPLETION LINE; `node tools/plancheck.mjs --local` then BARE.
+
 ### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's and are NOT rowed.
 order: rests on MK-3's attribution (SCHEDULER, first order audit, 2026-09-18)
 milestone: M3 — the member's own knowledge enters the record as what it is
@@ -30,16 +38,6 @@ scope: build §6; an opinion cited as a basis leg is refused by name (§7). **Re
 accepts-when: an opinion lands as a case element with its attribution and is refused as a leg, by name, through the ops; battery green by its COMPLETION LINE.
 NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — the refusal removed → an opinion lands as a leg and the arm FAILS. **Liar:** an opinion stored as a low-grade leg — the design refuses it as a leg at all.
 added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
-
-### REC-146 · queued — **CONTRADICTION'S IDENTIFY, 1 of 3: THE PAIRING READ — the plane forms candidate pairs by the four keys, viewer-gated and bounded per key, and states which level was empty; NO judgement and NO write.** — owner RECORD.
-order: BOB #14's item 5 (8.contradiction), after the claim and attribution rows it follows; the pairing read first (SCHEDULER, 2026-09-19)
-milestone: M9
-interface: I3 (an IC minted with `node tools/mintid.mjs IC`)
-design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §2 (pairing is the plane's), §4 (the keys K1–K4), §6 (visibility, bounds, the empty-level statement) and §9 item 1, beneath `BIO_Case_Making_v0_1.md` §CONTRADICTION.
-depends-on: none in code — CHECK AT THE CODE at spawn.
-scope: §4's four keys, viewer-gated (§7.9, Membership §7 item 7.14), bounded PER KEY with `limit`/`truncated`, §6's empty-level statement (four distinct facts, never a bare empty list), and a count of pairs NOT formed because a date or doctype was undetermined.
-accepts-when: through the op, each key's pair count on a fixture whose count is exact; the empty-level statement distinguishes its four facts; an unseen project's material forms no pair. How a liar passes it: a key that silently widens its join finds more pairs, so each key's join is pinned by an exact-count fixture. NEGATIVE CONTROL: widen one key's join, and its pinned count fails by name. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
-added: 2026-09-19 · SCHEDULER (BOB #16 inbox "CONTRADICTION'S IDENTIFY IS DESIGNED", item 1).
 
 ### M0-71 · queued — **CONTRADICTION'S IDENTIFY, 2 of 3: THE FIXTURE AND THE FIRST MEASUREMENT, BEFORE ANYTHING A MEMBER SEES — §7's corpus, the false-conflict rate and recall, and the THRESHOLD recorded.** A candidate judgement is measured OFF-RECORD (no table write). — owner M0 / VERIFY.
 order: the measurement IDENTIFY's judgement must pass, BEFORE anything a member sees; after REC-146 (SCHEDULER, 2026-09-19)

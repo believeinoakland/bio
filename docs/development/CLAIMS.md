@@ -50,7 +50,7 @@ CONDUCT does not edit `kickoffs/CONDUCT.md` while this claim is open; CONDUCT re
 **released: 2026-09-19 BOB #16** — landed: CONDUCT.md 96,800 B → 21,064 B, reviewed by CONDUCT #6 (three additions taken), exam M-63 (NEW 42/42 · OLD 42/42 · CTRL 27/42), CONDUCT.md and BOB.md armed in `readbudget` CUT.
 
 ## CLAIM 2026-09-18 DIST (the embed hazard, then the cut after 0.58.0)
-released:
+released: 2026-09-19 by DIST at Bob's stand-down. Every path is free. Landed: M-59 (the embed takes only the signed release); releases 0.59.0–0.65.0 (0.59.0–0.63.0 withdrawn; 0.64.0 and 0.65.0 deployed and live-verified); the `latest` pointer mechanism and 17 lessons in `kickoffs/DIST.md`; `migrate-released`'s WITHDRAWN correction. The state for the next DIST is in `DIST-NEXT.md`.
 session: DIST standing lane (worktree goofy-moore-1cb655, Sparky-Air)
 opened: 2026-09-18
 paths: `newgroup/**` (the embed step: `scripts/embed-release.mjs`, `test/embed.test.mjs`, `package.json`, the
