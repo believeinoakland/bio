@@ -237,6 +237,25 @@ is usually an unbounded poller. A stood-down session that receives a late report
   when the meter reaches it. Two concurrent batteries make every timing meaningless (15–65 min), and a suite that reads the
   shared git index can go red under that load: re-run it ALONE on the same clean tree and STATE both results.
 
+## Integration mechanics, measured by CONDUCT #7 (2026-09-19)
+
+- **`main` CAN MOVE FASTER THAN YOUR GATE RUNS, so an integrator that re-merges and re-gates from scratch on every
+  move NEVER CONVERGES.** Measured: a full battery is 550–650s, and `main` moved FOUR times inside one REC-151
+  integration (a ruling, a measurement, a queue close, an orchestration edit). Do not treat that as a reason to skip
+  the gate, and do not treat a figure as covering commits it did not measure. **Name the DELTA and classify it:**
+  `git diff --name-only <the tree the figure measured>..HEAD` and `node tools/gates.mjs --explain`. Docs-only → say so,
+  name the files, and re-run the instruments prose moves (`plancheck`, the doc-facing suites) rather than the whole
+  battery. Any code path → the full set re-runs, and the earlier figure is DISCARDED, never carried forward. A
+  completion line always names the commit it measured; if that is not the commit you push, say which commits it did
+  not cover, in the `released:` line and in the report.
+- **A docs-only commit is not exempt, and here is the proof rather than the principle:** REC-151's battery read 261/261
+  on `4917cacf` and then **260/261 on `d03e08ea` with only prose between them** — `strandedwork.test.mjs`' arm
+  `...and plancheck --local exits 0`. The cause was NOT the unpushed-branch arm the handoff predicted; it was
+  `docs/DECIDED.md` STALE, because `decided.mjs` had been regenerated BEFORE a later edit to `INTERFACE-CHANGES.md`.
+  **Regenerate every generated index LAST, after the final prose edit of the merge** — and when a suite goes red,
+  READ THE ASSERTION rather than accepting the red a handoff told you to expect: the predicted cause and the real one
+  wore the same name.
+
 ## Where the reasoning lives
 
 Each rule above was paid for; the receipts, dates and measurements are in `docs/archive/CONDUCT-kickoff-2026-09-19.md`

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1236 rulings across 100 documents.
+1237 rulings across 100 documents.
 
 ## DEC-
 
@@ -808,6 +808,8 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:11798`
 - **IC-164** — suite that pinned a sequential `CASE`/`DRAFT`/`RVG`/`TASK` id CORRECTED at its site with a dated reason. `bio-plane/scripts/coverage.mjs` floors only, from its own print. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-164), `MEASUREMENTS.md` (the…  
   `docs/development/CLAIMS.md:14967`
+- **IC-165** · 2026-09-19 — `TASK`'s gating is RULED CORRECT by BOB #17 (`63926201`, 2026-09-19) and STAYS.** It was raised as a question at this resolution — Membership v2 §7 enumerated CASE/DRAFT/RVG/PROJ — and BOB answered that the rule is the PREDICATE preceding that list (*every prefix whose objects a read withholds from some caller*),…  
+  `docs/development/INTERFACE-CHANGES.md:12061`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -859,7 +861,7 @@ authority is the file named, never this one.
 - **C-22** — CORRECTED, never exempted**, with the reason at the site: the family grew to TEN and, more to the point, CHANGED SUBJECT.  
   `docs/development/CLAIMS.md:7398`
 - **C-22** — the claim, each a ratchet that failed naming itself and was CORRECTED, never exempted: `bio-plane/test/airun.test.mjs` ARM D1 (the C-22 family) and `bio-plane/test/run-conditions.test.mjs` ARM W3 (`#aiRunInSight` classified AUTHORISES); `docs/DECIDED.md` regenerated.  
-  `docs/development/CLAIMS.md:15014`
+  `docs/development/CLAIMS.md:15016`
 - **C-22** — Two ratchets CORRECTED from their own failure output, never exempted: `airun.test.mjs` ARM D1 (the C-22 family: C-22.12 added; C-22.11 is REC-153's and joins at integration) and `run-conditions.test.mjs` ARM W3 (a new reader of `ai_runs`, `#aiRunInSight`, classified AUTHORISES).  
   `docs/development/INTERFACE-CHANGES.md:12105`
 - **C-22.9** — has now fired on three consecutive items — was CORRECTED, never exempted. - **C-22.9 `OBS_AUTHORITY_UNNAMED`** — a look the record cannot say WHY it made is not recorded.  
