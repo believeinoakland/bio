@@ -1,96 +1,68 @@
-# FLEET — resume here. Written 2026-09-14 by FLEET #1
+# FLEET — resume here. Written 2026-09-19 by FLEET (standing lane) at STAND DOWN
 
-Read `CLAUDE.md`, then `kickoffs/FLEET.md` (the area's law and its dated state notes), then
-this. Every fact below was VERIFIED FROM `origin/main` OR LIVE at the moment of writing, not
-recalled; re-verify the ones marked (live) before believing them, because a deployment is a
-fact about an account and not about a tree.
+Bob, 2026-09-19, via BOB #16: at 91% of weekly usage, every lane in this account stops and development moves to the
+OTHER Claude Code account. This file is for the first FLEET session THERE. Read `CLAUDE.md`, then `kickoffs/FLEET.md`
+(the area's law, and its "Process lessons" section, which is new at this handoff), then this. Every fact below was
+MEASURED on the date given — treat each as a POINTER and re-measure it; a deployment is a fact about an account, not
+a tree.
 
-## What the fleet is today
+## What the fleet is, live (measured 2026-09-19, after DIST's 0.65.0 deploy)
 
-Three Workers that live BESIDE the plane in the group's account, installed with it, holding
-NO store binding and NO member-facing surface, called only by the plane, calling only the
-plane's op surface under their own credential class. Their pattern is FLEET's law
-(`kickoffs/FLEET.md` "What this area owns").
+| member | serves | committed bundle sha256 (unchanged since 0.59.0) |
+| --- | --- | --- |
+| `agent-worker` | `0.65.0` | `a7e5f590…` |
+| `pdf-worker` | `0.65.0` | `b26dee19…` |
+| `ocr-worker` | `0.65.0`, `engine_loaded: true`, tesseract-wasm 0.11.0, tessdata_fast/eng | `0d99f5d0…` (+2 upload parts) |
+| plane `biosmoke7` | `0.65.0` at the isolate AND through the DO (`op=bootstrap`) | — |
 
-| member | does | committed bundle + guard | serving (live, 2026-09-14) |
-| --- | --- | --- | --- |
-| `agent-worker` | the investigative AI's runtime: FL-3's deterministic control-flow table, FL-5's fan-out contracts, FL-6's Claude-account cascade, the deployment gate (`MODES`) | yes — `dist/agent-worker.bundled.mjs` + manifest; 5 inputs incl. the plane's `tokens.mjs` (cross-tree, hashed) | `0.58.0` |
-| `pdf-worker` | Tier-2 text extraction; imports three plane sources (a PLANE change stales its artifact — by design) | yes | `0.58.0` |
-| `ocr-worker` | Tier-3 OCR, wasm tesseract (CPDF-10, CONTENT-PDF's engine on FLEET's pattern); the first member with UPLOAD PARTS the bundler never sees — wasm + language model, hashed by IC-79's `assets` arm | yes | `0.58.0`, `engine_loaded: true` |
+`main`'s `release/RELEASE.json` = 0.65.0, and its `fleet[]` names those three hashes. The member bytes have not moved
+since REC-100's migration (0.59.0): the version bumps 0.59.0 → 0.65.0 were the VERSION label only, and the fleet sources
+are identical from v0.62.0 to v0.65.0 (`git diff --stat` empty). A guard run on `main` 2026-09-18: `fleetbundles` 87 pass
+/ 0 fail / 0 skipped (all three `node_modules` installed), `agent-worker` harness 227/0.
 
-`release/RELEASE.json` is **0.58.0** and its `fleet[]` names all three. IC-82 (per-member
-`compat` + per-part `type` inside the signed fleet statement, `NS_FLEET/2`) is RESOLVED at
-I4 2.0.0; the BUILD against it is DIST's live claim (D-297, DS-1's installer half) — not
-FLEET's, and FLEET's answer to it (ACCEPT, with the condition COPY-NEVER-DEFAULT) is on the
-IC's RESPONSES section.
+## IC-130 — the one deploy constraint the fleet carries
 
-## What FLEET landed, in order, and what each left true
+IC-130 (I3 24.0.0, REC-100): the plane now REFUSES a run step `PRESENT` that names nothing. `agent-worker` was migrated in
+the same landing — a model-judged PRESENT is recorded `LOOKED_INDETERMINATE` with the judgement in `detail`, counted in
+`present_unbacked`, and per-entry refusals surface in `log_refused`.
 
-- **FL-9 / FL-10 — the build guard, members and plane.** `bio-plane/scripts/fleet-bundle.mjs`
-  is ONE expression of the recipe and ONE of the check; `bio-plane/test/fleetbundles.test.mjs`
-  asserts every committed artifact byte-identical to a fresh build AND every input's hash. Two
-  measured facts are the area's law: **the INPUT-HASH arm is load-bearing** (esbuild tree-shakes
-  an unused export, so byte-identity alone passes a real source change), and **a plane change
-  stales a fleet member's artifact**. The guard has fired in production repeatedly and CONDUCT's
-  integration loop handles it (rebuild on the merged tree). Rebuild with `npm run build` in the
-  member (or `bio-plane`) — verification NEVER writes.
-- **FL-6 — the Claude-account cascade at runtime**, resolved IN THE FLEET MEMBER
-  (`agent-worker/src/cascade.mjs`): member → project → instance, material per call and never
-  retained, publication is revocation and a revoked level FALLS THROUGH by name, nothing-resolves
-  refuses with `NO_ACCOUNT_RESOLVED` and per-level absences stated, and the record's payer cannot
-  disagree with the runtime's (`RUN_NAMES_A_DIFFERENT_PAYER`).
-- **SK-8's delegation (2026-09-14) — the `extract` row in the deployment gate.**
-  `agent-worker/src/harness.mjs` `MODES` now holds `check` (deployed), `investigate` (NOT),
-  `extract` (NOT). `DEPLOYMENT_SEQUENCE.order` in `bio-plane/src/skilldoctrine.mjs` moved in the
-  same commit (`["check","investigate","extract"]`); SK-4's ARM B3/B4 hold table and record as one
-  set. The gate's refusal is DERIVED from the table: a known-but-undeployed row says "not deployed
-  yet", an unknown word says the table does not know it. §8 of
-  `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` was corrected from the code by BOB #11
-  (`c17e39d`) to say PRESENT and NOT DEPLOYED.
+**ORDER: agent-worker FIRST, or in the same act as the plane — NEVER the plane first.** An OLD agent-worker in front of a
+NEW plane silently loses every model-judged PRESENT step. A NEW agent-worker in front of an OLD plane is safe, and that
+was TESTED, not reasoned: (1) offline — a throwaway tree at `v0.58.0` with `agent-worker/` from `v0.62.0`, harness 227/0
+incl. section R against the real 0.58.0 plane; (2) live, 2026-09-19, `biosmoke7` scratch at plane 0.58.0 + agent-worker
+0.62.0 — 11 steps, 11/11 ticks landed, 9 model-judged PRESENT recorded LOOKED_INDETERMINATE, 0 refused, run closed
+`completed`, swept (purge scope=all, `op=stats` zero, `op=audit` clean). DIST's deploy step now names this order
+(`80d3de44`). It held in the 0.64.0 deploy (agent-worker went first; the in-between state was verified safe).
 
-## What remains NOT deployed, and why — do not "fix" these
+## Open residue — none of it is FLEET's to run
 
-- **`investigate` is not deployed**: it enables only after CHECK's first live run is verified
-  (VF-5/SK-4). Flipping it is an EDIT to `harness.mjs` under review, never a request parameter,
-  and ARM B4 goes red until `DEPLOYMENT_SEQUENCE.verification_recorded` moves in the same commit.
-- **`extract` is not deployed**: §7.3 point 7 leaves "may a project stand an EXTRACT run
-  unattended" OPEN under a provisional NO, and a deployed extract mode is the first thing that
-  question bites on. Flipping it is a separate reviewed act nobody has taken. The row's own
-  comment says so; the document now says the same, so they cannot drift.
-- **No model TURN runs anywhere** (`turns_run: 0`, `judgement_source: "supplied"` — honest on the
-  wire). The cascade names who would pay; FL-1 measured the segment bound (memory, ~120 turns,
-  D-218's CPU half answered); no item has been minted to run one. That is a fact, not a gap
-  FLEET owes.
+- **M0-69** (queued): a scratch whole-store purge must also clear the identity tables (BOB #16's ruling,
+  `BIO_Distribution_v0_1.md` §6 rung 6). Today `op=purge&scope=all&confirm=scratch` leaves `members`.
+- **M0-70** (queued): the VF-4 instrument's arm 2a leaves a `proposed` member by design (Membership v2 §4.7) and must
+  purge scratch after itself.
+- **M0-68** (queued): `bio-plane/test/vf4-live-scratch.mjs` arm 4b-ii still asserts D-323's refusal; D-323 is closed, so
+  it fails 4 assertions on any current plane. Correct or retire to W8 with a dated reason — never exempt.
+- **Scratch on `biosmoke7`, stated at stand-down (2026-09-19):** every derived counter 0 (`op=stats`), `op=audit`
+  `ok:true checked=0 withErrors=0 offenders=0`. **Members: 7 VF-4 rows remain** — `vf4m202609140058/0101/0103/0104`,
+  `vf4t1` (proposed, 2026-09-14), `vf4ruth` (active, 2026-09-14), and **`vf4m202609190139` (proposed) left by FLEET's own
+  run of 2026-09-19**. No op in the plane removes a member; M0-69 is what clears them. The `bio` namespace holds none.
 
-## Claims, workers, delegations FLEET is carrying
+## Claims, workers, delegations, instruments FLEET is carrying
 
-- **Claims held: NONE.** Every FLEET claim in `CLAIMS.md` is released (stand-up, takeover,
-  FL-10, FL-6, SK-8's pickup). The 2026-09-13 "FLEET" claim (D-323/D-324) was a CONDUCT-spawned
-  worker under the area's banner and is released by CONDUCT.
-- **Workers spawned by FLEET: none.** FLEET ran its items itself.
-- **Delegations addressed to FLEET: all released** (SKILL→FLEET drained by FL-7; DIST→FLEET
-  drained as FL-9; SK-8→FLEET picked up and released 2026-09-14).
-- **Open toward FLEET: nothing.** IC-70, IC-79 and IC-82 are resolved. The IS build plan's
-  FLEET share is COMPLETE (FL-1..FL-6 landed; VF-4 landed). The one instrument left running by
-  FLEET #1 — a repo watcher in its own session — is STOPPED with this handoff; a successor arms
-  its own.
+- **Claims held: NONE.** The one FLEET claim this session made (FLEET.md routing, `8a585611`) was released in its commit.
+- **Workers spawned: none. Open toward FLEET: nothing** — `node tools/owed.mjs FLEET` read 0 attributed at stand-down.
+- **Self-wake: DELETED** at stand-down (the 6-hourly `CronCreate` and its re-arm reminder). A successor arms its own —
+  and see FLEET.md's lesson on the 7-day expiry.
+- **Throwaway instruments: all deleted** (the mixed tree, the adapted VF-4 copy). Nothing untracked is left.
 
 ## What a successor must not get wrong
 
-1. **The QUEUE row is not the record; the commit is.** FL-10 sat `queued` for four days after it
-   landed because the handoff line lived in a CLAIMS release note that nothing drains, and it cost
-   a false stall and a reconciliation re-drive. The rule is now in CONDUCT's loop files: an owed act
-   is a ROW or an INBOX/DELEGATION entry, never a note. Answer a re-drive with commits, never by
-   re-running landed work.
-2. **A change to a plane source stales a fleet artifact, and the guard is right to say so.** When
-   `fleetbundles` goes red on a merge, rebuild on the merged tree; never hand-edit a manifest hash,
-   and never loosen the input-hash arm — it is the load-bearing one.
-3. **Work in `bio-worktrees/FLEET` (or your own worktree), never the main checkout** (CONDUCT's),
-   and run `npm ci` in `bio-plane/`, `pdf-worker/` AND `ocr-worker/` before measuring anything —
-   a baseline read before install is a wrong number carrying full confidence.
-4. **Claim precisely and check the register first**: CASE/RECORD workers hold regions of
-   `store.mjs`/`index.mjs`/`schema.mjs`; the third member's ground is CONTENT-PDF's. FLEET's own
-   ground is `agent-worker/**`, `pdf-worker/**` (pattern), `fleet-bundle.mjs` + `fleetbundles.*`,
-   and `tools/deploy-fleet.mjs` is DIST's.
-5. **Report to the CURRENT lead BOB session** — they succeed one another; a report routed through
-   a stood-down one arrives third-hand. Verify which is live before sending.
+1. **"Safe" from a diff is a reading; say so until it is tested.** This lane first told DIST the mixed rollout was safe
+   from the diff alone; DIST then left production in exactly that state on the strength of it. It happened to be right.
+   The mixed-tree test (FLEET.md, Process lessons) costs minutes — run it BEFORE the claim leaves the lane.
+2. **A fleet member's version label is not its code.** Compare `fleet[].sha256` between tags before reasoning about a
+   rollout; identical bytes make a partial rollout safe regardless of the labels.
+3. **A lane reading `waiting` on `ListAgents` is holding a prompt nobody is answering.** Route to BOB as the one act
+   only Bob can take; do not re-send to the stalled lane and wait.
+4. The rest of FLEET #1's list (2026-09-14) still stands and now lives in FLEET.md: the commit is the record, a plane
+   change stales a fleet artifact, `npm ci` before measuring, claim precisely, report to the CURRENT lead BOB.
