@@ -208,3 +208,23 @@ captured 2026-07-19..22 and C-18.9's chain arm was written 2026-07-31, so the fi
 bytes landed, and all ten reconstruct. D-200 reads `open`; none of it is FLEET's. Recorded here only so the
 next session to run that op does not re-mint a known row as a discovery — which is what the lookup rule in
 `CLAUDE.md` §1 is for, and it paid for itself within an hour of this session opening.
+
+## `discoverMembers` and `planeMember` are CONSUMED ACROSS LANES — check before you change their shape
+
+Recorded 2026-09-19 on BOB #17's ruling, after this lane argued the opposite and was overruled with the
+better argument: *"the repo already records it"* is true and is not the question — the question is whether
+the session that needs the fact MEETS it. A FLEET session opening `bio-plane/scripts/fleet-bundle.mjs` to
+change `discoverMembers` has nothing today that would make it grep for callers first; DIST's acknowledging
+comment lives in DIST's file, and the imports live in three other lanes'. None of those is where a FLEET
+session looks before editing FLEET's own ground. (The same reasoning closed D-284 and D-306 the same day.)
+
+**Seven consumers on `origin/main`** — `git grep -l discoverMembers` finds them, and the count is the point:
+FLEET's own `fleet-bundle.mjs` and `bio-plane/test/fleetbundles.test.mjs`; the three members'
+`scripts/build.mjs`; and **DIST's `bio-plane/scripts/resolve-version.mjs` and `tools/release-assemble.mjs`**
+(DS-2, 2026-09-19). **A change to either function's shape or behaviour silently moves DIST's version
+authority and the release assembler** — the failure would surface in a release, not in a fleet test.
+
+So FLEET routes any change to them through `INTERFACE-CHANGES.md` and it reaches DIST before it lands. That
+posture is this lane's own mechanism and needs no ruling; whether the pair earns a REGISTERED I-number is
+BOB's, taken 2026-09-19 and to be decided with the consumers' owners rather than between two lanes — until
+then the protocol route is the safe posture and costs nothing if the answer is no.
