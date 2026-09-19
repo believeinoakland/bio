@@ -14618,3 +14618,29 @@ before the gate relay, and one new private helper beside `#aiRunProjectGate` —
 `docs/architecture/BIO_Membership_Architecture_v2.md` (front matter and the "AND THE CONTEXT KIND IS CHECKED"
 sentence's NOT BUILT); `docs/architecture/construct-status.json` if a claim there names the gate. NOT `QUEUE.md`,
 `release/`, `newgroup/`, `civicos-ui/app.html`, `kickoffs/CONDUCT.md`. NOT REC-152's tick/close principal rule.
+
+## CLAIM 2026-09-19 RECORD (REC-153) — RELEASED
+
+released: 2026-09-19 by the REC-153 worker, branch `worktree-agent-a7fe9ecc71d7b4add`, base `52218bdd`, merged with
+`origin/main` at `f50e0807` in `0a4f121d`. Baseline at `a55d50ff` (claim only): **254/256 suites green · 15711
+assertions passing** — the two red were not this item's: `strandedwork`'s *"plancheck --local exits 0"* (the claim's
+first wording was indexed into `DECIDED.md`, reworded in `d88f3afd`) and `ledger`'s *"moved at least one row"* (green
+on the merged tree). After, on the committed merge `0a4f121d`: **257/257 suites green · 15751 assertions passing**,
+provenance 260/260 in the commit at HEAD. New suite `airun-contextkind` 35; `airun`, `airuns`, `bounds` and
+`meaning-bounds` corrected with dated reasons, each green alone. `node scripts/coverage.mjs --strict` exit **0**
+unpiped; REGISTER_FLOOR arms 1464 -> 1465, classified 247 -> 248, corpus 248 -> 249, run 210 -> 211 from the print on
+`0a4f121d`, re-read `arms 1465/1465 · floor 211/211`. `node civicos-ui/test/run.mjs` exit **0**. NEGATIVE CONTROL
+`node test/airun-contextkind.control.mjs`: **`kind-check-dropped` (the kind check removed from `aiRunOpen`) 23/12 —
+every mislabelled arm fails by name**; `refuse-every-inquiry` (the row's liar) 26/9; `unseen-permitted` 32/3 (its
+first run was NOT AS DECLARED — one more catcher, declaration widened with the reason); `sight-not-asked` 33/2;
+`mismatch-names-kind` 34/1; `sight-via-roster-form` (over-strictness) 35/0; real sources untouched.
+`project-disclosure.control.mjs` (REC-145's) re-run: every arm AS DECLARED. IC-163 proposed MAJOR, I3 39.0.0 -> 40.0.0.
+**FOR CONDUCT:** RESOLVE IC-163 (read the base at resolution); flip REC-153 in `QUEUE.md`; `regionLines` — no DEC-49
+REGION marker was touched (the refusal is minted in `airun.mjs checkRunContextKind`, relayed in `aiRunOpen`).
+**FOR DIST:** an authority defect closes at the next plane release (a member can no longer open a run over a project
+they have not joined by labelling it `inquiry`).
+**FOR BOB (a DESIGN GAP, not decided here):** an `ai` credential sees as its principal member but is never asked for
+participation, so to keep a hidden id answering as absent it may open a run labelled `inquiry` over a project hidden
+from that member. It gains no authority (a machine is not gated under `project` either), but the record then holds a
+run whose kind is not the thing it names. Also: a kind outside the two-word vocabulary that EQUALS a seen bundle's type
+(`information` over an Information bundle) still opens — REC-69's delegation, narrowed not closed.
