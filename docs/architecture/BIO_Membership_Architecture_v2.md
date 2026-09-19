@@ -627,6 +627,11 @@ token and not to the founder's session). **Design:**
   Every other type still names its own id. Driven in `bio-plane/test/project-mint.test.mjs` and
   `project-mint.control.mjs`; the installer's own intake page (`src/setup.mjs`) was corrected with it. The surface half
   is UI-66, DELEGATED.
+- **BUILT 2026-09-19 by UI-66, the surface half.** `civicos-ui/app.html`'s Add surface creates a project with no
+  `op=allocid`, no `bundleId` and no `id:` line, and opens the `bundleId` the plane answers; the fork form asks for the
+  fork's name only and its receipt shows the `newId` the plane answers. A C-59 refusal renders in its canned
+  translation. Driven against the real plane in `civicos-ui/test/project-id-surface.test.mjs` (the id shown is the
+  `id:` line of the registered bytes; no id is SENT) and `project-id-surface.control.mjs`.
 - **RULED BY BOB, 2026-09-18 — a project does not own a line of inquiry.** *"Anybody can ask a question related to
   anything - even something also being explored in a project they're not a member of. A project doesn't own an area of
   enquiry to the exclusion of others."* So any member may ask any question and run an investigation on any question they

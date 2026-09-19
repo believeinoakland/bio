@@ -50,6 +50,29 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v93, 2026-09-19 session, thread UI, UI-66. Landed on `worktree-agent-a50d25200c5cb65b6` (built ON
+REC-141's `worktree-agent-a12cdccbace704eb6` @ `817a8f85`; the two land TOGETHER).
+SURFACE: `app.html` — the Add surface's project creation (`addGo`, `mdFor`) and the project workspace's fork
+form (`ROSTER_ACTS.projectfork`, `doRosterAct`). **A MEMBER NO LONGER CHOOSES A PROJECT'S ID, AND IS NOT
+ASKED FOR ONE.** REC-141 (IC-158, C-59) made the plane mint project ids and REFUSE a creation or a fork that
+names one (Membership v2 §7, *"HOW the plane mints a project id"*); the surface allocated `PROJ-<year>-<seq>-
+<slug>` in the browser through `op=allocid`, wrote it into the document and sent it, and the fork form asked
+the member to type the fork's id — so on a plane carrying IC-158 both were refused.
+
+**What a member now sees.** Adding a project: the same form, and the project opens under the id the record
+GAVE it — nothing is allocated here, no id is sent and the document carries no `id:` line; the id opened is
+the one the plane answered, which is the `id:` line of the bytes it registered. Forking: the form asks for the
+fork's NAME and nothing else; the receipt shows the id the record gave the fork. A refusal of either, if one
+ever comes, is the plane's own canned sentence (DEC-49 `translation`) — the Add surface used to print a
+refusal carrying no findings as its bare CODE ("Refused: PROJECT_ID_SUPPLIED").
+
+**Proved** against the REAL plane by `civicos-ui/test/project-id-surface.test.mjs` (29 assertions): what is
+SENT carries no id (the row's liar, a hidden prefilled field, is caught at the wire, not at the render), and
+the id shown equals the `id:` line read back through `op=image`, for the creation and for the fork. Control:
+`project-id-surface.control.mjs`, 5/5 AS DECLARED (restoring the fork field, the client-side allocation, or an
+id written only into the bytes each fails naming the plane's C-59 sentence; `bundleId: undefined` passes).
+`project-workspace.test.mjs` §6's fork arm, which drove a typed `newId`, is CORRECTED, not exempted.
+
 v92, 2026-09-18 session, thread UI, UI-65. Landed on `ui-65-conclude` (built ON the held
 `conduct/rec-136-held` @ `783054ac`; the two land TOGETHER).
 SURFACE: `app.html` — the conclude dialog and the stance surface (`#stands/<PROJ>/<INQ>`). **THE CONCLUDE SURFACE AFTER REC-136.** REC-136 (IC-153) made a
