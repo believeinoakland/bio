@@ -14924,13 +14924,29 @@ var ACTS = [
      no falsifier can honestly be given IS the authored account, and it is
      attributed. The one thing that would drop this rung is an override the
      plane could take SILENTLY, and that is the case C-2.8 and the store both
-     refuse by name. */
+     refuse by name.
+     REC-142 / INVESTIGATIVE-SESSION.md §7.1 item 8 — THE PROJECT ARM, and it is the store's own
+     condition read from the other side. `store.conclude` accepts a PROJECT's conclusion on a
+     question whose OWN state already reads `concluded` (REC-124: that state is the no-project
+     relationship's, and one relationship's conclusion must not bar another's), but the edge table
+     has no `concluded -> concluded` edge, so keyed on it alone the act the store accepts was never
+     published there — the surface renders only what the plane publishes (DEC-8), and §7.1 item 8
+     was honoured by the store and unreachable by a member (UI-65's DELEGATION).
+     ONE ACT, NOT A SECOND ID (decided on REC-142's claim): the relationship is `project=`, the
+     act's PARAMETER, as `withdrawconclusion` and `versioncurrent` leave WHICH project to theirs.
+     `concludes_for_project` is the positional fact (D-310's shape) — the caller has JOINED some
+     project it can see that live-cites the question — so a stranger, an invited member who never
+     joined, an administrator who sees every project and joined none, and a machine credential
+     (null) are not offered what the store would refuse them for every `project=` they could name.
+     NO EDGE IS ADDED, AND THAT IS THE LIAR THIS REFUSES: a `concluded -> concluded` edge would
+     publish the act to everybody and let the NO-PROJECT relationship conclude twice, re-opening a
+     conclusion to itself. `conclude-project-arm.test.mjs` asserts both, through the op. */
   {
     id: "conclude",
     label: "Conclude",
     weight: "single",
     types: ["inquiry"],
-    applies: (f2, ty) => ty === "inquiry" && edgesFrom(f2).includes("concluded")
+    applies: (f2, ty) => ty === "inquiry" && (edgesFrom(f2).includes("concluded") || f2.current_state === "concluded" && f2.concludes_for_project === true)
   },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
      back to `open`. TWO conditions and no third: the FROM state is in the
@@ -28222,6 +28238,17 @@ var Store = class _Store extends DurableObject {
         if (normalizeType(b.object_type) !== "project") return null;
         const who = this.#positionalMember(viewer, identity);
         return who === null ? null : this.#isJoinedParticipant(b.bundle_id, who);
+      })(),
+      /* REC-142 / §7.1 item 8: WHETHER THE CALLER CAN CONCLUDE THIS QUESTION FOR SOME PROJECT —
+         a POSITIONAL fact on an INQUIRY target, `project_owner`'s shape exactly: asked of
+         `identity`, through `#joinedCitingProjectOf` (every condition in it is one
+         `conclude()` runs), and THREE-VALUED — null on a target that is not an inquiry and for
+         a caller with no roster position (a `class:*` credential), whose act set is therefore
+         byte-unchanged. The rule that consumes it is `conclude`'s entry in the act catalogue. */
+      concludes_for_project: (() => {
+        if (normalizeType(b.object_type) !== "inquiry") return null;
+        const who = this.#positionalMember(viewer, identity);
+        return who === null ? null : this.#joinedCitingProjectOf(b.bundle_id, viewer, who);
       })(),
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
       rested_on: {
@@ -50762,6 +50789,32 @@ ${words}`;
   #isJoinedParticipant(projectId, memberId) {
     const p = this.#participation(projectId, memberId);
     return !!(p && (p.state === "joined" || p.state === "leaving"));
+  }
+  /* REC-142 / INVESTIGATIVE-SESSION.md §7.1 item 8 — MAY THIS MEMBER CONCLUDE THIS QUESTION FOR
+   * SOME PROJECT: has it JOINED a project it can SEE that LIVE-cites the question? `op=affordances`
+   * asks it before offering `conclude` on a question whose own state is already `concluded` (the
+   * no-project relationship's), where only a PROJECT's conclusion can land (REC-124).
+   *
+   * IT ANSWERS "SOME PROJECT", D-310's `#ownsAnyProject` shape: the project is `conclude`'s
+   * PARAMETER, not its target, so the pre-flight cannot know which one a caller will name. It
+   * narrows the act to exactly the class for which NO `project=` could succeed, and leaves "this
+   * caller's parameters may still not pass" (no reading stood on, no claim) where the release
+   * precedent leaves it — a refusal the store words at the act.
+   *
+   * EVERY CONDITION IS ONE `conclude()` ITSELF RUNS, CONSUMED AND NEVER RESTATED: the citing set
+   * is `#citesInto` (the one live-cites predicate — a SEVERED edge is a project that no longer
+   * draws on the question, which conclude refuses NO_CLAIM), sight is `#inSight` (the project gate
+   * conclude takes, `viewerPredicate`), and position is `#isJoinedParticipant` (C-56's rule, the
+   * one `#projectAuthority(…, "joined", "conclude")` asks). Membership in the project TYPE goes
+   * through `normalizeType`, because a question also writes `rel: cites` into its references
+   * (REC-37) and a citing question is no project to conclude in. */
+  #joinedCitingProjectOf(inquiryId, viewer, memberId) {
+    for (const pid of this.#citesInto(inquiryId).confirmed) {
+      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
+      if (!p || normalizeType(p.object_type) !== "project") continue;
+      if (this.#inSight(pid, viewer) && this.#isJoinedParticipant(pid, memberId)) return true;
+    }
+    return false;
   }
   /* ===== REC-134 / C-56 — SIGHT IS NOT AUTHORITY, AT EVERY ACT ON A PROJECT ================
    *

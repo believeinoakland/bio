@@ -11586,3 +11586,49 @@ found by reading the merged dispatch, replayed as an arm: the suite fails 61/2 o
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 36.0.0 → 37.0.0**, RE-RESOLVED AT LANDING. It was first resolved 34.0.0 → 35.0.0 on the HELD branch `conduct/rec-136-held`, which DIST kept off `main` until UI-65 could land with it. By the time it landed, IC-154 and IC-156 had taken 35.0.0 and 36.0.0, so the base was RE-READ at landing (36.0.0) and not carried. It landed TOGETHER WITH UI-65 (the conclude surface), so no deployed surface meets the `NO_CLAIM` refusal without the reading picker. The no-project `op=conclude` now REFUSES `NO_CLAIM` what it accepted (it must name `version=`), and a re-conclusion no longer replaces the earlier row, so it is breaking by IC-137. `op=withdrawconclusion` APPENDS (C-33.37 `NOTHING_TO_WITHDRAW`), is in `POSITIONAL_ACTS`, and was checked at integration to resolve its project through the VIEWER gate BEFORE `projectAuthority`, so a hidden and an absent project answer alike. That is REC-138's order; the act did not exist on REC-138's base. **A LIVE-SURFACE CONSEQUENCE, stated:** `civicos-ui/app.html`'s conclude flow sends no `version`, so after deploy a member's no-project conclude from the surface is REFUSED until UI-65 (the reading picker and the withdrawal surface) lands. DIST is told, so it does not ship this without it.
+
+## IC-159 · I3: `op=affordances` publishes `conclude` on a question whose OWN state is already `concluded` — its PROJECT arm — to a caller who has JOINED some project it can see that LIVE-cites the question · PROPOSED 2026-09-18 (REC-142, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  (base `3dee1fdb`): 37.0.0. Proposed as MINOR, ADDITIVE — 37.0.0 → 37.1.0.** Read the base AT RESOLUTION (IC-157 is
+  recorded elsewhere as moving I3 to 38.0.0; it was not on this tree's `main`). **Why ADDITIVE, by IC-137's rule:** no
+  call that succeeded is refused, no call that was refused succeeds (`op=conclude` is NOT edited — the store already
+  accepted a project's conclusion here, REC-124), no key moves or disappears, and the act catalogue is unchanged (still
+  one `conclude` entry, same id, label, weight, rung, needs, mode). What changes is that an act the op accepts is
+  PUBLISHED where it was not: `acts[]` for an inquiry at `concluded` now contains `conclude` for a caller whose
+  `concludes_for_project` fact is true. For every other caller — a machine credential (fact null), a member who has
+  joined no citing project, an administrator who sees every project and joined none — the act set is byte-unchanged.
+  `op=queue`'s `options[]` follow, by construction (the same `deriveActs` over the same facts).
+- **Proposer:** RECORD, REC-142 worker, branch `rec142/affordances-concluded`, 2026-09-18 — closing the DELEGATION
+  2026-09-18 UI (UI-65) -> RECORD (`INVESTIGATIVE-SESSION.md` §7.1 item 8).
+- **Owner to land it:** `RECORD`
+- **The shape, and the alternative not taken:** ONE act — `conclude` published on a concluded inquiry, the relationship
+  left to the act's `project=` PARAMETER as `withdrawconclusion` and `versioncurrent` leave theirs — NOT a separate act
+  id. Every table that decorates an act keys it by its OP id (`NEEDS`, `SESSION_OPS`, `RUNGS`, `POSITIONAL_ACTS`), so a
+  second id is either a second op for the same write (two doors for one act) or an id that names no op. The store
+  fact `concludes_for_project` (`affordanceFacts`, three-valued, `project_owner`'s shape) is asked of `identity`
+  through `Store#joinedCitingProjectOf`, which consumes `#citesInto` (live cites only — a severed citer is refused
+  `NO_CLAIM` at the act), `#inSight` (the project gate `conclude` takes) and `#isJoinedParticipant` (C-56's rule). NO
+  `concluded -> concluded` edge is added: the no-project relationship still cannot conclude twice (ILLEGAL_TRANSITION,
+  asserted through the op).
+- **Consumers to answer:** `UI` — **the stance surface is FIXED with no change, measured:** `civicos-ui/app.html`'s
+  `stanceConclusionSectionHtml` renders the project's conclude box off `actNamed(STANCE.acts, "conclude")`, so on a
+  question concluded with no project a joined member of a citing project now gets the control (UI-65 hosted it; the
+  plane never published it there). **ONE CONSEQUENCE FOR UI TO DECIDE, stated:** the QUESTION's page also hosts
+  `conclude` (surface registry: *"the question's page carries the no-project act"*), so for that same member it will now
+  render `conclude` on a concluded question, and its no-project dialog's submit is refused `ILLEGAL_TRANSITION` by the
+  plane in the plane's own words — a parameter refusal under the release precedent, never a wrong write. DELEGATED
+  (REC-142 -> UI) in `CLAIMS.md`. `node civicos-ui/test/run.mjs` exit 0 on this tree (the harness mocks the plane).
+  `DIST`, `SKILL`, `agent-worker`, `newgroup` — NOT-AFFECTED, grepped: no caller of `op=affordances` outside the plane
+  and `civicos-ui` (newgroup and `release/` carry the plane's bundle as bytes).
+
+**Suites:** NEW `bio-plane/test/conclude-project-arm.test.mjs` (17 assertions): offered to an OWNER and to a JOINED
+non-owner of a citing project; NOT offered to an invited-never-joined member, a member whose projects do not cite or
+SEVERED the question, an administrator, or the ADMIN token; unchanged on an OPEN question; the member concludes through
+the op, the project's stance reads it, the no-project conclusion is byte-unchanged; the pre-flight agrees with C-56 and
+NO_CLAIM; the no-project relationship cannot conclude twice. Negative control `node test/conclude-project-arm.control.mjs`
+from `bio-plane/` (arms patch COPIES, real sources hashed before and after): baseline 17/0 · (a) project arm removed
+14/3 · (b) the liar's `concluded -> concluded` edge 10/7 · (c) fact ignored 13/4 · (d) owners-only (over-strictness)
+16/1 — every arm AS DECLARED.
+
+**RESPONSES:** not yet collected.

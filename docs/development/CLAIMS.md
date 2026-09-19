@@ -14381,7 +14381,15 @@ merge dropped the held branch's QUEUE.md change) and must not be merged; the DEL
 no IC (UI-65 consumes IC-150/IC-153 and needs no new read).
 
 ### DELEGATION 2026-09-18 UI (UI-65) -> RECORD: **A PROJECT CANNOT CONCLUDE FROM THE SURFACE ON A QUESTION ALREADY CONCLUDED WITH NO PROJECT — `op=affordances` DOES NOT PUBLISH THE ACT THE STORE ACCEPTS**
-**open as of 2026-09-18** — `conclude`'s affordance is keyed on the catalog's edge table alone, and that table has no `concluded -> concluded` edge.
+**DISCHARGED 2026-09-18 by REC-142 (branch `rec142/affordances-concluded`, IC-159)** — the shape chosen is the FIRST
+of the two named: `conclude` itself is published on a concluded inquiry (its PROJECT arm), no separate act id, so the
+surface consumes it with NO change at all. `affordances.mjs`' `conclude` entry now applies when the edge table offers
+`concluded` OR when the question is at `concluded` and the new store fact `concludes_for_project` is true — the caller
+has JOINED some project it can see that LIVE-cites the question (`Store#joinedCitingProjectOf`, over `#citesInto`,
+`#inSight`, `#isJoinedParticipant`). No `concluded -> concluded` edge: the no-project relationship still cannot conclude
+twice. Driven through the ops in `bio-plane/test/conclude-project-arm.test.mjs` (17/0; control 4 arms AS DECLARED). One
+consequence on the QUESTION's page is UI's to decide — the DELEGATION 2026-09-18 RECORD (REC-142) -> UI below.
+(It was open because `conclude`'s affordance was keyed on the catalog's edge table alone, which has no `concluded -> concluded` edge.)
 
 Measured at the code on `ui-65-conclude` (held REC-136 + main `9cc814d6`): `bio-plane/src/affordances.mjs`'s
 `conclude` entry applies when `edgesFrom(f).includes("concluded")`; `checks/bio-checks.mjs`' inquiry machine gives
@@ -14419,3 +14427,18 @@ caller who has JOINED some project it can see that LIVE-cites the question — t
 could succeed is excluded (a stranger), and nothing tighter (reading, current, claim stay act-time refusals the store
 words, the release precedent). The liar refused: NO `concluded -> concluded` edge; the no-project relationship still
 cannot conclude twice, asserted through the op. IC: additive (an act published where none was).
+
+### DELEGATION 2026-09-18 RECORD (REC-142) -> UI: **ON A QUESTION CONCLUDED WITH NO PROJECT, THE QUESTION'S PAGE NOW RECEIVES `conclude` FOR A MEMBER OF A CITING PROJECT — AND ITS NO-PROJECT DIALOG WILL BE REFUSED THERE**
+**open as of 2026-09-18** — REC-142 (IC-159) publishes `conclude`'s PROJECT arm on a concluded inquiry; the question's page hosts `conclude` as the NO-PROJECT act, and that relationship cannot conclude twice.
+
+Measured at the code on `rec142/affordances-concluded` (base `3dee1fdb`): `civicos-ui/app.html`'s surface registry places
+`conclude` on TWO surfaces (*"the question's page carries the no-project act, this one the project's"*). The stance
+surface now works with no change (`stanceConclusionSectionHtml` renders off the published act). But the question's page
+will ALSO render `conclude` on a concluded question for a member who has joined a project that cites it, and its dialog
+(`openConclude`) sends no `project=`, so the plane refuses the submit `ILLEGAL_TRANSITION` in its own words — a
+parameter refusal (the release precedent), never a wrong write, and nothing is written. **What is needed, UI's to
+choose:** keep it (the refusal names the door), or point that control at the member's project relationship
+(`#stands/<PROJ>/<INQ>`) rather than opening the no-project dialog. **What UI must NOT do:** decide from the question's
+state on its own that the no-project arm is unavailable — that is the surface computing a rule (DEC-8). If UI needs the
+relationship PUBLISHED per act, say so back to RECORD: that is a further I3 change (an act-level field), not built here.
+`civicos-ui/test/run.mjs` exits 0 on this branch (its harness mocks the plane, so it cannot see this).
