@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-sight.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-sight.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-18 in worktree agent-a93cdfa0fe0f8d435 on base dd52609b (real src/index.mjs 658,971 B sha256 176cbfa2cb58…, src/store.mjs 2,604,600 B sha256 5ba1bb4b00b1…, untouched: YES): (a) baseline 92/0 · (b) cite-distinguishing 90/2 — only cite's byte-identity and never-positional arms · (c) position-first 88/4 — the positional check asked before the sight gate at `#edgeTransition`: sever's and reinstate's byte-identity AND never-positional (C-56-discloses) arms · (d) not-found-to-everyone 72/20 — every byte-identity arm stays GREEN (the lie) and the SEES-NO-ROLE and JOINED arms catch it · (e) roster-stamp-dropped 80/12 — without the control plane's viewer stamp the five roster acts disclose again (and a forged `viewer=` is believed): exactly their §1 and §2 arms · (f) promote-stamp-dropped 88/4 — fails closed, machine credentials included · (g) sight-via-redactor 92/0, the over-strictness arm. RECORDED, NOT SMOOTHED: (d) came back NOT AS DECLARED on the first run because its METHOD perturbed the fixture, and was corrected; (e) came back NOT AS DECLARED because its declaration was one row short (the stamp is also what overwrites a forged viewer), and was then REWRITTEN when the store's absent-viewer rule for the roster acts changed from fail-closed to not-asked (`Store#rosterInSight`) after the first full battery showed fail-closed breaking every suite that drives the roster straight at the store. Reasons at each arm in the driver; re-run, every arm AS DECLARED.
    RE-RUN 2026-09-18 by REC-141 in worktree agent-a12cdccbace704eb6 AFTER correcting this suite (P predicted from the plane's PROJ sequence and asserted at the mint; the fork rows send no newId; §6 CORRECTED from the KNOWN `EXISTS` to the refusal, byte-identical to a never-minted id), real src/index.mjs 660,878 B sha256 98368d9756c0…, src/store.mjs 2,636,157 B sha256 9c6222a402cc…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0 (each +2 passes: the mint-equals-prediction arm and §6's second arm).
+   RE-RUN 2026-09-19 by REC-141 after BOB #16's opaque-suffix ruling (P can no longer be predicted: the never-minted reads are taken at NEVER, and §1 normalises each read's OWN id to one placeholder), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,648,430 B sha256 d037f85ce689…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0. RECORDED: the first 2026-09-19 run had cite-distinguishing and roster-stamp-dropped NOT AS DECLARED only because §1's label was reworded and the driver matches it by fragment; the label was restored, and the arms then came back as declared.
  * =========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
@@ -175,23 +176,26 @@ must("bias proposed", await DO("promote", { ...pkg(BIAS, biasMd("proposed"), "bi
 const vSel = async (id) => must(`vera selects ${id}`, await POST(`op=select&token=${VERA}&kind=enumerated`, { ids: [id] })).handle;
 const V_MIN = await vSel(MINUTES), V_LED = await vSel(LEDGER);
 
-/* CORRECTED 2026-09-18 (REC-141, IC-158): P was CHOSEN ("PROJ-2026-9138-hidden") and minted at that id after the
-   never-minted read. The plane now MINTS a project's id (Membership v2 §7) and refuses a creation naming one, so
-   the id cannot be chosen. It is PREDICTED instead, from the plane's own sequence: `op=allocid` takes one step of
-   the PROJ sequence (which the mint shares), so the next mint in this private store is that number plus one, with
-   the slug of the creation's name. The mint below ASSERTS the minted id equals the prediction, so the comparison
-   is still between the SAME id before and after it names a project — never between two different ids. */
+/* CORRECTED 2026-09-19 (REC-141, IC-158, as corrected by BOB #16's *"A MINTED ID CARRIES NO COUNT"*): P was
+   CHOSEN ("PROJ-2026-9138-hidden") and minted at that id after the never-minted read. The plane now MINTS a
+   project's id with an OPAQUE random suffix and refuses a creation naming one, so the id can be neither chosen nor
+   predicted (the 2026-09-18 correction predicted it from `allocId`'s counter — the count BOB #16 ruled out). So the
+   never-minted reads are taken at NEVER, an id of the minted shape that names nothing, and the hidden reads at the
+   minted P; P starts as NEVER and is reassigned at the mint. §1 then compares the two bodies with each read's OWN id
+   replaced by one placeholder — the id is the only thing the two reads differ in by construction, so it is the only
+   thing normalised (`project-disclosure.test.mjs`' precedent for a run id). An answer that echoes the caller's own
+   id discloses nothing; any other byte that differs still fails. */
 const YEAR = new Date().toISOString().slice(0, 4);
-const stepped = must("step the PROJ sequence", await POST(`op=allocid&token=${ADM}&prefix=PROJ&year=${YEAR}`));
-const P = `PROJ-${YEAR}-${String(Number(String(stepped.id).split("-")[2]) + 1).padStart(4, "0")}-hidden-project-9138`;
-const REVISE = pkg(P, projectMd(P, [LEDGER], "A revision."), "project", "forming", "0".repeat(64), "rec138-fixed-snap");
+const NEVER = `PROJ-${YEAR}-0000-hidden-project-9138`;
+let P = NEVER;
+const REVISE_OF = () => pkg(P, projectMd(P, [LEDGER], "A revision."), "project", "forming", "0".repeat(64), "rec138-fixed-snap");
 
 /* ============================================ THE ACTS, as ONE table — vera's request for each.
    Every request is well-formed enough to REACH its project resolution. Nineteen of these already
    answered alike before this item; they are pinned so that stays true. */
 const ACTS = [
-  ["promote (a revision)", () => RAW(`op=promote&token=${VERA}`, REVISE)],
-  ["promote with a FORGED actorViewer", () => RAW(`op=promote&token=${VERA}`, { ...REVISE, actorViewer: `class:admin` })],
+  ["promote (a revision)", () => RAW(`op=promote&token=${VERA}`, REVISE_OF())],
+  ["promote with a FORGED actorViewer", () => RAW(`op=promote&token=${VERA}`, { ...REVISE_OF(), actorViewer: `class:admin` })],
   ["cite", () => RAW(`op=cite&token=${VERA}&project=${P}&handle=${V_MIN}&note=${E("the minutes")}`, {})],
   ["sever", () => RAW(`op=sever&token=${VERA}&project=${P}&handle=${V_LED}&reason=${E("superseded")}`, {})],
   ["reinstate", () => RAW(`op=reinstate&token=${VERA}&project=${P}&handle=${V_LED}&reason=${E("back in")}`, {})],
@@ -229,11 +233,13 @@ for (const [, f] of ACTS) absent.push(await f());
 t("the id names nothing yet (so the first read IS the never-minted answer)", await shaOf(P), null);
 
 /* MINT the project: created by the ADMIN token, owned by iris, olga invited. vera is never invited. */
-/* CORRECTED 2026-09-18 (REC-141): created with NO id; the plane mints it, and it must be the predicted P. */
+/* CORRECTED 2026-09-19 (REC-141): created with NO id; the plane mints it, and P becomes the minted id. */
 {
   const { bundleId: _chosen, ...create } = pkg(P, projectMd(null, [LEDGER]), "project", "forming", null, `${P}-${++seq}`);
   const minted = must("mint the project", await POST(`op=promote&token=${ADM}`, { ...create, meta: { ...create.meta, title: "Hidden project 9138" } }));
-  t("the plane minted exactly the predicted id (so both reads below are of ONE id)", minted.bundleId, P);
+  t("the plane minted an id of the canonical shape, and it is not the never-minted one read above",
+    [/^PROJ-\d{4}-\d{4}-hidden-project-9138$/.test(String(minted.bundleId)), minted.bundleId !== NEVER], [true, true]);
+  P = minted.bundleId;
 }
 must("iris owns it", await DO("projectclaimowner", { projectId: P, memberId: "iris" }));
 /* Straight to the store for the same reason: iris is the positional actor (`by`), and the viewer is
@@ -251,8 +257,10 @@ t("the table is not empty and was read in full both times (floor: 31 acts)",
 console.log("\n--- 1. an uninvited member's answer on a hidden project is BYTE-IDENTICAL to a never-minted id's ---");
 ACTS.forEach(([name], i) => {
   const a = absent[i], h = hidden[i];
+  /* Each read's own id -> one placeholder (see P's comment); nothing else is normalised. */
+  const idless = (body, id) => body.split(id).join("<PROJECT-ID>");
   t(`HIDDEN = ABSENT, raw (status, content type, body): op=${name}`,
-    { status: h.status, type: h.type, sha: sha(h.body) }, { status: a.status, type: a.type, sha: sha(a.body) });
+    { status: h.status, type: h.type, sha: sha(idless(h.body, P)) }, { status: a.status, type: a.type, sha: sha(idless(a.body, NEVER)) });
 });
 
 /* ======================================================== 2. POSITION NEVER SPEAKS FIRST */

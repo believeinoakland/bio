@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-mint.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-mint.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-18 in worktree agent-a12cdccbace704eb6 on base 3dee1fdb + REC-141 (real src/index.mjs 660,878 B sha256 98368d9756c0…, src/store.mjs 2,636,157 B sha256 9c6222a402cc…, untouched: YES), every arm AS DECLARED: (a) baseline 40/0 · (b) accept-supplied-id — THE ROW'S CONTROL 1, the refusal removed and the caller's id used -> 32/8, §1's refusal and byte-identity arms (the hidden id answers EXISTS, the free one is CREATED) · (c) hash-before-id — THE ROW'S CONTROL 2, the caller's pre-id sha registered -> 37/3, the returned-sha arm, the not-the-caller's-sha arm and the fork's sha arm · (d) fork-ignores-newid — a named newId silently ignored -> 37/3, the three fork refusal arms · (e) id-anywhere, an over-strict fence -> 38/2, the two over-strictness arms · (f) id-key-other-spelling, correct work in another spelling -> 40/0. RECORDED, NOT SMOOTHED: the FIRST run had (b) and (d) NOT AS DECLARED — (b)'s other-type byte-identity arm stayed green because the armed plane's own §1 creation had made the never-minted id EXIST, so both probes answered EXISTS; (d) failed four committing-fork arms because the armed plane's probe fork took the name the committing fork used. Both were the INSTRUMENT: the other-type probe now uses a second never-minted id and the fork probes a name of their own; re-run, every arm AS DECLARED.
    RE-RUN 2026-09-18 after merging origin/main (8e39602a) and adding the C-59.3 and C-59.4 check assertions (coverage's CHECKS column named both as never asserted), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,642,473 B sha256 e41e7bf843e9… (re-run again after the helper rename, identical figures), untouched: YES — every arm AS DECLARED: baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 · id-anywhere 39/2 · id-key-other-spelling 41/0. RECORDED: fork-ignores-newid first came back NOT AS DECLARED (37/4) because its declaration lacked the new C-59.3 check arm, which it rightly fails; the declaration was corrected and the arm re-run.
+   RE-RUN 2026-09-19 after BOB #16's *"A MINTED ID CARRIES NO COUNT"* (the suffix is now random from the CSPRNG, never allocId's counter; §6 added) and a merge with origin/main, real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,648,430 B sha256 d037f85ce689…, untouched: YES — every arm AS DECLARED: baseline 45/0 · accept-supplied-id 37/8 · hash-before-id 42/3 · fork-ignores-newid 41/4 · counter-restored (BOB #16's control: the suffix taken from allocId's PROJ sequence again) 42/3, exactly §6's three NO COUNT arms · id-anywhere 43/2 · id-key-other-spelling 45/0.
  * =========================================================================
  * REC-141 / D-428 (creation half) / IC-158 — THE PLANE MINTS PROJECT IDS. Membership Architecture v2
  * §7, the bullet *"HOW the plane mints a project id"* (BOB #15, 2026-09-18), with §7.9 (*"not its
@@ -201,6 +202,31 @@ t("the fork's registered `id:` is the minted id (the origin's id is not carried)
   [parseFrontmatter(String(forkText)).data?.id, String(forkText).split("\n").filter((l) => l.startsWith("id:")).length], [fork?.newId, 1]);
 t("the fork's returned sha is the sha of its registered bytes", fork?.bundleSha, forkText ? sha(forkText) : null);
 t("the fork still records its origin", String(forkText).includes(`target: ${H}`), true);
+
+/* ======================================================== 6. A MINTED ID CARRIES NO COUNT */
+console.log("\n--- 6. a minted id carries no count (BOB #16): the suffix is opaque, never allocId's counter ---");
+{
+  /* Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"* (BOB #16, 2026-09-19): a counted suffix told a creator how
+     many projects were minted before theirs, hidden ones included. Two probes, each one a counter cannot pass:
+     (1) the PROJ counter, read through `op=allocid` on either side of a mint, moves by the ONE step allocid itself
+     takes — the mint never reads or steps it — and the minted suffix is not the counter's value; (2) a run of
+     consecutive mints is not a +1 sequence. (2) is asked of five mints so a random suffix fails it with odds of
+     about 1 in 10^16 (four adjacent pairs each differing by exactly one), never by chance. */
+  const YEAR = new Date().toISOString().slice(0, 4);
+  const seqOf = (r) => Number(String(r?.id ?? "").split("-")[2]);
+  const before = seqOf(await POST(`op=allocid&token=${ADM}&prefix=PROJ&year=${YEAR}`));
+  const one = parse(await create(IRIS, "Count Probe Zero"));
+  const after = seqOf(await POST(`op=allocid&token=${ADM}&prefix=PROJ&year=${YEAR}`));
+  const suffix = (id) => Number(String(id).split("-")[2]);
+  t("NO COUNT: the mint neither read nor stepped allocId's PROJ counter (it moved by allocid's own one step)",
+    [Number.isFinite(before), after - before], [true, 1]);
+  t("NO COUNT: and the minted suffix is not the counter's next value", suffix(one?.bundleId) === before + 1, false);
+  const run = [];
+  for (const n of ["One", "Two", "Three", "Four", "Five"]) run.push(suffix(parse(await create(IRIS, `Count Probe ${n}`))?.bundleId));
+  t("NO COUNT: five consecutive mints all minted (the probe measured five real ids)", run.every(Number.isFinite), true);
+  t("NO COUNT: five consecutive mints do NOT differ by one, pair after pair",
+    run.slice(1).every((v, i) => v - run[i] === 1), false);
+}
 
 /* ======================================================== 5. UNCHANGED */
 console.log("\n--- 5. unchanged: the capability, the name rule, and every other type's creation ---");

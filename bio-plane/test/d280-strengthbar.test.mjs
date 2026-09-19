@@ -1,6 +1,7 @@
 /* ==== SUPERSEDED IN PART, 2026-08-10, BY CASE-2 UNDER DEC-72 — READ THIS BEFORE THE DECLARATION BELOW ====
    **ARMS (A), (C), (C2) AND (E) BELOW ARE NO LONGER RUNNABLE AS WRITTEN, AND THEY ARE KEPT RATHER THAN DELETED BECAUSE THEY ARE THE RECORD OF WHAT THE OLD MODEL DID.** Every one of them edits `#requiredStrengthFor`, which CASE-2 REMOVED: `CASE-AS-PRODUCTION.md`'s supersession table retires DEC-17's strictest-across-citers composition and calls D-280's fix "moot rather than wrong — the code it fixed is removed with the composition". There is no longer a bar read on this path to arm. Their MEASUREMENTS stand as history and their reasoning about faithful copies and over-strictness is still the best statement of why §7 counts call sites off the source.
    **STILL RUNNABLE AND STILL THIS SUITE'S CONTROLS: (B) the routing site and (D) the projection read**, whose sites #routeTask and restingOn are untouched by DEC-72 and are driven by §5 and §6. (G) BASELINE is unchanged in kind; its NUMBERS moved with the correction and are re-measured by CASE-2 rather than carried.
+   RE-RUN 2026-09-19 by REC-141 after §5's routing pair was re-built for opaque minted ids (ordered by their minted ids, then revised to carry their edges): (B) d280-strengthbar 31/4 — the routing arm, its basis arm and the two structural pins, as declared for THIS suite; (D) 33/2, the two restson arms; (G) baseline 35/0. The driver's own verdict line still reads NOT as declared for all three, and that is NOT this change: every miss is in severedhomes.test.mjs's expected STRUCTURAL/OVER-STRICTNESS arms, and in (C2), which the header above records as no longer runnable since CASE-2. Reported to SCHEDULER as a stale control.
    **WHERE THE PREDICATE'S WIDTH IS NOW PINNED:** `severedhomes.test.mjs` §4 (D-267's own suite) drives all four severance spellings through the homes walk. This suite's §3 no longer can, and says so in its own block rather than here.
    **CASE-2'S OWN CONTROLS FOR WHAT REPLACED THIS ARE IN `caseproduction.control.mjs`**, including the arm that would catch the composition being restored.
    ======================================================================================================= */
@@ -228,7 +229,8 @@ const promote = async (id, text, type, state, register = []) => {
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7)
    and a creation naming one is refused PROJECT_ID_SUPPLIED. The creation names no bundleId and the
    minted id is returned. `name` (the id the suite used to choose) keeps the title and snapshot key.
-   The plane mints in creation order (a per-year sequence), so creation order is id order. */
+   CORRECTED 2026-09-19: minted ids carry NO count (BOB #16), so creation order is NOT id order —
+   block 5 orders its two routing projects by their minted ids instead. */
 const createProject = async (name, refs, bar = null) => {
   const text = projectMd(null, refs, bar, name);
   const r = await POST(`op=promote&token=${MACHINE}`, {
@@ -548,12 +550,31 @@ console.log("\n--- 5. #routeTask: an obligation is not addressed to the owner of
   /* TWO citing projects over ONE bundle. The WITHDRAWN one sorts FIRST by id,
      which is the order `#routeTask` reads in — so before the fix the obligation
      went to carol, who withdrew, and the live project's owner never saw it. */
-  let P_GONE; /* minted below (REC-141) */
-  let P_HERE; /* minted below (REC-141) */
-  P_GONE = await createProject("PROJ-2026-9281-withdrawn-router", [{ target: SUBJ_ROUTING, status: "severed" }]);
-  P_HERE = await createProject("PROJ-2026-9282-still-citing-router", [{ target: SUBJ_ROUTING, status: "confirmed" }]);
-  /* ADDED 2026-09-18 (REC-141): the ids are minted now, so "the WITHDRAWN one sorts FIRST" is no
-     longer true by the suite's choice of literal — it is asserted, or this arm could pass vacuously. */
+  /* CORRECTED 2026-09-19 (REC-141, BOB #16's *"A MINTED ID CARRIES NO COUNT"*): minted ids are opaque, so
+     neither the literal the suite once chose nor creation order decides which sorts first. Both projects are
+     minted citing NOTHING, the lower minted id becomes the WITHDRAWN one and the higher the live one, and each is
+     then REVISED (base = the sha the plane returned) to carry its edge — so the withdrawn one sorts first by
+     construction, and the guard below still asserts it. */
+  const reviseRefs = async (id, made, name, refs) => {
+    const text = projectMd(id, refs, null, name);
+    const r = await POST(`op=promote&token=${MACHINE}`, {
+      bundleId: id, base: made.sha, snapKey: `${name}-refs`, author: "d280-suite",
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+              current_state: "forming", created: NOW, last_updated: NOW } });
+    if (!r || r.ok === false) throw new Error(`revise ${name}: ${JSON.stringify(r).slice(0, 900)}`);
+  };
+  const shaOfId = async (id) => ((await GET(`op=list&token=${MACHINE}&limit=1000`)) || []).find?.((b) => b.bundle_id === id)?.bundle_sha
+    ?? ((await GET(`op=list&token=${MACHINE}&limit=1000`))?.bundles ?? []).find((b) => b.bundle_id === id)?.bundle_sha;
+  const pair = [];
+  for (const name of ["PROJ-2026-9281-router-a", "PROJ-2026-9282-router-b"]) {
+    const id = await createProject(name, []);
+    pair.push({ id, name, sha: await shaOfId(id) });
+  }
+  pair.sort((a, b) => (a.id < b.id ? -1 : 1));
+  const P_GONE = pair[0].id, P_HERE = pair[1].id;
+  await reviseRefs(P_GONE, pair[0], pair[0].name, [{ target: SUBJ_ROUTING, status: "severed" }]);
+  await reviseRefs(P_HERE, pair[1], pair[1].name, [{ target: SUBJ_ROUTING, status: "confirmed" }]);
   t("FIXTURE GUARD: the withdrawn router project's MINTED id sorts before the live one's",
     P_GONE < P_HERE, true);
   /* 7.1 gives ownership to the promoting MEMBER, and these were promoted by a

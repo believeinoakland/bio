@@ -24617,16 +24617,27 @@ export class Store extends DurableObject {
     return { id: `${prefix}-${year}-${String(n).padStart(4, "0")}` };
   }
 
-  /** REC-141: a NEW project's id, minted in `allocId`'s pattern — `PROJ-<year>-<seq>-<slug>`, the slug
-   *  from the project's name the way both intake surfaces already slugged a title (`BUNDLE_ID_RE`'s
-   *  shape). A sequence number already held by an id someone CHOSE before ids were minted is stepped
-   *  past, inside the plane, so the caller learns nothing from it. Null only if 64 steps all collide. */
+  /** REC-141: a NEW project's id — `PROJ-<year>-<rand>-<slug>`, the slug from the project's name the way
+   *  both intake surfaces already slugged a title, in `BUNDLE_ID_RE`'s shape.
+   *
+   *  `<rand>` IS OPAQUE AND NEVER A COUNTER (Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16,
+   *  2026-09-19). `allocId`'s sequence is per prefix per year, so a counted suffix told a creator how many
+   *  projects were minted before theirs, hidden ones included. So the suffix is four digits drawn from the
+   *  runtime's CSPRNG (`crypto.getRandomValues`, rejection-sampled so every value 0000-9999 is equally
+   *  likely), fixed length because `BUNDLE_ID_RE` requires `\d{4}` there, and `allocId` is NOT read or
+   *  stepped. Uniqueness is checked against `bundles` inside the caller's (promote's) transaction and a
+   *  collision draws again; the full id includes the slug, so a collision needs the same name AND the
+   *  same draw. Null only if 64 draws all collide. */
   #mintProjectId(title) {
     const year = new Date().toISOString().slice(0, 4);
     const slug = String(title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
       .slice(0, 40).replace(/-+$/, "") || "project";
+    const draw = () => {
+      const u = new Uint16Array(1);
+      for (;;) { crypto.getRandomValues(u); if (u[0] < 60000) return String(u[0] % 10000).padStart(4, "0"); }
+    };
     for (let i = 0; i < 64; i++) {
-      const id = `${this.#nextSeq("PROJ", year).id}-${slug}`;
+      const id = `PROJ-${year}-${draw()}-${slug}`;
       if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id)) return id;
     }
     return null;

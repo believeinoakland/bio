@@ -59,6 +59,15 @@ const ARMS = {
                "the fork refusal's check is C-59.3"],
   },
 
+  /* BOB #16's CONTROL (CONDUCT #6, 2026-09-19): the COUNTER RESTORED — the suffix taken from allocId's PROJ
+     sequence again, as REC-141 first built it. §6's count arms must fail by name, and nothing else. */
+  "counter-restored": {
+    patches: [["store.mjs", "      const id = `PROJ-${year}-${draw()}-${slug}`;",
+               "      const id = `${this.#nextSeq(\"PROJ\", year).id}-${slug}`;"]],
+    mustFail: ["NO COUNT: the mint neither read nor stepped", "NO COUNT: and the minted suffix is not the counter",
+               "NO COUNT: five consecutive mints do NOT differ by one"],
+  },
+
   /* AN OVER-STRICT FENCE: refuse any document whose TEXT has a line reading `id:` anywhere (a body line,
      a nested key) instead of the frontmatter's own top-level key. The over-strictness arms must catch it. */
   "id-anywhere": {

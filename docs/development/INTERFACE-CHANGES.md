@@ -11746,8 +11746,9 @@ an existence oracle for project ids (D-428's creation half).
   `PROJECT_ID_SUPPLIED` (C-59.1) BEFORE any id is looked up — one payload, no id echoed. With none, `bundle.md` must be
   inline text with a frontmatter block (else `PROJECT_DOCUMENT_UNREADABLE`, C-59.4) and no top-level `id:` key (else
   `PROJECT_ID_IN_BYTES`, C-59.2; a nested key or a body line is not one). The plane mints
-  `PROJ-<year>-<seq>-<slug of meta.title>` from `allocId`'s sequence (shared with `op=allocid`) inside the promote
-  transaction, stepping past any number already held by a chosen id, writes `id: <minted>` as the first frontmatter
+  `PROJ-<year>-<rand>-<slug of meta.title>` inside the promote transaction — `<rand>` four digits from the runtime
+  CSPRNG (`crypto.getRandomValues`, rejection-sampled), NEVER `allocId`'s counter (BOB #16, 2026-09-19, *"A MINTED ID
+  CARRIES NO COUNT"*; CORRECTED from the first build, which read the counter), checked unique and redrawn on collision, writes `id: <minted>` as the first frontmatter
   line, recomputes `bytes` and `sha256`, and the answer's `bundleId` and `bundleSha` are the minted id and the sha of
   the registered bytes. Every other type still names its own id — unchanged.
 - `op=projectfork`: a `newId` that is present and non-empty is refused `PROJECT_FORK_ID_SUPPLIED` (C-59.3), FIRST. With
@@ -11759,14 +11760,16 @@ an existence oracle for project ids (D-428's creation half).
 UI-66 lands. For MINOR, and it does not govern: nothing is removed from a success answer.
 
 **Residuals named, not closed:** a project created BEFORE this under a non-canonical id (not `PROJ-`-prefixed) still
-answers `EXISTS` to a creation of another type at that id; and the minted sequence number (as `op=allocid` already did)
-tells a creator how many project ids were minted before theirs, hidden projects included — whether that count is a
-§7.9 disclosure is a DESIGN GAP for BOB. A refused creation after the mint step (e.g. `NAME_TAKEN`) consumes a sequence
-number (gaps, no disclosure beyond the count).
+answers `EXISTS` to a creation of another type at that id — BOB #16's stated LIMITATION; how many such ids the live record
+holds is UNDETERMINED (this worker has no access to a deployed record). The count disclosure the first build carried
+(the suffix WAS the PROJ counter) is CLOSED by the opaque suffix; `op=allocid` still hands out PROJ counter values, and
+`CASE`/`DRAFT`/`RVG` ids are still counted — both are the separate SCHEDULER item BOB #16's ruling names, not this one.
+Minted ids no longer sort in creation order (a suite that relied on that, `d280-strengthbar`, is corrected).
 
-**Suites:** new `bio-plane/test/project-mint.test.mjs` (41 assertions) and `project-mint.control.mjs` (six arms, all AS
-DECLARED on the merged tree: baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 ·
-id-anywhere 39/2 · id-key-other-spelling 41/0; every NOT-AS-DECLARED first run was the instrument or its declaration,
+**Suites:** new `bio-plane/test/project-mint.test.mjs` (45 assertions, §6 the no-count arms) and `project-mint.control.mjs`
+(seven arms, all AS DECLARED on the 2026-09-19 tree: baseline 45/0 · accept-supplied-id 37/8 · hash-before-id 42/3 ·
+fork-ignores-newid 41/4 · counter-restored 42/3 (BOB #16's control, exactly the three NO COUNT arms) · id-anywhere 43/2 ·
+id-key-other-spelling 45/0; every NOT-AS-DECLARED first run was the instrument or its declaration,
 recorded in the suite's header). CORRECTED at their sites with dated reasons, never exempted: `project-sight.test.mjs` §6 (the KNOWN `EXISTS`
 pin, now the refusal and byte-identical to a never-minted id; its control re-run, every arm AS DECLARED),
 `project-disclosure.test.mjs` §4, `ratify-authority.test.mjs` (REC-140's, control re-run AS DECLARED), the shared
