@@ -660,8 +660,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2512`
 - **D-431** — ified case rests on is refused, byte-identical for an unseen and a never-minted project; `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, with its reason; the (c) count is stated in the landing; D-431 CLOSED.  
   `docs/archive/ledgers/QUEUE-closed.md:2515`
-- **D-431** — WHAT BOB #16 DECIDED (each in its home document; `decided.mjs` finds them) D-431 (Publication §3 rule 2); scratch purge takes scratch identity (Distribution §6 rung 6); DISCOVERABLE/HIDDEN and the request to join (Membership v2 §7 item 7.14 — creator asked, nothing preselected; existing projects HIDDEN); DEC-63 as  
-  `docs/development/kickoffs/BOB-NEXT.md:67`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -2365,6 +2363,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1290`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1302`
+- WHAT BOB #17 DECIDED (each folded into its home document; `decided.mjs` finds them) - **TASK stays gated** — the "a minted id carries no count" set is the PREDICATE ("every prefix whose objects a read withholds from some caller"), not the four-name list.  
+  `docs/development/kickoffs/BOB-NEXT.md:72`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:78`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
