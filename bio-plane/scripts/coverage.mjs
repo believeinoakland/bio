@@ -1253,6 +1253,10 @@ const REGISTER_FLOOR = {
   // [REC-142 at its merge with REC-140] 2026-09-18: the two moves collided (1434 mine on c3afce3e, 1437 theirs); collapsed to ONE key and re-read on the committed merge afc32149 from the `--strict` print: `arms 1441/1437 · classified 245/244 · corpus (suites read) 246/245 · GREW by 4`, `floor 208/207 reproducible`.
   // [CONDUCT #6 at REC-142's merge over REC-143] 2026-09-19: collided (1441 REC-142's, 1443 main's); collapsed to ONE key and re-read on the COMMITTED merge 0a4ef56d (REC-142 + bob16-verif) from the `--strict` print: `arms 1448/1443 · classified 246/245 · corpus (suites read) 247/246 · GREW by 5`, `floor 209/208 reproducible`.
   // [CONDUCT #6 at D-430's merge over REC-142] 2026-09-19: collided (1447 D-430's, 1448 main's); collapsed to ONE key and re-read on the COMMITTED merge cca00cff from the `--strict` print: `arms 1452/1448 · classified 247/246 · corpus (suites read) 248/247 · GREW by 4`, `floor 210/209 reproducible`.
+  // [REC-141] 2026-09-18: MOVED 1437 -> 1443, classified 244 -> 245, corpus 245 -> 246, run 207 -> 208, from this item's own `--strict` print on its COMMITTED MERGE with origin/main (REC-140 in) 3b0409f1 (`arms 1443/1437 · classified 245/244 · corpus (suites read) 246/245 · GREW by 6 arm(s)`, `floor 208/207 reproducible`), exit 0. Cause: ONE new suite, project-mint.test.mjs, driven by project-mint.control.mjs (six arms). ONE KEY SET.
+  // [REC-141 at its merge with REC-143] 2026-09-18: the two moves collided (1443 REC-141's project-mint, 1443 main's migrate-released — each counted from the same 1437); collapsed to ONE key and re-read on the COMMITTED merge 3e8fd803 from the `--strict` print: `arms 1449/1443 · classified 246/245 · corpus (suites read) 247/246 · GREW by 6 arm(s)`, `floor 209/208 reproducible`. ONE KEY SET.
+  // [REC-141 at its merge with REC-142] 2026-09-18: collided again (1449 REC-141's with REC-143, 1448 main's with REC-142); collapsed to ONE key and re-read on the COMMITTED merge b1ca9edc from the `--strict` print: `arms 1454/1448 · classified 247/246 · corpus (suites read) 248/247 · GREW by 6 arm(s)`, `floor 210/209 reproducible` — the six are project-mint's. ONE KEY SET.
+  // [REC-141 at its merge with D-430] 2026-09-19: collided again (1454 REC-141's, 1452 main's); collapsed to ONE key and re-read on the COMMITTED merge 4bfed16f from the `--strict` print: `arms 1458/1452 · classified 248/247 · corpus (suites read) 249/248 · GREW by 6 arm(s)`, `floor 211/210 reproducible` — the six are project-mint's. ONE KEY SET.
   // [D-431] 2026-09-19: MOVED 1443 -> 1446, from this item's own `--strict` print on its committed tree c254f8ce (`arms 1446/1443 · classified 245/245 · corpus (suites read) 246/246 · GREW by 3 arm(s)`, `floor 208/208 reproducible`), exit 0. Cause: ratify-authority.test.mjs's declaration gained three arms, (h)-(j). No new suite. ONE KEY SET.
   // [D-431 at its merge with origin/main f61d071d] 2026-09-19: the two moves collided (1446 mine, 1452 main's); collapsed to ONE key and re-read on the COMMITTED merge 1d8dff0e from the `--strict` print: `arms 1456/1452 · classified 247/247 · corpus (suites read) 248/248 · GREW by 4 arm(s)`, `floor 210/210 reproducible`, exit 0 — ratify-authority's (h)-(j) plus ONE arm this print does not attribute (UNDETERMINED which suite: the register prints totals, and this item edited the NEGATIVE CONTROL lines of five suites); the branch's own 1446 is replaced, never added.
   // [REC-145] 2026-09-19: MOVED 1448 -> 1460, from this item's own `--strict` print on its committed tree 81c99d46 (`arms 1460/1448 · classified 246/246 · corpus (suites read) 247/247 · GREW by 12 arm(s)`, `floor 209/209 reproducible`), exit 0. Cause: NO new suite — the NEGATIVE CONTROL declarations of airun-projectgate.test.mjs (nc-pl18.mjs re-run, eleven rows) and project-disclosure.test.mjs (REC-145's arms) grew. classified, corpus and run UNMOVED. ONE KEY SET.
@@ -1357,8 +1361,8 @@ const REGISTER_FLOOR = {
   // [branch record | REC-96 read arms 1134 on its own tree] checkout can see (D-238), so a floor moved then would have been a figure
   // [branch record | REC-96 read arms 1134 on its own tree] nobody else reproduces. CONDUCT re-reads this on the MERGED tree. 
   // [D-430] 2026-09-18: MOVED 1443 -> 1447, classified 245 -> 246, corpus 246 -> 247, run 208 -> 209, from this item's own `--strict` print on its COMMITTED MERGE with origin/main (REC-143 in) `86cc1111` (`arms 1447/1443 · classified 246/245 · corpus (suites read) 247/246 · GREW by 4`, `floor 209/208 reproducible`); its earlier reads (1434 at `1b096956`, 1441 at `0b5d1ff2`) are replaced, never added. One new suite, `pipeline-readers.test.mjs`, declaring four arms (NC1–NC4). Nothing FELL.
-  classified: 247,
-  corpus: 248,
+  classified: 248,
+  corpus: 249,
   /* AND THE `run` KEY BELOW ARRIVED IN THE SAME MERGE AS A FLOOR COLLISION, which is
      why this block reads as it does. M0-42 moved arms 1093 -> 1097 from ITS OWN green
      print while this tree already carried REC-91's 1100 — two correct readings, neither
@@ -1386,7 +1390,7 @@ const REGISTER_FLOOR = {
      EXACT, so nothing about that item moved either figure. It is the sixth consecutive
      item to find a floor already stale BY MEASURING IT, which is the argument for
      measuring rather than for trusting the number in the file. */
-  run: 210,
+  run: 211,
 };
 
 /* THE UNCLASSIFIED CEILING, pinned BY NAME rather than by count. A suite whose

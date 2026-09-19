@@ -188,7 +188,10 @@ const infoMd = (id) => ["---",
    `op=cite` — the product's own act — and never hand-authored into frontmatter,
    because an edge a fixture typed is an edge that proves nothing about whether
    a caller can make one. */
-const projectMd = (id, { bar = null, refs = [], severed = [] } = {}) => ["---", `id: ${id}`,
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
+   creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation;
+   a revision passes the minted id and carries it as before. */
+const projectMd = (id, { bar = null, refs = [], severed = [] } = {}) => ["---", ...(id === null ? [] : [`id: ${id}`]),
   "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(refs.length || severed.length
@@ -201,19 +204,25 @@ const projectMd = (id, { bar = null, refs = [], severed = [] } = {}) => ["---", 
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 
 let snapSeq = 0;
-const promote = async (id, text, type, base = null) => POST(`op=promote&token=${RUTH}`, {
-  bundleId: id, base,
-  snapKey: `${id}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+const promote = async (id, text, type, base = null, name = id) => POST(`op=promote&token=${RUTH}`, {
+  ...(id === null ? {} : { bundleId: id }), base,
+  snapKey: `${id ?? name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${name}`,
           current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
           created: NOW, last_updated: LATER } });
-const mustPromote = async (id, text, type, base = null) => {
-  const r = await promote(id, text, type, base);
-  if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
+const mustPromote = async (id, text, type, base = null, name = id) => {
+  const r = await promote(id, text, type, base, name);
+  if (!r.ok) throw new Error(`promote ${id ?? name}: ${JSON.stringify(r).slice(0, 700)}`);
   return r;
+};
+/* A project CREATION: no id sent, the MINTED id read from the answer (REC-141). */
+const mintProject = async (name, opts) => {
+  const r = await mustPromote(null, projectMd(null, opts), "project", null, name);
+  if (typeof r.bundleId !== "string") throw new Error(`promote project ${name}: no minted id`);
+  return r.bundleId;
 };
 const shaOf = async (id) => (await GET(`op=list&token=${RUTH}&limit=1000`))
   ?.bundles?.find((b) => b.bundle_id === id)?.bundle_sha ?? null;
@@ -241,11 +250,9 @@ await mustPromote(INQ2, inquiryMd(INQ2, {}), "inquiry");
 
 /* THREE projects. A and B will share the question; C never cites it and is the
    arm that keeps "a project may stand on a reading" from being unconditional. */
-const A = "PROJ-2026-3000-oversight", B = "PROJ-2026-3000-budget",
-      C = "PROJ-2026-3000-unrelated", D = "PROJ-2026-3000-third",
-      /* REC-72's arm only. It exists so the CURATED act can be driven onto a
-         question without joining any edge set this probe measures a delta over. */
-      E = "PROJ-2026-3000-actor";
+/* CORRECTED 2026-09-18 (REC-141): the five ids are MINTED at creation below and read from the answers;
+   E is REC-72's arm only. It exists so the CURATED act can be driven onto a
+   question without joining any edge set this probe measures a delta over. */
 /* THE TWO BARS ARE CROSSED ON PURPOSE. A declares capture A / connection C; B
    declares capture C / connection B. The first draft of this fixture gave both
    strictest axes to ONE project and the arm passed while proving nothing;
@@ -260,11 +267,11 @@ const A = "PROJ-2026-3000-oversight", B = "PROJ-2026-3000-budget",
    DIRECTIONS, so a read that handed one project's standard to the other's work
    cannot pass by coincidence. Uncrossed bars would make that confusion
    invisible. */
-await mustPromote(A, projectMd(A, { bar: { capture: "A", connection: "C" } }), "project");
-await mustPromote(B, projectMd(B, { bar: { capture: "C", connection: "B" } }), "project");
-await mustPromote(C, projectMd(C), "project");
-await mustPromote(D, projectMd(D), "project");
-await mustPromote(E, projectMd(E), "project");
+const A = await mintProject("oversight", { bar: { capture: "A", connection: "C" } });
+const B = await mintProject("budget", { bar: { capture: "C", connection: "B" } });
+const C = await mintProject("unrelated");
+const D = await mintProject("third");
+const E = await mintProject("actor");
 
 const selectIds = async (ids) => {
   const r = await POST(`op=select&token=${RUTH}`, { ids });

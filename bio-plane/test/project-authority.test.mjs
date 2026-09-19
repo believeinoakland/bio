@@ -133,8 +133,11 @@ const inquiryMd = (id, basis) => ["---",
   "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
-const projectMd = (id, { cites = [], summary = "A project." } = {}) => ["---",
-  `id: ${id}`, "object_type: project", `title: "Project ${id}"`,
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7), and a
+   creation whose bytes carry an `id:` line is refused PROJECT_ID_IN_BYTES (C-59.2). A CREATION passes
+   `id` null (no id line; `name` labels the title); a REVISION passes the minted id and carries it. */
+const projectMd = (id, { cites = [], summary = "A project.", name = id } = {}) => ["---",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Project ${name}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites",
                                                               "    status: confirmed"])]
@@ -166,11 +169,22 @@ must("promote inquiry", await promoteAs(ADM, INQ, inquiryMd(INQ, LEDGER), "inqui
      P_IN    the founder's. ruth is invited, JOINS, and is made a second OWNER by the founder.
      P_JOIN  iris's. ruth is invited and JOINS, and is NOT an owner — the role distinction.
      P_RES / P_RES2  owned by olga / oren, who are then DEACTIVATED — §7.13's condition. */
-const P_OUT = "PROJ-2026-9134-out", P_IN = "PROJ-2026-9134-in", P_JOIN = "PROJ-2026-9134-join";
-const P_RES = "PROJ-2026-9134-stranded", P_RES2 = "PROJ-2026-9134-stranded2";
-for (const p of [P_OUT, P_IN, P_JOIN])
-  must(`promote ${p}`, await promoteAs(ADM, p, projectMd(p, { cites: [LEDGER, INQ] }), "project", "forming"));
-for (const p of [P_RES, P_RES2]) must(`promote ${p}`, await promoteAs(ADM, p, projectMd(p), "project", "forming"));
+/* CORRECTED 2026-09-18 (REC-141, IC-158): these ids were CHOSEN; the plane now refuses a creation naming
+   one (C-59.1 PROJECT_ID_SUPPLIED). Each creation names no bundleId and the minted id is read from the
+   answer; the old literal is kept as the label, so titles stay distinct. */
+const mkProject = async (label, cites) => must(`promote ${label}`, await POST(`op=promote&token=${ADM}`, (() => {
+  const text = projectMd(null, { cites, name: label });
+  return { base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+           files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+           meta: bundleMeta(label, "project", "forming") };
+})())).bundleId;
+const P_OUT = await mkProject("PROJ-2026-9134-out", [LEDGER, INQ]);
+const P_IN = await mkProject("PROJ-2026-9134-in", [LEDGER, INQ]);
+const P_JOIN = await mkProject("PROJ-2026-9134-join", [LEDGER, INQ]);
+const P_RES = await mkProject("PROJ-2026-9134-stranded", []);
+const P_RES2 = await mkProject("PROJ-2026-9134-stranded2", []);
+if (![P_OUT, P_IN, P_JOIN, P_RES, P_RES2].every((p) => typeof p === "string" && p.startsWith("PROJ-")))
+  throw new Error(`a creation answered no minted id: ${[P_OUT, P_IN, P_JOIN, P_RES, P_RES2]}`);
 must("claim P_OUT", await DO("projectclaimowner", { projectId: P_OUT, memberId: "iris" }));
 must("claim P_JOIN", await DO("projectclaimowner", { projectId: P_JOIN, memberId: "iris" }));
 must("claim P_IN", await DO("projectclaimowner", { projectId: P_IN, memberId: "admin" }));

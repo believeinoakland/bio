@@ -1,5 +1,7 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/ratify-authority.control.mjs` — deliberately NOT a `.test.mjs`, because it runs this suite against PATCHED COPIES of the sources and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/ratify-authority.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms. (a) `baseline` — nothing armed, MUST be green. (b) `readmit-project-bundles` — the C-58.1 type refusal disarmed: the PROJECT BUNDLE arms publish, so they MUST fail, and nothing else. (c) `no-owner-check` — C-57.1's owner question dropped in `#caseAuthority`: the NON-OWNER arms publish. (d) `no-delivery-check` — the delivery question dropped: the OUTSIDE ADMINISTRATOR, INVITED, UNINVITED, nothing-published and ruth's RETRY arms. (e) `type-before-sight` — role before visibility: the ratifier's viewer not sent to the gate facts, so a hidden project's bundle reaches the type refusal: only the two SIGHT arms that compare answers. (f) `refuse-every-finding` — the liar: every pinned finding refused: every refusal arm STAYS GREEN and the ALLOWED arms and the joined member's retry MUST fail. (g) `authority-after-retry` — the questions asked only for new bytes: only ruth's RETRY arm. D-431 ADDED THREE (2026-09-19), declared before arming: (h) `readmit-unpinned-finding` — the ROW'S CONTROL 1, an inquiry no ratified case pins or rests on skips the C-58.2 refusal: only the OUTSIDE A CASE (a) arms. (i) `rests-on-reads-basis` — the ROW'S CONTROL 2, the refusal reads the finding's BASIS legs instead of `Store.publishedGraphEdges` (a different edge set from the serving): the IDENTITY arms (behavioural and structural) and every evidence arm over a reference-only bundle. (j) `refuse-every-evidence` — the liar on the evidence side: every refusal arm stays green, and every evidence arm that must COMMIT, the evidence authority arms and the graph identity go red.
    RESULTS, RUN 2026-09-18 by the REC-140 worker (worktree agent-a761302b28f105764, base ff3a4cea + this item; real src/index.mjs 661,904 B sha256 a1c6cb7448bb, src/store.mjs 2,614,766 B sha256 e20e357f1a7c, untouched: YES): (a) 32/0 · (b) 27/5 · (c) 28/4 · (d) 26/6 · (e) 30/2 · (f) 25/7 · (g) 31/1 — every arm AS DECLARED on its first run. RESULTS, RUN 2026-09-19 by the D-431 worker (worktree agent-af4cb02e310604e39, base 7042404e + this item; real src/index.mjs 663,888 B sha256 7d80fc4e243a, src/store.mjs 2,647,601 B sha256 8cf9feabd6a6, untouched: YES), the suite now 51 assertions: (a) 51/0 · (b) 47/4 · (c) 44/7 · (d) 42/9 · (e) 49/2 · (f) 41/10 · (g) 50/1 · (h) 47/4 · (i) 42/9 · (j) 42/9 — every arm AS DECLARED on its first run. One figure MOVED and it is recorded, not smoothed: (b) fails 4 where it failed 5, because with the C-58.1 type refusal disarmed a project bundle now meets D-431's store refusal (C-58.3: nothing rests on it), so §1's "nothing was published" stays green — defence in depth, measured. THE PRE-ITEM MEASUREMENT for D-431: §7's three arms PUBLISHED on the base (32/0 with them pinned as published), which is what (h) and (j) re-create. THE PRE-ITEM MEASUREMENT (this suite against the pristine src/ of ff3a4cea, before §6's catalogue rows existed): 13 pass / 19 fail — the owner's own project bundle, the founder's delivery of it and ruth's delivery of gus's signature over it all PUBLISHED (ok:true; gus named attestor); a hidden project's bundle answered vic 409 RATIFY_STALE (naming its real sha) instead of the never-minted 404 ABSENT, and with a valid sha GATE_REFUSED C-13.1 "bundle.md is missing"; a pinned finding signed by gus (joined, not an owner) and by ruth (via the founder) both PUBLISHED; ruth (an outside administrator) DELIVERED iris's signature on A's finding and it PUBLISHED, and wen's and vic's deliveries were then answered ok:true off that commit; the §7 outside-a-case arms passed then and pass now (unchanged by this item, on purpose).
+   RE-RUN 2026-09-18 by REC-141 (worktree agent-a12cdccbace704eb6, merged with origin/main at 8e39602a) AFTER correcting this suite for plane-minted project ids (HIDDEN predicted from the PROJ sequence and asserted at the mint; makeCase's project read from the answer); real src/index.mjs 663,811 B sha256 3f4f83fdb5d6, src/store.mjs 2,642,481 B sha256 d9237596e068, untouched: YES — every arm AS DECLARED: (a) 33/0 · (b) 28/5 · (c) 29/4 · (d) 27/6 · (e) 31/2 · (f) 26/7 · (g) 32/1 (each +1 pass: the mint-equals-prediction arm).
+   RE-RUN 2026-09-19 by REC-141 after BOB #16's opaque-suffix ruling (HIDDEN no longer predicted; the never-minted read is at NEVER_ID and the SIGHT comparison normalises each read's own id), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,648,430 B sha256 d037f85ce689…, untouched: YES — every arm AS DECLARED: (a) 33/0 · (b) 28/5 · (c) 29/4 · (d) 27/6 · (e) 31/2 · (f) 26/7 · (g) 32/1.
  * =========================================================================
  * REC-140 / D-429 / IC-157 — `op=ratify` UNDER PUBLICATION RULE 2.
  *
@@ -177,15 +179,19 @@ const inquiryMd = (id, question, target, cites = []) => ["---",
   "## Session Log", "", `### Session ${LATER} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 let snapSeq = 0;
-const promote = async (id, text, objectType, state) => {
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a PROJECT's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED, so a project is created with `id` null, no bundleId and
+   bytes with no `id:` line, and its id is read from the answer's `bundleId`. `label` keeps each title distinct
+   (it was the chosen id). Every other type still names its own id. */
+const promote = async (id, text, objectType, state, label = id) => {
   const r = await POST(`op=promote&token=${ADM}`, {
-    bundleId: id, base: null,
-    snapKey: `20260918T${String(900000 + (++snapSeq)).slice(-6)}Z_${sha(id).slice(0, 8)}`,
-    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+    ...(id === null ? {} : { bundleId: id }), base: null,
+    snapKey: `20260918T${String(900000 + (++snapSeq)).slice(-6)}Z_${sha(String(label)).slice(0, 8)}`,
+    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${label}`,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [] });
-  if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 800)}`);
+  if (!r || r.ok === false) throw new Error(`promote ${label}: ${JSON.stringify(r).slice(0, 800)}`);
   return r;
 };
 const must = (what, r) => { if (!r || r.ok !== true) throw new Error(`${what}: ${JSON.stringify(r).slice(0, 600)}`); return r; };
@@ -215,8 +221,11 @@ let seq = 0;
 const makeCase = async ({ inviteWen = false, ratifyTheCase = true, owner = "iris", joiner = "gus", cites = [] } = {}) => {
   const TOK = { iris: IRIS, gus: GUS };
   const n = String(9400 + (++seq));
-  const project = `PROJ-2026-${n}-case`, info = `INFO-2026-${n}-memo`, lead = `INQ-2026-${n}-lead`;
-  await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating");
+  const info = `INFO-2026-${n}-memo`, lead = `INQ-2026-${n}-lead`;
+  /* CORRECTED 2026-09-18 (REC-141): the project's id is minted and read from the answer.
+     Combined at integration 2026-09-19 (CONDUCT #6) with D-431's owner/joiner/cites parameters. */
+  const project = (await promote(null, projectFixtureMd(null, { created: NOW, updated: LATER, name: `PROJ-2026-${n}-case` }),
+    "project", "investigating", `PROJ-2026-${n}-case`)).bundleId;
   must(`projectclaimowner ${project}`, await DO("projectclaimowner", { projectId: project, memberId: owner }));
   must(`${owner} invites ${joiner}`, await POST(`op=projectinvite&token=${TOK[owner]}&projectId=${project}&handle=${joiner}`));
   must(`${joiner} joins`, await POST(`op=projectjoin&token=${TOK[joiner]}&projectId=${project}`));
@@ -245,16 +254,28 @@ const makeCase = async ({ inviteWen = false, ratifyTheCase = true, owner = "iris
 
 /* ========================================= 0. SIGHT COMES BEFORE EVERYTHING */
 console.log("\n--- 0. a caller who cannot SEE the project is answered as for a bundle that does not exist ---");
-const HIDDEN = "PROJ-2026-9490-hidden";
-/* The never-minted answer, taken BEFORE the id exists, with the same body. */
-const BODY = { bundleId: HIDDEN, expectedSha: "0".repeat(64), sig: "not-a-signature" };
-const NEVER = await rawOf(`op=ratify&token=${VIC}`, BODY);
-await promote(HIDDEN, projectFixtureMd(HIDDEN, { created: NOW, updated: NOW }), "project", "investigating");
+/* CORRECTED 2026-09-19 (REC-141, IC-158, as corrected by BOB #16's *"A MINTED ID CARRIES NO COUNT"*): HIDDEN was
+   CHOSEN ("PROJ-2026-9490-hidden") and minted at that id after the never-minted read. The plane now mints project ids
+   with an OPAQUE random suffix, so the id can be neither chosen nor predicted (the 2026-09-18 correction predicted it
+   from `allocId`'s counter — the count BOB #16 ruled out). The never-minted read is taken at NEVER_ID, an id of the
+   minted shape that names nothing, BEFORE the mint; the hidden read at the minted HIDDEN. The comparison replaces each
+   read's OWN id with one placeholder — the only thing the two differ in by construction (`project-disclosure`'s
+   precedent for a run id); every other byte must match. */
+const YEAR = new Date().toISOString().slice(0, 4);
+const NEVER_ID = `PROJ-${YEAR}-0000-t-proj-2026-9490-hidden`;
+const bodyFor = (id) => ({ bundleId: id, expectedSha: "0".repeat(64), sig: "not-a-signature" });
+const idless = (body, id) => body.split(id).join("<PROJECT-ID>");
+/* The never-minted answer, taken BEFORE the project exists, with the same body but its own id. */
+const NEVER = await rawOf(`op=ratify&token=${VIC}`, bodyFor(NEVER_ID));
+const HIDDEN = (await promote(null, projectFixtureMd(null, { created: NOW, updated: NOW, name: "PROJ-2026-9490-hidden" }),
+  "project", "investigating", "PROJ-2026-9490-hidden")).bundleId;
+t("the plane minted an id of the canonical shape, not the never-minted one read above",
+  [/^PROJ-\d{4}-\d{4}-t-proj-2026-9490-hidden$/.test(String(HIDDEN)), HIDDEN !== NEVER_ID], [true, true]);
 must(`projectclaimowner ${HIDDEN}`, await DO("projectclaimowner", { projectId: HIDDEN, memberId: "iris" }));
 {
-  const hidden = await rawOf(`op=ratify&token=${VIC}`, BODY);
-  t("SIGHT: vic (in NO project) ratifying iris's hidden PROJECT bundle answers BYTE FOR BYTE as for an id never minted — never the type refusal, never a gate finding about its contents",
-    [hidden.status, hidden.body === NEVER.body], [NEVER.status, true]);
+  const hidden = await rawOf(`op=ratify&token=${VIC}`, bodyFor(HIDDEN));
+  t("SIGHT: vic (in NO project) ratifying iris's hidden PROJECT bundle answers BYTE FOR BYTE as for an id never minted (each read's own id normalised) — never the type refusal, never a gate finding about its contents",
+    [hidden.status, idless(hidden.body, HIDDEN) === idless(NEVER.body, NEVER_ID)], [NEVER.status, true]);
   t("SIGHT: and the never-minted answer is the bundle-level not-found",
     [NEVER.status, /"ABSENT"/.test(NEVER.body)], [404, true]);
   const s = await shaOf(HIDDEN);

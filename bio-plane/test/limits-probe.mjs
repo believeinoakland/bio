@@ -212,11 +212,14 @@ for (const mode of ["scan", "groupby"]) {
 /* 7. Cited edges in one call, which is D-38's ceiling reached from the other
       side: not the byte limit but whatever the statement shape imposes. */
 {
-  const pid = "PROJ-2026-3000-probe";
-  const ptext = md(pid).replace("object_type: information", "object_type: project")
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); a
+     creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1) and bytes carrying one PROJECT_ID_IN_BYTES
+     (C-59.2). So no bundleId is sent and the `id:` line is dropped; the minted id is in the answer. */
+  const label = "PROJ-2026-3000-probe";
+  const ptext = md(label).replace(`id: ${label}\n`, "").replace("object_type: information", "object_type: project")
     .replace("schema: information@1", "schema: project@1");
   await call("/promote", {
-    bundleId: pid, base: null, snapKey: `${pid}-new`, author: "probe",
+    base: null, snapKey: `${label}-new`, author: "probe",
     files: [{ path: "bundle.md", text: ptext, bytes: ptext.length, sha256: h(ptext) }],
     meta: { object_type: "project", group: "believe-in-oakland", title: "probe",
             current_state: "forming", created: "2026-07-01T00:00:00Z",

@@ -294,12 +294,14 @@ for (const [tok, id] of [[VERA, V_PUB], [WREN, W_PUB], [VERA, FREE]]) {
   if (!c.ok) throw new Error(`conclude ${id}: ${JSON.stringify(c)}`);
 }
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); the
+   old ids are the fixtures' names and V_PROJECT / W_PROJECT are the returned, minted ids. */
 const V_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case4", owner: "vera",
-  id: "PROJ-2026-0400-vera", created: NOW, updated: LATER });
+  name: "PROJ-2026-0400-vera", created: NOW, updated: LATER });
 const W_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case4", owner: "wren",
-  id: "PROJ-2026-0400-wren", created: NOW, updated: LATER });
+  name: "PROJ-2026-0400-wren", created: NOW, updated: LATER });
 
 /* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER — see caseceremony.mjs. The
    revision FLAG this suite is about is raised against a case edition, and a case

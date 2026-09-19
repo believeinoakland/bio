@@ -185,9 +185,11 @@ await enrol("omar", "omar-passphrase-r96", "admin", ["contribute", "publish"]);
 const IRIS = await enrol("iris", "iris-passphrase-r96", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-r96", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   the fixture takes a `name` and returns the minted id. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r96", owner: "iris",
-  id: "PROJ-2026-9600-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  name: "PROJ-2026-9600-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";

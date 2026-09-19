@@ -276,12 +276,14 @@ const imageOf = async (id) => {
   return String(im?.files?.["bundle.md"] ?? im?.["bundle.md"] ?? "");
 };
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   the fixture takes a `name` and returns the minted id. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-c5b", owner: "iris",
-  id: "PROJ-2026-7700-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  name: "PROJ-2026-7700-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 const VICS_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-c5b", owner: "vic",
-  id: "PROJ-2026-7701-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  name: "PROJ-2026-7701-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
 /* REC-130: THE RAW ANSWER — status, content type and the BODY'S BYTES, read as
    text and never parsed. "The same response" means the same bytes; two JSON

@@ -284,9 +284,12 @@ let bseq = 0;
    somewhere a member has not been invited, which is what the gate arm is
    about; every existing caller passes nothing and gets the information bundle
    it always got, byte for byte. */
-const bundleMd = (id, type = "information") => [
-  "---", `id: ${id}`, `object_type: ${type}`, `schema: ${type}@1`,
-  `title: "Doc ${id}"`, `current_state: ${type === "project" ? "forming" : "collected"}`, "prior_state: null",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a PROJECT's id is MINTED by the plane (Membership v2 §7), which refuses
+   a creation naming one (C-59.1) or bytes already carrying `id:` (C-59.2). So a project's bytes carry no id line
+   (`label` keeps the title it had) and its id is read from the promote answer; every other type is unchanged. */
+const bundleMd = (id, type = "information", label = id) => [
+  "---", ...(type === "project" ? [] : [`id: ${id}`]), `object_type: ${type}`, `schema: ${type}@1`,
+  `title: "Doc ${label}"`, `current_state: ${type === "project" ? "forming" : "collected"}`, "prior_state: null",
   `created: ${NOW}`, `last_updated: ${NOW}`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []",
@@ -299,12 +302,12 @@ const bundleMd = (id, type = "information") => [
 ].join("\n");
 async function seedDoc(captureSha, entities, { type = "information", tok = "mem-ui13" } = {}){
   const id = `${type === "project" ? "PROJ" : "INFO"}-2026-${String(++bseq).padStart(4,"0")}-ui13`;
-  const md = bundleMd(id, type);
+  const md = bundleMd(id, type, id);
   const doc = { capture:{ sha256:captureSha, encoding:"binary", bytes:10 },
                 reading:{ content_type:"meeting_calendar", reader_version:1, found:entities.length>0, at:NOW, entities } };
   const prov = JSON.stringify({ documents:[doc] });
   const r = await post("promote", {
-    bundleId:id, base:null, snapKey:"20260724T010000Z_aaaa1111", author:"ui13",
+    ...(type === "project" ? {} : { bundleId:id }), base:null, snapKey:"20260724T010000Z_aaaa1111", author:"ui13",
     meta:{ object_type:type, group:"believe-in-oakland", title:`Doc ${id}`,
            current_state: type === "project" ? "forming" : "collected", created:NOW, last_updated:NOW },
     files:[ { path:"bundle.md", text:md, bytes:md.length, sha256:sha(md) },
@@ -312,6 +315,10 @@ async function seedDoc(captureSha, entities, { type = "information", tok = "mem-
     register:[],
   }, tok);
   if(r && r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
+  if(type === "project"){
+    if(!r || typeof r.bundleId !== "string") throw new Error(`promote ${id}: no minted project id: ${JSON.stringify(r)}`);
+    return r.bundleId;
+  }
   return id;
 }
 

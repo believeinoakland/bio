@@ -4,6 +4,7 @@
    (c) fact-unnarrowed — the project arm keyed on `current_state === "concluded"` alone, the positional fact ignored. MUST FAIL: every NOT OFFERED arm. MUST NOT FAIL: the OFFERED arms, §2-§4.
    (d) owners-only — OVER-STRICTNESS: the fact asks `#isProjectOwner` instead of `#isJoinedParticipant`. MUST FAIL: jonah's OFFERED arm alone (a joined member who is not an owner concludes for the project at the op).
    RUN 2026-09-18 by the REC-142 worker (`node test/conclude-project-arm.control.mjs` from `bio-plane/`, branch `rec142/affordances-concluded` on base `3dee1fdb`; real sources affordances.mjs 143,287 B sha256 e824897865af…, store.mjs 2,632,707 B sha256 900cdc8d6d14…, bio-checks.mjs 785,417 B sha256 d0fcf070d8d2…, untouched: YES): baseline 17/0 · (a) no-project-arm 14/3 — both of iris's OFFERED arms and jonah's FAILED, nothing else · (b) liar-edge 10/7 — all four NOT OFFERED arms, CANNOT-CONCLUDE-TWICE, its nothing-written arm and the structural edge arm FAILED; the OFFERED arms and §2 stayed green, which is the point: the liar passes every arm a member of a citing project can see · (c) fact-unnarrowed 13/4 — the four NOT OFFERED arms alone · (d) owners-only 16/1 — jonah's OFFERED arm alone, the proof the suite can see a fence tighter than its rule. Every arm ARMED (anchor exactly once) and AS DECLARED on the first run.
+   RE-RUN 2026-09-18 by REC-141 (worktree agent-a12cdccbace704eb6, merged with origin/main at 1d439e31) AFTER correcting this suite for plane-minted project ids (P, Q, S read from the promote answers); real sources affordances.mjs 143,287 B sha256 e824897865af…, store.mjs 2,647,691 B sha256 f3065587cad6…, bio-checks.mjs 789,418 B sha256 cc46f5c88c69…, untouched: YES — every arm AS DECLARED with identical figures: baseline 17/0 · (a) 14/3 · (b) 10/7 · (c) 13/4 · (d) 16/1.
  * =========================================================================
  * REC-142 — `op=affordances` PUBLISHES A PROJECT'S `conclude` ON A QUESTION
  * WHOSE OWN STATE IS ALREADY `concluded` (INVESTIGATIVE-SESSION.md §7.1 item 8,
@@ -147,8 +148,11 @@ const inquiryMd = (id, basis) => ["---",
   `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 /* `cites` entries are [target, status]; a SEVERED one is a recorded decision to stop relying. */
-const projectMd = (id, cites = []) => ["---",
-  `id: ${id}`, "object_type: project", `title: "Project ${id}"`,
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7), which refuses a
+   creation naming one (C-59.1) or bytes carrying `id:` (C-59.2). A project is created with `id` null — no bundleId,
+   no id line — and its id is read from the answer; `label` keeps the title and snapshot key it had. */
+const projectMd = (id, cites = [], label = id) => ["---",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Project ${label}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap(([x, st]) => [`  - target: ${x}`, "    rel: cites",
                                                                     `    status: ${st}`])]
@@ -156,12 +160,12 @@ const projectMd = (id, cites = []) => ["---",
   "required_strength:", "  capture: B", "  connection: C",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 let snapSeq = 0;
-const promoteAs = async (tok, id, text, type, state) => POST(`op=promote&token=${tok}`, {
-  bundleId: id, base: null, snapKey: `${id}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+const promoteAs = async (tok, id, text, type, state, label = id) => POST(`op=promote&token=${tok}`, {
+  ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${label}`,
           current_state: state, created: NOW, last_updated: LATER } });
 const must = (label, r) => { if (!r || r.ok === false) throw new Error(`${label}: ${JSON.stringify(r).slice(0, 900)}`); return r; };
 const listed = async (id) => ((await GET(`op=list&token=${ADM}&limit=1000`)) || {}).bundles?.find((b) => b.bundle_id === id) ?? null;
@@ -179,10 +183,12 @@ for (const q of [INQ, OPENQ])
      Q      olga's; it cites only the ledger — never the question.
      S      olga's; it cited the question and SEVERED the edge.
    ruth is an administrator: she SEES every project and has joined none. */
-const P = "PROJ-2026-9142-oversight", Q = "PROJ-2026-9142-elsewhere", S = "PROJ-2026-9142-severed";
-must(`promote ${P}`, await promoteAs(ADM, P, projectMd(P, [[INQ, "confirmed"], [OPENQ, "confirmed"]]), "project", "forming"));
-must(`promote ${Q}`, await promoteAs(ADM, Q, projectMd(Q, [[LEDGER, "confirmed"]]), "project", "forming"));
-must(`promote ${S}`, await promoteAs(ADM, S, projectMd(S, [[INQ, "severed"]]), "project", "forming"));
+/* CORRECTED 2026-09-18 (REC-141): the three ids were CHOSEN here; they are now the ids the plane minted. */
+const mint = async (label, cites) =>
+  must(`promote ${label}`, await promoteAs(ADM, null, projectMd(null, cites, label), "project", "forming", label)).bundleId;
+const P = await mint("PROJ-2026-9142-oversight", [[INQ, "confirmed"], [OPENQ, "confirmed"]]);
+const Q = await mint("PROJ-2026-9142-elsewhere", [[LEDGER, "confirmed"]]);
+const S = await mint("PROJ-2026-9142-severed", [[INQ, "severed"]]);
 must("claim P", await DO("projectclaimowner", { projectId: P, memberId: "iris" }));
 must("claim Q", await DO("projectclaimowner", { projectId: Q, memberId: "olga" }));
 must("claim S", await DO("projectclaimowner", { projectId: S, memberId: "olga" }));

@@ -334,21 +334,24 @@ t("sam cannot record a look against ruth's lead (C-54.5)",
 console.log("\n--- 3b. the SHARE: an authored, dated act to one project ---");
 /* `member`, not `admin`: a THIRD administrator needs the consensus of the existing ones (4.7). */
 const VERA = await enrol("vera", "member"), OTTO = await enrol("otto", "member");
-const projMd = (id) => ["---", `id: ${id}`, "object_type: project", "current_state: forming",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED; the creation carries no id (in the body or the bytes)
+   and the id is read from the answer. `label` keeps each title distinct, as the chosen id did. */
+const projMd = () => ["---", "object_type: project", "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
-const mkProject = async (id, tok) => {
-  const md = projMd(id);
-  const r = await post("promote", { bundleId: id, base: null,
-    snapKey: `20260918T${String(500000 + (++snapSeq)).slice(-6)}Z_${sha(id).slice(0, 8)}`,
-    meta: { object_type: "project", group: "believe-in-oakland", title: `title for ${id}`,
+const mkProject = async (label, tok) => {
+  const md = projMd();
+  const r = await post("promote", { base: null,
+    snapKey: `20260918T${String(500000 + (++snapSeq)).slice(-6)}Z_${sha(label).slice(0, 8)}`,
+    meta: { object_type: "project", group: "believe-in-oakland", title: `title for ${label}`,
             current_state: "forming", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }, tok);
-  if (!r || r.ok === false) throw new Error(`project ${id}: ${JSON.stringify(r).slice(0, 400)}`);
+  if (!r || r.ok === false || !r.bundleId) throw new Error(`project ${label}: ${JSON.stringify(r).slice(0, 400)}`);
+  return r.bundleId;
 };
-const P1 = "PROJ-2026-0918-contract", P2 = "PROJ-2026-0918-elsewhere";
-await mkProject(P1, RUTH);
-await mkProject(P2, SAM);
+const P1 = await mkProject("PROJ-2026-0918-contract", RUTH);
+const P2 = await mkProject("PROJ-2026-0918-elsewhere", SAM);
 const inv = async (owner, p, handle) => get("projectinvite", `projectId=${p}&handle=${handle}`, owner);
 const join = async (tok, p) => get("projectjoin", `projectId=${p}`, tok);
 const i1 = await inv(RUTH, P1, "sam"), j1 = await join(SAM, P1);

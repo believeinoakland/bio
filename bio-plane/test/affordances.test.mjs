@@ -364,9 +364,11 @@ const infoMd = (id, state, contentHash) => [
   "---", "", "## Summary", "", "Record body.", "", "## Provenance Notes", "",
   "## Session Log", "", "## Review Notes", "",
 ].join("\n");
-const projMd = (id) => [
-  "---", `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Project ${id}"`, "current_state: forming", "prior_state: null",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   creation bytes carry no id line (PROJECT_ID_IN_BYTES), so projMd(null, label) builds them. */
+const projMd = (id, label = id) => [
+  "---", ...(id ? [`id: ${id}`] : []), "object_type: project", "schema: project@1",
+  `title: "Project ${label}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []",
@@ -400,8 +402,9 @@ const actnMd = (id) => [
 ].join("\n");
 
 const promote = async (id, md, type, state, extraFiles = [], tok = "mem-rec19") => {
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): id null creates with NO bundleId (a project's id is minted). */
   const r = rP(await POST(`op=promote&token=${tok}`, {
-    bundleId: id, base: null, snapKey: "20260701T000000Z_aaaa1111", author: "seed",
+    ...(id ? { bundleId: id } : {}), base: null, snapKey: "20260701T000000Z_aaaa1111", author: "seed",
     meta: { object_type: type, group: "believe-in-oakland", title: `t ${id}`,
             current_state: state, created: NOW, last_updated: NOW },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...extraFiles],
@@ -896,9 +899,10 @@ t("now verified and uncited: retire appears, release leaves — the state machin
 /* --------------------------- verified bundle carrying a LIVE cites edge */
 console.log("\n--- a VERIFIED bundle with a LIVE cites edge: retire is NOT published (DEC-8's headline) ---");
 const B = "INFO-2026-0002-rec19";
-const P = "PROJ-2026-0001-rec19";
 await promote(B, infoMd(B, "verified", `sha256:${sha("body B")}`), "information", "verified");
-await promote(P, projMd(P), "project", "forming");
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED; the id is read from the answer. */
+const P = (await promote(null, projMd(null, "rec19"), "project", "forming")).bundleId;
 const hB1 = await selectIds([B]);
 const cited = rP(await GET(`op=cite&token=mem-rec19&project=${P}&handle=${hB1}&note=basis`));
 t("cite — published for any information bundle — succeeds at the published report weight",

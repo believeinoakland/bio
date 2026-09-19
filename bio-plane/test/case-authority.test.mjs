@@ -183,11 +183,14 @@ const inquiryMd = (id, question, target) => ["---",
   "## Session Log", "", `### Session ${LATER} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 let snapSeq = 0;
-const promote = async (id, text, objectType, state) => {
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED. `id` null creates with NO bundleId, `label` names
+   the title, and the caller reads the id from the answer's `bundleId`. */
+const promote = async (id, text, objectType, state, label = id) => {
   const r = await POST(`op=promote&token=${ADM}`, {
-    bundleId: id, base: null,
-    snapKey: `20260918T${String(800000 + (++snapSeq)).slice(-6)}Z_${sha(id).slice(0, 8)}`,
-    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+    ...(id ? { bundleId: id } : {}), base: null,
+    snapKey: `20260918T${String(800000 + (++snapSeq)).slice(-6)}Z_${sha(label).slice(0, 8)}`,
+    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${label}`,
             current_state: state, created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [] });
@@ -200,8 +203,11 @@ const must = (what, r) => { if (!r || r.ok !== true) throw new Error(`${what}: $
 let seq = 0;
 const authorCase = async ({ joinRuth = false, inviteWen = false } = {}) => {
   const n = String(9370 + (++seq));   /* a canonical id carries FOUR digits (C-2.8) */
-  const project = `PROJ-2026-${n}-case`, info = `INFO-2026-${n}-memo`, lead = `INQ-2026-${n}-lead`;
-  await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating");
+  const info = `INFO-2026-${n}-memo`, lead = `INQ-2026-${n}-lead`;
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): the project's id is MINTED; the old id string is its name. */
+  const name = `PROJ-2026-${n}-case`;
+  const project = (await promote(null, projectFixtureMd(null, { created: NOW, updated: LATER, name }),
+    "project", "investigating", name)).bundleId;
   must(`projectclaimowner ${project}`, await DO("projectclaimowner", { projectId: project, memberId: "iris" }));
   must("iris invites gus", await POST(`op=projectinvite&token=${IRIS}&projectId=${project}&handle=gus`));
   must("gus joins", await POST(`op=projectjoin&token=${GUS}&projectId=${project}`));
@@ -371,8 +377,10 @@ console.log("\n--- 7. op=ratify of a PROJECT BUNDLE, driven against the same rul
      treatment (the owner herself refused, sight before type, the finding rules) is
      `ratify-authority.test.mjs`'s. `updated` equals `created` so the catalog owes
      no Session Log entry (C-13.2) and the arm would reach the act, not the gate. */
-  const P = "PROJ-2026-9399-bundle";
-  await promote(P, projectFixtureMd(P, { created: NOW, updated: NOW }), "project", "investigating");
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): the project's id is MINTED and read from the answer; the
+     sha signed below is still read back from op=list, i.e. the sha of the bytes the plane wrote. */
+  const P = (await promote(null, projectFixtureMd(null, { created: NOW, updated: NOW, name: "PROJ-2026-9399-bundle" }),
+    "project", "investigating", "PROJ-2026-9399-bundle")).bundleId;
   must(`projectclaimowner ${P}`, await DO("projectclaimowner", { projectId: P, memberId: "iris" }));
   const listed = await GET(`op=list&token=${IRIS}&limit=1000`);
   const s = ((Array.isArray(listed) ? listed : (listed && listed.bundles) || []).find((b) => b.bundle_id === P) || {}).bundle_sha;

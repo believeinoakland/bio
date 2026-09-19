@@ -170,10 +170,14 @@ console.log(`  (a literal in app.html cannot match a value that did not exist wh
 /* ---- seed: two inquiries every member can see, and ONE PROJECT CAROL OWNS ---- */
 const T0 = "2026-08-07T09:00:00Z";
 const sha = (s) => createHash("sha256").update(s).digest("hex");
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a PROJECT's id is MINTED by the plane (Membership v2 §7), which refuses a
+   creation naming one (C-59.1) or bytes carrying `id:` (C-59.2). A project is created with neither, and its id is
+   read from the answer; the old creation at a chosen id now REFUSED silently here (nothing checked the answer), so
+   the project arms below lost their project. Every other type is unchanged. */
 const promote = (id, objectType, tok = "mem-ui49") => {
-  const md = `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`;
+  const md = objectType === "project" ? `---\n---\n\n## Question\n\nfixture\n` : `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`;
   return post("promote", {
-    bundleId: id, base: null, snapKey: "20260807T090000Z_inbox", author: "ruth",
+    ...(objectType === "project" ? {} : { bundleId: id }), base: null, snapKey: "20260807T090000Z_inbox", author: "ruth",
     meta: { object_type: objectType, group: "believe-in-oakland",
             title: `fixture ${id}`,
             current_state: objectType === "project" ? "forming" : "open",
@@ -184,10 +188,10 @@ const promote = (id, objectType, tok = "mem-ui49") => {
 };
 const INQ   = "INQ-2026-0807-ui49-watched";
 const INQ2  = "INQ-2026-0807-ui49-elsewhere";
-const PROJ  = "PROJ-2026-0807-ui49-carols";
 await promote(INQ,  "inquiry");
 await promote(INQ2, "inquiry");
-await promote(PROJ, "project", CAROL);
+const PROJ = (await promote("PROJ-2026-0807-ui49-carols", "project", CAROL))?.bundleId;
+if (typeof PROJ !== "string") throw new Error("fixture: the project was not minted");
 
 const openRun = (run, contextType, contextId, label, bounds, tok = "mem-ui49") => post("airunopen", {
   run, contextType, contextId, label, mode: `mode-${tag()}`,

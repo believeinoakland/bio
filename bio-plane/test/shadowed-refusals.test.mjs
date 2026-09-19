@@ -252,9 +252,12 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [] } = {}
   "## Session Log", "", `### Session ${LATER} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 
-const projectMd = (id) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Project ${id}"`, "current_state: active", "prior_state: null",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
+   creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation,
+   `name` the label its title is built from (the id was, which kept each title unique). */
+const projectMd = (id, name = id) => ["---",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
+  `title: "Project ${name}"`, "current_state: active", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   `group: ${GROUP}`, "references: []", "state_history: []",
@@ -263,8 +266,8 @@ const projectMd = (id) => ["---",
 
 const promote = async (id, text, type, tok = RUTH, meta = {}, extraFiles = [], register = []) =>
   POST(`op=promote&token=${tok}`, {
-    bundleId: id, base: null,
-    snapKey: `${id}-${Math.random().toString(36).slice(2, 8)}`,
+    ...(id === null ? {} : { bundleId: id }), base: null,
+    snapKey: `${id ?? meta.title ?? "project"}-${Math.random().toString(36).slice(2, 8)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extraFiles],
     register,
     meta: { object_type: type, group: GROUP, title: `Bundle ${id}`,
@@ -274,6 +277,12 @@ const mustPromote = async (...a) => {
   const r = await promote(...a);
   if (!r.ok) throw new Error(`promote ${a[0]}: ${JSON.stringify(r).slice(0, 600)}`);
   return r;
+};
+/* A project CREATION under `tok`: no id sent, the MINTED id read from the answer (REC-141). */
+const mintProject = async (name, tok = RUTH) => {
+  const r = await mustPromote(null, projectMd(null, name), "project", tok, { title: `Bundle ${name}` });
+  if (typeof r.bundleId !== "string") throw new Error(`promote project ${name}: no minted id ${JSON.stringify(r).slice(0, 600)}`);
+  return r.bundleId;
 };
 
 console.log("\n=== REC-78 / D-230 · the eight shadowed refusals no suite pinned ===");
@@ -437,8 +446,7 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
      cannot fire), the handle names a real member (NO_SUCH_HANDLE) who is a
      JOINED PARTICIPANT (NOT_A_PARTICIPANT, behind) and is not already an owner
      (ALREADY_AN_OWNER, behind). The only thing wrong is that she is revoked. */
-  const P = "PROJ-2026-7800-add";
-  await mustPromote(P, projectMd(P), "project");
+  const P = await mintProject("PROJ-2026-7800-add");
   t("  anna is a joined participant of the project, so the only thing left to be wrong about her is "
   + "her status", [(await GET(`op=projectinvite&token=${RUTH}&projectId=${P}&handle=anna`)).ok,
                    (await GET(`op=projectjoin&token=${ANNA}&projectId=${P}`)).ok], [true, true]);
@@ -468,9 +476,8 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
   /* Complete: a real project, the caller IS an owner, the handle names a real
      member, and the reason is authored — so NO_REASON, which sits directly
      behind this refusal, cannot be what answered. */
-  const P = "PROJ-2026-7800-remove";
+  const P = await mintProject("PROJ-2026-7800-remove");
   const WHY = encodeURIComponent("the project has moved to the records team and she is no longer running it");
-  await mustPromote(P, projectMd(P), "project");
   t("  anna is a joined participant, so the ONLY thing she is not is an owner",
     [(await GET(`op=projectinvite&token=${RUTH}&projectId=${P}&handle=anna`)).ok,
      (await GET(`op=projectjoin&token=${ANNA}&projectId=${P}`)).ok], [true, true]);
@@ -505,13 +512,11 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
      The refusal's own detail says what the difference is, and the two arms are
      that sentence driven from both sides. */
   const WHY = encodeURIComponent("every owner of this project has left the group and the work is stranded");
-  const MACHINE_MADE = "PROJ-2026-7800-machine";
-  const MEMBER_MADE = "PROJ-2026-7800-stranded";
   /* A machine credential's promote sets no `ownerMemberId`, so the project is
      created with NO owner row — which is exactly the case the refusal describes
      and is why the fixture uses one rather than deleting a row by hand. */
-  await mustPromote(MACHINE_MADE, projectMd(MACHINE_MADE), "project", "mem-rec78");
-  await mustPromote(MEMBER_MADE, projectMd(MEMBER_MADE), "project", PETE);
+  const MACHINE_MADE = await mintProject("PROJ-2026-7800-machine", "mem-rec78");
+  const MEMBER_MADE = await mintProject("PROJ-2026-7800-stranded", PETE);
   t("  the two projects differ in exactly one thing, and it is the thing the refusal is about",
     [(await GET(`op=projectownerarith&token=${RUTH}&projectId=${MACHINE_MADE}`))?.live?.owners,
      (await GET(`op=projectownerarith&token=${RUTH}&projectId=${MEMBER_MADE}`))?.live?.owners], [0, 1]);
@@ -628,7 +633,7 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
      declares no bar, so nothing here is newly gated. */
   const PUB_PRJ = await makePublishingProject({
     post: POST, mf, sha, machineToken: "mem-rec78", owner: "ruth",
-    id: "PROJ-2026-7800-publish", created: NOW, updated: LATER });
+    name: "PROJ-2026-7800-publish", created: NOW, updated: LATER });  /* CORRECTED 2026-09-18 (REC-141): name, not id; the id is minted */
   const pub = await POST(`op=publish&token=${RUTH}`, { target: INQ,
     project: PUB_PRJ, roles: { [INQ]: "load_bearing" },
     scope: "Whether the FY2024 sewer transfer was authorised, on the documents in hand.",

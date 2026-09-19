@@ -11838,3 +11838,63 @@ sources untouched. `node test/nc-pl18.mjs` re-run: (e) the same control 39/13 as
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 38.1.0 → 39.0.0.** Base RE-READ at resolution off `origin/main`: 38.1.0 (IC-159, REC-142). Breaking: the wire value `PROJECTLESS` is gone (every inquiry-context run answers ground `INQUIRY`), and a call that was refused `AI_RUN_NOT_PROJECT_MEMBER` over a question now starts. It is breaking in the direction that removes a disclosure: the refusal told a member that a hidden project cites the question (§7.9). No first-party consumer reads a ground (the UI never calls `airunopen`; `agent-worker` runs on a machine credential). REC-141's IC-158, proposed on the same base, is re-based when it lands. A §7.9 DISCLOSURE closing — DIST told.
+
+## IC-158 · I3: THE PLANE MINTS PROJECT IDS — a creation of a project (or any creation in the `PROJ-` namespace) that names a `bundleId`, and a fork that names a `newId`, are REFUSED with one answer whether or not the id exists (C-59.1, C-59.3); the plane writes `id:` into the bytes before hashing and answers the minted `bundleId`/`newId` and the final `bundleSha`; bytes already carrying `id:` are refused (C-59.2) · PROPOSED 2026-09-18 (REC-141 / D-428's creation half, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (after merging `origin/main` at `1d439e31`):
+  38.1.0** (IC-159; it read 38.0.0 at the first merge). **Proposed MAJOR — 38.1.0 → 39.0.0**, BREAKING by IC-137's rule:
+  a create that succeeded before is now REFUSED. Read the base AT RESOLUTION.
+- **Proposer:** RECORD, worker `agent-a12cdccbace704eb6`, 2026-09-18, spawned by CONDUCT #6 for REC-141.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` — **BROKEN, measured:** `civicos-ui/app.html`'s Add surface creates a project by
+  `op=allocid` + a browser-built id + `bundleId`, and the fork form sends `newId`; both are now refused. UI-66 is the
+  surface half, DELEGATED in `CLAIMS.md`, and must land WITH this. `DIST` (newgroup embeds the old plane until the next
+  cut; the installer's intake page `bio-plane/src/setup.mjs` is corrected in this landing). `agent-worker` and the skill
+  pack: NOT-AFFECTED (grepped: neither creates a project nor forks one).
+- **Design:** `BIO_Membership_Architecture_v2.md` §7, the bullet *"HOW the plane mints a project id"* (BOB #15), with
+  §7.9 (*"not its existence"*); precedent the `bio-testimony/1` header the plane already writes.
+
+**THE DEFECT, MEASURED BEFORE ANY EDIT** (`3dee1fdb`, `project-sight.test.mjs` §6's KNOWN pin): a member who cannot see
+a project, creating a project at its id, answered `EXISTS`; at a never-minted id the same request CREATED the bundle —
+an existence oracle for project ids (D-428's creation half).
+
+**What changes, per op.**
+- `op=promote` (and the DO door `/promote`), `base: null`: when `meta.object_type` normalises to `project`, OR the
+  supplied `bundleId` begins `PROJ-` (whatever type is claimed — a creation of an `information` bundle at a hidden
+  project's id answered `EXISTS` too): a `bundleId` that is present and non-empty is refused
+  `PROJECT_ID_SUPPLIED` (C-59.1) BEFORE any id is looked up — one payload, no id echoed. With none, `bundle.md` must be
+  inline text with a frontmatter block (else `PROJECT_DOCUMENT_UNREADABLE`, C-59.4) and no top-level `id:` key (else
+  `PROJECT_ID_IN_BYTES`, C-59.2; a nested key or a body line is not one). The plane mints
+  `PROJ-<year>-<rand>-<slug of meta.title>` inside the promote transaction — `<rand>` four digits from the runtime
+  CSPRNG (`crypto.getRandomValues`, rejection-sampled), NEVER `allocId`'s counter (BOB #16, 2026-09-19, *"A MINTED ID
+  CARRIES NO COUNT"*; CORRECTED from the first build, which read the counter), checked unique and redrawn on collision, writes `id: <minted>` as the first frontmatter
+  line, recomputes `bytes` and `sha256`, and the answer's `bundleId` and `bundleSha` are the minted id and the sha of
+  the registered bytes. Every other type still names its own id — unchanged.
+- `op=projectfork`: a `newId` that is present and non-empty is refused `PROJECT_FORK_ID_SUPPLIED` (C-59.3), FIRST. With
+  none, the clone's origin `id:` is removed and the fork is minted by the same path; the answer's `newId` is the minted
+  id, `bundleSha` the registered sha. The old `MALFORMED` ("newId is required") and `EXISTS` answers are gone.
+- Each C-59 refusal carries `code`, `check` and a canned `translation` (DEC-49).
+
+**Classification: MAJOR.** A creation and a fork that succeeded are now refused; a member-facing surface breaks until
+UI-66 lands. For MINOR, and it does not govern: nothing is removed from a success answer.
+
+**Residuals named, not closed:** a project created BEFORE this under a non-canonical id (not `PROJ-`-prefixed) still
+answers `EXISTS` to a creation of another type at that id — BOB #16's stated LIMITATION; how many such ids the live record
+holds is UNDETERMINED (this worker has no access to a deployed record). The count disclosure the first build carried
+(the suffix WAS the PROJ counter) is CLOSED by the opaque suffix; `op=allocid` still hands out PROJ counter values, and
+`CASE`/`DRAFT`/`RVG` ids are still counted — both are the separate SCHEDULER item BOB #16's ruling names, not this one.
+Minted ids no longer sort in creation order (a suite that relied on that, `d280-strengthbar`, is corrected).
+
+**Suites:** new `bio-plane/test/project-mint.test.mjs` (45 assertions, §6 the no-count arms) and `project-mint.control.mjs`
+(seven arms, all AS DECLARED on the 2026-09-19 tree: baseline 45/0 · accept-supplied-id 37/8 · hash-before-id 42/3 ·
+fork-ignores-newid 41/4 · counter-restored 42/3 (BOB #16's control, exactly the three NO COUNT arms) · id-anywhere 43/2 ·
+id-key-other-spelling 45/0; every NOT-AS-DECLARED first run was the instrument or its declaration,
+recorded in the suite's header). CORRECTED at their sites with dated reasons, never exempted: `project-sight.test.mjs` §6 (the KNOWN `EXISTS`
+pin, now the refusal and byte-identical to a never-minted id; its control re-run, every arm AS DECLARED),
+`project-disclosure.test.mjs` §4, `ratify-authority.test.mjs` (REC-140's, control re-run AS DECLARED), the shared
+fixture `publishingproject.mjs`, and every other plane suite, probe and `civicos-ui/test/conclude-reading.test.mjs`
+that chose a project id (the list is the landing's diff).
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 40.0.0 → 41.0.0.** Base RE-READ at resolution off the integration tree: 40.0.0. Breaking by IC-137: a creation of a project (or any creation in the PROJ- namespace) that names a bundleId, and a fork that names a newId, are now REFUSED with one answer whether or not the id exists (C-59.1, C-59.3), closing the creation half of D-428's existence oracle; the minted id carries an OPAQUE CSPRNG suffix, never allocId's counter (BOB #16, d7ce3f86 — the owed act on the row, verified: project-mint §6 and its counter-restored control). LANDED TOGETHER WITH UI-66, so no deployed surface meets the refusal without the id-less Add and fork. A §7.9 DISCLOSURE closing — DIST told.

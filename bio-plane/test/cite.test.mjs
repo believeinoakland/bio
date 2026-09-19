@@ -106,9 +106,12 @@ Changes: collected.
 
 /* A project with a NON-bundle.md file, because the assertion that matters most
    here is that citing does not delete it. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): creation bytes of a project carry no `id:` line
+   (PROJECT_ID_IN_BYTES) — the plane mints the id and writes it — so a `p` with no id yet
+   renders none. */
 const projMd = (p) => `---
-id: ${p.id}
-object_type: project
+${p.id ? `id: ${p.id}
+` : ""}object_type: project
 schema: project@1
 title: "${p.title}"
 current_state: ${p.state || "forming"}
@@ -165,6 +168,20 @@ const promoteRaw = async (id, text, meta, base = null, extra = []) => call("/pro
   meta,
 });
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7)
+   and a creation naming one is refused PROJECT_ID_SUPPLIED. The creation names no bundleId and
+   the minted id is written onto `p.id`, so every later use of `p.id` is the plane's id. */
+const createProj = async (p, extra = []) => {
+  const text = projMd({ ...p, id: null });
+  const r = await call("/promote", {
+    base: null, snapKey: `${p.title.replace(/\W+/g, "-")}-new`, author: "suite",
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...extra],
+    meta: projMeta(p) });
+  if (r?.ok !== true || typeof r.bundleId !== "string") throw new Error(`create ${p.title}: ${JSON.stringify(r)}`);
+  p.id = r.bundleId;
+  return r;
+};
+
 const infoMeta = (b) => ({
   object_type: "information", group: "believe-in-oakland", title: b.title,
   current_state: b.state || "collected", prior_state: null,
@@ -188,12 +205,11 @@ for (let i = 0; i < 5; i++) INFOS.push({
   body: `Sewer franchise transfer detail number ${i}.`,
 });
 
-const PROJ = { id: "PROJ-2026-0001-sewer", title: "Sewer franchise diversion" };
+const PROJ = { title: "Sewer franchise diversion" }; /* id minted in setup() (REC-141) */
 
 async function setup() {
   for (const b of INFOS) await promoteRaw(b.id, infoMd(b), infoMeta(b));
-  const text = projMd(PROJ);
-  await promoteRaw(PROJ.id, text, projMeta(PROJ), null, [
+  await createProj(PROJ, [
     { path: "analysis.md", text: ANALYSIS, bytes: ANALYSIS.length, sha256: sha(ANALYSIS) },
     { path: "data/register.json", text: REGISTER, bytes: REGISTER.length, sha256: sha(REGISTER) },
   ]);
@@ -430,8 +446,8 @@ console.log("\n--- the block shape the live record actually uses ---");
   /* The fixture above started from `references: []`. The real
      PROJ-2026-0001-sewer-franchise-diversion carries a populated block, which
      is a different splice path and the one production exercises. */
-  const P2 = { id: "PROJ-2026-0002-block", title: "Block shaped", refs: "block" };
-  await promoteRaw(P2.id, projMd(P2), projMeta(P2));
+  const P2 = { title: "Block shaped", refs: "block" };
+  await createProj(P2);
   const seeded = parseFrontmatter(await liveText(P2.id)).data.references;
   t("it starts with the seed edge", seeded.length, 1);
 
@@ -448,8 +464,8 @@ console.log("\n--- the block shape the live record actually uses ---");
 
 console.log("\n--- notes are written, and unrepresentable ones are refused ---");
 {
-  const P3 = { id: "PROJ-2026-0003-noted", title: "Noted" };
-  await promoteRaw(P3.id, projMd(P3), projMeta(P3));
+  const P3 = { title: "Noted" };
+  await createProj(P3);
   const r = await cite(P3.id, await selectIds([INFOS[2].id]), "&note=" + encodeURIComponent("the continuation-year books"));
   t("a note is accepted", r.ok, true);
   const e = parseFrontmatter(await liveText(P3.id)).data.references.find((x) => x.target === INFOS[2].id);
@@ -475,8 +491,8 @@ console.log("\n--- scale: a pass on two edges is not a pass ---");
     many.push(b);
     await promoteRaw(b.id, infoMd(b), infoMeta(b));
   }
-  const P4 = { id: "PROJ-2026-0004-bulk", title: "Bulk citing" };
-  await promoteRaw(P4.id, projMd(P4), projMeta(P4));
+  const P4 = { title: "Bulk citing" };
+  await createProj(P4);
 
   const ids = many.map((b) => b.id);
   const h = await selectIds(ids);

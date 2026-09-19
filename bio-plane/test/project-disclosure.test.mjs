@@ -17,7 +17,8 @@
  *       joined gate. §3 is corrected and carries REC-145's arms. The count is unchanged.]
  * THE THIRD, plane-minted project ids (which closes `EXISTS`), is NOT built: the design does not say
  * whether a caller-supplied id for a new project is refused or ignored, and REC-139's row says STOP on
- * that. §4 below pins the creation's EXISTS as KNOWN so a change to it is noticed.
+ * that. §4 below pinned the creation's EXISTS as KNOWN so a change to it is noticed — and it WAS noticed:
+ * REC-141 (2026-09-18, IC-158) built the mint BOB #15 then decided, and §4 is CORRECTED to the refusal.
  *
  * WHAT WAS WRONG, measured on the unedited tree (`ee9f201c` + the claim), raw:
  *   - vera (never invited) creating a project named like iris's hidden one: 200, NAME_TAKEN, with
@@ -107,14 +108,18 @@ const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: 
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "", "Did it?", "",
   "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
-const projectMd = (id, title) => ["---", `id: ${id}`, "object_type: project", `title: "${title}"`,
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7), which writes
+   it into the bytes and refuses a creation that names one (C-59.1) or bytes that carry one (C-59.2). So a
+   project's creation bytes carry no `id:` line and its request no bundleId (`id` is null for a project); the
+   minted id is read from the answer. Every other type still names its own. */
+const projectMd = (id, title) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "${title}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 let seq = 0;
 const create = (tok, id, type, title) => {
   const md = type === "project" ? projectMd(id, title) : inquiryMd(id);
   return RAW(`op=promote&token=${tok}`, {
-    bundleId: id, base: null, snapKey: `20260701T0000${String(++seq).padStart(2, "0")}Z_rec139`,
+    ...(type === "project" ? {} : { bundleId: id }), base: null, snapKey: `20260701T0000${String(++seq).padStart(2, "0")}Z_rec139`,
     meta: { object_type: type, group: "believe-in-oakland", title,
             current_state: type === "project" ? "forming" : "open", created: NOW, last_updated: LATER },
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] });
@@ -125,13 +130,12 @@ const cite = async (tok, project, ids) => {
   return POST(`op=cite&token=${tok}&project=${E(project)}&handle=${handle}&note=${E("drawn on")}`, {});
 };
 
-const HIDDEN = "PROJ-2026-9139-hidden", H_TITLE = "Sewer Fund Transfers";
-const VISIBLE = "PROJ-2026-9139-visible", V_TITLE = "Franchise Fee Diversion";
-const VERAS = "PROJ-2026-9139-veras", VERAS_TITLE = "Vera's own project";
+/* CORRECTED 2026-09-18 (REC-141): the three project ids were CHOSEN here; they are now the ids the plane minted. */
+const H_TITLE = "Sewer Fund Transfers", V_TITLE = "Franchise Fee Diversion", VERAS_TITLE = "Vera's own project";
 const Q = "INQ-2026-9139-transfers";
-must("iris creates the hidden project", parse(await create(IRIS, HIDDEN, "project", H_TITLE)));
-must("sam creates the visible project", parse(await create(SAM, VISIBLE, "project", V_TITLE)));
-must("vera creates her own project", parse(await create(VERA, VERAS, "project", VERAS_TITLE)));
+const HIDDEN = must("iris creates the hidden project", parse(await create(IRIS, null, "project", H_TITLE))).bundleId;
+const VISIBLE = must("sam creates the visible project", parse(await create(SAM, null, "project", V_TITLE))).bundleId;
+const VERAS = must("vera creates her own project", parse(await create(VERA, null, "project", VERAS_TITLE))).bundleId;
 must("the question", parse(await create(ADM, Q, "inquiry", "Did the transfer follow the adopted process?")));
 must("sam invites olga", await POST(`op=projectinvite&token=${SAM}&projectId=${VISIBLE}&handle=olga`));
 must("olga joins sam's project", await POST(`op=projectjoin&token=${OLGA}&projectId=${VISIBLE}`));
@@ -152,7 +156,7 @@ console.log("\n--- 1. NAME_TAKEN names neither the other project's id nor its ti
 {
   /* A differently-cased spelling on purpose: echoing the STORED title would disclose its casing too. */
   const TYPED = "sewer  FUND transfers";
-  const viaCreate = await create(VERA, "PROJ-2026-9139-vera-clash", "project", TYPED);
+  const viaCreate = await create(VERA, null, "project", TYPED);
   show("vera creates a project named like the hidden one", viaCreate);
   const c = parse(viaCreate);
   t("CREATE: uniqueness still holds (provisional, OPEN for Bob) — vera is refused NAME_TAKEN", codeOf(c), "NAME_TAKEN");
@@ -160,7 +164,8 @@ console.log("\n--- 1. NAME_TAKEN names neither the other project's id nor its ti
   t("CREATE: neither the hidden id nor its stored title appears ANYWHERE in the raw body",
     [viaCreate.body.includes(HIDDEN), viaCreate.body.includes(H_TITLE)], [false, false]);
 
-  const viaFork = await RAW(`op=projectfork&token=${VERA}&projectId=${VERAS}&newId=PROJ-2026-9139-vfork&title=${E(TYPED)}`);
+  /* CORRECTED 2026-09-18 (REC-141): no newId — a named one is refused (C-59.3) before the name is judged. */
+  const viaFork = await RAW(`op=projectfork&token=${VERA}&projectId=${VERAS}&title=${E(TYPED)}`);
   show("vera forks her own project under the hidden one's name", viaFork);
   const f = parse(viaFork);
   t("FORK: uniqueness still holds — NAME_TAKEN", codeOf(f), "NAME_TAKEN");
@@ -170,12 +175,12 @@ console.log("\n--- 1. NAME_TAKEN names neither the other project's id nor its ti
 
   /* ONE ANSWER, whichever project holds the name: vera colliding with a project she CAN see (her own)
      gets the same bytes as colliding with one she cannot. */
-  const own = await create(VERA, "PROJ-2026-9139-vera-clash", "project", VERAS_TITLE);
+  const own = await create(VERA, null, "project", VERAS_TITLE);
   t("ONE ANSWER: a collision with a project vera CAN see is byte-identical to one with a project she cannot",
     { status: own.status, type: own.type, sha: sha(own.body) },
     { status: viaCreate.status, type: viaCreate.type, sha: sha(viaCreate.body) });
   t("OVER-STRICTNESS: a name nobody holds is NOT refused (uniqueness is not a blanket refusal)",
-    parse(await create(VERA, "PROJ-2026-9139-vera-new", "project", "Sewer Fund Transfers, revisited"))?.ok, true);
+    parse(await create(VERA, null, "project", "Sewer Fund Transfers, revisited"))?.ok, true);
 }
 
 /* ======================================================== 2. THE RUN REPORT */
@@ -306,15 +311,22 @@ console.log("\n--- 3. DEC-63 as amended: a run over a question consults NO proje
     [parse(await openCtx(SAM, `RUN-rec145-samp-${++runSeq}`, "project", VISIBLE))?.started], [true]);
 }
 
-/* ======================================================== 4. KNOWN, NOT CLOSED HERE */
-console.log("\n--- 4. KNOWN, NOT CLOSED HERE: a CREATION at a hidden project's id still answers EXISTS ---");
+/* ======================================================== 4. CLOSED BY REC-141 */
+console.log("\n--- 4. CLOSED BY REC-141: a CREATION naming a hidden project's id answers as one naming a free id ---");
 {
-  /* PINNED AS MEASURED so a change to it is noticed. BOB #15 decided the plane mints project ids, which
-     closes this; the design does not say whether a caller-supplied id for a NEW project is REFUSED or
-     IGNORED, and REC-139's row says STOP on that, so it is reported as a design gap rather than built. */
-  const r = await create(VERA, HIDDEN, "project", "Anything at all");
+  /* CORRECTED 2026-09-18 (REC-141, IC-158). This pinned `EXISTS` AS MEASURED, as KNOWN, while BOB #15's
+     "the plane mints project ids" was undecided in its mechanism. It is now decided and built: a creation
+     naming an id is refused BEFORE any id is looked up, one answer taken or not (`project-mint.test.mjs`). */
+  const named = (id) => { const md = projectMd(null, "Anything at all");
+    return RAW(`op=promote&token=${VERA}`, { bundleId: id, base: null, snapKey: `20260701T0000${String(++seq).padStart(2, "0")}Z_rec139`,
+      meta: { object_type: "project", group: "believe-in-oakland", title: "Anything at all", current_state: "forming",
+              created: NOW, last_updated: LATER },
+      files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [] }); };
+  const r = await named(HIDDEN), f = await named(HIDDEN.replace(/-\d{4}-/, "-9999-"));
   show("vera creates at the hidden project's id", r);
-  t("KNOWN (D-428, the plane-minted-id half): vera's CREATION at the hidden id answers EXISTS", codeOf(parse(r)), "EXISTS");
+  t("REC-141: vera's CREATION at the hidden id is refused PROJECT_ID_SUPPLIED, not EXISTS", codeOf(parse(r)), "PROJECT_ID_SUPPLIED");
+  t("REC-141: byte-identical to her creation at a never-minted id",
+    { status: r.status, type: r.type, sha: sha(r.body) }, { status: f.status, type: f.type, sha: sha(f.body) });
 }
 
 } catch (e) {

@@ -203,15 +203,19 @@ const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema:
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
 let seq = 0;
-const put = async (id, text, type, state) => {
-  const r = await POST(`op=promote&token=${TOK}`, { bundleId: id, base: null,
-    snapKey: `${id}-${++seq}-${sha(String(seq)).slice(0, 6)}`,
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a PROJECT's id is MINTED by the plane (Membership v2 §7); a
+   creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1). `id` null sends none (with `name` for the
+   title), and `put` returns the answer so the minted id can be read from it. */
+const put = async (id, text, type, state, name = id) => {
+  const r = await POST(`op=promote&token=${TOK}`, { ...(id === null ? {} : { bundleId: id }), base: null,
+    snapKey: `${id ?? name}-${++seq}-${sha(String(seq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: type === "information"
       ? [{ path: "snapshots/d.bin", sha256: sha(`c-${id}`), encoding: "binary", bytes: 10 }] : [],
-    meta: { object_type: type, group: "believe-in-oakland", title: `B ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland", title: `B ${name}`,
             current_state: state, created: NOW, last_updated: LATER } });
-  if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 500)}`);
+  if (!r.ok) throw new Error(`promote ${id ?? name}: ${JSON.stringify(r).slice(0, 500)}`);
+  return r;
 };
 const Q = "INQ-2026-7290-question", DOC = "INFO-2026-7290-doc";
 await put(Q, inquiryMd(Q), "inquiry", "open");
@@ -221,10 +225,9 @@ const handle = async (ids) => (await POST(`op=select&token=${TOK}`, { ids })).ha
 /* FINDING 1 — THE ONE REC-72 CLOSED, re-driven here so the sweep's own headline
    is measured on the same tree it reports and not carried from another file. */
 {
-  const CASE = "PROJ-2026-7290-case";
-  await put(CASE, ["---", `id: ${CASE}`, "object_type: project", "current_state: forming",
+  const CASE = (await put(null, ["---", "object_type: project", "current_state: forming",
     `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []", "---", "",
-    "## Summary", "", "A case.", "", "## Session Log"].join("\n"), "project", "forming");
+    "## Summary", "", "A case.", "", "## Session Log"].join("\n"), "project", "forming", "case")).bundleId;
   const c = await GET(`op=cite&token=${TOK}&project=${encodeURIComponent(CASE)}&handle=${await handle([Q])}`);
   const s = await GET(`op=sever&token=${TOK}&project=${encodeURIComponent(CASE)}`
     + `&handle=${await handle([Q])}&reason=${encodeURIComponent("no longer drawing on it")}`);

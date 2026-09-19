@@ -141,8 +141,11 @@ const inquiryMd = (id, question, legs) => ["---",
   "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and
+   creation bytes carrying an `id:` line are refused PROJECT_ID_IN_BYTES (C-59.2); `id` null builds the
+   creation's bytes with no id line. */
 const projectMd = (id, cites) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
   `title: "Sewer Fund"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
@@ -153,12 +156,14 @@ const projectMd = (id, cites) => ["---",
   "---", "", "## Summary", "", "The sewer fund investigation.", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): `id` null creates a PROJECT with NO bundleId (a creation naming
+   one is refused PROJECT_ID_SUPPLIED, C-59.1); the minted id is read from the answer's bundleId. */
 const promote = async (id, text, type, state, tok = MACHINE, register = []) => {
   const r = await POST(`op=promote&token=${tok}`, {
-    bundleId: id, base: null, snapKey: `${id}-new`, author: "rec20-suite",
+    ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${id ?? "PROJ-sewer-fund"}-new`, author: "rec20-suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id ?? "Sewer Fund"}`,
             current_state: state, created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
   return r;
@@ -283,8 +288,9 @@ const carol = await member("carol", ["contribute", "create_projects"]);
 const dave = await member("dave", ["contribute"]);
 
 /* ============================ phase 2 · the project, owned by carol */
-const PROJ = "PROJ-2026-0001-sewer-fund";
-await promote(PROJ, projectMd(PROJ, [INFO88]), "project", "forming", carol);
+/* CORRECTED 2026-09-18 (REC-141, IC-158): the project's id is MINTED by the plane (Membership v2 §7), not
+   chosen; PROJ is the id the creation answered with. */
+const PROJ = (await promote(null, projectMd(null, [INFO88]), "project", "forming", carol)).bundleId;
 
 /* ================================================== the assertions ======= */
 

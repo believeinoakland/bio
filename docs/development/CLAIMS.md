@@ -14654,3 +14654,88 @@ REGION marker was touched (the refusal site is `projectGate`, its body changed a
 project cites a question).
 **FOR BOB (a DESIGN GAP, not decided here):** over a question any member holding contribute may now tick and close
 ANOTHER member's run, because the three verbs share one gate (pinned as built, ARM H6).
+## CLAIM 2026-09-18 RECORD (REC-141 — THE PLANE MINTS PROJECT IDS: a caller-supplied id on a new project or a fork is refused with one answer; the plane writes `id:` into the bytes before it hashes and registers them)
+
+Worker spawned by CONDUCT #6, isolated worktree `agent-a12cdccbace704eb6`, branch `worktree-agent-a12cdccbace704eb6`,
+base `3dee1fdb`. `npm ci` in all three packages, each `node_modules` a real directory (5.0 GiB free). Design: Membership
+v2 §7, the bullet *"HOW the plane mints a project id"* (BOB #15), with §7.9. IDs minted with `tools/mintid.mjs`: IC-158,
+C-59. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — `promote`'s creation arm, `forkProject`, `allocId`'s sequence (a shared
+  private step), the DO door's `promote` row; `bio-plane/src/index.mjs` — `op=promote`'s and `op=projectfork`'s
+  handling of a caller-supplied id; `bio-plane/checks/bio-checks.mjs` — a new C-59 family.
+- Tests: a new `bio-plane/test/project-mint.test.mjs` and its control driver; `project-sight.test.mjs` §6's KNOWN pin
+  CORRECTED; every suite that chose a project id CORRECTED at its site with a dated reason, never exempted (including
+  the shared fixture `bio-plane/test/publishingproject.mjs`); `civicos-ui/test/**` fixtures only where a plane-backed
+  fixture chose a project id. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-158), `DEBT.md` (D-428's creation half), `BIO_Membership_Architecture_v2.md` front
+  matter and §7, `construct-status.json` if a construct's state moves, this block.
+
+NOT `QUEUE.md` (CONDUCT's/SCHEDULER's), NOT `civicos-ui/app.html` (UI-66's, DELEGATED below), NOT `release/`, NOT
+`newgroup/`.
+
+### DELEGATION 2026-09-18 RECORD (REC-141) -> UI: **THE ADD SURFACE AND THE FORK FORM MUST STOP SENDING A PROJECT ID — THE PLANE NOW MINTS IT AND REFUSES ONE (UI-66)**
+**open as of 2026-09-18** — REC-141 (IC-158) makes the surface's current project creation and fork REFUSED; UI-66 is the surface half and lands WITH REC-141.
+
+Measured at the code on `worktree-agent-a12cdccbace704eb6` (base `3dee1fdb`). What `civicos-ui/app.html` must stop sending:
+1. **The Add surface, for a PROJECT** (the create flow that calls `recR("allocid", { prefix: vocabFor(PREFIX, type), ... })`,
+   builds `id = stem + "-" + slug`, passes it to `mdFor(id, ...)` and sends `op=promote` with `bundleId: id`; and any other
+   create path — e.g. the proposal-adoption flow's `allocid` — whenever the type is `project`): send NO `bundleId`, do
+   NOT call `op=allocid` for it, and build `bundle.md` with NO `id:` line. The answer carries the minted id as `bundleId`
+   and the registered sha as `bundleSha`; the surface shows and opens THAT id (and uses that sha as the base of any
+   revision). A creation naming an id is refused `PROJECT_ID_SUPPLIED` (C-59.1); bytes carrying `id:` are refused
+   `PROJECT_ID_IN_BYTES` (C-59.2); unparseable bytes `PROJECT_DOCUMENT_UNREADABLE` (C-59.4). Every other type still
+   allocates and names its own id — unchanged.
+2. **The fork form** (`projectfork: { ..., fields: [["newId", "The new project's id", "required"], ["title", ...]] }`):
+   remove the `newId` field and send no `newId`; read the fork's id from the answer's `newId`. A named `newId` is refused
+   `PROJECT_FORK_ID_SUPPLIED` (C-59.3).
+3. Each C-59 refusal carries `code`, `check` and a canned `translation`; render the translation (DEC-49), and move
+   `civicos-ui/check-refusal-codes.mjs`' floors only from its own print if they move.
+The plane's own installer intake page (`bio-plane/src/setup.mjs`) was corrected by REC-141 itself.
+
+## CLAIM 2026-09-18 RECORD (REC-141) — RELEASED
+
+released: 2026-09-18 by the REC-141 worker, branch `worktree-agent-a12cdccbace704eb6`, base `3dee1fdb`, merged with
+`origin/main` twice (at `8e39602a`, REC-140 in; at `5871a991`, REC-143 in). Paths as claimed, PLUS `bio-plane/src/setup.mjs`'s
+intake create handler (the installer's own page chose a project id and is corrected), `ratify-authority.test.mjs`
+(REC-140's, arrived at the first merge) and two plane-backed UI suites (`intent-write`, `ai-session-context`).
+Baseline at `3dee1fdb`, NOT pristine and said so: **250/252 · 15402 assertions** — `mintid.test.mjs` failed on the tree as
+fetched (a D floor driven by QUEUE.md prose, not this item's) and `strandedwork.test.mjs` on this worker's own untracked
+log and claim edit landing mid-run. Final, at `c27e5caa`: **255/255 suites green · 15681 assertions passing · run
+95151.9aa825**, exit 0, provenance 258/258 at HEAD; `coverage.mjs --strict` exit **0** unpiped, CHECKS 341/341 named,
+REGISTER_FLOOR moved 1437 -> 1443 -> collapsed at the REC-143 merge to **1449 / 246 / 247, run 209** from the committed
+tree's own print; UI harness exit **0** (54 PASS). NEGATIVE CONTROLS: `node test/project-mint.control.mjs` six arms AS
+DECLARED (baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 · id-anywhere 39/2 ·
+id-key-other-spelling 41/0; restores verified by sha256, sources untouched); re-run after correcting their suites:
+`project-sight.control.mjs` (7 arms), `ratify-authority.control.mjs` (7 arms), `founder-sight.control.mjs` (9 arms) — all
+AS DECLARED. IDs minted with `tools/mintid.mjs`: IC-158, C-59.
+**FOR CONDUCT:** (1) RESOLVE IC-158 against I3 as read at resolution (proposed MAJOR on 38.0.0 -> 39.0.0; BREAKING — a
+create that named a project id, and a fork that named a newId, are now refused). (2) Land UI-66 WITH this (the DELEGATION
+above): until it lands the member surface's project creation and fork are REFUSED. (3) Flip REC-141 at integration and
+archive it; D-428's creation half is recorded closed on its row, the name half stays open with Bob. (4) Tell DIST: a
+DISCLOSURE closing (and a breaking I3 change), open on deployed instances until the next cut. (5) Carry to BOB the
+DESIGN GAP in the IC and in Membership v2's front matter: the minted sequence number tells a creator how many project ids
+were minted before theirs, hidden projects included. (6) To SCHEDULER, a pre-existing defect found in passing, NOT this
+item's: `bio-plane/test/curated-producer.probe.mjs`' read-side check looks for `entry.status === "severed"` inside
+`#restsOnLive`, which D-267 moved into `#refEdgeSevered` — the probe fails 9/1 on HEAD before and after this item; its fix
+is to point the source read at `#refEdgeSevered`.
+**SUPERSEDING FIGURES, after a THIRD merge with `origin/main` at `1d439e31` (REC-142 IC-159 in):** at `f9fbf157`,
+**256/256 suites green · 15703 assertions passing · run 42543.8b5036**, exit 0, provenance 259/259 at HEAD;
+`coverage.mjs --strict` exit **0**, REGISTER_FLOOR collapsed again and re-read from the committed merge's print to
+**1454 / 247 / 248, run 210**; UI harness exit **0** (54 PASS). `conclude-project-arm.test.mjs` (REC-142's, arrived at
+this merge) CORRECTED for minted ids and its control re-run AS DECLARED with identical figures. I3 on this tree reads
+**38.1.0** (IC-159), so IC-158's proposal is **38.1.0 -> 39.0.0** — read the base at resolution.
+**SUPERSEDING FIGURES, 2026-09-19, after CONDUCT #6's correction on BOB #16's ruling (Membership v2 §7, *"A MINTED ID
+CARRIES NO COUNT"*):** the PROJ suffix is now four digits from the CSPRNG (`crypto.getRandomValues`, rejection-sampled),
+redrawn on collision inside the promote transaction, NEVER read from or stepping `allocId` (CASE/DRAFT/RVG and
+`op=allocid` untouched — REC-151's). `project-mint.test.mjs` §6 asserts the counter moves only by allocid's own step, the
+suffix is not the counter's value, and five consecutive mints are not a +1 run; `project-mint.control.mjs`'s new
+`counter-restored` arm fails exactly those three (42/3), every other arm AS DECLARED (baseline 45/0). `project-sight` and
+`ratify-authority` no longer predict the minted id (never-minted read at a shaped id, each read's own id normalised) —
+controls re-run AS DECLARED; `d280-strengthbar`'s routing pair ordered by minted id; `conclude-project` and
+`airun-projectgate` expectations that assumed creation order corrected (the battery caught both), and every corrected
+suite re-run 4x (76 suites, 0 failing runs). Merged `origin/main` at `f61d071d`. At `28757640`: **257/257 suites green ·
+15744 assertions passing · run 65259.1fc098**, exit 0; `coverage.mjs --strict` exit **0**, REGISTER_FLOOR **1458 / 248 /
+249, run 211** (re-read from the committed merge's print); UI harness exit **0**. The live record's count of legacy
+non-`PROJ-` project ids (BOB #16's legacy residue) is UNDETERMINED — this worker has no access to a deployed record.

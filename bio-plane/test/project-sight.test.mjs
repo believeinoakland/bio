@@ -1,5 +1,7 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-sight.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-sight.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-18 in worktree agent-a93cdfa0fe0f8d435 on base dd52609b (real src/index.mjs 658,971 B sha256 176cbfa2cb58…, src/store.mjs 2,604,600 B sha256 5ba1bb4b00b1…, untouched: YES): (a) baseline 92/0 · (b) cite-distinguishing 90/2 — only cite's byte-identity and never-positional arms · (c) position-first 88/4 — the positional check asked before the sight gate at `#edgeTransition`: sever's and reinstate's byte-identity AND never-positional (C-56-discloses) arms · (d) not-found-to-everyone 72/20 — every byte-identity arm stays GREEN (the lie) and the SEES-NO-ROLE and JOINED arms catch it · (e) roster-stamp-dropped 80/12 — without the control plane's viewer stamp the five roster acts disclose again (and a forged `viewer=` is believed): exactly their §1 and §2 arms · (f) promote-stamp-dropped 88/4 — fails closed, machine credentials included · (g) sight-via-redactor 92/0, the over-strictness arm. RECORDED, NOT SMOOTHED: (d) came back NOT AS DECLARED on the first run because its METHOD perturbed the fixture, and was corrected; (e) came back NOT AS DECLARED because its declaration was one row short (the stamp is also what overwrites a forged viewer), and was then REWRITTEN when the store's absent-viewer rule for the roster acts changed from fail-closed to not-asked (`Store#rosterInSight`) after the first full battery showed fail-closed breaking every suite that drives the roster straight at the store. Reasons at each arm in the driver; re-run, every arm AS DECLARED.
+   RE-RUN 2026-09-18 by REC-141 in worktree agent-a12cdccbace704eb6 AFTER correcting this suite (P predicted from the plane's PROJ sequence and asserted at the mint; the fork rows send no newId; §6 CORRECTED from the KNOWN `EXISTS` to the refusal, byte-identical to a never-minted id), real src/index.mjs 660,878 B sha256 98368d9756c0…, src/store.mjs 2,636,157 B sha256 9c6222a402cc…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0 (each +2 passes: the mint-equals-prediction arm and §6's second arm).
+   RE-RUN 2026-09-19 by REC-141 after BOB #16's opaque-suffix ruling (P can no longer be predicted: the never-minted reads are taken at NEVER, and §1 normalises each read's OWN id to one placeholder), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,648,430 B sha256 d037f85ce689…, untouched: YES — every arm AS DECLARED: baseline 94/0 · cite-distinguishing 92/2 · position-first 90/4 · not-found-to-everyone 74/20 · roster-stamp-dropped 82/12 · promote-stamp-dropped 90/4 · sight-via-redactor 94/0. RECORDED: the first 2026-09-19 run had cite-distinguishing and roster-stamp-dropped NOT AS DECLARED only because §1's label was reworded and the driver matches it by fragment; the label was restored, and the arms then came back as declared.
  * =========================================================================
  * REC-138 / D-426 / IC-155 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT.
  * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project, *"Not its
@@ -126,8 +128,10 @@ const inquiryMd = (id, basis) => ["---", `id: ${id}`, "object_type: inquiry", "s
   "---", "", "## Question", "", "Did it?", "", "## What It Rests On", "", "## Conclusion", "",
   "## What Would Falsify This", "", "## Session Log", "", `### Session ${LATER} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
-const projectMd = (id, cites = [], summary = "A project.") => ["---", `id: ${id}`, "object_type: project",
-  `title: "Project ${id}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+/* CORRECTED 2026-09-18 (REC-141, IC-158): `id` null builds a CREATION's bytes, which carry no `id:` line —
+   the plane mints the project's id and writes it (C-59.2 refuses bytes already carrying one). */
+const projectMd = (id, cites = [], summary = "A project.") => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
+  `title: "Hidden project 9138"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
                    : ["references: []"]),
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", summary, "",
@@ -172,15 +176,26 @@ must("bias proposed", await DO("promote", { ...pkg(BIAS, biasMd("proposed"), "bi
 const vSel = async (id) => must(`vera selects ${id}`, await POST(`op=select&token=${VERA}&kind=enumerated`, { ids: [id] })).handle;
 const V_MIN = await vSel(MINUTES), V_LED = await vSel(LEDGER);
 
-const P = "PROJ-2026-9138-hidden";
-const REVISE = pkg(P, projectMd(P, [LEDGER], "A revision."), "project", "forming", "0".repeat(64), "rec138-fixed-snap");
+/* CORRECTED 2026-09-19 (REC-141, IC-158, as corrected by BOB #16's *"A MINTED ID CARRIES NO COUNT"*): P was
+   CHOSEN ("PROJ-2026-9138-hidden") and minted at that id after the never-minted read. The plane now MINTS a
+   project's id with an OPAQUE random suffix and refuses a creation naming one, so the id can be neither chosen nor
+   predicted (the 2026-09-18 correction predicted it from `allocId`'s counter — the count BOB #16 ruled out). So the
+   never-minted reads are taken at NEVER, an id of the minted shape that names nothing, and the hidden reads at the
+   minted P; P starts as NEVER and is reassigned at the mint. §1 then compares the two bodies with each read's OWN id
+   replaced by one placeholder — the id is the only thing the two reads differ in by construction, so it is the only
+   thing normalised (`project-disclosure.test.mjs`' precedent for a run id). An answer that echoes the caller's own
+   id discloses nothing; any other byte that differs still fails. */
+const YEAR = new Date().toISOString().slice(0, 4);
+const NEVER = `PROJ-${YEAR}-0000-hidden-project-9138`;
+let P = NEVER;
+const REVISE_OF = () => pkg(P, projectMd(P, [LEDGER], "A revision."), "project", "forming", "0".repeat(64), "rec138-fixed-snap");
 
 /* ============================================ THE ACTS, as ONE table — vera's request for each.
    Every request is well-formed enough to REACH its project resolution. Nineteen of these already
    answered alike before this item; they are pinned so that stays true. */
 const ACTS = [
-  ["promote (a revision)", () => RAW(`op=promote&token=${VERA}`, REVISE)],
-  ["promote with a FORGED actorViewer", () => RAW(`op=promote&token=${VERA}`, { ...REVISE, actorViewer: `class:admin` })],
+  ["promote (a revision)", () => RAW(`op=promote&token=${VERA}`, REVISE_OF())],
+  ["promote with a FORGED actorViewer", () => RAW(`op=promote&token=${VERA}`, { ...REVISE_OF(), actorViewer: `class:admin` })],
   ["cite", () => RAW(`op=cite&token=${VERA}&project=${P}&handle=${V_MIN}&note=${E("the minutes")}`, {})],
   ["sever", () => RAW(`op=sever&token=${VERA}&project=${P}&handle=${V_LED}&reason=${E("superseded")}`, {})],
   ["reinstate", () => RAW(`op=reinstate&token=${VERA}&project=${P}&handle=${V_LED}&reason=${E("back in")}`, {})],
@@ -205,7 +220,8 @@ const ACTS = [
   ["projectownerremove", () => RAW(`op=projectownerremove&token=${VERA}&projectId=${P}&handle=iris&reason=${E("r")}`)],
   ["projectownerrescue", () => RAW(`op=projectownerrescue&token=${VERA}&projectId=${P}&handle=olga&reason=${E("r")}`)],
   ["projectownerarith", () => RAW(`op=projectownerarith&token=${VERA}&projectId=${P}`)],
-  ["projectfork", () => RAW(`op=projectfork&token=${VERA}&projectId=${P}&newId=PROJ-2026-9138-fork&title=${E("A fork")}`)],
+  /* CORRECTED 2026-09-18 (REC-141): no `newId` — a named one is now refused (C-59.3) before sight is asked. */
+  ["projectfork", () => RAW(`op=projectfork&token=${VERA}&projectId=${P}&title=${E("A fork")}`)],
   ["projectparticipants", () => RAW(`op=projectparticipants&token=${VERA}&projectId=${P}`)],
   ["affordances target=", () => RAW(`op=affordances&token=${VERA}&target=${P}`)],
   ["image id=", () => RAW(`op=image&token=${VERA}&id=${P}`)],
@@ -217,7 +233,14 @@ for (const [, f] of ACTS) absent.push(await f());
 t("the id names nothing yet (so the first read IS the never-minted answer)", await shaOf(P), null);
 
 /* MINT the project: created by the ADMIN token, owned by iris, olga invited. vera is never invited. */
-must("mint the project", await promoteAs(ADM, P, projectMd(P, [LEDGER]), "project", "forming"));
+/* CORRECTED 2026-09-19 (REC-141): created with NO id; the plane mints it, and P becomes the minted id. */
+{
+  const { bundleId: _chosen, ...create } = pkg(P, projectMd(null, [LEDGER]), "project", "forming", null, `${P}-${++seq}`);
+  const minted = must("mint the project", await POST(`op=promote&token=${ADM}`, { ...create, meta: { ...create.meta, title: "Hidden project 9138" } }));
+  t("the plane minted an id of the canonical shape, and it is not the never-minted one read above",
+    [/^PROJ-\d{4}-\d{4}-hidden-project-9138$/.test(String(minted.bundleId)), minted.bundleId !== NEVER], [true, true]);
+  P = minted.bundleId;
+}
 must("iris owns it", await DO("projectclaimowner", { projectId: P, memberId: "iris" }));
 /* Straight to the store for the same reason: iris is the positional actor (`by`), and the viewer is
    the operator-internal `admin` one — a fixture's setup act, not a caller's. */
@@ -234,8 +257,10 @@ t("the table is not empty and was read in full both times (floor: 31 acts)",
 console.log("\n--- 1. an uninvited member's answer on a hidden project is BYTE-IDENTICAL to a never-minted id's ---");
 ACTS.forEach(([name], i) => {
   const a = absent[i], h = hidden[i];
+  /* Each read's own id -> one placeholder (see P's comment); nothing else is normalised. */
+  const idless = (body, id) => body.split(id).join("<PROJECT-ID>");
   t(`HIDDEN = ABSENT, raw (status, content type, body): op=${name}`,
-    { status: h.status, type: h.type, sha: sha(h.body) }, { status: a.status, type: a.type, sha: sha(a.body) });
+    { status: h.status, type: h.type, sha: sha(idless(h.body, P)) }, { status: a.status, type: a.type, sha: sha(idless(a.body, NEVER)) });
 });
 
 /* ======================================================== 2. POSITION NEVER SPEAKS FIRST */
@@ -273,7 +298,7 @@ console.log("\n--- 3. a caller who CAN see the project and holds no role gets th
   t("SEES, NO ROLE: olga — op=projectownerrescue answers ADMIN_ONLY (§7.13 is an administrator's)",
     codeOf(await POST(`op=projectownerrescue&token=${OLGA}&projectId=${P}&handle=pam&reason=${E("r")}`)), "ADMIN_ONLY");
   t("SEES, NO ROLE: olga — op=projectfork answers NOT_JOINED",
-    codeOf(await POST(`op=projectfork&token=${OLGA}&projectId=${P}&newId=PROJ-2026-9138-ofork&title=${E("olga fork")}`)), "NOT_JOINED");
+    codeOf(await POST(`op=projectfork&token=${OLGA}&projectId=${P}&title=${E("olga fork")}`)), "NOT_JOINED");
   t("SEES, NO ROLE: olga — op=airunopen over the project answers AI_RUN_NOT_PROJECT_MEMBER",
     codeOf(await POST(`op=airunopen&token=${OLGA}`, { run: "RUN-rec138-o", contextType: "project", contextId: P })),
     "AI_RUN_NOT_PROJECT_MEMBER");
@@ -281,7 +306,7 @@ console.log("\n--- 3. a caller who CAN see the project and holds no role gets th
   t("SEES, NO ROLE: ruth (an enrolled administrator, not in it — §7.3 sight) — op=cite answers C-56.1",
     codeOf(await POST(`op=cite&token=${RUTH}&project=${P}&handle=${R_MIN}&note=${E("n")}`, {})), "PROJECT_ACT_NOT_A_PARTICIPANT");
   t("SEES, NO ROLE: ruth — op=projectfork answers NOT_A_PARTICIPANT",
-    codeOf(await POST(`op=projectfork&token=${RUTH}&projectId=${P}&newId=PROJ-2026-9138-rfork&title=${E("ruth fork")}`)), "NOT_A_PARTICIPANT");
+    codeOf(await POST(`op=projectfork&token=${RUTH}&projectId=${P}&title=${E("ruth fork")}`)), "NOT_A_PARTICIPANT");
   t("SEES, NO ROLE: ruth — op=projectownerrescue answers OWNERS_ARE_ACTIVE (it reached §7.13's condition)",
     codeOf(await POST(`op=projectownerrescue&token=${RUTH}&projectId=${P}&handle=pam&reason=${E("r")}`)), "OWNERS_ARE_ACTIVE");
   t("SEES, NO ROLE: the FOUNDER's session (the administrator's viewer, IC-149) — op=promote answers C-56.1, not ABSENT",
@@ -305,7 +330,7 @@ console.log("\n--- 4. a JOINED member (the owner) gets the real answer ---");
     codeOf(await POST(`op=projectowneradd&token=${IRIS}&projectId=${P}&handle=nobody-138`)), "NO_SUCH_HANDLE");
   t("JOINED: iris's op=projectownerremove reaches the handle too",
     codeOf(await POST(`op=projectownerremove&token=${IRIS}&projectId=${P}&handle=nobody-138&reason=${E("r")}`)), "NO_SUCH_HANDLE");
-  t("JOINED: iris forks it", (await POST(`op=projectfork&token=${IRIS}&projectId=${P}&newId=PROJ-2026-9138-ifork&title=${E("iris fork")}`))?.ok, true);
+  t("JOINED: iris forks it", (await POST(`op=projectfork&token=${IRIS}&projectId=${P}&title=${E("iris fork")}`))?.ok, true);
   t("JOINED: iris's op=airunopen passes the project gate (the next check, the principals, is what answers)",
     codeOf(await POST(`op=airunopen&token=${IRIS}`, { run: "RUN-rec138-i", contextType: "project", contextId: P })),
     "AI_RUN_CAPABILITY_UNAVAILABLE");
@@ -320,8 +345,8 @@ console.log("\n--- 5. machine credentials are unchanged: they see every project 
     (await promoteAs(ADM, P, projectMd(P, [LEDGER, MINUTES], "admin token's revision"), "project", "forming", await shaOf(P)))?.ok, true);
 }
 
-/* ======================================================== 6. KNOWN, NOT CLOSED HERE */
-console.log("\n--- 6. KNOWN, NOT CLOSED HERE (D-428): a CREATION at a taken id says the id is taken ---");
+/* ======================================================== 6. A CREATION AT A HIDDEN ID (D-428's creation half) */
+console.log("\n--- 6. CLOSED BY REC-141 (D-428's creation half): a CREATION naming a hidden id answers as one naming a free id ---");
 {
   /* PINNED AS MEASURED so a change to it is noticed. A creation at a never-minted id CREATES it, so no
      answer to a creation at a hidden id can be byte-identical to that; the id space is shared and one
@@ -329,8 +354,16 @@ console.log("\n--- 6. KNOWN, NOT CLOSED HERE (D-428): a CREATION at a taken id s
      2026-09-18, REC-139: NAME_TAKEN no longer names the other project's id or title (IC-156,
      `project-disclosure.test.mjs`); plane-minted ids, which would close THIS pin, are decided and not
      built — the design does not say whether a supplied id is refused or ignored. */
-  const r = await POST(`op=promote&token=${VERA}`, pkg(P, projectMd(P), "project", "forming", null, "rec138-create"));
-  t("D-428 (KNOWN): vera's CREATION at the hidden project's id answers EXISTS", codeOf(r), "EXISTS");
+  /* CORRECTED 2026-09-18 (REC-141, IC-158). This pinned `EXISTS` AS MEASURED, as KNOWN: a creation at a hidden id
+     said the id was taken, because the caller chose ids and one id cannot be two bundles. The plane now MINTS
+     project ids (Membership v2 §7, BOB #15), so a creation that names one is refused BEFORE any id is looked up —
+     one answer, taken or not, echoing no id. The old pin was right about the old plane and is wrong about this one. */
+  const r = await RAW(`op=promote&token=${VERA}`, pkg(P, projectMd(null), "project", "forming", null, "rec138-create"));
+  const FREE = P.replace(/-\d{4}-hidden/, "-9999-hidden");
+  const f = await RAW(`op=promote&token=${VERA}`, pkg(FREE, projectMd(null), "project", "forming", null, "rec138-create"));
+  t("REC-141: vera's CREATION at the hidden project's id is refused PROJECT_ID_SUPPLIED, not EXISTS", codeOf(parse(r)), "PROJECT_ID_SUPPLIED");
+  t("REC-141: and it is BYTE-IDENTICAL to her creation at a never-minted id",
+    { status: r.status, type: r.type, sha: sha(r.body) }, { status: f.status, type: f.type, sha: sha(f.body) });
 }
 
 } catch (e) {

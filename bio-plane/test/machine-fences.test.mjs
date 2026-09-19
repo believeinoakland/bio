@@ -405,7 +405,9 @@ const fence = (code, payload, machineAnswer) => {
      the pair below; the project declares no bar, so nothing is newly gated. */
   const PUB_PRJ = await makePublishingProject({
     post: POST, mf, sha, machineToken: "adm-rec73", owner: "ruth",
-    id: "PROJ-2026-7300-publish", created: NOW, updated: LATER });
+    /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+       the fixture takes a `name` and returns the minted id. */
+    name: "PROJ-2026-7300-publish", created: NOW, updated: LATER });
   const BODY = { target: INQ, project: PUB_PRJ, roles: { [INQ]: "load_bearing" },
     scope: "Whether the FY2024 sewer transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.",
@@ -654,7 +656,8 @@ const fence = (code, payload, machineAnswer) => {
      grant's fence by name. */
   const REV_PRJ = await makePublishingProject({
     post: POST, mf, sha, machineToken: "adm-rec73", owner: "ruth",
-    id: "PROJ-2026-7300-review", created: NOW, updated: LATER });
+    /* CORRECTED 2026-09-18 (REC-141, IC-158): the id is MINTED by the plane; `name`, and the return value. */
+    name: "PROJ-2026-7300-review", created: NOW, updated: LATER });
   const BODY = { project: REV_PRJ, targets: ["INQ-2026-7300-review"], roles: { "INQ-2026-7300-review": "load_bearing" },
     scope: "Whether the transfer was authorised.", statement: "This draft covers the transfer only.",
     excluded: [], subjectPosition: "sought_and_answered", subjectJustification: "We asked and printed the answer.",

@@ -526,9 +526,10 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   t("…and one that rests on it THROUGH ANOTHER FINDING (F2 -> F1 -> the observation): REFUSED (C-53.11)",
     [...refusedAs(r3, "TESTIMONY_CITED_UNPUBLISHABLE"), r3 && r3.rests_on && r3.rests_on[0]?.observation],
     [...want("TESTIMONY_CITED_UNPUBLISHABLE"), OBS]);
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); the fixture takes a name and returns the minted id. */
   const PROJECT = await makePublishingProject({ post: (q, b) => rP(mf.dispatchFetch(`http://x/api/?${q}`,
       { method: "POST", body: JSON.stringify(b ?? {}) }).then((r) => r.json())), mf, sha, machineToken: "adm-mk1",
-    owner: "ruth", id: "PROJ-2026-5301-publisher", created: NOW, updated: NOW });
+    owner: "ruth", name: "PROJ-2026-5301-publisher", created: NOW, updated: NOW });
   const pubBody = (targets) => ({ project: PROJECT, targets, roles: allLoadBearing({ targets }),
     scope: "Whether the contract was stamped before the vote, on the documents in hand.",
     statement: "This case covers the stamp only, on the documents in hand at edition 1.",

@@ -174,9 +174,13 @@ const LATER = "2026-07-02T00:00:00Z";
    one and PILAR must own it. It declares NO BAR — an undeclared project is an
    ABSENT bar, so nothing this suite publishes is newly gated and the fixture adds
    a publisher rather than a fence. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED;
+   the fixture takes the old id string as its `name` (the title label) and the
+   suite uses the id it RETURNS. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-rec16", owner: "pilar",
-  id: "PROJ-2026-1600-divide", created: NOW, updated: LATER });
+  name: "PROJ-2026-1600-divide", created: NOW, updated: LATER });
 const refLines = (refs) => refs.length
   ? ["references:", ...refs.flatMap((r) => typeof r === "string"
       ? [`  - target: ${r}`, "    rel: cites", "    status: confirmed"]
