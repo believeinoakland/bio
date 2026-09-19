@@ -14293,6 +14293,14 @@ in all three packages, each `node_modules` a real directory. Design authority: `
 **NOT CLAIMED:** all of `bio-plane/**` (REC-136 is the held plane half and is consumed, not edited),
 `docs/development/QUEUE.md` (CONDUCT's).
 
+## CLAIM 2026-09-18 UI (UI-65) — RELEASED
+
+released: 2026-09-18 by the UI-65 worker, branch `ui-65-conclude` (held REC-136 `783054ac` + main `9cc814d6`).
+Every path the claim reserved is free. Figures are in UI-65's report and `CIVICOS_UI_STATE.md` v92. **FOR CONDUCT:**
+land `ui-65-conclude` TOGETHER with REC-136 (it contains `783054ac`); `ui-65-conclude-surface` is SUPERSEDED (its
+merge dropped the held branch's QUEUE.md change) and must not be merged; the DELEGATION to RECORD below is open;
+no IC (UI-65 consumes IC-150/IC-153 and needs no new read).
+
 ### DELEGATION 2026-09-18 UI (UI-65) -> RECORD: **A PROJECT CANNOT CONCLUDE FROM THE SURFACE ON A QUESTION ALREADY CONCLUDED WITH NO PROJECT — `op=affordances` DOES NOT PUBLISH THE ACT THE STORE ACCEPTS**
 **open as of 2026-09-18** — `conclude`'s affordance is keyed on the catalog's edge table alone, and that table has no `concluded -> concluded` edge.
 

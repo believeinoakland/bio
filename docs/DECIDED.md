@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1158 rulings across 92 documents.
+1160 rulings across 92 documents.
 
 ## DEC-
 
@@ -315,7 +315,7 @@ authority is the file named, never this one.
 - **D-98** · 2026-07-30 — RULED: undetermined authority becomes a task for the project manager, falling back to a group admin where a project has no manager, forwardable to a member better placed to attest.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:63`
 - **D-98** — and the RULED routing order, with every cited precedent verified present before the claim was written; D-98 is now a build task.  
-  `docs/development/CIVICOS_UI_STATE.md:906`
+  `docs/development/CIVICOS_UI_STATE.md:952`
 - **D-98** · 2026-07-30 — §RULED 2026-07-30 — STALE in its closing paragraph.  
   `docs/development/INBOX-GRAMMAR.md:8`
 - **D-98** — `taskforward`/`taskresolve` keep their RULED group-admin fallback (D-98 routing): a task is an instance obligation, not a project production.  
@@ -764,6 +764,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2325`
 - **IC-148** · 2026-09-18 — IC-148 AMENDED IN PLACE (MAJOR, 29.4.0 → 30.0.0): `dbBytes` for the admin class only under a server-set `capacity` stamp; the wire's log count renamed `observationsNonLead`, no `observations` key on the wire, purge's proof unchanged.  
   `docs/development/CLAIMS.md:13985`
+- **IC-153** — `conclude-act.test.mjs`'s mock CORRECTED to IC-153 (answers `basisversions`, refuses a no-version commit `NO_CLAIM` where the store does) and its journey picks a reading (93/0); `conclude-nofalsifier.test.mjs`'s REC-136 transport stand-in REMOVED, its journey now picks from the rendered picker (79/0);…  
+  `docs/development/CIVICOS_UI_STATE.md:82`
 - **IC-155** — CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md`…  
   `docs/development/CLAIMS.md:14201`
 ## C-
@@ -803,7 +805,7 @@ authority is the file named, never this one.
 - **C-18.5** — C-18.5's pattern copied field-for-field, the routing is the RULED order, and the tests are the both-ways C-18.5 tests with TASK fixtures.  
   `docs/development/INBOX-GRAMMAR.md:168`
 - **C-18.9** — conformant); C-18.9 implements the RULED publication fence and refused an undetermined document at verified in a both-ways test.  
-  `docs/development/CIVICOS_UI_STATE.md:969`
+  `docs/development/CIVICOS_UI_STATE.md:1015`
 - **C-19.1** — resolves each queued capture through `register`, applies the RULED routing order (`#routeTask`, `:6754-6780`), runs the C-19.1 grammar, writes or FOLDS a task | `tasks` rows; `created`/`folded`/`refused`/`waiting` lists | **OBLIGATION** (member task) | **YES** |  
   `docs/archive/research/MACHINE-PROCESSES.md:75`
 - **C-19.1** — resolves each queued capture, applies the RULED routing order, runs the C-19.1 grammar, writes or FOLDS a task | `tasks` | **OBLIGATION** | (`taskdrain` exists as an op; the alarm does not use it) | the one alarm | BUILT — the **only** notification generator with a producer | M1 · landed |  
@@ -1158,6 +1160,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2353`
 - **REC-133** · 2026-09-18 — ADDENDUM 2026-09-18 RECORD (REC-133, IC-151) — point 1's AUTHORITY line above is SUPERSEDED by `BIO_Publication_v0_1.md` §6A.2 as built:** the draft form is offered to the project's EDITORS — an owner or a JOINED participant holding `contribute` — not to the owner alone.  
   `docs/development/CLAIMS.md:13956`
+- **REC-136** — land `ui-65-conclude` TOGETHER with REC-136 (it contains `783054ac`); `ui-65-conclude-surface` is SUPERSEDED (its merge dropped the held branch's QUEUE.md change) and must not be merged; the DELEGATION to RECORD below is open; no IC (UI-65 consumes IC-150/IC-153 and needs no new read).  
+  `docs/development/CLAIMS.md:14300`
 - **REC-137** · 2026-09-18 — §7 — `op=caseratify`'s required position is DECIDED (the bullet *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18) and UNBUILT: whether the plane requires an OWNER's signature, and refuses delivery by an enrolled administrator with no role in the project, is REC-137's to verify…  
   `docs/architecture/BIO_Membership_Architecture_v2.md:12`
 - **REC-137** — `op=caseratify`'s position is DECIDED in the next bullet and is REC-137's to build.  
@@ -1820,17 +1824,17 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-31** — "RULED" and "open question" about one thing is how a settled decision comes to be doubted later, and Bob doubted it on 2026-07-31 for exactly this reason.  
   `docs/development/CAPTURE-SCALING.md:451`
 - TWO CLAIMS THIS SURFACE WAS ALREADY MAKING WERE CORRECTED, not extended: the `finder` registry declared `content` among its levels and promised "documents and their extracted content" while reaching no captured text at all, and the FIND recipe made the same promise in one step — now two steps, because they are two…  
-  `docs/development/CIVICOS_UI_STATE.md:136`
+  `docs/development/CIVICOS_UI_STATE.md:182`
 - ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.  
-  `docs/development/CIVICOS_UI_STATE.md:340`
+  `docs/development/CIVICOS_UI_STATE.md:386`
 - `handle` DECIDED PRODUCT-WIDE AND KEPT, WITH THE DRIFT ASSERTION AS THE ITEM — the naming is settled by a machine-guarded assertion rather than by a note, so the next session cannot re-litigate it by accident.  
-  `docs/development/CIVICOS_UI_STATE.md:573`
+  `docs/development/CIVICOS_UI_STATE.md:619`
 - BOB'S THREE RULINGS AT THE END OF THE SESSION, AND THE MEASUREMENT THAT SETTLED THEM.  
-  `docs/development/CIVICOS_UI_STATE.md:1135`
+  `docs/development/CIVICOS_UI_STATE.md:1181`
 - and a document REPLACED or WITHDRAWN are events; a body being renamed is a notice; a document ARRIVING and a meeting being scheduled are routine, because those are the normal course of business.  
-  `docs/development/CIVICOS_UI_STATE.md:1379`
+  `docs/development/CIVICOS_UI_STATE.md:1425`
 - RULINGS SETTLED THIS SESSION, do not re-ask.  
-  `docs/development/CIVICOS_UI_STATE.md:1485`
+  `docs/development/CIVICOS_UI_STATE.md:1531`
 - is CORRECTED, never exempted. No other arm touched. `.gitignore` — one pattern (`.ui*-harness/`) for negative-control pens, in the block that already documents transient harness directories under `civicos-ui/`. `docs/development/CLAIMS.md` (this entry), `docs/development/kickoffs/UI.md` (APPENDED, not  
   `docs/development/CLAIMS.md:99`
 - **2026-08-10** — AMENDED 2026-08-10 (same session), because a claim that does not name what was really edited is not a claim.** Three paths beyond the list above were touched and each is licensed by ORCHESTRATION rule 6 — *correct what your change superseded, in the SAME turn, yourself*:  
