@@ -14537,3 +14537,18 @@ choose:** keep it (the refusal names the door), or point that control at the mem
 state on its own that the no-project arm is unavailable — that is the surface computing a rule (DEC-8). If UI needs the
 relationship PUBLISHED per act, say so back to RECORD: that is a further I3 change (an act-level field), not built here.
 `civicos-ui/test/run.mjs` exits 0 on this branch (its harness mocks the plane, so it cannot see this).
+
+## CLAIM 2026-09-19 RECORD (REC-145 — DEC-63 as amended by Bob: a run whose context is an INQUIRY consults NO project; a PROJECT context keeps the joined gate; a §7.9 disclosure)
+
+claimed: 2026-09-19 by the REC-145 worker (worktree `agent-a3372f65d0555dbd9`, branch
+`worktree-agent-a3372f65d0555dbd9`, base `1d439e31`). Paths, named by function because `store.mjs` is shared ground
+with REC-141, D-431 and REC-144: `bio-plane/src/airun.mjs` (`PROJECT_GATE_GROUNDS`, `projectGate`, and one new
+exported predicate beside it); `bio-plane/src/store.mjs` (`#runContextProjects`, `#aiRunProjectGate`, and the
+refusal NOTES at the three run verbs' gate relays in `aiRunOpen` / `aiRunTick` / `aiRunClose` — no other line);
+`bio-plane/checks/bio-checks.mjs` (C-22.8 `AI_RUN_NOT_PROJECT_MEMBER`'s translation only); `bio-plane/test/`
+`airun-projectgate.test.mjs`, `nc-pl18.mjs`, `project-disclosure.test.mjs`, `project-disclosure.control.mjs`,
+`project-sight.test.mjs` (read; corrected only if it goes red); `bio-plane/dist/` (the rebuilt bundle);
+`bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR`, from the print only); `docs/development/INTERFACE-CHANGES.md` (one
+new IC); `docs/architecture/BIO_Membership_Architecture_v2.md` (front matter and the DEC-63 bullet's NOT BUILT
+sentence); `docs/architecture/construct-status.json` if a claim there names the gate. NOT `QUEUE.md`, `release/`,
+`newgroup/`, `civicos-ui/app.html`, `kickoffs/CONDUCT.md`.
