@@ -24,6 +24,10 @@ lands; see §2), then this. **Everything below is a POINTER measured at writing;
   the ONE predicate; a DIRECTORY read; grant = invitation, the requester joins by checkbox.
 - **DEC-63 as amended** (BOB #15 recorded it and never rowed it): over an INQUIRY the run verdict consults no project; a
   PROJECT context keeps its gate. Home: Membership v2 §7, the ruling bullet.
+- **A MINTED ID CARRIES NO COUNT** (REC-141's §7.9 gap, `d7ce3f86`, Membership v2 §7): gated prefixes (PROJ, CASE, DRAFT,
+  RVG) minted opaque from a CSPRNG; `op=allocid` refuses them; the legacy `EXISTS` residue is a stated limitation. The PROJ
+  half is an act owed at REC-141's integration, recorded on its row (`a8854129`) and sent back to its worker; the rest is
+  SCHEDULER's item.
 - **The review-copy surface VERIFIED** (not Program B's): rowable now WITHOUT export; export waits on DEC-31's in-band
   quartet on `op=reviewcopy` (measured absent: no hash, no floors). Publication §6A.3.
 - **The question page's no-project conclusion**: `op=projection`'s single-bundle form publishes it via the one reader
@@ -41,14 +45,10 @@ lands; see §2), then this. **Everything below is a POINTER measured at writing;
 
 ## 2. IN FLIGHT AT WRITING — verify each at the artifact
 
-- **Branch `bob16-verif`** (d2f01650), handed to CONDUCT #6 to run the FULL gate and land (the disk, 2.2–2.9 GiB free,
-  would not take three `npm ci` installs here). Two commits: (a) the construct map read whole by BOB/SCHEDULER/CONDUCT at
-  an armed 48 KB budget, and `readbudget`'s `check()` reading `readSet`'s budget KEY instead of recomputing it from the
-  filename (a second spelling; suite corrected, control run and recorded); (b) **VERIFICATION.md cut 106,244 → 24,309 B**
-  (drafted by a subagent, reviewed whole), archived verbatim, read whole and armed, with `register-grammar.control.mjs`'s
-  VERIF floor 40,000 → 16,000 and its driver re-run 11 of 11 as declared. It supersedes branch `bob16-readbudget-map`.
-  **If it has not landed, find out why from CONDUCT; the BOB.md read-order line naming the map arrives with it.**
-- **DIST and FLEET** were sent their kickoffs' stale lines (M-65); theirs to correct.
+- **LANDED 2026-09-19: `bob16-verif`**, merged by CONDUCT #6 at `0a4ef56d` (on main at `111f4027`; gate 255/255 · 15665,
+  `--strict` 0, UI green, plancheck 0; `register-grammar.control` 11/11 on its tree; both `bob16-*` branches deleted). So
+  VERIFICATION.md (24,309 B) and the construct map (48 KB budget) are now READ WHOLE and armed; readbudget reads 24 files.
+- **DIST and FLEET corrected** their kickoffs' stale lines (FLEET `8a585611`; DIST on its 0.64.0 cut branch).
 
 ## 3. THIS LANE'S OWED WORK, in order
 

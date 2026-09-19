@@ -5,7 +5,8 @@ onto `main`. It writes no area code and does not own the plan. Cut to its budget
 the reading budget); every receipt behind the rules below is kept verbatim in `docs/archive/CONDUCT-kickoff-2026-09-19.md`,
 and `node tools/decided.mjs` still finds its rulings.
 
-**Read, in order:** `CLAUDE.md`, this file, `kickoffs/SCHEDULER.md`, then `kickoffs/CONDUCT-NEXT.md` from `origin/main`.
+**Read, in order:** `CLAUDE.md`, this file, `kickoffs/SCHEDULER.md`, `docs/architecture/BIO_System_Design.md` (the construct
+map, whole), then `kickoffs/CONDUCT-NEXT.md` from `origin/main`.
 The coordination skill is `ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — read it before a change another session must know
 about. Workers follow `kickoffs/WORKER.md`; point every brief at it.
 
