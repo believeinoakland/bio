@@ -1,37 +1,41 @@
-# DIST — resume here. Rewritten 2026-09-19 by DIST #2, the standing lane in the NEW Claude Code account, after cutting, deploying, live-verifying and POINTING 0.66.0.
+# DIST — resume here. Rewritten 2026-09-19 by DIST #2, the standing lane in the NEW Claude Code account, after cutting, deploying, live-verifying and POINTING 0.66.0 and then 0.67.0.
 
 Read `CLAUDE.md`, then `kickoffs/DIST.md` IN FULL. Its **WHEN DIST CUTS**, the **`latest` pointer mechanism** and the
 **17 LESSONS** are the process; this file is only the state. Everything below was MEASURED 2026-09-19. Re-measure
 before acting on any of it — a figure is about the tree and the moment it was taken on.
 
-## 0.66.0 IS COMPLETE. All twelve gate steps are done and nothing is owed on it.
+## 0.67.0 IS COMPLETE. All twelve gate steps are done and nothing is owed on it.
 
 Cut, signed, tagged, deployed, live-verified, pointer advanced, installer re-cut and read back. `main`'s `release/`
-reads **0.66.0** and every installer's `/update` now offers it.
+reads **0.67.0** and every installer's `/update` now offers it. 0.66.0 landed the same day and is history.
 
-- Tag `v0.66.0` — commit `3d137cd2`'s ancestor `75069c81`; the tag OBJECT is `10f50859`. **`rev-parse v0.66.0` answers
-  the TAG, `^{commit}` answers the commit** — that is how a wrong sha reaches a table.
-- **The commit whose `release/` holds 0.66.0, for the NEXT cut's upgrade arm: `75069c81`.**
+**0.67.0 carries REC-151** (`cd4b5375`, integrated `5b717355`, IC-164): `op=allocid` refuses PROJ, CASE, DRAFT, RVG
+and TASK with `ALLOCID_PREFIX_GATED` (C-59.5) allocating nothing, and case/draft/grant/task ids mint opaque through
+one `Store#mintOpaqueId` — closing the §7.9 disclosure that a sequential id COUNTED objects the caller cannot see.
+
+- Tags `v0.66.0` (commit `75069c81`) and `v0.67.0` (commit `52725719`) are both on the mainline. **`rev-parse <tag>`
+  answers the TAG OBJECT, `^{commit}` answers the commit** — that is how a wrong sha reaches a table.
+- **The commit whose `release/` holds 0.67.0, for the NEXT cut's upgrade arm: `52725719`.**
 
 ## What is LIVE (measured 2026-09-19 after the deploy)
 
 | worker | serves | active version id = ROLLBACK TARGET |
 | --- | --- | --- |
-| `biosmoke7` (the plane) | 0.66.0, bytes = signed `c70058e1…` | `3e58e2a7-3346-418d-ac74-8335e5b57a57` |
-| `agent-worker` | 0.66.0 (a LABEL — see UNDETERMINED) | `f4b5c27f-fafe-49d2-9e93-dadbc3d43d8d` |
-| `pdf-worker` | 0.66.0 (a LABEL) | `6e9baff6-7659-4a12-b887-966199ea8277` |
-| `ocr-worker` | 0.66.0 (a LABEL) | `e12151fd-39c5-4d96-ae5c-d4f39a1756d5` |
+| `biosmoke7` (the plane) | 0.67.0, bytes = signed `5697d5d4…` | `73668b4a-3ae2-4a3c-841e-978f0cc5ff24` |
+| `agent-worker` | 0.67.0 (a LABEL — see UNDETERMINED) | `56bb8e1c-518d-4d1b-a315-7436852f7557` |
+| `pdf-worker` | 0.67.0 (a LABEL) | `2066b4a3-3b5c-4d38-a3d6-8721f85a6c27` |
+| `ocr-worker` | 0.67.0 (a LABEL) | `981acf8d-5d82-46d9-93f8-4a5b2aa21048` |
 | `civicos` (UI) | build `21bcfa6383eb` — UNMOVED, correctly | `405365a3-7874-4ac2-99d8-a48a970b98d1` |
-| `newgroup` (installer) | embeds signed **0.66.0**, bindings `[]` | `0e9fa04b-fb87-49fa-9b2e-9dea7b473b1d` |
+| `newgroup` (installer) | embeds signed **0.67.0**, bindings `[]` | `b9a4c243-7d66-4b6c-805b-a0153a8acc14` |
 
-- **The UI did not move, with evidence rather than a skip:** `civicos-ui/app.html` is byte-identical at `v0.65.0` and
-  `v0.66.0`, and its sha256 begins `21bcfa6383eb` — which IS the live build id. The build id is the app.html hash, so
+- **The UI did not move, with evidence rather than a skip:** `civicos-ui/app.html` is byte-identical at `v0.65.0`,
+  `v0.66.0` and `v0.67.0`, and its sha256 begins `21bcfa6383eb` — which IS the live build id. The build id is the app.html hash, so
   the serving surface is provably built from this app.html. Both ICs state `civicos` calls neither changed op.
 - **The installer was read back per lesson 8** and it is the one check that catches M-59's hazard: a substring search
   for the sha finds NOTHING (esbuild re-escapes the embed), and the literal is **SINGLE-quoted** — `var RELEASE_SOURCE =
   '…'`. Parse to the matching unescaped quote and let JS EVALUATE the literal (`new Function("return " + literal)`); a
   hand-rolled unescaper does not survive the SQL schema's own quoting. The evaluated value hashed
-  `c70058e1…` = `RELEASE.json`'s sha256, and `bindings: []` is empty.
+  `5697d5d4…` = `RELEASE.json`'s sha256, and `bindings: []` is empty.
 
 ## UNDETERMINED, held open, nobody has looked — do not let a neighbouring green line convert it
 
@@ -54,15 +58,15 @@ label, not behaviour. The question itself stands open. Same shape as DS-3: absen
 
 ## What is OWED, in order
 
-1. **NEXT CUT adds 0.66.0 to the upgrade arm**: `["0.66.0", "75069c81…"]` in `migrate-released.test.mjs`'s `RELEASES`
-   — **NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. 0.65.0 was added in this cut and its control
-   was RE-RUN rather than inferred: arm `alterafter` measured **169 pass / 66 fail** against the declared baseline
-   135/66 — the failure set is unchanged because it is bounded by `WITHDRAWN`, while the pass count rose from the
-   releases added. `store.mjs` restored sha256 MATCH.
-2. **REC-151 is 0.67.0's reason** — a third authority/disclosure closing (`op=allocid` refuses gated prefixes; opaque
-   `CASE`/`DRAFT`/`RVG` ids; a sequential id counted objects a caller cannot see, §7.9). IC-164 resolved MAJOR
-   (CONDUCT owns the I3 number; do not cite it from a row). It was finished on `worktree-agent-a59a4cdfa1b3d4dd3` and
-   pushed as a BRANCH; check whether CONDUCT has landed it on `main` before planning around it.
+1. **NEXT CUT adds 0.67.0 to the upgrade arm**: `["0.67.0", "52725719…"]` in `migrate-released.test.mjs`'s `RELEASES`
+   — **NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. 0.66.0 was added in the 0.67.0 cut and the
+   control was RE-RUN rather than inferred each time: arm `alterafter` has measured **135/66 (declared baseline) ->
+   169/66 (0.66.0 cut) -> 186/66 (0.67.0 cut)**. The FAILURE set is identical across all three because it is bounded by
+   `WITHDRAWN`, which no cut touches; the PASS count rises with each release added, and that rise is what shows the new
+   row is load-bearing rather than decorative. `store.mjs` restored sha256 MATCH every time.
+2. **No cut is owed.** `v0.67.0..origin/main` carried no shipped-path change when this was written. Apply
+   **WHEN DIST CUTS** on each self-wake: CUT NOW for a security/disclosure closing in no release, otherwise BATCH.
+
 3. **DS-3 (account cascade configuration) is DIST's and nobody has looked.** Its blocker discharged when DS-1 landed;
    SCHEDULER #2 recorded it UNDETERMINED rather than rounding it off. **FL-6 waits behind it.**
 4. **Carried, NOT re-verified:** tags v0.56.0/v0.57.0 never pushed; `v0.58.0` points off the mainline (`9ed18019`).
@@ -85,22 +89,28 @@ Claude Code **auto-mode classifier** — reasons seen: "[Production Deploy]", "[
 - **Never ask another lane to push or build for you.** FLEET #2 declined exactly that and was right: it is a permission
   decision about YOUR session being satisfied by a different one.
 
-## The 0.66.0 gate, for the next cut's comparison
+## The 0.67.0 gate, for the next cut's comparison
 
-260/260 suites green · 15937 assertions · EXCLUDES 2 untallied (`bundle`, `livefire` — D-413) · run 25652.e08127 ·
+261/261 suites green · 15977 assertions · EXCLUDES 2 untallied (`bundle`, `livefire` — D-413) · run 22124.0b73e8 ·
 tree hash identical before and after. newgroup wizard 131/0. `coverage --strict` clean. Signature: five negative
-controls refusing BY NAME (altered bytes, wrong namespace, wrong key, 0.65.0's sig over 0.66.0's bytes, fleetSig over a
-member-dropped payload) beside **two POSITIVE arms** — five refusals from a harness that cannot accept anything is an
-outcome that costs nothing to produce. 7/7.
+controls refusing BY NAME (altered bytes, wrong namespace, wrong key, the PREVIOUS release's sig over these bytes,
+fleetSig over a member-dropped payload) beside **two POSITIVE arms** — five refusals from a harness that cannot accept
+anything is an outcome that costs nothing to produce. 7/7. (0.66.0's gate, for the trend: 260/260 · 15937.)
 
-**Live closings, and which arm is the one that counts:** 7/7 green, but only the REC-153 arms DISCRIMINATE —
-`AI_RUN_NO_SUCH_CONTEXT` is answered live and occurs **0 times in 0.65.0's bundle**, which is what establishes that the
-build answering is 0.66.0. The version string does not establish that. The tick/close arms exercise an ABSENT run, which
-0.65.0 would answer identically; they confirm shape, not which build served.
+**Live closings, and the arm that makes it evidence.** 0.67.0: 11/11 arms — all five gated prefixes answer
+`ALLOCID_PREFIX_GATED` and allocate NOTHING, and an UNGATED prefix (`INFO`) still allocates (`INFO-2026-0003`).
+**Both halves are needed.** `ALLOCID_PREFIX_GATED` occurs 0 times in 0.66.0's bundle, so observing it establishes WHICH
+BUILD answered; the ungated arm rules out the op simply being broken, which five refusals alone cannot. 0.66.0's probe
+is the cautionary version: 7/7 green, but only its REC-153 arms discriminated — the tick/close arms exercised an ABSENT
+run that 0.65.0 would have answered identically, so they confirmed shape, not which build served.
 
-`op=audit`: 31 checked, 21 clean, 10 withErrors, all `C-18.9/chain-absent` — D-200's record state since 2026-08-04,
-nothing this release added. **Read the `offenders` key.** A first parse here read a `findings` key that does not exist
-and printed "0 findings" — a false CLEAN from a wrong key, caught only by dumping the raw shape.
+`op=audit` after both cuts: 31 checked, 21 clean, 10 withErrors, all `C-18.9/chain-absent` — D-200's record state since
+2026-08-04, nothing either release added. **Read the `offenders` key.** A first parse here read a `findings` key that
+does not exist and printed "0 findings" — a false CLEAN from a wrong key, caught only by dumping the raw shape.
+
+**`newgroup/` is NOT out of CONDUCT's scope, measured by CONDUCT #7:** five battery suites reference it
+(`fleetbundles`, `hygiene`, `check-firing`, `publishedcase`, and a probe). So a DIST installer re-cut is not a docs-only
+delta for an integrator — it discards a standing battery figure and forces a full re-run. Worth saying when you land one.
 
 **Construct status moved with this cut:** `15.installer-bundle` ABSENT → BUILT. The committed installer bundle now
 carries `fleetSig`, and the old claim's "deploying it is Bob's gate" clause was superseded by Bob's standing permission
