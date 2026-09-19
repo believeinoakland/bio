@@ -15118,3 +15118,12 @@ expresses the refusal moved. **Found by the instrument, not by memory:** `m025-a
 went red on the dead anchor (the D-276 class — a line changed in place under a quote that was not moved with it), and
 arm (c) was re-run afterwards (58 pass / 10 fail, restore sha256 MATCH and content IDENTICAL) rather than assumed to
 still arm. Nothing else in `caselifecycle.control.mjs` is touched.
+
+**ADDENDUM 2026-09-19 (same claim, REC-135):** `bio-plane/scripts/coverage.mjs` — the ONE `REGISTER_FLOOR` key set
+only (`arms`, `classified`, `corpus`, `run`), moved together from the instrument's own printed figures on the
+COMMITTED tree, with the record above the `arms` key. **The floors were deliberately read AFTER the commit:** while
+the new suite was untracked the strict run printed `254/253`-style figures with no slack at all, because the
+reproducible corpus counts only suites in the commit — a floor moved from that print would have been moved from a
+tree no other checkout reproduces (D-238). `regionLines` is untouched: this item adds no DEC-49 region and its
+changes to `publishCase()` sit outside every region marker in that function (verified by line number against
+`is-machine-publish`, `is-publish-statement` and `case-identity-derivation`).
