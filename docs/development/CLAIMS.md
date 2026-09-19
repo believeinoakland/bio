@@ -15135,3 +15135,37 @@ Claimed BY SITE:
 translation D-433's measurement brushes against is RECORD's `checks/bio-checks.mjs`, not touched here),
 `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `newgroup/**`, `release/**`, and
 `civicos-ui/check-refusal-codes.mjs` itself — D-433 is REPORTED, not fixed under this claim.
+
+## CLAIM 2026-09-19 UI (UI-67) — RELEASED
+
+released: 2026-09-19 by the UI-67 worker, branch **`ui-67-question-page-npc`** @ `fad05e42`, base `origin/main`
+@ `4dd314ff`. **VERIFIED ON THE REMOTE, not from this tree** (D-288): `git ls-remote --heads origin
+ui-67-question-page-npc` answers `fad05e423a34600655b166e53802ebcebaa3935f`. Every path this claim reserved is
+free.
+
+**Gated on the COMMITTED tree, each run DIRECTLY with its exit status read UNPIPED:**
+- battery **261/261 suites green · 15961 assertions passing** · EXCLUDES 2 untallied suite(s) (`bundle.test.mjs`,
+  `livefire.test.mjs`) · 530.1s · run `42603.393b46`; provenance **264 of 264** discovered item(s) in the commit at
+  HEAD (`fad05e42`); fleet 3 members, 3 RAN; no suite skipped. **Own baseline measured, not carried:** the same
+  battery on the pre-commit tree read 261/261 · **15960**, and the whole of the +1 is attributed PER SUITE by
+  re-running rather than by subtraction — `planning-hygiene.test.mjs` 282 → 283, which is the D-433 row.
+- `node bio-plane/scripts/coverage.mjs --strict` **exit 0**, floors EXACT and NONE moved (REGISTER FLOOR arms
+  1505/1505 · classified 252/252 · corpus 253/253); `civicos-ui/test` control census 34/55 → **35/56 declaring**
+  (reported, not gated).
+- UI harness `node civicos-ui/test/run.mjs` from the repo root, **exit 0, 56 PASS / 0 FAIL**. **BASELINE
+  RE-MEASURED AND THE BRIEFED FIGURE WAS STALE:** `app.html` at `4dd314ff` reads **55 PASS**, not the 54 the UI-65
+  block carries. `question-npc.test.mjs` 49 assertions is the whole of the delta.
+- `node tools/plancheck.mjs` — **0 fail** but for UNPUSHED before the push; 4 pre-existing WARNs (DEBT row budget,
+  two READING BUDGET files, stranded work), none of them this landing's.
+- `bound-sweep` ARM G **unmoved across the landing**: CARRIED-OUT-WHOLE 3 · CARRIED-BY-CALLEE 2 · STATED-BY-CALLEE
+  5 · STATED-HERE 5, findings 0, 15 call sites, reach deltas unchanged. No new entry and **no exemption**.
+- `question-npc.control.mjs` six arms, each alone, **all AS DECLARED**, exit 0; app.html restored to
+  `a6c5181a…` / 1403728 bytes by sha256 AND `cmp` after every one.
+
+**FOR CONDUCT:** **no IC** — I3 read at 44.0.0 on this tree and nothing on the wire moved; REC-142's delegation
+asked whether UI needed the relationship published per act and it ALREADY IS, through REC-144's `op=projection`.
+The `DELEGATION 2026-09-18 RECORD (REC-142) -> UI` block above is **DISCHARGED in its own block**. **D-433 is
+minted in `DEBT.md` with its fix named and wants a row from SCHEDULER** — it is a defect in
+`civicos-ui/check-refusal-codes.mjs`' own reach walk, found by measurement, and it will recur for every future
+real-plane UI suite. `CIVICOS_UI_STATE.md` gains `v94`; `MEASUREMENTS.md` gains this landing's figures;
+`INVESTIGATIVE-SESSION.md` §7.1 and its front matter record the surface half as BUILT.
