@@ -32,8 +32,25 @@
  *   NC4       OVER-STRICTNESS: only the correct row ZZ-45 planted
  *                                                  -> plancheck names no ZZ row; the suite's fixture and
  *                                                     structural arms stay green.
+ *
+ * M0-73 — D-430's two same-class readers, added 2026-09-19 (a second plant, four more arms):
+ *   M0-73 PLANT  ZZ-60 and ZZ-61 (blocked, Routed to BOB; ZZ-61 spaced `  ·  `) and a correct ZZ-63 citing
+ *                DEC-4242, IC-4243 and M-424, in the scratch BACKLOG.md
+ *                                                  -> `owed.mjs BOB` lists ZZ-60 and ZZ-61; `mintid --list`
+ *                                                     reads DEC 4242, IC 4243, M 424; the suite is GREEN
+ *                                                     (the plant is correct work — over-strictness).
+ *   NC5       owed.mjs's OWN pre-M0-73 walk restored, plant in place
+ *                                                  -> declared: the plain ZZ-60 STILL appears (the old walk
+ *                                                     already read the backlog — LED-6 put it there), the
+ *                                                     spaced ZZ-61 is LOST; the suite FAILS naming "owed's
+ *                                                     blocked rows ARE the lister's" and §6's owed grammar arm.
+ *   NC6a/b/c  mintid's DEC / IC / M corpus without BACKLOG.md, each ALONE, plant in place
+ *                                                  -> that namespace's floor falls back to the live one, the
+ *                                                     other two keep the plant's; the suite FAILS naming
+ *                                                     "<NS>: an id mentioned ONLY in BACKLOG.md raises the
+ *                                                     floor" and THE CLASS arm.
  */
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, copyFileSync, statSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, copyFileSync, statSync, existsSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -65,10 +82,11 @@ console.log(`  scratch worktree ${WT} at HEAD, ${changed.length} working file(s)
 
 const W = (p) => join(WT, p);
 const BACKLOG = W("docs/development/BACKLOG.md"), ROWDESIGN = W("tools/rowdesign.mjs"), PLANCHECK = W("tools/plancheck.mjs");
-const MIN_BYTES = { [BACKLOG]: 200, [ROWDESIGN]: 8000, [PLANCHECK]: 30000 };
+const OWED = W("tools/owed.mjs"), MINTID = W("tools/mintid.mjs");
+const MIN_BYTES = { [BACKLOG]: 200, [ROWDESIGN]: 8000, [PLANCHECK]: 30000, [OWED]: 8000, [MINTID]: 40000 };
 const PEN = mkdtempSync(join(tmpdir(), "d430-pen-"));
 const pristine = new Map();
-for (const [name, p] of [["backlog", BACKLOG], ["rowdesign", ROWDESIGN], ["plancheck", PLANCHECK]]) {
+for (const [name, p] of [["backlog", BACKLOG], ["rowdesign", ROWDESIGN], ["plancheck", PLANCHECK], ["owed", OWED], ["mintid", MINTID]]) {
   const copy = join(PEN, `pristine.d430.${name}`);
   copyFileSync(p, copy);
   pristine.set(p, { copy, sha: sha(p), bytes: statSync(p).size });
@@ -225,6 +243,91 @@ try {
     t("NC4 · RESTORED byte-identically", restore(BACKLOG), true);
   }
 
+  /* ------------------------------------------------ M0-73: D-430's two same-class readers, on disk */
+  const M073 = [
+    ``,
+    `### ZZ-60 · blocked — planted: waits on a design ruling. Routed to BOB.`, `milestone: M8`, ``,
+    `### ZZ-61  ·  blocked — planted: spaced as the lister reads it. Routed to BOB.`, `milestone: M8`, ``,
+    `### ZZ-63 · queued — planted: CORRECT, and cites DEC-4242, IC-4243 and M-424 nowhere else`, `milestone: M8`,
+    `behind-interface: I3`, `design: \`docs/architecture/BIO_System_Design.md\` §3`, ``,
+  ].join("\n");
+  const owedIds = () => {
+    const r = spawnSync(process.execPath, [OWED, "BOB"], { cwd: WT, encoding: "utf8" });
+    return [...new Set([...(r.stdout || "").matchAll(/\b(?:QUEUE|BACKLOG) (ZZ-6\d)\b/g)].map((m) => m[1]))].sort();
+  };
+  const floors = () => {
+    /* BY REALPATH, AND THE FIRST RUN IS WHY: the OS temp dir is a symlink on macOS (`/var` -> `/private/var`),
+       and mintid's main-guard compares `resolve(argv[1])` with `import.meta.url`, which node realpaths — so
+       spawned through the link it ran NOTHING and exited 0, and this parser read `{}` (M0-73, 2026-09-19). */
+    const r = spawnSync(process.execPath, [realpathSync(MINTID), "--list", "DEC", "IC", "M"], { cwd: WT, encoding: "utf8" });
+    if (!/^\s+DEC\s+floor/m.test(r.stdout || "")) console.log(`  mintid --list printed no DEC floor (exit ${r.status}): ${(r.stdout + r.stderr).slice(0, 300)}`);
+    return Object.fromEntries([...(r.stdout || "").matchAll(/^\s+(DEC|IC|M)\s+floor (\d+)/gm)].map((m) => [m[1], +m[2]]));
+  };
+  /* Replace the span between two markers, each of which must occur exactly once. */
+  function armSpan(p, open, close, replacement) {
+    const s = readFileSync(p, "utf8");
+    const n = [s.split(open).length - 1, s.split(close).length - 1];
+    t(`the arm ARMED (${p.slice(WT.length + 1)}: both span markers found exactly once)`, n, [1, 1]);
+    const a = s.indexOf(open), b = s.indexOf(close) + close.length;
+    writeFileSync(p, s.slice(0, a) + replacement + s.slice(b));
+  }
+  const suiteFailed = (re) => { const s = suite(); return { s, hit: s.reachedFoot && failedNaming(s, re) }; };
+
+  let liveFloors;
+  console.log("\n--- M0-73 PLANT · ZZ-60, ZZ-61 (blocked, routed to BOB) and ZZ-63 (cites DEC/IC/M) in the scratch BACKLOG.md ---");
+  {
+    liveFloors = floors();
+    console.log(`  floors before the plant: ${JSON.stringify(liveFloors)}`);
+    t("M0-73 · the live floors were READ (three namespaces)", Object.keys(liveFloors).sort(), ["DEC", "IC", "M"]);
+    t("M0-73 · nothing planted: owed names no ZZ row", owedIds(), []);
+    plant(M073);
+    t("M0-73 PLANT · `owed.mjs BOB` lists BOTH planted blocked rows", owedIds(), ["ZZ-60", "ZZ-61"]);
+    t("M0-73 PLANT · `mintid --list` raises DEC, IC and M to the backlog-only ids", floors(), { DEC: 4242, IC: 4243, M: 424 });
+    const s = suite();
+    t("M0-73 PLANT · the suite stays green with the plant in place (the plant is correct work)", [s.reachedFoot, s.fail], [true, 0]);
+    console.log(`  M0-73 planted suite: ${s.pass} pass, ${s.fail} fail`);
+  }
+
+  console.log("\n--- NC5 · owed.mjs's OWN walk restored (the pre-M0-73 reader; plant in place; armed ALONE) ---");
+  {
+    const OLD = [
+      "  for (const [src, label] of [[SOURCES.queue, \"QUEUE\"], [SOURCES.backlog, \"BACKLOG\"]]) {",
+      "    const q = read(src);",
+      "    if (q === null) unreadable.push(src);",
+      "    else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.*)$/gm))",
+      "      if (owner.test(m[2])) items.push({ source: label, id: m[1], attributed: true,",
+      "                                         why: `blocked on ${lane}`, text: m[2].trim().slice(0, 160) });",
+      "  }",
+      "",
+    ].join("\n");
+    armSpan(OWED, "  /* M0-73 BLOCKED-ROWS", "  /* END M0-73 BLOCKED-ROWS */\n", OLD);
+    const got = owedIds();
+    t("NC5 · on disk the plain ZZ-60 still appears (the old walk read the backlog too) and the spaced ZZ-61 is LOST",
+      got, ["ZZ-60"]);
+    const { s, hit } = suiteFailed(/owed's blocked rows ARE the lister's/);
+    t("NC5 · the suite FAILS naming it — \"owed's blocked rows ARE the lister's\"", hit, true);
+    t("NC5 · ...and §6 names the grammar the old walk carries", failedNaming(s, /owed\.mjs carries NO plan-row heading grammar/), true);
+    console.log(`  NC5 suite: ${s.pass} pass, ${s.fail} fail — failed: ${s.failed.map((l) => l.slice(0, 60)).join(" | ")}`);
+    t("NC5 · RESTORED byte-identically", restore(OWED), true);
+  }
+
+  for (const [nc, ns, file] of [["NC6a", "DEC", "DECISIONS.md"], ["NC6b", "IC", "INTERFACE-CHANGES.md"], ["NC6c", "M", "MEASUREMENTS.md"]]) {
+    console.log(`\n--- ${nc} · mintid's ${ns} corpus without BACKLOG.md (plant in place; armed ALONE) ---`);
+    const q = `"docs/development/${file}", "docs/development/QUEUE.md"`;
+    arm(MINTID, `${q}, "docs/development/BACKLOG.md"]`, `${q}]`);
+    const f = floors();
+    t(`${nc} · on disk the ${ns} floor FALLS back to the live one — the backlog-only id sets no floor`,
+      f[ns], liveFloors[ns]);
+    t(`${nc} · ...and the other two namespaces keep the planted floor (the arm moved one variable)`,
+      Object.entries(f).filter(([k]) => k !== ns).map(([, v]) => v > 400), [true, true]);
+    const { s, hit } = suiteFailed(new RegExp(`^${ns}: an id mentioned ONLY in BACKLOG\\.md raises the floor`));
+    t(`${nc} · the suite FAILS naming it — "${ns}: an id mentioned ONLY in BACKLOG.md raises the floor"`, hit, true);
+    t(`${nc} · ...and THE CLASS arm names it`, failedNaming(s, /THE CLASS: no mintid corpus names the cache without the backlog/), true);
+    console.log(`  ${nc} suite: ${s.pass} pass, ${s.fail} fail`);
+    t(`${nc} · RESTORED byte-identically`, restore(MINTID), true);
+  }
+  t("the M0-73 planted BACKLOG.md RESTORED byte-identically", restore(BACKLOG), true);
+
   console.log("\n--- every armed file, after every arm ---");
   for (const [p, { sha: want }] of pristine) t(`${p.slice(WT.length + 1)} is pristine at the end`, sha(p), want);
 } finally {
@@ -234,5 +337,5 @@ try {
   console.log(fail ? `  pristine copies KEPT in ${PEN} — a red run's copies are evidence` : `  pristine copies removed`);
 }
 
-console.log(`\npipeline-readers.control: ${pass} pass, ${fail} fail  (a baseline, the plant, four arms; ${pass + fail} checks)`);
+console.log(`\npipeline-readers.control: ${pass} pass, ${fail} fail  (a baseline, two plants, eight arms; ${pass + fail} checks)`);
 process.exit(fail ? 1 : 0);
