@@ -8730,6 +8730,24 @@ var AI_RUN_CHECKS = {
     check: "C-22.11",
     where: "src/airun.mjs checkRunContextKind, called from store.mjs aiRunOpen",
     translation: "Nothing of the kind this run names answers to that id here. A run is over a question or a project, nothing else; a run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
+  },
+  /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
+       AND CLOSE A RUN", BOB #16). C-22.12 and not C-22.11: CONDUCT #6 assigned C-22.11 to REC-153, which is
+       on its own branch, so this number was taken with the gap left for it.
+  
+       WHY IT IS ITS OWN CODE AND NOT C-22.8's. *You are not in this project* and *this is not your run* are
+       DIFFERENT FACTS with different remedies: the first is answered by an owner inviting you, the second by
+       nobody — the run is its principal's, and one nobody drives ends on its own lease. A co-participant who
+       is fully joined meets this and never C-22.8, and a single refusal covering both would tell them to ask
+       for an invitation they already hold.
+  
+       SAID ONLY TO SOMEBODY WHO CAN SEE THE RUN'S CONTEXT. A caller who cannot is answered as for a run that
+       does not exist, before this is reached (§7.9), so the sentence names nobody — neither the principal
+       nor the caller — and the store's `detail` names only the rule. */
+  AI_RUN_NOT_PRINCIPAL: {
+    check: "C-22.12",
+    where: "src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose",
+    translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -26069,6 +26087,20 @@ function checkRunContextKind({ contextType = null, contextId = null, found = nul
   return refusal3(
     "AI_RUN_NO_SUCH_CONTEXT",
     `no ${JSON.stringify(said)} answers to ${id} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
+  );
+}
+function runPrincipalOf(principal) {
+  const s = principal == null ? "" : String(principal).trim();
+  if (!s.startsWith("member:")) return s;
+  const i = s.indexOf("/");
+  return i < 0 ? s : s.slice(0, i);
+}
+function runPrincipalGate({ caller = null, principal = null } = {}) {
+  const who = runPrincipalOf(caller), owner = runPrincipalOf(principal);
+  if (who && owner && who === owner) return null;
+  return refusal3(
+    "AI_RUN_NOT_PRINCIPAL",
+    "ticking or closing a run is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds"
   );
 }
 function finishedBound(bounds, { expired = false, offered = null } = {}) {
@@ -59966,6 +59998,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ..._Store.#aiRunGateStated(gate)
     };
   }
+  /** REC-152 — CAN THIS VIEWER SEE THIS RUN? `aiRunRead`'s own predicate (D-15's `#bundleGate` over the
+   *  run's context), asked of one run id, so the tick and the close hide exactly what `op=airun` hides. An
+   *  absent stamp fails closed, as it does there. */
+  #aiRunInSight(run, viewer) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    return !!this.#one(`SELECT 1 AS x FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
+  }
   /** op=airuntick. The heartbeat, the work list, and the log — one call.
    *
    *  A tick does four things and the order matters: it appends what the run
@@ -59987,7 +60026,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     leaseMs = null,
     at = null,
     actor = null,
-    viewer = null
+    viewer = null,
+    /* REC-152: the caller's PRINCIPAL, stamped server-side by `index.mjs` in the form the open
+       stamps `principal_plane` in — never a caller's word. */
+    caller = null
   } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = _Store.#aiIso(nowMs);
@@ -59997,6 +60039,24 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       found: false,
       note: "no such run: it either never existed or was purged"
     };
+    if (!this.#aiRunInSight(run, viewer)) return {
+      run: run || null,
+      found: false,
+      note: "no such run: it either never existed or was purged"
+    };
+    const notPrincipal = runPrincipalGate({ caller, principal: row.principal_plane });
+    if (notPrincipal)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row.status,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        note: "a run is driven by its principal alone. Nothing was appended and no budget was spent"
+      };
     const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
     if (!gate.permitted)
       return {
@@ -60071,10 +60131,37 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
    *  to the one exit, and a caller who names no bound is refused by C-22.5
    *  rather than having "completed" inferred from its silence. */
-  aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null } = {}) {
+  aiRunClose({
+    run,
+    bound = null,
+    condition = null,
+    at = null,
+    actor = null,
+    viewer = null,
+    /* REC-152: the caller's PRINCIPAL, stamped server-side — see `aiRunTick`. */
+    caller = null
+  } = {}) {
     const now = at ? _Store.#aiIso(Date.parse(at)) : _Store.#aiIso(Date.now());
-    const row = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, run);
+    const row = this.#one(`SELECT context_type, context_id, principal_plane FROM ai_runs WHERE run = ?`, run);
     if (row) {
+      if (!this.#aiRunInSight(run, viewer)) return {
+        run,
+        found: false,
+        note: "no such run: it either never existed or was purged"
+      };
+      const notPrincipal = runPrincipalGate({ caller, principal: row.principal_plane });
+      if (notPrincipal)
+        return {
+          run,
+          terminated: false,
+          found: true,
+          ok: false,
+          code: notPrincipal.code,
+          check: notPrincipal.check,
+          translation: notPrincipal.translation,
+          detail: notPrincipal.detail,
+          note: "a run is ended by its principal, or by its own lease and bounds. The run is untouched and is still running"
+        };
       const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
       if (!gate.permitted)
         return {
@@ -63488,15 +63575,19 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           actor: url.searchParams.get("actor"),
           viewer: url.searchParams.get("viewer")
         }),
+        /* REC-152: `caller` is the fifth stamp — the caller's PRINCIPAL, from the QUERY and set AFTER the
+           body's spread, so a `caller` in the body is overwritten rather than believed. */
         airuntick: () => this.aiRunTick({
           ...body || {},
           actor: url.searchParams.get("actor"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          caller: url.searchParams.get("principal")
         }),
         airunclose: () => this.aiRunClose({
           ...body || {},
           actor: url.searchParams.get("actor"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          caller: url.searchParams.get("principal")
         }),
         airun: () => this.aiRunRead({
           run: url.searchParams.get("run"),
@@ -69999,7 +70090,7 @@ var index_default = {
       );
     if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "airunopen")
+    if (RUN_VERB_ACTIONS.includes(op))
       inner.searchParams.set(
         "principal",
         viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`

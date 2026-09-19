@@ -106,8 +106,11 @@ const ARMS = [
     declared: "remove the gate from `aiRunTick` ALONE. IS-6's own argument is the subject: gating "
             + "the open and leaving the tick free would let an account that may not start a run "
             + "still spend its budget.",
-    mustFail: "H1 (pia ticks) and H3 (the run is no longer untouched)",
-    mustNotFail: "H2 — the close keeps its gate, so the two are not one fence measured twice.",
+    mustFail: "L4 (sam, LEAVING P1, ticks his own run over it). [REC-152, 2026-09-19: was *H1 (pia ticks) and "
+            + "H3*. pia cannot see P1, so she is now answered as for an absent run BEFORE the gate, and a "
+            + "caller who is not the run's principal is refused C-22.12 before it too — so the project gate "
+            + "on the tick is reachable only by the principal once he is no longer joined, which is L4.]",
+    mustNotFail: "L5 — the close keeps its gate, so the two are not one fence measured twice.",
     from: "    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });\n"
         + "    if (!gate.permitted)\n      return { run, ticked: false, found: true, status: row.status,",
     to:   "    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });\n"
@@ -123,7 +126,9 @@ const ARMS = [
             + "PERMITTED arms over a question must fail by name.",
     mustFail: "A2 (ground back to PARTICIPANT), B0 (pia refused over a question), D1 D2 D3 (a question "
             + "no project cites is refused — there is no PROJECTLESS ground to fall back on), G1, G3, "
-            + "H6, L3, and the pure arms P1 P2 P2b P4",
+            + "L3, and the pure arms P1 P2 P2b P4 [REC-152, 2026-09-19: H6 leaves — pia is now refused "
+            + "C-22.12 as not the run's principal BEFORE the project gate is asked, so restoring the consult "
+            + "cannot move it]",
     mustNotFail: "A1 and G2 (a JOINED member still starts), every project-context arm (B1-B6, E, F, G4, "
                + "H1-H5, S, L1), C, M.",
     from: "  return String(contextType ?? \"\") === \"project\";\n}",
@@ -134,7 +139,9 @@ const ARMS = [
     declared: "THE LIAR REC-145's ROW NAMES: `runConsultsProjects` answers `false` for every kind, so a "
             + "run over a PROJECT consults nobody either. Every permission over a question stays green "
             + "(that is the lie); the project-context refusals must catch it.",
-    mustFail: "B1 B2 B4 B6, C3, E2, F1, F2, G4, H1 H2 H3, S1 S2, L1 — every refusal over a project",
+    mustFail: "B1 B2 B4 B6, C3, E2, F1, F2, G4, S1 S2, L1, L4 L5 — every refusal over a project; and H4, P1, "
+            + "P2 as REC-145's run measured them. [REC-152, 2026-09-19: H1 H2 H3 leave this set — pia is "
+            + "answered as absent before any gate — and L4 L5 join it, the principal's own tick and close.]",
     mustNotFail: "A, B0, D, G1-G3, H6, L3, C (the floor), M, P (the pure arms carry their own kind).",
     from: "  return String(contextType ?? \"\") === \"project\";\n}",
     to:   "  return false;\n}" },
@@ -157,7 +164,8 @@ const ARMS = [
     declared: "OVER-STRICTNESS ARM TWO, in the OPPOSITE direction: admit any participation row, so "
             + "`invited` and `leaving` count as participating. A gate loosened past its rule is "
             + "the same defect as one tightened past it.",
-    mustFail: "F1 (an invited member opens a run) and L1 (a member who asked to leave opens one)",
+    mustFail: "F1 (an invited member opens a run) and L1 (a member who asked to leave opens one) "
+            + "[REC-152: and L4 L5 — the same leaving member ticks and closes his own run over the project]",
     mustNotFail: "A, B, C, G — the settled states are unaffected.",
     from: "          return !!part && part.state === \"joined\";",
     to:   "          return !!part;" },
@@ -178,7 +186,9 @@ const ARMS = [
             + "OWN QUERY. A gate that trusts the caller's word about who they are is not a gate.",
     mustFail: "S1 (pia borrows sam's participation by naming him) and A2/D2/H4 (a caller who names "
             + "nobody now reads as a machine credential and the stated ground collapses) "
-            + "[REC-145: and B0, G1, H6 — the INQUIRY ground they pin collapses the same way]",
+            + "[REC-145: and B0, G1, H6 — the INQUIRY ground they pin collapses the same way] "
+            + "[REC-152: H6 leaves — it is now the principal refusal, C-22.12, which reads the `principal` "
+            + "stamp and not `actor` — and L4 L5 join: with no actor the leaving principal reads as a machine]",
     mustNotFail: "C1 — the capability floor is decided from the SESSION and is untouched by this.",
     from: "    if (RUN_VERB_ACTIONS.includes(op)) {\n      inner.searchParams.delete(\"actor\");",
     to:   "    if (false) {\n      inner.searchParams.delete(\"actor\");" },

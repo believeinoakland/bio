@@ -14946,3 +14946,46 @@ split makes stale, CORRECTED with their reason: `bio-plane/test/ledger.test.mjs`
 more than 5 non-running rows in the cache, which the split caps at 8 with the running rows in it) and
 `bio-plane/test/planning-hygiene.test.mjs`' queue-id set (read from `QUEUE.md` alone — D-430's class — so the
 backlog's ids would read as dangling references). Nothing else in `bio-plane/**` is touched.
+## CLAIM 2026-09-19 RECORD (REC-152 — `airuntick` and `airunclose` are the run's PRINCIPAL's acts: anyone else is refused positionally when they can see the run's context and answered as for an absent run when they cannot; the reaper is unchanged)
+
+claimed: 2026-09-19 by the REC-152 worker (worktree `agent-a8cfbd5a2893e6b93`, branch
+`worktree-agent-a8cfbd5a2893e6b93`, base `0cb784ab`). Paths, named by function because `store.mjs` and `airun.mjs` are
+shared with REC-153 (which edits `aiRunOpen`): `bio-plane/src/airun.mjs` (one new pure predicate beside `projectGate`);
+`bio-plane/src/store.mjs` (`aiRunTick` and `aiRunClose` only — NOT `aiRunOpen`, NOT `#aiRunTerminate`, NOT the reaper);
+`bio-plane/src/index.mjs` (the `principal` stamp beside `airunopen`'s, widened to the tick and the close);
+`bio-plane/checks/bio-checks.mjs` (one new C-22 row, C-22.12, and the family header's count);
+`bio-plane/test/airun-projectgate.test.mjs` (ARM H corrected, never exempted), `nc-pl18.mjs` if its anchors move, one
+new suite `bio-plane/test/airun-principal.test.mjs`; `bio-plane/dist/` (the rebuilt bundle);
+`bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR`, from the print only); `docs/development/INTERFACE-CHANGES.md` (one
+new IC); `docs/architecture/BIO_Membership_Architecture_v2.md` (front matter and the "WHO MAY TICK AND CLOSE" bullet's
+state); `docs/architecture/construct-status.json` if a claim there names it. NOT `QUEUE.md`, `release/`, `newgroup/`,
+`civicos-ui/app.html`, `kickoffs/CONDUCT.md`.
+
+## CLAIM 2026-09-19 RECORD (REC-152) — RELEASED
+
+released: 2026-09-19 by the REC-152 worker, branch `worktree-agent-a8cfbd5a2893e6b93`, base `0cb784ab`, merged with
+`origin/main` twice (20b7412f in `3dfaa7ad`; 2c99ca08 — DIST's 0.65.0 and M0-73 — in `f8686fc3`). Paths touched beyond
+the claim, each a ratchet that failed naming itself and was CORRECTED, never exempted: `bio-plane/test/airun.test.mjs`
+ARM D1 (the C-22 family) and `bio-plane/test/run-conditions.test.mjs` ARM W3 (`#aiRunInSight` classified AUTHORISES);
+`docs/DECIDED.md` regenerated. Baseline at `96779ad7` (claim only): **256/258 suites green · 15813 assertions passing**
+— `ledger.test.mjs` 2 red over the real QUEUE rows (pre-existing on that `main`; green after the first merge, which
+carried SCHEDULER's repair) and `owed-controls.test.mjs` 1 red CONTAMINATED by this item's untracked new suite (green
+alone at exit 0 with it moved aside). After, on the committed merge `70aefa7a`: **259/259 suites green · 15878
+assertions passing**, battery exit 0, provenance 262/262 in the commit at HEAD. Per suite `airun-principal` NEW 27, `airun-projectgate` 52 -> 54, `airun` 127 (D1 corrected), `run-conditions` 58 (W3
+corrected). `node scripts/coverage.mjs --strict` exit **0** unpiped; REGISTER_FLOOR arms 1480 -> 1486, classified
+249 -> 250, corpus 250 -> 251, run 212 -> 213 from the print on `5aeae866`, then collapsed at the second merge and
+re-read `arms 1496/1490 · classified 250/250 · corpus 251/251`, `floor 213/213` on `f8686fc3`. `node civicos-ui/test/run.mjs`
+exit **0**. NEGATIVE CONTROL `node test/airun-principal.control.mjs`: **`sent-field` (compare with the SENT field) 25/2 —
+ARM F1 and ARM F2 (THE FORGED ACTOR) by name**; `no-principal-check` 11/16; `no-sight` 24/3; `exact-compare` 24/3;
+`fold-by-split` 27/0; all AS DECLARED, real sources untouched (sha256). `node test/nc-pl18.mjs` re-run, eleven rows, ten
+restores verified by sha256 + `cmp`; four declarations moved with dated reasons. IC-165 proposed MAJOR, I3 41.1.0 -> 42.0.0.
+**FOR CONDUCT:** RESOLVE IC-165 (read the base at resolution); flip REC-152 in `QUEUE.md`; at integration with REC-153,
+`airun.test.mjs` ARM D1's list gains "C-22.11" and `bio-checks.mjs`'s C-22 header reads TWELVE (both files are edited by
+both branches); `regionLines` — no DEC-49 REGION marker was touched (the refusal site is the new `runPrincipalGate`,
+a function-level `where` on `projectGate`'s precedent).
+**FOR DIST:** a §7.9 disclosure closes at the next plane release — a caller who cannot see a run's project was told
+`found: true`, the run's status and C-22.8 by `op=airuntick`/`op=airunclose`; and a BREAKING I3 change for any
+deployed driver that ticks or closes a run under a credential other than its principal (none found first-party).
+**FOR BOB:** nothing owed; one reading stated rather than decided silently — an organisation-kind `ai` key and a token
+class are compared WHOLE (two org keys are two principals), because the ruling's parenthesis names only *that member's*
+minted credential.

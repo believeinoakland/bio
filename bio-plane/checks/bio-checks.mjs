@@ -6405,8 +6405,10 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). ELEVEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (TEN until REC-153 added C-22.11, 2026-09-19:
- * the run's context is the kind it says it is — like C-22.8, a fact about the run's CONTEXT, so it is here).
+ * and §14b.6). TWELVE C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (TEN until 2026-09-19, when REC-153 added
+ * C-22.11 — the run's context is the kind it says it is — and REC-152 added C-22.12 — the run's PRINCIPAL as the
+ * only hand that ticks or closes it; both facts about the RUN, so both here. Combined at their integration,
+ * CONDUCT #6).
  *
  * SIX UNTIL 2026-08-08, when SK-1 added C-22.7 — the run's THIRD condition,
  * the skill version, refused at the open where the two principals already are.
@@ -6716,6 +6718,27 @@ export const AI_RUN_CHECKS = {
       + 'name a question, and a run over a project has to name a project. Something you cannot see is '
       + 'answered exactly as something that does not exist, so this says nothing about whether anything '
       + 'else goes by that id.',
+  },
+  /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
+     AND CLOSE A RUN", BOB #16). C-22.12 and not C-22.11: CONDUCT #6 assigned C-22.11 to REC-153, which is
+     on its own branch, so this number was taken with the gap left for it.
+
+     WHY IT IS ITS OWN CODE AND NOT C-22.8's. *You are not in this project* and *this is not your run* are
+     DIFFERENT FACTS with different remedies: the first is answered by an owner inviting you, the second by
+     nobody — the run is its principal's, and one nobody drives ends on its own lease. A co-participant who
+     is fully joined meets this and never C-22.8, and a single refusal covering both would tell them to ask
+     for an invitation they already hold.
+
+     SAID ONLY TO SOMEBODY WHO CAN SEE THE RUN'S CONTEXT. A caller who cannot is answered as for a run that
+     does not exist, before this is reached (§7.9), so the sentence names nobody — neither the principal
+     nor the caller — and the store's `detail` names only the rule. */
+  AI_RUN_NOT_PRINCIPAL: {
+    check: 'C-22.12',
+    where: 'src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose',
+    translation: 'Only the person who started this investigation — or an AI credential they created '
+      + 'for it — can continue it or end it. It is not about which projects you belong to or what '
+      + 'you are allowed to do in general: an investigation nobody continues ends by itself when '
+      + 'its time or budget runs out.',
   },
 };
 

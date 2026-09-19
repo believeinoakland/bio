@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: `node bio-plane/test/nc-pl18.mjs` — RE-RUN 2026-09-19 by REC-145 (worktree agent-a3372f65d0555dbd9, base 1d439e31 + this item; DEC-63 as amended — a run over a question consults no project), ELEVEN ROWS, every restore verified by sha256 and `cmp` (the four sources hashed before and after the harness: OK). (0) BASELINE 52/0. (a) collapse the detail -> 50/2, B4 C3, as declared, B1/B2 green. (b) collapse the translation -> 50/2, B3 C3. (c) no gate on the open -> 40/12, B1 B2 B4 B6 C3 E2 F1 F2 G4 S1 S2 L1 — **B3 and B5 stay green and that is the arms, not the gate: B3 reads the catalogue and B5 asserts an absence, which an open door also satisfies**; this arm's and (d)'s anchors had NOT OCCURRED since REC-139 added `viewer` (corrected here). (d) no gate on the tick -> 49/3, H1 H3 and H4 (PL-18's recorded load-bearing tick count). (e) **REC-145's CONTROL — restore the project consult for an inquiry context -> 39/13, A2 B0 D1 D2 D3 G1 G3 H6 L3 P1 P2 P2b P4, exactly as declared: the PERMITTED arms fail by name**; A1/G2 (joined members) and every project-context arm green. (e2) THE ROW'S LIAR, the gate dropped for every context -> 33/19: every project-context refusal (B1 B2 B4 B6 C3 E2 F1 F2 G4 H1 H2 H3 S1 S2 L1) — NOT AS DECLARED in the catching direction: **H4, H5, P1 and P2 also went red, which the declaration said would not** (the P arms name the project kind and share the predicate; H4 pins sam's PARTICIPANT ground and H5 follows H2's close). (f) over-strictness, every project -> 52/0, declared ALL GREEN: moot after the amendment (a project context names one project). (g) admit invited/leaving -> 50/2, F1 L1. (h) neuter the capability floor -> 48/4, C1 C2 D4 and C4 (undeclared: C4 reads the floor's own code, which a neutered floor never sends). (i) drop the actor stamp -> 29/23, wide and in the declared direction. PL-18's ORIGINAL RUN, KEPT AS THE RECORD: TEN ROWS (a baseline plus nine arms), each armed ALONE, each declared before arming, each refusing to arm on an anchor that does not occur exactly once, every restore verified by sha256 AND `cmp` against a per-arm pristine copy with a byte floor. RUN 2026-08-09 by PL-18 (worktree agent-a4e2eff5ca09197e2). (0) BASELINE, nothing edited -> exit 0, 47 pass, 0 fail — the row that distinguishes nine-arms-broken from nine-arms-working. (a) THE ARM THIS SUITE EXISTS FOR — collapse the two refusals by giving the participation refusal the CAPABILITY refusal's words -> 45 pass, 2 fail, B4 and C3, **with B1 and B2 STAYING GREEN**: a refusal still occurs and still carries C-22.8, so only the arms asserting the SENTENCE can see the collapse. That asymmetry is the whole evidence that this suite is not buying an outcome that costs nothing to produce. (b) collapse the CANNED TRANSLATION in the catalogue -> 45 pass, 2 fail, B3 and C3 — **DECLARED B2 AND B2 STAYED GREEN, and that is a finding about the ARM, recorded at B2's site: both sides of B2 read the same catalogue and move together, so B2 can see a mis-keyed translation and never a wrong one.** (c) remove the gate from `aiRunOpen` alone -> 35 pass, 12 fail, every open refusal, with C1/C2 (the capability floor) and H1/H2 (the tick and close) GREEN — the three verbs are gated independently. (d) remove it from the tick alone -> 44/3, H1 H3 **H4** (H4 was not declared: it pins an absolute tick count, and an ungated tick moved it — the load-bearing-count class REC-75 recorded). (e) DEC-17's case armed the wrong way, a projectless inquiry silently DENIED -> 41/6, D1 D2 D3 **and P1, P2, P2b**, none of the three declared and all three the arm working: the P arms assert the closed permitting vocabulary is wholly REACHED and that only the refusing outcome carries a code, and PROJECTLESS became unreachable. (f) over-strictness, require participation in EVERY project holding the question -> 44/3, G1 G2 **L2** (undeclared, same cause), with A1/B/C/D green. (g) over-strictness the other way, admit `invited` and `leaving` as participating -> 45/2, F1 L1, exactly as declared. (h) neuter the CAPABILITY FLOOR in index.mjs -> 44/3, C1 C2 D4, **with ARM B GREEN** — the pair proving the two fences are independent rather than one measured twice. (i) drop the server-side `actor` stamp -> 26/21, far wider than the declared S1/A2/D2/H4 and in the declared direction: with no stamp every session reads as no member and the gate collapses wholesale. NOT AN ARM, and stated rather than discovered: `inner.searchParams.delete("actor")` is behaviourally INVISIBLE today, because the `set` below it is unconditional for all three verbs — kept as a structural guard, on REC-75's idempotent-write precedent. */
+/* NEGATIVE CONTROL: `node bio-plane/test/nc-pl18.mjs` — RE-RUN 2026-09-19 by REC-152 (worktree agent-a8cfbd5a2893e6b93, base 0cb784ab + this item: tick and close are the run's PRINCIPAL's; H1/H2/H6 CORRECTED, L4/L5 added), ELEVEN ROWS, ten restores verified by sha256 AND `cmp` (real sources hashed after: identical to before). (0) BASELINE 54/0. (a) 52/2 B4 C3. (b) 52/2 B3 C3. (c) no gate on the open 42/12, as REC-145's. **(d) no gate on the tick -> 53/1, L4 ALONE — NOT REC-145's H1 H3: pia is now answered as absent before any gate, and a non-principal is refused C-22.12 before it, so the tick's project gate is reachable only by the run's own principal once he is no longer joined (L4); L5 (the close) stays green, the two still two fences.** (e) inquiry-consults-projects 42/12 — H6 LEAVES the set (refused C-22.12 first). (e2) gate-dropped-everywhere 37/17 — H1 H2 H3 leave, L4 L5 join, H4 P1 P2 as REC-145 measured. (f) 54/0. (g) admit invited/leaving 50/4, F1 L1 **and L4 L5**. (h) 50/4 C1 C2 C4 D4. (i) drop the actor stamp 34/20 — H6 leaves (the principal refusal reads the `principal` stamp, not `actor`), L4 L5 join. Declarations in the driver moved to match, each with its dated reason. The ROW'S OWN control is `test/airun-principal.control.mjs` (sent-field: the forged-actor arms fail by name). — PREVIOUSLY RE-RUN 2026-09-19 by REC-145 (worktree agent-a3372f65d0555dbd9, base 1d439e31 + this item; DEC-63 as amended — a run over a question consults no project), ELEVEN ROWS, every restore verified by sha256 and `cmp` (the four sources hashed before and after the harness: OK). (0) BASELINE 52/0. (a) collapse the detail -> 50/2, B4 C3, as declared, B1/B2 green. (b) collapse the translation -> 50/2, B3 C3. (c) no gate on the open -> 40/12, B1 B2 B4 B6 C3 E2 F1 F2 G4 S1 S2 L1 — **B3 and B5 stay green and that is the arms, not the gate: B3 reads the catalogue and B5 asserts an absence, which an open door also satisfies**; this arm's and (d)'s anchors had NOT OCCURRED since REC-139 added `viewer` (corrected here). (d) no gate on the tick -> 49/3, H1 H3 and H4 (PL-18's recorded load-bearing tick count). (e) **REC-145's CONTROL — restore the project consult for an inquiry context -> 39/13, A2 B0 D1 D2 D3 G1 G3 H6 L3 P1 P2 P2b P4, exactly as declared: the PERMITTED arms fail by name**; A1/G2 (joined members) and every project-context arm green. (e2) THE ROW'S LIAR, the gate dropped for every context -> 33/19: every project-context refusal (B1 B2 B4 B6 C3 E2 F1 F2 G4 H1 H2 H3 S1 S2 L1) — NOT AS DECLARED in the catching direction: **H4, H5, P1 and P2 also went red, which the declaration said would not** (the P arms name the project kind and share the predicate; H4 pins sam's PARTICIPANT ground and H5 follows H2's close). (f) over-strictness, every project -> 52/0, declared ALL GREEN: moot after the amendment (a project context names one project). (g) admit invited/leaving -> 50/2, F1 L1. (h) neuter the capability floor -> 48/4, C1 C2 D4 and C4 (undeclared: C4 reads the floor's own code, which a neutered floor never sends). (i) drop the actor stamp -> 29/23, wide and in the declared direction. PL-18's ORIGINAL RUN, KEPT AS THE RECORD: TEN ROWS (a baseline plus nine arms), each armed ALONE, each declared before arming, each refusing to arm on an anchor that does not occur exactly once, every restore verified by sha256 AND `cmp` against a per-arm pristine copy with a byte floor. RUN 2026-08-09 by PL-18 (worktree agent-a4e2eff5ca09197e2). (0) BASELINE, nothing edited -> exit 0, 47 pass, 0 fail — the row that distinguishes nine-arms-broken from nine-arms-working. (a) THE ARM THIS SUITE EXISTS FOR — collapse the two refusals by giving the participation refusal the CAPABILITY refusal's words -> 45 pass, 2 fail, B4 and C3, **with B1 and B2 STAYING GREEN**: a refusal still occurs and still carries C-22.8, so only the arms asserting the SENTENCE can see the collapse. That asymmetry is the whole evidence that this suite is not buying an outcome that costs nothing to produce. (b) collapse the CANNED TRANSLATION in the catalogue -> 45 pass, 2 fail, B3 and C3 — **DECLARED B2 AND B2 STAYED GREEN, and that is a finding about the ARM, recorded at B2's site: both sides of B2 read the same catalogue and move together, so B2 can see a mis-keyed translation and never a wrong one.** (c) remove the gate from `aiRunOpen` alone -> 35 pass, 12 fail, every open refusal, with C1/C2 (the capability floor) and H1/H2 (the tick and close) GREEN — the three verbs are gated independently. (d) remove it from the tick alone -> 44/3, H1 H3 **H4** (H4 was not declared: it pins an absolute tick count, and an ungated tick moved it — the load-bearing-count class REC-75 recorded). (e) DEC-17's case armed the wrong way, a projectless inquiry silently DENIED -> 41/6, D1 D2 D3 **and P1, P2, P2b**, none of the three declared and all three the arm working: the P arms assert the closed permitting vocabulary is wholly REACHED and that only the refusing outcome carries a code, and PROJECTLESS became unreachable. (f) over-strictness, require participation in EVERY project holding the question -> 44/3, G1 G2 **L2** (undeclared, same cause), with A1/B/C/D green. (g) over-strictness the other way, admit `invited` and `leaving` as participating -> 45/2, F1 L1, exactly as declared. (h) neuter the CAPABILITY FLOOR in index.mjs -> 44/3, C1 C2 D4, **with ARM B GREEN** — the pair proving the two fences are independent rather than one measured twice. (i) drop the server-side `actor` stamp -> 26/21, far wider than the declared S1/A2/D2/H4 and in the declared direction: with no stamp every session reads as no member and the gate collapses wholesale. NOT AN ARM, and stated rather than discovered: `inner.searchParams.delete("actor")` is behaviourally INVISIBLE today, because the `set` below it is unconditional for all three verbs — kept as a structural guard, on REC-75's idempotent-write precedent. */
 /* PL-18 — DEC-63'S GATE: AN INVESTIGATION IS STARTED BY ANY MEMBER OF THE PROJECT.
  *
  * Bob, 2026-08-09: *"AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A
@@ -460,6 +460,7 @@ console.log("\n--- ARM G · OVER-STRICTNESS: joined to ONE of the projects that 
 }
 
 console.log("\n--- ARM H · THE TICK AND THE CLOSE CARRY THE SAME GATE ---");
+let LRUN = null;   /* REC-152: sam's run over P1 that ARM L drives after he asks to leave */
 {
   /* IS-6's own argument: gating the open and leaving the tick free would mean
      an account that may not START a run may still SPEND its budget and drive
@@ -475,19 +476,25 @@ console.log("\n--- ARM H · THE TICK AND THE CLOSE CARRY THE SAME GATE ---");
     + "vacuously over a run that never started",
     [started?.started, started?.status], [true, "running"]);
 
+  /* CORRECTED 2026-09-19 by REC-152, never exempted (Membership v2 §7, "WHO MAY TICK AND CLOSE A RUN",
+     BOB #16): H1 and H2 asserted pia was REFUSED C-22.8 — `found: true`, the run's status, a code. That
+     answer TOLD her the run exists over a project she cannot see (P1 is hidden from the uninvited, §7.9),
+     so the old assertion pinned a disclosure. The ruling: *a caller who cannot see the run's context is
+     answered as for a run that does not exist.* The project gate on the tick and the close is still
+     measured, where a caller can reach it — by the run's own PRINCIPAL once he is no longer joined (ARM L4,
+     L5); a caller who is not the principal is refused C-22.12 first (H6, and `airun-principal.test.mjs`). */
   const tick = rP(await POST(`op=airuntick&${PIA}`, { run: RUN, consume: { fetches: 3 },
     log: [{ level: "document", subject: "doc:x", state: "NEVER_LOOKED" }] }));
-  t("ARM H1: pia cannot TICK a run over a project she is outside — refused by code, and the "
-    + "answer says plainly that nothing was appended and no budget was spent",
-    [tick?.ticked, tick?.code, /no budget was spent/i.test(str(tick?.note))],
-    [false, "AI_RUN_NOT_PROJECT_MEMBER", true]);
+  t("ARM H1 (CORRECTED, REC-152): pia cannot see P1, so her TICK of a run over it is answered as for a run "
+    + "that does not exist — no code, no status, `found: false`",
+    [tick?.ticked ?? null, tick?.found, tick?.code ?? null, tick?.status ?? null, str(tick?.note)],
+    [null, false, null, null, "no such run: it either never existed or was purged"]);
 
   const close = rP(await POST(`op=airunclose&${PIA}`, { run: RUN, bound: "completed" }));
-  t("ARM H2: nor CLOSE it — and the answer says the run is untouched rather than reporting a "
-    + "close that did not happen. The refusal wears `#aiRunTerminate`'s OWN shape "
-    + "(`found`/`terminated`) rather than a second vocabulary for one op's failures",
-    [close?.terminated, close?.found, close?.code, /still running/i.test(str(close?.note))],
-    [false, true, "AI_RUN_NOT_PROJECT_MEMBER", true]);
+  t("ARM H2 (CORRECTED, REC-152): nor is her CLOSE told the run exists — `#aiRunTerminate`'s own "
+    + "not-found answer",
+    [close?.terminated ?? null, close?.found, close?.code ?? null, str(close?.note)],
+    [null, false, null, "no such run: it either never existed or was purged"]);
 
   /* READ BACK THROUGH A DIFFERENT OP: the refusals are asserted to have CHANGED
      NOTHING, not merely to have answered. A gate that refuses and writes anyway
@@ -512,12 +519,27 @@ console.log("\n--- ARM H · THE TICK AND THE CLOSE CARRY THE SAME GATE ---");
      project for its verdict"*); whether a run is its opener's to drive is a question the design does
      not answer, and it is reported as a DESIGN GAP rather than decided here. Pinned so a change to it
      is noticed. */
+  /* CORRECTED 2026-09-19 by REC-152, never exempted. The pin above was noticed, and the gap it recorded
+     was DECIDED by BOB #16 the same day (Membership v2 §7, "WHO MAY TICK AND CLOSE A RUN"): tick and close
+     are the run's PRINCIPAL's acts. The old assertion — pia ticks sam's run, `ticked: true`, ground INQUIRY —
+     pinned the as-built behaviour the ruling reverses: a tick by anyone but the principal writes acts under
+     a name that did not take them. pia CAN see the question, so she is refused POSITIONALLY (C-22.12),
+     not answered as absent — and the run is untouched. */
   await open(SAM, INQ_IN);
   const QRUN = lastRun();
   const qtick = rP(await POST(`op=airuntick&${PIA}`, { run: QRUN, consume: { fetches: 1 } }));
-  t("ARM H6 (REC-145, a DESIGN GAP pinned as built): pia ticks sam's run over a QUESTION — no project "
-    + "is consulted over a question, for any of the three verbs",
-    [qtick?.ticked, qtick?.code ?? null, qtick?.projectGate?.ground], [true, null, "INQUIRY"]);
+  const qclose = rP(await POST(`op=airunclose&${PIA}`, { run: QRUN, bound: "completed" }));
+  const qseen = rP(await GET(`op=airun&${RUTH}&run=${QRUN}`));
+  t("ARM H6 (CORRECTED, REC-152 — was a DESIGN GAP pinned as built): pia cannot tick or close sam's run over "
+    + "a QUESTION she can see — refused positionally, C-22.12, and the run is untouched",
+    [qtick?.ticked, qtick?.code, qtick?.check, qclose?.terminated, qclose?.code,
+     qseen?.session?.status, qseen?.session?.ticks],
+    [false, "AI_RUN_NOT_PRINCIPAL", "C-22.12", false, "AI_RUN_NOT_PRINCIPAL", "running", 1]);
+  /* REC-152: a second run of sam's over P1, left RUNNING for ARM L — once he is `leaving` P1 his OWN tick
+     and close must still meet the project gate, which is where that gate on these two verbs is observable
+     now that nobody else reaches it. */
+  await open(SAM, P1, "project");
+  LRUN = lastRun();
 }
 
 console.log("\n--- ARM M · A MACHINE CREDENTIAL: the gate does not apply, and says so ---");
@@ -648,6 +670,16 @@ console.log("\n--- ARM L · `leaving` IS THE THIRD STATE, AND IT DOES NOT PARTIC
   t("ARM L3 (REC-145): and sam, leaving P1, still runs over the QUESTION P1 cites — his standing in a "
     + "project is not consulted over a question",
     [(await open(SAM, INQ_IN))?.started], [true]);
+  /* REC-152 — THE PROJECT GATE ON THE TICK AND THE CLOSE, where it is still reachable. Only a run's own
+     principal gets past C-22.12, so the gate stands between the principal and his OWN run once he is no
+     longer a joined participant. `leaving` still sees P1 (7.6: the row stays until an administrator
+     acts), so this is the gate speaking and not sight. */
+  const lt = rP(await POST(`op=airuntick&${SAM}`, { run: LRUN, consume: { fetches: 1 } }));
+  t("ARM L4 (REC-152): sam, LEAVING P1, cannot tick even his OWN run over it — the project gate on the tick",
+    [lt?.ticked, lt?.code], [false, "AI_RUN_NOT_PROJECT_MEMBER"]);
+  const lc = rP(await POST(`op=airunclose&${SAM}`, { run: LRUN, bound: "completed" }));
+  t("ARM L5 (REC-152): nor close it — the project gate on the close; the run is left to its own lease",
+    [lc?.terminated, lc?.code, /still running/i.test(str(lc?.note))], [false, "AI_RUN_NOT_PROJECT_MEMBER", true]);
 }
 
 console.log(`\nairun-projectgate: ${pass} pass, ${fail} fail`);

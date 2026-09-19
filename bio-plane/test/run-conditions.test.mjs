@@ -293,6 +293,13 @@ const ROLE = {
      rather than assumed. The `bound` block in its answer is `ai_run_bounds`', a
      different table with its own publisher rules. */
   extractPropose:     "AUTHORISES",
+  /* REC-152's, 2026-09-19, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on the
+     item's first full battery. `#aiRunInSight` reads `ai_runs` (the key and `context_id`, through
+     `aiRunRead`'s own `#bundleGate`) to decide whether the TICK and the CLOSE — different acts — may even
+     acknowledge the run to this caller. AUTHORISES, word for word: it returns a boolean and publishes no
+     column of the row to anybody (an unseen run is answered with the caller's own `run` argument and the
+     not-found sentence, which is the absent run's answer). ARM W4's three publishers are untouched. */
+  "#aiRunInSight":     "AUTHORISES",
   "#aiRunReapPending": "HOUSEKEEPS",
   "#aiRunReapWake":    "HOUSEKEEPS",
   "#aiRunReap":        "HOUSEKEEPS",
