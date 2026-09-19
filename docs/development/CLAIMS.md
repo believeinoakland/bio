@@ -14604,3 +14604,17 @@ REGION marker was touched (the refusal site is `projectGate`, its body changed a
 project cites a question).
 **FOR BOB (a DESIGN GAP, not decided here):** over a question any member holding contribute may now tick and close
 ANOTHER member's run, because the three verbs share one gate (pinned as built, ARM H6).
+
+## CLAIM 2026-09-19 RECORD (REC-153 — `aiRunOpen` refuses a `contextType` that does not match the named bundle's type; an id the caller cannot see answers as absent; an authority defect)
+
+claimed: 2026-09-19 by the REC-153 worker (worktree `agent-a7fe9ecc71d7b4add`, branch
+`worktree-agent-a7fe9ecc71d7b4add`, base `52218bdd`). Paths, named by function because `store.mjs` is shared ground:
+`bio-plane/src/airun.mjs` (one new pure check beside `projectGate`); `bio-plane/src/store.mjs` (`aiRunOpen`'s guards
+before the gate relay, and one new private helper beside `#aiRunProjectGate` — no other line);
+`bio-plane/checks/bio-checks.mjs` (one new `AI_RUN_CHECKS` row, C-22.11, and the family header's count);
+`bio-plane/test/` — a new suite for this item, and any existing suite that opens a run over a context of another kind
+(CORRECTED with its reason, never exempted); `bio-plane/dist/` (the rebuilt bundle); `bio-plane/scripts/coverage.mjs`
+(`REGISTER_FLOOR`, from the print only); `docs/development/INTERFACE-CHANGES.md` (one new IC);
+`docs/architecture/BIO_Membership_Architecture_v2.md` (front matter and the "AND THE CONTEXT KIND IS CHECKED"
+sentence's NOT BUILT); `docs/architecture/construct-status.json` if a claim there names the gate. NOT `QUEUE.md`,
+`release/`, `newgroup/`, `civicos-ui/app.html`, `kickoffs/CONDUCT.md`. NOT REC-152's tick/close principal rule.
