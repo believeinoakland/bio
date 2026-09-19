@@ -42,15 +42,28 @@
  *     rule): a `done`, `blocked` or `superseded` row is NOT judged. Any other state token is
  *     reported in the corpus figure rather than silently scored — a thing the matcher does
  *     not understand must be NAMED.
+ *   - A row under a heading the row grammar cannot read (`### CASE-5b · done`). It is NAMED
+ *     by the lister (`strays`) and `plancheck` warns with it; its fields reach no arm here.
+ *
+ * WHICH ROWS: THE PLAN'S, CACHE ∪ BACKLOG, THROUGH `ledger.mjs`' ONE LISTER (D-430). This file
+ * read `QUEUE.md` alone until 2026-09-18. WORK-PIPELINE §1 makes `QUEUE.md` a cache of at most
+ * 8 rows and puts every other open item in `BACKLOG.md`, so once LED-6's migration moved the
+ * rows, a backlog row naming no design would have passed this check and every gate that runs
+ * it. The rows now come from `pipelineRows` — the same reader the archiver, the refill and the
+ * five pipeline invariants use — and this file carries NO row grammar and reads NO ledger file
+ * of its own. **Why not simply read `BACKLOG.md` here too:** that copy of the QUEUE reader
+ * agrees with the lister today and drifts the day either file's grammar moves, with nothing
+ * saying so; `bio-plane/test/pipeline-readers.test.mjs` §6 pins the structure for that reason.
+ * plancheck §2's milestone and interface checks read the same rows, through `planFieldAudit`
+ * below, for the same reason.
  */
 
-import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { governed } from "./corpuscheck.mjs";
+import { pipelineRows, queueRows } from "./ledger.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-export const QUEUE = "docs/development/QUEUE.md";
 
 /* §4.7's sentence, quoted so the failure carries the rule and not a paraphrase of it. */
 export const RULE_SENTENCE =
@@ -89,29 +102,64 @@ export const ROUTED_RE = /^design:\s*MISSING\b/m;
 const ROUTED_TO = /\brouted to BOB\b/i;
 const ROUTED_WHERE = /\bCLAIMS\.md\b/;
 
-/* Rows, read out of QUEUE.md's own `### <ID> · <state>` headings — the same grammar
-   `planning-hygiene.test.mjs` reads its id set from, and `mintid.mjs` its allocation sites.
-   A row ENDS at the next `###` item heading OR the next `##` area heading, whichever comes
-   first. THE `##` BOUND IS LOAD-BEARING AND WAS MEASURED, not assumed: without it the last
-   row before an area heading swallows that area's prose — `SK-5` absorbed the whole DIST
-   section and `FW-17` the IS-BUILD-PLAN status block — so a row could PASS on a governed path
-   that belongs to text below it. An arm that grades a row on somebody else's words is worse
-   than no arm. */
+/* A row as this file judges it: the lister's row with its body as LINES. `at` is the heading's
+   0-based index in its own file (the control driver removes a field by it). */
+const asRow = (r) => ({ id: r.id, state: r.state, line: r.line, at: r.start, body: r.body.split("\n"),
+                        file: r.file ?? null, where: r.where ?? null });
+
+/* Rows of ONE text, in `ledger.mjs`' grammar — kept for callers that hold a text (the control
+   drivers, `planning-hygiene`'s id-set arm). A row ENDS at the next heading of level 1-3.
+   CHANGED 2026-09-18 (D-430) FROM THIS FILE'S OWN GRAMMAR, which ended a row at the next
+   ITEM heading or `##`: the two bounds differ only at a `#` heading or a row-shaped `###`
+   heading the grammar cannot read (`### CASE-5b · done`), where the old bound folded that row's
+   fields into the row above — grading a row on somebody else's words, which the `##` bound
+   (measured: `SK-5` once absorbed the whole DIST section) exists to refuse. Over the live
+   QUEUE.md the two gave identical rows (27 of 27, measured 2026-09-18). */
 export function openRows(text) {
-  const lines = text.split("\n");
-  const heads = [];
-  lines.forEach((l, i) => {
-    const m = /^###\s+([A-Z][A-Z0-9]*-\d+)\s+·\s+([A-Za-z-]+)/.exec(l);
-    if (m) heads.push({ id: m[1], state: m[2], line: i + 1, at: i });
+  return queueRows(text).map(asRow);
+}
+
+/* THE PLAN'S ROWS — cache ∪ backlog, from `pipelineRows` and nothing else. `queue`/`backlog`
+   inject fixture TEXTS (either given: fixture mode, and the other reads as EMPTY — a fixture
+   never mixes with the live file); neither given: the live files under `repo`. */
+export function planRows({ repo = ROOT, queue = null, backlog = null } = {}) {
+  const texts = queue === null && backlog === null ? null : { QUEUE: queue ?? "", BACKLOG: backlog ?? "" };
+  const p = pipelineRows({ repo, texts });
+  const rows = p.rows.map(asRow);
+  return { rows, strays: p.strays, unreadable: p.unreadable, cacheRows: p.cacheRows, backlogRows: p.backlogRows };
+}
+
+/* PLANCHECK §2's MILESTONE AND INTERFACE CHECKS, over the plan's rows (D-430). Until 2026-09-18
+   plancheck matched `^milestone:` and `^behind-interface:` over QUEUE.md's whole text; they now
+   read every line of every row the lister reads, in both files. **What that trades, measured:**
+   the whole-text scan also reached three field lines under the row-shaped headings the grammar
+   cannot read (`CASE-5b`, `D-329+D-331+D-333`, `UI-17a` — all `done`, all naming known
+   milestones and I3); those are now NAMED as strays rather than read. No other field line in
+   QUEUE.md lay outside a row. (Measured at `3dee1fdb`; LED-6's step (2), `12983f6f`, then moved
+   those three blocks to the archive, so on the merged tree nothing is traded — but the next
+   unreadable heading will be named, not silently skipped.) The registries are READ (`### M<n> ·` in MILESTONES.md, `## I<n> —`
+   in INTERFACES.md), never listed. Either registry null: its half is not run, and says so. */
+export const MILESTONE_FIELD = /^milestone:\s*(M\d+)/;
+export const BEHIND_FIELD = /^behind-interface:\s*(.+)$/;
+export function planFieldAudit(rows, { milestones = null, interfaces = null } = {}) {
+  const knownMilestones = milestones === null ? null
+    : new Set([...milestones.matchAll(/^###\s+(M\d+)\s+·/gm)].map((m) => m[1]));
+  const knownInterfaces = interfaces === null ? null
+    : new Set([...interfaces.matchAll(/^##\s+(I\d+)\s+—/gm)].map((m) => m[1]));
+  const used = new Set(), unknownMilestone = [], unregisteredInterface = [];
+  for (const r of rows) r.body.forEach((l, k) => {
+    const at = { id: r.id, state: r.state, file: r.file, line: r.line + k };
+    const m = MILESTONE_FIELD.exec(l);
+    if (m && knownMilestones) {
+      used.add(m[1]);
+      if (!knownMilestones.has(m[1])) unknownMilestone.push({ ...at, milestone: m[1] });
+    }
+    const b = BEHIND_FIELD.exec(l);
+    if (b && knownInterfaces)
+      for (const id of (b[1].match(/\bI\d+\b/g) || []))
+        if (!knownInterfaces.has(id)) unregisteredInterface.push({ ...at, interface: id });
   });
-  const rows = [];
-  for (const [k, h] of heads.entries()) {
-    let end = k + 1 < heads.length ? heads[k + 1].at : lines.length;
-    for (let i = h.at + 1; i < end; i++) if (/^##\s/.test(lines[i])) { end = i; break; }
-    const body = lines.slice(h.at, end);
-    rows.push({ ...h, body });
-  }
-  return rows;
+  return { rowsRead: rows.length, knownMilestones, knownInterfaces, used, unknownMilestone, unregisteredInterface };
 }
 
 /* The lines the rule reads: the heading itself plus the four fields §4.7 names.
@@ -159,12 +207,13 @@ export function citations(text, index = governedIndex(), { milestone = "" } = {}
   return { paths: [...paths], ics, process, routed };
 }
 
-/* The audit. `queue` and `governedSet` are injectable so the suite can drive the judgement
-   over fixtures — including a planted governed path — without writing to the tree. */
-export function rowDesignAudit({ repo = ROOT, queue = null, governedSet = null } = {}) {
-  const text = queue ?? readFileSync(join(repo, QUEUE), "utf8");
+/* The audit. `queue`, `backlog` and `governedSet` are injectable so the suite can drive the
+   judgement over fixtures — including a planted governed path, and a planted BACKLOG row —
+   without writing to the tree. */
+export function rowDesignAudit({ repo = ROOT, queue = null, backlog = null, governedSet = null } = {}) {
   const index = governedIndex(governedSet ?? governed());
-  const rows = openRows(text);
+  const plan = planRows({ repo, queue, backlog });
+  const rows = plan.rows;
   const open = [], skipped = [], unknownState = [], findings = [];
   for (const row of rows) {
     if (!JUDGED.has(row.state)) {
@@ -175,17 +224,21 @@ export function rowDesignAudit({ repo = ROOT, queue = null, governedSet = null }
     const milestone = (row.body.find((l) => /^milestone:/.test(l)) || "");
     const c = citations(judged, index, { milestone });
     const ok = c.paths.length > 0 || c.ics.length > 0 || c.process.length > 0 || c.routed;
-    const r = { id: row.id, state: row.state, line: row.line, ...c, ok };
+    const r = { id: row.id, state: row.state, line: row.line, file: row.file, ...c, ok };
     open.push(r);
     if (!ok) findings.push(r);
   }
-  return { rows, open, skipped, unknownState, findings, governedCount: index.paths.size };
+  return { rows, open, skipped, unknownState, findings, governedCount: index.paths.size,
+           strays: plan.strays, unreadable: plan.unreadable, cacheRows: plan.cacheRows, backlogRows: plan.backlogRows };
 }
 
+/* `QUEUE.md:12` / `BACKLOG.md:3` — the file a row is in, by basename, as the gate prints it. */
+export const whereOf = (r) => `${String(r.file || "").split("/").pop() || "?"}:${r.line}`;
+
 export function rowMessage(findings) {
-  return `ROW NAMES NO DESIGN — ${findings.length} open QUEUE.md row(s) name no governed design\n`
+  return `ROW NAMES NO DESIGN — ${findings.length} open plan row(s) (QUEUE.md ∪ BACKLOG.md) name no governed design\n`
     + `        document, no IC, and no routed gap:\n`
-    + findings.map((f) => `          ${f.id} (${f.state}, QUEUE.md:${f.line})`).join("\n")
+    + findings.map((f) => `          ${f.id} (${f.state}, ${whereOf(f)})`).join("\n")
     + `\n        ${RULE_SENTENCE}\n`
     + `        Add a \`design:\` line after \`interface:\` naming the governed document AND the\n`
     + `        SECTION (a section, never a line number — §4.6), or, where no governing design\n`

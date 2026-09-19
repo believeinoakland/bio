@@ -67,7 +67,7 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, QUEUE, openRows, judgedText, JUDGED, citations, governedIndex } from "./rowdesign.mjs";
+import { ROOT, planRows, judgedText, JUDGED, citations, governedIndex } from "./rowdesign.mjs";
 import { governed } from "./corpuscheck.mjs";
 
 /* A SYMBOL is a backticked token that looks like a code identifier rather than prose: an op
@@ -174,15 +174,17 @@ export function sectionText(doc, anchor) {
    The default reads the tree. Found by the suite's own precision arm, which could not otherwise
    be written at all — a predicate that can only be tested against the real corpus is one whose
    precision nobody will ever measure, which is exactly the defect that withdrew the anchor arm. */
-export function substrateAudit({ repo = ROOT, queue = null, governedSet = null,
+/* THE ROWS ARE THE PLAN'S — cache ∪ backlog, through `rowdesign.mjs`' `planRows`, which is
+   `ledger.mjs`' one lister (D-430, 2026-09-18). This read `QUEUE.md` alone until then, so a row
+   moved into `BACKLOG.md` would have been asked nothing. `backlog` is injectable beside `queue`. */
+export function substrateAudit({ repo = ROOT, queue = null, backlog = null, governedSet = null,
                                  docReader = null } = {}) {
   const readDoc = docReader || ((path) => {
     const full = join(repo, path);
     return existsSync(full) ? readFileSync(full, "utf8") : null;
   });
-  const text = queue ?? readFileSync(join(repo, QUEUE), "utf8");
   const index = governedIndex(governedSet ?? governed());
-  const rows = openRows(text);
+  const rows = planRows({ repo, queue, backlog }).rows;
   const judged = [], unjudged = [], findings = [], broken = [];
 
   for (const row of rows) {
