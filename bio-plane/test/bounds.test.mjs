@@ -747,10 +747,31 @@ t("FIXTURE ARMS THE TRAP: one capture carries TWO resolutions, so op=resolutions
    before its bound can be shown to bite. Driven here rather than borrowed,
    because a descriptor on this roster that could not actually be called is the
    coverage-on-paper shape both these files exist to catch. */
+/* CORRECTED 2026-09-19 by REC-153, never exempted: these runs named the INFORMATION bundle
+   `INFO-2026-0001-r57` (and `INFO-2026-0002-r57`) as an `inquiry` context, and the open now refuses a
+   context that is not the kind it names (Membership v2 §7, BOB #16). The runs are only ever a population
+   for the caps below, so they now run over two QUESTIONS promoted here for them. (The first correction
+   named question ids this store did not hold; BOB #16's `7d03e852` then ruled that a machine sees no more
+   than a member, so an unheld id is refused to `mem-r57` as absent too.) */
+for (const q of ["INQ-2026-0807-bounds-runs", "INQ-2026-0807-bounds-runs-elsewhere"]) {
+  const md = ["---", `id: ${q}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${q}"`,
+    "current_state: open", "prior_state: null", `created: ${NOW}`, `last_updated: ${NOW}`, "produced_by:",
+    "  mode: assisted", "  capability_tier: session", "group: believe-in-oakland", "references: []",
+    "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
+    "  source: null", "visuals: []", "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "",
+    "Did it?", "", "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+    "## Session Log", "", "## Review Notes", ""].join("\n");
+  const r = await POST("op=promote&token=mem-r57", {
+    bundleId: q, base: null, snapKey: `${q}-new`, author: "r57",
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: q, current_state: "open",
+            created: NOW, last_updated: NOW } });
+  if (r?.ok !== true) throw new Error(`REC-153 fixture promote ${q}: ${JSON.stringify(r).slice(0, 600)}`);
+}
 const R70_RUN = "RUN-2026-0807-bounds70";
 {
   const opened = await POST(`op=airunopen&token=mem-r57`, {
-    run: R70_RUN, contextType: "inquiry", contextId: "INFO-2026-0001-r57",
+    run: R70_RUN, contextType: "inquiry", contextId: "INQ-2026-0807-bounds-runs",
     label: "REC-70 fixture — the observation log, bounded", mode: "check",
     principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
     skillVersion: "investigative-session@1", biasManifest: null,
@@ -800,7 +821,7 @@ t("FIXTURE ARMS THE TRAP: the REC-70 run's log holds THREE observations, so op=a
    context filter and not merely of the table. */
 for (const i of [2, 3]) {
   const opened = await POST(`op=airunopen&token=mem-r57`, {
-    run: `RUN-2026-0808-bounds69-${i}`, contextType: "inquiry", contextId: "INFO-2026-0001-r57",
+    run: `RUN-2026-0808-bounds69-${i}`, contextType: "inquiry", contextId: "INQ-2026-0807-bounds-runs",
     label: `REC-69 fixture run ${i} — the context list, bounded`, mode: "check",
     principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
     skillVersion: "investigative-session@1", biasManifest: null,
@@ -810,7 +831,7 @@ for (const i of [2, 3]) {
 {
   const elsewhere = await POST(`op=airunopen&token=mem-r57`, {
     run: "RUN-2026-0808-bounds69-elsewhere", contextType: "inquiry",
-    contextId: "INFO-2026-0002-r57",
+    contextId: "INQ-2026-0807-bounds-runs-elsewhere",
     label: "REC-69 fixture — a run in ANOTHER context", mode: "check",
     principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
     skillVersion: "investigative-session@1", biasManifest: null, bounds: [], leaseMs: 600000 });
@@ -820,8 +841,8 @@ for (const i of [2, 3]) {
 t("FIXTURE ARMS THE TRAP: THREE runs sit in one inquiry, so op=airuns' cap of 1 has something to cut — "
 + "and a FOURTH run in a different inquiry is NOT among them, so this count measures the context filter "
 + "rather than the size of the table",
-  [(await GET("op=airuns&token=mem-r57&contextType=inquiry&contextId=INFO-2026-0001-r57&limit=1000")).count,
-   (await GET("op=airuns&token=mem-r57&contextType=inquiry&contextId=INFO-2026-0002-r57&limit=1000")).count],
+  [(await GET("op=airuns&token=mem-r57&contextType=inquiry&contextId=INQ-2026-0807-bounds-runs&limit=1000")).count,
+   (await GET("op=airuns&token=mem-r57&contextType=inquiry&contextId=INQ-2026-0807-bounds-runs-elsewhere&limit=1000")).count],
   [3, 1]);
 
 /* ------------------------------------------------------- PL-1 / IS-1's FIXTURE.
@@ -1041,7 +1062,7 @@ const DRIVEN = [
         + "'nobody has looked at that' into a claim the record cannot support" },
   { op: "airuns", bite: 1, whole: 1000,
     drive: (n) => GET(`op=airuns&token=mem-r57&contextType=inquiry`
-                    + `&contextId=INFO-2026-0001-r57&limit=${n}`),
+                    + `&contextId=INQ-2026-0807-bounds-runs&limit=${n}`),
     more: (a) => a.truncated, says: "`truncated`",
     lost: "whether these are ALL the runs in this inquiry or the first N — and §14a's whole promise is "
         + "that a window shows the work happening in the object in view, so a member who cannot see that "
