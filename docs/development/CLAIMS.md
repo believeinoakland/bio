@@ -14676,7 +14676,13 @@ NOT `QUEUE.md` (CONDUCT's/SCHEDULER's), NOT `civicos-ui/app.html` (UI-66's, DELE
 `newgroup/`.
 
 ### DELEGATION 2026-09-18 RECORD (REC-141) -> UI: **THE ADD SURFACE AND THE FORK FORM MUST STOP SENDING A PROJECT ID — THE PLANE NOW MINTS IT AND REFUSES ONE (UI-66)**
-**open as of 2026-09-18** — REC-141 (IC-158) makes the surface's current project creation and fork REFUSED; UI-66 is the surface half and lands WITH REC-141.
+**DISCHARGED 2026-09-19 by UI-66 (branch `worktree-agent-a50d25200c5cb65b6`, carrying REC-141)** — all three: (1) the Add
+surface's project arm calls no `op=allocid`, sends no `bundleId`, writes no `id:` line (`mdFor` omits it when given no
+id), and opens the `bundleId` the plane answers; the proposal-adoption flow is `inquiry`-only (`PROP_ADOPT_KINDS`) and
+was not touched; (2) the fork form's `newId` field is REMOVED and the receipt shows the `newId` the plane answers;
+(3) a C-59 refusal renders its canned `translation` at both sites (`refusalTranslated`), and the Add surface's
+findings-less refusal renders the plane's sentence instead of its bare code. `check-refusal-codes.mjs`' floors did not
+move (read from its print in the UI harness). Driven against the real plane in `civicos-ui/test/project-id-surface.test.mjs`.
 
 Measured at the code on `worktree-agent-a12cdccbace704eb6` (base `3dee1fdb`). What `civicos-ui/app.html` must stop sending:
 1. **The Add surface, for a PROJECT** (the create flow that calls `recR("allocid", { prefix: vocabFor(PREFIX, type), ... })`,
@@ -14739,3 +14745,43 @@ suite re-run 4x (76 suites, 0 failing runs). Merged `origin/main` at `f61d071d`.
 15744 assertions passing · run 65259.1fc098**, exit 0; `coverage.mjs --strict` exit **0**, REGISTER_FLOOR **1458 / 248 /
 249, run 211** (re-read from the committed merge's print); UI harness exit **0**. The live record's count of legacy
 non-`PROJ-` project ids (BOB #16's legacy residue) is UNDETERMINED — this worker has no access to a deployed record.
+
+## CLAIM 2026-09-19 UI (UI-66 — the Add surface and the fork form stop asking a member for a project id; the id the plane returns is the one shown)
+
+Worker spawned by CONDUCT #6, isolated worktree `agent-a50d25200c5cb65b6`, branch `worktree-agent-a50d25200c5cb65b6`,
+built ON REC-141's branch (`worktree-agent-a12cdccbace704eb6` @ `817a8f85`, merged in at `328c2c45`) so the two land
+together. Design: Membership v2 §7, the bullet *"HOW the plane mints a project id"*, and REC-141's DELEGATION above.
+Paths, by SITE in `civicos-ui/app.html`:
+
+- UI (own): `mdFor` (the `id:` line becomes optional — omitted only when no id is given); `addGo`'s allocation and
+  promote for the `project` type, and its no-findings refusal arm; `ROSTER_ACTS.projectfork`'s fields and
+  `doRosterAct`'s receipt; `actRefusalHtml` (renders a refusal's canned `translation` first, DEC-49). NOT touched: every
+  other `ROSTER_ACTS` entry, `doProposalAdopt` (its kind is `inquiry` only — `PROP_ADOPT_KINDS`), any DEC-49 REGION.
+- Tests: a new `civicos-ui/test/project-id-surface.test.mjs` (drives the REAL plane in miniflare) and its control
+  driver; `civicos-ui/test/project-workspace.test.mjs` §6's fork arm CORRECTED (it drove a typed `newId`);
+  `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own print on a committed tree.
+- Docs: `docs/development/CIVICOS_UI_STATE.md` (prepend), `BIO_Membership_Architecture_v2.md` front matter and §7's
+  "surface half" line, `construct-status.json` if a construct's state moves, REC-141's DELEGATION's discharge (in its
+  own block), this block.
+
+NOT `QUEUE.md`, NOT `bio-plane/src/**` (REC-141's), NOT `release/`, NOT `newgroup/`, NOT `kickoffs/CONDUCT.md`.
+
+## CLAIM 2026-09-19 UI (UI-66) — RELEASED
+
+released: 2026-09-19 by the UI-66 worker, branch `worktree-agent-a50d25200c5cb65b6`, carrying REC-141 at `817a8f85`
+(merged at `328c2c45`) and `origin/main` at `f61d071d` (merged at `e1763f3d`). Paths as claimed; `app.html` sites:
+`mdFor`, `addGo`, `ROSTER_ACTS.projectfork`, `doRosterAct`, and a new `refusalTranslated` beside `actRefusalHtml`
+(`actRefusalHtml` itself is UNCHANGED — moving it to translations broke `version-review` §7's pinned detail, so the
+class change is reported, not made). No DEC-49 REGION touched. Final, gated at `d9e63d34`: battery **257/257 suites
+green · 15740 assertions passing · run 85224.fe9a87**, exit 0, provenance 260/260 at HEAD; `coverage.mjs --strict`
+exit **0** unpiped, REGISTER_FLOOR collapsed (1454 REC-141's vs 1452 main's) and re-read from the committed merge
+`e1763f3d`'s print to **1458 / 248 / 249, run 211** (then `1458/1458 · 248/248 · 249/249 · floor 211/211` at
+`d9e63d34`); UI harness exit **0**, **55 PASS** (54 + the new `project-id-surface.test.mjs`, 29 assertions);
+`check-refusal-codes` floors unmoved (reported GREW, not failed); `plancheck --local` 0 fail. An earlier battery at
+`5d95f316` read 256/257 — `strandedwork` failed on `plancheck --local`'s STALE `DECIDED.md` (regenerated) while this
+worker's own untracked battery log sat in the tree; not re-counted. NEGATIVE CONTROL `node
+civicos-ui/test/project-id-surface.control.mjs`: **5/5 AS DECLARED** at `5d95f316` and again at `d9e63d34` — baseline
+GREEN 29/29; (A) fork id field restored RED 20/29, naming C-59.3's sentence; (B) client-side project id restored RED
+9/29, naming C-59.1's; (C) the liar, an id in the bytes only, RED 11/29, naming C-59.2's; (D) `bundleId: undefined`
+GREEN 29/29; app.html restored to `21bcfa63…` by sha256 and `cmp` after every arm. REC-141's DELEGATION to UI
+DISCHARGED in its block. No id minted.
