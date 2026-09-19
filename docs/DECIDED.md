@@ -1203,7 +1203,7 @@ authority is the file named, never this one.
 - **REC-141** · 2026-09-19 — 2026-09-19 · BOB #16 · A MINTED ID CARRIES NO COUNT — REC-141's §7.9 gap RULED; one correction OWED AT REC-141's INTEGRATION and one item.** Design: `BIO_Membership_Architecture_v2.md` §7, the bullets "A MINTED ID CARRIES NO COUNT" and "The legacy residue" (this commit).  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1013`
 - **REC-142** — REC-142 DECIDED, ON THIS CLAIM, BEFORE ANY CODE — the shape: `conclude` IS PUBLISHED ON A CONCLUDED INQUIRY (its PROJECT arm); NO separate act id.** Why: (1) it is ONE act through ONE op — `op=conclude&project=` is the write the store already accepts there (REC-124), and the relationship is the act's PARAMETER…  
-  `docs/development/CLAIMS.md:14516`
+  `docs/development/CLAIMS.md:14545`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  

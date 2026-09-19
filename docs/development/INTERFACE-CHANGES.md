@@ -11735,7 +11735,13 @@ run. A new shared fixture `test/ratified-evidence.mjs`. CORRECTED at their sites
 `ratify`, `reuse-ratify`, `ratify-envelope`, `publishedcase` §8 (loose bundles made evidence of a ratified case),
 `deliverer` §5/§6, `testify` (case document before finding), `casesign` (a moved member is now refused, not published
 loose), `publish` 6b (C-58.2 before the edition), `shadowed-refusals` (viii), `derivation-bounds` (census 108 → 109, the
-arrival `#ratifiedFindingsRestingOn`).
+arrival `#ratifiedFindingsRestingOn`), and `casepin` (edition 1's throw became a named failure, because control arm
+(a) — no pin written — is now refused C-58.2 and died with no tally). Controls re-run on the corrected suites, every
+restore verified: `casesign` (d) 73/1 names the corrected arm; `shadowed-refusals` 11/11 as declared; `deliverer` six as
+declared after three declarations were corrected (two stale since REC-140, measured on the base); `nc-mk1` `pubbundle`
+corrected (its "nothing published" half is now held by C-58.3 — defence in depth); `casepin` (a) 0/1;
+`case-authority` and `machine-attest` unchanged and as declared. `operator-attest.control.mjs` reads four arms NOT AS
+DECLARED identically on the base and on this tree — pre-existing, not this item's, reported for CONDUCT.
 
 **RESPONSES:** not yet collected.
 

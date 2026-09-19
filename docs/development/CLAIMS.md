@@ -14502,6 +14502,35 @@ base `7042404e` (= origin/main at spawn, carrying the D-431 flip to `running`). 
 
 NOT `QUEUE.md`, NOT `release/`, NOT `newgroup/`, NOT `affordances.mjs` (REC-142), NOT REC-141's id-minting sites.
 
+## CLAIM 2026-09-19 RECORD (D-431) — RELEASED
+
+released: 2026-09-19 by the D-431 worker, branch `worktree-agent-af4cb02e310604e39`, base `7042404e`, merged with
+origin/main `f61d071d` (REC-142 / IC-159 — I3 38.1.0; D-430) before close-out; IC-161 re-based to 38.1.0 (proposed MAJOR
+→ 39.0.0). On the COMMITTED merge `1d8dff0e`: **256/256 suites green · 15721 assertions passing · run 78266.8bbdeb**, 0
+skipped (own baseline on `7042404e`: 254/254 · 15643 · run 93460.afef8e; `ratify-authority` 32 → 51). `coverage.mjs
+--strict` exit 0 unpiped, REGISTER_FLOOR collapsed to ONE key and re-read from its print (1446 branch / 1452 main →
+**1456**, classified 247, corpus 248, run 210). `node civicos-ui/test/run.mjs` exit 0 ("all harnesses green");
+`civicos-ui/check-refusal-codes.mjs` exit 0 with the new region `publish > is-ratify-outside-a-case` read (2 judged, 2
+checked), its floors not moved (below the print). `derivation-bounds` census 108 → 109 from its print. Paths as claimed,
+plus control-declaration corrections in `deliverer.control.mjs`, `nc-mk1.mjs` and `casepin.test.mjs`'s foot, each with a
+measured, dated reason. **(c): 0 rows** (M-66). IDs minted: IC-161, M-66. D-431's DEBT row CLOSED and archived.
+NEGATIVE CONTROLS (`node test/ratify-authority.control.mjs`, sources untouched: YES): baseline 51/0 · the row's control 1
+`readmit-unpinned-finding` 47/4 · the row's control 2 `rests-on-reads-basis` (the refusal reads the basis, not the
+graph's edge set) 42/9, the IDENTITY arms among them · the liar `refuse-every-evidence` 42/9 · REC-140's seven re-run,
+all ten AS DECLARED on the first run.
+**FOR CONDUCT:** (1) RESOLVE IC-161 against I3 as read at resolution (proposed MAJOR 38.1.0 → 39.0.0). (2) Flip D-431's
+QUEUE row to done (its DEBT row is already closed and archived). (3) `operator-attest.control.mjs` reads admin, member,
+probe and tokenstring NOT AS DECLARED ("the case is still NOT ratified" does not fail) IDENTICALLY on the pristine base
+`7042404e` and on this branch — pre-existing, not D-431's; place it. (4) I touched governed region
+`publish > is-ratify-outside-a-case` (new) in `store.mjs`; re-read `regionLines` at merge. **FOR DIST:** a new cut carries a
+breaking I3 change (two refusal codes where a publish stood); the record namespaces measured hold no published rows, so
+nothing already published is affected. **FOR BOB:** a DESIGN GAP, stated in `BIO_Publication_v0_1.md` §3 rule 2 and its
+front matter — a finding ratified before its evidence never serves the edge to it (the published graph admits a serve
+edge only to an already-published target and does not refresh), and C-21.2 forces that order for a GRADED leg on an
+information bundle (no frozen strength to inherit), so a case's graded evidence crosses but is not linked from its
+finding on the published graph. **FOR UI:** nothing to build; the instance page's ratify panel renders the two codes
+through its existing fallback (the canned `translation` travels on the wire and is not yet rendered there).
+
 ## CLAIM 2026-09-18 RECORD (REC-142 — `op=affordances` publishes a PROJECT's `conclude` on a question whose own state is already `concluded`; discharges the DELEGATION 2026-09-18 UI (UI-65) -> RECORD)
 
 claimed: 2026-09-18 by the REC-142 worker (spawned by CONDUCT #6), branch `rec142/affordances-concluded`, base
