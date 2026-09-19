@@ -341,6 +341,35 @@ exists precisely so that administrators cannot be manufactured unilaterally.
 Reactivating them as an ordinary member is a single administrator's call;
 restoring their administrator status is not.
 
+**THE SECTION 4.7 VOTE CANNOT BE CAST BY A PERSON TODAY, AND THAT IS AN OMISSION RATHER
+THAN A DECISION (D-136/D-134, RULED 2026-09-19 by BOB #17, read at the code).**
+`op=adminendorse` and `op=adminremove` carry `classes: ["admin", "probe"]` and appear in
+no session set, so the ONLY caller that can cast a 4.7 vote is a bearer credential. And
+`by` is server-stamped only for `PROJECT_ACTIONS` plus `projectparticipants` and
+`projectownerarith` (`index.mjs`), which these three are not — **so on the one reachable
+path the CALLER NAMES THE VOTER.** The plane's own comment beside that stamp already
+states the rule: *"a caller-supplied `by` is overwritten rather than honoured: 'only an
+owner may remove' is worth nothing if the caller names who they are."* Read it against
+this section and it says: **"every subsequent addition requires the consensus of all
+existing administrators" is worth nothing if the caller names who consented.** Seven
+releases of enforced arithmetic rest on attributions the caller supplies. This is D-421's
+class, which BOB #14 already ruled for `op=ratify` and `op=caseratify` (C-32.14/C-32.15):
+no operator bearer token delivers an authored act.
+
+**THE FIX, named so the rows can be placed, and it is ONE item rather than two.**
+Server-stamp `by` from the session on `adminendorse`, `adminremove` and `membercaps`, AND
+give those three session reach, **in the same landing**. Either alone is worse than
+neither: stamping without reach makes the 4.7 vote unreachable by anybody, because a
+bearer token would stamp as a machine and be refused with no session route to replace it;
+reach without stamping leaves the vote forgeable by the caller that names the voter. The
+member SURFACE (D-134's half — zero of the admin-only mutating ops appear in `app.html`)
+comes AFTER the fence and never before it, because a surface over an unfenced act is a
+second path to it.
+
+**Until it lands, the plane must not tell a member that this absence is a decision** — see
+the refusal rule (IC-55/D-262): *this verb is not for a person* is a design claim the
+plane may make only where such a decision exists, and here none does.
+
 **And administrators do not touch project participation.** They do not invite to
 projects, do not remove from projects, and do not activate or deactivate
 projects. That authority sits with project owners, per Section 7, with the
@@ -968,6 +997,25 @@ export is recorded in the append-only history, so it can never happen
 silently, and every administrator is notified. This is the path for a
 group deliberately moving hosts, splitting, or dissolving. A captured
 in-app administrator cannot use it.
+
+**WHAT OF 8.1 IS BUILT, AND WHAT THIS DOCUMENT PROMISED AHEAD OF THE CODE
+(D-52, stated 2026-09-19 by BOB #17 rather than left reading as a
+description).** The RECORD half is built: `export_log` writes the
+append-only row and `op=exportlog` makes it readable, so an administrator
+who LOOKS can find every export. **The NOTIFICATION half is not built, and
+there is no notification channel anywhere in this system** — verified at
+the code, not inferred: the only `notif` sites in `store.mjs` are the
+scheduler's internal `queue-renotify` consumer, and one comment declining
+to mint a member-facing notification out of a migration. So an
+administrator who never looks does not learn of an export. **Read the
+sentence above as the REQUIREMENT it is, not as behaviour to rely on**:
+until a channel exists, discovery is by looking. Closing it needs a CHANNEL
+DECISION — an in-app banner at next sign-in, or the communications surface
+the Roadmap describes — which is Bob's and is sequenced at M7, not a gap
+more code here can fill. This is stated because a design document that
+promises a notification the system does not send is the record claiming
+more than it can support, which this project ranks above a missing
+feature.
 
 **8.2 Published-record reconstruction requires nothing at all.** Published
 material is content-addressed, and its hashes are public and verifiable by
