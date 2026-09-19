@@ -78,15 +78,20 @@ const inquiryMd = (id, question, targets, at) => ["---",
 export async function restOnARatifiedCase({ post, get, doPost, sha, promoteToken, owner, ownerToken, signText,
                                             targets, n, store = "", at = "2026-07-01T00:00:00Z" } = {}) {
   if (!Array.isArray(targets) || !targets.length) throw new Error("ratified-evidence: no targets");
-  const project = `PROJ-2026-${n}-evidence`, lead = `INQ-2026-${n}-evidence`;
+  const lead = `INQ-2026-${n}-evidence`;
   let seq = 0;
-  const promote = async (id, text, objectType, state) => okOrThrow(`promote ${id}`, await post(`op=promote&token=${promoteToken}${store}`, {
-    bundleId: id, base: null,
-    snapKey: `20260701T${String(700000 + (++seq))}Z_${sha(id).slice(0, 8)}`,
-    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
+  const promote = async (id, text, objectType, state, label = id) => okOrThrow(`promote ${label}`, await post(`op=promote&token=${promoteToken}${store}`, {
+    ...(id === null ? {} : { bundleId: id }), base: null,
+    snapKey: `20260701T${String(700000 + (++seq))}Z_${sha(label).slice(0, 8)}`,
+    meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${label}`,
             current_state: state, created: at, last_updated: at },
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [] }));
-  await promote(project, projectFixtureMd(project, { created: at, updated: at }), "project", "investigating");
+  /* CORRECTED 2026-09-19 at D-431's integration (CONDUCT #6), where this new fixture met REC-141 (IC-158): a
+     project's id is minted by the plane and a creation that names one is refused C-59.1, so the project is
+     promoted with NO id and `project` is the id the plane answers. What the fixture builds is unchanged. */
+  const label = `PROJ-2026-${n}-evidence`;
+  const project = (await promote(null, projectFixtureMd(null, { created: at, updated: at, name: label }),
+    "project", "investigating", label)).bundleId;
   okOrThrow(`projectclaimowner ${project}`, await doPost("projectclaimowner", { projectId: project, memberId: owner }));
   await promote(lead, withAdoptableReading(inquiryMd(lead, `Does the record in ${lead} answer the question?`, targets, at)),
     "inquiry", "open");

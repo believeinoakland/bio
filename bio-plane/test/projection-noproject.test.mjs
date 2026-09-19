@@ -134,23 +134,23 @@ const infoMd = (id) => ["---",
   "visuals: []", "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const projectMd = (id) => ["---",
-  `id: ${id}`, "object_type: project", `title: "Oversight"`,
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Oversight"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references:", `  - target: ${ACTED}`, "    rel: cites", "    status: confirmed",
   "required_strength:", "  capture: B", "  connection: C",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 
 let snapSeq = 0;
-const mustPromote = async (id, text, type, state) => {
+const mustPromote = async (id, text, type, state, label = id) => {
   const r = await POST(`op=promote&token=${RUTH}`, {
-    bundleId: id, base: null,
-    snapKey: `${id}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+    ...(id === null ? {} : { bundleId: id }), base: null,
+    snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: type === "information"
-      ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`, current_state: state,
+      ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${label}`), encoding: "binary", bytes: 10 }] : [],
+    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${label}`, current_state: state,
             created: NOW, last_updated: LATER } });
-  if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 800)}`);
+  if (!r.ok) throw new Error(`promote ${label}: ${JSON.stringify(r).slice(0, 800)}`);
   return r;
 };
 const enc = encodeURIComponent;
@@ -159,7 +159,10 @@ const LEDGER = "INFO-2026-4144-ledger";
 const ACTED = "INQ-2026-4144-concluded-by-the-act";   /* no-project, names its reading: ADOPTED */
 const LEGACY = "INQ-2026-4144-concluded-in-bytes";    /* the pre-§7.1-item-6 shape: UNDETERMINED */
 const OPEN = "INQ-2026-4144-still-open";
-const PROJ = "PROJ-2026-4144-oversight";
+/* CORRECTED 2026-09-19 at REC-144's integration (CONDUCT #6), where it met REC-141 (IC-158): a project's id
+   is minted by the plane, and a creation that names one is refused C-59.1, so the project is promoted with NO
+   id (and no `id:` line) and PROJ is the id the plane answers. The suite's subject is unchanged. */
+let PROJ;
 const CLAIM = "The ledger shows the transfer was booked before the council met.";
 const READING = { name: "booked early", claim: CLAIM, description: "The ledger alone, read for the booking date." };
 const LEGACY_TEXT = "The legacy transfer was authorised.";
@@ -169,7 +172,7 @@ await mustPromote(ACTED, inquiryMd(ACTED, { reading: READING }), "inquiry", "ope
 await mustPromote(LEGACY, inquiryMd(LEGACY, { concluded: { conclusion: LEGACY_TEXT, falsifier: "a rescinding minute" } }),
   "inquiry", "concluded");
 await mustPromote(OPEN, inquiryMd(OPEN, { reading: READING }), "inquiry", "open");
-await mustPromote(PROJ, projectMd(PROJ), "project", "forming");
+PROJ = (await mustPromote(null, projectMd(null), "project", "forming", "PROJ-2026-4144-oversight")).bundleId;
 
 const concluded = await POST(`op=conclude&token=${RUTH}&target=${enc(ACTED)}`
   + `&conclusion=${enc("It was booked before the meeting.")}`
