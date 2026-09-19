@@ -79,6 +79,10 @@ const RELEASES = [
   /* 0.64.0: the first release that boots every store above, deployed and live-verified
      2026-09-19; the commit is dist/cut-0.64.0's cut, whose release/ holds it (DIST). */
   ["0.64.0", "a8bc9d91eca9f6f30aff2133f608ad423dc5e411"],
+  /* 0.65.0: deployed and live-verified 2026-09-19 (REC-145 and D-431 disclosure closings,
+     REC-141 + UI-66); the commit is dist/cut-0.65.0's cut, whose release/ holds it (DIST).
+     It boots every store above, so it belongs in RELEASES and NOT in WITHDRAWN. */
+  ["0.65.0", "22a72fa1454e4f801fd78d486c111a86f69452a9"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });

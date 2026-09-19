@@ -15055,3 +15055,19 @@ goes to a worker through CONDUCT.
 supersedes: the claim of 2026-09-18/19 by SCHEDULER #1 above (LED-6 steps (2) and (3)–(4)), whose worktree
 `.claude/worktrees/scheduler` no longer exists — SCHEDULER #1 stood down on Bob's order of 2026-09-19 without
 releasing it, and LED-6 is done at `c25cac55`. Recorded rather than deleted: the claim was real and its work landed.
+
+## CLAIM 2026-09-19 DIST (DIST #2, the first cut in the new Claude Code account — 0.66.0)
+
+session: DIST standing lane, DIST #2 [5a3e7f], worktree `intelligent-neumann-30d8e7`, Sparky-Air
+opened: 2026-09-19
+branch: `dist/cut-0.66.0` (the cut lives on a branch until it is deployed and live-verified; `main`'s `release/` is
+  the `latest` pointer and is NOT advanced until then — `kickoffs/DIST.md`, the mechanism decided 2026-09-19)
+paths: `release/**`, `newgroup/**` (the generated `src/release.mjs` via `npm run embed`), the version in
+  `bio-plane/package.json` and `bio-plane/wrangler.jsonc` and the same two sites in `agent-worker/`, `pdf-worker/`
+  and `ocr-worker/`, the committed plane build `bio-plane/dist/**`, `bio-plane/test/migrate-released.test.mjs`
+  (the upgrade arm's `RELEASES` row for 0.65.0), `docs/development/kickoffs/DIST-NEXT.md`, and appended entries in
+  `MEASUREMENTS.md` / `INTERFACE-CHANGES.md` for what this lane lands. All tags.
+why: REC-152 (IC-165, `airuntick`/`airunclose` are the run's principal's acts — AUTHORITY and DISCLOSURE) and
+  REC-153 (IC-163, `aiRunOpen` checks the context kind — AUTHORITY) are on `main` and in NO release. CONDUCT #7
+  named REC-152 a security/disclosure closing at integration, which makes this a CUT NOW under WHEN DIST CUTS,
+  not a batch. Bob's "cut and deploy nothing new before the account moves" is satisfied: this IS that account.

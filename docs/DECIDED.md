@@ -2377,8 +2377,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1290`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1302`
+- **2026-09-19** — FLEET's 574 MB was WITHDRAWN 2026-09-19: disk had recovered to 9.5 GiB with zero gates running, so the constraint that made it worth a human's attention was gone. FLEET armed its 6-hourly self-wake to re-raise it only if free space falls under ~4 GiB WITH work running, with the measurement attached — an instrument…  
+  `docs/development/kickoffs/BOB-NEXT.md:44`
 - WHAT BOB #17 DECIDED — each folded into its home document; `decided.mjs` finds them - **TASK stays gated** (Membership v2 §7): the set is a PREDICATE — *every prefix whose objects a read withholds from some caller* — not a list.  
-  `docs/development/kickoffs/BOB-NEXT.md:79`
+  `docs/development/kickoffs/BOB-NEXT.md:72`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:86`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
@@ -2395,10 +2397,14 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
-- (NOT to `WITHDRAWN`). - Rebuild the closings list from `git log v0.65.0..origin/main` and confirm each in 0.65.0's BYTES. - Check each IC since 0.65.0 for fleet members and for `civicos-ui/app.html` changes (lesson 6). 2.  
-  `docs/development/kickoffs/DIST-NEXT.md:46`
-- `v0.59.0`–`v0.63.0` are signed and WITHDRAWN (they brick existing stores): history only. ## What happened, briefly (the reasoning is in the commits and in M-59)  
-  `docs/development/kickoffs/DIST-NEXT.md:54`
+- carrying BOTH sides, DECIDED regenerated).  
+  `docs/development/kickoffs/DIST-NEXT.md:21`
+- NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. 0.65.0 was added in this cut and its control was RE-RUN, not inferred: arm `alterafter` measured **169 pass / 66 fail** against the declared baseline 135/66 — the failure set is unchanged because it is bounded by `WITHDRAWN`, while the pass count…  
+  `docs/development/kickoffs/DIST-NEXT.md:72`
+- against the declared baseline 135/66 — the failure set is unchanged because it is bounded by `WITHDRAWN`, while the pass count rose from the releases added.  
+  `docs/development/kickoffs/DIST-NEXT.md:74`
+- `v0.59.0`–`v0.63.0` are signed and WITHDRAWN (they brick existing stores): history only. **DELETED from this list as STALE:** "the installer does not install fleet member bundles".  
+  `docs/development/kickoffs/DIST-NEXT.md:82`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  
