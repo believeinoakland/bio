@@ -35,7 +35,7 @@ is 5 or more days old (BOB #15's rule), and write the new date here.
   copy) ships as a new read path for non-members. **Method:** grep the prior signed asset for the op/handler.
   A list of row names is only where to start.
 - **DEPLOY: REQUESTED of Bob through BOB #15 on 2026-09-18, and not yet answered as of this writing.** The order is
-  agent-worker first or together with the plane (IC-130), then the installer. The live plane and members are on 0.58.0.
+  agent-worker first or together with the plane (IC-130), then the installer. **SUPERSEDED 2026-09-19 by the 0.64.0 deploy: see the LIVE header above.** (It read: the live plane and members are on 0.58.0.)
 - REC-131 was cut as 0.60.0 (above).
 - **The embed hazard is CLOSED (M-59, `483ac38a`).** `newgroup`'s embed takes only the signed, verified asset from
   `release/` and builds nothing. So in a cut, embed AFTER `release-assemble --sign`. Between the bump and the
