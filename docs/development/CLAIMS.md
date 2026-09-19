@@ -14486,3 +14486,18 @@ Worker spawned by CONDUCT #6, worktree `agent-ae83cc9dbe0276399`, branch `worker
 - Docs: `docs/development/DEBT.md` D-430's row (closed and archived), `DECIDED.md` regenerated; this block.
 
 NOT a row of `QUEUE.md` (the `done` flip is CONDUCT's), NOT LED-6's migration (SCHEDULER's), NOT the live `BACKLOG.md`.
+
+## CLAIM 2026-09-18 M0 (D-430) — RELEASED
+
+released: 2026-09-18 by the D-430 worker, branch `worker/d-430`, base `3dee1fdb`, merged with origin/main three times
+(last `5871a991`, QUEUE.md-only), full gate at `6ca8bd21`. Baseline at `3dee1fdb`: **251/252 suites green · 15403
+assertions passing** — the one red, `mintid.test.mjs` *"no live floor is driven by prose (["D"])"*, was D-431 named in
+the BOB INBOX before REC-140 landed its row; not this item's, green once REC-140 merged. After, at `6ca8bd21`:
+**255/255 suites green · 15680 assertions passing**, no suite skipped (this item's own: `pipeline-readers.test.mjs`
++36; the rest is main's arrivals); `node scripts/coverage.mjs --strict` exit **0** unpiped, `arms 1447/1447 ·
+classified 246/246 · corpus 247/247 · floor 209/209`; `node civicos-ui/test/run.mjs` exit **0**; `plancheck --local` 0
+fail. REGISTER_FLOOR 1443 -> 1447 / 245 -> 246 / 246 -> 247 / run 208 -> 209, from the print on the committed merge
+`86cc1111`. NEGATIVE CONTROL `node bio-plane/test/pipeline-readers.control.mjs`: 30/30 as declared on `1b096956`,
+`8b2c926e` and `6ca8bd21`, in a scratch worktree, every restore byte-identical. **Built:** `ledger.mjs` `pipelineRows`
+and `strayHeadings`; `rowdesign.mjs` `planRows` and `planFieldAudit`; `rowdesign`, `rowsubstrate` and plancheck §2's
+field checks read only the lister. DEBT D-430 closed and archived. **Not done:** the QUEUE row's `done` flip (CONDUCT's).
