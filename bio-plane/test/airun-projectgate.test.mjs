@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: `node bio-plane/test/nc-pl18.mjs` — TEN ROWS (a baseline plus nine arms), each armed ALONE, each declared before arming, each refusing to arm on an anchor that does not occur exactly once, every restore verified by sha256 AND `cmp` against a per-arm pristine copy with a byte floor. RUN 2026-08-09 by PL-18 (worktree agent-a4e2eff5ca09197e2). (0) BASELINE, nothing edited -> exit 0, 47 pass, 0 fail — the row that distinguishes nine-arms-broken from nine-arms-working. (a) THE ARM THIS SUITE EXISTS FOR — collapse the two refusals by giving the participation refusal the CAPABILITY refusal's words -> 45 pass, 2 fail, B4 and C3, **with B1 and B2 STAYING GREEN**: a refusal still occurs and still carries C-22.8, so only the arms asserting the SENTENCE can see the collapse. That asymmetry is the whole evidence that this suite is not buying an outcome that costs nothing to produce. (b) collapse the CANNED TRANSLATION in the catalogue -> 45 pass, 2 fail, B3 and C3 — **DECLARED B2 AND B2 STAYED GREEN, and that is a finding about the ARM, recorded at B2's site: both sides of B2 read the same catalogue and move together, so B2 can see a mis-keyed translation and never a wrong one.** (c) remove the gate from `aiRunOpen` alone -> 35 pass, 12 fail, every open refusal, with C1/C2 (the capability floor) and H1/H2 (the tick and close) GREEN — the three verbs are gated independently. (d) remove it from the tick alone -> 44/3, H1 H3 **H4** (H4 was not declared: it pins an absolute tick count, and an ungated tick moved it — the load-bearing-count class REC-75 recorded). (e) DEC-17's case armed the wrong way, a projectless inquiry silently DENIED -> 41/6, D1 D2 D3 **and P1, P2, P2b**, none of the three declared and all three the arm working: the P arms assert the closed permitting vocabulary is wholly REACHED and that only the refusing outcome carries a code, and PROJECTLESS became unreachable. (f) over-strictness, require participation in EVERY project holding the question -> 44/3, G1 G2 **L2** (undeclared, same cause), with A1/B/C/D green. (g) over-strictness the other way, admit `invited` and `leaving` as participating -> 45/2, F1 L1, exactly as declared. (h) neuter the CAPABILITY FLOOR in index.mjs -> 44/3, C1 C2 D4, **with ARM B GREEN** — the pair proving the two fences are independent rather than one measured twice. (i) drop the server-side `actor` stamp -> 26/21, far wider than the declared S1/A2/D2/H4 and in the declared direction: with no stamp every session reads as no member and the gate collapses wholesale. NOT AN ARM, and stated rather than discovered: `inner.searchParams.delete("actor")` is behaviourally INVISIBLE today, because the `set` below it is unconditional for all three verbs — kept as a structural guard, on REC-75's idempotent-write precedent. */
+/* NEGATIVE CONTROL: `node bio-plane/test/nc-pl18.mjs` — RE-RUN 2026-09-19 by REC-145 (worktree agent-a3372f65d0555dbd9, base 1d439e31 + this item; DEC-63 as amended — a run over a question consults no project), ELEVEN ROWS, every restore verified by sha256 and `cmp` (the four sources hashed before and after the harness: OK). (0) BASELINE 52/0. (a) collapse the detail -> 50/2, B4 C3, as declared, B1/B2 green. (b) collapse the translation -> 50/2, B3 C3. (c) no gate on the open -> 40/12, B1 B2 B4 B6 C3 E2 F1 F2 G4 S1 S2 L1 — **B3 and B5 stay green and that is the arms, not the gate: B3 reads the catalogue and B5 asserts an absence, which an open door also satisfies**; this arm's and (d)'s anchors had NOT OCCURRED since REC-139 added `viewer` (corrected here). (d) no gate on the tick -> 49/3, H1 H3 and H4 (PL-18's recorded load-bearing tick count). (e) **REC-145's CONTROL — restore the project consult for an inquiry context -> 39/13, A2 B0 D1 D2 D3 G1 G3 H6 L3 P1 P2 P2b P4, exactly as declared: the PERMITTED arms fail by name**; A1/G2 (joined members) and every project-context arm green. (e2) THE ROW'S LIAR, the gate dropped for every context -> 33/19: every project-context refusal (B1 B2 B4 B6 C3 E2 F1 F2 G4 H1 H2 H3 S1 S2 L1) — NOT AS DECLARED in the catching direction: **H4, H5, P1 and P2 also went red, which the declaration said would not** (the P arms name the project kind and share the predicate; H4 pins sam's PARTICIPANT ground and H5 follows H2's close). (f) over-strictness, every project -> 52/0, declared ALL GREEN: moot after the amendment (a project context names one project). (g) admit invited/leaving -> 50/2, F1 L1. (h) neuter the capability floor -> 48/4, C1 C2 D4 and C4 (undeclared: C4 reads the floor's own code, which a neutered floor never sends). (i) drop the actor stamp -> 29/23, wide and in the declared direction. PL-18's ORIGINAL RUN, KEPT AS THE RECORD: TEN ROWS (a baseline plus nine arms), each armed ALONE, each declared before arming, each refusing to arm on an anchor that does not occur exactly once, every restore verified by sha256 AND `cmp` against a per-arm pristine copy with a byte floor. RUN 2026-08-09 by PL-18 (worktree agent-a4e2eff5ca09197e2). (0) BASELINE, nothing edited -> exit 0, 47 pass, 0 fail — the row that distinguishes nine-arms-broken from nine-arms-working. (a) THE ARM THIS SUITE EXISTS FOR — collapse the two refusals by giving the participation refusal the CAPABILITY refusal's words -> 45 pass, 2 fail, B4 and C3, **with B1 and B2 STAYING GREEN**: a refusal still occurs and still carries C-22.8, so only the arms asserting the SENTENCE can see the collapse. That asymmetry is the whole evidence that this suite is not buying an outcome that costs nothing to produce. (b) collapse the CANNED TRANSLATION in the catalogue -> 45 pass, 2 fail, B3 and C3 — **DECLARED B2 AND B2 STAYED GREEN, and that is a finding about the ARM, recorded at B2's site: both sides of B2 read the same catalogue and move together, so B2 can see a mis-keyed translation and never a wrong one.** (c) remove the gate from `aiRunOpen` alone -> 35 pass, 12 fail, every open refusal, with C1/C2 (the capability floor) and H1/H2 (the tick and close) GREEN — the three verbs are gated independently. (d) remove it from the tick alone -> 44/3, H1 H3 **H4** (H4 was not declared: it pins an absolute tick count, and an ungated tick moved it — the load-bearing-count class REC-75 recorded). (e) DEC-17's case armed the wrong way, a projectless inquiry silently DENIED -> 41/6, D1 D2 D3 **and P1, P2, P2b**, none of the three declared and all three the arm working: the P arms assert the closed permitting vocabulary is wholly REACHED and that only the refusing outcome carries a code, and PROJECTLESS became unreachable. (f) over-strictness, require participation in EVERY project holding the question -> 44/3, G1 G2 **L2** (undeclared, same cause), with A1/B/C/D green. (g) over-strictness the other way, admit `invited` and `leaving` as participating -> 45/2, F1 L1, exactly as declared. (h) neuter the CAPABILITY FLOOR in index.mjs -> 44/3, C1 C2 D4, **with ARM B GREEN** — the pair proving the two fences are independent rather than one measured twice. (i) drop the server-side `actor` stamp -> 26/21, far wider than the declared S1/A2/D2/H4 and in the declared direction: with no stamp every session reads as no member and the gate collapses wholesale. NOT AN ARM, and stated rather than discovered: `inner.searchParams.delete("actor")` is behaviourally INVISIBLE today, because the `set` below it is unconditional for all three verbs — kept as a structural guard, on REC-75's idempotent-write precedent. */
 /* PL-18 — DEC-63'S GATE: AN INVESTIGATION IS STARTED BY ANY MEMBER OF THE PROJECT.
  *
  * Bob, 2026-08-09: *"AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A
@@ -248,15 +248,33 @@ console.log("\n--- ARM A · THE RULING: a member of the project may start a run 
   t("ARM A1: sam holds contribute AND participates in the project that draws on the question — the "
     + "run STARTS",
     [r?.started, r?.status], [true, "running"]);
-  t("ARM A2: and the answer STATES the ground it was permitted on, rather than merely not refusing",
+  /* CORRECTED 2026-09-19 by REC-145 (DEC-63 as amended by Bob, 2026-09-18; Membership v2 §7), never
+     exempted: this pinned `[true, "PARTICIPANT", 1]` — sam permitted BECAUSE he joined the project that
+     cites the question. Bob reversed that reading (*"a project doesn't own an area of enquiry"*): over a
+     question the verdict consults no project, so the ground is INQUIRY and the gate did not apply. The
+     stated count is unchanged (REC-139: the citing projects sam can see, P1). */
+  t("ARM A2: and the answer STATES the ground it was permitted on, rather than merely not refusing — "
+    + "over a question that ground is INQUIRY, whoever cites it (REC-145)",
     [r?.projectGate?.applied, r?.projectGate?.ground, r?.projectGate?.projects],
-    [true, "PARTICIPANT", 1]);
+    [false, "INQUIRY", 1]);
 }
 
-console.log("\n--- ARM B · THE PARTICIPATION HALF: a contribute-holder OUTSIDE the project ---");
+console.log("\n--- ARM B0 · REC-145: a contribute-holder in NO project runs over a question a project cites ---");
 {
   const r = await open(PIA, INQ_IN);
-  t("ARM B1: pia holds contribute and is in no project — the run does NOT start",
+  t("ARM B0: pia holds contribute and is in no project, and P1 (which she cannot see) cites the question — "
+    + "the run STARTS, and the count names no project she cannot see",
+    [r?.started, r?.code ?? null, r?.projectGate?.ground, r?.projectGate?.projects], [true, null, "INQUIRY", 0]);
+}
+
+/* CORRECTED 2026-09-19 by REC-145, never exempted: ARMS B, C3/C4, F, S and L1 drove the participation
+   refusal over a QUESTION (INQ_IN / INQ_BOTH). DEC-63 as amended says nothing refuses there any more, so
+   each is RE-AIMED at a run whose context is the PROJECT ITSELF — the one context the refusal is still
+   said over — and asserts exactly what it asserted before about that refusal's words and its fence. */
+console.log("\n--- ARM B · THE PARTICIPATION HALF: a contribute-holder OUTSIDE the project, over the project ---");
+{
+  const r = await open(PIA, P1, "project");
+  t("ARM B1: pia holds contribute and has joined no project — a run over P1 does NOT start",
     r?.started, false);
   /* WHAT THIS ARM CAN AND CANNOT SEE, and it is a FINDING FROM ITS OWN CONTROL
      rather than a caveat written in advance. Arm (b) of `nc-pl18.mjs` replaces
@@ -288,9 +306,13 @@ console.log("\n--- ARM B · THE PARTICIPATION HALF: a contribute-holder OUTSIDE 
     [/holding\s+contribute would not change it/i.test(str(r?.detail)),
      str(r?.detail).includes("DEC-63")],
     [true, true]);
-  t("ARM B5: the refusal does NOT leak which projects hold the question — 7.12's skeleton rule "
-    + "means a non-participant may not be entitled to learn a project exists",
-    [str(r?.detail).includes(P1), str(r?.translation).includes(P1)], [false, false]);
+  /* CORRECTED 2026-09-19 by REC-145: the detail names what the CALLER sent (its own header's rule), and
+     over a project context that is the project's id — so `detail.includes(P1)` is now the caller's own
+     word echoed, not a leak. The property held is the one the arm was for: nothing names a project the
+     caller did NOT name, and the canned sentence names none. */
+  t("ARM B5: the refusal names no project the caller did not name — 7.12's skeleton rule means a "
+    + "non-participant may not be entitled to learn a project exists",
+    [str(r?.detail).includes(P2), str(r?.translation).includes(P1)], [false, false]);
   t("ARM B6: and nothing was written — the refused run does not exist",
     rP(await GET(`op=airun&${RUTH}&run=${lastRun()}`))?.found ?? null, false);
 }
@@ -311,7 +333,7 @@ console.log("\n--- ARM C · THE CAPABILITY HALF: a project member WITHOUT contri
      stated in BOTH directions on purpose: it is not enough that the sentences
      differ — each must be silent about the OTHER's subject, or a member reading
      one still cannot tell which fact is true of them. */
-  const bd = str((await open(PIA, INQ_IN))?.detail) + " " + str(T_PARTICIPATION);
+  const bd = str((await open(PIA, P1, "project"))?.detail) + " " + str(T_PARTICIPATION);
   const cd = str(r?.detail);
   t("ARM C3 (THE ITEM'S HEADLINE): the two refusals are DIFFERENT SENTENCES, and neither carries "
     + "the other's subject — the participation refusal never says the account lacks a capability, "
@@ -329,7 +351,7 @@ console.log("\n--- ARM C · THE CAPABILITY HALF: a project member WITHOUT contri
      is STRONGER than the figure it pinned: both refusals carry a machine key, and
      the two keys DIFFER, so a surface can key on the code and never on the prose. */
   const capCode = r?.code ?? null;
-  const gateAns = await open(PIA, INQ_IN);
+  const gateAns = await open(PIA, P1, "project");
   t("ARM C4 (CORRECTED, was a pin on NOT_CAPABLE having no C-number): both refusals carry a MACHINE "
     + "key and the two keys DIFFER, so a surface keys on the code and never on the prose",
     [typeof capCode === "string" && capCode.length > 0, capCode !== "C-22.8", gateAns?.reason ?? undefined],
@@ -346,12 +368,16 @@ console.log("\n--- ARM D · DEC-17: AN INQUIRY OUTSIDE ANY PROJECT ---");
   t("ARM D1: pia is in no project and the question is in no project — the run STARTS, because "
     + "DEC-17 puts no bar on an inquiry outside any project",
     [r?.started, r?.status], [true, "running"]);
+  /* CORRECTED 2026-09-19 by REC-145, never exempted: D2/D3 pinned the ground PROJECTLESS. That ground
+     was said ONLY when no project cited the question, so a member who got any other answer learned that
+     some project — possibly one hidden from them — did (§7.9's one bit). Every question now answers on
+     ONE ground, INQUIRY, and B0 (cited by a project pia cannot see) must read exactly as this one does. */
   t("ARM D2: AND THE PERMISSION IS STATED RATHER THAN SILENT — the answer says the gate did not "
-    + "apply and why, so a projectless run is distinguishable from an ungated one",
+    + "apply and why, on the SAME ground as a question a project cites (REC-145)",
     [r?.projectGate?.applied, r?.projectGate?.ground, r?.projectGate?.projects],
-    [false, "PROJECTLESS", 0]);
+    [false, "INQUIRY", 0]);
   t("ARM D3: the stated ground is the vocabulary's own sentence, read from the one place it lives",
-    r?.projectGate?.why, PROJECT_GATE_GROUNDS.PROJECTLESS);
+    r?.projectGate?.why, PROJECT_GATE_GROUNDS.INQUIRY);
   t("ARM D4: and a member WITHOUT contribute is still refused over a projectless question — DEC-17 "
     + "removes the project bar and does NOT remove the floor beneath it",
     [(await open(VERA, INQ_LOOSE))?.reason], ["NOT_CAPABLE"]);
@@ -368,12 +394,12 @@ console.log("\n--- ARM E · A PROJECT AS THE CONTEXT, not an inquiry ---");
 
 console.log("\n--- ARM F · WHICH STATES COUNT AS PARTICIPATING ---");
 {
-  const r = await open(INES, INQ_IN);
-  t("ARM F1: ines is INVITED to the project and has not joined — refused. An invited member sees "
+  const r = await open(INES, P1, "project");
+  t("ARM F1: ines is INVITED to the project and has not joined — a run over it is refused. An invited member sees "
     + "the project's SKELETON only, so there is nothing there for them to investigate (7.12's "
     + "reasoning, one door over from forkProject's own NOT_JOINED)",
     [r?.started, r?.code], [false, "AI_RUN_NOT_PROJECT_MEMBER"]);
-  const d = await open(GUS, INQ_IN);
+  const d = await open(GUS, P1, "project");
   t("ARM F2: gus is an ADMINISTRATOR holding contribute who is not in THIS project — refused, and the "
     + "absence of an admin bypass is DELIBERATE: v2 4.9 is that an administrator SEES every "
     + "project and DIRECTS none of them, and DEC-63's words are *any member of a project*",
@@ -391,16 +417,29 @@ console.log("\n--- ARM G · OVER-STRICTNESS: joined to ONE of the projects that 
      SEE, which §7.9 forbids (*"not its existence"*) and BOB #15 ruled out for a run's report by name.
      The VERDICT is unchanged (DEC-63 still reads both projects: he starts because he joined P2); the
      stated count is the projects in his sight, which is P2 alone. */
+  /* CORRECTED AGAIN 2026-09-19 by REC-145: the ground is INQUIRY, not PARTICIPANT — over a question
+     the verdict consults no project (DEC-63 as amended), so otto's P2 standing is not what admits him.
+     The count stays REC-139's: the one citing project otto can see. */
   t("ARM G1: otto joined P2 and was never invited to P1; the question is drawn on by BOTH — the run "
     + "STARTS. Requiring participation in every project touching a question would be a fence tighter "
     + "than the rule it enforces. The stated count is the ONE project otto can see (REC-139)",
     [r?.started, r?.projectGate?.ground, r?.projectGate?.projects],
-    [true, "PARTICIPANT", 1]);
+    [true, "INQUIRY", 1]);
   t("ARM G2 (the same arm from the other side): sam joined P1 and not P2, and reaches the same "
     + "shared question — so ARM G1 is about the RULE and not about otto",
     [(await open(SAM, INQ_BOTH))?.started], [true]);
-  t("ARM G3: and a member in NEITHER is still refused, so G1 is not simply an open door",
-    [(await open(PIA, INQ_BOTH))?.code], ["AI_RUN_NOT_PROJECT_MEMBER"]);
+  /* CORRECTED 2026-09-19 by REC-145, never exempted: this pinned pia REFUSED over INQ_BOTH — *"a member
+     in NEITHER is still refused, so G1 is not simply an open door"*. Bob's amendment makes it an open
+     door ON PURPOSE for a question (*"anybody can ask a question related to anything"*), so the arm now
+     asserts the permission and its count, and the door that must stay shut is the PROJECT: G4. */
+  const g3 = await open(PIA, INQ_BOTH);
+  t("ARM G3 (REC-145): a member in NEITHER project runs over the question both cite — PERMITTED, and "
+    + "the count names neither (pia can see neither project)",
+    [g3?.started, g3?.code ?? null, g3?.projectGate?.projects], [true, null, 0]);
+  t("ARM G4 (THE LIAR'S ARM, REC-145): and the same member is still REFUSED a run whose context is "
+    + "either PROJECT — dropping the gate for every context would pass G3 and fail this",
+    [(await open(PIA, P1, "project"))?.code, (await open(PIA, P2, "project"))?.code],
+    ["AI_RUN_NOT_PROJECT_MEMBER", "AI_RUN_NOT_PROJECT_MEMBER"]);
 }
 
 console.log("\n--- ARM H · THE TICK AND THE CLOSE CARRY THE SAME GATE ---");
@@ -408,15 +447,20 @@ console.log("\n--- ARM H · THE TICK AND THE CLOSE CARRY THE SAME GATE ---");
   /* IS-6's own argument: gating the open and leaving the tick free would mean
      an account that may not START a run may still SPEND its budget and drive
      it, which is the fence in the wrong place. */
-  const started = await open(SAM, INQ_IN);
+  /* CORRECTED 2026-09-19 by REC-145, never exempted: this run was over INQ_IN, and after DEC-63's
+     amendment a run over a question is gated for nobody — so pia's tick and close below would have been
+     PERMITTED and H1-H3 would have measured the amendment, not the three verbs' shared gate. The run is
+     RE-AIMED at the project P1, where the gate still stands; H6 states what the amendment does to a run
+     over a question. */
+  const started = await open(SAM, P1, "project");
   const RUN = lastRun();
-  t("ARM H0 (REACH): the run sam opened is really running — the two arms below would pass "
+  t("ARM H0 (REACH): the run sam opened over P1 is really running — the two arms below would pass "
     + "vacuously over a run that never started",
     [started?.started, started?.status], [true, "running"]);
 
   const tick = rP(await POST(`op=airuntick&${PIA}`, { run: RUN, consume: { fetches: 3 },
     log: [{ level: "document", subject: "doc:x", state: "NEVER_LOOKED" }] }));
-  t("ARM H1: pia cannot TICK a run over a question she is outside — refused by code, and the "
+  t("ARM H1: pia cannot TICK a run over a project she is outside — refused by code, and the "
     + "answer says plainly that nothing was appended and no budget was spent",
     [tick?.ticked, tick?.code, /no budget was spent/i.test(str(tick?.note))],
     [false, "AI_RUN_NOT_PROJECT_MEMBER", true]);
@@ -443,6 +487,20 @@ console.log("\n--- ARM H · THE TICK AND THE CLOSE CARRY THE SAME GATE ---");
   const okc = rP(await POST(`op=airunclose&${SAM}`, { run: RUN, bound: "completed" }));
   t("ARM H5: and closes it, for the same reason — so H2 measures the GATE and not a broken close",
     [okc?.terminated, okc?.found], [true, true]);
+
+  /* REC-145 — WHAT THE AMENDMENT DOES TO A RUN OVER A QUESTION, stated rather than left to be found.
+     The three verbs share ONE gate (IS-6's argument, above), and over a question that gate consults no
+     project — so a member holding contribute may tick and close ANOTHER member's run over a question.
+     That is the ruling applied as written (BOB #16: *"a run whose context is an INQUIRY consults no
+     project for its verdict"*); whether a run is its opener's to drive is a question the design does
+     not answer, and it is reported as a DESIGN GAP rather than decided here. Pinned so a change to it
+     is noticed. */
+  await open(SAM, INQ_IN);
+  const QRUN = lastRun();
+  const qtick = rP(await POST(`op=airuntick&${PIA}`, { run: QRUN, consume: { fetches: 1 } }));
+  t("ARM H6 (REC-145, a DESIGN GAP pinned as built): pia ticks sam's run over a QUESTION — no project "
+    + "is consulted over a question, for any of the three verbs",
+    [qtick?.ticked, qtick?.code ?? null, qtick?.projectGate?.ground], [true, null, "INQUIRY"]);
 }
 
 console.log("\n--- ARM M · A MACHINE CREDENTIAL: the gate does not apply, and says so ---");
@@ -470,14 +528,16 @@ console.log("\n--- ARM S · THE STAMP: `actor` is the SERVER'S, never the caller
      `index.mjs` deletes `actor` before it sets it, the `ownerMemberId`
      discipline. Both halves are driven: a caller cannot BORROW a member's
      participation, and a caller cannot DISCLAIM their own. */
+  /* CORRECTED 2026-09-19 by REC-145: both arms ran over INQ_IN, where nothing refuses any more, so a
+     borrowed or disclaimed `actor` could no longer be SEEN there. Re-aimed at the project P1. */
   const borrowed = rP(await POST(`op=airunopen&${PIA}&actor=sam`, {
-    run: "RUN-2026-0809-borrow", contextType: "inquiry", contextId: INQ_IN,
+    run: "RUN-2026-0809-borrow", contextType: "project", contextId: P1,
     principalClaude: "project", skillVersion: "investigative-session@1", leaseMs: 600000 }));
   t("ARM S1: pia naming `actor=sam` in her own query does NOT borrow sam's participation — the "
     + "caller-supplied value is overwritten, not honoured",
     [borrowed?.started, borrowed?.code], [false, "AI_RUN_NOT_PROJECT_MEMBER"]);
   const disclaimed = rP(await POST(`op=airunopen&${PIA}&actor=`, {
-    run: "RUN-2026-0809-disclaim", contextType: "inquiry", contextId: INQ_IN,
+    run: "RUN-2026-0809-disclaim", contextType: "project", contextId: P1,
     principalClaude: "project", skillVersion: "investigative-session@1", leaseMs: 600000 }));
   t("ARM S2: nor can she blank it to buy the machine credential's exemption — an empty `actor` "
     + "from a SESSION is still the session's member",
@@ -494,16 +554,21 @@ console.log("\n--- ARM P · THE PURE DECISION, driven directly over its own corp
   /* A PERMISSION IS NAMED BY ITS GROUND AND A REFUSAL BY ITS CODE — two
      vocabularies for two different things, neither restating the other. So the
      partition this asserts is `PROJECT_GATE_GROUNDS` plus exactly one code. */
+  /* CORRECTED 2026-09-19 by REC-145, never exempted: every call below named NO context kind, which was
+     harmless while the gate read only the project lists. The verdict now turns on the KIND (a question
+     consults no project), so each call says which kind it means: `Q` a question, `PJ` a project. The
+     vocabulary is still three grounds and one refusing code — PROJECTLESS is gone, INQUIRY replaces it. */
+  const Q = { contextType: "inquiry" }, PJ = { contextType: "project" };
   const g = (a) => projectGate(a).ground;
   const reached = [
-    g({ actor: "", projects: ["P"], projectsJoined: [] }),
-    g({ actor: "m", projects: [], projectsJoined: [] }),
-    g({ actor: "m", projects: ["P"], projectsJoined: ["P"] }),
+    g({ ...PJ, actor: "", projects: ["P"], projectsJoined: [] }),
+    g({ ...Q,  actor: "m", projects: [], projectsJoined: [] }),
+    g({ ...PJ, actor: "m", projects: ["P"], projectsJoined: ["P"] }),
   ];
   t("ARM P1: EVERY ground in the closed permitting vocabulary is REACHED — corpus "
     + `${Object.keys(PROJECT_GATE_GROUNDS).length} grounds, ${reached.length} driven, `
     + "plus the ONE refusing outcome, which is named by its code and not by a second ground",
-    [reached.sort(), projectGate({ actor: "m", projects: ["P"], projectsJoined: [] }).code],
+    [reached.sort(), projectGate({ ...PJ, actor: "m", projects: ["P"], projectsJoined: [] }).code],
     [Object.keys(PROJECT_GATE_GROUNDS).sort(), "AI_RUN_NOT_PROJECT_MEMBER"]);
   /* `permitted` IS THE VERDICT AND IT IS ASSERTED IN BOTH DIRECTIONS. Three
      grounds permit and one refuses — asserted as the whole partition rather
@@ -511,22 +576,33 @@ console.log("\n--- ARM P · THE PURE DECISION, driven directly over its own corp
      cannot hide behind the one that refuses. */
   t("ARM P2: exactly one ground refuses and the other three permit — the vocabulary is not three "
     + "synonyms for yes, and `permitted` says which is which rather than leaving it to be inferred",
-    [projectGate({ actor: "",  projects: ["P"], projectsJoined: [] }).permitted,
-     projectGate({ actor: "m", projects: [],    projectsJoined: [] }).permitted,
-     projectGate({ actor: "m", projects: ["P"], projectsJoined: ["P"] }).permitted,
-     projectGate({ actor: "m", projects: ["P"], projectsJoined: [] }).permitted ?? false,
-     projectGate({ actor: "m", projects: ["P"], projectsJoined: [] }).code],
+    [projectGate({ ...PJ, actor: "",  projects: ["P"], projectsJoined: [] }).permitted,
+     projectGate({ ...Q,  actor: "m", projects: [],    projectsJoined: [] }).permitted,
+     projectGate({ ...PJ, actor: "m", projects: ["P"], projectsJoined: ["P"] }).permitted,
+     projectGate({ ...PJ, actor: "m", projects: ["P"], projectsJoined: [] }).permitted ?? false,
+     projectGate({ ...PJ, actor: "m", projects: ["P"], projectsJoined: [] }).code],
     [true, true, true, false, "AI_RUN_NOT_PROJECT_MEMBER"]);
   t("ARM P2b: and ONLY the refusing ground carries a code — a permitting answer that carried one "
     + "would be a refusal wearing a permission's name",
-    [projectGate({ actor: "",  projects: ["P"], projectsJoined: [] }).code ?? null,
-     projectGate({ actor: "m", projects: [],    projectsJoined: [] }).code ?? null,
-     projectGate({ actor: "m", projects: ["P"], projectsJoined: ["P"] }).code ?? null],
+    [projectGate({ ...PJ, actor: "",  projects: ["P"], projectsJoined: [] }).code ?? null,
+     projectGate({ ...Q,  actor: "m", projects: [],    projectsJoined: [] }).code ?? null,
+     projectGate({ ...PJ, actor: "m", projects: ["P"], projectsJoined: ["P"] }).code ?? null],
     [null, null, null]);
   t("ARM P3: whitespace is not a member. A caller stamped with blanks is treated as no member "
     + "rather than as a member named ' ' who participates in nothing — a value that survives a "
     + "falsiness guard while naming nobody reads as present and travels (PL-4's measurement)",
-    g({ actor: "   ", projects: ["P"], projectsJoined: [] }), "NO_MEMBER_BEHIND_CALLER");
+    g({ ...PJ, actor: "   ", projects: ["P"], projectsJoined: [] }), "NO_MEMBER_BEHIND_CALLER");
+  /* REC-145 — THE PURE HALF OF "CONSULTS NO PROJECT". Over a question the verdict must not MOVE with
+     the project lists at all: none, one the member joined, two the member joined neither of. Any
+     difference between these three answers (other than the stated count the store replaces) is a
+     project consulted. */
+  const strip = (v) => ({ permitted: v.permitted, applied: v.applied, ground: v.ground, code: v.code ?? null });
+  t("ARM P4 (REC-145): over a QUESTION the verdict is IDENTICAL whatever projects cite it and whichever "
+    + "the member joined — no project is consulted",
+    [strip(projectGate({ ...Q, actor: "m", projects: [], projectsJoined: [] })),
+     strip(projectGate({ ...Q, actor: "m", projects: ["P"], projectsJoined: ["P"] })),
+     strip(projectGate({ ...Q, actor: "m", projects: ["P", "R"], projectsJoined: [] }))],
+    Array(3).fill({ permitted: true, applied: false, ground: "INQUIRY", code: null }));
 }
 
 console.log("\n--- ARM L · `leaving` IS THE THIRD STATE, AND IT DOES NOT PARTICIPATE ---");
@@ -542,13 +618,18 @@ console.log("\n--- ARM L · `leaving` IS THE THIRD STATE, AND IT DOES NOT PARTIC
   t("ARM L0 (REACH): sam's request to leave P1 is RECORDED as `leaving`, not as a removal — the "
     + "arm below would pass vacuously if the op had simply failed",
     [left?.ok, left?.state], [true, "leaving"]);
-  const r = await open(SAM, INQ_IN);
-  t("ARM L1: and the same member who opened runs freely three arms ago is now refused, by the "
+  /* CORRECTED 2026-09-19 by REC-145: re-aimed from INQ_IN to the project P1 — over a question sam's
+     standing is no longer consulted at all (L3 below), so `leaving` is observable only over the project. */
+  const r = await open(SAM, P1, "project");
+  t("ARM L1: and the same member who opened runs over P1 freely is now refused, by the "
     + "GATE and not by the floor — he still holds contribute",
     [r?.started, r?.code, r?.check], [false, "AI_RUN_NOT_PROJECT_MEMBER", "C-22.8"]);
   t("ARM L2: while the OTHER project's participant is untouched by it — one member's withdrawal "
     + "is not a fact about anybody else's standing",
     [(await open(OTTO, INQ_BOTH))?.started], [true]);
+  t("ARM L3 (REC-145): and sam, leaving P1, still runs over the QUESTION P1 cites — his standing in a "
+    + "project is not consulted over a question",
+    [(await open(SAM, INQ_IN))?.started], [true]);
 }
 
 console.log(`\nairun-projectgate: ${pass} pass, ${fail} fail`);

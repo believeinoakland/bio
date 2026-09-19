@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1199 rulings across 94 documents.
+1206 rulings across 94 documents.
 
 ## DEC-
 
@@ -226,14 +226,14 @@ authority is the file named, never this one.
   `docs/archive/ledgers/BOB-INBOX-drained.md:346`
 - **DEC-62** · 2026-09-14 — The decision this row was waiting on was taken in the construct's home (`BIO_Assistant_and_AI_Roles_v0_1.md` §7.3, BOB #11: EXTRACT runs in DEC-62's RUN, the pilot's exclusion CORRECTED and not lifted), and SK-8 built the caller the same day: `op=extractpropose` produces a proposed reading inside a member-opened…  
   `docs/archive/ledgers/DEBT-closed.md:60`
-- **DEC-63** · 2026-09-18 — §7 — DEC-63's run verdict: RULED by Bob (2026-09-18, a project does not own a line of inquiry) — over a question the verdict consults no project; a project context keeps its gate.  
+- **DEC-63** · 2026-09-18 — §7 — DEC-63's run verdict: RULED by Bob (2026-09-18) and BUILT by REC-145 (IC-162).  
   `docs/architecture/BIO_Membership_Architecture_v2.md:16`
 - **DEC-63** · 2026-09-18 — DEC-63 AS AMENDED BY BOB (2026-09-18: a project does not own a line of inquiry)** — recorded by BOB #15 and never rowed; the application is now at its home: Membership v2 §7, the ruling bullet, "How it applies at the code".  
   `docs/archive/ledgers/BOB-INBOX-drained.md:988`
 - **DEC-63** — TWO MORE `.test.mjs` FILES, EACH CORRECTED AND NEITHER EXEMPTED, both found by the WHOLE battery and by nothing smaller.** **`bio-plane/test/leadslug.test.mjs`** — the FIXTURE only: its run was opened by `ruth` over a question `PROJ_A` draws on while `carol` was that project's only participant, which DEC-63 now…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:5736`
 - **DEC-63** · 2026-09-18 — DEC-63 AS AMENDED BY BOB (2026-09-18: *a project does not own a line of inquiry*): for a run whose context is an INQUIRY the verdict consults NO project; a PROJECT context keeps the joined gate.** Verified by BOB #16: the gate still refuses `AI_RUN_NOT_PROJECT_MEMBER` over a question cited only by projects the…  
-  `docs/development/QUEUE.md:126`
+  `docs/archive/ledgers/QUEUE-closed.md:2498`
 - **DEC-65** — ns and neither the battery nor the fleet walk must discover it), `test/agent-worker.test.mjs` (FL-2's suite — four arms CORRECTED, never exempted, each with a comment saying why the old one was wrong; see the decision below), `fleet-member.json` (SURFACE unchanged).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:3100`
 - **DEC-65** · 2026-08-08 — DEC-65's SHAPE (b), WITH THE C-NUMBER CORRECTED AND THE SECOND SITE NAMED** DEC-65's recommendation named FL-3 as the place to build shape (b).  
@@ -557,7 +557,7 @@ authority is the file named, never this one.
 - **D-353** — D-353 RULED by CONDUCT (mechanism): the sweep joins the periodic census as its third shape — rowed as M0-33; the two pre-existing mode-(b) reds outside D-343 (`civicos-ui/test/refusal-partition.control.mjs` exit 1, 2 of 18 sub-checks, AND it leaves a ~4 MB `.rec79-control-pristine/` pen behind on a non-zero exit;…  
   `docs/archive/ledgers/QUEUE-closed.md:490`
 - **D-353** — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): decay mode (c) joins the periodic census as its THIRD shape — `tools/modec-sweep.mjs` runs beside `m025-arm-census.mjs`'s two, its dated adjudication table the record, an unadjudicated candidate a finding that carries the exit code and an adjudicated one…  
-  `docs/development/QUEUE.md:467`
+  `docs/development/QUEUE.md:511`
 - **D-358** · 2026-09-14 — DECIDED 2026-09-14** (D-358 answered: the run, not the pilot).  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:10`
 - **D-358** · 2026-09-14 — RULED and **BUILT, with a CALLER as of 2026-09-14** — `op=contentmint`, the four-state MINT LABEL on every content-row projection and on the leg surface, the attest fence made reachable (SK-7); D-358 ANSWERED at §7.3 — the caller is a RUN, not the pilot, whose exclusion is corrected rather than lifted; SK-8 landed…  
@@ -625,7 +625,7 @@ authority is the file named, never this one.
 - **D-428** — PLUS `bio-plane/test/projects.test.mjs` (one assertion that pinned NAME_TAKEN's `bundleId` CORRECTED with a dated reason) and `bio-plane/test/project-sight.test.mjs` (a comment's cross-reference to D-428 brought current).  
   `docs/development/CLAIMS.md:14293`
 - **D-428** · 2026-09-18 — es, whose sha is the returned sha; bytes already carrying `id:` are refused; `project-sight.test.mjs` §6's KNOWN pin is CORRECTED with its reason; D-428 CLOSED on its row — its name half was RULED by Bob on 2026-09-18 (Membership v2 §7: names stay unique across the instance and the refusal reveals only the name the…  
-  `docs/development/QUEUE.md:92`
+  `docs/development/QUEUE.md:96`
 - **D-429** · 2026-09-19 — §3 rule 2's note (D-429, BOB #15) is BUILT for a project bundle and for a finding a ratified case pins (REC-140, IC-157); what `op=ratify` still publishes OUTSIDE a case is D-431, DECIDED by BOB #16 (2026-09-19, §3 rule 2's second note) and not built. §6A's surface is verified rowable (BOB #16, 2026-09-19):…  
   `docs/architecture/BIO_Publication_v0_1.md:3`
 - **D-429** · 2026-09-18 — `case-authority.test.mjs` §7's pin CORRECTED at its site.  
@@ -647,9 +647,9 @@ authority is the file named, never this one.
 - **D-431** — D-431 RULED** and folded into `BIO_Publication_v0_1.md` §3 rule 2 (second note): `op=ratify` publishes a FINDING only at a sha a RATIFIED case pins; any other bundle only as EVIDENCE a pinned finding rests on; what crossed stays, COUNTED. - **FLEET's scratch questions**: a scratch purge takes scratch IDENTITY, a…  
   `docs/development/kickoffs/BOB-NEXT.md:17`
 - **D-431** · 2026-09-19 — design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 2, the second note ("DECIDED 2026-09-19 by BOB #16 (D-431)"), folded at `09ec7a86`, with rule 1 (one-way).  
-  `docs/development/QUEUE.md:79`
+  `docs/development/QUEUE.md:83`
 - **D-431** — ified case rests on is refused, byte-identical for an unseen and a never-minted project; `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, with its reason; the (c) count is stated in the landing; D-431 CLOSED.  
-  `docs/development/QUEUE.md:82`
+  `docs/development/QUEUE.md:86`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -802,6 +802,8 @@ authority is the file named, never this one.
   `docs/development/CIVICOS_UI_STATE.md:82`
 - **IC-155** — CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md`…  
   `docs/development/CLAIMS.md:14228`
+- **IC-162** · 2026-09-19 — IC-162 · I3: DEC-63 AS AMENDED — a run whose context is a QUESTION consults NO project: `airunopen` / `airuntick` / `airunclose` no longer refuse `AI_RUN_NOT_PROJECT_MEMBER` (C-22.8) over an inquiry; `projectGate.ground` over a question is `INQUIRY` (the value `PROJECTLESS` is removed, and `PARTICIPANT` is now said…  
+  `docs/development/INTERFACE-CHANGES.md:11724`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -1206,6 +1208,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/BOB-INBOX-drained.md:1013`
 - **REC-142** — REC-142 DECIDED, ON THIS CLAIM, BEFORE ANY CODE — the shape: `conclude` IS PUBLISHED ON A CONCLUDED INQUIRY (its PROJECT arm); NO separate act id.** Why: (1) it is ONE act through ONE op — `op=conclude&project=` is the write the store already accepts there (REC-124), and the relationship is the act's PARAMETER…  
   `docs/development/CLAIMS.md:14495`
+- **REC-145** · 2026-09-19 — 2026-09-19 · BOB #16 · REC-145's TWO FINDINGS RULED — two items, both disclosure/authority class.** Design: `BIO_Membership_Architecture_v2.md` §7, the DEC-63 ruling bullet, "WHO MAY TICK AND CLOSE A RUN" and "AND THE CONTEXT KIND IS CHECKED" (this commit).  
+  `docs/archive/ledgers/BOB-INBOX-drained.md:1032`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1307,7 +1311,7 @@ authority is the file named, never this one.
 - **UI-64** · 2026-09-17 — THREE DEFECTS IN ITS OWN INSTRUMENT, CORRECTED RATHER THAN DECLARED AWAY:** the suite was calling the handler DIRECTLY, so arm A left sections 4–5 green with the door gone; `rc.includes(at)` was **an equality that cost nothing, because the two timestamps are the same value**; and `clickRendered` THREW instead of…  
   `docs/archive/ledgers/QUEUE-closed.md:776`
 - **UI-66** — Every caller that chose a project id is CORRECTED at its site with its reason, never exempted.  
-  `docs/development/QUEUE.md:91`
+  `docs/development/QUEUE.md:95`
 ## FW-
 
 - **FW-1** · 2026-08-03 — RESPONSES · 2026-08-03 · to the proposal AS AMENDED (including `doc-para`) - **FRAMEWORK: `AGREE` — answered on its behalf by CONDUCT, in writing, per protocol step 3.** FRAMEWORK is dormant (its FW-1…FW-10 run is done and its slot released; no  
@@ -1573,7 +1577,7 @@ authority is the file named, never this one.
 - **M0-61** · 2026-09-18 — [SUPERSEDED IN PART by M-54, 2026-09-18 (M0-61): the three facts below re-measured true, but the NEWLINE is a correlate, not the cause — 2 of the 3 cross-line trips are genuine claims, and the RECONCILED sentence trips identically on one line.  
   `docs/development/MEASUREMENTS.md:15930`
 - **M0-68** · 2026-09-19 — A superseded test is CORRECTED, never exempted. — owner M0 (the test estate).  
-  `docs/development/QUEUE.md:373`
+  `docs/development/QUEUE.md:397`
 - **M0-69** · 2026-09-19 — §6 rung 6 — the scratch sweep taking scratch IDENTITY is DECIDED (BOB #16, 2026-09-19) and NOT BUILT: today `op=purge` clears the record tables only (row M0-69). - §7 — multi-instance isolation is planned, not built, and no queue row exists; the collision table and ordering constraints live in…  
   `docs/architecture/BIO_Distribution_v0_1.md:8`
 
@@ -1652,7 +1656,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — a project does not own a line of inquiry.** *"Anybody can ask a question related to anything - even something also being explored in a project they're not a member of.  
   `docs/architecture/BIO_Membership_Architecture_v2.md:618`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents might be private, though the existence of the project may not be.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:628`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:646`
 - CORRECTED the same day by BOB #15 — the first version said *the owner or any administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the exception"*).  
   `docs/architecture/BIO_Publication_v0_1.md:180`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
@@ -1717,6 +1721,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/archive/ledgers/BOB-INBOX-drained.md:955`
 - Superseded assertions are CORRECTED with the reason, never exempted.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:993`
+- (co-participants included), the principal and the reaper still end the run, and ARM H6 is CORRECTED with its reason. **The cheap defeat:** comparing the caller to the run's `actor` field as SENT rather than as stamped passes the arm and is forgeable, so the suite drives a caller that sends another member's id. 2.  
+  `docs/archive/ledgers/BOB-INBOX-drained.md:1042`
 - civicos-ui/test/act-dispose.test.mjs (this item's harness for (1) — CORRECTED with dated comments, never exempted), civicos-ui/test/act-proposal.test.mjs (harness for (2), same discipline), civicos-ui/test/document-page.test.mjs + civicos-ui/test/document-structure.test.mjs + civicos-ui/test/cite-act.test.mjs (the…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1071`
 - **2026-08-05** — paths AMENDED 2026-08-05, mid-item, because the work reached two lines the opening claim did not name and a claim that quietly grows is worse than one that is corrected: (6) `boot()` (~:900) gains ONE awaited line — `await loadActSource(true)` — and its comment; the seam had no caller anywhere in the file, which…  
@@ -1855,6 +1861,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/archive/ledgers/QUEUE-closed.md:2048`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
   `docs/archive/ledgers/QUEUE-closed.md:2431`
+- ect; the stated `projects` count stays sighted-only; a project-context run keeps the joined gate; superseded assertions CORRECTED with their reason, never exempted.  
+  `docs/archive/ledgers/QUEUE-closed.md:2504`
 - **2026-09-15** — THE FALSIFICATION RULE, CORRECTED 2026-09-15 (CONDUCT #11, on BOB #11's argument), and the correction is worth more than the clause it fixes.** Every `running` row carries a clause telling a reader how to check the status against the world.  
   `docs/archive/ledgers/QUEUE-narrative-2026-09-18.md:35`
 - PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED | | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only; knowledge, and an INPUT to the queue, never a rival | | wake a session that is already mid-run | **a short nudge, pointing at what to…  
@@ -2273,6 +2281,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:11437`
 - CORRECTED at its site with a dated reason, never exempted: `airun-projectgate.test.mjs` ARM G1, which pinned `projects: 2` for a member never invited to one of the two. **RESPONSES:** not yet collected.  
   `docs/development/INTERFACE-CHANGES.md:11498`
+- `project-disclosure.test.mjs` §3 CORRECTED and extended (21 → 27): the only-hidden question is PERMITTED with count 0; nora's accept arm and its byte-identity arm; the project-context refusal (olga invited-not-joined over the hidden project, nora over sam's); sam over his own project (over-strictness).  
+  `docs/development/INTERFACE-CHANGES.md:11754`
+- `airun-projectgate.test.mjs` CORRECTED (47 → 52): every arm that drove the refusal over a question is RE-AIMED at the project context with a dated reason; B0, G3/G4, H6, L3 and the pure P4 are new.  
+  `docs/development/INTERFACE-CHANGES.md:11756`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
@@ -2387,8 +2399,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MILESTONES.md:182`
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
-- ect; the stated `projects` count stays sighted-only; a project-context run keeps the joined gate; superseded assertions CORRECTED with their reason, never exempted.  
-  `docs/development/QUEUE.md:132`
+- ends one (as `acquireWhy` does), the `detail` only where no translation exists; `version-review` §7's pinned wording is CORRECTED in the same change with its reason.  
+  `docs/development/QUEUE.md:136`
+- scope: compare the caller to the STAMPED `principal_plane`, never a sent field; ARM H6 CORRECTED with its reason, never exempted. accepts-when: a second member with `contribute` is refused tick and close both over a question and over a project context (co-participants included); the principal and the reaper still…  
+  `docs/development/QUEUE.md:156`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

@@ -311,7 +311,9 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
          /* PL-18: the project-membership gate, decided ONCE in `airun.mjs` for all
             three run verbs rather than three times here — DEC-63's ruling that the
             gate is participation and not a capability tier. */
-         projectGate } from "./airun.mjs";
+         projectGate,
+         /* REC-145: which run contexts the gate consults a project for — one answer, shared. */
+         runConsultsProjects } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
    it holds no copy of what a chain may claim, which engine weakens what, or who
@@ -36691,6 +36693,11 @@ export class Store extends DurableObject {
   /** WHICH PROJECTS HOLD THIS CONTEXT — the run's context resolved to the
    *  projects whose participants may work on it.
    *
+   *  [REC-145, 2026-09-19: for a QUESTION this set no longer licenses anything. DEC-63 as amended by
+   *  Bob (*"a project doesn't own an area of enquiry"*) means the verdict over an inquiry consults no
+   *  project; the set is read only for the report's SIGHTED count (REC-139). The inquiry paragraph
+   *  below is kept as the record of PL-18's reading, and its "licenses" sentence is superseded.]
+   *
    *  A `project` context is its own project, and nothing else: a run opened
    *  over a project is work in that project by definition.
    *
@@ -36746,7 +36753,12 @@ export class Store extends DurableObject {
   #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects = this.#runContextProjects(contextType, contextId);
     const who = actor == null ? "" : String(actor).trim();
-    const joined = who
+    /* REC-145 (DEC-63 as amended by Bob, 2026-09-18; Membership v2 §7, BOB #16): OVER A QUESTION NO
+       PROJECT IS CONSULTED, so no participation question is asked at all — `runConsultsProjects` is the
+       one answer to which contexts are gated, shared with `projectGate` so the facts fed to the verdict
+       and the verdict cannot disagree. The citing projects are still resolved above, for the stated
+       count below and for nothing else. A PROJECT context keeps the joined-participant gate. */
+    const joined = who && runConsultsProjects(contextType)
       ? projects.filter((p) => {
           const part = this.#participation(p, who);
           return !!part && part.state === "joined";
@@ -36754,7 +36766,10 @@ export class Store extends DurableObject {
       : [];
     const g = projectGate({ actor: who, contextType, contextId, projects, projectsJoined: joined });
     /* REC-139 / D-428 (Membership v2 §7, BOB #15, 2026-09-18): THE REPORT COUNTS ONLY THE CITING
-       PROJECTS ITS CALLER CAN SEE, and none of the others. The VERDICT above is DEC-63's and is
+       PROJECTS ITS CALLER CAN SEE, and none of the others. [SUPERSEDED IN PART 2026-09-19 by REC-145:
+       the verdict no longer reads the citing projects at all — over a question it consults none, over
+       a project it reads that one. The count below is unchanged and stays sighted-only.] As REC-139
+       built it: the VERDICT above is DEC-63's and is
        computed over EVERY citing project, unchanged — who may START a run is that ruling's question,
        and it requires no disclosure. What changes is the number the answer STATES: it counted a
        project the caller cannot see, so a member's run over a question read `projects: 2` the moment
@@ -36860,8 +36875,9 @@ export class Store extends DurableObject {
       return { run, started: false,
                code: gate.code, check: gate.check,
                translation: gate.translation, detail: gate.detail,
-               note: "starting an investigation is licensed by PARTICIPATION IN THE PROJECT the "
-                   + "question belongs to (DEC-63, Bob 2026-08-09), and the contribute capability "
+               note: "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT "
+                   + "PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as "
+                   + "amended 2026-09-18), and the contribute capability "
                    + "is only the floor beneath that. These are two different facts about an "
                    + "account and they are refused separately so each names its own remedy" };
     /* REC-64 — UI-38's §14a RIDER, DISCHARGED HERE AND NOT AT A SURFACE.
@@ -37000,8 +37016,8 @@ export class Store extends DurableObject {
       return { run, ticked: false, found: true, status: row.status,
                code: gate.code, check: gate.check,
                translation: gate.translation, detail: gate.detail,
-               note: "continuing a run is licensed by PARTICIPATION IN THE PROJECT the run's question "
-                   + "belongs to (DEC-63), and the contribute capability is only the floor beneath "
+               note: "continuing a run over a project is licensed by PARTICIPATION IN THAT PROJECT "
+                   + "(DEC-63), and the contribute capability is only the floor beneath "
                    + "that. Nothing was appended and no budget was spent" };
     if (row.status !== "running")
       return { run, found: true, ticked: false, status: row.status,
@@ -37086,8 +37102,8 @@ export class Store extends DurableObject {
         return { run, terminated: false, found: true, ok: false,
                  code: gate.code, check: gate.check,
                  translation: gate.translation, detail: gate.detail,
-                 note: "closing a run is licensed by PARTICIPATION IN THE PROJECT the run's question "
-                     + "belongs to (DEC-63), and the contribute capability is only the floor beneath "
+                 note: "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT "
+                     + "(DEC-63), and the contribute capability is only the floor beneath "
                      + "that. The run is untouched and is still running" };
     }
     return this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });

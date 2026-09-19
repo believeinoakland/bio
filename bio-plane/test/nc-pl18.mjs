@@ -69,8 +69,8 @@ const ARMS = [
             + "carries the other's subject)",
     mustNotFail: "B1, B2 — a refusal still occurs and still carries the code. If these went red "
                + "the arm would prove nothing about the SENTENCE.",
-    from: "    `starting or continuing a run over ${label} is work inside the project it belongs to, `\n"
-        + "    + `and this account has joined none of them (DEC-63). This is not a capability: holding `\n"
+    from: "    `starting or continuing a run over ${label} is work inside that project, `\n"
+        + "    + `and this account has not joined it (DEC-63). This is not a capability: holding `\n"
         + "    + `contribute would not change it, and an owner of that project inviting you would`);",
     to:   "    `this account does not hold the contribute capability. Capabilities are set by an `\n"
         + "    + `administrator, so ask one to grant it rather than looking for another route.`);" },
@@ -82,8 +82,8 @@ const ARMS = [
     mustFail: "B2 (the translation is compared against the catalogue) and B3 (the sentence names "
             + "participation and the remedy)",
     mustNotFail: "B1 — the refusal still happens.",
-    from: "    translation: 'Asking the system to look into a question is work inside the project that question '\n"
-        + "      + 'belongs to, and this account is not one of that project\\'s participants. This is not about '\n"
+    from: "    translation: 'Asking the system to look into a project is work inside that project, and this '\n"
+        + "      + 'account is not one of that project\\'s participants. This is not about '\n"
         + "      + 'what the account is allowed to do in general — it is about which piece of work it is part '\n"
         + "      + 'of. Someone who owns that project can invite you to it.',",
     to:   "    translation: 'This account does not hold the contribute capability. Capabilities are set by an '\n"
@@ -92,11 +92,15 @@ const ARMS = [
   { id: "c-no-gate-on-open", file: STORE,
     declared: "remove the gate from `aiRunOpen` ALONE, leaving the tick and the close gated. This "
             + "is the RULING arm — DEC-63 is about who may START an investigation.",
-    mustFail: "B (all), E2, F1, F2, G3, S1, S2, L1 — every refusal at the open",
+    /* ANCHORS c AND d CORRECTED 2026-09-19 by REC-145: REC-139 added `viewer` to the three gate calls
+       and did not move these anchors, so both arms REFUSED TO ARM from then until now (measured by
+       reading: the old spelling occurs zero times). The declared set moves with REC-145 too — G3 is
+       now a permission and G4 the project-context refusal. */
+    mustFail: "B (all), C3, E2, F1, F2, G4, S1, S2, L1 — every refusal at the open",
     mustNotFail: "C (the capability floor is a different fence) and H1/H2 (the tick and close "
                + "keep their own gate, which is what proves the three are gated independently)",
-    from: "    const gate = this.#aiRunProjectGate({ actor, contextType, contextId });\n    if (!gate.permitted)",
-    to:   "    const gate = this.#aiRunProjectGate({ actor, contextType, contextId });\n    if (false && !gate.permitted)" },
+    from: "    const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });\n    if (!gate.permitted)",
+    to:   "    const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });\n    if (false && !gate.permitted)" },
 
   { id: "d-no-gate-on-tick", file: STORE,
     declared: "remove the gate from `aiRunTick` ALONE. IS-6's own argument is the subject: gating "
@@ -104,28 +108,48 @@ const ARMS = [
             + "still spend its budget.",
     mustFail: "H1 (pia ticks) and H3 (the run is no longer untouched)",
     mustNotFail: "H2 — the close keeps its gate, so the two are not one fence measured twice.",
-    from: "    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id });\n"
+    from: "    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });\n"
         + "    if (!gate.permitted)\n      return { run, ticked: false, found: true, status: row.status,",
-    to:   "    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id });\n"
+    to:   "    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });\n"
         + "    if (false && !gate.permitted)\n      return { run, ticked: false, found: true, status: row.status," },
 
-  { id: "e-projectless-silent-deny", file: AIRUN,
-    declared: "DEC-17's CASE, ARMED THE WRONG WAY. Make an inquiry outside any project fall through "
-            + "to the refusal — the silent deny the item was told to decide against. *An inquiry "
-            + "outside any project has no bar and inherits none.*",
-    mustFail: "D1, D2, D3 — the projectless run is refused, and the stated ground goes with it",
-    mustNotFail: "A, B, C — every arm about a question that IS in a project.",
-    from: "  if (all.length === 0)\n    return { permitted: true, applied: false, ground: \"PROJECTLESS\",",
-    to:   "  if (false)\n    return { permitted: true, applied: false, ground: \"PROJECTLESS\"," },
+  /* ARM e REPLACED 2026-09-19 by REC-145. It was *"DEC-17's case armed the wrong way"* — the
+     PROJECTLESS branch skipped — and that branch no longer exists: every question answers on ONE ground,
+     INQUIRY. Its successor is REC-145's own negative control, the row's words: restore the project
+     consult for an inquiry context (the one predicate both the store and the pure gate read). */
+  { id: "e-inquiry-consults-projects", file: AIRUN,
+    declared: "REC-145's NEGATIVE CONTROL. `runConsultsProjects` answers `true` for every kind, so a "
+            + "run over a question asks participation again (PL-18's reading, which Bob amended). The "
+            + "PERMITTED arms over a question must fail by name.",
+    mustFail: "A2 (ground back to PARTICIPANT), B0 (pia refused over a question), D1 D2 D3 (a question "
+            + "no project cites is refused — there is no PROJECTLESS ground to fall back on), G1, G3, "
+            + "H6, L3, and the pure arms P1 P2 P2b P4",
+    mustNotFail: "A1 and G2 (a JOINED member still starts), every project-context arm (B1-B6, E, F, G4, "
+               + "H1-H5, S, L1), C, M.",
+    from: "  return String(contextType ?? \"\") === \"project\";\n}",
+    to:   "  return true;\n}" },
+
+  /* REC-145 — THE ROW'S LIAR, added 2026-09-19: drop the gate for EVERY context. */
+  { id: "e2-gate-dropped-everywhere", file: AIRUN,
+    declared: "THE LIAR REC-145's ROW NAMES: `runConsultsProjects` answers `false` for every kind, so a "
+            + "run over a PROJECT consults nobody either. Every permission over a question stays green "
+            + "(that is the lie); the project-context refusals must catch it.",
+    mustFail: "B1 B2 B4 B6, C3, E2, F1, F2, G4, H1 H2 H3, S1 S2, L1 — every refusal over a project",
+    mustNotFail: "A, B0, D, G1-G3, H6, L3, C (the floor), M, P (the pure arms carry their own kind).",
+    from: "  return String(contextType ?? \"\") === \"project\";\n}",
+    to:   "  return false;\n}" },
 
   { id: "f-over-strict-all-projects", file: AIRUN,
     declared: "OVER-STRICTNESS ARM ONE. Require participation in EVERY project that draws on the "
             + "question rather than any one of them — a fence tighter than DEC-63's rule, which "
             + "says *a member of the project* and not *of every project*. Correct work in a "
-            + "spelling the fence did not anticipate must not be refused.",
-    mustFail: "G1 and G2 — both members of the shared question, each in only one of its two projects",
-    mustNotFail: "A1 (sam's question has ONE project, so a tightened fence does not reach it), B, "
-               + "C, D — which is what shows the arm is about the MANY-PROJECT case specifically.",
+            + "spelling the fence did not anticipate must not be refused. "
+            + "[REC-145, 2026-09-19: NOW DECLARED ALL GREEN. The any-vs-every distinction is moot "
+            + "after DEC-63's amendment: a question consults no project, and a project context names "
+            + "exactly ONE, so `mine.length === all.length` and `mine.length > 0` agree everywhere the "
+            + "gate is asked. Kept rather than deleted so the moot branch is visible as moot.]",
+    mustFail: "(none) — was G1 and G2, both now permissions over a question that consult no project",
+    mustNotFail: "everything.",
     from: "  if (mine.length > 0)\n    return { permitted: true, applied: true, ground: \"PARTICIPANT\",",
     to:   "  if (mine.length === all.length)\n    return { permitted: true, applied: true, ground: \"PARTICIPANT\"," },
 
@@ -153,7 +177,8 @@ const ARMS = [
     declared: "stop stamping `actor` server-side, so the value reaches the store from the CALLER'S "
             + "OWN QUERY. A gate that trusts the caller's word about who they are is not a gate.",
     mustFail: "S1 (pia borrows sam's participation by naming him) and A2/D2/H4 (a caller who names "
-            + "nobody now reads as a machine credential and the stated ground collapses)",
+            + "nobody now reads as a machine credential and the stated ground collapses) "
+            + "[REC-145: and B0, G1, H6 — the INQUIRY ground they pin collapses the same way]",
     mustNotFail: "C1 — the capability floor is decided from the SESSION and is untouched by this.",
     from: "    if (RUN_VERB_ACTIONS.includes(op)) {\n      inner.searchParams.delete(\"actor\");",
     to:   "    if (false) {\n      inner.searchParams.delete(\"actor\");" },

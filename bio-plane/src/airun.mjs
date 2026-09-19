@@ -1866,15 +1866,30 @@ export const PROJECT_GATE_GROUNDS = {
      *"any narrowing happens at the credential layer"* — IS-5's `ai` credential
      scope, which can only narrow what a machine may reach. */
   NO_MEMBER_BEHIND_CALLER: "the caller is a machine credential, so there is no participation to check",
-  /* DEC-17, VERBATIM: *"An inquiry outside any project has no bar and inherits
-     none."* So an inquiry in no project is PERMITTED and the permission is
-     STATED. Deciding it the other way would invent a constraint the model does
-     not carry — and answering it with a silent allow would be the same defect
-     one layer down, because nobody reading the answer could tell a projectless
-     inquiry from a gate that failed to run. */
-  PROJECTLESS: "this question is in no project, and DEC-17 puts no bar on one that is not",
-  PARTICIPANT: "the account participates in at least one project this question belongs to",
+  /* REC-145 (2026-09-19) — DEC-63 AS AMENDED BY BOB, 2026-09-18: *"A project doesn't own an area of
+     enquiry to the exclusion of others."* A run whose context is a QUESTION consults no project for its
+     verdict (Membership v2 §7, the DEC-63 ruling bullet, "How it applies at the code", BOB #16). ONE
+     GROUND for every question, whoever cites it, and that is the §7.9 half of the ruling rather than
+     tidiness. The ground this REPLACES, `PROJECTLESS` (PL-18, from DEC-17: *"An inquiry outside any
+     project has no bar and inherits none"*), was said only when NO project cited the question, so its
+     ABSENCE told a member that some project — possibly one hidden from them — did; a second permitting
+     ground keyed on the citers would carry the same bit. DEC-17's case is not lost: a question in no
+     project is still a question, permitted and STATED on this ground. And it is not a silent allow: the
+     answer still says WHY the run was allowed, which is what PL-18's vocabulary exists for. */
+  INQUIRY: "this run is over a question, and a project does not own a line of inquiry: the verdict consults no project (DEC-63 as amended, 2026-09-18)",
+  PARTICIPANT: "the account has joined the project this run is over",
 };
+
+/** REC-145 — DOES A RUN OVER THIS CONTEXT KIND CONSULT A PROJECT FOR ITS VERDICT? The ONE answer, read by
+ *  `projectGate` below AND by the store before it asks any participation question, so the pure decision
+ *  and the facts fed to it cannot disagree about which contexts are gated. Only a PROJECT context is:
+ *  *"a project's contents are private to its participants"* (BOB #16). Every other kind names no project.
+ *  `RUN_CONTEXTS` holds two kinds; an unvocabularied one (REC-69's delegated asymmetry — the open does
+ *  not fence the word) is read as naming none, never as a project the caller did not say, which is how
+ *  it was read before this item too (its citers were looked up, and a non-question has none). */
+export function runConsultsProjects(contextType) {
+  return String(contextType ?? "") === "project";
+}
 /* THERE IS NO `NOT_PARTICIPANT` GROUND, AND ITS ABSENCE IS A CORRECTION THIS
    ITEM'S OWN GUARD RUN FORCED RATHER THAN AN OMISSION. The first draft had one,
    and it was a SECOND NAME for a fact that already has a canonical one: the
@@ -1889,6 +1904,13 @@ export const PROJECT_GATE_GROUNDS = {
    one restating the other. */
 
 /** DEC-63 / PL-18 — MAY THIS ACCOUNT ASK THE SYSTEM TO LOOK AT THIS CONTEXT?
+ *
+ *  AMENDED 2026-09-19 by REC-145 (DEC-63 as amended by Bob, 2026-09-18; Membership v2 §7): THE GATE
+ *  NOW STANDS ONLY OVER A PROJECT CONTEXT. A run over a question consults no project — the ground is
+ *  `INQUIRY`, whoever cites it — so `AI_RUN_NOT_PROJECT_MEMBER` is never said over a question, and the
+ *  refusal no longer carries the one bit (*a project you cannot see cites this*) §7.9 forbids. What
+ *  follows about joined/invited/leaving and the absent admin bypass is unchanged, and now applies to a
+ *  run over a PROJECT only.
  *
  *  PURE, like everything else in this file: the STORE supplies the facts (which
  *  projects hold the context, and which of those the account has JOINED) and
@@ -1948,9 +1970,12 @@ export function projectGate({ actor = null, contextType = null, contextId = null
   if (!who)
     return { permitted: true, applied: false, ground: "NO_MEMBER_BEHIND_CALLER",
              why: PROJECT_GATE_GROUNDS.NO_MEMBER_BEHIND_CALLER, projects: all.length };
-  if (all.length === 0)
-    return { permitted: true, applied: false, ground: "PROJECTLESS",
-             why: PROJECT_GATE_GROUNDS.PROJECTLESS, projects: 0 };
+  /* REC-145: over a question NO PROJECT IS CONSULTED — neither list is read for the verdict, and the
+     store asks no participation question at all. `projects` is carried only as the count the answer
+     states, which the store replaces with the caller's SIGHTED count (REC-139). */
+  if (!runConsultsProjects(contextType))
+    return { permitted: true, applied: false, ground: "INQUIRY",
+             why: PROJECT_GATE_GROUNDS.INQUIRY, projects: all.length };
   if (mine.length > 0)
     return { permitted: true, applied: true, ground: "PARTICIPANT",
              why: PROJECT_GATE_GROUNDS.PARTICIPANT, projects: all.length };
@@ -1967,8 +1992,8 @@ export function projectGate({ actor = null, contextType = null, contextId = null
      `if (!gate.permitted)` reads it correctly — and there is no second field
      that could disagree with the code about whether this was a refusal. */
   return refusal("AI_RUN_NOT_PROJECT_MEMBER",
-    `starting or continuing a run over ${label} is work inside the project it belongs to, `
-    + `and this account has joined none of them (DEC-63). This is not a capability: holding `
+    `starting or continuing a run over ${label} is work inside that project, `
+    + `and this account has not joined it (DEC-63). This is not a capability: holding `
     + `contribute would not change it, and an owner of that project inviting you would`);
 }
 
