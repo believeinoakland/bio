@@ -14184,3 +14184,42 @@ exit 0, 156 pass / 0 fail, 28 restores byte-identical. Also touched beyond the c
 **FOR CONDUCT / SCHEDULER, before step (4) moves rows into the backlog:** `tools/rowdesign.mjs` and `plancheck` §2's
 milestone, interface and UNKNOWN-ROW-STATE checks read `QUEUE.md` only, so backlog rows would go unchecked by them;
 `mintid.mjs` and `owed.mjs` were retargeted here, those were not.
+
+## CLAIM 2026-09-18 RECORD (REC-138 — D-426: a project the caller cannot SEE answers every project-targeted act exactly as one that does not exist, and the sight answer comes BEFORE the positional one)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a93cdfa0fe0f8d435`, branch `worktree-agent-a93cdfa0fe0f8d435`,
+base `dd52609b`. `npm ci` in all three packages, each `node_modules` a real directory (4.3 GiB free after install).
+Design: Membership v2 §7.9 (*"Uninvited. The project is not visible at all. Not its existence"*), §7.3, IC-141's
+byte-identity rule, IC-152's `projectAuthority`. IDs minted with `tools/mintid.mjs`: IC-155, D-428. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — ONE shared project not-found and ONE sight predicate, and their callers:
+  `promote`'s revision arm, `cite`'s project lookup, `#edgeTransition`, `projectInvite`, `projectOwnerAdd`,
+  `projectOwnerRemove`, `projectOwnerRescue`, `forkProject`, `#runContextProjects`' project arm, and the DO dispatch
+  rows of those roster acts (the `viewer` they now read); `bio-plane/src/index.mjs` (the `viewer` stamp on the roster
+  acts, and `actorViewer` in `op=promote`'s body, both deleted first).
+- Tests: a new `bio-plane/test/project-sight.test.mjs` and its control driver; `project-authority.test.mjs`'s D-426 pin
+  CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted.
+  `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md` (D-426 closed, D-428 raised), `BIO_Membership_Architecture_v2.md`
+  front matter and §7.9, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `op=caseratify` or the case-ratification path (REC-137's), NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-138) — RELEASED
+
+released: 2026-09-18 by the REC-138 worker, branch `worktree-agent-a93cdfa0fe0f8d435`, base `dd52609b` (origin/main has
+since moved by DIST 0.61.0 and a merge; no `src/` overlap, I3 still 33.0.0 there — CONDUCT merges). Paths as claimed,
+PLUS `bio-plane/test/project-authority.control.mjs` (two declarations corrected with dated reasons) and
+`docs/archive/ledgers/DEBT-closed.md` (D-426 archived by `tools/ledger.mjs`). Baseline, pristine worktree at `70dd6480`
+(the claim commit, no src change): **247/248 suites green · 15105 assertions**, the one failure `mintid.test.mjs`'s
+*no live floor is driven by prose*, CAUSED BY THIS CLAIM naming D-428 before its DEBT row existed, and gone once the row
+landed. Final, at `03ac4822`: **249/249 suites green · 15201 assertions**, exit 0; `coverage.mjs --strict` exit 0 with
+REGISTER_FLOOR moved from its own print (1400 -> 1407 · 239 -> 240 · 240 -> 241 · run 202 -> 203); UI harness exit 0.
+IDs minted with `tools/mintid.mjs`: IC-155, D-428.
+**FOR CONDUCT:** (1) RESOLVE IC-155 against I3 as read at resolution (proposed MAJOR on 33.0.0; the break is
+`op=airunopen` refusing a member's run over a project context the store does not hold). (2) Flip REC-138 at integration.
+(3) Carry D-428 to BOB: §7.1's instance-wide name uniqueness (NAME_TAKEN names the other project's id and title) against
+§7.9, and whether project ids should be plane-minted. (4) Tell DIST: a DISCLOSURE closing, open on deployed instances
+until the next cut. (5) REC-137 runs beside this: if it adds an act that names a project, it asks `Store#inSight` BEFORE
+`#projectAuthority` and returns `Store.#noSuchProject` — say so at its merge.

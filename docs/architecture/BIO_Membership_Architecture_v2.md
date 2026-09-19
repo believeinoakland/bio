@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132; and §4's *direct nothing* ENFORCED at every act that changes a project, built by REC-134 (IC-152, C-56) — a positional check, never the visibility gate, with §7.13 the one administrator path. as of 2026-09-18.
+**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132; and §4's *direct nothing* ENFORCED at every act that changes a project, built by REC-134 (IC-152, C-56) — a positional check, never the visibility gate, with §7.13 the one administrator path; and §7.9's *uninvited* position ENFORCED at every project-targeted ACT, built by REC-138 (IC-155, D-426) — a project the caller cannot see answers exactly as one that does not exist, and sight is asked before position. as of 2026-09-18.
 
 **Place in the system** · Owns construct 1 of `BIO_System_Design.md` §3 (membership and authority). It supersedes one decision of `BIO_Technical_Architecture_Decisions_v10.md` §10 (per-member tokens) and depends on `BIO_State_Rules_Consistency_v1_5.md` §4.3 (the project object) and §5.1–5.3 (the relationship vocabulary and edge ownership). It adds accountability and access control, not integrity; the store schema realises it.
 
@@ -11,6 +11,7 @@
 - §7 — DEC-72 clause 5 adds an owner-only act (publish) absent here, and D-310/D-311 record that the affordance surface does not yet publish owner-gated publish or the roster acts.
 - §7 — `op=caseratify`'s required position is DECIDED (the bullet *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18) and UNBUILT: whether the plane requires an OWNER's signature, and refuses delivery by an enrolled administrator with no role in the project, is REC-137's to verify at the code and build. The rest of *direct nothing* is enforced (REC-134).
 - §7 — the hierarchy is stated in Focus terms "until the rename arc lands"; the live state machine is `inquiry` and the catalog marks `focus` legacy.
+- §7 — 7.1 against 7.9 is UNRULED (D-428, raised by REC-138): a CREATION at a hidden project's id answers `EXISTS`, and §7.1's instance-wide name uniqueness answers `NAME_TAKEN` naming the other project's id and title, to a creator who may not be able to see it. Whether uniqueness yields to invisibility there, and whether project ids should be plane-minted, is Bob's.
 
 **Contents**
 - [1. Why membership exists](#1-why-membership-exists)
@@ -505,6 +506,15 @@ positions a member occupies with respect to a project:
 - **Joined.** Everything, subject to the member's capabilities.
 
 Administrators see all projects and all participant lists.
+
+**"Not its existence" holds at the ACTS, not only at the reads — BUILT 2026-09-18 by REC-138 (IC-155, D-426).** Every act
+that names a project answers a caller who cannot see it exactly as it answers an id that names nothing, byte for byte
+(IC-141's rule), through one sight predicate (`Store#inSight`, over `viewerPredicate`) and one not-found
+(`Store.#noSuchProject`). Sight is asked BEFORE position, so a positional refusal (C-56, the roster acts' owner and
+administrator tests) is only ever said to a caller who can already see the project — the invited and the
+administrators — and tells them nothing new. The per-act measurement is IC-155's; driven in
+`bio-plane/test/project-sight.test.mjs` and `project-sight.control.mjs`. Not closed, because it is two rulings pulling
+against each other: a creation at a hidden project's id, and 7.1's name uniqueness (D-428).
 
 **THE FOUNDER IS AN ADMINISTRATOR HERE TOO — how a session reaches this rule (designed 2026-09-18 by BOB #15 for D-422).**
 The founder's own session read as `member:admin`, and `viewerPredicate`'s administrator arm looks for an active `members` row
