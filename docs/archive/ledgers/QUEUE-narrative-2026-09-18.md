@@ -415,3 +415,56 @@ Each row is the item's own `scope:` first line, cut at a word boundary, with `op
 rendered as prose so a derived summary states no claim about the dispatch table. The
 full item, unedited, is in the archived ledger.
 
+
+_(the build-order section's header, preamble and table as they stood at LED-6 step (4), 2026-09-19 — moved verbatim by SCHEDULER; the order now lives in the rows' file positions across `QUEUE.md` then `BACKLOG.md`)_
+
+## THE BUILD ORDER — every open row, in the order it will be processed (SCHEDULER, first order audit, 2026-09-18)
+
+**Every open row of this file is below, in ORDER; the area sections that follow keep their narrative and hold no rows.** Set at SCHEDULER's first act (`kickoffs/SCHEDULER.md`, *"confirm the order of the whole build plan"*): for each row its `depends-on` was resolved against `node tools/status.mjs` and `node tools/ledger.mjs find` (read at the artifact, not from the row), its design section opened, its stated blocker checked against the code, and step 3's rules applied — corrections to landed work and security and disclosure defects ahead of features. `was` is the row's position in this file before the audit (file order was the only order; nothing stated one across areas). Each row carries an `order:` line saying why it is where it is. Rows whose place is provisional on BOB's or Bob's priority say so, and were sent to BOB the same turn.
+
+| # | item | was | state | why it is here |
+| --- | --- | --- | --- | --- |
+| 1 | REC-153 | new | running | an authority defect (a mislabelled context walks around the joined gate); REC-145 is ON MAIN (c5d3788a), so runnable |
+| 2 | REC-152 | new | running | authority: who may end a run (REC-145 on main); moved above the UI corrections at BOB #16's direction while weekly usage is short — disclosure and authority first |
+| 3 | REC-151 | new | running | a §7.9 disclosure (a sequential id counts hidden objects); REC-141 is ON MAIN (11aa7b13), so runnable; above the UI corrections at BOB #16's direction |
+| 4 | UI-67 | new | queued | REC-144 is ON MAIN (071e34dc), so runnable: the question page renders its read |
+| 5 | UI-72 | new | queued | a correction to landed surfaces (refusals show internal detail over the plane's label); with the corrections, after UI-67 |
+| 6 | M0-73 | new | running | with D-430, a precondition of LED-6's split: without it a blocked backlog row leaves `owed` and a backlog-only id sets no floor |
+| 7 | LED-6 | 1 | queued | the pipeline migration, SCHEDULER's own hand act, after D-430 |
+| 8 | LED-7 | 2 | queued | the debt fold: until it runs, ~222 open DEBT rows — among them disclosure defects that would outrank features — stand outside the order, so the plan cannot be proved in order without it |
+| 9 | REC-135 | 8 | queued | first feature: BOB #14 item 2 (8.claim) — the project conclusion reaching the case; REC-136 is ON MAIN since c7f2df67, so it is runnable |
+| 10 | MK-3 | 9 | queued | BOB #14's items 3 and 6 (2.firsthand, 13.attribution); MK-1 is done; its first act keeps an off-the-record account from leaking at publication |
+| 11 | MK-5 | 10 | queued | rests on MK-3's attribution |
+| 12 | REC-146 | new | queued | BOB #14's item 5 (8.contradiction), after the claim and attribution rows it follows; the pairing read first |
+| 13 | M0-71 | new | queued | the measurement IDENTIFY's judgement must pass, BEFORE anything a member sees; after REC-146 |
+| 14 | REC-147 | new | blocked | blocked on M0-71's measured gate |
+| 15 | UI-68 | new | queued | BOB #14's item 8 (13.review-copy), its in-instance surfaces; the plane half is built |
+| 16 | REC-148 | new | queued | DEC-31's in-band quartet, before any review copy leaves the instance |
+| 17 | UI-69 | new | queued | after UI-68 and REC-148: export only once the quartet travels with it |
+| 18 | REC-149 | new | queued | Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first |
+| 19 | REC-150 | new | queued | after REC-149, whose EXISTENCE level it needs |
+| 20 | UI-70 | new | queued | after REC-149, and after UI-66 on the same forms |
+| 21 | UI-71 | new | queued | after REC-149 and REC-150 |
+| 22 | REC-122 | 11 | queued | runnable product work (M4, D-161's last act); REC-120 is done; not on BOB #14's list, which governs only rows added after it |
+| 23 | CAP-11 | 18 | queued | runnable since CAP-10 landed (M2 measurement); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) |
+| 24 | FW-20 | 19 | queued | runnable since CPDF-19 landed (M2 breadth); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) |
+| 25 | CPDF-3 | 16 | queued | unblocked at this audit (its deploy blocker is false); an M2 live verification, after the product rows above |
+| 26 | DIST-5 | 22 | queued | DIST's own reconciliation, ACCEPTED by DIST 2026-09-18 and queued in its session behind the REC-143 P0; holds no general slot |
+| 27 | M0-77 | new | queued | first of the queued M0 rows: a silent exit 0 in the id allocator every lane uses is a costs-nothing green |
+| 28 | M0-68 | new | queued | M0, right after the battery tally: an instrument asserting a closed defect fails against every current plane — a correction to a superseded test |
+| 29 | M0-72 | new | queued | M0; a negative control reporting a false FAIL, with M0-68's class of test corrections |
+| 30 | M0-74 | new | queued | M0; a probe failing on main for a moved check, with the other instrument corrections |
+| 31 | M0-75 | new | queued | M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment |
+| 32 | M0-76 | new | queued | M0, with the instrument corrections; ruled by BOB #16 |
+| 33 | M0-69 | new | queued | M0, after the battery tally and M0-68: a live verification whose scratch keeps member rows stops measuring the same subject twice |
+| 34 | M0-70 | new | queued | M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 |
+| 35 | VF-7 | 17 | queued | M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it |
+| 36 | M0-66 | 14 | queued | M0; an instrument producing false findings |
+| 37 | M0-64 | 12 | queued | M0; a control arm proving less than it declares |
+| 38 | M0-44 | 3 | queued | M0; seven truncated claims invisible to the bounds instrument |
+| 39 | M0-33 | 4 | queued | M0; a third census shape |
+| 40 | SK-5 | 21 | blocked | blocked: no plane op publishes the surface registry |
+| 41 | UI-60 | 20 | blocked | blocked: waits on Bob's re-prioritisation of UI |
+| 42 | REC-15 | 15 | blocked | blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 |
+| 43 | UI-17 | 23 | blocked | blocked: rests on REC-15 |
+

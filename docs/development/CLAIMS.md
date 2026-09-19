@@ -14938,3 +14938,11 @@ fixture edit in its path. **FOR DIST (or whoever holds an operator credential):*
 `biosmoke7` and `civicos`; 0 closes it. **FOR BOB:** no op enumerates runs, so a non-zero `aiRuns` can only be floored,
 never counted, by ops (M-68) — a design act if the full count is wanted. PL-18's "a context need not be a bundle this
 store holds" is superseded for the open by the ruling; stated in IC-163.
+## CLAIM 2026-09-19 SCHEDULER (LED-6 steps (3)–(4) — the cut and the split; two suites the split supersedes)
+
+claimed: 2026-09-19 by SCHEDULER, worktree `.claude/worktrees/scheduler`. Paths: `docs/development/QUEUE.md`,
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*` (the lane's own); OUTSIDE the lane, two assertions the
+split makes stale, CORRECTED with their reason: `bio-plane/test/ledger.test.mjs` §12's vacuity guard (it required
+more than 5 non-running rows in the cache, which the split caps at 8 with the running rows in it) and
+`bio-plane/test/planning-hygiene.test.mjs`' queue-id set (read from `QUEUE.md` alone — D-430's class — so the
+backlog's ids would read as dangling references). Nothing else in `bio-plane/**` is touched.
