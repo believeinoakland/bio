@@ -537,7 +537,7 @@ authority is the file named, never this one.
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/archive/ledgers/DEBT-closed.md:53`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
-  `docs/development/QUEUE.md:1251`
+  `docs/development/QUEUE.md:1242`
 - **D-330** · 2026-09-13 — AMENDED MID-ITEM, 2026-09-13: `docs/development/DEBT.md` gains a SECOND row beyond D-330's disposition — **D-333**, the class this item's measurement establishes and its repair does not close: a driver's declared TALLY decays while every one of its anchors stays live, and no static check can see the difference…  
   `docs/development/CLAIMS.md:3282`
 - **D-331** · 2026-09-13 — RULED AS THIS ROW RECOMMENDED, AND THE RULING DECLINES BOTH HALVES OF THE FALSE CHOICE: A THROWING DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.** `scripts/armdecay.mjs`'s `preflight()` is the shared dry pass — it counts every arm's quote in the file that arm will write, prints the WHOLE table, and only…  
@@ -551,7 +551,7 @@ authority is the file named, never this one.
 - **D-353** — D-353 RULED by CONDUCT (mechanism): the sweep joins the periodic census as its third shape — rowed as M0-33; the two pre-existing mode-(b) reds outside D-343 (`civicos-ui/test/refusal-partition.control.mjs` exit 1, 2 of 18 sub-checks, AND it leaves a ~4 MB `.rec79-control-pristine/` pen behind on a non-zero exit;…  
   `docs/archive/ledgers/QUEUE-closed.md:490`
 - **D-353** — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): decay mode (c) joins the periodic census as its THIRD shape — `tools/modec-sweep.mjs` runs beside `m025-arm-census.mjs`'s two, its dated adjudication table the record, an unadjudicated candidate a finding that carries the exit code and an adjudicated one…  
-  `docs/development/QUEUE.md:1081`
+  `docs/development/QUEUE.md:1072`
 - **D-358** · 2026-09-14 — DECIDED 2026-09-14** (D-358 answered: the run, not the pilot).  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:10`
 - **D-358** · 2026-09-14 — RULED and **BUILT, with a CALLER as of 2026-09-14** — `op=contentmint`, the four-state MINT LABEL on every content-row projection and on the leg surface, the attest fence made reachable (SK-7); D-358 ANSWERED at §7.3 — the caller is a RUN, not the pilot, whose exclusion is corrected rather than lifted; SK-8 landed…  
@@ -977,7 +977,7 @@ authority is the file named, never this one.
 - **REC-68** · 2026-08-09 — RECOVERED FROM `0ca7640^2` AND AMENDED, NOT RESTORED — AND THE AMENDMENT IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"*.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:110`
 - **REC-68** — REC-68 branch blob, and AMENDED rather than restored verbatim — see the last paragraph of this block for why the original was right when it was written and why putting it back unchanged would have been a second defect.  
-  `docs/development/VERIFICATION.md:254`
+  `docs/development/VERIFICATION.md:277`
 - **REC-69** — `op=airunlog` DECIDED as a SEPARATE surface**, reasoning at the site in decision order: §14a's click opens the TRANSCRIPT and `airun.mjs` states the log is NOT a transcript; the two answer different questions for different readers; the log publishes FOUR vocabularies precisely so its reader holds no copy — a…  
   `docs/archive/ledgers/QUEUE-2026-08.md:1729`
 - **REC-70** — CORRECTED 16 → 17 with a dated reason, never exempted**.  
@@ -1125,7 +1125,7 @@ authority is the file named, never this one.
 - **REC-121** · 2026-09-18 — AMENDED 2026-09-18 by REC-121 — §4.2's `chain` FILTER HAS THREE ANSWERS, NOT TWO, under `IC-131` on I3.** REC-104 kept `chain:undetermined` on `chain IS NULL`, which was right for every row that could exist when it was decided and became wrong when FW-19 (IC-125) admitted an image cited AS ITSELF: a `cited_as =…  
   `docs/development/CONTENT-SEARCH-DESIGN.md:11`
 - **REC-124** — Every caller this breaks (REC-124 counted 34 conclude callers) is CORRECTED at its site with its reason, never exempted, and the UI's conclude flow is DELEGATED if it breaks.  
-  `docs/development/QUEUE.md:1116`
+  `docs/development/QUEUE.md:1107`
 - **REC-125** · 2026-09-18 — The operator's bearer tokens are refused too (REC-125, D-421 DECIDED; C-32.14 / C-32.15, IC-137) — an attested act is delivered only by a signed-in member's own session |  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:141`
 - **REC-125** · 2026-09-18 — d permitted by design, BIO_Intake_Doctrine_v1_1.md §3; and NO OPERATOR BEARER TOKEN delivers either act (REC-125, D-421 DECIDED by BOB #14, 2026-09-18, `bio-plane/test/operator-attest.test.mjs`): the ADMIN, MEMBER and PROBE tokens each carrying a member's VALID signature were ACCEPTED at op=ratify and op=caseratify…  
@@ -1427,7 +1427,7 @@ authority is the file named, never this one.
 - **M0-14** · 2026-08-08 — The two SUPERSEDED READINGS below that row are near-duplicates: both open `120 of 120 — REMEASURED 2026-08-08 by M0-14` and repeat the same four sentences, the second differing only by carrying M0-15's `122 of 122 · 486`.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7434`
 - **M0-14** — M0-14 CORRECTED THE TALLY ITSELF, AND THE WAY IT WAS FOUND IS THE POINT.** M0-13 predicted the register would move **388 → 390** for two arms it had just added, and **it did not move at all.** Four of 120 suites scored ZERO while declaring 48 arms between them, a fifth scored **1 against a real 10**, and nothing…  
-  `docs/development/VERIFICATION.md:219`
+  `docs/development/VERIFICATION.md:242`
 - **M0-15** · 2026-08-08 — RE-MEASURING A TRUE BASELINE: THE RECIPE, CORRECTED 2026-08-08 (M0-15) **Do not use `git stash` to park work while you re-measure at HEAD.** The stack is shared by every worktree in this repository (the row above), so `git stash pop` is a  
   `docs/development/ORCHESTRATION.md:202`
 - **M0-23** — Correct the fixture to the wire shape and delete the phantom keys, with any assertion that read them CORRECTED at its site, never exempted.  
@@ -1499,7 +1499,7 @@ authority is the file named, never this one.
 - **M0-51** · 2026-09-17 — THE ROW'S OWN SCOPE FIGURE IS STALE AND IS CORRECTED HERE RATHER THAN LEFT FOR THE WORKER TO TRIP ON.** The row says TWELVE `*.control.mjs` files have no same-named `.test.mjs` sibling.  
   `docs/archive/ledgers/QUEUE-closed.md:370`
 - **M0-51** · 2026-09-17 — THE RULE, RULED by M0-51 on 2026-09-17 under the determination this row delegated rather than returned.  
-  `docs/development/VERIFICATION.md:450`
+  `docs/development/VERIFICATION.md:473`
 - **M0-54** · 2026-09-17 — GATE PROFILE RULED BY CONDUCT #2 AS `DOCS`, ON A MEASUREMENT AND NOT AS A CONCESSION TO THE DISK:** `gates.mjs` classifies the diff DOCS and CONDUCT verified it at the artifact — four paths, every one under `docs/`, no code — so the doc-facing suites plus `plancheck` were the owed gate and a full battery was never…  
   `docs/archive/ledgers/QUEUE-closed.md:330`
 - **M0-56** · 2026-09-17 — THE SHAPE IS A `pre-push` HOOK THAT REFUSES, SELF-INSTALLED BY `plancheck`, AND THE ARGUMENT THAT DECIDED IT IS COVERAGE RATHER THAN THE MUTATION OBJECTION.** A gate runs BEFORE the commit; a rebase happens AFTER.  
@@ -1515,7 +1515,7 @@ authority is the file named, never this one.
 - **M0-58** · 2026-09-18 — IT CORRECTED CONDUCT'S BRIEF ON THE ONE POINT THE BRIEF LEANED HARDEST ON.** I called the prose-claim gap *the big one* and M0-58's input; **it is substantially ALREADY INSTRUMENTED** — `tools/undesignedclaims.mjs` (D-408, landed the same day, run by `plancheck` 2f) reports **27 claims, 0 unaudited**, every one dated.  
   `docs/archive/ledgers/QUEUE-closed.md:756`
 - **M0-59** · 2026-09-17 — CORRECTED 2026-09-17 by M0-59 (D-406), and the correction is the point rather than a > footnote.** The sentence above said *closed for this clone AND ITS WORKTREES*.  
-  `docs/development/VERIFICATION.md:1324`
+  `docs/development/VERIFICATION.md:1347`
 - **M0-61** · 2026-09-18 — [SUPERSEDED IN PART by M-54, 2026-09-18 (M0-61): the three facts below re-measured true, but the NEWLINE is a correlate, not the cause — 2 of the 3 cross-line trips are genuine claims, and the RECONCILED sentence trips identically on one line.  
   `docs/development/MEASUREMENTS.md:15930`
 
@@ -2298,7 +2298,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - version that the content is extracted from."* RULED, folded into Part II §16.  
   `docs/development/QUEUE.md:878`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
-  `docs/development/QUEUE.md:1215`
+  `docs/development/QUEUE.md:1206`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  
