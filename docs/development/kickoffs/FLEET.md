@@ -159,3 +159,52 @@ Learned in the field and not written anywhere before. Each has a receipt in `FLE
   manifest hash; `npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/` before measuring; claim precisely (FLEET's
   ground is `agent-worker/**`, `pdf-worker/**`, `fleet-bundle.mjs` + `fleetbundles.*`; `tools/deploy-fleet.mjs` is
   DIST's; `ocr-worker` is CONTENT-PDF's ground on FLEET's pattern); report to the CURRENT lead BOB.
+
+## Stand-up, 2026-09-19 — FLEET #2, the first fleet session in the new account, measured rather than inherited
+
+The account switch (Bob, 2026-09-19, via BOB #16) retired every lane in the old account. This session
+re-measured `FLEET-NEXT.md`'s table instead of believing it — that file says to, and each fact below names
+its instrument. Self-wake re-armed the day it opened: recurring every 6 h and the one-shot renewal at day 5.
+
+**The fleet is coherent and serving.** Probed live on `biosmoke7`, 2026-09-19, with the admin token from
+`.env`: `agent-worker`, `pdf-worker` and `ocr-worker` each answer `{"ok":true,…,"version":"0.65.0"}` at
+`/version` (ocr also `engine_loaded: true`, tesseract-wasm 0.11.0), and the plane answers `0.65.0` at BOTH
+the isolate (`/version`) and through the DO (`op=bootstrap`). `release/RELEASE.json` on `main` names the
+three member hashes; all three committed bundles hash to them, `dist/` and `release/` copies alike.
+
+**NO plane change has staled a fleet artifact** — the question this file's law says to ask first. Every
+first-party input hash recorded in the three `dist/*.bundle.json` manifests matches the tree on
+`origin/main`: **23 checked, 0 drifted**, INCLUDING the seven `../bio-plane/src/*` couplings (`tokens.mjs`
+for agent-worker, `cpu/pdfstructure/subresources.mjs` for pdf-worker and ocr-worker) and ocr-worker's
+`../pdf-worker/src/pagepixels.mjs`. **The input-hash arm needs no `npm ci`**: it is pure hashing, so the
+staleness question can be answered in a fresh worktree BEFORE spending ~574 MB on three installs — worth
+knowing on this machine, where disk sat at 11 GiB free / 95% that morning. Only pdf-worker's two VENDORED
+inputs (`node_modules/unpdf/dist/*`) read UNREADABLE, which is the absent install and not drift; the
+byte-identity arm is the half that needs the install.
+
+**Two receipts in `FLEET-NEXT.md` of 2026-09-19 were imprecise. The conclusions hold; the evidence did not.**
+Carry the corrected form, because a successor who re-runs either one will see something the file denies:
+
+- *"the fleet sources are identical from v0.62.0 to v0.65.0 (`git diff --stat` empty)"* — **that diff is NOT
+  empty.** Four files change: `version` in `package.json` and `"vars": { "VERSION": … }` in `wrangler.jsonc`,
+  for both agent-worker and pdf-worker. The conclusion is right and now has its MECHANISM: **the version
+  label is a wrangler `var`, injected at deploy and never compiled into the bundle** — which is exactly why
+  both members hash to `a7e5f590…` / `b26dee19…` unchanged at v0.59.0, v0.62.0, v0.65.0 AND `main` while
+  `/version` answers 0.65.0. That is the strongest available form of "a version label is not the code": the
+  label and the code are kept in different places by design, so they CANNOT be read off one another.
+- *"Members: 7 VF-4 rows remain … The `bio` namespace holds none."* — the seven `vf4*` rows are exactly as
+  named, but `op=memberlist&store=scratch` returns **13**: six more predate VF-4 (`d41-sf72-a1/a2/a3`,
+  `probe-1785025010`, `probe-ms11t4s2`, `scr-ms11znmp`, all 2026-07-26). **M0-69's clearing job is 13 rows,
+  not 7.** And `bio` holds **4** member rows, none of them `vf4*` — true to that sentence's intent, false to
+  its words. State the WHOLE roster at a sweep, not the subset this lane happened to mint.
+
+**Scratch, stated at this sweep** (the rule is never to report "scratch clean" off `op=stats` alone): every
+derived counter 0, `op=audit` `ok:true checked=0`, and the 13 member rows above.
+
+**`bio`'s audit is not clean, and that is NOT news — look it up before reporting it.** `op=audit&store=bio`
+reads `checked=31 clean=21 withErrors=10`, `tallyDetail {"C-18.9/chain-absent": 10}`. `MEASUREMENTS.md`
+already carries this population byte-for-byte as **D-200's pre-existing one**, diagnosed: the ten were
+captured 2026-07-19..22 and C-18.9's chain arm was written 2026-07-31, so the field did not exist when the
+bytes landed, and all ten reconstruct. D-200 reads `open`; none of it is FLEET's. Recorded here only so the
+next session to run that op does not re-mint a known row as a discovery — which is what the lookup rule in
+`CLAUDE.md` §1 is for, and it paid for itself within an hour of this session opening.
