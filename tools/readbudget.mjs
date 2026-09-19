@@ -36,11 +36,17 @@ export const BUDGET = {
 };
 
 /* Files whose cut has landed, by repo-relative path: over budget again is a FAIL, not a WARN. */
-export const CUT = new Set(["CLAUDE.md"]);
+export const CUT = new Set(["CLAUDE.md", "docs/development/kickoffs/BOB.md", "docs/development/kickoffs/CONDUCT.md",
+                            "docs/development/ORCHESTRATION.md"]);
+
+/* Read-whole documents outside the kickoffs directory. */
+export const READ_WHOLE_DOCS = ["docs/development/ORCHESTRATION.md"];
 
 export function readSet(root = ROOT) {
   const kdir = join(root, "docs/development/kickoffs");
   const out = [{ file: "CLAUDE.md", budget: BUDGET["CLAUDE.md"] }];
+  /* Process documents every lane reads whole (BOB #16, 2026-09-19, BOB-NEXT §3 item 2): the kickoff budget. */
+  for (const f of READ_WHOLE_DOCS) if (existsSync(join(root, f))) out.push({ file: f, budget: BUDGET.kickoff });
   if (existsSync(kdir))
     for (const f of readdirSync(kdir).sort()) {
       if (!f.endsWith(".md") || f === "README.md") continue;

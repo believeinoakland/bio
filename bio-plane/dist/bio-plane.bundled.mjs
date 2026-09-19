@@ -3764,6 +3764,7 @@ __export(bio_checks_exports, {
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
+  RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
@@ -11588,8 +11589,20 @@ var PROJECT_AUTHORITY_CHECKS = {
 var CASE_AUTHORITY_CHECKS = {
   CASE_SIGNER_NOT_AN_OWNER: {
     check: "C-57.1",
-    where: "src/store.mjs ratifyCaseDocument > is-case-signer-owner",
-    translation: "A case is published in its project's name, so it has to be signed by an owner of that project. The signature on this case belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review the case document and sign it."
+    /* REC-140 (2026-09-18): the region moved into `#caseAuthority`, the ONE helper both ratify
+       paths call — `op=caseratify` for the case document and `op=ratify` for a finding a
+       ratified case pins (Publication rule 2 as BOB #15 applied it to D-429). The TRANSLATION
+       was corrected from "this case" to "a case, and each finding in it" at the same time,
+       because the same code now answers at both acts and the old sentence was false at one. */
+    where: "src/store.mjs #caseAuthority > is-case-signer-owner",
+    translation: "A case and each finding in it are published in the project's name, so each has to be signed by an owner of that project. This signature belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review it and sign it."
+  }
+};
+var RATIFY_SCOPE_CHECKS = {
+  RATIFY_PROJECT_BUNDLE: {
+    check: "C-58.1",
+    where: "src/index.mjs fetch > is-ratify-project-bundle",
+    translation: "A project's own document is not published. A project publishes through its cases: publish a case from the project, have an owner sign the case document, and then ratify the findings in it. Nothing was published."
   }
 };
 var PROJECT_ID_CHECKS = {
@@ -33960,30 +33973,15 @@ Subject position: ${pos} \u2014 ${just}
         version_sha: typeof r.version_sha === "string" ? r.version_sha : null
       }));
       const project = typeof fm.case_project === "string" && fm.case_project !== "null" ? fm.case_project.trim() : null;
-      if (project && deliveredBy !== "founder") {
-        const denied = this.#projectAuthority(project, deliveredBy, "joined", "caseratify");
-        if (denied) return denied;
-      }
-      const refusal7 = (code, detail) => {
-        const row = CASE_AUTHORITY_CHECKS[code];
-        return {
-          ok: false,
-          reason: code,
-          code,
-          check: row.check,
-          translation: row.translation,
-          detail,
-          caseId: id,
-          edition: ed,
-          project,
-          signer: attestorMember ?? null
-        };
-      };
-      if (!project || !this.#isProjectOwner(project, attestorMember))
-        return refusal7(
-          "CASE_SIGNER_NOT_AN_OWNER",
-          `case ${id} edition ${ed} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is ${attestorMember ?? "an unnamed signer"}'s, who is not an owner of it. Being a registered signer of this instance is not authority over a project. Nothing was committed.`
-        );
+      const denied = this.#caseAuthority({
+        project,
+        deliveredBy,
+        signer: attestorMember,
+        act: "caseratify",
+        subject: `case ${id} edition ${ed}`,
+        extra: { caseId: id, edition: ed }
+      });
+      if (denied) return denied;
       if (doc.ratified_at) {
         if (doc.sig_armored === sigArmored) return { ok: true, existed: true, caseId: id, edition: ed };
         return {
@@ -50911,6 +50909,57 @@ ${words}`;
       );
     return null;
   }
+  /* ===== REC-137 / REC-140 — WHO AUTHORISES A PUBLICATION IN A PROJECT'S NAME, AND WHO MAY CARRY IT IN ==
+   *
+   * Membership Architecture v2 §7, *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*
+   * (BOB #15). REC-137 built the two questions inside `ratifyCaseDocument`; REC-140 (D-429, Publication
+   * rule 2 as BOB #15 applied it) MOVED them here because `op=ratify` asks them too, of a finding a
+   * ratified case pins — one rule with two doors, never a second copy of it. Asked in this order:
+   *
+   * (1) DELIVERY IS CARRIAGE, NOT DIRECTION (AI Roles §3 rule 4: the record states signer and
+   *     deliverer apart). A member with a role in the project may deliver, and so may the FOUNDER, as
+   *     DEC-33's interim publishing route; an enrolled administrator with no role in the project may
+   *     NOT — administrators direct nothing (§4.9). The member half is REC-134's ONE positional check,
+   *     consumed and never restated: `deliveredBy` is the control plane's reading of the SESSION ROW
+   *     (`deliveringPrincipal`, REC-128), `member:<id>` for a member's session and `founder` for the
+   *     founder's. The founder is told apart HERE by that principal and never by the folded name: a
+   *     member ENROLLED as `admin` delivers as `member:admin`, is asked, and is not the founder. An
+   *     ABSENT deliverer is every internal caller (a store-level committer, the legacy arms), not
+   *     asked, as at every REC-134 act. A project-less subject is (2)'s to refuse, by name.
+   * (2) THE AUTHORITY IS THE SIGNATURE, AND IT MUST BE AN OWNER'S (DEC-72 clause 5: publishing is the
+   *     project owner's act). Asked through `#isProjectOwner`, §7's one owner predicate. A subject
+   *     naming no project has no owner to sign it and is refused by the same rule — DEC-72 removed the
+   *     project-less case, so it is a legacy document, and an absent publisher is not a publisher of
+   *     none.
+   *
+   * Returns null to proceed, or the refusal. `extra` carries the caller's own identifying fields,
+   * placed where `ratifyCaseDocument`'s refusal always carried them, so its answer is unchanged. */
+  #caseAuthority({ project, deliveredBy = null, signer = null, act, subject, extra = {} }) {
+    if (project && deliveredBy !== "founder") {
+      const denied = this.#projectAuthority(project, deliveredBy, "joined", act);
+      if (denied) return denied;
+    }
+    const refusal7 = (code, detail) => {
+      const row = CASE_AUTHORITY_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra,
+        project,
+        signer: signer ?? null
+      };
+    };
+    if (!project || !this.#isProjectOwner(project, signer))
+      return refusal7(
+        "CASE_SIGNER_NOT_AN_OWNER",
+        `${subject} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is ${signer ?? "an unnamed signer"}'s, who is not an owner of it. Being a registered signer of this instance is not authority over a project. Nothing was committed.`
+      );
+    return null;
+  }
   /* ===== REC-138 / D-426 — A PROJECT YOU CANNOT SEE IS A PROJECT THAT DOES NOT EXIST, AT EVERY ACT ==
    *
    * Membership Architecture v2 §7.9: an UNINVITED member sees nothing of a project — *"Not its
@@ -52328,12 +52377,22 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
      still returned because the migrate tool and the older gate consumed them;
      plane-gate/1.0 reads all of that out of the image instead, since the catalog
      wants the bundle as a filesystem rather than as query results. */
-  gateFacts(bundleId) {
+  /* REC-140 (D-429): SIGHT FIRST, AND ONE ANSWER FOR ABSENT AND HIDDEN. `op=ratify` sends
+     the ratifier's viewer, and a bundle that viewer cannot see answers with the SAME object
+     a never-minted id does, through ONE condition — IC-155's `#noSuchProject` discipline at
+     the bundle level (only project rows are ever filtered by `viewerPredicate`, so in
+     practice this is a hidden PROJECT). Before, the facts were read with no viewer and the
+     hidden bundle leaked twice: RATIFY_STALE echoed its real sha, and the ratifier-scoped
+     image came back empty and was reported as "bundle.md is missing". A viewer that was
+     NOT SENT (null) is not asked, on `#rosterInSight`'s precedent: every other reader of
+     these facts is a tool, not a caller. */
+  gateFacts(bundleId, viewer = null) {
     const row = this.#one(
       `SELECT bundle_id, object_type, current_state, bundle_sha FROM bundles WHERE bundle_id=?`,
       bundleId
     );
-    if (!row) return { ok: false, reason: "ABSENT", bundleId };
+    if (!row || viewer !== null && viewer !== void 0 && !this.#inSight(bundleId, viewer))
+      return { ok: false, reason: "ABSENT", bundleId };
     return {
       ok: true,
       row,
@@ -52429,6 +52488,33 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     if (!bundleId || !bundleSha || !attestorKey || !gateVersion || !sigArmored || !Array.isArray(shas))
       return { ok: false, reason: "MALFORMED" };
     return this.ctx.storage.transactionSync(() => {
+      const pinnedBy = this.#pinnedCaseEditionsOf(bundleId, bundleSha);
+      if (pinnedBy.length) {
+        const byProject = /* @__PURE__ */ new Map();
+        for (const pin of pinnedBy) {
+          const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, pin.case_id);
+          const pid = owner ? owner.project_id : null;
+          if (!byProject.has(pid)) byProject.set(pid, []);
+          byProject.get(pid).push(`${pin.case_id} edition ${Number(pin.edition)}`);
+        }
+        let refused = null;
+        for (const pid of [...byProject.keys()].sort()) {
+          const denied = this.#caseAuthority({
+            project: pid,
+            deliveredBy,
+            signer: attestorMember,
+            act: "ratify",
+            subject: `finding ${bundleId}, a member of case ${byProject.get(pid).join(", ")},`,
+            extra: { bundleId }
+          });
+          if (!denied) {
+            refused = null;
+            break;
+          }
+          refused = refused || denied;
+        }
+        if (refused) return refused;
+      }
       const top = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, bundleId);
       const highest = top && top.m != null ? Number(top.m) : 0;
       const already = this.#one(
@@ -63657,7 +63743,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         signeradd: () => this.signerAdd(body || {}),
         signerlist: () => this.signerList(),
         signerset: () => this.signerSet(body || {}),
-        gatefacts: () => this.gateFacts(url.searchParams.get("id")),
+        /* REC-140: the ratifier's viewer, when sent, is asked for sight (`gateFacts`). */
+        gatefacts: () => this.gateFacts(
+          url.searchParams.get("id"),
+          url.searchParams.has("viewer") ? url.searchParams.get("viewer") : null
+        ),
         /* CASE-5b: the case ceremony's three hops, beside `gatefacts` and
            `publish` because they are the same three acts one altitude up —
            hand out the facts, read the document, commit from the signed bytes. */
@@ -65847,6 +65937,12 @@ var testimonyFenceRow = (code) => {
   const row = TESTIMONY_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`testimonyFenceRow: ${code} has no TESTIMONY_CHECKS row with a canned translation (DEC-49).`);
+  return { code, check: row.check, translation: row.translation };
+};
+var ratifyScopeRow = (code) => {
+  const row = RATIFY_SCOPE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`ratifyScopeRow: ${code} has no RATIFY_SCOPE_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row.check, translation: row.translation };
 };
 var machineFenceRow = (code) => {
@@ -68896,10 +68992,21 @@ var index_default = {
       const body2 = await req.json().catch(() => null);
       if (!body2?.bundleId || !body2?.expectedSha || typeof body2?.sig !== "string")
         return json({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
-      const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body2.bundleId)}`));
+      const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
+      const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body2.bundleId)}&viewer=${ratViewer}`));
       if (!factsOut.answered) return storeSilent("ratify/gatefacts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
+      if (normalizeType(facts.row.object_type) === "project")
+        return json({
+          ok: false,
+          reason: "RATIFY_PROJECT_BUNDLE",
+          ...ratifyScopeRow("RATIFY_PROJECT_BUNDLE"),
+          bundleId: body2.bundleId,
+          detail: `${body2.bundleId} is a project's own document, and a project is published through its cases, never directly (BIO_Publication_v0_1.md \xA73 rule 2; D-429). Nothing was published.`,
+          store: storeName,
+          tokenClass: cls
+        }, 409);
       if (facts.testimony && facts.testimony.self.length)
         return json({
           ok: false,
@@ -68955,7 +69062,6 @@ var index_default = {
           tokenClass: cls
         }, 403);
       const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
-      const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
       const imgOut = await doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(body2.bundleId)}&viewer=${ratViewer}`));
       if (!imgOut.answered) return storeSilent("ratify/image");
       const image = imgOut.result;
@@ -69081,7 +69187,7 @@ var index_default = {
             store: storeName,
             tokenClass: cls
           },
-          pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF") ? 409 : 500
+          pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF" || pub.reason === "CASE_SIGNER_NOT_AN_OWNER" || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT") ? 409 : 500
         );
       let copied = 0, present = 0, r2state = "not configured";
       if (typeof env.PUBLISHED?.put === "function" && r2) {

@@ -47,6 +47,7 @@ The format is the one `PARALLELISM.md` fixes:
 Paths: `docs/development/kickoffs/CONDUCT.md`, `docs/archive/CONDUCT-kickoff-2026-09-19.md` (new, the verbatim archive),
 `tools/readbudget.mjs` (CONDUCT.md into CUT once it fits), `docs/development/MEASUREMENTS.md` (the CONDUCT exam, appended).
 CONDUCT does not edit `kickoffs/CONDUCT.md` while this claim is open; CONDUCT reviews the cut before it lands.
+**released: 2026-09-19 BOB #16** — landed: CONDUCT.md 96,800 B → 21,064 B, reviewed by CONDUCT #6 (three additions taken), exam M-63 (NEW 42/42 · OLD 42/42 · CTRL 27/42), CONDUCT.md and BOB.md armed in `readbudget` CUT.
 
 ## CLAIM 2026-09-18 DIST (the embed hazard, then the cut after 0.58.0)
 released:
@@ -14395,6 +14396,52 @@ publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no contr
 with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
 concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
 either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.
+## CLAIM 2026-09-18 RECORD (REC-140 — D-429: `op=ratify` REFUSES a project bundle; a finding it ratifies takes case ratification's owner-signer and joined-deliverer rules; a caller who cannot see the project is answered as for one that does not exist)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a761302b28f105764`, branch `worktree-agent-a761302b28f105764`,
+base `ff3a4cea` (= origin/main at spawn, carrying the REC-140 flip). `npm ci` in all three packages, each `node_modules` a
+real directory (4.7 GiB free after). Design: `BIO_Publication_v0_1.md` §3 rule 2 and its 2026-09-18 note (BOB #15);
+Membership v2 §7's case-ratification bullet; IC-154, IC-155. IDs minted with `tools/mintid.mjs`: C-58, IC-157. Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (`op=ratify`'s handler only); `bio-plane/src/store.mjs` (`gateFacts`, `publish`,
+  and `ratifyCaseDocument`'s two REC-137 questions moved — not restated — into one helper both ratify paths call);
+  `bio-plane/checks/bio-checks.mjs` (refusal family C-58; C-57.1's `where` and translation).
+- Tests: a new `bio-plane/test/ratify-authority.test.mjs` and its control driver; `case-authority.test.mjs` §7 and its
+  control's anchors; any suite that ratified a project bundle, or a case-pinned finding without an owner's signature —
+  CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` and
+  `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-157), `BIO_Publication_v0_1.md` and `BIO_Membership_Architecture_v2.md` front matter
+  and the sections named, `DEBT.md` (D-429's disposition), this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `#projectAuthority`'s or `#inSight`'s bodies (consumed unchanged), NOT `newgroup/`.
+## CLAIM 2026-09-18 RECORD (REC-140) — RELEASED
+
+released: 2026-09-18 by the REC-140 worker, branch `worktree-agent-a761302b28f105764`, base `ff3a4cea`, merged with
+origin/main `cd9d7c86` (REC-139 IC-156 — I3 36.0.0; DIST 0.63.0) before close-out; IC-157 re-based to 36.0.0. On the
+committed merge `cf3e1034`: **253/253 suites green · 15400 assertions passing · run 26049.1083be**; `coverage.mjs --strict`
+exit 0 with REGISTER_FLOOR moved from its own print (1427 -> 1434 · 243 -> 244 · 244 -> 245 · run 206 -> 207); the UI
+harness exit 0 ("all harnesses green"). `civicos-ui/check-refusal-codes.mjs` green with both governed regions read
+(`fetch > is-ratify-project-bundle`, `#caseAuthority > is-case-signer-owner`); its floors NOT moved (they sit below the
+figures it prints, as REC-137 also found). IDs minted with `tools/mintid.mjs`: C-58, IC-157, D-431. Paths as claimed, plus
+`bio-plane/test/deliverer.test.mjs` CORRECTED at its site (gus made a joined participant before delivering a pinned
+finding's signature). D-429 CLOSED and archived.
+**FOR CONDUCT:** (1) RESOLVE IC-157 against I3 as read at resolution (proposed MAJOR on 37.0.0 → 38.0.0). (2) Flip REC-140 at integration. (3) Carry D-431 to BOB: `op=ratify` still publishes an information
+bundle, an inquiry in no case, and a finding PREPARED into a not-yet-ratified case (the last under a NON-owner's key, which
+side-steps this item's rule by ratifying early) — Publication rule 2 permits none; recommendation in the row. (4) REC-136
+landed before close-out and was merged in (`67c6cc09`..`79f59f14`): `ratify-authority.test.mjs` now concludes through
+`withAdoptableReading(...)` / `adoptedVersionParam()`, and the figures above were re-taken on that merge (see the
+report). IC-157 re-based to I3 37.0.0 (proposed 38.0.0). **DIST is told:** an AUTHORITY and
+DISCLOSURE closing on `op=ratify`.
+
+## CLAIM 2026-09-18 SCHEDULER (LED-6 step (2) — QUEUE.md's non-row blocks to the archive; one control anchor the move supersedes)
+
+claimed: 2026-09-18 by SCHEDULER, worktree `.claude/worktrees/scheduler`. Paths: `docs/development/QUEUE.md` and
+`docs/archive/ledgers/*` (the lane's own, named here for the archive half); and, OUTSIDE the lane, ONE LINE of
+`bio-plane/test/m041-instrument-census.control.mjs` — arm (2)'s `anchorGraded`, which planted a row after QUEUE.md's
+`## M0 — VERIFICATION` heading. The migration moves that heading to the archive, so the anchor goes to zero
+(`m025-arm-anchor-witness` A4 named it); the anchor is CORRECTED to a heading the cache keeps, with a dated reason at the
+site, and the control is re-run on a clean committed tree. Nothing else in `bio-plane/**` is touched.
 
 ## CLAIM 2026-09-18 RECORD (REC-141 — THE PLANE MINTS PROJECT IDS: a caller-supplied id on a new project or a fork is refused with one answer; the plane writes `id:` into the bytes before it hashes and registers them)
 

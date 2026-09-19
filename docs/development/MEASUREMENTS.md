@@ -16919,3 +16919,56 @@ half for `>`; the exit status is the only part of a run's verdict a `>` collisio
 see:** a pipe (`| tee log`: the run id is the only defence), no `lsof` (says UNVERIFIED), a non-battery writer.
 
 **After, on the committed tree:** see the close-out figures in the M0-67 claim block (`CLAIMS.md`).
+
+## M-63 · 2026-09-19 · THE READINESS EXAM FOR CONDUCT — the cut kickoff (20.7 KB) against the old (96.8 KB) and against none (BOB #16)
+
+**Why.** M-60 owed the exam per lane; BOB-NEXT §3.1 made it the condition for landing `kickoffs/CONDUCT.md`'s cut.
+
+**Instrument.** M-60's, with ONE variable moved. 21 questions, each from a failure the old file records (the flip-before-
+spawn, the piped rebase, the dropped file, the keep-both duplicate, prune-on-merge, the disk criterion, the reap, the
+integration-owed correction, the release-note sweep, the self-wake, the checkout, the budget …), keyed to the act. Every
+arm is a fresh `claude -p --model claude-opus-5 --allowedTools Read` in an empty directory OUTSIDE the repository (no
+user-level CLAUDE.md exists; checked), holding today's `CLAUDE.md` (auto-loaded) and `kickoffs/SCHEDULER.md` — so the arms
+differ ONLY in CONDUCT.md: **NEW** = the cut (20,701 B); **OLD** = the file as of 2026-09-18 (96,800 B, now
+`docs/archive/CONDUCT-kickoff-2026-09-19.md`); **CTRL** = no CONDUCT.md — the negative control, which here measures what
+CLAUDE.md and SCHEDULER.md already carry, a sharper control than M-60's empty one. Graded BLIND by a fourth clean-room
+session: the answer sets shuffled to A/B/C (A=NEW, B=CTRL, C=OLD, unmasked after grading), scored 2/1/0 per question.
+
+| arm | score /42 | cache tokens created (≈ reading) | turns | cost |
+| --- | --- | --- | --- | --- |
+| CTRL (no CONDUCT.md) | **27** | 23,995 (baseline) | 4 | $0.56 |
+| NEW | **42** | 31,920 → the kickoff ≈ **7.9k tokens** | 4 | $0.58 |
+| OLD | **42** | 62,687 → the kickoff ≈ **38.7k tokens** | 10 | $1.17 |
+
+**What it establishes.** The control loses 15 points and the grader names where (Q3/Q8 the record read instead of the
+content, Q7 no merge trailer, Q11 no prune-on-merge, Q17 a guessed cron, Q21 a wrong budget), so the exam measures what
+CONDUCT.md adds. The cut kept every measured act at about a fifth of the reading and less than half the turns. **What it
+does not establish:** NEW and OLD both hit the ceiling, so the exam cannot rank them; it shows the cut LOST nothing it
+asks, not that it gained anything. The questions, the key and the cut have one author (BOB #16), which the blind grader
+and the OLD arm limit and do not remove. Retention over a long session is not measured; this is fidelity at the start.
+The suites that read CONDUCT.md by content (mintid, strandedwork, mergecarry test and control arm 7, corpuscheck,
+planning-hygiene) were driven over the cut before it landed.
+
+## M-64 · 2026-09-19 · THE READINESS EXAM FOR SCHEDULER — its required reading against none (BOB #16)
+
+**Instrument.** M-63's, for the SCHEDULER lane. 20 questions keyed to `kickoffs/SCHEDULER.md`, `WORK-PIPELINE.md` and
+`CLAUDE.md` (the inbox drain, the one-commit close, the cache's size and order, a row's fields, the defect-with-its-fix rule,
+the placement order, provisional placement, blocked rows, `ledger.mjs`, dependencies by `status.mjs`, the self-wake, the
+refresh, the gates, LED-7's three doors, blockers as claims, who owns the order). Two arms, each a fresh
+`claude -p --model claude-opus-5 --allowedTools Read` in an empty directory outside the repository with today's
+`CLAUDE.md` auto-loaded: **NEW** = + `kickoffs/SCHEDULER.md` (7,026 B) + `WORK-PIPELINE.md`; **CTRL** = `CLAUDE.md` only.
+No OLD arm: the kickoff is one day old and has no prior version. Graded BLIND (A/B shuffled; A=NEW, B=CTRL).
+
+| arm | score /40 | cache tokens created | turns | cost |
+| --- | --- | --- | --- | --- |
+| CTRL (CLAUDE.md only) | **28** | 22,917 | 4 | $0.47 |
+| NEW | **39** | 26,602 → the lane's reading ≈ **3.7k tokens** | 4 | $0.43 |
+
+**What it establishes.** The lane's reading adds 11 points for about 3.7k tokens. The control reasons correctly from
+`CLAUDE.md` alone on doctrine (defect triage, provisional placement, blockers as claims, the refresh) and fails on the
+lane's concrete mechanics: the cache's size and order, a row's fields, LED-7's doors, and the replenish in the closing
+commit. **The one point NEW lost is a gap in the reading, not in the reader:** neither `SCHEDULER.md` nor
+`WORK-PIPELINE.md` says that `ledger.mjs` REFUSES any move that does not conserve the id multiset of cache, backlog and
+archive — only `BACKLOG.md`'s own preamble does. Sent to SCHEDULER to add to its kickoff. **What it does not establish:**
+retention over a long session, and anything about DIST, FLEET or workers (still owed). One author wrote the questions
+and the key.
