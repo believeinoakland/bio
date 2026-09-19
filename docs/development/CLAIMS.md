@@ -14973,3 +14973,22 @@ and "The legacy residue" (BOB #16, `d7ce3f86`). IDs minted with `tools/mintid.mj
 
 NOT `QUEUE.md`, NOT `civicos-ui/app.html` (a DELEGATION if it calls `op=allocid` for a gated prefix), NOT `release/`,
 NOT `newgroup/`, NOT `kickoffs/CONDUCT.md`.
+
+WIP (stood down 2026-09-19): by CONDUCT #6 on Bob's direction, branch `worktree-agent-a59a4cdfa1b3d4dd3`, merged with
+origin/main `a04e04dc` (merge `616b4b2b`, never rebased). BUILT: `Store#mintOpaqueId`, the one CSPRNG minter (REC-141's
+draw lifted out); CASE (`publishCase`), DRAFT (`#caseDraft`), RVG (`#reviewGrant`), TASK (`taskDrain`, the one mint
+expression) and PROJ (`#mintProjectId`) all call it; `Store.GATED_ID_PREFIXES`; `Store#allocIdOp` refuses every gated
+prefix on the counter's scope (`ALLOCID_PREFIX_GATED`, C-59.5); REC-130's `allocid` comment corrected; IC-164 (proposed
+MAJOR 42.0.0 → 43.0.0, with the per-prefix table), D-432 (opaque id reissuable across a whole-store purge; fix named),
+MEASUREMENTS M-69 (legacy non-PROJ- project ids: 0 on biosmoke7, 0 on civicos), Membership v2 §7 and front matter.
+TESTED: new `opaque-ids.test.mjs` 35/0 and its control, seven arms AS DECLARED (counter-restored-case 31/4 by name;
+math-random 33/2 and counter-derived 34/1 only on the source pins); `project-mint` control seven arms AS DECLARED;
+corrected at their sites: project-mint §6, casesign, case-authority (control 5 arms AS DECLARED), multifinding,
+reviewcopy (control counts unchanged), caseproduction §8 (order-by-id). 89 minting suites × 4 runs: 0 failures.
+LAST GATES READ, on the committed merge `78fc68d3`: battery **259/260 suites green · 15931 assertions passing** —
+the one red is `strandedwork.test.mjs` `...and plancheck --local exits 0` (read on a tree whose branch was not yet
+pushed; not re-run); `coverage.mjs --strict` exit 0, REGISTER FLOOR 1499/251/252, run 214 from its own print; UI harness
+exit 0 at `ca119df1` (not re-run after the REC-153 merge); `plancheck --local` exit 0 at `3a09894b` (not re-run since).
+PRE-EXISTING, not this item's: `caseproduction.control.mjs` arms (C) and (H) throw in the fixture (NOT AS DECLARED)
+on the pre-REC-151 sources too. NEXT STEP: re-run `plancheck --local` then bare and the battery on the pushed tree
+(expect strandedwork green once pushed), the UI harness once, then write `released:`; CONDUCT resolves IC-164.
