@@ -48,7 +48,7 @@ names.
 5. **When CONDUCT reports a task complete** (by `SendMessage`, naming the task and its integration sha): verify the sha is
    on `origin/main` and the row's work is there, then in ONE commit mark it `done`, archive it, and replenish — the next
    runnable tasks from the top of the backlog into the cache until it holds 8, deleted from the backlog as they move. A
-   `blocked` task is never moved into the cache. Push, verify from the remote, and tell CONDUCT what entered the cache.
+   `blocked` task is never moved into the cache. (`ledger.mjs` REFUSES any move that does not conserve the id multiset of cache, backlog and archive — read its refusal, never work around it.) Push, verify from the remote, and tell CONDUCT what entered the cache.
 6. **Keep the cache ahead of CONDUCT.** It holds 8; CONDUCT runs about 3 at once. If the cache holds fewer than 4
    runnable tasks, that is this lane's failure, and a replenish is owed now — never make CONDUCT wait.
 7. **Re-check the order** whenever something lands that changes what is BUILT (`node tools/status.mjs --check`, and each
@@ -57,7 +57,7 @@ names.
 
 **Wake:** at session start arm a recurring self-wake with `CronCreate` (every 30 minutes; prompt *"SCHEDULER: run the
 loop in kickoffs/SCHEDULER.md"*); CONDUCT's completion messages and BOB's inbox entries also wake it. When nothing is
-owed, end the turn with one line saying so. **Never end a turn on a question nobody is present to read** — route it by
+owed, end the turn with one line saying so. **Resolving a rebase conflict in `QUEUE.md`: carry upstream's hunks onto yours, never take one side whole** — taking SCHEDULER's side once reverted CONDUCT's `running` flips under live workers (`8e39602a`). **Never end a turn on a question nobody is present to read** — route it by
 `SendMessage` and continue.
 
 ## The first work this lane owns
