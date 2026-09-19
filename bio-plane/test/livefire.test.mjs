@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) disable the store CAS-on-base in promote (guard `cur.bundle_sha !== base` with `false`) so the plane the self-test drives no longer refuses a stale write -> livefire reports 14/19, ok:false, exit 1: 5 self-test assertions fail (STALE base refused, garbage base refused, live state is the winning revision, history holds the superseded revision, lease returns live sha); restored, 19/19 ok:true. */
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the store CAS-on-base in promote (guard `cur.bundle_sha !== base` with `false`) so the plane the self-test drives no longer refuses a stale write -> livefire reports 14/19, ok:false, exit 1: 5 self-test assertions fail (STALE base refused, garbage base refused, live state is the winning revision, history holds the superseded revision, lease returns live sha); restored, 19/19 ok:true. (run 2026-09-18, M0-67/D-425) drop `&store=bio` from the confinement probe so it asks for a store it IS allowed -> the suite prints `ALLOWED (DEFECT)` and now exits 1 (before M0-67 the exit read `lf.ok` alone and was 0 over that printed defect); restored byte-identically (sha256 c6666907…). */
 /* Runs the deployed battery against local workerd first, so we know it works
    before it is fired at real storage. Credential-free.
    Negative-control detail: disable the store CAS-on-base in promote (guard `cur.bundle_sha !== base` with `false`) so the plane the self-test drives no longer refuses a stale write -> livefire reports 14/19, ok:false, exit 1: 5 self-test assertions fail (STALE base refused, garbage base refused, live state is the winning revision, history holds the superseded revision, lease returns live sha); restored, 19/19 ok:true. */
@@ -32,4 +32,7 @@ console.log("  probe promote with no body  :", d2.result?.reason || d2.error);
 const d3 = await j("/?op=stats&token=probe-local-battery");
 console.log("  probe reads land on         :", d3.store);
 await mf.dispose();
-process.exit(lf.ok ? 0 : 1);
+/* M0-67 / D-425's sweep: the confinement probe above PRINTED `ALLOWED (DEFECT)` and
+   the exit ignored it, so a probe reaching the live store read green in the battery.
+   A defect this suite prints is a defect this suite exits on. */
+process.exit(lf.ok && d1.error ? 0 : 1);

@@ -16840,3 +16840,78 @@ with the key action** — Q1 *"the BOB lane is Bob's room, so I bring the questi
 re-run the subject's negative control"*. **Owed:** the same exam per lane, and field counts of process failures per lane
 against this day's baseline.
 
+
+## M-61 · 2026-09-18 · M0-67 — CAN THE BATTERY REPORT GREEN OVER A SUITE THAT PRINTED FAIL? BOTH MECHANISMS DRIVEN; THE OBSERVED LINE WAS TWO RUNS IN ONE FILE (worktree `agent-aeae827f6d7997fa5`, base `30f1bd6b`, D-425)
+
+**Instrument.** `bio-plane/scripts/battery.mjs` read line by line; `node test/machinefences-dec49.test.mjs` in detached
+scratch worktrees at REC-133's and REC-124's commits; two real batteries pointed at ONE file (`.m067/interleave.sh`,
+worktree-local, not committed); a static sweep of every suite's exit path (`.m067/exitsweep.mjs`, likewise). Every exit
+status below was read UNPIPED. Baseline on this tree before any edit: **247/247 suites green · 15043 assertions · no suite
+skipped · exit 0** (`2f63de5e`).
+
+**What the tally counted (read, not inferred).** The verdict was `failed = results.filter(r => r.code !== 0 && !r.skip)`
+— the EXIT STATUS alone. The per-suite `N pass, M FAIL` text comes from the suite's own last `N pass(ed), M fail(ed)` line
+(`tally()`), and `M` was PRINTED but never reached `failed`, the headline or the exit. The per-suite status column (`ok` /
+`FAIL`) also came from the exit status alone.
+
+**Mechanism 1, the log — REPRODUCED EXACTLY.**
+
+| tree | `machinefences-dec49` | exit |
+| --- | --- | --- |
+| REC-133 at `d5aa3ec9` (the observed log's tree), `cb475127`, `97c55f06` | `67 pass, 0 fail` | 0 |
+| origin/main `30f1bd6b` | `70 pass, 0 fail` | 0 |
+| REC-124 in flight: `89f59d50`'s source + `81a98e28`'s suite (3 new rows, floor not yet moved) | **`68 pass, 2 fail`** (ARM D-PIN-B, ARM D0) | 1 |
+
+REC-133 claimed at 17:33 and measured its baseline at `d5aa3ec9`; REC-124 claimed at 17:35 and landed `89f59d50` at 17:44.
+Two batteries on ONE file, A = this tree (green), B = the REC-124 in-flight tree, same suite filter:
+
+| form | A exit | B exit | what the file shows |
+| --- | --- | --- | --- |
+| `>>`, A first by 2 s | 0 | 1 | `FAIL machinefences-dec49 … 68 pass, 2 FAIL` (line 33), then `13/14 suites green`, then **`14/14 suites green` as the last completion line** — the observed shape |
+| `>`, A first by 2 s | 0 | 1 | a SPLICED line `FAIL machinefences-dec49 … 68 pass,  ok task-fence…` above `14/14 suites green`, and a duplicated tail |
+| `>`, B first by 2 s | 0 | 1 | B's lines entirely overwritten; the file reads as A's clean run |
+
+The original log is NOT recoverable: a byte search of every worktree, `/private/tmp` and `$TMPDIR` for `68 pass, 2 FAIL`
+found only documents and `/private/tmp/conduct4-mk2/battery1.log`, which matches inside `168 pass, 2 FAIL` and is not it.
+**So WHICH file was shared is UNDETERMINED;** what is measured is that the tree that wrote the log cannot print the line,
+REC-124's in-flight tree prints it exactly in that window, and one file with two writers gives the whole shape.
+**Receipt about this instrument:** the first two searches for the log returned NOTHING and looked like "not found" — they
+were `timeout 120 grep …`, and `timeout` does not exist on this Mac (exit 127, empty output). An empty result from a
+command that never ran is the costs-nothing rule; the search was re-run without it.
+
+**Mechanism 2, the verdict — DRIVEN on the real tree.** One `t("M0-67 PLANTED", 1, 2)` in `machinefences-dec49`: alone
+`70 pass, 1 fail` exit 1; in the battery `FAIL … 70 pass, 1 FAIL`, `0/1 suites green`, exit 1 — correct, because the suite
+exits on its counter. With its exit forced to `process.exit(0)`: alone `70 pass, 1 fail` **exit 0**; the PRE-FIX runner
+printed **`ok  machinefences-dec49.test.mjs … 70 pass, 1 FAIL` under `1/1 suites green`, exit 0**. So the answer to D-425's
+question is YES in principle; mechanism 1 is what actually happened.
+
+**The sweep — 300 suites (239 plane · 53 UI harness · 8 fleet).** For each: the tally template's fail expression, and
+whether the exit after it reads that expression. Last exit call, by argument: `fail ? 1 : 0` 235; `1` (an `if (…) process.exit(1)`
+after the tally, natural exit otherwise) 42; `0` preceded by that same conditional `exit(1)` 4; other counter-bound
+ternaries 10; `lf.ok ? 0 : 1` 2; no exit call at all 7. **No suite exits 0 on a non-zero printed count.** Named:
+early `process.exit(0)` before the tally — 17 are `SKIPPED` paths (the runner's skip), 2 are opt-in measurement modes behind
+env vars (`REC120_DUMP`, `transcribe`'s `MEASURE`), and 5 sites in 4 files are text inside comments or generated fixtures,
+not exits;
+`d322-floor-gate-witness`/`conclude-nofalsifier` set `process.exitCode` (no later `exit(0)` overwrites it);
+`reextract`/`ocr-member-e2e` print `N passed, M+1 failed` from an `exit` listener without touching the code (safe today —
+an unsettled top-level await exits 13 — and now caught by the runner regardless); 41 suites (39 UI, plus `bundle`/`livefire`) carry no
+one-template tally; the UI harness never reads a tally at all (`civicos-ui/test/run.mjs` counts exit statuses only), and
+the 8 of the 39 read by hand fail by THROWING or by `if (fails.length) process.exit(1)`; all 53 UI suites were then
+grepped — none prints `FAIL` without a non-zero-exit construct in the same file, and none has neither a `throw` nor a
+non-zero exit. That is a PRESENCE check, not a proof the construct is reached on every failing path. **A real side-find, fixed:** `livefire` and `bundle` printed `ALLOWED (DEFECT)` for a probe
+reaching the live store and exited on `lf.ok` alone — 0 over a printed defect; now they exit 1 (arm: drop `&store=bio` ->
+`ALLOWED (DEFECT)`, exit 1). **What the matcher cannot see:** an exit decided inside an imported helper, a fail counter
+aliased through a second variable, async work a helper schedules, and a tally not written as one `${x} pass, ${y} fail`
+template (41 suites, 8 of them read by hand).
+
+**The fix and its controls.** `battery.mjs`: a printed failure with exit 0 is RED, named `EXIT/TALLY DISAGREE (D-425)`, and
+it beats a SKIPPED marker; `run <id>` on the header and completion line; refusal (exit 3) to start onto a file another
+battery holds (`lsof` + positional `node … battery.mjs` match); the file read back at the end — `LOG SHARED (D-425)`, exit
+non-zero. `test/battery-verdict.test.mjs`, 27 assertions, drives the real runner. Controls (each alone, restored by sha256
+and `cmp`): pre-fix runner 13/14; `crosscheck` off 20/7 (the liar reads `2/2`, exit 0); `logguard` off 21/6; start refusal
+off with the end check on 22/5 — **one arm NOT as declared:** in the `>` form an UNREFUSED truncating writer finished after
+A and overwrote A's `LOG SHARED` line, so the file lost it while A's exit stayed non-zero. The refusal is the load-bearing
+half for `>`; the exit status is the only part of a run's verdict a `>` collision cannot erase. **What the guard cannot
+see:** a pipe (`| tee log`: the run id is the only defence), no `lsof` (says UNVERIFIED), a non-battery writer.
+
+**After, on the committed tree:** see the close-out figures in the M0-67 claim block (`CLAIMS.md`).
