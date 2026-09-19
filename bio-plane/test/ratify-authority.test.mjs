@@ -1,5 +1,5 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/ratify-authority.control.mjs` — deliberately NOT a `.test.mjs`, because it runs this suite against PATCHED COPIES of the sources and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/ratify-authority.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms. (a) `baseline` — nothing armed, MUST be green. (b) `readmit-project-bundles` — the C-58.1 type refusal disarmed: the PROJECT BUNDLE arms publish, so they MUST fail, and nothing else. (c) `no-owner-check` — C-57.1's owner question dropped in `#caseAuthority`: the NON-OWNER arms publish. (d) `no-delivery-check` — the delivery question dropped: the OUTSIDE ADMINISTRATOR, INVITED, UNINVITED, nothing-published and ruth's RETRY arms. (e) `type-before-sight` — role before visibility: the ratifier's viewer not sent to the gate facts, so a hidden project's bundle reaches the type refusal: only the two SIGHT arms that compare answers. (f) `refuse-every-finding` — the liar: every pinned finding refused: every refusal arm STAYS GREEN and the ALLOWED arms and the joined member's retry MUST fail. (g) `authority-after-retry` — the questions asked only for new bytes: only ruth's RETRY arm.
-   RESULTS, RUN 2026-09-18 by the REC-140 worker (worktree agent-a761302b28f105764, base ff3a4cea + this item; real src/index.mjs 661,904 B sha256 a1c6cb7448bb, src/store.mjs 2,614,766 B sha256 e20e357f1a7c, untouched: YES): (a) 32/0 · (b) 27/5 · (c) 28/4 · (d) 26/6 · (e) 30/2 · (f) 25/7 · (g) 31/1 — every arm AS DECLARED on its first run. THE PRE-ITEM MEASUREMENT (this suite against the pristine src/ of ff3a4cea, before §6's catalogue rows existed): 13 pass / 19 fail — the owner's own project bundle, the founder's delivery of it and ruth's delivery of gus's signature over it all PUBLISHED (ok:true; gus named attestor); a hidden project's bundle answered vic 409 RATIFY_STALE (naming its real sha) instead of the never-minted 404 ABSENT, and with a valid sha GATE_REFUSED C-13.1 "bundle.md is missing"; a pinned finding signed by gus (joined, not an owner) and by ruth (via the founder) both PUBLISHED; ruth (an outside administrator) DELIVERED iris's signature on A's finding and it PUBLISHED, and wen's and vic's deliveries were then answered ok:true off that commit; the §7 outside-a-case arms passed then and pass now (unchanged by this item, on purpose).
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/ratify-authority.control.mjs` — deliberately NOT a `.test.mjs`, because it runs this suite against PATCHED COPIES of the sources and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/ratify-authority.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after; what each arm MUST fail is declared in the driver before it arms. (a) `baseline` — nothing armed, MUST be green. (b) `readmit-project-bundles` — the C-58.1 type refusal disarmed: the PROJECT BUNDLE arms publish, so they MUST fail, and nothing else. (c) `no-owner-check` — C-57.1's owner question dropped in `#caseAuthority`: the NON-OWNER arms publish. (d) `no-delivery-check` — the delivery question dropped: the OUTSIDE ADMINISTRATOR, INVITED, UNINVITED, nothing-published and ruth's RETRY arms. (e) `type-before-sight` — role before visibility: the ratifier's viewer not sent to the gate facts, so a hidden project's bundle reaches the type refusal: only the two SIGHT arms that compare answers. (f) `refuse-every-finding` — the liar: every pinned finding refused: every refusal arm STAYS GREEN and the ALLOWED arms and the joined member's retry MUST fail. (g) `authority-after-retry` — the questions asked only for new bytes: only ruth's RETRY arm. D-431 ADDED THREE (2026-09-19), declared before arming: (h) `readmit-unpinned-finding` — the ROW'S CONTROL 1, an inquiry no ratified case pins or rests on skips the C-58.2 refusal: only the OUTSIDE A CASE (a) arms. (i) `rests-on-reads-basis` — the ROW'S CONTROL 2, the refusal reads the finding's BASIS legs instead of `Store.publishedGraphEdges` (a different edge set from the serving): the IDENTITY arms (behavioural and structural) and every evidence arm over a reference-only bundle. (j) `refuse-every-evidence` — the liar on the evidence side: every refusal arm stays green, and every evidence arm that must COMMIT, the evidence authority arms and the graph identity go red.
+   RESULTS, RUN 2026-09-18 by the REC-140 worker (worktree agent-a761302b28f105764, base ff3a4cea + this item; real src/index.mjs 661,904 B sha256 a1c6cb7448bb, src/store.mjs 2,614,766 B sha256 e20e357f1a7c, untouched: YES): (a) 32/0 · (b) 27/5 · (c) 28/4 · (d) 26/6 · (e) 30/2 · (f) 25/7 · (g) 31/1 — every arm AS DECLARED on its first run. RESULTS, RUN 2026-09-19 by the D-431 worker (worktree agent-af4cb02e310604e39, base 7042404e + this item; real src/index.mjs 663,888 B sha256 7d80fc4e243a, src/store.mjs 2,647,601 B sha256 8cf9feabd6a6, untouched: YES), the suite now 51 assertions: (a) 51/0 · (b) 47/4 · (c) 44/7 · (d) 42/9 · (e) 49/2 · (f) 41/10 · (g) 50/1 · (h) 47/4 · (i) 42/9 · (j) 42/9 — every arm AS DECLARED on its first run. One figure MOVED and it is recorded, not smoothed: (b) fails 4 where it failed 5, because with the C-58.1 type refusal disarmed a project bundle now meets D-431's store refusal (C-58.3: nothing rests on it), so §1's "nothing was published" stays green — defence in depth, measured. THE PRE-ITEM MEASUREMENT for D-431: §7's three arms PUBLISHED on the base (32/0 with them pinned as published), which is what (h) and (j) re-create. THE PRE-ITEM MEASUREMENT (this suite against the pristine src/ of ff3a4cea, before §6's catalogue rows existed): 13 pass / 19 fail — the owner's own project bundle, the founder's delivery of it and ruth's delivery of gus's signature over it all PUBLISHED (ok:true; gus named attestor); a hidden project's bundle answered vic 409 RATIFY_STALE (naming its real sha) instead of the never-minted 404 ABSENT, and with a valid sha GATE_REFUSED C-13.1 "bundle.md is missing"; a pinned finding signed by gus (joined, not an owner) and by ruth (via the founder) both PUBLISHED; ruth (an outside administrator) DELIVERED iris's signature on A's finding and it PUBLISHED, and wen's and vic's deliveries were then answered ok:true off that commit; the §7 outside-a-case arms passed then and pass now (unchanged by this item, on purpose).
  * =========================================================================
  * REC-140 / D-429 / IC-157 — `op=ratify` UNDER PUBLICATION RULE 2.
  *
@@ -87,6 +87,8 @@ const codeOf = (r) => (r && typeof r.code === "string") ? r.code : (r && r.reaso
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 const NOT_OWNER_SIGNER = "CASE_SIGNER_NOT_AN_OWNER", NOT_IN = "PROJECT_ACT_NOT_A_PARTICIPANT";
 const PROJECT_BUNDLE = "RATIFY_PROJECT_BUNDLE";
+/* D-431 (C-58.2, C-58.3): nothing crosses outside a RATIFIED case. */
+const UNPINNED = "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", NOT_EVIDENCE = "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE";
 
 try {
 
@@ -148,13 +150,21 @@ const infoMd = (id) => ["---",
   "monitoring:", "  enabled: false", "  frequency: none",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-const inquiryMd = (id, question, target) => ["---",
+/* D-431: an information bundle the catalog owes nothing at ratification — `last_updated` equals `created` and
+   `source_status` is stated (C-13.2, C-2.7) — so an evidence arm reaches the act rather than the gate. REC-140's
+   §7 wrote this inline; it is shared now because §8 ratifies information as evidence. */
+const publishableInfoMd = (id) => infoMd(id).replace(`last_updated: "${LATER}"`, `last_updated: "${NOW}"`)
+  .replace("criticality: supporting", "criticality: supporting\nsource_status: unchanged");
+/* `cites`: further bundles the inquiry REFERENCES (`relates_to`) without a basis leg — D-431's §8, where "rests
+   on" must be the published graph's edge set and not the basis. */
+const inquiryMd = (id, question, target, cites = []) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, "current_state: open", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland",
   "references:", `  - target: ${target}`, "    rel: cites", "    status: confirmed",
+  ...cites.flatMap((c) => [`  - target: ${c}`, "    rel: relates_to", "    status: confirmed"]),
   "state_history: []", "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
@@ -198,21 +208,26 @@ const ratify = async (token, signer, id) => {
    one concluded inquiry; a case document authored by iris and RATIFIED by iris, so
    the finding's bytes are PINNED by a published case edition. */
 let seq = 0;
-const makeCase = async ({ inviteWen = false, ratifyTheCase = true } = {}) => {
+/* D-431: `owner`/`joiner` (§8b needs a project gus owns) and `cites` (§8's reference-only evidence) are new;
+   the defaults reproduce REC-140's fixture exactly, except that the case's information is now publishable
+   (`publishableInfoMd`), because §8 ratifies it as evidence — nothing before §8 ratifies it. `doc` is returned so
+   a caller that prepared the case unratified can sign it later. */
+const makeCase = async ({ inviteWen = false, ratifyTheCase = true, owner = "iris", joiner = "gus", cites = [] } = {}) => {
+  const TOK = { iris: IRIS, gus: GUS };
   const n = String(9400 + (++seq));
   const project = `PROJ-2026-${n}-case`, info = `INFO-2026-${n}-memo`, lead = `INQ-2026-${n}-lead`;
   await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating");
-  must(`projectclaimowner ${project}`, await DO("projectclaimowner", { projectId: project, memberId: "iris" }));
-  must("iris invites gus", await POST(`op=projectinvite&token=${IRIS}&projectId=${project}&handle=gus`));
-  must("gus joins", await POST(`op=projectjoin&token=${GUS}&projectId=${project}`));
-  if (inviteWen) must("iris invites wen", await POST(`op=projectinvite&token=${IRIS}&projectId=${project}&handle=wen`));
-  await promote(info, infoMd(info), "information", "collected");
-  await promote(lead, withAdoptableReading(inquiryMd(lead, `Was the transfer ${lead} authorised?`, info)), "inquiry", "open");
-  must(`conclude ${lead}`, await GET(`op=conclude&token=${IRIS}&target=${lead}`
+  must(`projectclaimowner ${project}`, await DO("projectclaimowner", { projectId: project, memberId: owner }));
+  must(`${owner} invites ${joiner}`, await POST(`op=projectinvite&token=${TOK[owner]}&projectId=${project}&handle=${joiner}`));
+  must(`${joiner} joins`, await POST(`op=projectjoin&token=${TOK[joiner]}&projectId=${project}`));
+  if (inviteWen) must(`${owner} invites wen`, await POST(`op=projectinvite&token=${TOK[owner]}&projectId=${project}&handle=wen`));
+  await promote(info, publishableInfoMd(info), "information", "collected");
+  await promote(lead, withAdoptableReading(inquiryMd(lead, `Was the transfer ${lead} authorised?`, info, cites)), "inquiry", "open");
+  must(`conclude ${lead}`, await GET(`op=conclude&token=${TOK[owner]}&target=${lead}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
     + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
     + adoptedVersionParam()));
-  const pub = await POST(`op=publish&token=${IRIS}`, {
+  const pub = await POST(`op=publish&token=${TOK[owner]}`, {
     project, targets: [lead], roles: allLoadBearing({ targets: [lead] }),
     scope: "Whether the FY2024 transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 transfer only, on the documents in hand at edition 1.",
@@ -223,9 +238,9 @@ const makeCase = async ({ inviteWen = false, ratifyTheCase = true } = {}) => {
     throw new Error(`publish ${project}: ${JSON.stringify(pub).slice(0, 900)}`);
   const d = pub.caseDocument;
   if (ratifyTheCase)
-    must(`caseratify ${d.case_id}`, await POST(`op=caseratify&token=${IRIS}`,
-      { caseId: d.case_id, edition: d.edition, expectedSha: d.doc_sha, sig: signCase("iris", d) }));
-  return { project, info, lead, case_id: d.case_id };
+    must(`caseratify ${d.case_id}`, await POST(`op=caseratify&token=${TOK[owner]}`,
+      { caseId: d.case_id, edition: d.edition, expectedSha: d.doc_sha, sig: signCase(owner, d) }));
+  return { project, info, lead, case_id: d.case_id, doc: d };
 };
 
 /* ========================================= 0. SIGHT COMES BEFORE EVERYTHING */
@@ -345,44 +360,136 @@ console.log("\n--- 6. the catalogue rows ---");
     CHECKS.CASE_AUTHORITY_CHECKS[NOT_OWNER_SIGNER].where, "src/store.mjs #caseAuthority > is-case-signer-owner");
 }
 
-/* ================ 7. OUTSIDE A CASE — MEASURED AND STATED, NOT CHANGED BY THIS ITEM */
-console.log("\n--- 7. what op=ratify publishes OUTSIDE a case (the ruling does not cover it; pinned as measured) ---");
+/* ================ 7. OUTSIDE A CASE — REFUSED (D-431), CORRECTED FROM "AS MEASURED" */
+console.log("\n--- 7. op=ratify publishes NOTHING outside a ratified case: (a) a finding no RATIFIED case pins is refused ---");
 {
-  /* The brief: "If op=ratify can publish something OUTSIDE a case that the ruling
-     does not cover, STOP that part and report it." It can, and these pin it AS
-     MEASURED so that whoever rules on it turns these red and corrects them here.
-     Publication rule 2 (BIO_Publication_v0_1.md §3) says only findings that are
-     part of a project can be published; neither of these is. */
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16).
+     These three arms were pinned by REC-140 AS MEASURED — each PUBLISHED, `ok: true`, one edition — because
+     the ruling REC-140 built did not say how to close them, and this block said so: "whoever rules on it turns
+     these red and corrects them here". BOB #16 ruled: nothing crosses outside a RATIFIED case. So the old
+     expectations described a DEFECT (publication outside a case, and the ceremony's order unenforced), not a
+     behaviour to keep, and each is corrected to the refusal, with nothing published. Not exempted: the same
+     three acts, driven the same way, now asserting what rule 2 requires. */
   const n = "9480";
   const info = `INFO-2026-${n}-loose`, lead = `INQ-2026-${n}-loose`;
-  /* `last_updated` equals `created` and `source_status` is stated, so the catalog
-     owes nothing (C-13.2, C-2.7) and the arm reaches the act rather than the gate. */
-  await promote(info, infoMd(info).replace(`last_updated: "${LATER}"`, `last_updated: "${NOW}"`)
-    .replace("criticality: supporting", "criticality: supporting\nsource_status: unchanged"), "information", "collected");
-  /* The inquiry is minted BEFORE its information is published, because a leg on a
-     published bundle must be inherited (C-21.2) — which is not this arm's subject. */
+  await promote(info, publishableInfoMd(info), "information", "collected");
   await promote(lead, withAdoptableReading(inquiryMd(lead, "Was the loose transfer authorised?", info)), "inquiry", "open");
   must(`conclude ${lead}`, await GET(`op=conclude&token=${IRIS}&target=${lead}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
     + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
     + adoptedVersionParam()));
-  /* The inquiry first: once its information is published, the gate asks for an
-     inherited leg (C-21.2), which is not this arm's subject. */
   const l = await ratify(VIC, "vic", lead);
-  t("OUTSIDE A CASE (KNOWN, not closed): a concluded INQUIRY in no case and no project is published through op=ratify by vic under his own key",
-    [l && l.ok, l && l.attestor, await editionsOf(lead)], [true, "vic", 1]);
-  /* A FINDING PREPARED INTO A CASE WHOSE DOCUMENT IS NOT YET RATIFIED. Until
-     op=caseratify commits the pins, `publish()` holds no case relation for these
-     bytes (`#pinnedCaseEditionsOf` joins published_cases), so the finding is
-     published as a LOOSE bundle — outside any case — and the rule this item applies
-     at a pinned finding is not reached. Stated and pinned; not closed here. */
+  t("OUTSIDE A CASE (a): a concluded INQUIRY in no case and no project, signed and delivered by vic — refused RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE (C-58.2), its detail naming op=caseratify as the act to take first",
+    [l && l.ok, codeOf(l), l && l.check, /op=caseratify/.test(l && l.detail || ""), await editionsOf(lead)],
+    [false, UNPINNED, "C-58.2", true, 0]);
+  const row = CHECKS.RATIFY_SCOPE_CHECKS[UNPINNED];
+  t("OUTSIDE A CASE (a): the refusal carries C-58.2's canned translation (DEC-49)", l && l.translation, row && row.translation);
+  /* A FINDING PREPARED INTO A CASE WHOSE DOCUMENT IS NOT YET RATIFIED: refused whoever signs — the
+     project's OWNER included, so this is the ceremony's ORDER being enforced and not an authority answer
+     (the liar that checks only the signer passes gus's arm and fails iris's). §4 is the other half: A, B
+     and C each have their case document signed FIRST, and their findings then commit. */
   const P = await makeCase({ ratifyTheCase: false });
   const p = await ratify(GUS, "gus", P.lead);
-  t("OUTSIDE A CASE (KNOWN, not closed): a finding PREPARED into iris's case, before the case document is ratified, is published by gus (not an owner) under his own key — the ceremony's order is not enforced",
-    [p && p.ok, p && p.attestor, await editionsOf(P.lead)], [true, "gus", 1]);
+  t("OUTSIDE A CASE (a): a finding PREPARED into iris's case, before the case document is ratified, signed and delivered by gus — refused C-58.2",
+    [p && p.ok, codeOf(p), await editionsOf(P.lead)], [false, UNPINNED, 0]);
+  const o = await ratify(IRIS, "iris", P.lead);
+  t("OUTSIDE A CASE (a): and by iris, the project's OWNER, signing and delivering it — refused C-58.2 the same way: the case document comes first",
+    [o && o.ok, codeOf(o), /op=caseratify/.test(o && o.detail || ""), await editionsOf(P.lead)], [false, UNPINNED, true, 0]);
   const i = await ratify(VIC, "vic", info);
-  t("OUTSIDE A CASE (KNOWN, not closed): an INFORMATION bundle in no case is published through op=ratify by any member holding a registered key (vic, in no project)",
-    [i && i.ok, i && i.attestor, await editionsOf(info)], [true, "vic", 1]);
+  t("OUTSIDE A CASE (b): an INFORMATION bundle no RATIFIED case's finding rests on (the loose inquiry above cites it, and is in no case) — refused RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE (C-58.3)",
+    [i && i.ok, codeOf(i), i && i.check, await editionsOf(info)], [false, NOT_EVIDENCE, "C-58.3", 0]);
+  const pi = await ratify(IRIS, "iris", P.info);
+  t("OUTSIDE A CASE (b): the information a PREPARED (unratified) case's finding rests on, signed and delivered by that project's owner — refused C-58.3: only a RATIFIED case's finding makes evidence",
+    [pi && pi.ok, codeOf(pi), await editionsOf(P.info)], [false, NOT_EVIDENCE, 0]);
+}
+
+/* ================ 8. EVIDENCE — WHAT A RATIFIED CASE'S FINDING RESTS ON CROSSES, UNDER THAT CASE'S AUTHORITY */
+console.log("\n--- 8. (b) evidence a ratified case's finding RESTS ON crosses, signed and delivered as that finding is ---");
+{
+  /* G's finding RESTS ON four bundles: its own information (a basis leg, `cites`), and three it only
+     REFERENCES (`relates_to`, no basis leg). "Rests on" is the published graph's own edge set —
+     `Store.publishedGraphEdges`, every `references[]` entry at `serve` class — so all four are evidence.
+     A reading of "rests on" as the BASIS legs would admit only the first, which is what the identity arms
+     (and the control's `rests-on-reads-basis` arm) exist to catch. G2a and G2b are refused-only — one per
+     authority question, so a control that disarms one question moves only its own bundle —
+     G3 is the evidence published BEFORE the finding, and G.info AFTER it: the published graph serves an
+     edge only to a target already published, and C-21.2 refuses a GRADED leg on a published bundle, so a
+     leg's own evidence can only follow its finding (stated in the landing as a design gap, not changed). */
+  const G2a = "INFO-2026-9470-signer", G2b = "INFO-2026-9470-deliverer", G3 = "INFO-2026-9470-served";
+  await promote(G2a, publishableInfoMd(G2a), "information", "collected");
+  await promote(G2b, publishableInfoMd(G2b), "information", "collected");
+  await promote(G3, publishableInfoMd(G3), "information", "collected");
+  const G = await makeCase({ ratifyTheCase: false, cites: [G2a, G2b, G3] });
+  const early = await ratify(IRIS, "iris", G3);
+  t("EVIDENCE BEFORE THE CASE: iris (owner) signs and delivers what G's finding rests on BEFORE G's case document is ratified — refused C-58.3",
+    [early && early.ok, codeOf(early), await editionsOf(G3)], [false, NOT_EVIDENCE, 0]);
+  must(`caseratify ${G.case_id}`, await POST(`op=caseratify&token=${IRIS}`,
+    { caseId: G.doc.case_id, edition: G.doc.edition, expectedSha: G.doc.doc_sha, sig: signCase("iris", G.doc) }));
+
+  const ev = await ratify(GUS, "iris", G3);
+  t("EVIDENCE ALLOWED: gus (JOINED) carries iris's OWNER signature over a bundle G's ratified finding rests on (a reference, not a basis leg) — PUBLISHED, iris attestor, gus deliverer",
+    [ev && ev.ok, ev && ev.attestor, ev && ev.deliveredBy && ev.deliveredBy.member, await editionsOf(G3)], [true, "iris", "gus", 1]);
+  const fin = await ratify(IRIS, "iris", G.lead);
+  t("ALLOWED (finding after its evidence): iris ratifies G's pinned finding — PUBLISHED",
+    [fin && fin.ok, fin && fin.attestor, await editionsOf(G.lead)], [true, "iris", 1]);
+  t("IDENTITY (ALLOWED finding's graph): the published graph's serve-class edges from G's finding are EXACTLY the four bundles the refusal treats as resting on it (served + dropped = 4), it serves the one already published (G3), and names nothing name-only",
+    fin && fin.graph, { serve: 1, name: 0, dropped: 3 });
+  const served = await GET(`op=publishedcase&id=${encodeURIComponent(G.case_id)}`);
+  const gf = ((served && served.findings) || []).find((x) => x.bundle_id === G.lead) || {};
+  t("IDENTITY (ALLOWED finding's graph): read back through op=publishedcase, the one SERVED edge is to G3",
+    (gf.serves || []).map((e) => e.to), [G3]);
+
+  const nonOwner = await ratify(GUS, "gus", G2a);
+  t("EVIDENCE NON-OWNER: gus (joined, not an owner) signs and delivers a bundle G's finding rests on — refused CASE_SIGNER_NOT_AN_OWNER (C-57.1), the case's own authority, never C-58.3",
+    [nonOwner && nonOwner.ok, codeOf(nonOwner), nonOwner && nonOwner.project], [false, NOT_OWNER_SIGNER, G.project]);
+  const outsider = await ratify(RUTH, "iris", G2b);
+  t("EVIDENCE OUTSIDE ADMINISTRATOR: ruth (admin, not in G's project) carries iris's owner signature — refused PROJECT_ACT_NOT_A_PARTICIPANT (C-56.1)",
+    [outsider && outsider.ok, codeOf(outsider)], [false, NOT_IN]);
+  const uninvited = await ratify(VIC, "iris", G2b);
+  t("EVIDENCE UNINVITED: vic (no role) carries iris's owner signature — refused PROJECT_ACT_NOT_A_PARTICIPANT",
+    [uninvited && uninvited.ok, codeOf(uninvited)], [false, NOT_IN]);
+  t("EVIDENCE NON-OWNER: and gus's own signature published nothing", await editionsOf(G2a), 0);
+  t("EVIDENCE DELIVERY: and nothing was published by either outside deliverer", await editionsOf(G2b), 0);
+
+  const after = await ratify(FOUNDER, "iris", G.info);
+  t("EVIDENCE ALLOWED: the FOUNDER delivers iris's signature over G's own basis information, AFTER the finding — PUBLISHED",
+    [after && after.ok, after && after.attestor, await editionsOf(G.info)], [true, "iris", 1]);
+
+  const src = readFileSync(join(SRC_DIR, "store.mjs"), "utf8"), idx = readFileSync(IDX, "utf8");
+  const calls = (s) => (s.match(/Store\.publishedGraphEdges\(/g) || []).length;
+  t("IDENTITY (structural): ONE definition of the published graph's edge set (`static publishedGraphEdges`), read once by op=ratify to build the graph and once by the refusal's rests-on — and op=ratify spells no edge class of its own",
+    [(src.match(/static publishedGraphEdges\(/g) || []).length, calls(idx), calls(src), /disclosure: "serve"/.test(idx)],
+    [1, 1, 1, false]);
+}
+
+console.log("\n--- 8b. several ratified cases rest on one bundle: an owner of ANY of their projects may sign ---");
+{
+  const shared = "INFO-2026-9471-shared", only = "INFO-2026-9471-only-k1";
+  await promote(shared, publishableInfoMd(shared), "information", "collected");
+  await promote(only, publishableInfoMd(only), "information", "collected");
+  const K1 = await makeCase({ cites: [shared, only] });                    /* iris owns; gus joined */
+  const K2 = await makeCase({ owner: "gus", joiner: "iris", cites: [shared] });
+  const one = await ratify(GUS, "gus", only);
+  t("EVIDENCE NON-OWNER: gus signs a bundle only K1 rests on, where he is joined and not an owner — refused C-57.1",
+    [one && one.ok, codeOf(one), one && one.project, await editionsOf(only)], [false, NOT_OWNER_SIGNER, K1.project, 0]);
+  const any = await ratify(GUS, "gus", shared);
+  t("ANY OWNER: gus signs and delivers a bundle BOTH K1 (iris's) and K2 (his) rest on — PUBLISHED under K2's authority, gus attestor",
+    [any && any.ok, any && any.attestor, await editionsOf(shared)], [true, "gus", 1]);
+}
+
+console.log("\n--- 8c. a bundle no RATIFIED case rests on answers the same bytes whether or not a project the caller cannot see prepares a case over it ---");
+{
+  const X = "INFO-2026-9472-unseen";
+  await promote(X, publishableInfoMd(X), "information", "collected");
+  const s = await shaOf(X);
+  const body = { bundleId: X, expectedSha: s, sig: signBundle("vic", X, s) };
+  const neverMinted = await rawOf(`op=ratify&token=${VIC}`, body);
+  const H = await makeCase({ ratifyTheCase: false, cites: [X] });         /* vic is in no project: H is hidden from him */
+  const unseen = await rawOf(`op=ratify&token=${VIC}`, body);
+  t("BYTE-IDENTICAL: vic's refusal for a bundle a HIDDEN project's unratified case rests on is byte for byte his refusal from before that project was minted",
+    [unseen.status, unseen.body === neverMinted.body, codeOf(rP(JSON.parse(unseen.body))), unseen.body.includes(H.project)],
+    [neverMinted.status, true, NOT_EVIDENCE, false]);
+  t("BYTE-IDENTICAL: and nothing was published", await editionsOf(X), 0);
 }
 
 } catch (e) {

@@ -822,10 +822,16 @@ const ratifyMember = async (id) => {
     [movedSha !== r2.bundleSha, /^[0-9a-f]{64}$/.test(movedSha)], [true, true]);
   const movedRat = rP(await POST(`op=ratify&token=${IRIS}`,
     { bundleId: SUPP, expectedSha: movedSha, sig: signRatify("iris", SUPP, movedSha) }));
-  if (!movedRat.ok) bail("ratify the revised member", movedRat);
-  t("THE PIN IS WHAT RESOLVES A MEMBER: the revised version ratifies as ITSELF, at its OWN next edition, "
-  + "and is NOT placed into the case — the case committed to a VERSION and not to an id",
-    [movedRat.ok, movedRat.edition, movedRat.caseId ?? null], [true, 2, null]);
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted. This arm expected the revised version to ratify "as ITSELF, at its OWN next edition" — a finding
+     published at a sha NO ratified case pins, i.e. outside any case, which is what D-431 closes (C-58.2). The
+     arm's subject is unchanged and is now asserted more strongly: the pin is what resolves a member, so a
+     version the case did not freeze is not placed into the case AND, being in no ratified case, is not
+     published at all. Control arm (d) (the roster matched by id alone) still sees it: the widened match
+     would call these bytes pinned and publish them into the case. */
+  t("THE PIN IS WHAT RESOLVES A MEMBER: the revised version is NOT placed into the case — the case committed "
+  + "to a VERSION and not to an id — and, pinned by no ratified case, it is not published at all (C-58.2)",
+    [movedRat.ok, movedRat.reason, movedRat.caseId ?? null], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", null]);
   /* AND THE CASE IS UNMOVED, which is the half worth stating plainly: it goes on
      serving the version it FROZE. `awaiting` stays empty because that version is
      still published and still answerable — a revision does not unpublish what was

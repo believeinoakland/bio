@@ -1008,13 +1008,20 @@ console.log("\n--- 6b. a republish that does not increment the edition is refuse
   const backdated = md.replace(/^edition: 3$/m, "edition: 2");
   await promote(INQ_CASE, backdated, "inquiry", "published", PILAR, await shaOf(INQ_CASE));
   const r = await ratify(INQ_CASE);
-  t("ratifying different bytes under an edition already published is refused BY NAME",
-    [r.ok, r.reason, r.highest], [false, "EDITION_EXISTS", undefined]);
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted. These hand-written bytes are a finding at a sha NO ratified case pins — the case pinned the bytes
+     op=publish stamped, and a hand revision moves the sha off the pin — so op=ratify now refuses them C-58.2
+     BEFORE the edition is read: publishing them would be publication outside a case. They are still refused BY
+     NAME and nothing is overwritten (asserted below, unchanged); the edition refusals stay in the committer and
+     are driven where an authored edition can still reach them (`shadowed-refusals.test.mjs` (viii), and
+     EDITION_EXISTS at a PINNED sha in `caseflip`/`multifinding`/`casepin`). */
+  t("ratifying different bytes under an edition already published is refused BY NAME (C-58.2: no ratified case pins them)",
+    [r.ok, r.reason, r.highest], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", undefined]);
   const backwards = md.replace(/^edition: 3$/m, "edition: 1");
   await promote(INQ_CASE, backwards, "inquiry", "published", PILAR, await shaOf(INQ_CASE));
   const r2 = await ratify(INQ_CASE);
-  t("and so is a republish that moves the edition BACKWARDS",
-    [r2.ok, r2.reason], [false, "EDITION_EXISTS"]);
+  t("and so is a republish that moves the edition BACKWARDS (C-58.2, for the same reason)",
+    [r2.ok, r2.reason], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE"]);
   t("after both refusals the published projection is untouched: three editions, none overwritten",
     (await editionsOf(INQ_CASE)).editions.map((e) => e.edition), [1, 2, 3]);
 }

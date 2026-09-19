@@ -553,9 +553,14 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
   const mk3 = await makeFinding(F3, PLAIN);
   /* ORDER MATTERS AND IS THE RECORD'S, NOT THE FENCE'S: once the plain document
      is itself published, a leg carrying its own grade on it is C-21.2's to refuse
-     (it must inherit) — so the finding and its case go first. */
-  const r6 = await ratify(F3);
+     (it must inherit) — so the finding and its case go first.
+     CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted: the FINDING was ratified before its CASE DOCUMENT — a finding prepared into no ratified case,
+     published loose, which D-431 closes (C-58.2). The ceremony's own order is followed: the case document is
+     signed first, then its finding, then the document the finding rests on (as that case's evidence). What
+     this arm asserts — nothing ordinary is over-fenced by the testimony fence — is unchanged. */
   const r7 = await caseRatify([F3]);
+  const r6 = await ratify(F3);
   const r5 = await ratify(PLAIN);
   t("OVER-STRICTNESS: a finding resting on an ORDINARY document, a case over it, and the document itself all RATIFY exactly as before",
     [pp && pp.ok, mk3, r6 && r6.ok, codeOf(r7), r7 && r7.ok, r5 && r5.ok],

@@ -34,6 +34,8 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+/* D-431: the bundle this suite ratifies is made EVIDENCE OF A RATIFIED CASE (Publication rule 2). */
+import { restOnARatifiedCase } from "./ratified-evidence.mjs";
 
 /* Detect stock ssh-keygen before Miniflare spins up or any key is generated.
    spawnSync sets `.error` (ENOENT) only when the binary cannot be spawned at
@@ -153,6 +155,26 @@ t("target bundle created", c1.result.ok, true);
 const c2 = await POST("op=promote&token=mem-ratify", { ...pkg(2, c1.result.bundleSha, "20260724T110000Z_bbbb2222") });
 t("target bundle revised", c2.result.ok, true);
 const LIVE = c2.result.bundleSha;
+/* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16),
+   at its site and not exempted. This suite ratified a LOOSE information bundle — one in no case — because
+   that was how a signature, the gate, the published fence and doorbell 7a could be driven at all. That was
+   publication OUTSIDE a case, which the ruling closes: anything that is not a finding crosses only as the
+   EVIDENCE a ratified case's finding rests on, signed by an owner of that case's project (C-58.3 refuses
+   the rest). So the bundle is made what the rule requires — a ratified case's finding, in a project sparky
+   owns, rests on it — and NOTHING this suite asserts about its own subject moves: it is still an
+   information bundle, in no case itself, publishing exactly its own parts and no container. */
+const signAs = (k) => (text) => {
+  const f = join(dir, `stmt-${Math.random().toString(36).slice(2)}`);
+  writeFileSync(f, text);
+  execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(dir, k), "-n", "bio-ratify", f], { stdio: ["ignore", "ignore", "ignore"] });
+  return readFileSync(f + ".sig", "utf8");
+};
+const storeDO = async (path, body) => {
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  return (await (await ns.get(ns.idFromName("bio")).fetch(`http://x/${path}`, { method: "POST", body: JSON.stringify(body) })).json());
+};
+await restOnARatifiedCase({ post: POST, get: GET, doPost: storeDO, sha, promoteToken: "mem-ratify",
+  owner: "sparky", ownerToken: SESS, signText: signAs("sparky"), targets: [ID], n: "7003", at: NOW });
 
 console.log("\n--- refusals before anything publishes ---");
 t("no signature refused", (await POST(RAT, { bundleId: ID, expectedSha: LIVE })).reason, "MALFORMED");

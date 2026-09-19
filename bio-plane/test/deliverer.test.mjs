@@ -216,7 +216,9 @@ const shaOf = async (id) => {
 /* One project, one inquiry, concluded and published by iris: a case document
    authored by her and awaiting a signature. Built twice — the second case is the
    LEGACY one. */
-const authorCase = async (project, lead, info, st = S) => {
+/* D-431 (2026-09-19): `infoRatifiable` — the case's own information is made ratifiable for the one case whose
+   information §5 ratifies AS THAT CASE'S EVIDENCE; every other call is byte-identical. */
+const authorCase = async (project, lead, info, st = S, infoRatifiable = false) => {
   const storeName = st ? "scratch" : "bio";
   await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating", st);
   const c = await DOIN(storeName, "projectclaimowner", { projectId: project, memberId: "iris" });
@@ -232,7 +234,7 @@ const authorCase = async (project, lead, info, st = S) => {
   if (!inv || inv.ok !== true) throw new Error(`projectinvite gus: ${JSON.stringify(inv)}`);
   const jn = await POST(`op=projectjoin&token=${GUS}${st}&projectId=${project}`);
   if (!jn || jn.ok !== true) throw new Error(`projectjoin gus: ${JSON.stringify(jn)}`);
-  await promote(info, infoMd(info), "information", "collected", st);
+  await promote(info, infoMd(info, infoRatifiable), "information", "collected", st);
   /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
      conclusion drawn with no project NAMES the accepted reading whose claim it
      adopts, and an unnamed one is refused NO_CLAIM. This conclude named none
@@ -257,7 +259,7 @@ const authorCase = async (project, lead, info, st = S) => {
   return pub.caseDocument;
 };
 const PROJECT = "PROJ-2026-9128-deliver", INFO = "INFO-2026-9128-memo", LEAD = "INQ-2026-9128-lead";
-const D = await authorCase(PROJECT, LEAD, INFO);
+const D = await authorCase(PROJECT, LEAD, INFO, S, true);
 /* CORRECTED 2026-09-18 (REC-128's merge onto REC-130), never exempted: this read
    went to the store with NO viewer, which REC-130 (IC-141) now rightly answers
    NO_CASE_DOCUMENT for an UNSIGNED document — an absent viewer is a stranger.
@@ -358,10 +360,14 @@ console.log("\n--- 4. what is PUBLISHED — the public case read, and the contai
 }
 
 /* =================== 5. op=ratify of a bundle in NO case — the FOUNDER again */
-console.log("\n--- 5. op=ratify, a ratified bundle in no case — iris SIGNS, the FOUNDER DELIVERS ---");
+console.log("\n--- 5. op=ratify, a ratified bundle in no case (the case's EVIDENCE) — iris SIGNS, the FOUNDER DELIVERS ---");
 {
-  const LOOSE = "INFO-2026-9128-loose";
-  await promote(LOOSE, infoMd(LOOSE, true), "information", "collected");
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted. This block ratified a fresh information bundle that nothing rested on — publication outside a
+     case, now refused C-58.3. A bundle in no case still crosses, as the EVIDENCE a ratified case's finding
+     rests on, so the block ratifies D's own information (LEAD's basis, and D is ratified in §2) — still a
+     bundle in no case, still iris's signature, still the FOUNDER delivering, which is this block's subject. */
+  const LOOSE = INFO;
   const s = await shaOf(LOOSE);
   const r = await POST(`op=ratify&token=${FOUNDER}${S}`, { bundleId: LOOSE, expectedSha: s,
     sig: signBytes("iris", `bio-ratify ${LOOSE} ${s}\n`) });
@@ -381,8 +387,17 @@ console.log("\n--- 6. LEGACY — a ratification recorded before REC-128 reads UN
 {
   /* A LEGACY FINDING ROW: the store's committer called exactly as the plane
      before this item called it, with a signer and no deliverer. */
-  const OLD = "INFO-2026-9128-legacy";
-  await promote(OLD, infoMd(OLD), "information", "collected");
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted: the legacy row was a fresh information bundle nothing rested on, committed at the store — now
+     refused C-58.3 there too, because the rule lives in the one committer. The legacy CASE below is committed
+     FIRST (it was second), and the legacy row is ITS information — evidence its ratified finding rests on —
+     committed exactly as the plane before REC-128 committed it: a signer and no deliverer. */
+  const D2 = await authorCase("PROJ-2026-9128-legacy", "INQ-2026-9128-legacy", "INFO-2026-9128-memo2");
+  const w2 = await DO("caseratify", { caseId: D2.case_id, edition: D2.edition, docSha: D2.doc_sha,
+    sigArmored: "-----BEGIN SSH SIGNATURE-----\nlegacy\n-----END SSH SIGNATURE-----", attestorKey: IRIS_KEY,
+    attestorMember: "iris", gateVersion: "legacy" });
+  if (!w2 || w2.ok === false) throw new Error(`legacy caseratify: ${JSON.stringify(w2)}`);
+  const OLD = "INFO-2026-9128-memo2";
   const s = await shaOf(OLD);
   const w = await DO("publish", { bundleId: OLD, bundleSha: s, attestorKey: IRIS_KEY, attestorMember: "iris",
     gateVersion: "legacy", sigArmored: "-----BEGIN SSH SIGNATURE-----\nlegacy\n-----END SSH SIGNATURE-----", shas: [] });
@@ -392,13 +407,8 @@ console.log("\n--- 6. LEGACY — a ratification recorded before REC-128 reads UN
     row && [row.attestor_member, row.delivered_by && row.delivered_by.kind, row.delivered_by && row.delivered_by.member,
             !!(row.delivered_by && typeof row.delivered_by.detail === "string" && /not inferred from the signer/.test(row.delivered_by.detail))],
     ["iris", "undetermined", null, true]);
-  /* A LEGACY CASE DOCUMENT: a second case, committed by the store's case
+  /* A LEGACY CASE DOCUMENT: the case above, committed by the store's case
      committer with a signer and no deliverer. */
-  const D2 = await authorCase("PROJ-2026-9128-legacy", "INQ-2026-9128-legacy", "INFO-2026-9128-memo2");
-  const w2 = await DO("caseratify", { caseId: D2.case_id, edition: D2.edition, docSha: D2.doc_sha,
-    sigArmored: "-----BEGIN SSH SIGNATURE-----\nlegacy\n-----END SSH SIGNATURE-----", attestorKey: IRIS_KEY,
-    attestorMember: "iris", gateVersion: "legacy" });
-  if (!w2 || w2.ok === false) throw new Error(`legacy caseratify: ${JSON.stringify(w2)}`);
   const cd2 = await caseDoc(D2);
   t("LEGACY, a case document: the signer is still named (iris) and the deliverer reads UNDETERMINED — not iris",
     [cd2.ratified, cd2.attestor_member, cd2.delivered_by && cd2.delivered_by.kind, cd2.delivered_by && cd2.delivered_by.member],

@@ -111,6 +111,8 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+/* D-431: the case document is signed BEFORE its finding is ratified — the ceremony's own order. */
+import { ratifyCase } from "./caseceremony.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -638,6 +640,12 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
     biasAcknowledgement: "This group holds a declared position that fund transfers should be adopted in "
                        + "public session, and edition 1 reads the FY2024 record through it." });
   t("  a real case is published at edition 1 through the ceremony", [pub.ok, pub.edition], [true, 1]);
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and
+     not exempted: the finding was ratified here BEFORE its case document was — a finding PREPARED into an
+     unratified case, published loose, which is exactly D-431's third measured publication outside a case and
+     is now refused C-58.2. The ceremony's own order is followed: ruth, the project's owner, signs the case
+     document first. */
+  await ratifyCase(async (q, b) => POST(q, b), pub, { dir, key: "ruth", token: RUTH });
 
   const liveSha = async () =>
     ((await GET(`op=list&token=${RUTH}`)) || []).find((b) => b.bundle_id === INQ)?.bundle_sha ?? null;
@@ -701,27 +709,44 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
 
   t("  edition 1 ratifies, so the case is genuinely published through 1",
     [(await ratify()).ok, true], [true, true]);
+  /* CORRECTED 2026-09-19 by the D-431 worker, and it is a finding about THIS refusal, not a fixture
+     convenience. Header note (c) says the only way to reach EDITION_NOT_INCREMENTED is an edition AUTHORED
+     into a hand-written revision's bytes. Since D-431 those bytes are a finding at a sha NO ratified case pins
+     (the ceremony stamps edition MAX+1 into the bytes it pins, and a hand revision moves the sha off the pin),
+     so op=ratify refuses them C-58.2 BEFORE the edition is read: THROUGH THE OP THIS REFUSAL IS NOW SHADOWED,
+     by a rule and on purpose, and that is asserted rather than hidden. The guard itself still stands in the
+     one committer, and is driven there — the Durable Object's `publish`, whose `edition` parameter IS the
+     authored value the control plane reads out of the signed bytes (NO_AUTHOR's precedent above: driven at
+     the route where the condition is a parameter). Its subject is EVIDENCE the ratified case's finding rests
+     on (CAP), the one kind of bundle outside a pinned finding that crosses at all now; the edition guard is
+     one code for every bundle, so the subject changes nothing it tests. */
   await revise(3);
   const at3 = await ratify();
-  t("  a revision authoring edition 3 ratifies, which is what leaves a HOLE at edition 2 — the only "
-  + "state from which this refusal is reachable at all",
-    [at3.ok, at3.edition], [true, 3]);
-
-  await revise(2);
-  const m = await ratify();
+  t("  THE SHADOW, STATED: a hand-written revision authoring edition 3 is refused C-58.2 at op=ratify — no "
+  + "ratified case pins its sha — so an authored edition never reaches the edition guard through the op",
+    [at3.ok, codeOf(at3)], [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE"]);
+  const nsE = await mf.getDurableObjectNamespace("STORE");
+  const objE = nsE.get(nsE.idFromName("bio"));
+  const commit = async (bundleSha, edition) => rP(await (await objE.fetch("http://x/publish", { method: "POST",
+    body: JSON.stringify({ bundleId: CAP, bundleSha, edition, attestorKey: keyB64, attestorMember: "ruth",
+      gateVersion: "shadowed-refusals", sigArmored: "-----BEGIN SSH SIGNATURE-----\nstore-level\n-----END SSH SIGNATURE-----",
+      shas: [] }) })).json());
+  const e3 = await commit("3".repeat(64), 3);
+  t("  at the committer, evidence the case rests on is committed at an authored edition 3, which leaves a "
+  + "HOLE below it — the only state from which this refusal is reachable at all",
+    [e3.ok, e3.edition], [true, 3]);
+  const m = await commit("2".repeat(64), 2);
   pin("EDITION_NOT_INCREMENTED",
-    "a real revision of a published case, gate-passing, signed by a registered key over its own live "
-    + "sha — complete but for the edition its own bytes claim being lower than the highest published",
+    "a commit the ratification rules admit (evidence a ratified case's finding rests on, signed by the "
+    + "project's owner) — complete but for the edition it authors being lower than the highest published",
     codeOf(m));
   t("  and the refusal states both numbers, which is what makes it checkable rather than a no",
     [m.edition, m.highest], [2, 3]);
-  t("  and NOTHING was published under the refused ratification: edition 2 does not answer",
-    (await GET(`op=publishedcase&token=${RUTH}&bundleId=${INQ}&edition=2`))?.ok ?? false, false);
-
-  await revise(4);
-  const r = await ratify();
-  t("  and the SAME revision, same member, same key and same gate, ratifies once its bytes claim an "
-  + "edition that moves the number", [r.ok, r.edition], [true, 4]);
+  t("  and NOTHING was published under the refused commit: CAP's chain holds edition 3 alone",
+    ((await GET(`op=publishededitions&token=${RUTH}&id=${CAP}`))?.editions || []).map((e) => e.edition), [3]);
+  const r = await commit("2".repeat(64), 4);
+  t("  and the SAME bytes, same member and same key, commit once the edition they author moves the number",
+    [r.ok, r.edition], [true, 4]);
 }
 
 /* ====================================================================== 3

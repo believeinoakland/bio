@@ -14472,3 +14472,23 @@ session: FLEET (worktree `sweet-goldberg-04a9ed`). Scope: `docs/development/kick
 sentences corrected to `CLAUDE.md` §3 as it reads on `origin/main`: the build plan's order goes to SCHEDULER and
 running work to CONDUCT (was "CONDUCT (sequencing)"); Bob's decisions go to BOB (was "via CONDUCT"). Claimed and
 released in the same commit.
+
+## CLAIM 2026-09-19 RECORD (D-431 — `op=ratify` publishes NOTHING outside a RATIFIED case: a finding only at a sha a ratified case pins; anything else only as evidence a pinned finding rests on, under that case's authority)
+
+Worker spawned by CONDUCT #6, isolated worktree `agent-af4cb02e310604e39`, branch `worktree-agent-af4cb02e310604e39`,
+base `7042404e` (= origin/main at spawn, carrying the D-431 flip to `running`). `npm ci` in all three packages, each
+`node_modules` a real directory. Baseline on the pristine base: **254/254 suites green · 15643 assertions passing · run
+93460.afef8e**. Design: `BIO_Publication_v0_1.md` §3 rule 2, its second note (BOB #16, D-431), and rule 1. IDs minted with
+`tools/mintid.mjs`: IC-161. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` (`publish`'s opening block; a new `static publishedGraphEdges` and
+  `#ratifiedFindingsRestingOn`); `bio-plane/src/index.mjs` (`op=ratify`'s handler only: the graph's edges built by the one
+  static, two codes on its 409 list); `bio-plane/checks/bio-checks.mjs` (`RATIFY_SCOPE_CHECKS` C-58.2, C-58.3).
+- Tests: `bio-plane/test/ratify-authority.test.mjs` §7 CORRECTED and §8 new, and its control driver; any suite that
+  ratified a bundle outside a ratified case, CORRECTED at its site with a dated reason, never exempted.
+  `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-161), `BIO_Publication_v0_1.md` front matter, §3 rule 2 and §4,
+  `construct-status.json` (13.fence), `DEBT.md` (D-431 closed and archived), `MEASUREMENTS.md` (the (c) count), this block.
+
+NOT `QUEUE.md`, NOT `release/`, NOT `newgroup/`, NOT `affordances.mjs` (REC-142), NOT REC-141's id-minting sites.
