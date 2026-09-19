@@ -613,7 +613,7 @@ authority is the file named, never this one.
 - **D-421** · 2026-09-18 — BOB #14 RULED the founder question:** a founder's password session stays ALLOWED (a human, and the only live publishing route); D-421's wording corrected to *a HUMAN's own authenticated session*; and the record must state who DELIVERED as well as who AUTHORISED → `REC-128`.  
   `docs/archive/ledgers/QUEUE-closed.md:188`
 - **D-426** · 2026-09-18 — `project-authority.test.mjs`'s D-426 pin CORRECTED to CLOSED.  
-  `docs/development/DEBT.md:295`
+  `docs/archive/ledgers/DEBT-closed.md:78`
 - **D-426** — CORRECTED at its site with a dated reason, never exempted: `project-authority.test.mjs` §2b' (the D-426 pin, now CLOSED) and its driver's declarations. **RESPONSES:** not yet collected.  
   `docs/development/INTERFACE-CHANGES.md:11378`
 ## IC-
