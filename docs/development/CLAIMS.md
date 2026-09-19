@@ -14898,8 +14898,8 @@ ARM D1 (the C-22 family) and `bio-plane/test/run-conditions.test.mjs` ARM W3 (`#
 `docs/DECIDED.md` regenerated. Baseline at `96779ad7` (claim only): **256/258 suites green · 15813 assertions passing**
 — `ledger.test.mjs` 2 red over the real QUEUE rows (pre-existing on that `main`; green after the first merge, which
 carried SCHEDULER's repair) and `owed-controls.test.mjs` 1 red CONTAMINATED by this item's untracked new suite (green
-alone at exit 0 with it moved aside). After, on the committed merge (see the final figures in the report line below):
-per suite `airun-principal` NEW 27, `airun-projectgate` 52 -> 54, `airun` 127 (D1 corrected), `run-conditions` 58 (W3
+alone at exit 0 with it moved aside). After, on the committed merge `70aefa7a`: **259/259 suites green · 15878
+assertions passing**, battery exit 0, provenance 262/262 in the commit at HEAD. Per suite `airun-principal` NEW 27, `airun-projectgate` 52 -> 54, `airun` 127 (D1 corrected), `run-conditions` 58 (W3
 corrected). `node scripts/coverage.mjs --strict` exit **0** unpiped; REGISTER_FLOOR arms 1480 -> 1486, classified
 249 -> 250, corpus 250 -> 251, run 212 -> 213 from the print on `5aeae866`, then collapsed at the second merge and
 re-read `arms 1496/1490 · classified 250/250 · corpus 251/251`, `floor 213/213` on `f8686fc3`. `node civicos-ui/test/run.mjs`
