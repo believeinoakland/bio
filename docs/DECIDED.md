@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1215 rulings across 95 documents.
+1216 rulings across 95 documents.
 
 ## DEC-
 
@@ -785,7 +785,7 @@ authority is the file named, never this one.
 - **IC-122** — (grammar arm extended; `codesUsed` CORRECTED, not exempted), `bio-plane/dist/**` (rebuild; `src/signpage.mjs` byte-identical), `docs/development/INTERFACE-CHANGES.md` (IC-122 PROPOSED), the Part II §16 Drive paragraph of `docs/architecture/BIO_Content_Framework_v0_10.md` (one parenthetical; front matter unchanged —…  
   `docs/development/CLAIMS.md:12989`
 - **IC-130** · 2026-09-19 — SUPERSEDED 2026-09-19 by the 0.64.0 deploy: see the LIVE header above.** (It read: the live plane and members are on 0.58.0.)  
-  `docs/development/kickoffs/DIST-NEXT.md:38`
+  `docs/development/kickoffs/DIST-NEXT.md:37`
 - **IC-136** — (IC-136 added `leads` to `op=stats`), RULED by BOB #15 in `MEMBER-KNOWLEDGE-DESIGN.md` §5 (*A COUNT IS A DISCLOSURE OF EXISTENCE*). - **Owner to land it:** `RECORD` - **Consumers to answer:** `UI` (NOT-AFFECTED measured: `civicos-ui/` calls neither `op=stats` nor  
   `docs/development/INTERFACE-CHANGES.md:10591`
 - **IC-138** — `bio-plane/test/rec121-chain-bytes.test.mjs` §4 CORRECTED at its site with the reason. - Generated: `bio-plane/dist/*` rebuilt. - Docs: `INTERFACE-CHANGES.md` (IC-138, minted with `node tools/mintid.mjs IC`), `CONTENT-SEARCH-DESIGN.md` (§4.2 and front matter), `docs/DECIDED.md` on regeneration, `.gitignore` (the…  
@@ -2341,6 +2341,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
+- Put ONLY withdrawn releases in its `WITHDRAWN` set: that loop asserts a release BRICKS 0.58.0, corrected in 0.65.0's cut.  
+  `docs/development/kickoffs/DIST-NEXT.md:10`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  
