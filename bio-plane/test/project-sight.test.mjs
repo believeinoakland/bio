@@ -325,7 +325,10 @@ console.log("\n--- 6. KNOWN, NOT CLOSED HERE (D-428): a CREATION at a taken id s
 {
   /* PINNED AS MEASURED so a change to it is noticed. A creation at a never-minted id CREATES it, so no
      answer to a creation at a hidden id can be byte-identical to that; the id space is shared and one
-     id cannot be two bundles. D-428 carries it (and NAME_TAKEN, 7.1's instance-wide uniqueness). */
+     id cannot be two bundles. D-428 carries it (and NAME_TAKEN, 7.1's instance-wide uniqueness).
+     2026-09-18, REC-139: NAME_TAKEN no longer names the other project's id or title (IC-156,
+     `project-disclosure.test.mjs`); plane-minted ids, which would close THIS pin, are decided and not
+     built — the design does not say whether a supplied id is refused or ignored. */
   const r = await POST(`op=promote&token=${VERA}`, pkg(P, projectMd(P), "project", "forming", null, "rec138-create"));
   t("D-428 (KNOWN): vera's CREATION at the hidden project's id answers EXISTS", codeOf(r), "EXISTS");
 }

@@ -37965,8 +37965,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
           return {
             ok: false,
             reason: "NAME_TAKEN",
-            bundleId: clash.bundle_id,
-            title: clash.title,
             detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This holds for deactivated projects too, because their names are still cited."
           };
       }
@@ -51021,8 +51019,6 @@ ${words}`;
     if (clash) return {
       ok: false,
       reason: "NAME_TAKEN",
-      bundleId: clash.bundle_id,
-      title: clash.title,
       detail: "a project by that name already exists on this instance, and project names are unique. This holds for deactivated projects too, because their names are still cited."
     };
     const liveMd = this.#one(
@@ -59012,14 +59008,16 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  CALLED rather than reimplemented, for the reason its own header gives: the
    *  admin bypass came to sit on invite and remove with different shapes
    *  because the test had two copies. */
-  #aiRunProjectGate({ actor, contextType, contextId }) {
+  #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects = this.#runContextProjects(contextType, contextId);
     const who = actor == null ? "" : String(actor).trim();
     const joined = who ? projects.filter((p) => {
       const part = this.#participation(p, who);
       return !!part && part.state === "joined";
     }) : [];
-    return projectGate({ actor: who, contextType, contextId, projects, projectsJoined: joined });
+    const g = projectGate({ actor: who, contextType, contextId, projects, projectsJoined: joined });
+    if (!g.permitted) return g;
+    return { ...g, projects: projects.filter((p) => this.#inSight(p, viewer)).length };
   }
   /** The gate's outcome as it travels on a SUCCESS answer. The refusal is
    *  dropped (there is none) and the ground is kept, because DEC-17's
@@ -59071,7 +59069,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
        `index.mjs` and empty for a machine credential. Never a
        caller's word — a principal a caller can name is not one, which
        is the rule the two `principal*` fields above already follow. */
-    actor = null
+    actor = null,
+    /* REC-139: WHOSE SIGHT the report's project count is taken in, stamped server-side
+       beside `actor` and read only by `#aiRunProjectGate`'s stated count. */
+    viewer = null
   } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = _Store.#aiIso(nowMs);
@@ -59084,7 +59085,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         translation: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
         note: "a run needs an id and the context it runs in (an inquiry or a project): a run nothing is in the context of has nowhere to be visible"
       };
-    const gate = this.#aiRunProjectGate({ actor, contextType, contextId });
+    const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
     if (!gate.permitted)
       return {
         run,
@@ -59193,7 +59194,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     log = null,
     leaseMs = null,
     at = null,
-    actor = null
+    actor = null,
+    viewer = null
   } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = _Store.#aiIso(nowMs);
@@ -59203,7 +59205,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       found: false,
       note: "no such run: it either never existed or was purged"
     };
-    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id });
+    const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
     if (!gate.permitted)
       return {
         run,
@@ -59277,11 +59279,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
    *  to the one exit, and a caller who names no bound is refused by C-22.5
    *  rather than having "completed" inferred from its silence. */
-  aiRunClose({ run, bound = null, condition = null, at = null, actor = null } = {}) {
+  aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null } = {}) {
     const now = at ? _Store.#aiIso(Date.parse(at)) : _Store.#aiIso(Date.now());
     const row = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, run);
     if (row) {
-      const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id });
+      const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
       if (!gate.permitted)
         return {
           run,
@@ -62685,18 +62687,24 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            exactly the reason `principal` is — a body is the caller's, and a
            gate that trusts the caller's word about who they are is not a
            gate. Empty means no member is behind this call. */
+        /* REC-139: `viewer` is the fourth, from the QUERY for the same reason and set AFTER the body's
+           spread, so a caller's own `viewer` in the body is overwritten rather than believed. It is
+           read only for the count of citing projects the answer states (§7.9). */
         airunopen: () => this.aiRunOpen({
           ...body || {},
           principalPlane: url.searchParams.get("principal"),
-          actor: url.searchParams.get("actor")
+          actor: url.searchParams.get("actor"),
+          viewer: url.searchParams.get("viewer")
         }),
         airuntick: () => this.aiRunTick({
           ...body || {},
-          actor: url.searchParams.get("actor")
+          actor: url.searchParams.get("actor"),
+          viewer: url.searchParams.get("viewer")
         }),
         airunclose: () => this.aiRunClose({
           ...body || {},
-          actor: url.searchParams.get("actor")
+          actor: url.searchParams.get("actor"),
+          viewer: url.searchParams.get("viewer")
         }),
         airun: () => this.aiRunRead({
           run: url.searchParams.get("run"),
@@ -69079,7 +69087,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1158 rulings across 92 documents.
+1161 rulings across 92 documents.
 
 ## DEC-
 
@@ -1161,7 +1161,11 @@ authority is the file named, never this one.
 - **REC-137** · 2026-09-18 — §7 — `op=caseratify`'s required position is DECIDED (the bullet *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18) and UNBUILT: whether the plane requires an OWNER's signature, and refuses delivery by an enrolled administrator with no role in the project, is REC-137's to verify…  
   `docs/architecture/BIO_Membership_Architecture_v2.md:12`
 - **REC-137** — `op=caseratify`'s position is DECIDED in the next bullet and is REC-137's to build.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:554`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:556`
+- **REC-139** — §7 — *"The plane MINTS project ids"* is DECIDED (BOB #15) and UNBUILT, because it does not say whether a caller-supplied id for a NEW project is REFUSED or IGNORED, whether `op=projectfork`'s `newId` (typed by the member in `civicos-ui` today) is minted too, or how the minted id reaches the document's own `id:` scalar.  
+  `docs/architecture/BIO_Membership_Architecture_v2.md:15`
+- **REC-139** — NOT BUILT, AND REPORTED AS A DESIGN GAP RATHER THAN DECIDED:** *"The plane MINTS project ids (a caller no longer chooses one)"* does not say whether a caller-supplied id for a NEW project is REFUSED or IGNORED, and REC-139's row says STOP on that.  
+  `docs/development/INTERFACE-CHANGES.md:11424`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -2165,6 +2169,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:11171`
 - CORRECTED at their sites with dated reasons, never exempted: `citeinquiry.test.mjs` (the DO dispatch's parameter roster gains the server-stamped `identity`) and `identity-claims.test.mjs` arm (j) (it selected the first stamp site whose writes include `proposedispose`, which is now the CLEAR positional stamp; it…  
   `docs/development/INTERFACE-CHANGES.md:11277`
+- CORRECTED at its site with a dated reason, never exempted: `airun-projectgate.test.mjs` ARM G1, which pinned `projects: 2` for a member never invited to one of the two. **RESPONSES:** not yet collected.  
+  `docs/development/INTERFACE-CHANGES.md:11434`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
