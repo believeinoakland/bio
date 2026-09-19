@@ -2134,7 +2134,10 @@ const SURFACES = {
        placement was then found in the code. That is the arm earning its keep on
        the first run, over the author's own description. */
     acts: ["conclude", "reopen", "inquirydivide", "inquiryground", "publish"],
-    reads: ["image", "inquirystrength", "inquiryground", "resolutions"],
+    /* UI-65: `basisversions` — the conclude dialog's reading picker (the
+       accepted readings a no-project conclusion may adopt) and the page's
+       no-project conclusion with its claim adopted or UNDETERMINED. */
+    reads: ["image", "inquirystrength", "inquiryground", "resolutions", "basisversions"],
   },
   project: {
     routes: ["object:project", "hash:project"],
@@ -2194,9 +2197,14 @@ const SURFACES = {
      address for one project's relationship to them. */
   "inquiry-stance": {
     routes: ["hash:stands"],
-    purpose: "Which reading of one question a named project stands on: the project's own dated declaration (§7), the act that makes it, and every reading the question has so the choice is made against the alternatives. Where the record names no reading it says so, and says which several situations answer identically rather than picking one.",
+    purpose: "Which reading of one question a named project stands on: the project's own dated declaration (§7), the act that makes it, and every reading the question has so the choice is made against the alternatives. Where the record names no reading it says so, and says which several situations answer identically rather than picking one. And what the project concluded on that reading: the act that adopts its claim, the withdrawal, and every conclusion and withdrawal in the order they were recorded.",
     levels: ["meaning"],
-    acts: ["versioncurrent"],
+    /* UI-65: the PROJECT's conclusion lives on the same relationship as its
+       stance (§7.1 item 1), so its act, its withdrawal and its whole history
+       are hosted here, off the read this surface already takes. `conclude` is
+       placed on TWO surfaces on purpose: the question's page carries the
+       no-project act, this one the project's. */
+    acts: ["versioncurrent", "conclude", "withdrawconclusion"],
     reads: ["basisversions", "affordances"],
   },
 
@@ -7865,6 +7873,12 @@ async function openInquiry(id, fromNav){
        pinned against. */
     let REF = null;
     try{ REF = await recR("earnedbasis", { id }); }catch(_){ REF = null; }
+    /* UI-65 — WHAT IT CONCLUDED WITH NO PROJECT, read from `op=basisversions`'
+       `no_project_conclusion` (REC-124/REC-136). Its failure is its own, for
+       REF's reason above: where it answers nothing the page renders exactly as
+       before and says nothing about a conclusion. */
+    let NPC = null;
+    try{ const bv = await recR("basisversions", { id, limit: "1" }); NPC = (bv && bv.ok !== false) ? (bv.no_project_conclusion || null) : null; }catch(_){ NPC = null; }
     let back = null, backErr = null, actsR = null, runs = "";
     try{
       const [b, a, r] = await Promise.all([
@@ -7919,6 +7933,7 @@ async function openInquiry(id, fromNav){
       <p class="subj-note">Every leg the question rests on, in the order it was recorded, with what it does to the conclusion and how its grade was established. A leg that cuts against the conclusion is a leg like any other and is counted on its own axis exactly as a supporting one is — the record keeps what it found, not only what it hoped for.</p>
       ${legsPane}
       ${strengthPanels(pair, legs)}
+      ${NPC ? `<h2 class="sec">What it concluded</h2>${noProjectConclusionHtml(NPC)}` : ""}
       ${pubEntry}
       ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR, pubEntry ? { elsewhere:["publish"] } : undefined)}
       <h2 class="sec">What would falsify it</h2>
@@ -9213,17 +9228,55 @@ function concludeFalsifier(){
    value as the STRING "undefined" rather than dropping the key — so a
    non-overriding member's request is byte-identical to the one this surface
    sent before this item only if the key is genuinely absent. */
+/* UI-65 — `version` IS THE READING THE MEMBER PICKED, APPENDED ONLY WHEN THEY
+   PICKED ONE, and for `no_falsifier`'s two reasons exactly: never a default
+   (REC-136 / §7.1 item 6 — *"a default reading is the plane choosing the
+   answer"*, and a surface choosing it is the same act one layer up), and never
+   the string "undefined". A member who has picked nothing sends no `version`,
+   and the plane's own NO_CLAIM sentence is what they are shown — which is also
+   exactly what a member with nothing to pick is shown, because that sentence
+   names the door. */
 function concludeParams(target){
   if(!CONCL) return { target };
   const p = { target, conclusion: CONCL.conclusion, falsifier: concludeFalsifier() };
+  if(CONCL.version) p.version = CONCL.version;
   if(CONCL.noFals) p.no_falsifier = "1";
   return p;
+}
+
+/* UI-65 — THE READINGS A NO-PROJECT CONCLUSION MAY ADOPT, and the filter is the
+   plane's own adoption check read off its own answer, never a rule of this
+   page: `op=conclude` adopts a reading that is ACCEPTED and STATES A CLAIM
+   (NO_CLAIM otherwise) and that RESTS ON SOMETHING (NO_BASIS otherwise). A
+   reading failing any of the three would be offered only to be refused. The
+   readings are the question's own, from `op=basisversions` asked with NO
+   project — a no-project conclusion stands on no project's CURRENT. */
+function concludeReadingOk(v){
+  return !!(v && typeof v === "object" && v.state === "accepted"
+            && String(v.claim == null ? "" : v.claim).trim() && Number(v.leg_count) >= 1);
+}
+function concludeReadingFind(name){
+  if(!CONCL || !name) return null;
+  return CONCL.readings.find(v => String(v.name) === String(name)) || null;
+}
+/* THE MEMBER'S PICK. Only a reading the plane's answer offered can be picked,
+   so a handler called with anything else changes nothing — the same guard
+   posture as `concludeNoFalsifier`: a fact about the act, not the markup. */
+function concludePick(name){
+  if(!CONCL) return;
+  const v = concludeReadingFind(name);
+  if(!v) return;
+  CONCL.version = String(v.name);
+  concludePaint();
 }
 
 async function openConclude(id, title, act){
   CONCL = { id, title, act, legs:[], pair:null, raw:null, pairErr:null, legPairs:{},
             sel:[], conclusion:"", falsifierText:"", noFals:false, noFalsSaid:null,
-            pf:null, receipt:null, busy:false };
+            pf:null, receipt:null, busy:false,
+            /* UI-65: the readings on offer, the bound the plane applied to that
+               answer, and the member's pick — EMPTY, always, at open. */
+            readings:[], readingsBound:"", readingsErr:null, version:"" };
   $("#dlg").innerHTML = `<h2>${esc(act.label)}</h2><p class="count-line">Loading&hellip;</p>`;
   $("#dlg-wrap").classList.remove("hidden");
   /* The legs come from the plane's OWN parse of the document's frontmatter
@@ -9233,6 +9286,17 @@ async function openConclude(id, title, act){
     let fmj = null; try{ fmj = proj && proj.fm_json ? JSON.parse(proj.fm_json) : null; }catch(_){}
     CONCL.legs = (fmj && Array.isArray(fmj.basis)) ? fmj.basis.filter(l=>l && typeof l==="object") : [];
   }catch(_){ CONCL.legs = []; }
+  /* UI-65: the readings, asked through the version-review surface's ONE door
+     (`versionReviewRead`, which reads and SAYS the bound) rather than a second
+     spelling of the same ask. Its failure is its own and is rendered as the
+     plane's words; it never empties the rest of the dialog. */
+  try{
+    const r = await versionReviewRead(id);
+    const ans = r && r.answer;
+    if(ans && ans.ok === false) CONCL.readingsErr = ans;
+    else CONCL.readings = (ans && Array.isArray(ans.versions)) ? ans.versions.filter(concludeReadingOk) : [];
+    CONCL.readingsBound = (r && r.bound) || "";
+  }catch(e){ CONCL.readingsErr = (e && typeof e === "object") ? e : { error:String(e) }; }
   await concludeRefresh();
 }
 
@@ -9401,6 +9465,32 @@ function concludePaint(){
                + (sel ? `<div class="cx-sel">${sel}</div>` : "");
         }).join("");
 
+  /* UI-65 — THE READING IT ADOPTS, PICKED BY THE MEMBER, NONE PICKED FOR THEM.
+     Radios with nothing `checked` at open, including when exactly one reading is
+     on offer: a lone reading pre-picked is the plane-chooses-the-answer shape
+     REC-136 refused, arriving through the convenience of a surface. The CLAIM of
+     the picked reading is shown verbatim BEFORE the commit, because the claim is
+     what is concluded (§7.1 item 2) and the member must read what they are
+     putting their name to. */
+  const picked = concludeReadingFind(CONCL.version);
+  const readingRows = CONCL.readingsErr
+    ? actRefusalHtml(CONCL.readingsErr)
+    : CONCL.readings.length
+      ? CONCL.readings.map(v=>{
+          const n = String(v.name), on = !!picked && String(picked.name) === n;
+          return `<label class="dz-opt${on?" on":""}" data-cx-reading="${esc(n)}">
+            <input type="radio" name="cx-reading"${on?" checked":""} onchange="concludePick(${esc(JSON.stringify(n))})">
+            <span class="dz-verb mono">${esc(n)}</span>
+            <span class="dz-mean">Claims: &ldquo;${esc(String(v.claim))}&rdquo; &middot; rests on ${esc(String(v.leg_count))} leg${Number(v.leg_count)===1?"":"s"}</span>
+            ${v.moved && v.moved.by ? `<div class="subj-how">Accepted by ${esc(String(v.moved.by))}${v.moved.at?` on ${esc(String(v.moved.at))}`:""}.</div>` : ""}
+          </label>`;
+        }).join("")
+      : `<div class="empty" data-cx-reading="none">The record answered with no reading of this question that has been accepted, states a claim and rests on something, so there is nothing here to pick.</div>`;
+  const adopts = picked
+    ? `<div class="cc" data-cx-claim="shown">Concluding adopts the claim of <span class="mono">${esc(String(picked.name))}</span>, and that claim is what will be recorded as concluded, word for word:</div>
+       <div class="pub-excl" data-cx-claim-text>${esc(String(picked.claim))}</div>`
+    : `<div class="cc" data-cx-claim="none">No reading picked.</div>`;
+
   const fals = concludeFalsifier();
   const pf = CONCL.pf;
   /* THE COMMIT IS ABSENT WHILE THE PLANE REFUSES — never present-and-disabled.
@@ -9413,6 +9503,12 @@ function concludePaint(){
     <p class="what">This act answers one question, in your name, on the permanent record. What you write below is written verbatim into the question's own document and its Session Log.</p>
     <div class="dz-what"><span class="dz-ttl">${esc(CONCL.title||CONCL.id)}</span><span class="id">${esc(CONCL.id)}</span></div>
     ${act.prompt?`<div class="teach" style="margin:8px 0">${esc(act.prompt)}</div>`:""}
+
+    <h3 class="cx-h">The reading it adopts</h3>
+    <p class="subj-note">A conclusion adopts the claim of one reading of this question's evidence that the group has accepted. Pick the one you are concluding on. None is picked for you.</p>
+    ${CONCL.readingsBound || ""}
+    <div class="dz-choose">${readingRows}</div>
+    ${adopts}
 
     <h3 class="cx-h">What it rests on</h3>
     <p class="subj-note">Pick from what the record already holds. Nothing here is composed for you, and picking a leg does not add one: these are the legs already recorded on this question.</p>
@@ -9438,7 +9534,7 @@ function concludePaint(){
     <div class="cc">${fals ? `Recorded verbatim as: <span class="mono">${esc(fals)}</span>` : "Nothing yet."}</div>
 
     <h3 class="cx-h">Your conclusion</h3>
-    <p class="subj-note">In your words. Nothing is drafted, suggested, or filled in here, and nothing will be.</p>
+    <p class="subj-note">In your words, recorded beside the claim you adopt above. Nothing is drafted, suggested, or filled in here, and nothing will be.</p>
     <textarea class="txt" id="cx-concl" rows="4" onchange="concludeAuthor('conclusion', this.value)"></textarea>
 
     ${actRungHtml(act)}
@@ -9470,6 +9566,12 @@ function concludeReceiptHtml(r){
       <div>The record moved <span class="mono">${esc(r.target||"")}</span> from <b>${esc(r.from||"")}</b> to <b>${esc(r.to||"")}</b>.</div>
       <div>Recorded against <b>${esc(r.author||"")}</b>${r.at?` on <span class="mono">${esc(r.at)}</span>`:""} &mdash; the record's own stamp, not this page's.</div>
       ${r.basis_legs!=null?`<div>It rests on ${esc(String(r.basis_legs))} leg${r.basis_legs===1?"":"s"}.</div>`:""}
+      ${/* UI-65: THE ADOPTED CLAIM, READ BACK OFF THE PLANE'S ANSWER — never off
+            this page's memory of what the member picked, so a receipt showing a
+            claim is the record saying it adopted that claim. */""}
+      ${r.claim && r.claim.state === "adopted" && r.claim.text
+        ? `<div data-cx-receipt-claim>Concluded on reading <span class="mono">${esc(String(r.claim.version||""))}</span>, adopting its claim word for word: &ldquo;${esc(String(r.claim.text))}&rdquo;</div>`
+        : ""}
       ${/* UI-64: THE OVERRIDE IS READ BACK OFF THE PLANE'S OWN ANSWER, never
             off this page's memory of what it sent. `falsifier_override` is
             `{by, at}` or NULL and REC-117 made it never absent, so a receipt
@@ -9482,6 +9584,41 @@ function concludeReceiptHtml(r){
         : ""}
     </div>
     <div class="row-btns"><button class="btn" onclick="closeDialog();openInquiry(${esc(JSON.stringify(String(r.target||"")))})">Back to the question</button></div>`;
+}
+
+/* ============================================================
+   UI-65 — A CONCLUSION DRAWN WITH NO PROJECT, AS THE RECORD READS IT.
+   `op=basisversions` publishes `no_project_conclusion` on every answer
+   (REC-124 / §7.1 item 5): null when the question's own state is not
+   concluded, otherwise the no-project relationship's conclusion with its CLAIM
+   either `adopted` (REC-136: the conclusion named its reading and that reading
+   still states that claim) or `undetermined`, with the plane's own sentence.
+
+   AN UNDETERMINED CLAIM IS STATED, NEVER FILLED IN. The conclusion TEXT is the
+   member's words and is not the claim — §7.1 says a claim is not a second name
+   for it — so it is rendered under its own label and the claim slot, where
+   undetermined, is the C-14 primitive with the PLANE'S basis sentence. Its
+   retry form is `positively_none` for the plane's own reason: a conclusion
+   written before item 6 is "never back-filled", so no second look at this
+   record will ever find its claim.
+
+   AND IT IS NEVER A PROJECT'S. The plane's `relationship_detail` says so in
+   its own words and is rendered beside it, because §7.1 item 8 makes a
+   no-project conclusion information for a project and never its answer.
+   ============================================================ */
+function noProjectConclusionHtml(npc){
+  if(!npc || typeof npc !== "object") return "";
+  const c = npc.claim && typeof npc.claim === "object" ? npc.claim : null;
+  const claim = c && c.state === "adopted" && c.text
+    ? `<div class="kv"><span class="k">The claim it adopted</span><span class="v plain">reading <span class="mono">${esc(String(c.version||""))}</span></span></div>
+       <div class="pub-excl" data-npc-claim="adopted">${esc(String(c.text))}</div>`
+    : `<div data-npc-claim="undetermined">${undeterminedPane((c && c.detail) || "the record published no claim for this conclusion", "positively_none", [])}</div>`;
+  return `<div class="card" data-npc style="margin:0 0 10px">
+    ${npc.relationship_detail ? `<div class="subj-how">${esc(String(npc.relationship_detail))}</div>` : ""}
+    ${claim}
+    ${npc.conclusion ? `<div class="kv"><span class="k">In the concluding member&rsquo;s words</span></div><div class="prose">${esc(String(npc.conclusion))}</div>` : ""}
+    ${npc.falsifier ? `<div class="subj-how">What would falsify it: ${esc(String(npc.falsifier))}</div>` : ""}
+  </div>`;
 }
 /*__CONCLUDE_ACT_END__*/
 /*__ELICITATION_START__*/
@@ -21077,6 +21214,7 @@ function stanceHtml(){
     + (act ? stanceActHtml(act)
            : '<div class="q-gap">The record publishes no way for this credential to change what this '
              + 'project stands on, so none is offered here.</div>')
+    + stanceConclusionSectionHtml()
     + '<h2 class="sec">The readings this question has</h2>'
     + (STANCE.bound || "")
     + (all.length
@@ -21090,10 +21228,253 @@ function stanceHtml(){
           + '</div>');
 }
 
+/* ============================================================
+   UI-65 — WHAT THIS PROJECT CONCLUDED, THE ACT THAT CONCLUDES FOR IT, AND THE
+   ACT THAT WITHDRAWS — INVESTIGATIVE-SESSION.md §7.1 items 1-3, 7 and 8, built
+   in the plane by REC-124 (IC-150) and REC-136 (IC-153).
+
+   WHY HERE. A project's conclusion is written on the (project, question)
+   relationship beside CURRENT and in the same form (item 1), and this surface
+   is the one address for exactly that pair (`#stands/<PROJ>/<INQ>`). It already
+   reads `op=basisversions&project=`, whose answer carries `conclusion_stance`
+   and `conclusion_history` — so the record is RENDERED from the read this page
+   already takes, and no second door is opened.
+
+   WHAT IS RENDERED, AND THE TWO RULES IT KEEPS.
+     · THE WHOLE HISTORY, in the plane's order, every entry dated and authored.
+       Showing only the stance would make a project that never concluded and one
+       that concluded and withdrew read the same, and DEC-19 as Bob ruled it
+       keeps "a record of the attestation and reversal". The stance is said
+       above it from `conclusion_stance`, never computed from the list.
+     · COMMENTARY is labelled the member's own words and, where the plane marks
+       it `evidence: false`, never evidence — the label is read off the plane's
+       flag, so a row that ever came back without it would not be labelled by
+       this page's assumption.
+
+   THE PROJECT'S ACT (op=conclude&project=). The claim concluded is the claim of
+   the reading the project STANDS ON, so there is nothing to pick here: picking
+   is `versioncurrent`, one section up. That claim is shown VERBATIM before the
+   commit, read from this same answer. No `conclusion=` is sent — the plane
+   refuses a free conclusion beside a project (CONCLUSION_IS_THE_CLAIM) — and no
+   `version=`, because a project concludes on its CURRENT and the plane refuses
+   a second pointer. Sent, never pre-flighted, this surface's posture for its
+   act: whatever comes back that is a refusal is the plane's sentence, and the
+   record is re-read after, so the page shows what the record holds.
+
+   THE FALSIFIER OVERRIDE, UI-64's STRUCTURE KEPT. The door to "no falsifier
+   can be stated" exists only UNDER the plane's own NO_FALSIFIER refusal to this
+   draft, and the handler refuses to set the flag at any other moment.
+
+   WITHDRAWAL (op=withdrawconclusion). Offered only while the plane's own stance
+   reads `concluded` — otherwise there is nothing to withdraw and the plane
+   would say NOTHING_TO_WITHDRAW. The reason is the member's; the field is empty
+   and stays empty until they write in it, and an empty one is refused by the
+   plane (NO_REASON) in its own words. The offer's own label is the plane's and
+   already says the conclusion stays in the record.
+   ============================================================ */
+function stanceWhen(by, at){
+  return 'by ' + esc(String(by || "an unnamed member")) + ' on ' + esc(String(at || "an unrecorded date"));
+}
+function stanceEntryHtml(e, i){
+  const n = (i + 1) + '.';
+  if(e.act === "concluded"){
+    const claim = (e.claim_state === "adopted" && e.claim)
+      ? '<div class="subj-how">Adopted the claim of reading <span class="mono">' + esc(String(e.version || ""))
+        + '</span>, word for word:</div><div class="pub-excl" data-conc-claim>' + esc(String(e.claim)) + '</div>'
+      : undeterminedPane("this entry in the project's record carries no claim", "positively_none", []);
+    const fals = e.falsifier
+      ? '<div class="subj-how">What would falsify it: ' + esc(String(e.falsifier)) + '</div>'
+      : (e.falsifier_override && e.falsifier_override.by)
+        ? '<div class="subj-how" data-nofals="history">No falsifier was stated, and the record carries that against <b>'
+          + esc(String(e.falsifier_override.by)) + '</b>' + (e.falsifier_override.at ? ' on <span class="mono">'
+          + esc(String(e.falsifier_override.at)) + '</span>' : '') + '.</div>'
+        : '';
+    const c = e.commentary && typeof e.commentary === "object" && e.commentary.text ? e.commentary : null;
+    const comm = c
+      ? '<div class="subj-how" data-conc-commentary>Commentary by ' + esc(String(c.by || e.by || "an unnamed member"))
+        + (c.evidence === false ? ' &mdash; their own words, recorded beside the conclusion and never evidence' : ' &mdash; their own words')
+        + ': &ldquo;' + esc(String(c.text)) + '&rdquo;</div>'
+      : '';
+    return '<div class="card" data-conc-entry="concluded" style="margin:0 0 8px">'
+      + '<div class="kv"><span class="k">' + n + ' Concluded</span><span class="v plain">' + stanceWhen(e.by, e.at) + '</span></div>'
+      + claim + fals + comm + '</div>';
+  }
+  if(e.act === "withdrawn")
+    return '<div class="card" data-conc-entry="withdrawn" style="margin:0 0 8px">'
+      + '<div class="kv"><span class="k">' + n + ' Withdrawn</span><span class="v plain">' + stanceWhen(e.by, e.at) + '</span></div>'
+      + '<div class="subj-how">It withdrew the conclusion on reading <span class="mono">' + esc(String(e.version || ""))
+      + '</span>' + (e.withdraws_at ? ' recorded on <span class="mono">' + esc(String(e.withdraws_at)) + '</span>' : '')
+      + '. That conclusion is not deleted: it is the entry it follows in this record.</div>'
+      + '<div class="subj-how">Why: &ldquo;' + esc(String(e.reason || "")) + '&rdquo;</div></div>';
+  return '<div data-conc-entry="unrecognised">'
+    + undeterminedPane(e.detail || "the record cannot read this entry", "could_not_determine", []) + '</div>';
+}
+function stanceStanceHtml(){
+  if(!STANCE.concPublished)
+    return '<div class="q-gap">The record published nothing about what this project concluded here.</div>';
+  const s = STANCE.concStance, h = STANCE.concHistory;
+  if(s === "concluded")
+    return '<div class="cc" data-conc-stance="concluded">This project stands on its conclusion: the last entry below.</div>';
+  if(s === "withdrawn")
+    return '<div class="cc" data-conc-stance="withdrawn">This project stands on no conclusion of this question. Its latest entry is a withdrawal, and every entry before it stays in the record below.</div>';
+  if(s === "none")
+    return '<div class="cc" data-conc-stance="none">This project has concluded nothing about this question.</div>';
+  const last = h.length ? h[h.length - 1] : null;
+  return '<div data-conc-stance="undetermined">'
+    + undeterminedPane((last && last.detail) || "the record's latest entry for this project cannot be read", "could_not_determine", [])
+    + '</div>';
+}
+function stanceCxClaimHtml(){
+  const c = STANCE.current;
+  if(!c || typeof c !== "object" || !c.version)
+    return '<div class="cc" data-cx-claim="none">This project stands on no reading of this question, so there is no claim shown here to adopt.</div>';
+  const v = stanceFind(c.version);
+  const claim = v ? String(v.claim == null ? "" : v.claim).trim() : "";
+  if(!v)
+    return '<div class="cc" data-cx-claim="none">The reading this project stands on is not among the ones this answer carries, so its claim is not shown here.</div>';
+  if(!claim)
+    return '<div class="cc" data-cx-claim="none">The reading this project stands on, <span class="mono">' + esc(String(v.name))
+      + '</span>, states no claim.</div>';
+  return '<div class="cc" data-cx-claim="shown">Concluding adopts the claim of <span class="mono">' + esc(String(v.name))
+    + '</span>, the reading this project stands on, and that claim is what will be recorded as concluded, word for word:</div>'
+    + '<div class="pub-excl" data-cx-claim-text>' + esc(String(v.claim)) + '</div>';
+}
+function stanceCxDoorHtml(){
+  const cx = STANCE.cx;
+  if(cx.noFals || !cx.refusal || cx.refusal.reason !== "NO_FALSIFIER") return "";
+  return '<div class="cc" data-nofals="offer"><button class="btn ghost" id="sx-nofals" onclick="stanceCxNoFalsifier(true)">'
+    + 'Record that no falsifier can be stated</button></div>';
+}
+function stanceCxStandingHtml(){
+  const cx = STANCE.cx;
+  if(!cx.noFals) return "";
+  return '<div data-nofals="taken"><div class="cc">You are recording that none can be stated. This is what the record said, and what you are answering for:</div>'
+    + actRefusalHtml(cx.noFalsSaid)
+    + '<div class="cc"><button class="btn ghost" id="sx-nofals-off" onclick="stanceCxNoFalsifier(false)">Withdraw this and state one instead</button></div></div>';
+}
+function stanceCxReceiptHtml(){
+  const r = STANCE.cx.receipt;
+  if(!r) return "";
+  const cl = r.claim && r.claim.state === "adopted" && r.claim.text
+    ? ', adopting the claim of reading <span class="mono">' + esc(String(r.claim.version || "")) + '</span> word for word: &ldquo;'
+      + esc(String(r.claim.text)) + '&rdquo;' : '';
+  return '<div class="intent-ok" data-cx-receipt>The record recorded this project&rsquo;s conclusion' + cl
+    + ', ' + stanceWhen(r.author, r.at) + ' &mdash; the record&rsquo;s own stamp, not this page&rsquo;s.</div>';
+}
+function stanceWdReceiptHtml(){
+  const r = STANCE.wd.receipt;
+  if(!r) return "";
+  return '<div class="intent-ok" data-wd-receipt>The record recorded the withdrawal, ' + stanceWhen(r.author, r.at)
+    + '. The conclusion it withdrew stays in the record, and the history below now carries both.</div>';
+}
+function stanceConclusionSectionHtml(){
+  if(!STANCE) return "";
+  const cAct = actNamed(STANCE.acts, "conclude");
+  const wAct = actNamed(STANCE.acts, "withdrawconclusion");
+  const cx = STANCE.cx, wd = STANCE.wd;
+  const cxBox = (cAct && actReachable(cAct))
+    ? '<div class="intent-box" data-stance-conclude><div class="intent-lede">' + esc(cAct.label || "") + '</div>'
+      + '<p class="subj-note">A project concludes by adopting the claim of the reading it stands on, and that claim is what is concluded. It is this project&rsquo;s own dated act and moves nothing for any other project reading this question. To conclude on a different reading, stand on it first, above.</p>'
+      + stanceCxClaimHtml()
+      + '<div class="kv"><span class="k">What would falsify it</span></div>'
+      + '<textarea class="txt" id="sx-fals" rows="3" onchange="stanceCxField(\'falsifier\', this.value)"></textarea>'
+      + '<div class="kv"><span class="k">Commentary (optional)</span></div>'
+      + '<p class="subj-note" data-cx-commentary-label>Your own words, recorded in your name beside the conclusion. Commentary is never evidence: it is not a leg and not the claim.</p>'
+      + '<textarea class="txt" id="sx-comm" rows="3" onchange="stanceCxField(\'commentary\', this.value)"></textarea>'
+      + (cx.refusal ? actRefusalHtml(cx.refusal) : '') + stanceCxDoorHtml() + stanceCxStandingHtml()
+      + '<button class="btn" id="sx-conclude" onclick="stanceConclude()"' + (cx.busy ? ' disabled' : '') + '>' + esc(cAct.label || "") + '</button>'
+      + stanceCxReceiptHtml()
+      + '</div>'
+    : '';
+  const wdBox = (wAct && actReachable(wAct))
+    ? (STANCE.concStance === "concluded"
+        ? '<div class="intent-box" data-stance-withdraw><div class="intent-lede">' + esc(wAct.label || "") + '</div>'
+          + '<p class="subj-note">Withdrawing adds a dated entry in your name to this project&rsquo;s record. The conclusion it withdraws is not deleted or changed: it stays in the record beside the withdrawal, and both are shown below.</p>'
+          + '<div class="kv"><span class="k">Why this project no longer stands on it</span></div>'
+          + '<textarea class="txt" id="sx-why" rows="3" onchange="stanceWdField(this.value)"></textarea>'
+          + (wd.refusal ? actRefusalHtml(wd.refusal) : '')
+          + '<button class="btn" id="sx-withdraw" onclick="stanceWithdraw()"' + (wd.busy ? ' disabled' : '') + '>' + esc(wAct.label || "") + '</button>'
+          + '</div>'
+        : '<div class="q-gap" data-stance-withdraw="nothing">This project stands on no conclusion of this question, so there is nothing for it to withdraw.</div>')
+      + stanceWdReceiptHtml()
+    : stanceWdReceiptHtml();
+  const hist = STANCE.concHistory.length
+    ? '<p class="count-line">' + STANCE.concHistory.length + ' entr' + (STANCE.concHistory.length === 1 ? 'y' : 'ies')
+      + ' in this project&rsquo;s record on this question, oldest first. Nothing in it is ever overwritten.</p>'
+      + STANCE.concHistory.map(stanceEntryHtml).join("")
+    : '';
+  const npc = STANCE.npc
+    ? '<h2 class="sec">Concluded with no project</h2>'
+      + '<p class="subj-note">The question itself carries a conclusion drawn outside any project. It is shown as information and is never this project&rsquo;s conclusion.</p>'
+      + noProjectConclusionHtml(STANCE.npc)
+    : '';
+  return '<h2 class="sec">What this project concluded</h2>'
+    + stanceStanceHtml() + cxBox + wdBox + hist + npc;
+}
+
+function stanceCxField(which, v){
+  if(!STANCE) return;
+  if(which === "falsifier") STANCE.cx.falsifier = String(v == null ? "" : v);
+  else if(which === "commentary") STANCE.cx.commentary = String(v == null ? "" : v);
+}
+function stanceWdField(v){ if(STANCE) STANCE.wd.reason = String(v == null ? "" : v); }
+/* THE GUARD IS THE DESIGN (UI-64's): the flag cannot be set unless the plane's
+   last answer to THIS draft was NO_FALSIFIER, and that refusal is what is kept. */
+function stanceCxNoFalsifier(on){
+  if(!STANCE) return;
+  const cx = STANCE.cx;
+  if(on){
+    if(!cx.refusal || cx.refusal.reason !== "NO_FALSIFIER") return;
+    cx.noFals = true; cx.noFalsSaid = cx.refusal; cx.refusal = null;
+  }else{ cx.noFals = false; cx.noFalsSaid = null; }
+  stancePaint();
+}
+/* `commentary` and `no_falsifier` are appended ONLY when there is one, for
+   `concludeParams`' reason: `rec` stringifies an undefined value. */
+function stanceConcludeParams(){
+  const cx = STANCE.cx;
+  const p = { target: STANCE.inquiry, project: STANCE.project, falsifier: cx.falsifier };
+  if(String(cx.commentary).trim()) p.commentary = cx.commentary;
+  if(cx.noFals) p.no_falsifier = "1";
+  return p;
+}
+async function stanceConclude(){
+  if(!STANCE || STANCE.cx.busy) return;
+  const cx = STANCE.cx;
+  cx.busy = true; cx.receipt = null; cx.refusal = null; STANCE.wd.receipt = null;
+  stancePaint();
+  const a = await actAsk("conclude", stanceConcludeParams());
+  cx.busy = false;
+  if(a.accepted){
+    cx.receipt = a.result || null;
+    cx.falsifier = ""; cx.commentary = ""; cx.noFals = false; cx.noFalsSaid = null;
+    await stanceLoad();
+  }else{ cx.refusal = a.refusal || null; stancePaint(); }
+}
+async function stanceWithdraw(){
+  if(!STANCE || STANCE.wd.busy) return;
+  const wd = STANCE.wd;
+  wd.busy = true; wd.receipt = null; wd.refusal = null; STANCE.cx.receipt = null;
+  stancePaint();
+  const a = await actAsk("withdrawconclusion",
+    { target: STANCE.inquiry, project: STANCE.project, reason: wd.reason });
+  wd.busy = false;
+  if(a.accepted){ wd.receipt = a.result || null; wd.reason = ""; await stanceLoad(); }
+  else { wd.refusal = a.refusal || null; stancePaint(); }
+}
+
 function stancePaint(){
   const el = (typeof $ === "function") ? $("#content") : null;
   if(!el) return;
   el.innerHTML = stanceHtml();
+  /* UI-65: the drafts are re-hydrated FROM STATE, never from the markup, so a
+     repaint neither loses what the member typed nor gives a field a value this
+     page chose. */
+  if(STANCE && typeof $ === "function"){
+    const f = $("#sx-fals"); if(f) f.value = STANCE.cx.falsifier;
+    const c = $("#sx-comm"); if(c) c.value = STANCE.cx.commentary;
+    const w = $("#sx-why");  if(w) w.value = STANCE.wd.reason;
+  }
 }
 
 /* Leaving for the review surface is a MOVE, not a copy: this page holds no
@@ -21141,6 +21522,15 @@ async function stanceLoad(){
        to say "this project has not chosen" about a read that never asked. */
     STANCE.currentPublished = Object.prototype.hasOwnProperty.call(answer, "current");
     STANCE.current = STANCE.currentPublished ? answer.current : null;
+    /* UI-65: the project's WHOLE conclusion record (REC-136 / §7.1 item 7) and
+       the no-project relationship's conclusion (item 5), kept apart at the one
+       place the wire is read, for `current`'s reason: an absent stance field is
+       a read that asked nothing, and is never rendered as `none`. */
+    STANCE.concPublished = Object.prototype.hasOwnProperty.call(answer, "conclusion_stance");
+    STANCE.concStance = STANCE.concPublished ? answer.conclusion_stance : null;
+    STANCE.concHistory = Array.isArray(answer.conclusion_history)
+      ? answer.conclusion_history.filter(e => e && typeof e === "object") : [];
+    STANCE.npc = answer.no_project_conclusion || null;
   }
   STANCE.acts = (actsR && actsR.ok) ? actsR.acts : [];
   STANCE.busy = false;
@@ -21153,7 +21543,12 @@ async function stanceOpen(projectId, inquiryId){
   if(!p || !id) return;
   STANCE = { project:p, inquiry:id, versions:[], current:null, currentPublished:false,
              bound:"", acts:[], refusal:null, refusalAct:null, receipt:null, err:null,
-             present:false, busy:true };
+             present:false, busy:true,
+             /* UI-65 — the conclusion record, and the two drafts. Every draft
+                field starts EMPTY and dies with this object. */
+             concPublished:false, concStance:null, concHistory:[], npc:null,
+             cx:{ falsifier:"", commentary:"", noFals:false, noFalsSaid:null, refusal:null, receipt:null, busy:false },
+             wd:{ reason:"", refusal:null, receipt:null, busy:false } };
   STANCE_HASH_LOCK = true;
   try{ location.hash = "#stands/" + p + "/" + id; }catch(_){}
   STANCE_HASH_LOCK = false;

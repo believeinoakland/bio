@@ -764,13 +764,15 @@ const ACTS_AWAITING_SURFACE = [
      budget book. Until that surface exists the act is reachable only through the
      API, which is the honest state and is what this row records. */
   { id: "attesttext",      published_by: "CPDF-10 (the Tier-3 OCR path)", owed_by: "UI — the transcription check: the page image beside the transcribed text, with the member marking the extent they checked", since: "2026-08-08" },
-  /* REC-136 (INVESTIGATIVE-SESSION.md §7.1 item 7). A PROJECT withdraws its
-     conclusion, and the withdrawal APPENDS — the conclusion stays readable
-     beside it. Registered as a DEBT, DELEGATED in `CLAIMS.md` (REC-136 -> UI):
-     the surface is the project's view of a question it concluded, showing the
-     whole history (`op=basisversions&project=`'s `conclusion_history`) and
-     offering the withdrawal with its required reason. */
-  { id: "withdrawconclusion", published_by: "REC-136 (§7.1 item 7)", owed_by: "UI — the project's stance on a question: its conclusion history, and withdrawing with a reason", since: "2026-09-18" },
+  /* `withdrawconclusion` STOOD HERE AND WAS STRUCK 2026-09-18 BY UI-65 — the
+     third row this drain has collected, and it fired by name (ARM A4c) on the
+     item's first run, before the row was touched. REC-136 published the act
+     (§7.1 item 7: a PROJECT withdraws its conclusion and the withdrawal
+     APPENDS) and registered it here as a debt. It is now hosted by
+     `SURFACES["inquiry-stance"]`, the project's view of the question, beside
+     the project's whole conclusion history (`conclusion_history`) and with the
+     plane's own label saying the conclusion stays in the record;
+     `conclude-reading.test.mjs` §5 drives it against the real plane. */
 ];
 
 /* THE ONE PLACE the act/surface partition is computed. The negative controls
@@ -855,8 +857,12 @@ await section("ARM A · acts come from the plane", () => {
      PRINTED on this tree rather than by adding one to the number in the file:
      the version-review surface hosts `versionhide`, so the registry describes
      one more placement and 18 had a placement of slack the moment it landed. */
-  ok(G.placements >= 20,
-     `ARM A3: ${G.placements} act placements are described, floor 20 (measured 2026-08-09 by UI-45 from the figure this arm PRINTED; was 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
+  /* MOVED 2026-09-18 (UI-65) FROM 20 TO 22, from the figure this arm PRINTED
+     (22, read with the floor raised out of reach on a throwaway copy): the
+     stance surface now hosts `conclude` (the project's act — a SECOND placement
+     of an act the question's page also hosts) and `withdrawconclusion`. */
+  ok(G.placements >= 22,
+     `ARM A3: ${G.placements} act placements are described, floor 22 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED; was 20 under UI-45, 19 under UI-42, 18 under UI-52, and 10 before that when it sat eight low) — a registry describing no acts would pass A2 vacuously`);
 
   /* ---- ARM A4a · THE FICTION HALF. UNCONDITIONAL, AND IT HAS NO REGISTER.
      A surface naming an act the plane does not publish is the registry claiming
@@ -910,11 +916,16 @@ await section("ARM A · acts come from the plane", () => {
      because a surface now hosts it. A register row being paid moves both, in
      opposite halves of the same partition, and 15 would have carried a whole
      act of slack in each. */
-  ok(G.baseline.length >= 17,
-     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 17 (measured 2026-08-09 by UI-45 from the figure this arm PRINTED, up from 16 when the register still named versioncurrent). `
+  /* BOTH MOVED 2026-09-18 (UI-65) FROM 17 TO 18, from the figures this arm
+     PRINTED (18 and 18, read with the floors raised out of reach on a
+     throwaway copy): striking `withdrawconclusion` moved it out of the register
+     into the catalogue-outside-it, and `inquiry-stance` now hosts it. 17 would
+     have carried one act of slack in each. */
+  ok(G.baseline.length >= 18,
+     `ARM A4d (FLOOR): the act catalogue OUTSIDE the register holds ${G.baseline.length} act(s), floor 18 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED, up from 17 when the register still named withdrawconclusion). `
      + `A catalogue read as empty makes every arm above pass over nothing — the ceiling especially, which is satisfied by a gap of zero for the wrong reason.`);
-  ok(G.hostedSet.size >= 17,
-     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 17 (measured 2026-08-09 by UI-45 from the figure this arm PRINTED, up from 16 when no surface hosted versioncurrent). `
+  ok(G.hostedSet.size >= 18,
+     `ARM A4e (FLOOR): the registry walk found ${G.hostedSet.size} distinct hosted act(s) across ${G.placements} placement(s), floor 18 (measured 2026-09-18 by UI-65 from the figure this arm PRINTED, up from 17 when no surface hosted withdrawconclusion). `
      + `A walk that found nothing would make every published act read as unhoused and send the reader to re-house a catalogue that was never the problem.`);
 
   /* ---- ARM A4f · OVER-STRICTNESS. A CORRECT ALTERNATIVE MUST PASS.
