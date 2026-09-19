@@ -47,6 +47,7 @@ The format is the one `PARALLELISM.md` fixes:
 Paths: `docs/development/kickoffs/CONDUCT.md`, `docs/archive/CONDUCT-kickoff-2026-09-19.md` (new, the verbatim archive),
 `tools/readbudget.mjs` (CONDUCT.md into CUT once it fits), `docs/development/MEASUREMENTS.md` (the CONDUCT exam, appended).
 CONDUCT does not edit `kickoffs/CONDUCT.md` while this claim is open; CONDUCT reviews the cut before it lands.
+**released: 2026-09-19 BOB #16** — landed: CONDUCT.md 96,800 B → 21,064 B, reviewed by CONDUCT #6 (three additions taken), exam M-63 (NEW 42/42 · OLD 42/42 · CTRL 27/42), CONDUCT.md and BOB.md armed in `readbudget` CUT.
 
 ## CLAIM 2026-09-18 DIST (the embed hazard, then the cut after 0.58.0)
 released:
