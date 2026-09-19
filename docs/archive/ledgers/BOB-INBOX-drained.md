@@ -926,3 +926,87 @@ uncapped, gated, and already derives a field on read. No queue item is supersede
 
 _(drained 2026-09-19 by SCHEDULER — design verified at its home (INVESTIGATIVE-SESSION.md §7.1, the op=projection paragraph); item 1 → **REC-144**, item 2 → **UI-67**, placed right after REC-142 as the other UI-65 follow-up. NO ENTRIES OUTSTANDING.)_
 
+**2026-09-19 · BOB #16 · CONTRADICTION'S IDENTIFY IS DESIGNED — THREE ITEMS, IN ORDER (BOB-NEXT §3 4a; SCHEDULER's
+order audit `cd9d7c86` held 8.contradiction unrowable until this existed).** Design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md`
+(level 2 beneath `BIO_Case_Making_v0_1.md` §CONTRADICTION; governed from this commit). Every table and column it names
+was read at the code. M9 (a member can state what they found). No queue item is superseded.
+
+1. **RECORD — the pairing read** (I3, an IC): §4's four keys (K1 one inquiry/opposite roles; K2 one subject/two held
+   claims; K3 one referent/two held claims; K4 one entity/two sources of different doctype or date), viewer-gated
+   (§7.9, §7 item 7.14), bounded PER KEY with `limit`/`truncated`, the §6 empty-level statement (four distinct "none"
+   facts, never a bare empty list), and a count of pairs NOT formed because a date or doctype was undetermined. No
+   judgement, no write. **The cheap defeat:** a key that silently widens its join to find more pairs makes the fixture's
+   per-key figures incomparable — the suite pins each key's join by a fixture whose pair count is exact.
+2. **M0 / VERIFY — the fixture and the first measurement, BEFORE anything a member sees** (after 1): §7's labelled
+   corpus (precision, world in both of Bob's shapes, record, unrelated), the false-conflict rate and recall per key,
+   the THRESHOLD recorded in `MEASUREMENTS.md` with its corpus size, and §7's three negative controls (disable K2; an
+   always-`world` judgement must fail the gate by name; an empty record returns case (a)). The measurement needs a
+   judgement to measure, so this item builds the fixture and the harness and measures a candidate judgement run
+   OFF-RECORD (no table write).
+3. **RECORD + the investigative session's skill — the judgement and the candidate table**, after 2 and only if 2's
+   gate is met: §5's five labels as labelled machine work through ONE append site, §8's row (both referents at their
+   versions, the key, the run, the label and reason, state `proposed`), idempotent over unchanged referents.
+
+**Not rowed, on purpose:** PRESENT and RESOLVE are the next design act, after item 2's first measurement.
+
+_(drained 2026-09-19 by SCHEDULER — design verified at `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §§2–9: item 1 → **REC-146**, item 2 → **M0-71**, item 3 → **REC-147** (reads `blocked` until M0-71's measured gate is met). Placed after MK-5, as BOB #14's item 5 sat after items 2, 3 and 6. NO ENTRIES OUTSTANDING.)_
+
+**2026-09-19 · BOB #16 · THREE DESIGNS AT THEIR HOMES — D-431 IS SPAWNABLE; DISCOVERABLE-OR-HIDDEN (4 items); DEC-63 AS
+AMENDED (1 item); THE REVIEW-COPY SURFACE VERIFIED (3 items).** Every design below is on `main` in its home document in
+this commit, read at the code before it was written. Nothing here is Bob's to answer; he is told the two decisions he may
+overrule. No queue item is superseded and no worker needs stopping.
+
+**A. D-431 — its design is now at its home**: `BIO_Publication_v0_1.md` §3 rule 2, the second note ("DECIDED 2026-09-19
+by BOB #16"), the ruling of the drained 2026-09-19 entry (`docs/archive/ledgers/BOB-INBOX-drained.md`,
+"D-431 RULED"). **SCHEDULER's spawn condition is met.**
+
+**B. DISCOVERABLE or HIDDEN, and the request to join** — `BIO_Membership_Architecture_v2.md` §7, item **7.14** (Bob's
+ruling of 2026-09-18). Decided there, each from an existing ruling: the setting is an OWNER'S recorded act, not a document
+field; **every existing project reads HIDDEN** (it was created under §7.9's promise); a new project's creator is ASKED,
+with nothing preselected, and the plane fails closed to HIDDEN when no setting is sent; a grant is an invitation and the
+requester still joins by the checkbox (§7.4). Milestone M8.
+1. **RECORD (I3, an IC):** the setting (owner-only, append-only, latest wins; no record = HIDDEN); `#inSight` answers
+   three levels at the ONE predicate (NONE / EXISTENCE / today's), EXISTENCE only for a discoverable project to a member
+   session outside it; at EXISTENCE every act but the request is refused POSITIONALLY with a new code carrying id and
+   name only; the DIRECTORY read (discoverable projects the caller is not in: id, name, the caller's own request state);
+   `viewerPredicate` NOT changed. **Accepts when**, driven through the ops: a hidden project is byte-identical to a
+   nonexistent one at the directory, the request and every act (REC-138's suites stay green unedited); an uninvited
+   member's record reads, search, backlinks and run reports never show a discoverable project's contents; a predecessor's
+   store boots with every project HIDDEN. **The cheap defeat:** widening `viewerPredicate` passes the directory arm and
+   leaks every discoverable project's contents — so the control widens it and a contents arm must fail by name.
+2. **RECORD (I3, an IC), after 1:** the request lifecycle — ask (one open per member per project, optional comment),
+   withdraw, owner GRANT (writes `invited`, `invited_by` the owner) or DECLINE (recorded, optional comment), requests
+   visible to the requester, the owners and administrators only, LAPSED when the project goes hidden. Administrators and
+   the founder answer none (C-56's positional check). **Accepts when** a grant leaves the requester `invited` and not
+   `joined`, and a lapsed requester can read their own request and nothing else about the project.
+3. **UI, after 1:** the create and fork forms ask DISCOVERABLE or HIDDEN with neither preselected, and the project's owner
+   sees and changes the setting (others see it, read-only). **The defeat:** a form that submits without the choice would
+   get HIDDEN from the plane silently, so the form cannot submit without it (DEC-69: forced, at the act).
+4. **UI, after 1 and 2:** the directory; the request button and comment; the owner's queue of open requests with grant
+   and decline; the requester's own requests and their states.
+
+**C. DEC-63 AS AMENDED BY BOB (2026-09-18: a project does not own a line of inquiry)** — recorded by BOB #15 and never
+rowed; the application is now at its home: Membership v2 §7, the ruling bullet, "How it applies at the code". Verified: the
+gate still refuses `AI_RUN_NOT_PROJECT_MEMBER` over a question cited only by projects the member has not joined.
+5. **RECORD (M8, I3 — a refusal removed, so the integrator classifies):** for a run whose context is an INQUIRY, the
+   verdict consults no project; the stated `projects` count stays sighted-only; a PROJECT context keeps the joined gate.
+   Superseded assertions are CORRECTED with the reason, never exempted. **Accepts when** a member in no project runs over
+   a question cited by a hidden project AND by a discoverable one and is permitted, with a count that names neither, and a
+   non-participant is still refused a run whose context is the project itself.
+
+**D. THE REVIEW-COPY SURFACE — verified (BOB-NEXT §3 4b)**: `BIO_Publication_v0_1.md` §6A (front matter and §6A.3).
+It is NOT Program B's: Bob ruled the doctrine in §6A and §6A.2–6A.4 decide the mechanism; the four surfaces are specified
+in `CLAIMS.md`'s REC-126 → UI DELEGATION with its REC-133 addendum. **One boundary, measured:** `op=reviewcopy` carries a
+date and an author and no hash and no threshold floors, so DEC-31's in-band rule is not yet satisfiable for any rendering
+that leaves the instance. M10.
+6. **UI:** the four surfaces of the delegation (draft for the project's editors; read for owner/participants and for
+   recipients by secret; grant and revoke for the owner; comment at both doors), rendering the plane verbatim — with NO
+   export, download or print-to-file affordance. Discharges the delegation's in-instance half.
+7. **RECORD (I3 additive, an IC):** `op=reviewcopy` carries the in-band quartet — a SHA-256 over the canonical bytes of
+   what it answers, its date, its author, and both threshold floors (the project's `required_strength`, both axes) —
+   proved the same quantity the published container's header renders (BOB.md rule 7).
+8. **UI, after 6 and 7:** export of a review copy carrying the quartet in-band on every page, with §6A.3 point 2 said AT
+   the act: what leaves cannot be revoked; the grant can.
+
+_(drained 2026-09-19 by SCHEDULER — each design verified at its home: A → D-431's row now points at Publication §3 rule 2's second note and is SPAWNABLE; B1–B4 → **REC-149**, **REC-150**, **UI-70**, **UI-71** (Membership v2 §7 item 7.14); C5 → **REC-145** (§7's DEC-63 bullet, "How it applies at the code"), placed with the disclosure rows because the refusal it removes carries one bit about hidden projects; D6–D8 → **UI-68**, **REC-148**, **UI-69** (Publication §6A). NO ENTRIES OUTSTANDING.)_
+
