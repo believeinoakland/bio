@@ -1,15 +1,22 @@
 # DIST — resume here. Rewritten 2026-09-18 by the DIST standing lane, after cutting 0.59.0; amended the same day after 0.60.0.
 
-**LATEST: 0.62.0** (main `2773ee27`, tag `v0.62.0` on the mainline). It closes REC-138 (IC-155: a hidden project answers
-exactly as a never-minted one at all 31 project-naming acts), a defect confirmed in 0.61.0's bytes. The plane is
-`0b9a9f2c…`; the members are byte-identical since 0.59.0. **Deploy requested of Bob through BOB; 0.62.0 supersedes the
-undeployed 0.59.0 to 0.61.0.** Earlier cuts: 0.61.0 closed REC-134 (and carried REC-132, whose founder's sight is
-new read authority, REC-124 and REC-133); 0.60.0 closed REC-131.
-**REC-136 IS HELD OFF MAIN** on `conduct/rec-136-held` @ `783054ac` (DIST's request; CONDUCT agreed). A plane
-carrying it refuses civicos-ui's conclude NO_CLAIM until UI-65 lands, and UI-65 builds on that branch and lands with
-it or ahead of it. **Before any cut, verify `783054ac` is not an ancestor of main unless UI-65 is on main.** Holding
-it OFF MAIN, instead of cutting from a pre-merge commit, keeps tags on the mainline.
-**NEXT CUT OWED: REC-137** (case ratification must carry an owner's signature), on landing. The 0.59.0 notes below remain true of 0.59.0.
+**STOP — READ THIS FIRST (2026-09-19 01:45Z).** Releases 0.59.0 to 0.63.0 (tags `v0.59.0`..`v0.63.0`) are
+signed and **BRICK AN EXISTING STORE**. #migrate runs the schema's `CREATE INDEX … inquiry_basis(content_id)` before the
+additive ALTER that adds the column (REC-90, `eff23189`), so a pre-REC-90 table throws inside blockConcurrencyWhile.
+Measured live when 0.62.0 was deployed on Bob's yes (wrangler tail: `no such column: content_id at offset 66`). DIST
+rolled `biosmoke7` back to version `057316e4` (0.58.0; it serves, selftest and bootstrap ok) and `newgroup` back to
+`f1919416`, and **withdrew `release/` on main to the signed 0.58.0** (`d86b27ea`). agent-worker, pdf-worker and
+ocr-worker serve 0.62.0. The version sites read 0.63.0, so `newgroup`'s `npm test` refuses at embed until the fixed
+cut, by design. `op=audit`: 10 of 31 fail C-18.9 (old INFO bundles with no provenance_chain); the baseline is UNDETERMINED.
+**OWED: CONDUCT's P0 fix plus a suite booting a 0.58.0-shaped store, then cut 0.64.0 and bring a NEW deploy request.**
+The approval for 0.62.0 is spent.
+**RULE UNTIL BOB RULES:** every installer's `/update` reads `main/release/RELEASE.json`, so pushing `release/` to main
+DISTRIBUTES to existing groups. It is gated like a deploy. Cut and sign, but do not advance main's `release/` without
+Bob's yes. Asked of Bob through BOB, recommending a separate pointer that DIST advances only on approval.
+**Also owed: DIST-5** (SCHEDULER, QUEUE.md build order position 17: which record of DS-1/DS-2 is wrong, per D-297),
+after the P0.
+**0.62.0** (tag `v0.62.0`) closed REC-138. 0.61.0 closed REC-134 and carried REC-132, REC-124 and REC-133. 0.60.0 closed REC-131.
+REC-136 is held off main until UI-65. The 0.59.0 notes below remain true of 0.59.0.
 
 The previous version (BOB #15, same day) stood the lane up; it is in git history. Read `CLAUDE.md`, then
 `kickoffs/DIST.md`, then this. **Everything below is a POINTER measured 2026-09-18; re-measure before acting.**
