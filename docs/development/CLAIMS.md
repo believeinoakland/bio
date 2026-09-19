@@ -14150,7 +14150,8 @@ DEC-33; AI Roles §3 rule 4. IDs minted with `tools/mintid.mjs`: C-57, IC-154. P
   exempted. `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their
   own prints.
 - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
-- Docs: `INTERFACE-CHANGES.md` (IC-154), `BIO_Membership_Architecture_v2.md` front matter and §7's block, this block.
+- Docs: `INTERFACE-CHANGES.md` (IC-154), `BIO_Membership_Architecture_v2.md` front matter and §7's block, `DEBT.md`
+  (D-429, raised — added to this claim 2026-09-18 when the `op=ratify` probe found it), this block.
 
 NOT `QUEUE.md` (CONDUCT's), NOT `#projectAuthority`'s body (REC-134's, consumed unchanged), NOT `cite`/`sever`/
 `reinstate`/`promote` visibility (REC-138's, D-426), NOT `newgroup/`.

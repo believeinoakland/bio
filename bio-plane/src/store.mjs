@@ -439,6 +439,8 @@ import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-che
 import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-134 / C-56: an act on a project asks the actor's own position in it (SIGHT IS NOT AUTHORITY). */
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
+import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -8477,18 +8479,12 @@ export class Store extends DurableObject {
                  expected: doc.doc_sha, got: docSha,
                  detail: `the case document has changed since it was reviewed. Read it again and re-sign: a `
                        + `signature over the previous bytes says nothing about these.` };
-      if (doc.ratified_at) {
-        if (doc.sig_armored === sigArmored) return { ok: true, existed: true, caseId: id, edition: ed };
-        return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
-                 detail: `case ${id} edition ${ed} is already ratified under a different signature. An `
-                       + `edition is a separate document and answers forever — a second attestation over the `
-                       + `same number would leave a reader unable to say who stood behind what they read. `
-                       + `Publish a new edition instead.` };
-      }
       /* OUT OF THE SIGNED BYTES. Parsed here rather than at the control plane
          for `publish()`'s own reason: the bytes are in this store, and re-reading
          them at the layer that already verified a hash over them is where the
-         two could come to disagree. */
+         two could come to disagree. Parsed BEFORE the retry check (moved up by
+         REC-137) because both of the authority questions below are asked of the
+         PUBLISHING PROJECT. */
       const fm = parseFrontmatter(doc.text).data || {};
       const roster = (Array.isArray(fm.case_findings) ? fm.case_findings : [])
         .map((x) => String(x ?? "").trim()).filter(Boolean);
@@ -8498,6 +8494,59 @@ export class Store extends DurableObject {
                        version_sha: typeof r.version_sha === "string" ? r.version_sha : null }));
       const project = typeof fm.case_project === "string" && fm.case_project !== "null"
         ? fm.case_project.trim() : null;
+      /* ===== REC-137 — WHO AUTHORISES A CASE, AND WHO MAY CARRY IT IN ==================
+         Membership Architecture v2 §7, *"A CASE RATIFICATION: who AUTHORISES it and who
+         may DELIVER it"* (BOB #15, 2026-09-18). Two questions, two answers, asked in this
+         order and BEFORE the idempotent retry below, so a refused deliverer or a
+         non-owner's signature is refused whether or not the edition already stands:
+
+         (1) DELIVERY IS CARRIAGE, NOT DIRECTION (AI Roles §3 rule 4: the record states
+             signer and deliverer apart). A member with a role in the project may deliver,
+             and so may the FOUNDER, as DEC-33's interim publishing route; an enrolled
+             administrator with no role in the project may NOT — administrators direct
+             nothing (§4.9). The member half is REC-134's ONE positional check, consumed
+             and never restated: `deliveredBy` is the control plane's reading of the SESSION
+             ROW (`deliveringPrincipal`, REC-128), `member:<id>` for a member's session —
+             byte-identical to `resolveSession`'s positional identity for that session — and
+             `founder` for the founder's. The founder is told apart HERE by that principal
+             and never by the folded name: a member ENROLLED as `admin` delivers as
+             `member:admin`, is asked, and is not the founder. An ABSENT deliverer is every
+             internal caller (a store-level committer, the legacy arms), not asked, as at
+             every REC-134 act.
+         (2) THE AUTHORITY IS THE SIGNATURE, AND IT MUST BE AN OWNER'S (DEC-72 clause 5:
+             publishing is the project owner's act). Before this the instance-wide signer
+             set was the only authority asked, so any registered signer could commit an
+             owner's case under their own name. Asked through `#isProjectOwner`, §7's one
+             owner predicate, never a second spelling of it. A case document naming no
+             project has no owner to sign it and is refused by the same rule — DEC-72
+             removed the project-less case, so this is a legacy document, and an absent
+             publisher is not a publisher of none. */
+      if (project && deliveredBy !== "founder") {   /* a project-less document is (2)'s to refuse, by name */
+        const denied = this.#projectAuthority(project, deliveredBy, "joined", "caseratify");
+        if (denied) return denied;
+      }
+      const refusal = (code, detail) => {
+        const row = CASE_AUTHORITY_CHECKS[code];
+        return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+                 caseId: id, edition: ed, project, signer: attestorMember ?? null };
+      };
+      /* DEC-49 REGION is-case-signer-owner */
+      if (!project || !this.#isProjectOwner(project, attestorMember))
+        return refusal("CASE_SIGNER_NOT_AN_OWNER",
+          `case ${id} edition ${ed} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} `
+          + `production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). `
+          + `The signature is ${attestorMember ?? "an unnamed signer"}'s, who is not an owner of it. Being a `
+          + `registered signer of this instance is not authority over a project. Nothing was committed.`);
+      /* END DEC-49 REGION is-case-signer-owner */
+      /* ===== END REC-137 ================================================================ */
+      if (doc.ratified_at) {
+        if (doc.sig_armored === sigArmored) return { ok: true, existed: true, caseId: id, edition: ed };
+        return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
+                 detail: `case ${id} edition ${ed} is already ratified under a different signature. An `
+                       + `edition is a separate document and answers forever — a second attestation over the `
+                       + `same number would leave a reader unable to say who stood behind what they read. `
+                       + `Publish a new edition instead.` };
+      }
       const now = new Date().toISOString();
       /* CASE-2's INVARIANT, UNCHANGED AND NOW ASKED ONCE. A case does not change
          hands between editions (DEC-72): the bar is read from the publishing

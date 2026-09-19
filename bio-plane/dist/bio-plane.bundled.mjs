@@ -3715,6 +3715,7 @@ __export(bio_checks_exports, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
+  CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
@@ -11568,6 +11569,13 @@ var PROJECT_AUTHORITY_CHECKS = {
     check: "C-56.2",
     where: "src/store.mjs #projectAuthority > is-project-authority",
     translation: "Only an owner of this project can do that. You are not one of its owners, and seeing a project does not let you direct it \u2014 administrators included. Nothing was changed."
+  }
+};
+var CASE_AUTHORITY_CHECKS = {
+  CASE_SIGNER_NOT_AN_OWNER: {
+    check: "C-57.1",
+    where: "src/store.mjs ratifyCaseDocument > is-case-signer-owner",
+    translation: "A case is published in its project's name, so it has to be signed by an owner of that project. The signature on this case belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review the case document and sign it."
   }
 };
 function leadLegFindings(label, leg, findings) {
@@ -33636,6 +33644,38 @@ Subject position: ${pos} \u2014 ${just}
           got: docSha,
           detail: `the case document has changed since it was reviewed. Read it again and re-sign: a signature over the previous bytes says nothing about these.`
         };
+      const fm = parseFrontmatter(doc.text).data || {};
+      const roster = (Array.isArray(fm.case_findings) ? fm.case_findings : []).map((x) => String(x ?? "").trim()).filter(Boolean);
+      const rows = (Array.isArray(fm.case_roles) ? fm.case_roles : []).filter((r) => r && typeof r === "object").map((r) => ({
+        target: String(r.target ?? "").trim(),
+        role: String(r.role ?? "").trim(),
+        version_sha: typeof r.version_sha === "string" ? r.version_sha : null
+      }));
+      const project = typeof fm.case_project === "string" && fm.case_project !== "null" ? fm.case_project.trim() : null;
+      if (project && deliveredBy !== "founder") {
+        const denied = this.#projectAuthority(project, deliveredBy, "joined", "caseratify");
+        if (denied) return denied;
+      }
+      const refusal7 = (code, detail) => {
+        const row = CASE_AUTHORITY_CHECKS[code];
+        return {
+          ok: false,
+          reason: code,
+          code,
+          check: row.check,
+          translation: row.translation,
+          detail,
+          caseId: id,
+          edition: ed,
+          project,
+          signer: attestorMember ?? null
+        };
+      };
+      if (!project || !this.#isProjectOwner(project, attestorMember))
+        return refusal7(
+          "CASE_SIGNER_NOT_AN_OWNER",
+          `case ${id} edition ${ed} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). The signature is ${attestorMember ?? "an unnamed signer"}'s, who is not an owner of it. Being a registered signer of this instance is not authority over a project. Nothing was committed.`
+        );
       if (doc.ratified_at) {
         if (doc.sig_armored === sigArmored) return { ok: true, existed: true, caseId: id, edition: ed };
         return {
@@ -33646,14 +33686,6 @@ Subject position: ${pos} \u2014 ${just}
           detail: `case ${id} edition ${ed} is already ratified under a different signature. An edition is a separate document and answers forever \u2014 a second attestation over the same number would leave a reader unable to say who stood behind what they read. Publish a new edition instead.`
         };
       }
-      const fm = parseFrontmatter(doc.text).data || {};
-      const roster = (Array.isArray(fm.case_findings) ? fm.case_findings : []).map((x) => String(x ?? "").trim()).filter(Boolean);
-      const rows = (Array.isArray(fm.case_roles) ? fm.case_roles : []).filter((r) => r && typeof r === "object").map((r) => ({
-        target: String(r.target ?? "").trim(),
-        role: String(r.role ?? "").trim(),
-        version_sha: typeof r.version_sha === "string" ? r.version_sha : null
-      }));
-      const project = typeof fm.case_project === "string" && fm.case_project !== "null" ? fm.case_project.trim() : null;
       const now = (/* @__PURE__ */ new Date()).toISOString();
       const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
       if (owner && owner.project_id !== project)

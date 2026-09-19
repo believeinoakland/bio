@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132; and §4's *direct nothing* ENFORCED at every act that changes a project, built by REC-134 (IC-152, C-56) — a positional check, never the visibility gate, with §7.13 the one administrator path. as of 2026-09-18.
+**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132; and §4's *direct nothing* ENFORCED at every act that changes a project, built by REC-134 (IC-152, C-56) — a positional check, never the visibility gate, with §7.13 the one administrator path; and §7's case-ratification bullet BUILT by REC-137 (IC-154, C-57): a case is committed only under an OWNER's signature, and delivered only by a joined participant of the project or the founder. as of 2026-09-18.
 
 **Place in the system** · Owns construct 1 of `BIO_System_Design.md` §3 (membership and authority). It supersedes one decision of `BIO_Technical_Architecture_Decisions_v10.md` §10 (per-member tokens) and depends on `BIO_State_Rules_Consistency_v1_5.md` §4.3 (the project object) and §5.1–5.3 (the relationship vocabulary and edge ownership). It adds accountability and access control, not integrity; the store schema realises it.
 
@@ -9,7 +9,7 @@
 - §10 — a data-model "sketch"; "Concrete DDL belongs with the implementation."
 - §11 — two cross-document obligations are unenacted: the Technical Architecture §10 annotation pointing here, and the project-name-uniqueness annotation on State Rules §4.3; the list also numbers two items "8."
 - §7 — DEC-72 clause 5 adds an owner-only act (publish) absent here, and D-310/D-311 record that the affordance surface does not yet publish owner-gated publish or the roster acts.
-- §7 — `op=caseratify`'s required position is DECIDED (the bullet *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18) and UNBUILT: whether the plane requires an OWNER's signature, and refuses delivery by an enrolled administrator with no role in the project, is REC-137's to verify at the code and build. The rest of *direct nothing* is enforced (REC-134).
+- §7 — whether a PROJECT's own bundle may be published through `op=ratify` at all, and if so under whose signature and by whose delivery, is UNDECIDED (D-429): the case-ratification bullet decides a CASE, and REC-137 measured that an administrator with no role can publish a project's own document under a non-owner's signature. `op=caseratify` itself is BUILT (REC-137, IC-154).
 - §7 — the hierarchy is stated in Focus terms "until the rename arc lands"; the live state machine is `inquiry` and the catalog marks `focus` legacy.
 
 **Contents**
@@ -541,7 +541,7 @@ token and not to the founder's session). **Design:**
   (`biasadopt`, *"Project managers define project bias"* with DEC-72 (5)). Refusals C-56.1/.2. The acts that already asked a
   position (roster, publish, the review copy, the run verbs, the lead share) are unchanged; §7.13 is not behind the check,
   and a control proves that applying it there breaks the rescue. Machine credentials hold no position and are unchanged. The
-  per-act table is IC-152's. `op=caseratify`'s position is DECIDED in the next bullet and is REC-137's to build. Driven in
+  per-act table is IC-152's. `op=caseratify`'s position is DECIDED in the next bullet and BUILT by REC-137 (IC-154). Driven in
   `bio-plane/test/project-authority.test.mjs` and `project-authority.control.mjs`.
 - **A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it** (decided 2026-09-18 by BOB #15 on REC-134's gap; it
   reconciles two of Bob's rulings rather than making a new one). **The authority is the SIGNATURES, and they must include
@@ -552,6 +552,14 @@ token and not to the founder's session). **Design:**
   (*"publishing currently runs through the group's operator"*) until the member-facing ceremony exists. **An enrolled
   administrator with no role in the project may not deliver** — DEC-33 names the group's operator, not every
   administrator, and administrators direct nothing (§4).
+- **BUILT 2026-09-18 by REC-137 (IC-154).** Verified at the code first: the plane asked for no owner anywhere — any
+  registered signer of the instance committed a case, and a joined non-owner's own signature was driven to a commit.
+  `Store#ratifyCaseDocument` now asks two questions before anything is written and before the idempotent retry. DELIVERY:
+  the session's principal (REC-128) is the FOUNDER, or passes REC-134's `#projectAuthority(..., "joined", "caseratify")`
+  (C-56.1) — "a member with a role" read as a JOINED participant (owners included; invited-not-joined has view rights
+  only, §7.5). AUTHORITY: the verified signer is an OWNER of the publishing project (`#isProjectOwner`), whoever delivers
+  (C-57.1 `CASE_SIGNER_NOT_AN_OWNER`). Driven in `bio-plane/test/case-authority.test.mjs` and `case-authority.control.mjs`.
+  `op=ratify` of a PROJECT bundle was driven against the same rule and does NOT meet it (D-429, a design gap above).
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.

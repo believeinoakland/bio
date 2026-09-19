@@ -11282,3 +11282,65 @@ always meant). REC-132's `founder-sight` suite is unchanged and green. **Known a
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #5 as MAJOR — I3 32.0.0 → 33.0.0.** The base was read at resolution: 32.0.0, unchanged since the proposal. Acts that SUCCEEDED for an administrator (enrolled or the founder) on a project it is not in are now REFUSED (C-56.1 `PROJECT_ACT_NOT_A_PARTICIPANT`, C-56.2 `PROJECT_ACT_NOT_THE_OWNER`), which IC-137 settles as breaking. Bob's doctrine that administrators direct nothing (Membership v2 §4) is now ENFORCED by one `Store#projectAuthority`, read from REC-132's POSITIONAL identity, which the control plane stamps and never takes from the caller. §7.13's rescue is deliberately outside it. Machine tokens are unchanged, measured. **Carried:** `op=caseratify`'s delivering member holding no role in the project is a design gap, raised to Bob through BOB #15; D-426 (cite, sever and reinstate distinguish a hidden project from a nonexistent one, which predates this item). **A DISCLOSURE AND AUTHORITY CLOSING: DIST is told (CONDUCT.md step 2b).**
+
+## IC-154 · I3: A CASE RATIFICATION'S AUTHORITY AND ITS DELIVERY, AS MEMBERSHIP v2 §7 DECIDES THEM — `op=caseratify` REFUSES a signature that is not an OWNER's of the publishing project (C-57.1 `CASE_SIGNER_NOT_AN_OWNER`), and REFUSES delivery by a session with no role in the project unless it is the FOUNDER's (C-56.1 through REC-134's one check) · PROPOSED 2026-09-18 (REC-137, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (`dd52609b`): 33.0.0.** **Proposed MAJOR —
+  33.0.0 → 34.0.0**, by IC-137's precedent: a refusal where none stood. Read the base AT RESOLUTION.
+- **Proposer:** RECORD, worker `agent-aee812fe065a38e23`, 2026-09-18, spawned by CONDUCT #5 for REC-137.
+- **Owner to land it:** `RECORD`
+- **Consumers to answer:** `UI` (measured: NOT-AFFECTED — `civicos-ui/app.html` names `op=caseratify` only in a comment
+  and submits it nowhere), `DIST` (newgroup embeds the old plane until the next cut), `SKILL` and `agent-worker`
+  (NOT-AFFECTED as measured: neither names the op). The affordance surface does not offer it (`affordances.mjs`
+  exempts it: its subject is a case edition, and op=publish's `next:` names it).
+- **Design:** `BIO_Membership_Architecture_v2.md` §7, *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*
+  (BOB #15, 2026-09-18); DEC-72 clause 5 (publishing is the project owner's act); DEC-33 (publishing currently runs
+  through the group's operator); `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (signer and deliverer stated apart);
+  §4.9 (administrators direct nothing).
+
+**WHAT THE CODE DID BEFORE — VERIFIED AT THE CODE, THEN DRIVEN.** `op=caseratify` asked for: a human's own session
+(REC-125), the instance-wide `publish` capability (NEEDS), STANDING in the owning project to read the facts (IC-141 — which
+every administrator has in every project), and a signature by ANY active registered signer of the INSTANCE
+(`facts.signers`, matched by key). `Store#ratifyCaseDocument` then committed whatever `attestorMember` the control plane
+handed it. **No owner was asked for anywhere on the path**, and nothing asked the deliverer's position. Driven on the
+pre-item sources (`CASE_AUTHORITY_SRC` at the pristine `src/`): gus — a JOINED participant, not an owner — signed and
+delivered iris's project's case, and it COMMITTED (`ok: true`, the record naming gus as attestor, the case published);
+ruth — an enrolled administrator with no role in the project — delivered iris's owner signature on another case and it
+COMMITTED too. 11 of the new suite's 23 assertions fail there.
+
+**THE SHAPE.** Two questions, asked in `ratifyCaseDocument` inside its transaction, after the document and its sha are
+matched and **before the idempotent retry**, so nothing is written on either refusal and a retry is never an authority
+answer:
+
+| Question | Who passes | Who is refused | Code |
+|---|---|---|---|
+| DELIVERY — who carried the signature in (the SESSION, `deliveringPrincipal`, REC-128) | a JOINED participant of the publishing project (`joined`/`leaving`, owners included — REC-134's `joined` position), or the FOUNDER (`founder`, DEC-33's interim route) | an enrolled administrator with no role in the project; an invited-not-joined member (§7.5: view rights only); any member not in it | `PROJECT_ACT_NOT_A_PARTICIPANT` C-56.1, relayed from `#projectAuthority(project, deliveredBy, "joined", "caseratify")` — REC-134's ONE check, unchanged |
+| AUTHORITY — whose signature it is (the verified key's registered member) | an OWNER of the publishing project (`#isProjectOwner`, §7's one owner predicate) | every non-owner signer, WHOEVER delivers — the founder's route is carriage and never authority; and a legacy project-less case document | `CASE_SIGNER_NOT_AN_OWNER` C-57.1, family `CASE_AUTHORITY_CHECKS`, DEC-49 region `is-case-signer-owner` |
+
+The founder is told apart by the session PRINCIPAL (`founder`), never by the folded name: a member ENROLLED as `admin`
+delivers as `member:admin`, is asked, and is not the founder. An ABSENT deliverer (a store-level committer — the legacy
+arms of `deliverer.test.mjs`) is not asked, exactly as at every REC-134 act; the owner-signer check still applies to it.
+`op=caseratify`'s handler in `src/index.mjs` is UNCHANGED: the store relays both refusals through its existing 409 path,
+each carrying `code`, `check`, `translation`, `detail`, `project` (and `act`/`needs` for C-56.1, `signer` for C-57.1).
+
+**Order of the two:** delivery first (who is asking), then authority. A non-owner's signature carried by an outside
+administrator therefore answers C-56.1; the signer's refusal is reached only by a caller entitled to deliver.
+
+**The third question the row asked — `op=ratify` of a PROJECT BUNDLE — DRIVEN, and the same rule does NOT hold there
+(D-429, raised; NOT closed).** An enrolled administrator with no role in a project, carrying the signature of a member who
+is neither an owner nor a participant of it, ratified the PROJECT'S OWN DOCUMENT through `op=ratify`, and it was
+PUBLISHED under that member's name (`case-authority.test.mjs` §7 pins it as measured). Not closed here because the §7
+bullet decides a CASE ratification, and whether a project's own bundle may be published at all — it is the group's
+thinking, which §7.9 hides even from the invited — is a question the design does not answer. DESIGN GAP, for BOB.
+
+**Suites:** new `bio-plane/test/case-authority.test.mjs` (23 assertions; on the PRE-ITEM sources 12 pass / 11 fail: a joined non-owner's own signature COMMITTED a case, and an enrolled administrator with no role DELIVERED an owner's signature and COMMITTED another) and its driver `case-authority.control.mjs`
+(five arms — baseline, `no-owner-signer`, `no-delivery-check`, `refuse-every-admin`, `delivery-after-retry` — every one
+AS DECLARED on its first run; results in the suite's header). CORRECTED at its site with a dated reason, never exempted:
+`casesign.test.mjs` (its second-attestation arm delivered and signed as omar, an enrolled administrator with no role in the
+project; it now makes omar a second OWNER through the roster ops, so it still reaches `CASE_EDITION_ALREADY_RATIFIED`).
+Every other suite that ratifies a case already did so with an owner's signature delivered by the owner or the founder,
+measured by running each (`caseflip`, `casepin`, `casesearched`, `caseproduction`, `conclude-project`, `deliverer`,
+`machine-attest`, `meaning-bounds`, `multifinding`, `operator-attest`, `publish`, `rung-ladder`, `reviewcopy`, `testify`,
+`testimonyaxis`, `caseobject`, `caselifecycle`, `publishedcase`, `reevaluation`, `project-authority`, `founder-sight`).
+
+**RESPONSES:** not yet collected.

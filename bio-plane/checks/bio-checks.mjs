@@ -11670,6 +11670,26 @@ export const PROJECT_AUTHORITY_CHECKS = {
   },
 };
 
+/* REC-137 / C-57 — A CASE RATIFICATION'S AUTHORITY IS ITS SIGNATURES, AND THEY MUST INCLUDE AN
+ * OWNER OF THE PUBLISHING PROJECT (Membership Architecture v2 §7, the bullet *"A CASE
+ * RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18; DEC-72 clause 5:
+ * publishing is the project owner's act). Before this, `op=caseratify` accepted the signature of
+ * ANY registered signer of the instance — the instance-wide signer set and the `publish`
+ * capability were the only authority asked — so a case authored by an owner could be committed
+ * under a non-owner's signature, and the record then named that non-owner as the one who stood
+ * behind the project's case. The DELIVERY half of the same bullet (an enrolled administrator with
+ * no role in the project may not carry the signature in) is NOT in this family: it is REC-134's
+ * one positional check, `#projectAuthority`, asked of the deliverer, and answers C-56.1. */
+export const CASE_AUTHORITY_CHECKS = {
+  CASE_SIGNER_NOT_AN_OWNER: {
+    check: 'C-57.1',
+    where: 'src/store.mjs ratifyCaseDocument > is-case-signer-owner',
+    translation: 'A case is published in its project\'s name, so it has to be signed by an owner of '
+      + 'that project. The signature on this case belongs to someone who is not one of its owners. '
+      + 'Nothing was committed. Ask an owner of the project to review the case document and sign it.',
+  },
+};
+
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
  *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
  *  action basis), so the rule has one spelling and three doors. It asks BOTH
