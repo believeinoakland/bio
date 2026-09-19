@@ -14395,3 +14395,12 @@ publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no contr
 with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
 concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
 either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.
+
+## CLAIM 2026-09-18 SCHEDULER (LED-6 step (2) — QUEUE.md's non-row blocks to the archive; one control anchor the move supersedes)
+
+claimed: 2026-09-18 by SCHEDULER, worktree `.claude/worktrees/scheduler`. Paths: `docs/development/QUEUE.md` and
+`docs/archive/ledgers/*` (the lane's own, named here for the archive half); and, OUTSIDE the lane, ONE LINE of
+`bio-plane/test/m041-instrument-census.control.mjs` — arm (2)'s `anchorGraded`, which planted a row after QUEUE.md's
+`## M0 — VERIFICATION` heading. The migration moves that heading to the archive, so the anchor goes to zero
+(`m025-arm-anchor-witness` A4 named it); the anchor is CORRECTED to a heading the cache keeps, with a dated reason at the
+site, and the control is re-run on a clean committed tree. Nothing else in `bio-plane/**` is touched.
