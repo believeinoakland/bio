@@ -60,7 +60,10 @@ lands; see §2), then this. **Everything below is a POINTER measured at writing;
 - **BOB'S PENDING CALL — weekly usage PACING** (brought 2026-09-19 ~05:15Z, once, in the README shape): 85% used at
   ~3 points/hour, resets 2026-09-22 18:00 UTC. Options (a) keep pace and stop hard; (b) PROVISIONAL, in force: CONDUCT
   spawns nothing new from 93%, running work finishes; (c) throttle to one worker; (d) extra usage (disabled; costs money).
-  Recommended (b). When he answers, tell CONDUCT and SCHEDULER.
+  Recommended (b). When he answers, tell CONDUCT and SCHEDULER. **Re-measured ~11:05Z: 88%, 3d6h left — 3 points in ~6h,
+  so the pace fell as waves shrank to the disk ceiling.** Re-measure before relying on either figure.
+- **REC-153's findings ruled** (`7d03e852`): a machine's run open answers absent where its principal cannot see; the kind
+  is refused outside `RUN_CONTEXTS`; stored mislabelled runs counted. Owed at REC-153's integration (CONDUCT told).
 - **Later rulings, all rowed**: REC-145's findings (REC-153 context kind, REC-152 tick/close by principal); the minted-id
   rule (REC-141's owed act + REC-151); the d280 control repair (M0-76). Top of the order at `038e1745`: D-431,
   REC-141+UI-66, REC-144, REC-153, REC-152, REC-151, then UI-67, UI-72.
