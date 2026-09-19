@@ -11,7 +11,7 @@
 - §7 — DEC-72 clause 5 adds an owner-only act (publish) absent here, and D-310/D-311 record that the affordance surface does not yet publish owner-gated publish or the roster acts.
 - §7 — `op=caseratify`'s required position is DECIDED (the bullet *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18) and UNBUILT: whether the plane requires an OWNER's signature, and refuses delivery by an enrolled administrator with no role in the project, is REC-137's to verify at the code and build. The rest of *direct nothing* is enforced (REC-134).
 - §7 — the hierarchy is stated in Focus terms "until the rename arc lands"; the live state machine is `inquiry` and the catalog marks `focus` legacy.
-- §7.1 against §7.9 — UNRULED (D-428, raised by REC-138): a CREATION at a hidden project's id answers `EXISTS`, and §7.1's instance-wide name uniqueness answers `NAME_TAKEN` naming the other project's id and title, to a creator who may not be able to see it. Whether uniqueness yields to invisibility there, and whether project ids should be plane-minted, is Bob's.
+- §7 — 7.1 against 7.9 is UNRULED (D-428, raised by REC-138): a CREATION at a hidden project's id answers `EXISTS`, and §7.1's instance-wide name uniqueness answers `NAME_TAKEN` naming the other project's id and title, to a creator who may not be able to see it. Whether uniqueness yields to invisibility there, and whether project ids should be plane-minted, is Bob's.
 
 **Contents**
 - [1. Why membership exists](#1-why-membership-exists)

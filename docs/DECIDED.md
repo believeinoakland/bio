@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1155 rulings across 92 documents.
+1157 rulings across 92 documents.
 
 ## DEC-
 
@@ -612,6 +612,10 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed.md:13`
 - **D-421** · 2026-09-18 — BOB #14 RULED the founder question:** a founder's password session stays ALLOWED (a human, and the only live publishing route); D-421's wording corrected to *a HUMAN's own authenticated session*; and the record must state who DELIVERED as well as who AUTHORISED → `REC-128`.  
   `docs/archive/ledgers/QUEUE-closed.md:188`
+- **D-426** · 2026-09-18 — `project-authority.test.mjs`'s D-426 pin CORRECTED to CLOSED.  
+  `docs/development/DEBT.md:295`
+- **D-426** — CORRECTED at its site with a dated reason, never exempted: `project-authority.test.mjs` §2b' (the D-426 pin, now CLOSED) and its driver's declarations. **RESPONSES:** not yet collected.  
+  `docs/development/INTERFACE-CHANGES.md:11378`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -1157,7 +1161,7 @@ authority is the file named, never this one.
 - **REC-137** · 2026-09-18 — §7 — `op=caseratify`'s required position is DECIDED (the bullet *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"*, BOB #15, 2026-09-18) and UNBUILT: whether the plane requires an OWNER's signature, and refuses delivery by an enrolled administrator with no role in the project, is REC-137's to verify…  
   `docs/architecture/BIO_Membership_Architecture_v2.md:12`
 - **REC-137** — `op=caseratify`'s position is DECIDED in the next bullet and is REC-137's to build.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:544`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:554`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
