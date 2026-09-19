@@ -14581,3 +14581,18 @@ Worker spawned by CONDUCT #6, worktree `agent-a8e2c1c3d9c1cc711`, branch `worktr
 - Docs: this block; `DECIDED.md` if regenerated.
 
 NOT `QUEUE.md`, NOT `BACKLOG.md` (no row is planted in the live file), NOT `bio-plane/scripts/battery.mjs` (M0-65's).
+
+## CLAIM 2026-09-19 M0 (M0-73) — RELEASED
+
+released: 2026-09-19 by the M0-73 worker, branch `worktree-agent-a8e2c1c3d9c1cc711`, base `243bcbce`, merged with
+origin/main once (`d978a4e1`). Baseline at `2827e834`: **256/256 suites green · 15702 assertions passing**. After, at
+`c972339f`: **256/256 suites green · 15715 assertions passing**, no suite skipped (+13 = `pipeline-readers.test.mjs`
+36 -> 49, §6's owed arms and §7); `node scripts/coverage.mjs --strict` exit **0** unpiped, `arms 1462/1462 ·
+classified 247/247 · corpus 248/248 · floor 210/210`; `node civicos-ui/test/run.mjs` exit **0**; `plancheck --local`
+0 fail. REGISTER_FLOOR arms 1452 -> 1462 from the print on the committed merge `d978a4e1`. **Live figures identical
+before and after:** every `mintid --list` floor and ref count (DEC 75, IC 159, M 65, D 431 …), and `owed.mjs` output
+byte-identical for BOB, CONDUCT, SCHEDULER, DIST, FLEET, M0, RECORD, UI and a nonexistent lane. CONTROLS:
+`pipeline-readers.control.mjs` 61/61 (NC5 owed's own walk; NC6a/b/c each corpus without the backlog), `owed.control.mjs`
+48/0 (A8 repointed), `ledger.control.mjs` 156/0 (O1 repointed), every restore byte-identical. **Built:** `owed.mjs`
+takes the plan's blocked rows from `pipelineRows`; `mintid.mjs`' DEC, IC and M corpora read `BACKLOG.md`. **Not done:**
+the QUEUE row's `done` flip (CONDUCT's); LED-6 step (4) (SCHEDULER's).
