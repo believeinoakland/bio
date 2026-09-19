@@ -20,6 +20,63 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
+**2026-09-19 · BOB #16 · THREE DESIGNS AT THEIR HOMES — D-431 IS SPAWNABLE; DISCOVERABLE-OR-HIDDEN (4 items); DEC-63 AS
+AMENDED (1 item); THE REVIEW-COPY SURFACE VERIFIED (3 items).** Every design below is on `main` in its home document in
+this commit, read at the code before it was written. Nothing here is Bob's to answer; he is told the two decisions he may
+overrule. No queue item is superseded and no worker needs stopping.
+
+**A. D-431 — its design is now at its home**: `BIO_Publication_v0_1.md` §3 rule 2, the second note ("DECIDED 2026-09-19
+by BOB #16"), the ruling of the drained 2026-09-19 entry (`docs/archive/ledgers/BOB-INBOX-drained.md`,
+"D-431 RULED"). **SCHEDULER's spawn condition is met.**
+
+**B. DISCOVERABLE or HIDDEN, and the request to join** — `BIO_Membership_Architecture_v2.md` §7, item **7.14** (Bob's
+ruling of 2026-09-18). Decided there, each from an existing ruling: the setting is an OWNER'S recorded act, not a document
+field; **every existing project reads HIDDEN** (it was created under §7.9's promise); a new project's creator is ASKED,
+with nothing preselected, and the plane fails closed to HIDDEN when no setting is sent; a grant is an invitation and the
+requester still joins by the checkbox (§7.4). Milestone M8.
+1. **RECORD (I3, an IC):** the setting (owner-only, append-only, latest wins; no record = HIDDEN); `#inSight` answers
+   three levels at the ONE predicate (NONE / EXISTENCE / today's), EXISTENCE only for a discoverable project to a member
+   session outside it; at EXISTENCE every act but the request is refused POSITIONALLY with a new code carrying id and
+   name only; the DIRECTORY read (discoverable projects the caller is not in: id, name, the caller's own request state);
+   `viewerPredicate` NOT changed. **Accepts when**, driven through the ops: a hidden project is byte-identical to a
+   nonexistent one at the directory, the request and every act (REC-138's suites stay green unedited); an uninvited
+   member's record reads, search, backlinks and run reports never show a discoverable project's contents; a predecessor's
+   store boots with every project HIDDEN. **The cheap defeat:** widening `viewerPredicate` passes the directory arm and
+   leaks every discoverable project's contents — so the control widens it and a contents arm must fail by name.
+2. **RECORD (I3, an IC), after 1:** the request lifecycle — ask (one open per member per project, optional comment),
+   withdraw, owner GRANT (writes `invited`, `invited_by` the owner) or DECLINE (recorded, optional comment), requests
+   visible to the requester, the owners and administrators only, LAPSED when the project goes hidden. Administrators and
+   the founder answer none (C-56's positional check). **Accepts when** a grant leaves the requester `invited` and not
+   `joined`, and a lapsed requester can read their own request and nothing else about the project.
+3. **UI, after 1:** the create and fork forms ask DISCOVERABLE or HIDDEN with neither preselected, and the project's owner
+   sees and changes the setting (others see it, read-only). **The defeat:** a form that submits without the choice would
+   get HIDDEN from the plane silently, so the form cannot submit without it (DEC-69: forced, at the act).
+4. **UI, after 1 and 2:** the directory; the request button and comment; the owner's queue of open requests with grant
+   and decline; the requester's own requests and their states.
+
+**C. DEC-63 AS AMENDED BY BOB (2026-09-18: a project does not own a line of inquiry)** — recorded by BOB #15 and never
+rowed; the application is now at its home: Membership v2 §7, the ruling bullet, "How it applies at the code". Verified: the
+gate still refuses `AI_RUN_NOT_PROJECT_MEMBER` over a question cited only by projects the member has not joined.
+5. **RECORD (M8, I3 — a refusal removed, so the integrator classifies):** for a run whose context is an INQUIRY, the
+   verdict consults no project; the stated `projects` count stays sighted-only; a PROJECT context keeps the joined gate.
+   Superseded assertions are CORRECTED with the reason, never exempted. **Accepts when** a member in no project runs over
+   a question cited by a hidden project AND by a discoverable one and is permitted, with a count that names neither, and a
+   non-participant is still refused a run whose context is the project itself.
+
+**D. THE REVIEW-COPY SURFACE — verified (BOB-NEXT §3 4b)**: `BIO_Publication_v0_1.md` §6A (front matter and §6A.3).
+It is NOT Program B's: Bob ruled the doctrine in §6A and §6A.2–6A.4 decide the mechanism; the four surfaces are specified
+in `CLAIMS.md`'s REC-126 → UI DELEGATION with its REC-133 addendum. **One boundary, measured:** `op=reviewcopy` carries a
+date and an author and no hash and no threshold floors, so DEC-31's in-band rule is not yet satisfiable for any rendering
+that leaves the instance. M10.
+6. **UI:** the four surfaces of the delegation (draft for the project's editors; read for owner/participants and for
+   recipients by secret; grant and revoke for the owner; comment at both doors), rendering the plane verbatim — with NO
+   export, download or print-to-file affordance. Discharges the delegation's in-instance half.
+7. **RECORD (I3 additive, an IC):** `op=reviewcopy` carries the in-band quartet — a SHA-256 over the canonical bytes of
+   what it answers, its date, its author, and both threshold floors (the project's `required_strength`, both axes) —
+   proved the same quantity the published container's header renders (BOB.md rule 7).
+8. **UI, after 6 and 7:** export of a review copy carrying the quartet in-band on every page, with §6A.3 point 2 said AT
+   the act: what leaves cannot be revoked; the grant can.
+
 **2026-09-19 · BOB #16 · THE QUESTION'S PAGE SHOWS A NO-PROJECT CONCLUSION — TWO ITEMS (UI-65's follow-up, routed here by
 SCHEDULER's order audit `cd9d7c86`).** Design: `docs/development/INVESTIGATIVE-SESSION.md` §7.1, the paragraph "The
 question's page reads the no-project conclusion from `op=projection`" (landed in this commit). Verified at the code first:
