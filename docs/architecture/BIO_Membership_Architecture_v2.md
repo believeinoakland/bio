@@ -584,9 +584,20 @@ token and not to the founder's session). **Design:**
   **BUILT 2026-09-18 by REC-139 (IC-156), in part.** `NAME_TAKEN` (at `promote` and `forkProject`) carries neither the other
   project's id nor its title, for every caller — one payload, so no sight question is asked. The three run verbs'
   `projectGate.projects` counts only the citing projects in the caller's sight (`Store#inSight`, the viewer stamped by the
-  control plane); DEC-63's verdict still reads every citing project. Plane-minted ids are NOT built: this bullet does not say
-  whether a caller-supplied id for a new project is refused or ignored (see Incomplete sections). Driven in
+  control plane); DEC-63's verdict still reads every citing project. Plane-minted ids are NOT built by it: the next bullet DECIDES how (BOB #15, after REC-139 stopped), and the remainder is re-rowed. Driven in
   `bio-plane/test/project-disclosure.test.mjs` and `project-disclosure.control.mjs`.
+- **HOW the plane mints a project id** (decided 2026-09-18 by BOB #15 on REC-139's stop): a caller-supplied id on a NEW
+  project is REFUSED — never silently ignored — with one byte-identical answer whether or not that id exists; a fork's
+  `newId` is minted the same way; and the plane WRITES the minted id into the document's `id:` frontmatter before it
+  hashes and registers the bytes, refusing bytes that already carry one, and returns the id and the final sha (the
+  precedent is the testimony header the plane already writes, `bio-testimony/1`). The Add surface and the fork form
+  stop asking a member for an id (a UI task).
+- **OPEN, and Bob's — DEC-63's run verdict meets §7.9.** DEC-63 gates a run on participation in the project the inquiry
+  belongs to; as built, a member is REFUSED a run over a question cited ONLY by projects they cannot see and PERMITTED one
+  over a question nobody cites, and that difference tells them a hidden project exists. Recommended to Bob: the verdict
+  is the same in both cases — refused for a member who participates in no project they can see citing it, PERMITTED
+  for the question's own author either way — so it discloses nothing and a stranger still cannot spend a hidden
+  project's runs. Running provisionally as built until he rules.
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
