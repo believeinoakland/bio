@@ -20,6 +20,23 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
+**2026-09-19 · BOB #16 · THE QUESTION'S PAGE SHOWS A NO-PROJECT CONCLUSION — TWO ITEMS (UI-65's follow-up, routed here by
+SCHEDULER's order audit `cd9d7c86`).** Design: `docs/development/INVESTIGATIVE-SESSION.md` §7.1, the paragraph "The
+question's page reads the no-project conclusion from `op=projection`" (landed in this commit). Verified at the code first:
+`op=basisversions` is the only read carrying `no_project_conclusion` and is capped; `op=projection`'s single-bundle form is
+uncapped, gated, and already derives a field on read. No queue item is superseded.
+
+1. **RECORD (M9; I3 additive, an IC):** `op=projection&id=<inquiry>` publishes `no_project_conclusion` through
+   `#noProjectConclusionOf`, under the gate the row passed; never on the list form. **Accepts when** a suite drives one
+   concluded-no-project inquiry and asserts the field is byte-identical to `op=basisversions`' for the same viewer, null
+   for an unconcluded inquiry and for a non-inquiry, and absent from the list form. **The cheap defeat to refuse:** a
+   second reader that copies the first's logic passes byte-equality today and drifts tomorrow — the suite asserts ONE
+   reader (the negative control swaps in a copy that differs in one branch and must fail by name).
+2. **UI (M9), after 1:** the question's page renders it with `noProjectConclusionHtml` from `getProjection`, and
+   invalidates `PROJ_CACHE` for that inquiry when a conclusion or a withdrawal lands. `bound-sweep` ARM G must stay green
+   with no new CARRIED-OUT-WHOLE entry — the read is uncapped, so ARM G has nothing to refuse, and adding an exemption
+   to pass it is the defeat.
+
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit. **Nothing is waiting.**
 
 ## THE BUILD ORDER — every open row, in the order it will be processed (SCHEDULER, first order audit, 2026-09-18)
