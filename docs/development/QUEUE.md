@@ -32,7 +32,7 @@ BOB appends a designed item, a correction or an order change here, with its inte
 | 2 | REC-141 | new | running | first queued: a §7.9 disclosure defect (D-428's existence oracle) whose fix BOB #15 has now designed; disclosure outranks features |
 | 3 | UI-66 | new | queued | with REC-141: REC-141 makes the surface's current create REFUSED, so the surface half lands with it |
 | 4 | REC-142 | new | running | a correction to just-landed work (REC-124, REC-136, UI-65); its dependency REC-136 is ON MAIN since c7f2df67 |
-| 5 | REC-144 | new | queued | UI-65's other follow-up, beside REC-142: the question page cannot show a no-project conclusion without this read |
+| 5 | REC-144 | new | running | UI-65's other follow-up, beside REC-142: the question page cannot show a no-project conclusion without this read |
 | 6 | UI-67 | new | queued | after REC-144, whose read it renders |
 | 7 | REC-145 | new | queued | a §7.9 disclosure: the refusal it removes tells a member a hidden project cites the question; with the disclosure rows |
 | 8 | D-430 | new | running | the precondition of LED-6's step (4); exempt from the M0 hold with LED-6 |
@@ -111,7 +111,7 @@ scope: give `conclude`'s affordance its PROJECT arm, the way `withdrawconclusion
 accepts-when: on a question concluded with no project, `op=affordances` offers the project's conclude to a member of a citing project and not to a stranger; the member concludes through the op and the project's stance reads it; the no-project conclusion is unchanged. How a liar passes it: adding a `concluded -> concluded` edge to the inquiry machine, which re-opens a no-project conclusion to itself, so the arm asserts the no-project relationship CANNOT conclude twice. NEGATIVE CONTROL: remove the project arm, and the affordance arm fails naming it.
 added: 2026-09-18 · SCHEDULER (UI-65's DELEGATION to RECORD, reported owed by CONDUCT #5; id minted with `node tools/mintid.mjs REC`).
 
-### REC-144 · queued — **`op=projection&id=<inquiry>` PUBLISHES `no_project_conclusion` THROUGH `#noProjectConclusionOf`, on the single-bundle form only, under the gate the row already passed — so the question's page can show a no-project conclusion from an UNCAPPED read (UI-65's follow-up; BOB #16, 2026-09-19).** — owner RECORD.
+### REC-144 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: REC-136's `#noProjectConclusionOf` is on `main`; `op=projection` carries no `no_project_conclusion` yet. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`op=projection&id=<inquiry>` PUBLISHES `no_project_conclusion` THROUGH `#noProjectConclusionOf`, on the single-bundle form only, under the gate the row already passed — so the question's page can show a no-project conclusion from an UNCAPPED read (UI-65's follow-up; BOB #16, 2026-09-19).** — owner RECORD.
 order: 5 · UI-65's other follow-up, beside REC-142: the question page cannot show a no-project conclusion without this read (SCHEDULER, 2026-09-19)
 milestone: M9
 interface: I3 additive (an IC minted with `node tools/mintid.mjs IC` before building)
