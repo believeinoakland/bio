@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1170 rulings across 92 documents.
+1167 rulings across 91 documents.
 
 ## DEC-
 
@@ -1158,8 +1158,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2287`
 - **REC-130** · 2026-09-18 — ALL THREE DECIDED BY BOB #14 the same hour, as applications of existing doctrine; BOB is writing them into `BIO_Publication_v0_1.md` §6A — this row UNBLOCKS against that text.** (1) unsigned case documents were readable anonymously → `REC-130`, which goes FIRST; (2) a non-member recipient reaches the copy by a…  
   `docs/archive/ledgers/QUEUE-closed.md:2307`
-- **REC-130** — CORRECTED by BOB #15: fixed on `main` by REC-130 at `a32fda24`, 17 minutes before this file was written**; CONDUCT #4's handoff adds REC-125 and MK-1, so FOUR exposures are fixed on `main` and open on any plane running 0.58.0).  
-  `docs/development/kickoffs/BOB-NEXT.md:29`
 - **REC-131** · 2026-09-18 — SUPERSEDED IN PART, 2026-09-18, BY BOB #15's CORRECTED RULING (`MEMBER-KNOWLEDGE-DESIGN.md` §5), which arrived during this IC's integration.  
   `docs/development/INTERFACE-CHANGES.md:10641`
 - **REC-133** · 2026-09-18 — CORRECTED WHILE RUNNING, 2026-09-18 (BOB #15 at `f624bd43`): §6A.2 now reads REVOKE = OWNER ONLY.  
@@ -2213,12 +2211,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1264`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1276`
-- WITHDRAWN — the tool reserves it for when the user asks, and the evidence that RC blocks an archive was confounded; an idle session with RC on archived on the first call, measured).  
-  `docs/development/kickoffs/BOB-NEXT.md:13`
-- "<subject>"` (what is RULED), `node tools/owed.mjs BOB` (what this lane OWES).  
-  `docs/development/kickoffs/BOB-NEXT.md:16`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
-  `docs/development/kickoffs/BOB.md:75`
+  `docs/development/kickoffs/BOB.md:77`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  
