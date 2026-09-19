@@ -579,6 +579,18 @@ token and not to the founder's session). **Design:**
   under §7.1's instance-wide uniqueness, refusing a name tells an uninvited member that a project with THAT name exists,
   which §7.9 says it may not learn. Running provisionally: uniqueness holds, and the refusal reveals only the name the
   caller supplied.
+- **HOW the plane mints a project id** (decided 2026-09-18 by BOB #15 on REC-139's stop): a caller-supplied id on a NEW
+  project is REFUSED — never silently ignored — with one byte-identical answer whether or not that id exists; a fork's
+  `newId` is minted the same way; and the plane WRITES the minted id into the document's `id:` frontmatter before it
+  hashes and registers the bytes, refusing bytes that already carry one, and returns the id and the final sha (the
+  precedent is the testimony header the plane already writes, `bio-testimony/1`). The Add surface and the fork form
+  stop asking a member for an id (a UI task).
+- **OPEN, and Bob's — DEC-63's run verdict meets §7.9.** DEC-63 gates a run on participation in the project the inquiry
+  belongs to; as built, a member is REFUSED a run over a question cited ONLY by projects they cannot see and PERMITTED one
+  over a question nobody cites, and that difference tells them a hidden project exists. Recommended to Bob: the verdict
+  is the same in both cases — refused for a member who participates in no project they can see citing it, PERMITTED
+  for the question's own author either way — so it discloses nothing and a stranger still cannot spend a hidden
+  project's runs. Running provisionally as built until he rules.
 - **Contract:** the founder gains sight, so it is an I3 change with its own IC (classification is the integrator's).
   **Negative controls:** the founder's session lists a project it was never invited to; it still cannot read another
   member's unshared lead; `memberAdd` with id `admin` is refused; the admin token's answers are byte-identical before and after.
