@@ -26,18 +26,22 @@ BOB #16, CONDUCT #6, SCHEDULER, DIST, FLEET — was told to save its handoff and
    FLEET. `node tools/owed.mjs BOB`, `plancheck`, `status.mjs --check` as ever.
 4. **Weekly usage in THIS account is unknown to me** — measure it (`get_usage`) before sizing any wave.
 
-## 1. THE STATE AT STAND-DOWN (each lane's `-NEXT.md` is the authority for its own lane)
+## 1. THE STATE AT STAND-DOWN — VERIFIED by BOB #16, 2026-09-19 ~13:10Z (each lane's `-NEXT.md` is its own authority)
 
-- **Live**: release **0.65.0** is `latest` and serving on biosmoke7 — plane, agent-worker, pdf-worker, ocr-worker, the UI
-  worker (DIST's and FLEET's landing reports, verified at `release/RELEASE.json`). REC-143's store brick is over.
-- **Running at stand-down**: REC-151 (opaque CASE/DRAFT/RVG ids) — its worker was told to push its branch as-is with a
-  line saying where it stopped; REC-152 in CONDUCT's gate (landed or pushed as a branch — `CONDUCT-NEXT.md` says which).
-  REC-153 built and awaiting its cut; its three owed rulings (machine sight, closed kind vocabulary, count mislabelled
-  runs) are on its row.
-- **The plan**: LED-6 DONE (cache + backlog, P1–P5 armed). **LED-7 — the debt fold — is SCHEDULER's own act** (Bob,
-  2026-09-19: *"Scheduler should be actively involved in moving debt rows into the build plan (in the proper order)"*),
-  in batches of ~20, three doors; it had just started.
-- **Disk** on the old machine ran 2–3 GiB free all session; if this account uses the same machine, it still does.
+- **Every lane saved and was archived by BOB #16 under D-398's three conditions**, each checked at the moment of acting:
+  DIST (`4dc15ede`), FLEET (`d6954b17`), SCHEDULER (`4a9c07e2`), CONDUCT #6 (`90f05f78`); CONDUCT #5 by CONDUCT #6; all 28
+  finished heartbeat run-sessions. Each reported zero crons and zero tasks. `list_sessions` then showed NO other session.
+  **The CONDUCT heartbeat task is DISABLED.** 13 leaked `workerd` processes (PPID 1, 1–18 h old, dead agents' worktrees)
+  were killed by explicit PID and verified gone. Worktrees removed after the same checks; free disk **9 GiB**.
+- **Live**: release **0.65.0** is `latest` and serving on biosmoke7 — plane, three members, the UI worker.
+- **Landed but in NO release**: REC-152 (tick/close by the principal, `f979ee31`) and REC-153 (context kind) — both
+  authority closings owed to the next cut (`DIST-NEXT.md`: 0.66.0). REC-152's cache row still reads `running`; close it
+  with `f979ee31` (`CONDUCT-NEXT.md` §2).
+- **REC-151 is WIP** on `worktree-agent-a59a4cdfa1b3d4dd3` @ `b69d7b26` (pushed; its worktree kept, clean, equal to the
+  remote); its last battery read 259/260 with the red not re-run. **Nine more unmerged branches** are listed in
+  `CONDUCT-NEXT.md` — content not verified absent from main; judge each before deleting any.
+- **The plan**: LED-6 DONE. LED-7 is SCHEDULER's own act; batch 1 committed (DEBT.md 223 → 218 open); two rows routed to
+  this lane (§3 item 0). `SCHEDULER-NEXT.md` carries the rest.
 
 ## 2. BOB'S OPEN CALL
 

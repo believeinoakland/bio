@@ -651,7 +651,7 @@ authority is the file named, never this one.
 - **D-431** — ified case rests on is refused, byte-identical for an unseen and a never-minted project; `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, with its reason; the (c) count is stated in the landing; D-431 CLOSED.  
   `docs/archive/ledgers/QUEUE-closed.md:2515`
 - **D-431** — WHAT BOB #16 DECIDED (each in its home document; `decided.mjs` finds them) D-431 (Publication §3 rule 2); scratch purge takes scratch identity (Distribution §6 rung 6); DISCOVERABLE/HIDDEN and the request to join (Membership v2 §7 item 7.14 — creator asked, nothing preselected; existing projects HIDDEN); DEC-63 as  
-  `docs/development/kickoffs/BOB-NEXT.md:61`
+  `docs/development/kickoffs/BOB-NEXT.md:65`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
