@@ -121,13 +121,29 @@ design, doctrine, anything for Bob → BOB) and continue.
   is one a caller can invent. **Several documents agreeing is usually one source copied** — go to the artifact.
 - **A blocker is a claim.** Verify it against the code on the tree you are on before you rest a
   deferral, a row or a refusal on it; a blocker inherited from a ledger is a claim about the day it was written.
+- **SUBSTRATE BUILT IS NOT DEPENDENT BUILT — and this is the JUDGING half of §2's building rule** (BOB #17,
+  2026-09-19, from three independent catches in one fold by SCHEDULER #2: D-60, D-115's fourth clause, D-116).
+  §2 says do not BUILD a dependent until its substrate is verified BUILT. The error that keeps being made runs the
+  other way: a row is READ as done because the thing underneath it is done. D-116 is the exhibit — the version
+  authority is built and nothing reads it THROUGH the binding, so the plane can verify itself current while a fleet
+  member still serves the previous build, **invisibly to both**. **When you judge a row, verify the DEPENDENT at the
+  code by name; a built substrate is not evidence about it, and neither is the row.** The honest outcome is usually
+  NARROWED to the one unbuilt trace, not closed — and a row closed by rounding off its unbuilt quarter is how a false
+  "done" enters the record.
 - **Run the negative control**: break the subject, watch the suite fail at a NAMED assertion, restore and
   verify by hash, and record it on the suite's `NEGATIVE CONTROL:` line. **Break only the thing** — a
   control that moves a second variable (a dirty tree, a crash) refutes nothing. When a control shows no
   effect, suspect a second cause before recording a refutation.
 - **Correct superseded tests, never exempt them**, with a comment saying why the old assertion was wrong.
 - **Test through the op, and verify live** in your own instance's scratch namespace, swept after; a
-  store-level test is not evidence a caller can reach the feature. **A deploy verified is not a build
+  store-level test is not evidence a caller can reach the feature. **NAME `store=scratch` ON EVERY CALL — the
+  namespace is not fenced for you** (D-325, ruled 2026-09-19 by BOB #17 at `index.mjs scopeFor`): only the PROBE
+  class is confined, by refusal; every other class, the ADMIN token included, is placed in `bio` when it asks and
+  when it says nothing. `scopeFor` honours `store=scratch` from ANY class, so the binding exists per CALL and an
+  instrument that omits the parameter addresses the REAL record. So a live verification's no-write guarantee is
+  the naming plus the WITNESS — the real record's counters read before and after every arm (VF-4's 13, identical)
+  — and never a plane fence. RESIDUE, stated: no credential can be bound to scratch for its whole life; a sticky
+  confinement is RECORD's ground and is NOT built. **A deploy verified is not a build
   serving**: rollout is per-isolate — if a live probe contradicts the suite, establish which build answered.
 - **A fix verified only where you changed it is not verified.** Ask who else reads it — the gate's note,
   the suite's assertion, the row that cites it, the kickoff that quotes it — and check THERE. **And re-run the

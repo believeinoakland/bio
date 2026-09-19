@@ -42,6 +42,14 @@ Bob can answer sends it here, and this session carries it into his conversation.
    <your id>`; archive exactly what it calls RETIRABLE, never a HOLD row. **The standing lanes — CONDUCT,
    BOB, DIST, FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18); the tool protects their newest
    session, so do not archive one by hand on an idle reading.
+   **THE HEARTBEAT'S OWN RUN-SESSIONS SELF-ARCHIVE ONLY INTERMITTENTLY, SO THIS SWEEP IS LOAD-BEARING RATHER THAN A
+   FORMALITY** (measured 2026-09-19 by BOB #17: of 9 `conduct-heartbeat` runs that day, 4 had archived themselves and
+   **5 had not**, in no pattern — two consecutive runs differed). They are finished `succeeded` sessions and are safe
+   to archive by id; the heartbeat's own SKILL names them as *"YOUR OWN PAST RUNS"* and tells it never to touch them,
+   so nothing else will. Read them with `list_task_runs` for the task rather than hunting them in `list_sessions`,
+   where they look like any other session. BOB #16 found 28 waiting at one stand-down. **`archive_session` returned
+   promptly from this lane in `auto` mode** — the wedge D-402/D-407 records was the HEARTBEAT calling it unattended,
+   not this lane, so the act stays here.
 4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.** And **measure every
    live session's context** (`get_usage` per session): any over 60% is refreshed (Bob, 2026-09-18) — tell it to write its
    handoff, then file its successor's chip. Include yourself.

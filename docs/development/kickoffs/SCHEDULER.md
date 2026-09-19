@@ -111,6 +111,67 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
   (~13 min). Never run a `.control.mjs` while a gate runs (controls edit and commit the tree). `timeout` does not exist
   on macOS. Naming a `D-` id in prose before its DEBT row exists fails `mintid.test`'s prose-floor arm.
 
+- **THE GAP AND THE INSTRUMENT THAT CLOSES IT ARE DIFFERENT OBJECTS — mint a NEW id for the instrument** (BOB #17 and
+  SCHEDULER #2, 2026-09-19, landed as LED-9 over D-404). The gap's record stays archived with its own disposition
+  moved verbatim into the description cell; the instrument gets an id that can be PLACED, DEPENDED ON and CLOSED on
+  its own terms. **Conflating them is how a closed row ends up holding live work** — a row closed because the gap was
+  answered, still carrying a build nobody can schedule against. The tell that you are about to do it: you are writing
+  a build scope into a row whose question has already been answered.
+- **A CITATION INVENTED TO PASS A CHECK IS WORSE THAN THE GAP IT HIDES**, and that is `rowdesign`'s own warning about
+  itself. When ROW NAMES NO DESIGN fires, do NOT try citations until one passes — read what `governed()` and
+  `PROCESS_AUTHORITIES` actually admit, then cite the law the row genuinely rests on. Measured 2026-09-19: LED-9 was
+  refused citing `CLAUDE.md` §2 (not a governed path) and again citing `WORK-PIPELINE.md` (no front matter, not
+  governed); the honest citation was `VERIFICATION.md`, admitted for M0 by name, with WORK-PIPELINE's P1–P5 named
+  beside it as what the arm EXTENDS.
+
+- **READ THE SECTION, NOT THE SUMMARY — it decides ORDER, not only scope.** `BOB.md` rule 4 says a design MENTIONED is
+  not a design that COVERS the act; the same rule bites on SEQUENCING, which nobody had written down. Twice on
+  2026-09-19 a reasonable inference about where a row belonged was overturned by the governed section itself.
+  (1) D-254's citation of `VERIFICATION.md` looked missing to `plancheck`'s ROW NAMES NO DESIGN arm and was a
+  MILESTONE error — `rowdesign.mjs` admits a process authority only for the milestone it is admitted for, so read that
+  failure as "check the milestone" before "check the pointer". (2) D-136 looked like it belonged ABOVE D-270 — a
+  forgeable governance vote is an authority defect, and putting it first would even have dissolved the two rows'
+  interaction — until `BIO_Membership_Architecture_v2.md` §4.7's *"Until it lands, the plane must not tell a member
+  that this absence is a decision"* proved D-270 must land FIRST, because that sentence is D-270's own and protects
+  nobody until it exists. **When a row's place rests on a ruling, QUOTE the sentence on its `order:` line** — the next
+  session can then CHECK the order instead of inheriting it, which is the same move as citing a section rather than a
+  line.
+
+- **RE-MEASURING A ROW: MEASURE BEHAVIOUR, NOT TEXT.** A `grep` count over a file that carries commentary answers a
+  question about TEXT. `bio-plane/checks/bio-checks.mjs` quotes the defects it fixes, BY DESIGN, so its comments are
+  archaeology that reads exactly like live advice. On 2026-09-19 D-203 was re-measured as "5 strings → 2 surviving" and
+  routed to BOB for a ruling it did not need: stripping block and line comments first gives **0 live occurrences**, and
+  the row was closable in fact. A dropped count IS evidence something changed — it is not evidence of what SURVIVED.
+  Strip comments (or read each hit at its site) before a count becomes a disposition.
+
+- **A LEDGER REBASE CONFLICT IS THE `QUEUE.md` TRAP, IN EVERY LEDGER — AND CHECK THE ROW LENGTHS AFTERWARDS.** Carry
+  upstream's hunks onto yours and never take one side whole; `docs/DECIDED.md` is regenerated, never merged. This bit
+  `DEBT.md` on 2026-09-19: one side had rewritten two dispositions (D-182 458 → 946 chars, D-199 4044 → 4784) while the
+  other had only archived a third row, so taking the archiving side whole would have reverted both rewrites.
+  **A reverted row looks exactly like a row you kept** — the id is present, the state is plausible, and nothing fails.
+  After any ledger carry, compare the touched rows' LENGTHS against the remote, not just their presence.
+
+- **TRIAGING A ROW: ASK THE QUESTION THE ROW DOES NOT OFFER — *is this limitation stated where a reader of the DESIGN
+  would meet it?*** A row presents its own options and they are rarely the whole set. Twice on 2026-09-19 a row's real
+  defect was NEITHER option it offered, and both had the same shape: **a true thing stated only where an instrument
+  prints it.** D-284's per-page/document-level limitation lived in `MEASUREMENTS.md`, `DEBT.md`, `INTERFACE-CHANGES.md`
+  and `CLAIMS.md` and in NO file under `docs/architecture/`; D-306's accuracy-vs-agreement distinction lived only in
+  CPDF-14's column headings, so its honesty depended on every future reader rediscovering it from a probe's output.
+  **A limitation that lives only in an instrument's output is one discipline away from being lost.** Both closed
+  through the THIRD DOOR once the statement was written into a governed design — and neither option they offered
+  would have closed them.
+
+- **FRONT MATTER IS A FIRST-CLASS SOURCE, AND ALMOST NOBODY READS IT.** D-359 was closed in fact on 2026-09-19 because
+  `BIO_Content_Framework_v0_10.md`'s front matter had said *"closing D-359"* since 2026-09-15 while the DEBT row still
+  read open — two records of one fact disagreeing for four days, DIST-5's shape. **The row would never have told you.**
+  When a row's subject has a home document, read that document's front matter before believing the row.
+
+- **BATCH THE QUESTIONS TO BOB IN GROUPS OF THREE OR FOUR, never one at a time** (BOB #17, 2026-09-19). Ruling several
+  in one sitting costs him far less context than the same rulings spread across separate messages, and **context is
+  BOB's binding constraint the way disk is CONDUCT's and weekly usage is the fleet's.** Send them together, each with
+  its single stated question, and expect them answered together. A row whose question is not yet sharp waits for the
+  next group rather than going early and half-formed.
+
 ## Checks before every push
 
 `node tools/plancheck.mjs` (0 fail), `node tools/readbudget.mjs`, and — once LED-6 lands — its five pipeline invariants.

@@ -20,6 +20,106 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-270 · queued — **SIX OPS ANSWER WITH NO REFUSAL CODE AT ALL, so DEC-49 cannot reach them — and for FIVE of them the session gate's sentence is FALSE** (the machine-credential sentence, sent where that is not the reason). Measured 2026-08-09. — owner RECORD.
+order: FIRST, CONFIRMED by BOB #17: a false rationale SUPPRESSES ITS OWN BUG REPORT — a member told the absence is a DECISION will not report it as a gap. Above M0-78 because it reaches a MEMBER (SCHEDULER #2, 2026-09-19)
+milestone: M8
+interface: I3 — IC-55 is PROPOSED on the branch (2026-08-09), NEVER RESOLVED. The integrator re-reads its base and re-classifies.
+design: DEC-49 with DEC-37/DEC-52's split. **RULED by BOB #17, 2026-09-19 — THREE sentences, not two:** (a) "not for a person" ONLY where that decision is recorded; (b) "your credential does not reach this verb", always sayable; (c) for an OMISSION, neither — state the fact, invent no rationale. Cite his folded home once on main.
+depends-on: none. **SEQUENCE CHECK (BOB #17):** D-136's fix DELETES the refusal this row rewords, for its ops. When re-deriving, REPORT the intersection of these five with D-136's three to SCHEDULER before rewording; disjoint, and this order stands.
+scope: **THE BRANCH IS EVIDENCE, NOT A MERGEABLE ARTIFACT.** `origin/worktree-agent-aafee89563a3f2d42` (`484ed359`) is **1573 commits BEHIND main**, its 180 lines in `index.mjs`. Read its suite, control and MEASUREMENTS; re-derive on current main. Still open: `C-39.2`/`C-39.3` are ZERO times in main's catalogue.
+accepts-when: each of the six answers with a DEC-49 row (`code`, `check`, `translation`); the five send a true sentence under the three-sentence rule; `refusal-wire.test.mjs`' set-pin is CORRECTED with its reason and still fails BOTH ways. How a liar passes it: one generic code for all six, so each op's is pinned by name. NEGATIVE CONTROL: restore the single condition, and the five-op arm fails naming them.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found by CONDUCT #7; keeps its `D-` id).
+
+### D-136 · queued — **THE §4.7 VOTE CANNOT BE CAST BY A PERSON, AND ON THE ONE REACHABLE PATH THE CALLER NAMES THE VOTER.** `adminendorse`, `adminremove` and `membercaps` are `["admin","probe"]`, in no session set; `by` is stamped only for `PROJECT_ACTIONS` plus two. Seven releases of governance arithmetic rest on attributions the caller supplies. — owner RECORD.
+order: SECOND. A forgeable governance vote outranks the hole below it. Below D-270 on the GOVERNED TEXT, not my judgement — §4.7's *"Until it lands, the plane must not tell a member that this absence is a decision"* IS D-270's sentence (c), so D-270 precedes it (SCHEDULER #2, 2026-09-19)
+milestone: M8
+interface: I3 — session reach and a `by` stamp on three ops; the integrator mints and classifies it.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7, the block "THE SECTION 4.7 VOTE CANNOT BE CAST BY A PERSON TODAY" (BOB #17, `95fb3e4c`).
+depends-on: none. **D-134 is NOT beside this row:** its surface is placeable only ONCE THIS LANDS (§4.7) — a surface over an unfenced act is a second path in.
+scope: **ONE LANDING; THIS ROW REFUSES TO BE SPLIT.** Server-stamp `by` from the session on `adminendorse`, `adminremove` AND `membercaps` (§4.9's capability edit, same bearer-only state) and give all three session reach, together. Either half alone is worse than neither: stamping without reach makes the vote unreachable; reach without stamping leaves it forgeable. D-421's class (C-32.14/C-32.15).
+accepts-when: a signed-in administrator casts an endorsement, a removal vote and a capability edit, each stamped as THEM by the server; a bearer credential naming another administrator as `by` is REFUSED; the arithmetic still refuses an addition without consensus. How a liar passes it: honouring a sent `by` for a session caller, so the suite drives one sending another's id. NEGATIVE CONTROL: drop the stamp, and the forged-voter arm fails by name.
+added: 2026-09-19 · SCHEDULER #2 (LED-7; BOB #17's ruling `95fb3e4c`; keeps its `D-` id).
+
+### M0-78 · queued — **TWO NEGATIVE CONTROLS MEASURE NOTHING: `caseproduction.control.mjs` arms (C) and (H) THROW INSIDE THE FIXTURE, on the old sources too, so their declared `mustFail` assertions are never evaluated and the control line claims coverage the evidence base does not have.** CONDUCT #7, 2026-09-19. — owner M0 / VERIFY.
+order: AHEAD OF FEATURES though its prefix is M0 — a control that cannot fail makes the record claim more than it can support, which CLAUDE.md §2 grades worse than a missing feature. BOB #16's M0-last rule was written for M0 BUILD items, not an evidence-base hole. Placed HIGH **provisionally**; the doctrine call is ROUTED TO BOB (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md`'s negative-control process with CLAUDE.md §5 — a control is evidence only when it FAILS at a NAMED assertion.
+depends-on: none. Verified at the code by SCHEDULER #2: both arms are registered in `bio-plane/test/caseproduction.control.mjs`, validated only by `preflight` from `bio-plane/scripts/armdecay.mjs`.
+scope: diagnose the fixture-level throw; repair (C) and (H) so each arms and fails BY NAME with `mustNotFail` green. **AND WIDEN THE DETECTOR, the larger half:** `preflight` counts an arm's own QUOTE in the file it writes — it proves the ANCHOR is live and can never prove the FIXTURE runs, so this class is invisible BY CONSTRUCTION to the census built to catch dead arms. Arm (H) already records having silently stopped arming once (M0-25).
+accepts-when: (C) and (H) run ALONE each fail at their declared named assertion, `mustNotFail` green; a fixture-level throw in ANY arm is reported as a DEAD ARM, not passed; restores verified by sha256 AND `cmp`. How a liar passes it: deleting or exempting the two arms, so the registered-arm count is asserted too. NEGATIVE CONTROL: break a healthy arm's fixture the same way, and the census names it.
+added: 2026-09-19 · SCHEDULER #2 (CONDUCT #7's finding, verified at the code; `node tools/mintid.mjs M0`).
+
+### D-414 · queued — **THE SEGMENTER FIVE BOUNDS WALKS SHARE CANNOT SEE A GENERATOR METHOD, so a generator's body is judged as part of the method above it** — `*eachImage`'s loop and its per-bundle `readImage` were credited to `danglingRefs`, which then read as doing work it does not do. — owner M0.
+order: FOURTH, immediately after M0-78, because it is the SAME DOCTRINE and should be taken with it: an instrument answering about a thing it cannot see. M0-78 is arms that do not arm and a census blind to it; D-355 is two drivers red on a green `main`; this is a walk mis-attributing a method. One worker holding all three fixes the class, not three symptoms (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md`'s rule that an instrument reports what it can see — read with CLAUDE.md §5, an equality that costs nothing to produce is not evidence.
+depends-on: none. **Take it with M0-78, and hand D-355 (still in DEBT) to the same worker.**
+scope: add `\*?` to the signature regex in each of the FIVE copies (`airuns`, `bounds`, `derivation-bounds`, `meaning-bounds`, `versionchain` — `grep 'const sig = /'`), then **re-measure every roster those walks pin**: the census and class counts may move by the generator's own verdict, and that movement is the finding, not a regression. M0-63 measured ONE generator in `store.mjs` today; the regex must not assume one.
+accepts-when: `*eachImage` is its own segment in all five walks and `danglingRefs` is judged on its own body alone; every roster the walks pin is re-printed with its movement stated. How a liar passes it: fixing one copy, so the arm asserts all five regexes are identical. NEGATIVE CONTROL: restore the old regex in one copy, and that walk's roster moves and fails by name.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
+
+### D-254 · queued — **REC-76's VERDICT READER EXISTS TWICE and only a drift pin makes that safe** — `civicos-ui/check-refusal-codes.mjs` has no exports and ends in a top-level `process.exit`, so `bio-plane/test/verdict-reader.mjs` hand-carries its six functions byte-identically. — owner VERIFY.
+order: a correction to landed work, so above features; below D-270 and M0-78 because this duplicate is FALSIFIABLE today — `readerDrift()` extracts from both files and both suites assert it — a measured debt, not an unmeasured risk (SCHEDULER #2, 2026-09-19)
+milestone: M0 — CORRECTED from the DEBT row's M8: both files it changes are TEST ESTATE, which is what M0 is, and that is why `VERIFICATION.md` is its authority.
+interface: none
+design: `docs/development/VERIFICATION.md`, the section "THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE" (REC-76, D-236), which governs `check-refusal-codes.mjs` and how it grades a verdict; read with D-240's `readerDrift()` pin.
+depends-on: none. **Sequence with D-270:** its branch also edits `civicos-ui/check-refusal-codes.mjs`, so whichever lands second re-reads the first.
+scope: the row names the whole fix — **one import** replacing the six function declarations in `check-refusal-codes.mjs`, after which `readerDrift()` becomes an import and `verdict-reader.mjs` is the single source. `origin/worktree-agent-a61e489de171ae6c5` (`9e24ef6e`) holds a built form 1572 commits behind main — read it, do not merge it blind.
+accepts-when: `check-refusal-codes.mjs` imports the reader and still runs as a script, its exit status read UNPIPED; `readerDrift()`'s extraction stays COUNTED and FLOORED, so two empty extractions cannot agree for free; both suites green. How a liar passes it: deleting the drift pin with the duplicate, so the pin's own arm must survive. NEGATIVE CONTROL: D-240's arm (3) — one character inside `verdictKind` — still fails both suites NAMING the function.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found stranded by CONDUCT #7; keeps its `D-` id).
+
+### D-339 · queued — **`CAPTURE-SCALING.md` §Job one AND THE PLANE STATE OPPOSITE REUSE RULES, AND THE DOCUMENT READS AS THE AUTHORITY** — the design gates reuse on `stable_since` older than the window; the built `reuseDecision` gates on RECENCY OF FETCH (24 h), because the stability gate measured live as reusing nothing at all. — owner CAPTURE.
+order: after D-254, with the corrections to landed work and above the features: a builder designing against §Job one designs against a rule THE PLANE REFUSED, which is the design claiming more than it can support — CLAUDE.md §2's class, pointed at a builder rather than a member. Cheap too: prose only (SCHEDULER #2, 2026-09-19)
+milestone: M7
+interface: none — prose in a design document; no code moves
+design: `docs/architecture/CAPTURE-SCALING.md` §Job one, which is the text being corrected, read against `reuseDecision` in the plane, which is the authority the correction adopts.
+depends-on: none. The built rule is already right and measured; nothing is being decided here.
+scope: fold the RECENCY rule and its live measurement into §Job one so the document states what the plane does, and mark the two constants (24 h, `minDocuments: 2`) as **CHOSEN, not measured**, beside the two open questions that still ask for them — the row's own words. The front matter moves in the same commit if the section's stated completeness changes (`CORPUS-STANDARD.md`).
+accepts-when: §Job one describes the recency gate and carries the live measurement that refused the stability gate; both constants are labelled CHOSEN; no code changes in the same commit. How a liar passes it: deleting the stale rule instead of correcting it, losing why it was refused — so the superseded rule stays with its dated reason. NEGATIVE CONTROL: none applies; this is prose, and `corpuscheck` is its arm.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
+
+### D-116 · queued — **NOTHING READS A FLEET MEMBER'S VERSION BACK THROUGH ITS BINDING.** The installer verifies the PLANE (`verifyUpdate` reads `op=bootstrap`) and each member is uploaded with a version and never asked what it answers — so the plane can verify itself current while a member still serves the previous build, invisibly to both. — owner DIST.
+order: after D-254, above features: a group can run a stale member with nothing reporting it, so the install and the deploy both claim more than they can support — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19)
+milestone: M7
+interface: none — a probe and its report; no plane op changes
+design: `docs/architecture/BIO_Distribution_v0_1.md` §8, the fleet's version authority, read with CLAUDE.md §5 — *a deploy verified is not a build serving*, and establish which build ANSWERED.
+depends-on: none. DS-2 built the BUILD-side authority (`resolve-version.mjs`; `release-assemble.mjs` refusing `VERSION_SKEW`/`VERSION_DISAGREES`); this is the RUNTIME half it does not reach.
+scope: read each member's version back THROUGH THE SERVICE BINDING, after install and after deploy, reporting per member. `newgroup`'s `verifyUpdate` is the shape to follow — it already retries and reports, for the plane alone. **D-115's one surviving requirement, "verify each member's version on read-back", is DISCHARGED HERE** — that row closed naming this one.
+accepts-when: an install against a fleet where ONE member serves a stale build names THAT member and does not report success; the same probe after a fleet deploy names the member that answered stale. How a liar passes it: probing a member's own endpoint instead of through the binding, which tests a path the plane does not use — so the probe goes through the binding the plane actually calls. NEGATIVE CONTROL: pin one member at the previous version, and the arm fails naming it.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id).
+
+### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two unrelated OPEN rows; IC-30 two PROPOSED interface changes; M0-16 a duplicated heading. `mintid --audit` registers all six, 0 breaks; the lookup §1 rests on answers ambiguously. — owner M0.
+order: SIXTH. AMBIGUITY STATED, not the record over-claiming: the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), while every row above is SILENTLY wrong. Loud beats silent, and blocking LED-7 on two rows of 211 does not outrank five silent ones (SCHEDULER #2 + BOB #17, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullet "The legacy residue" — **rewriting cited ids is REFUSED: citations must keep resolving** — with CLAUDE.md §1.
+depends-on: none.
+scope: **DISAMBIGUATE. DO NOT RENUMBER AN ID THAT ANYTHING CITES** (BOB #17, 2026-09-19 — a ruling, not a preference). A ledger id is cited by commit messages, other rows' `depends-on`, kickoffs, `DECIDED.md` and the archive — and **a commit message cannot be rewritten.** D-124's first row reading "renumbered from a colliding D-122" makes renumbering look established; it is the dangerous answer. So: the register carries BOTH, `find` REPORTS the collision and shows both rather than guessing, and a new id is minted fresh. M0-16's duplicate is an empty-bodied merge artefact — DELETED, not renumbered. If renumbering looks unavoidable, it is BOB's call before it lands.
+accepts-when: `find` returns BOTH rows for a collided id and SAYS it collided; `mintid --audit` still reads 0 breaks; every existing citation of the four still resolves. How a liar passes it: deleting a copy loses a defect — so the DEBT row count must not FALL, asserted. NEGATIVE CONTROL: plant a seventh collision, and the audit names it.
+added: 2026-09-19 · SCHEDULER #2 (batch 4; found by CONDUCT #7; no-renumber ruling by BOB #17).
+
+### LED-9 · queued — **A PIPELINE INVARIANT READS `status.mjs`, SO A DEPENDENT CANNOT BE SEQUENCED ABOVE UNBUILT SUBSTRATE.** P4 fails the plan when a cache row's `depends-on` is not MET — but that names other ROWS, so it answers *is the row it waits on earlier or done*, never *is the CONSTRUCT it rests on BUILT*. — owner M0 / SCHEDULER.
+order: with LED-8, the ledger tooling: preventive, not a live defect — no row is mis-sequenced today, checked by hand. Earned by THREE catches in one day (D-60, D-115, D-116): a row read as done because the thing underneath it was (SCHEDULER #2 + BOB #17, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md`, the law this gate is an arm of, with `WORK-PIPELINE.md`'s P1–P5 which it extends. The rule is CLAUDE.md §2 — *"verified BUILT by `status.mjs`, not by a row saying so"* — **RULED by BOB #17 (`a08e137a`) to be that doctrine MECHANISED:** the arm does not JUDGE builtness, it READS the one authority on it.
+depends-on: none.
+scope: extend `ledger.mjs`' invariants so a row whose `depends-on` names a CONSTRUCT is checked against `status.mjs`, failing the plan when a dependent sits above unbuilt substrate. **THE BOUND GOES IN THE ARM'S OWN OUTPUT, not only here** (BOB #17): it judges only a row that NAMES a construct, so **a row naming its substrate in PROSE is invisible to it** — the bound `corpuscheck`'s `--authority` arm states about itself. A green arm that hides its bound is read as more than it is.
+accepts-when: a row depending on a construct `status.mjs` reads ABSENT fails the plan NAMING both; one whose substrate is BUILT passes; **a row naming substrate only in prose is UNJUDGED, never passed**, with the unjudged count printed beside the verdict. How a liar passes it: judging only rows that name a construct and reporting 100%, which the unjudged count forbids. NEGATIVE CONTROL: point a row's `depends-on` at an absent construct, and the arm fails naming it.
+added: 2026-09-19 · SCHEDULER #2 (D-404's fix, ruled by BOB #17).
+
+### COFF-13 · queued — **NO FORMAT ENTRY EMITS A DECK LENGTH, so a deck whose TRAILING slides are unreadable is recorded shorter than it is — and the content row then REFUSES A TRUE CITATION of a real trailing slide as "past the deck".** D-359's named residue, rowed at its close rather than left in prose. — owner CONTENT-OFFICE.
+order: below LED-8, above the features: it refuses something TRUE — a record defect, not a gap — but errs in the CONSERVATIVE direction and reaches only decks with unreadable trailing slides, so it ranks under the defects above it (SCHEDULER #2, 2026-09-19)
+milestone: M9
+interface: I2 — a producer change on the text shape, so an IC is minted and the integrator classifies it.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §15's structure-shape row and §16's persistence paragraph, which both state this residue by name and say closing it is a producer change on I2.
+depends-on: none. COFF-11 (IC-100) and COFF-12 landed the producer and wire halves this completes.
+scope: a deck entry emits its own LENGTH — the slides the DECK has, not the ones the reader could open — and the wire carries it onto the persisted reading beside the slide list. The slide map is already keyed on each slide's OWN number (COFF-12), so the length is the missing fact, not a re-keying. `.odp` states an honestly NULL length if the format cannot answer, as `.ods` does for its grid.
+accepts-when: a deck whose LAST slide part is unreadable still admits a citation of that slide, and a citation past the real deck is still refused C-45.1 BY NAME with the figure in the refusal. How a liar passes it: emitting the READABLE slide count as the length, which is the defect — so the fixture's deck must have an unreadable TRAILING slide and the arm must assert the length exceeds the readable list. NEGATIVE CONTROL: emit the readable count instead, and the trailing-slide arm fails by name.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 7, at D-359's close; `node tools/mintid.mjs COFF`).
+
 ### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's and are NOT rowed.
 order: rests on MK-3's attribution (SCHEDULER, first order audit, 2026-09-18)
 milestone: M3 — the member's own knowledge enters the record as what it is
@@ -157,15 +257,6 @@ behind-interface: I1
 depends-on: CAP-1 (done), a DIST deploy
 added: 2026-07-31 · CONDUCT
 landed:
-
-### DIST-5 · queued — `BIO_Distribution_v0_1.md` §8 FINDS DS-1 AND DS-2 SATISFIED BY D-297's CLOSING WHILE THE BUILD-PLAN TABLE DOES NOT MARK THEM DONE — two records of one fact disagreeing, with no actor.
-order: DIST's own reconciliation, ACCEPTED by DIST 2026-09-18 and queued in its session behind the REC-143 P0; holds no general slot (SCHEDULER, 2026-09-18)
-milestone: M7
-interface: none — a reconciliation between a design document's own finding and a build-plan table
-design: `docs/architecture/BIO_Distribution_v0_1.md` §8, read against the build plan's table and `D-297` in `DEBT.md`, which is the closing the section rests its finding on
-depends-on: none — but it is NOT runnable by a non-DIST session and should not be spawned into a general slot
-accepts-when: the disagreement is RESOLVED WITH EVIDENCE FROM `D-297` ITSELF — the losing record corrected and the reason stated at the site, or both records found correct about different questions and the ambiguity named; **an "it looks done" reading does not close this row**; `node tools/plancheck.mjs --local`, then BARE after committing; the home design's front matter moves in the SAME COMMIT if its stated completeness changes.
-cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «DIST-5». A worker READS IT before building.
 
 ### M0-77 · queued — **`tools/mintid.mjs`' MAIN-GUARD COMPARES `resolve(process.argv[1])` WITH `import.meta.url`, WHICH NODE REALPATHS — so `mintid` invoked through a SYMLINKED path (macOS's temp dir is one) silently runs NOTHING and EXITS 0: a costs-nothing green in the id allocator every lane uses.** Found by M0-73's worker, routed by CONDUCT #6, 2026-09-19; fix named. A CLASS: SCHEDULER measured 25 `.mjs` files that read both `process.argv[1]` and `import.meta.url` (a candidate list, not a verdict — some may already realpath). — owner M0.
 order: first of the queued M0 rows: a silent exit 0 in the id allocator every lane uses is a costs-nothing green (SCHEDULER, 2026-09-19)
