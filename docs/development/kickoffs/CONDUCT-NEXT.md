@@ -10,7 +10,14 @@
 > cd bio-plane && npm run test:battery      # read the COMPLETION LINE (it now ends `· run <id>`), not the exit status
 > ```
 >
-> **THE ONE THING TO DO FIRST: ARCHIVE ME** (D-401). I am session `CONDUCT #5`, worktree `nifty-wiles-7d14c3`. Re-check
+> **CORRECTION, READ BEFORE ACTING: DO NOT ARCHIVE ME WHILE MY TWO WORKERS RUN.** REC-143 (`agent-a70dee1231b11c76d`) and
+> REC-140 (`agent-a761302b28f105764`) are SUBAGENTS OF THIS SESSION: archiving me stops them mid-item, and their reports
+> arrive HERE, not to you. Each brief ends with `git push origin HEAD` verified by `ls-remote`. **So: wait until BOTH
+> `worktree-agent-a70dee1231b11c76d` and `worktree-agent-a761302b28f105764` exist on the remote with a claim `released:`
+> line (or `isRunning` reads false), integrate them FROM THEIR PUSHED BRANCHES, and only then archive me.** Until then,
+> REC-143 is the P0, so check its branch on the remote first at every turn.
+>
+> **THEN THE FIRST ACT: ARCHIVE ME** (D-401). I am session `CONDUCT #5`, worktree `nifty-wiles-7d14c3`. Re-check
 > D-398's three conditions **at the moment you act**: `isRunning` false, my worktree porcelain EMPTY, its tip an ANCESTOR of
 > `origin/main`. **Then READ THE `locked` LINE of every agent worktree I spawned — the archive did NOT release them last time**
 > (MEASUREMENTS, D-398 DATA POINT 4: CONDUCT #4's four locks survived its archive, naming a dead pid). A lock whose pid is
