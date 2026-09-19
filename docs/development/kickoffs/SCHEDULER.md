@@ -111,6 +111,19 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
   (~13 min). Never run a `.control.mjs` while a gate runs (controls edit and commit the tree). `timeout` does not exist
   on macOS. Naming a `D-` id in prose before its DEBT row exists fails `mintid.test`'s prose-floor arm.
 
+- **THE GAP AND THE INSTRUMENT THAT CLOSES IT ARE DIFFERENT OBJECTS — mint a NEW id for the instrument** (BOB #17 and
+  SCHEDULER #2, 2026-09-19, landed as LED-9 over D-404). The gap's record stays archived with its own disposition
+  moved verbatim into the description cell; the instrument gets an id that can be PLACED, DEPENDED ON and CLOSED on
+  its own terms. **Conflating them is how a closed row ends up holding live work** — a row closed because the gap was
+  answered, still carrying a build nobody can schedule against. The tell that you are about to do it: you are writing
+  a build scope into a row whose question has already been answered.
+- **A CITATION INVENTED TO PASS A CHECK IS WORSE THAN THE GAP IT HIDES**, and that is `rowdesign`'s own warning about
+  itself. When ROW NAMES NO DESIGN fires, do NOT try citations until one passes — read what `governed()` and
+  `PROCESS_AUTHORITIES` actually admit, then cite the law the row genuinely rests on. Measured 2026-09-19: LED-9 was
+  refused citing `CLAUDE.md` §2 (not a governed path) and again citing `WORK-PIPELINE.md` (no front matter, not
+  governed); the honest citation was `VERIFICATION.md`, admitted for M0 by name, with WORK-PIPELINE's P1–P5 named
+  beside it as what the arm EXTENDS.
+
 - **READ THE SECTION, NOT THE SUMMARY — it decides ORDER, not only scope.** `BOB.md` rule 4 says a design MENTIONED is
   not a design that COVERS the act; the same rule bites on SEQUENCING, which nobody had written down. Twice on
   2026-09-19 a reasonable inference about where a row belonged was overturned by the governed section itself.
