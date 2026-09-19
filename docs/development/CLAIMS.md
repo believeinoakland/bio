@@ -14250,7 +14250,7 @@ origin/main `c0fc28e1` (M0-67, DIST 0.61.0) and then `ee9f201c` (REC-138, IC-155
 **248/248 suites green · 15106 assertions**, no skip. After: the final battery line, strict coverage, the UI harness and the
 gates are in the worker's report to CONDUCT and IC-154. Paths as claimed; `src/index.mjs` was NOT touched (the store
 relays both refusals through the handler's existing path). Also: `bio-plane/scripts/coverage.mjs` REGISTER_FLOOR moved
-from the strict print on the committed merge (1407 -> 1412 · 240 -> 241 · 241 -> 242 · run 203 -> 204);
+from the strict print on the committed merge with REC-138 (1414 -> 1419 · 241 -> 242 · 242 -> 243 · run 204 -> 205);
 `test/casesign.test.mjs` CORRECTED at its site with a dated reason; `DEBT.md` D-429 raised. `civicos-ui/check-refusal-codes.mjs`
 floors NOT moved (the harness is green; C-57.1's region is read and checked). IDs minted with `tools/mintid.mjs`: C-57,
 IC-154, D-429.
