@@ -76,6 +76,9 @@ const RELEASES = [
   ["0.61.0", "b57b8de21382163a2d73ef319ee481ae7418854c"],
   ["0.62.0", "2773ee2751bc0b3a54c755d177d9280e83535760"],
   ["0.63.0", "3d941c08b2aba5bfa9b639575159b59b3d21ec37"],
+  /* 0.64.0: the first release that boots every store above, deployed and live-verified
+     2026-09-19; the commit is dist/cut-0.64.0's cut, whose release/ holds it (DIST). */
+  ["0.64.0", "a8bc9d91eca9f6f30aff2133f608ad423dc5e411"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
@@ -333,7 +336,15 @@ for (const [version] of RELEASES) {
  * then upgraded to the current plane. The withdrawn release's boot is the
  * REPRODUCTION, driven with the released bytes: it must throw exactly what DIST saw.
  * ================================================================== */
-for (const [version] of RELEASES.slice(1)) {
+/* ONLY THE WITHDRAWN RELEASES. This loop read `RELEASES.slice(1)`, which was true while
+   every row after 0.58.0 was one of the five that bricked. It stopped being true the day
+   a FIXED release joined the table: DIST added 0.64.0 (2026-09-19, as REC-143's worker
+   asked for every new release), and this section then asserted that 0.64.0's own bytes
+   brick a 0.58.0 store. They do not, which is the point of 0.64.0 (and was measured live
+   on biosmoke7). Corrected, not exempted: the withdrawn set is NAMED, and a release that
+   boots is covered by section 2 as a store source. */
+const WITHDRAWN = new Set(["0.59.0", "0.60.0", "0.61.0", "0.62.0", "0.63.0"]);
+for (const [version] of RELEASES.filter(([v]) => WITHDRAWN.has(v))) {
   if (!PLANE[version] || !PLANE["0.58.0"]) continue;
   n++;
   const label = `0.58.0 -> ${version} -> 0.58.0 -> current`;

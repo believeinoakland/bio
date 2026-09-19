@@ -1,16 +1,15 @@
 # DIST — resume here. Rewritten 2026-09-18 by the DIST standing lane, after cutting 0.59.0; amended the same day after 0.60.0.
 
-**LIVE, MEASURED 2026-09-19 — 0.64.0 IS DEPLOYED AND IS `latest`.** On `biosmoke7`: the plane serves 0.64.0 (bytes read back
-= signed `e677a6a7…`; selftest and bootstrap ok; IT BOOTED THE STORE 0.58.0 CREATED). agent-worker, pdf-worker and
-ocr-worker serve 0.64.0 (bytes unchanged since 0.59.0). The UI worker `civicos` serves build `2eac184ced85` (UI-65; it was
-`74cc1646044b` of 2026-08-04). `newgroup` embeds the signed 0.64.0, with bindings `[]`. `main`'s `release/` = 0.64.0
-(merged `9d92dd13`, tag `v0.64.0` on the mainline), so `/update` offers it. `op=audit`: 31 checked, 10 C-18.9 = D-200,
-record state since 2026-08-04, unchanged.
-**Before the NEXT cut:** add `["0.64.0", "a8bc9d91eca9…"]` (the cut commit, whose `release/` holds 0.64.0) to
-`migrate-released.test.mjs`'s `RELEASES`. **NEXT CUT OWED: REC-145** (c02d7f91, a §7.9 disclosure closing, IC-162), then
-**REC-141 + UI-66 as a PAIR** (a plane with REC-141 refuses the old surface's project create and fork, so `civicos` moves
-with it). History: 0.59.0–0.63.0 were signed, bricked existing stores, were withdrawn, and never went live; 0.64.0
-supersedes them. The mechanism and the gate are in `kickoffs/DIST.md`.
+**LIVE, MEASURED 2026-09-19 — 0.65.0 IS DEPLOYED AND IS `latest`** (tag `v0.65.0` on the mainline; `main` `d9b10769`). On
+`biosmoke7`: the plane serves 0.65.0 (bytes = signed `5b4b3f52…`; selftest and bootstrap ok); agent-worker, pdf-worker and
+ocr-worker serve 0.65.0; `civicos` serves build `21bcfa6383eb` (UI-66, coupled to REC-141); `newgroup` embeds 0.65.0,
+with bindings `[]`. Live-verified: `op=projectfork` naming a `newId` is refused C-59.3, first, byte-identical for two ids,
+no echo (REC-141). stats, ratify-by-bearer and `op=audit` (the D-200 ten, unchanged) are as in 0.64.0. Rollback targets
+recorded before the deploy: biosmoke7 `be4dd1f3`, civicos `54fd3b83`, newgroup `d72607e6` (the 0.64.0 versions).
+**Before the NEXT cut:** add `["0.65.0", "22a72fa1…"]` (the cut commit) to `migrate-released.test.mjs`'s `RELEASES`.
+Put ONLY withdrawn releases in its `WITHDRAWN` set: that loop asserts a release BRICKS 0.58.0, corrected in 0.65.0's cut.
+**NEXT CUT OWED: REC-153** (IC-163, an authority closing), when it lands. M-68's figures (aiRuns 0 on bio, scratch and
+via civicos, 2026-09-19T11:45:59Z) went to CONDUCT #6 for REC-153's branch.
 **Also owed: DIST-5** (SCHEDULER, build order position 17: which record of DS-1/DS-2 is wrong, per D-297).
 The 0.59.0 notes below remain true of 0.59.0.
 
@@ -35,7 +34,7 @@ is 5 or more days old (BOB #15's rule), and write the new date here.
   copy) ships as a new read path for non-members. **Method:** grep the prior signed asset for the op/handler.
   A list of row names is only where to start.
 - **DEPLOY: REQUESTED of Bob through BOB #15 on 2026-09-18, and not yet answered as of this writing.** The order is
-  agent-worker first or together with the plane (IC-130), then the installer. The live plane and members are on 0.58.0.
+  agent-worker first or together with the plane (IC-130), then the installer. **SUPERSEDED 2026-09-19 by the 0.64.0 deploy: see the LIVE header above.** (It read: the live plane and members are on 0.58.0.)
 - REC-131 was cut as 0.60.0 (above).
 - **The embed hazard is CLOSED (M-59, `483ac38a`).** `newgroup`'s embed takes only the signed, verified asset from
   `release/` and builds nothing. So in a cut, embed AFTER `release-assemble --sign`. Between the bump and the

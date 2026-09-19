@@ -228,7 +228,10 @@ const ARMS = [
     mustFail: ["mintid's duplicate check READS THE BACKLOG — REC-7 in the cache and the backlog is seen twice"] },
   { id: "O1", title: "owed STOPS READING THE BACKLOG — after the migration every blocked row is there, and the list empties",
     suite: OWED_SUITE,
-    patches: [[OWED, "[[SOURCES.queue, \"QUEUE\"], [SOURCES.backlog, \"BACKLOG\"]]", "[[SOURCES.queue, \"QUEUE\"]]"]],
+    /* REPOINTED 2026-09-19 (M0-73): owed reads the plan's files over ledger.mjs' `PIPELINE` (cache, then
+       backlog) and takes its rows from `pipelineRows`; the arm drops the backlog from that loop — the
+       same property, at its one site. The old anchor went to ZERO (m025-arm-anchor-witness A4 caught it). */
+    patches: [[OWED, "  for (const l of PIPELINE) {", "  for (const l of PIPELINE.slice(0, 1)) {"]],
     mustFail: ["an unreadable BACKLOG is NAMED too (LED-6)", "a blocked row in the BACKLOG routed to the lane is owed, sourced BACKLOG (LED-6)"] },
 ];
 
