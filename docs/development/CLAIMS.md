@@ -14135,6 +14135,26 @@ must hold a position in the project (Membership v2 §7 Incomplete sections). (4)
 left open on purpose). (5) REC-136 (running) writes conclusion withdrawal: if it adds an act that writes a project's
 conclusion, that act joins `POSITIONAL_ACTS` and asks `#projectAuthority(..., "joined", ...)` — say so at its merge.
 
+## CLAIM 2026-09-18 RECORD (REC-137 — a case ratification's AUTHORITY is its signatures, which must include an OWNER of the publishing project; DELIVERY is carriage: a member with a role in the project, or the founder, never an administrator with no role)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-aee812fe065a38e23`, branch `worktree-agent-aee812fe065a38e23`,
+base `dd52609b`. `npm ci` in all three packages, each `node_modules` a real directory (4.8 GiB free after). Design:
+Membership v2 §7 *"A CASE RATIFICATION: who AUTHORISES it and who may DELIVER it"* (BOB #15), §4.9; DEC-72 cl. 5;
+DEC-33; AI Roles §3 rule 4. IDs minted with `tools/mintid.mjs`: C-57, IC-154. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` (`ratifyCaseDocument` only — the owner-signer check and the delivery check
+  through `#projectAuthority`, unchanged); `bio-plane/src/index.mjs` (`op=caseratify`'s handler only);
+  `bio-plane/checks/bio-checks.mjs` (refusal family C-57).
+- Tests: a new `bio-plane/test/case-authority.test.mjs` and its control driver; any suite that ratified a case without
+  an owner's signature or delivered it from outside the project — CORRECTED at its site with a dated reason, never
+  exempted. `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` floors only, moved from their
+  own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-154), `BIO_Membership_Architecture_v2.md` front matter and §7's block, `DEBT.md`
+  (D-429, raised — added to this claim 2026-09-18 when the `op=ratify` probe found it), this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `#projectAuthority`'s body (REC-134's, consumed unchanged), NOT `cite`/`sever`/
+`reinstate`/`promote` visibility (REC-138's, D-426), NOT `newgroup/`.
 ## CLAIM 2026-09-18 M0 (M0-67 — D-425: can the battery report green over a suite that printed FAIL?) — RELEASED
 
 Worker spawned by CONDUCT #5, isolated worktree `agent-aeae827f6d7997fa5`, branch
@@ -14223,3 +14243,20 @@ IDs minted with `tools/mintid.mjs`: IC-155, D-428.
 §7.9, and whether project ids should be plane-minted. (4) Tell DIST: a DISCLOSURE closing, open on deployed instances
 until the next cut. (5) REC-137 runs beside this: if it adds an act that names a project, it asks `Store#inSight` BEFORE
 `#projectAuthority` and returns `Store.#noSuchProject` — say so at its merge.
+## CLAIM 2026-09-18 RECORD (REC-137) — RELEASED
+
+released: 2026-09-18 by the REC-137 worker, branch `worktree-agent-aee812fe065a38e23`, base `dd52609b`, merged with
+origin/main `c0fc28e1` (M0-67, DIST 0.61.0) and then `ee9f201c` (REC-138, IC-155 — I3 34.0.0) before close-out; IC-154 re-based to 34.0.0. Baseline at `39785cda` (pristine but for this claim):
+**248/248 suites green · 15106 assertions**, no skip. After: the final battery line, strict coverage, the UI harness and the
+gates are in the worker's report to CONDUCT and IC-154. Paths as claimed; `src/index.mjs` was NOT touched (the store
+relays both refusals through the handler's existing path). Also: `bio-plane/scripts/coverage.mjs` REGISTER_FLOOR moved
+from the strict print on the committed merge with REC-138 (1414 -> 1419 · 241 -> 242 · 242 -> 243 · run 204 -> 205);
+`test/casesign.test.mjs` CORRECTED at its site with a dated reason; `DEBT.md` D-429 raised. `civicos-ui/check-refusal-codes.mjs`
+floors NOT moved (the harness is green; C-57.1's region is read and checked). IDs minted with `tools/mintid.mjs`: C-57,
+IC-154, D-429.
+**FOR CONDUCT:** (1) RESOLVE IC-154 against I3 as read at resolution (proposed MAJOR on 33.0.0, IC-137's precedent).
+(2) Flip REC-137 at integration. (3) Carry D-429 to BOB: may a PROJECT's own bundle be published through `op=ratify` at all
+(recommendation: no — refuse by type; a project publishes through its cases), and if so under the case rule. (4) At
+REC-138's merge: its `inSight` precedes `#projectAuthority`; `op=caseratify`'s sight is REC-130's standing check at the
+facts read, upstream of both REC-137 refusals, pinned byte for byte in `case-authority.test.mjs` §0 — re-run that suite on
+the merged tree.

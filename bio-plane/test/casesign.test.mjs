@@ -705,6 +705,26 @@ const SIGNED_DOC_SHA = pub.caseDocument.doc_sha;   /* captured BEFORE ratificati
      byte-identical (ed25519 signing here is deterministic), so it is a retry by
      construction and could never reach this refusal — the adversary has to be a
      different signer, which is also the shape the refusal is actually about. */
+  /* CORRECTED 2026-09-18 BY REC-137, NEVER EXEMPTED. Omar was an enrolled
+     ADMINISTRATOR with no role in the publishing project, carrying his own
+     registered signature — and REC-137 (Membership v2 §7, *"A CASE RATIFICATION:
+     who AUTHORISES it and who may DELIVER it"*, BOB #15) now refuses BOTH halves of
+     that before the edition is even looked at: an administrator with no role may not
+     deliver (C-56.1), and a signature that is not an OWNER's is no authority for the
+     project's case (C-57.1). So the arm was reaching this refusal through two doors
+     that are now shut, and would have answered C-56.1 instead. It is about a SECOND
+     ATTESTATION, so it now drives exactly that: omar becomes a second OWNER of the
+     project through the roster ops (invited, joined, added by iris — the only owner,
+     so no vote is owed), and his own owner's signature over an already-ratified
+     edition must still be refused by name. REC-137's own suite drives the refusals
+     this arm used to fall through. */
+  for (const [q, what] of [
+    [`op=projectinvite&token=${IRIS}&projectId=${encodeURIComponent(PUBLISHING_PROJECT)}&handle=omar`, "iris invites omar"],
+    [`op=projectjoin&token=${OMAR}&projectId=${encodeURIComponent(PUBLISHING_PROJECT)}`, "omar joins"],
+    [`op=projectowneradd&token=${IRIS}&projectId=${encodeURIComponent(PUBLISHING_PROJECT)}&handle=omar`, "iris adds omar as an owner"]]) {
+    const r = rP(await GET(q));
+    if (!r || r.ok !== true) bail(what, r);
+  }
   const second = await POST(`op=caseratify&token=${OMAR}`,
     { caseId: CASE, edition: 1, expectedSha: SIGNED_DOC_SHA,
       sig: signCase("omar", CASE, 1, SIGNED_DOC_SHA) });
