@@ -1,12 +1,15 @@
 # DIST — resume here. Rewritten 2026-09-18 by the DIST standing lane, after cutting 0.59.0; amended the same day after 0.60.0.
 
-**LATEST: 0.61.0** (main `b57b8de2`, tag `v0.61.0` on the mainline). It closes REC-134 (IC-152: an administrator not in
-a project can no longer change it), a defect confirmed in 0.60.0's bytes. It carries the batched REC-132 (the founder's
-session gains an administrator's SIGHT; this is named new authority to read), REC-124 and REC-133. The plane is
-`9242208b…`; the members are byte-identical since 0.59.0. **Deploy requested of Bob through BOB; 0.61.0 supersedes
-the undeployed 0.59.0 and 0.60.0.** 0.60.0 (tag `v0.60.0`) closed REC-131. **NEXT CUTS OWED, each on landing:
-REC-137** (case ratification must carry an owner's signature) **and REC-138** (D-426, a hidden project
-distinguishable from a nonexistent one). The 0.59.0 notes below remain true of 0.59.0.
+**LATEST: 0.62.0** (main `2773ee27`, tag `v0.62.0` on the mainline). It closes REC-138 (IC-155: a hidden project answers
+exactly as a never-minted one at all 31 project-naming acts), a defect confirmed in 0.61.0's bytes. The plane is
+`0b9a9f2c…`; the members are byte-identical since 0.59.0. **Deploy requested of Bob through BOB; 0.62.0 supersedes the
+undeployed 0.59.0 to 0.61.0.** Earlier cuts: 0.61.0 closed REC-134 (and carried REC-132, whose founder's sight is
+new read authority, REC-124 and REC-133); 0.60.0 closed REC-131.
+**REC-136 IS HELD OFF MAIN** on `conduct/rec-136-held` @ `783054ac` (DIST's request; CONDUCT agreed). A plane
+carrying it refuses civicos-ui's conclude NO_CLAIM until UI-65 lands, and UI-65 builds on that branch and lands with
+it or ahead of it. **Before any cut, verify `783054ac` is not an ancestor of main unless UI-65 is on main.** Holding
+it OFF MAIN, instead of cutting from a pre-merge commit, keeps tags on the mainline.
+**NEXT CUT OWED: REC-137** (case ratification must carry an owner's signature), on landing. The 0.59.0 notes below remain true of 0.59.0.
 
 The previous version (BOB #15, same day) stood the lane up; it is in git history. Read `CLAUDE.md`, then
 `kickoffs/DIST.md`, then this. **Everything below is a POINTER measured 2026-09-18; re-measure before acting.**
