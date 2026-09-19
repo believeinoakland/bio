@@ -17021,3 +17021,34 @@ commit. **The one point NEW lost is a gap in the reading, not in the reader:** n
 archive — only `BACKLOG.md`'s own preamble does. Sent to SCHEDULER to add to its kickoff. **What it does not establish:**
 retention over a long session, and anything about DIST, FLEET or workers (still owed). One author wrote the questions
 and the key.
+
+## M-65 · 2026-09-19 · THE READINESS EXAM FOR DIST, FLEET AND WORKER — and a defect in the instrument itself (BOB #16)
+
+**Instrument.** M-63/M-64's, run by a subagent under BOB #16's brief, which WROTE the questions and keys. That is a
+second author, which weakens the single-author confound M-60, M-63 and M-64 each carried. 20 questions per lane; NEW =
+`CLAUDE.md` + the lane's kickoff (+ `WORKER.md` for FLEET, whose reading order names it); CTRL = `CLAUDE.md` only;
+graded blind by a separate clean-room session.
+
+| lane | kickoff | NEW /40 | CTRL /40 | reading ≈ tokens |
+| --- | --- | --- | --- | --- |
+| DIST | 13,832 B | **40** | 24 | 4.8k |
+| FLEET | 8,553 B (+ `WORKER.md`) | **40** | 24 | 11.2k |
+| WORKER | 23,316 B | **40** | 23 | ~6k by bytes (the 2.3k delta is low: the NEW arm did not re-read CLAUDE.md) |
+
+**What it establishes.** Each kickoff covers every act asked of it; the control's losses show what each adds (e.g. DIST:
+deploying the plane before `agent-worker`; WORKER: not rebuilding the bundle after a `src/` change). **Every NEW arm hit
+the ceiling, so the exam cannot find a gap it did not ask about.** The question author also noted four inconsistencies it
+kept out of the exam as ambiguous, each sent to the owning lane: FLEET.md routes Bob's decisions "via CONDUCT" (§3 says
+BOB); DIST.md and FLEET.md route sequencing to CONDUCT (the order is SCHEDULER's); DIST.md's gate steps 6 (the baton
+lock, removed on purpose) and 10 (tag after deploy, where the 2026-09-19 mechanism tags on the cut branch before) are stale;
+DIST.md's access-widening line reads both before and after the deploy.
+
+**THE INSTRUMENT'S DEFECT, FOUND BY THIS RUN AND CHECKED BACK AGAINST THE EARLIER ONES.** `--allowedTools Read` does not
+confine an arm: the user-level `permissions.defaultMode: "auto"` let every arm run Bash, and two of this run's controls
+listed the parent directory, where other arms' files and the keys were. **Read at the transcripts** (each headless run's
+`session_id` names a `.jsonl` under `~/.claude/projects/`): in M-63 and M-64 EVERY arm used Bash (`cat`, `sed`, `ls`), and
+**NONE read a file outside its own directory**. M-64's CTRL ran `ls -la ..` and saw the key's NAME, and read nothing there;
+this run's two controls did the same and read nothing (per its report). So M-63 and M-64 stand. **M-60 is UNDETERMINED**,
+because its arms' transcripts were not checked (BOB #15's run). **The corrected instrument:** add
+`--disallowedTools Bash Glob Grep` to every arm and every grader, and keep each arm's directory out of reach of the keys
+(sibling directories, never children of one that holds a key).

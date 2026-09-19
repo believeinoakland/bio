@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1195 rulings across 94 documents.
+1196 rulings across 94 documents.
 
 ## DEC-
 
@@ -644,6 +644,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/BOB-INBOX-drained.md:959`
 - **D-431** · 2026-09-18 — "D-431 RULED"). **SCHEDULER's spawn condition is met.** **B. DISCOVERABLE or HIDDEN, and the request to join** — `BIO_Membership_Architecture_v2.md` §7, item **7.14** (Bob's ruling of 2026-09-18). Decided there, each from an existing ruling: the setting is an OWNER'S recorded act, not a document  
   `docs/archive/ledgers/BOB-INBOX-drained.md:961`
+- **D-431** — D-431 RULED** and folded into `BIO_Publication_v0_1.md` §3 rule 2 (second note): `op=ratify` publishes a FINDING only at a sha a RATIFIED case pins; any other bundle only as EVIDENCE a pinned finding rests on; what crossed stays, COUNTED. - **FLEET's scratch questions**: a scratch purge takes scratch IDENTITY, a…  
+  `docs/development/kickoffs/BOB-NEXT.md:17`
 - **D-431** · 2026-09-19 — design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 2, the second note ("DECIDED 2026-09-19 by BOB #16 (D-431)"), folded at `09ec7a86`, with rule 1 (one-way).  
   `docs/development/QUEUE.md:89`
 - **D-431** — ified case rests on is refused, byte-identical for an unseen and a never-minted project; `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, with its reason; the (c) count is stated in the landing; D-431 CLOSED.  
@@ -2287,8 +2289,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1277`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1289`
-- WHEN A RELEASE REACHES OTHER GROUPS — RULED by Bob:** *"The release may be deployed, obviously.  
-  `docs/development/kickoffs/BOB-NEXT.md:39`
+- DECIDED THIS SESSION, told to Bob as his to overrule - A new project's creator CHOOSES discoverable or hidden, with neither preselected (supersedes BOB #15's recommended default). - Every project existing today stays HIDDEN until its owner changes it (§7.9's promise to the people who created them).  
+  `docs/development/kickoffs/BOB-NEXT.md:68`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:77`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
