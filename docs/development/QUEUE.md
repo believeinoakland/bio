@@ -34,7 +34,7 @@ BOB appends a designed item, a correction or an order change here, with its inte
 | 4 | REC-142 | new | running | a correction to just-landed work (REC-124, REC-136, UI-65); its dependency REC-136 is ON MAIN since c7f2df67 |
 | 5 | REC-144 | new | running | UI-65's other follow-up, beside REC-142: the question page cannot show a no-project conclusion without this read |
 | 6 | UI-67 | new | queued | after REC-144, whose read it renders |
-| 7 | REC-145 | new | queued | a §7.9 disclosure: the refusal it removes tells a member a hidden project cites the question; with the disclosure rows |
+| 7 | REC-145 | new | running | a §7.9 disclosure: the refusal it removes tells a member a hidden project cites the question; with the disclosure rows |
 | 8 | D-430 | new | running | the precondition of LED-6's step (4); exempt from the M0 hold with LED-6 |
 | 9 | LED-6 | 1 | queued | the pipeline migration, SCHEDULER's own hand act, after D-430 |
 | 10 | LED-7 | 2 | queued | the debt fold: until it runs, ~222 open DEBT rows — among them disclosure defects that would outrank features — stand outside the order, so the plan cannot be proved in order without it |
@@ -131,7 +131,7 @@ scope: `civicos-ui/app.html`'s question page reads the field from `getProjection
 accepts-when: the UI harness concludes an inquiry with no project against the real plane and the question's page shows it; a withdrawal clears it without a reload. `bound-sweep` ARM G stays green with NO new CARRIED-OUT-WHOLE entry — the read is uncapped, so an exemption added to pass ARM G is the defeat. NEGATIVE CONTROL: drop the cache invalidation, and the withdrawal arm fails naming it.
 added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry `7c150df0`, item 2; id minted with `node tools/mintid.mjs UI`).
 
-### REC-145 · queued — **DEC-63 AS AMENDED BY BOB (2026-09-18: *a project does not own a line of inquiry*): for a run whose context is an INQUIRY the verdict consults NO project; a PROJECT context keeps the joined gate.** Verified by BOB #16: the gate still refuses `AI_RUN_NOT_PROJECT_MEMBER` over a question cited only by projects the member has not joined — which also carries the one bit about hidden projects §7.9 forbids. — owner RECORD.
+### REC-145 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: `Store#aiRunProjectGate` and `airun.mjs projectGate` are on `main` and still consult projects for an inquiry context; REC-139's sighted count is on `main`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **DEC-63 AS AMENDED BY BOB (2026-09-18: *a project does not own a line of inquiry*): for a run whose context is an INQUIRY the verdict consults NO project; a PROJECT context keeps the joined gate.** Verified by BOB #16: the gate still refuses `AI_RUN_NOT_PROJECT_MEMBER` over a question cited only by projects the member has not joined — which also carries the one bit about hidden projects §7.9 forbids. — owner RECORD.
 order: 7 · a §7.9 disclosure: the refusal it removes tells a member a hidden project cites the question; with the disclosure rows (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 — a refusal removed; the integrator classifies (IC minted with `node tools/mintid.mjs IC`)

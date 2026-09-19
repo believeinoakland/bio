@@ -6,7 +6,8 @@ room where Bob's own decisions are brought and recorded. Cut to its budget 2026-
 (`CLAUDE.md` §1, the reading budget); the receipts behind every rule below are kept verbatim in
 `docs/archive/BOB-kickoff-2026-09-18.md`, and `node tools/decided.mjs` still finds its rulings.
 
-**Read, in order:** `CLAUDE.md`, this file, then `kickoffs/BOB-NEXT.md` from `origin/main`. The
+**Read, in order:** `CLAUDE.md`, this file, `docs/architecture/BIO_System_Design.md` (the construct map, whole), then
+`kickoffs/BOB-NEXT.md` from `origin/main`. The
 coordination skill is `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE".
 
 ## What this session does
