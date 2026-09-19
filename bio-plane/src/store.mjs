@@ -702,93 +702,6 @@ export class Store extends DurableObject {
         this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
     }
 
-    /* REC-104: `content.chain_kind`, a GENERATED column (schema.mjs says why), added
-       to a `content` table created before it existed. THREE THINGS ABOUT THIS BLOCK
-       ARE LOAD-BEARING AND NONE IS STYLE.
-       (1) IT RUNS BEFORE THE SCHEMA, not in the additive ALTER list further down,
-           because the schema's CREATE INDEX on the column would otherwise hit the
-           OLD table and throw inside blockConcurrencyWhile — the failure the DROP
-           loop above records, which bricks the Durable Object rather than failing
-           a request.
-       (2) IT READS `table_xinfo`, NOT `table_info`. A generated column is HIDDEN
-           from `table_info`, which is what every other additive migration here
-           reads — so that spelling would never see the column it had added and
-           would re-ALTER on every boot, which SQLite refuses as a duplicate.
-       (3) THE COLUMN'S DEFINITION IS READ OUT OF THE SCHEMA TEXT, never restated.
-           A fresh store gets the column from CREATE TABLE and a migrated one from
-           this ALTER; a second copy of the expression here would be two
-           definitions of one column that could disagree, which is the exact
-           drift the generated column was chosen to make impossible.
-       No backfill: the engine computes the value for every existing row. */
-    {
-      const have = [...this.sql.exec(`PRAGMA table_xinfo(content)`)].map((r) => r.name);
-      if (have.length && !have.includes("chain_kind")) {
-        const stmt = bare.split(";").map((x) => x.trim())
-          .find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
-        const col = stmt && stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim())
-          .find((l) => /^chain_kind\s/.test(l));
-        if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
-      }
-    }
-
-    for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
-
-    /* ================================================================ *
-     * REC-93 / IC-92 — THE OBSERVATION LOG'S FOLD, and it runs ONCE per store.
-     *
-     * `OBSERVATION-LOG-DESIGN.md` §4.4: *"`ai_run_log`'s rows are rows of this
-     * table with `authority_kind = run` … Whether the old table is dropped or
-     * kept as a view is the landing's call; TWO WRITERS IS NOT."* This landing
-     * drops it, because a kept-but-dead table is a place for the two to drift
-     * back apart and nothing reads it once the reader moved.
-     *
-     * IT IS A DATA MOVE AND NOT AN APPEND, which is why it does not go through
-     * `#observe`. Those rows were written under the WEAKER RULE that existed
-     * when they were written — `ai_run_log` has no `result_ref` column at all —
-     * so putting them through today's refusals would refuse rows that are
-     * already in a coverage record. Re-judging history by a rule written after
-     * it is how a record loses the very evidence it was keeping.
-     *
-     * ORDER IS PRESERVED EXACTLY. `ORDER BY run, seq` on the read means every
-     * run's rows enter in their original sequence, so the store-wide `seq`
-     * SQLite assigns agrees with each run's own ordering — which is the whole
-     * of §4.4's *"the run's own ordering is the `seq` order within its
-     * authority"*, and what makes `op=airunlog`'s re-derived ordinal identical
-     * to the number it published before the fold.
-     *
-     * `subject_kind` IS `unstated` AND NOT A DERIVED KIND. The old table never
-     * recorded one. Deriving it from the level would be inventing a fact about
-     * rows already written, at the smallest possible scale and therefore the
-     * easiest to wave through.
-     *
-     * NOT RE-RUNNABLE AND NOT NEEDING TO BE: after the DROP the PRAGMA reports
-     * no columns and this block is skipped forever. A store created after this
-     * landing never had the table and skips it on its first boot. */
-    {
-      const old = [...this.sql.exec(`PRAGMA table_info(ai_run_log)`)];
-      if (old.length) {
-        this.sql.exec(
-          `INSERT INTO observation_log
-             (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
-              state, governed, condition, bound, terminal, result_kind, result_ref, detail)
-           SELECT l.at, 'machine', r.principal_claude, 'run', l.run, l.level, 'unstated', l.subject,
-                  l.state, l.governed, l.condition, l.bound, l.terminal, NULL, NULL, l.detail
-             FROM ai_run_log l LEFT JOIN ai_runs r ON r.run = l.run
-            ORDER BY l.run, l.seq`);
-        this.sql.exec(`DROP TABLE ai_run_log`);
-      }
-    }
-
-    {
-      const old = [...this.sql.exec(`PRAGMA table_info(published_bundles_preeditions)`)];
-      if (old.length) {
-        this.sql.exec(
-          `INSERT INTO published_bundles (bundle_id,edition,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored)
-           SELECT bundle_id,1,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored
-           FROM published_bundles_preeditions`);
-        this.sql.exec(`DROP TABLE published_bundles_preeditions`);
-      }
-    }
     /* CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so
        columns added after a store was first written need adding by hand. Done
        here rather than in a versioned migration ladder because these are
@@ -802,7 +715,32 @@ export class Store extends DurableObject {
     const memberCols = [...this.sql.exec(`PRAGMA table_info(members)`)].map((r) => r.name);
     if (memberCols.includes("name") && !memberCols.includes("cover"))
       this.sql.exec(`ALTER TABLE members RENAME COLUMN name TO cover`);
-    for (const [table, column, decl] of [
+    /* REC-143 — THE ADDITIVE COLUMNS ARE ADDED BEFORE THE SCHEMA RUNS, AND AGAIN AFTER IT.
+       Every release from 0.59.0 to 0.63.0 BRICKED an existing store: the schema carries
+       `CREATE INDEX IF NOT EXISTS inquiry_basis_content ON inquiry_basis(content_id)` (REC-90),
+       this list is what adds `content_id` to an `inquiry_basis` written before REC-82, and this
+       list used to run AFTER the schema — so on every pre-REC-82 store the index hit the OLD
+       table, threw `no such column: content_id` inside blockConcurrencyWhile, and the Durable
+       Object answered nothing. It is the failure the DROP loop's note above and the `chain_kind` block
+       below both record, arriving through the one list neither of them covered.
+       *
+       * ONE MECHANISM, NOT A SPECIAL CASE PER COLUMN. The sweep (MEASUREMENTS.md, REC-143) found
+       * three schema indexes on a column only this list adds — `inquiry_basis(content_id)`,
+       * `inquiry_basis_version_legs(content_id)`, `reading_text_source(calibrations)` — and the
+       * next one will be written by somebody who does not know this paragraph exists. So the
+       * WHOLE list runs first, for every table that already exists, and nothing a later landing
+       * appends to it can reintroduce the defect.
+       *
+       * THE SECOND PASS, AFTER THE SCHEMA, IS NOT REDUNDANT. A table the schema creates on this
+       * boot does not exist during the first pass, and many columns below live ONLY here and not
+       * in their table's CREATE (every `bundles` projection column, `members.handle`) — so a
+       * fresh store, or an old store gaining a table, gets them from the second pass. Both passes
+       * are guarded on PRAGMA and are therefore idempotent on every boot.
+       *
+       * ORDER WITHIN THIS FUNCTION: after the DROP loop and the published_bundles rename, so a
+       * table about to be rebuilt or renamed out of the way is never altered first — a renamed
+       * `published_bundles` reads as absent here and gets `delivered_by` from its new CREATE. */
+    const ADDITIVE_COLUMNS = [
       /* The membership model's member half. A COVER is what an administrator
          calls someone in the roster; a HANDLE is what the member chooses at
          enrolment and what the RECORD shows. Two names assigned by two parties
@@ -1095,10 +1033,105 @@ export class Store extends DurableObject {
          as UNDETERMINED, stated, through `#deliveredBy`. */
       ["published_bundles", "delivered_by", "TEXT"],
       ["case_documents", "delivered_by", "TEXT"],
-    ]) {
-      const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
-      if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    ];
+    const addColumns = () => {
+      for (const [table, column, decl] of ADDITIVE_COLUMNS) {
+        const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
+        /* An absent table reads as no columns: it is skipped here and the schema creates it. */
+        if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+      }
+    };
+    addColumns();
+
+    /* REC-104: `content.chain_kind`, a GENERATED column (schema.mjs says why), added
+       to a `content` table created before it existed. THREE THINGS ABOUT THIS BLOCK
+       ARE LOAD-BEARING AND NONE IS STYLE.
+       (1) IT RUNS BEFORE THE SCHEMA, not in the additive ALTER list further down,
+           because the schema's CREATE INDEX on the column would otherwise hit the
+           OLD table and throw inside blockConcurrencyWhile — the failure the DROP
+           loop above records, which bricks the Durable Object rather than failing
+           a request.
+       (2) IT READS `table_xinfo`, NOT `table_info`. A generated column is HIDDEN
+           from `table_info`, which is what every other additive migration here
+           reads — so that spelling would never see the column it had added and
+           would re-ALTER on every boot, which SQLite refuses as a duplicate.
+       (3) THE COLUMN'S DEFINITION IS READ OUT OF THE SCHEMA TEXT, never restated.
+           A fresh store gets the column from CREATE TABLE and a migrated one from
+           this ALTER; a second copy of the expression here would be two
+           definitions of one column that could disagree, which is the exact
+           drift the generated column was chosen to make impossible.
+       No backfill: the engine computes the value for every existing row. */
+    {
+      const have = [...this.sql.exec(`PRAGMA table_xinfo(content)`)].map((r) => r.name);
+      if (have.length && !have.includes("chain_kind")) {
+        const stmt = bare.split(";").map((x) => x.trim())
+          .find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
+        const col = stmt && stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim())
+          .find((l) => /^chain_kind\s/.test(l));
+        if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
+      }
     }
+
+    for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
+
+    /* ================================================================ *
+     * REC-93 / IC-92 — THE OBSERVATION LOG'S FOLD, and it runs ONCE per store.
+     *
+     * `OBSERVATION-LOG-DESIGN.md` §4.4: *"`ai_run_log`'s rows are rows of this
+     * table with `authority_kind = run` … Whether the old table is dropped or
+     * kept as a view is the landing's call; TWO WRITERS IS NOT."* This landing
+     * drops it, because a kept-but-dead table is a place for the two to drift
+     * back apart and nothing reads it once the reader moved.
+     *
+     * IT IS A DATA MOVE AND NOT AN APPEND, which is why it does not go through
+     * `#observe`. Those rows were written under the WEAKER RULE that existed
+     * when they were written — `ai_run_log` has no `result_ref` column at all —
+     * so putting them through today's refusals would refuse rows that are
+     * already in a coverage record. Re-judging history by a rule written after
+     * it is how a record loses the very evidence it was keeping.
+     *
+     * ORDER IS PRESERVED EXACTLY. `ORDER BY run, seq` on the read means every
+     * run's rows enter in their original sequence, so the store-wide `seq`
+     * SQLite assigns agrees with each run's own ordering — which is the whole
+     * of §4.4's *"the run's own ordering is the `seq` order within its
+     * authority"*, and what makes `op=airunlog`'s re-derived ordinal identical
+     * to the number it published before the fold.
+     *
+     * `subject_kind` IS `unstated` AND NOT A DERIVED KIND. The old table never
+     * recorded one. Deriving it from the level would be inventing a fact about
+     * rows already written, at the smallest possible scale and therefore the
+     * easiest to wave through.
+     *
+     * NOT RE-RUNNABLE AND NOT NEEDING TO BE: after the DROP the PRAGMA reports
+     * no columns and this block is skipped forever. A store created after this
+     * landing never had the table and skips it on its first boot. */
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(ai_run_log)`)];
+      if (old.length) {
+        this.sql.exec(
+          `INSERT INTO observation_log
+             (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
+              state, governed, condition, bound, terminal, result_kind, result_ref, detail)
+           SELECT l.at, 'machine', r.principal_claude, 'run', l.run, l.level, 'unstated', l.subject,
+                  l.state, l.governed, l.condition, l.bound, l.terminal, NULL, NULL, l.detail
+             FROM ai_run_log l LEFT JOIN ai_runs r ON r.run = l.run
+            ORDER BY l.run, l.seq`);
+        this.sql.exec(`DROP TABLE ai_run_log`);
+      }
+    }
+
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(published_bundles_preeditions)`)];
+      if (old.length) {
+        this.sql.exec(
+          `INSERT INTO published_bundles (bundle_id,edition,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored)
+           SELECT bundle_id,1,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored
+           FROM published_bundles_preeditions`);
+        this.sql.exec(`DROP TABLE published_bundles_preeditions`);
+      }
+    }
+    /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */
+    addColumns();
     /* classification was REMOVED from the Information catalog on 2026-07-27
        (Bob's decision, recorded in the state doc v30 entry). fact/analysis/
        judgment is a stance a citing project takes toward a passage, not a
