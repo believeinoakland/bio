@@ -14395,3 +14395,17 @@ publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no contr
 with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
 concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
 either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.
+
+## CLAIM 2026-09-18 M0 (D-430 — the plan's row checkers read cache ∪ backlog through `ledger.mjs`' one lister)
+
+Worker spawned by CONDUCT #6, worktree `agent-ae83cc9dbe0276399`, branch `worker/d-430`, base `3dee1fdb`. Design:
+`VERIFICATION.md` (admitted for M0), `WORK-PIPELINE.md` §1–§2, DEBT D-430. Paths:
+
+- M0 (own): `tools/rowdesign.mjs`; `tools/rowsubstrate.mjs` (the same reader, §2e — the class sweep); `tools/ledger.mjs`
+  only to add the one lister `pipelineRows` and `strayHeadings`; `tools/plancheck.mjs` §2's milestone and interface checks
+  and §2d/§7's row-design block only.
+- Tests: `bio-plane/test/pipeline-readers.test.mjs` and `pipeline-readers.control.mjs` (new); `planning-hygiene.test.mjs`
+  §4's labels; `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own printed figures.
+- Docs: `docs/development/DEBT.md` D-430's row (closed and archived), `DECIDED.md` regenerated; this block.
+
+NOT a row of `QUEUE.md` (the `done` flip is CONDUCT's), NOT LED-6's migration (SCHEDULER's), NOT the live `BACKLOG.md`.
