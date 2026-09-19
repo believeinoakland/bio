@@ -1,62 +1,65 @@
-# SCHEDULER-NEXT — the resume for the next SCHEDULER, in the OTHER Claude Code account (written 2026-09-19 by SCHEDULER #1 at Bob's stand-down)
+# SCHEDULER-NEXT — the resume for the next SCHEDULER (written 2026-09-19 by SCHEDULER #2, refreshed as the day runs)
 
-Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then this, then
-`QUEUE.md` whole. Everything below was measured on `origin/main` at the commit that carries this file. It is a pointer:
-re-measure before you act on any line (`CLAUDE.md` §1).
+Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` — **its "Mechanics learned" section is the practical half and it grew
+four entries today** — then this, then `QUEUE.md` whole. Everything below was measured on `origin/main`. It is a
+POINTER: re-measure before you rest anything on it (`CLAUDE.md` §1).
 
-## Why this lane stopped
+## The one thing that is not this lane's and blocks two others
 
-Bob, 2026-09-19, via BOB #16: at 91% of weekly usage every lane spins down, saves everything, and stops; development
-moves to the other account. SCHEDULER #1 finished the batch it held, committed it conserved, deleted its self-wake, and
-started nothing else.
+**CONDUCT AND DIST CANNOT PUSH.** Both sessions' `git push` is refused by the Claude Code auto-mode classifier —
+`[Data Exfiltration]` for a plain branch push, `[Production Deploy]` for a branch-to-main. It is the harness's gate,
+not the repo's: no `ask` rule exists on push and `CLAUDE.md` §4 records that pushing is not gated. DIST's began
+mid-session, after earlier pushes of the same branch succeeded. **SCHEDULER can push** — every commit below landed.
+
+Consequences you inherit: REC-151 is FINISHED on `worktree-agent-a59a4cdfa1b3d4dd3` and cannot land; **D-432 cannot be
+placed until it does** (its DEBT row rides that branch, and naming a `D-` id before its row exists fails `mintid.test`'s
+prose-floor arm); 0.66.0 is cut, signed, deployed and live-verified but `main`'s `release/` still reads 0.65.0; and
+CONDUCT is spawning NO workers, because a worker inherits its parent's gate and would strand its branch on this disk.
+
+**Neither lane asked anyone to push for them, and you must not.** A peer's blocked push performed by another session
+routes around a permission decision that belongs to the user. Sparky has been told; it is theirs to clear.
 
 ## The plan, measured
 
-- **The pipeline is LIVE** (LED-6 done at `c25cac55`): `QUEUE.md` is the cache (8 rows), `BACKLOG.md` holds the rest in
-  order, `docs/archive/ledgers/QUEUE-closed.md` holds what is done. `node tools/ledger.mjs invariants` reads P1–P5 PASS,
-  0 armed FAIL. Rows cut to their fields name `docs/archive/ledgers/QUEUE-cut-2026-09-19.md`, which holds their full text.
-- **Cache:** REC-152 and REC-151 `running`; then UI-67, UI-72, LED-7, REC-135, MK-3, REC-146 `queued`.
-- **Backlog:** 33 rows. The top is D-158 (placed by LED-7 batch 1), then MK-5, M0-71, REC-147 (blocked on M0-71's
-  measured gate), UI-68, REC-148, UI-69, REC-149, REC-150, UI-70, UI-71, REC-122, CAP-11, FW-20, CPDF-3, DIST-5, the M0
-  rows (M0-77 first), then the blocked tail (SK-5, UI-60, REC-15, UI-17).
-- **Ordering rule in force** (BOB #16, while usage was short): disclosure and authority rows first, then corrections to
-  landed work, then features, then M0.
-- **TRACKED ELSEWHERE** (end of `QUEUE.md`): DS-1/2/3, FL-6, PL-16 — ids allocated by the archived IS build plan.
+- **Cache (8):** REC-151 `running` (CONDUCT's, real WIP, not stale), then UI-67, UI-72, LED-7, REC-135, MK-3, REC-146,
+  D-158. Seven runnable — well above the four the kickoff requires, so no replenish is owed.
+- **Backlog (38), in order:** D-270, D-136, M0-78, D-254, D-116, LED-8, COFF-13, then MK-5 and the rest unchanged from
+  SCHEDULER #1's order. **Every one of the first seven was placed today and each `order:` line says why it is there.**
+- **`node tools/ledger.mjs invariants`:** P1–P5 PASS, 0 armed FAIL. `plancheck` bare: 0 fail, 4 warn.
+- **DEBT.md: 208 open** (218 at the start of 2026-09-19). Count `^| D-` as **LINES, not unique ids** — unique-counting
+  hides the two registered id collisions, which is how they were found.
 
 ## Owed acts, in order
 
-1. **Completions in flight.** REC-152 was in CONDUCT #6's full gate, and REC-151 was live, when the lanes stopped. When
-   their landing shas reach you, close each in ONE commit: verify, archive, refill (`kickoffs/SCHEDULER.md`, "Mechanics").
-   If a row reads `running` with no live worker, read its branch before concluding anything (`QUEUE.md`'s preamble).
-2. **LED-7, the debt fold — this lane's act** (Bob, 2026-09-19; `WORK-PIPELINE.md` §3). DEBT.md holds **218 open rows**
-   (223 before batch 1). **Batch 1 (10 rows):** closed in fact D-141, D-428, D-193, D-42; placed D-158; routed to BOB
-   and NOT moved D-325 (admin-class confinement vs the witness posture) and D-52 (the export-notification channel);
-   carried to batch 2, NOT moved, D-134 and D-136 (admin ops' session reachability: `SESSION_OPS` and the ballot's call
-   site need a trace) and D-92 (an intermittent 403, undiagnosed since 2026-07-30). The security/disclosure candidates
-   still open, by a keyword scan (a candidate list, not a verdict): D-55, D-60, D-80, D-116, D-126, D-138, D-148, D-149,
-   D-155, D-177, D-195, D-182, D-199, D-203, D-226, D-235, D-339, D-284, D-306, D-353, D-355, D-359, D-356, D-414, D-404,
-   D-396. Take ~20 per batch, each verified at the code, each out by one of the three doors in the same commit; report
-   counts to BOB (in / closed / placed / limitation).
-3. **D-325 and D-52 need BOB's decision.** Tell BOB in your first message; they were routed in the batch-1 commit
-   message and not yet by `SendMessage` when the stop came.
-4. **CONDUCT-NEXT.md line 34** still describes the old "THE BUILD ORDER table". CONDUCT #6 said it would fix this at its
-   handoff; check.
+1. **When CONDUCT's push clears, close REC-151 AND place D-432 in the SAME commit.** CONDUCT sends the merge sha; verify
+   it is an ancestor of `origin/main`, mark done, archive, refill, and write D-432's row in the same act.
+2. **LED-7 continues.** Batches 2–7 landed today: 218 → 208, every exit named, nothing deleted. **The character of the
+   work has changed and this is the most useful thing on this page:** the closable rows are gone from the top of the
+   file and the survivors are design-bound. Across batches 5–7, eleven rows measured and two closed. **So throughput is
+   now gated on BOB's rulings, not on your reading** — the useful act is sharpening each survivor until its decision is
+   a single stated question, then routing it. Do not mistake a low close-count for a slow batch.
+3. **Awaiting BOB's ruling, routed and NOT placed:** D-134 (placeable the moment D-136 lands, and not before — §4.7),
+   D-226, D-306, D-52 with D-126 (rule together; D-126 is D-52's parent), D-55, D-80, D-195, D-148 with D-149.
+4. **Carried with their next act named:** D-60 (one trace: does monitoring/dedup/contemporaneity read the NORMALISED
+   digest or the raw one), D-92 (a bounded live probe of `op=file` under sequential load), D-199 (walk all five DEC-55
+   points; two verified built), D-235 (its (b) survives; and its delegated `op=basisversions` finding has NO owner),
+   D-177 and D-182 (both name their own trigger).
 
-## Process lessons not written anywhere else
+## What this session got wrong, because you will be offered the same moves
 
-- The self-wake loop is cheap only if the no-op turn is ONE fetch and one line. Every write costs a gate run of about
-  4–6 minutes. Batch the closes that arrive together into one commit.
-- **Weekly usage is the binding limit, not context.** At 91% the lanes stopped with context to spare. Pace the fold by
-  usage. Batches of 20 rows cost most of a context window at the verification depth this lane uses.
-- A row's size budget (2 KiB backlog, 3 KiB cache) fits fields, not briefs. Write new rows as fields from the start
-  (title, order, milestone, interface, design, depends-on, accepts-when with its control), and put any history in the
-  commit message.
-- When CONDUCT spawns a P0 ahead of the order (REC-143 did), re-place it first at your next act and say why on its
-  `order:` line.
-- The order audit's strongest finds were claims no tool could see: a row spliced into prose (UI-60), stale blockers
-  (CPDF-3, VF-7), a state contradicting its own text (SK-5). Re-read the rows, and do not stop at running the tools.
+- **I read a datum backwards.** LED-8's scope said to repair the id collisions "against freshly minted ids"; I cited
+  D-124's *"renumbered from a colliding D-122"* as proof the repair must be done all at once, when it actually shows
+  **renumbering is the move that already failed**. BOB ruled it: DISAMBIGUATE, never renumber an id anything cites.
+- **I forwarded a row's premise without measuring it** (D-55) and marked it triaged. `CLAUDE.md` §5 binds a DISPOSITION
+  that inherits a claim exactly as it binds the row.
+- **I counted text and called it behaviour** (D-203): a grep over a file that is half commentary answers a question
+  about text. Stripping comments gave 0 live hits and the row was closable. Both mechanics are now in `SCHEDULER.md`.
+- **The tool refused me twice on one row and was right both times** (D-359). `archive` rejects a disposition declaring
+  residue — including residue words inside a PRIOR disposition you appended. The fix is the documented one: move the
+  prior disposition VERBATIM into the description cell, and row the real residue under its own id first.
 
 ## Your first acts
 
-`git fetch origin`; confirm `origin/main:docs/development/kickoffs/SCHEDULER.md` line 1. Arm the self-wake and its 5-day
-renewal (`CLAUDE.md` §4). Tell CONDUCT and BOB you are up, run `node tools/ledger.mjs invariants`, then take owed act 1.
+`git fetch origin`; confirm `origin/main:docs/development/kickoffs/SCHEDULER.md` line 1. Arm the self-wake (every 30
+minutes) and its 5-day renewal (`CLAUDE.md` §4). Tell CONDUCT and BOB you are up. Run `node tools/ledger.mjs
+invariants`. Then take owed act 1 if CONDUCT can push, and LED-7 if it cannot.
