@@ -30,6 +30,16 @@ scope: **THE BRANCH IS EVIDENCE, NOT A MERGEABLE ARTIFACT.** `origin/worktree-ag
 accepts-when: each of the six answers with a DEC-49 row (`code`, `check`, `translation`); the five send a true sentence under the three-sentence rule; `refusal-wire.test.mjs`' set-pin is CORRECTED with its reason and still fails BOTH ways. How a liar passes it: one generic code for all six, so each op's is pinned by name. NEGATIVE CONTROL: restore the single condition, and the five-op arm fails naming them.
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found by CONDUCT #7; keeps its `D-` id).
 
+### D-136 · queued — **THE §4.7 VOTE CANNOT BE CAST BY A PERSON, AND ON THE ONE REACHABLE PATH THE CALLER NAMES THE VOTER.** `adminendorse`, `adminremove` and `membercaps` are `["admin","probe"]`, in no session set; `by` is stamped only for `PROJECT_ACTIONS` plus two. Seven releases of governance arithmetic rest on attributions the caller supplies. — owner RECORD.
+order: SECOND. A forgeable governance vote outranks the hole below it. Below D-270 on the GOVERNED TEXT, not my judgement — §4.7's *"Until it lands, the plane must not tell a member that this absence is a decision"* IS D-270's sentence (c), so D-270 precedes it (SCHEDULER #2, 2026-09-19)
+milestone: M8
+interface: I3 — session reach and a `by` stamp on three ops; the integrator mints and classifies it.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7, the block "THE SECTION 4.7 VOTE CANNOT BE CAST BY A PERSON TODAY" (BOB #17, `95fb3e4c`).
+depends-on: none. **D-134 is NOT beside this row:** its surface is placeable only ONCE THIS LANDS (§4.7) — a surface over an unfenced act is a second path in.
+scope: **ONE LANDING; THIS ROW REFUSES TO BE SPLIT.** Server-stamp `by` from the session on `adminendorse`, `adminremove` AND `membercaps` (§4.9's capability edit, same bearer-only state) and give all three session reach, together. Either half alone is worse than neither: stamping without reach makes the vote unreachable; reach without stamping leaves it forgeable. D-421's class (C-32.14/C-32.15).
+accepts-when: a signed-in administrator casts an endorsement, a removal vote and a capability edit, each stamped as THEM by the server; a bearer credential naming another administrator as `by` is REFUSED; the arithmetic still refuses an addition without consensus. How a liar passes it: honouring a sent `by` for a session caller, so the suite drives one sending another's id. NEGATIVE CONTROL: drop the stamp, and the forged-voter arm fails by name.
+added: 2026-09-19 · SCHEDULER #2 (LED-7; BOB #17's ruling `95fb3e4c`; keeps its `D-` id).
+
 ### M0-78 · queued — **TWO NEGATIVE CONTROLS MEASURE NOTHING: `caseproduction.control.mjs` arms (C) and (H) THROW INSIDE THE FIXTURE, on the old sources too, so their declared `mustFail` assertions are never evaluated and the control line claims coverage the evidence base does not have.** CONDUCT #7, 2026-09-19. — owner M0 / VERIFY.
 order: AHEAD OF FEATURES though its prefix is M0 — a control that cannot fail makes the record claim more than it can support, which CLAUDE.md §2 grades worse than a missing feature. BOB #16's M0-last rule was written for M0 BUILD items, not an evidence-base hole. Placed HIGH **provisionally**; the doctrine call is ROUTED TO BOB (SCHEDULER #2, 2026-09-19)
 milestone: M0
