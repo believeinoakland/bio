@@ -14596,6 +14596,12 @@ byte-identical for BOB, CONDUCT, SCHEDULER, DIST, FLEET, M0, RECORD, UI and a no
 48/0 (A8 repointed), `ledger.control.mjs` 156/0 (O1 repointed), every restore byte-identical. **Built:** `owed.mjs`
 takes the plan's blocked rows from `pipelineRows`; `mintid.mjs`' DEC, IC and M corpora read `BACKLOG.md`. **Not done:**
 the QUEUE row's `done` flip (CONDUCT's); LED-6 step (4) (SCHEDULER's).
+**SUPERSEDING FIGURES, after a second merge of origin/main (REC-145 in) at `61f691bb`:** REGISTER_FLOOR collided (1462
+mine, 1464 main's), collapsed to ONE key and re-read on the committed merge: `arms 1474/1464 · classified 247/247 ·
+corpus 248/248`, `floor 210/210`, moved to 1474 at `21c4dbc8`, re-read `1474/1474`, exit 0. Battery at `21c4dbc8`:
+**256/256 suites green · 15726 assertions passing** (run 17732.829b24; an earlier run of the same tree went 254/256
+while the machine suspended mid-run, walkfloor at 3841 s — its two reds, `monitor-cadence` 59/0 and `owed-controls` 41/0,
+pass alone). `civicos-ui/test/run.mjs` exit 0 on the merge.
 
 ## CLAIM 2026-09-19 RECORD (REC-145 — DEC-63 as amended by Bob: a run whose context is an INQUIRY consults NO project; a PROJECT context keeps the joined gate; a §7.9 disclosure)
 
