@@ -103,6 +103,47 @@ run out of band whenever CONDUCT has integration capacity between area items.
 
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
+**2026-09-19 · BOB #16 · D-431 RULED; FLEET'S TWO SCRATCH QUESTIONS ANSWERED — THREE ITEMS, M8 and M0.** Decided by
+this lane from rulings already made, each read before deciding: `BIO_Publication_v0_1.md` §3 rule 2 (*"Only findings
+that are part of a project can be published"*, DEC-72) and its D-429 note; §3 rule 1 (one-way); Membership v2 §4.7
+(administrator consensus). Nothing here is Bob's to answer; he is told as a decision made. **The home-document fold of
+item 1 waits for REC-140 to land on main**, because REC-140's branch rewrites the same lines of §3 rule 2 and it is in
+its gate now; BOB folds it the turn REC-140 merges. No queue item is superseded and no worker needs stopping.
+
+1. **D-431 — `op=ratify` publishes nothing outside a RATIFIED case (RECORD, M8; interface I3, an IC).** Verified at
+   the code before ruling: `ratifyCaseDocument` commits the case and its pins FIRST, and each member then signs its own
+   bytes (`awaiting` = pinned minus `published_bundles`, `store.mjs`). "Case document first" is therefore the
+   ceremony's own order, and refusing the other order is not circular. The rule has two halves:
+   (a) **A FINDING** is ratified only at a `bundle_sha` that a RATIFIED case pins (`published_case_members.version_sha`),
+   under `Store#caseAuthority` (REC-140). Anything else is refused with a new code whose detail names the act to take
+   first (`op=caseratify`). This closes the loose-finding path (3) and the no-case inquiry (2).
+   (b) **ANY OTHER BUNDLE** (information, an inquiry cited as evidence) is never published on its own. It crosses only as
+   EVIDENCE of a ratified case: when a finding a ratified case pins RESTS ON it, it is signed and delivered as that
+   finding is, under `caseAuthority` for that case's project. If several ratified cases rest on it, an owner of ANY of
+   their projects may sign. **"Rests on" is the edge set the published graph already uses to decide it may serve an
+   edge.** The builder names that set from the code, and proves that the refusal and the serving read it identically
+   (BOB.md rule 7: a comparison names its quantity). Refused: a bundle that no ratified case's finding rests on,
+   answered for a caller who cannot see the project exactly as for one that does not exist (REC-138's class).
+   (c) **What has already crossed stays crossed** (rule 1: one-way). The builder COUNTS, in the record namespace, the
+   `published_bundles` rows that (a) and (b) would now refuse, and states the number in the landing. Until it is
+   counted it is UNDETERMINED, not zero. Nothing is retracted.
+   Suites: `ratify-authority.test.mjs` §7 is CORRECTED from "as measured" to refused, with the reason; negative control
+   on the new refusal. Reversing costs one refusal. Closes D-431 (the row arrives on main with REC-140).
+2. **Scratch purge takes scratch identity (M0; the purge op, I3 behaviour at scratch only).** FLEET measured on
+   biosmoke7 that `op=purge&confirm=scratch` leaves `members` untouched. Scratch now holds 7 VF-4 member rows, 6 of them
+   `proposed`. That is not a harmless leftover: `#activeAdmins` and the consensus count read that table, so each run
+   changes the next run's membership arithmetic, and a live verification stops measuring the same subject twice.
+   **Decided:** a whole-store purge of the SCRATCH store also clears the identity tables (`members`, `admin_votes` and
+   every table keyed on a member that `schema.mjs` holds), enumerated from the schema and pinned against it the way
+   `hygiene.test.mjs` pins the record list. **A purge of the RECORD store never touches identity**, structurally: the
+   control plane passes the flag only when the resolved store is scratch, and a suite drives a record-store purge and
+   asserts that `members` is unchanged. Membership in the record is governed by Membership v2, never by eviction.
+3. **A refused `memberadd` leaving a `proposed` row is CORRECT, and it is not a defect.** Membership v2 §4.7: an
+   administrator beyond the second needs every administrator's consensus, and the proposal is the object they endorse.
+   The response says so (`proposed: true`, `awaiting`). No member-removal op is owed for scratch; item 2 is the
+   remedy. **One item for SCHEDULER (M0):** VF-4's instrument states on its own output that arm 2a leaves a proposal
+   by design, and it runs a scratch purge after itself once item 2 lands.
+
 **2026-09-16 · BOB #12 · §4.3 CORRECTED — ONE ITEM OWED, and the correction itself is LANDED so nothing
 waits on you to read it.** `CONTENT-SEARCH-DESIGN.md` §4.3's per-capture bound was wrong in THREE
 independent ways; REC-91 found all three by BUILDING it, and BOB-NEXT §1 carried only two. Folded at
