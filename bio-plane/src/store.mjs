@@ -1719,9 +1719,26 @@ export class Store extends DurableObject {
          `overdue: 0` forever. That is exactly the way a stored strength goes
          stale (REC-12), and the answer a reader is shown must not be able to be
          wrong in the direction of "nothing is late here". */
-      return row && normalizeType(row.object_type) === "action"
-        ? { ...row, action: this.#actionDerived(row, nowMs) }
-        : row;
+      if (!row) return row;
+      const type = normalizeType(row.object_type);
+      /* REC-144 / INVESTIGATIVE-SESSION.md §7.1 ("The question's page reads the
+         no-project conclusion from `op=projection`", BOB #16, 2026-09-19) — THE
+         INQUIRY'S OWN CONCLUSION, the no-project relationship's, on this
+         UNCAPPED single-bundle read, so the question's page can show it without
+         rendering a capped list whose bound it cannot state (UI-65's follow-up).
+         COMPUTED BY THE ONE READER op=basisversions uses, never a second copy:
+         one reader, two reads, so the two cannot disagree — and a copy that
+         agrees today is the drift of tomorrow (`projection-noproject.test.mjs`
+         pins the call). Under the gate this row ALREADY PASSED; null when the
+         inquiry is not concluded, exactly as there, and null on every
+         non-inquiry. NEVER ON THE LIST FORM below: that arm is the capped
+         retrieval filter over cached columns, and a derived read per row is not
+         what it is for. */
+      return {
+        ...row,
+        ...(type === "action" ? { action: this.#actionDerived(row, nowMs) } : {}),
+        no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null,
+      };
     }
     /* IC-24 / REC-59, landed 2026-08-07 — THE TWO CORPUS ARMS, IN op=list's
        PAGED ENVELOPE. They returned a BARE JSON ARRAY capped at 200, and an

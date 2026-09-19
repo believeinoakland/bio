@@ -14785,3 +14785,29 @@ GREEN 29/29; (A) fork id field restored RED 20/29, naming C-59.3's sentence; (B)
 9/29, naming C-59.1's; (C) the liar, an id in the bytes only, RED 11/29, naming C-59.2's; (D) `bundleId: undefined`
 GREEN 29/29; app.html restored to `21bcfa63…` by sha256 and `cmp` after every arm. REC-141's DELEGATION to UI
 DISCHARGED in its block. No id minted.
+## CLAIM 2026-09-19 RECORD (REC-144 — the single-bundle `op=projection&id=<inquiry>` publishes `no_project_conclusion` through the ONE reader `#noProjectConclusionOf`; never on the list form)
+
+claimed: 2026-09-19 by the REC-144 worker (spawned by CONDUCT #6), branch `worktree-agent-af0ecccecaa170e90`, base
+`5871a991`. Paths: `bio-plane/src/store.mjs` (`projection()`'s single-bundle arm ONLY), `bio-plane/dist/**` (the rebuilt
+bundle), `bio-plane/test/projection-noproject.test.mjs` (new) and its `.control.mjs`, `docs/development/INTERFACE-CHANGES.md`
+(IC-160, new row), `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built line),
+`docs/architecture/construct-status.json` (8.claim's text and probes), `bio-plane/scripts/coverage.mjs` (floors only,
+from its own print, if any move). NOT `civicos-ui/app.html` — the surface half is UI-67's.
+
+## CLAIM 2026-09-19 RECORD (REC-144) — RELEASED
+
+released: 2026-09-19 by the REC-144 worker, branch `worktree-agent-af0ecccecaa170e90`, base `5871a991`, merged with
+`origin/main` `8ab8f48f` (REC-142 landed; I3 38.1.0). Paths as claimed. `projection()`'s single-bundle arm publishes
+`no_project_conclusion` by CALLING `#noProjectConclusionOf` (null on an unconcluded inquiry and every non-inquiry; never on
+the list form). IC-160, I3 MINOR additive, proposed 38.1.0 → 38.2.0. Suite `bio-plane/test/projection-noproject.test.mjs`
+26/0 (12/14 over the pristine store). NEGATIVE CONTROL `node test/projection-noproject.control.mjs`: baseline 26/0, (a)
+copied reader differing in one unreached branch 23/3 — the three ONE-READER arms by name, every byte-identity arm green
+under it, (b) field on the list form 22/4, (c) over-strictness 26/0; every restore sha256 MATCH. Battery own-baseline
+**254/254 · 15643** at `5871a991`; final **256/256 suites green · 15694 assertions passing · run 37606.463b55** at
+`dc7e9294` (the merge brings REC-142's suite; this item's own delta is +1 suite, +26 assertions). `coverage.mjs --strict`
+exit **0** unpiped, REGISTER FLOOR arms 1448 → 1451, classified 246 → 247, corpus 247 → 248, run 209 → 210, from its
+print on the committed tree; after merging `origin/main` `f61d071d` (D-430 in) the collided floor was collapsed and
+re-read on the committed merge `43ae8967`: arms **1455**, classified **248**, corpus **249**, run **211**. `node civicos-ui/test/run.mjs` exit **0**. **FOR CONDUCT:** resolve IC-160 (read the base at
+resolution) and flip REC-144 on integration. **FOR UI (UI-67):** the read is on the wire — render `no_project_conclusion`
+from `getProjection` with `noProjectConclusionHtml`, and drop `PROJ_CACHE` for the inquiry when a conclusion or a
+withdrawal lands.

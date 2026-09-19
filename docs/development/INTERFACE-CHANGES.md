@@ -11898,3 +11898,39 @@ that chose a project id (the list is the landing's diff).
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 40.0.0 → 41.0.0.** Base RE-READ at resolution off the integration tree: 40.0.0. Breaking by IC-137: a creation of a project (or any creation in the PROJ- namespace) that names a bundleId, and a fork that names a newId, are now REFUSED with one answer whether or not the id exists (C-59.1, C-59.3), closing the creation half of D-428's existence oracle; the minted id carries an OPAQUE CSPRNG suffix, never allocId's counter (BOB #16, d7ce3f86 — the owed act on the row, verified: project-mint §6 and its counter-restored control). LANDED TOGETHER WITH UI-66, so no deployed surface meets the refusal without the id-less Add and fork. A §7.9 DISCLOSURE closing — DIST told.
+
+## IC-160 · I3: `op=projection&id=<id>` (the SINGLE-BUNDLE form) publishes `no_project_conclusion` — for an inquiry, the inquiry's own no-project conclusion computed by the ONE reader `op=basisversions` uses (`#noProjectConclusionOf`), null when unconcluded; null on every non-inquiry; NEVER on the list form · PROPOSED 2026-09-19 (REC-144, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE after merging `origin/main` (`8ab8f48f`,
+  which carries REC-142's IC-159): 38.1.0 (38.0.0 at spawn on `5871a991`). Proposed MINOR, ADDITIVE — 38.1.0 → 38.2.0.**
+  Read the base AT RESOLUTION. **Why MINOR:** IC-25's test — nothing that answered before is refused or changes
+  meaning. The single-bundle answer GAINS one key and loses none; an action's `action` block is unchanged; an invisible
+  or absent bundle still answers `null`; the list form (paged and filtered) is byte-unchanged.
+- **Proposer:** RECORD, worker `agent-af0ecccecaa170e90`, 2026-09-19, spawned by CONDUCT #6 for REC-144.
+- **Owner to land it:** `RECORD`
+- **Design:** `INVESTIGATIVE-SESSION.md` §7.1, the paragraph "The question's page reads the no-project conclusion from
+  `op=projection`" (BOB #16, 2026-09-19, `7c150df0`).
+- **Consumers to answer:** `UI` — NOT BROKEN (an additive key; `getProjection` caches the row and reads named fields),
+  and the CONSUMER this exists for: **UI-67** renders it on the question's page with `noProjectConclusionHtml` and
+  invalidates `PROJ_CACHE` for the inquiry when a conclusion or a withdrawal lands. `DIST` (newgroup embeds the old
+  plane until the next cut), `SKILL`, `agent-worker` — NOT-AFFECTED, grepped: none reads `op=projection`'s single row.
+
+**THE SHAPE.** `op=projection&id=<id>`, when the row passes the viewer gate: the row as before, plus
+`no_project_conclusion` — for an inquiry, EXACTLY what `op=basisversions&id=<id>` publishes under the same key for the
+same viewer (`{project: null, inquiry, relationship: "no_project", state: "concluded", relationship_established: false,
+relationship_detail, conclusion, falsifier, claim: {state: "adopted"|"undetermined", …}}`), or null when the inquiry is
+not concluded; null for every other type. The list form carries no such key.
+
+**ONE READER, TWO READS.** The single-bundle arm calls `#noProjectConclusionOf` — the reader is not copied, so the two
+reads cannot disagree. `bio-plane/test/projection-noproject.test.mjs` (new, 26/0) proves the field byte-identical to
+`op=basisversions`' for two viewers over an ADOPTED and an UNDETERMINED conclusion (non-null, so the equality is not two
+nulls agreeing), null for an open inquiry and two non-inquiries, absent from the paged and the filtered list forms, and
+ONE reader off the source (exactly one definition, exactly two call sites, the reader's tokens once across `src/`).
+Negative control `node test/projection-noproject.control.mjs`: baseline 26/0 · (a) a copied reader differing in one
+unreached branch 23/3 — the ONE-READER arms fail by name while every byte-identity arm passes (the liar the row names) ·
+(b) the field on the list form 22/4 · (c) over-strictness 26/0; every restore sha256 MATCH. Before the change: 12/14.
+**No I5 IC:** no table or column moves.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MINOR — I3 41.0.0 → 41.1.0.** Base RE-READ at resolution off the integration tree: 41.0.0. Additive: the single-bundle op=projection for an inquiry carries no_project_conclusion from the ONE existing reader (#noProjectConclusionOf, the same op=basisversions calls); null for an unconcluded inquiry and for any other type; the list form unchanged. Nothing refused, no key moved. UI-67 renders it.
