@@ -75,6 +75,9 @@ export const SOURCES = {
   debt: "docs/development/DEBT.md",
   decisions: "docs/development/DECISIONS.md",
   queue: "docs/development/QUEUE.md",
+  /* LED-6: the pipeline cache may hold no `blocked` row (WORK-PIPELINE §2, invariant P3), so once
+     the migration lands EVERY blocked row lives in the backlog — read both, or this list empties. */
+  backlog: "docs/development/BACKLOG.md",
 };
 
 /* The phrases this corpus ALREADY uses to say a lane owes something. Derived by reading the rows
@@ -201,15 +204,17 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
     if (m[2] === "open") items.push({ source: "DECISIONS", id: m[1], attributed: true,
                                       why: "open decision", text: "awaiting Bob" });
 
-  const q = read(SOURCES.queue);
-  if (q === null) unreadable.push(SOURCES.queue);
-  /* THE WHOLE HEADING LINE, NOT ITS FIRST 220 CHARACTERS. Found 2026-09-18 by BOB #14: REC-100 is
-     blocked on a design ruling *Routed to BOB*, deep in a heading that carries its history, and the
-     truncated read returned 0 while the row sat routed to this lane. Measured over every lane before
-     the change: the full line adds exactly REC-100 for BOB and nothing for anybody else. */
-  else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.*)$/gm))
-    if (owner.test(m[2])) items.push({ source: "QUEUE", id: m[1], attributed: true,
-                                       why: `blocked on ${lane}`, text: m[2].trim().slice(0, 160) });
+  for (const [src, label] of [[SOURCES.queue, "QUEUE"], [SOURCES.backlog, "BACKLOG"]]) {
+    const q = read(src);
+    if (q === null) unreadable.push(src);
+    /* THE WHOLE HEADING LINE, NOT ITS FIRST 220 CHARACTERS. Found 2026-09-18 by BOB #14: REC-100 is
+       blocked on a design ruling *Routed to BOB*, deep in a heading that carries its history, and the
+       truncated read returned 0 while the row sat routed to this lane. Measured over every lane before
+       the change: the full line adds exactly REC-100 for BOB and nothing for anybody else. */
+    else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.*)$/gm))
+      if (owner.test(m[2])) items.push({ source: label, id: m[1], attributed: true,
+                                         why: `blocked on ${lane}`, text: m[2].trim().slice(0, 160) });
+  }
 
   /* TWO POPULATIONS, AND SUMMING ACROSS THEM WAS A FIGURE THAT COST NOTHING TO PRODUCE.
      Found 2026-09-17 by CONDUCT #3 running a DISCRIMINATION CONTROL this file should have had

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1156 rulings across 92 documents.
+1159 rulings across 92 documents.
 
 ## DEC-
 
@@ -537,7 +537,7 @@ authority is the file named, never this one.
 - **D-329** · 2026-09-13 — AND THE ROW'S OWN CONCLUSION IS OVERTURNED ON A MEASUREMENT: A STATIC INSTRUMENT CAN SEE THIS.** This row held that *"an assertion label composed at run time exists in no file, so no static instrument can see it and only a periodic census can."* That is true of the RENDERED label and FALSE OF THE TEMPLATE, which…  
   `docs/archive/ledgers/DEBT-closed.md:53`
 - **D-329** — D-329 — the row's own conclusion OVERTURNED on a measurement: a run-time-composed label exists in no file only as RENDERED; its TEMPLATE does, and `composedSpan()` (new `scripts/armdecay.mjs`) catches a fragment that resolves against a suite's template only by eating its `${…}` slot — reach 2,700 label quotes from…  
-  `docs/development/QUEUE.md:1242`
+  `docs/development/QUEUE.md:1251`
 - **D-330** · 2026-09-13 — AMENDED MID-ITEM, 2026-09-13: `docs/development/DEBT.md` gains a SECOND row beyond D-330's disposition — **D-333**, the class this item's measurement establishes and its repair does not close: a driver's declared TALLY decays while every one of its anchors stays live, and no static check can see the difference…  
   `docs/development/CLAIMS.md:3282`
 - **D-331** · 2026-09-13 — RULED AS THIS ROW RECOMMENDED, AND THE RULING DECLINES BOTH HALVES OF THE FALSE CHOICE: A THROWING DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING.** `scripts/armdecay.mjs`'s `preflight()` is the shared dry pass — it counts every arm's quote in the file that arm will write, prints the WHOLE table, and only…  
@@ -612,8 +612,12 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed.md:13`
 - **D-421** · 2026-09-18 — BOB #14 RULED the founder question:** a founder's password session stays ALLOWED (a human, and the only live publishing route); D-421's wording corrected to *a HUMAN's own authenticated session*; and the record must state who DELIVERED as well as who AUTHORISED → `REC-128`.  
   `docs/archive/ledgers/QUEUE-closed.md:188`
+- **D-426** · 2026-09-18 — `project-authority.test.mjs`'s D-426 pin CORRECTED to CLOSED.  
+  `docs/archive/ledgers/DEBT-closed.md:79`
+- **D-426** — CORRECTED at its site with a dated reason, never exempted: `project-authority.test.mjs` §2b' (the D-426 pin, now CLOSED) and its driver's declarations. **RESPONSES:** not yet collected.  
+  `docs/development/INTERFACE-CHANGES.md:11378`
 - **D-429** — `test/casesign.test.mjs` CORRECTED at its site with a dated reason; `DEBT.md` D-429 raised.  
-  `docs/development/CLAIMS.md:14188`
+  `docs/development/CLAIMS.md:14254`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -762,6 +766,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2325`
 - **IC-148** · 2026-09-18 — IC-148 AMENDED IN PLACE (MAJOR, 29.4.0 → 30.0.0): `dbBytes` for the admin class only under a server-set `capacity` stamp; the wire's log count renamed `observationsNonLead`, no `observations` key on the wire, purge's proof unchanged.  
   `docs/development/CLAIMS.md:13985`
+- **IC-155** — CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md`…  
+  `docs/development/CLAIMS.md:14221`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -1155,7 +1161,7 @@ authority is the file named, never this one.
 - **REC-133** · 2026-09-18 — ADDENDUM 2026-09-18 RECORD (REC-133, IC-151) — point 1's AUTHORITY line above is SUPERSEDED by `BIO_Publication_v0_1.md` §6A.2 as built:** the draft form is offered to the project's EDITORS — an owner or a JOINED participant holding `contribute` — not to the owner alone.  
   `docs/development/CLAIMS.md:13956`
 - **REC-137** — `op=caseratify`'s position is DECIDED in the next bullet and BUILT by REC-137 (IC-154).  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:544`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:554`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -2160,7 +2166,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - CORRECTED at their sites with dated reasons, never exempted: `citeinquiry.test.mjs` (the DO dispatch's parameter roster gains the server-stamped `identity`) and `identity-claims.test.mjs` arm (j) (it selected the first stamp site whose writes include `proposedispose`, which is now the CLEAR positional stamp; it…  
   `docs/development/INTERFACE-CHANGES.md:11277`
 - CORRECTED at its site with a dated reason, never exempted: `casesign.test.mjs` (its second-attestation arm delivered and signed as omar, an enrolled administrator with no role in the project; it now makes omar a second OWNER through the roster ops, so it still reaches `CASE_EDITION_ALREADY_RATIFIED`).  
-  `docs/development/INTERFACE-CHANGES.md:11338`
+  `docs/development/INTERFACE-CHANGES.md:11437`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
@@ -2300,7 +2306,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - version that the content is extracted from."* RULED, folded into Part II §16.  
   `docs/development/QUEUE.md:878`
 - D, driven through the op; the six keys are gone from finding bytes and `caseflip.test.mjs`'s still-there assertions are CORRECTED (never exempted) to say so; the stranger-verification path still passes end to end with the instance unreachable.  
-  `docs/development/QUEUE.md:1206`
+  `docs/development/QUEUE.md:1215`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  

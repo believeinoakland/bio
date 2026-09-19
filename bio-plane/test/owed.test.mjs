@@ -76,7 +76,12 @@ let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
 /* A reader over fixtures: the estate's own ledgers are never written by any arm. */
-const fixture = (files) => (p) => (p in files ? files[p] : null);
+/* CORRECTED 2026-09-18 by LED-6: owed now reads the BACKLOG beside the QUEUE (the pipeline cache
+   may hold no `blocked` row, so after the migration every blocked row lives in the backlog). These
+   fixtures predate it and state what a QUEUE yields, so a fixture that supplies the QUEUE and does not
+   name the BACKLOG supplies an EMPTY one; naming it `null` makes it unreadable, which section 5 drives. */
+const fixture = (files) => { const all = SOURCES.queue in files && !(SOURCES.backlog in files) ? { ...files, [SOURCES.backlog]: "" } : files;
+                             return (p) => (p in all ? all[p] : null); };
 const DEBT = (rows) => ["| id | type | date | body | disposition |", ...rows].join("\n");
 const ids = (o) => o.items.map((i) => i.id).sort();
 
@@ -171,6 +176,13 @@ section("5 — AN UNREADABLE LEDGER IS NOT AN EMPTY ONE. The rule this whole fam
   t("...and the message says UNKNOWN rather than reporting an empty list",
     /UNKNOWN/.test(owedMessage(o)), true);
   t("...and explicitly refuses the inference", /not an empty one/.test(owedMessage(o)), true);
+  /* LED-6: the backlog is a source, and a MISSING backlog is unreadable, never an empty one. */
+  const nb = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([]), [SOURCES.decisions]: "", [SOURCES.queue]: "", [SOURCES.backlog]: null }) });
+  t("an unreadable BACKLOG is NAMED too (LED-6)", nb.unreadable, [SOURCES.backlog]);
+  const bl = owedFor("BOB", { reader: fixture({ [SOURCES.debt]: DEBT([]), [SOURCES.decisions]: "", [SOURCES.queue]: "",
+    [SOURCES.backlog]: "### REC-8 · blocked — waits on a ruling. Routed to BOB.\n" }) });
+  t("a blocked row in the BACKLOG routed to the lane is owed, sourced BACKLOG (LED-6)",
+    bl.attributed.map((i) => `${i.source} ${i.id}`), ["BACKLOG REC-8"]);
 }
 
 /* ========================================================================== */

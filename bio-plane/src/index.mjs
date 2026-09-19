@@ -8945,6 +8945,14 @@ export default {
            gated like every other reference to a document. Fails closed on an
            absent stamp. */
         || op === "leadlook" || op === "leadread" || op === "leadshare"
+        /* REC-138 / D-426: the ROSTER acts name a project, so one the caller cannot see must
+           answer exactly as one that does not exist — asked of SIGHT before any positional test
+           (`Store#inSight`). `by` (below) stays the positional half; this is the visibility half.
+           ONE DIFFERENCE from the rest of this list, stated at `Store#rosterInSight`: the store
+           treats a viewer that was never SENT as a direct internal call and does not ask, on
+           `#projectAuthority`'s absent-identity precedent — so this stamp is load-bearing, and the
+           `roster-stamp-dropped` control arm measures what removing it discloses. */
+        || PROJECT_ACTIONS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -9407,6 +9415,14 @@ export default {
            (no roster position, not asked). */
         delete b.actorIdentity;
         b.actorIdentity = viaSession ? sessIdentity
+          : cls === "ai" ? aiCred.principal
+          : `${MACHINE_CLASS_PREFIX}${cls}`;
+        /* REC-138 / D-426: and the VISIBILITY half beside it, so a revision of a project the actor
+           cannot see answers exactly as a revision of one that does not exist (ABSENT), asked
+           BEFORE the positional check. The same three arms as the viewer stamp on every gated op:
+           the founder's is the administrator viewer, an `ai` key its principal. Deleted first. */
+        delete b.actorViewer;
+        b.actorViewer = viaSession ? sessViewer
           : cls === "ai" ? aiCred.principal
           : `${MACHINE_CLASS_PREFIX}${cls}`;
         if (b.base === null && b.meta && b.meta.object_type === "project" && viaSession) {

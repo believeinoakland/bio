@@ -14177,10 +14177,76 @@ exit 0, `log: … holds this run alone`; `node scripts/coverage.mjs --strict` ex
 the measurement. **FOR CONDUCT:** `battery.mjs`'s headline now ends `· run <id>` and a new exit status 3 means REFUSED
 (another battery holds the output file); `REGISTER_FLOOR` in `coverage.mjs` moved — re-read on the merged tree.
 
+## CLAIM 2026-09-18 M0 (LED-6, TOOL HALF ONLY — `ledger.mjs refill`, the BACKLOG ledger, `find` across three, the five pipeline invariants)
+
+Worker spawned by CONDUCT #5, worktree `agent-a59411b6b0b421aa5`, branch `worktree-agent-a59411b6b0b421aa5`, base
+`bf9704a9`. Design: `WORK-PIPELINE.md` §1, §2 and §5 step (1). Paths:
+
+- M0 (own): `tools/ledger.mjs`; `tools/plancheck.mjs` §2h only (the ledger gate's arms); `tools/mintid.mjs` and
+  `tools/owed.mjs` only to add `BACKLOG.md` to what they read (a reader blind to the backlog is the migration's hazard).
+- Tests: `bio-plane/test/ledger.test.mjs`, `bio-plane/test/ledger.control.mjs`; any suite pinning what they change,
+  corrected with its reason.
+- Docs: `docs/development/BACKLOG.md` created EMPTY with its header (no row); this block.
+
+NOT a row of `QUEUE.md` (CONDUCT's / SCHEDULER's), NOT steps (2)–(4) of §5 (the migration is by hand), NOT `DEBT.md`.
+
+## CLAIM 2026-09-18 M0 (LED-6, TOOL HALF) — RELEASED
+
+released: 2026-09-18 by the LED-6 worker, branch `worktree-agent-a59411b6b0b421aa5`, base `bf9704a9`, tool commit
+`d5103a78`. Baseline at `3634a038`: **247/247 suites green · 15043 assertions passing**, no suite skipped. After, at
+`d5103a78`: **247/247 suites green · 15123 assertions passing**, no suite skipped (+78 `ledger.test`, +2 `owed.test`);
+`node scripts/coverage.mjs --strict` exit **0** unpiped; `node civicos-ui/test/run.mjs` exit **0**; `plancheck --local`
+0 fail. NEGATIVE CONTROL `node bio-plane/test/ledger.control.mjs` from the repo root: 28 arms (10 LED-2, 18 LED-6),
+exit 0, 156 pass / 0 fail, 28 restores byte-identical. Also touched beyond the claim's first list, both to keep
+`plancheck` green: `docs/architecture/CORPUS-STANDARD.md` §6 (BACKLOG.md classified as a ledger, Status line dated).
+**Built:** `ledger.mjs refill [--dry-run]`, `find` across cache/backlog/archive, `invariants`, the five arms in
+`plancheck` §2h; `BACKLOG.md` created EMPTY. **Not done (out of scope):** WORK-PIPELINE §5 steps (2)–(4).
+**FOR CONDUCT / SCHEDULER, before step (4) moves rows into the backlog:** `tools/rowdesign.mjs` and `plancheck` §2's
+milestone, interface and UNKNOWN-ROW-STATE checks read `QUEUE.md` only, so backlog rows would go unchecked by them;
+`mintid.mjs` and `owed.mjs` were retargeted here, those were not.
+
+## CLAIM 2026-09-18 RECORD (REC-138 — D-426: a project the caller cannot SEE answers every project-targeted act exactly as one that does not exist, and the sight answer comes BEFORE the positional one)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a93cdfa0fe0f8d435`, branch `worktree-agent-a93cdfa0fe0f8d435`,
+base `dd52609b`. `npm ci` in all three packages, each `node_modules` a real directory (4.3 GiB free after install).
+Design: Membership v2 §7.9 (*"Uninvited. The project is not visible at all. Not its existence"*), §7.3, IC-141's
+byte-identity rule, IC-152's `projectAuthority`. IDs minted with `tools/mintid.mjs`: IC-155, D-428. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — ONE shared project not-found and ONE sight predicate, and their callers:
+  `promote`'s revision arm, `cite`'s project lookup, `#edgeTransition`, `projectInvite`, `projectOwnerAdd`,
+  `projectOwnerRemove`, `projectOwnerRescue`, `forkProject`, `#runContextProjects`' project arm, and the DO dispatch
+  rows of those roster acts (the `viewer` they now read); `bio-plane/src/index.mjs` (the `viewer` stamp on the roster
+  acts, and `actorViewer` in `op=promote`'s body, both deleted first).
+- Tests: a new `bio-plane/test/project-sight.test.mjs` and its control driver; `project-authority.test.mjs`'s D-426 pin
+  CORRECTED; any suite pinning a distinguishing answer CORRECTED at its site with a dated reason, never exempted.
+  `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-155), `DEBT.md` (D-426 closed, D-428 raised), `BIO_Membership_Architecture_v2.md`
+  front matter and §7.9, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `op=caseratify` or the case-ratification path (REC-137's), NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-138) — RELEASED
+
+released: 2026-09-18 by the REC-138 worker, branch `worktree-agent-a93cdfa0fe0f8d435`, base `dd52609b` (origin/main has
+since moved by DIST 0.61.0 and a merge; no `src/` overlap, I3 still 33.0.0 there — CONDUCT merges). Paths as claimed,
+PLUS `bio-plane/test/project-authority.control.mjs` (two declarations corrected with dated reasons) and
+`docs/archive/ledgers/DEBT-closed.md` (D-426 archived by `tools/ledger.mjs`). Baseline, pristine worktree at `70dd6480`
+(the claim commit, no src change): **247/248 suites green · 15105 assertions**, the one failure `mintid.test.mjs`'s
+*no live floor is driven by prose*, CAUSED BY THIS CLAIM naming D-428 before its DEBT row existed, and gone once the row
+landed. Final, at `03ac4822`: **249/249 suites green · 15201 assertions**, exit 0; `coverage.mjs --strict` exit 0 with
+REGISTER_FLOOR moved from its own print (1400 -> 1407 · 239 -> 240 · 240 -> 241 · run 202 -> 203); UI harness exit 0.
+IDs minted with `tools/mintid.mjs`: IC-155, D-428.
+**FOR CONDUCT:** (1) RESOLVE IC-155 against I3 as read at resolution (proposed MAJOR on 33.0.0; the break is
+`op=airunopen` refusing a member's run over a project context the store does not hold). (2) Flip REC-138 at integration.
+(3) Carry D-428 to BOB: §7.1's instance-wide name uniqueness (NAME_TAKEN names the other project's id and title) against
+§7.9, and whether project ids should be plane-minted. (4) Tell DIST: a DISCLOSURE closing, open on deployed instances
+until the next cut. (5) REC-137 runs beside this: if it adds an act that names a project, it asks `Store#inSight` BEFORE
+`#projectAuthority` and returns `Store.#noSuchProject` — say so at its merge.
 ## CLAIM 2026-09-18 RECORD (REC-137) — RELEASED
 
 released: 2026-09-18 by the REC-137 worker, branch `worktree-agent-aee812fe065a38e23`, base `dd52609b`, merged with
-origin/main `c0fc28e1` (M0-67, DIST 0.61.0) before close-out. Baseline at `39785cda` (pristine but for this claim):
+origin/main `c0fc28e1` (M0-67, DIST 0.61.0) and then `ee9f201c` (REC-138, IC-155 — I3 34.0.0) before close-out; IC-154 re-based to 34.0.0. Baseline at `39785cda` (pristine but for this claim):
 **248/248 suites green · 15106 assertions**, no skip. After: the final battery line, strict coverage, the UI harness and the
 gates are in the worker's report to CONDUCT and IC-154. Paths as claimed; `src/index.mjs` was NOT touched (the store
 relays both refusals through the handler's existing path). Also: `bio-plane/scripts/coverage.mjs` REGISTER_FLOOR moved
