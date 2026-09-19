@@ -185,8 +185,10 @@ const inquiryMd = (id, question, type = "inquiry", schema = "inquiry@1") => ["--
   "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 
-const projectMd = (id, title, cites) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); a
+   creation's bytes carrying an `id:` line are refused PROJECT_ID_IN_BYTES, so the creation document has none. */
+const projectMd = (title, cites) => ["---",
+  "object_type: project", "schema: project@1",
   `title: "${title}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
@@ -226,8 +228,6 @@ const promote = async (id, text, type, state, tok = RUTH, register = []) => {
 const INQ_A = "INQ-2026-4100-was-0042-competitively-bid";
 const INQ_B = "INQ-2026-4200-northbay-holds-how-many";
 const INQ_C = "INQ-2026-4300-legacy-typed-question";
-const PROJ_A = "PROJ-2026-4100-contract-0042";
-const PROJ_B = "PROJ-2026-4200-vendor-concentration";
 const INFO_OLD = "INFO-2026-4900-prior-contract-file";
 const CAP_OLD = sha("pl15-prior-contract-capture");
 
@@ -247,8 +247,22 @@ await promote(INFO_OLD, infoMd(INFO_OLD), "information", "collected", RUTH,
    block 4's assertion mean something: if there were only one project, filing
    under A's ancestors and filing under B's would produce the same answer and
    the spine arm would pass over a defect. */
-await promote(PROJ_A, projectMd(PROJ_A, "The 0042 award", [INQ_A]), "project", "forming", CAROL);
-await promote(PROJ_B, projectMd(PROJ_B, "Vendor concentration", [INQ_B, INFO_OLD]), "project", "forming", CAROL);
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1). The creation names no bundleId and the id
+   is read from the answer; `label` keeps the title (and so the minted slug) distinct, as the chosen id did. */
+const promoteProject = async (label, text) => {
+  const r = await POST(`op=promote&token=${CAROL}`, {
+    base: null, snapKey: `${label}-${sha(text).slice(0, 8)}`,
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+    register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${label}`,
+            current_state: "forming", created: NOW, last_updated: LATER } });
+  if (!r || r.ok === false || !r.bundleId) throw new Error(`promote ${label}: ${JSON.stringify(r).slice(0, 600)}`);
+  return r.bundleId;
+};
+const PROJ_A = await promoteProject("PROJ-2026-4100-contract-0042", projectMd("The 0042 award", [INQ_A]));
+const PROJ_B = await promoteProject("PROJ-2026-4200-vendor-concentration",
+  projectMd("Vendor concentration", [INQ_B, INFO_OLD]));
 
 const RUN = "RUN-2026-0808-pl15";
 /* CORRECTED 2026-08-09 BY PL-18, AND THE OLD FIXTURE IS SAID TO BE WRONG RATHER

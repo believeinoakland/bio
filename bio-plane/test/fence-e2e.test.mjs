@@ -219,15 +219,19 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
-const projectMd = (id, cites) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7): creation bytes carry no `id:` line (PROJECT_ID_IN_BYTES) and
+   a PROJECT creation sends no bundleId (PROJECT_ID_SUPPLIED) — `id` is only its
+   label, and the caller reads the minted id from the answer's `bundleId`. */
+const projectMd = (cites) => ["---",
+  "object_type: project", "schema: project@1",
   `title: "The stance this project takes"`, "current_state: collected", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, `group: ${GROUP}`,
   ...refLines(cites), "state_history: []", "---", "", "## Notes", ""].join("\n");
 
 const promote = async (id, text, type, tok = RUTH, extraMeta = {}, register = []) =>
   POST(`op=promote&token=${tok}`, {
-    bundleId: id, base: null,
+    ...(type === "project" ? {} : { bundleId: id }), base: null,
     snapKey: `${id}-${Math.random().toString(36).slice(2, 8)}`,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register,
@@ -422,12 +426,12 @@ console.log("\n--- 2. make-current: FOUR pre-write guards satisfied before the f
 {
   const L = "INFO-2026-9000-current-ledger";
   const INQ = "INQ-2026-9000-current";
-  const PRJ = "PRJ-2026-9000-stance";
   await mustPromote(L, infoMd(L), "information", RUTH, {}, CAPTURE_REGISTER(L));
   /* ALREADY `accepted`. `current` refuses anything else by name (VERSION_NOT_ACCEPTED),
      and a payload that stopped there would be measuring THAT refusal instead. */
   await mustPromote(INQ, inquiryMd(INQ, { refs: [L], extra: versionBlock("settled account", "accepted", L) }), "inquiry");
-  await mustPromote(PRJ, projectMd(PRJ, [INQ]), "project");
+  /* CORRECTED 2026-09-18 (REC-141): PRJ is the id the plane minted, not a chosen one. */
+  const PRJ = (await mustPromote("PRJ-2026-9000-stance", projectMd([INQ]), "project")).bundleId;
   t("   the reading is ACCEPTED (current implies accepted, §6 rule 5) and a readable project DRAWS "
   + "on the question — the two conditions this verb adds over accept",
     [await stateOfVersion(INQ, "settled account"), await stateOf(PRJ)], ["accepted", "collected"]);
@@ -515,9 +519,13 @@ console.log("\n--- 4. publish: a concluded case with every authored field the ce
      job is to be complete enough that only the credential can be what refuses
      it. The project declares no bar, so nothing about this payload is newly
      gated; the owner is RUTH, who is the member half of the pair below. */
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+     (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED;
+     the fixture takes the old id string as its `name` (the title label) and the
+     suite uses the id it RETURNS. */
   const PUB_PRJ = await makePublishingProject({
     post: POST, mf, sha, machineToken: "adm-vf5", owner: "ruth",
-    id: "PRJ-2026-9000-publish", created: NOW, updated: LATER });
+    name: "PRJ-2026-9000-publish", created: NOW, updated: LATER });
   const BODY = { target: INQ, project: PUB_PRJ, roles: { [INQ]: "load_bearing" },
     scope: "Whether the FY2024 sewer transfer was authorised, on the documents in hand.",
     statement: "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.",

@@ -124,9 +124,12 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
-const projectMd = (id) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Case ${id}"`, "current_state: forming", "prior_state: null",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   creation bytes carry no `id:` line (PROJECT_ID_IN_BYTES) and the creation names no bundleId
+   (PROJECT_ID_SUPPLIED). `name` keeps the title the chosen id used to give it. */
+const projectMd = (id, name = id) => ["---",
+  ...(id ? [`id: ${id}`] : []), "object_type: project", "schema: project@1",
+  `title: "Case ${name}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", "references: []", "state_history: []",
@@ -137,23 +140,23 @@ const projectMd = (id) => ["---",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
 let snapSeq = 0;
-const promote = async (id, text, type, { reading = null, register = [] } = {}) => {
+const promote = async (id, text, type, { reading = null, register = [], name = id } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
     const prov = JSON.stringify({ documents: [reading] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
   }
   return post("promote", {
-    bundleId: id, base: null,
+    ...(id != null ? { bundleId: id } : {}), base: null,
     snapKey: `20260914T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${name}`,
             current_state: type === "inquiry" ? "open" : type === "project" ? "forming" : "collected",
             created: NOW, last_updated: LATER },
     files, register });
 };
 const mustPromote = async (id, ...a) => {
   const r = await promote(id, ...a);
-  if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
+  if (r.ok === false || (id == null && !r.bundleId)) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
   return r;
 };
 const selectIds = async (ids) => {
@@ -194,8 +197,9 @@ for (const n of ["page", "arms", "refuse", "named", "again", "plain", "already"]
   await mustPromote(Q(n), inquiryMd(Q(n)), "inquiry");
 const INQ_TARGET = "INQ-2026-9700-target";
 await mustPromote(INQ_TARGET, inquiryMd(INQ_TARGET), "inquiry");
-const CASE = "PROJ-2026-9700-case";
-await mustPromote(CASE, projectMd(CASE), "project");
+/* CORRECTED 2026-09-18 (REC-141): the case's id is minted and read from the answer. */
+const CASE = (await mustPromote(null, projectMd(null, "PROJ-2026-9700-case"), "project",
+  { name: "PROJ-2026-9700-case" })).bundleId;
 
 /* THE CORPUS, PRINTED AND FLOORED. A headline assertion over an empty fixture
    has passed three times in this repository. */

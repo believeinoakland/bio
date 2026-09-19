@@ -196,9 +196,13 @@ const inquiryMd = (id, question, target) => ["---",
   "## Session Log", "", `### Session ${LATER} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 let snapSeq = 0;
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED —
+   so for a PROJECT `id` is only the label its title is built from, no bundleId
+   is sent, and the caller reads the minted id from the answer's `bundleId`. */
 const promote = async (id, text, objectType, state, st = S) => {
   const r = await POST(`op=promote&token=${ADM}${st}`, {
-    bundleId: id, base: null,
+    ...(objectType === "project" ? {} : { bundleId: id }), base: null,
     snapKey: `20260918T${String(700000 + (++snapSeq)).slice(-6)}Z_${sha(id).slice(0, 8)}`,
     meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
             current_state: state, created: NOW, last_updated: LATER },
@@ -216,9 +220,12 @@ const shaOf = async (id) => {
 /* One project, one inquiry, concluded and published by iris: a case document
    authored by her and awaiting a signature. Built twice — the second case is the
    LEGACY one. */
-const authorCase = async (project, lead, info, st = S) => {
+const authorCase = async (projectName, lead, info, st = S) => {
   const storeName = st ? "scratch" : "bio";
-  await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating", st);
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): the project is created with NO id
+     (creation bytes carry no `id:` line) and its id is the one the plane mints. */
+  const project = (await promote(projectName,
+    projectFixtureMd(null, { created: NOW, updated: LATER, name: projectName }), "project", "investigating", st)).bundleId;
   const c = await DOIN(storeName, "projectclaimowner", { projectId: project, memberId: "iris" });
   if (!c || c.ok !== true) throw new Error(`projectclaimowner: ${JSON.stringify(c)}`);
   await promote(info, infoMd(info), "information", "collected", st);

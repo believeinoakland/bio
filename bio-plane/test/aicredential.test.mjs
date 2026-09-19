@@ -160,14 +160,23 @@ const INQ = "INQ-2026-5100-ai-credential";
 }
 /* RUTH'S PRIVATE PROJECT — Anna is not a participant, which is what block 6
    measures the stated viewer against. */
-const PRJ = "PRJ-2026-5100-ruths-own";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED; the bytes carry no id line and the id is read from
+   the answer. (The old literal "PRJ-2026-5100-ruths-own" was only a label.) */
+let PRJ;
 {
-  const md = ["---", `id: ${PRJ}`, "object_type: project", "schema: project@1",
+  const md = ["---", "object_type: project", "schema: project@1",
     `title: "Ruth's own project"`, "current_state: collected", "prior_state: null",
     `created: "${NOW}"`, `last_updated: "${LATER}"`, "group: believe-in-oakland",
     "references: []", "state_history: []", "---", "", "## Notes", ""].join("\n");
-  const a = await promote(PRJ, md, "project");
-  if (!a.ok) throw new Error(`promote ${PRJ}: ${JSON.stringify(a).slice(0, 600)}`);
+  const a = await POST(`op=promote&token=${RUTH}`, {
+    base: null, snapKey: `ruths-own-${Math.random().toString(36).slice(2, 8)}`,
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
+    register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: "Ruth's own project",
+            current_state: "collected", created: NOW, last_updated: LATER } });
+  if (!a.ok) throw new Error(`promote ruths-own project: ${JSON.stringify(a).slice(0, 600)}`);
+  PRJ = a.bundleId;
 }
 
 const DRIVEN = new Set(), WIRE = new Map();

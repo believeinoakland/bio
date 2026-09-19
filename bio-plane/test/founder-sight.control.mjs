@@ -145,7 +145,14 @@ const adminBytes = async () => {
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
   });
   const { Miniflare } = await import("miniflare");
-  const drive = async (tree) => {
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): THIS tree's plane MINTS a project's id
+     (Membership v2 §7) and refuses a creation naming one (PROJECT_ID_SUPPLIED), while
+     the pre-change BASE build takes the id it is given. So THIS tree is driven FIRST,
+     creating the project with no id and id-less bytes; the base is then handed the
+     id this tree minted, in bytes carrying that same `id:` line — the stored bytes,
+     their sha and every answer that names the project are then the same on both
+     sides, and nothing new is normalised away. `chosen` null = mint (this tree). */
+  const drive = async (tree, chosen) => {
     const idx = join(tree, "bio-plane", "src", "index.mjs");
     const mf = new Miniflare({ modules: true, modulesRoot: "/", scriptPath: idx, script: readFileSync(idx, "utf8"),
       compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -165,11 +172,15 @@ const adminBytes = async () => {
       const iris = JSON.parse(await raw("op=login", { role: "member:iris", password: "iris-bytes-pass" }));
       const IRIS = (iris.result || iris).token;
       const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
-      const P = "PROJ-2026-9132-bytes", text = projectFixtureMd(P, { created: NOW, updated: LATER });
-      await raw(`op=promote&${A}`, { bundleId: P, base: null, snapKey: "20260918T132000Z_bytes001",
+      const text = projectFixtureMd(chosen, { created: NOW, updated: LATER, name: "PROJ-2026-9132-bytes" });
+      const made = JSON.parse(await raw(`op=promote&${A}`, { ...(chosen === null ? {} : { bundleId: chosen }),
+        base: null, snapKey: "20260918T132000Z_bytes001",
         meta: { object_type: "project", group: "believe-in-oakland", title: "t", current_state: "investigating",
                 created: NOW, last_updated: LATER },
-        files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [] });
+        files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [] }));
+      const P = (made.result || made).bundleId;
+      if (typeof P !== "string" || (chosen !== null && P !== chosen))
+        throw new Error(`admin-bytes: project creation (${chosen === null ? "minted" : "chosen " + chosen}): ${JSON.stringify(made).slice(0, 400)}`);
       const ns = await mf.getDurableObjectNamespace("STORE");
       await (await ns.get(ns.idFromName("bio")).fetch("http://x/projectclaimowner",
         { method: "POST", body: JSON.stringify({ projectId: P, memberId: "iris" }) })).text();
@@ -185,11 +196,11 @@ const adminBytes = async () => {
       const out = {};
       for (const q of reads) out[q.replace(LID, "LEAD-X")] = (await raw(q, q.startsWith("op=memberadd") ? {} : undefined))
         .replace(/\d{4}-\d{2}-\d{2}T[\d:.]+Z/g, "T").replace(/LEAD-\d{4}-\d{4}-[0-9a-f]+/g, "LEAD-X");
-      return out;
+      return { out, P };
     } finally { await mf.dispose(); }
   };
   try {
-    const b = await drive(baseTree), h = await drive(headTree);
+    const head = await drive(headTree, null), h = head.out, b = (await drive(baseTree, head.P)).out;
     const differ = Object.keys(b).filter((k) => b[k] !== h[k]);
     console.log(`admin-bytes: base ${base.slice(0, 8)} vs this tree — ${Object.keys(b).length} admin-token reads, `
       + `${differ.length} differ`);

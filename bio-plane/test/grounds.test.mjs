@@ -160,11 +160,15 @@ const ASSERTED_AT = "2026-08-05T09:00:00Z";
 /* CASE-2 / DEC-72: publication is a production of a project, owned by CAROL who
    publishes in block 5. NO BAR is declared — an undeclared project is an ABSENT
    bar, so the frozen pairs this suite measures are not newly gated by anything. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED;
+   the fixture takes the old id string as its `name` (the title label) and the
+   suite uses the id it RETURNS. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: async (q, b) => await mf.dispatchFetch(`http://x/api/?${q}`,
     { method: "POST", body: JSON.stringify(b ?? {}) }).then((r) => r.json()),
   mf, sha, machineToken: "adm-rec42", owner: "carol",
-  id: "PROJ-2026-4200-grounds", created: NOW, updated: LATER });
+  name: "PROJ-2026-4200-grounds", created: NOW, updated: LATER });
 
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
@@ -228,8 +232,12 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED —
+   a PROJECT creation sends no bundleId (`id` is only its label) and the caller
+   reads the minted id from the answer's `bundleId`. */
 const promote = async (id, text, type, base = null, tok = CAROL) => POST(`op=promote&token=${tok}`, {
-  bundleId: id, base, snapKey: `${id}-${base ? sha(base).slice(0, 8) : "new"}-${Math.random().toString(36).slice(2, 6)}`,
+  ...(type === "project" && base === null ? {} : { bundleId: id }), base, snapKey: `${id}-${base ? sha(base).slice(0, 8) : "new"}-${Math.random().toString(36).slice(2, 6)}`,
   author: "suite",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   /* REC-18: an INFORMATION bundle registers a capture, because a capture-axis
@@ -580,15 +588,21 @@ console.log("\n--- 6. through the OP (D-43), byte-equal, with the branches swept
      viewerPredicate filters today, and C-2.8 refuses a project-typed leg at the
      write, so the raw door is the only way to put an id a reader may not see
      INSIDE a branch of a visible answer. */
-  const PROJ = "PROJ-2026-1000-secret";
-  const projMd = ["---", `id: ${PROJ}`, "object_type: project", "schema: project@1",
-    `title: "Secret ${PROJ}"`, "current_state: forming", "prior_state: null",
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): the secret project is created with
+     no id (its bytes carry no `id:` line) and PROJ is the id the plane MINTS. Its
+     title used to CONTAIN its id, so "no id survives anywhere" also caught a
+     leaked title; the project is therefore revised once (base = the returned
+     bundleSha) to carry `id: PROJ` and a title naming PROJ again. */
+  const projMd = (id, label = id) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
+    "schema: project@1", `title: "Secret ${label}"`, "current_state: forming", "prior_state: null",
     `created: "${NOW}"`, `last_updated: "${LATER}"`,
     "produced_by:", "  mode: agent", "  capability_tier: high",
     "group: believe-in-oakland", "references: []", "state_history: []",
     "annotations_open: 0", "visuals: []",
     "---", "", "## Summary", "", "A project nobody else is invited to.", ""].join("\n");
-  await mustPromote(PROJ, projMd, "project");
+  const madeProj = await mustPromote("PROJ-2026-1000-secret", projMd(null, "PROJ-2026-1000-secret"), "project");
+  const PROJ = madeProj.bundleId;
+  await mustPromote(PROJ, projMd(PROJ), "project", madeProj.bundleSha);
   const HID = "INQ-2026-1017-hidden-branch";
   await mustPromote(HID, inquiryMd(HID), "inquiry");
   await doGet(`rawleg?from=${HID}&ord=0&to=${PROJ}&ttype=project&grade=B&axis=capture&source=capture&ground=quiet`);

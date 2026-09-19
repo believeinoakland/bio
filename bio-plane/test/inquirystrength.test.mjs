@@ -182,9 +182,12 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
-const projMd = (id) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Secret ${id}"`, "current_state: forming", "prior_state: null",
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7); a null id builds CREATION bytes with no `id:` line (refused
+   PROJECT_ID_IN_BYTES otherwise), `label` standing in the title until the id is known. */
+const projMd = (id, label = id) => ["---",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
+  `title: "Secret ${label}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", "references: []", "state_history: []",
@@ -193,7 +196,10 @@ const projMd = (id) => ["---",
 
 const promote = async (tok, id, text, type, base = null) => {
   const r = await POST(`op=promote&token=${tok}`, {
-    bundleId: id, base, snapKey: `${id}-${base ? sha(base).slice(0, 8) : "new"}`, author: "suite",
+    /* CORRECTED 2026-09-18 (REC-141): a project CREATION sends no bundleId (refused
+       PROJECT_ID_SUPPLIED); `id` is then only the label, and the answer carries the minted id. */
+    ...(type === "project" && base === null ? {} : { bundleId: id }),
+    base, snapKey: `${id}-${base ? sha(base).slice(0, 8) : "new"}`, author: "suite",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     /* REC-18, 2026-08-04: an INFORMATION bundle REGISTERS a capture, because a
        capture-axis grade is now EARNED from the capture record and a document
@@ -216,9 +222,18 @@ await member("gus", ["contribute"], "admin");
 const carol = await member("carol", ["contribute", "create_projects"]);
 const dave = await member("dave", ["contribute"]);
 
-const PROJ = "PROJ-2026-0001-secret";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): PROJ is the id the plane MINTS. The
+   fixture's title (in the bytes and the meta) used to CONTAIN its id, so every
+   "the answer names no PROJ" guard below also caught a leaked title; the minted
+   id is unknown until the creation answers, so the project is revised once
+   (base = the returned bundleSha) to carry `id: PROJ` and a title naming PROJ
+   again — restoring the fixture's shape, so no guard is weakened. */
+const PROJ = await (async () => {
+  const made = await promote(carol, "PROJ-2026-0001-secret", projMd(null, "PROJ-2026-0001-secret"), "project");
+  await promote(carol, made.bundleId, projMd(made.bundleId), "project", made.bundleSha);
+  return made.bundleId;
+})();
 const MISSING = "INQ-2026-9999-none";        // never created: the no-disclosure yardstick
-await promote(carol, PROJ, projMd(PROJ), "project");
 
 const CAP_B = "INFO-2026-0900-cap-b", CAP_C = "INFO-2026-0900-cap-c";
 const CON_A = "INFO-2026-0900-con-a", CON_D = "INFO-2026-0900-con-d";

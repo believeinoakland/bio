@@ -581,8 +581,9 @@ const member = async (id, caps, role = "member") => {
 };
 
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): id null creates with NO bundleId — a project's id is MINTED. */
 const promote = async (id, text, type, state, base = null, tok) => await post("promote", {
-  bundleId: id, base, snapKey: `${id}-${base ? "rev" : "new"}`,
+  ...(id ? { bundleId: id } : {}), base, snapKey: `${id ?? type}-${base ? "rev" : "new"}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
           current_state: state, created: NOW, last_updated: LATER },
@@ -612,13 +613,15 @@ await member("basil", ["contribute", "publish"], "admin");
 const MEMBER = await member("mo", ["contribute", "create_projects"]);
 const OUTSIDER = await member("otto", ["contribute"]);
 
-const projectMd = (id, title) => ["---", `id: ${id}`, "object_type: project",
+const projectMd = (id, title) => ["---", ...(id ? [`id: ${id}`] : []), "object_type: project",
   `title: "${title}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "---", "", "## Thesis Summary", "", "A project.", "",
   "## Open Questions", "", "## Ruled Out", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
 const INSTANCE_ID = "BIAS-2026-0001-house-lens";
-const PROJECT_ID = "PROJ-2026-0001-sewer-fund";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): the project's id is MINTED by the plane (Membership v2 §7) and
+   read from block 10's creation answer; it was "PROJ-2026-0001-sewer-fund", chosen. */
+let PROJECT_ID = null;
 
 /* ---- the instance set, written at DRAFT and moved by its own state machine ---- */
 const instanceFm = (state, over = {}) => FM({
@@ -751,8 +754,9 @@ await block("9", async () => {
 console.log("\n--- 10. the project layer: additions, nullifications, and the LOCK that binds projects ---");
 const PROJECT_BIAS = "BIAS-2026-0003-sewer-lens";
 await block("10", async () => {
-  const p = await promote(PROJECT_ID, projectMd(PROJECT_ID, "Sewer fund"), "project", "forming", null, MEMBER);
+  const p = await promote(null, projectMd(null, "Sewer fund"), "project", "forming", null, MEMBER);
   if (!p.ok) throw new Error(`project: ${J(p)}`);
+  PROJECT_ID = p.bundleId;
 
   const projFm = (state) => FM({
     id: PROJECT_BIAS, current_state: state,

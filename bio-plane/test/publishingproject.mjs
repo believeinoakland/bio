@@ -32,11 +32,17 @@
  */
 
 /** The minimal project bundle the gate accepts. Kept in ONE place so a change to
- *  the project schema moves one template and not eight. */
-export const projectFixtureMd = (id, { created, updated, bar = null, objective =
+ *  the project schema moves one template and not eight.
+ *
+ *  CORRECTED 2026-09-18 (REC-141, IC-158): the PLANE mints a project's id (Membership v2 §7, *"HOW the
+ *  plane mints a project id"*) and writes it into the bytes itself, refusing a creation that names an id
+ *  (C-59.1) or bytes that already carry one (C-59.2). So a CREATION's document is built with `id` null
+ *  and carries no `id:` line; a REVISION passes the minted id and carries it. `name` is the label the
+ *  title is built from (it was the id, which is what made each fixture's title unique). */
+export const projectFixtureMd = (id, { created, updated, bar = null, name = id, objective =
   "Decide whether to refer this to the auditor." } = {}) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Project ${id}"`, "current_state: investigating", "prior_state: null",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
+  `title: "Project ${name}"`, "current_state: investigating", "prior_state: null",
   `created: "${created}"`, `last_updated: "${updated}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", "references: []", "state_history: []",
@@ -64,20 +70,27 @@ export const projectFixtureMd = (id, { created, updated, bar = null, objective =
  *  fixture adds a publisher, never a gate. A suite that WANTS the bar to bite
  *  passes one.
  */
+/*  CORRECTED 2026-09-18 (REC-141, IC-158): this fixture CHOSE the project's id (`id`) and the plane now
+ *  refuses that (C-59.1 PROJECT_ID_SUPPLIED): a project's id is MINTED by the plane and returned. The
+ *  caller now passes a `name` (the label the title is built from, unique per suite as the id was) and
+ *  receives the minted id as the return value. Passing `id` THROWS rather than being ignored, so a suite
+ *  still expecting its chosen id is told at the fixture. */
 export async function makePublishingProject({ post, mf, sha, machineToken, owner,
-                                              id, created, updated, bar = null } = {}) {
+                                              id: chosen, name, created, updated, bar = null } = {}) {
+  if (chosen !== undefined) throw new Error(`fixture: a project's id is minted by the plane (REC-141); pass name, not id (${chosen})`);
+  const text = projectFixtureMd(null, { created, updated, bar, name });
   const r = await post(`op=promote&token=${machineToken}`, {
-    bundleId: id, base: null,
-    snapKey: `${String(created).replace(/[-:]/g, "").slice(0, 15)}Z_${sha(id).slice(0, 8)}`,
-    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${id}`,
+    base: null,
+    snapKey: `${String(created).replace(/[-:]/g, "").slice(0, 15)}Z_${sha(String(name)).slice(0, 8)}`,
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${name}`,
             current_state: "investigating", created, last_updated: updated },
-    files: [{ path: "bundle.md", text: projectFixtureMd(id, { created, updated, bar }),
-              bytes: projectFixtureMd(id, { created, updated, bar }).length,
-              sha256: sha(projectFixtureMd(id, { created, updated, bar })) }],
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     register: [],
   });
   const promoted = (r && typeof r === "object" && "result" in r) ? r.result : r;
-  if (promoted?.ok === false) throw new Error(`fixture: promote ${id}: ${JSON.stringify(promoted)}`);
+  if (promoted?.ok === false) throw new Error(`fixture: promote ${name}: ${JSON.stringify(promoted)}`);
+  const id = promoted?.bundleId;
+  if (typeof id !== "string") throw new Error(`fixture: promote ${name} returned no minted id: ${JSON.stringify(promoted)}`);
   const stub = await mf.getDurableObjectNamespace("STORE");
   const obj = stub.get(stub.idFromName("bio"));
   const c = await (await obj.fetch("http://x/projectclaimowner",

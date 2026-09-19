@@ -213,8 +213,10 @@ const infoMd = (id) => ["---",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+/* CORRECTED 2026-09-18 (REC-141, IC-158): creation bytes of a project carry no `id:` line
+   (PROJECT_ID_IN_BYTES), so `id` null writes none; the plane mints the id and writes it. */
 const projectMd = (id, { title, cites = [] } = {}) => ["---",
-  `id: ${id}`, "object_type: project", `title: "${title}"`,
+  ...(id ? [`id: ${id}`] : []), "object_type: project", `title: "${title}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length
     ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
@@ -239,7 +241,19 @@ const mustPromote = async (id, text, type) => {
 };
 
 const LEDGER = "INFO-2026-5000-ledger", MINUTES = "INFO-2026-5000-minutes";
-const A = "PROJ-2026-5000-oversight", B = "PROJ-2026-5000-budget";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7)
+   and a creation naming one is refused PROJECT_ID_SUPPLIED. The creation names no bundleId; the id
+   is read from the answer. `name` (the id the suite used to choose) keeps the meta title and key. */
+const createProject = async (name, text) => {
+  const r = await POST(`op=promote&token=${RUTH}`, {
+    base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+            current_state: "forming", created: NOW, last_updated: LATER } });
+  if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 800)}`);
+  return r.bundleId;
+};
+let A, B; /* minted below (REC-141) */
 const INQ = "INQ-2026-5000-sewer-transfers";
 const RUN_A = "AIRUN-2026-5000-oversight", RUN_B = "AIRUN-2026-5000-budget";
 
@@ -275,8 +289,8 @@ const V2 = { name: "the ledger alone", run: RUN_B, at: "2026-07-04T00:00:00Z",
   description: "Second reading: the ledger carries the finding without the minutes.",
   grounds: ["the ledger"], legs: [{ target: LEDGER, ground: "the ledger" }] };
 
-await mustPromote(A, projectMd(A, { title: "Oversight", cites: [INQ] }), "project");
-await mustPromote(B, projectMd(B, { title: "Budget", cites: [INQ] }), "project");
+A = await createProject("PROJ-2026-5000-oversight", projectMd(null, { title: "Oversight", cites: [INQ] }));
+B = await createProject("PROJ-2026-5000-budget", projectMd(null, { title: "Budget", cites: [INQ] }));
 const openRun = async (run, ctx) => {
   const r = await POST(`op=airunopen&token=${RUTH}`, {
     run, contextType: "project", contextId: ctx,

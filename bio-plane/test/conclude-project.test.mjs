@@ -172,8 +172,10 @@ const infoMd = (id) => ["---",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+/* CORRECTED 2026-09-18 (REC-141, IC-158): creation bytes of a project carry no `id:` line
+   (PROJECT_ID_IN_BYTES), so `id` null writes none; the plane mints the id and writes it. */
 const projectMd = (id, { title, cites = [] } = {}) => ["---",
-  `id: ${id}`, "object_type: project", `title: "${title}"`,
+  ...(id ? [`id: ${id}`] : []), "object_type: project", `title: "${title}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length
     ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
@@ -196,6 +198,19 @@ const mustPromote = async (id, text, type, state = null) => {
   if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 800)}`);
   return r;
 };
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7)
+   and a creation naming one is refused PROJECT_ID_SUPPLIED. The creation names no bundleId; the id
+   is read from the answer. `name` (the id the suite used to choose) keeps the meta title and the
+   snapshot key's `PROJ-…` prefix, which the tamper arm's key-ordering comment relies on. */
+const createProject = async (name, text) => {
+  const r = await POST(`op=promote&token=${RUTH}`, {
+    base: null, snapKey: `${name}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Bundle ${name}`,
+            current_state: "forming", created: NOW, last_updated: LATER } });
+  if (!r.ok || typeof r.bundleId !== "string") throw new Error(`create ${name}: ${JSON.stringify(r).slice(0, 800)}`);
+  return r.bundleId;
+};
 const shaOf = async (id) => (await GET(`op=list&token=${RUTH}&limit=1000`))
   ?.bundles?.find((b) => b.bundle_id === id)?.bundle_sha ?? null;
 const stateOf = async (id) => (await GET(`op=list&token=${RUTH}&limit=1000`))
@@ -210,8 +225,7 @@ const LEG = "INQ-2026-4124-legacy-question";      /* concluded the old way, no p
 /* A and B share INQ and stand on DIFFERENT readings with DIFFERENT claims — the
    liar's defence. C never cites INQ. D cites INQ and stands on nothing. E stands
    on a reading that states no claim. */
-const A = "PROJ-2026-4124-oversight", B = "PROJ-2026-4124-budget", C = "PROJ-2026-4124-unrelated",
-      D = "PROJ-2026-4124-undecided", E = "PROJ-2026-4124-claimless";
+let A, B, C, D, E; /* minted below (REC-141) */
 const CLAIM_A = "The transfer followed the process the council adopted in 2024.";
 const CLAIM_B = "The transfer bypassed the council vote the adopted process requires.";
 const VA = { name: "paper trail", claim: CLAIM_A,
@@ -228,11 +242,11 @@ const VL = { name: "legacy reading", claim: "The legacy question has a claimed a
   description: "A reading of the legacy question, stated after it was concluded the old way.",
   grounds: ["the ledger alone"], legs: [{ target: LEDGER, ground: "the ledger alone" }] };
 
-await mustPromote(A, projectMd(A, { title: "Oversight", cites: [INQ, LEG] }), "project");
-await mustPromote(B, projectMd(B, { title: "Budget", cites: [INQ] }), "project");
-await mustPromote(C, projectMd(C, { title: "Unrelated" }), "project");
-await mustPromote(D, projectMd(D, { title: "Undecided", cites: [INQ] }), "project");
-await mustPromote(E, projectMd(E, { title: "Claimless", cites: [INQ] }), "project");
+A = await createProject("PROJ-2026-4124-oversight", projectMd(null, { title: "Oversight", cites: [INQ, LEG] }));
+B = await createProject("PROJ-2026-4124-budget", projectMd(null, { title: "Budget", cites: [INQ] }));
+C = await createProject("PROJ-2026-4124-unrelated", projectMd(null, { title: "Unrelated" }));
+D = await createProject("PROJ-2026-4124-undecided", projectMd(null, { title: "Undecided", cites: [INQ] }));
+E = await createProject("PROJ-2026-4124-claimless", projectMd(null, { title: "Claimless", cites: [INQ] }));
 await mustPromote(INQ, inquiryMd(INQ, { versions: [VA, VB, VN], basis: [LEDGER, MINUTES] }), "inquiry");
 /* REC-136: LEG is concluded IN ITS OWN BYTES, the way every conclusion written
    before §7.1 item 6 is — the act can no longer write one that names no
@@ -335,7 +349,8 @@ console.log("\n--- 1. two projects, one shared question, each concludes with ITS
     [/\nconclusions:\n  - inquiry: "INQ-2026-4124-sewer-transfers"\n    act: "concluded"\n    version: "paper trail"\n    claim: "The transfer followed the process the council adopted in 2024\."/.test(aText),
      /\n    by: "ruth"\n/.test(aText), /\n    at: "20\d\d-/.test(aText)], [true, true, true]);
   t("and the act is in A's Session Log, naming the claim adopted",
-    /### Session [^\n]+ \| Concluded \| ruth\nTrigger: op=conclude on INQ-2026-4124-sewer-transfers for PROJ-2026-4124-oversight\n[^\n]*\nClaim: The transfer followed/.test(aText), true);
+    /* CORRECTED 2026-09-18 (REC-141): re-pointed from the literal id at A's minted id. */
+    new RegExp(`### Session [^\\n]+ \\| Concluded \\| ruth\\nTrigger: op=conclude on INQ-2026-4124-sewer-transfers for ${A}\\n[^\\n]*\\nClaim: The transfer followed`).test(aText), true);
   t("B's own bytes carry B's claim and NOT A's",
     [(await textOf(B) || "").includes(CLAIM_B), (await textOf(B) || "").includes(CLAIM_A)], [true, false]);
 
@@ -561,7 +576,8 @@ console.log("\n--- 5. §7.1 item 7: WITHDRAWAL APPENDS — conclude, withdraw, c
   const bText = (await textOf(B)) || "";
   t("B's own bytes carry all three entries for INQ, and its Session Log records the withdrawal",
     [entriesIn(bText),
-     /\| Conclusion withdrawn \| ruth\nTrigger: op=withdrawconclusion on INQ-2026-4124-sewer-transfers for PROJ-2026-4124-budget\n/.test(bText)],
+     /* CORRECTED 2026-09-18 (REC-141): re-pointed from the literal id at B's minted id. */
+     new RegExp(`\\| Conclusion withdrawn \\| ruth\\nTrigger: op=withdrawconclusion on INQ-2026-4124-sewer-transfers for ${B}\\n`).test(bText)],
     [3, true]);
   t("and A was not moved by any of B's acts", (await conclusionOf(A))?.version, VB.name);
 
@@ -576,7 +592,10 @@ console.log("\n--- 5. §7.1 item 7: WITHDRAWAL APPENDS — conclude, withdraw, c
      tally — an offender's error list is capped, and B's fixture draws unrelated
      core-field findings that would fill it. BEFORE and AFTER, so the C-5.1
      finding is attributed to the rewrite rather than to the fixture. */
-  const auditB = async () => (await GET(`op=audit&token=${RUTH}&after=${enc("PROJ-2026-4124-buda")}&limit=1`)) || {};
+  /* CORRECTED 2026-09-18 (REC-141): the cursor was a literal just below the chosen id; B is now
+     minted, so the cursor is B with its last character stepped down one — still just below B. */
+  const belowB = B.slice(0, -1) + String.fromCharCode(B.charCodeAt(B.length - 1) - 1);
+  const auditB = async () => (await GET(`op=audit&token=${RUTH}&after=${enc(belowB)}&limit=1`)) || {};
   const beforeAudit = await auditB();
   const cut = bText.replace(/\nconclusions:\n  - inquiry: "INQ-2026-4124-sewer-transfers"\n(    [^\n]*\n)+?(?=  - inquiry)/, "\nconclusions:\n");
   /* The snapshot key SORTS LAST on purpose: C-5.1 compares against the

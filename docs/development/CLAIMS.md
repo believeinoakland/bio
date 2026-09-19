@@ -14395,3 +14395,43 @@ publishes it (Q12, DEC-8), so UI-65's stance surface offers the project no contr
 with an accepted reading and leaves WHICH project to the act's parameter. Whether that is `conclude` published on a
 concluded inquiry, or a separate act id for the project relationship, is RECORD's to decide; the surface consumes
 either with no change beyond the act id. UI-65 did not edit `bio-plane/**`.
+
+## CLAIM 2026-09-18 RECORD (REC-141 — THE PLANE MINTS PROJECT IDS: a caller-supplied id on a new project or a fork is refused with one answer; the plane writes `id:` into the bytes before it hashes and registers them)
+
+Worker spawned by CONDUCT #6, isolated worktree `agent-a12cdccbace704eb6`, branch `worktree-agent-a12cdccbace704eb6`,
+base `3dee1fdb`. `npm ci` in all three packages, each `node_modules` a real directory (5.0 GiB free). Design: Membership
+v2 §7, the bullet *"HOW the plane mints a project id"* (BOB #15), with §7.9. IDs minted with `tools/mintid.mjs`: IC-158,
+C-59. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — `promote`'s creation arm, `forkProject`, `allocId`'s sequence (a shared
+  private step), the DO door's `promote` row; `bio-plane/src/index.mjs` — `op=promote`'s and `op=projectfork`'s
+  handling of a caller-supplied id; `bio-plane/checks/bio-checks.mjs` — a new C-59 family.
+- Tests: a new `bio-plane/test/project-mint.test.mjs` and its control driver; `project-sight.test.mjs` §6's KNOWN pin
+  CORRECTED; every suite that chose a project id CORRECTED at its site with a dated reason, never exempted (including
+  the shared fixture `bio-plane/test/publishingproject.mjs`); `civicos-ui/test/**` fixtures only where a plane-backed
+  fixture chose a project id. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-158), `DEBT.md` (D-428's creation half), `BIO_Membership_Architecture_v2.md` front
+  matter and §7, `construct-status.json` if a construct's state moves, this block.
+
+NOT `QUEUE.md` (CONDUCT's/SCHEDULER's), NOT `civicos-ui/app.html` (UI-66's, DELEGATED below), NOT `release/`, NOT
+`newgroup/`.
+
+### DELEGATION 2026-09-18 RECORD (REC-141) -> UI: **THE ADD SURFACE AND THE FORK FORM MUST STOP SENDING A PROJECT ID — THE PLANE NOW MINTS IT AND REFUSES ONE (UI-66)**
+**open as of 2026-09-18** — REC-141 (IC-158) makes the surface's current project creation and fork REFUSED; UI-66 is the surface half and lands WITH REC-141.
+
+Measured at the code on `worktree-agent-a12cdccbace704eb6` (base `3dee1fdb`). What `civicos-ui/app.html` must stop sending:
+1. **The Add surface, for a PROJECT** (the create flow that calls `recR("allocid", { prefix: vocabFor(PREFIX, type), ... })`,
+   builds `id = stem + "-" + slug`, passes it to `mdFor(id, ...)` and sends `op=promote` with `bundleId: id`; and any other
+   create path — e.g. the proposal-adoption flow's `allocid` — whenever the type is `project`): send NO `bundleId`, do
+   NOT call `op=allocid` for it, and build `bundle.md` with NO `id:` line. The answer carries the minted id as `bundleId`
+   and the registered sha as `bundleSha`; the surface shows and opens THAT id (and uses that sha as the base of any
+   revision). A creation naming an id is refused `PROJECT_ID_SUPPLIED` (C-59.1); bytes carrying `id:` are refused
+   `PROJECT_ID_IN_BYTES` (C-59.2); unparseable bytes `PROJECT_DOCUMENT_UNREADABLE` (C-59.4). Every other type still
+   allocates and names its own id — unchanged.
+2. **The fork form** (`projectfork: { ..., fields: [["newId", "The new project's id", "required"], ["title", ...]] }`):
+   remove the `newId` field and send no `newId`; read the fork's id from the answer's `newId`. A named `newId` is refused
+   `PROJECT_FORK_ID_SUPPLIED` (C-59.3).
+3. Each C-59 refusal carries `code`, `check` and a canned `translation`; render the translation (DEC-49), and move
+   `civicos-ui/check-refusal-codes.mjs`' floors only from its own print if they move.
+The plane's own installer intake page (`bio-plane/src/setup.mjs`) was corrected by REC-141 itself.

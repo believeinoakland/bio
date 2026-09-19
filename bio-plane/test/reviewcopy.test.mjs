@@ -191,12 +191,14 @@ const IRIS = await enrol("iris", "iris-passphrase-126", "member", ["contribute",
 const VIC = await enrol("vic", "vic-passphrase-126", "member", ["contribute", "publish"]);
 rP(await POST("op=signeradd&token=adm-r126", { keyB64: mkKey("iris"), memberId: "iris", comment: "iris laptop" }));
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   the fixture takes a `name` and returns the minted id (PROJ holds it; vic's own project is never cited). */
 const PROJ = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r126", owner: "iris",
-  id: "PROJ-2026-1260-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  name: "PROJ-2026-1260-auditor", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-r126", owner: "vic",
-  id: "PROJ-2026-1261-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
+  name: "PROJ-2026-1261-elsewhere", created: "2026-07-01T00:00:00Z", updated: "2026-07-02T00:00:00Z" });
 
 /* REC-133 — THE ROSTER §6A.2's THREE AUTHORITIES ARE DRIVEN AGAINST. Each holds the
    STRONGEST capabilities its position allows, so a refusal can only come from the

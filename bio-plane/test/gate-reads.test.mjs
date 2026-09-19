@@ -111,13 +111,17 @@ const member = async (id, caps, role = "member") => {
   return lg.result.token;
 };
 
-const md = (id, type, refs = "") => `---\nid: ${id}\nobject_type: ${type}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n${refs}---\n\n## Summary\n\nSecret plan.\n`;
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane
+   (Membership v2 §7). A null id builds CREATION bytes with no `id:` line (refused
+   PROJECT_ID_IN_BYTES otherwise); mk then sends no bundleId (refused
+   PROJECT_ID_SUPPLIED otherwise) and returns the minted id. */
+const md = (id, type, refs = "") => `---\n${id === null ? "" : `id: ${id}\n`}object_type: ${type}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n${refs}---\n\n## Summary\n\nSecret plan.\n`;
 /* REC-30 extends the fixture: a bundle may now also carry a CAPTURE — registered
    (so the task consumer can resolve an event back to it) and read (so FW-5's
    provenance reading lands in `readings`/`reading_refs`, which is what the whole
    recogniser and progression axis is built on). Everything REC-25 asserted is
    unchanged by it: the same three bundles, the same bundle.md. */
-const mk = async (id, type, tok, refs = "", capture = null) => {
+const mk = async (id, type, tok, refs = "", capture = null, label = id) => {
   const text = md(id, type, refs);
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   const register = [];
@@ -130,11 +134,12 @@ const mk = async (id, type, tok, refs = "", capture = null) => {
     register.push({ sha256: capture.sha, path: "captures/doc.pdf", encoding: "binary", bytes: 10 });
   }
   const r = await POST(`op=promote&token=${tok}`, {
-    bundleId: id, base: null, snapKey: `${id}-new`, author: "suite", files, register,
-    meta: { object_type: type, group: "believe-in-oakland", title: id,
+    ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${label}-new`, author: "suite", files, register,
+    meta: { object_type: type, group: "believe-in-oakland", title: label,
             current_state: type === "project" ? "forming" : "collected",
             created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
-  if (!r.result?.ok) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
+  if (!r.result?.ok) throw new Error(`promote ${label}: ${JSON.stringify(r)}`);
+  return r.result;
 };
 
 /* 4.2/4.3: the first two roster members must be administrators. ruth is the
@@ -148,7 +153,9 @@ const dave = await member("dave", ["contribute"]);
 
 const INFO = "INFO-2026-0001-shared";
 const PROB = "PROB-2026-0001-shared";
-const PROJ = "PROJ-2026-0001-secret";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): PROJ is the id the plane MINTS when carol
+   creates the project below, no longer a chosen literal. */
+let PROJ = null;
 const MISSING = "PROJ-2026-9999-none";   // never created: the no-disclosure yardstick
 const SHARED = [INFO, PROB];
 
@@ -176,10 +183,30 @@ await mk(PROB, "problem", "mem-rec25");
 /* REC-14's `required_strength` on the SECRET project, so op=strengthbarof has a
    real bar to report about the SHARED information the project cites — and a real
    project id to withhold while reporting it. */
-await mk(PROJ, "project", carol,
-  `references:\n  - target: ${INFO}\n    rel: cites\n    status: confirmed\n    note: evidence\n${dangle(PHANTOM_P)}`
-  + `required_strength:\n  capture: B\n  connection: C\n`,
-  { sha: PSHA, entities: [REF] });
+{
+  const projRefs = `references:\n  - target: ${INFO}\n    rel: cites\n    status: confirmed\n    note: evidence\n${dangle(PHANTOM_P)}`
+    + `required_strength:\n  capture: B\n  connection: C\n`;
+  const made = await mk(null, "project", carol, projRefs, { sha: PSHA, entities: [REF] }, "PROJ-2026-0001-secret");
+  PROJ = made.bundleId;
+  /* CORRECTED 2026-09-18 (REC-141): the fixture's title WAS its id, and every
+     leak guard below that asks "does the answer contain PROJ" therefore caught a
+     leaked TITLE as well as a leaked id. The minted id cannot be known before the
+     creation, so the same bytes are revised once (base = the returned bundleSha)
+     under the title PROJ — restoring title == id, so no guard is weakened. */
+  const text = md(PROJ, "project", projRefs);
+  const prov = JSON.stringify({ documents: [{
+    capture: { sha256: PSHA, encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_calendar", reader_version: 1, found: true,
+               at: "2026-07-01T00:00:00Z", entities: [REF] } }] });
+  const rv = await POST(`op=promote&token=${carol}`, {
+    bundleId: PROJ, base: made.bundleSha, snapKey: `${PROJ}-title`, author: "suite",
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }],
+    register: [{ sha256: PSHA, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
+    meta: { object_type: "project", group: "believe-in-oakland", title: PROJ, current_state: "forming",
+            created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } });
+  if (!rv.result?.ok) throw new Error(`retitle ${PROJ}: ${JSON.stringify(rv)}`);
+}
 
 const ids = (r) => (r.body.result || []).map((b) => b.bundle_id).sort();
 

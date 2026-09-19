@@ -146,8 +146,10 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   creation bytes carry no `id:` line (PROJECT_ID_IN_BYTES), so `id` null writes none. */
 const projectMd = (id, title) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
+  ...(id ? [`id: ${id}`] : []), "object_type: project", "schema: project@1",
   `title: "${title}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
@@ -159,23 +161,23 @@ const projectMd = (id, title) => ["---",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
 let snapSeq = 0;
-const promote = async (id, text, type, { base = null, register = [], reading = null, state = null } = {}) => {
+const promote = async (id, text, type, { base = null, register = [], reading = null, state = null, name = id } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) {
     const prov = JSON.stringify({ documents: [reading] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
   }
   return post("promote", {
-    bundleId: id, base,
+    ...(id != null ? { bundleId: id } : {}), base,
     snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${name}`,
             current_state: state || (type === "inquiry" ? "open" : type === "project" ? "forming" : "collected"),
             created: NOW, last_updated: LATER },
     files, register });
 };
 const mustPromote = async (id, ...a) => {
   const r = await promote(id, ...a);
-  if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
+  if (r.ok === false || (id == null && !r.bundleId)) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
   return r;
 };
 const selectIds = async (ids) => {
@@ -254,12 +256,14 @@ t("op=resolve grades the composite-key reference A — the machine's own act, ov
 
 const MAIN = "INQ-2026-3700-main";        // the question that will do the citing
 const SUB = "INQ-2026-3700-sub";          // a question cited AS A LEG of MAIN
-const CASE = "PROJ-2026-3700-case";
+let CASE; /* minted below (REC-141): a creation naming a project id is refused PROJECT_ID_SUPPLIED */
 await mustPromote(MAIN, inquiryMd(MAIN,
   { question: "Did the sewer fund pay for the marina?", subject: ORD }), "inquiry");
 await mustPromote(SUB, inquiryMd(SUB,
   { question: "What did the transfer ordinance authorise?" }), "inquiry");
-await mustPromote(CASE, projectMd(CASE, "Sewer franchise diversion"), "project");
+/* CORRECTED 2026-09-18 (REC-141, IC-158): the case is created with no bundleId; its id is read from the answer. */
+CASE = (await mustPromote(null, projectMd(null, "Sewer franchise diversion"), "project",
+  { name: "PROJ-2026-3700-case" })).bundleId;
 t("the question starts with NO basis at all — absent in the table and absent in its bytes",
   [await tableLegs(MAIN), await docLegs(MAIN)], [[], null]);
 

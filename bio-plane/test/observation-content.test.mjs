@@ -448,8 +448,12 @@ const promote = async (id, { type = "information", reading = null, captureSha = 
                                                            bytes: 10 }, reading }] });
     files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
   }
+  /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and
+     a project creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1); a project creation sends no
+     bundleId (`id` is then only its title label) and the minted id comes back on the answer. */
+  const mint = type === "project" && !HEAD.has(id);
   const body = {
-    bundleId: id, base: HEAD.get(id) ?? null,
+    ...(mint ? {} : { bundleId: id }), base: HEAD.get(id) ?? null,
     snapKey: `20260915T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
             current_state: type === "inquiry" ? "open" : "collected",
@@ -458,7 +462,7 @@ const promote = async (id, { type = "information", reading = null, captureSha = 
   if (author !== undefined) body.author = author;
   const r = await POST(`op=promote&token=${ADM}`, body);
   if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
-  HEAD.set(id, r.bundleSha);
+  HEAD.set(mint ? r.bundleId : id, r.bundleSha);
   return r;
 };
 

@@ -587,17 +587,20 @@ const GET = async (op, qs, tok = TOK) => rP(await (await mf.dispatchFetch(
 
 const NOW = "2026-08-08T09:00:00Z";
 const INQUIRY = "INQ-2026-0808-who-signed-the-transfers";
-const PROJECT = "PROJ-2026-0808-transfer-review";
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
+   creation naming one is refused PROJECT_ID_SUPPLIED; the fixture promotes it with no bundleId and no `id:`
+   line, and PROJECT is read from the answer. */
+let PROJECT = null;
 
 const promote = async (id, text, type, state) => await POST("promote", {
-  bundleId: id, base: null, snapKey: `${id}-new`,
+  ...(id === null ? {} : { bundleId: id }), base: null, snapKey: `${id ?? "project"}-new`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
           current_state: state, created: NOW, last_updated: NOW },
 });
 const inquiryMd = ["---", `id: ${INQUIRY}`, "---", "", "## Question", "",
   "Who signed the sewer fund transfers?", ""].join("\n");
-const projectMd = ["---", `id: ${PROJECT}`, "object_type: project", `title: "Transfer review"`,
+const projectMd = ["---", "object_type: project", `title: "Transfer review"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${NOW}"`, "---", "",
   "## Thesis Summary", "", "A project.", "", "## Open Questions", "", "## Ruled Out", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
@@ -605,8 +608,9 @@ const projectMd = ["---", `id: ${PROJECT}`, "object_type: project", `title: "Tra
 await block("fixture", async () => {
   const a = await promote(INQUIRY, inquiryMd, "inquiry", "open");
   if (!a || a.ok === false) throw new Error(`promote inquiry: ${J(a)}`);
-  const b = await promote(PROJECT, projectMd, "project", "forming");
-  if (!b || b.ok === false) throw new Error(`promote project: ${J(b)}`);
+  const b = await promote(null, projectMd, "project", "forming");
+  if (!b || b.ok === false || typeof b.bundleId !== "string") throw new Error(`promote project: ${J(b)}`);
+  PROJECT = b.bundleId;
 });
 
 /* THE SIX RUNS, one per answer this field can honestly give, plus the matrix

@@ -162,8 +162,11 @@ const member = async (id, caps, role = "member") => {
   return lg.result.token;
 };
 
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7): its
+   creation names no bundleId (PROJECT_ID_SUPPLIED) and its bytes no id line (PROJECT_ID_IN_BYTES); `mk`
+   returns the id the plane answered with, and for a project `id` is only its title's label. */
 const bundleMd = (id, type) => [
-  "---", `id: ${id}`, `object_type: ${type}`,
+  "---", ...(type === "project" ? [] : [`id: ${id}`]), `object_type: ${type}`,
   `current_state: ${type === "project" ? "forming" : type === "inquiry" ? "open" : "collected"}`,
   `created: "${NOW}"`, `last_updated: "${NOW}"`, "---", "", "## Summary", "", "A fixture.", "",
 ].join("\n");
@@ -171,12 +174,13 @@ const bundleMd = (id, type) => [
 const mk = async (id, type, tok) => {
   const text = bundleMd(id, type);
   const r = await RAW(`op=promote&token=${tok}`, {
-    bundleId: id, base: null, snapKey: `${id}-new`, author: "r69",
+    ...(type === "project" ? {} : { bundleId: id }), base: null, snapKey: `${id}-new`, author: "r69",
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
     meta: { object_type: type, group: "believe-in-oakland", title: id,
             current_state: type === "project" ? "forming" : type === "inquiry" ? "open" : "collected",
             created: NOW, last_updated: NOW } });
   if (!r.result?.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 500)}`);
+  return r.result.bundleId;
 };
 
 /* 4.2/4.3: the first two roster members must be administrators. */
@@ -186,13 +190,13 @@ const carol = await member("carol", ["contribute", "create_projects"]);
 const dave = await member("dave", ["contribute"]);      // THE UNINVITED MEMBER
 
 const INQ = "INQ-2026-0001-shared";        // shared corpus: everybody sees it
-const PROJ = "PROJ-2026-0001-secret";      // carol's project: dave is NOT invited
 const OTHER = "INFO-2026-0002-shared";     // a second shared context, for the filter arm
 const MISSING = "PROJ-2026-9999-none";     // never created: the no-disclosure yardstick
 
 await mk(INQ, "inquiry", "mem-r69");
 await mk(OTHER, "information", "mem-r69");
-await mk(PROJ, "project", carol);
+/* CORRECTED 2026-09-18 (REC-141, IC-158): carol's project (dave is NOT invited) carries the id the plane MINTED. */
+const PROJ = await mk("secret", "project", carol);
 
 const open = async (tok, run, contextType, contextId, label) => {
   const r = await POST(`op=airunopen&token=${tok}`, {

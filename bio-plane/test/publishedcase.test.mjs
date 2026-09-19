@@ -193,9 +193,11 @@ const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
 /* CASE-2 / DEC-72's publishing project, owned by VERA, who publishes throughout.
    NO BAR is declared, so nothing this suite publishes is newly gated. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7);
+   the fixture takes a `name` and returns the minted id, which is what PUBLISHING_PROJECT now holds. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-rec22", owner: "vera",
-  id: "PROJ-2026-2200-publishedcase", created: NOW, updated: LATER });
+  name: "PROJ-2026-2200-publishedcase", created: NOW, updated: LATER });
 const refLines = (targets) => targets.length
   ? ["references:", ...targets.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
   : ["references: []"];

@@ -282,9 +282,11 @@ const reopen = async (target, reason) =>
    exactly as one that does not exist. `allLoadBearing` designates every target load-bearing,
    which is what this suite means — it is about the PIN, and a supporting member would
    be an unrelated variable in a freeze test. */
+/* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); the
+   old id is the fixture's name and PUBLISHING_PROJECT is the returned, minted id. */
 const PUBLISHING_PROJECT = await makePublishingProject({
   post: POST, mf, sha, machineToken: "adm-case3", owner: "vera",
-  id: "PROJ-2026-0300-casepin", created: NOW, updated: LATER });
+  name: "PROJ-2026-0300-casepin", created: NOW, updated: LATER });
 /* CASE-5b: THE CASE CEREMONY RIDES THIS HELPER. `op=publish` now AUTHORS a case
    document and commits nothing case-side — the case's identity, roster, PINS,
    partition, scope, bar and acknowledgement are committed when a member SIGNS
