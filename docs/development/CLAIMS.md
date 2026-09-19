@@ -14638,3 +14638,16 @@ is to point the source read at `#refEdgeSevered`.
 **1454 / 247 / 248, run 210**; UI harness exit **0** (54 PASS). `conclude-project-arm.test.mjs` (REC-142's, arrived at
 this merge) CORRECTED for minted ids and its control re-run AS DECLARED with identical figures. I3 on this tree reads
 **38.1.0** (IC-159), so IC-158's proposal is **38.1.0 -> 39.0.0** — read the base at resolution.
+**SUPERSEDING FIGURES, 2026-09-19, after CONDUCT #6's correction on BOB #16's ruling (Membership v2 §7, *"A MINTED ID
+CARRIES NO COUNT"*):** the PROJ suffix is now four digits from the CSPRNG (`crypto.getRandomValues`, rejection-sampled),
+redrawn on collision inside the promote transaction, NEVER read from or stepping `allocId` (CASE/DRAFT/RVG and
+`op=allocid` untouched — REC-151's). `project-mint.test.mjs` §6 asserts the counter moves only by allocid's own step, the
+suffix is not the counter's value, and five consecutive mints are not a +1 run; `project-mint.control.mjs`'s new
+`counter-restored` arm fails exactly those three (42/3), every other arm AS DECLARED (baseline 45/0). `project-sight` and
+`ratify-authority` no longer predict the minted id (never-minted read at a shaped id, each read's own id normalised) —
+controls re-run AS DECLARED; `d280-strengthbar`'s routing pair ordered by minted id; `conclude-project` and
+`airun-projectgate` expectations that assumed creation order corrected (the battery caught both), and every corrected
+suite re-run 4x (76 suites, 0 failing runs). Merged `origin/main` at `f61d071d`. At `28757640`: **257/257 suites green ·
+15744 assertions passing · run 65259.1fc098**, exit 0; `coverage.mjs --strict` exit **0**, REGISTER_FLOOR **1458 / 248 /
+249, run 211** (re-read from the committed merge's print); UI harness exit **0**. The live record's count of legacy
+non-`PROJ-` project ids (BOB #16's legacy residue) is UNDETERMINED — this worker has no access to a deployed record.
