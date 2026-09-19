@@ -25,7 +25,8 @@
  *     *blocked on BOB*, *is BOB's*, *STILL OPEN*.
  *   - `DECISIONS.md` entries still `open`, which are by construction Bob's and this lane's to
  *     surface.
- *   - `QUEUE.md` rows whose state is `blocked` and whose text names a lane.
+ *   - the plan's rows (`QUEUE.md` and `BACKLOG.md`, read through `ledger.mjs`' one lister since
+ *     M0-73) whose state is `blocked` and whose heading names a lane.
  *
  * **THE RESIDUE LINES ARE THE MOST IMPORTANT SOURCE AND THE EASIEST TO LOSE.** A row that says
  * *STILL OPEN AND NOT CLAIMED DONE: …* is a session being honest about what it did not finish, and
@@ -68,16 +69,21 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+/* M0-73: the plan's rows come from `ledger.mjs`' ONE lister. `ledger.mjs` imports this file too (the one
+   closed-DEBT predicate, below), so the import cycle is real, and harmless ONLY because nothing at this
+   file's top level touches these bindings: `SOURCES.queue` and `.backlog` are GETTERS for that reason. */
+import { LEDGERS, PIPELINE, pipelineRows } from "./ledger.mjs";
 
 export const ROOT = join(new URL("..", import.meta.url).pathname);
 
 export const SOURCES = {
   debt: "docs/development/DEBT.md",
   decisions: "docs/development/DECISIONS.md",
-  queue: "docs/development/QUEUE.md",
   /* LED-6: the pipeline cache may hold no `blocked` row (WORK-PIPELINE §2, invariant P3), so once
-     the migration lands EVERY blocked row lives in the backlog — read both, or this list empties. */
-  backlog: "docs/development/BACKLOG.md",
+     the migration lands EVERY blocked row lives in the backlog — read both, or this list empties.
+     M0-73: both paths are `ledger.mjs`' own, never spelled here, so they cannot drift from the lister's. */
+  get queue() { return LEDGERS.QUEUE.live; },
+  get backlog() { return LEDGERS.BACKLOG.live; },
 };
 
 /* The phrases this corpus ALREADY uses to say a lane owes something. Derived by reading the rows
@@ -204,17 +210,31 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
     if (m[2] === "open") items.push({ source: "DECISIONS", id: m[1], attributed: true,
                                       why: "open decision", text: "awaiting Bob" });
 
-  for (const [src, label] of [[SOURCES.queue, "QUEUE"], [SOURCES.backlog, "BACKLOG"]]) {
-    const q = read(src);
-    if (q === null) unreadable.push(src);
-    /* THE WHOLE HEADING LINE, NOT ITS FIRST 220 CHARACTERS. Found 2026-09-18 by BOB #14: REC-100 is
-       blocked on a design ruling *Routed to BOB*, deep in a heading that carries its history, and the
-       truncated read returned 0 while the row sat routed to this lane. Measured over every lane before
-       the change: the full line adds exactly REC-100 for BOB and nothing for anybody else. */
-    else for (const m of q.matchAll(/^### ([A-Z0-9-]+) · blocked(.*)$/gm))
-      if (owner.test(m[2])) items.push({ source: label, id: m[1], attributed: true,
-                                         why: `blocked on ${lane}`, text: m[2].trim().slice(0, 160) });
+  /* M0-73 BLOCKED-ROWS — THE PLAN'S BLOCKED ROWS ARE THE LISTER'S, AND THIS FILE CARRIES NO ROW GRAMMAR.
+     Until M0-73 this read `QUEUE.md` and `BACKLOG.md` with a heading pattern of its OWN (`[A-Z0-9-]+`, one
+     space either side of the dot) — D-430's class: it agreed with `ledger.mjs` on every live row and
+     disagreed at the edges, reading `### X-1-2 · blocked` (a heading no other arm of the plan reads) and
+     missing `### X-1  ·  blocked` (a row every other arm reads). The files are still read through this
+     file's `reader`, so an unreadable one is NAMED and a suite can inject fixtures; the ROWS come from
+     `pipelineRows`, the one lister (`pipeline-readers.test.mjs` §6 and §7 pin both halves). */
+  const texts = {};
+  for (const l of PIPELINE) {
+    const t = read(l.live);
+    if (t === null) unreadable.push(l.live); else texts[l.name] = t;
   }
+  for (const r of pipelineRows({ texts }).rows) {
+    if (r.state !== "blocked") continue;
+    /* THE WHOLE HEADING LINE AFTER ITS STATE, NOT ITS FIRST 220 CHARACTERS. Found 2026-09-18 by BOB #14:
+       REC-100 is blocked on a design ruling *Routed to BOB*, deep in a heading that carries its history,
+       and the truncated read returned 0 while the row sat routed to this lane. Measured over every lane
+       before the change: the full line adds exactly REC-100 for BOB and nothing for anybody else. The
+       offset is taken from the lister's own `id` and `state`, never re-parsed. */
+    const head = r.body.split("\n")[0];
+    const rest = head.slice(head.indexOf(r.state, head.indexOf(r.id) + r.id.length) + r.state.length);
+    if (owner.test(rest)) items.push({ source: r.ledger, id: r.id, attributed: true,
+                                       why: `blocked on ${lane}`, text: rest.trim().slice(0, 160) });
+  }
+  /* END M0-73 BLOCKED-ROWS */
 
   /* TWO POPULATIONS, AND SUMMING ACROSS THEM WAS A FIGURE THAT COST NOTHING TO PRODUCE.
      Found 2026-09-17 by CONDUCT #3 running a DISCRIMINATION CONTROL this file should have had
