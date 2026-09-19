@@ -9390,7 +9390,13 @@ export default {
        that is a question about the person or the group, not about which of
        their credentials asked. Two fields, two questions, and collapsing them
        would silently widen or narrow one of the two. */
-    if (op === "airunopen")
+    /* REC-152 (Membership v2 §7, "WHO MAY TICK AND CLOSE A RUN", BOB #16): THE SAME STAMP ON THE TICK AND
+       THE CLOSE, because they are the run's PRINCIPAL's acts and the store compares the caller with the
+       principal the OPEN stamped — so both sides of that comparison must be composed by ONE expression, or
+       a member and her own credential could stop being recognised as one principal by a spelling drift.
+       SET, never appended: a `principal` the caller put in its own query is overwritten here, and the
+       store reads it as `caller` only from this stamp (a principal a caller can name is not one). */
+    if (RUN_VERB_ACTIONS.includes(op))
       inner.searchParams.set("principal",
         viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
