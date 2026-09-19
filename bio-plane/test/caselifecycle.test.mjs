@@ -87,6 +87,7 @@
 
 import "./stdio.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -250,9 +251,16 @@ const mustPromote = async (...a) => {
   if (r.ok === false) throw new Error(`promote ${a[1]}: ${JSON.stringify(r)}`);
   return r;
 };
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none; the inquiries it concludes (V_PUB, W_PUB,
+   FREE — not OPEN, which is never concluded) now carry one
+   (`withAdoptableReading`) and the call names it. */
 const conclude = async (tok, target, conclusion, falsifier) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 const reopen = async (tok, target, reason) =>
   rP(await GET(`op=reopen&token=${tok}&target=${encodeURIComponent(target)}&reason=${encodeURIComponent(reason)}`));
 const affordances = async (tok, target) =>
@@ -275,7 +283,10 @@ await mustPromote(VERA, INFO_A, infoMd(INFO_A), "information", "collected",
 await mustPromote(VERA, INFO_B, infoMd(INFO_B), "information", "collected");
 const inqBody = (id) => inquiryMd(id, { question: "Was the sewer transfer authorised?",
   refs: [INFO_A], legs: [{ target: INFO_A, grade: "B", axis: "capture", source: "capture" }] });
-for (const id of [V_PUB, W_PUB, FREE, OPEN]) await mustPromote(VERA, id, inqBody(id), "inquiry");
+/* REC-136: only the three this suite concludes carry an adoptable reading, so
+   OPEN publishes exactly the act set it did. */
+for (const id of [V_PUB, W_PUB, FREE, OPEN])
+  await mustPromote(VERA, id, id === OPEN ? inqBody(id) : withAdoptableReading(inqBody(id)), "inquiry");
 
 for (const [tok, id] of [[VERA, V_PUB], [WREN, W_PUB], [VERA, FREE]]) {
   const c = await conclude(tok, id, "The transfer rests on a memo nobody adopted.",

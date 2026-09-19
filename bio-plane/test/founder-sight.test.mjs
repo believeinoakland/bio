@@ -47,6 +47,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { MEMBER_ID_CHECKS } from "../checks/bio-checks.mjs";
 import { projectFixtureMd } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 /* The control driver points this at an armed copy of the sources. */
 const SRC_DIR = process.env.FOUNDER_SIGHT_SRC || fileURLToPath(new URL("../src", import.meta.url));
@@ -166,10 +167,16 @@ const own = await DO("projectclaimowner", { projectId: PROJ, memberId: "iris" })
 if (!own || own.ok !== true) throw new Error(`projectclaimowner: ${JSON.stringify(own)}`);
 const INFO = "INFO-2026-9132-memo", INQ = "INQ-2026-9132-q";
 await promote(INFO, infoMd(INFO), "information", "collected");
-await promote(INQ, inquiryMd(INQ, INFO), "inquiry", "open");
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM with nothing written. This
+   fixture concluded with no reading because the act took none; the inquiry now
+   carries one (`withAdoptableReading`) and the call names it. Fixture, not subject. */
+await promote(INQ, withAdoptableReading(inquiryMd(INQ, INFO)), "inquiry", "open");
 const cc = await GET(`op=conclude&token=${IRIS}&target=${INQ}`
   + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-  + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
+  + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+  + adoptedVersionParam());
 if (!cc || cc.ok === false) throw new Error(`conclude: ${JSON.stringify(cc).slice(0, 600)}`);
 console.log("  corpus: 1 project owned by iris (founder, ruth and vera uninvited), 1 information, 1 concluded inquiry;"
   + " the founder's password session, iris's and vera's sessions, the admin and member tokens");

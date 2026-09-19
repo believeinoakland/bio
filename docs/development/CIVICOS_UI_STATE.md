@@ -50,6 +50,52 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v92, 2026-09-18 session, thread UI, UI-65. Landed on `ui-65-conclude` (built ON the held
+`conduct/rec-136-held` @ `783054ac`; the two land TOGETHER).
+SURFACE: `app.html` — the conclude dialog and the stance surface (`#stands/<PROJ>/<INQ>`). **THE CONCLUDE SURFACE AFTER REC-136.** REC-136 (IC-153) made a
+no-project conclusion NAME the accepted reading whose claim it adopts (`version=`, else
+`NO_CLAIM`) and made a project's conclusion record APPEND-ONLY with a withdrawal act; the
+surface sent no `version`, so on any plane carrying IC-153 every conclude a member committed
+was refused. REC-124 (IC-150) had already left the project's act, its commentary and the
+undetermined legacy claim with no surface. Both delegations are discharged here.
+
+**What a member now sees.** (1) The conclude dialog offers the question's ADOPTABLE readings
+— accepted, stating a claim, resting on something: the plane's own adoption check, read off
+`op=basisversions` — each with its claim verbatim, and **picks none**, including when there is
+one; the picked reading's claim is shown word for word before the commit, and `version=` is
+sent only when the member picked. With nothing to pick, the commit is refused by the plane and
+its `NO_CLAIM` sentence, which names the door, is what the member reads. (2) The stance
+surface carries the project's act (`op=conclude&project=`), showing the claim of the reading
+the project STANDS ON verbatim before the commit — picking another reading is `versioncurrent`,
+one section up — with a commentary field labelled the member's own words and never evidence,
+UI-64's falsifier door kept structurally; the WITHDRAWAL (`op=withdrawconclusion`) with the
+member's reason, offered only while the plane's stance reads `concluded`; the stance; and the
+WHOLE history, every entry dated and authored, in order. (3) A no-project conclusion renders on
+the stance surface with its claim ADOPTED, or UNDETERMINED through the C-14 primitive with the
+plane's sentence — never filled in with the conclusion text — and the plane's own words saying
+it is never a project's. It was first also put on the question's page, and
+`bound-sweep.test.mjs` ARM G refused that site: it read `op=basisversions` (a capped op) and
+dropped the bound. Routing it through a bound-stating helper and not rendering the bound would
+have passed the walk by doing what it forbids, so the site was REMOVED instead.
+
+**Tests.** `conclude-reading.test.mjs` (NEW, real plane under miniflare, 65/0);
+`conclude-act.test.mjs`'s mock CORRECTED to IC-153 (answers `basisversions`, refuses a
+no-version commit `NO_CLAIM` where the store does) and its journey picks a reading (93/0);
+`conclude-nofalsifier.test.mjs`'s REC-136 transport stand-in REMOVED, its journey now picks
+from the rendered picker (79/0); `surface-registry.test.mjs` struck `withdrawconclusion` from
+`ACTS_AWAITING_SURFACE` (ARM A4c fired by name) and moved A4d/A4e 17 -> 18 and A3 20 -> 22
+from the printed figures. Control: `conclude-reading.control.mjs`, five arms — no version sent,
+prefilled picker, history-is-only-the-stance, project claim not shown, legacy claim filled in —
+each failing exactly where declared, each restored by sha256 and cmp.
+
+**Not done, and said so.** A project cannot conclude from the surface on a question that is
+already concluded with no project: `op=affordances` publishes `conclude` only where the
+catalog's edge table offers it, and `concluded` has no edge to itself, while the store accepts
+the project's act there (DELEGATION to RECORD, `CLAIMS.md`). And nothing links to the stance
+surface: it is reachable by its address alone, as it was under UI-45. And the question's own
+page does not show a no-project conclusion's claim (ARM G, above) until the plane publishes it
+on a read that carries no list bound.
+
 v91, 2026-09-17 session, thread UI, UI-64. Landed on `worktree-agent-a3e2efc5bdd9b529e`.
 SURFACE: `app.html`, the conclude act's commit slot. **THE FALSIFIER OVERRIDE WAS
 REACHABLE ON THE WIRE AND INVISIBLE TO THE MEMBER.** REC-117 landed the plane half the

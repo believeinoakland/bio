@@ -70,6 +70,7 @@ import { join } from "node:path";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -102,9 +103,15 @@ const reevals = async (target = null, tok = "mem-rec17") =>
 const owed = (r, bundleId) => (r?.obligations ?? []).filter((o) => o.bundle_id === bundleId);
 const sourcesOn = (r, bundleId) => owed(r, bundleId).flatMap((o) => o.causes.map((c) => c.source));
 
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none; the one inquiry it concludes (INQ_CASE)
+   now carries one (`withAdoptableReading`) and the call names it. */
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 /* REC-44 / DEC-44 (2026-08-04): op=publish now requires an authored `scope` —
    a published case is a CONTAINER over one or more FINDINGS and states what
    brought them together. The helper supplies a default so every assertion below
@@ -319,9 +326,10 @@ const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "cap
                      author: "pilar", date: "2026-08-04" },
                    { target: INQ_MOVED, grade: "B", axis: "connection", source: "hunch",
                      author: "pilar", date: "2026-08-04" }];
-await mustPromote(INQ_CASE, inquiryMd(INQ_CASE, {
+/* REC-136: INQ_CASE is concluded (twice), so it carries an accepted reading to adopt. */
+await mustPromote(INQ_CASE, withAdoptableReading(inquiryMd(INQ_CASE, {
   question: "Did the City transfer sewer funds without authority?",
-  refs: [INFO_CAP, INFO_CONN, INQ_MOVED], legs: CASE_LEGS }), "inquiry", "open");
+  refs: [INFO_CAP, INFO_CONN, INQ_MOVED], legs: CASE_LEGS })), "inquiry", "open");
 
 await mustPromote(INQ_BLOCKED, inquiryMd(INQ_BLOCKED, {
   question: "Who signed the transfer memo?",

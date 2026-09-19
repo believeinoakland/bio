@@ -44,6 +44,7 @@ import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, checkBundle, BUNDLE_ID_RE } from "../checks/bio-checks.mjs";
 
 const SRC_DIR = fileURLToPath(new URL("../src", import.meta.url));
@@ -496,14 +497,22 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
     .replace("---\n\n## Question", ["basis:", `  - target: ${target}`, "    role: supports",
       ...(grade ? ["    grade: D", "    grade_axis: connection", "    grade_source: testimony"] : []),
       "---", "", "## Question"].join("\n"));
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM. Every finding made here is
+     concluded, and it was concluded with no reading because the act took none;
+     each now carries one (`withAdoptableReading`, a leg on its one basis target)
+     and the call names it. Fixture, not subject: the fence asserted below is
+     unchanged. */
   const makeFinding = async (id, target, grade = true) => {
-    const md = legMd(id, target, grade);
+    const md = withAdoptableReading(legMd(id, target, grade));
     const p = await post("promote", { bundleId: id, base: null, snapKey: snapKey(),
       meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What did the clerk do?",
               current_state: "open", created: NOW, last_updated: NOW },
       files: [fileOf("bundle.md", md)] }, RUTH);
     const c = await get("conclude", `target=${id}&conclusion=${encodeURIComponent("It was stamped first.")}`
-      + `&falsifier=${encodeURIComponent("A received-log showing a later stamp would overturn this.")}`, RUTH);
+      + `&falsifier=${encodeURIComponent("A received-log showing a later stamp would overturn this.")}`
+      + adoptedVersionParam(), RUTH);
     return [p && p.ok, c && c.ok];
   };
   const F1 = "INQ-2026-5301-rests-on-obs", F2 = "INQ-2026-5301-rests-on-f1";

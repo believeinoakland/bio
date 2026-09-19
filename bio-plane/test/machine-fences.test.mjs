@@ -77,6 +77,7 @@ import { dirname, join } from "node:path";
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { isMachineIdentity, isMachineStamp } from "../checks/bio-checks.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "..", "..");                  // bio-plane/test -> repo root
@@ -323,17 +324,28 @@ const fence = (code, payload, machineAnswer) => {
   const DOC = "INFO-2026-7300-conclude-basis";
   const INQ = "INQ-2026-7300-conclude";
   await mustPromote(DOC, infoMd(DOC), "information");
-  await mustPromote(INQ, inquiryMd(INQ, { refs: [DOC], legs: [{ target: DOC, role: "supports" }] }), "inquiry");
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM. The payload below was
+     COMPLETE without it because the act took none; it no longer is, and the
+     member half would now be refused NO_CLAIM — so the inquiry carries an
+     accepted reading (`withAdoptableReading`) and BOTH calls name it. The
+     machine half is unchanged in what it proves: the fence answers first, and
+     the same payload succeeding for a member is what makes it complete. */
+  await mustPromote(INQ, withAdoptableReading(inquiryMd(INQ, { refs: [DOC], legs: [{ target: DOC, role: "supports" }] })),
+    "inquiry");
   const CONCL = encodeURIComponent("The transfer rests on a 1998 resolution never rescinded");
   const FALS = encodeURIComponent("A rescinding resolution, or a memo naming a different authority");
+  const VER = adoptedVersionParam();
 
-  const m = await GET(`op=conclude&token=${AI}&target=${INQ}&conclusion=${CONCL}&falsifier=${FALS}`);
+  const m = await GET(`op=conclude&token=${AI}&target=${INQ}&conclusion=${CONCL}&falsifier=${FALS}${VER}`);
   fence("MACHINE_CANNOT_CONCLUDE",
-    "an OPEN inquiry carrying one basis leg, with the conclusion AND the falsifier both authored",
+    "an OPEN inquiry carrying one basis leg, with the conclusion AND the falsifier both authored, "
+    + "naming the accepted reading whose claim it adopts",
     codeOf(m));
   t("  the record did not move under the machine's call", await stateOf(INQ), "open");
 
-  const r = await GET(`op=conclude&token=${RUTH}&target=${INQ}&conclusion=${CONCL}&falsifier=${FALS}`);
+  const r = await GET(`op=conclude&token=${RUTH}&target=${INQ}&conclusion=${CONCL}&falsifier=${FALS}${VER}`);
   t("  and the SAME payload concludes for a signed-in member, attributed to her by the server",
     [r.ok, r.from, r.to, r.basis_legs, r.author], [true, "open", "concluded", 1, "ruth"]);
 }
@@ -377,10 +389,13 @@ const fence = (code, payload, machineAnswer) => {
     "    grade_source: hunch", "    author: ruth", "    date: 2026-08-04"].join("\n");
   const md = inquiryMd(INQ, { question: "Was the sewer transfer authorised?", refs: [CAP, CONN] })
     .replace("---\n\n## Question", `${legs}\n---\n\n## Question`);
-  await mustPromote(INQ, md, "inquiry");
+  /* CORRECTED 2026-09-18 (REC-136, §7.1 item 6): the conclusion this fixture
+     draws names an accepted reading, which the inquiry now carries. Fixture, not subject. */
+  await mustPromote(INQ, withAdoptableReading(md), "inquiry");
   const cn = await GET(`op=conclude&token=${RUTH}&target=${INQ}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`);
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+    + adoptedVersionParam());
   if (!cn.ok) throw new Error(`conclude for publish: ${JSON.stringify(cn).slice(0, 400)}`);
 
   /* ADDED 2026-08-10, CASE-2 / DEC-72: publication is a PRODUCTION OF A PROJECT

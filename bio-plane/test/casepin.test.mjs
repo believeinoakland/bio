@@ -69,6 +69,7 @@
 
 import "./stdio.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import { ADOPTED_READING, ADOPTED_CLAIM, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -169,6 +170,11 @@ const versionLines = (versions) => {
     ...scalar("description", v.description),
     ...scalar("relationship", v.relationship),
     ...scalar("state", v.state ?? "suggested"),
+    /* REC-136: an ACCEPTED reading states who accepted it and when, and the one
+       a no-project conclusion adopts carries a claim. Absent on V1, so V1's
+       lines are exactly what they were. */
+    ...scalar("state_by", v.state_by), ...scalar("state_at", v.state_at),
+    ...scalar("claim", v.claim),
     ...scalar("hidden", false),
     ...scalar("author", "vera"), ...scalar("at", NOW)].join("\n"));
   const grounds = versions.flatMap((v) => (v.grounds ?? []).map((g) =>
@@ -243,9 +249,20 @@ const mustPromote = async (...a) => {
   if (r.ok === false) throw new Error(`promote ${a[0]}: ${JSON.stringify(r)}`);
   return r;
 };
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none. PUB already carries a reading ("opening
+   account") but it is SUGGESTED, claimless, and the reading every version act in
+   this suite moves — so it cannot be the adopted one without changing what blocks
+   2-5 are about. PUB therefore carries a SECOND reading, V_ADOPT, accepted with a
+   claim, written by hand (the shared helper refuses a document that already
+   carries basis_versions), and the call names it. FREE is never concluded and is
+   unchanged. */
 const conclude = async (target, conclusion, falsifier) =>
   rP(await GET(`op=conclude&token=${VERA}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 const reopen = async (target, reason) =>
   rP(await GET(`op=reopen&token=${VERA}&target=${encodeURIComponent(target)}&reason=${encodeURIComponent(reason)}`));
 /* THE CEREMONY IS `op=publish` AT THE CONTROL PLANE — `publishCase()` is the
@@ -311,15 +328,23 @@ const V1 = { name: "opening account", relationship: "and",
   grounds: ["paper trail"],
   legs: [{ target: INFO_A, ground: "paper trail", grade: "B", axis: "capture", source: "capture" }] };
 
+/* REC-136: the accepted reading PUB's conclusions adopt — see `conclude` above.
+   No grade on its leg: absent is undetermined, and a grade here would be a
+   strength claim this suite never made. */
+const V_ADOPT = { name: ADOPTED_READING, relationship: "and",
+  description: "The reading the inquiry's own basis states, adopted when it was concluded.",
+  state: "accepted", state_by: "vera", state_at: NOW, claim: ADOPTED_CLAIM,
+  grounds: ["the cited record"], legs: [{ target: INFO_A, ground: "the cited record" }] };
+
 const DOC_CAP_SHA = sha("casepin-INFO_A-bytes");
 await mustPromote(INFO_A, infoMd(INFO_A), "information", "collected",
   { register: [{ path: "snapshots/source.bin", sha256: DOC_CAP_SHA, bytes: 512, encoding: "binary" }] });
 await mustPromote(INFO_B, infoMd(INFO_B), "information", "collected");
 
-const inqBody = (id) => inquiryMd(id, { question: "Was the sewer transfer authorised?",
+const inqBody = (id, versions = [V1]) => inquiryMd(id, { question: "Was the sewer transfer authorised?",
   refs: [INFO_A], legs: [{ target: INFO_A, grade: "B", axis: "capture", source: "capture" }],
-  versions: [V1] });
-await mustPromote(PUB, inqBody(PUB), "inquiry");
+  versions });
+await mustPromote(PUB, inqBody(PUB, [V1, V_ADOPT]), "inquiry");   /* REC-136: PUB is the one concluded */
 await mustPromote(FREE, inqBody(FREE), "inquiry");
 
 const c1 = await conclude(PUB, "The transfer rests on a memo nobody adopted.",

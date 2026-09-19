@@ -58,6 +58,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 
@@ -227,8 +228,13 @@ const INQ_A = "INQ-2026-1000-first", INQ_B = "INQ-2026-1000-discard",
       INQ_C = "INQ-2026-1000-gates", INQ_D = "INQ-2026-1000-remove",
       INQ_BARE = "INQ-2026-1000-bare", INQ_PUB = "INQ-2026-1000-published",
       INQ_DIV = "INQ-2026-1000-divided";
-for (const id of [INQ_A, INQ_B, INQ_C, INQ_D, INQ_PUB, INQ_DIV])
-  await mustPromote(id, inquiryMd(id, { refs: FOUR.map((l) => l.target), legs: FOUR }), "inquiry");
+/* REC-136 (2026-09-18, INVESTIGATIVE-SESSION.md §7.1 item 6): INQ_PUB is the
+   one inquiry this suite CONCLUDES, so it alone carries an accepted reading to
+   adopt; the others do not, so the act sets they publish are exactly what they were. */
+for (const id of [INQ_A, INQ_B, INQ_C, INQ_D, INQ_PUB, INQ_DIV]) {
+  const md = inquiryMd(id, { refs: FOUR.map((l) => l.target), legs: FOUR });
+  await mustPromote(id, id === INQ_PUB ? withAdoptableReading(md) : md, "inquiry");
+}
 await mustPromote(INQ_BARE, inquiryMd(INQ_BARE), "inquiry");
 
 /* ======================= 1. FIRST AUTHORSHIP, AND IT REACHES THE ARITHMETIC */
@@ -513,9 +519,15 @@ console.log("\n--- 7. removing a grouping is a restructure; and the states that 
   /* PUBLISHED. The pair and the per-group breakdown are inside signed, ratified
      bytes; re-cutting the partition underneath them would leave the document
      composing to something the edition on the record contradicts. */
+  /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+     conclusion drawn with no project NAMES the accepted reading whose claim it
+     adopts, and an unnamed one is refused NO_CLAIM with nothing written. This
+     fixture concluded with no reading because the act took none; INQ_PUB now
+     carries one (`withAdoptableReading`) and the call names it. */
   await GET(`op=conclude&token=${CAROL}&target=${INQ_PUB}`
     + `&conclusion=${encodeURIComponent("The transfer rested on a memo nobody adopted.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer.")}`);
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer.")}`
+    + adoptedVersionParam());
   /* REC-44 / DEC-44 (2026-08-04): `scope` is authored per case per edition and
      required. Nothing else in this block moves — a published case still refuses
      restructuring by name, at whatever arity the case has. */

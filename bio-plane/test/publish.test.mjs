@@ -77,6 +77,7 @@ import { join } from "node:path";
 import { checkBundle, STATES, SUBJECT_POSITIONS, checkCaseDocument,
          parseFrontmatter as parseFm } from "../checks/bio-checks.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { SCHEMA } from "../src/schema.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -156,9 +157,15 @@ const publish = async (tok, body) => {
     await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "pilar", token: PILAR });
   return r;
 };
+/* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
+   conclusion drawn with no project NAMES the accepted reading whose claim it
+   adopts, and an unnamed one is refused NO_CLAIM. This helper concluded with no
+   reading because the act took none; the inquiries it concludes now carry one
+   (`withAdoptableReading`) and the call names it. */
 const conclude = async (tok, { target, conclusion, falsifier }) =>
   rP(await GET(`op=conclude&token=${tok}&target=${encodeURIComponent(target)}`
-    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`));
+    + `&conclusion=${encodeURIComponent(conclusion)}&falsifier=${encodeURIComponent(falsifier)}`
+    + adoptedVersionParam()));
 const strengthbar = async (tok, body) => rP(await POST(`op=strengthbar&token=${tok}`, body));
 /* CORRECTED 2026-08-10, CASE-2 / DEC-72. This helper asked for the bar OF A
    FINDING, which was the right question under DEC-17's composed read and is not
@@ -375,10 +382,13 @@ await mustPromote(INFO_LEFTOUT, infoMd(INFO_LEFTOUT), "information", "collected"
 const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
                    { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
                      author: "pilar", date: "2026-08-04" }];
-await mustPromote(INQ_CASE, inquiryMd(INQ_CASE, { question: "Was the sewer transfer authorised?",
-  refs: [INFO_CAP, INFO_CONN], legs: CASE_LEGS }), "inquiry", "open");
-await mustPromote(INQ_THIN, inquiryMd(INQ_THIN, { question: "Who signed the memo?",
-  refs: [INFO_CAP], legs: [{ target: INFO_CAP }] }), "inquiry", "open");
+/* REC-136: INQ_CASE and INQ_THIN are CONCLUDED below, so each carries an
+   accepted reading to adopt (§7.1 item 6). INQ_OPEN is never concluded and is
+   left exactly as it was. */
+await mustPromote(INQ_CASE, withAdoptableReading(inquiryMd(INQ_CASE, { question: "Was the sewer transfer authorised?",
+  refs: [INFO_CAP, INFO_CONN], legs: CASE_LEGS })), "inquiry", "open");
+await mustPromote(INQ_THIN, withAdoptableReading(inquiryMd(INQ_THIN, { question: "Who signed the memo?",
+  refs: [INFO_CAP], legs: [{ target: INFO_CAP }] })), "inquiry", "open");
 await mustPromote(INQ_OPEN, inquiryMd(INQ_OPEN, { question: "Does this recur?",
   refs: [INFO_CAP], legs: [{ target: INFO_CAP }] }), "inquiry", "open");
 
