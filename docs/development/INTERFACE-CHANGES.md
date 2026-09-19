@@ -11333,7 +11333,7 @@ PUBLISHED under that member's name (`case-authority.test.mjs` §7 pins it as mea
 bullet decides a CASE ratification, and whether a project's own bundle may be published at all — it is the group's
 thinking, which §7.9 hides even from the invited — is a question the design does not answer. DESIGN GAP, for BOB.
 
-**Suites:** new `bio-plane/test/case-authority.test.mjs` (23 assertions; on the PRE-ITEM sources 12 pass / 11 fail: a joined non-owner's own signature COMMITTED a case, and an enrolled administrator with no role DELIVERED an owner's signature and COMMITTED another) and its driver `case-authority.control.mjs`
+**Suites:** new `bio-plane/test/case-authority.test.mjs` (26 assertions — §0 pins that a caller who cannot SEE the project gets the never-minted answer byte for byte, so neither refusal discloses existence; on the PRE-ITEM sources, measured before §0 was added, 12 pass / 11 fail of 23: a joined non-owner's own signature COMMITTED a case, and an enrolled administrator with no role DELIVERED an owner's signature and COMMITTED another) and its driver `case-authority.control.mjs`
 (five arms — baseline, `no-owner-signer`, `no-delivery-check`, `refuse-every-admin`, `delivery-after-retry` — every one
 AS DECLARED on its first run; results in the suite's header). CORRECTED at its site with a dated reason, never exempted:
 `casesign.test.mjs` (its second-attestation arm delivered and signed as omar, an enrolled administrator with no role in the
