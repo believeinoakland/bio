@@ -8701,6 +8701,29 @@ var AI_RUN_CHECKS = {
     check: "C-22.10",
     where: "src/airun.mjs checkObservation, called from store.mjs #observe",
     translation: "That observation says the thing is there without saying what was found. A record that something is present has to point at what it found \u2014 the captured document, the passage, the entity \u2014 or nobody can check it later, and a claim of coverage that cannot be checked is worse than no claim at all."
+  },
+  /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
+       DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
+       the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
+       Once REC-145 made the run verdict turn on the KIND (a question consults no project), a run labelled
+       `inquiry` over a PROJECT's id opened for a member who had not joined that project — the joined gate
+       walked around by a word the caller chose.
+  
+       ONE CODE FOR THE MISMATCH, THE ABSENT ID AND THE HIDDEN ONE, and that is the §7.9 half of the ruling
+       rather than economy. A second code for *"that is a project, not a question"* would be said over a
+       project the caller can see and withheld over one they cannot, so the difference between the two codes
+       would be the bit. The refusal is built from what the caller SENT and nothing else, which makes the
+       three one object by construction (`#noSuchProject`'s discipline, one act over). It is one condition —
+       *nothing of the kind you named answers to that id for you* — not two behind one number.
+  
+       WHAT IT DOES NOT REFUSE, stated: a MACHINE credential's run over an id this store does not hold (no
+       person is behind it, so there is no participation to walk around and no sight to leak — REC-138's
+       posture for the project arm), and a run over a PROJECT id the member cannot see (the joined gate,
+       C-22.8, answers that one, absent and hidden alike, exactly as before). */
+  AI_RUN_NO_SUCH_CONTEXT: {
+    check: "C-22.11",
+    where: "src/airun.mjs checkRunContextKind, called from store.mjs aiRunOpen",
+    translation: "Nothing of the kind this run names answers to that id here. A run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -25980,6 +26003,16 @@ function projectGate({
   return refusal3(
     "AI_RUN_NOT_PROJECT_MEMBER",
     `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
+  );
+}
+function checkRunContextKind({ contextType = null, contextId = null, found = null, member = false } = {}) {
+  const said = String(contextType ?? "");
+  const seen = found !== null && found !== void 0;
+  if (seen && found === said) return null;
+  if (!seen && (!member || runConsultsProjects(said))) return null;
+  return refusal3(
+    "AI_RUN_NO_SUCH_CONTEXT",
+    `no ${JSON.stringify(said.slice(0, 60))} answers to ${JSON.stringify(String(contextId ?? "").slice(0, 200))} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
   );
 }
 function finishedBound(bounds, { expired = false, offered = null } = {}) {
@@ -59465,6 +59498,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  a run's context is not required to be a bundle this store holds, and
    *  refusing on a lookup that came back empty would be refusing on what cannot
    *  be verified — a claim about the record made from a fact about our index.
+   *  [NARROWED 2026-09-19 by REC-153: that still holds for a MACHINE credential. A MEMBER's run over an id
+   *  they cannot see, under any kind but `project`, is now refused at the open by `checkRunContextKind`
+   *  before this is asked — permitting the absent id would have forced permitting a hidden project's.]
    *
    *  REC-138 / D-426 — EXCEPT A CONTEXT THAT SAYS IT IS A PROJECT, which is now that project
    *  whether or not this store holds it. As built, a PROJECT context the store did not hold read
@@ -59484,6 +59520,19 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, from);
       return !!b && normalizeType(b.object_type) === "project";
     }).sort();
+  }
+  /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
+   *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
+   *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
+   *  `#inSight`, the one predicate; a viewer that was NOT SENT (null) is not asked, on `gateFacts`' and
+   *  `#rosterInSight`'s precedent — the control plane stamps every run verb (`RUN_VERB_ACTIONS`), so only a
+   *  direct store caller arrives without one. The type is normalised (`problem`/`focus` read `inquiry`). */
+  #runContextKind(contextId, viewer) {
+    const id = contextId == null ? "" : String(contextId);
+    const b = id ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id) : null;
+    if (!b) return null;
+    if (viewer !== null && viewer !== void 0 && !this.#inSight(id, viewer)) return null;
+    return normalizeType(b.object_type);
   }
   /** The gate, as the three run verbs call it. Returns `projectGate`'s verdict
    *  object — `refusal` null or built, and a `ground` that is stated either way.
@@ -59568,6 +59617,22 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         check: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.check,
         translation: ACT_SHAPE_CHECKS.AI_RUN_NO_CONTEXT.translation,
         note: "a run needs an id and the context it runs in (an inquiry or a project): a run nothing is in the context of has nowhere to be visible"
+      };
+    const kind = checkRunContextKind({
+      contextType,
+      contextId,
+      found: this.#runContextKind(contextId, viewer),
+      member: !!(actor != null && String(actor).trim())
+    });
+    if (kind)
+      return {
+        run,
+        started: false,
+        code: kind.code,
+        check: kind.check,
+        translation: kind.translation,
+        detail: kind.detail,
+        note: "a run's context kind is checked against the thing it names, and a thing the caller cannot see answers as one that does not exist (Membership Architecture v2 \xA77, BOB #16, 2026-09-19): the project gate turns on the kind, so the kind cannot be the caller's word"
       };
     const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
     if (!gate.permitted)

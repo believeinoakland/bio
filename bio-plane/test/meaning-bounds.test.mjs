@@ -1384,8 +1384,12 @@ t("op=concerns: the bound APPLIED is the same figure for every reader — a view
 console.log("\n--- LIVE: op=airunlog, the op REC-60's ratchet could not see ---");
 const RUN = "RUN-2026-0807-rec70";
 {
+  /* CORRECTED 2026-09-19 by REC-153, never exempted: the context was the INFORMATION bundle
+     `INFO-2026-0001-r60` labelled `inquiry`, which the open now refuses (a run's context must be the kind
+     it names — Membership v2 §7, BOB #16). The run is only a log for a bound to bite on, so it names a
+     question id this store does not hold, which a machine credential may still open over (PL-18). */
   const opened = await POST("op=airunopen&token=mem-r60", {
-    run: RUN, contextType: "inquiry", contextId: "INFO-2026-0001-r60",
+    run: RUN, contextType: "inquiry", contextId: "INQ-2026-0807-rec70-runs",
     label: "REC-70 fixture — a log long enough for a bound to bite", mode: "check",
     principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
     skillVersion: "investigative-session@1", biasManifest: null,

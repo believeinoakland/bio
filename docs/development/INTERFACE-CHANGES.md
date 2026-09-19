@@ -11764,3 +11764,48 @@ sources untouched. `node test/nc-pl18.mjs` re-run: (e) the same control 39/13 as
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 38.1.0 → 39.0.0.** Base RE-READ at resolution off `origin/main`: 38.1.0 (IC-159, REC-142). Breaking: the wire value `PROJECTLESS` is gone (every inquiry-context run answers ground `INQUIRY`), and a call that was refused `AI_RUN_NOT_PROJECT_MEMBER` over a question now starts. It is breaking in the direction that removes a disclosure: the refusal told a member that a hidden project cites the question (§7.9). No first-party consumer reads a ground (the UI never calls `airunopen`; `agent-worker` runs on a machine credential). REC-141's IC-158, proposed on the same base, is re-based when it lands. A §7.9 DISCLOSURE closing — DIST told.
+
+## IC-163 · I3: A RUN'S CONTEXT IS THE KIND IT NAMES — `airunopen` REFUSES a `contextType` that is not the named bundle's type (C-22.11 `AI_RUN_NO_SUCH_CONTEXT`), and a member's open over an id they cannot see, under any kind but `project`, answers exactly as a never-minted id · PROPOSED 2026-09-19 (REC-153, minted with `node tools/mintid.mjs IC`) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`
+  (base `52218bdd`): 39.0.0. Proposed as MAJOR — 39.0.0 → 40.0.0.** Read the base AT RESOLUTION. **Why not additive, by
+  IC-137's rule:** calls that STARTED now refuse — a run labelled `inquiry` over a project, information or other
+  non-question bundle; a run labelled `project` over a question; a member's run over an id they cannot see under a kind
+  other than `project`; any kind spelled otherwise than the bundle's type (`Inquiry`, `Project`). One wire code is added.
+  No key is added to or removed from any success answer.
+- **Proposer:** RECORD, REC-153 worker, branch `worktree-agent-a7fe9ecc71d7b4add`, 2026-09-19 — Membership v2 §7, the
+  DEC-63 ruling bullet, "AND THE CONTEXT KIND IS CHECKED" (BOB #16, `ed249814`).
+- **Owner to land it:** `RECORD`
+- **What changed, measured through the op** (`bio-plane/test/airun-contextkind.test.mjs`; before = the same suite on
+  the unedited tree, 23/12):
+
+| call | before (base `52218bdd`) | after |
+| --- | --- | --- |
+| olga (invited, NOT joined) opens sam's PROJECT labelled `inquiry` | STARTED, ground `INQUIRY` — the joined gate walked around | refused `AI_RUN_NO_SUCH_CONTEXT` (C-22.11) |
+| the same by sam (joined), by an administrator, by a machine credential | started | refused C-22.11 — a mismatch is refused whoever asks |
+| the same labelled `Project` or `information` | started (consulted no project) | refused C-22.11 |
+| a QUESTION labelled `project` | started (joined gate over a project nobody holds) | refused C-22.11 |
+| vera (uninvited) over a project HIDDEN from her, labelled `inquiry` | started | refused C-22.11, raw answer BYTE-IDENTICAL to a never-minted id |
+| a member over a never-minted id labelled `inquiry` | started, `INQUIRY` | refused C-22.11 |
+| any caller over a PROJECT id labelled `project` | the joined gate | UNCHANGED (C-22.8 for a non-participant; absent and hidden alike, REC-138) |
+| any caller over a question labelled `inquiry` | started | UNCHANGED (the liar's arm) |
+| a machine credential over an id this store does not hold | started | UNCHANGED (no participation to walk around; a context need not be held here, PL-18) |
+| an `ai` credential (its principal's sight, no actor) over a project hidden from its principal | started | UNCHANGED, and byte-identical to its never-minted open — sight is asked, so the hidden id is absent to it |
+
+- **Consumers to answer:** `UI` — NOT-AFFECTED, grepped: `civicos-ui` never calls `op=airunopen` (its own comments say
+  so, `app.html` ~19602/19736); `check-refusal-codes.mjs` harvests the new translation by shape. `agent-worker` —
+  NOT-AFFECTED, grepped: it opens no run (`airunopen` appears only in comments in `agent-worker/src/`). `DIST`, `SKILL`,
+  `newgroup` — NOT-AFFECTED (`release/` and `newgroup/` carry the plane's bundle as bytes).
+
+**Suites:** `airun-contextkind.test.mjs` NEW (35 assertions). CORRECTED with dated reasons, never exempted:
+`airun.test.mjs` (ARM D1's family count TEN → ELEVEN; ARM C's run labelled `project` over an inquiry now names
+`inquiry`), `airuns.test.mjs` (its second context was an INFORMATION bundle opened as `inquiry` — now a question; ARM R
+pinned that a run OPENED as `Inquiry` was accepted — it is now refused, and the read's casing tolerance, kept for
+pre-REC-153 rows, is no longer driven), `bounds.test.mjs` and `meaning-bounds.test.mjs` (runs over INFO bundles labelled
+`inquiry` now name question ids the store does not hold, under a machine credential). Negative control `node
+test/airun-contextkind.control.mjs`: **`kind-check-dropped` (the row's control) 23/12 — every mislabelled arm and both
+unseen-refused arms fail by name**; `refuse-every-inquiry` (the row's liar) 26/9; `unseen-permitted` 32/3;
+`sight-not-asked` 33/2; `mismatch-names-kind` 34/1; `sight-via-roster-form` (over-strictness) 35/0; real sources
+untouched. REC-145's `project-disclosure.control.mjs` re-run on this tree: every arm AS DECLARED.
+
+**RESPONSES:** not yet collected.

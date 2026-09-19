@@ -313,7 +313,9 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
             gate is participation and not a capability tier. */
          projectGate,
          /* REC-145: which run contexts the gate consults a project for — one answer, shared. */
-         runConsultsProjects } from "./airun.mjs";
+         runConsultsProjects,
+         /* REC-153: the run's context is the kind it says it is — decided in `airun.mjs`, the facts from here. */
+         checkRunContextKind } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
    it holds no copy of what a chain may claim, which engine weakens what, or who
@@ -36722,6 +36724,9 @@ export class Store extends DurableObject {
    *  a run's context is not required to be a bundle this store holds, and
    *  refusing on a lookup that came back empty would be refusing on what cannot
    *  be verified — a claim about the record made from a fact about our index.
+   *  [NARROWED 2026-09-19 by REC-153: that still holds for a MACHINE credential. A MEMBER's run over an id
+   *  they cannot see, under any kind but `project`, is now refused at the open by `checkRunContextKind`
+   *  before this is asked — permitting the absent id would have forced permitting a hidden project's.]
    *
    *  REC-138 / D-426 — EXCEPT A CONTEXT THAT SAYS IT IS A PROJECT, which is now that project
    *  whether or not this store holds it. As built, a PROJECT context the store did not hold read
@@ -36741,6 +36746,20 @@ export class Store extends DurableObject {
       const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, from);
       return !!b && normalizeType(b.object_type) === "project";
     }).sort();
+  }
+
+  /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
+   *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
+   *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
+   *  `#inSight`, the one predicate; a viewer that was NOT SENT (null) is not asked, on `gateFacts`' and
+   *  `#rosterInSight`'s precedent — the control plane stamps every run verb (`RUN_VERB_ACTIONS`), so only a
+   *  direct store caller arrives without one. The type is normalised (`problem`/`focus` read `inquiry`). */
+  #runContextKind(contextId, viewer) {
+    const id = contextId == null ? "" : String(contextId);
+    const b = id ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id) : null;
+    if (!b) return null;
+    if (viewer !== null && viewer !== undefined && !this.#inSight(id, viewer)) return null;
+    return normalizeType(b.object_type);
   }
 
   /** The gate, as the three run verbs call it. Returns `projectGate`'s verdict
@@ -36870,6 +36889,21 @@ export class Store extends DurableObject {
        name for precisely that: *a defence that is documented and not wired is
        worse than a missing one.* The code stays a string literal where it is
        written, which is the rule the marker exists to serve. */
+    /* REC-153 (Membership v2 §7, the DEC-63 ruling bullet, "AND THE CONTEXT KIND IS CHECKED", BOB #16) — THE
+       CONTEXT IS THE KIND IT SAYS IT IS, checked HERE, before the gate: the gate's verdict turns on the kind
+       (REC-145), so a kind the caller chose freely was a way around it — an `inquiry` label over a project's
+       id opened for a member who had not joined it. A RELAY, like the gate's below and C-22.7's: the refusal
+       is minted in `airun.mjs checkRunContextKind`, whose catalogue row names that site. Only the CONTEXT's
+       open is checked; tick and close read the stored kind, which is now checked at the door it came in by. */
+    const kind = checkRunContextKind({ contextType, contextId,
+      found: this.#runContextKind(contextId, viewer), member: !!(actor != null && String(actor).trim()) });
+    if (kind)
+      return { run, started: false,
+               code: kind.code, check: kind.check,
+               translation: kind.translation, detail: kind.detail,
+               note: "a run's context kind is checked against the thing it names, and a thing the caller "
+                   + "cannot see answers as one that does not exist (Membership Architecture v2 §7, BOB #16, "
+                   + "2026-09-19): the project gate turns on the kind, so the kind cannot be the caller's word" };
     const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
     if (!gate.permitted)
       return { run, started: false,

@@ -1595,7 +1595,11 @@ export const STANDARD_BASIS = {
  * asymmetry is REAL and is REC-69's own finding rather than an oversight — the
  * open is PL-5's site and its refusals are C-22's family, and widening a write's
  * refusal set from inside a read's item is how one item's blast radius becomes
- * another item's red suite. It is DELEGATED with the measurement. */
+ * another item's red suite. It is DELEGATED with the measurement.
+ * NARROWED 2026-09-19 by REC-153 (`checkRunContextKind`), NOT CLOSED: the open now refuses a kind that is not
+ * the named bundle's type, and a member's unvocabularied kind over an id they cannot see. A kind outside this
+ * vocabulary that EQUALS a seen bundle's type (`information` over an Information bundle) still opens, and a
+ * machine's over an id the store does not hold — REC-69's delegation stands for that remainder. */
 export const RUN_CONTEXTS = {
   inquiry: "a question the group is working on, which any project may draw on",
   project: "a body of work with its own members, its own bar and its own lens",
@@ -1995,6 +1999,43 @@ export function projectGate({ actor = null, contextType = null, contextId = null
     `starting or continuing a run over ${label} is work inside that project, `
     + `and this account has not joined it (DEC-63). This is not a capability: holding `
     + `contribute would not change it, and an owner of that project inviting you would`);
+}
+
+/** REC-153 — IS THE NAMED CONTEXT THE KIND THE CALLER SAID IT IS? Membership Architecture v2 §7, the DEC-63
+ *  ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16, 2026-09-19): *"A run's `contextType` must equal
+ *  the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
+ *
+ *  WHY IT EXISTS: REC-145 made the verdict turn on the KIND (`runConsultsProjects` above), and the open took
+ *  the kind as the caller typed it. A member who had not joined a project opened a run over THAT PROJECT'S ID
+ *  by calling it an `inquiry` — permitted on the INQUIRY ground — which is the joined gate walked around by a
+ *  word. Run at the open, BEFORE `projectGate`, so the gate is only ever asked about a context that is what
+ *  it says it is.
+ *
+ *  PURE, like `projectGate`: the STORE supplies the facts and this makes the decision.
+ *    `found`  — the named bundle's type (normalised) IF THE CALLER CAN SEE IT, else null. The store asks
+ *               sight through `#inSight`, so an absent id and a hidden one arrive here as the SAME null and
+ *               this function cannot tell them apart — which is the §7.9 half, made structural.
+ *    `member` — whether a person stands behind the call (the gate's own population, `actor`).
+ *
+ *  THE RULE, in three lines:
+ *    - a bundle the caller SEES answers by its type: equal to the kind said, or refused. Whoever the caller
+ *      is — a joined participant labelling their own project a question is refused too, because the record
+ *      would then say the run is over a question when it is over a project. Compared EXACTLY: `Project` is
+ *      not `project`, and as built it consulted no project either.
+ *    - an id the caller CANNOT see answers as absent. Under `project` the joined gate already answers absent
+ *      and hidden alike (REC-138), so nothing is added there. Under any other kind a MEMBER is refused, since
+ *      permitting the absent id would force permitting the hidden one. A MACHINE credential is not: it has no
+ *      participation to walk around and a run's context need not be a bundle this store holds (PL-18).
+ *    - the refusal is built ONLY from what the caller sent, so mismatch, absent and hidden are one object. */
+export function checkRunContextKind({ contextType = null, contextId = null, found = null, member = false } = {}) {
+  const said = String(contextType ?? "");
+  const seen = found !== null && found !== undefined;
+  if (seen && found === said) return null;
+  if (!seen && (!member || runConsultsProjects(said))) return null;
+  return refusal("AI_RUN_NO_SUCH_CONTEXT",
+    `no ${JSON.stringify(said.slice(0, 60))} answers to ${JSON.stringify(String(contextId ?? "").slice(0, 200))} `
+    + `here. A run's context must be the kind the run names; something you cannot see answers exactly as `
+    + `something that does not exist (Membership Architecture v2 §7.9)`);
 }
 
 /** WHICH BOUND STOPPED THIS RUN — the pure decision, so the ordinary close and
