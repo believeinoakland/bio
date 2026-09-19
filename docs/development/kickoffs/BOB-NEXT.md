@@ -50,6 +50,14 @@ lands; see §2), then this. **Everything below is a POINTER measured at writing;
   VERIFICATION.md (24,309 B) and the construct map (48 KB budget) are now READ WHOLE and armed; readbudget reads 24 files.
 - **DIST and FLEET corrected** their kickoffs' stale lines (FLEET `8a585611`; DIST on its 0.64.0 cut branch).
 
+- **BOB'S PENDING CALL — weekly usage PACING** (brought 2026-09-19 ~05:15Z, once, in the README shape): 85% used at
+  ~3 points/hour, resets 2026-09-22 18:00 UTC. Options (a) keep pace and stop hard; (b) PROVISIONAL, in force: CONDUCT
+  spawns nothing new from 93%, running work finishes; (c) throttle to one worker; (d) extra usage (disabled; costs money).
+  Recommended (b). When he answers, tell CONDUCT and SCHEDULER.
+- **Later rulings, all rowed**: REC-145's findings (REC-153 context kind, REC-152 tick/close by principal); the minted-id
+  rule (REC-141's owed act + REC-151); the d280 control repair (M0-76). Top of the order at `038e1745`: D-431,
+  REC-141+UI-66, REC-144, REC-153, REC-152, REC-151, then UI-67, UI-72.
+
 ## 3. THIS LANE'S OWED WORK, in order
 
 1. **Field counts** of process failures per lane against the 2026-09-18 baseline (M-60's "owed"). No baseline is defined
