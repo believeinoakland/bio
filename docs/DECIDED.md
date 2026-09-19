@@ -2397,12 +2397,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
-- NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. 0.66.0 was added in the 0.67.0 cut and the control was RE-RUN rather than inferred each time: arm `alterafter` has measured **135/66 (declared baseline) -> 169/66 (0.66.0 cut) -> 186/66 (0.67.0 cut)**.  
+- NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store.  
   `docs/development/kickoffs/DIST-NEXT.md:62`
-- `WITHDRAWN`, which no cut touches; the PASS count rises with each release added, and that rise is what shows the new row is load-bearing rather than decorative.  
-  `docs/development/kickoffs/DIST-NEXT.md:65`
 - `v0.59.0`–`v0.63.0` are signed and WITHDRAWN (they brick existing stores): history only. **DELETED as STALE:** "the installer does not install fleet member bundles".  
-  `docs/development/kickoffs/DIST-NEXT.md:73`
+  `docs/development/kickoffs/DIST-NEXT.md:72`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  
@@ -2411,6 +2409,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/DIST.md:90`
 - goes in its `WITHDRAWN` set**, because that loop asserts the release BRICKS a 0.58.0 store.  
   `docs/development/kickoffs/DIST.md:206`
+- count is identical every time because it is bounded by `WITHDRAWN`, which a cut never touches; the PASS count rises with each release ADDED to `RELEASES`.  
+  `docs/development/kickoffs/DIST.md:261`
 - **2026-09-16** — RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather than by an instrument.** He stands development down in one account — the BOB session retires itself and every lane and worker under it — and only once that account confirms everything is stopped does he open the other…  
   `docs/development/kickoffs/NEW-MACHINE.md:59`
 - `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  

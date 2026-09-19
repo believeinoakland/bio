@@ -59,11 +59,10 @@ label, not behaviour. The question itself stands open. Same shape as DS-3: absen
 ## What is OWED, in order
 
 1. **NEXT CUT adds 0.67.0 to the upgrade arm**: `["0.67.0", "52725719…"]` in `migrate-released.test.mjs`'s `RELEASES`
-   — **NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. 0.66.0 was added in the 0.67.0 cut and the
-   control was RE-RUN rather than inferred each time: arm `alterafter` has measured **135/66 (declared baseline) ->
-   169/66 (0.66.0 cut) -> 186/66 (0.67.0 cut)**. The FAILURE set is identical across all three because it is bounded by
-   `WITHDRAWN`, which no cut touches; the PASS count rises with each release added, and that rise is what shows the new
-   row is load-bearing rather than decorative. `store.mjs` restored sha256 MATCH every time.
+   — **NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. **Re-run its control and compare against the
+   SEQUENCE below, not against "green" — `DIST.md` lesson 19 says why a single figure cannot answer it.**
+   `alterafter`: **135/66 (declared baseline) -> 169/66 (0.66.0 cut) -> 186/66 (0.67.0 cut)**. `store.mjs` restored
+   sha256 MATCH every time.
 2. **No cut is owed.** `v0.67.0..origin/main` carried no shipped-path change when this was written. Apply
    **WHEN DIST CUTS** on each self-wake: CUT NOW for a security/disclosure closing in no release, otherwise BATCH.
 
@@ -97,12 +96,11 @@ controls refusing BY NAME (altered bytes, wrong namespace, wrong key, the PREVIO
 fleetSig over a member-dropped payload) beside **two POSITIVE arms** — five refusals from a harness that cannot accept
 anything is an outcome that costs nothing to produce. 7/7. (0.66.0's gate, for the trend: 260/260 · 15937.)
 
-**Live closings, and the arm that makes it evidence.** 0.67.0: 11/11 arms — all five gated prefixes answer
-`ALLOCID_PREFIX_GATED` and allocate NOTHING, and an UNGATED prefix (`INFO`) still allocates (`INFO-2026-0003`).
-**Both halves are needed.** `ALLOCID_PREFIX_GATED` occurs 0 times in 0.66.0's bundle, so observing it establishes WHICH
-BUILD answered; the ungated arm rules out the op simply being broken, which five refusals alone cannot. 0.66.0's probe
-is the cautionary version: 7/7 green, but only its REC-153 arms discriminated — the tick/close arms exercised an ABSENT
-run that 0.65.0 would have answered identically, so they confirmed shape, not which build served.
+**Live closings — the FIGURES; the lesson is `DIST.md` lesson 18, read it there.** 0.67.0: **11/11** arms — five gated
+prefixes answer `ALLOCID_PREFIX_GATED` allocating nothing, and an UNGATED prefix (`INFO`) still allocates
+(`INFO-2026-0003`). 0.66.0: **7/7**, but only its REC-153 arms discriminated. `ALLOCID_PREFIX_GATED` occurs 0 times in
+0.66.0's bundle and `AI_RUN_NO_SUCH_CONTEXT` 0 times in 0.65.0's — those absences are what established which build
+answered, in each case.
 
 `op=audit` after both cuts: 31 checked, 21 clean, 10 withErrors, all `C-18.9/chain-absent` — D-200's record state since
 2026-08-04, nothing either release added. **Read the `offenders` key.** A first parse here read a `findings` key that

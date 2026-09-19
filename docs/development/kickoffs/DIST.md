@@ -242,3 +242,26 @@ and both want to ship.
    step means "no finding the previous release did not have". Compare against D-200's ten, by bundle id.
 16. **The battery's completion line excludes untallied suites** (D-413: `bundle`, `livefire`). Read the `EXCLUDES` clause.
 17. **A self-wake cron is session-only and expires after 7 days.** Record the arm date in DIST-NEXT, and re-arm after 5 days.
+18. **A REFUSAL-ONLY BATTERY CONFIRMS SHAPE, NOT WHICH BUILD ANSWERED — pair every refusal set with a positive arm that
+   could only pass on the NEW build.** `CLAUDE.md` §5 already says an outcome that costs nothing to produce is not
+   evidence; this is its next turn. **The receipt, 2026-09-19 (DIST #2, 0.66.0):** the live probe read 7/7 green and
+   was honest, but its `airuntick`/`airunclose` arms exercised an ABSENT run — a run that never existed — which 0.65.0
+   would have answered byte-identically. Those arms were silent on the only question the probe existed to settle. Only
+   the REC-153 arms discriminated, because `AI_RUN_NO_SUCH_CONTEXT` occurs **0 times in the previous signed bundle**, so
+   observing it live can ONLY come from the new build. **The structure to use, built into 0.67.0's 11/11:** (a) the
+   refusals; (b) a positive arm carrying a wire code ABSENT from the prior signed bundle — that is what establishes
+   which build answered, never the `/version` string; (c) an arm proving the op is not simply BROKEN (an UNGATED prefix
+   still allocating), because a uniformly-refusing op and a correct gate look identical from outside. It is the same
+   geometry as the signature controls' two positive arms beside five refusals, and as the gate's own
+   `N/N suites green` line: **verify by the positive artifact.** Ruled into DIST's law by BOB #17, 2026-09-19, and
+   named to Bob as a candidate for `CLAUDE.md` §5 — if it is folded there, this lesson points at it rather than
+   restating it.
+19. **A CONTROL CAN BE MEANINGFUL ONLY AS A TREND, AND `migrate-released`'s IS ONE.** Its `alterafter` arm has measured
+   **135 pass / 66 fail (declared baseline, REC-143) → 169/66 (0.66.0's cut) → 186/66 (0.67.0's cut)**. The FAILURE
+   count is identical every time because it is bounded by `WITHDRAWN`, which a cut never touches; the PASS count rises
+   with each release ADDED to `RELEASES`. **That rise is the only thing that shows a newly added row is load-bearing
+   rather than decorative** — a single run cannot say it, so a session that reads one figure, sees green, and moves on
+   has learned nothing and will not know. **So: record the SEQUENCE in `DIST-NEXT` at every cut, never the latest
+   figure, and compare against the previous cut's numbers rather than against "green".** If the pass count does NOT
+   rise after adding a release, the row is not being exercised — check the fixture map (`ARMED: every release in the
+   list is a fixture`) before trusting the cut.
