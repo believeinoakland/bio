@@ -903,8 +903,8 @@ checkout is held by nobody.** So:
   was a tree somebody wrote into; an unheld clean checkout at the tip needs no watcher.
 
 Credentials are in `.env`; git is configured to push as the bio persona (see the
-recalled memory). Reserve gated actions — deploying the plane or the installer —
-for BOB.
+recalled memory). Deploying the plane or the installer is DIST's, by Bob's standing permission (2026-09-18,
+`CLAUDE.md` §4); no other lane deploys.
 
 ## A RED `main` IS REPAIRED BY WHOEVER SEES IT WHEN THE REPAIR IS DETERMINISTIC, AND ROUTED TO THE PUSHER WHEN IT NEEDS JUDGEMENT.
 

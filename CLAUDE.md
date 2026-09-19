@@ -85,7 +85,9 @@ design, doctrine, anything for Bob → BOB) and continue.
 
 - **Never force-push** — the deny list refuses it outright. Fetch and rebase. Pushing itself is NOT gated
   (Bob, 2026-09-16): report the landing, not the intention.
-- **The gated acts are three: deploying the plane, deploying the installer, and writing `.env`.**
+- **Writing `.env` is gated** (a secret, not an act). **Deploying the plane and the installer is DIST's, by Bob's STANDING
+  permission** (2026-09-18: *"DIST has standing permission to deploy when asked to"*) — under DIST's own gate and
+  verification, reported to BOB after landing; no other lane deploys.
 - **One account develops at a time**, enforced by the operator (Bob, 2026-09-16). When told to stand
   down, confirm every lane and worker under you is stopped before you report that it is. There was a lock;
   it was removed on purpose — **do not rebuild it**; if you think one is needed, say so and let Bob rule.
