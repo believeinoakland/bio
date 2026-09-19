@@ -14487,7 +14487,10 @@ scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER FLOOR 1434/244/245/2
 merge and re-read 1441/245/246/208 from the print on `afc32149`); `node civicos-ui/test/run.mjs` exit **0**; `status
 --check` 0 drift; `plancheck --local` 0 fail. NEGATIVE CONTROL `node test/conclude-project-arm.control.mjs`: baseline
 17/0 · (a) no-project-arm 14/3 · (b) liar-edge 10/7 · (c) fact-unnarrowed 13/4 · (d) owners-only 16/1 — every arm AS
-DECLARED, real sources untouched (sha256 before = after). **FOR CONDUCT:** RESOLVE IC-159 (proposed MINOR, ADDITIVE, I3
+DECLARED, real sources untouched (sha256 before = after). RE-GATED after a second merge of `origin/main` (`0afa7f61`,
+docs and `tools/readbudget.mjs` only) at `3147a25a`: **254/254 suites green · 15459 assertions passing**, provenance
+257/257; `--strict` exit 0 with the floors EXACT (1441/245/246, run 208); UI harness exit 0; `plancheck --local` 0 fail.
+**FOR CONDUCT:** RESOLVE IC-159 (proposed MINOR, ADDITIVE, I3
 38.0.0 → 38.1.0; read the base at resolution); the UI-65 -> RECORD DELEGATION is DISCHARGED in its own block; the
 REC-142 -> UI DELEGATION (the question's page) is open.
 
