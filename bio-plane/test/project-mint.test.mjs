@@ -1,5 +1,6 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/project-mint.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/project-mint.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
    RESULTS, RUN 2026-09-18 in worktree agent-a12cdccbace704eb6 on base 3dee1fdb + REC-141 (real src/index.mjs 660,878 B sha256 98368d9756c0…, src/store.mjs 2,636,157 B sha256 9c6222a402cc…, untouched: YES), every arm AS DECLARED: (a) baseline 40/0 · (b) accept-supplied-id — THE ROW'S CONTROL 1, the refusal removed and the caller's id used -> 32/8, §1's refusal and byte-identity arms (the hidden id answers EXISTS, the free one is CREATED) · (c) hash-before-id — THE ROW'S CONTROL 2, the caller's pre-id sha registered -> 37/3, the returned-sha arm, the not-the-caller's-sha arm and the fork's sha arm · (d) fork-ignores-newid — a named newId silently ignored -> 37/3, the three fork refusal arms · (e) id-anywhere, an over-strict fence -> 38/2, the two over-strictness arms · (f) id-key-other-spelling, correct work in another spelling -> 40/0. RECORDED, NOT SMOOTHED: the FIRST run had (b) and (d) NOT AS DECLARED — (b)'s other-type byte-identity arm stayed green because the armed plane's own §1 creation had made the never-minted id EXIST, so both probes answered EXISTS; (d) failed four committing-fork arms because the armed plane's probe fork took the name the committing fork used. Both were the INSTRUMENT: the other-type probe now uses a second never-minted id and the fork probes a name of their own; re-run, every arm AS DECLARED.
+   RE-RUN 2026-09-18 after merging origin/main (8e39602a) and adding the C-59.3 and C-59.4 check assertions (coverage's CHECKS column named both as never asserted), real src/index.mjs 663,811 B sha256 3f4f83fdb5d6…, src/store.mjs 2,642,481 B sha256 d9237596e068…, untouched: YES — every arm AS DECLARED: baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 · id-anywhere 39/2 · id-key-other-spelling 41/0. RECORDED: fork-ignores-newid first came back NOT AS DECLARED (37/4) because its declaration lacked the new C-59.3 check arm, which it rightly fails; the declaration was corrected and the arm re-run.
  * =========================================================================
  * REC-141 / D-428 (creation half) / IC-158 — THE PLANE MINTS PROJECT IDS. Membership Architecture v2
  * §7, the bullet *"HOW the plane mints a project id"* (BOB #15, 2026-09-18), with §7.9 (*"not its
@@ -177,8 +178,9 @@ t("OVER-STRICTNESS: a nested `id:` and a body line reading `id:` are NOT an id �
 const overText = over?.bundleId ? await fileOf(ADM, over.bundleId) : null;
 t("and the minted id is written beside them, the body untouched",
   [parseFrontmatter(String(overText)).data?.id, String(overText).includes("id: a line of prose, not frontmatter")], [over?.bundleId, true]);
-t("a document with no frontmatter is refused by name (nowhere to write the id)",
-  codeOf(parse(await create(VERA, "No Fence", { md: "## Summary\n\nno fence\n" }))), "PROJECT_DOCUMENT_UNREADABLE");
+const noFence = parse(await create(VERA, "No Fence", { md: "## Summary\n\nno fence\n" }));
+t("a document with no frontmatter is refused by name (nowhere to write the id), check C-59.4",
+  [codeOf(noFence), noFence?.check], ["PROJECT_DOCUMENT_UNREADABLE", "C-59.4"]);
 
 /* ======================================================== 4. THE FORK */
 console.log("\n--- 4. a fork's newId is minted the same way ---");
@@ -189,6 +191,8 @@ const fN = await RAW(`op=projectfork&token=${IRIS}&projectId=${E(H)}&newId=${E(N
 t("a fork naming a TAKEN newId is REFUSED PROJECT_FORK_ID_SUPPLIED", codeOf(parse(fH)), "PROJECT_FORK_ID_SUPPLIED");
 t("a fork naming a NEVER-MINTED newId is REFUSED PROJECT_FORK_ID_SUPPLIED", codeOf(parse(fN)), "PROJECT_FORK_ID_SUPPLIED");
 t("BYTE-IDENTICAL: the two", rawOf(fH), rawOf(fN));
+t("the fork refusal's check is C-59.3, with a canned translation",
+  [parse(fH)?.check, typeof parse(fH)?.translation === "string" && parse(fH).translation.length > 40], ["C-59.3", true]);
 const fork = parse(await RAW(`op=projectfork&token=${IRIS}&projectId=${E(H)}&title=${E("Fork One")}`));
 t("a fork with NO newId COMMITS and returns the id it minted",
   [fork?.ok, /^PROJ-\d{4}-\d{4}-fork-one$/.test(String(fork?.newId))], [true, true]);

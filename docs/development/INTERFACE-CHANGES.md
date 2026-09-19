@@ -11716,10 +11716,10 @@ tells a creator how many project ids were minted before theirs, hidden projects 
 §7.9 disclosure is a DESIGN GAP for BOB. A refused creation after the mint step (e.g. `NAME_TAKEN`) consumes a sequence
 number (gaps, no disclosure beyond the count).
 
-**Suites:** new `bio-plane/test/project-mint.test.mjs` (40 assertions) and `project-mint.control.mjs` (six arms, all AS
-DECLARED: baseline 40/0 · accept-supplied-id 32/8 · hash-before-id 37/3 · fork-ignores-newid 37/3 · id-anywhere 38/2 ·
-id-key-other-spelling 40/0; the first run's two NOT-AS-DECLARED arms were the instrument, recorded in the suite's
-header). CORRECTED at their sites with dated reasons, never exempted: `project-sight.test.mjs` §6 (the KNOWN `EXISTS`
+**Suites:** new `bio-plane/test/project-mint.test.mjs` (41 assertions) and `project-mint.control.mjs` (six arms, all AS
+DECLARED on the merged tree: baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 ·
+id-anywhere 39/2 · id-key-other-spelling 41/0; every NOT-AS-DECLARED first run was the instrument or its declaration,
+recorded in the suite's header). CORRECTED at their sites with dated reasons, never exempted: `project-sight.test.mjs` §6 (the KNOWN `EXISTS`
 pin, now the refusal and byte-identical to a never-minted id; its control re-run, every arm AS DECLARED),
 `project-disclosure.test.mjs` §4, `ratify-authority.test.mjs` (REC-140's, control re-run AS DECLARED), the shared
 fixture `publishingproject.mjs`, and every other plane suite, probe and `civicos-ui/test/conclude-reading.test.mjs`

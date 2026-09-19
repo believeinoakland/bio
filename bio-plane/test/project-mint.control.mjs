@@ -55,7 +55,8 @@ const ARMS = {
      "silently ignored" the ruling forbids. The fork's refusal arms must go red. */
   "fork-ignores-newid": {
     patches: [["store.mjs", "    if (newId !== undefined && newId !== null && newId !== \"\") {", "    if (false) {"]],
-    mustFail: ["a fork naming a TAKEN newId", "a fork naming a NEVER-MINTED newId", "BYTE-IDENTICAL: the two"],
+    mustFail: ["a fork naming a TAKEN newId", "a fork naming a NEVER-MINTED newId", "BYTE-IDENTICAL: the two",
+               "the fork refusal's check is C-59.3"],
   },
 
   /* AN OVER-STRICT FENCE: refuse any document whose TEXT has a line reading `id:` anywhere (a body line,
