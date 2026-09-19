@@ -14191,10 +14191,10 @@ harness breaks, `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §
 ## CLAIM 2026-09-18 RECORD (REC-136) — RELEASED
 
 released: 2026-09-18 by the REC-136 worker, branch `worktree-agent-a01b00fb335bbabb8`, base `f16b9b49`, merged with
-`origin/main` at `dd52609b` (REC-133 and REC-134). Baseline at `ec766ef9`: 240/247 in the run, the other 7 contaminated by
+`origin/main` at `dd52609b` (REC-133 and REC-134) and again at `b4330caf` (M0-67, DIST 0.61.0). Baseline at `ec766ef9`: 240/247 in the run, the other 7 contaminated by
 this worker's own mid-run edit of `src/` (a parse error, loud) and each green re-run alone on pristine source; none
-skipped. After, at `8755b9bd`: **248/248 suites green · 15145 assertions passing**, no suite skipped, no printed FAIL;
-`node scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER FLOOR 1400 -> 1403 from its print); `node
+skipped. After, at `5ca64227`: **249/249 suites green · 15174 assertions passing**, no suite skipped, no printed FAIL;
+`node scripts/coverage.mjs --strict` exit **0** unpiped (REGISTER FLOOR 1407 -> 1410 from its print); `node
 civicos-ui/test/run.mjs` exit **0**; `status --check` 0; `corpuscheck` 0. NEGATIVE CONTROL `node
 test/conclude-project.control.mjs`: baseline 75/0, (a) 64/11, (b) 69/6, (c) 73/2, (d) 74/1, (e) 66/9, (f) 72/3, (g) 74/1,
 every restore sha256 MATCH; plus divide.test (1 arm) and project-authority.test (3 arms) recorded at their sites. **FOR CONDUCT:** RESOLVE IC-153 (proposed MAJOR, BREAKING; read I3's base
