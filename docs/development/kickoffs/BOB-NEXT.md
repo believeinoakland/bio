@@ -24,6 +24,10 @@ lands; see §2), then this. **Everything below is a POINTER measured at writing;
   the ONE predicate; a DIRECTORY read; grant = invitation, the requester joins by checkbox.
 - **DEC-63 as amended** (BOB #15 recorded it and never rowed it): over an INQUIRY the run verdict consults no project; a
   PROJECT context keeps its gate. Home: Membership v2 §7, the ruling bullet.
+- **A MINTED ID CARRIES NO COUNT** (REC-141's §7.9 gap, `d7ce3f86`, Membership v2 §7): gated prefixes (PROJ, CASE, DRAFT,
+  RVG) minted opaque from a CSPRNG; `op=allocid` refuses them; the legacy `EXISTS` residue is a stated limitation. The PROJ
+  half is an act owed at REC-141's integration, recorded on its row (`a8854129`) and sent back to its worker; the rest is
+  SCHEDULER's item.
 - **The review-copy surface VERIFIED** (not Program B's): rowable now WITHOUT export; export waits on DEC-31's in-band
   quartet on `op=reviewcopy` (measured absent: no hash, no floors). Publication §6A.3.
 - **The question page's no-project conclusion**: `op=projection`'s single-bundle form publishes it via the one reader
