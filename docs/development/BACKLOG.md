@@ -20,15 +20,15 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-270 · queued — **SIX OPS ANSWER WITH NO REFUSAL CODE AT ALL, so DEC-49 cannot reach them — and for FIVE of them the session gate's sentence is FALSE** (the machine-credential sentence, sent where that is not the reason). Measured 2026-08-09, 274 driven calls. — owner RECORD.
-order: FIRST. The plane tells a member something UNTRUE about why it refused — the record claiming more than it can support, which CLAUDE.md §2 grades above every feature. Ahead of M0-78 because it reaches a MEMBER, not only the evidence base (SCHEDULER #2, 2026-09-19)
+### D-270 · queued — **SIX OPS ANSWER WITH NO REFUSAL CODE AT ALL, so DEC-49 cannot reach them — and for FIVE of them the session gate's sentence is FALSE** (the machine-credential sentence, sent where that is not the reason). Measured 2026-08-09. — owner RECORD.
+order: FIRST, CONFIRMED by BOB #17: a false rationale SUPPRESSES ITS OWN BUG REPORT — a member told the absence is a DECISION will not report it as a gap. Above M0-78 because it reaches a MEMBER (SCHEDULER #2, 2026-09-19)
 milestone: M8
-interface: I3 — IC-55 is PROPOSED on the branch (2026-08-09) and was NEVER RESOLVED. The integrator re-reads its base and re-classifies; nothing is inherited.
-design: DEC-49 with DEC-37/DEC-52's machine/member split. **THE SPLIT IS ROUTED TO BOB:** the row calls distinguishing "this verb is not for a person" from "your credential does not reach this verb" a doctrine question, and IC-55 took it unilaterally on an unmerged branch. Placed provisionally; BOB confirms the wording first.
-depends-on: none.
-scope: **THE BRANCH IS EVIDENCE, NOT A MERGEABLE ARTIFACT — not a cheap integrate.** `origin/worktree-agent-aafee89563a3f2d42` (`484ed359`) is **1573 commits BEHIND main**, measured 2026-09-19, and its 180-line change is in `index.mjs`. Read its `d270-reach.test.mjs`, control and MEASUREMENTS entry; re-derive on current main. Verified still open: `C-39.2`/`C-39.3` appear ZERO times in `origin/main:bio-plane/checks/bio-checks.mjs`.
-accepts-when: each of the six ops answers with a DEC-49 row (`code`, `check`, `translation`); the five sent the false sentence send a true one; `refusal-wire.test.mjs`' set-pin is CORRECTED with its reason and still fails BOTH ways. How a liar passes it: one generic code for all six, so each op's is pinned by name. NEGATIVE CONTROL: restore the single condition, and the five-op arm fails naming them.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found stranded by CONDUCT #7, verified at the code; keeps its `D-` id).
+interface: I3 — IC-55 is PROPOSED on the branch (2026-08-09), NEVER RESOLVED. The integrator re-reads its base and re-classifies.
+design: DEC-49 with DEC-37/DEC-52's split. **RULED by BOB #17, 2026-09-19 — THREE sentences, not two:** (a) "not for a person" ONLY where that decision is recorded; (b) "your credential does not reach this verb", always sayable; (c) for an OMISSION, neither — state the fact, invent no rationale. Cite his folded home once on main.
+depends-on: none. **SEQUENCE CHECK (BOB #17):** D-136's fix DELETES the refusal this row rewords, for its ops. When re-deriving, REPORT the intersection of these five with D-136's three to SCHEDULER before rewording; disjoint, and this order stands.
+scope: **THE BRANCH IS EVIDENCE, NOT A MERGEABLE ARTIFACT.** `origin/worktree-agent-aafee89563a3f2d42` (`484ed359`) is **1573 commits BEHIND main**, its 180 lines in `index.mjs`. Read its suite, control and MEASUREMENTS; re-derive on current main. Still open: `C-39.2`/`C-39.3` are ZERO times in main's catalogue.
+accepts-when: each of the six answers with a DEC-49 row (`code`, `check`, `translation`); the five send a true sentence under the three-sentence rule; `refusal-wire.test.mjs`' set-pin is CORRECTED with its reason and still fails BOTH ways. How a liar passes it: one generic code for all six, so each op's is pinned by name. NEGATIVE CONTROL: restore the single condition, and the five-op arm fails naming them.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found by CONDUCT #7; keeps its `D-` id).
 
 ### M0-78 · queued — **TWO NEGATIVE CONTROLS MEASURE NOTHING: `caseproduction.control.mjs` arms (C) and (H) THROW INSIDE THE FIXTURE, on the old sources too, so their declared `mustFail` assertions are never evaluated and the control line claims coverage the evidence base does not have.** CONDUCT #7, 2026-09-19. — owner M0 / VERIFY.
 order: AHEAD OF FEATURES though its prefix is M0 — a control that cannot fail makes the record claim more than it can support, which CLAUDE.md §2 grades worse than a missing feature. BOB #16's M0-last rule was written for M0 BUILD items, not an evidence-base hole. Placed HIGH **provisionally**; the doctrine call is ROUTED TO BOB (SCHEDULER #2, 2026-09-19)
@@ -49,6 +49,16 @@ depends-on: none. **Sequence with D-270:** its branch also edits `civicos-ui/che
 scope: the row names the whole fix — **one import** replacing the six function declarations in `check-refusal-codes.mjs`, after which `readerDrift()` becomes an import and `verdict-reader.mjs` is the single source. `origin/worktree-agent-a61e489de171ae6c5` (`9e24ef6e`) holds a built form 1572 commits behind main — read it, do not merge it blind.
 accepts-when: `check-refusal-codes.mjs` imports the reader and still runs as a script, its exit status read UNPIPED; `readerDrift()`'s extraction stays COUNTED and FLOORED, so two empty extractions cannot agree for free; both suites green. How a liar passes it: deleting the drift pin with the duplicate, so the pin's own arm must survive. NEGATIVE CONTROL: D-240's arm (3) — one character inside `verdictKind` — still fails both suites NAMING the function.
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found stranded by CONDUCT #7; keeps its `D-` id).
+
+### D-116 · queued — **NOTHING READS A FLEET MEMBER'S VERSION BACK THROUGH ITS BINDING.** The installer verifies the PLANE (`verifyUpdate` reads `op=bootstrap`) and each member is uploaded with a version and never asked what it answers — so the plane can verify itself current while a member still serves the previous build, invisibly to both. — owner DIST.
+order: after D-254, above features: a group can run a stale member with nothing reporting it, so the install and the deploy both claim more than they can support — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19)
+milestone: M7
+interface: none — a probe and its report; no plane op changes
+design: `docs/architecture/BIO_Distribution_v0_1.md` §8, the fleet's version authority, read with CLAUDE.md §5 — *a deploy verified is not a build serving*, and establish which build ANSWERED.
+depends-on: none. DS-2 built the BUILD-side authority (`resolve-version.mjs`; `release-assemble.mjs` refusing `VERSION_SKEW`/`VERSION_DISAGREES`); this is the RUNTIME half it does not reach.
+scope: read each member's version back THROUGH THE SERVICE BINDING, after install and after deploy, reporting per member. `newgroup`'s `verifyUpdate` is the shape to follow — it already retries and reports, for the plane alone. **D-115's one surviving requirement, "verify each member's version on read-back", is DISCHARGED HERE** — that row closed naming this one.
+accepts-when: an install against a fleet where ONE member serves a stale build names THAT member and does not report success; the same probe after a fleet deploy names the member that answered stale. How a liar passes it: probing a member's own endpoint instead of through the binding, which tests a path the plane does not use — so the probe goes through the binding the plane actually calls. NEGATIVE CONTROL: pin one member at the previous version, and the arm fails naming it.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id).
 
 ### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's and are NOT rowed.
 order: rests on MK-3's attribution (SCHEDULER, first order audit, 2026-09-18)
