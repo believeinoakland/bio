@@ -113,9 +113,16 @@ const ARMS = {
   /* THE CONTROL PLANE'S STAMP DROPPED: the three run verbs receive no viewer, the store fails closed and
      states NO project — never every one. The visible-count arms go red (sam's, olga's, ruth's, and the
      machine's, whose viewer is stamped by the same line); the byte-identity arms stay green (0 = 0). */
+  /* DECLARATION WIDENED 2026-09-19 by REC-153, from this arm's own run (19/9): REC-153's context-kind check
+     asks the caller's SIGHT through the same stamp and FAILS CLOSED without it, so with the stamp dropped
+     every open is refused as for an absent context — the run-started arms (sam's, nora's, the joined-owner
+     over-strictness arm, and the project-context arm's olga half) fail too. The same defect, caught earlier
+     and louder: the stamp's absence is still never read as "every project". */
   "run-stamp-dropped": {
     patches: [["index.mjs", "        || RUN_VERB_ACTIONS.includes(op)\n", ""]],
-    mustFail: ["THE LIAR'S ARM", "SEES IT: olga", "SEES IT: ruth", "MACHINE CREDENTIAL"],
+    mustFail: ["THE LIAR'S ARM", "SEES IT: olga", "SEES IT: ruth", "MACHINE CREDENTIAL", "THE RUN STARTED both times",
+               "sam over a question ONLY a project he cannot see cites is PERMITTED", "REC-145 PERMITTED: nora",
+               "REC-145 PROJECT CONTEXT KEEPS THE GATE", "REC-145 OVER-STRICTNESS"],
   },
 
   /* OVER-STRICTNESS: the same sight question asked through the store's OTHER spelling of it,

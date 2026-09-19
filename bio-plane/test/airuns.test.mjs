@@ -190,11 +190,14 @@ const carol = await member("carol", ["contribute", "create_projects"]);
 const dave = await member("dave", ["contribute"]);      // THE UNINVITED MEMBER
 
 const INQ = "INQ-2026-0001-shared";        // shared corpus: everybody sees it
-const OTHER = "INFO-2026-0002-shared";     // a second shared context, for the filter arm
+/* CORRECTED 2026-09-19 by REC-153, never exempted: this was an INFORMATION bundle (`INFO-…`) opened as an
+   `inquiry` context, which the open now refuses — a run's context must be the kind it names (Membership v2
+   §7, BOB #16). The arm only ever needed a second QUESTION, so it is one. */
+const OTHER = "INQ-2026-0002-shared";      // a second shared context, for the filter arm
 const MISSING = "PROJ-2026-9999-none";     // never created: the no-disclosure yardstick
 
 await mk(INQ, "inquiry", "mem-r69");
-await mk(OTHER, "information", "mem-r69");
+await mk(OTHER, "inquiry", "mem-r69");
 /* CORRECTED 2026-09-18 (REC-141, IC-158): carol's project (dave is NOT invited) carries the id the plane MINTED. */
 const PROJ = await mk("secret", "project", carol);
 
@@ -492,14 +495,23 @@ const shouty = await GET(`op=airuns&token=${dave}&contextType=${encodeURICompone
 t("ARM R: `  INQUIRY  ` with padding, and a padded id, is ANSWERED — not refused — and answers "
 + "exactly what the tidy spelling answered",
   [shouty.ok, idsOf(shouty)], [true, ["RUN-r69-inq-a", "RUN-r69-inq-b"]]);
-t("ARM R: and the WRITE's own casing is honoured on the way back. `aiRunOpen` stores the kind "
-+ "VERBATIM, so a run opened as `Inquiry` is in the record — a case-sensitive match here would "
-+ "answer 'nothing is running' over a run that plainly is",
+/* CORRECTED 2026-09-19 by REC-153, never exempted. This pinned that a run OPENED as `Inquiry` was
+   accepted and listed. The open now compares the kind EXACTLY with the named bundle's type (Membership
+   v2 §7, "AND THE CONTEXT KIND IS CHECKED", BOB #16): a spelling that is not the kind was a way around
+   the project gate (`Project` consulted no project), so `Inquiry` is refused at the door and the record
+   gains no mis-spelled kind. The READ's casing tolerance is kept for rows stored before REC-153; no op
+   can mint such a row any more, so that half is no longer driven here — stated, not hidden. */
+t("ARM R: a run opened as `Inquiry` (not the kind's spelling) is REFUSED at the open (REC-153), and "
++ "the list is unchanged — the record does not gain a mis-spelled kind",
   await (async () => {
-    await open(carol, "RUN-r69-case", "Inquiry", OTHER, "opened with a capitalised kind");
+    const r = await POST(`op=airunopen&token=${carol}`, {
+      run: "RUN-r69-case", contextType: "Inquiry", contextId: OTHER, label: "opened with a capitalised kind",
+      mode: "check", principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+      skillVersion: "investigative-session@1", biasManifest: null,
+      bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
     const a = await GET(`op=airuns&token=${dave}&contextType=inquiry&contextId=${OTHER}`);
-    return idsOf(a);
-  })(), ["RUN-r69-case", "RUN-r69-other"]);
+    return [r?.code ?? null, idsOf(a)];
+  })(), ["AI_RUN_NO_SUCH_CONTEXT", ["RUN-r69-other"]]);
 
 /* =================================================================== *
  * THE CLASS SWEEP — printed with its corpus and its reach, and it says

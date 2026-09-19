@@ -6405,7 +6405,8 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). TEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE.
+ * and §14b.6). ELEVEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (TEN until REC-153 added C-22.11, 2026-09-19:
+ * the run's context is the kind it says it is — like C-22.8, a fact about the run's CONTEXT, so it is here).
  *
  * SIX UNTIL 2026-08-08, when SK-1 added C-22.7 — the run's THIRD condition,
  * the skill version, refused at the open where the two principals already are.
@@ -6683,6 +6684,38 @@ export const AI_RUN_CHECKS = {
       + 'A record that something is present has to point at what it found — the captured '
       + 'document, the passage, the entity — or nobody can check it later, and a claim of '
       + 'coverage that cannot be checked is worse than no claim at all.',
+  },
+  /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
+     DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
+     the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
+     Once REC-145 made the run verdict turn on the KIND (a question consults no project), a run labelled
+     `inquiry` over a PROJECT's id opened for a member who had not joined that project — the joined gate
+     walked around by a word the caller chose.
+
+     ONE CODE FOR THE MISMATCH, THE ABSENT ID AND THE HIDDEN ONE, and that is the §7.9 half of the ruling
+     rather than economy. A second code for *"that is a project, not a question"* would be said over a
+     project the caller can see and withheld over one they cannot, so the difference between the two codes
+     would be the bit. The refusal is built from what the caller SENT and nothing else, which makes the
+     three one object by construction (`#noSuchProject`'s discipline, one act over). It is one condition —
+     *nothing of the kind you named answers to that id for you* — not two behind one number.
+
+     CORRECTED THE SAME DAY on BOB #16's ruling (`7d03e852`), which the first build did not have: (i) A MACHINE
+     SEES NO MORE THAN ITS PRINCIPAL — an `ai` credential's open over an id its member cannot see is that member's
+     own absent answer, and an operator credential's open over a never-minted id is refused as absent too (the
+     first build let a machine through for an id the store did not hold, on PL-18's word); (ii) THE KIND IS
+     `RUN_CONTEXTS`' CLOSED VOCABULARY — any other word is refused HERE before any bundle is looked at, rather
+     than matched against the bundle's type. Both are this row's one condition: the kind and id the caller named
+     do not resolve to a context they can run in. A new code for (ii) was weighed and declined: C-22.12 is
+     REC-152's, and the word refused is the caller's own, so the refusal can say which failed without a second
+     code carrying any bit. */
+  AI_RUN_NO_SUCH_CONTEXT: {
+    check: 'C-22.11',
+    where: 'src/airun.mjs checkRunContextKind, called from store.mjs aiRunOpen',
+    translation: 'Nothing of the kind this run names answers to that id here. A run is over a question or a '
+      + 'project, nothing else; a run over a question has to '
+      + 'name a question, and a run over a project has to name a project. Something you cannot see is '
+      + 'answered exactly as something that does not exist, so this says nothing about whether anything '
+      + 'else goes by that id.',
   },
 };
 

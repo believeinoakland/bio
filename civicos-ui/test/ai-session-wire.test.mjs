@@ -183,20 +183,30 @@ console.log(`  (a literal in app.html cannot match a value that did not exist wh
    withholding rather than a simulated one. ---- */
 const T0 = "2026-08-07T09:00:00Z";
 const SHA = "a".repeat(64);
-const promote = (id, objectType) => post("promote", {
-  bundleId: id, base: null, snapKey: "20260807T090000Z_inbox", author: "ruth",
-  meta: { object_type: objectType, group: "believe-in-oakland",
-          title: `fixture ${id}`,
-          current_state: objectType === "project" ? "forming" : "open",
-          created: T0, last_updated: T0 },
-  files: [{ path: "bundle.md", text: `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`,
-            bytes: 40, sha256: SHA }],
-  register: [],
-});
+/* CORRECTED 2026-09-19 by REC-153 (a cross-area fixture fix, declared in REC-153's claim), never exempted:
+   since REC-141 (IC-158) a PROJECT's id is minted by the plane, so `promote(PROJ, "project")` naming an id was
+   REFUSED (PROJECT_ID_SUPPLIED) and this suite's project did not exist — which nothing here noticed, because
+   a machine credential could still open a run over an id the store did not hold. REC-153 (BOB #16) refuses
+   that as absent, so the fixture now creates the project with NO id and reads back the one the plane minted,
+   and it throws if either creation is refused. What ARM N measures is unchanged. */
+const promote = async (id, objectType) => {
+  const mint = objectType === "project";
+  const r = await post("promote", {
+    ...(mint ? {} : { bundleId: id }), base: null, snapKey: "20260807T090000Z_inbox", author: "ruth",
+    meta: { object_type: objectType, group: "believe-in-oakland",
+            title: `fixture ${id}`,
+            current_state: objectType === "project" ? "forming" : "open",
+            created: T0, last_updated: T0 },
+    files: [{ path: "bundle.md", text: mint ? `---\n---\n\n## Question\n\nfixture\n` : `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`,
+              bytes: 40, sha256: SHA }],
+    register: [],
+  });
+  if (!r || r.ok === false || !r.bundleId) throw new Error(`fixture promote ${id}: ${JSON.stringify(r).slice(0, 400)}`);
+  return r.bundleId;
+};
 const INQ  = "INQ-2026-0807-ui47-running-session";
-const PROJ = "PROJ-2026-0807-ui47-uninvited";
 await promote(INQ, "inquiry");
-await promote(PROJ, "project");
+const PROJ = await promote("PROJ-2026-0807-ui47-uninvited", "project");
 
 const openRun = (run, contextType, contextId, bounds, extra = {}) => post("airunopen", {
   run, contextType, contextId, label: LABEL, mode: MODE,

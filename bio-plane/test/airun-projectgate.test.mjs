@@ -280,7 +280,12 @@ console.log("\n--- ARM B0 · REC-145: a contribute-holder in NO project runs ove
    said over — and asserts exactly what it asserted before about that refusal's words and its fence. */
 console.log("\n--- ARM B · THE PARTICIPATION HALF: a contribute-holder OUTSIDE the project, over the project ---");
 {
-  const r = await open(PIA, P1, "project");
+  /* CORRECTED 2026-09-19 by REC-153 (BOB #16, `7d03e852`), never exempted: ARMS B, C, E2 and S drove PIA over P1.
+     P1 is HIDDEN from pia (she was never invited), and the open now asks SIGHT BEFORE POSITION: a project the
+     caller cannot see answers as one that does not exist (`AI_RUN_NO_SUCH_CONTEXT`, C-22.11), so C-22.8 is said
+     only to a caller who can SEE the project. These arms are about C-22.8's words, so their subject is now INES
+     — invited to P1 and never joined, the non-participant who sees it. pia's own answer is pinned in G4. */
+  const r = await open(INES, P1, "project");
   t("ARM B1: pia holds contribute and has joined no project — a run over P1 does NOT start",
     r?.started, false);
   /* WHAT THIS ARM CAN AND CANNOT SEE, and it is a FINDING FROM ITS OWN CONTROL
@@ -340,7 +345,7 @@ console.log("\n--- ARM C · THE CAPABILITY HALF: a project member WITHOUT contri
      stated in BOTH directions on purpose: it is not enough that the sentences
      differ — each must be silent about the OTHER's subject, or a member reading
      one still cannot tell which fact is true of them. */
-  const bd = str((await open(PIA, P1, "project"))?.detail) + " " + str(T_PARTICIPATION);
+  const bd = str((await open(INES, P1, "project"))?.detail) + " " + str(T_PARTICIPATION);
   const cd = str(r?.detail);
   t("ARM C3 (THE ITEM'S HEADLINE): the two refusals are DIFFERENT SENTENCES, and neither carries "
     + "the other's subject — the participation refusal never says the account lacks a capability, "
@@ -358,7 +363,7 @@ console.log("\n--- ARM C · THE CAPABILITY HALF: a project member WITHOUT contri
      is STRONGER than the figure it pinned: both refusals carry a machine key, and
      the two keys DIFFER, so a surface can key on the code and never on the prose. */
   const capCode = r?.code ?? null;
-  const gateAns = await open(PIA, P1, "project");
+  const gateAns = await open(INES, P1, "project");
   t("ARM C4 (CORRECTED, was a pin on NOT_CAPABLE having no C-number): both refusals carry a MACHINE "
     + "key and the two keys DIFFER, so a surface keys on the code and never on the prose",
     [typeof capCode === "string" && capCode.length > 0, capCode !== "C-22.8", gateAns?.reason ?? undefined],
@@ -394,8 +399,8 @@ console.log("\n--- ARM E · A PROJECT AS THE CONTEXT, not an inquiry ---");
 {
   t("ARM E1: sam runs over the project he participates in",
     [(await open(SAM, P1, "project"))?.started], [true]);
-  const r = await open(PIA, P1, "project");
-  t("ARM E2: pia does not, and gets the participation refusal by code",
+  const r = await open(INES, P1, "project");
+  t("ARM E2: ines (invited, not joined — she SEES P1) does not, and gets the participation refusal by code",
     [r?.started, r?.code, r?.check], [false, "AI_RUN_NOT_PROJECT_MEMBER", "C-22.8"]);
 }
 
@@ -443,10 +448,15 @@ console.log("\n--- ARM G · OVER-STRICTNESS: joined to ONE of the projects that 
   t("ARM G3 (REC-145): a member in NEITHER project runs over the question both cite — PERMITTED, and "
     + "the count names neither (pia can see neither project)",
     [g3?.started, g3?.code ?? null, g3?.projectGate?.projects], [true, null, 0]);
+  /* CORRECTED 2026-09-19 by REC-153 (BOB #16, `7d03e852`): pia cannot SEE either project, so the open answers
+     her as for a project that does not exist (C-22.11, sight before position) — still refused, never started.
+     The GATE's refusal is kept in this arm by ines, who sees P1 and has not joined it: dropping the gate for
+     every context passes G3 and pia's half, and fails ines's. */
   t("ARM G4 (THE LIAR'S ARM, REC-145): and the same member is still REFUSED a run whose context is "
-    + "either PROJECT — dropping the gate for every context would pass G3 and fail this",
-    [(await open(PIA, P1, "project"))?.code, (await open(PIA, P2, "project"))?.code],
-    ["AI_RUN_NOT_PROJECT_MEMBER", "AI_RUN_NOT_PROJECT_MEMBER"]);
+    + "either PROJECT (answered as absent: she sees neither), while ines, who SEES P1, meets the joined gate — "
+    + "dropping the gate for every context would pass G3 and fail this",
+    [(await open(PIA, P1, "project"))?.code, (await open(PIA, P2, "project"))?.code, (await open(INES, P1, "project"))?.code],
+    ["AI_RUN_NO_SUCH_CONTEXT", "AI_RUN_NO_SUCH_CONTEXT", "AI_RUN_NOT_PROJECT_MEMBER"]);
 }
 
 console.log("\n--- ARM H · THE TICK AND THE CLOSE CARRY THE SAME GATE ---");
@@ -537,13 +547,14 @@ console.log("\n--- ARM S · THE STAMP: `actor` is the SERVER'S, never the caller
      participation, and a caller cannot DISCLAIM their own. */
   /* CORRECTED 2026-09-19 by REC-145: both arms ran over INQ_IN, where nothing refuses any more, so a
      borrowed or disclaimed `actor` could no longer be SEEN there. Re-aimed at the project P1. */
-  const borrowed = rP(await POST(`op=airunopen&${PIA}&actor=sam`, {
+  /* CORRECTED 2026-09-19 by REC-153: the subject is INES (sees P1, not joined) — see ARM B's note. */
+  const borrowed = rP(await POST(`op=airunopen&${INES}&actor=sam`, {
     run: "RUN-2026-0809-borrow", contextType: "project", contextId: P1,
     principalClaude: "project", skillVersion: "investigative-session@1", leaseMs: 600000 }));
-  t("ARM S1: pia naming `actor=sam` in her own query does NOT borrow sam's participation — the "
+  t("ARM S1: ines naming `actor=sam` in her own query does NOT borrow sam's participation — the "
     + "caller-supplied value is overwritten, not honoured",
     [borrowed?.started, borrowed?.code], [false, "AI_RUN_NOT_PROJECT_MEMBER"]);
-  const disclaimed = rP(await POST(`op=airunopen&${PIA}&actor=`, {
+  const disclaimed = rP(await POST(`op=airunopen&${INES}&actor=`, {
     run: "RUN-2026-0809-disclaim", contextType: "project", contextId: P1,
     principalClaude: "project", skillVersion: "investigative-session@1", leaseMs: 600000 }));
   t("ARM S2: nor can she blank it to buy the machine credential's exemption — an empty `actor` "

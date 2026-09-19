@@ -17105,6 +17105,34 @@ declared (the `passing` and `passing, failing` fixtures fail by name, the sum re
 as declared (the EXCLUDES segment and EXCLUDED line absent, the old shrug present); `liar` (every group optional, the row's
 liar clause built) → 23/18. `tally-through-pipe.control.mjs d93` → 1 of 1 AS DECLARED on the new wording.
 
+## M-68 · 2026-09-19 · REC-153 (3): THE STORED RUNS WHOSE CONTEXT KIND IS NOT WHAT THEY NAME, IN THE RECORD NAMESPACE — UNDETERMINED, NOT COUNTED (REC-153 worker, worktree `agent-a7fe9ecc71d7b4add`)
+
+**What was to be counted** (BOB #16, `7d03e852`): the `ai_runs` rows already stored whose `context_type` is outside
+`RUN_CONTEXTS` {`inquiry`, `project`}, or names a bundle of another type, or names no held bundle. They are never
+rewritten; the number is to be stated, and it is UNDETERMINED until counted.
+
+**Result: UNDETERMINED. No instance was counted, and this is not 0.**
+
+**Why, stated as the instrument's limits rather than as an obstacle:**
+- **No read op enumerates runs.** Measured by grep of `bio-plane/src/store.mjs` for `FROM ai_runs`: every read is keyed
+  by one `run` id, or by one `(context_type, context_id)` pair (`op=airuns`), or selects `running` rows for the reaper
+  and the wake. So the ops can reach a mislabelled run only as: the TOTAL (`op=stats` → `aiRuns`, a count), then, per
+  held bundle, `op=airuns` under each of the two vocabulary words. `op=airuns` REFUSES any other word (C-36.2) and
+  finds nothing for an id no bundle holds — so a run stored under `information`, `Inquiry` or an unheld id is
+  unreachable by any op, and a per-context enumeration can only give a FLOOR.
+- **Every one of those ops needs an operator credential, and the plane takes it only as a `token=` query parameter**
+  (`index.mjs`, `url.searchParams.get("token")`). This worker declined to put a credential into a URL; D-431's M-66 used
+  a credential-free op, which does not exist for runs.
+
+**The act that closes it, and whose it is (named in the landing for CONDUCT, with DIST as the natural actor):** on each
+instance this account serves (`biosmoke7`, `civicos` per M-66), read `op=stats` → `aiRuns`. **If it is 0, the count is
+0, determined.** If it is not, the ops give only a floor (per held bundle, `op=airuns&contextType=inquiry|project`, a run
+listed under a kind other than its bundle's type), and the full count needs a new read — every `ai_runs` row's
+`context_type` against `bundles.object_type` — which is a design act (a new op, or an operator console query), not
+this item's. **What this cannot see:** an instance another group installed with `newgroup`; a scratch namespace.
+
+**SETTLED 2026-09-19 — 0, MEASURED (DIST, relayed by CONDUCT #6 at REC-153's integration; appended, the record above unchanged).** `op=stats` read with the admin credential over HTTPS, never printed, at 2026-09-19T11:45:59Z: biosmoke7 store `bio` → `aiRuns=0`, `aiRunBounds=0`, `aiRunLog=0`; store `scratch` → all 0 (FLEET had swept it); civicos `/api?op=stats` → all 0, which is the SAME store read by a second route (civicos is the UI worker proxying to biosmoke7), not a second store. With no stored runs at all, no stored run can be mislabelled: **the count is 0, determined, on this account's instances.** What it still cannot see is unchanged: instances another group installed with `newgroup`.
+
 ## M-69 · 2026-09-19 · REC-151: THE LEGACY NON-`PROJ-` PROJECT IDS IN THE RECORD NAMESPACE — 0 ON `biosmoke7`, 0 ON `civicos` (REC-151 worker)
 
 **Instrument:** a read-only scratch script (never printing a credential) calling `op=list&type=project` with the

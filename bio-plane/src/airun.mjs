@@ -1595,7 +1595,10 @@ export const STANDARD_BASIS = {
  * asymmetry is REAL and is REC-69's own finding rather than an oversight — the
  * open is PL-5's site and its refusals are C-22's family, and widening a write's
  * refusal set from inside a read's item is how one item's blast radius becomes
- * another item's red suite. It is DELEGATED with the measurement. */
+ * another item's red suite. It is DELEGATED with the measurement.
+ * CLOSED 2026-09-19 by REC-153 (`checkRunContextKind`, on BOB #16's ruling that the kind is THIS closed
+ * vocabulary): the open now REFUSES any word not a key here, before it looks at any bundle. REC-69's delegation
+ * is discharged for new runs; rows stored before it are never rewritten (counted in MEASUREMENTS). */
 export const RUN_CONTEXTS = {
   inquiry: "a question the group is working on, which any project may draw on",
   project: "a body of work with its own members, its own bar and its own lens",
@@ -1995,6 +1998,52 @@ export function projectGate({ actor = null, contextType = null, contextId = null
     `starting or continuing a run over ${label} is work inside that project, `
     + `and this account has not joined it (DEC-63). This is not a capability: holding `
     + `contribute would not change it, and an owner of that project inviting you would`);
+}
+
+/** REC-153 — IS THE NAMED CONTEXT THE KIND THE CALLER SAID IT IS? Membership Architecture v2 §7, the DEC-63
+ *  ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16, 2026-09-19): *"A run's `contextType` must equal
+ *  the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
+ *
+ *  WHY IT EXISTS: REC-145 made the verdict turn on the KIND (`runConsultsProjects` above), and the open took
+ *  the kind as the caller typed it. A member who had not joined a project opened a run over THAT PROJECT'S ID
+ *  by calling it an `inquiry` — permitted on the INQUIRY ground — which is the joined gate walked around by a
+ *  word. Run at the open, BEFORE `projectGate`, so the gate is only ever asked about a context that is what
+ *  it says it is.
+ *
+ *  PURE, like `projectGate`: the STORE supplies the one fact and this makes the decision.
+ *    `found` — the named bundle's type (normalised) IF THE CALLER CAN SEE IT, else null. The store asks sight
+ *              through `#inSight` in the caller's OWN sight, so an absent id and a hidden one arrive here as the
+ *              SAME null and this function cannot tell them apart — which is the §7.9 half, made structural.
+ *
+ *  THE RULE, in four lines, in this order (CORRECTED 2026-09-19 on BOB #16's ruling at `7d03e852`, which
+ *  replaced the first build's machine carve-out and its open vocabulary):
+ *    1. THE KIND IS `RUN_CONTEXTS`' CLOSED VOCABULARY — `inquiry` or `project`, spelled exactly. Any other word is
+ *       REFUSED before any bundle is looked at: a closed vocabulary refuses, it does not ignore
+ *       (`EXPERTISE_IS_NOT_ASSIGNED`'s precedent), and a word matched against the bundle's type would let
+ *       `information` over an Information bundle through as a context kind nobody designed.
+ *    2. AN ID THE CALLER CANNOT SEE ANSWERS AS ABSENT — for EVERY caller and every kind, sight before position
+ *       (`#noSuchProject`'s order). A MACHINE SEES NO MORE THAN ITS PRINCIPAL (BOB #16): an `ai` credential asks
+ *       in its member's sight, so its open over a project hidden from that member is that member's own answer,
+ *       byte for byte; an unfiltered operator credential sees every bundle, so only a never-minted id is unseen
+ *       to it, and it gets the same absent answer. This SUPERSEDES, for the open, PL-18's "a run's context need
+ *       not be a bundle this store holds": a run now names a context this record holds and the caller can see.
+ *    3. A bundle the caller sees answers by its type: equal to the kind said, or refused — whoever asks. A joined
+ *       participant labelling their own project a question is refused too: the record would say the run is over
+ *       a question when it is over a project.
+ *    4. Otherwise nothing here; `projectGate` then asks participation over a project the caller can SEE.
+ *  The refusal for 2 and 3 is built ONLY from what the caller sent, so a mismatch, an absent id and a hidden one
+ *  are one object. Rule 1's detail differs from it only by the word the caller sent, which reveals nothing. */
+export function checkRunContextKind({ contextType = null, contextId = null, found = null } = {}) {
+  const said = String(contextType ?? "");
+  const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
+  if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said))
+    return refusal("AI_RUN_NO_SUCH_CONTEXT",
+      `${JSON.stringify(said.slice(0, 60))} is not a kind of run context: a run is over a question ("inquiry") or `
+      + `a project ("project"), and nothing else, so no run over ${id} was opened`);
+  if (found !== null && found !== undefined && found === said) return null;
+  return refusal("AI_RUN_NO_SUCH_CONTEXT",
+    `no ${JSON.stringify(said)} answers to ${id} here. A run's context must be the kind the run names; `
+    + `something you cannot see answers exactly as something that does not exist (Membership Architecture v2 §7.9)`);
 }
 
 /** WHICH BOUND STOPPED THIS RUN — the pure decision, so the ordinary close and
