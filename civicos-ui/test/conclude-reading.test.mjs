@@ -42,16 +42,16 @@
  * NEGATIVE CONTROL: `node civicos-ui/test/conclude-reading.control.mjs` — FIVE
  * arms, each ALONE, each restored from its own pristine copy and verified by
  * sha256 AND cmp; app.html returned to
- * 04fddaf5ecc035fcfa550b33f77f4e5d70cb7b5991adab962ce0fc1e67ec4767 (1390878
- * bytes) after every one. RUN 2026-09-18 (UI-65). WHOLE: 64 pass, 0 fail.
- *   (A) SEND NO VERSION -> 55/9: the commit is refused and "NO NO_CLAIM WAS
+ * 2eac184ced857bf7066d6872b67a0db494f63a741d02122a2c8e8e6435f44bf1 (1391078
+ * bytes) after every one. RUN 2026-09-18 (UI-65). WHOLE: 65 pass, 0 fail.
+ *   (A) SEND NO VERSION -> 56/9: the commit is refused and "NO NO_CLAIM WAS
  *       RENDERED" fails by name, while the DEC-8 sweep HOLDS — so what the
  *       member read in place of the receipt was the plane's own sentence.
- *   (B) PREFILL THE PICKER -> 60/4: the three NOTHING-IS-PREFILLED arms and
+ *   (B) PREFILL THE PICKER -> 61/4: the three NOTHING-IS-PREFILLED arms and
  *       the "picks nothing either" arm, with the adoption itself still right.
- *   (C) HISTORY IS ONLY THE STANCE -> 62/2, the plane's history arms green.
- *   (D) PROJECT CLAIM NOT SHOWN -> 62/2.
- *   (E) LEGACY CLAIM FILLED IN -> 62/2.
+ *   (C) HISTORY IS ONLY THE STANCE -> 63/2, the plane's history arms green.
+ *   (D) PROJECT CLAIM NOT SHOWN -> 63/2.
+ *   (E) LEGACY CLAIM FILLED IN -> 63/2.
  * The first run of (A) was scored on an assertion that failed on the receipt
  * heading alone, so "the member saw NO_CLAIM" was inferred rather than
  * measured; the NO_CLAIM check was split out and the arm re-run.
