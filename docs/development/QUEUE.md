@@ -35,7 +35,7 @@ BOB appends a designed item, a correction or an order change here, with its inte
 | 5 | UI-67 | new | queued | after REC-144, whose read it renders |
 | 6 | UI-72 | new | queued | a correction to landed surfaces (refusals show internal detail over the plane's label); with the corrections, after UI-67 |
 | 7 | REC-145 | new | running | a §7.9 disclosure: the refusal it removes tells a member a hidden project cites the question; with the disclosure rows |
-| 8 | REC-153 | new | queued | an authority defect (a mislabelled context walks around the joined gate); right after REC-145, whose verdict it rests on |
+| 8 | REC-153 | new | running | an authority defect (a mislabelled context walks around the joined gate); right after REC-145, whose verdict it rests on |
 | 9 | REC-152 | new | queued | authority: who may end a run; after REC-145, correcting its ARM H6 |
 | 10 | REC-151 | new | queued | a §7.9 disclosure (a sequential id counts hidden objects); with the disclosure rows, after REC-141 whose mint it extends |
 | 11 | M0-73 | new | running | with D-430, a precondition of LED-6's split: without it a blocked backlog row leaves `owed` and a backlog-only id sets no floor |
@@ -146,7 +146,7 @@ scope: an inquiry-context run consults no project; the stated `projects` count s
 accepts-when: a member in no project runs over a question cited by a hidden project AND a discoverable one and is permitted, with a count naming neither; a non-participant is still refused a run whose context is the project itself. How a liar passes it: dropping the gate for every context, so the project-context refusal must hold. NEGATIVE CONTROL: restore the project consult for inquiry context, and the permitted arm fails by name. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
 added: 2026-09-19 · SCHEDULER (BOB #16 inbox "THREE DESIGNS AT THEIR HOMES", item 5).
 
-### REC-153 · queued — **`aiRunOpen` REFUSES a `contextType` that does not match the named bundle's type; an id the caller cannot see answers as absent (BOB #16, 2026-09-19).** An `inquiry`-labelled run over a project id reads PROJECTLESS and walks around the project-context joined gate — an AUTHORITY DEFECT, ahead of features. — owner RECORD.
+### REC-153 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: REC-145 is on `main` (c02d7f91, `runConsultsProjects`); `aiRunOpen` does not compare `contextType` with the bundle's type. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`aiRunOpen` REFUSES a `contextType` that does not match the named bundle's type; an id the caller cannot see answers as absent (BOB #16, 2026-09-19).** An `inquiry`-labelled run over a project id reads PROJECTLESS and walks around the project-context joined gate — an AUTHORITY DEFECT, ahead of features. — owner RECORD.
 order: 8 · an authority defect (a mislabelled context walks around the joined gate); right after REC-145, whose verdict it rests on (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 — a refusal added (IC minted with `node tools/mintid.mjs IC`; the integrator classifies)
