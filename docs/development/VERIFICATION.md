@@ -48,6 +48,8 @@ instance could (D-40). **Correct a wrong fixture; never relax the assertion.**
 fragment: `node scripts/battery.mjs <fragment>`). Suites are DISCOVERED from the directory, never listed
 (D-93). A suite whose tally cannot be read is *unknown*, never zero. A suite needing stock `ssh-keygen`
 SKIPS loudly with a named reason; read the SKIP COUNT, not only the exit status (`CLAUDE.md` §6).
+Tallies read: `N pass, M fail`, `N passed, M failed`, `N passing[, M failing]`. **The assertion total omits
+untallied suites and says so** (`· EXCLUDES N untallied suite(s) ·`, then a line naming them, D-413): quote it.
 
 ### A printed failure is a failure, and one log holds one run (M0-67, D-425)
 

@@ -204,7 +204,7 @@ const ARMS = [
     plant: true,
     declares:
       "the runner reports the tally-less crashing suite as FAILED with `assertions\n" +
-      "     unknown`, names it under `reported no assertion count`, NEVER counts it as zero\n" +
+      "     unknown`, names it as EXCLUDED FROM THE ASSERTION TOTAL, NEVER counts it as zero\n" +
       "     assertions passing and never as green — and the suite planted AFTER it still\n" +
       "     RUNS and reports its own count. Independent of D-282: green before and after.",
     run() {
@@ -224,7 +224,10 @@ const ARMS = [
           'process.exit(fail ? 1 : 0);\n');
         const r = runToFile([join(PLANE, "scripts", "battery.mjs"), "zz-d93probe"]);
         const crashUnknown = /FAIL\s+zz-d93probe-crash\.test\.mjs.*assertions unknown/.test(r.out);
-        const namedUnknown = /reported no assertion count:.*zz-d93probe-crash\.test\.mjs/.test(r.out);
+        /* CORRECTED 2026-09-19 by M0-65 (D-413): this read `reported no assertion count:`, the
+           wording D-413 found reading as a formatting note while the headline's total silently
+           left the suite out. The runner now says the total EXCLUDES it, and names it there. */
+        const namedUnknown = /EXCLUDED FROM THE ASSERTION TOTAL[^\n]*zz-d93probe-crash\.test\.mjs/.test(r.out);
         const afterRan = /ok\s+zz-d93probe-after\.test\.mjs.*2 pass/.test(r.out);
         const notGreen = r.code !== 0;
         const ok = crashUnknown && namedUnknown && afterRan && notGreen;
