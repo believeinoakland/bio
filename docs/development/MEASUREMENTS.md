@@ -17130,3 +17130,5 @@ instance this account serves (`biosmoke7`, `civicos` per M-66), read `op=stats` 
 listed under a kind other than its bundle's type), and the full count needs a new read — every `ai_runs` row's
 `context_type` against `bundles.object_type` — which is a design act (a new op, or an operator console query), not
 this item's. **What this cannot see:** an instance another group installed with `newgroup`; a scratch namespace.
+
+**SETTLED 2026-09-19 — 0, MEASURED (DIST, relayed by CONDUCT #6 at REC-153's integration; appended, the record above unchanged).** `op=stats` read with the admin credential over HTTPS, never printed, at 2026-09-19T11:45:59Z: biosmoke7 store `bio` → `aiRuns=0`, `aiRunBounds=0`, `aiRunLog=0`; store `scratch` → all 0 (FLEET had swept it); civicos `/api?op=stats` → all 0, which is the SAME store read by a second route (civicos is the UI worker proxying to biosmoke7), not a second store. With no stored runs at all, no stored run can be mislabelled: **the count is 0, determined, on this account's instances.** What it still cannot see is unchanged: instances another group installed with `newgroup`.
