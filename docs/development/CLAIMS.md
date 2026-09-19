@@ -14155,3 +14155,21 @@ byte-identity rule, IC-152's `projectAuthority`. IDs minted with `tools/mintid.m
   front matter and §7.9, this block.
 
 NOT `QUEUE.md` (CONDUCT's), NOT `op=caseratify` or the case-ratification path (REC-137's), NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-138) — RELEASED
+
+released: 2026-09-18 by the REC-138 worker, branch `worktree-agent-a93cdfa0fe0f8d435`, base `dd52609b` (origin/main has
+since moved by DIST 0.61.0 and a merge; no `src/` overlap, I3 still 33.0.0 there — CONDUCT merges). Paths as claimed,
+PLUS `bio-plane/test/project-authority.control.mjs` (two declarations corrected with dated reasons) and
+`docs/archive/ledgers/DEBT-closed.md` (D-426 archived by `tools/ledger.mjs`). Baseline, pristine worktree at `70dd6480`
+(the claim commit, no src change): **247/248 suites green · 15105 assertions**, the one failure `mintid.test.mjs`'s
+*no live floor is driven by prose*, CAUSED BY THIS CLAIM naming D-428 before its DEBT row existed, and gone once the row
+landed. Final, at `03ac4822`: **249/249 suites green · 15201 assertions**, exit 0; `coverage.mjs --strict` exit 0 with
+REGISTER_FLOOR moved from its own print (1400 -> 1407 · 239 -> 240 · 240 -> 241 · run 202 -> 203); UI harness exit 0.
+IDs minted with `tools/mintid.mjs`: IC-155, D-428.
+**FOR CONDUCT:** (1) RESOLVE IC-155 against I3 as read at resolution (proposed MAJOR on 33.0.0; the break is
+`op=airunopen` refusing a member's run over a project context the store does not hold). (2) Flip REC-138 at integration.
+(3) Carry D-428 to BOB: §7.1's instance-wide name uniqueness (NAME_TAKEN names the other project's id and title) against
+§7.9, and whether project ids should be plane-minted. (4) Tell DIST: a DISCLOSURE closing, open on deployed instances
+until the next cut. (5) REC-137 runs beside this: if it adds an act that names a project, it asks `Store#inSight` BEFORE
+`#projectAuthority` and returns `Store.#noSuchProject` — say so at its merge.
