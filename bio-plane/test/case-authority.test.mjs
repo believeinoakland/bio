@@ -260,10 +260,17 @@ const rawOf = async (q, body) => {
   const r = await mf.dispatchFetch(`http://x/api/?${q}`, { method: "POST", body: JSON.stringify(body) });
   return { status: r.status, body: await r.text() };
 };
-const PREDICTED_E = `CASE-${new Date().toISOString().slice(0, 4)}-0005`;
-const NEVER = await rawOf(`op=caseratify&token=${VIC}`, { caseId: PREDICTED_E, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" });
+/* CORRECTED 2026-09-19 (REC-151, IC-164 — Membership v2 §7, *"A MINTED ID CARRIES NO COUNT"*, BOB #16): E's id was
+   PREDICTED as `CASE-<year>-0005`, the fifth number off `allocId`'s CASE counter. A new case's id is now OPAQUE (a
+   CSPRNG suffix), so it cannot be predicted: the never-minted answer is taken at NEVER_ID, an id of the case shape the
+   minter can never draw (its suffix is not four digits), and the comparison replaces each answer's OWN id with one
+   placeholder — the only thing the two differ in by construction (`ratify-authority.test.mjs` §0's precedent); every
+   other byte must match. */
+const NEVER_ID = `CASE-${new Date().toISOString().slice(0, 4)}-never`;
+const idless = (raw, id) => ({ ...raw, body: String(raw.body).split(id).join("<CASE-ID>") });
+const NEVER = idless(await rawOf(`op=caseratify&token=${VIC}`, { caseId: NEVER_ID, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }), NEVER_ID);
 const E = await authorCase();
-if (E.case_id !== PREDICTED_E) throw new Error(`E was minted ${E.case_id}, not the predicted ${PREDICTED_E}`);
+if (!/^CASE-\d{4}-\d{4}$/.test(String(E.case_id))) throw new Error(`E was minted ${E.case_id}, not an id of the case shape`);
 t("the ground: five unsigned case documents authored by iris, each its own project's production, none committed",
   await Promise.all([A, B, C, Dc, E].map(stateOf)), [UNTOUCHED, UNTOUCHED, UNTOUCHED, UNTOUCHED, UNTOUCHED]);
 
@@ -272,7 +279,7 @@ t("the ground: five unsigned case documents authored by iris, each its own proje
    so this arm run after any commit of E would be measuring something else. */
 console.log("\n--- 0. a caller who cannot SEE the project is answered as for a case that does not exist ---");
 {
-  const hidden = await rawOf(`op=caseratify&token=${VIC}`, { caseId: E.case_id, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" });
+  const hidden = idless(await rawOf(`op=caseratify&token=${VIC}`, { caseId: E.case_id, edition: 1, expectedSha: "0".repeat(64), sig: "not-a-signature" }), E.case_id);
   t("SIGHT: vic (a member of NO project) asking to ratify E's UNSIGNED case answers BYTE FOR BYTE as for a case id never minted — neither C-56.1 nor C-57.1 is reachable by somebody who cannot see the project",
     [hidden.status, hidden.body === NEVER.body, /NO_CASE_DOCUMENT/.test(hidden.body)], [NEVER.status, true, true]);
   const withSig = await ratify(VIC, "iris", E);

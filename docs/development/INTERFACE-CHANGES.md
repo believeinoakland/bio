@@ -11962,7 +11962,7 @@ unreached branch 23/3 — the ONE-READER arms fail by name while every byte-iden
 | `INQ`, `ACTN`, `FOCUS`, `PROB`, `BIAS` | callers through `op=allocid`: `civicos-ui/app.html` (the Add surface, behind `!minted`; the proposal adoption, `inquiry` only) and `src/setup.mjs`' intake (behind `!minted`) | none — not project bundles, so `viewerPredicate` does not filter them | SHARED — counter kept; still allocated through `op=allocid` |
 | `LFIRE` | `src/livefire.mjs` through `op=allocid` | none — a live-fire probe's own scratch prefix | SHARED — counter kept |
 
-- **What changed, measured through the op** (`opaque-ids.test.mjs`, 34 assertions, on a fresh store):
+- **What changed, measured through the op** (`opaque-ids.test.mjs`, 35 assertions, on a fresh store):
   three `op=publish` / `op=casedraft` / `op=reviewgrant` / `op=taskdrain` mints of each gated prefix are NOT the counter's
   `0001, 0002, 0003` and no adjacent pair differs by one; `op=allocid&prefix=<gated>` answers `ok: false`,
   `code: ALLOCID_PREFIX_GATED`, `check: C-59.5`, a canned `translation`, and no `id`; `prefix=CASE-<year>` (the dash moved
@@ -11992,11 +11992,11 @@ unreached branch 23/3 — the ONE-READER arms fail by name while every byte-iden
   id minted before a whole-store purge can be drawn again after it (the counter never could, because `purge` keeps
   `seq`). REC-141's PROJ mint already had this. Fix named in the row.
 
-**Suites:** NEW `bio-plane/test/opaque-ids.test.mjs` (34) and `opaque-ids.control.mjs` (seven arms, all AS DECLARED).
+**Suites:** NEW `bio-plane/test/opaque-ids.test.mjs` (35 — including a pin of `REVIEW_NO_SECRET`, the complaint the RVG mint's new `MINT_EXHAUSTED` now sits behind, which `machine-fences.test.mjs`' shadow sweep asked for) and `opaque-ids.control.mjs` (seven arms, all AS DECLARED).
 CORRECTED at their sites with dated reasons, never exempted: `project-mint.test.mjs` §6 (it read the PROJ counter
 through `op=allocid`) and its control's `counter-restored` anchor; `casesign.test.mjs` (it PREDICTED the case id as
 `CASE-<year>-0001`; the never-minted reads are now taken at an id the minter cannot draw, compared with the id
-replaced — `ratify-authority.test.mjs` §0's precedent); `multifinding.test.mjs` (FIND_C's case named as the literal
+replaced — `ratify-authority.test.mjs` §0's precedent); `case-authority.test.mjs` (E's id PREDICTED as `CASE-<year>-0005`; corrected the same way, its control re-run: five arms AS DECLARED); `multifinding.test.mjs` (FIND_C's case named as the literal
 `CASE-2026-0002`); `reviewcopy.test.mjs` (a dry-run arm read the next case as the counter's `0002`).
 **No I5 IC:** no table or column moves.
 

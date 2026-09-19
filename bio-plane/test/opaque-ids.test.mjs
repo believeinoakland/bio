@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/opaque-ids.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS COPIES OF THE SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/opaque-ids.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
-   RESULTS, RUN 2026-09-19 in worktree agent-a59a4cdfa1b3d4dd3 on base 0cb784ab + REC-151 (real src/index.mjs 663,895 B sha256 b23d4325df07…, src/store.mjs 2,666,055 B sha256 dae04c76a0b1…, untouched: YES), every arm AS DECLARED on the first run: (a) baseline 34/0 · (b) counter-restored-case — THE ROW'S CONTROL, a new case's id taken from allocId's CASE counter again -> 30/4, exactly CASE's two NO COUNT arms and the two structural pins that see the site (the counter pin and the CASE-calls-the-minter pin); DRAFT, RVG, TASK and PROJ stay green · (c) math-random — the liar (a), Math.random for the CSPRNG -> 32/2, ONLY the two source-by-name arms; every behavioural arm stays green, which is why they exist · (d) counter-derived — the liar (a), the counter's value through a fixed permutation -> 33/1, ONLY `nothing weaker or counted` (the minter steps #nextSeq); the behavioural arms stay green · (e) allocid-open, the refusal removed -> 28/6, the five refusal arms and the dash arm · (f) allocid-overstrict, a prefix gated by its first letters -> 33/1, the PROJECTX arm · (g) csprng-other-spelling, a 32-bit CSPRNG draw — correct work -> 34/0.
+   RESULTS, RUN 2026-09-19 in worktree agent-a59a4cdfa1b3d4dd3 on base 0cb784ab + REC-151 merged with origin/main at 20b7412f (real src/index.mjs 663,895 B sha256 b23d4325df07…, src/store.mjs 2,666,041 B sha256 05544429b20c…, untouched: YES), every arm AS DECLARED on the first run and again after the REVIEW_NO_SECRET pin was added (figures below are the second run): (a) baseline 35/0 · (b) counter-restored-case — THE ROW'S CONTROL, a new case's id taken from allocId's CASE counter again -> 31/4, exactly CASE's two NO COUNT arms and the two structural pins that see the site (the counter pin and the CASE-calls-the-minter pin); DRAFT, RVG, TASK and PROJ stay green · (c) math-random — the liar, Math.random for the CSPRNG -> 33/2, ONLY the two source-by-name arms; every behavioural arm stays green, which is why they exist · (d) counter-derived — the liar, the counter's value through a fixed permutation -> 34/1, ONLY `nothing weaker or counted` (the minter steps #nextSeq); the behavioural arms stay green · (e) allocid-open, the refusal removed -> 29/6, the five refusal arms and the dash arm · (f) allocid-overstrict, a prefix gated by its first letters -> 34/1, the PROJECTX arm · (g) csprng-other-spelling, a 32-bit CSPRNG draw — correct work -> 35/0.
  * =========================================================================
  * REC-151 / IC-164 — A MINTED ID CARRIES NO COUNT, FOR EVERY GATED PREFIX. Membership Architecture v2 §7, the
  * bullet *"A MINTED ID CARRIES NO COUNT"* (BOB #16, 2026-09-19): `allocId`'s sequence is PER PREFIX PER YEAR, so
@@ -220,6 +220,18 @@ console.log("\n--- 2. each gated prefix, minted three times in a row through its
     grants.push(r?.grantId);
   }
   countArms("RVG", grants);
+  /* The RVG mint now has a refusal of its own behind it (MINT_EXHAUSTED), so the complaint in FRONT of it —
+     a grant whose read secret's fingerprint was not stamped — is pinned here (machine-fences' shadow sweep asks
+     for exactly that). The control plane always stamps it, so it is driven at the Durable Object's door, the one
+     place an absent stamp can arrive; nothing is minted or issued. */
+  {
+    const ns0 = await mf.getDurableObjectNamespace("STORE");
+    const door = ns0.get(ns0.idFromName("bio"));
+    const r = rP(await (await door.fetch(`http://x/reviewgrant?author=iris`, { method: "POST",
+      body: JSON.stringify({ draft: drafts[0], recipient: "No Stamp" }) })).json());
+    t("a grant with no stamped secret fingerprint is refused REVIEW_NO_SECRET before any id is minted",
+      [r?.ok, r?.reason, r?.grantId], [false, "REVIEW_NO_SECRET", undefined]);
+  }
 
   /* TASK — `op=taskdrain` turns a queued capture event into a task (Store#taskDrain). The events are enqueued on
      the Durable Object directly because there is deliberately no control-plane enqueue (bounds.test.mjs's own
