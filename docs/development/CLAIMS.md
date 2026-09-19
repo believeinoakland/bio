@@ -14511,3 +14511,30 @@ Measured at the code on `worktree-agent-a12cdccbace704eb6` (base `3dee1fdb`). Wh
 3. Each C-59 refusal carries `code`, `check` and a canned `translation`; render the translation (DEC-49), and move
    `civicos-ui/check-refusal-codes.mjs`' floors only from its own print if they move.
 The plane's own installer intake page (`bio-plane/src/setup.mjs`) was corrected by REC-141 itself.
+
+## CLAIM 2026-09-18 RECORD (REC-141) — RELEASED
+
+released: 2026-09-18 by the REC-141 worker, branch `worktree-agent-a12cdccbace704eb6`, base `3dee1fdb`, merged with
+`origin/main` twice (at `8e39602a`, REC-140 in; at `5871a991`, REC-143 in). Paths as claimed, PLUS `bio-plane/src/setup.mjs`'s
+intake create handler (the installer's own page chose a project id and is corrected), `ratify-authority.test.mjs`
+(REC-140's, arrived at the first merge) and two plane-backed UI suites (`intent-write`, `ai-session-context`).
+Baseline at `3dee1fdb`, NOT pristine and said so: **250/252 · 15402 assertions** — `mintid.test.mjs` failed on the tree as
+fetched (a D floor driven by QUEUE.md prose, not this item's) and `strandedwork.test.mjs` on this worker's own untracked
+log and claim edit landing mid-run. Final, at `c27e5caa`: **255/255 suites green · 15681 assertions passing · run
+95151.9aa825**, exit 0, provenance 258/258 at HEAD; `coverage.mjs --strict` exit **0** unpiped, CHECKS 341/341 named,
+REGISTER_FLOOR moved 1437 -> 1443 -> collapsed at the REC-143 merge to **1449 / 246 / 247, run 209** from the committed
+tree's own print; UI harness exit **0** (54 PASS). NEGATIVE CONTROLS: `node test/project-mint.control.mjs` six arms AS
+DECLARED (baseline 41/0 · accept-supplied-id 33/8 · hash-before-id 38/3 · fork-ignores-newid 37/4 · id-anywhere 39/2 ·
+id-key-other-spelling 41/0; restores verified by sha256, sources untouched); re-run after correcting their suites:
+`project-sight.control.mjs` (7 arms), `ratify-authority.control.mjs` (7 arms), `founder-sight.control.mjs` (9 arms) — all
+AS DECLARED. IDs minted with `tools/mintid.mjs`: IC-158, C-59.
+**FOR CONDUCT:** (1) RESOLVE IC-158 against I3 as read at resolution (proposed MAJOR on 38.0.0 -> 39.0.0; BREAKING — a
+create that named a project id, and a fork that named a newId, are now refused). (2) Land UI-66 WITH this (the DELEGATION
+above): until it lands the member surface's project creation and fork are REFUSED. (3) Flip REC-141 at integration and
+archive it; D-428's creation half is recorded closed on its row, the name half stays open with Bob. (4) Tell DIST: a
+DISCLOSURE closing (and a breaking I3 change), open on deployed instances until the next cut. (5) Carry to BOB the
+DESIGN GAP in the IC and in Membership v2's front matter: the minted sequence number tells a creator how many project ids
+were minted before theirs, hidden projects included. (6) To SCHEDULER, a pre-existing defect found in passing, NOT this
+item's: `bio-plane/test/curated-producer.probe.mjs`' read-side check looks for `entry.status === "severed"` inside
+`#restsOnLive`, which D-267 moved into `#refEdgeSevered` — the probe fails 9/1 on HEAD before and after this item; its fix
+is to point the source read at `#refEdgeSevered`.
