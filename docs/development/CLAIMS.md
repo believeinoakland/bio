@@ -14270,8 +14270,10 @@ at resolution); the UI DELEGATION above is open; §7.1 item 4 (REC-135) is unbui
 
 ## CLAIM 2026-09-18 UI (UI-65 — the conclude surface after REC-136: the reading picker, the adopted claim before commit, the project's act, withdrawal, stance and history)
 
-Worker spawned by CONDUCT #5, isolated worktree `agent-aaafef192b74592eb`, branch `ui-65-conclude-surface`,
-built ON the held branch `conduct/rec-136-held` @ `783054ac` merged with `origin/main` @ `ee9f201c`. `npm ci`
+Worker spawned by CONDUCT #5, isolated worktree `agent-aaafef192b74592eb`, branch **`ui-65-conclude`**,
+built ON the held branch `conduct/rec-136-held` @ `783054ac` merged with `origin/main` @ `9cc814d6`. (An
+earlier branch, `ui-65-conclude-surface`, carries a merge that DROPPED the held branch's QUEUE.md change;
+plancheck caught it, the merge was redone here, and that branch is SUPERSEDED — never merge it.) `npm ci`
 in all three packages, each `node_modules` a real directory. Design authority: `INVESTIGATIVE-SESSION.md`
 §7.1 items 1-8, with the REC-124 and REC-136 DELEGATIONs above. Claimed BY SITE:
 
