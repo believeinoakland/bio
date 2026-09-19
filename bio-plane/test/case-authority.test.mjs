@@ -52,6 +52,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { projectFixtureMd, allLoadBearing } from "./publishingproject.mjs";
 import { CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
+/* CORRECTED 2026-09-18 by CONDUCT #5 at the merge that landed REC-136 with UI-65: this suite was written against
+   the pre-REC-136 conclude, which adopted no claim. INVESTIGATIVE-SESSION.md §7.1 item 6 now refuses a no-project
+   conclude that names no reading (NO_CLAIM), so the concluded inquiry carries REC-136's ONE adoptable reading and
+   the call names it, exactly as REC-136 corrected 27 suites. Nothing this suite asserts (case authority) moves. */
+import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- case-authority ---");
@@ -206,10 +211,11 @@ const authorCase = async ({ joinRuth = false, inviteWen = false } = {}) => {
   }
   if (inviteWen) must("iris invites wen", await POST(`op=projectinvite&token=${IRIS}&projectId=${project}&handle=wen`));
   await promote(info, infoMd(info), "information", "collected");
-  await promote(lead, inquiryMd(lead, `Was the transfer ${lead} authorised?`, info), "inquiry", "open");
+  await promote(lead, withAdoptableReading(inquiryMd(lead, `Was the transfer ${lead} authorised?`, info)), "inquiry", "open");
   must(`conclude ${lead}`, await GET(`op=conclude&token=${IRIS}&target=${lead}`
     + `&conclusion=${encodeURIComponent("The transfer rests on a memo nobody adopted.")}`
-    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`));
+    + `&falsifier=${encodeURIComponent("An adopted resolution naming the transfer would overturn this.")}`
+    + adoptedVersionParam()));
   const pub = await POST(`op=publish&token=${IRIS}`, {
     project, targets: [lead], roles: allLoadBearing({ targets: [lead] }),
     scope: "Whether the FY2024 transfer was authorised, on the documents in hand.",
