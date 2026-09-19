@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1159 rulings across 92 documents.
+1160 rulings across 92 documents.
 
 ## DEC-
 
@@ -2013,6 +2013,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:14129`
 - an owner's signature or delivered it from outside the project — CORRECTED at its site with a dated reason, never exempted.  
   `docs/development/CLAIMS.md:14149`
+- CORRECTED at its site with a dated reason, never exempted.  
+  `docs/development/CLAIMS.md:14276`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
