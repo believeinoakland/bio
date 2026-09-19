@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1155 rulings across 92 documents.
+1156 rulings across 92 documents.
 
 ## DEC-
 
@@ -612,6 +612,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed.md:13`
 - **D-421** · 2026-09-18 — BOB #14 RULED the founder question:** a founder's password session stays ALLOWED (a human, and the only live publishing route); D-421's wording corrected to *a HUMAN's own authenticated session*; and the record must state who DELIVERED as well as who AUTHORISED → `REC-128`.  
   `docs/archive/ledgers/QUEUE-closed.md:188`
+- **D-429** — `test/casesign.test.mjs` CORRECTED at its site with a dated reason; `DEBT.md` D-429 raised.  
+  `docs/development/CLAIMS.md:14188`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  

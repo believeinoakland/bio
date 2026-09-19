@@ -14176,3 +14176,21 @@ exit 0, `log: … holds this run alone`; `node scripts/coverage.mjs --strict` ex
 `node tools/plancheck.mjs --local` 0 fail; `node tools/decided.mjs` regenerated. D-425 CLOSED and archived; M-61 records
 the measurement. **FOR CONDUCT:** `battery.mjs`'s headline now ends `· run <id>` and a new exit status 3 means REFUSED
 (another battery holds the output file); `REGISTER_FLOOR` in `coverage.mjs` moved — re-read on the merged tree.
+
+## CLAIM 2026-09-18 RECORD (REC-137) — RELEASED
+
+released: 2026-09-18 by the REC-137 worker, branch `worktree-agent-aee812fe065a38e23`, base `dd52609b`, merged with
+origin/main `c0fc28e1` (M0-67, DIST 0.61.0) before close-out. Baseline at `39785cda` (pristine but for this claim):
+**248/248 suites green · 15106 assertions**, no skip. After: the final battery line, strict coverage, the UI harness and the
+gates are in the worker's report to CONDUCT and IC-154. Paths as claimed; `src/index.mjs` was NOT touched (the store
+relays both refusals through the handler's existing path). Also: `bio-plane/scripts/coverage.mjs` REGISTER_FLOOR moved
+from the strict print on the committed merge (1407 -> 1412 · 240 -> 241 · 241 -> 242 · run 203 -> 204);
+`test/casesign.test.mjs` CORRECTED at its site with a dated reason; `DEBT.md` D-429 raised. `civicos-ui/check-refusal-codes.mjs`
+floors NOT moved (the harness is green; C-57.1's region is read and checked). IDs minted with `tools/mintid.mjs`: C-57,
+IC-154, D-429.
+**FOR CONDUCT:** (1) RESOLVE IC-154 against I3 as read at resolution (proposed MAJOR on 33.0.0, IC-137's precedent).
+(2) Flip REC-137 at integration. (3) Carry D-429 to BOB: may a PROJECT's own bundle be published through `op=ratify` at all
+(recommendation: no — refuse by type; a project publishes through its cases), and if so under the case rule. (4) At
+REC-138's merge: its `inSight` precedes `#projectAuthority`; `op=caseratify`'s sight is REC-130's standing check at the
+facts read, upstream of both REC-137 refusals, pinned byte for byte in `case-authority.test.mjs` §0 — re-run that suite on
+the merged tree.
