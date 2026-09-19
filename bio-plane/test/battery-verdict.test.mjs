@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-09-18, M0-67/D-425) FOUR ARMS ON `scripts/battery.mjs`, each armed ALONE by hand with the fixed runner copied aside (sha256 5b3da92e…, 48,439 B) and restored against that copy by sha256 AND `cmp` after every arm ("restored byte-identically: YES" each time). BASELINE (nothing armed): 27 pass, 0 fail. (0) `prefix` — the PRE-M0-67 runner itself (sha256 0c9d3d87…) -> 13 pass, 14 FAIL: every liar arm (the planted `3 pass, 2 fail` suite exiting 0 reads `ok` under `2/2 suites green` and the scratch battery EXITS 0 — D-425's question answered YES), the run-id arm, and every shared-log arm; the over-strictness arms stay GREEN. (a) `crosscheck` — `const lied = false` -> 20 pass, 7 FAIL, exactly the seven liar arms (got `2/2`, exit 0); log and over-strictness arms GREEN. (b) `logguard` — no start refusal AND `logIntrusions` returns [] -> 21 pass, 6 FAIL, exactly the six shared-log arms: B RUNS its suite onto A's file and A prints no LOG SHARED line; the tally arms and both SEQUENTIAL-append arms stay GREEN. (c) `refusal-only` — start refusal off, end check ON -> 22 pass, 5 FAIL: the four refusal arms, AS DECLARED, plus one NOT as declared — in the `>>` form A still names the file (`another run's header or completion line is in it … another battery still has it open`), but in the `>` form A's LOG SHARED line is ABSENT from the file while A's exit is still non-zero (got [false,false,true]): B, unrefused and truncating, finished after A and overwrote A's closing lines at the same offsets. The declaration was wrong and the arm was right — a later truncating writer can erase anything the first run prints, which is why the START refusal is the load-bearing half for `>` and the exit status is the only part of A's verdict a `>` collision cannot touch. THE BRIEF'S OWN CONTROL, on the real tree: one `t("M0-67 PLANTED", 1, 2)` added to `machinefences-dec49.test.mjs` (pristine sha256 3216a898…, 29,611 B) -> alone `70 pass, 1 fail`, exit 1 (unpiped); in the battery `FAIL … 70 pass, 1 FAIL`, `0/1 suites green`, exit 1. Then its exit forced to `process.exit(0)` -> alone `70 pass, 1 fail`, exit 0; PRE-FIX runner `ok … 70 pass, 1 FAIL`, `1/1 suites green`, EXIT 0; FIXED runner `FAIL … 70 pass, 1 FAIL — and EXITED 0 (D-425: counted RED)`, `0/1 suites green`, `EXIT/TALLY DISAGREE (D-425)` named, exit 1. Suite restored byte-identically. Recorded in MEASUREMENTS.md under M0-67. */
+/* NEGATIVE CONTROL: (run 2026-09-18, M0-67/D-425) FOUR ARMS ON `scripts/battery.mjs`, each armed ALONE by hand with the fixed runner copied aside (sha256 5b3da92e…, 48,439 B) and restored against that copy by sha256 AND `cmp` after every arm ("restored byte-identically: YES" each time). BASELINE (nothing armed): 27 pass, 0 fail. (0) `prefix` — the PRE-M0-67 runner itself (sha256 0c9d3d87…) -> 13 pass, 14 FAIL: every liar arm (the planted `3 pass, 2 fail` suite exiting 0 reads `ok` under `2/2 suites green` and the scratch battery EXITS 0 — D-425's question answered YES), the run-id arm, and every shared-log arm; the over-strictness arms stay GREEN. (a) `crosscheck` — `const lied = false` -> 20 pass, 7 FAIL, exactly the seven liar arms (got `2/2`, exit 0); log and over-strictness arms GREEN. (b) `logguard` — no start refusal AND `logIntrusions` returns [] -> 21 pass, 6 FAIL, exactly the six shared-log arms: B RUNS its suite onto A's file and A prints no LOG SHARED line; the tally arms and both SEQUENTIAL-append arms stay GREEN. (c) `refusal-only` — start refusal off, end check ON -> 22 pass, 5 FAIL: the four refusal arms, AS DECLARED, plus one NOT as declared — in the `>>` form A still names the file (`another run's header or completion line is in it … another battery still has it open`), but in the `>` form A's LOG SHARED line is ABSENT from the file while A's exit is still non-zero (got [false,false,true]): B, unrefused and truncating, finished after A and overwrote A's closing lines at the same offsets. The declaration was wrong and the arm was right — a later truncating writer can erase anything the first run prints, which is why the START refusal is the load-bearing half for `>` and the exit status is the only part of A's verdict a `>` collision cannot touch. THE BRIEF'S OWN CONTROL, on the real tree: one `t("M0-67 PLANTED", 1, 2)` added to `machinefences-dec49.test.mjs` (pristine sha256 3216a898…, 29,611 B) -> alone `70 pass, 1 fail`, exit 1 (unpiped); in the battery `FAIL … 70 pass, 1 FAIL`, `0/1 suites green`, exit 1. Then its exit forced to `process.exit(0)` -> alone `70 pass, 1 fail`, exit 0; PRE-FIX runner `ok … 70 pass, 1 FAIL`, `1/1 suites green`, EXIT 0; FIXED runner `FAIL … 70 pass, 1 FAIL — and EXITED 0 (D-425: counted RED)`, `0/1 suites green`, `EXIT/TALLY DISAGREE (D-425)` named, exit 1. Suite restored byte-identically. Recorded in MEASUREMENTS.md under M0-67. (run 2026-09-19, M0-65/D-413) FOUR MORE ARMS ON `scripts/battery.mjs`, driven by a scratch script that patches ONE anchor (asserting it matched exactly once), runs this suite, and restores from a per-arm copy of the fixed runner (sha256 61b485f0…, 51,166 B) by sha256 AND `cmp` ("MATCH … identical" every arm). BASELINE (nothing armed): 41 pass, 0 fail. (d) `widening` — the tally reverted to the pre-M0-65 pattern (`pass(?:ed)?,` then a REQUIRED fail count) -> 33 pass, 8 FAIL, exactly as declared: the `passing` fixture and the `passing, failing` fixture (each read `assertions unknown`), the exact sum (9, not 27), the headline segment and the other-direction arm (f3/f4 now named as excluded), the `12 passing, 2 failing` liar (read ok, exit 0) and both over-strictness arms (g2 unknown); `N pass, M fail`, `N passed, M failed`, both named-unknown arms and sections 1-3 stay GREEN. (e) `reportline` — the headline segment and the EXCLUDED line reverted to `N suite(s) reported no assertion count: …` -> 37 pass, 4 FAIL, as declared: the headline EXCLUDES segment, the EXCLUDED line naming both suites, the old-shrug-gone arm, and section 2's corrected no-count arm; every count and the exact sum stay GREEN (the old headline still parses). (f) `liar` — THE ROW'S LIAR CLAUSE BUILT: every group optional (`(\d+)?`), nothing filtered, so every suite "has a tally" and the last empty match counts NaN -> 23 pass, 18 FAIL: every exact count, the sum, both named-unknown arms, the EXCLUDED line, and section 1's liars (a NaN fail count never reaches the verdict). (g) over-strictness is carried IN the suite, not by an arm: a fully tallied run must print the old headline shape with no EXCLUDES segment and no EXCLUDED line, and a bare `3 passed` must stay UNCOUNTED — both GREEN at baseline. Recorded in MEASUREMENTS.md under M0-65. */
 /* M0-67 / D-425: CAN THE BATTERY REPORT GREEN OVER A SUITE THAT PRINTED FAIL?
  *
  * Two mechanisms, both driven on purpose, because "cannot reproduce" from one clean
@@ -124,9 +124,76 @@ console.log("\n--- 2. over-strictness: honest runs read exactly as before ---");
   t("an honest failure (exit 1) is RED exactly as before, and is NOT reported as a disagreement",
     [statusOf(r.out, "c.test.mjs"), /EXIT\/TALLY DISAGREE[^\n]*c\.test\.mjs/.test(r.out)], ["FAIL", false]);
   t("a named SKIP with no failing tally is still a skip", statusOf(r.out, "d.test.mjs"), "skip");
+  /* CORRECTED 2026-09-19 by M0-65 (D-413), not exempted: this read
+     `/reported no assertion count: e\.test\.mjs/`, and that wording WAS the defect — it
+     named the suite as a formatting note while the headline's assertion total silently
+     left it out. The line now says the total EXCLUDES it; the status half is unchanged. */
   t("a suite with no readable count is still UNKNOWN, not red and not zero",
-    [statusOf(r.out, "e.test.mjs"), /reported no assertion count: e\.test\.mjs/.test(r.out)], ["ok", true]);
+    [statusOf(r.out, "e.test.mjs"), /EXCLUDED FROM THE ASSERTION TOTAL[^\n]*: [^\n]*e\.test\.mjs/.test(r.out)], ["ok", true]);
   t("headline 3/5 (a, b, e) and exit 1 (c only)", [headline(r.out), r.code], ["3/5", 1]);
+}
+
+/* ============== 2b. M0-65 / D-413: WHAT THE ASSERTION TOTAL COUNTS, AND SAYS IT LEAVES OUT ==============
+ *
+ * HOW A LIAR WOULD SATISFY THIS, stated before what it checks: widen the tally to
+ * `(\d+)?` everywhere so every suite "has a tally" that counts nothing — no suite is
+ * ever excluded, the loud line never prints, and the total reads 0 or NaN; or reword
+ * the report line without naming the excluded suites. So every accepted form is held
+ * to its EXACT count and the headline to the EXACT sum, the excluded suites are held
+ * to be NAMED on a line that says EXCLUDED, and the tallied suites are held to be
+ * absent from that line — both directions, in one estate. */
+console.log("\n--- 2b. every accepted tally form is COUNTED; a suite with none is NAMED AS EXCLUDED (D-413) ---");
+const countOf = (out, file) => { const m = out.match(new RegExp(`^  (?:ok  |FAIL|skip)  ${file.replace(/\./g, "\\.")}\\s+\\d+ms  (.*)$`, "m")); return m ? m[1] : null; };
+const assertionsOf = (out) => { const m = out.match(/^\d+\/\d+ suites green · (?:\d+ skipped · )?(\d+) assertions passing · /m); return m ? +m[1] : null; };
+const excludedLine = (out) => (out.match(/^  EXCLUDED FROM THE ASSERTION TOTAL[^\n]*/m) || [])[0] || null;
+{
+  const e = estate({
+    "f1-passfail.test.mjs": `console.log("f1: 4 pass, 0 fail"); process.exit(0);\n`,
+    "f2-passedfailed.test.mjs": `console.log("f2: 5 passed, 0 failed"); process.exit(0);\n`,
+    "f3-passing.test.mjs": `console.log("f3: 7 passing"); process.exit(0);\n`,
+    "f4-passingfailing.test.mjs": `console.log("f4: 11 passing, 0 failing"); process.exit(0);\n`,
+    "n1-none.test.mjs": `console.log("n1 ran and printed no tally"); process.exit(0);\n`,
+    /* a bare `N passed` is prose, not one of the four forms: it must stay UNCOUNTED
+       and NAMED, or the widening has gone past what it was asked for */
+    "n2-bare.test.mjs": `console.log("n2: 3 passed"); process.exit(0);\n`,
+  });
+  const r = runPiped(e);
+  t("form `N pass, M fail` is COUNTED at its exact number", countOf(r.out, "f1-passfail.test.mjs"), "4 pass");
+  t("form `N passed, M failed` is COUNTED at its exact number", countOf(r.out, "f2-passedfailed.test.mjs"), "5 pass");
+  t("form `N passing` (no fail count) is COUNTED at its exact number — the `passing` fixture", countOf(r.out, "f3-passing.test.mjs"), "7 pass");
+  t("form `N passing, M failing` is COUNTED at its exact number — the `passing, failing` fixture", countOf(r.out, "f4-passingfailing.test.mjs"), "11 pass");
+  t("the headline's assertion total is the EXACT sum of the four tallied suites (4+5+7+11), not 0, not NaN", assertionsOf(r.out), 27);
+  t("the two untallied suites are UNKNOWN in their own lines, never zero", [countOf(r.out, "n1-none.test.mjs"), countOf(r.out, "n2-bare.test.mjs")], ["assertions unknown", "assertions unknown"]);
+  t("the HEADLINE itself says the total EXCLUDES them, as a segment right after the figure",
+    /^6\/6 suites green · 27 assertions passing · EXCLUDES 2 untallied suite\(s\) · [\d.]+s · run \S+$/m.test(r.out), true);
+  const ex = excludedLine(r.out) || "";
+  t("the line below says EXCLUDED FROM THE ASSERTION TOTAL and names BOTH excluded suites",
+    [!!excludedLine(r.out), /n1-none\.test\.mjs/.test(ex), /n2-bare\.test\.mjs/.test(ex), /counts NONE of their assertions/.test(ex)], [true, true, true, true]);
+  t("and the other direction: no TALLIED suite is named on the excluded line",
+    ["f1-passfail", "f2-passedfailed", "f3-passing", "f4-passingfailing"].filter((f) => ex.includes(f)), []);
+  t("the old shrug is gone — `reported no assertion count` does not print", /reported no assertion count/.test(r.out), false);
+  t("the tally moved NO suite status: 6/6 green, exit 0", [headline(r.out), r.code], ["6/6", 0]);
+}
+{
+  /* the `passing, failing` form with failures and exit 0 reaches the verdict exactly as
+     `N pass, M fail` does (D-425): widening the tally must widen the cross-check with it */
+  const e = estate({ "pf-liar.test.mjs": `console.log("pf-liar: 12 passing, 2 failing"); process.exit(0);\n` });
+  const r = runPiped(e);
+  t("`12 passing, 2 failing` with exit 0 is RED and named as an EXIT/TALLY DISAGREE",
+    [statusOf(r.out, "pf-liar.test.mjs"), /EXIT\/TALLY DISAGREE \(D-425\): pf-liar\.test\.mjs printed 2 fail/.test(r.out), r.code], ["FAIL", true, 1]);
+}
+{
+  /* OVER-STRICTNESS: a run where every suite tallied prints the headline exactly as it
+     did before M0-65 — no EXCLUDES segment and no EXCLUDED line. A loud line that also
+     fires on a clean run is noise, and noise is how a loud line becomes a shrug again. */
+  const e = estate({
+    "g1.test.mjs": `console.log("g1: 2 pass, 0 fail"); process.exit(0);\n`,
+    "g2.test.mjs": `console.log("g2: 3 passing"); process.exit(0);\n`,
+  });
+  const r = runPiped(e);
+  t("a fully tallied run: headline `2/2 suites green · 5 assertions passing · <time> · run <id>`, no EXCLUDES segment",
+    /^2\/2 suites green · 5 assertions passing · [\d.]+s · run \S+$/m.test(r.out), true);
+  t("and no EXCLUDED line at all", excludedLine(r.out), null);
 }
 
 /* ============== 3. ONE LOG, ONE RUN ============== */
@@ -210,7 +277,7 @@ if (!HAVE_LSOF) {
 }
 
 for (const b of bases) rmSync(b, { recursive: true, force: true });
-t("the arms drove the estates they declared (a floor, so a walk that lost an arm fails)", bases.length, HAVE_LSOF ? 6 : 5);
+t("the arms drove the estates they declared (a floor, so a walk that lost an arm fails)", bases.length, HAVE_LSOF ? 9 : 8);   /* M0-65: +3 (section 2b) */
 
 console.log(`\nbattery-verdict: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
