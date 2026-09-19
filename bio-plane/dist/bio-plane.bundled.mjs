@@ -26678,48 +26678,10 @@ var Store = class _Store extends DurableObject {
       if (cols.length && !cols.includes("edition"))
         this.sql.exec(`ALTER TABLE published_bundles RENAME TO published_bundles_preeditions`);
     }
-    {
-      const have = [...this.sql.exec(`PRAGMA table_xinfo(content)`)].map((r) => r.name);
-      if (have.length && !have.includes("chain_kind")) {
-        const stmt = bare.split(";").map((x) => x.trim()).find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
-        const col = stmt && stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim()).find((l) => /^chain_kind\s/.test(l));
-        if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
-      }
-    }
-    for (const s of bare.split(";")) {
-      const t = s.trim();
-      if (t) this.sql.exec(t);
-    }
-    {
-      const old = [...this.sql.exec(`PRAGMA table_info(ai_run_log)`)];
-      if (old.length) {
-        this.sql.exec(
-          `INSERT INTO observation_log
-             (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
-              state, governed, condition, bound, terminal, result_kind, result_ref, detail)
-           SELECT l.at, 'machine', r.principal_claude, 'run', l.run, l.level, 'unstated', l.subject,
-                  l.state, l.governed, l.condition, l.bound, l.terminal, NULL, NULL, l.detail
-             FROM ai_run_log l LEFT JOIN ai_runs r ON r.run = l.run
-            ORDER BY l.run, l.seq`
-        );
-        this.sql.exec(`DROP TABLE ai_run_log`);
-      }
-    }
-    {
-      const old = [...this.sql.exec(`PRAGMA table_info(published_bundles_preeditions)`)];
-      if (old.length) {
-        this.sql.exec(
-          `INSERT INTO published_bundles (bundle_id,edition,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored)
-           SELECT bundle_id,1,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored
-           FROM published_bundles_preeditions`
-        );
-        this.sql.exec(`DROP TABLE published_bundles_preeditions`);
-      }
-    }
     const memberCols = [...this.sql.exec(`PRAGMA table_info(members)`)].map((r) => r.name);
     if (memberCols.includes("name") && !memberCols.includes("cover"))
       this.sql.exec(`ALTER TABLE members RENAME COLUMN name TO cover`);
-    for (const [table, column, decl] of [
+    const ADDITIVE_COLUMNS = [
       /* The membership model's member half. A COVER is what an administrator
          calls someone in the roster; a HANDLE is what the member chooses at
          enrolment and what the RECORD shows. Two names assigned by two parties
@@ -27012,10 +26974,53 @@ var Store = class _Store extends DurableObject {
          as UNDETERMINED, stated, through `#deliveredBy`. */
       ["published_bundles", "delivered_by", "TEXT"],
       ["case_documents", "delivered_by", "TEXT"]
-    ]) {
-      const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].some((r) => r.name === column);
-      if (!have) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    ];
+    const addColumns = () => {
+      for (const [table, column, decl] of ADDITIVE_COLUMNS) {
+        const have = [...this.sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
+        if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+      }
+    };
+    addColumns();
+    {
+      const have = [...this.sql.exec(`PRAGMA table_xinfo(content)`)].map((r) => r.name);
+      if (have.length && !have.includes("chain_kind")) {
+        const stmt = bare.split(";").map((x) => x.trim()).find((x) => x.startsWith("CREATE TABLE IF NOT EXISTS content ("));
+        const col = stmt && stmt.split("\n").map((l) => l.replace(/--.*$/, "").trim()).find((l) => /^chain_kind\s/.test(l));
+        if (col) this.sql.exec(`ALTER TABLE content ADD COLUMN ${col.replace(/,$/, "")}`);
+      }
     }
+    for (const s of bare.split(";")) {
+      const t = s.trim();
+      if (t) this.sql.exec(t);
+    }
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(ai_run_log)`)];
+      if (old.length) {
+        this.sql.exec(
+          `INSERT INTO observation_log
+             (at, actor_class, actor, authority_kind, authority, level, subject_kind, subject,
+              state, governed, condition, bound, terminal, result_kind, result_ref, detail)
+           SELECT l.at, 'machine', r.principal_claude, 'run', l.run, l.level, 'unstated', l.subject,
+                  l.state, l.governed, l.condition, l.bound, l.terminal, NULL, NULL, l.detail
+             FROM ai_run_log l LEFT JOIN ai_runs r ON r.run = l.run
+            ORDER BY l.run, l.seq`
+        );
+        this.sql.exec(`DROP TABLE ai_run_log`);
+      }
+    }
+    {
+      const old = [...this.sql.exec(`PRAGMA table_info(published_bundles_preeditions)`)];
+      if (old.length) {
+        this.sql.exec(
+          `INSERT INTO published_bundles (bundle_id,edition,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored)
+           SELECT bundle_id,1,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored
+           FROM published_bundles_preeditions`
+        );
+        this.sql.exec(`DROP TABLE published_bundles_preeditions`);
+      }
+    }
+    addColumns();
     const bundleCols = [...this.sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name);
     if (bundleCols.includes("classification"))
       this.sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
