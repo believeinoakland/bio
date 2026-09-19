@@ -14242,3 +14242,20 @@ Design: Membership v2 §7 (BOB #15 at `7b733d07`, *"What a refusal may say about
   matter and §7, this block.
 
 NOT `QUEUE.md` (CONDUCT's), NOT `op=caseratify` or the case-ratification path (REC-137's), NOT `newgroup/`.
+
+## CLAIM 2026-09-18 RECORD (REC-139) — RELEASED
+
+released: 2026-09-18 by the REC-139 worker, branch `worktree-agent-a590a3b1c261bf1ff`, base `ee9f201c`. Paths as claimed,
+PLUS `bio-plane/test/projects.test.mjs` (one assertion that pinned NAME_TAKEN's `bundleId` CORRECTED with a dated reason)
+and `bio-plane/test/project-sight.test.mjs` (a comment's cross-reference to D-428 brought current). Baseline, NOT pristine
+and said so: the run at `a50d0fd7` read **247/250 · 15308 assertions**, and all three failures were this item's own edits
+landing while it ran (`projects.test.mjs` on the NAME_TAKEN change; `owed-controls` and `strandedwork` on a dirty tree).
+Final, at `eb858a02`: **251/251 suites green · 15335 assertions · run 24855.172395**, exit 0, no member skipped;
+`coverage.mjs --strict` exit 0 with REGISTER_FLOOR moved from its own print (1414 -> 1422 · 241 -> 242 · 242 -> 243 · run
+204 -> 205); UI harness exit 0. IDs minted with `tools/mintid.mjs`: IC-156.
+**FOR CONDUCT:** (1) RESOLVE IC-156 against I3 as read at resolution (proposed MAJOR on 34.0.0; REC-137 runs beside it).
+(2) Flip REC-139 at integration — as PARTLY done: plane-minted project ids are NOT built. (3) Carry to BOB the design gap
+in Membership v2 §7 (*"The plane MINTS project ids"* does not say whether a caller-supplied id for a new project is
+refused or ignored, nor whether `op=projectfork`'s `newId` is minted, nor how the minted id reaches the document's `id:`)
+and D-428 (c), whether DEC-63's run VERDICT is itself a §7.9 disclosure. (4) Tell DIST: a DISCLOSURE closing, open on
+deployed instances until the next cut.
