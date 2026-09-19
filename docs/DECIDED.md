@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1175 rulings across 92 documents.
+1176 rulings across 92 documents.
 
 ## DEC-
 
@@ -345,7 +345,7 @@ authority is the file named, never this one.
 - **D-117** — 2 · STALE RECORD CORRECTED BY THIS SWEEP (already pushed, batch 1) `VERIFICATION.md`'s floor table (0/42 → measured 105/105 suites declaring negative controls) · D-117 resolved (coverage.mjs gates the fleet under `--strict`) · D-213's close  
   `docs/archive/IS-SWEEP-2026-08-07.md:138`
 - **D-118** — RULED (D-118, DEC-42) | | version authority; signing and namespaces; byte-verification; the rollout wait; the account pin | BUILT and asserted (D-106, D-108, `deploy.mjs`, the wizard suite) | | the installer: OAuth, plan probe, buckets, plane and fleet uploaded and verified, `bindings: []` | BUILT and verified…  
-  `docs/architecture/BIO_Distribution_v0_1.md:88`
+  `docs/architecture/BIO_Distribution_v0_1.md:99`
 - **D-118** · 2026-07-31 — Workers Paid is an optimisation and never a requirement (RULED), and the sovereign installer puts instances into other groups' accounts, most of which will be Free.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:75`
 - **D-118** — Workers Paid is an optimisation and never a requirement (RULED), and the installer puts instances into other groups' accounts, most of them Free.  
@@ -1542,6 +1542,8 @@ authority is the file named, never this one.
   `docs/development/MEASUREMENTS.md:15930`
 - **M0-68** · 2026-09-19 — A superseded test is CORRECTED, never exempted. — owner M0 (the test estate).  
   `docs/development/QUEUE.md:1086`
+- **M0-69** · 2026-09-19 — §6 rung 6 — the scratch sweep taking scratch IDENTITY is DECIDED (BOB #16, 2026-09-19) and NOT BUILT: today `op=purge` clears the record tables only (row M0-69). - §7 — multi-instance isolation is planned, not built, and no queue row exists; the collision table and ordering constraints live in…  
+  `docs/architecture/BIO_Distribution_v0_1.md:8`
 
 ## Rulings carrying no id
 
