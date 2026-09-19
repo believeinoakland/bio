@@ -14575,7 +14575,9 @@ Worker spawned by CONDUCT #6, worktree `agent-a8e2c1c3d9c1cc711`, branch `worktr
 
 - M0 (own): `tools/owed.mjs` (the blocked-row read only); `tools/mintid.mjs` (the DEC, IC and M corpus lists only).
 - Tests: `bio-plane/test/owed.test.mjs`, `owed.control.mjs` (A8's anchor, repointed), `pipeline-readers.test.mjs` §6
-  and its control driver, `mintid.test.mjs`; `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own print.
+  and its control driver, `mintid.test.mjs`; `ledger.control.mjs` arm O1's anchor only (added 2026-09-19: it quoted
+  owed's old walk and `m025-arm-anchor-witness` A4 named it at ZERO); `bio-plane/scripts/coverage.mjs`
+  `REGISTER_FLOOR` only from my own print.
 - Docs: this block; `DECIDED.md` if regenerated.
 
 NOT `QUEUE.md`, NOT `BACKLOG.md` (no row is planted in the live file), NOT `bio-plane/scripts/battery.mjs` (M0-65's).
