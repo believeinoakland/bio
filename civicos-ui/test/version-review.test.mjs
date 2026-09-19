@@ -77,7 +77,12 @@ import { appScript } from "./extract.mjs";
    CONSUMES it, rather than hand-writing a rival copy. See
    `analyst-vocabulary.mjs` for what it is derived from and what it cannot see. */
 import { analystHits, reachLine } from "./analyst-vocabulary.mjs";
-import { VERSION_MACHINE } from "../../bio-plane/checks/bio-checks.mjs";
+import { VERSION_MACHINE, BASIS_VERSION_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+/* UI-72: the refusal row this suite's mock answers with, taken FROM THE PLANE'S OWN CATALOGUE
+   rather than typed here. A hand copy agrees with itself for free, and this one did not even
+   agree: the fixture named `C-25.19` where the row is `C-25.18`, and carried a one-line
+   `translation` nobody in the plane has ever sent. */
+const NOT_AN_INQUIRY = BASIS_VERSION_CHECKS.BASIS_VERSIONS_NOT_AN_INQUIRY;
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -230,9 +235,19 @@ function mockFetch(u){
   const R = o => ({ ok:true, json:async()=>({ ok:true, result:o }) });
   if(op === "basisversions"){
     if(p.id !== INQ)
+      /* CORRECTED 2026-09-19 (UI-72), never exempted. THE FIXTURE INVENTED TWO OF THE FOUR
+         FIELDS: `check:"C-25.19"` is not this refusal's check (the row says C-25.18), and the
+         `translation` was a sentence of the fixture's own composition — so a suite whose whole
+         subject is that the surface renders the PLANE'S words was judging it against words the
+         plane never wrote. The check and the translation now come from the catalogue row itself;
+         the `detail` is the store's, copied from `basisVersions`'s own `refuse(...)` call and
+         deliberately DIFFERENT from the translation, because a fixture in which the two agree
+         cannot tell which one the surface rendered. */
       return R({ ok:false, reason:"BASIS_VERSIONS_NOT_AN_INQUIRY", code:"BASIS_VERSIONS_NOT_AN_INQUIRY",
-                 check:"C-25.19", translation:"The record answers this only for a question.",
-                 detail:"that is not a question, so it has no readings of its evidence." });
+                 check:NOT_AN_INQUIRY.check, translation:NOT_AN_INQUIRY.translation,
+                 detail:"PROJ-2026-0001 is not an inquiry. Only an inquiry has a basis, so only an "
+                   + "inquiry has versions of one; an empty list here would say this thing has none "
+                   + "when it could not have any." });
     return R(versionsAnswer());
   }
   if(op === "affordances"){
@@ -623,8 +638,16 @@ ok("the record's OWN bound is still stated separately from the display's — the
 {
   await ctx.__open("PROJ-2026-0001");
   const refused = keep("a refusal");
-  ok("a refusal is rendered in the plane's own sentence",
-     strip(refused).includes("that is not a question, so it has no readings of its evidence."));
+  /* CORRECTED 2026-09-19 (UI-72), never exempted. This assertion pinned the refusal's
+     `detail` — the sentence written for A CALLER of `op=basisversions` — while the same
+     answer carried the canned `translation` DEC-49 authored for a member. It was the
+     assertion UI-66's own comment cited as the reason the class change had not been made,
+     so correcting it is this row's work and not a side effect of it. BOTH halves are
+     asserted: the member reads the translation, and does NOT read the caller's sentence. */
+  ok("a refusal is rendered in the plane's own MEMBER-FACING sentence (DEC-49's canned translation)",
+     strip(refused).includes(strip(NOT_AN_INQUIRY.translation)));
+  ok("and the sentence written for a CALLER of the op is not what the member reads",
+     !strip(refused).includes("Only an inquiry has a basis, so only an inquiry has versions of one"));
   ok("and its code is shown as the record's, not re-worded",
      refused.includes("BASIS_VERSIONS_NOT_AN_INQUIRY"));
   ok("no reading list, no comparison and no control is drawn beside a refusal",

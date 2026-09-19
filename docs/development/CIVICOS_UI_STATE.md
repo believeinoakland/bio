@@ -50,6 +50,43 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v95, 2026-09-19 session, thread UI, UI-72. Landed on `ui-72-refusal-translation` (base `origin/main` @ `5d6e4803`).
+SURFACE: `app.html` — `actRefusalHtml` and `intentRefusalHtml`, which between them draw **every refusal a member reads
+on an act surface** (27 call sites and 10). **A REFUSAL CARRYING THE PLANE'S CANNED `translation` NOW REACHES THE MEMBER
+IN THAT SENTENCE, EVERYWHERE, INSTEAD OF IN THE SENTENCE WRITTEN FOR A CALLER OF THE OP.**
+
+**What a member stops reading.** Both fields are the plane's own words, so DEC-8 was never broken — but they address
+different readers, and the one that was rendered addresses a program. Three measured examples, each the sentence a member
+actually met: *"…is not an inquiry. Only an inquiry has a basis, so only an inquiry has versions of one"* on the version
+review; a conclusion refused for want of a falsifier answering with the op's own query parameter `…&no_falsifier=1`; and
+`op=promote`'s *"send the fork with no newId"*. Each is TRUE OF THE OP AND FALSE OF THE MEMBER'S SITUATION — the record
+claiming more precision than it can support at the one place a person meets it, which is the defect class `CLAUDE.md` §2
+names as worse than a missing feature.
+
+**The shape, and why it is one function.** `refusalWords(r)` decides the order once — a canned `translation` (DEC-49,
+which amends DEC-8 to license an AUTHORED translation keyed on a code the plane SENT) first, `detail`/`error` behind it,
+and an EMPTY or NON-STRING translation is not a sentence and falls through rather than blanking the member. Both
+renderers read it. UI-66's per-site shim `refusalTranslated` is DELETED and its two call sites unwrapped: it applied the
+rule at two of thirty-seven sites and its own comment recorded the rest as *"a class change, reported, not made here"*.
+Applying a preference per site is the thirteen-surfaces drift DEC-49's option (b) was rejected for.
+
+**`intentRefusalHtml` was found by the class sweep, not by the row.** Its body was BYTE-IDENTICAL to `actRefusalHtml`'s —
+same markup, same code line, same `r.detail || r.error || ""` — and it serves ten member-facing intent panes. Fixing only
+what was reported would have left the same defect one function over.
+
+**Four suites went red and every one was CORRECTED at its site, never exempted.** `conclude-nofalsifier`,
+`conclude-reading` and `question-npc` each build a DEC-8 sweep corpus from the wire's `detail` and `error` and NOT its
+`translation`, so the moment the surface rendered a translation the sweep reported THE PLANE'S OWN SENTENCE as invented
+by the surface — an instrument naming the wrong culprit. `version-review` §7 pinned the `detail` of a refusal whose
+`translation` the member now reads, and its fixture was **wrong in two fields**: it named `C-25.19` where the row is
+`C-25.18` and carried a one-line translation the plane has never sent. Both now come from the catalogue row itself.
+
+**What is NOT fixed, and it is named rather than implied.** Eleven further member-facing sites read a refusal's `detail`
+without going through `refusalWords` — `teach()` (the gate), `queueReason`, `planeSaid` (the published case page), the
+finder's per-subject errors, the release, attest and capture receipts, the proposal pre-flight, the forward picker, the
+leg pre-flight and `INTENT_VOCAB.words`. Each is the same class and each needs its own reading of whether its code is
+translated; the fix is the same one line. It is in UI-72's report as an act for CONDUCT to route, not left here.
+
 v94, 2026-09-19 session, thread UI, UI-67. Landed on `ui-67-question-page-npc` (base `origin/main` @ `4dd314ff`).
 SURFACE: `app.html` — the QUESTION's page (`openInquiry`), the act bar (`actBarHtml`), and the three sites that land a
 conclusion or a withdrawal (`doConclude`, `stanceConclude`, `stanceWithdraw`). **THE QUESTION'S PAGE NOW SHOWS WHAT THE
