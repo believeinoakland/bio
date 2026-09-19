@@ -16920,6 +16920,55 @@ see:** a pipe (`| tee log`: the run id is the only defence), no `lsof` (says UNV
 
 **After, on the committed tree:** see the close-out figures in the M0-67 claim block (`CLAIMS.md`).
 
+## M-62 · 2026-09-18 · REC-143 — EVERY RELEASE FROM 0.59.0 TO 0.63.0 BRICKS A STORE 0.58.0 WROTE: REPRODUCED WITH THE RELEASED BYTES, SWEPT, AND CLOSED (worktree `agent-a70dee1231b11c76d`, base `4b4c2e70`)
+
+**Instrument:** `bio-plane/test/migrate-released.test.mjs` (miniflare 4.20260722.0, the plane's own workerd
+engine). Its fixtures are the SIGNED plane bundles read out of git — `release/bio-plane.bundled.mjs` at each
+release's manifest commit — each checked against its own `RELEASE.json` sha256 before use. Nothing about the
+old shape is typed. 0.58.0 is `db7589b8` (the manifest commit the row names); its bundle is byte-identical to
+the one at the `v0.58.0` tag `9ed18019` (both sha256 `72fce1e9…`), measured here. 0.59.0–0.63.0 are the tags'
+commits (`c53d9d92`, `76b2a5c6`, `b57b8de2`, `2773ee27`, `3d941c08`).
+
+**The reproduction, before the fix (current plane at `4b4c2e70` booted on a store 0.58.0 wrote):**
+`op=bootstrap` answered `STORE_DID_NOT_ANSWER`; every request that reached the Durable Object came back
+HTTP 500 `Error: no such column: content_id at offset 66: SQLITE_ERROR`. **Also reproduced with each
+withdrawn release's OWN bytes**: 0.58.0 → 0.59.0, → 0.60.0, → 0.61.0, → 0.62.0 and → 0.63.0 each throw exactly
+`no such column: content_id`, which is DIST's biosmoke7 finding at 0.62.0 extended to all five. **And the
+rollback DIST performed is clean**: after each failed upgrade, 0.58.0 boots the same store and answers with its
+rows intact — the failed `#migrate` left nothing 0.58.0 cannot read.
+
+**Stores BORN on 0.59.0–0.63.0 were never affected**: every one of those releases' `CREATE TABLE` already
+carries `inquiry_basis.content_id`, and each such store lacks nothing against a fresh current store (the
+suite prints each old store's gap list before migrating). The brick is exactly *a store created on 0.58.0 or
+earlier, upgraded to any of 0.59.0–0.63.0*.
+
+**The sweep — every non-`CREATE TABLE` statement in the current `schema.mjs` (112: all `CREATE [UNIQUE]
+INDEX`; the schema literal holds no trigger or view — those are created in `#migrate` after the additive list)
+read against the 67-entry additive list, and each release's `CREATE TABLE`s:**
+
+| Statement | Table | Column only the list adds | Old stores it bricks |
+| --- | --- | --- | --- |
+| `inquiry_basis_content` | `inquiry_basis` | `content_id` (REC-82) | ≤ 0.58.0 — the reported defect |
+| `inquiry_basis_version_legs_content` | `inquiry_basis_version_legs` | `content_id` (REC-82) | ≤ 0.58.0 — DIST's first suspicion, CONFIRMED; it would have thrown next had the first not |
+| `reading_text_source_cal` | `reading_text_source` | `calibrations` (CPDF-13) | a store predating CPDF-13; 0.58.0's `CREATE` already carries the column, so not a 0.58.0 store |
+| `transcriptions(capture_sha, content_id)` | `transcriptions` | none | none — DIST's second suspicion REFUTED: the table is new since 0.58.0 and every release that has it creates it with the column |
+
+**The reverse — a column the current `CREATE TABLE` declares on a table that existed in an old release, which
+neither that release's `CREATE` nor the additive list supplies:** none, for each of 0.58.0–0.63.0. **What the
+static matcher could not see**: statements `#migrate` issues outside the schema literal (the FTS tables and
+triggers, `project_participants`, `selections`, the `bundles_<col>` indexes) — those run AFTER the additive
+list and were not at risk, and the dynamic half below covers them anyway. The dynamic half is the suite's
+shape comparison: a store each release wrote, after migration, holds every table, every column
+(`table_xinfo`), every index and every trigger a FRESH current store holds (104 tables, 134
+indexes/triggers), and no table a fresh one lacks — for all eleven paths driven.
+
+**The fix** (`store.mjs` `#migrate`): the additive list becomes `ADDITIVE_COLUMNS`, applied by one
+`addColumns()` BEFORE the schema (to every table that already exists; an absent table reads as no columns and
+is skipped) and AGAIN AFTER it (for a table the schema creates this boot — many list columns live ONLY in the
+list, e.g. every `bundles` projection column). One mechanism, not a case per column. **After the fix: 201
+pass, 0 fail** across six born-on stores and five upgrade paths, and the negative control's `alterafter` arm
+(the list moved back after the schema) returns 135/66 naming `no such column: content_id` in every failing
+store.
 ## M-63 · 2026-09-19 · THE READINESS EXAM FOR CONDUCT — the cut kickoff (20.7 KB) against the old (96.8 KB) and against none (BOB #16)
 
 **Why.** M-60 owed the exam per lane; BOB-NEXT §3.1 made it the condition for landing `kickoffs/CONDUCT.md`'s cut.
