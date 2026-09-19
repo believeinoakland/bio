@@ -1473,7 +1473,7 @@ authority is the file named, never this one.
 - **M0-14** — M0-14 CORRECTED THE TALLY ITSELF, AND THE WAY IT WAS FOUND IS THE POINT.** M0-13 predicted the register would move **388 → 390** for two arms it had just added, and **it did not move at all.** Four of 120 suites scored ZERO while declaring 48 arms between them, a fifth scored **1 against a real 10**, and nothing…  
   `docs/development/VERIFICATION.md:242`
 - **M0-15** · 2026-08-08 — RE-MEASURING A TRUE BASELINE: THE RECIPE, CORRECTED 2026-08-08 (M0-15) **Do not use `git stash` to park work while you re-measure at HEAD.** The stack is shared by every worktree in this repository (the row above), so `git stash pop` is a  
-  `docs/development/ORCHESTRATION.md:202`
+  `docs/archive/ORCHESTRATION-2026-09-19.md:202`
 - **M0-23** — Correct the fixture to the wire shape and delete the phantom keys, with any assertion that read them CORRECTED at its site, never exempted.  
   `docs/archive/ledgers/QUEUE-closed.md:516`
 - **M0-27** · 2026-09-14 — Gates on the branch: corpuscheck 44/0; gates.mjs GREEN class DOCS (13 prose paths) — 19/19 doc-facing suites · 1,164, four UI suites, plancheck --local 0/0; DECIDED regenerated.  
@@ -1841,6 +1841,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/archive/ledgers/QUEUE-closed.md:2431`
 - **2026-09-15** — THE FALSIFICATION RULE, CORRECTED 2026-09-15 (CONDUCT #11, on BOB #11's argument), and the correction is worth more than the clause it fixes.** Every `running` row carries a clause telling a reader how to check the status against the world.  
   `docs/archive/ledgers/QUEUE-narrative-2026-09-18.md:35`
+- PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED | | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only; knowledge, and an INPUT to the queue, never a rival | | wake a session that is already mid-run | **a short nudge, pointing at what to…  
+  `docs/archive/ORCHESTRATION-2026-09-19.md:98`
 - RULED by Bob; the design pass argues it is a doctrine requirement, not a convenience, because weakest-link composition otherwise forces overclaim-or-silence |  
   `docs/archive/PROCESS-INVENTORY.md:109`
 - The whole of `BIO_Case_Making_v0_1.md` (494 lines): the recursive inquiry object with three phase names (RULED, `:408`), weakest-link strength composition, division-by-supersession with authored apportionment, the completeness claim as an authored act at publication, audience renderings that state what they excluded. |  
@@ -2365,8 +2367,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  
   `docs/development/MILESTONES.md:182`
-- PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED | | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only; knowledge, and an INPUT to the queue, never a rival | | wake a session that is already mid-run | **a short nudge, pointing at what to…  
-  `docs/development/ORCHESTRATION.md:98`
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
 - AMENDED (1 item); THE REVIEW-COPY SURFACE VERIFIED (3 items).** Every design below is on `main` in its home document in this commit, read at the code before it was written.  
