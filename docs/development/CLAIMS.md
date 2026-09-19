@@ -14472,3 +14472,13 @@ session: FLEET (worktree `sweet-goldberg-04a9ed`). Scope: `docs/development/kick
 sentences corrected to `CLAUDE.md` §3 as it reads on `origin/main`: the build plan's order goes to SCHEDULER and
 running work to CONDUCT (was "CONDUCT (sequencing)"); Bob's decisions go to BOB (was "via CONDUCT"). Claimed and
 released in the same commit.
+
+## CLAIM 2026-09-19 M0 (M0-65 — D-413: the battery's assertion total silently excludes every suite that prints no tally; the report line says so, and the tally accepts the `passing` forms)
+
+claimed: 2026-09-19 by the M0-65 worker (spawned by CONDUCT #6), branch `worktree-agent-ac2acc663da2165ca`, base
+`7042404e`. Paths: `bio-plane/scripts/battery.mjs` (the tally, the headline's assertion segment and the no-count report
+line ONLY), `bio-plane/test/battery-verdict.test.mjs` (the tally arms added; its superseded no-count assertion corrected
+at the site), `bio-plane/test/tally-through-pipe.control.mjs` (its reading of the no-count line, corrected at the site),
+`bio-plane/scripts/coverage.mjs` (floors only, from its own print, if any move), `docs/development/DEBT.md` (D-413's
+row, closed), `docs/development/VERIFICATION.md` (the sentence stating which tally forms the runner reads),
+`docs/development/MEASUREMENTS.md` (the before/after and the controls).
