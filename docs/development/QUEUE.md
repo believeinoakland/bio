@@ -32,11 +32,11 @@ BOB appends a designed item, a correction or an order change here, with its inte
 | 2 | REC-141 | new | running | first queued: a §7.9 disclosure defect (D-428's existence oracle) whose fix BOB #15 has now designed; disclosure outranks features |
 | 3 | UI-66 | new | running | with REC-141: REC-141 makes the surface's current create REFUSED, so the surface half lands with it |
 | 4 | REC-144 | new | running | UI-65's other follow-up, beside REC-142: the question page cannot show a no-project conclusion without this read |
-| 5 | UI-67 | new | queued | after REC-144, whose read it renders |
-| 6 | UI-72 | new | queued | a correction to landed surfaces (refusals show internal detail over the plane's label); with the corrections, after UI-67 |
-| 7 | REC-153 | new | running | an authority defect (a mislabelled context walks around the joined gate); REC-145 is ON MAIN (c5d3788a), so runnable |
-| 8 | REC-152 | new | queued | authority: who may end a run; REC-145 is ON MAIN (c5d3788a), so runnable; corrects its ARM H6 |
-| 9 | REC-151 | new | queued | a §7.9 disclosure (a sequential id counts hidden objects); with the disclosure rows, after REC-141 whose mint it extends |
+| 5 | REC-153 | new | running | an authority defect (a mislabelled context walks around the joined gate); REC-145 is ON MAIN (c5d3788a), so runnable |
+| 6 | REC-152 | new | queued | authority: who may end a run (REC-145 on main); moved above the UI corrections at BOB #16's direction while weekly usage is short — disclosure and authority first |
+| 7 | REC-151 | new | queued | a §7.9 disclosure (a sequential id counts hidden objects); after REC-141, whose mint it extends; moved above the UI corrections at BOB #16's direction |
+| 8 | UI-67 | new | queued | after REC-144, whose read it renders |
+| 9 | UI-72 | new | queued | a correction to landed surfaces (refusals show internal detail over the plane's label); with the corrections, after UI-67 |
 | 10 | M0-73 | new | running | with D-430, a precondition of LED-6's split: without it a blocked backlog row leaves `owed` and a backlog-only id sets no floor |
 | 11 | LED-6 | 1 | queued | the pipeline migration, SCHEDULER's own hand act, after D-430 |
 | 12 | LED-7 | 2 | queued | the debt fold: until it runs, ~222 open DEBT rows — among them disclosure defects that would outrank features — stand outside the order, so the plan cannot be proved in order without it |
@@ -117,28 +117,8 @@ scope: the single-bundle `op=projection` for an inquiry carries `no_project_conc
 accepts-when: a suite drives one concluded-no-project inquiry and asserts the field is byte-identical to `op=basisversions`' for the same viewer, null for an unconcluded inquiry and for a non-inquiry, and absent from the list form. How a liar passes it: a second reader copying the first's logic passes byte-equality today and drifts tomorrow, so the suite asserts ONE reader. NEGATIVE CONTROL: swap in a copy differing in one branch, and the one-reader arm fails by name. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
 added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry `7c150df0`, item 1; id minted with `node tools/mintid.mjs REC`).
 
-### UI-67 · queued — **THE QUESTION'S PAGE RENDERS THE NO-PROJECT CONCLUSION with `noProjectConclusionHtml` from `getProjection`, and invalidates `PROJ_CACHE` for that inquiry when a conclusion or a withdrawal lands (BOB #16, 2026-09-19).** — owner UI.
-order: 5 · after REC-144, whose read it renders (SCHEDULER, 2026-09-19)
-milestone: M9
-interface: I3 consumer (of REC-144's IC)
-design: `docs/development/INVESTIGATIVE-SESSION.md` §7.1, the paragraph "The question's page reads the no-project conclusion from `op=projection`" (BOB #16, `7c150df0`).
-depends-on: REC-144 — CHECK AT THE CODE at spawn. And REC-142 (done, `3203139b`).
-scope: `civicos-ui/app.html`'s question page reads the field from `getProjection` and renders it with the existing `noProjectConclusionHtml`; the projection cache entry for the inquiry is invalidated on a conclusion or a withdrawal. **ALSO (SCHEDULER, 2026-09-19, from REC-142's landing): discharge the DELEGATION 2026-09-18 RECORD (REC-142) -> UI in `CLAIMS.md`** — on a question concluded with no project, the question page's no-project conclude dialog is now offered to a joined member and then refused `ILLEGAL_TRANSITION`; UI decides whether to point it at the stance page, and the harness asserts no dialog is offered that the plane then refuses.
-accepts-when: the UI harness concludes an inquiry with no project against the real plane and the question's page shows it; a withdrawal clears it without a reload. `bound-sweep` ARM G stays green with NO new CARRIED-OUT-WHOLE entry — the read is uncapped, so an exemption added to pass ARM G is the defeat. NEGATIVE CONTROL: drop the cache invalidation, and the withdrawal arm fails naming it.
-added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry `7c150df0`, item 2; id minted with `node tools/mintid.mjs UI`).
-
-### UI-72 · queued — **`civicos-ui/app.html`'s `actRefusalHtml` SHOWS A REFUSAL's `detail` EVEN WHEN THE PLANE SENDS A CANNED `translation`, on every surface that uses it — the member reads the plane's internal wording instead of its label.** Found by UI-66, routed by CONDUCT #6, 2026-09-19; fix named. A correction to landed surfaces. — owner UI.
-order: 6 · a correction to landed surfaces (refusals show internal detail over the plane's label); with the corrections, after UI-67 (SCHEDULER, 2026-09-19)
-milestone: M8
-interface: I3 consumer (no plane change)
-design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it — *refusals carry the plane's own label*: every condition has a named code and a canned translation — and the rule `acquireWhy` already applies in `app.html`.
-depends-on: none.
-scope: `actRefusalHtml` renders the `translation` first when the plane sends one (as `acquireWhy` does), the `detail` only where no translation exists; `version-review` §7's pinned wording is CORRECTED in the same change with its reason. Every surface calling `actRefusalHtml` is listed in the landing.
-accepts-when: the harness drives a refusal that carries a translation on each listed surface and sees the translation; one without a translation still shows the detail; `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: dropping `detail` everywhere, so the no-translation arm must still show it. NEGATIVE CONTROL: restore detail-first, and the translation arm fails by name.
-added: 2026-09-19 · SCHEDULER (UI-66's finding, routed by CONDUCT #6; id minted with `node tools/mintid.mjs UI`).
-
 ### REC-153 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: REC-145 is on `main` (c02d7f91, `runConsultsProjects`); `aiRunOpen` does not compare `contextType` with the bundle's type. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`aiRunOpen` REFUSES a `contextType` that does not match the named bundle's type; an id the caller cannot see answers as absent (BOB #16, 2026-09-19).** An `inquiry`-labelled run over a project id reads PROJECTLESS and walks around the project-context joined gate — an AUTHORITY DEFECT, ahead of features. — owner RECORD.
-order: 7 · an authority defect (a mislabelled context walks around the joined gate); REC-145 is ON MAIN (c5d3788a), so runnable (SCHEDULER, 2026-09-19)
+order: 5 · an authority defect (a mislabelled context walks around the joined gate); REC-145 is ON MAIN (c5d3788a), so runnable (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 — a refusal added (IC minted with `node tools/mintid.mjs IC`; the integrator classifies)
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the DEC-63 ruling bullet, "AND THE CONTEXT KIND IS CHECKED" (BOB #16, `ed249814`).
@@ -148,7 +128,7 @@ accepts-when: an `inquiry`-labelled open over a project id the member has not jo
 added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry `ed249814`, item 2).
 
 ### REC-152 · queued — **`airuntick` AND `airunclose` ARE THE RUN'S PRINCIPAL'S ACTS (`principal_plane`: a member or that member's minted machine credential); anyone else is refused positionally when they can see the run's context and answered as for an absent run when they cannot; the reaper is unchanged (BOB #16, 2026-09-19).** Corrects REC-145's ARM H6, which pinned the as-built behaviour. — owner RECORD.
-order: 8 · authority: who may end a run; REC-145 is ON MAIN (c5d3788a), so runnable; corrects its ARM H6 (SCHEDULER, 2026-09-19)
+order: 6 · authority: who may end a run (REC-145 on main); moved above the UI corrections at BOB #16's direction while weekly usage is short — disclosure and authority first (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 — a refusal added (IC minted with `node tools/mintid.mjs IC`; the integrator classifies)
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the DEC-63 ruling bullet, "WHO MAY TICK AND CLOSE A RUN" (BOB #16, `ed249814`).
@@ -158,7 +138,7 @@ accepts-when: a second member with `contribute` is refused tick and close both o
 added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry `ed249814`, item 1).
 
 ### REC-151 · queued — **A MINTED ID CARRIES NO COUNT, for every other gated prefix: `CASE`, `DRAFT`, `RVG` minted OPAQUE (a CSPRNG suffix, checked unique), and `op=allocid` REFUSES every gated prefix, `PROJ` included (BOB #16, 2026-09-19).** `allocId`'s `seq` is per prefix per year, so a sequential id counts objects a caller cannot see — a §7.9 DISCLOSURE, ahead of features. — owner RECORD.
-order: 9 · a §7.9 disclosure (a sequential id counts hidden objects); with the disclosure rows, after REC-141 whose mint it extends (SCHEDULER, 2026-09-19)
+order: 7 · a §7.9 disclosure (a sequential id counts hidden objects); after REC-141, whose mint it extends; moved above the UI corrections at BOB #16's direction (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 — `op=allocid` gains a refusal, so the integrator classifies (IC minted with `node tools/mintid.mjs IC`)
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7, the bullets "A MINTED ID CARRIES NO COUNT" and "The legacy residue" (BOB #16, `d7ce3f86`).
@@ -166,6 +146,26 @@ depends-on: REC-141 (its opaque `PROJ-` mint is the pattern this row extends; pa
 scope: enumerate every `allocId` caller and state, per prefix, gated (opaque) or shared (counter kept); mint the gated ones opaque; refuse gated prefixes at `op=allocid`; COUNT the legacy non-`PROJ-` project ids in the record namespace for the limitation's statement. Existing ids are never rewritten.
 accepts-when: two mints in a row of each gated prefix do not differ by one; `op=allocid` with a gated prefix is refused; the per-prefix table and the legacy count are in the landing. How a liar passes it: a suffix from `Math.random` or derived from the counter passes a "not sequential" arm and is still predictable, so the suite asserts the CSPRNG source by name. NEGATIVE CONTROL: restore the counter for one prefix, and its arm fails by name. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
 added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry `d7ce3f86`, item 2; id minted with `node tools/mintid.mjs REC`).
+
+### UI-67 · queued — **THE QUESTION'S PAGE RENDERS THE NO-PROJECT CONCLUSION with `noProjectConclusionHtml` from `getProjection`, and invalidates `PROJ_CACHE` for that inquiry when a conclusion or a withdrawal lands (BOB #16, 2026-09-19).** — owner UI.
+order: 8 · after REC-144, whose read it renders (SCHEDULER, 2026-09-19)
+milestone: M9
+interface: I3 consumer (of REC-144's IC)
+design: `docs/development/INVESTIGATIVE-SESSION.md` §7.1, the paragraph "The question's page reads the no-project conclusion from `op=projection`" (BOB #16, `7c150df0`).
+depends-on: REC-144 — CHECK AT THE CODE at spawn. And REC-142 (done, `3203139b`).
+scope: `civicos-ui/app.html`'s question page reads the field from `getProjection` and renders it with the existing `noProjectConclusionHtml`; the projection cache entry for the inquiry is invalidated on a conclusion or a withdrawal. **ALSO (SCHEDULER, 2026-09-19, from REC-142's landing): discharge the DELEGATION 2026-09-18 RECORD (REC-142) -> UI in `CLAIMS.md`** — on a question concluded with no project, the question page's no-project conclude dialog is now offered to a joined member and then refused `ILLEGAL_TRANSITION`; UI decides whether to point it at the stance page, and the harness asserts no dialog is offered that the plane then refuses.
+accepts-when: the UI harness concludes an inquiry with no project against the real plane and the question's page shows it; a withdrawal clears it without a reload. `bound-sweep` ARM G stays green with NO new CARRIED-OUT-WHOLE entry — the read is uncapped, so an exemption added to pass ARM G is the defeat. NEGATIVE CONTROL: drop the cache invalidation, and the withdrawal arm fails naming it.
+added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry `7c150df0`, item 2; id minted with `node tools/mintid.mjs UI`).
+
+### UI-72 · queued — **`civicos-ui/app.html`'s `actRefusalHtml` SHOWS A REFUSAL's `detail` EVEN WHEN THE PLANE SENDS A CANNED `translation`, on every surface that uses it — the member reads the plane's internal wording instead of its label.** Found by UI-66, routed by CONDUCT #6, 2026-09-19; fix named. A correction to landed surfaces. — owner UI.
+order: 9 · a correction to landed surfaces (refusals show internal detail over the plane's label); with the corrections, after UI-67 (SCHEDULER, 2026-09-19)
+milestone: M8
+interface: I3 consumer (no plane change)
+design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it — *refusals carry the plane's own label*: every condition has a named code and a canned translation — and the rule `acquireWhy` already applies in `app.html`.
+depends-on: none.
+scope: `actRefusalHtml` renders the `translation` first when the plane sends one (as `acquireWhy` does), the `detail` only where no translation exists; `version-review` §7's pinned wording is CORRECTED in the same change with its reason. Every surface calling `actRefusalHtml` is listed in the landing.
+accepts-when: the harness drives a refusal that carries a translation on each listed surface and sees the translation; one without a translation still shows the detail; `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: dropping `detail` everywhere, so the no-translation arm must still show it. NEGATIVE CONTROL: restore detail-first, and the translation arm fails by name.
+added: 2026-09-19 · SCHEDULER (UI-66's finding, routed by CONDUCT #6; id minted with `node tools/mintid.mjs UI`).
 
 ### M0-73 · running — **SPAWNED 2026-09-19 by CONDUCT #6. DEPENDS-ON CHECKED AGAINST THE CODE at spawn: D-430 is on `main` (cca00cff, `ledger.mjs` `pipelineRows`); `tools/owed.mjs` does not use it yet. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **D-430's TWO SAME-CLASS READERS, left alone by its worker and named for rowing: `tools/owed.mjs` reads `blocked` headings with its OWN grammar (~l.214), and `tools/mintid.mjs`' DEC, IC and M corpus lists omit `BACKLOG.md` — so after LED-6's split a blocked backlog row is missing from `owed`, and an id mentioned only in the backlog sets no floor (a re-issue).** A PRECONDITION of LED-6's step (4), beside D-430. — owner M0; exempt as LED-6's precondition.
 order: 10 · with D-430, a precondition of LED-6's split: without it a blocked backlog row leaves `owed` and a backlog-only id sets no floor (SCHEDULER, 2026-09-19)

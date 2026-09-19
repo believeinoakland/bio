@@ -1,27 +1,18 @@
 # DIST — resume here. Rewritten 2026-09-18 by the DIST standing lane, after cutting 0.59.0; amended the same day after 0.60.0.
 
-**STOP — READ THIS FIRST (2026-09-19 01:45Z).** Releases 0.59.0 to 0.63.0 (tags `v0.59.0`..`v0.63.0`) are
-signed and **BRICK AN EXISTING STORE**. #migrate runs the schema's `CREATE INDEX … inquiry_basis(content_id)` before the
-additive ALTER that adds the column (REC-90, `eff23189`), so a pre-REC-90 table throws inside blockConcurrencyWhile.
-Measured live when 0.62.0 was deployed on Bob's yes (wrangler tail: `no such column: content_id at offset 66`). DIST
-rolled `biosmoke7` back to version `057316e4` (0.58.0; it serves, selftest and bootstrap ok) and `newgroup` back to
-`f1919416`, and **withdrew `release/` on main to the signed 0.58.0** (`d86b27ea`). agent-worker, pdf-worker and
-ocr-worker serve 0.62.0. The version sites read 0.63.0, so `newgroup`'s `npm test` refuses at embed until the fixed
-cut, by design. `op=audit`: 10 of 31 fail C-18.9 (old INFO bundles with no provenance_chain); the baseline is UNDETERMINED.
-**OWED: REC-143** (the P0 fix, rowed and running at `4b4c2e70`, integrated by CONDUCT #6), **then cut 0.64.0 and bring
-a NEW deploy request.** Before cutting, confirm REC-143's suite boots a 0.58.0-shaped store built from git's bytes, and
-that its negative control is this bug. 0.64.0's notes must name, since the live 0.58.0: everything 0.59.0 to 0.63.0
-closed (REC-123, REC-125, REC-129, REC-130, SK-7, REC-131, REC-134, REC-138, REC-137); REC-139 (`9030b9be`) and
-REC-140 when landed; the new sight and read paths (REC-126 review copy, REC-132 founder's sight); and **the conclude
-change, REC-136 + UI-65** (landed together at `67c6cc09`, IC-153, I3 37.0.0).
-The approval for 0.62.0 is spent.
-**RULE UNTIL BOB RULES:** every installer's `/update` reads `main/release/RELEASE.json`, so pushing `release/` to main
-DISTRIBUTES to existing groups. It is gated like a deploy. Cut and sign, but do not advance main's `release/` without
-Bob's yes. Asked of Bob through BOB, recommending a separate pointer that DIST advances only on approval.
-**Also owed: DIST-5** (SCHEDULER, QUEUE.md build order position 17: which record of DS-1/DS-2 is wrong, per D-297),
-after the P0.
-**0.62.0** (tag `v0.62.0`) closed REC-138. 0.61.0 closed REC-134 and carried REC-132, REC-124 and REC-133. 0.60.0 closed REC-131.
-REC-136 is held off main until UI-65. The 0.59.0 notes below remain true of 0.59.0.
+**LIVE, MEASURED 2026-09-19 — 0.64.0 IS DEPLOYED AND IS `latest`.** On `biosmoke7`: the plane serves 0.64.0 (bytes read back
+= signed `e677a6a7…`; selftest and bootstrap ok; IT BOOTED THE STORE 0.58.0 CREATED). agent-worker, pdf-worker and
+ocr-worker serve 0.64.0 (bytes unchanged since 0.59.0). The UI worker `civicos` serves build `2eac184ced85` (UI-65; it was
+`74cc1646044b` of 2026-08-04). `newgroup` embeds the signed 0.64.0, with bindings `[]`. `main`'s `release/` = 0.64.0
+(merged `9d92dd13`, tag `v0.64.0` on the mainline), so `/update` offers it. `op=audit`: 31 checked, 10 C-18.9 = D-200,
+record state since 2026-08-04, unchanged.
+**Before the NEXT cut:** add `["0.64.0", "a8bc9d91eca9…"]` (the cut commit, whose `release/` holds 0.64.0) to
+`migrate-released.test.mjs`'s `RELEASES`. **NEXT CUT OWED: REC-145** (c02d7f91, a §7.9 disclosure closing, IC-162), then
+**REC-141 + UI-66 as a PAIR** (a plane with REC-141 refuses the old surface's project create and fork, so `civicos` moves
+with it). History: 0.59.0–0.63.0 were signed, bricked existing stores, were withdrawn, and never went live; 0.64.0
+supersedes them. The mechanism and the gate are in `kickoffs/DIST.md`.
+**Also owed: DIST-5** (SCHEDULER, build order position 17: which record of DS-1/DS-2 is wrong, per D-297).
+The 0.59.0 notes below remain true of 0.59.0.
 
 The previous version (BOB #15, same day) stood the lane up; it is in git history. Read `CLAUDE.md`, then
 `kickoffs/DIST.md`, then this. **Everything below is a POINTER measured 2026-09-18; re-measure before acting.**
