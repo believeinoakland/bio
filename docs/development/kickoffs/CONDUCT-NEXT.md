@@ -1,106 +1,104 @@
-# CONDUCT-NEXT — the resume prompt for CONDUCT #6
+# CONDUCT-NEXT — the resume prompt for the next CONDUCT, in the OTHER Claude Code account
 
-> **WRITTEN BY CONDUCT #5, 2026-09-18, standing down at Bob's context-refresh direction (70% full, relayed by BOB #15).**
+> **WRITTEN BY CONDUCT #6, 2026-09-19, at Bob's STAND-DOWN** (relayed by BOB #16): *"at 91% of weekly usage, we should
+> start spinning this series of lanes down … development will stop entirely in this account and transition to the other
+> CC account."* There is NO CONDUCT #7 in this account. **Every lane in this account is stopped; nothing here is running.**
 > Verify all of it yourself before believing this file. If anything disagrees, the tree is right.
 >
 > ```
 > git fetch origin && git show origin/main:docs/development/QUEUE.md | grep -E '^### [A-Za-z0-9-]+ · running'
 > node tools/plancheck.mjs                  # expect 0 fail
+> node tools/ledger.mjs invariants          # expect 0 armed FAIL (P1–P5 are ARMED since LED-6)
 > node tools/status.mjs --check             # expect 0 drift
-> cd bio-plane && npm run test:battery      # read the COMPLETION LINE (it now ends `· run <id>`), not the exit status
 > ```
 >
-> **CORRECTION, READ BEFORE ACTING: DO NOT ARCHIVE ME WHILE MY TWO WORKERS RUN.** REC-143 (`agent-a70dee1231b11c76d`) and
-> REC-140 (`agent-a761302b28f105764`) are SUBAGENTS OF THIS SESSION: archiving me stops them mid-item, and their reports
-> arrive HERE, not to you. Each brief ends with `git push origin HEAD` verified by `ls-remote`. **So: wait until BOTH
-> `worktree-agent-a70dee1231b11c76d` and `worktree-agent-a761302b28f105764` exist on the remote with a claim `released:`
-> line (or `isRunning` reads false), integrate them FROM THEIR PUSHED BRANCHES, and only then archive me.** Until then,
-> REC-143 is the P0, so check its branch on the remote first at every turn.
->
-> **THEN THE FIRST ACT: ARCHIVE ME** (D-401). I am session `CONDUCT #5`, worktree `nifty-wiles-7d14c3`. Re-check
-> D-398's three conditions **at the moment you act**: `isRunning` false, my worktree porcelain EMPTY, its tip an ANCESTOR of
-> `origin/main`. **Then READ THE `locked` LINE of every agent worktree I spawned — the archive did NOT release them last time**
-> (MEASUREMENTS, D-398 DATA POINT 4: CONDUCT #4's four locks survived its archive, naming a dead pid). A lock whose pid is
-> not in `ps` is stale: unlock only after re-verifying CLEAN and ANCESTOR, then `git worktree remove`. My Remote Control:
-> left alone. My self-wake cron (`46c26cc2`) is deleted at stand-down; **create your OWN** (`CronCreate` `7,27,47 * * * *`,
-> recurring, the prompt in `kickoffs/CONDUCT.md`) and record its id.
+> **Nothing of mine is alive to archive**: 0 subagents (`ListAgents`), 0 crons (`CronList`), verified at stand-down.
+> **Arm your own self-wake** in your account (kickoff "Opening", step 3) — nothing carries across accounts.
 
-**Written 2026-09-18 by CONDUCT #5.** Read `CLAUDE.md`, then `kickoffs/CONDUCT.md`, then `kickoffs/SCHEDULER.md`, then this.
+**Read `CLAUDE.md`, then `kickoffs/CONDUCT.md` (21–23 KB, read it whole; a new section "Integration mechanics, measured by
+CONDUCT #6" holds this session's durable lessons), then `kickoffs/SCHEDULER.md`, then this.**
 
----
+## 0. THE STATE OF THE PLAN (measured on `origin/main` at stand-down)
 
-## 0. THE LANE CHANGED SHAPE THIS SESSION — READ `kickoffs/CONDUCT.md` step 0 AND `kickoffs/SCHEDULER.md`
+- **LED-6 IS DONE** (SCHEDULER, `c25cac55`): `QUEUE.md` is the CACHE (≤ 8 rows), `BACKLOG.md` holds the rest in order,
+  P1–P5 are armed. **You flip only rows in `QUEUE.md`**; SCHEDULER (if one runs in your account) archives and refills. If no
+  SCHEDULER runs, `node tools/ledger.mjs archive <ID>` + `node tools/ledger.mjs refill` are the acts it would perform.
+- **Rows cut to their fields** name their verbatim text in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` — put that block
+  in the brief of any such row.
+- **Cache at stand-down:** `REC-152 · running` (**WRONG — it LANDED**, §1; SCHEDULER stood down before my report reached it:
+  close it with its sha), `REC-151 · running` (**TRUE in substance: WIP on its branch**, §2), then `queued` and runnable:
+  UI-67, UI-72, LED-7, REC-135, MK-3, REC-146.
+- **Pacing rule (BOB #16, provisional, Bob never ruled it separately):** spawn nothing once the weekly window reads ≥ 93%.
+  Your account has its own window — measure it.
+- **Interfaces:** I3 **43.0.0** (IC-165). I resolved IC-157 → IC-165 tonight, each on the base as read at its landing.
 
-**SCHEDULER is live** (standing lane). It owns `QUEUE.md`'s ORDER (THE BUILD ORDER table, one `order:` line per row), the BOB
-INBOX drain, **done + archive + replenish in one commit**, the backlog, and LED-6's migration. **You own ONE word per row —
-a cached task's `queued` → `running`, pushed BEFORE its spawn — plus gating, spawning, integrating and verifying.** When you
-integrate, `SendMessage` SCHEDULER the task id and the integration merge sha on `origin/main`; it closes the row. Do NOT
-flip a row to `done` or archive it yourself (I did, before SCHEDULER existed — those are all archived already).
+## 1. WHAT I LANDED (all on `origin/main`; shas are the LANDING MERGES)
 
-**DIST is live** (standing) and now holds a standing deploy permission (CLAUDE.md §4, BOB #15's push). **Step 2b: when an
-integration closes a security, disclosure or authority defect, say so in the merge commit and `SendMessage` DIST** with the
-merge sha. DIST cuts on disclosure closings and batches the rest; it asked for, and got, **separate pushes** when a feature
-would ride a security cut to a live surface. **FLEET is live** (standing). DIST and FLEET are never archived for idleness.
+| item | merge | IC → I3 | what |
+| --- | --- | --- | --- |
+| REC-140 | `61ceb109` | IC-157 → 38.0.0 | op=ratify refuses project bundles; owner signer, joined deliverer |
+| REC-143 (P0) | `4a32c72f` | — | #migrate adds its columns before the schema; 0.58.0 stores boot |
+| REC-142 | `3203139b` | IC-159 → 38.1.0 | + BOB's `bob16-verif` (VERIFICATION cut) |
+| D-430 | `cca00cff` | — | plan checkers read cache ∪ backlog |
+| REC-145 | `c02d7f91` | IC-162 → 39.0.0 | DEC-63 amended: an inquiry run consults no project |
+| D-431 | `cf089297` | IC-161 → 40.0.0 | op=ratify publishes nothing outside a ratified case |
+| REC-141 | `11aa7b13` | IC-158 → 41.0.0 | the plane mints OPAQUE project ids |
+| UI-66 | `48fb16e5` | — | lands WITH REC-141 (22 superseded paths declared) |
+| REC-144 | `071e34dc` | IC-160 → 41.1.0 | op=projection carries no_project_conclusion |
+| M0-65 | `5a6d5913` | — | battery line names the EXCLUDED untallied suites |
+| (meeting) | `ccb0be14` | — | D-431/REC-144 fixtures corrected where they met REC-141 |
+| M0-73 | `538fbcb5` | — | owed.mjs via pipelineRows; mintid reads BACKLOG |
+| REC-153 | `2b014a84` | IC-163 → 42.0.0 | aiRunOpen checks the context kind; M-68 settled at 0 |
+| **REC-152** | **`f979ee31`** (origin `41cb8c37`) | **IC-165 → 43.0.0** | tick/close by the run's principal only |
 
-## 1. THE MEASURED STATE (`origin/main` `cf8992e7`, verify it)
+**DIST**: 0.65.0 is live and `latest` (REC-145, D-431, REC-141+UI-66, REC-144, REC-142). **REC-153 and REC-152 are NOT in
+any release** — DIST planned to cut REC-153 (with REC-152 if landed by 09:53); REC-152 landed after DIST stood down, and my
+message could not be delivered. **Both are authority closings owed to the next cut.** migrate-released has a WITHDRAWN set:
+a new release goes in RELEASES only.
 
-| gate | figure |
-| --- | --- |
-| last full gate | **252/252 suites green · 15404 assertions** (the UI-65 + REC-136 landing), `--strict` exit 0, UI harness exit 0 |
-| interfaces | I1 1.5.0 · I2 2.6.0 · **I3 37.0.0** · I5 1.22.0 — this session resolved IC-139..IC-156 (I3 27.0.0 → 37.0.0) |
-| construct-status | 85 claims, 0 drift |
-| plancheck | 0 fail, 8 warn (pipeline P3–P5 until LED-6; reading budgets; stranded work) |
-| release/ | **0.58.0** — DIST WITHDREW 0.59.0–0.63.0 from `main`'s `release/` because **each bricks an existing store** (REC-143) |
-| disk | ~5 GiB free |
+## 2. OWED ACTS — each a row or a verbatim handoff, nothing only in prose elsewhere
 
-## 2. WHAT IS LIVE — INTEGRATE THESE (they are yours now)
+1. **Close REC-152** in the cache with `f979ee31` (it reads `running`).
+2. **REC-151 — WIP, pushed, NOT integrated:** `worktree-agent-a59a4cdfa1b3d4dd3` @ `b69d7b26`. Its CLAIMS block carries a
+   `WIP (stood down 2026-09-19):` line with exactly where it stopped. Built: one `Store#mintOpaqueId` (CSPRNG, unique),
+   CASE/DRAFT/RVG/TASK/PROJ minted through it; `op=allocid` refuses gated prefixes (C-59.5 `ALLOCID_PREFIX_GATED`);
+   IC-164 (proposed on 42.0.0 → **re-base at landing: 43.0.0 → 44.0.0**); D-432; M-69 (legacy non-PROJ project ids: 0 on
+   biosmoke7 and civicos). Tests: `opaque-ids.test` 35/0, controls as declared. **Last battery 259/260** — the red was
+   `strandedwork`'s plancheck arm on an unpushed branch, NOT re-run. **To finish:** merge `origin/main` into it, plancheck
+   `--local` then bare, full battery, UI harness, write `released:`, integrate.
+3. **Two items for the plan** (SCHEDULER never received them): D-432 (an opaque id can be re-issued after a whole-store purge;
+   fix: a purge-exempt ledger of minted ids) and `caseproduction.control.mjs` arms (C) and (H) crashing inside the fixture on
+   the old sources too, so they measure nothing.
+4. **One decision for BOB:** REC-151 classified `TASK` as a gated prefix (the bullet names CASE/DRAFT/RVG/PROJ only);
+   reversing is one list entry and one mint line.
+5. **For DIST:** cut REC-153 + REC-152 (authority); REC-141+UI-66 ship together (already in 0.65.0).
 
-1. **REC-143 — THE P0. Every release since 0.58.0 BRICKS AN EXISTING STORE** (DIST, measured live on biosmoke7): `#migrate`
-   runs the schema's `inquiry_basis_content` index before the ALTER that adds `content_id`. Worker live in
-   `agent-a70dee1231b11c76d`. Brief: reproduce on a 0.58.0-shaped store read from git (`db7589b8`/`v0.58.0`), sweep every
-   schema statement against the ALTER list, fix with the `chain_kind` pattern, a regression suite booting old shapes, the
-   negative control = this exact bug. **Integrate it FIRST, message DIST (it cuts 0.64.0 and re-deploys), report to
-   SCHEDULER.** Rowed by me AHEAD of SCHEDULER's order with `order: 0` — SCHEDULER re-numbers.
-2. **REC-140 — D-429 — FINISHED AFTER MY STAND-DOWN, PUSHED at `worktree-agent-a761302b28f105764` @ `398e6639` (verified by `ls-remote`), NOT YET INTEGRATED.** Its report, in substance: `op=ratify` refuses a project bundle (C-58.1 `RATIFY_PROJECT_BUNDLE`); findings a ratified case pins take caseratify's rules through ONE moved helper `Store#caseAuthority` (C-57.1 owner-signer, C-56.1 joined-or-founder deliverer); a hidden bundle answers byte-identically to a never-minted one (before: vic got 409 `RATIFY_STALE` naming the real sha — a leak D-429 had not named). IC-157 proposed MAJOR 37.0.0 → 38.0.0. Worker gate 253/253 · 15439, `--strict` exit 0, UI harness exit 0, six control arms as declared. D-429 archived closed on the branch; **D-431 raised for Bob: `op=ratify` still publishes OUTSIDE a case** (an information bundle; a concluded inquiry in no case; a finding prepared into an UNratified case, under a non-owner key — which routes around this item's rule); recommendation in the row. Its branch is 10 commits behind main — merge `origin/main` into it at integration. **For you: resolve IC-157 at the base then current, report REC-140 to SCHEDULER, tell DIST (authority + disclosure closing), carry D-431 to BOB.** The original brief line follows: `op=ratify` refuses project bundles and takes caseratify's owner-signer and joined-deliverer rules.
-   Worker live in `agent-a761302b28f105764` (it holds 5 untracked files mid-run — do not prune). Told mid-run to use
-   `adoptable-reading.mjs` for any no-project conclude (REC-136 is on main). An authority closing → DIST.
-3. **UI-65's row still reads `running` on `main`** — it LANDED with REC-136 at `c7f2df67` (pushed `67c6cc09`); I reported
-   it to SCHEDULER, whose act closes it. If it still reads running, re-send the report; do not flip it yourself.
+## 3. EVERY REMOTE BRANCH HOLDING COMMITS `main` DOES NOT HAVE (measured `git rev-list --count origin/main..<b>`)
 
-## 3. THE RECEIPTS AGAINST MYSELF — these recur, and each cost real time
+A count > 0 means commits not on main; it does NOT prove the CONTENT is absent (a rebased or squashed landing reads the same).
+Check by content before disposing of any. Every other remote branch is an ancestor of `main`.
 
-- **zsh DOES NOT WORD-SPLIT `$L`.** `kill -9 $L` with a PID list killed NOTHING and my check printed the list without testing
-  liveness — a stray battery ran beside a gate for minutes. **Use `${=L}`, and verify each pid gone.** CONDUCT #4 had written
-  this same slip down; I made it anyway. A `TaskStop` on a background gate does NOT kill its battery either — reap by tree.
-- **A chained `merge; git add -A; commit` COMMITS CONFLICT MARKERS** when the merge fails. The pre-push hook caught it
-  (`UNRESOLVED MERGE MARKERS`), I amended the unpushed commit. Run the merge as its own command and read its result.
-- **`git rebase` over a merge FLATTENS it** (it replayed a worker's commits one by one). Integrate by MERGING `origin/main`,
-  never rebasing an integration branch.
-- **TWO RELAYED DISCLOSURE LISTS WERE INCOMPLETE** (REC-103, then SK-7 missing). I built them from the handoff and my own
-  landings instead of `git log`. DIST now rebuilds from the log; do the same.
-- **Two garbled shas in messages** ("7c3c9e8d-era", "1e0..."). Read the sha off `git log --merges origin/main` before
-  typing it; correct in the same minute if you slip.
-- **A fix verified at the change site was not verified**: REC-137's new suite concluded without a version and broke the
-  moment REC-136 landed under it; `case-authority.test` was repaired in the landing merge with REC-136's helper. **After
-  every merge, run the suites where the two items MEET**, not only the item's own.
+| branch | tip | commits ahead | last commit |
+| --- | --- | --- | --- |
+| `bob-audit` | `255693c8` | 1 | 2026-09-10 |
+| `m041-instrument-census` | `20ddfc77` | 12 | 2026-09-15 |
+| `ui-65-conclude-surface` | `c97d8c6b` | 2 | 2026-09-18 |
+| `worktree-agent-a249f66820def3efd` | `c2e1747d` | 4 | 2026-09-18 |
+| `worktree-agent-a59a4cdfa1b3d4dd3` | `b69d7b26` | 13 | 2026-09-19 |
+| `worktree-agent-a61e489de171ae6c5` | `9e24ef6e` | 1 | 2026-08-09 |
+| `worktree-agent-a6de3e82fcfd8bd2a` | `ef28580b` | 5 | 2026-09-18 |
+| `worktree-agent-a9e7e017d06799858` | `9706d19e` | 2 | 2026-08-09 |
+| `worktree-agent-aa383f4f0259d59f2` | `62d79afd` | 1 | 2026-09-17 |
+| `worktree-agent-aafee89563a3f2d42` | `484ed359` | 3 | 2026-08-09 |
 
-## 4. WHAT HELD, AND IS WORTH KEEPING
+Known: `worktree-agent-a59a4cdfa1b3d4dd3` is REC-151's WIP (§2). `ui-65-conclude-surface` is UI-65's SUPERSEDED first branch
+(CONDUCT #5: disposable). The rest predate this session and were not investigated by me.
 
-- **Holding a merge off `main` when a peer ruling or a live surface says so.** REC-128 (a REC-130 conflict: the founder lost
-  standing), REC-131 (two more BOB rulings folded into ONE major), REC-136 (DIST: held until UI-65) — each parked on a
-  REMOTE branch, never lost, and landed whole. **Park on the remote, then `checkout -B` to `origin/main`.**
-- **Checking a new act against a parallel item's rule at the code** (REC-136's withdraw act against REC-138's
-  visibility-before-role, which it did not exist to meet) — read, not assumed.
-- **Re-reading every IC's base AT LANDING**: IC-139 (27→29.2), IC-153 (35→37) were proposed or resolved on stale bases.
-- **Worker-ended-with-background-children locks, measured**: REC-124's worker ended with background work → its worktree
-  stayed LOCKED; every other finished agent released its lock. Consistent with D-398's registered hypothesis; not a test.
+## 4. RECEIPTS AGAINST MYSELF (the durable lessons are in `kickoffs/CONDUCT.md`; these are the incidents)
 
-## 5. OPEN WITH BOB / BOB #15
-
-- **Bob's**: DEC-63's run verdict leaks one bit (refused over a question cited only by hidden projects, permitted over an
-  uncited one). BOB #15 recommended a single verdict; **keep as built until Bob rules; do not row**.
-- **Bob's**: §7.1 instance-wide project-name uniqueness against §7.9 (`NAME_TAKEN` reveals the typed name exists).
-- **With SCHEDULER to row**: FLEET's scratch-purge findings (purge does not clear scratch members; VF-4 arm 2a leaves a
-  proposed member; `vf4-live-scratch.mjs` arm 4b-ii asserts closed D-323); `ui-65-conclude-surface` (superseded branch).
-- **DIST raised to BOB**: the installer's `/update` reads `main`'s `release/` directly, so a signed release on `main` is
-  DISTRIBUTED the moment it is pushed — not when Bob approves a deploy.
+- Chained `merge; …; add -A; commit` committed conflict markers once (pre-push refused it). Same as CONDUCT #5's receipt.
+- A merge commit I pushed is mislabelled "DECIDED regenerated after merging origin/main" (`c5d3788a`) — it is the merge that
+  resolved the Membership doc; the subject is wrong, the content right.
+- Merged UI-66's branch (on REC-141's first build) without declaring the superseded paths; mergecarry caught it before push.
+- A weekly-burn figure sent to BOB was wrong (6 pts/4 h; it was 10 pts/3.3 h), corrected in the same minute.
+- I asserted a probe was not in the battery before checking; checked it the next turn (it was not).

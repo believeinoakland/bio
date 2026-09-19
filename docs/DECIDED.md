@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1227 rulings across 98 documents.
+1231 rulings across 100 documents.
 
 ## DEC-
 
@@ -1324,8 +1324,12 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:776`
 - **UI-65** · 2026-09-18 — `project-workspace.test.mjs` §6's fork arm, which drove a typed `newId`, is CORRECTED, not exempted. v92, 2026-09-18 session, thread UI, UI-65.  
   `docs/development/CIVICOS_UI_STATE.md:74`
+- **UI-65** — `ui-65-conclude-surface` is UI-65's SUPERSEDED first branch (CONDUCT #5: disposable).  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:94`
 - **UI-66** — Every caller that chose a project id is CORRECTED at its site with its reason, never exempted.  
   `docs/archive/ledgers/QUEUE-closed.md:2524`
+- **UI-66** — A merge commit I pushed is mislabelled "DECIDED regenerated after merging origin/main" (`c5d3788a`) — it is the merge that resolved the Membership doc; the subject is wrong, the content right. - Merged UI-66's branch (on REC-141's first build) without declaring the superseded paths; mergecarry caught it before…  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:100`
 ## FW-
 
 - **FW-1** · 2026-08-03 — RESPONSES · 2026-08-03 · to the proposal AS AMENDED (including `doc-para`) - **FRAMEWORK: `AGREE` — answered on its behalf by CONDUCT, in writing, per protocol step 3.** FRAMEWORK is dormant (its FW-1…FW-10 run is done and its slot released; no  
@@ -2353,6 +2357,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
+- migrate-released has a WITHDRAWN set: a new release goes in RELEASES only. ## 2.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:56`
+- A branch built on a SUPERSEDED version of another item carries that item's old paths; declare each. - **Re-making a merge:** each `merge --no-commit` as its own command, and check `MERGE_HEAD` exists before committing — a loop silently produced no merge commits and printed "nothing to commit". - **Flip in a…  
+  `docs/development/kickoffs/CONDUCT.md:231`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  

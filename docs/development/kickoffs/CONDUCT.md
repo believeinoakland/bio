@@ -215,6 +215,28 @@ work integrated is a zombie); re-list and put the VERIFIED zero into the handoff
 archive is refused it READS THE ERROR — the causes are disjunctive and two can hold at once (D-405), and a turn in progress
 is usually an unbounded poller. A stood-down session that receives a late report MESSAGES its successor and writes nothing.
 
+## Integration mechanics, measured by CONDUCT #6 (2026-09-19)
+
+- **A BOB ruling that lands on a RUNNING row** is written ON the row as an `owed-at-integration:` FIELD line (a prose line
+  breaks the row grammar), then sent back to the worker by `SendMessage` to its agent id, which resumes it on its own branch
+  with its context. Verify the owed act at the merge. Cheaper than area code in a merge commit, which is not yours.
+- **Batch several finished items under ONE gate**, merged in a deliberate order (security first), each IC resolved on the
+  base as read at ITS landing. **Then run the suites where the items MEET**: two items green on their own branches were red
+  together (a new fixture chose ids another item now refuses). Correct them at their sites in a named commit.
+- **Mechanical conflicts are scriptable, the rest are not:** `docs/DECIDED.md` = either side + regenerate; `bio-plane/dist/`
+  = ours + `node scripts/build-plane.mjs`; REGISTER_FLOOR = main's key + the branch's comment lines, re-read from the
+  `--strict` print on the COMMITTED merge; CLAIMS/MEASUREMENTS/INTERFACE-CHANGES appends = keep both. Everything else:
+  read both sides; two additions ending before a shared closing brace need the brace between them.
+- **`Dropped-from-branch:` trailers must sit in the LAST paragraph, with `Co-Authored-By`** — a blank line between them and
+  git reads no trailers. A branch built on a SUPERSEDED version of another item carries that item's old paths; declare each.
+- **Re-making a merge:** each `merge --no-commit` as its own command, and check `MERGE_HEAD` exists before committing — a
+  loop silently produced no merge commits and printed "nothing to commit".
+- **Flip in a throwaway `git worktree add --detach origin/main`** while your integration tree is mid-gate; plancheck runs
+  there without `node_modules`.
+- **Usage pacing:** stop spawning when one more worker's cost (200–540k tokens each, measured) would cross the stop line, not
+  when the meter reaches it. Two concurrent batteries make every timing meaningless (15–65 min), and a suite that reads the
+  shared git index can go red under that load: re-run it ALONE on the same clean tree and STATE both results.
+
 ## Where the reasoning lives
 
 Each rule above was paid for; the receipts, dates and measurements are in `docs/archive/CONDUCT-kickoff-2026-09-19.md`
