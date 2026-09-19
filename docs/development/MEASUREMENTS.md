@@ -17253,3 +17253,117 @@ ops against the real plane in miniflare, on `rec146-record` at base `93e56472`. 
 **WHAT THESE FIGURES ARE NOT.** None of them is a statement about RECALL or about the FALSE-CONFLICT RATE. Those are
 §7's and they need the labelled fixture §9 item 2 owes; until it exists no figure in this project says anything about
 how good the detector is. Every figure above is about WHAT WAS COMPARED.
+
+## 2026-09-19 · D-270 — THE SESSION GATE ANSWERED THREE FACTS WITH ONE SENTENCE, AND IT WAS FALSE FOR TWO
+
+**Instrument:** `bio-plane/test/d270-refusal-truth.test.mjs` (new), driving the plane under miniflare
+under an ordinary MEMBER session and a real ADMINISTRATOR's session (`op=claim` + `op=login` with
+`role: "admin"`, never an enrolled member whose roster row reads administrator). `SESSION_OPS` parsed
+out of `src/index.mjs` with all 17 spreads resolved PER ROLE; the `OPS` table parsed by BRACE
+MATCHING. Worktree `d270-record`, base `origin/main` at `98209ce2`.
+
+**Corpus, printed on every run:** SESSION_OPS member 108 · admin 113 · unresolved spreads **0** ·
+OPS 195 rows parsed · 103 mutating · 14 ops excluded from the gate's corpus structurally (ungated
+`classes: null`, above-the-gate `export`, pre-authentication) and every exclusion DRIVEN rather than
+trusted.
+
+### The split, re-derived 1573 commits after it was first measured
+
+| arm | ops | measured |
+| --- | --- | --- |
+| (b) refused a MEMBER session, PERFORMED for an ADMINISTRATOR's | **5** | `governorconfig memberadd memberset signeradd signerset` |
+| (a) no session reaches, AND a decision is RECORDED | **4** | `capturerequestdrain cpuprobe purge taskdrain` |
+| (c) no session reaches, and NO decision is recorded | **10** | `adminendorse adminremove calibrate calibrationsignal calibrationsubject livefire membercaps provenancechain provenanceroute reproject` |
+
+**THE FIVE ARE IDENTICAL TO THE 2026-08-09 MEASUREMENT**, re-derived independently. The plane
+answered all of them with one sentence — *"this operation requires a machine credential, not a
+signed-in session"* — which is TRUE only of the four in (a).
+
+**THE MEASUREMENT'S OWN FIRST PARSE WAS WRONG AND IS RECORDED AS SUCH.** A line regex over the `OPS`
+table read **103 rows where there are 195 and called every one mutating**, which reports the five
+role-gated ops as TWO. Nothing downstream would have looked wrong. Corrected to brace matching, and
+the suite now floors the parse (>150 rows) BEFORE any membership claim is made over it, because every
+set assertion in it is vacuously true over an empty parse.
+
+### Two ops whose OWN ROWS contradicted the sentence they were sent
+
+`op=provenancechain` and `op=provenanceroute` carry, in `src/index.mjs`, the words *"NOT open to
+`daemon`: deciding that the evidence supports a route is a named member's judgement."* They were
+answered *"this operation is performed by an unattended writer, not by a person at a browser."* A
+TWO-way split would have made that permanent under a canned translation, which is worse than the bare
+string it replaced.
+
+### The codeless residue: SIX in the row, THREE on `main`, ZERO now
+
+D-270's row says six ops answer with no code at all. **Measured at the code on 2026-09-19 that is
+THREE** — `refusal-wire.test.mjs`'s set-pin was already struck once at integration on 2026-08-09 when
+REC-79's admission family coded the session-gate three. The three that remained (`capture`,
+`pdfstructure`, `monitor`) now answer `REQUIRED_ARGUMENT_MISSING` (C-61.1) beside a BYTE-IDENTICAL
+`error`. The set-pin is struck to EMPTY with its reason and still fails in both directions.
+
+### Figures
+
+- Battery baseline on this tree at `98209ce2`: **263/263 suites green · 16051 assertions · 2 untallied
+  suites (`bundle.test.mjs`, `livefire.test.mjs`)**, run `19886.d31ee5`. Final figures in the item's report.
+- DEC-49 guard: exit **0**. **NINE floors moved in the same turn from the figures the guard PRINTED,
+  and the PRE-EXISTING SLACK was enormous** — measured by running the guard over PRISTINE `origin/main`
+  sources with this item's two plane files swapped out and restored by sha256 AND `cmp`:
+  families 23→34 (pristine 33: **10 slack**, +1 ours), rows 219→285 (282: **63 slack**, +3),
+  census 517→595 (592: **75**, +3), reach 272→338 (335: **63**, +3),
+  governedSites 84→123 (121: **37**, +2), regions 70→107 (105: **35**, +2),
+  regionLines 2215→2952 (2910: **695**, +42), codesChecked 218→316 (313: **95**, +3),
+  refusalsJudged 220→316 (313: **93**, +3). **`reachGap` unmoved at 40** — all three codes arrive
+  TRANSLATED. `outcomeReturns` unmoved at 126 and `inheritedVerdicts` unmoved at 4 (see below).
+- Region attribution, exact: `sessionOpGate > is-session-op-gate` **29L (3 judged, 3 compared)**,
+  `requiredArgument > is-required-argument` **7L (1/1)**, and `fetch > is-admission` 102L→**108L**
+  (8 judged→7) because its header comment is corrected where the session gate left it. 6+29+7 = the
+  whole +42.
+
+### The DEC-49 guard refused this item's first shape, and the refusal was right
+
+The gate was first written to return `{ error: {...} }` for `fetch` to spread — the shape D-270's
+2026-08 ancestor used. **The guard FAILED it:** `{ ok: false, ...gated.error }` is a return-position
+outcome whose CODE comes from a spread, and `inheritedVerdicts` is a **ceiling that may only fall**.
+It sat at 4 and the shape made it 5. Rebuilt so `sessionOpGate` returns the Response itself: every
+code stays a STRING LITERAL inside the governed region, `fetch` has no outcome literal to misread,
+and the ceiling is unmoved. **A cheaper shape that costs a ratchet is not cheaper.**
+
+### Controls: eight arms, and TWO found this item's own instrument wrong
+
+Run twice. First run six of eight as declared; **(b)** was RED naming exactly the declared ops but the
+DRIVER demanded one patch match where that arm legitimately makes two — the driver moved, not the arm.
+**(c)** was RED and named NONE of the four ops it was declared to name: the by-name map READS
+`UNATTENDED_BY_DECISION` out of the source and grades the plane against it, **so emptying the record
+moves both sides together and the map agrees with itself for free**. The arm was right, the
+declaration was wrong; the suite gained a LITERAL pin of the recorded-decision set in the same turn
+and (c) was re-declared onto it. Second run: **ALL EIGHT AS DECLARED — a GREEN 29/0 · b RED 23/6 ·
+c RED 26/3 · d RED 27/2 · e RED 27/2 · f RED 19/10 · g RED 28/1 · h GREEN 29/0**, every restore
+byte-identical by sha256 AND `cmp` above a guarded floor.
+
+**And the suite reproduced the 2026-08 harness's own mistake on its first run**, caught by the
+ARM-IS-REAL assertion written for it: `ada` was enrolled `role: "admin"` and used as the administrator
+arm, but `kind` is `sess.role === "admin" ? …` and an enrolled member holds `member:<id>`. The pair
+assertion went red naming both halves refused. That mistake measured a split of ZERO twice in 2026-08
+— the direction that CLOSES an open defect.
+
+### A CONSUMER THE SENTENCE-SWEEP COULD NOT SEE, found by the battery
+
+The consumer survey grepped for the LITERAL SENTENCE and reported three suites. **There were four.**
+`browse.test.mjs` asserts `.error.includes("machine credential")` — a SUBSTRING — and is invisible to
+a full-sentence matcher. It was found by running the battery, which does not care how a consumer
+spells its dependency. Its `op=livefire` line **was pinning an invented rationale in place** (nothing
+on record says that verb is not for a person) and is CORRECTED with its reason; its `op=purge` line
+immediately above is UNCHANGED and still green. **So: a sentence-matcher finds consumers that compare
+the whole string and misses every one that tests a fragment, lowercases it, or matches it by regex.**
+The run that found it was STOPPED at 48/263 rather than left to measure a tree about to change, and
+its wrapper still printed `exit 0` over the kill — the trap `kickoffs/WORKER.md` names; the figure
+that mattered was the suite's own FAIL line.
+
+### What the instrument CANNOT see, stated
+
+An empty payload only provokes refusals sitting above the payload complaints. The PRE-AUTHENTICATION
+surfaces (`verify`, `publishedbytes`, `publishedcase`, `knock`, `bootstrap`) are reached with no
+credential and are NAMED on every run rather than assumed absent — they are D-278's. `op=verify` and
+`op=publishedbytes` keep their bare sha256 strings for that reason. Refusals returned as raw bytes or
+HTML rather than through `json()` are outside the walk. It is not a live probe: a green harness is not
+a serving build (D-108).

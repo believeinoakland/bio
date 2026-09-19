@@ -40,6 +40,11 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
             all until REC-79, so the gate every caller passes through was outside
             the rule governing everything behind it. */
          ADMISSION_CHECKS,
+         /* D-270 / C-61: the argument complaint's row. Named rather than reached
+            through the namespace below, because it is used AS A VALUE at the one
+            governed site — the code is a STRING LITERAL there so the DEC-49
+            guard's arm C can COMPARE it rather than read past a variable. */
+         REQUIRED_ARGUMENT_CHECKS,
          /* CAP-8 / C-48: the Google Drive host stack's DEC-49 rows. Every one is
             a NAMING — a folder, a kind the address does not carry, a shape this
             recogniser does not read, the application shell, an export that could
@@ -3077,6 +3082,197 @@ const admissionRow = (code) => {
   return { code, check: row.check, translation: row.translation };
 };
 
+/* D-270 / C-61: the argument complaint's row reader, `admissionRow`'s shape and
+   its refusal to invent — a code with no sentence behind it throws here rather
+   than reaching a member. */
+const requiredArgumentRow = (code) => {
+  const row = REQUIRED_ARGUMENT_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned `
+                  + `translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+
+/* =========================================================================
+ * D-270 — THE SESSION GATE ANSWERED THREE DIFFERENT FACTS WITH ONE SENTENCE,
+ * AND THE SENTENCE WAS FALSE FOR TWO OF THEM.
+ *
+ * THE RULE IS BOB'S, 2026-09-19, and its home is CITED rather than restated
+ * here: `docs/architecture/BIO_Membership_Architecture_v2.md` §4, the §4.7
+ * block. The generating rule is one line — A REFUSAL MAY STATE ONLY WHAT THE
+ * SYSTEM CAN SUPPORT — and it yields three sentences where this gate had one:
+ *
+ *   (a) "this verb is not for a person"  — a DESIGN CLAIM. Sayable ONLY where
+ *       such a decision is RECORDED. `MACHINE_CREDENTIAL_REQUIRED`.
+ *   (b) "your credential does not reach this verb" — ALWAYS sayable, because it
+ *       is about the caller rather than about the design.
+ *       `SESSION_ROLE_CANNOT_REACH_OP`.
+ *   (c) for an OMISSION — NEITHER. State the fact and invent no rationale.
+ *       `SESSION_ROUTE_NOT_RECORDED`.
+ *
+ * **WHY (c) HAD TO EXIST, AND IT IS THE ARGUMENT RATHER THAN A FOOTNOTE.** A
+ * false rationale SUPPRESSES ITS OWN BUG REPORT. A member told that an absence
+ * is a DECISION will not report it as a gap, so the sentence recruits the one
+ * person who could have caught it into believing there is nothing to catch. The
+ * measured case is D-136's: `adminendorse`, `adminremove` and `membercaps` are
+ * reachable by NO session, and §4.7 assigns that very vote to a person. A
+ * TWO-way split — which is what IC-55 proposed in 2026-08 — would have written
+ * "this verb is not for a person" onto the three ops whose bug report it then
+ * suppresses.
+ *
+ * **AND (a) IS NARROWER THAN IT LOOKS.** `op=provenancechain` and
+ * `op=provenanceroute` were inside the old sentence's reach, and their own OPS
+ * rows say the opposite of it in as many words: *"NOT open to `daemon`: deciding
+ * that the evidence supports a route is a named member's judgement."* The plane
+ * was telling a member that an op reserved to a named member's judgement is
+ * performed by an unattended writer. Under (c) they now get the fact and no
+ * invented reason, which is the honest answer until somebody rules.
+ *
+ * **WHAT THIS DOES NOT CHANGE, AND IT IS THE WHOLE SAFETY ARGUMENT: WHO REACHES
+ * WHAT.** Not one op moves between `SESSION_OPS`' sets and no class list moves.
+ * Exactly the same callers are refused exactly the same verbs; what changes is
+ * what they are TOLD. A fix here that widened reach would be a different item
+ * wearing this one's costume.
+ * ======================================================================= */
+
+/* WHERE A DECISION IS RECORDED THAT A VERB IS NOT FOR A PERSON.
+ *
+ * THIS TABLE IS THE PLANE HOLDING ITS OWN WARRANT. Sentence (a) is a claim
+ * about the DESIGN, and the plane may only make it while it can say where the
+ * decision lives — so the citation is served to the caller in `recorded` and
+ * the claim travels with the thing that licenses it.
+ *
+ * IT IS A PROPERTY AND NOT A LIST OF SPELLINGS, which is what makes it safe to
+ * leave alone: an op added tomorrow is absent from this table, so it gets (c)
+ * automatically and the plane invents nothing about it. **The default is the
+ * honest answer**, and that is deliberate — the failure mode this item exists
+ * to close is a rationale asserted where none was recorded, so the direction
+ * that costs nothing must be the one that claims nothing.
+ *
+ * EACH ENTRY WAS READ AT THE ARTIFACT, not inferred from an op looking
+ * machine-ish, and the four below are the only ones in this plane for which a
+ * decision was found. Ops refused to every session with NO entry here —
+ * `livefire`, `reproject`, `provenancechain`, `provenanceroute`, the three
+ * calibration writes, and D-136's three — are UNDETERMINED rather than decided,
+ * and saying WHICH is a first-class obligation (CLAUDE.md). Adding a row here
+ * is recording a decision, so it is an act to take deliberately and never to
+ * tidy up. */
+const UNATTENDED_BY_DECISION = {
+  purge: "src/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside "
+       + "SESSION_OPS, purge above all, still requires a machine credential.'",
+  cpuprobe: "src/index.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the "
+          + "runtime cuts it off. Probe and admin only: it belongs nowhere near a member's session.'",
+  capturerequestdrain: "src/index.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY "
+                     + "DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the "
+                     + "class by decision, not by drift.'",
+  taskdrain: "src/index.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S — a member "
+           + "reaching for it by hand would be a person doing the daemon's job with the daemon's "
+           + "conduct rules applied to them.'",
+};
+
+/* THE SESSION GATE. A browser signed in with a password holds a session token,
+ * not a machine credential; `SESSION_OPS` is what says which MUTATING ops that
+ * session may drive, per role.
+ *
+ * IT IS ITS OWN NAMED FUNCTION rather than a block inside `fetch`, and that is
+ * REC-71's rule paid at allocation time: a DEC-49 `where` resolves a span BY
+ * FUNCTION NAME, and PL-4 shipped one pointing at `acquire` — a name that does
+ * not exist, because the op lives inside `fetch` — so nothing was checking that
+ * site at all. A gate left inline in `fetch` is a gate no `where` can name.
+ *
+ * `error` IS KEPT BESIDE THE CODE, and that is deliberate rather than timidity:
+ * every consumer of this refusal reads `reason || error` or `error || reason`,
+ * so ADDING a code moves nobody while REMOVING the string would. For the
+ * by-decision arm the sentence is the byte-identical legacy one. For the other
+ * two it is NEW, because the legacy sentence was not merely coarse there — it
+ * was WRONG, and a consumer switching on it was switching on a false statement.
+ * IC-55 carries that half. */
+function sessionOpGate(kind, op, spec, method) {
+  /* **THIS GATE RETURNS THE RESPONSE ITSELF, NOT A REFUSAL OBJECT FOR `fetch` TO
+     SPREAD, AND THAT IS A MEASURED CHOICE RATHER THAN A STYLE.** The obvious
+     shape — return `{ error: {...} }` and write `return json({ ok: false,
+     ...gated.error }, 403)` at the call site — was built first and the DEC-49
+     guard REFUSED it: that call site is a return-position outcome whose CODE
+     comes from a spread, which the walk cannot resolve until run time, and
+     `inheritedVerdicts` is a CEILING THAT MAY ONLY FALL. It sat at 4 and the
+     shape would have made it 5 — a new place a refusal can pass through
+     ungraded, bought for nothing. Returning the Response keeps every code a
+     STRING LITERAL inside the governed region where the walk compares it against
+     the catalogue, and leaves `fetch` with no outcome literal to misread. */
+  const refusal = (code, error, detail, extra) =>
+    json({ ok: false, reason: code, ...admissionRow(code), error, detail, op, ...(extra || {}) }, 403);
+  /* `capture` is nominally mutating because of its PUT path; its GET is a read
+     and is treated as one. Computed and returned OUTSIDE the region on purpose,
+     so the admission is not conscripted into this family as a refusal site. */
+  if (!spec.mutating || (op === "capture" && method === "GET") || SESSION_OPS[kind].has(op))
+    return null;
+
+  /* DEC-49 REGION is-session-op-gate
+   *
+   * THE SPAN the three session codes name (REC-71). A REGION and not the whole
+   * function, so the admission above is not read as part of the family. Helper
+   * `refusal`, and every code a STRING LITERAL at its site so arm C of the
+   * DEC-49 guard can COMPARE it rather than read past a variable — one code in
+   * a variable shipped `translation: undefined` to a member.
+   *
+   * THE ORDER IS THE HONESTY, and it runs from what the system can support MOST
+   * to what it can support LEAST. Ask the session lists FIRST: if any role
+   * reaches this verb then the refusal is about THIS caller's role, and it is
+   * true without consulting any record. Only then ask whether a decision is
+   * recorded. And if none is, say so — do not fall back on the design claim,
+   * because the fallback IS the defect. */
+  if (SESSION_OPS.admin.has(op) || SESSION_OPS.member.has(op))
+    return refusal("SESSION_ROLE_CANNOT_REACH_OP",
+      "this operation is reserved to an administrator of this group",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only an `
+      + `administrator's, and this session's role is '${String(kind).slice(0, 20)}'. There is no `
+      + `machine credential to go and find: an administrator performs this from their own browser. `
+      + `This is section 4's role boundary rather than a credential boundary, and the plane said `
+      + `otherwise until D-270 measured the difference.`,
+      { role: kind });
+  const recorded = UNATTENDED_BY_DECISION[op];
+  if (recorded)
+    return refusal("MACHINE_CREDENTIAL_REQUIRED",
+      /* THE LEGACY SENTENCE, BYTE-IDENTICAL. It is TRUE of these, and keeping
+         it is what makes the code purely additive for them. */
+      "this operation requires a machine credential, not a signed-in session",
+      `'${String(op).slice(0, 60)}' is on the unattended path. No signed-in session of any role `
+      + `reaches it, the founder's included; it answers to a credential held in the hosting `
+      + `account. This instance holds a decision on record saying so, cited in 'recorded' so you `
+      + `can check it. Nothing here says a machine is trusted more than a person (DEC-52 rules the `
+      + `opposite): it says which credential this verb is addressed to.`,
+      { recorded });
+  return refusal("SESSION_ROUTE_NOT_RECORDED",
+    "no signed-in session reaches this operation, and no decision on record says why",
+    `'${String(op).slice(0, 60)}' is reachable by no session of any role, and this instance holds `
+    + `no recorded decision that it is not meant for a person. The plane will not invent one: a `
+    + `member told an absence is a decision stops reporting it as the gap it may well be. If you `
+    + `expected to perform this, that expectation is worth filing rather than working around.`);
+  /* END DEC-49 REGION is-session-op-gate */
+}
+
+/* THE ARGUMENT COMPLAINT (C-61). ONE code for the whole condition with the
+ * argument in `argument` and the shape in `shape`, rather than a row per op —
+ * `AI_BEYOND_TASK_SCOPE` is the standing precedent for one code whose producers
+ * are told apart by a field.
+ *
+ * A HELPER RATHER THAN THREE EDITED SITES, for the `where` field's sake: a
+ * DEC-49 row holds ONE `where` naming the SMALLEST SPAN, so a code minted at
+ * three sites inside `fetch` could not name one honestly. */
+function requiredArgument(op, argument, shape, error) {
+  /* DEC-49 REGION is-required-argument
+   * THE SPAN `REQUIRED_ARGUMENT_MISSING` names. Code a STRING LITERAL at its
+   * site. `error` is passed in BYTE-IDENTICAL from the call site rather than
+   * rebuilt from a template here, so all three legacy sentences survive this
+   * change unaltered and no consumer reading `error` moves at all. */
+  return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING",
+           ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
+           error, op, argument, shape,
+           detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
+                 + `none the operation could use. Nothing was changed.` };
+  /* END DEC-49 REGION is-required-argument */
+}
+
 /* Some of these reads happen INSIDE a per-item renderer that returns a rendered
    object rather than a Response, so it has no way to refuse on its own behalf.
    Rather than let it fabricate a rendering from an answer it never got, it
@@ -4713,6 +4909,17 @@ export default {
      * it: the guard's outcome reader could not see `return json({ … }, 403)` at
      * all, so this region reported nothing to judge until that was widened.
      *
+     * **CORRECTED 2026-09-19 BY D-270: THE SESSION GATE HAS LEFT THIS REGION.**
+     * The count above is the count as REC-79 drew it and is kept as the record
+     * of why the region exists; what this span holds TODAY is five refusals, not
+     * six. The sixth — `MACHINE_CREDENTIAL_REQUIRED` — moved out to its own
+     * named function `sessionOpGate` and its own region `is-session-op-gate`,
+     * because it turned out to be answering THREE different facts with one
+     * sentence and to be false for two of them. Its `where` moved with it. This
+     * paragraph is corrected rather than deleted for the reason the project
+     * keeps meeting from the other side: a comment describing a mechanism the
+     * tree does not carry is its most-repeated defect.
+     *
      * Every code below is a STRING LITERAL at its site, and `admissionRow` reads
      * the C-number and the canned translation from the ONE row, so the
      * `translation: undefined` DEC-49 was written to prevent cannot be spelled
@@ -4767,10 +4974,16 @@ export default {
              (REC-79). 28 suites assert on these sentences; a rule this project
              adopted late has to be arrivable at without breaking what already
              reads the old shape, so C-38 is ADDITIVE on the wire. IC-REC-79. */
-          if (spec.mutating && !(op === "capture" && req.method === "GET")
-              && !SESSION_OPS[kind].has(op))
-            return json({ ok: false, reason: "MACHINE_CREDENTIAL_REQUIRED", ...admissionRow("MACHINE_CREDENTIAL_REQUIRED"),
-              error: "this operation requires a machine credential, not a signed-in session", op }, 403);
+          /* D-270: the gate is a NAMED FUNCTION now, so a DEC-49 `where` can
+             point at it, and it answers THREE different conditions where this
+             line answered one — of which the one it answered was false for two.
+             It returns the REFUSAL RESPONSE or null, rather than an object for
+             this line to spread — see its own header: spreading it here would
+             add a fifth INHERITED VERDICT to a DEC-49 ceiling that may only
+             fall, and it buys nothing, because the codes are literals inside the
+             gate's own governed region where the walk can compare them. */
+          const gated = sessionOpGate(kind, op, spec, req.method);
+          if (gated) return gated;
           cls = kind;
           ({ member: sessMember, viewer: sessViewer, identity: sessIdentity } = resolveSession(sess));
           sessRights = sess;
@@ -5301,7 +5514,8 @@ export default {
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, error: "capture requires sha256=<64 lowercase hex>" }, 400);
+        return json({ ok: false, ...requiredArgument("capture", "sha256", "<64 lowercase hex>",
+          "capture requires sha256=<64 lowercase hex>") }, 400);
       const key = captureKey(storeName, sha);
       if (req.method === "PUT" || req.method === "POST") {
         const body = new Uint8Array(await req.arrayBuffer());
@@ -5340,7 +5554,8 @@ export default {
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, error: "pdfstructure requires sha256=<64 lowercase hex>" }, 400);
+        return json({ ok: false, ...requiredArgument("pdfstructure", "sha256", "<64 lowercase hex>",
+          "pdfstructure requires sha256=<64 lowercase hex>") }, 400);
       /* CPDF-19 / D-319 — THE OPT-IN RE-READ TO TIER 3 (`EXTRACTION-BREADTH-DESIGN.md`
          §5.1). WITHOUT `ocr` NOTHING BELOW THIS BLOCK CHANGES, AND NOTHING IN IT RUNS:
          the answer is byte-identical to the read this op always was, which is the
@@ -7576,7 +7791,8 @@ export default {
       const body = await req.json().catch(() => null);
       const bundleId = body?.bundleId;
       if (typeof bundleId !== "string" || !bundleId)
-        return json({ ok: false, error: "monitor needs a bundleId" }, 400);
+        return json({ ok: false, ...requiredArgument("monitor", "bundleId",
+          "a non-empty string in the POST body", "monitor needs a bundleId") }, 400);
 
       const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
       /* REC-25: the store's image read fails closed without a viewer. The

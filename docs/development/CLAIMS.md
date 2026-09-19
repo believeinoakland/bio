@@ -15317,3 +15317,60 @@ all of `civicos-ui/**`, `docs/development/QUEUE.md` (CONDUCT's word), `docs/deve
 `release/**`, and every other suite in `bio-plane/test/`.
 
 **open as of 2026-09-19** — LANDED AND PUSHED, awaiting CONDUCT's integration. Branch `rec-146-contradiction-pairing` @ `8d51d57c`, verified from the REMOTE with `git ls-remote --heads origin`. Gate on that tree: battery **262/262 suites green / 16022 assertions / exit 0** (baseline on the same tree before the change 261/261 / 15976 / exit 0), `coverage.mjs --strict` **exit 0** (195/195 ops reached through the control plane, 347/347 checks named, 254/254 suites declaring a control), `civicos-ui/test/run.mjs` **exit 0**, `plancheck` clean but for UNPUSHED-to-main. Negative control **6/6 arms AS DECLARED**, baseline 43/0. **REGISTER_FLOOR moved** to arms 1511 / classified 253 / corpus 254 / run 216, read off this item's own post-commit green `--strict` print — **CONDUCT re-reads it on the merged tree**, as it re-reads the one row added to `derivation-bounds.test.mjs`'s UNREAD_FORMS roster. The claim stays OPEN until CONDUCT merges; the paths are free to a later worker the moment it does.
+
+## CLAIM 2026-09-19 RECORD (D-270 — the session gate answered three facts with one sentence, and it was false for two)
+
+session: d270-record (worktree `.claude/worktrees/d270-record`, branch `d-270-refusal-codes`)
+
+**open as of 2026-09-19** — OPEN while this item builds; CONDUCT integrates and resolves IC-55.
+
+paths, named by REGION and by SITE and never by file, because `index.mjs` is the repo's
+most-churned file and other sessions are live in it:
+
+- `bio-plane/src/index.mjs` — **by REGION and by SITE:**
+  (1) the NEW `UNATTENDED_BY_DECISION` declaration and the NEW functions `sessionOpGate` and
+      `requiredArgument`, placed immediately after `admissionRow`, each carrying ONE new
+      `DEC-49 REGION` pair (`is-session-op-gate`, `is-required-argument`);
+  (2) the ONE session-gate line inside `is-admission` — the `spec.mutating && … !SESSION_OPS[kind].has(op)`
+      return — REPLACED by a call to `sessionOpGate`. **NOT** any other refusal in `is-admission`:
+      `NOT_AUTHENTICATED`, `CLASS_FORBIDDEN`, `ROOT_OF_TRUST_REQUIRED`, `NOT_CAPABLE` and
+      `SCOPE_REFUSED` are untouched, and the region's own header comment is corrected because it
+      counts the refusals it holds;
+  (3) THREE argument-complaint sites, each gaining the code beside a BYTE-IDENTICAL `error`:
+      `op=capture`'s sha256 test, `op=pdfstructure`'s sha256 test, `op=monitor`'s bundleId test.
+  **NOT** `op=verify`'s and `op=publishedbytes`' sha256 complaints — they are PRE-AUTHENTICATION
+  surfaces, D-278's subject, and are named here as deliberately out of scope rather than missed.
+  **NOT** the OPS table's rows, **NOT** `SESSION_OPS`' membership: this item changes what the plane
+  SAYS, never who reaches what. That is the whole of its safety argument.
+
+- `bio-plane/checks/bio-checks.mjs` — **by SITE:** TWO rows appended to the EXISTING
+  `ADMISSION_CHECKS` (`SESSION_ROLE_CANNOT_REACH_OP` C-38.7, `SESSION_ROUTE_NOT_RECORDED` C-38.8)
+  and `MACHINE_CREDENTIAL_REQUIRED`'s `where` and translation corrected in place; ONE new family
+  `REQUIRED_ARGUMENT_CHECKS` (C-61.1, minted with `node tools/mintid.mjs C`). No existing row's
+  CODE moves and no other family is touched.
+
+- `bio-plane/test/d270-refusal-truth.test.mjs` (NEW) and
+  `bio-plane/test/d270-refusal-truth.control.mjs` (NEW, deliberately not a `.test.mjs`).
+
+- `bio-plane/test/admission-gate.test.mjs` — the C-38 TOTALITY set and the two new driven arms
+  ONLY. Its existing six arms are untouched; `op=purge` remains its C-38.3 exemplar.
+
+- `bio-plane/test/refusal-wire.test.mjs` — the D-270 set-pin ONLY (struck WITH its reason, still
+  failing in BOTH directions).
+
+- `bio-plane/test/members.test.mjs` — the FIVE assertions on the old sentence, CORRECTED with the
+  reason beside each and never exempted. **Two of them were pinning the FALSE sentence in place.**
+
+- `bio-plane/test/shadowed-refusals.test.mjs` — a COMMENT only (its header says `op=provenancechain`
+  is refused "requires a machine credential", which this item makes untrue). No assertion moves.
+
+- `civicos-ui/check-refusal-codes.mjs` — the `FLOOR` figures ONLY, moved from the figures this
+  guard PRINTED, with the pre-existing-slack split measured against pristine sources.
+
+- `docs/development/INTERFACE-CHANGES.md` — IC-55 ONLY (PROPOSED; the base is read and the
+  RESOLUTION taken by CONDUCT).
+
+- `docs/development/MEASUREMENTS.md` — one dated entry.
+
+**NOT** `bio-plane/src/store.mjs`. **NOT** `civicos-ui/app.html`. **NOT** `docs/development/QUEUE.md`.
+**NOT** `newgroup/**`. **NOT** `main`.

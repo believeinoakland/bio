@@ -10014,13 +10014,67 @@ export const ADMISSION_CHECKS = {
      opposite facts about the caller. This one is a PERSON asking for something
      only an unattended writer does; the row above is a credential of the wrong
      kind entirely. One refusal covering both would tell neither caller anything
-     they could act on — DEC-49's own argument, and PL-18's. */
+     they could act on — DEC-49's own argument, and PL-18's.
+
+     **NARROWED 2026-09-19 BY D-270, AND THE `where` MOVED WITH THE SITE.** This
+     row is a DESIGN CLAIM — it tells a person that a verb is not for people —
+     and BOB #17 ruled that the plane may make it ONLY where such a decision is
+     recorded. Until D-270 this one sentence answered THREE different facts and
+     was FALSE for two of them: it went to five ops an administrator's own
+     browser performs, and to ops whose OPS rows say in as many words that they
+     are a named member's judgement. The site is now `sessionOpGate`, which
+     sends this row only for an op named in `UNATTENDED_BY_DECISION`, and the
+     refusal carries the citation in `recorded`, so the claim and its warrant
+     travel together. The rule's home is
+     `docs/architecture/BIO_Membership_Architecture_v2.md` §4 (the §4.7 block). */
   MACHINE_CREDENTIAL_REQUIRED: {
     check: 'C-38.3',
-    where: 'src/index.mjs fetch > is-admission',
+    where: 'src/index.mjs sessionOpGate > is-session-op-gate',
     translation: 'This operation is performed by an unattended writer, not by a person at a '
       + 'browser. A signed-in session cannot do it; it needs a machine credential an administrator '
-      + 'has issued.',
+      + 'has issued. This instance holds a recorded decision to that effect and names it beside '
+      + 'this message.',
+  },
+  /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
+     OUTCOMES, and the one the plane could ALWAYS have said: it is about the
+     CALLER rather than about the design, so it needs no recorded decision to be
+     sayable. Five ops — `governorconfig`, `memberadd`, `memberset`, `signeradd`,
+     `signerset` — were answered with the row above, which told a member to go
+     and find a machine credential for an act an administrator performs from
+     their own browser. There is no such credential to find. This sentence names
+     the person to ask instead, because that is the action actually available. */
+  SESSION_ROLE_CANNOT_REACH_OP: {
+    check: 'C-38.7',
+    where: 'src/index.mjs sessionOpGate > is-session-op-gate',
+    translation: 'A signed-in person does perform this operation, but an administrator of this '
+      + 'group, and this session is not one. No machine credential is needed and finding one is '
+      + 'not the way through: ask an administrator.',
+  },
+  /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
+     otherwise have to cover a case neither is true of.
+
+     **THE ARGUMENT, AND IT IS THIS ROW'S WHOLE REASON.** A false rationale
+     SUPPRESSES ITS OWN BUG REPORT: a member told that an absence is a DECISION
+     will not report it as a gap, so the sentence recruits the one person who
+     could have caught it into believing there is nothing to catch. The measured
+     case is D-136's — `adminendorse`, `adminremove` and `membercaps` are
+     reachable by no session, and Membership Architecture §4.7 assigns that very
+     vote to a person. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
+     independently that the old sentence told an administrator the act §4.9
+     assigns them needs a credential §4.8 says somebody else holds, and that
+     there is no action a member can take from it.
+
+     SO THIS ROW STATES THE FACT AND INVENTS NO RATIONALE. It says what is true
+     — no session route exists — and says plainly that the record holds no
+     decision explaining it, which is an INVITATION to report the gap rather
+     than a wall in front of it. A refusal may state only what the system can
+     support. */
+  SESSION_ROUTE_NOT_RECORDED: {
+    check: 'C-38.8',
+    where: 'src/index.mjs sessionOpGate > is-session-op-gate',
+    translation: 'No signed-in session reaches this operation, and this instance holds no recorded '
+      + 'decision saying it is not meant for a person. That is a gap in the record rather than a '
+      + 'rule you have run into, and it is worth reporting as one.',
   },
   /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
      ENOUGH, and the translation says so, because a member refused here will
@@ -10060,6 +10114,47 @@ export const ADMISSION_CHECKS = {
     where: 'src/index.mjs fetch > is-admission',
     translation: 'That credential is allowed to act, but not on the part of the record this '
       + 'request named. It is confined to its own namespace and this request reached outside it.',
+  },
+};
+
+/* ===========================================================================
+   D-270 — THE ARGUMENT COMPLAINT (C-61), the other half of the row.
+
+   THREE OPS REFUSED A MISSING OR MALFORMED ARGUMENT WITH A BARE `error` STRING
+   AND NO CODE OF ANY KIND: `op=capture` and `op=pdfstructure` (*"requires
+   sha256=<64 lowercase hex>"*) and `op=monitor` (*"needs a bundleId"*). A
+   refusal with no code is one layer further out than REC-64's sweep of codes
+   with no translation — there is nothing to translate, DEC-49's guard cannot
+   see it, and a census of CODES cannot count a refusal that has none.
+
+   ONE ROW AND NOT THREE, and the reason is that the CONDITION is one condition.
+   `AI_BEYOND_TASK_SCOPE` is the standing precedent for a single code whose
+   producers are told apart by a field, and `refusal-wire.test.mjs` already pins
+   that pair for exactly this reason. The site names the argument and the shape
+   it wanted, so a caller can tell `op=capture`'s complaint from `op=monitor`'s
+   without the catalogue growing a row per call site.
+
+   AND IT IS MINTED IN ONE GOVERNED FUNCTION rather than at three edited sites,
+   because a DEC-49 row holds ONE `where` naming the SMALLEST SPAN. A code minted
+   at three sites inside `fetch` could not name one honestly — the guard's own
+   arm-C note calls that the MULTI-SITE class. Minting it in `requiredArgument`
+   is what makes this row's `where` true.
+
+   WHAT IS DELIBERATELY NOT IN SCOPE, named rather than left to be noticed:
+   `op=verify` and `op=publishedbytes` make the same sha256 complaint and keep
+   their bare strings. They are PRE-AUTHENTICATION surfaces reached with no
+   credential at all, which is D-278's subject and a different determination.
+   =========================================================================== */
+export const REQUIRED_ARGUMENT_CHECKS = {
+  /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
+     tell a refused request from a half-applied one has to go and look, and this
+     is the one refusal in the plane most likely to be met by a script. */
+  REQUIRED_ARGUMENT_MISSING: {
+    check: 'C-61.1',
+    where: 'src/index.mjs requiredArgument > is-required-argument',
+    translation: 'This request left out an argument the operation cannot run without, or sent one '
+      + 'in a shape it does not accept. Nothing was changed. The argument and the shape it must '
+      + 'take are named beside this message.',
   },
 };
 

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1250 rulings across 100 documents.
+1253 rulings across 100 documents.
 
 ## DEC-
 
@@ -900,6 +900,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:4843`
 - **C-35.14** — Inside the plane, `textchain.test.mjs`'s family-totality list was CORRECTED (not exempted) for C-35.14 and a CHECK_ARMS row drives it. **RESPONSES:** not yet collected.  
   `docs/development/INTERFACE-CHANGES.md:9729`
+- **C-38.3** — , all CORRECTED with the reason beside them and never exempted), `admission-gate.test.mjs` (whose C-38.3 arm uses `op=purge` and is UNCHANGED, because purge is one of the four with a recorded decision), `browse.test.mjs` (see below) and one COMMENT in `shadowed-refusals.test.mjs`, corrected because a comment…  
+  `docs/development/INTERFACE-CHANGES.md:12327`
 - **C-41** — CORRECTED IN THIS ITEM, never exempted.** The predicate's own comment named this item as where the change would arrive, and it arrives there.  
   `docs/development/INTERFACE-CHANGES.md:5333`
 - **C-41.10** · 2026-09-17 — RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — BREAKING, MAJOR, AND RULED AGAINST BOTH THE DESIGN AND THE ROW, WHICH SAID MINOR.** C-41.10 now refuses a case document lacking the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a…  
@@ -2187,6 +2189,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:14994`
 - ONLY (`count(store, "this.#noProjectConclusionOf(")`), CORRECTED from 2 to 3 with the reason at the site.  
   `docs/development/CLAIMS.md:15218`
+- `bio-plane/test/members.test.mjs` — the FIVE assertions on the old sentence, CORRECTED with the reason beside each and never exempted.  
+  `docs/development/CLAIMS.md:15361`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2479,6 +2483,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:16545`
 - the criterion that could: the step does not recover a RULED table at all.  
   `docs/development/MEASUREMENTS.md:16558`
+- on record says that verb is not for a person) and is CORRECTED with its reason; its `op=purge` line immediately above is UNCHANGED and still green.  
+  `docs/development/MEASUREMENTS.md:17355`
 - CORRECTED THE SAME DAY BY BOB #15, and the correction is the ruling.** The first version handed these counts to *a caller who could read every row — for an instance-wide count, the `admin` class*.  
   `docs/development/MEMBER-KNOWLEDGE-DESIGN.md:134`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  

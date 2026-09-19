@@ -555,8 +555,23 @@ t("the ops answering a caller with NO code at all are NAMED — D-270, raised by
      written to fail when one of the six was fixed, not only when a seventh arrived.
      THREE REMAIN, and they are the other kind D-270 names: ops refusing a MISSING
      ARGUMENT with a bare `error` string. Giving those a code is still an interface
-     decision rather than a translation, so D-270 stays open on a smaller corpus. */
-  ["capture", "monitor", "pdfstructure"]);
+     decision rather than a translation, so D-270 stays open on a smaller corpus.
+
+     STRUCK AGAIN 2026-09-19 BY D-270 ITSELF, TO EMPTY, WITH THE REASON — and the
+     set is KEPT rather than deleted, which is the whole point of pinning a SET.
+     `capture`, `pdfstructure` and `monitor` now answer `REQUIRED_ARGUMENT_MISSING`
+     (C-61.1) beside a BYTE-IDENTICAL `error`, minted in one governed helper
+     `requiredArgument` so the row's `where` names one span rather than three.
+     **AN EMPTY SET IS STILL AN ASSERTION AND STILL FAILS IN BOTH DIRECTIONS:** a
+     new codeless refusal anywhere in this drive fails this line and must be looked
+     at. That is exactly what it was written to do, and D-270 is the second time it
+     has fired in the GOOD direction — which is the argument for pinning a set over
+     counting, made twice by the same line.
+     WHAT THIS DRIVE STILL CANNOT SEE, so an empty set is not read as a clean plane:
+     it filters to member-CLASS ops, so `forbidden for token class` on a read outside
+     that class is invisible to it, and the PRE-AUTHENTICATION sha256 complaints
+     (`op=verify`, `op=publishedbytes`) are outside it too. Both are D-278's. */
+  []);
 console.log(`    BODIES THIS WALK COULD NOT CLASSIFY: ${NOT_CLASSIFIED.length}`);
 for (const n of NOT_CLASSIFIED.slice(0, 20)) console.log(`      unclassified  op=${n.op} (${n.who}) — ${n.why}`);
 /* The census is REPORTED and NOT GATED, deliberately: gating it would fail this
