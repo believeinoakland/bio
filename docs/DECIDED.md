@@ -821,7 +821,7 @@ authority is the file named, never this one.
 - **IC-162** · 2026-09-19 — IC-162 · I3: DEC-63 AS AMENDED — a run whose context is a QUESTION consults NO project: `airunopen` / `airuntick` / `airunclose` no longer refuse `AI_RUN_NOT_PROJECT_MEMBER` (C-22.8) over an inquiry; `projectGate.ground` over a question is `INQUIRY` (the value `PROJECTLESS` is removed, and `PARTICIPANT` is now said…  
   `docs/development/INTERFACE-CHANGES.md:11798`
 - **IC-164** — suite that pinned a sequential `CASE`/`DRAFT`/`RVG`/`TASK` id CORRECTED at its site with a dated reason. `bio-plane/scripts/coverage.mjs` floors only, from its own print. - Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration. - Docs: `INTERFACE-CHANGES.md` (IC-164), `MEASUREMENTS.md` (the…  
-  `docs/development/CLAIMS.md:14967`
+  `docs/development/CLAIMS.md:14969`
 - **IC-165** · 2026-09-19 — `TASK`'s gating is RULED CORRECT by BOB #17 (`63926201`, 2026-09-19) and STAYS.** It was raised as a question at this resolution — Membership v2 §7 enumerated CASE/DRAFT/RVG/PROJ — and BOB answered that the rule is the PREDICATE preceding that list (*every prefix whose objects a read withholds from some caller*),…  
   `docs/development/INTERFACE-CHANGES.md:12061`
 ## C-
@@ -875,7 +875,7 @@ authority is the file named, never this one.
 - **C-22** — CORRECTED, never exempted**, with the reason at the site: the family grew to TEN and, more to the point, CHANGED SUBJECT.  
   `docs/development/CLAIMS.md:7398`
 - **C-22** — the claim, each a ratchet that failed naming itself and was CORRECTED, never exempted: `bio-plane/test/airun.test.mjs` ARM D1 (the C-22 family) and `bio-plane/test/run-conditions.test.mjs` ARM W3 (`#aiRunInSight` classified AUTHORISES); `docs/DECIDED.md` regenerated.  
-  `docs/development/CLAIMS.md:15016`
+  `docs/development/CLAIMS.md:15018`
 - **C-22** — Two ratchets CORRECTED from their own failure output, never exempted: `airun.test.mjs` ARM D1 (the C-22 family: C-22.12 added; C-22.11 is REC-153's and joins at integration) and `run-conditions.test.mjs` ARM W3 (a new reader of `ai_runs`, `#aiRunInSight`, classified AUTHORISES).  
   `docs/development/INTERFACE-CHANGES.md:12105`
 - **C-22.9** — has now fired on three consecutive items — was CORRECTED, never exempted. - **C-22.9 `OBS_AUTHORITY_UNNAMED`** — a look the record cannot say WHY it made is not recorded.  
@@ -2182,7 +2182,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - driver; `civicos-ui/test/project-workspace.test.mjs` §6's fork arm CORRECTED (it drove a typed `newId`); `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own print on a committed tree. - Docs: `docs/development/CIVICOS_UI_STATE.md` (prepend), `BIO_Membership_Architecture_v2.md` front matter and §7's…  
   `docs/development/CLAIMS.md:14797`
 - Tests: `bio-plane/test/project-mint.test.mjs` §6 CORRECTED (it read the PROJ counter through `op=allocid`, which now refuses PROJ) and its control driver; a new `bio-plane/test/opaque-ids.test.mjs` and `opaque-ids.control.mjs`; any suite that pinned a sequential `CASE`/`DRAFT`/`RVG`/`TASK` id CORRECTED at its site…  
-  `docs/development/CLAIMS.md:14965`
+  `docs/development/CLAIMS.md:14967`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
