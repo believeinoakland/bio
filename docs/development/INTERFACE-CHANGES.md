@@ -11970,14 +11970,17 @@ unreached branch 23/3 — the ONE-READER arms fail by name while every byte-iden
 - **Consumers to answer:** `agent-worker` — AFFECTED ONLY IF it drives a run under a credential that is not the run's
   principal: it ticks and closes with the `ai` credential it is handed per call (`src/index.mjs` `driveHarness`). A
   member-kind credential of the member who opened the run, or the credential that opened it, is unaffected; an
-  organisation-kind key or another member's credential is now refused C-22.12. Its fleet suites ran green in the
-  battery. `UI` — NOT-AFFECTED, grepped: `civicos-ui` calls neither op. `DIST`, `SKILL`, `newgroup` — NOT-AFFECTED
+  organisation-kind key or another member's credential is now refused C-22.12. Its fleet suites, which load the real
+  plane (`harness`, `agent-worker`, `fanout`), ran green in the battery on this tree. `UI` — NOT-AFFECTED, grepped: `civicos-ui` calls neither op. `DIST`, `SKILL`, `newgroup` — NOT-AFFECTED
   (`release/` and `newgroup/` carry the plane's bundle as bytes).
 
 **Suites:** `airun-principal.test.mjs` NEW (27 assertions); `airun-projectgate.test.mjs` CORRECTED (52 → 54): H1/H2 —
 pia over the hidden project is now answered as absent (the old assertion pinned a disclosure); H6 — the design gap
 REC-145 pinned as built is DECIDED and asserted as a C-22.12 refusal; L4/L5 NEW, the project gate on the tick and close
-as the run's own principal meets it after leaving. Negative controls: `node test/airun-principal.control.mjs` —
+as the run's own principal meets it after leaving. Two ratchets CORRECTED from their own failure output, never
+exempted: `airun.test.mjs` ARM D1 (the C-22 family: C-22.12 added; C-22.11 is REC-153's and joins at integration) and
+`run-conditions.test.mjs` ARM W3 (a new reader of `ai_runs`, `#aiRunInSight`, classified AUTHORISES). Negative
+controls: `node test/airun-principal.control.mjs` —
 **`sent-field` (the row's control: compare with the sent field) 25/2, ARM F1 and ARM F2 (THE FORGED ACTOR) by name**;
 `no-principal-check` 11/16; `no-sight` 24/3; `exact-compare` 24/3; `fold-by-split` (over-strictness) 27/0; every arm
 AS DECLARED, real sources untouched. `node test/nc-pl18.mjs` re-run, eleven rows, restores verified by sha256 + `cmp`.

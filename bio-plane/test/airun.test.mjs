@@ -263,10 +263,16 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
      ON REC-93's FIRST RUN TOO, which is three for three**: the number was read
      off the arm's own failure output and corrected, never exempted and never
      computed by adding one. */
-  t("ARM D1: the C-22 family is TEN C-numbers — IS-6's six, SK-1's skill-version condition, and "
-    + "PL-18's project-membership gate, and REC-93's two for the folded observation log",
+  /* CORRECTED A FOURTH TIME 2026-09-19 BY REC-152, on the same terms: the family now holds C-22.12
+     (`AI_RUN_NOT_PRINCIPAL` — tick and close are the run's PRINCIPAL's acts, Membership v2 §7, BOB #16).
+     It is a fact about the run (whose it is), so it is in this family for D1's standing reason. ELEVEN
+     numbers on this branch and not twelve: C-22.11 is REC-153's, assigned by CONDUCT #6 and on its own
+     branch, so the gap is deliberate and the two land together at integration (the list below then gains
+     "C-22.11"). **THIS ARM FIRED ON REC-152's FIRST FULL BATTERY** — read off its failure, never exempted. */
+  t("ARM D1: the C-22 family is ELEVEN C-numbers on this branch — IS-6's six, SK-1's skill-version condition, "
+    + "PL-18's project-membership gate, REC-93's two for the folded observation log, and REC-152's principal",
     codes.map((c) => AI_RUN_CHECKS[c].check).sort(),
-    ["C-22.1", "C-22.10", "C-22.2", "C-22.3", "C-22.4", "C-22.5", "C-22.6", "C-22.7",
+    ["C-22.1", "C-22.10", "C-22.12", "C-22.2", "C-22.3", "C-22.4", "C-22.5", "C-22.6", "C-22.7",
      "C-22.8", "C-22.9"]);
   t("ARM D2: every code carries a CANNED TRANSLATION — an untranslated code must not exist to be sent",
     codes.filter((c) => typeof AI_RUN_CHECKS[c].translation !== "string"
