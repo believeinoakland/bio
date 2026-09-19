@@ -42,6 +42,12 @@ The format is the one `PARALLELISM.md` fixes:
 
 **Not repaired by rewriting history.** `CLAUDE.md`: never force-push. The commit stands, this entry names what is inside it, and the next reader of `576dd52` has somewhere to land. Recorded here rather than only in a commit message because a commit message is exactly the surface that failed.
 
+## CLAIM 2026-09-19 BOB (BOB #16 — cutting `kickoffs/CONDUCT.md` to its 24 KB reading budget; BOB-NEXT §3.1)
+
+Paths: `docs/development/kickoffs/CONDUCT.md`, `docs/archive/CONDUCT-kickoff-2026-09-19.md` (new, the verbatim archive),
+`tools/readbudget.mjs` (CONDUCT.md into CUT once it fits), `docs/development/MEASUREMENTS.md` (the CONDUCT exam, appended).
+CONDUCT does not edit `kickoffs/CONDUCT.md` while this claim is open; CONDUCT reviews the cut before it lands.
+
 ## CLAIM 2026-09-18 DIST (the embed hazard, then the cut after 0.58.0)
 released:
 session: DIST standing lane (worktree goofy-moore-1cb655, Sparky-Air)
