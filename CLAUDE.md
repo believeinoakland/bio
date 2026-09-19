@@ -85,7 +85,9 @@ design, doctrine, anything for Bob → BOB) and continue.
 
 - **Never force-push** — the deny list refuses it outright. Fetch and rebase. Pushing itself is NOT gated
   (Bob, 2026-09-16): report the landing, not the intention.
-- **The gated acts are three: deploying the plane, deploying the installer, and writing `.env`.**
+- **Writing `.env` is gated** (a secret, not an act). **Deploying the plane and the installer is DIST's, by Bob's STANDING
+  permission** (2026-09-18: *"DIST has standing permission to deploy when asked to"*) — under DIST's own gate and
+  verification, reported to BOB after landing; no other lane deploys.
 - **One account develops at a time**, enforced by the operator (Bob, 2026-09-16). When told to stand
   down, confirm every lane and worker under you is stopped before you report that it is. There was a lock;
   it was removed on purpose — **do not rebuild it**; if you think one is needed, say so and let Bob rule.
@@ -94,8 +96,12 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **Claim your area in `docs/development/CLAIMS.md` before editing**; do not edit another area's paths
   (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`. Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
-  FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18); a lane's session is refreshed only when its
-  context is too full, by its successor. **Its self-wake expires:** a session-only `CronCreate` lasts 7 days, so when
+  FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18). **A session is REFRESHED when its context is
+  more than 60% full** (Bob, 2026-09-18: *"Always refresh sessions with context windows that are more than 60% full"*):
+  check your own with `get_usage` at every self-wake and every handoff boundary; over 60%, stop taking new work, write
+  your `<LANE>-NEXT.md` from the measured state, push it, verify it on the remote, and ask BOB for your successor. The
+  successor archives you under D-398's three conditions. BOB measures every live session at its own opening, so a lane
+  that stops checking is still caught. **Its self-wake expires:** a session-only `CronCreate` lasts 7 days, so when
   you arm it, also arm a ONE-SHOT reminder 5 days out that deletes it, arms a fresh one, and arms the next reminder
   (FLEET's form, 2026-09-18).
 - **Undetermined is first-class and must be STATED.** Never invent an attribution, a referent or a figure
