@@ -339,7 +339,17 @@ function commitArm({ tag, rel, anchor, replacement, expectId, declared, judge })
    of the anchor, so the plant is spliced between whole lines and never into the
    middle of one; the replacement re-emits the heading and the plant becomes the
    lane's first row, which is where an M0 item belongs. */
-const anchorGraded = "## M0 — VERIFICATION · cross-cutting, a BACKGROUND LANE (holds no slot)\n";
+/* CORRECTED 2026-09-18 by SCHEDULER (LED-6 step (2)): the anchor WAS QUEUE.md's
+   M0 lane heading (the "M0 — VERIFICATION" section, quoted here without its markup so
+   the anchor witness does not read this comment as a live anchor — M0-66's class).
+   The pipeline migration moved every per-area section to
+   `docs/archive/ledgers/QUEUE-narrative-2026-09-18.md`, so that heading no longer
+   exists in the cache and the anchor went to ZERO (`m025-arm-anchor-witness` A4 named
+   it). The old assertion was not wrong about the file it was written against; the
+   file moved. The census grades an id by its `### <ID> ·` heading ANYWHERE in the
+   file, so WHERE the plant lands does not change what the arm measures: it now
+   follows the BOB INBOX heading, the one heading every version of the cache keeps. */
+const anchorGraded = "## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).\n";
 
 commitArm({
   tag: "(2) planted bypass, GRADED namespace",

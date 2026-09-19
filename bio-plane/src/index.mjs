@@ -3034,6 +3034,13 @@ const testimonyFenceRow = (code) => {
     throw new Error(`testimonyFenceRow: ${code} has no TESTIMONY_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row.check, translation: row.translation };
 };
+/* REC-140 / C-58: what op=ratify may publish at all, on `testimonyFenceRow`'s shape. */
+const ratifyScopeRow = (code) => {
+  const row = CHECK_CATALOGUE.RATIFY_SCOPE_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`ratifyScopeRow: ${code} has no RATIFY_SCOPE_CHECKS row with a canned translation (DEC-49).`);
+  return { code, check: row.check, translation: row.translation };
+};
 const machineFenceRow = (code) => {
   const row = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
@@ -7952,7 +7959,20 @@ export default {
          Every post-commit conversion is byte-identical on the wire when the
          store ANSWERS: the new fields appear only on the path that previously
          lied, so no consumer of a working instance sees anything move. */
-      const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}`));
+      /* REC-25: ratification reads at the RATIFIER'S scope — a bundle the
+         caller may not see cannot be assembled for their signature, and the
+         answer is the same ABSENT a hidden bundle would give anywhere else.
+         REC-140 (D-429): and that scope is now asked at the FIRST read, the gate
+         facts, rather than only at the image. Before, the facts were read with no
+         viewer, so a caller who could not see a PROJECT was told about it: a stale
+         sha drew RATIFY_STALE naming the hidden bundle's real sha, and a fresh one
+         drew GATE_REFUSED C-13.1 "bundle.md is missing" — the ratifier-scoped image
+         of a hidden bundle reported as an empty document (REC-53's class). With
+         the viewer asked here the hidden bundle answers with the SAME object a
+         never-minted id does (`Store#gateFacts`), so every answer below is said
+         only to a caller who can see the bundle. */
+      const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
+      const factsOut = await doAnswer(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
       /* A silence here previously threw a TypeError on `facts.ok` — a crash and
          not a claim, which is the mildest member of this class and is converted
          anyway because what this read answers is the GATE'S OWN FACTS: the
@@ -7962,6 +7982,21 @@ export default {
       if (!factsOut.answered) return storeSilent("ratify/gatefacts");
       const facts = factsOut.result;
       if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
+      /* DEC-49 REGION is-ratify-project-bundle — REC-140 / C-58.1. BIO_Publication_v0_1.md
+         §3 rule 2 as BOB #15 applied it to D-429 (2026-09-18): *"Only findings that are
+         part of a project can be published"*, and a project's own document is not a
+         finding — a project publishes THROUGH ITS CASES. So a project bundle is refused
+         by TYPE, whoever signs and whoever delivers, its owner included; there is no
+         signer rule to weigh because there is nothing here to authorise. Below sight
+         (the gate facts answered ABSENT to a caller who cannot see it), above the
+         signature, so the refusal costs the caller no key and tells them nothing new. */
+      if (normalizeType(facts.row.object_type) === "project")
+        return json({ ok: false, reason: "RATIFY_PROJECT_BUNDLE", ...ratifyScopeRow("RATIFY_PROJECT_BUNDLE"),
+          bundleId: body.bundleId,
+          detail: `${body.bundleId} is a project's own document, and a project is published through its cases, `
+                + `never directly (BIO_Publication_v0_1.md §3 rule 2; D-429). Nothing was published.`,
+          store: storeName, tokenClass: cls }, 409);
+      /* END DEC-49 REGION is-ratify-project-bundle */
       /* DEC-49 REGION is-testimony-publish-bundle — MK-1 (A) / C-53.10, C-53.11.
          MEASURED before it existed (`test/mk1-publish-probe.mjs`): op=ratify on an
          observation whose bytes were in the working bucket PUBLISHED its words,
@@ -8003,10 +8038,7 @@ export default {
                       store: storeName, tokenClass: cls }, 403);
       const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
 
-      /* REC-25: ratification reads at the RATIFIER'S scope — a bundle the
-         caller may not see cannot be assembled for their signature, and the
-         answer is the same ABSENT a hidden bundle would give anywhere else. */
-      const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
+      /* REC-25's ratifier scope, `ratViewer`, is taken above at the gate facts (REC-140). */
       /* REC-53: `runGate` does `Object.entries(image || {})`, so a silence here
          handed the gate an EMPTY BUNDLE and the ratification came back
          GATE_REFUSED with the catalog's findings about missing required files —
@@ -8255,7 +8287,12 @@ export default {
                                beside them, not a fault in this request. */
                             || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED"
                             || pub.reason === "CASE_NAMES_NO_PROJECT"
-                            || pub.reason === "CASE_ROSTER_EXCLUDES_SELF") ? 409 : 500);
+                            || pub.reason === "CASE_ROSTER_EXCLUDES_SELF"
+                            /* REC-140: a pinned finding's authority refusals (C-57.1, and
+                               C-56.1 through REC-134's one check) — the REQUEST was refused,
+                               which is what 409 says; `op=caseratify` relays the same two. */
+                            || pub.reason === "CASE_SIGNER_NOT_AN_OWNER"
+                            || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT") ? 409 : 500);
 
       /* The fence: ratified bytes land content-addressed in the published
          bucket, so the published corpus is self-contained. Existing keys

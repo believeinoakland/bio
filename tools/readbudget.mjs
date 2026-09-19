@@ -36,7 +36,7 @@ export const BUDGET = {
 };
 
 /* Files whose cut has landed, by repo-relative path: over budget again is a FAIL, not a WARN. */
-export const CUT = new Set(["CLAUDE.md"]);
+export const CUT = new Set(["CLAUDE.md", "docs/development/kickoffs/BOB.md", "docs/development/kickoffs/CONDUCT.md"]);
 
 export function readSet(root = ROOT) {
   const kdir = join(root, "docs/development/kickoffs");
