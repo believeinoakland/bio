@@ -17052,3 +17052,19 @@ this run's two controls did the same and read nothing (per its report). So M-63 
 five runs (`examroom/new`, `new2`, `old`, `none`, `grade` under BOB #15's scratchpad) each read only inside their own directory. **The corrected instrument:** add
 `--disallowedTools Bash Glob Grep` to every arm and every grader, and keep each arm's directory out of reach of the keys
 (sibling directories, never children of one that holds a key).
+
+## M-66 · 2026-09-19 · D-431 (c): THE `published_bundles` ROWS THE NEW RULE WOULD NOW REFUSE, IN THE RECORD NAMESPACE — 0, OF 0 (D-431 worker)
+
+**Instrument:** `curl` of `op=publishedmanifest` (credential-free; pinned to the `bio` store, the record namespace —
+`BIO_Publication_v0_1.md` §3 rule 10; it selects EVERY `published_bundles` row, `Store#publishedManifest`) at
+2026-09-19T03:52Z, against the two instances this account serves a plane on: `biosmoke7` (`BIO_INSTANCE` in `.env`) and
+`civicos`. Both answered `ok: true, scope: "published"` with `published: []`, `cases: []`, `caseMembers: []`, `shas: []`.
+`bio-plane` and `biosmoke5` answered Cloudflare error 1042 (no worker serving there), so they hold no record to count.
+
+**Result:** the record holds **zero** published rows on either instance, so the number of rows D-431's (a) and (b)
+would now refuse is **0 — counted, not assumed**: there is nothing on the published surface outside a ratified case
+because there is nothing on it at all. Nothing is retracted (rule 1); there was nothing to retract.
+
+**What this cannot see, stated:** an instance installed into ANOTHER group's Cloudflare account by `newgroup` is not
+reachable from this account and is not counted; a scratch namespace is deliberately unreadable on this path and is not
+the record. The count is of the two instances named, at the instant named.

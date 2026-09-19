@@ -37,6 +37,8 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { normalizeAddress } from "../src/subresources.mjs";
+/* D-431: each bundle this suite ratifies is made EVIDENCE OF A RATIFIED CASE (Publication rule 2). */
+import { restOnARatifiedCase } from "./ratified-evidence.mjs";
 
 /* Every ratification here is signed with stock ssh-keygen, so without it there
    is nothing to sign and no subset to run: SKIP LOUDLY WITH A NAMED REASON and
@@ -114,6 +116,14 @@ const signRatify = (bundleId, bundleSha) => {
     { stdio: ["ignore", "ignore", "ignore"] });
   return readFileSync(f + ".sig", "utf8");
 };
+/* D-431: the same key over any statement (the case document's, for `ratified-evidence.mjs`). */
+const signText = (text) => {
+  const f = join(dir, `stmt-${Math.random().toString(36).slice(2)}`);
+  writeFileSync(f, text);
+  execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(dir, "sparky"), "-n", "bio-ratify", f],
+    { stdio: ["ignore", "ignore", "ignore"] });
+  return readFileSync(f + ".sig", "utf8");
+};
 const add = await POST("op=memberadd&token=adm-rr", { memberId: "sparky", cover: "Bob", role: "admin" });
 await POST("op=enroll", { invite: add.result.invite, handle: "sparky", password: "sparky-passphrase" });
 await POST("op=signeradd&token=adm-rr", { keyB64, memberId: "sparky", comment: "sparky laptop" });
@@ -176,6 +186,13 @@ const buildBundle = async (id, seed, parts) => {
   };
   const c = await POST("op=promote&token=mem-rr", pkg);
   t(`[${id}] bundle promoted`, c.result.ok, true);
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted: every bundle here was ratified LOOSE — in no case — which was publication outside a case and is
+     now refused C-58.3. Each is made what the rule requires, the evidence a ratified case's finding (in a
+     project sparky owns) rests on; nothing asserted about re-fetching reused parts moves. */
+  await restOnARatifiedCase({ post: POST, get: GET, doPost: (p, b) => call("/" + p, b), sha,
+    promoteToken: "mem-rr", owner: "sparky", ownerToken: SESS, signText: signText, targets: [id],
+    n: String(7200 + seedDoc), at: NOW });
   return { id, capSha, live: c.result.bundleSha };
 };
 const norms = (parts) => parts.map((p) => normalizeAddress(p.address)).sort();
@@ -299,6 +316,9 @@ console.log("\n=== a bundle that reused nothing ratifies exactly as before (no r
             { path: "snapshots/evidence.bin", blobSha: capSha, bytes: capBytes.length, sha256: capSha }],
     register: [{ sha256: capSha, path: "snapshots/evidence.bin", encoding: "binary", bytes: capBytes.length }],
   });
+  /* D-431, CORRECTED 2026-09-19 as `buildBundle` is above: evidence of a ratified case, never loose. */
+  await restOnARatifiedCase({ post: POST, get: GET, doPost: (p, b) => call("/" + p, b), sha,
+    promoteToken: "mem-rr", owner: "sparky", ownerToken: SESS, signText, targets: [id], n: "7299", at: NOW });
   const rat = await POST(RAT, { bundleId: id, expectedSha: c.result.bundleSha, sig: signRatify(id, c.result.bundleSha) });
   t("it ratifies", rat.ok, true);
   t("and carries no reuse report, so nothing overclaims a verification that did not happen", "reuse" in rat, false);

@@ -72,6 +72,8 @@ import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+/* D-431: the loose branch's bundle is made EVIDENCE OF A RATIFIED CASE (Publication rule 2). */
+import { restOnARatifiedCase } from "./ratified-evidence.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- publishedcase ---");
@@ -849,6 +851,25 @@ console.log("\n--- 8. M0-11: the LOOSE branch — ratified bytes in no case, dri
 
   await mustPromote(LOOSE, ratifiableInfoMd(LOOSE), "information", "collected");
   const LOOSE_SHA = await shaOf(LOOSE);
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16),
+     at its site and not exempted. The loose branch was reached by ratifying an information bundle in NO case
+     AT ALL, which was publication outside a case and is now refused C-58.3. The branch itself is not gone:
+     EVIDENCE — a bundle a ratified case's finding rests on — is published and is a member of no case, so its
+     bytes are exactly "ratified bytes that belong to no case". So LOOSE is made that, and every assertion
+     below about the branch reads the same state it was written for. */
+  await restOnARatifiedCase({ post: POST, get: GET, sha, promoteToken: "adm-rec22", owner: "vera",
+    ownerToken: VERA, targets: [LOOSE], n: "2201", at: NOW,
+    doPost: async (p, b) => {
+      const ns = await mf.getDurableObjectNamespace("STORE");
+      return (await ns.get(ns.idFromName("bio")).fetch(`http://x/${p}`, { method: "POST", body: JSON.stringify(b) })).json();
+    },
+    signText: (text) => {
+      const f = join(dir, `stmt-${Math.random().toString(36).slice(2)}`);
+      writeFileSync(f, text);
+      execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(dir, "vera"), "-n", "bio-ratify", f],
+        { stdio: ["ignore", "ignore", "ignore"] });
+      return readFileSync(f + ".sig", "utf8");
+    } });
   const ratL = await ratify(LOOSE);
   /* THE FIXTURE IS ASSERTED NON-EMPTY BEFORE ANYTHING IS ASSERTED ABOUT IT.
      This project's most-repeated instrument defect is an arm that passes over an

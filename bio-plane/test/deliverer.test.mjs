@@ -1,6 +1,6 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/deliverer.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES (src/index.mjs, src/store.mjs) while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/deliverer.control.mjs [arm]`. Each arm armed ALONE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND byte comparison (never `git checkout --`). DECLARED BEFORE ARMING — (a) `baseline`, nothing armed: MUST be green. (b) `fromsig` — THE LIAR THE ROW NAMES: at both acts the deliverer is taken from the SIGNATURE (`member:<the signer's member id>`) instead of from the session: the founder-delivered case document and the founder-delivered bundle then record iris, and gus's delivery records iris, so every DELIVERED arm MUST FAIL (the answers, the read-backs, the container, the public reads) and the structural pin that both acts hand the SESSION to `deliveringPrincipal` MUST FAIL; the legacy arms and the ground STAY GREEN. (c) `backfill` — the legacy liar: the store's one read chokepoint coalesces a NULL deliverer to the signer: both LEGACY arms MUST FAIL, and THE TABLE with them (a back-filled legacy row reads `member:iris` beside signer iris — the first declaration omitted the table and was corrected after its run; the subject was right, the declaration was not), and nothing else. (d) `session-member` — the deliverer taken from `sessMember` (the folded string) instead of the session ROW: the founder's deliveries then record `member:admin`, a member nobody enrolled, so the FOUNDER arms MUST FAIL while gus's delivery STAYS GREEN — which is what tells "from the session" from "from the right field of the session". RESULTS: see the RESULTS line below, written from the harness's own output.
    RESULTS, RUN 2026-09-18 in worktree agent-a01d041e19ab1ad65, every restore byte-identical (src/index.mjs 623,578 B sha256 cc60e5c87b7d…, src/store.mjs 2,430,967 B sha256 dc9188affdf9…): baseline 17/0 · fromsig 6/11 · backfill 14/3 · session-member 10/7 — ALL FOUR AS DECLARED, no arm failed to arm. RE-RUN on the source merged with origin/main e1434b06 (commit cf0480a5; src/index.mjs 632,230 B sha256 e4ed28f6b104…, src/store.mjs 2,490,761 B sha256 9e03344a86a1…): the same four figures, all as declared, every restore byte-identical.
-   ADDED 2026-09-18 by REC-128's merge fix (the founder's standing for an UNSIGNED case document, a semantic conflict with REC-130), two arms: (e) `founder-standing` — `sessionCaseViewer` loses its founder line, so a founder session folds to `member:admin` exactly as both case reads spelled it before the fix: DECLARED to fail the founder's op=casedocument read, the founder's case delivery, and everything downstream of the case never being ratified (caseDoc, pubcase, all three CONTAINER arms), with vera's two STANDING arms and the loose/gus deliveries green. (f) `everyone-admin` — the over-broad fix, every session resolved to the root-administrator viewer: ONLY vera's arms can tell it from the right fix; declared to fail vera's two STANDING arms plus caseDoc/pubcase/container (vera's delivery then SUCCEEDS and the record names her) — that declaration was CORRECTED once after its first run omitted the downstream three, the instrument's error recorded at the arm. RUN 2026-09-18 in worktree agent-a2c230e047820e35a on the merged tree, every restore byte-identical (src/index.mjs 640,589 B sha256 80058a9e12c1…, src/store.mjs 2,495,915 B sha256 faa877d28a16…): baseline 20/0 · fromsig 9/11 · backfill 17/3 · session-member 13/7 · founder-standing 13/7 · everyone-admin 15/5 — ALL SIX AS DECLARED. RE-POINTED 2026-09-18 by REC-132 (worktree agent-a0f6ffd4522bb36bd): `sessionCaseViewer` became `resolveSession`, so arms (e) and (f) now arm its VISIBILITY line (`VIEWER_LINE` in the driver) — the same variable at its new spelling. Re-run on that tree (src/index.mjs 645,037 B sha256 2bc646dcc189…): baseline 20/0 · fromsig 9/11 · backfill 17/3 · session-member 13/7 · founder-standing 13/7 · everyone-admin 15/5 — ALL SIX AS DECLARED, every restore byte-identical.
+   ADDED 2026-09-18 by REC-128's merge fix (the founder's standing for an UNSIGNED case document, a semantic conflict with REC-130), two arms: (e) `founder-standing` — `sessionCaseViewer` loses its founder line, so a founder session folds to `member:admin` exactly as both case reads spelled it before the fix: DECLARED to fail the founder's op=casedocument read, the founder's case delivery, and everything downstream of the case never being ratified (caseDoc, pubcase, all three CONTAINER arms), with vera's two STANDING arms and the loose/gus deliveries green. (f) `everyone-admin` — the over-broad fix, every session resolved to the root-administrator viewer: ONLY vera's arms can tell it from the right fix; declared to fail vera's two STANDING arms plus caseDoc/pubcase/container (vera's delivery then SUCCEEDS and the record names her) — that declaration was CORRECTED once after its first run omitted the downstream three, the instrument's error recorded at the arm. RUN 2026-09-18 in worktree agent-a2c230e047820e35a on the merged tree, every restore byte-identical (src/index.mjs 640,589 B sha256 80058a9e12c1…, src/store.mjs 2,495,915 B sha256 faa877d28a16…): baseline 20/0 · fromsig 9/11 · backfill 17/3 · session-member 13/7 · founder-standing 13/7 · everyone-admin 15/5 — ALL SIX AS DECLARED. RE-POINTED 2026-09-18 by REC-132 (worktree agent-a0f6ffd4522bb36bd): `sessionCaseViewer` became `resolveSession`, so arms (e) and (f) now arm its VISIBILITY line (`VIEWER_LINE` in the driver) — the same variable at its new spelling. Re-run on that tree (src/index.mjs 645,037 B sha256 2bc646dcc189…): baseline 20/0 · fromsig 9/11 · backfill 17/3 · session-member 13/7 · founder-standing 13/7 · everyone-admin 15/5 — ALL SIX AS DECLARED, every restore byte-identical. RE-RUN 2026-09-19 by the D-431 worker: on the PRISTINE base 7042404e (scratch worktree) session-member 11/9 and everyone-admin 18/2 were already NOT AS DECLARED (stale since REC-140's C-56.1 delivery check); on D-431's tree, after §5/§6 were corrected to ratify the case's EVIDENCE, the three declarations were corrected in the driver with their reasons and every arm re-run: baseline 20/0 · fromsig 9/11 · backfill 17/3 · session-member 8/12 · founder-standing 8/12 · everyone-admin 18/2 — ALL SIX AS DECLARED, every restore byte-identical (src/index.mjs 663,888 B sha256 7d80fc4e243a…, src/store.mjs 2,647,601 B sha256 8cf9feabd6a6…).
  * =========================================================================
  * REC-128 — THE RECORD STATES WHO AUTHORISED AND WHO DELIVERED (BOB #14,
  * 2026-09-18, the honesty half of D-421).
@@ -216,7 +216,9 @@ const shaOf = async (id) => {
 /* One project, one inquiry, concluded and published by iris: a case document
    authored by her and awaiting a signature. Built twice — the second case is the
    LEGACY one. */
-const authorCase = async (project, lead, info, st = S) => {
+/* D-431 (2026-09-19): `infoRatifiable` — the case's own information is made ratifiable for the one case whose
+   information §5 ratifies AS THAT CASE'S EVIDENCE; every other call is byte-identical. */
+const authorCase = async (project, lead, info, st = S, infoRatifiable = false) => {
   const storeName = st ? "scratch" : "bio";
   await promote(project, projectFixtureMd(project, { created: NOW, updated: LATER }), "project", "investigating", st);
   const c = await DOIN(storeName, "projectclaimowner", { projectId: project, memberId: "iris" });
@@ -232,7 +234,7 @@ const authorCase = async (project, lead, info, st = S) => {
   if (!inv || inv.ok !== true) throw new Error(`projectinvite gus: ${JSON.stringify(inv)}`);
   const jn = await POST(`op=projectjoin&token=${GUS}${st}&projectId=${project}`);
   if (!jn || jn.ok !== true) throw new Error(`projectjoin gus: ${JSON.stringify(jn)}`);
-  await promote(info, infoMd(info), "information", "collected", st);
+  await promote(info, infoMd(info, infoRatifiable), "information", "collected", st);
   /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
      conclusion drawn with no project NAMES the accepted reading whose claim it
      adopts, and an unnamed one is refused NO_CLAIM. This conclude named none
@@ -257,7 +259,7 @@ const authorCase = async (project, lead, info, st = S) => {
   return pub.caseDocument;
 };
 const PROJECT = "PROJ-2026-9128-deliver", INFO = "INFO-2026-9128-memo", LEAD = "INQ-2026-9128-lead";
-const D = await authorCase(PROJECT, LEAD, INFO);
+const D = await authorCase(PROJECT, LEAD, INFO, S, true);
 /* CORRECTED 2026-09-18 (REC-128's merge onto REC-130), never exempted: this read
    went to the store with NO viewer, which REC-130 (IC-141) now rightly answers
    NO_CASE_DOCUMENT for an UNSIGNED document — an absent viewer is a stranger.
@@ -358,10 +360,14 @@ console.log("\n--- 4. what is PUBLISHED — the public case read, and the contai
 }
 
 /* =================== 5. op=ratify of a bundle in NO case — the FOUNDER again */
-console.log("\n--- 5. op=ratify, a ratified bundle in no case — iris SIGNS, the FOUNDER DELIVERS ---");
+console.log("\n--- 5. op=ratify, a ratified bundle in no case (the case's EVIDENCE) — iris SIGNS, the FOUNDER DELIVERS ---");
 {
-  const LOOSE = "INFO-2026-9128-loose";
-  await promote(LOOSE, infoMd(LOOSE, true), "information", "collected");
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted. This block ratified a fresh information bundle that nothing rested on — publication outside a
+     case, now refused C-58.3. A bundle in no case still crosses, as the EVIDENCE a ratified case's finding
+     rests on, so the block ratifies D's own information (LEAD's basis, and D is ratified in §2) — still a
+     bundle in no case, still iris's signature, still the FOUNDER delivering, which is this block's subject. */
+  const LOOSE = INFO;
   const s = await shaOf(LOOSE);
   const r = await POST(`op=ratify&token=${FOUNDER}${S}`, { bundleId: LOOSE, expectedSha: s,
     sig: signBytes("iris", `bio-ratify ${LOOSE} ${s}\n`) });
@@ -381,8 +387,17 @@ console.log("\n--- 6. LEGACY — a ratification recorded before REC-128 reads UN
 {
   /* A LEGACY FINDING ROW: the store's committer called exactly as the plane
      before this item called it, with a signer and no deliverer. */
-  const OLD = "INFO-2026-9128-legacy";
-  await promote(OLD, infoMd(OLD), "information", "collected");
+  /* CORRECTED 2026-09-19 by the D-431 worker (BIO_Publication_v0_1.md §3 rule 2, BOB #16), at its site and not
+     exempted: the legacy row was a fresh information bundle nothing rested on, committed at the store — now
+     refused C-58.3 there too, because the rule lives in the one committer. The legacy CASE below is committed
+     FIRST (it was second), and the legacy row is ITS information — evidence its ratified finding rests on —
+     committed exactly as the plane before REC-128 committed it: a signer and no deliverer. */
+  const D2 = await authorCase("PROJ-2026-9128-legacy", "INQ-2026-9128-legacy", "INFO-2026-9128-memo2");
+  const w2 = await DO("caseratify", { caseId: D2.case_id, edition: D2.edition, docSha: D2.doc_sha,
+    sigArmored: "-----BEGIN SSH SIGNATURE-----\nlegacy\n-----END SSH SIGNATURE-----", attestorKey: IRIS_KEY,
+    attestorMember: "iris", gateVersion: "legacy" });
+  if (!w2 || w2.ok === false) throw new Error(`legacy caseratify: ${JSON.stringify(w2)}`);
+  const OLD = "INFO-2026-9128-memo2";
   const s = await shaOf(OLD);
   const w = await DO("publish", { bundleId: OLD, bundleSha: s, attestorKey: IRIS_KEY, attestorMember: "iris",
     gateVersion: "legacy", sigArmored: "-----BEGIN SSH SIGNATURE-----\nlegacy\n-----END SSH SIGNATURE-----", shas: [] });
@@ -392,13 +407,8 @@ console.log("\n--- 6. LEGACY — a ratification recorded before REC-128 reads UN
     row && [row.attestor_member, row.delivered_by && row.delivered_by.kind, row.delivered_by && row.delivered_by.member,
             !!(row.delivered_by && typeof row.delivered_by.detail === "string" && /not inferred from the signer/.test(row.delivered_by.detail))],
     ["iris", "undetermined", null, true]);
-  /* A LEGACY CASE DOCUMENT: a second case, committed by the store's case
+  /* A LEGACY CASE DOCUMENT: the case above, committed by the store's case
      committer with a signer and no deliverer. */
-  const D2 = await authorCase("PROJ-2026-9128-legacy", "INQ-2026-9128-legacy", "INFO-2026-9128-memo2");
-  const w2 = await DO("caseratify", { caseId: D2.case_id, edition: D2.edition, docSha: D2.doc_sha,
-    sigArmored: "-----BEGIN SSH SIGNATURE-----\nlegacy\n-----END SSH SIGNATURE-----", attestorKey: IRIS_KEY,
-    attestorMember: "iris", gateVersion: "legacy" });
-  if (!w2 || w2.ok === false) throw new Error(`legacy caseratify: ${JSON.stringify(w2)}`);
   const cd2 = await caseDoc(D2);
   t("LEGACY, a case document: the signer is still named (iris) and the deliverer reads UNDETERMINED — not iris",
     [cd2.ratified, cd2.attestor_member, cd2.delivered_by && cd2.delivered_by.kind, cd2.delivered_by && cd2.delivered_by.member],

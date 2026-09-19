@@ -11673,6 +11673,80 @@ report and in the claim's release.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #6 as MAJOR — I3 37.0.0 → 38.0.0.** Base RE-READ at resolution off `origin/main` `d036094b`: 37.0.0 (IC-153, REC-136 + UI-65), so the worker's re-based proposal stands. Breaking by IC-137: three acts that committed now refuse (a project bundle at `op=ratify`, C-58.1; a pinned finding under a non-owner's signature, C-57.1; one delivered by an administrator with no role, C-56.1), and a caller who cannot see a project bundle now receives the never-minted 404 `ABSENT` instead of 409 `RATIFY_STALE`/`GATE_REFUSED` (IC-25). No first-party surface affected (`civicos-ui/` names `op=ratify` nowhere, re-grepped at integration); the instance page's `ratifyPanel` renders the new codes through its existing fallback. An AUTHORITY and DISCLOSURE closing — DIST told; it rides 0.64.0 with REC-143 (DIST's ruling: no cut without the P0 fix). D-431 (what `op=ratify` still publishes outside a case) carried to BOB.
 
+## IC-161 · I3: `op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE — a finding at a sha no ratified case pins is REFUSED (C-58.2 `RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE`, naming `op=caseratify` as the act to take first); any other bundle crosses only as EVIDENCE a ratified case's pinned finding rests on, under that case's authority (C-57.1 / C-56.1), else REFUSED (C-58.3 `RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE`) · PROPOSED 2026-09-19 (D-431, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE: 38.1.0** (38.0.0 at spawn on `7042404e`; IC-159 (REC-142) moved it and was merged in before close-out).
+  **Proposed MAJOR — 38.1.0 → 39.0.0**, by IC-137's precedent: two refusals where a publish stood. Read the base AT
+  RESOLUTION.
+- **Proposer:** RECORD, worker `agent-af4cb02e310604e39`, 2026-09-19, spawned by CONDUCT #6 for D-431.
+- **Owner to land it:** `RECORD`
+- **Design:** `BIO_Publication_v0_1.md` §3 rule 2, its second note (BOB #16, D-431) and rule 1; IC-157 (`Store#caseAuthority`,
+  C-58.1).
+- **Consumers to answer:** `UI` (measured NOT-AFFECTED: `civicos-ui/` names `op=ratify` nowhere — grepped); the instance
+  page `bio-plane/src/setup.mjs` (`ratifyPanel` submits `op=ratify` for any bundle id; a loose information bundle, a
+  no-case inquiry and a finding before its case document now render through its existing fallback as *"Refused:
+  <code>"* — the canned `translation` travels on the wire, as IC-157 recorded for the page's other codes); `DIST` (newgroup
+  embeds the old plane until the next cut); `SKILL` and `agent-worker` (NOT-AFFECTED: neither submits `op=ratify`).
+
+**WHAT THE CODE DID BEFORE — pinned by REC-140 AS MEASURED** (`ratify-authority.test.mjs` §7 on `7042404e`, 32/0 with the
+three arms asserting PUBLISHED): an information bundle in no case, published by any member holding a registered key; a
+concluded inquiry in no case and no project, the same; and a finding PREPARED into a case whose document was not yet
+ratified, published LOOSE under a non-owner's key — the ceremony's order (case document first) not enforced, and
+IC-157's owner/delivery rule side-stepped by ratifying early.
+
+**THE SHAPE.** In `Store#publish`, first in its transaction (before the edition refusals and the idempotent retry, so
+nothing is written on a refusal and a retry of bytes that crossed before this rule answers nobody):
+
+| The bundle at this sha | Answer | Code |
+|---|---|---|
+| a finding a RATIFIED case pins | IC-157's `#caseAuthority` (unchanged) | C-57.1 / C-56.1 |
+| anything else that a RATIFIED case's pinned finding RESTS ON | `#caseAuthority` for that case's project; several projects: an owner of ANY may sign (first refusal by id otherwise) | C-57.1 / C-56.1 |
+| an inquiry nothing ratified rests on | refused; the detail names `op=caseratify` first | `RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE` C-58.2 |
+| any other bundle nothing ratified rests on | refused | `RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE` C-58.3 |
+
+Both codes: family `RATIFY_SCOPE_CHECKS`, one DEC-49 region `publish > is-ratify-outside-a-case`, relayed by `op=ratify`
+at **409** (added to its list beside C-57.1/C-56.1; a store refusal outside the list answered 500).
+
+**"RESTS ON", NAMED FROM THE CODE.** The published graph serves an edge only of the `serve` class (every `references[]`
+entry of the RATIFIED bytes; the two division disclosures are name-only) and only to a published target (`#publishEdges`).
+That classification was an inline array in `op=ratify`; it is now **`Store.publishedGraphEdges(fm)`, moved verbatim**, and
+BOTH the graph `op=ratify` hands `#publishEdges` and the refusal's `#ratifiedFindingsRestingOn` (every ratified case's
+pinned member, at its PINNED bytes — live file or `history`) read it. Pinned bytes the store cannot read rest on nothing
+(undeterminable, so refused — the safe direction for this defect).
+
+**SIGHT.** Only project rows are ever hidden (`#inSight`), and the gate facts are read at the ratifier's viewer (IC-157).
+The refusal consults RATIFIED cases only, which are public, so a bundle no ratified case rests on answers the same bytes
+whether or not a project the caller cannot see is preparing a case over it (driven: §8c, byte-identical before and after
+the hidden project exists).
+
+**WHY MAJOR.** Three acts that COMMITTED now REFUSE, with new codes (IC-137 read strictly). The retry of a bundle that
+crossed before this rule is also now refused rather than answered `existed` — nothing is retracted (rule 1).
+
+**What already crossed (the ruling's (c)):** counted in the record namespace — **0 rows** on `biosmoke7` and on `civicos`,
+each of which holds no published row at all (`MEASUREMENTS.md` M-66).
+
+**A REFUSAL THIS SHADOWS, stated:** `EDITION_NOT_INCREMENTED` was reachable through `op=ratify` only by an edition
+AUTHORED into hand-written revision bytes; those bytes are now a finding no ratified case pins, refused C-58.2 first. The
+guard stays in the committer and is driven there (`shadowed-refusals.test.mjs` (viii), corrected).
+
+**Suites:** `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, §8/8b/8c new (32 → 51 assertions);
+its control driver gains three arms (the row's two controls and the evidence-side liar), all ten AS DECLARED on the first
+run. A new shared fixture `test/ratified-evidence.mjs`. CORRECTED at their sites with dated reasons, never exempted:
+`ratify`, `reuse-ratify`, `ratify-envelope`, `publishedcase` §8 (loose bundles made evidence of a ratified case),
+`deliverer` §5/§6, `testify` (case document before finding), `casesign` (a moved member is now refused, not published
+loose), `publish` 6b (C-58.2 before the edition), `shadowed-refusals` (viii), `derivation-bounds` (census 108 → 109, the
+arrival `#ratifiedFindingsRestingOn`), and `casepin` (edition 1's throw became a named failure, because control arm
+(a) — no pin written — is now refused C-58.2 and died with no tally). Controls re-run on the corrected suites, every
+restore verified: `casesign` (d) 73/1 names the corrected arm; `shadowed-refusals` 11/11 as declared; `deliverer` six as
+declared after three declarations were corrected (two stale since REC-140, measured on the base); `nc-mk1` `pubbundle`
+corrected (its "nothing published" half is now held by C-58.3 — defence in depth); `casepin` (a) 0/1;
+`case-authority` and `machine-attest` unchanged and as declared. `operator-attest.control.mjs` reads four arms NOT AS
+DECLARED identically on the base and on this tree — pre-existing, not this item's, reported for CONDUCT.
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 39.0.0 → 40.0.0.** Base RE-READ at resolution off the integration tree: 39.0.0. Breaking by IC-137: op=ratify refuses what it published — a finding no RATIFIED case pins (C-58.2 RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE, naming op=caseratify) and any other bundle that is not evidence a ratified case's pinned finding rests on (C-58.3); 'rests on' is the published graph's own edge set, read through one Store.publishedGraphEdges. The (c) count of already-crossed rows was MEASURED at 0 on biosmoke7 and civicos (M-66); other instances unmeasured. A DISCLOSURE AND AUTHORITY closing — DIST told.
+
 ## IC-159 · I3: `op=affordances` publishes `conclude` on a question whose OWN state is already `concluded` — its PROJECT arm — to a caller who has JOINED some project it can see that LIVE-cites the question · PROPOSED 2026-09-18 (REC-142, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
 
 - **Interface:** I3 (plane → UI, the op contracts). **Version read off this tree's `docs/development/INTERFACES.md`

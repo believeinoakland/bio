@@ -146,7 +146,12 @@ const ARMS = {
   pubbundle: {
     files: [INDEX],
     why: "(A) the fence at op=ratify for the OBSERVATION ITSELF removed — its words, provenance document and the observer's handle cross into the published record",
-    mustFail: ["op=ratify on the OBSERVATION ITSELF", "NOTHING of it is published"],
+    /* DECLARATION CORRECTED 2026-09-19 by the D-431 worker, after the arm came back NOT AS DECLARED (55/1) on
+       D-431's tree: "NOTHING of it is published" now STAYS GREEN, because with C-53.10 disarmed the observation
+       — which no ratified case's finding rests on — is refused by D-431's C-58.3 in the committer instead. That
+       is defence in depth, measured, not the fence working; the arm still fails naming the fence itself, which is
+       what it exists to prove. */
+    mustFail: ["op=ratify on the OBSERVATION ITSELF"],
     mustPass: "the cited-finding and case refusals (separate arms of the fence)",
     patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.self.length)\n",
                               "      if (false && facts.testimony && facts.testimony.self.length)\n"]]),

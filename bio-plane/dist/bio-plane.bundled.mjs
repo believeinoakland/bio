@@ -11607,6 +11607,24 @@ var RATIFY_SCOPE_CHECKS = {
     check: "C-58.1",
     where: "src/index.mjs fetch > is-ratify-project-bundle",
     translation: "A project's own document is not published. A project publishes through its cases: publish a case from the project, have an owner sign the case document, and then ratify the findings in it. Nothing was published."
+  },
+  /* D-431 (2026-09-19, IC-161): `op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE
+   * (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16). REC-140 measured three
+   * publications outside a case and pinned them as measured: an information bundle in no case, a
+   * concluded inquiry in no case, and a finding prepared into a case whose document was not yet
+   * ratified. Both codes are refused in `Store#publish`, in its transaction, before the edition
+   * refusals and the retry, and ONE region carries both, because the one condition — no ratified
+   * case pins this sha and none of their pinned findings rests on this bundle — is split only by
+   * what the bundle IS. */
+  RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE: {
+    check: "C-58.2",
+    where: "src/store.mjs publish > is-ratify-outside-a-case",
+    translation: "A finding is published only as part of a case its project has ratified, and no ratified case holds this version of it. Publish it into a case from its project, have an owner of the project sign the case document first, and then ratify this finding at the version the case holds. Nothing was published."
+  },
+  RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: {
+    check: "C-58.3",
+    where: "src/store.mjs publish > is-ratify-outside-a-case",
+    translation: "This is published only as evidence for a case, and no finding in any ratified case rests on it. Cite it from a finding, publish that finding's case and have an owner of the project sign the case document; an owner of that project can then sign this. Nothing was published."
   }
 };
 function leadLegFindings(label, leg, findings) {
@@ -52493,6 +52511,47 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         }
         if (refused) return refused;
       }
+      if (!pinnedBy.length) {
+        const resting = this.#ratifiedFindingsRestingOn(bundleId);
+        if (!resting.length) {
+          const kind = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
+          const refusal7 = (code, detail) => {
+            const row = RATIFY_SCOPE_CHECKS[code];
+            return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, bundleId };
+          };
+          if (kind && normalizeType(kind.object_type) === "inquiry")
+            return refusal7(
+              "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE",
+              `${bundleId} at ${String(bundleSha).slice(0, 12)} is not a finding any RATIFIED case pins, and a finding is published only as a member of a ratified case (BIO_Publication_v0_1.md \xA73 rule 2). Publish it into a case from its project (op=publish), have an owner of that project sign the case document (op=caseratify) FIRST, and then ratify this finding at the version the case pinned. Nothing was published.`
+            );
+          return refusal7(
+            "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE",
+            `no finding of a RATIFIED case rests on ${bundleId}, and anything that is not a finding crosses only as the evidence a ratified case's finding rests on (BIO_Publication_v0_1.md \xA73 rule 2). Cite it from a finding, publish that finding's case and have an owner sign the case document (op=caseratify); then an owner of that project may sign this. Nothing was published.`
+          );
+        }
+        const byProject = /* @__PURE__ */ new Map();
+        for (const r of resting) {
+          if (!byProject.has(r.project)) byProject.set(r.project, []);
+          byProject.get(r.project).push(`${r.finding} of case ${r.case_id}`);
+        }
+        let refused = null;
+        for (const pid of [...byProject.keys()].sort()) {
+          const denied = this.#caseAuthority({
+            project: pid,
+            deliveredBy,
+            signer: attestorMember,
+            act: "ratify",
+            subject: `${bundleId}, the evidence ${byProject.get(pid).join(", ")} rests on,`,
+            extra: { bundleId }
+          });
+          if (!denied) {
+            refused = null;
+            break;
+          }
+          refused = refused || denied;
+        }
+        if (refused) return refused;
+      }
       const top = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, bundleId);
       const highest = top && top.m != null ? Number(top.m) : 0;
       const already = this.#one(
@@ -53497,6 +53556,70 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
        other D-309 site takes, so "how many cases is this member in" has one answer
        across the file. The JOIN on `published_cases` is unchanged and still does its
        job: only case editions that exist are membership. */
+  /* ===== D-431 — WHAT A FINDING "RESTS ON", NAMED ONCE, AND READ BY BOTH THE SERVING AND THE REFUSAL =====
+     BIO_Publication_v0_1.md §3 rule 2, the second note (BOB #16, 2026-09-19): *"Rests on is the edge set the
+     published graph already uses to decide it may serve an edge, named by the builder from the code and proved
+     identical at both sites."* NAMED FROM THE CODE: the published graph is written by `#publishEdges` from the
+     edges `op=ratify` reads out of the RATIFIED BYTES, and it SERVES an edge only when the edge is of the
+     `serve` class and its target is itself published. The `serve` class is every `references[]` entry (its
+     `rel` as the kind, `cites` when none is authored); the two division disclosures are NAME-ONLY by kind and
+     are never served. So a finding RESTS ON exactly the targets of its `serve`-class edges.
+     This one static IS that edge set: the control plane builds the graph it hands `#publishEdges` from it
+     (`op=ratify`), and `#ratifiedFindingsRestingOn` asks it of each pinned finding's bytes — one function,
+     two readers, so the refusal and the serving cannot come to read different quantities.
+     `ratify-authority.test.mjs` §8 pins the behaviour (what the refusal admits is what the graph serves) and
+     the two call sites. Moved here VERBATIM from `op=ratify`'s inline array; a second spelling of this list
+     anywhere is the defect it exists to prevent. */
+  static publishedGraphEdges(fm) {
+    const d = fm && typeof fm === "object" ? fm : {};
+    const refs = Array.isArray(d.references) ? d.references : [];
+    return [
+      ...refs.filter((r) => r && typeof r.target === "string").map((r) => ({
+        to: r.target,
+        kind: typeof r.rel === "string" && r.rel ? r.rel : "cites",
+        disclosure: "serve"
+      })),
+      ...typeof d.division_parent === "string" && d.division_parent !== "null" ? [{ to: d.division_parent, kind: "division_parent", disclosure: "name" }] : [],
+      ...(Array.isArray(d.division_siblings) ? d.division_siblings : []).filter((s) => typeof s === "string" && s).map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" }))
+    ];
+  }
+  /* D-431 (b): WHICH FINDINGS OF A RATIFIED CASE REST ON THIS BUNDLE, and each one's publishing project.
+     Asked over every roster row a RATIFIED case edition PINNED (`version_sha` set, joined to
+     `published_cases`, which only `ratifyCaseDocument` writes), at the PINNED bytes — the bytes the case
+     froze and the finding will be signed at, never whatever `bundle.md` says today (the working `refs`
+     table is a projection of today's document and would be a second edge set). The bytes are read from the
+     live file when it is still at the pin and from `history` when the finding has moved since. PINNED BYTES
+     THIS STORE CANNOT READ rest on nothing here: the question is then undeterminable, and admitting a
+     bundle on an undetermined answer is the direction this defect runs in. The rows are a roster, bounded
+     by the cases ever ratified, and never a walk of the corpus. */
+  #ratifiedFindingsRestingOn(bundleId) {
+    const pins = this.#rows(
+      `SELECT DISTINCT m.case_id, m.bundle_id, m.version_sha, cs.project_id
+         FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+         LEFT JOIN cases cs ON cs.case_id=m.case_id
+        WHERE m.version_sha IS NOT NULL AND m.bundle_id<>?
+        ORDER BY m.case_id, m.bundle_id`,
+      bundleId
+    );
+    const out = [];
+    for (const p of pins) {
+      const at = this.#one(
+        `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md' AND sha256=?`,
+        p.bundle_id,
+        p.version_sha
+      ) || this.#one(
+        `SELECT content FROM history WHERE bundle_id=? AND path='bundle.md' AND sha256=? LIMIT 1`,
+        p.bundle_id,
+        p.version_sha
+      );
+      if (!at || typeof at.content !== "string") continue;
+      const fm = parseFrontmatter(at.content).data || {};
+      if (_Store.publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === bundleId))
+        out.push({ case_id: p.case_id, finding: p.bundle_id, project: p.project_id ?? null });
+    }
+    return out;
+  }
   #pinnedCaseEditionsOf(bundleId, bundleSha) {
     const rels = this.#rows(
       `SELECT m.case_id, m.edition, m.role FROM published_case_members m
@@ -69121,16 +69244,7 @@ var index_default = {
         author: ratifiedFm.completeness?.author ?? null,
         at: ratifiedFm.completeness?.at ?? null
       } : null;
-      const fmRefs = Array.isArray(ratifiedFm.references) ? ratifiedFm.references : [];
-      const edges = [
-        ...fmRefs.filter((r) => r && typeof r.target === "string").map((r) => ({
-          to: r.target,
-          kind: typeof r.rel === "string" && r.rel ? r.rel : "cites",
-          disclosure: "serve"
-        })),
-        ...typeof ratifiedFm.division_parent === "string" && ratifiedFm.division_parent !== "null" ? [{ to: ratifiedFm.division_parent, kind: "division_parent", disclosure: "name" }] : [],
-        ...(Array.isArray(ratifiedFm.division_siblings) ? ratifiedFm.division_siblings : []).filter((s) => typeof s === "string" && s).map((s) => ({ to: s, kind: "division_sibling", disclosure: "name" }))
-      ];
+      const edges = Store.publishedGraphEdges(ratifiedFm);
       const deliveredBy = deliveringPrincipal(sessRights);
       const pubOut = await doAnswer(stub.fetch(new Request("http://do/publish", {
         method: "POST",
@@ -69170,7 +69284,7 @@ var index_default = {
             store: storeName,
             tokenClass: cls
           },
-          pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF" || pub.reason === "CASE_SIGNER_NOT_AN_OWNER" || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT") ? 409 : 500
+          pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF" || pub.reason === "CASE_SIGNER_NOT_AN_OWNER" || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT" || pub.reason === "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE" || pub.reason === "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE") ? 409 : 500
         );
       let copied = 0, present = 0, r2state = "not configured";
       if (typeof env.PUBLISHED?.put === "function" && r2) {
