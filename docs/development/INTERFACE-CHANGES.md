@@ -12115,3 +12115,47 @@ AS DECLARED, real sources untouched. `node test/nc-pl18.mjs` re-run, eleven rows
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 42.0.0 → 43.0.0.** Base RE-READ at resolution off the integration tree: 42.0.0. Breaking by IC-137: op=airuntick and op=airunclose now REFUSE (C-22.12 AI_RUN_NOT_PRINCIPAL) every caller who is not the run's stamped principal (ai_runs.principal_plane — the member, or a machine credential that member minted), co-participants and administrators included; a caller who cannot see the run's context gets the byte-identical answer for a run that does not exist, which also closes a §7.9 disclosure (tick/close told such a caller the run existed and its status). The reaper is unchanged. Compared against the control plane's STAMP, never a sent field (the forged-actor arm). Combined at integration with REC-153's C-22.11 (the C-22 family is TWELVE; airun.test ARM D1 carries both). An AUTHORITY and DISCLOSURE closing — DIST told.
+
+## IC-167 · I3: `op=contradictionpairs` — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A new READ that forms candidate pairs by the four keys of `CONTRADICTION-IDENTIFY-DESIGN.md` §4, each pair carrying the key that formed it; viewer-gated through `Store#bundleGate` on every bundle column of every side; bounded per key (`limit`, `bound`, `truncated`, over-fetched by one) with a caller `limit` CLAMPED and published, never refused; and an `absence` on every key that formed nothing, naming WHICH LEVEL was empty out of a published ladder. K4 COUNTS the candidates it could not form for want of a doctype or a document date its reader never stated, and does not form them. `judgement.state` is `NOT_REACHED` and `wrote` is `false`. One refusal: `CONTRADICTION_KEY_UNKNOWN` (C-60.1) · PROPOSED 2026-09-19 (REC-146, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI and fleet, the op contracts). **Version read off this tree's
+  `docs/development/INTERFACES.md` (base `93e56472`): 44.0.0. Proposed as MINOR, ADDITIVE — 44.0.0 → 44.1.0.** Read the
+  base AT RESOLUTION. **Why additive, by IC-137's rule, and it is the easy direction for once:** the op did not exist,
+  so no call that SUCCEEDED is now refused and no key on any existing answer moves. Nothing outside the four files this
+  row names is edited; `schema.mjs` is untouched (§9 item 1 is *no judgement, no table write*), so I5 does not move at
+  all.
+- **Proposer:** RECORD, REC-146 worker, own worktree `rec146-record`, branch `rec-146-contradiction-pairing`,
+  2026-09-19 — `CONTRADICTION-IDENTIFY-DESIGN.md` §2, §4, §6 and §9 item 1 (BOB #16, 2026-09-19), beneath
+  `BIO_Case_Making_v0_1.md` §CONTRADICTION (Bob, 2026-09-17).
+- **Owner to land it:** `RECORD`
+- **Consumer impact, MEASURED rather than asserted:** ZERO. `grep -rn "contradictionpairs"` over `civicos-ui/`,
+  `agent-worker/`, `newgroup/`, `pdf-worker/` and `ocr-worker/` returns nothing on this tree — the op is new and no
+  surface calls it. **That is a fact about this moment and not an argument for anything** (IC-25's rule): the row is
+  filed because the op contract is I3's whether or not anybody reads it yet, and PRESENT is the consumer it is for.
+
+### The wire, in full
+
+| field | what it carries |
+| --- | --- |
+| `ok`, `wrote` | `true`, and `false` — the read writes nothing and SAYS so rather than leaving a reader to assume it |
+| `pairs_formed`, `limit`, `bound`, `bounded` | the count, the bound THIS answer was read at, the plane's own ceiling (50), and `true` |
+| `viewer_scope` | `viewerPredicate`'s scope: `participant`, `member` or **`DENY`** |
+| `keys[]` | one row per key: `key`, `name`, `feeds` (`world`/`record`), `join`, `why`, `ran`, `formed`, `limit`, `truncated`, `levels[]` (the ladder, `{level, present}`), `absence` (`{level, says}` or `null`), `notes[]`; K3 adds `arms` (`passage`/`document`, each with its own `formed` and `truncated`); K4 adds `undetermined`, `indistinct` and `undetermined_detail` (`never_read`/`no_doctype`/`no_date`) |
+| `pairs[]` | `key`, the key's own referent field (`inquiry`, `subject_entity`, `content_id`+`referent_grain`, `entity_id`+`discriminator`), `a` and `b` — each a `kind` (`leg`/`claim`/`extent`) with its referent RESOLVED (a leg carries `capture_sha`, `ref`, `extent_kind`, `stale`; a claim carries `version` and the `claim` verbatim; an extent carries `doctype`, `date`, `read`) — and `why` |
+| `judgement` | `{state: "NOT_REACHED", by, item, why}`. **No label vocabulary is published**, deliberately: §5's five labels are the JUDGEMENT's output and publishing them from a surface that assigns none would read as a detector that had declined to label |
+| `says` | the one sentence a surface renders without composing it |
+
+### What a consumer must NOT read into it
+
+- **A PAIR IS NOT A CONTRADICTION.** It is a claim that two assertions are WORTH COMPARING, by the named key. A surface
+  that renders `pairs[]` under a heading saying *contradictions found* would be the false-conflict failure §1 says
+  switches a detector off inside a week, arriving before the detector exists.
+- **AN EMPTY `pairs[]` IS NOT A CONSISTENT RECORD.** It is one of eight different facts and the answer names which:
+  `viewer` (an outage — the read compared nothing), `not_run`, `inquiry`, `leg`, `role`, `referent`, `subject`,
+  `reading`, `claim`, `content`, `cited`, `resolution`, `shared_entity`, `shared_subject`, `shared_referent`,
+  `shared_side` or `discriminator`. **A consumer that renders the count without the level is the defect this item
+  exists to prevent.**
+- **`viewer_scope: "DENY"` IS AN OUTAGE AND NEVER A RESULT.** Every key then reads `absence.level: "viewer"` and
+  `says` states it compared nothing. A surface must not present that answer as a report.
+
+**RESPONSES:** not yet collected.

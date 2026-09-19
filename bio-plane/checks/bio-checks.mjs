@@ -11865,6 +11865,33 @@ export const PROJECT_ID_CHECKS = {
   },
 };
 
+/* REC-146 / C-60 — THE CONTRADICTION PAIRING READ'S REFUSALS
+ * (`CONTRADICTION-IDENTIFY-DESIGN.md` section 4, section 9 item 1).
+ *
+ * ONE refusal, and the family is one row rather than padded out, because the read
+ * takes exactly one argument that can be wrong. `limit` is CLAMPED and not refused
+ * (a number out of range is a caller asking for more than the plane gives, which the
+ * published `limit` already answers); an absent or unrecognised viewer is not refused
+ * either — it fails CLOSED through `viewerPredicate` and the answer SAYS the read saw
+ * nothing, which is the section 6 obligation and not a refusal.
+ *
+ * WHY THE KEY IS REFUSED RATHER THAN IGNORED, and it is `MEANING_ROWS_UNKNOWN_ARM`'s
+ * reasoning at C-23.2 one construct over: `key=` SELECTS A JOIN. A misspelled key that
+ * silently ran all four — or none — would answer a question the caller did not ask, and
+ * on THIS surface an answer reads as a census of what was compared. Section 4's own rule
+ * is that keys are ADDED, never tuned, precisely so the per-key figures stay comparable
+ * across runs; a key name that answered from a different key would make them incomparable
+ * while looking complete. So the refusal NAMES the keys the record holds. */
+export const CONTRADICTION_PAIR_CHECKS = {
+  CONTRADICTION_KEY_UNKNOWN: {
+    check: 'C-60.1',
+    where: 'src/store.mjs contradictionPairs > is-contradiction-key-unknown',
+    translation: 'The record pairs assertions by named keys, and that is not one of them. Rather than '
+      + 'answer from a different key and let the answer look like a complete comparison, it says so and '
+      + 'names the keys it holds. Ask again with one of them, or with none at all to run every key.',
+  },
+};
+
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
  *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
  *  action basis), so the rule has one spelling and three doors. It asks BOTH

@@ -17199,3 +17199,22 @@ Corroborated by artifact rather than by the one tool: `bio-plane/test/projection
 remote branch list, which is D-288's own stated reason for leaving 134 inherited branches alone. **Bound: this judges
 these three only** — not the nine unmerged branches `CONDUCT-NEXT.md` lists, whose content is still unjudged, and not
 any branch created after this reading.
+
+## M-71 · 2026-09-19 · REC-146 — the CONTRADICTION pairing read: its bound, and what the empty-level walk measured
+
+**Instrument:** `bio-plane/test/contradictionpairs.test.mjs` and `bio-plane/test/nc-rec146.mjs`, driven THROUGH the
+ops against the real plane in miniflare, on `rec146-record` at base `93e56472`. Corpus: 5 information documents
+(2 resolved established to one registered subject, 3 to a second), 6 inquiries, 2 registry entities.
+
+| What | Measured | Why it is that and not a guess |
+| --- | --- | --- |
+| `Store.CONTRADICTION_PAIRS_MAX` | **50** per key | NOT measured from a workload — **stated as a CHOSEN bound, which is the honest label**. There is no corpus yet to measure a page size against: §9 item 2's fixture does not exist, so any figure claimed as measured here would be a guess wearing a constant's clothes. 50 is `NARROW_CANDIDATES_MAX`'s figure, taken deliberately so the plane has one number for "a page of machine-proposed candidates a member will look through" rather than two. **RE-MEASURE IT when the §7 fixture lands** — that is the first workload this bound will ever have. |
+| pairs a key may return | at most the bound; the statement over-fetches by **one** | truncation is OBSERVED rather than inferred from equality with the bound (REC-109's class). Driven both ways: at `limit=1` over a 3-pair corpus K2/K3 report `truncated: true` with one pair each; at the default over the SAME corpus all four keys report `truncated: false`. |
+| distinct empty-LEVEL answers over one filling store | **7** (`content`, `inquiry`, `leg`, `reading`, `resolution`, `role`, `subject`) from **6** readings of one op | the six-state walk: empty store -> two documents read -> a question resting on nothing -> both legs one way -> one leg turned round -> the documents resolved. **This is the figure the item is about.** A canned "nothing found" produces ONE. |
+| K4 outcomes over 4 candidate pairs on one entity | **1** formed, **2** undetermined, **1** indistinct | three different answers from one key in one call. The 2 are pairs against an agenda whose reader stated no date (`undetermined_detail.no_date: 2`) and are NOT formed; the 1 is two agendas of the same kind on the same date — nothing was missing, they simply cannot be told apart. |
+| suite / control | **43 assertions**, 0 fail · **6/6** control arms AS DECLARED, baseline 43/0 | arms: `viewer` 16/27, `level` 36/7, `undetermined` 38/5, `dedup` 37/6, `overstrict` 38/5; every file restored by sha256 AND `cmp` (store.mjs 2,713,460 B `dcabe44ab28b`; index.mjs 666,610 B `cfe27b4c9357`). |
+| the bounds census (`derivation-bounds.test.mjs`) | **UNMOVED at 109**, ceiling and floor both green | the five new row sources are all SQL-bounded by the published cap and are graded BY NAME: `#contradictionK1:rows`, `#contradictionK2:rows`, `#contradictionK3Same:rows`, `#contradictionK3Doc:rows`, `#contradictionK4:rows`. **No floor was invalidated and none was moved.** One row was added to that suite's `UNREAD_FORMS` roster for `#contradictionK3`'s composite claim, with its reason at the site. |
+
+**WHAT THESE FIGURES ARE NOT.** None of them is a statement about RECALL or about the FALSE-CONFLICT RATE. Those are
+§7's and they need the labelled fixture §9 item 2 owes; until it exists no figure in this project says anything about
+how good the detector is. Every figure above is about WHAT WAS COMPARED.
