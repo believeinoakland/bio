@@ -641,7 +641,7 @@ authority is the file named, never this one.
 - **D-431** · 2026-09-18 — "D-431 RULED"). **SCHEDULER's spawn condition is met.** **B. DISCOVERABLE or HIDDEN, and the request to join** — `BIO_Membership_Architecture_v2.md` §7, item **7.14** (Bob's ruling of 2026-09-18). Decided there, each from an existing ruling: the setting is an OWNER'S recorded act, not a document  
   `docs/archive/ledgers/BOB-INBOX-drained.md:961`
 - **D-431** · 2026-09-19 — RULED by BOB #16 (2026-09-19, Publication §3 rule 2, second note) and BUILT by the D-431 worker (IC-161, branch `worktree-agent-af4cb02e310604e39`): C-58.2 and C-58.3 in `Store#publish`; `ratify-authority.test.mjs` §7 corrected to refused, §8 the evidence path; the (c) count is 0 (M-66).** | M8 · **CLOSED…  
-  `docs/development/DEBT.md:297`
+  `docs/archive/ledgers/DEBT-closed.md:81`
 - **D-431** — D-431 RULED** and folded into `BIO_Publication_v0_1.md` §3 rule 2 (second note): `op=ratify` publishes a FINDING only at a sha a RATIFIED case pins; any other bundle only as EVIDENCE a pinned finding rests on; what crossed stays, COUNTED. - **FLEET's scratch questions**: a scratch purge takes scratch IDENTITY, a…  
   `docs/development/kickoffs/BOB-NEXT.md:17`
 - **D-431** · 2026-09-19 — design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 2, the second note ("DECIDED 2026-09-19 by BOB #16 (D-431)"), folded at `09ec7a86`, with rule 1 (one-way).  
