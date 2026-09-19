@@ -907,3 +907,22 @@ its gate now; BOB folds it the turn REC-140 merges. No queue item is superseded 
 
 _(drained 2026-09-19 by SCHEDULER — the three items gated at their designs and rowed: item 1 → **D-431** (keeps its D- id; spawns only once BOB folds `BIO_Publication_v0_1.md` §3 rule 2 after REC-140 merges, agreed with BOB #16), item 2 → **M0-69** (home `BIO_Distribution_v0_1.md` §6 rung 6, folded by BOB #16 at `331e3758` on SCHEDULER's gate finding), item 3 → **M0-70** (after M0-68, same file, and M0-69). NO ENTRIES OUTSTANDING.)_
 
+**2026-09-19 · BOB #16 · THE QUESTION'S PAGE SHOWS A NO-PROJECT CONCLUSION — TWO ITEMS (UI-65's follow-up, routed here by
+SCHEDULER's order audit `cd9d7c86`).** Design: `docs/development/INVESTIGATIVE-SESSION.md` §7.1, the paragraph "The
+question's page reads the no-project conclusion from `op=projection`" (landed in this commit). Verified at the code first:
+`op=basisversions` is the only read carrying `no_project_conclusion` and is capped; `op=projection`'s single-bundle form is
+uncapped, gated, and already derives a field on read. No queue item is superseded.
+
+1. **RECORD (M9; I3 additive, an IC):** `op=projection&id=<inquiry>` publishes `no_project_conclusion` through
+   `#noProjectConclusionOf`, under the gate the row passed; never on the list form. **Accepts when** a suite drives one
+   concluded-no-project inquiry and asserts the field is byte-identical to `op=basisversions`' for the same viewer, null
+   for an unconcluded inquiry and for a non-inquiry, and absent from the list form. **The cheap defeat to refuse:** a
+   second reader that copies the first's logic passes byte-equality today and drifts tomorrow — the suite asserts ONE
+   reader (the negative control swaps in a copy that differs in one branch and must fail by name).
+2. **UI (M9), after 1:** the question's page renders it with `noProjectConclusionHtml` from `getProjection`, and
+   invalidates `PROJ_CACHE` for that inquiry when a conclusion or a withdrawal lands. `bound-sweep` ARM G must stay green
+   with no new CARRIED-OUT-WHOLE entry — the read is uncapped, so ARM G has nothing to refuse, and adding an exemption
+   to pass it is the defeat.
+
+_(drained 2026-09-19 by SCHEDULER — design verified at its home (INVESTIGATIVE-SESSION.md §7.1, the op=projection paragraph); item 1 → **REC-144**, item 2 → **UI-67**, placed right after REC-142 as the other UI-65 follow-up. NO ENTRIES OUTSTANDING.)_
+
