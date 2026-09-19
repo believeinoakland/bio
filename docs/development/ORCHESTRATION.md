@@ -62,7 +62,7 @@ untracked one cannot even be found. Two corollaries, each paid for:
 | --- | --- | --- |
 | hand a design change or new items to the plan | **`BOB INBOX`**, top of `QUEUE.md` | BOB appends, newest first; SCHEDULER drains it into ordered rows |
 | raise a question to the architecture side | **`DECISIONS.md`**, or `SendMessage` to BOB | an entry carries `provisional:`; BOB brings what is Bob's to him |
-| tell the NEXT session in your area what you learned | **that area's kickoff, and its `-NEXT.md`** | rewritten at the close of your turn, by you |
+| tell the NEXT session in your area what you learned | **the area's LAW (`<AREA>.md`) for what pays repeatedly; its `-NEXT.md` for what the next session must DO** | see "which of the two" below; the `-NEXT` is rewritten at the close of your turn, by you |
 | need work inside another area's paths | **DELEGATION in `CLAIMS.md`** | append the need; continue with your own work; never edit their paths |
 | change a shape another area builds against | **`INTERFACE-CHANGES.md`** protocol | PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED |
 | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only knowledge; a defect goes to SCHEDULER only with its fix named |
@@ -71,6 +71,15 @@ untracked one cannot even be found. Two corollaries, each paid for:
 **Choosing badly costs in one direction only**: a misfiled entry costs one reclassification, an unraised one costs the
 thing going unrecorded. When in doubt, raise it — in a FILE or a message to the owning lane, never only in a window
 nobody watches.
+
+**WHICH OF THE TWO — the area's LAW or its `-NEXT` (FLEET #2, 2026-09-19, correcting BOB #17's instruction).** They are
+not the same channel and the choice is not stylistic. **A `-NEXT.md` is CONSUMED ONCE, by one successor, and is
+superseded the moment that session writes its own. `<AREA>.md` is the area's law and is READ IN FULL by every session
+that ever holds the lane.** So the test is how often the lesson pays: a fact the next session must ACT on once (what is
+mid-flight, which branch is live, what is owed right now) belongs in the `-NEXT`; a rule that will pay every time
+anyone works this area belongs in the LAW, and belongs there NOW rather than waiting on a refresh that may be far off.
+Put it in both when it is both. **The failure this closes:** a durable lesson written only into a handoff is read once
+and then dropped — it looks recorded and is not, which is the same shape as a claim the record cannot support.
 
 ### The rules that make the channels work
 
