@@ -31,16 +31,6 @@ accepts-when: an opinion lands as a case element with its attribution and is ref
 NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — the refusal removed → an opinion lands as a leg and the arm FAILS. **Liar:** an opinion stored as a low-grade leg — the design refuses it as a leg at all.
 added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
 
-### REC-146 · queued — **CONTRADICTION'S IDENTIFY, 1 of 3: THE PAIRING READ — the plane forms candidate pairs by the four keys, viewer-gated and bounded per key, and states which level was empty; NO judgement and NO write.** — owner RECORD.
-order: BOB #14's item 5 (8.contradiction), after the claim and attribution rows it follows; the pairing read first (SCHEDULER, 2026-09-19)
-milestone: M9
-interface: I3 (an IC minted with `node tools/mintid.mjs IC`)
-design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §2 (pairing is the plane's), §4 (the keys K1–K4), §6 (visibility, bounds, the empty-level statement) and §9 item 1, beneath `BIO_Case_Making_v0_1.md` §CONTRADICTION.
-depends-on: none in code — CHECK AT THE CODE at spawn.
-scope: §4's four keys, viewer-gated (§7.9, Membership §7 item 7.14), bounded PER KEY with `limit`/`truncated`, §6's empty-level statement (four distinct facts, never a bare empty list), and a count of pairs NOT formed because a date or doctype was undetermined.
-accepts-when: through the op, each key's pair count on a fixture whose count is exact; the empty-level statement distinguishes its four facts; an unseen project's material forms no pair. How a liar passes it: a key that silently widens its join finds more pairs, so each key's join is pinned by an exact-count fixture. NEGATIVE CONTROL: widen one key's join, and its pinned count fails by name. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
-added: 2026-09-19 · SCHEDULER (BOB #16 inbox "CONTRADICTION'S IDENTIFY IS DESIGNED", item 1).
-
 ### M0-71 · queued — **CONTRADICTION'S IDENTIFY, 2 of 3: THE FIXTURE AND THE FIRST MEASUREMENT, BEFORE ANYTHING A MEMBER SEES — §7's corpus, the false-conflict rate and recall, and the THRESHOLD recorded.** A candidate judgement is measured OFF-RECORD (no table write). — owner M0 / VERIFY.
 order: the measurement IDENTIFY's judgement must pass, BEFORE anything a member sees; after REC-146 (SCHEDULER, 2026-09-19)
 milestone: M0 (VERIFY; the acceptance test of item 3 is this item's over-strictness arm)
