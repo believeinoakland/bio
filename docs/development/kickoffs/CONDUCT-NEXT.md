@@ -1,104 +1,127 @@
-# CONDUCT-NEXT — the resume prompt for the next CONDUCT, in the OTHER Claude Code account
+# CONDUCT-NEXT — the resume prompt for the next CONDUCT, in THIS Claude Code account
 
-> **WRITTEN BY CONDUCT #6, 2026-09-19, at Bob's STAND-DOWN** (relayed by BOB #16): *"at 91% of weekly usage, we should
-> start spinning this series of lanes down … development will stop entirely in this account and transition to the other
-> CC account."* There is NO CONDUCT #7 in this account. **Every lane in this account is stopped; nothing here is running.**
-> Verify all of it yourself before believing this file. If anything disagrees, the tree is right.
->
-> ```
-> git fetch origin && git show origin/main:docs/development/QUEUE.md | grep -E '^### [A-Za-z0-9-]+ · running'
-> node tools/plancheck.mjs                  # expect 0 fail
-> node tools/ledger.mjs invariants          # expect 0 armed FAIL (P1–P5 are ARMED since LED-6)
-> node tools/status.mjs --check             # expect 0 drift
-> ```
->
-> **Nothing of mine is alive to archive**: 0 subagents (`ListAgents`), 0 crons (`CronList`), verified at stand-down.
-> **Arm your own self-wake** in your account (kickoff "Opening", step 3) — nothing carries across accounts.
+> **WRITTEN BY CONDUCT #7, 2026-09-19, WHILE BLOCKED — NOT at a stand-down.** This session is alive and under
+> 60% context. It is written because 21 commits exist ONLY on this disk and the estate turned over around the
+> stall (SCHEDULER #2 replaced, BOB #17 refreshed at 60%). **THIS FILE IS NOT ON `origin/main`** — it cannot be
+> pushed either. If you are reading it from the remote, someone else landed it and it is older than the tree.
+> Verify everything below yourself. If anything disagrees, the tree is right.
 
-**Read `CLAUDE.md`, then `kickoffs/CONDUCT.md` (21–23 KB, read it whole; a new section "Integration mechanics, measured by
-CONDUCT #6" holds this session's durable lessons), then `kickoffs/SCHEDULER.md`, then this.**
+## 0. THE BLOCKER — read this before planning anything
 
-## 0. THE STATE OF THE PLAN (measured on `origin/main` at stand-down)
+**`git push` is refused in CONDUCT #7's session** by the Claude Code auto-mode classifier, reason
+`[Data Exfiltration]`. It is the HARNESS's gate, not the repo's: `.claude/settings.json` denies only
+`--force`/`-f`/`--force-with-lease`, and `CLAUDE.md` §4 records Bob's ruling that pushing is not gated.
 
-- **LED-6 IS DONE** (SCHEDULER, `c25cac55`): `QUEUE.md` is the CACHE (≤ 8 rows), `BACKLOG.md` holds the rest in order,
-  P1–P5 are armed. **You flip only rows in `QUEUE.md`**; SCHEDULER (if one runs in your account) archives and refills. If no
-  SCHEDULER runs, `node tools/ledger.mjs archive <ID>` + `node tools/ledger.mjs refill` are the acts it would perform.
-- **Rows cut to their fields** name their verbatim text in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` — put that block
-  in the brief of any such row.
-- **Cache at stand-down:** `REC-152 · running` (**WRONG — it LANDED**, §1; SCHEDULER stood down before my report reached it:
-  close it with its sha), `REC-151 · running` (**TRUE in substance: WIP on its branch**, §2), then `queued` and runnable:
-  UI-67, UI-72, LED-7, REC-135, MK-3, REC-146.
-- **Pacing rule (BOB #16, provisional, Bob never ruled it separately):** spawn nothing once the weekly window reads ≥ 93%.
-  Your account has its own window — measure it.
-- **Interfaces:** I3 **43.0.0** (IC-165). I resolved IC-157 → IC-165 tonight, each on the base as read at its landing.
+**What is established, and it is less than it sounds:**
+- NOT command-shape. Two acts differing in destination AND privilege were refused identically:
+  `git push origin HEAD:main` from a detached worktree, and a plain `git push origin <branch>` writing
+  nothing to `main`. A shape-sensitive classifier would have split them.
+- NOT per-session-static. **BOB #17 measured DIST #2 pushing, then failing, MID-SESSION.** That refutes the
+  per-session reading CONDUCT #7 published earlier — it is corrected here because it was wrong.
+- It is a CLASS across three lanes (BOB-NEXT item 1): CONDUCT cannot push at all; DIST could, then could not,
+  and was also refused `wrangler deploy --dry-run`.
 
-## 1. WHAT I LANDED (all on `origin/main`; shas are the LANDING MERGES)
+**Do not ask a peer to push for you.** BOB, SCHEDULER and FLEET could all push in the same window. Running the
+command your own gate refused, through someone else, routes around a permission decision that is Sparky's.
+CONDUCT #7 refused this repeatedly and BOB confirmed it was right. Route it to Sparky and keep working.
 
-| item | merge | IC → I3 | what |
-| --- | --- | --- | --- |
-| REC-140 | `61ceb109` | IC-157 → 38.0.0 | op=ratify refuses project bundles; owner signer, joined deliverer |
-| REC-143 (P0) | `4a32c72f` | — | #migrate adds its columns before the schema; 0.58.0 stores boot |
-| REC-142 | `3203139b` | IC-159 → 38.1.0 | + BOB's `bob16-verif` (VERIFICATION cut) |
-| D-430 | `cca00cff` | — | plan checkers read cache ∪ backlog |
-| REC-145 | `c02d7f91` | IC-162 → 39.0.0 | DEC-63 amended: an inquiry run consults no project |
-| D-431 | `cf089297` | IC-161 → 40.0.0 | op=ratify publishes nothing outside a ratified case |
-| REC-141 | `11aa7b13` | IC-158 → 41.0.0 | the plane mints OPAQUE project ids |
-| UI-66 | `48fb16e5` | — | lands WITH REC-141 (22 superseded paths declared) |
-| REC-144 | `071e34dc` | IC-160 → 41.1.0 | op=projection carries no_project_conclusion |
-| M0-65 | `5a6d5913` | — | battery line names the EXCLUDED untallied suites |
-| (meeting) | `ccb0be14` | — | D-431/REC-144 fixtures corrected where they met REC-141 |
-| M0-73 | `538fbcb5` | — | owed.mjs via pipelineRows; mintid reads BACKLOG |
-| REC-153 | `2b014a84` | IC-163 → 42.0.0 | aiRunOpen checks the context kind; M-68 settled at 0 |
-| **REC-152** | **`f979ee31`** (origin `41cb8c37`) | **IC-165 → 43.0.0** | tick/close by the run's principal only |
+## 1. REC-151 — FINISHED AND GATED, NOT LANDED. One command away.
 
-**DIST**: 0.65.0 is live and `latest` (REC-145, D-431, REC-141+UI-66, REC-144, REC-142). **REC-153 and REC-152 are NOT in
-any release** — DIST planned to cut REC-153 (with REC-152 if landed by 09:53); REC-152 landed after DIST stood down, and my
-message could not be delivered. **Both are authority closings owed to the next cut.** migrate-released has a WITHDRAWN set:
-a new release goes in RELEASES only.
+Branch `worktree-agent-a59a4cdfa1b3d4dd3`, in worktree `.claude/worktrees/agent-a59a4cdfa1b3d4dd3`
+(it has all three `node_modules` installed — do NOT remove it; re-installing costs ~644 MB on a tight disk).
 
-## 2. OWED ACTS — each a row or a verbatim handoff, nothing only in prose elsewhere
+**FINAL GATE, all four instruments, exit statuses read UNPIPED, on `bfad3deb`:**
+- battery **261/261 suites green · 15959 assertions passing · EXCLUDES 2 untallied suite(s) · 538.1s ·
+  run 28457.eaec20**, 0 failures, provenance 264/264
+- `coverage.mjs --strict` exit 0, REGISTER FLOOR exactly at its keys (arms 1505/1505, classified 252/252,
+  corpus 253/253, run 215/215), provenance 269/269
+- `civicos-ui/test/run.mjs` exit 0, all harnesses green
+- `plancheck --local` 0 fail, 4 warn. **Bare `plancheck`'s only failure is `UNPUSHED` — that is the block.**
 
-1. **Close REC-152** in the cache with `f979ee31` (it reads `running`).
-2. **REC-151 — WIP, pushed, NOT integrated:** `worktree-agent-a59a4cdfa1b3d4dd3` @ `b69d7b26`. Its CLAIMS block carries a
-   `WIP (stood down 2026-09-19):` line with exactly where it stopped. Built: one `Store#mintOpaqueId` (CSPRNG, unique),
-   CASE/DRAFT/RVG/TASK/PROJ minted through it; `op=allocid` refuses gated prefixes (C-59.5 `ALLOCID_PREFIX_GATED`);
-   IC-164 (proposed on 42.0.0 → **re-base at landing: 43.0.0 → 44.0.0**); D-432; M-69 (legacy non-PROJ project ids: 0 on
-   biosmoke7 and civicos). Tests: `opaque-ids.test` 35/0, controls as declared. **Last battery 259/260** — the red was
-   `strandedwork`'s plancheck arm on an unpushed branch, NOT re-run. **To finish:** merge `origin/main` into it, plancheck
-   `--local` then bare, full battery, UI harness, write `released:`, integrate.
-3. **Two items for the plan** (SCHEDULER never received them): D-432 (an opaque id can be re-issued after a whole-store purge;
-   fix: a purge-exempt ledger of minted ids) and `caseproduction.control.mjs` arms (C) and (H) crashing inside the fixture on
-   the old sources too, so they measure nothing.
-4. **One decision for BOB:** REC-151 classified `TASK` as a gated prefix (the bullet names CASE/DRAFT/RVG/PROJ only);
-   reversing is one list entry and one mint line.
-5. **For DIST:** cut REC-153 + REC-152 (authority); REC-141+UI-66 ship together (already in 0.65.0).
+Every merge of `main` since has been classified DOCS-ONLY and re-gated with `plancheck --local` only, per the
+convergence rule in `kickoffs/CONDUCT.md`. **If any later merge touches a code path, the full set re-runs.**
 
-## 3. EVERY REMOTE BRANCH HOLDING COMMITS `main` DOES NOT HAVE (measured `git rev-list --count origin/main..<b>`)
+**What it carries:** `Store#mintOpaqueId`, the one CSPRNG minter; CASE/DRAFT/RVG/TASK/PROJ all mint through it;
+`op=allocid` refuses every gated prefix (`ALLOCID_PREFIX_GATED`, C-59.5). **IC-164 RESOLVED as MAJOR, I3
+43.0.0 → 44.0.0** — re-based at resolution because IC-165 landed under its proposal. BOB #17 ruled at
+`63926201` that `TASK` STAYS GATED (the set is the PREDICATE, not the four-name list); IC-164's resolution was
+corrected at the source to say so. An AUTHORITY/DISCLOSURE closing.
 
-A count > 0 means commits not on main; it does NOT prove the CONTENT is absent (a rebased or squashed landing reads the same).
-Check by content before disposing of any. Every other remote branch is an ancestor of `main`.
+**TO LAND IT:** merge `origin/main` (never rebase — this branch is eighteen merges deep), re-gate per the
+classification rule, `git push origin HEAD:main`, verify from the REMOTE. **THEN, in order:**
+1. `SendMessage` SCHEDULER the task id and the merge sha — **D-432 goes in the SAME commit that closes REC-151**
+   (SCHEDULER #2's finding: naming a `D-` id in prose before its DEBT row exists fails `mintid.test`'s
+   prose-floor arm, so it cannot be placed earlier).
+2. Write `released:` on REC-151's CLAIMS block. **CONDUCT #7 deliberately did NOT write it** — the paths are
+   still CLAIMED and the block carries an `INTEGRATION HELD` line instead, because the item has not landed and
+   `released:` would claim more than the record supports.
+3. `SendMessage` DIST — REC-151 is a third authority/disclosure closing and triggers the next cut (0.67.0).
+   DIST cut 0.66.0 without it, deliberately and correctly.
+4. PRUNE-ON-MERGE only AFTER the push is verified.
 
-| branch | tip | commits ahead | last commit |
-| --- | --- | --- | --- |
-| `bob-audit` | `255693c8` | 1 | 2026-09-10 |
-| `m041-instrument-census` | `20ddfc77` | 12 | 2026-09-15 |
-| `ui-65-conclude-surface` | `c97d8c6b` | 2 | 2026-09-18 |
-| `worktree-agent-a249f66820def3efd` | `c2e1747d` | 4 | 2026-09-18 |
-| `worktree-agent-a59a4cdfa1b3d4dd3` | `b69d7b26` | 13 | 2026-09-19 |
-| `worktree-agent-a61e489de171ae6c5` | `9e24ef6e` | 1 | 2026-08-09 |
-| `worktree-agent-a6de3e82fcfd8bd2a` | `ef28580b` | 5 | 2026-09-18 |
-| `worktree-agent-a9e7e017d06799858` | `9706d19e` | 2 | 2026-08-09 |
-| `worktree-agent-aa383f4f0259d59f2` | `62d79afd` | 1 | 2026-09-17 |
-| `worktree-agent-aafee89563a3f2d42` | `484ed359` | 3 | 2026-08-09 |
+## 2. WHAT EXISTS ONLY ON THIS DISK — re-measure, never quote
 
-Known: `worktree-agent-a59a4cdfa1b3d4dd3` is REC-151's WIP (§2). `ui-65-conclude-surface` is UI-65's SUPERSEDED first branch
-(CONDUCT #5: disposable). The rest predate this session and were not investigated by me.
+At `86db75f9`, 2026-09-19 ~17:30Z: `git rev-list HEAD --not origin/main b69d7b26` = **21 commits, 4 non-merge**.
+**This number GROWS while the block holds — re-measure it, do not quote this line.** (BOB #17 landed a stale
+"3 commits" in a handoff and it grew 7x before anyone noticed; that is D-353's own defect in the wild.)
 
-## 4. RECEIPTS AGAINST MYSELF (the durable lessons are in `kickoffs/CONDUCT.md`; these are the incidents)
+The four with original content: `4917cacf` REGISTER_FLOOR moved to its own print · `1bf2e339` the DECIDED
+staleness that reddened `strandedwork`, fixed at its cause, plus the convergence law · `bfad3deb` that section
+cut back under the 24 KiB reading budget · `6d8620da` the final gate figures on the claim.
 
-- Chained `merge; …; add -A; commit` committed conflict markers once (pre-push refused it). Same as CONDUCT #5's receipt.
-- A merge commit I pushed is mislabelled "DECIDED regenerated after merging origin/main" (`c5d3788a`) — it is the merge that
-  resolved the Membership doc; the subject is wrong, the content right.
-- Merged UI-66's branch (on REC-141's first build) without declaring the superseded paths; mergecarry caught it before push.
-- A weekly-burn figure sent to BOB was wrong (6 pts/4 h; it was 10 pts/3.3 h), corrected in the same minute.
-- I asserted a probe was not in the battery before checking; checked it the next turn (it was not).
+**The reconstruction cost is the SEVENTEEN MERGE COMMITS, not the four.** `main` has moved eighteen times under
+this integration; each merge carries a resolution, including the Membership v2 Status splice and the D-428 drop.
+REC-151's own substance is safe on origin at `b69d7b26` — this is a THROUGHPUT blocker, not data loss.
+
+## 3. THE NINE BRANCHES — JUDGED. Three hold work `main` lacks; do not delete them.
+
+Judged by CONTENT (grep the symbol the item added on `origin/main`), never by commit count — `git cherry` reads
+a rebased or squashed landing identically to a lost one.
+
+- **`worktree-agent-aafee89563a3f2d42`** (`484ed359`) — **D-270**, OPEN. `C-39.2`/`C-39.3` appear ZERO times in
+  main's `bio-checks.mjs`. NOW PLACED FIRST in the backlog.
+- **`worktree-agent-a61e489de171ae6c5`** (`9e24ef6e`) — **D-254**, OPEN. Placed third.
+- **`worktree-agent-a9e7e017d06799858`** (`9706d19e`) — **UI-43**, and `ledger.mjs find UI-43` returns NOTHING
+  anywhere. A branch with no row. BOB's question, not a plan item. **Leave it un-deleted and unexplained.**
+
+**DISPOSABLE** (content verified on main): `bob-audit`; `m041-instrument-census` (**12 commits, every one already
+upstream** — the proof that count misleads); `ui-65-conclude-surface`; `a249f66820def3efd` (REC-100/IC-130);
+`a6de3e82fcfd8bd2a` (MK-4 · done, read as unapplied only because it was rebased); `aa383f4f0259d59f2` (M0-57).
+None deleted: PRUNE-ON-MERGE permits deletion only after a verified push.
+
+**SCHEDULER #2's correction, which governs the brief:** D-270 and D-254 are **EVIDENCE, NOT MERGEABLE** — both
+branches are ~1573 commits behind main. Read the suite, the control and the MEASUREMENTS entry, then re-derive
+on current main. A worker briefed expecting `git merge` will burn a slot discovering otherwise.
+
+## 4. WHAT THE D-270 / D-136 BRIEF MUST CARRY — pointers, the rows are the source
+
+Do not restate these from here; **quote the rows**, which are their single source. Backlog order: D-270, D-136,
+M0-78, D-254, D-116, LED-8, LED-9, MK-5.
+- **D-270 first, and the sequencing is counterintuitive:** D-136 is the authority defect and would normally lead,
+  but Membership v2 §4.7 says *"Until it lands, the plane must not tell a member that this absence is a
+  decision"* — which IS D-270's sentence (c). **D-270 carries a required SEQUENCE CHECK: report the intersection
+  of its five ops with D-136's three to SCHEDULER BEFORE rewording anything.**
+- **IC-55 is RULED THREE sentences, not the two its branch proposed.** Re-read its base and re-classify.
+- **D-136 refuses to be split — ONE landing.** Half of it makes things worse than not starting.
+
+## 5. RECEIPTS AGAINST MYSELF
+
+- **I chained `merge; …; add -A; commit` after a merge printed `Automatic merge failed`** — the exact form
+  `kickoffs/CONDUCT.md` forbids. It was safe ONLY by luck: `decided.mjs` rewrote `docs/DECIDED.md`, the sole
+  conflicted file, before `add -A` staged the markers. Had the conflict been in `DEBT.md`, I would have committed
+  markers and `plancheck --local` would still have read 0 fail. Every merge after it was done as discrete steps.
+- **I accepted a red's predicted cause instead of reading its assertion.** The battery went 260/261 on
+  `strandedwork.test.mjs`' `plancheck --local exits 0` — the arm the previous handoff said would be red for an
+  unpushed branch. It was not: `docs/DECIDED.md` was STALE. Same suite, same assertion, different cause.
+- **I published "the discriminator is per-session"** from one lane's evidence. BOB's DIST datum refutes it.
+- **I stated a context figure ("~33%") without measuring it**, the defect BOB recorded for two other lanes.
+- **I called D-270/D-254 "cheap integrate-and-gate"** without measuring the 1573-commit distance.
+- **I read a two-way `git diff --name-only HEAD..origin/main` as "main changed these files"** — it was showing my
+  own REC-151 changes. Use `A...B` for what B's commits changed.
+
+## 6. STANDING STATE
+
+Self-wake cron `7,27,47 * * * *` (id `35a761f0`) + one-shot renewal `b2f9e3a4` on 2026-09-24. **Session crons die
+with the session — arm your own; nothing carries across.** Cache 8 rows, `REC-151 · running` is CONDUCT #7's and
+TRUE in substance. Zero workers spawned all session: a worker is a SUBAGENT of this session and would inherit the
+push gate, so its branch would strand on this disk. That is why slots sat empty, not idleness.
