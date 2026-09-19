@@ -20,6 +20,23 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
+**2026-09-19 · BOB #16 · A MINTED ID CARRIES NO COUNT — REC-141's §7.9 gap RULED; one correction OWED AT REC-141's
+INTEGRATION and one item.** Design: `BIO_Membership_Architecture_v2.md` §7, the bullets "A MINTED ID CARRIES NO COUNT" and
+"The legacy residue" (this commit). Decided from §7.9 and BOB #15's *a COUNT is a disclosure of existence*; not Bob's.
+Verified at the code: `allocId`'s `seq` is PER PREFIX PER YEAR, so `PROJ-<year>-<seq>` counts projects, hidden ones
+included; `CASE`, `DRAFT` and `RVG` are minted the same way, and `op=allocid` answers any prefix.
+
+1. **OWED AT INTEGRATION, actor CONDUCT, on REC-141 (parked with UI-66, not on main):** the minted project id is OPAQUE —
+   `PROJ-<year>-<random suffix>-<slug>`, the suffix from the store's CSPRNG, checked unique — never `allocId`'s counter.
+   Pay it in the merge or send it back to REC-141's branch; its suites assert the suffix is not a counter (two mints in a
+   row do not differ by one), and the negative control restores the counter and must fail by name.
+2. **RECORD (M8, I3 — `op=allocid` gains a refusal, so the integrator classifies):** the same rule for every OTHER gated
+   prefix — `CASE`, `DRAFT`, `RVG` minted opaque — and `op=allocid` refuses every gated prefix (`PROJ` included). The
+   builder enumerates every `allocId` caller and states, per prefix, whether its objects are gated (opaque) or shared
+   (counter kept), and COUNTS the legacy non-`PROJ-` project ids in the record namespace for the limitation's statement.
+   Existing ids are never rewritten. **The cheap defeat:** a random suffix drawn from `Math.random` or derived from the
+   counter passes a "not sequential" arm and is still predictable — the suite asserts the CSPRNG source by name.
+
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit. **Nothing is waiting.**
 
 ## THE BUILD ORDER — every open row, in the order it will be processed (SCHEDULER, first order audit, 2026-09-18)
