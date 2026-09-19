@@ -50,6 +50,16 @@ scope: diagnose the fixture-level throw; repair (C) and (H) so each arms and fai
 accepts-when: (C) and (H) run ALONE each fail at their declared named assertion, `mustNotFail` green; a fixture-level throw in ANY arm is reported as a DEAD ARM, not passed; restores verified by sha256 AND `cmp`. How a liar passes it: deleting or exempting the two arms, so the registered-arm count is asserted too. NEGATIVE CONTROL: break a healthy arm's fixture the same way, and the census names it.
 added: 2026-09-19 · SCHEDULER #2 (CONDUCT #7's finding, verified at the code; `node tools/mintid.mjs M0`).
 
+### D-414 · queued — **THE SEGMENTER FIVE BOUNDS WALKS SHARE CANNOT SEE A GENERATOR METHOD, so a generator's body is judged as part of the method above it** — `*eachImage`'s loop and its per-bundle `readImage` were credited to `danglingRefs`, which then read as doing work it does not do. — owner M0.
+order: FOURTH, immediately after M0-78, because it is the SAME DOCTRINE and should be taken with it: an instrument answering about a thing it cannot see. M0-78 is arms that do not arm and a census blind to it; D-355 is two drivers red on a green `main`; this is a walk mis-attributing a method. One worker holding all three fixes the class, not three symptoms (SCHEDULER #2, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md`'s rule that an instrument reports what it can see — read with CLAUDE.md §5, an equality that costs nothing to produce is not evidence.
+depends-on: none. **Take it with M0-78, and hand D-355 (still in DEBT) to the same worker.**
+scope: add `\*?` to the signature regex in each of the FIVE copies (`airuns`, `bounds`, `derivation-bounds`, `meaning-bounds`, `versionchain` — `grep 'const sig = /'`), then **re-measure every roster those walks pin**: the census and class counts may move by the generator's own verdict, and that movement is the finding, not a regression. M0-63 measured ONE generator in `store.mjs` today; the regex must not assume one.
+accepts-when: `*eachImage` is its own segment in all five walks and `danglingRefs` is judged on its own body alone; every roster the walks pin is re-printed with its movement stated. How a liar passes it: fixing one copy, so the arm asserts all five regexes are identical. NEGATIVE CONTROL: restore the old regex in one copy, and that walk's roster moves and fails by name.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
+
 ### D-254 · queued — **REC-76's VERDICT READER EXISTS TWICE and only a drift pin makes that safe** — `civicos-ui/check-refusal-codes.mjs` has no exports and ends in a top-level `process.exit`, so `bio-plane/test/verdict-reader.mjs` hand-carries its six functions byte-identically. — owner VERIFY.
 order: a correction to landed work, so above features; below D-270 and M0-78 because this duplicate is FALSIFIABLE today — `readerDrift()` extracts from both files and both suites assert it — a measured debt, not an unmeasured risk (SCHEDULER #2, 2026-09-19)
 milestone: M0 — CORRECTED from the DEBT row's M8: both files it changes are TEST ESTATE, which is what M0 is, and that is why `VERIFICATION.md` is its authority.
@@ -59,6 +69,16 @@ depends-on: none. **Sequence with D-270:** its branch also edits `civicos-ui/che
 scope: the row names the whole fix — **one import** replacing the six function declarations in `check-refusal-codes.mjs`, after which `readerDrift()` becomes an import and `verdict-reader.mjs` is the single source. `origin/worktree-agent-a61e489de171ae6c5` (`9e24ef6e`) holds a built form 1572 commits behind main — read it, do not merge it blind.
 accepts-when: `check-refusal-codes.mjs` imports the reader and still runs as a script, its exit status read UNPIPED; `readerDrift()`'s extraction stays COUNTED and FLOORED, so two empty extractions cannot agree for free; both suites green. How a liar passes it: deleting the drift pin with the duplicate, so the pin's own arm must survive. NEGATIVE CONTROL: D-240's arm (3) — one character inside `verdictKind` — still fails both suites NAMING the function.
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found stranded by CONDUCT #7; keeps its `D-` id).
+
+### D-339 · queued — **`CAPTURE-SCALING.md` §Job one AND THE PLANE STATE OPPOSITE REUSE RULES, AND THE DOCUMENT READS AS THE AUTHORITY** — the design gates reuse on `stable_since` older than the window; the built `reuseDecision` gates on RECENCY OF FETCH (24 h), because the stability gate measured live as reusing nothing at all. — owner CAPTURE.
+order: after D-254, with the corrections to landed work and above the features: a builder designing against §Job one designs against a rule THE PLANE REFUSED, which is the design claiming more than it can support — CLAUDE.md §2's class, pointed at a builder rather than a member. Cheap too: prose only (SCHEDULER #2, 2026-09-19)
+milestone: M7
+interface: none — prose in a design document; no code moves
+design: `docs/architecture/CAPTURE-SCALING.md` §Job one, which is the text being corrected, read against `reuseDecision` in the plane, which is the authority the correction adopts.
+depends-on: none. The built rule is already right and measured; nothing is being decided here.
+scope: fold the RECENCY rule and its live measurement into §Job one so the document states what the plane does, and mark the two constants (24 h, `minDocuments: 2`) as **CHOSEN, not measured**, beside the two open questions that still ask for them — the row's own words. The front matter moves in the same commit if the section's stated completeness changes (`CORPUS-STANDARD.md`).
+accepts-when: §Job one describes the recency gate and carries the live measurement that refused the stability gate; both constants are labelled CHOSEN; no code changes in the same commit. How a liar passes it: deleting the stale rule instead of correcting it, losing why it was refused — so the superseded rule stays with its dated reason. NEGATIVE CONTROL: none applies; this is prose, and `corpuscheck` is its arm.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
 
 ### D-116 · queued — **NOTHING READS A FLEET MEMBER'S VERSION BACK THROUGH ITS BINDING.** The installer verifies the PLANE (`verifyUpdate` reads `op=bootstrap`) and each member is uploaded with a version and never asked what it answers — so the plane can verify itself current while a member still serves the previous build, invisibly to both. — owner DIST.
 order: after D-254, above features: a group can run a stale member with nothing reporting it, so the install and the deploy both claim more than they can support — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19)
