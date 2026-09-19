@@ -14639,3 +14639,23 @@ is to point the source read at `#refEdgeSevered`.
 **1454 / 247 / 248, run 210**; UI harness exit **0** (54 PASS). `conclude-project-arm.test.mjs` (REC-142's, arrived at
 this merge) CORRECTED for minted ids and its control re-run AS DECLARED with identical figures. I3 on this tree reads
 **38.1.0** (IC-159), so IC-158's proposal is **38.1.0 -> 39.0.0** — read the base at resolution.
+
+## CLAIM 2026-09-19 UI (UI-66 — the Add surface and the fork form stop asking a member for a project id; the id the plane returns is the one shown)
+
+Worker spawned by CONDUCT #6, isolated worktree `agent-a50d25200c5cb65b6`, branch `worktree-agent-a50d25200c5cb65b6`,
+built ON REC-141's branch (`worktree-agent-a12cdccbace704eb6` @ `817a8f85`, merged in at `328c2c45`) so the two land
+together. Design: Membership v2 §7, the bullet *"HOW the plane mints a project id"*, and REC-141's DELEGATION above.
+Paths, by SITE in `civicos-ui/app.html`:
+
+- UI (own): `mdFor` (the `id:` line becomes optional — omitted only when no id is given); `addGo`'s allocation and
+  promote for the `project` type, and its no-findings refusal arm; `ROSTER_ACTS.projectfork`'s fields and
+  `doRosterAct`'s receipt; `actRefusalHtml` (renders a refusal's canned `translation` first, DEC-49). NOT touched: every
+  other `ROSTER_ACTS` entry, `doProposalAdopt` (its kind is `inquiry` only — `PROP_ADOPT_KINDS`), any DEC-49 REGION.
+- Tests: a new `civicos-ui/test/project-id-surface.test.mjs` (drives the REAL plane in miniflare) and its control
+  driver; `civicos-ui/test/project-workspace.test.mjs` §6's fork arm CORRECTED (it drove a typed `newId`);
+  `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` only from my own print on a committed tree.
+- Docs: `docs/development/CIVICOS_UI_STATE.md` (prepend), `BIO_Membership_Architecture_v2.md` front matter and §7's
+  "surface half" line, `construct-status.json` if a construct's state moves, REC-141's DELEGATION's discharge (in its
+  own block), this block.
+
+NOT `QUEUE.md`, NOT `bio-plane/src/**` (REC-141's), NOT `release/`, NOT `newgroup/`, NOT `kickoffs/CONDUCT.md`.
