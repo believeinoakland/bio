@@ -2374,7 +2374,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1302`
 - WHAT BOB #17 DECIDED (each folded into its home document; `decided.mjs` finds them) - **TASK stays gated** — the "a minted id carries no count" set is the PREDICATE ("every prefix whose objects a read withholds from some caller"), not the four-name list.  
-  `docs/development/kickoffs/BOB-NEXT.md:72`
+  `docs/development/kickoffs/BOB-NEXT.md:71`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:78`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  

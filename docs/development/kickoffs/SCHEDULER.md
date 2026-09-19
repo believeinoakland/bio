@@ -124,6 +124,20 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
   session can then CHECK the order instead of inheriting it, which is the same move as citing a section rather than a
   line.
 
+- **RE-MEASURING A ROW: MEASURE BEHAVIOUR, NOT TEXT.** A `grep` count over a file that carries commentary answers a
+  question about TEXT. `bio-plane/checks/bio-checks.mjs` quotes the defects it fixes, BY DESIGN, so its comments are
+  archaeology that reads exactly like live advice. On 2026-09-19 D-203 was re-measured as "5 strings → 2 surviving" and
+  routed to BOB for a ruling it did not need: stripping block and line comments first gives **0 live occurrences**, and
+  the row was closable in fact. A dropped count IS evidence something changed — it is not evidence of what SURVIVED.
+  Strip comments (or read each hit at its site) before a count becomes a disposition.
+
+- **A LEDGER REBASE CONFLICT IS THE `QUEUE.md` TRAP, IN EVERY LEDGER — AND CHECK THE ROW LENGTHS AFTERWARDS.** Carry
+  upstream's hunks onto yours and never take one side whole; `docs/DECIDED.md` is regenerated, never merged. This bit
+  `DEBT.md` on 2026-09-19: one side had rewritten two dispositions (D-182 458 → 946 chars, D-199 4044 → 4784) while the
+  other had only archived a third row, so taking the archiving side whole would have reverted both rewrites.
+  **A reverted row looks exactly like a row you kept** — the id is present, the state is plausible, and nothing fails.
+  After any ledger carry, compare the touched rows' LENGTHS against the remote, not just their presence.
+
 ## Checks before every push
 
 `node tools/plancheck.mjs` (0 fail), `node tools/readbudget.mjs`, and — once LED-6 lands — its five pipeline invariants.
