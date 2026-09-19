@@ -11683,10 +11683,35 @@ export const PROJECT_AUTHORITY_CHECKS = {
 export const CASE_AUTHORITY_CHECKS = {
   CASE_SIGNER_NOT_AN_OWNER: {
     check: 'C-57.1',
-    where: 'src/store.mjs ratifyCaseDocument > is-case-signer-owner',
-    translation: 'A case is published in its project\'s name, so it has to be signed by an owner of '
-      + 'that project. The signature on this case belongs to someone who is not one of its owners. '
-      + 'Nothing was committed. Ask an owner of the project to review the case document and sign it.',
+    /* REC-140 (2026-09-18): the region moved into `#caseAuthority`, the ONE helper both ratify
+       paths call — `op=caseratify` for the case document and `op=ratify` for a finding a
+       ratified case pins (Publication rule 2 as BOB #15 applied it to D-429). The TRANSLATION
+       was corrected from "this case" to "a case, and each finding in it" at the same time,
+       because the same code now answers at both acts and the old sentence was false at one. */
+    where: 'src/store.mjs #caseAuthority > is-case-signer-owner',
+    translation: 'A case and each finding in it are published in the project\'s name, so each has to be '
+      + 'signed by an owner of that project. This signature belongs to someone who is not one of its '
+      + 'owners. Nothing was committed. Ask an owner of the project to review it and sign it.',
+  },
+};
+
+/* REC-140 / C-58 — WHAT `op=ratify` MAY PUBLISH AT ALL (BIO_Publication_v0_1.md §3 rule 2,
+ * *"Only findings that are part of a project can be published"*, as BOB #15 applied it to
+ * D-429 on 2026-09-18). A PROJECT's own document is the group's thinking, not a finding: a
+ * project publishes THROUGH ITS CASES (DEC-72), so the project bundle is refused by type,
+ * whoever signs and whoever delivers — its owner included. Measured before this existed
+ * (`test/ratify-authority.test.mjs`): an enrolled administrator with no role in a project,
+ * carrying the signature of a member who was neither its owner nor a participant, PUBLISHED
+ * the project's own document under that member's name. Asked AFTER sight (a caller who
+ * cannot see the project is answered as for a bundle that does not exist, so this refusal is
+ * said only to someone who can already see it) and BEFORE the signature is weighed. */
+export const RATIFY_SCOPE_CHECKS = {
+  RATIFY_PROJECT_BUNDLE: {
+    check: 'C-58.1',
+    where: 'src/index.mjs fetch > is-ratify-project-bundle',
+    translation: 'A project\'s own document is not published. A project publishes through its cases: '
+      + 'publish a case from the project, have an owner sign the case document, and then ratify the '
+      + 'findings in it. Nothing was published.',
   },
 };
 
