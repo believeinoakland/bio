@@ -14260,3 +14260,23 @@ IC-154, D-429.
 REC-138's merge: its `inSight` precedes `#projectAuthority`; `op=caseratify`'s sight is REC-130's standing check at the
 facts read, upstream of both REC-137 refusals, pinned byte for byte in `case-authority.test.mjs` §0 — re-run that suite on
 the merged tree.
+
+## CLAIM 2026-09-18 RECORD (REC-140 — D-429: `op=ratify` REFUSES a project bundle; a finding it ratifies takes case ratification's owner-signer and joined-deliverer rules; a caller who cannot see the project is answered as for one that does not exist)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a761302b28f105764`, branch `worktree-agent-a761302b28f105764`,
+base `ff3a4cea` (= origin/main at spawn, carrying the REC-140 flip). `npm ci` in all three packages, each `node_modules` a
+real directory (4.7 GiB free after). Design: `BIO_Publication_v0_1.md` §3 rule 2 and its 2026-09-18 note (BOB #15);
+Membership v2 §7's case-ratification bullet; IC-154, IC-155. IDs minted with `tools/mintid.mjs`: C-58, IC-157. Paths:
+
+- RECORD (own): `bio-plane/src/index.mjs` (`op=ratify`'s handler only); `bio-plane/src/store.mjs` (`gateFacts`, `publish`,
+  and `ratifyCaseDocument`'s two REC-137 questions moved — not restated — into one helper both ratify paths call);
+  `bio-plane/checks/bio-checks.mjs` (refusal family C-58; C-57.1's `where` and translation).
+- Tests: a new `bio-plane/test/ratify-authority.test.mjs` and its control driver; `case-authority.test.mjs` §7 and its
+  control's anchors; any suite that ratified a project bundle, or a case-pinned finding without an owner's signature —
+  CORRECTED at its site with a dated reason, never exempted. `bio-plane/scripts/coverage.mjs` and
+  `civicos-ui/check-refusal-codes.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-157), `BIO_Publication_v0_1.md` and `BIO_Membership_Architecture_v2.md` front matter
+  and the sections named, `DEBT.md` (D-429's disposition), this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `#projectAuthority`'s or `#inSight`'s bodies (consumed unchanged), NOT `newgroup/`.
