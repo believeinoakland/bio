@@ -48,6 +48,10 @@ const edit = (file, needle, replacement) => {
 };
 
 const CALL = `        no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null,`;
+/* The copy's call spelled out whole, not derived by a `.replace` of the reader's
+   name: that name occurs at two call sites, and m025-arm-anchor-witness reads a
+   `.replace(` literal as an anchor that must occur once in its subject. */
+const CALL_COPY = `        no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOfCopy(row.bundle_id) : null,`;
 const HEAD = "  #noProjectConclusionOf(inquiryId) {\n";
 const BRANCH = `"the inquiry carries no such reading"`;
 
@@ -69,7 +73,7 @@ const ARMS = {
          const copy = reader.replace("#noProjectConclusionOf(inquiryId)", "#noProjectConclusionOfCopy(inquiryId)")
                             .replace(BRANCH, `"no reading of that name is carried by this inquiry"`);
          writeFileSync(STORE, src.slice(0, end + "\n  }\n".length) + "\n" + copy + src.slice(end + "\n  }\n".length), "latin1");
-         edit(STORE, CALL, CALL.replace("this.#noProjectConclusionOf(", "this.#noProjectConclusionOfCopy("));
+         edit(STORE, CALL, CALL_COPY);
        } },
 
   b: { files: [STORE],
