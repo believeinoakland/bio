@@ -111,6 +111,19 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
   (~13 min). Never run a `.control.mjs` while a gate runs (controls edit and commit the tree). `timeout` does not exist
   on macOS. Naming a `D-` id in prose before its DEBT row exists fails `mintid.test`'s prose-floor arm.
 
+- **READ THE SECTION, NOT THE SUMMARY — it decides ORDER, not only scope.** `BOB.md` rule 4 says a design MENTIONED is
+  not a design that COVERS the act; the same rule bites on SEQUENCING, which nobody had written down. Twice on
+  2026-09-19 a reasonable inference about where a row belonged was overturned by the governed section itself.
+  (1) D-254's citation of `VERIFICATION.md` looked missing to `plancheck`'s ROW NAMES NO DESIGN arm and was a
+  MILESTONE error — `rowdesign.mjs` admits a process authority only for the milestone it is admitted for, so read that
+  failure as "check the milestone" before "check the pointer". (2) D-136 looked like it belonged ABOVE D-270 — a
+  forgeable governance vote is an authority defect, and putting it first would even have dissolved the two rows'
+  interaction — until `BIO_Membership_Architecture_v2.md` §4.7's *"Until it lands, the plane must not tell a member
+  that this absence is a decision"* proved D-270 must land FIRST, because that sentence is D-270's own and protects
+  nobody until it exists. **When a row's place rests on a ruling, QUOTE the sentence on its `order:` line** — the next
+  session can then CHECK the order instead of inheriting it, which is the same move as citing a section rather than a
+  line.
+
 ## Checks before every push
 
 `node tools/plancheck.mjs` (0 fail), `node tools/readbudget.mjs`, and — once LED-6 lands — its five pipeline invariants.
