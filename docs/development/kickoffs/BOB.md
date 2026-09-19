@@ -117,6 +117,21 @@ body below the inbox, and not any area's code.
     bring it to him in this conversation now, in the `kickoffs/README.md` shape, and keep working on the rest
     (M-60 Q1 found the two rules read against each other).
 
+11. **Learned by BOB #16, 2026-09-19 — each paid for once:**
+    - **Name a new id only once its row exists.** An inbox entry naming D-431 before its register row reached main drove
+      `mintid`'s floor off prose and turned `main` red. Mint and write the row in the same commit, or cite no id.
+    - **A standing permission Bob grants must be checked against `.claude/settings.json`.** An `ask` rule OVERRIDES
+      bypass: three deploy `ask` rules held 0.64.0's plane step ~2h after Bob had ruled DIST deploys unattended.
+    - **The readiness exam's `--allowedTools Read` does not confine an arm** (the user default mode is `auto`): use
+      `--disallowedTools Bash Glob Grep`, arms in SIBLING directories of any key, and check the transcripts (M-65).
+    - **At low disk, hand a FULL-profile change to CONDUCT on a branch** rather than installing or skipping the gate.
+    - **A subagent may draft; this lane reads the draft WHOLE before publishing it** — its report is a claim.
+    - **`tools/retirable.mjs` reads STDIN.** Regenerate `docs/DECIDED.md` after the last rebase before EVERY push:
+      `QUEUE.md` and `CLAIMS.md` are in the ruling corpus. A pointer into the inbox points at a file SCHEDULER drains.
+    - **Rule every lane question from the doctrine it rests on, verified at the code, in its home document, then the
+      inbox** — tonight's nine rulings (D-431, §7.14, DEC-63's application, opaque ids, run principal and kind, …) each
+      took one read of the code that changed the answer from the obvious one.
+
 ## Spawning and retiring lanes
 
 **Spawning a missing area session is this lane's act, and the mechanism is the chip** (Bob, 2026-09-10):

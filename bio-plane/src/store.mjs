@@ -316,6 +316,9 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
          runConsultsProjects,
          /* REC-153: the run's context is the kind it says it is — decided in `airun.mjs`, the facts from here. */
          checkRunContextKind } from "./airun.mjs";
+/* REC-152: tick and close are the run's PRINCIPAL's acts — the positional half, decided once in `airun.mjs`.
+   Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
+import { runPrincipalGate } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
    it holds no copy of what a chain may claim, which engine weakens what, or who
@@ -37311,6 +37314,14 @@ export class Store extends DurableObject {
              expires: Store.#aiIso(nowMs + lease), ...Store.#aiRunGateStated(gate) };
   }
 
+  /** REC-152 — CAN THIS VIEWER SEE THIS RUN? `aiRunRead`'s own predicate (D-15's `#bundleGate` over the
+   *  run's context), asked of one run id, so the tick and the close hide exactly what `op=airun` hides. An
+   *  absent stamp fails closed, as it does there. */
+  #aiRunInSight(run, viewer) {
+    const seen = this.#bundleGate("r.context_id", viewer);
+    return !!this.#one(`SELECT 1 AS x FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
+  }
+
   /** op=airuntick. The heartbeat, the work list, and the log — one call.
    *
    *  A tick does four things and the order matters: it appends what the run
@@ -37325,12 +37336,30 @@ export class Store extends DurableObject {
    *  is a fact about the run's state, and a late tick from a straggling
    *  sub-session must not resurrect a run whose log is already closed. */
   aiRunTick({ run, state = null, consume = null, log = null, leaseMs = null, at = null,
-              actor = null, viewer = null } = {}) {
+              actor = null, viewer = null,
+              /* REC-152: the caller's PRINCIPAL, stamped server-side by `index.mjs` in the form the open
+                 stamps `principal_plane` in — never a caller's word. */
+              caller = null } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
     const now = Store.#aiIso(nowMs);
     const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
     if (!row) return { run: run || null, found: false,
       note: "no such run: it either never existed or was purged" };
+    /* REC-152 (Membership v2 §7, "WHO MAY TICK AND CLOSE A RUN", BOB #16) — SIGHT FIRST, THEN POSITION.
+       A caller who cannot see the run's context is answered EXACTLY as for a run that does not exist —
+       the answer two lines up, byte for byte — because a refusal would tell them the run exists (§7.9).
+       One who can see it and is not the run's PRINCIPAL is refused positionally (C-22.12), before the
+       project gate and before anything is written: a tick by anyone else writes acts under a name that
+       did not take them. Sight is `aiRunRead`'s own question (`#aiRunInSight`), so a run `op=airun`
+       hides is a run this door hides. */
+    if (!this.#aiRunInSight(run, viewer)) return { run: run || null, found: false,
+      note: "no such run: it either never existed or was purged" };
+    const notPrincipal = runPrincipalGate({ caller, principal: row.principal_plane });
+    if (notPrincipal)
+      return { run, ticked: false, found: true, status: row.status,
+               code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail,
+               note: "a run is driven by its principal alone. Nothing was appended and no budget was spent" };
     /* PL-18 / DEC-63 — THE SAME GATE, AFTER THE RUN IS FOUND AND BEFORE
        ANYTHING IS WRITTEN. Ordered this way deliberately: an unknown run is
        answered as unknown to everybody, so the gate cannot be used to learn
@@ -37412,7 +37441,9 @@ export class Store extends DurableObject {
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
    *  to the one exit, and a caller who names no bound is refused by C-22.5
    *  rather than having "completed" inferred from its silence. */
-  aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null } = {}) {
+  aiRunClose({ run, bound = null, condition = null, at = null, actor = null, viewer = null,
+               /* REC-152: the caller's PRINCIPAL, stamped server-side — see `aiRunTick`. */
+               caller = null } = {}) {
     const now = at ? Store.#aiIso(Date.parse(at)) : Store.#aiIso(Date.now());
     /* PL-18 / DEC-63 — THE GATE, AND IT IS HERE RATHER THAN IN
        `#aiRunTerminate` FOR A REASON WORTH STATING: that function is the ONE
@@ -37428,8 +37459,21 @@ export class Store extends DurableObject {
        id exists.
 
        A RELAY, not a governed site — see the note at `aiRunOpen`'s gate. */
-    const row = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, run);
+    const row = this.#one(`SELECT context_type, context_id, principal_plane FROM ai_runs WHERE run = ?`, run);
     if (row) {
+      /* REC-152 — SIGHT FIRST, THEN POSITION, as at the tick. Unseen answers `#aiRunTerminate`'s own
+         not-found, byte for byte; seen-but-not-the-principal is refused in this door's own shape. The
+         REAPER does not come through here — it calls `#aiRunTerminate` directly — so a run nobody may
+         close by hand still ends on its lease and bounds, and no member is asked. */
+      if (!this.#aiRunInSight(run, viewer)) return { run, found: false,
+        note: "no such run: it either never existed or was purged" };
+      const notPrincipal = runPrincipalGate({ caller, principal: row.principal_plane });
+      if (notPrincipal)
+        return { run, terminated: false, found: true, ok: false,
+                 code: notPrincipal.code, check: notPrincipal.check,
+                 translation: notPrincipal.translation, detail: notPrincipal.detail,
+                 note: "a run is ended by its principal, or by its own lease and bounds. The run is untouched "
+                     + "and is still running" };
       const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
       if (!gate.permitted)
         /* THE SHAPE IS `#aiRunTerminate`'S OWN — `found` / `terminated`, with
@@ -40866,12 +40910,16 @@ export class Store extends DurableObject {
                                           principalPlane: url.searchParams.get("principal"),
                                           actor: url.searchParams.get("actor"),
                                           viewer: url.searchParams.get("viewer") }),
+        /* REC-152: `caller` is the fifth stamp — the caller's PRINCIPAL, from the QUERY and set AFTER the
+           body's spread, so a `caller` in the body is overwritten rather than believed. */
         airuntick: () => this.aiRunTick({ ...(body || {}),
                                           actor: url.searchParams.get("actor"),
-                                          viewer: url.searchParams.get("viewer") }),
+                                          viewer: url.searchParams.get("viewer"),
+                                          caller: url.searchParams.get("principal") }),
         airunclose: () => this.aiRunClose({ ...(body || {}),
                                             actor: url.searchParams.get("actor"),
-                                            viewer: url.searchParams.get("viewer") }),
+                                            viewer: url.searchParams.get("viewer"),
+                                            caller: url.searchParams.get("principal") }),
         airun: () => this.aiRunRead({ run: url.searchParams.get("run"),
                                       viewer: url.searchParams.get("viewer") }),
         airunlog: () => this.aiRunLog({ run: url.searchParams.get("run"),

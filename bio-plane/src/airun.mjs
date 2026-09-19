@@ -2046,6 +2046,48 @@ export function checkRunContextKind({ contextType = null, contextId = null, foun
     + `something you cannot see answers exactly as something that does not exist (Membership Architecture v2 §7.9)`);
 }
 
+/** REC-152 — WHOSE RUN IS THIS, AS A PRINCIPAL? Membership v2 §7, "WHO MAY TICK AND CLOSE A RUN" (BOB #16,
+ *  2026-09-19): *tick and close are the run's PRINCIPAL's acts — the member (or that member's minted machine
+ *  credential) the plane stamped as `ai_runs.principal_plane` at open.*
+ *
+ *  The control plane stamps a principal in ONE composite form (`index.mjs`, the `principal` stamp):
+ *  `member:<id>` for a session, `<credential principal>/<tokenId>` for an `ai` credential, and
+ *  `class:<cls>` for a token class. A member-kind credential's principal is `member:<id>`, so everything
+ *  before the `/` is the MEMBER the credential acts for — and a member and the credentials minted for her
+ *  are ONE principal, which is the ruling's parenthesis. A member id carries no `/` (`memberAdd`'s shape),
+ *  so the first `/` is the credential's. A principal with NO member behind it — a token class, an
+ *  organisation-kind key (`class:ai/<tokenId>`) — is compared WHOLE: an organisation key acts for the group
+ *  with nobody individual behind it, so two such keys are two principals, not one. Whitespace is nobody. */
+export function runPrincipalOf(principal) {
+  const s = principal == null ? "" : String(principal).trim();
+  if (!s.startsWith("member:")) return s;
+  const i = s.indexOf("/");
+  return i < 0 ? s : s.slice(0, i);
+}
+
+/** REC-152 — MAY THIS CALLER TICK OR CLOSE THIS RUN? Null when the caller IS the run's principal, else the
+ *  POSITIONAL refusal (C-22.12). `caller` is the control plane's STAMP for the account asking and
+ *  `principal` is `ai_runs.principal_plane` as stamped at open — never a field either party sent, because a
+ *  principal a caller can name is not one (§14a).
+ *
+ *  THIS IS THE POSITIONAL HALF ONLY. Sight is asked FIRST, by the store, and a caller who cannot see the
+ *  run's context never reaches this: they are answered as for a run that does not exist (§7.9; REC-138's
+ *  order — sight before position). So the refusal below is said only to somebody who can already see the
+ *  run exists, and it names nobody: not the principal, not the caller.
+ *
+ *  NO ADMINISTRATOR BYPASS — an administrator SEES every project and DIRECTS none (§4), and ending someone
+ *  else's run directs their work. NO EMPTY BYPASS either: a caller the control plane stamped with nothing
+ *  matches nobody, which is the fail-closed direction (a run nobody may drive by hand still ends by its own
+ *  lease and bounds, through the reaper, which asks nobody). */
+export function runPrincipalGate({ caller = null, principal = null } = {}) {
+  const who = runPrincipalOf(caller), owner = runPrincipalOf(principal);
+  if (who && owner && who === owner) return null;
+  return refusal("AI_RUN_NOT_PRINCIPAL",
+    "ticking or closing a run is its principal's act — the member who opened it, or a machine credential "
+    + "that member minted — and this account is not that principal (DEC-24: a run's work is attributed to "
+    + "its principal). A run nobody drives ends on its own lease and bounds");
+}
+
 /** WHICH BOUND STOPPED THIS RUN — the pure decision, so the ordinary close and
  *  the reaper compute it through ONE function instead of two that agree.
  *

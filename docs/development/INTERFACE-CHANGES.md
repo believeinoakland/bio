@@ -12054,4 +12054,64 @@ replaced — `ratify-authority.test.mjs` §0's precedent); `case-authority.test.
 `CASE-2026-0002`); `reviewcopy.test.mjs` (a dry-run arm read the next case as the counter's `0002`).
 **No I5 IC:** no table or column moves.
 
+
+
 **RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #7 as MAJOR — I3 43.0.0 → 44.0.0.** Base RE-READ at resolution off the integration tree: 43.0.0. The row proposed 42.0.0 → 43.0.0 and IC-165 landed underneath it, so the proposed base was stale — read at RESOLUTION, by this file's own rule. Breaking by IC-137: a call that SUCCEEDED is now refused — `op=allocid` with `PROJ`, `CASE`, `DRAFT`, `RVG` or `TASK` answers `ALLOCID_PREFIX_GATED` (C-59.5) and allocates nothing — and the MEANING of a gated id changes: its four digits no longer order or count anything, so a consumer sorting or comparing by id to recover minting order becomes wrong without changing a line. The SHAPE (`<P>-<year>-\d{4}[-slug]`) is unchanged, so `BUNDLE_ID_RE`, C-19.1's TASK grammar and every reader of the shape still hold. One CSPRNG minter (`Store#mintOpaqueId`) now serves all five gated prefixes; REC-141's PROJ draw was lifted into it. **An AUTHORITY and DISCLOSURE closing** — a sequential id counted objects the caller cannot see (§7.9); DIST told. **`TASK`'s gating is the BUILDER'S READING of the design's own criterion, not a ruling** — Membership v2 §7 names CASE/DRAFT/RVG/PROJ only — so it is routed to BOB and landed as built; reversing it is one entry in `Store.GATED_ID_PREFIXES` and one mint line. D-432 (an opaque id can be reissued across a whole-store purge, which the counter could not) is MINTED with its fix named, not closed here.
+
+## IC-165 · I3: `op=airuntick` and `op=airunclose` are the run's PRINCIPAL's acts — a caller who can see the run's context and is not its principal (`ai_runs.principal_plane`: the member, or a machine credential that member minted) is REFUSED `AI_RUN_NOT_PRINCIPAL` (C-22.12); a caller who cannot see the context receives the byte-identical answer for a run that does not exist; the reaper is unchanged · PROPOSED 2026-09-19 (REC-152, minted with `node tools/mintid.mjs IC` BEFORE writing this row) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI and fleet, the op contracts). **Version read off this tree's
+  `docs/development/INTERFACES.md` (base `0cb784ab`): 41.1.0. Proposed as MAJOR — 41.1.0 → 42.0.0.** Read the base AT
+  RESOLUTION. **Why not additive, by IC-137's rule:** calls that SUCCEEDED are now refused (another member's tick or
+  close over a question; a co-participant's over a project; an administrator's; a token class's over a member's run),
+  and one answer that carried `found: true`, the run's `status` and C-22.8 now carries `found: false` and nothing else.
+  No key is added to a success; the refusal carries the tick's and the close's existing refusal shapes.
+- **Proposer:** RECORD, REC-152 worker, branch `worktree-agent-a8cfbd5a2893e6b93`, 2026-09-19 — Membership v2 §7, the
+  DEC-63 ruling bullet, "WHO MAY TICK AND CLOSE A RUN" (BOB #16, `ed249814`).
+- **Owner to land it:** `RECORD`
+- **The comparison:** the control plane stamps the caller's principal on the tick and the close by the SAME expression
+  that stamps `principal_plane` on the open (`member:<id>` · `<credential principal>/<tokenId>` · `class:<cls>`), set
+  over anything the caller sent. A member-kind credential's principal is `member:<id>`, so a member and the credentials
+  minted FOR her are one principal (the part before the `/`); a token class and an organisation-kind key are compared
+  whole. Sight is `op=airun`'s own predicate, asked FIRST.
+- **What changed, measured through the op** (`airun-principal.test.mjs`, run on the unedited tree and after):
+
+| call | before (base `0cb784ab`) | after |
+| --- | --- | --- |
+| pia (contribute, no project) ticks / closes alice's run over a question she can see | `ticked: true` / `terminated: true` | refused C-22.12, run untouched |
+| cora, alice's JOINED co-participant, ticks / closes alice's run over the project | `ticked: true` / `terminated: true` | refused C-22.12 |
+| gus, an administrator holding contribute, over either run | ticked over the question; C-22.8 over the project | refused C-22.12 |
+| pia over alice's run in a project she cannot see | `found: true`, the run's `status`, C-22.8 — told the run exists | byte-identical to a never-minted run id (`found: false`) |
+| a caller who SENDS `member:alice` as `actor`/`principal`/`identity` (query) and `actor`/`principal`/`principalPlane`/`caller` (body) | — | refused C-22.12 (the forged-actor arm) |
+| alice's own `ai` credential (principal `member:alice`) over her session's run, and her session over the credential's run | NOT MEASURED in isolation (see note); nothing on the base refused it | ticked / closed |
+| the `MEMBER_TOKEN` class over its own run / over a member's run | ticked / ticked | ticked / refused C-22.12 |
+| the reaper, over a run nobody drives | ends it on `lease` | UNCHANGED |
+
+  Note on the credential row: on the base, alice's credential's tick of her session's run answered `ticked: false`
+  with no code because an earlier arm had already ENDED that run (pia's close succeeded) — the before-table is the
+  suite's own run, not a separate fixture.
+- **Consumers to answer:** `agent-worker` — AFFECTED ONLY IF it drives a run under a credential that is not the run's
+  principal: it ticks and closes with the `ai` credential it is handed per call (`src/index.mjs` `driveHarness`). A
+  member-kind credential of the member who opened the run, or the credential that opened it, is unaffected; an
+  organisation-kind key or another member's credential is now refused C-22.12. Its fleet suites, which load the real
+  plane (`harness`, `agent-worker`, `fanout`), ran green in the battery on this tree. `UI` — NOT-AFFECTED, grepped: `civicos-ui` calls neither op. `DIST`, `SKILL`, `newgroup` — NOT-AFFECTED
+  (`release/` and `newgroup/` carry the plane's bundle as bytes).
+
+**Suites:** `airun-principal.test.mjs` NEW (27 assertions); `airun-projectgate.test.mjs` CORRECTED (52 → 54): H1/H2 —
+pia over the hidden project is now answered as absent (the old assertion pinned a disclosure); H6 — the design gap
+REC-145 pinned as built is DECIDED and asserted as a C-22.12 refusal; L4/L5 NEW, the project gate on the tick and close
+as the run's own principal meets it after leaving. Two ratchets CORRECTED from their own failure output, never
+exempted: `airun.test.mjs` ARM D1 (the C-22 family: C-22.12 added; C-22.11 is REC-153's and joins at integration) and
+`run-conditions.test.mjs` ARM W3 (a new reader of `ai_runs`, `#aiRunInSight`, classified AUTHORISES). Negative
+controls: `node test/airun-principal.control.mjs` —
+**`sent-field` (the row's control: compare with the sent field) 25/2, ARM F1 and ARM F2 (THE FORGED ACTOR) by name**;
+`no-principal-check` 11/16; `no-sight` 24/3; `exact-compare` 24/3; `fold-by-split` (over-strictness) 27/0; every arm
+AS DECLARED, real sources untouched. `node test/nc-pl18.mjs` re-run, eleven rows, restores verified by sha256 + `cmp`.
+
+**No I5 IC:** no table or column moves (`ai_runs.principal_plane` is read, not changed).
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #6 as MAJOR — I3 42.0.0 → 43.0.0.** Base RE-READ at resolution off the integration tree: 42.0.0. Breaking by IC-137: op=airuntick and op=airunclose now REFUSE (C-22.12 AI_RUN_NOT_PRINCIPAL) every caller who is not the run's stamped principal (ai_runs.principal_plane — the member, or a machine credential that member minted), co-participants and administrators included; a caller who cannot see the run's context gets the byte-identical answer for a run that does not exist, which also closes a §7.9 disclosure (tick/close told such a caller the run existed and its status). The reaper is unchanged. Compared against the control plane's STAMP, never a sent field (the forged-actor arm). Combined at integration with REC-153's C-22.11 (the C-22 family is TWELVE; airun.test ARM D1 carries both). An AUTHORITY and DISCLOSURE closing — DIST told.

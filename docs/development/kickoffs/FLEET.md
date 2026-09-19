@@ -125,3 +125,37 @@ the correction was to answer with the commits rather than re-run landed work. IC
 IC-79 both await CONDUCT's RESOLUTION. The fleet is THREE members (ocr-worker joined,
 CPDF-10), all guarded, serving 0.57.0 account-wide; FLEET's IS-build-plan share is
 complete; nothing is schedulable in this area until a new delegation or FL item arrives.
+
+## Process lessons — recorded at stand-down, 2026-09-19 (FLEET, standing lane)
+
+Learned in the field and not written anywhere before. Each has a receipt in `FLEET-NEXT.md` of 2026-09-19.
+
+- **Test a mixed-version claim before it leaves the lane.** When DIST must know whether member N in front of plane M
+  is safe: `git worktree add --detach <scratch>/mix v<M>`, then `git checkout v<N> -- agent-worker` inside it, symlink
+  `bio-plane/node_modules` from a real install (an experiment only, never a gate), run
+  `node agent-worker/test/harness.test.mjs` — section R drives the REAL plane of that tree under miniflare. Remove the
+  worktree after. A diff reading is labelled a reading until this has run.
+- **Live mixed-version end to end:** copy `bio-plane/test/vf4-live-scratch.mjs` to an untracked name beside it, move its
+  version expectations (the `t(...)` lines at the rollout gate and at EXIT) to the pair under test, and set the plan
+  judgement to `observed: "PRESENT"` so IC-130's path runs; tally each `H.stepLog` entry's `state`. It works in
+  `store=scratch` and sweeps itself; delete the copy. It drives the TABLE against the live plane, not the deployed
+  isolate: scratch cannot mint an `ai` credential (M-8's wall, C-29.1), so `/run` is only drivable to its refusals.
+- **Reading which build answers:** members at `https://<member>.believeinoakland.workers.dev/version`. The plane's
+  workers.dev route answers `error code: 1042`; use `ORIGIN` from `bio-plane/test/vf4-call.mjs` (it reads the instance
+  from `.env`) — `/version` for the isolate AND `/api/?op=bootstrap` for the DO. Both, every time.
+- **A version label is not the code.** Compare `release/RELEASE.json` `fleet[].sha256` across tags
+  (`git show "v0.64.0:release/RELEASE.json"`) and the committed bundle's own hash before reasoning about a rollout.
+- **Stalled deploys:** a peer lane shown `waiting` by `ListAgents` is holding a permission prompt. Route it to BOB as
+  the one act only Bob can take; a partial rollout is reported with whether it is SAFE, from the bytes.
+- **`purge` does not clear scratch members** (M0-69/M0-70 carry it); state member residue at every sweep rather than
+  reporting "scratch clean" off `op=stats` alone.
+- **Self-wake:** `CronCreate` jobs are session-only and expire after 7 days. Record the arm date, and arm a one-shot
+  reminder 5 days out that deletes and re-arms it (BOB #15's rule).
+- **zsh traps in this estate's shell:** `echo ======` fails (`=` expansion); `"$v:r..."` applies the `:r` modifier and
+  eats the path — write `"${v}:release/..."`; quote `"v0.65.0^{commit}"`. A chained command then dies at the first
+  such error and the later halves never run — read every half's output.
+- **Carried from FLEET #1 (2026-09-14):** the QUEUE row is not the record, the commit is — answer a re-drive with
+  commits; a plane change stales a fleet artifact and the guard is right — rebuild on the merged tree, never hand-edit a
+  manifest hash; `npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/` before measuring; claim precisely (FLEET's
+  ground is `agent-worker/**`, `pdf-worker/**`, `fleet-bundle.mjs` + `fleetbundles.*`; `tools/deploy-fleet.mjs` is
+  DIST's; `ocr-worker` is CONTENT-PDF's ground on FLEET's pattern); report to the CURRENT lead BOB.
