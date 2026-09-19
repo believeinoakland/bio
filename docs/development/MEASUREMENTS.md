@@ -17154,3 +17154,48 @@ lookup, so it is not an oracle, and it is not rewritten (ids are cited).
 reachable from this account and is not counted; a scratch namespace is not the record and is not counted. The two
 instances answered identical project lists; whether they are one store behind two names was not established. The count
 is of the two instances named, at the instant named.
+## M-70 · 2026-09-19 · THE DISK AT THE ACCOUNT SWITCH, AND THE CONTENT VERDICT ON THE THREE STRANDED BRANCHES (BOB #17)
+
+**Why this was measured:** development moved to the other Claude Code account on 2026-09-19 and all four standing lanes
+took fresh worktrees within the hour. Disk, not the plan, is the binding constraint on how wide a wave may run, and no
+figure for it existed in this account. The second part settles a `plancheck` warning that every session will otherwise
+re-investigate.
+
+**Instrument and moment:** `df -h /Users/sparky` and `du -sh`, on Sparky-Air, between 09:45 and 10:20 EDT on 2026-09-19,
+with four standing-lane worktrees created and two part-way through `npm ci`.
+
+### Part 1 — the disk
+
+- Free: **12 GiB at 95% capacity at 09:45**, **11 GiB by 10:15** — about a GiB consumed by the lanes' own worktrees
+  inside the first half hour. (BOB #16 recorded 9 GiB at stand-down the same day; the rise is the old account's
+  worktrees being removed.)
+- A worktree with **no** install: **70 MB**.
+- `node_modules` per package, in the main checkout: `bio-plane` **210 MB**, `ocr-worker` **183 MB**, `pdf-worker`
+  **181 MB** — **574 MB for the three** `CLAUDE.md` §6 requires. DIST also installs `newgroup`.
+- So an INSTALLED worktree is **~644 MB**, confirmed against the ones that exist rather than inferred:
+  `agent-a59a4cdfa1b3d4dd3` (REC-151's, three packages) measures **644 MB**; DIST's four-package worktree **853 MB**.
+- `.git` is **314 MB**; the main checkout carries another 574 MB of its own installs.
+- **The arithmetic a wave must respect:** a worker worktree costs ~600 MB, and each concurrent full gate about another
+  1 GiB of temporary space (`DIST-NEXT.md`). At 11 GiB free with the four standing lanes installed (~2.6 GiB), roughly
+  **8 GiB remains** — a dozen worker worktrees on paper, and far fewer once concurrent gates are counted.
+- **This figure is to be RE-MEASURED, never carried:** it moved by a GiB in thirty minutes.
+
+### Part 2 — the three stranded branches hold nothing `main` lacks
+
+`plancheck`'s STRANDED WORK arm names three units every run and says plainly that it does not judge content. Judged
+here, at `70e45d05`:
+
+- `conduct6/batch3` and `conduct6/batch3-old`, both at `cca61c33` — **on no remote at all**.
+- `ui-65-conclude-surface` at `4cc202e7`, whose remote ref is the older `c97d8c6b`.
+
+**Instrument: `git cherry -v origin/main <branch>`**, which marks a commit `-` when its patch is already upstream and
+`+` when it is not. Every commit on all three reads `-` **except `4cc202e7`** — and that commit's entire content is the
+deletion of the REC-136 row from `QUEUE.md`, a row **already absent from main's `QUEUE.md`**, removed by the 2026-09-19
+queue cut (`docs/archive/ledgers/QUEUE-cut-2026-09-19.md`, which records REC-136 as on main since `c7f2df67`).
+Corroborated by artifact rather than by the one tool: `bio-plane/test/projection-noproject.test.mjs` and
+`civicos-ui/test/project-id-surface.test.mjs` — the artifacts those commits' subjects name — are both PRESENT on main.
+
+**Verdict: no work is at risk on this disk from these three**, and pushing them would add nothing but noise to the
+remote branch list, which is D-288's own stated reason for leaving 134 inherited branches alone. **Bound: this judges
+these three only** — not the nine unmerged branches `CONDUCT-NEXT.md` lists, whose content is still unjudged, and not
+any branch created after this reading.
