@@ -14223,3 +14223,22 @@ IDs minted with `tools/mintid.mjs`: IC-155, D-428.
 §7.9, and whether project ids should be plane-minted. (4) Tell DIST: a DISCLOSURE closing, open on deployed instances
 until the next cut. (5) REC-137 runs beside this: if it adds an act that names a project, it asks `Store#inSight` BEFORE
 `#projectAuthority` and returns `Store.#noSuchProject` — say so at its merge.
+
+## CLAIM 2026-09-18 RECORD (REC-139 — D-428's decided remainder: a refusal never names or describes a project the caller cannot see — `NAME_TAKEN` drops the other project's id and title; an inquiry run reports only the citing projects its member can see; plane-minted project ids)
+
+Worker spawned by CONDUCT #5, isolated worktree `agent-a590a3b1c261bf1ff`, branch `worktree-agent-a590a3b1c261bf1ff`,
+base `ee9f201c`. `npm ci` in all three packages, each `node_modules` a real directory (6.4 GiB free after install).
+Design: Membership v2 §7 (BOB #15 at `7b733d07`, *"What a refusal may say about a project the caller cannot see"*),
+§7.9, DEC-63. Builds on IC-155's `Store#inSight`. IDs minted with `tools/mintid.mjs`: IC-156. Paths:
+
+- RECORD (own): `bio-plane/src/store.mjs` — `promote`'s and `forkProject`'s `NAME_TAKEN` payloads, `#aiRunProjectGate`
+  and the three run verbs' DO dispatch rows (the `viewer` they now read); `bio-plane/src/index.mjs` (the `viewer` stamp
+  on the three run verbs).
+- Tests: a new `bio-plane/test/project-disclosure.test.mjs` and its control driver; `airun-projectgate.test.mjs`'s
+  ARM G1 count CORRECTED at its site with a dated reason; any other suite pinning the old payload CORRECTED, never
+  exempted. `bio-plane/scripts/coverage.mjs` floors only, moved from their own prints.
+- Generated: `bio-plane/dist/*` rebuilt; `docs/DECIDED.md` on regeneration.
+- Docs: `INTERFACE-CHANGES.md` (IC-156), `DEBT.md` (D-428's disposition), `BIO_Membership_Architecture_v2.md` front
+  matter and §7, this block.
+
+NOT `QUEUE.md` (CONDUCT's), NOT `op=caseratify` or the case-ratification path (REC-137's), NOT `newgroup/`.
