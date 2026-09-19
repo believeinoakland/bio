@@ -14472,3 +14472,12 @@ session: FLEET (worktree `sweet-goldberg-04a9ed`). Scope: `docs/development/kick
 sentences corrected to `CLAUDE.md` §3 as it reads on `origin/main`: the build plan's order goes to SCHEDULER and
 running work to CONDUCT (was "CONDUCT (sequencing)"); Bob's decisions go to BOB (was "via CONDUCT"). Claimed and
 released in the same commit.
+
+## CLAIM 2026-09-19 RECORD (REC-144 — the single-bundle `op=projection&id=<inquiry>` publishes `no_project_conclusion` through the ONE reader `#noProjectConclusionOf`; never on the list form)
+
+claimed: 2026-09-19 by the REC-144 worker (spawned by CONDUCT #6), branch `worktree-agent-af0ecccecaa170e90`, base
+`5871a991`. Paths: `bio-plane/src/store.mjs` (`projection()`'s single-bundle arm ONLY), `bio-plane/dist/**` (the rebuilt
+bundle), `bio-plane/test/projection-noproject.test.mjs` (new) and its `.control.mjs`, `docs/development/INTERFACE-CHANGES.md`
+(IC-160, new row), `docs/development/INVESTIGATIVE-SESSION.md` (front matter and §7.1's built line),
+`docs/architecture/construct-status.json` (8.claim's text and probes), `bio-plane/scripts/coverage.mjs` (floors only,
+from its own print, if any move). NOT `civicos-ui/app.html` — the surface half is UI-67's.

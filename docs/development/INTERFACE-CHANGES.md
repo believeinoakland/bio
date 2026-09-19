@@ -11671,3 +11671,37 @@ report and in the claim's release.
 **RESPONSES:** not yet collected.
 
 **RESOLUTION · 2026-09-18 · ACCEPTED by CONDUCT #6 as MAJOR — I3 37.0.0 → 38.0.0.** Base RE-READ at resolution off `origin/main` `d036094b`: 37.0.0 (IC-153, REC-136 + UI-65), so the worker's re-based proposal stands. Breaking by IC-137: three acts that committed now refuse (a project bundle at `op=ratify`, C-58.1; a pinned finding under a non-owner's signature, C-57.1; one delivered by an administrator with no role, C-56.1), and a caller who cannot see a project bundle now receives the never-minted 404 `ABSENT` instead of 409 `RATIFY_STALE`/`GATE_REFUSED` (IC-25). No first-party surface affected (`civicos-ui/` names `op=ratify` nowhere, re-grepped at integration); the instance page's `ratifyPanel` renders the new codes through its existing fallback. An AUTHORITY and DISCLOSURE closing — DIST told; it rides 0.64.0 with REC-143 (DIST's ruling: no cut without the P0 fix). D-431 (what `op=ratify` still publishes outside a case) carried to BOB.
+
+## IC-160 · I3: `op=projection&id=<id>` (the SINGLE-BUNDLE form) publishes `no_project_conclusion` — for an inquiry, the inquiry's own no-project conclusion computed by the ONE reader `op=basisversions` uses (`#noProjectConclusionOf`), null when unconcluded; null on every non-inquiry; NEVER on the list form · PROPOSED 2026-09-19 (REC-144, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (`5871a991`): 38.0.0. Proposed MINOR,
+  ADDITIVE — 38.0.0 → 38.1.0**; if REC-142's IC-159 (38.0.0 → 38.1.0, being integrated) lands first, this is 38.1.0 →
+  38.2.0. Read the base AT RESOLUTION. **Why MINOR:** IC-25's test — nothing that answered before is refused or changes
+  meaning. The single-bundle answer GAINS one key and loses none; an action's `action` block is unchanged; an invisible
+  or absent bundle still answers `null`; the list form (paged and filtered) is byte-unchanged.
+- **Proposer:** RECORD, worker `agent-af0ecccecaa170e90`, 2026-09-19, spawned by CONDUCT #6 for REC-144.
+- **Owner to land it:** `RECORD`
+- **Design:** `INVESTIGATIVE-SESSION.md` §7.1, the paragraph "The question's page reads the no-project conclusion from
+  `op=projection`" (BOB #16, 2026-09-19, `7c150df0`).
+- **Consumers to answer:** `UI` — NOT BROKEN (an additive key; `getProjection` caches the row and reads named fields),
+  and the CONSUMER this exists for: **UI-67** renders it on the question's page with `noProjectConclusionHtml` and
+  invalidates `PROJ_CACHE` for the inquiry when a conclusion or a withdrawal lands. `DIST` (newgroup embeds the old
+  plane until the next cut), `SKILL`, `agent-worker` — NOT-AFFECTED, grepped: none reads `op=projection`'s single row.
+
+**THE SHAPE.** `op=projection&id=<id>`, when the row passes the viewer gate: the row as before, plus
+`no_project_conclusion` — for an inquiry, EXACTLY what `op=basisversions&id=<id>` publishes under the same key for the
+same viewer (`{project: null, inquiry, relationship: "no_project", state: "concluded", relationship_established: false,
+relationship_detail, conclusion, falsifier, claim: {state: "adopted"|"undetermined", …}}`), or null when the inquiry is
+not concluded; null for every other type. The list form carries no such key.
+
+**ONE READER, TWO READS.** The single-bundle arm calls `#noProjectConclusionOf` — the reader is not copied, so the two
+reads cannot disagree. `bio-plane/test/projection-noproject.test.mjs` (new, 26/0) proves the field byte-identical to
+`op=basisversions`' for two viewers over an ADOPTED and an UNDETERMINED conclusion (non-null, so the equality is not two
+nulls agreeing), null for an open inquiry and two non-inquiries, absent from the paged and the filtered list forms, and
+ONE reader off the source (exactly one definition, exactly two call sites, the reader's tokens once across `src/`).
+Negative control `node test/projection-noproject.control.mjs`: baseline 26/0 · (a) a copied reader differing in one
+unreached branch 23/3 — the ONE-READER arms fail by name while every byte-identity arm passes (the liar the row names) ·
+(b) the field on the list form 22/4 · (c) over-strictness 26/0; every restore sha256 MATCH. Before the change: 12/14.
+**No I5 IC:** no table or column moves.
+
+**RESPONSES:** not yet collected.

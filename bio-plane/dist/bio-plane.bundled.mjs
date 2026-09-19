@@ -27418,7 +27418,13 @@ var Store = class _Store extends DurableObject {
         bundleId,
         ...gate.args
       );
-      return row && normalizeType(row.object_type) === "action" ? { ...row, action: this.#actionDerived(row, nowMs) } : row;
+      if (!row) return row;
+      const type = normalizeType(row.object_type);
+      return {
+        ...row,
+        ...type === "action" ? { action: this.#actionDerived(row, nowMs) } : {},
+        no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null
+      };
     }
     const asked = Number(limit);
     const cap = Number.isFinite(asked) && asked > 0 ? Math.min(_Store.PROJECTION_LIMIT_MAX, Math.floor(asked)) : _Store.PROJECTION_LIMIT_DEFAULT;
