@@ -302,6 +302,24 @@ console.log(`    (c) OMISSION        ${OMITTED.length}: ${OMITTED.join(" ")}`);
 t("the ROLE-GATED arm is exactly the five D-270 measured on 2026-08-09, re-derived here 1573 "
 + "commits later — pinned as a literal SET so a sixth arrival or a departure is looked at",
   ROLE_OPS, ["governorconfig", "memberadd", "memberset", "signeradd", "signerset"]);
+/* ADDED 2026-09-19 (D-136). THE PIN ABOVE DID ITS JOB AND THIS IS WHAT IT
+   CAUGHT. D-136 gave `adminendorse`, `adminremove` and `membercaps` session
+   reach, and this suite went red until somebody looked at where they landed —
+   which is the whole point of pinning a literal. They landed in NEITHER arm,
+   deliberately: they are in BOTH of `SESSION_OPS`' sets, because
+   `SESSION_OPS.admin` means the FOUNDER'S password session alone (`kind` is
+   `sess.role === "admin" ? "admin" : "member"`, the measurement §4 of this file
+   records twice) and §4.7 gives the vote to EVERY administrator. What decides
+   them is the ROSTER, asked by the store against a server-stamped `by`.
+   **AN OP IN BOTH SETS IS A THIRD SHAPE AND IT IS COUNTED RATHER THAN
+   IGNORED.** Without this arm the three would simply have vanished from this
+   file's three-way partition, and a regression that put them back beyond every
+   session would leave all three arms green while saying nothing. */
+const BOTH_SETS = MUTATING.filter((o) => REACHES_GATE(o) && ADMIN_SET.has(o) && MEMBER_SET.has(o)).sort();
+t("D-136's three reach BOTH session sets and are therefore in NEITHER role arm — the roster "
++ "decides them, not the gate, which is `expertiseconfirm`'s recorded posture "
++ "(BIO_Membership_Architecture_v2.md §4.7 / §4.9)",
+  ["adminendorse", "adminremove", "membercaps"].filter((o) => !BOTH_SETS.includes(o)), []);
 t("and every declared op is one no session reaches — a declaration over an op a session DOES reach "
 + "would be a recorded decision contradicted by the table it sits in",
   [...DECLARED].filter((o) => !NO_SESSION.includes(o)), []);
@@ -452,9 +470,26 @@ t("every op no session reaches answers with the code its arm calls for, EACH BY 
 t("the OMISSION arm is non-empty — an empty (c) arm makes the map above a test of (a) alone, which "
 + "is the two-way split IC-55 proposed and the thing this item exists to correct",
   OMITTED.length > 0, true);
-t("and it holds the three D-136 is about: until its fence lands the plane must not tell an "
-+ "administrator that this absence is a DECISION (BIO_Membership_Architecture_v2.md §4)",
-  ["adminendorse", "adminremove", "membercaps"].filter((o) => !OMITTED.includes(o)), []);
+/* CORRECTED 2026-09-19 (D-136), NEVER EXEMPTED, AND THE ASSERTION IS NOW THE
+   ONE IT ALWAYS MEANT. It read *the omission arm holds D-136's three* — true of
+   a plane where §4.7's vote could be cast by nobody, and it was the plane, not
+   the rule, that this file was grading. D-136 landed the fence, so the three are
+   REACHABLE by an administrator's session and the honest answer to a member has
+   become (b), which names the administrator as the route.
+   **THE DIRECTION IS ASSERTED, NOT DROPPED, AND THAT IS THE WHOLE CORRECTION.**
+   Deleting the arm would leave nothing watching the three ops D-270's argument
+   is built on, and a regression that put them back beyond every session would
+   pass in silence. So it is INVERTED: they must be ABSENT from (c) and PRESENT
+   in (b). A revert of D-136 fails this by name, and so does a half-revert that
+   removes the reach while leaving the stamp. */
+t("D-136's three are NO LONGER omissions — §4.7's vote is a person's act now, so the plane has "
++ "stopped having to say the record holds no decision about them "
++ "(BIO_Membership_Architecture_v2.md §4.7 / §4.9)",
+  ["adminendorse", "adminremove", "membercaps"].filter((o) => OMITTED.includes(o)), []);
+t("and they are REACHABLE rather than merely gone from this arm — an op that vanished from all "
++ "three arms would satisfy the assertion above while reaching nobody at all, which is the exact "
++ "state D-136 was raised about",
+  ["adminendorse", "adminremove", "membercaps"].filter((o) => !BOTH_SETS.includes(o)), []);
 /* THE CONTRADICTED PAIR, named because their own OPS rows say the opposite of
    the sentence they used to receive. */
 t("and it holds op=provenancechain and op=provenanceroute, whose own OPS rows say 'NOT open to "

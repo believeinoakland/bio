@@ -15425,3 +15425,47 @@ suites' `detail` pins are green by absence. Fix: carry the catalogue row's `tran
 pin. Measured in `MEASUREMENTS.md` M-72.
 
 **open as of 2026-09-19** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-19 RECORD (D-136 — THE §4.7 VOTE AND THE §4.9 CAPABILITY EDIT BECOME A PERSON'S ACTS: session reach and a server-stamped `by` on `adminendorse`, `adminremove` and `membercaps`, in ONE landing)
+
+Worker spawned by CONDUCT #8. **Own worktree** `.claude/worktrees/d136-conduct8`, branch
+**`worker/d136-conduct8`**, base `origin/main` @ `ad67ff0a`. `npm ci` in `bio-plane/`, `pdf-worker/` and
+`ocr-worker/`, each `node_modules` verified a REAL DIRECTORY (30 / 25 / 26 entries), `df -h` 7.6 GiB free
+after. Design authority: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 (the BOB #17 block
+"THE SECTION 4.7 VOTE CANNOT BE CAST BY A PERSON TODAY", `95fb3e4c`) and §4.9's capability edit, read
+with §5. Precedent: D-421 / C-32.14 / C-32.15 (BOB #14) — no operator bearer token delivers an
+authored act. Claimed BY SITE, because `index.mjs` and `store.mjs` are the repo's most-churned files:
+
+- `bio-plane/src/index.mjs` — **by SITE:** (1) the NEW `GOVERNANCE_ACTIONS` array beside
+  `PROJECT_ACTIONS`; (2) `SESSION_OPS.admin` — ONE spread added beside `"memberadd", "memberset"`,
+  and **the `member` set is NOT touched**; (3) THREE `null` rows in the capability table beside
+  `memberadd`/`memberset`; (4) the `by` stamp's condition — one disjunct added; (5) ONE NEW
+  `DEC-49 REGION is-operator-governance-act` immediately above that stamp; (6) the D-270 doctrine
+  comment's "reachable by NO session" sentence and the OPS-table comment, both CORRECTED because
+  this landing makes them false. **NOT** the OPS rows' `classes` lists, **NOT** any other refusal.
+- `bio-plane/src/store.mjs` — `memberCaps` ONLY: it gains the `by` argument and the active-admin
+  check that makes the stamp non-inert. `adminEndorse`/`adminRemove` already read `by` and are
+  UNTOUCHED.
+- `bio-plane/checks/bio-checks.mjs` — ONE new row `OPERATOR_TOKEN_CANNOT_GOVERN` at **C-32.17** in
+  `MACHINE_FENCE_CHECKS` (the family D-421's two rows live in), and the D-136 sentence at the
+  `SESSION_GATE` family's note, corrected.
+- `bio-plane/src/affordances.mjs` — THREE `NON_ACTS` entries with their reasons (forced by the NEEDS
+  totality guard, `affordances.test.mjs:180`), and nothing else.
+- `bio-plane/test/adminvote.test.mjs` and `bio-plane/test/adminvote.control.mjs` — both NEW.
+- `bio-plane/test/d270-refusal-truth.test.mjs` — the OMITTED arm for the three ops, CORRECTED with a
+  dated reason (never exempted): they are no longer omissions.
+- `bio-plane/test/admission-gate.test.mjs` — C-38.8's OMISSION exemplar RE-POINTED off `op=membercaps`,
+  which this landing stops being an example of.
+- `bio-plane/test/membership.test.mjs` — `by` added to the direct-DO `membercaps` drives, with a dated
+  reason at the site; the arithmetic assertions are untouched.
+- `bio-plane/dist/` (the rebuilt bundle); `bio-plane/scripts/coverage.mjs` (floors, from the print only).
+- `docs/architecture/BIO_Membership_Architecture_v2.md` (§4.7's block and the front matter) and
+  `docs/architecture/construct-status.json` (`1.admin-floor`, `1.capabilities`).
+
+**NOT** `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), **NOT**
+`docs/development/INTERFACE-CHANGES.md` (I3; **the integrator mints and classifies the IC**, per the
+row), **NOT** `newgroup/`, **NOT** `release/`, **NOT** `civicos-ui/app.html` — **D-134's member
+surface is out of scope by the row's own words**: a surface over an act whose voter the caller can
+name is a second path to a forgeable vote, and it is placeable only once this lands.
+
+**open as of 2026-09-19** — OPEN while this item builds; CONDUCT integrates and mints the IC.

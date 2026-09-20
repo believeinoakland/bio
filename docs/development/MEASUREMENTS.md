@@ -17391,3 +17391,38 @@ literals and the `reason:`/`code:` string literals within 400 characters of one,
 variable, or receives from the real plane in miniflare, is outside it entirely — the twelve plane-driven UI suites
 carry real translations the walk never counts. And it says a fixture CANNOT REPRESENT a translation, never that any
 assertion reads one.
+
+## M-76 · 2026-09-19 · D-136 — the §4.7 vote measured ON THE LIVE PLANE before it was fenced
+
+**Instrument:** a read-only probe against the DEPLOYED instance `biosmoke7`
+(`believeinoakland.workers.dev`, Cloudflare account `20b533579290b9b93168345edd3b7f72`, confirmed by the
+API at the moment of the run), serving build **0.67.0** — which is the PRE-ITEM plane, because this worker
+does not deploy. Run from `.claude/worktrees/d136-conduct8`, branch `worker/d136-conduct8`, base
+`origin/main` @ `ad67ff0a`. **`store=scratch` was NAMED ON EVERY CALL** (D-325: the namespace is not
+fenced for any class but PROBE), and the no-write guarantee is that naming PLUS the WITNESS — the scratch
+roster read before and after every arm.
+
+**WHY A LIVE PROBE OF A DEFECT RATHER THAN OF A FIX.** The fix is not deployed and this lane does not
+deploy it, so the only thing a live instance can answer is whether the defect the row describes is REAL on
+a serving build or only a reading of the source. That is worth asking: `CLAUDE.md` grades a blocker as a
+claim, and a defect inferred from code is the same shape.
+
+| Arm (all `store=scratch`, ADMIN bearer token) | Answer | What it establishes |
+| --- | --- | --- |
+| `op=adminendorse`, `by` naming another administrator | **200 `NO_SUCH_MEMBER`** | the bearer **REACHED THE HANDLER** — it is not fenced, and the `by` the store checks is the one the caller sent. The refusal is about the target, never about the caller |
+| `op=adminremove`, same shape | **200 `NO_SUCH_MEMBER`** | the same, at the removal vote |
+| `op=membercaps`, no `by` at all | **200 `NO_SUCH_MEMBER`** | the pre-item ordering: the capability edit asks whether the member exists and **never asks who is calling** |
+| WITNESS, scratch roster before / after | **13 rows / 13 rows, byte-identical** | nothing was written by any arm |
+
+**THE DISCRIMINATOR BETWEEN THE TWO BUILDS, recorded so a later reader can re-run this against a deployed
+D-136 and see it flip:** `op=adminendorse` and `op=adminremove` answer `OPERATOR_TOKEN_CANNOT_GOVERN`
+(C-32.17) instead of `NO_SUCH_MEMBER`, and `op=membercaps` answers `NOT_AN_ADMIN` — because the roster
+question moves in front of the member lookup.
+
+**WHAT THIS PROBE CANNOT SEE, and it is the larger half.** It never demonstrated a COMPLETED forgery on the
+live instance, and that is deliberate rather than a limit of the method: completing one means writing a
+governance vote in another administrator's name into a live record, which is the act the item exists to
+prevent, and sweeping an `admin_votes` row afterwards needs a purge this worker has no business running.
+So the live evidence is REACH and ORDERING; the forgery itself is driven end-to-end over the real sources
+in `bio-plane/test/adminvote.test.mjs`, where one administrator's session sends another's id in the body
+AND the query and the answer is read from the record rather than from the echo.

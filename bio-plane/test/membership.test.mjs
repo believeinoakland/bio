@@ -48,6 +48,25 @@ const call = async (p, body) => (await (await mf.dispatchFetch("http://x" + p,
 
 const add = (b) => call("/memberadd", b);
 const enroll = (b) => call("/enroll", b);
+/* D-136, 2026-09-19 — CORRECTED, NEVER EXEMPTED, and the old spelling was WRONG
+   rather than merely superseded.
+   Every governance drive below used to put `by` in the REQUEST BODY, and the
+   store read it from there. That is precisely the defect D-136 closed: the
+   store's check against the live administrator roster was whole, and the VALUE
+   it checked was the caller's own, so "every existing administrator must
+   endorse an addition" was satisfied by anyone willing to type another
+   administrator's id. A suite asserting the arithmetic over a caller-supplied
+   voter was asserting the arithmetic of a rule that did not bind.
+   `by` now arrives in the QUERY, where `index.mjs` stamps it from the signed-in
+   session and the store's relay overrides any body copy with it. This suite
+   drives the Durable Object with no control plane in front of it, exactly as it
+   does for the `administer=1` stamp above and for REC-25's `viewer`, so it
+   writes the stamp itself — and `members.test.mjs` and `adminvote.test.mjs`
+   prove through the REAL surface that a caller cannot.
+   The assertions themselves are UNCHANGED. Section 4.7's arithmetic is this
+   file's subject and none of it moves; what moved is where the voter's name
+   comes from, which was never this suite's claim to make. */
+const gov = (p, body, by) => call(`${p}?by=${encodeURIComponent(by)}`, body);
 /* THE ADMINISTRATOR STAMP, carried the way this battery's other gated direct-DO
    reads carry `viewer` (REC-25). This suite drives the Durable Object with no
    control plane in front of it, and D-157's cover↔handle projection lives in the
@@ -113,19 +132,19 @@ console.log("\n--- capabilities are granted, and absent means absent (5) ---");
 {
   const m = await of("ordinary");
   t("an invited member carries the capabilities the administrator set", Array.isArray(m.capabilities), true);
-  const r = await call("/membercaps", { memberId: "ordinary", capabilities: ["contribute", "publish"] });
+  const r = await gov("/membercaps", { memberId: "ordinary", capabilities: ["contribute", "publish"] }, "admin");
   t("an administrator edits them afterwards", r.ok, true);
   t("and they are what was set", (await of("ordinary")).capabilities, ["contribute", "publish"]);
   t("an unknown capability is refused",
-    (await call("/membercaps", { memberId: "ordinary", capabilities: ["contribute", "fly"] })).reason, "BAD_CAPABILITY");
+    (await gov("/membercaps", { memberId: "ordinary", capabilities: ["contribute", "fly"] }, "admin")).reason, "BAD_CAPABILITY");
   t("administer cannot be granted this way, only by the Section 4 process",
-    (await call("/membercaps", { memberId: "ordinary", capabilities: ["administer"] })).reason, "NOT_A_CAPABILITY_GRANT");
+    (await gov("/membercaps", { memberId: "ordinary", capabilities: ["administer"] }, "admin")).reason, "NOT_A_CAPABILITY_GRANT");
 }
 
 console.log("\n--- administrator status cannot be stripped (4.4) ---");
 {
   t("no administrator may demote another",
-    (await call("/membercaps", { memberId: "second", capabilities: ["contribute"] })).reason, "NOT_A_CAPABILITY_GRANT");
+    (await gov("/membercaps", { memberId: "second", capabilities: ["contribute"] }, "admin")).reason, "NOT_A_CAPABILITY_GRANT");
   t("nor revoke them directly",
     (await call("/memberset", { memberId: "second", status: "revoked" })).reason, "ADMIN_REQUIRES_VOTE");
   t("an ordinary member can still be revoked directly",
@@ -142,8 +161,8 @@ console.log("\n--- adding an administrator past the second needs consensus (4.7)
   t("and no invite was handed out", r.invite, undefined);
 
   t("an endorsement from a non-administrator is refused",
-    (await call("/adminendorse", { memberId: "third", by: "ordinary" })).reason, "NOT_AN_ADMIN");
-  const e = await call("/adminendorse", { memberId: "third", by: "second" });
+    (await gov("/adminendorse", { memberId: "third" }, "ordinary")).reason, "NOT_AN_ADMIN");
+  const e = await gov("/adminendorse", { memberId: "third" }, "second");
   t("the last endorsement issues the invitation", e.ok, true);
   t("and hands over the invite exactly once", typeof e.invite, "string");
   t("the proposal is now a normal pending invitation", (await of("third")).status, "invited");
@@ -172,19 +191,19 @@ console.log("\n--- removal: the Section 4.7 table, asserted directly ---");
 
 console.log("\n--- removal at three administrators takes both of the others ---");
 {
-  const one = await call("/adminremove", { memberId: "third", by: "admin", reason: "unreachable for months" });
+  const one = await gov("/adminremove", { memberId: "third", reason: "unreachable for months" }, "admin");
   t("one vote does not eject", one.ok, false);
   t("it reports the tally", { have: one.have, need: one.need }, { have: 1, need: 2 });
   t("the target is still an administrator", (await of("third")).status, "active");
 
   t("the target may not vote on their own removal",
-    (await call("/adminremove", { memberId: "third", by: "third", reason: "no" })).reason, "TARGET_CANNOT_VOTE");
+    (await gov("/adminremove", { memberId: "third", reason: "no" }, "third")).reason, "TARGET_CANNOT_VOTE");
   t("nor may a non-administrator",
-    (await call("/adminremove", { memberId: "third", by: "ordinary", reason: "no" })).reason, "NOT_AN_ADMIN");
+    (await gov("/adminremove", { memberId: "third", reason: "no" }, "ordinary")).reason, "NOT_AN_ADMIN");
   t("and one administrator cannot vote twice",
-    (await call("/adminremove", { memberId: "third", by: "admin", reason: "again" })).reason, "ALREADY_VOTED");
+    (await gov("/adminremove", { memberId: "third", reason: "again" }, "admin")).reason, "ALREADY_VOTED");
 
-  const two = await call("/adminremove", { memberId: "third", by: "second", reason: "unreachable for months" });
+  const two = await gov("/adminremove", { memberId: "third", reason: "unreachable for months" }, "second");
   t("the second vote ejects", two.ok, true);
   t("the target is revoked", (await of("third")).status, "revoked");
   t("the deciding administrators are recorded", two.deciders.sort(), ["admin", "second"]);
@@ -197,7 +216,7 @@ console.log("\n--- removal is impossible at two, which is the point (4.7) ---");
      who has no roster row, so it is read from the arithmetic rather than by
      counting members. */
   t("two administrators remain", (await call("/adminarith")).live.administrators, 2);
-  const r = await call("/adminremove", { memberId: "second", by: "admin", reason: "dispute" });
+  const r = await gov("/adminremove", { memberId: "second", reason: "dispute" }, "admin");
   t("the only other administrator cannot eject them", r.ok, false);
   t("and the refusal explains the arithmetic rather than just failing", r.reason, "IMPOSSIBLE_AT_TWO");
   t("the target is untouched", (await of("second")).status, "active");
@@ -283,9 +302,9 @@ console.log("\n--- negative controls ---");
 {
   t("the arithmetic helper can say impossible", (await call("/adminarith")).table.some((x) => !x.possible), true);
   t("and can say possible", (await call("/adminarith")).table.some((x) => x.possible), true);
-  t("an unknown member is still refused", (await call("/adminremove", { memberId: "ghost", by: "admin", reason: "x" })).reason, "NO_SUCH_MEMBER");
+  t("an unknown member is still refused", (await gov("/adminremove", { memberId: "ghost", reason: "x" }, "admin")).reason, "NO_SUCH_MEMBER");
   t("and the founding administrator cannot be removed from inside the app (4.6)",
-    (await call("/adminremove", { memberId: "admin", by: "second", reason: "x" })).reason, "ROOT_OF_TRUST");
+    (await gov("/adminremove", { memberId: "admin", reason: "x" }, "second")).reason, "ROOT_OF_TRUST");
 }
 
 console.log("\n--- 4.9: reactivation must not restore administrator status ---");
@@ -306,7 +325,7 @@ console.log("\n--- 4.9: reactivation must not restore administrator status ---")
     const a = await call("/memberadd", { memberId: id, cover: `cover ${id}`, role: "admin" });
     let invite = a.invite;
     if (!invite) for (const v of await admins()) {
-      const e = await call("/adminendorse", { memberId: id, by: v });
+      const e = await gov("/adminendorse", { memberId: id }, v);
       if (e.invite) invite = e.invite;
     }
     t(`${id} received an invitation`, typeof invite, "string");
@@ -315,7 +334,7 @@ console.log("\n--- 4.9: reactivation must not restore administrator status ---")
   const before = (await call("/memberlist")).members.find((m) => m.member_id === "cx");
   t("cx is an active administrator", [before.role, before.status], ["admin", "active"]);
   for (const v of (await admins()).filter((a) => a !== "cx"))
-    await call("/adminremove", { memberId: "cx", by: v, reason: "test" });
+    await gov("/adminremove", { memberId: "cx", reason: "test" }, v);
   const gone = (await call("/memberlist")).members.find((m) => m.member_id === "cx");
   t("the vote revokes them", gone.status, "revoked");
   t("and the row still SAYS admin, which is the trap", gone.role, "admin");
