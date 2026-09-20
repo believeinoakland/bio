@@ -20,6 +20,39 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-434 · queued — **A PUBLISHED RECIPE REFUSES THE MEMBER AT ITS OWN LAST STEP.** `app.html`.s `RECIPES[capture-a-document-and-ground-a-question-on-it]`, ends on `op=inquiryground` — which authors the DEC-32 PARTITION over legs that ALREADY EXIST and refuses `NO_BASIS` when there are none. On a fresh capture the member is REFUSED; on a question with legs it regroups them and attaches the document to nothing. The op for this act is `op=cite`. **PART 1 ONLY.** — owner UI.
+order: FIRST. The record telling a member to do what the plane refuses is the record claiming more than it can support, which CLAUDE.md §2 grades above every feature — and it is PUBLISHED, so it is wrong in the member.s hands. One edit plus its arm (SCHEDULER #3, 2026-09-20)
+milestone: M8
+interface: none — part 1 changes no interface.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §0 · Vocabulary, which ALREADY BANS this: *"GROUND PARTITION … is **never a surface word**"* — DEC-32.s elicitation clause 1 bans it from every member-facing surface. The recipe breaks a ban a governed document already states: enforcement, not a new rule.
+depends-on: none.
+scope: **PART 1 ONLY; THE ROW REFUSES TO GROW.** Correct the step and its `why` to `op=cite`, or split into cite-then-ground if the recipe means both — plus one arm that DRIVES it end to end, since its id appears nowhere outside `app.html`. **PART 2 IS NOT PLACED:** no arm of `surface-registry.test.mjs` asks whether a step.s op can perform its act, and BOB ruled it must be SIZED first — inventing a model of every op to judge a `why` string is the citation-invented-to-pass-a-check failure.
+accepts-when: the recipe is driven end to end against the plane and COMPLETES. How a liar passes it: editing the `why` to match the wrong op — so the arm DRIVES it and asserts no refusal, instead of reading text.
+NEGATIVE CONTROL: restore `op=inquiryground` and the drive arm fails by name at `NO_BASIS`.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18.s inbox entry, drained this commit).
+
+### D-435 · queued — **`owed.mjs` CAN ATTRIBUTE BUT NEVER DISCHARGE, SO EVERY LANE'S WORKLIST IS MONOTONIC.** `owedFor()` tests `OWNER_RE(lane)` against a row.s DISPOSITION, excluding only `isClosedDebtRow`, so an OPEN row that once said *ROUTED TO BOB* owes forever — however emphatically a later dated sentence in the same cell says that lane.s part is done. `owed.mjs BOB` reads 7 and **exactly 1 is known false** (D-134). — owner BOB (its own instrument).
+order: SECOND. Every lane plans from this number, including this one, and it can only grow — a worklist that cannot shrink quietly becomes a backlog of the past. Cheap, and the fix is named in the row rather than designed (SCHEDULER #3, 2026-09-20, BOB #18's inbox entry)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — an instrument reports what it can see, and this one cannot see a discharge.
+depends-on: none.
+scope: a `DISCHARGE_RE` matching the form the corpus already writes twice and NOTHING ELSE — `nothing (on this row |here )?falls to (the )?<LANE>( lane)?` — as narrow as `RESIDUE_RE` was forced to be. **A row discharged for one lane still attributes to any OTHER lane its disposition names** — the predicate is per-lane, not per-row. **FULL GATE PROFILE** (`tools/` is not `docs/`): check disk first; BOB #18 declined to build it at raising for that reason rather than skip the gate.
+accepts-when: a row carrying BOTH an owner phrase and a discharge is NOT attributed; one carrying only the owner phrase still is; D-134 leaves BOB's list and the count moves 7 → 6. Every lane's count re-measured BEFORE and AFTER, so the effect is a figure rather than a claim. How a liar passes it: widening the pattern until the count drops — so the over-strictness arm asserts an undischarged row still attributes.
+NEGATIVE CONTROL: break the discharge in `owed-controls.mjs` and watch a NAMED assertion in `owed.test.mjs` fail.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18.s inbox entry, drained this commit).
+
+### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
+order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), enacting BOB #18.s ruling in `kickoffs/BOB.md` "Spawning and retiring lanes": a stood-down, duplicate or retired session RELEASES the lane name.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT lives in the repo where a suite drives it, the ACT stays in the harness.
+scope: the OCCUPANCY half only — before a chip is filed, read the session list and REFUSE if a live session already holds the lane (by `scheduledTaskId` or title). Put it in `tools/` as a pure function over a session listing, so a suite drives it. **MUST NOT TOUCH:** the `conduct-8` scheduled task.s definition lives OUTSIDE this repo and is the operator.s — named to them, never changed from here. **FULL GATE PROFILE** (`tools/` is not `docs/`): check disk first.
+accepts-when: given a listing with a live session bound to a lane, the judgement REFUSES it and names the occupant; given the same listing with that session stood down, it admits. Driven from a FIXTURE listing, never the live harness. How a liar passes it: matching on title alone — so the arm feeds a session whose title differs and whose `scheduledTaskId` matches.
+NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is admitted, failing by name.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
+
 ### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own instructions whole — which is the one thing CLAUDE.md's reading budget exists to guarantee. It was already over at 32,259 B before REC-146 appended to it. — owner RECORD.
 order: after D-339 with the corrections: it is not a defect in the product, but it breaks the READING BUDGET doctrine for the busiest build lane, and every RECORD worker pays it on every spawn. Cheap and mechanical (SCHEDULER #2, 2026-09-19)
 milestone: M0
@@ -29,6 +62,17 @@ depends-on: none.
 scope: cut it on CONDUCT.md's precedent — **archive the cut text VERBATIM** (nothing deleted), reduce the live file under 24,576 B, and add it to `CUT` in `tools/readbudget.mjs` so the warning clears honestly rather than by exemption. **THE TIMING CONSTRAINT IS WHY REC-146 DID NOT DO IT:** RECORD.md's own convention is append-never-rewrite while other RECORD workers are live, so this runs when no RECORD worker holds it — CONDUCT confirms that before spawning.
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar passes it: deleting rather than archiving, so the arm diffs the archive against the pre-cut file. NEGATIVE CONTROL: drop a paragraph instead of moving it, and the byte-identity check fails naming it.
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
+
+### M0-82 · queued — **`kickoffs/CONDUCT.md` HAS 24 BYTES OF HEADROOM, SO THE ROUTING RULE THE INTEGRATOR LANE MOST NEEDS CANNOT BE WRITTEN WHERE IT READS IT.** 24,552 B against 24,576 B, in `readbudget.mjs`. CUT set where an overrun FAILS. CONDUCT #8 raised it and rightly refused to decide it; BOB #18 ruled ARCHIVE-THEN-CUT. — owner CONDUCT.
+order: beside REC-154, the same class: a kickoff at or over its reading budget, which the busiest build lane pays on every spawn. **AND IT IS PLACED AS A ROW RATHER THAN SENT AS A MESSAGE BECAUSE CONDUCT CANNOT BE TOLD** — it runs unattended and has no inbox (M-74) (SCHEDULER #3, 2026-09-20)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each* — enacting BOB #18's ruling in `kickoffs/BOB.md`.
+depends-on: none. REC-154 is the same act on `RECORD.md`; either may land first.
+scope: ONE commit that (1) moves CONDUCT.md's two "Integration mechanics" sections VERBATIM to `docs/archive/`, (2) cuts them from the kickoff and cites the archive, (3) lands the three occupancy/reachability rules from `kickoffs/BOB.md` in the space freed. **THE ARCHIVE STEP IS THE WHOLE RULING:** `docs/archive/CONDUCT-kickoff-2026-09-19.md` does NOT contain those sections (grepped, 0 hits), so cutting them without archiving destroys a receipt that exists nowhere else, which CLAUDE.md §1 forbids. `BOB.md`'s own header is the worked precedent.
+accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; `node tools/decided.mjs` still finds every ruling in the moved sections; the kickoff cites the archive by path. How a liar passes it: cutting prose that was never archived — so the arm greps the archive for each moved section's own first sentence.
+NEGATIVE CONTROL: cut a section without archiving it, and the decided-index arm fails by name.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
 
 ### D-116 · queued — **NOTHING READS A FLEET MEMBER'S VERSION BACK THROUGH ITS BINDING.** The installer verifies the PLANE (`verifyUpdate` reads `op=bootstrap`) and each member is uploaded with a version and never asked what it answers — so the plane can verify itself current while a member still serves the previous build, invisibly to both. — owner DIST.
 order: after D-254, above features: a group can run a stale member with nothing reporting it, so the install and the deploy both claim more than they can support — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19)

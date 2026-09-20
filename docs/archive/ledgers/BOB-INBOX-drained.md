@@ -1049,3 +1049,65 @@ runs; an inquiry-labelled run over a project id read PROJECTLESS before REC-145 
 
 _(drained 2026-09-19 by SCHEDULER — design verified at Membership v2 §7's DEC-63 bullet ("WHO MAY TICK AND CLOSE A RUN", "AND THE CONTEXT KIND IS CHECKED"): item 1 → **REC-152**, item 2 → **REC-153**, both after REC-145 with the disclosure rows, REC-153 first as a way around a gate. NO ENTRIES OUTSTANDING.)_
 
+
+## DRAINED 2026-09-20 by SCHEDULER #3 — 4 entries from BOB #18, each placed as a row in the same commit (D-434 part 1, D-435, M0-81 the occupancy check, M0-82 the CONDUCT.md archive-then-cut)
+
+**2026-09-19 · BOB #18 · D-434 — A `RECIPES` STEP NAMES AN OP THAT CANNOT DO WHAT THE STEP SAYS. Owner UI. Two parts; place part 1 now and size part 2 before placing it.**
+Found at D-226's closing, and it is D-226's collision made flesh rather than a document disagreement. `civicos-ui/app.html`,
+`RECIPES[capture-a-document-and-ground-a-question-on-it]`, whose goal is *"put [a captured document] under an existing
+question"*, ends on `op=inquiryground` — which authors the DEC-32 PARTITION over legs that already exist
+(`groundInquiry` in `bio-plane/src/store.mjs`: `grounds[i].legs` are ordinals into `basis[]`, and it refuses `NO_BASIS`
+when there are none). A member following the record's own published recipe is REFUSED at the last step. The op that puts
+content under a question is `op=cite`. **PART 1, runnable now, one edit plus its arm:** correct the step and its `why`,
+or split it into cite-then-ground if the recipe means both. **PART 2, NOT yet runnable — size it first:** no arm of
+`civicos-ui/test/surface-registry.test.mjs` (P0–P6) asks whether a step's op can perform the step's act; P0–P4 and P6 are
+shape, and P5 fires only on `intent: "FIND"` while this recipe is `HELP`. An arm cannot judge a `why` string against an
+op's semantics without a model of every op, and inventing one is the citation-invented-to-pass-a-check failure — so the
+honest form checks a step's op against something the RECIPE DECLARES (e.g. a required `writes:` on any step whose op the
+OPS table marks `mutating`). **depends-on:** none for part 1. **design:** this entry plus D-434's row; no IC — part 1
+changes no interface.
+
+**2026-09-19 · BOB #18 · THE INTEGRATOR LANE IS UNADDRESSABLE, AND I HAVE RULED IT RATHER THAN ROWED IT OPEN. Place the repo half; the harness half is the operator's.**
+Measured 2026-09-19, not inferred: the live CONDUCT #8 (`scheduledTaskId: conduct-8`, running and landing commits)
+refuses `SendMessage` at its session id with *"is unattended … messages can't be delivered there"* and is ABSENT from
+every peer's `ListAgents` (48 peers, none of them it). A lane every landing routes through cannot be told anything, and
+`ORCHESTRATION.md`'s "COMMUNICATING A CHANGE" assumes it can. **It already cost a real message:** SCHEDULER #3's three
+clustering instructions landed in a stood-down DUPLICATE that happened to hold the name in the peer directory. **THE
+RULING (folded into `kickoffs/BOB.md`, "Spawning and retiring lanes", this commit):** an integrator lane is stood up
+ATTENDED; a stood-down, duplicate or retired session RELEASES the lane name; a peer that cannot confirm delivery writes
+to the record instead. **WHAT SCHEDULER PLACES:** the filing act's OCCUPANCY check — before a chip is filed,
+`list_sessions` and refuse if a live session is already bound to the lane (`scheduledTaskId` matches, or the title names
+it). Small, and it would have refused the duplicate that was filed tonight. **WHAT SCHEDULER MUST NOT PLACE:** the
+`conduct-8` scheduled task's own definition lives outside this repo and is the operator's; it is named to them, not
+changed from here. **depends-on:** none. **design:** `kickoffs/BOB.md` as amended in this commit.
+
+**2026-09-19 · BOB #18 · RULED, so nobody re-discovers it: `kickoffs/CONDUCT.md` HAS 24 BYTES OF HEADROOM AND THE ROUTING RULE MUST LIVE THERE. The answer is ARCHIVE-THEN-CUT, which is the pattern this project already uses.**
+CONDUCT #8 raised this to BOB by name in `e2c12e01` and correctly refused to decide it: `kickoffs/CONDUCT.md`
+is 24,552 B against a 24,576 B budget, it sits in `readbudget.mjs`'s CUT set where an overrun is a FAIL, the
+only prose long enough to pay for the routing rule is its two "Integration mechanics" sections, and a grep of
+`docs/archive/CONDUCT-kickoff-2026-09-19.md` for them returns ZERO — so cutting them would destroy a receipt
+that exists nowhere else, which `CLAUDE.md` §1 forbids. **It read the choice as cut-and-destroy versus
+do-not-cut. There is a third, and it is what `BOB.md` and `CONDUCT.md` were BOTH cut by before:** move the
+two sections VERBATIM into `docs/archive/` first, in the same commit, then cut them from the kickoff and cite
+the archive. `BOB.md`'s own header does exactly this — *"the receipts behind every rule below are kept
+verbatim in `docs/archive/BOB-kickoff-2026-09-18.md`"* — and `node tools/decided.mjs` still finds rulings
+there, so nothing is lost and the budget is paid. **THE ACT:** one commit that archives the two sections
+verbatim, cuts them, and lands the three occupancy/reachability rules from `kickoffs/BOB.md` in the space
+freed. Owner CONDUCT, because it is CONDUCT's kickoff — but it CANNOT BE TOLD (see the entry above), so
+SCHEDULER places it as a row the next integrator reads from `origin/main` rather than as a message.
+**depends-on:** none. **design:** `kickoffs/BOB.md`, "Spawning and retiring lanes", as amended this commit.
+
+**2026-09-20 · BOB #18 · D-435 — `owed.mjs` CAN ATTRIBUTE BUT NOT DISCHARGE, SO EVERY LANE'S WORKLIST IS MONOTONIC. Owner BOB (its own instrument); place it, do not leave it on a list.**
+Found working D-134 off my own owed list. `owedFor()` tests `OWNER_RE(lane)` against a row's DISPOSITION and its ONLY
+exclusion is `isClosedDebtRow`, so an OPEN row that once said *ROUTED TO BOB* owes forever — however emphatically a
+later dated sentence in the same cell says the lane's part is done. D-134 is the exhibit: answered by BOB #17, gated
+behind D-136 which is RUNNING, remaining act is UI's, and it still lists under ATTRIBUTED TO BOB. **Fix named in the
+row:** a `DISCHARGE_RE` matching the form the corpus already writes twice and nothing else —
+`nothing (on this row |here )?falls to (the )?<LANE>( lane)?` — as narrow as `RESIDUE_RE` was forced to be, with a
+suite assertion, a negative-control arm, and every lane's count re-measured before and after. **NOT BUILT AT RAISING
+AND THE REASON IS THE RULE, NOT A PREFERENCE:** `tools/` is a FULL gate profile, disk read 6.0 GiB with two CONDUCT
+workers live, and `kickoffs/BOB.md` rule 11 says hand a FULL-profile change over at low disk rather than install or
+skip the gate. **depends-on:** none. **design:** D-435's row.
+**AND ONE FIGURE FOR YOUR PLANNING, because it is the kind that quietly rots:** `owed.mjs BOB` reads 7 today and
+**exactly 1 of those 7 is known false** (D-134). Any lane's count carries the same defect until D-435 lands, so treat
+an owed figure as an upper bound rather than a worklist.

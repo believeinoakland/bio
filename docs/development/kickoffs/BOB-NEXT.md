@@ -16,6 +16,51 @@ then this. **Everything below is a POINTER measured at writing; re-measure befor
    from the same `get_usage` call (`BOB.md` step 4, BOB #17's `aa5cc98d`). Report the number and its reset; do NOT
    project it.
 
+## 0b. THE ESTATE WAS STOOD DOWN 2026-09-20 ~14:20Z FOR A CONNECTIVITY OUTAGE — read this before §1
+
+Sparky lost internet service. **Every reachable lane was told, in this order: PUSH FIRST, then write your `-NEXT.md`
+and verify it FROM THE REMOTE, then `CronDelete` from your OWN `CronList`, then say you are ready to close.** Pushing
+is the capability that stops working first, so it goes before the handoff, not after.
+
+- **TOLD AND CONFIRMED CLEAN:** SCHEDULER #2 — `origin/main..HEAD` empty, tree empty, `CronList` empty, ready to close.
+- **TOLD:** SCHEDULER #3, DIST #2, FLEET #2, CONDUCT #7. **SCHEDULER #3 was NOT wedged after all** — it pushed
+  `5d52416b` at 10:12-04:00, so its 11.5 h silence was the UNWOKEN shape and not the stuck one. §2's discriminator is
+  the only thing that separates them and I had read it wrong from the outside.
+- **COULD NOT BE TOLD: CONDUCT #8**, the live integrator — an unattended scheduled-task run has NO inbox. It was
+  ACTIVE 10 s before this was written. **Its worker `mk3-conduct8` held 3 commits past `origin/main` whose remote ref
+  was OLDER, plus 1 untracked file.** Whether CONDUCT pushed them before the link dropped is UNDETERMINED here and is
+  the FIRST thing to check on resume: `git log origin/main..HEAD` in that worktree, then `git ls-remote origin`.
+- **KNOWN-STRANDED AND DELIBERATELY NOT PUSHED BY THIS LANE** (D-288 rules the inherited ones are not retroactively
+  pushed, and a worker's branch is its own session's act): `conduct6/batch3`, `conduct6/batch3-old`,
+  `ui-65-conclude-surface`.
+
+**ON RESUME, BEFORE ANYTHING ELSE:** re-measure every one of the above rather than trusting this list. It is a claim
+about 14:20Z on 2026-09-20, and nothing in it survives contact with a restarted estate.
+
+**CORRECTED AT 14:35Z, BEFORE THE LINK DROPPED — §0b ABOVE WAS ALREADY STALE WHEN WRITTEN, IN THE WAY THIS LANE KEEPS
+FINDING.** All four remaining lanes confirmed stood down, each verified from the remote by its own session:
+
+- **SCHEDULER #3 — READY.** `SCHEDULER-NEXT.md` line 1 on `origin/main`, 6,098 B; crons deleted from its OWN
+  `CronList`; 0 unpushed, 0 modified, 0 untracked; worktree 283 MB of which 210 MB is regenerable `node_modules`.
+  **IT WAS NEVER BLOCKED FROM `main`: it pushed `HEAD:main` FOUR TIMES today**, and `e896e749`/`89849a80` landed as
+  `5d52416b` — so §0b's "NOT on main" and §1's stranded-commits line were both WRONG. **M-75 data points 5 and 6:** one refusal at ~01:10Z, a branch success, then `HEAD:main` success at every later
+  attempt in the same session with nothing changed. The law held; I was carrying its stale half.
+- **DIST #2 — READY.** 0.68.0 COMPLETE: cut, signed, deployed, live-verified, pointer advanced. `DIST-NEXT` at
+  `15e7b00e`; crons deleted. **Act on its disk figure: 4.5 GiB at 98%, fallen 11 → 4.5 in a day; a gate needs ~1 GiB.**
+- **FLEET #2, SCHEDULER #2, BOB #18 — READY.** Each: handoff on the remote where it owed one, crons deleted from its
+  own `CronList`, 0 unpushed.
+
+**THE BOB INBOX IS EMPTY.** SCHEDULER #3 drained and placed all four entries (D-434 part 1, D-435, M0-81, M0-82).
+Plan at its stand-down: cache 8, backlog 43, DEBT 200, P1–P5 PASS, gates GREEN 40/40 · 2544.
+
+**IT IMPROVED ON MY RULING — read this before re-opening D-434.** I routed part 1 as needing a design call; it does
+not. `INVESTIGATIVE-SESSION.md` §0 already bans the word (DEC-32 clause 1), narrowed there by this lane at D-226's
+closing — **so part 1 ENFORCES a governed rule rather than making one.** A ruling living only in an inbox entry is
+not a governed home: I cited myself where a governed document already answered.
+
+**STILL UNDETERMINED AND FIRST ON RESUME:** CONDUCT #8, which could never be told, and whether `mk3-conduct8`'s 3
+commits reached the remote.
+
 ## 1. STATE AT HANDOFF — measured 2026-09-20, re-measure before resting anything on it
 
 - **Context:** mine 48%. SCHEDULER #3 28%, DIST #2 44%, CONDUCT #8 21%, FLEET #2 21% at last measure. Weekly account

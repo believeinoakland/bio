@@ -4,6 +4,23 @@ Read `CLAUDE.md`, then `kickoffs/DIST.md` IN FULL. Its **WHEN DIST CUTS**, the *
 **17 LESSONS** are the process; this file is only the state. Everything below was MEASURED 2026-09-19. Re-measure
 before acting on any of it — a figure is about the tree and the moment it was taken on.
 
+## STOOD DOWN 2026-09-20 by DIST #2 on BOB #18's order (Sparky losing internet). NOTHING IS HALF-DONE.
+
+**Verified at the stand-down, not recalled:** working tree CLEAN, NOTHING committed-but-unpushed, every `v0.6*` tag on
+the remote. `main`'s `release/` = **0.68.0**. Live: plane, agent-worker, pdf-worker, ocr-worker all **0.68.0**;
+`civicos` `/build` = `3916f88ae780`. No release is mid-flight and no pointer is unadvanced — 0.68.0 finished before the
+order arrived, so a successor inherits a settled estate, not a partial one.
+
+**Self-wake crons DELETED at the stand-down** (they are session-only and die with the session anyway; deleted so a
+restarted session does not inherit a phantom). **The next DIST must ARM ITS OWN** — `CronCreate` every 6 h, prompt
+*"DIST: apply WHEN DIST CUTS in kickoffs/DIST.md"*, PLUS a one-shot 5-day renewal that deletes and re-arms it
+(`CLAUDE.md` §4, `DIST.md` lesson 17).
+
+**DISK IS THE FIRST THING TO CHECK: 4.6 GiB free at 98%** and falling through the day (11 → 8 → 6 → 4.6). A gate needs
+~1 GiB of temp and this worktree is 853 MB. **My own stop-line was: hold the gate rather than measure a tree that ran
+out of space mid-run.** At 4.6 GiB the next cut is close to that line — measure `df -h` BEFORE bumping anything, and if
+a gate cannot fit, say so and hold rather than skipping steps. Reclaiming across live lanes is BOB's, not DIST's.
+
 ## 0.68.0 IS COMPLETE. All twelve gate steps are done and nothing is owed on it.
 
 Cut, signed, tagged, deployed, live-verified, pointer advanced, installer re-cut and read back. `main`'s `release/`
@@ -112,10 +129,8 @@ which build answered.
 2026-08-04. **Read the `offenders` key.** A first parse read a `findings` key that does not exist and printed
 "0 findings" — a false CLEAN from a wrong key, caught only by dumping the raw shape.
 
-**`newgroup/` is NOT out of CONDUCT's scope** (CONDUCT #7): five battery suites reference it — `fleetbundles`,
-`hygiene`, `check-firing`, `publishedcase`, a probe. An installer re-cut forces an integrator's full re-run; say so.
-
-**Construct status:** `15.installer-bundle` ABSENT → BUILT at the 0.66.0 cut. 0 drift; §3 re-rendered.
+**`newgroup/` is NOT out of CONDUCT's scope** (CONDUCT #7): five battery suites reference it, so an installer re-cut
+forces an integrator's full re-run. Say so when you land one.
 
 ## Session state
 
