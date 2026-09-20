@@ -95,10 +95,30 @@ const leaks = async () => {
   out.manifest = { obsId: man.includes(OBS), handle: man.includes("olgaobserver"), words: man.includes("PROBE-WORDS") };
   return out;
 };
-const row = (path, act, r, l) => console.log(`\nPATH ${path}\n  act      ${act}\n  answer   ${JSON.stringify({ ok: r && r.ok, code: codeOf(r) })}`
+/* ADDED 2026-09-20 by the MK-3 worker — A PATH THAT NEVER RAN MUST NOT PRINT AS
+   A CLEAN ONE, and on THIS instrument that is the whole point rather than tidiness.
+   `row()` printed `answer {"ok":null,"code":null}` beside an EMPTY bucket whenever
+   the act was never reached, which is byte-for-byte what a path that ran and leaked
+   nothing prints. Measured 2026-09-20: PATH 3 — the `op=caseratify` route, C-53.12,
+   the fence MK-3 would lift — has been printing exactly that, because its `op=publish`
+   precondition refuses `NOT_CONCLUDED` (`op=conclude` now refuses `NO_CLAIM`:
+   REC-124/REC-136 §7.1 made a conclusion adopt a named reading's claim, and this
+   probe's fixture names none). A reader of this output would conclude the case route
+   was driven and published nothing. It was not driven at all.
+   `ok === null` is the signal, and it is a FINDING, printed as one. */
+const DEAD = [];
+const row = (path, act, r, l, why = null) => {
+  const dead = !r || r.ok === null || r.ok === undefined;
+  if (dead && path !== "0 baseline") DEAD.push(`PATH ${path}${why ? ` — ${why}` : ""}`);
+  console.log(`\nPATH ${path}\n  act      ${act}\n  answer   ${JSON.stringify({ ok: r && r.ok, code: codeOf(r) })}`
+  + (dead && path !== "0 baseline"
+      ? `\n  DEAD ARM THIS PATH WAS NEVER DRIVEN${why ? `: ${why}` : ""}. The bucket and verify lines below say`
+        + `\n           NOTHING about this route — they are the state left by the paths above it.`
+      : "")
   + `\n  bucket   ${l.objects} object(s) · words in ${JSON.stringify(l.words)} · provenance in ${JSON.stringify(l.provenance)} · handle in ${JSON.stringify(l.handle)} · id in ${JSON.stringify(l.obsId)}`
   + `\n  verify   words ${l.verify.words} · provenance ${l.verify.provenance}`
   + `\n  manifest id ${l.manifest.obsId} · handle ${l.manifest.handle} · words ${l.manifest.words}`);
+};
 row("0 baseline", "nothing ratified yet", { ok: null }, await leaks());
 
 /* PATH 1: op=ratify on the observation directly. */
@@ -127,8 +147,16 @@ row("1b op=ratify on the authored bundle once its bytes are in the working bucke
 if (r1b && !r1b.ok) console.log(`  detail   ${JSON.stringify(r1b).slice(0, 600)}`);
 
 /* PATH 2: a finding whose basis cites the observation, ratified. */
+/* CORRECTED 2026-09-20 by the MK-3 worker, never exempted — and the OLD CALL WAS
+   WRONG rather than merely stale. It passed `id: "PROJ-2026-5302-probe"`, and
+   REC-141/IC-158 (2026-09-18) made a project's id MINTED BY THE PLANE
+   (C-59.1 PROJECT_ID_SUPPLIED); `makePublishingProject` now THROWS on `id`
+   rather than ignoring it, deliberately, so a caller still expecting its chosen
+   id is told at the fixture. This probe is not a `.test.mjs` — it is MK-1's
+   measurement instrument, run by hand — so no battery suite could see it die,
+   and PATHS 2, 3 and 4 had not run since. Pass `name`, take the minted id. */
 const PROJECT = await makePublishingProject({ post: POST, mf, sha, machineToken: ADM, owner: "iris",
-  id: "PROJ-2026-5302-probe", created: NOW, updated: LATER });
+  name: "mk1-publish-probe", created: NOW, updated: LATER });
 const inquiryMd = (id, question, target) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, "current_state: open", "prior_state: null",
@@ -175,7 +203,8 @@ if (p3 && p3.caseDocument) {
   const pc = JSON.stringify(await GET(`op=publishedcase&id=${D.case_id}`));
   console.log(`  publishedcase: id ${pc.includes(OBS)} · handle ${pc.includes("olgaobserver")} · words ${pc.includes("PROBE-WORDS")}`);
 }
-row("3 op=publish + op=caseratify, the finding as a case member", "iris signs the case document", r3, await leaks());
+row("3 op=publish + op=caseratify, the finding as a case member", "iris signs the case document", r3, await leaks(),
+    p3 && p3.caseDocument ? null : `op=publish authored no case document (${codeOf(p3) ?? "no answer"}), so op=caseratify was never called`);
 if (r3 && r3.ok === false) console.log(`  detail   ${JSON.stringify(r3).slice(0, 600)}`);
 
 /* PATH 4: the observation ITSELF named as a case target. */
@@ -187,5 +216,14 @@ if (p4 && p4.caseDocument) {
   r4 = await POST(`op=caseratify&token=${IRIS}`, { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
     sig: signCase("iris", D.case_id, D.edition, D.doc_sha) });
 }
-row("4 op=publish + op=caseratify, the observation itself as a case target", "iris signs", r4, await leaks());
+row("4 op=publish + op=caseratify, the observation itself as a case target", "iris signs", r4, await leaks(),
+    p4 && p4.caseDocument ? null : `op=publish refused the observation as a case target (${codeOf(p4) ?? "no answer"}), so op=caseratify was never called — AND THAT REFUSAL IS ITSELF THE MEASUREMENT: an authored observation is object_type information and a case member must be an inquiry, so an observation is NEVER a published_case_members row`);
+if (DEAD.length) {
+  /* THE FOOT, so a reader who scrolled past a path cannot miss that it never ran.
+     WORKER.md: *an arm that did not arm is a finding*, and this instrument's whole
+     job is to say what reached the published record — so a path it could not drive
+     is the one thing it must not report in silence. */
+  console.log(`\n${DEAD.length} PATH(S) NEVER DRIVEN — this run measured nothing about them:`);
+  for (const d of DEAD) console.log(`  ${d}`);
+} else console.log("\nevery path was driven.");
 await mf.dispose();

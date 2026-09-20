@@ -15762,3 +15762,82 @@ CONDUCT is not waiting on it to keep working.
 this one**, each diagnosed to a named fix, because a defect may be placed only with its fix identified.
 
 **open as of 2026-09-20.**
+
+## CLAIM 2026-09-20 RECORD (MK-3 — attribution on the case contribution act; the row's FIRST ACT is a depends-on that may stop it)
+
+claimed: 2026-09-20 by the MK-3 worker (worktree `.claude/worktrees/mk3-conduct8`, branch `worker/mk3-conduct8`,
+base `origin/main` @ `e1aa2eee`). Spawned by CONDUCT #8. **NARROW ON PURPOSE** — the row's `depends-on` is MK-1
+*and the case contribution act IDENTIFIED at the artifact*, and the second half is the first act. Paths:
+
+- `bio-plane/test/mk1-publish-probe.mjs` — REPAIR ONLY. The probe is MK-1's own measurement instrument and it
+  has been DEAD since REC-141/IC-158 (2026-09-18) changed `makePublishingProject` to refuse a chosen project id
+  (`C-59.1 PROJECT_ID_SUPPLIED`): the fixture THROWS at path 2 and paths 2, 3 and 4 have not run since. It is not
+  a `.test.mjs`, so no battery suite could see it. Repaired to pass `name` and take the minted id, per the
+  fixture's own corrected contract. No assertion changed; the printed shape is unchanged.
+- `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` — §Incomplete's §4 entry ONLY. That entry says the contribution
+  act *"is to be confirmed against how the case document's members are assembled (`published_case_members`) when
+  MK-3 is built"*. This claim records the confirmation it asked for and nothing else. **§4's body is NOT edited
+  and no construct moves**: `node tools/status.mjs 13.attribution` stays ABSENT.
+- `docs/development/CLAIMS.md` — this block and the DELEGATION under it.
+
+**NOT TOUCHED, and deliberately:** `bio-plane/src/index.mjs`, `bio-plane/src/store.mjs`, `bio-plane/src/schema.mjs`,
+`bio-plane/checks/bio-checks.mjs`. **MK-1's publication fence (C-53.10, C-53.11, C-53.12) IS STILL STANDING** and
+this item did not touch a byte of it. Lifting it is MK-3's own act and it is NOT taken — see the DELEGATION below.
+
+**open as of 2026-09-20** — the paths are free the moment CONDUCT integrates; no path here is `src/`.
+
+## DELEGATION 2026-09-20 RECORD (MK-3) -> BOB, then SCHEDULER — **§4's ATTRIBUTION ACT DOES NOT EXIST IN THIS PLANE, AND WHAT IS MISSING IS AN ACT RATHER THAN A FIELD. MK-1's PUBLICATION FENCE IS DELIBERATELY STILL STANDING.**
+
+**open as of 2026-09-20** — MK-3 stopped at its own `depends-on` and needs a DESIGN answer before it can be built,
+so it goes to BOB first (`CLAUDE.md` §3/§4) and to SCHEDULER after. **Nothing is owed by CONDUCT except carrying
+this block.**
+
+**THE ROW'S FIRST ACT WAS A `depends-on` THAT STOPS IT, AND STOPPING IS THE OUTCOME.** MK-3's `depends-on` is
+*MK-1, and the case contribution act IDENTIFIED at the artifact (`MEMBER-KNOWLEDGE-DESIGN.md` §Incomplete)*.
+
+- **MK-1 is MET**, verified at the code and not from a row: `bio-plane/src/store.mjs` carries
+  *"MK-1 / D-184 — THE AUTHORED FLAG'S FENCE, HERE AND BEFORE THE FIRST WRITE"* in `promote`, and
+  `node tools/status.mjs 2.firsthand` reads PARTIAL with all twelve of its probes `ok`.
+- **THE SECOND HALF IS NOT MET.** §Incomplete offered a binary — `op=caseratify`, or a per-member contribution
+  act before it — to be confirmed against how `published_case_members` is assembled. Confirmed, and **neither is
+  the act; there is no such act.** The three measurements and their sites are written into that §Incomplete entry
+  in the same commit, so this is not the only copy. In short: (1) an authored observation is
+  `object_type: information` and a case member must be an inquiry (`NOT_AN_INQUIRY`, driven through `op=publish`),
+  and `published_case_members` is written by ONE statement in `ratifyCaseDocument()` over the signed document's
+  `case_findings` — so **the thing §4 governs never has a roster row at all**; it reaches a case as
+  `testimonyReach().via`, an edge with no row, or as evidence under D-431(b). (2) **Every act on the publication
+  path is the publishing project's OWNER's** — `op=publish` through `#isProjectOwner`, `op=caseratify` and (since
+  D-429/REC-140 and D-431, both AFTER §4 was written) `op=ratify` through `#caseAuthority`'s
+  `CASE_SIGNER_NOT_AN_OWNER`. The attesting member is a different, server-stamped party. (3) The whole 195-op
+  census holds no member-scoped case contribution act.
+
+**WHY THIS IS BOB'S AND NOT A BUILDER'S.** Putting the level on any act that exists would have the PUBLISHER choose
+the OBSERVER's attribution. That is a prefill by another member — the one thing §4's "No default" clause forbids —
+and `CLAUDE.md` §4 forbids inventing an attribution outright. On this field the person exposed by an invented one is
+a source who chose to be off the record. **So the honest outcome is a narrowed unknown, not a build.**
+
+**THE FIVE QUESTIONS, and the last one is the one that decides whether §4 is buildable as written.**
+
+1. **Who takes the act, and where does it sit in the ceremony?** The attesting member is not an owner and may hold
+   no `publish` capability at all (MK-1's own probe enrols its observer with `contribute` alone).
+2. **Does the case ceremony BLOCK until every contributing observer has chosen?** If yes, any member holds a veto
+   over their project's publication. If no, what does an unchosen contribution publish — and "nothing" is a fourth
+   outcome beside the four levels, which §4 does not have.
+3. **What happens when the observer has left the group, or is inactive?**
+4. **What does the level key on** — `(case edition, observation)`, or `(case edition, finding, observation)`? One
+   observation can be reached by two findings of one case at different depths (`testimonyReach` returns exactly
+   that shape), and a `via` observation has no roster row to hang a per-contribution choice on.
+5. **WHAT A `group`- OR `project`-LEVEL CHOICE DOES TO THE SIGNED BYTES.** The author's handle is in
+   `data/provenance.json` **inside the bundle whose sha is signed and published**. A published projection cannot
+   withhold it without either (a) not publishing that provenance document, which breaks byte verification of the
+   bundle a stranger is entitled to check, or (b) authoring the observation's provenance differently at `testify`
+   time — which the level, being per case edition and explicitly NOT stored on the observation (§4), is not known
+   at. **§4 as written does not resolve this, and until it is resolved the fence cannot be lifted by any
+   projection**, because the leak it exists to prevent is inside the bytes rather than beside them.
+
+**WHAT MK-3 DID NOT DO, stated so nobody reads the branch as a partial build:** it did not touch
+`index.mjs`, `store.mjs`, `schema.mjs` or `bio-checks.mjs`; **C-53.10, C-53.11 and C-53.12 stand exactly as MK-1
+left them**; no construct moved (`13.attribution` is still ABSENT); no IC is proposed, because no interface changed.
+
+**FOR SCHEDULER, after BOB rules:** MK-3 cannot be re-run as written. Its replacement needs BOB's answers to 1–5
+first, and question 5 may make §4 itself need amendment rather than a builder.
