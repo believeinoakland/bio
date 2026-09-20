@@ -17391,3 +17391,77 @@ literals and the `reason:`/`code:` string literals within 400 characters of one,
 variable, or receives from the real plane in miniflare, is outside it entirely — the twelve plane-driven UI suites
 carry real translations the walk never counts. And it says a fixture CANNOT REPRESENT a translation, never that any
 assertion reads one.
+
+## 2026-09-19 — THE INSTRUMENT CLUSTER (M0-78, D-414, D-433), measured on `worker/instr-conduct8` off `ad67ff0a`
+
+Instrument: each suite and guard run DIRECTLY, exit status read UNPIPED, on a quiet tree in this
+worker's own worktree. Figures are what the instruments PRINTED, never arithmetic on a file.
+
+**D-414 — the segmenter's generator gap, and the movement IS the finding.** The signature regex shared
+by five walks gained `(?:\*\s*)?`. Measured by diffing the head set the old and new regexes find over
+four plane sources before any suite was run: **exactly ONE gained head across the whole corpus** —
+`eachImage` at `store.mjs:14037` — **zero lost, zero false positives** (`index.mjs` 75/75,
+`airun.mjs` 64/64, `schema.mjs` 0/0). The walks then moved:
+
+| figure | before | after |
+| --- | --- | --- |
+| `store.mjs` method segments (bounds, derivation-bounds, meaning-bounds all print it) | 595 | **596** |
+| derivation-bounds: methods scanning UNBOUNDED (the CENSUS ratchet) | 109 | **110** |
+| derivation-bounds: the amplification CLASS | 24 | **24, unmoved** |
+| meaning-bounds: methods publishing a collection | 203 | **203, unmoved** |
+| bounds: methods carrying a cap / ops reached | 50 / 36 | **50 / 36, unmoved** |
+| bounds REC-59 corpus chars scanned | 25,724,115 | **25,734,467** (this item's own comments) |
+| suite tallies | airuns 53/0 · bounds 167/0 · derivation-bounds 72/0 · meaning-bounds 92/0 · versionchain 91/0 | **53/0 · 173/0 · 72/0 · 92/0 · 91/0** |
+
+**THE CENSUS MOVE IS A DIFFERENT KIND FROM THE EIGHT ABOVE IT IN THAT FILE.** Every prior movement was
+a NEW METHOD entering `store.mjs`. Nothing entered here: `*eachImage` has been there unchanged and the
+INSTRUMENT could not see it, so the census reported 109 over a population of 110 for as long as that
+generator has existed, with the ceiling green throughout. **A ratchet cannot catch what its reader never
+counted.** NARROWED AND NOT CLOSED: `eachImage` joins the CENSUS and does NOT join the amplification
+CLASS. It reads one image per bundle over an unbounded scan, which is the class's own shape, but the
+per-row call is `this.readImage(...)` rather than a `#rows(` the walk can see — the walk's DECLARED
+helper blind spot. The hand-admitted compensation for that blind spot (`D384_STAYS`) is a population
+measured 2026-09-16, when this method was invisible and could not have been measured into it.
+
+**M0-78 — the two arms that armed perfectly and measured nothing.** Diagnosed by running each arm
+alone. Both die the same way: the arm removes a refusal from `store.mjs`, the act therefore travels
+FURTHER and meets the next authority that refuses it anyway — the gate (`C-41.8`) for (C), the
+participation fence (`C-56.1`) for (H) — and `caseceremony.mjs`'s `ratifyCase` throws on that refusal,
+killing the module before one declared assertion is evaluated. Before: both `-1 pass, -1 fail · NOT AS
+DECLARED`, driver exit 1. After the fixture surfaces a ratify-stage refusal instead of throwing:
+**(C) 72 pass / 3 fail, (H) 66 pass / 9 fail, both `as declared`, driver exit 0**, with the unarmed
+suite unchanged at **75/0**.
+
+**THE DETECTOR, WHICH IS THE LARGER HALF, MEASURED BOTH WAYS.** With the census and the fixture BOTH
+reverted to HEAD, `m025-arm-census.mjs --only caseproduction.control.mjs` printed
+`caseproduction.control.mjs  UNCLASSIFIED  exit=1 arms=? decl=? 13.8s`, reported `8 anchor(s), 0 NOT
+LIVE`, and **EXITED 0**. With the widened detector and the fixture still reverted it reports
+**FIXTURE-THREW, count 1, exit 1**. So the pre-M0-78 state was not "reported healthy" — it was printed
+for a human and enforced on nobody, while D-331's preflight correctly reported every anchor live,
+because **a preflight proves the ANCHOR is live and can never prove the FIXTURE runs.**
+
+**D-433 — the reach that counted observation as reach.** `check-refusal-codes.mjs` ARM B R3 now
+partitions each suite's literals into FED (handed into a surface) and OBSERVED-ONLY (compared against a
+received value), prints BOTH halves per suite, and floors the fed half.
+
+| figure | before | after |
+| --- | --- | --- |
+| R3 (codes credited to a harness mock) | 74 | **70** |
+| R3 OBSERVED-ONLY, printed and not floored | not distinguished | **4** — `BAD_KIND`, `FALSIFIER_AND_NONE_STATED`, `NO_STATEMENT`, `NO_TITLE` |
+| `arm B: REACH` total, and `FLOOR.reach` | 338 / 338 | **338 / 338, NOT MOVED** |
+| new `FLOOR.r3Fed` | — | **70**, exact |
+
+**THE TOTAL REACH DID NOT MOVE AND THAT IS THE HONEST RESULT, NOT A DISAPPOINTMENT.** All four
+observed-only codes are independently in reach through R1's family rows or R2's `app.html` names, so
+the union hid the correction completely — and would hide a regression in the same direction just as
+completely, which is exactly why the fed half needs a floor of its own. The inflation D-433 names is
+real in R3 and is not, today, inflating `FLOOR.reach`. **The mechanism was live**: driven on a planted
+suite, a code in reach through NEITHER R1 nor R2 moves the reach 338 -> 339 when a mock HANDS it and
+338 -> 338 when a suite only ASSERTS it. Before this landing both raised it.
+
+Negative controls: `node bio-plane/test/nc-instr-cluster.mjs`, seven arms plus a baseline, **all seven
+AS DECLARED**, every restore verified by sha256 AND `cmp` against uniquely-named per-arm pristine
+copies (`derivation-bounds` 154,501 B · `bounds` 146,194 B · `caseproduction.test` 75,785 B ·
+`caseproduction.control` 26,928 B), pen swept. Arm 2 prices the spelling that was NOT taken: the
+shorter `\*?\s*` also lets `\s*` absorb a third space of indent and match at ANY depth, taking
+derivation-bounds from **72/0 to 48/24**.

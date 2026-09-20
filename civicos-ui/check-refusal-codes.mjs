@@ -778,6 +778,30 @@ const FLOOR = {
                        // PL-11 and SK-1 each found the same ten of slack independently, neither
                        // having added any vocabulary. A walk that lost a whole vocabulary would
                        // still have cleared 40.
+
+  /* ============================================================ D-433, 2026-09-19
+     THE FED HALF OF R3, FLOORED IN ITS OWN RIGHT. Set to 70 from this guard's own
+     GREEN print on this item's tree, never by arithmetic on the number that was here.
+
+     **WHY IT NEEDS A FLOOR OF ITS OWN, and the measurement is the argument.** The
+     partition took R3 from 74 to 70 and left the TOTAL REACH UNCHANGED AT 338,
+     because all four observed-only codes (BAD_KIND, FALSIFIER_AND_NONE_STATED,
+     NO_STATEMENT, NO_TITLE) are independently in reach through R1's family rows or
+     R2's app.html names. So `FLOOR.reach` did NOT move and is not evidence about
+     this half either way — **the union hid the correction completely**, and it
+     would hide a future regression in the same direction just as completely.
+
+     A floor ONLY on the union is therefore blind to exactly the thing this row is
+     about: R3 could collapse to nothing and the total would not notice, which is
+     REC-70's shrunken-walk failure with a different subject. This floor is what
+     makes the fed half a measurement rather than a by-product of a larger one.
+
+     IT IS A FLOOR AND NOT A CEILING, deliberately: a suite genuinely handing a new
+     code to a surface SHOULD raise it, and that is a real widening of what a member
+     can meet. What must never happen silently is the fed half FALLING — that means
+     the partition stopped recognising hand-offs, and a walk that lost sight reports
+     a smaller, tidier, wrong answer. */
+  r3Fed: 70,
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a
@@ -938,6 +962,94 @@ function screamingLiterals(src) {
   for (const m of src.matchAll(/["'`]([A-Z][A-Z0-9_]{2,})["'`]/g)) if (CODE_RE.test(m[1])) out.add(m[1]);
   for (const m of src.matchAll(/^\s*([A-Z][A-Z0-9_]{2,})\s*:/gm)) if (CODE_RE.test(m[1])) out.add(m[1]);
   return out;
+}
+
+/* ============================================================== D-433, 2026-09-19
+   A SUITE THAT *OBSERVES* A REFUSAL IS NOT A SURFACE THAT CAN *RECEIVE* ONE.
+
+   R3's whole claim is "a HARNESS MOCK sends it" — a code the SURFACE is handed,
+   which is what makes it reachable by a member. `screamingLiterals` cannot tell
+   that from a code a suite merely ASSERTS AGAINST, and the two are opposite
+   facts about the same string:
+
+       fetchMock = async () => ({ ok: false, reason: "NOT_CAPABLE" });   // FED
+       ok(r.reason === "NOT_CAPABLE");                                   // OBSERVED
+
+   The first proves the surface can receive that code. **The second proves the
+   PLANE sent it, which is the opposite of evidence that the surface was ever
+   handed it** — and as real-plane UI suites replace mocks, every refusal a suite
+   asserts by name inflated the reach.
+
+   WHY THIS IS WORSE THAN A MERELY BLIND INSTRUMENT, and it is the reason the row
+   outranks its own size: `FLOOR.reach` is a RATCHET that may only rise. An
+   inflated reach is moved into the floor by the next worker reading a green
+   print, and from then on every run inherits the inflation and no later
+   measurement can bring it back down without looking like a regression. **A
+   blind instrument reports nothing; a ratchet LOCKS THE ERROR IN.**
+
+   THE PARTITION IS PRINTABLE, SO BOTH HALVES ARE PRINTED PER SUITE and only the
+   FED half is floored. Printing both is not decoration — it is the arm against
+   the cheap way past this row, which is to drop the observed half and call the
+   smaller number an improvement. The two halves together must still account for
+   every code `screamingLiterals` finds, so a code cannot fall out of the world
+   by being classified into neither.
+
+   WHAT THIS MATCHER CAN AND CANNOT SEE, stated rather than left to be found:
+     - It reads OCCURRENCES, and a code is FED for a suite if ANY occurrence of
+       it is fed. A code appearing only in comparisons is OBSERVED-only.
+     - It recognises two observation shapes: a comparison against a value
+       (`x === "CODE"`, `"CODE" !== x`, `==`/`!=` alike), and `reason: "CODE"`
+       (or `code:`/`check:`) inside an `ok(...)` / `is(...)` / `t(...)`
+       expectation call. Anything else counts as fed.
+     - **It cannot see a code fed through a VARIABLE** (`const R = "X"; … reason: R`)
+       — that is `screamingLiterals`' own blind spot inherited, and such a code
+       is counted FED only if the literal also appears somewhere fed-shaped.
+     - A suite that builds an expectation object and passes it to a mock in the
+       same expression is read as FED, which is the safe direction: this
+       partition may only ever REMOVE codes from reach that are provably
+       observation-only, never add one. */
+const OBS_CALL = /\b(?:ok|is|eq|assert|t|expect|deepEqual|strictEqual)\s*\(/g;
+
+function partitionSuiteLiterals(src) {
+  const fed = new Set(), observed = new Set();
+  /* The spans of every expectation call, so `reason: "X"` inside one is read as
+     an expectation rather than as a mock's answer. Parenthesis-matched, because
+     a fixed character window cuts a long assertion in half and misreads its
+     tail — the span rule this estate arrived at for DEC-49 regions, one level
+     out. */
+  const obsSpans = [];
+  OBS_CALL.lastIndex = 0;
+  for (const m of src.matchAll(OBS_CALL)) {
+    let i = m.index + m[0].length - 1, d = 0;
+    for (; i < src.length; i++) {
+      if (src[i] === "(") d++;
+      else if (src[i] === ")") { d--; if (!d) break; }
+    }
+    obsSpans.push([m.index, Math.min(i + 1, src.length)]);
+  }
+  const inObsCall = (at) => obsSpans.some(([a, b]) => at >= a && at < b);
+
+  for (const m of src.matchAll(/["'`]([A-Z][A-Z0-9_]{2,})["'`]/g)) {
+    const code = m[1];
+    if (!CODE_RE.test(code)) continue;
+    const before = src.slice(Math.max(0, m.index - 40), m.index);
+    const after = src.slice(m.index + m[0].length, m.index + m[0].length + 40);
+    /* A COMPARISON AGAINST A RECEIVED VALUE, in either order. */
+    const comparedRight = /[!=]==?\s*$/.test(before);
+    const comparedLeft = /^\s*[!=]==?/.test(after);
+    /* `reason:` / `code:` / `check:` INSIDE an expectation call. */
+    const keyedExpectation = /\b(?:reason|code|check)\s*:\s*$/.test(before) && inObsCall(m.index);
+    if (comparedRight || comparedLeft || keyedExpectation) observed.add(code);
+    else fed.add(code);
+  }
+  /* The object-key shape `CODE:` at the head of a line is a table declaration,
+     never an observation — kept FED, as `screamingLiterals` reads it. */
+  for (const m of src.matchAll(/^\s*([A-Z][A-Z0-9_]{2,})\s*:/gm))
+    if (CODE_RE.test(m[1])) fed.add(m[1]);
+  /* OBSERVED is reported as the codes seen ONLY in observation position: a code
+     both fed and observed is FED, because one real hand-off is what reach means. */
+  for (const c of fed) observed.delete(c);
+  return { fed, observed };
 }
 
 /* THE SIXTH MATCHER IS NOT A REGEX, AND THAT IS THE POINT. `meaningRows` and
@@ -1130,12 +1242,25 @@ function armB(rows, census, surfaceTables) {
      mints it. Without the intersection this would harvest every constant name
      in two large files and call the noise "reach". */
   const R2 = new Set([...screamingLiterals(app)].filter(c => census.union.has(c)));
-  const R3 = new Set(), R3repro = new Set();
+  /* D-433: R3 harvests only what a suite FEEDS INTO the surface. A code the
+     suite merely asserts against is the PLANE's evidence, not the surface's
+     reach, and counting it inflated a ratchet that may only rise. Both halves
+     are kept per suite and PRINTED below; only the fed half enters R3. */
+  const R3 = new Set(), R3repro = new Set(), R3observed = new Set();
+  const r3PerSuite = [];
   for (const s of suites) {
     const committed = inCommit(path.join(TESTDIR, s));
-    for (const c of screamingLiterals(fs.readFileSync(path.join(TESTDIR, s), "utf8")))
-      if (census.union.has(c)) { R3.add(c); if (committed) R3repro.add(c); }
+    const { fed, observed } = partitionSuiteLiterals(fs.readFileSync(path.join(TESTDIR, s), "utf8"));
+    const fedIn = [...fed].filter(c => census.union.has(c)).sort();
+    const obsIn = [...observed].filter(c => census.union.has(c)).sort();
+    for (const c of fedIn) { R3.add(c); if (committed) R3repro.add(c); }
+    for (const c of obsIn) R3observed.add(c);
+    if (fedIn.length || obsIn.length) r3PerSuite.push({ suite: s, committed, fed: fedIn, obs: obsIn });
   }
+  /* A code OBSERVED in one suite and FED in another is FED: one real hand-off
+     is what reach means, and the union is taken across suites for the same
+     reason it is taken within one. */
+  for (const c of R3) R3observed.delete(c);
 
   const reach = new Set([...R1, ...R2, ...R3]);
   /* THE REACH FLOOR IS THE REPRODUCIBLE ONE (D-257). `suites` is discovered off
@@ -1194,6 +1319,18 @@ function armB(rows, census, surfaceTables) {
      rather than an impression. */
   const gap = [...reach].filter(c => !translated.has(c)).sort();
 
+  /* D-433: THE FED HALF IS FLOORED IN ITS OWN RIGHT, because the union above
+     cannot see it move — measured: the partition moved R3 74 -> 70 and left the
+     union at 338. A fed half that FALLS means this walk stopped recognising a
+     hand-off, which is a blind instrument reporting a tidy number, never an
+     improvement in the surface. */
+  if (R3.size < FLOOR.r3Fed)
+    FAIL(`R3's FED half is ${R3.size} code(s) a suite hands to a surface, floor is ${FLOOR.r3Fed}. `
+       + `THE PARTITION LOST SIGHT OF A HAND-OFF — and the total reach cannot tell you, because a code `
+       + `dropped here is usually still in reach through R1 or R2 (measured at D-433's landing: R3 fell `
+       + `74 -> 70 with the union unmoved at 338). Establish whether a suite stopped feeding the code or `
+       + `this walk stopped reading the shape, before moving this floor.`);
+
   if (reachRepro.size < FLOOR.reach)
     FAIL(`the reach is ${reachRepro.size} codes that are in the commit at HEAD (${reach.size} over the `
        + `working tree), floor is ${FLOOR.reach}. THE WALK LOST SIGHT — this is the `
@@ -1231,8 +1368,29 @@ function armB(rows, census, surfaceTables) {
        + `translation (DEC-49, and every IS fence inherits it) — add a row in a \`*_CHECKS\` family rather `
        + `than wording at the call site, then lower this ceiling in the same turn.`);
 
+  /* ============================================================== D-433
+     BOTH HALVES OF R3, PER SUITE, AND THE FED HALF IS THE ONE FLOORED.
+     Printed rather than summarised because the cheap way past this row is to
+     drop the observed half and report the smaller number as an improvement:
+     with both printed, a suite whose codes all moved into OBSERVED is visible
+     as exactly that, and a reader can check any single line against the suite.
+     The two halves are disjoint by construction and their union is every code
+     `screamingLiterals` would have harvested, so nothing falls out of the
+     world by being classified into neither. */
+  NOTE(`arm B / D-433: R3 PARTITIONED — a suite that FEEDS a code into the surface proves reach; one `
+     + `that merely ASSERTS a code arrived proves the PLANE sent it, which is not the same fact. `
+     + `FED ${R3.size} code(s) (floored) · OBSERVED-ONLY ${R3observed.size} code(s) (printed, NOT floored)`);
+  for (const r of r3PerSuite)
+    NOTE(`arm B / D-433:   ${r.suite}${r.committed ? "" : " (NOT in the commit at HEAD)"} — `
+       + `FED ${r.fed.length}${r.fed.length ? ` [${r.fed.join(", ")}]` : ""} · `
+       + `OBSERVED ${r.obs.length}${r.obs.length ? ` [${r.obs.join(", ")}]` : ""}`);
+  if (R3observed.size)
+    NOTE(`arm B / D-433: the OBSERVED-ONLY union, in NO suite's fed half and therefore NOT in reach: `
+       + `${[...R3observed].sort().join(", ")}`);
+
   NOTE(`arm B: REACH ${reach.size} codes — R1 family rows ${R1.size}, R2 named by app.html ${R2.size}, `
-     + `R3 sent by a harness mock ${R3.size} (R2/R3 intersected with the plane census) · `
+     + `R3 FED by a harness mock ${R3.size} (R2/R3 intersected with the plane census; D-433: `
+     + `observed-only codes excluded) · `
      + `${reachRepro.size} of them ${HEAD_SAYS}, which is the figure `
      + `floored and the one a floor may be moved to · floor ${FLOOR.reach}`
      + `${reachRepro.size > FLOOR.reach ? ` · GREW by ${reachRepro.size - FLOOR.reach}` : ""}`);

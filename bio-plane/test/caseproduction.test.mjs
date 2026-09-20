@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: RAN 2026-09-19 by the M0-78/D-414/D-433 worker, driver `test/nc-instr-cluster.mjs`, SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, every restore verified by sha256 AND by `cmp` against a uniquely-named per-arm pristine copy with byte counts printed and floored. ALL SEVEN AS DECLARED. BASELINE ROW FIRST (arm 7): derivation-bounds 72/0 · bounds 173/0 · witness 26/0 · DEC-49 guard exit 0 (reach 338, R3 fed 70, observed-only 4). (1) D-414 reverted in ONE walk only (derivation-bounds) so the five copies disagree: derivation-bounds 71/1 failing at CENSUS IS A CEILING with the figure back at 109, and bounds 172/1 failing at D-414 PARITY — the parity arm is what catches a liar who fixes one copy of five. (2) the SHORTER spelling `\*?\s*` in one walk, which also lets `\s*` eat a third space of indent and match at any depth: derivation-bounds 48/24, the widening measured rather than argued. (3) M0-78 reverted so a ratify-stage refusal THROWS again: the census reports FIXTURE-THREW and exits 1, where the pre-M0-78 census over the same tree printed UNCLASSIFIED, `8 anchor(s), 0 NOT LIVE`, and EXITED 0 — measured with both files reverted to HEAD, not inferred. (4) arm (H)'s registration deleted from the driver, which is how a liar passes M0-78: witness 25/1 failing at A8 by name. (5) a planted UI suite that only ASSERTS a code: reach 338 unmoved and R3 fed 70 unmoved, the code printed in the OBSERVED half. (6) the same code HANDED by a mock in the same planted suite: reach 338 -> 339 and R3 fed 70 -> 71, the over-strictness direction. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/caseproduction.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (`d280-strengthbar.control.mjs`'s precedent, `severedhomes.control.mjs` before it). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad (PL-10). Every arm is armed ALONE with every other defence held OPEN, every restore is verified BY sha256 AND BY CONTENT against a per-arm pristine copy named with the ARM ID as well as the path, and every arm DECLARES before it runs what MUST fail and what MUST NOT. Run in one step with `node test/caseproduction.control.mjs [arm]`.
    (A) THE PROJECT-LESS PATH RESTORED — CASE-1's handed-over arm, and the one that makes `cases.project_id NOT NULL` real through an op instead of structurally. In src/store.mjs publishCase() replace `if (!proj)` with `if (false)` -> a case publishes naming no project, which is the path DEC-72 deletes. MUST FAIL: §2's refusal arm. MUST NOT FAIL: §3's owner arms — armed apart on purpose, because one fence covering for another is how a half-fix reads as a whole one.
    (B) THE OWNER FENCE NEUTERED. In src/store.mjs publishCase() replace `if (!this.#isProjectOwner(proj, who))` with `if (false)` -> any member with the publish capability publishes another project's production. MUST FAIL: §3's non-owner arm. MUST NOT FAIL: §2, §5.
@@ -125,10 +126,45 @@ try {
 /* CASE-5b: the two-member case published in block 5, carried across blocks so 6
    and 8 can read its own signed CASE DOCUMENT. */
 let TWO_MEMBER_CASE = null;
+/* ===== M0-78, 2026-09-19 — A REFUSAL AT THE *RATIFY* STAGE IS SURFACED, NOT THROWN.
+ *
+ * THE GUARD ABOVE (`r.ok !== false`) WAS HALF THE SHAPE AND THE MISSING HALF COST THIS SUITE TWO
+ * NEGATIVE CONTROLS. It stops the ceremony when `op=publish` refuses — "this suite is mostly
+ * refusal arms and every one of them would otherwise become a fixture crash", which is exactly
+ * right. But the ceremony is TWO acts, and nothing guarded the second. `ratifyCase` throws on any
+ * `op=caseratify` refusal (deliberately, and `caseceremony.mjs` keeps that behaviour for every
+ * other suite that rides it), so a refusal arriving at RATIFY-time killed the module.
+ *
+ * WHY THAT IS A DEFECT IN THE FIXTURE AND NOT IN THE ARMS. A negative control's whole job is to
+ * remove one refusal and watch a NAMED assertion fail. Remove a refusal from `store.mjs` and the
+ * act does not become legal — it travels FURTHER, and meets the next authority that would have
+ * refused it anyway: the gate (C-41.8), or the participation fence (C-56.1). Arms (C) and (H) each
+ * did precisely that, so each ended as an uncaught throw at `caseceremony.mjs:76` with **not one
+ * of its declared assertions ever evaluated**. The driver reported `-1 pass, -1 fail` and `NOT AS
+ * DECLARED`, which is the driver being honest; but the suite's own control line went on claiming
+ * coverage those two arms never produced. **A control that cannot fail proves nothing, and one
+ * that cannot RUN proves less.**
+ *
+ * SURFACED RATHER THAN SWALLOWED, which is the distinction `caseceremony.mjs`'s own header draws:
+ * the refusal is recorded on the answer as `ratifyRefused` AND printed, so a reader of this suite's
+ * output sees the ceremony stopped and where. A fixture that failed quietly here would produce a
+ * suite whose assertions all measure the wrong thing — the very thing the throw exists to prevent —
+ * so nothing is hidden; what changes is only that the module survives to evaluate its own arms.
+ *
+ * THE SHAPE IS GENERAL AND IS THE REASON THIS SITS IN THE HELPER RATHER THAN AT TWO CALL SITES:
+ * any future arm that moves a refusal later in the ceremony lands here too. */
 const publish = async (tok, body, { sign = true } = {}) => {
   const r = rP(await POST(`op=publish&token=${tok}`, body));
-  if (sign && r && r.ok !== false && r.caseDocument)
-    await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "pilar", token: tok });
+  if (sign && r && r.ok !== false && r.caseDocument) {
+    try {
+      await ratifyCase(async (q, b) => rP(await POST(q, b)), r, { dir, key: "pilar", token: tok });
+    } catch (e) {
+      r.ratifyRefused = String(e.message);
+      console.log(`  (fixture) THE CEREMONY DID NOT COMPLETE for ${r.caseDocument.case_id}@`
+        + `${r.caseDocument.edition} — op=publish succeeded and op=caseratify refused, so no cases `
+        + `row exists for it. Surfaced rather than thrown (M0-78): ${String(e.message).slice(0, 400)}`);
+    }
+  }
   return r;
 };
 /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a

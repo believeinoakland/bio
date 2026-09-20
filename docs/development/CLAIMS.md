@@ -15425,3 +15425,58 @@ suites' `detail` pins are green by absence. Fix: carry the catalogue row's `tran
 pin. Measured in `MEASUREMENTS.md` M-72.
 
 **open as of 2026-09-19** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-19 M0 / VERIFY / UI (THE INSTRUMENT CLUSTER — M0-78, D-414, D-433 as ONE landing)
+
+Worker spawned by CONDUCT #8. **Own worktree** `.claude/worktrees/instr-conduct8`, branch
+**`worker/instr-conduct8`**, base `origin/main` @ `ad67ff0a`. `npm ci` in `bio-plane/`, `pdf-worker/` and
+`ocr-worker/`, each `node_modules` verified a REAL DIRECTORY (30 / 25 / 26 entries), `df -h` 7.0 GiB free
+after. Design authority: `docs/development/VERIFICATION.md`'s negative-control register read with
+`CLAUDE.md` §5 (*a control is evidence only when it FAILS at a NAMED assertion*), and for D-433 that
+document's section **"THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE"**. Taken as ONE worker
+because SCHEDULER placed them as one doctrine — an instrument answering about a thing it cannot see.
+**D-355 was OUT OF SCOPE and is not touched.** Claimed BY SITE:
+
+- `bio-plane/test/airuns.test.mjs`, `bounds.test.mjs`, `derivation-bounds.test.mjs`,
+  `meaning-bounds.test.mjs`, `versionchain.test.mjs` — **the ONE shared `const sig` line in each**
+  (D-414), identical in all five, plus the comment above it. In `bounds.test.mjs` ALSO the new D-414
+  PARITY / BEHAVIOUR / OVER-STRICTNESS arms after `WALK GUARD: the roster is non-trivial`. In
+  `derivation-bounds.test.mjs` ALSO **the census ratchet `SCANNING_MEASURED_2026_09_15` 109 -> 110**
+  (moved from this run's own printed corpus line, with the arrival `eachImage` named and the
+  movement's KIND stated) and **`D384_LEAVES`' `danglingRefs` entry CORRECTED, never exempted**.
+  Nothing else in any of the five.
+- `bio-plane/test/caseproduction.test.mjs` — the `publish` helper ONLY: a ratify-stage refusal is
+  SURFACED (recorded on the answer and printed) instead of throwing out of the fixture. No assertion
+  moves and the unarmed suite is unchanged at 75/0.
+- `bio-plane/test/caseproduction.control.mjs` — arms (C) and (H)'s DECLARATIONS ONLY, both corrected
+  to what the arms now measurably do. No arm is deleted, no anchor moves, no edit changes.
+- `bio-plane/test/m025-arm-census.mjs` — the NEW `FIXTURE_THREW` union, its `threw` classification, the
+  `FIXTURE-THREW` verdict ranked ABOVE the exit-status test, its report block, its figure line and its
+  clause in the exit code. Nothing existing is re-spelled.
+- `bio-plane/test/m025-arm-anchor-witness.test.mjs` — the NEW A8 roster walk and its two arms only.
+- `bio-plane/test/nc-instr-cluster.mjs` — **NEW**, the seven-arm driver for all three rows.
+- `civicos-ui/check-refusal-codes.mjs` — **by SITE:** the NEW `partitionSuiteLiterals` and `OBS_CALL`
+  beside `screamingLiterals`; R3's harvest loop in `armB`; the D-433 per-suite print; the R3 line of the
+  existing REACH note; and **ONE new `FLOOR` key, `r3Fed: 70`**, set from this guard's own green print.
+  **`FLOOR.reach` is NOT moved — measured at 338 before and after** (see MEASUREMENTS). `regionLines`,
+  `CEILING.reachGap` and every other floor are untouched.
+- `docs/development/MEASUREMENTS.md` (appended) and this block.
+
+**NOT CLAIMED:** `bio-plane/src/**` (nothing under `src/` is edited, so no bundle rebuild is owed),
+`bio-plane/src/index.mjs`, `bio-plane/src/store.mjs` and `bio-plane/checks/bio-checks.mjs` (D-136's
+worker is live in all three), `civicos-ui/app.html`, `docs/development/QUEUE.md` (CONDUCT's word),
+`docs/development/DEBT.md` (D-355 stays where it is — placing it is SCHEDULER's act), `newgroup/**`,
+`release/**`, and every other suite in `bio-plane/test/` and `civicos-ui/test/`.
+
+**A STALE CLAIM MET AND NOT TREATED AS LIVE, stated because the register is the thing that has to be
+trustworthy.** `CLAIM 2026-09-19 RECORD (D-270)` above names `civicos-ui/check-refusal-codes.mjs` — the
+`FLOOR` figures — and is still marked **open as of 2026-09-19**. It is NOT live: D-270 **landed at
+`02e7c537`**, which is an ancestor of this branch's base, and its session is gone — no
+`.claude/worktrees/d270-record` exists and `git ls-remote --heads origin d-270-refusal-codes` answers
+nothing. Its `released:` line was never written. The same is true of the `REC-146` and `UI-72` blocks
+above, whose branches are likewise absent from the remote. **Reported to CONDUCT as an act, not parked:
+those three blocks want their `released:` written by whoever integrates them**, and until then the
+register reads as reserving paths that are free.
+
+**open as of 2026-09-19** — claimed at the start of the item; the paths stay reserved until CONDUCT
+integrates the branch.

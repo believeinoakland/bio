@@ -243,8 +243,22 @@ arm("C", "DEC-72's SECOND RULED DEFAULT REMOVED — an all-supporting case publi
      on its first run — which is that guard working, and is why it exists. */
   [["store", `    if (!loadBearing.length)\n      return { ok: false, reason: "NO_LOAD_BEARING_MEMBER",`,
              `    if (false)\n      return { ok: false, reason: "NO_LOAD_BEARING_MEMBER",`]],
+  /* M0-78, 2026-09-19 — RE-MEASURED AFTER THIS ARM WAS MADE TO ARM AT ALL, AND THE THIRD FAILURE
+     IS DECLARED BECAUSE IT HAPPENS, not because it was predicted. Until today this arm ended in an
+     uncaught throw inside the fixture (`caseceremony.mjs:76`) and NONE of the declarations below
+     was ever evaluated; the driver said `-1 pass, -1 fail · NOT AS DECLARED` and was right, while
+     the suite's control line claimed coverage that did not exist. With the ceremony's ratify-stage
+     refusal now SURFACED rather than thrown (see `caseproduction.test.mjs`'s `publish` helper), the
+     arm runs and reads 72 pass / 3 fail. Two of the three are the declared pair. The third is §6's
+     lowered-bar arm, and it is a CASCADE of exactly the kind this arm's own note above describes:
+     with the load-bearing refusal gone, the all-supporting act PUBLISHES and moves the record §6
+     then reads. It is written into the declaration rather than left as an undeclared extra, because
+     an arm whose real effect is wider than its declaration is a control that has stopped describing
+     itself — and the fixture split that contained the OTHER cascade (§5's) is what makes it safe to
+     name this one precisely instead of loosening the whole arm. */
   [{ name: OWN,
-     mustFail: ["AN ALL-SUPPORTING CASE IS REFUSED", "VACUITY GUARD"],
+     mustFail: ["AN ALL-SUPPORTING CASE IS REFUSED", "VACUITY GUARD",
+                "THE PROJECT LOWERS ITS OWN BAR ON THE RECORD AND THE SAME CASE PUBLISHES"],
      mustNotFail: ["A LOAD-BEARING MEMBER BELOW THE PROJECT'S STANDARD IS REFUSED",
                    "THE SAME FINDING, THE SAME GRADES, THE SAME BAR"] }]);
 
@@ -310,11 +324,45 @@ arm("G", "THE GROUP DEFAULT RESTORED AS A FALLBACK PUBLICATION BAR — the exact
                    "A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED"] }]);
 
 /* ================== (H) THE RATIFY COMMIT TAKEN OFF THE SIGNED BYTES */
+/* ===== M0-78, 2026-09-19 — THIS ARM'S DECLARATION WAS CORRECTED, NOT EXEMPTED, AND THE OLD ONE
+   WAS RIGHT WHEN IT WAS WRITTEN. It read: *"**EVERY ACT-SIDE ARM IN §2–§6 MUST STAY GREEN, WHICH
+   IS THE POINT**: the ceremony goes on refusing correctly while the record commits an attribution
+   no signature covers."* That described the arm's behaviour on the tree it was written for, and it
+   is FALSE on this one, in a way nobody could have seen because the arm had stopped arming: it
+   ended in an uncaught throw at `caseceremony.mjs:76` and not one of its declarations was ever
+   evaluated. This is the SECOND time this arm has silently stopped doing what it says — M0-25
+   caught the first (a re-anchoring, recorded below) — and the shape is the same both times: the
+   plane grew an authority the arm did not know about.
+
+   WHAT CHANGED UNDERNEATH IT. The arm forges the committed project to the literal
+   `PROJ-ARMED-CASE2-CONTROL-H`. A later landing put a PARTICIPATION FENCE on `op=caseratify`
+   (C-56.1, §7.5: work inside a project is for someone who has joined it). The forged project is
+   one nobody has joined, so the ceremony is now refused at ratify rather than completing — and
+   the fixture threw on that refusal instead of surfacing it, which is what hid the whole thing.
+
+   WHAT THE ARM DEMONSTRATES TODAY, measured at 66 pass / 9 fail: the declared §8 assertion fails
+   BY NAME, and the four act-side REFUSAL arms named in `mustNotFail` all stay green. But three of
+   the nine failures are in §5 and §6, so "every act-side arm in §2–§6 stays green" is no longer
+   true as a blanket claim. Those three read a case document that must have been RATIFIED, and
+   under this arm no case is ever committed, so they cascade. The declaration below now says what
+   is actually protected — the four named refusal arms — rather than a sweeping claim the run
+   contradicts.
+
+   **AND THE ARM IS NOW WEAKER THAN IT WAS, WHICH IS STATED RATHER THAN QUIETLY ACCEPTED.** Its
+   original property was that *the record commits an attribution no signature covers* — the
+   dangerous case, because the ceremony looks correct throughout. Today the forged attribution is
+   stopped by the participation fence before anything is committed, so what the arm drives is the
+   fence, not the commit. Restoring the original property needs the forged project to be one the
+   actor HAS joined (the fixture's `PROJ_OTHER` is exactly such a project), and that cannot be
+   written as a static literal here because project ids are opaque and minted at run time
+   (Membership v2 §7). That re-aiming is a row of its own and is REPORTED, not taken here. */
 arm("H", "THE `cases` ROW COMMITTED FROM A REQUEST RATHER THAN FROM THE SIGNED DOCUMENT — the "
   + "control plane stops reading `case_project` out of the ratified frontmatter. DECLARED: §8's "
-  + "committed-from-bytes arms MUST fail. **EVERY ACT-SIDE ARM IN §2–§6 MUST STAY GREEN, WHICH IS "
-  + "THE POINT**: the ceremony goes on refusing correctly while the record commits an attribution "
-  + "no signature covers, and a reader cannot tell the two apart.",
+  + "committed-from-bytes arm MUST fail by name, and THE FOUR ACT-SIDE REFUSAL ARMS NAMED BELOW "
+  + "MUST STAY GREEN — the ceremony goes on refusing correctly at act time while the record does "
+  + "not commit what the signature covers. CORRECTED 2026-09-19 (M0-78): the §5/§6 arms that read "
+  + "a RATIFIED case document do cascade, because the participation fence now refuses the forged "
+  + "attribution at ratify; see the note above for what that costs this arm.",
   /* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING IS KEPT:
      THIS ARM HAD STOPPED ARMING ON `main`, AND IT CHANGED FILES WHEN IT DIED.
      It quoted `const caseProject = caseId && typeof ratifiedFm.case_project === …`

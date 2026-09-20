@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: RAN 2026-09-19 by the M0-78/D-414/D-433 worker, driver `test/nc-instr-cluster.mjs`, SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, every restore verified by sha256 AND by `cmp` against a uniquely-named per-arm pristine copy with byte counts printed and floored. ALL SEVEN AS DECLARED. BASELINE ROW FIRST (arm 7): derivation-bounds 72/0 · bounds 173/0 · witness 26/0 · DEC-49 guard exit 0 (reach 338, R3 fed 70, observed-only 4). (1) D-414 reverted in ONE walk only (derivation-bounds) so the five copies disagree: derivation-bounds 71/1 failing at CENSUS IS A CEILING with the figure back at 109, and bounds 172/1 failing at D-414 PARITY — the parity arm is what catches a liar who fixes one copy of five. (2) the SHORTER spelling `\*?\s*` in one walk, which also lets `\s*` eat a third space of indent and match at any depth: derivation-bounds 48/24, the widening measured rather than argued. (3) M0-78 reverted so a ratify-stage refusal THROWS again: the census reports FIXTURE-THREW and exits 1, where the pre-M0-78 census over the same tree printed UNCLASSIFIED, `8 anchor(s), 0 NOT LIVE`, and EXITED 0 — measured with both files reverted to HEAD, not inferred. (4) arm (H)'s registration deleted from the driver, which is how a liar passes M0-78: witness 25/1 failing at A8 by name. (5) a planted UI suite that only ASSERTS a code: reach 338 unmoved and R3 fed 70 unmoved, the code printed in the OBSERVED half. (6) the same code HANDED by a mock in the same planted suite: reach 338 -> 339 and R3 fed 70 -> 71, the over-strictness direction. */
 /* NEGATIVE CONTROL: run 2026-09-13 under M0-25, each arm ALONE against the REAL tree with every other defence held open, restores verified by sha256 AND `cmp` against uniquely-named per-arm pristine copies with the byte count printed and floored — the driver is `test/m025-anchor-witness.control.mjs` and re-runs every arm in one step. (1) THE ARM THIS SUITE EXISTS FOR, and it is the D-276 class reproduced exactly: change a line IN PLACE in a subject a control driver quotes (`agent-worker/src/index.mjs`'s `MEANING_ARM` call site, the very line D-276 moved) so the driver's anchor now matches zero times -> arm A4 FAILS naming the driver, the anchor and the subject, while the driver's own file is untouched and every other arm holds. (2) THE OVER-STRICTNESS DIRECTION — re-spell the same line in a way the quote still matches (whitespace outside the anchor's span) -> NOTHING fails, because a fence tighter than its rule is an undeclared interface change wearing the costume of caution. (3) THE REACH ARM, because a detector that finds nothing passes every clean corpus: neuter the extractor so it reads no anchor at all -> the corpus floors FAIL (A1/A2/A3) while the zero-match arm A4 reports a triumphant empty list, which is exactly why the floors are asserted and printed rather than assumed. (4) THE MULTIPLICITY HALF — plant a SECOND copy of an anchored line in its subject so the anchor occurs twice -> A5 FAILS naming the driver and the file, which is the "anchor occurred twice" receipt WORKER.md records and which silently disarms a first-occurrence patch. (5) THE NAMED LIST'S OWN STALENESS — remove one deliberate multi-occurrence closure from its subject -> A6 FAILS naming the entry that has stopped being true, so a naming cannot outlive the thing it named. (6) THE BASELINE, and it is not decoration: nothing armed -> every arm green, which is what distinguishes five-arms-broken from five-arms-working.
  *
  * NEGATIVE CONTROL — EXTENDED 2026-09-14 (D-329 + D-331 + D-333), seven arms added to the same driver, each ALONE, restores verified by sha256 AND `cmp`; all thirteen arms of the driver ran and twelve were as declared first time. (7) THE COMPOSED-LABEL ARM, and it is this item's reason to exist: put D-329's own historical defect back into `aicredential.control.mjs` — a `mustNotFail` fragment carrying the rendered count `26` against a label the suite composes -> L3 FAILS naming the driver, naming `aicredential.test.mjs` as the composer, and naming `"26"` as the value that sat in the slot, while A4, A5 and every S-arm stay green so the LABEL half and the ANCHOR half are measurably distinguishable. **THE EDIT IS ADDITIVE AND ITS FIRST SPELLING WAS NOT** — replacing the fragment consumed this driver's own edit-tuple anchor and A4 fired on the arm itself, which is the estate's self-citation receipt in a new costume. (8) THE OVER-STRICTNESS DIRECTION — the same fragment re-spelled to start MID-SEGMENT, still quoting only the invariant part -> NOTHING fails, because a fence tighter than its rule is an undeclared interface change wearing the costume of caution. (9) THE LABEL REACH ARM — neuter `isLabelQuote` so no label is read at all -> L1 and S9 FAIL while L3 reports a triumphant EMPTY LIST, which is exactly why the reach is floored and printed. (10) D-331's ARM, run against `casepin.control.mjs` rather than this suite: stale TWO anchors in `src/store.mjs`, one belonging to arm (a) and one shared by (e) and (f) -> the preflight reports ALL SIX rows with THREE not live and names an arm BEHIND the first casualty, and the driver refuses to arm anything. Before the preflight this run reported ONE casualty and died. (11) ITS OVER-STRICTNESS DIRECTION — a healthy `casepin` preflights all-live, runs its baseline arm green and exits 0. (12) D-333's ARM, run against the CENSUS: decay `casesign.control.mjs`'s head from five arms to four WITHOUT MOVING ONE ANCHOR -> the census reports `TALLY NOT AS DECLARED` naming casesign with both numbers and exits non-zero, while reporting ZERO stale arms — the two decay shapes stay separable. (13) ITS OVER-STRICTNESS DIRECTION — `casepin`, whose corrected declaration now agrees with its run, leaves the tally section silent and the census at exit 0. **ONE PRE-EXISTING ARM CORRECTED, NEVER EXEMPTED**: A5 declared `mustNot: A4` and returned [A4, A6], measured identically on a pristine `origin/main` worktree at `b0eddbf` — its patch necessarily consumes its own anchor, so A4 is a correct consequence; the declaration now requires A4 to fail with EXACTLY this driver's own anchor in its finding list.
@@ -445,6 +446,64 @@ const staleNamings = NAMED_MULTI.filter((n) =>
   .map((n) => `${n.driver}: ${n.match}`);
 t(`A6 and the named list has not gone stale — every deliberate multiplicity is still there and still multiple (${staleNamings.length} stale)`,
   staleNamings, []);
+
+/* ==================================================================== M0-78
+   A8 · THE REGISTERED ARM ROSTER, PINNED BY NAME — THE ARM AGAINST DELETING THE
+   ARM. Every check M0-78 adds asks whether an arm MEASURED anything. None of
+   them asks whether the arm is still THERE, and the cheapest way past all of
+   them is to delete the two arms that were failing, or to comment them out. That
+   is not hypothetical bookkeeping: this estate's own rule is *correct a
+   superseded test, never exempt it*, and an exempted arm is "a rule nobody is
+   enforcing and nobody remembers deleting".
+
+   PINNED BY NAME AND NOT BY COUNT, for the reason M0-40 recorded one file over:
+   a count alone is satisfied by a deletion and an addition in the same turn, and
+   the roster then reads `8 of 8` while the arm the row was about is gone. The
+   ids are the pin; the count follows from them.
+
+   THE REACH IS PRINTED AND ITS LIMIT STATED, because that sentence is what lets
+   the next reader tell a clean result from a walk looking in the wrong place:
+   this reads the TOP-LEVEL `arm("<id>", …)` registration shape, which is
+   `caseproduction.control.mjs`'s. `casepin` and `casesign` are throwing drivers
+   of the same family and do NOT use it — they arm at their call sites — so they
+   are NOT covered here and are named as uncovered rather than silently scored
+   zero. A driver adopting the registration shape joins this arm automatically;
+   one that does not is invisible to it, and that is the honest boundary. */
+/* AN ID, NOT A TITLE, AND THE DIFFERENCE WAS MEASURED RATHER THAN ASSUMED. The
+   first draft of this walk matched any `arm("…"` first argument and read 34
+   drivers — because most of the estate passes the arm's TITLE first
+   (`arm("(1) THE REACHABLE LEG …", …)`), not an id. Those are not id rosters and
+   printing them as such buried the one roster this arm pins in several hundred
+   characters of prose. The shape that carries a separable ID is a SHORT
+   alphanumeric first argument, and it is the shape `caseproduction.control.mjs`
+   uses; drivers passing a title first are counted and named as a different
+   shape rather than scored zero. */
+const ARM_REG = /^arm\(\s*"([A-Za-z0-9]{1,4})"\s*,/gm;
+const ARM_ANY = /^arm\(\s*"/gm;
+const armRosters = [], titleFirst = [];
+for (const d of graded) {
+  const src = driverText.get(d) ?? (existsSync(join(REPO, d)) ? readFileSync(join(REPO, d), "utf8") : "");
+  ARM_REG.lastIndex = 0; ARM_ANY.lastIndex = 0;
+  const ids = [...src.matchAll(ARM_REG)].map((m) => m[1]);
+  if (ids.length) armRosters.push({ driver: d, ids });
+  else if (ARM_ANY.test(src)) titleFirst.push(d);
+}
+console.log(`\n--- M0-78: registered arm rosters (top-level \`arm("<id>", …)\` shape) ---`);
+for (const r of armRosters) console.log(`    ${r.driver}: ${r.ids.length} arm(s) — ${r.ids.join(", ")}`);
+console.log(`    REACH: ${armRosters.length} driver(s) register arms by a short ID this walk can pin.`);
+console.log(`    NAMED, NOT SCORED ZERO: ${titleFirst.length} further driver(s) call \`arm(\` with a TITLE first,`);
+console.log(`    which carries no separable id; and casepin/casesign arm at their call sites with no`);
+console.log(`    registration at all. Neither group is covered by the pin below.`);
+
+const CASEPROD = "bio-plane/test/caseproduction.control.mjs";
+const caseprodRoster = armRosters.find((r) => r.driver === CASEPROD);
+t(`A8 the walk actually found the registration shape — an empty roster would make the pin below vacuous, `
++ `which is this estate's most-repeated instrument defect (${armRosters.length} driver(s) with a roster)`,
+  armRosters.length >= 1 && (caseprodRoster?.ids.length ?? 0) > 0, true);
+t(`A8 caseproduction.control.mjs still REGISTERS ALL EIGHT ARMS, BY NAME — M0-78 repaired (C) and (H), `
++ `whose declared assertions had never once been evaluated, and the cheapest way to pass every check `
++ `that row adds is to delete them. Pinned by id so a deletion cannot be masked by an addition`,
+  caseprodRoster?.ids ?? null, ["A", "B", "C", "D", "E", "F", "G", "H"]);
 
 /* --------------------------------------------------------------- THE SELF-TEST
    M0-14's rule: naming alone would be a walk that never counts anything new, so
