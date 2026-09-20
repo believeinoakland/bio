@@ -929,6 +929,24 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
        the item that adds it. It is the first READ this table has ever had: for
        39 days `op=provenanceroute` was `mutating: true` and nothing read the
        marks at all. */
+    contradictionpairs: "REC-146: the CONTRADICTION pairing read — which of the record's own assertions are "
+      + "worth comparing, by the four keys of CONTRADICTION-IDENTIFY-DESIGN.md section 4. GATED, and this is "
+      + "the widest ENUMERATION this table has classified: it reads across every question, every accepted "
+      + "reading and every cited document at once, and answers with pairs naming both. Section 6 of its own "
+      + "design requires it — the pairing runs AS A MEMBER, pairs only what that member can see, and never "
+      + "enters a project's contents uninvited (Membership v2 section 7.9, section 7 item 7.14). It takes the "
+      + "fail-closed viewer stamp beside op=narrowcandidates in index.mjs, and EVERY bundle column on EVERY "
+      + "side of EVERY key goes through Store#bundleGate — the ONE compilation point — rather than through a "
+      + "predicate written per key, because four keys each carrying their own copy of the gate is four places "
+      + "for one of them to be written without it. "
+      + "WHAT AN ABSENT STAMP DOES HERE IS THE PART WORTH READING, because on this op the fail-closed posture "
+      + "could produce a LIE rather than an outage. `viewerPredicate` answers DENY, every key returns nothing "
+      + "— and an empty pair list on a contradiction detector reads as THE RECORD HOLDS NO CONTRADICTIONS, "
+      + "which is the record claiming more than it can support. So the answer does not merely go empty: "
+      + "`viewer_scope` is published as DENY, every key's `absence.level` is `viewer`, and `says` states that "
+      + "the read compared NOTHING and that this is an outage and not a statement about the record. "
+      + "NO COUNT OF THE WITHHELD IS REPORTED (op=backlinks' rule): a count of pairs a caller may not see "
+      + "would say that somebody's project holds material about a subject they were never invited to.",
     narrowcandidates: "REC-86: the machine's proposals for making ONE leg of ONE reading more specific. "
       + "GATED: it names a QUESTION and answers about the document its leg rests on, so it takes the "
       + "fail-closed viewer stamp beside op=narrow in index.mjs and answers a question the caller may not "

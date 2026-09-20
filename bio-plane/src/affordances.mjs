@@ -1291,9 +1291,25 @@ export const ACTS = [
      no longer saying it to somebody for whom NO parameter could succeed. The
      per-pair question (may this viewer publish for THIS project) is a different
      fact and a different item, D-311, argued at NON_ACTS' roster rows below. */
+  /* REC-135 / INVESTIGATIVE-SESSION.md §7.1 item 4, 2026-09-19: `concluded` IS
+     ASKED OF A RELATIONSHIP, SO THE STATE WORD IS NO LONGER THE WHOLE OF IT.
+     `op=conclude&project=` writes the project's adoption onto the PROJECT and
+     deliberately leaves the shared question's own state where it was (§7: one
+     team's decision never moves another's). So a member whose team HAS concluded
+     a shared question sees `current_state: open` on it, and this predicate — the
+     affordance-layer half of publishCase()'s NOT_CONCLUDED sentence, which the
+     paragraph above says the two must AGREE on — would have gone on hiding the
+     act from exactly the member item 4 exists for.
+     A DISJUNCTION AND NOT A REPLACEMENT, because both relationships publish: the
+     no-project conclusion in a question's own bytes still admits a case (item 5
+     reads it as the no-project relationship's and the case document now SAYS so),
+     and `concluded_for_project` adds the project's own. `=== true` is the whole
+     of the three-valued handling: a machine-class credential answers null there,
+     does not widen, and keeps its own fence (MACHINE_CANNOT_PUBLISH). */
   { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && f.current_state === "concluded" && !f.case_member
-                     && f.project_owner !== false },
+    applies: (f, ty) => ty === "inquiry"
+                     && (f.current_state === "concluded" || f.concluded_for_project === true)
+                     && !f.case_member && f.project_owner !== false },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
      `single`, conclude's precedent: one question is divided at a time.
@@ -1650,6 +1666,16 @@ export const NON_ACTS = {
   narrow: "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
   /* REC-86: the candidate list is a READ, on `extractproposals`' reasoning below. */
   narrowcandidates: "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labelled machine work and writes nothing",
+  /* REC-146: the CONTRADICTION pairing read is a NON_ACT for a reason one step
+     stronger than `narrowcandidates`' above, and it is worth stating because the
+     surfacing item (PRESENT) will be tempted to make it one. It is not
+     object-directed because its subject is a PAIR — two assertions in different
+     questions, or two documents — and `affordanceFacts` carries neither. But the
+     deeper reason is DEC-24 and this design's own section 2: what the pairing
+     returns is not something to DO, it is something to LOOK AT, and nothing may act
+     on a pair until a member has judged it. An affordance rendered beside a bundle
+     would offer the act before the judgement that licenses it exists. */
+  contradictionpairs: "read: which of the record's own assertions are worth comparing, by the four named keys; forms candidate pairs, judges none of them and writes nothing",
   /* REC-87 / IC-128. TRANSCRIBE is NOT an object-directed act, on `contentmint`'s
      reason: its subject is a PORTION of a document — (document, extent) — and
      `affordanceFacts` carries no page and no region, so an applies() over those

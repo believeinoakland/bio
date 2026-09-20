@@ -1138,6 +1138,36 @@ async function getProjection(id){
   try{ p = (await recR("projection",{id})) || null; }catch(_){ p = null; }
   PROJ_CACHE.set(id, p); return p;
 }
+/* UI-67 — THE ONE INVALIDATOR FOR A CONCLUSION OR A WITHDRAWAL, and it exists
+   as a NAME rather than as two more `delete` lines because a cache that outlives
+   the act is how a surface comes to show a record that no longer exists.
+
+   WHY IT MATTERS MORE NOW THAN IT DID. `PROJ_CACHE` never expires — `getProjection`
+   answers from it for the life of the session — and until REC-144 the single-bundle
+   projection carried only fields that move when the DOCUMENT is rewritten, which
+   every writer here already invalidates. REC-144 put `no_project_conclusion` on that
+   same answer (INVESTIGATIVE-SESSION.md §7.1, BOB #16 2026-09-19), so the question's
+   page now reads a RELATIONSHIP off a cached row. A member who concludes and then
+   returns to the question would be shown the record as it stood before their own act:
+   a page saying nothing was concluded over a record that holds a conclusion. The
+   reverse — the page still showing a conclusion the record has let go — is the worse
+   direction and is the one `CLAUDE.md` ranks above a missing feature, so BOTH acts
+   invalidate, not only the one that adds.
+
+   ITS REACH, STATED. It is called from the THREE sites that land a conclusion or a
+   withdrawal (`doConclude`, `stanceConclude`, `stanceWithdraw`) and from nowhere else;
+   `concludePreflight` withholds its target and writes nothing, so it must NOT call it,
+   and `question-npc.test.mjs` walks app.html for every `actAsk("conclude"…)` /
+   `actAsk("withdrawconclusion"…)` site and fails if that set is not exactly those four.
+   Five OTHER sites in this file (the release flow, the two capture writers, the version
+   acts) spell the same two deletes inline; they predate this name, they belong to other
+   items' claims, and they are NOT rewritten here — so the honest statement is that this
+   is one invalidator for ONE class of act, not the file's only cache-forgetting code. */
+function projForget(id){
+  const k = String(id == null ? "" : id);
+  if(!k) return;
+  IMG_CACHE.delete(k); PROJ_CACHE.delete(k);
+}
 /* `reverseRefs` AND `REVREF_CACHE` STOOD HERE AND WERE DELETED ON 2026-08-05 BY
    UI-21, in favour of `op=backlinks` — REC-25's GATED reverse read, built for
    exactly this.
@@ -7255,24 +7285,47 @@ async function actAsk(op, params){
   }
   return (r && r.ok === false) ? { accepted:false, refusal:r } : { accepted:true, result:r };
 }
+/* THE WORDS A MEMBER READS FOR A REFUSAL, DECIDED IN ONE PLACE (UI-72).
+
+   **THE ORDER IS THE PLANE'S BOTH WAYS.** DEC-49 (Bob, 2026-08-06, amending
+   DEC-8) licenses a surface to render an AUTHORED translation keyed on a code
+   the plane SENT; DEC-8 still forbids a surface COMPUTING a refusal. A canned
+   `translation` is the plane's own MEMBER-FACING sentence and comes first;
+   `detail` is the plane's sentence too, but it is written for A CALLER OF THE
+   OP — "send the fork with no newId", "pass id=<INQ-…>" — so a member reading
+   it is being shown something true of the op and false of their own situation.
+   `acquireWhy` has had this rule since REC-79; this is the same rule one layer
+   up, at the place every act surface meets it.
+
+   **WHY IT IS HERE AND NOT AT A LIST OF CALL SITES.** UI-66 applied the
+   preference at the two sites it owned and said so in its own comment: moving
+   it inside `actRefusalHtml` was *"a class change, reported, not made here"*.
+   UI-72 IS that change. It is made in ONE function deliberately — a preference
+   applied per site is the thirteen-surfaces drift DEC-49's option (b) was
+   rejected for, and twenty-seven act surfaces reach `actRefusalHtml` while ten
+   more reach `intentRefusalHtml`, which carried a byte-identical copy of this
+   line until this item swept the class and found it.
+
+   **AN EMPTY OR NON-STRING `translation` IS NOT A SENTENCE** and falls through
+   to `detail`. That is the `translation: undefined` defect one shape over, and
+   taking it as the answer would blank a member — the same two shapes
+   `admission-translation.test.mjs` pins for `acquireWhy`, pinned here by
+   `refusal-translation-surface.test.mjs`. */
+function refusalWords(r){
+  if(!r || typeof r !== "object") return "";
+  if(typeof r.translation === "string" && r.translation) return r.translation;
+  return r.detail || r.error || "";
+}
 /* A refusal, IN THE PLANE'S OWN WORDS and never re-worded here. DEC-8's
    acceptance clause for this item is that every refusal string rendered is one
    the plane returned — so this function has no default sentence of its own
    beyond stating that the record said nothing further. */
 function actRefusalHtml(r){
   if(!r) return "";
-  const words = r.detail || r.error || "";
+  const words = refusalWords(r);
   return `<div class="intent-ref"><div class="intent-ref-why">${esc(words || "The record refused this and said nothing further.")}</div>`
     + (r.reason ? `<div class="intent-ref-code mono">${esc(r.reason)}</div>` : "")
     + `</div>`;
-}
-/* UI-66. A refusal carrying a canned `translation` (DEC-49), rendered in THAT — the plane's own member-facing
-   sentence, received and never composed — in place of its `detail`, which is written for a caller of the op
-   (C-59.3's says "send the fork with no newId"). `acquireWhy`'s rule. Applied at the two sites UI-66 owns
-   (`addGo`'s promote, `doRosterAct`) rather than inside `actRefusalHtml`, whose other callers pin `detail`
-   (version-review §7): moving every act surface to the translation is a class change, reported, not made here. */
-function refusalTranslated(r){
-  return (r && typeof r.translation === "string" && r.translation) ? { ...r, detail: r.translation } : r;
 }
 /* The acts the plane publishes for ONE object as it stands. A refusal (an
    object this credential may not see answers NO_SUCH_BUNDLE, identical to an
@@ -7915,6 +7968,27 @@ async function openInquiry(id, fromNav){
        uncarried, and no control for it exists on either side. */
     const pubEntry = publicationEntryHtml(actsR);
 
+    /* UI-67 — WHAT THIS QUESTION CONCLUDED, WITH NO PROJECT, from the read this
+       page already takes. INVESTIGATIVE-SESSION.md §7.1, BOB #16 2026-09-19: the
+       single-bundle `op=projection` publishes `no_project_conclusion` (REC-144),
+       computed by the SAME reader `op=basisversions` uses, under the gate this
+       row already passed. UI-65 could not render it here because the only read
+       carrying it then was `op=basisversions`, a CAPPED list read, and this page
+       renders no list whose bound it could state — `bound-sweep` ARM G refused
+       the site and was right to. Nothing about that changed by being argued: the
+       plane published the field on an UNCAPPED read, and the site became legal.
+       This page therefore adds NO new `recR` call at all; `getProjection` is the
+       same one hop it has always taken, and ARM G's walk sees exactly what it saw
+       before. An exemption in that suite would have been the defeat.
+
+       NULL IS NOT ABSENCE AND IS NOT RENDERED AS ONE. The plane answers null for
+       a question that is not concluded and for every non-inquiry, so nothing is
+       drawn — this page does not write "nothing was concluded", because it cannot
+       tell that from a read that failed. Where the read failed, `proj` is null and
+       this is the empty string, exactly as every other field off it. */
+    const npc = (proj && proj.no_project_conclusion && typeof proj.no_project_conclusion === "object")
+      ? proj.no_project_conclusion : null;
+
     const questionPane = questionText
       ? `<div class="card"><div class="prose">${mdLite(questionText)}</div></div>`
       : `<div class="empty">This question's own words are not in the document. Nothing is shown in their place.</div>`;
@@ -7929,6 +8003,34 @@ async function openInquiry(id, fromNav){
         ? rels.map(r=>`<div class="linkrow" onclick="openBundle(${esc(JSON.stringify(String(r.from)))})"><span class="lt">${esc(r.from_title||r.from)}</span><span class="ln">${esc(typeLabel(r.from_type, r.from_state))} &middot; ${esc(r.rel||"cites")} this${r.note?` &middot; ${esc(r.note)}`:""}</span></div>`).join("")
         : `<div class="empty">Nothing in the record rests on this question yet.</div>`);
 
+    /* The no-project conclusion renders through `noProjectConclusionHtml` — the
+       SAME helper the stance surface uses, not a second rendering of one record.
+       That is the whole reason §7.1 names the helper: two renderings of one
+       conclusion is how the two come to say different things. */
+    const npcPane = npc
+      ? `<h2 class="sec">What this question concluded</h2>
+        <p class="subj-note">This conclusion was drawn on the question itself, outside any project. A project that draws on this question concludes for itself, on its own view of it, and reads this as information — never as its answer.</p>
+        ${noProjectConclusionHtml(npc)}`
+      : "";
+
+    /* THE ROUTED ACT, and the whole of REC-142's DELEGATION to UI. The projects
+       named are the record's OWN reverse index, gated to this credential — never
+       a list this page assembled, and never a claim about which of them the
+       member has joined, which the record does not publish here. Where it names
+       none, the sentence names none and points at the address instead of
+       inventing one. */
+    const citing = rels.filter(r=>r && normalizeType(r.from_type) === "project");
+    const npcRouted = npc
+      ? `This page&rsquo;s own form draws a conclusion with no project, and the record already carries one on this question &mdash; it is above. A project concludes for itself, on the project&rsquo;s own view of this question.`
+        + (citing.length
+          ? ` ${citing.length===1?"The project below draws":"The projects below draw"} on this question, as the record&rsquo;s reverse index has it:`
+            + citing.map(r=>`<div class="linkrow" onclick="stanceOpen(${esc(JSON.stringify(String(r.from)))},${esc(JSON.stringify(String(id)))})"><span class="lt">${esc(r.from_title||r.from)}</span><span class="ln">${esc(typeLabel(r.from_type, r.from_state))} &middot; what this project stands on, and what it concluded</span></div>`).join("")
+          : ` The record&rsquo;s reverse index names no project drawing on this question that this credential may see.`)
+      : "";
+    const barOpts = {};
+    if(pubEntry) barOpts.elsewhere = ["publish"];
+    if(npcRouted) barOpts.routed = { conclude: npcRouted };
+
     $("#content").innerHTML = `${crumb}
       <div class="trow"><h1 class="rec">${esc(fm.title||(proj&&proj.title)||id)}</h1></div>
       <p class="lede">${esc(PHASE_LABEL[phase])} &middot; <span class="mono">${esc(state)}</span></p>
@@ -7939,8 +8041,9 @@ async function openInquiry(id, fromNav){
       <p class="subj-note">Every leg the question rests on, in the order it was recorded, with what it does to the conclusion and how its grade was established. A leg that cuts against the conclusion is a leg like any other and is counted on its own axis exactly as a supporting one is — the record keeps what it found, not only what it hoped for.</p>
       ${legsPane}
       ${strengthPanels(pair, legs)}
+      ${npcPane}
       ${pubEntry}
-      ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR, pubEntry ? { elsewhere:["publish"] } : undefined)}
+      ${actBarHtml(id, fm.title||(proj&&proj.title)||id, actsR, (barOpts.elsewhere || barOpts.routed) ? barOpts : undefined)}
       <h2 class="sec">What would falsify it</h2>
       ${falsifyText
         ? `<div class="card"><div class="prose">${mdLite(falsifyText)}</div></div>`
@@ -8302,7 +8405,7 @@ async function doRosterAct(){
   const r = await actAsk(a.op, params);
   if(!r.accepted){
     const err = $("#ra-err");
-    if(err){ err.innerHTML = actRefusalHtml(refusalTranslated(r.refusal)); err.classList.remove("hidden"); }
+    if(err){ err.innerHTML = actRefusalHtml(r.refusal); err.classList.remove("hidden"); }   /* UI-72: the translation is `actRefusalHtml`'s own rule now, for every act surface and not these two. */
     if(go){ go.disabled = false; go.textContent = a.label; }
     return { refused:true, reason: r.refusal && r.refusal.reason };
   }
@@ -9116,10 +9219,30 @@ const ACT_FLOW = {
    a statement about this page's layout and never about the record: the acts, the
    labels and the availability all still come from the plane, and nothing here
    decides that an act may or may not be done. */
+/* UI-67 added `routed` alongside `elsewhere`, and the two are NOT the same thing.
+   `elsewhere` says THIS page carries the act in a section of its own. `routed`
+   says this page does not carry the act at all and names the surface that does,
+   in a sentence the caller supplies — because the caller is the only one holding
+   the plane's answer that makes the routing true. The act is still NAMED with the
+   producer's own label and is never dropped: an act the record publishes and the
+   member cannot see is the defect this bar was built to refuse.
+
+   THE ONE CALLER TODAY is `openInquiry`, and its reason is REC-142's DELEGATION.
+   `op=affordances` publishes `conclude` on a question whose own state is already
+   `concluded` — its PROJECT arm — to a member who has joined a project that cites
+   it. This page's `ACT_FLOW.conclude` opens the NO-PROJECT dialog, which sends no
+   `project=`, which the plane refuses. Offering it would be a control this page
+   knows leads nowhere, so the control is routed rather than rendered. WHAT DECIDES
+   THAT IS THE PLANE'S OWN ANSWER, never this page's reading of the question's
+   state: `op=projection` publishes the no-project RELATIONSHIP (REC-144), and its
+   presence is the record saying that relationship has concluded. That is exactly
+   the act-level relationship field REC-142's delegation offered to build, arriving
+   from a different read — so no further I3 change is needed. */
 function actBarHtml(id, title, r, opts){
   if(!r) return "";
   const noun = (opts && opts.noun) || "question";
   const elsewhere = (opts && opts.elsewhere) || [];
+  const routed = (opts && opts.routed && typeof opts.routed === "object") ? opts.routed : {};
   if(!r.ok)
     /* The plane refused the question about this object. Its words, verbatim. */
     return `<h2 class="sec">What can be done here</h2>${actRefusalHtml(r.refusal)}`;
@@ -9129,9 +9252,11 @@ function actBarHtml(id, title, r, opts){
     return `<h2 class="sec">What can be done here</h2>
       <div class="empty">The record publishes no act on this ${esc(noun)} as it stands.</div>`;
   const jid = esc(JSON.stringify(id)), jt = esc(JSON.stringify(title||id));
-  const withFlow = acts.filter(a=>ACT_FLOW[a.id] && actReachable(a));
-  const here     = acts.filter(a=>!(ACT_FLOW[a.id] && actReachable(a)) && elsewhere.includes(a.id));
-  const named    = acts.filter(a=>!(ACT_FLOW[a.id] && actReachable(a)) && !elsewhere.includes(a.id));
+  const carried  = (a) => ACT_FLOW[a.id] && actReachable(a) && !routed[a.id];
+  const withFlow = acts.filter(a=>carried(a));
+  const sentTo   = acts.filter(a=>!carried(a) && routed[a.id]);
+  const here     = acts.filter(a=>!carried(a) && !routed[a.id] && elsewhere.includes(a.id));
+  const named    = acts.filter(a=>!carried(a) && !routed[a.id] && !elsewhere.includes(a.id));
   const buttons = withFlow.map(a=>
     `<button class="btn ghost" onclick="actGo(${esc(JSON.stringify(a.id))},${jid},${jt})">${esc(a.label)}&hellip;</button>`).join("");
   /* An act the record publishes that this surface cannot carry is NAMED with no
@@ -9144,10 +9269,16 @@ function actBarHtml(id, title, r, opts){
   const rest = named.length
     ? `<p class="subj-note">The record also publishes ${named.map(a=>`<b>${esc(a.label)}</b>`).join(", ")} on this ${esc(noun)}. ${named.length===1?"It is":"They are"} not carried on this page.</p>`
     : "";
+  /* The routed act keeps the producer's label and gains the caller's sentence,
+     which says where it IS taken. The sentence is the caller's because only the
+     caller holds the plane answer that makes the routing true. */
+  const sent = sentTo.map(a=>
+    `<div class="subj-note" data-act-routed="${esc(a.id)}">The record also publishes <b>${esc(a.label)}</b> on this ${esc(noun)}. ${routed[a.id]}</div>`).join("");
   return `<h2 class="sec">What can be done here</h2>
     <p class="subj-note">Every act below is one the record publishes for this ${esc(noun)} as it stands, under the record's own name for it. This page adds none and renames none.</p>
     ${buttons?`<div class="rv-bar" style="margin:0;gap:8px">${buttons}</div>`:""}
     ${mine}
+    ${sent}
     ${rest}`;
 }
 function actGo(actId, id, title){
@@ -9561,6 +9692,10 @@ async function doConclude(){
   if(!CONCL) return;
   CONCL.busy = false;
   if(!a.accepted){ CONCL.pf = { clear:false, refusal:a.refusal }; concludePaint(); return; }
+  /* UI-67: the record moved, so this session's memory of it is stale. Taken on
+     the ACCEPTED branch only — a refusal wrote nothing and forgetting there would
+     make the cache a worse witness rather than a better one. */
+  projForget(CONCL.id);
   CONCL.receipt = a.result;
   concludePaint();
 }
@@ -9623,7 +9758,18 @@ function concludeReceiptHtml(r){
    exact shape ARM G exists to refuse. So the question's page does not show it
    until the plane publishes the no-project conclusion on a read that carries no
    list bound (reported by UI-65; the plane is RECORD's).
-   ============================================================ */
+
+   **CORRECTED 2026-09-19 BY UI-67, AND THE PARAGRAPH ABOVE IS KEPT BECAUSE IT
+   IS THE REASON RATHER THAN THE STATE.** The condition it named has been met:
+   REC-144 (IC-160) publishes `no_project_conclusion` on the single-bundle
+   `op=projection`, which is UNCAPPED and carries no list bound, computed by this
+   same `#noProjectConclusionOf` — one reader, two reads. So the question's page
+   DOES render it now, off `getProjection`, through this same helper, and ARM G
+   is untouched because the page added no call to a capped op. The last sentence
+   above stood as a statement of state for one day; it is now history and is
+   marked as such rather than deleted, because a reader arriving at ARM G's
+   refusal needs to know the site was refused for a reason that was CLOSED, not
+   argued away. Nothing in this function changed. */
 function noProjectConclusionHtml(npc){
   if(!npc || typeof npc !== "object") return "";
   const c = npc.claim && typeof npc.claim === "object" ? npc.claim : null;
@@ -14587,10 +14733,18 @@ async function intentAsk(op, body){
 }
 
 /* A refusal, in the PLANE'S OWN WORDS and never re-worded here. The refusals
-   teach: they name the requirement, and the requirement is the record's. */
+   teach: they name the requirement, and the requirement is the record's.
+
+   **FOUND BY UI-72'S CLASS SWEEP AND CORRECTED WITH ITS TWIN, not after it.**
+   This function's body was BYTE-IDENTICAL to `actRefusalHtml`'s — same markup,
+   same code line, same `r.detail || r.error || ""` — and it serves the ten
+   intent panes. UI-72's row named `actRefusalHtml`; fixing only what was
+   reported would have left the same defect at a sibling site serving surfaces a
+   member reaches the same way. Both now read `refusalWords`, so the rule is
+   written once and a third copy cannot drift from it. */
 function intentRefusalHtml(r){
   if(!r) return "";
-  const words = r.detail || r.error || "";
+  const words = refusalWords(r);
   return `<div class="intent-ref"><div class="intent-ref-why">${esc(words || "The record refused this and said nothing further.")}</div>`
     + (r.reason ? `<div class="intent-ref-code mono">${esc(r.reason)}</div>` : "")
     + `</div>`;
@@ -17149,7 +17303,7 @@ async function addGo(){
            — the machine word DEC-49 keeps away from members, with the plane's own sentence thrown away. It
            is rendered through `actRefusalHtml`, the plane's words verbatim (its canned translation first). */
         : (res && (res.translation || res.detail))
-          ? `<b>The record refused this and nothing was written.</b>` + actRefusalHtml(refusalTranslated(res))
+          ? `<b>The record refused this and nothing was written.</b>` + actRefusalHtml(res)
           : `Refused: ${esc(why)}. Nothing was written.`);
       return;
     }
@@ -21487,6 +21641,14 @@ async function stanceConclude(){
   if(a.accepted){
     cx.receipt = a.result || null;
     cx.falsifier = ""; cx.commentary = ""; cx.noFals = false; cx.noFalsSaid = null;
+    /* UI-67: this surface re-reads itself through `stanceLoad`, but the QUESTION's
+       page reads the same inquiry through `PROJ_CACHE` and would not. A project's
+       conclusion does NOT move the inquiry's own state (`inquiry_moved: false`,
+       §7.1 item 1), so the field this clears is not one this act changes today —
+       it is cleared because the act is of the CLASS that can, and a cache kept
+       across a conclusion only because today's arm happens not to touch it is a
+       correctness that expires the next time the plane changes. */
+    projForget(STANCE.inquiry);
     await stanceLoad();
   }else{ cx.refusal = a.refusal || null; stancePaint(); }
 }
@@ -21498,7 +21660,8 @@ async function stanceWithdraw(){
   const a = await actAsk("withdrawconclusion",
     { target: STANCE.inquiry, project: STANCE.project, reason: wd.reason });
   wd.busy = false;
-  if(a.accepted){ wd.receipt = a.result || null; wd.reason = ""; await stanceLoad(); }
+  /* UI-67: the same invalidation on the withdrawal, and for the same reason. */
+  if(a.accepted){ wd.receipt = a.result || null; wd.reason = ""; projForget(STANCE.inquiry); await stanceLoad(); }
   else { wd.refusal = a.refusal || null; stancePaint(); }
 }
 

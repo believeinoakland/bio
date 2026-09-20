@@ -80,6 +80,11 @@ mid-flight, which branch is live, what is owed right now) belongs in the `-NEXT`
 anyone works this area belongs in the LAW, and belongs there NOW rather than waiting on a refresh that may be far off.
 Put it in both when it is both. **The failure this closes:** a durable lesson written only into a handoff is read once
 and then dropped — it looks recorded and is not, which is the same shape as a claim the record cannot support.
+**AND THE REASON IN ONE SENTENCE, from DIST #2 on 2026-09-19, which is the test to apply when the choice is unclear:
+THE SESSION THAT NEEDS THE LESSON WILL NOT BE THE SESSION THAT LEARNED IT.** A `-NEXT` is addressed to one successor
+you can picture; the law is addressed to everyone who ever holds the lane, including the session that will meet the
+trap for the first time years from now with no idea it was ever paid for. If you cannot name the ONE session the note
+is for, it belongs in the law.
 
 ### The rules that make the channels work
 

@@ -258,6 +258,14 @@ function harvest(o){
   if (!o || typeof o !== "object") return;
   if (typeof o.detail === "string" && o.detail) SAID.add(o.detail);
   if (typeof o.error === "string" && o.error) SAID.add(o.error);
+  /* CORRECTED 2026-09-19 (UI-72), never exempted. The sweep below asks whether a
+     sentence the member read CAME OVER THE WIRE; a canned `translation` (DEC-49)
+     arrives on the same answer, from the plane's own check row, and belongs in the
+     corpus for the same reason `detail` does. The omission was invisible while no
+     surface rendered one — the moment `actRefusalHtml` preferred the translation,
+     this sweep called the PLANE'S own sentence foreign. A sentence app.html
+     composes is still in neither field, so the arm still bites. */
+  if (typeof o.translation === "string" && o.translation) SAID.add(o.translation);
   for (const v of Object.values(o)) if (v && typeof v === "object") harvest(v);
 }
 const ctx = { console, URL, URLSearchParams, JSON, Array, Object, String, Number, Math, Date, RegExp, Promise,
@@ -413,8 +421,14 @@ await U.concludeAuthor("conclusion", "Nobody objected in writing.");
 await U.concludeAuthor("falsifier", "A written objection dated before the transfer.");
 await U.doConclude();
 const n1 = capture(dlg());
+/* CORRECTED 2026-09-19 (UI-72), never exempted: pinned on the plane's canned
+   `translation` rather than on its `detail`. Both are the plane's — the surface
+   composes neither — but `detail` is written for a caller of the op and
+   `translation` is the sentence DEC-49 authored for a member, which is what
+   `actRefusalHtml` now renders on every act surface. The old assertion named the
+   right rule and the wrong field. */
 ok("THE MEMBER SEES NO_CLAIM RENDERED AS THE PLANE'S OWN SENTENCE — the door (name a reading) is the plane's, not this page's",
-  /NO_CLAIM/.test(n1) && n1.includes(`<div class="intent-ref-why">${U.esc(PLANE_NO_CLAIM.detail)}</div>`),
+  /NO_CLAIM/.test(n1) && n1.includes(`<div class="intent-ref-why">${U.esc(PLANE_NO_CLAIM.translation)}</div>`),
   n1.slice(0, 900));
 ok("the commit sent no version, because nothing was picked", !("version" in lastOf("conclude").params));
 ok("and nothing was written: the question is still open", fmScalar(await imageOf(INQ_NONE), "current_state") === "open");

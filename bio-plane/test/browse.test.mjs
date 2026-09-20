@@ -66,10 +66,21 @@ t("bytes are exact", sha(Buffer.from(await dlr.arrayBuffer())), capSha);
    disappeared: a browser may add to the working record, and may not destroy
    anything or hand itself new powers. The refusals below are the boundary. */
 console.log("\n--- a session writes intake and nothing else ---");
-t("purge via session is refused, in plain words",
+/* CORRECTED 2026-09-19 BY D-270, NEVER EXEMPTED. Both lines asserted the words
+   `machine credential`, and the SECOND ONE WAS ASSERTING A RATIONALE THE PLANE
+   HELD NO RECORD FOR — which is the defect D-270 closes, pinned in place by a
+   test. `op=purge` has a recorded decision that it is not for a person, so it
+   keeps the byte-identical sentence and that line is UNCHANGED. `op=livefire`
+   does not: it is refused to every session, nothing on record says why, and the
+   plane now says exactly that instead of inventing the reason.
+   **THE PAIR IS KEPT TOGETHER DELIBERATELY** — side by side they are the whole
+   distinction this item draws, and a reader who changes one without the other
+   will find out here. The INTENT of both lines is untouched: a session writes
+   intake and nothing else, and both acts are still refused. */
+t("purge via session is refused, in plain words, and the words are the recorded-decision ones",
   (await j(`/api/?op=purge&token=${S}&confirm=bio`)).error.includes("machine credential"), true);
-t("the live-fire battery is refused",
-  (await j(`/api/?op=livefire&token=${S}`)).error.includes("machine credential"), true);
+t("the live-fire battery is refused too — still refused, but NOT with a reason nobody recorded",
+  (await j(`/api/?op=livefire&token=${S}`)).reason, "SESSION_ROUTE_NOT_RECORDED");
 t("nothing was purged", (await j(`/api/?op=stats&token=${S}`)).result.bundles, 1);
 t("a session may take a lease, which is intake",
   (await j(`/api/?op=lease&token=${S}&id=INFO-2026-7001-x`)).result.ok, true);

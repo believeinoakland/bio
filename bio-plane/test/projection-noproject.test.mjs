@@ -259,9 +259,20 @@ console.log("\n--- 4. ONE READER: the single-bundle arm calls #noProjectConclusi
     count(store, "\n  #noProjectConclusionOf("), 1);
   /* EXACT, not a floor — severedhomes.test.mjs's reason: it is the only
      instrument that sees a reader of the rule appear or disappear. A third
-     call site is not wrong; it is somebody who must come here and say which. */
-  t("ONE READER: exactly TWO call sites — op=basisversions and op=projection's single-bundle arm",
-    count(store, "this.#noProjectConclusionOf("), 2);
+     call site is not wrong; it is somebody who must come here and say which.
+     CORRECTED 2026-09-19 by REC-135, which is that somebody, and the OLD
+     ASSERTION WAS RIGHT WHEN IT WAS WRITTEN AND IS WRONG NOW rather than having
+     been too strict: at REC-144 there were exactly two reads of this quantity
+     and the pin said so. §7.1 item 4 adds a THIRD — `#caseConclusionFor`, the
+     one reader `op=publish`'s NOT_CONCLUDED gate and the case document both ask
+     "is this question concluded, and for whose relationship?" through. It is a
+     CALL and not a copy, which is the property this whole section exists to
+     hold: the token arm below still reads ONCE across both files, and it is the
+     arm that would catch a fourth reader written out by hand. The count moves;
+     the rule does not. */
+  t("ONE READER: exactly THREE call sites — op=basisversions, op=projection's single-bundle arm, "
+  + "and REC-135's #caseConclusionFor (the case path's no-project arm)",
+    count(store, "this.#noProjectConclusionOf("), 3);
   /* NAMED FILES, NOT A DIRECTORY WALK (hygiene.test.mjs's walk census): the store
      that holds the reader and the dispatch that could host a copy beside the op. */
   const srcs = ["store.mjs", "index.mjs"].map((f) => readFileSync(SRC(f), "latin1")).join("\n");

@@ -3732,6 +3732,7 @@ __export(bio_checks_exports, {
   CONTENT_ID_RE: () => CONTENT_ID_RE,
   CONTENT_MINTED_BY_PLANE: () => CONTENT_MINTED_BY_PLANE,
   CONTENT_MINT_STATES: () => CONTENT_MINT_STATES,
+  CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
@@ -3766,6 +3767,7 @@ __export(bio_checks_exports, {
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
+  REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
@@ -10669,14 +10671,63 @@ var ADMISSION_CHECKS = {
     translation: "The credential you sent is not one this operation accepts. Credentials here are issued for a particular purpose, and widening this one is not the way through: use the credential meant for this work."
   },
   /* The mirror of the row above, and it exists separately because the two are
-     opposite facts about the caller. This one is a PERSON asking for something
-     only an unattended writer does; the row above is a credential of the wrong
-     kind entirely. One refusal covering both would tell neither caller anything
-     they could act on — DEC-49's own argument, and PL-18's. */
+       opposite facts about the caller. This one is a PERSON asking for something
+       only an unattended writer does; the row above is a credential of the wrong
+       kind entirely. One refusal covering both would tell neither caller anything
+       they could act on — DEC-49's own argument, and PL-18's.
+  
+       **NARROWED 2026-09-19 BY D-270, AND THE `where` MOVED WITH THE SITE.** This
+       row is a DESIGN CLAIM — it tells a person that a verb is not for people —
+       and BOB #17 ruled that the plane may make it ONLY where such a decision is
+       recorded. Until D-270 this one sentence answered THREE different facts and
+       was FALSE for two of them: it went to five ops an administrator's own
+       browser performs, and to ops whose OPS rows say in as many words that they
+       are a named member's judgement. The site is now `sessionOpGate`, which
+       sends this row only for an op named in `UNATTENDED_BY_DECISION`, and the
+       refusal carries the citation in `recorded`, so the claim and its warrant
+       travel together. The rule's home is
+       `docs/architecture/BIO_Membership_Architecture_v2.md` §4 (the §4.7 block). */
   MACHINE_CREDENTIAL_REQUIRED: {
     check: "C-38.3",
-    where: "src/index.mjs fetch > is-admission",
-    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued."
+    where: "src/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued. This instance holds a recorded decision to that effect and names it beside this message."
+  },
+  /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
+     OUTCOMES, and the one the plane could ALWAYS have said: it is about the
+     CALLER rather than about the design, so it needs no recorded decision to be
+     sayable. Five ops — `governorconfig`, `memberadd`, `memberset`, `signeradd`,
+     `signerset` — were answered with the row above, which told a member to go
+     and find a machine credential for an act an administrator performs from
+     their own browser. There is no such credential to find. This sentence names
+     the person to ask instead, because that is the action actually available. */
+  SESSION_ROLE_CANNOT_REACH_OP: {
+    check: "C-38.7",
+    where: "src/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "A signed-in person does perform this operation, but an administrator of this group, and this session is not one. No machine credential is needed and finding one is not the way through: ask an administrator."
+  },
+  /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
+       otherwise have to cover a case neither is true of.
+  
+       **THE ARGUMENT, AND IT IS THIS ROW'S WHOLE REASON.** A false rationale
+       SUPPRESSES ITS OWN BUG REPORT: a member told that an absence is a DECISION
+       will not report it as a gap, so the sentence recruits the one person who
+       could have caught it into believing there is nothing to catch. The measured
+       case is D-136's — `adminendorse`, `adminremove` and `membercaps` are
+       reachable by no session, and Membership Architecture §4.7 assigns that very
+       vote to a person. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
+       independently that the old sentence told an administrator the act §4.9
+       assigns them needs a credential §4.8 says somebody else holds, and that
+       there is no action a member can take from it.
+  
+       SO THIS ROW STATES THE FACT AND INVENTS NO RATIONALE. It says what is true
+       — no session route exists — and says plainly that the record holds no
+       decision explaining it, which is an INVITATION to report the gap rather
+       than a wall in front of it. A refusal may state only what the system can
+       support. */
+  SESSION_ROUTE_NOT_RECORDED: {
+    check: "C-38.8",
+    where: "src/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "No signed-in session reaches this operation, and this instance holds no recorded decision saying it is not meant for a person. That is a gap in the record rather than a rule you have run into, and it is worth reporting as one."
   },
   /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
      ENOUGH, and the translation says so, because a member refused here will
@@ -10711,6 +10762,16 @@ var ADMISSION_CHECKS = {
     check: "C-38.6",
     where: "src/index.mjs fetch > is-admission",
     translation: "That credential is allowed to act, but not on the part of the record this request named. It is confined to its own namespace and this request reached outside it."
+  }
+};
+var REQUIRED_ARGUMENT_CHECKS = {
+  /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
+     tell a refused request from a half-applied one has to go and look, and this
+     is the one refusal in the plane most likely to be met by a script. */
+  REQUIRED_ARGUMENT_MISSING: {
+    check: "C-61.1",
+    where: "src/index.mjs requiredArgument > is-required-argument",
+    translation: "This request left out an argument the operation cannot run without, or sent one in a shape it does not accept. Nothing was changed. The argument and the shape it must take are named beside this message."
   }
 };
 var DRIVE_CAPTURE_CHECKS = {
@@ -11702,6 +11763,13 @@ var PROJECT_ID_CHECKS = {
     check: "C-59.5",
     where: "src/store.mjs allocIdOp > is-allocid-prefix-gated",
     translation: "Ids of this kind are given by the record when the thing itself is created, and are not handed out in advance. Create the project, case, draft, grant or task through its own action and the record will answer with its id. Nothing was allocated."
+  }
+};
+var CONTRADICTION_PAIR_CHECKS = {
+  CONTRADICTION_KEY_UNKNOWN: {
+    check: "C-60.1",
+    where: "src/store.mjs contradictionPairs > is-contradiction-key-unknown",
+    translation: "The record pairs assertions by named keys, and that is not one of them. Rather than answer from a different key and let the answer look like a complete comparison, it says so and names the keys it holds. Ask again with one of them, or with none at all to run every key."
   }
 };
 function leadLegFindings(label, leg, findings) {
@@ -15188,12 +15256,27 @@ var ACTS = [
        no longer saying it to somebody for whom NO parameter could succeed. The
        per-pair question (may this viewer publish for THIS project) is a different
        fact and a different item, D-311, argued at NON_ACTS' roster rows below. */
+  /* REC-135 / INVESTIGATIVE-SESSION.md §7.1 item 4, 2026-09-19: `concluded` IS
+     ASKED OF A RELATIONSHIP, SO THE STATE WORD IS NO LONGER THE WHOLE OF IT.
+     `op=conclude&project=` writes the project's adoption onto the PROJECT and
+     deliberately leaves the shared question's own state where it was (§7: one
+     team's decision never moves another's). So a member whose team HAS concluded
+     a shared question sees `current_state: open` on it, and this predicate — the
+     affordance-layer half of publishCase()'s NOT_CONCLUDED sentence, which the
+     paragraph above says the two must AGREE on — would have gone on hiding the
+     act from exactly the member item 4 exists for.
+     A DISJUNCTION AND NOT A REPLACEMENT, because both relationships publish: the
+     no-project conclusion in a question's own bytes still admits a case (item 5
+     reads it as the no-project relationship's and the case document now SAYS so),
+     and `concluded_for_project` adds the project's own. `=== true` is the whole
+     of the three-valued handling: a machine-class credential answers null there,
+     does not widen, and keeps its own fence (MACHINE_CANNOT_PUBLISH). */
   {
     id: "publish",
     label: "Publish (author the case)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f2, ty) => ty === "inquiry" && f2.current_state === "concluded" && !f2.case_member && f2.project_owner !== false
+    applies: (f2, ty) => ty === "inquiry" && (f2.current_state === "concluded" || f2.concluded_for_project === true) && !f2.case_member && f2.project_owner !== false
   },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
@@ -28415,6 +28498,17 @@ var Store = class _Store extends DurableObject {
         const who = this.#positionalMember(viewer, identity);
         return who === null ? null : this.#joinedCitingProjectOf(b.bundle_id, viewer, who);
       })(),
+      /* REC-135 / §7.1 item 4: WHETHER A PROJECT THIS CALLER HAS JOINED STANDS ON A
+         CONCLUSION OF THIS QUESTION — `concludes_for_project`'s shape exactly, one line
+         up, and THREE-VALUED for its reason: null on a target that is not an inquiry and
+         for a caller with no roster position, whose published act set is therefore
+         byte-unchanged. The rule that consumes it is `publish`'s entry in the act
+         catalogue, which widens on `=== true` and never narrows on a null. */
+      concluded_for_project: (() => {
+        if (normalizeType(b.object_type) !== "inquiry") return null;
+        const who = this.#positionalMember(viewer, identity);
+        return who === null ? null : this.#concludedForJoinedProjectOf(b.bundle_id, viewer, who);
+      })(),
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
       rested_on: {
         working: rested.confirmed.length,
@@ -31429,6 +31523,143 @@ Claim: ${f2.claim}
       claim
     };
   }
+  /* ===== REC-135 / INVESTIGATIVE-SESSION.md §7.1 item 4 (BOB #15, 2026-09-18) —
+   * IS THIS QUESTION CONCLUDED, AND FOR WHOSE RELATIONSHIP? THE ONE READER THE
+   * CASE PATH ASKS.
+   *
+   * "Everything that asked 'is this inquiry concluded?' asks it FOR A PROJECT."
+   * Before this, publishCase() asked bundles.current_state === 'concluded' —
+   * the INQUIRY'S OWN SHARED STATE — which is the single stance §7 forbids: on a
+   * shared question one team's conclusion admitted every team's case, and a team
+   * that HAD concluded through op=conclude&project= could not publish at all,
+   * because the project arm deliberately never moves the inquiry's state
+   * (conclude(), THE PROJECT'S CONCLUSION IS WRITTEN ON THE PROJECT AND NOWHERE
+   * ELSE). Both halves of that are corrected here.
+   *
+   * IT CALLS THE EXISTING READERS AND COPIES NEITHER. #conclusionOf is the
+   * project half (REC-124/REC-136: the stance, and only while it is a conclusion
+   * — a withdrawal is never a standing answer) and #noProjectConclusionOf is the
+   * inquiry's-own-bytes half (REC-124 item 5, REC-136 item 6). BOB #16's
+   * one-reader rule at REC-144: two reads of one quantity must be the same
+   * function, or the record can disagree with itself about what a project
+   * concluded.
+   *
+   * THE DISJUNCTION IS A PROVISIONAL AND IT IS ARGUED RATHER THAN ASSUMED, and
+   * the alternative is named so reversing it is one edit. §7.1 item 8 says a
+   * no-project conclusion is visible as information and is never read as P's,
+   * and read strictly that refuses publication to every project whose finding was
+   * concluded before the project arm existed — which is EVERY published case in
+   * this record and every publishing caller in the battery, since op=conclude had
+   * no project arm before 2026-09-18. Item 5 rules the opposite way about the
+   * same bytes: they are read as the conclusion of the relationship that
+   * concluded them, or of the no-project relationship where none can be
+   * established — STATED AS SUCH. So the no-project conclusion still admits a
+   * case, and what makes that honest rather than lax is the second half of this
+   * item: WHICH relationship the case rests on is written into the case document
+   * and into this act's answer, PER MEMBER, instead of being left to a reader to
+   * assume it was the publisher's. Tightening later is one arm of this function
+   * and a refusal message; it is not a migration.
+   * (Item 6's aside — a case needs a project (DEC-72), so a no-project conclusion
+   * is never published — is FALSE of the code as built, and is reported to BOB
+   * rather than quietly made true in either direction.)
+   *
+   * not_concluded IS NOT ONE FACT AND IS NEVER RETURNED AS ONE (CLAUDE.md §2:
+   * sparse is normal, and saying WHICH is a first-class obligation). The project
+   * may have concluded and WITHDRAWN (REC-136's history), may have written an act
+   * this plane does not recognise (undetermined, never guessed), may have done
+   * nothing — and another project may have concluded the same shared question,
+   * which is information and is never this project's stance (item 8). Each is
+   * named, and the other-projects read publishes its own bound, because an
+   * ABSENCE over a truncated set is not a finding.
+   *
+   * THE STATE FLOOR SURVIVES, and dropping it would have been this item opening a
+   * hole while closing one. current_state no longer decides whether the
+   * relationship concluded, but it still decides whether the QUESTION can bear a
+   * case at all: conclude() refuses a deferred, dismissed or divided question,
+   * yet a project's conclusions[] row written while the question was open
+   * SURVIVES the group later setting it down or dividing it (DEC-28: divided is
+   * terminal and its legs were re-homed onto children). A case asserted over one
+   * of those would rest on a question the group has carried forward or put away,
+   * which the old expression refused as a side effect and this refuses on
+   * purpose. */
+  static CASE_BEARING_STATES = ["open", "surfaced", "concluded"];
+  #caseConclusionFor(projectId, inquiryId, viewer, currentState) {
+    const pid = String(projectId ?? "").trim();
+    const inq = String(inquiryId ?? "").trim();
+    const bearing = _Store.CASE_BEARING_STATES.includes(currentState);
+    const own = pid && bearing ? this.#conclusionOf(pid, inq, viewer) : null;
+    if (own)
+      return {
+        state: "concluded",
+        relationship: "project",
+        project: pid,
+        inquiry: inq,
+        version: own.version ?? null,
+        claim: {
+          state: own.claim ? "adopted" : "undetermined",
+          text: own.claim ?? null,
+          version: own.version ?? null,
+          detail: null
+        },
+        falsifier: own.falsifier ?? "",
+        falsifier_override: own.falsifier_override ?? null,
+        by: own.by ?? null,
+        at: own.at ?? null,
+        detail: `${pid} concluded this question on reading '${own.version ?? "(unnamed)"}' and still stands on it, so this case records that project's own adopted claim (7.1 items 1-2).`
+      };
+    const np = bearing ? this.#noProjectConclusionOf(inq) : null;
+    if (np)
+      return {
+        state: "concluded",
+        relationship: "no_project",
+        project: null,
+        inquiry: inq,
+        version: np.claim && np.claim.version ? np.claim.version : null,
+        claim: {
+          state: np.claim ? np.claim.state : "undetermined",
+          text: np.claim && np.claim.state === "adopted" ? np.claim.text : null,
+          version: np.claim && np.claim.version ? np.claim.version : null,
+          detail: np.claim && np.claim.state !== "adopted" ? np.claim.detail ?? null : null
+        },
+        falsifier: np.falsifier ?? "",
+        falsifier_override: null,
+        by: null,
+        at: null,
+        detail: np.relationship_detail
+      };
+    const rec = pid ? this.#conclusionRecordOf(pid, inq, viewer) : { history: [], stance: null };
+    const st = rec.stance;
+    const why = !bearing ? "question_not_case_bearing" : !pid ? "no_project_named" : !st ? "project_has_never_concluded" : st.act === "withdrawn" ? "project_withdrew_its_conclusion" : st.act === "concluded" ? "project_has_never_concluded" : "project_stance_undetermined";
+    const others = [];
+    let othersBound = null, othersTruncated = null;
+    if (bearing) {
+      const drawing = this.#projectsDrawingOn(inq, viewer);
+      othersBound = drawing.bound ?? null;
+      othersTruncated = drawing.truncated === true;
+      for (const p of drawing) {
+        if (p.id === pid) continue;
+        const c = this.#conclusionOf(p.id, inq, viewer);
+        if (c) others.push({ project: p.id, version: c.version ?? null, at: c.at ?? null });
+      }
+    }
+    return {
+      state: "not_concluded",
+      relationship: pid ? "project" : "no_project",
+      project: pid || null,
+      inquiry: inq,
+      why,
+      claim: { state: "undetermined", text: null, version: null, detail: null },
+      stance: st ? { act: st.act, version: st.version ?? null, at: st.at ?? null } : null,
+      history_length: rec.history.length,
+      inquiry_state: currentState ?? null,
+      concluded_elsewhere: others,
+      concluded_elsewhere_bounds: {
+        projects_bound: othersBound,
+        projects_truncated: othersTruncated,
+        detail: "a bounded number of projects drawing on this question are read, and only those this viewer may see. A conclusion reported here is still true; an ABSENCE over a truncated or gated set is not."
+      }
+    };
+  }
   /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7 (BOB #15, 2026-09-18) —
    * A PROJECT WITHDRAWS ITS CONCLUSION, and the withdrawal is a dated, authored
    * act that APPENDS to the relationship's history. It never deletes and never
@@ -32576,14 +32807,29 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
         };
       const fm = parseFrontmatter(liveMd.content).data || {};
-      if (b.current_state !== "concluded")
+      const conc = this.#caseConclusionFor(proj, id, viewer, b.current_state);
+      if (conc.state !== "concluded")
         return {
           ok: false,
           reason: "NOT_CONCLUDED",
           target: id,
+          project: proj,
           from: b.current_state,
           object_type: fm.object_type ?? b.object_type,
-          detail: "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion. Conclude it first (op=conclude). A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72)."
+          relationship: conc.relationship,
+          why: conc.why,
+          stance: conc.stance,
+          concluded_elsewhere: conc.concluded_elsewhere,
+          concluded_elsewhere_bounds: conc.concluded_elsewhere_bounds,
+          /* THE RULE'S OWN SENTENCE LEADS EVERY BRANCH, and it is not decoration.
+             "only a CONCLUDED finding may be a case member" is CASE-AS-PRODUCTION's
+             supersession table VERBATIM, and `caselifecycle.test.mjs` asserts that the
+             document and the plane print the SAME words so the two cannot drift. The
+             first draft of this item wrote a per-branch detail and dropped it, and that
+             suite went red at a named assertion — recorded because it is the instrument
+             doing exactly what it was built for. What the branch adds is WHICH fact was
+             met; what the rule says is unchanged. */
+          detail: "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md \xA77.1 item 4). " + (conc.why === "question_not_case_bearing" ? `This question is ${b.current_state}, and a case cannot be asserted over one the group has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ` : conc.why === "project_withdrew_its_conclusion" ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; \xA77.1 item 7 \u2014 the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project=${proj}). ` : conc.why === "project_stance_undetermined" ? `${proj}'s latest entry about this question names an act this plane does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ` : `${proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (\xA77.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project=${proj}&version=<reading>). `) + (conc.concluded_elsewhere.length ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) \u2014 information, never this project's stance (\xA77.1 item 8). ` : "") + "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72)."
         };
       if (this.#caseRelationOf(id).member)
         return {
@@ -32593,7 +32839,7 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           from: b.current_state,
           detail: "this finding is already a member of a published case at the version it stands at now, so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one from bytes nobody revised would make the edition number a count of publish calls rather than a record of what changed. Reopen it (op=reopen), work it, conclude it again, and publish that \u2014 which is the route DEC-12 built and the one that leaves a reader able to see what moved."
         };
-      prepared.push({ id, b, fm, text: liveMd.content });
+      prepared.push({ id, b, fm, text: liveMd.content, conclusion: conc });
     }
     const roleMap = roles && typeof roles === "object" && !Array.isArray(roles) ? roles : null;
     if (roles != null && !roleMap)
@@ -32951,6 +33197,7 @@ Subject position: ${pos} \u2014 ${just}
         edition,
         detail: `the case document's searched section could not be computed: ${searched.why}. A case document publishes what was looked for beside what it claims to cover (D-196); it does not publish the claim with the record of the looking left blank.`
       };
+    const conclusionRows = prepared.map((p) => ({ target: p.id, ...p.conclusion }));
     const docText = _Store.#caseDocumentText({
       caseId: theCase,
       edition,
@@ -32967,7 +33214,8 @@ Subject position: ${pos} \u2014 ${just}
       excluded: rows,
       author: who,
       at: when,
-      searched
+      searched,
+      conclusions: conclusionRows
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -33108,9 +33356,18 @@ Subject position: ${pos} \u2014 ${just}
        optional — a case document that cannot say what was searched must
        fail the ceremony rather than publish a completeness statement
        with the same silence D-196 exists to name. */
-    searched
+    /* REC-135 / IC-166: the per-member conclusion the case RESTS ON,
+       computed by the caller for the same reason `searched` is — this
+       method is pure and static and the answer needs the store. One row
+       per roster member, in roster order, each naming WHOSE relationship
+       concluded the question (the publishing project's, or the no-project
+       relationship's where the conclusion is in the question's own bytes
+       and names nobody, §7.1 item 5). */
+    searched,
+    conclusions = []
   }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
+    const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
     const fm = [
       "---",
       `format: ${CASE_DOCUMENT_FORMAT}`,
@@ -33126,6 +33383,41 @@ Subject position: ${pos} \u2014 ${just}
         `    role: ${roleOf.get(m) ?? "null"}`,
         `    version_sha: ${pins.get(m) ?? "null"}`
       ]),
+      /* REC-135 / §7.1 item 4 — THE CONCLUSION EACH MEMBER ENTERED THIS CASE ON,
+         AND WHOSE IT WAS. An ARRAY OF FLAT OBJECTS, `case_roles`'s shape, for the
+         grammar's own reason (two levels, no map inside an array).
+         WHY `relationship` IS THE FIRST FIELD AFTER THE TARGET. Before this item
+         a case document recorded NO conclusion at all — a reader holding the
+         bytes could see which findings were in and at which hashes, and had to
+         assume that whoever published had also concluded. On a shared question
+         that assumption is exactly what §7 forbids, and it is the reader outside
+         this project who pays for it. So the bytes now say which relationship's
+         conclusion the case rests on, and a `no_project` row is a DISCLOSURE and
+         not a defect: it means the question was concluded in its own bytes with
+         nobody named, which §7.1 item 5 rules is read as the no-project
+         relationship's and STATED as such.
+         `claim_state: undetermined` IS A FIRST-CLASS ANSWER and is never an
+         empty claim. A conclusion written before §7.1 item 6 names no reading, so
+         WHICH claim was concluded cannot be established from the record — the
+         document says so, with the reason, rather than publishing a blank. */
+      "case_conclusions:",
+      ...roster.flatMap((m) => {
+        const c = concOf.get(m) || null;
+        return [
+          `  - target: ${m}`,
+          `    relationship: ${c ? c.relationship : "null"}`,
+          `    project: ${c && c.project ? c.project : "null"}`,
+          `    version: ${c && c.version ? c.version : "null"}`,
+          `    claim_state: ${c && c.claim ? c.claim.state : "null"}`,
+          `    claim: "${_Store.#fmSafe(c && c.claim && c.claim.text ? c.claim.text : "")}"`,
+          `    claim_detail: "${_Store.#fmSafe(c && c.claim && c.claim.detail ? c.claim.detail : "")}"`,
+          `    falsifier: "${_Store.#fmSafe(c && c.falsifier ? c.falsifier : "")}"`,
+          `    falsifier_override_by: ${c && c.falsifier_override ? c.falsifier_override.by : "null"}`,
+          `    falsifier_override_at: "${_Store.#fmSafe(c && c.falsifier_override ? c.falsifier_override.at : "")}"`,
+          `    concluded_by: ${c && c.by ? c.by : "null"}`,
+          `    concluded_at: "${_Store.#fmSafe(c && c.at ? c.at : "")}"`
+        ];
+      }),
       "completeness:",
       `  statement: "${_Store.#fmSafe(statement)}"`,
       `  subject_position: ${position}`,
@@ -33191,6 +33483,23 @@ Subject position: ${pos} \u2014 ${just}
          that asserts it, which half claims what. */
       "A LOAD-BEARING finding is one this case rests on, and the standard of evidence below was asked of it.",
       "A SUPPORTING finding travels with the case and is not presented as carrying it.",
+      "",
+      /* REC-135 / §7.1 item 4 — IN THE BODY AND IN PROSE, for the reason the
+         `searched` section is: a member reviews and signs THIS, and a block of
+         key-value pairs they have to decode is not a thing anybody reviewed. */
+      "## The Conclusions This Case Records",
+      "",
+      "A conclusion belongs to a PROJECT'S RELATIONSHIP with a question, never to the question alone (INVESTIGATIVE-SESSION.md \xA77.1): an inquiry can be shared, and one team concluding it does not move another team's stance. Each member below is named with the relationship whose conclusion this case rests on, and with the claim that relationship adopted, frozen as it stood at publication.",
+      "",
+      ...roster.map((m) => {
+        const c = concOf.get(m) || null;
+        const whose = !c ? "NO CONCLUSION WAS RECORDED FOR THIS MEMBER" : c.relationship === "project" ? `concluded by ${c.project}${c.by ? ` (${c.by})` : ""}${c.at ? ` on ${c.at}` : ""} on reading '${c.version ?? "(unnamed)"}'` : "concluded in the question's own bytes, naming no project \u2014 read as the NO-PROJECT relationship's conclusion, which is not this project's (\xA77.1 item 5)";
+        const claim = !c || !c.claim ? "" : c.claim.state === "adopted" ? ` The claim adopted: ${c.claim.text}` : ` The claim is UNDETERMINED: ${c.claim.detail || "this conclusion names no reading, so which claim was concluded cannot be established from the record. It is stated rather than filled in."}`;
+        const fals = !c ? "" : c.falsifier ? ` What would falsify it: ${c.falsifier}` : c.falsifier_override ? ` NO FALSIFIER STATED \u2014 recorded by ${c.falsifier_override.by} at ${c.falsifier_override.at}.` : " NO FALSIFIER IS RECORDED for this conclusion.";
+        return `- **${m}** \u2014 ${whose}.${claim}${fals}`;
+      }),
+      "",
+      roster.every((m) => (concOf.get(m) || {}).relationship === "project") ? `Every conclusion this case records is ${project}'s own.` : "AT LEAST ONE MEMBER ENTERED THIS CASE ON A CONCLUSION THAT IS NOT THIS PROJECT'S OWN. That is disclosed rather than smoothed: a conclusion written in a question's own bytes names no project, so the relationship that drew it cannot be established and it is read as the no-project relationship's. A reader weighing this case should know which findings this project concluded for itself and which it took as the record already answered.",
       "",
       "## What This Excludes",
       "",
@@ -36365,6 +36674,668 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
       absence,
       proposal_only: true,
       says: "every entry here is MACHINE WORK and a PROPOSAL. Listing it wrote nothing and cited nothing; which passage is on point to this question is the member's judgment, made by op=narrow in the member's own name."
+    };
+  }
+  /* =======================================================================
+   * REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, 1 of 3: THE PAIRING READ.
+   * `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` section 9 item 1, beneath
+   * `BIO_Case_Making_v0_1.md` section CONTRADICTION (Bob, 2026-09-17).
+   *
+   * WHAT THIS IS AND, MORE IMPORTANTLY, WHAT IT IS NOT. Section 2 splits the
+   * detector in two and the split is the whole audit story: PAIRING — which two
+   * assertions are worth comparing — is deterministic, in the plane, and
+   * auditable; JUDGEMENT — whether a pair conflicts, and how — is the machine's,
+   * inside a run, labelled machine work, and is NOT BUILT. This method is the
+   * first half ALONE. It judges nothing, labels nothing, and writes nothing.
+   *
+   * WHY THE SPLIT IS WORTH THE TWO ITEMS, in section 2's own words: *a single
+   * machine pass over "everything" can neither be bounded nor audited. Nobody
+   * could say what it compared, so nobody could say what it missed, and a silent
+   * result would read as no contradictions.* So *what was compared* is a plane
+   * fact, published here per key with its bound, and *what was concluded about
+   * it* is a labelled proposal that does not exist yet and SAYS SO.
+   *
+   * THE ONE THING THIS SURFACE CAN GET WRONG THAT NOTHING ELSE CAN.
+   * `CLAUDE.md`: *sparse is normal at every level, and absence at one level is
+   * not evidence of absence at the next. Saying WHICH is true is a first-class
+   * obligation.* An empty pair list here is SIX different facts — nobody has
+   * asked a question; the questions hold no readings; the readings state no
+   * claim; the claims share no subject; the sources cannot be told apart for
+   * want of a date nobody recorded; or this caller was shown nothing at all.
+   * Printed bare, every one of them reads as THE RECORD IS CONSISTENT, which is
+   * the record claiming more than it can support — worse than a missing feature.
+   * So no key ever returns a bare zero: `absence` names the LEVEL and the
+   * ladder that found it is published beside it.
+   * ======================================================================= */
+  /** The per-key bound. Section 6: *it is bounded, and the bound is stated* —
+   *  a capped answer that drops its bound reads as COMPLETENESS. */
+  static CONTRADICTION_PAIRS_MAX = 50;
+  /** The keys, section 4, as the VOCABULARY rather than as four spellings in
+   *  four places (PL-17's rule: the vocabulary travels with the answer, so a
+   *  surface renders what the plane holds instead of a literal it learned once).
+   *  Section 4: *keys are ADDED, not tuned* — a fifth key is a design change and
+   *  a new row, never a widened join inside an existing key, because a key whose
+   *  meaning drifts makes the per-key figures incomparable across runs. */
+  static CONTRADICTION_KEYS = {
+    K1: {
+      key: "K1",
+      name: "one inquiry, opposite roles",
+      feeds: "world",
+      join: "a supports leg and a cuts_against leg of the SAME inquiry, each resting on a passage",
+      why: "the inquiry already holds both sides; what is missing is anyone proposing the discrepancy itself as the conclusion shape"
+    },
+    K2: {
+      key: "K2",
+      name: "one subject, two held claims",
+      feeds: "record",
+      join: "two inquiries with the same subject entity, each with an ACCEPTED reading carrying a claim",
+      why: "two things the group HOLDS about one subject \u2014 the case that carries a duty"
+    },
+    K3: {
+      key: "K3",
+      name: "one referent, two held claims",
+      feeds: "record",
+      join: "two accepted readings, of different inquiries, whose legs rest on the SAME passage (or, where no passage is named, the same captured document)",
+      why: "we read the same text two ways"
+    },
+    K4: {
+      key: "K4",
+      name: "one entity, two sources of different kind or date",
+      feeds: "world",
+      join: "two cited passages whose documents RESOLVE (established) to the same entity, from different doctypes, or with different dates, AS THEIR READERS STATE THEM",
+      why: "Bob's two examples: the rule against the action, March against October"
+    }
+  };
+  /** The doctype and the document DATE for one capture, AS THE READER STATES
+   *  THEM — never as this method infers them.
+   *
+   *  BOTH ARE THREE-VALUED AND THE THIRD VALUE IS THE POINT (section 4): *a
+   *  document date or a doctype that its reader does not state is UNDETERMINED,
+   *  and a pair that needs one is not formed on a guess.* `CLAUDE.md`: never
+   *  invent a figure to get past a gate. So `null` here is returned and counted,
+   *  and it is THREE different facts kept apart by `read`: no reading row at all
+   *  (nobody has read this document), a reading that states no date, and a
+   *  reading whose stored JSON will not parse.
+   *
+   *  THE DATE IS READ OFF THE READING'S OWN TOP-LEVEL `date`, which is where
+   *  every doctype that has one puts it (`docprofile/doctypes/`: the agenda, the
+   *  minutes, the staff report). A doctype that states none simply has none, and
+   *  that is a fact about the READER rather than about the document — which is
+   *  exactly why it may not be filled in from `content.at` or from the capture's
+   *  registration time. Those are facts about US. */
+  #contradictionDoc(captureSha, memo) {
+    if (memo.has(captureSha)) return memo.get(captureSha);
+    const row = this.#one(
+      `SELECT content_type, reading FROM readings WHERE capture_sha=? LIMIT 1`,
+      captureSha
+    );
+    const reading = row ? safeJson(row.reading) : null;
+    const s = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+    const out = {
+      read: !!row,
+      doctype: row ? s(row.content_type) : null,
+      date: reading ? s(reading.date) : null,
+      parsed: row ? reading !== null : null
+    };
+    memo.set(captureSha, out);
+    return out;
+  }
+  /** K1 — one inquiry, opposite roles. A `supports` leg and a `cuts_against` leg
+   *  of the SAME inquiry, each with a content referent.
+   *
+   *  BOUNDED AT THE SQL AND NOT IN JAVASCRIPT, which is D-365's distinction and
+   *  the one `derivation-bounds.test.mjs` grades: a published `truncated` over a
+   *  scan that read everything is an envelope staying perfectly honest about a
+   *  read that was not bounded at all. The statement OVER-FETCHES BY ONE so
+   *  truncation is OBSERVED rather than inferred from equality with the bound. */
+  #contradictionK1(viewer, cap) {
+    const g = this.#bundleGate("s.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT s.bundle_id AS inquiry, s.ord AS a_ord, s.target_id AS a_target,
+              s.content_id AS a_content, s.note AS a_note,
+              c.ord AS b_ord, c.target_id AS b_target, c.content_id AS b_content, c.note AS b_note
+         FROM inquiry_basis s
+         JOIN inquiry_basis c ON c.bundle_id = s.bundle_id
+        WHERE s.role = 'supports' AND c.role = 'cuts_against'
+          AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
+          AND (${g.sql})
+        ORDER BY s.bundle_id, s.ord, c.ord
+        LIMIT ?`,
+      ...g.args,
+      cap + 1
+    );
+    const truncated = rows.length > cap;
+    const page = truncated ? rows.slice(0, cap) : rows;
+    const pairs = page.map((r) => ({
+      key: "K1",
+      inquiry: r.inquiry,
+      a: this.#contradictionExtent("leg", {
+        inquiry: r.inquiry,
+        ord: r.a_ord,
+        role: "supports",
+        target: r.a_target,
+        content_id: r.a_content,
+        note: r.a_note
+      }),
+      b: this.#contradictionExtent("leg", {
+        inquiry: r.inquiry,
+        ord: r.b_ord,
+        role: "cuts_against",
+        target: r.b_target,
+        content_id: r.b_content,
+        note: r.b_note
+      }),
+      why: "one question already rests on both of these, one supporting it and one cutting against it. What they SAY about each other is not read here"
+    }));
+    return { pairs, truncated, undetermined: 0, notes: [] };
+  }
+  /** K2 — one subject, two held claims. Two inquiries with the same
+   *  `bundles.inquiry_subject_entity`, each with an ACCEPTED reading carrying a
+   *  `claim`.
+   *
+   *  `hidden = 0` AND `state = 'accepted'` ARE BOTH REQUIRED AND THEY ARE
+   *  DIFFERENT RULES. Section 3: *a `suggested`, `considering` or `rejected`
+   *  version is not held* — that is the state test. A HIDDEN accepted version is
+   *  a reading the group PRUNED (`inquiry_basis_versions.hidden`, the prune flag,
+   *  where hiding is not deleting), and pairing a pruned reading would propose a
+   *  record defect out of something the group has already set aside.
+   *
+   *  `bundle_id >` RATHER THAN `<>` IS WHAT MAKES A PAIR ONE PAIR. Without it
+   *  every pair appears twice, once from each side, and a count of candidates
+   *  would be double what was actually compared — a figure that costs nothing to
+   *  produce and means nothing. */
+  #contradictionK2(viewer, cap) {
+    const ga = this.#bundleGate("v1.bundle_id", viewer);
+    const gb = this.#bundleGate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim,
+              d1.inquiry_subject_entity AS entity_id, d1.title AS a_title, d2.title AS b_title
+         FROM inquiry_basis_versions v1
+         JOIN bundles d1 ON d1.bundle_id = v1.bundle_id
+         JOIN bundles d2 ON d2.inquiry_subject_entity = d1.inquiry_subject_entity
+                        AND d2.bundle_id > d1.bundle_id
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = d2.bundle_id
+        WHERE v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND d1.inquiry_subject_entity IS NOT NULL AND d1.inquiry_subject_entity <> ''
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY d1.inquiry_subject_entity, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const truncated = rows.length > cap;
+    const page = truncated ? rows.slice(0, cap) : rows;
+    const pairs = page.map((r) => ({
+      key: "K2",
+      subject_entity: r.entity_id,
+      a: {
+        kind: "claim",
+        inquiry: r.a_inquiry,
+        title: r.a_title ?? null,
+        version: r.a_version,
+        claim: r.a_claim
+      },
+      b: {
+        kind: "claim",
+        inquiry: r.b_inquiry,
+        title: r.b_title ?? null,
+        version: r.b_version,
+        claim: r.b_claim
+      },
+      why: "two questions about the same registered subject, each with a reading the group ACCEPTED and a claim it therefore holds. Whether they can both be so is not read here"
+    }));
+    return { pairs, truncated, undetermined: 0, notes: [] };
+  }
+  /** K3 arm (a) — two accepted readings, of DIFFERENT inquiries, whose legs rest
+   *  on the SAME content row. */
+  #contradictionK3Same(viewer, cap) {
+    const ga = this.#bundleGate("v1.bundle_id", viewer);
+    const gb = this.#bundleGate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim, l1.ord AS a_ord,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim, l2.ord AS b_ord,
+              l1.content_id AS content_id
+         FROM inquiry_basis_version_legs l1
+         JOIN inquiry_basis_versions v1 ON v1.bundle_id = l1.bundle_id AND v1.name = l1.name
+         JOIN inquiry_basis_version_legs l2 ON l2.content_id = l1.content_id
+                                           AND l2.bundle_id > l1.bundle_id
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
+        WHERE l1.content_id IS NOT NULL
+          AND v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY l1.content_id, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const truncated = rows.length > cap;
+    return { rows: truncated ? rows.slice(0, cap) : rows, truncated };
+  }
+  /** K3 arm (b) — THE SAME QUESTION WHERE NO PASSAGE IS NAMED, and it is a
+   *  SECOND STATEMENT rather than a `UNION` for two reasons, both measured
+   *  elsewhere in this file: D-36's workerd ceiling of five compound terms is
+   *  low enough that a union here would be one step from a shape no bench
+   *  predicted, and a union publishes ONE figure over two joins that mean
+   *  different things — which is the arm the per-key census exists to keep apart.
+   *
+   *  WHAT A NULL `content_id` IS, and the arm is written against the schema's
+   *  own three causes rather than against a guess: the leg rests on an INQUIRY
+   *  (no capture and no part to point at), the record holds no bytes of the
+   *  information object, or the row is a REPLAY of a leg written under rules that
+   *  did not exist. Only the last two name a DOCUMENT, so this arm requires
+   *  `target_type = 'information'` and the first cause is excluded BY MEANING —
+   *  two claims resting on the same sub-QUESTION are not two readings of one
+   *  text, which is what K3 is about. */
+  #contradictionK3Doc(viewer, cap) {
+    const ga = this.#bundleGate("v1.bundle_id", viewer);
+    const gb = this.#bundleGate("v2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT v1.bundle_id AS a_inquiry, v1.name AS a_version, v1.claim AS a_claim, l1.ord AS a_ord,
+              v2.bundle_id AS b_inquiry, v2.name AS b_version, v2.claim AS b_claim, l2.ord AS b_ord,
+              l1.target_id AS target_id
+         FROM inquiry_basis_version_legs l1
+         JOIN inquiry_basis_versions v1 ON v1.bundle_id = l1.bundle_id AND v1.name = l1.name
+         JOIN inquiry_basis_version_legs l2 ON l2.target_id = l1.target_id
+                                           AND l2.bundle_id > l1.bundle_id
+                                           AND l2.content_id IS NULL
+         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
+        WHERE l1.content_id IS NULL AND l1.target_type = 'information'
+          AND l2.target_type = 'information'
+          AND v1.state = 'accepted' AND v2.state = 'accepted'
+          AND v1.hidden = 0 AND v2.hidden = 0
+          AND v1.claim IS NOT NULL AND v1.claim <> ''
+          AND v2.claim IS NOT NULL AND v2.claim <> ''
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY l1.target_id, v1.bundle_id, v1.name, v2.bundle_id, v2.name
+        LIMIT ?`,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const truncated = rows.length > cap;
+    return { rows: truncated ? rows.slice(0, cap) : rows, truncated };
+  }
+  /** K3, both arms, each bounded on its own and each SAID. */
+  #contradictionK3(viewer, cap) {
+    const same = this.#contradictionK3Same(viewer, cap);
+    const doc = this.#contradictionK3Doc(viewer, cap);
+    const mk = (r, referent) => ({
+      key: "K3",
+      ...referent,
+      a: { kind: "claim", inquiry: r.a_inquiry, version: r.a_version, claim: r.a_claim, ord: r.a_ord },
+      b: { kind: "claim", inquiry: r.b_inquiry, version: r.b_version, claim: r.b_claim, ord: r.b_ord },
+      why: referent.content_id ? "two questions whose accepted readings rest on the SAME passage, each holding a claim. What that passage supports is the thing they may disagree about" : "two questions whose accepted readings rest on the same DOCUMENT with no passage named on either side, each holding a claim. The passage grain is absent on both, not chosen"
+    });
+    const pairs = [
+      ...same.rows.map((r) => mk(r, { content_id: r.content_id, referent_grain: "passage" })),
+      ...doc.rows.map((r) => mk(r, { content_id: null, document: r.target_id, referent_grain: "document" }))
+    ];
+    return {
+      pairs,
+      truncated: same.truncated || doc.truncated,
+      undetermined: 0,
+      arms: {
+        passage: { formed: same.rows.length, truncated: same.truncated },
+        document: { formed: doc.rows.length, truncated: doc.truncated }
+      },
+      notes: []
+    };
+  }
+  /** One leg's side of a pair, with the passage it rests on RESOLVED — the ref
+   *  a member reads and the capture it is a part of. The leg alone names a
+   *  content id, which is a hash and tells a reader nothing about what was
+   *  cited. Section 5 requires both sides to travel with their referents. */
+  #contradictionExtent(kind, side) {
+    const row = side.content_id ? this.#one(
+      `SELECT capture_sha, ref, extent_kind, stale FROM content WHERE content_id=? LIMIT 1`,
+      side.content_id
+    ) : null;
+    return {
+      kind,
+      ...side,
+      capture_sha: row ? row.capture_sha : null,
+      ref: row ? row.ref : null,
+      extent_kind: row ? row.extent_kind : null,
+      stale: row ? !!row.stale : null
+    };
+  }
+  /** K4 — one entity, two sources of different kind or DATE.
+   *
+   *  THE SQL FINDS CANDIDATES AND THE JAVASCRIPT DECIDES, and the division is
+   *  the item's honesty requirement rather than a convenience. The join can say
+   *  *these two documents resolve, established, to one entity, and somebody has
+   *  cited a passage of each.* It CANNOT say whether their kinds or their dates
+   *  differ, because a reader's date lives inside the reading's JSON and a
+   *  doctype that a reader does not state is absent rather than empty. So the
+   *  discriminator is applied here, where the third answer — UNDETERMINED — can
+   *  be COUNTED and the pair left unformed.
+   *
+   *  `established = 1` ON BOTH ENDS IS SECTION 4's WORD AND IT IS LOAD-BEARING.
+   *  An `established` resolution is one graded A or B at both ends; a C-tier
+   *  correspondence is expressly *flagged for a member to confirm*. Pairing on
+   *  an unconfirmed correspondence would manufacture a world-contradiction
+   *  candidate out of two documents nobody has yet agreed are about one thing —
+   *  *an equality that costs nothing to produce is not evidence*, arriving where
+   *  it would do the most damage.
+   *
+   *  `DISTINCT` IS NOT COSMETIC: `resolutions` is keyed `(capture_sha, ref,
+   *  entity_id)`, so one document naming a subject five times holds five rows to
+   *  it, and without `DISTINCT` one candidate pair would be counted five times.
+   *  A per-key figure inflated by how often a document repeats a name is a figure
+   *  about the document's prose, not about what was compared. */
+  #contradictionK4(viewer, cap) {
+    const ga = this.#bundleGate("c1.bundle_id", viewer);
+    const gb = this.#bundleGate("c2.bundle_id", viewer);
+    const rows = this.#rows(
+      `SELECT DISTINCT c1.content_id AS a_content, c1.capture_sha AS a_capture, c1.ref AS a_ref,
+              c1.extent_kind AS a_kind,
+              c2.content_id AS b_content, c2.capture_sha AS b_capture, c2.ref AS b_ref,
+              c2.extent_kind AS b_kind, r1.entity_id AS entity_id
+         FROM content c1
+         JOIN resolutions r1 ON r1.capture_sha = c1.capture_sha AND r1.established = 1
+         JOIN resolutions r2 ON r2.entity_id = r1.entity_id AND r2.established = 1
+                            AND r2.capture_sha > r1.capture_sha
+         JOIN content c2 ON c2.capture_sha = r2.capture_sha
+        WHERE (EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id = c1.content_id)
+               OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl WHERE vl.content_id = c1.content_id))
+          AND (EXISTS (SELECT 1 FROM inquiry_basis ib2 WHERE ib2.content_id = c2.content_id)
+               OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl2 WHERE vl2.content_id = c2.content_id))
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY r1.entity_id, c1.content_id, c2.content_id
+        LIMIT ?`,
+      ...ga.args,
+      ...gb.args,
+      cap + 1
+    );
+    const truncated = rows.length > cap;
+    const page = truncated ? rows.slice(0, cap) : rows;
+    const memo = /* @__PURE__ */ new Map();
+    const pairs = [];
+    let undetermined = 0, indistinct = 0;
+    const missing = { never_read: 0, no_doctype: 0, no_date: 0 };
+    for (const r of page) {
+      const da = this.#contradictionDoc(r.a_capture, memo);
+      const db = this.#contradictionDoc(r.b_capture, memo);
+      const kindsKnown = !!da.doctype && !!db.doctype;
+      const datesKnown = !!da.date && !!db.date;
+      const discriminator = kindsKnown && da.doctype !== db.doctype ? "doctype" : datesKnown && da.date !== db.date ? "date" : null;
+      if (discriminator) {
+        pairs.push({
+          key: "K4",
+          entity_id: r.entity_id,
+          discriminator,
+          a: {
+            kind: "extent",
+            content_id: r.a_content,
+            capture_sha: r.a_capture,
+            ref: r.a_ref,
+            extent_kind: r.a_kind,
+            doctype: da.doctype,
+            date: da.date,
+            read: da.read
+          },
+          b: {
+            kind: "extent",
+            content_id: r.b_content,
+            capture_sha: r.b_capture,
+            ref: r.b_ref,
+            extent_kind: r.b_kind,
+            doctype: db.doctype,
+            date: db.date,
+            read: db.read
+          },
+          why: discriminator === "doctype" ? "two documents the record has established are about the same subject, of different kinds as their readers state them \u2014 the shape of a rule against the act it governs" : "two documents the record has established are about the same subject, dated differently as their readers state them \u2014 the shape of one body saying X then Y"
+        });
+        continue;
+      }
+      if (kindsKnown && datesKnown) {
+        indistinct += 1;
+        continue;
+      }
+      undetermined += 1;
+      if (!da.read || !db.read) missing.never_read += 1;
+      else if (!kindsKnown) missing.no_doctype += 1;
+      else missing.no_date += 1;
+    }
+    return {
+      pairs,
+      truncated,
+      undetermined,
+      indistinct,
+      missing,
+      notes: undetermined ? [`${undetermined} candidate pair(s) were NOT formed because a doctype or a document date their readers never stated was needed to tell them apart (${missing.never_read} where a document has not been read at all, ${missing.no_doctype} where a reader stated no kind, ${missing.no_date} where a reader stated no date). That is not evidence the two agree`] : []
+    };
+  }
+  /** WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED — section 6,
+   *  and `CLAUDE.md`'s rule that this whole arm exists to serve.
+   *
+   *  A LADDER OF EXISTENCE PROBES, AND EXISTENCE IS DELIBERATELY NOT A COUNT.
+   *  The obligation is to say WHICH level was empty, which is a question about
+   *  existence; a census would answer a question nobody asked and would cost an
+   *  unbounded scan per rung on the one surface whose whole subject is that the
+   *  record is sparse. Each probe is `LIMIT 1` and rides the same viewer gate as
+   *  the key's own join, so a rung can never report material this caller may not
+   *  see — a ladder answered ungated would tell an uninvited reader that the
+   *  level below is populated, which is the disclosure the gate is for.
+   *
+   *  THE FIRST RUNG THAT IS EMPTY IS THE ANSWER, because absence at one level is
+   *  not evidence of absence at the next. A key that returns nothing because
+   *  nobody has asked a question is a DIFFERENT FACT from one that returns
+   *  nothing because the questions hold no accepted reading, and the next move
+   *  differs: go and look, versus go and read what you hold.
+   *
+   *  `viewer` IS A RUNG AND IT IS THE FIRST ONE, and section 6 does not list it.
+   *  REPORTED AS A DESIGN GAP. Section 6 names four empty-causes and every one
+   *  of them is a statement about the RECORD; a read made with no viewer stamp,
+   *  or one the gate does not recognise, is empty for a reason that is not about
+   *  the record at all. Folding it into "the key had nothing to join" would make
+   *  an outage read as a sparse record — the exact substitution of one absence
+   *  for another this section forbids — so it is named, and it is named FIRST
+   *  because nothing below it can be believed when it fires. */
+  #contradictionLadder(key, viewer, scope) {
+    const rung = (level, sql, ...args) => ({ level, present: !!this.#one(sql, ...args) });
+    if (scope === "DENY")
+      return [{ level: "viewer", present: false }];
+    const gi = this.#bundleGate("ib.bundle_id", viewer);
+    const gv = this.#bundleGate("v.bundle_id", viewer);
+    const gs = this.#bundleGate("s.bundle_id", viewer);
+    const vp = viewerPredicate(viewer);
+    const anyInquiry = () => rung(
+      "inquiry",
+      `SELECT 1 AS x FROM bundles b WHERE b.object_type='inquiry' AND (${vp.sql}) LIMIT 1`,
+      ...vp.args
+    );
+    const heldReading = (extra) => this.#one(
+      `SELECT 1 AS x FROM inquiry_basis_versions v
+        WHERE v.state='accepted' AND v.hidden=0 ${extra} AND (${gv.sql}) LIMIT 1`,
+      ...gv.args
+    );
+    if (key === "K1") return [
+      { level: "viewer", present: true },
+      anyInquiry(),
+      rung("leg", `SELECT 1 AS x FROM inquiry_basis ib WHERE (${gi.sql}) LIMIT 1`, ...gi.args),
+      rung("role", `SELECT 1 AS x FROM inquiry_basis s JOIN inquiry_basis c ON c.bundle_id=s.bundle_id
+                     WHERE s.role='supports' AND c.role='cuts_against' AND (${gs.sql}) LIMIT 1`, ...gs.args),
+      rung("referent", `SELECT 1 AS x FROM inquiry_basis s JOIN inquiry_basis c ON c.bundle_id=s.bundle_id
+                         WHERE s.role='supports' AND c.role='cuts_against'
+                           AND s.content_id IS NOT NULL AND c.content_id IS NOT NULL
+                           AND (${gs.sql}) LIMIT 1`, ...gs.args)
+    ];
+    if (key === "K2") return [
+      { level: "viewer", present: true },
+      anyInquiry(),
+      rung("subject", `SELECT 1 AS x FROM bundles b WHERE b.inquiry_subject_entity IS NOT NULL
+                        AND b.inquiry_subject_entity <> '' AND (${vp.sql}) LIMIT 1`, ...vp.args),
+      { level: "reading", present: !!heldReading("") },
+      { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") }
+    ];
+    if (key === "K3") return [
+      { level: "viewer", present: true },
+      anyInquiry(),
+      { level: "reading", present: !!heldReading("") },
+      { level: "claim", present: !!heldReading("AND v.claim IS NOT NULL AND v.claim <> ''") },
+      rung("referent", `SELECT 1 AS x FROM inquiry_basis_version_legs l
+                         JOIN inquiry_basis_versions v ON v.bundle_id=l.bundle_id AND v.name=l.name
+                        WHERE v.state='accepted' AND v.hidden=0
+                          AND v.claim IS NOT NULL AND v.claim <> ''
+                          AND (l.content_id IS NOT NULL OR l.target_type='information')
+                          AND (${gv.sql}) LIMIT 1`, ...gv.args)
+    ];
+    const gc = this.#bundleGate("c.bundle_id", viewer);
+    return [
+      { level: "viewer", present: true },
+      rung("content", `SELECT 1 AS x FROM content c WHERE (${gc.sql}) LIMIT 1`, ...gc.args),
+      rung("cited", `SELECT 1 AS x FROM content c
+                      WHERE (EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.content_id=c.content_id)
+                             OR EXISTS (SELECT 1 FROM inquiry_basis_version_legs vl
+                                         WHERE vl.content_id=c.content_id))
+                        AND (${gc.sql}) LIMIT 1`, ...gc.args),
+      rung("resolution", `SELECT 1 AS x FROM content c
+                           JOIN resolutions r ON r.capture_sha=c.capture_sha AND r.established=1
+                          WHERE (${gc.sql}) LIMIT 1`, ...gc.args),
+      rung("shared_entity", `SELECT 1 AS x FROM resolutions r1
+                              JOIN resolutions r2 ON r2.entity_id=r1.entity_id AND r2.established=1
+                                                 AND r2.capture_sha > r1.capture_sha
+                             WHERE r1.established=1 LIMIT 1`)
+    ];
+  }
+  /** The sentence a member reads when a key found nothing. ONE place, so a
+   *  surface renders what the plane holds and never composes this itself — the
+   *  second place a distinction is made is the first place it can drift. */
+  static #CONTRADICTION_ABSENCE = {
+    viewer: "this read was made with NO VIEWER the record recognises, so it compared nothing and every key below is empty for want of a reader rather than for want of material. This is an outage, not a statement about the record: ask again with a member's session",
+    inquiry: "no question is in scope at all. Nothing has been asked here yet, so there is nothing for any key to pair \u2014 the record is EMPTY at the question level and says nothing whatever about whether the world contains contradictions",
+    leg: "questions exist and NONE of them rests on anything. Nothing has been cited, so there are no two sides to put beside each other",
+    role: "questions rest on material, but not ONE of them holds both a leg that supports it and a leg that cuts against it. That is a fact about how the questions are argued, not about whether the record contains a discrepancy",
+    referent: "both sides exist, but the legs name no PASSAGE \u2014 they rest on a whole document, on a sub-question, or on bytes this record does not hold. A pair whose sides cannot be quoted is not a pair a member could judge, so none was formed",
+    subject: "questions exist and NONE of them names a registered subject. K2 pairs by subject, so this is absence at the SUBJECT level: the claims may well disagree and nothing here can see it",
+    reading: "questions exist and none of them holds an ACCEPTED reading. A suggested, considering or rejected reading is not something the group HOLDS, so there is no held assertion to pair. Nothing is claimed about what the questions would say if they were read",
+    claim: "accepted readings exist and none of them carries a CLAIM. What the group holds is therefore unstated in the one field this key can read, which is absence in OUR record rather than agreement in it",
+    shared_entity: "cited passages and established resolutions exist, but no two documents resolve to the SAME subject. There is nothing about one entity to compare",
+    content: "no passage of any document has been cited or marked citable. Nothing has been extracted at the content level, which says nothing about what the documents say",
+    cited: "passages exist and none of them is cited by any reading. This key compares what the record RESTS ON, and it rests on none of them",
+    resolution: "cited passages exist and their documents carry no ESTABLISHED resolution to any subject. Nobody has confirmed what these documents are about, so there is no entity to pair them under \u2014 the next move is to resolve them, not to conclude they are unrelated",
+    shared_side: "questions hold both a supporting and a cutting leg, and each names a passage, but no ONE question holds both at once. The two sides of this key are the two sides of a SINGLE question, and none has them",
+    shared_subject: "held claims and registered subjects both exist, and no two accepted claims share a subject. Every subject is spoken to once, so there is nothing about one subject for the record to disagree with itself about",
+    shared_referent: "held claims rest on passages, and no two claims of DIFFERENT questions rest on the same one. Each passage is read by at most one held claim, so no text is read two ways here",
+    discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by kind or by date. Either the readers state the same kind and the same date on both, or they state neither \u2014 and where a value is missing the pair was left unformed rather than guessed. The counts beside this say which"
+  };
+  /** op=contradictionpairs — THE PAIRING READ (REC-146 / IC-167).
+   *
+   *  A READ. It judges nothing and writes nothing, and both are said in the
+   *  answer rather than left to a reader of this comment: `judgement.state` is
+   *  `NOT_REACHED` and names the item that will reach it, and `wrote` is false.
+   *
+   *  WHY `judgement` IS PUBLISHED AS A FIELD AT ALL, since nothing fills it.
+   *  Because the alternative is an answer that lists candidate pairs and says
+   *  nothing about whether anybody has looked at them — and a list of pairs with
+   *  no verdict beside it reads as a list of CONTRADICTIONS. Section 1: a
+   *  detector that cannot tell imprecision from double-speak buries members in
+   *  false conflicts and is switched off inside a week. This surface must not
+   *  begin that way by implication, so it states in its own answer that the
+   *  labelling step does not exist.
+   *
+   *  NO LABEL VOCABULARY IS PUBLISHED HERE, deliberately, and it is the same
+   *  decision one step stricter. Section 5's five labels are the JUDGEMENT's
+   *  output; publishing them from a surface that assigns none would let a
+   *  consumer render the vocabulary beside the pairs and read as a detector that
+   *  had declined to label. The vocabulary arrives with its writer.
+   *
+   *  EACH KEY IS RUN EXACTLY ONCE and its result feeds both the per-key envelope
+   *  and the flat pair list. The first draft of this method ran every key TWICE —
+   *  once for the census and once for the pairs — which is a doubled read AND a
+   *  correctness hazard: two runs of one key over a store being written between
+   *  them would publish a `formed` figure that does not match the pairs beside
+   *  it, and nothing would fail. */
+  contradictionPairs({ key = null, limit = null, viewer = null } = {}) {
+    const catalogue = _Store.CONTRADICTION_KEYS;
+    const names = Object.keys(catalogue);
+    const asked = key == null || String(key).trim() === "" ? null : String(key).trim().toUpperCase();
+    if (asked !== null && !Object.prototype.hasOwnProperty.call(catalogue, asked)) {
+      const row = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
+      return {
+        ok: false,
+        reason: "CONTRADICTION_KEY_UNKNOWN",
+        code: "CONTRADICTION_KEY_UNKNOWN",
+        check: row.check,
+        translation: row.translation,
+        keys: names,
+        detail: `the record pairs by ${names.join(", ")} and holds no key '${String(key).slice(0, 40)}'`
+      };
+    }
+    const max = _Store.CONTRADICTION_PAIRS_MAX;
+    const n = Number(limit);
+    const cap = Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), max) : max;
+    const gate = viewerPredicate(viewer);
+    const denied = gate.scope === "DENY";
+    const run = new Set(asked ? [asked] : names);
+    const pairs = [];
+    const keys = names.map((name) => {
+      const spec = catalogue[name];
+      if (!run.has(name))
+        return {
+          ...spec,
+          ran: false,
+          formed: 0,
+          limit: cap,
+          truncated: false,
+          levels: null,
+          notes: [],
+          absence: {
+            level: "not_run",
+            says: `this key was not run: the request named ${asked}. Nothing here is a statement about what ${name} would have found`
+          }
+        };
+      const out = denied ? { pairs: [], truncated: false, notes: [] } : name === "K1" ? this.#contradictionK1(viewer, cap) : name === "K2" ? this.#contradictionK2(viewer, cap) : name === "K3" ? this.#contradictionK3(viewer, cap) : this.#contradictionK4(viewer, cap);
+      pairs.push(...out.pairs);
+      const ladder = this.#contradictionLadder(name, viewer, gate.scope);
+      const empty = ladder.find((r) => !r.present);
+      const level = out.pairs.length ? null : empty ? empty.level : name === "K1" ? "shared_side" : name === "K2" ? "shared_subject" : name === "K3" ? "shared_referent" : "discriminator";
+      return {
+        ...spec,
+        ran: true,
+        formed: out.pairs.length,
+        limit: cap,
+        truncated: out.truncated,
+        levels: ladder,
+        notes: out.notes,
+        absence: level === null ? null : { level, says: _Store.#CONTRADICTION_ABSENCE[level] },
+        ...out.arms ? { arms: out.arms } : {},
+        ...name === "K4" && !denied ? {
+          undetermined: out.undetermined,
+          indistinct: out.indistinct,
+          undetermined_detail: out.missing
+        } : {}
+      };
+    });
+    const formed = pairs.length;
+    const undetermined = keys.reduce((a, k) => a + (k.undetermined || 0), 0);
+    return {
+      ok: true,
+      wrote: false,
+      pairs_formed: formed,
+      limit: cap,
+      bound: max,
+      bounded: true,
+      viewer_scope: gate.scope,
+      keys,
+      pairs,
+      judgement: {
+        state: "NOT_REACHED",
+        by: "the machine, inside an investigative run, as labelled machine work (DEC-24)",
+        item: "CONTRADICTION-IDENTIFY-DESIGN.md section 9 item 3",
+        why: "whether either side of a pair here CONTRADICTS the other \u2014 and whether that would be a contradiction in the WORLD, one in OUR RECORD, or merely the same fact stated at two precisions \u2014 is semantic work this plane cannot do and has not done. NOTHING here is a finding, and a pair is not a claim that its two sides disagree: it is a claim that they are WORTH COMPARING, by the named key, and nothing more"
+      },
+      says: denied ? "this read compared NOTHING, because no viewer the record recognises was stamped on it. That is an outage and not a statement about the record: every key below reads empty for want of a reader, and none of them looked" : `${formed} candidate pair(s) over ${[...run].join(", ")}, each carrying the KEY that brought its two sides together` + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a date or a doctype their readers never stated was needed to tell the two apart, and that is COUNTED rather than rounded to agreement` : "") + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is never evidence of absence at the next, and a key with nothing to join says the record is SPARSE there, not that it is consistent`
     };
   }
   /** op=narrow — THE ACT. A new basis version, one leg narrower, the old retained. */
@@ -51112,6 +52083,36 @@ ${words}`;
     }
     return false;
   }
+  /* REC-135 / §7.1 item 4 — DOES A PROJECT THIS CALLER HAS JOINED STAND ON A
+   * CONCLUSION OF THIS QUESTION? `#joinedCitingProjectOf`'s walk with the one
+   * extra question, asked through `#conclusionOf` — the SAME reader
+   * `publishCase()`'s own gate runs, so the act this fact fronts and the refusal
+   * cannot disagree about what a project concluded (DEC-8, the whole reason
+   * affordances.mjs exists).
+   *
+   * IT IS A FACT AND NEVER A RULE. It says only that SOME joined project has a
+   * standing conclusion here; whether THIS caller may publish for THAT project is
+   * the per-pair question D-311 names, and the act still refuses on its own terms
+   * (`NOT_THE_PROJECT_OWNER`, `NOT_CONCLUDED` for the project actually named).
+   * That is every act's posture in this file: the record permits the move, not
+   * that this caller's parameters will pass.
+   *
+   * WHY IT HAD TO ARRIVE WITH THE REFUSAL. `publish` was derived from
+   * `current_state === 'concluded'` alone, and its own comment says that
+   * expression is the affordance-layer half of publishCase()'s NOT_CONCLUDED
+   * sentence and the two MUST agree. Moving the refusal to the project's
+   * relationship without this fact would have left the surface silent for exactly
+   * the member §7.1 item 4 exists for — the one whose team concluded a shared
+   * question through op=conclude&project=, which never moves that word. */
+  #concludedForJoinedProjectOf(inquiryId, viewer, memberId) {
+    for (const pid of this.#citesInto(inquiryId).confirmed) {
+      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
+      if (!p || normalizeType(p.object_type) !== "project") continue;
+      if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
+      if (this.#conclusionOf(pid, inquiryId, viewer)) return true;
+    }
+    return false;
+  }
   /* ===== REC-134 / C-56 — SIGHT IS NOT AUTHORITY, AT EVERY ACT ON A PROJECT ================
    *
    * Membership Architecture v2 §7, *"SIGHT IS NOT AUTHORITY — and this is Bob's doctrine,
@@ -63505,6 +64506,17 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           ord: url.searchParams.get("ord"),
           viewer: url.searchParams.get("viewer")
         }),
+        /* REC-146 / IC-167: THE CONTRADICTION PAIRING READ. `viewer` is the control
+           plane's stamp and never the caller's — the pairing runs AS A MEMBER
+           (CONTRADICTION-IDENTIFY-DESIGN.md section 6) and a caller-supplied viewer
+           would be the impostor hole REC-29 measured. `key` and `limit` are the
+           caller's, and both are answered rather than trusted: an unknown key is
+           refused BY NAME and a limit out of range is clamped to the published bound. */
+        contradictionpairs: () => this.contradictionPairs({
+          key: url.searchParams.get("key"),
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer")
+        }),
         /* REC-87 / IC-128: TRANSCRIBE. The TYPIST and the ATTESTOR come from the
            QUERY STRING, where the control plane stamped them, and never from the
            body — `attesttext`'s correction, taken from the start rather than
@@ -64803,6 +65815,13 @@ var OPS = {
      machine's proposals are listed to whoever may see the question. */
   narrow: { classes: ["admin", "member", "probe"], mutating: true },
   narrowcandidates: { classes: ["admin", "member", "probe"], mutating: false },
+  /* REC-146 / IC-167 — CONTRADICTION'S IDENTIFY, THE PAIRING READ. A pure read on
+     `narrowcandidates`' class cut exactly: whoever may READ the record may ask which of
+     its assertions are worth comparing. It writes nothing, judges nothing and mints
+     nothing, so there is no act here to fence to a person — what it DOES need is the
+     viewer, which it takes fail-closed in the stamp block below, because the pairing
+     runs AS A MEMBER and pairs only what that member may see. */
+  contradictionpairs: { classes: ["admin", "member", "probe"], mutating: false },
   dangling: { classes: ["admin", "member", "probe"], mutating: false },
   stats: { classes: ["admin", "member", "probe"], mutating: false },
   promote: { classes: ["admin", "member", "probe"], mutating: true },
@@ -65594,6 +66613,11 @@ var SESSION_OPS = {
        reading of a question, reached by a signed-in member. */
     "narrow",
     "narrowcandidates",
+    /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
+       their accepted readings and the documents those rest on, so the
+       viewer decides what it may pair at all — the session route is the
+       only one that produces a member the gate can filter by. */
+    "contradictionpairs",
     /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
        word in their own name, `attesttext`'s route and reason. */
     "transcribe",
@@ -65666,6 +66690,7 @@ var SESSION_OPS = {
     "extractproposals",
     "narrow",
     "narrowcandidates",
+    "contradictionpairs",
     "transcribe",
     "transcriptionattest",
     "testify",
@@ -65750,6 +66775,13 @@ var NEEDS = {
      group putting its name on anything — the new reading is born `suggested`. */
   narrow: "contribute",
   narrowcandidates: "contribute",
+  /* REC-146: NO CAPABILITY. The pairing read takes none, on `op=content`'s and
+     `op=transcription`'s reasoning: asking which of the record's own assertions are
+     worth comparing is READING the record. It writes nothing into the working corpus
+     and puts nobody's name on anything, so there is no contribution to gate — and a
+     capability here would mean a member could be shown a question and refused the
+     answer to "what else does this record say about it". */
+  contradictionpairs: null,
   /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
      row and its text into the working corpus, and attesting a typing is
      `attesttext`'s act on different text — both ride `contribute`, as
@@ -66435,6 +67467,57 @@ var admissionRow = (code) => {
     throw new Error(`admissionRow: ${code} has no ADMISSION_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+var requiredArgumentRow = (code) => {
+  const row = REQUIRED_ARGUMENT_CHECKS[code];
+  if (!row || typeof row.translation !== "string" || !row.translation)
+    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
+  return { code, check: row.check, translation: row.translation };
+};
+var UNATTENDED_BY_DECISION = {
+  purge: "src/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside SESSION_OPS, purge above all, still requires a machine credential.'",
+  cpuprobe: "src/index.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the runtime cuts it off. Probe and admin only: it belongs nowhere near a member's session.'",
+  capturerequestdrain: "src/index.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'",
+  taskdrain: "src/index.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S \u2014 a member reaching for it by hand would be a person doing the daemon's job with the daemon's conduct rules applied to them.'"
+};
+function sessionOpGate(kind, op, spec, method) {
+  const refusal7 = (code, error, detail, extra) => json({ ok: false, reason: code, ...admissionRow(code), error, detail, op, ...extra || {} }, 403);
+  if (!spec.mutating || op === "capture" && method === "GET" || SESSION_OPS[kind].has(op))
+    return null;
+  if (SESSION_OPS.admin.has(op) || SESSION_OPS.member.has(op))
+    return refusal7(
+      "SESSION_ROLE_CANNOT_REACH_OP",
+      "this operation is reserved to an administrator of this group",
+      `'${String(op).slice(0, 60)}' is reachable from a signed-in session, but only an administrator's, and this session's role is '${String(kind).slice(0, 20)}'. There is no machine credential to go and find: an administrator performs this from their own browser. This is section 4's role boundary rather than a credential boundary, and the plane said otherwise until D-270 measured the difference.`,
+      { role: kind }
+    );
+  const recorded = UNATTENDED_BY_DECISION[op];
+  if (recorded)
+    return refusal7(
+      "MACHINE_CREDENTIAL_REQUIRED",
+      /* THE LEGACY SENTENCE, BYTE-IDENTICAL. It is TRUE of these, and keeping
+         it is what makes the code purely additive for them. */
+      "this operation requires a machine credential, not a signed-in session",
+      `'${String(op).slice(0, 60)}' is on the unattended path. No signed-in session of any role reaches it, the founder's included; it answers to a credential held in the hosting account. This instance holds a decision on record saying so, cited in 'recorded' so you can check it. Nothing here says a machine is trusted more than a person (DEC-52 rules the opposite): it says which credential this verb is addressed to.`,
+      { recorded }
+    );
+  return refusal7(
+    "SESSION_ROUTE_NOT_RECORDED",
+    "no signed-in session reaches this operation, and no decision on record says why",
+    `'${String(op).slice(0, 60)}' is reachable by no session of any role, and this instance holds no recorded decision that it is not meant for a person. The plane will not invent one: a member told an absence is a decision stops reporting it as the gap it may well be. If you expected to perform this, that expectation is worth filing rather than working around.`
+  );
+}
+function requiredArgument(op, argument, shape, error) {
+  return {
+    ok: false,
+    reason: "REQUIRED_ARGUMENT_MISSING",
+    ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
+    error,
+    op,
+    argument,
+    shape,
+    detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was changed.`
+  };
+}
 var StoreSilent = class extends Error {
   constructor(op) {
     super(`the store did not answer ${op}`);
@@ -67303,14 +68386,8 @@ var index_default = {
               op,
               detail: "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a signed-in session, and not in-app administrator status. A session is derived from a password; the root of trust is the token held in the hosting account. This refuses the founder's own browser too, which is the one place in this system where being the founder is not enough. The published record needs no credential at all: see op=publishedmanifest."
             }, 403);
-          if (spec.mutating && !(op === "capture" && req.method === "GET") && !SESSION_OPS[kind].has(op))
-            return json({
-              ok: false,
-              reason: "MACHINE_CREDENTIAL_REQUIRED",
-              ...admissionRow("MACHINE_CREDENTIAL_REQUIRED"),
-              error: "this operation requires a machine credential, not a signed-in session",
-              op
-            }, 403);
+          const gated = sessionOpGate(kind, op, spec, req.method);
+          if (gated) return gated;
           cls = kind;
           ({ member: sessMember, viewer: sessViewer, identity: sessIdentity } = resolveSession(sess));
           sessRights = sess;
@@ -67662,7 +68739,12 @@ var index_default = {
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, error: "capture requires sha256=<64 lowercase hex>" }, 400);
+        return json({ ok: false, ...requiredArgument(
+          "capture",
+          "sha256",
+          "<64 lowercase hex>",
+          "capture requires sha256=<64 lowercase hex>"
+        ) }, 400);
       const key = captureKey(storeName, sha);
       if (req.method === "PUT" || req.method === "POST") {
         const body2 = new Uint8Array(await req.arrayBuffer());
@@ -67703,7 +68785,12 @@ var index_default = {
         return json({ ok: false, error: "R2 is not configured on this instance" }, 503);
       const sha = (url.searchParams.get("sha256") || "").toLowerCase();
       if (!/^[0-9a-f]{64}$/.test(sha))
-        return json({ ok: false, error: "pdfstructure requires sha256=<64 lowercase hex>" }, 400);
+        return json({ ok: false, ...requiredArgument(
+          "pdfstructure",
+          "sha256",
+          "<64 lowercase hex>",
+          "pdfstructure requires sha256=<64 lowercase hex>"
+        ) }, 400);
       const ocrAsked = url.searchParams.has("ocr");
       let reBasis = null, reAuthor = null, reViewer = null;
       if (ocrAsked) {
@@ -69130,7 +70217,12 @@ var index_default = {
       const body2 = await req.json().catch(() => null);
       const bundleId = body2?.bundleId;
       if (typeof bundleId !== "string" || !bundleId)
-        return json({ ok: false, error: "monitor needs a bundleId" }, 400);
+        return json({ ok: false, ...requiredArgument(
+          "monitor",
+          "bundleId",
+          "a non-empty string in the POST body",
+          "monitor needs a bundleId"
+        ) }, 400);
       const stub0 = env.STORE.get(env.STORE.idFromName(storeName));
       const imgOut = await doAnswer(stub0.fetch(`http://do/image?id=${encodeURIComponent(bundleId)}&viewer=${encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
       if (!imgOut.answered) return storeSilent("monitor");
@@ -70129,7 +71221,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "contradictionpairs" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`

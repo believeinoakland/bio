@@ -462,3 +462,53 @@ is no such state on a newly published finding. DEC-72's design: *"A finding's li
    C-11.1's silently-past-due finding. **Moving the constant forward re-arms the bomb** — the
    suite owns an injected clock and the date should be derived from it. ACTION's ground, not
    RECORD's; measured and reported to CONDUCT.
+
+## REC-146 landed 2026-09-19 (worktree `rec146-record`) — CONTRADICTION's IDENTIFY, 1 of 3: the pairing read
+
+APPENDED, never rewritten — other RECORD workers are live (REC-135 was running in `rec135-record` while this ran).
+
+**`op=contradictionpairs` IS THE FIRST THIRD OF ONE MECHANISM OF THREE, AND THE ANSWER SAYS SO IN ITS OWN WORDS.**
+`judgement.state` is `NOT_REACHED`, `wrote` is `false`, and NO label vocabulary is on the wire. Read
+`CONTRADICTION-IDENTIFY-DESIGN.md` §2 before touching it: PAIRING is the plane's and JUDGEMENT is the machine's, and
+the split exists so *what was compared* is a plane fact while *what was concluded about it* is a labelled proposal.
+
+**FIVE THINGS THIS TURN PAID FOR, so the next session does not.**
+
+1. **THE EMPTY ANSWER IS THE ITEM, NOT THE PAIRS.** On this surface an empty `pairs[]` printed bare reads as THE
+   RECORD IS CONSISTENT — the record claiming more than it can support, on the one construct whose whole product is
+   trustworthiness. So every key that forms nothing carries `absence.level` out of a published LADDER of bounded
+   existence probes, and the negative control's `level` arm is the one that matters: replacing the ladder search with
+   a constant leaves **every pair-forming assertion GREEN** and takes down only the level arms. **A detector can be
+   exactly right about what it compared and lying about what it found nothing in**, and nothing but an assertion
+   about the LEVEL can tell them apart.
+2. **THE LADDER IS EXISTENCE PROBES AND NOT COUNTS, deliberately.** The obligation is to say WHICH level was empty,
+   which is a question about existence; a census would answer a question nobody asked and would cost an unbounded
+   scan per rung on the one surface whose whole subject is that the record is sparse. Every probe is `LIMIT 1` and
+   rides the SAME viewer gate as the key's own join — a ladder answered ungated would tell an uninvited reader that
+   the level below is populated.
+3. **`viewer` IS A LEVEL AND THE DESIGN DOES NOT LIST IT** (reported as a DESIGN GAP and shipped). §6 names four
+   empty-causes and all four are statements about the RECORD. A read with no viewer the gate recognises is empty for
+   a reason that is not about the record at all, and folding it into *the key had nothing to join* makes an OUTAGE
+   read as a SPARSE RECORD. The control's `viewer` arm drives it: the four keys come back `["viewer","viewer",
+   "viewer","viewer"]` and `says` states the read compared nothing.
+4. **AN OVER-STRICT JOIN DOES NOT MERELY LOSE PAIRS — IT MAKES THE ABSENCE STATEMENT LIE.** Found by the
+   `overstrict` control arm: narrowing K3 to readings sharing a NAME makes the key report `shared_referent`, i.e.
+   *no two claims read the same text*, over a record where two of them do. **The honesty mechanism is only as honest
+   as the join beneath it**, and no arm inside the suite can see that on its own. If you widen or narrow a key, the
+   thing to re-check is what its ABSENCE then says.
+5. **AN OVER-STRICTNESS ARM MUST ASK BY IDENTITY, NEVER BY COUNT.** This suite's first over-strictness assertion
+   asserted the COUNT of K4 pairs, and the `undetermined` arm — a LOOSENING, which ADDS pairs — took it down too, so
+   the arm read NOT AS DECLARED. **The arm was right and the declaration was wrong.** One assertion cannot tell a
+   fence too tight from one too loose; they are opposite defects. The suite now asks *did the legitimate pair
+   survive* beside *is the count still one*, and both are declared.
+
+**WHAT IS NOT BUILT AND MUST NOT BE ASSUMED:** the judgement and its five labels (§9 item 3), the candidate TABLE and
+any write at all, and the fixture and false-conflict measurement (§9 item 2) that §7 says must come BEFORE anything
+reaches a member. PRESENT and RESOLVE are not designed. `node tools/status.mjs 8.contradiction` reads PARTIAL and its
+text names each of these.
+
+**ONE MEASURED FINDING KEPT RATHER THAN HIDDEN:** K4's `undetermined_detail.never_read` bucket is NOT REACHABLE
+TODAY. An ESTABLISHED resolution is written from a document's own reading refs, so a capture carrying one has a
+reading by construction. The bucket is kept because `read` is honestly three-valued and a member-asserted established
+resolution would reach it; folding it into `no_doctype` would report a document nobody has opened as one whose reader
+said nothing. It is declared in the suite's "what this cannot see" block.

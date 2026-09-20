@@ -1739,7 +1739,20 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
 + "D-369 NAMES it and no instrument did. A reader that grades one spelling is this file's oldest "
 + "failure, so the unread forms get a roster of their own and a NEW one must be declared here",
   UNREAD_FORMS.slice().sort(),
-  ["basisVersions: from + versions.length < total",
+  [/* REC-146, 2026-09-19 — DECLARED HERE BECAUSE THIS SUITE SAYS A NEW ONE MUST BE, and the
+      alternative was available and was REFUSED as gaming. `#contradictionK3` runs TWO bounded
+      arms (the passage join and the whole-document join) and publishes the disjunction of their
+      two `truncated` figures, so its RHS is not `X.length > Y` and the grader cannot read it.
+      Rewriting it as `const anyTruncated = same.truncated || doc.truncated; ... truncated:
+      anyTruncated` would have made the claim match the REPUBLISHED arm above and vanish from
+      every roster — a change made to the SUBJECT so the INSTRUMENT would stop seeing it, which
+      is the wrong direction whatever it does to the count.
+      WHAT MAKES THIS ONE SAFE, and it is checked rather than asserted: BOTH disjuncts are graded
+      by name in the GRADED roster one block up — `#contradictionK3Same:rows` and
+      `#contradictionK3Doc:rows` — each over a statement the published cap bounds. So this entry
+      is a composite of two measurements this file already made, and not an unmeasured claim. */
+   "#contradictionK3: same.truncated || doc.truncated",
+   "basisVersions: from + versions.length < total",
    "biasManifest: from + page.length < all.length",
    "deriveConnections: rowsCut || distinct.length > endsCap",
    "extractProposals: listed.length >= n",

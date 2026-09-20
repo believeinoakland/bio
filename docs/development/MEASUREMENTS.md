@@ -17199,3 +17199,195 @@ Corroborated by artifact rather than by the one tool: `bio-plane/test/projection
 remote branch list, which is D-288's own stated reason for leaving 134 inherited branches alone. **Bound: this judges
 these three only** — not the nine unmerged branches `CONDUCT-NEXT.md` lists, whose content is still unjudged, and not
 any branch created after this reading.
+
+## 2026-09-19 · UI-67 — the UI harness baseline, and `bound-sweep` ARM G across this landing
+
+Measured on `ui-67-question-page-npc`, base `origin/main` @ `4dd314ff`, worktree
+`.claude/worktrees/hungry-liskov-e0108c`, `npm ci` fresh in `bio-plane/`, `pdf-worker/` and `ocr-worker/` (30 / 25 / 26
+entries, each a real directory), disk 8.0 GiB free after the three installs.
+
+**Instrument: `node civicos-ui/test/run.mjs` from the repo root, exit read UNPIPED.** The baseline was taken by writing
+`git show HEAD:civicos-ui/app.html` over the working file with this session's copy held aside, and restored by `cp` and
+verified by sha256 AND `cmp` — `git checkout --` was NOT used (`CLAUDE.md` §7).
+
+- **BASELINE, `app.html` at `4dd314ff`: 55 suites PASS, 0 FAIL, exit 0.** This corrects the figure carried in the UI-65
+  claim block (54 PASS, 2026-09-18) — one suite has been added to the estate since, and the number is re-measured rather
+  than carried, which is the practice that found it.
+- **AFTER this landing's `app.html` change, before the new suite: 55 PASS, 0 FAIL, exit 0** — no existing suite moved.
+- **FINAL, with `question-npc.test.mjs` added: 56 PASS, 0 FAIL, exit 0.** Delta attributed per suite by re-running the
+  baseline, never by subtraction: the whole of the +1 is the new suite.
+
+**Instrument: `node civicos-ui/test/bound-sweep.test.mjs`, ARM G's own printed buckets.** The concern the row names is
+that a new read of the no-project conclusion would land in ARM G's `CARRIED-OUT-WHOLE` bucket, whose membership is pinned
+by name.
+
+- **Before and after this landing, identical:** 6 files · 720 named functions · 21 unconditionally-capped ops on the
+  plane's roster · 15 call sites reaching one · buckets `CARRIED-OUT-WHOLE 3 · CARRIED-BY-CALLEE 2 · STATED-BY-CALLEE 5
+  · STATED-HERE 5` · findings 0. Reach deltas unchanged (synthetic 0 -> 1; the five bound statements removed 0 -> 6).
+- **Why it did not move, and it is a fact about the change rather than luck:** the question's page reads
+  `no_project_conclusion` off `getProjection`, which it already called. The landing adds **no `recR` call at all**, so
+  ARM G's walk — which anchors on `recR("<op>"` — sees exactly what it saw before. No exemption was added, and none
+  would have been the fix.
+
+**Instrument: `node civicos-ui/test/question-npc.control.mjs`.** Six arms, each alone, each restored from a pristine copy
+verified by sha256 and `cmp` (`a6c5181a…`, 1403728 bytes, clean after every arm). All six AS DECLARED, exit 0 — BASELINE
+49/0 · A 47/2 · B 37/12 · C 41/8 · D 44/5 · E (over-strictness) 49/0. **A finding about the instrument:** the first run
+returned 48 for arms B and D against a baseline of 49, because one assertion sat inside a bare `if` and was SKIPPED under
+those mutations rather than failed. Only comparing arm totals to the baseline's showed it. That is the second time this
+estate has paid for that shape (`bound-sweep` ARM G records the first).
+## M-71 · 2026-09-19 · REC-146 — the CONTRADICTION pairing read: its bound, and what the empty-level walk measured
+
+**Instrument:** `bio-plane/test/contradictionpairs.test.mjs` and `bio-plane/test/nc-rec146.mjs`, driven THROUGH the
+ops against the real plane in miniflare, on `rec146-record` at base `93e56472`. Corpus: 5 information documents
+(2 resolved established to one registered subject, 3 to a second), 6 inquiries, 2 registry entities.
+
+| What | Measured | Why it is that and not a guess |
+| --- | --- | --- |
+| `Store.CONTRADICTION_PAIRS_MAX` | **50** per key | NOT measured from a workload — **stated as a CHOSEN bound, which is the honest label**. There is no corpus yet to measure a page size against: §9 item 2's fixture does not exist, so any figure claimed as measured here would be a guess wearing a constant's clothes. 50 is `NARROW_CANDIDATES_MAX`'s figure, taken deliberately so the plane has one number for "a page of machine-proposed candidates a member will look through" rather than two. **RE-MEASURE IT when the §7 fixture lands** — that is the first workload this bound will ever have. |
+| pairs a key may return | at most the bound; the statement over-fetches by **one** | truncation is OBSERVED rather than inferred from equality with the bound (REC-109's class). Driven both ways: at `limit=1` over a 3-pair corpus K2/K3 report `truncated: true` with one pair each; at the default over the SAME corpus all four keys report `truncated: false`. |
+| distinct empty-LEVEL answers over one filling store | **7** (`content`, `inquiry`, `leg`, `reading`, `resolution`, `role`, `subject`) from **6** readings of one op | the six-state walk: empty store -> two documents read -> a question resting on nothing -> both legs one way -> one leg turned round -> the documents resolved. **This is the figure the item is about.** A canned "nothing found" produces ONE. |
+| K4 outcomes over 4 candidate pairs on one entity | **1** formed, **2** undetermined, **1** indistinct | three different answers from one key in one call. The 2 are pairs against an agenda whose reader stated no date (`undetermined_detail.no_date: 2`) and are NOT formed; the 1 is two agendas of the same kind on the same date — nothing was missing, they simply cannot be told apart. |
+| suite / control | **43 assertions**, 0 fail · **6/6** control arms AS DECLARED, baseline 43/0 | arms: `viewer` 16/27, `level` 36/7, `undetermined` 38/5, `dedup` 37/6, `overstrict` 38/5; every file restored by sha256 AND `cmp` (store.mjs 2,713,460 B `dcabe44ab28b`; index.mjs 666,610 B `cfe27b4c9357`). |
+| the bounds census (`derivation-bounds.test.mjs`) | **UNMOVED at 109**, ceiling and floor both green | the five new row sources are all SQL-bounded by the published cap and are graded BY NAME: `#contradictionK1:rows`, `#contradictionK2:rows`, `#contradictionK3Same:rows`, `#contradictionK3Doc:rows`, `#contradictionK4:rows`. **No floor was invalidated and none was moved.** One row was added to that suite's `UNREAD_FORMS` roster for `#contradictionK3`'s composite claim, with its reason at the site. |
+
+**WHAT THESE FIGURES ARE NOT.** None of them is a statement about RECALL or about the FALSE-CONFLICT RATE. Those are
+§7's and they need the labelled fixture §9 item 2 owes; until it exists no figure in this project says anything about
+how good the detector is. Every figure above is about WHAT WAS COMPARED.
+
+## 2026-09-19 · D-270 — THE SESSION GATE ANSWERED THREE FACTS WITH ONE SENTENCE, AND IT WAS FALSE FOR TWO
+
+**Instrument:** `bio-plane/test/d270-refusal-truth.test.mjs` (new), driving the plane under miniflare
+under an ordinary MEMBER session and a real ADMINISTRATOR's session (`op=claim` + `op=login` with
+`role: "admin"`, never an enrolled member whose roster row reads administrator). `SESSION_OPS` parsed
+out of `src/index.mjs` with all 17 spreads resolved PER ROLE; the `OPS` table parsed by BRACE
+MATCHING. Worktree `d270-record`, base `origin/main` at `98209ce2`.
+
+**Corpus, printed on every run:** SESSION_OPS member 108 · admin 113 · unresolved spreads **0** ·
+OPS 195 rows parsed · 103 mutating · 14 ops excluded from the gate's corpus structurally (ungated
+`classes: null`, above-the-gate `export`, pre-authentication) and every exclusion DRIVEN rather than
+trusted.
+
+### The split, re-derived 1573 commits after it was first measured
+
+| arm | ops | measured |
+| --- | --- | --- |
+| (b) refused a MEMBER session, PERFORMED for an ADMINISTRATOR's | **5** | `governorconfig memberadd memberset signeradd signerset` |
+| (a) no session reaches, AND a decision is RECORDED | **4** | `capturerequestdrain cpuprobe purge taskdrain` |
+| (c) no session reaches, and NO decision is recorded | **10** | `adminendorse adminremove calibrate calibrationsignal calibrationsubject livefire membercaps provenancechain provenanceroute reproject` |
+
+**THE FIVE ARE IDENTICAL TO THE 2026-08-09 MEASUREMENT**, re-derived independently. The plane
+answered all of them with one sentence — *"this operation requires a machine credential, not a
+signed-in session"* — which is TRUE only of the four in (a).
+
+**THE MEASUREMENT'S OWN FIRST PARSE WAS WRONG AND IS RECORDED AS SUCH.** A line regex over the `OPS`
+table read **103 rows where there are 195 and called every one mutating**, which reports the five
+role-gated ops as TWO. Nothing downstream would have looked wrong. Corrected to brace matching, and
+the suite now floors the parse (>150 rows) BEFORE any membership claim is made over it, because every
+set assertion in it is vacuously true over an empty parse.
+
+### Two ops whose OWN ROWS contradicted the sentence they were sent
+
+`op=provenancechain` and `op=provenanceroute` carry, in `src/index.mjs`, the words *"NOT open to
+`daemon`: deciding that the evidence supports a route is a named member's judgement."* They were
+answered *"this operation is performed by an unattended writer, not by a person at a browser."* A
+TWO-way split would have made that permanent under a canned translation, which is worse than the bare
+string it replaced.
+
+### The codeless residue: SIX in the row, THREE on `main`, ZERO now
+
+D-270's row says six ops answer with no code at all. **Measured at the code on 2026-09-19 that is
+THREE** — `refusal-wire.test.mjs`'s set-pin was already struck once at integration on 2026-08-09 when
+REC-79's admission family coded the session-gate three. The three that remained (`capture`,
+`pdfstructure`, `monitor`) now answer `REQUIRED_ARGUMENT_MISSING` (C-61.1) beside a BYTE-IDENTICAL
+`error`. The set-pin is struck to EMPTY with its reason and still fails in both directions.
+
+### Figures
+
+- Battery baseline on this tree at `98209ce2`: **263/263 suites green · 16051 assertions · 2 untallied
+  suites (`bundle.test.mjs`, `livefire.test.mjs`)**, run `19886.d31ee5`. Final figures in the item's report.
+- DEC-49 guard: exit **0**. **NINE floors moved in the same turn from the figures the guard PRINTED,
+  and the PRE-EXISTING SLACK was enormous** — measured by running the guard over PRISTINE `origin/main`
+  sources with this item's two plane files swapped out and restored by sha256 AND `cmp`:
+  families 23→34 (pristine 33: **10 slack**, +1 ours), rows 219→285 (282: **63 slack**, +3),
+  census 517→595 (592: **75**, +3), reach 272→338 (335: **63**, +3),
+  governedSites 84→123 (121: **37**, +2), regions 70→107 (105: **35**, +2),
+  regionLines 2215→2952 (2910: **695**, +42), codesChecked 218→316 (313: **95**, +3),
+  refusalsJudged 220→316 (313: **93**, +3). **`reachGap` unmoved at 40** — all three codes arrive
+  TRANSLATED. `outcomeReturns` unmoved at 126 and `inheritedVerdicts` unmoved at 4 (see below).
+- Region attribution, exact: `sessionOpGate > is-session-op-gate` **29L (3 judged, 3 compared)**,
+  `requiredArgument > is-required-argument` **7L (1/1)**, and `fetch > is-admission` 102L→**108L**
+  (8 judged→7) because its header comment is corrected where the session gate left it. 6+29+7 = the
+  whole +42.
+
+### The DEC-49 guard refused this item's first shape, and the refusal was right
+
+The gate was first written to return `{ error: {...} }` for `fetch` to spread — the shape D-270's
+2026-08 ancestor used. **The guard FAILED it:** `{ ok: false, ...gated.error }` is a return-position
+outcome whose CODE comes from a spread, and `inheritedVerdicts` is a **ceiling that may only fall**.
+It sat at 4 and the shape made it 5. Rebuilt so `sessionOpGate` returns the Response itself: every
+code stays a STRING LITERAL inside the governed region, `fetch` has no outcome literal to misread,
+and the ceiling is unmoved. **A cheaper shape that costs a ratchet is not cheaper.**
+
+### Controls: eight arms, and TWO found this item's own instrument wrong
+
+Run twice. First run six of eight as declared; **(b)** was RED naming exactly the declared ops but the
+DRIVER demanded one patch match where that arm legitimately makes two — the driver moved, not the arm.
+**(c)** was RED and named NONE of the four ops it was declared to name: the by-name map READS
+`UNATTENDED_BY_DECISION` out of the source and grades the plane against it, **so emptying the record
+moves both sides together and the map agrees with itself for free**. The arm was right, the
+declaration was wrong; the suite gained a LITERAL pin of the recorded-decision set in the same turn
+and (c) was re-declared onto it. Second run: **ALL EIGHT AS DECLARED — a GREEN 29/0 · b RED 23/6 ·
+c RED 26/3 · d RED 27/2 · e RED 27/2 · f RED 19/10 · g RED 28/1 · h GREEN 29/0**, every restore
+byte-identical by sha256 AND `cmp` above a guarded floor.
+
+**And the suite reproduced the 2026-08 harness's own mistake on its first run**, caught by the
+ARM-IS-REAL assertion written for it: `ada` was enrolled `role: "admin"` and used as the administrator
+arm, but `kind` is `sess.role === "admin" ? …` and an enrolled member holds `member:<id>`. The pair
+assertion went red naming both halves refused. That mistake measured a split of ZERO twice in 2026-08
+— the direction that CLOSES an open defect.
+
+### A CONSUMER THE SENTENCE-SWEEP COULD NOT SEE, found by the battery
+
+The consumer survey grepped for the LITERAL SENTENCE and reported three suites. **There were four.**
+`browse.test.mjs` asserts `.error.includes("machine credential")` — a SUBSTRING — and is invisible to
+a full-sentence matcher. It was found by running the battery, which does not care how a consumer
+spells its dependency. Its `op=livefire` line **was pinning an invented rationale in place** (nothing
+on record says that verb is not for a person) and is CORRECTED with its reason; its `op=purge` line
+immediately above is UNCHANGED and still green. **So: a sentence-matcher finds consumers that compare
+the whole string and misses every one that tests a fragment, lowercases it, or matches it by regex.**
+The run that found it was STOPPED at 48/263 rather than left to measure a tree about to change, and
+its wrapper still printed `exit 0` over the kill — the trap `kickoffs/WORKER.md` names; the figure
+that mattered was the suite's own FAIL line.
+
+### What the instrument CANNOT see, stated
+
+An empty payload only provokes refusals sitting above the payload complaints. The PRE-AUTHENTICATION
+surfaces (`verify`, `publishedbytes`, `publishedcase`, `knock`, `bootstrap`) are reached with no
+credential and are NAMED on every run rather than assumed absent — they are D-278's. `op=verify` and
+`op=publishedbytes` keep their bare sha256 strings for that reason. Refusals returned as raw bytes or
+HTML rather than through `json()` are outside the walk. It is not a live probe: a green harness is not
+a serving build (D-108).
+## M-72 · 2026-09-19 · UI-72 — the refusal-rendering estate: how many sites, and how many fixtures can see the field
+
+**Instrument:** `civicos-ui/app.html` counted by its own suite (`refusal-translation-surface.test.mjs` ARM 2 prints the
+two call-site figures on every run, so they cannot go stale silently), and a one-pass census over
+`civicos-ui/test/*.mjs` cross-referenced against every `translation`-bearing row the plane exports from
+`bio-plane/checks/bio-checks.mjs`. Measured on `ui-72-refusal-translation`, base `origin/main` @ `5d6e4803`.
+
+| What | Measured | Why it is that and not a guess |
+| --- | --- | --- |
+| act surfaces reaching `actRefusalHtml` | **27** call sites | counted in the suite from the merged source at run time, printed in its completion line; UI-66 moved two of them and reported the other twenty-five as a class change |
+| member-facing panes reaching `intentRefusalHtml` | **10** call sites | the byte-identical twin the row did not name; found by sweeping the class rather than the row |
+| hand-written refusal fixtures in `civicos-ui/test/` | **198** across 37 of 82 files | every `ok:false` object literal in the estate |
+| of those, fixtures carrying a `translation` at all | **13** | so **185 of 198 cannot see this field** — their `detail` pins stayed green by ABSENCE, not by agreement, which is the liar this item's row named in advance |
+| distinct refusal codes those fixtures name | **39** | read from `reason:`/`code:` literals inside the fixture |
+| of those, codes the PLANE has a canned translation for | **6** | joined against the check catalogue's rows, not against a list |
+| codes whose fixture OMITS the translation the plane would send | **4** — `KIND_NOT_PERSONAL`, `NOT_CAPABLE`, `NO_ACKNOWLEDGMENT`, `NO_SUCH_SELECTION` | a fixture narrower than the wire (M0-23's class). NAMED rather than scored zero; each is another suite's estate and is reported with its fix, not changed here |
+| suites that went red on the change | **4** of 56 | `conclude-nofalsifier`, `conclude-reading`, `question-npc` (all three: a DEC-8 sweep whose corpus read `detail`+`error` and not `translation`) and `version-review` §7 (a `detail` pin). All CORRECTED at the site with a dated reason |
+| further member-facing `detail` readers outside the two renderers | **11**, each named in `CIVICOS_UI_STATE.md` `v95` | the residue of the class sweep, reported with its fix and not fixed under this row |
+
+**WHAT THIS CENSUS CANNOT SEE, stated rather than left to be found.** The fixture walk matches `ok:false` object
+literals and the `reason:`/`code:` string literals within 400 characters of one, so a refusal a suite builds from a
+variable, or receives from the real plane in miniflare, is outside it entirely — the twelve plane-driven UI suites
+carry real translations the walk never counts. And it says a fixture CANNOT REPRESENT a translation, never that any
+assertion reads one.
