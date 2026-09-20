@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1256 rulings across 99 documents.
+1257 rulings across 99 documents.
 
 ## DEC-
 
@@ -2199,6 +2199,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:15218`
 - `bio-plane/test/members.test.mjs` — the FIVE assertions on the old sentence, CORRECTED with the reason beside each and never exempted.  
   `docs/development/CLAIMS.md:15361`
+- the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact.  
+  `docs/development/CLAIMS.md:15518`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

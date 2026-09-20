@@ -15501,3 +15501,19 @@ not appended — 16,276 → 16,374 B of a 16,384 B budget, 10 B headroom, `readb
 lane+s to write; the `CLAUDE.md` §5 edit follows BOB #17+s D-325 precedent of the same day.
 
 **open as of 2026-09-19** — a single-sitting corpus act; released in the same turn it lands.
+
+## CLAIM 2026-09-20 DIST (DIST #2 — cut 0.68.0, the first BATCH release; the UI worker moves with it)
+
+session: DIST standing lane, DIST #2 [5a3e7f], worktree `intelligent-neumann-30d8e7`, Sparky-Air
+opened: 2026-09-20
+branch: `dist/cut-0.68.0` (branch until deployed and live-verified; `main`'s `release/` is the `latest` pointer)
+paths: `release/**`, `newgroup/**` (generated `src/release.mjs` and `dist/`), the version in `bio-plane/package.json`
+  and `bio-plane/wrangler.jsonc` and the same two sites in `agent-worker/`, `pdf-worker/`, `ocr-worker/`,
+  `bio-plane/test/migrate-released.test.mjs` (the `RELEASES` row for 0.67.0), `docs/development/kickoffs/DIST-NEXT.md`.
+  All tags. **The `civicos` UI worker is DEPLOYED from `civicos-ui/app.html` at the tag (gate step 12) — DIST builds and
+  deploys the worker; it does NOT edit `civicos-ui/**`, which is UI's.**
+why: a BATCH, not a CUT NOW, and that was tested rather than assumed — no commit in `v0.67.0..origin/main` names a
+  security or disclosure closing. `main` differs from the release in five shipped files carrying THREE interface
+  changes (IC-55 / D-270+UI-72, IC-166 / REC-135, IC-167 / REC-146), the BATCH arm's once-a-day bound has reset with
+  the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with
+  REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact.
