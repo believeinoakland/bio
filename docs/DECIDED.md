@@ -2207,7 +2207,7 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:15464`
 - comment's "reachable by NO session" sentence and the OPS-table comment, both CORRECTED because this landing makes them false.  
   `docs/development/CLAIMS.md:15605`
-- the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact.  
+- **2026-09-20** — the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact. ## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER — **THE LANDING REPORT FOR FOUR CACHE ROWS, WHICH IS THE MESSAGE I CANNOT…  
   `docs/development/CLAIMS.md:15720`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`

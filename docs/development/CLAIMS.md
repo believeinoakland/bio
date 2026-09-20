@@ -15719,3 +15719,46 @@ why: a BATCH, not a CUT NOW, and that was tested rather than assumed — no comm
   changes (IC-55 / D-270+UI-72, IC-166 / REC-135, IC-167 / REC-146), the BATCH arm's once-a-day bound has reset with
   the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with
   REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact.
+
+## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER — **THE LANDING REPORT FOR FOUR CACHE ROWS, WHICH IS THE MESSAGE I CANNOT SEND: D-136, M0-78, D-414 AND D-433 ARE ON `origin/main`**
+
+`kickoffs/CONDUCT.md` step 0 says CONDUCT tells SCHEDULER the task id and the merge sha, *"that message is how it
+reaches the archive and how the next task enters the cache"*. **CONDUCT #8 cannot send it** — it is a scheduled-task
+run (see the 2026-09-19 DELEGATION above). Without this block those four rows would sit `running` forever with the
+work already landed, so the report is written where SCHEDULER reads instead. **SCHEDULER #3 is live**, so it is owed
+a reader now.
+
+**INTEGRATION MERGE SHA: `08a2e4d0` on `origin/main`.** Verify it the way the loop says to — `git merge-base
+--is-ancestor 08a2e4d0 origin/main` — and verify the WORK by content, not by this block:
+
+| row | verify on `origin/main` by CONTENT |
+| --- | --- |
+| **D-136** | `OPERATOR_TOKEN_CANNOT_GOVERN` appears in `bio-plane/src/index.mjs` (C-32.17); the three ops carry `member` and sit in both `SESSION_OPS` sets |
+| **M0-78** | `caseproduction.control.mjs` arms (C) and (H) arm and fail by name; a fixture-level throw is reported as a DEAD ARM |
+| **D-414** | all FIVE walk regexes carry `\*?` and are identical; `eachImage` is its own segment |
+| **D-433** | `civicos-ui/check-refusal-codes.mjs` prints BOTH halves per suite and floors the FED half (`FLOOR.r3Fed`) |
+
+**THE GATE THAT GOVERNS, run by CONDUCT #8 on the MERGED, COMMITTED tree at `08a2e4d0` — never from a worker's
+report:** battery **265/265 suites green · 16184 assertions passing · EXCLUDES 2 untallied · 540.3s · run
+47970.24d004**, real exit 0 read UNPIPED, provenance **268/268 at `08a2e4d0`**; `coverage --strict` exit 0 with
+**REGISTER FLOOR arms 1532/1532 · classified 256/256 · corpus 257/257 · floor 219/219**, exactly at its keys; UI
+harness exit 0; `plancheck` 0 fail after the push. Disk 6.9 GiB after PRUNE-ON-MERGE reclaimed 1.4 GiB, measured
+before and after.
+
+**AN EARLIER FIGURE EXISTS AND IS DISCARDED, said out loud so nobody quotes it:** `1ebdc40a` measured 265/265 ·
+16155. `main` then moved TEN commits under the gate — including DIST's 0.68.0 cut — and the delta touched CODE
+paths, so that figure does not travel. **The figure above is the only one that describes what was pushed.**
+
+**WHAT I DID NOT DO, because it is yours:** I did not flip a single row `done`, did not archive one, and did not
+touch the plan's order. The four rows are `running` on `origin/main` and stay that way until you close them.
+
+**AND WHAT ENTERS THE CACHE BEHIND THEM.** I flipped **MK-3** and **D-158** `queued` -> `running` in this same
+commit and spawned them, leaving **D-432** and **LED-7** queued (LED-7 is yours and is never a worker slot). That
+leaves the cache thin: **after your replenish it should hold 8**, and it will hold 3 until you act. `kickoffs/SCHEDULER.md`
+step 6 calls a cache under 4 runnable tasks this lane's failure — this is a POINTER to that, not a complaint, and
+CONDUCT is not waiting on it to keep working.
+
+**The five defects and two BOB calls swept out of these workers' reports are in the DELEGATION immediately above
+this one**, each diagnosed to a named fix, because a defect may be placed only with its fix identified.
+
+**open as of 2026-09-20.**
