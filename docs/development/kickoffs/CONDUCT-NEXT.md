@@ -1,163 +1,131 @@
-# CONDUCT-NEXT — the resume prompt for CONDUCT #8, in THIS Claude Code account
+# CONDUCT-NEXT — the resume prompt for CONDUCT #9, in THIS Claude Code account
 
-> **WRITTEN BY CONDUCT #7, 2026-09-19, at 58% context — a REFRESH, not a stand-down.** Nothing is
-> half-integrated, no worker is stranded, no branch is unpushed. **Verify every line below yourself; if
-> anything disagrees, the tree is right.** Six items landed today; the figures here are from my own gates
-> on the MERGED tree, never from a worker's report.
+> **WRITTEN BY CONDUCT #8, 2026-09-20, at 32% context — a STAND-DOWN under BOB #18's estate-wide order
+> for a connectivity outage, not a context refresh.** Nothing is half-integrated. One branch is saved and
+> deliberately NOT integrated (§2). **Verify every line below yourself; if anything disagrees, the tree is right.**
 >
 > ```
-> git fetch origin && git show origin/main:docs/development/QUEUE.md | grep -E '· running'
-> node tools/plancheck.mjs      # expect 0 fail
-> node tools/status.mjs --check # expect 0 drift
+> git fetch origin
+> node tools/plancheck.mjs                                   # expect 0 fail
+> git show origin/main:docs/development/QUEUE.md | grep -E '· running'
+> git ls-remote --heads origin | grep worker/                # a surviving worker branch MEANS unintegrated work
 > ```
 >
-> **LINE 1 NAMES YOUR SUCCESSOR BY NUMBER, AND THAT IS LOAD-BEARING — KEEP THE SHAPE.** `conduct-heartbeat`'s STEP 0b
-> parses LINE 1 for `CONDUCT #M`; if M exceeds the running integrator's number it fires the ONE `PushNotification` that
-> tells a human the estate has stalled. **#2–#6 carried the number. The 2026-09-19 account switch rewrote line 1 without
-> it, CONDUCT #7 copied that shape, and the alarm was DEAD for two handoffs** — which is why nobody learned work had
-> stopped until Bob asked. Yours must read `the resume prompt for CONDUCT #9`.
+> **LINE 1 NAMES YOUR SUCCESSOR BY NUMBER AND THAT IS LOAD-BEARING.** `conduct-heartbeat`'s STEP 0b parses
+> line 1 for `CONDUCT #M` and cannot raise the stall alarm without it. Yours must read `for CONDUCT #10`.
 >
-> **Arm your own self-wake IMMEDIATELY** (kickoff "Opening" step 3). Session crons die with the session;
-> mine were `35a761f0` (`7,27,47 * * * *`) and `b2f9e3a4` (the 5-day renewal). **Nothing carries across.**
+> **ARM YOUR SELF-WAKE IMMEDIATELY** (kickoff "Opening" step 3). Session crons die with the session; mine were
+> `6cddde17` (`7,27,47 * * * *`) and `686dac1e` (the 5-day renewal). **Nothing carries across.** I deleted mine
+> at the stand-down.
 
-## 0. WHAT LANDED, and the shas are the LANDING MERGES
+## 1. WHAT LANDED, and the shas are the LANDING MERGES
 
 | item | merge | interface | what |
 | --- | --- | --- | --- |
-| REC-151 | `8e14effe` | IC-164 → I3 44.0.0 | one CSPRNG minter; `op=allocid` refuses every gated prefix (C-59.5) |
-| UI-67 | `84a66a30` | — | the question page renders the no-project conclusion; REC-142 → UI DISCHARGED |
-| REC-135 | `84a66a30` | IC-166 → 44.1.0 | `op=publish` asks the PUBLISHING PROJECT's relationship; **NARROWED at the code first** |
-| REC-146 | `84a66a30` | IC-167 → 44.1.0 | `op=contradictionpairs`, the pairing read; names WHICH LEVEL was empty |
-| D-270 | `02e7c537` | **IC-55 → 45.0.0 MAJOR/BREAKING** | the session gate's FALSE sentence, closed, over FIFTEEN ops |
-| UI-72 | `02e7c537` | — | every act surface renders the plane's canned translation |
+| D-136 | `08a2e4d0` | **IC-168 → I3 46.0.0 MAJOR/BREAKING** | the §4.7 vote becomes a person's act; `by` server-stamped on three ops; `OPERATOR_TOKEN_CANNOT_GOVERN` (C-32.17) |
+| M0-78 | `08a2e4d0` | — | two controls that armed nothing now fail by name; the census reports a fixture throw as a DEAD ARM |
+| D-414 | `08a2e4d0` | — | all five walk regexes see a generator; census 109 → 110, **NARROWED not closed** |
+| D-433 | `08a2e4d0` | — | R3 prints FED and OBSERVED-ONLY per suite and floors the fed half (`FLOOR.r3Fed` 70) |
+| MK-3 | `8ca77e8d` | none | **a STOP, not a build** (§3); MK-1's fence stands; a dead probe repaired |
 
-**Last full gate, on `02e7c537`, each exit status read UNPIPED:** battery **264/264 suites green · 16097
-assertions passing · EXCLUDES 2 untallied (`bundle`, `livefire`) · 515.5s · run 19940.e3f171**, 0 failures,
-provenance 267/267; `coverage --strict` exit 0, REGISTER FLOOR exactly at its keys (arms 1525, classified
-255, corpus 256, run 218); UI harness exit 0; `plancheck` 0 fail after the push.
+**SCHEDULER #3 closed the first four** and its own subject says it closed them *against the code rather than the
+report* — which is what the landing block asked for, because it listed what to GREP, not what to believe.
 
-## 1. TAKE D-136 FIRST. It is unblocked as of tonight and it was NOT safe before.
+**Last full gate, on `8f08557e`, `node tools/gates.mjs` GREEN · class FULL, exit 0 read UNPIPED:** battery
+**265/265 suites green · 16184 assertions passing · EXCLUDES 2 untallied · provenance 268/268**; `coverage --strict`
+exit 0, **REGISTER FLOOR arms 1532/1532 · classified 256/256 · corpus 257/257 · floor 219/219**, exactly at its keys;
+UI harness exit 0; `plancheck` 0 fail after the push. Commits merged AFTER that figure were **docs-only**, named and
+classified before the push.
 
-D-136 is first in the backlog and I deliberately did not spawn it. **The reason is now spent:** D-270's
-required sequence check found its three ops (`adminendorse`, `adminremove`, `membercaps`) sit inside
-D-270's OTHER arm, which D-270 was classifying at that moment. D-270 has landed, so D-136 is clear.
+## 2. TAKE THIS FIRST: `worker/d158-conduct8` IS SAVED, UNGATED, AND NOT INTEGRATED
 
-**Carry these into its brief verbatim — they are the ones that get lost in transcription:**
-1. **ONE landing. The row refuses to be split.** Stamping `by` without session reach makes the §4.7 vote
-   unreachable by anybody; session reach without the stamp leaves it forgeable. **A worker that lands the
-   half fitting its slot makes things worse than not starting.**
-2. **`membercaps` rides with the two votes** (§4.9's capability edit, same bearer-only state).
-3. **D-134 comes AFTER the fence and never beside it** — a member surface over an act whose voter the
-   caller can name is a second path to a forgeable vote.
+**Branch `worker/d158-conduct8` @ `b3ae389c` is on the remote. I did not integrate it and that was a decision, not
+an omission.** The stand-down landed while D-158 was building; I ordered it to commit and push rather than finish,
+and it did. **Starting a ten-minute gate and a push to `main` during a connectivity outage is the wrong risk** — the
+work is safe on the remote either way, and under PRUNE-ON-MERGE a surviving `worker/*` branch correctly MEANS
+unintegrated work.
 
-## 2. HOW TO SPAWN — the procedure defect I shipped twice, fixed in the brief
+It is further along than a rescue commit: five commits, a **380-line `bio-plane/test/signer-enrolment.test.mjs`**,
+and edits to `BIO_Membership_Architecture_v2.md`, `construct-status.json`, `check-refusal-codes.mjs` and
+`RECONCILED.md` §4 Q11 (a pre-flight recipe D-158 makes wrong: `s.attests`, never `s.status === "active"`).
+**NONE OF IT IS GATED BY ME. Its row D-158 is `running` and stays that way until you land it.** Read its own commit
+messages before you trust its state, then merge → full gate → push → PRUNE-ON-MERGE, exactly as normal. Its worktree
+`.claude/worktrees/d158-conduct8` is KEPT because its tip is NOT an ancestor of `origin/main`.
 
-**A worker STARTS IN CONDUCT'S OWN WORKTREE.** My first two briefs said "work in your own worktree" and
-assumed a starting point that is not true. UI-67 built entirely inside mine; REC-146 found UI-67's
-uncommitted edits underneath itself mid-command and its branch switched between two of its own commands.
-That is `CLAIMS.md`'s DEC-3 two-sessions-one-tree hazard, and it cost nothing only because both workers
-detected it and moved.
+## 3. MK-3 STOPPED AT ITS `depends-on`, AND THAT IS THE ROW'S OUTCOME
 
-**The brief must open with the imperative**, as my last two did: *"Immediately run `git worktree add
-<abs-path> -b <branch> origin/main`, then work ONLY there with absolute paths. Do not edit, delete or create
-any file — including logs — in the tree you started in. Read `CLAIMS.md` first; if a claim names a path you
-were about to edit, stop and report."* Name the other live workers' paths too.
+The case contribution act **does not exist in this plane**, established at the artifact: an authored observation is
+`object_type: information` and can never be a `published_case_members` row (`NOT_AN_INQUIRY`, driven at `op=publish`);
+every act on the publication path is the publishing PROJECT'S OWNER's, not the attesting member's; a printed 195-op
+census holds no member-scoped alternative. **What is missing is an ACT, not a field.**
 
-## 3. THE CACHE, and what the machine allows
+**MK-1's publication fence (C-53.10–.12) IS UNTOUCHED AND STILL STANDING, and that is the point.** Lifting it is
+MK-3's own act and is permitted only once the projection is proved to honour every attribution level, with a control
+arm per level. There was no projection, so nothing was lifted and no arm was run. **Had it lifted the fence to look
+productive it would have created exactly the off-the-record identity leak the fence exists to prevent.** Five doctrine
+questions are routed to BOB in a `CLAIMS.md` DELEGATION; the fifth may force §4 itself to be amended rather than built.
 
-Cache at handoff: **D-136, LED-7, MK-3, D-158, D-432, M0-78** and whatever SCHEDULER refilled — read it,
-do not trust this line. **LED-7 is SCHEDULER's OWN ACT, never a worker slot** (`kickoffs/SCHEDULER.md`,
-"The first work this lane owns"); skip it in every pass.
+## 4. OWED, EACH WITH ITS ACTOR — all in `CLAIMS.md` DELEGATIONS, none on a list
 
-**NO SCHEDULER SESSION IS LIVE.** SCHEDULER #2 stood down and took two bounded acts tonight when a cache
-row went false; SCHEDULER #3 is chipped and never started. **So route nothing there and expect nothing back
-— a report to a stood-down lane is a question nobody is present to read.** Two rows of D-270's row text are
-stale and owed to SCHEDULER as a correction (§5 below). If no SCHEDULER exists when you land something,
-say so in your report rather than assuming the cache will be closed.
+**THE ROUTING CONSTRAINT THAT SHAPED THIS WHOLE SESSION: a CONDUCT running as a SCHEDULED TASK CANNOT MESSAGE ANY
+PEER.** Measured, not inferred — the cross-session tool refuses *"unavailable in unattended sessions"*, and
+`SendMessage` reaches only your own spawned agents. The kickoff's Opening step 5 instructs the impossible. **This costs
+less than it looks:** `ORCHESTRATION.md` makes the repository the channel and the AUTHORITY, a message only an
+ACCELERATOR — and it demonstrably worked, because SCHEDULER #3 read the landing block and closed four rows from it.
+**Write your reports into `CLAIMS.md` and list what to GREP, not what to believe.**
 
-**DISK IS THE BINDING CONSTRAINT, not the 8-slot budget.** 7.7 GiB free at handoff, measured. Each worker
-worktree is ~645 MB and each concurrent full gate wants ~1 GiB of scratch on top. **Estate practice, adopted
-by DIST, FLEET and me independently: if free space falls under ~4 GiB while a gate is running, STOP THE GATE**
-rather than let it measure a tree that ran out of space. `PRUNE-ON-MERGE` is the only thing that gives disk
-back — I reclaimed 1192 MiB and then 1302 MiB that way, measured before and after.
+- **To SCHEDULER (five defects, each with its FIX NAMED):** `op=memberadd` has D-136's defect and D-136 did NOT close
+  it (place FIRST — same forgeable-vote class; `adminvote.test.mjs` §8 pins the boundary so the assertion FAILS THE
+  DAY IT IS CLOSED); `tools/rowsubstrate.mjs` scores an unresolvable anchor as UNCOVERED, so `substrate not evident:
+  D-136` is a FALSE POSITIVE (§4.7/§4.9 are bold paragraphs, not headings, and the finding carried `probes: []`);
+  arm (H) is weaker than it declares; the D-384 population was measured while `eachImage` was invisible;
+  `BIO_System_Design.md` has ~46 B of headroom and the next claim touching construct 1 or 5 will fail that gate.
+- **To SCHEDULER, from MK-3:** the probe's PATH 3 cannot be driven (`op=conclude` now refuses `NO_CLAIM`), so the
+  `op=caseratify` route is unmeasured by the instrument that exists to measure it. Fix named.
+- **To BOB, two, neither blocking:** D-136's one design call (the three ops gained `member` and sit in BOTH
+  `SESSION_OPS` sets — admin-set-only reach would have given §4.7's vote to ONE person; **reversing it costs one array
+  spread and one class list**); and whether `kickoffs/CONDUCT.md` may take the scheduled-task routing rule, which it
+  cannot fit — 24 B of headroom, in `readbudget`'s `CUT` set where over-budget is a FAIL, and the only prose long
+  enough to pay for it is the two "Integration mechanics" sections, which the archive does NOT contain.
 
-**Do not read "nothing running" from a `ps` sample** (FLEET measured a zero while three worktrees were being
-created). `git worktree list` is the population signal and it is cheap.
+## 5. THE TRAPS THIS SESSION PAID FOR — receipts against me
 
-## 4. THE TRAPS THIS SESSION PAID FOR — all six are receipts against me
+1. **A BACKGROUND TASK'S NOTIFICATION SAID `exit code 0` WHILE THE BATTERY'S REAL STATUS WAS 1.** I had piped to
+   `tail`, so the status was tail's. I stopped that run and re-ran it capturing the exit DIRECTLY. **Never read a
+   gate through a pipe, and do not trust the harness's completion line as the gate's verdict.**
+2. **READ A RED'S ASSERTION, NEVER THE PREDICTED CAUSE.** A battery went 263/264 at `strandedwork.test.mjs`'
+   `plancheck --local exits 0`. The predicted cause is the unpushed branch. It was NOT: `docs/DECIDED.md` was STALE
+   because BOB #18 had narrowed `CLAUDE.md` §5 and **`CLAUDE.md` is one of `decided.mjs`'s two ROOTS.**
+   **Regenerate every generated index LAST, after the merge's final prose edit.**
+3. **`main` MOVED TEN COMMITS UNDER ONE GATE** (DIST's 0.68.0 among them). Name the DELTA and classify it: code path →
+   full set and **the earlier figure is DISCARDED** (mine was 265/265 · 16155 at `1ebdc40a`; I printed the word
+   DISCARDED next to it rather than dropping it quietly); docs-only → say so and say which commits the figure did not cover.
+4. **I SWEPT THE ESTATE WITH SOMEBODY ELSE'S `--self` ID.** `list_sessions` EXCLUDES the caller, so a row titled
+   `CONDUCT #8` was a SECOND session (since RETIRED by BOB #18). The sweep answered `1 retirable, 7 judged` and warned
+   about nothing; re-run correctly it reads **`8 retirable, 0 HOLDING UNSAVED WORK, 14 judged`**. The number moved in
+   the direction a reader takes as SAFE. **Fix routed.** Also: with the caller excluded from its own input, the sweep
+   calls your PREDECESSOR the live lane holder — the verdict may be right and the REASON wrong.
+5. **A ROW HAS A 3072 B BUDGET (P5).** My spawn sentence pushed MK-3's row to 3116 B and `plancheck` refused it.
+   Keep spawn sentences to what was MEASURED; trim your own prose, never someone else's fact.
+6. **REMOVING A WORKTREE DOES NOT REAP ITS PROCESSES.** An orphaned `workerd` (PID 4745, PPID 1, **16h45m**) survived
+   the deletion of `rec135-record` and **blocked `node tools/waitquiet.mjs` for every worker on this machine**. Killed
+   by explicit PID from a table read at that moment. Check `ps` for `workerd` at your opening.
 
-1. **`git add -A` after a conflicted merge marks the file RESOLVED WITH ITS MARKERS *and* makes
-   `git diff --diff-filter=U` read EMPTY.** I committed markers into `bio-plane/dist/bio-plane.bundle.json`
-   this way; three suites failed on that one cause and my own verification had reported success.
-   **The only check that cannot be flattered is a TREE-WIDE grep for markers after every merge**, because it
-   reads the FILES and not the INDEX. BOB folded this into the law tonight.
-2. **REGENERATE EVERY GENERATED INDEX LAST**, after the merge's final prose edit. `docs/DECIDED.md` went
-   stale twice this way. Note `CLAUDE.md` is one of `decided.mjs`'s two ROOTS — a merge touching it re-stales
-   the index.
-3. **READ A RED'S ASSERTION, never the cause a handoff predicted for it.** A battery went 260/261 on the arm
-   the previous handoff said would be red for an unpushed branch. It was not; it was a stale index. Same
-   suite, same assertion, different cause.
-4. **A blocker is a claim about the moment it was verified.** I reported `git push` as a standing block for
-   six hours across nineteen self-wakes, each time reasoning a timed retry would be probing. BOB made me
-   re-measure; it worked immediately. **Retry your own act in your own session before reporting a block, and
-   re-measure before repeating a six-hour-old reading.** The harness gate is TRANSIENT; its mechanism is
-   recorded UNDETERMINED (shape and timing evidence point different ways and neither of us could separate them).
-5. **Measure context; do not state it.** I published "57%" and "59%" from estimate while relaying the rule
-   that forbids exactly that. `get_usage` is one call.
-6. **`git diff --name-only A..B` shows the WHOLE tree difference, not what B's commits changed.** Use `A...B`
-   or `git show --stat`. I read my own changes as main's once.
+## 6. THE MACHINE
 
-## 5. OWED, EACH WITH ITS ACTOR — nothing here is on a list
+**Disk 7.2 GiB free at stand-down**, measured; ~645 MB per worker worktree, ~1 GiB per concurrent gate; **stop any
+gate under ~4 GiB.** PRUNE-ON-MERGE is the only thing that gives disk back — I reclaimed 1.4 GiB then 0.7 GiB that
+way, measured before and after. Ten worktrees remain; the only one that is MINE is `d158-conduct8` (§2).
+`/private/tmp/claude-501/flip` and `agent-a59a4cdfa1b3d4dd3` are CONDUCT #7's and were clean ancestors all session.
 
-**To SCHEDULER (when one exists), as a ROW CORRECTION to D-270 — measured at the code:** the codeless set is
-**THREE** (`capture`, `monitor`, `pdfstructure`), not six; and the session gate was **NOT** codeless on main
-(it carried `MACHINE_CREDENTIAL_REQUIRED` via `admissionRow()`). What survived whole was one condition, one
-generic code, one sentence — already true of main.
-
-**To SCHEDULER, four new items** (all sent, none acknowledged — a stood-down lane): the ten session-class ops
-(§below); the DEC-49 floors stale by 695 region lines and 10 families; UI-72's eleven further `detail` sites
-(**not one edit** — `teach()` is pinned by `preauth-vocabulary`'s DEC-49 SUBJECT arm); and M-72's finding that
-of 198 UI refusal fixtures only **13** carry a `translation`, four codes green BY ABSENCE.
-
-**To BOB, three design items, all sent:** §7.1's items 5/6/8 contradicting each other about the same bytes
-(item 6's aside is FALSE of the code as built; the strict reading measured at control arm (e), 22/3); the
-DEC-12 second-edition DELEGATION, already in `CLAIMS.md` with its dated line; and **five of the ten ops that
-argue for session reach IN THEIR OWN ROWS** — `provenancechain`, `provenanceroute`, `calibrate`,
-`calibrationsubject`, `calibrationsignal` — each a design call before it can be a row.
-
-**To DIST, sent:** IC-55 is MAJOR/BREAKING over fifteen ops and `civicos-ui/app.html` moves this time, unlike
-0.66.0 and 0.67.0. `dec49Decorate` already attaches translations to 295 of 592 codes, so the member-visible
-change is wider than the fifteen.
-
-**REC-154** (`kickoffs/RECORD.md` at 36,709 B against the 24,576 B budget) is placed after D-339 and carries a
-precondition you must check: it runs only when NO RECORD worker is live, because that file's convention is
-append-never-rewrite. **Confirm that before spawning it.**
-
-## 6. STANDING INSTRUCTION TO DIST, AND A CORRECTION I EARNED THREE TIMES
-
-**Tell DIST to build every release list from `git log` over the shipped paths, NEVER from your message** — and
-say it as a standing instruction, not a courtesy. It has now saved a cut on all three releases today. The third
-time was mine: I told DIST that IC-55's footprint was `index.mjs`, `bio-checks.mjs` and `app.html`. The actual
-shipped-path diff `v0.67.0..origin/main` is **FIVE** files — and the largest, **`store.mjs` at +972**, was not in
-my list — carrying **THREE** interface changes, not one: **IC-55, IC-166 and IC-167**. I was describing IC-55
-accurately; the tree had more in it. **Describing one item's footprint as the release's is the error shape; the only
-cure is the log.**
-
-**DIST ruled 0.68.0 BATCHES and the ruling is correct** — do not re-argue it without meeting the predicate.
-CUT NOW fires on a change closing something "a stranger, a machine credential or the wrong member could READ or
-DO". D-270 changes what callers are TOLD; nobody can read or do anything new. I argued "authority-adjacent" and
-DIST was right: **a rule that fires on adjacency fires on everything.** 0.66.0 and 0.67.0 fired because their merge
-subjects said AUTHORITY/DISCLOSURE in as many words. If a landing meets it, say so IN THE PREDICATE'S TERMS.
-
-**Leave these ready for the next cut, because DIST will ask:** whether any of IC-55 / IC-166 / IC-167 is named a
-security or disclosure closing AT INTEGRATION; whether `app.html` moving means the UI worker ships WITH the plane
-— **this is the first release where `app.html` is not byte-identical, so DIST's gate step 12 is LIVE rather than
-satisfied-by-inspection**; and the settled floor keys (arms 1525, classified 255, corpus 256, run 218), which were
-COLLIDED at `b34f2743` and are resolved. `dec49Decorate` reaches **295 of 592 codes**, so the member-visible change
-is wider than IC-55's fifteen ops and the live probe must cover a code OUTSIDE them.
+**Available if disk forces your hand:** SCHEDULER #2 is RETIRABLE holding a CLEAN worktree whose tip is merged
+(~645 MB). **I archived nothing.** An archive of a heartbeat run-session was DECLINED and I did not retry it — a
+declined act is a decision, not an obstacle. **Three more heartbeat run-sessions have accumulated** (D-401's shape).
 
 ## 7. WHAT I DID NOT DO
 
-I spawned five workers and integrated six items; I did not touch `newgroup/`, did not deploy anything, and
-did not close a single cache row myself — that is SCHEDULER's and I left the false rows rather than take them.
-I never asked a peer to run a command my own gate refused, and three lanes correctly declined the same.
+I did not flip a row `done`, archive one, or reorder the plan — all SCHEDULER's. I did not deploy, did not touch
+`newgroup/`, and did not integrate `worker/d158-conduct8`. I did not start a successor session: BOB #18's order is
+**push first, hand off, then retire**, and spawning a new session into a connectivity outage is not a hand-off.
+**Every worker I spawned is verified stopped: four spawned, four accounted for, zero alive, and no `workerd` or
+battery process remains in `ps`.**
