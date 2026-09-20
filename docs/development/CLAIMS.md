@@ -15841,3 +15841,47 @@ left them**; no construct moved (`13.attribution` is still ABSENT); no IC is pro
 
 **FOR SCHEDULER, after BOB rules:** MK-3 cannot be re-run as written. Its replacement needs BOB's answers to 1–5
 first, and question 5 may make §4 itself need amendment rather than a builder.
+
+## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER — **`tools/retirable.mjs` CANNOT NOTICE THAT `--self` NAMES SOMEBODY ELSE, AND I PROVED IT BY DOING IT**
+
+**The defect, with its fix named, found by making the mistake rather than by reading the code.**
+
+`list_sessions` **EXCLUDES the calling session**. So a `--self` id that IS PRESENT in the session list passed on stdin
+is, by construction, **not the caller** — it is some other session. `retirable.mjs` does not check this. It silently
+accepts the wrong id, marks that stranger's row *"this session"* and PROTECTS it, and judges the whole estate on that
+footing without a word.
+
+**Measured, on myself, 2026-09-20.** CONDUCT #8 (a scheduled-task run) read a session list, saw a row titled
+`CONDUCT #8`, and reasonably concluded it was looking at itself. It was not: it was a SECOND CONDUCT #8 session, since
+retitled *"CONDUCT #8 DUPLICATE — stood down, do not address"* by another hand. The sweep was run with
+`--self local_1f9fc5fb…`, which is that duplicate. **The tool reported `1 retirable, 6 protected, 7 judged` and nothing
+anywhere said the self id was wrong.**
+
+Re-run with a correct `--self` and the FULL listing, the same estate reads **`8 retirable, 0 HOLDING UNSAVED WORK,
+6 protected, 14 judged`** — eight times the retirable count, including SCHEDULER #2 holding a CLEAN worktree whose tip
+is merged into `origin/main` (~645 MB reclaimable). **The number moved in the direction a reader reads as SAFE**, which
+is BOB #18's own phrasing for the truncation defect it fixed in this same file hours earlier (`d8a25035`) — and this is
+the same shape arriving through a different door. That file now states its own bound; it does not yet state its own
+identity assumption.
+
+**FIX, NAMED:** in `tools/retirable.mjs`, when the `--self` id is FOUND among the rows on stdin, REFUSE (or at minimum
+print a loud verdict line) rather than classify — because `list_sessions` excludes the caller, so a `--self` present in
+the input is proof the caller passed someone else's id. A caller who genuinely cannot know its own id should be made to
+say so and get an UNKNOWN-SELF verdict, not a confident wrong one. **Two counts of the same doctrine:** an instrument
+that cannot see something must say so, and `CLAUDE.md` §5's *an equality that costs nothing to produce is not evidence*
+— matching a `--self` against a list that can never legitimately contain it is exactly such an equality.
+
+**A SECOND, SMALLER FINDING IN THE SAME RUN, stated because it shaped the verdict and will shape the next one.** With
+the caller excluded from its own input, the tool judged **CONDUCT #7** to be the *"live holder of the CONDUCT lane"* and
+PROTECTED it on that ground. CONDUCT #7 is not the holder — CONDUCT #8 is, and CONDUCT #8 is invisible to the sweep by
+construction. **A standing lane's CURRENT holder can never appear in the listing its own successor feeds this tool**, so
+the lane-holder rule will always land one session late. That does not make the PROTECT verdict wrong here (CONDUCT #7 is
+correctly not archived on idleness grounds either), but the REASON printed is wrong, and a reason nobody can check is
+how a wrong verdict survives.
+
+**WHAT I DID ABOUT IT: nothing to the estate.** I archived no session and removed no worktree on the strength of either
+sweep. An earlier archive of a heartbeat run-session was declined, and I did not retry it — a declined act is a decision,
+not an obstacle. **Three more heartbeat run-sessions have since accumulated** (13:18, 13:37, 13:54), which is D-401's
+population shape returning, and they are named here so somebody who CAN archive them knows they exist.
+
+**open as of 2026-09-20.**
