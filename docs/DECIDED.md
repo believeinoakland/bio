@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1262 rulings across 99 documents.
+1263 rulings across 99 documents.
 
 ## DEC-
 
@@ -2413,8 +2413,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1343`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1355`
+- CORRECTED AT 14:35Z, BEFORE THE LINK DROPPED — §0b ABOVE WAS ALREADY STALE WHEN WRITTEN, IN THE WAY THIS LANE KEEPS FINDING.** All four remaining lanes confirmed stood down, each verified from the remote by its own session: - **SCHEDULER #3 — READY.** `SCHEDULER-NEXT.md` line 1 on `origin/main`, 6,098 B; crons…  
+  `docs/development/kickoffs/BOB-NEXT.md:40`
 - I RULED THE OCCUPANCY GAP INTO `BOB.md` AND DID NOT CHECK MY OWN LANE.** BOB #17 worked this lane for 3.5 h after I was chipped from its handoff.  
-  `docs/development/kickoffs/BOB-NEXT.md:110`
+  `docs/development/kickoffs/BOB-NEXT.md:134`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:93`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
