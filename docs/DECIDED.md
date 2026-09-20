@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1261 rulings across 99 documents.
+1263 rulings across 99 documents.
 
 ## DEC-
 
@@ -396,6 +396,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:660`
 - **D-157** · 2026-08-02 — `test/members.test.mjs:192` asserts the current behaviour and must be CORRECTED, never exempted** (`CLAUDE.md`), with a comment saying why the old assertion was wrong.  
   `docs/archive/ledgers/QUEUE-2026-08.md:973`
+- **D-158** · 2026-09-20 — CORRECTED 2026-09-20 BY D-158, at this site rather than in a report, because the recipe above is > what a UI-17 worker would copy.** The measured limit is CLOSED.  
+  `docs/development/research/RECONCILED.md:1646`
 - **D-164** · 2026-09-14 — D-164 design-space study, RULED 2026-09-14 in Bob's framing: the transcription is authored text whose fidelity is undetermined and stated until a second member attests it, so fidelity rises through people and never through a machine's confidence in itself.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1588`
 - **D-164** · 2026-09-14 — RULED 2026-09-14; no surface (Program B) | | the catalogue of standards by audience and output act | OWED (§5.5 of the D-164 study); does not exist | | certification and persistence divergences | unmade | | addressed delivery | RULED 2026-09-17 (§6A) — the review copy's PLANE HALF BUILT (REC-126); its surface…  
@@ -2209,6 +2211,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:15605`
 - **2026-09-20** — the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact. ## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER — **THE LANDING REPORT FOR FOUR CACHE ROWS, WHICH IS THE MESSAGE I CANNOT…  
   `docs/development/CLAIMS.md:15720`
+- Q11 is SETTLED and its answer does not move; what moves is the RECIPE it hands the next worker.  
+  `docs/development/CLAIMS.md:15818`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2546,9 +2550,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-02** — SETTLED 2026-08-02 BY MEASUREMENT, as this entry required** — run against the real plane under `workerd`, recorded in `MEASUREMENTS.md` with its date and instrument. **THE ANSWER: YES, with no new op.** `op=signerlist` is reachable by an ordinary member's SESSION  
   `docs/development/research/RECONCILED.md:1621`
 - **2026-08-03** — Q12 · SETTLED 2026-08-03 by the design pass this question asked for (session BOB).** **THE ANSWER: narration is SURFACE-scoped and plane-sourced; controls are never narrated and never greyed.** The three files were answering two different questions, which is why they seemed  
-  `docs/development/research/RECONCILED.md:1648`
+  `docs/development/research/RECONCILED.md:1661`
 - **2026-08-03** — Q13 · SETTLED 2026-08-03 by the design pass this question asked for (session BOB).** **THE ANSWER: within a class, LONGEST-WAITING FIRST, stated on the surface — as the RULE, not a proxy.** The candidate orderings are bounded and each of the others fails on a standing rule:  
-  `docs/development/research/RECONCILED.md:1671`
+  `docs/development/research/RECONCILED.md:1684`
 - **2026-07-24** — Its five design questions are SUPERSEDED** by that document, which the section itself says.  
   `docs/development/RETRIEVAL-PROBE.md:3`
 - §Design questions — SUPERSEDED IN FULL by `RETRIEVAL-SUBSTRATE.md`, as the section's own opening paragraph states.  

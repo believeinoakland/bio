@@ -1643,6 +1643,19 @@ not show active is one `ratify` will not accept either. It is wrong only optimis
 What becomes AVAILABLE is the per-member pre-flight UI-17 could not previously offer — as an
 addition to the instance-wide refusal, not a replacement for it, until D-158 closes.
 
+> **CORRECTED 2026-09-20 BY D-158, at this site rather than in a report, because the recipe above is
+> what a UI-17 worker would copy.** The measured limit is CLOSED. `Store.SIGNER_ATTESTS` is now ONE
+> predicate read by `signerList`, `gateFacts` and `caseDocumentFacts`; `op=signeradd`, and
+> `op=signerset` when it ACTIVATES, refuse a member who is not `active` (C-63.1
+> `SIGNER_MEMBER_NOT_ENROLLED`, C-63.2 `SIGNER_MEMBER_NOT_ACTIVE`); and `op=signerlist` serves
+> `member_status` and `attests` beside the key's own `status`. **Q11's answer is unchanged and
+> STRENGTHENED** — it was settled YES on the reasoning that the roster errs only optimistically, and
+> it now errs in neither direction. **BUT THE PRE-FLIGHT PREDICATE ABOVE IS NOW THE WRONG ONE:** read
+> `s.attests`, never `s.status === "active"`. `status` is the administrator's own revocation switch on
+> the key and answers only half the question the gate asks; a key can be `status:"active"` and
+> `attests:false`, and that pair is exactly what D-158 existed to make sayable. The clause *"until
+> D-158 closes"* is discharged.
+
 ### Tier 3 — recorded, blocking nothing now
 
 **Q12 · SETTLED 2026-08-03 by the design pass this question asked for (session BOB).**

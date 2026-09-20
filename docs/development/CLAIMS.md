@@ -15805,3 +15805,28 @@ the member roster must not offer — not a call and not a render. `app.html` its
 build; the plane's own setup page is the one surface that renders it, and it is corrected here.
 
 **open as of 2026-09-20** — OPEN while this item builds; CONDUCT integrates and mints the IC.
+
+## CLAIM 2026-09-20 RECORD (D-158, SECOND BLOCK — ONE PATH ADDED after the item's own "who else reads this" sweep found a live recipe that D-158 makes wrong)
+
+Appended rather than edited into the block above, because this register is APPEND-ONLY and the
+addition was found after that block was written.
+
+- `docs/development/research/RECONCILED.md` — **ONE SITE ONLY:** a dated correction block appended
+  under §4 Q11's "Build consequence" paragraph. Nothing else in the file is touched, and §2.2 — which
+  `bio-plane/test/statussweep.test.mjs` parses at run time — is deliberately not approached.
+
+**WHY IT HAD TO BE HERE AND NOT IN A REPORT.** Q11 is SETTLED and its answer does not move; what moves
+is the RECIPE it hands the next worker. It tells UI-17 to compute the per-member pre-flight as
+`signers.filter(s => s.member_id === me && s.status === "active").length === 0`, and after this landing
+that is the WRONG PREDICATE — `status` is the administrator's revocation switch on the key and answers
+half the question the gate asks, while `attests` answers the whole of it. The paragraph also ends
+*"until D-158 closes"*, a live pointer this landing discharges. A correct fix that leaves a document
+telling the next reader to do the old thing is a fix verified only where it was made.
+
+**VERIFIED THERE, not only where the change was made:** every suite that reads this file was run
+DIRECTLY with its exit status read UNPIPED after the edit — `statussweep` 45/0, `earnedbasis` 54/0,
+`publishedcase` 105/0, `grounds` 68/0, `inquiry` 34/0, `strength` 42/0, `basis` 29/0, all exit 0 —
+and `plancheck` after. The full battery's figure was taken at `f9bfd812`; the only delta after it is
+this prose block under `docs/`, and the suites above are the ones that read the file it is in.
+
+**open as of 2026-09-20** — OPEN while this item builds; released with the block above at integration.
