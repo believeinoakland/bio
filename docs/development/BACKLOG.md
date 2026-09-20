@@ -20,26 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-254 · queued — **REC-76's VERDICT READER EXISTS TWICE and only a drift pin makes that safe** — `civicos-ui/check-refusal-codes.mjs` has no exports and ends in a top-level `process.exit`, so `bio-plane/test/verdict-reader.mjs` hand-carries its six functions byte-identically. — owner VERIFY.
-order: a correction to landed work, so above features; below D-270 and M0-78 because this duplicate is FALSIFIABLE today — `readerDrift()` extracts from both files and both suites assert it — a measured debt, not an unmeasured risk (SCHEDULER #2, 2026-09-19)
-milestone: M0 — CORRECTED from the DEBT row's M8: both files it changes are TEST ESTATE, which is what M0 is, and that is why `VERIFICATION.md` is its authority.
-interface: none
-design: `docs/development/VERIFICATION.md`, the section "THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE" (REC-76, D-236), which governs `check-refusal-codes.mjs` and how it grades a verdict; read with D-240's `readerDrift()` pin.
-depends-on: none. **Sequence with D-270:** its branch also edits `civicos-ui/check-refusal-codes.mjs`, so whichever lands second re-reads the first.
-scope: the row names the whole fix — **one import** replacing the six function declarations in `check-refusal-codes.mjs`, after which `readerDrift()` becomes an import and `verdict-reader.mjs` is the single source. `origin/worktree-agent-a61e489de171ae6c5` (`9e24ef6e`) holds a built form 1572 commits behind main — read it, do not merge it blind.
-accepts-when: `check-refusal-codes.mjs` imports the reader and still runs as a script, its exit status read UNPIPED; `readerDrift()`'s extraction stays COUNTED and FLOORED, so two empty extractions cannot agree for free; both suites green. How a liar passes it: deleting the drift pin with the duplicate, so the pin's own arm must survive. NEGATIVE CONTROL: D-240's arm (3) — one character inside `verdictKind` — still fails both suites NAMING the function.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found stranded by CONDUCT #7; keeps its `D-` id).
-
-### D-339 · queued — **`CAPTURE-SCALING.md` §Job one AND THE PLANE STATE OPPOSITE REUSE RULES, AND THE DOCUMENT READS AS THE AUTHORITY** — the design gates reuse on `stable_since` older than the window; the built `reuseDecision` gates on RECENCY OF FETCH (24 h), because the stability gate measured live as reusing nothing at all. — owner CAPTURE.
-order: after D-254, with the corrections to landed work and above the features: a builder designing against §Job one designs against a rule THE PLANE REFUSED, which is the design claiming more than it can support — CLAUDE.md §2's class, pointed at a builder rather than a member. Cheap too: prose only (SCHEDULER #2, 2026-09-19)
-milestone: M7
-interface: none — prose in a design document; no code moves
-design: `docs/architecture/CAPTURE-SCALING.md` §Job one, which is the text being corrected, read against `reuseDecision` in the plane, which is the authority the correction adopts.
-depends-on: none. The built rule is already right and measured; nothing is being decided here.
-scope: fold the RECENCY rule and its live measurement into §Job one so the document states what the plane does, and mark the two constants (24 h, `minDocuments: 2`) as **CHOSEN, not measured**, beside the two open questions that still ask for them — the row's own words. The front matter moves in the same commit if the section's stated completeness changes (`CORPUS-STANDARD.md`).
-accepts-when: §Job one describes the recency gate and carries the live measurement that refused the stability gate; both constants are labelled CHOSEN; no code changes in the same commit. How a liar passes it: deleting the stale rule instead of correcting it, losing why it was refused — so the superseded rule stays with its dated reason. NEGATIVE CONTROL: none applies; this is prose, and `corpuscheck` is its arm.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
-
 ### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own instructions whole — which is the one thing CLAUDE.md's reading budget exists to guarantee. It was already over at 32,259 B before REC-146 appended to it. — owner RECORD.
 order: after D-339 with the corrections: it is not a defect in the product, but it breaks the READING BUDGET doctrine for the busiest build lane, and every RECORD worker pays it on every spawn. Cheap and mechanical (SCHEDULER #2, 2026-09-19)
 milestone: M0
@@ -79,6 +59,38 @@ depends-on: none.
 scope: extend `ledger.mjs`' invariants so a row whose `depends-on` names a CONSTRUCT is checked against `status.mjs`, failing the plan when a dependent sits above unbuilt substrate. **THE BOUND GOES IN THE ARM'S OWN OUTPUT, not only here** (BOB #17): it judges only a row that NAMES a construct, so **a row naming its substrate in PROSE is invisible to it** — the bound `corpuscheck`'s `--authority` arm states about itself. A green arm that hides its bound is read as more than it is.
 accepts-when: a row depending on a construct `status.mjs` reads ABSENT fails the plan NAMING both; one whose substrate is BUILT passes; **a row naming substrate only in prose is UNJUDGED, never passed**, with the unjudged count printed beside the verdict. How a liar passes it: judging only rows that name a construct and reporting 100%, which the unjudged count forbids. NEGATIVE CONTROL: point a row's `depends-on` at an absent construct, and the arm fails naming it.
 added: 2026-09-19 · SCHEDULER #2 (D-404's fix, ruled by BOB #17).
+
+### REC-155 · queued — **SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS ARE REACHABLE BY NO SESSION, AND THE PLANE ANSWERS `SESSION_ROUTE_NOT_RECORDED` BECAUSE NOBODY RULED.** The provenance pair and calibration three admit `member`; `livefire` and `reproject` admit `admin` only. All seven are mutating, in neither `SESSION_OPS` set and no `UNATTENDED_BY_DECISION` row. — owner RECORD.
+order: below the ledger tooling, PROVISIONALLY. The plane is HONEST here — D-270 landed the refusal that stops it inventing a rationale — a determination owed, not a defect shipping. The order moves when BOB rules: the answer decides whether it is one landing or seven (SCHEDULER #3, 2026-09-19)
+milestone: M8
+interface: I3 if any op gains session reach; NONE if every answer is a recorded decision — that is the ruling.
+design: MISSING — routed to BOB (CLAIMS.md DELEGATION 2026-09-19 SCHEDULER, "the seven undetermined session routes"). The gap is EXPLICIT: `index.mjs`. comment names these ops *"UNDETERMINED rather than decided"*; nothing governed rules on them.
+depends-on: none. **NOT D-136**: its three ops are the same shape but are ruled (§4.7); these are not. **REC-65 already pins the provenance pair as a known-open identity claim (`test/identity-claims.test.mjs`) that fails in EITHER direction — moving those two without a ruling breaks it.**
+scope: per op, ONE of two acts, BOB.s choice not the worker.s — `SESSION_OPS` with a driven arm, OR a recorded decision in `UNATTENDED_BY_DECISION` with its citation. **FIVE ARGUE AGAINST THE PRESENT REFUSAL IN THEIR OWN COMMENTS**: the provenance pair say *"a named member's judgement"*; the calibration three say the fence *"is NOT about who may measure"*.
+accepts-when: each of the seven is EITHER driven from a session by role OR carries a citation a caller can check. How a liar passes it: tidying ops into the table with no decision behind them — so each citation is resolved at its artifact.
+added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 1, verified at the code).
+
+### UI-73 · queued — **ELEVEN MEMBER-FACING SITES STILL READ A REFUSAL'S RAW `detail` INSTEAD OF ITS CANNED TRANSLATION** — `teach()`, `queueReason`, `planeSaid`, the finder's per-subject errors, the release / attest / capture receipts, the proposal pre-flight, the forward picker, the leg pre-flight's `subj-how`, and `INTENT_VOCAB.words`. UI-72 landed the two renderers and `refusalWords(r)`; this is its named remainder. — owner UI.
+order: a CORRECTION TO JUST-LANDED WORK, which outranks new work: UI-72 shipped the helper and eleven sites still bypass it, so a member meets machine vocabulary at the moment they are told no — the failure DEC-49 exists to close (SCHEDULER #3, 2026-09-19)
+milestone: M8
+interface: none — the helper exists; no code, wire shape or catalogue row moves.
+design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it — every condition has a named code and a canned translation. UI-72's own citation, unchanged.
+depends-on: none. UI-72 landed at `02e7c537`.
+scope: each site reads `refusalWords(r)` instead of `r.detail`. **IT IS NOT ONE EDIT AND THE ROW REFUSES TO BE TREATED AS ONE:** `teach()` is pinned by `civicos-ui/test/preauth-vocabulary.test.mjs`' DEC-49 SUBJECT arm, whose FIGURES MOVE when the gate's rendered sentence changes — so this row carries that arm's re-read and re-pin as its own work rather than leaving the battery to discover it.
+accepts-when: all eleven take their words from the ONE helper, asserted as `refusal-translation-surface.test.mjs` already asserts the two renderers; the SUBJECT arm re-pinned to figures a green run printed, with the movement STATED. How a liar passes it: re-pinning the arm to whatever it now reads — so the re-pin names the old and new figures and why they moved.
+NEGATIVE CONTROL: restore `r.detail` at one site, and that site's arm fails by name.
+added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 3, verified in UI-72's own CLAIMS.md block).
+
+### M0-80 · queued — **FOUR REFUSAL CODES ARE PINNED GREEN BY ABSENCE RATHER THAN BY AGREEMENT** — the plane sends a canned `translation` for `KIND_NOT_PERSONAL` (`queue.test.mjs`), `NO_ACKNOWLEDGMENT` (`release-flow.test.mjs`), `NO_SUCH_SELECTION` (`act-dispose.test.mjs`) and `NOT_CAPABLE`, and each fixture OMITS the field, so the `detail` pin passes by not looking. Of 198 hand-written refusal fixtures in the UI estate only THIRTEEN carry a `translation` at all (M-72). — owner M0.
+order: with the instrument cluster and NOT beside UI-73, though they were routed together. A fixture narrower than the wire is a check that cannot fail — M0-78's doctrine exactly — whereas UI-73 is a surface correction. CLAUDE.md §5: an equality that costs nothing to produce is not evidence (SCHEDULER #3, 2026-09-19)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a suite is evidence only where it can disagree with the thing it measures.
+depends-on: none. Measured in `docs/development/MEASUREMENTS.md` M-72 (UI-72, 2026-09-19).
+scope: carry the catalogue row's `translation` in each of the four fixtures and re-read the pin. **AND THE LARGER HALF, which is why this is an M0 row and not four edits:** 185 of 198 fixtures carry no `translation`, so the same blindness is available everywhere — report the count of fixtures whose refusal shape is NARROWER than the wire the plane sends, and floor it.
+accepts-when: each of the four pins DISAGREES with the plane when the translation is wrong, proved by feeding a wrong one; the narrower-than-wire count is printed per suite and floored. How a liar passes it: fixing the four and leaving the census unbuilt, so the floor is asserted to exist.
+NEGATIVE CONTROL: put a WRONG translation in one repaired fixture, and that suite fails by name — today it passes, because the field is absent.
+added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's routed item 4; `node tools/mintid.mjs M0`).
 
 ### COFF-13 · queued — **NO FORMAT ENTRY EMITS A DECK LENGTH, so a deck whose TRAILING slides are unreadable is recorded shorter than it is — and the content row then REFUSES A TRUE CITATION of a real trailing slide as "past the deck".** D-359's named residue, rowed at its close rather than left in prose. — owner CONTENT-OFFICE.
 order: below LED-8, above the features: it refuses something TRUE — a record defect, not a gap — but errs in the CONSERVATIVE direction and reaches only decks with unreadable trailing slides, so it ranks under the defects above it (SCHEDULER #2, 2026-09-19)

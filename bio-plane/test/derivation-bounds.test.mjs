@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: RAN 2026-09-19 by the M0-78/D-414/D-433 worker, driver `test/nc-instr-cluster.mjs`, SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, every restore verified by sha256 AND by `cmp` against a uniquely-named per-arm pristine copy with byte counts printed and floored. ALL SEVEN AS DECLARED. BASELINE ROW FIRST (arm 7): derivation-bounds 72/0 · bounds 173/0 · witness 26/0 · DEC-49 guard exit 0 (reach 338, R3 fed 70, observed-only 4). (1) D-414 reverted in ONE walk only (derivation-bounds) so the five copies disagree: derivation-bounds 71/1 failing at CENSUS IS A CEILING with the figure back at 109, and bounds 172/1 failing at D-414 PARITY — the parity arm is what catches a liar who fixes one copy of five. (2) the SHORTER spelling `\*?\s*` in one walk, which also lets `\s*` eat a third space of indent and match at any depth: derivation-bounds 48/24, the widening measured rather than argued. (3) M0-78 reverted so a ratify-stage refusal THROWS again: the census reports FIXTURE-THREW and exits 1, where the pre-M0-78 census over the same tree printed UNCLASSIFIED, `8 anchor(s), 0 NOT LIVE`, and EXITED 0 — measured with both files reverted to HEAD, not inferred. (4) arm (H)'s registration deleted from the driver, which is how a liar passes M0-78: witness 25/1 failing at A8 by name. (5) a planted UI suite that only ASSERTS a code: reach 338 unmoved and R3 fed 70 unmoved, the code printed in the OBSERVED half. (6) the same code HANDED by a mock in the same planted suite: reach 338 -> 339 and R3 fed 70 -> 71, the over-strictness direction. */
 /* NEGATIVE CONTROL: (run 2026-08-08, rec66-agent, REC-66) FIVE armed arms and one armed by
    construction, each armed ALONE with every other held open, driven by `test/nc-rec66.mjs`
    (`cd bio-plane && node test/nc-rec66.mjs`), every file restored from a PRISTINE pre-arm
@@ -339,7 +340,14 @@ const decomment = (text) => text.split("\n").map(((state) => (L) => {
 /* Method segments bounded by the NEXT signature — `bounds.test.mjs`'s segmenter. */
 const segments = (code) => {
   const lines = code.split("\n");
-  const sig = /^ {2}(?:static\s+|async\s+)?(#?[A-Za-z_$][\w$]*)\s*\(/;
+  /* D-414: `(?:\*\s*)?` so a GENERATOR method opens its own segment. Without it `*eachImage`
+     was invisible and its body was credited to the method above it (`danglingRefs`), which
+     then read as doing work it does not do. The optional group carries its own `\s*`
+     deliberately: a bare `\*?\s*` would also let `\s*` absorb a THIRD space of indent and
+     match at ANY depth, a second and silent widening. This regex is IDENTICAL in all five
+     walks sharing this segmenter; the D-414 PARITY arms in `bounds.test.mjs` read all five
+     off disk and assert it. */
+  const sig = /^ {2}(?:static\s+|async\s+)?(?:\*\s*)?(#?[A-Za-z_$][\w$]*)\s*\(/;
   const heads = [];
   for (let i = 0; i < lines.length; i++) { const m = sig.exec(lines[i]); if (m) heads.push([i, m[1]]); }
   const out = new Map();
@@ -576,10 +584,21 @@ const D384_LEAVES = [
   { name: "auditPass", why: "its per-row work (readImage, checkBundle, an inquiry_basis read and "
       + "earnedBasisRegistry per bundle) iterates a LIMIT-bounded page (cap <= 1000, published); the "
       + "unbounded `known` set is built once and used as a lookup, and the route-mark scan is read once" },
-  { name: "danglingRefs", why: "its own body is one anti-join, returned. Its membership was the NEXT "
-      + "segment's: `*eachImage` is a generator the segmenter's signature regex cannot see, so its "
-      + "header scan was credited here. eachImage does read an image per bundle, and has no caller in "
-      + "src/ — the segmenter gap is D-414" },
+  /* CORRECTED 2026-09-19 by D-414, never exempted, and the OLD TEXT WAS RIGHT WHEN IT WAS WRITTEN:
+     it read "`*eachImage` is a generator the segmenter's signature regex cannot see, so its header
+     scan was credited here … the segmenter gap is D-414". That sentence DIAGNOSED the gap and was
+     true of every tree until this one. It is false now because the gap is closed — the regex gained
+     `(?:\*\s*)?` in all five walks that share this segmenter — so `eachImage` opens its own segment
+     and this entry's verdict now rests on danglingRefs' OWN body, which is the whole point of the
+     row. Kept as a correction rather than a rewrite because the diagnosis is the reason the verdict
+     can be trusted: before the fix this member LEFT the class for a reason the reader could not
+     see, and a disposition believed on the strength of a stale explanation is the defect this list
+     exists to prevent. */
+  { name: "danglingRefs", why: "its own body is one anti-join, returned — judged on that body alone "
+      + "since D-414 closed the segmenter's generator gap (2026-09-19). Before that it was credited "
+      + "with the NEXT segment's header scan, because `*eachImage` could not open a segment of its "
+      + "own; that generator now opens one, is counted in the CENSUS in its own right, and this "
+      + "verdict no longer depends on the reader's blind spot" },
   { name: "earnedBasisRegistry", why: "one pass folding the union scan into a Map, then one pass over "
       + "the Map — linear, no read per row. REC-88's worked example: inline and hoisted now agree" },
   { name: "frontier", why: "#frontierVerification and a register read per row over a LIMIT-bounded "
@@ -1284,7 +1303,32 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    a walk of the corpus — and it is deliberately NOT paged: a page that stopped before the one resting
    finding would refuse evidence a ratified case rests on, the over-strictness failure the D-431 suite's
    `refuse-every-evidence` arm measures. It is not in the amplification class (24 is unchanged). */
-const SCANNING_MEASURED_2026_09_15 = 109;
+/* D-414, 2026-09-19: 109 -> 110, TAKEN FROM THE CORPUS LINE THIS RUN PRINTED (`110 methods scanning
+   UNBOUNDED`), not by adding one. The arrival is `eachImage`, and there is no departure.
+
+   **THIS ARRIVAL IS A DIFFERENT KIND FROM EVERY ONE ABOVE, AND THAT IS THE FINDING RATHER THAN THE
+   NUMBER.** The eight movements above are each a NEW METHOD entering the source. Nothing entered the
+   source here: `*eachImage` has been in `store.mjs` unchanged, and the INSTRUMENT could not see it.
+   The signature regex this file shares with four sibling walks had no `\*?`, so a generator never
+   opened a segment, and its body was swallowed by the segment above it. So this census has been
+   reporting 109 over a population of 110 for as long as that generator has existed, and the ceiling
+   was green the whole time — a ratchet cannot catch what its reader never counted.
+
+   **WHAT MOVED IS THE READER, NOT THE PLANE**, and the direction matters: a ceiling rising because
+   the walk started seeing a real member is not slack, it is the repair of an undercount. The
+   departure half is `danglingRefs`, which does NOT leave this census (its own anti-join is genuinely
+   unbounded) but does lose the scan it was never doing — see its `D384_LEAVES` entry, corrected in
+   this same turn.
+
+   **NARROWED, NOT CLOSED:** `eachImage` joins this CENSUS and does NOT join the amplification CLASS,
+   which stays at 24. That is not a judgement that it does not amplify — it reads one image per
+   bundle over an unbounded scan, which is the class's own shape. It is the walk's DECLARED helper
+   blind spot: the per-row call is `this.readImage(...)`, not a `#rows(` the walk can see, and the
+   hand-admitted compensation for exactly that blind spot (`D384_STAYS`) is a population MEASURED on
+   2026-09-16, when this method was invisible and so could not have been measured into it. Enrolling
+   it means re-measuring that population, which is a row of its own and is reported rather than
+   taken here. */
+const SCANNING_MEASURED_2026_09_15 = 110;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "

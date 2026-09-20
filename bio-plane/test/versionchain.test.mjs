@@ -120,7 +120,14 @@ const SCHEMA_CODE = decomment(SCHEMA_SRC).split("\n")
    rather than by brace matching. */
 const segments = (code) => {
   const lines = code.split("\n");
-  const sig = /^ {2}(?:static\s+|async\s+)?(#?[A-Za-z_$][\w$]*)\s*\(/;
+  /* D-414: `(?:\*\s*)?` so a GENERATOR method opens its own segment. Without it `*eachImage`
+     was invisible and its body was credited to the method above it (`danglingRefs`), which
+     then read as doing work it does not do. The optional group carries its own `\s*`
+     deliberately: a bare `\*?\s*` would also let `\s*` absorb a THIRD space of indent and
+     match at ANY depth, a second and silent widening. This regex is IDENTICAL in all five
+     walks sharing this segmenter; the D-414 PARITY arms in `bounds.test.mjs` read all five
+     off disk and assert it. */
+  const sig = /^ {2}(?:static\s+|async\s+)?(?:\*\s*)?(#?[A-Za-z_$][\w$]*)\s*\(/;
   const heads = [];
   for (let i = 0; i < lines.length; i++) { const m = sig.exec(lines[i]); if (m) heads.push([i, m[1]]); }
   const out = new Map();

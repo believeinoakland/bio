@@ -12364,3 +12364,52 @@ offer "ask an administrator" as an ACTION now has a code to key on, which it did
 
 **RESOLUTION · 2026-09-19 · ACCEPTED by CONDUCT #7 as MAJOR, BREAKING — I3 44.1.0 → 45.0.0.** Base RE-READ at resolution off the integration tree: 44.1.0 (the row was first proposed 2026-08-09 against a base 1573 commits behind, and re-proposed on current main by D-270 — the base that governs is this one). Breaking by IC-137's rule: a call that succeeded is not refused, but **the SENTENCE a caller receives changes for fifteen ops**, and one that carried a single generic `MACHINE_CREDENTIAL_REQUIRED` now carries one of three outcomes — `MACHINE_CREDENTIAL_REQUIRED` NARROWED to ops named in `UNATTENDED_BY_DECISION` and citing its warrant in `recorded` (four, each read at the artifact), `SESSION_ROLE_CANNOT_REACH_OP` (C-38.7) COMPUTED from `SESSION_OPS` so it cannot become false, and `SESSION_ROUTE_NOT_RECORDED` (C-38.8, ten ops). A consumer branching on the old code for any of the ten becomes wrong without changing a line, which is IC-118's reason for calling such a move breaking. **No op moves between session sets and no class list moves**: the same callers are refused the same verbs; what changes is what they are told. `capture`/`pdfstructure`/`monitor` gain `REQUIRED_ARGUMENT_MISSING` (C-61.1). **The re-classification from FIVE ops to FIFTEEN is the finding**: the 2026-08 two-way split concealed the omission arm, and the proposer's fourth code (`TOKEN_CLASS_CANNOT_REACH_OP`) is DROPPED because REC-79 already codes that condition as `CLASS_FORBIDDEN` and a second code for one condition is two authorities for one fact. **The declaration is a PROPERTY, not a list** — an op absent from it receives the omission answer automatically, so the default claims nothing, which is BOB #17's sentence (c) built rather than restated. An AUTHORITY-adjacent closing of the class CLAUDE.md §2 ranks first: **a false rationale suppresses its own bug report**, and the sequence check found the two-way split would have written one onto the very three ops D-136 exists to fix. DIST told.
 
+
+## IC-168 · I3: THE §4.7 VOTE AND THE §4.9 CAPABILITY EDIT BECOME A PERSON'S ACTS — `op=adminendorse`, `op=adminremove` and `op=membercaps` gain `member` in `classes` and membership of BOTH `SESSION_OPS` sets; `by` is SERVER-STAMPED from the session and is no longer caller-supplied on all three; `Store#memberCaps` gains a `by` argument and refuses a non-administrator; a bearer credential reaching any of the three is REFUSED `OPERATOR_TOKEN_CANNOT_GOVERN` (C-32.17) · PROPOSED 2026-09-20 (D-136; the row says *"the integrator mints and classifies it"*, so CONDUCT #8 minted IC-168 with `node tools/mintid.mjs IC` at integration)
+
+**WHAT CHANGES FOR A CALLER.** Before: the three ops were `["admin", "probe"]`, in no session set, and the
+governance arithmetic recorded whatever `by` the caller sent. **Seven releases of §4.7 arithmetic therefore rested
+on attributions the caller supplied** — anyone holding an operator token could record an endorsement, a removal
+vote or a capability edit in another administrator's name. After: a signed-in administrator casts each act and the
+SERVER stamps who cast it; a bearer credential naming another administrator as `by` is refused by name.
+
+**WHY THIS IS BREAKING AND NOT ADDITIVE.** Unlike IC-55, which changed only what a caller is TOLD, this changes
+what a caller may DO: **a call that previously succeeded is now refused.** An operator-token caller of any of the
+three ops receives `OPERATOR_TOKEN_CANNOT_GOVERN` where it previously got a write. That is IC-137's rule in its
+plainest form. Consumer impact MEASURED by the builder, not assumed: no bearer-token caller of these three ops
+exists anywhere in the tree outside two suites, and both were corrected in the same landing — **corrected, never
+exempted**, each with a comment saying why the old assertion was wrong.
+
+**THE ONE DESIGN CALL INSIDE THIS CHANGE, STATED SO IT CAN BE OVERTURNED CHEAPLY.** The three ops gained `member`
+and sit in BOTH `SESSION_OPS` sets, rather than the admin set alone. The reason is that `kind` is `admin` for the
+FOUNDER'S PASSWORD SESSION ONLY — an enrolled administrator holds `member:<id>`. Reach in the admin set alone
+would have given §4.7's vote to exactly one person while the new fence closed the bearer route to everybody else,
+leaving a three-administrator group unable to add or remove an administrator at all. **That is the row's own
+failure mode arriving at one instead of zero**, which is not an improvement worth shipping. The ROSTER decides and
+the store refuses a non-administrator by name; this is `expertiseconfirm`'s written posture. **Reversing it costs
+one array spread and one class list**, and it is argued at the site and in §4 of the design — so if BOB rules the
+other way it is a small, local edit, not a rebuild.
+
+**I5 does not move** — `schema.mjs` is untouched; `admin_votes` already carried the column the stamp writes.
+
+**NEGATIVE CONTROL, re-run at integration and not taken from the builder's report:** `adminvote.control.mjs`,
+seven arms. The arm that decides the item is `stamp-dropped`, failing at the NAMED assertion *"a session caller
+naming ANOTHER administrator as `by` does not cast that administrator's endorsement"* (and its removal-vote and
+capability-edit siblings). Dropping the stamp must take that arm down and nothing else; `reach-dropped` and
+`overstrict` bound it from the other side — an implementation that refuses everybody scores the same on the happy
+path and is caught by those two.
+
+**RESOLUTION · 2026-09-20 · ACCEPTED by CONDUCT #8 as MAJOR, BREAKING — I3 45.0.0 → 46.0.0.** Base RE-READ at
+resolution off the integration tree: **45.0.0**, as IC-55 left it earlier in this same wave — read at THIS
+landing, not at the moment the row was written, because an IC proposed on a stale base is resolved on today's.
+**IC-168 lands in the wave AFTER IC-55 rather than beside it**, so the interface moves a second time rather than
+once: IC-55 was resolved and pushed at `02e7c537` before D-136 was ever spawned, which is precisely the sequence
+§4.7 required — D-270's sentence (c) had to exist before this row could close the vote it protects.
+
+**AND THE FOURTH OP IS NOT IN THIS CHANGE, WHICH IS THE HONEST OUTCOME AND NOT A GAP I AM HIDING.** `op=memberadd`
+has the SAME defect — its `by` is not stamped, and `Store#memberAdd` writes an `admin_votes` ('add') row from it,
+so a proposer can still record one endorsement in another administrator's name. BOB #17's ruling named three ops
+and the row refuses to be split, so widening it here would have been CONDUCT inventing scope at integration.
+**It is NARROWED, not closed**, and the builder pinned the boundary in `adminvote.test.mjs` §8 so the assertion
+FAILS THE DAY IT IS CLOSED — a row closed by rounding off its unbuilt quarter is how a false "done" enters the
+record. The fix is named in the DELEGATION that carries it to SCHEDULER.

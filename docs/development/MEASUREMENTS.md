@@ -17392,6 +17392,79 @@ variable, or receives from the real plane in miniflare, is outside it entirely �
 carry real translations the walk never counts. And it says a fixture CANNOT REPRESENT a translation, never that any
 assertion reads one.
 
+## 2026-09-19 — THE INSTRUMENT CLUSTER (M0-78, D-414, D-433), measured on `worker/instr-conduct8` off `ad67ff0a`
+
+Instrument: each suite and guard run DIRECTLY, exit status read UNPIPED, on a quiet tree in this
+worker's own worktree. Figures are what the instruments PRINTED, never arithmetic on a file.
+
+**D-414 — the segmenter's generator gap, and the movement IS the finding.** The signature regex shared
+by five walks gained `(?:\*\s*)?`. Measured by diffing the head set the old and new regexes find over
+four plane sources before any suite was run: **exactly ONE gained head across the whole corpus** —
+`eachImage` at `store.mjs:14037` — **zero lost, zero false positives** (`index.mjs` 75/75,
+`airun.mjs` 64/64, `schema.mjs` 0/0). The walks then moved:
+
+| figure | before | after |
+| --- | --- | --- |
+| `store.mjs` method segments (bounds, derivation-bounds, meaning-bounds all print it) | 595 | **596** |
+| derivation-bounds: methods scanning UNBOUNDED (the CENSUS ratchet) | 109 | **110** |
+| derivation-bounds: the amplification CLASS | 24 | **24, unmoved** |
+| meaning-bounds: methods publishing a collection | 203 | **203, unmoved** |
+| bounds: methods carrying a cap / ops reached | 50 / 36 | **50 / 36, unmoved** |
+| bounds REC-59 corpus chars scanned | 25,724,115 | **25,734,467** (this item's own comments) |
+| suite tallies | airuns 53/0 · bounds 167/0 · derivation-bounds 72/0 · meaning-bounds 92/0 · versionchain 91/0 | **53/0 · 173/0 · 72/0 · 92/0 · 91/0** |
+
+**THE CENSUS MOVE IS A DIFFERENT KIND FROM THE EIGHT ABOVE IT IN THAT FILE.** Every prior movement was
+a NEW METHOD entering `store.mjs`. Nothing entered here: `*eachImage` has been there unchanged and the
+INSTRUMENT could not see it, so the census reported 109 over a population of 110 for as long as that
+generator has existed, with the ceiling green throughout. **A ratchet cannot catch what its reader never
+counted.** NARROWED AND NOT CLOSED: `eachImage` joins the CENSUS and does NOT join the amplification
+CLASS. It reads one image per bundle over an unbounded scan, which is the class's own shape, but the
+per-row call is `this.readImage(...)` rather than a `#rows(` the walk can see — the walk's DECLARED
+helper blind spot. The hand-admitted compensation for that blind spot (`D384_STAYS`) is a population
+measured 2026-09-16, when this method was invisible and could not have been measured into it.
+
+**M0-78 — the two arms that armed perfectly and measured nothing.** Diagnosed by running each arm
+alone. Both die the same way: the arm removes a refusal from `store.mjs`, the act therefore travels
+FURTHER and meets the next authority that refuses it anyway — the gate (`C-41.8`) for (C), the
+participation fence (`C-56.1`) for (H) — and `caseceremony.mjs`'s `ratifyCase` throws on that refusal,
+killing the module before one declared assertion is evaluated. Before: both `-1 pass, -1 fail · NOT AS
+DECLARED`, driver exit 1. After the fixture surfaces a ratify-stage refusal instead of throwing:
+**(C) 72 pass / 3 fail, (H) 66 pass / 9 fail, both `as declared`, driver exit 0**, with the unarmed
+suite unchanged at **75/0**.
+
+**THE DETECTOR, WHICH IS THE LARGER HALF, MEASURED BOTH WAYS.** With the census and the fixture BOTH
+reverted to HEAD, `m025-arm-census.mjs --only caseproduction.control.mjs` printed
+`caseproduction.control.mjs  UNCLASSIFIED  exit=1 arms=? decl=? 13.8s`, reported `8 anchor(s), 0 NOT
+LIVE`, and **EXITED 0**. With the widened detector and the fixture still reverted it reports
+**FIXTURE-THREW, count 1, exit 1**. So the pre-M0-78 state was not "reported healthy" — it was printed
+for a human and enforced on nobody, while D-331's preflight correctly reported every anchor live,
+because **a preflight proves the ANCHOR is live and can never prove the FIXTURE runs.**
+
+**D-433 — the reach that counted observation as reach.** `check-refusal-codes.mjs` ARM B R3 now
+partitions each suite's literals into FED (handed into a surface) and OBSERVED-ONLY (compared against a
+received value), prints BOTH halves per suite, and floors the fed half.
+
+| figure | before | after |
+| --- | --- | --- |
+| R3 (codes credited to a harness mock) | 74 | **70** |
+| R3 OBSERVED-ONLY, printed and not floored | not distinguished | **4** — `BAD_KIND`, `FALSIFIER_AND_NONE_STATED`, `NO_STATEMENT`, `NO_TITLE` |
+| `arm B: REACH` total, and `FLOOR.reach` | 338 / 338 | **338 / 338, NOT MOVED** |
+| new `FLOOR.r3Fed` | — | **70**, exact |
+
+**THE TOTAL REACH DID NOT MOVE AND THAT IS THE HONEST RESULT, NOT A DISAPPOINTMENT.** All four
+observed-only codes are independently in reach through R1's family rows or R2's `app.html` names, so
+the union hid the correction completely — and would hide a regression in the same direction just as
+completely, which is exactly why the fed half needs a floor of its own. The inflation D-433 names is
+real in R3 and is not, today, inflating `FLOOR.reach`. **The mechanism was live**: driven on a planted
+suite, a code in reach through NEITHER R1 nor R2 moves the reach 338 -> 339 when a mock HANDS it and
+338 -> 338 when a suite only ASSERTS it. Before this landing both raised it.
+
+Negative controls: `node bio-plane/test/nc-instr-cluster.mjs`, seven arms plus a baseline, **all seven
+AS DECLARED**, every restore verified by sha256 AND `cmp` against uniquely-named per-arm pristine
+copies (`derivation-bounds` 154,501 B · `bounds` 146,194 B · `caseproduction.test` 75,785 B ·
+`caseproduction.control` 26,928 B), pen swept. Arm 2 prices the spelling that was NOT taken: the
+shorter `\*?\s*` also lets `\s*` absorb a third space of indent and match at ANY depth, taking
+derivation-bounds from **72/0 to 48/24**.
 ## M-75 · 2026-09-19 · THE PUSH BLOCKER IS PER (SESSION × REFSPEC × MOMENT) AND WAS NEVER ESTATE-WIDE (BOB #18)
 
 **Instrument:** `git push` invocations and their printed results, plus `git log` / `git show` against `origin/main`
@@ -17433,3 +17506,135 @@ NAMED: rows 4 and 5 mean SCHEDULER #3's two published commits (`e896e749`, `8984
 assertions) are on a branch and not on `main`, so the rows they carry are written and NOT PLACED.** No lane may push
 them — that would launder a refusal belonging to another session's user (`CLAUDE.md` §4, and BOB #18 declined it
 explicitly while holding a working `HEAD:main` push). It is the operator's act or SCHEDULER's own later retry.
+## M-76 · 2026-09-19 · D-136 — the §4.7 vote measured ON THE LIVE PLANE before it was fenced
+
+**Instrument:** a read-only probe against the DEPLOYED instance `biosmoke7`
+(`believeinoakland.workers.dev`, Cloudflare account `20b533579290b9b93168345edd3b7f72`, confirmed by the
+API at the moment of the run), serving build **0.67.0** — which is the PRE-ITEM plane, because this worker
+does not deploy. Run from `.claude/worktrees/d136-conduct8`, branch `worker/d136-conduct8`, base
+`origin/main` @ `ad67ff0a`. **`store=scratch` was NAMED ON EVERY CALL** (D-325: the namespace is not
+fenced for any class but PROBE), and the no-write guarantee is that naming PLUS the WITNESS — the scratch
+roster read before and after every arm.
+
+**WHY A LIVE PROBE OF A DEFECT RATHER THAN OF A FIX.** The fix is not deployed and this lane does not
+deploy it, so the only thing a live instance can answer is whether the defect the row describes is REAL on
+a serving build or only a reading of the source. That is worth asking: `CLAUDE.md` grades a blocker as a
+claim, and a defect inferred from code is the same shape.
+
+| Arm (all `store=scratch`, ADMIN bearer token) | Answer | What it establishes |
+| --- | --- | --- |
+| `op=adminendorse`, `by` naming another administrator | **200 `NO_SUCH_MEMBER`** | the bearer **REACHED THE HANDLER** — it is not fenced, and the `by` the store checks is the one the caller sent. The refusal is about the target, never about the caller |
+| `op=adminremove`, same shape | **200 `NO_SUCH_MEMBER`** | the same, at the removal vote |
+| `op=membercaps`, no `by` at all | **200 `NO_SUCH_MEMBER`** | the pre-item ordering: the capability edit asks whether the member exists and **never asks who is calling** |
+| WITNESS, scratch roster before / after | **13 rows / 13 rows, byte-identical** | nothing was written by any arm |
+
+**THE DISCRIMINATOR BETWEEN THE TWO BUILDS, recorded so a later reader can re-run this against a deployed
+D-136 and see it flip:** `op=adminendorse` and `op=adminremove` answer `OPERATOR_TOKEN_CANNOT_GOVERN`
+(C-32.17) instead of `NO_SUCH_MEMBER`, and `op=membercaps` answers `NOT_AN_ADMIN` — because the roster
+question moves in front of the member lookup.
+
+**WHAT THIS PROBE CANNOT SEE, and it is the larger half.** It never demonstrated a COMPLETED forgery on the
+live instance, and that is deliberate rather than a limit of the method: completing one means writing a
+governance vote in another administrator's name into a live record, which is the act the item exists to
+prevent, and sweeping an `admin_votes` row afterwards needs a purge this worker has no business running.
+So the live evidence is REACH and ORDERING; the forgery itself is driven end-to-end over the real sources
+in `bio-plane/test/adminvote.test.mjs`, where one administrator's session sends another's id in the body
+AND the query and the answer is read from the record rather than from the echo.
+
+## M-77 · 2026-09-20 · A WORKLIST WENT BLIND ON A TRUNCATED LISTING, AND THE NUMBER FELL IN THE DIRECTION A READER READS AS PROGRESS (BOB #18, from conduct-heartbeat's measurement)
+
+**Instrument:** the `conduct-heartbeat` scheduled task, which calls `tools/retirable.mjs` with a `list_sessions`
+listing each firing and prints its counts. Four consecutive runs on 2026-09-20 carried the figures below; BOB #18
+read them from the heartbeat's own transcript and re-drove the predicate itself before acting.
+
+**THE FIGURES.** The heartbeat passed a listing fixed at **limit 50** while the estate held **53** sessions and grew
+by roughly **3 per hour** — from the heartbeat's own finished run-sessions. Each new row arrives at the TOP of a
+listing sorted by recency and pushes the oldest off the BOTTOM.
+
+| across four runs | reported | true |
+| --- | --- | --- |
+| HOLD (sessions holding UNSAVED work, D-288's loss shape) | 15 → 14 → 13 → 12 | **15, unmoved** |
+| estate row count | 51 → 52 → 53 | — |
+
+Three sessions went invisible on schedule (`Ticker Skill v9.4`, `v9.2`, `v9.1`), each holding commits on no remote
+ref. At three firings an hour the whole 15-row HOLD class disappears within about five hours.
+
+**WHY IT IS THE DANGEROUS DIRECTION.** The rows that fall off a recency-sorted listing are the OLDEST, and the oldest
+is exactly where stranded work accumulates — so the count degrades *precisely* over the population the tool exists to
+protect. And it degrades DOWNWARD: fewer-at-risk and fewer-visible are indistinguishable in the output, and the
+number a reader sees is the one they read as progress. The heartbeat named this as the fourth sighting of that class
+inside its own task.
+
+**THE DEFECT, stated as a property rather than an incident:** `retirable.mjs` reads a listing on stdin, counts what
+it was HANDED, and printed `N judged` as though N were the estate. **It cannot see what the caller left out, and
+until this landing it did not say so.** That is `CLAUDE.md` §5 from the inside — *when the answer is a count, ask what
+the count cannot see* — and BOB #18 had itself reported "0 HOLDING UNSAVED WORK" from hand-built 11-row inputs across
+four sweeps without ever stating that bound.
+
+**WHAT LANDED (`tools/retirable.mjs`, this commit).** The verdict now names its own bound on EVERY run, not only bad
+ones — a caveat that appears only when something is wrong trains a reader to skip it, which is how four heartbeat runs
+went unread. `--total N` lets a caller that knows the estate size declare it, and `N > judged` prints a refusal naming
+the shortfall and saying the verdict covers the rest NOT AT ALL. With no `--total`, an input length equal to a common
+listing limit raises a **HINT explicitly labelled not-a-finding**: it is evidence of truncation and never proof, and
+the tool says it cannot tell a truncated 50 from a real estate of 50 and does not guess.
+
+**DRIVEN:** `bio-plane/test/retirable.test.mjs` section 8, four arms driving the CLI as a SUBPROCESS — the defect and
+the fix both live in the CLI block, which the other seven sections never execute. 60 pass / 0 fail, 8/8 sections.
+**NEGATIVE CONTROL:** two arms, each disarming one branch alone, failing 4 and 2 NAMED assertions respectively; the
+subject restored by `cp` (never `git checkout`, which would have discarded the fix) and verified by sha256
+`8c391cac…d46a3975`. Recorded on the suite's own `NEGATIVE CONTROL:` line.
+
+**WHAT THIS DOES NOT FIX, stated so nobody reads it as closed:** the heartbeat's own limit of 50 lives in its SKILL
+outside this repository and is the operator's; this landing makes a truncated call *visible* rather than impossible.
+## M-73 · 2026-09-19 · the DEC-49 floors: which are still slack, after D-270 moved nine of them
+
+**INSTRUMENT:** `node civicos-ui/check-refusal-codes.mjs` on `ad67ff0a`, exit 0, read unpiped; the `FLOOR` table read
+from the same file at the same sha. **WHY IT WAS RE-RUN:** CONDUCT #7 routed *"the DEC-49 floors are stale by a lot —
+695 region lines and 10 families of slack, unmoved across several landings"* at its handoff. **THAT FIGURE NO LONGER
+REPRODUCES**, and the reason is a landing rather than an error: D-270 moved nine floors in its own turn.
+
+| figure | floor | a green run PRINTS | slack |
+| --- | --- | --- | --- |
+| `families` | 34 | 34 | 0 — D-270 moved it 23 → 34 |
+| `rows` | 285 | 285 | 0 — moved 219 → 285 |
+| `census` | 595 | 595 | 0 — moved 517 → 595 |
+| `reach` | 338 | 338 | 0 — moved 272 → 338 |
+| `governedSites` | 123 | 123 | 0 — moved 84 → 123 |
+| `regions` | 107 | 107 | 0 — moved 70 → 107 |
+| `regionLines` | 2952 | 2952 | 0 — moved 2215 → 2952, which is CONDUCT #7's 695 (it measured 737 before the move) |
+| `codesChecked` | 316 | 316 | 0 — moved 218 → 316 |
+| `refusalsJudged` | 316 | 316 | 0 — moved 220 → 316 |
+| **`outcomeReturns`** | **98** | **126** | **28 — and the run SAYS SO: *"corpus GREW by 28"*, on a GREEN exit** |
+| **`vocabularies`** | **11** | **22** | **11** |
+| **`vocabularyTerms`** | **64** | **110** | **46** |
+| **`untranslated`** | **270** | **297** | **27** |
+| `bodyLines` | 60 | 4691 lines read | DELIBERATE and documented at the site — not counted as slack here |
+
+**WHAT SURVIVES CONDUCT #7'S FINDING, AND IT IS THE WHOLE POINT: the four figures still slack are the four D-270 did
+not touch.** Every figure a landing is expected to move was moved by the landing that moved it; the four left behind
+are corpus and vocabulary counts that no item grows on purpose, so no item's turn ever pays to refresh them. **A
+dropped count is evidence something changed; it is never evidence of what survived** — and here the survivors are the
+sharper finding, because the guard PRINTS its own slack and exits 0. Placed as `M0-79`.
+
+## M-74 · 2026-09-19 · an UNATTENDED session can be messaged by nobody, in either direction
+
+**INSTRUMENT:** `SendMessage` and `mcp__ccd_session_mgmt__send_message` addressed to session
+`local_60a6515d-517d-45de-94ec-8ff2d4efb7a2` (CONDUCT #8, `scheduledTaskId: "conduct-8"`), from SCHEDULER #3, plus
+`ListAgents` from two sessions and `get_session` on the target. **SUBJECT:** whether a lane stood up by a scheduled
+task can be reached by its peers.
+
+| probe | result |
+| --- | --- |
+| `ListAgents` from SCHEDULER #3 (48 peers) | the target is ABSENT; a DIFFERENT session holding the same title is present |
+| `SendMessage` to the title `CONDUCT #8` | delivered to the wrong session — a duplicate that held the name |
+| `SendMessage` to the target's `local_…` session id | **`undelivered`** — *"session … is unattended (a scheduled-task run or dispatched session); messages can't be delivered there"* |
+| the same, attempted independently by a second session | same refusal, same wording, same hour |
+| outbound, recorded by the target itself in `CLAIMS.md` | *"Messaging another session is unavailable in unattended sessions"* |
+
+**SO THE CHANNEL IS CLOSED IN BOTH DIRECTIONS, and the lane behind it is the one every completion report flows
+through.** Two things follow and neither is a workaround. **(1) The repository is not merely the authority, it is the
+ONLY channel to such a lane** — what it must know goes on the ROW it reads from `origin/main`, never only into a
+message. **(2) A NAME IS NOT AN ADDRESS.** The first send here landed on a duplicate session holding the title, and
+nothing in the result said so; it was the recipient that noticed. Silence from a peer is not agreement, and a
+`success: true` is not delivery to the lane you meant. Stated in `ORCHESTRATION.md`'s channels table, where a reader
+planning a route meets it.

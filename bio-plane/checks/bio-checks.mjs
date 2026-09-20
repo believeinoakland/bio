@@ -9219,6 +9219,30 @@ export const MACHINE_FENCE_CHECKS = {
      must name the person who handed the group's draft to somebody. One row, one
      region: the three acts enter through `reviewAct`, and the fence stands at that
      door before any act is chosen. */
+  /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
+     the same doctrine rather than a new one: *the credential that delivers an
+     act decides when the record changes, and the record names the actor.* A
+     §4.7 vote is C-32.14's shape with the member's signature replaced by a
+     roster position — an act the record attributes to a named administrator,
+     which a bearer token held in the hosting account cannot be.
+     ONE ROW FOR THE THREE OPS, on C-32.16's precedent rather than C-32.14's: the
+     endorsement, the removal vote and the capability edit enter through ONE
+     region and are refused by ONE predicate, so three rows would be one rule with
+     three homes. The op is named in the answer, so a caller still learns which
+     verb was refused, and the class is named in `tokenClass`, so an operator
+     learns which of its credentials asked.
+     THE PREDICATE IS `!viaSession` — how the caller ARRIVED, not which token it
+     held — so it covers ADMIN, MEMBER and PROBE today and any binding added
+     tomorrow, and no class list appears at the site to go stale. */
+  OPERATOR_TOKEN_CANNOT_GOVERN: {
+    check: 'C-32.17',
+    where: 'src/index.mjs fetch > is-operator-governance-act',
+    translation: 'Endorsing an administrator, voting to remove one, and setting what a member may do '
+      + 'are things the group holds a named administrator answerable for, and the record names who did '
+      + 'them. The credential that asked here is one of the operator\'s access tokens for this copy, '
+      + 'not a person: it holds no place on the roster, so it cannot be one of the administrators whose '
+      + 'agreement the rule requires. Sign in as that administrator and do it from there.',
+  },
   MACHINE_CANNOT_REVIEW: {
     check: 'C-32.16',
     where: 'src/store.mjs reviewAct > is-machine-review',
@@ -10057,9 +10081,15 @@ export const ADMISSION_CHECKS = {
      SUPPRESSES ITS OWN BUG REPORT: a member told that an absence is a DECISION
      will not report it as a gap, so the sentence recruits the one person who
      could have caught it into believing there is nothing to catch. The measured
-     case is D-136's — `adminendorse`, `adminremove` and `membercaps` are
+     case is D-136's — `adminendorse`, `adminremove` and `membercaps` WERE
      reachable by no session, and Membership Architecture §4.7 assigns that very
-     vote to a person. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
+     vote to a person. **D-136 LANDED 2026-09-19 and discharged that case**: the
+     three now hold `SESSION_OPS.admin` reach and a server-stamped `by`, so an
+     administrator's session reaches them and a member's gets the ROLE sentence,
+     not this one. The receipt stays in the past tense because it is the ARGUMENT
+     for this row rather than a roster of its members — the gap was reported only
+     because the plane declined to call it a decision, and deleting the evidence
+     once the gap closes is how a rule outlives the reason it was made. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
      independently that the old sentence told an administrator the act §4.9
      assigns them needs a credential §4.8 says somebody else holds, and that
      there is no action a member can take from it.

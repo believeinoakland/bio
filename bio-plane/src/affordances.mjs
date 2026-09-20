@@ -1828,6 +1828,17 @@ export const NON_ACTS = {
   expertiseconfirm: "administrator act on a declaration, class-gated",
   memberadd: "roster governance, bounded by SESSION_OPS.admin",
   memberset: "roster governance, bounded by SESSION_OPS.admin",
+  /* D-136. THE THREE ARRIVE HERE BECAUSE THEY ARRIVED IN `NEEDS`, and that is
+     the totality guard doing its job rather than a formality: giving them
+     session reach put them in the capability table, and every key there is an
+     ACT or a NAMED non-act. They are NON_ACTS for `memberadd`'s reason exactly —
+     their subject is a MEMBER and the roster, never a bundle, so there is no
+     strip beside an object for them to appear on. D-311 decided the seven roster
+     acts STAY non-acts; these three are the same argument and nothing about
+     making them reachable by a person changes what they act ON. */
+  membercaps: "roster governance — the subject is a member's capabilities, not a bundle (4.9)",
+  adminendorse: "section 4.7 governance — the subject is a proposed administrator, not a bundle",
+  adminremove: "section 4.7 governance — the subject is an administrator's standing, not a bundle",
   signeradd: "signer governance, bounded by SESSION_OPS.admin",
   signerset: "signer governance, bounded by SESSION_OPS.admin",
   governorconfig: "operator tuning of the per-host governor",

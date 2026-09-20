@@ -198,6 +198,44 @@ const DID_NOT_ARM = [
   /found 0 occurrence/i,
   /occurrence\(s\)/i,
 ];
+
+/* ==================================================================== M0-78
+   THE ARM THAT ARMED PERFECTLY AND MEASURED NOTHING — a shape every instrument
+   in this estate was blind to BY CONSTRUCTION, and the blindness is structural
+   rather than a missing spelling.
+
+   D-331's `preflight` counts an arm's own quote in the file that arm will
+   WRITE. That proves the ANCHOR IS LIVE. **It can never prove the FIXTURE
+   RUNS**, and those are different claims: an arm can patch exactly the site it
+   meant to, and the suite it then drives can die before evaluating a single
+   assertion. `caseproduction.control.mjs` arms (C) and (H) did precisely that —
+   `ALL 8 ANCHORS LIVE`, and both arms ending in an uncaught throw inside
+   `caseceremony.mjs`, with their declared `mustFail` assertions never reached.
+   The census scored them by the ONLY evidence it had, and had none.
+
+   WHY THAT IS THE WORST OF THE THREE SHAPES THIS FILE ALREADY KNOWS. A stale
+   anchor is loud: something says `occurs 0 times`. A decayed tally is
+   arithmetic. But a fixture-level throw produces a driver that ran, patched a
+   live site, restored cleanly, and reported — and the only trace is the ABSENCE
+   of a tally. **An absence is exactly what a phrase table cannot match**, which
+   is why this is a second union and not four more rows in the one above.
+
+   WHAT A THROWN FIXTURE IS: an arm whose measurement does not exist. Reported as
+   a DEAD ARM rather than passed, because that is what it is — the arm did not
+   arm anything that could be observed. Note the suite's own `-1` convention is
+   read here, which is `control-register.mjs`'s null-never-zero rule arriving one
+   level out: a suite that threw reports `-1 pass, -1 fail`, never `0, 0`, and an
+   instrument that folded those two together would score a dead arm as a clean
+   one. The driver `caseproduction.control.mjs` already prints all three of these
+   phrases; they are matched here so that EVERY driver reporting the same fact in
+   the same words is read, rather than this one being special-cased. */
+const FIXTURE_THREW = [
+  /NO TALLY\b/i,
+  /produced no tally at all/i,
+  /\bthe suite THREW\b/i,
+  /-1 pass, -1 fail/,
+  /\bassertions unknown\b/i,
+];
 /* A driver's own PROSE describes these failures too — every one of these files
    is half commentary. A phrase hit inside a line the driver merely PRINTED as
    documentation is not a finding, so hits are taken from the RUN's stdout, and
@@ -315,6 +353,16 @@ function runDriver(d) {
   const rawHits = lines.filter((l) => DID_NOT_ARM.some((re) => re.test(l)));
   const prose = rawHits.filter((l) => isResultLine(l) || onlyInBackticks(l) || reportsZero(l) || hyphenatedNoun(l));
   const stale = rawHits.filter((l) => !prose.includes(l));
+  /* M0-78 — the same two exclusions the union above earns, for the same reasons:
+     a driver's own PROSE about thrown fixtures is not a thrown fixture, and a
+     phrase inside backticks is a rule being named rather than a verdict. The
+     `-1 pass, -1 fail` row is deliberately NOT excluded by the backtick rule:
+     it is a measurement, and it is printed as one. */
+  const threwRaw = lines.filter((l) => FIXTURE_THREW.some((re) => re.test(l)));
+  const threw = threwRaw.filter((l) => {
+    const bare = l.replace(/`[^`]*`/g, "");
+    return /-1 pass, -1 fail/.test(l) || FIXTURE_THREW.some((re) => re.test(bare));
+  });
   const wrong = lines.filter((l) => NOT_AS_DECLARED.some((re) => re.test(l)));
 
   /* A tally that cannot be read is reported as unknown, never as zero. */
@@ -338,6 +386,16 @@ function runDriver(d) {
   if (r.error && r.error.code === "ETIMEDOUT") verdict = "TIMEOUT";
   else if (r.error) verdict = "SPAWN-ERROR";
   else if (stale.length) verdict = "DID-NOT-ARM";
+  /* M0-78: A THROWN FIXTURE IS A DEAD ARM AND IS RANKED WITH THE STALE ANCHORS,
+     ABOVE the exit-status test. That order is the whole fix. Put below it, a
+     driver that exits 0 while one of its arms measured nothing reads ALL-ARMED —
+     which is exactly how arms (C) and (H) passed this census, and a census that
+     grades an unmeasured arm as armed is the defect it exists to catch, one
+     level up. It is a SEPARATE verdict from DID-NOT-ARM rather than folded into
+     it, because the two need different repairs: a stale anchor is re-anchored,
+     a thrown fixture is repaired in the SUITE. Collapsing them would point the
+     next reader at the wrong file. */
+  else if (threw.length) verdict = "FIXTURE-THREW";
   else if (r.status === 0) verdict = "ALL-ARMED";
   else verdict = "UNCLASSIFIED";   // non-zero exit, no recognised stale phrase
 
@@ -362,7 +420,7 @@ function runDriver(d) {
   const tallyOk = completed ? tallyHonoured(declared, arms) : null;
 
   return { ...d, ms, status: r.status, signal: r.signal, verdict, arms, leftDirty, dirtyNow,
-           armLines, preflightLines, declared, tallyOk,
+           armLines, preflightLines, declared, tallyOk, threw,
            stale, prose, wrong, out, err: r.error ? String(r.error.message) : null };
 }
 
@@ -457,6 +515,24 @@ if (!staleDrivers.length) console.log(`  none: no driver reported an unarmed arm
 for (const r of staleDrivers) {
   console.log(`\n  ${r.rel}  (exit ${r.status})`);
   for (const l of r.stale) console.log(`      ${l.trim()}`);
+}
+
+/* ==================================================================== M0-78
+   THE ARM THAT ARMED AND MEASURED NOTHING. Reported in its own block, ABOVE the
+   prose hits and beside the stale anchors, because it is a DEAD ARM by a
+   different mechanism and wants a different repair: a stale anchor is
+   re-anchored in the DRIVER, a thrown fixture is repaired in the SUITE. */
+const threwDrivers = results.filter((r) => r.verdict === "FIXTURE-THREW");
+console.log(`\n${"-".repeat(78)}\nFIXTURE THREW — THE ARM ARMED AND MEASURED NOTHING (M0-78)`);
+console.log(`An arm here patched a LIVE anchor and then drove a suite that died before evaluating`);
+console.log(`a single assertion, so its declared \`mustFail\` was never reached. D-331's preflight`);
+console.log(`cannot see this BY CONSTRUCTION: it proves the ANCHOR is live, never that the FIXTURE`);
+console.log(`runs. The only trace is an ABSENT tally, which no phrase table can match, so the`);
+console.log(`suite's own \`-1\` (never 0) is what is read. Counted as a DEAD ARM, never passed.`);
+if (!threwDrivers.length) console.log(`  none: every arm this census ran produced a tally to be judged on.`);
+for (const r of threwDrivers) {
+  console.log(`\n  ${r.rel}  (exit ${r.status})`);
+  for (const l of r.threw) console.log(`      ${l.trim()}`);
 }
 
 const proseHits = results.filter((r) => r.prose && r.prose.length);
@@ -555,6 +631,7 @@ console.log(`  drivers found        : ${all.length}  (${conv.length} by conventi
 console.log(`  drivers RUN          : ${results.length}`);
 console.log(`  arms announced       : ${armsTotal}  (over ${results.length - unknownArms.length} drivers whose announcements this matcher reads; ${unknownArms.length} unreadable)`);
 console.log(`  drivers with a STALE arm : ${staleDrivers.length}`);
+console.log(`  drivers whose FIXTURE THREW : ${threwDrivers.length}  (M0-78 — an armed anchor that measured nothing)`);
 console.log(`  declared tallies read : ${results.filter((r) => r.declared !== null).length} of ${results.length}  (the rest report UNKNOWN, never zero)`);
 console.log(`  tally NOT AS DECLARED : ${tallyWrong.length}   ·   tally unknown on one side: ${tallyBlind.length}`);
 console.log(`  anchor preflights     : ${preflighted.length} driver(s) reported their whole anchor set before arming`);
@@ -568,4 +645,9 @@ console.log(`\nsummary written to ${SUMMARY}`);
    so it carries the same exit. An UNKNOWN on either side does NOT, because an
    unreadable declaration is a gap in this instrument and not a defect in the
    driver, and gating on it would make the reach figure a punishment. */
-process.exit(staleDrivers.length || tallyWrong.length ? 1 : 0);
+/* EXTENDED 2026-09-19 (M0-78): a thrown fixture carries the same exit. It is an
+   arm that produced no measurement, which is the same failure as an arm that
+   never armed — and the whole reason this row existed is that two such arms sat
+   on a green `main` being counted as coverage. A dead arm that exits 0 is the
+   defect, not the report of it. */
+process.exit(staleDrivers.length || tallyWrong.length || threwDrivers.length ? 1 : 0);

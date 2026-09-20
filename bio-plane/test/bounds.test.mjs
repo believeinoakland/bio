@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: RAN 2026-09-19 by the M0-78/D-414/D-433 worker, driver `test/nc-instr-cluster.mjs`, SEVEN ARMS PLUS A BASELINE, each armed ALONE with every other defence held open, every restore verified by sha256 AND by `cmp` against a uniquely-named per-arm pristine copy with byte counts printed and floored. ALL SEVEN AS DECLARED. BASELINE ROW FIRST (arm 7): derivation-bounds 72/0 · bounds 173/0 · witness 26/0 · DEC-49 guard exit 0 (reach 338, R3 fed 70, observed-only 4). (1) D-414 reverted in ONE walk only (derivation-bounds) so the five copies disagree: derivation-bounds 71/1 failing at CENSUS IS A CEILING with the figure back at 109, and bounds 172/1 failing at D-414 PARITY — the parity arm is what catches a liar who fixes one copy of five. (2) the SHORTER spelling `\*?\s*` in one walk, which also lets `\s*` eat a third space of indent and match at any depth: derivation-bounds 48/24, the widening measured rather than argued. (3) M0-78 reverted so a ratify-stage refusal THROWS again: the census reports FIXTURE-THREW and exits 1, where the pre-M0-78 census over the same tree printed UNCLASSIFIED, `8 anchor(s), 0 NOT LIVE`, and EXITED 0 — measured with both files reverted to HEAD, not inferred. (4) arm (H)'s registration deleted from the driver, which is how a liar passes M0-78: witness 25/1 failing at A8 by name. (5) a planted UI suite that only ASSERTS a code: reach 338 unmoved and R3 fed 70 unmoved, the code printed in the OBSERVED half. (6) the same code HANDED by a mock in the same planted suite: reach 338 -> 339 and R3 fed 70 -> 71, the over-strictness direction. */
 /* NEGATIVE CONTROL (M0-18, run 2026-08-09, worktree agent-a62aec7acd493144e): the
    provenance floor added to this file is armed by `test/provenance-floor.control.mjs`
    — COMMITTED, so it re-runs in one step. 58 of 58 checks as declared over eight arms,
@@ -159,7 +160,14 @@ const decomment = (text) => text.split("\n").map(((state) => (L) => {
    a segment either. */
 const segments = (code) => {
   const lines = code.split("\n");
-  const sig = /^ {2}(?:static\s+|async\s+)?(#?[A-Za-z_$][\w$]*)\s*\(/;
+  /* D-414: `(?:\*\s*)?` so a GENERATOR method opens its own segment. Without it `*eachImage`
+     was invisible and its body was credited to the method above it (`danglingRefs`), which
+     then read as doing work it does not do. The optional group carries its own `\s*`
+     deliberately: a bare `\*?\s*` would also let `\s*` absorb a THIRD space of indent and
+     match at ANY depth, a second and silent widening. This regex is IDENTICAL in all five
+     walks sharing this segmenter; the D-414 PARITY arms in `bounds.test.mjs` read all five
+     off disk and assert it. */
+  const sig = /^ {2}(?:static\s+|async\s+)?(?:\*\s*)?(#?[A-Za-z_$][\w$]*)\s*\(/;
   const heads = [];
   for (let i = 0; i < lines.length; i++) { const m = sig.exec(lines[i]); if (m) heads.push([i, m[1]]); }
   const out = new Map();
@@ -232,6 +240,71 @@ t("WALK GUARD: a segment is bounded by the NEXT method and does not run into it"
   [/const cap = Math\.max\(1, Math\.min\(1000/.test(segments(CODE).get("taskList")),
    /taskDrain\(\{/.test(segments(CODE).get("taskList"))], [true, false]);
 t("WALK GUARD: the roster is non-trivial", METHODS.size >= 10, true);
+
+/* ===== D-414, 2026-09-19 — THE SEGMENTER IS COPIED INTO FIVE WALKS, SO ITS PARITY IS AN ARM.
+ *
+ * This file is the segmenter's home; four siblings say so in their own comments and carry a
+ * BYTE COPY of it. A copy is how a fix lands in one place and the other four go on reporting the
+ * old answer, which is exactly how D-414 passed unnoticed: the missing `(?:\*\s*)?` was missing
+ * FIVE TIMES, and any one of the five could have been repaired alone while the estate still
+ * mis-attributed generator bodies in the other four. **How a liar passes D-414 is fixing one
+ * copy**, so the copies are read OFF DISK here and compared to each other.
+ *
+ * It is a parity arm and deliberately not a "the regex is <this string>" pin: pinning the text
+ * here would make this file a sixth copy of the thing it is checking, and the next person to
+ * change the segmenter correctly would have to change it in six places instead of five. What is
+ * asserted is that the five AGREE, that there are still exactly five, and — below — what the
+ * agreed regex DOES, because five identical copies of a wrong regex agree perfectly. */
+const SEGMENTER_WALKS = ["airuns", "bounds", "derivation-bounds", "meaning-bounds", "versionchain"];
+const SIG_LINE = /^ {2}const sig = (\/.*\/);$/m;
+const SIG_COPIES = SEGMENTER_WALKS.map((n) => {
+  const src = readFileSync(new URL(`./${n}.test.mjs`, import.meta.url), "utf8");
+  const all = [...src.matchAll(new RegExp(SIG_LINE.source, "gm"))];
+  return { name: n, count: all.length, src: all.length === 1 ? all[0][1] : null };
+});
+console.log(`\n--- D-414: the shared segmenter, read off disk in ${SIG_COPIES.length} walks ---`);
+for (const c of SIG_COPIES) console.log(`  ${c.name.padEnd(20)} ${c.count} copy/copies  ${c.src ?? "UNREADABLE"}`);
+
+t("D-414 PARITY: every walk that carries the shared segmenter declares EXACTLY ONE signature "
++ "regex, and the reader found it in all of them — a walk this arm cannot read is reported by "
++ "name, never scored as agreeing",
+  SIG_COPIES.filter((c) => c.count !== 1).map((c) => [c.name, c.count]), []);
+t("D-414 PARITY: and the five are BYTE-IDENTICAL. Fixing one copy and leaving four is how this "
++ "defect passed for as long as it did, so the divergent ones are named here rather than counted",
+  [...new Set(SIG_COPIES.map((c) => c.src))].length, 1);
+t("D-414 PARITY: the population is still FIVE — a sixth walk copying the segmenter must join this "
++ "arm rather than inherit the old spelling silently, and a walk disappearing must be noticed too",
+  SIG_COPIES.length, 5);
+
+/* WHAT THE AGREED REGEX DOES, driven rather than described — five identical copies of a wrong
+   regex agree perfectly, so parity alone is not the property. The last arm is the one that
+   matters most and is the reason the fix is `(?:\*\s*)?` and not the shorter `\*?\s*`: the short
+   spelling lets `\s*` absorb a THIRD space of indent, so the walk would silently start matching
+   nested object literals and arrow bodies at any depth — a second widening, invisible because it
+   only ever ADDS segments and this file's guards ask whether the count is plausible. */
+const SIG_RE = new RegExp(SIG_COPIES[0].src.slice(1, -1));
+t("D-414 BEHAVIOUR: the agreed regex opens a segment for a GENERATOR method, which is the whole "
++ "of this row — `*eachImage` was invisible and its body was credited to `danglingRefs` above it",
+  ["  *eachImage() {", "  * spaced() {", "  async *both() {", "  static *stat() {"]
+    .map((L) => SIG_RE.exec(L)?.[1] ?? null),
+  ["eachImage", "spaced", "both", "stat"]);
+t("D-414 BEHAVIOUR: and it still reads every shape it read BEFORE — plain, async, static and "
++ "#private. A fix that traded an old match for the new one would be a regression this parity "
++ "arm could not see, because all five copies would trade it together",
+/* THIS ARM CAME BACK RED ON ITS FIRST RUN AND THE DEFECT WAS THE ARM, NOT THE SUBJECT — recorded
+   rather than smoothed. It expected `hidden` for `  #hidden(` and got `#hidden`. The capture is
+   `(#?[A-Za-z_$][\w$]*)`, so the `#` sigil is INSIDE the group and a private method's segment is
+   keyed WITH it. That is correct and load-bearing: the census roster this estate prints names
+   `#rows`, `#one`, `#frontierContent` and forty more with their sigil, and `D384_STAYS` /
+   `D384_LEAVES` look members up by exactly those keys. An arm that "fixed" the capture to strip
+   the `#` would have silently emptied every by-name pin in four walks. */
+  ["  plain(", "  async later(", "  static made(", "  #hidden("]
+    .map((L) => SIG_RE.exec(L)?.[1] ?? null),
+  ["plain", "later", "made", "#hidden"]);
+t("D-414 OVER-STRICTNESS: the indent is still EXACTLY two spaces. This is the arm against the "
++ "shorter `\\*?\\s*` spelling, which matches at ANY depth and would enrol nested literals as "
++ "methods — it only ever ADDS segments, so no count guard in this estate would have caught it",
+  ["   threeSpaces(", "      deepNested(", "\ttabbed("].map((L) => SIG_RE.test(L)), [false, false, false]);
 t("WALK GUARD: and it reaches ops through the dispatch", OPS.size >= 8, true);
 
 /* THE TWO OPS THE ITEM NAMED ARE ON THE PLANE'S OWN ROSTER — found through the
