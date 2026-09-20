@@ -193,14 +193,38 @@ export function summarise(rows) {
                      protected: by("PROTECTED").length, total: rows.length } };
 }
 
-/* CLI: sessions as JSON on stdin (the array `list_sessions` returns). Prints a verdict per row
-   and a summary. The caller ARCHIVES what is RETIRABLE and reports what is on HOLD. */
+/* A VERDICT IS BOUNDED BY ITS INPUT, AND UNTIL 2026-09-20 THIS TOOL DID NOT SAY SO.
+ *
+ * `total` counts the rows it was HANDED, and the summary read `N judged` as though N were the
+ * estate. It is not: this tool reads a listing on stdin and cannot see what the caller's listing
+ * left out. **MEASURED BY THE conduct-heartbeat ACROSS FOUR CONSECUTIVE RUNS, 2026-09-20**: the
+ * watchdog called this predicate with `list_sessions` fixed at limit 50 while the estate held 53
+ * sessions and grew ~3/hour from the heartbeat's own finished run-sessions. Each new row arrived
+ * at the TOP of the listing and pushed the oldest off the BOTTOM — and the bottom is exactly where
+ * D-288's stranded work lives. The true HOLD count was 15 and did not move; the REPORTED count
+ * fell 15 -> 14 -> 13 -> 12. **The number fell in the direction a reader reads as progress**, and
+ * three Ticker sessions holding commits on no remote went invisible on schedule.
+ *
+ * This is `CLAUDE.md` §5's rule from the inside — *when the answer is a count, ask what the count
+ * cannot see* — and the answer here is: everything the caller did not pass. So the tool now says
+ * that on every run, and says it LOUDLY when it can prove a gap:
+ *   - `--total N` lets a caller that knows the estate size declare it. N > judged is a REFUSAL to
+ *     read the verdict as estate-wide, naming the shortfall.
+ *   - With no `--total`, an input length equal to a common listing limit is a HINT and is labelled
+ *     one — it is evidence of truncation, never proof, and a tool that cannot tell them apart must
+ *     not pretend otherwise (the same discipline `plancheck`'s delegation-cohort arm states).
+ * The bound line prints even when nothing is wrong, because a caveat that appears only on bad runs
+ * trains a reader to skip it. */
+const LISTING_LIMITS = new Set([10, 20, 25, 40, 50, 100]);
+
 if (process.argv[1] && process.argv[1].endsWith("retirable.mjs")) {
   const chunks = [];
   for await (const c of process.stdin) chunks.push(c);
   const raw = chunks.join("").trim();
   if (!raw) { console.error("retirable: no session JSON on stdin"); process.exit(2); }
   const selfArg = process.argv.indexOf("--self");
+  const totalArg = process.argv.indexOf("--total");
+  const declaredTotal = totalArg > -1 ? Number(process.argv[totalArg + 1]) : null;
   const rows = classify(JSON.parse(raw), {
     selfId: selfArg > -1 ? process.argv[selfArg + 1] : null,
   });
@@ -211,6 +235,23 @@ if (process.argv[1] && process.argv[1].endsWith("retirable.mjs")) {
     console.log(`\n${v} — ${list.length}`);
     for (const r of list) console.log(`  ${r.title} [${r.sessionId.slice(0, 12)}] — ${r.reason}`);
   }
+  const judged = s.counts.total;
   console.log(`\nretirable: ${s.counts.retirable} retirable, ${s.counts.hold} HOLDING UNSAVED WORK, `
-    + `${s.counts.protected} protected, ${s.counts.total} judged`);
+    + `${s.counts.protected} protected, ${judged} judged`);
+
+  if (Number.isFinite(declaredTotal) && declaredTotal > judged) {
+    const missed = declaredTotal - judged;
+    console.log(`\nNOT JUDGED — ${missed} of ${declaredTotal} session(s) were NOT PASSED TO THIS TOOL.`);
+    console.log(`  This verdict covers ${judged} and says NOTHING about the other ${missed}. A row`);
+    console.log(`  holding unsaved work is invisible here if the caller's listing left it out, and a`);
+    console.log(`  truncated listing drops its OLDEST rows first — which is where stranded work lives.`);
+    console.log(`  Re-run with an exhaustive listing before treating any count above as estate-wide.`);
+  } else if (declaredTotal === null && LISTING_LIMITS.has(judged)) {
+    console.log(`\nHINT, NOT A FINDING — the input was exactly ${judged} rows, a common listing limit.`);
+    console.log(`  That is consistent with a TRUNCATED listing and equally consistent with an estate`);
+    console.log(`  of exactly ${judged}; this tool cannot tell them apart and does not guess. Pass`);
+    console.log(`  --total <estate size> to make the difference checkable.`);
+  } else {
+    console.log(`  BOUND: this verdict covers the ${judged} session(s) passed in and no others.`);
+  }
 }

@@ -17433,3 +17433,49 @@ NAMED: rows 4 and 5 mean SCHEDULER #3's two published commits (`e896e749`, `8984
 assertions) are on a branch and not on `main`, so the rows they carry are written and NOT PLACED.** No lane may push
 them — that would launder a refusal belonging to another session's user (`CLAUDE.md` §4, and BOB #18 declined it
 explicitly while holding a working `HEAD:main` push). It is the operator's act or SCHEDULER's own later retry.
+
+## M-77 · 2026-09-20 · A WORKLIST WENT BLIND ON A TRUNCATED LISTING, AND THE NUMBER FELL IN THE DIRECTION A READER READS AS PROGRESS (BOB #18, from conduct-heartbeat's measurement)
+
+**Instrument:** the `conduct-heartbeat` scheduled task, which calls `tools/retirable.mjs` with a `list_sessions`
+listing each firing and prints its counts. Four consecutive runs on 2026-09-20 carried the figures below; BOB #18
+read them from the heartbeat's own transcript and re-drove the predicate itself before acting.
+
+**THE FIGURES.** The heartbeat passed a listing fixed at **limit 50** while the estate held **53** sessions and grew
+by roughly **3 per hour** — from the heartbeat's own finished run-sessions. Each new row arrives at the TOP of a
+listing sorted by recency and pushes the oldest off the BOTTOM.
+
+| across four runs | reported | true |
+| --- | --- | --- |
+| HOLD (sessions holding UNSAVED work, D-288's loss shape) | 15 → 14 → 13 → 12 | **15, unmoved** |
+| estate row count | 51 → 52 → 53 | — |
+
+Three sessions went invisible on schedule (`Ticker Skill v9.4`, `v9.2`, `v9.1`), each holding commits on no remote
+ref. At three firings an hour the whole 15-row HOLD class disappears within about five hours.
+
+**WHY IT IS THE DANGEROUS DIRECTION.** The rows that fall off a recency-sorted listing are the OLDEST, and the oldest
+is exactly where stranded work accumulates — so the count degrades *precisely* over the population the tool exists to
+protect. And it degrades DOWNWARD: fewer-at-risk and fewer-visible are indistinguishable in the output, and the
+number a reader sees is the one they read as progress. The heartbeat named this as the fourth sighting of that class
+inside its own task.
+
+**THE DEFECT, stated as a property rather than an incident:** `retirable.mjs` reads a listing on stdin, counts what
+it was HANDED, and printed `N judged` as though N were the estate. **It cannot see what the caller left out, and
+until this landing it did not say so.** That is `CLAUDE.md` §5 from the inside — *when the answer is a count, ask what
+the count cannot see* — and BOB #18 had itself reported "0 HOLDING UNSAVED WORK" from hand-built 11-row inputs across
+four sweeps without ever stating that bound.
+
+**WHAT LANDED (`tools/retirable.mjs`, this commit).** The verdict now names its own bound on EVERY run, not only bad
+ones — a caveat that appears only when something is wrong trains a reader to skip it, which is how four heartbeat runs
+went unread. `--total N` lets a caller that knows the estate size declare it, and `N > judged` prints a refusal naming
+the shortfall and saying the verdict covers the rest NOT AT ALL. With no `--total`, an input length equal to a common
+listing limit raises a **HINT explicitly labelled not-a-finding**: it is evidence of truncation and never proof, and
+the tool says it cannot tell a truncated 50 from a real estate of 50 and does not guess.
+
+**DRIVEN:** `bio-plane/test/retirable.test.mjs` section 8, four arms driving the CLI as a SUBPROCESS — the defect and
+the fix both live in the CLI block, which the other seven sections never execute. 60 pass / 0 fail, 8/8 sections.
+**NEGATIVE CONTROL:** two arms, each disarming one branch alone, failing 4 and 2 NAMED assertions respectively; the
+subject restored by `cp` (never `git checkout`, which would have discarded the fix) and verified by sha256
+`8c391cac…d46a3975`. Recorded on the suite's own `NEGATIVE CONTROL:` line.
+
+**WHAT THIS DOES NOT FIX, stated so nobody reads it as closed:** the heartbeat's own limit of 50 lives in its SKILL
+outside this repository and is the operator's; this landing makes a truncated call *visible* rather than impossible.
