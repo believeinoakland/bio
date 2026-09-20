@@ -265,3 +265,11 @@ and both want to ship.
    figure, and compare against the previous cut's numbers rather than against "green".** If the pass count does NOT
    rise after adding a release, the row is not being exercised — check the fixture map (`ARMED: every release in the
    list is a fixture`) before trusting the cut.
+20. **WRITE THE CLAIM BEFORE THE FINAL `decided.mjs` REGENERATION — a `CLAIM` block is INDEXED PROSE.** A claim's
+   `why:` line states a ruling, so `decided.mjs` picks it up; appending the claim AFTER regenerating leaves
+   `docs/DECIDED.md` STALE. That is not a cosmetic failure: `strandedwork.test.mjs` asserts *"…and `plancheck --local`
+   exits 0"*, `--local` skips the publication checks but still sees STALE, and **the battery goes RED on a tree whose
+   only defect is a generated index** (0.68.0's first gate, 263/264, cost a full second run). **And it cannot be
+   repaired by regenerating and re-running only that suite:** regenerating changes the tree, so the first run's figures
+   describe a tree that no longer exists, and the tree that gets TAGGED must be the tree that was MEASURED. Order:
+   bump → `RELEASES` row → **claim → `node tools/decided.mjs`** → build → sign → controls → embed → gate.

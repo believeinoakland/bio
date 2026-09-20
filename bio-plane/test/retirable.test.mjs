@@ -27,6 +27,20 @@
  * predicate on the real estate, not by reading it. It is the wrong-unit class — the fourth
  * instance on 2026-09-17.
  *
+ * NEGATIVE CONTROL for SECTION 8 (RUN 2026-09-20 by BOB #18, baseline 60 pass / 0 fail, 8/8
+ * sections): two arms, each armed ALONE against `tools/retirable.mjs` copied aside and restored by
+ * `cp`, NOT by `git checkout` (CLAUDE.md §7 — checkout restores HEAD and would have discarded the
+ * fix itself), with the restore verified by sha256 against the pre-arm digest
+ * 8c391cac3d8bfe9c76abae89bafccb92b57d34661f82d55f1090f53fd46a3975.
+ *   (B1) the `--total` gap branch made unreachable -> 4 NAMED assertions fail (56 pass / 4 fail):
+ *        *--total greater than judged names the shortfall*, *says the verdict covers the rest NOT
+ *        AT ALL*, *names WHICH rows a truncation drops first*, *suppresses the plain BOUND line*.
+ *   (B2) the HINT branch made unreachable -> 2 NAMED assertions fail (58 pass / 2 fail): *a round
+ *        input length raises a HINT*, *refuses to guess between truncation and a real estate of 50*.
+ *   BOTH ARMS BREAK ONLY THE BRANCH THEY NAME — a one-token edit to a single condition, so no
+ *   second variable moves and the other sections stay green in each run, which is what makes the
+ *   two failures attributable rather than merely simultaneous.
+ *
  * NEGATIVE CONTROL: (all eight RUN 2026-09-17 by BOB #13, exit 0, 46 pass / 0 fail, both
  * baselines green) `node bio-plane/test/retirable.control.mjs` from the repo root — eight arms,
  * each armed ALONE against a pristine copy in `.d402-harness/`, every restore verified by
@@ -68,7 +82,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 7;
+const SECTIONS = 8;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -299,6 +313,52 @@ section("7 — THE SUMMARY SEPARATES 'HOLDING UNSAVED WORK' FROM 'NOT RETIRABLE'
   t("HOLD is its own list and not folded into protected", s.hold.map((r) => r.sessionId), ["h"]);
   t("every row carries a non-empty reason", rows.every((r) => (r.reason || "").length > 10), true);
   t("every row carries its idle age as a number", rows.every((r) => typeof r.idleHours === "number"), true);
+}
+
+/* SECTION 8 — THE VERDICT STATES ITS OWN BOUND. Added 2026-09-20 by BOB #18 after the
+   conduct-heartbeat measured this predicate going blind across four consecutive runs: called with
+   a listing fixed at 50 while the estate held 53 and grew ~3/hour, it reported HOLD falling
+   15 -> 14 -> 13 -> 12 while the true count never moved. Rows were pushed off the BOTTOM of the
+   listing, which is where stranded work lives, and the number fell in the direction a reader reads
+   as progress. Every arm here drives the CLI as a SUBPROCESS, because the defect and the fix are
+   both in the CLI block and the rest of this suite imports the module's functions instead —
+   a suite that never runs the entry point cannot see a bug that lives there. */
+{
+  section("8 · the verdict names what it did not judge");
+  const CLI = join(REPO, "tools/retirable.mjs");
+  const mk = (n) => JSON.stringify(Array.from({ length: n }, (_, i) => ({
+    sessionId: `local_s${String(i).padStart(4, "0")}-0000-0000-0000-000000000000`,
+    title: `s${i}`, cwd: "/tmp", isArchived: false, isRunning: false,
+    lastActivityAt: "2026-09-01T00:00:00.000Z",
+  })));
+  const run = (rows, ...extra) =>
+    execFileSync("node", [CLI, "--self", "local_none", ...extra],
+      { input: mk(rows), encoding: "utf8" });
+
+  /* An ordinary run says the bound even though nothing is wrong: a caveat that appears only on
+     bad runs trains the reader to skip it, which is how the heartbeat's own reader missed four. */
+  const plain = run(7);
+  t("a plain run prints the BOUND line", /BOUND: this verdict covers the 7 session\(s\)/.test(plain), true);
+  t("a plain run does not cry truncation", /NOT JUDGED|HINT, NOT A FINDING/.test(plain), false);
+
+  /* --total is the only PROOF of a gap available to this tool, and it names the shortfall. */
+  const gap = run(7, "--total", "53");
+  t("--total greater than judged names the shortfall", /NOT JUDGED — 46 of 53/.test(gap), true);
+  t("the gap arm says the verdict covers the rest NOT AT ALL", /says NOTHING about the other 46/.test(gap), true);
+  t("the gap arm names WHICH rows a truncation drops first", /OLDEST rows first/.test(gap), true);
+  t("the gap arm suppresses the plain BOUND line", /BOUND: this verdict covers/.test(gap), false);
+
+  /* A round count is EVIDENCE of truncation and never proof; the tool must not collapse the two. */
+  const hint = run(50);
+  t("a round input length raises a HINT", /HINT, NOT A FINDING — the input was exactly 50 rows/.test(hint), true);
+  t("the hint refuses to guess between truncation and a real estate of 50",
+    /cannot tell them apart and does not guess/.test(hint), true);
+  t("a hint is not reported as a finding", /NOT JUDGED —/.test(hint), false);
+
+  /* --total EQUAL to judged is the caller asserting completeness: no gap, no hint, bound stated. */
+  const exact = run(50, "--total", "50");
+  t("--total equal to judged clears the hint", /HINT, NOT A FINDING/.test(exact), false);
+  t("--total equal to judged still prints the bound", /BOUND: this verdict covers the 50/.test(exact), true);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);
