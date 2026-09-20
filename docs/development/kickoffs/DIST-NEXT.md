@@ -1,41 +1,46 @@
-# DIST — resume here. Rewritten 2026-09-19 by DIST #2, the standing lane in the NEW Claude Code account, after cutting, deploying, live-verifying and POINTING 0.66.0 and then 0.67.0.
+# DIST — resume here. Rewritten 2026-09-19 by DIST #2, the standing lane in the NEW Claude Code account, after cutting, deploying, live-verifying and POINTING 0.66.0, 0.67.0 and 0.68.0.
 
 Read `CLAUDE.md`, then `kickoffs/DIST.md` IN FULL. Its **WHEN DIST CUTS**, the **`latest` pointer mechanism** and the
 **17 LESSONS** are the process; this file is only the state. Everything below was MEASURED 2026-09-19. Re-measure
 before acting on any of it — a figure is about the tree and the moment it was taken on.
 
-## 0.67.0 IS COMPLETE. All twelve gate steps are done and nothing is owed on it.
+## 0.68.0 IS COMPLETE. All twelve gate steps are done and nothing is owed on it.
 
 Cut, signed, tagged, deployed, live-verified, pointer advanced, installer re-cut and read back. `main`'s `release/`
-reads **0.67.0** and every installer's `/update` now offers it. 0.66.0 landed the same day and is history.
+reads **0.68.0** and every installer's `/update` now offers it. 0.66.0 and 0.67.0 landed 2026-09-19.
 
-**0.67.0 carries REC-151** (`cd4b5375`, integrated `5b717355`, IC-164): `op=allocid` refuses PROJ, CASE, DRAFT, RVG
-and TASK with `ALLOCID_PREFIX_GATED` (C-59.5) allocating nothing, and case/draft/grant/task ids mint opaque through
-one `Store#mintOpaqueId` — closing the §7.9 disclosure that a sequential id COUNTED objects the caller cannot see.
+**0.68.0 was the first BATCH** (0.66.0/0.67.0 were CUT NOWs). It carries **IC-55** (D-270+UI-72: the session gate
+answered three facts with one sentence, false for two — `SESSION_ROLE_CANNOT_REACH_OP` C-38.7 computed from
+`SESSION_OPS`, `SESSION_ROUTE_NOT_RECORDED` C-38.8, `REQUIRED_ARGUMENT_MISSING` C-61.1), **IC-166** (REC-135) and
+**IC-167** (REC-146). **CUT NOW was tested and declined:** no commit named a security/disclosure closing, and
+"authority-adjacent" is not the predicate — nobody could READ or DO anything new.
 
-- Tags `v0.66.0` (commit `75069c81`) and `v0.67.0` (commit `52725719`) are both on the mainline. **`rev-parse <tag>`
+- Tags `v0.66.0` (`75069c81`), `v0.67.0` (`52725719`) and `v0.68.0` (`49c4b400`) are all on the mainline. **`rev-parse <tag>`
   answers the TAG OBJECT, `^{commit}` answers the commit** — that is how a wrong sha reaches a table.
-- **The commit whose `release/` holds 0.67.0, for the NEXT cut's upgrade arm: `52725719`.**
+- **The commit whose `release/` holds 0.68.0, for the NEXT cut's upgrade arm: `49c4b400`.**
 
 ## What is LIVE (measured 2026-09-19 after the deploy)
 
 | worker | serves | active version id = ROLLBACK TARGET |
 | --- | --- | --- |
-| `biosmoke7` (the plane) | 0.67.0, bytes = signed `5697d5d4…` | `73668b4a-3ae2-4a3c-841e-978f0cc5ff24` |
-| `agent-worker` | 0.67.0 (a LABEL — see UNDETERMINED) | `56bb8e1c-518d-4d1b-a315-7436852f7557` |
-| `pdf-worker` | 0.67.0 (a LABEL) | `2066b4a3-3b5c-4d38-a3d6-8721f85a6c27` |
-| `ocr-worker` | 0.67.0 (a LABEL) | `981acf8d-5d82-46d9-93f8-4a5b2aa21048` |
-| `civicos` (UI) | build `21bcfa6383eb` — UNMOVED, correctly | `405365a3-7874-4ac2-99d8-a48a970b98d1` |
-| `newgroup` (installer) | embeds signed **0.67.0**, bindings `[]` | `b9a4c243-7d66-4b6c-805b-a0153a8acc14` |
+| `biosmoke7` (the plane) | 0.68.0, bytes = signed `6442d818…` | `cff3bc9c-23ce-47b3-b8a5-87f194e91fd0` |
+| `agent-worker` | 0.68.0 (a LABEL — see UNDETERMINED) | `2c25bcf9-26a4-4c73-aef8-a27ac062b143` |
+| `pdf-worker` | 0.68.0 (a LABEL) | `95570e50-a934-4b0c-a8f0-4f3ded1b94bb` |
+| `ocr-worker` | 0.68.0 (a LABEL) | `57a282c9-ecb5-45be-afb3-41405a06d884` |
+| `civicos` (UI) | build `3916f88ae780` — **MOVED with 0.68.0** | `f0c23544-6dd9-4011-918c-86e35aa03257` |
+| `newgroup` (installer) | embeds signed **0.68.0**, bindings `[]` | `8536db1b-01cd-4caf-8531-34dd75352013` |
 
-- **The UI did not move, with evidence rather than a skip:** `civicos-ui/app.html` is byte-identical at `v0.65.0`,
-  `v0.66.0` and `v0.67.0`, and its sha256 begins `21bcfa6383eb` — which IS the live build id. The build id is the app.html hash, so
-  the serving surface is provably built from this app.html. Both ICs state `civicos` calls neither changed op.
+- **The UI MOVED with 0.68.0 and gate step 12 was live for the first time.** `app.html` was byte-identical at
+  v0.65.0/0.66.0/0.67.0, so step 12 was satisfied by inspection three times running — which is how a lane starts
+  skipping it. Build the worker from the TAG: `civicos-ui/worker.template.mjs` with `__APP_HTML_BASE64__` and
+  `__BUILD_ID__` (= app.html's sha256) injected, deployed by `civicos-ui/deploy-ui.mjs <asset>`. **The `/build` route
+  serves BUILD_ID, so `curl …/build` == app.html's sha at the tag is the check** — it read `3916f88ae780…` and matched.
+  Run the UI harness (`node civicos-ui/test/run.mjs`) in the gate whenever app.html moves.
 - **The installer was read back per lesson 8** and it is the one check that catches M-59's hazard: a substring search
   for the sha finds NOTHING (esbuild re-escapes the embed), and the literal is **SINGLE-quoted** — `var RELEASE_SOURCE =
   '…'`. Parse to the matching unescaped quote and let JS EVALUATE the literal (`new Function("return " + literal)`); a
   hand-rolled unescaper does not survive the SQL schema's own quoting. The evaluated value hashed
-  `5697d5d4…` = `RELEASE.json`'s sha256, and `bindings: []` is empty.
+  `6442d818…` = `RELEASE.json`'s sha256, and `bindings: []` is empty.
 
 ## UNDETERMINED, held open, nobody has looked — do not let a neighbouring green line convert it
 
@@ -58,29 +63,13 @@ label, not behaviour. The question itself stands open. Same shape as DS-3: absen
 
 ## What is OWED, in order
 
-1. **NEXT CUT adds 0.67.0 to the upgrade arm**: `["0.67.0", "52725719…"]` in `migrate-released.test.mjs`'s `RELEASES`
+1. **NEXT CUT adds 0.68.0 to the upgrade arm**: `["0.68.0", "49c4b400…"]` in `migrate-released.test.mjs`'s `RELEASES`
    — **NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store. **Re-run its control and compare against the
    SEQUENCE below, not against "green" — `DIST.md` lesson 19 says why a single figure cannot answer it.**
-   `alterafter`: **135/66 (declared baseline) -> 169/66 (0.66.0 cut) -> 186/66 (0.67.0 cut)**. `store.mjs` restored
-   sha256 MATCH every time.
-2. **A BATCH IS PENDING — 0.68.0, and it was DECLINED as a CUT NOW on purpose (DIST #2, 2026-09-19).** Shipped-path
-   diff `v0.67.0..origin/main` is five files — `bio-checks.mjs` +128, `affordances.mjs` +30, `index.mjs` +257,
-   **`store.mjs` +972**, **`civicos-ui/app.html` +201** — carrying THREE interface changes: **IC-55** (D-270/UI-72, the
-   session gate's one false sentence becomes three true ones), **IC-166** (REC-135) and **IC-167** (REC-146).
-   - **Why BATCH and not CUT NOW:** every commit subject and body over the shipped paths was searched and **none names
-     a security or disclosure closing**. CONDUCT argued IC-55 is "AUTHORITY-adjacent" and of the `CLAUDE.md` §2 class
-     (a false rationale suppresses its own bug report), which is true and still is not the predicate — nobody can READ
-     or DO anything they could not before; the same callers are refused the same verbs, only the sentence changes. **A
-     rule that fires on adjacency fires on everything.** Add the BATCH arm's own "at most once a day" bound, already
-     spent on 0.66.0 and 0.67.0, and REC-146 being explicitly 1 of 3.
-   - **`app.html` MOVES THIS TIME.** 0.66.0 and 0.67.0 both satisfied gate step 12 by inspection because app.html was
-     byte-identical across the tags. **It is not, now** — so the UI worker `civicos` must be BUILT FROM THE TAG and
-     deployed WITH the plane, per `CIVICOS_UI_STATE.md`'s "Build and deploy the dev worker" and the v12 build-id
-     injection. This is the first release of the three where that step is live rather than already-true.
-   - **The live probe must reach OUTSIDE IC-55's fifteen ops.** `dec49Decorate` attaches the catalogue translation to
-     every `ok:false` answer whose code has a row — **295 of the plane's 592 codes** (CONDUCT #7) — so the
-     member-visible change is wider than the ops IC-55 names, and a probe confined to them would understate it.
-   - Ask at the cut: are the floor keys CONDUCT flagged COLLIDED in `b34f2743` settled?
+   `alterafter`: **135/66 (baseline) -> 169/66 -> 186/66 -> 203/66**, one row per cut. `store.mjs` restored sha256
+   MATCH every time.
+2. **No cut is owed.** Apply **WHEN DIST CUTS** on each self-wake: CUT NOW for a security/disclosure closing in no
+   release, otherwise BATCH — `main` green and differing in a shipped path, at most once a day.
 
 3. **DS-3 (account cascade configuration) is DIST's and nobody has looked.** Its blocker discharged when DS-1 landed;
    SCHEDULER #2 recorded it UNDETERMINED rather than rounding it off. **FL-6 waits behind it.**
@@ -104,29 +93,29 @@ Claude Code **auto-mode classifier** — reasons seen: "[Production Deploy]", "[
 - **Never ask another lane to push or build for you.** FLEET #2 declined exactly that and was right: it is a permission
   decision about YOUR session being satisfied by a different one.
 
-## The 0.67.0 gate, for the next cut's comparison
+## The 0.68.0 gate, for the next cut's comparison
 
-261/261 suites green · 15977 assertions · EXCLUDES 2 untallied (`bundle`, `livefire` — D-413) · run 22124.0b73e8 ·
-tree hash identical before and after. newgroup wizard 131/0. `coverage --strict` clean. Signature 7/7: five controls
-refusing BY NAME (altered bytes, wrong namespace, wrong key, the PREVIOUS release's sig over these bytes, fleetSig over
-a member-dropped payload) beside two POSITIVE arms — `DIST.md` lesson 18 for why both halves are needed.
-(0.66.0's gate, for the trend: 260/260 · 15937.)
+264/264 suites green · 16114 assertions · EXCLUDES 2 untallied (`bundle`, `livefire` — D-413) · run 25359.ef83ce ·
+tree hash identical before and after. newgroup wizard 131/0. `coverage --strict` exit 0, REGISTER FLOOR exact at
+1525/1525 arms · 255/255 classified · 256/256 corpus. `civicos-ui`: all harnesses green. Signature 7/7 — five controls
+refusing BY NAME beside two POSITIVE arms (`DIST.md` lesson 18). Trend: 260/260 · 15937 (0.66.0) -> 261/261 · 15977
+(0.67.0) -> 264/264 · 16114.
 
-**Live closings — the FIGURES; the lesson is `DIST.md` lesson 18, read it there.** 0.67.0: **11/11** arms — five gated
-prefixes answer `ALLOCID_PREFIX_GATED` allocating nothing, and an UNGATED prefix (`INFO`) still allocates
-(`INFO-2026-0003`). 0.66.0: **7/7**, but only its REC-153 arms discriminated. `ALLOCID_PREFIX_GATED` occurs 0 times in
-0.66.0's bundle and `AI_RUN_NO_SUCH_CONTEXT` 0 times in 0.65.0's — those absences are what established which build
-answered, in each case.
+**Live arms 7/7, and WHICH ONE IS THE EVIDENCE — read `DIST.md` lesson 18 before trusting a probe.**
+`REQUIRED_ARGUMENT_MISSING`/C-61.1 on `capture`/`pdfstructure`/`monitor` DISCRIMINATES: 0 occurrences in 0.67.0's
+bundle. **The `translation`/`check` arms do NOT** — `dec49Decorate` appears 3× in 0.67.0's bundle, so the WIRE half
+predates this release and 0.67.0 would have answered them identically; only the SURFACE (UI-72) is new, and its
+evidence is the `/build` id matching app.html's sha. Stated because those arms read green and prove nothing about
+which build answered.
 
-`op=audit` after both cuts: 31 checked, 21 clean, 10 withErrors, all `C-18.9/chain-absent` — D-200's record state since
-2026-08-04, nothing either release added. **Read the `offenders` key.** A first parse here read a `findings` key that
-does not exist and printed "0 findings" — a false CLEAN from a wrong key, caught only by dumping the raw shape.
+`op=audit` after every cut: 31 checked, 21 clean, 10 withErrors, all `C-18.9/chain-absent` — D-200's record state since
+2026-08-04. **Read the `offenders` key.** A first parse read a `findings` key that does not exist and printed
+"0 findings" — a false CLEAN from a wrong key, caught only by dumping the raw shape.
 
 **`newgroup/` is NOT out of CONDUCT's scope** (CONDUCT #7): five battery suites reference it — `fleetbundles`,
 `hygiene`, `check-firing`, `publishedcase`, a probe. An installer re-cut forces an integrator's full re-run; say so.
 
-**Construct status:** `15.installer-bundle` ABSENT → BUILT at the 0.66.0 cut (the committed bundle now carries
-`fleetSig`). 0 drift; §3 re-rendered.
+**Construct status:** `15.installer-bundle` ABSENT → BUILT at the 0.66.0 cut. 0 drift; §3 re-rendered.
 
 ## Session state
 
