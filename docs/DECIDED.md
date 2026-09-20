@@ -1743,6 +1743,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/archive/CONDUCT-kickoff-2026-09-19.md:888`
 - A CLAIM ABOUT THE WORLD IS CORRECTED BY GOING TO THE ARTIFACT.  
   `docs/archive/CONDUCT-kickoff-2026-09-19.md:939`
+- A branch built on a SUPERSEDED version of another item carries that item's old paths; declare each. - **Re-making a merge:** each `merge --no-commit` as its own command, and check `MERGE_HEAD` exists before committing — a loop silently produced no merge commits and printed "nothing to commit". - **Flip in a…  
+  `docs/archive/CONDUCT-kickoff-2026-09-20.md:237`
 - **2026-08-10** — SUPERSEDED 2026-08-10, the same day, by Bob's instruction: "Remove all references to > Google Drive and App Script, as that's not part of the system architecture."** Move 1's > banners were the cheap repair; his instruction is the real one, and the banners came out > with the text they warned about.  
   `docs/archive/CORPUS-STUDY.md:186`
 - a `RULED` / `DECIDED` / `AMENDED` / `CORRECTED` / `OVERTURNED` marker.  
@@ -2407,8 +2409,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
-- A branch built on a SUPERSEDED version of another item carries that item's old paths; declare each. - **Re-making a merge:** each `merge --no-commit` as its own command, and check `MERGE_HEAD` exists before committing — a loop silently produced no merge commits and printed "nothing to commit". - **Flip in a…  
-  `docs/development/kickoffs/CONDUCT.md:231`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  

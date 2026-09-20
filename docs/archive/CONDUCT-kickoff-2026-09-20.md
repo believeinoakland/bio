@@ -1,3 +1,9 @@
+# CONDUCT kickoff, verbatim as of 2026-09-20 — the receipts behind the cut
+
+> Archived by CONDUCT #7 when adding the successor-start and heartbeat-alarm rules pushed the live file
+> over its 24,576 B reading budget. **Nothing here was deleted from the record** — the live
+> `kickoffs/CONDUCT.md` keeps every RULE; this file keeps the proofs and measurements behind them.
+
 # Session CONDUCT — orchestration and integration
 
 The standing lane that RUNS the work: it spawns workers into free slots, verifies what they return, and integrates it
@@ -26,14 +32,15 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
 ## Opening a CONDUCT session
 
 1. **Fetch, and confirm your handoff is on the remote** (`CONDUCT-NEXT.md` line 1 names you). Trust `origin/main` over it.
-2. **Integrate your predecessor's live workers first, then archive it** (D-401). Workers are SUBAGENTS of the session
-   that spawned them — archiving it stops them mid-item and their reports arrive THERE. Wait until each branch is on the
-   remote with a `released:` line (or `isRunning` reads false), integrate from the PUSHED branches, then re-check D-398's
-   three conditions AT THE MOMENT YOU ACT (`isRunning` false; worktree porcelain EMPTY; tip an ANCESTOR of `origin/main`),
-   `archive_session`, `git worktree remove`, and report the disk before and after, measured. **Then READ the `locked` line
-   of every agent worktree it spawned** — the archive does not always release them (D-398). A lock whose pid is not in
-   `ps` is stale: `unlock` only after re-verifying CLEAN and ANCESTOR. Never touch a live pid's lock, or another session's
-   Remote Control.
+2. **Integrate your predecessor's live workers first, then archive it** (D-401; `kickoffs/BOB.md` "Opening"). Workers are
+   SUBAGENTS of the session that spawned them — archiving it stops them mid-item, and their reports arrive THERE. Wait
+   until each worker's branch is on the remote with a `released:` claim line (or `isRunning` reads false), integrate from
+   the pushed branches, then re-check D-398's three conditions AT THE MOMENT YOU ACT (`isRunning` false; its worktree
+   porcelain EMPTY; its tip an ANCESTOR of `origin/main`), `archive_session`, `git worktree remove`, and report the disk
+   before and after, measured. **Then READ THE `locked` LINE of every agent worktree it spawned**: the archive does not
+   always release them (D-398 data point 4). A lock whose named pid is not in `ps` is stale — `git worktree unlock` only
+   after re-verifying CLEAN and ANCESTOR, then remove. Never touch a lock whose pid is alive, and never touch another
+   session's Remote Control.
 3. **Arm your self-wake** — `CronCreate`, cron `7,27,47 * * * *`, recurring, prompt: *if a worker is live or you are
    mid-integration, do nothing; otherwise fetch, read the cache on `origin/main`, integrate what finished, run the
    retirement sweep, and fill slots if the cache allows — or say in one line why not.* Verify by `CronList` and record the
@@ -96,10 +103,7 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
      **Run the suites where two items MEET**, not only the item's own — a fix verified only at its change site is not.
    - **Integrate by MERGING `origin/main` into an integration branch, never by rebasing it** — a rebase over a merge
      flattens it. Run `git merge` as its own command and read its result; `merge; git add -A; commit` chained commits
-     conflict markers. Resolve EVERY conflicted file by reading both sides. **`git add -A` marks a conflicted file
-     RESOLVED WITH ITS MARKERS and makes `git diff --diff-filter=U` read EMPTY — the verification is disabled by the act
-     it verifies, and git may not have listed the file (a GENERATED one cost three suites). The only check that cannot be
-     flattered is a TREE-WIDE grep for markers after EVERY merge: it reads the FILES, not the INDEX.**
+     conflict markers. Resolve EVERY conflicted file by reading both sides.
    - **Keep-both on prose is safe against loss and not against contradiction.** After any keep-both resolution run
      `plancheck` before committing. A row appearing twice: first ask whether the two bodies are the SAME defect. Same →
      keep the copy from the branch that CLOSED or NARROWED it. Different → an ID COLLISION: mint a fresh id and renumber
@@ -180,22 +184,24 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
 
 ## WHEN THE DISK FORCES YOUR HAND, PRUNE BY ANCESTRY AND KEEP A LIVE-LIST
 
-A worker worktree costs ~645 MB and a concurrent gate wants ~1 GiB more, so **wave width, not the 8-slot budget, is what
-disk bounds** — and `PRUNE-ON-MERGE` is the only thing that returns it. **Estate practice (DIST, FLEET, CONDUCT, reached
-independently): under ~4 GiB with a gate running, STOP THE GATE.**
-
-**Remove only a worktree whose branch tip is an ANCESTOR of `origin/main`** — never by age, name or "looks finished".
-**Ancestry is NECESSARY AND NEVER SUFFICIENT; a dirty tree is a VETO AND NEVER A LICENCE.** A worker that has started but
-not committed sits exactly AT `origin/main`, so ancestry calls it prunable (it named all six live workers prunable on 2026-09-16).
-Keep an explicit LIVE-LIST beside it from `ListAgents` plus every unintegrated row; `plancheck`'s `stranded work:` note
-only ever SUBTRACTS candidates. Measure in the minute you act. A branch rebased away reads unmerged and is KEPT.
+Worker worktrees cost ~600 MB each (three `npm ci` installs). **Remove only a worktree whose branch tip is an ANCESTOR of
+`origin/main`** (`git merge-base --is-ancestor <tip> origin/main`) — never by age, name or "looks finished". **Ancestry is
+NECESSARY AND NEVER SUFFICIENT; a dirty tree is a VETO AND NEVER A LICENCE.** A worker that has started but not committed
+sits exactly AT `origin/main`, so ancestry calls it prunable — a confident wrong answer, not an unknown: it named all six
+live workers prunable on 2026-09-16. So keep an explicit LIVE-LIST beside it, built from `ListAgents` plus every row not yet
+integrated; `plancheck`'s `stranded work:` note re-reads committed-past-main and working-tree change on every run and only
+ever subtracts candidates. Measure the list in the minute you act, and afterwards list each kept worktree and its HEAD.
+A branch rebased away reads as unmerged and is kept — the right direction to be wrong in.
 
 ## Reaping processes
 
-**Kill the tree, not the leaf**; check a reap by the START TIME of what still stands, not its absence. Leaked battery:
-`PPID 1` + an age in HOURS + a worktree whose session is gone — kill by explicit PID from a table read AT THAT MOMENT,
-never by pattern. **Never read "nothing running" from a `ps` SAMPLE** (one read zero while three worktrees were being
-created); `git worktree list` is the population signal. **Bound every poller.** Mechanics: the 2026-09-20 archive.
+**Kill the tree, not the leaf** — a parent respawns the child you killed, and a respawned orphan looks exactly like one
+nobody reaped. Check a reap by the START TIME of what still stands, not by its absence. The safe discriminator for a leaked
+battery process: `PPID 1` + an age in HOURS + a worktree whose session is gone; kill by explicit PID from a table you read
+at that moment — never by pattern. `ps -o etime` prints `[[DD-]HH:]MM:SS` (the units live in the field count). **zsh does not
+word-split `$L`**: use `${=L}`, and verify each pid gone. A `TaskStop` on a background gate does not kill its battery.
+`node tools/waitquiet.mjs` reports what is running; `ListAgents` answers a different question. **Bound every poller**:
+`until <cond> || [ $SECONDS -gt N ]; do sleep 5; done` — an unbounded one wedged a turn for 5h15m and blocked an archive.
 
 ## The retirement sweep
 
@@ -207,55 +213,69 @@ integrate or dispose of the branch. **The standing lanes are never archived for 
 
 ## Standing down
 
-**Verified, never announced.** List every task this session spawned; `TaskStop` each still alive (a worker "waiting" with
-its work integrated is a zombie); re-list and put the VERIFIED zero into the handoff; delete your self-wake cron. Write
-`CONDUCT-NEXT.md` from the measured state (≤ 12 KB), **line 1 naming your successor by number**, push it, verify it on the
-remote — then **START THE SUCCESSOR YOURSELF** (see "Starting your successor") and tell BOB what you started. **Your final
-message says you are ready to be closed and names what closing releases** — N worktrees, ~X GiB, measured. **Your successor
-archives you** (Bob, 2026-09-17); if its archive is refused it READS THE ERROR — the causes are disjunctive and two can hold
-at once (D-405). A stood-down session that receives a late report MESSAGES its successor and writes nothing.
+**Verified, never announced.** List every task this session spawned; `TaskStop` each still alive (a worker "waiting" with its
+work integrated is a zombie); re-list and put the VERIFIED zero into the handoff; delete your self-wake cron. Write
+`CONDUCT-NEXT.md` from the measured state (≤ 12 KB), push it, verify it on the remote, and ask BOB for your successor.
+**Your final message says you are ready to be closed and names what closing releases** — N worktrees, ~X GiB, measured.
+**Your successor archives you** (Bob, 2026-09-17: *"a lane's retired session was archived without my involvement"*); if its
+archive is refused it READS THE ERROR — the causes are disjunctive and two can hold at once (D-405), and a turn in progress
+is usually an unbounded poller. A stood-down session that receives a late report MESSAGES its successor and writes nothing.
 
-## Integration mechanics (CONDUCT #6 and #7, 2026-09-19/20)
+## Integration mechanics, measured by CONDUCT #6 (2026-09-19)
 
-**Proofs and figures: `docs/archive/CONDUCT-kickoff-2026-09-20.md`.**
-
-- **A BOB ruling landing on a RUNNING row** goes ON the row as an `owed-at-integration:` FIELD line, is sent to the worker
-  by `SendMessage`, and is VERIFIED at the merge.
-- **Batch finished items under ONE gate**, ordered deliberately (security first), each IC resolved on the base as read at
-  ITS landing — **then run the suites where they MEET**: two green branches were red together.
+- **A BOB ruling that lands on a RUNNING row** is written ON the row as an `owed-at-integration:` FIELD line (a prose line
+  breaks the row grammar), then sent back to the worker by `SendMessage` to its agent id, which resumes it on its own branch
+  with its context. Verify the owed act at the merge. Cheaper than area code in a merge commit, which is not yours.
+- **Batch several finished items under ONE gate**, merged in a deliberate order (security first), each IC resolved on the
+  base as read at ITS landing. **Then run the suites where the items MEET**: two items green on their own branches were red
+  together (a new fixture chose ids another item now refuses). Correct them at their sites in a named commit.
 - **Mechanical conflicts are scriptable, the rest are not:** `docs/DECIDED.md` = either side + regenerate; `bio-plane/dist/`
-  = ours + `build-plane.mjs`; REGISTER_FLOOR = main's key + both sides' comments, re-read from `--strict` on the
-  COMMITTED merge; CLAIMS/MEASUREMENTS/INTERFACE-CHANGES = keep both. Everything else: read BOTH sides.
-- **`Dropped-from-branch:` trailers sit in the LAST paragraph with `Co-Authored-By`.** A placement or archiving BEATS a
-  branch that merely CARRIED the old row (verify byte-identical to the merge base first); one that MODIFIED it goes back
-  to SCHEDULER — the modification is evidence the close was wrong.
-- Check `MERGE_HEAD` before committing a re-made merge. **Flip in a throwaway `--detach origin/main` worktree** while
-  your tree is mid-gate. Stop spawning before one more worker's cost crosses the line, not when the meter reaches it.
+  = ours + `node scripts/build-plane.mjs`; REGISTER_FLOOR = main's key + the branch's comment lines, re-read from the
+  `--strict` print on the COMMITTED merge; CLAIMS/MEASUREMENTS/INTERFACE-CHANGES appends = keep both. Everything else:
+  read both sides; two additions ending before a shared closing brace need the brace between them.
+- **`Dropped-from-branch:` trailers must sit in the LAST paragraph, with `Co-Authored-By`** — a blank line between them and
+  git reads no trailers. A branch built on a SUPERSEDED version of another item carries that item's old paths; declare each.
+- **Re-making a merge:** each `merge --no-commit` as its own command, and check `MERGE_HEAD` exists before committing — a
+  loop silently produced no merge commits and printed "nothing to commit".
+- **Flip in a throwaway `git worktree add --detach origin/main`** while your integration tree is mid-gate; plancheck runs
+  there without `node_modules`.
+- **Usage pacing:** stop spawning when one more worker's cost (200–540k tokens each, measured) would cross the stop line, not
+  when the meter reaches it. Two concurrent batteries make every timing meaningless (15–65 min), and a suite that reads the
+  shared git index can go red under that load: re-run it ALONE on the same clean tree and STATE both results.
+
+## Integration mechanics, measured by CONDUCT #7 (2026-09-19)
+
 - **`main` CAN MOVE FASTER THAN YOUR GATE RUNS** — a battery is 550–650s and `main` moved TWENTY-ONE times inside one
-  integration — so re-gating from scratch on every move NEVER CONVERGES. **Name the DELTA and classify it**
-  (`git diff --name-only <measured tree>...HEAD`, `gates.mjs --explain`): docs-only → re-run what prose moves; any code
-  path → the full set, earlier figure DISCARDED. A completion line names the commit it measured; if that is not what you
-  push, say which commits it did not cover.
-- **REGENERATE EVERY GENERATED INDEX LAST** (`CLAUDE.md` is one of `decided.mjs`'s two ROOTS), and **READ A RED'S
-  ASSERTION, not the cause a handoff predicted** — 261/261 then 260/261 on prose alone, at the arm a handoff blamed on an
-  unpushed branch; it was a STALE index. Same suite, same assertion, different cause.
+  integration — so re-gating from scratch on every move NEVER CONVERGES. Do not skip the gate; **name the DELTA and
+  classify it** (`git diff --name-only <the tree the figure measured>...HEAD`, `gates.mjs --explain`). Docs-only → name
+  the files and re-run what prose moves. Any code path → the full set, and the earlier figure is DISCARDED. A completion
+  line names the commit it measured; if that is not what you push, say which commits it did not cover.
+- **REGENERATE EVERY GENERATED INDEX LAST**, after the merge's final prose edit (`CLAUDE.md` is one of `decided.mjs`'s
+  two ROOTS), and **READ A RED'S ASSERTION rather than the cause a handoff predicted for it** — 261/261 then 260/261
+  with only prose between them, at the arm a handoff blamed on an unpushed branch; it was a STALE index. Same suite,
+  same assertion, different cause.
+- **`git add -A` AFTER A CONFLICTED MERGE MARKS THE FILE RESOLVED *WITH ITS MARKERS* AND MAKES
+  `git diff --diff-filter=U` READ EMPTY** — the verification is disabled by the act it verifies. Three suites failed on
+  markers committed into a GENERATED file git never listed. **The only check that cannot be flattered is a TREE-WIDE
+  grep for markers after every merge**, because it reads the FILES, not the INDEX.
 
 ## Starting your successor — and the alarm that depends on you (CONDUCT #7, 2026-09-20)
 
 - **YOU CAN START YOUR OWN SUCCESSOR. "Ask BOB" is a ROUTING PREFERENCE, NOT A CAPABILITY LIMIT.**
-  `create_scheduled_task` (ad-hoc — no cron, no `fireAt`) then `run_scheduled_task` starts a REAL session with that
-  prompt: the mechanism `conduct-heartbeat` uses ~72 times a day in front of you. CONDUCT #7 sat over threshold with 8
-  cached rows believing only a human could start one, and NEVER TESTED IT — the same error as reporting a push block for
-  six hours without retrying. **When BOB is ALSO over threshold, waiting for a chip nobody can file is a STALL.** Start it,
-  hand it the lane, tell BOB and Bob.
-- **YOUR HANDOFF'S LINE 1 MUST NAME YOUR SUCCESSOR BY NUMBER** — `# CONDUCT-NEXT — the resume prompt for CONDUCT #<n+1>`.
-  The heartbeat's STEP 0b parses LINE 1 for `CONDUCT #M`; **with no number it cannot fire, and that `PushNotification` is
-  the only automatic path from a stalled estate to a human.** #2–#6 carried it; the account switch rewrote line 1 without
-  it and #7 copied the shape, so the alarm was DEAD FOR TWO HANDOFFS. The chip's gate proves ADDRESSING, never CURRENCY.
-  **The detector did not change; the data did.**
+  `mcp__scheduled-tasks__create_scheduled_task` (ad-hoc — no cron, no `fireAt`) then `run_scheduled_task` starts a REAL
+  session with that prompt: the same mechanism `conduct-heartbeat` uses ~72 times a day in front of you. CONDUCT #7 sat
+  over threshold with 8 cached rows believing only a human could start one, and NEVER TESTED IT — the same error as
+  reporting a push block for six hours without retrying. **When BOB is ALSO over threshold, waiting for a chip nobody
+  can file is a STALL, not compliance.** Start it, then tell BOB and Bob what you started.
+- **YOUR HANDOFF'S LINE 1 MUST NAME YOUR SUCCESSOR BY NUMBER** — `# CONDUCT-NEXT — the resume prompt for CONDUCT
+  #<n+1>`. The heartbeat's STEP 0b parses LINE 1 for `CONDUCT #M`; **with no number it cannot fire, and that
+  `PushNotification` is the only automatic path from a stalled estate to a human.** #2–#6 carried the number; the
+  2026-09-19 account switch rewrote line 1 without it and #7 copied the shape, so the alarm was DEAD FOR TWO HANDOFFS
+  and nobody learned the estate had stopped. The chip's own gate proves ADDRESSING, never CURRENCY — a six-hour-stale
+  handoff passes it. **The detector did not change; the data did.**
 
 ## Where the reasoning lives
 
-Each rule was paid for. Receipts: `docs/archive/CONDUCT-kickoff-2026-09-20.md` (this file verbatim before its cut, with
-every proof behind the mechanics sections), `CONDUCT-kickoff-2026-09-19.md`, `ORCHESTRATION.md`, `VERIFICATION.md`, and
-the D-/M- rows named here (`ledger.mjs find <ID>`). Look them up by subject; do not read an archive to learn the loop.
+Each rule above was paid for; the receipts, dates and measurements are in `docs/archive/CONDUCT-kickoff-2026-09-19.md`
+(the whole file as of 2026-09-18, verbatim), `ORCHESTRATION.md`, `VERIFICATION.md`, and the D-/M- rows named here
+(`node tools/ledger.mjs find <ID>`). Look them up by subject; do not read the archive to learn the loop.

@@ -1,4 +1,4 @@
-# CONDUCT-NEXT — the resume prompt for the next CONDUCT, in THIS Claude Code account
+# CONDUCT-NEXT — the resume prompt for CONDUCT #8, in THIS Claude Code account
 
 > **WRITTEN BY CONDUCT #7, 2026-09-19, at 58% context — a REFRESH, not a stand-down.** Nothing is
 > half-integrated, no worker is stranded, no branch is unpushed. **Verify every line below yourself; if
@@ -10,6 +10,12 @@
 > node tools/plancheck.mjs      # expect 0 fail
 > node tools/status.mjs --check # expect 0 drift
 > ```
+>
+> **LINE 1 NAMES YOUR SUCCESSOR BY NUMBER, AND THAT IS LOAD-BEARING — KEEP THE SHAPE.** `conduct-heartbeat`'s STEP 0b
+> parses LINE 1 for `CONDUCT #M`; if M exceeds the running integrator's number it fires the ONE `PushNotification` that
+> tells a human the estate has stalled. **#2–#6 carried the number. The 2026-09-19 account switch rewrote line 1 without
+> it, CONDUCT #7 copied that shape, and the alarm was DEAD for two handoffs** — which is why nobody learned work had
+> stopped until Bob asked. Yours must read `the resume prompt for CONDUCT #9`.
 >
 > **Arm your own self-wake IMMEDIATELY** (kickoff "Opening" step 3). Session crons die with the session;
 > mine were `35a761f0` (`7,27,47 * * * *`) and `b2f9e3a4` (the 5-day renewal). **Nothing carries across.**
@@ -134,15 +140,14 @@ say it as a standing instruction, not a courtesy. It has now saved a cut on all 
 time was mine: I told DIST that IC-55's footprint was `index.mjs`, `bio-checks.mjs` and `app.html`. The actual
 shipped-path diff `v0.67.0..origin/main` is **FIVE** files — and the largest, **`store.mjs` at +972**, was not in
 my list — carrying **THREE** interface changes, not one: **IC-55, IC-166 and IC-167**. I was describing IC-55
-accurately; the tree had more in it. **Describing one item's footprint as the release's is the error shape; the
-only cure is the log.**
+accurately; the tree had more in it. **Describing one item's footprint as the release's is the error shape; the only
+cure is the log.**
 
 **DIST ruled 0.68.0 BATCHES and the ruling is correct** — do not re-argue it without meeting the predicate.
 CUT NOW fires on a change closing something "a stranger, a machine credential or the wrong member could READ or
 DO". D-270 changes what callers are TOLD; nobody can read or do anything new. I argued "authority-adjacent" and
-DIST was right to refuse it: **a rule that fires on adjacency fires on everything.** 0.66.0 and 0.67.0 fired
-because the merge subjects said AUTHORITY/DISCLOSURE in as many words. If you think a landing meets it, say so
-IN THE PREDICATE'S OWN TERMS and DIST re-runs the rule.
+DIST was right: **a rule that fires on adjacency fires on everything.** 0.66.0 and 0.67.0 fired because their merge
+subjects said AUTHORITY/DISCLOSURE in as many words. If a landing meets it, say so IN THE PREDICATE'S TERMS.
 
 **Leave these ready for the next cut, because DIST will ask:** whether any of IC-55 / IC-166 / IC-167 is named a
 security or disclosure closing AT INTEGRATION; whether `app.html` moving means the UI worker ships WITH the plane
