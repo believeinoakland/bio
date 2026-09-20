@@ -63,8 +63,24 @@ label, not behaviour. The question itself stands open. Same shape as DS-3: absen
    SEQUENCE below, not against "green" — `DIST.md` lesson 19 says why a single figure cannot answer it.**
    `alterafter`: **135/66 (declared baseline) -> 169/66 (0.66.0 cut) -> 186/66 (0.67.0 cut)**. `store.mjs` restored
    sha256 MATCH every time.
-2. **No cut is owed.** `v0.67.0..origin/main` carried no shipped-path change when this was written. Apply
-   **WHEN DIST CUTS** on each self-wake: CUT NOW for a security/disclosure closing in no release, otherwise BATCH.
+2. **A BATCH IS PENDING — 0.68.0, and it was DECLINED as a CUT NOW on purpose (DIST #2, 2026-09-19).** Shipped-path
+   diff `v0.67.0..origin/main` is five files — `bio-checks.mjs` +128, `affordances.mjs` +30, `index.mjs` +257,
+   **`store.mjs` +972**, **`civicos-ui/app.html` +201** — carrying THREE interface changes: **IC-55** (D-270/UI-72, the
+   session gate's one false sentence becomes three true ones), **IC-166** (REC-135) and **IC-167** (REC-146).
+   - **Why BATCH and not CUT NOW:** every commit subject and body over the shipped paths was searched and **none names
+     a security or disclosure closing**. CONDUCT argued IC-55 is "AUTHORITY-adjacent" and of the `CLAUDE.md` §2 class
+     (a false rationale suppresses its own bug report), which is true and still is not the predicate — nobody can READ
+     or DO anything they could not before; the same callers are refused the same verbs, only the sentence changes. **A
+     rule that fires on adjacency fires on everything.** Add the BATCH arm's own "at most once a day" bound, already
+     spent on 0.66.0 and 0.67.0, and REC-146 being explicitly 1 of 3.
+   - **`app.html` MOVES THIS TIME.** 0.66.0 and 0.67.0 both satisfied gate step 12 by inspection because app.html was
+     byte-identical across the tags. **It is not, now** — so the UI worker `civicos` must be BUILT FROM THE TAG and
+     deployed WITH the plane, per `CIVICOS_UI_STATE.md`'s "Build and deploy the dev worker" and the v12 build-id
+     injection. This is the first release of the three where that step is live rather than already-true.
+   - **The live probe must reach OUTSIDE IC-55's fifteen ops.** `dec49Decorate` attaches the catalogue translation to
+     every `ok:false` answer whose code has a row — **295 of the plane's 592 codes** (CONDUCT #7) — so the
+     member-visible change is wider than the ops IC-55 names, and a probe confined to them would understate it.
+   - Ask at the cut: are the floor keys CONDUCT flagged COLLIDED in `b34f2743` settled?
 
 3. **DS-3 (account cascade configuration) is DIST's and nobody has looked.** Its blocker discharged when DS-1 landed;
    SCHEDULER #2 recorded it UNDETERMINED rather than rounding it off. **FL-6 waits behind it.**
