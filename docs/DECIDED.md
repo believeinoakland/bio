@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1254 rulings across 100 documents.
+1257 rulings across 100 documents.
 
 ## DEC-
 
@@ -37,7 +37,7 @@ authority is the file named, never this one.
 - **DEC-8** — Four suites went red and every one was CORRECTED at its site, never exempted.** `conclude-nofalsifier`, `conclude-reading` and `question-npc` each build a DEC-8 sweep corpus from the wire's `detail` and `error` and NOT its `translation`, so the moment the surface rendered a translation the sweep reported THE…  
   `docs/development/CIVICOS_UI_STATE.md:77`
 - **DEC-8** — All CORRECTED at the site with a dated reason |  
-  `docs/development/MEASUREMENTS.md:17273`
+  `docs/development/MEASUREMENTS.md:17386`
 - **DEC-10** — P-88, which is RULED by DEC-10 and MISSING**: does this instance connect to an inquiry or a project.  
   `docs/archive/research/BUILD-ORDER.md:503`
 - **DEC-10** · 2026-08-01 — (`DECISIONS.md:414+`), RULED 2026-08-01 | **NO.** The scan notices; nothing filters or notifies |  
@@ -893,7 +893,7 @@ authority is the file named, never this one.
 - **C-25.19** — — roster/classification/ratchet/pin rows for the six new ops and the three new columns, each CORRECTED with a dated reason, never exempted.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2579`
 - **C-25.19** — CORRECTED and never exempted**: the fixture invented a translation and named `C-25.19` where the plane's row is `C-25.18`, and §7 pinned the `detail` of a refusal whose `translation` the member now reads. - `docs/development/CIVICOS_UI_STATE.md` (PREPENDED), `docs/development/MEASUREMENTS.md` (appended) and this…  
-  `docs/development/CLAIMS.md:15346`
+  `docs/development/CLAIMS.md:15402`
 - **C-25.34** — Two superseded assertions CORRECTED, never exempted** — CASE-1's `version_sha is NULL` (now the pin) and `versionstate`'s registry-equality floor, which caught the new code immediately and was working as designed; CASE-1's control driver re-run, all five arms still red.  
   `docs/archive/ledgers/QUEUE-closed.md:1147`
 - **C-27** — Plus roster/ratchet/pin rows in whichever of `bio-plane/test/{bounds,meaning-bounds,capability,gate-reads,hygiene,versions,conformance}.test.mjs` the change makes owed, each CORRECTED with a dated reason and never exempted.  
