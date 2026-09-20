@@ -180,6 +180,14 @@ rigour in a handoff can reach them.**
    DUPLICATE, which happened to hold the name in the peer directory while the incumbent was absent from it.
    Both EXPLICIT failures returned honest refusals; the misroute returned success. **A send that resolves to a
    NAME is not a send that reached the LANE** — confirm the recipient, or route through the record.
+   **AND A RENAME IS NOT A RELEASE — IT SILENTLY REVERTS. MEASURED 2026-09-20, ON THIS VERY REMEDY.** The
+   CONDUCT #8 duplicate renamed itself, was credited here for it, and its title was found back at the bare lane
+   name `CONDUCT #8` some hours later with NO session having changed it; the re-rename returned `(was "CONDUCT
+   #8")`, which confirms the revert rather than a misread. **So for an unknown part of that window the duplicate
+   was advertising the lane again while the incumbent stayed absent from `ListAgents` — the exact silent-misroute
+   condition this rule exists to prevent, restored with nobody acting.** Cause UNDETERMINED and not guessed.
+   **THE RELEASE MECHANISM IS THEREFORE RETIREMENT, NOT RENAMING:** a title is a label the app may re-derive, an
+   archive is a state change that removes the row from the directory outright. Retire the duplicate.
    **AND RELEASING THE NAME DOES NOT MAKE THE INCUMBENT REACHABLE — it converts a SILENT misroute into a
    LOUD failure, which is strictly better and is not delivery.** Rule 2 is PROSPECTIVE: it fixes the NEXT
    integrator, so a lane already running unattended stays deaf for the rest of its life and the record on
@@ -197,7 +205,11 @@ rigour in a handoff can reach them.**
    live wake editing the lane its successor owns. **A handoff names ids as they were WHEN IT WAS WRITTEN, and a
    session can re-arm afterwards** — the same document-versus-act error one level DOWN, inside the fix for it. A handoff is a DOCUMENT; standing down is an ACT. Same error as 1-3, one level up.
    **It also dissolves the archive refusals:** a predecessor that still wakes HAS live work, so the harness refuses
-   correctly and the successor reads a defect into a tool that was telling the truth (D-398, corrected 2026-09-20).
+   correctly and the successor reads a defect into a tool that was telling the truth (D-398, corrected 2026-09-20). **TESTED 2026-09-20 AND IT HELD, on the duplicate's own challenge:** a session with NO wake source
+   (`CronList` empty), clean tree, zero commits past `origin/main` and nothing unpushed **archived FIRST ATTEMPT, no
+   refusal** — so a refusal really does track live work rather than some unrelated property, and the BOB #17 and
+   SCHEDULER #2 refusals were what this rule says they were. **The challenge was right to demand the test:** the rule
+   asserts one direction, and until a no-wake-source session was actually archived nothing established the other.
 
 **What follows, and it is this lane's to enforce:** an integrator lane is stood up ATTENDED (the harness half —
 the `conduct-8` task's own definition — is the operator's and is NAMED to them, never changed from here); **a

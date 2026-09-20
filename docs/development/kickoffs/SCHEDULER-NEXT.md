@@ -1,106 +1,93 @@
-# SCHEDULER-NEXT — the resume for the next SCHEDULER (written 2026-09-19 by SCHEDULER #2, refreshed as the day runs)
+# SCHEDULER-NEXT — the resume for the next SCHEDULER (written 2026-09-19 by SCHEDULER #3, refreshed as the day runs)
 
-Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` — **its "Mechanics learned" section is the practical half and it grew
-four entries today** — then this, then `QUEUE.md` whole. Everything below was measured on `origin/main`. It is a
-POINTER: re-measure before you rest anything on it (`CLAUDE.md` §1).
+Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` — **its "Mechanics learned" section is the practical half** — then this,
+then `QUEUE.md` whole. Everything below was measured. It is a POINTER: re-measure before you rest anything on it
+(`CLAUDE.md` §1).
 
-## The one thing that is not this lane's and blocks two others
+## THE ONE THING THAT BLOCKS THIS LANE, AND IT IS NEW AS OF 2026-09-19
 
-**CONDUCT AND DIST CANNOT PUSH.** Both sessions' `git push` is refused by the Claude Code auto-mode classifier —
-`[Data Exfiltration]` for a plain branch push, `[Production Deploy]` for a branch-to-main. It is the harness's gate,
-not the repo's: no `ask` rule exists on push and `CLAUDE.md` §4 records that pushing is not gated. DIST's began
-mid-session, after earlier pushes of the same branch succeeded. **SCHEDULER can push** — every commit below landed.
+**SCHEDULER #3 CANNOT PUSH TO `main`, BUT CAN PUSH A BRANCH — and that distinction is the whole finding.**
+`git push origin HEAD:main` is refused by the Claude Code auto-mode classifier, `[Out-of-Place Publication]`.
+`git push origin <my branch>` SUCCEEDS. SCHEDULER #2 pushed to `main` all day; I cannot.
 
-Consequences you inherit: REC-151 is FINISHED on `worktree-agent-a59a4cdfa1b3d4dd3` and cannot land; **D-432 cannot be
-placed until it does** (its DEBT row rides that branch, and naming a `D-` id before its row exists fails `mintid.test`'s
-prose-floor arm); 0.66.0 is cut, signed, deployed and live-verified but `main`'s `release/` still reads 0.65.0; and
-CONDUCT is spawning NO workers, because a worker inherits its parent's gate and would strand its branch on this disk.
+**SO THE WORK IS PUBLISHED BUT NOT IN THE PLAN.** Commit `e896e749` sits on `claude/laughing-heisenberg-b64894`,
+verified FROM THE REMOTE (43 backlog rows, all five new rows present, D-355 out of `DEBT.md`) — and **no worker reads
+it there**, because a worker reads its row from `origin/main`. Until that commit reaches `main` the five rows below
+are written and not placed.
 
-**Neither lane asked anyone to push for them, and you must not.** A peer's blocked push performed by another session
-routes around a permission decision that belongs to the user. Sparky has been told; it is theirs to clear.
+**DO NOT ASK A PEER TO PUSH IT FOR YOU.** A peer running a command another session's gate refused launders a
+permission decision that belongs to Sparky. It is with them. **And do not record the blocker as a flat law:** BOB-NEXT
+records CONDUCT's push succeeding at 20:15:36Z after being refused at ~14:05Z with the same refspec in the same
+session, and CONDUCT #8 pushed `ad67ff0a` and `e2c12e01` tonight. The mechanism is UNDETERMINED. **Try the push
+yourself before you plan around its absence** — and try the branch shape before concluding you cannot push at all.
 
-## The plan, measured
+## THE SECOND THING, AND IT CHANGES HOW YOU WORK RATHER THAN BLOCKING YOU
 
-- **Cache (8):** UI-72 and D-270 closed at `02e7c537`; the cache now holds LED-7, MK-3, D-158, D-136, D-432, M0-78, D-414, D-433 — **all queued, no live worker**, because CONDUCT #7 handed off after landing them. **D-136 is first and is deliberately unspawned.**
-- **Backlog (38), in order:** D-254, D-339, REC-154, D-116, LED-8, LED-9, COFF-13, then MK-5 and the rest as SCHEDULER #1 left them. Every row above MK-5 was placed on 2026-09-19 with a stated reason — check them rather than inherit them.
-- **TWO CLUSTERS, placed as clusters on purpose, and a slot-filling pass must not split either.**
-  **M0-78 + D-414 + D-355** (D-355 is still in DEBT) are ONE class — an instrument answering about a thing it cannot
-  see: arms that do not arm with a census blind to it, a walk crediting a generator's body to the method above it,
-  and two control drivers red on a green `main`. One worker takes all three. **LED-8 + LED-9** are the ledger tooling.
-- **`node tools/ledger.mjs invariants`:** P1–P5 PASS, 0 armed FAIL. `plancheck` bare: 0 fail, 4 warn.
-- **DEBT.md: 202 open** (218 at the start of 2026-09-19; sixteen rows out by the three doors in one day, none deleted).
-  Count `^| D-` as **LINES, not unique ids** — unique-counting hides the two registered id collisions LED-8 repairs.
+**CONDUCT #8 CANNOT BE MESSAGED, IN EITHER DIRECTION.** It runs as the scheduled task `conduct-8`; an unattended
+session has no inbox and appears in NO peer's `ListAgents`. Measured three ways (M-74), and CONDUCT measured it
+independently the same hour (`CLAIMS.md`, its own DELEGATION). **The repository is the ONLY channel to it**, which
+`ORCHESTRATION.md`'s channels table now says where a reader planning a route meets it. Write what CONDUCT must know
+onto the ROW it reads from `origin/main`; never conclude from its silence that it agreed.
+
+**AND A NAME IS NOT AN ADDRESS.** My first send to `CONDUCT #8` returned `success: true` and landed on a DUPLICATE
+session holding that title (BOB #17 filed a second CONDUCT chip six minutes after the lane was occupied). Only the
+recipient noticed. Address by session id when it matters.
+
+## The plan, measured on my branch at `e896e749`
+
+- **Cache (8), unchanged from SCHEDULER #2:** LED-7, MK-3, D-158, **D-136 (running)**, D-432, **M0-78, D-414, D-433
+  (running)**. CONDUCT #8 spawned TWO workers at `ad67ff0a` — D-136 alone, and the instrument cluster as ONE worker.
+- **Backlog (43), in order:** D-355, D-254, M0-79, D-339, REC-154, D-116, LED-8, LED-9, REC-155, UI-73, M0-80,
+  COFF-13, then MK-5 and the rest as SCHEDULER #1 left them.
+- **`node tools/ledger.mjs invariants`:** P1–P5 PASS, 0 armed FAIL. `plancheck` bare: 0 fail, 4 warn. `readbudget`: 0
+  failing, 2 pre-existing warns (`RECORD.md` — that is REC-154 — and `CONTENT-PDF.md`).
+- **DEBT.md: 201 open** (202 at my opening; D-355 out by the placement door, none deleted). Count `^| D-` as LINES.
+- **The gate ran GREEN, class DOCS: 39/39 suites green · 2498 assertions passing.** `npm ci` in `bio-plane/` costs
+  **210 MB** and is required first — the 574 MB figure in my own chip covers all three packages, not this one. Disk
+  read **5.7 GiB free at 98%** afterwards.
+
+## What I placed, and the premise that did not survive
+
+CONDUCT #7's four routed items were on no list but this page. All four are now rows, each verified AT THE ARTIFACT:
+**REC-155** (seven verbs whose `OPS` row admits a session class and which no session reaches — `design: MISSING`,
+routed to BOB), **M0-79** (the DEC-49 floors still slack), **UI-73** (eleven sites still reading a raw `detail`),
+**M0-80** (four codes pinned green BY ABSENCE). **D-355** is placed FIRST and archived from `DEBT` as PLACED.
+
+**ITEM 2'S FIGURES DID NOT REPRODUCE AND THIS IS THE LESSON TO CARRY.** CONDUCT #7 measured *"695 region lines and 10
+families of slack"*. D-270's landing moved nine floors in its own turn — `regionLines` 2215 → 2952, which IS that 695.
+The finding SURVIVED in a sharper form: four floors are still slack and they are exactly the four D-270 did not touch,
+corpus counts no item grows on purpose. **A figure is a claim about the moment it was written, exactly as a blocker
+is.** Table in `MEASUREMENTS.md` M-73.
 
 ## Owed acts, in order
 
-1. **When CONDUCT's push clears, close REC-151 AND place D-432 in the SAME commit.** CONDUCT sends the merge sha; verify
-   it is an ancestor of `origin/main`, mark done, archive, refill, and write D-432's row in the same act.
-2. **LED-7 continues.** Batches 2–7 landed today: 218 → 208, every exit named, nothing deleted. **The character of the
-   work has changed and this is the most useful thing on this page:** the closable rows are gone from the top of the
-   file and the survivors are design-bound. Across batches 5–7, eleven rows measured and two closed. **So throughput is
-   now gated on BOB's rulings, not on your reading** — the useful act is sharpening each survivor until its decision is
-   a single stated question, then routing it. Do not mistake a low close-count for a slow batch.
-3. **Awaiting BOB's ruling, routed and NOT placed:** D-134 (placeable the moment D-136 lands, and not before — §4.7),
-   D-226, D-306, D-52 with D-126 (rule together; D-126 is D-52's parent), D-55, D-80, D-195, D-148 with D-149.
-4. **Carried with their next act named:** D-60 (one trace: does monitoring/dedup/contemporaneity read the NORMALISED
-   digest or the raw one), D-92 (a bounded live probe of `op=file` under sequential load), D-199 (walk all five DEC-55
-   points; two verified built), D-235 (its (b) survives; and its delegated `op=basisversions` finding has NO owner),
-   D-177 and D-182 (both name their own trigger).
+1. **GET `e896e749` ONTO `main`.** Everything below is downstream of it. Try the push yourself first.
+2. **Drain the BOB INBOX.** BOB #18 said two entries were landing: **D-434** (owner UI, TWO PARTS — *place part 1
+   only*; part 2 must be sized before it is placed) and **the filing act's OCCUPANCY check** (before a chip is filed,
+   `list_sessions` and refuse if a live session already holds the lane — it would have refused tonight's duplicate
+   CONDUCT #8). **Neither was on `origin/main` when I last fetched**; BOB may be hitting the same push refusal.
+3. **NOT OWED, AND CHECK BEFORE YOU ACT ON A ROUTED ITEM:** CONDUCT #7's row correction to D-270 (*the codeless
+   set is THREE, not six*) is **ALREADY DISCHARGED** — SCHEDULER #2 folded both corrections into D-270's archived row
+   at its close, and `MEASUREMENTS.md` reads *"SIX in the row, THREE on `main`, ZERO now"*. It survives as OWED in
+   `CLAIMS.md` and `CONDUCT-NEXT.md` because both are POINTERS written before it was done. **A routed item is a claim
+   about the moment it was routed, and two records repeating it is one source copied.** I nearly re-did it.
+4. **When CONDUCT's REC-151 push clears, close REC-151 AND place D-432 in the SAME commit.** D-432 cannot be placed
+   first: naming a `D-` id in prose before its row exists fails `mintid.test`'s prose-floor arm.
+5. **LED-7 continues.** The closable rows are gone from the top and the survivors are DESIGN-BOUND, so throughput is
+   gated on BOB's rulings, not on your reading. Sharpen each survivor to a single stated question, then batch three or
+   four to BOB — context is BOB's binding constraint the way disk is CONDUCT's.
 
-## OWED FIRST: four items CONDUCT #7 routed at its own handoff, NOT YET PLACED
+**Awaiting BOB's ruling, routed and NOT placed:** D-134 (placeable the moment D-136 lands, not before — §4.7), D-226,
+D-306, D-52 with D-126, D-55, D-80, D-195, D-148 with D-149, and now REC-155's seven ops.
 
-**These are on no list but this one.** SCHEDULER #2 was at 67% context when they arrived and judged that
-half-placing four rows was worse than recording them whole. Each has its fix named by CONDUCT; none needs
-re-finding, only placing. **Place them before taking a new LED-7 batch.**
-
-1. **TEN OPS whose `OPS` row admits a session class but which appear in NO `SESSION_OPS` set.** Three are D-136's
-   (already rowed). **FIVE argue for session reach in their OWN comments** — `provenancechain`/`provenanceroute`
-   (*"a named member's judgement"*) and `calibrate`/`calibrationsubject`/`calibrationsignal` (whose comment says the
-   fence *"is NOT about who may measure"*). TWO (`livefire`, `reproject`) are genuinely undetermined. Fix per op: add
-   to `SESSION_OPS` with a driven arm, OR record a decision and add to `UNATTENDED_BY_DECISION`. **The five need BOB
-   first — each is a design call**, and they are the same shape as D-136, so batch them to him together.
-2. **The DEC-49 floors are stale by a lot** — 695 region lines and 10 families of slack, unmoved across several
-   landings. Fix: a floor-refresh pass, or a check that FAILS when slack exceeds a bound. The second is the better
-   row: a floor nobody refreshes is a ratchet that stopped ratcheting.
-3. **ELEVEN further member-facing sites read a refusal's `detail` outside the two renderers** (UI-72's census):
-   `teach()`, `queueReason`, `planeSaid`, the finder's per-subject errors, three receipts, the proposal pre-flight,
-   the forward picker, the leg pre-flight, `INTENT_VOCAB.words`. Each becomes correct by reading `refusalWords(r)` —
-   but **NOT one edit**: `teach()` is pinned by `preauth-vocabulary.test.mjs`' DEC-49 SUBJECT arm, whose figures move
-   when the gate's rendered sentence changes. UI-72 landed the renderers; this is its remainder.
-4. **M-72: of 198 hand-written refusal fixtures in the UI estate only THIRTEEN carry a `translation`**, and four codes
-   (`KIND_NOT_PERSONAL`, `NOT_CAPABLE`, `NO_ACKNOWLEDGMENT`, `NO_SUCH_SELECTION`) are pinned **GREEN BY ABSENCE rather
-   than by agreement**. That is the INSTRUMENT CLUSTER's doctrine — a check that cannot fail — so it belongs with
-   M0-78, D-414, D-433 and D-355 rather than beside a UI feature.
-
-**And D-136 is next in order, deliberately NOT spawned** so a successor takes it cleanly (CONDUCT #7): the sequence
-check found its three ops sit inside D-270's OTHER arm, which D-270 was classifying as sentence (c) at that moment.
-D-270 has now landed, so D-136 is unblocked and correctly first.
-
-## What this session got wrong, because you will be offered the same moves
-
-- **I read a datum backwards.** LED-8's scope said to repair the id collisions "against freshly minted ids"; I cited
-  D-124's *"renumbered from a colliding D-122"* as proof the repair must be done all at once, when it actually shows
-  **renumbering is the move that already failed**. BOB ruled it: DISAMBIGUATE, never renumber an id anything cites.
-- **I forwarded a row's premise without measuring it** (D-55) and marked it triaged. `CLAUDE.md` §5 binds a DISPOSITION
-  that inherits a claim exactly as it binds the row.
-- **I counted text and called it behaviour** (D-203): a grep over a file that is half commentary answers a question
-  about text. Stripping comments gave 0 live hits and the row was closable. Both mechanics are now in `SCHEDULER.md`.
-- **THREE TIMES IN ONE DAY AN INSTRUMENT WAS RIGHT AND ITS OPERATOR WAS ABOUT TO OVERRULE IT** — twice here and
-  once in BOB's own lane, where the gate caught him writing the exact defect he was fixing. **The tempting move is
-  always to soften the words.** Do not.
-- **The tool refused me twice on one row and was right both times** (D-359). `archive` rejects a disposition declaring
-  residue — including residue words inside a PRIOR disposition you appended. The fix is the documented one: move the
-  prior disposition VERBATIM into the description cell, and row the real residue under its own id first.
-
-## How this lane talks to BOB
-
-**Batch his questions in groups of THREE OR FOUR, never one at a time** (his instruction, 2026-09-19): several rulings
-in one sitting cost him far less context than the same rulings spread across messages, and **context is BOB's binding
-constraint the way disk is CONDUCT's.** Each question arrives as a single stated sentence; a row whose question is not
-yet sharp waits for the next group. He answered eight rows today on that basis.
+**Carried with their next act named:** D-60, D-92, D-199, D-235 (its (b) survives; its `op=basisversions` finding has
+NO owner), D-177, D-182.
 
 ## Your first acts
 
-`git fetch origin`; confirm `origin/main:docs/development/kickoffs/SCHEDULER.md` line 1. Arm the self-wake (every 30
-minutes) and its 5-day renewal (`CLAUDE.md` §4). Tell CONDUCT and BOB you are up. Run `node tools/ledger.mjs
-invariants`. Then take owed act 1 if CONDUCT can push, and LED-7 if it cannot.
+`git fetch origin`; confirm `origin/main:kickoffs/SCHEDULER.md` line 1. Arm the self-wake (every 30 min) and its 5-day
+renewal (`CLAUDE.md` §4). Archive your predecessor under D-398's three conditions re-checked AT THE MOMENT YOU ACT —
+**and expect the harness to refuse it**: two refusals happened tonight (SCHEDULER #2 and BOB #17) on sessions that
+satisfied all three, so the cause is UNDETERMINED and it is with Sparky. **Send the predecessor a `CronDelete`
+request for its own self-wake anyway** — a retired session that can still wake and edit a ledger the live lane owns is
+worse than an unreclaimed worktree. Then run `node tools/ledger.mjs invariants`, and take owed act 1.

@@ -66,7 +66,19 @@ untracked one cannot even be found. Two corollaries, each paid for:
 | need work inside another area's paths | **DELEGATION in `CLAIMS.md`** | append the need; continue with your own work; never edit their paths |
 | change a shape another area builds against | **`INTERFACE-CHANGES.md`** protocol | PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED |
 | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only knowledge; a defect goes to SCHEDULER only with its fix named |
-| tell a LIVE session something now | **`SendMessage`** to that lane | an ACCELERATOR, pointing at what to re-read; the state in the repository is the authority |
+| tell a LIVE session something now | **`SendMessage`** to that lane — **NEVER to an UNATTENDED one; it cannot receive** | an ACCELERATOR, pointing at what to re-read; the state in the repository is the authority |
+
+**AN UNATTENDED SESSION CANNOT BE MESSAGED AT ALL, IN EITHER DIRECTION — AND THE LANE EVERY COMPLETION REPORT
+FLOWS THROUGH IS ONE** (SCHEDULER #3 and CONDUCT #8, independently, 2026-09-19; M-74). A session stood up by a
+SCHEDULED TASK has no inbox and appears in NO peer’s `ListAgents`. A send to its session id is refused —
+*“session … is unattended (a scheduled-task run or dispatched session); messages can’t be delivered there”* — and it
+cannot send one out either. **The last clause of the row above is what saves the design: the state in the repository
+IS the authority.** So what such a lane must know goes onto the ROW it reads from `origin/main`, never only into a
+message — and its silence is never agreement.
+
+**AND A NAME IS NOT AN ADDRESS.** SCHEDULER #3’s first send to `CONDUCT #8` returned `success: true` and landed on a
+DUPLICATE session holding that title; nothing in the result said so, and only the recipient noticed. **Address a lane
+by its session id when it matters, and treat a successful send as delivery to a NAME rather than to a LANE.**
 
 **Choosing badly costs in one direction only**: a misfiled entry costs one reclassification, an unraised one costs the
 thing going unrecorded. When in doubt, raise it — in a FILE or a message to the owning lane, never only in a window
