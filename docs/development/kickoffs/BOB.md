@@ -185,6 +185,19 @@ rigour in a handoff can reach them.**
    integrator, so a lane already running unattended stays deaf for the rest of its life and the record on
    `origin/main` is the only channel to it. Verified 2026-09-19 after the duplicate released the name: the
    incumbent was STILL absent from all 48 peers.
+4. **AND A HANDOFF IS NOT A STAND-DOWN — VERIFY THE PREDECESSOR *STOPPED*, NOT MERELY THAT IT *WROTE*.** Measured
+   on THIS lane, 2026-09-20, hours after rules 1-3 were landed here: BOB #17 wrote `BOB-NEXT.md` naming its
+   successor, BOB #18 was chipped from it — **and BOB #17 went on landing commits on `main` for another 3.5 h**,
+   because it still held its own self-wake cron from before the handoff. Four commits, two BOB sessions, one lane,
+   no collision only by luck of which section each edited. **The successor's act is to confirm the predecessor's
+   CRONS ARE GONE — ask it to `CronList` and `CronDelete` and report back — not to take the handoff's existence as
+   evidence it stopped.** **AND IT MUST DELETE FROM ITS OWN `CronList`, NEVER FROM IDS IN THE HANDOFF —
+   BOB #17 CAUGHT THIS ON ITS WAY OUT.** BOB #18 named the two ids `BOB-NEXT.md` carried; by then BOB #17 had
+   deleted one and re-armed a WIDENED 6-hourly under a NEW id, so obeying the message literally would have left a
+   live wake editing the lane its successor owns. **A handoff names ids as they were WHEN IT WAS WRITTEN, and a
+   session can re-arm afterwards** — the same document-versus-act error one level DOWN, inside the fix for it. A handoff is a DOCUMENT; standing down is an ACT. Same error as 1-3, one level up.
+   **It also dissolves the archive refusals:** a predecessor that still wakes HAS live work, so the harness refuses
+   correctly and the successor reads a defect into a tool that was telling the truth (D-398, corrected 2026-09-20).
 
 **What follows, and it is this lane's to enforce:** an integrator lane is stood up ATTENDED (the harness half —
 the `conduct-8` task's own definition — is the operator's and is NAMED to them, never changed from here); **a
