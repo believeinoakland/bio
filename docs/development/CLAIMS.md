@@ -15762,3 +15762,42 @@ CONDUCT is not waiting on it to keep working.
 this one**, each diagnosed to a named fix, because a defect may be placed only with its fix identified.
 
 **open as of 2026-09-20.**
+
+## CLAIM 2026-09-20 RECORD (D-158 — THE ROSTER AND THE GATE ANSWER ONE QUESTION: a signing key is registered to a member who can attest, and `op=signerlist` says which state each key is actually in)
+
+Worker spawned by CONDUCT #8. **Own worktree** `.claude/worktrees/d158-conduct8`, branch **`worker/d158-conduct8`**,
+base `origin/main` @ `e1aa2eee`. `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`, each `node_modules`
+verified a REAL DIRECTORY (30 / 25 / 26 entries), `df -h` 5.5 GiB free after. Design authority:
+`docs/architecture/BIO_Membership_Architecture_v2.md` §6 (enrolment: the member chooses a handle and a password)
+read with §10's `members`/`signers` sketch and §4's *approve signing keys*; the row's own analysis is in
+`docs/archive/ledgers/DEBT-closed.md` («D-158»), which prefers refusing at WRITE over joining `members` at READ.
+Claimed BY SITE, because `store.mjs` and `index.mjs` are the repo's most-churned files and MK-3 is live in
+`store.mjs` beside this item:
+
+- `bio-plane/src/store.mjs` — **by SITE:** (1) the NEW `static SIGNER_ATTESTS` beside the `---- signers ----`
+  header and the NEW private `#signerMemberBar`; (2) `signerAdd` — the member lookup only; (3) `signerSet` —
+  the activation branch only; (4) `signerList` — its whole statement and its row map; (5) the signer-set
+  subquery inside `gateFacts` and the one inside `caseDocumentFacts`, each having its INLINE predicate replaced
+  by the constant and nothing else; (6) the `MEMBER_ID_CHECKS` import line, which gains one name. **NOT** any
+  other function, **NOT** the schema, **NOT** `purge`.
+- `bio-plane/checks/bio-checks.mjs` — ONE new family `SIGNER_ENROLMENT_CHECKS` at **C-63** (minted
+  `node tools/mintid.mjs C`) with two rows, appended after `MEMBER_ID_CHECKS`.
+- `bio-plane/src/setup.mjs` — **by SITE:** the `#k-list` render inside `openMembers`, one new `signerWhy`
+  helper beside `memberWhy`, and ONE line added to `memberWhy`. Precedent for a RECORD worker editing this
+  file: REC-140, REC-141 and REC-143, each named in this register.
+- `bio-plane/test/signer-enrolment.test.mjs` and `bio-plane/test/signer-enrolment.control.mjs` — both NEW.
+- `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` figures, from the print only.
+- `civicos-ui/check-refusal-codes.mjs` — **the `FLOOR` table only**, moved from that guard's own green print,
+  on the precedent this register records for REC-84, REC-86, REC-97 and D-270, each a RECORD item that moved
+  these figures because a plane-side family is what moves them. **NOTHING else under `civicos-ui/`.**
+- `bio-plane/test/refusal-wire.test.mjs` — its two catalogue FLOORS only, same reason.
+- `bio-plane/dist/` (the rebuilt bundle).
+- `docs/architecture/BIO_Membership_Architecture_v2.md` (§6's note and the front matter) and
+  `docs/architecture/construct-status.json` (`1.invitations`), `docs/development/MEASUREMENTS.md`.
+
+**NOT** `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), **NOT**
+`docs/development/INTERFACE-CHANGES.md` (I3; **the integrator mints and classifies the IC**, per the row),
+**NOT** `newgroup/`, **NOT** `release/`, **NOT** `civicos-ui/app.html` — measured: `grep -rn 'signerlist\|signeradd\|signerset'`
+over `civicos-ui/` returns ZERO, so no member surface calls these ops and there is no UI half to build.
+
+**open as of 2026-09-20** — OPEN while this item builds; CONDUCT integrates and mints the IC.

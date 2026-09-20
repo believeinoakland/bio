@@ -17586,3 +17586,50 @@ subject restored by `cp` (never `git checkout`, which would have discarded the f
 
 **WHAT THIS DOES NOT FIX, stated so nobody reads it as closed:** the heartbeat's own limit of 50 lives in its SKILL
 outside this repository and is the operator's; this landing makes a truncated call *visible* rather than impossible.
+
+## M-78 · 2026-09-20 · D-158 — the roster/gate disagreement measured on this tree, and the RESIDUE counted on both live instances
+
+**INSTRUMENT AND TREE.** `bio-plane/test/signer-enrolment.test.mjs` (new) run from
+`bio-plane/` in worktree `.claude/worktrees/d158-conduct8`, branch `worker/d158-conduct8`,
+base `origin/main` @ `e1aa2eee`. Every signature is made by stock `ssh-keygen`; every act
+goes through the real control plane under Miniflare.
+
+**THE DEFECT, RE-MEASURED RATHER THAN RECALLED.** The row was written 2026-08-02. The
+suite was run against `origin/main`'s three sources (`src/store.mjs`, `src/setup.mjs`,
+`checks/bio-checks.mjs`) swapped in and restored by sha256 AND `cmp`, each byte-identical
+afterwards: **18 pass, 13 fail.** `op=signeradd` accepted a key for `kestrel` while her
+status was `invited` and returned `ok:true`; `op=signerset` put a revoked member's key
+back to `active`; `op=signerlist` carried no `attests` field at all, so the roster's
+attesting set read `(none)` while `op=ratify` accepted `kestrel, iris` over real
+signatures; and the gate predicate was found INLINE TWICE with zero readers of any shared
+constant. After the change the same suite reads **32 pass, 0 fail**.
+
+**THE RESIDUE, COUNTED LIVE ON THE REAL RECORD, 2026-09-20.** `op=signerlist` and
+`op=memberlist` read with the admin bearer token against
+`https://biosmoke7.believeinoakland.workers.dev` and
+`https://civicos.believeinoakland.workers.dev`, both answering `bio-plane` **0.68.0** and
+both reporting `store: bio`:
+
+| instance | members | signer rows | `active` key under a non-`active` member |
+| --- | --- | --- | --- |
+| biosmoke7 | 4 (`revoked` 1, `invited` 2, `active` 1) | **0** | **0** |
+| civicos | 4 (`revoked` 1, `invited` 2, `active` 1) | **0** | **0** |
+
+So the legacy row this fix cannot rewrite exists **nowhere on this account's instances**;
+an instance in another group's account is not reachable and is not counted.
+
+**WHAT THIS LIVE READING IS NOT, said out loud.** It is not evidence about the fix. Both
+instances serve 0.68.0, which does not carry it — a deploy is DIST's and had not happened
+— so `attests` is absent from their answers and a live probe could not distinguish the two
+builds by the roster's shape. **And each instance's roster is EMPTY, so the "no disagreement
+found" reading costs nothing to produce**: what it establishes is the RESIDUE and nothing
+else. The member rosters are non-empty and carry exactly the `invited` and `revoked`
+statuses the fix is about, which is what makes the zero a real count rather than an
+unanswered call.
+
+**NO WRITE, AND HOW THAT IS GUARANTEED.** All three ops used — `bootstrap`, `signerlist`,
+`memberlist` — are `mutating: false` in `index.mjs`'s OPS table, and the witness is the two
+reads themselves: 4 members and 0 signer rows before and after, on both instances.
+`store=scratch` was deliberately NOT named (D-325), because the subject of this census IS
+the real record's own residue and a scratch-scoped read would have counted zero by
+construction rather than by measurement.

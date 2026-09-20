@@ -3772,6 +3772,7 @@ __export(bio_checks_exports, {
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
   SEARCHED_SUBJECT_SOURCES: () => SEARCHED_SUBJECT_SOURCES,
+  SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
   STATES: () => STATES,
   STRENGTH_STATES: () => STRENGTH_STATES,
   SUBJECT_POSITIONS: () => SUBJECT_POSITIONS,
@@ -11712,6 +11713,18 @@ var MEMBER_ID_CHECKS = {
     translation: "That member id is reserved. `admin` is the name this instance gives its founding administrator, and anything that checks whether someone is an administrator by name would read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id for this person."
   }
 };
+var SIGNER_ENROLMENT_CHECKS = {
+  SIGNER_MEMBER_NOT_ENROLLED: {
+    check: "C-63.1",
+    where: "src/store.mjs #signerMemberBar > is-signer-member-attesting",
+    translation: "That person has not enrolled yet. A signing key belongs to a member who has taken up their invitation and chosen a handle; until then this instance would refuse anything signed with it, so registering it now would put a key on the roster that cannot sign. Nothing was written. Send them their invitation link, and register the key once they have enrolled."
+  },
+  SIGNER_MEMBER_NOT_ACTIVE: {
+    check: "C-63.2",
+    where: "src/store.mjs #signerMemberBar > is-signer-member-attesting",
+    translation: "That member\u2019s membership is not active, so this instance would refuse anything signed with their key. Nothing was written. Reinstate the member first if they should be able to sign again."
+  }
+};
 var PROJECT_AUTHORITY_CHECKS = {
   PROJECT_ACT_NOT_A_PARTICIPANT: {
     check: "C-56.1",
@@ -13429,6 +13442,7 @@ async function openMembers(){
   $("#k-list").innerHTML = keys.length ? keys.map(x=>
     '<div class="kv"><span class="k">'+escH(x.member_id)+'</span><span class="v"><span class="mono dim">'
     + escH(String(x.key_b64).slice(0,24)) + "&hellip;</span> " + chip(x.status)
+    + (x.attests === false ? ' <span class="dim">' + escH(signerWhy(x)) + "</span>" : "")
     + ' <button class="kbtn" data-key="'+escH(x.key_b64)+'" data-to="'
     + (x.status==="revoked"?"active":"revoked") + '">'
     + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
@@ -13437,6 +13451,23 @@ async function openMembers(){
     await post("signerset", { keyB64: b.dataset.key, status: b.dataset.to }); openMembers();
   }));
 }
+/* D-158: this list renders the key's own status, which is the administrator's own
+   revocation switch and NOT whether the key can sign. A key whose member never
+   enrolled used to read active here while the instance refused everything signed
+   with it \u2014 the page telling the administrator more than the plane would honour.
+   op=signerlist now carries the derived fact and the stored one behind it, and
+   each sentence below names a STORED fact rather than a state invented to cover
+   it. The last line is the undetermined branch and says so out loud: an older
+   plane sends no attests field at all, so this renders nothing rather than
+   guessing, which is the caller-side of the same rule. */
+function signerWhy(x){
+  const w = x && x.attests_why;
+  if (w === "key_revoked") return "revoked \u2014 cannot sign";
+  if (w === "member_invited" || w === "member_proposed") return "this member has not enrolled yet, so this key cannot sign";
+  if (w === "member_revoked") return "this member has been revoked, so this key cannot sign";
+  if (w === "member_absent") return "no member on the roster holds this key, so it cannot sign";
+  return "this key cannot sign, and this copy has not been told why";
+}
 function memberWhy(res, wanted){
   const why = (res && res.reason) || "unknown";
   if (why === "BAD_MEMBER_ID") return "A member name is lowercase letters, digits and dashes, at least two characters. "
@@ -13444,6 +13475,12 @@ function memberWhy(res, wanted){
   if (why === "NO_COVER") return "Give a cover as well as a sign-in name: a label you will recognise them by. It does not have to be their real name.";
   if (why === "EXISTS") return "There is already a member with that name.";
   if (why === "NO_SUCH_MEMBER") return "There is no member by that name. Add them first, then register their key.";
+  /* D-158, on UI-72's rule: a refusal carrying the plane's OWN canned sentence
+     reaches the administrator in THAT sentence instead of as the bare code.
+     Placed AFTER the four sentences above so nothing this page already says
+     changes, and before the fallback so the next code with a translation needs
+     no edit here. */
+  if (res && typeof res.translation === "string" && res.translation) return res.translation;
   return "Refused: " + why;
 }
 $("#m-add").addEventListener("click", async ()=>{
@@ -33777,8 +33814,9 @@ Subject position: ${pos} \u2014 ${just}
       signers: this.#rows(
         `SELECT s.key_b64, s.member_id FROM signers s
          JOIN members m ON m.member_id=s.member_id
-         WHERE s.status='active' AND m.status='active'`
+         WHERE ${_Store.SIGNER_ATTESTS}`
       ),
+      /* D-158: ONE predicate; this was its own inline copy. */
       priorCase: this.#one(
         `SELECT edition, completeness, bias_acknowledgement FROM published_cases
           WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
@@ -53655,11 +53693,83 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     } : {} };
   }
   /* ---- signers: the registered-key projection ---- */
+  /* D-158 — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM
+   * DISAGREEING AGAIN.
+   *
+   * WHAT WENT WRONG, measured 2026-08-02 (session BOB, `MEASUREMENTS.md`, over
+   * real `ssh-keygen` signatures through the real ratify path) and re-measured at
+   * this code on 2026-09-20: `signerList` read the `signers` table ALONE while
+   * `gateFacts` and `caseDocumentFacts` each carried THEIR OWN COPY of the
+   * question below. Two copies of a rule and a third reader that never asked it
+   * is the shape that let `op=signerlist` report `active` for a key `op=ratify`
+   * answers `SIG_UNKNOWN_KEY` — the roster claiming more than the gate grants,
+   * which is the defect class this project ranks above a missing feature.
+   *
+   * IT IS A CONSTANT RATHER THAN A HELPER because the two gate readers need it as
+   * a WHERE clause and the roster needs it as a projected column, and a helper
+   * returning rows could not serve both without one of them re-deriving it.
+   * `signer-enrolment.test.mjs` PINS THE READER COUNT EXACTLY at three and the
+   * occurrences of its text at one: no behavioural assertion anywhere can see a
+   * faithful inline copy of a rule (D-280's `#refEdgeSevered` lesson, arriving at
+   * a SQL fragment), so if you add a fourth reader that pin fails and you are
+   * meant to come and say which site you added and why. Do not relax it. */
+  static SIGNER_ATTESTS = `s.status='active' AND m.status='active'`;
+  /* D-158 — THE WRITE HALF, and WHICH WAY the two were made to agree is the
+   * decision, not a detail.
+   *
+   * The roster tells the truth; the gate is NOT relaxed. Letting the gate accept
+   * a key whose member never enrolled would WIDEN AN AUTHORITY: a signature would
+   * attest in the name of a roster slot no person has taken up, and the
+   * `attestor_member` this plane stamps on a published edition would be an
+   * attribution nobody made. That is the class D-136 closed for the §4.7 vote one
+   * act over. Membership Architecture v2 §6 is the authority — enrolment is where
+   * the person chooses their handle and their password — and §11 item 8 already
+   * says a member stopped only by the absence of a signing key is the key doing
+   * the capability's job. Narrowing a claim and widening an authority are not two
+   * spellings of one fix.
+   *
+   * TWO CODES, because there are two facts and one sentence could not be true of
+   * both. A member with no handle has NEVER ENROLLED; a member with one whose
+   * status is not `active` has been revoked or is otherwise not standing. The
+   * answer carries the STORED status and the enrolment fact beside the code, so
+   * the caller is told the state rather than a word invented to cover both.
+   *
+   * ANSWERS NULL when the member may attest, so a caller reads
+   * `const bar = …; if (bar) return bar;` and nothing else. */
+  #signerMemberBar(memberId) {
+    const m = this.#one(`SELECT member_id, status, handle FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (m.status === "active") return null;
+    const enrolled = typeof m.handle === "string" && m.handle !== "";
+    const refusal7 = (code, detail) => {
+      const row = SIGNER_ENROLMENT_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        memberId: m.member_id,
+        member_status: m.status,
+        enrolled
+      };
+    };
+    if (!enrolled)
+      return refusal7(
+        "SIGNER_MEMBER_NOT_ENROLLED",
+        `${m.member_id} has not enrolled: status '${m.status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one this instance would refuse. Nothing was written.`
+      );
+    return refusal7(
+      "SIGNER_MEMBER_NOT_ACTIVE",
+      `${m.member_id} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.`
+    );
+  }
   signerAdd({ keyB64, memberId, comment } = {}) {
     if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
       return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
-    if (!this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return { ok: false, reason: "NO_SUCH_MEMBER" };
+    const barAdd = this.#signerMemberBar(memberId);
+    if (barAdd) return barAdd;
     this.sql.exec(
       `INSERT INTO signers (key_b64,member_id,comment,status,added) VALUES (?,?,?,'active',?)
        ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
@@ -53671,13 +53781,54 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     );
     return { ok: true, keyB64, memberId };
   }
+  /* D-158 — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN.
+   *
+   * `status` is UNTOUCHED and still means exactly what it has always meant: the
+   * administrator's own revocation switch on this key. What was missing is that
+   * the gate asks a SECOND question the roster never asked, and both were being
+   * answered in the one word `active`.
+   *
+   * So the row gains two things and HIDES NOTHING. `member_status` is the stored
+   * fact underneath — `op=memberlist` already serves it to this op's own three
+   * classes, so nothing is disclosed here that a caller could not already read.
+   * `attests` is whether `op=ratify` would accept a signature from this key right
+   * now, computed from the SAME constant the two gate readers use. Hiding the
+   * disagreeing rows instead would have made the two views agree by saying LESS
+   * than the record supports, which is a different defect and not a fix;
+   * `signer-enrolment.control.mjs`'s `roster-blind` arm drives exactly that cheat
+   * and shows the invariant assertion stays green under it.
+   *
+   * THE JOIN IS LEFT so a key whose member row is missing is REPORTED rather than
+   * dropped, and `attests_why` names a STORED fact in every branch. Its last
+   * branch is the literal `undetermined`: it is unreachable while the constant
+   * above is what it is, and it is kept because a derived reason that quietly
+   * guessed when the predicate moved would be this row's own defect one altitude
+   * up. Undetermined is first-class and gets said. */
   signerList() {
-    return { signers: this.#rows(`SELECT key_b64, member_id, comment, status, added FROM signers ORDER BY added`) };
+    return { signers: this.#rows(
+      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, m.status AS member_status,
+              CASE WHEN ${_Store.SIGNER_ATTESTS} THEN 1 ELSE 0 END AS attests
+         FROM signers s LEFT JOIN members m ON m.member_id = s.member_id
+        ORDER BY s.added`
+    ).map((r) => ({
+      key_b64: r.key_b64,
+      member_id: r.member_id,
+      comment: r.comment,
+      status: r.status,
+      added: r.added,
+      member_status: r.member_status ?? null,
+      attests: r.attests === 1,
+      attests_why: r.attests === 1 ? null : r.status !== "active" ? "key_revoked" : r.member_status === null || r.member_status === void 0 ? "member_absent" : r.member_status !== "active" ? `member_${r.member_status}` : "undetermined"
+    })) };
   }
   signerSet({ keyB64, status } = {}) {
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    if (!this.#one(`SELECT key_b64 FROM signers WHERE key_b64=?`, keyB64))
-      return { ok: false, reason: "NO_SUCH_KEY" };
+    const row = this.#one(`SELECT key_b64, member_id FROM signers WHERE key_b64=?`, keyB64);
+    if (!row) return { ok: false, reason: "NO_SUCH_KEY" };
+    if (status === "active") {
+      const barSet = this.#signerMemberBar(row.member_id);
+      if (barSet) return barSet;
+    }
     this.sql.exec(`UPDATE signers SET status=? WHERE key_b64=?`, status, keyB64);
     return { ok: true, keyB64, status };
   }
@@ -53724,8 +53875,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       signers: this.#rows(
         `SELECT s.key_b64, s.member_id FROM signers s
          JOIN members m ON m.member_id=s.member_id
-         WHERE s.status='active' AND m.status='active'`
+         WHERE ${_Store.SIGNER_ATTESTS}`
       ),
+      /* D-158: ONE predicate; this was its own inline copy. */
       /* REC-14: the two facts the catalog cannot get from the bundle — what
          THIS case asserted at its previous edition (C-21.1) and what the cases
          beneath it FROZE (C-21.2). Read here, with the rows, rather than

@@ -149,10 +149,22 @@ console.log(`            ${untranslatedRows} catalogue entr(ies) in those famili
    the DEC-49 guard's own floor, so a family or row that vanishes fails there
    too, and this file adds a second reader rather than a second, laxer standard.
    It is not a ratchet on REC-64 — the sweep only ever ADDS rows. */
-t("the catalogue walk found real families and did not go blind", FAMILIES.length >= 16, true);
+/* MOVED 16 -> 35 families and 166 -> 288 codes, 2026-09-20 by D-158 (worktree d158-conduct8),
+   FROM THIS SUITE'S OWN GREEN PRINT (`CORPUS: 35 DEC-49 families - 288 codes carrying a canned
+   translation`) and never by adding to the numbers that were here. THE MOVE IS ALMOST ALL
+   PRE-EXISTING SLACK AND THAT IS THE POINT OF RECORDING THE SPLIT: this file's own paragraph above
+   says the figures are floored AT the measurement so that this walk and
+   `civicos-ui/check-refusal-codes.mjs` hold one standard, and that agreement had quietly lapsed —
+   the other guard floored at 34/285 while this one still said 16/166, nineteen families of slack in
+   a floor whose whole job is to catch a walk going blind. Measured by running this suite over the
+   PRISTINE origin/main sources (e1aa2eee) with this item's three plane files swapped out and
+   restored by sha256 AND cmp: pristine printed 34/286, so 18 families and 120 codes of the move are
+   PRE-EXISTING SLACK and +1 family / +2 codes are this item's (SIGNER_ENROLMENT_CHECKS, C-63.1 and
+   C-63.2). Both guards now floor at the same figures again. */
+t("the catalogue walk found real families and did not go blind", FAMILIES.length >= 35, true);
 t("the catalogue walk found real translated rows — the floor is asserted BEFORE anything is "
 + "claimed over the set, because a gate that passes over an empty corpus passes over anything",
-  ROWS.size >= 166, true);
+  ROWS.size >= 288, true);
 /* `dec49Attach` in index.mjs resolves a code against exactly this set, so a code
    living in two families would make the wire's answer depend on module order.
    The DEC-49 guard's arm A refuses a duplicated CHECK NUMBER; this is the same
@@ -169,7 +181,7 @@ t("no code is minted in two families — the property the one-place decoration r
    corpus that fails its floor STOPS at the floor with its tally printed, so
    "the corpus went blind" is reported as a RED with a number rather than as a
    silence. Recorded rather than smoothed. */
-if (FAMILIES.length < 16 || ROWS.size < 166) {
+if (FAMILIES.length < 35 || ROWS.size < 288) {
   console.log("\n  HALTED: the catalogue corpus is below its floor. Nothing below can mean anything "
             + "over a corpus this walk cannot see, so nothing below is claimed.");
   console.log(`\nFAILED  ${pass} pass, ${fail} fail`);
