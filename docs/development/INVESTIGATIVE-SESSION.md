@@ -6,7 +6,7 @@
 
 **Incomplete sections** ·
 - §14c — options graded 2026-08-06; option A LANDED (PL-8, the MEANING arm) while D-222's debt row still reads open; stage C (content-grain search) sits in Part II §18, not queued.
-- §THE READ SURFACE HAS A HOLE — the two-route measurement is partly stale; D-164, the "second precondition", REOPENED 2026-09-15 and still unbuilt, so versions still compose document-grain legs.
+- §THE READ SURFACE HAS A HOLE — the two-route measurement is partly stale; D-164, the "second precondition", REOPENED 2026-09-15 and still unbuilt, so versions still compose document-grain legs. **NARROWED 2026-09-19 by BOB #18 (at D-226's closing), in two halves that must not be collapsed:** the leg REFERENT is built — `inquiry_basis.content_id` and `inquiry_basis_version_legs.content_id` both exist and are indexed (REC-82 / IC-83), verified by name at the schema — and D-164's open row is now a DESIGN row for Part II §18, not that build. **Whether the version COMPOSITION PATH actually reads those columns or still composes at document grain was NOT verified here and is stated UNDETERMINED rather than inherited from the column's existence** — a present column is not a reader that uses it, which is the same substrate-is-not-dependent error in its commonest form. Whoever next touches §2 drives that path and settles it.
 - §What the session sees — the bias object is BUILT (PL-12) and D-220's version join landed (PL-10); the text still says UNBUILDABLE TODAY.
 - §The fence — `capture_requests` BUILT (PL-4); the `[BOB-4]` provisional is superseded by DEC-52 final (§19's F9 says so; the paragraph is not rewritten).
 - §Which Claude account — DS-3 and FL-6 (cascade config and runtime) are closed rows; D-218 MEASURED 2026-08-08 — the text still says "to MEASURE".
@@ -122,9 +122,20 @@ section below and on every IS item's build:
   (DEC-9/10) — three senses, and the worst sat in IS-9's acceptance clause, where a search
   hit wore the name of the thing the whole system exists to protect. Renamed throughout.
 - **LEG** means the register's leg, whole: axis, relationship (AND/OR per DEC-32),
-  grade_source, and — once D-164 lands — extent and extraction method (DEC-23). v2's leg
-  was materially thinner, and a builder implementing the thin leg under-builds the
-  register's. There is one leg shape and it is the register's.
+  grade_source, and extent and extraction method (DEC-23). **THE EXTENT CLAUSE IS NO
+  LONGER CONDITIONAL, AND AN OPEN D-164 IS NOT EVIDENCE THAT IT IS.** This bullet was
+  written *"once D-164 lands"*; the central gap D-164 named — *the address exists, no
+  edge carries it* — is CLOSED at the code, verified BY NAME rather than through a
+  status line: `inquiry_basis.content_id` and `inquiry_basis_version_legs.content_id`,
+  both present and indexed (REC-82 / IC-83). **D-164 ITSELF STAYS OPEN on a different
+  and broader question** — REOPENED 2026-09-15 as a DESIGN row for the six pieces Part II
+  §18 lists as undesigned as of 2026-09-15, not as the leg-referent build it began as (that
+  list is §18's claim and is cited here, not re-asserted). *Substrate built is not
+  dependent built*, and this is that law's mirror: an open row ABOVE a landed piece is
+  not evidence the piece is missing, and a builder who reads it that way under-builds
+  exactly the leg this bullet exists to protect. (Narrowed 2026-09-19 by BOB #18 at
+  D-226's closing.) v2's leg was materially thinner, and a builder implementing the thin
+  leg under-builds the register's. There is one leg shape and it is the register's.
 - **GROUND PARTITION** is the analyst's and schema's term (`inquiry_basis` carries
   `ground` and `role` columns today) and is **never a surface word** — DEC-32's
   elicitation clause 1 bans it from every member-facing surface, tooltips included. This

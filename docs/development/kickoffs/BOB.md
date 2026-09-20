@@ -151,6 +151,41 @@ recent against `origin/main`'s tip before you file.** The lane writing the hando
 successor and a stale world; this check is the only thing between that lane and an honest mistake. It belongs to
 whoever FILES the chip, which is this lane.
 
+**AND ASK THE TWO QUESTIONS NO DOCUMENT CAN ANSWER: IS THE LANE OCCUPIED, AND CAN IT HEAR YOU?** Ruled
+2026-09-19 by BOB #18 from three failures inside one hour, all of one root. A chip's gate tests ADDRESSING
+(line 1 names the successor) and, since `38f5b370`, CURRENCY (the handoff's timestamp against `origin/main`).
+**Both are properties of a DOCUMENT. Occupancy and reachability are properties of the ESTATE, and no amount of
+rigour in a handoff can reach them.**
+
+1. **OCCUPANCY — check it BEFORE filing, not after.** BOB #17 filed a CONDUCT #8 chip 6m35s after the
+   scheduled task `conduct-8` had already stood that lane up; the chip passed both existing tests (correctly
+   addressed, and a handoff five minutes old carrying that night's landings) and produced a DUPLICATE LANE.
+   **The check: `list_sessions` first, and do not file if a LIVE session is already bound to the lane** — bound
+   meaning its `scheduledTaskId` is the lane's task id, or its title names the lane. This lane already makes
+   that call for step 3's sweep; the whole cost is reading it before filing instead of after.
+2. **REACHABILITY — a lane stood up UNATTENDED has no inbox at all.** Measured 2026-09-19: the live CONDUCT #8
+   (`scheduledTaskId: conduct-8`, running and landing commits) answered `SendMessage` at its session id with
+   *"is unattended … messages can't be delivered there"*, and was ABSENT from every peer's `ListAgents` — 48
+   peers, none of them it. `ORCHESTRATION.md`'s "COMMUNICATING A CHANGE" assumes every lane can be told things;
+   **a lane that cannot be told things cannot integrate**, and this is the lane every landing routes through.
+3. **AND THE LANE NAME IS HELD BY WHOEVER CLAIMS IT, NOT BY WHOEVER HOLDS THE LANE — this is the half that
+   fails QUIETLY.** SCHEDULER #3 sent CONDUCT three clustering instructions; they landed in the stood-down
+   DUPLICATE, which happened to hold the name in the peer directory while the incumbent was absent from it.
+   Both EXPLICIT failures returned honest refusals; the misroute returned success. **A send that resolves to a
+   NAME is not a send that reached the LANE** — confirm the recipient, or route through the record.
+   **AND RELEASING THE NAME DOES NOT MAKE THE INCUMBENT REACHABLE — it converts a SILENT misroute into a
+   LOUD failure, which is strictly better and is not delivery.** Rule 2 is PROSPECTIVE: it fixes the NEXT
+   integrator, so a lane already running unattended stays deaf for the rest of its life and the record on
+   `origin/main` is the only channel to it. Verified 2026-09-19 after the duplicate released the name: the
+   incumbent was STILL absent from all 48 peers.
+
+**What follows, and it is this lane's to enforce:** an integrator lane is stood up ATTENDED (the harness half —
+the `conduct-8` task's own definition — is the operator's and is NAMED to them, never changed from here); **a
+stood-down, duplicate or retired session RELEASES the lane name** (CONDUCT #8's duplicate did this unprompted,
+which is the only reason the misroute was caught at all — make it a rule, not a virtue); and a peer that cannot
+confirm delivery says so and writes to the record instead, which is the one channel an unattended session can
+still read.
+
 **Spawning a missing area session is this lane's act, and the mechanism is the chip** (Bob, 2026-09-10):
 ensure the area's kickoff exists, then file a `spawn_task` chip whose prompt is a SELF-CONTAINED paste
 block — read `CLAUDE.md`, then the kickoff, fetch, verify state from `origin/main`, claim before editing —

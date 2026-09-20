@@ -17465,3 +17465,44 @@ copies (`derivation-bounds` 154,501 B · `bounds` 146,194 B · `caseproduction.t
 `caseproduction.control` 26,928 B), pen swept. Arm 2 prices the spelling that was NOT taken: the
 shorter `\*?\s*` also lets `\s*` absorb a third space of indent and match at ANY depth, taking
 derivation-bounds from **72/0 to 48/24**.
+## M-75 · 2026-09-19 · THE PUSH BLOCKER IS PER (SESSION × REFSPEC × MOMENT) AND WAS NEVER ESTATE-WIDE (BOB #18)
+
+**Instrument:** `git push` invocations and their printed results, plus `git log` / `git show` against `origin/main`
+after each. Every figure below is a result this session read or a peer reported with its own receipt; none is recalled.
+
+**THE BELIEF BEING TESTED.** From ~14:05Z on 2026-09-19 the estate planned around *"CONDUCT #7 cannot `git push` at
+all and DIST #2 cannot advance the `latest` pointer"* — stated in `BOB-NEXT.md` §2, repeated into BOB #18's kickoff
+as *"One CLASS of harness gate across three lanes"*, and acted on: DIST held the release pointer, CONDUCT declined
+to retry on nineteen consecutive self-wakes reasoning that a timed retry was probing, and SCHEDULER #3 wrote that it
+was *"proceeding as if it stays blocked"*. BOB #17 recorded, correctly, that the MECHANISM was undetermined — but the
+SCOPE was never questioned by anyone, and the scope is what the planning rested on.
+
+**WHAT WAS MEASURED, 2026-09-19 evening, five results:**
+
+| # | actor | refspec | result |
+| --- | --- | --- | --- |
+| 1 | CONDUCT #7 | `origin <branch>` @ ~14:05Z | REFUSED |
+| 2 | CONDUCT #7 | `origin <branch>` @ 20:15:36Z, same session | SUCCEEDED |
+| 3 | CONDUCT #8 | `HEAD:main` @ 01:00:19Z and again at e2c12e01 | SUCCEEDED |
+| 4 | SCHEDULER #3 | `HEAD:main` | REFUSED, `[Out-of-Place Publication]` |
+| 5 | SCHEDULER #3 | `origin claude/laughing-heisenberg-b64894`, same session, minutes later | SUCCEEDED |
+| 6 | BOB #18 | `HEAD:main` @ ~01:35Z | SUCCEEDED — `e2c12e01..0ca2c216`, push guard green |
+
+**THE FINDING.** *The lanes cannot push* is FALSE as stated, and was false for most of the window it was believed.
+Two lanes pushed to `main` on the same evening a third was refused that exact refspec — and that third pushed a
+BRANCH minutes later from the same session. So a refusal binds to a (session × refspec × moment) triple and
+generalises to none of the three axes on its own. **What is NOT established, and is deliberately not guessed:** why
+any individual refusal fired. Rows 4 and 5 are a tight pair on refspec; rows 1 and 2 are a tight pair on time; no
+pair isolates a single variable, and the mechanism stays UNDETERMINED exactly as `BOB-NEXT.md` §2 left it.
+
+**THE COST, which is the reason this is a measurement and not a note.** Nothing in rows 1–6 required a person. The
+estate spent roughly eight hours routing around a constraint that two of its own lanes were crossing, and the
+discriminator that would have shown it — *try the narrowest form and record which refspec was refused* — costs one
+command. SCHEDULER #3 ran it unprompted and found the branch/main split in minutes.
+
+**WHAT IT CHANGED.** `CLAUDE.md` §5's blocker law now reads *about ONE actor, ONE form, ONE moment, never the
+estate*, and requires the narrowest retry plus the refspec, session and hour on any reported block. **THE RESIDUE,
+NAMED: rows 4 and 5 mean SCHEDULER #3's two published commits (`e896e749`, `89849a80`, gate GREEN 39/39, 2498
+assertions) are on a branch and not on `main`, so the rows they carry are written and NOT PLACED.** No lane may push
+them — that would launder a refusal belonging to another session's user (`CLAUDE.md` §4, and BOB #18 declined it
+explicitly while holding a working `HEAD:main` push). It is the operator's act or SCHEDULER's own later retry.
