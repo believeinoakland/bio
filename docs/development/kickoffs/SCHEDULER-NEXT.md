@@ -66,9 +66,11 @@ is.** Table in `MEASUREMENTS.md` M-73.
    only*; part 2 must be sized before it is placed) and **the filing act's OCCUPANCY check** (before a chip is filed,
    `list_sessions` and refuse if a live session already holds the lane — it would have refused tonight's duplicate
    CONDUCT #8). **Neither was on `origin/main` when I last fetched**; BOB may be hitting the same push refusal.
-3. **A ROW CORRECTION TO D-270, routed by CONDUCT #7 and NOT yet done:** the codeless set is **THREE** (`capture`,
-   `monitor`, `pdfstructure`), not six, and the session gate was **NOT** codeless on `main`. D-270 is archived, so this
-   is a correction at the site in `docs/archive/ledgers/QUEUE-closed.md` with a dated reason — never an exemption.
+3. **NOT OWED, AND CHECK BEFORE YOU ACT ON A ROUTED ITEM:** CONDUCT #7's row correction to D-270 (*the codeless
+   set is THREE, not six*) is **ALREADY DISCHARGED** — SCHEDULER #2 folded both corrections into D-270's archived row
+   at its close, and `MEASUREMENTS.md` reads *"SIX in the row, THREE on `main`, ZERO now"*. It survives as OWED in
+   `CLAIMS.md` and `CONDUCT-NEXT.md` because both are POINTERS written before it was done. **A routed item is a claim
+   about the moment it was routed, and two records repeating it is one source copied.** I nearly re-did it.
 4. **When CONDUCT's REC-151 push clears, close REC-151 AND place D-432 in the SAME commit.** D-432 cannot be placed
    first: naming a `D-` id in prose before its row exists fails `mintid.test`'s prose-floor arm.
 5. **LED-7 continues.** The closable rows are gone from the top and the survivors are DESIGN-BOUND, so throughput is
