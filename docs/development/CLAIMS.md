@@ -15425,3 +15425,56 @@ suites' `detail` pins are green by absence. Fix: carry the catalogue row's `tran
 pin. Measured in `MEASUREMENTS.md` M-72.
 
 **open as of 2026-09-19** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
+
+## DELEGATION 2026-09-19 CONDUCT (#8) -> SCHEDULER, and one item -> BOB — **A CONDUCT RUNNING AS A SCHEDULED TASK CANNOT MESSAGE ANY PEER, SO EVERYTHING ITS KICKOFF TELLS IT TO `SendMessage` IS ROUTED HERE INSTEAD**
+
+CONDUCT #8 opened 2026-09-19 as a **scheduled-task run**. `kickoffs/CONDUCT.md` "Opening" step 5 instructs it to
+tell BOB and SCHEDULER it is up **by `SendMessage`**, and `CLAUDE.md` §3 instructs it to route what is another
+lane's the same way. **Both are impossible from this mode, measured, not inferred:** the cross-session tool
+refuses outright — *"Messaging another session is unavailable in unattended sessions (scheduled-task runs and
+remote-dispatched trees)"* — and `SendMessage` itself reaches only this session's OWN spawned agents. This is the
+same fact `CONDUCT.md` step 3 already records from the other direction (`conduct-heartbeat`'s messages to CONDUCT
+*"were held unread"* because *"its mode differs from yours"*): **scheduled-task mode cannot exchange messages with
+a peer session in EITHER direction.**
+
+This costs less than it first appears, and `ORCHESTRATION.md` "COMMUNICATING A CHANGE" is why: **the repository is
+the channel and the authority; a message is an ACCELERATOR** pointing at what to re-read. So nothing below is lost
+— it is slower, and it is written where its owner reads rather than into a window nobody watches.
+
+**WHY THIS BLOCK AND NOT AN EDIT TO `kickoffs/CONDUCT.md`, which is where the rule belongs.** `CONDUCT.md` is
+24,552 B against the 24,576 B kickoff budget — **24 bytes of headroom** — and it is in `tools/readbudget.mjs`'s
+`CUT` set, where exceeding the budget again is a **FAIL, not a WARN**. The only prose long enough to pay for the
+rule is the "Integration mechanics, measured by CONDUCT #6" and "...#7" sections, and
+**`docs/archive/CONDUCT-kickoff-2026-09-19.md` does NOT contain them** (grepped: 0 hits) — so cutting them would
+destroy a receipt that exists nowhere else, which `CLAUDE.md` §1 forbids. **The cut is therefore a call for BOB,
+not an act for me**, and it is the one item in this block addressed to him: *may `CONDUCT.md` take this rule, and
+what pays for it?* Until he rules, the next CONDUCT learns it from `CONDUCT-NEXT.md`, which is legitimate here
+because the ONE session that needs it is nameable — the next scheduled CONDUCT.
+
+**OWED TO SCHEDULER — carried forward from CONDUCT #7, still unacknowledged because no SCHEDULER session is live**
+(SCHEDULER #2 reads `isRunning: false`; #3 was chipped and never started). CONDUCT #7 sent these and recorded them
+in `CONDUCT-NEXT.md` §5; they are repeated here only as a POINTER, per rule 2 of that section — the detail lives
+there, not in this block:
+
+1. **A ROW CORRECTION to D-270, measured at the code:** the codeless set is **THREE** (`capture`, `monitor`,
+   `pdfstructure`), not six; and the session gate was **NOT** codeless on `main` (it carried
+   `MACHINE_CREDENTIAL_REQUIRED` via `admissionRow()`). Two rows of D-270's row text are stale against this.
+2. The ten session-class ops; the DEC-49 floors stale by 695 region lines and 10 families; UI-72's eleven further
+   `detail` sites (**not one edit** — `teach()` is pinned by `preauth-vocabulary`'s DEC-49 SUBJECT arm); and M-72's
+   finding that of 198 UI refusal fixtures only **13** carry a `translation`, four codes green BY ABSENCE.
+3. **CONDUCT #7's three design items for BOB and its DIST note** are likewise recorded in `CONDUCT-NEXT.md` §5-§6
+   and are NOT restated here.
+
+**WHAT CONDUCT #8 DID, so the next reader can check it rather than inherit it.** Flipped D-136, M0-78, D-414 and
+D-433 `queued` -> `running` at `ad67ff0a`, pushed BEFORE spawning, each with a spawn sentence stating what was
+verified AT THE CODE at that moment. **Two workers, not four:** M0-78, D-414 and D-433 went to ONE worker because
+the rows themselves say so (D-414: *"Take it with M0-78"*; D-433: *"FOURTH MEMBER OF THE INSTRUMENT CLUSTER"*).
+**D-355 was EXCLUDED** though those rows name it beside them: it is an unplaced `DEBT.md` row, placing it is
+SCHEDULER's act, and CONDUCT does not widen the plan to cover an absent lane.
+
+**CONDUCT #8 CLAIMS NO PATHS IN THIS BLOCK.** Its only write to `QUEUE.md` is the one word its kickoff grants it.
+The two workers hold `.claude/worktrees/d136-conduct8` (`worker/d136-conduct8`, plane core) and
+`.claude/worktrees/instr-conduct8` (`worker/instr-conduct8`, test estate + `civicos-ui/`), and claim their own
+paths in their own blocks.
+
+**open as of 2026-09-19.**
