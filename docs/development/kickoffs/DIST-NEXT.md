@@ -107,10 +107,10 @@ Claude Code **auto-mode classifier** — reasons seen: "[Production Deploy]", "[
 ## The 0.67.0 gate, for the next cut's comparison
 
 261/261 suites green · 15977 assertions · EXCLUDES 2 untallied (`bundle`, `livefire` — D-413) · run 22124.0b73e8 ·
-tree hash identical before and after. newgroup wizard 131/0. `coverage --strict` clean. Signature: five negative
-controls refusing BY NAME (altered bytes, wrong namespace, wrong key, the PREVIOUS release's sig over these bytes,
-fleetSig over a member-dropped payload) beside **two POSITIVE arms** — five refusals from a harness that cannot accept
-anything is an outcome that costs nothing to produce. 7/7. (0.66.0's gate, for the trend: 260/260 · 15937.)
+tree hash identical before and after. newgroup wizard 131/0. `coverage --strict` clean. Signature 7/7: five controls
+refusing BY NAME (altered bytes, wrong namespace, wrong key, the PREVIOUS release's sig over these bytes, fleetSig over
+a member-dropped payload) beside two POSITIVE arms — `DIST.md` lesson 18 for why both halves are needed.
+(0.66.0's gate, for the trend: 260/260 · 15937.)
 
 **Live closings — the FIGURES; the lesson is `DIST.md` lesson 18, read it there.** 0.67.0: **11/11** arms — five gated
 prefixes answer `ALLOCID_PREFIX_GATED` allocating nothing, and an UNGATED prefix (`INFO`) still allocates
@@ -122,13 +122,11 @@ answered, in each case.
 2026-08-04, nothing either release added. **Read the `offenders` key.** A first parse here read a `findings` key that
 does not exist and printed "0 findings" — a false CLEAN from a wrong key, caught only by dumping the raw shape.
 
-**`newgroup/` is NOT out of CONDUCT's scope, measured by CONDUCT #7:** five battery suites reference it
-(`fleetbundles`, `hygiene`, `check-firing`, `publishedcase`, and a probe). So a DIST installer re-cut is not a docs-only
-delta for an integrator — it discards a standing battery figure and forces a full re-run. Worth saying when you land one.
+**`newgroup/` is NOT out of CONDUCT's scope** (CONDUCT #7): five battery suites reference it — `fleetbundles`,
+`hygiene`, `check-firing`, `publishedcase`, a probe. An installer re-cut forces an integrator's full re-run; say so.
 
-**Construct status moved with this cut:** `15.installer-bundle` ABSENT → BUILT. The committed installer bundle now
-carries `fleetSig`, and the old claim's "deploying it is Bob's gate" clause was superseded by Bob's standing permission
-of 2026-09-18. `status.mjs --check` reads 0 drift; §3 was re-rendered with `--write`.
+**Construct status:** `15.installer-bundle` ABSENT → BUILT at the 0.66.0 cut (the committed bundle now carries
+`fleetSig`). 0 drift; §3 re-rendered.
 
 ## Session state
 
