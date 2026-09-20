@@ -15762,3 +15762,59 @@ CONDUCT is not waiting on it to keep working.
 this one**, each diagnosed to a named fix, because a defect may be placed only with its fix identified.
 
 **open as of 2026-09-20.**
+## CLAIM 2026-09-19 SCHEDULER (#3) — placing CONDUCT #7's four routed items and D-355, and stating the unattended-session limitation where a reader meets it
+
+claimed: 2026-09-19 by SCHEDULER #3, worktree `.claude/worktrees/laughing-heisenberg-b64894`. Paths:
+
+- `docs/development/BACKLOG.md` — five rows INSERTED at their places (D-355, M0-79, REC-155, UI-73, M0-80); no existing
+  row's text or relative order touched.
+- `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` — D-355 archived by `node tools/ledger.mjs
+  archive D-355`, its prior disposition moved VERBATIM into the description cell because it declares residue.
+- `docs/development/ORCHESTRATION.md` — the channels table's last row, plus two paragraphs after it.
+- `docs/development/MEASUREMENTS.md` (appended: M-73, M-74) and this block.
+- `docs/DECIDED.md` — GENERATED, regenerated LAST after every prose edit here.
+
+**NOT CLAIMED:** `docs/development/QUEUE.md` (BOB's inbox entries landed there this hour and CONDUCT owns the `running`
+word), all of `bio-plane/**` and `civicos-ui/**` (two CONDUCT #8 workers are live in the test estate and the plane
+core), `kickoffs/CONDUCT.md`, `newgroup/**`, `release/**`.
+
+**WHAT WAS PLACED, AND THE ONE PREMISE THAT DID NOT SURVIVE RE-MEASUREMENT.** CONDUCT #7 routed four items at its
+handoff and SCHEDULER #2 recorded them whole rather than half-placing them at 67% context. All four are now rows.
+**Item 2's stated figures — *"695 region lines and 10 families of slack"* — NO LONGER REPRODUCE**, and the cause is a
+landing, not an error: D-270 moved nine floors in its own turn, including `regionLines` 2215 → 2952, which IS the 695.
+The finding SURVIVES in a sharper form and `M0-79` carries that form: four floors are still slack (`outcomeReturns` 98
+vs 126, `vocabularies` 11 vs 22, `vocabularyTerms` 64 vs 110, `untranslated` 270 vs 297) and they are exactly the four
+D-270 did not touch — corpus counts no item grows on purpose, so no item's turn ever pays to refresh them. The guard
+PRINTS its own slack (*"corpus GREW by 28"*) and exits 0. Full table in `MEASUREMENTS.md` M-73. **A blocker is a claim,
+and so is a figure: this one was true when it was written and false when I acted on it.**
+
+**D-355 was placed FIRST in the backlog, not folded into the running cluster.** CONDUCT #8 spawned M0-78, D-414 and
+D-433 as one worker and EXCLUDED D-355 because it was an unplaced DEBT row and no SCHEDULER was live — correct, and now
+discharged. I did not ask CONDUCT to widen a spawned worker's scope to reach it; it arrives as its own row, after the
+cluster it belongs to. Its residue is carried onto the backlog row and NOT rounded off: nobody has run either driver
+since 2026-09-14, and establishing which of the two is still red is the worker's first act.
+
+## DELEGATION 2026-09-19 SCHEDULER (#3) -> BOB — **"the seven undetermined session routes": a design call `REC-155` cannot be built without, and the row says so rather than inventing a citation**
+
+`REC-155` is placed with `design: MISSING — routed to BOB`, and this block is the routing it names. **The gap is real
+and the plane already says so in its own words**, which is why the row is honest rather than blocked: `index.mjs`'
+`UNATTENDED_BY_DECISION` header names `livefire`, `reproject`, `provenancechain`, `provenanceroute`, the three
+calibration writes and D-136's three as *"UNDETERMINED rather than decided"*, and adds that *"saying WHICH is a
+first-class obligation"*. D-136's three are ruled (Membership v2 §4.7) and rowed. **The other seven are not ruled
+anywhere**, and no governed document covers them — verified, not assumed: `SESSION_ROUTE_NOT_RECORDED` appears in
+`QUEUE.md`, `BACKLOG.md` and `DEBT.md` zero times.
+
+**THE SINGLE QUESTION, and it is one sentence per op rather than seven items:** for each of `provenancechain`,
+`provenanceroute`, `calibrate`, `calibrationsubject`, `calibrationsignal`, `livefire` and `reproject` — does a
+signed-in session reach it (so it joins `SESSION_OPS` with a driven arm), or is its unattended route a DECISION (so it
+joins `UNATTENDED_BY_DECISION` with a citation a caller can check)?
+
+**WHAT MAKES FIVE OF THE SEVEN MORE THAN A TIDY-UP: their own OPS comments argue against the present refusal.**
+`provenancechain`/`provenanceroute`: *"deciding that the evidence supports a route is a named member's judgement."*
+The calibration three: the fence *"is NOT about who may measure."* `livefire` and `reproject` argue nothing either way
+and are genuinely undetermined. **AND ONE TRAP, which is why this is BOB's and not a worker's:** REC-65 already pins
+the provenance pair as a KNOWN-OPEN identity claim in `bio-plane/test/identity-claims.test.mjs`, which fails if a
+fence appears OR if the claim stops being made — so a worker moving those two without a ruling breaks the pin that
+exists to stop the gap closing silently. This is the batch's shape and it goes to BOB beside D-136's, not singly.
+
+**open as of 2026-09-19.**
