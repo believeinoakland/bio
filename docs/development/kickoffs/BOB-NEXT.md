@@ -61,6 +61,17 @@ checkout means stale permissions.
    register's, "ground" both a DEC-32-banned surface word and a real `inquiry_basis` column). The act is deciding
    which sense wins and which document yields — a CORPUS decision under CORPUS-STANDARD, not a rename SCHEDULER can
    sequence. It is the largest of the rows on this desk and needs a clear sitting; nothing in the plan depends on it.
+0a. **THREE DESIGN CALLS FROM CONDUCT #7's 2026-09-19 landings — accepted, NOT started.** `CONDUCT-NEXT.md` carries
+   each with its measurement; they are named here so this lane meets them on its own list rather than only inside
+   another's. (1) **§7.1's items 5, 6 and 8 contradict each other about the same bytes** — strictly read, item 8
+   refuses publication to every case in this record; REC-135 shipped the disjunction DISCLOSED in the signed bytes,
+   price-tagged on ONE side only (arm (e) 22/3; the strict reading's battery-wide cost NOT measured, and larger). (2) **DEC-12's second-edition route is unreachable for a finding published on a
+   project-arm conclusion** — a DELEGATION in `CLAIMS.md`, dated; both doors shut and each refusal correct on its own
+   terms; NOT a regression. (3) **FIVE ops argue for session reach in their OWN comments** while the gate said
+   otherwise (`provenancechain`, `provenanceroute`, `calibrate`, `calibrationsubject`, `calibrationsignal`): per op,
+   add to `SESSION_OPS` with a driven arm OR record a decision into `UNATTENDED_BY_DECISION`. They surfaced as GAPS
+   rather than false sentences because D-270 built IC-55's sentence (c) as a PROPERTY, not a list — **an op absent
+   from the declaration gets the omission answer automatically, so the default claims nothing.**
 0b. **Two more design rows routed here and NOT started** — these are real design acts, not
    rulings, and each needs its own sitting:
    - **D-55** (DOCTRINE, Bob ruled) — **NARROWED at the schema; read the row, not its headline.** The precondition
@@ -100,36 +111,23 @@ checkout means stale permissions.
 - **In `SCHEDULER.md`:** the GAP and the INSTRUMENT that closes it are different objects; a CITATION INVENTED TO PASS
   A CHECK is worse than the gap it hides.
 
-## 5. HOW I WAS WRONG — each caught by someone else or by an instrument
+## 5. HOW I WAS WRONG — the durable ones are in the LAWS now; these are the ones that stayed mine
 
 - **A BLOCKER IS A CLAIM ABOUT THE MOMENT IT WAS VERIFIED, AND THREE OF US REPORTED ONE FOR SIX HOURS WITHOUT
-  RE-READING IT.** DIST also called three members "serving 0.66.0" on a VERSION VAR — a label, not evidence about the
-  bundle; it left that UNDETERMINED rather than closing on it. **A control establishing what a refusal is NOT
-  sensitive to says nothing about what it will do later.**
-- **AND I TURNED ONE LANE'S MEASUREMENT INTO A FLAT LAW.** DIST's shape finding was real and tightly controlled; I
-  wrote "the actionable variable is COMMAND SHAPE, NOT TIME" into this file, and CONDUCT falsified it from inside one
-  session. **Two honest readings from different lanes are evidence the mechanism is UNDETERMINED, not a licence to
-  pick the newer one.** State both, name what neither establishes.
-- **AN ASK THAT WAS TRUE WHEN RAISED IS NOT TRUE FOREVER.** A figure quoted UP (the exposure count) and a constraint
+  RE-READING IT.** DIST also called three members "serving 0.66.0" on a VERSION VAR — a label, not evidence.
+  **A control establishing what a refusal is NOT sensitive to says nothing about what it will do later.**
+- **AND I TURNED ONE LANE'S MEASUREMENT INTO A FLAT LAW** — "the actionable variable is COMMAND SHAPE, NOT TIME",
+  falsified by CONDUCT from inside one session. **Two honest readings from different lanes mean the mechanism is
+  UNDETERMINED, not a licence to pick the newer one.** State both; name what neither establishes.
+- **AN ASK THAT WAS TRUE WHEN RAISED IS NOT TRUE FOREVER.** A figure quoted UP (an exposure count) and a constraint
   quoted DOWN (FLEET's 574 MB, after disk recovered) are the same failure; the second is harder to catch because
   carrying an open item forward FEELS like diligence.
-- **I read a background task's "exit code 0" as the gate's verdict. The gate was RED** — the 0 was my own trailing
-  `echo`. `CLAUDE.md` §7's wrapper trap in a new costume: **read the completion line and `gates: GREEN`, never a
-  wrapper's status.**
-- **I stated "npm ci is installed" as a fact about the machine in four lane chips.** I had measured the MAIN CHECKOUT;
-  every lane gets a fresh worktree where it is absent. True of the wrong unit. DIST caught it.
-- **I told FLEET to put durable lessons in its handoff.** Wrong: the law is read every time, a handoff once. FLEET
-  corrected me and the correction is now ORCHESTRATION.md's rule.
-- **I hypothesised the push refusal was command-shape.** CONDUCT's control refuted it cleanly.
-- **I told CONDUCT to "rebase before your gate."** Wrong twice: never change the tree mid-gate, and CONDUCT integrates
-  by MERGING, never rebasing, because a rebase over a merge flattens it.
-- **I tried to archive D-325 while its disposition declared residue.** `ledger.mjs` refused. The tool was right.
-- **THE WRONG-UNIT ERROR IS THIS ESTATE'S MOST REPEATED DEFECT — caught SIX times on 2026-09-19 alone**, by three
-  lanes, three of them where the wrong unit was a MEASUREMENT rather than the code: stranded branches (commit COUNT
-  for REACHABILITY); D-325 (CAN an instrument bind itself vs does anything REQUIRE it); D-134's figure; D-254 (a ROW
-  NAMES NO DESIGN failure that was a MILESTONE error); D-203 (a STRING COUNT for LIVE ADVICE); and **both SCHEDULER
-  and I reporting ESTIMATED context as measured.** **When the answer is a count, ask what the count cannot see —
-  including of yourself: `get_usage` is the only honest source for your own context.**
-- **A LEDGER REBASE IS THE `QUEUE.md` TRAP IN EVERY LEDGER, AND PRESENCE IS NOT THE CHECK — LENGTH IS.** A `DEBT.md`
-  conflict nearly reverted two of SCHEDULER's rewrites. **A reverted row looks exactly like a row you kept.** Carry
-  the hunks, then compare the touched rows' lengths against the REMOTE.
+- **I read a background task's "exit code 0" as a gate's verdict. The gate was RED** — the 0 was my own trailing
+  `echo`. Read the completion line and `gates: GREEN`, never a wrapper's status.
+- **I judged worktrees by whether a SESSION held them, not whether their WORK had landed** — reporting nothing to
+  reclaim while ~1.3 GiB was finished work awaiting `PRUNE-ON-MERGE`.
+- **THE WRONG-UNIT ERROR was caught SIX times on 2026-09-19 by three lanes**, three where the wrong unit was a
+  MEASUREMENT — including SCHEDULER and me reporting ESTIMATED context as measured. **When the answer is a count, ask
+  what the count cannot see — including of yourself.**
+- **In the LAWS, not here:** the ledger-rebase length check and `add -A` disabling `--diff-filter=U` (§7); the
+  channel rule (`ORCHESTRATION.md`); the heartbeat sweep (`BOB.md` step 3).

@@ -20,26 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-414 · queued — **THE SEGMENTER FIVE BOUNDS WALKS SHARE CANNOT SEE A GENERATOR METHOD, so a generator's body is judged as part of the method above it** — `*eachImage`'s loop and its per-bundle `readImage` were credited to `danglingRefs`, which then read as doing work it does not do. — owner M0.
-order: FOURTH, immediately after M0-78, because it is the SAME DOCTRINE and should be taken with it: an instrument answering about a thing it cannot see. M0-78 is arms that do not arm and a census blind to it; D-355 is two drivers red on a green `main`; this is a walk mis-attributing a method. One worker holding all three fixes the class, not three symptoms (SCHEDULER #2, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md`'s rule that an instrument reports what it can see — read with CLAUDE.md §5, an equality that costs nothing to produce is not evidence.
-depends-on: none. **Take it with M0-78, and hand D-355 (still in DEBT) to the same worker.**
-scope: add `\*?` to the signature regex in each of the FIVE copies (`airuns`, `bounds`, `derivation-bounds`, `meaning-bounds`, `versionchain` — `grep 'const sig = /'`), then **re-measure every roster those walks pin**: the census and class counts may move by the generator's own verdict, and that movement is the finding, not a regression. M0-63 measured ONE generator in `store.mjs` today; the regex must not assume one.
-accepts-when: `*eachImage` is its own segment in all five walks and `danglingRefs` is judged on its own body alone; every roster the walks pin is re-printed with its movement stated. How a liar passes it: fixing one copy, so the arm asserts all five regexes are identical. NEGATIVE CONTROL: restore the old regex in one copy, and that walk's roster moves and fails by name.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
-
-### D-433 · queued — **`check-refusal-codes.mjs` ARM B RULE R3 CANNOT TELL A MOCK THAT *HANDS* A REFUSAL CODE TO THE SURFACE FROM A SUITE THAT *OBSERVES* ONE** — so a suite MEASURING a plane refusal inflates the measured reach and pushes a ratchet that may only rise. Measured by UI-67, 2026-09-19. — owner UI.
-order: with D-414, the instrument cluster. A false reach gets RATCHETED IN and the ratchet only rises, so every later run inherits the inflation — worse than a blind instrument, which does not lock its error in (SCHEDULER #2, 2026-09-19)
-milestone: M0 — CORRECTED from the DEBT row's M8: `check-refusal-codes.mjs` is TEST ESTATE, the same correction D-254 needed on the SAME FILE.
-interface: none
-design: `docs/development/VERIFICATION.md`, the section "THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE", which governs this file and its arms.
-depends-on: none. **FOURTH MEMBER OF THE INSTRUMENT CLUSTER — take it with M0-78, D-414 and D-355** (still in DEBT). **AND SEQUENCE IT WITH D-254, which edits THE SAME FILE** — whichever lands second re-reads the first.
-scope: the row names the whole fix — R3 harvests only literals a suite FEEDS INTO the surface (a code in an object handed to its mock fetch or envelope), never one read off a response it asserts against: exclude literals occurring as a comparison against a received value (`.reason === "X"`, `reason: "X"` inside `ok(...)`), keep those inside a mock's answer. **The partition is printable, so the arm PRINTS both halves per suite and floors the FED half** — else it is the blind walk REC-70 records.
-accepts-when: a real-plane suite asserting a refusal by name does not raise the reach; a mock that HANDS a code still does; both halves printed per suite, fed half floored. How a liar passes it: dropping the observed half, so the print must show both. NEGATIVE CONTROL: feed a code through an assertion only, and the reach must not move.
-added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7 at UI-67's landing; keeps its `D-` id).
-
 ### D-254 · queued — **REC-76's VERDICT READER EXISTS TWICE and only a drift pin makes that safe** — `civicos-ui/check-refusal-codes.mjs` has no exports and ends in a top-level `process.exit`, so `bio-plane/test/verdict-reader.mjs` hand-carries its six functions byte-identically. — owner VERIFY.
 order: a correction to landed work, so above features; below D-270 and M0-78 because this duplicate is FALSIFIABLE today — `readerDrift()` extracts from both files and both suites assert it — a measured debt, not an unmeasured risk (SCHEDULER #2, 2026-09-19)
 milestone: M0 — CORRECTED from the DEBT row's M8: both files it changes are TEST ESTATE, which is what M0 is, and that is why `VERIFICATION.md` is its authority.

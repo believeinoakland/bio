@@ -21,11 +21,8 @@ routes around a permission decision that belongs to the user. Sparky has been to
 
 ## The plan, measured
 
-- **Cache (8):** REC-151 `running` (CONDUCT's, real WIP, not stale), then UI-67, UI-72, LED-7, REC-135, MK-3, REC-146,
-  D-158. Seven runnable — above the four the kickoff requires, so no replenish is owed.
-- **Backlog (41), in order:** D-270, D-136, M0-78, D-414, D-254, D-339, D-116, LED-8, LED-9, COFF-13, then MK-5 and
-  the rest as SCHEDULER #1 left them. **Every one of the first ten was placed on 2026-09-19 and each `order:` line
-  says why it is there** — check them rather than inherit them.
+- **Cache (8):** UI-72 and D-270 closed at `02e7c537`; the cache now holds LED-7, MK-3, D-158, D-136, D-432, M0-78, D-414, D-433 — **all queued, no live worker**, because CONDUCT #7 handed off after landing them. **D-136 is first and is deliberately unspawned.**
+- **Backlog (38), in order:** D-254, D-339, REC-154, D-116, LED-8, LED-9, COFF-13, then MK-5 and the rest as SCHEDULER #1 left them. Every row above MK-5 was placed on 2026-09-19 with a stated reason — check them rather than inherit them.
 - **TWO CLUSTERS, placed as clusters on purpose, and a slot-filling pass must not split either.**
   **M0-78 + D-414 + D-355** (D-355 is still in DEBT) are ONE class — an instrument answering about a thing it cannot
   see: arms that do not arm with a census blind to it, a walk crediting a generator's body to the method above it,
@@ -49,6 +46,35 @@ routes around a permission decision that belongs to the user. Sparky has been to
    digest or the raw one), D-92 (a bounded live probe of `op=file` under sequential load), D-199 (walk all five DEC-55
    points; two verified built), D-235 (its (b) survives; and its delegated `op=basisversions` finding has NO owner),
    D-177 and D-182 (both name their own trigger).
+
+## OWED FIRST: four items CONDUCT #7 routed at its own handoff, NOT YET PLACED
+
+**These are on no list but this one.** SCHEDULER #2 was at 67% context when they arrived and judged that
+half-placing four rows was worse than recording them whole. Each has its fix named by CONDUCT; none needs
+re-finding, only placing. **Place them before taking a new LED-7 batch.**
+
+1. **TEN OPS whose `OPS` row admits a session class but which appear in NO `SESSION_OPS` set.** Three are D-136's
+   (already rowed). **FIVE argue for session reach in their OWN comments** — `provenancechain`/`provenanceroute`
+   (*"a named member's judgement"*) and `calibrate`/`calibrationsubject`/`calibrationsignal` (whose comment says the
+   fence *"is NOT about who may measure"*). TWO (`livefire`, `reproject`) are genuinely undetermined. Fix per op: add
+   to `SESSION_OPS` with a driven arm, OR record a decision and add to `UNATTENDED_BY_DECISION`. **The five need BOB
+   first — each is a design call**, and they are the same shape as D-136, so batch them to him together.
+2. **The DEC-49 floors are stale by a lot** — 695 region lines and 10 families of slack, unmoved across several
+   landings. Fix: a floor-refresh pass, or a check that FAILS when slack exceeds a bound. The second is the better
+   row: a floor nobody refreshes is a ratchet that stopped ratcheting.
+3. **ELEVEN further member-facing sites read a refusal's `detail` outside the two renderers** (UI-72's census):
+   `teach()`, `queueReason`, `planeSaid`, the finder's per-subject errors, three receipts, the proposal pre-flight,
+   the forward picker, the leg pre-flight, `INTENT_VOCAB.words`. Each becomes correct by reading `refusalWords(r)` —
+   but **NOT one edit**: `teach()` is pinned by `preauth-vocabulary.test.mjs`' DEC-49 SUBJECT arm, whose figures move
+   when the gate's rendered sentence changes. UI-72 landed the renderers; this is its remainder.
+4. **M-72: of 198 hand-written refusal fixtures in the UI estate only THIRTEEN carry a `translation`**, and four codes
+   (`KIND_NOT_PERSONAL`, `NOT_CAPABLE`, `NO_ACKNOWLEDGMENT`, `NO_SUCH_SELECTION`) are pinned **GREEN BY ABSENCE rather
+   than by agreement**. That is the INSTRUMENT CLUSTER's doctrine — a check that cannot fail — so it belongs with
+   M0-78, D-414, D-433 and D-355 rather than beside a UI feature.
+
+**And D-136 is next in order, deliberately NOT spawned** so a successor takes it cleanly (CONDUCT #7): the sequence
+check found its three ops sit inside D-270's OTHER arm, which D-270 was classifying as sentence (c) at that moment.
+D-270 has now landed, so D-136 is unblocked and correctly first.
 
 ## What this session got wrong, because you will be offered the same moves
 
