@@ -2398,7 +2398,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - FLEET's 574 MB was WITHDRAWN: disk recovered to 9.5 GiB with zero gates running.  
   `docs/development/kickoffs/BOB-NEXT.md:53`
 - WHAT BOB #17 DECIDED — all folded into home documents; `decided.mjs` finds every one **Rulings, each with the sentence that decides it:** - **TASK stays gated** (Membership v2 §7) — the set is a PREDICATE, not a list.  
-  `docs/development/kickoffs/BOB-NEXT.md:79`
+  `docs/development/kickoffs/BOB-NEXT.md:90`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:86`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  

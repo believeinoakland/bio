@@ -142,6 +142,15 @@ body below the inbox, and not any area's code.
 
 ## Spawning and retiring lanes
 
+**BEFORE FILING ANY CHIP, CHECK THE HANDOFF'S CURRENCY AND NOT ONLY ITS ADDRESSING** (CONDUCT #7's finding,
+2026-09-19). A chip's gate tests that `<LANE>-NEXT.md` line 1 NAMES the successor. **It cannot test whether the file
+is CURRENT**, and an hours-old handoff passes it cleanly while handing a successor a world that has moved — CONDUCT's
+sat at a version written while it was blocked behind a gate that had since lifted, describing a stalled estate that no
+longer existed. **Run `git log -1 --format='%h %cI' origin/main -- <that file>` and satisfy yourself the timestamp is
+recent against `origin/main`'s tip before you file.** The lane writing the handoff is the only thing between a
+successor and a stale world; this check is the only thing between that lane and an honest mistake. It belongs to
+whoever FILES the chip, which is this lane.
+
 **Spawning a missing area session is this lane's act, and the mechanism is the chip** (Bob, 2026-09-10):
 ensure the area's kickoff exists, then file a `spawn_task` chip whose prompt is a SELF-CONTAINED paste
 block — read `CLAUDE.md`, then the kickoff, fetch, verify state from `origin/main`, claim before editing —
