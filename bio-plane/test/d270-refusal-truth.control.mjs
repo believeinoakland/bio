@@ -40,7 +40,21 @@ const ARMS = [
   { id: "a", file: null, expect: "GREEN",
     what: "BASELINE — nothing armed. Every other arm's figure is read against this one." },
 
-  { id: "b", file: SRC, expect: "RED", armedExpect: 2, mustName: ["memberadd", "adminendorse"],
+  /* CORRECTED 2026-09-19 (D-136), NEVER EXEMPTED, AND THE CONTROL CAUGHT ITSELF
+     BEING DISARMED — which is `CLAUDE.md` M-60 Q9's rule paying for itself: a
+     suite coupled to BEHAVIOUR survives a change that silently disarms the
+     control coupled to SHAPE. `adminendorse` was named here because it was an
+     OMISSION, refused to every session, so collapsing the split changed what it
+     was told. D-136 gave it session reach, so `sessionOpGate` now returns early
+     for it and it produces NO admission refusal at all — the arm went
+     NOT AS DECLARED naming `MISSING[adminendorse]` on the first run after the
+     landing, which is the arm working rather than failing.
+     `signeradd` REPLACES it rather than the name simply being dropped: the arm's
+     value is that it proves the DISTINCTION over more than one op, and a
+     one-name arm could be satisfied by a plane that had collapsed everything
+     except `memberadd`. `signeradd` is in the ROLE arm, is untouched by this
+     item, and is a different family from `memberadd`. */
+  { id: "b", file: SRC, expect: "RED", armedExpect: 2, mustName: ["memberadd", "signeradd"],
     what: "THE SPLIT COLLAPSED — sessionOpGate's three outcomes reduced to the single "
         + "MACHINE_CREDENTIAL_REQUIRED `main` sent before D-270. This is the arm the row's "
         + "accepts-when demands: it proves the suite grades the DISTINCTION, not a code's presence.",
