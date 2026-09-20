@@ -20,48 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-355 · queued — **TWO CONTROL DRIVERS ARE RED ON A GREEN `main`, AND ONE LEAKS A 4 MB PEN ON EVERY NON-ZERO EXIT.** `civicos-ui/test/refusal-partition.control.mjs` exits 1 with 2 of 18 sub-checks not as declared and leaves `.rec79-control-pristine/` behind; `bio-plane/test/provenance-floor.control.mjs` exits 1 at 55 of 58. Folded from DEBT.md by LED-7, keeping its id. — owner M0.
-order: FIRST: the FOURTH MEMBER of the instrument cluster (M0-78, D-414, D-433) — controls that are not evidence — and that cluster is IN FLIGHT: CONDUCT #8 spawned the other three and rightly excluded this row, no SCHEDULER being live to place it — now discharged (SCHEDULER #3, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a control is evidence only when it FAILS at a named assertion.
-depends-on: none. **Take it AFTER M0-78 lands:** M0-78's second half widens the census so an arm that fails to arm is REPORTED, and a driver red on a green `main` is the same class.
-scope: three acts, stated whole in the archived row (`node tools/ledger.mjs find D-355`): ATTRIBUTE each red arm to a behaviour move or a suite growth, dated AT THE SITE (the D-343 precedent), never exempt; make the pen's removal UNCONDITIONAL on exit (UI-59's driver is the precedent); teach the census `refselectivity`.s `arms: ?` shape or re-spell the driver, and SAY WHICH.
-accepts-when: both drivers exit 0 with every sub-check as declared, each attribution dated at its site; the pen is absent after a FORCED non-zero exit. How a liar passes it: exempting an arm instead of attributing it, so the arm count is asserted too.
-residue: **NOBODY HAS RUN EITHER DRIVER SINCE 2026-09-14** — a `.control.mjs` edits and commits the tree, so confirming the redness and the leak is a worker's act. `refusal-partition` HAS changed since (m0-36, `ed815c93`); `provenance-floor` is untouched. The worker.s FIRST act: establish which is still red.
-added: 2026-09-19 · SCHEDULER #3 (LED-7; keeps its `D-` id).
-
-### D-254 · queued — **REC-76's VERDICT READER EXISTS TWICE and only a drift pin makes that safe** — `civicos-ui/check-refusal-codes.mjs` has no exports and ends in a top-level `process.exit`, so `bio-plane/test/verdict-reader.mjs` hand-carries its six functions byte-identically. — owner VERIFY.
-order: a correction to landed work, so above features; below D-270 and M0-78 because this duplicate is FALSIFIABLE today — `readerDrift()` extracts from both files and both suites assert it — a measured debt, not an unmeasured risk (SCHEDULER #2, 2026-09-19)
-milestone: M0 — CORRECTED from the DEBT row's M8: both files it changes are TEST ESTATE, which is what M0 is, and that is why `VERIFICATION.md` is its authority.
-interface: none
-design: `docs/development/VERIFICATION.md`, the section "THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE" (REC-76, D-236), which governs `check-refusal-codes.mjs` and how it grades a verdict; read with D-240's `readerDrift()` pin.
-depends-on: none. **Sequence with D-270:** its branch also edits `civicos-ui/check-refusal-codes.mjs`, so whichever lands second re-reads the first.
-scope: the row names the whole fix — **one import** replacing the six function declarations in `check-refusal-codes.mjs`, after which `readerDrift()` becomes an import and `verdict-reader.mjs` is the single source. `origin/worktree-agent-a61e489de171ae6c5` (`9e24ef6e`) holds a built form 1572 commits behind main — read it, do not merge it blind.
-accepts-when: `check-refusal-codes.mjs` imports the reader and still runs as a script, its exit status read UNPIPED; `readerDrift()`'s extraction stays COUNTED and FLOORED, so two empty extractions cannot agree for free; both suites green. How a liar passes it: deleting the drift pin with the duplicate, so the pin's own arm must survive. NEGATIVE CONTROL: D-240's arm (3) — one character inside `verdictKind` — still fails both suites NAMING the function.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 2; found stranded by CONDUCT #7; keeps its `D-` id).
-
-### M0-79 · queued — **FOUR DEC-49 FLOORS ARE SLACK AND THE GUARD PRINTS IT WITHOUT FAILING** — `civicos-ui/check-refusal-codes.mjs` reads `outcomeReturns` 126 against a floor of 98 and says *"corpus GREW by 28"* on a GREEN run; `vocabularies` 22 vs 11, `vocabularyTerms` 110 vs 64, `untranslated` 297 vs 270. A floor with slack is the floor not being a ratchet — and this one announces its slack and passes. — owner M0.
-order: THIRD on this file, after D-433 (running) and D-254 — whichever lands last re-reads the others. It is the INSTRUMENT CLUSTER's doctrine on the floor side: a check that reports where it should gate cannot fail, which CLAUDE.md §2 grades worse than a missing feature (SCHEDULER #3, 2026-09-19)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with the FLOOR table.s header — *"slack in a floor is not harmless: it is the floor not being a ratchet."*
-depends-on: none. **Sequence after D-254** (same file).
-scope: **FAIL on slack beyond a stated bound, rather than print it.** The file already computes every measured/floor pair, so the arm is a comparison it is one line from making. The bound is a design call the worker states AT THE SITE: zero for figures a landing is expected to move in the same turn, non-zero only where the header already argues it (`bodyLines` sits deliberately far below its measurement — do not gate that one without saying why).
-accepts-when: with any one floor left stale by a landing, the guard EXITS NON-ZERO naming that figure, its floor and its measured value; a landing that moves a floor in the same turn stays green. How a liar passes it: gating only the figures currently equal — so the arm asserts the FULL set of floor keys is covered or explicitly exempted.
-NEGATIVE CONTROL: drop one floor by one and the guard fails BY NAME; today it prints and passes.
-added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 2, RE-MEASURED — its own figures no longer reproduce, four others do; see MEASUREMENTS.md).
-
-### D-339 · queued — **`CAPTURE-SCALING.md` §Job one AND THE PLANE STATE OPPOSITE REUSE RULES, AND THE DOCUMENT READS AS THE AUTHORITY** — the design gates reuse on `stable_since` older than the window; the built `reuseDecision` gates on RECENCY OF FETCH (24 h), because the stability gate measured live as reusing nothing at all. — owner CAPTURE.
-order: after D-254, with the corrections to landed work and above the features: a builder designing against §Job one designs against a rule THE PLANE REFUSED, which is the design claiming more than it can support — CLAUDE.md §2's class, pointed at a builder rather than a member. Cheap too: prose only (SCHEDULER #2, 2026-09-19)
-milestone: M7
-interface: none — prose in a design document; no code moves
-design: `docs/architecture/CAPTURE-SCALING.md` §Job one, which is the text being corrected, read against `reuseDecision` in the plane, which is the authority the correction adopts.
-depends-on: none. The built rule is already right and measured; nothing is being decided here.
-scope: fold the RECENCY rule and its live measurement into §Job one so the document states what the plane does, and mark the two constants (24 h, `minDocuments: 2`) as **CHOSEN, not measured**, beside the two open questions that still ask for them — the row's own words. The front matter moves in the same commit if the section's stated completeness changes (`CORPUS-STANDARD.md`).
-accepts-when: §Job one describes the recency gate and carries the live measurement that refused the stability gate; both constants are labelled CHOSEN; no code changes in the same commit. How a liar passes it: deleting the stale rule instead of correcting it, losing why it was refused — so the superseded rule stays with its dated reason. NEGATIVE CONTROL: none applies; this is prose, and `corpuscheck` is its arm.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
-
 ### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own instructions whole — which is the one thing CLAUDE.md's reading budget exists to guarantee. It was already over at 32,259 B before REC-146 appended to it. — owner RECORD.
 order: after D-339 with the corrections: it is not a defect in the product, but it breaks the READING BUDGET doctrine for the busiest build lane, and every RECORD worker pays it on every spawn. Cheap and mechanical (SCHEDULER #2, 2026-09-19)
 milestone: M0
