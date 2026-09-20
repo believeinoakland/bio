@@ -15478,3 +15478,21 @@ The two workers hold `.claude/worktrees/d136-conduct8` (`worker/d136-conduct8`, 
 paths in their own blocks.
 
 **open as of 2026-09-19.**
+
+## CLAIM 2026-09-19 BOB (D-226 closed against §0, and the estate's OCCUPANCY / REACHABILITY rule)
+
+Session BOB #18, own worktree `.claude/worktrees/blissful-kowalevski-e36e92`, branch
+**`claude/blissful-kowalevski-e36e92`**, base `origin/main` @ `ad67ff0a`. Claimed BY SITE:
+
+- `docs/development/DEBT.md` — **D-226's row only** (closing it against the correction already inside it),
+  and ONE new row this lane raises.
+- `docs/development/INVESTIGATIVE-SESSION.md` — **§0's LEG bullet only**, one clause: the `once D-164 lands`
+  conditional, which `node tools/status.mjs 4` says has landed. No other section is touched.
+- `docs/development/kickoffs/BOB.md` — the "Spawning and retiring lanes" section only, beside the currency
+  rule landed at `38f5b370`. This lane's own kickoff.
+- `docs/development/QUEUE.md` — **the `BOB INBOX` at the top ONLY**, never the queue body below it.
+
+**NOT** `civicos-ui/app.html` — the RECIPES defect this claim DIAGNOSES is UI's to fix and is routed to
+SCHEDULER through the inbox, not edited here. **NOT** any plane source. **NOT** the queue body.
+
+**open as of 2026-09-19** — a single-sitting corpus act; released in the same turn it lands.
