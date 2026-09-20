@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1257 rulings across 100 documents.
+1255 rulings across 99 documents.
 
 ## DEC-
 
@@ -750,8 +750,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:7020`
 - **IC-39** — interfaces owned: IC-39's `reading.text_source` chain, AMENDED (an optional `extent` on a derivation step).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7022`
-- **IC-55** — IC-55 is RULED THREE sentences, not the two its branch proposed.** Re-read its base and re-classify. - **D-136 refuses to be split — ONE landing.** Half of it makes things worse than not starting. ## 5.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:104`
 - **IC-62** — THE ENDING WAS ADDED, NOT THE COMMENT CORRECTED, and the argument is the item.** Correcting the header would have closed the CHEAP half and cemented the EXPENSIVE one: the disagreement was the symptom, the misattribution was the bug, and editing the header to admit `cancelled` would have left a machine refusal…  
   `docs/archive/ledgers/QUEUE-closed.md:1532`
 - **IC-74** — `caseflip.test.mjs`'s pin was CORRECTED, never exempted, and now drives a finding published into two cases end to end; `multicase.test.mjs` re-runs the census every battery and asserts zero scalar readers remain.  
@@ -2407,8 +2405,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CAPTURE.md:239`
 - never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
   `docs/development/kickoffs/CAPTURE.md:281`
-- The four with original content: `4917cacf` REGISTER_FLOOR moved to its own print · `1bf2e339` the DECIDED staleness that reddened `strandedwork`, fixed at its cause, plus the convergence law · `bfad3deb` that section cut back under the 24 KiB reading budget · `6d8620da` the final gate figures on the claim.  
-  `docs/development/kickoffs/CONDUCT-NEXT.md:68`
 - A branch built on a SUPERSEDED version of another item carries that item's old paths; declare each. - **Re-making a merge:** each `merge --no-commit` as its own command, and check `MERGE_HEAD` exists before committing — a loop silently produced no merge commits and printed "nothing to commit". - **Flip in a…  
   `docs/development/kickoffs/CONDUCT.md:231`
 - **2026-07-31** — CORRECTED 2026-07-31 by session BOB: item (3) of the plan below is SUPERSEDED by the function-specific Worker topology decision.  
