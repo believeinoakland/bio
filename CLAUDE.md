@@ -119,8 +119,9 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **An equality or an outcome that costs nothing to produce is not evidence**: two empty-body digests
   agree on nothing; our governor refusing is not the source failing; a provenance hop a caller can hand us
   is one a caller can invent. **Several documents agreeing is usually one source copied** — go to the artifact.
-- **A blocker is a claim.** Verify it against the code on the tree you are on before you rest a
-  deferral, a row or a refusal on it; a blocker inherited from a ledger is a claim about the day it was written.
+- **A blocker is a claim — about ONE actor, ONE form, ONE moment, never the estate** (M-75). Verify it
+  against the code on your tree before you rest a deferral, a row or a refusal on it; one from a ledger is a
+  claim about its day. Retry the NARROWEST form; name the refspec, session and hour refused.
 - **SUBSTRATE BUILT IS NOT DEPENDENT BUILT — and this is the JUDGING half of §2's building rule** (BOB #17,
   2026-09-19, from three independent catches in one fold by SCHEDULER #2: D-60, D-115's fourth clause, D-116).
   §2 says do not BUILD a dependent until its substrate is verified BUILT. The error that keeps being made runs the

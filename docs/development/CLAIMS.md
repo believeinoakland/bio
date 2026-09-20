@@ -15495,4 +15495,9 @@ Session BOB #18, own worktree `.claude/worktrees/blissful-kowalevski-e36e92`, br
 **NOT** `civicos-ui/app.html` — the RECIPES defect this claim DIAGNOSES is UI's to fix and is routed to
 SCHEDULER through the inbox, not edited here. **NOT** any plane source. **NOT** the queue body.
 
+**WIDENED in the same turn, stated rather than done quietly:** `CLAUDE.md` §5+s blocker bullet (rewritten IN PLACE,
+not appended — 16,276 → 16,374 B of a 16,384 B budget, 10 B headroom, `readbudget` 0 failing) and an append to
+`docs/development/MEASUREMENTS.md` (M-75). `MEASUREMENTS.md` appends are named in `kickoffs/BOB.md` as this
+lane+s to write; the `CLAUDE.md` §5 edit follows BOB #17+s D-325 precedent of the same day.
+
 **open as of 2026-09-19** — a single-sitting corpus act; released in the same turn it lands.
