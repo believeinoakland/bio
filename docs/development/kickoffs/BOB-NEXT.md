@@ -54,8 +54,11 @@ a run in progress — so one wedge stalls a lane indefinitely and nothing in thi
   following the record's own recipe is refused. Owner UI, part 1 runnable, part 2 to be SIZED before placing.
 - **`CLAUDE.md` §5's blocker law rewritten IN PLACE** (budget is the point of that file; 10 B headroom left):
   *a blocker is a claim about ONE actor, ONE form, ONE moment, never the estate.* Receipt **M-75**.
-- **`BOB.md` rules 1–4**: occupancy and reachability before filing a chip; the integrator does not run unattended; a
-  stood-down session RELEASES the lane name; and rule 4's handoff-is-not-a-stand-down.
+- **`BOB.md` rules 1–4**: occupancy and reachability before filing a chip; the integrator does not run unattended;
+  a stood-down session RELEASES the lane name — **BY RETIREMENT, NOT BY RENAMING, because a rename silently
+  REVERTED and was measured doing so (2026-09-20)**; and rule 4's handoff-is-not-a-stand-down, **which was
+  challenged and TESTED: a session with no wake source and no live work archived first attempt, so a refusal does
+  track live work.** The CONDUCT #8 duplicate is RETIRED.
 - **`retirable.mjs` now states its own BOUND** (M-77) — it counted what it was HANDED and printed `N judged` as
   though N were the estate. The heartbeat watched reported HOLD fall 15→14→13→12 while the truth stayed 15.
   Gate GREEN class FULL, 264/264 suites, 16126 assertions, negative control two arms.
