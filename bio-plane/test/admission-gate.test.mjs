@@ -167,22 +167,50 @@ console.log("\n--- C-38.7 · A PERSON ASKING FOR SOMETHING ONLY AN ADMINISTRATOR
 
 console.log("\n--- C-38.8 · AN OMISSION, STATED AS ONE AND GIVEN NO INVENTED RATIONALE ---");
 {
-  const r = await POST(`op=membercaps&${CAI}`, { memberId: "cai", capabilities: [] });
+  /* RE-POINTED 2026-09-19 (D-136), NEVER EXEMPTED, AND THE ROW IS THE SAME ROW.
+     This arm drove `op=membercaps`, which WAS the sharpest example of an
+     omission: §4.7 assigns that vote to a person and no session reached it, so
+     calling the absence a DECISION was both false and self-concealing. D-136
+     landed the fence, `op=membercaps` is now reachable by an administrator's
+     session, and it answers C-38.7 (the ROLE sentence) — so it has stopped being
+     an example of this row, and a suite that kept driving it would be asserting
+     C-38.8 over an op that no longer produces it.
+     `op=provenanceroute` REPLACES it and is the strongest remaining case rather
+     than the nearest one: its OWN OPS row says *"NOT open to `daemon`: deciding
+     that the evidence supports a route is a named member's judgement"*, so a
+     refusal claiming the verb is not for a person would contradict the table it
+     was read out of — which is the contradiction D-270's doctrine paragraph
+     names beside the three this item just discharged. The omission arm is
+     derived rather than listed in `d270-refusal-truth.test.mjs` and floored
+     non-empty there, so this exemplar going stale is caught by name. */
+  const r = await POST(`op=provenanceroute&${CAI}`, {});
   admits("a member's session on an op no session reaches and no decision explains", r, "SESSION_ROUTE_NOT_RECORDED");
   /* THE ASSERTION THIS ROW EXISTS FOR, and it is a NEGATIVE about the wording
-     rather than a positive about the code. `op=membercaps` is D-136's: §4.7
-     assigns that vote to a person, so telling a member the absence is a DECISION
-     is both false and self-concealing — a member told an absence is deliberate
-     stops reporting it. The plane must say the fact and stop. */
-  t("and it makes NO design claim — it never says the verb is not for a person, because §4.7 says "
-  + "the opposite and a false rationale suppresses its own bug report",
+     rather than a positive about the code. */
+  t("and it makes NO design claim — it never says the verb is not for a person, because this op's "
+  + "own OPS row says the opposite and a false rationale suppresses its own bug report",
     /not for a person|unattended writer|not by a person/i.test(`${r.translation} ${r.detail}`), false);
   t("and it says plainly that the record holds no decision, which is an invitation to report the "
   + "gap rather than a wall in front of it",
     /no recorded decision/i.test(r.translation || ""), true);
-  const m = await POST("op=membercaps&token=t-admin-1", { memberId: "cai", capabilities: [] });
+  const m = await POST("op=provenanceroute&token=t-admin-1", {});
   t("NEGATIVE CONTROL: the same op is NOT refused admission to the machine credential",
     m.reason === "SESSION_ROUTE_NOT_RECORDED", false);
+  /* AND THE OP THIS ARM USED TO DRIVE IS ASSERTED AT ITS NEW ANSWER, so the
+     re-pointing above is a MOVE rather than a deletion, and a revert of D-136
+     fails HERE as well as in the suite that grades the arms.
+     IT IS NOT AN ADMISSION REFUSAL ANY MORE, AND THAT IS THE POINT. D-136 put
+     the three governance ops in BOTH session sets, because the plane's `kind` is
+     `admin` for the FOUNDER'S session alone and §4.7 gives the vote to every
+     administrator. So `op=membercaps` PASSES this gate for any member and the
+     ROSTER refuses the ones with no standing — `op=expertiseconfirm`'s posture.
+     The assertion therefore reads the STORE's answer, not an ADMISSION_CHECKS
+     row, and `admits()` is deliberately not used: this is no longer a C-38. */
+  const was = await POST(`op=membercaps&${CAI}`, { memberId: "cai", capabilities: [] });
+  t("and op=membercaps, which this arm used to drive, is no longer refused ADMISSION at all — "
+  + "D-136 gave it to every administrator's session, so it passes this gate and the ROSTER "
+  + "refuses cai by name instead",
+    [was.result?.reason ?? was.reason, was.result?.by ?? was.by], ["NOT_AN_ADMIN", "cai"]);
 }
 
 console.log("\n--- C-38.4 · THE ONE PLACE WHERE BEING THE FOUNDER IS NOT ENOUGH (8.1) ---");

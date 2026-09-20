@@ -1,6 +1,6 @@
 # BIO Membership Architecture
 
-**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132; and §4's *direct nothing* ENFORCED at every act that changes a project, built by REC-134 (IC-152, C-56) — a positional check, never the visibility gate, with §7.13 the one administrator path; and §7.9's *uninvited* position ENFORCED at every project-targeted ACT, built by REC-138 (IC-155, D-426) — a project the caller cannot see answers exactly as one that does not exist, and sight is asked before position; and §7's case-ratification bullet BUILT by REC-137 (IC-154, C-57): a case is committed only under an OWNER's signature, and delivered only by a joined participant of the project or the founder; and BOB #15's *what a refusal may say about a project the caller cannot see* PARTLY BUILT by REC-139 (IC-156, D-428) — `NAME_TAKEN` names no other project, a run's report counts only the citing projects its caller can see; plane-minted project ids decided by BOB #15 and BUILT in the plane by REC-141 (IC-158, C-59), with an OPAQUE random suffix per BOB #16 (a minted id carries no count); the surface half is UI-66 (landed together); and the case-ratification bullet applied at `op=ratify` by REC-140 (IC-157, D-429): a project bundle is refused outright, and a finding a ratified case pins takes the same two questions through one helper. §7.14 designs Bob's DISCOVERABLE-or-HIDDEN ruling and the request to join (BOB #16, 2026-09-19), not built; the DEC-63 amendment's application is stated in §7 and BUILT by REC-145 (IC-162, 2026-09-19): a run over a question consults no project, a run over a project keeps the joined gate. A minted id of a gated object carries no count (BOB #16, 2026-09-19); the gated set is that PREDICATE rather than a closed list, and `TASK` is in it (BOB #17, 2026-09-19) — BUILT for every gated prefix by REC-141 and REC-151 (IC-164, C-59.5): one CSPRNG minter `Store#mintOpaqueId`, and `op=allocid` refuses every gated prefix. Tick and close are the run's principal's (BOB #16, 2026-09-19), BUILT by REC-152 (IC-165, C-22.12); a run's context kind is checked, a machine sees no more than its principal and the kind is a closed vocabulary (BOB #16), BUILT by REC-153 (IC-163, C-22.11); the stored mislabelled runs counted at 0 (M-68). as of 2026-09-19.
+**Status** · The membership construct: cover and handle, administrators and the two-administrator floor, capabilities, burner-URL invitations, project participation and ownership, secure verified export. "v2.0, July 26, 2026", a "first-class architecture document, peer to BIO_Technical_Architecture_Decisions, BIO_State_Rules_Consistency, and BIO_Functional_Architecture", "specified by Bob Krause in session, July 24 and July 26, 2026", with per-section "Confirmed" dates; it supersedes v1.4 with a change table of every difference and is the specification the build works from. Complete at its level for §§1–8 and §10; §9 is self-declared architecture debt and §11 a pre-ship list with two cross-document items unenacted. The caveat: the root of trust is unmodelled, so every claim about it reads as "whoever controls the hosting account." §7 gained the design for D-422 (the founder's session sees what an administrator sees; one session resolver; the id `admin` reserved) on 2026-09-18, built by REC-132; and §4's *direct nothing* ENFORCED at every act that changes a project, built by REC-134 (IC-152, C-56) — a positional check, never the visibility gate, with §7.13 the one administrator path; and §7.9's *uninvited* position ENFORCED at every project-targeted ACT, built by REC-138 (IC-155, D-426) — a project the caller cannot see answers exactly as one that does not exist, and sight is asked before position; and §7's case-ratification bullet BUILT by REC-137 (IC-154, C-57): a case is committed only under an OWNER's signature, and delivered only by a joined participant of the project or the founder; and BOB #15's *what a refusal may say about a project the caller cannot see* PARTLY BUILT by REC-139 (IC-156, D-428) — `NAME_TAKEN` names no other project, a run's report counts only the citing projects its caller can see; plane-minted project ids decided by BOB #15 and BUILT in the plane by REC-141 (IC-158, C-59), with an OPAQUE random suffix per BOB #16 (a minted id carries no count); the surface half is UI-66 (landed together); and the case-ratification bullet applied at `op=ratify` by REC-140 (IC-157, D-429): a project bundle is refused outright, and a finding a ratified case pins takes the same two questions through one helper. §7.14 designs Bob's DISCOVERABLE-or-HIDDEN ruling and the request to join (BOB #16, 2026-09-19), not built; the DEC-63 amendment's application is stated in §7 and BUILT by REC-145 (IC-162, 2026-09-19): a run over a question consults no project, a run over a project keeps the joined gate. A minted id of a gated object carries no count (BOB #16, 2026-09-19); the gated set is that PREDICATE rather than a closed list, and `TASK` is in it (BOB #17, 2026-09-19) — BUILT for every gated prefix by REC-141 and REC-151 (IC-164, C-59.5): one CSPRNG minter `Store#mintOpaqueId`, and `op=allocid` refuses every gated prefix. Tick and close are the run's principal's (BOB #16, 2026-09-19), BUILT by REC-152 (IC-165, C-22.12); a run's context kind is checked, a machine sees no more than its principal and the kind is a closed vocabulary (BOB #16), BUILT by REC-153 (IC-163, C-22.11); the stored mislabelled runs counted at 0 (M-68). §4.7's vote and §4.9's capability edit BUILT by D-136 (2026-09-19): `op=adminendorse`, `op=adminremove` and `op=membercaps` reach a signed-in administrator's session and their `by` is stamped by the SERVER, so the consensus arithmetic no longer rests on an attribution the caller supplies; an operator bearer token is refused by name (C-32.17), D-421's ruling applied to a roster position rather than a signature. The three sit in BOTH session sets because `kind` is `admin` for the FOUNDER'S session alone — the one design call, argued in §4.7. NOT closed: `op=memberadd`'s `by` writes an `admin_votes` row and is still the caller's (§4.7's last paragraph). as of 2026-09-19.
 
 **Place in the system** · Owns construct 1 of `BIO_System_Design.md` §3 (membership and authority). It supersedes one decision of `BIO_Technical_Architecture_Decisions_v10.md` §10 (per-member tokens) and depends on `BIO_State_Rules_Consistency_v1_5.md` §4.3 (the project object) and §5.1–5.3 (the relationship vocabulary and edge ownership). It adds accountability and access control, not integrity; the store schema realises it.
 
@@ -16,6 +16,8 @@
 - §7 — DEC-63's run verdict: RULED by Bob (2026-09-18) and BUILT by REC-145 (IC-162). Who may TICK and CLOSE a run (the gap REC-145 pinned as built at ARM H6) was DECIDED by BOB #16 — the run's principal alone — and is BUILT by REC-152 (IC-165, C-22.12). The context KIND is checked at the open (REC-153, IC-163); the runs stored before it under a mislabelled kind were COUNTED at 0 on this account's instances (MEASUREMENTS M-68, DIST's `op=stats` reading), so nothing remains stored in that state here; an instance another group installed is unmeasured.
 - §7 — a legacy project's caller-chosen id still answers `EXISTS` to a creation of another type at it: a stated LIMITATION with its closing path (the bullet "The legacy residue"); the opaque-id rule is BUILT for every gated prefix (REC-141 for `PROJ`, REC-151 for `CASE`/`DRAFT`/`RVG`/`TASK` and `op=allocid`). The legacy non-`PROJ-` project ids in the record namespace were COUNTED by REC-151 (MEASUREMENTS M-69): 0 on `biosmoke7` and 0 on `civicos` at 2026-09-19T11:17Z; an instance in another group's account is not reachable and is not counted.
 - §7 (item 7.14) — DISCOVERABLE or HIDDEN and the request to join: DESIGNED (BOB #16, 2026-09-19), NOT BUILT; every existing project reads HIDDEN.
+- §4 (the 4.7 block) — `op=memberadd`'s `by` is NOT server-stamped while `Store#memberAdd` WRITES an `admin_votes` ('add') row from it, so the proposer of an administrator can still record ONE endorsement in another administrator's name. The same class D-136 closed for the other three ops, in a fourth BOB #17's ruling did not name; MEASURED and printed by `bio-plane/test/adminvote.test.mjs` §8, fix named there, routed rather than taken.
+- §4 — the member SURFACE for these acts (D-134) is NOT BUILT: zero of the admin-only mutating ops appear in `civicos-ui/app.html`, which is deliberate and comes after the fence, never beside it.
 
 **Contents**
 - [1. Why membership exists](#1-why-membership-exists)
@@ -341,8 +343,10 @@ exists precisely so that administrators cannot be manufactured unilaterally.
 Reactivating them as an ordinary member is a single administrator's call;
 restoring their administrator status is not.
 
-**THE SECTION 4.7 VOTE CANNOT BE CAST BY A PERSON TODAY, AND THAT IS AN OMISSION RATHER
-THAN A DECISION (D-136/D-134, RULED 2026-09-19 by BOB #17, read at the code).**
+**THE SECTION 4.7 VOTE COULD NOT BE CAST BY A PERSON, AND THAT WAS AN OMISSION RATHER
+THAN A DECISION (D-136/D-134, RULED 2026-09-19 by BOB #17, read at the code).
+BUILT 2026-09-19 by D-136 — the finding below is kept in the PAST TENSE, with what
+landed stated after it, because the reasoning is what licenses the fence.**
 `op=adminendorse` and `op=adminremove` carry `classes: ["admin", "probe"]` and appear in
 no session set, so the ONLY caller that can cast a 4.7 vote is a bearer credential. And
 `by` is server-stamped only for `PROJECT_ACTIONS` plus `projectparticipants` and
@@ -368,7 +372,42 @@ second path to it.
 
 **Until it lands, the plane must not tell a member that this absence is a decision** — see
 the refusal rule (IC-55/D-262): *this verb is not for a person* is a design claim the
-plane may make only where such a decision exists, and here none does.
+plane may make only where such a decision exists, and here none does. **That obligation is
+DISCHARGED: the absence has stopped being an absence.**
+
+**WHAT LANDED (D-136, 2026-09-19), AND THE ONE DESIGN CALL IT FORCED.** The three ops carry
+`classes: ["admin","member","probe"]`, appear in BOTH of `SESSION_OPS`' sets, and their `by`
+is stamped by the server from the signed-in session through `GOVERNANCE_ACTIONS` — one array
+consumed by the reach, the stamp and the fence together, so the halves cannot ship apart. The
+store READS the stamp on all three: `adminEndorse` and `adminRemove` already checked `by`
+against the live administrator roster and now receive it from the query rather than the
+caller's body; `memberCaps` gained the same check, because a stamp nothing consults is a
+mechanism believed on the strength of its existence. An operator's bearer token is refused at
+the door by name (`OPERATOR_TOKEN_CANNOT_GOVERN`, C-32.17), which is D-421's ruling — *the
+credential that delivers an act decides when the record changes, and the record names the
+actor* — applied to a §4.7 vote with the signature replaced by a roster position.
+
+**THE DESIGN CALL: the three are in BOTH session sets, not the administrator's alone, and
+this section is where that is recorded.** The plane's `kind` is `admin` only for the
+FOUNDER'S password session; every enrolled administrator holds `member:<id>` however their
+roster row reads, and a class list without `member` refuses their browser before the session
+gate is reached — both measured at the code, the second by an enrolled administrator being
+refused CLASS_FORBIDDEN at her own endorsement. Reach in the administrator set alone would
+therefore have given §4.7's vote to ONE person while closing the bearer route to everyone
+else, leaving a group of three unable to add or remove an administrator at all: this
+section's own failure mode arrived at one administrator instead of zero. **What decides these
+acts is the ROSTER, and the store asks it** — an ordinary member reaching them is told
+`NOT_AN_ADMIN`, the thing that is true, which is `op=expertiseconfirm`'s recorded posture for
+an administrator-only act. It discloses nothing new: §3's handle roster with its roles is
+already a member's to read. The member SURFACE (D-134) is still unbuilt and still comes after
+this fence.
+
+**WHAT IS NOT CLOSED, stated rather than rounded off.** `op=memberadd`'s `by` is NOT
+server-stamped, and `Store#memberAdd` WRITES an `admin_votes` row from it — so the proposer of
+an administrator can still record one endorsement in another administrator's name. It is the
+same class in a fourth op this ruling did not name, it is measured and printed by
+`bio-plane/test/adminvote.test.mjs` §8, and its fix is one disjunct on the stamp plus the
+suites that send `by` in that op's body. It is routed rather than taken here.
 
 **And administrators do not touch project participation.** They do not invite to
 projects, do not remove from projects, and do not activate or deactivate

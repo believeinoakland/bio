@@ -352,6 +352,14 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        grant, revoke) share one fence at the store's `#reviewAuthor`. D-PIN-B
        failed naming exactly this row until it was written here. */
     ["C-32.16", "MACHINE_CANNOT_REVIEW"],
+    /* D-136, 2026-09-19 — D-421's ruling applied to SECTION 4 GOVERNANCE: an
+       operator's bearer token delivers no §4.7 vote and no §4.9 capability edit.
+       Same family, same control-plane home as C-32.14/C-32.15, and ONE row for
+       the three ops because they enter through one region and are refused by one
+       predicate. D-PIN-B failed naming exactly this row until it was written
+       here, and D0 read 54 against a pinned 53 — the pair of arms doing its job
+       on the first battery of the item that added it. */
+    ["C-32.17", "OPERATOR_TOKEN_CANNOT_GOVERN"],
     /* ACT_SHAPE_CHECKS — the single-homed tail, plus §14a's capability sentence */
     ["C-33.1", "NO_CONCLUSION"],
     ["C-33.2", "NO_FALSIFIER"],
@@ -493,10 +501,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 52 -> 53 on 2026-09-18 (REC-136), FROM THE FIGURE THIS INSTRUMENT PRINTED
      ("got 53" on the item's tree) and not by adding to the number in the file:
      C-33.37 NOTHING_TO_WITHDRAW. */
+  /* MOVED 53 -> 54 on 2026-09-19 (D-136), FROM THE FIGURE THIS INSTRUMENT PRINTED
+     ("corpus: 54 rows across 2 families" on the item's tree) and not by adding to
+     the number in the file: C-32.17 OPERATOR_TOKEN_CANNOT_GOVERN. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one, REC-124's three and REC-136's one — a walk that lost a family would run fewer arms and "
-    + "every one of them would still pass",
-    rowsSeen, 53);
+    + "REC-126's one, REC-124's three, REC-136's one and D-136's one — a walk that lost a family would run "
+    + "fewer arms and every one of them would still pass",
+    rowsSeen, 54);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

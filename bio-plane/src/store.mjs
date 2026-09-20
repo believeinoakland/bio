@@ -29304,7 +29304,27 @@ export class Store extends DurableObject {
    *  granted and removed only by the section 4 process, and 4.4 says no
    *  administrator may strip another, so this refuses to touch either side of
    *  that line. */
-  memberCaps({ memberId, capabilities } = {}) {
+  /*  D-136 ADDS `by`, AND IT IS READ RATHER THAN RECORDED. Section 4.9 makes
+   *  setting capabilities a custodial act of an ADMINISTRATOR, and the control
+   *  plane now stamps `by` from the session (`GOVERNANCE_ACTIONS` in index.mjs).
+   *  A stamp nothing consults is a mechanism believed on the strength of its
+   *  EXISTENCE rather than its behaviour, so the check sits here beside
+   *  `adminEndorse`'s and `adminRemove`'s, which asked the same question of the
+   *  same roster before this item and were whole except for who supplied the
+   *  answer. A bearer credential stamps `class:<cls>`, which is in no roster,
+   *  so it is refused here even if the control plane's fence in front of it were
+   *  removed — which is exactly what the `fence-dropped` control arm measures.
+   *
+   *  IT IS ASKED BEFORE `NO_SUCH_MEMBER`, deliberately: who may ask is settled
+   *  before the record answers whether a member exists, so a caller with no
+   *  standing cannot use this op to enumerate the roster. */
+  memberCaps({ memberId, capabilities, by } = {}) {
+    const admins = this.#activeAdmins();
+    if (!by || !admins.includes(by))
+      return { ok: false, reason: "NOT_AN_ADMIN", by,
+               detail: "setting a member's capabilities is an administrator's act (4.9), and the plane "
+                     + "stamps who is asking from the signed-in session rather than taking it from the "
+                     + "caller. This caller is not one of the active administrators." };
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     const want = Array.isArray(capabilities) ? capabilities : null;
@@ -29317,7 +29337,11 @@ export class Store extends DurableObject {
     if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad, known: Store.CAPABILITIES };
     this.sql.exec(`UPDATE members SET capabilities=?, updated=? WHERE member_id=?`,
       JSON.stringify(want), new Date().toISOString(), memberId);
-    return { ok: true, memberId, capabilities: want };
+    /* `by` travels back in the answer for `adminRemove`'s reason — an act the
+       record attributes to a person should say whom it attributed it to, at the
+       moment it is performed, so a caller can see the server's answer rather
+       than its own. */
+    return { ok: true, memberId, capabilities: want, by };
   }
 
   /** Endorse a proposed administrator. Addition above the second requires the
@@ -42114,9 +42138,26 @@ export class Store extends DurableObject {
            by the projection in memberList() above, off the `administer` stamp
            this line passes through — a class ACL cannot express it, because the
            op is legitimately reachable by callers who must not see the pairing. */
-        membercaps: () => this.memberCaps(body || {}),
-        adminendorse: () => this.adminEndorse(body || {}),
-        adminremove: () => this.adminRemove(body || {}),
+        /* D-136 — `by` COMES FROM THE QUERY, AND THE OVERRIDE IS LAST SO A BODY
+           CANNOT WIN. This is the half that turns the control plane's stamp from
+           a record into a fence, and before this item it was the whole defect:
+           `adminEndorse` and `adminRemove` already checked `by` against the live
+           administrator roster, and the check was sound — but the VALUE it
+           checked arrived in the caller's own body, so "every existing
+           administrator must endorse" was satisfied by a caller willing to type
+           somebody else's id. The projects family stamps and reads `by` exactly
+           this way (`projectinvite` below), for the sentence its own comment
+           gives: only an owner may remove is worth nothing if the caller names
+           who they are.
+           SPREAD-THEN-OVERRIDE rather than a hand-listed shape, and the order is
+           the safety property: a `by` in the body is overwritten by the query on
+           every one of the three, so no future field added to any of these
+           payloads can reintroduce the caller's answer by being copied in after
+           it. A direct call with no stamp gets `null` and is refused by name,
+           which is the fail-closed direction — the store never guesses a voter.  */
+        membercaps: () => this.memberCaps({ ...(body || {}), by: url.searchParams.get("by") }),
+        adminendorse: () => this.adminEndorse({ ...(body || {}), by: url.searchParams.get("by") }),
+        adminremove: () => this.adminRemove({ ...(body || {}), by: url.searchParams.get("by") }),
         adminarith: () => this.adminArithmetic(),
         projectclaimowner: () => this.projectClaimOwner(body || {}),
         /* REC-138: `viewer` is the control plane's stamp (sight before position, `#inSight`). */

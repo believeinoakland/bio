@@ -15318,11 +15318,23 @@ all of `civicos-ui/**`, `docs/development/QUEUE.md` (CONDUCT's word), `docs/deve
 
 **open as of 2026-09-19** — LANDED AND PUSHED, awaiting CONDUCT's integration. Branch `rec-146-contradiction-pairing` @ `8d51d57c`, verified from the REMOTE with `git ls-remote --heads origin`. Gate on that tree: battery **262/262 suites green / 16022 assertions / exit 0** (baseline on the same tree before the change 261/261 / 15976 / exit 0), `coverage.mjs --strict` **exit 0** (195/195 ops reached through the control plane, 347/347 checks named, 254/254 suites declaring a control), `civicos-ui/test/run.mjs` **exit 0**, `plancheck` clean but for UNPUSHED-to-main. Negative control **6/6 arms AS DECLARED**, baseline 43/0. **REGISTER_FLOOR moved** to arms 1511 / classified 253 / corpus 254 / run 216, read off this item's own post-commit green `--strict` print — **CONDUCT re-reads it on the merged tree**, as it re-reads the one row added to `derivation-bounds.test.mjs`'s UNREAD_FORMS roster. The claim stays OPEN until CONDUCT merges; the paths are free to a later worker the moment it does.
 
+**RELEASED 2026-09-20 by CONDUCT #8 at the instrument cluster + D-136 integration.** REC-146 LANDED at `84a66a30` and its branch is GONE from the remote (`git ls-remote --heads origin` prints nothing for it, which under PRUNE-ON-MERGE
+MEANS integrated, not missing). The paths this block reserved are therefore FREE, and were already free when the
+instrument-cluster worker met this block and proceeded on the evidence rather than stalling — it was right to, and
+it reported the stale reservation rather than silently ignoring it. **The claimant could not write this line: its
+session is gone. The integrator writes it, which is the only actor who can.**
+
 ## CLAIM 2026-09-19 RECORD (D-270 — the session gate answered three facts with one sentence, and it was false for two)
 
 session: d270-record (worktree `.claude/worktrees/d270-record`, branch `d-270-refusal-codes`)
 
 **open as of 2026-09-19** — OPEN while this item builds; CONDUCT integrates and resolves IC-55.
+
+**RELEASED 2026-09-20 by CONDUCT #8 at the instrument cluster + D-136 integration.** D-270 LANDED at `02e7c537` and its branch is GONE from the remote (`git ls-remote --heads origin` prints nothing for it, which under PRUNE-ON-MERGE
+MEANS integrated, not missing). The paths this block reserved are therefore FREE, and were already free when the
+instrument-cluster worker met this block and proceeded on the evidence rather than stalling — it was right to, and
+it reported the stale reservation rather than silently ignoring it. **The claimant could not write this line: its
+session is gone. The integrator writes it, which is the only actor who can.**
 
 paths, named by REGION and by SITE and never by file, because `index.mjs` is the repo's
 most-churned file and other sessions are live in it:
@@ -15425,6 +15437,12 @@ suites' `detail` pins are green by absence. Fix: carry the catalogue row's `tran
 pin. Measured in `MEASUREMENTS.md` M-72.
 
 **open as of 2026-09-19** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
+
+**RELEASED 2026-09-20 by CONDUCT #8 at the instrument cluster + D-136 integration.** UI-72 LANDED at `84a66a30` and its branch is GONE from the remote (`git ls-remote --heads origin` prints nothing for it, which under PRUNE-ON-MERGE
+MEANS integrated, not missing). The paths this block reserved are therefore FREE, and were already free when the
+instrument-cluster worker met this block and proceeded on the evidence rather than stalling — it was right to, and
+it reported the stale reservation rather than silently ignoring it. **The claimant could not write this line: its
+session is gone. The integrator writes it, which is the only actor who can.**
 
 ## CLAIM 2026-09-19 M0 / VERIFY / UI (THE INSTRUMENT CLUSTER — M0-78, D-414, D-433 as ONE landing)
 
@@ -15569,3 +15587,119 @@ not appended — 16,276 → 16,374 B of a 16,384 B budget, 10 B headroom, `readb
 lane+s to write; the `CLAUDE.md` §5 edit follows BOB #17+s D-325 precedent of the same day.
 
 **open as of 2026-09-19** — a single-sitting corpus act; released in the same turn it lands.
+## CLAIM 2026-09-19 RECORD (D-136 — THE §4.7 VOTE AND THE §4.9 CAPABILITY EDIT BECOME A PERSON'S ACTS: session reach and a server-stamped `by` on `adminendorse`, `adminremove` and `membercaps`, in ONE landing)
+
+Worker spawned by CONDUCT #8. **Own worktree** `.claude/worktrees/d136-conduct8`, branch
+**`worker/d136-conduct8`**, base `origin/main` @ `ad67ff0a`. `npm ci` in `bio-plane/`, `pdf-worker/` and
+`ocr-worker/`, each `node_modules` verified a REAL DIRECTORY (30 / 25 / 26 entries), `df -h` 7.6 GiB free
+after. Design authority: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 (the BOB #17 block
+"THE SECTION 4.7 VOTE CANNOT BE CAST BY A PERSON TODAY", `95fb3e4c`) and §4.9's capability edit, read
+with §5. Precedent: D-421 / C-32.14 / C-32.15 (BOB #14) — no operator bearer token delivers an
+authored act. Claimed BY SITE, because `index.mjs` and `store.mjs` are the repo's most-churned files:
+
+- `bio-plane/src/index.mjs` — **by SITE:** (1) the NEW `GOVERNANCE_ACTIONS` array beside
+  `PROJECT_ACTIONS`; (2) `SESSION_OPS.admin` — ONE spread added beside `"memberadd", "memberset"`,
+  and **the `member` set is NOT touched**; (3) THREE `null` rows in the capability table beside
+  `memberadd`/`memberset`; (4) the `by` stamp's condition — one disjunct added; (5) ONE NEW
+  `DEC-49 REGION is-operator-governance-act` immediately above that stamp; (6) the D-270 doctrine
+  comment's "reachable by NO session" sentence and the OPS-table comment, both CORRECTED because
+  this landing makes them false. **NOT** the OPS rows' `classes` lists, **NOT** any other refusal.
+- `bio-plane/src/store.mjs` — `memberCaps` ONLY: it gains the `by` argument and the active-admin
+  check that makes the stamp non-inert. `adminEndorse`/`adminRemove` already read `by` and are
+  UNTOUCHED.
+- `bio-plane/checks/bio-checks.mjs` — ONE new row `OPERATOR_TOKEN_CANNOT_GOVERN` at **C-32.17** in
+  `MACHINE_FENCE_CHECKS` (the family D-421's two rows live in), and the D-136 sentence at the
+  `SESSION_GATE` family's note, corrected.
+- `bio-plane/src/affordances.mjs` — THREE `NON_ACTS` entries with their reasons (forced by the NEEDS
+  totality guard, `affordances.test.mjs:180`), and nothing else.
+- `bio-plane/test/adminvote.test.mjs` and `bio-plane/test/adminvote.control.mjs` — both NEW.
+- `bio-plane/test/d270-refusal-truth.test.mjs` — the OMITTED arm for the three ops, CORRECTED with a
+  dated reason (never exempted): they are no longer omissions.
+- `bio-plane/test/admission-gate.test.mjs` — C-38.8's OMISSION exemplar RE-POINTED off `op=membercaps`,
+  which this landing stops being an example of.
+- `bio-plane/test/membership.test.mjs` — `by` added to the direct-DO `membercaps` drives, with a dated
+  reason at the site; the arithmetic assertions are untouched.
+- `bio-plane/dist/` (the rebuilt bundle); `bio-plane/scripts/coverage.mjs` (floors, from the print only).
+- `docs/architecture/BIO_Membership_Architecture_v2.md` (§4.7's block and the front matter) and
+  `docs/architecture/construct-status.json` (`1.admin-floor`, `1.capabilities`).
+
+**NOT** `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), **NOT**
+`docs/development/INTERFACE-CHANGES.md` (I3; **the integrator mints and classifies the IC**, per the
+row), **NOT** `newgroup/`, **NOT** `release/`, **NOT** `civicos-ui/app.html` — **D-134's member
+surface is out of scope by the row's own words**: a surface over an act whose voter the caller can
+name is a second path to a forgeable vote, and it is placeable only once this lands.
+
+**open as of 2026-09-19** — OPEN while this item builds; CONDUCT integrates and mints the IC.
+
+## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER (five defects, each with its FIX NAMED) and -> BOB (two calls) — **SWEPT OUT OF TWO WORKER REPORTS AT INTEGRATION, BECAUSE PROSE IN A REPORT IS DRAINED BY NOTHING**
+
+Both workers of CONDUCT #8's first wave ended their reports with verbs aimed at a future actor. `kickoffs/CONDUCT.md`
+requires each to become a row, an inbox-class entry or a DELEGATION — never a line on a list — so here they are, each
+diagnosed to the point where its FIX CAN BE NAMED, which is the bar `CLAUDE.md` §4 sets before a defect may be placed.
+**SCHEDULER #3 is live** (measured `isRunning: true`), so these are owed a reader. CONDUCT #8 cannot `SendMessage` it —
+see the 2026-09-19 DELEGATION above — so this block is the channel.
+
+**TO SCHEDULER — five, in the order I would place them, with the reason on each:**
+
+1. **`op=memberadd` HAS D-136'S DEFECT AND D-136 DID NOT CLOSE IT — place this FIRST, ahead of the other four.** Its
+   `by` is not stamped and `Store#memberAdd` writes an `admin_votes` ('add') row from it, so a proposer can still
+   record one endorsement in another administrator's name. This is the same forgeable-governance-vote class that made
+   D-136 outrank a feature, so it inherits that rank. **FIX, NAMED:** add `|| op === "memberadd"` to the `by` stamp's
+   condition in `bio-plane/src/index.mjs`, pass `by` from the query in the store relay, and correct the suites that
+   send it in that op's body. **It is already pinned:** `adminvote.test.mjs` §8 prints the boundary and its assertion
+   FAILS THE DAY THIS IS CLOSED, so the row cannot be quietly forgotten. Not folded into D-136 because BOB #17's ruling
+   named three ops and that row refuses to be split — widening it at integration would have been CONDUCT inventing
+   scope.
+
+2. **`tools/rowsubstrate.mjs` SCORES AN UNRESOLVABLE ANCHOR AS UNCOVERED, so `plancheck` reports a false
+   `substrate not evident`.** This is an instrument claiming about what it cannot see — the exact class the instrument
+   cluster just closed three of, which is why it belongs beside them. Measured: §4.7 and §4.9 are BOLD PARAGRAPHS, not
+   headings, so `sectionText()` returns null for both and D-136's finding carries **`probes: []`** — it compared zero
+   symbols against zero text and reported a gap. §4, the real heading, contains BOTH of the row's symbols.
+   Independently corroborated the same day by `corpuscheck`, which refused front-matter bullets naming "§4.7" as *"not
+   a section of the document"*. **FIX, NAMED:** when every anchor for a cited document is unresolvable, fall back to
+   document level or count the row UNJUDGED — **never uncovered**. That file's own header already documents this
+   mechanism as withdrawn from its ANCHOR arm; it leaked into the COVERAGE arm. Owner M0 / VERIFY.
+   **`D-136`'s pointer was NOT changed and no citation was invented** — *a citation invented to pass a check is worse
+   than the gap it hides.*
+
+3. **`caseproduction.control.mjs` ARM (H) IS NOW WEAKER THAN IT DECLARES.** The participation fence (C-56.1) stops the
+   forged attribution at ratify, so the arm drives the fence rather than the commit it claims to test. **FIX, NAMED:**
+   restore the original property with a forged project the actor has JOINED (`PROJ_OTHER`) — which cannot be a static
+   literal, because project ids are opaque and minted, so the arm needs a minted fixture. Named at the site by the
+   builder. Wants its own row: it is a second defect in a control the cluster repaired, not part of that repair.
+
+4. **THE D-384 POPULATION WAS MEASURED WHILE `eachImage` WAS INVISIBLE.** `eachImage` amplifies but sits outside
+   `D384_STAYS`, whose population was fixed on 2026-09-16 — before D-414 made generator methods visible to the five
+   walks. **FIX, NAMED:** re-measure that population now that the walks can see it. The builder declined to widen its
+   own row to take this, correctly.
+
+5. **`docs/architecture/BIO_System_Design.md` IS 46 BYTES UNDER ITS READING BUDGET** (49,106 of 49,152 B). The D-136
+   builder pushed it over with its own claim prose and cut ITS OWN prose back to fit — the right direction, and the
+   same act DIST took on `DIST-NEXT` at `c291250e`. **The next claim touching construct 1 or 5 will FAIL that gate.**
+   **FIX, NAMED:** the file's OWNER cuts it; this is not a defect in any row that trips over it. Flagging it before it
+   fails rather than after.
+
+**TO BOB — two, and neither blocks anything:**
+
+A. **D-136's one design call, made rather than asked, and cheap to overturn.** The three governance ops gained
+   `member` and sit in BOTH `SESSION_OPS` sets rather than the admin set alone, because `kind` is `admin` for the
+   FOUNDER'S PASSWORD SESSION ONLY while an enrolled administrator holds `member:<id>`. Admin-set-only reach would
+   have given §4.7's vote to exactly one person while the new fence closed the bearer route to everyone else —
+   **the row's own failure mode arriving at one instead of zero.** Argued at the site and in §4 of the design, and
+   recorded in IC-168. **Reversing it costs one array spread and one class list.** Ruling welcome, not needed to proceed.
+
+B. **The `kickoffs/CONDUCT.md` cut question, restated from the 2026-09-19 block above because it is now addressed to a
+   live BOB.** That file has 24 bytes of headroom and is in `readbudget.mjs`'s `CUT` set, where exceeding budget is a
+   FAIL. The rule that a scheduled-task CONDUCT cannot message any peer belongs in that law and cannot fit. The only
+   prose long enough to pay for it is the two "Integration mechanics" sections, which `docs/archive/CONDUCT-kickoff-2026-09-19.md`
+   does NOT contain. **May it take the rule, and what pays for it?**
+
+**AND ONE THING CONDUCT #8 DID ITSELF RATHER THAN ROUTE**, recorded so it can be checked: the three CLAIMS blocks for
+D-270, REC-146 and UI-72 reserved paths that were already free — all three landed and their branches are gone from the
+remote, which under PRUNE-ON-MERGE means integrated. Their claimants' sessions are gone, so no claimant could write the
+release. **The integrator is the only actor who can, so the integrator did**; each block now carries its dated
+`RELEASED 2026-09-20` line in its own block. The instrument-cluster worker met one of those stale reservations on its
+own file, proceeded on the evidence, and REPORTED it — which is the behaviour that surfaced this at all.
+
+**open as of 2026-09-20.**
