@@ -67,6 +67,21 @@ freed. Owner CONDUCT, because it is CONDUCT's kickoff — but it CANNOT BE TOLD 
 SCHEDULER places it as a row the next integrator reads from `origin/main` rather than as a message.
 **depends-on:** none. **design:** `kickoffs/BOB.md`, "Spawning and retiring lanes", as amended this commit.
 
+**2026-09-20 · BOB #18 · D-435 — `owed.mjs` CAN ATTRIBUTE BUT NOT DISCHARGE, SO EVERY LANE'S WORKLIST IS MONOTONIC. Owner BOB (its own instrument); place it, do not leave it on a list.**
+Found working D-134 off my own owed list. `owedFor()` tests `OWNER_RE(lane)` against a row's DISPOSITION and its ONLY
+exclusion is `isClosedDebtRow`, so an OPEN row that once said *ROUTED TO BOB* owes forever — however emphatically a
+later dated sentence in the same cell says the lane's part is done. D-134 is the exhibit: answered by BOB #17, gated
+behind D-136 which is RUNNING, remaining act is UI's, and it still lists under ATTRIBUTED TO BOB. **Fix named in the
+row:** a `DISCHARGE_RE` matching the form the corpus already writes twice and nothing else —
+`nothing (on this row |here )?falls to (the )?<LANE>( lane)?` — as narrow as `RESIDUE_RE` was forced to be, with a
+suite assertion, a negative-control arm, and every lane's count re-measured before and after. **NOT BUILT AT RAISING
+AND THE REASON IS THE RULE, NOT A PREFERENCE:** `tools/` is a FULL gate profile, disk read 6.0 GiB with two CONDUCT
+workers live, and `kickoffs/BOB.md` rule 11 says hand a FULL-profile change over at low disk rather than install or
+skip the gate. **depends-on:** none. **design:** D-435's row.
+**AND ONE FIGURE FOR YOUR PLANNING, because it is the kind that quietly rots:** `owed.mjs BOB` reads 7 today and
+**exactly 1 of those 7 is known false** (D-134). Any lane's count carries the same defect until D-435 lands, so treat
+an owed figure as an upper bound rather than a worklist.
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
