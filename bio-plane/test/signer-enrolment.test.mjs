@@ -188,7 +188,7 @@ t("FLOOR: and the signer roster starts EMPTY, so every row counted below was put
 console.log("\n--- 1. the write: a key is registered to a member who can attest ---");
 const addKestrelEarly = await POST(`op=signeradd&token=${ADM}`,
   { keyB64: KEY.kestrel, memberId: "kestrel", comment: "kestrel laptop" });
-t("op=signeradd for a member who has not enrolled is refused BY NAME",
+t("op=signeradd for a member who has not enrolled is refused BY NAME, and the check FIRES: C-63.1",
   addKestrelEarly.reason, "SIGNER_MEMBER_NOT_ENROLLED");
 t("and the refusal carries the plane's own canned sentence, so the administrator is told what happened "
 + "rather than handed a code (DEC-49)",
@@ -225,7 +225,7 @@ t("jonah's membership is revoked, and the cascade takes his key with it (memberS
   [revokeJonah.ok, ((await roster()).find((r) => r.key_b64 === KEY.jonah) || {}).status], [true, "revoked"]);
 const reviveKey = await POST(`op=signerset&token=${ADM}`, { keyB64: KEY.jonah, status: "active" });
 t("op=signerset cannot put a revoked member's key back to `active` — the second door onto the same "
-+ "disagreement, refused BY NAME", reviveKey.reason, "SIGNER_MEMBER_NOT_ACTIVE");
++ "disagreement, refused BY NAME, and the check FIRES: C-63.2", reviveKey.reason, "SIGNER_MEMBER_NOT_ACTIVE");
 t("and it names the stored facts: enrolled, membership revoked",
   [reviveKey.member_status, reviveKey.enrolled], ["revoked", true]);
 t("and the key is still revoked, so nothing landed",

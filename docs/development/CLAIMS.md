@@ -15797,7 +15797,11 @@ Claimed BY SITE, because `store.mjs` and `index.mjs` are the repo's most-churned
 
 **NOT** `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), **NOT**
 `docs/development/INTERFACE-CHANGES.md` (I3; **the integrator mints and classifies the IC**, per the row),
-**NOT** `newgroup/`, **NOT** `release/`, **NOT** `civicos-ui/app.html` — measured: `grep -rn 'signerlist\|signeradd\|signerset'`
-over `civicos-ui/` returns ZERO, so no member surface calls these ops and there is no UI half to build.
+**NOT** `newgroup/`, **NOT** `release/`, **NOT** `civicos-ui/app.html` — MEASURED, and stated precisely because
+"zero" was the first thing this claim said and it was one hit too generous: `grep -rn 'signerlist|signeradd|signerset|signerList'`
+over `civicos-ui/` returns **ONE** hit, and it is `civicos-ui/test/members-roster.test.mjs:192`, a suite's LIST of acts
+the member roster must not offer — not a call and not a render. `app.html` itself returns ZERO. `agent-worker/`,
+`pdf-worker/src` and `ocr-worker/src` return zero. So no member surface reads this roster and there is no UI half to
+build; the plane's own setup page is the one surface that renders it, and it is corrected here.
 
 **open as of 2026-09-20** — OPEN while this item builds; CONDUCT integrates and mints the IC.
