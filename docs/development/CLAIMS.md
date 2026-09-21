@@ -15980,3 +15980,9 @@ claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths: `docs
 `docs/development/MEASUREMENTS.md` (M-75 gains one dated data-point line, appended under it), `docs/DECIDED.md`
 (GENERATED, regenerated LAST), and this block. The MK-3 DELEGATION's discharge is written INSIDE that block,
 where `tools/delegations.mjs` reads it.
+
+## CLAIM 2026-09-21 BOB (BOB #19 — batch 2: REC-135's second-edition question ruled as §7.1 item 9; D-195, D-80, D-126 and D-52 re-disposed against their own designs and the code)
+
+claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths: `docs/development/INVESTIGATIVE-SESSION.md`
+(front matter and §7.1 only), `docs/development/DEBT.md` (the disposition cells of D-195, D-80, D-126 and D-52 only),
+`docs/development/QUEUE.md` (the BOB INBOX only), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
