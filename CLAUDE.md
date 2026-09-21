@@ -123,11 +123,9 @@ design, doctrine, anything for Bob → BOB) and continue.
   against the code on your tree before you rest a deferral, a row or a refusal on it; one from a ledger is a
   claim about its day. Retry the NARROWEST form; name the refspec, session and hour refused.
 - **SUBSTRATE BUILT IS NOT DEPENDENT BUILT — and this is the JUDGING half of §2's building rule** (BOB #17,
-  2026-09-19, from three independent catches in one fold by SCHEDULER #2: D-60, D-115's fourth clause, D-116).
+  2026-09-19; D-60, D-115, D-116, receipts archived).
   §2 says do not BUILD a dependent until its substrate is verified BUILT. The error that keeps being made runs the
-  other way: a row is READ as done because the thing underneath it is done. D-116 is the exhibit — the version
-  authority is built and nothing reads it THROUGH the binding, so the plane can verify itself current while a fleet
-  member still serves the previous build, **invisibly to both**. **When you judge a row, verify the DEPENDENT at the
+  other way: a row is READ as done because the thing underneath it is done. D-116 is the exhibit (archived verbatim). **When you judge a row, verify the DEPENDENT at the
   code by name; a built substrate is not evidence about it, and neither is the row.** The honest outcome is usually
   NARROWED to the one unbuilt trace, not closed — and a row closed by rounding off its unbuilt quarter is how a false
   "done" enters the record.
@@ -177,11 +175,8 @@ each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not
 - **Schema:** new tables before the `host_governor` block; no backticks in the schema or setup templates;
   no semicolon inside an inline `--` comment; a derived table must be added to `purge`.
 - **Bound every poller** (`until <cond> || [ $SECONDS -gt N ]`); kill by PID from a table you read, never by pattern.
-- **Never put a shell variable in an `rm`/`rmdir` path: write the literal absolute path, or skip the cleanup.** The
-  harness treats a removal that an empty variable could turn into a root path (`rm -f $W/$d/x.log`) as a critical-path
-  removal, and it ASKS EVEN IN BYPASS. No allow rule or hook can pre-approve it (Claude Code's permission docs, "critical
-  paths"), so the lane, and every worker running inside it, halts until Bob clicks (a CONDUCT #9 worker, 2026-09-21).
-  Put the same rule in every worker's brief.
+- **No shell variable in an `rm`/`rmdir` path**; write the literal absolute path. Bypass still ASKS when an empty
+  variable could aim it at root (no rule or hook can pre-approve that), halting the lane. Brief workers too.
 
 ## 8. Cloudflare and credentials
 
