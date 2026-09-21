@@ -56,7 +56,10 @@
  * (B) THE LIAR — `op=inquiryground` kept, the `why` rewritten to describe citing -> RED, naming NO_BASIS; (C) THE
  * HALF-FIX — `op=cite` with the surface left at `inquiry` -> RED, naming the unperformable pair; (D) the last step
  * DELETED (every remaining step completes) -> RED, naming the GOAL; (E) OVER-STRICTNESS — cite, then group, the split
- * the row itself names -> GREEN. Results are recorded in the control driver's header.
+ * the row itself names -> GREEN. RUN 2026-09-21 by D-434's worker: 6/6 AS DECLARED — BASELINE 25/25, (A) 19/25 and
+ * (B) 20/25 each failing on "REFUSED NO_BASIS" (and (B) on no vocabulary line), (C) 17/23 on NO SUCH PAIR, (D) 18/20
+ * on both GOAL lines, (E) 30/30; app.html restored by sha256 and `cmp` after every arm. The per-arm lines are in the
+ * control driver's header.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard the writer's
    own output. SHARED from the plane's test estate; census: `stdio-census.test.mjs`. */
