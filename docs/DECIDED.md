@@ -1295,7 +1295,7 @@ authority is the file named, never this one.
 - **REC-155** · 2026-09-21 — CLAIM 2026-09-21 BOB (BOB #20 — REC-155 RULED into Membership v2 §4.10, landed AHEAD of D-158; the first ruling of the BOB #19 -> BOB #20 DELEGATION) claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`.  
   `docs/development/CLAIMS.md:16249`
 - **REC-155** — REC-155 RULED** into Membership v2 §4.10 (BOB #19's ruling, one example corrected at the code: a bearer caller's author stamp is `token:<class>`).  
-  `docs/development/kickoffs/BOB-NEXT.md:33`
+  `docs/development/kickoffs/BOB-NEXT.md:35`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -2460,7 +2460,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1368`
 - Five more exports were RULED INTO I10, and FLEET landed them as 1.1.0 PROVISIONAL (`e99abfec`). - **THE PUBLICATION BLOCK**, root cause: the user-level auto-mode environment (`~/.claude/settings.json`, `autoMode.environment`) trusted only `supervised-harness-kit`, and `believeinoakland/bio` is PUBLIC and was not  
-  `docs/development/kickoffs/BOB-NEXT.md:35`
+  `docs/development/kickoffs/BOB-NEXT.md:37`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:93`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
