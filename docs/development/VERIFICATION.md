@@ -39,8 +39,7 @@ The rest of the 2026-07-31 table is archived; this row stays (pinned by `registe
 
 ## Three defects the instruments found on first run
 
-An unchained suite never ran; one read an absolute container path; a fixture held a value no real
-instance could (D-40). **Correct a wrong fixture; never relax the assertion.**
+Receipts archived (D-40). **Correct a wrong fixture; never relax the assertion.**
 
 ## The battery runs every suite, and reports all of them
 
@@ -165,6 +164,8 @@ zero-match MUST first count every arm's quote in the file that arm will write an
 (`preflight()` in `bio-plane/scripts/armdecay.mjs`). **Keep the throw**: a half-armed tree is never
 measured. Refuse only for the arms the invocation will run. **A driver's declared arm count is held
 against its run** (D-333, `m025-arm-census.mjs`); an UNKNOWN on either side is listed apart, not gated.
+**Decay mode (c), a subject gone, is a stated LIMITATION, not a figure** (D-353): cite M0-29's 0 only as of
+`e9ba393`, 2026-09-14.
 
 ### A DRIVER IS FOUND BY WALKING THE DRIVERS, NEVER BY GUESSING ITS NAME (M0-51, 2026-09-17)
 
