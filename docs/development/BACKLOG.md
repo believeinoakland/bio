@@ -110,16 +110,6 @@ scope: ONE disjunct, `raw.length === R` (the supply was not exhausted), in the O
 accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. How a liar passes it: fixing one arm, so the fixture drives all three. NEGATIVE CONTROL: drop the disjunct, and the full-fetch arm fails by name at each level.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
 
-### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE CEILING — AGAINST D-36's MEASURED workerd CEILING OF ABOUT 100.** The `subject IN (${marks})` inside `__REC91_AXIS_LIST__` (`store.mjs`) is built from `pageCut`; REC-109 held it at `cap` rather than doubling it. It has never fired because no fixture or instance has held ~100 captures with a content-level row, and every other guarded site chunks at 64. — owner RECORD.
-order: directly after D-389, the same op's content arm and the same page cut, one worker at a time: a read that must say WHICH absence is true fails outright on the first instance past ~100 content captures; below D-389 because it fails LOUDLY rather than claiming coverage (SCHEDULER #8, 2026-09-21, LED-7 batch S8-1)
-milestone: M3
-interface: none — the answer's shape does not move; the integrator classifies.
-design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers), with D-36's measured ceiling (`node tools/ledger.mjs find D-36`).
-depends-on: none.
-scope: chunk the subject list at 64, each chunk's rows merged into the one `indexState` map; a fixture of 200+ subjects driven through `op=frontier&level=content`; then SWEEP every `IN` list built from a `limit`-bounded page, `#frontierMeaning` first, chunking each or stating its bound, every site listed with its verdict. **FULL GATE PROFILE**.
-accepts-when: a 200-subject page answers every row's index state, equal to the same rows read one chunk at a time; the sweep's list is in the landing. How a liar passes it: a fixture under 100 subjects, which never meets the ceiling, so its count is asserted above it. NEGATIVE CONTROL: restore the single unchunked `IN`, and the 200-subject arm fails by name.
-added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-1; D-390's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
-
 ### REC-160 · queued — **`op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS.** `Store#reevaluations` reads legs from `inquiry_basis`, which drops `status`, and its edition cause says *"this leg rests on edition N"* for every leg, so a withdrawn leg is described as support. `#refEdgeSevered` is the one predicate, and `restingOn` already publishes a status from it. — owner RECORD.
 order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
 milestone: M9
@@ -129,6 +119,26 @@ depends-on: none. D-280 closed; nothing is superseded.
 scope: each obligation leg carries `status` (`severed` or `confirmed`) from `#refEdgeSevered(bundle, target)`, and a severed leg's edition detail says the withdrawn leg NAMED edition N rather than resting on it. The obligation still fires (DEC-70) and derives nothing from strength; an unrecorded or unrecognised `status` reads `confirmed`.
 accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed leg out, which reverses DEC-70, so `d280-strengthbar.test.mjs` SITE (c) stays green. NEGATIVE CONTROL: drop the status, and the severed-leg arm fails by name.
 added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
+### D-57 · queued — **`resolveLinks` TELLS A MEMBER THAT A SELF-LINKED PAGE'S TARGET *CHANGED*, NAMING ONE CAPTURE TWICE AS THE BRACKET.** A page linking to itself (every Legistar calendar does) finds its own capture as both `before` and `after` — its `first_retrieved` and `last_retrieved` equal the source's retrieval instant — so the `before && after` arm returns `undetermined` with the basis *"the target changed somewhere between the captures bracketing this document's retrieval"*. The verdict is defensible; the BASIS is false, and the UI renders the plane's words verbatim. — owner RECORD.
+order: after REC-160, with the read-time claims the record cannot support (CLAUDE.md §2's class): a fabricated sentence about a source, on every self-linking municipal page; below REC-160 because the verdict it carries is right (SCHEDULER #8, 2026-09-21, LED-7 batch S8-2)
+milestone: M3
+interface: I3 — a fourth BASIS on `op=links&capture=`, never a fourth verdict; the integrator mints and classifies the IC.
+design: `docs/development/LINK-FIDELITY.md`, which defines the verdicts and what each basis may claim, with `BIO_Intake_Doctrine_v1_1.md` (link fidelity is construct 2's).
+depends-on: none.
+scope: the row's fix — `resolveLinks` recognises a pick whose `capture_sha` is `sourceCapture` and states a SELF-REFERENCE basis; and, the same defect one step wider, a `before` and `after` that are ONE capture never read as *changed*. The UI keeps rendering the plane's words.
+accepts-when: a self-linking page's self-link reads the self-reference basis, with no *changed* sentence and no doubled hash; a genuine two-capture bracket still reads *changed*. How a liar passes it: dropping the self-link from the answer, so the arm asserts it is still listed and counted. NEGATIVE CONTROL: remove the self-reference test, and the self-link arm fails by name at the *changed* sentence.
+added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-2; D-57's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
+
+### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE CEILING — AGAINST D-36's MEASURED workerd CEILING OF ABOUT 100.** The `subject IN (${marks})` inside `__REC91_AXIS_LIST__` (`store.mjs`) is built from `pageCut`; REC-109 held it at `cap` rather than doubling it. It has never fired because no fixture or instance has held ~100 captures with a content-level row, and every other guarded site chunks at 64. — owner RECORD.
+order: after D-57: a read that must say WHICH absence is true fails outright on the first instance past ~100 content captures; below D-389, REC-160 and D-57 because it fails LOUDLY rather than claiming what the record cannot support (SCHEDULER #8, 2026-09-21, LED-7 S8-1 and S8-2)
+milestone: M3
+interface: none — the answer's shape does not move; the integrator classifies.
+design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers), with D-36's measured ceiling (`node tools/ledger.mjs find D-36`).
+depends-on: none. **Sequence after D-389** (the same method's page cut, `store.mjs` `#frontierContent`).
+scope: chunk the subject list at 64, each chunk's rows merged into the one `indexState` map; a fixture of 200+ subjects driven through `op=frontier&level=content`; then SWEEP every `IN` list built from a `limit`-bounded page, `#frontierMeaning` first, chunking each or stating its bound, every site listed with its verdict. **FULL GATE PROFILE**.
+accepts-when: a 200-subject page answers every row's index state, equal to the same rows read one chunk at a time; the sweep's list is in the landing. How a liar passes it: a fixture under 100 subjects, which never meets the ceiling, so its count is asserted above it. NEGATIVE CONTROL: restore the single unchunked `IN`, and the 200-subject arm fails by name.
+added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-1; D-390's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
 
 ### CAP-14 · queued — **A REUSED PART DOES NOT NAME THE CAPTURE ITS BYTES CAME FROM.** The manifest records WHEN (`reused_from_fetched_at`), not WHICH capture fetched them, and `reusedParts` names only the capture that reused. RULED owed by BOB #21 (2026-09-21): for a reused part, who retrieved the bytes is an EARLIER capture. — owner CAPTURE.
 order: after D-389 and behind CAP-13, the same reuse machinery and files, one worker at a time; below CAP-13 because it adds provenance the record omits rather than correcting a figure it overstates (SCHEDULER #6, 2026-09-21; the D-339 worker's item 3, ruled)

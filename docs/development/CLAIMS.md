@@ -17147,6 +17147,11 @@ directly after D-389 (the frontier content arm's `IN` list binds up to `cap` var
 100). M0-95 and M0-96 cite `VERIFICATION.md`'s driver law, folded by BOB #23 at `19a0efb6`. D-162, D-38, D-45, D-53 and
 D-55 SENT to BOB as the DELEGATION SCHEDULER (#8) -> BOB below. 154 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 3): LED-7 batch S8-2** — D-57 PLACED after REC-160 (`resolveLinks` tells a member a
+self-linked page's target CHANGED, naming one capture twice), verified at the code; D-390 moved below it, since a silent
+claim the record cannot support outranks a loud failure (CLAUDE.md §2), and sequenced after D-389 on its `depends-on`
+line. 153 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
 
 1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
