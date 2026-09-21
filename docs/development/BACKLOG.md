@@ -20,15 +20,35 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-83 · queued — **`tools/retirable.mjs` CAN PROTECT A STRANGER AND CALL A STANDING LANE'S LIVE HOLDER RETIRABLE.** Three defects, one judgement: (1) `laneOf` strips only a TRAILING `#N`, so `CONDUCT #8 (BIO) — integrator lane` is in no lane, its predecessor is elected newest, and the holder was judged RETIRABLE (BOB #19, 2026-09-21); (2) a `--self` FOUND in the input is accepted, though `list_sessions` excludes the caller (CONDUCT #8, 2026-09-20: `1 retirable … 7 judged`, correctly `8 … 14`); (3) the caller can never be the newest of its own lane. — owner BOB (its instrument).
-order: directly before M0-81, as ONE row — *"one file, one suite, one gate"* (BOB #19, 2026-09-21): it inverts the standing-lane protection, and its count moves in the direction a reader takes as SAFE (SCHEDULER #4, 2026-09-21)
+### M0-97 · queued — **`tools/decided.mjs` CANNOT SEE MOST OF BOB'S ANSWERED DECISIONS, AND IT HAS COST A RE-ASK (M-85).** `MARKER` is an uppercase-only word list, while `DECISIONS.md` records an answer in a lowercase `decided:` field: 13 of 19 entries are not filed under their own id, 11 of them answered or enacted, and `decided.mjs "severance"` returns DEC-29 and DEC-72, not DEC-70, which rules it. SCHEDULER #5 sent D-280 (c) to BOB eleven days after Bob ruled it. — owner M0.
+order: FIRST among the instruments, directly after D-435 (in flight): `CLAUDE.md` §1 names this tool the one source for what has been decided (BOB #22, 2026-09-21; placed by SCHEDULER #7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header, which calls the index a FLOOR: *"A RULING WITH NO MARKER is invisible here."*
+depends-on: none. **Take with D-341**, the same file: one file, one suite, one gate (BOB #22).
+scope: a `DECISIONS.md` entry carrying a `decided:` line is indexed as ONE ruling under its own `DEC-n` (text from `response:`, date from `decided:`), beside the prose `MARKER` scan and never replacing it; an `open` or `deferred` entry is not a ruling. **FULL GATE PROFILE** (`tools/`).
+accepts-when: every answered or enacted `### DEC-n` is returned by `decided.mjs "DEC-n"`, a printed count equality against the file's own headings; `"severance"` returns DEC-70; a deferred entry is not returned. How a liar passes it: lower-casing `MARKER`, which floods the index, so an arm asserts the index grows only by entries it did not file and files none twice. NEGATIVE CONTROL: drop the field arm, and the equality fails naming DEC-70.
+added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
+### D-341 · queued — **`tools/decided.mjs` GLUES AN APPENDED CLAIM'S HEADER ONTO THE PREVIOUS RULING, SO THE INDEX FILES ANOTHER AREA'S RULING AS CARRYING THE NEW CLAIM.** `scan()` joins a matched line under 200 chars with the next three lines and stops at nothing: `docs/DECIDED.md` carries an IC-82 ruling ending in a `## CLAIM 2026-09-14 RECORD (REC-80 …` header today (re-measured 2026-09-21). — owner M0.
+order: directly after M0-97, the same file: one file, one suite, one gate (BOB #22, 2026-09-21); the index every session is told to trust answers with half another block's header (SCHEDULER #7, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header on quoting a wrapped ruling from its joined window.
+depends-on: none. Take with M0-97.
+scope: the row's FIX: the joiner stops at a heading line (`^#`) or a blank line. **FULL GATE PROFILE** (`tools/`).
+accepts-when: a regenerated `docs/DECIDED.md` carries no `## CLAIM` text inside any ruling, and a hand-wrapped ruling still quotes whole. How a liar passes it: stopping at every line break, so the wrapped-ruling arm must pass. NEGATIVE CONTROL: an arm appends a claim after a trailing `released:` line; drop the stop, and it fails by name.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-341's DEBT row of 2026-09-14; keeps its `D-` id).
+
+### M0-83 · queued — **`tools/retirable.mjs` CAN PROTECT A STRANGER, CALL A STANDING LANE'S LIVE HOLDER RETIRABLE, AND JUDGE OTHER REPOSITORIES' SESSIONS.** (1) `laneOf` strips only a TRAILING `#N`, so `CONDUCT #8 (BIO) — integrator lane` is in no lane and its live holder was judged RETIRABLE (BOB #19); (2) a `--self` FOUND in the input is accepted, though `list_sessions` excludes the caller (CONDUCT #8); (3) the caller can never be its lane's newest; (4) fed the whole account's sessions, it called 24 Supervisor sessions RETIRABLE and 15 Alpha-Pipeline sessions HOLD (BOB #21). — owner BOB (its instrument).
+order: directly before M0-81, *"one file, one suite, one gate"* (BOB #19): it inverts the standing-lane protection, and its count moves the way a reader takes as SAFE (SCHEDULER #4; item (4) BOB #22, 2026-09-21)
 milestone: M0
 interface: none
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's header "WHAT IS NEVER AUTO-RETIRED" and `kickoffs/BOB.md` "Spawning and retiring lanes".
 depends-on: none.
-scope: (1) `laneOf` takes the word before `#<n>` wherever the number sits (`/^\s*([A-Za-z]+)\s*#\d+/`, else the title); (2) a `--self` present in the input is REFUSED with an UNKNOWN-SELF verdict; (3) the caller may declare its own title and then counts as its lane's newest. **FULL GATE PROFILE** (`tools/`): check disk first.
-accepts-when: a suffixed title lands in its lane and its predecessor is not elected; a `--self` found in the input is refused by name; a declared caller is its lane's newest. How a liar passes it: fitting one title shape, so an arm feeds a suffixed and a trailing form. NEGATIVE CONTROL: restore the trailing-only regex, and the suffixed-title arm fails by name.
-added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry with CONDUCT #8's DELEGATION 2026-09-20, drained this commit).
+scope: (1) `laneOf` takes the word before `#<n>` wherever it sits, else the title; (2) a `--self` in the input is REFUSED, UNKNOWN-SELF; (3) a caller may declare its title and is then its lane's newest; (4) only a `cwd` inside this repository (the primary checkout or `.claude/worktrees/*`) is judged, the rest reported OUT OF SCOPE with their count. **FULL GATE PROFILE** (`tools/`): check disk first.
+accepts-when: a suffixed title lands in its lane; a found `--self` is refused by name; a declared caller is newest; a mixed input judges the BIO session and names another repository's and a vanished cwd out of scope. How a liar passes it: one title shape, or a path-prefix match, so arms feed both title forms and a sibling directory sharing the prefix. NEGATIVE CONTROL: restore the trailing-only regex, or drop the scope test, and its arm fails by name.
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's entry); item (4) SCHEDULER #7 (BOB #22's entry, drained this commit).
 
 ### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
 order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
@@ -131,6 +151,16 @@ scope: ONE disjunct, `raw.length === R` (the supply was not exhausted), in the O
 accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. How a liar passes it: fixing one arm, so the fixture drives all three. NEGATIVE CONTROL: drop the disjunct, and the full-fetch arm fails by name at each level.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
 
+### REC-160 · queued — **`op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS.** `Store#reevaluations` reads legs from `inquiry_basis`, which drops `status`, and its edition cause says *"this leg rests on edition N"* for every leg, so a withdrawn leg is described as support. `#refEdgeSevered` is the one predicate, and `restingOn` already publishes a status from it. — owner RECORD.
+order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
+milestone: M9
+interface: I3 additive — the integrator mints the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §5.4 (cascade semantics: an upstream re-distribution sets a re-evaluation obligation on every dependent), with DEC-70 (`docs/development/DECISIONS.md`, Bob, 2026-09-10): *severance discharges SUPPORT, never CONNECTION*; *the connection INFORMS, never binds*. DEC-70's fold into its governed home is asked of BOB.
+depends-on: none. D-280 closed; nothing is superseded.
+scope: each obligation leg carries `status` (`severed` or `confirmed`) from `#refEdgeSevered(bundle, target)`, and a severed leg's edition detail says the withdrawn leg NAMED edition N rather than resting on it. The obligation still fires (DEC-70) and derives nothing from strength; an unrecorded or unrecognised `status` reads `confirmed`.
+accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed leg out, which reverses DEC-70, so `d280-strengthbar.test.mjs` SITE (c) stays green. NEGATIVE CONTROL: drop the status, and the severed-leg arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
 ### CAP-14 · queued — **A REUSED PART DOES NOT NAME THE CAPTURE ITS BYTES CAME FROM.** The manifest records WHEN (`reused_from_fetched_at`), not WHICH capture fetched them, and `reusedParts` names only the capture that reused. RULED owed by BOB #21 (2026-09-21): for a reused part, who retrieved the bytes is an EARLIER capture. — owner CAPTURE.
 order: after D-389 and behind CAP-13, the same reuse machinery and files, one worker at a time; below CAP-13 because it adds provenance the record omits rather than correcting a figure it overstates (SCHEDULER #6, 2026-09-21; the D-339 worker's item 3, ruled)
 milestone: M2
@@ -160,6 +190,16 @@ depends-on: none.
 scope: extend `ledger.mjs`' invariants so a row whose `depends-on` names a CONSTRUCT is checked against `status.mjs`, failing the plan when a dependent sits above unbuilt substrate. **THE BOUND GOES IN THE ARM'S OWN OUTPUT, not only here** (BOB #17): it judges only a row that NAMES a construct, so **a row naming its substrate in PROSE is invisible to it** — the bound `corpuscheck`'s `--authority` arm states about itself. A green arm that hides its bound is read as more than it is.
 accepts-when: a row depending on a construct `status.mjs` reads ABSENT fails the plan NAMING both; one whose substrate is BUILT passes; **a row naming substrate only in prose is UNJUDGED, never passed**, with the unjudged count printed beside the verdict. How a liar passes it: judging only rows that name a construct and reporting 100%, which the unjudged count forbids. NEGATIVE CONTROL: point a row's `depends-on` at an absent construct, and the arm fails naming it.
 added: 2026-09-19 · SCHEDULER #2 (D-404's fix, ruled by BOB #17).
+
+### D-293 · queued — **THE PUSH GUARD NEVER RUNS `tools/gates.mjs`, AND NOTHING REFUSES A TREE WHOSE RECORDED VERDICT IS RED.** `tools/pushguard.mjs` runs `decided.mjs --check` and refuses a stale push, nothing more. RULED by BOB #22 (SCHEDULER #5's Q4): a push-time gate would not converge — a full gate takes ~25 minutes and `main` took 48 first-parent commits from 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes (M-85) — so the guard READS a recorded verdict. — owner M0.
+order: with the preventive instruments, after LED-9 and above D-107: it moves *gate before you push* from discipline to instrument for every lane's push, where D-107 does so for one deploy (SCHEDULER #7, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section for the half it states; the refusal's design is CARRIED in BOB #22's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293 RULED"), because that file is at its reading budget: the builder adds the refusal's one line in the landing.
+depends-on: none.
+scope: `gates.mjs` records its verdict and class keyed by the TREE it measured, only when that tree was CLEAN, untracked under the git common dir; the guard refuses a push whose tip tree carries a RED record, naming it, and says nothing when none exists. **FULL GATE PROFILE**.
+accepts-when: a RED gate then a push of that tree is refused by name; a GREEN, an unrecorded and a changed tree each pass. How a liar passes it: keying on the commit sha, which an amend of the message alone evades, so the arm amends and asserts the refusal holds. NEGATIVE CONTROL: drop the guard's lookup, and the RED-then-push arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; BOB #22's ruling, drained this commit; keeps its `D-` id).
 
 ### D-107 · queued — **THE INSTALLER HAS NO SCRIPTED DEPLOY.** `newgroup/DEPLOY.md` documents a dashboard paste of the bundled module, which records nothing about what was deployed and gives a version assertion nowhere to live; `newgroup/scripts/` holds only `embed-release.mjs`. The plane has what this lacks: `bio-plane/scripts/deploy.mjs` will not report success until it reads the script back and hashes it against the signed asset. D-106 went unnoticed for thirteen releases in this gap. — owner DIST.
 order: with the preventive instruments, after LED-9: DIST's law reads the installer back BY HAND at every cut (`kickoffs/DIST.md` step 9: the embedded version, and `bindings: []` still empty), so nothing ships unverified today; the script moves it from discipline to instrument (SCHEDULER #6, 2026-09-21, LED-7 batch 15)
@@ -403,6 +443,26 @@ scope: UI-43's scope RE-DERIVED on current `main` — the branch is EVIDENCE, 1,
 accepts-when: an OR accept requires the per-branch affirmation; a fixture whose two parts share a capture shows that origin before it, and one with independent parts shows NONE; driven against the real plane. NEGATIVE CONTROLS: drop the affirmation, or hide the field, and each arm fails by name.
 added: 2026-09-21 · SCHEDULER #5 (D-397's third branch and D-195, verified at the code; `node tools/mintid.mjs UI`).
 
+### REC-161 · queued — **NOTHING COMPUTES INDEPENDENCE OVER A PARTITION A MEMBER IS STILL PROPOSING, SO D-195's SHARED ORIGIN CANNOT BE SHOWN AT THEIR OWN ELICITATION.** `Store#independenceOf` has two consumers, `op=suggest`'s check and `op=versionstrength`'s read of a STORED version; UI-27's read-back (`elicFalsifier`) prints *"Your answer fails only if ALL of these fail"* and reads no independence. — owner RECORD.
+order: 1 of 2, directly after UI-74, which shows the same fact at the accept ceremony (BOB #22, 2026-09-21: SCHEDULER #5's Q1, RULED)
+milestone: M9
+interface: I3 additive — an IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §12 clause (c) (BOB #22, 2026-09-21).
+depends-on: none — `#independenceOf` is built.
+scope: a read returning `#independenceOf` for a PROPOSED partition over an inquiry's existing legs, gated as `op=versionstrength` is, writing nothing, `checked`/`complete` as they already are.
+accepts-when: two parts sharing a capture read as sharing an origin, independent parts read clean, a one-part partition reads `checked: false`, and the answer equals `op=versionstrength`'s once the partition is written. How a liar passes it: a second derivation that agrees today, so a control swaps in a copy differing in one branch and fails by name.
+added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
+### UI-75 · queued — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two of the reasons trace to one capture.** — owner UI.
+order: 2 of 2, after REC-161; with UI-74, whichever lands second reuses the first's rendering (BOB #22, 2026-09-21)
+milestone: M9
+interface: I3 consumer (REC-161's IC).
+design: `docs/development/INVESTIGATIVE-SESSION.md` §12 clause (c), with DEC-69: inform once, at the act.
+depends-on: REC-161.
+scope: the read-back names each shared origin between the parts it lists, once, before the answers are written; it prefills nothing, refuses nothing, shows no strength and no AND/OR word.
+accepts-when: two correlated reasons show their origin and the member's answers are written unchanged. How a liar passes it: blocking or reordering the answers on a shared origin, which turns an informing fact into a gate.
+added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs UI`).
+
 ### MK-6 · queued — **THE AUTHORED BUNDLE NAMES NO AUTHOR** (MK-3's replacement (i), `MEMBER-KNOWLEDGE-DESIGN.md` §4.1). Today `testify` writes the author's member id into `bundle.md`'s Session Log AND into `data/provenance.json` (`author`, `provenance_chain[].who`), and a ratified bundle's files are what the published bucket receives. Every file and manifest record an authored bundle can publish must name the author as `observer:<testimony id>`, which only the register resolves. — owner RECORD.
 order: replaces MK-3 (superseded 2026-09-21), directly above MK-7 and MK-5, which rest on it; BOB #19: *"Build (i) regardless"* — no published byte moves, since MK-1's fence still stands (SCHEDULER #4, 2026-09-21)
 milestone: M3 — the member's own knowledge enters the record as what it is
@@ -523,6 +583,16 @@ depends-on: REC-149 and REC-150.
 scope: as the design says, rendering the plane's answers verbatim.
 accepts-when: the harness requests, the owner grants, the requester sees `invited` and joins by the checkbox, all against the real plane; a hidden project never appears in the directory. NEGATIVE CONTROL: render a hidden project from a cached list, and the directory arm fails. `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE.
 added: 2026-09-19 · SCHEDULER (same entry, item 4).
+
+### D-260 · queued — **A WOKEN RUN IS NOT RE-ENTERED: FL-4's wake has nothing to consume it.** When the daemon completes a capture a run waited on, the plane holds the run's lease, logs that the daemon answered and stamps `run_woken_at`; nothing dispatches the run, because `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`. RULED by BOB #22 (SCHEDULER #5's Q3): an instance may hold ONE organisation-principal `ai` credential and resumes ONLY the runs it opened. — owner RECORD with FLEET, then DIST.
+order: a feature after the rows Bob's priorities ordered (UI-71), above D-126: FL-4's wake and DS-3's and FL-6's halves are BUILT and inert until this caller exists, and I8 leaves PROVISIONAL when it lands (SCHEDULER #7, 2026-09-21)
+milestone: M9
+interface: I8 (leaves PROVISIONAL); the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260 paragraph; the deploy half, `docs/architecture/BIO_Distribution_v0_1.md` §6's bullet. A member-principal run's non-resumption is the stated limitation there.
+depends-on: none — FL-4, `instanceClaudeToken` (`src/tokens.mjs`, DS-3 `2de6f25f`) and FL-6's member half are on `main`.
+scope: (1) RECORD with FLEET: FL-4's wake dispatches a woken run to `agent-worker` with the organisation credential ONLY when its stamped principal equals the run's `principal_plane`, and otherwise logs that it did not; the dispatch hands `claude_accounts` its instance level. (2) DIST, after 1: install and update carry that credential as a secret, as `DAEMON_TOKEN` is, never in the record, denylisted by `tokens.mjs` on publication.
+accepts-when: a run the instance credential opened resumes after its capture completes; a member's run is not dispatched and says so. How a liar passes it: dispatching every woken run and leaning on REC-152 to refuse the tick, so the arm asserts the member's run is never DISPATCHED.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; BOB #22's ruling, drained this commit; keeps its `D-` id).
 
 ### D-126 · queued — **THE `per-item` WEIGHT IS DESIGNED AND UNBUILT, SO A QUEUE SELECTION CANNOT BE HANDLED AS A SET.** `bio-plane/src/affordances.mjs` publishes `refuse` (5), `report` (1) and `single` (14) and no `per-item` (re-measured 2026-09-21), and the three acts a selection would use each take one key. The rest of what D-126 asked for is BUILT: the three classes, the 35-kind registry, the item contract, the handled-scopes. — owner RECORD, then UI.
 order: a feature, after the rows Bob's priorities ordered (UI-71 closes his 2026-09-18 ruling), before the M4/M2 product rows because the queue surface is built and UI-55's ARM 4d already watches for it (SCHEDULER #5, 2026-09-21)

@@ -16982,6 +16982,13 @@ D-438 and D-439 CLOSED in `DEBT.md` AS A DEBT ROW, PLACED. The archived D-240 DE
 DESIGN GAP goes to BOB as a design item (its worker's wording is lost; CONDUCT #10's reading of the three rules, labelled
 as inference). 167 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 3): BOB #22's six inbox entries DRAINED**, each verified at its cited design and
+at the code — M0-97 (`decided.mjs` indexes a `decided:` field) directly after D-435, with D-341 (the same file) after it;
+REC-160 (`op=reevaluations` names a severed leg's status) after D-389, on `BIO_State_Rules_Consistency_v1_5.md` §5.4 with
+DEC-70; M0-83 amended with item (4) inside its budget; D-260 after UI-71 and D-293 after LED-9, each under its own id;
+REC-161 then UI-75 (D-195 at the elicitation) directly after UI-74. D-341, D-260 and D-293 CLOSED in `DEBT.md` AS A DEBT
+ROW, PLACED: 164 open DEBT rows remain. The DELEGATION SCHEDULER (#7) -> BOB below carries the next group.
+
 ## CLAIM 2026-09-21 BOB (#22) — REC-156's bearer and proposer questions ruled into Membership v2 §4.7
 
 claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Membership_Architecture_v2.md`
@@ -16994,3 +17001,33 @@ claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `doc
 claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
 (rewritten from the state measured at ~20:00Z), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-21 BOB #22** — landed in the same commit as the file it covers.
+
+## DELEGATION 2026-09-21 SCHEDULER (#7) -> BOB — **FOUR QUESTIONS, ONE EACH: D-145's addressing, D-355's driver rules, DEC-70's fold, and a bearer's reach for §4.9's acts; none blocks a runnable row**
+
+1. **D-145 — WHICH SHAPE ADDRESSES A RECORD OBJECT ACROSS INSTANCES?** Re-verified on `origin/main` @ `2bd24da7`:
+   non-gated prefixes (`INFO-…`) still come from `Store#nextSeq`, one counter per instance, and the gated prefixes'
+   opaque tails (Membership v2 §7, REC-141/REC-151) answer ENUMERATION, not addressing: they are unique within the
+   instance that drew them. So every edge addressed by id (`references[].target`, `inquiry_basis`, citations) cannot
+   leave its instance, and two instances citing each other collide. The row's three candidates, none free: an
+   instance-scoped prefix; a UUID beside the human id; citation by content hash with the id as a comment. **The
+   question:** which, or is cross-instance addressing out of scope until M6 is taken up?
+2. **D-355's DESIGN GAP — FOLD TWO DRIVER RULES INTO `VERIFICATION.md`, WHICH IS 9 B UNDER ITS BUDGET?** The D-355 worker
+   reported three rules the file lacks; its wording is LOST (not in its commit, M-83, its claim or CONDUCT's reach).
+   CONDUCT #10's reading of the landed code, labelled as inference: (a) a throwing driver validates every anchor before
+   arming — ALREADY the file's D-331 section, so not a gap; (b) a driver removes its pen on EVERY exit (0, 1, a throw,
+   SIGINT/SIGTERM/SIGHUP), which needs ASYNCHRONOUS children because a handler over `execFileSync` fires only after the
+   script ends (measured, M-83); (c) a driver declares its arm tally in its head and asserts it at its foot. Evidence:
+   `civicos-ui/test/refusal-partition.control.mjs`, `bio-plane/test/nc-d355.mjs`. M0-95 and M0-96 are placed on D-355's
+   precedent and would cite the rules once folded. **The question:** fold (b) and (c), and where does the room come from?
+3. **DEC-70 HAS NO GOVERNED HOME.** REC-160 (`op=reevaluations` calls a severed leg support) rests on DEC-70's *severance
+   discharges SUPPORT, never CONNECTION*, which lives only in `DECISIONS.md` — not a path `rowdesign` admits. I placed it
+   on `BIO_State_Rules_Consistency_v1_5.md` §5.4 (the re-evaluation obligation itself), with DEC-70 cited beside it.
+   **The question:** fold DEC-70's severed-leg sentence into its construct's home — §5.4, or the inquiry's (Content
+   Framework Part I §12)?
+4. **A BEARER'S REACH FOR §4.9's CUSTODIAL ACTS, RULED ONCE.** REC-156 PROVISIONALLY lets an operator bearer keep
+   reaching `memberadd` (its `by` now names nobody; Membership v2 front matter records it as BOB's). REC-159 gives
+   `memberset`, `signeradd` and `signerset` the same session reach. **The question:** does a bearer keep reaching all
+   four, or is it refused by name as C-32.17 refuses one at the §4.7 votes? `governorconfig`'s owner is NOT asked
+   again here: CONDUCT #10 put it to BOB #22 with REC-156's DELEGATION.
+
+**open as of 2026-09-21** — sent to BOB #22 by message; REC-159 and REC-160 are placed and runnable either way.
