@@ -17227,6 +17227,11 @@ paths, BY SITE:
 
 **open as of 2026-09-21** — OPEN while this item builds; released at integration.
 
+**RELEASED 2026-09-21 by CONDUCT #10 at integration.** D-434 (part 1) LANDED in the merge `745aef00`, pushed to
+`main` in the same landing as this line with M-86, under one FULL gate. The paths this block reserved are FREE; its branch
+`worktree-agent-a51b695c70bb123af` is deleted from the remote after the push is verified. Part 2 stays unplaced, as the
+row requires; the worker's sizing inputs for it are in its report (to SCHEDULER).
+
 ## CLAIM 2026-09-21 CONDUCT (#10) — M-86: the 34 merged pre-PRUNE-ON-MERGE `worktree-agent-*` branches recorded name → sha, then pruned from the remote
 
 claimed: 2026-09-21 by CONDUCT #10, worktree `.claude/worktrees/conduct-10`. Paths: `docs/development/MEASUREMENTS.md`
