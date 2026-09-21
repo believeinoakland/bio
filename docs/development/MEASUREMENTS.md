@@ -17522,6 +17522,15 @@ the FIRST push of a session with no prior push in its transcript. And it is a CL
 across every live session's transcript on 2026-09-21, `non-fast-forward` and `[rejected]` appear ZERO times. So when
 Bob asked whether SCHEDULER and CONDUCT were colliding, the measured answer was no, and narrower checkouts would not
 change a filter that reads the command rather than the content.
+
+**DATA POINT 8, 2026-09-21, FLEET #3, appended beside 7 on BOB #19's pointer.** Two `git push origin HEAD:main` from
+FLEET #3's session both SUCCEEDED at the first attempt: `db24e4d2..790ad66a` just after 15:08:27Z and
+`80d2c2a7..d660d29e` just after 15:35:12Z (each the end of that commit's gate), both docs only and fast-forward. In
+the same hour CONDUCT #9 (landing D-158, refused by the classifier with `[Out-of-Place Publication]`) and SCHEDULER #4
+had pushes to `main` refused. **Only the success half is measured here**: the two refusals are those sessions' own
+reports, not re-read by this lane. One thing is new. The first of these pushes was this session's FIRST, so data
+point 7's novelty (a first push refused) is not a rule. Same shape: ONE actor, ONE form, ONE moment.
+
 ## M-76 · 2026-09-19 · D-136 — the §4.7 vote measured ON THE LIVE PLANE before it was fenced
 
 **Instrument:** a read-only probe against the DEPLOYED instance `biosmoke7`
