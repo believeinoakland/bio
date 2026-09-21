@@ -87,7 +87,7 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20); vocabulary corrected 2026-08-05 (D-188, > DEC-46 (d)).  
   `docs/architecture/BIO_Design_Requirements_v2.md:456`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"a work product carrying > unsettled BIAS DEBT (its cited bias manifest differs from the current > effective set) cannot advance workproduct_state and cannot be ratified for > publication"*.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1588`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1590`
 - **DEC-20** · 2026-08-02 — — AMENDED 2026-08-02 by Bob (DEC-20); struck here 2026-08-05 (D-188).  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1694`
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
@@ -459,7 +459,7 @@ authority is the file named, never this one.
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-203** · 2026-09-19 — THE LADDER IS ONE-WAY AND GAINS NO `verified -> collected` EDGE — RULED 2026-09-19 by BOB #17 (D-203/D-200), from this section's own design rather than as a new rule.** Three things decide it.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:682`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:684`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
   `docs/archive/ledgers/QUEUE-2026-08.md:162`
 - **D-212** · 2026-08-05 — SUPERSEDED 2026-08-05 by the VERSIONS design — the question this row asked turned out not to be a record question at all.** The row went through three drafts and each was wrong in an instructive way, so the history is kept rather than deleted.  
