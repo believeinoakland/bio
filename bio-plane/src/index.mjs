@@ -492,6 +492,16 @@ const OPS = {
   /* The log is READ by in-app administrators who cannot run an export. They must
      be able to see that one happened even though they cannot cause it. */
   exportlog:           { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-436 / IC-172 — THE INSTANCE'S PRODUCING GROUP (State Rules v1.5 §3.1), the one value every bundle this
+     instance writes names as its `group`. The READ is open to every class that reads the record: it answers
+     what the store records, and when it records nothing it says so. The SEED is the other half of decision (b):
+     a store that already held documents when the value arrived records nothing at boot, and is given its group
+     by this act, once. RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN
+     CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO
+     SESSION OF ANY ROLE REACHES IT: it is named in no SESSION_OPS set, and UNATTENDED_BY_DECISION cites this
+     row, so a session is told which credential the verb is addressed to rather than an invented reason. */
+  instancegroup:       { classes: ["admin", "member", "probe"], mutating: false },
+  instancegroupseed:   { classes: ["admin"],                    mutating: true  },
   /* Section 8.2. classes: null, because published-record reconstruction requires
      NOTHING: the hashes are public and verifiable by any stranger without this
      instance's cooperation or continued existence. It reads the published
@@ -3287,6 +3297,12 @@ const UNATTENDED_BY_DECISION = {
   taskdrain: "src/index.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S — a member "
            + "reaching for it by hand would be a person doing the daemon's job with the daemon's "
            + "conduct rules applied to them.'",
+  /* D-436: recorded by the D-436 worker as a PROVISIONAL decision, and stated as one in IC-172 — the seed is
+     the root of trust's, as the claim and the export are. The citation is the OPS row's own sentence. */
+  instancegroupseed: "src/index.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE "
+                   + "INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN "
+                   + "THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION "
+                   + "OF ANY ROLE REACHES IT.'",
 };
 
 /* THE SESSION GATE. A browser signed in with a password holds a session token,
@@ -8027,7 +8043,9 @@ export default {
       const promoted = await doAnswer(stub0.fetch("http://do/promote", { method: "POST", body: JSON.stringify({
         bundleId, base: liveSha, snapKey: stamp, author: "bio-monitor",
         writer: "mechanical", operation: "monitor-tick",
-        meta: { object_type: fm.object_type, group: fm.group || "believe-in-oakland",
+        /* D-436: no `group` — a tick is a REVISION, and the store keeps the group the document's creation wrote.
+           This was a literal fallback. */
+        meta: { object_type: fm.object_type,
                 title: fm.title, current_state: fm.current_state, prior_state: fm.prior_state ?? null,
                 created: fm.created, last_updated: checked },
         /* Every OTHER file carried forward untouched. promote writes a whole
@@ -10283,6 +10301,11 @@ export default {
        (C-29.4), which is only possible because the stamp is the server's. */
     if (op === "aicredentialrevoke")
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* D-436 / IC-172: WHO RECORDED THE INSTANCE'S PRODUCING GROUP is the whole of `recorded_by`, so it is the
+       SERVER's stamp, set after the caller's parameters were copied — a caller-supplied `author` is overwritten.
+       Only the root of trust reaches the op (its OPS row), so this reads `token:admin` in practice. */
+    if (op === "instancegroupseed")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* REC-126 / DEC-31: WHO AUTHORED THE DRAFT, WHO ISSUED THE GRANT, WHO WITHDREW
        IT — the three facts §6A.2's "attributed" row demands, so all three are
        stamped by the server and a caller-supplied `author` is overwritten rather

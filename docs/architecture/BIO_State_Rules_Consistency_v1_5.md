@@ -1,12 +1,13 @@
 # Believe in Oakland
 
-**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. as of 2026-09-19.
+**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. Amended 2026-09-21 (D-436, provisional, IC-172): §3.1's `group` is ONE recorded value per instance, written once — at the store's first boot from the slug the installer bound, or by the root of trust's one seed on a store that predates it — stamped into every document the plane creates, and never a literal or a deploy-time var; see the amendment at the foot. as of 2026-09-21.
 
 **Place in the system** · Owns construct 3 of `BIO_System_Design.md` §3 (the record): bundle shape and the rules the plane checks. `BIO_Intake_Doctrine_v1_1.md` defers to it for shape; `BIO_Membership_Architecture_v2.md` builds on its §4.3 and §5.1–5.3; the intake provenance register and I-18 realise the intake doctrine inside it. README calls it "the most operationally load-bearing document in the corpus."
 
 **Incomplete sections** ·
 - §1 — the folder layout is the retired substrate's; history per the banner.
 - §2 — the state/record split and description-as-truth transferred; §2.4 convergent promotion, §2.5's gated deletion mechanics and §2.6 the pending-package queue are history, and the PENDING/PROMOTING transients no longer exist.
+- §3.1 — the core field list is stated; where the `group` value comes from was unstated until the 2026-09-21 amendment at the foot (D-436), whose three decisions are PROVISIONAL, and what a group named wrongly in bytes that are already signed can become is not designed.
 - §4.2 — the Focus machine is legacy: nothing produces those states; the live machine is `inquiry`, which §4 does not describe, nor `bias`.
 - §4.3 — lacks the project-name-uniqueness annotation Membership v2 §11 requires.
 - §4 — `published` left the inquiry lifecycle by the 2026-09-10 amendment (DEC-72 / CASE-4); the body text of the state machines is unrevised.
@@ -56,6 +57,7 @@
   - [Cross-reference: declared bias and workproduct_state (July 27, 2026)](#cross-reference-declared-bias-and-workproduct_state-july-27-2026)
   - [Amendment: `concluded` is a state of a PROJECT'S relationship with an inquiry (2026-09-18, BOB #15)](#amendment-concluded-is-a-state-of-a-projects-relationship-with-an-inquiry-2026-09-18-bob-15)
   - [Amendment: `published` leaves the INQUIRY state machine (2026-09-10, DEC-72 / CASE-4)](#amendment-published-leaves-the-inquiry-state-machine-2026-09-10-dec-72-case-4)
+  - [Amendment: the producing `group` is ONE recorded value per instance (2026-09-21, D-436)](#amendment-the-producing-group-is-one-recorded-value-per-instance-2026-09-21-d-436)
 
 ---
 
@@ -1667,3 +1669,41 @@ inquiry's STATE and its PUBLICATION HISTORY are two different records.*
 Recorded here so the state-rules corpus and the case corpus cannot drift apart —
 the obligation the cross-reference note above this one exists to enforce, and the
 one that note measured failing for three days.
+
+## Amendment: the producing `group` is ONE recorded value per instance (2026-09-21, D-436)
+
+**§3.1 names `group` — the producing group's slug, which travels with every distributed copy — and did not say where
+the value comes from.** The built plane answered with a literal: one group's slug, written as a default in eighteen
+places, as a trimmed-argument default in two and unconditionally in three (a member's firsthand observation, its
+promote meta, and a fork), and composed into new documents by the instance's own setup page. True of the instance that
+wrote it and false of every instance `newgroup` installs — a sovereign group's record naming the wrong producer in its
+own signed bytes. D-436's own row made the design call; this amendment records how it was built, and the three
+decisions the build had to make, each **PROVISIONAL** (the D-436 worker, 2026-09-21; IC-172).
+
+**THE RULE.** An instance's producing group is ONE value in its store (`instance_group`, one row, WRITTEN ONCE — no
+statement updates or deletes it, and `op=purge` leaves it). Every default and every stamp reads it and nothing else:
+every document the plane CREATES carries it as `group:` in its bytes, whatever a caller wrote, and the projection's
+`group_id` is written with it; a revision keeps the group its creation wrote. It is never a literal in the code, and it
+is never RE-READ from a deploy-time variable, because it is in signed bytes and a redeploy must not be able to move it.
+A replayed creation (historical replay is not authorship) carries the past's bytes verbatim.
+
+1. **Where it comes from (decision a).** At the store's FIRST BOOT — the first pass over storage that has never held
+   this schema — from the slug the installer bound as `INSTANCE_NAME`, which is the worker name the group chose
+   (D-102) and is bound in the same upload that creates the worker. It is read at that moment only, checked against the
+   installer's own slug grammar, and a missing or malformed name records nothing. The first boot was chosen over the
+   operator's first claim because the scratch namespace is a separate store no claim reaches, because the root of trust
+   can write before anyone claims, and because a claim can be re-armed.
+2. **A store that predates the value (decision b).** A store that already held the schema records nothing at boot, even
+   with the variable bound: this project's own instance is named for its worker and not its group, and a sovereign store
+   installed earlier holds documents already stamped with the old literal, so the variable and the record can disagree
+   and choosing between them is a person's act. The root of trust records it ONCE (`op=instancegroupseed`); a second
+   seed is refused (C-64.3). Documents already written are not rewritten — their bytes are signed.
+3. **Nothing recorded (decision c).** A write that must name its producing group is never given a default. A caller's
+   own statement of its group is kept as the caller's, exactly as before; a creation stating none, a document the plane
+   composes itself, a division whose parent names none, and the group default bar with no group named are refused by
+   name (C-64.1). The read `op=instancegroup` says in words when nothing is recorded.
+
+**WHAT THIS DOES NOT DECIDE, stated rather than left to be found:** what a document already signed under a WRONG
+producer can become (it cannot be rewritten; a correcting act is undesigned); what `group` means for a document that
+genuinely came from another group (no import path exists — replay is the only one, and it keeps the past's bytes); and
+whether the setup page and the member UI should learn the value at all, since the plane now stamps every creation.

@@ -456,6 +456,8 @@ import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 import { RATIFY_SCOPE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
 import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
+/* D-436 / C-64: the instance's producing group, recorded once and never a literal. */
+import { INSTANCE_GROUP_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -663,6 +665,10 @@ export class Store extends DurableObject {
   }
 
   #migrate() {
+    /* D-436: THE STORE'S FIRST BOOT, witnessed BEFORE anything below creates or alters a table — storage that has
+       never held this schema has no `bundles` table. It is the one moment the producing group is recorded from the
+       installer's binding; `#recordGroupAtFirstBoot` (after the schema pass) says why, and no later boot reads it. */
+    const firstBoot = !this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='bundles'`);
     const bare = (this.env.SCHEMA || SCHEMA_TEXT || "").split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
     /* Some tables are DERIVED: regenerable by scan, never authoritative, holding
        nothing a member wrote. When one of those changes shape, recreating it is
@@ -1088,6 +1094,10 @@ export class Store extends DurableObject {
     }
 
     for (const s of bare.split(";")) { const t = s.trim(); if (t) this.sql.exec(t); }
+
+    /* D-436: immediately after the schema pass, so the table exists and nothing later in this function can throw
+       between the store's birth and the record of whose store it is. */
+    if (firstBoot) this.#recordGroupAtFirstBoot();
 
     /* ================================================================ *
      * REC-93 / IC-92 — THE OBSERVATION LOG'S FOLD, and it runs ONCE per store.
@@ -3980,7 +3990,7 @@ export class Store extends DurableObject {
       files: [{ path: "bundle.md", text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() },
               ...carried],
       meta: {
-        object_type: "project", group: fm.group || "believe-in-oakland", title: fm.title,
+        object_type: "project", title: fm.title,
         current_state: fm.current_state, prior_state: fm.prior_state ?? null,
         created: fm.created, last_updated: when,
         criticality: fm.criticality ?? null,
@@ -4217,7 +4227,7 @@ export class Store extends DurableObject {
         author: author || "member",
         files: [{ path: "bundle.md", text, bytes: bytes.length,
                   sha256: createSha256().update(bytes).hex() }, ...carried],
-        meta: { object_type: "inquiry", group: fm.group || "believe-in-oakland", title: fm.title,
+        meta: { object_type: "inquiry", title: fm.title,
                 current_state: to, prior_state: cur.current_state,
                 created: fm.created, last_updated: when,
                 criticality: fm.criticality ?? null },
@@ -4820,7 +4830,7 @@ export class Store extends DurableObject {
         author: author || "member",
         files: [{ path: "bundle.md", text, bytes: bytes.length,
                   sha256: createSha256().update(bytes).hex() }, ...carried],
-        meta: { object_type: "information", group: fm.group || "believe-in-oakland", title: fm.title,
+        meta: { object_type: "information", title: fm.title,
                 current_state: "retired", prior_state: cur.current_state,
                 created: fm.created, last_updated: when,
                 criticality: fm.criticality ?? null },
@@ -5020,7 +5030,7 @@ export class Store extends DurableObject {
         author: who,
         files: [{ path: "bundle.md", text, bytes: bytes.length,
                   sha256: createSha256().update(bytes).hex() }, ...carried],
-        meta: { object_type: "information", group: fm.group || "believe-in-oakland", title: fm.title,
+        meta: { object_type: "information", title: fm.title,
                 current_state: "verified", prior_state: cur.current_state,
                 created: fm.created, last_updated: when,
                 criticality: fm.criticality ?? null },
@@ -5492,7 +5502,7 @@ export class Store extends DurableObject {
       author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+      meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: "concluded", prior_state: b.current_state,
               created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null },
@@ -5632,7 +5642,7 @@ export class Store extends DurableObject {
       snapKey: `${f.when.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: f.who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: pfm.object_type ?? "project", group: pfm.group || "believe-in-oakland",
+      meta: { object_type: pfm.object_type ?? "project",
               title: pfm.title, current_state: pfm.current_state ?? "forming",
               prior_state: pfm.prior_state ?? null, created: pfm.created, last_updated: f.when,
               criticality: pfm.criticality ?? null },
@@ -6129,7 +6139,7 @@ export class Store extends DurableObject {
       author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+      meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: to, prior_state: b.current_state,
               created: fm.created, last_updated: when, criticality: fm.criticality ?? null },
     });
@@ -6293,7 +6303,7 @@ export class Store extends DurableObject {
       author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+      meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
               created: fm.created, last_updated: when, criticality: fm.criticality ?? null },
     });
@@ -6364,7 +6374,7 @@ export class Store extends DurableObject {
       snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? doc.object_type, group: fm.group || "believe-in-oakland",
+      meta: { object_type: fm.object_type ?? doc.object_type,
               title: fm.title, current_state: fm.current_state ?? doc.current_state,
               prior_state: fm.prior_state ?? null, created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null },
@@ -6656,7 +6666,7 @@ export class Store extends DurableObject {
       author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+      meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: "open", prior_state: b.current_state,
               created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null },
@@ -7773,7 +7783,7 @@ export class Store extends DurableObject {
          has, which publication does not move. `prior_state` is likewise the
          document's own, unchanged — the promotion is a new VERSION of a
          `concluded` finding, not a transition. */
-      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+      meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
               created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null },
@@ -9495,7 +9505,15 @@ export class Store extends DurableObject {
     }
 
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
-    const group = fm.group || "believe-in-oakland";
+    /* D-436: THE CHILDREN ARE CREATIONS, written AFTER the parent's revision — so whether each can name its producing
+       group is asked HERE, before anything moves, and never discovered by a child refused after the parent is
+       already divided. A child's bytes are derived from the parent's and carry its `group:` line; `promote` stamps
+       the store's recorded group over it, or, recording none, keeps the parent's. With neither, no child could name
+       one. This line was a literal fallback. */
+    if (!this.#producingGroup() && !(typeof fm.group === "string" && fm.group.trim()))
+      return this.#groupUndetermined("inquirydivide",
+        `${target}'s children would be new documents that must name the group that produced them; this store `
+        + `records none and ${target}'s own document names none, so nothing was divided.`);
 
     /* THE CHILDREN ARE DERIVED FROM THE PARENT'S OWN DOCUMENT, not built from a
        template here. A template would be this file's private idea of what an
@@ -9721,7 +9739,7 @@ export class Store extends DurableObject {
       author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? b.object_type, group,
+      meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: "divided", prior_state: b.current_state,
               created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null },
@@ -9736,7 +9754,7 @@ export class Store extends DurableObject {
         author: who,
         files: [{ path: "bundle.md", text: pl.text, bytes: cb.length,
                   sha256: createSha256().update(cb).hex() }],
-        meta: { object_type: fm.object_type ?? b.object_type, group,
+        meta: { object_type: fm.object_type ?? b.object_type,
                 title: deriveInquiryTitle(pl.q) ?? pl.q,
                 current_state: "open", prior_state: null,
                 created: when, last_updated: when,
@@ -10134,7 +10152,7 @@ export class Store extends DurableObject {
       /* NO STATE MOVES. The meta carries the document's own state forward
          unchanged — this act authors what a question rests on, not where it
          stands — which is why it is not in index.mjs's STATE_ACTIONS. */
-      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+      meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
               created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null },
@@ -10315,7 +10333,13 @@ export class Store extends DurableObject {
                detail: "the required evidentiary strength is the GROUP's declaration about its own work. A "
                      + "machine credential may not make it. Sign in as a member." };
     /* END DEC-49 REGION is-machine-strength-bar */
-    const gid = String(group ?? "").trim() || "believe-in-oakland";
+    /* D-436: the default is the store's recorded group, never a literal; recording none and naming none, the
+       declaration has no group to belong to and is refused rather than filed under a name nobody chose. */
+    const gid = String(group ?? "").trim() || this.#producingGroup();
+    if (!gid)
+      return this.#groupUndetermined("strengthbar",
+        "the default bar is the GROUP's declaration, keyed by its group; this request names no group and this store "
+        + "records none. Nothing was declared.");
     for (const [axis, v] of [["capture", capture], ["connection", connection]])
       /* REC-51: the membership test AND the sentence that reports it both read
          the catalog. The sentence was a FIFTH copy this item's scope had counted
@@ -10404,7 +10428,13 @@ export class Store extends DurableObject {
                        + `PROJECT (DEC-72).` };
       return { ok: true, project: pid, bar: this.#projectBar(pid) };
     }
-    const gid = String(group ?? "").trim() || "believe-in-oakland";
+    /* D-436: the default is the store's recorded group. Recording none and naming none, there is no group whose
+       default to read — a READ, so it is stated as undetermined rather than refused. */
+    const gid = String(group ?? "").trim() || this.#producingGroup();
+    if (!gid)
+      return { ok: true, group: null, bar: null, seeds_new_projects: true,
+               detail: "no group is named and this store records no producing group, so there is no group default to "
+                     + "read. An absent bar gates nothing and is not a bar of zero." };
     const g = this.#one(`SELECT group_id, capture, connection, author, at FROM group_strength_bar WHERE group_id=?`, gid);
     return { ok: true, group: gid, bar: g || null,
              /* DEC-17's surviving half, stated in the answer so a reader cannot
@@ -11195,7 +11225,7 @@ export class Store extends DurableObject {
            citing object there was. Byte-identical for a case (its frontmatter
            says `project`) and correct for a question. */
         object_type: fm.object_type ?? p.object_type,
-        group: fm.group || "believe-in-oakland", title: fm.title,
+        title: fm.title,
         current_state: fm.current_state, prior_state: fm.prior_state ?? null,
         created: fm.created, last_updated: when,
         criticality: fm.criticality ?? null,
@@ -12317,7 +12347,7 @@ export class Store extends DurableObject {
       snapKey: `${nowIso.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm0.object_type ?? src.b.object_type, group: fm0.group || "believe-in-oakland",
+      meta: { object_type: fm0.object_type ?? src.b.object_type,
               title: fm0.title, current_state: src.b.current_state, prior_state: fm0.prior_state ?? null,
               created: fm0.created, last_updated: nowIso, criticality: fm0.criticality ?? null },
     });
@@ -14300,6 +14330,30 @@ export class Store extends DurableObject {
     }
     /* ===== END REC-141 (the mint itself is the first act inside the transaction) ===== */
     if ((!bundleId && !creatingProject) || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    /* ===== D-436 — A CREATION'S PRODUCING GROUP, decided HERE, before the transaction, because a refusal returned
+       from inside `transactionSync` does not roll back what was already written (REC-141's mint writes first).
+       With a recorded group, a creation is STAMPED with it (`#stampGroup`, after the mint) and the projection is
+       written with it — whatever the caller's bytes or meta said, because the producer of a document this instance
+       creates is this instance's group. A REPLAY is the exception, on this function's standing rule that historical
+       replay is not authorship: its bytes are the past's and are carried verbatim. With no recorded group, nothing
+       is stamped and nothing is defaulted: the caller's OWN statement — the document's `group:`, else its meta — is
+       kept as before, and a creation that states none is refused (C-64.1). A REVISION is never decided here: the
+       projection keeps the group its creation wrote, so a revision's meta names no group at all. ===== */
+    let groupStamp = null, createdGroup = null;
+    if (base === null) {
+      const recorded = this.#producingGroup();
+      if (recorded && !pkg.replay) { groupStamp = recorded; createdGroup = recorded; }
+      else {
+        const md0 = files.find((f) => f && f.path === "bundle.md");
+        const said = md0 && typeof md0.text === "string" ? parseFrontmatter(md0.text).data?.group : undefined;
+        const stated = [said, meta.group].find((g) => typeof g === "string" && g.trim() !== "");
+        createdGroup = stated ? stated.trim() : recorded;
+        if (!createdGroup)
+          return this.#groupUndetermined("promote",
+            "this store records no producing group, and this creation names none — neither a group: line in its "
+            + "bundle.md nor a group in its meta. The record does not supply one. Nothing was created.");
+      }
+    }
     return this.ctx.storage.transactionSync(() => {
       /* REC-141: MINT, WRITE, THEN HASH. The id goes in as the first line after the opening fence; the
          bytes and their sha256 are recomputed from the written text, and THAT sha is what the files row,
@@ -14316,7 +14370,10 @@ export class Store extends DurableObject {
         const written = { ...projectMd, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
         files = files.map((f) => f === projectMd ? written : f);
       }
-      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
+      /* D-436: the producing group written into a created document's bytes — after the mint, so a new project's
+         document is written once for its id and once for its group, and hashed from what is finally held. */
+      if (groupStamp) files = Store.#stampGroup(files, groupStamp);
+      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
 
       /* REC-138 / D-426: a REVISION of a bundle the actor cannot see answers exactly as a revision of
          one that does not exist — one answer, `#promoteAbsent`, from both branches. Only project
@@ -15030,7 +15087,10 @@ export class Store extends DurableObject {
            last_updated=excluded.last_updated, criticality=excluded.criticality,
            bundle_sha=excluded.bundle_sha,
            row_version=bundles.row_version+1`,
-        bundleId, projectedType, meta.group, projectedTitle, meta.current_state, meta.prior_state ?? null,
+        /* D-436: a revision keeps the group its creation wrote (the ON CONFLICT arm never touches group_id, and
+           NOT NULL is checked before it, so the value handed in must be real); a creation writes the one decided
+           above, before the transaction. `meta.group` is read nowhere but that decision. */
+        bundleId, projectedType, cur ? cur.group_id : createdGroup, projectedTitle, meta.current_state, meta.prior_state ?? null,
         meta.created, meta.last_updated, meta.criticality ?? null, newSha, bundleId);
 
       /* Projected from the document, every promotion, so the table is a view of
@@ -17464,6 +17524,15 @@ export class Store extends DurableObject {
           : `observedAt '${obs}' is later than this record's own clock (${recorded})`,
         { observed_at: obs || null });
     /* END DEC-49 REGION is-testify-words */
+    /* D-436: THE PLANE COMPOSES THESE BYTES, so the producing group they name is the store's recorded one and
+       nothing else — this line was an unconditional literal. Asked AFTER the member's own refusals (who, and the
+       words) so each keeps answering in its own words, and BEFORE `allocId`, so a store recording no group spends
+       no id on a document it will not write. */
+    const group = this.#producingGroup();
+    if (!group)
+      return this.#groupUndetermined("testify",
+        "a firsthand observation is a document the record writes itself, and it must name the group that produced "
+        + "it; this store records none, so the observation was not written. Nothing was spent.");
 
     const heading = (typeof title === "string" ? title : "")
       .replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200)
@@ -17499,7 +17568,7 @@ export class Store extends DurableObject {
       `title: ${JSON.stringify(heading)}`, "current_state: collected", "prior_state: null",
       `created: "${recorded}"`, `last_updated: "${recorded}"`,
       "produced_by:", "  mode: human", "  capability_tier: session",
-      "group: believe-in-oakland", "references: []", "state_history: []",
+      `group: ${group}`, "references: []", "state_history: []",
       "annotations_open: 0",
       "reeval_pending:", "  flag: false", "  since: null", "  source: null",
       "visuals: []", "criticality: supporting", "source_status: unchanged",
@@ -17565,7 +17634,7 @@ export class Store extends DurableObject {
         author: who,
         files: [{ path: "bundle.md", ...enc(md) }, { path: "data/provenance.json", ...enc(provText) },
                 { path: file, text: fileText, bytes: fileBytes.length, sha256: sha }],
-        meta: { object_type: "information", group: "believe-in-oakland", title: heading,
+        meta: { object_type: "information", title: heading,
                 current_state: "collected", prior_state: null, created: recorded, last_updated: recorded,
                 criticality: "supporting" },
         register: [{ sha256: sha, path: file, encoding: "utf8", bytes: fileBytes.length }],
@@ -28020,6 +28089,136 @@ export class Store extends DurableObject {
     return { ok: true, role };
   }
 
+  /* =====================================================================
+   * D-436 / IC-172 — THE PRODUCING GROUP, ONE RECORDED VALUE FOR THE WHOLE INSTANCE.
+   *
+   * State Rules v1.5 §3.1: every bundle.md carries `group`, the producing group's slug, and it travels with
+   * every distributed copy — so it is in the SIGNED bytes. This file used to write one literal slug there,
+   * through eighteen `fm.group ||` fallbacks, two trimmed-argument defaults and three unconditional stamps
+   * (testify's bytes and meta, and a fork's meta): true of one instance and false of every instance `newgroup`
+   * installs. Now there is ONE value, the `instance_group` row, and every default and every stamp reads it
+   * through `#producingGroup()`. Nothing in this file names a group of its own.
+   *
+   * DECISION (a), PROVISIONAL (D-436), WHERE IT COMES FROM. It is written ONCE, at the store's FIRST BOOT — the
+   * `#migrate` pass that found no `bundles` table, i.e. storage that has never held this schema. On that boot and
+   * on no other, the slug the installer bound as INSTANCE_NAME is recorded: the worker name the group chose
+   * (D-102), which `newgroup` binds in the SAME upload that creates the worker, so it is present before the
+   * store can boot at all. It is checked against the installer's own slug grammar first, and a missing or
+   * malformed name records NOTHING — the store then says so (`instanceGroup`), because an invented value in
+   * signed bytes is the defect this closes.
+   *   NEVER A DEPLOY-TIME VARIABLE AS ITS SOURCE. INSTANCE_NAME is the channel the slug ARRIVES by, read at one
+   *   moment; every later boot ignores it, and nothing else in the plane reads it for this. So a redeploy that
+   *   moves the binding moves nothing already recorded, and nothing written afterwards.
+   *   WHY THE FIRST BOOT AND NOT op=claim, the plane's other first-run act. The scratch namespace is a Durable
+   *   Object of its own that no claim ever reaches; the root of trust can write before anyone claims; and a
+   *   claim is RE-ARMED by rotating ADMIN_TOKEN, so "the first claim" would need a witness of its own. The
+   *   store's birth is witnessed by the schema itself. The alternative — the slug carried in op=claim's body —
+   *   would take it from whoever opens the setup page rather than from the installer.
+   *
+   * DECISION (b), PROVISIONAL, A STORE THAT PREDATES THE VALUE. A store that already held the schema when this
+   * table arrived records NOTHING at boot, even with INSTANCE_NAME bound: this project's own instance is named
+   * for its worker and not its group, and a sovereign store installed earlier holds documents already stamped
+   * with the old literal — the binding and the record can disagree, and choosing between them is a person's
+   * act, not a boot's. It is recorded ONCE by the root of trust (`instanceGroupSeed`, op=instancegroupseed),
+   * and refused a second time. The documents already written are not rewritten: their bytes are signed.
+   *
+   * DECISION (c), PROVISIONAL, NOTHING RECORDED. A write that must name the producing group is never given a
+   * default. `promote` keeps a caller's OWN statement of its group (the document's `group:`, else its meta)
+   * exactly as before — the caller's words, not the plane's — and refuses GROUP_UNDETERMINED (C-64.1) when
+   * neither states one; a document the plane composes itself (`testify`), a division whose parent names no
+   * group, and the group default bar with no group named are refused the same way.
+   * ===================================================================== */
+
+  /* The installer's slug grammar, `newgroup/src/index.mjs`'s SLUG_RE, byte for byte. instance-group.test.mjs
+     pins the two sources equal, so neither can move alone. */
+  static GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
+
+  /** THE ONE READER: the recorded slug, or null when this store records none. Every default and every stamp
+   *  asks here, and it reads the store and nothing else — never `this.env`. */
+  #producingGroup() {
+    const r = this.#one(`SELECT slug FROM instance_group WHERE id=1`);
+    return r && typeof r.slug === "string" && r.slug ? r.slug : null;
+  }
+
+  /* DECISION (a)'s write, called by `#migrate` only when it found no `bundles` table before the schema ran. */
+  #recordGroupAtFirstBoot() {
+    const slug = String((this.env && this.env.INSTANCE_NAME) ?? "").trim();
+    if (!Store.GROUP_SLUG_RE.test(slug)) return;
+    this.sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
+                   VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`,
+                  slug, new Date().toISOString());
+  }
+
+  /** op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
+  instanceGroup() {
+    const r = this.#one(`SELECT slug, recorded_at, source, recorded_by FROM instance_group WHERE id=1`);
+    if (r) return { ok: true, group: r.slug, recorded_at: r.recorded_at, source: r.source,
+                    recorded_by: r.recorded_by ?? null };
+    return { ok: true, group: null, recorded_at: null, source: null, recorded_by: null,
+             detail: "no producing group is recorded for this store. A store records it once: at its first boot, "
+                   + "from the slug its installer bound, or — on a store that already held documents when the value "
+                   + "arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must "
+                   + "name its producing group is given no default: a caller's own statement of its group is kept "
+                   + "as the caller's, and a write stating none is refused." };
+  }
+
+  /** op=instancegroupseed: DECISION (b), the root of trust's one act. The control plane stamps `author`. */
+  instanceGroupSeed({ slug = null, author = null } = {}) {
+    const refusal = (code, detail, extra) => {
+      const row = INSTANCE_GROUP_CHECKS[code];
+      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
+               detail, ...(extra || {}) };
+    };
+    const s = typeof slug === "string" ? slug.trim() : "";
+    /* DEC-49 REGION is-instance-group-seed */
+    if (!Store.GROUP_SLUG_RE.test(s))
+      return refusal("GROUP_SLUG_MALFORMED",
+        `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a group is recorded as"} a slug in the `
+        + `installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). `
+        + `Nothing was recorded.`);
+    const held = this.#one(`SELECT slug, recorded_at, source FROM instance_group WHERE id=1`);
+    if (held)
+      return refusal("GROUP_ALREADY_RECORDED",
+        `this store has recorded its producing group since ${held.recorded_at} (${held.source}), and it is `
+        + `recorded once. Nothing was changed.`,
+        { group: held.slug, recorded_at: held.recorded_at, source: held.source });
+    /* END DEC-49 REGION is-instance-group-seed */
+    const at = new Date().toISOString();
+    const who = typeof author === "string" && author.trim() ? author.trim() : null;
+    this.sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
+                   VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at, who);
+    return { ok: true, group: s, recorded_at: at, source: "seed", recorded_by: who,
+             note: "every document this store writes from now on names this group. Documents already written are "
+                 + "NOT rewritten: whatever group their bytes name is what they were signed under." };
+  }
+
+  /* DECISION (c)'s refusal, ONE site however many acts need it, so its DEC-49 row can name one smallest span. */
+  #groupUndetermined(act, detail) {
+    /* DEC-49 REGION is-group-undetermined */
+    const row = INSTANCE_GROUP_CHECKS.GROUP_UNDETERMINED;
+    return { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", check: row.check,
+             translation: row.translation, act, detail };
+    /* END DEC-49 REGION is-group-undetermined */
+  }
+
+  /* A CREATED document names THIS instance's group in its own bytes, whatever the caller wrote — D-78's rule for
+     `surfaced_by` one field over: the store byte-trusts bundle.md, so the one honest place to decide the producer
+     is the one write path, and it fixes every writer at once (the setup page, the member UI, the plane's own).
+     REC-141's order, MINT, WRITE, THEN HASH: the bytes and their sha256 are recomputed from the written text, so
+     the sha the answer carries is the sha of what is held. A document already naming this group — in any
+     spelling the catalogue's parser reads as it — is left byte-identical. Absent, the key is opened immediately
+     before the closing fence, `#setOrAddScalar`'s convention. */
+  static #stampGroup(files, slug) {
+    return files.map((f) => {
+      if (!f || f.path !== "bundle.md" || typeof f.text !== "string") return f;
+      if (parseFrontmatter(f.text).data?.group === slug) return f;
+      const text = Store.#setOrAddScalar(f.text, "group", slug);
+      if (text === f.text) return f;
+      const bytes = new TextEncoder().encode(text);
+      return { ...f, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
+    });
+  }
+
   /* THE WORDS A REFUSED SIGN-IN IS GIVEN, REC-39, and they live in ONE place
      because the SAME NO_SUCH_ROLE is returned from two arms — here, where no
      credential row exists, and in the DO dispatch's `login:` wrapper, where a
@@ -28965,7 +29164,9 @@ export class Store extends DurableObject {
       author: by, ownerMemberId: by,
       files: [{ path: "bundle.md", text, bytes: fbytes.length,
                 sha256: createSha256().update(fbytes).hex() }, ...carried],
-      meta: { object_type: "project", group: "believe-in-oakland", title,
+      /* D-436: no `group` here — this was an unconditional literal. The fork is a CREATION, so `promote` stamps the
+         store's recorded group into its bytes, or, recording none, keeps the group its origin's bytes carry. */
+      meta: { object_type: "project", title,
               current_state: "forming", created: when, last_updated: when },
     });
     if (!promoted.ok) return promoted;
@@ -33825,7 +34026,7 @@ export class Store extends DurableObject {
       author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? b.object_type, group: fm.group || "believe-in-oakland",
+      meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
               created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null },
@@ -33879,7 +34080,7 @@ export class Store extends DurableObject {
       snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: pfm.object_type ?? "project", group: pfm.group || "believe-in-oakland",
+      meta: { object_type: pfm.object_type ?? "project",
               title: pfm.title, current_state: pfm.current_state ?? "forming",
               prior_state: pfm.prior_state ?? null, created: pfm.created, last_updated: when,
               criticality: pfm.criticality ?? null },
@@ -34566,7 +34767,7 @@ export class Store extends DurableObject {
       snapKey: `${nowIso.replace(/[-:]/g, "")}_${Store.#rand(4)}`, author: who || run,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm0.object_type ?? b.object_type, group: fm0.group || "believe-in-oakland",
+      meta: { object_type: fm0.object_type ?? b.object_type,
               title: fm0.title, current_state: b.current_state, prior_state: fm0.prior_state ?? null,
               created: fm0.created, last_updated: nowIso,
               criticality: fm0.criticality ?? null },
@@ -42321,6 +42522,10 @@ export class Store extends DurableObject {
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...(body || {}), tokenFp: url.searchParams.get("fp") }),
+        /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
+           query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
+        instancegroup: () => this.instanceGroup(),
+        instancegroupseed: () => this.instanceGroupSeed({ ...(body || {}), author: url.searchParams.get("author") }),
         login: async () => {
           /* A member login is refused unless the member is active, so
              revocation closes the front door as well as the sessions.

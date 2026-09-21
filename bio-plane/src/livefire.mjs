@@ -50,7 +50,10 @@ export async function livefire(env, storeName, { capacity = false } = {}) {
     const body = md(state, rev);
     return {
       bundleId: id, snapKey: "20260723T190000Z_livefire", author: "livefire",
-      meta: { object_type: "information", group: "believe-in-oakland", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: new Date().toISOString() },
+      /* D-436: no `group`, which was a literal. The canary is a CREATION, so the store it lands in stamps its own
+         recorded producing group into the bytes — and a store recording none refuses it by name (C-64.1), which
+         this battery then reports as the first assertion failing: a true finding about that store. */
+      meta: { object_type: "information", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: new Date().toISOString() },
       files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: await sha256(body) }, ...extra],
       register: [],
     };
@@ -75,7 +78,10 @@ export async function livefire(env, storeName, { capacity = false } = {}) {
   /* REC-25: the image read fails closed without a viewer. The battery is a
      first-party machine probe reading its own scratch canary, so it reads at
      machine scope — the scope D-15 deliberately leaves unfiltered. */
-  const live = await get(`image?id=${id}&viewer=class:probe`);
+  /* D-436: `|| {}` — a store recording no producing group REFUSES the canary's creation (C-64.1), and the image of a
+     bundle that was never written is null. Read bare, the next line threw a TypeError and this battery answered a
+     500 with no JSON at all; now the refusal is REPORTED, as the assertions it fails, by name. */
+  const live = (await get(`image?id=${id}&viewer=class:probe`)) || {};
   assert("live state is the winning revision", /rev 3/.test(live["bundle.md"]), true);
   assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire.md"] || ""), true);
   assert("the verbatim promotion record is projected", "_history/promotion_20260723T190000Z_livefire.json" in live, true,

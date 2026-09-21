@@ -580,6 +580,11 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     credentials:         "operator/member auth; a data purge must not delete logins and lock the instance out",
     sessions:             "bearer login sessions; auth state, not corpus-derived",
     bootstrap:            "one-row claim state; whether the instance has been claimed, not corpus data",
+    /* D-436. The instance's PRODUCING GROUP, bootstrap's one-row family: which group this copy belongs to, written
+       once and named in the signed bytes of every document it writes. A purge that cleared it would leave every
+       later creation refused or — worse — decided by whatever the next caller claimed. `instance-group.test.mjs`
+       drives a whole-store purge and reads the value back unchanged. */
+    instance_group:       "the instance's producing-group slug (D-436): identity, recorded once at the store's first boot or by the root of trust's one seed, named in the signed bytes of every document the store writes; not derived from the corpus",
     members:              "the roster; membership is identity, not derived from captured documents",
     signers:              "registered signing keys; identity, not corpus-derived",
     /* PL-11 / IS-5 / D-199 (2). The `ai` credential's DECLARED TASK SCOPE, and

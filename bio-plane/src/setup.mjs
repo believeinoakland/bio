@@ -775,11 +775,15 @@ const stamp = ()=>{
 const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
   /* REC-141: a PROJECT's id is minted by the plane, which writes it into these bytes and refuses
      bytes already carrying one, so a project's document is sent with no id line (id is null). */
+  /* D-436: and NO group line, for the same kind of reason. The producing group is the instance's
+     one recorded value, and the plane writes it into every document it creates; this page wrote a
+     literal slug here, true of one instance and false of every other. On a copy that records no
+     group yet, the plane refuses the save by name (C-64.1) rather than supply one. */
   const fm = ["---",...(id === null ? [] : ["id: "+id]),"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
     "produced_by:","  mode: assisted","  capability_tier: session",
-    "group: believe-in-oakland","references: []","state_history: []",
+    "references: []","state_history: []",
     "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
     "  source: null","visuals: []"];
   if (type === "information") fm.push(
@@ -977,7 +981,7 @@ $("#n-save").addEventListener("click", async ()=>{
       doc && doc.capture ? { content_hash: doc.capture.sha256 } : null, act);
     const r = await post("promote", {
       ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: WHO,
-      meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
+      meta: { object_type:type, title, current_state:state, created:now, last_updated:now },
       files: await docFiles(text, doc, await sha256Text(text)),
       register: doc ? [...(Array.isArray(doc.parts) && doc.parts.length
                         ? doc.parts.map((p) => ({ sha256: p.sha256, path: p.file,
@@ -1079,7 +1083,7 @@ $("#e-save").addEventListener("click", async ()=>{
          which the store correctly refused as a stale write, so no revision
          through this page had ever succeeded. */
       bundleId: EDIT_ID, base: lease.result.base, snapKey: stamp(), author: WHO,
-      meta: { object_type: fmv.object_type, group:"believe-in-oakland", title: fmv.title || EDIT_ID,
+      meta: { object_type: fmv.object_type, title: fmv.title || EDIT_ID,
               current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
       files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) },
               ...(await carryForward(EDIT_ID, "bundle.md"))],

@@ -16954,3 +16954,49 @@ design corpus and the map are BOB's), and every kickoff but SCHEDULER's. **D-435
 until BOB #22's landing of it is on `main`: BOB #22 builds it and archives it itself.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 RECORD (D-436 — THE PRODUCING GROUP IS ONE RECORDED VALUE PER INSTANCE: no bundle this plane writes names a literal group)
+
+Worker spawned by CONDUCT #10. **Own worktree** `.claude/worktrees/agent-a6dd0a0a3a3a6cc10`, branch
+**`worktree-agent-a6dd0a0a3a3a6cc10`**, base `origin/main` @ `2bd24da7` (fast-forwarded from the spawn's `4fac1548`; the
+row read `running` at both). `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`, each `node_modules` verified a REAL
+DIRECTORY; 6.0 GiB free. Baseline battery on the untouched tree: `267/267 suites green · 16264 assertions passing`. Design
+authority: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (the core field `group`) with the design call in
+D-436's own archived row (`docs/archive/ledgers/DEBT-closed.md`). IC-172 and the C-64 family minted with
+`node tools/mintid.mjs` BEFORE building. Claimed BY SITE, because `store.mjs` and `index.mjs` are the most-churned files:
+
+- `bio-plane/src/schema.mjs` — ONE new table `instance_group`, immediately after `bootstrap` (so before `host_governor`).
+- `bio-plane/src/store.mjs` — **by SITE:** (1) `#migrate` — ONE line at its head (the first-boot witness) and ONE call
+  immediately after the schema pass; (2) NEW, immediately after `setPassword`: `static GROUP_SLUG_RE`, `#producingGroup`,
+  `#recordGroupAtFirstBoot`, `instanceGroup`, `instanceGroupSeed`, `#groupUndetermined`, `static #stampGroup`; (3)
+  `promote` — the creation's group decided before `transactionSync`, the stamp after REC-141's mint, `cur`'s SELECT gains
+  `group_id`, and the `bundles` INSERT's group value; (4) `testify` — the recorded group read and refused-when-absent
+  before `allocId`, the bytes' `group:` line, the meta key; (5) `forkProject` — the meta key; (6) `divide` — a pre-check
+  where `const group` stood, and its two meta keys; (7) `strengthBarSet`, `strengthBarOf` — the default group; (8) the meta
+  `group` key REMOVED, nothing else, at the seventeen other revision sites: `#edgeTransition`, `dispose`, `retire`,
+  `release`, `conclude`, `#setProjectConclusion`, `actionMove`, `actionCorrespond`, `#respondsToInto`, `reopen`,
+  `publishCase`, `groundInquiry`, `cite`, `narrow`, `#moveVersionState`, `#setProjectCurrentVersion`, `suggestVersion`;
+  (9) the DO dispatch map — two new routes, `instancegroup` and `instancegroupseed`; (10) ONE import line from the catalog.
+- `bio-plane/src/index.mjs` — **by SITE:** (1) the OPS table — two new rows; (2) `UNATTENDED_BY_DECISION` — one entry;
+  (3) the forward's stamps — `author` for `instancegroupseed`; (4) the monitor tick's promote `meta` — the `group` key.
+- `bio-plane/src/setup.mjs` — **by SITE:** `mdFor`'s `group:` line; the intake save's and the edit save's meta `group` key.
+- `bio-plane/src/livefire.mjs` — the canary's meta `group` key.
+- `bio-plane/checks/bio-checks.mjs` — ONE new DEC-49 family, `INSTANCE_GROUP_CHECKS` (C-64.1–C-64.3).
+- `bio-plane/test/instance-group.test.mjs` and `bio-plane/test/instance-group.control.mjs` — both NEW.
+- `bio-plane/test/hygiene.test.mjs` — ONE entry in the D-113 `EXEMPT` table.
+- Suites a correct landing makes wrong — named in a SECOND block once the battery has named them, each corrected with a
+  dated reason, never exempted.
+- `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` — FLOOR FIGURES ONLY, from their own print.
+- `bio-plane/dist/` (the rebuilt bundle).
+- `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (front matter, and ONE dated amendment section at the foot),
+  `docs/architecture/construct-status.json` (`3.census`, and a NEW claim `3.producing-group`),
+  `docs/architecture/BIO_System_Design.md` (RENDERED by `node tools/status.mjs --write`, never hand-edited),
+  `docs/development/INTERFACE-CHANGES.md` (IC-172, appended), `docs/development/MEASUREMENTS.md` (one appended entry),
+  `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT** `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), **NOT** `docs/development/INTERFACES.md`
+(CONDUCT's at resolution), **NOT** `newgroup/**` (the installer half is DIST's — DELEGATION below), **NOT** `release/**`,
+**NOT** `civicos-ui/app.html` (UI's — DELEGATION below), **NOT** `docs/development/kickoffs/RECORD.md` (it reads 36,709 B
+against its budget, so the lesson lives in the code's own comments and the amendment).
+
+**open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates and resolves IC-172.

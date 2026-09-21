@@ -183,6 +183,28 @@ CREATE TABLE IF NOT EXISTS bootstrap (
   token_fp    TEXT
 );
 
+-- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG,
+-- ONE VALUE FOR THE WHOLE INSTANCE. Every bundle this instance writes names it as its
+-- group, in the bytes that get signed, and nothing else may supply that name: not a
+-- literal in the code, and not a deploy-time variable, which a redeploy could move
+-- silently. One row, id=1, WRITTEN ONCE: every writer is an INSERT that does nothing on
+-- conflict, and no statement anywhere updates or deletes it.
+--   source  'bootstrap'  recorded at the store's FIRST BOOT (the migrate pass that finds no
+--                        bundles table), from the slug the installer bound as INSTANCE_NAME,
+--                        the worker name the group chose (D-102), read at that moment only
+--           'seed'       recorded once by op=instancegroupseed, the root of trust's act, on a
+--                        store that already held the schema when this table arrived
+--   recorded_by  NULL for bootstrap, the server-stamped credential for a seed
+-- EXEMPT FROM op=purge, in both arms: identity, not derived from the corpus, in the family
+-- of bootstrap and seq. hygiene.test.mjs lists it among the purge exemptions.
+CREATE TABLE IF NOT EXISTS instance_group (
+  id           INTEGER PRIMARY KEY CHECK (id = 1),
+  slug         TEXT NOT NULL,
+  recorded_at  TEXT NOT NULL,
+  source       TEXT NOT NULL,
+  recorded_by  TEXT
+);
+
 -- ---- write arc ----
 
 -- Members. Each member signs in with their own password (stored in
@@ -3584,7 +3606,10 @@ rev ${rev}
       bundleId: id,
       snapKey: "20260723T190000Z_livefire",
       author: "livefire",
-      meta: { object_type: "information", group: "believe-in-oakland", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: (/* @__PURE__ */ new Date()).toISOString() },
+      /* D-436: no `group`, which was a literal. The canary is a CREATION, so the store it lands in stamps its own
+         recorded producing group into the bytes — and a store recording none refuses it by name (C-64.1), which
+         this battery then reports as the first assertion failing: a true finding about that store. */
+      meta: { object_type: "information", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: (/* @__PURE__ */ new Date()).toISOString() },
       files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: await sha256(body) }, ...extra],
       register: []
     };
@@ -3604,7 +3629,7 @@ rev ${rev}
     "the lost-update floor, on real storage"
   );
   assert("garbage base refused", (await post("promote", { ...await pkgFor("ratified", 5), base: "deadbeef" })).reason, "CAS_STALE");
-  const live = await get(`image?id=${id}&viewer=class:probe`);
+  const live = await get(`image?id=${id}&viewer=class:probe`) || {};
   assert("live state is the winning revision", /rev 3/.test(live["bundle.md"]), true);
   assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire.md"] || ""), true);
   assert(
@@ -3774,6 +3799,7 @@ __export(bio_checks_exports, {
   HEADINGS: () => HEADINGS,
   HEADINGS_WHEN: () => HEADINGS_WHEN,
   INQUIRY_TITLE_MAX: () => INQUIRY_TITLE_MAX,
+  INSTANCE_GROUP_CHECKS: () => INSTANCE_GROUP_CHECKS,
   ISO_TS_RE: () => ISO_TS_RE,
   LEAD_CHECKS: () => LEAD_CHECKS,
   LEAD_ID_RE: () => LEAD_ID_RE,
@@ -11838,6 +11864,23 @@ var CONTRADICTION_PAIR_CHECKS = {
     translation: "The record pairs assertions by named keys, and that is not one of them. Rather than answer from a different key and let the answer look like a complete comparison, it says so and names the keys it holds. Ask again with one of them, or with none at all to run every key."
   }
 };
+var INSTANCE_GROUP_CHECKS = {
+  GROUP_UNDETERMINED: {
+    check: "C-64.1",
+    where: "src/store.mjs #groupUndetermined > is-group-undetermined",
+    translation: "This copy has not recorded which group it belongs to, and nothing in this request says, so the record cannot write a document that must name the group that produced it. A copy records its group once: when it is first installed, or by one act of whoever holds its administrator token in the hosting account. Nothing was written."
+  },
+  GROUP_SLUG_MALFORMED: {
+    check: "C-64.2",
+    where: "src/store.mjs instanceGroupSeed > is-instance-group-seed",
+    translation: "A group is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded."
+  },
+  GROUP_ALREADY_RECORDED: {
+    check: "C-64.3",
+    where: "src/store.mjs instanceGroupSeed > is-instance-group-seed",
+    translation: "This copy's group is already recorded, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed."
+  }
+};
 function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
   const refusal7 = (code, message, repairs) => f(LEAD_CHECKS[code].check, "error", message, repairs, code);
@@ -13094,11 +13137,15 @@ const stamp = ()=>{
 const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
   /* REC-141: a PROJECT's id is minted by the plane, which writes it into these bytes and refuses
      bytes already carrying one, so a project's document is sent with no id line (id is null). */
+  /* D-436: and NO group line, for the same kind of reason. The producing group is the instance's
+     one recorded value, and the plane writes it into every document it creates; this page wrote a
+     literal slug here, true of one instance and false of every other. On a copy that records no
+     group yet, the plane refuses the save by name (C-64.1) rather than supply one. */
   const fm = ["---",...(id === null ? [] : ["id: "+id]),"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
     "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
     "created: "+now,"last_updated: "+now,
     "produced_by:","  mode: assisted","  capability_tier: session",
-    "group: believe-in-oakland","references: []","state_history: []",
+    "references: []","state_history: []",
     "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
     "  source: null","visuals: []"];
   if (type === "information") fm.push(
@@ -13296,7 +13343,7 @@ $("#n-save").addEventListener("click", async ()=>{
       doc && doc.capture ? { content_hash: doc.capture.sha256 } : null, act);
     const r = await post("promote", {
       ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: WHO,
-      meta: { object_type:type, group:"believe-in-oakland", title, current_state:state, created:now, last_updated:now },
+      meta: { object_type:type, title, current_state:state, created:now, last_updated:now },
       files: await docFiles(text, doc, await sha256Text(text)),
       register: doc ? [...(Array.isArray(doc.parts) && doc.parts.length
                         ? doc.parts.map((p) => ({ sha256: p.sha256, path: p.file,
@@ -13398,7 +13445,7 @@ $("#e-save").addEventListener("click", async ()=>{
          which the store correctly refused as a stale write, so no revision
          through this page had ever succeeded. */
       bundleId: EDIT_ID, base: lease.result.base, snapKey: stamp(), author: WHO,
-      meta: { object_type: fmv.object_type, group:"believe-in-oakland", title: fmv.title || EDIT_ID,
+      meta: { object_type: fmv.object_type, title: fmv.title || EDIT_ID,
               current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
       files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) },
               ...(await carryForward(EDIT_ID, "bundle.md"))],
@@ -26965,6 +27012,7 @@ var Store = class _Store extends DurableObject {
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
   #migrate() {
+    const firstBoot = !this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='bundles'`);
     const bare = (this.env.SCHEMA || SCHEMA || "").split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const [table, needed] of [
       ["links", "citation_norm"],
@@ -27295,6 +27343,7 @@ var Store = class _Store extends DurableObject {
       const t = s.trim();
       if (t) this.sql.exec(t);
     }
+    if (firstBoot) this.#recordGroupAtFirstBoot();
     {
       const old = [...this.sql.exec(`PRAGMA table_info(ai_run_log)`)];
       if (old.length) {
@@ -29801,7 +29850,6 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       ],
       meta: {
         object_type: "project",
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: fm.current_state,
         prior_state: fm.prior_state ?? null,
@@ -30042,7 +30090,6 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         }, ...carried],
         meta: {
           object_type: "inquiry",
-          group: fm.group || "believe-in-oakland",
           title: fm.title,
           current_state: to,
           prior_state: cur.current_state,
@@ -30674,7 +30721,6 @@ Changes: state ${cur.current_state} to retired. Reason: ${why}.
         }, ...carried],
         meta: {
           object_type: "information",
-          group: fm.group || "believe-in-oakland",
           title: fm.title,
           current_state: "retired",
           prior_state: cur.current_state,
@@ -30887,7 +30933,6 @@ Mitigation: ${mit}
         }, ...carried],
         meta: {
           object_type: "information",
-          group: fm.group || "believe-in-oakland",
           title: fm.title,
           current_state: "verified",
           prior_state: cur.current_state,
@@ -31299,7 +31344,6 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
       }, ...carried],
       meta: {
         object_type: fm.object_type ?? b.object_type,
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: "concluded",
         prior_state: b.current_state,
@@ -31470,7 +31514,6 @@ Claim: ${f2.claim}
       }, ...carried],
       meta: {
         object_type: pfm.object_type ?? "project",
-        group: pfm.group || "believe-in-oakland",
         title: pfm.title,
         current_state: pfm.current_state ?? "forming",
         prior_state: pfm.prior_state ?? null,
@@ -32049,7 +32092,6 @@ Reason: ${why}
       }, ...carried],
       meta: {
         object_type: fm.object_type ?? b.object_type,
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: to,
         prior_state: b.current_state,
@@ -32266,7 +32308,6 @@ Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who
       }, ...carried],
       meta: {
         object_type: fm.object_type ?? b.object_type,
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: b.current_state,
         prior_state: fm.prior_state ?? null,
@@ -32351,7 +32392,6 @@ Changes: responds_to edge added to ${actionId}.
       }, ...carried],
       meta: {
         object_type: fm.object_type ?? doc.object_type,
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: fm.current_state ?? doc.current_state,
         prior_state: fm.prior_state ?? null,
@@ -32606,7 +32646,6 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       }, ...carried],
       meta: {
         object_type: fm.object_type ?? b.object_type,
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: "open",
         prior_state: b.current_state,
@@ -33205,7 +33244,6 @@ Subject position: ${pos} \u2014 ${just}
            `concluded` finding, not a transition. */
         meta: {
           object_type: fm.object_type ?? b.object_type,
-          group: fm.group || "believe-in-oakland",
           title: fm.title,
           current_state: b.current_state,
           prior_state: fm.prior_state ?? null,
@@ -34927,7 +34965,11 @@ Subject position: ${pos} \u2014 ${just}
       };
     }
     const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
-    const group = fm.group || "believe-in-oakland";
+    if (!this.#producingGroup() && !(typeof fm.group === "string" && fm.group.trim()))
+      return this.#groupUndetermined(
+        "inquirydivide",
+        `${target}'s children would be new documents that must name the group that produced them; this store records none and ${target}'s own document names none, so nothing was divided.`
+      );
     const plans = [];
     for (let k = 0; k < kids.length; k++) {
       const id = ids[k];
@@ -35101,7 +35143,6 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
       }, ...carried],
       meta: {
         object_type: fm.object_type ?? b.object_type,
-        group,
         title: fm.title,
         current_state: "divided",
         prior_state: b.current_state,
@@ -35127,7 +35168,6 @@ Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), ${legs.filter((
         }],
         meta: {
           object_type: fm.object_type ?? b.object_type,
-          group,
           title: deriveInquiryTitle(pl.q) ?? pl.q,
           current_state: "open",
           prior_state: null,
@@ -35554,7 +35594,6 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
          stands — which is why it is not in index.mjs's STATE_ACTIONS. */
       meta: {
         object_type: fm.object_type ?? b.object_type,
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: b.current_state,
         prior_state: fm.prior_state ?? null,
@@ -35732,7 +35771,12 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
         reason: "MACHINE_CANNOT_DECLARE",
         detail: "the required evidentiary strength is the GROUP's declaration about its own work. A machine credential may not make it. Sign in as a member."
       };
-    const gid = String(group ?? "").trim() || "believe-in-oakland";
+    const gid = String(group ?? "").trim() || this.#producingGroup();
+    if (!gid)
+      return this.#groupUndetermined(
+        "strengthbar",
+        "the default bar is the GROUP's declaration, keyed by its group; this request names no group and this store records none. Nothing was declared."
+      );
     for (const [axis, v] of [["capture", capture], ["connection", connection]])
       if (v != null && !BASIS_GRADES.includes(v))
         return {
@@ -35839,7 +35883,15 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
         };
       return { ok: true, project: pid, bar: this.#projectBar(pid) };
     }
-    const gid = String(group ?? "").trim() || "believe-in-oakland";
+    const gid = String(group ?? "").trim() || this.#producingGroup();
+    if (!gid)
+      return {
+        ok: true,
+        group: null,
+        bar: null,
+        seeds_new_projects: true,
+        detail: "no group is named and this store records no producing group, so there is no group default to read. An absent bar gates nothing and is not a bar of zero."
+      };
     const g = this.#one(`SELECT group_id, capture, connection, author, at FROM group_strength_bar WHERE group_id=?`, gid);
     return {
       ok: true,
@@ -36446,7 +36498,6 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
            citing object there was. Byte-identical for a case (its frontmatter
            says `project`) and correct for a question. */
         object_type: fm.object_type ?? p.object_type,
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: fm.current_state,
         prior_state: fm.prior_state ?? null,
@@ -37671,7 +37722,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }, ...carried],
       meta: {
         object_type: fm0.object_type ?? src.b.object_type,
-        group: fm0.group || "believe-in-oakland",
         title: fm0.title,
         current_state: src.b.current_state,
         prior_state: fm0.prior_state ?? null,
@@ -39539,6 +39589,24 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         );
     }
     if (!bundleId && !creatingProject || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    let groupStamp = null, createdGroup = null;
+    if (base === null) {
+      const recorded = this.#producingGroup();
+      if (recorded && !pkg.replay) {
+        groupStamp = recorded;
+        createdGroup = recorded;
+      } else {
+        const md0 = files.find((f2) => f2 && f2.path === "bundle.md");
+        const said = md0 && typeof md0.text === "string" ? parseFrontmatter(md0.text).data?.group : void 0;
+        const stated = [said, meta.group].find((g) => typeof g === "string" && g.trim() !== "");
+        createdGroup = stated ? stated.trim() : recorded;
+        if (!createdGroup)
+          return this.#groupUndetermined(
+            "promote",
+            "this store records no producing group, and this creation names none \u2014 neither a group: line in its bundle.md nor a group in its meta. The record does not supply one. Nothing was created."
+          );
+      }
+    }
     return this.ctx.storage.transactionSync(() => {
       if (creatingProject) {
         bundleId = this.#mintProjectId(meta.title);
@@ -39554,7 +39622,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         const written = { ...projectMd, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
         files = files.map((f2) => f2 === projectMd ? written : f2);
       }
-      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state FROM bundles WHERE bundle_id=?`, bundleId);
+      if (groupStamp) files = _Store.#stampGroup(files, groupStamp);
+      const cur = this.#one(`SELECT bundle_sha, row_version, object_type, current_state, group_id FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur && base !== null && pkg.actorIdentity != null && !this.#inSight(bundleId, pkg.actorViewer ?? null))
         return _Store.#promoteAbsent();
       if (cur && base === null)
@@ -40031,9 +40100,12 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
            last_updated=excluded.last_updated, criticality=excluded.criticality,
            bundle_sha=excluded.bundle_sha,
            row_version=bundles.row_version+1`,
+        /* D-436: a revision keeps the group its creation wrote (the ON CONFLICT arm never touches group_id, and
+           NOT NULL is checked before it, so the value handed in must be real); a creation writes the one decided
+           above, before the transaction. `meta.group` is read nowhere but that decision. */
         bundleId,
         projectedType,
-        meta.group,
+        cur ? cur.group_id : createdGroup,
         projectedTitle,
         meta.current_state,
         meta.prior_state ?? null,
@@ -42027,6 +42099,12 @@ ${words}`;
         obsMs == null ? `observedAt ${obs ? `'${obs.slice(0, 40)}' is not a real calendar date (YYYY-MM-DD) or UTC instant (YYYY-MM-DDTHH:MM[:SS]Z)` : `was not given`}. It is the member's own statement of when they saw it, and the record does not supply one` : `observedAt '${obs}' is later than this record's own clock (${recorded})`,
         { observed_at: obs || null }
       );
+    const group = this.#producingGroup();
+    if (!group)
+      return this.#groupUndetermined(
+        "testify",
+        "a firsthand observation is a document the record writes itself, and it must name the group that produced it; this store records none, so the observation was not written. Nothing was spent."
+      );
     const heading = (typeof title === "string" ? title : "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 200) || `Firsthand observation, observed ${obs}`;
     const id = `${this.allocId("INFO", recorded.slice(0, 4)).id}-observation`;
     const fileText = _Store.testimonyBytes({ id, observedAt: obs, words: text });
@@ -42052,7 +42130,7 @@ ${words}`;
       "produced_by:",
       "  mode: human",
       "  capability_tier: session",
-      "group: believe-in-oakland",
+      `group: ${group}`,
       "references: []",
       "state_history: []",
       "annotations_open: 0",
@@ -42143,7 +42221,6 @@ ${words}`;
       ],
       meta: {
         object_type: "information",
-        group: "believe-in-oakland",
         title: heading,
         current_state: "collected",
         prior_state: null,
@@ -51942,6 +52019,154 @@ ${words}`;
     );
     return { ok: true, role };
   }
+  /* =====================================================================
+   * D-436 / IC-172 — THE PRODUCING GROUP, ONE RECORDED VALUE FOR THE WHOLE INSTANCE.
+   *
+   * State Rules v1.5 §3.1: every bundle.md carries `group`, the producing group's slug, and it travels with
+   * every distributed copy — so it is in the SIGNED bytes. This file used to write one literal slug there,
+   * through eighteen `fm.group ||` fallbacks, two trimmed-argument defaults and three unconditional stamps
+   * (testify's bytes and meta, and a fork's meta): true of one instance and false of every instance `newgroup`
+   * installs. Now there is ONE value, the `instance_group` row, and every default and every stamp reads it
+   * through `#producingGroup()`. Nothing in this file names a group of its own.
+   *
+   * DECISION (a), PROVISIONAL (D-436), WHERE IT COMES FROM. It is written ONCE, at the store's FIRST BOOT — the
+   * `#migrate` pass that found no `bundles` table, i.e. storage that has never held this schema. On that boot and
+   * on no other, the slug the installer bound as INSTANCE_NAME is recorded: the worker name the group chose
+   * (D-102), which `newgroup` binds in the SAME upload that creates the worker, so it is present before the
+   * store can boot at all. It is checked against the installer's own slug grammar first, and a missing or
+   * malformed name records NOTHING — the store then says so (`instanceGroup`), because an invented value in
+   * signed bytes is the defect this closes.
+   *   NEVER A DEPLOY-TIME VARIABLE AS ITS SOURCE. INSTANCE_NAME is the channel the slug ARRIVES by, read at one
+   *   moment; every later boot ignores it, and nothing else in the plane reads it for this. So a redeploy that
+   *   moves the binding moves nothing already recorded, and nothing written afterwards.
+   *   WHY THE FIRST BOOT AND NOT op=claim, the plane's other first-run act. The scratch namespace is a Durable
+   *   Object of its own that no claim ever reaches; the root of trust can write before anyone claims; and a
+   *   claim is RE-ARMED by rotating ADMIN_TOKEN, so "the first claim" would need a witness of its own. The
+   *   store's birth is witnessed by the schema itself. The alternative — the slug carried in op=claim's body —
+   *   would take it from whoever opens the setup page rather than from the installer.
+   *
+   * DECISION (b), PROVISIONAL, A STORE THAT PREDATES THE VALUE. A store that already held the schema when this
+   * table arrived records NOTHING at boot, even with INSTANCE_NAME bound: this project's own instance is named
+   * for its worker and not its group, and a sovereign store installed earlier holds documents already stamped
+   * with the old literal — the binding and the record can disagree, and choosing between them is a person's
+   * act, not a boot's. It is recorded ONCE by the root of trust (`instanceGroupSeed`, op=instancegroupseed),
+   * and refused a second time. The documents already written are not rewritten: their bytes are signed.
+   *
+   * DECISION (c), PROVISIONAL, NOTHING RECORDED. A write that must name the producing group is never given a
+   * default. `promote` keeps a caller's OWN statement of its group (the document's `group:`, else its meta)
+   * exactly as before — the caller's words, not the plane's — and refuses GROUP_UNDETERMINED (C-64.1) when
+   * neither states one; a document the plane composes itself (`testify`), a division whose parent names no
+   * group, and the group default bar with no group named are refused the same way.
+   * ===================================================================== */
+  /* The installer's slug grammar, `newgroup/src/index.mjs`'s SLUG_RE, byte for byte. instance-group.test.mjs
+     pins the two sources equal, so neither can move alone. */
+  static GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
+  /** THE ONE READER: the recorded slug, or null when this store records none. Every default and every stamp
+   *  asks here, and it reads the store and nothing else — never `this.env`. */
+  #producingGroup() {
+    const r = this.#one(`SELECT slug FROM instance_group WHERE id=1`);
+    return r && typeof r.slug === "string" && r.slug ? r.slug : null;
+  }
+  /* DECISION (a)'s write, called by `#migrate` only when it found no `bundles` table before the schema ran. */
+  #recordGroupAtFirstBoot() {
+    const slug = String((this.env && this.env.INSTANCE_NAME) ?? "").trim();
+    if (!_Store.GROUP_SLUG_RE.test(slug)) return;
+    this.sql.exec(
+      `INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
+                   VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`,
+      slug,
+      (/* @__PURE__ */ new Date()).toISOString()
+    );
+  }
+  /** op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
+  instanceGroup() {
+    const r = this.#one(`SELECT slug, recorded_at, source, recorded_by FROM instance_group WHERE id=1`);
+    if (r) return {
+      ok: true,
+      group: r.slug,
+      recorded_at: r.recorded_at,
+      source: r.source,
+      recorded_by: r.recorded_by ?? null
+    };
+    return {
+      ok: true,
+      group: null,
+      recorded_at: null,
+      source: null,
+      recorded_by: null,
+      detail: "no producing group is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or \u2014 on a store that already held documents when the value arrived \u2014 by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing group is given no default: a caller's own statement of its group is kept as the caller's, and a write stating none is refused."
+    };
+  }
+  /** op=instancegroupseed: DECISION (b), the root of trust's one act. The control plane stamps `author`. */
+  instanceGroupSeed({ slug = null, author = null } = {}) {
+    const refusal7 = (code, detail, extra) => {
+      const row = INSTANCE_GROUP_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const s = typeof slug === "string" ? slug.trim() : "";
+    if (!_Store.GROUP_SLUG_RE.test(s))
+      return refusal7(
+        "GROUP_SLUG_MALFORMED",
+        `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a group is recorded as"} a slug in the installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). Nothing was recorded.`
+      );
+    const held = this.#one(`SELECT slug, recorded_at, source FROM instance_group WHERE id=1`);
+    if (held)
+      return refusal7(
+        "GROUP_ALREADY_RECORDED",
+        `this store has recorded its producing group since ${held.recorded_at} (${held.source}), and it is recorded once. Nothing was changed.`,
+        { group: held.slug, recorded_at: held.recorded_at, source: held.source }
+      );
+    const at = (/* @__PURE__ */ new Date()).toISOString();
+    const who = typeof author === "string" && author.trim() ? author.trim() : null;
+    this.sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
+                   VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at, who);
+    return {
+      ok: true,
+      group: s,
+      recorded_at: at,
+      source: "seed",
+      recorded_by: who,
+      note: "every document this store writes from now on names this group. Documents already written are NOT rewritten: whatever group their bytes name is what they were signed under."
+    };
+  }
+  /* DECISION (c)'s refusal, ONE site however many acts need it, so its DEC-49 row can name one smallest span. */
+  #groupUndetermined(act, detail) {
+    const row = INSTANCE_GROUP_CHECKS.GROUP_UNDETERMINED;
+    return {
+      ok: false,
+      reason: "GROUP_UNDETERMINED",
+      code: "GROUP_UNDETERMINED",
+      check: row.check,
+      translation: row.translation,
+      act,
+      detail
+    };
+  }
+  /* A CREATED document names THIS instance's group in its own bytes, whatever the caller wrote — D-78's rule for
+     `surfaced_by` one field over: the store byte-trusts bundle.md, so the one honest place to decide the producer
+     is the one write path, and it fixes every writer at once (the setup page, the member UI, the plane's own).
+     REC-141's order, MINT, WRITE, THEN HASH: the bytes and their sha256 are recomputed from the written text, so
+     the sha the answer carries is the sha of what is held. A document already naming this group — in any
+     spelling the catalogue's parser reads as it — is left byte-identical. Absent, the key is opened immediately
+     before the closing fence, `#setOrAddScalar`'s convention. */
+  static #stampGroup(files, slug) {
+    return files.map((f2) => {
+      if (!f2 || f2.path !== "bundle.md" || typeof f2.text !== "string") return f2;
+      if (parseFrontmatter(f2.text).data?.group === slug) return f2;
+      const text = _Store.#setOrAddScalar(f2.text, "group", slug);
+      if (text === f2.text) return f2;
+      const bytes = new TextEncoder().encode(text);
+      return { ...f2, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };
+    });
+  }
   /* THE WORDS A REFUSED SIGN-IN IS GIVEN, REC-39, and they live in ONE place
        because the SAME NO_SUCH_ROLE is returned from two arms — here, where no
        credential row exists, and in the DO dispatch's `login:` wrapper, where a
@@ -52990,9 +53215,10 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         bytes: fbytes.length,
         sha256: createSha256().update(fbytes).hex()
       }, ...carried],
+      /* D-436: no `group` here — this was an unconditional literal. The fork is a CREATION, so `promote` stamps the
+         store's recorded group into its bytes, or, recording none, keeps the group its origin's bytes carry. */
       meta: {
         object_type: "project",
-        group: "believe-in-oakland",
         title,
         current_state: "forming",
         created: when,
@@ -57286,7 +57512,6 @@ Changes: reading '${vname}' ${to === null ? act === "hide" ? `${hidden ? "hidden
       }, ...carried],
       meta: {
         object_type: fm.object_type ?? b.object_type,
-        group: fm.group || "believe-in-oakland",
         title: fm.title,
         current_state: b.current_state,
         prior_state: fm.prior_state ?? null,
@@ -57359,7 +57584,6 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       }, ...carried],
       meta: {
         object_type: pfm.object_type ?? "project",
-        group: pfm.group || "believe-in-oakland",
         title: pfm.title,
         current_state: pfm.current_state ?? "forming",
         prior_state: pfm.prior_state ?? null,
@@ -57820,7 +58044,6 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       }, ...carried],
       meta: {
         object_type: fm0.object_type ?? b.object_type,
-        group: fm0.group || "believe-in-oakland",
         title: fm0.title,
         current_state: b.current_state,
         prior_state: fm0.prior_state ?? null,
@@ -65250,6 +65473,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1" }),
         bootstrap: () => this.bootstrapState(url.searchParams.get("fp")),
         claim: () => this.claim({ ...body || {}, tokenFp: url.searchParams.get("fp") }),
+        /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
+           query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
+        instancegroup: () => this.instanceGroup(),
+        instancegroupseed: () => this.instanceGroupSeed({ ...body || {}, author: url.searchParams.get("author") }),
         login: async () => {
           const role = body?.role || "admin";
           if (role.startsWith("member:")) {
@@ -65876,6 +66103,16 @@ var OPS = {
   /* The log is READ by in-app administrators who cannot run an export. They must
      be able to see that one happened even though they cannot cause it. */
   exportlog: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-436 / IC-172 — THE INSTANCE'S PRODUCING GROUP (State Rules v1.5 §3.1), the one value every bundle this
+     instance writes names as its `group`. The READ is open to every class that reads the record: it answers
+     what the store records, and when it records nothing it says so. The SEED is the other half of decision (b):
+     a store that already held documents when the value arrived records nothing at boot, and is given its group
+     by this act, once. RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN
+     CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO
+     SESSION OF ANY ROLE REACHES IT: it is named in no SESSION_OPS set, and UNATTENDED_BY_DECISION cites this
+     row, so a session is told which credential the verb is addressed to rather than an invented reason. */
+  instancegroup: { classes: ["admin", "member", "probe"], mutating: false },
+  instancegroupseed: { classes: ["admin"], mutating: true },
   /* Section 8.2. classes: null, because published-record reconstruction requires
      NOTHING: the hashes are public and verifiable by any stranger without this
      instance's cooperation or continued existence. It reads the published
@@ -67903,7 +68140,10 @@ var UNATTENDED_BY_DECISION = {
   purge: "src/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside SESSION_OPS, purge above all, still requires a machine credential.'",
   cpuprobe: "src/index.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the runtime cuts it off. Probe and admin only: it belongs nowhere near a member's session.'",
   capturerequestdrain: "src/index.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the class by decision, not by drift.'",
-  taskdrain: "src/index.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S \u2014 a member reaching for it by hand would be a person doing the daemon's job with the daemon's conduct rules applied to them.'"
+  taskdrain: "src/index.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S \u2014 a member reaching for it by hand would be a person doing the daemon's job with the daemon's conduct rules applied to them.'",
+  /* D-436: recorded by the D-436 worker as a PROVISIONAL decision, and stated as one in IC-172 — the seed is
+     the root of trust's, as the claim and the export are. The citation is the OPS row's own sentence. */
+  instancegroupseed: "src/index.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT \u2014 THE ADMIN_TOKEN CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY \u2014 AND NO SESSION OF ANY ROLE REACHES IT.'"
 };
 function sessionOpGate(kind, op, spec, method) {
   const refusal7 = (code, error, detail, extra) => json({ ok: false, reason: code, ...admissionRow(code), error, detail, op, ...extra || {} }, 403);
@@ -70787,9 +71027,10 @@ var index_default = {
         author: "bio-monitor",
         writer: "mechanical",
         operation: "monitor-tick",
+        /* D-436: no `group` — a tick is a REVISION, and the store keeps the group the document's creation wrote.
+           This was a literal fallback. */
         meta: {
           object_type: fm.object_type,
-          group: fm.group || "believe-in-oakland",
           title: fm.title,
           current_state: fm.current_state,
           prior_state: fm.prior_state ?? null,
@@ -71859,6 +72100,8 @@ var index_default = {
     }
     if (op === "aicredentialrevoke")
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    if (op === "instancegroupseed")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     if (op === "casedraft" || op === "reviewgrant" || op === "reviewrevoke") {
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
       inner.searchParams.delete("secretSha");
