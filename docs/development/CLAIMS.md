@@ -16931,4 +16931,6 @@ why: a CUT NOW, judged at the code. Before REC-156 (`397ff618`, merge `f84bcd47`
   (IC-170, I5 MINOR: a new `minted_ids` table, so the upgrade arm is load-bearing). Shipped-path diff: `bio-checks.mjs`,
   `index.mjs`, `schema.mjs`, `setup.mjs`, `store.mjs`. No fleet source, `app.html`, `newgroup/` or `release/` moved.
 
-**open as of 2026-09-21.**
+**RELEASED 2026-09-21 by DIST #3** — 0.70.0 is complete: tag `v0.70.0` = `072bb9f3` on the mainline; deployed and
+live-verified 13/13 (the DO build established by C-63.1); pointer advanced at `0a562200`; installer `837d24c8` read back
+(embed MATCH, bindings `[]`), its bundle and `DIST-NEXT.md` landed in the commit that releases this.
