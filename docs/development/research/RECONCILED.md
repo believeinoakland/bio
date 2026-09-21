@@ -1,6 +1,6 @@
 # RECONCILED — the single statement of the case-making design
 
-**Status** · The single statement of the case-making design, written 2026-08-01 by session BOB and amended in place through 2026-08-03: it resolves 38 contradictions across the study, applies R1–R4 passage by passage, re-derives the 35-item build order and ranks 14 open questions. It rests on Bob's rulings DEC-12 through DEC-22 and DEC-28 through DEC-31 (each marked in place), is amended by DEC-18 and DEC-21, and its §3 build order is DONE — every item `done` in `QUEUE.md` except REC-15 and UI-17, blocked by DEC-33, the deferral under which this whole set is PARKED. Complete as a design record; superseded in part by DEC-72 (a CASE is a production of a project) which §0 does not know. Caveat: the file says SUSPEND in some fifty places and means UNRATED (its own §1.1 amendment), and it cites the archived storyboards by line. as of 2026-09-17.
+**Status** · The single statement of the case-making design, written 2026-08-01 by session BOB and amended in place through 2026-08-03: it resolves 38 contradictions across the study, applies R1–R4 passage by passage, re-derives the 35-item build order and ranks 14 open questions. It rests on Bob's rulings DEC-12 through DEC-22 and DEC-28 through DEC-31 (each marked in place), is amended by DEC-18 and DEC-21, and its §3 build order is DONE — every item `done` in `QUEUE.md` except REC-15 and UI-17, blocked by DEC-33, the deferral under which this whole set is PARKED. Complete as a design record; superseded in part by DEC-72 (a CASE is a production of a project) which §0 does not know. Caveat: the file says SUSPEND in some fifty places and means UNRATED (its own §1.1 amendment), and it cites the archived storyboards by line. §4 Q11's measured limit — a key registered for a member who never enrolled reading `active` on `op=signerlist` — is CLOSED by D-158 (2026-09-20, C-63) and Q11's own answer is unchanged and strengthened; its pre-flight RECIPE is corrected at the site, because `s.status === "active"` is now the wrong predicate and `s.attests` is the right one. as of 2026-09-20.
 
 **Place in the system** · Owns the reasoning behind construct 8 of `BIO_System_Design.md` §3 and touches 12 (surfaces) and 13 (publication); level-1 home `BIO_Case_Making_v0_1.md`, rulings in `DECISIONS.md`. `QUEUE.md`'s REC/UI items and `review-document.html` depend on it; DEC-72, `BIO_DATAPLANE_STATE.md` and DEC-33's deferral (REC-15, UI-17, UI-17a) supersede parts of §0 and §3.
 
@@ -1642,6 +1642,19 @@ not show active is one `ratify` will not accept either. It is wrong only optimis
 **Build consequence:** C-4's instance-wide `NO_SIGNERS` wording in UI-17 is unaffected and stays.
 What becomes AVAILABLE is the per-member pre-flight UI-17 could not previously offer — as an
 addition to the instance-wide refusal, not a replacement for it, until D-158 closes.
+
+> **CORRECTED 2026-09-20 BY D-158, at this site rather than in a report, because the recipe above is
+> what a UI-17 worker would copy.** The measured limit is CLOSED. `Store.SIGNER_ATTESTS` is now ONE
+> predicate read by `signerList`, `gateFacts` and `caseDocumentFacts`; `op=signeradd`, and
+> `op=signerset` when it ACTIVATES, refuse a member who is not `active` (C-63.1
+> `SIGNER_MEMBER_NOT_ENROLLED`, C-63.2 `SIGNER_MEMBER_NOT_ACTIVE`); and `op=signerlist` serves
+> `member_status` and `attests` beside the key's own `status`. **Q11's answer is unchanged and
+> STRENGTHENED** — it was settled YES on the reasoning that the roster errs only optimistically, and
+> it now errs in neither direction. **BUT THE PRE-FLIGHT PREDICATE ABOVE IS NOW THE WRONG ONE:** read
+> `s.attests`, never `s.status === "active"`. `status` is the administrator's own revocation switch on
+> the key and answers only half the question the gate asks; a key can be `status:"active"` and
+> `attests:false`, and that pair is exactly what D-158 existed to make sayable. The clause *"until
+> D-158 closes"* is discharged.
 
 ### Tier 3 — recorded, blocking nothing now
 

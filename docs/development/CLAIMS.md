@@ -15955,3 +15955,71 @@ claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths:
 
 **NOT CLAIMED:** `tools/retirable.mjs` and the heartbeat's definition. Both defects go through the BOB INBOX with
 their fixes named: the first is a FULL-profile change, and the second is the operator's.
+
+## CLAIM 2026-09-20 RECORD (D-158 — THE ROSTER AND THE GATE ANSWER ONE QUESTION: a signing key is registered to a member who can attest, and `op=signerlist` says which state each key is actually in)
+
+Worker spawned by CONDUCT #8. **Own worktree** `.claude/worktrees/d158-conduct8`, branch **`worker/d158-conduct8`**,
+base `origin/main` @ `e1aa2eee`. `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`, each `node_modules`
+verified a REAL DIRECTORY (30 / 25 / 26 entries), `df -h` 5.5 GiB free after. Design authority:
+`docs/architecture/BIO_Membership_Architecture_v2.md` §6 (enrolment: the member chooses a handle and a password)
+read with §10's `members`/`signers` sketch and §4's *approve signing keys*; the row's own analysis is in
+`docs/archive/ledgers/DEBT-closed.md` («D-158»), which prefers refusing at WRITE over joining `members` at READ.
+Claimed BY SITE, because `store.mjs` and `index.mjs` are the repo's most-churned files and MK-3 is live in
+`store.mjs` beside this item:
+
+- `bio-plane/src/store.mjs` — **by SITE:** (1) the NEW `static SIGNER_ATTESTS` beside the `---- signers ----`
+  header and the NEW private `#signerMemberBar`; (2) `signerAdd` — the member lookup only; (3) `signerSet` —
+  the activation branch only; (4) `signerList` — its whole statement and its row map; (5) the signer-set
+  subquery inside `gateFacts` and the one inside `caseDocumentFacts`, each having its INLINE predicate replaced
+  by the constant and nothing else; (6) the `MEMBER_ID_CHECKS` import line, which gains one name. **NOT** any
+  other function, **NOT** the schema, **NOT** `purge`.
+- `bio-plane/checks/bio-checks.mjs` — ONE new family `SIGNER_ENROLMENT_CHECKS` at **C-63** (minted
+  `node tools/mintid.mjs C`) with two rows, appended after `MEMBER_ID_CHECKS`.
+- `bio-plane/src/setup.mjs` — **by SITE:** the `#k-list` render inside `openMembers`, one new `signerWhy`
+  helper beside `memberWhy`, and ONE line added to `memberWhy`. Precedent for a RECORD worker editing this
+  file: REC-140, REC-141 and REC-143, each named in this register.
+- `bio-plane/test/signer-enrolment.test.mjs` and `bio-plane/test/signer-enrolment.control.mjs` — both NEW.
+- `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` figures, from the print only.
+- `civicos-ui/check-refusal-codes.mjs` — **the `FLOOR` table only**, moved from that guard's own green print,
+  on the precedent this register records for REC-84, REC-86, REC-97 and D-270, each a RECORD item that moved
+  these figures because a plane-side family is what moves them. **NOTHING else under `civicos-ui/`.**
+- `bio-plane/test/refusal-wire.test.mjs` — its two catalogue FLOORS only, same reason.
+- `bio-plane/dist/` (the rebuilt bundle).
+- `docs/architecture/BIO_Membership_Architecture_v2.md` (§6's note and the front matter) and
+  `docs/architecture/construct-status.json` (`1.invitations`), `docs/development/MEASUREMENTS.md`.
+
+**NOT** `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), **NOT**
+`docs/development/INTERFACE-CHANGES.md` (I3; **the integrator mints and classifies the IC**, per the row),
+**NOT** `newgroup/`, **NOT** `release/`, **NOT** `civicos-ui/app.html` — MEASURED, and stated precisely because
+"zero" was the first thing this claim said and it was one hit too generous: `grep -rn 'signerlist|signeradd|signerset|signerList'`
+over `civicos-ui/` returns **ONE** hit, and it is `civicos-ui/test/members-roster.test.mjs:192`, a suite's LIST of acts
+the member roster must not offer — not a call and not a render. `app.html` itself returns ZERO. `agent-worker/`,
+`pdf-worker/src` and `ocr-worker/src` return zero. So no member surface reads this roster and there is no UI half to
+build; the plane's own setup page is the one surface that renders it, and it is corrected here.
+
+**open as of 2026-09-20** — OPEN while this item builds; CONDUCT integrates and mints the IC.
+
+## CLAIM 2026-09-20 RECORD (D-158, SECOND BLOCK — ONE PATH ADDED after the item's own "who else reads this" sweep found a live recipe that D-158 makes wrong)
+
+Appended rather than edited into the block above, because this register is APPEND-ONLY and the
+addition was found after that block was written.
+
+- `docs/development/research/RECONCILED.md` — **ONE SITE ONLY:** a dated correction block appended
+  under §4 Q11's "Build consequence" paragraph. Nothing else in the file is touched, and §2.2 — which
+  `bio-plane/test/statussweep.test.mjs` parses at run time — is deliberately not approached.
+
+**WHY IT HAD TO BE HERE AND NOT IN A REPORT.** Q11 is SETTLED and its answer does not move; what moves
+is the RECIPE it hands the next worker. It tells UI-17 to compute the per-member pre-flight as
+`signers.filter(s => s.member_id === me && s.status === "active").length === 0`, and after this landing
+that is the WRONG PREDICATE — `status` is the administrator's revocation switch on the key and answers
+half the question the gate asks, while `attests` answers the whole of it. The paragraph also ends
+*"until D-158 closes"*, a live pointer this landing discharges. A correct fix that leaves a document
+telling the next reader to do the old thing is a fix verified only where it was made.
+
+**VERIFIED THERE, not only where the change was made:** every suite that reads this file was run
+DIRECTLY with its exit status read UNPIPED after the edit — `statussweep` 45/0, `earnedbasis` 54/0,
+`publishedcase` 105/0, `grounds` 68/0, `inquiry` 34/0, `strength` 42/0, `basis` 29/0, all exit 0 —
+and `plancheck` after. The full battery's figure was taken at `f9bfd812`; the only delta after it is
+this prose block under `docs/`, and the suites above are the ones that read the file it is in.
+
+**open as of 2026-09-20** — OPEN while this item builds; released with the block above at integration.

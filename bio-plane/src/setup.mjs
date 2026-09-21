@@ -1150,6 +1150,7 @@ async function openMembers(){
   $("#k-list").innerHTML = keys.length ? keys.map(x=>
     '<div class="kv"><span class="k">'+escH(x.member_id)+'</span><span class="v"><span class="mono dim">'
     + escH(String(x.key_b64).slice(0,24)) + "&hellip;</span> " + chip(x.status)
+    + (x.attests === false ? ' <span class="dim">' + escH(signerWhy(x)) + "</span>" : "")
     + ' <button class="kbtn" data-key="'+escH(x.key_b64)+'" data-to="'
     + (x.status==="revoked"?"active":"revoked") + '">'
     + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
@@ -1158,6 +1159,23 @@ async function openMembers(){
     await post("signerset", { keyB64: b.dataset.key, status: b.dataset.to }); openMembers();
   }));
 }
+/* D-158: this list renders the key's own status, which is the administrator's own
+   revocation switch and NOT whether the key can sign. A key whose member never
+   enrolled used to read active here while the instance refused everything signed
+   with it — the page telling the administrator more than the plane would honour.
+   op=signerlist now carries the derived fact and the stored one behind it, and
+   each sentence below names a STORED fact rather than a state invented to cover
+   it. The last line is the undetermined branch and says so out loud: an older
+   plane sends no attests field at all, so this renders nothing rather than
+   guessing, which is the caller-side of the same rule. */
+function signerWhy(x){
+  const w = x && x.attests_why;
+  if (w === "key_revoked") return "revoked — cannot sign";
+  if (w === "member_invited" || w === "member_proposed") return "this member has not enrolled yet, so this key cannot sign";
+  if (w === "member_revoked") return "this member has been revoked, so this key cannot sign";
+  if (w === "member_absent") return "no member on the roster holds this key, so it cannot sign";
+  return "this key cannot sign, and this copy has not been told why";
+}
 function memberWhy(res, wanted){
   const why = (res && res.reason) || "unknown";
   if (why === "BAD_MEMBER_ID") return "A member name is lowercase letters, digits and dashes, at least two characters. "
@@ -1165,6 +1183,12 @@ function memberWhy(res, wanted){
   if (why === "NO_COVER") return "Give a cover as well as a sign-in name: a label you will recognise them by. It does not have to be their real name.";
   if (why === "EXISTS") return "There is already a member with that name.";
   if (why === "NO_SUCH_MEMBER") return "There is no member by that name. Add them first, then register their key.";
+  /* D-158, on UI-72's rule: a refusal carrying the plane's OWN canned sentence
+     reaches the administrator in THAT sentence instead of as the bare code.
+     Placed AFTER the four sentences above so nothing this page already says
+     changes, and before the fallback so the next code with a translation needs
+     no edit here. */
+  if (res && typeof res.translation === "string" && res.translation) return res.translation;
   return "Refused: " + why;
 }
 $("#m-add").addEventListener("click", async ()=>{

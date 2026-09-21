@@ -12413,3 +12413,58 @@ and the row refuses to be split, so widening it here would have been CONDUCT inv
 **It is NARROWED, not closed**, and the builder pinned the boundary in `adminvote.test.mjs` §8 so the assertion
 FAILS THE DAY IT IS CLOSED — a row closed by rounding off its unbuilt quarter is how a false "done" enters the
 record. The fix is named in the DELEGATION that carries it to SCHEDULER.
+
+## IC-169 · I3: A SIGNING KEY IS REGISTERED ONLY TO A MEMBER WHO CAN ATTEST, AND THE ROSTER SAYS WHICH STATE EACH KEY IS IN — `op=signeradd`, and `op=signerset` when it ACTIVATES, refuse a member whose status is not `active` (`SIGNER_MEMBER_NOT_ENROLLED` C-63.1 when no handle was ever chosen, `SIGNER_MEMBER_NOT_ACTIVE` C-63.2 when one was); every `op=signerlist` row keeps `status` and gains `member_status`, `attests` and `attests_why` · PROPOSED 2026-09-21 (D-158; the row's `interface:` line says *"IC minted with `node tools/mintid.mjs IC`; the integrator classifies"*, so CONDUCT #9 minted IC-169 at integration)
+
+**WHAT CHANGES FOR A CALLER.** Before: `op=signeradd` asked only whether the member EXISTED and wrote the key
+`active`; `op=signerset status=active` asked only whether the key existed; `op=signerlist` read the `signers` table
+alone. So a key registered for a member who never enrolled read `active` on the roster while `op=ratify` answered
+`SIG_UNKNOWN_KEY` — the roster claiming more than the gate grants (measured 2026-08-02; re-measured by the builder on
+2026-09-20 at 18 pass / 13 fail against the pre-landing sources, MEASUREMENTS M-79). After: both writes refuse such a
+member by name and write nothing, answering `code`, `check`, `translation`, `detail`, `memberId`, `member_status` and
+`enrolled`; `NO_SUCH_MEMBER` is unchanged and still answers first; REVOKING a key is never barred. Each roster row
+keeps `status` (the administrator's revocation switch on the key, untouched) and gains `member_status` (the stored
+membership status, `null` when the member row is absent — `op=memberlist` already serves it to the same three
+classes), `attests` (whether `op=ratify` would accept this key now, computed from the ONE constant
+`Store.SIGNER_ATTESTS` that `gateFacts` and `caseDocumentFacts` now also read) and `attests_why` (`null` when it
+attests, else `key_revoked`, `member_absent`, `member_<status>`, or the literal `undetermined`).
+
+**WHY THIS IS BREAKING AND NOT ADDITIVE.** IC-137's rule in its plainest form: **a call that previously succeeded is
+now refused.** An administrator's `op=signeradd` for an invited member used to write a key and now answers
+`SIGNER_MEMBER_NOT_ENROLLED`. The three roster fields are additive and ride in the same bump; the strongest
+classification governs. **The direction of the fix is the design call, and it is the builder's, argued at the site:**
+the ROSTER was made to tell the truth and the GATE was NOT relaxed, because accepting the key would let a signature
+attest in the name of a roster slot no person has taken up (`BIO_Membership_Architecture_v2.md` §6 — enrolment is
+where the person takes up the membership the key would speak for); that is the class IC-168 closed for the §4.7 vote
+one act over. Hiding the disagreeing rows instead would have made the views agree by saying LESS than the record
+supports, and the control's `roster-blind` arm drives exactly that cheat.
+
+**CONSUMERS, MEASURED AT INTEGRATION on the merged tree, not taken from the report.** The three ops have ONE non-test
+caller: the plane's own setup page (`bio-plane/src/setup.mjs`, `openMembers`), which rendered the `active` chip and is
+corrected in the same landing. `civicos-ui/` makes ZERO calls — its one textual hit is
+`test/members-roster.test.mjs`'s list of acts the member roster must NOT offer. `agent-worker/`, `pdf-worker/` and
+`ocr-worker/` return zero; `newgroup/`'s hits are the released plane bundle it embeds, not a caller. The `op` table does
+not move: `classes` and `mutating` are unchanged for all three. **I5 does not move** — `schema.mjs` is untouched.
+
+**RESIDUE, stated rather than left to be discovered.** A key registered before this landing for a member who never
+enrolled is NOT rewritten, and no op can now create another; it is REPORTED (`attests: false`, `attests_why:
+member_invited`). Counted at ZERO on both of this account's instances on 2026-09-20, over non-empty member rosters that
+carry `invited` and `revoked` members (M-79); an instance in another group's account is not reachable from here and is
+UNDETERMINED.
+
+**NEGATIVE CONTROL, re-run at integration by CONDUCT #9 on the merged tree and not taken from the builder's report:**
+`node test/signer-enrolment.control.mjs`, exit 0, **all seven arms AS DECLARED** — baseline 32/0 · write-guard-dropped
+28/4 · set-guard-dropped 28/4 · roster-honesty-dropped 28/4 · roster-blind 25/7 · roster-inlined 31/1 ·
+read-overstrict 27/5 — every restore byte-identical, and `src/store.mjs` read afterwards at sha256 `c5fe16e9…`, the
+branch's own. The arm that decides the item is `write-guard-dropped`: exactly the four write assertions fail, led by
+*"op=signeradd for a member who has not enrolled is refused BY NAME, and the check FIRES: C-63.1"*, while every roster
+assertion stays green over the legacy row the missing guard just let through — the only place the read half can be
+driven at all.
+
+**RESOLUTION · 2026-09-21 · ACCEPTED by CONDUCT #9 as MAJOR, BREAKING — I3 46.0.0 → 47.0.0.** Base RE-READ at
+resolution off the integration tree: **46.0.0**, as IC-168's resolution above left it — **and the registry did not say
+so.** `INTERFACES.md`'s I3 `Version:` line still read 45.0.0: D-136's landing (`1ebdc40a`, pushed at `08a2e4d0`)
+wrote IC-168's resolution in this file and never bumped the registry, so two records of one fact disagreed for a day.
+The registry now carries IC-168's 46.0.0 as the Prior it always was and this change above it. **CONDUCT answers FOR
+the consumer areas, in writing, per step 3 — not as their agreement:** UI NOT-AFFECTED (it makes no call), DIST
+NOT-AFFECTED (the installer carries the plane and serves no roster of its own); RECORD owns the change and landed it.
