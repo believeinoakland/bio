@@ -119,6 +119,33 @@ CREATE TABLE IF NOT EXISTS seq (
   next  INTEGER NOT NULL
 );
 
+-- D-432, Membership v2 section 7: THE OPAQUE MINTER'S MEMORY, beside the counter's.
+-- seq is why allocid never reissues an identifier that has already existed -- a
+-- purge keeps it. The gated prefixes (PROJ, CASE, DRAFT, RVG, TASK) have no counter:
+-- Store#mintOpaqueId draws their four digits from the CSPRNG, and it checked each
+-- draw only against the LIVE rows of its kind, which a purge deletes. So an id could
+-- be drawn again after a purge, and a citation of the purged object would silently
+-- resolve to the NEW one. Every id the minter hands out is recorded here, and every
+-- draw asks this table as well as the live rows.
+-- EXEMPT FROM op=purge, IN BOTH ARMS, ON SEQ'S REASONING. The standing rule that a
+-- DERIVED table is named in purge does not reach it: nothing here is derived from
+-- the corpus, and clearing it is the defect it closes. hygiene.test.mjs lists it
+-- among the purge exemptions, beside seq.
+-- Written in the minting act's own transaction, never one of its own, so an act that
+-- rolls back (the review copy's dry run of the publish gates) takes its row back with
+-- it. Seeded at every boot by Store#seedMintLedger from the live rows of each gated
+-- kind, and from the range seq says the counter issued for a prefix with no tail.
+-- READ BY NO ROUTE, and never counted or listed: a count of these ids is how many
+-- gated objects were ever minted, hidden ones included (BOB #16).
+--   source   'mint'     drawn and handed out by Store#mintOpaqueId
+--            'live'     learned at boot from a live row of its kind
+--            'counter'  learned at boot from seq, an id the counter issued before REC-151
+CREATE TABLE IF NOT EXISTS minted_ids (
+  id           TEXT PRIMARY KEY,
+  recorded_at  TEXT NOT NULL,
+  source       TEXT NOT NULL
+);
+
 -- Credentials live here rather than in Worker secrets, because a Worker cannot
 -- rewrite its own secret. ADMIN_TOKEN is a bootstrap credential used once; the
 -- real password is chosen by the operator and only its hash is stored. Losing

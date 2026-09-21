@@ -197,7 +197,7 @@ const ARMS = [
     id: "neuter",
     what: "NEUTER THE READER — make the census's lexer blank EVERYTHING, so it sees no code at all",
     expect: "MUST FAIL as a DELTA WITH THE CORPUS PRINTED: the REACH arm goes red at "
-          + "`0 walking file(s), floor 34` and the stale-list arm goes red naming all nine "
+          + "`0 walking file(s), floor <N>` (N non-zero) and the stale-list arm goes red naming all nine "
           + "entries at once. D-265's arm, re-proven on the moved matcher. A detector that "
           + "finds nothing passes every clean corpus, so without this row the `fixture` arm "
           + "above is satisfied for free — a census that looked at nothing would also report "
@@ -216,7 +216,14 @@ const ARMS = [
        reads for now names 34. The ARM is unchanged — a lexer blinded to everything
        must still report ZERO walking files against a non-zero floor, which is the
        delta this row exists to produce. */
-    ok: (r) => r.hygiene.fail > 0 && r.walkfloor.fail > 0 && /0 walking file\(s\), floor 34/.test(r.hygiene.out),
+    /* CORRECTED 2026-09-21 BY D-432, and the correction is to STOP NAMING THE NUMBER rather than to move it again:
+       hygiene's REACH floor moved 34 -> 36 with the corpus (D-432's own walker, and one that had landed without moving
+       it), and this predicate was the second reader of that figure — the second floor move that has had to come here
+       (M0-25's 32 -> 34 was the first).
+       What the arm proves never depended on the value: a lexer blinded to everything reports ZERO walking files
+       against a NON-ZERO floor. So the predicate now asks exactly that (`floor [1-9]…`), and the next floor move
+       leaves this row alone. `floor 0` still fails it, so a floor zeroed out cannot pass here either. */
+    ok: (r) => r.hygiene.fail > 0 && r.walkfloor.fail > 0 && /0 walking file\(s\), floor [1-9]\d*/.test(r.hygiene.out),
   },
 ];
 
