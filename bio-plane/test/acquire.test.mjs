@@ -424,9 +424,17 @@ console.log("\n--- acquisition becomes evidence in the record ---");
     ["bundle.md", "data/provenance.json", "snapshots/report.pdf"]);
   t("the document is a blob reference, not inlined", files.find((f) => f.path === a.document.file).blobSha, DOC_SHA);
 
-  const { checkBundle } = await import("../checks/bio-checks.mjs");
+  const { checkBundle, withProducingGroup } = await import("../checks/bio-checks.mjs");
   const map = new Map();
   for (const fl of files) map.set(fl.path, fl.text !== undefined ? fl.text : DOC);
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted. The page's bundle.md used to be complete as sent only
+     because it carried a LITERAL producing group — true of one instance, false of every other. The page now sends no
+     `group:` line and the plane writes the store's recorded group into every creation, so the bundle is judged AS THE
+     PLANE HOLDS IT: the page's bytes through the catalogue's `withProducingGroup`, the function the store's stamp calls.
+     The page's side is pinned too — its own bytes name no group. */
+  t("the page's own bundle.md names no producing group — the plane writes it at creation (D-436)",
+    /^group:/m.test(map.get("bundle.md")), false);
+  map.set("bundle.md", withProducingGroup(map.get("bundle.md"), "acquire-fixture"));
   const { findings } = await checkBundle({
     folderName: ID, files: map,
     sha256: async (v) => createHash("sha256").update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex"),

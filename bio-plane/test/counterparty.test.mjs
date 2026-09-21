@@ -47,7 +47,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { checkBundle, withProducingGroup } from "../checks/bio-checks.mjs";
 
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -282,7 +282,15 @@ console.log("\n--- the placeholder is not written anywhere any more ---");
   const ui = new Function(...Object.keys(sandbox),
     script + "\n;return { mdFor, FIRST_STATE };")(...Object.values(sandbox));
   const id = "ACTN-2026-0009-intake-check";
-  const text = ui.mdFor(id, "action", ui.FIRST_STATE.action, "Intake check", "What the member wrote.", NOW);
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: the page no longer writes a producing group — it wrote a
+     LITERAL one, true of one instance only — and the plane stamps the store's recorded group into every creation. So
+     "exactly one finding" is asked of the document AS THE PLANE HOLDS IT (the page's bytes through the catalogue's
+     `withProducingGroup`, the function the store's stamp calls); asked of the page's bytes alone it would count the
+     group the plane supplies as a second gap, which is a different division of labour, not a second invention. */
+  const own = ui.mdFor(id, "action", ui.FIRST_STATE.action, "Intake check", "What the member wrote.", NOW);
+  const text = withProducingGroup(own, "intake-fixture");   /* a slug that cannot match the counterparty pins */
+  t("…and the page's own bytes name no producing group — the plane writes it at creation (D-436)",
+    /^group:/m.test(own), false);
   const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
   const errs = findings.filter((f) => f.severity === "error");

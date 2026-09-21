@@ -32,7 +32,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle, deriveInquiryTitle } from "../checks/bio-checks.mjs";
+import { checkBundle, deriveInquiryTitle, withProducingGroup } from "../checks/bio-checks.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -303,7 +303,13 @@ console.log("\n--- 5. either entry point mints the same object, and no path asks
   const text = ui.mdFor(id, "inquiry", ui.FIRST_STATE.inquiry, ui.deriveInquiryTitle(QUESTION), QUESTION,
     "2026-07-24T12:00:00Z", false, null);
   t("the page's writer puts the question under ## Question", text.includes("## Question\n\n" + QUESTION), true);
-  const files = new Map([["bundle.md", text]]);
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: the page no longer writes a producing group (it wrote a
+     LITERAL one, true of one instance only); the plane stamps the store's recorded group into every creation. So the
+     page's bytes are judged AS THE PLANE HOLDS THEM, through the catalogue's `withProducingGroup` — the function the
+     store's stamp calls — and the page's own side is pinned: it names no group. */
+  t("…and the page's own bytes name no producing group — the plane writes it at creation (D-436)",
+    /^group:/m.test(text), false);
+  const files = new Map([["bundle.md", withProducingGroup(text, "inquiry-fixture")]]);
   const { findings } = await checkBundle({ folderName: id, files,
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64), resolveTarget: () => true });
   t("and the result is conformant with no field beyond the derived title asked of the member",

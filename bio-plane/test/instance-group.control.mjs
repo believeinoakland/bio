@@ -7,12 +7,15 @@
  *
  * `mint-ledger.control.mjs`'s method exactly: each arm copies `src/` (and `checks/`, `docprofile/`) into a
  * uniquely-named temporary tree, applies its patch THERE (asserting each anchor occurs EXACTLY ONCE — an arm that did
- * not arm is a finding, not a pass), and runs the suite with INSTANCE_GROUP_SRC pointed at the copy. The real
- * `src/index.mjs`, `src/store.mjs`, `src/schema.mjs`, `src/setup.mjs` and `src/livefire.mjs` are hashed (sha256 and
- * byte length) before the first arm and after the last; the run fails if any moved. What each arm MUST fail (by the
- * assertion's label prefix) is DECLARED below before it arms; every other assertion MUST stay green.
+ * not arm is a finding, not a pass), and runs the suite with INSTANCE_GROUP_SRC pointed at the copy. A patch naming a
+ * bare module edits the copy's `src/`; one naming `checks/…` edits the copy's catalogue, which that plane imports. The
+ * real `src/index.mjs`, `src/store.mjs`, `src/schema.mjs`, `src/setup.mjs`, `src/livefire.mjs` and
+ * `checks/bio-checks.mjs` are hashed (sha256 and byte length) before the first arm and after the last; the run fails if
+ * any moved. What each arm MUST fail (by the assertion's label prefix) is DECLARED below before it arms; every other
+ * assertion MUST stay green.
  *
- * RESULTS: see the header of `test/instance-group.test.mjs` and IC-172.
+ * RESULTS: the suite's own NEGATIVE CONTROL line carries the figures, all thirteen arms AS DECLARED on the first full
+ * run and again after battery pass one's corrections; IC-172 repeats them.
  */
 import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -25,7 +28,8 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "instance-group.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "src/setup.mjs", "src/livefire.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "src/setup.mjs", "src/livefire.mjs",
+              "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 const LIT = ["believe", "in", "oakland"].join("-");   /* spelled apart so this driver's own text is not a site */
@@ -38,7 +42,9 @@ const TESTIFY_LINE = "      `group: ${group}`, \"references: []\", \"state_histo
 const SEED_HELD = "    if (held)\n      return refusal(\"GROUP_ALREADY_RECORDED\",";
 const UNDETERMINED_DEFAULT = "        createdGroup = stated ? stated.trim() : recorded;";
 const PURGE_ANCHOR = "        this.sql.exec(`DELETE FROM bundles`);";
-const STAMP_WRITE = "      const text = Store.#setOrAddScalar(f.text, \"group\", slug);";
+/* The catalogue's ONE definition of writing the group (the store's stamp calls it): its two write lines. */
+const DEF_REPLACE = "    if (lines[i].startsWith('group:')) { lines[i] = `group: ${slug}`; return lines.join('\\n'); }";
+const DEF_OPEN = "  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join('\\n');";
 const WITNESS = "SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='bundles'";
 
 /* Label prefixes, grouped as the suite names them. */
@@ -134,7 +140,10 @@ const ARMS = {
   /* THE SUITE'S OWN OVER-STRICTNESS, twice: the stamp writes the value QUOTED, and the first-boot witness asks in
      another spelling. Correct work in forms the suite did not anticipate — nothing may fail. */
   "stamp-quoted": {
-    patches: [["store.mjs", STAMP_WRITE, "      const text = Store.#setOrAddScalar(f.text, \"group\", JSON.stringify(slug));"]],
+    patches: [["checks/bio-checks.mjs", DEF_REPLACE,
+               "    if (lines[i].startsWith('group:')) { lines[i] = `group: ${JSON.stringify(slug)}`; return lines.join('\\n'); }"],
+              ["checks/bio-checks.mjs", DEF_OPEN,
+               "  return [...lines.slice(0, end), `group: ${JSON.stringify(slug)}`, ...lines.slice(end)].join('\\n');"]],
     mustFail: [],
   },
   "witness-other-spelling": {
@@ -152,7 +161,8 @@ const run = (name) => {
     cpSync(join(PLANE, "checks"), join(tree, "bio-plane", "checks"), { recursive: true });
     cpSync(join(REPO, "docprofile"), join(tree, "docprofile"), { recursive: true });
     for (const [file, from, to] of arm.patches) {
-      const p = join(tree, "bio-plane", "src", file);
+      /* A bare name is a module of src/; "checks/..." is the catalogue the copy's plane imports. */
+      const p = file.includes("/") ? join(tree, "bio-plane", file) : join(tree, "bio-plane", "src", file);
       const s = readFileSync(p, "latin1");
       const n = s.split(from).length - 1;
       if (n !== 1) return { name, armed: false, why: `anchor in ${file} occurs ${n} times: ${from.slice(0, 70)}` };

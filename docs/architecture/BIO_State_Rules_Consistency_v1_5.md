@@ -1704,6 +1704,6 @@ A replayed creation (historical replay is not authorship) carries the past's byt
    name (C-64.1). The read `op=instancegroup` says in words when nothing is recorded.
 
 **WHAT THIS DOES NOT DECIDE, stated rather than left to be found:** what a document already signed under a WRONG
-producer can become (it cannot be rewritten; a correcting act is undesigned); what `group` means for a document that
+producer can become (it cannot be rewritten; a correcting act is undesigned as of 2026-09-21); what `group` means for a document that
 genuinely came from another group (no import path exists — replay is the only one, and it keeps the past's bytes); and
 whether the setup page and the member UI should learn the value at all, since the plane now stamps every creation.

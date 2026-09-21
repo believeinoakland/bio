@@ -54,7 +54,11 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-mk1", MEMBER_TOKEN: "mem-mk1", PROBE_TOKEN: "prb-mk1", VERSION: "test" },
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: INSTANCE_NAME is bound because every install binds it
+     (`newgroup`'s upload, D-102), and a store records its producing group from it at its FIRST BOOT. Unbound, the
+     store records none and op=testify (the plane composes the observation and must name its producer) is refused by name (C-64.1) where it used to be handed a literal
+     group. 'believe-in-oakland' is this project's own group, the one these fixtures' documents already name. */
+  bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-mk1", MEMBER_TOKEN: "mem-mk1", PROBE_TOKEN: "prb-mk1", VERSION: "test" },
 });
 
 let pass = 0, fail = 0;

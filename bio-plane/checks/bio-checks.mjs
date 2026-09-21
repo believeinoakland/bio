@@ -12095,6 +12095,25 @@ export const INSTANCE_GROUP_CHECKS = {
   },
 };
 
+/** D-436 — THE ONE DEFINITION of how a producing group is written into a document's bytes. `Store#stampGroup` calls it
+ *  for every creation at the one write path, and a suite that judges a composer's bytes AS THE PLANE WILL HOLD THEM calls
+ *  the same function — so neither is a copy of the other, and a change to how the group is written moves both.
+ *  Replaces the top-level `group:` line (column 0, inside the front matter), or opens one immediately before the closing
+ *  fence, the convention every key the plane adds follows. Returns the text UNCHANGED when there is no front matter block
+ *  to write into, and when the document already names `slug` in any spelling this catalogue's parser reads as it — so a
+ *  correct document is never rewritten. */
+export function withProducingGroup(text, slug) {
+  if (typeof text !== 'string' || typeof slug !== 'string' || !slug) return text;
+  if (parseFrontmatter(text).data?.group === slug) return text;
+  const lines = text.split('\n');
+  if (lines[0] !== '---') return text;
+  const end = lines.indexOf('---', 1);
+  if (end === -1) return text;
+  for (let i = 1; i < end; i++)
+    if (lines[i].startsWith('group:')) { lines[i] = `group: ${slug}`; return lines.join('\n'); }
+  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join('\n');
+}
+
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
  *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
  *  action basis), so the rule has one spelling and three doors. It asks BOTH

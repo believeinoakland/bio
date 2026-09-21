@@ -36,6 +36,11 @@ const mf = new Miniflare({
   modules: true, script: readFileSync(SRC, "utf8"), modulesRoot: "/", scriptPath: SRC,
   compatibilityDate: "2026-07-01",
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: INSTANCE_NAME is bound because every install binds it
+     (`newgroup`'s upload, D-102), and a store records its producing group from it at its FIRST BOOT. Unbound, the
+     store records none and a fork of a project whose document names no group is refused by name (C-64.1) where it used to be handed a literal
+     group. 'believe-in-oakland' is this project's own group, the one these fixtures' documents already name. */
+  bindings: { INSTANCE_NAME: "believe-in-oakland" },
 });
 const call = async (p, b) => (await (await mf.dispatchFetch("http://x" + p,
   b ? { method: "POST", body: JSON.stringify(b) } : {})).json()).result;

@@ -116,7 +116,11 @@ const mf = new Miniflare({
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   /* The automatic drain is pushed far out so the manual drains below are never
      raced by the alarm — severedhomes' precedent, queue.test.mjs's before it. */
-  bindings: { ADMIN_TOKEN: "adm-d280", MEMBER_TOKEN: "mem-d280", PROBE_TOKEN: "prb-d280",
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: INSTANCE_NAME is bound because every install binds it
+     (`newgroup`'s upload, D-102), and a store records its producing group from it at its FIRST BOOT. Unbound, the
+     store records none and the group default bar declared with no group named is refused by name (C-64.1) where it used to be handed a literal
+     group. 'believe-in-oakland' is this project's own group, the one these fixtures' documents already name. */
+  bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-d280", MEMBER_TOKEN: "mem-d280", PROBE_TOKEN: "prb-d280",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
 });
 

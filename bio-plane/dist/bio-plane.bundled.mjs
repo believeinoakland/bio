@@ -3914,7 +3914,8 @@ __export(bio_checks_exports, {
   verifyRegistryRoot: () => verifyRegistryRoot,
   verifyReleaseSignature: () => verifyReleaseSignature,
   versionNeedsReason: () => versionNeedsReason,
-  vocabFor: () => vocabFor
+  vocabFor: () => vocabFor,
+  withProducingGroup: () => withProducingGroup
 });
 var BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
 var ANN_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -11881,6 +11882,20 @@ var INSTANCE_GROUP_CHECKS = {
     translation: "This copy's group is already recorded, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed."
   }
 };
+function withProducingGroup(text, slug) {
+  if (typeof text !== "string" || typeof slug !== "string" || !slug) return text;
+  if (parseFrontmatter(text).data?.group === slug) return text;
+  const lines = text.split("\n");
+  if (lines[0] !== "---") return text;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return text;
+  for (let i = 1; i < end; i++)
+    if (lines[i].startsWith("group:")) {
+      lines[i] = `group: ${slug}`;
+      return lines.join("\n");
+    }
+  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join("\n");
+}
 function leadLegFindings(label, leg, findings) {
   const l = leg && typeof leg === "object" ? leg : {};
   const refusal7 = (code, message, repairs) => f(LEAD_CHECKS[code].check, "error", message, repairs, code);
@@ -14961,6 +14976,11 @@ var RUNG_ABSENT = {
   reproject: { ground: "substrate", is: "rebuilds the projection from bundles already written" },
   livefire: { ground: "substrate", is: "the self-test write, scratch-confined" },
   purge: { ground: "substrate", is: "operator maintenance of the store, not an act on the record" },
+  /* D-436: the root of trust's one act on a store that predates the value. It sits BENEATH the record — it records
+     whose store this is, which every later creation is stamped with — and it rewrites nothing the record already
+     holds, so there is no act on the record for a rung to price. It cannot be undone either: that is WRITTEN ONCE,
+     refused a second time by name (C-64.3), and stated there rather than as a rung here. */
+  instancegroupseed: { ground: "substrate", is: "records, once, the producing group every later creation is stamped with" },
   connect: { ground: "substrate", is: "DERIVES connections from documents already held; re-running re-derives" },
   provenancechain: { ground: "substrate", is: "rebuilds the provenance register from what is already recorded" },
   provenanceroute: { ground: "substrate", is: "assesses a route already captured" },
@@ -52154,14 +52174,13 @@ ${words}`;
      `surfaced_by` one field over: the store byte-trusts bundle.md, so the one honest place to decide the producer
      is the one write path, and it fixes every writer at once (the setup page, the member UI, the plane's own).
      REC-141's order, MINT, WRITE, THEN HASH: the bytes and their sha256 are recomputed from the written text, so
-     the sha the answer carries is the sha of what is held. A document already naming this group — in any
-     spelling the catalogue's parser reads as it — is left byte-identical. Absent, the key is opened immediately
-     before the closing fence, `#setOrAddScalar`'s convention. */
+     the sha the answer carries is the sha of what is held. HOW the line is written is the catalogue's ONE
+     definition, `withProducingGroup` — replaced, or opened immediately before the closing fence — and a document
+     already naming this group, in any spelling the catalogue's parser reads as it, comes back byte-identical. */
   static #stampGroup(files, slug) {
     return files.map((f2) => {
       if (!f2 || f2.path !== "bundle.md" || typeof f2.text !== "string") return f2;
-      if (parseFrontmatter(f2.text).data?.group === slug) return f2;
-      const text = _Store.#setOrAddScalar(f2.text, "group", slug);
+      const text = withProducingGroup(f2.text, slug);
       if (text === f2.text) return f2;
       const bytes = new TextEncoder().encode(text);
       return { ...f2, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };

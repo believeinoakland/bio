@@ -456,8 +456,9 @@ import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 import { RATIFY_SCOPE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
 import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
-/* D-436 / C-64: the instance's producing group, recorded once and never a literal. */
-import { INSTANCE_GROUP_CHECKS } from "../checks/bio-checks.mjs";
+/* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
+   is written into a document's bytes, which the suites judging a composer's bytes call too. */
+import { INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -28205,14 +28206,13 @@ export class Store extends DurableObject {
      `surfaced_by` one field over: the store byte-trusts bundle.md, so the one honest place to decide the producer
      is the one write path, and it fixes every writer at once (the setup page, the member UI, the plane's own).
      REC-141's order, MINT, WRITE, THEN HASH: the bytes and their sha256 are recomputed from the written text, so
-     the sha the answer carries is the sha of what is held. A document already naming this group — in any
-     spelling the catalogue's parser reads as it — is left byte-identical. Absent, the key is opened immediately
-     before the closing fence, `#setOrAddScalar`'s convention. */
+     the sha the answer carries is the sha of what is held. HOW the line is written is the catalogue's ONE
+     definition, `withProducingGroup` — replaced, or opened immediately before the closing fence — and a document
+     already naming this group, in any spelling the catalogue's parser reads as it, comes back byte-identical. */
   static #stampGroup(files, slug) {
     return files.map((f) => {
       if (!f || f.path !== "bundle.md" || typeof f.text !== "string") return f;
-      if (parseFrontmatter(f.text).data?.group === slug) return f;
-      const text = Store.#setOrAddScalar(f.text, "group", slug);
+      const text = withProducingGroup(f.text, slug);
       if (text === f.text) return f;
       const bytes = new TextEncoder().encode(text);
       return { ...f, text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() };

@@ -768,6 +768,11 @@ export const RUNG_ABSENT = {
   reproject:            { ground: "substrate", is: "rebuilds the projection from bundles already written" },
   livefire:             { ground: "substrate", is: "the self-test write, scratch-confined" },
   purge:                { ground: "substrate", is: "operator maintenance of the store, not an act on the record" },
+  /* D-436: the root of trust's one act on a store that predates the value. It sits BENEATH the record — it records
+     whose store this is, which every later creation is stamped with — and it rewrites nothing the record already
+     holds, so there is no act on the record for a rung to price. It cannot be undone either: that is WRITTEN ONCE,
+     refused a second time by name (C-64.3), and stated there rather than as a rung here. */
+  instancegroupseed:    { ground: "substrate", is: "records, once, the producing group every later creation is stamped with" },
   connect:              { ground: "substrate", is: "DERIVES connections from documents already held; re-running re-derives" },
   provenancechain:      { ground: "substrate", is: "rebuilds the provenance register from what is already recorded" },
   provenanceroute:      { ground: "substrate", is: "assesses a route already captured" },

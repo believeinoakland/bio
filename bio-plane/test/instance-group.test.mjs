@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/instance-group.control.mjs` — deliberately NOT a `.test.mjs`, because it builds ARMED COPIES of the sources while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/instance-group.control.mjs [arm]`. Every arm patches a COPY of `src/` (asserting its anchor occurs exactly once), the real sources are hashed before and after, and what each arm MUST fail is declared in the driver before it arms.
-   RESULTS: recorded in the driver's header and in IC-172 once run.
+   RESULTS, RUN 2026-09-21 in worktree agent-a6dd0a0a3a3a6cc10 on `2bd24da7` + D-436 (real src/store.mjs 2,771,001 B sha256 5a4e2f8b20e1…; every real source and checks/bio-checks.mjs untouched: YES), all thirteen AS DECLARED: (a) baseline 47/0 · (b) literal-at-a-call-site 46/1, S1 ALONE — testify's line restored to the literal is HEALED by the creation stamp, so only the source census can see it, which is the design · (c) literal-at-the-authority, THE ROW'S CONTROL, the one reader returning the literal: 23/24, every writer names it by name while the record's own reads (B1–B3, W9, L1, P1–P7) stay green · (d) stamp-removed 36/11, the member UI's and the setup page's bytes stored as sent · (e) reread-the-var, THE LIAR THE ROW NAMES: 43/4, green over the first install and red only where the var MOVED (L2–L4) and at the reader's pin (S3) · (f) no-first-boot-write 29/18 · (g) seed-at-every-boot, decision b's control: 44/3 (P2, P6, P7) · (h) upsert-at-first-boot 46/1, S2 ALONE, a latent upsert no behaviour can see · (i) seed-accepts-twice 46/1 (P7) · (j) default-when-undetermined, a literal restored in decision c's path: 44/3 (S1, C2, C2b) · (k) purge-clears-it 41/6 · (l) stamp-quoted 47/0 · (m) witness-other-spelling 47/0 — the last two correct work in spellings the suite did not anticipate.
  * =========================================================================
  * D-436 / IC-172 — THE PRODUCING GROUP IS ONE RECORDED VALUE PER INSTANCE, AND NO BUNDLE THIS PLANE WRITES NAMES A
  * LITERAL ONE. BIO_State_Rules_Consistency_v1_5.md §3.1: `group` is the producing group's slug and travels with every
@@ -43,7 +43,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { parseFrontmatter, INSTANCE_GROUP_CHECKS } from "../checks/bio-checks.mjs";
+import { parseFrontmatter, INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
 import { codeOnly } from "../scripts/declared-source.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 
@@ -190,9 +190,11 @@ console.log("\n--- 0. the plane's source names no group of its own, and the valu
     return n ? [`${f}:${n}`] : [];
   });
   console.log(`         (corpus: ${files.length} module(s), ${bytes} B under ${SRC_DIR === join(PLANE, "src") ? "src/" : "an ARMED copy of src/"})`);
-  t("S0: the corpus the census reads is the plane's source and is not empty (a census over nothing proves nothing)",
-    [files.length >= 25, files.includes("store.mjs"), files.includes("index.mjs"), files.includes("setup.mjs")],
-    [true, true, true, true]);
+  /* BY NAME, NOT BY COUNT: every module the literal stood in on the base is in the corpus — a census over nothing
+     proves nothing — and the walk floors on no figure, so a module dropped into the directory can only turn S1 red,
+     never quietly green (hygiene.test.mjs names this walk on exactly that reasoning). */
+  t("S0: the corpus the census reads is the plane's source, holding every module the literal stood in on the base",
+    ["store.mjs", "index.mjs", "setup.mjs", "livefire.mjs", "schema.mjs"].filter((f) => !files.includes(f)), []);
   t(`S1: the literal slug occurs NOWHERE in the plane's source — code or comment, any module (it stood 28 times on the base)`,
     hits, []);
   const store = codeOnly(readFileSync(join(SRC_DIR, "store.mjs"), "utf8"));
@@ -215,6 +217,30 @@ console.log("\n--- 0. the plane's source names no group of its own, and the valu
   const plane = /static GROUP_SLUG_RE = (\/[^\n]+\/);/.exec(readFileSync(join(SRC_DIR, "store.mjs"), "utf8"));
   t("S4: the plane checks a slug by the INSTALLER'S OWN grammar — the two sources are byte-equal, so neither moves alone",
     [!!installer, !!plane, installer && plane ? installer[1] === plane[1] : false], [true, true, true]);
+  const stamp = /static #stampGroup\(files, slug\)\s*\{([\s\S]*?)\n  \}/.exec(store);
+  t("S5: the store's stamp writes the group through the catalogue's ONE definition, `withProducingGroup` — the function "
+    + "the corrected suites judge a composer's bytes by — and not a second copy of the rule",
+    [!!stamp, !!stamp && /withProducingGroup\(f\.text, slug\)/.test(stamp[1]), !!stamp && /setOrAddScalar/.test(stamp[1])],
+    [true, true, false]);
+}
+
+/* ======================================================================= 0b. THE ONE DEFINITION */
+console.log("\n--- 0b. the catalogue's one definition of writing a producing group into bytes ---");
+{
+  const doc = (line) => ["---", "id: INFO-2026-0001-x", "object_type: information", ...(line ? [line] : []),
+                         "references: []", "---", "", "## Summary", ""].join("\n");
+  t("U1: a document naming ANOTHER group has that line REPLACED in place, and nothing else moves",
+    withProducingGroup(doc(`group: ${LITERAL}`), SLUG), doc(`group: ${SLUG}`));
+  const opened = withProducingGroup(doc(null), SLUG).split("\n");
+  t("U2: a document naming NO group gains the line immediately before the closing fence (the convention every added key follows)",
+    [opened.indexOf(`group: ${SLUG}`), opened.indexOf("---", 1) - 1, groupIn(opened.join("\n"))],
+    [opened.indexOf("---", 1) - 1, opened.indexOf("---", 1) - 1, SLUG]);
+  t("U3: a document already naming the group — in ANY spelling the parser reads as it, quoted included — comes back IDENTICAL",
+    [withProducingGroup(doc(`group: ${SLUG}`), SLUG) === doc(`group: ${SLUG}`),
+     withProducingGroup(doc(`group: "${SLUG}"`), SLUG) === doc(`group: "${SLUG}"`)], [true, true]);
+  t("U4: text with no front matter block, or no slug to write, is returned untouched — nothing is invented to write into",
+    [withProducingGroup("## Summary\n\nno fence\n", SLUG), withProducingGroup(doc(null), ""), withProducingGroup(doc(null), null)],
+    ["## Summary\n\nno fence\n", doc(null), doc(null)]);
 }
 
 /* ======================================================================= 1. FIRST BOOT */
