@@ -91,6 +91,10 @@ const RELEASES = [
      closing: op=allocid refuses every gated prefix, ids mint opaque); the commit is
      dist/cut-0.67.0's cut, whose release/ holds it. RELEASES, NOT WITHDRAWN. */
   ["0.67.0", "527257198d5026325bb8653f3b3bd6b7cde80fde"],
+  /* 0.68.0: deployed and live-verified 2026-09-20, the first BATCH (IC-55 / D-270+UI-72,
+     IC-166 / REC-135, IC-167 / REC-146); the commit is dist/cut-0.68.0's cut, whose
+     release/ holds it. It boots every store above: RELEASES, NOT WITHDRAWN. */
+  ["0.68.0", "49c4b400ab87bb52821a1eef19d8109a02d2778b"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });

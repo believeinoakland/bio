@@ -15720,6 +15720,10 @@ why: a BATCH, not a CUT NOW, and that was tested rather than assumed — no comm
   the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with
   REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact.
 
+**RELEASED 2026-09-21 by DIST #3, the lane's successor**: 0.68.0 is complete (deployed, live-verified, pointer advanced,
+installer re-cut), re-measured live 2026-09-21 ~14:35Z with every active version id unchanged; DIST #2 archived under
+D-398's three conditions and its worktree removed.
+
 ## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER — **THE LANDING REPORT FOR FOUR CACHE ROWS, WHICH IS THE MESSAGE I CANNOT SEND: D-136, M0-78, D-414 AND D-433 ARE ON `origin/main`**
 
 `kickoffs/CONDUCT.md` step 0 says CONDUCT tells SCHEDULER the task id and the merge sha, *"that message is how it
@@ -15955,3 +15959,24 @@ claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths:
 
 **NOT CLAIMED:** `tools/retirable.mjs` and the heartbeat's definition. Both defects go through the BOB INBOX with
 their fixes named: the first is a FULL-profile change, and the second is the operator's.
+
+## CLAIM 2026-09-21 DIST (DIST #3 — cut 0.69.0, a CUT NOW: D-136 / IC-168, the §4.7 vote an operator token could forge)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+opened: 2026-09-21
+branch: `dist/cut-0.69.0` (branch until deployed and live-verified; `main`'s `release/` is the `latest` pointer)
+paths: `release/**`, `newgroup/**` (generated `src/release.mjs` and `dist/`), the version in `bio-plane/package.json`
+  and `bio-plane/wrangler.jsonc` and the same two sites in `agent-worker/`, `pdf-worker/`, `ocr-worker/`,
+  `bio-plane/test/migrate-released.test.mjs` (the `RELEASES` row for 0.68.0), `docs/development/kickoffs/DIST-NEXT.md`,
+  `docs/DECIDED.md` (GENERATED). All tags. **`civicos` does NOT move this time:** `civicos-ui/app.html` is
+  byte-identical at `v0.68.0` and at this branch's base, so gate step 12 is satisfied by inspection — stated, not skipped.
+why: a CUT NOW. `main` carries D-136 (IC-168, I3 46.0.0 MAJOR/BREAKING), integrated 2026-09-20 by CONDUCT #8 and in
+  no signed release: before it, an operator-token holder could record a §4.7 endorsement, a removal vote or a §4.9
+  capability edit in ANOTHER administrator's name — something a machine credential could DO, which is WHEN DIST CUTS'
+  predicate. The release also WIDENS reach (member sessions reach `adminendorse`, `adminremove` and `membercaps`; the
+  store refuses a `by` that is not an active administrator), named to BOB #19 before the cut. `op=memberadd`'s same
+  defect is NOT closed by 0.69.0 (IC-168: NARROWED). Shipped-path diff since `v0.68.0` is four plane files, all
+  D-136's; the three members' own sources are unchanged, and `release-assemble`'s freshness guard decides whether any
+  member artifact moved. Members redeploy in the fleet's order, agent-worker first (IC-130).
+
+**open as of 2026-09-21.**
