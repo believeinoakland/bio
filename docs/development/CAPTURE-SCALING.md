@@ -1,13 +1,13 @@
 # Capture scaling: shared site assets, resumable ticks, and the ceiling
 
-**Status** · Written 2026-07-28 from figures measured against live pages at 0.37.0, and already corrected once: on 2026-07-31 its header still read *"Nothing here is built yet"* when five of six order-of-work items had shipped, which is why this document carries per-item status at all. Measured again against `bio-plane/src` at plane 0.58.0, **all six items are now [BUILT]** — item 6 (CAP-4) landed as the `reuse_verdicts` table (`schema.mjs`) with the free POSTHOC detection phase, the RATIFY phase's plain GET, and all four outcomes including `not_attempted` — so item 6's own status line is now the stale one. The measurements stand. **Partially complete.** No order-of-work item is unbuilt; what is unbuilt is MEASUREMENT: the freshness window and the recurrence thresholds are constants CHOSEN in code (24 h and `minDocuments: 2` in `reuseDecision`, `subresources.mjs`; a 0.6 share over at least three documents in `siteChrome`, `store.mjs`), which is the `SUBRESOURCE_CAP = 45` mistake this document names by name — and the sections listed below. **§Job one was corrected on 2026-09-21 (D-339)** to state the reuse rule the plane runs — recency of fetch, not stability — and where the measurement that refused the stability gate is recorded; the superseded rule stays in the section, unedited, beside its dated reason. as of 2026-09-21.
+**Status** · Written 2026-07-28 from figures measured against live pages at 0.37.0, and already corrected once: on 2026-07-31 its header still read *"Nothing here is built yet"* when five of six order-of-work items had shipped, which is why this document carries per-item status at all. Measured again against `bio-plane/src` at plane 0.58.0, **all six items are now [BUILT]** — item 6 (CAP-4) landed as the `reuse_verdicts` table (`schema.mjs`) with the free POSTHOC detection phase, the RATIFY phase's plain GET, and all four outcomes including `not_attempted` — so item 6's own status line is now the stale one. The measurements stand. **Partially complete.** No order-of-work item is unbuilt; what is unbuilt is MEASUREMENT: the freshness window and the recurrence thresholds are constants CHOSEN in code (24 h and `minDocuments: 2` in `reuseDecision`, `subresources.mjs`; a 0.6 share over at least three primary captures in `siteChrome`, `store.mjs`), which is the `SUBRESOURCE_CAP = 45` mistake this document names by name — and the sections listed below. **§Job one was corrected on 2026-09-21 (D-339)** to state the reuse rule the plane runs — recency of fetch, not stability — and where the measurement that refused the stability gate is recorded; the superseded rule stays in the section, unedited, beside its dated reason. as of 2026-09-21.
 
 **Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It owns the three things that make capture survive a real corpus — the per-site asset record, resumable sessions, and the empirically calibrated ceiling — and it is the substrate `CAPTURE-FIDELITY.md`'s subresource capture now runs on. Its recurrence signal is what `LINK-FIDELITY.md`'s chrome section reaches for; its composite-capture consequence is D-191 (a capture assembled from reused parts has a temporal spread the record does not state); and DEC-42 supersedes its free-tier premise while D-185 keeps the frugality.
 
 **Incomplete sections** ·
 - §Order of work — item 6's status line reads *"DECIDED 2026-07-31 and QUEUED as CAP-4"* and CAP-4 has LANDED: `reuse_verdicts` carries both producers (POSTHOC and RATIFY) with the four outcomes, and refinements (a) to (d) are built as decided. The line should be read as history.
-- §Job one: stop re-fetching — CORRECTED 2026-09-21 (D-339): the body now states the rule `reuseDecision` (`subresources.mjs`) runs — furniture kinds only, at least two distinct documents on the host, and the source seen serving the bytes within 24 h, with stability demoted to a secondary signal — and where the live measurement that refused the `stable_since` rule is recorded; that rule stays in the section unedited, marked superseded with its reason. Two things in it remain open: both constants are CHOSEN, not measured (§Open questions carries them); and the manifest records WHEN a reused part was last seen served but not WHICH capture fetched it. Until 2026-09-21 this bullet said the sketched `reused_from` / `reused_fetched_at` / `fetched_this_capture` shape "is built as written", and it is not: `fetched_this_capture` is, the time is written as `reused_from_fetched_at`, and `reused_from` exists neither in the manifest nor in the store's `reusedParts` read.
-- §The per-site asset record — the column list drawn here is not the table that exists. `site_assets` (`schema.mjs`) carries `last_fetched`, `kind` and `changes`, which are what the reuse decision reads, and it has no `capture_count` or `distinct_documents`: the distinct-document count moved into `site_asset_refs`, one row per (asset, document), so a re-capture cannot double-count it.
+- §Job one: stop re-fetching — CORRECTED 2026-09-21 (D-339): the body now states the rule `reuseDecision` (`subresources.mjs`) runs — furniture kinds only, at least two distinct primary captures on the host, and the source seen serving the bytes within 24 h, with stability demoted to a secondary signal — and where the live measurement that refused the `stable_since` rule is recorded; that rule stays in the section unedited, marked superseded with its reason. Three things in it remain open: both constants are CHOSEN, not measured (§Open questions carries them); the manifest records WHEN a reused part was last seen served but not WHICH capture fetched it; and the two-document floor counts primary captures rather than pages, so one page whose bytes changed between two captures meets it alone. The last two are routed by D-339's delegation of 2026-09-21 in `CLAIMS.md`. Until 2026-09-21 this bullet said the sketched `reused_from` / `reused_fetched_at` / `fetched_this_capture` shape "is built as written", and it is not: `fetched_this_capture` is, the time is written as `reused_from_fetched_at`, and `reused_from` exists neither in the manifest nor in the store's `reusedParts` read.
+- §The per-site asset record — the column list drawn here is not the table that exists. `site_assets` (`schema.mjs`) carries `last_fetched` (the clock the reuse gate reads), `kind` and `changes`, and it has no `capture_count` or `distinct_documents`: the distinct-document count moved into `site_asset_refs`, one row per (asset, primary capture), so a byte-identical re-capture cannot double-count it. CORRECTED 2026-09-21 (D-339): until then this bullet said a re-capture cannot double-count it at all, and one whose bytes changed does — it is a new primary sha (§Job one, condition 3).
 - §Open questions — both remaining questions are unmeasured while the code has already picked their constants, which is exactly the failure this document diagnoses; since 2026-09-21 (D-339) each question names its chosen constants beside it, labelled CHOSEN — 24 h for the freshness window, and for the recurrence threshold both reuse's `minDocuments: 2` and chrome classification's 0.6 share in `siteChrome`. Neither the freshness window nor either threshold has been measured against fifteen or more captures of one host.
 - §Workers Paid is an optimisation — superseded in premise by DEC-42 and marked as such in the body. Its free-tier figures are history: no supported instance runs under them and the installer refuses a Free account (D-185).
 
@@ -114,23 +114,29 @@ the one that fetched it.
 (`bio-plane/src/subresources.mjs`) lets stored bytes stand in for a fetch only when
 all four of these hold, checked in this order:
 
-1. the record already holds the address for this host — `site_assets`, keyed on the
-   host of the document being captured and the normalised address;
+1. the record already holds the address, with its bytes, for this host —
+   `site_assets`, keyed on the host of the document being captured and the
+   normalised address (`not_seen_before` otherwise);
 2. its kind is furniture: `REUSABLE_KINDS` is stylesheet, css-asset, font and icon,
    so an image inside the document and a script are always fetched
    (`evidence_is_always_fetched`);
 3. at least **2** distinct primary captures on the host have referenced it
-   (`minDocuments`, counted by primary sha in `site_asset_refs`), because an asset
-   only one page references is that page's own wherever it sits
-   (`not_yet_shared_across_documents`);
+   (`minDocuments`; `not_yet_shared_across_documents`), because an asset only one
+   page references is that page's own wherever it sits. The count is of primary
+   capture SHAs in `site_asset_refs`, not of pages: a page whose bytes changed
+   between two captures is two primary shas, so one page captured twice can meet
+   this floor on its own;
 4. the source was last seen SERVING those bytes within **24 h** of now
    (`freshWindowMs`, measured from `last_fetched`: `last_seen_served_too_long_ago`,
    or `no_fetch_record` when no fetch time can be read).
 
-A known address refused at any step is listed in the manifest's `reuse.not_reused`
-under the reason named; an address the record has never held is simply fetched.
-**Stability gates nothing.** `stable_since` and the change count travel with each
-reuse as secondary confidence, and `stable_since` keeps its own job in §Job three.
+An address the record holds that is refused at any step is listed in the
+manifest's `reuse.not_reused` under the reason named; an address the record has
+never held is fetched without being listed. **Stability gates nothing.**
+`reuseDecision` returns the asset's stability age and change count beside a yes, as
+secondary confidence, and the capture reads neither: each reused part records
+`stable_since` itself (as `reused_stable_since`) and no change count. `stable_since`
+keeps its own job in §Job three.
 **And a reuse never renews its own licence:** `recordSiteAssets` moves
 `last_fetched` only when the source is actually fetched, while a reuse moves
 `last_seen` alone, so every reused part was seen served within the window at the
@@ -532,7 +538,7 @@ have to do and shrinks them considerably. But it does not remove the need.
   or more captures per host rather than from a guess. **CHOSEN, not measured
   (D-339, 2026-09-21), and in two places.** Reuse requires 2 distinct primary
   captures on the host (`minDocuments` in `reuseDecision`), and recurrence chrome
-  classification calls an address chrome at a share of 0.6 of the host's captured
-  documents once the host has at least three (`siteChrome` in `store.mjs`, whose
+  classification calls an address chrome at a share of 0.6 of the host's distinct
+  primary captures once the host has at least three (`siteChrome` in `store.mjs`, whose
   `threshold` defaults to 0.6; no op reaches its store route today). Neither has
   been set from fifteen captures of one host. Still open until it is measured.

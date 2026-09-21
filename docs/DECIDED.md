@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1280 rulings across 101 documents.
+1281 rulings across 101 documents.
 
 ## DEC-
 
@@ -153,9 +153,9 @@ authority is the file named, never this one.
 - **DEC-42** · 2026-08-04 — [Workers Paid is an optimisation, never a requirement — SUPERSEDED 2026-08-04 (DEC-42)](#workers-paid-is-an-optimisation-never-a-requirement-superseded-2026-08-04-dec-42) - [Order of work](#order-of-work) - [Open questions](#open-questions)  
   `docs/development/CAPTURE-SCALING.md:25`
 - **DEC-42** · 2026-08-04 — Workers Paid is an optimisation, never a requirement — SUPERSEDED 2026-08-04 (DEC-42) > **SUPERSEDED by DEC-42, 2026-08-04.  
-  `docs/development/CAPTURE-SCALING.md:377`
+  `docs/development/CAPTURE-SCALING.md:383`
 - **DEC-42** · 2026-08-04 — SUPERSEDED by DEC-42, 2026-08-04. Workers Paid IS a requirement.** The section > below is kept unedited because its reasoning is still right about the thing it was > protecting; what changed is a PREMISE, and the premise was never measured until now. >  
-  `docs/development/CAPTURE-SCALING.md:379`
+  `docs/development/CAPTURE-SCALING.md:385`
 - **DEC-42** · 2026-08-04 — SUPERSEDED IN ITS PREMISE 2026-08-04 (DEC-42): Workers Paid IS now a > requirement**, so the collision this section resolves no longer exists in either > direction.  
   `docs/development/CLIENT-RENDERED.md:172`
 - **DEC-42** · 2026-08-04 — CORRECTED 2026-08-04 by session BOB (DEC-42): "Workers Paid is an optimisation, never a requirement" is SUPERSEDED — Paid IS a requirement.** An instance already needed a Cloudflare account and a payment method, and R2 already bills past its free allowance, so the change is $0+card → $5+card rather than free → paid.  
@@ -578,10 +578,12 @@ authority is the file named, never this one.
   `docs/archive/ledgers/DEBT-closed.md:54`
 - **D-333** · 2026-09-13 — It decayed when arm (f) was added; the declaration is CORRECTED, never exempted, with the dated reason at the site and the old number recorded as right when it was written.  
   `docs/archive/ledgers/DEBT-closed.md:55`
-- **D-339** · 2026-09-21 — §Job one: stop re-fetching — CORRECTED 2026-09-21 (D-339): the body now states the rule `reuseDecision` (`subresources.mjs`) runs — furniture kinds only, at least two distinct documents on the host, and the source seen serving the bytes within 24 h, with stability demoted to a secondary signal — and where the live…  
+- **D-339** · 2026-09-21 — §Job one: stop re-fetching — CORRECTED 2026-09-21 (D-339): the body now states the rule `reuseDecision` (`subresources.mjs`) runs — furniture kinds only, at least two distinct primary captures on the host, and the source seen serving the bytes within 24 h, with stability demoted to a secondary signal — and where…  
   `docs/development/CAPTURE-SCALING.md:9`
+- **D-339** · 2026-09-21 — CORRECTED 2026-09-21 (D-339): until then this bullet said a re-capture cannot double-count it at all, and one whose bytes changed does — it is a new primary sha (§Job one, condition 3).  
+  `docs/development/CAPTURE-SCALING.md:10`
 - **D-339** · 2026-07-29 — SUPERSEDED 2026-07-29 by the measurement above; folded into this section > 2026-09-21 (D-339).** The next paragraph is the rule this section first proposed, > kept unedited so the reason stays beside it.  
-  `docs/development/CAPTURE-SCALING.md:168`
+  `docs/development/CAPTURE-SCALING.md:174`
 - **D-343** · 2026-09-14 — It was found by a wider reading that was WITHDRAWN for precision, and it is named here so the withdrawal loses nothing.  
   `docs/archive/ledgers/DEBT-closed.md:56`
 - **D-350** — exact leg-key-set pin each, CORRECTED (never exempted) for the `content_id` D-350 adds. **NOT CLAIMED:** `civicos-ui/**` other than the guard's floor table (UI's — the affordance half is DELEGATED below), `docs/development/QUEUE.md` (CONDUCT flips the row),  
@@ -1425,7 +1427,7 @@ authority is the file named, never this one.
 - **CAP-4** · 2026-07-31 — §Order of work — item 6's status line reads *"DECIDED 2026-07-31 and QUEUED as CAP-4"* and CAP-4 has LANDED: `reuse_verdicts` carries both producers (POSTHOC and RATIFY) with the four outcomes, and refinements (a) to (d) are built as decided.  
   `docs/development/CAPTURE-SCALING.md:8`
 - **CAP-4** · 2026-07-31 — DECIDED 2026-07-31 and QUEUED as CAP-4.** Post-hoc reuse verification from `site_assets`, which is free, and re-fetch of reused parts at ratification. **Provenance, recorded honestly.** Bob confirmed on 2026-07-31 that the ADJACENT  
-  `docs/development/CAPTURE-SCALING.md:461`
+  `docs/development/CAPTURE-SCALING.md:467`
 - **CAP-4** · 2026-07-31 — DECIDED 2026-07-31 under Bob's delegation and queued as CAP-4**; the mandatory-ness is this project's decision rather than a ruling of his, and is labelled that way · D-54 (the installer does not detect the Workers plan) · D-63 / D-66  
   `docs/development/MILESTONES.md:147`
 - **CAP-4** — M2 · DECIDED, queued CAP-4 | | CAPTURE-SCALING open · freshness window, recurrence threshold | CAPTURE | M2 (measurement first) | | ARCHIVE-FALLBACK · per-document cadence by volatility | RECORD · CAPTURE | M1 | | ARCHIVE-FALLBACK · Memento rather than Wayback | RECORD | M6 |  
@@ -2006,13 +2008,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-31** — STATUS CORRECTED 2026-07-31 (session BOB).  
   `docs/development/CAPTURE-SCALING.md:33`
 - RULED by Bob: a reused asset IS allowed in a capture that will be ratified as evidence.  
-  `docs/development/CAPTURE-SCALING.md:183`
+  `docs/development/CAPTURE-SCALING.md:189`
 - RULED by Bob. When a bundle is promoted to evidence, every reused part is re-fetched and compared. Not advisory, not conditional. The case for advisory was that a source can go dark between capture and  
-  `docs/development/CAPTURE-SCALING.md:296`
+  `docs/development/CAPTURE-SCALING.md:302`
 - RULED by Bob: he is willing to put his own account on Workers Paid, and is cautious about making it a requirement for production instances. That caution is correct and it is load-bearing for the whole project.  
-  `docs/development/CAPTURE-SCALING.md:410`
+  `docs/development/CAPTURE-SCALING.md:416`
 - **2026-07-31** — "RULED" and "open question" about one thing is how a settled decision comes to be doubted later, and Bob doubted it on 2026-07-31 for exactly this reason.  
-  `docs/development/CAPTURE-SCALING.md:528`
+  `docs/development/CAPTURE-SCALING.md:534`
 - TWO CLAIMS THIS SURFACE WAS ALREADY MAKING WERE CORRECTED, not extended: the `finder` registry declared `content` among its levels and promised "documents and their extracted content" while reaching no captured text at all, and the FIND recipe made the same promise in one step — now two steps, because they are two…  
   `docs/development/CIVICOS_UI_STATE.md:282`
 - ONE INSTRUMENT WAS CORRECTED IN PLACE AND IT WAS NOT THIS ITEM'S.  

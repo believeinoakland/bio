@@ -16253,10 +16253,57 @@ paths:
     the two questions that ask for them), and the front matter (Status, Incomplete sections). No heading moves, so
     Contents does not. The row's `design:` line names `docs/architecture/`; the document lives under `docs/development/`.
   - `docs/DECIDED.md` — GENERATED, regenerated LAST by `node tools/decided.mjs`, never authored.
-  - `docs/development/CLAIMS.md` — this block.
+  - `docs/development/CLAIMS.md` — this block, and the DELEGATION immediately below it.
 NOT MINE: `bio-plane/**` — PROSE ONLY, no code moves (the row's accepts-when); code comments that still state the
-superseded rule are REPORTED for CONDUCT, not edited. `docs/development/QUEUE.md` (CONDUCT's `running` word,
+superseded rule are ROUTED by the DELEGATION below, not edited. `docs/development/QUEUE.md` (CONDUCT's `running` word,
 SCHEDULER's order), `docs/development/MEASUREMENTS.md` (cited, not appended; nothing is re-taken live), and every
 other governed document.
 
 **open as of 2026-09-21** — OPEN while this item builds; released at integration.
+
+## DELEGATION 2026-09-21 CAPTURE (D-339 worker) -> SCHEDULER, one question -> BOB first — **WHAT D-339'S READING OF `reuseDecision` FOUND AND A PROSE-ONLY ITEM MAY NOT FIX: two comments still state the refused stability gate, the two-document floor counts captures rather than pages, and no field names the capture a reused part came from**
+
+D-339 is PROSE ONLY (its accepts-when: no code in the same commit), so what it found in CAPTURE's own code goes to
+SCHEDULER to be placed, each with its fix named, and the one that needs a design answer goes to BOB first. Every
+claim below was read at the code on `cfa6659c`, not taken from a row. `CAPTURE-SCALING.md` §Job one and its
+Incomplete sections record items 2 and 3 in the same commit, so this block is not the only copy.
+
+1. **Two comments still state the rule the plane refused in 0.40.0.** `bio-plane/src/schema.mjs`, the comment above
+   `site_assets`: *"only the first licenses reuse"* (stability licensing reuse); and `bio-plane/src/index.mjs`, the
+   acquire path's comment before `siteKnown` is read: *"A stylesheet stable across the window and seen in more than one
+   document is reused"*. `reuseDecision` gates on recency of fetch and never on stability. **FIX, NAMED:** reword both
+   to recency of fetch, in the words `reuseDecision`'s own comment already uses. Comment-only under `bio-plane/src/`:
+   the bundle rebuilds byte-identical while its manifest's input record moves (WORKER.md, "Before you finish" step 0).
+2. **The two-document floor counts primary CAPTURES, not pages.** `siteAssets` (`store.mjs`) computes `documents` as
+   `COUNT(DISTINCT primary_sha)` over `site_asset_refs`, and `primary_sha` is the content hash of the captured primary
+   (the acquire path passes `primarySha: sha`, the capture's R2 key, to the `recordsiteassets` store route). So one
+   page captured twice with changed bytes is two "documents": it meets `minDocuments: 2` alone, and in `siteChrome` a
+   page captured often makes its own assets read as the site's chrome. The comments in `siteAssets` and above
+   `site_asset_refs` say a re-capture cannot inflate the count, which holds only for a byte-identical one. **FIX,
+   NAMED:** count distinct primary ADDRESSES in `siteAssets` and `siteChrome` — the primary's address is
+   `captured_locators.address_norm` where `capture_sha = primary_sha` — a query change rather than a schema change,
+   provided every counted primary has its locator row (the acquire path's own comment says that write is
+   unconditional; the placing item verifies it). The alternative is to keep counting captures and correct both
+   comments. Recommendation: addresses, because the rule's own rationale is that an asset only one page references is
+   that page's own.
+3. **-> BOB first: must a reused part name the capture it CAME FROM?** §Job one says the manifest entry must *"name
+   the capture it came from and when"*. The plane records WHEN (`reused_from_fetched_at`) and not WHICH: `site_assets`
+   keeps no pointer to the capture that set `last_fetched` (it could be inferred only by matching timestamps in
+   `site_asset_refs`, which nothing does), and the store's `reusedParts` names the capture that REUSED a part, never
+   the one that fetched it. The section's stated reason, never leading a reader to believe a byte was verified at
+   capture time, is already met by `fetched_this_capture: false` and the `detail` sentence; naming the source capture
+   is further provenance, so whether it is owed is a design call. **If BOB rules it stands, FIX, NAMED:** a
+   `last_fetched_by` column on the derived `site_assets` (added through the reshape pass, before schema application),
+   written beside `last_fetched` for a fetched observation in `recordSiteAssets`, and carried as `reused_from` on each
+   reused part: an additive manifest field, which the placing item judges for an IC because the capture-honesty
+   surface reads these parts.
+4. **Not CAPTURE's, found on the way: `tools/rowdesign.mjs` passes a design pointer that names a missing file.**
+   D-339's own row cites `CAPTURE-SCALING.md` under `docs/architecture/`, where it has never been; the governed copy is
+   `docs/development/CAPTURE-SCALING.md`. `citations()` drops the full path (it is not in the governed set), then its
+   basename matcher finds `CAPTURE-SCALING.md` inside the same string and resolves it to the one governed copy, so the
+   row reads as naming its design and `plancheck` counts it among "0 naming no design". **FIX, NAMED:** when a row's
+   full `docs/…md` path resolves to no file on disk, report it as a dead pointer (a note at least) instead of letting
+   the basename rescue it. The file's header already concedes it cannot prove a pointer TRUE; a pointer to a file that
+   does not exist is the one case it could prove false for free.
+
+**open as of 2026-09-21** — raised at D-339's landing; nothing placed yet, and item 3 waits on BOB.
