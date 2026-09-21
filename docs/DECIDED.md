@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1266 rulings across 99 documents.
+1269 rulings across 99 documents.
 
 ## DEC-
 
@@ -195,7 +195,7 @@ authority is the file named, never this one.
 - **DEC-49** — `test/textchain.test.mjs` was CORRECTED at its site, never exempted.** Its DEC-49 family-totality assertion caught the new refusal row immediately — the hand-written `codesUsed` list was wrong the moment the refusal landed — and the correction carries a dated reason at the line, with an arm driving the new code.  
   `docs/development/INTERFACE-CHANGES.md:5225`
 - **DEC-49** — milestone: M0 — CORRECTED from the DEBT row's M8: both files it changes are TEST ESTATE, which is what M0 is, and that is why `VERIFICATION.md` is its authority. interface: none design: `docs/development/VERIFICATION.md`, the section "THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE" (REC-76, D-236), which…  
-  `docs/development/QUEUE.md:120`
+  `docs/development/QUEUE.md:144`
 - **DEC-52** — WHY THEY ARE NOT DECIDED HERE.** Bob ruled on THREE VERBS — declare a relation, resolve a reference, thread a progression.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:3709`
 - **DEC-52** · 2026-08-07 — `docs/development/INVESTIGATIVE-SESSION.md` states at TWO sites — §14a's post-processing paragraph (`[BOB-4 — RULED 2026-08-07, PROVISIONAL]`) and the open-questions list — that *"the sidebar approval (identify → present → member approves) remains the act of record for the constitutive fields."* **DEC-52's decided…  
@@ -2218,9 +2218,11 @@ Settled in prose without an id allocated. Cite them by file and line.
 - comment's "reachable by NO session" sentence and the OPS-table comment, both CORRECTED because this landing makes them false.  
   `docs/development/CLAIMS.md:15605`
 - **2026-09-20** — the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact. ## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER — **THE LANDING REPORT FOR FOUR CACHE ROWS, WHICH IS THE MESSAGE I CANNOT…  
-  `docs/development/CLAIMS.md:15720`
+  `docs/development/CLAIMS.md:15728`
+- **2026-09-21** — CLAIM 2026-09-21 BOB (BOB #19 — MK-3's five doctrine questions RULED into `MEMBER-KNOWLEDGE-DESIGN.md` §4; the CLAIMS.md MK-3 DELEGATION answered; M-75's seventh data point) claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`.  
+  `docs/development/CLAIMS.md:15976`
 - Q11 is SETTLED and its answer does not move; what moves is the RECIPE it hands the next worker.  
-  `docs/development/CLAIMS.md:16011`
+  `docs/development/CLAIMS.md:16036`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2513,14 +2515,18 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MEASUREMENTS.md:16558`
 - on record says that verb is not for a person) and is CORRECTED with its reason; its `op=purge` line immediately above is UNCHANGED and still green.  
   `docs/development/MEASUREMENTS.md:17355`
+- name"* above is SUPERSEDED by this paragraph.  
+  `docs/development/MEMBER-KNOWLEDGE-DESIGN.md:195`
 - CORRECTED THE SAME DAY BY BOB #15, and the correction is the ruling.** The first version handed these counts to *a caller who could read every row — for an instance-wide count, the `admin` class*.  
-  `docs/development/MEMBER-KNOWLEDGE-DESIGN.md:134`
+  `docs/development/MEMBER-KNOWLEDGE-DESIGN.md:215`
 - **2026-08-01** — CORRECTED 2026-08-01 — this hole is CLOSED and the paragraph below is kept as the > reasoning that closed it.** One reconciling Durable Object alarm now serves FIVE > consumers (selection-sweep, task-drain, archive-monitor, connection-derive, > overdue-scan), three of which landed within a week of the decision.  
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  
   `docs/development/MILESTONES.md:182`
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
+- **2026-09-21** — Its five doctrine questions are RULED (`MEMBER-KNOWLEDGE-DESIGN.md` §4.1–§4.6), and §8 names the two items that replace it.  
+  `docs/development/QUEUE.md:66`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  
