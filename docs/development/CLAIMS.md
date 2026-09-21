@@ -17225,6 +17225,10 @@ RULED — D-38 and D-45 are stated LIMITATIONS in State Rules' front matter (§4
 door; Q1 (D-162) and Q3 (D-53) are DOCTRINE and were PUT TO BOB in his conversation on 2026-09-21 — do not re-ask; Q4
 (D-55), a bounded design act whose one link is untraced, passes to BOB #24 (BOB-NEXT §3).
 
+**PLACED 2026-09-21 by SCHEDULER #9:** Q1 (D-162) was RULED BY BOB (`BIO_Content_Framework_v0_10.md` §8.4, BOB #23's
+inbox entry `8d2ba50f`) and is PLACED as D-162 (RECORD, M4) and UI-76 (UI, M8); D-162 left DEBT by the second door.
+Q3 (D-53) stays with Bob and Q4 (D-55) with BOB #24; this block stays open until both are answered.
+
 ## CLAIM 2026-09-21 BOB (#23) — the handoff to BOB #24, written as a CHECKPOINT while live
 
 claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
@@ -17383,3 +17387,31 @@ regenerated); `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1: on
 `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/kickoffs/BOB-NEXT.md` (§2 and §3);
 `docs/DECIDED.md` (GENERATED, regenerated LAST); this block.
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 SCHEDULER (#9) — the lane's standing claim on the build plan's own files; BOB #23's D-162 themes entry drained (D-162 and UI-76 placed) and ten rows at the backlog's foot cut to their fields
+
+claimed: 2026-09-21 by SCHEDULER #9, worktree `.claude/worktrees/focused-perlman-dcfab7` (branch
+`claude/focused-perlman-dcfab7`; base `origin/main` @ `c05d71c8`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s
+ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+this lane sent or acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #8 (`claude/wizardly-ishizaka-f2c7cf`), archived by this session on 2026-09-21
+at ~23:45Z under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip
+`c05d71c8` = `origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); its worktree
+removed by `git worktree remove` without force, 5,933,148 → 6,603,888 KiB free (+655 MiB; `du` read the tree at
+663,496 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-21.**
+
+Commit 1: BOB #23's inbox entry (`8d2ba50f`) DRAINED, verified at `BIO_Content_Framework_v0_10.md` §8.4 (Bob's ruling of
+2026-09-21, its four fences) and at the code on `c05d71c8`: `ENTITY_KINDS` holds ten named-entity kinds and no theme,
+`bio-plane/src` names no theme, and C-54.1 refuses a lead by name as a leg. D-162 PLACED under its own id (RECORD, M4)
+after D-394, with the meaning-layer features; UI-76 (UI, M8) directly after it. D-162 left DEBT by the second door. The
+backlog then stood 3,234 B over its 150 KiB budget, so ten rows at the foot of the order (SK-5 up to M0-70) were cut to
+their fields, each row's whole pre-cut text VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. 145 open DEBT
+rows remain.
