@@ -588,6 +588,14 @@ visuals: \[\] \# description-as-truth entries when visuals exist
 The per-type extension (Section 4) follows the core in the same
 frontmatter block.
 
+**THE `group` VALUE, AND WHAT CAME BEFORE IT (D-436; RULED BY BOB 2026-09-21).** `group` is the producing group's slug:
+one value in the store's durable state, written once — at a store's first boot from the installer's instance name, or
+once by the root of trust — and never a deploy-time value, because it lands in signed bytes. A store that already held
+bundles before D-436 records none until its root of trust sets it, and a new document naming no group is refused
+meanwhile. **No migration and no automatic setting is owed for those stores:** Bob, 2026-09-21, *"everything captured
+so far is for testing purposes only"*; at the MVP release the record *"will be thrown out (or at least not copied over
+to the instance running a real release)"*, so nothing recorded before it binds the design.
+
 ### 3.2 The dual-audience encoding
 
 Every structured list item that humans read (focus statements,

@@ -17367,3 +17367,12 @@ claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker
 `docs/development/VERIFICATION.md` (the DEC-49 section: one sentence; two lookup pointers trimmed elsewhere);
 `docs/archive/VERIFICATION-2026-09-19.md` (the trimmed pointers, verbatim); `docs/DECIDED.md` (GENERATED), this block.
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — Bob's answers recorded: D-162 themes (Content Framework §8.4) and D-436 pre-MVP records (State Rules §3.1); D-53 re-presented
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/architecture/BIO_Content_Framework_v0_10.md` (§8.4 new, one Status sentence, one Incomplete bullet; Contents
+regenerated); `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1: one RULED paragraph; Contents regenerated);
+`docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/kickoffs/BOB-NEXT.md` (§2 and §3);
+`docs/DECIDED.md` (GENERATED, regenerated LAST); this block.
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
