@@ -171,12 +171,22 @@ scope: a scripted installer deploy on `deploy.mjs`'s pattern: upload the bundle,
 accepts-when: a deploy whose read-back differs from the signed bytes, carries another version or shows any binding reports FAILURE by name; a clean one reports the hash it read. How a liar passes it: believing what the upload API returned, so the arm tampers with the read-back. NEGATIVE CONTROL: skip the hash comparison, and the tampered-read-back arm fails by name.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 15; keeps its `D-` id).
 
+### REC-159 · queued — **AN ENROLLED ADMINISTRATOR IS REFUSED §4.9's CUSTODIAL ACTS FROM THEIR OWN SESSION, WITH A SENTENCE THAT IS FALSE OF THEM.** `memberadd`, `memberset`, `signeradd` and `signerset` sit in `SESSION_OPS.admin` alone, the FOUNDER'S password session, so an enrolled administrator is answered `SESSION_ROLE_CANNOT_REACH_OP` (C-38.7): the op *"is reserved to an administrator of this group"*. Measured by REC-156; `adminvote.test.mjs` §8f pins it KNOWN-OPEN. — owner RECORD.
+order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
+milestone: M8
+interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each act is EVERY administrator's) and §4.7's block *"WHAT IS STILL NOT CLOSED"*, which names this fix: D-136's call applied again — both session sets, a stamped `by`, the roster refusing a non-administrator by name.
+depends-on: none. D-136 and REC-156 are on `main`.
+scope: the four gain `member` in `classes` and both `SESSION_OPS` sets; `memberset`, `signeradd` and `signerset` stamp `by` as `memberadd` does; each store method refuses a stamped `by` that is not an ACTIVE administrator, by name, BEFORE any lookup. §8f and the ROLE literal CORRECTED, never exempted. **NOT in scope:** `governorconfig` and a bearer's reach, both with BOB.
+accepts-when: an enrolled administrator performs all four from their session, attributed to them; a member is refused by name. How a liar passes it: widening the class without the roster check, so the member arm must refuse. NEGATIVE CONTROL: drop the roster check, and the member arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
+
 ### REC-155 · queued — **SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED (§4.10): FIVE GAIN SESSION REACH, TWO ARE UNATTENDED BY DECISION. LANDING 1 of 2.** The plane answers all seven `SESSION_ROUTE_NOT_RECORDED` today, and its header calls them *"UNDETERMINED rather than decided"* (`index.mjs`). — owner RECORD.
 order: where it stood, below the ledger tooling, now with its design (BOB #20's entry): the plane is honest here — a determination was owed, not a defect shipping — and this landing refuses nobody (SCHEDULER #5, 2026-09-21; placed by SCHEDULER #3, 2026-09-19)
 milestone: M8
 interface: I3 — MINOR: sessions gain reach and no class list moves; the integrator mints the IC.
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.10 (ruled by BOB #19, landed by BOB #20 at `d9cf3283`).
-depends-on: none. **NOT D-136**, whose three ops §4.7 ruled and which is built.
+depends-on: none. **NOT D-136**, whose three ops §4.7 ruled and which is built. **Sequence after REC-159** (the same `SESSION_OPS` sets and ROLE literal).
 scope: `provenancechain`, `provenanceroute`, `calibrate`, `calibrationsubject` and `calibrationsignal` join BOTH `SESSION_OPS` sets, each with an arm DRIVEN through the plane from a signed-in session; `livefire` and `reproject` join `UNATTENDED_BY_DECISION` with the citation §4.10 quotes; the UNDETERMINED header is corrected in the same commit. **REC-65's known-open pin is NOT moved here** — it moves in REC-158, with the fence.
 accepts-when: each of the five answers a member session and an administrator session with the op's own result; the two unattended ops answer every session `MACHINE_CREDENTIAL_REQUIRED` with `recorded` citing §4.10's artifact. How a liar passes it: an arm that calls the store directly — the session gate lives in `index.mjs`. NEGATIVE CONTROL: drop one op from a `SESSION_OPS` set, and its arm fails by name.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 1); designed 2026-09-21 by §4.10, BOB #20's entry drained by SCHEDULER #5.
@@ -212,6 +222,36 @@ accepts-when: all eleven take their words from the ONE helper, asserted as `refu
 NEGATIVE CONTROL: restore `r.detail` at one site, and that site's arm fails by name.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 3, verified in UI-72's own CLAIMS.md block).
 
+### D-438 · queued — **THE DEC-49 GUARD'S REAL-TREE CONTROL HARNESS `civicos-ui/test/refusal-codes.control.mjs` IS RED: FOUR ARMS FAIL THAT ARE NOT ITS SUBJECT'S.** (c) `stdio-census.test.mjs` ARM D reads the guard BY NAME, so moving the guard aside turns the harness red on an `ENOENT`; (e) its first predicate is the census sentence from before D-257; (r2) EXACTLY 33 conscripted, measured 35; (r6) EXACTLY 36, measured 38. NARROWED: its `refusal-partition` half closed with D-355 (`0e80aa8c`). — owner VERIFY.
+order: FIRST of the instrument cluster, with M0-93: a control red on a green `main` measures nothing, D-355's class, and the DEC-49 guard is what a member's refusal words rest on (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), the section "THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE", with its rule that a control is evidence only when it FAILS at a named assertion.
+depends-on: none. D-254 corrected (n2) at `cac06ae7`.
+scope: per arm: (c) require the harness RED only on stdio-census's read of the missing file and every refusal-judging suite GREEN over the codeless refusal; (e) take the fixture suite's ARM 5 regex as D-257 corrected it; (r2)/(r6) re-derive both counts on the current tree and NAME the two refusals that joined `promote`. Run it to its foot.
+accepts-when: the harness runs to its foot with every arm AS DECLARED, each re-declaration dated at its site. How a liar passes it: re-pinning (r2)/(r6) to whatever prints, so the two joiners are NAMED. NEGATIVE CONTROL: restore 33, and (r2) fails by name.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; the D-254 worker's DEBT row; keeps its `D-` id).
+
+### M0-93 · queued — **`bio-plane/test/delegations.control.mjs` IS RED ON `main`: ITS A1 AND A6 ASSUME ONE AFFIRMATION LINE PER DELEGATION BLOCK, AND THE INSTRUMENT ALLOWS SEVERAL.** `tools/delegations.mjs` judges a block by its NEWEST `open as of`; the REC-69 "unread-index roster" DELEGATION in `CLAIMS.md` carries two (2026-09-16 and -17). A1 ages only the newest, so the block cannot go STALE; A6 compares 36 re-dated LINES with 35 BLOCKS. The D-355 worker read `m037-control: 19 pass, 5 fail` (M-83). — owner M0.
+order: with D-438, first of the instrument cluster: a control red on a green `main` (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with its M0-51 rule: *never rename a subject to satisfy an instrument*. The register's two dated lines are true history and stay.
+depends-on: none.
+scope: correct the CONTROL to the instrument's contract: A1 ages EVERY affirmation of the block it stales; A6 counts affirmation lines, not blocks. Attributed at the site, dated, never exempted. A3 and A6's declared-pass check read UNDETERMINED in M-83: establish both on the corrected run.
+accepts-when: the control reads every arm AS DECLARED on `main` with the two-line block in place, and leaves the tree byte-identical. How a liar passes it: deleting the older line, so the arm asserts the register unchanged. NEGATIVE CONTROL: restore newest-only aging, and A1 fails by name.
+added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
+
+### M0-94 · queued — **`bio-plane/test/m025-arm-census.mjs` PRINTS AN `UNCLASSIFIED` DRIVER, ONE EXITING NON-ZERO WITH NO PHRASE ITS MATCHER KNOWS, AND EXITS 0 OVER IT.** The census exits non-zero only on a stale arm, a false tally or a thrown fixture. In M-83 `provenance-floor` read `UNCLASSIFIED exit=1` and `delegations` still does: printed, gated on nobody. — owner M0.
+order: directly after M0-93 and D-438, the two drivers it would turn red on landing: a gate that reports where it should fail cannot fail, M0-79's doctrine on the census side (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the census's own D-333 and M0-78 extensions of its exit: a false tally, then a thrown fixture, carry it.
+depends-on: M0-93, D-438.
+scope: an UNCLASSIFIED driver carries the census's non-zero exit, a third extension of the same line; it is still REPORTED unclassified, never scored stale or clean. The landing states the UNCLASSIFIED population its own full census run found; each is attributed or rowed.
+accepts-when: a fixture driver exiting 1 with an unknown phrase turns the census exit 1, naming it; the population is stated. How a liar passes it: teaching the matcher the fixture's phrase, so the arm generates its phrase fresh. NEGATIVE CONTROL: drop the new disjunct, and that arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
+
 ### M0-80 · queued — **FOUR REFUSAL CODES ARE PINNED GREEN BY ABSENCE RATHER THAN BY AGREEMENT** — the plane sends a canned `translation` for `KIND_NOT_PERSONAL` (`queue.test.mjs`), `NO_ACKNOWLEDGMENT` (`release-flow.test.mjs`), `NO_SUCH_SELECTION` (`act-dispose.test.mjs`) and `NOT_CAPABLE`, and each fixture OMITS the field, so the `detail` pin passes by not looking. Of 198 hand-written refusal fixtures in the UI estate only THIRTEEN carry a `translation` at all (M-72). — owner M0.
 order: with the instrument cluster and NOT beside UI-73, though they were routed together. A fixture narrower than the wire is a check that cannot fail — M0-78's doctrine exactly — whereas UI-73 is a surface correction. CLAUDE.md §5: an equality that costs nothing to produce is not evidence (SCHEDULER #3, 2026-09-19)
 milestone: M0
@@ -232,6 +272,16 @@ depends-on: none.
 scope: a full `docs/…md` path resolving to no file on disk is reported as a DEAD POINTER (at least a note), and the basename loop takes only a bare name — never one inside a path, as the process-authority arm's `(?<![\w/])` already refuses. **FULL GATE PROFILE** (`tools/`).
 accepts-when: a fixture row citing a wrong directory is reported dead by name; the right full path still passes; a bare unique basename still resolves. How a liar passes it: dropping the basename rescue altogether, so the bare-name arm must still pass. NEGATIVE CONTROL: let the basename loop match inside a path again, and the wrong-directory arm fails by name.
 added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs M0`).
+
+### D-437 · queued — **REC-76's VERDICT READER SAYS IT READS EVERY BOOLEAN-PRODUCING OPERATOR, AND READS SIX: `<=`, `>=`, `instanceof` and `in` are not boolean-shaped to it, and the shifts `<<`, `>>`, `>>>` are.** `verdictKind` in `bio-plane/test/verdict-reader.mjs`, since D-254 the ONE home three instruments import, refuses a `<`/`>` beside `=`. Of 1,798 return-position outcomes, 6 properties carry a depth-0 `<=`/`>=` it cannot see, 3 of which would change the verdict; no instrument is known to read wrong TODAY. — owner VERIFY.
+order: with the instrument cluster, after M0-92: a reader blind to an operator class but latent, a `gap` as its row classifies it (D-378's precedent), so below the controls red today (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), the section "THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE", which governs the reader.
+depends-on: none. **Sequence after D-438**: the guard's harness reads the reader's figures.
+scope: at depth 0, `<=`/`>=` are `expr`, `<<`/`>>`/`>>>` are NOT, `instanceof` and `in` (word-bounded) are `expr`, `=>` stays excluded; one READING per operator in the reader's own table; the three instruments' figures re-read and any floor moved from its own print.
+accepts-when: each operator's reading passes; each moved figure is attributed to the print it came from. How a liar passes it: a floor nudged to fit, so every move cites its print. NEGATIVE CONTROL: revert the `<=` clause alone, and its reading fails naming `verdictKind`.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; the D-254 worker's DEBT row; keeps its `D-` id).
 
 ### M0-87 · queued — **`tools/rowsubstrate.mjs` SCORES A ROW WHOSE EVERY CITED ANCHOR IS UNRESOLVABLE AS UNCOVERED, so `plancheck` prints a false `substrate not evident`.** When `sectionText()` returns null the scope is set aside as UNRESOLVABLE, `covered` stays false with `probes: []`, and the row still joins the findings — zero symbols against zero text, reported as a gap. D-136 carried exactly that (§4.7 and §4.9 are bold paragraphs, not headings). Latent today: the four current notes each resolve their anchor. — owner M0 / VERIFY.
 order: with the instrument cluster, after M0-80: an instrument claiming about what it cannot see, the class the cluster closed three of (CONDUCT #8's DELEGATION 2026-09-20 item 2); a WARN, and latent, so below the rows that hide a failure (SCHEDULER #4, 2026-09-21)
@@ -262,6 +312,36 @@ depends-on: none. **Same file as M0-44** — one worker at a time.
 scope: re-measure the `D384_STAYS` population with generators visible, and enrol or exclude `eachImage` with its reason; any move of the class figure is attributed, never nudged.
 accepts-when: `eachImage` carries a verdict in `D384_STAYS` or `D384_LEAVES` with its reason; the class figure is taken from a printed run, its delta attributed. How a liar passes it: a verdict with no measurement, so the entry cites the body it judged. NEGATIVE CONTROL: remove the entry, and the admitted-set arm fails naming `eachImage`.
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+
+### D-439 · queued — **TWO MORE SHARED MECHANISMS ARE HAND-KEPT COPIES, NEITHER PINNED.** (1) A READER: `stripComments`, `quotedIn`, `literalsOf`, `flatten` and `citationResolves` are copied across the four `skill*.test.mjs` suites, which decide what each READS of the skill pack: REC-76's reader before D-254, unpinned. (2) A HAND-KEPT DEPENDENCY LIST: three `battery-*.test.mjs` suites carry `REAL_MODULES = ["provenance.mjs", "residue.mjs"]`, so the next relative import `battery.mjs` takes turns all three red at load, no module named (D-265's signature). — owner M0.
+order: after M0-89, the instrument cluster's end: copies that agree today, the drift a pin would catch, so debt and not a live defect (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-254's single-homed verdict reader (`cac06ae7`) as the precedent.
+depends-on: none.
+scope: (1) one shared `bio-plane/test/skill-reader.mjs` the four suites import, pinned as D-254 pins its reader; (2) `instrumentDeps("battery.mjs")` from `instrument-deps.mjs`, which already takes an entry. CANNOT SEE: an indented or arrow function, a renamed or re-commented copy.
+accepts-when: four suites import one reader, three derive their list, every suite's tally unchanged. How a liar passes it: a renamed second copy, so the pin extracts by behaviour. NEGATIVE CONTROL: add a relative import to a copy of `battery.mjs`, and the derived list carries it where the literal did not.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; the D-254 worker's DEBT row; keeps its `D-` id).
+
+### M0-95 · queued — **34 CONTROL DRIVERS LEAVE THEIR PEN IN THE TREE WHEN A RUN FAILS: `nc-rec95.mjs` and `nc-rec129.mjs` never remove theirs, and 32 more remove it only at the foot.** An untracked pen makes `git status --porcelain` non-empty (D-398's archive condition) and rides a careless `git add -A` into a commit. From M-83's static sweep of 217 driver-shaped files, heuristic and stated so; the two pens are `.gitignore`d as a MITIGATION only. — owner M0.
+order: after D-439, closing the instrument cluster: residue a failed control leaves, a second variable in the next run (CLAUDE.md §5: *break only the thing*), not a false measurement (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-355's `removePenOnExit` in `refusal-partition.control.mjs` as the precedent: an `exit` hook runs on exit 0, `process.exit(1)` and an uncaught throw (M-83).
+depends-on: none. Sequence with M0-96: whichever lands second re-reads the first.
+scope: each pen's removal moves into an `exit` hook (a shared helper is the builder's call, stated); the builder re-derives the population rather than trusting the sweep, and lists every driver judged with its verdict. A pen is removed BY NAME, never by a variable path (CLAUDE.md §7).
+accepts-when: each fixed driver, forced to exit non-zero, leaves no pen and a clean `git status`. How a liar passes it: removing on exit 0 only, so the forced-red arm is required. NEGATIVE CONTROL: drop one driver's hook, and its forced-red arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
+
+### M0-96 · queued — **TWO CONTROL DRIVERS INSTALL SIGINT/SIGTERM/SIGHUP HANDLERS OVER SYNCHRONOUS CHILDREN, SO A STOP SIGNAL WAITS FOR THE END OF THE RUN, and the driver keeps editing real sources after it is told to stop.** `bio-plane/test/independence.control.mjs` and `run-conditions.control.mjs` run their suites with `execFileSync`/`spawnSync`. Measured by the D-355 worker (M-83): a SIGTERM sent at 1.0 s ran the handler at 4.0 s, after the whole script; the handler suppresses the default kill. — owner M0.
+order: directly after M0-95, the same class, a driver's behaviour on an abnormal exit; last of the cluster, because the run still restores, late (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-355's asynchronous `refusal-partition.control.mjs` and `nc-d355.mjs` arm (4) (SIGTERM mid-arm: exit 143, restored, pen absent) as the precedent.
+depends-on: none. Sequence with M0-95.
+scope: each driver runs its children asynchronously, so its handler runs mid-arm, restores from memory and exits; nothing else in either driver moves.
+accepts-when: each driver SIGTERMed mid-arm exits promptly with its subjects byte-identical by sha256 and `cmp`. How a liar passes it: removing the handlers, so the SIGTERM arm asserts the restore. NEGATIVE CONTROL: restore the synchronous call, and the prompt-exit arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
 
 ### COFF-13 · queued — **NO FORMAT ENTRY EMITS A DECK LENGTH, so a deck whose TRAILING slides are unreadable is recorded shorter than it is — and the content row then REFUSES A TRUE CITATION of a real trailing slide as "past the deck".** D-359's named residue, rowed at its close rather than left in prose. — owner CONTENT-OFFICE.
 order: below LED-8, above the features: it refuses something TRUE — a record defect, not a gap — but errs in the CONSERVATIVE direction and reaches only decks with unreadable trailing slides, so it ranks under the defects above it (SCHEDULER #2, 2026-09-19)

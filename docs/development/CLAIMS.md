@@ -16882,12 +16882,11 @@ with a dated reason. REC-156 did not take it: it moves reach, and the row's scop
    ADMIN_TOKEN holder's, under §4.6)? Either way its refusal must stop calling an enrolled administrator a
    non-administrator: if it stays the founder's, `SESSION_ROLE_CANNOT_REACH_OP` must say *the founder's session* for it.
 
-**open as of 2026-09-21** — raised at REC-156's landing; nothing placed yet, and item 3 waits on BOB.
-
 **open as of 2026-09-21** — **item 2's bearer question RULED by BOB #22, once for all four ops** (Membership v2 §4.7,
 *WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH*): the ADMIN_TOKEN holder keeps reaching them, its `by` stamped `class:admin`,
 on no roster, so it endorses for nobody (§4.6); and an administrator's proposal IS their own endorsement, counted once.
-Item 2's fix is SCHEDULER's to place on that ruling. **Item 3 (`governorconfig`) is carried to BOB #23** (BOB-NEXT §3).
+Items 1 and 2 PLACED on that ruling by SCHEDULER #7 as REC-159, directly before REC-155 (the same `SESSION_OPS` sets); the
+block's two state lines merged into this one. **Item 3 (`governorconfig`) is carried to BOB #23** (BOB-NEXT §3).
 
 ## CLAIM 2026-09-21 BOB (#22) — the two BOB groups ruled: D-325 a stated LIMITATION, D-80 folded, Membership §8.1 folded, D-195 at the elicitation, D-260 and D-293 ruled, D-280 found RULED by Bob as DEC-70
 
@@ -16974,6 +16973,14 @@ design corpus and the map are BOB's), and every kickoff but SCHEDULER's. **D-435
 until BOB #22's landing of it is on `main`: BOB #22 builds it and archives it itself.
 
 **open as of 2026-09-21.**
+
+**AMENDED 2026-09-21, same session (commit 2): CONDUCT #10's routes placed, each with its fix named** — REC-159 (REC-156's
+DELEGATION, items 1–2) directly before REC-155; D-438 (NARROWED to `refusal-codes.control.mjs`), M0-93
+(`delegations.control.mjs`) and M0-94 (the census's UNCLASSIFIED exit) at the head of the instrument cluster; D-437 after
+M0-92; D-439, M0-95 (pens left on a failed run) and M0-96 (signal handlers over synchronous children) at its end. D-437,
+D-438 and D-439 CLOSED in `DEBT.md` AS A DEBT ROW, PLACED. The archived D-240 DELEGATION DISCHARGED by D-254. D-355's
+DESIGN GAP goes to BOB as a design item (its worker's wording is lost; CONDUCT #10's reading of the three rules, labelled
+as inference). 167 open DEBT rows remain.
 
 ## CLAIM 2026-09-21 BOB (#22) — REC-156's bearer and proposer questions ruled into Membership v2 §4.7
 
