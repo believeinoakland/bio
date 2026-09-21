@@ -16898,3 +16898,14 @@ landed blocks, and dated lines on the SCHEDULER (#5) and SCHEDULER (#6) DELEGATI
 **NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, every kickoff, and every other design document.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT points at D-260's ruled deploy half, which is DIST's after the plane's caller)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (owed item 3, one appended sentence), `docs/DECIDED.md` (GENERATED,
+  regenerated LAST), and this block.
+why: BOB #22 ruled D-260 at `3b904ea7` (`BIO_Assistant_and_AI_Roles_v0_1.md` §6; `BIO_Distribution_v0_1.md` §6's
+  bullet), verified on `main` by DIST #3. `QUEUE.md`'s BOB INBOX entry makes its item 2 DIST's, after item 1: install and
+  update carry ONE organisation-principal `ai` credential as a deploy secret, as `DAEMON_TOKEN` is carried. A successor
+  reads DIST-NEXT whole, so the pointer goes there; the entry and the D-260 row stay the authority.
+**released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
