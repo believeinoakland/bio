@@ -2580,7 +2580,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - THE ONE DESIGN CALL INSIDE THIS CHANGE, STATED SO IT CAN BE OVERTURNED CHEAPLY.** The three ops gained `member` and sit in BOTH `SESSION_OPS` sets, rather than the admin set alone.  
   `docs/development/INTERFACE-CHANGES.md:12383`
 - (`247/268 suites green`), every one CORRECTED with a dated reason at the site and none exempted.  
-  `docs/development/INTERFACE-CHANGES.md:12708`
+  `docs/development/INTERFACE-CHANGES.md:12709`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  
