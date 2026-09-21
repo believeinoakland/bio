@@ -16882,7 +16882,11 @@ with a dated reason. REC-156 did not take it: it moves reach, and the row's scop
    ADMIN_TOKEN holder's, under §4.6)? Either way its refusal must stop calling an enrolled administrator a
    non-administrator: if it stays the founder's, `SESSION_ROLE_CANNOT_REACH_OP` must say *the founder's session* for it.
 
-**open as of 2026-09-21** — raised at REC-156's landing; nothing placed yet, and item 3 waits on BOB.
+**DISCHARGED 2026-09-21 — every item placed or ruled, verified on `origin/main` @ `c31b8f60` by SCHEDULER #7:** items 1 and 2
+PLACED as REC-159, directly before REC-155; a bearer's reach RULED by BOB #22 into Membership v2 §4.7 (the ADMIN_TOKEN holder is
+not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT
+RUN THE INSTANCE*: `governorconfig` is the operator's), and its build PLACED as REC-162 directly after REC-159. The block's two
+dated open lines came out with this one, as `tools/delegations.mjs` asks of a closed block; both rulings live in Membership v2.
 
 ## CLAIM 2026-09-21 BOB (#22) — the two BOB groups ruled: D-325 a stated LIMITATION, D-80 folded, Membership §8.1 folded, D-195 at the elicitation, D-260 and D-293 ruled, D-280 found RULED by Bob as DEC-70
 
@@ -16901,7 +16905,22 @@ landed blocks, and dated lines on the SCHEDULER (#5) and SCHEDULER (#6) DELEGATI
 
 **NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, every kickoff, and every other design document.
 
-**open as of 2026-09-21.**
+**released: 2026-09-21 by BOB #22** — landed at `3b904ea7`, verified on `origin/main` (DOCS gate `40/40 suites green · 2517
+assertions passing`). `docs/development/VERIFICATION.md` and `docs/archive/VERIFICATION-2026-09-19.md` were in this claim
+and came out of it unchanged: the first draft's cut disarmed a control, and both files were restored byte-identical.
+
+## CLAIM 2026-09-21 BOB (#22) — D-435: `owed.mjs` learns to DISCHARGE, per lane
+
+claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `tools/owed.mjs` (a per-lane `DISCHARGE_RE`
+and its use in `owedFor`); `bio-plane/test/owed.test.mjs` (four arms and the NEGATIVE CONTROL record);
+`bio-plane/test/owed.control.mjs` (one arm); `docs/development/BACKLOG.md` and `docs/archive/ledgers/*` (D-435's row,
+marked done and archived by `node tools/ledger.mjs archive D-435`); `docs/development/CLAIMS.md` (this block);
+`docs/DECIDED.md` (GENERATED, regenerated LAST). FULL GATE PROFILE.
+
+**NOT CLAIMED:** every other path.
+
+**released: 2026-09-21 BOB #22** — landed in the same push as the text it covers, under a FULL gate (`267/267 suites green ·
+16252 assertions passing`, `gates: GREEN · class FULL`).
 
 ## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT points at D-260's ruled deploy half, which is DIST's after the plane's caller)
 
@@ -16954,6 +16973,233 @@ design corpus and the map are BOB's), and every kickoff but SCHEDULER's. **D-435
 until BOB #22's landing of it is on `main`: BOB #22 builds it and archives it itself.
 
 **open as of 2026-09-21.**
+
+**AMENDED 2026-09-21, same session (commit 2): CONDUCT #10's routes placed, each with its fix named** — REC-159 (REC-156's
+DELEGATION, items 1–2) directly before REC-155; D-438 (NARROWED to `refusal-codes.control.mjs`), M0-93
+(`delegations.control.mjs`) and M0-94 (the census's UNCLASSIFIED exit) at the head of the instrument cluster; D-437 after
+M0-92; D-439, M0-95 (pens left on a failed run) and M0-96 (signal handlers over synchronous children) at its end. D-437,
+D-438 and D-439 CLOSED in `DEBT.md` AS A DEBT ROW, PLACED. The archived D-240 DELEGATION DISCHARGED by D-254. D-355's
+DESIGN GAP goes to BOB as a design item (its worker's wording is lost; CONDUCT #10's reading of the three rules, labelled
+as inference). 167 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 3): BOB #22's six inbox entries DRAINED**, each verified at its cited design and
+at the code — M0-97 (`decided.mjs` indexes a `decided:` field) directly after D-435, with D-341 (the same file) after it;
+REC-160 (`op=reevaluations` names a severed leg's status) after D-389, on `BIO_State_Rules_Consistency_v1_5.md` §5.4 with
+DEC-70; M0-83 amended with item (4) inside its budget; D-260 after UI-71 and D-293 after LED-9, each under its own id;
+REC-161 then UI-75 (D-195 at the elicitation) directly after UI-74. D-341, D-260 and D-293 CLOSED in `DEBT.md` AS A DEBT
+ROW, PLACED: 164 open DEBT rows remain. The DELEGATION SCHEDULER (#7) -> BOB below carries the next group.
+
+**AMENDED 2026-09-21, same session (commit 4): BOB #22's landing met** — D-435 archived by BOB #22 (`8245cf54`), so the
+cache is replenished to 8 with M0-97, D-341 and M0-83 by `node tools/ledger.mjs refill`; REC-159's scope follows BOB #22's
+bearer ruling (§4.7); the REC-156 DELEGATION's two state lines are merged into one; the group to BOB carries D-99 in
+place of the ruled bearer question, and D-145 and D-99 carry a dated SENT note.
+
+**AMENDED 2026-09-21, same session (commit 5): LED-7 batch S7-1** — D-33 CLOSED IN FACT (`query.test.mjs` asserts every sortable
+field ends with `bundle_id ASC`); D-40 PLACED after M0-91, RE-MEASURED (`cite-scale.mjs` still writes the illegal `notable`,
+though the row called it fixed); D-59 PLACED after D-92 as a bounded scratch measurement. D-162 carried to the next BOB
+group (doctrine, by its own disposition); D-124 carried until LED-8. 161 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 6): BOB #23's entry DRAINED** — `governorconfig`'s refusal PLACED as REC-162, back to
+back after REC-159; the REC-156 DELEGATION DISCHARGED, every item placed or ruled. BOB #23 verified this session's drain of BOB
+#22's six entries row by row, takes M0-83 itself, and rules the SCHEDULER (#7) -> BOB group's Q1, Q3 and Q4 next, Q2 after M0-83.
+
+**AMENDED 2026-09-21, same session (commit 7): LED-7 batch S7-2 and THE REFRESH** — D-50 PLACED after CPDF-3 (the catalog half
+of project-name uniqueness; the write path refuses `NAME_TAKEN`); D-54 NARROWED to `limits.subrequests` and PLACED after D-107,
+its plan half closed by DEC-42. 159 open DEBT rows remain. `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #8 at the
+refresh (56%, nothing pending); this claim passes to SCHEDULER #8, who supersedes it when it archives this session.
+
+## CLAIM 2026-09-21 BOB (#22) — REC-156's bearer and proposer questions ruled into Membership v2 §4.7
+
+claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Membership_Architecture_v2.md`
+(§4.7: one RULED paragraph), `docs/development/CLAIMS.md` (this block and one dated line on the REC-156 DELEGATION),
+`docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #22** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#22) — the handoff to BOB #23
+
+claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~20:00Z), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #22** — landed in the same commit as the file it covers.
+
+## DELEGATION 2026-09-21 SCHEDULER (#7) -> BOB — **FOUR QUESTIONS, ONE EACH: D-145's addressing, D-355's driver rules, DEC-70's fold, and D-99's interchange design; none blocks a runnable row**
+
+1. **D-145 — WHICH SHAPE ADDRESSES A RECORD OBJECT ACROSS INSTANCES?** Re-verified on `origin/main` @ `2bd24da7`:
+   non-gated prefixes (`INFO-…`) still come from `Store#nextSeq`, one counter per instance, and the gated prefixes'
+   opaque tails (Membership v2 §7, REC-141/REC-151) answer ENUMERATION, not addressing: they are unique within the
+   instance that drew them. So every edge addressed by id (`references[].target`, `inquiry_basis`, citations) cannot
+   leave its instance, and two instances citing each other collide. The row's three candidates, none free: an
+   instance-scoped prefix; a UUID beside the human id; citation by content hash with the id as a comment. **The
+   question:** which, or is cross-instance addressing out of scope until M6 is taken up?
+2. **D-355's DESIGN GAP — FOLD TWO DRIVER RULES INTO `VERIFICATION.md`, WHICH IS 9 B UNDER ITS BUDGET?** The D-355 worker
+   reported three rules the file lacks; its wording is LOST (not in its commit, M-83, its claim or CONDUCT's reach).
+   CONDUCT #10's reading of the landed code, labelled as inference: (a) a throwing driver validates every anchor before
+   arming — ALREADY the file's D-331 section, so not a gap; (b) a driver removes its pen on EVERY exit (0, 1, a throw,
+   SIGINT/SIGTERM/SIGHUP), which needs ASYNCHRONOUS children because a handler over `execFileSync` fires only after the
+   script ends (measured, M-83); (c) a driver declares its arm tally in its head and asserts it at its foot. Evidence:
+   `civicos-ui/test/refusal-partition.control.mjs`, `bio-plane/test/nc-d355.mjs`. M0-95 and M0-96 are placed on D-355's
+   precedent and would cite the rules once folded. **The question:** fold (b) and (c), and where does the room come from?
+3. **DEC-70 HAS NO GOVERNED HOME.** REC-160 (`op=reevaluations` calls a severed leg support) rests on DEC-70's *severance
+   discharges SUPPORT, never CONNECTION*, which lives only in `DECISIONS.md` — not a path `rowdesign` admits. I placed it
+   on `BIO_State_Rules_Consistency_v1_5.md` §5.4 (the re-evaluation obligation itself), with DEC-70 cited beside it.
+   **The question:** fold DEC-70's severed-leg sentence into its construct's home — §5.4, or the inquiry's (Content
+   Framework Part I §12)?
+4. **D-99 — WARC AND MEMENTO AS INTERCHANGE: A DIRECTION, NOT YET A DESIGN.** `ARCHIVE-FALLBACK.md` §"WARC as
+   interchange, not as store" and §"Build to Memento, not to Wayback" both read [ABSENT]: nothing in the tree reads or
+   writes WARC, and the plane queries Wayback's own CDX endpoint. The sections decide the DIRECTION (WARC in, WARC out; the
+   internal store unchanged) but not the build: which provenance hop becomes which WARC record, what a Memento TimeGate
+   or TimeMap over an instance answers, and how an export carries an id-addressed graph, which is Q1. **The question:**
+   design it with Q1, or state it as M6's limitation until M6 is taken up?
+
+**DISCHARGED 2026-09-21 by BOB #23** — all four RULED, each into its home (the group was sent to BOB #23 by message;
+D-99 replaced a Q4 BOB #22 had already ruled). **Q1 (D-145) and Q4 (D-99) are M6's**, which `MILESTONES.md` sequences
+last and which already absorbs D-99: no shape is chosen now, and the two are designed together because an export
+carries an id-addressed graph (State Rules front matter, §1.2; `ARCHIVE-FALLBACK.md` front matter) — LED-7 disposes of
+both rows as M6's. **Q3: DEC-70 is folded into State Rules §5.4**, which REC-160 cites. **Q2: `VERIFICATION.md`'s driver
+law** (the D-331 section) carries D-355's two rules — a driver DECLARES its arm tally at its head and ASSERTS it at its
+foot, held against its run by the census; its pen goes on EVERY exit from an `exit` hook, with asynchronous children
+where it must honour a signal (M-83). Rule (a) was already there. The room came from archiving the 2026-07-31 floor
+plan's list verbatim (`docs/archive/VERIFICATION-2026-09-19.md`); its rule stays. M0-95 and M0-96 may cite the section.
+
+## CLAIM 2026-09-21 BOB (#23) — CONDUCT #10's Q3 ruled (`op=governorconfig` is the OPERATOR's, not every administrator's) and D-432's counter-era gap ruled (NEVER drawn)
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/architecture/BIO_Membership_Architecture_v2.md` (§4.9: one RULED paragraph; §4.7: the bearer paragraph's heading,
+which still read PROVISIONAL after BOB #22 ruled it; §7's D-432 bullet: one RULED sentence; front matter: the Status
+sentence and two Incomplete bullets; Contents regenerated); `docs/development/QUEUE.md` (the BOB INBOX only: one entry);
+`docs/development/CLAIMS.md` (this block and one dated line on the REC-156 DELEGATION); `docs/DECIDED.md` (GENERATED,
+regenerated LAST).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, every kickoff, and every other design document.
+
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — M0-83: `tools/retirable.mjs`'s four defects (a suffixed lane title, a `--self` found in its own input, the caller never its lane's newest, other repositories' sessions judged here)
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11` (its instrument; CONDUCT #10 flips the
+cache row `running` and spawns nothing into it). Paths: `tools/retirable.mjs`; `bio-plane/test/retirable.test.mjs`
+(sections 4 and 6 CORRECTED with dated reasons, section 9 new, the NEGATIVE CONTROL record);
+`bio-plane/test/retirable.control.mjs` (six arms, A9–A14); `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals
+ONLY, and only to figures a green run prints); `docs/development/kickoffs/BOB.md` and `docs/development/kickoffs/CONDUCT.md`
+(the retirement-sweep command gains `--self-title`, and each sentence saying `laneOf` matches the bare form alone —
+kickoffs this change supersedes); `docs/development/QUEUE.md` and `docs/archive/ledgers/*` (M0-83's row marked done and
+archived by `node tools/ledger.mjs archive M0-83`); `docs/DECIDED.md` (GENERATED, regenerated LAST). FULL GATE PROFILE.
+
+**NOT CLAIMED:** every other path. The heartbeat's SKILL (outside this repository) needs no change: it passes `--self`
+with its own id, which is never in its listing, and holds no lane.
+
+**released: 2026-09-21 BOB #23** — landed in the same push as the code it covers, M0-83 archived in the same commit.
+
+## CLAIM 2026-09-21 BOB (#23) — SCHEDULER #7's group: D-145 and D-99 stated as M6's, DEC-70 folded into State Rules §5.4
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§5.4: one RULED paragraph; front matter: one Incomplete bullet
+for §1.2 and the Status sentence; Contents regenerated); `docs/development/ARCHIVE-FALLBACK.md` (front matter: two
+Incomplete bullets and the Status sentence; Contents regenerated); `docs/development/CLAIMS.md` (this block and one dated
+line on the SCHEDULER (#7) -> BOB DELEGATION); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT CLAIMED:** every other path; `DEBT.md`'s D-145 and D-99 rows are SCHEDULER's (LED-7).
+
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — SCHEDULER #7's Q2: D-355's two driver rules folded into `VERIFICATION.md`'s driver law
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/development/VERIFICATION.md` (the D-331 section: one sentence rewritten and one added; "Where the floor goes next":
+its 2026-07-31 list archived, its rule kept); `docs/archive/VERIFICATION-2026-09-19.md` (the cut list, appended
+verbatim under a dated heading); `docs/development/CLAIMS.md` (this block and one dated line on the SCHEDULER (#7) -> BOB
+DELEGATION); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT CLAIMED:** every other path.
+
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 SCHEDULER (#8) — the lane's standing claim on the build plan's own files; BOB #23's answers to SCHEDULER #7's group carried (D-145 and D-99 out of DEBT by the third door, REC-160 re-pointed at State Rules §5.4) and the cache replenished after M0-83
+
+claimed: 2026-09-21 by SCHEDULER #8, worktree `.claude/worktrees/wizardly-ishizaka-f2c7cf` (branch
+`claude/wizardly-ishizaka-f2c7cf`; base `origin/main` @ `81226cc1`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s
+ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+addressed to SCHEDULER that this lane acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #7 (`claude/brave-engelbart-1834cd`), archived by this session on 2026-09-21
+at ~21:28Z under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip
+`e92dece7`, an ancestor of `origin/main` @ `81226cc1`), after its own CronList read back empty by message (*"No
+scheduled jobs."*); its worktree removed by `git worktree remove` without force, 5,502,432 → 6,172,224 KiB free
+(+654 MiB; `du` read the tree at 663,280 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-21.**
+
+Commit 1: M0-83 was archived by BOB #23 in its own landing (`b399f9cf`), so the cache is replenished to 8 with M0-81 by
+`node tools/ledger.mjs refill`. BOB #23's rulings of SCHEDULER #7's Q1, Q3 and Q4 (`43cd0caf`), verified at their
+artifacts: D-145 (State Rules front matter, §1.2) and D-99 (`ARCHIVE-FALLBACK.md`'s front matter) CLOSED BY THE THIRD
+DOOR as M6's stated deferrals and archived; REC-160's `design:` line cites §5.4, which now carries DEC-70. BOB #23
+DISCHARGED the DELEGATION SCHEDULER (#7) -> BOB at `19a0efb6` with Q2 (`VERIFICATION.md`'s driver law); this commit
+was rebased onto it. 157 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 2): LED-7 batch S8-1** — D-28 CLOSED BY THE THIRD DOOR (`docs/architecture/README.md`
+has recorded the Conversion Plan's absence at the corpus index since `6ac72d0a`, 2026-07-25); D-32 CLOSED BY THE THIRD DOOR
+(`RETRIEVAL-SUBSTRATE.md`'s front matter says its tables are the probe harness's, never the shipped ops'); D-390 PLACED
+directly after D-389 (the frontier content arm's `IN` list binds up to `cap` variables against D-36's ceiling of about
+100). M0-95 and M0-96 cite `VERIFICATION.md`'s driver law, folded by BOB #23 at `19a0efb6`. D-162, D-38, D-45, D-53 and
+D-55 SENT to BOB as the DELEGATION SCHEDULER (#8) -> BOB below. 154 open DEBT rows remain.
+
+## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
+
+1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
+   (`affordances.mjs`) is ten NAMED-entity kinds (source, institution, office, movement, person, body, ordinance,
+   parcel, contract, fund), no concept, topic or theme, so two documents about one IDEA that name no shared entity have
+   no connection available. The row reads DOCTRINE (Bob), *raise as a DEC when M4 reaches the entity axis*, and the
+   entity axis is BUILT (`node tools/status.mjs 6`). The row names its own risk: a registry of themes is how a record
+   starts asserting relationships nobody can check. **The question:** take it to Bob now, or state it as a deferral in
+   the entity axis's home (Content Framework Part I §8) until a design makes a theme falsifiable?
+2. **D-38 AND D-45 — TWO LIMITATIONS SETTLED BY DECISION AND HOMED IN NO GOVERNED DESIGN.** `MILESTONES.md`'s
+   "Deliberately not scheduled" lists both (*settled by decision, default is to leave them*) and `WORK-PIPELINE.md` §3
+   names both as third-door rows; neither is stated in a construct's home (`MILESTONES.md` and `BIO_DATAPLANE_STATE.md`
+   are not governed). D-38: a project's citations live inline in its `bundle.md` under `INLINE_MAX` (1,048,576 B), and by
+   the row's 0.18.0 figures a maximum 10,000-item selection fits and the ceiling is met only cumulatively (~12,000
+   edges), refused `CITATION_TOO_LARGE` before anything is written (the two sites in `store.mjs` re-read today); Bob,
+   2026-07-25: leave it, and revisit when a real corpus approaches it. D-45: `promote` accepts a register entry whose bytes exist nowhere, ratify
+   refuses it (`gate.mjs`: `PLANE_MISSING_BYTES`, `PLANE_SIZE`), and `op=registeraudit` reports it on demand; default:
+   leave it. **The question:** fold each as a stated limitation into its construct's home — State Rules §4.3 (a project
+   bundle carries its citations inline) for D-38, and §6 or §7 (the invariant set; the violation-to-repair map) for
+   D-45 — or other sections you name?
+3. **D-53 — REPUTATION AND CREDENCE: BOTH OF THE ROW'S BLOCKERS ARE STALE; IS THE DOCTRINE STILL OPEN?** *Blocks S-11
+   step 5* is stale (`MILESTONES.md`: bulk release shipped in 0.34.0), and its *blocking finding* — references target a
+   bundle id and nothing finer — was overtaken by the content object (DEC-23; construct 4 BUILT, eight extent kinds).
+   Re-verified: no credence or reputation field or check in `bio-plane/src` or `bio-plane/checks`. What stands
+   is doctrine: Bob's framing (trust inherited from a credible source, added by a member's ratification, never
+   decreasing) against Tech Arch v10's *No transitive trust* and Design Requirements §4 (reputation accrues with no
+   authority managing it). **The question:** carry it to Bob, or state it as a deferral, and in which home?
+4. **D-55 — BOB #17's BOUNDED DESIGN ACT, WHICH D-64 WAITS ON.** BOB #17 narrowed it on 2026-09-19: per-origin data
+   (`site_assets`), the join (`site_asset_refs`) and sub-document addressing (`content`) exist; what is missing is an
+   AUTHORITY value at asset or content grain and the rule that a content row over third-party bytes takes that origin's
+   authority. Its one untraced link — whether a content row can be minted over subresource bytes at all (`image` with
+   `cited_as='bytes'` the candidate) and whether it joins `site_asset_refs` — is NOT re-traced here. D-64 (a
+   client-rendered page captured as evidence, M2) reads BLOCKED on it. **The question:** design it now, the link traced
+   first (by a worker through CONDUCT if you want one), or state it as a deferral in `CLIENT-RENDERED.md` until a
+   rendered capture is used as evidence?
+
+**open as of 2026-09-21** — sent to BOB #23 by message; each row carries a dated SENT note in `DEBT.md`.
+
+## CLAIM 2026-09-21 BOB (#23) — the handoff to BOB #24, written as a CHECKPOINT while live
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~21:30Z), `docs/DECIDED.md` (GENERATED,
+regenerated LAST), and this block.
+**released: 2026-09-21 BOB #23** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — Bob's ruling: a session is refreshed past 70% context, not 60%
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths: `CLAUDE.md` (§4's refresh
+sentence only), `docs/archive/CLAUDE-2026-09-18.md` (the receipt, appended), `docs/development/kickoffs/BOB.md` (opening
+step 4's two figures), `docs/development/kickoffs/CONDUCT.md` (step 4's figure), `docs/development/ORCHESTRATION.md` (the
+standing lanes' figure), `docs/development/kickoffs/BOB-NEXT.md` (its figures and one line), `docs/DECIDED.md`
+(GENERATED, regenerated LAST), and this block. Kickoffs this ruling supersedes, corrected in the same landing.
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
 
 ## CLAIM 2026-09-21 RECORD (D-436 — THE PRODUCING GROUP IS ONE RECORDED VALUE PER INSTANCE: no bundle this plane writes names a literal group)
 

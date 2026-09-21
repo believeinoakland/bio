@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-409's NEGATIVE CONTROL DRIVER — nine arms plus an opening and closing baseline — over
+/* D-409's NEGATIVE CONTROL DRIVER — ten arms plus an opening and closing baseline — over
  * `tools/owed.mjs` and `bio-plane/test/owed.test.mjs`.
  *
  *   node bio-plane/test/owed.control.mjs        (from the repo root)
@@ -71,10 +71,14 @@ const suiteRun = () => {
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   const tally = out.match(/owed: (\d+) pass, (\d+) fail/);
   const failed = [...out.matchAll(/^ {2}FAIL {2}(.+)$/gm)].map((m) => m[1]);
+  const passed = [...out.matchAll(/^ {2}PASS {2}(.+)$/gm)].map((m) => m[1]);
   return { out, pass: tally ? +tally[1] : -1, fail: tally ? +tally[2] : -1,
-           reachedFoot: !!tally, status: r.status, failed };
+           reachedFoot: !!tally, status: r.status, failed, passed };
 };
 const broke = (s, frag) => s.failed.some((l) => l.includes(frag));
+/* HELD IS A PASS LINE THAT NAMES IT, NEVER A MISSING FAIL LINE (D-435, 2026-09-21): a fragment that
+   names no assertion at all is absent from the FAIL lines too, so "did not fail" costs nothing. */
+const held = (s, frag) => s.passed.some((l) => l.includes(frag));
 /* Downstream of nothing — an arm that takes this down moved a second variable. */
 const collateral = (s) => broke(s, "the owner and residue patterns are declared once");
 
@@ -89,8 +93,10 @@ console.log("\n--- ARM BASELINE · nothing armed ---");
 const ARMS = [
   { id: "A1", title: "the owner test matches the row BODY again — the measured 58-item defect, "
                    + "where every row QUOTING Bob was read as assigning work to him",
-    from: "    const owned = owner.test(r.disposition);",
-    to:   "    const owned = owner.test(r.disposition) || owner.test(r.body);",
+    /* RE-AIMED 2026-09-21 (D-435, BOB #22): the line it patched gained the discharge test. The arm
+       still adds the BODY to the owner test and leaves the discharge in place — one variable, as before. */
+    from: "    const owned = owner.test(r.disposition) && !discharge.test(r.disposition);",
+    to:   "    const owned = (owner.test(r.disposition) || owner.test(r.body)) && !discharge.test(r.disposition);",
     mustBreak: "A ROW THAT ONLY QUOTES BOB IN ITS BODY IS NOT OWED" },
 
   { id: "A2", title: "a bare `RESIDUE` marker again — the measured 28-item defect, where prose "
@@ -149,6 +155,19 @@ const ARMS = [
     from: "  + String.raw`|(?i:is )${lane}(?i:'s)` + POSSESSIVE_ENDS);",
     to:   "  + String.raw`|(?i:is )${lane}(?i:'s)\\b`);",
     mustBreak: "A POSSESSIVE FOLLOWED BY A NOUN IS NOT AN ASSIGNMENT" },
+
+  { id: "A10", title: "the discharge ignored again — the pre-D-435 line, where an OPEN row that once said "
+                    + "ROUTED TO BOB owed BOB forever, whatever a later sentence in its cell said (D-134)",
+    from: "    const owned = owner.test(r.disposition) && !discharge.test(r.disposition);",
+    to:   "    const owned = owner.test(r.disposition);",
+    mustBreak: "A ROW CARRYING AN OWNER PHRASE AND A DISCHARGE FOR THE LANE IS NOT ATTRIBUTED",
+    /* The per-lane arm's CONDUCT half fails WITH it by construction — it asserts CONDUCT's discharge
+       works, which no row can show with the discharge gone — so it is declared here, not discovered.
+       Every OTHER D-435 assertion must HOLD, and says so as a PASS line. */
+    alsoBreak: "...and it IS discharged for CONDUCT",
+    holds: ["OVER-STRICTNESS: the same disposition WITHOUT the discharge",
+            "A DISCHARGE IS PER-LANE — a row discharged for CONDUCT",
+            "BOB THE PERSON DISCHARGES NOTHING"] },
 ];
 
 for (const a of ARMS) {
@@ -158,6 +177,7 @@ for (const a of ARMS) {
   const s = suiteRun();
   t(`${a.id} · the suite FAILS at "${a.mustBreak.slice(0, 48)}…"`, broke(s, a.mustBreak), true);
   if (a.alsoBreak) t(`${a.id} · ...and "${a.alsoBreak.slice(0, 36)}…" fails with it`, broke(s, a.alsoBreak), true);
+  for (const h of a.holds || []) t(`${a.id} · ...while "${h.slice(0, 40)}…" HOLDS`, held(s, h), true);
   t(`${a.id} · ...and the suite survived to report it`, s.reachedFoot, true);
   t(`${a.id} · ...and the failure is not collateral`, collateral(s), false);
   t(`${a.id} · RESTORED byte-identically`, restore(), true);

@@ -22,100 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-21 · BOB #22 · `tools/decided.mjs` CANNOT SEE MOST OF BOB'S ANSWERED DECISIONS, AND IT HAS COST A RE-ASK (M-85).**
-Design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header, which calls the index a
-FLOOR. Verified at the code: `MARKER` in `tools/decided.mjs` is an uppercase-only word list, while `DECISIONS.md` records
-an answer in a lowercase `decided:` field, so an entry whose `response:` carries no uppercase marker word is not indexed.
-13 of 19 entries are not filed under their own id, 11 of them answered or enacted; `decided.mjs "severance"` returns
-DEC-29 and DEC-72, not DEC-70, which rules exactly that. SCHEDULER #5 sent D-280 (c) to BOB eleven days after Bob ruled
-it, and BOB #22 was one step from ruling the opposite. `CLAUDE.md` §1 names this tool the one source for what has been
-decided, so place it first among the instruments. Sequence with D-341 (same file): one file, one suite, one gate.
-
-1. **M0 (FULL GATE PROFILE):** a `DECISIONS.md` entry that carries a `decided:` line is indexed as ONE ruling under its own
-   `DEC-n` (text from `response:`, date from `decided:`), beside the prose `MARKER` scan and never replacing it; an `open`
-   or `deferred` entry is not indexed as a ruling. **Accepts when** every answered or enacted `### DEC-n` heading is
-   returned by `decided.mjs "DEC-n"` (a printed count equality against the file's own headings), `decided.mjs
-   "severance"` returns DEC-70, and a deferred entry is not returned. **The cheap defeat to refuse:** lower-casing
-   `MARKER`, which floods the index with every prose *decided*, so an arm asserts the index grows only by the entries it
-   did not already file and files none twice. NEGATIVE CONTROL: drop the field arm, and the equality fails naming DEC-70.
-
-**2026-09-21 · BOB #22 · `op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS — the gap
-DEC-70 leaves at its own pin.** Design: `docs/development/DECISIONS.md` DEC-70 (Bob, 2026-09-10): *severance discharges
-SUPPORT, never CONNECTION*, and *the connection INFORMS, never binds*. Verified at the code: `Store#reevaluations` reads
-legs from `inquiry_basis`, which drops `status`, and its edition cause says *"this leg rests on edition N"* for every
-leg; nothing in the answer says a leg was withdrawn. `#refEdgeSevered` is the one predicate, and `restingOn` already
-publishes a status from it. D-280 closed this commit; nothing is superseded.
-
-1. **RECORD (M9; I3 additive, the integrator mints the IC):** each obligation leg carries `status` (`severed` |
-   `confirmed`) from `#refEdgeSevered(bundle, target)`, and a severed leg's edition detail says the withdrawn leg NAMED
-   edition N rather than resting on it. The obligation still fires (DEC-70) and derives nothing from strength. **Accepts
-   when** a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a
-   confirmed leg unchanged. **The cheap defeat to refuse:** filtering the severed leg out, which reverses DEC-70, so
-   `d280-strengthbar.test.mjs` SITE (c) stays green; an unrecorded or unrecognised `status` reads `confirmed`. NEGATIVE
-   CONTROL: drop the status, and the severed-leg arm fails by name.
-
-**2026-09-21 · BOB #22 · M0-83 GAINS ITEM (4): `tools/retirable.mjs` JUDGES OTHER REPOSITORIES' SESSIONS AGAINST BIO'S
-REMOTES** (measured by BOB #21, BOB-NEXT §3.4). Design: M0-83's own. Fed the account's whole `list_sessions`, it called
-24 Supervisor sessions RETIRABLE (their cwd no longer exists) and 15 Alpha-Pipeline sessions HOLD; BOB #22's sweep fed
-BIO sessions only, by hand, which is this fix done manually. Amends M0-83's scope; supersedes nothing.
-
-1. **M0-83 item (4) (owner BOB; FULL GATE PROFILE):** judge only sessions whose `cwd` resolves inside this repository (the
-   primary checkout or `.claude/worktrees/*`) and report the rest OUT OF SCOPE, never RETIRABLE, HOLD or PROTECTED, with
-   their count printed. **Accepts when** an input mixing a BIO session, another repository's and a vanished cwd judges the
-   first and names the other two out of scope. **The cheap defeat to refuse:** a prefix match on the path, so an arm feeds
-   a sibling directory sharing the prefix and asserts it is out of scope. NEGATIVE CONTROL: drop the scope test, and the
-   other-repository arm fails by name.
-
-**2026-09-21 · BOB #22 · D-260 RULED — AN INSTANCE MAY HOLD ONE ORGANISATION-PRINCIPAL `ai` CREDENTIAL AND RESUMES ONLY
-THE RUNS IT OPENED (SCHEDULER (#5)'s Q3).** Design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260
-paragraph (this commit); the deploy half is `BIO_Distribution_v0_1.md` §6's bullet. Verified at the code: a run's
-principal is stamped `principal/tokenId` at the open (`index.mjs`, D-199 (4)); only that principal ticks or closes it
-(REC-152, C-22.12); a machine credential stamps an empty actor, so an organisation key may open a run within its scope;
-`AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`. Place D-260 under its own id with the dispatch fix
-on its row; a member-principal run's non-resumption is the stated limitation in that paragraph.
-
-1. **RECORD with FLEET (M9; I8, which leaves PROVISIONAL when this lands):** FL-4's wake dispatches a woken run to
-   `agent-worker` with the instance's organisation credential ONLY when that credential's stamped principal equals the
-   run's `principal_plane`, and otherwise logs that it did not; the dispatch hands `claude_accounts` its instance level.
-   **Accepts when** a run the instance credential opened resumes after its capture completes, and a member's run is not
-   dispatched and says so. **The cheap defeat to refuse:** dispatching every woken run and leaning on REC-152 to refuse
-   the tick, so the arm asserts the member's run is never DISPATCHED.
-2. **DIST, after 1:** install and update carry that credential as a secret the way `DAEMON_TOKEN` is carried, never in the
-   record, denylisted by `tokens.mjs` on publication.
-
-**2026-09-21 · BOB #22 · D-293 RULED — THE PUSH GUARD NEVER RUNS `tools/gates.mjs`, AND IS TO REFUSE A TREE WHOSE
-RECORDED VERDICT IS RED, WHICH IS NOT BUILT (SCHEDULER (#5)'s Q4).** Design: `docs/development/VERIFICATION.md`, the push-guard section, which
-already states the first half: the hook *"runs `decided.mjs --check` and REFUSES a stale push"*, nothing more. THIS ENTRY
-CARRIES THE SECOND HALF until it is built, because that file is at its reading budget (24,567 of 24,576 B) and its
-register block is quoted by `register-grammar.control.mjs`'s arms, so a cut there is its owner's act: the builder adds
-the refusal's one line in the landing that builds it. Measured (M-85): a full gate takes ~25 minutes and `main` took 48
-first-parent commits from 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes, so a push-time gate would rebase and
-re-gate without converging. Place D-293 under its own id, owner M0.
-
-1. **M0 (FULL GATE PROFILE):** `gates.mjs` records its verdict and class keyed by the tree it measured, only when that tree
-   was CLEAN, untracked under the git common dir; the guard refuses a push whose tip tree carries a RED record, naming it,
-   and says nothing when none exists. **Accepts when** a RED gate then a push of that tree is refused by name, and a GREEN,
-   an unrecorded and a changed tree each pass. **The cheap defeat to refuse:** keying on the commit sha, which an amend of
-   the message alone evades, so the arm amends and asserts the refusal holds. NEGATIVE CONTROL: drop the guard's lookup,
-   and the RED-then-push arm fails by name.
-
-**2026-09-21 · BOB #22 · D-195'S SHARED-ORIGIN DISCLOSURE AT THE MEMBER'S OWN ELICITATION — TWO ITEMS, IN ORDER (SCHEDULER
-(#5)'s Q1, RULED).** Design: `docs/development/INVESTIGATIVE-SESSION.md` §12 clause (c) (this commit). Verified at the
-code: UI-27's read-back (`elicFalsifier`) prints *"Your answer fails only if ALL of these fail"* and reads no
-independence (`versionstrength` and `independence` occur 0 times in `civicos-ui/app.html`); `Store#independenceOf` has
-two consumers, `op=suggest`'s check and `op=versionstrength`'s read of a STORED version. Place after UI-74, which shows
-the same fact at the accept ceremony; whichever lands second reuses the first's rendering.
-
-1. **RECORD (M9; I3 additive, an IC):** a read returning `#independenceOf` for a PROPOSED partition over an inquiry's
-   existing legs, gated as `op=versionstrength` is, writing nothing, `checked`/`complete` as they already are. **Accepts
-   when** two parts sharing a capture read as sharing an origin, independent parts read clean, a one-part partition reads
-   `checked: false`, and the answer equals `op=versionstrength`'s once the partition is written. **The cheap defeat to
-   refuse:** a second derivation that agrees today, so a control swaps in a copy differing in one branch and fails by name.
-2. **UI (M9), after 1:** the read-back names each shared origin between the parts it lists, once (DEC-69), before the
-   answers are written; it prefills nothing, refuses nothing, shows no strength and no AND/OR word. **Accepts when** two
-   correlated reasons show their origin and the member's answers are written unchanged. **The cheap defeat to refuse:**
-   blocking or reordering the answers on a shared origin, which turns an informing fact into a gate.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
@@ -172,6 +78,37 @@ scope: `ALREADY_A_CASE_MEMBER` compares the RELATIONSHIP, as `NOT_CONCLUDED` doe
 accepts-when: REC-135's own probe path — conclude, publish, withdraw, conclude on another claim, publish — reaches a SECOND edition recording the new claim; publishing unchanged still refuses `ALREADY_A_CASE_MEMBER`. How a liar passes it: dropping the refusal, so the unchanged arm must still refuse. NEGATIVE CONTROL: pin on `bundle_sha` alone again, and the second-edition arm fails by name.
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 
+### M0-97 · queued — **`tools/decided.mjs` CANNOT SEE MOST OF BOB'S ANSWERED DECISIONS, AND IT HAS COST A RE-ASK (M-85).** `MARKER` is an uppercase-only word list, while `DECISIONS.md` records an answer in a lowercase `decided:` field: 13 of 19 entries are not filed under their own id, 11 of them answered or enacted, and `decided.mjs "severance"` returns DEC-29 and DEC-72, not DEC-70, which rules it. SCHEDULER #5 sent D-280 (c) to BOB eleven days after Bob ruled it. — owner M0.
+order: FIRST among the instruments, directly after D-435 (in flight): `CLAUDE.md` §1 names this tool the one source for what has been decided (BOB #22, 2026-09-21; placed by SCHEDULER #7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header, which calls the index a FLOOR: *"A RULING WITH NO MARKER is invisible here."*
+depends-on: none. **Take with D-341**, the same file: one file, one suite, one gate (BOB #22).
+scope: a `DECISIONS.md` entry carrying a `decided:` line is indexed as ONE ruling under its own `DEC-n` (text from `response:`, date from `decided:`), beside the prose `MARKER` scan and never replacing it; an `open` or `deferred` entry is not a ruling. **FULL GATE PROFILE** (`tools/`).
+accepts-when: every answered or enacted `### DEC-n` is returned by `decided.mjs "DEC-n"`, a printed count equality against the file's own headings; `"severance"` returns DEC-70; a deferred entry is not returned. How a liar passes it: lower-casing `MARKER`, which floods the index, so an arm asserts the index grows only by entries it did not file and files none twice. NEGATIVE CONTROL: drop the field arm, and the equality fails naming DEC-70.
+added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
+### D-341 · queued — **`tools/decided.mjs` GLUES AN APPENDED CLAIM'S HEADER ONTO THE PREVIOUS RULING, SO THE INDEX FILES ANOTHER AREA'S RULING AS CARRYING THE NEW CLAIM.** `scan()` joins a matched line under 200 chars with the next three lines and stops at nothing: `docs/DECIDED.md` carries an IC-82 ruling ending in a `## CLAIM 2026-09-14 RECORD (REC-80 …` header today (re-measured 2026-09-21). — owner M0.
+order: directly after M0-97, the same file: one file, one suite, one gate (BOB #22, 2026-09-21); the index every session is told to trust answers with half another block's header (SCHEDULER #7, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header on quoting a wrapped ruling from its joined window.
+depends-on: none. Take with M0-97.
+scope: the row's FIX: the joiner stops at a heading line (`^#`) or a blank line. **FULL GATE PROFILE** (`tools/`).
+accepts-when: a regenerated `docs/DECIDED.md` carries no `## CLAIM` text inside any ruling, and a hand-wrapped ruling still quotes whole. How a liar passes it: stopping at every line break, so the wrapped-ruling arm must pass. NEGATIVE CONTROL: an arm appends a claim after a trailing `released:` line; drop the stop, and it fails by name.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-341's DEBT row of 2026-09-14; keeps its `D-` id).
+
+### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
+order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), enacting BOB #18.s ruling in `kickoffs/BOB.md` "Spawning and retiring lanes": a stood-down, duplicate or retired session RELEASES the lane name.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT lives in the repo where a suite drives it, the ACT stays in the harness.
+scope: the OCCUPANCY half only — before a chip is filed, read the session list and REFUSE if a live session already holds the lane (by `scheduledTaskId` or title). Put it in `tools/` as a pure function over a session listing, so a suite drives it. **MUST NOT TOUCH:** the `conduct-8` scheduled task.s definition lives OUTSIDE this repo and is the operator.s — named to them, never changed from here. **FULL GATE PROFILE** (`tools/` is not `docs/`): check disk first.
+accepts-when: given a listing with a live session bound to a lane, the judgement REFUSES it and names the occupant; given the same listing with that session stood down, it admits. Driven from a FIXTURE listing, never the live harness. How a liar passes it: matching on title alone — so the arm feeds a session whose title differs and whose `scheduledTaskId` matches.
+NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is admitted, failing by name.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.
@@ -181,5 +118,5 @@ added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; `
 | RECORD | PL-16 | the published case (IS-8, M10) — **RESHAPED BY DEC-72, not merely blocked.** Its finding-side stamping and its NO-case-level-bar assumption are both overtaken; `CASE-AS-PRODUCTION.md` and the CASE-1..CASE-6 rows are the live decomposition | **Bob** (DEC-33's ceremony deferral) **AND now DEC-72's redesign.** Read the design doc before touching it — supersession is never silent, so the row keeps its id and names what overtook it |
 | **DIST** | DS-1 | D-115 — the installer installs the FLEET | **DONE 2026-09-19 — THIS TABLE WAS THE RECORD THAT WAS WRONG, corrected here with the reason (DIST-5's own act).** Landed at `8decf468` ("D-297: the installer installs the FLEET — verified, templated, degrading per member, on install AND update"). DIST #2 confirmed at its touch; VERIFIED INDEPENDENTLY BY SCHEDULER #2 AT THE CODE, not from either row: `8decf468` is an ancestor of `origin/main`, and `newgroup/src/index.mjs` carries a section headed "the fleet (IC-82/D-297)" and names `fleet` **27 times** — D-297's own opening measurement was that this file mentioned it **zero** times, which is the evidence from D-297 itself that DIST-5's accepts-when demanded |
 | **DIST** | DS-2 | D-116 — version authority spans the fleet | **DONE 2026-09-19**, landed at `da3d4f17` ("DS-2: the version authority spans the fleet — and five of six sites disagreed with it"). VERIFIED BY SCHEDULER #2 AT THE CODE: ancestor of `origin/main`; `bio-plane/scripts/resolve-version.mjs` CONSUMES FLEET's own `discoverMembers` rather than re-implementing it, so the set checked cannot drift from the set built, and takes `bio-plane/package.json` as THE authority; `tools/release-assemble.mjs` refuses `VERSION_SKEW` and `VERSION_DISAGREES`; `resolveversion.test.mjs` arms BEHIND (ARM 2) and AHEAD (ARM 3) — the direction a one-sided check misses |
-| **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
-| FLEET | FL-6 | the Claude-account cascade at runtime | **D-260 (the plane's caller does not exist)**; FL-6's member half LANDED at `f5ed2bfa` (2026-09-12) and DS-3's config half at `2de6f25f` — DIST #3 and FLEET #3, verified by SCHEDULER #4 |
+| **DIST** | DS-3 | the account cascade config (instance-level token; minting is a MEMBER act) | **D-260, PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling (its item 2 is DIST's deploy half).** Before that: **D-260 — NARROWED, and no longer blocked on DS-1 or unread** (DIST #3, then FLEET #3, 2026-09-21; verified at the code by SCHEDULER #4): its CONFIG half LANDED at `2de6f25f` (2026-09-12 — `instanceClaudeStatus`/`instanceClaudeToken` in `tokens.mjs`, the deploy sending and keeping the secret, the denylist's revocation-by-publication). Its acceptance — a configured instance token resolving at FL-6's third level — cannot be met by ANY configuration until the plane's calling side exists: `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`, and `instanceClaudeToken` has no non-test caller. The dispatch fix is named on D-260. The member and project token surfaces are ABSENT, a design question DIST #3 sent to BOB |
+| FLEET | FL-6 | the Claude-account cascade at runtime | **D-260 (the plane's caller does not exist), PLACED 2026-09-21 in `BACKLOG.md` on BOB #22's ruling**; FL-6's member half LANDED at `f5ed2bfa` (2026-09-12) and DS-3's config half at `2de6f25f` — DIST #3 and FLEET #3, verified by SCHEDULER #4 |

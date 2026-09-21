@@ -1,83 +1,75 @@
-# BOB — resume here. Written 2026-09-21 by BOB #21 for BOB #22, in the SAME Claude Code account.
+# BOB — resume here. Written 2026-09-21 by BOB #23 for BOB #24, in the SAME Claude Code account.
 
 Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this.
-**Everything below is a POINTER measured at ~18:50Z 2026-09-21; re-measure before resting anything on it.**
+**Everything below is a POINTER measured at ~21:30Z 2026-09-21; re-measure before resting anything on it.** Written as a
+CHECKPOINT while BOB #23 was live at 52% context: if it is still live when you start, it is your predecessor to archive,
+not a peer.
 
 ## 0. YOUR FIRST ACTS
 
-1. **Archive BOB #21** (`local_41a0aa5f-2801-4453-85a4-f12719b47a2c`) under D-398's three conditions, re-checked
-   AT THE MOMENT YOU ACT. Its worktree `.claude/worktrees/bob-21` (~647 MB with three packages' `node_modules`) was
-   made by the harness's `EnterWorktree` and reads **locked** in `git worktree list`: if `archive_session` leaves it,
-   `git worktree unlock` then `git worktree remove`, literal paths only. It deletes its crons from its OWN `CronList`
-   before it says it is ready; confirm by message to "BOB #21", never by ids written here.
-2. **Arm your self-wake and its 5-day renewal WITH THE SELF-AUDIT IN THE PROMPT** (rule 12(a)), including *what is my
-   context now*.
-3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` for every lane plus the weekly figure; sweep with
-   `retirable.mjs`, ONE archive per call. **Archive only BIO sessions**: it calls 24 Supervisor sessions RETIRABLE
-   (their cwd no longer exists) and 15 Alpha-Pipeline sessions HOLD. Both are other projects of Bob's, judged against
-   BIO's remotes, which is §3.4's defect.
-4. **CONDUCT #10**: its chip (`task_511bbaf1`, filed ~18:30Z after occupancy and currency passed) waits on Bob's click.
-   If no live CONDUCT #10 exists, the chip is still pending, so never file a second one.
+1. **Archive BOB #23** (`local_277a4066-4985-4f54-ab09-5839fd69d3a2`) under D-398's three conditions, re-checked AT THE
+   MOMENT YOU ACT. Its worktree `.claude/worktrees/ecstatic-stonebraker-746e11` is the app's own for that session, so
+   `archive_session` may remove it; if it does not, `git worktree remove` with the literal path. It holds three packages'
+   `node_modules` (648 MiB measured at 21:29Z). It deletes its crons from its OWN `CronList` before it says it is ready (it
+   armed a 2-hourly self-wake and a 5-day renewal); confirm by message to "BOB #23", never by ids written anywhere.
+2. **Arm your self-wake and its 5-day renewal WITH THE SELF-AUDIT IN THE PROMPT** (rule 12(a)): context, occupancy,
+   currency, blockers retried in the narrowest form, refusals read literally, superseded kickoffs corrected; then
+   `ReadNotifications`; then the agenda.
+3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` for every lane plus the weekly figure. **Sweep with the
+   NEW `retirable.mjs` (M0-83):** feed `list_sessions` VERBATIM, whole — other repositories now read OUT OF SCOPE — with
+   `--self <your id> --self-title "BOB #24"`. It REFUSES (exit 3) a `--self` found in its input, so never hand-build the
+   listing with your own row in it; BOB #23 did exactly that at its opening.
 
-## 1. THE ESTATE, measured ~18:50Z
+## 1. THE ESTATE, measured ~21:30Z
 
-- CONDUCT #9 is at 60%. It holds D-254 and REC-156 as subagents and only forwards their reports; D-432 is parked
-  ungated on `conduct9/d432-integration`, and D-355 is finished at `7aca6b93`. CONDUCT-NEXT is on main (`6dacae09`).
-  SCHEDULER #6 is up and running LED-7 batches (15 by 18:45Z). FLEET #3 checkpointed at 54% (FLEET-NEXT rewritten).
-  DIST #3 was at 46% at ~18:00Z, and 0.70.0's batch is owed 2026-09-22.
-- Weekly all-models: **42% at 18:50Z** (32% at ~16:50Z, per BOB #20), resetting 2026-09-26 11:00Z. **Disk: 3.7 GiB free at
-  18:49Z.** A full gate stops under ~4 GiB (CONDUCT's practice). BOB #21 stopped its own at 3.8 GiB, then waited on a
-  bounded `df` watch before restarting.
+- **SCHEDULER #7 is refreshing** (56%); BOB #23 filed the **SCHEDULER #8 chip** (task `task_37fec5e0`) after the three
+  checks (line 1, currency, occupancy). If #8 is up, send it the shas of §2's group rulings: its owed act 1 moves D-145 and
+  D-99 out of DEBT by their doors and re-points REC-160's design at State Rules §5.4.
+- CONDUCT #10 56% (three workers live: D-436, M0-79, D-434, plus REC-157), expecting to cross the refresh line while integrating: it
+  will ask this lane for the **CONDUCT #11 chip**. DIST #3 57% and FLEET #3 58%, both idle; each asks for its successor
+  past 70%. Check line 1, currency and occupancy before every chip, and title it EXACTLY `<LANE> #<n>`.
+- Weekly all models **51% at 21:30Z** (48% at 20:36Z), resetting 2026-09-26 11:00Z. Disk **5.92 GiB** at 21:29Z.
 
-## 2. WHAT BOB #21 DID — on `main`, verified from the remote
+## 2. WHAT BOB #23 DID — on `main`, verified from the remote
 
-- **M0-86, THE MAP CUT** (`57904bcd`): the map went from 49,148 B to 40,100 B, with 9,052 B of headroom. Nine claim
-  texts were cut, each old text VERBATIM in its `note` (9 of 9 checked against the old JSON). BOB #19's prepared texts
-  took four corrections at the code: 8.claim was FALSE, and its `none` probe was a false witness now replaced by a
-  `hit`; 11.machine-fence overclaimed; 10.lead names REC-131's three ops; and 11.cascade was split, with
-  **11.cascade-sources** ABSENT (no level has a source the plane delivers; the plane never calls AGENT_WORKER, D-260).
-  **12.accept** is ABSENT (no surface calls op=versionaccept, UI-74). The changed probes' negative control armed 4/4.
-  **The convention now: a claim's text states status in one short paragraph, and history goes in its note.** CONDUCT
-  #10 was told how D-432's 3.census review fits.
-- **corpuscheck's pair pin** (`28a55a3a`): 8.claim now cites §7.1 item 9, a third evaluated pair. It was corrected
-  with a dated reason, and its negative control fails exactly the two corrected assertions.
-- **Landing 2** (`b6a14392`): **I10's five exports are STABLE**, and FLEET folded the two precisions (`89ff4592`).
-  **D-339 item 3 is RULED** (CAPTURE-SCALING §Job one): a reused part names its source capture, and a pre-build reuse
-  reads UNDETERMINED. **D-182 is RULED** (Case Making §2): Roadmap §8's words for tiers 1–3, plus UNDETERMINED, never
-  a default of 1. **D-353 is CLOSED** by the third door, its limitation stated in VERIFICATION.md.
-- CONDUCT #10's chip is filed. BOB #20 was archived and its worktree removed (disk 5.46 GiB to 6.70 GiB).
+- **`c31b8f60` — CONDUCT #10's Q3 RULED:** `governorconfig` is the OPERATOR's act (founder's session + ADMIN_TOKEN bearer),
+  not an administrator's (Membership v2 §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE*): a host's configured appetite
+  outranks the hosting account's `GOVERNOR_APPETITE_PER_MIN`, and §4.8 keeps governance off the machine. Its build is
+  **REC-162** (placed after REC-159). Same commit: **D-432's counter-era ids are NEVER redrawn** (§7), and §4.7's bearer
+  paragraph plus two front-matter lines no longer read PROVISIONAL after BOB #22's ruling.
+- **`b399f9cf` — M0-83 BUILT and archived** (FULL gate 267/267 · 16286; control 85/0, arms A9–A14): suffixed lane titles,
+  UNKNOWN-SELF, `--self-title`, lanes ordered by instance number, and repository scope by path segments. `81226cc1`:
+  `REGISTER_FLOOR` arms 1553 from that print. `BOB.md` and `CONDUCT.md` sweep commands corrected in the same landing.
+- **`43cd0caf` + `19a0efb6` — SCHEDULER #7's four questions RULED:** D-145 and D-99 are M6's, designed together when M6 is
+  taken up (State Rules front matter §1.2; `ARCHIVE-FALLBACK.md`); DEC-70 folded into State Rules §5.4; D-355's two
+  driver rules folded into `VERIFICATION.md`'s D-331 section (24,561 of 24,576 B — the room came from archiving the
+  2026-07-31 floor plan's list). The DELEGATION closes on ONE DISCHARGED line.
+- **Bob RULED the refresh line at 70%, not 60%** (2026-09-21, verbatim in `docs/archive/CLAUDE-2026-09-18.md`); enacted in
+  `CLAUDE.md` §4, `BOB.md`, `CONDUCT.md` and `ORCHESTRATION.md`, and told to every live lane. Keep reporting the weekly figure.
+- SCHEDULER #7's drain of BOB #22's six entries VERIFIED row by row. BOB #22 archived and its worktree removed (+654 MiB);
+  four heartbeat run-sessions archived.
 
 ## 3. OWED — in this order
 
-1. **Q3, WITH BOB**, put to him in his conversation 2026-09-21 (SCHEDULER #6's Q3; `INVESTIGATIVE-SESSION.md` §7.1,
-   "THE ONE THING RUNNING PROVISIONALLY"): should a case rest on a NO-PROJECT conclusion? BOB recommended keeping the
-   disclosed disjunction. When he answers, write it into that paragraph and tell SCHEDULER. Do not re-ask.
-2. **SCHEDULER #6's Q1 (D-325)**: recommended a stated LIMITATION, per BOB #17's SUFFICIENT ruling. First find a
-   design home that names the store namespace. None under `docs/architecture/` names `scopeFor`, and CLAUDE.md §5
-   states the rule.
-3. **SCHEDULER #5's DELEGATION to BOB** (`CLAIMS.md`): fold 1 (Membership §8.1, D-52's narrowing), fold 2 (a Content
-   Framework Incomplete bullet naming §12.1 for D-80), and questions Q1 (D-195 at UI-27's elicitation), Q2 (D-280
-   (c)), Q3 (D-260, an instance-held `ai` credential) and Q4 (D-293, a gates pre-push hook). Folds 3 and 4 are done.
-4. **D-435** (the `owed.mjs` release fix, owner BOB) and **M0-83** (the `retirable.mjs` trio), plus a FOURTH defect
-   BOB #21 measured and has NOT routed yet. `retirable` judges sessions of OTHER repositories against BIO's remotes.
-   **FIX, NAMED:** judge only sessions whose cwd resolves inside this repository (the primary checkout or
-   `.claude/worktrees/*`), and report the rest as OUT OF SCOPE, never RETIRABLE or HOLD. Read M0-83's row first, then
-   fold the defect in through the inbox.
-5. **With Bob** (carried; do not re-ask): D-148, D-149, where a member's or project's Claude key would live (now
-   11.cascade-sources' text), MK-7's provisionals, and M0-85.
+1. **Q3, WITH BOB, still unanswered** (put to him 2026-09-21; `INVESTIGATIVE-SESSION.md` §7.1, "THE ONE THING RUNNING
+   PROVISIONALLY"): should a case rest on a NO-PROJECT conclusion? BOB recommends keeping the disclosed disjunction. When
+   he answers, write it into that paragraph, add a dated line to the SCHEDULER (#6) -> BOB DELEGATION, and tell
+   SCHEDULER. Do not re-ask.
+2. **The chips** as lanes refresh (§1), and SCHEDULER #8's shas if BOB #23 has not sent them.
+3. **Whatever SCHEDULER #8 routes here**: its next group, and any DESIGN GAP a landing raises.
+4. **With Bob** (carried; do not re-ask): D-148, D-149, where a member's or project's Claude key would live
+   (11.cascade-sources' text), MK-7's provisionals, and M0-85.
 
-## 4. HOW BOB #21 WAS WRONG — data points (rule 12(c))
+## 4. HOW BOB #23 WAS WRONG — data points (rule 12(c))
 
-- **A rebase resolution moved another block's state line.** Two blocks appended at one spot, and git counted the
-  shared trailing `open as of` line as common, so reordering the hunks put it under BOB's claim. SCHEDULER #6's
-  DELEGATION was left with no state line, and the register fails that. It was caught before the push by reading the
-  block's end and restored in landing 2. After an append conflict, check every block's state line.
-- **Who else reads it, asked too late**: corpuscheck pins the map's cited pairs, and the gate found it after 11
-  minutes. Grep the suites for what a change feeds (`statusAuthority`) BEFORE gating.
-- **A worktree-isolated session's guard refuses `awk` programs and shell arithmetic in compound commands.** Use node
-  scripts, and keep commands plain.
-- **52% context at the landing.** Reading the map, QUEUE and VERIFICATION whole, and three rebases as main moved,
-  cost the most.
+- **It fed its opening sweep a hand-built listing that included its OWN row** — the exact shape M0-83 now refuses.
+- **It added a second `open as of` line to one DELEGATION** (the M0-93 red shape); SCHEDULER's note caught it before the
+  push and the rebase folded the two. Then its first DISCHARGED line dropped three of the four dispositions; reading the
+  block back caught that. One affirmation per block, naming every item.
+- **BOB #22 ruled a question in one paragraph and left it PROVISIONAL in two others** of the same document. When ruling,
+  grep the home document for every other mention of the question.
+- **Context:** 43% at the first landing, 52% at the fifth. The whole reads of Membership v2 §4 and CLAIMS.md blocks cost
+  the most; a lookup by id would have served for several.
 
-**BOB #21 says it is ready to be closed once BOB #22 confirms it has read this.** Closing releases one worktree
-(~647 MB), to be measured then.
+**BOB #23 says it is ready to be closed once BOB #24 confirms it has read this.** Closing releases one worktree
+(648 MiB), to be measured then.

@@ -39,7 +39,8 @@ Bob can answer sends it here, and this session carries it into his conversation.
    disjunctive and two can hold at once (D-405) — a turn in progress is usually an unbounded poller. **Never
    touch another session's Remote Control** (the tool reserves it for when the user asks).
 3. **Sweep the population:** `list_sessions` (limit 50) → a temp file → `node tools/retirable.mjs --self
-   <your id>`; archive exactly what it calls RETIRABLE, never a HOLD row. **The standing lanes — CONDUCT,
+   <your id> --self-title "BOB #<n>"` (the listing verbatim: it refuses a `--self` it finds in it, and judges only this
+   repository's sessions, M0-83); archive exactly what it calls RETIRABLE, never a HOLD row. **The standing lanes — CONDUCT,
    BOB, DIST, FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18); the tool protects their newest
    session, so do not archive one by hand on an idle reading.
    **THE HEARTBEAT'S OWN RUN-SESSIONS SELF-ARCHIVE ONLY INTERMITTENTLY, SO THIS SWEEP IS LOAD-BEARING RATHER THAN A
@@ -51,10 +52,10 @@ Bob can answer sends it here, and this session carries it into his conversation.
    promptly from this lane in `auto` mode** — the wedge D-402/D-407 records was the HEARTBEAT calling it unattended,
    not this lane, so the act stays here.
 4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.** And **measure every
-   live session's context** (`get_usage` per session): any over 60% is refreshed (Bob, 2026-09-18) — tell it to write its
+   live session's context** (`get_usage` per session): any over 70% is refreshed (Bob, 2026-09-21; 60% until then) — tell it to write its
    handoff, then file its successor's chip. Include yourself.
    **AND RECORD THE ACCOUNT'S WEEKLY FIGURE, WHICH THE SAME CALL ALREADY RETURNS** (`plan.windows`, *Weekly · all
-   models*) — **the 60% rule watches per-session CONTEXT and NOTHING watches the weekly BUDGET, which is the metric
+   models*) — **the 70% rule watches per-session CONTEXT and NOTHING watches the weekly BUDGET, which is the metric
    that ended the previous account at 91%** (FLEET #2 noticed the gap, 2026-09-20). One number per day from whoever
    opens it is enough; it costs nothing, because you are already making the call. **Do NOT project it linearly** — a
    first day carries an account switch, lanes standing up and release cuts, so a straight-line forecast from it is a
@@ -234,7 +235,7 @@ ensure the area's kickoff exists, then file a `spawn_task` chip whose prompt is 
 block — read `CLAUDE.md`, then the kickoff, fetch, verify state from `origin/main`, claim before editing —
 and Bob clicks once. A saturating session is replaced the same way: it writes its `<AREA>-NEXT.md` first,
 and the chip refuses to work if that handoff is absent from the remote. **Title a lane's chip EXACTLY `<LANE> #<n>`:**
-the heartbeat's STEP 0 and `retirable.mjs`'s `laneOf` match that form and nothing else — a task titled `CONDUCT #8
+the heartbeat's STEP 0 matches that form and nothing else (`retirable.mjs`'s `laneOf` also reads a suffixed title since M0-83) — a task titled `CONDUCT #8
 (BIO) — integrator lane` was invisible to both (BOB #19, 2026-09-21).
 
 **A stand-down is not a retirement.** A stood-down session keeps running and may hold its worktree; its

@@ -27,7 +27,7 @@
  *
  * NEGATIVE CONTROL: (all six RUN 2026-09-17 by BOB #13, exit 0, 33 pass / 0 fail, both baselines
  * green; all SEVEN re-RUN 2026-09-18 by BOB #14 with A7 added, exit 0, 38 pass / 0 fail;
- * all EIGHT re-RUN the same day with A8 added) `node bio-plane/test/owed.control.mjs` from the repo root — eight arms, each armed ALONE
+ * all EIGHT re-RUN the same day with A8 added) `node bio-plane/test/owed.control.mjs` from the repo root — ten arms, each armed ALONE
  * against a pristine copy in `.d409-harness/`, every restore verified by sha256 AND `cmp` AND a
  * floored byte count.
  *   (A1) the owner test matches the row BODY again -> S1 fails: the measured 58-item defect,
@@ -50,6 +50,14 @@
  *   (All nine RE-RUN 2026-09-19 by the M0-73 worker after A8's anchor was repointed to the lister-fed
  *   `rest` — owed's blocked rows now come from `ledger.mjs`' `pipelineRows` — exit 0, 48 pass / 0 fail,
  *   suite 42/0 at both baselines, restore verified by sha256.)
+ *   (A10) the discharge ignored again -> S8 fails at *A ROW CARRYING AN OWNER PHRASE AND A DISCHARGE
+ *        FOR THE LANE IS NOT ATTRIBUTED*: D-134's false listing (D-435). The per-lane arm's CONDUCT
+ *        half fails with it by construction; the over-strictness, per-lane BOB and case assertions are
+ *        asserted to HOLD, each as a PASS line.
+ *   (A10 added and A1 re-aimed at the line the discharge changed; all ten RUN 2026-09-21 by BOB #22,
+ *   exit 0, 57 pass / 0 fail, suite 47/0 at both baselines, every restore verified by sha256 AND `cmp`
+ *   AND a floored byte count. A10 armed alone outside the driver, which prints no per-arm tally: suite
+ *   exit 1, 45 pass / 2 fail, exactly the two declared.)
  *
  * **AND SECTION 7 IS A DISCRIMINATION CONTROL THE TOOL SHIPPED WITHOUT, which is why it was
  * WRONG.** `owed.mjs ZZZNOTALANE` returned ELEVEN items — a lane that does not exist cannot
@@ -74,7 +82,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 7;
+const SECTIONS = 8;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -267,6 +275,39 @@ section("7 — THE DISCRIMINATION CONTROL. A NONEXISTENT LANE MUST BE ATTRIBUTED
     /ATTRIBUTED to this lane, plus 2 open residue/.test(owedMessage(real)), true);
   t("...and says why they are counted apart, so the next reader does not re-sum them",
     /costs nothing to produce/.test(owedMessage(real)), true);
+}
+
+/* ========================================================================== */
+section("8 — A DISCHARGE BY NAME ENDS ONE LANE'S PART, AND ONLY THAT LANE'S (D-435). The tool "
+      + "could attribute but never discharge, so an OPEN row that once said ROUTED TO BOB owed BOB "
+      + "forever: D-134 said 'Nothing on this row falls to the BOB lane' and stayed on the list.");
+{
+  /* A MINIMAL PAIR: D-40 is D-41 plus the discharge sentence and nothing else, so the one variable
+     between them is the one under test. The shared text carries the near-misses a WIDENED pattern
+     would take — 'Nothing' and 'falls to' in prose that discharges nobody, and 'the BOB lane' outside
+     the form — so the liar's fix (widen until the count drops) fails the over-strictness arm. */
+  const base = "M4 · open — ROUTED TO BOB 2026-09-20: the ceremony is a design call for the BOB lane. "
+             + "Nothing is placeable until it is ruled; the build then falls to UI.";
+  const files = { [SOURCES.debt]: DEBT([
+    `| D-40 | gap | 2026-09-21 | body | ${base} Nothing on this row falls to the BOB lane. |`,
+    `| D-41 | gap | 2026-09-21 | body | ${base} |`,
+    "| D-42 | gap | 2026-09-21 | body | M4 · open — routed to BOB for the ruling and routed to CONDUCT for the spawn. Nothing on this row falls to CONDUCT. |",
+    "| D-43 | gap | 2026-09-21 | body | M4 · open — ROUTED TO BOB for the ruling; nothing here falls to Bob the person. |",
+    "| D-44 | gap | 2026-09-21 | body | M4 · open — routed to CONDUCT for the spawn. |",
+  ]), [SOURCES.decisions]: "", [SOURCES.queue]: "" };
+  const bob = owedFor("BOB", { reader: fixture(files) }).attributed.map((i) => i.id);
+  const conduct = owedFor("CONDUCT", { reader: fixture(files) }).attributed.map((i) => i.id);
+  /* The not-attributed half is asserted beside a FOUND item from the same run, never alone. */
+  t("A ROW CARRYING AN OWNER PHRASE AND A DISCHARGE FOR THE LANE IS NOT ATTRIBUTED — D-134's false listing",
+    [bob.includes("D-41"), bob.includes("D-40")], [true, false]);
+  t("OVER-STRICTNESS: the same disposition WITHOUT the discharge IS attributed, near-misses and all",
+    bob.includes("D-41"), true);
+  t("A DISCHARGE IS PER-LANE — a row discharged for CONDUCT is still attributed to BOB, which it also routes to",
+    bob.includes("D-42"), true);
+  t("...and it IS discharged for CONDUCT, whose undischarged row is attributed in the same run",
+    [conduct.includes("D-44"), conduct.includes("D-42")], [true, false]);
+  t("BOB THE PERSON DISCHARGES NOTHING — 'nothing here falls to Bob' leaves the row the BOB lane's",
+    bob.includes("D-43"), true);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);

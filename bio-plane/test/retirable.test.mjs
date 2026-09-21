@@ -41,6 +41,21 @@
  *   second variable moves and the other sections stay green in each run, which is what makes the
  *   two failures attributable rather than merely simultaneous.
  *
+ * NEGATIVE CONTROL for SECTION 9 (RUN 2026-09-21 by BOB #23 for M0-83, baseline 83 pass / 0 fail,
+ * 9/9 sections): six arms, A9–A14 of `node bio-plane/test/retirable.control.mjs`, each armed ALONE
+ * against the pristine copy and restored by that driver (sha256 AND `cmp` AND a floored byte count);
+ * driver exit 0, 85 pass / 0 fail, `tools/retirable.mjs` sha256 f2dba3e9f210fa42… before and after.
+ *   (A9)  `laneOf` back to the TRAILING-only regex -> *a SUFFIXED title is its lane's live holder*
+ *         FAILS, and the UNKNOWN-SELF arm does not: BOB #19's defect, re-armed.
+ *   (A10) the UNKNOWN-SELF refusal removed -> *a --self FOUND in the input is REFUSED, by name*.
+ *   (A11) the declared caller left out of the election -> *a DECLARED caller is its lane's newest*,
+ *         and the UNDECLARED arm does not fail.
+ *   (A12) the OUT-OF-SCOPE verdict removed -> *names another repository's and a vanished cwd OUT
+ *         OF SCOPE* (BOB #21's 24 + 15).
+ *   (A13) scope by string PREFIX, the cheap defeat M0-83 names -> the SIBLING arm FAILS and the
+ *         other-repository arm does NOT: a prefix match passes that one, which is why both exist.
+ *   (A14) the election by activity alone -> *the lane is ORDERED by instance number*.
+ *
  * NEGATIVE CONTROL: (all eight RUN 2026-09-17 by BOB #13, exit 0, 46 pass / 0 fail, both
  * baselines green) `node bio-plane/test/retirable.control.mjs` from the repo root — eight arms,
  * each armed ALONE against a pristine copy in `.d402-harness/`, every restore verified by
@@ -66,13 +81,13 @@
 
 import "./stdio.mjs";
 import "./sandbox.mjs";
-import { mkdtempSync, writeFileSync, existsSync, chmodSync } from "node:fs";
+import { mkdtempSync, writeFileSync, existsSync, chmodSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { classify, summarise, treeState, laneOf, isTaskRun, STANDING_LANES,
-         DEFAULT_IDLE_HOURS } from "../../tools/retirable.mjs";
+         DEFAULT_IDLE_HOURS, instanceOf, electHolders, UnknownSelf } from "../../tools/retirable.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -82,7 +97,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 8;
+const SECTIONS = 9;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -211,10 +226,18 @@ section("4 — AN UNREADABLE TREE IS 'HOLD', NOT 'CLEAN'. Concluding a value fro
       + "two causes, inside the safety check itself.");
 {
   const { work } = scratch();
-  const rows = run([S({ sessionId: "gone", title: "CONTENT-PDF", cwd: join(SANDBOX, "does-not-exist") })],
-                   { repo: work });
+  /* CORRECTED 2026-09-21 by M0-83 (4), never exempted: this arm's vanished cwd sat in the SANDBOX, OUTSIDE
+     the repository it was judged against — the shape M0-83 names out of scope (24 Supervisor sessions,
+     their directories gone, judged RETIRABLE against this repository's remotes). The claim it made is kept
+     where it is true: a vanished cwd INSIDE the repository is its own removed worktree, and holds nothing. */
+  const rows = run([
+    S({ sessionId: "gone", title: "CONTENT-PDF", cwd: join(work, ".claude/worktrees/does-not-exist") }),
+    S({ sessionId: "gone-elsewhere", title: "CONTENT-PDF", cwd: join(SANDBOX, "does-not-exist") }),
+  ], { repo: work });
   /* A path that does not exist holds nothing — that is a real absence, not an unknown one. */
   t("a cwd that does not exist holds nothing and is RETIRABLE", verdictOf(rows, "gone"), "RETIRABLE");
+  t("...and one that is not this repository's is OUT OF SCOPE, not judged", verdictOf(rows, "gone-elsewhere"),
+    "OUT_OF_SCOPE");
 
   /* A path that EXISTS but whose status cannot be read is the dangerous one. */
   const rows2 = classify([S({ sessionId: "unread", title: "CONTENT-PDF", cwd: work })],
@@ -276,21 +299,23 @@ section("6 — SELF, RUNNING, AND THE IDLE THRESHOLD. A session mid-task between
 {
   const { work } = scratch();
   const wt = linked(work, "wt-fresh");
+  /* CORRECTED 2026-09-21 by M0-83 (2), never exempted: this section fed the caller's OWN row in the input and
+     asserted it PROTECTED as "this session". `list_sessions` never contains its caller, so that shape is
+     PROOF the id is somebody else's — CONDUCT #8 drove it for real on 2026-09-20 and a stranger was
+     protected in its name. The shape is now refused (section 9); here the caller is absent, as it always is. */
   const rows = run([
-    S({ sessionId: "me", title: "CONTENT-PDF", cwd: wt, lastActivityAt: ago(99) }),
     S({ sessionId: "busy", title: "CAPTURE", cwd: wt, isRunning: true, lastActivityAt: ago(99) }),
     S({ sessionId: "fresh", title: "RECORD", cwd: wt, lastActivityAt: ago(1) }),
     S({ sessionId: "stale", title: "RECORD", cwd: wt, lastActivityAt: ago(20) }),
   ], { repo: work, selfId: "me" });
-  t("SELF is protected", verdictOf(rows, "me"), "PROTECTED");
-  t("...by name, so the reason is auditable", reasonOf(rows, "me"), "this session");
+  t("the caller, absent from its own listing, is judged nowhere", rows.some((r) => r.sessionId === "me"), false);
   t("a RUNNING session is protected", verdictOf(rows, "busy"), "PROTECTED");
   t("a session idle UNDER the threshold is protected", verdictOf(rows, "fresh"), "PROTECTED");
   t("...and the reason states the threshold it was judged against",
     /threshold 4h/.test(reasonOf(rows, "fresh")), true);
   t("a session idle OVER the threshold with saved work is RETIRABLE", verdictOf(rows, "stale"), "RETIRABLE");
   t("the default threshold is declared once", DEFAULT_IDLE_HOURS, 4);
-  t("...and exactly one of the four was named, so the sweep discriminates",
+  t("...and exactly one of the three was named, so the sweep discriminates",
     summarise(rows).counts.retirable, 1);
 }
 
@@ -359,6 +384,106 @@ section("7 — THE SUMMARY SEPARATES 'HOLDING UNSAVED WORK' FROM 'NOT RETIRABLE'
   const exact = run(50, "--total", "50");
   t("--total equal to judged clears the hint", /HINT, NOT A FINDING/.test(exact), false);
   t("--total equal to judged still prints the bound", /BOUND: this verdict covers the 50/.test(exact), true);
+}
+
+/* SECTION 9 — M0-83 (BOB #23, 2026-09-21): four defects, each found by a lane acting on this tool's verdict,
+   each moving a count the way a reader takes as SAFE. The arms drive both the module and, where the defect
+   lives at the entry point, the CLI as a subprocess (section 8's reason). */
+{
+  section("9 — M0-83: a SUFFIXED lane title, a --self found in its own input, a DECLARED caller, and "
+        + "another repository's sessions");
+  const CLI = join(REPO, "tools/retirable.mjs");
+  const cliRun = (rows, ...args) => spawnSync("node", [CLI, ...args], { input: JSON.stringify(rows), encoding: "utf8" });
+  /* A cwd inside THIS repository that no longer exists: in scope, and it holds nothing, so no tree is read. */
+  const HERE = join(REPO, ".claude/worktrees/__m083-no-such-tree__");
+  const { work } = scratch();
+  const wtOld = linked(work, "wt-m083");
+
+  /* (1) THE LANE OF A SUFFIXED TITLE. Both forms fed, so fitting one title shape cannot pass. */
+  t("laneOf reads a SUFFIXED title's lane", laneOf({ title: "CONDUCT #8 (BIO) — integrator lane" }), "CONDUCT");
+  t("...and still a TRAILING one and a bare one", [laneOf({ title: "CONDUCT #7" }), laneOf({ title: "BOB" })],
+    ["CONDUCT", "BOB"]);
+  t("instanceOf reads the number wherever it sits, and null where there is none",
+    [instanceOf({ title: "CONDUCT #8 (BIO) — integrator lane" }), instanceOf({ title: "DIST" })], [8, null]);
+  const r1 = run([
+    S({ sessionId: "c7", title: "CONDUCT #7", cwd: wtOld, lastActivityAt: ago(30) }),
+    S({ sessionId: "c8", title: "CONDUCT #8 (BIO) — integrator lane", cwd: work, lastActivityAt: ago(9) }),
+  ], { repo: work });
+  t("a SUFFIXED title is its lane's live holder, so its predecessor is not elected",
+    [verdictOf(r1, "c8"), verdictOf(r1, "c7")], ["PROTECTED", "RETIRABLE"]);
+  const r1b = run([
+    S({ sessionId: "b22", title: "BOB #22", cwd: wtOld, lastActivityAt: ago(5) }),
+    S({ sessionId: "b23", title: "BOB #23", cwd: work, lastActivityAt: ago(6) }),
+  ], { repo: work });
+  t("the lane is ORDERED by instance number, not by who acted last",
+    [verdictOf(r1b, "b23"), verdictOf(r1b, "b22")], ["PROTECTED", "RETIRABLE"]);
+
+  /* (2) A --self FOUND IN THE INPUT. */
+  let refused = null;
+  try { run([S({ sessionId: "stranger", title: "CONDUCT #8", cwd: work })], { repo: work, selfId: "stranger" }); }
+  catch (e) { refused = e; }
+  t("a --self FOUND in the input is REFUSED, by name",
+    [refused instanceof UnknownSelf, refused ? refused.code : null], [true, "UNKNOWN_SELF"]);
+  t("...naming the row it found", /as 'CONDUCT #8'/.test(refused ? refused.message : ""), true);
+  const c2 = cliRun([{ sessionId: "local_x", title: "CONDUCT #8", cwd: HERE, isArchived: false, isRunning: false,
+                       lastActivityAt: ago(2) }], "--self", "local_x");
+  t("the CLI refuses it with exit 3, UNKNOWN-SELF, and prints NO verdict",
+    [c2.status, /^UNKNOWN-SELF/m.test(c2.stdout), /retirable: \d+ retirable/.test(c2.stdout)], [3, true, false]);
+  const r2 = run([S({ sessionId: "other", title: "CONTENT-PDF", cwd: wtOld })], { repo: work, selfId: "me" });
+  t("a --self ABSENT from the input, as list_sessions leaves it, is accepted", verdictOf(r2, "other"), "RETIRABLE");
+
+  /* (3) THE CALLER IS NEVER IN ITS OWN LISTING. */
+  const pred = [S({ sessionId: "b22", title: "BOB #22", cwd: wtOld, lastActivityAt: ago(30) })];
+  const r3 = run(pred, { repo: work, selfId: "me" });
+  t("UNDECLARED, the caller's predecessor is taken for the lane's holder", verdictOf(r3, "b22"), "PROTECTED");
+  t("...and the reason SAYS it is only the newest listed", /newest LISTED/.test(reasonOf(r3, "b22")), true);
+  const r3b = run(pred, { repo: work, selfId: "me", selfTitle: "BOB #23" });
+  t("a DECLARED caller is its lane's newest, so its predecessor is judged on its tree", verdictOf(r3b, "b22"),
+    "RETIRABLE");
+  const succ = [S({ sessionId: "b24", title: "BOB #24", cwd: wtOld, lastActivityAt: ago(30) })];
+  t("...but a declared caller never displaces a listed SUCCESSOR",
+    [electHolders(succ, { selfId: "me", selfTitle: "BOB #23", now: NOW }).get("BOB").id,
+     verdictOf(run(succ, { repo: work, selfId: "me", selfTitle: "BOB #23" }), "b24")], ["b24", "PROTECTED"]);
+  const c3 = cliRun([{ sessionId: "local_b24", title: "BOB #24", cwd: HERE, isArchived: false, isRunning: false,
+                       lastActivityAt: ago(30) }], "--self", "local_me", "--self-title", "BOB #23");
+  t("the CLI tells a declared caller that a successor outranks it",
+    /NOT THIS LANE'S HOLDER — you declared 'BOB #23', and 'BOB #24' outranks it/.test(c3.stdout), true);
+
+  /* (4) ANOTHER REPOSITORY'S SESSIONS. */
+  const other = scratch();
+  const sibling = `${work}-sibling`;
+  mkdirSync(sibling, { recursive: true });
+  const r4 = run([
+    S({ sessionId: "bio", title: "CONTENT-PDF", cwd: wtOld }),
+    S({ sessionId: "otherrepo", title: "Supervisor session", cwd: other.work }),
+    S({ sessionId: "vanished", title: "Alpha Pipeline", cwd: join(SANDBOX, "vanished-elsewhere", "x") }),
+    S({ sessionId: "sib", title: "CONTENT-HTML", cwd: sibling }),
+    S({ sessionId: "nocwd", title: "a cloud session", cwd: null }),
+    S({ sessionId: "c99", title: "CONDUCT #99", cwd: other.work, lastActivityAt: ago(0.1) }),
+    S({ sessionId: "c2", title: "CONDUCT #2", cwd: work, lastActivityAt: ago(9) }),
+    S({ sessionId: "busy-else", title: "Ticker Skill", cwd: other.work, isRunning: true }),
+  ], { repo: work });
+  t("a mixed input judges THIS repository's session", verdictOf(r4, "bio"), "RETIRABLE");
+  t("...and names another repository's and a vanished cwd OUT OF SCOPE",
+    [verdictOf(r4, "otherrepo"), verdictOf(r4, "vanished")], ["OUT_OF_SCOPE", "OUT_OF_SCOPE"]);
+  t("a SIBLING directory sharing the repository's path as a PREFIX is out of scope", verdictOf(r4, "sib"),
+    "OUT_OF_SCOPE");
+  t("a session with no cwd is out of scope", verdictOf(r4, "nocwd"), "OUT_OF_SCOPE");
+  t("another repository's CONDUCT #99 does not displace this lane's holder", verdictOf(r4, "c2"), "PROTECTED");
+  t("a RUNNING session of another repository is out of scope, not protected", verdictOf(r4, "busy-else"),
+    "OUT_OF_SCOPE");
+  t("the summary COUNTS what it did not judge, apart from what it did",
+    [summarise(r4).counts.outOfScope, summarise(r4).counts.judged, summarise(r4).counts.total], [6, 2, 8]);
+  const r5 = classify([S({ sessionId: "u", title: "CONTENT-PDF", cwd: work })],
+    { now: NOW, repo: work, remoteMap: new Map(), scope: null });
+  t("a repository whose worktrees cannot be listed places nothing: UNDETERMINED, and it HOLDS",
+    [verdictOf(r5, "u"), /could NOT BE LISTED/.test(reasonOf(r5, "u"))], ["HOLD", true]);
+  const c4 = cliRun([
+    { sessionId: "local_in", title: "CONTENT-PDF", cwd: HERE, isArchived: false, isRunning: false, lastActivityAt: ago(30) },
+    { sessionId: "local_out", title: "Supervisor", cwd: other.work, isArchived: false, isRunning: false, lastActivityAt: ago(30) },
+  ], "--self", "local_none");
+  t("the CLI prints the out-of-scope COUNT apart from the verdicts, and both counts on its summary line",
+    [/OUT OF SCOPE — 1 session\(s\)/.test(c4.stdout), /1 judged, 1 out of scope/.test(c4.stdout)], [true, true]);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);

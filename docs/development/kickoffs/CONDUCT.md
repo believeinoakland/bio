@@ -41,7 +41,7 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
    fresh one and arms the next reminder (`CLAUDE.md` §4). The `conduct-heartbeat` scheduled task no longer messages you
    (its mode differs from yours, so its messages were held unread); it only watches for what no session can report about
    itself — no integrator, or one idle with runnable work three runs in a row, which means your self-wake is not armed.
-4. **Measure your context** (`get_usage`) at every self-wake and every handoff boundary; over 60%, refresh (`CLAUDE.md` §4).
+4. **Measure your context** (`get_usage`) at every self-wake and every handoff boundary; over 70%, refresh (`CLAUDE.md` §4).
 5. **Tell BOB and SCHEDULER you are up**, by `SendMessage`.
 
 ## The loop
@@ -199,7 +199,7 @@ created); `git worktree list` is the population signal. **Bound every poller.** 
 
 ## The retirement sweep
 
-At the end of every wave: `list_sessions` (limit 50) → a temp file → `node tools/retirable.mjs --self <your id> < file`;
+At the end of every wave: `list_sessions` (limit 50) → a temp file → `node tools/retirable.mjs --self <your id> --self-title "CONDUCT #<n>" < file`;
 archive exactly the rows it calls RETIRABLE, `git worktree remove` where it says `ownsWorktree`, never touch a HOLD row, and
 report the disk before and after, measured. Archiving is TWO acts — the archive, and `git worktree remove` (the tool does not
 free the disk). A RETIRABLE session whose tip is on its OWN remote branch and not on `origin/main` is saved but UNINTEGRATED:
@@ -246,8 +246,7 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
   is UNATTENDED — it can neither send nor receive a cross-session message and is in no `ListAgents` (M-74), so CONDUCT
   #8 integrated deaf (`BOB.md`, "Spawning and retiring lanes"). **A stall is still worse than deafness:** if no BOB
   answers, start it that way yourself (CONDUCT #7 never tested that it could), then write in CONDUCT-NEXT that the lane
-  is deaf so peers route through the record. Title it exactly `CONDUCT #<n>`: the heartbeat and `retirable.mjs` match
-  nothing else.
+  is deaf so peers route through the record. Title it exactly `CONDUCT #<n>`: the heartbeat matches nothing else.
 - **YOUR HANDOFF'S LINE 1 MUST NAME YOUR SUCCESSOR BY NUMBER** — `# CONDUCT-NEXT — the resume prompt for CONDUCT #<n+1>`.
   The heartbeat's STEP 0b parses LINE 1 for `CONDUCT #M`; **with no number it cannot fire, and that `PushNotification` is
   the only automatic path from a stalled estate to a human.** #2–#6 carried it; the account switch rewrote line 1 without

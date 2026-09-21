@@ -1227,3 +1227,124 @@ every session `MACHINE_CREDENTIAL_REQUIRED` with `recorded` citing §4.10's arti
 bearer `provenanceroute` are refused by name; a session's succeed, and its author is the session's member, never
 `token:<class>`. **How a liar passes it:** an arm that calls the store directly. The session gate lives in `index.mjs`,
 so only a request through the plane reaches it.
+
+## DRAINED 2026-09-21 by SCHEDULER #7 — BOB #22's six entries (`3b904ea7`), each verified at its cited design and at the code on `origin/main` @ `2bd24da7`: (1) PLACED as `M0-97` directly after D-435, first among the instruments, with D-341 (the same file) PLACED after it; (2) PLACED as `REC-160` after D-389, its design `BIO_State_Rules_Consistency_v1_5.md` §5.4 with DEC-70, whose fold into a governed home is asked of BOB (`DECISIONS.md` is not governed); (3) APPLIED to M0-83 as item (4), the row rewritten to hold four items inside its budget; (4) D-260 PLACED under its own id after UI-71, both halves on its row; (5) D-293 PLACED under its own id after LED-9, this entry carrying the refusal's design; (6) PLACED as `REC-161` then `UI-75` directly after UI-74
+
+**2026-09-21 · BOB #22 · `tools/decided.mjs` CANNOT SEE MOST OF BOB'S ANSWERED DECISIONS, AND IT HAS COST A RE-ASK (M-85).**
+Design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header, which calls the index a
+FLOOR. Verified at the code: `MARKER` in `tools/decided.mjs` is an uppercase-only word list, while `DECISIONS.md` records
+an answer in a lowercase `decided:` field, so an entry whose `response:` carries no uppercase marker word is not indexed.
+13 of 19 entries are not filed under their own id, 11 of them answered or enacted; `decided.mjs "severance"` returns
+DEC-29 and DEC-72, not DEC-70, which rules exactly that. SCHEDULER #5 sent D-280 (c) to BOB eleven days after Bob ruled
+it, and BOB #22 was one step from ruling the opposite. `CLAUDE.md` §1 names this tool the one source for what has been
+decided, so place it first among the instruments. Sequence with D-341 (same file): one file, one suite, one gate.
+
+1. **M0 (FULL GATE PROFILE):** a `DECISIONS.md` entry that carries a `decided:` line is indexed as ONE ruling under its own
+   `DEC-n` (text from `response:`, date from `decided:`), beside the prose `MARKER` scan and never replacing it; an `open`
+   or `deferred` entry is not indexed as a ruling. **Accepts when** every answered or enacted `### DEC-n` heading is
+   returned by `decided.mjs "DEC-n"` (a printed count equality against the file's own headings), `decided.mjs
+   "severance"` returns DEC-70, and a deferred entry is not returned. **The cheap defeat to refuse:** lower-casing
+   `MARKER`, which floods the index with every prose *decided*, so an arm asserts the index grows only by the entries it
+   did not already file and files none twice. NEGATIVE CONTROL: drop the field arm, and the equality fails naming DEC-70.
+
+**2026-09-21 · BOB #22 · `op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS — the gap
+DEC-70 leaves at its own pin.** Design: `docs/development/DECISIONS.md` DEC-70 (Bob, 2026-09-10): *severance discharges
+SUPPORT, never CONNECTION*, and *the connection INFORMS, never binds*. Verified at the code: `Store#reevaluations` reads
+legs from `inquiry_basis`, which drops `status`, and its edition cause says *"this leg rests on edition N"* for every
+leg; nothing in the answer says a leg was withdrawn. `#refEdgeSevered` is the one predicate, and `restingOn` already
+publishes a status from it. D-280 closed this commit; nothing is superseded.
+
+1. **RECORD (M9; I3 additive, the integrator mints the IC):** each obligation leg carries `status` (`severed` |
+   `confirmed`) from `#refEdgeSevered(bundle, target)`, and a severed leg's edition detail says the withdrawn leg NAMED
+   edition N rather than resting on it. The obligation still fires (DEC-70) and derives nothing from strength. **Accepts
+   when** a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a
+   confirmed leg unchanged. **The cheap defeat to refuse:** filtering the severed leg out, which reverses DEC-70, so
+   `d280-strengthbar.test.mjs` SITE (c) stays green; an unrecorded or unrecognised `status` reads `confirmed`. NEGATIVE
+   CONTROL: drop the status, and the severed-leg arm fails by name.
+
+**2026-09-21 · BOB #22 · M0-83 GAINS ITEM (4): `tools/retirable.mjs` JUDGES OTHER REPOSITORIES' SESSIONS AGAINST BIO'S
+REMOTES** (measured by BOB #21, BOB-NEXT §3.4). Design: M0-83's own. Fed the account's whole `list_sessions`, it called
+24 Supervisor sessions RETIRABLE (their cwd no longer exists) and 15 Alpha-Pipeline sessions HOLD; BOB #22's sweep fed
+BIO sessions only, by hand, which is this fix done manually. Amends M0-83's scope; supersedes nothing.
+
+1. **M0-83 item (4) (owner BOB; FULL GATE PROFILE):** judge only sessions whose `cwd` resolves inside this repository (the
+   primary checkout or `.claude/worktrees/*`) and report the rest OUT OF SCOPE, never RETIRABLE, HOLD or PROTECTED, with
+   their count printed. **Accepts when** an input mixing a BIO session, another repository's and a vanished cwd judges the
+   first and names the other two out of scope. **The cheap defeat to refuse:** a prefix match on the path, so an arm feeds
+   a sibling directory sharing the prefix and asserts it is out of scope. NEGATIVE CONTROL: drop the scope test, and the
+   other-repository arm fails by name.
+
+**2026-09-21 · BOB #22 · D-260 RULED — AN INSTANCE MAY HOLD ONE ORGANISATION-PRINCIPAL `ai` CREDENTIAL AND RESUMES ONLY
+THE RUNS IT OPENED (SCHEDULER (#5)'s Q3).** Design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260
+paragraph (this commit); the deploy half is `BIO_Distribution_v0_1.md` §6's bullet. Verified at the code: a run's
+principal is stamped `principal/tokenId` at the open (`index.mjs`, D-199 (4)); only that principal ticks or closes it
+(REC-152, C-22.12); a machine credential stamps an empty actor, so an organisation key may open a run within its scope;
+`AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`. Place D-260 under its own id with the dispatch fix
+on its row; a member-principal run's non-resumption is the stated limitation in that paragraph.
+
+1. **RECORD with FLEET (M9; I8, which leaves PROVISIONAL when this lands):** FL-4's wake dispatches a woken run to
+   `agent-worker` with the instance's organisation credential ONLY when that credential's stamped principal equals the
+   run's `principal_plane`, and otherwise logs that it did not; the dispatch hands `claude_accounts` its instance level.
+   **Accepts when** a run the instance credential opened resumes after its capture completes, and a member's run is not
+   dispatched and says so. **The cheap defeat to refuse:** dispatching every woken run and leaning on REC-152 to refuse
+   the tick, so the arm asserts the member's run is never DISPATCHED.
+2. **DIST, after 1:** install and update carry that credential as a secret the way `DAEMON_TOKEN` is carried, never in the
+   record, denylisted by `tokens.mjs` on publication.
+
+**2026-09-21 · BOB #22 · D-293 RULED — THE PUSH GUARD NEVER RUNS `tools/gates.mjs`, AND IS TO REFUSE A TREE WHOSE
+RECORDED VERDICT IS RED, WHICH IS NOT BUILT (SCHEDULER (#5)'s Q4).** Design: `docs/development/VERIFICATION.md`, the push-guard section, which
+already states the first half: the hook *"runs `decided.mjs --check` and REFUSES a stale push"*, nothing more. THIS ENTRY
+CARRIES THE SECOND HALF until it is built, because that file is at its reading budget (24,567 of 24,576 B) and its
+register block is quoted by `register-grammar.control.mjs`'s arms, so a cut there is its owner's act: the builder adds
+the refusal's one line in the landing that builds it. Measured (M-85): a full gate takes ~25 minutes and `main` took 48
+first-parent commits from 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes, so a push-time gate would rebase and
+re-gate without converging. Place D-293 under its own id, owner M0.
+
+1. **M0 (FULL GATE PROFILE):** `gates.mjs` records its verdict and class keyed by the tree it measured, only when that tree
+   was CLEAN, untracked under the git common dir; the guard refuses a push whose tip tree carries a RED record, naming it,
+   and says nothing when none exists. **Accepts when** a RED gate then a push of that tree is refused by name, and a GREEN,
+   an unrecorded and a changed tree each pass. **The cheap defeat to refuse:** keying on the commit sha, which an amend of
+   the message alone evades, so the arm amends and asserts the refusal holds. NEGATIVE CONTROL: drop the guard's lookup,
+   and the RED-then-push arm fails by name.
+
+**2026-09-21 · BOB #22 · D-195'S SHARED-ORIGIN DISCLOSURE AT THE MEMBER'S OWN ELICITATION — TWO ITEMS, IN ORDER (SCHEDULER
+(#5)'s Q1, RULED).** Design: `docs/development/INVESTIGATIVE-SESSION.md` §12 clause (c) (this commit). Verified at the
+code: UI-27's read-back (`elicFalsifier`) prints *"Your answer fails only if ALL of these fail"* and reads no
+independence (`versionstrength` and `independence` occur 0 times in `civicos-ui/app.html`); `Store#independenceOf` has
+two consumers, `op=suggest`'s check and `op=versionstrength`'s read of a STORED version. Place after UI-74, which shows
+the same fact at the accept ceremony; whichever lands second reuses the first's rendering.
+
+1. **RECORD (M9; I3 additive, an IC):** a read returning `#independenceOf` for a PROPOSED partition over an inquiry's
+   existing legs, gated as `op=versionstrength` is, writing nothing, `checked`/`complete` as they already are. **Accepts
+   when** two parts sharing a capture read as sharing an origin, independent parts read clean, a one-part partition reads
+   `checked: false`, and the answer equals `op=versionstrength`'s once the partition is written. **The cheap defeat to
+   refuse:** a second derivation that agrees today, so a control swaps in a copy differing in one branch and fails by name.
+2. **UI (M9), after 1:** the read-back names each shared origin between the parts it lists, once (DEC-69), before the
+   answers are written; it prefills nothing, refuses nothing, shows no strength and no AND/OR word. **Accepts when** two
+   correlated reasons show their origin and the member's answers are written unchanged. **The cheap defeat to refuse:**
+   blocking or reordering the answers on a shared origin, which turns an informing fact into a gate.
+
+## DRAINED 2026-09-21 by SCHEDULER #7 — BOB #23's entry (`c31b8f60`), verified at `BIO_Membership_Architecture_v2.md` §4.9 and at the code (the five founder-only ops; `index.mjs`' two `governorconfig` comments): PLACED as `REC-162`, back to back after REC-159; the REC-156 DELEGATION DISCHARGED
+
+**2026-09-21 · BOB #23 · `op=governorconfig` IS THE OPERATOR'S, AND ITS REFUSAL CALLS AN ENROLLED ADMINISTRATOR A
+NON-ADMINISTRATOR (the REC-156 DELEGATION's item 3, RULED).** Design: `docs/architecture/BIO_Membership_Architecture_v2.md`
+§4.9, the paragraph *AND ADMINISTRATORS DO NOT RUN THE INSTANCE* (this commit). Verified at the code: exactly five ops sit
+in `SESSION_OPS.admin` and not in `SESSION_OPS.member` (`governorconfig`, `memberadd`, `memberset`, `signeradd`,
+`signerset`, re-derived from `index.mjs` and pinned by `d270-refusal-truth.test.mjs`'s ROLE literal); a member-kind
+session refused one gets `SESSION_ROLE_CANNOT_REACH_OP`, whose sentence says the op *"is reserved to an administrator of
+this group"* and that the session's role is `member` — false of an ENROLLED administrator, whose `kind` is `member` by
+D-136's measurement. `Store#governorAdmit` ranks a host's configured appetite above the hosting account's
+`GOVERNOR_APPETITE_PER_MIN`, which is the ruling's reason. Supersedes nothing; the DELEGATION's item 2 is REC-159.
+
+1. **RECORD (M8; I3, the integrator classifies it in IC-55's family):** the (b) refusal says WHICH session reaches the op,
+   derived from the set that reaches it, so it cannot go false when an op moves: an op only `SESSION_OPS.admin` reaches is
+   *reserved to the founder's session* (the operator's sign-in, Membership v2 §4.9), and the sentence neither calls it an
+   administrator's nor says the caller's role is not one. It is TRUE TODAY of all five, so it may land alone; it touches
+   the two suites REC-159 does, so sequence the two back to back and let the second re-read the first's pins. In the same
+   landing, correct `index.mjs`' two `governorconfig` comments (the OPS row's *"the same line memberset and signerset
+   draw"*, the NEEDS entry's *"the same as the roster ops above"*): its line is §4.8's, not §4.9's. **Accepts when** an
+   enrolled administrator and an ordinary member, each refused `governorconfig`, read the founder's-session sentence, and
+   the founder's session and the ADMIN_TOKEN bearer still set an appetite. **The cheap defeat to refuse:** moving
+   `governorconfig` into both session sets, which reverses the ruling, so an arm asserts the enrolled administrator is
+   still REFUSED. `d270-refusal-truth`'s `/administrator/` assertion on every ROLE op is corrected with a dated reason,
+   never exempted. NEGATIVE CONTROL: restore the administrator sentence for a founder-only op, and the arm fails by name.
