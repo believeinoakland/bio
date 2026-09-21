@@ -20,16 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-86 · queued — **BOB'S OWN ACT, NOT A WORKER SLOT (BOB #19 is cutting it by hand, 2026-09-21).** **THE CONSTRUCT MAP HAS 4 BYTES OF HEADROOM ONCE D-158 LANDS, AND OVER BUDGET IT FAILS EVERY GATE.** `docs/architecture/BIO_System_Design.md` is 49,106 B on `origin/main` and 49,148 B on `worker/d158-conduct8` (`b3ae389c`), against the 49,152 B map budget, in `tools/readbudget.mjs`' `CUT` set. The next landing that lengthens a §3 row fails — D-432 adds a table that construct 3's census cell records. — owner BOB (the map's author).
-order: SECOND, by BOB's hand rather than a slot: over budget this file FAILS every landing that grows it, where `RECORD.md` (REC-154) is a WARN; it should land before D-432 does (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 5, re-measured)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each*.
-depends-on: none.
-scope: BOB's stated plan: move each §3 claim's HISTORY into `construct-status.json`'s unrendered `note`, which `node tools/status.mjs <topic>` still prints, so nothing is lost; anything cut from prose is archived VERBATIM.
-accepts-when: `node tools/readbudget.mjs` reads the map under budget, headroom stated in bytes at the landing; `node tools/status.mjs --check` still agrees; nothing that left the map is absent from both the note and the archive.
-added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
-
 ### D-434 · queued — **A PUBLISHED RECIPE REFUSES THE MEMBER AT ITS OWN LAST STEP.** `app.html`.s `RECIPES[capture-a-document-and-ground-a-question-on-it]`, ends on `op=inquiryground` — which authors the DEC-32 PARTITION over legs that ALREADY EXIST and refuses `NO_BASIS` when there are none. On a fresh capture the member is REFUSED; on a question with legs it regroups them and attaches the document to nothing. The op for this act is `op=cite`. **PART 1 ONLY.** — owner UI.
 order: FIRST. The record telling a member to do what the plane refuses is the record claiming more than it can support, which CLAUDE.md §2 grades above every feature — and it is PUBLISHED, so it is wrong in the member.s hands. One edit plus its arm (SCHEDULER #3, 2026-09-20)
 milestone: M8
