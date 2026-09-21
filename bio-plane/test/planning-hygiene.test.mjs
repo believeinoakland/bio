@@ -8,7 +8,11 @@
    TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
    THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
    spelled an `op=` token that op-claims then read as a real claim. Recorded at their
-   sites in the control, not smoothed. */
+   sites in the control, not smoothed.
+   RE-RUN 2026-09-21 by D-355: 55 of 58 before any edit. ARM 3's planning check FAILED at 276 pass, 4 fail with git
+   shimmed, because this suite grew four assertions that run `tools/plancheck.mjs` (M0-30 at `ff26024f`, 2026-09-14;
+   M0-37 at `e88dcaeb`, 2026-09-16) and plancheck needs git by design. The arm now requires that every failure here
+   without git is one of those plancheck-reading assertions, and nothing else. After: 59 of 59 control checks as declared, exit 0. */
 /* NEGATIVE CONTROL (M0-26, run 2026-09-14, worktree agent-a64d514be75dea71a), on the
    DISCOVERY CORPUS this item had to widen, each arm ALONE and restored by cp-back
    verified sha256 and `cmp` at 17,291 bytes. BASELINE 244 pass 0 fail, corpus 76 docs /

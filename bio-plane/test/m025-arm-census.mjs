@@ -39,6 +39,20 @@
  *     spellings. A driver announcing its arms in a shape not in that union
  *     reports `arms: ?` — printed as unknown, NEVER as zero. WORKER.md's rule:
  *     a thing the matcher does not understand must be NAMED.
+ *     EXTENDED 2026-09-21 (D-355): when NO line of a run matches that union,
+ *     the count falls back to the REGISTER'S OWN ENUMERATION GRAMMAR — the
+ *     distinct parenthesised ordinals that OPEN a line, counted by
+ *     `control-register.mjs`'s `countEnumerations` (a first ordinal and at
+ *     least two distinct, or nothing) — so ONE rule says what an enumerated arm
+ *     is, in both instruments, rather than a twelfth spelling here. It is a
+ *     FALLBACK and never a union member, and that is the whole design:
+ *     `op-claims.control.mjs` announces `ARM a — …` AND prints an `(a) …`
+ *     summary line per arm, so a union member would have counted every arm of
+ *     every such driver twice and manufactured a D-333 finding. A driver the
+ *     union already reads keeps its count exactly. The driver that exposed the
+ *     gap is `refselectivity.control.mjs`, which announces `  (a) …` and read
+ *     `arms: ?` against a declared four on every run before this. A run whose
+ *     lines match neither grammar still reads `arms: ?`.
  *   - It cannot see an arm that arms CORRECTLY but tests the wrong thing. It CAN
  *     now see an arm table that was silently shortened or grown — see D-333
  *     below, added 2026-09-14; before that it saw only the liveness of the
@@ -110,6 +124,7 @@ import { spawnSync } from "node:child_process";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readDeclaredArms, tallyHonoured } from "../scripts/armdecay.mjs";
+import { countEnumerations } from "../scripts/control-register.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const argv = process.argv.slice(2);
@@ -365,8 +380,16 @@ function runDriver(d) {
   });
   const wrong = lines.filter((l) => NOT_AS_DECLARED.some((re) => re.test(l)));
 
-  /* A tally that cannot be read is reported as unknown, never as zero. */
-  const arms = armLines.length ? armLines.length : null;
+  /* A tally that cannot be read is reported as unknown, never as zero.
+     D-355: only when the union read NOTHING, the register's ENUMERATION grammar is asked. The
+     candidate tokens are the FIRST whitespace-delimited token of each line that opens with `(`;
+     `countEnumerations` then applies the register's own ordinal rule to them — so `(a)` counts,
+     `(/Users/…)` and `(a)b` do not, and a lone `(b)` with no first ordinal is not a list. */
+  const leadTokens = armLines.length ? []
+    : lines.map((l) => l.trim()).filter((l) => l.startsWith("(")).map((l) => l.split(/\s/)[0]);
+  const enumerated = leadTokens.length ? countEnumerations(leadTokens.join(" ") + " ") : 0;
+  const armsBy = armLines.length ? "union" : (enumerated ? "enumeration" : null);
+  const arms = armLines.length ? armLines.length : (enumerated || null);
 
   /* A DRIVER THAT DIED MID-ARM LEAVES THE TREE PATCHED, and the next driver
      would then measure a tree nobody meant to hand it. Every driver here
@@ -419,7 +442,7 @@ function runDriver(d) {
   const completed = !(r.error || r.signal);
   const tallyOk = completed ? tallyHonoured(declared, arms) : null;
 
-  return { ...d, ms, status: r.status, signal: r.signal, verdict, arms, leftDirty, dirtyNow,
+  return { ...d, ms, status: r.status, signal: r.signal, verdict, arms, armsBy, leftDirty, dirtyNow,
            armLines, preflightLines, declared, tallyOk, threw,
            stale, prose, wrong, out, err: r.error ? String(r.error.message) : null };
 }
@@ -486,7 +509,7 @@ for (const d of chosen) {
   const r = runDriver(d);
   results.push(r);
   if (!FROM_LOGS) writeFileSync(logPathFor(d), r.out);
-  const armsTxt = r.arms === null ? "arms=?" : `arms=${r.arms}`;
+  const armsTxt = r.arms === null ? "arms=?" : `arms=${r.arms}${r.armsBy === "enumeration" ? "(enum)" : ""}`;
   const tallyTxt = r.declared === null ? "decl=?" : `decl=${r.declared.n}${r.declared.plusBaseline ? "+b" : ""}`;
   console.log(`${String(r.verdict).padEnd(13)} exit=${String(r.status)} ${armsTxt.padEnd(9)} ${tallyTxt.padEnd(9)} ${(r.ms / 1000).toFixed(1)}s`
     + `${r.tallyOk === false ? "  <<< TALLY NOT AS DECLARED" : ""}`
@@ -606,9 +629,19 @@ for (const r of preflighted) {
   for (const l of bad) console.log(`      ${l.trim()}`);
 }
 
+/* D-355 — the drivers whose count came from the FALLBACK, printed apart so a reader can see which
+   grammar produced each number rather than trusting one figure made two ways. */
+const enumeratedArms = results.filter((r) => r.armsBy === "enumeration");
+if (enumeratedArms.length) {
+  console.log(`\n${"-".repeat(78)}\nARMS READ BY THE REGISTER'S ENUMERATION GRAMMAR (D-355) — no line of these runs matched`);
+  console.log(`the announcement union, so each count is the number of DISTINCT parenthesised ordinals that`);
+  console.log(`OPEN a line, read by control-register.mjs's own countEnumerations. A fallback, never a union member.`);
+  for (const r of enumeratedArms) console.log(`  ${r.rel}: ${r.arms} arm(s)`);
+}
+
 const unknownArms = results.filter((r) => r.arms === null);
 if (unknownArms.length) {
-  console.log(`\n${"-".repeat(78)}\nARM COUNT UNREADABLE (announcement shape not in the matcher's union) — printed as`);
+  console.log(`\n${"-".repeat(78)}\nARM COUNT UNREADABLE (announcement shape in neither the union nor the enumeration grammar) — printed as`);
   console.log(`unknown, NEVER as zero. The verdict for these still stands; only the tally is blind.`);
   for (const r of unknownArms) console.log(`  ${r.rel}`);
 }
@@ -629,7 +662,8 @@ const armsTotal = results.reduce((a, r) => a + (r.arms || 0), 0);
 console.log(`\n${"=".repeat(78)}\nTHE FIGURE`);
 console.log(`  drivers found        : ${all.length}  (${conv.length} by convention + ${OFF_CONVENTION.length} off-convention)`);
 console.log(`  drivers RUN          : ${results.length}`);
-console.log(`  arms announced       : ${armsTotal}  (over ${results.length - unknownArms.length} drivers whose announcements this matcher reads; ${unknownArms.length} unreadable)`);
+console.log(`  arms announced       : ${armsTotal}  (over ${results.length - unknownArms.length} drivers whose announcements this matcher reads, `
+  + `${enumeratedArms.length} of them by the enumeration fallback; ${unknownArms.length} unreadable)`);
 console.log(`  drivers with a STALE arm : ${staleDrivers.length}`);
 console.log(`  drivers whose FIXTURE THREW : ${threwDrivers.length}  (M0-78 — an armed anchor that measured nothing)`);
 console.log(`  declared tallies read : ${results.filter((r) => r.declared !== null).length} of ${results.length}  (the rest report UNKNOWN, never zero)`);

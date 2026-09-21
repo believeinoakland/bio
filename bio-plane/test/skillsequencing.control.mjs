@@ -1,7 +1,14 @@
-/* SK-4's NEGATIVE CONTROL HARNESS — SIX ARMS, RUN IN ONE STEP.
+/* SK-4's NEGATIVE CONTROL HARNESS — SIX ARMS PLUS A BASELINE, RUN IN ONE STEP.
  *
  *     node test/skillsequencing.control.mjs          # every arm, plus the baseline
  *     node test/skillsequencing.control.mjs 2        # one arm
+ *
+ * THE FIRST LINE WAS CORRECTED 2026-09-21 BY D-355, AND NO ARM MOVED. It said the six arms and not the
+ * baseline, while the run announces `(0) BASELINE` before them. Until D-355 the census could not read a
+ * `(n)` announcement at all, so it scored this driver `arms: ?` and the difference was invisible; on its
+ * first reading it held six declared against seven announced (D-333). A baseline is an announcement and
+ * not a declared arm, so the head now names it — D-343's precedent, the declaration corrected to what the
+ * driver announces. The six arms were always six, and the old line was right about them.
  *
  * DELIBERATELY NOT A `.test.mjs`. It EDITS REAL SOURCES while it runs, and the
  * battery discovers `*.test.mjs` from the directory — `suggest.control.mjs` set

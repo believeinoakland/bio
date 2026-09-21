@@ -17775,3 +17775,70 @@ construction rather than by measurement.
 one that was still waking on its own cron. And a row's premise was a claim about an archive that a newer archive had
 superseded thirteen hours before the row existed — copied through a DELEGATION, a ruling and a placement, none of which
 opened the newer file. M0-82 is narrowed accordingly.
+
+## M-83 · 2026-09-21 · D-355 — two control drivers red on a green `main`, attributed at their sites; the pen that leaked on EVERY exit; the census's `arms: ?`
+
+**Instrument and vantage.** Worktree `agent-a9a513c0906ae3b3e` at `fc94b045` (= `origin/main`), Sparky-Air, node
+v26.0.0. Every driver run ALONE with no battery of this worktree running; every restore verified independently of the
+driver's own report by `_m025/d355-a9a513/treecheck.cjs` (sha256 against the pre-run digest AND the HEAD blob, `cmp(1)`
+exit 0, byte count floored). Other worktrees' batteries were running during the census baseline — the figures below are
+verdicts and counts, not timings.
+
+**THE FIRST ACT — WHICH IS STILL RED, 2026-09-21, before any edit.**
+- `civicos-ui/test/refusal-partition.control.mjs`: STILL RED, IN A DIFFERENT MODE FROM THE ONE D-355 RECORDED. Exit 1
+  by an UNCAUGHT `ARM DID NOT ARM: the anchor occurred 7 time(s) in index.mjs` at arm 2; arms 0 (3 sub-checks) and 1
+  as declared; arms 3–9 NEVER REACHED; the pen left holding 2 copies, 1.4 MB. Tracked files restored (4/4 MATCH).
+- `bio-plane/test/provenance-floor.control.mjs`: STILL RED, UNCHANGED: `FAILED 55 of 58 control checks as declared`,
+  arms 2a, 3 and 6-stage-1, exactly M0-29's figure at `e9ba393`. Its own pen and phantoms absent after (6/6), tracked
+  files 7/7 MATCH.
+- The census BEFORE (`m025-arm-census.mjs --only` the three): refusal-partition `DID-NOT-ARM exit=1 arms=3 decl=?`;
+  provenance-floor `UNCLASSIFIED exit=1 arms=14 decl=?` — **printed, and gated on nobody**; refselectivity
+  `ALL-ARMED exit=0 arms=? decl=4`; census exit 1; tally unknown on one side 3.
+
+**THE ATTRIBUTIONS, each dated at its site.**
+| driver · arm | kind | the commit that turned it | evidence |
+| --- | --- | --- | --- |
+| refusal-partition · 2 / 2b | BEHAVIOUR MOVE | merge `108020ce` (2026-08-09 17:31 -0700): REC-79 (`4df1cd06`) met D-262 (`f5bdff29`), whose `dec49Attach` in `json()` backfills a missing `translation` on the way out | D-262 NOT an ancestor of REC-79's commit, nor the reverse; arm 10 (the old single-route break) measured GREEN |
+| refusal-partition · 2 (throw) | ANCHOR DECAY | `f2beb0e1` (2026-09-14 19:12 -0700, CAP-8's `driveRow`): the anchor 1 → 2; 7 today (`git log --first-parent -S`) | the throw above |
+| provenance-floor · 2a | CORPUS GROWTH | `bb0e10bd` (2026-08-10 10:34 -0700, SK-2 added `src/skilldoctrine.mjs`): committed corpus 27 → 28 = the literal floor | `ls-tree` count per first-parent commit; 33 today |
+| provenance-floor · 3 | SUITE GROWTH | `ff26024f` (2026-09-14, M0-30: 2 plancheck-reading assertions) and `e88dcaeb` (2026-09-16, M0-37: 2 more) | planning-hygiene under the same shim: 276/4, all four labels `plancheck …` |
+| provenance-floor · 6-stage-1 | SUBJECT-CORPUS MOVE | `ae0ae418` (2026-09-10 13:16 -0700, CASE-5): `EDITION_NOT_INCREMENTED` left machine-fences' identity-shadowing class (`publish`, shadows 6 → no identity word in its 300-char window) | a labelled replica of the suite's walk, agreeing with the suite at HEAD (the same 7 codes) |
+All five causes are ancestors of `e9ba393`, consistent with M0-29's 2026-09-14 finding.
+
+**A MECHANISM MEASURED ON THE WAY.** In a script whose work is `execFileSync`, a SIGTERM sent at 1.0 s ran its JS
+handler at 4.0 s — after the whole synchronous script. A signal handler on a synchronous driver SUPPRESSES the default
+kill and DEFERS the signal to the end; the `exit` hook, by contrast, runs on exit 0, `process.exit(1)` and an uncaught
+throw (CJS and ESM), measured. `refusal-partition` therefore runs its suites asynchronously.
+
+**AFTER, each driver ALONE, restores verified independently.**
+- `refusal-partition.control.mjs`: exit 0 — `ALL 11 ANCHORS LIVE` (D-331 preflight, 10 arms), 19 of 19 sub-checks AS
+  DECLARED over 11 announced arms (`DECLARED vs RUN … — as declared`); arm 2 fails at the CANNED TRANSLATION
+  assertion BY NAME; arm 10 (the old single-route break) GREEN — the chokepoint carried the sentence; `PEN: 10
+  pristine copies written this run · 10 removed by name as each restore verified · 0 removed by the exit hook · the
+  directory is ABSENT · exit 0`. Subjects 4/4 MATCH HEAD by sha256 and cmp.
+- `provenance-floor.control.mjs`: exit 0 — `OK 59 of 59 control checks as declared` (58 + the new roster check); the
+  pair's floor READ from arm 1 as 34 (33 + the phantom): 2a FAILS (31/1), 2b PASSES (32/0); arm 3 planning 276/4,
+  `4 plancheck-reading, 0 other`; 6-stage-1 names 7 codes, every one quoted by a moved pinner; 6a/6b as before;
+  roster 13 of 13.
+- `bio-plane/test/nc-d355.mjs` (NEW): exit 0, `8 arm(s) run, 0 NOT AS DECLARED` — (0) baseline: census reads
+  refselectivity `arms=4(enum) decl=4`, 0 wrong, 0 unknown, exit 0; refusal-partition 19/19, pen absent · (1) the
+  fallback neutered: `arms=?`, unknown 1 · (2) refselectivity's `(d)` line deleted from its saved run: `arms=3(enum)`,
+  TALLY NOT AS DECLARED 1, named, census EXIT 1 · (2b) the same log, fallback neutered: `arms=?`, 0 findings, EXIT 0 ·
+  (3) over-strictness, `op-claims.control.mjs` RUN: `arms=6` by the union = its 6 `ARM` lines, NOT doubled by its 6
+  `(id)` summary lines · (4) SIGTERM while armed: exit 143, EXIT-TIME RESTORE printed, tree pristine, pen absent ·
+  (5) admission-gate forced to exit 1: refusal-partition exit 1, exactly rows [0, 10] DISAGREE, pen absent · (6) a
+  second copy of arm 9's anchor: the whole preflight table (10 arm ids), arm 9 marked, REFUSED TO ARM BLIND, no ARM 0
+  announced, pen absent. Subjects 9/9 verified after by sha256 and cmp; both pens absent.
+- THE CENSUS AFTER: `m025-arm-census.mjs --only` six drivers, RUN, logs kept in this worktree's `_m025/`: refusal-partition `ALL-ARMED exit=0 arms=11 decl=10+b` (BEFORE: `DID-NOT-ARM exit=1 arms=3 decl=?`), its preflight read by the census as 11 anchors, 0 not live; provenance-floor `ALL-ARMED exit=0 arms=14` (BEFORE: `UNCLASSIFIED exit=1`); refselectivity `ALL-ARMED exit=0 arms=4(enum) decl=4` (BEFORE: `arms=?`); pipeline-readers `ALL-ARMED arms=? decl=4` — unchanged, neither grammar reads its run; skillsequencing `arms=7(enum) decl=6 <<< TALLY NOT AS DECLARED` — the fallback reading it for the FIRST time: its head said SIX ARMS and its run announces `(0) BASELINE` before the six. The head was corrected to SIX ARMS PLUS A BASELINE (D-343's precedent; no arm moved) and the SAME run bytes re-read with `--from-logs` give `decl=6+b` HONOURED — census EXIT 0, 0 tally findings, 3 unknown. delegations `UNCLASSIFIED exit=1 arms=? decl=6+b` — A THIRD DRIVER RED ON A GREEN `main`, NOT THIS ITEM'S: on the EXACT `fc94b045` tree (every edit of this item swapped out and back, each verified by sha256 and cmp) it reads `m037-control: 19 pass, 5 fail`. Its A1 and A6 failures are deterministic and are the DELEGATION block at `CLAIMS.md:196`, which has carried TWO affirmation lines (200 and 202) since `e5f6fa4a5` (2026-09-17): A1 rolls back only the newest, so the block cannot go STALE, and A6 counts 36 affirmation lines against 35 blocks. A6's "declared to pass" check and A3 (red on the pristine tree, green on this one) are UNDETERMINED here.
+
+**THE CLASS, SWEPT (static, heuristic — stated as such).** 217 driver-shaped files in 9 directories: 51 create a
+directory and remove nothing, 59 remove only at the foot, 1 only on a clean run, 5 in a `finally`, 1 in an exit hook.
+Crossed with `.gitignore`: THREE never remove a pen that is also UNIGNORED — `refusal-partition` (fixed here),
+`nc-rec95.mjs` (`.rec95-control-pristine`) and `nc-rec129.mjs` (`.rec129-harness`), both now listed as a mitigation
+only; 32 more remove theirs only at the foot, unignored. SIGNAL HANDLERS ON SYNCHRONOUS DRIVERS: 2 —
+`independence.control.mjs` and `run-conditions.control.mjs` both install SIGINT/SIGTERM/SIGHUP handlers over
+`execFileSync`/`spawnSync` suites, so by the mechanism measured above their disarm runs only at the END of the run.
+THE CENSUS FALLBACK'S REACH (static): of 132 convention drivers 71 print a union shape, 6 print ONLY an ordinal shape
+(`refselectivity`, `dec65-strength-reach`, `scheduler`, `skillsequencing`, `walkfigure`, `civicos-ui/refusal-codes`),
+55 print neither where a static reader can see; of the 61, FOUR declare a readable tally — the only drivers the
+fallback can newly hold to a count — and all four were RUN above.
