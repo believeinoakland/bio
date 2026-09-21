@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1293 rulings across 100 documents.
+1295 rulings across 100 documents.
 
 ## DEC-
 
@@ -2273,6 +2273,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:16001`
 - Q11 is SETTLED and its answer does not move; what moves is the RECIPE it hands the next worker.  
   `docs/development/CLAIMS.md:16210`
+- AMENDED, same landing:** `bio-plane/test/corpuscheck.test.mjs` — its two assertions pinning the map's evaluated design pairs, CORRECTED with a dated reason (8.claim's new text cites §7.1 item 9, a third real pair; negative control: that citation dropped from the map -> exactly those two assertions fail by name; map…  
+  `docs/development/CLAIMS.md:16533`
+- design pairs, CORRECTED with a dated reason (8.claim's new text cites §7.1 item 9, a third real pair; negative control: that citation dropped from the map -> exactly those two assertions fail by name; map restored and verified by hash). **NOT CLAIMED:** the rest of `bio-plane/**`, `tools/**`, every kickoff, and…  
+  `docs/development/CLAIMS.md:16534`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
