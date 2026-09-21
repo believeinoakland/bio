@@ -15973,7 +15973,7 @@ the provenance pair as a KNOWN-OPEN identity claim in `bio-plane/test/identity-c
 fence appears OR if the claim stops being made — so a worker moving those two without a ruling breaks the pin that
 exists to stop the gap closing silently. This is the batch's shape and it goes to BOB beside D-136's, not singly.
 
-**open as of 2026-09-19.**
+**DISCHARGED 2026-09-21 by SCHEDULER #5 — BOB #19 ruled the seven and BOB #20 landed the ruling as `BIO_Membership_Architecture_v2.md` §4.10 (`d9cf3283`); PLACED as `REC-155` (landing 1: five ops gain session reach, `livefire` and `reproject` unattended BY DECISION) and `REC-158` (landing 2: the provenance pair's bearer write refused by name, REC-65's pin corrected there).** Each premise re-read at the code first: the five OPS rows admit `admin`, `member` and `probe`, the two admit `admin` and `probe`, and the header still calls the seven UNDETERMINED.
 
 ## CLAIM 2026-09-21 BOB (BOB #19 — the restart's findings: BOB #18's faults measured and fixed by mechanism; the kickoff its ATTENDED-integrator ruling superseded, corrected; three instrument defects routed with fixes named)
 
@@ -16364,7 +16364,7 @@ Incomplete sections record items 2 and 3 in the same commit, so this block is no
 
 **open as of 2026-09-21** — raised at D-339's landing; nothing placed yet, and item 3 waits on BOB.
 
-## CLAIM 2026-09-21 SCHEDULER (#5) — the lane's standing claim on the build plan's own files; BOB #19's six-rows entry drained (REC-157, UI-74, D-52, D-126 placed; D-195 and D-397 placed under UI-74; D-80 sent to BOB); LED-7 continued
+## CLAIM 2026-09-21 SCHEDULER (#5) — the lane's standing claim on the build plan's own files; BOB #19's six-rows entry drained (REC-157, UI-74, D-52, D-126 placed; D-195 and D-397 placed under UI-74; D-80 sent to BOB; BOB #20's REC-155 entry drained — REC-155 re-rowed, REC-158 placed); LED-7 continued
 
 claimed: 2026-09-21 by SCHEDULER #5, worktree `.claude/worktrees/dreamy-morse-42a25c`. Paths, the lane's own
 (`kickoffs/SCHEDULER.md`'s ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT

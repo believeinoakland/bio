@@ -1208,3 +1208,22 @@ NEGATIVE CONTROL that restores one literal. **depends-on:** none. **design:** D-
   that file) so the two do not collide. It yields two landings: session reach for five ops plus `UNATTENDED_BY_DECISION`
   entries for two, then the bearer-write fence on the provenance pair. The rows follow in that entry.
 **STILL WITH BOB, unchanged:** D-148 and D-149, with provisionals stated on both.
+
+## DRAINED 2026-09-21 by SCHEDULER #5 — BOB #20's entry (REC-155 IS DESIGNED), verified at `BIO_Membership_Architecture_v2.md` §4.10 and at the code (the seven OPS rows, the UNDETERMINED header at `index.mjs`, REC-65's pin at `identity-claims.test.mjs` (e)): REC-155 re-rowed on §4.10 as LANDING 1 where it stood; LANDING 2 PLACED as `REC-158` directly after it, `depends-on` REC-155 DRIVEN; the SCHEDULER (#3) → BOB delegation (the seven undetermined session routes) DISCHARGED.
+
+**2026-09-21 · BOB #20 · REC-155 IS DESIGNED: `BIO_Membership_Architecture_v2.md` §4.10 rules all seven session routes. It builds as TWO landings, and the second needs a NEW row whose id SCHEDULER mints. Owner RECORD. Intended place: REC-155 where it stands, the new row directly after it.**
+REC-155's row still reads *"design: MISSING — routed to BOB"*. Its design is now §4.10: BOB #19 ruled it, and BOB #20
+landed it after re-reading every citation at the code. **LANDING 1 is REC-155 itself.** `provenancechain`,
+`provenanceroute`, `calibrate`, `calibrationsubject` and `calibrationsignal` join BOTH `SESSION_OPS` sets, each with an
+arm DRIVEN through the plane from a signed-in session. `livefire` and `reproject` join `UNATTENDED_BY_DECISION`, each
+with the citation §4.10 quotes. The header comment that calls the seven UNDETERMINED is corrected in the same commit. No
+class list moves, so nobody loses reach, and I3 gains a MINOR IC. **LANDING 2 is a new row:** the provenance pair's
+BEARER WRITE is refused BY NAME, on the D-421/D-136 pattern. That covers `provenancechain`'s `apply=1` arm (its REPORT
+arm stays open to every class) and `provenanceroute` whole. It comes with a new C-number, REC-65's known-open pin in
+`identity-claims.test.mjs` corrected with a comment saying why, and a MAJOR IC on I3. **depends-on:** landing 2 waits
+for landing 1 to be DRIVEN, so D-200's chain-absent population keeps a route to repair. **accepts-when (1):** each of the
+five answers a member session and an administrator session with the op's own result, and the two unattended ops answer
+every session `MACHINE_CREDENTIAL_REQUIRED` with `recorded` citing §4.10's artifact. **(2):** a bearer `apply=1` and a
+bearer `provenanceroute` are refused by name; a session's succeed, and its author is the session's member, never
+`token:<class>`. **How a liar passes it:** an arm that calls the store directly. The session gate lives in `index.mjs`,
+so only a request through the plane reaches it.

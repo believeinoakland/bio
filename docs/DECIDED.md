@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1286 rulings across 101 documents.
+1287 rulings across 101 documents.
 
 ## DEC-
 
@@ -195,7 +195,7 @@ authority is the file named, never this one.
 - **DEC-49** — `test/textchain.test.mjs` was CORRECTED at its site, never exempted.** Its DEC-49 family-totality assertion caught the new refusal row immediately — the hand-written `codesUsed` list was wrong the moment the refusal landed — and the correction carries a dated reason at the line, with an arm driving the new code.  
   `docs/development/INTERFACE-CHANGES.md:5225`
 - **DEC-49** — milestone: M0 — CORRECTED from the DEBT row's M8: both files it changes are TEST ESTATE, which is what M0 is, and that is why `VERIFICATION.md` is its authority. interface: none design: `docs/development/VERIFICATION.md`, the section "THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE" (REC-76, D-236), which…  
-  `docs/development/QUEUE.md:99`
+  `docs/development/QUEUE.md:82`
 - **DEC-52** — WHY THEY ARE NOT DECIDED HERE.** Bob ruled on THREE VERBS — declare a relation, resolve a reference, thread a progression.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:3709`
 - **DEC-52** · 2026-08-07 — `docs/development/INVESTIGATIVE-SESSION.md` states at TWO sites — §14a's post-processing paragraph (`[BOB-4 — RULED 2026-08-07, PROVISIONAL]`) and the open-questions list — that *"the sidebar approval (identify → present → member approves) remains the act of record for the constitutive fields."* **DEC-52's decided…  
@@ -333,7 +333,7 @@ authority is the file named, never this one.
 - **D-98** · 2026-07-30 — RULED: undetermined authority becomes a task for the project manager, falling back to a group admin where a project has no manager, forwardable to a member better placed to attest.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:63`
 - **D-98** · 2026-09-21 — §8.1's "no notification channel anywhere" is SUPERSEDED by BOB #19's narrowing (the channel is the queue; only TRANSPORT is Bob's, D-98); its fold into §8.1 was asked of BOB on 2026-09-21 — read the landed §8.1 first.**  
-  `docs/development/BACKLOG.md:232`
+  `docs/development/BACKLOG.md:242`
 - **D-98** — and the RULED routing order, with every cited precedent verified present before the claim was written; D-98 is now a build task.  
   `docs/development/CIVICOS_UI_STATE.md:1052`
 - **D-98** · 2026-07-30 — §RULED 2026-07-30 — STALE in its closing paragraph.  
@@ -1074,6 +1074,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-2026-08.md:424`
 - **REC-65** · 2026-08-07 — The earlier provisional — sidebar approval as the act of record — is SUPERSEDED as a GATE; the sidebar remains visibility and bulk review.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2877`
+- **REC-65** — me; REC-65's known-open pin (`identity-claims.test.mjs` arm (e), which names `provenancechain` beside `proposedispose`) CORRECTED with a dated comment saying why, never exempted.  
+  `docs/development/BACKLOG.md:172`
 - **REC-68** — AND IT IS AMENDED RATHER THAN RESTORED, WHICH IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"* — true of its tree, false of this one, where `--strict` prints 741.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7372`
 - **REC-68** · 2026-08-09 — RECOVERED FROM `0ca7640^2` AND AMENDED, NOT RESTORED — AND THE AMENDMENT IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"*.  
@@ -1284,7 +1286,7 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Membership_Architecture_v2.md:421`
 - **REC-155** — REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches that file) so the two do not collide.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1207`
-- **REC-155** — SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS ARE REACHABLE BY NO SESSION, AND THE PLANE ANSWERS `SESSION_ROUTE_NOT_RECORDED` BECAUSE NOBODY RULED.** The provenance pair and calibration three admit `member`; `livefire` and `reproject` admit `admin` only.  
+- **REC-155** — SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED (§4.10): FIVE GAIN SESSION REACH, TWO ARE UNATTENDED BY DECISION.  
   `docs/development/BACKLOG.md:156`
 - **REC-155** — (1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md` after §4.9 (before `## 5.  
   `docs/development/CLAIMS.md:16049`
@@ -1629,7 +1631,7 @@ authority is the file named, never this one.
 - **M0-32** · 2026-09-14 — Found by M0-32's worker (2026-09-14) while reading the instrument rather than its output, and CONFIRMED at integration: `tools/decided.mjs`'s `MARKER` is `/\b(RULED|DECIDED|AMENDED|CORRECTED|OVERTURNED|SETTLED|SUPERSEDED|WITHDRAWN|CONCEDED)\b/` and **`.` IS A WORD BOUNDARY**, so the literal string `DECIDED.md`…  
   `docs/archive/ledgers/DEBT-closed.md:62`
 - **M0-33** · 2026-09-18 — M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold) milestone: M0 (background lane, holds no slot) — the test estate's own instrument interface: none — control drivers and the census only  
-  `docs/development/BACKLOG.md:540`
+  `docs/development/BACKLOG.md:550`
 - **M0-34** · 2026-09-15 — `RULED by Bob` means DOCTRINE no session may revisit; a session's own name means MECHANISM a later session MAY revisit on evidence.  
   `docs/archive/ledgers/QUEUE-closed.md:405`
 - **M0-35** · 2026-09-16 — CLAIM AMENDED 2026-09-16 M0 (M0-35 — three paths the original block did not name) session: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch `worktree-agent-af799694331ecc8d3`) **Appended rather than edited in place**, per this file's own rule.  
@@ -1667,7 +1669,7 @@ authority is the file named, never this one.
 - **M0-61** · 2026-09-18 — [SUPERSEDED IN PART by M-54, 2026-09-18 (M0-61): the three facts below re-measured true, but the NEWLINE is a correlate, not the cause — 2 of the 3 cross-line trips are genuine claims, and the RECONCILED sentence trips identically on one line.  
   `docs/development/MEASUREMENTS.md:15936`
 - **M0-68** · 2026-09-19 — A superseded test is CORRECTED, never exempted. — owner M0 (the test estate).  
-  `docs/development/BACKLOG.md:426`
+  `docs/development/BACKLOG.md:436`
 - **M0-69** · 2026-09-19 — §6 rung 6 — the scratch sweep taking scratch IDENTITY is DECIDED (BOB #16, 2026-09-19) and NOT BUILT: today `op=purge` clears the record tables only (row M0-69). - §7 — multi-instance isolation is planned, not built, and no queue row exists; the collision table and ordering constraints live in…  
   `docs/architecture/BIO_Distribution_v0_1.md:8`
 - **M0-82** · 2026-09-21 — 2026-09-21 · BOB #19 · M0-82 NARROWED, NOT SUPERSEDED.  

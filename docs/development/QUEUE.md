@@ -22,23 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-21 · BOB #20 · REC-155 IS DESIGNED: `BIO_Membership_Architecture_v2.md` §4.10 rules all seven session routes. It builds as TWO landings, and the second needs a NEW row whose id SCHEDULER mints. Owner RECORD. Intended place: REC-155 where it stands, the new row directly after it.**
-REC-155's row still reads *"design: MISSING — routed to BOB"*. Its design is now §4.10: BOB #19 ruled it, and BOB #20
-landed it after re-reading every citation at the code. **LANDING 1 is REC-155 itself.** `provenancechain`,
-`provenanceroute`, `calibrate`, `calibrationsubject` and `calibrationsignal` join BOTH `SESSION_OPS` sets, each with an
-arm DRIVEN through the plane from a signed-in session. `livefire` and `reproject` join `UNATTENDED_BY_DECISION`, each
-with the citation §4.10 quotes. The header comment that calls the seven UNDETERMINED is corrected in the same commit. No
-class list moves, so nobody loses reach, and I3 gains a MINOR IC. **LANDING 2 is a new row:** the provenance pair's
-BEARER WRITE is refused BY NAME, on the D-421/D-136 pattern. That covers `provenancechain`'s `apply=1` arm (its REPORT
-arm stays open to every class) and `provenanceroute` whole. It comes with a new C-number, REC-65's known-open pin in
-`identity-claims.test.mjs` corrected with a comment saying why, and a MAJOR IC on I3. **depends-on:** landing 2 waits
-for landing 1 to be DRIVEN, so D-200's chain-absent population keeps a route to repair. **accepts-when (1):** each of the
-five answers a member session and an administrator session with the op's own result, and the two unattended ops answer
-every session `MACHINE_CREDENTIAL_REQUIRED` with `recorded` citing §4.10's artifact. **(2):** a bearer `apply=1` and a
-bearer `provenanceroute` are refused by name; a session's succeed, and its author is the session's member, never
-`token:<class>`. **How a liar passes it:** an arm that calls the store directly. The session gate lives in `index.mjs`,
-so only a request through the plane reaches it.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
