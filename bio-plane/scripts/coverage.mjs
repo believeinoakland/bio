@@ -1342,8 +1342,10 @@ const REGISTER_FLOOR = {
   /* MERGED 2026-09-21 by D-436's worker, merging origin/main `ce830340` into its branch: BOTH moved `arms` from 1552
      (BOB #23 +1 at M0-83, D-436 +13) and neither from the other's figure. ONE KEY — COLLAPSED, never both kept — and
      its figure is RE-READ from the `--strict` run PRINTED ON THE COMMITTED MERGE (D-238: an uncommitted merge reads
-     short), never the sum typed in: MERGE_FIGURE_PENDING. */
-  arms: 1553,
+     short), never the sum typed in: `REGISTER FLOOR  arms 1566/1553 · classified 259/259 · corpus (suites read)
+     260/260 · GREW by 13 arm(s)` and `222 RUN … floor 222/222 reproducible` on the committed merge `e8533257`, exit 0
+     unpiped. Only `arms` moves here; nothing FELL. */
+  arms: 1566,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.

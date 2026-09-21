@@ -12767,7 +12767,8 @@ carried to BOB #22 with this landing's report. **NOT closed by it:** `memberadd`
 with a dated reason at the site: `acquire`, `bundle`, `caseproduction`, `conformance`, `counterparty`, `d270-refusal-truth`,
 `d280-strengthbar`, `gate-reads`, `hygiene`, `inquiry`, `installer`, `livefire`, `project-mint`, `project-sight`, `projects`,
 `publish`, `testify`, `testimonyaxis`. FLOORS moved from the printed figures on the committed tree: `scripts/coverage.mjs`
-`REGISTER_FLOOR` (arms 1552 → 1565, classified 258 → 259, corpus 259 → 260, run 221 → 222) and
+`REGISTER_FLOOR` (arms 1552 → 1565, classified 258 → 259, corpus 259 → 260, run 221 → 222; `arms` re-read as 1566
+on this branch's committed merge of origin/main `ce830340`, where BOB #23's M0-83 had moved it 1552 → 1553) and
 `civicos-ui/check-refusal-codes.mjs` (families 35 → 36, rows 288 → 291, census 598 → 601, reach 341 → 344, governedSites 125
 → 127, regions 109 → 111, regionLines 2973 → 2991, codesChecked 319 → 323, refusalsJudged 319 → 322 — every figure the old
 floor plus exactly this item's two spans and three codes, per the guard's own per-site line). The subjects' own controls
