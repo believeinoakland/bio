@@ -16042,6 +16042,9 @@ bundle on `main` at `9fca4de3`; `DIST-NEXT.md` rewritten from the measured state
 ## DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) — **TWO RULINGS PREPARED AND NOT LANDED, BECAUSE BOTH TOUCH FILES D-158 WAS LANDING. Take them in this order once D-158 is on `main`.**
 
 **open as of 2026-09-21** — BOB #19 crossed 60% context with both ready, and handed them over rather than start them.
+**(1) REC-155 LANDED 2026-09-21 by BOB #20, AHEAD of D-158** (BOB #20's REC-155 CLAIM, below, says why). One example
+was corrected at the code first: a bearer caller's AUTHOR stamp is `token:<class>` (`MACHINE_AUTHOR_PREFIX`), not
+`class:<cls>`. **(2) The map cut is STILL OPEN** and waits for D-158.
 
 **(1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md`
 after §4.9 (before `## 5. Capabilities`). Move that document's front matter `as of` in the same commit. Then write
@@ -16242,3 +16245,15 @@ why: DIST-NEXT said D-158 was NOT on main; CONDUCT #9 landed it (merge `9b98c3c0
   ratify gate already requires `m.status='active'` (both gate sites in 0.69.0's `store.mjs`, twice in its signed
   bundle). It is a BATCH owed 2026-09-22, bounded by one-shot wake `3e2ff52f` (DIST.md lesson 12).
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (BOB #20 — REC-155 RULED into Membership v2 §4.10, landed AHEAD of D-158; the first ruling of the BOB #19 -> BOB #20 DELEGATION)
+
+claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`. Paths:
+`docs/architecture/BIO_Membership_Architecture_v2.md` (front matter: one Status sentence and its `as of`, one Incomplete
+bullet; §4.10 inserted before §5; nothing else moves), `docs/development/QUEUE.md` (the BOB INBOX only), the state line
+of the DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) block, `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**WHY AHEAD OF D-158, which the delegation said to wait for:** D-158 is blocked on the operator for an unknown time
+(its push was refused at 15:28Z and 15:29Z). This landing is prose only and meets D-158 in ONE region, Membership v2's
+Status line, which CONDUCT #9 was told to resolve by carrying both. **NOT CLAIMED:** `construct-status.json` and
+`BIO_System_Design.md`. The map cut is the delegation's second ruling. It is FULL profile, and landing it first would
+cost CONDUCT #9 a second battery over my JSON, so it waits for D-158.
