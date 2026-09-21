@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1365 rulings across 101 documents.
+1364 rulings across 101 documents.
 
 ## DEC-
 
@@ -87,7 +87,7 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20); vocabulary corrected 2026-08-05 (D-188, > DEC-46 (d)).  
   `docs/architecture/BIO_Design_Requirements_v2.md:456`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"a work product carrying > unsettled BIAS DEBT (its cited bias manifest differs from the current > effective set) cannot advance workproduct_state and cannot be ratified for > publication"*.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1599`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1601`
 - **DEC-20** · 2026-08-02 — — AMENDED 2026-08-02 by Bob (DEC-20); struck here 2026-08-05 (D-188).  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1694`
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
@@ -288,6 +288,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:1209`
 - **D-38** — D-38 AND D-45 — TWO LIMITATIONS SETTLED BY DECISION AND HOMED IN NO GOVERNED DESIGN.** `MILESTONES.md`'s "Deliberately not scheduled" lists both (*settled by decision, default is to leave them*) and `WORK-PIPELINE.md` §3 names both as third-door rows; neither is stated in a construct's home (`MILESTONES.md` and…  
   `docs/development/CLAIMS.md:17170`
+- **D-38** · 2026-09-21 — RULED — D-38 and D-45 are stated LIMITATIONS in State Rules' front matter (§4.3, §8), so both leave DEBT by the third door; Q1 (D-162) and Q3 (D-53) are DOCTRINE and were PUT TO BOB in his conversation on 2026-09-21 — do not re-ask; Q4 (D-55), a bounded design act whose one link is untraced, passes to BOB #24…  
+  `docs/development/CLAIMS.md:17198`
 - **D-46** · 2026-07-26 — The deployed plane enforces the SUPERSEDED v1.4 rule for project participant removal.** `projectRemove` in `store.mjs` requires an in-app administrator and answers `ADMIN_ONLY`, which is Membership Architecture v1.4 section 7.7. v2 section 7.7 REVERSES it: only a project OWNER removes a participant, and…  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:18`
 - **D-50** · 2026-07-26 — SUPERSEDED — closed by 0.28.0 (PLAN S-12 item 6); the residue is D-50 · open, S-12 step 6 |  
@@ -416,8 +418,6 @@ authority is the file named, never this one.
   `docs/archive/research/BUILD-ORDER.md:121`
 - **D-144** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2): LED-7 batch 11** — D-144, D-143, D-199 and D-184 CLOSED IN FACT; D-84 (narrowed to its one unbuilt trace), D-207 and D-92 PLACED under their own ids; D-182 and D-325 SENT to BOB.  
   `docs/development/CLAIMS.md:16497`
-- **D-145** — `43cd0caf` + `19a0efb6` — SCHEDULER #7's four questions RULED:** D-145 and D-99 are M6's, designed together when M6 is taken up (State Rules front matter §1.2; `ARCHIVE-FALLBACK.md`); DEC-70 folded into State Rules §5.4; D-355's two driver rules folded into `VERIFICATION.md`'s D-331 section (24,561 of 24,576 B —…  
-  `docs/development/kickoffs/BOB-NEXT.md:43`
 - **D-151** — ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`, `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine callers are DISTINGUISHABLE.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3447`
 - **D-156** · 2026-08-02 — AMENDED 2026-08-02 by Bob, and the correction is larger than the vocabulary split:** the USER TYPE list is not one archetype.  
@@ -475,7 +475,7 @@ authority is the file named, never this one.
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-203** · 2026-09-19 — THE LADDER IS ONE-WAY AND GAINS NO `verified -> collected` EDGE — RULED 2026-09-19 by BOB #17 (D-203/D-200), from this section's own design rather than as a new rule.** Three things decide it.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:683`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:685`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
   `docs/archive/ledgers/QUEUE-2026-08.md:162`
 - **D-212** · 2026-08-05 — SUPERSEDED 2026-08-05 by the VERSIONS design — the question this row asked turned out not to be a record question at all.** The row went through three drafts and each was wrong in an instructive way, so the history is kept rather than deleted.  
@@ -2410,7 +2410,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§5.4: one RULED paragraph; front matter: one Incomplete bullet for §1.2 and the Status sentence; Contents regenerated); `docs/development/ARCHIVE-FALLBACK.md` (front matter: two Incomplete bullets and the Status sentence; Contents regenerated);…  
   `docs/development/CLAIMS.md:17095`
 - `docs/development/ORCHESTRATION.md` (one RULED section under "COMMUNICATING A CHANGE"); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, four items in order); `docs/development/CLAIMS.md` (this block); `docs/DECIDED.md` (GENERATED, regenerated LAST).  
-  `docs/development/CLAIMS.md:17256`
+  `docs/development/CLAIMS.md:17259`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2609,10 +2609,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1369`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1381`
-- `c31b8f60` — CONDUCT #10's Q3 RULED:** `governorconfig` is the OPERATOR's act (founder's session + ADMIN_TOKEN bearer), not an administrator's (Membership v2 §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE*): a host's configured appetite outranks the hosting account's `GOVERNOR_APPETITE_PER_MIN`, and §4.8 keeps…  
-  `docs/development/kickoffs/BOB-NEXT.md:35`
-- **2026-09-21** — Bob RULED the refresh line at 70%, not 60%** (2026-09-21, verbatim in `docs/archive/CLAUDE-2026-09-18.md`); enacted in `CLAUDE.md` §4, `BOB.md`, `CONDUCT.md` and `ORCHESTRATION.md`, and told to every live lane.  
-  `docs/development/kickoffs/BOB-NEXT.md:47`
+- **2026-09-18** — Bob RULED the refresh line at 70%** (verbatim in `docs/archive/CLAUDE-2026-09-18.md`; `CLAUDE.md` §4, `BOB.md`, `CONDUCT.md`, `ORCHESTRATION.md`).  
+  `docs/development/kickoffs/BOB-NEXT.md:33`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  

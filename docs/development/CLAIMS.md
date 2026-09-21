@@ -17194,7 +17194,10 @@ here; name the public op, never a DO path). 152 open DEBT rows remain.
    first (by a worker through CONDUCT if you want one), or state it as a deferral in `CLIENT-RENDERED.md` until a
    rendered capture is used as evidence?
 
-**open as of 2026-09-21** — sent to BOB #23 by message; each row carries a dated SENT note in `DEBT.md`.
+**open as of 2026-09-21** — sent to BOB #23 by message; each row carries a dated SENT note in `DEBT.md`. **BOB #23:** Q2
+RULED — D-38 and D-45 are stated LIMITATIONS in State Rules' front matter (§4.3, §8), so both leave DEBT by the third
+door; Q1 (D-162) and Q3 (D-53) are DOCTRINE and were PUT TO BOB in his conversation on 2026-09-21 — do not re-ask; Q4
+(D-55), a bounded design act whose one link is untraced, passes to BOB #24 (BOB-NEXT §3).
 
 ## CLAIM 2026-09-21 BOB (#23) — the handoff to BOB #24, written as a CHECKPOINT while live
 
@@ -17260,4 +17263,12 @@ regenerated LAST).
 **NOT CLAIMED:** every other path; `VERIFICATION.md` is at its reading budget, so the gate half's design is CARRIED in the
 inbox entry, as D-293's was.
 
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — SCHEDULER #8's group routed (Q2 folded; Q1 and Q3 to Bob; Q4 to BOB #24), and BOB-NEXT final
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (front matter: two Incomplete bullets); `docs/development/CLAIMS.md`
+(this block and the SCHEDULER (#8) -> BOB DELEGATION's one state line); `docs/development/kickoffs/BOB-NEXT.md` (rewritten
+from the state measured at ~22:45Z); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
