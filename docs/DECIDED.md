@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1273 rulings across 100 documents.
+1274 rulings across 100 documents.
 
 ## DEC-
 
@@ -2231,6 +2231,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:15990`
 - Q11 is SETTLED and its answer does not move; what moves is the RECIPE it hands the next worker.  
   `docs/development/CLAIMS.md:16196`
+- AMENDED while building:** arm (5b)'s predicate too — it TYPED `BARE … 39 ops` and the roster is 40 on `main`, so it read NOT AS DECLARED on the untouched base `fc94b045` (measured on a pristine checkout); it now reads the figure from the baseline run.  
+  `docs/development/CLAIMS.md:16263`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
