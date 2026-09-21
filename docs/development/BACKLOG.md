@@ -20,6 +20,26 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### REC-156 · queued — **`op=memberadd` STILL LETS A PROPOSER RECORD AN ENDORSEMENT IN ANOTHER ADMINISTRATOR'S NAME.** Its `by` is not server-stamped — the stamp in `bio-plane/src/index.mjs` covers `PROJECT_ACTIONS`, `GOVERNANCE_ACTIONS` and two project ops — and `Store#memberAdd` writes an `admin_votes` ('add') row from it when an addition needs consensus. D-136 closed this class for the three ops BOB #17 ruled, and only those. — owner RECORD.
+order: FIRST, and seated ABOVE D-432 when it enters the cache (refill appends): D-136's class and rank — *"A forgeable governance vote outranks the hole below it"* — and a correction to just-landed work (`08a2e4d0`), verified at the code (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 1)
+milestone: M8
+interface: I3 — a server-stamped `by` on one more op; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 — an addition beyond the second administrator needs the consensus of all existing ones; the section D-136 enacted.
+depends-on: none. D-136 landed at `08a2e4d0`.
+scope: add `op === "memberadd"` to the `by` stamp's condition and relay the stamped `by`; correct each suite that sends `by` in that op's body, reason at the site. **`adminvote.test.mjs`' `memberaddStamped` arm pins this boundary and FAILS THE DAY IT CLOSES** — correct it with a dated reason, never exempt it. Correct the `GOVERNANCE_ACTIONS` comment's *"NOT memberadd/memberset"* too (`memberSet` takes no `by`).
+accepts-when: a signed-in administrator's `memberadd` records the endorsement as THEM; a body `by` naming another administrator is overwritten, asserted by a drive that sends one; construct 1's *"NOT closed: op=memberadd's by"* clause leaves `construct-status.json`. How a liar passes it: stamping at the plane while the store still honours a body `by`. NEGATIVE CONTROL: drop the disjunct, and the forged-`by` arm fails by name.
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs REC`).
+
+### M0-86 · queued — **BOB'S OWN ACT, NOT A WORKER SLOT (BOB #19 is cutting it by hand, 2026-09-21).** **THE CONSTRUCT MAP HAS 4 BYTES OF HEADROOM ONCE D-158 LANDS, AND OVER BUDGET IT FAILS EVERY GATE.** `docs/architecture/BIO_System_Design.md` is 49,106 B on `origin/main` and 49,148 B on `worker/d158-conduct8` (`b3ae389c`), against the 49,152 B map budget, in `tools/readbudget.mjs`' `CUT` set. The next landing that lengthens a §3 row fails — D-432 adds a table that construct 3's census cell records. — owner BOB (the map's author).
+order: SECOND, by BOB's hand rather than a slot: over budget this file FAILS every landing that grows it, where `RECORD.md` (REC-154) is a WARN; it should land before D-432 does (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 5, re-measured)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each*.
+depends-on: none.
+scope: BOB's stated plan: move each §3 claim's HISTORY into `construct-status.json`'s unrendered `note`, which `node tools/status.mjs <topic>` still prints, so nothing is lost; anything cut from prose is archived VERBATIM.
+accepts-when: `node tools/readbudget.mjs` reads the map under budget, headroom stated in bytes at the landing; `node tools/status.mjs --check` still agrees; nothing that left the map is absent from both the note and the archive.
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+
 ### D-434 · queued — **A PUBLISHED RECIPE REFUSES THE MEMBER AT ITS OWN LAST STEP.** `app.html`.s `RECIPES[capture-a-document-and-ground-a-question-on-it]`, ends on `op=inquiryground` — which authors the DEC-32 PARTITION over legs that ALREADY EXIST and refuses `NO_BASIS` when there are none. On a fresh capture the member is REFUSED; on a question with legs it regroups them and attaches the document to nothing. The op for this act is `op=cite`. **PART 1 ONLY.** — owner UI.
 order: FIRST. The record telling a member to do what the plane refuses is the record claiming more than it can support, which CLAUDE.md §2 grades above every feature — and it is PUBLISHED, so it is wrong in the member.s hands. One edit plus its arm (SCHEDULER #3, 2026-09-20)
 milestone: M8
@@ -42,6 +62,16 @@ accepts-when: a row carrying BOTH an owner phrase and a discharge is NOT attribu
 NEGATIVE CONTROL: break the discharge in `owed-controls.mjs` and watch a NAMED assertion in `owed.test.mjs` fail.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18.s inbox entry, drained this commit).
 
+### M0-83 · queued — **`tools/retirable.mjs` CAN PROTECT A STRANGER AND CALL A STANDING LANE'S LIVE HOLDER RETIRABLE.** Three defects, one judgement: (1) `laneOf` strips only a TRAILING `#N`, so `CONDUCT #8 (BIO) — integrator lane` is in no lane, its predecessor is elected newest, and the holder was judged RETIRABLE (BOB #19, 2026-09-21); (2) a `--self` FOUND in the input is accepted, though `list_sessions` excludes the caller (CONDUCT #8, 2026-09-20: `1 retirable … 7 judged`, correctly `8 … 14`); (3) the caller can never be the newest of its own lane. — owner BOB (its instrument).
+order: directly before M0-81, as ONE row — *"one file, one suite, one gate"* (BOB #19, 2026-09-21): it inverts the standing-lane protection, and its count moves in the direction a reader takes as SAFE (SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's header "WHAT IS NEVER AUTO-RETIRED" and `kickoffs/BOB.md` "Spawning and retiring lanes".
+depends-on: none.
+scope: (1) `laneOf` takes the word before `#<n>` wherever the number sits (`/^\s*([A-Za-z]+)\s*#\d+/`, else the title); (2) a `--self` present in the input is REFUSED with an UNKNOWN-SELF verdict; (3) the caller may declare its own title and then counts as its lane's newest. **FULL GATE PROFILE** (`tools/`): check disk first.
+accepts-when: a suffixed title lands in its lane and its predecessor is not elected; a `--self` found in the input is refused by name; a declared caller is its lane's newest. How a liar passes it: fitting one title shape, so an arm feeds a suffixed and a trailing form. NEGATIVE CONTROL: restore the trailing-only regex, and the suffixed-title arm fails by name.
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry with CONDUCT #8's DELEGATION 2026-09-20, drained this commit).
+
 ### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
 order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
 milestone: M0
@@ -53,6 +83,26 @@ accepts-when: given a listing with a live session bound to a lane, the judgement
 NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is admitted, failing by name.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
 
+### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 had landed `0ca2c216`, `8e4c30c3` and `fa58ce92`; nothing noticed for hours, and `kickoffs/BOB.md` rule 4 now carries the lesson as prose. — owner M0.
+order: directly after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second, and it would have told BOB #18 at its next push (SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), enacting `kickoffs/BOB.md` rules 4 and 12.
+depends-on: none.
+scope: a `plancheck` WARN over `git log origin/main --format='%h %cI %s'`: for each lane prefix `<lane> #N:`, a commit by instance N dated AFTER one by instance M > N is a POST-SUCCESSION LANDING, named with both commits. EXEMPT: a predecessor's commit touching only its own `-NEXT` file. **FULL GATE PROFILE** (`tools/`).
+accepts-when: a fixture log with an older instance landing after a newer one WARNs naming both; the same log whose late commit touches only the `-NEXT` file does not. How a liar passes it: matching one lane's name, so the fixture carries two lanes. NEGATIVE CONTROL: drop the date comparison, and the late-landing arm fails by name.
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+
+### M0-85 · blocked — **THE HEARTBEAT MEASURES A STALE TREE.** `conduct-heartbeat` STEP 3 greps `QUEUE.md` in the MAIN CHECKOUT's working tree and STEP -1 runs `tools/retirable.mjs` there; `git fetch` never moves that tree and no session works in it (DEC-3), so on 2026-09-21 it sat at `aa5cc98d`, 34 commits behind `origin/main`. STEP 4b's idle-with-work alarm, which reaches Bob's phone, rests on those counts. — owner the OPERATOR (the task definition lives outside this repository); BOB #19 carries it.
+order: with M0-81 (BOB #19, 2026-09-21); `blocked` because no worker can take it — the definition is Bob's to approve and is never changed from here (SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the heartbeat's own STEP 3 warning, *"A QUESTION ASKED ABOUT THE WRONG UNIT"*.
+depends-on: Bob's approval of the definition edit (BOB #19 took it to him, 2026-09-21).
+scope: STEP 3 reads `git show origin/main:docs/development/QUEUE.md`; STEP -1 fast-forwards the checkout first (`git merge --ff-only origin/main` — clean and held by nobody, so it cannot lose work).
+accepts-when: a heartbeat run's `queued`/`running` counts equal those of `git show origin/main:docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
+
 ### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own instructions whole — which is the one thing CLAUDE.md's reading budget exists to guarantee. It was already over at 32,259 B before REC-146 appended to it. — owner RECORD.
 order: after D-339 with the corrections: it is not a defect in the product, but it breaks the READING BUDGET doctrine for the busiest build lane, and every RECORD worker pays it on every spawn. Cheap and mechanical (SCHEDULER #2, 2026-09-19)
 milestone: M0
@@ -63,16 +113,15 @@ scope: cut it on CONDUCT.md's precedent — **archive the cut text VERBATIM** (n
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar passes it: deleting rather than archiving, so the arm diffs the archive against the pre-cut file. NEGATIVE CONTROL: drop a paragraph instead of moving it, and the byte-identity check fails naming it.
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
 
-### M0-82 · queued — **`kickoffs/CONDUCT.md` HAS 24 BYTES OF HEADROOM, SO THE ROUTING RULE THE INTEGRATOR LANE MOST NEEDS CANNOT BE WRITTEN WHERE IT READS IT.** 24,552 B against 24,576 B, in `readbudget.mjs`. CUT set where an overrun FAILS. CONDUCT #8 raised it and rightly refused to decide it; BOB #18 ruled ARCHIVE-THEN-CUT. — owner CONDUCT.
-order: beside REC-154, the same class: a kickoff at or over its reading budget, which the busiest build lane pays on every spawn. **AND IT IS PLACED AS A ROW RATHER THAN SENT AS A MESSAGE BECAUSE CONDUCT CANNOT BE TOLD** — it runs unattended and has no inbox (M-74) (SCHEDULER #3, 2026-09-20)
+### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The ATTENDED-start rule landed in `kickoffs/CONDUCT.md` "Starting your successor" (BOB #19, `89bfa0d1`). The ARCHIVE-THEN-CUT had landed before this row was placed: CONDUCT #7 at `7641d109` (2026-09-20 00:55Z) archived the kickoff verbatim to `docs/archive/CONDUCT-kickoff-2026-09-20.md`, which holds both "Integration mechanics" sections, and condensed them with a pointer; the premise came from a grep of the `-09-19` archive. `CONDUCT.md` is 24,492 B: 84 B of headroom. — owner CONDUCT.
+order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each* — enacting BOB #18's ruling in `kickoffs/BOB.md`.
-depends-on: none. REC-154 is the same act on `RECORD.md`; either may land first.
-scope: ONE commit that (1) moves CONDUCT.md's two "Integration mechanics" sections VERBATIM to `docs/archive/`, (2) cuts them from the kickoff and cites the archive, (3) lands the three occupancy/reachability rules from `kickoffs/BOB.md` in the space freed. **THE ARCHIVE STEP IS THE WHOLE RULING:** `docs/archive/CONDUCT-kickoff-2026-09-19.md` does NOT contain those sections (grepped, 0 hits), so cutting them without archiving destroys a receipt that exists nowhere else, which CLAUDE.md §1 forbids. `BOB.md`'s own header is the worked precedent.
-accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; `node tools/decided.mjs` still finds every ruling in the moved sections; the kickoff cites the archive by path. How a liar passes it: cutting prose that was never archived — so the arm greps the archive for each moved section's own first sentence.
-NEGATIVE CONTROL: cut a section without archiving it, and the decided-index arm fails by name.
-added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget, enacting `kickoffs/BOB.md` "Spawning and retiring lanes" rules 1 and 3.
+depends-on: none. Sequence after M0-81.
+scope: when CONDUCT starts its successor itself because no BOB answers, it checks OCCUPANCY first — no live session bound to the lane by `scheduledTaskId` or title — and RETIRES a duplicate rather than renaming it. Paid for inside the 24,576 B budget by the file's owner; anything cut is archived VERBATIM.
+accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 
 ### D-116 · queued — **NOTHING READS A FLEET MEMBER'S VERSION BACK THROUGH ITS BINDING.** The installer verifies the PLANE (`verifyUpdate` reads `op=bootstrap`) and each member is uploaded with a version and never asked what it answers — so the plane can verify itself current while a member still serves the previous build, invisibly to both. — owner DIST.
 order: after D-254, above features: a group can run a stale member with nothing reporting it, so the install and the deploy both claim more than they can support — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19)
@@ -135,6 +184,36 @@ scope: carry the catalogue row's `translation` in each of the four fixtures and 
 accepts-when: each of the four pins DISAGREES with the plane when the translation is wrong, proved by feeding a wrong one; the narrower-than-wire count is printed per suite and floored. How a liar passes it: fixing the four and leaving the census unbuilt, so the floor is asserted to exist.
 NEGATIVE CONTROL: put a WRONG translation in one repaired fixture, and that suite fails by name — today it passes, because the field is absent.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's routed item 4; `node tools/mintid.mjs M0`).
+
+### M0-87 · queued — **`tools/rowsubstrate.mjs` SCORES A ROW WHOSE EVERY CITED ANCHOR IS UNRESOLVABLE AS UNCOVERED, so `plancheck` prints a false `substrate not evident`.** When `sectionText()` returns null the scope is set aside as UNRESOLVABLE, `covered` stays false with `probes: []`, and the row still joins the findings — zero symbols against zero text, reported as a gap. D-136 carried exactly that (§4.7 and §4.9 are bold paragraphs, not headings). Latent today: the four current notes each resolve their anchor. — owner M0 / VERIFY.
+order: with the instrument cluster, after M0-80: an instrument claiming about what it cannot see, the class the cluster closed three of (CONDUCT #8's DELEGATION 2026-09-20 item 2); a WARN, and latent, so below the rows that hide a failure (SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header: *"A MISS IS NOT PROOF IT IS ABSENT"*, and a row the question cannot be asked of is UNJUDGED, never scored.
+depends-on: none.
+scope: when every anchor for a cited document is unresolvable, fall back to document level or count the row UNJUDGED — never uncovered. The mechanism withdrawn from the ANCHOR arm leaked into the COVERAGE arm. **FULL GATE PROFILE** (`tools/`).
+accepts-when: a fixture row whose only anchor is a bold paragraph is UNJUDGED or judged at document level, never a finding; a row whose resolved section lacks every symbol still is one. How a liar passes it: scoring the unresolvable row covered, so the arm asserts it is not a pass either. NEGATIVE CONTROL: restore skip-then-push, and the unresolvable arm fails by name.
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+
+### M0-88 · queued — **`caseproduction.control.mjs` ARM (H) NOW DRIVES THE PARTICIPATION FENCE, NOT THE COMMIT IT DECLARES.** It forges the committed project to a literal nobody has joined, so C-56.1 refuses it at `op=caseratify` before anything commits; its original property — *the record commits an attribution no signature covers*, the dangerous case — goes untested. M0-78 corrected the arm's declaration and REPORTED the re-aim rather than taking it. — owner M0.
+order: with the instrument cluster, after M0-80: a control proving less than it declares — a second defect in a control the cluster repaired (CONDUCT #8's DELEGATION 2026-09-20 item 3; SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a control is evidence only when it FAILS at a named assertion; read with M0-78's note at the arm.
+depends-on: none.
+scope: re-aim arm (H) at a forged project the actor HAS joined (`PROJ_OTHER`'s role), minted at run time — project ids are opaque (Membership v2 §7), so it cannot be a static literal — so the ceremony completes and §8's committed-from-bytes arm fails by name.
+accepts-when: the arm reaches the commit; §8's arm fails BY NAME while the four named act-side refusal arms stay green; the control leaves the tree byte-identical. How a liar passes it: a joined project the fixture never ratifies with, so the arm asserts the ceremony completed.
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+
+### M0-89 · queued — **`D384_STAYS` WAS MEASURED WHILE `*eachImage` WAS INVISIBLE, so the hand-admitted compensation for the walk's helper blind spot has never judged it.** D-414 made generator methods visible to the five walks (census 109 → 110) and left `eachImage` in the CENSUS but outside the amplification CLASS: it reads one image per bundle over an unbounded scan, through `this.readImage(...)`, which the walk cannot see. — owner M0.
+order: with the instrument cluster, after M0-80: D-414's named residue (*"a row of its own and is reported rather than taken here"*, at the census in `derivation-bounds.test.mjs`); an undercount a ratchet cannot catch (CONDUCT #8's DELEGATION 2026-09-20 item 4; SCHEDULER #4, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-384 (`node tools/ledger.mjs find D-384`) and D-414's note at the census.
+depends-on: none. **Same file as M0-44** — one worker at a time.
+scope: re-measure the `D384_STAYS` population with generators visible, and enrol or exclude `eachImage` with its reason; any move of the class figure is attributed, never nudged.
+accepts-when: `eachImage` carries a verdict in `D384_STAYS` or `D384_LEAVES` with its reason; the class figure is taken from a printed run, its delta attributed. How a liar passes it: a verdict with no measurement, so the entry cites the body it judged. NEGATIVE CONTROL: remove the entry, and the admitted-set arm fails naming `eachImage`.
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 
 ### COFF-13 · queued — **NO FORMAT ENTRY EMITS A DECK LENGTH, so a deck whose TRAILING slides are unreadable is recorded shorter than it is — and the content row then REFUSES A TRUE CITATION of a real trailing slide as "past the deck".** D-359's named residue, rowed at its close rather than left in prose. — owner CONTENT-OFFICE.
 order: below LED-8, above the features: it refuses something TRUE — a record defect, not a gap — but errs in the CONSERVATIVE direction and reaches only decks with unreadable trailing slides, so it ranks under the defects above it (SCHEDULER #2, 2026-09-19)
@@ -323,6 +402,16 @@ depends-on: none.
 scope: point the probe's source read (its `src.indexOf("  #restsOnLive(id) {")` near line 273) at `#refEdgeSevered`'s definition, with a dated comment saying why the old read was right when written; take the DEFINITION, never the first mention, as the existing comment requires.
 accepts-when: `node bio-plane/test/curated-producer.probe.mjs` from `bio-plane/` reads 10 pass, 0 fail; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: widening the read to any mention of either name, so the read must anchor on the definition line. NEGATIVE CONTROL: rename `#refEdgeSevered` on a scratch copy, and the probe fails by name.
 added: 2026-09-19 · SCHEDULER (CONDUCT #6's report; fix named; id minted with `node tools/mintid.mjs M0`).
+
+### M0-90 · queued — **MK-1's PUBLISH PROBE CANNOT DRIVE ITS PATH 3, the `op=caseratify` route C-53.12 fences.** Its fixture concludes without naming a reading's claim, so `op=conclude` refuses `NO_CLAIM` (REC-124/REC-136, §7.1), `op=publish` then refuses `NOT_CONCLUDED`, and the path never runs. MK-3's worker made it print DEAD rather than clean (`bio-plane/test/mk1-publish-probe.mjs`); the route stays unmeasured by the instrument built to measure it. C-53.12 itself is asserted in the battery (`testify.test.mjs`, `testimonyaxis.test.mjs`). — owner M0.
+order: with M0-74, the probe corrections: a probe path that cannot run, now stated rather than hidden; the measurement a lifted fence will need (SCHEDULER #4, 2026-09-21; MK-3's report, CONDUCT-NEXT §4)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §Incomplete, which MK-3 confirmed at the artifact.
+depends-on: none.
+scope: the fixture adopts a named reading's claim at `op=conclude`, so PATH 3 drives `op=publish` then `op=caseratify` and reads the fence's answer.
+accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that never reached ratify, so the DEAD detector stays. NEGATIVE CONTROL: drop the claim, and PATH 3 prints DEAD by name.
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 
 ### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)" segment; give each a standard tally, and the segment leaves the headline.** Suggested by M0-65's worker, routed by CONDUCT #6, 2026-09-19. **It MOVES the assertion total** — the landing states the old and new totals and attributes the delta to the two suites. — owner M0.
 order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)

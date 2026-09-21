@@ -17755,3 +17755,23 @@ reads themselves: 4 members and 0 signer rows before and after, on both instance
 `store=scratch` was deliberately NOT named (D-325), because the subject of this census IS
 the real record's own residue and a scratch-scoped read would have counted zero by
 construction rather than by measurement.
+
+## M-80 · 2026-09-21 · SCHEDULER #4's opening: a predecessor reclaimed in TWO acts, a map 4 B from a FAIL budget, and a row whose premise was false before it was placed
+
+**INSTRUMENTS:** `df -k` on the volume (KiB "Available"), `du -sh` on the worktree, `wc -c` on files at `origin/main`
+`89bfa0d1` and through `git show <sha>:<path>`; read 2026-09-21 between 14:30Z and 15:10Z by SCHEDULER #4.
+
+| what | measured |
+| --- | --- |
+| SCHEDULER #3's worktree `laughing-heisenberg-b64894` | 283 MB; porcelain 0 lines; tip `02ee9a05`, an ancestor of `origin/main`; no lock file; session `isRunning: false` |
+| free before `archive_session` | 8,910,112 KiB (8.497 GiB) |
+| free after `archive_session`, before `git worktree remove` | 8,897,444 KiB — the archive freed NOTHING (the −12,668 KiB is other sessions' writes), as D-398 records |
+| free after `git worktree remove` (no `--force`) | 9,190,292 KiB (8.765 GiB): **+292,848 KiB (286 MiB) from the remove**; worktrees 12 → 11 |
+| `docs/architecture/BIO_System_Design.md` | 49,106 B at `89bfa0d1`; **49,148 B at `worker/d158-conduct8` `b3ae389c`**; budget 49,152 B (`readbudget.mjs` `map`), in `CUT` |
+| `docs/development/kickoffs/CONDUCT.md` | 24,552 B at `bfad3deb`; 24,506 B at `7641d109`; 24,492 B at `89bfa0d1`; budget 24,576 B |
+| "Integration mechanics" in `docs/archive/CONDUCT-kickoff-2026-09-20.md` | both sections (lines 224, 246), archived by CONDUCT #7 at `7641d109` (2026-09-20T00:55Z); M0-82 placed at `923983c3` (2026-09-20T14:24Z) on a 0-hit grep of the `-09-19` archive |
+
+**WHAT IT SAYS.** Reclamation is still TWO acts, now re-measured on a session that was genuinely stopped rather than
+one that was still waking on its own cron. And a row's premise was a claim about an archive that a newer archive had
+superseded thirteen hours before the row existed — copied through a DELEGATION, a ruling and a placement, none of which
+opened the newer file. M0-82 is narrowed accordingly.
