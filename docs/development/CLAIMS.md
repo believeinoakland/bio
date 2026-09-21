@@ -16180,6 +16180,8 @@ build; the plane's own setup page is the one surface that renders it, and it is 
 
 **open as of 2026-09-20** — OPEN while this item builds; CONDUCT integrates and mints the IC.
 
+**RELEASED 2026-09-21 by CONDUCT #9 at integration** — see the release line closing the SECOND D-158 block below. The IC this block asked the integrator to mint is IC-169.
+
 ## CLAIM 2026-09-20 RECORD (D-158, SECOND BLOCK — ONE PATH ADDED after the item's own "who else reads this" sweep found a live recipe that D-158 makes wrong)
 
 Appended rather than edited into the block above, because this register is APPEND-ONLY and the
@@ -16204,3 +16206,5 @@ and `plancheck` after. The full battery's figure was taken at `f9bfd812`; the on
 this prose block under `docs/`, and the suites above are the ones that read the file it is in.
 
 **open as of 2026-09-20** — OPEN while this item builds; released with the block above at integration.
+
+**RELEASED 2026-09-21 by CONDUCT #9 at integration.** D-158 LANDED in the integration merge `9b98c3c0`, pushed to `main` at `36eaf651` (IC-169 ACCEPTED MAJOR, I3 46.0.0 → 47.0.0), and branch `worker/d158-conduct8` is GONE from the remote (`git ls-remote --heads origin` prints nothing for it, which under PRUNE-ON-MERGE MEANS integrated, not missing). The paths both D-158 blocks reserved are FREE, this block's `RECONCILED.md` site included. Its measurement is M-79 (minted as M-78; renumbered at integration — see the block).
