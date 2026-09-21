@@ -15987,6 +15987,17 @@ claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths: `docs
 (front matter and §7.1 only), `docs/development/DEBT.md` (the disposition cells of D-195, D-80, D-126 and D-52 only),
 `docs/development/QUEUE.md` (the BOB INBOX only), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 
+## CLAIM 2026-09-21 FLEET (FLEET #3 — the restart's fleet measurement, and the `op=bootstrap` reading corrected in FLEET's law)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/kickoffs/FLEET.md` (the "Reading which build answers" lesson, corrected in place, and a dated
+stand-up section, the file's own form); `docs/development/MEASUREMENTS.md` (ONE dated line under the 0.57.0 "which
+build answered" table; its body is a dated receipt and stays as written, on BOB #19's instruction); `docs/DECIDED.md`
+(GENERATED, regenerated last if the prose moves it); and this block. No fleet source, bundle, manifest or tool is
+touched. **NOT CLAIMED:** `BACKLOG.md`'s D-116 row (SCHEDULER's), `newgroup/**` and
+`bio-plane/test/vf4-live-scratch.mjs` — the narrowing goes to SCHEDULER and DIST by `SendMessage`, its fix named.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the text it covers.
+
 ## CLAIM 2026-09-20 RECORD (D-158 — THE ROSTER AND THE GATE ANSWER ONE QUESTION: a signing key is registered to a member who can attest, and `op=signerlist` says which state each key is actually in)
 
 Worker spawned by CONDUCT #8. **Own worktree** `.claude/worktrees/d158-conduct8`, branch **`worker/d158-conduct8`**,

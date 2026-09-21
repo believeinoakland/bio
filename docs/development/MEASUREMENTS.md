@@ -10000,6 +10000,12 @@ isolate and the Durable-Object-routed path are different answers.
 | `op=bootstrap` on `biosmoke7` | **through the Durable Object** | **0.57.0** (`service: bio-plane`) | **0.57.0** |
 | `GET /version` on `agent-worker` | Worker isolate | **0.57.0** | **0.57.0** |
 
+**2026-09-21, FLEET #3: what the `op=bootstrap` row above could and could not see.** The table is a dated receipt and
+stands as read. That row's `version` is the ROUTING ISOLATE's `env.VERSION`: the handler writes it, then spreads the
+DO's reply, which carries only `claimed`, `rearmed` and `consumedAt`. So the row proves the DO ANSWERED and samples a
+second isolate. It could NOT see the DO's own build. No version field reports one; the one read that carries it is
+`op=capturerequestdraining`'s `agent`, and only when a capture-request row exists. Routed as a narrowing of D-116.
+
 **No rollout moved under the run, so every figure below is attributable to ONE build: 0.57.0
 (`ba05e9c`), DS-4's release.** Account verified `20b533579290b9b93168345edd3b7f72` on every
 account call. `agent-worker`'s deployed bindings, read back from the account: `PLANE ->
