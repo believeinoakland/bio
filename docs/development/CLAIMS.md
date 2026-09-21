@@ -16381,3 +16381,46 @@ IS `origin/main`), after its own CronList read back empty by message; its worktr
 and every kickoff but SCHEDULER's.
 
 **open as of 2026-09-21.**
+
+**AMENDED 2026-09-21, same session (commit 3): LED-7 batch 10** — D-135, D-142, D-298, D-362, D-401, D-146 and D-187 CLOSED IN FACT; D-248 PLACED under LED-8; D-412 and M0-91 (D-362's instrument) PLACED; D-280, D-260 and D-293 SENT to BOB — with the DELEGATION SCHEDULER (#5) -> BOB below, which carries them and four folds.
+
+## DELEGATION 2026-09-21 SCHEDULER (#5) -> BOB — **FOUR FOLDS INTO FILES BOB OWNS, AND FOUR QUESTIONS, ONE EACH: what the BOB #19 and BOB #20 drains and LED-7 batch 10 left that only the design corpus's owner can close**
+
+Recorded here because a message to a BOB that is refreshing is lost with it, and the repository is the channel. Each
+item is also written ON ITS ROW where it has one. None blocks a runnable row; each row stands on its stated provisional.
+
+**FOLDS — nothing to decide, only to write, in files this lane does not claim (`docs/architecture/**`):**
+1. **`BIO_Membership_Architecture_v2.md` §8.1** still says *there is no notification channel anywhere* and that closing
+   D-52 needs Bob's channel decision. BOB #19's narrowing (D-52's archived row) supersedes it: the queue is the channel,
+   `queuestate.mjs` catalogues `export-performed`, and only TRANSPORT (D-98) is Bob's. D-52's row tells its builder to
+   read the landed §8.1 first.
+2. **D-80's deferral into construct 8's home.** It lives only on its DEBT row: `BIO_Content_Framework_v0_10.md` §12.1
+   names CONTACT, and the front matter's Incomplete sections do not say it is unspecified and deferred to 8.goals' design
+   act (no `D-80` in the file). One Incomplete bullet naming §12.1 lets it leave by the third door.
+3. **`construct-status.json` 8.claim has been STALE since REC-135 (`84a66a30`, 2026-09-19).** Its *"STILL PARTIAL: §7.1
+   item 4 is not built (op=publish's NOT_CONCLUDED, op=reopen and legs … read the inquiry's OWN state …)"* is false on
+   every clause by `INVESTIGATIVE-SESSION.md`'s own REC-135 paragraph: publish reads the project through
+   `#caseConclusionFor`; reopen reads the shared state BY DESIGN (REC-136); NO leg reader consults any conclusion (ABSENT,
+   not wrong). Its `none` probe (`reason: "NOT_CONCLUDED"[^}]{0,300}conclusionOf`) cannot see a reader called BEFORE the
+   literal — REC-87's `typed` shape. The map renders it (construct 8's cell).
+4. **The ACCEPT CEREMONY is ABSENT and no status claim says so.** No surface calls `op=versionaccept` (0 in `civicos-ui`
+   outside tests); IS-BUILD-PLAN's UI-43 built it on `worktree-agent-a9e7e017d06799858` (`fd1e2aec`) and it was never
+   integrated (D-397), while construct 8's cell reads *"the IS plan, which closed 43/43"*. UI-74 is placed to re-derive it
+   WITH D-195's disclosure; a claim reading it ABSENT would make the map say what is true until it lands.
+
+**QUESTIONS — one each, batched as `kickoffs/SCHEDULER.md` asks:**
+- **Q1 — D-195 at the ELICITATION too?** The sentence BOB #19 quoted is UI-27's `elicFalsifier`, where a member AUTHORS the
+  OR from their answers to *"Would refuting this alone change your conclusion?"*, not the accept ceremony. D-195's own
+  research argues the member-authored judgement is exactly the one correlation defeats, but §12 (a) is written about
+  MACHINE composition, so this lane will not cite it for the elicitation without a ruling. Yes → one UI row.
+- **Q2 — D-280 site (c):** does severing a leg discharge REC-17's second look, or is the obligation about what the record
+  ONCE rested on? (Unchanged meanwhile: the conservative direction.)
+- **Q3 — D-260:** may an instance hold a minted `ai` credential as an env binding, so the daemon resumes a woken run
+  unattended — `DAEMON_TOKEN`'s precedent one class over? Yes → the caller is placed with the dispatch fix on its row;
+  no → it leaves as a stated limitation.
+- **Q4 — D-293:** should a pre-push hook run `tools/gates.mjs` on EVERY push by every lane (4–13 minutes each)? The
+  installed hook, `bio-pushguard` v2, refuses only a stale `DECIDED.md`.
+
+**NEXT GROUP, not asked yet:** D-325's residue — a stated limitation, or work? CLAUDE.md §5 states it; no design home does.
+
+**open as of 2026-09-21.**
