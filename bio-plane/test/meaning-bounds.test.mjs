@@ -1,3 +1,22 @@
+/* NEGATIVE CONTROL: (run 2026-09-21, D-254 worker, worktree agent-aba246a225e641de7, D-254) the D-240 arm (a) is
+   an IMPORT PIN now — REC-76's reader has ONE home, `test/verdict-reader.mjs`, and the DEC-49 guard imports it — and
+   `test/verdict-excluder.control.mjs` runs its arms with D-240's: THIRTEEN in all, each armed ALONE, every restore
+   verified by sha256 AND content, every arm reading the suite's FOOT. **13 of 13 AS DECLARED, harness exit 0; the tree
+   came back to meaning-bounds 92/0 · plane-envelope 60/0 and the guard's output byte-identical.** This file's share:
+   (3) RE-AIMED, still D-240's arm: ONE CHARACTER of drift inside a SECOND `verdictKind`, re-grown in the guard with
+       `verdictKind` dropped from its import -> **91/1**, D-240 (a) and nothing else, READER line `NOT SINGLE-HOMED:
+       verdictKind`; the guard itself exits 0 (the copy is dead code — only the pin can see it).
+   (3m) THE STALE-MERGE SHAPE, all eight declarations back beside the guard's full import -> **91/1** on (a) naming
+       all eight; the guard FAILS TO LOAD (`SyntaxError: Identifier 'skipString' has already been declared`).
+   (3b) OVER-STRICTNESS — a comment edited outside the shared functions -> **92/0**.
+   (3c) D-240's OWN arm-(3) edit applied to the ONE home -> **91/1**, (a) alone, `MISREAD: verdictKind` — a READING
+       catches the change the old pin passed whenever both copies moved together (REC-79); plane-envelope 58/2 on (a)
+       and (d); the guard's output byte-identical (no governed site spells a `Boolean(…)` verdict).
+   (3d) OVER-STRICTNESS — the guard's import re-spelled (reversed, one per line, trailing comma, single quotes, an
+       `as` alias) -> **92/0**.
+   THE HARNESS HAD GONE STALE AND SAID NOTHING, measured on a pristine checkout of `fc94b045`: arm (5b) typed `BARE …
+   39 ops`, the roster is 40, so it read NOT AS DECLARED — and the harness exited 0 anyway. (5b) reads its figure from
+   the baseline run now, and the harness exits 1 on any arm not as declared. */
 /* NEGATIVE CONTROL: (run 2026-08-08, d240-agent, D-240) TEN arms in
    `test/verdict-excluder.control.mjs` — run it, it is one command and it prints its own register.
    Every arm armed ALONE with the others held open, every file restored from a UNIQUELY-NAMED
@@ -768,24 +787,37 @@ t("WALK GUARD: and it can see a BARE ARRAY return, shape (b) — the shape a ret
  * polarity: the over-strictness half is not optional here.
  * ========================================================================== */
 console.log("\n--- D-240: the refusal excluder, driven in both directions ---");
-/* (a) ONE MECHANISM, NOT TWO. The verdict reader is REC-76's, and this is what
-   makes "shared" a fact rather than an intention: the six functions are
-   extracted from BOTH files and compared byte for byte. A drift in either copy
-   fails here NAMING the function, which is the whole reason a copy was
-   acceptable at all — see verdict-reader.mjs's header for why it is a copy and
-   what the delegated single-home version is. */
+/* (a) ONE MECHANISM, NOT TWO — AND SINCE D-254, ONE HOME. The verdict reader is
+   REC-76's, and this is what makes "shared" a fact rather than an intention.
+   CORRECTED 2026-09-21 by D-254, never exempted: this arm used to extract the
+   functions from TWO files and compare them byte for byte, which was right while
+   the guard held its own copy. D-254 deleted that copy — the guard IMPORTS the
+   reader now — so the old comparison would set `verdict-reader.mjs` beside
+   ITSELF and agree for free over any reader, an empty one included. What it
+   asserts instead is the two claims "one mechanism" always made: ONE HOME (the
+   guard imports every shared function from `verdict-reader.mjs` and declares
+   none of them itself, so a copy that grows back fails here NAMING the
+   function) and ONE BEHAVIOUR (every READING in that file still holds, so a
+   change to what the one reader answers fails here NAMING the function).
+   Counted and floored on all three figures. See `verdict-reader.mjs`'s pin. */
 {
   const guardSrc = readFileSync(new URL("../../civicos-ui/check-refusal-codes.mjs", import.meta.url), "utf8");
   const mineSrc = readFileSync(new URL("./verdict-reader.mjs", import.meta.url), "utf8");
   const drift = readerDrift(guardSrc, mineSrc);
-  console.log(`  READER: ${drift.read} of ${drift.expected} shared functions extracted, ${drift.chars} chars, `
-            + `differing from REC-76's copy: ${drift.differing.length ? drift.differing.join(", ") : "none"}`);
-  t("D-240 (a) ONE MECHANISM: the verdict reader in `test/verdict-reader.mjs` is BYTE-IDENTICAL to "
-  + "REC-76's in `civicos-ui/check-refusal-codes.mjs`, function by function — so a third reader "
-  + "cannot appear by drift, which is how the next component goes dark differently. The extraction "
-  + "is FLOORED and COUNTED, because two empty extractions agree for free",
-    [drift.differing, drift.read, drift.chars > drift.minChars],
-    [[], drift.expected, true]);
+  console.log(`  READER: ${drift.read} of ${drift.expected} shared functions in the ONE home, ${drift.chars} chars `
+            + `(floor ${drift.minChars}) · the DEC-49 guard imports ${drift.imported} of ${drift.expected} in `
+            + `${drift.statements} statement(s) and declares ${drift.localCopies.length} itself · `
+            + `${drift.held} of ${drift.readings} readings hold (floor ${drift.minReadings}) · `
+            + `NOT SINGLE-HOMED: ${drift.differing.length ? drift.differing.join(", ") : "none"} · `
+            + `MISREAD: ${drift.misread.length ? drift.misread.join(", ") : "none"}`);
+  t("D-240 (a) ONE MECHANISM, ONE HOME (D-254): the DEC-49 guard IMPORTS every function of REC-76's "
+  + "verdict reader from `test/verdict-reader.mjs` and declares none of them itself, and every READING "
+  + "of that one reader still holds — so a second reader cannot grow back and the one reader cannot "
+  + "change what it answers without failing here NAMING the function. COUNTED and FLOORED, because an "
+  + "empty reader, an empty import and an empty readings table would each agree for free",
+    [drift.differing, drift.misread, drift.unread, drift.read, drift.imported,
+     drift.chars > drift.minChars, drift.readings >= drift.minReadings, drift.held],
+    [[], [], [], drift.expected, drift.expected, true, true, drift.readings]);
 }
 /* (b) THE WIDENING, AS A DELTA AND IN THE SAFE DIRECTION. Both halves are
    required: that it sees MORE than the one literal, and that it sees everything

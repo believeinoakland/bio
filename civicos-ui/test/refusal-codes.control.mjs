@@ -49,8 +49,29 @@ const F = {
   store:   path.join(PLANE, "src", "store.mjs"),
   app:     path.join(UI, "app.html"),
   guard:   path.join(UI, "check-refusal-codes.mjs"),
+  /* D-254: the guard IMPORTS REC-76's verdict reader from here, so an arm that
+     breaks how arm C reads a verdict ((n2), (n6)) breaks THIS file now — the
+     guard's own text no longer holds those functions. */
+  reader:  path.join(PLANE, "test", "verdict-reader.mjs"),
   runner:  path.join(HERE, "run.mjs"),
 };
+
+/* THE FLOOR ANCHORS ARE READ, NOT TYPED — corrected 2026-09-21 by D-254, never
+   exempted. (n2) anchored on `  refusalsJudged: 124,`, `  codesChecked: 122,` and
+   `  unclassifiedOutcomes: 3,` — FIGURES, which every landing that moves a floor
+   changes. They had moved (319 / 319 / 1), so `arm()` threw "the text this
+   control removes is not in check-refusal-codes.mjs" and ABORTED this file at
+   (n2): (n3)-(n6) and (z) were not running on `main` — measured on `fc94b045`
+   before this edit. (The August D-254 branch `9e24ef6e` met the same abort at
+   148/145 and fixed it on a branch that never merged.) The anchor is the KEY now,
+   and its figure is read from the file at arm time, asserted to occur ONCE. */
+function figure(file, key) {
+  const all = [...fs.readFileSync(file, "utf8").matchAll(new RegExp(`^  ${key}: \\d+,`, "gm"))];
+  if (all.length !== 1)
+    throw new Error(`figure(${key}): ${all.length} line(s) in ${path.basename(file)}, expected exactly 1 — an arm `
+      + `that cannot find what it breaks proves nothing`);
+  return all[0][0];
+}
 
 const sha = f => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex");
 
@@ -395,7 +416,8 @@ arm("(n1)", [{
 
    The classifier is reverted to the one-vocabulary form — a verdict is read only
    when the field is called `ok` — over the SAME planted refusal as (n1). The
-   three ratchet figures are relaxed IN THIS ARM ONLY, and the reason is stated
+   ratchet figures (three, and since D-254 a fourth — see it below) are relaxed
+   IN THIS ARM ONLY, and the reason is stated
    because relaxing a floor inside a control is otherwise indistinguishable from
    buying a green run: with the old classifier in place the plane's own
    `started: false` refusals fall out of the judged set, so the FLOORS would fire
@@ -409,10 +431,21 @@ arm("(n2)", [
     to: `export function checkBound(bound) {
   if (bound === "__rec76_control__") return { started: false, detail: "a refusal nobody gave a code" };`,
   },
-  { file: F.guard, from: `    if (kind) return { key: p.key, kind };`, to: `    if (kind && p.key === "ok") return { key: p.key, kind };` },
-  { file: F.guard, from: `  refusalsJudged: 124,`, to: `  refusalsJudged: 0,` },
-  { file: F.guard, from: `  codesChecked: 122,`, to: `  codesChecked: 0,` },
-  { file: F.guard, from: `  unclassifiedOutcomes: 3,`, to: `  unclassifiedOutcomes: 999,` },
+  /* the classifier lives in the ONE reader since D-254 — see `F.reader` */
+  { file: F.reader, from: `    if (kind) return { key: p.key, kind };`, to: `    if (kind && p.key === "ok") return { key: p.key, kind };` },
+  { file: F.guard, from: figure(F.guard, "refusalsJudged"), to: `  refusalsJudged: 0,` },
+  { file: F.guard, from: figure(F.guard, "codesChecked"), to: `  codesChecked: 0,` },
+  { file: F.guard, from: figure(F.guard, "unclassifiedOutcomes"), to: `  unclassifiedOutcomes: 999,` },
+  /* A FOURTH RELAXATION, for the SAME stated reason as the three above — added
+     2026-09-21 by D-254, never exempted. Once the anchors above stopped aborting
+     this arm, it ran for the first time since REC-79 and came back RED on a figure
+     it never meant to measure: REC-79's `inheritedVerdicts` ceiling, 6 against 4.
+     With only `ok` read as a verdict, outcomes whose verdict is `preview:` or
+     `started:` beside a spread lose it and fall into the INHERITED bin — the
+     emulation moving a ratchet, which is exactly what the three relaxations above
+     exist to keep out of this arm's way. MEASURED identical on the untouched base
+     `fc94b045` and on D-254's tree, so it is this arm's staleness, not D-254's. */
+  { file: F.guard, from: figure(F.guard, "inheritedVerdicts"), to: `  inheritedVerdicts: 999,` },
 ], guard, r => ({
   ok: r.exit === 0,
   what: "the guard exits 0 — a CODELESS refusal sits at a governed site and the one-vocabulary "
@@ -478,7 +511,7 @@ arm("(n5)", [{
    ceiling alone would have stayed green through it (REC-70). */
 console.log("\n(n6) THE OUTCOME WALK NEUTERED — the CORPUS floor fires, with the corpus printed");
 arm("(n6)", [{
-  file: F.guard,
+  file: F.reader,   /* D-254: `outcomeReturns` is the ONE reader's now, imported by the guard */
   from: `function outcomeReturns(text) {`,
   to: `function outcomeReturns(text) { return [];`,
 }], guard, r => ({

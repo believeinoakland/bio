@@ -175,6 +175,37 @@
  *   (n1),(n3) and (n6) are ALSO re-run mechanically by ARM 10 below over fixture
  *   trees, every run of the battery, together with the computed-verdict shape in
  *   both directions and the unclassified-outcome bucket.
+ *
+ *   D-254's, RUN 2026-09-21 by the D-254 worker (worktree agent-aba246a225e641de7)
+ *   against the REAL tree, each ALONE, every restore verified by sha256 AND bytes
+ *   against a per-arm pristine copy, every run reading THIS suite's foot line —
+ *   after the guard stopped holding REC-76's reader and began IMPORTING it from
+ *   `bio-plane/test/verdict-reader.mjs`. Baseline 83/0 (80 before D-254: ARM 1
+ *   gained the derivation pin, ARM 10h is new).
+ *   (t1) THE GUARD RE-GROWS ITS OWN `verdictOf` — dropped from the import, a
+ *        verbatim copy declared. DECLARED MUST FAIL on ARM 10h alone. RUN: 83/2,
+ *        both failures ARM 10h's — the neutered reader no longer reaches a guard
+ *        reading through its own copy — and both plane suites red on D-240 (a)
+ *        naming `verdictOf` NOT SINGLE-HOMED. **ARM 10h is the import DRIVEN
+ *        through the guard's own run; D-240 (a) is the same fact READ off the
+ *        source.**
+ *   (t2) THE MODULE DERIVATION NEUTERED (`copyImports` copies nothing). **FIRST
+ *        RUN NOT AS DECLARED, and recorded rather than smoothed:** declared "red
+ *        on ARM 1's floor and on every arm whose guard must load"; it WAS (46 FAIL
+ *        lines, ARM 1's among them) — and then the suite STOPPED at ARM 10g, whose
+ *        `mutateReader` refuses a fixture holding no reader, so there was no foot
+ *        line to count. Re-declared as exactly that and re-run: AS DECLARED.
+ *   (t3) AN ARM THAT DOES NOT ARM — ARM 10g's anchor made absent. DECLARED MUST
+ *        STOP. RUN: exit 1, `mutateReader changed NOTHING`, no foot line, and NO
+ *        `.vf2-fixture-*` left behind (`buildTree` removes a tree that throws).
+ *   (t4) OVER-STRICTNESS — the guard's import re-spelled (reversed, one name per
+ *        line, trailing comma, single quotes). DECLARED MUST PASS. RUN: 83/0.
+ *   And on the REAL-tree harness `refusal-codes.control.mjs`: (n2) and (n6) now
+ *   arm the READER; (n2)'s floor anchors are read, not typed, and it relaxes
+ *   REC-79's `inheritedVerdicts` like its other three. Before D-254 that harness
+ *   ABORTED at (n2) on `fc94b045`, so (n3)–(n6) and (z) had not run; after it,
+ *   (n1)–(n6) and (z) are all green. Its (c), (e), (r2) and (r6) FAIL, exactly as
+ *   on the untouched base, and are NOT D-254's (named in its report).
  * ============================================================================
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
@@ -208,12 +239,62 @@ function t(name, got, want) {
    WORKTREE (mkdtemp under civicos-ui/test), never in a shared scratchpad.
    ============================================================ */
 
+const REPO = path.join(UIDIR, "..");
+const READER_REL = path.join("bio-plane", "test", "verdict-reader.mjs");
+
+/* THE MODULES A SOURCE IMPORTS BY RELATIVE PATH (D-254) — a static `import … from
+   "./x"`, `export … from "./x"` or bare `import "./x"`, beginning in column zero
+   where every import statement in this estate begins, so a comment line that
+   happens to start with the word is never read as one. A bare specifier (`fs`,
+   `node:path`) is the runtime's, not the tree's. CANNOT SEE a computed
+   `await import(…)`, and is not asked to: the guard's one dynamic import is arm
+   E's, whose target is a PLANE source the fixture already writes. */
+const RELATIVE_IMPORT = /^(?:import|export)\s(?:[^;"'`]*?\sfrom\s*)?["'](\.{1,2}\/[^"'\n]+)["']/gm;
+
+/* Copy every module the (mutated) guard imports into the fixture at the SAME
+   repo-relative path, then every module THOSE import, to a fixpoint. Returns the
+   repo-relative paths copied, so ARM 1 can floor and print what was derived. */
+function copyImports(guardSrc, root) {
+  const seen = new Set();
+  const queue = [...guardSrc.matchAll(RELATIVE_IMPORT)].map((m) => path.join("civicos-ui", m[1]));
+  while (queue.length) {
+    const rel = path.normalize(queue.shift());
+    if (seen.has(rel)) continue;
+    if (rel.startsWith("..") || path.isAbsolute(rel))
+      throw new Error(`copyImports: the guard reaches ${rel}, OUTSIDE the repository — a fixture cannot copy that honestly`);
+    seen.add(rel);
+    const text = fs.readFileSync(path.join(REPO, rel), "utf8");
+    fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+    fs.writeFileSync(path.join(root, rel), text);
+    for (const m of text.matchAll(RELATIVE_IMPORT)) queue.push(path.join(path.dirname(rel), m[1]));
+  }
+  return [...seen].sort();
+}
+
+/* A mutation that changes nothing THROWS (see `buildTree`). */
+function mutated(hook, text, fn) {
+  const out = fn(text);
+  if (typeof out !== "string" || out === text)
+    throw new Error(`${hook} changed NOTHING — its anchor is not in the text it mutates, so the arm that asked for it `
+      + `would measure an UNMUTATED tree. An arm that did not arm is a finding, never a pass.`);
+  return out;
+}
+
 const DEFAULT_TRANSLATION =
   "That request did not say which document address to read the versions of, so nothing was looked up "
   + "and no document was guessed at in its place.";
 
 function buildTree(over = {}) {
   const root = fs.mkdtempSync(path.join(HERE, ".vf2-fixture-"));
+  /* D-254: a tree that THROWS while it is being built — a mutation that did not
+     arm, a module the guard reaches outside the repository — must not leave its
+     directory behind. `withTree`'s cleanup only covers a tree that finished
+     building, and a crash here never reaches ARM 8's residue check. */
+  try { return populateTree(root, over); }
+  catch (e) { try { fs.rmSync(root, { recursive: true, force: true }); } catch (_) {} throw e; }
+}
+
+function populateTree(root, over) {
   const ui = path.join(root, "civicos-ui");
   const src = path.join(root, "bio-plane", "src");
   const checks = path.join(root, "bio-plane", "checks");
@@ -335,7 +416,13 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
   guard = guard.replace(/PART_REASON: "src\/subresources\.mjs"/, `PART_REASON: "src/parts.mjs"`);
   guard = guard.replace(/const VOCABULARY_MODULES = new Map\(Object\.entries\(\{[\s\S]*?\n\}\)\);/,
     `const VOCABULARY_MODULES = new Map(Object.entries({ "src/vocab.mjs": "the fixture's vocabularies" }));`);
-  if (over.mutateGuard) guard = over.mutateGuard(guard);
+  /* AN ARM THAT DID NOT ARM IS A FINDING, NEVER A PASS (D-254). A mutation is a
+     `String.replace`, and a replace whose anchor has moved changes NOTHING and says
+     nothing. D-254 moved `outcomeReturns` out of the guard, and ARM 10g's old
+     `g.replace("function outcomeReturns(text) {", …)` became exactly that: a no-op
+     over which the arm would have measured an UNMUTATED guard. So a mutation that
+     hands the text back unchanged THROWS, naming its hook. */
+  if (over.mutateGuard) guard = mutated("mutateGuard", guard, over.mutateGuard);
   fs.writeFileSync(path.join(ui, "check-refusal-codes.mjs"), guard);
 
   /* ---- D-257: THE FIXTURE IS NOW A REPOSITORY, BECAUSE THE GUARD ASKS ONE ----
@@ -343,10 +430,21 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
      and reach floors against the figures `git ls-tree HEAD` says another checkout
      reproduces. Two things follow for this fixture, and neither is optional:
 
-       1. THE MODULE MUST EXIST IN THE TREE. It is COPIED from the real one rather
-          than re-written here — a hand copy agrees with the original at zero cost
-          and then goes stale in one of its homes, which is the failure the module
-          itself was created to avoid.
+       1. EVERY MODULE THE GUARD IMPORTS MUST EXIST IN THE TREE. Each is COPIED from
+          the real one rather than re-written here — a hand copy agrees with the
+          original at zero cost and then goes stale in one of its homes, which is
+          the failure the module itself was created to avoid.
+          CORRECTED 2026-09-21 by D-254, never exempted, and the correction is the
+          CLASS rather than the instance: this step copied ONE module BY NAME
+          (`provenance.mjs`). D-254 gave the guard a second relative import — REC-76's
+          verdict reader, `bio-plane/test/verdict-reader.mjs` — and the hand-kept line
+          made every fixture arm fail at LOAD: MEASURED, 46 of 80 assertions red, each
+          reading `exit 1` with no module named anywhere, which is D-265's signature
+          one directory over (`bio-plane/test/instrument-deps.mjs` records the same
+          hand-kept list going stale in two suites). So the list is DERIVED from the
+          guard's own import statements and followed to a fixpoint (`copyImports`),
+          and a module the guard starts or stops importing arrives or leaves here on
+          its own. ARM 1 floors it and prints it.
        2. THE TREE MUST BE A CHECKOUT. A `mkdtemp` directory inside this worktree
           is inside a repository whose HEAD does not describe it, so `git ls-tree
           HEAD` answers EMPTY — verified, and every fixture file UNTRACKED, which
@@ -357,16 +455,23 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
 
      The nested `.git` lives and dies with the fixture: the residue arm at the
      foot of this file already asserts no `.vf2-fixture-*` survives the run. */
-  const provDir = path.join(root, "bio-plane", "scripts");
-  fs.mkdirSync(provDir, { recursive: true });
-  fs.copyFileSync(fileURLToPath(new URL("../../bio-plane/scripts/provenance.mjs", import.meta.url)),
-                  path.join(provDir, "provenance.mjs"));
+  const copied = copyImports(guard, root);
+  /* D-254: the READER is the guard's now, so an arm that must break how the guard
+     reads a verdict breaks the fixture's copy of THE READER — the guard's own text
+     no longer holds those functions. Same did-not-arm rule as `mutateGuard`. */
+  if (over.mutateReader) {
+    const at = path.join(root, READER_REL);
+    if (!fs.existsSync(at))
+      throw new Error(`mutateReader: the fixture holds no ${READER_REL} — the guard no longer imports it, so this arm `
+        + `has no subject. An arm that did not arm is a finding, never a pass.`);
+    fs.writeFileSync(at, mutated("mutateReader", fs.readFileSync(at, "utf8"), over.mutateReader));
+  }
   const git = (...args) => execFileSync("git", args, { cwd: root, stdio: "pipe" });
   git("init", "-q");
   git("-c", "user.email=fixture@bio.test", "-c", "user.name=VF-2 fixture", "add", "-A");
   git("-c", "user.email=fixture@bio.test", "-c", "user.name=VF-2 fixture",
       "commit", "-q", "-m", "the fixture tree, so the guard's provenance check has a commit to ask about");
-  return { root, ui };
+  return { root, ui, copied };
 }
 
 function runGuard(tree) {
@@ -398,6 +503,13 @@ withTree({}, tree => {
   t("ARM 1: and it says so", /every code a surface can receive carries a canned translation/.test(r.out), true);
   t("ARM 1: with its corpus size PRINTED, not merely asserted (a walk that has gone blind is visible)",
     /UNION \(the census\)\s+\d+ codes/.test(r.out), true);
+  /* D-254: the modules the fixture carries were DERIVED from the guard's own imports,
+     so this floors the derivation (an empty one copies nothing and fails every arm at
+     load, which is the failure it replaced) and pins the one module D-254 added. */
+  console.log(`  fixture modules, derived from the guard's imports: ${tree.copied.join(" · ")}`);
+  t("ARM 1: and the fixture carries EVERY module the guard imports, DERIVED from its own import statements "
+  + "rather than listed — REC-76's verdict reader among them, the one D-254 made the guard import",
+    [tree.copied.length >= 2, tree.copied.includes(READER_REL)], [true, true]);
 });
 
 /* ============================================================
@@ -1065,7 +1177,13 @@ withTree({ fixtureSrc: withExtra(`  if (input.late) return { ok: true, code: "FI
 });
 
 console.log("\n--- ARM 10g · the OUTCOME CORPUS floor fires when the return reader goes blind ---");
-withTree({ mutateGuard: g => g.replace("function outcomeReturns(text) {", "function outcomeReturns(text) { return [];") }, tree => {
+/* CORRECTED 2026-09-21 by D-254, never exempted: this arm neutered `outcomeReturns`
+   in the fixture's copy of the GUARD, and D-254 moved that function into the one
+   reader the guard imports — so the old `mutateGuard` replace matched NOTHING and
+   the arm would have measured a guard with its reader intact. It neuters the
+   fixture's copy of the READER now, which is what the guard reads, and
+   `mutated()` throws if the anchor ever moves again. */
+withTree({ mutateReader: r => r.replace("function outcomeReturns(text) {", "function outcomeReturns(text) { return [];") }, tree => {
   const r = runGuard(tree);
   /* A CEILING IS NOT A RATCHET, and this is that lesson on the corpus rather
      than on the census: a walk that reads nothing asserts nothing, and without
@@ -1075,6 +1193,22 @@ withTree({ mutateGuard: g => g.replace("function outcomeReturns(text) {", "funct
   t("ARM 10g: exits 1", r.exit, 1);
   t("ARM 10g: on the CORPUS floor, saying every verdict below it is a verdict over nothing",
     /THE CORPUS COLLAPSED/.test(r.out), true);
+});
+
+console.log("\n--- ARM 10h · the guard's VERDICT is the ONE reader's: neuter `verdictOf` THERE and arm C reads none (D-254) ---");
+withTree({ mutateReader: r => r.replace("function verdictOf(objText) {", "function verdictOf(objText) { return null;") }, tree => {
+  const r = runGuard(tree);
+  /* THE IMPORT, DRIVEN RATHER THAN READ. The plane suites' pin (`readerDrift`)
+     READS the guard's source and asserts that it imports the reader and declares
+     no copy; this arm is the same fact from the other side, through the guard's
+     own run. If the guard ever grew its own `verdictOf` back (a stale merge, a
+     revert), this mutation would reach nothing the guard calls, the fixture's
+     three refusals would still be judged, and the arm would come back GREEN over a
+     guard that no longer reads through the one reader — which is why it must be
+     RED here, and why D-254's control re-grows exactly that copy to prove it. */
+  t("ARM 10h: exits 1 — with the one reader's `verdictOf` neutered, the guard can read no verdict", r.exit, 1);
+  t("ARM 10h: and NAMES the outcomes it can no longer classify, rather than passing over them",
+    /carry NO verdict this walk can read[\s\S]*src\/fixture\.mjs:\d+ \(checkFixture\)/.test(r.out), true);
 });
 
 console.log("\n--- ARM 8 · the arms above actually ran ---");
@@ -1105,5 +1239,8 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `whose invisibility cost a translation), a SUCCESS in an unanticipated spelling is NOT graded a refusal `
   + `(10d), an outcome the walk cannot classify is NAMED rather than scored zero (10e), a declared success `
   + `carrying a refusal code FAILS as a contradiction (10f), and a neutered return reader fires the CORPUS `
-  + `floor rather than reporting green over nothing (10g)`);
+  + `floor rather than reporting green over nothing (10g). AND SINCE D-254 the guard reads verdicts through `
+  + `ONE imported reader: every fixture carries the modules the guard imports, DERIVED from its own import `
+  + `statements (arm 1), and neutering the one reader's verdictOf leaves the guard unable to read any verdict `
+  + `(10h) — the import driven through the guard's own run, not only read off its source`);
 if (bad) process.exit(1);
