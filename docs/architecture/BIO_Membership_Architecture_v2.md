@@ -260,6 +260,19 @@ captured administrator recruits confederates and manufactures the majority
 that then ejects the honest ones. Closing that door is what makes the
 removal rule below safe.
 
+**WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH — RULED 2026-09-21 by BOB #22** (REC-156's
+questions, carried by CONDUCT #10), from §4.6 and this section, verified at the code (`index.mjs`'s
+`by` stamp; `Store#memberAdd`). **An administrator's proposal, made from their own session, IS their
+endorsement, and counts once:** consensus means every existing administrator has assented, and
+proposing is assent; a second act from the proposer would protect nothing the others' endorsements do
+not. **The ADMIN_TOKEN holder is NOT refused** at `memberadd`, and by the same ruling at §4.9's
+`memberset`, `signeradd` and `signerset` (C-32.17 refuses a bearer only at the three VOTES): a bearer's
+`by` is stamped `class:admin`, on no roster, so it endorses for nobody and is recorded as the operator's
+act, and what it can still do (an invitation, the second administrator, a proposal awaiting every
+administrator) is the root of trust's power under §4.6, which refusing it here would only pretend to
+bound. An addition beyond the second issues no invitation until every existing administrator has
+endorsed it from their own session.
+
 **Removal.** A majority of all administrators, counting the target in the
 denominator but not permitting them to vote. Ties do not eject. The
 arithmetic:

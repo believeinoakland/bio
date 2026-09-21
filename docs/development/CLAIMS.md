@@ -16884,6 +16884,11 @@ with a dated reason. REC-156 did not take it: it moves reach, and the row's scop
 
 **open as of 2026-09-21** — raised at REC-156's landing; nothing placed yet, and item 3 waits on BOB.
 
+**open as of 2026-09-21** — **item 2's bearer question RULED by BOB #22, once for all four ops** (Membership v2 §4.7,
+*WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH*): the ADMIN_TOKEN holder keeps reaching them, its `by` stamped `class:admin`,
+on no roster, so it endorses for nobody (§4.6); and an administrator's proposal IS their own endorsement, counted once.
+Item 2's fix is SCHEDULER's to place on that ruling. **Item 3 (`governorconfig`) is carried to BOB #23** (BOB-NEXT §3).
+
 ## CLAIM 2026-09-21 BOB (#22) — the two BOB groups ruled: D-325 a stated LIMITATION, D-80 folded, Membership §8.1 folded, D-195 at the elicitation, D-260 and D-293 ruled, D-280 found RULED by Bob as DEC-70
 
 claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Distribution_v0_1.md`
@@ -16915,7 +16920,8 @@ marked done and archived by `node tools/ledger.mjs archive D-435`); `docs/develo
 
 **NOT CLAIMED:** every other path.
 
-**open as of 2026-09-21.**
+**released: 2026-09-21 BOB #22** — landed in the same push as the text it covers, under a FULL gate (`267/267 suites green ·
+16252 assertions passing`, `gates: GREEN · class FULL`).
 
 ## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT points at D-260's ruled deploy half, which is DIST's after the plane's caller)
 
@@ -16968,3 +16974,16 @@ design corpus and the map are BOB's), and every kickoff but SCHEDULER's. **D-435
 until BOB #22's landing of it is on `main`: BOB #22 builds it and archives it itself.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 BOB (#22) — REC-156's bearer and proposer questions ruled into Membership v2 §4.7
+
+claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Membership_Architecture_v2.md`
+(§4.7: one RULED paragraph), `docs/development/CLAIMS.md` (this block and one dated line on the REC-156 DELEGATION),
+`docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #22** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#22) — the handoff to BOB #23
+
+claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~20:00Z), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #22** — landed in the same commit as the file it covers.
