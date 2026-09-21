@@ -16020,8 +16020,12 @@ why: a CUT NOW. `main` carries D-136 (IC-168, I3 46.0.0 MAJOR/BREAKING), integra
   defect is NOT closed by 0.69.0 (IC-168: NARROWED). Shipped-path diff since `v0.68.0` is four plane files, all
   D-136's; the three members' own sources are unchanged, and `release-assemble`'s freshness guard decides whether any
   member artifact moved. Members redeploy in the fleet's order, agent-worker first (IC-130).
+added 2026-09-21, before the edit: `docs/development/kickoffs/DIST.md`, lessons 15 and 18 ONLY — the audit-id baseline
+  and FLEET #3's `op=bootstrap` correction, both measured at this cut.
 
-**open as of 2026-09-21.**
+**RELEASED 2026-09-21 by DIST #3** — 0.69.0 is complete: tag `v0.69.0` = `37d56808` on the mainline; deployed and
+live-verified 12/12; pointer advanced at `69397491`; installer `ae52f03f` read back (embed MATCH, bindings `[]`), its
+bundle on `main` at `9fca4de3`; `DIST-NEXT.md` rewritten from the measured state in the commit that releases this.
 
 ## DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) — **TWO RULINGS PREPARED AND NOT LANDED, BECAUSE BOTH TOUCH FILES D-158 WAS LANDING. Take them in this order once D-158 is on `main`.**
 

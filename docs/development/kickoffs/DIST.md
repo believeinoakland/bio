@@ -239,7 +239,8 @@ and both want to ship.
 14. **zsh treats `$var:x` as a history modifier**: `git show $c:path` silently becomes `$c` with `:p`/`:r`/`:c` applied.
    Write `"${c}:path"`.
 15. **`op=audit` on biosmoke7 is never fully clean:** 10 C-18.9 findings are D-200, record state since 2026-08-04. The gate
-   step means "no finding the previous release did not have". Compare against D-200's ten, by bundle id.
+   step means "no finding the previous release did not have". Compare against D-200's ten, by bundle id — D-200 recorded
+   only the COUNT; the ten ids were first recorded in DIST-NEXT at 0.69.0's cut (2026-09-21), and that list is the baseline.
 16. **The battery's completion line excludes untallied suites** (D-413: `bundle`, `livefire`). Read the `EXCLUDES` clause.
 17. **A self-wake cron is session-only and expires after 7 days.** Record the arm date in DIST-NEXT, and re-arm after 5 days.
 18. **A REFUSAL-ONLY BATTERY CONFIRMS SHAPE, NOT WHICH BUILD ANSWERED — pair every refusal set with a positive arm that
@@ -255,7 +256,10 @@ and both want to ship.
    geometry as the signature controls' two positive arms beside five refusals, and as the gate's own
    `N/N suites green` line: **verify by the positive artifact.** Ruled into DIST's law by BOB #17, 2026-09-19, and
    named to Bob as a candidate for `CLAUDE.md` §5 — if it is folded there, this lesson points at it rather than
-   restating it.
+   restating it. **`op=bootstrap` is NOT a reading of the DO's build** (FLEET #3, 2026-09-21): its `version` is the routing
+   isolate's `env.VERSION`; the DO adds only claimed/rearmed/consumedAt. A DO-side change is evidenced only by a DO-side
+   wire code; when none is reachable without a session or a write, the DO's build is UNDETERMINED and the landing report
+   says so (0.69.0, whose D-136 DO paths are session-only).
 19. **A CONTROL CAN BE MEANINGFUL ONLY AS A TREND, AND `migrate-released`'s IS ONE.** Its `alterafter` arm has measured
    **135 pass / 66 fail (declared baseline, REC-143) → 169/66 (0.66.0's cut) → 186/66 (0.67.0's cut)**. The FAILURE
    count is identical every time because it is bounded by `WITHDRAWN`, which a cut never touches; the PASS count rises
