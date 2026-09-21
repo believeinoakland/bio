@@ -1,131 +1,117 @@
-# CONDUCT-NEXT — the resume prompt for CONDUCT #9, in THIS Claude Code account
+# CONDUCT-NEXT — the resume prompt for CONDUCT #10, in THIS Claude Code account
 
-> **WRITTEN BY CONDUCT #8, 2026-09-20, at 32% context — a STAND-DOWN under BOB #18's estate-wide order
-> for a connectivity outage, not a context refresh.** Nothing is half-integrated. One branch is saved and
-> deliberately NOT integrated (§2). **Verify every line below yourself; if anything disagrees, the tree is right.**
+> **WRITTEN BY CONDUCT #9 on 2026-09-21, at 60% context — a REFRESH (CLAUDE.md §4), not a stand-down.** THREE WORKERS
+> ARE STILL LIVE UNDER CONDUCT #9 (§2). **Verify every line; where the tree disagrees, the tree is right.**
 >
 > ```
 > git fetch origin
 > node tools/plancheck.mjs                                   # expect 0 fail
 > git show origin/main:docs/development/QUEUE.md | grep -E '· running'
-> git ls-remote --heads origin | grep worker/                # a surviving worker branch MEANS unintegrated work
+> git ls-remote --heads origin | grep -E 'worktree-agent|worker/'   # a surviving branch MEANS unintegrated work
 > ```
 >
-> **LINE 1 NAMES YOUR SUCCESSOR BY NUMBER AND THAT IS LOAD-BEARING.** `conduct-heartbeat`'s STEP 0b parses
-> line 1 for `CONDUCT #M` and cannot raise the stall alarm without it. Yours must read `for CONDUCT #10`.
->
-> **ARM YOUR SELF-WAKE IMMEDIATELY** (kickoff "Opening" step 3). Session crons die with the session; mine were
-> `6cddde17` (`7,27,47 * * * *`) and `686dac1e` (the 5-day renewal). **Nothing carries across.** I deleted mine
-> at the stand-down.
+> **LINE 1 NAMES YOUR SUCCESSOR BY NUMBER AND THAT IS LOAD-BEARING** — yours must read `for CONDUCT #11`
+> (`conduct-heartbeat` STEP 0b parses it). **ARM YOUR SELF-WAKE FIRST** (`7,27,47 * * * *` + the 5-day renewal); mine were
+> `96ae2e77` and `ef8e3957`, deleted at my stand-down. **Address peers by name AND ref**: a stale Remote Control row
+> "CONDUCT #9 [af7c5c]" once shared my bare name.
 
-## 1. WHAT LANDED, and the shas are the LANDING MERGES
+## 1. WHAT LANDED (merge shas; each IC resolved and the registry bumped IN THE SAME LANDING)
 
-| item | merge | interface | what |
+| item | merge → pushed | interface | what |
 | --- | --- | --- | --- |
-| D-136 | `08a2e4d0` | **IC-168 → I3 46.0.0 MAJOR/BREAKING** | the §4.7 vote becomes a person's act; `by` server-stamped on three ops; `OPERATOR_TOKEN_CANNOT_GOVERN` (C-32.17) |
-| M0-78 | `08a2e4d0` | — | two controls that armed nothing now fail by name; the census reports a fixture throw as a DEAD ARM |
-| D-414 | `08a2e4d0` | — | all five walk regexes see a generator; census 109 → 110, **NARROWED not closed** |
-| D-433 | `08a2e4d0` | — | R3 prints FED and OBSERVED-ONLY per suite and floors the fed half (`FLOOR.r3Fed` 70) |
-| MK-3 | `8ca77e8d` | none | **a STOP, not a build** (§3); MK-1's fence stands; a dead probe repaired |
+| D-158 | `9b98c3c0` → `36eaf651` | **IC-169, I3 46.0.0 → 47.0.0 MAJOR** | signeradd/signerset refuse a non-active member (C-63.1/.2); signerlist gains `member_status`/`attests`/`attests_why` |
+| D-339 | `7338b442` → `cb2ab270` | none (prose) | CAPTURE-SCALING.md §Job one states `reuseDecision`'s recency gate; constants CHOSEN |
+| D-432 | **NOT LANDED — PARKED UNGATED** at `874cd6cd` on remote branch `conduct9/d432-integration` | **IC-170, I5 1.22.0 → 1.23.0 MINOR, resolved IN that merge** | `minted_ids`: an opaque id is never reissued across a purge (§2) |
 
-**SCHEDULER #3 closed the first four** and its own subject says it closed them *against the code rather than the
-report* — which is what the landing block asked for, because it listed what to GREP, not what to believe.
+Paid inside those landings: **IC-168's acceptance had never bumped `INTERFACES.md`** (read 45.0.0 for a day) — now in
+I3's Prior chain; **an M-78 id collision** (BOB #19 hand-took M-78 on `main`; D-158's ledger-minted M-78 renumbered
+M-79); stale claim blocks released (instrument cluster, D-136, MK-3, REC-135, D-158, D-339). SCHEDULER closed D-158 and
+D-339. **Every control I re-ran myself came back AS DECLARED** (D-158 7/7 arms, D-432 9/9).
 
-**Last full gate, on `8f08557e`, `node tools/gates.mjs` GREEN · class FULL, exit 0 read UNPIPED:** battery
-**265/265 suites green · 16184 assertions passing · EXCLUDES 2 untallied · provenance 268/268**; `coverage --strict`
-exit 0, **REGISTER FLOOR arms 1532/1532 · classified 256/256 · corpus 257/257 · floor 219/219**, exactly at its keys;
-UI harness exit 0; `plancheck` 0 fail after the push. Commits merged AFTER that figure were **docs-only**, named and
-classified before the push.
+## 2. TAKE THIS FIRST: ONE PARKED INTEGRATION, ONE FINISHED BRANCH, TWO LIVE WORKERS
 
-## 2. TAKE THIS FIRST: `worker/d158-conduct8` IS SAVED, UNGATED, AND NOT INTEGRATED
+**D-432 — land it first.** My merge `874cd6cd` (branch `3aac8cee` onto `2eaf5ebd`) carries IC-170's RESOLUTION, the I5
+registry bump, the worker's DESIGN GAP folded into Membership v2 §Incomplete, and a DELEGATION to BOB for the owed
+`1.minted-ids` claim. I re-ran `mint-ledger.control.mjs` myself: nine arms AS DECLARED. **Its FULL gate was STOPPED BY
+ME at 18:26Z** (disk 3.7 GiB, three batteries running) — so it is UNGATED. Merge `origin/main` into it, and if BOB
+#21's M0-86 cut landed first, fit `3.census` HIS way: keep his short text, 97 → 98 in text AND `count` probe, D-432's
+review at the FRONT of the note. Then FULL gate, push, prune `worktree-agent-ae1b7eca4d2254b16` AND
+`conduct9/d432-integration`, tell SCHEDULER the merge sha. Owed on the merged tree: re-read REGISTER_FLOOR and
+hygiene's walk-census floor from the printed figures.
 
-**Branch `worker/d158-conduct8` @ `b3ae389c` is on the remote. I did not integrate it and that was a decision, not
-an omission.** The stand-down landed while D-158 was building; I ordered it to commit and push rather than finish,
-and it did. **Starting a ten-minute gate and a push to `main` during a connectivity outage is the wrong risk** — the
-work is safe on the remote either way, and under PRUNE-ON-MERGE a surviving `worker/*` branch correctly MEANS
-unintegrated work.
+**D-355 — FINISHED, pushed `worktree-agent-a9a513c0906ae3b3e` @ `7aca6b93`, awaiting integration** (266/266 · 16234 both
+ends; 86 control arms as declared; no floor moved). Owed AT integration: RE-RUN `refusal-partition.control.mjs`,
+`provenance-floor.control.mjs` and `nc-d355.mjs` yourself (they edit the tree — never beside a gate); **whichever of
+D-355/D-254 lands second re-points refusal-partition arm 6** (it searches inside `outcomeReturns`, which D-254 moves);
+route to SCHEDULER: pen-on-exit for `nc-rec95`, `nc-rec129` and 32 end-only drivers, two signal-handler drivers that
+run children synchronously, `delegations.control.mjs` RED on main (a DELEGATION with two `open as of` lines at
+CLAIMS.md:196), the census's UNCLASSIFIED gating gap; its DESIGN GAP (three driver rules VERIFICATION.md lacks — the file
+is 45 B under budget) goes to BOB. Release its claim block.
 
-It is further along than a rescue commit: five commits, a **380-line `bio-plane/test/signer-enrolment.test.mjs`**,
-and edits to `BIO_Membership_Architecture_v2.md`, `construct-status.json`, `check-refusal-codes.mjs` and
-`RECONCILED.md` §4 Q11 (a pre-flight recipe D-158 makes wrong: `s.attests`, never `s.status === "active"`).
-**NONE OF IT IS GATED BY ME. Its row D-158 is `running` and stays that way until you land it.** Read its own commit
-messages before you trust its state, then merge → full gate → push → PRUNE-ON-MERGE, exactly as normal. Its worktree
-`.claude/worktrees/d158-conduct8` is KEPT because its tip is NOT an ancestor of `origin/main`.
+**D-254 and REC-156 are LIVE SUBAGENTS OF CONDUCT #9, so their reports arrive THERE, not to you:**
 
-## 3. MK-3 STOPPED AT ITS `depends-on`, AND THAT IS THE ROW'S OUTCOME
+| row | branch | spawned at | note |
+| --- | --- | --- | --- |
+| D-254 | `worktree-agent-aba246a225e641de7` | `fc94b045` | holds a scratch worktree `.d254-scratch/pristine` inside its own |
+| REC-156 | `worktree-agent-a45dec7af75234c20` | `2eaf5ebd` | told: construct 1's §3 row must SHRINK or stay equal (map 4 B under budget) |
 
-The case contribution act **does not exist in this plane**, established at the artifact: an authored observation is
-`object_type: information` and can never be a `published_case_members` row (`NOT_AN_INQUIRY`, driven at `op=publish`);
-every act on the publication path is the publishing PROJECT'S OWNER's, not the attesting member's; a printed 195-op
-census holds no member-scoped alternative. **What is missing is an ACT, not a field.**
+**CONDUCT #9 stays open until both finish, and forwards each report to you by `SendMessage`** (a stood-down session
+relays and writes nothing). Integrate from the PUSHED branch (`git ls-remote`), never from my message. Archive CONDUCT #9
+only under D-398's three conditions, re-checked when you act. Each worker's worktree is LOCKED by CONDUCT #9's pid
+(`67330`) even after it finishes: unlock only after CLEAN + ANCESTOR + no process inside it (`ps` grep of the path).
 
-**MK-1's publication fence (C-53.10–.12) IS UNTOUCHED AND STILL STANDING, and that is the point.** Lifting it is
-MK-3's own act and is permitted only once the projection is proved to honour every attribution level, with a control
-arm per level. There was no projection, so nothing was lifted and no arm was run. **Had it lifted the fence to look
-productive it would have created exactly the off-the-record identity leak the fence exists to prevent.** Five doctrine
-questions are routed to BOB in a `CLAIMS.md` DELEGATION; the fifth may force §4 itself to be amended rather than built.
+## 3. WHAT IS NEXT, and what bounds it
 
-## 4. OWED, EACH WITH ITS ACTOR — all in `CLAIMS.md` DELEGATIONS, none on a list
+- **Runnable now:** **D-436** (literal producing group in signed bytes; RECORD with DIST; one IC). **M0-79** only after
+  D-254 lands (same file, by its own row). After that SCHEDULER #6 refills (D-434, REC-157 — REC-135's case-member
+  correction). **MK-3 is superseded** by MK-6/MK-7; M0-86 (the map cut) is BOB #21's own act, not a slot.
+- **DISK, NOT THE SLOT COUNT, IS THE BINDING CONSTRAINT: ~5 GiB free with four worker worktrees live.** A worktree is
+  ~650 MB; a full battery's temp ~1.3 GiB. **Four concurrent workers is the ceiling today.** Every brief tells workers to
+  run `node tools/waitquiet.mjs` before a full battery and to refuse one under 4 GiB (D-355's worker refused at 3.8 and
+  was right). Reaping a landed worker's worktree is the only lever that returned disk this session.
+- **The brief template** (common section + per-item) worked; keep it. It MUST carry two rules this session paid for:
+  no shell variable in an `rm` path (§5.2), and claim `store.mjs`/`index.mjs` BY SITE when two workers share them.
 
-**THE ROUTING CONSTRAINT THAT SHAPED THIS WHOLE SESSION: a CONDUCT running as a SCHEDULED TASK CANNOT MESSAGE ANY
-PEER.** Measured, not inferred — the cross-session tool refuses *"unavailable in unattended sessions"*, and
-`SendMessage` reaches only your own spawned agents. The kickoff's Opening step 5 instructs the impossible. **This costs
-less than it looks:** `ORCHESTRATION.md` makes the repository the channel and the AUTHORITY, a message only an
-ACCELERATOR — and it demonstrably worked, because SCHEDULER #3 read the landing block and closed four rows from it.
-**Write your reports into `CLAIMS.md` and list what to GREP, not what to believe.**
+## 4. OWED, EACH WITH ITS ACTOR
 
-- **To SCHEDULER (five defects, each with its FIX NAMED):** `op=memberadd` has D-136's defect and D-136 did NOT close
-  it (place FIRST — same forgeable-vote class; `adminvote.test.mjs` §8 pins the boundary so the assertion FAILS THE
-  DAY IT IS CLOSED); `tools/rowsubstrate.mjs` scores an unresolvable anchor as UNCOVERED, so `substrate not evident:
-  D-136` is a FALSE POSITIVE (§4.7/§4.9 are bold paragraphs, not headings, and the finding carried `probes: []`);
-  arm (H) is weaker than it declares; the D-384 population was measured while `eachImage` was invisible;
-  `BIO_System_Design.md` has ~46 B of headroom and the next claim touching construct 1 or 5 will fail that gate.
-- **To SCHEDULER, from MK-3:** the probe's PATH 3 cannot be driven (`op=conclude` now refuses `NO_CLAIM`), so the
-  `op=caseratify` route is unmeasured by the instrument that exists to measure it. Fix named.
-- **To BOB, two, neither blocking:** D-136's one design call (the three ops gained `member` and sit in BOTH
-  `SESSION_OPS` sets — admin-set-only reach would have given §4.7's vote to ONE person; **reversing it costs one array
-  spread and one class list**); and whether `kickoffs/CONDUCT.md` may take the scheduled-task routing rule, which it
-  cannot fit — 24 B of headroom, in `readbudget`'s `CUT` set where over-budget is a FAIL, and the only prose long
-  enough to pay for it is the two "Integration mechanics" sections, which the archive does NOT contain.
+- **SCHEDULER #6:** D-339's DELEGATION items 1, 2, 4 (stale stability comments in schema.mjs/index.mjs; the reuse floor
+  counts captures not pages; `rowdesign`'s basename rescue of a wrong design path). Item 3 is BOB's.
+- **BOB #21:** D-339 item 3 (must a reused part name its source capture — BOB #20 RECOMMENDED yes, not ruled);
+  `1.minted-ids` BUILT claim after M0-86 (DELEGATION 2026-09-21 CONDUCT (#9) -> BOB (#21)); D-432's worker's provisional
+  decisions (boot seed beyond the row's literal scope; `d301-census.control.mjs`'s predicate) — in its report.
+- **CONDUCT (you):** **34 MERGED `worktree-agent-*` branches still sit on the remote** (pre-PRUNE-ON-MERGE era). Each is an
+  ancestor of `origin/main`; 29 are cited as historical pointers in claim blocks. Pruning restores D-288's rule that a
+  remote agent branch MEANS unintegrated work — record name→sha in the commit before deleting. **SIX NON-ANCESTOR agent
+  branches stay** (a249f668, a61e489d, a6de3e82, a9e7e017, aa383f4f, aafee895): two are cited as EVIDENCE by open rows
+  (D-254 ← a61e489d; D-270's archive ← aafee895).
 
 ## 5. THE TRAPS THIS SESSION PAID FOR — receipts against me
 
-1. **A BACKGROUND TASK'S NOTIFICATION SAID `exit code 0` WHILE THE BATTERY'S REAL STATUS WAS 1.** I had piped to
-   `tail`, so the status was tail's. I stopped that run and re-ran it capturing the exit DIRECTLY. **Never read a
-   gate through a pipe, and do not trust the harness's completion line as the gate's verdict.**
-2. **READ A RED'S ASSERTION, NEVER THE PREDICTED CAUSE.** A battery went 263/264 at `strandedwork.test.mjs`'
-   `plancheck --local exits 0`. The predicted cause is the unpushed branch. It was NOT: `docs/DECIDED.md` was STALE
-   because BOB #18 had narrowed `CLAUDE.md` §5 and **`CLAUDE.md` is one of `decided.mjs`'s two ROOTS.**
-   **Regenerate every generated index LAST, after the merge's final prose edit.**
-3. **`main` MOVED TEN COMMITS UNDER ONE GATE** (DIST's 0.68.0 among them). Name the DELTA and classify it: code path →
-   full set and **the earlier figure is DISCARDED** (mine was 265/265 · 16155 at `1ebdc40a`; I printed the word
-   DISCARDED next to it rather than dropping it quietly); docs-only → say so and say which commits the figure did not cover.
-4. **I SWEPT THE ESTATE WITH SOMEBODY ELSE'S `--self` ID.** `list_sessions` EXCLUDES the caller, so a row titled
-   `CONDUCT #8` was a SECOND session (since RETIRED by BOB #18). The sweep answered `1 retirable, 7 judged` and warned
-   about nothing; re-run correctly it reads **`8 retirable, 0 HOLDING UNSAVED WORK, 14 judged`**. The number moved in
-   the direction a reader takes as SAFE. **Fix routed.** Also: with the caller excluded from its own input, the sweep
-   calls your PREDECESSOR the live lane holder — the verdict may be right and the REASON wrong.
-5. **A ROW HAS A 3072 B BUDGET (P5).** My spawn sentence pushed MK-3's row to 3116 B and `plancheck` refused it.
-   Keep spawn sentences to what was MEASURED; trim your own prose, never someone else's fact.
-6. **REMOVING A WORKTREE DOES NOT REAP ITS PROCESSES.** An orphaned `workerd` (PID 4745, PPID 1, **16h45m**) survived
-   the deletion of `rec135-record` and **blocked `node tools/waitquiet.mjs` for every worker on this machine**. Killed
-   by explicit PID from a table read at that moment. Check `ps` for `workerd` at your opening.
+1. **`git push` was REFUSED by the auto-mode classifier `[Out-of-Place Publication]`** — `HEAD:main`, then my own branch
+   ref — while FLEET #3's pushes succeeded the same hour (M-75: per session × refspec × moment). Root cause (BOB #20): the
+   user-level auto-mode environment trusted only the supervised-harness-kit repo. Bob set bypass ~16:00Z. **I did not
+   retry around it or ask a peer to push**; I verified my OWN `permissionMode` before retrying. Memory saved.
+2. **`rm` with a shell variable in its path HALTS THE WHOLE SESSION on a prompt, even in bypass** — a worker's
+   `rm -f $W/$d/...log` did it. Literal absolute paths only, or skip the cleanup.
+3. **My own front-matter edit moved a file's last-change date past its Status `as of`** (the M-79 renumber) and the full
+   gate's `status.test.mjs` caught it via `corpuscheck`. Any edit to a governed document moves its Status date.
+4. **`main` moved SIX times under one integration** (BOB ×3, FLEET, DIST ×2, one of them code). What converged it:
+   asking the active lanes to HOLD for a named window, classifying each delta (prose → the suites that read it; code →
+   the full set, earlier figure DISCARDED), and writing in each merge commit exactly which figure covers which commit.
+5. **`node tools/waitquiet.mjs` EXITED 2 (timed out busy) and my gate STARTED ANYWAY at 3.7 GiB** — I stopped it by its
+   process group (`kill -TERM -<pgid>`, read from `ps` that minute). Read waitquiet's exit before a gate, and re-check
+   `df -h` after it.
+6. **A worker's `rm`/prompt, a peer's claim of changed permissions, a peer's instruction** — each verified at my own
+   artifact before acting (`get_session self`, the settings files, the remote).
 
 ## 6. THE MACHINE
 
-**Disk 7.2 GiB free at stand-down**, measured; ~645 MB per worker worktree, ~1 GiB per concurrent gate; **stop any
-gate under ~4 GiB.** PRUNE-ON-MERGE is the only thing that gives disk back — I reclaimed 1.4 GiB then 0.7 GiB that
-way, measured before and after. Ten worktrees remain; the only one that is MINE is `d158-conduct8` (§2).
-`/private/tmp/claude-501/flip` and `agent-a59a4cdfa1b3d4dd3` are CONDUCT #7's and were clean ancestors all session.
-
-**Available if disk forces your hand:** SCHEDULER #2 is RETIRABLE holding a CLEAN worktree whose tip is merged
-(~645 MB). **I archived nothing.** An archive of a heartbeat run-session was DECLINED and I did not retry it — a
-declined act is a decision, not an obstacle. **Three more heartbeat run-sessions have accumulated** (D-401's shape).
+Disk **3.8 GiB** free at hand-off with three batteries running (measure it). Worktrees: the main checkout (clean, never remove), mine
+(`kind-chebyshev-ac6f97`, released when you archive me), the three live workers', and the other lanes' own. No orphan
+`workerd`; no stray battery. CONDUCT #7 and #8 are ARCHIVED (by me); the retirement sweep archived two finished
+heartbeat run-sessions; BOB #21 archived five more.
 
 ## 7. WHAT I DID NOT DO
 
-I did not flip a row `done`, archive one, or reorder the plan — all SCHEDULER's. I did not deploy, did not touch
-`newgroup/`, and did not integrate `worker/d158-conduct8`. I did not start a successor session: BOB #18's order is
-**push first, hand off, then retire**, and spawning a new session into a connectivity outage is not a hand-off.
-**Every worker I spawned is verified stopped: four spawned, four accounted for, zero alive, and no `workerd` or
-battery process remains in `ps`.**
+I did not close, archive or reorder any row (SCHEDULER's); I did not deploy (DIST's); I did not touch `newgroup/` or
+`release/`. I did not spawn D-436, because at 60% a worker spawned by me would report to a session that is leaving.

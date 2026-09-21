@@ -15570,6 +15570,15 @@ the channel, and the point of the exercise stands: the repository reached them a
 
 **ITEMS 1 AND 2 AND THE CUT QUESTION ARE DONE — recorded 2026-09-21 by SCHEDULER #4 from the record rather than from this block:** item 1 (the D-270 correction) had already been carried by SCHEDULER #2 (`0db72d3b`); item 2's four were placed by SCHEDULER #3 as REC-155, M0-79, UI-73 and M0-80 (`afd89325`); the cut question went to BOB #18, who ruled it (M0-82 — since narrowed, because the archive-then-cut had already landed at `7641d109`). **Item 3 — CONDUCT #7's three design items for BOB and its DIST note — is NOT judged here**, so the block stays open.
 
+**ITEM 3 JUDGED AND THE BLOCK DISCHARGED 2026-09-21 by SCHEDULER #6**, from CONDUCT #7's `CONDUCT-NEXT.md` at
+`7641d109` §5–§6, each item checked at its owner's record rather than from this block: (a) §7.1's items 5/6/8 reached
+BOB's corpus — `INVESTIGATIVE-SESSION.md`'s REC-135 paragraph states it as *"a question for Bob"* and ships the
+disjunction provisionally — but no BOB handoff carries it, so it joins SCHEDULER (#6)'s next BOB group; (b) the DEC-12
+second-edition DELEGATION was RULED as §7.1 item 9 (BOB #19) and placed as REC-157; (c) the five session-reach ops
+were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0
+(`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s BATCH rule has DIST check
+`git log <last release tag>..origin/main` itself.
+
 ## CLAIM 2026-09-19 BOB (D-226 closed against §0, and the estate's OCCUPANCY / REACHABILITY rule)
 
 Session BOB #18, own worktree `.claude/worktrees/blissful-kowalevski-e36e92`, branch
@@ -16041,10 +16050,10 @@ bundle on `main` at `9fca4de3`; `DIST-NEXT.md` rewritten from the measured state
 
 ## DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) — **TWO RULINGS PREPARED AND NOT LANDED, BECAUSE BOTH TOUCH FILES D-158 WAS LANDING. Take them in this order once D-158 is on `main`.**
 
-**open as of 2026-09-21** — BOB #19 crossed 60% context with both ready, and handed them over rather than start them.
+**DISCHARGED 2026-09-21 — both rulings landed: (1) REC-155 by BOB #20; (2) the map cut by BOB #21 (M0-86, archived in the same commit; the map 40,100 B of 49,152).** Each prepared text was re-verified at the code first, and four were corrected: 11.machine-fence's first sentence overclaimed (a bearer token is fenced at ratify and caseratify only, and op=attest is a machine-permitted attest); 10.lead's *"no counter discloses one"* is now the three ops REC-131 fenced; 11.cascade-sources' INSTANCE level has a deploy secret but no caller outside the tests, so the split names that; 8.claim's `none` probe was a false witness and is replaced. BOB #19 crossed 60% context with both ready, and handed them over rather than start them.
 **(1) REC-155 LANDED 2026-09-21 by BOB #20, AHEAD of D-158** (BOB #20's REC-155 CLAIM, below, says why). One example
 was corrected at the code first: a bearer caller's AUTHOR stamp is `token:<class>` (`MACHINE_AUTHOR_PREFIX`), not
-`class:<cls>`. **(2) The map cut is STILL OPEN** and waits for D-158.
+`class:<cls>`. **(2) The map cut LANDED 2026-09-21 by BOB #21**, after D-158.
 
 **(1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md`
 after §4.9 (before `## 5. Capabilities`). Move that document's front matter `as of` in the same commit. Then write
@@ -16364,7 +16373,22 @@ Incomplete sections record items 2 and 3 in the same commit, so this block is no
    the basename rescue it. The file's header already concedes it cannot prove a pointer TRUE; a pointer to a file that
    does not exist is the one case it could prove false for free.
 
-**open as of 2026-09-21** — raised at D-339's landing; nothing placed yet, and item 3 waits on BOB.
+**open as of 2026-09-21** — items 1, 2 and 4 placed by SCHEDULER #6 (below); item 3 RULED by BOB #21 (below), and it
+waits only on SCHEDULER's placement.
+
+**PLACED AND DISCHARGED 2026-09-21 by SCHEDULER #6, each item re-read at the code on `3b338e60`:** items 1 and 2 as ONE
+row, **CAP-13**, after D-116 — one owner, one area and one FULL gate, and item 2's fix rewrites the comments beside
+item 1's. Ranked by what the re-read ADDED: the count reaches the capture MANIFEST, whose reused part says *"across N
+documents on this host"* (`subresources.mjs`, `reused_seen_in_documents`), so every re-capture of a changed page writes
+an inflated figure into content-addressed bytes; `siteChrome` has no caller (`sitechrome` occurs 0 times in
+`index.mjs`). Item 4 as **M0-92**, after M0-80 — latent on today's plan (0 dead paths across `QUEUE.md` and
+`BACKLOG.md`). Item 3 is held for the next BOB group, recorded in SCHEDULER (#6)'s CLAIM block below.
+
+**Item 3 RULED 2026-09-21 by BOB #21: the requirement STANDS**, a reused part names the capture it came from, because the
+intake contract's provenance names who retrieved the bytes (`CAPTURE-SCALING.md` §Job one carries the ruling and the
+build). SCHEDULER places item 3's FIX as named, with two amendments: the reusing capture's `site_asset_refs` row keeps
+`reused_from`, taken from the observation, and `reusedParts` reads it there; and a reuse recorded before the build reads
+UNDETERMINED as to its source, never inferred by matching timestamps.
 
 ## CLAIM 2026-09-21 SCHEDULER (#5) — the lane's standing claim on the build plan's own files; BOB #19's six-rows entry drained (REC-157, UI-74, D-52, D-126 placed; D-195 and D-397 placed under UI-74; D-80 sent to BOB; BOB #20's REC-155 entry drained — REC-155 re-rowed, REC-158 placed); LED-7 continued
 
@@ -16426,6 +16450,159 @@ item is also written ON ITS ROW where it has one. None blocks a runnable row; ea
 **NEXT GROUP, not asked yet:** D-325's residue — a stated limitation, or work? CLAUDE.md §5 states it; no design home does.
 
 **open as of 2026-09-21.**
+
+**open as of 2026-09-21** — FOLDS 3 AND 4 DONE by BOB #21 at the map cut (M0-86): 8.claim's text now says §7.1 item 4 is
+BUILT for publication and that no leg reader consults a conclusion, and its false-witness `none` probe is replaced by a
+`hit` on `#caseConclusionFor`'s call; `12.accept` is a new ABSENT claim (`uinone` on `versionaccept`), so the map says
+the ceremony is absent until UI-74 lands. Folds 1 and 2 and questions Q1–Q4 remain, BOB's to take next.
+
+## CLAIM 2026-09-21 SCHEDULER (#6) — the lane's standing claim on the build plan's own files; the D-339 worker's corrections placed (CAP-13, M0-92), CPDF-21 placed beside REC-154, and two delegations DISCHARGED
+
+claimed: 2026-09-21 by SCHEDULER #6, worktree `.claude/worktrees/scheduler-6` (branch `scheduler-6/a`, base `origin/main`
+@ `3b338e60`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s ownership table): `docs/development/QUEUE.md` (the BOB
+INBOX drain and the rows; CONDUCT owns the `running` word), `docs/development/BACKLOG.md`, `docs/archive/ledgers/*`,
+`docs/development/kickoffs/SCHEDULER*.md`; `docs/development/DEBT.md` (LED-7's dispositions and moves);
+`docs/development/MEASUREMENTS.md` (appends); `docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or
+DISCHARGED line at the end of each DELEGATION addressed to SCHEDULER that this lane acts on; `docs/DECIDED.md`
+(GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #5 (`dreamy-morse-42a25c`), archived by this session on 2026-09-21 at 17:54Z
+under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `1e423768` an
+ancestor of `origin/main` @ `3b338e60`), after its own CronList read back empty by message (*"No scheduled jobs."*); its
+worktree removed, 5,727,672 → 6,377,792 KiB free (+635 MiB; `du` read the tree at 662,780 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**THE NEXT BOB GROUP — HELD, NOT SENT**, three questions, one each; held because BOB #21 opened at 17:52Z on SCHEDULER
+#5's four, and LED-7 batch 11 may add a fourth: (1) **D-325's residue** — a stated limitation, or work? (carried from
+the NEXT GROUP line of the DELEGATION SCHEDULER (#5) -> BOB); (2) **the D-339 worker's item 3** — must a reused part name
+the capture it CAME FROM? §Job one says so; the plane records WHEN and not WHICH; that block names the fix if yes;
+(3) **`INVESTIGATIVE-SESSION.md` §7.1's items 5/6/8** — should a NO-PROJECT conclusion admit a case at all? REC-135's
+paragraph records it as a question for Bob and ships the disjunction provisionally; no BOB handoff carries it.
+
+**open as of 2026-09-21.**
+
+**AMENDED 2026-09-21, same session (commit 2): LED-7 batch 11** — D-144, D-143, D-199 and D-184 CLOSED IN FACT; D-84
+(narrowed to its one unbuilt trace), D-207 and D-92 PLACED under their own ids; D-182 and D-325 SENT to BOB. The held
+group is SENT as the DELEGATION SCHEDULER (#6) -> BOB below, D-182 its fourth question. 180 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 3): LED-7 batch 12** — D-223 CLOSED IN FACT (PL-8's `leg:hunch` arm); D-220
+(narrowed to the investigative session, its consumer (3)) and D-394 (designed in framework §18.1, unbuilt) PLACED under
+their own ids. D-351 and D-311 carried with their next acts named in `SCHEDULER-NEXT.md`. 177 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 4): LED-7 batch 13** — D-389 PLACED after CAP-13 (its fix as the row analysed it;
+its open acceptance question answered by `CLAUDE.md` §2, stated on the row) and D-351 PLACED after CAP-11 (CAP-7's census,
+M-13, met its sizing condition). D-311 still carried. 175 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 5): LED-7 batch 14** — D-311 PLACED after REC-158, both halves: the seven roster
+acts by the per-pair fact it names, and the machine fence it carried (`op=affordances` offers `publish` to a credential the
+store refuses by name). 174 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 6): LED-7 batch 15** — D-83 CLOSED IN FACT (FW-6 built the registry once, FW-7 the
+graded recognisers); D-107 PLACED after LED-9 (the installer's deploy is still a dashboard paste). 172 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 7): BOB #21's rulings placed** — the cache replenished with D-434 after BOB #21
+archived M0-86 at its map cut; CAP-14 and D-182 placed on the Q2 and Q4 rulings. 170 open DEBT rows remain (D-353 closed
+by BOB #21 through the third door).
+
+## DELEGATION 2026-09-21 SCHEDULER (#6) -> BOB — **FOUR QUESTIONS, ONE EACH, from the D-339 worker's DELEGATION, CONDUCT #7's design items and LED-7 batch 11; none blocks a runnable row**
+
+Recorded here because the repository is the channel; each is also written on its row where it has one, and each stands
+on its stated provisional until ruled. It is a second group beside SCHEDULER (#5)'s, not a restatement of it.
+
+- **Q1 — D-325's residue: a LIMITATION, or WORK?** No credential can be bound to scratch for its whole life (a sticky
+  confinement). `CLAUDE.md` §5 states it and no governed design does. A limitation: state it in the credential model's
+  home and D-325 leaves by the third door. Work: a RECORD row with its design. Provisional: BOB #17's ruling stands, the
+  per-call `store=scratch` plus the witness.
+- **Q2 — must a reused part name the capture it CAME FROM?** `CAPTURE-SCALING.md` §Job one says a reused entry must *"name
+  the capture it came from and when"*; the plane records WHEN (`reused_from_fetched_at`) and not WHICH. The section's
+  stated reason, never implying a byte was verified at capture time, is met by `fetched_this_capture: false` and the
+  detail sentence. Yes: the D-339 worker's DELEGATION item 3 names the fix (`last_fetched_by`, carried as `reused_from`)
+  and one row follows. No: §Job one's sentence is corrected. Provisional: WHEN only.
+- **Q3 — should a NO-PROJECT conclusion admit a case at all?** `INVESTIGATIVE-SESSION.md` §7.1, REC-135's paragraph,
+  records it as a question for Bob: item 8 read strictly says no, item 5 reads such bytes as the no-project
+  relationship's and states it, and item 6's aside is false of the code. The build ships the DISJUNCTION, the
+  relationship disclosed in the signed bytes; reversing it is one arm of one function (control arm (e), 22 pass / 3
+  fail). CONDUCT #7 sent it on 2026-09-19 and no BOB handoff carries it. Provisional: the disjunction.
+- **Q4 — D-182: `risk_tier`'s WORDS, or a THIRD VALUE?** C-2.10 admits 1, 2 and 3, nothing publishes member words for
+  them, and no undetermined value exists, so a surface either invents meanings or writes the floor. Publish
+  member-facing words for the three (REC-38's pattern), or make it three-valued with UNDETERMINED as authority and
+  counterparty were? Either answer places one row. Provisional: both writers keep 1, reasoning at each site.
+
+**open as of 2026-09-21** — answered in part by BOB #21. **Q2 RULED:** the requirement STANDS (`CAPTURE-SCALING.md`
+§Job one); the D-339 DELEGATION's item 3 line says how SCHEDULER places it. **Q4 RULED:** both halves in one row
+(`BIO_Case_Making_v0_1.md` §2). Tiers 1–3 get the Roadmap §8 words, and where no member stated a tier the value is
+UNDETERMINED, never a default of 1. **Q3 is Bob's**, as `INVESTIGATIVE-SESSION.md` §7.1 records, and was put to him in
+his conversation on 2026-09-21 with BOB's recommendation to keep the disclosed disjunction; the provisional stands until
+he answers. **Q1 is open for BOB #22**, recommended a stated LIMITATION (BOB #17 ruled the per-call posture
+SUFFICIENT); it needs a design home that names the store namespace first, and none does yet.
+
+**Q2 AND Q4 PLACED 2026-09-21 by SCHEDULER #6** on those rulings (`b6a14392`): Q2 as CAP-14 after D-389, behind CAP-13
+on the same files, with BOB #21's two amendments on the row (the reusing ref row keeps `reused_from`; a reuse recorded
+before the build reads UNDETERMINED as to its source); Q4 as D-182 under its own id after D-220, archived from DEBT as
+PLACED. This block's own bare `open as of` line was removed in the same commit: the one above now states its status.
+
+## CLAIM 2026-09-21 BOB (#21) — the construct-map cut (M0-86): each §3 claim's history moves VERBATIM into `construct-status.json`'s unrendered `note`
+
+claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`. Paths: `docs/architecture/construct-status.json`
+(the `"text"` literal of each claim the cut shortens, replaced IN PLACE with its old text moved verbatim into `"note"`;
+8.claim's false-witness probe replaced; two claims inserted, `11.cascade-sources` and `12.accept`);
+`docs/architecture/BIO_System_Design.md` (§3's state column, RENDERED by `node tools/status.mjs --write`, which moves
+its `as of`); `docs/development/QUEUE.md` (M0-86's row only, by `node tools/ledger.mjs archive M0-86`) and
+`docs/archive/ledgers/*` (that tool's own write); `docs/development/CLAIMS.md` (this block, and one dated line closing
+item 2 of DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) and folds 3 and 4 of DELEGATION 2026-09-21 SCHEDULER (#5) ->
+BOB); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: BOB #20's five CLAIM blocks of 2026-09-21, RELEASED here: each landed with its text, and the session that
+held them was archived by this one at ~17:57Z under D-398's three conditions, re-checked at the moment of acting (not
+running; porcelain empty; tip `3b338e60` = `origin/main`), after its own `CronList` read back "No scheduled jobs." by
+message; its worktree removed.
+
+**AMENDED, same landing:** `bio-plane/test/corpuscheck.test.mjs` — its two assertions pinning the map's evaluated
+design pairs, CORRECTED with a dated reason (8.claim's new text cites §7.1 item 9, a third real pair; negative control:
+that citation dropped from the map -> exactly those two assertions fail by name; map restored and verified by hash).
+
+**NOT CLAIMED:** the rest of `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
+
+**open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 FLEET (FLEET #3 — I10's body: BOB #21's two precisions folded, and the five no longer marked PROVISIONAL in the body)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/INTERFACES.md` (§I10's body ONLY: one sentence of the Version line, the 1.1.0 heading, the
+`writeMember` sentence and the "What stays outside I10" paragraph; the Status line is BOB's and is NOT touched);
+`docs/development/kickoffs/FLEET.md` (one parenthesis in the I10 note); `docs/DECIDED.md` (GENERATED, regenerated
+last); and this block. No code moves.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 FLEET (FLEET #3 — FLEET-NEXT rewritten as a CHECKPOINT while live, from the measured state)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/kickoffs/FLEET-NEXT.md` (rewritten whole: FLEET #2's 2026-09-20 handoff is superseded by today's
+measured state); `docs/DECIDED.md` (GENERATED, regenerated last); and this block. FLEET #3 stays live; this is a
+checkpoint at 54% context, not a stand-down.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-21 BOB (#21) — landing 2: I10's five confirmed STABLE; D-339 item 3 and D-182 RULED; D-353 closed by its stated limitation
+
+claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`. Paths: `docs/development/INTERFACES.md` (§I10's
+Status line ONLY; FLEET owns the body and was sent two precisions); `docs/development/CAPTURE-SCALING.md` (§Job one: one
+RULED paragraph, and one clause of its Incomplete bullet); `docs/architecture/BIO_Case_Making_v0_1.md` (§2: one RULED
+paragraph under the action fields, and the Status `as of`); `docs/development/VERIFICATION.md` (one sentence beside
+D-333's census rule; one receipt sentence moved VERBATIM to `docs/archive/VERIFICATION-2026-09-19.md` to stay in
+budget); `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-353's disposition, then
+`node tools/ledger.mjs archive D-353`); `docs/development/CLAIMS.md` (this block, and dated lines on the D-339 and the
+SCHEDULER (#6) -> BOB DELEGATIONs, including the SCHEDULER (#6) block's own `open as of` line, restored after a
+rebase resolution of mine had moved it under my claim); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT CLAIMED:** `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
+
+**open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 BOB (#21) — the handoff to BOB #22
+
+claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~18:50Z), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #21** — landed in the same commit as the file it covers.
 
 ## CLAIM 2026-09-21 RECORD (D-432 — AN OPAQUE ID IS NEVER DRAWN AGAIN, PURGE OR NOT: the minter gains a purge-exempt ledger it consults)
 
@@ -16491,4 +16668,10 @@ So the claim's text and probes were parked in `3.census`'s UNRENDERED note in `d
 --write` and `--check` (0 drift), and strike the parked note. BOB #21 holds the cut and may fold it in; otherwise whoever
 lands next on construct 1 after the cut does it and discharges this block here.
 
-**open as of 2026-09-21** — waits on M0-86.
+**DISCHARGED 2026-09-21 by CONDUCT #10** — M0-86 is on `main` at `57904bcd`, and D-432's integration merge adds
+`1.minted-ids` (BUILT; probes: table `minted_ids`, `FROM minted_ids WHERE id=` and `this\.#seedMintLedger\(\)` in
+`store.mjs`), its text bounded by what `#seedMintLedger` itself says it cannot see (an id that left every live table
+before the ledger existed). The parking paragraph in `3.census`'s note is replaced by the integrator's fit, and D-432's
+review BY MEANING leads that note, re-reviewed against the two non-BUILT claims that landed after its base
+(`11.cascade-sources`, `12.accept`). `node tools/status.mjs --write` then `--check`: 88 claims, 251 probes, 0 drift; the
+map reads 40,370 B against its 49,152 B budget.

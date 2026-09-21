@@ -98,15 +98,16 @@ accepts-when: with any one floor left stale by a landing, the guard EXITS NON-ZE
 NEGATIVE CONTROL: drop one floor by one and the guard fails BY NAME; today it prints and passes.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 2, RE-MEASURED — its own figures no longer reproduce, four others do; see MEASUREMENTS.md).
 
-### M0-86 · queued — **BOB'S OWN ACT, NOT A WORKER SLOT (BOB #19 is cutting it by hand, 2026-09-21).** **THE CONSTRUCT MAP HAS 4 BYTES OF HEADROOM ONCE D-158 LANDS, AND OVER BUDGET IT FAILS EVERY GATE.** `docs/architecture/BIO_System_Design.md` is 49,106 B on `origin/main` and 49,148 B on `worker/d158-conduct8` (`b3ae389c`), against the 49,152 B map budget, in `tools/readbudget.mjs`' `CUT` set. The next landing that lengthens a §3 row fails — D-432 adds a table that construct 3's census cell records. — owner BOB (the map's author).
-order: SECOND, by BOB's hand rather than a slot: over budget this file FAILS every landing that grows it, where `RECORD.md` (REC-154) is a WARN; it should land before D-432 does (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 5, re-measured)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each*.
+### D-434 · queued — **A PUBLISHED RECIPE REFUSES THE MEMBER AT ITS OWN LAST STEP.** `app.html`.s `RECIPES[capture-a-document-and-ground-a-question-on-it]`, ends on `op=inquiryground` — which authors the DEC-32 PARTITION over legs that ALREADY EXIST and refuses `NO_BASIS` when there are none. On a fresh capture the member is REFUSED; on a question with legs it regroups them and attaches the document to nothing. The op for this act is `op=cite`. **PART 1 ONLY.** — owner UI.
+order: FIRST. The record telling a member to do what the plane refuses is the record claiming more than it can support, which CLAUDE.md §2 grades above every feature — and it is PUBLISHED, so it is wrong in the member.s hands. One edit plus its arm (SCHEDULER #3, 2026-09-20)
+milestone: M8
+interface: none — part 1 changes no interface.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §0 · Vocabulary, which ALREADY BANS this: *"GROUND PARTITION … is **never a surface word**"* — DEC-32.s elicitation clause 1 bans it from every member-facing surface. The recipe breaks a ban a governed document already states: enforcement, not a new rule.
 depends-on: none.
-scope: BOB's stated plan: move each §3 claim's HISTORY into `construct-status.json`'s unrendered `note`, which `node tools/status.mjs <topic>` still prints, so nothing is lost; anything cut from prose is archived VERBATIM.
-accepts-when: `node tools/readbudget.mjs` reads the map under budget, headroom stated in bytes at the landing; `node tools/status.mjs --check` still agrees; nothing that left the map is absent from both the note and the archive.
-added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+scope: **PART 1 ONLY; THE ROW REFUSES TO GROW.** Correct the step and its `why` to `op=cite`, or split into cite-then-ground if the recipe means both — plus one arm that DRIVES it end to end, since its id appears nowhere outside `app.html`. **PART 2 IS NOT PLACED:** no arm of `surface-registry.test.mjs` asks whether a step.s op can perform its act, and BOB ruled it must be SIZED first — inventing a model of every op to judge a `why` string is the citation-invented-to-pass-a-check failure.
+accepts-when: the recipe is driven end to end against the plane and COMPLETES. How a liar passes it: editing the `why` to match the wrong op — so the arm DRIVES it and asserts no refusal, instead of reading text.
+NEGATIVE CONTROL: restore `op=inquiryground` and the drive arm fails by name at `NO_BASIS`.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18.s inbox entry, drained this commit).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

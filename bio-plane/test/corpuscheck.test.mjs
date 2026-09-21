@@ -407,8 +407,13 @@ section("design status has ONE authority — the construct map, and the arm that
        `INVESTIGATIVE-SESSION.md` §7.1 item 4 (the half of §7.1 that is NOT built), so the map
        carries a SECOND real pair and the instrument evaluated it — verdict
        `list-claims-no-undesignedness`, a pass, because §7.1 is a design and says what it lacks.
-       The arm pins the WHOLE evaluated set, so a pair that stops being evaluated still fails. */
+       The arm pins the WHOLE evaluated set, so a pair that stops being evaluated still fails.
+       CORRECTED AGAIN 2026-09-21 by BOB #21 at the map cut (M0-86), never exempted: `8.claim`'s
+       rewritten text cites §7.1 item 9 too (the second edition over a moved conclusion, NOT built,
+       REC-157), a THIRD real pair, evaluated with the same passing verdict. The old list was right
+       of the old map and is wrong of this one; the whole set stays pinned. */
     [`8·docs/development/INVESTIGATIVE-SESSION.md·7.1·4·list-claims-no-undesignedness`,
+     `8·docs/development/INVESTIGATIVE-SESSION.md·7.1·9·list-claims-no-undesignedness`,
      `8·${FRAMEWORK}·18·6·points-at-its-design`]);
   t("every citation in the map RESOLVED — an unresolved one is SAID, not skipped", live.unresolved, []);
 
@@ -441,9 +446,11 @@ section("design status has ONE authority — the construct map, and the arm that
     /AT ITS SOURCE/.test(f) && /Never exempt it/.test(f), true);
   t("the pair's verdict is RESTATED and its covering document named",
     /* CORRECTED 2026-09-18 by REC-124: the second real pair (§7.1 item 4, see arm 1) is
-       evaluated here too and stays a pass; the receipt's pair is still the one RESTATED. */
+       evaluated here too and stays a pass; the receipt's pair is still the one RESTATED.
+       CORRECTED AGAIN 2026-09-21 by BOB #21 (M0-86): the third real pair (§7.1 item 9, see arm 1)
+       is evaluated here as well and also passes; the receipt's pair is still the only one RESTATED. */
     armed.pairs.map((p) => [p.verdict, p.covering]),
-    [["list-claims-no-undesignedness", null], ["RESTATED", CASEMAKING]]);
+    [["list-claims-no-undesignedness", null], ["list-claims-no-undesignedness", null], ["RESTATED", CASEMAKING]]);
 
   // --------------------- 3. THE LIAR'S ARM, EXCLUDED — a SECOND triple fires with NO TOOL EDIT
   /* The cheapest green for this row is an arm matching on a hand-written pair list holding

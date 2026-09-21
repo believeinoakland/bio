@@ -6,7 +6,7 @@
 
 **Incomplete sections** ·
 - §Order of work — item 6's status line reads *"DECIDED 2026-07-31 and QUEUED as CAP-4"* and CAP-4 has LANDED: `reuse_verdicts` carries both producers (POSTHOC and RATIFY) with the four outcomes, and refinements (a) to (d) are built as decided. The line should be read as history.
-- §Job one: stop re-fetching — CORRECTED 2026-09-21 (D-339): the body now states the rule `reuseDecision` (`subresources.mjs`) runs — furniture kinds only, at least two distinct primary captures on the host, and the source seen serving the bytes within 24 h, with stability demoted to a secondary signal — and where the live measurement that refused the `stable_since` rule is recorded; that rule stays in the section unedited, marked superseded with its reason. Three things in it remain open: both constants are CHOSEN, not measured (§Open questions carries them); the manifest records WHEN a reused part was last seen served but not WHICH capture fetched it; and the two-document floor counts primary captures rather than pages, so one page whose bytes changed between two captures meets it alone. The last two are routed by D-339's delegation of 2026-09-21 in `CLAIMS.md`. Until 2026-09-21 this bullet said the sketched `reused_from` / `reused_fetched_at` / `fetched_this_capture` shape "is built as written", and it is not: `fetched_this_capture` is, the time is written as `reused_from_fetched_at`, and `reused_from` exists neither in the manifest nor in the store's `reusedParts` read.
+- §Job one: stop re-fetching — CORRECTED 2026-09-21 (D-339): the body now states the rule `reuseDecision` (`subresources.mjs`) runs — furniture kinds only, at least two distinct primary captures on the host, and the source seen serving the bytes within 24 h, with stability demoted to a secondary signal — and where the live measurement that refused the `stable_since` rule is recorded; that rule stays in the section unedited, marked superseded with its reason. Three things in it remain open: both constants are CHOSEN, not measured (§Open questions carries them); the manifest records WHEN a reused part was last seen served but not WHICH capture fetched it (RULED OWED 2026-09-21 by BOB #21: the section names the build, and a reuse recorded before it reads UNDETERMINED as to its source); and the two-document floor counts primary captures rather than pages, so one page whose bytes changed between two captures meets it alone. The last two are routed by D-339's delegation of 2026-09-21 in `CLAIMS.md`. Until 2026-09-21 this bullet said the sketched `reused_from` / `reused_fetched_at` / `fetched_this_capture` shape "is built as written", and it is not: `fetched_this_capture` is, the time is written as `reused_from_fetched_at`, and `reused_from` exists neither in the manifest nor in the store's `reusedParts` read.
 - §The per-site asset record — the column list drawn here is not the table that exists. `site_assets` (`schema.mjs`) carries `last_fetched` (the clock the reuse gate reads), `kind` and `changes`, and it has no `capture_count` or `distinct_documents`: the distinct-document count moved into `site_asset_refs`, one row per (asset, primary capture), so a byte-identical re-capture cannot double-count it. CORRECTED 2026-09-21 (D-339): until then this bullet said a re-capture cannot double-count it at all, and one whose bytes changed does — it is a new primary sha (§Job one, condition 3).
 - §Open questions — both remaining questions are unmeasured while the code has already picked their constants, which is exactly the failure this document diagnoses; since 2026-09-21 (D-339) each question names its chosen constants beside it, labelled CHOSEN — 24 h for the freshness window, and for the recurrence threshold both reuse's `minDocuments: 2` and chrome classification's 0.6 share in `siteChrome`. Neither the freshness window nor either threshold has been measured against fifteen or more captures of one host.
 - §Workers Paid is an optimisation — superseded in premise by DEC-42 and marked as such in the body. Its free-tier figures are history: no supported instance runs under them and the installer refuses a Free account (D-185).
@@ -109,6 +109,23 @@ what the paragraph above requires, NOT FETCHED and WHEN are recorded; **the capt
 the bytes came from is not.** No `reused_from` field exists in the manifest or in
 the store's `reusedParts` read, which names the capture that REUSED a part and never
 the one that fetched it.
+
+**RULED 2026-09-21 by BOB #21 (D-339's DELEGATION, item 3): the requirement STANDS — a
+reused part names the capture it came from.** The intake contract's provenance names
+who retrieved a document's bytes and when (`BIO_Intake_Doctrine_v1_1.md` §2), and a
+reused part's bytes were retrieved by an EARLIER capture, so that capture is the
+part's provenance. `fetched_this_capture: false` stops a reader believing the bytes
+were verified now; without the source capture nothing lets the reader FOLLOW them to
+the fetch that saw them served. **Build:** `site_assets` gains `last_fetched_by`, the
+primary capture sha whose fetch set `last_fetched`, written beside it on every FETCHED
+observation and never moved by a reuse; each reused part carries it as `reused_from`
+in the manifest; and the reusing capture's `site_asset_refs` row keeps it too, taken
+from the observation itself so the store and the manifest cannot disagree. `reusedParts`
+reads it from that row, never from `site_assets`, whose value a later fetch moves.
+**A reuse recorded before that is UNDETERMINED as to its source, and says so**
+(`reused_from: null`, read as *not recorded*). It is never inferred by matching a ref
+row's `at` against `last_fetched`: both are whole seconds and a ref row is overwritten
+in place, so that match costs nothing and proves nothing.
 
 **The rule the plane runs: RECENCY OF FETCH, not stability.** `reuseDecision`
 (`bio-plane/src/subresources.mjs`) lets stored bytes stand in for a fetch only when

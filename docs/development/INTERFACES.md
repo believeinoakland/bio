@@ -1428,8 +1428,7 @@ reproduced), and 134.6 MB is refused in-isolate as a catchable `RangeError`.
   the first. BOB confirms it to STABLE once it has been read against the code. **1.1.0**, 2026-09-21, ADDITIVE, and
   again a registration of existing shapes with no IC: `writeMember`, `verifyFresh`, `freshBuildRunnable`, `sha256` and
   `REPO_ROOT` join, because another lane's code imports each of them. Ruled by BOB #20 by message, 2026-09-21; BOB's
-  record follows. Written from the code at `86725fb8` (`fleet-bundle.mjs` is unchanged since `790ad66a`). **The five
-  are PROVISIONAL until BOB has read them against the code.**
+  record follows. Written from the code at `86725fb8` (`fleet-bundle.mjs` is unchanged since `790ad66a`).
 - **Consumers** (measured 2026-09-21 by parsing every tracked `.mjs` file's `import { … } from` this module,
   multi-line imports included; no dynamic import of it exists; the defining file is not counted):
   - `discoverMembers`: `agent-worker/scripts/build.mjs` and `pdf-worker/scripts/build.mjs` (FLEET);
@@ -1442,7 +1441,7 @@ reproduced), and 134.6 MB is refused in-isolate as a catchable `RangeError`.
   - `verifyFresh`, `freshBuildRunnable` and `sha256`: `tools/release-assemble.mjs` (DIST).
   - `REPO_ROOT`: `tools/release-assemble.mjs` and `bio-plane/scripts/resolve-version.mjs` (DIST).
   - `bio-plane/test/fleetbundles.test.mjs` (FLEET) imports all seven.
-- **Status:** STABLE for `discoverMembers` and `planeMember` (their 1.0.0 shape), CONFIRMED by BOB #20 on 2026-09-21 after reading both against `bio-plane/scripts/fleet-bundle.mjs` at `86725fb8` (the file is unchanged since `ef3dfd3d`). The one precision that read found, `planeMember`'s `external` being a fresh copy, is folded into the shape above. The five exports added at 1.1.0 (`e99abfec`, on BOB #20's ruling) stay PROVISIONAL until BOB reads them against the code.
+- **Status:** STABLE for `discoverMembers` and `planeMember` (their 1.0.0 shape), CONFIRMED by BOB #20 on 2026-09-21 after reading both against `bio-plane/scripts/fleet-bundle.mjs` at `86725fb8` (the file is unchanged since `ef3dfd3d`). The one precision that read found, `planeMember`'s `external` being a fresh copy, is folded into the shape above. **The five exports added at 1.1.0 (`e99abfec`, on BOB #20's ruling) are STABLE too, CONFIRMED by BOB #21 on 2026-09-21:** each read against the same file (still unchanged since `ef3dfd3d`), each cost above found at `tools/release-assemble.mjs` (`GUARD_CANNOT_RUN`, `STALE_OR_UNINSTALLABLE`, `MANIFEST_DISAGREES`, `MEMBER_PART_UNHASHED`, `MEMBER_PART_DISAGREES`), and the consumer list re-measured by parsing every tracked `.mjs` import: exact, with no dynamic import. Two precisions, folded into the body by FLEET #3 at `89ff4592`: `buildMember` (outside I10) also writes the artifact when passed `write: true`, which only `writeMember` does, so "the only writing path" holds of the calls and not of the exports; and `optionsFor` and `manifestFrom` are exported and imported by nothing, so they belong with the exports that stay outside I10.
 
 ### The shape
 
@@ -1485,7 +1484,7 @@ appear in `discoverMembers`.
 - **The ORDER carries no signed byte.** The assembler re-sorts the fleet by member before building the payload
   `fleetSig` covers (`release-assemble.mjs`), so a change of sort order is not a release-format change.
 
-### The five exports added at 1.1.0 (PROVISIONAL)
+### The five exports added at 1.1.0
 
 At 1.0.0 this section listed these five as outside I10 and left their joining to BOB; BOB #20 ruled them in. Each
 is written from the code as it stands.
@@ -1497,7 +1496,9 @@ function here that takes a `repoRoot` defaults it to this, and the assembler roo
 **`sha256(buf)`** is synchronous: the SHA-256 of a Buffer or string, as lowercase hex. Every hash in a manifest and
 in `RELEASE.json` is produced by it and compared as a string.
 
-**`writeMember(member)`** is async and is THE ONLY WRITING PATH in the module. For a descriptor with a `bundle`, it
+**`writeMember(member)`** is async, and it is the only CALL PATH in the module that writes: `buildMember` (outside
+I10) writes the artifact only when passed `write: true`, and only `writeMember` passes it (BOB #21's precision,
+2026-09-21). For a descriptor with a `bundle`, it
 creates the directory of `bundle.outfile` under `abs`, builds with the shared recipe (esbuild writes
 `bundle.outfile`), and writes `bundle.manifest` as JSON with a two-space indent and a trailing newline. It resolves
 to `{ built, manifest }`. `built` is `{ bytes: Buffer, sha256, inputs: [{ path, bytes }], metafile }`. `manifest` is
@@ -1533,5 +1534,7 @@ built module still makes outside `bundle.external || DEFAULT_EXTERNAL`, read fro
 
 **What stays outside I10.** No other lane imports the module's remaining exports (measured 2026-09-21):
 `assetsOf`, `buildMember`, `fleetProvenance`, `memberPaths`, `unresolvableSpecifiers` and `verifyStatic` are imported
-only by FLEET's own `fleetbundles.test.mjs`, and nothing outside the module imports the constants `RECIPE` and
-`DEFAULT_EXTERNAL`. An export that gains an importer in another lane joins I10 by the same rule.
+only by FLEET's own `fleetbundles.test.mjs`; nothing imports `optionsFor` or `manifestFrom` (BOB #21's precision,
+2026-09-21); and nothing outside the module imports the constants `RECIPE` and `DEFAULT_EXTERNAL`. That is ten exports
+outside I10 beside its seven, all seventeen accounted for. An export that gains an importer in another lane joins I10
+by the same rule.
