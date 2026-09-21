@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1327 rulings across 100 documents.
+1329 rulings across 101 documents.
 
 ## DEC-
 
@@ -311,7 +311,7 @@ authority is the file named, never this one.
 - **D-80** · 2026-07-30 — RULED by Bob: contradicting aspirations are welcomed, because we may not realise that they contradict and because we learn from trying to achieve aspirations whether they are achieved or not.  
   `docs/archive/ledgers/DEBT-closed.md:143`
 - **D-80** · 2026-09-21 — a stated LIMITATION, D-80 folded, Membership §8.1 folded, D-195 at the elicitation, D-260 and D-293 ruled, D-280 found RULED by Bob as DEC-70  
-  `docs/development/CLAIMS.md:16883`
+  `docs/development/CLAIMS.md:16887`
 - **D-82** — p the derived dress -> the D-82 arm FAILS; (2) re-introduce approval as a write gate -> the DEC-52-final arm FAILS (the SUPERSEDED provisional); (3) make bulk review N acts instead of one over the set -> the set arm FAILS; (4) neuter the attribution predicate -> the REACH arm fails AS A DELTA with the corpus…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:5662`
 - **D-82** · 2026-07-30 — RULED by Bob: the appearance of an assistant-surfaced focus should communicate that it is one.  
@@ -544,6 +544,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Distribution_v0_1.md:115`
 - **D-260** · 2026-09-21 — D-260 is RULED** (BOB #22, 2026-09-21; the assistant's §6, and `QUEUE.md`'s BOB INBOX entry): its item 2 is DIST's, AFTER item 1 (the plane's caller, RECORD with FLEET) — install and update carry ONE organisation-principal `ai` credential as a deploy secret the way `DAEMON_TOKEN` is carried, never in the record,…  
   `docs/development/kickoffs/DIST-NEXT.md:59`
+- **D-260** — (4) D-260 RULED, placed under its own id.  
+  `docs/development/kickoffs/SCHEDULER-NEXT.md:35`
 - **D-260** · 2026-09-21 — 2026-09-21 · BOB #22 · D-260 RULED — AN INSTANCE MAY HOLD ONE ORGANISATION-PRINCIPAL `ai` CREDENTIAL AND RESUMES ONLY THE RUNS IT OPENED (SCHEDULER (#5)'s Q3).** Design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260 paragraph (this commit); the deploy half is `BIO_Distribution_v0_1.md` §6's…  
   `docs/development/QUEUE.md:69`
 - **D-263** · 2026-08-09 — D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED** item: D-263 (existing row, raised by M0-20).  
@@ -617,7 +619,7 @@ authority is the file named, never this one.
 - **D-333** · 2026-09-13 — It decayed when arm (f) was added; the declaration is CORRECTED, never exempted, with the dated reason at the site and the old number recorded as right when it was written.  
   `docs/archive/ledgers/DEBT-closed.md:55`
 - **D-333** — RULED paragraph, and one clause of its Incomplete bullet); `docs/architecture/BIO_Case_Making_v0_1.md` (§2: one RULED paragraph under the action fields, and the Status `as of`); `docs/development/VERIFICATION.md` (one sentence beside D-333's census rule; one receipt sentence moved VERBATIM to…  
-  `docs/development/CLAIMS.md:16608`
+  `docs/development/CLAIMS.md:16612`
 - **D-339** · 2026-09-21 — VERIFIED BY SCHEDULER #5 AT THE CODE: `7338b442` is an ancestor of `origin/main`, and `docs/development/CAPTURE-SCALING.md` names `reuseDecision` 9×, `CHOSEN` 6× and `SUPERSEDED` 4×.  
   `docs/archive/ledgers/QUEUE-closed.md:2725`
 - **D-339** · 2026-09-21 — §Job one: stop re-fetching — CORRECTED 2026-09-21 (D-339): the body now states the rule `reuseDecision` (`subresources.mjs`) runs — furniture kinds only, at least two distinct primary captures on the host, and the source seen serving the bytes within 24 h, with stability demoted to a secondary signal — and where…  
@@ -629,11 +631,11 @@ authority is the file named, never this one.
 - **D-339** · 2026-07-29 — SUPERSEDED 2026-07-29 by the measurement above; folded into this section > 2026-09-21 (D-339).** The next paragraph is the rule this section first proposed, > kept unedited so the reason stays beside it.  
   `docs/development/CAPTURE-SCALING.md:191`
 - **D-339** · 2026-09-21 — Q2 RULED:** the requirement STANDS (`CAPTURE-SCALING.md` §Job one); the D-339 DELEGATION's item 3 line says how SCHEDULER places it.  
-  `docs/development/CLAIMS.md:16544`
+  `docs/development/CLAIMS.md:16548`
 - **D-339** — Q4 RULED:** both halves in one row (`BIO_Case_Making_v0_1.md` §2).  
-  `docs/development/CLAIMS.md:16545`
+  `docs/development/CLAIMS.md:16549`
 - **D-339** · 2026-09-21 — CLAIM 2026-09-21 BOB (#21) — landing 2: I10's five confirmed STABLE; D-339 item 3 and D-182 RULED; D-353 closed by its stated limitation claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`.  
-  `docs/development/CLAIMS.md:16604`
+  `docs/development/CLAIMS.md:16608`
 - **D-339** — D-339 item 3 is RULED** (CAPTURE-SCALING §Job one): a reused part names its source capture, and a pre-build reuse reads UNDETERMINED.  
   `docs/development/kickoffs/BOB-NEXT.md:45`
 - **D-343** · 2026-09-14 — It was found by a wider reading that was WITHDRAWN for precision, and it is named here so the withdrawal loses nothing.  
@@ -747,7 +749,7 @@ authority is the file named, never this one.
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2):** also `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-436 archived as PLACED; D-260's disposition carries DS-3's and FL-6's dispatch fix), the TRACKED ELSEWHERE table in `QUEUE.md`, and `docs/development/kickoffs/SCHEDULER-NEXT.md` (the refresh).  
   `docs/development/CLAIMS.md:16245`
 - **D-438** — operator gap), and — AMENDED while building — **D-438** (the guard's two real-tree control harnesses had stopped measuring; the arms NOT D-254's) and **D-439** (the class sweep's two unpinned copies). - `docs/development/MEASUREMENTS.md` (appended), `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals ONLY,…  
-  `docs/development/CLAIMS.md:16792`
+  `docs/development/CLAIMS.md:16796`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -2333,14 +2335,16 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:16461`
 - Q3 RULED: `BIO_Assistant_and_AI_Roles_v0_1.md` §6 (one organisation-principal `ai` credential, resuming only the runs it opened; a member's run is a stated limitation).  
   `docs/development/CLAIMS.md:16464`
+- **2026-09-21** — AMENDED 2026-09-21, same session (commit 8): THE REFRESH at 60%** — `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #7 from the state measured at `e50f5c75`; this claim passes to SCHEDULER #7, who supersedes it when it archives this session.  
+  `docs/development/CLAIMS.md:16520`
 - **2026-09-21** — Q1 RULED by BOB #22: a stated LIMITATION.** `BIO_Distribution_v0_1.md` §6 rung 6 and its front matter now state that the namespace is chosen per call, never per credential (only PROBE is confined, at `index.mjs` `scopeFor`, read 2026-09-21); the guarantee is the per-call `store=scratch` plus the witness; no…  
-  `docs/development/CLAIMS.md:16557`
+  `docs/development/CLAIMS.md:16561`
 - AMENDED, same landing:** `bio-plane/test/corpuscheck.test.mjs` — its two assertions pinning the map's evaluated design pairs, CORRECTED with a dated reason (8.claim's new text cites §7.1 item 9, a third real pair; negative control: that citation dropped from the map -> exactly those two assertions fail by name; map…  
-  `docs/development/CLAIMS.md:16578`
+  `docs/development/CLAIMS.md:16582`
 - design pairs, CORRECTED with a dated reason (8.claim's new text cites §7.1 item 9, a third real pair; negative control: that citation dropped from the map -> exactly those two assertions fail by name; map restored and verified by hash). **NOT CLAIMED:** the rest of `bio-plane/**`, `tools/**`, every kickoff, and…  
-  `docs/development/CLAIMS.md:16579`
+  `docs/development/CLAIMS.md:16583`
 - AMENDED while building:** arm (5b)'s predicate too — it TYPED `BARE … 39 ops` and the roster is 40 on `main`, so it read NOT AS DECLARED on the untouched base `fc94b045` (measured on a pristine checkout); it now reads the figure from the baseline run.  
-  `docs/development/CLAIMS.md:16778`
+  `docs/development/CLAIMS.md:16782`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
