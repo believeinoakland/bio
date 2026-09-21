@@ -572,7 +572,12 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
      trusted. */
   const EXEMPT = {
     seq:                  "monotonic id counter; must survive so allocid never reissues an identifier (see purge comment)",
-    credentials:          "operator/member auth; a data purge must not delete logins and lock the instance out",
+    /* D-432. The OPAQUE minter's memory, exempt on seq's reasoning and for no new one: the gated prefixes have no
+       counter, so this ledger is what stops `Store#mintOpaqueId` handing a purged object's id to a new one. It is
+       NOT a derived table, which is why the D-113 rule this check enforces does not reach it — clearing it is the
+       defect it closes. `mint-ledger.test.mjs` drives that under a forced draw. */
+    minted_ids:           "the opaque minter's memory (D-432): every gated id ever handed out, so #mintOpaqueId never reissues one across a purge; seq's reasoning, for the ids that have no counter; not derived from the corpus, and clearing it is the defect it closes (see purge comment)",
+    credentials:         "operator/member auth; a data purge must not delete logins and lock the instance out",
     sessions:             "bearer login sessions; auth state, not corpus-derived",
     bootstrap:            "one-row claim state; whether the instance has been claimed, not corpus data",
     members:              "the roster; membership is identity, not derived from captured documents",
@@ -2083,6 +2088,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        provenance and appears in the GUARDED list above, which is the line that
        makes this naming a category judgement rather than a convenience. */
     "bio-plane/test/m025-arm-census.mjs",         // runs the control drivers; reports a census, floors on nothing
+    /* ADDED 2026-09-21 by D-432's item, AND THE RATCHET CAUGHT IT ON THE FIRST RUN — before anyone read the diff.
+       WHY IT IS NAMED AND NOT GUARDED, and it is `refusal-codes.test.mjs`'s reason: its walk of `src/` (or of the
+       armed copy a control points it at) feeds ONE assertion, that NO module but `store.mjs` and `schema.mjs` names
+       the minter's ledger in code — a CEILING AT ZERO. A phantom module deposited there can only turn that RED, never
+       quietly green, and nothing it prints is a figure anybody floors on. Provenance would tell it something true and
+       useless. */
+    "bio-plane/test/mint-ledger.test.mjs",        // src/, asserts NO other module names the ledger (a ceiling at zero)
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2138,8 +2150,14 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      length why THIS floor is the one where slack is not tolerable: it guards a
      matcher whose failure mode is over-blinding, and a slack floor is blind to
      exactly that. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 34)`,
-    census.length >= 34, true);
+  /* MOVED 2026-09-21 BY D-432: 34 -> 36, from the figure this run PRINTED on the line above (`class census: 36
+     file(s)`) on D-432's tree, never by adding to the number in the file. ONE of the two is D-432's own suite
+     (`test/mint-ledger.test.mjs`, named above). THE OTHER WAS ALREADY THERE: the same census on `origin/main` @
+     `fc94b045`, before D-432 touched anything, printed `35 file(s)` against this floor of 34 — one walker landed
+     without moving it, so the floor had carried one slack since. It is closed here rather than carried, because the
+     block above argues this is the floor where slack is not tolerable. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 36)`,
+    census.length >= 36, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

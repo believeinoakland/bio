@@ -16426,3 +16426,69 @@ item is also written ON ITS ROW where it has one. None blocks a runnable row; ea
 **NEXT GROUP, not asked yet:** D-325's residue — a stated limitation, or work? CLAUDE.md §5 states it; no design home does.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 RECORD (D-432 — AN OPAQUE ID IS NEVER DRAWN AGAIN, PURGE OR NOT: the minter gains a purge-exempt ledger it consults)
+
+Worker spawned by CONDUCT #9 [3d638d]. **Own worktree** `.claude/worktrees/agent-ae1b7eca4d2254b16`, branch
+**`worktree-agent-ae1b7eca4d2254b16`**, base `origin/main` @ `fc94b045` (the row read `running` there). `npm ci` in
+`bio-plane/`, `pdf-worker/` and `ocr-worker/`, each `node_modules` verified a REAL DIRECTORY; `df -h` 7.4 GiB free after.
+Design authority: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (the minted-id bullets; the legacy-residue
+bullet's *"citations must keep resolving"*) with the `op=purge` comment's *"allocid must never reissue an identifier that
+has already existed"*, the precedent the row extends. IC-170 minted with `node tools/mintid.mjs IC` BEFORE building.
+Claimed BY SITE, because `store.mjs` is the repo's most-churned file:
+
+- `bio-plane/src/schema.mjs` — ONE new table `minted_ids`, immediately after `seq` (so before `host_governor`).
+- `bio-plane/src/store.mjs` — **by SITE:** (1) `#mintOpaqueId` — its body and its comment; (2) the NEW
+  `static UNTAILED_GATED_PREFIXES` beside `GATED_ID_PREFIXES`; (3) the NEW `static #MINT_LEDGER_LIVE` and the NEW
+  `#seedMintLedger`, beside the minter; (4) ONE call at the end of `#migrate`; (5) the comment above `purge` (the `seq`
+  paragraph gains the ledger's) — NOT `purge`'s body; (6) the comments at `publishCase`'s CASE mint and at
+  `#mintProjectId` — comments only. **NOT** `taskDrain` (CAPTURE's function; its mint expression is unchanged, the ledger
+  lives in the one minter it already calls), **NOT** any other function.
+- `bio-plane/test/hygiene.test.mjs` — ONE entry in the D-113 `EXEMPT` table, beside `seq`.
+- `bio-plane/test/mint-ledger.test.mjs` and `bio-plane/test/mint-ledger.control.mjs` — both NEW.
+- `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` figures, from the print only.
+- `bio-plane/dist/` (the rebuilt bundle).
+- `docs/architecture/BIO_Membership_Architecture_v2.md` (the front matter; §7's REC-151 bullet's last sentence and ONE new
+  BUILT bullet after it), `docs/architecture/construct-status.json` (`3.census`, and a NEW claim `1.minted-ids`),
+  `docs/architecture/BIO_System_Design.md` (§3's rows 1 and 3 — RENDERED by `node tools/status.mjs --write`, never
+  hand-edited), `docs/development/INTERFACE-CHANGES.md` (IC-170, appended), `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT** `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), **NOT** `docs/development/kickoffs/RECORD.md`
+(it reads 36,709 B against a 24,576 B budget, so the lesson is carried by the schema and the minter's own comments rather
+than a further appended note), **NOT** `newgroup/`, **NOT** `release/`, **NOT** `civicos-ui/`.
+
+**open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates and resolves IC-170.
+
+## CLAIM 2026-09-21 RECORD (D-432, SECOND BLOCK — TWO SITES ADDED after the item's own suite met hygiene's walk census)
+
+Appended rather than edited into the block above, because this register is APPEND-ONLY and both sites were found after
+it was written — by the census, on the new suite's first hygiene run, which is the ratchet working as designed.
+
+- `bio-plane/test/hygiene.test.mjs` — TWO MORE SITES beside the `EXEMPT` entry: (1) ONE entry in `CLASS_NAMED_UNGUARDED`
+  naming `test/mint-ledger.test.mjs` (its walk of `src/` feeds a ceiling at zero, `refusal-codes.test.mjs`'s reason);
+  (2) the walk census's REACH floor, 34 -> 36, from the figure the run PRINTED (`class census: 36 file(s)`). One of the
+  two is D-432's suite; the other was ALREADY THERE — `origin/main` @ `fc94b045` printed 35 against 34 before this item
+  touched anything, so the floor had carried one slack since some earlier landing.
+- `bio-plane/test/d301-census.control.mjs` — ONE predicate (the `neuter` arm's `ok`) and its `expect` sentence: the
+  SECOND reader of that floor's figure. It named `floor 34`; it now asks `floor [1-9]\d*` — zero walking files against a
+  NON-ZERO floor, which is all the arm ever proved — so the next floor move leaves it alone. RE-RUN after the edit:
+  `node test/d301-census.control.mjs neuter` AS DECLARED (hygiene 920/2, walkfloor 42/2), restore VERIFIED by sha256 and
+  byte-compare.
+
+**open as of 2026-09-21** — OPEN while this item builds; released with the block above at integration.
+**corrected 2026-09-21 by the D-432 worker** — the first block's `construct-status.json` entry names "a NEW claim
+`1.minted-ids`": it was NOT added. `node tools/plancheck.mjs` failed READING BUDGET on it — the construct map read 51,093 B
+against its 49,152 B budget, because `origin/main` already sat at 49,148 B (M0-86: four bytes of headroom). The census
+review went into `3.census`'s UNRENDERED `note` instead, the rendered text moved by one digit (97 -> 98 tables), the map
+is back at 49,148 B, and the claim is OWED until M0-86 frees room (named in the note and in the report to CONDUCT).
+
+## DELEGATION 2026-09-21 CONDUCT (#9) -> BOB (#21) — **D-432's BUILT claim `1.minted-ids` is OWED and cannot land until the M0-86 map cut does**
+
+D-432 landed the opaque minter's ledger (`minted_ids`, IC-170, I5 1.23.0). Its worker wrote the BUILT claim for
+construct 1 and `plancheck` refused it: `BIO_System_Design.md` sits at 49,148 of 49,152 B, and `readbudget` FAILS over.
+So the claim's text and probes were parked in `3.census`'s UNRENDERED note in `docs/architecture/construct-status.json`.
+**THE ACT:** once M0-86 is on `main`, move that text into a `1.minted-ids` claim (BUILT), run `node tools/status.mjs
+--write` and `--check` (0 drift), and strike the parked note. BOB #21 holds the cut and may fold it in; otherwise whoever
+lands next on construct 1 after the cut does it and discharges this block here.
+
+**open as of 2026-09-21** — waits on M0-86.

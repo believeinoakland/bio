@@ -12468,3 +12468,87 @@ wrote IC-168's resolution in this file and never bumped the registry, so two rec
 The registry now carries IC-168's 46.0.0 as the Prior it always was and this change above it. **CONDUCT answers FOR
 the consumer areas, in writing, per step 3 — not as their agreement:** UI NOT-AFFECTED (it makes no call), DIST
 NOT-AFFECTED (the installer carries the plane and serves no roster of its own); RECORD owns the change and landed it.
+
+## IC-170 · I5: THE OPAQUE MINTER GAINS A LEDGER IT CONSULTS — a new table `minted_ids` (`id` PRIMARY KEY, `recorded_at`, `source`) beside `seq`, EXEMPT from `op=purge` in BOTH arms on `seq`'s reasoning; `Store#mintOpaqueId` asks it AS WELL AS the live rows on every draw and records every id it hands out, in the minting act's own transaction; `#migrate` seeds it at every boot from each gated kind's live rows and, for `CASE`/`DRAFT`/`RVG`, from the range the counter issued before REC-151; NO op reads it · PROPOSED 2026-09-21 (D-432, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump and the RESOLUTION are CONDUCT's
+
+- **Interface:** I5 (the store schema). **Version read off this tree's `docs/development/INTERFACES.md` (base `fc94b045`):
+  1.22.0. Proposed as MINOR — 1.22.0 → 1.23.0.** Read the base AT RESOLUTION. **Why additive:** one new table; no column
+  of any existing table moves; no op gains, loses or re-means a key — purge's before/after proof and `op=stats` carry no
+  key for it, ASSERTED (`mint-ledger.test.mjs` F3); nothing a caller could do is refused — a draw that would have
+  reissued an id that existed now draws again, invisibly at the wire, because a gated id is opaque. **Why it is not like
+  the other additive tables in this file:** it is NOT purged, deliberately, on `seq`'s reasoning. I5's rule 1 (a DERIVED
+  table must be named in `op=purge`) does not reach it — nothing in it is derived from the corpus, and clearing it is the
+  very defect it closes. `hygiene.test.mjs` lists it among the D-113 exemptions, beside `seq`, and `mint-ledger.test.mjs`
+  S4 pins that no statement anywhere UPDATEs or DELETEs it.
+- **Proposer:** RECORD, D-432 worker, branch `worktree-agent-ae1b7eca4d2254b16`, 2026-09-21 — Membership v2 §7 (the
+  minted-id bullets; the legacy-residue bullet's *"citations must keep resolving"*) and the `op=purge` comment's rule,
+  extended to the ids that have no counter: *"allocid must never reissue an identifier that has already existed"*.
+- **Owner to land it:** `RECORD`.
+- **The shape.** `minted_ids (id TEXT PRIMARY KEY, recorded_at TEXT NOT NULL, source TEXT NOT NULL)`; `source` is `mint`
+  (drawn and handed out by the minter), `live` (learned at boot from a live row of its kind) or `counter` (learned at boot
+  from `seq`: an id the counter issued for an untailed gated prefix before REC-151, used or not). Written by
+  `#mintOpaqueId` and `#seedMintLedger` ONLY; read by `#mintOpaqueId` ONLY, as a point lookup keyed on one id (S3 pins
+  every read to that shape — a count of gated ids is how many gated objects were ever minted, hidden ones included,
+  BOB #16's disclosure). The minter's insert is PLAIN, into the key: it cannot collide while the read stands, and the
+  control's `no-ledger-read` arm measured what it does if the read is lost — the act FAILS (SQLITE_CONSTRAINT) rather
+  than handing the spent id out.
+- **Measured consumer impact** — `grep -rl minted_ids` over `bio-plane/`, `docs/`, `tools/`, `civicos-ui/`,
+  `agent-worker/`, `pdf-worker/src`, `ocr-worker/src`, `newgroup/` and `release/` on this branch: `bio-plane/src/schema.mjs`,
+  `bio-plane/src/store.mjs`, the rebuilt `dist/bio-plane.bundled.mjs`, `test/hygiene.test.mjs`, the two new
+  `test/mint-ledger.*` files, and the documents that name the item (the Membership doc, the construct map and its data,
+  CLAIMS, QUEUE, the closed-debt archive). **ZERO** hits in every consumer tree, and zero in any `bio-plane/src` module but
+  those two (S5 pins it):
+  - `op=purge` / `op=stats` / `op=selftest` / `op=livefire` — NOT AFFECTED: `#counts` does not read the table (F3).
+  - D-113's purge census (`hygiene.test.mjs`) — CHANGED IN THIS LANDING: `EXEMPT` gains `minted_ids`.
+  - `3.census` (`tools/status.mjs`) — 97 → 98 tables, REVIEWED BY MEANING in `construct-status.json`, the review in the
+    claim's UNRENDERED `note` (printed by `node tools/status.mjs 3`): the construct map had 4 bytes of headroom against
+    its 49,152 B budget (M0-86, BOB's cut, not yet landed), so the rendered text changed by one digit and nothing else,
+    and the map stays at 49,148 B. For the same reason the construct's own BUILT claim, `1.minted-ids`, is OWED rather
+    than written — its text and probes are in that note, to be added once M0-86 frees room.
+  - `DIST` (deploy) — nothing to run: `CREATE TABLE IF NOT EXISTS` makes the table at the first boot of the new build, and
+    the seed runs at the end of `#migrate` at every boot, so an older build deployed back for a while and minting
+    meanwhile is caught up at the next boot of this one. Its cost is TEN statements whatever the store holds — one
+    `INSERT OR IGNORE … SELECT` per live source table and ONE for the counter (a recursive CTE, at most 9,999 numbers
+    per untailed scope) — each doing its work inside SQLite, in proportion to the gated rows or the ids the counter
+    issued, never the corpus; no row returns to JS. The first draft looped over `seq` in JS with a write per id, and
+    `derivation-bounds.test.mjs`' walk named it on the first full battery (it grades JS loops over an unbounded
+    `#rows(` read, and states it cannot see work inside SQL — which the site now says, with the bound).
+  - `CAPTURE` — `tasks` is READ by the seed; `taskDrain` (CAPTURE's function) is NOT edited: its mint already goes
+    through the one minter, which is where the ledger lives.
+  - `UI`, `agent-worker`, `pdf-worker`, `ocr-worker`, `newgroup`, `SKILL` — NOT AFFECTED: none reads a store table, and
+    `newgroup/` and `release/` carry the plane's bundle as bytes.
+  - **No I3 IC:** no op's shape moves.
+- **What changed, measured through the op** (`mint-ledger.test.mjs`, 26 assertions, on a build of `src/` whose ONLY edit
+  forces the FIRST draw of each gated prefix to a suffix the suite chose — so the redraw of a purged id is certain, not
+  1 in 10,000): every gated prefix minted, the store purged whole, and the same objects minted again under the same names
+  and slugs — each of PROJ, CASE, DRAFT, RVG and TASK is handed a FRESH id, never the purged one (F4–F8); a project purged
+  by itself likewise (F9); the review copy's dry run mints a case id inside the publish gates' rolled-back transaction
+  and the real publish that follows is handed that same id — the ledger kept nothing for an act that rolled back (F2);
+  and on a store a LEGACY build (REC-151's minter: no ledger write, no seed; the pre-REC-151 `op=allocid` that served
+  CASE) wrote, THIS build's boot learns the legacy ids, and after a whole-store purge a draw forced to each is refused
+  (U3–U6), as is a draw forced to `CASE-<year>-0002`, which the counter issued and no object ever used (U7). Control:
+  `mint-ledger.control.mjs`, nine arms, all AS DECLARED (figures in the suite's header).
+- **What it cannot see, stated:** an id that left every live table BEFORE this landing and that no counter recorded — a
+  `PROJ` or `TASK` counter id whose slug is gone, or an opaque id minted and purged before the ledger existed. Nothing in
+  the store remembers those, so no seed can; an exact reissue of one needs its slug AND its four digits again.
+- **DESIGN GAP (Membership v2 §7):** the minted-id bullets are silent on whether an id the COUNTER issued for a gated
+  prefix before REC-151 may be drawn by the opaque minter. Built as NEVER, on the `op=purge` comment's rule (an allocation
+  handed out is an identifier that has existed); the reversal is one arm of `#seedMintLedger`.
+
+**Suites:** NEW `bio-plane/test/mint-ledger.test.mjs` (26) and `mint-ledger.control.mjs` (nine arms). CHANGED
+`bio-plane/test/hygiene.test.mjs` (the `EXEMPT` entry; the walk census names the new suite, and its REACH floor moves
+34 → 36 from the printed figure) and `bio-plane/test/d301-census.control.mjs` (its `neuter` predicate reads the floor
+as NON-ZERO rather than as 34, re-run AS DECLARED).
+
+**RESPONSES:** not yet collected.
+
+**RESOLUTION · 2026-09-21 · ACCEPTED by CONDUCT #9 as MINOR, ADDITIVE — I5 1.22.0 → 1.23.0.** Base RE-READ at
+resolution off the integration tree: **1.22.0** (IC-146), as proposed. ADDITIVE because the change is one new table no
+op reads, counts or lists, and nothing a caller could do before is refused now: an opaque id that could once be redrawn
+after a purge simply is not. **NEGATIVE CONTROL RE-RUN AT INTEGRATION by CONDUCT #9 on the merged tree, not taken from
+the report:** `node test/mint-ledger.control.mjs`, exit 0, all nine arms AS DECLARED (baseline 26/0 · no-ledger-read
+14/12 · no-ledger-write 20/6 · ledger-purged 15/11 · outside-the-transaction 25/1 · no-seed 21/5 · no-counter-seed 25/1
+· no-live-seed 22/4 · lookup-other-spelling 26/0), real sources reported untouched and re-hashed identical afterwards.
+CONDUCT answers FOR the schema's consumer areas, in writing, per step 3: NOT-AFFECTED — no consumer reads the table.
+**OWED, not done here:** the BUILT claim `1.minted-ids` (text and probes in `3.census`'s note) cannot enter
+`construct-status.json` until BOB #21's M0-86 map cut lands (the map sits 4 B under its budget) — a DELEGATION carries it.
