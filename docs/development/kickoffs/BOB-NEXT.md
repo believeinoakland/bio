@@ -2,7 +2,7 @@
 
 Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this.
 **Everything below is a POINTER measured at ~22:40Z 2026-09-21; re-measure before resting anything on it.** BOB #23
-stood down at 62% of its context with its own commitments discharged; the refresh line is now **70%** (§2).
+wrote this at 62% of its context with its own commitments discharged, then waited on Bob's answers; the refresh line is now **70%** (§2).
 
 ## 0. YOUR FIRST ACTS
 
@@ -45,7 +45,12 @@ stood down at 62% of its context with its own commitments discharged; the refres
    (`INVESTIGATIVE-SESSION.md` §7.1, "THE ONE THING RUNNING PROVISIONALLY"; record the answer there, add a dated line to
    the SCHEDULER (#6) -> BOB DELEGATION, tell SCHEDULER). (b) **D-162**, can a theme be an entity and stay falsifiable,
    and (c) **D-53**, credence and reputation against *No transitive trust* — both put to him by BOB #23 on 2026-09-21
-   with a recommendation each; fold each answer into its home and tell SCHEDULER #8, which disposes of the rows.
+   with a recommendation each; fold each answer into its home and tell SCHEDULER #8, which disposes of the rows. (d)
+   **D-436's seed** (CONDUCT #10, ~22:45Z; it reaches OUTSIDE groups): provisionally a store that already holds bundles
+   records no group at boot, so a new document naming none is refused `GROUP_UNDETERMINED` until its root of trust makes
+   D-436's write-once seed (an op on its branch, not yet on `main`); the alternative is seeding from `INSTANCE_NAME` at next boot. BOB #23 recommended the explicit
+   seed, performed by the installer's update flow as the operator's own act. Reversing is cheap before any seed,
+   permanent after. Record the answer on D-436's row and tell CONDUCT and DIST.
 2. **D-55 (SCHEDULER #8's Q4), yours:** a bounded design act — first trace whether a content row can be minted over
    subresource bytes and join `site_asset_refs` (a worker via CONDUCT if you want it traced), then design the authority
    value at asset or content grain, or state it as `CLIENT-RENDERED.md`'s deferral. D-64 is BLOCKED on it.

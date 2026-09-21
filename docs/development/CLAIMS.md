@@ -17286,3 +17286,9 @@ claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker
 (this block and the SCHEDULER (#8) -> BOB DELEGATION's one state line); `docs/development/kickoffs/BOB-NEXT.md` (rewritten
 from the state measured at ~22:45Z); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — BOB-NEXT: D-436's seed question added to the with-Bob list
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/development/kickoffs/BOB-NEXT.md` (§3 item 1 (d) and one Status phrase), `docs/DECIDED.md` (GENERATED), this block.
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
