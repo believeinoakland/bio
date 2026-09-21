@@ -64,8 +64,11 @@ console.log("\n--- an empty token authenticates nothing ---");
 /* ---- 2. optional R2 ---- */
 console.log("\n--- no R2 is healthy and declared; livefire agrees ---");
 {
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: an installed plane carries the INSTANCE_NAME the installer
+     binds in the same upload that creates it (D-102), and its store records its producing group from it at its FIRST
+     BOOT. Without it, livefire's canary — which names no group of its own since D-436 — is refused by name (C-64.1). */
   const mf = mk({ ADMIN_TOKEN: "an-admin-token-16ch", MEMBER_TOKEN: "a-member-token-16ch",
-                  PROBE_TOKEN: "probe-local-battery" }, { r2: false });
+                  PROBE_TOKEN: "probe-local-battery", INSTANCE_NAME: "installed-group" }, { r2: false });
   const j = async (p) => (await (await mf.dispatchFetch("http://x" + p)).json());
   const st = await j("/api/?op=selftest&token=probe-local-battery");
   t("selftest ok with no R2", st.ok, true);

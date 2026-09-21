@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1373 rulings across 103 documents.
+1378 rulings across 103 documents.
 
 ## DEC-
 
@@ -87,7 +87,7 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20); vocabulary corrected 2026-08-05 (D-188, > DEC-46 (d)).  
   `docs/architecture/BIO_Design_Requirements_v2.md:456`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"a work product carrying > unsettled BIAS DEBT (its cited bias manifest differs from the current > effective set) cannot advance workproduct_state and cannot be ratified for > publication"*.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1609`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1611`
 - **DEC-20** · 2026-08-02 — — AMENDED 2026-08-02 by Bob (DEC-20); struck here 2026-08-05 (D-188).  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1694`
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
@@ -485,7 +485,7 @@ authority is the file named, never this one.
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-203** · 2026-09-19 — THE LADDER IS ONE-WAY AND GAINS NO `verified -> collected` EDGE — RULED 2026-09-19 by BOB #17 (D-203/D-200), from this section's own design rather than as a new rule.** Three things decide it.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:693`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:695`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
   `docs/archive/ledgers/QUEUE-2026-08.md:162`
 - **D-212** · 2026-08-05 — SUPERSEDED 2026-08-05 by the VERSIONS design — the question this row asked turned out not to be a record question at all.** The row went through three drafts and each was wrong in an instructive way, so the history is kept rather than deleted.  
@@ -780,8 +780,10 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16282`
 - **D-435** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 4): BOB #22's landing met** — D-435 archived by BOB #22 (`8245cf54`), so the cache is replenished to 8 with M0-97, D-341 and M0-83 by `node tools/ledger.mjs refill`; REC-159's scope follows BOB #22's bearer ruling (§4.7); the REC-156 DELEGATION's two state lines are merged…  
   `docs/development/CLAIMS.md:16992`
+- **D-436** · 2026-09-21 — the `group` value comes from was unstated until the 2026-09-21 amendment at the foot (D-436), whose three decisions Bob RULED on 2026-09-21 (§3.1), and what a group named wrongly in bytes that are already signed can become is not designed.  
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:11`
 - **D-436** · 2026-09-21 — THE `group` VALUE, AND WHAT CAME BEFORE IT (D-436; RULED BY BOB 2026-09-21).** `group` is the producing group's slug: one value in the store's durable state, written once — at a store's first boot from the installer's instance name, or once by the root of trust — and never a deploy-time value, because it lands in…  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:591`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:593`
 - **D-436** · 2026-09-21 — DRAINED 2026-09-21 by SCHEDULER #4 — 2 entries from BOB #19 (MK-3 SUPERSEDED by MK-6 and MK-7, MK-5 re-pointed; D-436 PLACED second in the order); its third entry (the six answered rows) stays for the next drain  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1158`
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2):** also `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-436 archived as PLACED; D-260's disposition carries DS-3's and FL-6's dispatch fix), the TRACKED ELSEWHERE table in `QUEUE.md`, and `docs/development/kickoffs/SCHEDULER-NEXT.md` (the refresh).  
@@ -1883,6 +1885,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/BIO_Membership_Architecture_v2.md:914`
 - CORRECTED the same day by BOB #15 — the first version said *the owner or any administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the exception"*).  
   `docs/architecture/BIO_Publication_v0_1.md:192`
+- RULED BY BOB the same day** as §3.1's paragraph *"THE `group` VALUE, AND WHAT CAME BEFORE IT"* states them (recorded by BOB #23; reconciled here at integration by CONDUCT #11, because the two texts met only in the merge). **THE RULE.** An instance's producing group is ONE value in its store (`instance_group`, one…  
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1703`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:11`
 - **2026-07-30** — It is the inventory that has to exist before a design document can be written honestly." One RULED marker (Bob, 2026-07-30, Step 0's scope).  
@@ -2427,6 +2431,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:17278`
 - regenerated); `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1: one RULED paragraph; Contents regenerated); `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/kickoffs/BOB-NEXT.md` (§2 and §3); `docs/DECIDED.md` (GENERATED, regenerated LAST); this block.  
   `docs/development/CLAIMS.md:17375`
+- CORRECTED SUITES, each with a dated reason at the site and none exempted: `acquire`, `conformance`, `counterparty`, `inquiry` (the setup page's `mdFor` bytes are judged AS THE PLANE HOLDS THEM, through `withProducingGroup`, beside a pin that the page's own bytes name no group); `bundle`, `livefire`, `installer`,…  
+  `docs/development/CLAIMS.md:17438`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2599,6 +2605,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:12050`
 - THE ONE DESIGN CALL INSIDE THIS CHANGE, STATED SO IT CAN BE OVERTURNED CHEAPLY.** The three ops gained `member` and sit in BOTH `SESSION_OPS` sets, rather than the admin set alone.  
   `docs/development/INTERFACE-CHANGES.md:12383`
+- (`247/268 suites green`), every one CORRECTED with a dated reason at the site and none exempted.  
+  `docs/development/INTERFACE-CHANGES.md:12709`
+- **2026-09-21** — Bob RULED them on 2026-09-21 (State Rules §3.1, recorded by BOB #23); the amendment's text and its Incomplete-sections line are reconciled to the ruling in the merge.  
+  `docs/development/INTERFACE-CHANGES.md:12804`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-08-07** — [16 · Positions taken and WITHDRAWN](#16-positions-taken-and-withdrawn) - [17 · What is NOT settled — and what was settled since v2](#17-what-is-not-settled-and-what-was-settled-since-v2) - [18 · Decomposition — HANDED OVER 2026-08-07 and ENACTED](#18-decomposition-handed-over-2026-08-07-and-enacted) - [19 · The…  

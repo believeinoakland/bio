@@ -12055,6 +12055,65 @@ export const CONTRADICTION_PAIR_CHECKS = {
   },
 };
 
+/* D-436 / C-64 — THE INSTANCE'S PRODUCING GROUP (BIO_State_Rules_Consistency_v1_5.md §3.1: `group` is the
+ * producing group's slug and travels with every distributed copy — so it is in the SIGNED bytes). The plane
+ * used to write one literal slug there, true of one instance and false of every instance `newgroup` installs.
+ * The slug is now ONE value in the store (`instance_group`), recorded once — at the store's first boot from the
+ * slug the installer bound, or, on a store that predates the value, by the root of trust's one act — and read
+ * by every default and every stamp (`Store#producingGroup`).
+ *
+ * THREE refusals, and each says what the mechanism found rather than guessing at the caller:
+ *   C-64.1 — a write that must NAME the producing group, on a store recording none, where the request states
+ *            none either. The plane will not supply a default: a default is how the wrong producer got into
+ *            signed bytes, and UNDETERMINED is first-class. ONE site, a helper, so however many acts need the
+ *            refusal it has one smallest span.
+ *   C-64.2 — a seed naming something that is not a slug in the installer's own grammar.
+ *   C-64.3 — a seed on a store that already records its group. WRITTEN ONCE, because the value is in every
+ *            document the record has signed, and a second value would make them name a producer they were
+ *            not written under. */
+export const INSTANCE_GROUP_CHECKS = {
+  GROUP_UNDETERMINED: {
+    check: 'C-64.1',
+    where: 'src/store.mjs #groupUndetermined > is-group-undetermined',
+    translation: 'This copy has not recorded which group it belongs to, and nothing in this request says, so the '
+      + 'record cannot write a document that must name the group that produced it. A copy records its group once: '
+      + 'when it is first installed, or by one act of whoever holds its administrator token in the hosting account. '
+      + 'Nothing was written.',
+  },
+  GROUP_SLUG_MALFORMED: {
+    check: 'C-64.2',
+    where: 'src/store.mjs instanceGroupSeed > is-instance-group-seed',
+    translation: 'A group is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase '
+      + 'letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.',
+  },
+  GROUP_ALREADY_RECORDED: {
+    check: 'C-64.3',
+    where: 'src/store.mjs instanceGroupSeed > is-instance-group-seed',
+    translation: 'This copy\'s group is already recorded, and it is recorded once: the name travels inside every '
+      + 'document the record has signed, so a second name would make those documents name a producer they were '
+      + 'not written under. Nothing was changed.',
+  },
+};
+
+/** D-436 — THE ONE DEFINITION of how a producing group is written into a document's bytes. `Store#stampGroup` calls it
+ *  for every creation at the one write path, and a suite that judges a composer's bytes AS THE PLANE WILL HOLD THEM calls
+ *  the same function — so neither is a copy of the other, and a change to how the group is written moves both.
+ *  Replaces the top-level `group:` line (column 0, inside the front matter), or opens one immediately before the closing
+ *  fence, the convention every key the plane adds follows. Returns the text UNCHANGED when there is no front matter block
+ *  to write into, and when the document already names `slug` in any spelling this catalogue's parser reads as it — so a
+ *  correct document is never rewritten. */
+export function withProducingGroup(text, slug) {
+  if (typeof text !== 'string' || typeof slug !== 'string' || !slug) return text;
+  if (parseFrontmatter(text).data?.group === slug) return text;
+  const lines = text.split('\n');
+  if (lines[0] !== '---') return text;
+  const end = lines.indexOf('---', 1);
+  if (end === -1) return text;
+  for (let i = 1; i < end; i++)
+    if (lines[i].startsWith('group:')) { lines[i] = `group: ${slug}`; return lines.join('\n'); }
+  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join('\n');
+}
+
 /** C-54.1 — ONE LEG, ASKED WHETHER IT RESTS ON A LEAD. The one checker every
  *  leg grammar consults (`checkInquiryBasis`' basis[], the version legs, the
  *  action basis), so the rule has one spelling and three doors. It asks BOTH

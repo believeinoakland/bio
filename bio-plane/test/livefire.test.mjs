@@ -14,7 +14,11 @@ const mf = new Miniflare({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { VERSION: "0.2.0-local", PROBE_TOKEN: "probe-local-battery" },
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: INSTANCE_NAME is bound because every install binds it
+     (`newgroup`'s upload, D-102) and a store records its producing group from it at its FIRST BOOT. Unbound, the
+     scratch store records none, and livefire's canary — which now names no group of its own, where it named a literal
+     one — is REFUSED by name (C-64.1): the plane right about a store no install produces. */
+  bindings: { VERSION: "0.2.0-local", PROBE_TOKEN: "probe-local-battery", INSTANCE_NAME: "livefire-fixture" },
 });
 const j = async (p) => (await (await mf.dispatchFetch("http://x" + p)).json());
 const st = await j("/?op=selftest&token=probe-local-battery");

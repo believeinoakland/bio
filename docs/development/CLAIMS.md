@@ -17376,3 +17376,116 @@ regenerated); `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1: on
 `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/kickoffs/BOB-NEXT.md` (§2 and §3);
 `docs/DECIDED.md` (GENERATED, regenerated LAST); this block.
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 RECORD (D-436 — THE PRODUCING GROUP IS ONE RECORDED VALUE PER INSTANCE: no bundle this plane writes names a literal group)
+
+Worker spawned by CONDUCT #10. **Own worktree** `.claude/worktrees/agent-a6dd0a0a3a3a6cc10`, branch
+**`worktree-agent-a6dd0a0a3a3a6cc10`**, base `origin/main` @ `2bd24da7` (fast-forwarded from the spawn's `4fac1548`; the
+row read `running` at both). `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`, each `node_modules` verified a REAL
+DIRECTORY; 6.0 GiB free. Baseline battery on the untouched tree: `267/267 suites green · 16264 assertions passing`. Design
+authority: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (the core field `group`) with the design call in
+D-436's own archived row (`docs/archive/ledgers/DEBT-closed.md`). IC-172 and the C-64 family minted with
+`node tools/mintid.mjs` BEFORE building. Claimed BY SITE, because `store.mjs` and `index.mjs` are the most-churned files:
+
+- `bio-plane/src/schema.mjs` — ONE new table `instance_group`, immediately after `bootstrap` (so before `host_governor`).
+- `bio-plane/src/store.mjs` — **by SITE:** (1) `#migrate` — ONE line at its head (the first-boot witness) and ONE call
+  immediately after the schema pass; (2) NEW, immediately after `setPassword`: `static GROUP_SLUG_RE`, `#producingGroup`,
+  `#recordGroupAtFirstBoot`, `instanceGroup`, `instanceGroupSeed`, `#groupUndetermined`, `static #stampGroup`; (3)
+  `promote` — the creation's group decided before `transactionSync`, the stamp after REC-141's mint, `cur`'s SELECT gains
+  `group_id`, and the `bundles` INSERT's group value; (4) `testify` — the recorded group read and refused-when-absent
+  before `allocId`, the bytes' `group:` line, the meta key; (5) `forkProject` — the meta key; (6) `divide` — a pre-check
+  where `const group` stood, and its two meta keys; (7) `strengthBarSet`, `strengthBarOf` — the default group; (8) the meta
+  `group` key REMOVED, nothing else, at the seventeen other revision sites: `#edgeTransition`, `dispose`, `retire`,
+  `release`, `conclude`, `#setProjectConclusion`, `actionMove`, `actionCorrespond`, `#respondsToInto`, `reopen`,
+  `publishCase`, `groundInquiry`, `cite`, `narrow`, `#moveVersionState`, `#setProjectCurrentVersion`, `suggestVersion`;
+  (9) the DO dispatch map — two new routes, `instancegroup` and `instancegroupseed`; (10) ONE import line from the catalog.
+- `bio-plane/src/index.mjs` — **by SITE:** (1) the OPS table — two new rows; (2) `UNATTENDED_BY_DECISION` — one entry;
+  (3) the forward's stamps — `author` for `instancegroupseed`; (4) the monitor tick's promote `meta` — the `group` key.
+- `bio-plane/src/setup.mjs` — **by SITE:** `mdFor`'s `group:` line; the intake save's and the edit save's meta `group` key.
+- `bio-plane/src/livefire.mjs` — the canary's meta `group` key.
+- `bio-plane/checks/bio-checks.mjs` — ONE new DEC-49 family, `INSTANCE_GROUP_CHECKS` (C-64.1–C-64.3).
+- `bio-plane/test/instance-group.test.mjs` and `bio-plane/test/instance-group.control.mjs` — both NEW.
+- `bio-plane/test/hygiene.test.mjs` — ONE entry in the D-113 `EXEMPT` table.
+- Suites a correct landing makes wrong — named in a SECOND block once the battery has named them, each corrected with a
+  dated reason, never exempted.
+- `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` — FLOOR FIGURES ONLY, from their own print.
+- `bio-plane/dist/` (the rebuilt bundle).
+- `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (front matter, and ONE dated amendment section at the foot),
+  `docs/architecture/construct-status.json` (`3.census`, and a NEW claim `3.producing-group`),
+  `docs/architecture/BIO_System_Design.md` (RENDERED by `node tools/status.mjs --write`, never hand-edited),
+  `docs/development/INTERFACE-CHANGES.md` (IC-172, appended), `docs/development/MEASUREMENTS.md` (one appended entry),
+  `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT** `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), **NOT** `docs/development/INTERFACES.md`
+(CONDUCT's at resolution), **NOT** `newgroup/**` (the installer half is DIST's — DELEGATION below), **NOT** `release/**`,
+**NOT** `civicos-ui/app.html` (UI's — DELEGATION below), **NOT** `docs/development/kickoffs/RECORD.md` (it reads 36,709 B
+against its budget, so the lesson lives in the code's own comments and the amendment).
+
+**open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates and resolves IC-172.
+
+## CLAIM 2026-09-21 RECORD (D-436, SECOND BLOCK — the paths battery pass one NAMED, each a suite a correct landing made wrong, or a table that must classify the new op)
+
+Appended rather than edited into the block above, because this register is APPEND-ONLY and every path below was found by
+the first full battery on the branch (`247/268 suites green`, 21 named), not predicted.
+
+- `bio-plane/checks/bio-checks.mjs` — ONE more site beside the new family: `withProducingGroup`, the ONE definition of how
+  a producing group is written into a document's bytes, which `Store#stampGroup` calls and the corrected suites judge by.
+- `bio-plane/src/store.mjs` — `#stampGroup`'s body (it calls the catalogue's definition) and the import line, only.
+- `bio-plane/src/affordances.mjs` — ONE entry in `RUNG_ABSENT` (`instancegroupseed`, ground `substrate`), because
+  `rung-ladder.test.mjs` requires every mutating op to carry a rung or a stated absence.
+- `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` — ONE line of the amendment, dated, because
+  `undesignedclaims.test.mjs` counts an undated "undesigned" as unaudited.
+- CORRECTED SUITES, each with a dated reason at the site and none exempted: `acquire`, `conformance`, `counterparty`,
+  `inquiry` (the setup page's `mdFor` bytes are judged AS THE PLANE HOLDS THEM, through `withProducingGroup`, beside a pin
+  that the page's own bytes name no group); `bundle`, `livefire`, `installer`, `caseproduction`, `d280-strengthbar`,
+  `publish`, `testify`, `testimonyaxis`, `project-mint`, `project-sight`, `projects` (the fixture now binds the
+  `INSTANCE_NAME` every install binds, so its store records a producing group at its first boot); `d270-refusal-truth`
+  (its pinned literal gains the fifth recorded decision); `gate-reads` (the new read is classified); `hygiene` (the new
+  suite's walk is named, and the walk census's reach floor moves by the printed figure) — all under `bio-plane/test/`.
+- Any control driver whose subject these corrections touch, re-run and, where its declaration moved, corrected.
+
+**open as of 2026-09-21** — OPEN while this item builds; released with the block above at integration.
+
+## DELEGATION 2026-09-21 RECORD (D-436 worker) -> DIST — **THE INSTALLER HALF OF D-436: what `newgroup` sends, through which channel, and the ONE seed every instance installed before this release needs**
+
+D-436 (IC-172) makes an instance's producing group ONE value in each of its stores, written ONCE. **For a NEW install the
+installer sends nothing new, and through no op:** the store records the slug at its FIRST BOOT from the `INSTANCE_NAME`
+plain_text binding `uploadInstall` already sends (`newgroup/src/index.mjs`, `{ type: "plain_text", name: "INSTANCE_NAME",
+text: slug }`, D-102) in the SAME upload that creates the worker — read at that moment only and never again. What DIST owes:
+
+1. **KEEP `INSTANCE_NAME` = the slug INSIDE `uploadInstall`'s own PUT** (both the normal and the `noSelf` degraded arm, as
+   today), before any request can reach the new worker. A binding that arrived in a LATER PUT would arrive after the store
+   may already have booted — the setup page's first `op=bootstrap` boots it — and the store would then record nothing,
+   because it never reads the binding again.
+2. **`uploadUpdate`'s re-binding of `INSTANCE_NAME` moves nothing** — by design (`instance-group.test.mjs` L1–L4). No act;
+   do not rely on it to change a group.
+3. **EVERY INSTANCE INSTALLED BEFORE THIS RELEASE RECORDS NOTHING AT BOOT** (its store predates the value — decision (b)).
+   After deploying the release carrying D-436, the root of trust calls **`op=instancegroupseed` ONCE per store** — its
+   ADMIN_TOKEN as `token=`, method POST, body `{"slug":"<the group's slug>"}` — for the `bio` store AND for
+   `store=scratch`, and verifies each with `op=instancegroup` (`group`, `source: "seed"`, `recorded_by: "token:admin"`).
+   **This project's own instance, `biosmoke7`, is seeded `believe-in-oakland`, NOT its worker name**: its group is not its
+   worker name. Until it is seeded: its creations keep the caller's own statement (civicos-ui's literal, true there), a
+   creation stating no group is refused `GROUP_UNDETERMINED` (C-64.1), `op=testify` is refused the same way, and
+   `op=livefire` reports its canary refused in scratch (five assertions, by name — no longer a 500). A sovereign instance
+   installed earlier can be seeded only by its own operator, whose root of trust it is: how the installer's update path
+   tells them is DIST's to decide.
+4. **The slug grammar is pinned equal:** `Store.GROUP_SLUG_RE` (`bio-plane/src/store.mjs`) and `SLUG_RE`
+   (`newgroup/src/index.mjs`) are compared byte-for-byte by `instance-group.test.mjs` S4 — a change to either moves both.
+
+**open as of 2026-09-21** — OPEN until DIST has deployed the release carrying D-436, seeded `biosmoke7`'s two stores
+(item 3), and stated item 3's route for sovereign instances installed earlier.
+
+## DELEGATION 2026-09-21 RECORD (D-436 worker) -> UI — **`civicos-ui/app.html` still composes the old literal producing group; since D-436 it is inert wherever a group is recorded, and it is owed out**
+
+`mdFor` writes a literal `group:` line into every new document's bytes (the `"group: believe-in-oakland"` entry of its
+front matter array), and three promote calls send the same literal as `meta.group` (app.html's supporting-files revision, and
+the two creation paths that build `meta` beside `mdFor`). Since D-436 (IC-172): on a store recording its producing group, `promote`
+REPLACES a created document's `group:` line with the recorded value and never reads `meta.group`, so the literal is harmless
+there; on a store recording none (an instance not yet seeded) it is kept as the caller's own statement, as before. **Owed
+act:** drop the `group:` line from `mdFor` and the three `meta` `group` keys — the plane now writes the producing group into
+every creation, exactly as `bio-plane/src/setup.mjs` does since this landing — **AFTER DIST has seeded `biosmoke7`**
+(DELEGATION above), because on an unseeded store a creation that states no group is refused C-64.1. The eleven
+`civicos-ui/test` suites carrying the literal as fixture data may then want the correction `bio-plane/test/conformance.test.mjs`
+took: judge a composer's bytes AS THE PLANE HOLDS THEM, through the catalogue's one definition, `withProducingGroup`.
+
+**open as of 2026-09-21** — OPEN until `civicos-ui/app.html` composes no literal producing group.

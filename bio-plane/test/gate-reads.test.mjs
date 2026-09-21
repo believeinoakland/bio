@@ -1230,6 +1230,10 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     governorstate: "per-HOST fetch accounting; names no bundle.",
     signerlist: "the active signer set; names no bundle.",
     exportlog: "who exported and when — an export can never happen silently; names no bundle.",
+    /* D-436, 2026-09-21. Classified by the item that adds it. */
+    instancegroup: "HOLDS NO CORPUS MATERIAL: the instance's ONE producing-group slug (D-436) — the name every "
+      + "document this store writes carries in its own bytes, and the worker's own hostname besides. No bundle id, "
+      + "no row a viewer predicate could filter, and nothing a hidden project could leak through.",
     progression: "a progression DEFINITION: a member's constitutive claim about how an institution "
       + "ought to behave. It names stages, not documents.",
     proposals: "the DERIVED findings feed. Aggregated per (progression, stage) over entities and "

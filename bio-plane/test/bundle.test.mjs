@@ -20,7 +20,11 @@ const mf = new Miniflare({
      token is shorter than 16, and this fixture's 11-character `probe-local` failed
      it. The fixture was wrong, not the rule: a suite whose fixture violates a rule
      the plane enforces is testing a configuration no instance may have. */
-  bindings: { VERSION: "0.2.0", PROBE_TOKEN: "probe-local-fixture-2026" },
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: INSTANCE_NAME is bound because every install binds it
+     (`newgroup`'s upload, D-102) and a store records its producing group from it at its FIRST BOOT. Unbound, the store
+     records none, and livefire's canary — which now names no group of its own, where it named a literal one — is
+     REFUSED by name (C-64.1), which is the plane being right about a store no install produces. */
+  bindings: { VERSION: "0.2.0", PROBE_TOKEN: "probe-local-fixture-2026", INSTANCE_NAME: "bundle-fixture" },
 });
 const j = async (p) => (await (await mf.dispatchFetch("http://x" + p)).json());
 const st = await j("/?op=selftest&token=probe-local-fixture-2026");

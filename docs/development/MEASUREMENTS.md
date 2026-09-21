@@ -18094,3 +18094,29 @@ line from making is made, for all nineteen ratchet keys, on the figure each arm 
 does not decide about is itself a failure, which is what caught the fixture's missing `r3Fed` floor. The gate also caught
 something the row did not ask about: a real-tree control arm (`refusal-partition` arm 9) that had planted its subject one
 line outside the governed region since the day it was written, and reported green for that reason alone.
+
+## M-89 · 2026-09-21 · D-436 — the literal producing group counted across the plane's source, and what one recorded value costs the suites that leaned on it
+
+Instruments: `grep -a -c` and a census script printing every line naming the literal with its enclosing method, over
+`bio-plane/src/*.mjs` on `origin/main` @ `2bd24da7` and again on the branch; `node test/instance-group.test.mjs` and `node
+test/instance-group.control.mjs` from `bio-plane/`; `node scripts/battery.mjs` from `bio-plane/`, each after `node
+tools/waitquiet.mjs` exited 0; node:sqlite for the one engine fact.
+
+| measured | before (`2bd24da7`) | after (this branch) |
+| --- | --- | --- |
+| the literal slug in `src/store.mjs` | **23**: 18 `fm.group \|\|` fallbacks (17 in REVISIONS, whose `meta.group` the projection never read after creation; 1 feeding `divide`'s children), 2 trimmed-argument defaults (`strengthBarSet`, `strengthBarOf`), 3 unconditional stamps (`testify`'s bytes and meta, `forkProject`'s meta) | **0** |
+| in `src/index.mjs` | 1 (the monitor tick, a revision) | 0 |
+| in `src/setup.mjs`, NOT in the row's count | 3 (the intake page's `mdFor` bytes, its creation meta, its edit meta) | 0 |
+| in `src/livefire.mjs`, NOT in the row's count | 1 (the canary's meta) | 0 |
+| `INSTANCE_NAME` readers in the plane | 5, all naming the WORKER (a User-Agent, a provenance hop) | 6: those 5, and the first-boot write, read once per store |
+| SQLite: an UPSERT handing NULL to a NOT NULL column whose row already exists | — | REFUSED, `NOT NULL constraint failed` (node:sqlite; the plane's own precedent at `provenanceChainRebuild`), so a revision's projection value must be real and is now the head's own `group_id` |
+| full battery | `267/267 suites green · 16264 assertions passing` (EXCLUDES 2 untallied), `2bd24da7` | `267/268 suites green · 16331 assertions passing` on the committed merge `598199da` (origin/main `ce830340` merged in); the one red, `strandedwork` ("plancheck --local exits 0"), was `docs/DECIDED.md` STALE over IC-172's text, regenerated LAST as the brief orders and the suite re-run green |
+| per-suite attribution, final against baseline | — | D-436: `instance-group` +47 (new), `acquire` +1, `conformance` +1, `counterparty` +1, `inquiry` +1 (the page-side pins), `hygiene` +5 (the exemption, the named walk, the new table); the eighteen other corrected suites unchanged in count. With the merge of `ce830340`, not D-436: `owed` +5, `retirable` +23, `planning-hygiene` −16 |
+| battery pass one on the branch, before any suite was corrected | — | `247/268 suites green · 15890 assertions passing` — the 21 failures named in IC-172, each corrected with a dated reason |
+| `instance-group.control.mjs`, thirteen arms | — | all AS DECLARED, three times with the same figures (first build; after pass one's corrections; after the first-boot witness moved to `PRAGMA table_info`): (a) 47/0 · (b) 46/1 · (c) 23/24 · (d) 36/11 · (e) 43/4 · (f) 29/18 · (g) 44/3 · (h) 46/1 · (i) 46/1 · (j) 44/3 · (k) 41/6 · (l) 47/0 · (m) 47/0 |
+
+**WHAT IT SAYS.** Seventeen of the eighteen fallbacks were already inert for the PROJECTION — `promote`'s upsert never
+updates `group_id` after a creation — but every one of them still had to hand the upsert a real value, because SQLite checks
+NOT NULL before the conflict arm; the literal was the value it was handed. The three stamps and the setup page's composer
+were the live defect: they put the literal into the BYTES. The arm that no behavioural assertion can see is the most
+instructive one — a literal restored at a call site (b) is healed by the creation stamp, so only the source census fails.

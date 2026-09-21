@@ -580,6 +580,11 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     credentials:         "operator/member auth; a data purge must not delete logins and lock the instance out",
     sessions:             "bearer login sessions; auth state, not corpus-derived",
     bootstrap:            "one-row claim state; whether the instance has been claimed, not corpus data",
+    /* D-436. The instance's PRODUCING GROUP, bootstrap's one-row family: which group this copy belongs to, written
+       once and named in the signed bytes of every document it writes. A purge that cleared it would leave every
+       later creation refused or — worse — decided by whatever the next caller claimed. `instance-group.test.mjs`
+       drives a whole-store purge and reads the value back unchanged. */
+    instance_group:       "the instance's producing-group slug (D-436): identity, recorded once at the store's first boot or by the root of trust's one seed, named in the signed bytes of every document the store writes; not derived from the corpus",
     members:              "the roster; membership is identity, not derived from captured documents",
     signers:              "registered signing keys; identity, not corpus-derived",
     /* PL-11 / IS-5 / D-199 (2). The `ai` credential's DECLARED TASK SCOPE, and
@@ -2095,6 +2100,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        quietly green, and nothing it prints is a figure anybody floors on. Provenance would tell it something true and
        useless. */
     "bio-plane/test/mint-ledger.test.mjs",        // src/, asserts NO other module names the ledger (a ceiling at zero)
+    /* ADDED 2026-09-21 by D-436's item, and the ratchet caught it on battery pass one, as it caught D-432's. NAMED AND
+       NOT GUARDED on the same reasoning: its walk of `src/` (or of the armed copy its control points it at) feeds S1,
+       that the literal producing-group slug occurs in NO module — a CEILING AT ZERO — and S0 asks for five modules BY
+       NAME rather than flooring on a count. A phantom module deposited there can only turn S1 red, never quietly green,
+       and nothing it prints is a figure anybody floors on. */
+    "bio-plane/test/instance-group.test.mjs",     // src/, asserts NO module names the literal group (a ceiling at zero)
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2156,8 +2167,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      `fc94b045`, before D-432 touched anything, printed `35 file(s)` against this floor of 34 — one walker landed
      without moving it, so the floor had carried one slack since. It is closed here rather than carried, because the
      block above argues this is the floor where slack is not tolerable. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 36)`,
-    census.length >= 36, true);
+  /* MOVED 2026-09-21 BY D-436: 36 -> 37, from the figure this run PRINTED on the line above (`class census: 37
+     file(s)`) on D-436's tree, never by adding to the number in the file. The one is D-436's own suite
+     (`test/instance-group.test.mjs`, named above), the only walker this item adds (its control driver copies trees and
+     walks none); CONDUCT #10 recorded the census at 36 against 36 when D-432 landed, so no slack is carried out. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 37)`,
+    census.length >= 37, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

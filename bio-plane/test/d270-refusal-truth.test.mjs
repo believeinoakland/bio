@@ -333,10 +333,15 @@ t("and every declared op is one no session reaches — a declaration over an op 
    to produce is not evidence" shape arriving inside the item that quotes it, and
    the literal below is what makes the emptying visible BY NAME. Adding an op here
    is recording a decision, so this line is meant to fail when one is recorded. */
-t("the RECORDED-DECISION arm is exactly the four ops a decision was FOUND for, pinned as a literal "
+/* CORRECTED 2026-09-21 BY D-436, and this line failing is the line WORKING, as the paragraph above says it is meant
+   to: D-436 RECORDED a fifth decision — `instancegroupseed` is the root of trust's act, cited to its own OPS row, and
+   stated PROVISIONAL there and in IC-172. The four the pin named were found at the artifact; the fifth was made by the
+   item that adds the op, which is the one act this table allows ("recording a decision"). Not a relaxation: the
+   literal still names every op, so an emptied or invented record still fails BY NAME. */
+t("the RECORDED-DECISION arm is exactly the five ops a decision is RECORDED for, pinned as a literal "
 + "— because the map that grades it reads the same declaration it grades against, and so cannot "
 + "see the record being emptied or invented into",
-  UNATTENDED, ["capturerequestdrain", "cpuprobe", "purge", "taskdrain"]);
+  UNATTENDED, ["capturerequestdrain", "cpuprobe", "instancegroupseed", "purge", "taskdrain"]);
 
 /* ====================================================================== 4
  * THE SESSIONS. A MEMBER'S AND A REAL ADMINISTRATOR'S.

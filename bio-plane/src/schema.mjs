@@ -176,6 +176,28 @@ CREATE TABLE IF NOT EXISTS bootstrap (
   token_fp    TEXT
 );
 
+-- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG,
+-- ONE VALUE FOR THE WHOLE INSTANCE. Every bundle this instance writes names it as its
+-- group, in the bytes that get signed, and nothing else may supply that name: not a
+-- literal in the code, and not a deploy-time variable, which a redeploy could move
+-- silently. One row, id=1, WRITTEN ONCE: every writer is an INSERT that does nothing on
+-- conflict, and no statement anywhere updates or deletes it.
+--   source  'bootstrap'  recorded at the store's FIRST BOOT (the migrate pass that finds no
+--                        bundles table), from the slug the installer bound as INSTANCE_NAME,
+--                        the worker name the group chose (D-102), read at that moment only
+--           'seed'       recorded once by op=instancegroupseed, the root of trust's act, on a
+--                        store that already held the schema when this table arrived
+--   recorded_by  NULL for bootstrap, the server-stamped credential for a seed
+-- EXEMPT FROM op=purge, in both arms: identity, not derived from the corpus, in the family
+-- of bootstrap and seq. hygiene.test.mjs lists it among the purge exemptions.
+CREATE TABLE IF NOT EXISTS instance_group (
+  id           INTEGER PRIMARY KEY CHECK (id = 1),
+  slug         TEXT NOT NULL,
+  recorded_at  TEXT NOT NULL,
+  source       TEXT NOT NULL,
+  recorded_by  TEXT
+);
+
 -- ---- write arc ----
 
 -- Members. Each member signs in with their own password (stored in

@@ -26,7 +26,12 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
-import { checkBundle } from "../checks/bio-checks.mjs";
+import { checkBundle, withProducingGroup } from "../checks/bio-checks.mjs";
+
+/* D-436 (IC-172): the setup page no longer names a producing group — the plane writes it into every creation from the
+   store's one recorded value — so the page's bytes are judged below AS THE PLANE HOLDS THEM, through the catalogue's
+   own `withProducingGroup`. This is the group that stands in for "the store's recorded value" when they are. */
+const INTAKE_GROUP = "intake-fixture";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -190,9 +195,18 @@ console.log("\n--- the intake form writes conformant bundles ---");
       bias: "draft", problem: "surfaced" });
 
   const now = "2026-07-24T12:00:00Z";
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted. These assertions judged the page's bytes AS IT SENDS THEM,
+     and those bytes were complete only because they carried a LITERAL producing group — true of one instance and false
+     of every instance `newgroup` installs. The page now sends NO `group:` line, because the plane writes it into every
+     creation from the store's one recorded value (`Store#stampGroup`, which calls the catalogue's `withProducingGroup`).
+     So what is judged is the document AS THE PLANE HOLDS IT — the page's own bytes through that same catalogue
+     function, never a copy of it — and the page's side of the division is pinned after the loop: it names no group. */
+  const pageNamesGroup = [];
   for (const type of ["information", "inquiry", "focus", "problem", "project", "action"]) {
     const id = `${ui.PREFIX[type]}-2026-0002-intake-check`;
-    const text = ui.mdFor(id, type, ui.FIRST_STATE[type], "Intake check", "What the member wrote.", now);
+    const own = ui.mdFor(id, type, ui.FIRST_STATE[type], "Intake check", "What the member wrote.", now);
+    pageNamesGroup.push(/^group:/m.test(own));
+    const text = withProducingGroup(own, INTAKE_GROUP);
     const f2 = new Map([["bundle.md", text]]);
     if (type === "information") {
       /* verified state would demand a dataset and a snapshot; collected does
@@ -242,8 +256,9 @@ console.log("\n--- the intake form writes conformant bundles ---");
             basis: "Which office holds the records has not been established; the records index would settle it." } },
          /state: undetermined/],
       ]) {
-        const authored = ui.mdFor(id, type, ui.FIRST_STATE[type], "Intake check",
-          "What the member wrote.", now, false, null, act);
+        /* D-436, 2026-09-21: judged as the plane holds it, as the loop's own bytes are (see above). */
+        const authored = withProducingGroup(ui.mdFor(id, type, ui.FIRST_STATE[type], "Intake check",
+          "What the member wrote.", now, false, null, act), INTAKE_GROUP);
         const r = await checkBundle({ folderName: id, files: new Map([["bundle.md", authored]]),
           sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
         const e2 = r.findings.filter((x) => x.severity === "error");
@@ -255,6 +270,10 @@ console.log("\n--- the intake form writes conformant bundles ---");
     }
     t(`a new ${type} bundle has zero errors`, errs.length, 0);
   }
+  /* D-436, 2026-09-21: the page's side of the division, pinned. A page that went back to writing a group of its own
+     would be a second author of the producer — and the one that got it wrong on every instance but one. */
+  t("the page's OWN bytes name no producing group, for every type — the plane writes it at creation (D-436)",
+    pageNamesGroup, [false, false, false, false, false, false]);
 }
 
 
@@ -277,8 +296,10 @@ console.log("\n--- a revision through the browser stays conformant ---");
   const ui2 = new Function(...Object.keys(sb), script2 + "\n;return { mdFor, FIRST_STATE, reviseText };")(...Object.values(sb));
 
   const created = "2026-07-01T00:00:00Z";
-  const first = ui2.mdFor("INFO-2026-0003-revise-check", "information", "collected",
-    "Revise check", "First writing.", created);
+  /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted: a revision starts from the document AS THE PLANE HOLDS IT,
+     and the plane stamped the producing group into it at creation — the page no longer writes one. */
+  const first = withProducingGroup(ui2.mdFor("INFO-2026-0003-revise-check", "information", "collected",
+    "Revise check", "First writing.", created), INTAKE_GROUP);
   const later = "2026-07-24T12:00:00Z";
   const rev = ui2.reviseText(first + "\nEdited by hand.\n", "ruth", later);
 
