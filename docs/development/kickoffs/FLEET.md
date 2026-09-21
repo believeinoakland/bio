@@ -233,6 +233,13 @@ posture is this lane's own mechanism and needs no ruling; whether the pair earns
 BOB's, taken 2026-09-19 and to be decided with the consumers' owners rather than between two lanes — until
 then the protocol route is the safe posture and costs nothing if the answer is no.
 
+**REGISTERED AS I10, 2026-09-21: the question above is answered.** BOB #19 ruled the pair a registered interface,
+owner FLEET, and FLEET #3 wrote `INTERFACES.md` §I10 from the code (PROVISIONAL until BOB reads it against the
+code). A change to either function is now an IC against I10, and the protocol route above is that IC's route.
+**The count above was one short, and it counted the definer.** By `import`, SEVEN files consume the pair: the six
+named above, plus `bio-plane/scripts/build-plane.mjs`, which imports `planeMember` only. `fleet-bundle.mjs` defines
+them. `git grep -l discoverMembers` cannot see a consumer of `planeMember` alone, so grep both names.
+
 ## Stand-up, 2026-09-21 — FLEET #3, after the 23.5 h dark: measured, and one lesson of this file corrected
 
 Self-wake armed at opening (every 6 h, with the day-5 renewal). FLEET #2 archived under D-398, its three conditions
@@ -246,7 +253,9 @@ manifests record (19 first-party inputs, 2 vendored, 2 locks, 2 ocr assets), plu
 `release/` copy and the 2 release parts against the manifest and `RELEASE.json`. **31 match, 0 drift, 2 unreadable**
 (the vendored `unpdf`: an absent install). Its control: the same check reading inputs from `f5ed2bfa` exits 1, naming
 `agent-worker/src/index.mjs`. All three members EXIST at all ten tags v0.59.0 … v0.68.0 and on `main`, and manifest,
-artifact and release agree at every one: `a7e5f590…`, `b26dee19…`, `0d99f5d0…` throughout.
+artifact and release agree at every one: `a7e5f590…`, `b26dee19…`, `0d99f5d0…` throughout. **Re-read after DIST's
+0.69.0 deploy, 2026-09-21T15:14:06Z:** the members and the plane answer `0.69.0` (three samples each), the check
+reads 0 drift at `origin/main` `69397491`, and v0.69.0 carries the same three hashes. Labels only, again.
 
 **CORRECTED: `op=bootstrap` never read the DO's build.** The handler writes `version: env.VERSION` from the isolate that
 routed the request, then spreads the DO's reply, which is `bootstrapState` (`claimed`, `rearmed`, `consumedAt`) and

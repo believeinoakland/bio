@@ -16097,3 +16097,13 @@ probe, the `CASCADE_ORDER` constant, while two of its three levels have no sourc
 BUILT). `11.cascade-sources` is inserted after it as ABSENT, with its `none` probes. **`8.claim`'s old text is
 FALSE.** It says §7.1 item 4 is not built, but REC-135 built it for publication (`#caseConclusionFor`), and a leg
 resting on an inquiry reads NO conclusion at all. The new text says both.
+
+## CLAIM 2026-09-21 FLEET (FLEET #3 — I10 registered: `discoverMembers` and `planeMember`, on BOB #19's ruling)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/INTERFACES.md` (ONE new section, I10, appended at the end; no existing section is touched);
+`docs/development/kickoffs/FLEET.md` (one dated paragraph answering the "CONSUMED ACROSS LANES" section's open
+question); `docs/DECIDED.md` (GENERATED, regenerated last); and this block. The id was minted with
+`node tools/mintid.mjs I`, not read off the file. No code moves: `bio-plane/scripts/fleet-bundle.mjs` is registered
+as it stands.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the section it covers.
