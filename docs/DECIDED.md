@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1289 rulings across 101 documents.
+1287 rulings across 100 documents.
 
 ## DEC-
 
@@ -310,8 +310,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-2026-08.md:782`
 - **D-80** · 2026-07-30 — RULED by Bob: contradicting aspirations are welcomed, because we may not realise that they contradict and because we learn from trying to achieve aspirations whether they are achieved or not.  
   `docs/development/DEBT.md:67`
-- **D-80** — §7.1 item 9); D-80 → DEFERRED, nothing to place (door 3: 8.goals' design act gains the required clause); REC-155 → RULED in Membership v2 §4.10, and BOB #20's entry carries its rows.  
-  `docs/development/kickoffs/SCHEDULER-NEXT.md:26`
 - **D-82** — p the derived dress -> the D-82 arm FAILS; (2) re-introduce approval as a write gate -> the DEC-52-final arm FAILS (the SUPERSEDED provisional); (3) make bulk review N acts instead of one over the set -> the set arm FAILS; (4) neuter the attribution predicate -> the REACH arm fails AS A DELTA with the corpus…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:5662`
 - **D-82** · 2026-07-30 — RULED by Bob: the appearance of an assistant-surfaced focus should communicate that it is one.  
@@ -402,8 +400,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:660`
 - **D-157** · 2026-08-02 — `test/members.test.mjs:192` asserts the current behaviour and must be CORRECTED, never exempted** (`CLAUDE.md`), with a comment saying why the old assertion was wrong.  
   `docs/archive/ledgers/QUEUE-2026-08.md:973`
-- **D-158** — D-158 (`9b98c3c0`, verified by content); MK-3 SUPERSEDED by MK-6 and MK-7. - **BOB INBOX:** BOB #19's "SIX ROWS … ANSWERED" entry is UNDRAINED, and BOB #20 said one more entry (REC-155's two landings) was landing.  
-  `docs/development/kickoffs/SCHEDULER-NEXT.md:16`
 - **D-158** · 2026-09-20 — CORRECTED 2026-09-20 BY D-158, at this site rather than in a report, because the recipe above is > what a UI-17 worker would copy.** The measured limit is CLOSED.  
   `docs/development/research/RECONCILED.md:1646`
 - **D-164** · 2026-09-14 — D-164 design-space study, RULED 2026-09-14 in Bob's framing: the transcription is authored text whose fidelity is undetermined and stated until a second member attests it, so fidelity rises through people and never through a machine's confidence in itself.  
