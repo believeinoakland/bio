@@ -16413,3 +16413,8 @@ it was written — by the census, on the new suite's first hygiene run, which is
   byte-compare.
 
 **open as of 2026-09-21** — OPEN while this item builds; released with the block above at integration.
+**corrected 2026-09-21 by the D-432 worker** — the first block's `construct-status.json` entry names "a NEW claim
+`1.minted-ids`": it was NOT added. `node tools/plancheck.mjs` failed READING BUDGET on it — the construct map read 51,093 B
+against its 49,152 B budget, because `origin/main` already sat at 49,148 B (M0-86: four bytes of headroom). The census
+review went into `3.census`'s UNRENDERED `note` instead, the rendered text moved by one digit (97 -> 98 tables), the map
+is back at 49,148 B, and the claim is OWED until M0-86 frees room (named in the note and in the report to CONDUCT).

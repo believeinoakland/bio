@@ -12500,8 +12500,11 @@ NOT-AFFECTED (the installer carries the plane and serves no roster of its own); 
   those two (S5 pins it):
   - `op=purge` / `op=stats` / `op=selftest` / `op=livefire` — NOT AFFECTED: `#counts` does not read the table (F3).
   - D-113's purge census (`hygiene.test.mjs`) — CHANGED IN THIS LANDING: `EXEMPT` gains `minted_ids`.
-  - `3.census` (`tools/status.mjs`) — 97 → 98 tables, REVIEWED BY MEANING in `construct-status.json`; the new claim
-    `1.minted-ids` records the construct with its probes.
+  - `3.census` (`tools/status.mjs`) — 97 → 98 tables, REVIEWED BY MEANING in `construct-status.json`, the review in the
+    claim's UNRENDERED `note` (printed by `node tools/status.mjs 3`): the construct map had 4 bytes of headroom against
+    its 49,152 B budget (M0-86, BOB's cut, not yet landed), so the rendered text changed by one digit and nothing else,
+    and the map stays at 49,148 B. For the same reason the construct's own BUILT claim, `1.minted-ids`, is OWED rather
+    than written — its text and probes are in that note, to be added once M0-86 frees room.
   - `DIST` (deploy) — nothing to run: `CREATE TABLE IF NOT EXISTS` makes the table at the first boot of the new build, and
     the seed runs at the end of `#migrate` at every boot, so an older build deployed back for a while and minting
     meanwhile is caught up at the next boot of this one. Its cost is bounded by the gated rows the store holds (one
