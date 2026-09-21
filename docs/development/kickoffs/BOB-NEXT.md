@@ -24,7 +24,9 @@ Read `CLAUDE.md` (§7 has a NEW rule: no shell variable in an `rm` path), then `
 - **Every lane runs in BYPASS since ~16:00Z (Bob).** CONDUCT #9 is busy, with four workers (D-432, D-355, D-254,
   D-339), and will ask for CONDUCT #10 near 60%: check occupancy and currency, then file the chip. SCHEDULER #5 is up
   (chip `task_7b0ddbe1`) and archives SCHEDULER #4 itself. DIST #3 is idle: 0.70.0, a BATCH for D-158, is owed on
-  2026-09-22 and its wake is armed. FLEET #3 is idle. Weekly all-models 32%, resets 2026-09-26 11:00Z. Disk ~8.7 GiB.
+  2026-09-22 and its wake is armed. FLEET #3 is idle. Weekly all-models 32%, resets 2026-09-26 11:00Z. **Disk 4.1 GiB free at
+  ~17:25Z, and it is the estate's binding constraint** (CONDUCT #9 runs three workers, not eight; seven worktrees
+  hold 647 MB or more each).
 - On `main`: D-158 (`36eaf651`), SCHEDULER #4's placements (`a1c64829`, `cfa6659c`) and BOB #20's landing
   (`cfa6659c..38314937`).
 
@@ -58,7 +60,20 @@ Read `CLAUDE.md` (§7 has a NEW rule: no shell variable in an `rm` path), then `
    figure carries its date and bound wherever it is cited) is in no governed home yet.
 4. **D-435** (owner BOB) is the `owed.mjs` release fix. Until it lands, D-80, D-126, D-134 and D-195 are FALSE entries
    on BOB's list; each says nothing on it falls to BOB. **M0-83** (owner BOB) is the `retirable.mjs` trio.
-5. **With Bob** (carried by BOB #19; do not re-ask): D-148, D-149, where a member's or project's Claude key would
+5. **A design call routed to BOB after this was written** (CONDUCT #9, 2026-09-21 ~17:20Z; `CLAIMS.md` DELEGATION
+   2026-09-21 CAPTURE (D-339 worker), item 3). `CAPTURE-SCALING.md` §Job one requires the manifest to name the
+   CAPTURE a reused part came from, but the plane records only WHEN it was last seen served (`reused_from_fetched_at`).
+   **BOB #20's recommendation, not landed, to verify at the code:** the requirement STANDS, because a provenance hop
+   names its source. Build `last_fetched_by`, carried as `reused_from`. Every reuse recorded before that reads
+   UNDETERMINED, stated, and is never inferred by matching timestamps, because an inference that costs nothing is
+   not evidence. Rule it in §Job one and answer the DELEGATION there.
+6. **`CLAIMS.md` "DELEGATION 2026-09-21 SCHEDULER (#5) -> BOB"** (on main at `1e423768`; nothing runnable waits on it).
+   It holds FOUR FOLDS into BOB's files: Membership §8.1 for D-52; D-80's deferral into the framework's front matter;
+   `8.claim`, which the map cut already rewrites; and the accept ceremony, ABSENT with no claim saying so (UI-74 is
+   placed). It holds FOUR QUESTIONS: D-195 at UI-27's elicitation too; D-280 (c); D-260, whether an instance-held `ai`
+   credential is needed; D-293, whether every lane needs a `gates.mjs` pre-push hook. Read the block itself; this is
+   only a pointer.
+7. **With Bob** (carried by BOB #19; do not re-ask): D-148, D-149, where a member's or project's Claude key would
    live, MK-3's two provisionals (now MK-7's), and M0-85, the heartbeat definition edit (STEP 3 reads a stale tree).
 
 ## 4. HOW BOB #20 WAS WRONG — data points (rule 12(c))

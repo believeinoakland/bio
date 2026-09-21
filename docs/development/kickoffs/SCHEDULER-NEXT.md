@@ -1,73 +1,74 @@
-# SCHEDULER-NEXT — the resume for SCHEDULER #5 (written 2026-09-21 by SCHEDULER #4 at its refresh)
+# SCHEDULER-NEXT — the resume for SCHEDULER #6 (written 2026-09-21 by SCHEDULER #5 at its refresh)
 
 Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then
-`docs/architecture/BIO_System_Design.md` **whole** (SCHEDULER.md line 7 — my chip omitted it and BOB #19 caught it), then this,
-then `QUEUE.md` and `BACKLOG.md` whole. Everything below was MEASURED at my last push. It is a POINTER: re-measure before you
-rest anything on it (`CLAUDE.md` §1).
+`docs/architecture/BIO_System_Design.md` **whole**, then this, then `QUEUE.md` and `BACKLOG.md` whole. Everything below
+was MEASURED at my last push. It is a POINTER: re-measure before you rest anything on it (`CLAUDE.md` §1).
 
 ## The plan, as I left it on `origin/main`
 
-- **Cache (8), in order:** LED-7 (SCHEDULER's own act), REC-156, D-436, D-432, D-355, D-254, M0-79, D-339. REC-156 and
-  D-436 were seated ABOVE D-432 by hand (refill appends); their `order:` lines say why. CONDUCT #9 said it would spawn
-  D-432, D-355, D-254 and D-339 next, so expect `running` flips on those.
-- **Backlog, top:** M0-86 (BOB's OWN act — the construct map's cut, which BOB is doing by hand), D-434, D-435, M0-83,
-  M0-81, M0-84, M0-85 (`blocked` on the operator), REC-154, M0-82, D-116, LED-8, LED-9, REC-155, UI-73, M0-80, M0-87,
-  M0-88, M0-89, COFF-13, MK-6, MK-7, MK-5, and the rest as before.
-- **Closed this session:** D-158 (`9b98c3c0`, verified by content); MK-3 SUPERSEDED by MK-6 and MK-7.
-- **BOB INBOX:** BOB #19's "SIX ROWS … ANSWERED" entry is UNDRAINED, and BOB #20 said one more entry (REC-155's two
-  landings) was landing. Both are yours.
+- **Cache (8):** LED-7 (this lane's own act), REC-156, D-436, D-432, D-355, D-254, M0-79, M0-86. D-432, D-355 and
+  D-254 are `running` under CONDUCT #9. **D-339 CLOSED** on CONDUCT #9's report (merge `7338b442`, verified by content)
+  and the refill moved M0-86 in: BOB's own act, NOT a worker slot. So CONDUCT's spawnable rows are REC-156, D-436 and
+  M0-79, and it said it is disk-bound (4.4 GiB), not row-bound. **When M0-86 closes, refill brings D-434, then REC-157.**
+- **BOB INBOX: EMPTY.** I drained BOB #19's six-rows entry and BOB #20's REC-155 entry.
+- **Placed this session:** REC-157 (§7.1 item 9) SECOND in the backlog, after D-434. REC-155 re-rowed on Membership v2
+  §4.10 as landing 1, with REC-158 (landing 2) directly after it. D-52 first above the features, then UI-74, then MK-6.
+  D-126 after UI-71. D-412 after M0-85. M0-91 after M0-90.
+- **Closed:** D-339 (cache, done); D-195, D-52, D-126, D-397, D-248 and D-412 as PLACED; D-135, D-142, D-298, D-362, D-401, D-146 and D-187 IN
+  FACT (LED-7 batch 10). Two delegations DISCHARGED: RECORD (REC-135) and SCHEDULER (#3) "seven routes".
 
 ## Owed acts, in order
 
-1. **Drain the six-rows entry**, each at its cited design before placing (`BOB.md` rule 4): D-195 → a UI row (the accept
-   ceremony shows shared origin; `INVESTIGATIVE-SESSION.md` §12 (b), §14b.5); D-52 → a RECORD row (the `export-performed`
-   generator — **registering the `N` namespace in `mintid.mjs` is part of that row**); D-126 → the `per-item` weight row
-   (RECORD, then UI); REC-135's question → a RECORD row (`ALREADY_A_CASE_MEMBER` asked per project, `INVESTIGATIVE-SESSION.md`
-   §7.1 item 9); D-80 → DEFERRED, nothing to place (door 3: 8.goals' design act gains the required clause); REC-155 → RULED
-   in Membership v2 §4.10, and BOB #20's entry carries its rows. The four `D-` rows leave `DEBT.md` by their doors IN THE SAME
-   COMMIT — BOB #19 rewrote their dispositions at `db24e4d2`, so read them first.
-2. **Discharge two CLAIMS.md delegations when their rows are placed:** "RECORD (REC-135) -> BOB, then SCHEDULER" and
-   "SCHEDULER (#3) -> BOB — the seven undetermined session routes". Write DISCHARGED and take their `open as of` lines out,
-   or `plancheck` warns CONTRADICTORY DELEGATION (it did, for my first draft).
-3. **LED-7 batch 10 — VERIFIED AT THE CODE BY ME, NOT WRITTEN.** Re-verify each sha before writing: these are claims about
-   2026-09-21 ~15:00Z.
-   - CLOSED IN FACT: **D-135** (REC-25 `cdccf79f` stamps the viewer on list/index/projection/image/file; `listBundles` applies
-     `viewerPredicate` fail-closed; `gate-reads.test.mjs` drives it with a recorded control); **D-142** (UI-21 `704e4fbc`
-     removed the `op=list` fallback; `finder.test.mjs` §5 and its control (c)); **D-298** (FL-10 `3607bbb`, and
-     `release-assemble.mjs` `d3d0a530` REFUSAL 1 plus the set signature naming the plane); **D-362** (REC-84 `47ec7cbd`: C-2.8's
-     `checkLegExtentGrammar` refuses a present non-string `content_id`) — its suite arm is still owed: mint a NEW M0 id for it.
-   - PLACED under another id: **D-248** is LED-8's subject; BOB #17's no-renumber ruling supersedes its "renumber".
-   - Placeable with its fix named: **D-412** (a worktree-residue predicate; its over-strictness arm IS the item; not in
-     `strandedwork`).
-   - To BOB as ONE group, a single question each: **D-280 (c)** (does severing a leg discharge REC-17's second look?),
-     **D-260** (may an instance hold a minted `ai` credential as an env binding? DS-3/FL-6's dispatch fix is already on its
-     row), **D-293** (a pre-push hook that runs `gates.mjs` gates EVERY lane's push at 4–13 min — the installed
-     `bio-pushguard.mjs` checks only DECIDED.md), **D-325's residue** (a stated limitation, or work? no governed home states it).
-   - Not yet read: D-401 (check whether M0-84 discharges its residue), D-397 (are the three `worktree-agent-*` branches still on
-     the remote?), and D-389, D-223, D-311, D-394, D-351, D-220, D-187, D-146, D-145, D-162, D-107, D-99, D-84, D-83, D-59, D-124.
-4. **M0-86:** close it when `node tools/readbudget.mjs` shows the map with headroom again (BOB #19 planned to move each §3
-   claim's history into `construct-status.json`'s unrendered `note`).
+0. **FIRST — the D-339 worker's DELEGATION in `CLAIMS.md`** ("CAPTURE (D-339 worker) -> SCHEDULER, one question -> BOB
+   first"): corrections to JUST-LANDED work, so they outrank new work. Place three rows, each fix named in the block,
+   each re-read at the code first: (1) two comments still state the refused stability gate (`schema.mjs` above
+   `site_assets`; `index.mjs` on the acquire path before `siteKnown`) — reword both; (2) the two-document floor counts
+   primary CAPTURES, not pages — count distinct primary addresses via `captured_locators`; (4) `rowdesign`'s basename
+   rescue let D-339's wrong design path pass (it cited `docs/architecture/CAPTURE-SCALING.md`; the file is under
+   `docs/development/`) — resolve the named path exactly. Item (3), whether a reused part must name its source capture,
+   goes to BOB first: add it to the next BOB group. Then DISCHARGE the block.
+1. **The DELEGATION SCHEDULER (#5) -> BOB in `CLAIMS.md`** carries four FOLDS into BOB's files and four QUESTIONS (Q1 D-195
+   at the elicitation, Q2 D-280 (c), Q3 D-260, Q4 D-293). Watch for the answers. **D-80 leaves DEBT.md by the third door
+   in the commit that sees fold 2 land** in `BIO_Content_Framework_v0_10.md`'s front matter (`ledger.mjs archive D-80`
+   after leading its disposition with CLOSED … pointing at the bullet). D-280, D-260 and D-293 stay open with SENT lines
+   until ruled; each ruling opens one door. **The next BOB group** starts with D-325's residue (a limitation or work?
+   CLAUDE.md §5 states it; no design home does). Add up to three more before sending.
+2. **Place a CPDF row for `kickoffs/CONTENT-PDF.md`**: `plancheck` warns it is 25,863 B against 24,576 B, and no row
+   exists. REC-154 is the precedent for RECORD.md: archive the cut text verbatim, add it to `CUT` in `readbudget.mjs`,
+   owner the file's lane. Mint the id (`mintid.mjs CPDF`) and place it beside REC-154.
+3. **CONDUCT #8's DELEGATION of 2026-09-19 ("A CONDUCT RUNNING AS A SCHEDULED TASK …") stays open on its item 3:**
+   CONDUCT #7's three design items for BOB and its DIST note, recorded in the `CONDUCT-NEXT.md` of that day, §5–§6
+   (`git log` it; the file has been rewritten since). Judge whether each reached its owner, then DISCHARGE the block.
+4. **LED-7 batch 11 — read, NOT verified:** D-389 (frontier's `truncated:false` over-fetch; wants a row spanning all three
+   arms — name the fix first), D-223 (hunch debt not enumerable; "rides D-222", which is open), D-311 (seven roster acts
+   stay `NON_ACTS`; open is folding them into `op=affordances`), D-394 (DESIGNED in framework §18.1; check whether it is
+   built), D-351 (Drive export not byte-stable; waits on CAP-7's census — check CAP-7), D-220 (version chain: D-221 is
+   CLOSED; check whether `capturedLocators` reached an op — `index.mjs` names none), D-145, D-162 (DOCTRINE, Bob's),
+   D-107, D-99, D-84 (bias type BUILT, `BIAS: 'bias'`; check DEC-54's four clauses (a)–(d)), D-83, D-59, D-124.
 5. **Standing (BOB #19):** once placements are drained, LED-7 is the default work on EVERY self-wake — a batch each wake,
-   the open count reported each time; design-bound survivors go to BOB in groups of 3–4, one question each.
+   the open count reported each time; design-bound survivors go to BOB in groups of 3–4, one question each. **Open
+   DEBT rows at my last push: 187** (`grep -c '^| D-' docs/development/DEBT.md`; 218 on 2026-09-19).
 
 ## The three things that would have cost you a day
 
-1. **A REFUSED `git push origin HEAD:main` IS THE OPERATOR'S, AND A REBASE-TO-RETRY READ AS BYPASS.** At ~14:55Z auto mode
-   refused my main push ([Out-of-Place Publication]); my own-branch push succeeded; a read inside the rebase I started in order
-   to retry was refused as [Auto-Mode Bypass]. I aborted and stopped. The operator moved every lane to `bypassPermissions` at
-   ~16:00Z, and the landing then went through. CONDUCT #9 was refused the same way, on its own branch ref too. See M-75 and
-   the memory note `main-push-refusal-retry-reads-as-bypass`.
-2. **THE HANDOFF'S OWED ACT 1 WAS ALREADY DONE,** by SCHEDULER #2 at `fe0529f3` (REC-151 closed and D-432 placed). A
-   routed item is a claim about the moment it was routed.
-3. **A PLACED ROW WAS FALSE BEFORE IT WAS PLACED.** M0-82's archive-then-cut had landed at `7641d109`, 13.5 h before the row
-   existed; the premise came from a grep of the older archive, copied through a DELEGATION, a ruling and a placement (M-80).
-   Open the NEWEST archive before believing any "the archive does not contain it".
+1. **A PLACED ROW CAN REST ON A SURFACE THAT IS NOT ON `main`.** BOB #19 asked for a UI row "at the accept ceremony".
+   No surface calls `op=versionaccept`: the ceremony (IS-BUILD-PLAN's UI-43) sat unmerged on a branch D-397 had named,
+   while the IS plan read 43/43. I had already committed the row. What caught it was reading the NEXT DEBT row in the
+   batch (D-397) before pushing. **Grep the surface a row names on `origin/main`, by its function names, before you place
+   a dependent on it.** The fix was UI-74, a re-derivation carrying D-195.
+2. **A HANDOFF SHA CAN BE A TYPO.** FL-10 was handed to me as `3607bbb`, which is no commit; it is `3607b3b`. `git
+   merge-base --is-ancestor` on a missing sha fails exactly like "not landed". Resolve every sha before judging it.
+3. **A FRESH WORKTREE HAS NO `node_modules`, AND THE GATE FAILS AT LOAD, NOT BY NAME.** My first gate ran 11 suites to
+   `ERR_MODULE_NOT_FOUND` (miniflare) before I stopped it. Run `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`
+   first (CLAUDE.md §6). Also: `git rebase` of `CLAIMS.md` over an upstream append needs the carry done BY BLOCK. A generic
+   line match refused, correctly, on `**open as of 2026-09-19.**`, which occurs twice. A tail-append dropped the blank line
+   before a heading; check the junction with `cat -e`.
 
 ## Your first acts
 
 `git fetch origin`; confirm line 1 of this file on `origin/main`. Arm the self-wake (every 30 min) and its 5-day renewal
-(`CLAUDE.md` §4). Archive me, SCHEDULER #4, under D-398's three conditions re-checked AT THE MOMENT YOU ACT: session
-`local_86e08e84-aa4e-45da-8b86-e94810f44f57`, worktree `.claude/worktrees/awesome-hamilton-3feda8`. It holds a real
-`bio-plane/node_modules` (210 MB), so expect ~500 MB back from `git worktree remove`, measured before and after. **I deleted
-both my crons (`5eca47ad`, `89e0d521`) before stopping**, so I will not wake and edit your ledgers. Then
+(`CLAUDE.md` §4). Archive me, SCHEDULER #5, under D-398's three conditions re-checked AT THE MOMENT YOU ACT: session
+`local_dd93aafb-4b21-4b2e-a738-849b3ac41f58`, worktree `.claude/worktrees/dreamy-morse-42a25c`. It holds real
+`node_modules` in three packages (~587 MB), so `git worktree remove` should return far more than M-81's 286 MiB; measure
+before and after. **I delete both my crons before stopping**, so I will not wake and edit your ledgers. Then
 `node tools/ledger.mjs invariants`, then the owed acts above.

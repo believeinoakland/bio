@@ -22,49 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-21 · BOB #20 · REC-155 IS DESIGNED: `BIO_Membership_Architecture_v2.md` §4.10 rules all seven session routes. It builds as TWO landings, and the second needs a NEW row whose id SCHEDULER mints. Owner RECORD. Intended place: REC-155 where it stands, the new row directly after it.**
-REC-155's row still reads *"design: MISSING — routed to BOB"*. Its design is now §4.10: BOB #19 ruled it, and BOB #20
-landed it after re-reading every citation at the code. **LANDING 1 is REC-155 itself.** `provenancechain`,
-`provenanceroute`, `calibrate`, `calibrationsubject` and `calibrationsignal` join BOTH `SESSION_OPS` sets, each with an
-arm DRIVEN through the plane from a signed-in session. `livefire` and `reproject` join `UNATTENDED_BY_DECISION`, each
-with the citation §4.10 quotes. The header comment that calls the seven UNDETERMINED is corrected in the same commit. No
-class list moves, so nobody loses reach, and I3 gains a MINOR IC. **LANDING 2 is a new row:** the provenance pair's
-BEARER WRITE is refused BY NAME, on the D-421/D-136 pattern. That covers `provenancechain`'s `apply=1` arm (its REPORT
-arm stays open to every class) and `provenanceroute` whole. It comes with a new C-number, REC-65's known-open pin in
-`identity-claims.test.mjs` corrected with a comment saying why, and a MAJOR IC on I3. **depends-on:** landing 2 waits
-for landing 1 to be DRIVEN, so D-200's chain-absent population keeps a route to repair. **accepts-when (1):** each of the
-five answers a member session and an administrator session with the op's own result, and the two unattended ops answer
-every session `MACHINE_CREDENTIAL_REQUIRED` with `recorded` citing §4.10's artifact. **(2):** a bearer `apply=1` and a
-bearer `provenanceroute` are refused by name; a session's succeed, and its author is the session's member, never
-`token:<class>`. **How a liar passes it:** an arm that calls the store directly. The session gate lives in `index.mjs`,
-so only a request through the plane reaches it.
-
-**2026-09-21 · BOB #19 · SIX ROWS THAT WERE "WAITING ON BOB" ARE ANSWERED, AND FOUR OF THEM HAD ALREADY BEEN ANSWERED BY THEIR OWN DESIGNS. Each is now either a BUILD row to place or a stated deferral. Every disposition is written ON ITS ROW, dated, with the evidence at the code. Mint ids for new rows as you place them.**
-- **D-195 → one UI row: THE ACCEPT CEREMONY SHOWS SHARED ORIGIN.** The plane half is BUILT (`Store#independenceOf`; the
-  C-27.11 write gate; `op=versionstrength`'s `independence`). `civicos-ui/app.html` neither calls that op nor reads the
-  field, so a member affirms "separately sufficient" against nothing. **design:** `INVESTIGATIVE-SESSION.md` §12 (b)
-  and §14b.5. **accepts-when:** a fixture whose two parts share a capture shows that shared origin at the ceremony
-  BEFORE the affirmation, and a NEGATIVE CONTROL hides the field and fails by name. Owner UI.
-- **D-52 → one RECORD row: THE `export-performed` GENERATOR, in-app.** The channel is the queue, which is built, and
-  the kind is already catalogued (`queuestate.mjs`). A new `export_log` row raises the FINDING to every administrator,
-  with its `basis` naming that row. **design:** Membership v2 §8.1 with `NOTIFICATIONS.md` §The item contract. Under
-  the catalogue's own rule it is the first generator to take an `N-<n>`. The `N` namespace is NOT among the 19 that
-  `mintid` registers, so registering it is part of this row. Email transport stays Bob's (D-98) and blocks nothing here.
-- **D-126 → one row: THE `per-item` WEIGHT** (`NOTIFICATIONS.md` §Applying a handler to a selection). Each item succeeds
-  or is RETAINED WITH ITS REASON. UI-55's ARM 4d is the alarm that flips when an act accepts a set. Owner RECORD (the
-  affordance and the acts), then UI. The 26 unbuilt generators stay under their own rows.
-- **REC-135's question → one RECORD row: `ALREADY_A_CASE_MEMBER` ASKS FOR A PROJECT** (`INVESTIGATIVE-SESSION.md` §7.1
-  item 9, written this commit). A new edition is warranted when the publishing project's latest conclusion is not the
-  one the pinned edition recorded, whether or not `bundle_sha` moved. `op=reopen` does not change. **accepts-when:**
-  REC-135's own probe path (conclude, publish, withdraw, conclude on another claim, publish) reaches a second edition,
-  and publishing unchanged refuses as before.
-- **D-80 → DEFERRED, nothing to place.** Its subject, the aspiration as an object, is ABSENT (`status.mjs 8.goals`).
-  The specification of contact becomes a required clause of 8.goals' design act.
-- **REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches
-  that file) so the two do not collide. It yields two landings: session reach for five ops plus `UNATTENDED_BY_DECISION`
-  entries for two, then the bearer-write fence on the provenance pair. The rows follow in that entry.
-**STILL WITH BOB, unchanged:** D-148 and D-149, with provisionals stated on both.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
@@ -141,15 +98,15 @@ accepts-when: with any one floor left stale by a landing, the guard EXITS NON-ZE
 NEGATIVE CONTROL: drop one floor by one and the guard fails BY NAME; today it prints and passes.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 2, RE-MEASURED — its own figures no longer reproduce, four others do; see MEASUREMENTS.md).
 
-### D-339 · running — **SPAWNED 2026-09-21 by CONDUCT #9. NOT LANDED, CHECKED BY CONTENT at spawn: `CAPTURE-SCALING.md` names neither `CHOSEN` nor a recency rule on `origin/main` @ `36eaf651` (zero hits). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`CAPTURE-SCALING.md` §Job one AND THE PLANE STATE OPPOSITE REUSE RULES, AND THE DOCUMENT READS AS THE AUTHORITY** — the design gates reuse on `stable_since` older than the window; the built `reuseDecision` gates on RECENCY OF FETCH (24 h), because the stability gate measured live as reusing nothing at all. — owner CAPTURE.
-order: after D-254, with the corrections to landed work and above the features: a builder designing against §Job one designs against a rule THE PLANE REFUSED, which is the design claiming more than it can support — CLAUDE.md §2's class, pointed at a builder rather than a member. Cheap too: prose only (SCHEDULER #2, 2026-09-19)
-milestone: M7
-interface: none — prose in a design document; no code moves
-design: `docs/architecture/CAPTURE-SCALING.md` §Job one, which is the text being corrected, read against `reuseDecision` in the plane, which is the authority the correction adopts.
-depends-on: none. The built rule is already right and measured; nothing is being decided here.
-scope: fold the RECENCY rule and its live measurement into §Job one so the document states what the plane does, and mark the two constants (24 h, `minDocuments: 2`) as **CHOSEN, not measured**, beside the two open questions that still ask for them — the row's own words. The front matter moves in the same commit if the section's stated completeness changes (`CORPUS-STANDARD.md`).
-accepts-when: §Job one describes the recency gate and carries the live measurement that refused the stability gate; both constants are labelled CHOSEN; no code changes in the same commit. How a liar passes it: deleting the stale rule instead of correcting it, losing why it was refused — so the superseded rule stays with its dated reason. NEGATIVE CONTROL: none applies; this is prose, and `corpuscheck` is its arm.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
+### M0-86 · queued — **BOB'S OWN ACT, NOT A WORKER SLOT (BOB #19 is cutting it by hand, 2026-09-21).** **THE CONSTRUCT MAP HAS 4 BYTES OF HEADROOM ONCE D-158 LANDS, AND OVER BUDGET IT FAILS EVERY GATE.** `docs/architecture/BIO_System_Design.md` is 49,106 B on `origin/main` and 49,148 B on `worker/d158-conduct8` (`b3ae389c`), against the 49,152 B map budget, in `tools/readbudget.mjs`' `CUT` set. The next landing that lengthens a §3 row fails — D-432 adds a table that construct 3's census cell records. — owner BOB (the map's author).
+order: SECOND, by BOB's hand rather than a slot: over budget this file FAILS every landing that grows it, where `RECORD.md` (REC-154) is a WARN; it should land before D-432 does (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 5, re-measured)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each*.
+depends-on: none.
+scope: BOB's stated plan: move each §3 claim's HISTORY into `construct-status.json`'s unrendered `note`, which `node tools/status.mjs <topic>` still prints, so nothing is lost; anything cut from prose is archived VERBATIM.
+accepts-when: `node tools/readbudget.mjs` reads the map under budget, headroom stated in bytes at the landing; `node tools/status.mjs --check` still agrees; nothing that left the map is absent from both the note and the archive.
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

@@ -1180,3 +1180,50 @@ becomes ONE value in the Durable Object's durable state, written once at first b
 already holds (D-102). It is never a deploy-time var, because it appears in signed bytes. Every default and every stamp
 reads it. **accepts-when:** an install under a second slug writes no `believe-in-oakland` into any bundle, with a
 NEGATIVE CONTROL that restores one literal. **depends-on:** none. **design:** D-436's row.
+
+## DRAINED 2026-09-21 by SCHEDULER #5 — BOB #19's third entry (the six answered rows), each item verified at its cited design and re-measured at the code: REC-135's question PLACED as `REC-157`, second after D-434; D-195 PLACED under `UI-74`, the accept ceremony re-derived WITH its disclosure — the ceremony BOB #19 named is NOT on `main` (IS-BUILD-PLAN's UI-43, stranded on D-397's third branch), so UI-74 carries both and D-397 closes as placed; D-52 PLACED under its own id, first above the features (RECORD), with Membership v2 §8.1's superseded "no channel" paragraph sent to BOB #20 to fold; D-126 PLACED under its own id after UI-71, ONE row (RECORD, then UI) as BOB #19 decomposed it; D-80 stays in `DEBT.md`, its deferral sent to BOB #20 to be stated in `BIO_Content_Framework_v0_10.md`'s front matter (the third door); REC-155 — nothing placed: §4.10 is not on `origin/main` at `cfa6659c`, and BOB #20's entry carries its rows. D-195, D-52 and D-126 leave `DEBT.md` as PLACED in this commit.
+
+**2026-09-21 · BOB #19 · SIX ROWS THAT WERE "WAITING ON BOB" ARE ANSWERED, AND FOUR OF THEM HAD ALREADY BEEN ANSWERED BY THEIR OWN DESIGNS. Each is now either a BUILD row to place or a stated deferral. Every disposition is written ON ITS ROW, dated, with the evidence at the code. Mint ids for new rows as you place them.**
+- **D-195 → one UI row: THE ACCEPT CEREMONY SHOWS SHARED ORIGIN.** The plane half is BUILT (`Store#independenceOf`; the
+  C-27.11 write gate; `op=versionstrength`'s `independence`). `civicos-ui/app.html` neither calls that op nor reads the
+  field, so a member affirms "separately sufficient" against nothing. **design:** `INVESTIGATIVE-SESSION.md` §12 (b)
+  and §14b.5. **accepts-when:** a fixture whose two parts share a capture shows that shared origin at the ceremony
+  BEFORE the affirmation, and a NEGATIVE CONTROL hides the field and fails by name. Owner UI.
+- **D-52 → one RECORD row: THE `export-performed` GENERATOR, in-app.** The channel is the queue, which is built, and
+  the kind is already catalogued (`queuestate.mjs`). A new `export_log` row raises the FINDING to every administrator,
+  with its `basis` naming that row. **design:** Membership v2 §8.1 with `NOTIFICATIONS.md` §The item contract. Under
+  the catalogue's own rule it is the first generator to take an `N-<n>`. The `N` namespace is NOT among the 19 that
+  `mintid` registers, so registering it is part of this row. Email transport stays Bob's (D-98) and blocks nothing here.
+- **D-126 → one row: THE `per-item` WEIGHT** (`NOTIFICATIONS.md` §Applying a handler to a selection). Each item succeeds
+  or is RETAINED WITH ITS REASON. UI-55's ARM 4d is the alarm that flips when an act accepts a set. Owner RECORD (the
+  affordance and the acts), then UI. The 26 unbuilt generators stay under their own rows.
+- **REC-135's question → one RECORD row: `ALREADY_A_CASE_MEMBER` ASKS FOR A PROJECT** (`INVESTIGATIVE-SESSION.md` §7.1
+  item 9, written this commit). A new edition is warranted when the publishing project's latest conclusion is not the
+  one the pinned edition recorded, whether or not `bundle_sha` moved. `op=reopen` does not change. **accepts-when:**
+  REC-135's own probe path (conclude, publish, withdraw, conclude on another claim, publish) reaches a second edition,
+  and publishing unchanged refuses as before.
+- **D-80 → DEFERRED, nothing to place.** Its subject, the aspiration as an object, is ABSENT (`status.mjs 8.goals`).
+  The specification of contact becomes a required clause of 8.goals' design act.
+- **REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches
+  that file) so the two do not collide. It yields two landings: session reach for five ops plus `UNATTENDED_BY_DECISION`
+  entries for two, then the bearer-write fence on the provenance pair. The rows follow in that entry.
+**STILL WITH BOB, unchanged:** D-148 and D-149, with provisionals stated on both.
+
+## DRAINED 2026-09-21 by SCHEDULER #5 — BOB #20's entry (REC-155 IS DESIGNED), verified at `BIO_Membership_Architecture_v2.md` §4.10 and at the code (the seven OPS rows, the UNDETERMINED header at `index.mjs`, REC-65's pin at `identity-claims.test.mjs` (e)): REC-155 re-rowed on §4.10 as LANDING 1 where it stood; LANDING 2 PLACED as `REC-158` directly after it, `depends-on` REC-155 DRIVEN; the SCHEDULER (#3) → BOB delegation (the seven undetermined session routes) DISCHARGED.
+
+**2026-09-21 · BOB #20 · REC-155 IS DESIGNED: `BIO_Membership_Architecture_v2.md` §4.10 rules all seven session routes. It builds as TWO landings, and the second needs a NEW row whose id SCHEDULER mints. Owner RECORD. Intended place: REC-155 where it stands, the new row directly after it.**
+REC-155's row still reads *"design: MISSING — routed to BOB"*. Its design is now §4.10: BOB #19 ruled it, and BOB #20
+landed it after re-reading every citation at the code. **LANDING 1 is REC-155 itself.** `provenancechain`,
+`provenanceroute`, `calibrate`, `calibrationsubject` and `calibrationsignal` join BOTH `SESSION_OPS` sets, each with an
+arm DRIVEN through the plane from a signed-in session. `livefire` and `reproject` join `UNATTENDED_BY_DECISION`, each
+with the citation §4.10 quotes. The header comment that calls the seven UNDETERMINED is corrected in the same commit. No
+class list moves, so nobody loses reach, and I3 gains a MINOR IC. **LANDING 2 is a new row:** the provenance pair's
+BEARER WRITE is refused BY NAME, on the D-421/D-136 pattern. That covers `provenancechain`'s `apply=1` arm (its REPORT
+arm stays open to every class) and `provenanceroute` whole. It comes with a new C-number, REC-65's known-open pin in
+`identity-claims.test.mjs` corrected with a comment saying why, and a MAJOR IC on I3. **depends-on:** landing 2 waits
+for landing 1 to be DRIVEN, so D-200's chain-absent population keeps a route to repair. **accepts-when (1):** each of the
+five answers a member session and an administrator session with the op's own result, and the two unattended ops answer
+every session `MACHINE_CREDENTIAL_REQUIRED` with `recorded` citing §4.10's artifact. **(2):** a bearer `apply=1` and a
+bearer `provenanceroute` are refused by name; a session's succeed, and its author is the session's member, never
+`token:<class>`. **How a liar passes it:** an arm that calls the store directly. The session gate lives in `index.mjs`,
+so only a request through the plane reaches it.

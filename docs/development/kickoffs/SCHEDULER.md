@@ -172,6 +172,9 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
   its single stated question, and expect them answered together. A row whose question is not yet sharp waits for the
   next group rather than going early and half-formed.
 
+- **A ROW MAY NOT REST ON A SURFACE `main` DOES NOT HAVE — GREP IT BY ITS FUNCTION NAMES BEFORE PLACING A DEPENDENT** (SCHEDULER #5, 2026-09-21). BOB #19's inbox asked for a UI row "at the accept ceremony"; no surface calls `op=versionaccept`, because the ceremony (IS-BUILD-PLAN's UI-43) sat unmerged on a branch D-397 had named while the IS plan read 43/43. The row was committed before the next DEBT row in the batch exposed it. An inbox entry, a plan marked closed and a quoted sentence are all claims; the surface's own names on `origin/main` are the evidence. The fix was a re-derivation row (UI-74) that carries the dependent, not a dependent placed on nothing.
+- **A `DEBT.md` DISPOSITION IS A MARKDOWN TABLE CELL: it may not contain `|`.** Quoting code like `a || b` splits the cell, `debtDisposition` then reads the wrong text, and `isClosedDebtRow` judges a row you did not write. Write the condition in words; assert the read-back equals what you wrote before saving (SCHEDULER #5's batch 10 aborted on exactly that assertion, before any byte was written).
+
 ## Checks before every push
 
 `node tools/plancheck.mjs` (0 fail), `node tools/readbudget.mjs`, and — once LED-6 lands — its five pipeline invariants.

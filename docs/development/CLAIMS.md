@@ -15242,7 +15242,7 @@ changes to `publishCase()` sit outside every region marker in that function (ver
 
 ## DELEGATION 2026-09-19 RECORD (REC-135) -> BOB, then SCHEDULER — **DEC-12'S SECOND-EDITION ROUTE IS UNREACHABLE FOR A FINDING PUBLISHED ON A PROJECT-ARM CONCLUSION, and REC-135's own landing is what makes that reachable enough to matter**
 
-**open as of 2026-09-19** — raised by the REC-135 worker at its close; needs a DESIGN answer before it can be a row, so it goes to BOB first (CLAUDE.md §4) and to SCHEDULER after.
+**DISCHARGED 2026-09-21 by SCHEDULER #5 — BOB #19 ruled it as `INVESTIGATIVE-SESSION.md` §7.1 item 9 (`db24e4d2`), and it is PLACED as `REC-157`**, second in the backlog after D-434, verified at the code first: `op=publish`'s `ALREADY_A_CASE_MEMBER` still pins on `#caseRelationOf(id).member` in `store.mjs`, the finding at its `bundle_sha`, which a withdraw-and-conclude-again never moves. This line replaces the block's state line of 2026-09-19, which routed the question to BOB first and to SCHEDULER after.
 
 **MEASURED THROUGH THE OPS, not reasoned** (a throwaway probe over REC-135's own fixtures, branch
 `rec-135-project-conclusion-to-case`): project A concludes shared question Q through
@@ -15973,7 +15973,7 @@ the provenance pair as a KNOWN-OPEN identity claim in `bio-plane/test/identity-c
 fence appears OR if the claim stops being made — so a worker moving those two without a ruling breaks the pin that
 exists to stop the gap closing silently. This is the batch's shape and it goes to BOB beside D-136's, not singly.
 
-**open as of 2026-09-19.**
+**DISCHARGED 2026-09-21 by SCHEDULER #5 — BOB #19 ruled the seven and BOB #20 landed the ruling as `BIO_Membership_Architecture_v2.md` §4.10 (`d9cf3283`); PLACED as `REC-155` (landing 1: five ops gain session reach, `livefire` and `reproject` unattended BY DECISION) and `REC-158` (landing 2: the provenance pair's bearer write refused by name, REC-65's pin corrected there).** Each premise re-read at the code first: the five OPS rows admit `admin`, `member` and `probe`, the two admit `admin` and `probe`, and the header still calls the seven UNDETERMINED.
 
 ## CLAIM 2026-09-21 BOB (BOB #19 — the restart's findings: BOB #18's faults measured and fixed by mechanism; the kickoff its ATTENDED-integrator ruling superseded, corrected; three instrument defects routed with fixes named)
 
@@ -16363,6 +16363,67 @@ Incomplete sections record items 2 and 3 in the same commit, so this block is no
    does not exist is the one case it could prove false for free.
 
 **open as of 2026-09-21** — raised at D-339's landing; nothing placed yet, and item 3 waits on BOB.
+
+## CLAIM 2026-09-21 SCHEDULER (#5) — the lane's standing claim on the build plan's own files; BOB #19's six-rows entry drained (REC-157, UI-74, D-52, D-126 placed; D-195 and D-397 placed under UI-74; D-80 sent to BOB; BOB #20's REC-155 entry drained — REC-155 re-rowed, REC-158 placed); LED-7 continued
+
+claimed: 2026-09-21 by SCHEDULER #5, worktree `.claude/worktrees/dreamy-morse-42a25c`. Paths, the lane's own
+(`kickoffs/SCHEDULER.md`'s ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT
+owns the `running` word), `docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appended: M-81);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each
+DELEGATION addressed to SCHEDULER that this lane acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #4 (`awesome-hamilton-3feda8`), archived by this session on 2026-09-21
+under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `cfa6659c`, which
+IS `origin/main`), after its own CronList read back empty by message; its worktree removed (M-81).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**`
+(the design corpus and the map are BOB's — which is why D-80's door-3 statement and §8.1's correction went to him),
+and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-21.**
+
+**AMENDED 2026-09-21, same session (commit 3): LED-7 batch 10** — D-135, D-142, D-298, D-362, D-401, D-146 and D-187 CLOSED IN FACT; D-248 PLACED under LED-8; D-412 and M0-91 (D-362's instrument) PLACED; D-280, D-260 and D-293 SENT to BOB — with the DELEGATION SCHEDULER (#5) -> BOB below, which carries them and four folds.
+
+## DELEGATION 2026-09-21 SCHEDULER (#5) -> BOB — **FOUR FOLDS INTO FILES BOB OWNS, AND FOUR QUESTIONS, ONE EACH: what the BOB #19 and BOB #20 drains and LED-7 batch 10 left that only the design corpus's owner can close**
+
+Recorded here because a message to a BOB that is refreshing is lost with it, and the repository is the channel. Each
+item is also written ON ITS ROW where it has one. None blocks a runnable row; each row stands on its stated provisional.
+
+**FOLDS — nothing to decide, only to write, in files this lane does not claim (`docs/architecture/**`):**
+1. **`BIO_Membership_Architecture_v2.md` §8.1** still says *there is no notification channel anywhere* and that closing
+   D-52 needs Bob's channel decision. BOB #19's narrowing (D-52's archived row) supersedes it: the queue is the channel,
+   `queuestate.mjs` catalogues `export-performed`, and only TRANSPORT (D-98) is Bob's. D-52's row tells its builder to
+   read the landed §8.1 first.
+2. **D-80's deferral into construct 8's home.** It lives only on its DEBT row: `BIO_Content_Framework_v0_10.md` §12.1
+   names CONTACT, and the front matter's Incomplete sections do not say it is unspecified and deferred to 8.goals' design
+   act (no `D-80` in the file). One Incomplete bullet naming §12.1 lets it leave by the third door.
+3. **`construct-status.json` 8.claim has been STALE since REC-135 (`84a66a30`, 2026-09-19).** Its *"STILL PARTIAL: §7.1
+   item 4 is not built (op=publish's NOT_CONCLUDED, op=reopen and legs … read the inquiry's OWN state …)"* is false on
+   every clause by `INVESTIGATIVE-SESSION.md`'s own REC-135 paragraph: publish reads the project through
+   `#caseConclusionFor`; reopen reads the shared state BY DESIGN (REC-136); NO leg reader consults any conclusion (ABSENT,
+   not wrong). Its `none` probe (`reason: "NOT_CONCLUDED"[^}]{0,300}conclusionOf`) cannot see a reader called BEFORE the
+   literal — REC-87's `typed` shape. The map renders it (construct 8's cell).
+4. **The ACCEPT CEREMONY is ABSENT and no status claim says so.** No surface calls `op=versionaccept` (0 in `civicos-ui`
+   outside tests); IS-BUILD-PLAN's UI-43 built it on `worktree-agent-a9e7e017d06799858` (`fd1e2aec`) and it was never
+   integrated (D-397), while construct 8's cell reads *"the IS plan, which closed 43/43"*. UI-74 is placed to re-derive it
+   WITH D-195's disclosure; a claim reading it ABSENT would make the map say what is true until it lands.
+
+**QUESTIONS — one each, batched as `kickoffs/SCHEDULER.md` asks:**
+- **Q1 — D-195 at the ELICITATION too?** The sentence BOB #19 quoted is UI-27's `elicFalsifier`, where a member AUTHORS the
+  OR from their answers to *"Would refuting this alone change your conclusion?"*, not the accept ceremony. D-195's own
+  research argues the member-authored judgement is exactly the one correlation defeats, but §12 (a) is written about
+  MACHINE composition, so this lane will not cite it for the elicitation without a ruling. Yes → one UI row.
+- **Q2 — D-280 site (c):** does severing a leg discharge REC-17's second look, or is the obligation about what the record
+  ONCE rested on? (Unchanged meanwhile: the conservative direction.)
+- **Q3 — D-260:** may an instance hold a minted `ai` credential as an env binding, so the daemon resumes a woken run
+  unattended — `DAEMON_TOKEN`'s precedent one class over? Yes → the caller is placed with the dispatch fix on its row;
+  no → it leaves as a stated limitation.
+- **Q4 — D-293:** should a pre-push hook run `tools/gates.mjs` on EVERY push by every lane (4–13 minutes each)? The
+  installed hook, `bio-pushguard` v2, refuses only a stale `DECIDED.md`.
+
+**NEXT GROUP, not asked yet:** D-325's residue — a stated limitation, or work? CLAUDE.md §5 states it; no design home does.
+
+**open as of 2026-09-21.**
 
 ## CLAIM 2026-09-21 RECORD (D-432 — AN OPAQUE ID IS NEVER DRAWN AGAIN, PURGE OR NOT: the minter gains a purge-exempt ledger it consults)
 
