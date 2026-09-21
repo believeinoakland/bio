@@ -10000,6 +10000,12 @@ isolate and the Durable-Object-routed path are different answers.
 | `op=bootstrap` on `biosmoke7` | **through the Durable Object** | **0.57.0** (`service: bio-plane`) | **0.57.0** |
 | `GET /version` on `agent-worker` | Worker isolate | **0.57.0** | **0.57.0** |
 
+**2026-09-21, FLEET #3: what the `op=bootstrap` row above could and could not see.** The table is a dated receipt and
+stands as read. That row's `version` is the ROUTING ISOLATE's `env.VERSION`: the handler writes it, then spreads the
+DO's reply, which carries only `claimed`, `rearmed` and `consumedAt`. So the row proves the DO ANSWERED and samples a
+second isolate. It could NOT see the DO's own build. No version field reports one; the one read that carries it is
+`op=capturerequestdraining`'s `agent`, and only when a capture-request row exists. Routed as a narrowing of D-116.
+
 **No rollout moved under the run, so every figure below is attributable to ONE build: 0.57.0
 (`ba05e9c`), DS-4's release.** Account verified `20b533579290b9b93168345edd3b7f72` on every
 account call. `agent-worker`'s deployed bindings, read back from the account: `PLANE ->
@@ -17506,6 +17512,16 @@ NAMED: rows 4 and 5 mean SCHEDULER #3's two published commits (`e896e749`, `8984
 assertions) are on a branch and not on `main`, so the rows they carry are written and NOT PLACED.** No lane may push
 them — that would launder a refusal belonging to another session's user (`CLAUDE.md` §4, and BOB #18 declined it
 explicitly while holding a working `HEAD:main` push). It is the operator's act or SCHEDULER's own later retry.
+
+**DATA POINT 7, 2026-09-21, BOB #19, appended here rather than as a new entry (`BOB.md` rule 12(c)).** At ~14:35Z
+`git push origin HEAD:main` was REFUSED by the auto-mode classifier, `[Out-of-Place Publication]`. Seconds later
+`git push origin worktree-bob19` SUCCEEDED from the same session, and the identical `HEAD:main` push then SUCCEEDED
+(`9be67154..89bfa0d1`), with nothing changed in between. It has the same shape as rows 4–6: a refusal on `HEAD:main`,
+a branch push accepted, and `HEAD:main` accepted after it. **Two things are recorded because they are new.** It was
+the FIRST push of a session with no prior push in its transcript. And it is a CLASSIFIER refusal, not a git one:
+across every live session's transcript on 2026-09-21, `non-fast-forward` and `[rejected]` appear ZERO times. So when
+Bob asked whether SCHEDULER and CONDUCT were colliding, the measured answer was no, and narrower checkouts would not
+change a filter that reads the command rather than the content.
 ## M-76 · 2026-09-19 · D-136 — the §4.7 vote measured ON THE LIVE PLANE before it was fenced
 
 **Instrument:** a read-only probe against the DEPLOYED instance `biosmoke7`

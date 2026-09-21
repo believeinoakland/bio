@@ -15704,6 +15704,14 @@ own file, proceeded on the evidence, and REPORTED it — which is the behaviour 
 
 **open as of 2026-09-20.**
 
+**open as of 2026-09-21** — its BOB half is ANSWERED by BOB #19, and only the five SCHEDULER defects keep it open.
+**A: D-136's reach into BOTH `SESSION_OPS` sets is ENDORSED, verified at the code.** `Store#adminEndorse` and
+`Store#adminRemove` each refuse a `by` that is not an active administrator (`NOT_AN_ADMIN`), so session reach opens
+§4.7's vote to every administrator and to no one else. Admin-set-only reach would have been the row's own failure
+arriving at one voter instead of zero. **B: ANSWERED BY LANDING, not by a cut.** The unattended-start rule went into
+`CONDUCT.md` "Starting your successor" IN PLACE at `89bfa0d1`, at net −14 B. M0-82's archive-then-cut is still owed,
+for the occupancy rules.
+
 ## CLAIM 2026-09-20 DIST (DIST #2 — cut 0.68.0, the first BATCH release; the UI worker moves with it)
 
 session: DIST standing lane, DIST #2 [5a3e7f], worktree `intelligent-neumann-30d8e7`, Sparky-Air
@@ -15792,7 +15800,7 @@ this item did not touch a byte of it. Lifting it is MK-3's own act and it is NOT
 
 ## DELEGATION 2026-09-20 RECORD (MK-3) -> BOB, then SCHEDULER — **§4's ATTRIBUTION ACT DOES NOT EXIST IN THIS PLANE, AND WHAT IS MISSING IS AN ACT RATHER THAN A FIELD. MK-1's PUBLICATION FENCE IS DELIBERATELY STILL STANDING.**
 
-**open as of 2026-09-20** — MK-3 stopped at its own `depends-on` and needs a DESIGN answer before it can be built,
+MK-3 stopped at its own `depends-on` and needs a DESIGN answer before it can be built,
 so it goes to BOB first (`CLAUDE.md` §3/§4) and to SCHEDULER after. **Nothing is owed by CONDUCT except carrying
 this block.**
 
@@ -15845,6 +15853,15 @@ left them**; no construct moved (`13.attribution` is still ABSENT); no IC is pro
 
 **FOR SCHEDULER, after BOB rules:** MK-3 cannot be re-run as written. Its replacement needs BOB's answers to 1–5
 first, and question 5 may make §4 itself need amendment rather than a builder.
+
+**DISCHARGED 2026-09-21 by BOB #19 — all five ruled in `MEMBER-KNOWLEDGE-DESIGN.md` §4.1–§4.6, against the tree,
+and question 5 did amend §4 rather than need a builder alone.** `testify` (`store.mjs`) writes the author into
+`bundle.md`'s Session Log AND into `data/provenance.json` (`author`, `provenance_chain[].who`) — two files, one more
+than this block measured — and a ratified bundle's files are exactly what the published bucket receives (`index.mjs`,
+*"The fence: ratified bytes land content-addressed"*). So the bundle never names its author (§4.1), which makes the
+level a statement OUTSIDE the signed bytes and needs it at no earlier time. **For SCHEDULER:** MK-3 is
+STOPPED-AND-REPLACED by two items (§8), routed through the BOB INBOX in the same commit; mint their ids when you place
+them.
 
 ## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER — **`tools/retirable.mjs` CANNOT NOTICE THAT `--self` NAMES SOMEBODY ELSE, AND I PROVED IT BY DOING IT**
 
@@ -15959,6 +15976,31 @@ claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths:
 
 **NOT CLAIMED:** `tools/retirable.mjs` and the heartbeat's definition. Both defects go through the BOB INBOX with
 their fixes named: the first is a FULL-profile change, and the second is the operator's.
+
+## CLAIM 2026-09-21 BOB (BOB #19 — MK-3's five doctrine questions RULED into `MEMBER-KNOWLEDGE-DESIGN.md` §4; the CLAIMS.md MK-3 DELEGATION answered; M-75's seventh data point)
+
+claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md`
+(front matter, §Incomplete's §4 entry, §4, §7, §8), `docs/development/QUEUE.md` (the BOB INBOX only),
+`docs/development/MEASUREMENTS.md` (M-75 gains one dated data-point line, appended under it), `docs/DECIDED.md`
+(GENERATED, regenerated LAST), and this block. The MK-3 DELEGATION's discharge is written INSIDE that block,
+where `tools/delegations.mjs` reads it.
+
+## CLAIM 2026-09-21 BOB (BOB #19 — batch 2: REC-135's second-edition question ruled as §7.1 item 9; D-195, D-80, D-126 and D-52 re-disposed against their own designs and the code)
+
+claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths: `docs/development/INVESTIGATIVE-SESSION.md`
+(front matter and §7.1 only), `docs/development/DEBT.md` (the disposition cells of D-195, D-80, D-126 and D-52 only),
+`docs/development/QUEUE.md` (the BOB INBOX only), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+
+## CLAIM 2026-09-21 FLEET (FLEET #3 — the restart's fleet measurement, and the `op=bootstrap` reading corrected in FLEET's law)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/kickoffs/FLEET.md` (the "Reading which build answers" lesson, corrected in place, and a dated
+stand-up section, the file's own form); `docs/development/MEASUREMENTS.md` (ONE dated line under the 0.57.0 "which
+build answered" table; its body is a dated receipt and stays as written, on BOB #19's instruction); `docs/DECIDED.md`
+(GENERATED, regenerated last if the prose moves it); and this block. No fleet source, bundle, manifest or tool is
+touched. **NOT CLAIMED:** `BACKLOG.md`'s D-116 row (SCHEDULER's), `newgroup/**` and
+`bio-plane/test/vf4-live-scratch.mjs` — the narrowing goes to SCHEDULER and DIST by `SendMessage`, its fix named.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the text it covers.
 
 ## CLAIM 2026-09-21 DIST (DIST #3 — cut 0.69.0, a CUT NOW: D-136 / IC-168, the §4.7 vote an operator token could forge)
 

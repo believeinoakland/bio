@@ -63,6 +63,56 @@ answers, in which case the lane is written down as deaf so peers route through t
 exact-title requirement. **M0-82's archive-then-cut and the OCCUPANCY rules are still owed.** Its premise that
 *"CONDUCT cannot be told"* holds only for a scheduled-task CONDUCT: CONDUCT #9 was chipped attended on 2026-09-21.
 
+**2026-09-21 · BOB #19 · MK-3 IS STOPPED-AND-REPLACED. Its five doctrine questions are RULED (`MEMBER-KNOWLEDGE-DESIGN.md` §4.1–§4.6), and §8 names the two items that replace it. Mint their ids as you place them; none is named before its row exists. Intended place: MK-3's own slot, (i) then (ii). Disposition MK-3's row as STOPPED-AND-REPLACED: its worker's STOP landed at `8ca77e8d`.**
+**(i) THE BUNDLE NAMES NO AUTHOR (§4.1).** Owner RECORD. Interface I3 and I5; the builder states whether it is
+additive or breaking. **depends-on:** MK-1 (built). Today `testify` writes the author's member id into `bundle.md`'s
+Session Log AND into `data/provenance.json` (`author`, `provenance_chain[].who`), and a ratified bundle's files are
+what the published bucket receives. The fix: every file and manifest record an authored bundle can publish names the
+author as `observer:<testimony id>`, which only the register resolves. **accepts-when:** a fixture case publishes an
+observation at `group` level and NO published part (no file, no manifest entry) contains the author's member id,
+handle or cover. This is a population arm, never a list of sites. **NEGATIVE CONTROL:** restore the member id in the
+Session Log, and the arm fails by name. Existing authored bundles stay fenced, and no published byte moves.
+**(ii) THE ACT AND THE LIFT (§4.2–§4.6).** Owner RECORD. Interface I3. **depends-on:** (i), and the review copy
+(REC-126, built). The item builds the attribution act (an op the builder names), which only the observation's author may take, per (case edition,
+observation), on the draft. It writes each edition's attribution into the case document, derived from the act. It
+refuses ratification while any reached observation is unchosen, naming each one. It refuses `name` for a member with
+no handle. **Then, as its own act, it lifts MK-1's fence (C-53.10–.12), with a control arm per level.** MK-5 now
+depends on (ii). Two of (ii)'s points are provisionals carried to Bob, cheap to change until built: §4.4's narrow veto
+and §4.6's `name` = handle. Build (i) regardless.
+
+**2026-09-21 · BOB #19 · D-436. THE PLANE STAMPS A LITERAL PRODUCING GROUP, SO A SOVEREIGN GROUP'S RECORD NAMES THE WRONG PRODUCER IN ITS OWN SIGNED BYTES. Owner RECORD, with DIST. Intended place: M7's rows, AHEAD of any release a new group installs.**
+The row is in `DEBT.md` in this commit, with its FIX NAMED and its one design call made. The instance's group slug
+becomes ONE value in the Durable Object's durable state, written once at first bootstrap from the slug the installer
+already holds (D-102). It is never a deploy-time var, because it appears in signed bytes. Every default and every stamp
+reads it. **accepts-when:** an install under a second slug writes no `believe-in-oakland` into any bundle, with a
+NEGATIVE CONTROL that restores one literal. **depends-on:** none. **design:** D-436's row.
+
+**2026-09-21 · BOB #19 · SIX ROWS THAT WERE "WAITING ON BOB" ARE ANSWERED, AND FOUR OF THEM HAD ALREADY BEEN ANSWERED BY THEIR OWN DESIGNS. Each is now either a BUILD row to place or a stated deferral. Every disposition is written ON ITS ROW, dated, with the evidence at the code. Mint ids for new rows as you place them.**
+- **D-195 → one UI row: THE ACCEPT CEREMONY SHOWS SHARED ORIGIN.** The plane half is BUILT (`Store#independenceOf`; the
+  C-27.11 write gate; `op=versionstrength`'s `independence`). `civicos-ui/app.html` neither calls that op nor reads the
+  field, so a member affirms "separately sufficient" against nothing. **design:** `INVESTIGATIVE-SESSION.md` §12 (b)
+  and §14b.5. **accepts-when:** a fixture whose two parts share a capture shows that shared origin at the ceremony
+  BEFORE the affirmation, and a NEGATIVE CONTROL hides the field and fails by name. Owner UI.
+- **D-52 → one RECORD row: THE `export-performed` GENERATOR, in-app.** The channel is the queue, which is built, and
+  the kind is already catalogued (`queuestate.mjs`). A new `export_log` row raises the FINDING to every administrator,
+  with its `basis` naming that row. **design:** Membership v2 §8.1 with `NOTIFICATIONS.md` §The item contract. Under
+  the catalogue's own rule it is the first generator to take an `N-<n>`. The `N` namespace is NOT among the 19 that
+  `mintid` registers, so registering it is part of this row. Email transport stays Bob's (D-98) and blocks nothing here.
+- **D-126 → one row: THE `per-item` WEIGHT** (`NOTIFICATIONS.md` §Applying a handler to a selection). Each item succeeds
+  or is RETAINED WITH ITS REASON. UI-55's ARM 4d is the alarm that flips when an act accepts a set. Owner RECORD (the
+  affordance and the acts), then UI. The 26 unbuilt generators stay under their own rows.
+- **REC-135's question → one RECORD row: `ALREADY_A_CASE_MEMBER` ASKS FOR A PROJECT** (`INVESTIGATIVE-SESSION.md` §7.1
+  item 9, written this commit). A new edition is warranted when the publishing project's latest conclusion is not the
+  one the pinned edition recorded, whether or not `bundle_sha` moved. `op=reopen` does not change. **accepts-when:**
+  REC-135's own probe path (conclude, publish, withdraw, conclude on another claim, publish) reaches a second edition,
+  and publishing unchanged refuses as before.
+- **D-80 → DEFERRED, nothing to place.** Its subject, the aspiration as an object, is ABSENT (`status.mjs 8.goals`).
+  The specification of contact becomes a required clause of 8.goals' design act.
+- **REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches
+  that file) so the two do not collide. It yields two landings: session reach for five ops plus `UNATTENDED_BY_DECISION`
+  entries for two, then the bearer-write fence on the provenance pair. The rows follow in that entry.
+**STILL WITH BOB, unchanged:** D-148 and D-149, with provisionals stated on both.
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
