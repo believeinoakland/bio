@@ -89,8 +89,8 @@ const ARMS = {
   /* Each half of the seed alone: the COUNTER half is the only thing that refuses an id the counter issued and no object
      ever used; the LIVE half the only thing that refuses one a pre-ledger build minted. */
   "no-counter-seed": {
-    patches: [["store.mjs", "      if (!m || !Store.UNTAILED_GATED_PREFIXES.includes(m[1])) continue;",
-               "      if (true) continue;"]],
+    patches: [["store.mjs", "    this.sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)\n                   WITH RECURSIVE",
+               "    if (false) this.sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)\n                   WITH RECURSIVE"]],
     mustFail: ["U7 CASE"],
   },
   "no-live-seed": {

@@ -50148,8 +50148,14 @@ ${words}`;
          allocation handed out is an identifier that has existed. Nothing steps those scopes now (`op=allocid` refuses
          every gated prefix), so the range is fixed.
      Rows already recorded are left as they are: `recorded_at` is when the ledger FIRST learned an id, `source` how.
-     COST, stated: one INSERT OR IGNORE per source over its own rows, plus at most `next`-1 point inserts per untailed
-     gated counter scope — bounded by the gated rows the store holds, never by the corpus.
+     COST, stated: nine INSERT OR IGNORE … SELECT statements (one per live source) and ONE for the counter — ten
+     statements whatever the store holds, each doing its work inside SQLite: the live ones in proportion to the gated
+     rows of their table, never the corpus, and the counter one in proportion to the ids the counter issued (at most
+     9,999 per untailed scope, one scope per prefix per year). No row comes back into JS and nothing is done per row
+     here. Stated because `derivation-bounds.test.mjs` grades JS loops over an unbounded `#rows(` read and cannot see
+     work inside SQL, by its own statement: this seed's first draft looped over `seq` in JS with a write per id, that
+     walk named it on the first full battery, and the counter half was rewritten as the one statement below — which is
+     also simply the better shape (ten statements rather than one per issued id). It runs at boot and no op reaches it.
      WHAT IT CANNOT SEE, stated: an id that left every live table BEFORE this landing and that no counter recorded — a
      PROJ or TASK counter id whose slug is gone, an opaque id minted and purged before the ledger existed, or a case id
      a refused publish stamped into member bytes only. Nothing in the store remembers those, so nothing here can; an
@@ -50159,16 +50165,18 @@ ${words}`;
     for (const [prefix, table, column] of _Store.#MINT_LEDGER_LIVE)
       this.sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
                      SELECT DISTINCT ${column}, ?, 'live' FROM ${table} WHERE ${column} GLOB ?`, at, `${prefix}-*`);
-    for (const r of this.#rows(`SELECT scope, next FROM seq`)) {
-      const m = /^([A-Z]+)-\d{4}$/.exec(String(r.scope));
-      if (!m || !_Store.UNTAILED_GATED_PREFIXES.includes(m[1])) continue;
-      for (let n = 1, top = Math.min(Number(r.next) - 1, 9999); n <= top; n++)
-        this.sql.exec(
-          `INSERT OR IGNORE INTO minted_ids (id,recorded_at,source) VALUES (?,?,'counter')`,
-          `${r.scope}-${String(n).padStart(4, "0")}`,
-          at
-        );
-    }
+    const scopes = _Store.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
+    const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
+    this.sql.exec(
+      `INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
+                   WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n
+                     WHERE i < (SELECT MIN(9999, COALESCE(MAX(next), 1) - 1) FROM seq WHERE ${inScope("scope")}))
+                   SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
+                     FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
+      ...scopes,
+      at,
+      ...scopes
+    );
   }
   acquireLease(bundleId, actor, ttlMs) {
     if (typeof actor !== "string" || !actor.trim())

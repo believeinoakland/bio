@@ -12507,8 +12507,12 @@ NOT-AFFECTED (the installer carries the plane and serves no roster of its own); 
     than written — its text and probes are in that note, to be added once M0-86 frees room.
   - `DIST` (deploy) — nothing to run: `CREATE TABLE IF NOT EXISTS` makes the table at the first boot of the new build, and
     the seed runs at the end of `#migrate` at every boot, so an older build deployed back for a while and minting
-    meanwhile is caught up at the next boot of this one. Its cost is bounded by the gated rows the store holds (one
-    `INSERT OR IGNORE … SELECT` per source table) plus at most `next`−1 point inserts per untailed gated counter scope.
+    meanwhile is caught up at the next boot of this one. Its cost is TEN statements whatever the store holds — one
+    `INSERT OR IGNORE … SELECT` per live source table and ONE for the counter (a recursive CTE, at most 9,999 numbers
+    per untailed scope) — each doing its work inside SQLite, in proportion to the gated rows or the ids the counter
+    issued, never the corpus; no row returns to JS. The first draft looped over `seq` in JS with a write per id, and
+    `derivation-bounds.test.mjs`' walk named it on the first full battery (it grades JS loops over an unbounded
+    `#rows(` read, and states it cannot see work inside SQL — which the site now says, with the bound).
   - `CAPTURE` — `tasks` is READ by the seed; `taskDrain` (CAPTURE's function) is NOT edited: its mint already goes
     through the one minter, which is where the ledger lives.
   - `UI`, `agent-worker`, `pdf-worker`, `ocr-worker`, `newgroup`, `SKILL` — NOT AFFECTED: none reads a store table, and
