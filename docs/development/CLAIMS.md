@@ -16913,3 +16913,10 @@ why: BOB #22 ruled D-260 at `3b904ea7` (`BIO_Assistant_and_AI_Roles_v0_1.md` §6
   update carry ONE organisation-principal `ai` credential as a deploy secret, as `DAEMON_TOKEN` is carried. A successor
   reads DIST-NEXT whole, so the pointer goes there; the entry and the D-260 row stay the authority.
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 CONDUCT (#10) — M-86: the 34 merged pre-PRUNE-ON-MERGE `worktree-agent-*` branches recorded name → sha, then pruned from the remote
+
+claimed: 2026-09-21 by CONDUCT #10, worktree `.claude/worktrees/conduct-10`. Paths: `docs/development/MEASUREMENTS.md`
+(M-86, appended), `docs/DECIDED.md` (GENERATED, regenerated last), and this block. The six non-ancestor agent branches
+stay on the remote. The branch deletions happen only after this commit is verified on `main`.
+**released: 2026-09-21 CONDUCT #10** — landed in the same commit as the text it covers.
