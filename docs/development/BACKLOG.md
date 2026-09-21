@@ -140,6 +140,16 @@ scope: chunk the subject list at 64, each chunk's rows merged into the one `inde
 accepts-when: a 200-subject page answers every row's index state, equal to the same rows read one chunk at a time; the sweep's list is in the landing. How a liar passes it: a fixture under 100 subjects, which never meets the ceiling, so its count is asserted above it. NEGATIVE CONTROL: restore the single unchunked `IN`, and the 200-subject arm fails by name.
 added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-1; D-390's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
 
+### D-60 · queued — **`op=monitor` COMPARES RAW BYTES, SO A LEGISTAR PAGE READS `modified` ON EVERY TICK AND MONITORING REPORTS NOTHING.** It compares the fetched bytes' hash with the capture's `sha256`, then writes `source_status: modified` and raises the re-evaluation flag; `op=acquire` already records the evidentiary digest (FW-4) and C-18.3 folds by it. ASP.NET reissues `__VIEWSTATE` per response: 31% of the bytes, nothing changed (2026-07-30). — owner RECORD.
+order: after D-390, above CAP-14: M1's monitoring is noise on the class of page Oakland publishes on; below the claims the record cannot support because the design grades a change reported that did not happen as the cheaper error (DOCUMENT-PROFILES.md, "Three digests") (SCHEDULER #8, 2026-09-21, LED-7 S8-3)
+milestone: M1
+interface: I3 — `op=monitor` names the comparison it made; the integrator mints and classifies the IC.
+design: `docs/development/DOCUMENT-PROFILES.md` §"Three digests, not one" — *evidentiary … answers "has the substance changed?", which is what monitoring asks* — with `BIO_Content_Framework_v0_10.md` §5.
+depends-on: none — FW-4's digests are built.
+scope: monitoring compares the EVIDENTIARY digest when the baseline recorded one as determined and the fetched bytes normalise under the same handler with certainty, through acquire's one function; otherwise raw, and the answer says which. Substance unchanged writes no `modified` and raises no flag. `resolveLinks`' bracket is NOT in scope: D-59 measures it first.
+accepts-when: two fetches differing only in `__VIEWSTATE` read `unchanged`, compared evidentiary, with no flag raised; a real text change reads `modified`; a baseline with no determined digest compares raw and says so. How a liar passes it: normalising everything, so the real-change arm must read `modified`. NEGATIVE CONTROL: compare raw again, and the viewstate arm fails by name.
+added: 2026-09-21 · SCHEDULER #8 (LED-7 S8-3; D-60's DEBT row, traced at the code; keeps its `D-` id).
+
 ### CAP-14 · queued — **A REUSED PART DOES NOT NAME THE CAPTURE ITS BYTES CAME FROM.** The manifest records WHEN (`reused_from_fetched_at`), not WHICH capture fetched them, and `reusedParts` names only the capture that reused. RULED owed by BOB #21 (2026-09-21): for a reused part, who retrieved the bytes is an EARLIER capture. — owner CAPTURE.
 order: after D-389 and behind CAP-13, the same reuse machinery and files, one worker at a time; below CAP-13 because it adds provenance the record omits rather than correcting a figure it overstates (SCHEDULER #6, 2026-09-21; the D-339 worker's item 3, ruled)
 milestone: M2

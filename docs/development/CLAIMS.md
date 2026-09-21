@@ -17152,6 +17152,12 @@ self-linked page's target CHANGED, naming one capture twice), verified at the co
 claim the record cannot support outranks a loud failure (CLAUDE.md §2), and sequenced after D-389 on its `depends-on`
 line. 153 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 4): LED-7 batch S8-3** — D-60 PLACED after D-390: the one trace its last
+disposition asked for, made at the code — `op=monitor` still compares raw bytes and writes `source_status: modified`
+with a re-evaluation flag (the placed half); duplicate detection already folds by the evidentiary digest (C-18.3); the
+links bracket is D-59's to measure first. `kickoffs/SCHEDULER.md` gains two mechanics lines (`git grep -E` has no `\b`
+here; name the public op, never a DO path). 152 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
 
 1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
