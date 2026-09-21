@@ -16317,6 +16317,8 @@ other governed document.
 
 **open as of 2026-09-21** — OPEN while this item builds; released at integration.
 
+**RELEASED 2026-09-21 by CONDUCT #9 at integration.** D-339 LANDED in the merge `7338b442`, pushed to `main` at `cb2ab270`, and branch `worktree-agent-a058ffd54ec0ccb26` is GONE from the remote — integrated, not missing; SCHEDULER #5 closed the row at `1e423768`. The path this block reserved is FREE. The DELEGATION raised beside it stays OPEN: items 1, 2 and 4 are SCHEDULER #6's, item 3 is BOB's.
+
 ## DELEGATION 2026-09-21 CAPTURE (D-339 worker) -> SCHEDULER, one question -> BOB first — **WHAT D-339'S READING OF `reuseDecision` FOUND AND A PROSE-ONLY ITEM MAY NOT FIX: two comments still state the refused stability gate, the two-document floor counts captures rather than pages, and no field names the capture a reused part came from**
 
 D-339 is PROSE ONLY (its accepts-when: no code in the same commit), so what it found in CAPTURE's own code goes to
