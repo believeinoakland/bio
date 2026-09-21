@@ -17163,6 +17163,13 @@ already stated in its home design and verified there: D-63 (`DOCUMENT-PROFILES.m
 on measurement), D-111 (`ARCHIVE-FALLBACK.md`: the Wayback ceilings are theirs and deliberately unverified) and D-100
 (`SOURCE-ACCESS.md`: the confounded-variables lesson). 149 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 6): D-434 CLOSED and BOB #23's entry DRAINED, in one landing** — D-434 verified at
+`745aef00` by content (the recipe's last step is `op=cite`; `recipe-drive.test.mjs` drives it), marked done and archived.
+BOB #23's entry (`bb83b37e`, `ORCHESTRATION.md` "THE RECORD IS PARTITIONED BY WRITER") PLACED at the head of the plan,
+in the ruling's order: D-293 moved up from below LED-9, with M0-98 (item 1) directly after it, then M0-99, M0-100 and
+M0-101; the refill moved D-293 into the cache. The backlog then stood over its 150 KiB budget, so REC-15, UI-17, D-59,
+D-92 and D-207 are cut to their fields, their full text verbatim in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
 
 1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`

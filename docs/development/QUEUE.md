@@ -22,38 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-21 · BOB #23 · THE RECORD IS PARTITIONED BY WRITER, AND A REBASE RE-CHECKS ONLY WHAT BOTH SIDES TOUCHED — FOUR
-ITEMS, IN ORDER (Bob's direction: *"This 'fake' conflict has significantly slowed down development recently"*, via CONDUCT
-#10; and *"there's no need to run excessively more tests than is needed"*).** Design: `docs/development/ORCHESTRATION.md`,
-*THE RECORD IS PARTITIONED BY WRITER* (this commit), whose measurements are the reason; the gate half is CARRIED HERE,
-because `VERIFICATION.md` is at its reading budget. Place at the head of the instrument cluster: it is the estate's
-throughput. Supersedes nothing; item 1 builds on D-293 in the same file.
-
-1. **M0 (FULL GATE PROFILE), with D-293 — one file, one suite, one gate:** `gates.mjs` records its verdict keyed by the
-   tree (D-293); a TARGETED class — a diff touching no `bio-plane/src|checks`, `civicos-ui/`, fleet, installer or
-   package/config file runs the suites that import, spawn or MENTION a changed path (derived at run time and printed, as
-   DOCS is), `coverage --strict` when a test file changed, and plancheck; and `--since`, which after a rebase reads the
-   recorded verdict and re-runs only suites whose inputs intersect files changed on BOTH sides, plus plancheck. **Accepts
-   when** a tools-only diff selects its importers and the register gate, a `src/` edit alongside reads FULL, and a rebase
-   over disjoint docs commits re-runs only plancheck. **The cheap defeat to refuse:** selecting by exact import alone, which
-   misses a suite reading through a computed path, so selection is by MENTION. NEGATIVE CONTROL: stage a `src/` edit with a
-   tools edit, and the class must read FULL.
-2. **M0 (FULL GATE PROFILE): `docs/DECIDED.md` stops being committed.** Untracked and ignored; `decided.mjs` writes it on
-   demand and the seven tools that read it read through one freshness call; the push guard's and plancheck's staleness
-   arms retire, their suites corrected with dated reasons, never exempted. **Accepts when** a ruling edited on two branches
-   merges with no `DECIDED.md` conflict and `decided.mjs "<subject>"` answers from the merged corpus. **The cheap defeat
-   to refuse:** keeping it committed under `merge=ours`, which hides staleness, so an arm asserts it is untracked.
-3. **M0 (FULL GATE PROFILE): one file per NEW CLAIM, DELEGATION, measurement and interface-change entry**, the old files
-   frozen history plus the state lines of their open blocks; ONE reader module yields both for every reader (`plancheck`,
-   `delegations`, `owed`, `ledger`, `decided`, `mintid` …); `CLAUDE.md` §4's claim sentence and the kickoffs corrected
-   in the landing. **Accepts when** two lanes adding entries concurrently merge with no conflict, a line one lane adds to
-   its own block beside another lane's new entry stays in its block, and every reader's counts over the frozen history are
-   unchanged. **The cheap defeat to refuse:** `merge=union`, which makes CONDUCT's detached-line case SILENT, so an arm
-   reproduces that case and asserts the line stays in its block.
-4. **M0 with CONDUCT, after 3: `running` leaves SCHEDULER's rows** for a CONDUCT-owned per-row record written at spawn and
-   removed at integration; `ledger.mjs` and `refill` read it. **Accepts when** CONDUCT writes no line of `QUEUE.md` and a
-   running row still reads `running`. **The cheap defeat to refuse:** writing both places, so an arm asserts one.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
@@ -88,17 +56,6 @@ scope: **FAIL on slack beyond a stated bound, rather than print it.** The file a
 accepts-when: with any one floor left stale by a landing, the guard EXITS NON-ZERO naming that figure, its floor and its measured value; a landing that moves a floor in the same turn stays green. How a liar passes it: gating only the figures currently equal — so the arm asserts the FULL set of floor keys is covered or explicitly exempted.
 NEGATIVE CONTROL: drop one floor by one and the guard fails BY NAME; today it prints and passes.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 2, RE-MEASURED — its own figures no longer reproduce, four others do; see MEASUREMENTS.md).
-
-### D-434 · running — **SPAWNED 2026-09-21 by CONDUCT #10. NOT LANDED, CHECKED BY CONTENT at spawn: on `origin/main` @ `b83e705c`, `RECIPES[capture-a-document-and-ground-a-question-on-it]` (`civicos-ui/app.html:2317`) still ends on `{ surface: "inquiry", op: "inquiryground",` at line 2325. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **A PUBLISHED RECIPE REFUSES THE MEMBER AT ITS OWN LAST STEP.** `app.html`.s `RECIPES[capture-a-document-and-ground-a-question-on-it]`, ends on `op=inquiryground` — which authors the DEC-32 PARTITION over legs that ALREADY EXIST and refuses `NO_BASIS` when there are none. On a fresh capture the member is REFUSED; on a question with legs it regroups them and attaches the document to nothing. The op for this act is `op=cite`. **PART 1 ONLY.** — owner UI.
-order: FIRST. The record telling a member to do what the plane refuses is the record claiming more than it can support, which CLAUDE.md §2 grades above every feature — and it is PUBLISHED, so it is wrong in the member.s hands. One edit plus its arm (SCHEDULER #3, 2026-09-20)
-milestone: M8
-interface: none — part 1 changes no interface.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §0 · Vocabulary, which ALREADY BANS this: *"GROUND PARTITION … is **never a surface word**"* — DEC-32.s elicitation clause 1 bans it from every member-facing surface. The recipe breaks a ban a governed document already states: enforcement, not a new rule.
-depends-on: none.
-scope: **PART 1 ONLY; THE ROW REFUSES TO GROW.** Correct the step and its `why` to `op=cite`, or split into cite-then-ground if the recipe means both — plus one arm that DRIVES it end to end, since its id appears nowhere outside `app.html`. **PART 2 IS NOT PLACED:** no arm of `surface-registry.test.mjs` asks whether a step.s op can perform its act, and BOB ruled it must be SIZED first — inventing a model of every op to judge a `why` string is the citation-invented-to-pass-a-check failure.
-accepts-when: the recipe is driven end to end against the plane and COMPLETES. How a liar passes it: editing the `why` to match the wrong op — so the arm DRIVES it and asserts no refusal, instead of reading text.
-NEGATIVE CONTROL: restore `op=inquiryground` and the drive arm fails by name at `NO_BASIS`.
-added: 2026-09-20 · SCHEDULER #3 (BOB #18.s inbox entry, drained this commit).
 
 ### REC-157 · queued — **A CASE KEEPS ASSERTING A CLAIM ITS PROJECT WITHDREW, AND DEC-19's ONE ROUTE FORWARD — A NEW EDITION — IS REFUSED.** Since REC-135 (IC-166) a published case records the PROJECT's adopted claim; when the project withdraws and concludes again on another claim, `op=publish` still refuses `ALREADY_A_CASE_MEMBER`, whose pin is `#caseRelationOf(id).member` — the finding at its `bundle_sha`, which never moved. — owner RECORD.
 order: SECOND, after D-434: a correction to just-landed work (REC-135, `84a66a30`) failing in the PUBLISHED record — the case says what its project no longer stands on and cannot be corrected forward, CLAUDE.md §2's class; below D-434 only because publishing runs through the operator (DEC-33) (SCHEDULER #5, 2026-09-21)
@@ -140,6 +97,16 @@ scope: the OCCUPANCY half only — before a chip is filed, read the session list
 accepts-when: given a listing with a live session bound to a lane, the judgement REFUSES it and names the occupant; given the same listing with that session stood down, it admits. Driven from a FIXTURE listing, never the live harness. How a liar passes it: matching on title alone — so the arm feeds a session whose title differs and whose `scheduledTaskId` matches.
 NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is admitted, failing by name.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
+
+### D-293 · queued — **THE PUSH GUARD NEVER RUNS `tools/gates.mjs`, AND NOTHING REFUSES A TREE WHOSE RECORDED VERDICT IS RED.** `tools/pushguard.mjs` runs `decided.mjs --check` and refuses a stale push, nothing more. RULED by BOB #22 (SCHEDULER #5's Q4): a push-time gate would not converge — a full gate takes ~25 minutes and `main` took 48 first-parent commits from 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes (M-85) — so the guard READS a recorded verdict. — owner M0.
+order: FIRST, with M0-98 directly below it in the same file (one file, one suite, one gate): BOB #23's entry folds its item 1 in and heads the instruments with it, the estate's throughput (Bob, via CONDUCT #10: *"This 'fake' conflict has significantly slowed down development recently"*); it was after LED-9 (SCHEDULER #8, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section for the half it states; the refusal's design is CARRIED in BOB #22's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293 RULED"), because that file is at its reading budget: the builder adds the refusal's one line in the landing.
+depends-on: none. **Take with M0-98**, whose `--since` reads this row's verdict record.
+scope: `gates.mjs` records its verdict and class keyed by the TREE it measured, only when that tree was CLEAN, untracked under the git common dir; the guard refuses a push whose tip tree carries a RED record, naming it, and says nothing when none exists. **FULL GATE PROFILE**.
+accepts-when: a RED gate then a push of that tree is refused by name; a GREEN, an unrecorded and a changed tree each pass. How a liar passes it: keying on the commit sha, which an amend of the message alone evades, so the arm amends and asserts the refusal holds. NEGATIVE CONTROL: drop the guard's lookup, and the RED-then-push arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; BOB #22's ruling, drained this commit; keeps its `D-` id).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
