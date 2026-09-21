@@ -12643,3 +12643,136 @@ every restore byte-identical. CONDUCT answers FOR the consumer areas, in writing
 **THE DECISION INSIDE IT STAYS PROVISIONAL AND IS BOB'S** — a bearer reaching `memberadd` is not refused — and is
 carried to BOB #22 with this landing's report. **NOT closed by it:** `memberadd` reaches the founder's session alone
 (REC-156's DELEGATION, SCHEDULER's to place).
+
+## IC-172 · I3 + I5: THE PRODUCING GROUP IS ONE RECORDED VALUE PER INSTANCE — a new table `instance_group` (one row, WRITTEN ONCE, purge-exempt) recorded at the store's FIRST BOOT from the installer's `INSTANCE_NAME` or by the root of trust's one seed; two new ops, `op=instancegroup` (read) and `op=instancegroupseed` (root of trust, write-once); `op=promote` STAMPS every created document's `group:` with the recorded value and writes `group_id` from it, reading a caller's `meta.group` only on a store that records none; recording none, a write that states no group is refused `GROUP_UNDETERMINED` (C-64.1) · PROPOSED 2026-09-21 (D-436, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bumps, the classification and the RESOLUTION are CONDUCT's
+
+- **Interfaces:** I3 (plane → UI, the op contracts) and I5 (the store schema). **Versions read off this tree's
+  `docs/development/INTERFACES.md` (base `2bd24da7`): I3 48.0.0, I5 1.23.0.** Read the bases AT RESOLUTION. **The class is
+  CONDUCT's, and what it rests on is measured here, not argued:**
+  - **I5:** ONE new table; no column of any existing table moves. It is NOT derived and NOT purged (identity, `bootstrap`'s
+    and `seq`'s family); `hygiene.test.mjs` lists it among the D-113 exemptions.
+  - **I3:** TWO new ops (additive). **A REFUSAL WHERE NONE STOOD BEFORE:** on a store recording no group, `op=promote` (a
+    creation stating no group in its bytes or its meta), `op=testify`, `op=strengthbar` (no group named),
+    `op=inquirydivide` (a parent whose document names no group) and `op=projectfork` (an origin naming none) now answer
+    `GROUP_UNDETERMINED` (C-64.1) where each used to write the literal slug — IC-25 settles a new refusal as breaking
+    whatever its measured impact. **THE SAME REQUEST, A DIFFERENT RECORD:** on a store recording a group, a creation whose
+    bytes name another group (or none) is stored with the recorded one in its `group:` line and its `group_id`, and the
+    answer's `bundleSha` is the sha of the bytes held (IC-168's and IC-171's reading of a behaviour change). **ONE
+    WIDENING:** a revision's `meta` need not carry a group any longer — the projection keeps the group its creation wrote.
+    `op=strengthbarof` with no group, on a store recording none, answers `ok` with `group: null` and a sentence instead of
+    reading a row keyed by the literal.
+- **Proposer:** RECORD, D-436 worker, branch `worktree-agent-a6dd0a0a3a3a6cc10`, 2026-09-21 —
+  `BIO_State_Rules_Consistency_v1_5.md` §3.1 (the core field `group`) with the design call in D-436's own archived row;
+  the three decisions it needed, (a)–(c), are PROVISIONAL and stated at the site (`store.mjs`, the block after
+  `setPassword`) and in the State Rules amendment of 2026-09-21.
+- **Owner to land it:** `RECORD`; the installer half is DIST's (DELEGATION in `CLAIMS.md`).
+- **The shape.**
+  - `instance_group (id INTEGER PRIMARY KEY CHECK (id = 1), slug TEXT NOT NULL, recorded_at TEXT NOT NULL, source TEXT NOT
+    NULL, recorded_by TEXT)`; `source` is `bootstrap` (recorded at the store's first boot — the `#migrate` pass that finds no
+    `bundles` table — from `INSTANCE_NAME`, checked against the installer's slug grammar; nothing is recorded when the name
+    is missing or malformed) or `seed` (recorded by `op=instancegroupseed`; `recorded_by` the server's stamp). Every writer
+    is an INSERT that does nothing on conflict; no statement updates, replaces or deletes the row (`instance-group.test.mjs`
+    S2 pins it).
+  - `op=instancegroup` — classes admin, member, probe; not mutating. `{ group, recorded_at, source, recorded_by }`, or
+    `group: null` with a `detail` sentence stating that nothing is recorded and what follows from it.
+  - `op=instancegroupseed` — class admin, mutating, POST `{ slug }`. The ROOT OF TRUST's act: named in no `SESSION_OPS`
+    set, and `UNATTENDED_BY_DECISION` cites its OPS row, so a session (the founder's included) is refused
+    `MACHINE_CREDENTIAL_REQUIRED` with that citation. Answers `{ ok, group, recorded_at, source: "seed", recorded_by, note }`;
+    refuses `GROUP_SLUG_MALFORMED` (C-64.2) and `GROUP_ALREADY_RECORDED` (C-64.3, carrying the held `group`,
+    `recorded_at`, `source`). Records for the store the call addresses (`store=scratch` names scratch).
+  - `op=promote` — a CREATION (`base: null`) on a store recording a group, not a replay: `bundle.md`'s top-level `group:`
+    is set to the recorded slug (replaced, or opened before the closing fence), through the catalogue's ONE definition,
+    `withProducingGroup`; the bytes and sha256 are recomputed after REC-141's mint, so a new project's document is
+    written once for its id and once for its group; a document already naming the group in any spelling the catalogue's
+    parser reads as it is left byte-identical. `group_id` is the recorded slug. On a store recording none (or for a
+    replay) `group_id` is the document's own `group:`, else the caller's `meta.group`, else the recorded slug, else
+    C-64.1 before anything is written. A REVISION writes the head's own `group_id` and never reads `meta.group`.
+  - `INSTANCE_GROUP_CHECKS` (`bio-checks.mjs`): C-64.1 `GROUP_UNDETERMINED` (`src/store.mjs #groupUndetermined >
+    is-group-undetermined`), C-64.2 and C-64.3 (`src/store.mjs instanceGroupSeed > is-instance-group-seed`).
+- **Measured consumer impact** — `grep -rl` for `instancegroup`, `group_id`, the literal slug and `op=promote` over
+  `civicos-ui/`, `agent-worker/`, `pdf-worker/src`, `ocr-worker/src`, `newgroup/src` and `tools/` on this branch:
+  - `UI` (`civicos-ui/app.html`) — calls NEITHER new op (0 hits). It COMPOSES the literal: `mdFor` writes it into every new
+    document's bytes and three promote calls send it as `meta.group`. **NOT BROKEN:** on a store recording a group the
+    stamp replaces the line and `meta.group` is not read; on a store recording none it is kept as the caller's own
+    statement, as before. It READS `group_id` (op=projection) for the document page's "In the record of …" line, which now
+    shows the instance's own slug. DELEGATION to UI filed: drop the literal once DIST has seeded this project's instance.
+  - `DIST` (`newgroup/src/index.mjs`) — binds `INSTANCE_NAME` = the slug in `uploadInstall` and `uploadUpdate`; calls
+    `op=bootstrap` (unchanged); calls neither new op. **Nothing in the installer must change for a NEW install.** Every
+    instance installed BEFORE this release records nothing at boot and needs ONE seed per store — DELEGATION to DIST filed,
+    with this project's own instance (`biosmoke7`, whose group is not its worker name) named. The installer's `SLUG_RE`
+    and the plane's `Store.GROUP_SLUG_RE` are pinned equal (S4).
+  - Fleet members — `pdf-worker/src`, `ocr-worker/src`: zero hits for any of the four. `agent-worker`: the literal and
+    `op=promote` appear only in its TEST fixtures; its sources compose no bundle.
+  - `tools/fw21-onpoint-probe.mjs` carries the literal as a probe fixture; `release/` and `newgroup/src/release.mjs` carry
+    the plane's bundle as bytes (DIST's cut).
+  - `bio-plane` suites — **21 named by battery pass one** (`247/268 suites green`), every one CORRECTED with a dated reason
+    at the site and none exempted. THE SETUP PAGE'S BYTES (`acquire`, `conformance`, `counterparty`, `inquiry`): judged AS THE
+    PLANE HOLDS THEM, through the catalogue's `withProducingGroup` — the function the store's stamp calls — beside a pin
+    that the page's own bytes name no group. A STORE THAT RECORDED NO GROUP (`bundle`, `livefire`, `installer` — neutral
+    slugs; `caseproduction`, `d280-strengthbar`, `publish`, `testify`, `testimonyaxis`, `project-mint`, `project-sight`,
+    `projects` — this project's own slug, the one their fixtures already name): the fixture binds the `INSTANCE_NAME` every
+    install binds, so the store records a group at its first boot. TABLES THE NEW OPS MUST ENTER: `d270-refusal-truth`
+    (its pinned literal gains the fifth recorded decision — the pin failing is the pin working, its own comment says so),
+    `gate-reads` (op=instancegroup classified UNGATED: it holds no corpus material), `rung-ladder` (via ONE `RUNG_ABSENT`
+    entry in `src/affordances.mjs`, ground `substrate`), `hygiene` (the D-113 `EXEMPT` entry; the new suite named in the
+    walk census; its REACH floor 36 → 37 from the printed figure). `undesignedclaims` (the amendment's one statement of
+    absence now carries its date, 2026-09-21). `owed-controls` (coverage `--strict`: see the floors below). ONE finding worth carrying: the first
+    `counterparty` correction used the slug `counterparty-fixture`, and the suite's whole-document `/counterparty/` pin
+    then failed on the GROUP line — a pin that reads the whole document for one word is over-strict against any field
+    that happens to contain it; the fixture slug was changed, the pin was not.
+  - `bio-plane/migrate/migrate.mjs` keeps its `fm.group || <literal>` meta fallback, DELIBERATELY: it replays THIS group's
+    own Drive-era record through `op=promote` as a REPLAY, whose bytes are carried verbatim, and on a store recording a
+    group its meta is not read at all. Stated rather than silently left.
+- **What changed, measured through the op** (`instance-group.test.mjs`, 47 assertions, every write through the control
+  plane): a store booted under `INSTANCE_NAME=oak-town` records `oak-town` at its first boot, and so does its scratch store
+  at ITS first boot (B1, B2); claiming the instance moves nothing (B3). EVERY writer then names `oak-town` and nothing else:
+  the member UI's exact shape (the literal in the bytes AND in meta) is stored naming `oak-town`, re-hashed, one `group:`
+  line (W1); a creation stating none gains the line (W2); one already naming it, quoted, is byte-identical (W3); op=testify
+  (W4); a new project, written once for its minted id and once for its group, and its fork (W5); a revision the plane
+  writes, op=conclude (W6); op=livefire's canary in scratch (W7); and over the WHOLE record — every bundle, every text file,
+  live and history — no `believe-in-oakland` anywhere (W8), every live `bundle.md` naming `oak-town` (W8b); a whole-store
+  purge leaves the group (W9). **THE LIAR'S ARM:** the same persisted store rebooted with the var MOVED to `other-town`
+  still records `oak-town`, and documents written after the move name `oak-town` (L1–L4). **DECISION (b):** a store whose
+  first boot had no binding records nothing (P1), a later boot WITH the binding still records nothing (P2), a member
+  bearer and the founder's own session are refused (P3, P4 — the latter `MACHINE_CREDENTIAL_REQUIRED`, citing the OPS
+  row), a malformed slug is refused C-64.2 (P5), the root of trust records it once with the server's stamp over a forged
+  `author` (P6), a second seed is refused C-64.3 and nothing moves (P7), every refusal then lifts (P8), and a document
+  written before the seed is not rewritten (P9). **DECISION (c):** recording none, a caller's own statement of its group is
+  kept (C1, C1b), a creation stating none is refused C-64.1 and writes nothing (C2, C2b), and so are op=testify (C3) and
+  the group default bar, whose read says undetermined (C4). A replay keeps the past's bytes (R1); a malformed binding
+  records nothing (R2). The catalogue's one definition is driven directly (U1–U4) and the store's stamp is pinned to call
+  it (S5); the census of the source (S0, S1), the write-once pin (S2), the reader's pin (S3) and the grammar pin (S4).
+  **Control:** `instance-group.control.mjs`, THIRTEEN arms, all AS DECLARED, run twice (before and after battery pass
+  one's corrections): (a) baseline 47/0 · (b) literal-at-a-call-site 46/1, S1 ALONE — the creation stamp heals it, so the
+  census is what sees it · (c) literal-at-the-authority, THE ROW'S CONTROL, 23/24 · (d) stamp-removed 36/11 · (e)
+  reread-the-var, THE LIAR, 43/4 (S3, L2–L4) · (f) no-first-boot-write 29/18 · (g) seed-at-every-boot 44/3 (P2, P6, P7)
+  · (h) upsert-at-first-boot 46/1, S2 ALONE · (i) seed-accepts-twice 46/1 (P7) · (j) default-when-undetermined 44/3 (S1,
+  C2, C2b) · (k) purge-clears-it 41/6 · (l) stamp-quoted 47/0 · (m) witness-other-spelling 47/0; real sources and the
+  catalogue hashed before and after, untouched.
+- **What it cannot see, stated:** a store written by a build OLDER than this one is simulated by a store whose first boot
+  had no `INSTANCE_NAME` — equivalent by the rule (the first-boot witness is the `bundles` table, which every build
+  creates), but no pre-D-436 build is cut. `divide`, the strength-bar pair's refusal arm and fifteen of the seventeen
+  revision writers are not driven one by one (every creation reaches ONE decision in `promote`, driven from five
+  callers; every revision keeps its creation's group, driven through `conclude`; the census sees a literal reappear
+  anywhere). The monitor tick needs a fetch and is not driven. And nothing here can correct a document ALREADY signed
+  under a wrong producer on an instance installed before this release: its bytes are signed, and no correcting act
+  exists or has been ruled as of 2026-09-21 (the State Rules amendment says so, dated).
+- **DESIGN GAP (State Rules v1.5 §3.1):** the section names `group` and never said where an instance's value comes from,
+  whether it may change, or what it means for a document that came from another group; the example value in §3.1 is one
+  instance's own slug, and the built plane read it as a default. Recorded in the document's Incomplete sections and in its
+  2026-09-21 amendment, with the three decisions marked PROVISIONAL. Not yet ruled, as of 2026-09-21: what a document already
+  SIGNED under a wrong producer can become.
+
+**Suites:** NEW `bio-plane/test/instance-group.test.mjs` (47) and `instance-group.control.mjs` (thirteen arms). CHANGED, each
+with a dated reason at the site: `acquire`, `bundle`, `caseproduction`, `conformance`, `counterparty`, `d270-refusal-truth`,
+`d280-strengthbar`, `gate-reads`, `hygiene`, `inquiry`, `installer`, `livefire`, `project-mint`, `project-sight`, `projects`,
+`publish`, `testify`, `testimonyaxis`. FLOORS moved from the printed figures on the committed tree: `scripts/coverage.mjs`
+`REGISTER_FLOOR` (arms 1552 → 1565, classified 258 → 259, corpus 259 → 260, run 221 → 222) and
+`civicos-ui/check-refusal-codes.mjs` (families 35 → 36, rows 288 → 291, census 598 → 601, reach 341 → 344, governedSites 125
+→ 127, regions 109 → 111, regionLines 2973 → 2991, codesChecked 319 → 323, refusalsJudged 319 → 322 — every figure the old
+floor plus exactly this item's two spans and three codes, per the guard's own per-site line). The subjects' own controls
+re-run after the change: `d270-refusal-truth.control.mjs` 8/8, `rung-ladder.control.mjs` 3/3, `d301-census.control.mjs
+neuter`, `nc-mk1.mjs` (testify's) every arm, and conformance's recorded UI-19 arm (54/3, exactly the three declared) — all
+AS DECLARED, every restore verified.
+
+**RESPONSES:** not yet collected.
