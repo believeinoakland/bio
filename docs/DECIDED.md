@@ -2446,7 +2446,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - — RELEASES, NOT WITHDRAWN. - **WIDENED, named to BOB #19 before the cut:** member sessions reach `adminendorse`, `adminremove`, `membercaps`; the store refuses a `by` that is not an active administrator.  
   `docs/development/kickoffs/DIST-NEXT.md:16`
 - `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only. ## UNDETERMINED, held open — do not let a neighbouring green line convert it  
-  `docs/development/kickoffs/DIST-NEXT.md:57`
+  `docs/development/kickoffs/DIST-NEXT.md:61`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  
