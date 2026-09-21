@@ -93,6 +93,16 @@ scope: STEP 3 reads `git show origin/main:docs/development/QUEUE.md`; STEP -1 fa
 accepts-when: a heartbeat run's `queued`/`running` counts equal those of `git show origin/main:docs/development/QUEUE.md` read at that run, and its sweep names the tip it judged.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 
+### D-412 · queued — **THE ESTATE AUDITS EXPOSURE AND NOBODY AUDITS RESIDUE: a worktree that is registered, clean, merged and owned by no live session is correctly reported `0 EXPOSED` — and reclaimed by nothing.** `strandedwork.mjs` asks *does this work reach anybody* (loss); nothing asks *is this still needed* (cost), and `retirable.mjs` keys on SESSIONS, so a scratch checkout with no session belongs to no sweep. — owner M0.
+order: with the session-hygiene instruments, after M0-84: disk is CONDUCT's binding constraint (M-80 and M-81 each measure ~286 MiB per retired tree) and this names the residue nothing reclaims; below M0-81 and M0-84, which prevent and detect a lane fault rather than a cost (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-398's three conditions asked of a TREE rather than a session.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT in the repo where a suite drives it, the ACT in the harness.
+scope: a residue predicate over `git worktree list` plus a session listing: a tree REGISTERED, CLEAN, MERGED and owned by no live session is RECLAIMABLE, reported with its size. **Do NOT fold it into `strandedwork`**: that arm warns about LOSS, and a cost signal mixed into a loss signal gets both tuned out. **FULL GATE PROFILE** (`tools/`).
+accepts-when: a fixture tree registered, clean, merged and unowned is named RECLAIMABLE with its size; **one a live worker is using is NEVER named** — the over-strictness arm IS the item. How a liar passes it: ignoring ownership, so the live-owner fixture must not be named. NEGATIVE CONTROL: drop the ownership test, and the live-worker fixture is named, failing by name.
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10; keeps its `D-` id).
+
 ### REC-154 · queued — **`kickoffs/RECORD.md` IS 36,709 B AGAINST THE 24,576 B READING BUDGET**, so the lane whose kickoff it is cannot read its own instructions whole — which is the one thing CLAUDE.md's reading budget exists to guarantee. It was already over at 32,259 B before REC-146 appended to it. — owner RECORD.
 order: after D-339 with the corrections: it is not a defect in the product, but it breaks the READING BUDGET doctrine for the busiest build lane, and every RECORD worker pays it on every spawn. Cheap and mechanical (SCHEDULER #2, 2026-09-19)
 milestone: M0
@@ -462,6 +472,16 @@ depends-on: none.
 scope: the fixture adopts a named reading's claim at `op=conclude`, so PATH 3 drives `op=publish` then `op=caseratify` and reads the fence's answer.
 accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that never reached ratify, so the DEAD detector stays. NEGATIVE CONTROL: drop the claim, and PATH 3 prints DEAD by name.
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+
+### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` refuses a present `content_id` that is not a string (REC-84, `47ec7cbd`): the case where an unquoted all-digit id parses as an integer and the leg would silently become a whole-document citation. The two suites that reach the refusal feed a malformed STRING (`"not-an-id"`), never a number. — owner M0.
+order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite can watch it fail; read with D-362 (`node tools/ledger.mjs find D-362`).
+depends-on: none.
+scope: one arm that drives an unquoted all-digit `content_id` THROUGH THE FRONTMATTER PARSE into C-2.8 and asserts the refusal by name — D-362's measured path: `parseScalar` coerces `/^-?\d+$/` to a number before anything reads it. Suites: `content-extent-leg.test.mjs` or `cite-extent.test.mjs`, the worker's choice, stated.
+accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a number, so the arm starts from `bundle.md` text. NEGATIVE CONTROL: treat a non-string `content_id` as absent again, and the arm fails by name.
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
 
 ### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)" segment; give each a standard tally, and the segment leaves the headline.** Suggested by M0-65's worker, routed by CONDUCT #6, 2026-09-19. **It MOVES the assertion total** — the landing states the old and new totals and attributes the delta to the two suites. — owner M0.
 order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
