@@ -1261,9 +1261,9 @@ authority is the file named, never this one.
 - **REC-155** — SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS ARE REACHABLE BY NO SESSION, AND THE PLANE ANSWERS `SESSION_ROUTE_NOT_RECORDED` BECAUSE NOBODY RULED.** The provenance pair and calibration three admit `member`; `livefire` and `reproject` admit `admin` only.  
   `docs/development/BACKLOG.md:107`
 - **REC-155** — (1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md` after §4.9 (before `## 5.  
-  `docs/development/CLAIMS.md:16038`
+  `docs/development/CLAIMS.md:16042`
 - **REC-155** · 2026-09-21 — 4.10 The seven ops no session reached, and no decision explained: RULED 2026-09-21 by BOB #19 (REC-155).** `index.mjs`' `UNATTENDED_BY_DECISION` header names `provenancechain`, `provenanceroute`, `calibrate`, `calibrationsubject`, `calibrationsignal`, `livefire` and `reproject` as refused to every session with no…  
-  `docs/development/CLAIMS.md:16044`
+  `docs/development/CLAIMS.md:16048`
 - **REC-155** — REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches that file) so the two do not collide.  
   `docs/development/QUEUE.md:111`
 - **REC-156** — I10 RULED**: `discoverMembers`/`planeMember` get a registered interface; FLEET drafts it PROVISIONAL from the code; **you confirm it to STABLE** after reading it against the code. - **SCHEDULER #4's placements (`a12e9836`: REC-156, M0-83–M0-90, the M0-82 narrowing, the retirable row) are on its branch…  
@@ -2230,7 +2230,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-21** — CLAIM 2026-09-21 BOB (BOB #19 — MK-3's five doctrine questions RULED into `MEMBER-KNOWLEDGE-DESIGN.md` §4; the CLAIMS.md MK-3 DELEGATION answered; M-75's seventh data point) claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`.  
   `docs/development/CLAIMS.md:15988`
 - Q11 is SETTLED and its answer does not move; what moves is the RECIPE it hands the next worker.  
-  `docs/development/CLAIMS.md:16161`
+  `docs/development/CLAIMS.md:16175`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2443,10 +2443,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
-- NOT `WITHDRAWN`**, which asserts a release BRICKS a 0.58.0 store.  
-  `docs/development/kickoffs/DIST-NEXT.md:84`
-- `v0.59.0`–`v0.63.0` are signed and WITHDRAWN (they brick existing stores): history only. **DELETED as STALE:** "the installer does not install fleet member bundles".  
-  `docs/development/kickoffs/DIST-NEXT.md:94`
+- — RELEASES, NOT WITHDRAWN. - **WIDENED, named to BOB #19 before the cut:** member sessions reach `adminendorse`, `adminremove`, `membercaps`; the store refuses a `by` that is not an active administrator.  
+  `docs/development/kickoffs/DIST-NEXT.md:16`
+- `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only. ## UNDETERMINED, held open — do not let a neighbouring green line convert it  
+  `docs/development/kickoffs/DIST-NEXT.md:57`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  
@@ -2456,9 +2456,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - goes in its `WITHDRAWN` set**, because that loop asserts the release BRICKS a 0.58.0 store.  
   `docs/development/kickoffs/DIST.md:206`
 - count is identical every time because it is bounded by `WITHDRAWN`, which a cut never touches; the PASS count rises with each release ADDED to `RELEASES`.  
-  `docs/development/kickoffs/DIST.md:261`
+  `docs/development/kickoffs/DIST.md:265`
 - CORRECTED: `op=bootstrap` never read the DO's build.** The handler writes `version: env.VERSION` from the isolate that routed the request, then spreads the DO's reply, which is `bootstrapState` (`claimed`, `rearmed`, `consumedAt`) and nothing more.  
-  `docs/development/kickoffs/FLEET.md:251`
+  `docs/development/kickoffs/FLEET.md:260`
 - **2026-09-16** — RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather than by an instrument.** He stands development down in one account — the BOB session retires itself and every lane and worker under it — and only once that account confirms everything is stopped does he open the other…  
   `docs/development/kickoffs/NEW-MACHINE.md:59`
 - `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  

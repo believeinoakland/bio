@@ -16028,8 +16028,12 @@ why: a CUT NOW. `main` carries D-136 (IC-168, I3 46.0.0 MAJOR/BREAKING), integra
   defect is NOT closed by 0.69.0 (IC-168: NARROWED). Shipped-path diff since `v0.68.0` is four plane files, all
   D-136's; the three members' own sources are unchanged, and `release-assemble`'s freshness guard decides whether any
   member artifact moved. Members redeploy in the fleet's order, agent-worker first (IC-130).
+added 2026-09-21, before the edit: `docs/development/kickoffs/DIST.md`, lessons 15 and 18 ONLY — the audit-id baseline
+  and FLEET #3's `op=bootstrap` correction, both measured at this cut.
 
-**open as of 2026-09-21.**
+**RELEASED 2026-09-21 by DIST #3** — 0.69.0 is complete: tag `v0.69.0` = `37d56808` on the mainline; deployed and
+live-verified 12/12; pointer advanced at `69397491`; installer `ae52f03f` read back (embed MATCH, bindings `[]`), its
+bundle on `main` at `9fca4de3`; `DIST-NEXT.md` rewritten from the measured state in the commit that releases this.
 
 ## DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) — **TWO RULINGS PREPARED AND NOT LANDED, BECAUSE BOTH TOUCH FILES D-158 WAS LANDING. Take them in this order once D-158 is on `main`.**
 
@@ -16105,6 +16109,16 @@ probe, the `CASCADE_ORDER` constant, while two of its three levels have no sourc
 BUILT). `11.cascade-sources` is inserted after it as ABSENT, with its `none` probes. **`8.claim`'s old text is
 FALSE.** It says §7.1 item 4 is not built, but REC-135 built it for publication (`#caseConclusionFor`), and a leg
 resting on an inquiry reads NO conclusion at all. The new text says both.
+
+## CLAIM 2026-09-21 FLEET (FLEET #3 — I10 registered: `discoverMembers` and `planeMember`, on BOB #19's ruling)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/INTERFACES.md` (ONE new section, I10, appended at the end; no existing section is touched);
+`docs/development/kickoffs/FLEET.md` (one dated paragraph answering the "CONSUMED ACROSS LANES" section's open
+question); `docs/DECIDED.md` (GENERATED, regenerated last); and this block. The id was minted with
+`node tools/mintid.mjs I`, not read off the file. No code moves: `bio-plane/scripts/fleet-bundle.mjs` is registered
+as it stands.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the section it covers.
 
 ## CLAIM 2026-09-20 RECORD (D-158 — THE ROSTER AND THE GATE ANSWER ONE QUESTION: a signing key is registered to a member who can attest, and `op=signerlist` says which state each key is actually in)
 

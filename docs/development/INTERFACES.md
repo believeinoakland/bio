@@ -1414,3 +1414,67 @@ reproduced), and 134.6 MB is refused in-isolate as a catchable `RangeError`.
   route with the strongest provenance — cannot be decoded in-isolate and is REFUSED BY
   NAME. What share of the image-only class that is has never been measured.
 
+
+---
+
+## I10 — the fleet's discovery descriptors (`discoverMembers`, `planeMember`)
+
+- **ID:** I10
+- **Owner:** `FLEET` (the code: `bio-plane/scripts/fleet-bundle.mjs`)
+- **Version:** 1.0.0 — **PROVISIONAL.** Registered 2026-09-21 by FLEET #3 on BOB #19's ruling of that day, and
+  written FROM THE CODE as it stands on `origin/main` at `790ad66a`. The shape already had seven consuming files in
+  three lanes, and this registry's first rule is that an interface not here does not exist and nothing may be built
+  against it. Registering an existing shape takes no IC; the next change to it is the first. BOB confirms it to
+  STABLE once it has been read against the code.
+- **Consumers** (measured 2026-09-21: `git grep -l` for each name on `origin/main`, then each file's `import` read;
+  the defining file is not counted):
+  - `discoverMembers`: `agent-worker/scripts/build.mjs` and `pdf-worker/scripts/build.mjs` (FLEET);
+    `ocr-worker/scripts/build.mjs` (CONTENT-PDF); `bio-plane/scripts/resolve-version.mjs` and
+    `tools/release-assemble.mjs` (DIST); `bio-plane/test/fleetbundles.test.mjs` (FLEET).
+  - `planeMember`: `bio-plane/scripts/resolve-version.mjs` and `tools/release-assemble.mjs` (DIST);
+    `bio-plane/scripts/build-plane.mjs` (the plane's own bundle build, FL-10); `bio-plane/test/fleetbundles.test.mjs`.
+- **Status:** PROVISIONAL
+
+### The shape
+
+Both are synchronous exports of `bio-plane/scripts/fleet-bundle.mjs`. Neither writes, calls git or touches the
+network. Both return the same DESCRIPTOR:
+
+    { dir: string, name: string, abs: string, bundle: object | null }
+
+- `dir` is the member's directory relative to the repository root, and `abs` is `join(repoRoot, dir)`.
+- `name` is `fleet-member.json`'s `name`, else `dir`.
+- `bundle` is the marker's `bundle` block as written, else `null`. The module reads `entry`, `outfile`, `manifest`,
+  `external` (optional, defaulting to `DEFAULT_EXTERNAL`) and `assets` (optional upload parts; only `ocr-worker`
+  declares any). A `note` key is prose and nothing reads it. A member whose `bundle` is `null` is DISCOVERED and not
+  built, and the gate names it rather than skipping it.
+
+**`discoverMembers(repoRoot = REPO_ROOT)`** reads the tree. It returns one descriptor for every top-level, non-dot
+directory of `repoRoot` that holds a `fleet-member.json` which parses, sorted by `name` (`localeCompare`). A
+directory whose marker is absent or does not parse is skipped without a word: membership IS the marker (D-117,
+discovered and never hand-listed).
+
+**`planeMember(repoRoot = REPO_ROOT)`** reads nothing. It returns the plane's descriptor, built fresh on each call:
+`dir` and `name` are `"bio-plane"`, and `bundle` is `{ entry: "src/index.mjs", outfile: "dist/bio-plane.bundled.mjs",
+manifest: "dist/bio-plane.bundle.json", external: DEFAULT_EXTERNAL }`. The plane is deliberately NOT a
+`fleet-member.json` member, because that marker would enrol it in fleet rules it necessarily breaks, so it does not
+appear in `discoverMembers`.
+
+### What changing it costs
+
+- **The member SET is DIST's version authority and the release's contents.** `resolve-version.mjs` holds every
+  discovered member's version to `bio-plane/package.json`, and `release-assemble.mjs` ships every discovered member
+  that has a `bundle`. A marker added, removed or made unparseable moves both, and the failure surfaces in a
+  release, never in a fleet test.
+- **The FIELDS are read by name.** `name` is read by the three member build scripts, `dir` and `name` by
+  `resolve-version.mjs`, and `abs` and `bundle` by the assembler and by `writeMember`, `verifyStatic` and
+  `verifyFresh`, which every build, the gate and the assembler call. Renaming or retyping a field is BREAKING.
+- **The WALK is shared.** `battery.mjs` and `coverage.mjs` guard the identical walk (`coverage.mjs`'s `FLEET_FLOOR`
+  counts members), and this module's count feeds `GUARDED_FLOOR` in `fleetbundles.test.mjs`.
+- **`planeMember`'s paths are where the plane artifact lives** for the plane build, the gate and the assembler.
+- **The ORDER carries no signed byte.** The assembler re-sorts the fleet by member before building the payload
+  `fleetSig` covers (`release-assemble.mjs`), so a change of sort order is not a release-format change.
+
+**Outside I10, as ruled.** Other exports of the same module are also imported across lanes and are NOT registered
+here: `writeMember` (the three member builds and the plane build), `verifyFresh`, `freshBuildRunnable` and `sha256`
+(the assembler), and `REPO_ROOT` (the assembler and `resolve-version.mjs`). Whether they join I10 is BOB's decision.
