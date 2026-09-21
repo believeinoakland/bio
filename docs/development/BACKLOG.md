@@ -691,6 +691,16 @@ scope: one arm that drives an unquoted all-digit `content_id` THROUGH THE FRONTM
 accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a number, so the arm starts from `bundle.md` text. NEGATIVE CONTROL: treat a non-string `content_id` as absent again, and the arm fails by name.
 added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
 
+### D-40 · queued — **AN INFORMATION FIXTURE STILL WRITES `criticality: "notable"`, WHICH C-2.7 REFUSES, THOUGH ITS ROW SAID IT WAS FIXED.** The catalog's enum is `crucial` or `supporting`; `bio-plane/test/cite-scale.mjs`'s `infoMeta` has built every Information bundle with `notable` since `8c7e7178` (2026-07-25), and D-40's disposition listed that file as fixed. `retrieval-scale.mjs`, `search.test.mjs` and `selection.test.mjs` use `notable` DELIBERATELY as facet and filter DATA, and nothing at those sites says so. — owner M0.
+order: with the probe corrections, after M0-91: a fixture non-conformant for a reason unrelated to what it measures, and a template a later session can copy; no suite is wrong today (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5's *break only the thing*: a fixture illegal for an unrelated reason is a second variable.
+depends-on: none.
+scope: `cite-scale.mjs`'s `infoMeta` writes `supporting`; each deliberate DATA use gets a dated comment at its site saying the illegal value is facet data, never a template. No assertion moves.
+accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the facet DATA too, which rewrites assertions to fix a fixture, so those suites' tallies stay byte-identical.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-40's DEBT row of 2026-07-25, re-measured; keeps its `D-` id).
+
 ### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)" segment; give each a standard tally, and the segment leaves the headline.** Suggested by M0-65's worker, routed by CONDUCT #6, 2026-09-19. **It MOVES the assertion total** — the landing states the old and new totals and attributes the delta to the two suites. — owner M0.
 order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
@@ -757,6 +767,16 @@ depends-on: none.
 scope: a BOUNDED live probe in the scratch namespace — `store=scratch` named on every call, swept after — driving `op=file` with a member token under sequential load over at least the row's eleven bundles; record in `MEASUREMENTS.md` whether a 403 recurs and which `index.mjs` site answered, with the serving build named. A cause found becomes a new row with its fix; none found closes this one as not reproduced at that build, stated.
 accepts-when: `MEASUREMENTS.md` carries the probe with its load, its count and the build; the row closes either way. How a liar passes it: a probe lighter than July's, so the load is stated beside the row's.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
+
+### D-59 · queued — **`contemporaneous`, THE STRONGEST LINK-FIDELITY VERDICT, HAS NEVER BEEN OBSERVED ON REAL DATA, AND MAY BE UNREACHABLE FOR MOST OF WHAT BIO CAPTURES.** It needs one set of bytes observed on both sides of a retrieval (`observations > 1` on one `captured_locators` row); on 2026-07-30 two captures of Legistar's `Legislation.aspx` twelve minutes apart gave two different hashes (per-response viewstate). No measurement since records the verdict firing (`MEASUREMENTS.md` searched 2026-09-21). — owner VERIFY.
+order: with the live verifications, after D-92: a measurement deciding whether a verdict arm earns its complexity, not a defect shipping, since `undetermined` is honest meanwhile (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M3
+interface: none — a probe
+design: `docs/development/LINK-FIDELITY.md`, which defines the verdict and names the establishing routes that do not rest on byte identity: a timestamp token, a third-party archive, monitoring across the interval.
+depends-on: none.
+scope: a BOUNDED live probe in the scratch namespace, `store=scratch` named on every call and swept after: each of N named hosts' pages captured twice at an interval, recording per host whether the bytes repeat (the bracket can fire) or differ (it cannot), with the serving build named in `MEASUREMENTS.md`. Whether the bracket arm stays goes to BOB with the figure.
+accepts-when: `MEASUREMENTS.md` carries the per-host table with N, the interval and the build; the row closes either way. How a liar passes it: hosts chosen for static bytes, so the list includes the municipal ASP.NET class the row measured.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-59's DEBT row of 2026-07-30; keeps its `D-` id).
 
 ### M0-66 · queued — `m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a driver's block comment that names an anchor-bearing shape in backticks reads as a live anchor, and produced TWO … (whole text: the cut archive)
 order: M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)

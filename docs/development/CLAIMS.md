@@ -17001,6 +17001,11 @@ cache is replenished to 8 with M0-97, D-341 and M0-83 by `node tools/ledger.mjs 
 bearer ruling (§4.7); the REC-156 DELEGATION's two state lines are merged into one; the group to BOB carries D-99 in
 place of the ruled bearer question, and D-145 and D-99 carry a dated SENT note.
 
+**AMENDED 2026-09-21, same session (commit 5): LED-7 batch S7-1** — D-33 CLOSED IN FACT (`query.test.mjs` asserts every sortable
+field ends with `bundle_id ASC`); D-40 PLACED after M0-91, RE-MEASURED (`cite-scale.mjs` still writes the illegal `notable`,
+though the row called it fixed); D-59 PLACED after D-92 as a bounded scratch measurement. D-162 carried to the next BOB
+group (doctrine, by its own disposition); D-124 carried until LED-8. 161 open DEBT rows remain.
+
 ## CLAIM 2026-09-21 BOB (#22) — REC-156's bearer and proposer questions ruled into Membership v2 §4.7
 
 claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Membership_Architecture_v2.md`
