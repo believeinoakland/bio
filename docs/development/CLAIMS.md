@@ -16474,6 +16474,10 @@ paragraph records it as a question for Bob and ships the disjunction provisional
 (narrowed to its one unbuilt trace), D-207 and D-92 PLACED under their own ids; D-182 and D-325 SENT to BOB. The held
 group is SENT as the DELEGATION SCHEDULER (#6) -> BOB below, D-182 its fourth question. 180 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 3): LED-7 batch 12** — D-223 CLOSED IN FACT (PL-8's `leg:hunch` arm); D-220
+(narrowed to the investigative session, its consumer (3)) and D-394 (designed in framework §18.1, unbuilt) PLACED under
+their own ids. D-351 and D-311 carried with their next acts named in `SCHEDULER-NEXT.md`. 177 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#6) -> BOB — **FOUR QUESTIONS, ONE EACH, from the D-339 worker's DELEGATION, CONDUCT #7's design items and LED-7 batch 11; none blocks a runnable row**
 
 Recorded here because the repository is the channel; each is also written on its row where it has one, and each stands

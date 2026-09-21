@@ -285,6 +285,16 @@ scope: at case publication the plane stamps the manifest in force for the case's
 accepts-when: a case published under an adopted set names each pair and the hash; adopting a new revision afterwards leaves the published bytes identical; with nothing adopted the document says no manifest was in force. How a liar passes it: recomputing at read time, so the arm moves the lens after publishing and asserts the bytes did not move. NEGATIVE CONTROL: drop the stamp, and the named-lens arm fails by name.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
 
+### D-220 · queued — **THE INVESTIGATIVE SESSION READS SIXTY CAPTURES OF ONE DOCUMENT AS SIXTY DOCUMENTS.** Bob's ruling of 2026-08-06 — link a document's versions and USE that where it helps — is built as a READ: `op=versionchain` (PL-10) exposes the join, `heldMatch` consumes it (D-221, closed) and the UI renders it. `INVESTIGATIVE-SESSION.md` names the session consumer (3), and `agent-worker` calls nine plane ops, `versionchain` not among them. NARROWED to that consumer. — owner FLEET, with SKILL for the doctrine.
+order: after D-84, above the features: a deployed machine role over-counts what the record holds — the false-coverage hazard `STORE-AS-CACHE.md` names — in work a member reads and may accept; a correction to built work (SCHEDULER #6, 2026-09-21, LED-7 batch 12)
+milestone: M9
+interface: I8 consumer of `op=versionchain` (I3, built); no shape moves unless the builder finds one.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §"What the session sees" — *"AND IT MUST READ DOCUMENT VERSIONS AS VERSIONS (D-220, Bob 2026-08-06) … The session is consumer (3) on that row."*
+depends-on: none — `op=versionchain` is built.
+scope: the run reads an address's versions through `op=versionchain` and counts a document once, its versions as versions, wherever it counts or cites held material; the skill doctrine says so. Consumer (2), monitoring per address, is UNJUDGED here: the builder checks it at spawn and states it.
+accepts-when: a fixture holding several captures of one address reads as ONE document with its versions, and a run's coverage counts it once. How a liar passes it: deduplicating by title or text, which merges different documents — so the fixture carries two different documents sharing a title. NEGATIVE CONTROL: drop the chain read, and the one-document arm fails by name.
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
+
 ### UI-74 · queued — **THE ACCEPT CEREMONY IS NOT ON `main`, SO NO SURFACE LETS A MEMBER ACCEPT A MACHINE-PROPOSED READING.** The IS plan's UI-43 built it on `worktree-agent-a9e7e017d06799858` (`fd1e2aec`, 2026-08-09) and it was never integrated (D-397's third branch): `acceptCeremonyOpen`, `ACER_` and `versionaccept` occur 0 times in `origin/main:civicos-ui/app.html`, 3, 16 and 4 times on the branch (2026-09-21). — owner UI.
 order: the first feature, after D-52: DEC-24's member half — the machine proposes, the member concludes — has no door, and the IS plan recorded it done at 43/43; below the corrections because the status authority claims no ceremony (SCHEDULER #5, 2026-09-21)
 milestone: M9
@@ -434,6 +444,16 @@ design: `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connectio
 depends-on: REC-120 (DONE — `determining_pair.selection`, `pair_rule` and C-49.4 present on `main`; verify before building).
 accepts-when: in M-51's fixture a member choosing the p.9 mention makes a p.9 citation answer REACHED with that grade and a p.2 citation answer outside, through the ops; with no choice made every REC-120 answer is byte-identical; a machine credential cannot choose (refused by name); a choice cannot name a mention the document does not carry; `DEBT.md` D-161 CLOSED; construct-status updated if a claim moves (`node tools/status.mjs --check` then … (whole text: the cut archive)
 cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «REC-122». A worker READS IT before building.
+
+### D-394 · queued — **A MEMBER WHOSE CASE RESTS ON A PASSAGE IS NEVER TOLD A NEWER VERSION OF ITS DOCUMENT EXISTS.** A refreshed capture's content rows relate to the old ones by nothing. Framework §18.1 splits the question: *a newer version exists* is answerable TODAY with certainty (`op=versionchain`); *which passage survives* is a candidate at best. Re-extraction of the SAME bytes is built and correct (REC-82). — owner RECORD.
+order: with the M4 product rows, after REC-122: a gap and not an over-claim (§18.1 says so, which is why no instrument catches it), resting on built substrate — the chain (PL-10) and REC-82's carry (SCHEDULER #6, 2026-09-21, LED-7 batch 12)
+milestone: M4
+interface: I3 — a read-time answer the builder names; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 — lazily at READ, never at capture; an answer about a PAIR attached to nothing persistent; extent-match *"a SUFFICIENT signal for a candidate and never as evidence of identity"*, UNDETERMINED where it fails.
+depends-on: none — `op=versionchain` and REC-82 are built.
+scope: as §18.1 — where a cited content row's document has a newer capture at its address, the read says so with certainty and offers the extent-match candidate or UNDETERMINED; NOTHING is written, so a proposal cannot be mistaken for a re-pointing.
+accepts-when: a leg citing a passage whose address gained a newer capture reads *a newer version exists* with its candidate or UNDETERMINED; leg, content row and edge are byte-identical before and after; a single-version document says nothing. How a liar passes it: persisting the candidate, so an arm asserts no table grew. NEGATIVE CONTROL: drop the chain lookup, and the newer-version arm fails by name.
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
 
 ### CAP-11 · queued — DEC-75 ENACTED, act 3 — the export step's CALIBRATION:
 order: runnable since CAP-10 landed (M2 measurement); placement CONFIRMED as SCHEDULER's by BOB #15 (BOB #14's list governed rows added after it) (SCHEDULER, first order audit, 2026-09-18)
