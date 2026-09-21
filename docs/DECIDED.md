@@ -1282,10 +1282,10 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16055`
 - **REC-155** · 2026-09-21 — CLAIM 2026-09-21 BOB (BOB #20 — REC-155 RULED into Membership v2 §4.10, landed AHEAD of D-158; the first ruling of the BOB #19 -> BOB #20 DELEGATION) claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`.  
   `docs/development/CLAIMS.md:16249`
+- **REC-155** — REC-155 RULED** into Membership v2 §4.10 (BOB #19's ruling, one example corrected at the code: a bearer caller's author stamp is `token:<class>`).  
+  `docs/development/kickoffs/BOB-NEXT.md:33`
 - **REC-155** — REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches that file) so the two do not collide.  
   `docs/development/QUEUE.md:63`
-- **REC-156** — I10 RULED**: `discoverMembers`/`planeMember` get a registered interface; FLEET drafts it PROVISIONAL from the code; **you confirm it to STABLE** after reading it against the code. - **SCHEDULER #4's placements (`a12e9836`: REC-156, M0-83–M0-90, the M0-82 narrowing, the retirable row) are on its branch…  
-  `docs/development/kickoffs/BOB-NEXT.md:29`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -2451,8 +2451,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1356`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1368`
-- MK-3's five doctrine questions RULED** (`MEMBER-KNOWLEDGE-DESIGN.md` §4.0–§4.6): the signed bundle never names its author (`observer:<testimony id>`), attribution is the author's own act per (case edition, observation), an unchosen observation blocks only its own use, `name` publishes the handle; two replacement…  
-  `docs/development/kickoffs/BOB-NEXT.md:45`
+- Five more exports were RULED INTO I10, and FLEET landed them as 1.1.0 PROVISIONAL (`e99abfec`). - **THE PUBLICATION BLOCK**, root cause: the user-level auto-mode environment (`~/.claude/settings.json`, `autoMode.environment`) trusted only `supervised-harness-kit`, and `believeinoakland/bio` is PUBLIC and was not  
+  `docs/development/kickoffs/BOB-NEXT.md:35`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:93`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
