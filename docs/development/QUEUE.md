@@ -98,15 +98,15 @@ accepts-when: with any one floor left stale by a landing, the guard EXITS NON-ZE
 NEGATIVE CONTROL: drop one floor by one and the guard fails BY NAME; today it prints and passes.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 2, RE-MEASURED — its own figures no longer reproduce, four others do; see MEASUREMENTS.md).
 
-### D-339 · running — **SPAWNED 2026-09-21 by CONDUCT #9. NOT LANDED, CHECKED BY CONTENT at spawn: `CAPTURE-SCALING.md` names neither `CHOSEN` nor a recency rule on `origin/main` @ `36eaf651` (zero hits). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`CAPTURE-SCALING.md` §Job one AND THE PLANE STATE OPPOSITE REUSE RULES, AND THE DOCUMENT READS AS THE AUTHORITY** — the design gates reuse on `stable_since` older than the window; the built `reuseDecision` gates on RECENCY OF FETCH (24 h), because the stability gate measured live as reusing nothing at all. — owner CAPTURE.
-order: after D-254, with the corrections to landed work and above the features: a builder designing against §Job one designs against a rule THE PLANE REFUSED, which is the design claiming more than it can support — CLAUDE.md §2's class, pointed at a builder rather than a member. Cheap too: prose only (SCHEDULER #2, 2026-09-19)
-milestone: M7
-interface: none — prose in a design document; no code moves
-design: `docs/architecture/CAPTURE-SCALING.md` §Job one, which is the text being corrected, read against `reuseDecision` in the plane, which is the authority the correction adopts.
-depends-on: none. The built rule is already right and measured; nothing is being decided here.
-scope: fold the RECENCY rule and its live measurement into §Job one so the document states what the plane does, and mark the two constants (24 h, `minDocuments: 2`) as **CHOSEN, not measured**, beside the two open questions that still ask for them — the row's own words. The front matter moves in the same commit if the section's stated completeness changes (`CORPUS-STANDARD.md`).
-accepts-when: §Job one describes the recency gate and carries the live measurement that refused the stability gate; both constants are labelled CHOSEN; no code changes in the same commit. How a liar passes it: deleting the stale rule instead of correcting it, losing why it was refused — so the superseded rule stays with its dated reason. NEGATIVE CONTROL: none applies; this is prose, and `corpuscheck` is its arm.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 9; keeps its `D-` id).
+### M0-86 · queued — **BOB'S OWN ACT, NOT A WORKER SLOT (BOB #19 is cutting it by hand, 2026-09-21).** **THE CONSTRUCT MAP HAS 4 BYTES OF HEADROOM ONCE D-158 LANDS, AND OVER BUDGET IT FAILS EVERY GATE.** `docs/architecture/BIO_System_Design.md` is 49,106 B on `origin/main` and 49,148 B on `worker/d158-conduct8` (`b3ae389c`), against the 49,152 B map budget, in `tools/readbudget.mjs`' `CUT` set. The next landing that lengthens a §3 row fails — D-432 adds a table that construct 3's census cell records. — owner BOB (the map's author).
+order: SECOND, by BOB's hand rather than a slot: over budget this file FAILS every landing that grows it, where `RECORD.md` (REC-154) is a WARN; it should land before D-432 does (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 5, re-measured)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each*.
+depends-on: none.
+scope: BOB's stated plan: move each §3 claim's HISTORY into `construct-status.json`'s unrendered `note`, which `node tools/status.mjs <topic>` still prints, so nothing is lost; anything cut from prose is archived VERBATIM.
+accepts-when: `node tools/readbudget.mjs` reads the map under budget, headroom stated in bytes at the landing; `node tools/status.mjs --check` still agrees; nothing that left the map is absent from both the note and the archive.
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
