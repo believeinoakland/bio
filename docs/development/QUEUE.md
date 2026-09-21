@@ -22,6 +22,38 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-21 · BOB #23 · THE RECORD IS PARTITIONED BY WRITER, AND A REBASE RE-CHECKS ONLY WHAT BOTH SIDES TOUCHED — FOUR
+ITEMS, IN ORDER (Bob's direction: *"This 'fake' conflict has significantly slowed down development recently"*, via CONDUCT
+#10; and *"there's no need to run excessively more tests than is needed"*).** Design: `docs/development/ORCHESTRATION.md`,
+*THE RECORD IS PARTITIONED BY WRITER* (this commit), whose measurements are the reason; the gate half is CARRIED HERE,
+because `VERIFICATION.md` is at its reading budget. Place at the head of the instrument cluster: it is the estate's
+throughput. Supersedes nothing; item 1 builds on D-293 in the same file.
+
+1. **M0 (FULL GATE PROFILE), with D-293 — one file, one suite, one gate:** `gates.mjs` records its verdict keyed by the
+   tree (D-293); a TARGETED class — a diff touching no `bio-plane/src|checks`, `civicos-ui/`, fleet, installer or
+   package/config file runs the suites that import, spawn or MENTION a changed path (derived at run time and printed, as
+   DOCS is), `coverage --strict` when a test file changed, and plancheck; and `--since`, which after a rebase reads the
+   recorded verdict and re-runs only suites whose inputs intersect files changed on BOTH sides, plus plancheck. **Accepts
+   when** a tools-only diff selects its importers and the register gate, a `src/` edit alongside reads FULL, and a rebase
+   over disjoint docs commits re-runs only plancheck. **The cheap defeat to refuse:** selecting by exact import alone, which
+   misses a suite reading through a computed path, so selection is by MENTION. NEGATIVE CONTROL: stage a `src/` edit with a
+   tools edit, and the class must read FULL.
+2. **M0 (FULL GATE PROFILE): `docs/DECIDED.md` stops being committed.** Untracked and ignored; `decided.mjs` writes it on
+   demand and the seven tools that read it read through one freshness call; the push guard's and plancheck's staleness
+   arms retire, their suites corrected with dated reasons, never exempted. **Accepts when** a ruling edited on two branches
+   merges with no `DECIDED.md` conflict and `decided.mjs "<subject>"` answers from the merged corpus. **The cheap defeat
+   to refuse:** keeping it committed under `merge=ours`, which hides staleness, so an arm asserts it is untracked.
+3. **M0 (FULL GATE PROFILE): one file per NEW CLAIM, DELEGATION, measurement and interface-change entry**, the old files
+   frozen history plus the state lines of their open blocks; ONE reader module yields both for every reader (`plancheck`,
+   `delegations`, `owed`, `ledger`, `decided`, `mintid` …); `CLAUDE.md` §4's claim sentence and the kickoffs corrected
+   in the landing. **Accepts when** two lanes adding entries concurrently merge with no conflict, a line one lane adds to
+   its own block beside another lane's new entry stays in its block, and every reader's counts over the frozen history are
+   unchanged. **The cheap defeat to refuse:** `merge=union`, which makes CONDUCT's detached-line case SILENT, so an arm
+   reproduces that case and asserts the line stays in its block.
+4. **M0 with CONDUCT, after 3: `running` leaves SCHEDULER's rows** for a CONDUCT-owned per-row record written at spawn and
+   removed at integration; `ledger.mjs` and `refill` read it. **Accepts when** CONDUCT writes no line of `QUEUE.md` and a
+   running row still reads `running`. **The cheap defeat to refuse:** writing both places, so an arm asserts one.
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.

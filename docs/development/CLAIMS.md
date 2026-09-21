@@ -17249,3 +17249,15 @@ claimed: 2026-09-21 by CONDUCT #10, worktree `.claude/worktrees/conduct-10`. Pat
 (M-86, appended), `docs/DECIDED.md` (GENERATED, regenerated last), and this block. The six non-ancestor agent branches
 stay on the remote. The branch deletions happen only after this commit is verified on `main`.
 **released: 2026-09-21 CONDUCT #10** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — THE RECORD IS PARTITIONED BY WRITER (Bob's direction via CONDUCT #10, and his own on re-gating)
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/development/ORCHESTRATION.md` (one RULED section under "COMMUNICATING A CHANGE"); `docs/development/QUEUE.md` (the
+BOB INBOX only: one entry, four items in order); `docs/development/CLAIMS.md` (this block); `docs/DECIDED.md` (GENERATED,
+regenerated LAST).
+
+**NOT CLAIMED:** every other path; `VERIFICATION.md` is at its reading budget, so the gate half's design is CARRIED in the
+inbox entry, as D-293's was.
+
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.

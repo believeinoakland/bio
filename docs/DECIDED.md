@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1363 rulings across 100 documents.
+1365 rulings across 101 documents.
 
 ## DEC-
 
@@ -2409,6 +2409,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:17080`
 - `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§5.4: one RULED paragraph; front matter: one Incomplete bullet for §1.2 and the Status sentence; Contents regenerated); `docs/development/ARCHIVE-FALLBACK.md` (front matter: two Incomplete bullets and the Status sentence; Contents regenerated);…  
   `docs/development/CLAIMS.md:17095`
+- `docs/development/ORCHESTRATION.md` (one RULED section under "COMMUNICATING A CHANGE"); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, four items in order); `docs/development/CLAIMS.md` (this block); `docs/DECIDED.md` (GENERATED, regenerated LAST).  
+  `docs/development/CLAIMS.md:17256`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2713,6 +2715,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/MILESTONES.md:118`
 - Bob already RULED the doctrine** — content > produced by a third-party script, if it is ever evidence, is recorded as produced by > THAT party and not by the hosting site.  
   `docs/development/MILESTONES.md:182`
+- **2026-09-21** — THE RECORD IS PARTITIONED BY WRITER — RULED 2026-09-21 by BOB #23, on Bob's direction Bob, relayed by CONDUCT #10: *"This 'fake' conflict has significantly slowed down development recently."* And to BOB #23 directly: *"there's no need to run excessively more tests than is needed."* Measured that day on `main`: 60  
+  `docs/development/ORCHESTRATION.md:118`
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  

@@ -115,6 +115,30 @@ is for, it belongs in the law.
 8. **When a role splits off yours, the split is not done until the new role's kickoff carries every rule you relied on
    being true of yourself** — swept for, not recalled. A resume prompt is a mechanism and inherits nothing.
 
+### THE RECORD IS PARTITIONED BY WRITER — RULED 2026-09-21 by BOB #23, on Bob's direction
+
+Bob, relayed by CONDUCT #10: *"This 'fake' conflict has significantly slowed down development recently."* And to BOB
+#23 directly: *"there's no need to run excessively more tests than is needed."* Measured that day on `main`: 60
+first-parent landings; `CLAIMS.md` touched by 97 commits and the GENERATED `docs/DECIDED.md` by 88; CONDUCT #10
+re-merged ~9 times, nearly always on `CLAIMS.md`'s tail, while SCHEDULER's own pipeline files never conflicted with it.
+**The larger cost was re-gating:** every docs-only move of `main` re-ran the 41 doc-facing suites (~4 min, waiting for a
+quiet machine), and a tools-only change ran all 267 (M0-83: 2 files import `tools/retirable.mjs`). Rule 1 above,
+extended to whole FILES, in build order:
+
+1. **A rebase re-checks only what BOTH sides touched.** The gate records its verdict keyed by the tree it measured
+   (D-293); after a rebase only the suites whose inputs intersect files changed on both sides re-run, plus plancheck. A
+   change touching no plane, UI, fleet, installer or package file runs only the suites that import, spawn or mention what
+   it changed (TARGETED); a plane change stays FULL, and CONDUCT's integration batches keep running FULL.
+2. **A generated index is not committed.** `docs/DECIDED.md` is produced on demand; `tools/decided.mjs` stays the one
+   source (`CLAUDE.md` §1), so nothing merges it and the push guard stops refusing it as stale.
+3. **A file several lanes append to becomes one file per entry.** New CLAIM, DELEGATION, measurement and interface-change
+   entries are each their own file; the old files are frozen history plus the state lines of blocks still open; one
+   reader module yields both, and any single-file view is generated.
+4. **A lane writes only its own files:** CONDUCT's `running` word leaves SCHEDULER's rows for a CONDUCT-owned record.
+
+Until each lands: SCHEDULER batches its docs landings to one per wake and holds `main` while CONDUCT lands (live
+2026-09-21); appends at a tail are resolved by carrying both sides, each line kept in its own block.
+
 ### The failure modes, with their receipts
 
 One line each; the full rows are in the archive.
