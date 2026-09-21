@@ -191,6 +191,16 @@ scope: the four gain `member` in `classes` and both `SESSION_OPS` sets; `members
 accepts-when: an enrolled administrator performs all four from their session, attributed to them; a member is refused by name. How a liar passes it: widening the class without the roster check, so the member arm must refuse. NEGATIVE CONTROL: drop the roster check, and the member arm fails by name.
 added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
 
+### REC-162 · queued — **A FOUNDER-ONLY OP'S REFUSAL CALLS AN ENROLLED ADMINISTRATOR A NON-ADMINISTRATOR.** Five ops sit in `SESSION_OPS.admin` and not `SESSION_OPS.member`; a member-kind session refused one gets `SESSION_ROLE_CANNOT_REACH_OP`, whose sentence says the op *"is reserved to an administrator of this group"* and that the caller's role is `member`, false of an enrolled administrator. RULED by BOB #23: `op=governorconfig` is the OPERATOR's act. — owner RECORD.
+order: back to back after REC-159, the same two suites (`d270-refusal-truth`'s ROLE literal, `adminvote` §8f), the second re-reading the first's pins; a false refusal sentence, CLAUDE.md §2's class (BOB #23's entry, 2026-09-21; SCHEDULER #7)
+milestone: M8
+interface: I3 — the refusal's sentence; the integrator classifies it in IC-55's family.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE* (BOB #23, 2026-09-21).
+depends-on: none; true of all five today. **Sequence after REC-159.**
+scope: the (b) refusal says WHICH session reaches the op, derived from the set that reaches it: an op only `SESSION_OPS.admin` reaches is *reserved to the founder's session*, never an administrator's. `index.mjs`' two `governorconfig` comments (*"the same line memberset and signerset draw"*; *"the same as the roster ops above"*) corrected: its line is §4.8's. `d270-refusal-truth`'s `/administrator/` assertion corrected with a dated reason, never exempted.
+accepts-when: an enrolled administrator and a member, each refused `governorconfig`, read the founder's-session sentence; the founder's session and the ADMIN_TOKEN bearer still set an appetite. How a liar passes it: moving `governorconfig` into both sets, so an arm asserts the enrolled administrator is still REFUSED. NEGATIVE CONTROL: restore the administrator sentence for a founder-only op, and the arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
 ### REC-155 · queued — **SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED (§4.10): FIVE GAIN SESSION REACH, TWO ARE UNATTENDED BY DECISION. LANDING 1 of 2.** The plane answers all seven `SESSION_ROUTE_NOT_RECORDED` today, and its header calls them *"UNDETERMINED rather than decided"* (`index.mjs`). — owner RECORD.
 order: where it stood, below the ledger tooling, now with its design (BOB #20's entry): the plane is honest here — a determination was owed, not a defect shipping — and this landing refuses nobody (SCHEDULER #5, 2026-09-21; placed by SCHEDULER #3, 2026-09-19)
 milestone: M8
