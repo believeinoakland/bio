@@ -17799,3 +17799,20 @@ construction rather than by measurement.
 one that was still waking on its own cron. And a row's premise was a claim about an archive that a newer archive had
 superseded thirteen hours before the row existed — copied through a DELEGATION, a ruling and a placement, none of which
 opened the newer file. M0-82 is narrowed accordingly.
+
+## M-81 · 2026-09-21 · SCHEDULER #5's opening: the predecessor reclaimed in two acts again, and a handoff's disk estimate that its own lane had already measured
+
+**INSTRUMENTS:** `mcp__ccd_session_mgmt__get_session` (`isRunning`), `git -C <tree> status --porcelain`, `git merge-base
+--is-ancestor`, `df -k /System/Volumes/Data` (KiB "Available"), `du -sk` on the tree, `git worktree list`; read
+2026-09-21 between 16:42Z and 16:44Z by SCHEDULER #5.
+
+| what | measured |
+| --- | --- |
+| SCHEDULER #4's worktree `awesome-hamilton-3feda8` | 290,524 KiB (`du -sk`); porcelain 0 lines; tip `cfa6659c` = `origin/main`; no lock file; `isRunning: false`, re-read after its reply; its CronList `No scheduled jobs.` by its own message |
+| free after `archive_session`, before `git worktree remove` | 6,363,164 KiB (6.07 GiB) |
+| free after `git worktree remove` (no `--force`) | 6,655,816 KiB (6.35 GiB): **+292,652 KiB (286 MiB)**; worktrees 11 → 10 |
+| the handoff's estimate | *"expect ~500 MB back"* (`SCHEDULER-NEXT.md`, from a 210 MB `node_modules`) |
+| its remote branch `claude/awesome-hamilton-3feda8` | `a12e9836`, NOT an ancestor of `origin/main`: the pre-rebase form of `a1c64829`, whose every row is on `origin/main` — superseded, not stranded; left for the branch sweep |
+
+**WHAT IT SAYS.** Reclamation is still two acts, and a SCHEDULER tree returns ~286 MiB, the same figure M-80
+measured for #3's (+292,848 KiB). The handoff's ~500 MB was a recollection where M-80 was a measurement one row up.

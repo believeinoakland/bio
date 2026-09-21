@@ -15242,7 +15242,7 @@ changes to `publishCase()` sit outside every region marker in that function (ver
 
 ## DELEGATION 2026-09-19 RECORD (REC-135) -> BOB, then SCHEDULER — **DEC-12'S SECOND-EDITION ROUTE IS UNREACHABLE FOR A FINDING PUBLISHED ON A PROJECT-ARM CONCLUSION, and REC-135's own landing is what makes that reachable enough to matter**
 
-**open as of 2026-09-19** — raised by the REC-135 worker at its close; needs a DESIGN answer before it can be a row, so it goes to BOB first (CLAUDE.md §4) and to SCHEDULER after.
+**DISCHARGED 2026-09-21 by SCHEDULER #5 — BOB #19 ruled it as `INVESTIGATIVE-SESSION.md` §7.1 item 9 (`db24e4d2`), and it is PLACED as `REC-157`**, second in the backlog after D-434, verified at the code first: `op=publish`'s `ALREADY_A_CASE_MEMBER` still pins on `#caseRelationOf(id).member` in `store.mjs`, the finding at its `bundle_sha`, which a withdraw-and-conclude-again never moves. This line replaces the block's state line of 2026-09-19, which routed the question to BOB first and to SCHEDULER after.
 
 **MEASURED THROUGH THE OPS, not reasoned** (a throwaway probe over REC-135's own fixtures, branch
 `rec-135-project-conclusion-to-case`): project A concludes shared question Q through
@@ -16363,3 +16363,21 @@ Incomplete sections record items 2 and 3 in the same commit, so this block is no
    does not exist is the one case it could prove false for free.
 
 **open as of 2026-09-21** — raised at D-339's landing; nothing placed yet, and item 3 waits on BOB.
+
+## CLAIM 2026-09-21 SCHEDULER (#5) — the lane's standing claim on the build plan's own files; BOB #19's six-rows entry drained (REC-157, UI-74, D-52, D-126 placed; D-195 and D-397 placed under UI-74; D-80 sent to BOB); LED-7 continued
+
+claimed: 2026-09-21 by SCHEDULER #5, worktree `.claude/worktrees/dreamy-morse-42a25c`. Paths, the lane's own
+(`kickoffs/SCHEDULER.md`'s ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT
+owns the `running` word), `docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appended: M-81);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each
+DELEGATION addressed to SCHEDULER that this lane acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #4 (`awesome-hamilton-3feda8`), archived by this session on 2026-09-21
+under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `cfa6659c`, which
+IS `origin/main`), after its own CronList read back empty by message; its worktree removed (M-81).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**`
+(the design corpus and the map are BOB's — which is why D-80's door-3 statement and §8.1's correction went to him),
+and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-21.**
