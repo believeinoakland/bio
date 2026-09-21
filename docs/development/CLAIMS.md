@@ -17184,3 +17184,10 @@ D-55 SENT to BOB as the DELEGATION SCHEDULER (#8) -> BOB below. 154 open DEBT ro
    rendered capture is used as evidence?
 
 **open as of 2026-09-21** — sent to BOB #23 by message; each row carries a dated SENT note in `DEBT.md`.
+
+## CLAIM 2026-09-21 BOB (#23) — the handoff to BOB #24, written as a CHECKPOINT while live
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~21:30Z), `docs/DECIDED.md` (GENERATED,
+regenerated LAST), and this block.
+**released: 2026-09-21 BOB #23** — landed in the same commit as the file it covers.

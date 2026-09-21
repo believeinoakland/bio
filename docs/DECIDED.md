@@ -252,8 +252,6 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:1654`
 - **DEC-70** · 2026-09-21 — M9 · CLOSED 2026-09-21 by BOB #22, IN FACT — all six sites are resolved, and site (c), the one this row was re-sent to BOB for, was RULED BY BOB ON 2026-09-10 as DEC-70 (`docs/development/DECISIONS.md`, answered and enacted): *severance discharges SUPPORT, never CONNECTION*, so `reevaluations` counting a severed…  
   `docs/archive/ledgers/DEBT-closed.md:144`
-- **DEC-70** · 2026-09-10 — Q2 was already RULED BY BOB on 2026-09-10 as DEC-70**, so D-280 closed in fact.  
-  `docs/development/kickoffs/BOB-NEXT.md:39`
 - **DEC-72** · 2026-08-10 — AMENDED 2026-08-10 (DEC-72, Bob): the third "phase" is now its own OBJECT.** The > collapse below STANDS for inquiry and finding — one recursive object, a finding being > an inquiry that reached a conclusion.  
   `docs/architecture/BIO_Case_Making_v0_1.md:493`
 - **DEC-72** — REDESIGN, RULED BY BOB.** A notification, not a copy (ORCHESTRATION's rule, and this entry was trimmed the same day for violating it): **the ruling is DEC-72; the design, its implications, the supersession table, AND the decomposition (CASE-1 … CASE-6, all M10, IC protocol against I3/I5) are…  
@@ -414,6 +412,8 @@ authority is the file named, never this one.
   `docs/archive/research/BUILD-ORDER.md:121`
 - **D-144** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2): LED-7 batch 11** — D-144, D-143, D-199 and D-184 CLOSED IN FACT; D-84 (narrowed to its one unbuilt trace), D-207 and D-92 PLACED under their own ids; D-182 and D-325 SENT to BOB.  
   `docs/development/CLAIMS.md:16497`
+- **D-145** — `43cd0caf` + `19a0efb6` — SCHEDULER #7's four questions RULED:** D-145 and D-99 are M6's, designed together when M6 is taken up (State Rules front matter §1.2; `ARCHIVE-FALLBACK.md`); DEC-70 folded into State Rules §5.4; D-355's two driver rules folded into `VERIFICATION.md`'s D-331 section (24,561 of 24,576 B —…  
+  `docs/development/kickoffs/BOB-NEXT.md:43`
 - **D-151** — ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`, `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine callers are DISTINGUISHABLE.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3447`
 - **D-156** · 2026-08-02 — AMENDED 2026-08-02 by Bob, and the correction is larger than the vocabulary split:** the USER TYPE list is not one archetype.  
@@ -2601,8 +2601,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1369`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1381`
-- BOB #22 RULED its Q1 and Q2 into Membership v2 §4.7 (*WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH*).  
-  `docs/development/kickoffs/BOB-NEXT.md:22`
+- `c31b8f60` — CONDUCT #10's Q3 RULED:** `governorconfig` is the OPERATOR's act (founder's session + ADMIN_TOKEN bearer), not an administrator's (Membership v2 §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE*): a host's configured appetite outranks the hosting account's `GOVERNOR_APPETITE_PER_MIN`, and §4.8 keeps…  
+  `docs/development/kickoffs/BOB-NEXT.md:35`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
