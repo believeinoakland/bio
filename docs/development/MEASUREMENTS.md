@@ -17919,3 +17919,33 @@ the D-254 worker.
 copy safe could not survive the copy's deletion as a comparison, so it became an import pin and a behavioural one. The larger
 finding is the harnesses: three control drivers around this one guard had stopped measuring (an abort, an abort, a typed
 figure), and the one that reported a wrong arm still exited 0. None of it showed until something moved their subject.
+
+## M-84 · 2026-09-21 · REC-156 — who calls `op=memberadd`, with which credential, and with a body `by`: the census a bearer refusal would have to answer
+
+**INSTRUMENTS:** three scanners run 2026-09-21 by the REC-156 worker over its tree at `be829dbd` (`origin/main` @
+`2eaf5ebd` plus one `CLAIMS.md` block); scratch instruments, not committed, so their RULES are stated here. (1) Every
+occurrence of `memberadd` / `memberAdd(` in `bio-plane/{src,test,scripts,checks}`, `tools/`, `civicos-ui/`,
+`agent-worker/`, `pdf-worker/src`, `ocr-worker/src` and `scripts/`, with a `by` key sought in the same statement.
+(2) Every call whose body is passed by VARIABLE or helper, because (1) reads an inline object only. (3) Each call site in
+`bio-plane/test` classified by the token expression in its own URL (`token=${X}` / `token=X`) or its helper's credential
+argument: BEARER when it is a constant bound to an operator binding (`ADM`, `ADMIN`, `PROBE`, `TOKEN_OF.admin`) or a
+literal `adm-*` / `admin-*` / `t-admin-*`, SESSION when it names a login result, and every other site PRINTED and read
+by hand, never scored.
+
+| what | measured |
+| --- | --- |
+| scanned by (1) | 704 files, 221 occurrences; 1 carried an inline `by` (`adminvote.test.mjs`' `enrol`) |
+| found only by (2) | `membership.test.mjs`' §4.7 drive — `by: "admin"` through its `add` helper, at the Durable Object |
+| `bio-plane/test` call sites | 135, in 502 files (258 of them `*.test.mjs`) |
+| BEARER callers | 101 files by the classifier + 3 it missed, read by hand (`airun-projectgate`, `gate-reads`, `inquirystrength`: `t-admin-*` literals its pattern did not admit): **99 battery suites** and **5** non-battery (`accepts-without-reading.measure`, `curated-producer.probe`, `d216-sharing.probe`, `mk1-publish-probe`, `mk2-pristine-probe`) |
+| SESSION callers | `founder-sight.test.mjs` (the founder's), `members.test.mjs` (the founder's session invites; a member session is refused), `admission-gate.test.mjs` (a member session, refused) — no enrolled administrator's session reaches the op at all |
+| the Durable Object driven directly | `membership.test.mjs`, `projects.test.mjs` |
+| printed and read by hand | 18 sites: prose, the three `t-admin-*` suites, member/`ai` credentials that are refused, and `vf4-live-scratch.mjs` |
+| sites sending `by` in the op's body | **2** — the two named above, both corrected in REC-156's landing |
+| non-test callers | `bio-plane/src/setup.mjs` `#m-add` (the founder's SESSION; body `{memberId, cover}`); `vf4-live-scratch.mjs` (LIVE; ADMIN bearer; no `by`) |
+| `civicos-ui/`, `newgroup/`, `agent-worker/`, `tools/`, `scripts/` | zero calls (`newgroup/`'s hits are the embedded plane bundle; `civicos-ui/`'s are suites) |
+
+**WHAT IT SAYS.** The bearer route to `memberadd` is how this estate creates members: refusing it as C-32.17 refuses the
+three governance ops would break 99 battery suites, five probes and a live verification, while REC-156's stamp already
+leaves a bearer's `by` naming nobody. **WHAT IT CANNOT SEE:** a caller outside this tree (a script a group wrote against
+its own instance), a body assembled by string concatenation, and a call through an op name built at run time.

@@ -1632,9 +1632,17 @@ const PROJECT_ACTIONS = ["projectinvite", "projectjoin", "projectleave", "projec
    administrator's own field is not editable at all (4.4 defeated by arithmetic
    otherwise), and the store refuses that case by name. It is the same
    bearer-only state and the same fix.
-   NOT `memberadd`/`memberset`: they already hold session reach, they take their
-   own `by` at the store, and widening this array to them would be a reach change
-   wearing this item's costume. */
+   NOT `memberadd`/`memberset` — CORRECTED 2026-09-21 by REC-156, because only one
+   of this sentence's three clauses was true. It read: *"they already hold session
+   reach, they take their own `by` at the store, and widening this array to them
+   would be a reach change wearing this item's costume."* `memberSet` takes NO `by`
+   at all, and `memberadd`'s session reach is the FOUNDER'S alone (`SESSION_OPS.admin`
+   — this block's own measurement). Its `by` WAS the caller's: the §4.7 forgery this
+   array closed for three ops, alive in a fourth. REC-156 stamps it by its OWN
+   disjunct on the `by` stamp, NOT by joining this array — and the reason is the
+   clause that stays true: this array also spreads MEMBER-set reach and the operator
+   fence, and moving either is a reach change and a refusal nobody ruled. The stamp
+   site says what was decided about a bearer, and that it is provisional. */
 const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];
 /* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
    member reaching confirm is refused by the store with ADMIN_ONLY, which says
@@ -9772,8 +9780,34 @@ export default {
        nobody supplies its subject. `memberCaps` gains the same argument and the
        same check in this landing, so the stamp is READ on all three rather than
        being recorded and trusted. */
+    /* REC-156 adds `memberadd` — D-136's sentence in the one op that ruling did
+       not name. `Store#memberAdd` WRITES the proposer's `admin_votes` ('add') row
+       when an addition needs §4.7's consensus, and the voter it wrote was whoever
+       the caller put in `by`, so a proposal could carry one endorsement in another
+       administrator's name. Now the SERVER names the proposer, and the store's
+       relay reads it from the query, never the body: a proposal records its
+       proposer's own endorsement and nobody else's.
+       ITS OWN DISJUNCT, NOT `GOVERNANCE_ACTIONS`: that array also spreads
+       MEMBER-set reach and the operator fence, and REC-156 moves neither.
+       A SESSION stamps its member — the FOUNDER'S (`admin`), because
+       `SESSION_OPS.admin` is the only set holding this op, and the store counts
+       the founder an administrator only where a claim was spent. A BEARER stamps
+       `class:<cls>`, which is on no roster: it opens a proposal and endorses nothing.
+       **PROVISIONAL, AND BOB'S TO RULE: a bearer reaching `memberadd` is NOT
+       refused** the way C-32.17 refuses one at the three ops above. MEASURED
+       before choosing (MEASUREMENTS M-84): 99 battery suites, five probes and
+       FLEET's live VF-4 run create their members through a bearer `memberadd`;
+       `setup.mjs`, the one non-test caller, posts with the founder's SESSION.
+       With this stamp a bearer's `by` names nobody, and what the op still does for
+       one — an invitation, §4.2's second administrator, a proposal awaiting every
+       administrator — attributes no act to any administrator and is the
+       ADMIN_TOKEN holder's by §4.6. C-32.17's sentence (*"a vote it delivered
+       would be attributed to whoever the caller named"*) would be FALSE here,
+       which is D-270's class. REVERSING IT costs one disjunct on the fence above
+       and a founder-session fixture for every caller named in M-84. */
     if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op)
-        || op === "projectparticipants" || op === "projectownerarith")
+        || op === "projectparticipants" || op === "projectownerarith"
+        || op === "memberadd")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* IS-6 / §14a, DEC-27(b), DEC-55.4: THE PLANE-CREDENTIAL PRINCIPAL on a run,
        decided by the SERVER from the credential that authenticated and set after

@@ -154,7 +154,18 @@ console.log("\n--- administrator status cannot be stripped (4.4) ---");
 
 console.log("\n--- adding an administrator past the second needs consensus (4.7) ---");
 {
-  const r = await add({ memberId: "third", cover: "the third", role: "admin", by: "admin" });
+  /* CORRECTED 2026-09-21 (REC-156), NEVER EXEMPTED, and the old spelling was WRONG
+     for D-136's reason one op over. This drive sent `by: "admin"` in the BODY and the
+     store read the proposer from there — so the endorsement the proposal carried was
+     whoever the caller named, which is the §4.7 forgery REC-156 closed in the op
+     D-136's ruling did not name. `memberadd`'s `by` now arrives in the QUERY, stamped
+     by index.mjs and relayed by the store over any body copy, and a body `by` is read
+     as nobody. MEASURED: run unchanged against the fixed store, this block failed ten
+     assertions from "naming who has yet to endorse" and the suite threw before its
+     foot. So it writes the stamp itself through `gov`, as it does for the three ops.
+     The assertions are UNCHANGED: the founder's proposal still carries the founder's
+     endorsement, and only second is awaited. */
+  const r = await gov("/memberadd", { memberId: "third", cover: "the third", role: "admin" }, "admin");
   t("the invitation is not issued outright", r.ok, false);
   t("it opens a proposal instead", r.reason, "CONSENSUS_REQUIRED");
   t("naming who has yet to endorse", r.awaiting, ["second"]);

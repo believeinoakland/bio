@@ -1312,6 +1312,18 @@ const REGISTER_FLOOR = {
      suite UNTRACKED and the reproducible figures were still 1539/257/258/220 (D-238). Nothing
      FELL. ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and
      in the FLEET block far below. */
+  /* MOVED 2026-09-21 by REC-156 (worktree `agent-a45dec7af75234c20`, branch
+     `worktree-agent-a45dec7af75234c20`, base `2eaf5ebd`): arms 1539 -> 1543 and NOTHING
+     else, from this item's own green `--strict` run PRINTED ON ITS COMMITTED TREE 397ff618
+     (`REGISTER FLOOR arms 1543/1539 · classified 257/257 · corpus (suites read) 258/258 ·
+     GREW by 4 arm(s)`, and `220 RUN … floor 220/220`), never counted and never added by
+     hand. The cause is ONE declaration: `test/adminvote.test.mjs` now states eleven arms
+     (a)–(k) where it stated seven — REC-156's four for `op=memberadd`'s `by`, run by
+     `test/adminvote.control.mjs`. No suite was added, so `classified`, `corpus` and `run`
+     do not move. Nothing FELL. */
+  /* MERGED 2026-09-21 by CONDUCT #10, integrating D-432 and REC-156 in one batch: BOTH moved `arms` from 1539
+     (D-432 +9, REC-156 +4) and neither moved it from the other's figure. ONE KEY, re-read from the `--strict` run
+     PRINTED ON THE COMMITTED MERGE (D-238: an uncommitted merge reads short) — never the sum typed in. */
   arms: 1548,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
