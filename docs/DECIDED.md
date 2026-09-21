@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1324 rulings across 100 documents.
+1325 rulings across 100 documents.
 
 ## DEC-
 
@@ -542,6 +542,8 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Distribution_v0_1.md:12`
 - **D-260** · 2026-09-21 — RULED 2026-09-21 (D-260; the assistant's §6), NOT BUILT: the deploy carries no such secret yet | | WARC/Memento interchange; capture-byte custody at scale | M6's absorbed debt (D-99; the R2 growth question) — not designed | | the front page a group sees; the wizard saying what an absent member costs | built as…  
   `docs/architecture/BIO_Distribution_v0_1.md:115`
+- **D-260** · 2026-09-21 — D-260 is RULED** (BOB #22, 2026-09-21; the assistant's §6, and `QUEUE.md`'s BOB INBOX entry): its item 2 is DIST's, AFTER item 1 (the plane's caller, RECORD with FLEET) — install and update carry ONE organisation-principal `ai` credential as a deploy secret the way `DAEMON_TOKEN` is carried, never in the record,…  
+  `docs/development/kickoffs/DIST-NEXT.md:59`
 - **D-260** · 2026-09-21 — 2026-09-21 · BOB #22 · D-260 RULED — AN INSTANCE MAY HOLD ONE ORGANISATION-PRINCIPAL `ai` CREDENTIAL AND RESUMES ONLY THE RUNS IT OPENED (SCHEDULER (#5)'s Q3).** Design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260 paragraph (this commit); the deploy half is `BIO_Distribution_v0_1.md` §6's…  
   `docs/development/QUEUE.md:69`
 - **D-263** · 2026-08-09 — D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED** item: D-263 (existing row, raised by M0-20).  
@@ -2548,7 +2550,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - — RELEASES, NOT WITHDRAWN. - **WIDENED, named to BOB #19 before the cut:** member sessions reach `adminendorse`, `adminremove`, `membercaps`; the store refuses a `by` that is not an active administrator.  
   `docs/development/kickoffs/DIST-NEXT.md:16`
 - `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only. ## UNDETERMINED, held open — do not let a neighbouring green line convert it  
-  `docs/development/kickoffs/DIST-NEXT.md:61`
+  `docs/development/kickoffs/DIST-NEXT.md:64`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  

@@ -56,7 +56,10 @@ build under a DISTINCT field — is with SCHEDULER, fix named by FLEET #3. Until
    blocked on DS-3 (its member half landed `f5ed2bfa`). The member/project token SURFACES are a design question BOB #19
    carried to Bob with a recommendation. **biosmoke7 has NO INSTANCE_CLAUDE_TOKEN binding and `.env` has none.** DIST's
    next act here comes only when D-260's caller exists: configure the secret (it arrives on the clipboard, never
-   printed) and prove it by a whoami-class use.
+   printed) and prove it by a whoami-class use. **D-260 is RULED** (BOB #22, 2026-09-21; the assistant's §6, and
+   `QUEUE.md`'s BOB INBOX entry): its item 2 is DIST's, AFTER item 1 (the plane's caller, RECORD with FLEET) — install and
+   update carry ONE organisation-principal `ai` credential as a deploy secret the way `DAEMON_TOKEN` is carried, never in
+   the record, denylisted by `tokens.mjs` on publication. Not runnable until item 1 lands; look up its placement (`ledger.mjs find D-260`).
 4. **Carried, NOT re-verified:** tags v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline (`9ed18019`);
    `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only.
 
