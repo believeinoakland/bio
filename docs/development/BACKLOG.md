@@ -275,6 +275,16 @@ scope: a generator raising `export-performed` to EVERY administrator's queue whe
 accepts-when: one export writes one item per administrator, each naming the `export_log` row, and a non-administrator gets none; `mintid N` mints. How a liar passes it: raising to the exporter alone, so the arm counts EVERY administrator. NEGATIVE CONTROL: drop the generator, and that arm fails by name.
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
 
+### D-84 · queued — **A PUBLISHED CASE DOES NOT NAME THE BIAS LENS IT WAS HELD TO.** DEC-54 (d) and the bias design require every work product to cite its BIAS MANIFEST — the (bias bundle, revision) pairs in force and a hash of the effective set — travelling with publication. The plane computes it (`op=biasmanifest`, `statements_sha`) and pins each adoption (`bias_adoptions`), and no publication path writes it: `published_cases` holds the authored `bias_acknowledgement` and REC-44's container manifest, no lens. NARROWED: the rest of D-84 is built. — owner RECORD.
+order: directly after D-52, above the features: DEC-20's *disclosed* — the manifest SHOWN in the artifact — is missing from every published case, and one published without it is corrected only by a new edition (DEC-19) (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
+milestone: M10
+interface: I3 — the case document gains the manifest; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" — *"The manifest is part of the evidentiary record and travels with publication"* — and §"The bias acknowledgement, authored at export", whose manifest row reads *computed and stamped by the plane*.
+depends-on: none — PL-12's manifest and pins are built.
+scope: at case publication the plane stamps the manifest in force for the case's project scope — its pairs and `statements_sha` — into the signed case document, FROZEN and never recomputed; the acknowledgement stays authored beside it.
+accepts-when: a case published under an adopted set names each pair and the hash; adopting a new revision afterwards leaves the published bytes identical; with nothing adopted the document says no manifest was in force. How a liar passes it: recomputing at read time, so the arm moves the lens after publishing and asserts the bytes did not move. NEGATIVE CONTROL: drop the stamp, and the named-lens arm fails by name.
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
+
 ### UI-74 · queued — **THE ACCEPT CEREMONY IS NOT ON `main`, SO NO SURFACE LETS A MEMBER ACCEPT A MACHINE-PROPOSED READING.** The IS plan's UI-43 built it on `worktree-agent-a9e7e017d06799858` (`fd1e2aec`, 2026-08-09) and it was never integrated (D-397's third branch): `acceptCeremonyOpen`, `ACER_` and `versionaccept` occur 0 times in `origin/main:civicos-ui/app.html`, 3, 16 and 4 times on the branch (2026-09-21). — owner UI.
 order: the first feature, after D-52: DEC-24's member half — the machine proposes, the member concludes — has no door, and the IS plan recorded it done at 43/43; below the corrections because the status authority claims no ceremony (SCHEDULER #5, 2026-09-21)
 milestone: M9
@@ -559,6 +569,26 @@ design: `docs/development/SCHEDULER.md` §"The mechanism, and how the next consu
 depends-on: **the next plane deploy through `deploy.mjs`** (DIST's next cut — D-297's release is the likely carrier)
 accepts-when: (on the deploy landing) both first activations measured and recorded with the serving build named; the first armed tick attributed to the scoped class; `op=audit` clean after; any anomaly filed as a finding rather than worked around.
 cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «VF-7». A worker READS IT before building.
+
+### D-207 · queued — **A SESSION LOG ENTRY THAT `op=cite` WROTE OVER A SELECTION THAT SWAPPED AT A CONSTANT COUNT, BEFORE REC-55, IS SILENT ABOUT THE DRIFT — and silence there reads as *the set had not moved*.** REC-55 fixed it forward, and the Session Log is append-only, so any such entry is still in the record. Nobody has looked. — owner VERIFY (M0).
+order: with the live verifications, after VF-7: a READ that bounds a possible over-claim in the record; the population is fixed — REC-55 is on every serving build — so waiting does not grow it (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
+milestone: M0
+interface: none — read ops only
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` I-5 (the Session Log is append-only) — why a found entry is Bob's and is never annotated here.
+depends-on: none.
+scope: sweep the live record's Session Logs for `op=cite` entries over a `kind:"query"` selection written before REC-55's deploy, and judge each: drifted at a constant count, did not drift, or UNDETERMINED where the selection at mint is not recoverable — stated, never guessed. READ ONLY, the record's counters read before and after as the witness (CLAUDE.md §5).
+accepts-when: the sweep reports its population and each verdict with the counters unchanged; a drifted entry goes to BOB as doctrine (may an append-only record be annotated?) and nothing is written. How a liar passes it: sweeping scratch, where nothing old lives — so the store read is named, and it is the record the entries live in.
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
+
+### D-92 · queued — **`op=file` WITH A MEMBER TOKEN RETURNED AN INTERMITTENT 403 UNDER SEQUENTIAL LOAD** (the live instance, July): a different bundle each pass, so not a permission boundary; a 403 reads as a refusal where a rate limit is a 429, and it nearly produced a false finding that eleven bundles had no recorded source. The row's fix — the response NAMES its cause — waits on knowing the cause. — owner VERIFY (M0).
+order: last of the live verifications, after D-207: a July observation on a plane rebuilt many times since, with no report of recurrence; a bounded measurement that names a cause or retires the claim (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
+milestone: M0
+interface: none — a probe; a fix it finds is its own row
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5: *a blocker is a claim — about ONE actor, ONE form, ONE moment*. This one is from July.
+depends-on: none.
+scope: a BOUNDED live probe in the scratch namespace — `store=scratch` named on every call, swept after — driving `op=file` with a member token under sequential load over at least the row's eleven bundles; record in `MEASUREMENTS.md` whether a 403 recurs and which `index.mjs` site answered, with the serving build named. A cause found becomes a new row with its fix; none found closes this one as not reproduced at that build, stated.
+accepts-when: `MEASUREMENTS.md` carries the probe with its load, its count and the build; the row closes either way. How a liar passes it: a probe lighter than July's, so the load is stated beside the row's.
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
 
 ### M0-66 · queued — `m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a driver's block comment that names an anchor-bearing shape in backticks reads as a live anchor, and produced TWO … (whole text: the cut archive)
 order: M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)

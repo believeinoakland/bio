@@ -16469,3 +16469,33 @@ the capture it CAME FROM? §Job one says so; the plane records WHEN and not WHIC
 paragraph records it as a question for Bob and ships the disjunction provisionally; no BOB handoff carries it.
 
 **open as of 2026-09-21.**
+
+**AMENDED 2026-09-21, same session (commit 2): LED-7 batch 11** — D-144, D-143, D-199 and D-184 CLOSED IN FACT; D-84
+(narrowed to its one unbuilt trace), D-207 and D-92 PLACED under their own ids; D-182 and D-325 SENT to BOB. The held
+group is SENT as the DELEGATION SCHEDULER (#6) -> BOB below, D-182 its fourth question. 180 open DEBT rows remain.
+
+## DELEGATION 2026-09-21 SCHEDULER (#6) -> BOB — **FOUR QUESTIONS, ONE EACH, from the D-339 worker's DELEGATION, CONDUCT #7's design items and LED-7 batch 11; none blocks a runnable row**
+
+Recorded here because the repository is the channel; each is also written on its row where it has one, and each stands
+on its stated provisional until ruled. It is a second group beside SCHEDULER (#5)'s, not a restatement of it.
+
+- **Q1 — D-325's residue: a LIMITATION, or WORK?** No credential can be bound to scratch for its whole life (a sticky
+  confinement). `CLAUDE.md` §5 states it and no governed design does. A limitation: state it in the credential model's
+  home and D-325 leaves by the third door. Work: a RECORD row with its design. Provisional: BOB #17's ruling stands, the
+  per-call `store=scratch` plus the witness.
+- **Q2 — must a reused part name the capture it CAME FROM?** `CAPTURE-SCALING.md` §Job one says a reused entry must *"name
+  the capture it came from and when"*; the plane records WHEN (`reused_from_fetched_at`) and not WHICH. The section's
+  stated reason, never implying a byte was verified at capture time, is met by `fetched_this_capture: false` and the
+  detail sentence. Yes: the D-339 worker's DELEGATION item 3 names the fix (`last_fetched_by`, carried as `reused_from`)
+  and one row follows. No: §Job one's sentence is corrected. Provisional: WHEN only.
+- **Q3 — should a NO-PROJECT conclusion admit a case at all?** `INVESTIGATIVE-SESSION.md` §7.1, REC-135's paragraph,
+  records it as a question for Bob: item 8 read strictly says no, item 5 reads such bytes as the no-project
+  relationship's and states it, and item 6's aside is false of the code. The build ships the DISJUNCTION, the
+  relationship disclosed in the signed bytes; reversing it is one arm of one function (control arm (e), 22 pass / 3
+  fail). CONDUCT #7 sent it on 2026-09-19 and no BOB handoff carries it. Provisional: the disjunction.
+- **Q4 — D-182: `risk_tier`'s WORDS, or a THIRD VALUE?** C-2.10 admits 1, 2 and 3, nothing publishes member words for
+  them, and no undetermined value exists, so a surface either invents meanings or writes the floor. Publish
+  member-facing words for the three (REC-38's pattern), or make it three-valued with UNDETERMINED as authority and
+  counterparty were? Either answer places one row. Provisional: both writers keep 1, reasoning at each site.
+
+**open as of 2026-09-21.**
