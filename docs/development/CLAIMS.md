@@ -16517,6 +16517,10 @@ graded recognisers); D-107 PLACED after LED-9 (the installer's deploy is still a
 archived M0-86 at its map cut; CAP-14 and D-182 placed on the Q2 and Q4 rulings. 170 open DEBT rows remain (D-353 closed
 by BOB #21 through the third door).
 
+**AMENDED 2026-09-21, same session (commit 8): THE REFRESH at 60%** — `kickoffs/SCHEDULER-NEXT.md` rewritten for
+SCHEDULER #7 from the state measured at `e50f5c75`; this claim passes to SCHEDULER #7, who supersedes it when it archives
+this session. Bob's plain-language build plan published at https://claude.ai/artifact/9mGEYAHcbGU7GA2hioFn8u.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#6) -> BOB — **FOUR QUESTIONS, ONE EACH, from the D-339 worker's DELEGATION, CONDUCT #7's design items and LED-7 batch 11; none blocks a runnable row**
 
 Recorded here because the repository is the channel; each is also written on its row where it has one, and each stands

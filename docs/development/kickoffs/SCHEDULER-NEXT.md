@@ -1,74 +1,76 @@
-# SCHEDULER-NEXT — the resume for SCHEDULER #6 (written 2026-09-21 by SCHEDULER #5 at its refresh)
+# SCHEDULER-NEXT — the resume for SCHEDULER #7 (written 2026-09-21 by SCHEDULER #6 at its refresh)
 
 Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then
 `docs/architecture/BIO_System_Design.md` **whole**, then this, then `QUEUE.md` and `BACKLOG.md` whole. Everything below
-was MEASURED at my last push. It is a POINTER: re-measure before you rest anything on it (`CLAUDE.md` §1).
+was MEASURED at `origin/main` `e50f5c75` (~19:46Z), with CONDUCT #10's landing report of `b83e705c` added. It is a POINTER: re-measure before you rest anything on it.
 
-## The plan, as I left it on `origin/main`
+## The plan, as I left it
 
-- **Cache (8):** LED-7 (this lane's own act), REC-156, D-436, D-432, D-355, D-254, M0-79, M0-86. D-432, D-355 and
-  D-254 are `running` under CONDUCT #9. **D-339 CLOSED** on CONDUCT #9's report (merge `7338b442`, verified by content)
-  and the refill moved M0-86 in: BOB's own act, NOT a worker slot. So CONDUCT's spawnable rows are REC-156, D-436 and
-  M0-79, and it said it is disk-bound (4.4 GiB), not row-bound. **When M0-86 closes, refill brings D-434, then REC-157.**
-- **BOB INBOX: EMPTY.** I drained BOB #19's six-rows entry and BOB #20's REC-155 entry.
-- **Placed this session:** REC-157 (§7.1 item 9) SECOND in the backlog, after D-434. REC-155 re-rowed on Membership v2
-  §4.10 as landing 1, with REC-158 (landing 2) directly after it. D-52 first above the features, then UI-74, then MK-6.
-  D-126 after UI-71. D-412 after M0-85. M0-91 after M0-90.
-- **Closed:** D-339 (cache, done); D-195, D-52, D-126, D-397, D-248 and D-412 as PLACED; D-135, D-142, D-298, D-362, D-401, D-146 and D-187 IN
-  FACT (LED-7 batch 10). Two delegations DISCHARGED: RECORD (REC-135) and SCHEDULER (#3) "seven routes".
+- **Cache (8), all four `running` rows now LANDED:** CONDUCT #10 integrated REC-156, D-432, D-355 and D-254 at
+  `b83e705c` (one FULL gate on `db6ab1b6`: 267/267 suites green, 16247 assertions): **D-432 -> `19fdcd95`** (IC-170),
+  **D-355 -> `0e80aa8c`**, **D-254 -> `cac06ae7`**, **REC-156 -> `f84bcd47`** (IC-171 MAJOR). None is closed yet: that
+  is your first act. The rest of the cache is LED-7, D-436 (waits on disk), M0-79 (runnable now D-254 landed) and D-434;
+  CONDUCT fills D-436, M0-79 and D-434 next.
+- **Backlog (72), top:** REC-157, **D-435**, M0-83, M0-81, M0-84, M0-85 (blocked).
+- **DEBT.md: 167 open rows** (187 when I opened; 223 when the fold began).
 
 ## Owed acts, in order
 
-0. **FIRST — the D-339 worker's DELEGATION in `CLAIMS.md`** ("CAPTURE (D-339 worker) -> SCHEDULER, one question -> BOB
-   first"): corrections to JUST-LANDED work, so they outrank new work. Place three rows, each fix named in the block,
-   each re-read at the code first: (1) two comments still state the refused stability gate (`schema.mjs` above
-   `site_assets`; `index.mjs` on the acquire path before `siteKnown`) — reword both; (2) the two-document floor counts
-   primary CAPTURES, not pages — count distinct primary addresses via `captured_locators`; (4) `rowdesign`'s basename
-   rescue let D-339's wrong design path pass (it cited `docs/architecture/CAPTURE-SCALING.md`; the file is under
-   `docs/development/`) — resolve the named path exactly. Item (3), whether a reused part must name its source capture,
-   goes to BOB first: add it to the next BOB group. Then DISCHARGE the block.
-1. **The DELEGATION SCHEDULER (#5) -> BOB in `CLAIMS.md`** carries four FOLDS into BOB's files and four QUESTIONS (Q1 D-195
-   at the elicitation, Q2 D-280 (c), Q3 D-260, Q4 D-293). Watch for the answers. **D-80 leaves DEBT.md by the third door
-   in the commit that sees fold 2 land** in `BIO_Content_Framework_v0_10.md`'s front matter (`ledger.mjs archive D-80`
-   after leading its disposition with CLOSED … pointing at the bullet). D-280, D-260 and D-293 stay open with SENT lines
-   until ruled; each ruling opens one door. **The next BOB group** starts with D-325's residue (a limitation or work?
-   CLAUDE.md §5 states it; no design home does). Add up to three more before sending.
-2. **Place a CPDF row for `kickoffs/CONTENT-PDF.md`**: `plancheck` warns it is 25,863 B against 24,576 B, and no row
-   exists. REC-154 is the precedent for RECORD.md: archive the cut text verbatim, add it to `CUT` in `readbudget.mjs`,
-   owner the file's lane. Mint the id (`mintid.mjs CPDF`) and place it beside REC-154.
-3. **CONDUCT #8's DELEGATION of 2026-09-19 ("A CONDUCT RUNNING AS A SCHEDULED TASK …") stays open on its item 3:**
-   CONDUCT #7's three design items for BOB and its DIST note, recorded in the `CONDUCT-NEXT.md` of that day, §5–§6
-   (`git log` it; the file has been rewritten since). Judge whether each reached its owner, then DISCHARGE the block.
-4. **LED-7 batch 11 — read, NOT verified:** D-389 (frontier's `truncated:false` over-fetch; wants a row spanning all three
-   arms — name the fix first), D-223 (hunch debt not enumerable; "rides D-222", which is open), D-311 (seven roster acts
-   stay `NON_ACTS`; open is folding them into `op=affordances`), D-394 (DESIGNED in framework §18.1; check whether it is
-   built), D-351 (Drive export not byte-stable; waits on CAP-7's census — check CAP-7), D-220 (version chain: D-221 is
-   CLOSED; check whether `capturedLocators` reached an op — `index.mjs` names none), D-145, D-162 (DOCTRINE, Bob's),
-   D-107, D-99, D-84 (bias type BUILT, `BIAS: 'bias'`; check DEC-54's four clauses (a)–(d)), D-83, D-59, D-124.
-5. **Standing (BOB #19):** once placements are drained, LED-7 is the default work on EVERY self-wake — a batch each wake,
-   the open count reported each time; design-bound survivors go to BOB in groups of 3–4, one question each. **Open
-   DEBT rows at my last push: 187** (`grep -c '^| D-' docs/development/DEBT.md`; 218 on 2026-09-19).
+0. **CLOSE THE FOUR, in ONE commit with the refill:** verify each merge sha above is an ancestor of `origin/main` and its
+   row's work is there BY CONTENT, mark it `done`, `ledger.mjs archive` each. **D-435 MAY NOT MOVE:** BOB #22 is building
+   it from the backlog and archives it itself; it asked that nobody move or edit that row until its landing is on
+   `main`. `refill` cannot skip a row (REC-157 first, D-435 second), so until that landing is on `main`, refill ONE slot
+   (REC-157) and say so on the commit. Tell CONDUCT what entered.
+1. **Place what CONDUCT #10 routed at its landing, each only with its fix named:** (a) D-355's five routes (CONDUCT-NEXT
+   §2): pen-on-exit for `nc-rec95`, `nc-rec129` and 32 end-only drivers; two signal-handler drivers that run children
+   synchronously; `delegations.control.mjs` RED on `main` (a DELEGATION with two `open as of` lines at `CLAIMS.md:196`);
+   the census's UNCLASSIFIED gating gap; and its DESIGN GAP (three driver rules `VERIFICATION.md` lacks), which is BOB's.
+   (b) D-437, D-438 and D-439, D-254's DEBT rows, now in `DEBT.md`. (c) REC-156's DELEGATION: enrolled administrators
+   cannot reach `memberadd`, `memberset`, `signeradd`, `signerset` or `governorconfig` from their own session. Fix: D-136's
+   shape; CONDUCT put the `governorconfig` question to BOB #22. (d) The DISCHARGED line D-254's worker asks for on the
+   archived D-240 DELEGATION in `docs/archive/ledgers/CLAIMS-2026-08.md`, which the lane's standing claim covers.
+2. **Drain the BOB INBOX: six entries from BOB #22** (`3b904ea7`). (1) `decided.mjs` cannot see 11 of Bob's 17 answered DEC
+   entries (M-85); asked to go FIRST among the instruments, sequenced with D-341 (same file). (2) reevaluations' wording
+   and status gap under DEC-70. (3) M0-83 item (4): the retirement tool judges other projects' sessions; it amends M0-83.
+   (4) D-260 RULED, placed under its own id. (5) D-293 RULED, likewise; its fix's design is CARRIED IN THE ENTRY because
+   `VERIFICATION.md` is at budget. Read what `rowdesign` admits before citing it. (6) D-195 at the elicitation, two items
+   after UI-74. Verify each at its cited section, mint ids with `mintid.mjs`, and move each drained entry to the archive
+   in the same commit.
+3. **DELEGATION SCHEDULER (#6) -> BOB is open on Q3 only** (Bob's own: may a NO-PROJECT conclusion admit a case?). The
+   ruling opens one door; nothing to do until it arrives. **The next BOB group starts with D-145**: bundle ids are per
+   instance, so nothing addressed by id survives leaving the instance. The row lists candidate shapes, none free; the
+   opaque ids of Membership v2 §7 answer enumeration, not cross-instance addressing. Add up to three more before sending.
+4. **LED-7, the standing default:** one batch per wake, the open count reported each time. Not yet verified from SCHEDULER
+   #5's list: D-162, D-99, D-59, D-124. D-124 is a COLLIDED id, one of LED-8's six: carry it until LED-8 lands. Then take
+   the rest oldest first, security and disclosure first.
 
-## The three things that would have cost you a day
+## Done this session (all verified on the remote)
 
-1. **A PLACED ROW CAN REST ON A SURFACE THAT IS NOT ON `main`.** BOB #19 asked for a UI row "at the accept ceremony".
-   No surface calls `op=versionaccept`: the ceremony (IS-BUILD-PLAN's UI-43) sat unmerged on a branch D-397 had named,
-   while the IS plan read 43/43. I had already committed the row. What caught it was reading the NEXT DEBT row in the
-   batch (D-397) before pushing. **Grep the surface a row names on `origin/main`, by its function names, before you place
-   a dependent on it.** The fix was UI-74, a re-derivation carrying D-195.
-2. **A HANDOFF SHA CAN BE A TYPO.** FL-10 was handed to me as `3607bbb`, which is no commit; it is `3607b3b`. `git
-   merge-base --is-ancestor` on a missing sha fails exactly like "not landed". Resolve every sha before judging it.
-3. **A FRESH WORKTREE HAS NO `node_modules`, AND THE GATE FAILS AT LOAD, NOT BY NAME.** My first gate ran 11 suites to
-   `ERR_MODULE_NOT_FOUND` (miniflare) before I stopped it. Run `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`
-   first (CLAUDE.md §6). Also: `git rebase` of `CLAIMS.md` over an upstream append needs the carry done BY BLOCK. A generic
-   line match refused, correctly, on `**open as of 2026-09-19.**`, which occurs twice. A tail-append dropped the blank line
-   before a heading; check the junction with `cat -e`.
+Placed CAP-13, M0-92, CPDF-21, D-84 (narrowed), D-207, D-92, D-220 (narrowed), D-394, D-389, D-351, D-311, D-107,
+CAP-14 and D-182. Closed in fact: D-144, D-143, D-199, D-184, D-223 and D-83. Replenished D-434 after BOB #21 closed
+M0-86. Discharged the D-339 worker's DELEGATION and CONDUCT #8's of 2026-09-19. **Bob's plain-language build plan**, 91
+entries at `3b904ea7`, is published at https://claude.ai/artifact/9mGEYAHcbGU7GA2hioFn8u; to update it from a new
+session, pass that URL as `url`. Its draft and generator are in my scratchpad, which dies with me: rebuild from
+`QUEUE.md` and `BACKLOG.md` if Bob asks again.
+
+## The four things that would have cost you an hour
+
+1. **A GIT NON-FAST-FORWARD ON THE MAIN PUSH IS A RACE, NOT A REFUSAL.** Another lane pushed between my fetch and my
+   push. Fetch, look at what landed, rebase, regenerate `docs/DECIDED.md`, check the carry, then push under a NEW branch
+   name (`scheduler-6/b`, never forcing `/a`) and `HEAD:main`. The memory about auto-mode refusals is a different case.
+2. **YOUR OWN CLOSING TEXT CAN TRIP `RESIDUE_RE`.** I wrote "verified still open" in a CLOSED disposition, and
+   `isClosedDebtRow` would have read the row OPEN. The read-back assertion in my script caught it before anything was
+   written. Run `isClosedDebtRow(debtDisposition(next))` on every row before saving.
+3. **OTHER LANES CLOSE ROWS TOO:** BOB closed M0-86, D-353, D-325, D-80 and D-280, and is building D-435. A close from
+   another lane leaves a replenish owed and nobody tells you, so count the cache at every wake.
+4. **`planning-hygiene.test.mjs` asserts once per open DEBT row**, so the DOCS gate's assertion total falls by exactly
+   the number of rows archived. Attribute the delta with a per-suite diff between runs; do not chase it.
 
 ## Your first acts
 
-`git fetch origin`; confirm line 1 of this file on `origin/main`. Arm the self-wake (every 30 min) and its 5-day renewal
-(`CLAUDE.md` §4). Archive me, SCHEDULER #5, under D-398's three conditions re-checked AT THE MOMENT YOU ACT: session
-`local_dd93aafb-4b21-4b2e-a738-849b3ac41f58`, worktree `.claude/worktrees/dreamy-morse-42a25c`. It holds real
-`node_modules` in three packages (~587 MB), so `git worktree remove` should return far more than M-81's 286 MiB; measure
-before and after. **I delete both my crons before stopping**, so I will not wake and edit your ledgers. Then
-`node tools/ledger.mjs invariants`, then the owed acts above.
+`git fetch origin`; confirm line 1 of this file on `origin/main`. Arm the self-wake (every 30 min) and its 5-day renewal.
+Archive me, SCHEDULER #6, under D-398's three conditions re-checked AT THE MOMENT YOU ACT: session
+`local_dbf83dd3-3275-4f40-8167-87c883ff3005`, worktree `.claude/worktrees/scheduler-6` (branch `scheduler-6/b`; remote
+`scheduler-6/a` holds a pre-rebase duplicate of work already on `main`). The tree holds real `node_modules` in three
+packages, about 660 MiB with the checkout; measure the disk before and after. **I delete both my crons before stopping.**
+Then `node tools/ledger.mjs invariants`, then the owed acts above.
