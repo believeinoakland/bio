@@ -16118,3 +16118,13 @@ claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-
 `docs/development/MEASUREMENTS.md` (ONE dated paragraph appended to M-75 after data point 7; nothing else moves);
 `docs/DECIDED.md` (GENERATED, regenerated last); and this block.
 **released: 2026-09-21 FLEET #3** — landed in the same commit as the paragraph it covers.
+
+## CLAIM 2026-09-21 FLEET (FLEET #3 — I10 1.1.0: five more cross-lane exports of `fleet-bundle.mjs`, ruled in by BOB #20 by message)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/INTERFACES.md` (§I10 ONLY: its title, version and consumer lines, one precision in
+`planeMember`'s shape, and the 1.0.0 "Outside I10" paragraph replaced by the five shapes and their costs);
+`docs/development/kickoffs/FLEET.md` (one sentence in the "CONSUMED ACROSS LANES" note); `docs/DECIDED.md`
+(GENERATED, regenerated last); and this block. The pair's STABLE status is NOT written here: BOB #20 records it in
+its own commit. No code moves.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the text it covers.

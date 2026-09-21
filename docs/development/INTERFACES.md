@@ -1417,22 +1417,31 @@ reproduced), and 134.6 MB is refused in-isolate as a catchable `RangeError`.
 
 ---
 
-## I10 — the fleet's discovery descriptors (`discoverMembers`, `planeMember`)
+## I10 — `fleet-bundle.mjs`'s cross-lane exports: discovery, build and freshness
 
 - **ID:** I10
 - **Owner:** `FLEET` (the code: `bio-plane/scripts/fleet-bundle.mjs`)
-- **Version:** 1.0.0 — **PROVISIONAL.** Registered 2026-09-21 by FLEET #3 on BOB #19's ruling of that day, and
-  written FROM THE CODE as it stands on `origin/main` at `790ad66a`. The shape already had seven consuming files in
-  three lanes, and this registry's first rule is that an interface not here does not exist and nothing may be built
-  against it. Registering an existing shape takes no IC; the next change to it is the first. BOB confirms it to
-  STABLE once it has been read against the code.
-- **Consumers** (measured 2026-09-21: `git grep -l` for each name on `origin/main`, then each file's `import` read;
-  the defining file is not counted):
+- **Version:** 1.1.0. **1.0.0**, 2026-09-21: `discoverMembers` and `planeMember`, registered PROVISIONAL by FLEET #3
+  on BOB #19's ruling of that day, and written FROM THE CODE as it stands on `origin/main` at `790ad66a`. The shape
+  already had seven consuming files in three lanes, and this registry's first rule is that an interface not here does
+  not exist and nothing may be built against it. Registering an existing shape takes no IC; the next change to it is
+  the first. BOB confirms it to STABLE once it has been read against the code. **1.1.0**, 2026-09-21, ADDITIVE, and
+  again a registration of existing shapes with no IC: `writeMember`, `verifyFresh`, `freshBuildRunnable`, `sha256` and
+  `REPO_ROOT` join, because another lane's code imports each of them. Ruled by BOB #20 by message, 2026-09-21; BOB's
+  record follows. Written from the code at `86725fb8` (`fleet-bundle.mjs` is unchanged since `790ad66a`). **The five
+  are PROVISIONAL until BOB has read them against the code.**
+- **Consumers** (measured 2026-09-21 by parsing every tracked `.mjs` file's `import { … } from` this module,
+  multi-line imports included; no dynamic import of it exists; the defining file is not counted):
   - `discoverMembers`: `agent-worker/scripts/build.mjs` and `pdf-worker/scripts/build.mjs` (FLEET);
     `ocr-worker/scripts/build.mjs` (CONTENT-PDF); `bio-plane/scripts/resolve-version.mjs` and
     `tools/release-assemble.mjs` (DIST); `bio-plane/test/fleetbundles.test.mjs` (FLEET).
   - `planeMember`: `bio-plane/scripts/resolve-version.mjs` and `tools/release-assemble.mjs` (DIST);
     `bio-plane/scripts/build-plane.mjs` (the plane's own bundle build, FL-10); `bio-plane/test/fleetbundles.test.mjs`.
+  - `writeMember`: the three member builds named above (FLEET, and CONTENT-PDF for `ocr-worker`) and
+    `bio-plane/scripts/build-plane.mjs`.
+  - `verifyFresh`, `freshBuildRunnable` and `sha256`: `tools/release-assemble.mjs` (DIST).
+  - `REPO_ROOT`: `tools/release-assemble.mjs` and `bio-plane/scripts/resolve-version.mjs` (DIST).
+  - `bio-plane/test/fleetbundles.test.mjs` (FLEET) imports all seven.
 - **Status:** PROVISIONAL
 
 ### The shape
@@ -1456,7 +1465,8 @@ discovered and never hand-listed).
 
 **`planeMember(repoRoot = REPO_ROOT)`** reads nothing. It returns the plane's descriptor, built fresh on each call:
 `dir` and `name` are `"bio-plane"`, and `bundle` is `{ entry: "src/index.mjs", outfile: "dist/bio-plane.bundled.mjs",
-manifest: "dist/bio-plane.bundle.json", external: DEFAULT_EXTERNAL }`. The plane is deliberately NOT a
+manifest: "dist/bio-plane.bundle.json", external: [...DEFAULT_EXTERNAL] }`. That `external` is a fresh COPY of the
+frozen constant, equal in value and never the same array (BOB #20's precision, 2026-09-21). The plane is deliberately NOT a
 `fleet-member.json` member, because that marker would enrol it in fleet rules it necessarily breaks, so it does not
 appear in `discoverMembers`.
 
@@ -1475,6 +1485,53 @@ appear in `discoverMembers`.
 - **The ORDER carries no signed byte.** The assembler re-sorts the fleet by member before building the payload
   `fleetSig` covers (`release-assemble.mjs`), so a change of sort order is not a release-format change.
 
-**Outside I10, as ruled.** Other exports of the same module are also imported across lanes and are NOT registered
-here: `writeMember` (the three member builds and the plane build), `verifyFresh`, `freshBuildRunnable` and `sha256`
-(the assembler), and `REPO_ROOT` (the assembler and `resolve-version.mjs`). Whether they join I10 is BOB's decision.
+### The five exports added at 1.1.0 (PROVISIONAL)
+
+At 1.0.0 this section listed these five as outside I10 and left their joining to BOB; BOB #20 ruled them in. Each
+is written from the code as it stands.
+
+**`REPO_ROOT`** is a constant: the repository root as an absolute path, derived from this module's own location
+(`resolve(join(dirname(fileURLToPath(import.meta.url)), "..", ".."))`, two levels above `bio-plane/scripts/`). Every
+function here that takes a `repoRoot` defaults it to this, and the assembler roots `release/` on it.
+
+**`sha256(buf)`** is synchronous: the SHA-256 of a Buffer or string, as lowercase hex. Every hash in a manifest and
+in `RELEASE.json` is produced by it and compared as a string.
+
+**`writeMember(member)`** is async and is THE ONLY WRITING PATH in the module. For a descriptor with a `bundle`, it
+creates the directory of `bundle.outfile` under `abs`, builds with the shared recipe (esbuild writes
+`bundle.outfile`), and writes `bundle.manifest` as JSON with a two-space indent and a trailing newline. It resolves
+to `{ built, manifest }`. `built` is `{ bytes: Buffer, sha256, inputs: [{ path, bytes }], metafile }`. `manifest` is
+the object written, with the keys `_comment`, `member`, `artifact`, `sha256`, `bytes`, `recipe`, `inputs`,
+`vendoredInputs`, `assets` (only when the member declares any) and `lock`.
+
+**`freshBuildRunnable(member, manifest)`** is synchronous and only reads. It returns `{ runnable: true, reason: null }`
+when every `manifest.vendoredInputs[].path` is readable under `abs`. Otherwise it returns `{ runnable: false, reason }`,
+and the reason names how many are missing, the first of them, and the `npm ci` that installs them.
+
+**`verifyFresh(member, committed)`** is async and NEVER writes. `committed` is the artifact's bytes as a Buffer, read
+by the caller BEFORE the call. It builds the member fresh in memory and resolves to `{ findings, built }`. `findings`
+is an array of sentences: one `STALE BUNDLE` when the fresh bytes differ from `committed`, and one for each import the
+built module still makes outside `bundle.external || DEFAULT_EXTERNAL`, read from esbuild's own metafile. An EMPTY
+`findings` is the only "fresh".
+
+### What changing the five costs
+
+- **`verifyFresh`'s `findings` IS the release's freshness guard.** The assembler refuses to cut
+  (`STALE_OR_UNINSTALLABLE`) on any finding, and an empty array is the whole of its freshness verdict. A change that
+  lets `findings` come back empty for a stale or uninstallable artifact ships those bytes SIGNED.
+- **`freshBuildRunnable` decides whether a release can be assembled at all.** The assembler refuses on
+  `runnable: false` (`GUARD_CANNOT_RUN`) and prints `reason` as the remedy, because a guard that skips is not a guard.
+  A wrong `true` hands `verifyFresh` a tree without its vendored bytes; a wrong `false` refuses a good cut.
+- **`writeMember`'s manifest is read by the assembler and the gate.** The assembler checks `sha256` against the
+  committed artifact (`MANIFEST_DISAGREES`), reads `vendoredInputs` through `freshBuildRunnable`, and matches every
+  declared part against `assets[]` (`MEMBER_PART_UNHASHED`, `MEMBER_PART_DISAGREES`). A key renamed or retyped breaks
+  the release, not only the build.
+- **`sha256`'s output is compared as a string everywhere.** Changing the algorithm, the case or the encoding is
+  BREAKING for every manifest and every `RELEASE.json`.
+- **`REPO_ROOT` follows the module's location.** Moving `fleet-bundle.mjs` silently re-roots every default and the
+  assembler's `release/`.
+
+**What stays outside I10.** No other lane imports the module's remaining exports (measured 2026-09-21):
+`assetsOf`, `buildMember`, `fleetProvenance`, `memberPaths`, `unresolvableSpecifiers` and `verifyStatic` are imported
+only by FLEET's own `fleetbundles.test.mjs`, and nothing outside the module imports the constants `RECIPE` and
+`DEFAULT_EXTERNAL`. An export that gains an importer in another lane joins I10 by the same rule.

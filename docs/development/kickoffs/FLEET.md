@@ -238,7 +238,10 @@ owner FLEET, and FLEET #3 wrote `INTERFACES.md` §I10 from the code (PROVISIONAL
 code). A change to either function is now an IC against I10, and the protocol route above is that IC's route.
 **The count above was one short, and it counted the definer.** By `import`, SEVEN files consume the pair: the six
 named above, plus `bio-plane/scripts/build-plane.mjs`, which imports `planeMember` only. `fleet-bundle.mjs` defines
-them. `git grep -l discoverMembers` cannot see a consumer of `planeMember` alone, so grep both names.
+them. `git grep -l discoverMembers` cannot see a consumer of `planeMember` alone, so grep both names. **At 1.1.0
+(ruled by BOB #20 by message, 2026-09-21) `writeMember`, `verifyFresh`, `freshBuildRunnable`, `sha256` and `REPO_ROOT`
+joined I10.** Every export of `fleet-bundle.mjs` that another lane imports is now registered, so read §I10 before
+changing ANY export here. A one-line grep cannot see a multi-line `import { … }`: parse the imports, as §I10 records.
 
 ## Stand-up, 2026-09-21 — FLEET #3, after the 23.5 h dark: measured, and one lesson of this file corrected
 
