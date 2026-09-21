@@ -16533,7 +16533,11 @@ held them was archived by this one at ~17:57Z under D-398's three conditions, re
 running; porcelain empty; tip `3b338e60` = `origin/main`), after its own `CronList` read back "No scheduled jobs." by
 message; its worktree removed.
 
-**NOT CLAIMED:** `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
+**AMENDED, same landing:** `bio-plane/test/corpuscheck.test.mjs` — its two assertions pinning the map's evaluated
+design pairs, CORRECTED with a dated reason (8.claim's new text cites §7.1 item 9, a third real pair; negative control:
+that citation dropped from the map -> exactly those two assertions fail by name; map restored and verified by hash).
+
+**NOT CLAIMED:** the rest of `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
 
 **open as of 2026-09-21.**
 
