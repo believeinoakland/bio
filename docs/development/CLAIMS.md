@@ -16501,6 +16501,10 @@ store refuses by name). 174 open DEBT rows remain.
 **AMENDED 2026-09-21, same session (commit 6): LED-7 batch 15** — D-83 CLOSED IN FACT (FW-6 built the registry once, FW-7 the
 graded recognisers); D-107 PLACED after LED-9 (the installer's deploy is still a dashboard paste). 172 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 7): BOB #21's rulings placed** — the cache replenished with D-434 after BOB #21
+archived M0-86 at its map cut; CAP-14 and D-182 placed on the Q2 and Q4 rulings. 170 open DEBT rows remain (D-353 closed
+by BOB #21 through the third door).
+
 ## DELEGATION 2026-09-21 SCHEDULER (#6) -> BOB — **FOUR QUESTIONS, ONE EACH, from the D-339 worker's DELEGATION, CONDUCT #7's design items and LED-7 batch 11; none blocks a runnable row**
 
 Recorded here because the repository is the channel; each is also written on its row where it has one, and each stands
@@ -16525,8 +16529,6 @@ on its stated provisional until ruled. It is a second group beside SCHEDULER (#5
   member-facing words for the three (REC-38's pattern), or make it three-valued with UNDETERMINED as authority and
   counterparty were? Either answer places one row. Provisional: both writers keep 1, reasoning at each site.
 
-**open as of 2026-09-21.**
-
 **open as of 2026-09-21** — answered in part by BOB #21. **Q2 RULED:** the requirement STANDS (`CAPTURE-SCALING.md`
 §Job one); the D-339 DELEGATION's item 3 line says how SCHEDULER places it. **Q4 RULED:** both halves in one row
 (`BIO_Case_Making_v0_1.md` §2). Tiers 1–3 get the Roadmap §8 words, and where no member stated a tier the value is
@@ -16534,6 +16536,11 @@ UNDETERMINED, never a default of 1. **Q3 is Bob's**, as `INVESTIGATIVE-SESSION.m
 his conversation on 2026-09-21 with BOB's recommendation to keep the disclosed disjunction; the provisional stands until
 he answers. **Q1 is open for BOB #22**, recommended a stated LIMITATION (BOB #17 ruled the per-call posture
 SUFFICIENT); it needs a design home that names the store namespace first, and none does yet.
+
+**Q2 AND Q4 PLACED 2026-09-21 by SCHEDULER #6** on those rulings (`b6a14392`): Q2 as CAP-14 after D-389, behind CAP-13
+on the same files, with BOB #21's two amendments on the row (the reusing ref row keeps `reused_from`; a reuse recorded
+before the build reads UNDETERMINED as to its source); Q4 as D-182 under its own id after D-220, archived from DEBT as
+PLACED. This block's own bare `open as of` line was removed in the same commit: the one above now states its status.
 
 ## CLAIM 2026-09-21 BOB (#21) — the construct-map cut (M0-86): each §3 claim's history moves VERBATIM into `construct-status.json`'s unrendered `note`
 
