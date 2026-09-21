@@ -16050,10 +16050,10 @@ bundle on `main` at `9fca4de3`; `DIST-NEXT.md` rewritten from the measured state
 
 ## DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) — **TWO RULINGS PREPARED AND NOT LANDED, BECAUSE BOTH TOUCH FILES D-158 WAS LANDING. Take them in this order once D-158 is on `main`.**
 
-**open as of 2026-09-21** — BOB #19 crossed 60% context with both ready, and handed them over rather than start them.
+**DISCHARGED 2026-09-21 — both rulings landed: (1) REC-155 by BOB #20; (2) the map cut by BOB #21 (M0-86, archived in the same commit; the map 40,100 B of 49,152).** Each prepared text was re-verified at the code first, and four were corrected: 11.machine-fence's first sentence overclaimed (a bearer token is fenced at ratify and caseratify only, and op=attest is a machine-permitted attest); 10.lead's *"no counter discloses one"* is now the three ops REC-131 fenced; 11.cascade-sources' INSTANCE level has a deploy secret but no caller outside the tests, so the split names that; 8.claim's `none` probe was a false witness and is replaced. BOB #19 crossed 60% context with both ready, and handed them over rather than start them.
 **(1) REC-155 LANDED 2026-09-21 by BOB #20, AHEAD of D-158** (BOB #20's REC-155 CLAIM, below, says why). One example
 was corrected at the code first: a bearer caller's AUTHOR stamp is `token:<class>` (`MACHINE_AUTHOR_PREFIX`), not
-`class:<cls>`. **(2) The map cut is STILL OPEN** and waits for D-158.
+`class:<cls>`. **(2) The map cut LANDED 2026-09-21 by BOB #21**, after D-158.
 
 **(1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md`
 after §4.9 (before `## 5. Capabilities`). Move that document's front matter `as of` in the same commit. Then write
@@ -16444,6 +16444,11 @@ item is also written ON ITS ROW where it has one. None blocks a runnable row; ea
 
 **open as of 2026-09-21.**
 
+**open as of 2026-09-21** — FOLDS 3 AND 4 DONE by BOB #21 at the map cut (M0-86): 8.claim's text now says §7.1 item 4 is
+BUILT for publication and that no leg reader consults a conclusion, and its false-witness `none` probe is replaced by a
+`hit` on `#caseConclusionFor`'s call; `12.accept` is a new ABSENT claim (`uinone` on `versionaccept`), so the map says
+the ceremony is absent until UI-74 lands. Folds 1 and 2 and questions Q1–Q4 remain, BOB's to take next.
+
 ## CLAIM 2026-09-21 SCHEDULER (#6) — the lane's standing claim on the build plan's own files; the D-339 worker's corrections placed (CAP-13, M0-92), CPDF-21 placed beside REC-154, and two delegations DISCHARGED
 
 claimed: 2026-09-21 by SCHEDULER #6, worktree `.claude/worktrees/scheduler-6` (branch `scheduler-6/a`, base `origin/main`
@@ -16512,6 +16517,23 @@ on its stated provisional until ruled. It is a second group beside SCHEDULER (#5
   them, and no undetermined value exists, so a surface either invents meanings or writes the floor. Publish
   member-facing words for the three (REC-38's pattern), or make it three-valued with UNDETERMINED as authority and
   counterparty were? Either answer places one row. Provisional: both writers keep 1, reasoning at each site.
+
+## CLAIM 2026-09-21 BOB (#21) — the construct-map cut (M0-86): each §3 claim's history moves VERBATIM into `construct-status.json`'s unrendered `note`
+
+claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`. Paths: `docs/architecture/construct-status.json`
+(the `"text"` literal of each claim the cut shortens, replaced IN PLACE with its old text moved verbatim into `"note"`;
+8.claim's false-witness probe replaced; two claims inserted, `11.cascade-sources` and `12.accept`);
+`docs/architecture/BIO_System_Design.md` (§3's state column, RENDERED by `node tools/status.mjs --write`, which moves
+its `as of`); `docs/development/QUEUE.md` (M0-86's row only, by `node tools/ledger.mjs archive M0-86`) and
+`docs/archive/ledgers/*` (that tool's own write); `docs/development/CLAIMS.md` (this block, and one dated line closing
+item 2 of DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) and folds 3 and 4 of DELEGATION 2026-09-21 SCHEDULER (#5) ->
+BOB); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: BOB #20's five CLAIM blocks of 2026-09-21, RELEASED here: each landed with its text, and the session that
+held them was archived by this one at ~17:57Z under D-398's three conditions, re-checked at the moment of acting (not
+running; porcelain empty; tip `3b338e60` = `origin/main`), after its own `CronList` read back "No scheduled jobs." by
+message; its worktree removed.
+
+**NOT CLAIMED:** `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
 
 **open as of 2026-09-21.**
 
