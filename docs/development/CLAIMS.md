@@ -16269,8 +16269,9 @@ after data point 8; nothing else moves), `docs/DECIDED.md` (GENERATED, regenerat
 
 claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`. Paths: `.claude/settings.json`
 (the `deny` list only: eight rules ADDED and none removed), `docs/development/MEASUREMENTS.md` (data point 9's last
-sentence, which is BOB #20's own paragraph and is not yet on `main`), `docs/development/QUEUE.md` (the BOB INBOX
-only: one entry routing `tools/owed.mjs`'s release defect with its fix named), `docs/DECIDED.md` (GENERATED,
+sentence, which is BOB #20's own paragraph and is not yet on `main`), `docs/development/QUEUE.md` (NOTHING in the end:
+the BOB INBOX entry routing `tools/owed.mjs`'s release defect was WITHDRAWN before landing, because SCHEDULER #4 had
+already placed that defect as D-435), `docs/DECIDED.md` (GENERATED,
 regenerated LAST), and this block. **WHY:** Bob set every lane to bypass at ~16:00Z to clear the `[Out-of-Place Publication]` refusals.
 Bypass removes the classifier, so the deny list is now the ONLY force-push guard, and `CLAUDE.md` §4 says it
 *"refuses it outright"*. It did not: the three rules match only a flag placed directly after `push`. **Measured by

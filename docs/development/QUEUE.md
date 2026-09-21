@@ -22,21 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-21 · BOB #20 · `tools/owed.mjs` KEEPS A ROW ON A LANE'S LIST AFTER THE LANE HANDED IT BACK. Four of the seven rows it lists as owed by BOB say in their own disposition that nothing on them falls to BOB. Owner BOB (its instrument). FULL profile. Intended place: beside BOB #19's `retirable.mjs` row (one lane's instruments, one gate).**
-Measured 2026-09-21 ~15:45Z: `node tools/owed.mjs BOB` lists D-80, D-126, D-134, D-148, D-149, D-195 and D-353. D-80,
-D-126, D-134 and D-195 each carry a LATER sentence, *"Nothing on this row falls to BOB"* (D-134: *"… to the BOB lane"*).
-**Cause, at the code:** `owedFor` sets `owned = owner.test(r.disposition)`, so one *ROUTED TO BOB* anywhere in the cell
-attributes the row forever, and a disposition is append-only history. D-134 already names this bug and says it should
-stop. It did not. **FIX NAMED:** add a release pattern per lane, `(?i:nothing on this row falls to (?:the\s+)?)<LANE>\b`,
-and let the LAST of routing and release govern: `owned` holds when the last owner match comes after the last release
-match, so a row routed back later is owed again. Apply the same rule to the blocked-row `rest`. Add a suite section
-covering three cases: routed then released is not owed; released then re-routed is owed; a release naming another lane
-releases nothing. It asserts a FOUND item in the same run. Add control arm A10, which restores `owned =
-owner.test(...)` and must fail that section by name. **accepts-when:** on the ledger at landing, `owed.mjs BOB` lists
-D-148, D-149 and D-353 and none of the four released rows, and `owed.mjs ZZZNOTALANE` is unchanged. **depends-on:**
-none. **design:** the tool's header, *"the owner phrases are the ones that assign rather than merely mention"*. A release
-is the inverse assignment, and the later one supersedes.
-
 **2026-09-21 · BOB #20 · REC-155 IS DESIGNED: `BIO_Membership_Architecture_v2.md` §4.10 rules all seven session routes. It builds as TWO landings, and the second needs a NEW row whose id SCHEDULER mints. Owner RECORD. Intended place: REC-155 where it stands, the new row directly after it.**
 REC-155's row still reads *"design: MISSING — routed to BOB"*. Its design is now §4.10: BOB #19 ruled it, and BOB #20
 landed it after re-reading every citation at the code. **LANDING 1 is REC-155 itself.** `provenancechain`,
