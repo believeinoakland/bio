@@ -97,8 +97,8 @@ design, doctrine, anything for Bob → BOB) and continue.
   (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`. Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
   FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18). **A session is REFRESHED when its context is
-  more than 60% full** (Bob, 2026-09-18: *"Always refresh sessions with context windows that are more than 60% full"*):
-  check your own with `get_usage` at every self-wake and every handoff boundary; over 60%, stop taking new work, write
+  more than 70% full** (Bob, 2026-09-21, raising his 60% of 2026-09-18; receipt in the archive named in §1):
+  check your own with `get_usage` at every self-wake and every handoff boundary; over 70%, stop taking new work, write
   your `<LANE>-NEXT.md` from the measured state, push it, verify it on the remote, and ask BOB for your successor. The
   successor archives you under D-398's three conditions. BOB measures every live session at its own opening, so a lane
   that stops checking is still caught. **Its self-wake expires:** a session-only `CronCreate` lasts 7 days, so when

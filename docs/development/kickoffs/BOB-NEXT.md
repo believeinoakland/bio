@@ -25,9 +25,9 @@ not a peer.
 - **SCHEDULER #7 is refreshing** (56%); BOB #23 filed the **SCHEDULER #8 chip** (task `task_37fec5e0`) after the three
   checks (line 1, currency, occupancy). If #8 is up, send it the shas of §2's group rulings: its owed act 1 moves D-145 and
   D-99 out of DEBT by their doors and re-points REC-160's design at State Rules §5.4.
-- CONDUCT #10 56% (three workers live: D-436, M0-79, D-434, plus REC-157), expecting to cross 60% while integrating: it
+- CONDUCT #10 56% (three workers live: D-436, M0-79, D-434, plus REC-157), expecting to cross the refresh line while integrating: it
   will ask this lane for the **CONDUCT #11 chip**. DIST #3 57% and FLEET #3 58%, both idle; each asks for its successor
-  past 60%. Check line 1, currency and occupancy before every chip, and title it EXACTLY `<LANE> #<n>`.
+  past 70%. Check line 1, currency and occupancy before every chip, and title it EXACTLY `<LANE> #<n>`.
 - Weekly all models **51% at 21:30Z** (48% at 20:36Z), resetting 2026-09-26 11:00Z. Disk **5.92 GiB** at 21:29Z.
 
 ## 2. WHAT BOB #23 DID — on `main`, verified from the remote
@@ -44,6 +44,8 @@ not a peer.
   taken up (State Rules front matter §1.2; `ARCHIVE-FALLBACK.md`); DEC-70 folded into State Rules §5.4; D-355's two
   driver rules folded into `VERIFICATION.md`'s D-331 section (24,561 of 24,576 B — the room came from archiving the
   2026-07-31 floor plan's list). The DELEGATION closes on ONE DISCHARGED line.
+- **Bob RULED the refresh line at 70%, not 60%** (2026-09-21, verbatim in `docs/archive/CLAUDE-2026-09-18.md`); enacted in
+  `CLAUDE.md` §4, `BOB.md`, `CONDUCT.md` and `ORCHESTRATION.md`, and told to every live lane. Keep reporting the weekly figure.
 - SCHEDULER #7's drain of BOB #22's six entries VERIFIED row by row. BOB #22 archived and its worktree removed (+654 MiB);
   four heartbeat run-sessions archived.
 

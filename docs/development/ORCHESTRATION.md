@@ -8,7 +8,7 @@
 
 - **Bob** — the architect and the one human. Reached only through the BOB lane (`CLAUDE.md` §3).
 - **The five standing lanes**, each a long-lived session in its own worktree, never archived for idleness, refreshed at
-  >60% context (`CLAUDE.md` §4):
+  >70% context (`CLAUDE.md` §4):
   - **BOB** (`kickoffs/BOB.md`) — requirements, UX, architecture with Bob. Its product is DECOMPOSITION: a decision, its
     implications, and independent items, each scoped behind the interface it sits behind, handed on through the BOB INBOX.
     The channel for every other lane's question to Bob.

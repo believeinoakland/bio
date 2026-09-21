@@ -52,10 +52,10 @@ Bob can answer sends it here, and this session carries it into his conversation.
    promptly from this lane in `auto` mode** — the wedge D-402/D-407 records was the HEARTBEAT calling it unattended,
    not this lane, so the act stays here.
 4. **Run `node tools/owed.mjs BOB`, `node tools/plancheck.mjs` and `node tools/status.mjs --check`.** And **measure every
-   live session's context** (`get_usage` per session): any over 60% is refreshed (Bob, 2026-09-18) — tell it to write its
+   live session's context** (`get_usage` per session): any over 70% is refreshed (Bob, 2026-09-21; 60% until then) — tell it to write its
    handoff, then file its successor's chip. Include yourself.
    **AND RECORD THE ACCOUNT'S WEEKLY FIGURE, WHICH THE SAME CALL ALREADY RETURNS** (`plan.windows`, *Weekly · all
-   models*) — **the 60% rule watches per-session CONTEXT and NOTHING watches the weekly BUDGET, which is the metric
+   models*) — **the 70% rule watches per-session CONTEXT and NOTHING watches the weekly BUDGET, which is the metric
    that ended the previous account at 91%** (FLEET #2 noticed the gap, 2026-09-20). One number per day from whoever
    opens it is enough; it costs nothing, because you are already making the call. **Do NOT project it linearly** — a
    first day carries an account switch, lanes standing up and release cuts, so a straight-line forecast from it is a

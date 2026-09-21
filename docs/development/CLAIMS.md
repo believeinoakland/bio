@@ -17191,3 +17191,12 @@ claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker
 `docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~21:30Z), `docs/DECIDED.md` (GENERATED,
 regenerated LAST), and this block.
 **released: 2026-09-21 BOB #23** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — Bob's ruling: a session is refreshed past 70% context, not 60%
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths: `CLAUDE.md` (§4's refresh
+sentence only), `docs/archive/CLAUDE-2026-09-18.md` (the receipt, appended), `docs/development/kickoffs/BOB.md` (opening
+step 4's two figures), `docs/development/kickoffs/CONDUCT.md` (step 4's figure), `docs/development/ORCHESTRATION.md` (the
+standing lanes' figure), `docs/development/kickoffs/BOB-NEXT.md` (its figures and one line), `docs/DECIDED.md`
+(GENERATED, regenerated LAST), and this block. Kickoffs this ruling supersedes, corrected in the same landing.
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.

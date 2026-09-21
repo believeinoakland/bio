@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1359 rulings across 100 documents.
+1361 rulings across 100 documents.
 
 ## DEC-
 
@@ -1891,6 +1891,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/archive/CLAUDE-2026-09-18.md:163`
 - BEFORE RAISING A QUESTION, OR WRITING A DECISION ITEM, ASK WHAT IS ALREADY DECIDED:** node tools/decided.mjs "<the subject>"  
   `docs/archive/CLAUDE-2026-09-18.md:206`
+- **2026-09-21** — RULED BY BOB 2026-09-21 — A SESSION IS REFRESHED PAST 70% CONTEXT, NOT 60% (receipt for `CLAUDE.md` §4) Bob, verbatim, in BOB #23's conversation at ~21:35Z: *"I think the process will be significantly more productive if session context window limits were set to 70% rather than the current limit set at just 60%."*…  
+  `docs/archive/CLAUDE-2026-09-18.md:673`
 - **2026-09-18** — [SUPERSEDED 2026-09-18 for QUEUE rows: the `done` flip, its archive and the replenish are SCHEDULER's single commit — step 0.]** **A `done` FLIP ARCHIVES ITS ROW IN THE SAME COMMIT — LED-5, Bob's direction of 2026-09-18 (small, ordered, always-current ledgers).** When integration flips a QUEUE row to `done` (or…  
   `docs/archive/CONDUCT-kickoff-2026-09-19.md:59`
 - **2026-09-16** — RULED 2026-09-16 by BOB #12 (mechanism, BOB's) on CONDUCT #1's report, which flagged the change instead of quietly working around it.  
@@ -2603,6 +2605,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1381`
 - `c31b8f60` — CONDUCT #10's Q3 RULED:** `governorconfig` is the OPERATOR's act (founder's session + ADMIN_TOKEN bearer), not an administrator's (Membership v2 §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE*): a host's configured appetite outranks the hosting account's `GOVERNOR_APPETITE_PER_MIN`, and §4.8 keeps…  
   `docs/development/kickoffs/BOB-NEXT.md:35`
+- **2026-09-21** — Bob RULED the refresh line at 70%, not 60%** (2026-09-21, verbatim in `docs/archive/CLAUDE-2026-09-18.md`); enacted in `CLAUDE.md` §4, `BOB.md`, `CONDUCT.md` and `ORCHESTRATION.md`, and told to every live lane.  
+  `docs/development/kickoffs/BOB-NEXT.md:47`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
