@@ -1,11 +1,12 @@
 # Believe in Oakland
 
-**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. as of 2026-09-19.
+**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. DEC-70's severance rule is folded into §5.4, and D-145's cross-instance addressing is stated as M6's (BOB #23, 2026-09-21). as of 2026-09-21.
 
 **Place in the system** · Owns construct 3 of `BIO_System_Design.md` §3 (the record): bundle shape and the rules the plane checks. `BIO_Intake_Doctrine_v1_1.md` defers to it for shape; `BIO_Membership_Architecture_v2.md` builds on its §4.3 and §5.1–5.3; the intake provenance register and I-18 realise the intake doctrine inside it. README calls it "the most operationally load-bearing document in the corpus."
 
 **Incomplete sections** ·
 - §1 — the folder layout is the retired substrate's; history per the banner.
+- §1.2 — an id is unique within ONE instance, so nothing addressed by id survives leaving it and two instances' ids collide (D-145). Cross-instance addressing is M6's (`MILESTONES.md`), designed WITH D-99's WARC and Memento interchange, because an export carries an id-addressed graph; no shape is chosen until M6 is taken up (BOB #23, 2026-09-21). Content-hash citation, the row's third candidate, is the one the record's doctrine already leans to (identity is canonical, the address a comment).
 - §2 — the state/record split and description-as-truth transferred; §2.4 convergent promotion, §2.5's gated deletion mechanics and §2.6 the pending-package queue are history, and the PENDING/PROMOTING transients no longer exist.
 - §4.2 — the Focus machine is legacy: nothing produces those states; the live machine is `inquiry`, which §4 does not describe, nor `bias`.
 - §4.3 — lacks the project-name-uniqueness annotation Membership v2 §11 requires.
@@ -1015,6 +1016,16 @@ false with since and source returned to null. Because since records when
 the flag was set, the checker enforces the staleness rule mechanically:
 a flag: true whose since is older than the policy-set age is a surfaced
 finding.
+
+**SEVERANCE DISCHARGES SUPPORT, NEVER CONNECTION — DEC-70, ruled by Bob 2026-09-10, folded here
+2026-09-21 by BOB #23 (SCHEDULER #7's Q3).** A severed basis leg still receives the re-evaluation
+obligation when what it named moves: the obligation attaches to what a finding EVER rested on, because
+relative contributions shift under DEC-32's arithmetic, and when a strong branch later weakens, the
+severed corroborating leg is the thread then needed. The boundary: a severed leg contributes nothing to
+strength, gates nothing and counts toward no bar; the connection INFORMS, never binds. So a read of the
+obligation marks which legs are severed and never describes one as resting on its target (REC-160). The
+read is pulled, so no member is prompted (DEC-69); a pushed form, if one is ever built, tells once, is
+dispositionable, and ages (D-79).
 
 ### 5.5 Multi-writer coherence (added v1.1)
 

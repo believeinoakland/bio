@@ -1326,7 +1326,11 @@ const REGISTER_FLOOR = {
      PRINTED ON THE COMMITTED MERGE `f84bcd47` (D-238: an uncommitted merge reads short), exit 0 unpiped:
      `REGISTER FLOOR  arms 1552/1548 · classified 258/258 · corpus (suites read) 259/259 · GREW by 4 arm(s)` and
      `221 RUN … floor 221/221 reproducible` — never the sum typed in. Only `arms` moves; nothing FELL. */
-  arms: 1552,
+  /* MOVED 2026-09-21 by BOB #23 at M0-83, from the FULL gate's own `--strict` print on its committed tree (`b399f9cf`'s
+     content), exit 0 unpiped: `REGISTER FLOOR  arms 1553/1552 · classified 258/258 · corpus (suites read) 259/259 · GREW
+     by 1 arm(s)` and `floor 221/221 reproducible` — the arrival is `retirable.test.mjs`'s section-9 NEGATIVE CONTROL
+     record. Only `arms` moves; nothing FELL. */
+  arms: 1553,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.

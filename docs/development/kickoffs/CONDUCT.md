@@ -199,7 +199,7 @@ created); `git worktree list` is the population signal. **Bound every poller.** 
 
 ## The retirement sweep
 
-At the end of every wave: `list_sessions` (limit 50) → a temp file → `node tools/retirable.mjs --self <your id> < file`;
+At the end of every wave: `list_sessions` (limit 50) → a temp file → `node tools/retirable.mjs --self <your id> --self-title "CONDUCT #<n>" < file`;
 archive exactly the rows it calls RETIRABLE, `git worktree remove` where it says `ownsWorktree`, never touch a HOLD row, and
 report the disk before and after, measured. Archiving is TWO acts — the archive, and `git worktree remove` (the tool does not
 free the disk). A RETIRABLE session whose tip is on its OWN remote branch and not on `origin/main` is saved but UNINTEGRATED:
@@ -246,8 +246,7 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
   is UNATTENDED — it can neither send nor receive a cross-session message and is in no `ListAgents` (M-74), so CONDUCT
   #8 integrated deaf (`BOB.md`, "Spawning and retiring lanes"). **A stall is still worse than deafness:** if no BOB
   answers, start it that way yourself (CONDUCT #7 never tested that it could), then write in CONDUCT-NEXT that the lane
-  is deaf so peers route through the record. Title it exactly `CONDUCT #<n>`: the heartbeat and `retirable.mjs` match
-  nothing else.
+  is deaf so peers route through the record. Title it exactly `CONDUCT #<n>`: the heartbeat matches nothing else.
 - **YOUR HANDOFF'S LINE 1 MUST NAME YOUR SUCCESSOR BY NUMBER** — `# CONDUCT-NEXT — the resume prompt for CONDUCT #<n+1>`.
   The heartbeat's STEP 0b parses LINE 1 for `CONDUCT #M`; **with no number it cannot fire, and that `PushNotification` is
   the only automatic path from a stalled estate to a human.** #2–#6 carried it; the account switch rewrote line 1 without

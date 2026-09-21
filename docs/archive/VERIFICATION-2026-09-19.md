@@ -1443,3 +1443,14 @@ From "## Three defects the instruments found on first run", the receipt sentence
 
 An unchained suite never ran; one read an absolute container path; a fixture held a value no real
 instance could (D-40).
+
+## Cut 2026-09-21 by BOB #23 — room for D-355's two driver rules (SCHEDULER #7's Q2)
+
+From "## Where the floor goes next, in order", the 2026-07-31 plan's list (its rule stays in place):
+
+The 2026-07-31 plan, each an M0 item in `MILESTONES.md`: (1) control-plane assertions for the unreached
+ops and `sourcereach`; (2) backfill the register; (3) name the unnamed checks, one tampering assertion
+each; (4) `npm test` becomes the runner — done (M0-4); (5) `--strict` becomes the gate once 1–3 are done,
+not before: **a gate set above the current state fails on day one and gets switched off, which is worse
+than no gate.** Today `node tools/gates.mjs` runs `--strict` in the full set (`CLAUDE.md` §6); ask
+`coverage.mjs` for the figures, not this list.
