@@ -17360,3 +17360,10 @@ from the state measured at ~22:45Z); `docs/DECIDED.md` (GENERATED, regenerated L
 claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
 `docs/development/kickoffs/BOB-NEXT.md` (§3 item 1 (d) and one Status phrase), `docs/DECIDED.md` (GENERATED), this block.
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — M0-79's slack rule folded into VERIFICATION.md's DEC-49 section (CONDUCT #10's DESIGN GAP)
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/development/VERIFICATION.md` (the DEC-49 section: one sentence; two lookup pointers trimmed elsewhere);
+`docs/archive/VERIFICATION-2026-09-19.md` (the trimmed pointers, verbatim); `docs/DECIDED.md` (GENERATED), this block.
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.

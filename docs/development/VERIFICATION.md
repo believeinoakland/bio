@@ -39,7 +39,7 @@ The rest of the 2026-07-31 table is archived; this row stays (pinned by `registe
 
 ## Three defects the instruments found on first run
 
-Receipts archived (D-40). **Correct a wrong fixture; never relax the assertion.**
+**Correct a wrong fixture; never relax the assertion.**
 
 ## The battery runs every suite, and reports all of them
 
@@ -319,7 +319,7 @@ fails on day one and gets switched off, which is worse than no gate.** `node too
 ## The fleet blind spot, named before it bites (D-117)
 
 An instrument must enumerate every Worker it claims to cover and land with the first member, not after:
-an instrument that lags its subject reports a floor that describes nothing. (Fleet coverage: VF-1, above.)
+an instrument that lags its subject reports a floor that describes nothing.
 
 ## THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE — 2026-08-08, REC-76 (D-236)
 
@@ -327,7 +327,8 @@ an instrument that lags its subject reports a floor that describes nothing. (Fle
 VERDICT — the first boolean-shaped property: literal `true` is a success; `false` or a computed boolean is
 a refusal owing a translated code; none is UNCLASSIFIED, named, under a falling ceiling. **The rule to
 carry: never grade by one literal. INVERT — grade everything that does not declare itself the other
-thing — and NAME what cannot be classified** (REC-70, M0-14, CPDF-9, REC-76; D-240 holds two more).
+thing — and NAME what cannot be classified** (REC-76, D-240). **Its floors FAIL on slack past a stated
+bound**, each bound and reason in its `SLACK` table (M0-79).
 
 ## What this deliberately does not claim
 
