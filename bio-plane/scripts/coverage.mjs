@@ -1299,7 +1299,16 @@ const REGISTER_FLOOR = {
      ones — the floor was read from a run taken AFTER the commit, which is the only figure
      another checkout reproduces (D-238). ONE KEY SET, grepped after writing: `^  arms:`
      matches TWICE in this file, here and in the FLEET block far below. */
-  arms: 1539,
+  /* MOVED 2026-09-21 by REC-156 (worktree `agent-a45dec7af75234c20`, branch
+     `worktree-agent-a45dec7af75234c20`, base `2eaf5ebd`): arms 1539 -> 1543 and NOTHING
+     else, from this item's own green `--strict` run PRINTED ON ITS COMMITTED TREE 397ff618
+     (`REGISTER FLOOR arms 1543/1539 · classified 257/257 · corpus (suites read) 258/258 ·
+     GREW by 4 arm(s)`, and `220 RUN … floor 220/220`), never counted and never added by
+     hand. The cause is ONE declaration: `test/adminvote.test.mjs` now states eleven arms
+     (a)–(k) where it stated seven — REC-156's four for `op=memberadd`'s `by`, run by
+     `test/adminvote.control.mjs`. No suite was added, so `classified`, `corpus` and `run`
+     do not move. Nothing FELL. */
+  arms: 1543,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.
