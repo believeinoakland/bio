@@ -17158,6 +17158,11 @@ with a re-evaluation flag (the placed half); duplicate detection already folds b
 links bracket is D-59's to measure first. `kickoffs/SCHEDULER.md` gains two mechanics lines (`git grep -E` has no `\b`
 here; name the public op, never a DO path). 152 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 5): LED-7 batch S8-4** — three rows CLOSED BY THE THIRD DOOR, each limitation
+already stated in its home design and verified there: D-63 (`DOCUMENT-PROFILES.md`: the conservative default, rules only
+on measurement), D-111 (`ARCHIVE-FALLBACK.md`: the Wayback ceilings are theirs and deliberately unverified) and D-100
+(`SOURCE-ACCESS.md`: the confounded-variables lesson). 149 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
 
 1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
