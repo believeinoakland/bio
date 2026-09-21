@@ -1,14 +1,14 @@
 # Capture scaling: shared site assets, resumable ticks, and the ceiling
 
-**Status** · Written 2026-07-28 from figures measured against live pages at 0.37.0, and already corrected once: on 2026-07-31 its header still read *"Nothing here is built yet"* when five of six order-of-work items had shipped, which is why this document carries per-item status at all. Measured again against `bio-plane/src` at plane 0.58.0, **all six items are now [BUILT]** — item 6 (CAP-4) landed as `reuse_verdicts` (`schema.mjs:609-640`) with the free POSTHOC detection phase, the RATIFY phase's plain GET, and all four outcomes including `not_attempted` — so item 6's own status line is now the stale one. The measurements stand. What is unbuilt here is not an item but a MEASUREMENT: the freshness window and the recurrence threshold are constants CHOSEN in code (`reuseDecision`, `subresources.mjs:596`, 24 h and `minDocuments: 2`), which is the `SUBRESOURCE_CAP = 45` mistake this document names by name. as of 2026-09-14.
+**Status** · Written 2026-07-28 from figures measured against live pages at 0.37.0, and already corrected once: on 2026-07-31 its header still read *"Nothing here is built yet"* when five of six order-of-work items had shipped, which is why this document carries per-item status at all. Measured again against `bio-plane/src` at plane 0.58.0, **all six items are now [BUILT]** — item 6 (CAP-4) landed as the `reuse_verdicts` table (`schema.mjs`) with the free POSTHOC detection phase, the RATIFY phase's plain GET, and all four outcomes including `not_attempted` — so item 6's own status line is now the stale one. The measurements stand. **Partially complete.** No order-of-work item is unbuilt; what is unbuilt is MEASUREMENT: the freshness window and the recurrence thresholds are constants CHOSEN in code (24 h and `minDocuments: 2` in `reuseDecision`, `subresources.mjs`; a 0.6 share over at least three documents in `siteChrome`, `store.mjs`), which is the `SUBRESOURCE_CAP = 45` mistake this document names by name — and the sections listed below. **§Job one was corrected on 2026-09-21 (D-339)** to state the reuse rule the plane runs — recency of fetch, not stability — and where the measurement that refused the stability gate is recorded; the superseded rule stays in the section, unedited, beside its dated reason. as of 2026-09-21.
 
 **Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It owns the three things that make capture survive a real corpus — the per-site asset record, resumable sessions, and the empirically calibrated ceiling — and it is the substrate `CAPTURE-FIDELITY.md`'s subresource capture now runs on. Its recurrence signal is what `LINK-FIDELITY.md`'s chrome section reaches for; its composite-capture consequence is D-191 (a capture assembled from reused parts has a temporal spread the record does not state); and DEC-42 supersedes its free-tier premise while D-185 keeps the frugality.
 
 **Incomplete sections** ·
 - §Order of work — item 6's status line reads *"DECIDED 2026-07-31 and QUEUED as CAP-4"* and CAP-4 has LANDED: `reuse_verdicts` carries both producers (POSTHOC and RATIFY) with the four outcomes, and refinements (a) to (d) are built as decided. The line should be read as history.
-- §Job one: stop re-fetching — its freshness rule is SUPERSEDED by what shipped. It proposes reusing only assets whose `stable_since` is older than the window; `reuseDecision` (`subresources.mjs:582-608`) gates on RECENCY OF FETCH instead, with stability demoted to a secondary signal, because the stability gate measured live as reusing nothing at all on a fresh instance — the week when the ceiling hurts most. The `reused_from` / `reused_fetched_at` / `fetched_this_capture` manifest shape is built as written.
-- §The per-site asset record — the column list drawn here is not the table that exists. `site_assets` (`schema.mjs:315-328`) carries `last_fetched`, `kind` and `changes`, which are what the reuse decision reads, and it has no `capture_count` or `distinct_documents`: the distinct-document count moved into `site_asset_refs`, one row per (asset, document), so a re-capture cannot double-count it.
-- §Open questions — both remaining questions are unmeasured while the code has already picked both constants, which is exactly the failure this document diagnoses; neither the freshness window nor the recurrence threshold has been measured against fifteen or more captures of one host.
+- §Job one: stop re-fetching — CORRECTED 2026-09-21 (D-339): the body now states the rule `reuseDecision` (`subresources.mjs`) runs — furniture kinds only, at least two distinct documents on the host, and the source seen serving the bytes within 24 h, with stability demoted to a secondary signal — and where the live measurement that refused the `stable_since` rule is recorded; that rule stays in the section unedited, marked superseded with its reason. Two things in it remain open: both constants are CHOSEN, not measured (§Open questions carries them); and the manifest records WHEN a reused part was last seen served but not WHICH capture fetched it. Until 2026-09-21 this bullet said the sketched `reused_from` / `reused_fetched_at` / `fetched_this_capture` shape "is built as written", and it is not: `fetched_this_capture` is, the time is written as `reused_from_fetched_at`, and `reused_from` exists neither in the manifest nor in the store's `reusedParts` read.
+- §The per-site asset record — the column list drawn here is not the table that exists. `site_assets` (`schema.mjs`) carries `last_fetched`, `kind` and `changes`, which are what the reuse decision reads, and it has no `capture_count` or `distinct_documents`: the distinct-document count moved into `site_asset_refs`, one row per (asset, document), so a re-capture cannot double-count it.
+- §Open questions — both remaining questions are unmeasured while the code has already picked their constants, which is exactly the failure this document diagnoses; since 2026-09-21 (D-339) each question names its chosen constants beside it, labelled CHOSEN — 24 h for the freshness window, and for the recurrence threshold both reuse's `minDocuments: 2` and chrome classification's 0.6 share in `siteChrome`. Neither the freshness window nor either threshold has been measured against fifteen or more captures of one host.
 - §Workers Paid is an optimisation — superseded in premise by DEC-42 and marked as such in the body. Its free-tier figures are history: no supported instance runs under them and the installer refuses a Free account (D-185).
 
 **Contents**
@@ -97,6 +97,79 @@ not. The honest field is something like:
 { "url": "...", "sha256": "...", "reused_from": "<capture sha of the earlier fetch>",
   "reused_fetched_at": "2026-07-28T09:14:02Z", "fetched_this_capture": false }
 ```
+
+**What the plane writes, read at `fc94b045` on 2026-09-21.** The example above is
+this section's sketch, and the manifest does not have that shape. Each reused part
+carries `fetched_this_capture: false`, `reused_from_fetched_at` (the address's
+`last_fetched` in `site_assets`), `reused_stable_since`, `reused_seen_in_documents`
+and a `detail` sentence saying it was not fetched during this capture; the
+manifest's `reuse` block carries the counts, `not_reused` with the reason for each
+refusal, and the two constants in force (`fresh_window_ms`, `min_documents`). Of
+what the paragraph above requires, NOT FETCHED and WHEN are recorded; **the capture
+the bytes came from is not.** No `reused_from` field exists in the manifest or in
+the store's `reusedParts` read, which names the capture that REUSED a part and never
+the one that fetched it.
+
+**The rule the plane runs: RECENCY OF FETCH, not stability.** `reuseDecision`
+(`bio-plane/src/subresources.mjs`) lets stored bytes stand in for a fetch only when
+all four of these hold, checked in this order:
+
+1. the record already holds the address for this host — `site_assets`, keyed on the
+   host of the document being captured and the normalised address;
+2. its kind is furniture: `REUSABLE_KINDS` is stylesheet, css-asset, font and icon,
+   so an image inside the document and a script are always fetched
+   (`evidence_is_always_fetched`);
+3. at least **2** distinct primary captures on the host have referenced it
+   (`minDocuments`, counted by primary sha in `site_asset_refs`), because an asset
+   only one page references is that page's own wherever it sits
+   (`not_yet_shared_across_documents`);
+4. the source was last seen SERVING those bytes within **24 h** of now
+   (`freshWindowMs`, measured from `last_fetched`: `last_seen_served_too_long_ago`,
+   or `no_fetch_record` when no fetch time can be read).
+
+A known address refused at any step is listed in the manifest's `reuse.not_reused`
+under the reason named; an address the record has never held is simply fetched.
+**Stability gates nothing.** `stable_since` and the change count travel with each
+reuse as secondary confidence, and `stable_since` keeps its own job in §Job three.
+**And a reuse never renews its own licence:** `recordSiteAssets` moves
+`last_fetched` only when the source is actually fetched, while a reuse moves
+`last_seen` alone, so every reused part was seen served within the window at the
+moment it was reused, and once the window lapses the address is fetched again.
+
+**Why the rule moved: the stability gate was measured live, and it reused nothing
+at all.** The first cut of 0.40.0 gated reuse on how long an asset had been stable,
+as the paragraph kept below proposes. The zero was structural rather than unlucky,
+as the release commit explains: a fresh instance has no stability history
+(`stable_since` starts at an asset's first fetch), so nothing could be reused
+*"until it had sat in the record a week"* — while the ceiling hurts most in exactly
+that first week. The condition became recency of fetch before 0.40.0 was cut, and
+no commit carries the stability gate: `reuseDecision` and `stable_since` both first
+appear in `9a889f5a`, already gated on recency.
+
+**Where that measurement is recorded, and where it is not.** The refusal is
+recorded in the 0.40.0 release commit `9a889f5a` (2026-07-29, under *"A DEFECT
+FOUND BY MEASURING"*) and in `CIVICOS_UI_STATE.md`'s v27 entry (2026-07-29, part
+twenty-five); `reuseDecision`'s own comment repeats it. **No figures for the
+refusal were kept, and `MEASUREMENTS.md` has no entry for it.** What
+`MEASUREMENTS.md` does hold is the replacement rule measured live, in its section
+*Convergence: what reuse and continuation buy* — five passes over two Legistar
+pages under 0.40.0, in which the Calendar showed 0 parts reused at pass 1, 31 at
+pass 3 and 51 at pass 5, and Legislation completed at pass 5 with 60 reused. The
+zeros before the third capture of a host are the two-document floor working as
+designed.
+
+**Both constants are CHOSEN, not measured.** 24 h and 2 are literal defaults,
+written in both `reuseDecision` and `captureSubresources`; the acquire path passes
+neither, nothing configures them, and every manifest records the pair it ran under.
+Neither has been measured against a host. The two questions in §Open questions
+still ask for them, and a constant picked rather than measured is the
+`SUBRESOURCE_CAP = 45` mistake §Sensing the ceiling names.
+
+> **SUPERSEDED 2026-07-29 by the measurement above; folded into this section
+> 2026-09-21 (D-339).** The next paragraph is the rule this section first proposed,
+> kept unedited so the reason stays beside it. Its kind restriction stands and is
+> built as `REUSABLE_KINDS`; its `stable_since` condition is what the measurement
+> refused.
 
 The freshness window is the live question. A stylesheet that has not changed in
 three months is not going to change during a capture run; a page's own images
@@ -440,7 +513,11 @@ have to do and shrinks them considerably. But it does not remove the need.
 ## Open questions
 
 - The freshness window, and whether it differs by kind. Stylesheets and images
-  inside the document are not the same risk.
+  inside the document are not the same risk. **CHOSEN, not measured (D-339,
+  2026-09-21):** the plane runs one window, 24 h, for all four furniture kinds
+  (`freshWindowMs` in `reuseDecision`), and never reuses an image inside the
+  document at all, so the by-kind half is answered by exclusion and the window
+  itself by a pick. Still open until it is measured.
 - ~~Whether re-fetch at ratification is mandatory or advisory.~~ **STRUCK
   2026-07-31 (session BOB): this question is ANSWERED by this document's own
   "Re-fetch at ratification is mandatory" section, which was written after it and
@@ -452,4 +529,10 @@ have to do and shrinks them considerably. But it does not remove the need.
   be doubted later, and Bob doubted it on 2026-07-31 for exactly this reason. See
   the note under item 6 above: the substance stands, the provenance is thin.
 - The recurrence threshold, which should come from measurement across fifteen
-  or more captures per host rather than from a guess.
+  or more captures per host rather than from a guess. **CHOSEN, not measured
+  (D-339, 2026-09-21), and in two places.** Reuse requires 2 distinct primary
+  captures on the host (`minDocuments` in `reuseDecision`), and recurrence chrome
+  classification calls an address chrome at a share of 0.6 of the host's captured
+  documents once the host has at least three (`siteChrome` in `store.mjs`, whose
+  `threshold` defaults to 0.6; no op reaches its store route today). Neither has
+  been set from fifteen captures of one host. Still open until it is measured.

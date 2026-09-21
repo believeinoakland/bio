@@ -16242,3 +16242,21 @@ why: DIST-NEXT said D-158 was NOT on main; CONDUCT #9 landed it (merge `9b98c3c0
   ratify gate already requires `m.status='active'` (both gate sites in 0.69.0's `store.mjs`, twice in its signed
   bundle). It is a BATCH owed 2026-09-22, bounded by one-shot wake `3e2ff52f` (DIST.md lesson 12).
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 CAPTURE (D-339 — `CAPTURE-SCALING.md` §Job one states the reuse rule the plane runs, and keeps the one it replaced)
+
+session: worker for D-339, Opus 5, worktree-isolated, spawned 2026-09-21 by CONDUCT #9 [3d638d]
+worktree: `.claude/worktrees/agent-a058ffd54ec0ccb26` (Sparky-Air)
+branch: `worktree-agent-a058ffd54ec0ccb26` (base `fc94b045`)
+paths:
+  - `docs/development/CAPTURE-SCALING.md` — §Job one (body), §Open questions (the chosen constants labelled beside
+    the two questions that ask for them), and the front matter (Status, Incomplete sections). No heading moves, so
+    Contents does not. The row's `design:` line names `docs/architecture/`; the document lives under `docs/development/`.
+  - `docs/DECIDED.md` — GENERATED, regenerated LAST by `node tools/decided.mjs`, never authored.
+  - `docs/development/CLAIMS.md` — this block.
+NOT MINE: `bio-plane/**` — PROSE ONLY, no code moves (the row's accepts-when); code comments that still state the
+superseded rule are REPORTED for CONDUCT, not edited. `docs/development/QUEUE.md` (CONDUCT's `running` word,
+SCHEDULER's order), `docs/development/MEASUREMENTS.md` (cited, not appended; nothing is re-taken live), and every
+other governed document.
+
+**open as of 2026-09-21** — OPEN while this item builds; released at integration.
