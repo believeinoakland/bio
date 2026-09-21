@@ -67,7 +67,13 @@ Read `CLAUDE.md` (§7 has a NEW rule: no shell variable in an `rm` path), then `
    names its source. Build `last_fetched_by`, carried as `reused_from`. Every reuse recorded before that reads
    UNDETERMINED, stated, and is never inferred by matching timestamps, because an inference that costs nothing is
    not evidence. Rule it in §Job one and answer the DELEGATION there.
-6. **With Bob** (carried by BOB #19; do not re-ask): D-148, D-149, where a member's or project's Claude key would
+6. **`CLAIMS.md` "DELEGATION 2026-09-21 SCHEDULER (#5) -> BOB"** (on main at `1e423768`; nothing runnable waits on it).
+   It holds FOUR FOLDS into BOB's files: Membership §8.1 for D-52; D-80's deferral into the framework's front matter;
+   `8.claim`, which the map cut already rewrites; and the accept ceremony, ABSENT with no claim saying so (UI-74 is
+   placed). It holds FOUR QUESTIONS: D-195 at UI-27's elicitation too; D-280 (c); D-260, whether an instance-held `ai`
+   credential is needed; D-293, whether every lane needs a `gates.mjs` pre-push hook. Read the block itself; this is
+   only a pointer.
+7. **With Bob** (carried by BOB #19; do not re-ask): D-148, D-149, where a member's or project's Claude key would
    live, MK-3's two provisionals (now MK-7's), and M0-85, the heartbeat definition edit (STEP 3 reads a stale tree).
 
 ## 4. HOW BOB #20 WAS WRONG — data points (rule 12(c))
