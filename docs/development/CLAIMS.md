@@ -15238,6 +15238,8 @@ tree no other checkout reproduces (D-238). `regionLines` is untouched: this item
 changes to `publishCase()` sit outside every region marker in that function (verified by line number against
 `is-machine-publish`, `is-publish-statement` and `case-identity-derivation`).
 
+**RELEASED 2026-09-21 by CONDUCT #9.** REC-135 LANDED by CONDUCT #7 at `84a66a30` in one batch with UI-67 and REC-146 (SCHEDULER #2 closed it verified at that sha), and branch `rec-135-project-conclusion-to-case` is GONE from the remote. The paths are FREE. The DELEGATION that follows this block is a separate record and is NOT discharged by this line.
+
 ## DELEGATION 2026-09-19 RECORD (REC-135) -> BOB, then SCHEDULER — **DEC-12'S SECOND-EDITION ROUTE IS UNREACHABLE FOR A FINDING PUBLISHED ON A PROJECT-ARM CONCLUSION, and REC-135's own landing is what makes that reachable enough to matter**
 
 **open as of 2026-09-19** — raised by the REC-135 worker at its close; needs a DESIGN answer before it can be a row, so it goes to BOB first (CLAUDE.md §4) and to SCHEDULER after.
@@ -15498,6 +15500,8 @@ register reads as reserving paths that are free.
 
 **open as of 2026-09-19** — claimed at the start of the item; the paths stay reserved until CONDUCT
 integrates the branch.
+
+**RELEASED 2026-09-21 by CONDUCT #9.** M0-78, D-414 and D-433 LANDED together at `08a2e4d0` (CONDUCT #8; SCHEDULER #3 closed all three against the code), and branch `worker/instr-conduct8` is GONE from the remote (`git ls-remote --heads origin` prints nothing for it, which under PRUNE-ON-MERGE MEANS integrated, not missing). The paths this block reserved are FREE. **This line is a day late:** the integrator that landed the item did not write it, and a reservation left standing is one the next worker must stop and re-derive.
 ## DELEGATION 2026-09-19 CONDUCT (#8) -> SCHEDULER, and one item -> BOB — **A CONDUCT RUNNING AS A SCHEDULED TASK CANNOT MESSAGE ANY PEER, SO EVERYTHING ITS KICKOFF TELLS IT TO `SendMessage` IS ROUTED HERE INSTEAD**
 
 CONDUCT #8 opened 2026-09-19 as a **scheduled-task run**. `kickoffs/CONDUCT.md` "Opening" step 5 instructs it to
@@ -15630,6 +15634,8 @@ surface is out of scope by the row's own words**: a surface over an act whose vo
 name is a second path to a forgeable vote, and it is placeable only once this lands.
 
 **open as of 2026-09-19** — OPEN while this item builds; CONDUCT integrates and mints the IC.
+
+**RELEASED 2026-09-21 by CONDUCT #9.** D-136 LANDED at `1ebdc40a`, pushed at `08a2e4d0` (IC-168 — the IC this block asked the integrator to mint), and branch `worker/d136-conduct8` is GONE from the remote: integrated, not missing. The paths this block reserved are FREE. A day late, for the reason the instrument-cluster block's release gives.
 
 ## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER (five defects, each with its FIX NAMED) and -> BOB (two calls) — **SWEPT OUT OF TWO WORKER REPORTS AT INTEGRATION, BECAUSE PROSE IN A REPORT IS DRAINED BY NOTHING**
 
@@ -15797,6 +15803,8 @@ base `origin/main` @ `e1aa2eee`). Spawned by CONDUCT #8. **NARROW ON PURPOSE** �
 this item did not touch a byte of it. Lifting it is MK-3's own act and it is NOT taken — see the DELEGATION below.
 
 **open as of 2026-09-20** — the paths are free the moment CONDUCT integrates; no path here is `src/`.
+
+**RELEASED 2026-09-21 by CONDUCT #9.** MK-3's worker STOPPED at its own depends-on and that stop LANDED at `8ca77e8d`; branch `worker/mk3-conduct8` is GONE from the remote. The row is not done: BOB #19 ruled its five questions (`fa3a5a96`, `MEMBER-KNOWLEDGE-DESIGN.md` §4 and §8) and SCHEDULER #4 is superseding it with the two replacement items. A stopped row holds no paths — each replacement claims its own — and MK-1's fence (C-53.10–.12) stands untouched.
 
 ## DELEGATION 2026-09-20 RECORD (MK-3) -> BOB, then SCHEDULER — **§4's ATTRIBUTION ACT DOES NOT EXIST IN THIS PLANE, AND WHAT IS MISSING IS AN ACT RATHER THAN A FIELD. MK-1's PUBLICATION FENCE IS DELIBERATELY STILL STANDING.**
 

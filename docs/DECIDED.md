@@ -895,7 +895,7 @@ authority is the file named, never this one.
 - **C-25.19** — — roster/classification/ratchet/pin rows for the six new ops and the three new columns, each CORRECTED with a dated reason, never exempted.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:2579`
 - **C-25.19** — CORRECTED and never exempted**: the fixture invented a translation and named `C-25.19` where the plane's row is `C-25.18`, and §7 pinned the `detail` of a refusal whose `translation` the member now reads. - `docs/development/CIVICOS_UI_STATE.md` (PREPENDED), `docs/development/MEASUREMENTS.md` (appended) and this…  
-  `docs/development/CLAIMS.md:15414`
+  `docs/development/CLAIMS.md:15416`
 - **C-25.34** — Two superseded assertions CORRECTED, never exempted** — CASE-1's `version_sha is NULL` (now the pin) and `versionstate`'s registry-equality floor, which caught the new code immediately and was working as designed; CASE-1's control driver re-run, all five arms still red.  
   `docs/archive/ledgers/QUEUE-closed.md:1147`
 - **C-27** — Plus roster/ratchet/pin rows in whichever of `bio-plane/test/{bounds,meaning-bounds,capability,gate-reads,hygiene,versions,conformance}.test.mjs` the change makes owed, each CORRECTED with a dated reason and never exempted.  
@@ -913,7 +913,7 @@ authority is the file named, never this one.
 - **C-38.3** — , all CORRECTED with the reason beside them and never exempted), `admission-gate.test.mjs` (whose C-38.3 arm uses `op=purge` and is UNCHANGED, because purge is one of the four with a recorded decision), `browse.test.mjs` (see below) and one COMMENT in `shadowed-refusals.test.mjs`, corrected because a comment…  
   `docs/development/INTERFACE-CHANGES.md:12327`
 - **C-38.8** — `bio-plane/test/d270-refusal-truth.test.mjs` — the OMITTED arm for the three ops, CORRECTED with a dated reason (never exempted): they are no longer omissions. - `bio-plane/test/admission-gate.test.mjs` — C-38.8's OMISSION exemplar RE-POINTED off `op=membercaps`, which this landing stops being an example of.  
-  `docs/development/CLAIMS.md:15616`
+  `docs/development/CLAIMS.md:15620`
 - **C-41** — CORRECTED IN THIS ITEM, never exempted.** The predicate's own comment named this item as where the change would arrive, and it arrives there.  
   `docs/development/INTERFACE-CHANGES.md:5333`
 - **C-41.10** · 2026-09-17 — RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — BREAKING, MAJOR, AND RULED AGAINST BOTH THE DESIGN AND THE ROW, WHICH SAID MINOR.** C-41.10 now refuses a case document lacking the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a…  
@@ -2214,17 +2214,17 @@ Settled in prose without an id allocated. Cite them by file and line.
 - ONLY (`count(store, "this.#noProjectConclusionOf(")`), CORRECTED from 2 to 3 with the reason at the site.  
   `docs/development/CLAIMS.md:15218`
 - `bio-plane/test/members.test.mjs` — the FIVE assertions on the old sentence, CORRECTED with the reason beside each and never exempted.  
-  `docs/development/CLAIMS.md:15373`
+  `docs/development/CLAIMS.md:15375`
 - `D384_LEAVES`' `danglingRefs` entry CORRECTED, never exempted**. Nothing else in any of the five. - `bio-plane/test/caseproduction.test.mjs` — the `publish` helper ONLY: a ratify-stage refusal is SURFACED (recorded on the answer and printed) instead of throwing out of the fixture.  
-  `docs/development/CLAIMS.md:15464`
+  `docs/development/CLAIMS.md:15466`
 - comment's "reachable by NO session" sentence and the OPS-table comment, both CORRECTED because this landing makes them false.  
-  `docs/development/CLAIMS.md:15605`
+  `docs/development/CLAIMS.md:15609`
 - **2026-09-21** — the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact. **RELEASED 2026-09-21 by DIST #3, the lane's successor**: 0.68.0 is complete (deployed, live-verified, pointer advanced,  
-  `docs/development/CLAIMS.md:15728`
+  `docs/development/CLAIMS.md:15734`
 - **2026-09-21** — CLAIM 2026-09-21 BOB (BOB #19 — MK-3's five doctrine questions RULED into `MEMBER-KNOWLEDGE-DESIGN.md` §4; the CLAIMS.md MK-3 DELEGATION answered; M-75's seventh data point) claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`.  
-  `docs/development/CLAIMS.md:15980`
+  `docs/development/CLAIMS.md:15988`
 - Q11 is SETTLED and its answer does not move; what moves is the RECIPE it hands the next worker.  
-  `docs/development/CLAIMS.md:16078`
+  `docs/development/CLAIMS.md:16086`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
