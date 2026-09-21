@@ -1454,3 +1454,9 @@ each; (4) `npm test` becomes the runner — done (M0-4); (5) `--strict` becomes 
 not before: **a gate set above the current state fails on day one and gets switched off, which is worse
 than no gate.** Today `node tools/gates.mjs` runs `--strict` in the full set (`CLAUDE.md` §6); ask
 `coverage.mjs` for the figures, not this list.
+
+## Cut 2026-09-21 by BOB #23 — room for M0-79's slack rule in the DEC-49 section (CONDUCT #10's DESIGN GAP)
+
+Three fragments, verbatim, each a pointer whose target is looked up by id: the DEC-49 section's lineage
+`(REC-70, M0-14, CPDF-9, REC-76; D-240 holds two more).` (now `(REC-76, D-240).`); the fleet section's
+`(Fleet coverage: VF-1, above.)`; and the first-run section's `Receipts archived (D-40).`
