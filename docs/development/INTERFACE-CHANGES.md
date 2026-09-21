@@ -12669,7 +12669,8 @@ carried to BOB #22 with this landing's report. **NOT closed by it:** `memberadd`
 - **The shape.**
   - `instance_group (id INTEGER PRIMARY KEY CHECK (id = 1), slug TEXT NOT NULL, recorded_at TEXT NOT NULL, source TEXT NOT
     NULL, recorded_by TEXT)`; `source` is `bootstrap` (recorded at the store's first boot — the `#migrate` pass that finds no
-    `bundles` table — from `INSTANCE_NAME`, checked against the installer's slug grammar; nothing is recorded when the name
+    `bundles` table, asked through `PRAGMA table_info`, the form `#migrate` already runs against every live store at every
+    boot, because a statement that threw there would brick the Durable Object — from `INSTANCE_NAME`, checked against the installer's slug grammar; nothing is recorded when the name
     is missing or malformed) or `seed` (recorded by `op=instancegroupseed`; `recorded_by` the server's stamp). Every writer
     is an INSERT that does nothing on conflict; no statement updates, replaces or deletes the row (`instance-group.test.mjs`
     S2 pins it).
@@ -12742,8 +12743,8 @@ carried to BOB #22 with this landing's report. **NOT closed by it:** `memberadd`
   the group default bar, whose read says undetermined (C4). A replay keeps the past's bytes (R1); a malformed binding
   records nothing (R2). The catalogue's one definition is driven directly (U1–U4) and the store's stamp is pinned to call
   it (S5); the census of the source (S0, S1), the write-once pin (S2), the reader's pin (S3) and the grammar pin (S4).
-  **Control:** `instance-group.control.mjs`, THIRTEEN arms, all AS DECLARED, run twice (before and after battery pass
-  one's corrections): (a) baseline 47/0 · (b) literal-at-a-call-site 46/1, S1 ALONE — the creation stamp heals it, so the
+  **Control:** `instance-group.control.mjs`, THIRTEEN arms, all AS DECLARED, run three times with the same figures (the
+  first build; after battery pass one's corrections; after the first-boot witness moved to `PRAGMA table_info(bundles)`): (a) baseline 47/0 · (b) literal-at-a-call-site 46/1, S1 ALONE — the creation stamp heals it, so the
   census is what sees it · (c) literal-at-the-authority, THE ROW'S CONTROL, 23/24 · (d) stamp-removed 36/11 · (e)
   reread-the-var, THE LIAR, 43/4 (S3, L2–L4) · (f) no-first-boot-write 29/18 · (g) seed-at-every-boot 44/3 (P2, P6, P7)
   · (h) upsert-at-first-boot 46/1, S2 ALONE · (i) seed-accepts-twice 46/1 (P7) · (j) default-when-undetermined 44/3 (S1,

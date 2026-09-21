@@ -668,8 +668,11 @@ export class Store extends DurableObject {
   #migrate() {
     /* D-436: THE STORE'S FIRST BOOT, witnessed BEFORE anything below creates or alters a table — storage that has
        never held this schema has no `bundles` table. It is the one moment the producing group is recorded from the
-       installer's binding; `#recordGroupAtFirstBoot` (after the schema pass) says why, and no later boot reads it. */
-    const firstBoot = !this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='bundles'`);
+       installer's binding; `#recordGroupAtFirstBoot` (after the schema pass) says why, and no later boot reads it.
+       Asked through `PRAGMA table_info`, the form this function already runs against every live store at every boot
+       (the DROP loop below), rather than through a catalogue read nothing else in the plane makes: a statement that
+       threw here would throw inside blockConcurrencyWhile, and that bricks the Durable Object. */
+    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;
     const bare = (this.env.SCHEMA || SCHEMA_TEXT || "").split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
     /* Some tables are DERIVED: regenerable by scan, never authoritative, holding
        nothing a member wrote. When one of those changes shape, recreating it is

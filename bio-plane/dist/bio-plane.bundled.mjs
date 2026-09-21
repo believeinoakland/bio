@@ -27032,7 +27032,7 @@ var Store = class _Store extends DurableObject {
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
   #migrate() {
-    const firstBoot = !this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='bundles'`);
+    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;
     const bare = (this.env.SCHEMA || SCHEMA || "").split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const [table, needed] of [
       ["links", "citation_norm"],

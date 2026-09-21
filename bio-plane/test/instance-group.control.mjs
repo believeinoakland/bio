@@ -45,7 +45,7 @@ const PURGE_ANCHOR = "        this.sql.exec(`DELETE FROM bundles`);";
 /* The catalogue's ONE definition of writing the group (the store's stamp calls it): its two write lines. */
 const DEF_REPLACE = "    if (lines[i].startsWith('group:')) { lines[i] = `group: ${slug}`; return lines.join('\\n'); }";
 const DEF_OPEN = "  return [...lines.slice(0, end), `group: ${slug}`, ...lines.slice(end)].join('\\n');";
-const WITNESS = "SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='bundles'";
+const WITNESS = "    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;";
 
 /* Label prefixes, grouped as the suite names them. */
 const EVERY_W = ["W1:", "W1b:", "W2:", "W3:", "W4:", "W5:", "W5b:", "W6:", "W7:", "W8:", "W8b:"];
@@ -147,7 +147,7 @@ const ARMS = {
     mustFail: [],
   },
   "witness-other-spelling": {
-    patches: [["store.mjs", WITNESS, "SELECT name FROM sqlite_master WHERE name = 'bundles' AND type = 'table'"]],
+    patches: [["store.mjs", WITNESS, "    const firstBoot = !this.#one(`SELECT name FROM sqlite_master WHERE name = 'bundles' AND type = 'table'`);"]],
     mustFail: [],
   },
 };
