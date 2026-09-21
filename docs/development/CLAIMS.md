@@ -16111,3 +16111,10 @@ question); `docs/DECIDED.md` (GENERATED, regenerated last); and this block. The 
 `node tools/mintid.mjs I`, not read off the file. No code moves: `bio-plane/scripts/fleet-bundle.mjs` is registered
 as it stands.
 **released: 2026-09-21 FLEET #3** — landed in the same commit as the section it covers.
+
+## CLAIM 2026-09-21 FLEET (FLEET #3 — M-75 data point 8: the success half of the same hour's push refusals)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/MEASUREMENTS.md` (ONE dated paragraph appended to M-75 after data point 7; nothing else moves);
+`docs/DECIDED.md` (GENERATED, regenerated last); and this block.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the paragraph it covers.
