@@ -142,7 +142,11 @@ Learned in the field and not written anywhere before. Each has a receipt in `FLE
   isolate: scratch cannot mint an `ai` credential (M-8's wall, C-29.1), so `/run` is only drivable to its refusals.
 - **Reading which build answers:** members at `https://<member>.believeinoakland.workers.dev/version`. The plane's
   workers.dev route answers `error code: 1042`; use `ORIGIN` from `bio-plane/test/vf4-call.mjs` (it reads the instance
-  from `.env`) — `/version` for the isolate AND `/api/?op=bootstrap` for the DO. Both, every time.
+  from `.env`) — `/version` AND `/api/?op=bootstrap&store=scratch` (no token: bootstrap is `classes: null`). Both,
+  every time — but **both print the ROUTING ISOLATE's `env.VERSION`**; bootstrap adds only that the DO ANSWERED
+  (corrected 2026-09-21, FLEET #3's stand-up below). No version FIELD reports the DO's own build. Two readings reach
+  it: a DO-side wire code absent from the prior signed bundle (DIST's law), and `op=capturerequestdraining`'s `agent`,
+  which needs an existing capture-request row.
 - **A version label is not the code.** Compare `release/RELEASE.json` `fleet[].sha256` across tags
   (`git show "v0.64.0:release/RELEASE.json"`) and the committed bundle's own hash before reasoning about a rollout.
 - **Stalled deploys:** a peer lane shown `waiting` by `ListAgents` is holding a permission prompt. Route it to BOB as
@@ -228,3 +232,42 @@ So FLEET routes any change to them through `INTERFACE-CHANGES.md` and it reaches
 posture is this lane's own mechanism and needs no ruling; whether the pair earns a REGISTERED I-number is
 BOB's, taken 2026-09-19 and to be decided with the consumers' owners rather than between two lanes — until
 then the protocol route is the safe posture and costs nothing if the answer is no.
+
+## Stand-up, 2026-09-21 — FLEET #3, after the 23.5 h dark: measured, and one lesson of this file corrected
+
+Self-wake armed at opening (every 6 h, with the day-5 renewal). FLEET #2 archived under D-398, its three conditions
+re-read at the moment of acting; as that row measured, the archive alone freed nothing, and `git worktree remove`
+freed 650 MiB (9.04 → 9.68 GiB free).
+
+**The fleet serves 0.68.0, and 0.67.0 and 0.68.0 moved LABELS only.** Live, 2026-09-21T14:34:50Z, three samples each,
+all agreeing: the three members answer `0.68.0` (ocr `engine_loaded: true`, tesseract-wasm 0.11.0), and the plane
+`biosmoke7` answers `0.68.0` at `/version` and at `op=bootstrap`. The staleness check read 33 figures: every hash the
+manifests record (19 first-party inputs, 2 vendored, 2 locks, 2 ocr assets), plus each committed artifact, its
+`release/` copy and the 2 release parts against the manifest and `RELEASE.json`. **31 match, 0 drift, 2 unreadable**
+(the vendored `unpdf`: an absent install). Its control: the same check reading inputs from `f5ed2bfa` exits 1, naming
+`agent-worker/src/index.mjs`. All three members EXIST at all ten tags v0.59.0 … v0.68.0 and on `main`, and manifest,
+artifact and release agree at every one: `a7e5f590…`, `b26dee19…`, `0d99f5d0…` throughout.
+
+**CORRECTED: `op=bootstrap` never read the DO's build.** The handler writes `version: env.VERSION` from the isolate that
+routed the request, then spreads the DO's reply, which is `bootstrapState` (`claimed`, `rearmed`, `consumedAt`) and
+nothing more. `op=selftest` relays the DO's stats, which carry no build either. So the reading this file taught, which
+its 2026-09-19 stand-up and FLEET #2's handoff quote, is TWO ISOLATE SAMPLES plus proof that the DO answered. It cannot
+see the lagging DO the rollout rule warns of. The DO reads its own `env.VERSION` only to compose a capture request's
+user agent, `CivicOS/<version> (…)`, and `op=capturerequestdraining` (admin/probe, a read) returns that as `agent`,
+but only for an existing non-member-browser row. Scratch held 0 capture-request rows at 14:47Z (counters witnessed
+identical before and after), so the DO's build could not be read today without a write. DIST's discriminator also
+reaches the DO when its wire code is DO-side, and 0.67.0's is (`AI_RUN_NO_SUCH_CONTEXT`: `store.mjs` calls
+`checkRunContextKind`, and `index.mjs` never names it). Judged at the code
+to be D-116's defect seen from the DO side: D-116's premise, that `verifyUpdate` verifies the PLANE, is the same
+overclaim. Routed to SCHEDULER and DIST as a narrowing of D-116, not as a new row. `MEASUREMENTS.md`'s 0.57.0 table
+now carries a dated line saying what it could and could not see.
+
+**FL-6 is BUILT, and its runtime trace waits on the plane's CALLER, not on DS-3.** Its own accepts-when (fixtures,
+29/0, four control arms) was met at `f5ed2bfa`, `status.mjs` reads `11.cascade BUILT`, and `src/cascade.mjs` is a
+hashed input of the committed agent-worker bundle at all ten tags (whether the UPLOADED bytes match is DIST's open
+question). DS-3's config half landed too, at `2de6f25f` on 2026-09-12 (`instanceClaudeToken` in `tokens.mjs`): DIST
+#3 measured that today, and it re-reads here. What does not exist is the call. `instanceClaudeToken` has no caller,
+and `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`: D-260's gap, whose fix DIST #3 has sent to
+SCHEDULER (DIST #3 also reads no `INSTANCE_CLAUDE_TOKEN` configured on `biosmoke7`). So no account resolves at
+runtime, and two FLEET documents each said more than the code: the 2026-09-12 → 14 section's "LANDED AND LIVE", and
+FLEET #2's handoff's "BLOCKED on DS-3".
