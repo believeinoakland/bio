@@ -162,8 +162,11 @@ DELEGATION in `CLAIMS.md`, 2026-08-09). Controls: `node test/owed-controls.contr
 The driver law. A dead anchor in a throwing driver blinds every arm behind it. **A driver that throws on a
 zero-match MUST first count every arm's quote in the file that arm will write and PRINT THE WHOLE TABLE**
 (`preflight()` in `bio-plane/scripts/armdecay.mjs`). **Keep the throw**: a half-armed tree is never
-measured. Refuse only for the arms the invocation will run. **A driver's declared arm count is held
-against its run** (D-333, `m025-arm-census.mjs`); an UNKNOWN on either side is listed apart, not gated.
+measured. Refuse only for the arms the invocation will run. **A driver DECLARES its arm tally at its head
+and ASSERTS it at its foot**, held against its run by the census (D-333, D-355, `m025-arm-census.mjs`); an
+UNKNOWN on either side is listed apart, not gated. **Its pen goes on EVERY exit** (0, 1, a throw, a signal)
+from an `exit` hook: a signal handler over `execFileSync` fires only after the script ends (M-83), so a
+driver honours a signal with asynchronous children.
 **Decay mode (c), a subject gone, is a stated LIMITATION, not a figure** (D-353): cite M0-29's 0 only as of
 `e9ba393`, 2026-09-14.
 
@@ -309,12 +312,9 @@ An item is done when:
 
 ## Where the floor goes next, in order
 
-The 2026-07-31 plan, each an M0 item in `MILESTONES.md`: (1) control-plane assertions for the unreached
-ops and `sourcereach`; (2) backfill the register; (3) name the unnamed checks, one tampering assertion
-each; (4) `npm test` becomes the runner — done (M0-4); (5) `--strict` becomes the gate once 1–3 are done,
-not before: **a gate set above the current state fails on day one and gets switched off, which is worse
-than no gate.** Today `node tools/gates.mjs` runs `--strict` in the full set (`CLAUDE.md` §6); ask
-`coverage.mjs` for the figures, not this list.
+The 2026-07-31 plan is M0 rows in `MILESTONES.md` (its list archived). **A gate set above the current state
+fails on day one and gets switched off, which is worse than no gate.** `node tools/gates.mjs` runs
+`--strict` in the full set (`CLAUDE.md` §6); ask `coverage.mjs` for the figures.
 
 ## The fleet blind spot, named before it bites (D-117)
 

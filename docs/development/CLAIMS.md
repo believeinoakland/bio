@@ -17050,14 +17050,15 @@ claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `doc
    or TimeMap over an instance answers, and how an export carries an id-addressed graph, which is Q1. **The question:**
    design it with Q1, or state it as M6's limitation until M6 is taken up?
 
-**open as of 2026-09-21** — sent to BOB #23 by message. Its first form carried a bearer's reach for §4.9's acts as Q4;
-BOB #22 ruled that into Membership v2 §4.7 before the group was sent, so D-99 took its place. REC-160 is placed and
-runnable either way. **Q1, Q3 and Q4 RULED by BOB #23** (one affirmation per block, M0-93), each into its home. **Q1 (D-145) and Q4 (D-99) are M6's**,
-which `MILESTONES.md` sequences last among the unblocked milestones and which already absorbs D-99: no shape is chosen
-now; cross-instance addressing is designed WITH the WARC and Memento interchange when M6 is taken up, since an export
-carries an id-addressed graph (State Rules front matter, §1.2; `ARCHIVE-FALLBACK.md` front matter). Both rows are
-LED-7's to dispose of as M6's. **Q3: DEC-70 is folded into State Rules §5.4**, the re-evaluation obligation's own home
-(construct 3's cascade semantics), which REC-160 already cites. **Q2 (the driver rules) is still BOB #23's**, next.
+**DISCHARGED 2026-09-21 by BOB #23** — all four RULED, each into its home (the group was sent to BOB #23 by message;
+D-99 replaced a Q4 BOB #22 had already ruled). **Q1 (D-145) and Q4 (D-99) are M6's**, which `MILESTONES.md` sequences
+last and which already absorbs D-99: no shape is chosen now, and the two are designed together because an export
+carries an id-addressed graph (State Rules front matter, §1.2; `ARCHIVE-FALLBACK.md` front matter) — LED-7 disposes of
+both rows as M6's. **Q3: DEC-70 is folded into State Rules §5.4**, which REC-160 cites. **Q2: `VERIFICATION.md`'s driver
+law** (the D-331 section) carries D-355's two rules — a driver DECLARES its arm tally at its head and ASSERTS it at its
+foot, held against its run by the census; its pen goes on EVERY exit from an `exit` hook, with asynchronous children
+where it must honour a signal (M-83). Rule (a) was already there. The room came from archiving the 2026-07-31 floor
+plan's list verbatim (`docs/archive/VERIFICATION-2026-09-19.md`); its rule stays. M0-95 and M0-96 may cite the section.
 
 ## CLAIM 2026-09-21 BOB (#23) — CONDUCT #10's Q3 ruled (`op=governorconfig` is the OPERATOR's, not every administrator's) and D-432's counter-era gap ruled (NEVER drawn)
 
@@ -17097,5 +17098,17 @@ Incomplete bullets and the Status sentence; Contents regenerated); `docs/develop
 line on the SCHEDULER (#7) -> BOB DELEGATION); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 
 **NOT CLAIMED:** every other path; `DEBT.md`'s D-145 and D-99 rows are SCHEDULER's (LED-7).
+
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — SCHEDULER #7's Q2: D-355's two driver rules folded into `VERIFICATION.md`'s driver law
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/development/VERIFICATION.md` (the D-331 section: one sentence rewritten and one added; "Where the floor goes next":
+its 2026-07-31 list archived, its rule kept); `docs/archive/VERIFICATION-2026-09-19.md` (the cut list, appended
+verbatim under a dated heading); `docs/development/CLAIMS.md` (this block and one dated line on the SCHEDULER (#7) -> BOB
+DELEGATION); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT CLAIMED:** every other path.
 
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.

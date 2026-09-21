@@ -350,6 +350,8 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:11248`
 - **D-98** — authority undetermined at capture `[OBLIGATION]` (D-98, RULED: created automatically) - monitor tick: source modified `[FINDING]` · source removed (404/410) `[FINDING]` - source unreachable, and distinguishably: governed by our own pacing `[CONDITION]` (D-104) - duplicate document detected `[FINDING]` (D-60)  
   `docs/development/NOTIFICATIONS.md:184`
+- **D-99** · 2026-09-21 — — all four RULED, each into its home (the group was sent to BOB #23 by message; D-99 replaced a Q4 BOB #22 had already ruled).  
+  `docs/development/CLAIMS.md:17053`
 - **D-102** · 2026-07-30 — RULED 2026-07-30: the installer wizard must PROMPT the operator for an installation name at setup, and that name becomes the INSTANCE_NAME component of the UA string.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:65`
 - **D-102** · 2026-08-10 — AMENDED 2026-08-10: THE DEFECT WAS RECORDED AND NEVER ENACTED, WHICH IS A DIFFERENT AND WORSE FINDING THAN UNKNOWN.** `agent-worker/wrangler.jsonc:47-50` states it in its own comment — *"for an INSTALLED instance the plane's worker name is per instance (the instance name IS the worker name, D-102), so this…  
@@ -747,9 +749,9 @@ authority is the file named, never this one.
 - **D-431** — ified case rests on is refused, byte-identical for an unseen and a never-minted project; `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, with its reason; the (c) count is stated in the landing; D-431 CLOSED.  
   `docs/archive/ledgers/QUEUE-closed.md:2515`
 - **D-432** — `docs/architecture/BIO_Membership_Architecture_v2.md` (§4.9: one RULED paragraph; §4.7: the bearer paragraph's heading, which still read PROVISIONAL after BOB #22 ruled it; §7's D-432 bullet: one RULED sentence; front matter: the Status sentence and two Incomplete bullets; Contents regenerated);…  
-  `docs/development/CLAIMS.md:17065`
-- **D-432** — which still read PROVISIONAL after BOB #22 ruled it; §7's D-432 bullet: one RULED sentence; front matter: the Status sentence and two Incomplete bullets; Contents regenerated); `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and one dated line on the REC-156…  
   `docs/development/CLAIMS.md:17066`
+- **D-432** — which still read PROVISIONAL after BOB #22 ruled it; §7's D-432 bullet: one RULED sentence; front matter: the Status sentence and two Incomplete bullets; Contents regenerated); `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and one dated line on the REC-156…  
+  `docs/development/CLAIMS.md:17067`
 - **D-434** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 7): BOB #21's rulings placed** — the cache replenished with D-434 after BOB #21 archived M0-86 at its map cut; CAP-14 and D-182 placed on the Q2 and Q4 rulings. 170 open DEBT rows remain (D-353 closed by BOB #21 through the third door).  
   `docs/development/CLAIMS.md:16516`
 - **D-435** — the BOB INBOX entry routing `tools/owed.mjs`'s release defect was WITHDRAWN before landing, because SCHEDULER #4 had already placed that defect as D-435), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.  
@@ -1776,8 +1778,6 @@ authority is the file named, never this one.
   `docs/architecture/BIO_Distribution_v0_1.md:8`
 - **M0-82** · 2026-09-21 — 2026-09-21 · BOB #19 · M0-82 NARROWED, NOT SUPERSEDED.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1151`
-- **M0-93** — Q1, Q3 and Q4 RULED by BOB #23** (one affirmation per block, M0-93), each into its home.  
-  `docs/development/CLAIMS.md:17055`
 - **M0-97** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): BOB #22's six inbox entries DRAINED**, each verified at its cited design and at the code — M0-97 (`decided.mjs` indexes a `decided:` field) directly after D-435, with D-341 (the same file) after it; REC-160 (`op=reevaluations` names a severed leg's status) after D-389,…  
   `docs/development/CLAIMS.md:16985`
 
@@ -2394,9 +2394,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - AMENDED while building:** arm (5b)'s predicate too — it TYPED `BARE … 39 ops` and the roster is 40 on `main`, so it read NOT AS DECLARED on the untouched base `fc94b045` (measured on a pristine checkout); it now reads the figure from the baseline run.  
   `docs/development/CLAIMS.md:16782`
 - (sections 4 and 6 CORRECTED with dated reasons, section 9 new, the NEGATIVE CONTROL record); `bio-plane/test/retirable.control.mjs` (six arms, A9–A14); `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals ONLY, and only to figures a green run prints); `docs/development/kickoffs/BOB.md` and…  
-  `docs/development/CLAIMS.md:17079`
+  `docs/development/CLAIMS.md:17080`
 - `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§5.4: one RULED paragraph; front matter: one Incomplete bullet for §1.2 and the Status sentence; Contents regenerated); `docs/development/ARCHIVE-FALLBACK.md` (front matter: two Incomplete bullets and the Status sentence; Contents regenerated);…  
-  `docs/development/CLAIMS.md:17094`
+  `docs/development/CLAIMS.md:17095`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
