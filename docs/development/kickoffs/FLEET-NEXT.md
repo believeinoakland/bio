@@ -1,102 +1,77 @@
-# FLEET — resume here. Written 2026-09-20 by FLEET #2 (standing lane) at STAND DOWN
+# FLEET — resume here. Written 2026-09-21 by FLEET #3 (standing lane) as a CHECKPOINT while live
 
-Sparky is losing internet service; BOB #18 ordered every lane to push and retire. Read `CLAUDE.md`, then
-`kickoffs/FLEET.md` IN FULL — the area's law, and it now carries two sections this session added that matter
-more than this file does — then this. **Every fact below was MEASURED at the time given. Each is a POINTER:
-re-measure it. A deployment is a fact about an account, not a tree**, and this account was mid-flight when
-the link went.
+FLEET #3 is LIVE; this is a checkpoint written at 54% context, not a stand-down. If FLEET #3 still answers, it holds
+the lane; if it does not, this is the state. Read `CLAUDE.md`, then `kickoffs/FLEET.md` IN FULL (its 2026-09-21
+stand-up section carries today's corrections), then this. **Every fact below was MEASURED at the time given. Each is
+a POINTER: re-measure it.**
 
-## The fleet, measured 2026-09-19 after DIST's 0.66.0 deploy — NOT re-probed after 0.67.0
+## The fleet, measured 2026-09-21
 
-| member | last live reading | committed bundle sha256 |
+| what | reading | when |
 | --- | --- | --- |
-| `agent-worker` | `0.66.0` | `a7e5f590…` |
-| `pdf-worker` | `0.66.0` | `b26dee19…` |
-| `ocr-worker` | `0.66.0`, `engine_loaded: true`, tesseract-wasm 0.11.0 | `0d99f5d0…` |
-| plane `biosmoke7` | `0.66.0` at the isolate AND through the DO (`op=bootstrap`) | — |
+| `agent-worker`, `pdf-worker`, `ocr-worker` at `/version` | `0.69.0` (ocr `engine_loaded: true`, tesseract-wasm 0.11.0), 3 samples each | 15:14:06Z |
+| plane `biosmoke7` | `0.69.0` at `/version` AND at `op=bootstrap`. Both print the ROUTING ISOLATE's `env.VERSION`; bootstrap adds only that the DO answered | 15:14:06Z |
+| staleness: every figure the three manifests record, plus each artifact, its `release/` copy and the release parts | 33 checked, 31 match, **0 drift**, 2 unreadable (pdf-worker's vendored `unpdf`: the absent install) | `36eaf651`, after D-158 |
+| member bytes across tags | identical at all eleven tags v0.59.0 … v0.69.0: `a7e5f590…`, `b26dee19…`, `0d99f5d0…` | — |
 
-**DIST was cutting 0.67.0 when the link went. I did NOT re-probe after it — so the table above is 0.66.0's
-reading, not today's.** Probe before believing it: members at `https://<member>.believeinoakland.workers.dev/version`;
-the plane via `ORIGIN` from `bio-plane/test/vf4-call.mjs`, `/version` for the isolate AND `/api/?op=bootstrap`
-for the DO, both, every time (the plane's workers.dev route answers `error code: 1042`).
+The committed instrument for staleness is `bio-plane/test/fleetbundles.test.mjs` (87 pass in every gate today; its
+input-hash arm needs no `npm ci`). The cross-tag and remote-blob checks FLEET #3 ran were scratchpad scripts and die
+with the session. Their method is in FLEET.md's 2026-09-21 stand-up: 33 figures, and a control that reads the inputs
+from an older rev must FAIL, naming the file.
 
-**The member bundle bytes are IDENTICAL at v0.59.0, v0.62.0, v0.65.0 and v0.66.0 — all three members, all
-four tags, measured directly.** Members move for the VERSION label alone. Read FLEET.md's stand-up section
-for why that is a mechanism rather than a coincidence: the label is a wrangler `var` injected at deploy and
-never compiled into the bundle, so a label and a hash CANNOT be read off one another.
+## What landed today, on `origin/main`, each gated GREEN (class DOCS) and verified from the remote
 
-## What is verified, and the one thing that is not
+- `790ad66a`: FLEET.md's stand-up; **`op=bootstrap` never read the DO's build** (the reading lesson corrected in
+  place); FL-6's real blocker; a dated line under MEASUREMENTS' 0.57.0 table, its body untouched.
+- `d660d29e`: **I10 registered** (`discoverMembers`, `planeMember`; BOB #19's ruling), and the 0.69.0 re-read.
+- `86725fb8`: M-75 data point 8 (this session's pushes succeeded in the hour two lanes' were refused).
+- `e99abfec`: **I10 1.1.0**, adding `writeMember`, `verifyFresh`, `freshBuildRunnable`, `sha256` and `REPO_ROOT` (BOB
+  #20's ruling, carried by message while BOB's push was refused).
+- `89ff4592`: BOB #21's two precisions folded into §I10's body.
 
-- **NO plane change had staled a fleet artifact** as of `v0.66.0`: 23 recorded first-party input hashes in
-  the three `dist/*.bundle.json` manifests matched, 0 drifted, including the seven `../bio-plane/src/*`
-  couplings and ocr-worker's `../pdf-worker/src/pagepixels.mjs`. **This check needs NO `npm ci`** — it is
-  pure hashing and runs in a fresh worktree in seconds. Re-run it first after any plane landing. The 2
-  "unreadable" are pdf-worker's vendored `unpdf` files, absent from a tag because `node_modules` is not
-  committed: **that is the tag being correct, not drift.** Do not log it as a defect.
-- **UNDETERMINED and held open, not FLEET's to close:** whether the bytes wrangler UPLOADED to the three
-  members correspond to a build of the tagged source. DIST #2 holds this open in DIST-NEXT in these words.
-  Lesson 7's method (`wrangler deploy --dry-run --outdir`, byte-compared) was REFUSED in DIST's session by
-  the auto-mode classifier. **DIST asked FLEET to run it and FLEET DECLINED** — a peer satisfying a
-  permission decision made about another session is the work-around, not a favour, however scrupulously
-  asked. It went to Sparky as the act only they can take. **If a successor is asked again, decline again.**
-  What bounds it: the member bytes did not move across the cut, so only the VERSION var can diverge — that
-  bounds the cost of a wrong answer to a LABEL, and does not answer the question.
+Claims held: NONE, each released in the commit that used it. Workers spawned: none.
 
-## Open residue — none of it FLEET's to run
+## Open threads, as they stood at 18:38Z
 
-- **FL-6** (the Claude-account cascade at runtime) is FLEET's only build-plan row and is BLOCKED on **DS-3**,
-  which reads UNDETERMINED: DIST said plainly it did not verify it and `BIO_Distribution_v0_1.md` §8 makes no
-  satisfied-claim either — **nobody has looked. Absence of a READER, not of the work.** DIST took it, then
-  sequenced it behind 0.66.0's pointer. Unchanged through four self-wakes.
-- **M0-69 / M0-70 / M0-68** (queued, background lane). On M0-68: it is a PLACED row, not a live failure —
-  `vf4-live-scratch.mjs` declares itself a MEASUREMENT OF RECORD and its dated note PREDICTS the arm's
-  staleness at the site. This lane described it as a failure to CONDUCT and was corrected; do not repeat it.
-- **Scratch on `biosmoke7`, 2026-09-19:** every derived counter 0, `op=audit ok:true checked=0`, and
-  **13 member rows** — the 7 `vf4*` plus six older (`d41-sf72-a1/a2/a3`, `probe-1785025010`, `probe-ms11t4s2`,
-  `scr-ms11znmp`, all 2026-07-26). **M0-69's clearing job is 13 rows, not 7.** `bio` holds 4 member rows.
-- **`bio`'s `op=audit` is NOT clean and it is NOT news:** `checked=31 clean=21 withErrors=10`,
-  `tallyDetail {"C-18.9/chain-absent": 10}` = **D-200's pre-existing population, byte-for-byte**, already
-  diagnosed in `MEASUREMENTS.md`. Look it up before reporting it; do not re-mint it as a discovery.
+- **I10's Status line** reads STABLE for the pair (BOB #20, `dfff4c22`). BOB #21 confirmed the five STABLE by message
+  and said it lands the Status line itself after its map-cut. **If that line still names only the pair, the act is
+  BOB's. FLEET never writes the Status line.**
+- **D-116** (owner DIST) is narrowed on FLEET's finding: the plane's own DO is a build-bearing part nothing reads
+  back, and the fix is a DO-reported build under a DISTINCT field (never `version`, which the spread would replace).
+  It is landed in `BACKLOG.md`; the row now opens "NOTHING READS BACK WHAT BUILD". Nothing is owed by FLEET.
+- **FL-6** waits on **D-260** (the plane's caller does not exist), not on DS-3, whose config half landed at
+  `2de6f25f`. QUEUE's tracked-elsewhere cells now say so. Nothing in FLEET is runnable until D-260 lands a caller.
+- **A deploy dry-run for DIST**: not asked of this session. If DIST asks FLEET to run one, DECLINE: a peer satisfying
+  a permission decision made about another session is the work-around, not a favour.
+- **Owed**: `node tools/owed.mjs FLEET` read **0 attributed** at every reading today.
 
-## What this session landed, and what it holds
+## This session and its worktree
 
-Two commits, both on `origin/main`, both verified FROM the remote: **`59531035`** (FLEET.md's stand-up
-section — the live measurement, the staleness answer, and two receipts in the PREVIOUS FLEET-NEXT corrected)
-and **`3d8f00c2`** (`discoverMembers`/`planeMember` are consumed across lanes).
+- Worktree `.claude/worktrees/eloquent-goldstine-78dfbd`, clean, at `origin/main`. It holds 573 MB of `npm ci`
+  installs (bio-plane, pdf-worker, ocr-worker); the byte-identity arm and the gates need them.
+- Self-wake: recurring `e524a0a8` (`47 0,6,12,18 * * *` PDT) and renewal `08c1ed46` (2026-09-26 09:23 PDT). Both are
+  session-only; a successor arms its own, with FLEET-NEXT 2026-09-20's two disk corrections in the prompt text.
+- **Disk: 4.7 GiB free (98%) at 18:38Z**, down from 9.68 GiB after FLEET #2's worktree was removed (+650 MiB,
+  archive then `git worktree remove`, D-398). Under ~4 GiB it is a WAVE-WIDTH question for CONDUCT with the
+  arithmetic attached, never an offer to free FLEET's installs.
+- Context: 54% at 18:37Z. Over 60%: rewrite this file at REFRESH and ask BOB for FLEET #4.
 
-- **Claims held: NONE** — each released in the commit that used it. **Workers spawned: none. Owed: `node
-  tools/owed.mjs FLEET` read 0 attributed at every one of four self-wakes.**
-- **Self-wake: DELETED at stand-down**, both halves, from this session's own `CronList`. Arm your own; a
-  session-only `CronCreate` expires after 7 days, so arm the one-shot renewal at day 5 too. **Put the disk
-  step's two corrections in the prompt itself** (below) — a lesson that lives in a message is one the next
-  wake does not read.
-- **`discoverMembers` and `planeMember` have SEVEN consumers across three lanes**, two of them DIST's.
-  FLEET routes changes to them through `INTERFACE-CHANGES.md`; DIST #2 accepted. **Whether the pair earns a
-  REGISTERED I-number is BOB's and was NOT decided** — it was taken, open, on 2026-09-19.
-- **Disk: 7.0 GiB free at 97%, measured 2026-09-20 at this session's last wake** (BOB #18 read 6.4 GiB at
-  roughly the same time — two instruments, both above the ~4 GiB raise line). Not a projection. **13
-  worktrees.** FLEET's worktree holds ~574 MB of `npm ci` installs, KEPT on BOB's ruling.
+## What a successor must not get wrong, learned today
 
-## What a successor must not get wrong
-
-1. **Judge "is work running" with `git worktree list`, NEVER a `ps` scan.** A point-in-time `ps` returned
-   ZERO while three worktrees were being created around it — a bad instrument reporting confidently.
-2. **If disk falls under ~4 GiB, do NOT offer to free FLEET's 574 MB.** BOB audited all eight worktrees:
-   seven LIVE or deliberately held, one dead unit at 70 MB. **There is nothing to reclaim.** Running at full
-   width COSTS ~4.3 GB and the only valve is `PRUNE-ON-MERGE`. It is a WAVE-WIDTH question for CONDUCT, with
-   the arithmetic attached — not cleanup for anyone.
-3. **A figure gains scope when it is quoted.** This lane gave DIST two members at two tags; DIST wrote three
-   at four. It was TRUE, and it was not SUPPORTED — right by luck is the same defect as wrong with a better
-   outcome. Re-read your own figures before they become someone else's evidence, and when confirming a claim
-   like that, check the member EXISTS at the older tags rather than inferring it from a matching hash: a
-   member that did not exist yet answers just as tidily.
-4. **"The repo already records it" is not the question — whether the session that needs it MEETS it is.**
-   This lane argued the first and BOB overruled it with the second, and was right: the fact lived in another
-   lane's file, where no FLEET session would ever look.
-5. **Go to the ARTIFACT, not to the handoff that describes it.** This lane relayed the previous FLEET-NEXT's
-   wording on M0-68 and was corrected by CONDUCT, which opened the file. Several documents agreeing is
-   usually one source copied — and that includes THIS file.
-6. The rest still stands and lives in `FLEET.md`: the commit is the record, answer a re-drive with commits;
-   a plane change stales a fleet artifact and the guard is right — rebuild, never hand-edit a manifest hash;
-   claim precisely (`agent-worker/**`, `pdf-worker/**`, `fleet-bundle.mjs`, `fleetbundles.*`;
-   `tools/deploy-fleet.mjs` is DIST's; `ocr-worker` is CONTENT-PDF's); report to the CURRENT lead BOB.
+1. **`op=bootstrap`'s `version` is the routing isolate's.** No version FIELD reports the DO's build. The two readings
+   that reach it are a DO-side wire code absent from the prior signed bundle (DIST's law), and
+   `op=capturerequestdraining`'s `agent`, which needs a capture-request row.
+2. **Count importers by PARSING, never by a one-line grep.** A multi-line `import { … }` is invisible to grep, and
+   every one of the assembler's imports was multi-line.
+3. **A tag range is a claim about every tag in it.** FLEET #3 sent "v0.59.0 through v0.68.0" after checking 6 of the
+   10 tags, and had to correct it. Check every tag, or name the ones checked.
+4. **When a suite's assertion count moves between gates, attribute it at a FIXED BASE** (a detached scratch worktree
+   at the base, run with and without your change) before believing either. `planning-hygiene` fell 280 → 256 today,
+   and at a fixed base this lane's change moved it by 0.
+5. **Main moves every few minutes when lanes are live**, and remote-tracking refs are shared across worktrees. Rebase;
+   keep BOTH sides of a CLAIMS.md append; regenerate DECIDED.md, never hand-merge it; check the FILES for markers;
+   re-gate.
+6. **No shell variable in an `rm` path or an `mv`/`cp` target** (Bob's rule via BOB #20, 2026-09-21). Write the
+   literal absolute path, or skip the cleanup.
+7. **Never push for a lane whose push was refused**, however clean its commit. The refusal belongs to that session's
+   user.

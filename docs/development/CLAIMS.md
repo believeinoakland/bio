@@ -16520,3 +16520,11 @@ claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-
 `docs/development/kickoffs/FLEET.md` (one parenthesis in the I10 note); `docs/DECIDED.md` (GENERATED, regenerated
 last); and this block. No code moves.
 **released: 2026-09-21 FLEET #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 FLEET (FLEET #3 — FLEET-NEXT rewritten as a CHECKPOINT while live, from the measured state)
+
+claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/kickoffs/FLEET-NEXT.md` (rewritten whole: FLEET #2's 2026-09-20 handoff is superseded by today's
+measured state); `docs/DECIDED.md` (GENERATED, regenerated last); and this block. FLEET #3 stays live; this is a
+checkpoint at 54% context, not a stand-down.
+**released: 2026-09-21 FLEET #3** — landed in the same commit as the file it covers.
