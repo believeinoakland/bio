@@ -20,16 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-156 · queued — **`op=memberadd` STILL LETS A PROPOSER RECORD AN ENDORSEMENT IN ANOTHER ADMINISTRATOR'S NAME.** Its `by` is not server-stamped — the stamp in `bio-plane/src/index.mjs` covers `PROJECT_ACTIONS`, `GOVERNANCE_ACTIONS` and two project ops — and `Store#memberAdd` writes an `admin_votes` ('add') row from it when an addition needs consensus. D-136 closed this class for the three ops BOB #17 ruled, and only those. — owner RECORD.
-order: FIRST, and seated ABOVE D-432 when it enters the cache (refill appends): D-136's class and rank — *"A forgeable governance vote outranks the hole below it"* — and a correction to just-landed work (`08a2e4d0`), verified at the code (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 1)
-milestone: M8
-interface: I3 — a server-stamped `by` on one more op; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 — an addition beyond the second administrator needs the consensus of all existing ones; the section D-136 enacted.
-depends-on: none. D-136 landed at `08a2e4d0`.
-scope: add `op === "memberadd"` to the `by` stamp's condition and relay the stamped `by`; correct each suite that sends `by` in that op's body, reason at the site. **`adminvote.test.mjs`' `memberaddStamped` arm pins this boundary and FAILS THE DAY IT CLOSES** — correct it with a dated reason, never exempt it. Correct the `GOVERNANCE_ACTIONS` comment's *"NOT memberadd/memberset"* too (`memberSet` takes no `by`).
-accepts-when: a signed-in administrator's `memberadd` records the endorsement as THEM; a body `by` naming another administrator is overwritten, asserted by a drive that sends one; construct 1's *"NOT closed: op=memberadd's by"* clause leaves `construct-status.json`. How a liar passes it: stamping at the plane while the store still honours a body `by`. NEGATIVE CONTROL: drop the disjunct, and the forged-`by` arm fails by name.
-added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs REC`).
-
 ### M0-86 · queued — **BOB'S OWN ACT, NOT A WORKER SLOT (BOB #19 is cutting it by hand, 2026-09-21).** **THE CONSTRUCT MAP HAS 4 BYTES OF HEADROOM ONCE D-158 LANDS, AND OVER BUDGET IT FAILS EVERY GATE.** `docs/architecture/BIO_System_Design.md` is 49,106 B on `origin/main` and 49,148 B on `worker/d158-conduct8` (`b3ae389c`), against the 49,152 B map budget, in `tools/readbudget.mjs`' `CUT` set. The next landing that lengthens a §3 row fails — D-432 adds a table that construct 3's census cell records. — owner BOB (the map's author).
 order: SECOND, by BOB's hand rather than a slot: over budget this file FAILS every landing that grows it, where `RECORD.md` (REC-154) is a WARN; it should land before D-432 does (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 5, re-measured)
 milestone: M0
@@ -123,15 +113,15 @@ scope: when CONDUCT starts its successor itself because no BOB answers, it check
 accepts-when: `node tools/readbudget.mjs` reads CONDUCT.md under budget with 0 failing; the kickoff states the check at the fallback start and cites BOB.md; anything cut is byte-identical in the archive.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry); narrowed 2026-09-21 by BOB #19 and SCHEDULER #4 (BOB #19's inbox entry, drained this commit).
 
-### D-116 · queued — **NOTHING READS A FLEET MEMBER'S VERSION BACK THROUGH ITS BINDING.** The installer verifies the PLANE (`verifyUpdate` reads `op=bootstrap`) and each member is uploaded with a version and never asked what it answers — so the plane can verify itself current while a member still serves the previous build, invisibly to both. — owner DIST.
-order: after D-254, above features: a group can run a stale member with nothing reporting it, so the install and the deploy both claim more than they can support — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19)
+### D-116 · queued — **NOTHING READS BACK WHAT BUILD THE PLANE'S DURABLE OBJECT, OR ANY FLEET MEMBER, ACTUALLY SERVES.** The installer verifies the plane's ROUTING ISOLATE only: `verifyUpdate` reads `op=bootstrap`, whose `version` is that isolate's `env.VERSION`, with the DO's `bootstrapState` spread after it and carrying no build; each member is uploaded with a version and never asked what it answers. — owner DIST.
+order: after D-254, above features: a group can run a stale DO or member with nothing reporting it — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19; NARROWED by FLEET #3 and verified at the code by SCHEDULER #4, 2026-09-21: `vf4-live-scratch.mjs` stores the isolate's value as `plane_durable_object`)
 milestone: M7
-interface: none — a probe and its report; no plane op changes
-design: `docs/architecture/BIO_Distribution_v0_1.md` §8, the fleet's version authority, read with CLAUDE.md §5 — *a deploy verified is not a build serving*, and establish which build ANSWERED.
-depends-on: none. DS-2 built the BUILD-side authority (`resolve-version.mjs`; `release-assemble.mjs` refusing `VERSION_SKEW`/`VERSION_DISAGREES`); this is the RUNTIME half it does not reach.
-scope: read each member's version back THROUGH THE SERVICE BINDING, after install and after deploy, reporting per member. `newgroup`'s `verifyUpdate` is the shape to follow — it already retries and reports, for the plane alone. **D-115's one surviving requirement, "verify each member's version on read-back", is DISCHARGED HERE** — that row closed naming this one.
-accepts-when: an install against a fleet where ONE member serves a stale build names THAT member and does not report success; the same probe after a fleet deploy names the member that answered stale. How a liar passes it: probing a member's own endpoint instead of through the binding, which tests a path the plane does not use — so the probe goes through the binding the plane actually calls. NEGATIVE CONTROL: pin one member at the previous version, and the arm fails naming it.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id).
+interface: I3 — ONE additive IC: `op=bootstrap`'s reply gains the DO's own build under a DISTINCT field; the op's field pin moves in the same commit.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §8, the fleet's version authority, with CLAUDE.md §5: *a deploy verified is not a build serving*.
+depends-on: none. DS-2 built the BUILD-side authority; this is the RUNTIME half.
+scope: (1) the DO reports its own build under a field that is NEVER `version` — a later spread would REPLACE the isolate's reading — and `verifyUpdate` requires both and names the one that lags; VF-4's DO arm reads it. (2) each member is read back THROUGH THE BINDING after install and deploy (D-115's surviving requirement).
+accepts-when: a DO or member whose build differs from the routing isolate's is NAMED, and the install or update does not report success. How a liar passes it: filling the DO field from the isolate's env, so two values agree for free. NEGATIVE CONTROL: copy `env.VERSION` into the DO field in the handler, and the arm fails by name.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id); narrowed 2026-09-21.
 
 ### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two unrelated OPEN rows; IC-30 two PROPOSED interface changes; M0-16 a duplicated heading. `mintid --audit` registers all six, 0 breaks; the lookup §1 rests on answers ambiguously. — owner M0.
 order: SIXTH. AMBIGUITY STATED, not the record over-claiming: the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), while every row above is SILENTLY wrong. Loud beats silent, and blocking LED-7 on two rows of 211 does not outrank five silent ones (SCHEDULER #2 + BOB #17, 2026-09-19)
@@ -225,12 +215,32 @@ scope: a deck entry emits its own LENGTH — the slides the DECK has, not the on
 accepts-when: a deck whose LAST slide part is unreadable still admits a citation of that slide, and a citation past the real deck is still refused C-45.1 BY NAME with the figure in the refusal. How a liar passes it: emitting the READABLE slide count as the length, which is the defect — so the fixture's deck must have an unreadable TRAILING slide and the arm must assert the length exceeds the readable list. NEGATIVE CONTROL: emit the readable count instead, and the trailing-slide arm fails by name.
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 7, at D-359's close; `node tools/mintid.mjs COFF`).
 
+### MK-6 · queued — **THE AUTHORED BUNDLE NAMES NO AUTHOR** (MK-3's replacement (i), `MEMBER-KNOWLEDGE-DESIGN.md` §4.1). Today `testify` writes the author's member id into `bundle.md`'s Session Log AND into `data/provenance.json` (`author`, `provenance_chain[].who`), and a ratified bundle's files are what the published bucket receives. Every file and manifest record an authored bundle can publish must name the author as `observer:<testimony id>`, which only the register resolves. — owner RECORD.
+order: replaces MK-3 (superseded 2026-09-21), directly above MK-7 and MK-5, which rest on it; BOB #19: *"Build (i) regardless"* — no published byte moves, since MK-1's fence still stands (SCHEDULER #4, 2026-09-21)
+milestone: M3 — the member's own knowledge enters the record as what it is
+interface: I3 and I5 (the authored provenance document's shape); the builder states additive or breaking, and the integrator mints the IC.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §4.1 (the bundle never names its author) and §8's row for replacement (i).
+depends-on: MK-1 (built).
+scope: as §4.1 — every file and manifest record an authored bundle can publish carries `observer:<testimony id>` in place of the member id, and the register alone resolves it. Existing authored bundles stay fenced.
+accepts-when: a fixture case publishes an observation at `group` level and NO published part — no file, no manifest entry — contains the author's member id, handle or cover: a POPULATION arm over every published part, never a list of sites. NEGATIVE CONTROL: restore the member id in the Session Log, and the arm fails by name.
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs MK`).
+
+### MK-7 · queued — **THE ATTRIBUTION ACT, AND THEN THE LIFT OF MK-1's FENCE** (MK-3's replacement (ii), `MEMBER-KNOWLEDGE-DESIGN.md` §4.2–§4.6): an op the builder names, taken only by the observation's author, per (case edition, observation), on the draft; each edition's attribution written into the case document, derived from the act; ratification refused while any reached observation is unchosen, naming each; `name` refused for a member with no handle. **Then, as its own act, MK-1's fence (C-53.10–.12) is lifted, with a control arm per level.** Off-the-record stays a structural absence. — owner RECORD.
+order: after MK-6, which it rests on, and above MK-5, which rests on it; replaces MK-3 (superseded 2026-09-21). Two points are provisionals carried to Bob, cheap to change until built: §4.4's narrow veto and §4.6's `name` = handle (SCHEDULER #4, 2026-09-21)
+milestone: M3 — the member's own knowledge enters the record as what it is
+interface: I3 — the builder names the op and, if a design names it first, registers it in `op-claims.mjs`' `PLANNED_OPS`.
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §4.2–§4.6 and §8's row for replacement (ii).
+depends-on: MK-6; REC-126 (the review copy, built).
+scope: as §4.2–§4.6 and §8. The lift is its own act, taken only once the projection honours every level.
+accepts-when: through the ops, each level round-trips into the published projection exactly as chosen; nothing is prefilled; an unchosen reached observation refuses ratification BY NAME; `name` without a handle is refused; off-the-record publishes no identity by construction. NEGATIVE CONTROL: one arm per level — drop a level's handling and its arm fails by name.
+added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs MK`).
+
 ### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's and are NOT rowed.
-order: rests on MK-3's attribution (SCHEDULER, first order audit, 2026-09-18)
+order: rests on MK-7's attribution act — re-pointed from MK-3, superseded 2026-09-21 (`MEMBER-KNOWLEDGE-DESIGN.md` §8) (SCHEDULER, first order audit, 2026-09-18; SCHEDULER #4, 2026-09-21)
 milestone: M3 — the member's own knowledge enters the record as what it is
 interface: I3
 design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §6 (an opinion is not evidence)
-depends-on: MK-3 (it carries MK-3's attribution)
+depends-on: MK-7 (it carries MK-7's attribution; §8 names MK-3's replacement (ii))
 scope: build §6; an opinion cited as a basis leg is refused by name (§7). **Read the design section at the artifact before building (§8's own condition).**
 accepts-when: an opinion lands as a case element with its attribution and is refused as a leg, by name, through the ops; battery green by its COMPLETION LINE.
 NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — the refusal removed → an opinion lands as a leg and the arm FAILS. **Liar:** an opinion stored as a low-grade leg — the design refuses it as a leg at all.

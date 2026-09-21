@@ -15872,6 +15872,8 @@ level a statement OUTSIDE the signed bytes and needs it at no earlier time. **Fo
 STOPPED-AND-REPLACED by two items (§8), routed through the BOB INBOX in the same commit; mint their ids when you place
 them.
 
+**PLACED 2026-09-21 by SCHEDULER #4 — the SCHEDULER half:** MK-3 is SUPERSEDED by MK-6 (§4.1, the bundle names no author) and MK-7 (§4.2–§4.6, the act and then the lift), both minted at placement as §8 asks; MK-5 now depends on MK-7.
+
 ## DELEGATION 2026-09-20 CONDUCT (#8) -> SCHEDULER — **`tools/retirable.mjs` CANNOT NOTICE THAT `--self` NAMES SOMEBODY ELSE, AND I PROVED IT BY DOING IT**
 
 **The defect, with its fix named, found by making the mistake rather than by reading the code.**
@@ -16227,6 +16229,8 @@ acting (not running; porcelain empty; tip `02ee9a05` an ancestor of `origin/main
 (M0-86 is the map OWNER's act, not this lane's), and every kickoff but SCHEDULER's.
 
 **open as of 2026-09-21.**
+
+**AMENDED 2026-09-21, same session (commit 2):** also `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-436 archived as PLACED; D-260's disposition carries DS-3's and FL-6's dispatch fix), the TRACKED ELSEWHERE table in `QUEUE.md`, and `docs/development/kickoffs/SCHEDULER-NEXT.md` (the refresh).
 
 ## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT kept true: D-158 landed, judged BATCH at the code, and the bound is armed)
 
