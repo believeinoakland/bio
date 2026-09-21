@@ -17066,3 +17066,19 @@ regenerated LAST).
 **NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, every kickoff, and every other design document.
 
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — M0-83: `tools/retirable.mjs`'s four defects (a suffixed lane title, a `--self` found in its own input, the caller never its lane's newest, other repositories' sessions judged here)
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11` (its instrument; CONDUCT #10 flips the
+cache row `running` and spawns nothing into it). Paths: `tools/retirable.mjs`; `bio-plane/test/retirable.test.mjs`
+(sections 4 and 6 CORRECTED with dated reasons, section 9 new, the NEGATIVE CONTROL record);
+`bio-plane/test/retirable.control.mjs` (six arms, A9–A14); `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals
+ONLY, and only to figures a green run prints); `docs/development/kickoffs/BOB.md` and `docs/development/kickoffs/CONDUCT.md`
+(the retirement-sweep command gains `--self-title`, and each sentence saying `laneOf` matches the bare form alone —
+kickoffs this change supersedes); `docs/development/QUEUE.md` and `docs/archive/ledgers/*` (M0-83's row marked done and
+archived by `node tools/ledger.mjs archive M0-83`); `docs/DECIDED.md` (GENERATED, regenerated LAST). FULL GATE PROFILE.
+
+**NOT CLAIMED:** every other path. The heartbeat's SKILL (outside this repository) needs no change: it passes `--self`
+with its own id, which is never in its listing, and holds no lane.
+
+**released: 2026-09-21 BOB #23** — landed in the same push as the code it covers, M0-83 archived in the same commit.

@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1353 rulings across 100 documents.
+1354 rulings across 100 documents.
 
 ## DEC-
 
@@ -2391,6 +2391,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:16583`
 - AMENDED while building:** arm (5b)'s predicate too — it TYPED `BARE … 39 ops` and the roster is 40 on `main`, so it read NOT AS DECLARED on the untouched base `fc94b045` (measured on a pristine checkout); it now reads the figure from the baseline run.  
   `docs/development/CLAIMS.md:16782`
+- (sections 4 and 6 CORRECTED with dated reasons, section 9 new, the NEGATIVE CONTROL record); `bio-plane/test/retirable.control.mjs` (six arms, A9–A14); `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals ONLY, and only to figures a green run prints); `docs/development/kickoffs/BOB.md` and…  
+  `docs/development/CLAIMS.md:17074`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2592,7 +2594,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - BOB #22 RULED its Q1 and Q2 into Membership v2 §4.7 (*WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH*).  
   `docs/development/kickoffs/BOB-NEXT.md:22`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
-  `docs/development/kickoffs/BOB.md:93`
+  `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
   `docs/development/kickoffs/CAPTURE.md:99`
 - debt that can be avoided; superseded rules in tests are CORRECTED, never exempted.** All of these earned their place; the ledger has the receipts. ## Bob's rulings, already made.  

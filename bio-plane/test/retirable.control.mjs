@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-402's NEGATIVE CONTROL DRIVER — eight arms plus an opening and closing baseline — over
+/* D-402's NEGATIVE CONTROL DRIVER — eight arms, M0-83's six, and an opening and closing baseline — over
  * `tools/retirable.mjs` and the suite that drives it, `bio-plane/test/retirable.test.mjs`.
  *
  *   node bio-plane/test/retirable.control.mjs        (from the repo root)
@@ -40,6 +40,22 @@
  *                                                     defect arriving one layer out, which is
  *                                                     exactly why this predicate REUSES
  *                                                     `strandedwork` rather than re-asking.
+ *
+ *   M0-83's six (BOB #23, 2026-09-21), each against section 9:
+ *   A9  `laneOf` restored to the TRAILING-only regex -> "a SUFFIXED title is its lane's live holder"
+ *                                                     FAILS: the holder is in no lane and its
+ *                                                     predecessor is elected (BOB #19's defect).
+ *   A10 the UNKNOWN-SELF refusal removed             -> "a --self FOUND in the input is REFUSED"
+ *                                                     FAILS: a stranger is judged in the caller's
+ *                                                     name (CONDUCT #8's, 2026-09-20).
+ *   A11 the declared caller left out of the election -> "a DECLARED caller is its lane's newest"
+ *                                                     FAILS: its predecessor is protected again.
+ *   A12 the OUT-OF-SCOPE verdict removed             -> "names another repository's and a vanished
+ *                                                     cwd OUT OF SCOPE" FAILS (BOB #21's 24 + 15).
+ *   A13 scope by string PREFIX (OVER-STRICTNESS's    -> the SIBLING arm FAILS and the other-repository
+ *       twin: the cheap defeat the row names)         arm does NOT — a prefix match passes it.
+ *   A14 the election by ACTIVITY alone               -> "ORDERED by instance number" FAILS: a
+ *                                                     predecessor that acted last is elected.
  *
  * **ONE ARM HAD TO BE RE-AIMED AFTER ITS FIRST RUN, AND THE REASON IS THE POINT OF THE DRIVER.**
  * A5 was written against S4's VERDICT assertion and could not fail: disabling the `unreadable`
@@ -191,6 +207,44 @@ const ARMS = [
     to: `  const saved = onMain === null ? null : onMain;`,
     mustBreak: "work pushed under ANOTHER branch name is SAVED, so the session is RETIRABLE",
     mustNotBreak: ["a DIRTY tree is HOLD", "an UNPUSHED tip is HOLD"] },
+
+  { id: "A9", title: "`laneOf` restored to the TRAILING-only regex — BOB #19's suffixed holder, in no lane",
+    from: `export const laneOf = (s) => { const m = LANE_TITLE.exec(s.title || ""); return m ? m[1] : (s.title || "").trim(); };`,
+    to: `export const laneOf = (s) => (s.title || "").replace(/\\s*#\\d+\\s*$/, "").trim();`,
+    mustBreak: "a SUFFIXED title is its lane's live holder",
+    mustNotBreak: ["a --self FOUND in the input is REFUSED"] },
+
+  { id: "A10", title: "the UNKNOWN-SELF refusal removed — CONDUCT #8's stranger, protected in its name",
+    from: `  if (found) throw new UnknownSelf(selfId, found.title || "");`,
+    to: `  if (false) throw new UnknownSelf(selfId, found.title || "");`,
+    mustBreak: "a --self FOUND in the input is REFUSED, by name",
+    mustNotBreak: ["a SUFFIXED title is its lane's live holder"] },
+
+  { id: "A11", title: "the DECLARED caller left out of its lane's election — its predecessor protected again",
+    from: `  if (selfTitle) {
+    const lane = laneOf({ title: selfTitle });
+    const n = instanceOf({ title: selfTitle });`,
+    to: `  if (false) {
+    const lane = laneOf({ title: selfTitle });
+    const n = instanceOf({ title: selfTitle });`,
+    mustBreak: "a DECLARED caller is its lane's newest",
+    mustNotBreak: ["UNDECLARED, the caller's predecessor is taken for the lane's holder"] },
+
+  { id: "A12", title: "the OUT-OF-SCOPE verdict removed — BOB #21's other repositories, judged here",
+    from: `    if (place === "out")`,
+    to: `    if (false)`,
+    mustBreak: "names another repository's and a vanished cwd OUT OF SCOPE" },
+
+  { id: "A13", title: "scope by string PREFIX — the cheap defeat M0-83 names (OVER-STRICTNESS's twin)",
+    from: `  return rel === "" || (!isAbsolute(rel) && rel !== ".." && !rel.startsWith(".." + sep));`,
+    to: `  return String(p).startsWith(String(root));`,
+    mustBreak: "a SIBLING directory sharing the repository's path as a PREFIX is out of scope",
+    mustNotBreak: ["names another repository's and a vanished cwd OUT OF SCOPE"] },
+
+  { id: "A14", title: "the election by ACTIVITY alone — a predecessor that acted last, elected",
+    from: `  const outranks = (a, b) => (a[0] !== b[0] ? a[0] > b[0] : a[1] > b[1]);`,
+    to: `  const outranks = (a, b) => a[1] > b[1];`,
+    mustBreak: "the lane is ORDERED by instance number, not by who acted last" },
 ];
 
 for (const a of ARMS) {
