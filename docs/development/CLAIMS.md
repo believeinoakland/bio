@@ -16257,3 +16257,10 @@ of the DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) block, `docs/DECIDED.md` (GE
 Status line, which CONDUCT #9 was told to resolve by carrying both. **NOT CLAIMED:** `construct-status.json` and
 `BIO_System_Design.md`. The map cut is the delegation's second ruling. It is FULL profile, and landing it first would
 cost CONDUCT #9 a second battery over my JSON, so it waits for D-158.
+
+## CLAIM 2026-09-21 BOB (BOB #20 — I10 read against the code: 1.0.0 confirmed STABLE, five further exports ruled INTO it; M-75 data point 9)
+
+claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`. Paths:
+`docs/development/INTERFACES.md` (§I10's `Status` line ONLY; FLEET owns the section's body and writes the five new
+shapes itself, on this ruling sent by message), `docs/development/MEASUREMENTS.md` (one dated paragraph appended to M-75
+after data point 8; nothing else moves), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.

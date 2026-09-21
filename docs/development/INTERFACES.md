@@ -1442,7 +1442,7 @@ reproduced), and 134.6 MB is refused in-isolate as a catchable `RangeError`.
   - `verifyFresh`, `freshBuildRunnable` and `sha256`: `tools/release-assemble.mjs` (DIST).
   - `REPO_ROOT`: `tools/release-assemble.mjs` and `bio-plane/scripts/resolve-version.mjs` (DIST).
   - `bio-plane/test/fleetbundles.test.mjs` (FLEET) imports all seven.
-- **Status:** PROVISIONAL
+- **Status:** STABLE for `discoverMembers` and `planeMember` (their 1.0.0 shape), CONFIRMED by BOB #20 on 2026-09-21 after reading both against `bio-plane/scripts/fleet-bundle.mjs` at `86725fb8` (the file is unchanged since `ef3dfd3d`). The one precision that read found, `planeMember`'s `external` being a fresh copy, is folded into the shape above. The five exports added at 1.1.0 (`e99abfec`, on BOB #20's ruling) stay PROVISIONAL until BOB reads them against the code.
 
 ### The shape
 

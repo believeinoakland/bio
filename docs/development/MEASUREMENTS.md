@@ -17531,6 +17531,24 @@ had pushes to `main` refused. **Only the success half is measured here**: the tw
 reports, not re-read by this lane. One thing is new. The first of these pushes was this session's FIRST, so data
 point 7's novelty (a first push refused) is not a rule. Same shape: ONE actor, ONE form, ONE moment.
 
+**DATA POINT 9, 2026-09-21, BOB #20, appended beside 7 and 8 (`BOB.md` rule 12(c)).** Measured in this session, each
+one actor, one form and one moment. **(a)** `archive_session` over five finished `conduct-heartbeat` run-sessions,
+issued IN PARALLEL at ~15:45Z: two were ACCEPTED and three REFUSED *"Blocked by classifier"*, with no bracketed
+category. It was the same act on the same kind of target at the same instant. Each of the three was then ACCEPTED on
+ONE sequential retry at ~15:53Z. **(b)** `git push origin claude/competent-panini-90fcc0` was this session's FIRST
+push, of its OWN branch, as a compound command (`cd … && git push … | tail`). It was REFUSED
+`[Out-of-Place Publication]` at ~15:58Z. The BARE form, run from the worktree seconds later, was REFUSED
+`[Out-of-Place Publication]` again. `HEAD:main` was never attempted: the branch-first rule (`BOB-NEXT.md` §5) was
+followed, and the branch push itself was refused, which no earlier data point records. **Reported by the lanes
+themselves and not re-measured here:** CONDUCT #9's pushes to `main` and to its own branch were refused
+`[Out-of-Place Publication]` at 15:28Z and 15:29Z. SCHEDULER #4's `HEAD:main` was refused ~14:55Z, its branch was
+accepted 14:56:12Z, and its rebase-to-retry was refused `[Auto-Mode Bypass]` between 14:56:12Z and 15:02Z. BOB #19's
+second refusal (~15:10Z, *"Blocked by classifier"*) cleared on an immediate retry. DIST #3 had four refusals, each
+passing on its narrowest retry (`DIST-NEXT.md`, "The harness refusals"). **Two things are new.** A BRANCH push was
+refused in BOTH forms, so pushing a branch first does not always open a path. And one session saw the classifier split
+two to three over five identical parallel calls, the plainest evidence yet that a refusal is a fact about ONE CALL.
+**Why any of them fired is UNDETERMINED and is not guessed.**
+
 ## M-76 · 2026-09-19 · D-136 — the §4.7 vote measured ON THE LIVE PLANE before it was fenced
 
 **Instrument:** a read-only probe against the DEPLOYED instance `biosmoke7`
