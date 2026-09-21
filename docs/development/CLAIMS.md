@@ -16909,3 +16909,22 @@ why: BOB #22 ruled D-260 at `3b904ea7` (`BIO_Assistant_and_AI_Roles_v0_1.md` §6
   update carry ONE organisation-principal `ai` credential as a deploy secret, as `DAEMON_TOKEN` is carried. A successor
   reads DIST-NEXT whole, so the pointer goes there; the entry and the D-260 row stay the authority.
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 DIST (DIST #3 — cut 0.70.0, a CUT NOW: REC-156 / IC-171, the §4.7 endorsement op=memberadd let a caller forge)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+opened: 2026-09-21
+branch: `dist/cut-0.70.0` from `b83e705c` (branch until deployed and live-verified; `main`'s `release/` is the pointer)
+paths: `release/**`, `newgroup/**` (generated `src/release.mjs` and `dist/`), the version in `bio-plane/package.json`
+  and `bio-plane/wrangler.jsonc` and the same two sites in `agent-worker/`, `pdf-worker/`, `ocr-worker/`,
+  `bio-plane/test/migrate-released.test.mjs` (the `RELEASES` row for 0.69.0), `docs/development/kickoffs/DIST-NEXT.md`,
+  `docs/DECIDED.md` (GENERATED). All tags. `civicos` does NOT move: `app.html` is byte-identical at `v0.69.0` and here.
+why: a CUT NOW, judged at the code. Before REC-156 (`397ff618`, merge `f84bcd47`), `Store#memberAdd` wrote the
+  proposer's §4.7 `admin_votes` ('add') row from the caller's own `by`, and `op=memberadd` admits bearer admin and probe
+  tokens: a machine credential could record an endorsement in another administrator's name. The `by` is now
+  server-stamped, and a bearer is stamped `class:<cls>`, which no roster holds. It is IC-168's NARROWED residue. Also
+  carried, from `git log v0.69.0..b83e705c`: D-158 (IC-169, I3; the BATCH owed for 2026-09-22 folds in here) and D-432
+  (IC-170, I5 MINOR: a new `minted_ids` table, so the upgrade arm is load-bearing). Shipped-path diff: `bio-checks.mjs`,
+  `index.mjs`, `schema.mjs`, `setup.mjs`, `store.mjs`. No fleet source, `app.html`, `newgroup/` or `release/` moved.
+
+**open as of 2026-09-21.**

@@ -95,6 +95,10 @@ const RELEASES = [
      IC-166 / REC-135, IC-167 / REC-146); the commit is dist/cut-0.68.0's cut, whose
      release/ holds it. It boots every store above: RELEASES, NOT WITHDRAWN. */
   ["0.68.0", "49c4b400ab87bb52821a1eef19d8109a02d2778b"],
+  /* 0.69.0: deployed and live-verified 2026-09-21 (D-136 / IC-168, a CUT NOW: the §4.7
+     vote and §4.9 capability edit an operator token could forge); the commit is
+     dist/cut-0.69.0's cut, whose release/ holds it. RELEASES, NOT WITHDRAWN. */
+  ["0.69.0", "37d5680859f94f22623fdea1b34b99a2550c518e"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
