@@ -98,16 +98,6 @@ accepts-when: with any one floor left stale by a landing, the guard EXITS NON-ZE
 NEGATIVE CONTROL: drop one floor by one and the guard fails BY NAME; today it prints and passes.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 2, RE-MEASURED — its own figures no longer reproduce, four others do; see MEASUREMENTS.md).
 
-### M0-86 · queued — **BOB'S OWN ACT, NOT A WORKER SLOT (BOB #19 is cutting it by hand, 2026-09-21).** **THE CONSTRUCT MAP HAS 4 BYTES OF HEADROOM ONCE D-158 LANDS, AND OVER BUDGET IT FAILS EVERY GATE.** `docs/architecture/BIO_System_Design.md` is 49,106 B on `origin/main` and 49,148 B on `worker/d158-conduct8` (`b3ae389c`), against the 49,152 B map budget, in `tools/readbudget.mjs`' `CUT` set. The next landing that lengthens a §3 row fails — D-432 adds a table that construct 3's census cell records. — owner BOB (the map's author).
-order: SECOND, by BOB's hand rather than a slot: over budget this file FAILS every landing that grows it, where `RECORD.md` (REC-154) is a WARN; it should land before D-432 does (SCHEDULER #4, 2026-09-21; CONDUCT #8's DELEGATION 2026-09-20 item 5, re-measured)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each*.
-depends-on: none.
-scope: BOB's stated plan: move each §3 claim's HISTORY into `construct-status.json`'s unrendered `note`, which `node tools/status.mjs <topic>` still prints, so nothing is lost; anything cut from prose is archived VERBATIM.
-accepts-when: `node tools/readbudget.mjs` reads the map under budget, headroom stated in bytes at the landing; `node tools/status.mjs --check` still agrees; nothing that left the map is absent from both the note and the archive.
-added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
-
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.

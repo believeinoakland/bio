@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1294 rulings across 100 documents.
+1293 rulings across 100 documents.
 
 ## DEC-
 
@@ -391,7 +391,7 @@ authority is the file named, never this one.
 - **D-140** — (D-140); producer-published `options[]` (GAP-Q2); `queue_state` for mute/snooze; the relevance filter P-88 (DEC-10, RULED, MISSING); the ageing job P-85 (MISSING) | B8, B9, B1 · **HOLE-1** (CONDITION has no carrier) |  
   `docs/archive/research/BUILD-ORDER.md:121`
 - **D-144** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2): LED-7 batch 11** — D-144, D-143, D-199 and D-184 CLOSED IN FACT; D-84 (narrowed to its one unbuilt trace), D-207 and D-92 PLACED under their own ids; D-182 and D-325 SENT to BOB.  
-  `docs/development/CLAIMS.md:16473`
+  `docs/development/CLAIMS.md:16478`
 - **D-151** — ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`, `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine callers are DISTINGUISHABLE.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3447`
 - **D-156** · 2026-08-02 — AMENDED 2026-08-02 by Bob, and the correction is larger than the vocabulary split:** the USER TYPE list is not one archetype.  
@@ -471,7 +471,7 @@ authority is the file named, never this one.
 - **D-222** — §Where AI actually sits — self-marked PARTLY SUPERSEDED; D-222 option A landed (the MEANING arm reaches `inquiry_basis` and `resolutions`); `readings`, `reading_refs`, `connections` still fixed-key only; stage C is inside Part II §18's scope, not queued.  
   `docs/development/STORE-AS-CACHE.md:10`
 - **D-223** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): LED-7 batch 12** — D-223 CLOSED IN FACT (PL-8's `leg:hunch` arm); D-220 (narrowed to the investigative session, its consumer (3)) and D-394 (designed in framework §18.1, unbuilt) PLACED under their own ids.  
-  `docs/development/CLAIMS.md:16477`
+  `docs/development/CLAIMS.md:16482`
 - **D-225** · 2026-09-15 — CAPPED — this row read "uncapped (D-225)" until 2026-09-15 and is CORRECTED IN PLACE rather than deleted, because what it recorded was a real gap and the gap CLOSING is the news** | `documentsConcerning`, `resolutionsForCapture`, `connectionsFor` in `store.mjs`, named by SYMBOL and not by line (`CORPUS-STANDARD.md`…  
   `docs/architecture/BIO_Content_Framework_v0_10.md:2172`
 - **D-225** · 2026-08-07 — Related finding, raised as D-225 on 2026-08-07 and since CLOSED — CORRECTED IN PLACE on 2026-09-15 by REC-99, never deleted, because the gap this paragraph recorded was real and the gap CLOSING is the news:** the existing meaning-layer reads — `concerns`, `resolutions`, `connections` — **WERE uncapped** on the day…  
@@ -559,7 +559,7 @@ authority is the file named, never this one.
 - **D-311** — THE SEVEN ROSTER ACTS DECIDED: THEY STAY, argued at their own table and filed as D-311** — publish was already published with an incomplete derivation (an overclaim, which this record ranks above a gap; nothing lies about acts nobody offers); they need a DIFFERENT, per-pair fact; they are seven positions, not one;…  
   `docs/archive/ledgers/QUEUE-closed.md:1226`
 - **D-311** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 5): LED-7 batch 14** — D-311 PLACED after REC-158, both halves: the seven roster acts by the per-pair fact it names, and the machine fence it carried (`op=affordances` offers `publish` to a credential the store refuses by name). 174 open DEBT rows remain.  
-  `docs/development/CLAIMS.md:16485`
+  `docs/development/CLAIMS.md:16490`
 - **D-311** — The seven roster acts stay `NON_ACTS`, "position-enforced by the store", and that is DECIDED rather than deferred** — the argument is at their own table in `affordances.mjs` and the item is `D-311`.  
   `docs/development/INTERFACE-CHANGES.md:5539`
 - **D-315** — Then the mechanization question, DECIDED not deferred: whether a cheap arm-anchoring check (each arm's anchor occurs exactly once in its subject, the D-315 exactly-once shape) can run battery-side without running the arms — or argue at the site why the census stays periodic.  
@@ -637,7 +637,7 @@ authority is the file named, never this one.
 - **D-388** — WHICH FILES ARE GOVERNED WAS NOT DECIDED HERE.** The row put that with CORPUS-STANDARD and Bob; the three files the walk found unclassified are LISTED with the question each poses and routed as D-388, not assigned a class.  
   `docs/development/CLAIMS.md:10803`
 - **D-389** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 4): LED-7 batch 13** — D-389 PLACED after CAP-13 (its fix as the row analysed it; its open acceptance question answered by `CLAUDE.md` §2, stated on the row) and D-351 PLACED after CAP-11 (CAP-7's census, M-13, met its sizing condition).  
-  `docs/development/CLAIMS.md:16481`
+  `docs/development/CLAIMS.md:16486`
 - **D-389** — NOT SETTLED BY THIS BUMP, and both are rowed rather than left in a report.** **D-389** — `truncated: false` still rests on the over-fetch absorbing the fence, and that is true of ALL THREE frontier arms, so correcting one would be mirror-and-drift; the sound form and its leak analysis are in the row.  
   `docs/development/INTERFACE-CHANGES.md:8369`
 - **D-391** · 2026-09-16 — WHY NEITHER IS CORRECTED HERE:** re-denominating another area's measurement from outside it is how a wrong number acquires a second author.  
@@ -1242,8 +1242,6 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:12149`
 - **REC-125** · 2026-09-18 — The operator's bearer tokens are refused too (REC-125, D-421 DECIDED; C-32.14 / C-32.15, IC-137) — an attested act is delivered only by a signed-in member's own session |  
   `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md:141`
-- **REC-125** · 2026-09-18 — d permitted by design, BIO_Intake_Doctrine_v1_1.md §3; and NO OPERATOR BEARER TOKEN delivers either act (REC-125, D-421 DECIDED by BOB #14, 2026-09-18, `bio-plane/test/operator-attest.test.mjs`): the ADMIN, MEMBER and PROBE tokens each carrying a member's VALID signature were ACCEPTED at op=ratify and op=caseratify…  
-  `docs/architecture/BIO_System_Design.md:91`
 - **REC-125** · 2026-09-18 — CLAIM 2026-09-18 RECORD (REC-125 — D-421 DECIDED: the operator's bearer tokens may not deliver an attested act) Worker spawned by CONDUCT #4 into worktree `agent-aac5bdb9dea9c048e`.  
   `docs/development/CLAIMS.md:13538`
 - **REC-126** · 2026-09-18 — §6A — the review copy is RULED and DESIGNED, and its PLANE HALF IS BUILT (REC-126, IC-145/IC-146, 2026-09-18): the draft case, the grant with its hashed per-grant read secret, revocation, the edition binding, the comment, and the missing-list taken from the publish gates' own refusal — see §4.  
