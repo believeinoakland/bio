@@ -16449,12 +16449,24 @@ item is also written ON ITS ROW where it has one. None blocks a runnable row; ea
 
 **NEXT GROUP, not asked yet:** D-325's residue — a stated limitation, or work? CLAUDE.md §5 states it; no design home does.
 
-**open as of 2026-09-21.**
-
-**open as of 2026-09-21** — FOLDS 3 AND 4 DONE by BOB #21 at the map cut (M0-86): 8.claim's text now says §7.1 item 4 is
+**2026-09-21, BOB #21** — FOLDS 3 AND 4 DONE at the map cut (M0-86): 8.claim's text now says §7.1 item 4 is
 BUILT for publication and that no leg reader consults a conclusion, and its false-witness `none` probe is replaced by a
 `hit` on `#caseConclusionFor`'s call; `12.accept` is a new ABSENT claim (`uinone` on `versionaccept`), so the map says
-the ceremony is absent until UI-74 lands. Folds 1 and 2 and questions Q1–Q4 remain, BOB's to take next.
+the ceremony is absent until UI-74 lands. Folds 1 and 2 and questions Q1–Q4 remained, BOB's to take next.
+
+**DISCHARGED 2026-09-21 by BOB #22 — every item answered, each in its home, verified at the code first.** FOLD 1:
+`BIO_Membership_Architecture_v2.md` §8.1 now says what the notification half lacks is a PRODUCER, not a channel (the queue;
+`queuestate.mjs` catalogues `export-performed`; D-52 places the generator; only transport is Bob's, D-98). FOLD 2:
+`BIO_Content_Framework_v0_10.md`'s front matter names §12.1's CONTACT as deferred to 8.goals' design act; D-80 archived by
+the third door. Q1 RULED YES: `INVESTIGATIVE-SESSION.md` §12 clause (c), two items in the BOB INBOX. **Q2 WAS ALREADY RULED
+BY BOB, on 2026-09-10, as DEC-70** (*severance discharges SUPPORT, never CONNECTION*; the shipped provisional IS the
+ruling), so D-280 is archived closed in fact; the re-ask traces to `decided.mjs`, which cannot see DEC-70 (M-85; routed
+through the inbox). Q3 RULED: `BIO_Assistant_and_AI_Roles_v0_1.md` §6 (one organisation-principal `ai` credential,
+resuming only the runs it opened; a member's run is a stated limitation). Q4 RULED NO: the guard never runs `gates.mjs`
+(M-85's landing rate), which `VERIFICATION.md`'s push-guard section already states; its named fix, refusing a tree
+whose recorded verdict is RED, is carried by the D-293 inbox entry until built, because that file is at its reading
+budget and its register block is quoted by a control. D-260 and D-293 reach SCHEDULER through the BOB INBOX, to be
+placed under their own ids. The NEXT GROUP's D-325 went to BOB as SCHEDULER (#6)'s Q1, answered there.
 
 ## CLAIM 2026-09-21 SCHEDULER (#6) — the lane's standing claim on the build plan's own files; the D-339 worker's corrections placed (CAP-13, M0-92), CPDF-21 placed beside REC-154, and two delegations DISCHARGED
 
@@ -16542,6 +16554,12 @@ on the same files, with BOB #21's two amendments on the row (the reusing ref row
 before the build reads UNDETERMINED as to its source); Q4 as D-182 under its own id after D-220, archived from DEBT as
 PLACED. This block's own bare `open as of` line was removed in the same commit: the one above now states its status.
 
+**open as of 2026-09-21** — **Q1 RULED by BOB #22: a stated LIMITATION.** `BIO_Distribution_v0_1.md` §6 rung 6 and its
+front matter now state that the namespace is chosen per call, never per credential (only PROBE is confined, at
+`index.mjs` `scopeFor`, read 2026-09-21); the guarantee is the per-call `store=scratch` plus the witness; no credential
+binds to scratch for life and none is planned. D-325 archived by the third door. **Only Q3 remains, and it is Bob's**
+(put to him 2026-09-21; not re-asked); its provisional, the disclosed disjunction, stands.
+
 ## CLAIM 2026-09-21 BOB (#21) — the construct-map cut (M0-86): each §3 claim's history moves VERBATIM into `construct-status.json`'s unrendered `note`
 
 claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`. Paths: `docs/architecture/construct-status.json`
@@ -16563,7 +16581,8 @@ that citation dropped from the map -> exactly those two assertions fail by name;
 
 **NOT CLAIMED:** the rest of `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
 
-**open as of 2026-09-21.**
+**released: 2026-09-21 by BOB #22** — landed at `57904bcd`, an ancestor of `origin/main` @ `85f99909`; BOB #21 archived
+at ~18:58Z under D-398's three conditions, re-checked at the moment of acting.
 
 ## CLAIM 2026-09-21 FLEET (FLEET #3 — I10's body: BOB #21's two precisions folded, and the five no longer marked PROVISIONAL in the body)
 
@@ -16596,7 +16615,7 @@ rebase resolution of mine had moved it under my claim); `docs/DECIDED.md` (GENER
 
 **NOT CLAIMED:** `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
 
-**open as of 2026-09-21.**
+**released: 2026-09-21 by BOB #22** — landed at `b6a14392`, an ancestor of `origin/main` @ `85f99909`; BOB #21 archived.
 
 ## CLAIM 2026-09-21 BOB (#21) — the handoff to BOB #22
 
@@ -16860,3 +16879,22 @@ with a dated reason. REC-156 did not take it: it moves reach, and the row's scop
    non-administrator: if it stays the founder's, `SESSION_ROLE_CANNOT_REACH_OP` must say *the founder's session* for it.
 
 **open as of 2026-09-21** — raised at REC-156's landing; nothing placed yet, and item 3 waits on BOB.
+
+## CLAIM 2026-09-21 BOB (#22) — the two BOB groups ruled: D-325 a stated LIMITATION, D-80 folded, Membership §8.1 folded, D-195 at the elicitation, D-260 and D-293 ruled, D-280 found RULED by Bob as DEC-70
+
+claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Distribution_v0_1.md`
+(§6 rung 6: one paragraph; front matter: one bullet added, the §6 D-260 bullet rewritten; the D-260 frontier row; Status
+`as of`); `docs/architecture/BIO_Membership_Architecture_v2.md` (§8.1's built-and-promised paragraph only);
+`docs/architecture/BIO_Content_Framework_v0_10.md` (front matter: one Incomplete bullet; Status `as of`);
+`docs/development/INVESTIGATIVE-SESSION.md` (§12: one clause (c); front matter: one bullet);
+`docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` (§6's D-260 paragraph; front matter §6 bullet; the D-260 frontier
+row; Status `as of`); `docs/development/DEBT.md` and
+`docs/archive/ledgers/*` (D-325's, D-80's and D-280's dispositions, then `node tools/ledger.mjs archive`);
+`docs/development/QUEUE.md` (the BOB INBOX only); `docs/development/MEASUREMENTS.md` (M-85, appended);
+`docs/development/CLAIMS.md` (this block, the releases of BOB #21's two
+landed blocks, and dated lines on the SCHEDULER (#5) and SCHEDULER (#6) DELEGATIONs to BOB); `docs/DECIDED.md`
+(GENERATED, regenerated LAST).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, every kickoff, and every other design document.
+
+**open as of 2026-09-21.**
