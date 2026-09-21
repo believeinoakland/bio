@@ -16882,18 +16882,11 @@ with a dated reason. REC-156 did not take it: it moves reach, and the row's scop
    ADMIN_TOKEN holder's, under §4.6)? Either way its refusal must stop calling an enrolled administrator a
    non-administrator: if it stays the founder's, `SESSION_ROLE_CANNOT_REACH_OP` must say *the founder's session* for it.
 
-**open as of 2026-09-21** — **item 2's bearer question RULED by BOB #22, once for all four ops** (Membership v2 §4.7,
-*WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH*): the ADMIN_TOKEN holder keeps reaching them, its `by` stamped `class:admin`,
-on no roster, so it endorses for nobody (§4.6); and an administrator's proposal IS their own endorsement, counted once.
-Items 1 and 2 PLACED on that ruling by SCHEDULER #7 as REC-159, directly before REC-155 (the same `SESSION_OPS` sets); the
-block's two state lines merged into this one. **Item 3 (`governorconfig`) is carried to BOB #23** (BOB-NEXT §3).
-
-**open as of 2026-09-21** — **item 3 RULED by BOB #23** (Membership v2 §4.9, *AND ADMINISTRATORS DO NOT RUN THE
-INSTANCE*): `governorconfig` is the OPERATOR's act — the founder's session and the ADMIN_TOKEN holder's bearer — and not
-an administrator's, because a host's configured appetite outranks the hosting account's `GOVERNOR_APPETITE_PER_MIN` and
-4.8 keeps governance off the machine. It stays in `SESSION_OPS.admin` alone. Its refusal's corrected sentence, and the two
-plane comments REC-159 makes false, are one BOB INBOX entry of 2026-09-21, to ride WITH REC-159 (the same two suites,
-one gate). Nothing in this DELEGATION waits on BOB now: that entry is SCHEDULER's to place.
+**DISCHARGED 2026-09-21 — every item placed or ruled, verified on `origin/main` @ `c31b8f60` by SCHEDULER #7:** items 1 and 2
+PLACED as REC-159, directly before REC-155; a bearer's reach RULED by BOB #22 into Membership v2 §4.7 (the ADMIN_TOKEN holder is
+not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT
+RUN THE INSTANCE*: `governorconfig` is the operator's), and its build PLACED as REC-162 directly after REC-159. The block's two
+dated open lines came out with this one, as `tools/delegations.mjs` asks of a closed block; both rulings live in Membership v2.
 
 ## CLAIM 2026-09-21 BOB (#22) — the two BOB groups ruled: D-325 a stated LIMITATION, D-80 folded, Membership §8.1 folded, D-195 at the elicitation, D-260 and D-293 ruled, D-280 found RULED by Bob as DEC-70
 
@@ -17000,6 +16993,20 @@ ROW, PLACED: 164 open DEBT rows remain. The DELEGATION SCHEDULER (#7) -> BOB bel
 cache is replenished to 8 with M0-97, D-341 and M0-83 by `node tools/ledger.mjs refill`; REC-159's scope follows BOB #22's
 bearer ruling (§4.7); the REC-156 DELEGATION's two state lines are merged into one; the group to BOB carries D-99 in
 place of the ruled bearer question, and D-145 and D-99 carry a dated SENT note.
+
+**AMENDED 2026-09-21, same session (commit 5): LED-7 batch S7-1** — D-33 CLOSED IN FACT (`query.test.mjs` asserts every sortable
+field ends with `bundle_id ASC`); D-40 PLACED after M0-91, RE-MEASURED (`cite-scale.mjs` still writes the illegal `notable`,
+though the row called it fixed); D-59 PLACED after D-92 as a bounded scratch measurement. D-162 carried to the next BOB
+group (doctrine, by its own disposition); D-124 carried until LED-8. 161 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 6): BOB #23's entry DRAINED** — `governorconfig`'s refusal PLACED as REC-162, back to
+back after REC-159; the REC-156 DELEGATION DISCHARGED, every item placed or ruled. BOB #23 verified this session's drain of BOB
+#22's six entries row by row, takes M0-83 itself, and rules the SCHEDULER (#7) -> BOB group's Q1, Q3 and Q4 next, Q2 after M0-83.
+
+**AMENDED 2026-09-21, same session (commit 7): LED-7 batch S7-2 and THE REFRESH** — D-50 PLACED after CPDF-3 (the catalog half
+of project-name uniqueness; the write path refuses `NAME_TAKEN`); D-54 NARROWED to `limits.subrequests` and PLACED after D-107,
+its plan half closed by DEC-42. 159 open DEBT rows remain. `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #8 at the
+refresh (56%, nothing pending); this claim passes to SCHEDULER #8, who supersedes it when it archives this session.
 
 ## CLAIM 2026-09-21 BOB (#22) — REC-156's bearer and proposer questions ruled into Membership v2 §4.7
 

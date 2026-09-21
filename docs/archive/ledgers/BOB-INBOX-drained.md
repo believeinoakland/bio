@@ -1323,3 +1323,28 @@ the same fact at the accept ceremony; whichever lands second reuses the first's 
    answers are written; it prefills nothing, refuses nothing, shows no strength and no AND/OR word. **Accepts when** two
    correlated reasons show their origin and the member's answers are written unchanged. **The cheap defeat to refuse:**
    blocking or reordering the answers on a shared origin, which turns an informing fact into a gate.
+
+## DRAINED 2026-09-21 by SCHEDULER #7 — BOB #23's entry (`c31b8f60`), verified at `BIO_Membership_Architecture_v2.md` §4.9 and at the code (the five founder-only ops; `index.mjs`' two `governorconfig` comments): PLACED as `REC-162`, back to back after REC-159; the REC-156 DELEGATION DISCHARGED
+
+**2026-09-21 · BOB #23 · `op=governorconfig` IS THE OPERATOR'S, AND ITS REFUSAL CALLS AN ENROLLED ADMINISTRATOR A
+NON-ADMINISTRATOR (the REC-156 DELEGATION's item 3, RULED).** Design: `docs/architecture/BIO_Membership_Architecture_v2.md`
+§4.9, the paragraph *AND ADMINISTRATORS DO NOT RUN THE INSTANCE* (this commit). Verified at the code: exactly five ops sit
+in `SESSION_OPS.admin` and not in `SESSION_OPS.member` (`governorconfig`, `memberadd`, `memberset`, `signeradd`,
+`signerset`, re-derived from `index.mjs` and pinned by `d270-refusal-truth.test.mjs`'s ROLE literal); a member-kind
+session refused one gets `SESSION_ROLE_CANNOT_REACH_OP`, whose sentence says the op *"is reserved to an administrator of
+this group"* and that the session's role is `member` — false of an ENROLLED administrator, whose `kind` is `member` by
+D-136's measurement. `Store#governorAdmit` ranks a host's configured appetite above the hosting account's
+`GOVERNOR_APPETITE_PER_MIN`, which is the ruling's reason. Supersedes nothing; the DELEGATION's item 2 is REC-159.
+
+1. **RECORD (M8; I3, the integrator classifies it in IC-55's family):** the (b) refusal says WHICH session reaches the op,
+   derived from the set that reaches it, so it cannot go false when an op moves: an op only `SESSION_OPS.admin` reaches is
+   *reserved to the founder's session* (the operator's sign-in, Membership v2 §4.9), and the sentence neither calls it an
+   administrator's nor says the caller's role is not one. It is TRUE TODAY of all five, so it may land alone; it touches
+   the two suites REC-159 does, so sequence the two back to back and let the second re-read the first's pins. In the same
+   landing, correct `index.mjs`' two `governorconfig` comments (the OPS row's *"the same line memberset and signerset
+   draw"*, the NEEDS entry's *"the same as the roster ops above"*): its line is §4.8's, not §4.9's. **Accepts when** an
+   enrolled administrator and an ordinary member, each refused `governorconfig`, read the founder's-session sentence, and
+   the founder's session and the ADMIN_TOKEN bearer still set an appetite. **The cheap defeat to refuse:** moving
+   `governorconfig` into both session sets, which reverses the ruling, so an arm asserts the enrolled administrator is
+   still REFUSED. `d270-refusal-truth`'s `/administrator/` assertion on every ROLE op is corrected with a dated reason,
+   never exempted. NEGATIVE CONTROL: restore the administrator sentence for a founder-only op, and the arm fails by name.
