@@ -61,6 +61,10 @@
  *   (A7..A9 added and all nine RUN 2026-09-18 by BOB #14, exit 0, 43 pass / 0 fail.)
  *   (All eight RE-RUN 2026-09-18 by the LED-2 worker after A3's anchor was repointed to the one
  *   `isClosedDebtRow` call site, exit 0, 43 pass / 0 fail, restore verified by sha256.)
+ *   (A10) the discharge ignored again -> an OPEN row that once said *ROUTED TO BOB* owes BOB forever,
+ *        whatever a later sentence in its cell says: D-134's false listing (D-435).
+ *   (A10 added and A1 re-aimed at the line the discharge changed; all ten RUN 2026-09-21 by BOB #22,
+ *   exit 0, 57 pass / 0 fail, suite 47/0 at both baselines, restore verified by sha256 AND cmp.)
  *
  * **THE HEADER FIRST CITED THIS FILE BEFORE IT EXISTED**, which is the false-absence class this
  * family exists to catch, committed by a file in the family. Corrected to say so, then built.
@@ -112,6 +116,27 @@ export const OWNER_RE = (lane) => new RegExp(
   + String.raw`|(?i:blocked on (?:the\s+)?)${lane}\b`
   + String.raw`|${lane}(?i:'s to |'s call| owns | to decide| to design)`
   + String.raw`|(?i:is )${lane}(?i:'s)` + POSSESSIVE_ENDS);
+
+/* A LANE'S PART IS DISCHARGED BY NAME, AND ONLY THAT LANE'S (D-435, 2026-09-21, BOB #22). Until then this
+   file could ATTRIBUTE but never DISCHARGE: an OPEN row whose disposition once said *ROUTED TO BOB* owed
+   BOB forever, however plainly a later dated sentence in the same cell said that part was done — so every
+   lane's worklist could only grow. D-134 is the exhibit: BOB #18 wrote *Nothing on this row falls to the
+   BOB lane* on 2026-09-20, and the row stayed on BOB's list.
+   THE ONE FORM THE CORPUS ALREADY WRITES, AND NOTHING ELSE. Measured 2026-09-21 over the live DEBT.md:
+   exactly twice (D-134, D-398), both *Nothing on this row falls to the BOB lane.* It is as narrow as
+   RESIDUE_RE was forced to be, because the liar's fix for a list that cannot shrink is a pattern wide
+   enough to make the count drop: the same day, *nothing* stood outside the form in 25 live dispositions,
+   and *falls to* in prose that discharges nobody (the bodies of D-63 and D-304). The phrase is case-insensitive;
+   the lane token is case-sensitive and word-bounded, as in OWNER_RE and for its reason — *nothing here
+   falls to Bob* is the person. The trailing ` lane` is the corpus's spelling; `\b` is what ends the token.
+   PER-LANE, NOT PER-ROW: a discharge names ONE lane, so a row discharged for BOB is still attributed to
+   every other lane its disposition names (D-134 remains UI's). Within its own lane it outranks an owner
+   phrase wherever in the cell either stands, so a row routed BACK to a lane it discharged must have the
+   discharge rewritten, not a routing appended after it — the record is made explicit, never guessed (the
+   `owed by this lane` rule below). A residue marker is untouched: a discharged row that still declares
+   one stays in the residue population, attributed to nobody. */
+export const DISCHARGE_RE = (lane) => new RegExp(
+  String.raw`(?i:\bnothing (?:on this row |here )?falls to (?:the )?)${lane}\b(?i: lane)?`);
 
 /* TIGHTENED TWICE, BOTH TIMES BY DRIVING IT. A bare `RESIDUE` matched the word wherever it
    appeared in narration — *the residue that is ALREADY THERE*, *residue each* — which is prose
@@ -186,6 +211,7 @@ const rowsOf = (text, prefix) => {
 export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
   const read = reader || ((p) => { try { return readFileSync(join(repo, p), "utf8"); } catch { return null; } });
   const owner = OWNER_RE(lane);
+  const discharge = DISCHARGE_RE(lane);
   const items = [], unreadable = [];
 
   const debt = read(SOURCES.debt);
@@ -194,8 +220,10 @@ export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
     /* A CLOSED row owes nothing, however many owner words it carries. */
     if (isClosedDebtRow(r.disposition)) continue;
     /* DISPOSITION ONLY. The body quotes Bob in nearly every row; a mention is not an
-       assignment, and conflating them produced a 58-item list that was mostly noise. */
-    const owned = owner.test(r.disposition);
+       assignment, and conflating them produced a 58-item list that was mostly noise.
+       D-435: and a lane the disposition DISCHARGES by name is not attributed, whatever owner
+       phrases the same cell carries — per lane, so every other lane it names still is. */
+    const owned = owner.test(r.disposition) && !discharge.test(r.disposition);
     const residue = RESIDUE_RE.test(r.disposition);
     if (owned || residue)
       items.push({ source: "DEBT", id: r.id, attributed: owned,

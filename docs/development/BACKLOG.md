@@ -20,17 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### D-435 · queued — **`owed.mjs` CAN ATTRIBUTE BUT NEVER DISCHARGE, SO EVERY LANE'S WORKLIST IS MONOTONIC.** `owedFor()` tests `OWNER_RE(lane)` against a row.s DISPOSITION, excluding only `isClosedDebtRow`, so an OPEN row that once said *ROUTED TO BOB* owes forever — however emphatically a later dated sentence in the same cell says that lane.s part is done. `owed.mjs BOB` reads 7 and **exactly 1 is known false** (D-134). — owner BOB (its own instrument).
-order: SECOND. Every lane plans from this number, including this one, and it can only grow — a worklist that cannot shrink quietly becomes a backlog of the past. Cheap, and the fix is named in the row rather than designed (SCHEDULER #3, 2026-09-20, BOB #18's inbox entry)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — an instrument reports what it can see, and this one cannot see a discharge.
-depends-on: none.
-scope: a `DISCHARGE_RE` matching the form the corpus already writes twice and NOTHING ELSE — `nothing (on this row |here )?falls to (the )?<LANE>( lane)?` — as narrow as `RESIDUE_RE` was forced to be. **A row discharged for one lane still attributes to any OTHER lane its disposition names** — the predicate is per-lane, not per-row. **FULL GATE PROFILE** (`tools/` is not `docs/`): check disk first; BOB #18 declined to build it at raising for that reason rather than skip the gate.
-accepts-when: a row carrying BOTH an owner phrase and a discharge is NOT attributed; one carrying only the owner phrase still is; D-134 leaves BOB's list and the count moves 7 → 6. Every lane's count re-measured BEFORE and AFTER, so the effect is a figure rather than a claim. How a liar passes it: widening the pattern until the count drops — so the over-strictness arm asserts an undischarged row still attributes.
-NEGATIVE CONTROL: break the discharge in `owed-controls.mjs` and watch a NAMED assertion in `owed.test.mjs` fail.
-added: 2026-09-20 · SCHEDULER #3 (BOB #18.s inbox entry, drained this commit).
-
 ### M0-83 · queued — **`tools/retirable.mjs` CAN PROTECT A STRANGER AND CALL A STANDING LANE'S LIVE HOLDER RETIRABLE.** Three defects, one judgement: (1) `laneOf` strips only a TRAILING `#N`, so `CONDUCT #8 (BIO) — integrator lane` is in no lane, its predecessor is elected newest, and the holder was judged RETIRABLE (BOB #19, 2026-09-21); (2) a `--self` FOUND in the input is accepted, though `list_sessions` excludes the caller (CONDUCT #8, 2026-09-20: `1 retirable … 7 judged`, correctly `8 … 14`); (3) the caller can never be the newest of its own lane. — owner BOB (its instrument).
 order: directly before M0-81, as ONE row — *"one file, one suite, one gate"* (BOB #19, 2026-09-21): it inverts the standing-lane protection, and its count moves in the direction a reader takes as SAFE (SCHEDULER #4, 2026-09-21)
 milestone: M0

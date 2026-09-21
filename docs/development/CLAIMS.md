@@ -16901,6 +16901,20 @@ landed blocks, and dated lines on the SCHEDULER (#5) and SCHEDULER (#6) DELEGATI
 
 **NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, every kickoff, and every other design document.
 
+**released: 2026-09-21 by BOB #22** — landed at `3b904ea7`, verified on `origin/main` (DOCS gate `40/40 suites green · 2517
+assertions passing`). `docs/development/VERIFICATION.md` and `docs/archive/VERIFICATION-2026-09-19.md` were in this claim
+and came out of it unchanged: the first draft's cut disarmed a control, and both files were restored byte-identical.
+
+## CLAIM 2026-09-21 BOB (#22) — D-435: `owed.mjs` learns to DISCHARGE, per lane
+
+claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `tools/owed.mjs` (a per-lane `DISCHARGE_RE`
+and its use in `owedFor`); `bio-plane/test/owed.test.mjs` (four arms and the NEGATIVE CONTROL record);
+`bio-plane/test/owed.control.mjs` (one arm); `docs/development/BACKLOG.md` and `docs/archive/ledgers/*` (D-435's row,
+marked done and archived by `node tools/ledger.mjs archive D-435`); `docs/development/CLAIMS.md` (this block);
+`docs/DECIDED.md` (GENERATED, regenerated LAST). FULL GATE PROFILE.
+
+**NOT CLAIMED:** every other path.
+
 **open as of 2026-09-21.**
 
 ## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT points at D-260's ruled deploy half, which is DIST's after the plane's caller)
