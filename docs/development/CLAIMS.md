@@ -17612,3 +17612,29 @@ why: the D-436 DELEGATION leaves "how the installer's update path tells them" to
   that their own `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion, and NEVER seeds.
   It is built with 0.71.0, accepted by the wizard suite (telling present when unseeded, absent when seeded, no seed call).
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 M0 (D-293 WITH M0-98 — the gate records its verdict by TREE, the push guard refuses a RED record, and a TARGETED class plus `--since`)
+
+session: WORKER spawned 2026-09-21 ~23:30Z by CONDUCT #10 for D-293 with M0-98 (one file set, one suite, one gate), worktree
+`.claude/worktrees/agent-aa5a3d09efb0f2f8c`, branch `worktree-agent-aa5a3d09efb0f2f8c`, from `origin/main` @ `a4630aa1`.
+authority: `QUEUE.md` `### D-293 · running`; `BACKLOG.md` `### M0-98` (it read `queued`, not `blocked`, on `a4630aa1`); design
+`VERIFICATION.md` (the push-guard section), BOB #22's D-293 entry and BOB #23's entry in `BOB-INBOX-drained.md`, and
+`ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1.
+paths, BY SITE:
+  - `tools/gates.mjs` — the verdict record (written only for a CLEAN tree, keyed by the tree), the TARGETED class, `--since`,
+    and the header's reach statements. Its existing NEGATIVE CONTROL (src + docs reads FULL, docs alone DOCS) is kept true.
+  - `tools/pushguard.mjs` — the record's ONE module (path, key, reader, writer, effective verdict) and the refusal of a push
+    whose tip tree carries a RED record, in `run()`. The pre-push SHIM is NOT changed and `HOOK_VERSION` stays 2: the shim's
+    behaviour is untouched, so no hook in the shared common dir is rewritten by this landing.
+  - `bio-plane/test/gates.test.mjs` (NEW, the one suite) and `bio-plane/test/gates.control.mjs` (NEW, its driver).
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, moved to the figures this item's own green `--strict` run PRINTS.
+  - `docs/development/VERIFICATION.md` — the push-guard section only: the refusal's one line, paid for by tightening that
+    section's own prose (the file is at its reading budget: 24,568 of 24,576 B measured at spawn).
+  - `.gitignore` — one pen line, `.d293-harness/`, named for the item like every pen above it.
+  - `docs/development/MEASUREMENTS.md` (appended, if a figure is quoted), `docs/DECIDED.md` (GENERATED, regenerated LAST), and
+    this block with its DELEGATIONS.
+**NOT CLAIMED:** `CLAUDE.md` §6 and the kickoffs whose gate sentences this landing makes stale (DELEGATED below, each with its
+replacement), `docs/development/QUEUE.md`, `docs/development/BACKLOG.md`, `bio-plane/src/**` (nothing under `src/` is edited, so
+no bundle rebuild is owed), `bio-plane/test/pushguard.test.mjs` (kept green unedited), `newgroup/**`, `release/**`.
+
+**open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
