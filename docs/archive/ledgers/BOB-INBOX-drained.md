@@ -1382,3 +1382,20 @@ throughput. Supersedes nothing; item 1 builds on D-293 in the same file.
 4. **M0 with CONDUCT, after 3: `running` leaves SCHEDULER's rows** for a CONDUCT-owned per-row record written at spawn and
    removed at integration; `ledger.mjs` and `refill` read it. **Accepts when** CONDUCT writes no line of `QUEUE.md` and a
    running row still reads `running`. **The cheap defeat to refuse:** writing both places, so an arm asserts one.
+
+## DRAINED 2026-09-21 by SCHEDULER #9 — BOB #23's entry (`8d2ba50f`), verified at `BIO_Content_Framework_v0_10.md` §8.4 (Bob's ruling, its four fences) and at the code on `origin/main` @ `c05d71c8` (`ENTITY_KINDS` holds ten named-entity kinds and no theme; `bio-plane/src` names no theme; C-54.1 refuses a lead by name): item 1 PLACED as `D-162` (RECORD, M4) under its own id, with the meaning-layer features after D-394; item 2 PLACED as `UI-76` (UI, M8) directly after it (`node tools/mintid.mjs UI`); D-162 left DEBT by the second door. The backlog was over its 150 KiB budget, so ten rows at the foot were cut to their fields (`QUEUE-cut-2026-09-21.md`).
+
+**2026-09-21 · BOB #23 · D-162 RULED BY BOB — THEMES: A CONNECTION THROUGH AN IDEA, DECLARED UNDER A COVER, NEVER A BASIS.**
+Design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.4 (this commit), Bob's ruling with the four fences. Verified
+at the code: `ENTITY_KINDS` holds ten named-entity kinds and no theme; a lead is refused BY NAME as a basis leg
+(`LEAD_NOT_EVIDENCE`), the pattern fence 4 reuses. D-162 leaves DEBT by the second door under its own id. Place with
+the meaning-layer features (M4), after the instrument cluster.
+
+1. **RECORD (M4; I3 additive, the integrator mints the IC):** a theme object declared by a member session under its
+   cover, with a required TEST; an attributed act placing a document or content row in it; a machine proposal stored as
+   a HUNCH that never counts as membership until a member confirms; and every basis, version and action-basis leg
+   resting on a theme refused BY NAME. **Accepts when** a member declares a theme with a test and places two documents
+   sharing no entity in it, a proposal reads as a hunch, and a leg citing the theme is refused by name. **The cheap
+   defeat to refuse:** a theme as an eleventh entity kind, which makes it a named thing and a citable one, so an arm
+   asserts it is not in `ENTITY_KINDS` and cannot be a leg.
+2. **UI (M8), after 1:** declare, test and place from the member surface, the cover shown on every theme.

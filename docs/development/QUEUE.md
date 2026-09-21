@@ -41,21 +41,6 @@ SCHEDULER (#8)'s Q4 is answered.
 3. **Nothing else is owed.** Registering a held subresource as its own document (the design's item 2) is not built and
    is not owed until a member needs it. Attribution of a rendered page's regions is deferred, with its trigger named.
 
-**2026-09-21 · BOB #23 · D-162 RULED BY BOB — THEMES: A CONNECTION THROUGH AN IDEA, DECLARED UNDER A COVER, NEVER A BASIS.**
-Design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.4 (this commit), Bob's ruling with the four fences. Verified
-at the code: `ENTITY_KINDS` holds ten named-entity kinds and no theme; a lead is refused BY NAME as a basis leg
-(`LEAD_NOT_EVIDENCE`), the pattern fence 4 reuses. D-162 leaves DEBT by the second door under its own id. Place with
-the meaning-layer features (M4), after the instrument cluster.
-
-1. **RECORD (M4; I3 additive, the integrator mints the IC):** a theme object declared by a member session under its
-   cover, with a required TEST; an attributed act placing a document or content row in it; a machine proposal stored as
-   a HUNCH that never counts as membership until a member confirms; and every basis, version and action-basis leg
-   resting on a theme refused BY NAME. **Accepts when** a member declares a theme with a test and places two documents
-   sharing no entity in it, a proposal reads as a hunch, and a leg citing the theme is refused by name. **The cheap
-   defeat to refuse:** a theme as an eleventh entity kind, which makes it a named thing and a citable one, so an arm
-   asserts it is not in `ENTITY_KINDS` and cannot be a leg.
-2. **UI (M8), after 1:** declare, test and place from the member surface, the cover shown on every theme.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
