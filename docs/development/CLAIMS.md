@@ -16277,3 +16277,12 @@ Bypass removes the classifier, so the deny list is now the ONLY force-push guard
 dry-run probes, which change nothing on the remote:** `git push --dry-run origin +HEAD:<ref>` is DENIED, and so is
 `... --force` placed after the arguments. The control, a plain `git push --dry-run origin HEAD:<ref>`, is ALLOWED, and
 `git ls-remote` shows neither probe ref exists.
+
+## CLAIM 2026-09-21 BOB (BOB #20 — CLAUDE.md §7 gains the one prompt that bypass cannot skip: an `rm` path built from a shell variable)
+
+claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`. Paths: `CLAUDE.md` (§7, ONE bullet
+added; nothing else moves), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block. **WHY:** at Bob's
+instruction (*"I should not still be getting permission requests"*), after a CONDUCT #9 worker halted that lane in bypass on
+*"Dangerous rm operation on possibly-empty variable path"*. Claude Code's own permission docs list critical-path `rm`/`rmdir`
+removals among the prompts that NO mode skips, and state that no allow rule and no PreToolUse hook can approve one. So the
+fix is in how commands are written, and every lane was told by message first (CONDUCT, DIST and FLEET adopted it).

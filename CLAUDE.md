@@ -177,6 +177,11 @@ each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not
 - **Schema:** new tables before the `host_governor` block; no backticks in the schema or setup templates;
   no semicolon inside an inline `--` comment; a derived table must be added to `purge`.
 - **Bound every poller** (`until <cond> || [ $SECONDS -gt N ]`); kill by PID from a table you read, never by pattern.
+- **Never put a shell variable in an `rm`/`rmdir` path: write the literal absolute path, or skip the cleanup.** The
+  harness treats a removal that an empty variable could turn into a root path (`rm -f $W/$d/x.log`) as a critical-path
+  removal, and it ASKS EVEN IN BYPASS. No allow rule or hook can pre-approve it (Claude Code's permission docs, "critical
+  paths"), so the lane, and every worker running inside it, halts until Bob clicks (a CONDUCT #9 worker, 2026-09-21).
+  Put the same rule in every worker's brief.
 
 ## 8. Cloudflare and credentials
 
