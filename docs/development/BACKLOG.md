@@ -181,6 +181,16 @@ scope: a scripted installer deploy on `deploy.mjs`'s pattern: upload the bundle,
 accepts-when: a deploy whose read-back differs from the signed bytes, carries another version or shows any binding reports FAILURE by name; a clean one reports the hash it read. How a liar passes it: believing what the upload API returned, so the arm tampers with the read-back. NEGATIVE CONTROL: skip the hash comparison, and the tampered-read-back arm fails by name.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 15; keeps its `D-` id).
 
+### D-54 · queued — **`bio-plane/wrangler.jsonc` LEAVES `limits.subrequests` UNSET, SO THE PLANE'S SUBREQUEST CEILING IS WHATEVER CLOUDFLARE'S DEFAULT IS THAT MONTH.** NARROWED: the row's plan half is CLOSED by DEC-42, since the installer REQUIRES Workers Paid and VERIFIES it before completing (`newgroup/src/index.mjs`, "The Workers Paid plan is needed first"). What remains is its last sentence: the default moved from 1,000 to 10,000 in February 2026 (Cloudflare's documentation, a vendor claim), and a default that moves is not a decision. — owner DIST.
+order: with DIST's rows, after D-107: preventive, a configuration nothing reads wrong today (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M7
+interface: I4 — the plane's deploy configuration; the integrator classifies it.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6, the deploy-to-serve ladder (every rung read back), with DEC-42: Workers Paid is required.
+depends-on: none.
+scope: set `limits.subrequests` explicitly in `bio-plane/wrangler.jsonc` to the figure the plane is sized for on Workers Paid, with the reason and the vendor's figure cited at the site; DIST's deploy reads it back.
+accepts-when: the deployed script's settings carry the explicit value, read back after the deploy. How a liar passes it: a value equal to today's default with no reason, so the site cites what the plane needs.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-54's DEBT row of 2026-07-29, NARROWED at the code; keeps its `D-` id).
+
 ### REC-159 · queued — **AN ENROLLED ADMINISTRATOR IS REFUSED §4.9's CUSTODIAL ACTS FROM THEIR OWN SESSION, WITH A SENTENCE THAT IS FALSE OF THEM.** `memberadd`, `memberset`, `signeradd` and `signerset` sit in `SESSION_OPS.admin` alone, the FOUNDER'S password session, so an enrolled administrator is answered `SESSION_ROLE_CANNOT_REACH_OP` (C-38.7): the op *"is reserved to an administrator of this group"*. Measured by REC-156; `adminvote.test.mjs` §8f pins it KNOWN-OPEN. — owner RECORD.
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
@@ -640,6 +650,16 @@ behind-interface: I1
 depends-on: CAP-1 (done), a DIST deploy
 added: 2026-07-31 · CONDUCT
 landed:
+
+### D-50 · queued — **PROJECT NAME UNIQUENESS IS ENFORCED AT THE WRITE PATH AND NOT IN THE CHECK CATALOG, SO A CORPUS HANDED IN FROM ELSEWHERE CANNOT BE JUDGED FOR IT.** `store.mjs` refuses `NAME_TAKEN` by `Store.projectNameKey` at the write, and no `bio-checks` check reports two projects whose names collide, which is what the conformance path is for. — owner RECORD.
+order: with the lower product rows, after CPDF-3: nothing can be WRITTEN wrong, because the write path refuses; this is the conformance half, lower than the write path by the row's own words (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M7
+interface: I3 — a catalog check; the integrator classifies any IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §11 item 8, *"Project name uniqueness enforced in the check catalog and at the write path"*, with §7.1's rule: case-insensitive, whitespace-collapsed, across deactivated projects.
+depends-on: none.
+scope: a catalog check over a handed corpus naming every pair of projects whose `Store.projectNameKey` collide, deactivated ones included, IMPORTING that key function rather than copying it.
+accepts-when: a fixture corpus with two projects differing only in case and spacing is reported by name; distinct names pass; a deactivated collider is still reported. How a liar passes it: a second normaliser that agrees on the fixture, so the check imports `projectNameKey`. NEGATIVE CONTROL: compare raw titles instead of the key, and the case-and-spacing arm fails by name.
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
 
 ### M0-77 · queued — **`tools/mintid.mjs`' MAIN-GUARD COMPARES `resolve(process.argv[1])` WITH `import.meta.url`, WHICH NODE REALPATHS — so `mintid` invoked through a SYMLINKED path (macOS's temp dir is one) silently runs NOTHING and EXITS 0: a costs-nothing green in the id allocator every lane uses.** Found by M0-73's worker, routed by CONDUCT #6, 2026-09-19; fix named. A CLASS: SCHEDULER measured 25 `.mjs` files that read both `process.argv[1]` and `import.meta.url` (a candidate list, not a verdict — some may already realpath). — owner M0.
 order: first of the queued M0 rows: a silent exit 0 in the id allocator every lane uses is a costs-nothing green (SCHEDULER, 2026-09-19)

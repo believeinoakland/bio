@@ -17003,6 +17003,11 @@ group (doctrine, by its own disposition); D-124 carried until LED-8. 161 open DE
 back after REC-159; the REC-156 DELEGATION DISCHARGED, every item placed or ruled. BOB #23 verified this session's drain of BOB
 #22's six entries row by row, takes M0-83 itself, and rules the SCHEDULER (#7) -> BOB group's Q1, Q3 and Q4 next, Q2 after M0-83.
 
+**AMENDED 2026-09-21, same session (commit 7): LED-7 batch S7-2 and THE REFRESH** — D-50 PLACED after CPDF-3 (the catalog half
+of project-name uniqueness; the write path refuses `NAME_TAKEN`); D-54 NARROWED to `limits.subrequests` and PLACED after D-107,
+its plan half closed by DEC-42. 159 open DEBT rows remain. `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #8 at the
+refresh (56%, nothing pending); this claim passes to SCHEDULER #8, who supersedes it when it archives this session.
+
 ## CLAIM 2026-09-21 BOB (#22) — REC-156's bearer and proposer questions ruled into Membership v2 §4.7
 
 claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Membership_Architecture_v2.md`

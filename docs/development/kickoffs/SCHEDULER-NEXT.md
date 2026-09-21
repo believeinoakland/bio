@@ -1,9 +1,10 @@
-# SCHEDULER-NEXT — the resume for SCHEDULER #8 (written 2026-09-21 by SCHEDULER #7, a CHECKPOINT while live)
+# SCHEDULER-NEXT — the resume for SCHEDULER #8 (written 2026-09-21 by SCHEDULER #7 at its refresh)
 
 Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then
 `docs/architecture/BIO_System_Design.md` **whole**, then this, then `QUEUE.md` and `BACKLOG.md` whole. Everything below
-was MEASURED at `origin/main` `c31b8f60` plus this session's own commits on top (~21:05Z). It is a POINTER: re-measure
-before you rest anything on it. If line 1 still says CHECKPOINT, SCHEDULER #7 did not reach its refresh: measure harder.
+was MEASURED at `origin/main` `1394a25d` plus this session's last commit on top (~21:30Z). It is a POINTER: re-measure
+before you rest anything on it. SCHEDULER #7 refreshed at 56% rather than 60%, with nothing pending, because one more
+completion would have crossed the line in the middle of an act.
 
 ## The plan, as I left it
 
@@ -11,8 +12,8 @@ before you rest anything on it. If line 1 still says CHECKPOINT, SCHEDULER #7 di
   REC-157 · M0-97 · D-341 · M0-83. **M0-97 and D-341 are ONE worker** (the same file, `tools/decided.mjs`). **M0-83 is
   BOB #23's own build** (BOB-NEXT §3 item 4): CONDUCT flips it `running` for BOB, and BOB archives it in its landing, as
   BOB #22 did D-435. A close by another lane leaves a replenish owed and nobody tells you: count the cache at every wake.
-- **Backlog (85), top:** M0-81, M0-84, M0-85 (blocked, the operator's), D-412, REC-154, CPDF-21, M0-82, D-116.
-- **DEBT.md: 161 open rows** (167 when I opened).
+- **Backlog (87), top:** M0-81, M0-84, M0-85 (blocked, the operator's), D-412, REC-154, CPDF-21, M0-82, D-116.
+- **DEBT.md: 159 open rows** (167 when I opened).
 - **BOB INBOX: empty.** Two BOB lanes drained this session: BOB #22's six entries and BOB #23's one.
 
 ## Owed acts, in order
@@ -30,7 +31,8 @@ before you rest anything on it. If line 1 still says CHECKPOINT, SCHEDULER #7 di
 3. **LED-7, the standing default:** one batch per wake, the open count reported each time. D-124 is a COLLIDED id (one of
    LED-8's six): carry it until LED-8 lands. The oldest open rows are mostly ACCEPTED or DOCTRINE (D-28, D-38, D-45, D-53,
    D-55): their third door writes into a governed design, which is BOB's, so batch them to BOB as questions rather than
-   verifying them one by one. D-19, D-32, D-36, D-50 and D-54 are the next ordinary rows.
+   verifying them one by one. D-32 and D-36 are the next ordinary rows; D-19 is about a July migration's LIVE data
+   (18 bundles' `created`), so verifying it means reading the record, `store=` named on every call.
 
 ## Done this session (all verified on the remote)
 
@@ -38,7 +40,9 @@ Archived SCHEDULER #6 (D-398's three conditions; its CronList read back empty by
 Closed D-432, D-355, D-254 and REC-156 (CONDUCT #10's batch, each checked by content). Placed CONDUCT #10's routes:
 REC-159, D-438, M0-93, M0-94, D-437, D-439, M0-95, M0-96; DISCHARGED the archived D-240 DELEGATION. Drained BOB #22's six
 entries: M0-97, D-341, REC-160, M0-83 item (4), D-260, D-293, REC-161, UI-75 — verified row by row by BOB #23. Drained BOB
-#23's: REC-162; DISCHARGED the REC-156 DELEGATION. LED-7 batch S7-1: D-33 closed in fact; D-40 and D-59 placed.
+#23's: REC-162; DISCHARGED the REC-156 DELEGATION. LED-7 batch S7-1: D-33 closed in fact; D-40 and D-59 placed. Batch
+S7-2: D-50 placed after CPDF-3 (the catalog half of name uniqueness); D-54 NARROWED to `limits.subrequests` and placed
+after D-107, its plan half closed by DEC-42.
 
 ## The traps this session paid for
 
