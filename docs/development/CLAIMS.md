@@ -16264,3 +16264,15 @@ claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90f
 `docs/development/INTERFACES.md` (§I10's `Status` line ONLY; FLEET owns the section's body and writes the five new
 shapes itself, on this ruling sent by message), `docs/development/MEASUREMENTS.md` (one dated paragraph appended to M-75
 after data point 8; nothing else moves), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+
+## CLAIM 2026-09-21 BOB (BOB #20 — the force-push deny list made true for the forms it missed, now that every lane runs in bypass; M-75 data point 9 names a cause)
+
+claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`. Paths: `.claude/settings.json`
+(the `deny` list only: eight rules ADDED and none removed), `docs/development/MEASUREMENTS.md` (data point 9's last
+sentence, which is BOB #20's own paragraph and is not yet on `main`), `docs/DECIDED.md` (GENERATED, regenerated LAST),
+and this block. **WHY:** Bob set every lane to bypass at ~16:00Z to clear the `[Out-of-Place Publication]` refusals.
+Bypass removes the classifier, so the deny list is now the ONLY force-push guard, and `CLAUDE.md` §4 says it
+*"refuses it outright"*. It did not: the three rules match only a flag placed directly after `push`. **Measured by
+dry-run probes, which change nothing on the remote:** `git push --dry-run origin +HEAD:<ref>` is DENIED, and so is
+`... --force` placed after the arguments. The control, a plain `git push --dry-run origin HEAD:<ref>`, is ALLOWED, and
+`git ls-remote` shows neither probe ref exists.

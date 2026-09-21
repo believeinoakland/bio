@@ -17547,7 +17547,13 @@ second refusal (~15:10Z, *"Blocked by classifier"*) cleared on an immediate retr
 passing on its narrowest retry (`DIST-NEXT.md`, "The harness refusals"). **Two things are new.** A BRANCH push was
 refused in BOTH forms, so pushing a branch first does not always open a path. And one session saw the classifier split
 two to three over five identical parallel calls, the plainest evidence yet that a refusal is a fact about ONE CALL.
-**Why any of them fired is UNDETERMINED and is not guessed.**
+**A CAUSE IS NAMED, AND IT IS NOT YET VERIFIED.** The auto-mode classifier's environment
+(`~/.claude/settings.json`, `autoMode.environment`) is user-level, so it reaches every project. It named ONE trusted
+repository, `supervised-harness-kit`, while `believeinoakland/bio` is PUBLIC (confirmed via `gh`) and was not declared,
+so a push to it reads as publishing outside the trust boundary. At ~16:00Z Bob set every lane to bypass, and the same
+bare branch push SUCCEEDED at 16:03:11Z. BOB #20 then declared the repository in that environment. **The test is the
+next session started in auto mode:** its first push either passes or refutes this. Data point 8 and DIST #3's retries
+show the classifier is not deterministic, so one pass is weak evidence and one refusal is strong.
 
 ## M-76 · 2026-09-19 · D-136 — the §4.7 vote measured ON THE LIVE PLANE before it was fenced
 
