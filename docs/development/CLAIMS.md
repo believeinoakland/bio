@@ -17226,3 +17226,10 @@ paths, BY SITE:
 (CONDUCT's word, SCHEDULER's order), `newgroup/**`, `release/**`.
 
 **open as of 2026-09-21** — OPEN while this item builds; released at integration.
+
+## CLAIM 2026-09-21 CONDUCT (#10) — M-86: the 34 merged pre-PRUNE-ON-MERGE `worktree-agent-*` branches recorded name → sha, then pruned from the remote
+
+claimed: 2026-09-21 by CONDUCT #10, worktree `.claude/worktrees/conduct-10`. Paths: `docs/development/MEASUREMENTS.md`
+(M-86, appended), `docs/DECIDED.md` (GENERATED, regenerated last), and this block. The six non-ancestor agent branches
+stay on the remote. The branch deletions happen only after this commit is verified on `main`.
+**released: 2026-09-21 CONDUCT #10** — landed in the same commit as the text it covers.

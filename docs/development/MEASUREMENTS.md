@@ -17998,3 +17998,58 @@ and the liar arm shows the drive, not the words, is what catches a recipe naming
 a recipe other than this one (PART 2 is not placed); a surface-level click path (the steps are performed through the
 seams the click reaches, not through rendered controls); and any recipe step whose (surface, op) pair has no binding,
 which the drive refuses to vouch for rather than guessing.
+
+## M-86 · 2026-09-21 · CONDUCT #10 — the 34 pre-PRUNE-ON-MERGE `worktree-agent-*` branches pruned from the remote, each an ANCESTOR of `origin/main` @ `4fac1548`, recorded name → sha before deletion
+
+**INSTRUMENTS AND VANTAGE.** `git ls-remote --heads origin 'worktree-agent-*'` and `git merge-base --is-ancestor <tip> origin/main`,
+read at 20:19Z from worktree `conduct-10` on Sparky-Air, `origin/main` = `4fac1548`.
+
+**WHAT WAS MEASURED.** 40 remote `worktree-agent-*` branches: 34 whose tip is an ancestor of `origin/main` — merged work
+from before PRUNE-ON-MERGE (D-288 item 3, landed by M0-49) — and 6 that are NOT, which STAY: `a249f668`, `a61e489d`
+(cited as evidence by D-254's row), `a6de3e82`, `a9e7e017`, `aa383f4f` and `aafee895` (cited by D-270's archive). No
+branch of the live wave (D-436, M0-79, D-434) was on the remote at the moment of reading. CONDUCT #9's handoff counted
+the same 34 and 6; re-measured here rather than taken from it.
+
+**WHY PRUNE.** Under PRUNE-ON-MERGE a `worktree-agent-*` branch on the remote MEANS unintegrated work, and these 34 made
+that signal read 40 where 6 is true. Every commit below stays reachable from `main`, so a claim block that cites one of
+these branch names as a historical pointer still resolves — by the sha in this table.
+
+| branch | tip sha |
+| --- | --- |
+| `worktree-agent-a1137b844e6d23aed` | `3a67ddd77ffe4953486be03b66b1d630f0478946` |
+| `worktree-agent-a186b6b601ae91372` | `ee5dbc4dfc7d8cbc834375504dcb1c4aaf4b2cff` |
+| `worktree-agent-a1f71e7a9d1c91962` | `c68c50601e5ce50d54f1852bdbe19707f275d01d` |
+| `worktree-agent-a20ba9ff2880e1eae` | `6f75ad8622fff0cf5e12c13435ccab3577e92fb5` |
+| `worktree-agent-a249f66820def3efd-rebased` | `4924babd8df3d04ad32ee9ceaa7f6adfaef01b27` |
+| `worktree-agent-a3378dc3df6e90e46` | `83ecb399f5532654f5d05ff7cb2ffd5f23e1f9e9` |
+| `worktree-agent-a3e2efc5bdd9b529e` | `8f90dc38825ea87230d64834741021631ab784cf` |
+| `worktree-agent-a3fbd59a3fef1a961` | `d60fb9a3afd1f81b807be6ec1a7aa1d4df8f24b4` |
+| `worktree-agent-a445cd855cdde44ea` | `84954ce4302b5d066202f45fbb24f7941fe6b6d8` |
+| `worktree-agent-a4f337d8455ba96c8` | `6cd2a450b96a3bcabf8f6894204398948f0ab17c` |
+| `worktree-agent-a5f807eada28ece7f` | `f91e407ab0b771bbadb993b80ee290b87dbe439d` |
+| `worktree-agent-a697a8fb2a50b3f2f` | `fb16dd9905c4fdaabc056a2722cde70cdaf6f988` |
+| `worktree-agent-a69fd9c430281b583` | `bf4329161a75010f32975d3e7a59823ee466c292` |
+| `worktree-agent-a6ca2a8271027f74b` | `0c54948a63d4c78aff9b4e1a14ce8cd21059c104` |
+| `worktree-agent-a6d2b732150e83e8a` | `4f09d38447bfb3522ebce8fa30e48a2ec5232aae` |
+| `worktree-agent-a7b9294a66f1df4b0` | `11cf4aca40c9c60892f625d0dc5dc4456ce2bcab` |
+| `worktree-agent-a811f19cc02e2aa59` | `bff742154ce491c6686e4a09bb76785884fa6d08` |
+| `worktree-agent-a835fde7253b57127` | `3b0fe5fdb574ae37fb7985594360fe648ea8baa8` |
+| `worktree-agent-a8dafc3592e03bc2a` | `1585cec99430226ea528ab4ae69ada8d4f22dd71` |
+| `worktree-agent-a93ad890406651eff` | `e6e45dc4140d8252749d39fb0d6848d61abdf47d` |
+| `worktree-agent-a997c958fae212f25` | `0742f23ecac1f8329a811b58bc7b45e559f9ab1f` |
+| `worktree-agent-aa29968dac7cc0e37` | `cd89ae09e9fdab25bae8dc05314a76388e34f92e` |
+| `worktree-agent-aa7814dd8fb705958` | `91e25d041f08925a4b27d9f1e96837a845779c15` |
+| `worktree-agent-aaa96b17819fdda02` | `0dd066da1b33e9337d342c85ee53aab5d4082eff` |
+| `worktree-agent-aac5bdb9dea9c048e` | `7eb262e3fe9ce550dac866809095ae2437196bb7` |
+| `worktree-agent-ab3bf809046a052e6` | `7b20127886fb0303aa547129d151ec4ddd835514` |
+| `worktree-agent-ab81d2ae5244e06a7` | `c9117059973d9a32f6b1683db405e8a1af80ba71` |
+| `worktree-agent-ac7f5ea0af44d1c3f` | `d1d2a50514f57231599e8dba07f4cfe62bc9f58b` |
+| `worktree-agent-ad1b1996bfd2046a7` | `2c5cca74eaaf66b718fd91d52e5bea7c98f0d3e7` |
+| `worktree-agent-ad37cd8c19b30bf8b` | `19ff57cb4c7cc092013f67bfb8f15997ab1e7bb1` |
+| `worktree-agent-ad4cf6fb4e08b180f` | `c8d9c6cb5dea144b9015a977907b6e1f3ff21008` |
+| `worktree-agent-adcd3110010904330` | `d0a687a4000b91d24dc27f7a21af33bc768af0b9` |
+| `worktree-agent-adf3ba7d5e1b95c38` | `862f0bddc5708dd130547ff6e6a25eb331650ba2` |
+| `worktree-agent-af80bb7c93b1a381b` | `3126e3bbd0da2ddf60069a82918186a5eabf1603` |
+
+**WHAT IT CANNOT SAY.** Ancestry says each tip's commits are in `main`; it cannot say the work was integrated on purpose
+rather than carried in by a later merge, and it says nothing about the six kept, whose work is NOT in `main`.
