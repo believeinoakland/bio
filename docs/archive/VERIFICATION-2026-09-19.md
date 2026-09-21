@@ -1436,3 +1436,10 @@ check reading the live hook's version line, not by the instrument. The corrected
 **executes the installed `pre-push` with cwd set to each worktree**, which is how git invokes
 it, and reads what it says. **A coverage claim about a shared mechanism must drive the
 artifact that is installed, never a model of it.**
+
+## Moved from VERIFICATION.md on 2026-09-21 by BOB #21, VERBATIM, to make room for D-353's stated limitation
+
+From "## Three defects the instruments found on first run", the receipt sentence (the rule stays in place):
+
+An unchained suite never ran; one read an absolute container path; a fixture held a value no real
+instance could (D-40).

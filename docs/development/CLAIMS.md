@@ -16373,7 +16373,8 @@ Incomplete sections record items 2 and 3 in the same commit, so this block is no
    the basename rescue it. The file's header already concedes it cannot prove a pointer TRUE; a pointer to a file that
    does not exist is the one case it could prove false for free.
 
-**open as of 2026-09-21** — raised at D-339's landing; nothing placed yet, and item 3 waits on BOB.
+**open as of 2026-09-21** — items 1, 2 and 4 placed by SCHEDULER #6 (below); item 3 RULED by BOB #21 (below), and it
+waits only on SCHEDULER's placement.
 
 **PLACED AND DISCHARGED 2026-09-21 by SCHEDULER #6, each item re-read at the code on `3b338e60`:** items 1 and 2 as ONE
 row, **CAP-13**, after D-116 — one owner, one area and one FULL gate, and item 2's fix rewrites the comments beside
@@ -16382,6 +16383,12 @@ documents on this host"* (`subresources.mjs`, `reused_seen_in_documents`), so ev
 an inflated figure into content-addressed bytes; `siteChrome` has no caller (`sitechrome` occurs 0 times in
 `index.mjs`). Item 4 as **M0-92**, after M0-80 — latent on today's plan (0 dead paths across `QUEUE.md` and
 `BACKLOG.md`). Item 3 is held for the next BOB group, recorded in SCHEDULER (#6)'s CLAIM block below.
+
+**Item 3 RULED 2026-09-21 by BOB #21: the requirement STANDS**, a reused part names the capture it came from, because the
+intake contract's provenance names who retrieved the bytes (`CAPTURE-SCALING.md` §Job one carries the ruling and the
+build). SCHEDULER places item 3's FIX as named, with two amendments: the reusing capture's `site_asset_refs` row keeps
+`reused_from`, taken from the observation, and `reusedParts` reads it there; and a reuse recorded before the build reads
+UNDETERMINED as to its source, never inferred by matching timestamps.
 
 ## CLAIM 2026-09-21 SCHEDULER (#5) — the lane's standing claim on the build plan's own files; BOB #19's six-rows entry drained (REC-157, UI-74, D-52, D-126 placed; D-195 and D-397 placed under UI-74; D-80 sent to BOB; BOB #20's REC-155 entry drained — REC-155 re-rowed, REC-158 placed); LED-7 continued
 
@@ -16515,6 +16522,16 @@ on its stated provisional until ruled. It is a second group beside SCHEDULER (#5
   member-facing words for the three (REC-38's pattern), or make it three-valued with UNDETERMINED as authority and
   counterparty were? Either answer places one row. Provisional: both writers keep 1, reasoning at each site.
 
+**open as of 2026-09-21.**
+
+**open as of 2026-09-21** — answered in part by BOB #21. **Q2 RULED:** the requirement STANDS (`CAPTURE-SCALING.md`
+§Job one); the D-339 DELEGATION's item 3 line says how SCHEDULER places it. **Q4 RULED:** both halves in one row
+(`BIO_Case_Making_v0_1.md` §2). Tiers 1–3 get the Roadmap §8 words, and where no member stated a tier the value is
+UNDETERMINED, never a default of 1. **Q3 is Bob's**, as `INVESTIGATIVE-SESSION.md` §7.1 records, and was put to him in
+his conversation on 2026-09-21 with BOB's recommendation to keep the disclosed disjunction; the provisional stands until
+he answers. **Q1 is open for BOB #22**, recommended a stated LIMITATION (BOB #17 ruled the per-call posture
+SUFFICIENT); it needs a design home that names the store namespace first, and none does yet.
+
 ## CLAIM 2026-09-21 BOB (#21) — the construct-map cut (M0-86): each §3 claim's history moves VERBATIM into `construct-status.json`'s unrendered `note`
 
 claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`. Paths: `docs/architecture/construct-status.json`
@@ -16546,3 +16563,19 @@ claimed: 2026-09-21 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-
 `docs/development/kickoffs/FLEET.md` (one parenthesis in the I10 note); `docs/DECIDED.md` (GENERATED, regenerated
 last); and this block. No code moves.
 **released: 2026-09-21 FLEET #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#21) — landing 2: I10's five confirmed STABLE; D-339 item 3 and D-182 RULED; D-353 closed by its stated limitation
+
+claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`. Paths: `docs/development/INTERFACES.md` (§I10's
+Status line ONLY; FLEET owns the body and was sent two precisions); `docs/development/CAPTURE-SCALING.md` (§Job one: one
+RULED paragraph, and one clause of its Incomplete bullet); `docs/architecture/BIO_Case_Making_v0_1.md` (§2: one RULED
+paragraph under the action fields, and the Status `as of`); `docs/development/VERIFICATION.md` (one sentence beside
+D-333's census rule; one receipt sentence moved VERBATIM to `docs/archive/VERIFICATION-2026-09-19.md` to stay in
+budget); `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-353's disposition, then
+`node tools/ledger.mjs archive D-353`); `docs/development/CLAIMS.md` (this block, and dated lines on the D-339 and the
+SCHEDULER (#6) -> BOB DELEGATIONs, including the SCHEDULER (#6) block's own `open as of` line, restored after a
+rebase resolution of mine had moved it under my claim); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT CLAIMED:** `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
+
+**open as of 2026-09-21.**

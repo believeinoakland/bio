@@ -1,6 +1,6 @@
 # Case-making: the design pass
 
-**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). **One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about what was decided, and it was load-bearing in an argument.** §CONTRADICTION's IDENTIFY is designed at level 2 (BOB #16, 2026-09-19, `CONTRADICTION-IDENTIFY-DESIGN.md`). as of 2026-09-19.
+**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). **One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about what was decided, and it was load-bearing in an argument.** §CONTRADICTION's IDENTIFY is designed at level 2 (BOB #16, 2026-09-19, `CONTRADICTION-IDENTIFY-DESIGN.md`). as of 2026-09-21.
 
 **Place in the system** · The reasoning behind construct 8 of `BIO_System_Design.md` §3 (intent and inquiry) **[audited 2026-09-17: the quotation below is Bob's framing of 2026-08-01 and the design has since LANDED — this document is it, and construct 8 reads built]**: "CASE-MAKING is undesigned, and it is what the whole system is for" (D-127). Its rulings feed M9 and M10; `BIO_Interaction_Constructs_v0_1.md` takes FINDING as case-making's substrate from it; the thread itself is paused behind DEC-33 until Bob reopens it.
 
@@ -147,6 +147,14 @@ here. The `action` object type has been in the check catalogue throughout:
 - states `planned → active → awaiting_response → resolved | abandoned`
 - headings `## Plan`, `## Status`, `## Correspondence`, `## Session Log`, `## Review Notes`
 - fields `action_kind`, `risk_tier`, `counterparty`
+
+**`risk_tier`, RULED 2026-09-21 by BOB #21 (D-182; SCHEDULER #6's Q4): both halves, in one row.** The three
+tiers already carry Bob's own meanings in the mission of record (`BIO_Complete_Roadmap_v5.md` §8): **1, file
+freely; 2, file with caution; 3, do not file without counsel** (evidence published, filing templates not
+included). A surface publishes those words (REC-38's pattern) and invents none. And `risk_tier` gains an
+UNDETERMINED value, as authority and counterparty did (D-130), written wherever no member has stated a tier.
+Today's writers default to 1, which tells a member an action is safe to file freely when nobody assessed it:
+an overclaim on the one field that carries legal exposure. Only a member's authored act sets 1, 2 or 3.
 
 `awaiting_response`, `## Correspondence` and `counterparty` are unmistakably
 **outward-facing**: a records request, a letter to a council member, a complaint, a
