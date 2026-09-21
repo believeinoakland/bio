@@ -1744,9 +1744,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-19** — AMENDED 2026-09-19 by BOB #17 — the gated set is the PREDICATE, and `TASK` satisfies it.** The bullet above names `CASE`, `DRAFT`, `RVG` and `PROJ`; that was the ENUMERATION made when the rule was written, not a closed set.  
   `docs/architecture/BIO_Membership_Architecture_v2.md:740`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — a project does not own a line of inquiry.** *"Anybody can ask a question related to anything - even something also being explored in a project they're not a member of.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:787`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:808`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents might be private, though the existence of the project may not be.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:836`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:857`
 - CORRECTED the same day by BOB #15 — the first version said *the owner or any administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the exception"*).  
   `docs/architecture/BIO_Publication_v0_1.md:192`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
