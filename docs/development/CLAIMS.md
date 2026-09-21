@@ -16973,7 +16973,8 @@ paths, BY SITE:
   - `civicos-ui/test/recipe-drive.control.mjs` — NEW, its negative-control driver (not `.test.mjs`, so `run.mjs` does not
     discover it).
   - `docs/development/CIVICOS_UI_STATE.md` (one PREPENDED entry), `docs/development/MEASUREMENTS.md` (appended), this
-    block.
+    block, and `docs/DECIDED.md` (GENERATED, regenerated LAST — added to this block when the push guard refused the
+    branch with the index stale over this item's own prose).
 **NOT CLAIMED:** `bio-plane/**` (nothing under `src/` is edited, so no bundle rebuild is owed),
 `civicos-ui/test/surface-registry.test.mjs` (PART 2 IS NOT PLACED and is not built here), `docs/development/QUEUE.md`
 (CONDUCT's word, SCHEDULER's order), `newgroup/**`, `release/**`.
