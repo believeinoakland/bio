@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1287 rulings across 100 documents.
+1289 rulings across 100 documents.
 
 ## DEC-
 
@@ -331,7 +331,7 @@ authority is the file named, never this one.
 - **D-98** · 2026-07-30 — RULED: undetermined authority becomes a task for the project manager, falling back to a group admin where a project has no manager, forwardable to a member better placed to attest.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:63`
 - **D-98** · 2026-09-21 — §8.1's "no notification channel anywhere" is SUPERSEDED by BOB #19's narrowing (the channel is the queue; only TRANSPORT is Bob's, D-98); its fold into §8.1 was asked of BOB on 2026-09-21 — read the landed §8.1 first.**  
-  `docs/development/BACKLOG.md:242`
+  `docs/development/BACKLOG.md:272`
 - **D-98** — and the RULED routing order, with every cited precedent verified present before the claim was written; D-98 is now a build task.  
   `docs/development/CIVICOS_UI_STATE.md:1052`
 - **D-98** · 2026-07-30 — §RULED 2026-07-30 — STALE in its closing paragraph.  
@@ -385,7 +385,7 @@ authority is the file named, never this one.
 - **D-134** · 2026-08-01 — ONE FIGURE CORRECTED FOR PRECISION, because as written the next reader's `grep -c` refutes it:** the disposition says *ZERO of the five appears anywhere in `app.html`*, and `governorconfig` DOES appear — once, at `:1078`, inside a COMMENT about which ops flatten their response shape in `index.mjs`.  
   `docs/development/DEBT.md:98`
 - **D-135** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): LED-7 batch 10** — D-135, D-142, D-298, D-362, D-401, D-146 and D-187 CLOSED IN FACT; D-248 PLACED under LED-8; D-412 and M0-91 (D-362's instrument) PLACED; D-280, D-260 and D-293 SENT to BOB — with the DELEGATION SCHEDULER (#5) -> BOB below, which carries them and four…  
-  `docs/development/CLAIMS.md:16387`
+  `docs/development/CLAIMS.md:16404`
 - **D-136** · 2026-09-19 — THAN A DECISION (D-136/D-134, RULED 2026-09-19 by BOB #17, read at the code).  
   `docs/architecture/BIO_Membership_Architecture_v2.md:349`
 - **D-137** — and was CORRECTED, never exempted. `bounds` demanded the new capped op be DRIVEN and **its first run read `truncated: false` at a cap of ONE — the arm could not arm**, because the suite's store held fewer than two document-level subjects; three are now seeded through the real writer. `derivation-bounds`'…  
@@ -687,11 +687,11 @@ authority is the file named, never this one.
 - **D-431** — ified case rests on is refused, byte-identical for an unseen and a never-minted project; `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, with its reason; the (c) count is stated in the landing; D-431 CLOSED.  
   `docs/archive/ledgers/QUEUE-closed.md:2515`
 - **D-435** — the BOB INBOX entry routing `tools/owed.mjs`'s release defect was WITHDRAWN before landing, because SCHEDULER #4 had already placed that defect as D-435), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.  
-  `docs/development/CLAIMS.md:16273`
+  `docs/development/CLAIMS.md:16282`
 - **D-436** · 2026-09-21 — DRAINED 2026-09-21 by SCHEDULER #4 — 2 entries from BOB #19 (MK-3 SUPERSEDED by MK-6 and MK-7, MK-5 re-pointed; D-436 PLACED second in the order); its third entry (the six answered rows) stays for the next drain  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1158`
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2):** also `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-436 archived as PLACED; D-260's disposition carries DS-3's and FL-6's dispatch fix), the TRACKED ELSEWHERE table in `QUEUE.md`, and `docs/development/kickoffs/SCHEDULER-NEXT.md` (the refresh).  
-  `docs/development/CLAIMS.md:16236`
+  `docs/development/CLAIMS.md:16245`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -931,7 +931,7 @@ authority is the file named, never this one.
 - **C-38.3** — , all CORRECTED with the reason beside them and never exempted), `admission-gate.test.mjs` (whose C-38.3 arm uses `op=purge` and is UNCHANGED, because purge is one of the four with a recorded decision), `browse.test.mjs` (see below) and one COMMENT in `shadowed-refusals.test.mjs`, corrected because a comment…  
   `docs/development/INTERFACE-CHANGES.md:12327`
 - **C-38.8** — `bio-plane/test/d270-refusal-truth.test.mjs` — the OMITTED arm for the three ops, CORRECTED with a dated reason (never exempted): they are no longer omissions. - `bio-plane/test/admission-gate.test.mjs` — C-38.8's OMISSION exemplar RE-POINTED off `op=membercaps`, which this landing stops being an example of.  
-  `docs/development/CLAIMS.md:15621`
+  `docs/development/CLAIMS.md:15630`
 - **C-41** — CORRECTED IN THIS ITEM, never exempted.** The predicate's own comment named this item as where the change would arrive, and it arrives there.  
   `docs/development/INTERFACE-CHANGES.md:5333`
 - **C-41.10** · 2026-09-17 — RESOLVED ACCEPTED 2026-09-17 by CONDUCT #2 at integration — BREAKING, MAJOR, AND RULED AGAINST BOTH THE DESIGN AND THE ROW, WHICH SAID MINOR.** C-41.10 now refuses a case document lacking the `searched` section, so a case authored-but-unsigned across this upgrade carries none and `op=caseratify` refuses it — **a…  
@@ -1075,7 +1075,7 @@ authority is the file named, never this one.
 - **REC-65** · 2026-08-07 — The earlier provisional — sidebar approval as the act of record — is SUPERSEDED as a GATE; the sidebar remains visibility and bulk review.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2877`
 - **REC-65** — me; REC-65's known-open pin (`identity-claims.test.mjs` arm (e), which names `provenancechain` beside `proposedispose`) CORRECTED with a dated comment saying why, never exempted.  
-  `docs/development/BACKLOG.md:172`
+  `docs/development/BACKLOG.md:192`
 - **REC-68** — AND IT IS AMENDED RATHER THAN RESTORED, WHICH IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"* — true of its tree, false of this one, where `--strict` prints 741.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7372`
 - **REC-68** · 2026-08-09 — RECOVERED FROM `0ca7640^2` AND AMENDED, NOT RESTORED — AND THE AMENDMENT IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"*.  
@@ -1287,15 +1287,19 @@ authority is the file named, never this one.
 - **REC-155** — REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches that file) so the two do not collide.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1207`
 - **REC-155** — SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED (§4.10): FIVE GAIN SESSION REACH, TWO ARE UNATTENDED BY DECISION.  
-  `docs/development/BACKLOG.md:156`
+  `docs/development/BACKLOG.md:176`
+- **REC-155** — were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0 (`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s BATCH rule has DIST check `git log <last release tag>..origin/main` itself.  
+  `docs/development/CLAIMS.md:15578`
 - **REC-155** — (1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md` after §4.9 (before `## 5.  
-  `docs/development/CLAIMS.md:16049`
+  `docs/development/CLAIMS.md:16058`
 - **REC-155** · 2026-09-21 — 4.10 The seven ops no session reached, and no decision explained: RULED 2026-09-21 by BOB #19 (REC-155).** `index.mjs`' `UNATTENDED_BY_DECISION` header names `provenancechain`, `provenanceroute`, `calibrate`, `calibrationsubject`, `calibrationsignal`, `livefire` and `reproject` as refused to every session with no…  
-  `docs/development/CLAIMS.md:16055`
+  `docs/development/CLAIMS.md:16064`
 - **REC-155** · 2026-09-21 — CLAIM 2026-09-21 BOB (BOB #20 — REC-155 RULED into Membership v2 §4.10, landed AHEAD of D-158; the first ruling of the BOB #19 -> BOB #20 DELEGATION) claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`.  
-  `docs/development/CLAIMS.md:16249`
+  `docs/development/CLAIMS.md:16258`
 - **REC-155** — REC-155 RULED** into Membership v2 §4.10 (BOB #19's ruling, one example corrected at the code: a bearer caller's author stamp is `token:<class>`).  
   `docs/development/kickoffs/BOB-NEXT.md:35`
+- **REC-157** — second-edition DELEGATION was RULED as §7.1 item 9 (BOB #19) and placed as REC-157; (c) the five session-reach ops were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0 (`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s…  
+  `docs/development/CLAIMS.md:15577`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1631,7 +1635,7 @@ authority is the file named, never this one.
 - **M0-32** · 2026-09-14 — Found by M0-32's worker (2026-09-14) while reading the instrument rather than its output, and CONFIRMED at integration: `tools/decided.mjs`'s `MARKER` is `/\b(RULED|DECIDED|AMENDED|CORRECTED|OVERTURNED|SETTLED|SUPERSEDED|WITHDRAWN|CONCEDED)\b/` and **`.` IS A WORD BOUNDARY**, so the literal string `DECIDED.md`…  
   `docs/archive/ledgers/DEBT-closed.md:62`
 - **M0-33** · 2026-09-18 — M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold) milestone: M0 (background lane, holds no slot) — the test estate's own instrument interface: none — control drivers and the census only  
-  `docs/development/BACKLOG.md:560`
+  `docs/development/BACKLOG.md:590`
 - **M0-34** · 2026-09-15 — `RULED by Bob` means DOCTRINE no session may revisit; a session's own name means MECHANISM a later session MAY revisit on evidence.  
   `docs/archive/ledgers/QUEUE-closed.md:405`
 - **M0-35** · 2026-09-16 — CLAIM AMENDED 2026-09-16 M0 (M0-35 — three paths the original block did not name) session: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch `worktree-agent-af799694331ecc8d3`) **Appended rather than edited in place**, per this file's own rule.  
@@ -1669,7 +1673,7 @@ authority is the file named, never this one.
 - **M0-61** · 2026-09-18 — [SUPERSEDED IN PART by M-54, 2026-09-18 (M0-61): the three facts below re-measured true, but the NEWLINE is a correlate, not the cause — 2 of the 3 cross-line trips are genuine claims, and the RECONCILED sentence trips identically on one line.  
   `docs/development/MEASUREMENTS.md:15936`
 - **M0-68** · 2026-09-19 — A superseded test is CORRECTED, never exempted. — owner M0 (the test estate).  
-  `docs/development/BACKLOG.md:436`
+  `docs/development/BACKLOG.md:466`
 - **M0-69** · 2026-09-19 — §6 rung 6 — the scratch sweep taking scratch IDENTITY is DECIDED (BOB #16, 2026-09-19) and NOT BUILT: today `op=purge` clears the record tables only (row M0-69). - §7 — multi-instance isolation is planned, not built, and no queue row exists; the collision table and ordering constraints live in…  
   `docs/architecture/BIO_Distribution_v0_1.md:8`
 - **M0-82** · 2026-09-21 — 2026-09-21 · BOB #19 · M0-82 NARROWED, NOT SUPERSEDED.  
@@ -2016,7 +2020,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-31** — RULED 2026-07-31: what publication actually requires Bob, 2026-07-31: "A capture can be published if there are no undetermined authority links in the provenance.  
   `docs/development/AUTHORITY-AND-TRUST.md:228`
 - RULED by BOB #17 (`a08e137a`) to be that doctrine MECHANISED:** the arm does not JUDGE builtness, it READS the one authority on it.  
-  `docs/development/BACKLOG.md:150`
+  `docs/development/BACKLOG.md:170`
 - **2026-07-31** — STATUS CORRECTED 2026-07-31 (session BOB).  
   `docs/development/CAPTURE-SCALING.md:33`
 - RULED by Bob: a reused asset IS allowed in a capture that will be ratified as evidence.  
@@ -2252,15 +2256,15 @@ Settled in prose without an id allocated. Cite them by file and line.
 - `D384_LEAVES`' `danglingRefs` entry CORRECTED, never exempted**. Nothing else in any of the five. - `bio-plane/test/caseproduction.test.mjs` — the `publish` helper ONLY: a ratify-stage refusal is SURFACED (recorded on the answer and printed) instead of throwing out of the fixture.  
   `docs/development/CLAIMS.md:15466`
 - comment's "reachable by NO session" sentence and the OPS-table comment, both CORRECTED because this landing makes them false.  
-  `docs/development/CLAIMS.md:15610`
+  `docs/development/CLAIMS.md:15619`
 - **2026-09-21** — the date, and the floor keys CONDUCT flagged COLLIDED at `b34f2743` are SETTLED — `coverage --strict` exit 0 with REGISTER FLOOR arms 1525/1525, classified 255/255, corpus 256/256, all exact. **RELEASED 2026-09-21 by DIST #3, the lane's successor**: 0.68.0 is complete (deployed, live-verified, pointer advanced,  
-  `docs/development/CLAIMS.md:15735`
+  `docs/development/CLAIMS.md:15744`
 - **2026-09-21** — MK-3 is SUPERSEDED by MK-6 (§4.1, the bundle names no author) and MK-7 (§4.2–§4.6, the act and then the lift), both minted at placement as §8 asks; MK-5 now depends on MK-7.  
-  `docs/development/CLAIMS.md:15875`
+  `docs/development/CLAIMS.md:15884`
 - **2026-09-21** — CLAIM 2026-09-21 BOB (BOB #19 — MK-3's five doctrine questions RULED into `MEMBER-KNOWLEDGE-DESIGN.md` §4; the CLAIMS.md MK-3 DELEGATION answered; M-75's seventh data point) claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`.  
-  `docs/development/CLAIMS.md:15992`
+  `docs/development/CLAIMS.md:16001`
 - Q11 is SETTLED and its answer does not move; what moves is the RECIPE it hands the next worker.  
-  `docs/development/CLAIMS.md:16201`
+  `docs/development/CLAIMS.md:16210`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

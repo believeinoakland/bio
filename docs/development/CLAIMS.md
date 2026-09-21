@@ -15570,6 +15570,15 @@ the channel, and the point of the exercise stands: the repository reached them a
 
 **ITEMS 1 AND 2 AND THE CUT QUESTION ARE DONE — recorded 2026-09-21 by SCHEDULER #4 from the record rather than from this block:** item 1 (the D-270 correction) had already been carried by SCHEDULER #2 (`0db72d3b`); item 2's four were placed by SCHEDULER #3 as REC-155, M0-79, UI-73 and M0-80 (`afd89325`); the cut question went to BOB #18, who ruled it (M0-82 — since narrowed, because the archive-then-cut had already landed at `7641d109`). **Item 3 — CONDUCT #7's three design items for BOB and its DIST note — is NOT judged here**, so the block stays open.
 
+**ITEM 3 JUDGED AND THE BLOCK DISCHARGED 2026-09-21 by SCHEDULER #6**, from CONDUCT #7's `CONDUCT-NEXT.md` at
+`7641d109` §5–§6, each item checked at its owner's record rather than from this block: (a) §7.1's items 5/6/8 reached
+BOB's corpus — `INVESTIGATIVE-SESSION.md`'s REC-135 paragraph states it as *"a question for Bob"* and ships the
+disjunction provisionally — but no BOB handoff carries it, so it joins SCHEDULER (#6)'s next BOB group; (b) the DEC-12
+second-edition DELEGATION was RULED as §7.1 item 9 (BOB #19) and placed as REC-157; (c) the five session-reach ops
+were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0
+(`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s BATCH rule has DIST check
+`git log <last release tag>..origin/main` itself.
+
 ## CLAIM 2026-09-19 BOB (D-226 closed against §0, and the estate's OCCUPANCY / REACHABILITY rule)
 
 Session BOB #18, own worktree `.claude/worktrees/blissful-kowalevski-e36e92`, branch
@@ -16366,6 +16375,14 @@ Incomplete sections record items 2 and 3 in the same commit, so this block is no
 
 **open as of 2026-09-21** — raised at D-339's landing; nothing placed yet, and item 3 waits on BOB.
 
+**PLACED AND DISCHARGED 2026-09-21 by SCHEDULER #6, each item re-read at the code on `3b338e60`:** items 1 and 2 as ONE
+row, **CAP-13**, after D-116 — one owner, one area and one FULL gate, and item 2's fix rewrites the comments beside
+item 1's. Ranked by what the re-read ADDED: the count reaches the capture MANIFEST, whose reused part says *"across N
+documents on this host"* (`subresources.mjs`, `reused_seen_in_documents`), so every re-capture of a changed page writes
+an inflated figure into content-addressed bytes; `siteChrome` has no caller (`sitechrome` occurs 0 times in
+`index.mjs`). Item 4 as **M0-92**, after M0-80 — latent on today's plan (0 dead paths across `QUEUE.md` and
+`BACKLOG.md`). Item 3 is held for the next BOB group, recorded in SCHEDULER (#6)'s CLAIM block below.
+
 ## CLAIM 2026-09-21 SCHEDULER (#5) — the lane's standing claim on the build plan's own files; BOB #19's six-rows entry drained (REC-157, UI-74, D-52, D-126 placed; D-195 and D-397 placed under UI-74; D-80 sent to BOB; BOB #20's REC-155 entry drained — REC-155 re-rowed, REC-158 placed); LED-7 continued
 
 claimed: 2026-09-21 by SCHEDULER #5, worktree `.claude/worktrees/dreamy-morse-42a25c`. Paths, the lane's own
@@ -16424,5 +16441,31 @@ item is also written ON ITS ROW where it has one. None blocks a runnable row; ea
   installed hook, `bio-pushguard` v2, refuses only a stale `DECIDED.md`.
 
 **NEXT GROUP, not asked yet:** D-325's residue — a stated limitation, or work? CLAUDE.md §5 states it; no design home does.
+
+**open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 SCHEDULER (#6) — the lane's standing claim on the build plan's own files; the D-339 worker's corrections placed (CAP-13, M0-92), CPDF-21 placed beside REC-154, and two delegations DISCHARGED
+
+claimed: 2026-09-21 by SCHEDULER #6, worktree `.claude/worktrees/scheduler-6` (branch `scheduler-6/a`, base `origin/main`
+@ `3b338e60`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s ownership table): `docs/development/QUEUE.md` (the BOB
+INBOX drain and the rows; CONDUCT owns the `running` word), `docs/development/BACKLOG.md`, `docs/archive/ledgers/*`,
+`docs/development/kickoffs/SCHEDULER*.md`; `docs/development/DEBT.md` (LED-7's dispositions and moves);
+`docs/development/MEASUREMENTS.md` (appends); `docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or
+DISCHARGED line at the end of each DELEGATION addressed to SCHEDULER that this lane acts on; `docs/DECIDED.md`
+(GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #5 (`dreamy-morse-42a25c`), archived by this session on 2026-09-21 at 17:54Z
+under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `1e423768` an
+ancestor of `origin/main` @ `3b338e60`), after its own CronList read back empty by message (*"No scheduled jobs."*); its
+worktree removed, 5,727,672 → 6,377,792 KiB free (+635 MiB; `du` read the tree at 662,780 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**THE NEXT BOB GROUP — HELD, NOT SENT**, three questions, one each; held because BOB #21 opened at 17:52Z on SCHEDULER
+#5's four, and LED-7 batch 11 may add a fourth: (1) **D-325's residue** — a stated limitation, or work? (carried from
+the NEXT GROUP line of the DELEGATION SCHEDULER (#5) -> BOB); (2) **the D-339 worker's item 3** — must a reused part name
+the capture it CAME FROM? §Job one says so; the plane records WHEN and not WHICH; that block names the fix if yes;
+(3) **`INVESTIGATIVE-SESSION.md` §7.1's items 5/6/8** — should a NO-PROJECT conclusion admit a case at all? REC-135's
+paragraph records it as a question for Bob and ships the disjunction provisionally; no BOB handoff carries it.
 
 **open as of 2026-09-21.**

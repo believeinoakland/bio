@@ -113,6 +113,16 @@ scope: cut it on CONDUCT.md's precedent — **archive the cut text VERBATIM** (n
 accepts-when: `node tools/readbudget.mjs` no longer warns on RECORD.md; the archived text is byte-identical to what left the live file; no RECORD worker was live during the cut. How a liar passes it: deleting rather than archiving, so the arm diffs the archive against the pre-cut file. NEGATIVE CONTROL: drop a paragraph instead of moving it, and the byte-identity check fails naming it.
 added: 2026-09-19 · SCHEDULER #2 (routed by CONDUCT #7; `node tools/mintid.mjs REC`).
 
+### CPDF-21 · queued — **`kickoffs/CONTENT-PDF.md` IS 25,863 B AGAINST THE 24,576 B READING BUDGET**, so the lane cannot read its own instructions whole. CPDF-18 (`e0d81cac`, 2026-09-18) took it over the line from 23,658 B; `readbudget` WARNs and does not fail, because the file is not in `CUT`. — owner CONTENT-PDF.
+order: directly after REC-154, its class and its precedent: it breaks CLAUDE.md §1's reading budget for a build lane, every CONTENT-PDF worker pays it on every spawn, and it is cheap and mechanical (SCHEDULER #6, 2026-09-21; SCHEDULER #5's handoff)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) with CLAUDE.md §1's reading budget — *a file is either READ WHOLE or LOOKED UP, never half of each* — and REC-154 and `kickoffs/CONDUCT.md`'s cut of 2026-09-19 as precedents.
+depends-on: none. **Same line as REC-154** (`CUT` in `tools/readbudget.mjs`): whichever lands second re-reads the first.
+scope: as REC-154 — archive the cut text VERBATIM (nothing deleted), bring the live file under 24,576 B, and add it to `CUT` so the WARN clears honestly and a later overrun FAILS. Runs when no CONTENT-PDF worker holds the file; CONDUCT confirms that before spawning. **FULL GATE PROFILE** (`tools/`).
+accepts-when: `node tools/readbudget.mjs` no longer warns on CONTENT-PDF.md and lists it in `CUT`; the archived text is byte-identical to what left the live file. How a liar passes it: deleting rather than archiving, so the arm diffs the archive against the pre-cut file. NEGATIVE CONTROL: drop a paragraph instead of moving it, and the byte-identity check fails naming it.
+added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CPDF`).
+
 ### M0-82 · queued — **NARROWED TWICE ON 2026-09-21: WHAT IS LEFT IS THE OCCUPANCY RULE AT THE INTEGRATOR'S NO-BOB FALLBACK START.** The ATTENDED-start rule landed in `kickoffs/CONDUCT.md` "Starting your successor" (BOB #19, `89bfa0d1`). The ARCHIVE-THEN-CUT had landed before this row was placed: CONDUCT #7 at `7641d109` (2026-09-20 00:55Z) archived the kickoff verbatim to `docs/archive/CONDUCT-kickoff-2026-09-20.md`, which holds both "Integration mechanics" sections, and condensed them with a pointer; the premise came from a grep of the `-09-19` archive. `CONDUCT.md` is 24,492 B: 84 B of headroom. — owner CONDUCT.
 order: beside REC-154, the reading-budget class, and after M0-81, which builds the occupancy judgement this rule points at (SCHEDULER #4, 2026-09-21, re-measured; placed by SCHEDULER #3, 2026-09-20)
 milestone: M0
@@ -132,6 +142,16 @@ depends-on: none. DS-2 built the BUILD-side authority; this is the RUNTIME half.
 scope: (1) the DO reports its own build under a field that is NEVER `version` — a later spread would REPLACE the isolate's reading — and `verifyUpdate` requires both and names the one that lags; VF-4's DO arm reads it. (2) each member is read back THROUGH THE BINDING after install and deploy (D-115's surviving requirement).
 accepts-when: a DO or member whose build differs from the routing isolate's is NAMED, and the install or update does not report success. How a liar passes it: filling the DO field from the isolate's env, so two values agree for free. NEGATIVE CONTROL: copy `env.VERSION` into the DO field in the handler, and the arm fails by name.
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id); narrowed 2026-09-21.
+
+### CAP-13 · queued — **A REUSED PART SAYS IT WAS SEEN *"across N documents on this host"*, AND N COUNTS CAPTURES: every re-capture of a changed page inflates it, and one page captured twice meets the two-document reuse floor ALONE.** `siteAssets` and `siteChrome` (`store.mjs`) count `DISTINCT primary_sha`; two comments still state the stability gate 0.40.0 refused (`schema.mjs` above `site_assets`; `index.mjs` before `siteKnown`). — owner CAPTURE.
+order: after D-116, above the ledger tooling: CLAUDE.md §2's class — a figure the record cannot support, in content-addressed manifests nothing corrects, on monitoring's normal path; below D-116 because it concerns FURNITURE and the fetch-honesty fields are right (SCHEDULER #6, 2026-09-21; D-339 worker's items 1–2, verified at the code)
+milestone: M2
+interface: none expected — no op exposes `siteassets` or `sitechrome`; `reused_seen_in_documents` keeps its name and type, only its VALUE becomes true (the integrator classifies).
+design: `docs/development/CAPTURE-SCALING.md` §Job one, reuse condition 3 — *"an asset only one page references is that page's own"* — which also states this defect.
+depends-on: none.
+scope: count distinct primary ADDRESSES (`captured_locators.address_norm` where `capture_sha = primary_sha`) in both readers — a query, not a schema change. D-58 writes the locator unconditionally but in a swallowing `try`, and older captures may lack one: say what such a primary counts as, never drop it silently. Reword the two comments to recency of fetch, and the two that say a re-capture cannot inflate the count. **FULL GATE PROFILE**.
+accepts-when: one page captured twice with changed bytes reads 1 document and is NOT reused; two pages sharing a stylesheet read 2 and are; the manifest's N equals the page count. How a liar passes it: a byte-identical re-capture, which never moved the count. NEGATIVE CONTROL: count `primary_sha` again, and the changed-bytes arm fails by name.
+added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CAP`).
 
 ### LED-8 · queued — **SIX REGISTERED ID COLLISIONS: `ledger.mjs find` ANSWERS TWO DIFFERENT ROWS FOR ONE ID.** D-121 and D-124 each name two unrelated OPEN rows; IC-30 two PROPOSED interface changes; M0-16 a duplicated heading. `mintid --audit` registers all six, 0 breaks; the lookup §1 rests on answers ambiguously. — owner M0.
 order: SIXTH. AMBIGUITY STATED, not the record over-claiming: the tools REFUSE loudly rather than corrupt (`archive D-121 --dry-run` prints both dispositions and stops), while every row above is SILENTLY wrong. Loud beats silent, and blocking LED-7 on two rows of 211 does not outrank five silent ones (SCHEDULER #2 + BOB #17, 2026-09-19)
@@ -194,6 +214,16 @@ scope: carry the catalogue row's `translation` in each of the four fixtures and 
 accepts-when: each of the four pins DISAGREES with the plane when the translation is wrong, proved by feeding a wrong one; the narrower-than-wire count is printed per suite and floored. How a liar passes it: fixing the four and leaving the census unbuilt, so the floor is asserted to exist.
 NEGATIVE CONTROL: put a WRONG translation in one repaired fixture, and that suite fails by name — today it passes, because the field is absent.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's routed item 4; `node tools/mintid.mjs M0`).
+
+### M0-92 · queued — **`tools/rowdesign.mjs` PASSES A DESIGN POINTER TO A FILE THAT DOES NOT EXIST.** `citations()` drops a full `docs/…md` path outside the governed set, then its basename loop matches the file name INSIDE that same path and resolves it to the one governed copy, so a wrong directory reads as naming its design. D-339 cited `docs/architecture/CAPTURE-SCALING.md`, which has never existed, and `plancheck` counted it among "0 naming no design". — owner M0.
+order: with the instrument cluster, after M0-80 and above M0-87: a check that PASSES where it should fail — CLAUDE.md §5's costs-nothing green — where M0-87 is a false WARN; latent today (0 dead paths across `QUEUE.md` and `BACKLOG.md`, measured 2026-09-21) (SCHEDULER #6, 2026-09-21; the D-339 worker's DELEGATION item 4)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header: it cannot prove a pointer TRUE, and a pointer to a file that does not exist is the one case it can prove FALSE for free.
+depends-on: none.
+scope: a full `docs/…md` path resolving to no file on disk is reported as a DEAD POINTER (at least a note), and the basename loop takes only a bare name — never one inside a path, as the process-authority arm's `(?<![\w/])` already refuses. **FULL GATE PROFILE** (`tools/`).
+accepts-when: a fixture row citing a wrong directory is reported dead by name; the right full path still passes; a bare unique basename still resolves. How a liar passes it: dropping the basename rescue altogether, so the bare-name arm must still pass. NEGATIVE CONTROL: let the basename loop match inside a path again, and the wrong-directory arm fails by name.
+added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs M0`).
 
 ### M0-87 · queued — **`tools/rowsubstrate.mjs` SCORES A ROW WHOSE EVERY CITED ANCHOR IS UNRESOLVABLE AS UNCOVERED, so `plancheck` prints a false `substrate not evident`.** When `sectionText()` returns null the scope is set aside as UNRESOLVABLE, `covered` stays false with `probes: []`, and the row still joins the findings — zero symbols against zero text, reported as a gap. D-136 carried exactly that (§4.7 and §4.9 are bold paragraphs, not headings). Latent today: the four current notes each resolve their anchor. — owner M0 / VERIFY.
 order: with the instrument cluster, after M0-80: an instrument claiming about what it cannot see, the class the cluster closed three of (CONDUCT #8's DELEGATION 2026-09-20 item 2); a WARN, and latent, so below the rows that hide a failure (SCHEDULER #4, 2026-09-21)
