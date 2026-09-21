@@ -16031,6 +16031,81 @@ why: a CUT NOW. `main` carries D-136 (IC-168, I3 46.0.0 MAJOR/BREAKING), integra
 
 **open as of 2026-09-21.**
 
+## DELEGATION 2026-09-21 BOB (#19) -> BOB (#20) — **TWO RULINGS PREPARED AND NOT LANDED, BECAUSE BOTH TOUCH FILES D-158 WAS LANDING. Take them in this order once D-158 is on `main`.**
+
+**open as of 2026-09-21** — BOB #19 crossed 60% context with both ready, and handed them over rather than start them.
+
+**(1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md`
+after §4.9 (before `## 5. Capabilities`). Move that document's front matter `as of` in the same commit. Then write
+the BOB INBOX entry for its two landings. The first landing is session reach for five ops plus two
+`UNATTENDED_BY_DECISION` rows. The second is the provenance pair's bearer-write fence, which is MAJOR and updates
+REC-65's pin.
+
+**4.10 The seven ops no session reached, and no decision explained: RULED 2026-09-21 by BOB #19 (REC-155).**
+`index.mjs`' `UNATTENDED_BY_DECISION` header names `provenancechain`, `provenanceroute`, `calibrate`,
+`calibrationsubject`, `calibrationsignal`, `livefire` and `reproject` as refused to every session with no decision on
+record. The plane answers each one `SESSION_ROUTE_NOT_RECORDED`, which is honest, and asks for exactly this ruling. Each
+answer below was read from the op's own row or its handler, at the artifact.
+
+- **`provenancechain` and `provenanceroute` JOIN BOTH SESSION SETS**, each with a driven arm. Their OPS rows state the
+  doctrine: *"deciding that the evidence supports a route is a named member's judgement"*, and *"a standing statement in
+  the record with nobody's name on it is not a statement."* A signed-in session is the one caller that carries a name.
+  Today a bearer token reaches both, and a bearer token stamps `class:<cls>`, which is nobody's name. **So the bearer
+  WRITE route then closes, BY NAME, in a SECOND landing**, on the pattern of D-421 (C-32.14/.15) and D-136 (C-32.17).
+  For `provenancechain` that is its `apply=1` arm; its default REPORT arm writes nothing and stays open. For
+  `provenanceroute` it is the op, which writes and does nothing else. The second landing comes AFTER the session route is
+  driven, so D-200's chain-absent population keeps a route to repair it. It is also where REC-65's known-open identity
+  pin (`identity-claims.test.mjs`) is corrected, because that pin fails when a fence appears, and the first landing adds
+  none.
+- **`calibrate`, `calibrationsubject` and `calibrationsignal` JOIN BOTH SESSION SETS**, each with a driven arm. Their OPS
+  row rules the question already: *"The fence that matters here is therefore NOT about who may measure; it is that a
+  measurement may never move a GRADE"* (`CAL_CANNOT_REGRADE`). A person may measure, and may record that a vendor
+  announced something, on the same terms as a probe. The bearer route stays, because a scheduled re-probe is a machine
+  act by construction.
+- **`livefire` and `reproject` are UNATTENDED BY DECISION**, and each joins `UNATTENDED_BY_DECISION` with the citation a
+  caller can check. `livefire` is the deployment's live-fire battery: *"the only channel available for reaching a
+  deployment may be a plain fetch of a URL. Confined to the scratch namespace"* (`src/livefire.mjs`, header).
+  `reproject` is a deploy's maintenance pass: *"Exposed because a deploy runs the bounded pass once at construction and
+  a large store may need more than one"* (`src/store.mjs`, `reproject`). Neither is a member's act; each is addressed to
+  the operator's credential. Recording that is a decision, which is what the table exists to hold.
+
+**What this does not change:** no class list moves in the first landing, so every caller keeps its reach and sessions
+gain it. The second landing is the one that refuses a caller, and it is BREAKING for bearer writers of the provenance
+pair. It states its IC as MAJOR.
+
+**(2) THE CONSTRUCT MAP CUT.** `BIO_System_Design.md` is your file. It has 4 B of headroom once D-158 lands, and
+`readbudget` FAILS the next landing that lengthens a §3 row. **The method, learned the hard way:** each claim is ONE
+line of `construct-status.json`. The file mixes raw and `\uXXXX` encodings EVEN WITHIN ONE LINE (`3.census`), so
+re-serialising it reformats the whole file and collides with every landing. Replace only the `"text"` string literal
+in place, and add or extend `"note"`: `status.mjs <topic>` prints the note, and the map never renders it. Move the
+OLD text into the note VERBATIM. Then run `node tools/status.mjs --write`, `--check`, `readbudget`,
+`corpuscheck`, and a FULL gate (`.json` under `docs/` is not prose). The rendered text falls by about 10 KB.
+**The new status texts** were measured on 2026-09-21; re-verify each against the code before landing:
+
+```
+const NEW = {
+  "3.census": null,
+  "2.firsthand": "a member's firsthand observation as evidence (D-184; MEMBER-KNOWLEDGE-DESIGN.md §2–§4). BUILT: op=testify's authored INFO bundle (the member's words behind a canonical header, the register's `authored` flag set only on that path and fenced at op=promote; MK-1, C-53) and its grade, a THIRD axis `testimony` at D, never folded into capture (MK-2, C-2.8). NOT BUILT: its attribution in a published case (13.attribution; §4 designed 2026-09-21), so nothing resting on an observation crosses the publication fence yet (C-53.10–.12). The build detail is this claim's note",
+  "8.claim": "a claim is carried on basis VERSIONS (the `claim` column, D-217b), and CONCLUDING ADOPTS IT PER PROJECT (INVESTIGATIVE-SESSION.md §7.1): each project keeps its own dated, authored, APPEND-ONLY history of conclusions and withdrawals (REC-124, REC-136; IC-150, IC-153), read back through op=basisversions, op=affordances' project arm (REC-142) and the single-bundle projection (REC-144). §7.1 item 4 is BUILT FOR PUBLICATION (REC-135, IC-166): NOT_CONCLUDED asks the publishing project's relationship through #caseConclusionFor, and the case document records the conclusion it rests on. NOT BUILT: a leg resting on an inquiry reads NO conclusion at all, for any relationship (measured at REC-135's integration, 2026-09-19); and a second edition over a moved project conclusion (§7.1 item 9, ruled 2026-09-21). The per-item build detail is this claim's note",
+  "10.lead": "a member's LEAD (D-194; MEMBER-KNOWLEDGE-DESIGN.md §5), plane half (MK-4): the `leads` table and op=lead, leadlook, leadread and leadshare. A lead is NEVER evidence (C-54.1, by name, at every leg grammar). It is visible to its author, to the joined participants of a project it was shared to, to a machine only within a member's minted scope, and to nobody else; no counter discloses one (REC-131). The member SURFACE is Program B's and is not built. The detail is this claim's note",
+  "11.machine-fence": "no machine delivers an attesting or ratifying act: an `ai` credential is refused below the scope check (REC-123; C-32.12/.13, C-35.10), and no operator bearer token carrying a member's signature ratifies (REC-125, D-421; C-32.14/.15). Only a member's own session does. op=attest, a third party's timestamp, is permitted by design. The detail is this claim's note",
+  "8.contradiction": "Q14's contradiction case (CONTRADICTION-IDENTIFY-DESIGN.md). IDENTIFY's first third is BUILT: op=contradictionpairs, the pairing read over keys K1–K4, viewer-gated, bounded per key, with an absence that names which level was empty (REC-146, IC-167, C-60). NOT BUILT: the JUDGEMENT, any candidate table or write, and the false-conflict measurement; PRESENT and RESOLVE are not designed. The detail is this claim's note",
+  "9.internet": "the frontier's internet-level READ is BUILT and driven (REC-129, IC-143): op=frontier&level=internet answers from a lead's looks, fenced by the lead's own visibility before grouping, and names what it does not read. STILL ABSENT: search has no internet arm. The detail is this claim's note",
+  "13.review-copy": "the review copy (DEC-31; BIO_Publication_v0_1.md §6A). The PLANE HALF is BUILT (REC-126; IC-145/IC-146): op=casedraft, reviewgrant, reviewrevoke, reviewcopy and reviewcomment, and op=casedocument for a live grant holder. The SURFACE is ABSENT, and with it the member-facing export statement (§6A.3 point 2). The detail is this claim's note",
+  "11.cascade": "the credential cascade's ORDER and its per-level judgement (member, then project, then instance), one pure expression in agent-worker (FL-6). Only the instance level has a SOURCE today; see 11.cascade-sources",
+};
+const SOURCES = { id: "11.cascade-sources", state: "ABSENT",
+  text: "a SOURCE for the cascade's MEMBER and PROJECT levels: the plane has no storage and no op for either, so only the instance level can resolve (DIST #3, 2026-09-21). Where a member's or a project's key would live, never in the record yet settable by a member (D-199), is undecided and is Bob's: a group's instance would hold a member's personal vendor key",
+  probes: [{ none: ["claude_accounts", "claude_token", "claudeToken", "member_claude", "project_claude", "claudeAccount"], flags: "i", in: ["bio-plane/src/store.mjs", "bio-plane/src/index.mjs", "bio-plane/src/schema.mjs"] }] };
+```
+
+`3.census`'s new text is its current text, cut before the first " Moved ", plus " Each move's review BY MEANING,
+newest first, is in this claim's note". `11.cascade` gains a note saying why it was split: it read BUILT on ONE
+probe, the `CASCADE_ORDER` constant, while two of its three levels have no source (SUBSTRATE BUILT IS NOT DEPENDENT
+BUILT). `11.cascade-sources` is inserted after it as ABSENT, with its `none` probes. **`8.claim`'s old text is
+FALSE.** It says §7.1 item 4 is not built, but REC-135 built it for publication (`#caseConclusionFor`), and a leg
+resting on an inquiry reads NO conclusion at all. The new text says both.
+
 ## CLAIM 2026-09-20 RECORD (D-158 — THE ROSTER AND THE GATE ANSWER ONE QUESTION: a signing key is registered to a member who can attest, and `op=signerlist` says which state each key is actually in)
 
 Worker spawned by CONDUCT #8. **Own worktree** `.claude/worktrees/d158-conduct8`, branch **`worker/d158-conduct8`**,
