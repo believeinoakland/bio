@@ -203,6 +203,16 @@ scope: a new C-number refusing a bearer `apply=1` and a bearer `provenanceroute`
 accepts-when: a bearer `apply=1` and a bearer `provenanceroute` are refused by name; a session's succeed and the author written is the session's member, never `token:<class>`; a bearer REPORT still answers. How a liar passes it: fencing the REPORT arm too, so an arm asserts it still succeeds. NEGATIVE CONTROL: drop the refusal, and the bearer-write arm fails by name.
 added: 2026-09-21 · SCHEDULER #5 (BOB #20's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 
+### D-311 · queued — **`op=affordances` PUBLISHES NOTHING ABOUT SEVEN ROSTER ACTS, AND OFFERS `publish` TO A MACHINE CREDENTIAL THE STORE REFUSES BY NAME.** `projectinvite`, `-join`, `-leave`, `-remove`, `-owneradd`, `-ownerremove` and `-ownerrescue` sit in `NON_ACTS` (`affordances.mjs`); a `class:` credential is offered `publish`, which `publishCase()` refuses `MACHINE_CANNOT_PUBLISH` — the pre-flight disagreeing with the act. — owner RECORD.
+order: after REC-158, with the plane's who-may-do-what: an act OFFERED that the store refuses is an overclaim in the pre-flight; the roster half costs narration only (no surface renders one off it) (SCHEDULER #6, 2026-09-21, LED-7 batch 14)
+milestone: M8
+interface: I3 — an addition to the published act set and a narrowing for machine credentials; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"RULED 2026-08-01: the pre-flight is plane-sourced" — *see what it will refuse and why BEFORE it runs* — with the positions of `BIO_Membership_Architecture_v2.md` §7.7.
+depends-on: none — D-310's pattern (IC-75) is built.
+scope: the row's own fix: one per-pair fact, `#isProjectOwner(target, viewer)` — never D-310's *owns some project* — and seven `applies` predicates, each derived from its own refusal (`projectjoin` is the invitee's, `projectleave` a participant's, `projectremove` an administrator's). Then withhold from a machine credential every act its class is refused by name, correcting D-310's byte-unchanged arm with a dated reason — the consumers reading it with one named first.
+accepts-when: each roster act is offered exactly where its store act succeeds, pair by pair; a machine credential is offered nothing its class is refused. How a liar passes it: reusing D-310's fact, so an owner of project A must not be offered `projectinvite` on B. NEGATIVE CONTROL: swap in D-310's fact, and the cross-project arm fails by name.
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 14; keeps its `D-` id).
+
 ### UI-73 · queued — **ELEVEN MEMBER-FACING SITES STILL READ A REFUSAL'S RAW `detail` INSTEAD OF ITS CANNED TRANSLATION** — `teach()`, `queueReason`, `planeSaid`, the finder's per-subject errors, the release / attest / capture receipts, the proposal pre-flight, the forward picker, the leg pre-flight's `subj-how`, and `INTENT_VOCAB.words`. UI-72 landed the two renderers and `refusalWords(r)`; this is its named remainder. — owner UI.
 order: a CORRECTION TO JUST-LANDED WORK, which outranks new work: UI-72 shipped the helper and eleven sites still bypass it, so a member meets machine vocabulary at the moment they are told no — the failure DEC-49 exists to close (SCHEDULER #3, 2026-09-19)
 milestone: M8
