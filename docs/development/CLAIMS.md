@@ -16954,3 +16954,28 @@ design corpus and the map are BOB's), and every kickoff but SCHEDULER's. **D-435
 until BOB #22's landing of it is on `main`: BOB #22 builds it and archives it itself.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 UI (D-434 PART 1 — the published recipe that refused the member at its own last step: its step corrected to `op=cite`, and ONE arm that DRIVES it against the real plane)
+
+session: WORKER spawned by CONDUCT #10, worktree `.claude/worktrees/agent-a51b695c70bb123af`, branch
+`worktree-agent-a51b695c70bb123af`, base `origin/main` @ `2bd24da7` (fast-forwarded from the spawn base `4fac1548`; no
+`civicos-ui/**` path moved between the two), Sparky-Air. `npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each
+`node_modules` a REAL directory (30 / 25 / 26 entries); `df -h` 4.6 GiB free at the claim.
+authority: `QUEUE.md` `### D-434 · running` (CONDUCT #10), design `docs/development/INVESTIGATIVE-SESSION.md` §0 ·
+Vocabulary (*"GROUND PARTITION … is never a surface word"*, DEC-32 clause 1).
+paths, BY SITE:
+  - `civicos-ui/app.html` — inside `/*__SURFACES_START__*/ … /*__SURFACES_END__*/`, the ONE `RECIPES` entry
+    `capture-a-document-and-ground-a-question-on-it`: its LAST step (`surface`, `op`, `why`) and one dated comment at
+    that step. Its `id`, `intent`, `goal` and first two steps are NOT edited. **NOT TOUCHED:** every `SURFACES` entry,
+    the other two `RECIPES`, `SURFACE_LEVELS`, every renderer, every refusal string, and every marked region outside the
+    SURFACES block.
+  - `civicos-ui/test/recipe-drive.test.mjs` — NEW, this item's drive arm (the real plane in miniflare).
+  - `civicos-ui/test/recipe-drive.control.mjs` — NEW, its negative-control driver (not `.test.mjs`, so `run.mjs` does not
+    discover it).
+  - `docs/development/CIVICOS_UI_STATE.md` (one PREPENDED entry), `docs/development/MEASUREMENTS.md` (appended), this
+    block.
+**NOT CLAIMED:** `bio-plane/**` (nothing under `src/` is edited, so no bundle rebuild is owed),
+`civicos-ui/test/surface-registry.test.mjs` (PART 2 IS NOT PLACED and is not built here), `docs/development/QUEUE.md`
+(CONDUCT's word, SCHEDULER's order), `newgroup/**`, `release/**`.
+
+**open as of 2026-09-21** — OPEN while this item builds; released at integration.
