@@ -15981,6 +15981,12 @@ claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths: `docs
 (GENERATED, regenerated LAST), and this block. The MK-3 DELEGATION's discharge is written INSIDE that block,
 where `tools/delegations.mjs` reads it.
 
+## CLAIM 2026-09-21 BOB (BOB #19 — batch 2: REC-135's second-edition question ruled as §7.1 item 9; D-195, D-80, D-126 and D-52 re-disposed against their own designs and the code)
+
+claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths: `docs/development/INVESTIGATIVE-SESSION.md`
+(front matter and §7.1 only), `docs/development/DEBT.md` (the disposition cells of D-195, D-80, D-126 and D-52 only),
+`docs/development/QUEUE.md` (the BOB INBOX only), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+
 ## CLAIM 2026-09-20 RECORD (D-158 — THE ROSTER AND THE GATE ANSWER ONE QUESTION: a signing key is registered to a member who can attest, and `op=signerlist` says which state each key is actually in)
 
 Worker spawned by CONDUCT #8. **Own worktree** `.claude/worktrees/d158-conduct8`, branch **`worker/d158-conduct8`**,
