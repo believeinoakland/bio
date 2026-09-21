@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1368 rulings across 103 documents.
+1369 rulings across 103 documents.
 
 ## DEC-
 
@@ -287,9 +287,9 @@ authority is the file named, never this one.
 - **D-36** — THE MEASUREMENT DECIDED THE SHAPE and is recorded in MEASUREMENTS.md with its date and its re-runnable instrument: over the ONE real captured document this repository holds, a subject name was the WHOLE label in 0 of 41 labels against 33 names taken from the document itself — so the normalised-label index answers…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1209`
 - **D-38** — D-38 AND D-45 — TWO LIMITATIONS SETTLED BY DECISION AND HOMED IN NO GOVERNED DESIGN.** `MILESTONES.md`'s "Deliberately not scheduled" lists both (*settled by decision, default is to leave them*) and `WORK-PIPELINE.md` §3 names both as third-door rows; neither is stated in a construct's home (`MILESTONES.md` and…  
-  `docs/development/CLAIMS.md:17189`
+  `docs/development/CLAIMS.md:17196`
 - **D-38** · 2026-09-21 — RULED — D-38 and D-45 are stated LIMITATIONS in State Rules' front matter (§4.3, §8), so both leave DEBT by the third door; Q1 (D-162) and Q3 (D-53) are DOCTRINE and were PUT TO BOB in his conversation on 2026-09-21 — do not re-ask; Q4 (D-55), a bounded design act whose one link is untraced, passes to BOB #24…  
-  `docs/development/CLAIMS.md:17217`
+  `docs/development/CLAIMS.md:17224`
 - **D-46** · 2026-07-26 — The deployed plane enforces the SUPERSEDED v1.4 rule for project participant removal.** `projectRemove` in `store.mjs` requires an in-app administrator and answers `ADMIN_ONLY`, which is Membership Architecture v1.4 section 7.7. v2 section 7.7 REVERSES it: only a project OWNER removes a participant, and…  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:18`
 - **D-50** · 2026-07-26 — SUPERSEDED — closed by 0.28.0 (PLAN S-12 item 6); the residue is D-50 · open, S-12 step 6 |  
@@ -601,9 +601,9 @@ authority is the file named, never this one.
 - **D-293** — Q4 RULED NO: the guard never runs `gates.mjs` (M-85's landing rate), which `VERIFICATION.md`'s push-guard section already states; its named fix, refusing a tree whose recorded verdict is RED, is carried by the D-293 inbox entry until built, because that file is at its reading budget and its register block is quoted…  
   `docs/development/CLAIMS.md:16465`
 - **D-293** · 2026-09-21 — RULED by BOB #22 (SCHEDULER #5's Q4): a push-time gate would not converge — a full gate takes ~25 minutes and `main` took 48 first-parent commits from 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes (M-85) — so the guard READS a recorded verdict. — owner M0.  
-  `docs/development/QUEUE.md:101`
+  `docs/development/QUEUE.md:90`
 - **D-293** — states; the refusal's design is CARRIED in BOB #22's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293 RULED"), because that file is at its reading budget: the builder adds the refusal's one line in the landing.  
-  `docs/development/QUEUE.md:105`
+  `docs/development/QUEUE.md:94`
 - **D-302** · 2026-09-10 — ct pin reds on every added paragraph, while this population is FIVE hand-written sentences in append-only history and a SETTLED IC, so the exact figure is the honest ratchet — `LEDGER`'s own argument for holding counts exactly.  
   `docs/archive/ledgers/DEBT-closed.md:18`
 - **D-304** — Wider than briefed and AMENDED into the claim with reasons (the grade change forces the census arms to move or the ratchet reds on a correct estate); the cry-wolf half of the flow's scoping was narrowed only where the grade would otherwise PRINT a claim the record cannot support; **the quiet half is D-304, a row…  
@@ -1163,7 +1163,7 @@ authority is the file named, never this one.
 - **REC-65** · 2026-08-07 — The earlier provisional — sidebar approval as the act of record — is SUPERSEDED as a GATE; the sidebar remains visibility and bulk review.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2877`
 - **REC-65** — me; REC-65's known-open pin (`identity-claims.test.mjs` arm (e), which names `provenancechain` beside `proposedispose`) CORRECTED with a dated comment saying why, never exempted.  
-  `docs/development/BACKLOG.md:279`
+  `docs/development/BACKLOG.md:269`
 - **REC-68** — AND IT IS AMENDED RATHER THAN RESTORED, WHICH IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"* — true of its tree, false of this one, where `--strict` prints 741.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7375`
 - **REC-68** · 2026-08-09 — RECOVERED FROM `0ca7640^2` AND AMENDED, NOT RESTORED — AND THE AMENDMENT IS THE ITEM.** REC-68's sentence opened *"THE CURRENT PRINTED FIGURE IS `482 arms`"*.  
@@ -1375,7 +1375,7 @@ authority is the file named, never this one.
 - **REC-155** — REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches that file) so the two do not collide.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1207`
 - **REC-155** — SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED (§4.10): FIVE GAIN SESSION REACH, TWO ARE UNATTENDED BY DECISION.  
-  `docs/development/BACKLOG.md:263`
+  `docs/development/BACKLOG.md:253`
 - **REC-155** — were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0 (`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s BATCH rule has DIST check `git log <last release tag>..origin/main` itself.  
   `docs/development/CLAIMS.md:15578`
 - **REC-155** — (1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md` after §4.9 (before `## 5.  
@@ -1407,7 +1407,7 @@ authority is the file named, never this one.
 - **REC-159** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2): CONDUCT #10's routes placed, each with its fix named** — REC-159 (REC-156's DELEGATION, items 1–2) directly before REC-155; D-438 (NARROWED to `refusal-codes.control.mjs`), M0-93 (`delegations.control.mjs`) and M0-94 (the census's UNCLASSIFIED exit) at the head of the…  
   `docs/development/CLAIMS.md:16977`
 - **REC-162** — RULED by BOB #23: `op=governorconfig` is the OPERATOR's act. — owner RECORD.  
-  `docs/development/BACKLOG.md:253`
+  `docs/development/BACKLOG.md:243`
 - **REC-162** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 6): BOB #23's entry DRAINED** — `governorconfig`'s refusal PLACED as REC-162, back to back after REC-159; the REC-156 DELEGATION DISCHARGED, every item placed or ruled.  
   `docs/development/CLAIMS.md:17002`
 ## UI-
@@ -1575,7 +1575,7 @@ authority is the file named, never this one.
 - **CAP-12** · 2026-09-14 — AMENDED at CAP-12's landing — 2026-09-14 (the second key this entry was written to carry; the version stays **1.5.0** and the class stays ADDITIVE, and CONDUCT confirms or moves it at integration)  
   `docs/development/INTERFACE-CHANGES.md:6740`
 - **CAP-14** · 2026-09-21 — RULED owed by BOB #21 (2026-09-21): for a reused part, who retrieved the bytes is an EARLIER capture. — owner CAPTURE.  
-  `docs/development/BACKLOG.md:193`
+  `docs/development/BACKLOG.md:183`
 ## CPDF-
 
 - **CPDF-2** — CPDF-2 is SUPERSEDED** by Bob's function-specific Worker topology (I6).  
@@ -1792,6 +1792,8 @@ authority is the file named, never this one.
   `docs/development/BACKLOG.md:723`
 - **M0-69** · 2026-09-19 — §6 rung 6 — the scratch sweep taking scratch IDENTITY is DECIDED (BOB #16, 2026-09-19) and NOT BUILT: today `op=purge` clears the record tables only (row M0-69). - §6 rung 6 — no credential can be bound to the scratch namespace for its whole life: a stated LIMITATION (D-325; BOB #22, 2026-09-21).  
   `docs/architecture/BIO_Distribution_v0_1.md:8`
+- **M0-79** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 8): M0-79 CLOSED and THE REFRESH** — M0-79 verified at `45064d8f` by content (the guard's `SLACK` table fails slack beyond its bound), marked done and archived; the refill moved M0-99.  
+  `docs/development/CLAIMS.md:17180`
 - **M0-82** · 2026-09-21 — 2026-09-21 · BOB #19 · M0-82 NARROWED, NOT SUPERSEDED.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1151`
 - **M0-97** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): BOB #22's six inbox entries DRAINED**, each verified at its cited design and at the code — M0-97 (`decided.mjs` indexes a `decided:` field) directly after D-435, with D-341 (the same file) after it; REC-160 (`op=reevaluations` names a severed leg's status) after D-389,…  
@@ -2142,13 +2144,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-31** — RULED 2026-07-31: what publication actually requires Bob, 2026-07-31: "A capture can be published if there are no undetermined authority links in the provenance.  
   `docs/development/AUTHORITY-AND-TRUST.md:228`
 - **2026-09-21** — design: `docs/development/CAPTURE-SCALING.md` §Job one, *"RULED 2026-09-21 by BOB #21 … a reused part names the capture it came from"*, which carries the build, with `BIO_Intake_Doctrine_v1_1.md` §2. depends-on: none.  
-  `docs/development/BACKLOG.md:197`
+  `docs/development/BACKLOG.md:187`
 - RULED by BOB #17 (`a08e137a`) to be that doctrine MECHANISED:** the arm does not JUDGE builtness, it READS the one authority on it.  
-  `docs/development/BACKLOG.md:217`
+  `docs/development/BACKLOG.md:207`
 - §8f and the ROLE literal CORRECTED, never exempted.  
-  `docs/development/BACKLOG.md:249`
+  `docs/development/BACKLOG.md:239`
 - **2026-08-01** — design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"RULED 2026-08-01: the pre-flight is plane-sourced" — *see what it will refuse and why BEFORE it runs* — with the positions of `BIO_Membership_Architecture_v2.md` §7.7.  
-  `docs/development/BACKLOG.md:287`
+  `docs/development/BACKLOG.md:277`
 - **2026-07-31** — STATUS CORRECTED 2026-07-31 (session BOB).  
   `docs/development/CAPTURE-SCALING.md:33`
 - RULED by Bob: a reused asset IS allowed in a capture that will be ratified as evidence.  
@@ -2416,7 +2418,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§5.4: one RULED paragraph; front matter: one Incomplete bullet for §1.2 and the Status sentence; Contents regenerated); `docs/development/ARCHIVE-FALLBACK.md` (front matter: two Incomplete bullets and the Status sentence; Contents regenerated);…  
   `docs/development/CLAIMS.md:17095`
 - `docs/development/ORCHESTRATION.md` (one RULED section under "COMMUNICATING A CHANGE"); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, four items in order); `docs/development/CLAIMS.md` (this block); `docs/DECIDED.md` (GENERATED, regenerated LAST).  
-  `docs/development/CLAIMS.md:17278`
+  `docs/development/CLAIMS.md:17285`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2652,7 +2654,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - CORRECTED with dated reasons, never exempted.  
   `docs/development/kickoffs/RECORD.md:377`
 - **2026-09-21** — a `cut:` line naming it — from the BOTTOM of the order, never the top: RULED by BOB #23 (2026-09-21), the budget stays 150 KiB (`kickoffs/SCHEDULER.md`, the last mechanics line).  
-  `docs/development/kickoffs/SCHEDULER-NEXT.md:18`
+  `docs/development/kickoffs/SCHEDULER-NEXT.md:19`
 - **2026-09-21** — `BACKLOG.md`'S BUDGET STAYS 150 KiB — RULED by BOB #23, 2026-09-21.** When a placement needs room, cut the rows FURTHEST DOWN the order to their fields (their `scope:` verbatim in the dated cut archive, `docs/archive/ledgers/QUEUE-cut-<date>.md`, each line prefixed `> `, a `cut:` line left on the row), never from…  
   `docs/development/kickoffs/SCHEDULER.md:179`
 - **2026-07-28** — RULED by Bob, 2026-07-28: source addresses are NOT exempt from the canonical-identity rule.  

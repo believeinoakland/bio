@@ -17177,6 +17177,13 @@ persisted and `reading_refs` indexed by entity reference, FW-5). BOB #23's rulin
 KiB, cut from the bottom of the order, recorded in `kickoffs/SCHEDULER.md`; `kickoffs/SCHEDULER-NEXT.md` rewritten as a
 CHECKPOINT for SCHEDULER #9 while live. 146 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 8): M0-79 CLOSED and THE REFRESH** — M0-79 verified at `45064d8f` by content
+(the guard's `SLACK` table fails slack beyond its bound), marked done and archived; the refill moved M0-99. M0-98 reads
+`blocked`: CONDUCT #10 builds it inside D-293's worker, and both close at that integration. M0-102 PLACED after D-438
+(three instruments that pass where they should fail, routed by CONDUCT #10 from M0-79's report). `kickoffs/SCHEDULER-NEXT.md`
+rewritten for SCHEDULER #9 at the refresh; this claim passes to SCHEDULER #9, who supersedes it when it archives this
+session. 146 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
 
 1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
