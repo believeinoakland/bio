@@ -1323,8 +1323,10 @@ const REGISTER_FLOOR = {
      do not move. Nothing FELL. */
   /* MERGED 2026-09-21 by CONDUCT #10, integrating D-432 and REC-156 in one batch: BOTH moved `arms` from 1539
      (D-432 +9, REC-156 +4) and neither moved it from the other's figure. ONE KEY, re-read from the `--strict` run
-     PRINTED ON THE COMMITTED MERGE (D-238: an uncommitted merge reads short) — never the sum typed in. */
-  arms: 1548,
+     PRINTED ON THE COMMITTED MERGE `f84bcd47` (D-238: an uncommitted merge reads short), exit 0 unpiped:
+     `REGISTER FLOOR  arms 1552/1548 · classified 258/258 · corpus (suites read) 259/259 · GREW by 4 arm(s)` and
+     `221 RUN … floor 221/221 reproducible` — never the sum typed in. Only `arms` moves; nothing FELL. */
+  arms: 1552,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.

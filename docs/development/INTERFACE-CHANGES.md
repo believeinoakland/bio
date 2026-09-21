@@ -12552,6 +12552,9 @@ the report:** `node test/mint-ledger.control.mjs`, exit 0, all nine arms AS DECL
 CONDUCT answers FOR the schema's consumer areas, in writing, per step 3: NOT-AFFECTED — no consumer reads the table.
 **OWED, not done here:** the BUILT claim `1.minted-ids` (text and probes in `3.census`'s note) cannot enter
 `construct-status.json` until BOB #21's M0-86 map cut lands (the map sits 4 B under its budget) — a DELEGATION carries it.
+**PAID 2026-09-21 by CONDUCT #10 at D-432's landing:** M0-86 landed first (`57904bcd`), so D-432 was re-merged onto it
+(`19fdcd95`) and `1.minted-ids` entered `construct-status.json` as BUILT — its text bounded by what `#seedMintLedger` says
+it cannot see; the DELEGATION is discharged in its own block. I5 stays 1.23.0.
 
 ## IC-171 · I3: `op=memberadd`'s `by` is SERVER-STAMPED and no longer caller-supplied — the store relays the stamp from the query over any body copy, so a §4.7 proposal records its PROPOSER's own endorsement and nobody else's; a bearer's proposal records none, and a bearer is NOT refused (PROVISIONAL, BOB's to rule) · PROPOSED 2026-09-21 (REC-156, minted with `node tools/mintid.mjs IC` before building) — the version bump, the classification and the RESOLUTION are CONDUCT's
 
@@ -12619,3 +12622,24 @@ the eleven discriminating memberadd assertions.
 **WHAT IS STILL NOT CLOSED, and it is NOT this change:** `memberadd` reaches the founder's session alone, so an enrolled
 administrator cannot propose an addition or invite a member from her own session, and is refused with a sentence that
 calls the op an administrator's. Routed with its fix named by REC-156's DELEGATION in `CLAIMS.md`.
+
+**RESOLUTION · 2026-09-21 · ACCEPTED by CONDUCT #10 as MAJOR, BREAKING — I3 47.0.0 → 48.0.0.** Base RE-READ at
+resolution off the integration tree, where REC-156 lands in ONE batch with D-432, D-355 and D-254, none of which moves
+I3 (IC-170 is I5): **47.0.0** (IC-169), as proposed. **WHY MAJOR, on IC-25's rule and IC-3's settled reasoning, and
+on IC-168's precedent for this same class:** no request that succeeded is refused, so IC-137's plainest test is not
+met — but *"the BEHAVIOUR change is a break, and the break is what gets versioned"*: the SAME request now leaves a
+DIFFERENT record. A body `by` naming another administrator no longer casts that administrator's endorsement; a
+bearer's proposal records none; and the founder's session's proposal now records the founder's own endorsement where
+it recorded none unless the id was typed. IC-131's MINOR precedent does not reach it, because that narrowing left every
+row reachable, and here a caller that had the operator's bearer cast an administrator's endorsement must now endorse
+from that administrator's session. The consumers were MEASURED NOT-AFFECTED (M-84: `civicos-ui/` makes no
+`memberadd` call; the setup page sends no `by`; FLEET's `vf4-live-scratch.mjs` sends none) — which is why the
+break costs nothing today, never a reason to record it as additive. **NEGATIVE CONTROL RE-RUN AT INTEGRATION by
+CONDUCT #10 on the merged tree `f84bcd47`, not taken from the report:** `node test/adminvote.control.mjs` (from
+`bio-plane/`), exit 0, all eleven arms AS DECLARED — baseline 56/0 · stamp-dropped 40/16 · fence-dropped 46/10 ·
+reach-dropped 37/19 · caps-ungated 53/3 · overstrict 37/19 · classkeyed 52/4 · memberadd-disjunct-dropped 48/8 ·
+memberadd-relay-dropped 46/10 · memberadd-relay-fallback 54/2 · memberadd-overstrict 53/3 — identical to the builder's,
+every restore byte-identical. CONDUCT answers FOR the consumer areas, in writing: NOT-AFFECTED, as measured above.
+**THE DECISION INSIDE IT STAYS PROVISIONAL AND IS BOB'S** — a bearer reaching `memberadd` is not refused — and is
+carried to BOB #22 with this landing's report. **NOT closed by it:** `memberadd` reaches the founder's session alone
+(REC-156's DELEGATION, SCHEDULER's to place).

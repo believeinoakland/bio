@@ -16636,6 +16636,13 @@ than a further appended note), **NOT** `newgroup/`, **NOT** `release/`, **NOT** 
 
 **open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates and resolves IC-170.
 
+**RELEASED 2026-09-21 by CONDUCT #10 at integration.** D-432 LANDED in the integration merge `19fdcd95` — CONDUCT #9's
+parked `874cd6cd` re-merged onto M0-86's map cut — pushed to `main` in the same landing as this line, in ONE batch with
+D-355, D-254 and REC-156 under one full gate (IC-170 ACCEPTED MINOR, I5 1.23.0, resolved by CONDUCT #9 inside the
+parked merge). Branches `worktree-agent-ae1b7eca4d2254b16` and `conduct9/d432-integration` are deleted from the remote
+after the push is verified (PRUNE-ON-MERGE). The paths this block reserved are FREE, and the `1.minted-ids` claim its
+worker could not add is added (the DELEGATION below is DISCHARGED).
+
 ## CLAIM 2026-09-21 RECORD (D-432, SECOND BLOCK — TWO SITES ADDED after the item's own suite met hygiene's walk census)
 
 Appended rather than edited into the block above, because this register is APPEND-ONLY and both sites were found after
@@ -16658,6 +16665,10 @@ it was written — by the census, on the new suite's first hygiene run, which is
 against its 49,152 B budget, because `origin/main` already sat at 49,148 B (M0-86: four bytes of headroom). The census
 review went into `3.census`'s UNRENDERED `note` instead, the rendered text moved by one digit (97 -> 98 tables), the map
 is back at 49,148 B, and the claim is OWED until M0-86 frees room (named in the note and in the report to CONDUCT).
+
+**RELEASED 2026-09-21 by CONDUCT #10 at integration**, with the block above: its two added sites landed in `19fdcd95`.
+On the merged tree the walk census reads 36 against its floor of 36 (hygiene 922/0), so the floor this block moved
+carries no slack.
 
 ## DELEGATION 2026-09-21 CONDUCT (#9) -> BOB (#21) — **D-432's BUILT claim `1.minted-ids` is OWED and cannot land until the M0-86 map cut does**
 
@@ -16716,6 +16727,14 @@ the sequencing note in this item's report), `docs/development/QUEUE.md` (CONDUCT
 
 **open as of 2026-09-21** — OPEN while this item builds; released at integration.
 
+**RELEASED 2026-09-21 by CONDUCT #10 at integration.** D-355 LANDED in the merge `0e80aa8c`, pushed to `main` in the
+same landing as this line (the batch with D-432, D-254 and REC-156, one full gate). Its three drivers were RE-RUN BY THE
+INTEGRATOR on the merged tree, never beside a gate: `refusal-partition.control.mjs` 11/11 arms and 19/19 sub-checks as
+declared (ARM 6 through D-254's re-aim, fitted onto this item's hoisted anchors), `provenance-floor.control.mjs` 59/59
+checks and 13/13 arms, `nc-d355.mjs` 8/8 arms — the pen absent and the tree clean after each. Branch
+`worktree-agent-a9a513c0906ae3b3e` is deleted from the remote after the push is verified. The paths this block
+reserved are FREE; the routes in its report go to SCHEDULER #6, which places them on this landing.
+
 ## CLAIM 2026-09-21 VERIFY (D-254 — REC-76's verdict reader SINGLE-HOMED: the DEC-49 guard IMPORTS it, and the drift pin becomes an IMPORT pin)
 
 Worker spawned by CONDUCT #9 [3d638d] for ONE cached task, D-254 (QUEUE row read `running` on `origin/main` @
@@ -16763,6 +16782,15 @@ the integrator rather than written there), `newgroup/**`, `release/**`, every ot
 
 **open as of 2026-09-21** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
 
+**RELEASED 2026-09-21 by CONDUCT #10 at integration.** D-254 LANDED in the merge `cac06ae7`, pushed to `main` in the
+same landing as this line (the batch with D-432, D-355 and REC-156). It landed SECOND of the two items that changed
+`refusal-partition.control.mjs`, so its ARM 6 re-aim was fitted onto D-355's hoisted anchors, and the preflight row for
+arm 6 was re-pointed to the reader (the anchor occurs once there and zero times in the guard). RE-RUN BY THE
+INTEGRATOR: `verdict-excluder.control.mjs` 13/13 arms as declared, the guard's output byte-identical to its baseline.
+D-437, D-438 and D-439 are carried onto `main`'s DEBT.md over LED-7's rework. Branch
+`worktree-agent-aba246a225e641de7` is deleted from the remote after the push is verified. The paths this block
+reserved are FREE.
+
 ## CLAIM 2026-09-21 RECORD (REC-156 — `op=memberadd`'s `by` is stamped by the SERVER, and the store reads only the stamp: a §4.7 proposal records its proposer's own endorsement and nobody else's)
 
 Worker spawned by CONDUCT #9 [3d638d]. **Own worktree** `.claude/worktrees/agent-a45dec7af75234c20`, branch
@@ -16798,6 +16826,13 @@ or `civicos-ui/`, and **NOT** `DIST-NEXT.md` / `CONDUCT-NEXT.md`, whose *"NOT cl
 at this landing and are named in the report for their owners rather than edited here.
 
 **open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates.
+
+**RELEASED 2026-09-21 by CONDUCT #10 at integration.** REC-156 LANDED in the merge `f84bcd47`, pushed to `main` in the
+same landing as this line, security first in the batch with D-432, D-355 and D-254 (IC-171 ACCEPTED MAJOR, I3 47.0.0 ->
+48.0.0; REGISTER_FLOOR `arms` re-read as 1552 from `--strict` on the committed merge, because both it and D-432 moved it
+from 1539). `adminvote.control.mjs` RE-RUN BY THE INTEGRATOR: 11/11 arms as declared, identical to the builder's.
+Branch `worktree-agent-a45dec7af75234c20` is deleted from the remote after the push is verified. The paths this block
+reserved are FREE; the DELEGATION below stays OPEN — SCHEDULER's to place, with its one question for BOB.
 
 ## DELEGATION 2026-09-21 RECORD (REC-156 worker) -> SCHEDULER, one question -> BOB first — **AN ENROLLED ADMINISTRATOR CANNOT PERFORM §4.9'S CUSTODIAL ACTS FROM HER OWN SESSION, AND IS REFUSED WITH A SENTENCE THAT IS FALSE OF HER**
 
