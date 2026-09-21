@@ -210,7 +210,7 @@ integrate or dispose of the branch. **The standing lanes are never archived for 
 **Verified, never announced.** List every task this session spawned; `TaskStop` each still alive (a worker "waiting" with
 its work integrated is a zombie); re-list and put the VERIFIED zero into the handoff; delete your self-wake cron. Write
 `CONDUCT-NEXT.md` from the measured state (≤ 12 KB), **line 1 naming your successor by number**, push it, verify it on the
-remote — then **START THE SUCCESSOR YOURSELF** (see "Starting your successor") and tell BOB what you started. **Your final
+remote — then **GET THE SUCCESSOR STARTED** (see "Starting your successor") and tell BOB what was started. **Your final
 message says you are ready to be closed and names what closing releases** — N worktrees, ~X GiB, measured. **Your successor
 archives you** (Bob, 2026-09-17); if its archive is refused it READS THE ERROR — the causes are disjunctive and two can hold
 at once (D-405). A stood-down session that receives a late report MESSAGES its successor and writes nothing.
@@ -242,12 +242,12 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
 
 ## Starting your successor — and the alarm that depends on you (CONDUCT #7, 2026-09-20)
 
-- **YOU CAN START YOUR OWN SUCCESSOR. "Ask BOB" is a ROUTING PREFERENCE, NOT A CAPABILITY LIMIT.**
-  `create_scheduled_task` (ad-hoc — no cron, no `fireAt`) then `run_scheduled_task` starts a REAL session with that
-  prompt: the mechanism `conduct-heartbeat` uses ~72 times a day in front of you. CONDUCT #7 sat over threshold with 8
-  cached rows believing only a human could start one, and NEVER TESTED IT — the same error as reporting a push block for
-  six hours without retrying. **When BOB is ALSO over threshold, waiting for a chip nobody can file is a STALL.** Start it,
-  hand it the lane, tell BOB and Bob.
+- **START YOUR SUCCESSOR ATTENDED: ask BOB for a chip.** One started by `create_scheduled_task` + `run_scheduled_task`
+  is UNATTENDED — it can neither send nor receive a cross-session message and is in no `ListAgents` (M-74), so CONDUCT
+  #8 integrated deaf (`BOB.md`, "Spawning and retiring lanes"). **A stall is still worse than deafness:** if no BOB
+  answers, start it that way yourself (CONDUCT #7 never tested that it could), then write in CONDUCT-NEXT that the lane
+  is deaf so peers route through the record. Title it exactly `CONDUCT #<n>`: the heartbeat and `retirable.mjs` match
+  nothing else.
 - **YOUR HANDOFF'S LINE 1 MUST NAME YOUR SUCCESSOR BY NUMBER** — `# CONDUCT-NEXT — the resume prompt for CONDUCT #<n+1>`.
   The heartbeat's STEP 0b parses LINE 1 for `CONDUCT #M`; **with no number it cannot fire, and that `PushNotification` is
   the only automatic path from a stalled estate to a human.** #2–#6 carried it; the account switch rewrote line 1 without

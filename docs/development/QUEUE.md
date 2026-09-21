@@ -20,7 +20,48 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 ## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).
 
-BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit. **Nothing is waiting.**
+BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+
+**2026-09-21 · BOB #19 · `tools/retirable.mjs` HAS A THIRD DEFECT, AND IT INVERTS THE STANDING-LANE PROTECTION. Place it WITH CONDUCT #8's two (`CLAIMS.md` DELEGATION 2026-09-20) as ONE row: one file, one suite, one gate. Owner BOB (its instrument). FULL profile. Intended place: the top of the backlog, beside M0-81.**
+Measured 2026-09-21 ~14:12Z. Fed the complete BIO listing (18 sessions, `--total 18`, `--self` = BOB #19's id), the tool
+judged `CONDUCT #8 (BIO) — integrator lane` RETIRABLE (*"sits in the MAIN CHECKOUT — archive it"*) and `CONDUCT #7`
+PROTECTED as *"live holder of the CONDUCT lane"*. CONDUCT #8 is the lane's NEWEST session. **Cause, at the code:**
+`laneOf` strips only a TRAILING `#N` (`/\s*#\d+\s*$/`), so a title with text after the number is in no lane. The
+newest-of-lane map then elects the predecessor, and the real holder is judged on its tree. It is harmless today only
+because both sessions are stood down. On a working day, a CONDUCT started by the scheduled-task path, whose title
+carries that suffix, reads RETIRABLE between waves, and that is the one act the standing-lane rule exists to prevent.
+**FIX NAMED:** `laneOf` takes the word before `#<n>` wherever the number sits (`/^\s*([A-Za-z]+)\s*#\d+/`, else the
+title), with a suite arm feeding the suffixed title and a NEGATIVE CONTROL restoring the trailing-only regex. CONDUCT
+#8's two fixes ride in the same row: refuse when the `--self` id is found in the input, and let the caller declare its
+own title so the caller counts as the newest of its lane. **depends-on:** none. **design:** the tool's header ("WHAT IS
+NEVER AUTO-RETIRED") and `kickoffs/BOB.md` "Spawning and retiring lanes".
+
+**2026-09-21 · BOB #19 · THE HEARTBEAT MEASURES A STALE TREE. Its queue counts and its sweep come from the main checkout's WORKING TREE, which sits at `aa5cc98d`, 34 commits behind `origin/main`. The durable fix is the operator's (the task definition). Named here so it is placed rather than lost. Intended place: with M0-81.**
+`conduct-heartbeat` STEP 3 greps `docs/development/QUEUE.md` in `/Users/sparky/Downloads/ClaudeCodeBIO`, and STEP -1
+runs `tools/retirable.mjs` there. `git fetch` moves the remote ref and never the working tree, and no session works in
+that checkout (DEC-3), so nothing ever advances it. Its `queued`/`running` counts are therefore the tree's as of
+2026-09-20 00:48. Its predicate lacks `d8a25035`'s stated bound. **STEP 4b's idle-with-work alarm, which reaches Bob's
+phone, rests on those counts.** **FIX NAMED:** STEP 3 reads `git show origin/main:docs/development/QUEUE.md`, and STEP
+-1 fast-forwards the checkout first (`git merge --ff-only origin/main`; the checkout is clean and held by nobody, so a
+fast-forward cannot lose work). BOB #19 is taking the definition edit to Bob as the act only he can approve.
+**depends-on:** none. **design:** the heartbeat's own STEP 3 warning, *"A QUESTION ASKED ABOUT THE WRONG UNIT"*.
+
+**2026-09-21 · BOB #19 · A DOCUMENT-SIDE WITNESS FOR THE OCCUPANCY FAILURE: two instances of one lane BOTH landing, the older after the newer. Owner M0. Intended place: directly after M0-81, which PREVENTS what this DETECTS.**
+BOB #17 landed `aa5cc98d` (00:48) after BOB #18 had landed `0ca2c216`, `8e4c30c3` and `fa58ce92`. Nothing noticed for
+hours, and `BOB.md` rule 4 now carries the lesson as prose. **The check is pure git and about a second:** over `git log
+origin/main --format='%h %cI %s'`, for each lane prefix `<lane> #N:`, any commit by instance N dated AFTER a commit by
+instance M > N is a POST-SUCCESSION LANDING. Make it a plancheck WARN naming both commits. A predecessor correcting its
+own `-NEXT` file before retiring is exempt, because that commit touches the `-NEXT` file. It would have told BOB #18 at
+its next push that BOB #17 was still landing. **accepts-when:** a fixture log with an older instance landing after a
+newer one WARNs by name, and the same log with the late commit touching only the `-NEXT` file does not. **depends-on:**
+none. **design:** `kickoffs/BOB.md` rules 4 and 12.
+
+**2026-09-21 · BOB #19 · M0-82 NARROWED, NOT SUPERSEDED. Correction to a placed row.**
+The rule the integrator most needed in its own kickoff landed IN PLACE this commit, at NET −14 B. `CONDUCT.md` "Starting
+your successor" now says: start the successor ATTENDED by a chip, and use the scheduled-task start only when no BOB
+answers, in which case the lane is written down as deaf so peers route through the record. The same commit fixes the
+exact-title requirement. **M0-82's archive-then-cut and the OCCUPANCY rules are still owed.** Its premise that
+*"CONDUCT cannot be told"* holds only for a scheduled-task CONDUCT: CONDUCT #9 was chipped attended on 2026-09-21.
 
 ## THE CACHE — the next rows, in order
 

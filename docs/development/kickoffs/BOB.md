@@ -147,6 +147,17 @@ body below the inbox, and not any area's code.
       inbox** — tonight's nine rulings (D-431, §7.14, DEC-63's application, opaque ids, run principal and kind, …) each
       took one read of the code that changed the answer from the obvious one.
 
+12. **THIS LANE'S RULES BIND THIS LANE FIRST — BY MECHANISM, NOT BY RE-READING** (BOB #19, 2026-09-21; M-78). BOB #18's
+    eight failures were each a rule it already HELD: occupancy, a stale handoff, M-75, reading a refusal, the opening
+    checklist, never handing Bob a click, a gate read through a pipe — and correcting the kickoff a ruling supersedes (it
+    ruled the integrator ATTENDED here and left `CONDUCT.md` prescribing the unattended start). **(a) The self-wake prompt
+    OPENS with a self-audit** — is `BOB-NEXT.md` current, am I the only live BOB, is each blocker I carry retried in its
+    narrowest form, has every refusal been read literally, is every kickoff my rulings superseded corrected — so it runs
+    every two hours instead of being remembered. **(b) The agenda is `owed.mjs BOB` and the design calls routed here,
+    never a peer's message**; estate operations past the opening are CONDUCT's and FLEET's to do and this lane's to
+    route. **(c) A broken rule is a DATA POINT on its receipt, not a new, louder rule:** answering each failure with more
+    bold text grew the reading while the rulings stopped — BOB #17 carried 11 rulings in 22 commits, BOB #18 2 in 12.
+
 ## Spawning and retiring lanes
 
 **BEFORE FILING ANY CHIP, CHECK THE HANDOFF'S CURRENCY AND NOT ONLY ITS ADDRESSING** (CONDUCT #7's finding,
@@ -222,7 +233,9 @@ still read.
 ensure the area's kickoff exists, then file a `spawn_task` chip whose prompt is a SELF-CONTAINED paste
 block — read `CLAUDE.md`, then the kickoff, fetch, verify state from `origin/main`, claim before editing —
 and Bob clicks once. A saturating session is replaced the same way: it writes its `<AREA>-NEXT.md` first,
-and the chip refuses to work if that handoff is absent from the remote.
+and the chip refuses to work if that handoff is absent from the remote. **Title a lane's chip EXACTLY `<LANE> #<n>`:**
+the heartbeat's STEP 0 and `retirable.mjs`'s `laneOf` match that form and nothing else — a task titled `CONDUCT #8
+(BIO) — integrator lane` was invisible to both (BOB #19, 2026-09-21).
 
 **A stand-down is not a retirement.** A stood-down session keeps running and may hold its worktree; its
 successor archives it (above). From the moment a successor exists it owns the checkout: a replaced session

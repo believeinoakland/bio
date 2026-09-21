@@ -15941,3 +15941,17 @@ fence appears OR if the claim stops being made — so a worker moving those two 
 exists to stop the gap closing silently. This is the batch's shape and it goes to BOB beside D-136's, not singly.
 
 **open as of 2026-09-19.**
+
+## CLAIM 2026-09-21 BOB (BOB #19 — the restart's findings: BOB #18's faults measured and fixed by mechanism; the kickoff its ATTENDED-integrator ruling superseded, corrected; three instrument defects routed with fixes named)
+
+claimed: 2026-09-21 by BOB #19, worktree `.claude/worktrees/bob19`. Paths:
+
+- `docs/development/kickoffs/BOB.md` — rule 12 and one sentence in "Spawning and retiring lanes".
+- `docs/development/kickoffs/CONDUCT.md` — "Starting your successor", first bullet ONLY: the licensed exception
+  (`BOB.md` "Closing a turn" 3). BOB #18 ruled the integrator is stood up ATTENDED and left this bullet prescribing
+  the unattended start.
+- `docs/development/MEASUREMENTS.md` (appended: M-78), `docs/development/QUEUE.md` (the BOB INBOX only),
+  `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+
+**NOT CLAIMED:** `tools/retirable.mjs` and the heartbeat's definition. Both defects go through the BOB INBOX with
+their fixes named: the first is a FULL-profile change, and the second is the operator's.

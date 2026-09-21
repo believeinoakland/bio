@@ -17638,3 +17638,45 @@ message. **(2) A NAME IS NOT AN ADDRESS.** The first send here landed on a dupli
 nothing in the result said so; it was the recipient that noticed. Silence from a peer is not agreement, and a
 `success: true` is not delivery to the lane you meant. Stated in `ORCHESTRATION.md`'s channels table, where a reader
 planning a route meets it.
+
+## M-78 · 2026-09-21 · TWO BOB SESSIONS A DAY APART: where the time went, and every failure of the second was a rule it already held (BOB #19)
+
+**INSTRUMENT:** `git log origin/main --since=2026-09-17 --grep='^bob #1[78]' -i --format='%h %cI %s'`, read at
+`9be67154`; each commit classified from its subject and diff. A RULING is a design decision recorded in its governed
+home, or a ledger row closed or narrowed against the code. Everything else is OPERATIONS or LANE LAW. The
+classification is this session's reading, stated so it can be re-done.
+
+| session | span (commit times, -04:00) | commits | rulings | the rulings |
+| --- | --- | --- | --- | --- |
+| BOB #17 | 2026-09-19 10:05 → 2026-09-20 00:48 | 22 | **11, in 7 commits** | TASK stays gated; D-325; D-52 narrowed; D-136's omission named; D-55 narrowed; D-203 closed with its ladder edge; D-284; D-306; D-356; D-353; D-404 |
+| BOB #18 | 2026-09-19 21:30 → 2026-09-20 10:28 | 12 | **2, in 2 commits** (and D-148/D-149 carried to Bob in a third) | D-226 closed; D-134's BOB half discharged |
+
+**WHERE BOB #17'S RULINGS CAME FROM:** SCHEDULER #2's LED-7 batches. Each row reads *"ROUTED TO BOB 2026-09-19 by
+LED-7 batch N"*. A supply existed and was worked. **Three rows of that supply are still owed: D-80, D-126 and D-195**
+(`node tools/owed.mjs BOB`, 2026-09-21). BOB #18 worked none of them. That tool also lists D-353 and D-134, which were
+ANSWERED by BOB #17 and BOB #18 respectively. They appear only because `owed.mjs` can attribute a row but never
+discharge one (D-435). BOB #18's other nine commits went to
+the stand-down (2), to diagnosing wedges, duplicates and archive refusals (3), to new or narrowed lane law (3), and to
+one instrument's bound (1).
+
+**THE EIGHT FAILURES BOB #18 NAMED IN ITS OWN HANDOFF (§6), PLUS ONE FOUND AT THE RESTART. Each was a rule it
+already held:**
+
+| # | failure | the rule it held |
+| --- | --- | --- |
+| 1 | did not check its own lane's occupancy. BOB #17 landed `aa5cc98d` at 00:48, after BOB #18's `0ca2c216` (21:30), `8e4c30c3` and `fa58ce92` | `BOB.md` rule 1, which it had written that evening |
+| 2 | let its own handoff rot a day | the currency check, which it had written |
+| 3 | carried a resolved push blocker for three cycles | M-75, which it had written |
+| 4 | reported an archive refusal as a defect of "undetermined cause", twice | read the refusal: *"it still has live work"* was true both times |
+| 5 | skipped the sweep, `DECISIONS.md`, per-session context and `npm ci`; four peer messages set its agenda | `BOB.md` "Opening" 3–5 and rule 10 |
+| 6 | asked Bob to click `run_scheduled_task` | `CLAUDE.md` §3 |
+| 7 | read a background task's "exit code 0" as GREEN once, and piped a gate through `tail` once | `CLAUDE.md` §5 |
+| 8 | **found by BOB #19:** ruled the integrator is stood up ATTENDED (`BOB.md`, "What follows") and left `CONDUCT.md` "Starting your successor" prescribing `create_scheduled_task` + `run_scheduled_task`, the UNATTENDED start, as the default | `BOB.md` "Closing a turn" 3: correct every kickoff your change superseded, in the same turn |
+
+**THE FINDING: NOT ONE FAILURE WAS A MISSING RULE.** Each rule was held and applied OUTWARD. The response to each was
+more rule text: `BOB.md` gained the rules-1-to-4 subsection, and `CLAUDE.md` §5 was narrowed to 10 B of headroom. The
+reading grew while the rulings stopped. **A further rule cannot fix a rule that is held and not applied, so the fix is
+MECHANICAL.** (a) The self-audit lives in the self-wake PROMPT, which is executed every two hours rather than
+remembered. BOB #19's prompt carries it, from its first wake. (b) The agenda is the owed list, never a peer's message.
+(c) A broken rule is recorded as a data point on its receipt, as in this table, not as a louder rule. Ruled into
+`BOB.md` rule 12.
