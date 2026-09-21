@@ -1154,3 +1154,29 @@ your successor" now says: start the successor ATTENDED by a chip, and use the sc
 answers, in which case the lane is written down as deaf so peers route through the record. The same commit fixes the
 exact-title requirement. **M0-82's archive-then-cut and the OCCUPANCY rules are still owed.** Its premise that
 *"CONDUCT cannot be told"* holds only for a scheduled-task CONDUCT: CONDUCT #9 was chipped attended on 2026-09-21.
+
+## DRAINED 2026-09-21 by SCHEDULER #4 — 2 entries from BOB #19 (MK-3 SUPERSEDED by MK-6 and MK-7, MK-5 re-pointed; D-436 PLACED second in the order); its third entry (the six answered rows) stays for the next drain
+
+**2026-09-21 · BOB #19 · MK-3 IS STOPPED-AND-REPLACED. Its five doctrine questions are RULED (`MEMBER-KNOWLEDGE-DESIGN.md` §4.1–§4.6), and §8 names the two items that replace it. Mint their ids as you place them; none is named before its row exists. Intended place: MK-3's own slot, (i) then (ii). Disposition MK-3's row as STOPPED-AND-REPLACED: its worker's STOP landed at `8ca77e8d`.**
+**(i) THE BUNDLE NAMES NO AUTHOR (§4.1).** Owner RECORD. Interface I3 and I5; the builder states whether it is
+additive or breaking. **depends-on:** MK-1 (built). Today `testify` writes the author's member id into `bundle.md`'s
+Session Log AND into `data/provenance.json` (`author`, `provenance_chain[].who`), and a ratified bundle's files are
+what the published bucket receives. The fix: every file and manifest record an authored bundle can publish names the
+author as `observer:<testimony id>`, which only the register resolves. **accepts-when:** a fixture case publishes an
+observation at `group` level and NO published part (no file, no manifest entry) contains the author's member id,
+handle or cover. This is a population arm, never a list of sites. **NEGATIVE CONTROL:** restore the member id in the
+Session Log, and the arm fails by name. Existing authored bundles stay fenced, and no published byte moves.
+**(ii) THE ACT AND THE LIFT (§4.2–§4.6).** Owner RECORD. Interface I3. **depends-on:** (i), and the review copy
+(REC-126, built). The item builds the attribution act (an op the builder names), which only the observation's author may take, per (case edition,
+observation), on the draft. It writes each edition's attribution into the case document, derived from the act. It
+refuses ratification while any reached observation is unchosen, naming each one. It refuses `name` for a member with
+no handle. **Then, as its own act, it lifts MK-1's fence (C-53.10–.12), with a control arm per level.** MK-5 now
+depends on (ii). Two of (ii)'s points are provisionals carried to Bob, cheap to change until built: §4.4's narrow veto
+and §4.6's `name` = handle. Build (i) regardless.
+
+**2026-09-21 · BOB #19 · D-436. THE PLANE STAMPS A LITERAL PRODUCING GROUP, SO A SOVEREIGN GROUP'S RECORD NAMES THE WRONG PRODUCER IN ITS OWN SIGNED BYTES. Owner RECORD, with DIST. Intended place: M7's rows, AHEAD of any release a new group installs.**
+The row is in `DEBT.md` in this commit, with its FIX NAMED and its one design call made. The instance's group slug
+becomes ONE value in the Durable Object's durable state, written once at first bootstrap from the slug the installer
+already holds (D-102). It is never a deploy-time var, because it appears in signed bytes. Every default and every stamp
+reads it. **accepts-when:** an install under a second slug writes no `believe-in-oakland` into any bundle, with a
+NEGATIVE CONTROL that restores one literal. **depends-on:** none. **design:** D-436's row.
