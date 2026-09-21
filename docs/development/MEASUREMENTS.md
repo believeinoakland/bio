@@ -17816,3 +17816,28 @@ opened the newer file. M0-82 is narrowed accordingly.
 
 **WHAT IT SAYS.** Reclamation is still two acts, and a SCHEDULER tree returns ~286 MiB, the same figure M-80
 measured for #3's (+292,848 KiB). The handoff's ~500 MB was a recollection where M-80 was a measurement one row up.
+
+## M-85 · 2026-09-21 · BOB #22's opening: the predecessor reclaimed, a ruling index blind to 11 of Bob's 17 answered decisions, and the landing rate a push-time gate would face
+
+**INSTRUMENTS:** `mcp__ccd_session_mgmt__get_session` (`isRunning`), `git -C <tree> status --porcelain`, `git merge-base
+--is-ancestor`, `df -k /System/Volumes/Data` (KiB "Available"), `git worktree unlock` then `remove`; `node tools/decided.mjs
+"<DEC-id>"` once per `### DEC-n` heading of `docs/development/DECISIONS.md` (a scratch driver asking whether the answer
+files a ruling under that id); `git log --first-parent --since=2026-09-21T13:00:00Z --format=%cI origin/main`, gaps
+between consecutive commits; `[ -d <tree>/<pkg>/node_modules ]` over every checkout; `get_usage` (`plan.windows`). Read
+2026-09-21 between 18:58Z and 19:25Z by BOB #22.
+
+| what | measured |
+| --- | --- |
+| BOB #21's worktree `bob-21`, locked by `EnterWorktree` | ~647 MB (`du -sh`); porcelain 0 lines; tip `c90febdc` an ancestor of `origin/main` `85f99909`; `isRunning: false` at 18:58Z; its CronList `No scheduled jobs.` by its own message |
+| free before `archive_session`, then after `unlock` + `remove` | 5,255,956 KiB, then 5,899,848 KiB: **+643,892 KiB (629 MiB)**; the archive left the locked tree, as the handoff said it would |
+| `decided.mjs "<DEC-id>"` over DECISIONS.md's 19 entries | **13 not filed under their own id, 11 of them `answered` or `enacted`** (DEC-31, -39, -43, -48, -50, -51, -68, -70, -71, -73, -75); 6 found. Cause, at `tools/decided.mjs`'s `MARKER`: an uppercase-only word list, while an entry records its answer in a lowercase `decided:` field |
+| `decided.mjs "severance"` | DEC-29 and DEC-72, and **not DEC-70**, the entry that rules exactly that (Bob, 2026-09-10) |
+| `origin/main` first-parent commits, 13:00Z to ~19:20Z | 48; median gap 3.3 min; **46 of 47 gaps under 25 min**, a full gate's cost (`tools/gates.mjs`'s header) |
+| checkouts holding all three packages' `node_modules` | 10 of 11; only `bob-22` holds none |
+| the account's weekly figure | all models **43%** at 18:59Z, resetting 2026-09-26 11:00Z (5-hour window 55%, resetting 21:00Z) |
+
+**WHAT IT SAYS.** The index `CLAUDE.md` §1 names as the one source for what has been decided answers *not found* for most
+of Bob's own answered decisions, and it cost a real re-ask: SCHEDULER #5 routed D-280 (c) to BOB eleven days after Bob
+ruled it as DEC-70, and this session was one step from ruling the opposite. A gate as long as a full one cannot sit at
+the push while `main` moves every few minutes. The `node_modules` count refuted this session's own first premise for
+D-293 before it was written, which is why the ruling rests on the landing rate instead.

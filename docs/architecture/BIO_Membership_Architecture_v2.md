@@ -1112,16 +1112,19 @@ in-app administrator cannot use it.
 description).** The RECORD half is built: `export_log` writes the
 append-only row and `op=exportlog` makes it readable, so an administrator
 who LOOKS can find every export. **The NOTIFICATION half is not built, and
-there is no notification channel anywhere in this system** — verified at
-the code, not inferred: the only `notif` sites in `store.mjs` are the
-scheduler's internal `queue-renotify` consumer, and one comment declining
-to mint a member-facing notification out of a migration. So an
-administrator who never looks does not learn of an export. **Read the
-sentence above as the REQUIREMENT it is, not as behaviour to rely on**:
-until a channel exists, discovery is by looking. Closing it needs a CHANNEL
-DECISION — an in-app banner at next sign-in, or the communications surface
-the Roadmap describes — which is Bob's and is sequenced at M7, not a gap
-more code here can fill. This is stated because a design document that
+what it lacks is a PRODUCER, not a channel** (narrowed 2026-09-21 by BOB #19,
+folded here by BOB #22 the same day; the 2026-09-19 text said no channel
+existed and that closing it needed Bob's channel decision, which this
+supersedes). The in-app channel is the QUEUE, built — one queue with three
+homes (`NOTIFICATIONS.md`, Bob, 2026-08-01) — and
+`bio-plane/src/queuestate.mjs` already catalogues the FINDING
+`export-performed` (*"every administrator is notified"*). No generator raises
+it, so an administrator who never looks does not learn of an export; row
+D-52 (owner RECORD) places that generator. Only TRANSPORT beyond the app —
+email, or the communications surface the Roadmap describes — stays Bob's
+(D-98), and the in-app notice does not wait on it. **Read the sentence above
+as the REQUIREMENT it is, not as behaviour to rely on**: until D-52 lands,
+discovery is by looking. This is stated because a design document that
 promises a notification the system does not send is the record claiming
 more than it can support, which this project ranks above a missing
 feature.

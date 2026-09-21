@@ -1,14 +1,15 @@
 # BIO Distribution
 
-**Status** · v0.1 DRAFT, written 2026-09-14 by session BOB #11 as the level-1 home of construct 15 of `BIO_System_Design.md` §3 (distribution: installer, releases, fleet, multi-instance), which that map named as having no level-1 document describing the deployed topology. Awaiting Bob's review. It RULES NOTHING: the rules below are restated from where they were ruled — D-297 (closed), D-292, D-106, D-108, D-118, DEC-42, `CLAUDE.md`'s account and release sections, `PARALLELISM.md`'s fleet rules — and the mechanisms are those `newgroup`, `deploy.mjs`, the fleet build and `release/RELEASE.json` implement at 0.58.0. Completeness: complete at its level for the topology as deployed; multi-instance isolation is PLANNED NOT BUILT and sequenced after the member surfaces (§7); the fleet reaching a sovereign group is Bob's gate (§4). The one caveat: `BIO_Technical_Architecture_Decisions_v10.md` still carries the general rules this construct runs under (integrity, the manifest contract, promotion posture) and explicitly disclaims its own retired mechanisms; this document is their live replacement for distribution and cites the rules rather than restating them. §6 rung 6 gained what the scratch sweep takes (BOB #16, 2026-09-19). as of 2026-09-19
+**Status** · v0.1 DRAFT, written 2026-09-14 by session BOB #11 as the level-1 home of construct 15 of `BIO_System_Design.md` §3 (distribution: installer, releases, fleet, multi-instance), which that map named as having no level-1 document describing the deployed topology. Awaiting Bob's review. It RULES NOTHING: the rules below are restated from where they were ruled — D-297 (closed), D-292, D-106, D-108, D-118, DEC-42, `CLAUDE.md`'s account and release sections, `PARALLELISM.md`'s fleet rules — and the mechanisms are those `newgroup`, `deploy.mjs`, the fleet build and `release/RELEASE.json` implement at 0.58.0. Completeness: complete at its level for the topology as deployed; multi-instance isolation is PLANNED NOT BUILT and sequenced after the member surfaces (§7); the fleet reaching a sovereign group is Bob's gate (§4). The one caveat: `BIO_Technical_Architecture_Decisions_v10.md` still carries the general rules this construct runs under (integrity, the manifest contract, promotion posture) and explicitly disclaims its own retired mechanisms; this document is their live replacement for distribution and cites the rules rather than restating them. §6 rung 6 gained what the scratch sweep takes (BOB #16, 2026-09-19) and the namespace limitation D-325 leaves as (BOB #22, 2026-09-21); §6's D-260 bullet now points at the assistant's ruling. as of 2026-09-21
 
 **Place in the system** · Level 1; the authority for construct 15. Depends on `BIO_Technical_Architecture_Decisions_v10.md` (§10.2 integrity rules, §10.10 the manifest contract, §10.11 promotion gate posture, §5 distribution risk tiering — the decisions that survived the substrate change), `BIO_State_Rules_Consistency_v1_5.md` (the record an instance holds — construct 3), `BIO_Content_Framework_v0_10.md` Part II §16 (the three extraction tiers the fleet serves — construct 5), `BIO_Assistant_and_AI_Roles_v0_1.md` §6 (`agent-worker` — construct 11). Level-2 beneath it: `docs/development/MULTI-INSTANCE-ISOLATION.md` (the partition plan), `kickoffs/DIST.md` (the release gate as a process), `docs/development/VERIFICATION.md` (what a green battery does and does not claim), `docs/development/SCHEDULER.md` where it cites the distribution model, `docs/development/CAPTURE-SCALING.md` §Workers Paid. Depended on by `BIO_Publication_v0_1.md` (the published bucket per instance), `INVESTIGATIVE-SESSION.md` §14a (the account cascade decides sovereignty too), `MILESTONES.md` M6 and M7. Supersedes `BIO_Technical_Architecture_Decisions_v10.md` §9, §10.1, §10.5 and §10.6 as the live description (they are marked retired in their own front matter) and the fleet/multi-instance paragraph of `BIO_System_Design.md` §6, which becomes a pointer.
 
 **Incomplete sections** ·
 - §6 rung 6 — the scratch sweep taking scratch IDENTITY is DECIDED (BOB #16, 2026-09-19) and NOT BUILT: today `op=purge` clears the record tables only (row M0-69).
+- §6 rung 6 — no credential can be bound to the scratch namespace for its whole life: a stated LIMITATION (D-325; BOB #22, 2026-09-21). Only PROBE is confined, so this rung's no-write guarantee is the per-call `store=scratch` plus the witness, never a plane fence.
 - §7 — multi-instance isolation is planned, not built, and no queue row exists; the collision table and ordering constraints live in `MULTI-INSTANCE-ISOLATION.md` and are pointed at, not restated.
 - §4 — the fleet reaches a sovereign group only when Bob deploys the installer that carries it (D-297's last act); until then a group's instance takes the honest branch and this section says what that costs.
-- §6 — the account cascade's instance level is built and D-260 (a woken run re-entered; an instance-held credential) is open in the assistant's document; the distribution half of that question is named here and not answered.
+- §6 — D-260 is RULED (BOB #22, 2026-09-21; `BIO_Assistant_and_AI_Roles_v0_1.md` §6): an instance may hold ONE organisation-principal `ai` credential as a deploy secret, and it resumes only the runs that credential opened. Carrying that secret through install and update, as `DAEMON_TOKEN` is carried, is this construct's half, and it is NOT BUILT.
 
 **Contents**
 - [1. What the construct is, and why it is major](#1-what-the-construct-is-and-why-it-is-major)
@@ -84,6 +85,14 @@ What the installer installs is exactly the topology §2 names, and D-115's lesso
    because membership in the record is governed by `BIO_Membership_Architecture_v2.md`, never by eviction. A refused
    `memberadd` leaving a `proposed` row is Membership v2 §4.7's design (the proposal is what the administrators endorse),
    not residue to remove by another op.
+   **Which namespace a call lands in is chosen PER CALL, never per credential — a stated LIMITATION (D-325; BOB #17
+   ruled the posture SUFFICIENT 2026-09-19, and BOB #22 states its residue 2026-09-21).** `scopeFor`
+   (`bio-plane/src/index.mjs`) confines only the PROBE class, by refusal; every other class — ADMIN, MEMBER, `ai`, and
+   DAEMON on purpose (REC-33) — lands in `bio` unless that call names `store=scratch`. So this rung's no-write guarantee
+   is the naming on every call plus the WITNESS, the record's counters read before and after every arm (`CLAUDE.md` §5).
+   **No credential can be bound to scratch for its whole life, and none is planned:** a sticky confinement would be a new
+   credential property on RECORD's ground, with its own design, raised only if a live verification is measured writing
+   the real record despite the naming and the witness.
 7. **Per member, the same ladder** (`tools/deploy-fleet.mjs`, one at a time), because each member rolls out on its own.
 
 If a live probe contradicts the suite, establish which build answered before believing either — the rule was paid for on 0.52.0, when a probe answered by the old build looked exactly like a security defect in the new one.
@@ -103,7 +112,7 @@ Today several instances in one account collide on bucket names, plane and member
 | the fleet reaching a sovereign group | WAITS on Bob's click (the installer deploy) |
 | multi-instance isolation | PLANNED NOT BUILT; sequenced after Program B |
 | DS-1 (installer installs the fleet), DS-2 (version authority spans the fleet), DS-3 (account cascade configuration) | rows not marked done in the build-plan table; DS-1 and DS-2 are satisfied by D-297's closing and owe their rows' reconciliation |
-| an instance-held `ai` credential; a woken run re-entered | OPEN (D-260) |
+| an instance-held `ai` credential; a woken run re-entered | RULED 2026-09-21 (D-260; the assistant's §6), NOT BUILT: the deploy carries no such secret yet |
 | WARC/Memento interchange; capture-byte custody at scale | M6's absorbed debt (D-99; the R2 growth question) — not designed |
 | the front page a group sees; the wizard saying what an absent member costs | built as `newgroup`'s UI; the cost sentence per member is D-115's residue and is stated on install |
 
