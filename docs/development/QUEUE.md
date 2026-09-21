@@ -98,6 +98,17 @@ scope: the row's FIX: the joiner stops at a heading line (`^#`) or a blank line.
 accepts-when: a regenerated `docs/DECIDED.md` carries no `## CLAIM` text inside any ruling, and a hand-wrapped ruling still quotes whole. How a liar passes it: stopping at every line break, so the wrapped-ruling arm must pass. NEGATIVE CONTROL: an arm appends a claim after a trailing `released:` line; drop the stop, and it fails by name.
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-341's DEBT row of 2026-09-14; keeps its `D-` id).
 
+### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
+order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), enacting BOB #18.s ruling in `kickoffs/BOB.md` "Spawning and retiring lanes": a stood-down, duplicate or retired session RELEASES the lane name.
+depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT lives in the repo where a suite drives it, the ACT stays in the harness.
+scope: the OCCUPANCY half only — before a chip is filed, read the session list and REFUSE if a live session already holds the lane (by `scheduledTaskId` or title). Put it in `tools/` as a pure function over a session listing, so a suite drives it. **MUST NOT TOUCH:** the `conduct-8` scheduled task.s definition lives OUTSIDE this repo and is the operator.s — named to them, never changed from here. **FULL GATE PROFILE** (`tools/` is not `docs/`): check disk first.
+accepts-when: given a listing with a live session bound to a lane, the judgement REFUSES it and names the occupant; given the same listing with that session stood down, it admits. Driven from a FIXTURE listing, never the live harness. How a liar passes it: matching on title alone — so the arm feeds a session whose title differs and whose `scheduledTaskId` matches.
+NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is admitted, failing by name.
+added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
+
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
 `docs/archive/IS-BUILD-PLAN.md` ALLOCATES these ids as track-table rows, so a `### <ID> ·` heading here would allocate them a second time (`plancheck` fails that). Their status is tracked here until each is rowed under an id this file may open, or closed. DS-1/DS-2 are DIST-5's subject; DS-3 and FL-6 are routed to DIST and FLEET.

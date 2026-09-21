@@ -20,17 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
-order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), enacting BOB #18.s ruling in `kickoffs/BOB.md` "Spawning and retiring lanes": a stood-down, duplicate or retired session RELEASES the lane name.
-depends-on: none. `tools/retirable.mjs` is the precedent: the JUDGEMENT lives in the repo where a suite drives it, the ACT stays in the harness.
-scope: the OCCUPANCY half only — before a chip is filed, read the session list and REFUSE if a live session already holds the lane (by `scheduledTaskId` or title). Put it in `tools/` as a pure function over a session listing, so a suite drives it. **MUST NOT TOUCH:** the `conduct-8` scheduled task.s definition lives OUTSIDE this repo and is the operator.s — named to them, never changed from here. **FULL GATE PROFILE** (`tools/` is not `docs/`): check disk first.
-accepts-when: given a listing with a live session bound to a lane, the judgement REFUSES it and names the occupant; given the same listing with that session stood down, it admits. Driven from a FIXTURE listing, never the live harness. How a liar passes it: matching on title alone — so the arm feeds a session whose title differs and whose `scheduledTaskId` matches.
-NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is admitted, failing by name.
-added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
-
 ### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 had landed `0ca2c216`, `8e4c30c3` and `fa58ce92`; nothing noticed for hours, and `kickoffs/BOB.md` rule 4 now carries the lesson as prose. — owner M0.
 order: directly after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second, and it would have told BOB #18 at its next push (SCHEDULER #4, 2026-09-21)
 milestone: M0
@@ -125,7 +114,7 @@ added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
 order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
 milestone: M9
 interface: I3 additive — the integrator mints the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §5.4 (cascade semantics: an upstream re-distribution sets a re-evaluation obligation on every dependent), with DEC-70 (`docs/development/DECISIONS.md`, Bob, 2026-09-10): *severance discharges SUPPORT, never CONNECTION*; *the connection INFORMS, never binds*. DEC-70's fold into its governed home is asked of BOB.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §5.4 (cascade semantics: an upstream re-distribution sets a re-evaluation obligation on every dependent), DEC-70's home since BOB #23 folded it there (`43cd0caf`, 2026-09-21): *a read of the obligation marks which legs are severed and never describes one as resting on its target (REC-160)*; *the connection INFORMS, never binds*.
 depends-on: none. D-280 closed; nothing is superseded.
 scope: each obligation leg carries `status` (`severed` or `confirmed`) from `#refEdgeSevered(bundle, target)`, and a severed leg's edition detail says the withdrawn leg NAMED edition N rather than resting on it. The obligation still fires (DEC-70) and derives nothing from strength; an unrecorded or unrecognised `status` reads `confirmed`.
 accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed leg out, which reverses DEC-70, so `d280-strengthbar.test.mjs` SITE (c) stays green. NEGATIVE CONTROL: drop the status, and the severed-leg arm fails by name.

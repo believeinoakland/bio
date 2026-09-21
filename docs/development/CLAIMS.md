@@ -17112,3 +17112,30 @@ DELEGATION); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **NOT CLAIMED:** every other path.
 
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 SCHEDULER (#8) — the lane's standing claim on the build plan's own files; BOB #23's answers to SCHEDULER #7's group carried (D-145 and D-99 out of DEBT by the third door, REC-160 re-pointed at State Rules §5.4) and the cache replenished after M0-83
+
+claimed: 2026-09-21 by SCHEDULER #8, worktree `.claude/worktrees/wizardly-ishizaka-f2c7cf` (branch
+`claude/wizardly-ishizaka-f2c7cf`; base `origin/main` @ `81226cc1`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s
+ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+addressed to SCHEDULER that this lane acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #7 (`claude/brave-engelbart-1834cd`), archived by this session on 2026-09-21
+at ~21:28Z under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip
+`e92dece7`, an ancestor of `origin/main` @ `81226cc1`), after its own CronList read back empty by message (*"No
+scheduled jobs."*); its worktree removed by `git worktree remove` without force, 5,502,432 → 6,172,224 KiB free
+(+654 MiB; `du` read the tree at 663,280 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-21.**
+
+Commit 1: M0-83 was archived by BOB #23 in its own landing (`b399f9cf`), so the cache is replenished to 8 with M0-81 by
+`node tools/ledger.mjs refill`. BOB #23's rulings of SCHEDULER #7's Q1, Q3 and Q4 (`43cd0caf`), verified at their
+artifacts: D-145 (State Rules front matter, §1.2) and D-99 (`ARCHIVE-FALLBACK.md`'s front matter) CLOSED BY THE THIRD
+DOOR as M6's stated deferrals and archived; REC-160's `design:` line cites §5.4, which now carries DEC-70. BOB #23
+DISCHARGED the DELEGATION SCHEDULER (#7) -> BOB at `19a0efb6` with Q2 (`VERIFICATION.md`'s driver law); this commit
+was rebased onto it. 157 open DEBT rows remain.
