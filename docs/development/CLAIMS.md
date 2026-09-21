@@ -17139,3 +17139,48 @@ artifacts: D-145 (State Rules front matter, §1.2) and D-99 (`ARCHIVE-FALLBACK.m
 DOOR as M6's stated deferrals and archived; REC-160's `design:` line cites §5.4, which now carries DEC-70. BOB #23
 DISCHARGED the DELEGATION SCHEDULER (#7) -> BOB at `19a0efb6` with Q2 (`VERIFICATION.md`'s driver law); this commit
 was rebased onto it. 157 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 2): LED-7 batch S8-1** — D-28 CLOSED BY THE THIRD DOOR (`docs/architecture/README.md`
+has recorded the Conversion Plan's absence at the corpus index since `6ac72d0a`, 2026-07-25); D-32 CLOSED BY THE THIRD DOOR
+(`RETRIEVAL-SUBSTRATE.md`'s front matter says its tables are the probe harness's, never the shipped ops'); D-390 PLACED
+directly after D-389 (the frontier content arm's `IN` list binds up to `cap` variables against D-36's ceiling of about
+100). M0-95 and M0-96 cite `VERIFICATION.md`'s driver law, folded by BOB #23 at `19a0efb6`. D-162, D-38, D-45, D-53 and
+D-55 SENT to BOB as the DELEGATION SCHEDULER (#8) -> BOB below. 154 open DEBT rows remain.
+
+## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
+
+1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
+   (`affordances.mjs`) is ten NAMED-entity kinds (source, institution, office, movement, person, body, ordinance,
+   parcel, contract, fund), no concept, topic or theme, so two documents about one IDEA that name no shared entity have
+   no connection available. The row reads DOCTRINE (Bob), *raise as a DEC when M4 reaches the entity axis*, and the
+   entity axis is BUILT (`node tools/status.mjs 6`). The row names its own risk: a registry of themes is how a record
+   starts asserting relationships nobody can check. **The question:** take it to Bob now, or state it as a deferral in
+   the entity axis's home (Content Framework Part I §8) until a design makes a theme falsifiable?
+2. **D-38 AND D-45 — TWO LIMITATIONS SETTLED BY DECISION AND HOMED IN NO GOVERNED DESIGN.** `MILESTONES.md`'s
+   "Deliberately not scheduled" lists both (*settled by decision, default is to leave them*) and `WORK-PIPELINE.md` §3
+   names both as third-door rows; neither is stated in a construct's home (`MILESTONES.md` and `BIO_DATAPLANE_STATE.md`
+   are not governed). D-38: a project's citations live inline in its `bundle.md` under `INLINE_MAX` (1,048,576 B), and by
+   the row's 0.18.0 figures a maximum 10,000-item selection fits and the ceiling is met only cumulatively (~12,000
+   edges), refused `CITATION_TOO_LARGE` before anything is written (the two sites in `store.mjs` re-read today); Bob,
+   2026-07-25: leave it, and revisit when a real corpus approaches it. D-45: `promote` accepts a register entry whose bytes exist nowhere, ratify
+   refuses it (`gate.mjs`: `PLANE_MISSING_BYTES`, `PLANE_SIZE`), and `op=registeraudit` reports it on demand; default:
+   leave it. **The question:** fold each as a stated limitation into its construct's home — State Rules §4.3 (a project
+   bundle carries its citations inline) for D-38, and §6 or §7 (the invariant set; the violation-to-repair map) for
+   D-45 — or other sections you name?
+3. **D-53 — REPUTATION AND CREDENCE: BOTH OF THE ROW'S BLOCKERS ARE STALE; IS THE DOCTRINE STILL OPEN?** *Blocks S-11
+   step 5* is stale (`MILESTONES.md`: bulk release shipped in 0.34.0), and its *blocking finding* — references target a
+   bundle id and nothing finer — was overtaken by the content object (DEC-23; construct 4 BUILT, eight extent kinds).
+   Re-verified: no credence or reputation field or check in `bio-plane/src` or `bio-plane/checks`. What stands
+   is doctrine: Bob's framing (trust inherited from a credible source, added by a member's ratification, never
+   decreasing) against Tech Arch v10's *No transitive trust* and Design Requirements §4 (reputation accrues with no
+   authority managing it). **The question:** carry it to Bob, or state it as a deferral, and in which home?
+4. **D-55 — BOB #17's BOUNDED DESIGN ACT, WHICH D-64 WAITS ON.** BOB #17 narrowed it on 2026-09-19: per-origin data
+   (`site_assets`), the join (`site_asset_refs`) and sub-document addressing (`content`) exist; what is missing is an
+   AUTHORITY value at asset or content grain and the rule that a content row over third-party bytes takes that origin's
+   authority. Its one untraced link — whether a content row can be minted over subresource bytes at all (`image` with
+   `cited_as='bytes'` the candidate) and whether it joins `site_asset_refs` — is NOT re-traced here. D-64 (a
+   client-rendered page captured as evidence, M2) reads BLOCKED on it. **The question:** design it now, the link traced
+   first (by a worker through CONDUCT if you want one), or state it as a deferral in `CLIENT-RENDERED.md` until a
+   rendered capture is used as evidence?
+
+**open as of 2026-09-21** — sent to BOB #23 by message; each row carries a dated SENT note in `DEBT.md`.
