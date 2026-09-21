@@ -20,36 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-97 · queued — **`tools/decided.mjs` CANNOT SEE MOST OF BOB'S ANSWERED DECISIONS, AND IT HAS COST A RE-ASK (M-85).** `MARKER` is an uppercase-only word list, while `DECISIONS.md` records an answer in a lowercase `decided:` field: 13 of 19 entries are not filed under their own id, 11 of them answered or enacted, and `decided.mjs "severance"` returns DEC-29 and DEC-72, not DEC-70, which rules it. SCHEDULER #5 sent D-280 (c) to BOB eleven days after Bob ruled it. — owner M0.
-order: FIRST among the instruments, directly after D-435 (in flight): `CLAUDE.md` §1 names this tool the one source for what has been decided (BOB #22, 2026-09-21; placed by SCHEDULER #7)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header, which calls the index a FLOOR: *"A RULING WITH NO MARKER is invisible here."*
-depends-on: none. **Take with D-341**, the same file: one file, one suite, one gate (BOB #22).
-scope: a `DECISIONS.md` entry carrying a `decided:` line is indexed as ONE ruling under its own `DEC-n` (text from `response:`, date from `decided:`), beside the prose `MARKER` scan and never replacing it; an `open` or `deferred` entry is not a ruling. **FULL GATE PROFILE** (`tools/`).
-accepts-when: every answered or enacted `### DEC-n` is returned by `decided.mjs "DEC-n"`, a printed count equality against the file's own headings; `"severance"` returns DEC-70; a deferred entry is not returned. How a liar passes it: lower-casing `MARKER`, which floods the index, so an arm asserts the index grows only by entries it did not file and files none twice. NEGATIVE CONTROL: drop the field arm, and the equality fails naming DEC-70.
-added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
-
-### D-341 · queued — **`tools/decided.mjs` GLUES AN APPENDED CLAIM'S HEADER ONTO THE PREVIOUS RULING, SO THE INDEX FILES ANOTHER AREA'S RULING AS CARRYING THE NEW CLAIM.** `scan()` joins a matched line under 200 chars with the next three lines and stops at nothing: `docs/DECIDED.md` carries an IC-82 ruling ending in a `## CLAIM 2026-09-14 RECORD (REC-80 …` header today (re-measured 2026-09-21). — owner M0.
-order: directly after M0-97, the same file: one file, one suite, one gate (BOB #22, 2026-09-21); the index every session is told to trust answers with half another block's header (SCHEDULER #7, LED-7)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's own header on quoting a wrapped ruling from its joined window.
-depends-on: none. Take with M0-97.
-scope: the row's FIX: the joiner stops at a heading line (`^#`) or a blank line. **FULL GATE PROFILE** (`tools/`).
-accepts-when: a regenerated `docs/DECIDED.md` carries no `## CLAIM` text inside any ruling, and a hand-wrapped ruling still quotes whole. How a liar passes it: stopping at every line break, so the wrapped-ruling arm must pass. NEGATIVE CONTROL: an arm appends a claim after a trailing `released:` line; drop the stop, and it fails by name.
-added: 2026-09-21 · SCHEDULER #7 (LED-7; D-341's DEBT row of 2026-09-14; keeps its `D-` id).
-
-### M0-83 · queued — **`tools/retirable.mjs` CAN PROTECT A STRANGER, CALL A STANDING LANE'S LIVE HOLDER RETIRABLE, AND JUDGE OTHER REPOSITORIES' SESSIONS.** (1) `laneOf` strips only a TRAILING `#N`, so `CONDUCT #8 (BIO) — integrator lane` is in no lane and its live holder was judged RETIRABLE (BOB #19); (2) a `--self` FOUND in the input is accepted, though `list_sessions` excludes the caller (CONDUCT #8); (3) the caller can never be its lane's newest; (4) fed the whole account's sessions, it called 24 Supervisor sessions RETIRABLE and 15 Alpha-Pipeline sessions HOLD (BOB #21). — owner BOB (its instrument).
-order: directly before M0-81, *"one file, one suite, one gate"* (BOB #19): it inverts the standing-lane protection, and its count moves the way a reader takes as SAFE (SCHEDULER #4; item (4) BOB #22, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with the tool's header "WHAT IS NEVER AUTO-RETIRED" and `kickoffs/BOB.md` "Spawning and retiring lanes".
-depends-on: none.
-scope: (1) `laneOf` takes the word before `#<n>` wherever it sits, else the title; (2) a `--self` in the input is REFUSED, UNKNOWN-SELF; (3) a caller may declare its title and is then its lane's newest; (4) only a `cwd` inside this repository (the primary checkout or `.claude/worktrees/*`) is judged, the rest reported OUT OF SCOPE with their count. **FULL GATE PROFILE** (`tools/`): check disk first.
-accepts-when: a suffixed title lands in its lane; a found `--self` is refused by name; a declared caller is newest; a mixed input judges the BIO session and names another repository's and a vanished cwd out of scope. How a liar passes it: one title shape, or a path-prefix match, so arms feed both title forms and a sibling directory sharing the prefix. NEGATIVE CONTROL: restore the trailing-only regex, or drop the scope test, and its arm fails by name.
-added: 2026-09-21 · SCHEDULER #4 (BOB #19's entry); item (4) SCHEDULER #7 (BOB #22's entry, drained this commit).
-
 ### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
 order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
 milestone: M0
@@ -217,7 +187,7 @@ milestone: M8
 interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each act is EVERY administrator's) and §4.7's block *"WHAT IS STILL NOT CLOSED"*, which names this fix: D-136's call applied again — both session sets, a stamped `by`, the roster refusing a non-administrator by name.
 depends-on: none. D-136 and REC-156 are on `main`.
-scope: the four gain `member` in `classes` and both `SESSION_OPS` sets; `memberset`, `signeradd` and `signerset` stamp `by` as `memberadd` does; each store method refuses a stamped `by` that is not an ACTIVE administrator, by name, BEFORE any lookup. §8f and the ROLE literal CORRECTED, never exempted. **NOT in scope:** `governorconfig` and a bearer's reach, both with BOB.
+scope: the four gain `member` in `classes` and both `SESSION_OPS` sets; `memberset`, `signeradd` and `signerset` stamp `by` as `memberadd` does; each store method refuses a stamped `by` that is not an ACTIVE administrator, by name, BEFORE any lookup. §8f and the ROLE literal CORRECTED, never exempted. A bearer keeps reaching all four, its `by` naming nobody (§4.7, RULED by BOB #22). **NOT in scope:** `governorconfig`, with BOB #23.
 accepts-when: an enrolled administrator performs all four from their session, attributed to them; a member is refused by name. How a liar passes it: widening the class without the roster check, so the member arm must refuse. NEGATIVE CONTROL: drop the roster check, and the member arm fails by name.
 added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
 

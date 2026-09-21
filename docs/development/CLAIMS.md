@@ -16989,6 +16989,11 @@ DEC-70; M0-83 amended with item (4) inside its budget; D-260 after UI-71 and D-2
 REC-161 then UI-75 (D-195 at the elicitation) directly after UI-74. D-341, D-260 and D-293 CLOSED in `DEBT.md` AS A DEBT
 ROW, PLACED: 164 open DEBT rows remain. The DELEGATION SCHEDULER (#7) -> BOB below carries the next group.
 
+**AMENDED 2026-09-21, same session (commit 4): BOB #22's landing met** — D-435 archived by BOB #22 (`8245cf54`), so the
+cache is replenished to 8 with M0-97, D-341 and M0-83 by `node tools/ledger.mjs refill`; REC-159's scope follows BOB #22's
+bearer ruling (§4.7); the REC-156 DELEGATION's two state lines are merged into one; the group to BOB carries D-99 in
+place of the ruled bearer question, and D-145 and D-99 carry a dated SENT note.
+
 ## CLAIM 2026-09-21 BOB (#22) — REC-156's bearer and proposer questions ruled into Membership v2 §4.7
 
 claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Membership_Architecture_v2.md`
@@ -17002,7 +17007,7 @@ claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `doc
 (rewritten from the state measured at ~20:00Z), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-21 BOB #22** — landed in the same commit as the file it covers.
 
-## DELEGATION 2026-09-21 SCHEDULER (#7) -> BOB — **FOUR QUESTIONS, ONE EACH: D-145's addressing, D-355's driver rules, DEC-70's fold, and a bearer's reach for §4.9's acts; none blocks a runnable row**
+## DELEGATION 2026-09-21 SCHEDULER (#7) -> BOB — **FOUR QUESTIONS, ONE EACH: D-145's addressing, D-355's driver rules, DEC-70's fold, and D-99's interchange design; none blocks a runnable row**
 
 1. **D-145 — WHICH SHAPE ADDRESSES A RECORD OBJECT ACROSS INSTANCES?** Re-verified on `origin/main` @ `2bd24da7`:
    non-gated prefixes (`INFO-…`) still come from `Store#nextSeq`, one counter per instance, and the gated prefixes'
@@ -17024,10 +17029,13 @@ claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `doc
    on `BIO_State_Rules_Consistency_v1_5.md` §5.4 (the re-evaluation obligation itself), with DEC-70 cited beside it.
    **The question:** fold DEC-70's severed-leg sentence into its construct's home — §5.4, or the inquiry's (Content
    Framework Part I §12)?
-4. **A BEARER'S REACH FOR §4.9's CUSTODIAL ACTS, RULED ONCE.** REC-156 PROVISIONALLY lets an operator bearer keep
-   reaching `memberadd` (its `by` now names nobody; Membership v2 front matter records it as BOB's). REC-159 gives
-   `memberset`, `signeradd` and `signerset` the same session reach. **The question:** does a bearer keep reaching all
-   four, or is it refused by name as C-32.17 refuses one at the §4.7 votes? `governorconfig`'s owner is NOT asked
-   again here: CONDUCT #10 put it to BOB #22 with REC-156's DELEGATION.
+4. **D-99 — WARC AND MEMENTO AS INTERCHANGE: A DIRECTION, NOT YET A DESIGN.** `ARCHIVE-FALLBACK.md` §"WARC as
+   interchange, not as store" and §"Build to Memento, not to Wayback" both read [ABSENT]: nothing in the tree reads or
+   writes WARC, and the plane queries Wayback's own CDX endpoint. The sections decide the DIRECTION (WARC in, WARC out; the
+   internal store unchanged) but not the build: which provenance hop becomes which WARC record, what a Memento TimeGate
+   or TimeMap over an instance answers, and how an export carries an id-addressed graph, which is Q1. **The question:**
+   design it with Q1, or state it as M6's limitation until M6 is taken up?
 
-**open as of 2026-09-21** — sent to BOB #22 by message; REC-159 and REC-160 are placed and runnable either way.
+**open as of 2026-09-21** — sent to BOB #23 by message. Its first form carried a bearer's reach for §4.9's acts as Q4;
+BOB #22 ruled that into Membership v2 §4.7 before the group was sent, so D-99 took its place. REC-160 is placed and
+runnable either way.
