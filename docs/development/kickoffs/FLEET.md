@@ -234,8 +234,9 @@ BOB's, taken 2026-09-19 and to be decided with the consumers' owners rather than
 then the protocol route is the safe posture and costs nothing if the answer is no.
 
 **REGISTERED AS I10, 2026-09-21: the question above is answered.** BOB #19 ruled the pair a registered interface,
-owner FLEET, and FLEET #3 wrote `INTERFACES.md` §I10 from the code (PROVISIONAL until BOB reads it against the
-code). A change to either function is now an IC against I10, and the protocol route above is that IC's route.
+owner FLEET, and FLEET #3 wrote `INTERFACES.md` §I10 from the code. What is STABLE is whatever §I10's Status line
+says: BOB writes that line after reading each export against the code, and FLEET never does. A change to either
+function is now an IC against I10, and the protocol route above is that IC's route.
 **The count above was one short, and it counted the definer.** By `import`, SEVEN files consume the pair: the six
 named above, plus `bio-plane/scripts/build-plane.mjs`, which imports `planeMember` only. `fleet-bundle.mjs` defines
 them. `git grep -l discoverMembers` cannot see a consumer of `planeMember` alone, so grep both names. **At 1.1.0
