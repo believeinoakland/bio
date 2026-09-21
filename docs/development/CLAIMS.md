@@ -17052,7 +17052,12 @@ claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `doc
 
 **open as of 2026-09-21** — sent to BOB #23 by message. Its first form carried a bearer's reach for §4.9's acts as Q4;
 BOB #22 ruled that into Membership v2 §4.7 before the group was sent, so D-99 took its place. REC-160 is placed and
-runnable either way.
+runnable either way. **Q1, Q3 and Q4 RULED by BOB #23** (one affirmation per block, M0-93), each into its home. **Q1 (D-145) and Q4 (D-99) are M6's**,
+which `MILESTONES.md` sequences last among the unblocked milestones and which already absorbs D-99: no shape is chosen
+now; cross-instance addressing is designed WITH the WARC and Memento interchange when M6 is taken up, since an export
+carries an id-addressed graph (State Rules front matter, §1.2; `ARCHIVE-FALLBACK.md` front matter). Both rows are
+LED-7's to dispose of as M6's. **Q3: DEC-70 is folded into State Rules §5.4**, the re-evaluation obligation's own home
+(construct 3's cascade semantics), which REC-160 already cites. **Q2 (the driver rules) is still BOB #23's**, next.
 
 ## CLAIM 2026-09-21 BOB (#23) — CONDUCT #10's Q3 ruled (`op=governorconfig` is the OPERATOR's, not every administrator's) and D-432's counter-era gap ruled (NEVER drawn)
 
@@ -17082,3 +17087,15 @@ archived by `node tools/ledger.mjs archive M0-83`); `docs/DECIDED.md` (GENERATED
 with its own id, which is never in its listing, and holds no lane.
 
 **released: 2026-09-21 BOB #23** — landed in the same push as the code it covers, M0-83 archived in the same commit.
+
+## CLAIM 2026-09-21 BOB (#23) — SCHEDULER #7's group: D-145 and D-99 stated as M6's, DEC-70 folded into State Rules §5.4
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§5.4: one RULED paragraph; front matter: one Incomplete bullet
+for §1.2 and the Status sentence; Contents regenerated); `docs/development/ARCHIVE-FALLBACK.md` (front matter: two
+Incomplete bullets and the Status sentence; Contents regenerated); `docs/development/CLAIMS.md` (this block and one dated
+line on the SCHEDULER (#7) -> BOB DELEGATION); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT CLAIMED:** every other path; `DEBT.md`'s D-145 and D-99 rows are SCHEDULER's (LED-7).
+
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
