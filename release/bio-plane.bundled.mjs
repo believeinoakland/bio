@@ -10173,6 +10173,26 @@ var MACHINE_FENCE_CHECKS = {
      must name the person who handed the group's draft to somebody. One row, one
      region: the three acts enter through `reviewAct`, and the fence stands at that
      door before any act is chosen. */
+  /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
+     the same doctrine rather than a new one: *the credential that delivers an
+     act decides when the record changes, and the record names the actor.* A
+     §4.7 vote is C-32.14's shape with the member's signature replaced by a
+     roster position — an act the record attributes to a named administrator,
+     which a bearer token held in the hosting account cannot be.
+     ONE ROW FOR THE THREE OPS, on C-32.16's precedent rather than C-32.14's: the
+     endorsement, the removal vote and the capability edit enter through ONE
+     region and are refused by ONE predicate, so three rows would be one rule with
+     three homes. The op is named in the answer, so a caller still learns which
+     verb was refused, and the class is named in `tokenClass`, so an operator
+     learns which of its credentials asked.
+     THE PREDICATE IS `!viaSession` — how the caller ARRIVED, not which token it
+     held — so it covers ADMIN, MEMBER and PROBE today and any binding added
+     tomorrow, and no class list appears at the site to go stale. */
+  OPERATOR_TOKEN_CANNOT_GOVERN: {
+    check: "C-32.17",
+    where: "src/index.mjs fetch > is-operator-governance-act",
+    translation: "Endorsing an administrator, voting to remove one, and setting what a member may do are things the group holds a named administrator answerable for, and the record names who did them. The credential that asked here is one of the operator's access tokens for this copy, not a person: it holds no place on the roster, so it cannot be one of the administrators whose agreement the rule requires. Sign in as that administrator and do it from there."
+  },
   MACHINE_CANNOT_REVIEW: {
     check: "C-32.16",
     where: "src/store.mjs reviewAct > is-machine-review",
@@ -10712,9 +10732,15 @@ var ADMISSION_CHECKS = {
        SUPPRESSES ITS OWN BUG REPORT: a member told that an absence is a DECISION
        will not report it as a gap, so the sentence recruits the one person who
        could have caught it into believing there is nothing to catch. The measured
-       case is D-136's — `adminendorse`, `adminremove` and `membercaps` are
+       case is D-136's — `adminendorse`, `adminremove` and `membercaps` WERE
        reachable by no session, and Membership Architecture §4.7 assigns that very
-       vote to a person. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
+       vote to a person. **D-136 LANDED 2026-09-19 and discharged that case**: the
+       three now hold `SESSION_OPS.admin` reach and a server-stamped `by`, so an
+       administrator's session reaches them and a member's gets the ROLE sentence,
+       not this one. The receipt stays in the past tense because it is the ARGUMENT
+       for this row rather than a roster of its members — the gap was reported only
+       because the plane declined to call it a decision, and deleting the evidence
+       once the gap closes is how a rule outlives the reason it was made. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
        independently that the old sentence told an administrator the act §4.9
        assigns them needs a credential §4.8 says somebody else holds, and that
        there is no action a member can take from it.
@@ -53283,7 +53309,29 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
    *  granted and removed only by the section 4 process, and 4.4 says no
    *  administrator may strip another, so this refuses to touch either side of
    *  that line. */
-  memberCaps({ memberId, capabilities } = {}) {
+  /*  D-136 ADDS `by`, AND IT IS READ RATHER THAN RECORDED. Section 4.9 makes
+   *  setting capabilities a custodial act of an ADMINISTRATOR, and the control
+   *  plane now stamps `by` from the session (`GOVERNANCE_ACTIONS` in index.mjs).
+   *  A stamp nothing consults is a mechanism believed on the strength of its
+   *  EXISTENCE rather than its behaviour, so the check sits here beside
+   *  `adminEndorse`'s and `adminRemove`'s, which asked the same question of the
+   *  same roster before this item and were whole except for who supplied the
+   *  answer. A bearer credential stamps `class:<cls>`, which is in no roster,
+   *  so it is refused here even if the control plane's fence in front of it were
+   *  removed — which is exactly what the `fence-dropped` control arm measures.
+   *
+   *  IT IS ASKED BEFORE `NO_SUCH_MEMBER`, deliberately: who may ask is settled
+   *  before the record answers whether a member exists, so a caller with no
+   *  standing cannot use this op to enumerate the roster. */
+  memberCaps({ memberId, capabilities, by } = {}) {
+    const admins = this.#activeAdmins();
+    if (!by || !admins.includes(by))
+      return {
+        ok: false,
+        reason: "NOT_AN_ADMIN",
+        by,
+        detail: "setting a member's capabilities is an administrator's act (4.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators."
+      };
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     const want = Array.isArray(capabilities) ? capabilities : null;
@@ -53302,7 +53350,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       (/* @__PURE__ */ new Date()).toISOString(),
       memberId
     );
-    return { ok: true, memberId, capabilities: want };
+    return { ok: true, memberId, capabilities: want, by };
   }
   /** Endorse a proposed administrator. Addition above the second requires the
    *  CONSENSUS of every existing administrator, and that is the load-bearing
@@ -64949,9 +64997,26 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            by the projection in memberList() above, off the `administer` stamp
            this line passes through — a class ACL cannot express it, because the
            op is legitimately reachable by callers who must not see the pairing. */
-        membercaps: () => this.memberCaps(body || {}),
-        adminendorse: () => this.adminEndorse(body || {}),
-        adminremove: () => this.adminRemove(body || {}),
+        /* D-136 — `by` COMES FROM THE QUERY, AND THE OVERRIDE IS LAST SO A BODY
+           CANNOT WIN. This is the half that turns the control plane's stamp from
+           a record into a fence, and before this item it was the whole defect:
+           `adminEndorse` and `adminRemove` already checked `by` against the live
+           administrator roster, and the check was sound — but the VALUE it
+           checked arrived in the caller's own body, so "every existing
+           administrator must endorse" was satisfied by a caller willing to type
+           somebody else's id. The projects family stamps and reads `by` exactly
+           this way (`projectinvite` below), for the sentence its own comment
+           gives: only an owner may remove is worth nothing if the caller names
+           who they are.
+           SPREAD-THEN-OVERRIDE rather than a hand-listed shape, and the order is
+           the safety property: a `by` in the body is overwritten by the query on
+           every one of the three, so no future field added to any of these
+           payloads can reintroduce the caller's answer by being copied in after
+           it. A direct call with no stamp gets `null` and is refused by name,
+           which is the fail-closed direction — the store never guesses a voter.  */
+        membercaps: () => this.memberCaps({ ...body || {}, by: url.searchParams.get("by") }),
+        adminendorse: () => this.adminEndorse({ ...body || {}, by: url.searchParams.get("by") }),
+        adminremove: () => this.adminRemove({ ...body || {}, by: url.searchParams.get("by") }),
         adminarith: () => this.adminArithmetic(),
         projectclaimowner: () => this.projectClaimOwner(body || {}),
         /* REC-138: `viewer` is the control plane's stamp (sight before position, `#inSight`). */
@@ -66062,6 +66127,23 @@ var OPS = {
   memberset: { classes: ["admin", "probe"], mutating: true },
   /* The membership model's member half. `memberadd`, `memberset`, `membercaps`,
      `adminendorse` and `adminremove` are admin-only: section 4 governance.
+     D-136: the last three gain `member` and a server-stamped `by`
+     (`GOVERNANCE_ACTIONS` below), and the grant is `expertiseconfirm`'s six
+     rows up rather than a new idea — an ADMINISTRATOR-ONLY act carrying
+     `["admin","member","probe"]` because `kind` for every signed-in person but
+     the founder is `member`, so a class list without it refuses every real
+     administrator's browser with CLASS_FORBIDDEN before the session gate is
+     ever reached. MEASURED, not reasoned: the first draft of this item left
+     these three lists alone and ruth, an enrolled administrator, was refused
+     CLASS_FORBIDDEN at her own endorsement.
+     **THE GRANT IS NOT A WIDENING OF WHO MAY GOVERN.** What decides these acts
+     is the ROSTER: the `by` stamp names whoever is signed in and the store
+     refuses a `by` that is not an active administrator, by name. An ordinary
+     member reaching them is told NOT_AN_ADMIN — the thing that is true — which
+     is `expertiseconfirm`'s ADMIN_ONLY and `conclude`'s fail-closed posture. The
+     `member` CLASS also admits the MEMBER_TOKEN bearer, which
+     `is-operator-governance-act` refuses along with every other bearer, keyed on
+     how the caller arrived rather than on a class list that would go stale.
      `memberlist` is NOT, and this comment used to say it was — the second of
      D-157's three self-contradicting sites, sitting two lines under the entry
      that is the first: a grant of admin, member AND probe, which was the
@@ -66074,9 +66156,9 @@ var OPS = {
      driven by the `administer` stamp set beside the D-15 viewer stamp below.
      `adminarith` is a read of the rule itself, so a UI can tell a group what a
      removal would take before they begin one. */
-  membercaps: { classes: ["admin", "probe"], mutating: true },
-  adminendorse: { classes: ["admin", "probe"], mutating: true },
-  adminremove: { classes: ["admin", "probe"], mutating: true },
+  membercaps: { classes: ["admin", "member", "probe"], mutating: true },
+  adminendorse: { classes: ["admin", "member", "probe"], mutating: true },
+  adminremove: { classes: ["admin", "member", "probe"], mutating: true },
   adminarith: { classes: ["admin", "member", "probe"], mutating: false },
   /* D-9: why a register row is unreferenced. A read that classifies every row
      against what the store actually holds, so the 20 unexplained rows on the
@@ -66509,6 +66591,7 @@ var PROJECT_ACTIONS = [
   "projectfork",
   "projectownerrescue"
 ];
+var GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];
 var EXPERTISE_ACTIONS = ["expertisedeclare", "expertiseconfirm"];
 var REGISTRY_ACTIONS = [
   "entitycreate",
@@ -66613,6 +66696,43 @@ var SESSION_OPS = {
        reading of a question, reached by a signed-in member. */
     "narrow",
     "narrowcandidates",
+    /* D-136: THE §4.7 VOTE BECOMES CASTABLE BY THE PEOPLE §4.7 ASSIGNS IT
+       TO — AND THAT IS WHY THE THREE ARE IN **BOTH** SETS, WHICH IS THE ONE
+       DESIGN CALL THIS ITEM HAD TO MAKE. It is `EXPERTISE_ACTIONS`' posture,
+       written out at that array with its reasoning, and the reasoning is the
+       same here.
+       **THE MEASUREMENT THAT FORCED IT.** `kind` is
+       `sess.role === "admin" ? "admin" : "member"`, so `SESSION_OPS.admin`
+       does NOT mean *an administrator's session*: it means THE FOUNDER'S
+       PASSWORD SESSION AND NOTHING ELSE. An enrolled administrator holds
+       `member:<id>` however their roster row reads —
+       `d270-refusal-truth.test.mjs` records two separate harnesses making
+       exactly that mistake and measuring a split of zero over a plane that
+       had one. So `...GOVERNANCE_ACTIONS` in the ADMIN SET ALONE would have
+       given the §4.7 vote to ONE person, the founder, while the operator
+       fence below took the bearer route away from everybody else — and §4.7
+       needs *the consensus of all existing administrators*. A group of three
+       would have been left unable to add or remove an administrator at all.
+       **That is the row's own failure mode, not an improvement on it:**
+       "stamping without reach makes the 4.7 vote unreachable by anybody",
+       arrived at one administrator instead of zero.
+       **WHAT DECIDES THESE ACTS IS THE ROSTER, AND THE STORE ASKS IT.** Both
+       sets reach the op; the `by` stamp below names whoever is signed in;
+       and `adminEndorse`, `adminRemove` and `memberCaps` each refuse a `by`
+       that is not an ACTIVE ADMINISTRATOR, by name. An ordinary member
+       therefore gets NOT_AN_ADMIN — which says what is actually wrong —
+       rather than "only an administrator's session", which would be true of
+       neither the caller nor the rule, and which every real administrator
+       would have received too. `expertiseconfirm` is in the member set for
+       that sentence exactly, and `conclude`'s fail-closed posture is the
+       same argument: reach the handler, be refused by the thing that knows.
+       IT WIDENS NOTHING A MEMBER COULD NOT ALREADY SEE: `op=memberlist` is
+       admin/member/probe and already publishes the roster with its roles, so
+       no arm of these three discloses anything new before refusing.
+       Before this landing the three were in NEITHER set, so every session
+       got SESSION_ROUTE_NOT_RECORDED: an OMISSION honestly stated (D-270
+       (c)), and this is the item that discharges it. */
+    ...GOVERNANCE_ACTIONS,
     /* REC-146: THE CONTRADICTION PAIRING READ. It reads across QUESTIONS,
        their accepted readings and the documents those rest on, so the
        viewer decides what it may pair at all — the session route is the
@@ -66722,6 +66842,7 @@ var SESSION_OPS = {
     ...VERSION_ACTIONS,
     "memberadd",
     "memberset",
+    ...GOVERNANCE_ACTIONS,
     "signeradd",
     "signerset",
     "governorstate",
@@ -67034,6 +67155,22 @@ var NEEDS = {
   expertiseconfirm: null,
   memberadd: null,
   memberset: null,
+  /* D-136: NO WORKING CAPABILITY, and the reason is §5's own rather than
+     `memberadd`'s by proximity. The §4.7 vote and the §4.9 capability edit are
+     custodial powers over MEMBERSHIP: what bounds them is `SESSION_OPS.admin`
+     above — who a session IS — and section 4's process, not one of section 5's
+     four working rights. Hanging `administer` here would be the wrong mechanism
+     twice over: `administer` is not a working capability, it moves only by the
+     section 4 process, and §5 says an administrator holds every working
+     capability and their own field is not consulted at all — so a capability
+     test here would be a test of a field the design says nobody reads.
+     PRESENT rather than absent because both totality guards must SEE them: the
+     capability suite fails on a session-reachable mutating op that is missing
+     from this table, and `affordances.mjs` requires every NEEDS key to be an ACT
+     or a NAMED non-act — all three are named there with their reasons. */
+  membercaps: null,
+  adminendorse: null,
+  adminremove: null,
   signeradd: null,
   signerset: null,
   /* PL-11 / IS-5 / D-199: NO WORKING CAPABILITY, and NO FIFTH CAPABILITY TOKEN
@@ -71276,7 +71413,16 @@ var index_default = {
         "identity",
         viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
       );
-    if (PROJECT_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
+    if (GOVERNANCE_ACTIONS.includes(op) && !viaSession)
+      return json({
+        ok: false,
+        reason: "OPERATOR_TOKEN_CANNOT_GOVERN",
+        ...machineFenceRow("OPERATOR_TOKEN_CANNOT_GOVERN"),
+        op,
+        tokenClass: cls,
+        detail: `section 4 governance is a named administrator's own act, delivered through that administrator's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token, which holds no position on the roster: it cannot be one of the administrators whose consensus \xA74.7 requires, and a vote it delivered would be attributed to whoever the caller named. Sign in as the administrator and do it there (D-136, applying D-421).`
+      }, 403);
+    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (RUN_VERB_ACTIONS.includes(op))
       inner.searchParams.set(
