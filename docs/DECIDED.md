@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1340 rulings across 100 documents.
+1349 rulings across 101 documents.
 
 ## DEC-
 
@@ -235,7 +235,7 @@ authority is the file named, never this one.
 - **DEC-62** · 2026-09-14 — The decision this row was waiting on was taken in the construct's home (`BIO_Assistant_and_AI_Roles_v0_1.md` §7.3, BOB #11: EXTRACT runs in DEC-62's RUN, the pilot's exclusion CORRECTED and not lifted), and SK-8 built the caller the same day: `op=extractpropose` produces a proposed reading inside a member-opened…  
   `docs/archive/ledgers/DEBT-closed.md:60`
 - **DEC-63** · 2026-09-18 — §7 — DEC-63's run verdict: RULED by Bob (2026-09-18) and BUILT by REC-145 (IC-162).  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:18`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:17`
 - **DEC-63** · 2026-09-18 — DEC-63 AS AMENDED BY BOB (2026-09-18: a project does not own a line of inquiry)** — recorded by BOB #15 and never rowed; the application is now at its home: Membership v2 §7, the ruling bullet, "How it applies at the code".  
   `docs/archive/ledgers/BOB-INBOX-drained.md:988`
 - **DEC-63** — TWO MORE `.test.mjs` FILES, EACH CORRECTED AND NEITHER EXEMPTED, both found by the WHOLE battery and by nothing smaller.** **`bio-plane/test/leadslug.test.mjs`** — the FIXTURE only: its run was opened by `ruth` over a question `PROJ_A` draws on while `carol` was that project's only participant, which DEC-63 now…  
@@ -313,7 +313,7 @@ authority is the file named, never this one.
 - **D-80** · 2026-07-30 — RULED by Bob: contradicting aspirations are welcomed, because we may not realise that they contradict and because we learn from trying to achieve aspirations whether they are achieved or not.  
   `docs/archive/ledgers/DEBT-closed.md:143`
 - **D-80** · 2026-09-21 — a stated LIMITATION, D-80 folded, Membership §8.1 folded, D-195 at the elicitation, D-260 and D-293 ruled, D-280 found RULED by Bob as DEC-70  
-  `docs/development/CLAIMS.md:16891`
+  `docs/development/CLAIMS.md:16898`
 - **D-82** — p the derived dress -> the D-82 arm FAILS; (2) re-introduce approval as a write gate -> the DEC-52-final arm FAILS (the SUPERSEDED provisional); (3) make bulk review N acts instead of one over the set -> the set arm FAILS; (4) neuter the attribution predicate -> the REACH arm fails AS A DELTA with the corpus…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:5665`
 - **D-82** · 2026-07-30 — RULED by Bob: the appearance of an assistant-surfaced focus should communicate that it is one.  
@@ -395,7 +395,7 @@ authority is the file named, never this one.
 - **D-135** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): LED-7 batch 10** — D-135, D-142, D-298, D-362, D-401, D-146 and D-187 CLOSED IN FACT; D-248 PLACED under LED-8; D-412 and M0-91 (D-362's instrument) PLACED; D-280, D-260 and D-293 SENT to BOB — with the DELEGATION SCHEDULER (#5) -> BOB below, which carries them and four…  
   `docs/development/CLAIMS.md:16411`
 - **D-136** · 2026-09-19 — THAN A DECISION (D-136/D-134, RULED 2026-09-19 by BOB #17, read at the code).  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:363`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:362`
 - **D-137** — and was CORRECTED, never exempted. `bounds` demanded the new capped op be DRIVEN and **its first run read `truncated: false` at a cap of ONE — the arm could not arm**, because the suite's store held fewer than two document-level subjects; three are now seeded through the real writer. `derivation-bounds`'…  
   `docs/development/CLAIMS.md:7459`
 - **D-140** — (D-140); producer-published `options[]` (GAP-Q2); `queue_state` for mute/snooze; the relevance filter P-88 (DEC-10, RULED, MISSING); the ageing job P-85 (MISSING) | B8, B9, B1 · **HOLE-1** (CONDITION has no carrier) |  
@@ -744,12 +744,16 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2512`
 - **D-431** — ified case rests on is refused, byte-identical for an unseen and a never-minted project; `ratify-authority.test.mjs` §7 CORRECTED from "as measured" to refused, with its reason; the (c) count is stated in the landing; D-431 CLOSED.  
   `docs/archive/ledgers/QUEUE-closed.md:2515`
+- **D-432** — `docs/architecture/BIO_Membership_Architecture_v2.md` (§4.9: one RULED paragraph; §4.7: the bearer paragraph's heading, which still read PROVISIONAL after BOB #22 ruled it; §7's D-432 bullet: one RULED sentence; front matter: the Status sentence and two Incomplete bullets; Contents regenerated);…  
+  `docs/development/CLAIMS.md:17053`
+- **D-432** — which still read PROVISIONAL after BOB #22 ruled it; §7's D-432 bullet: one RULED sentence; front matter: the Status sentence and two Incomplete bullets; Contents regenerated); `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and one dated line on the REC-156…  
+  `docs/development/CLAIMS.md:17054`
 - **D-434** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 7): BOB #21's rulings placed** — the cache replenished with D-434 after BOB #21 archived M0-86 at its map cut; CAP-14 and D-182 placed on the Q2 and Q4 rulings. 170 open DEBT rows remain (D-353 closed by BOB #21 through the third door).  
   `docs/development/CLAIMS.md:16516`
 - **D-435** — the BOB INBOX entry routing `tools/owed.mjs`'s release defect was WITHDRAWN before landing, because SCHEDULER #4 had already placed that defect as D-435), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.  
   `docs/development/CLAIMS.md:16282`
 - **D-435** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 4): BOB #22's landing met** — D-435 archived by BOB #22 (`8245cf54`), so the cache is replenished to 8 with M0-97, D-341 and M0-83 by `node tools/ledger.mjs refill`; REC-159's scope follows BOB #22's bearer ruling (§4.7); the REC-156 DELEGATION's two state lines are merged…  
-  `docs/development/CLAIMS.md:16992`
+  `docs/development/CLAIMS.md:16999`
 - **D-436** · 2026-09-21 — DRAINED 2026-09-21 by SCHEDULER #4 — 2 entries from BOB #19 (MK-3 SUPERSEDED by MK-6 and MK-7, MK-5 re-pointed; D-436 PLACED second in the order); its third entry (the six answered rows) stays for the next drain  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1158`
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2):** also `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-436 archived as PLACED; D-260's disposition carries DS-3's and FL-6's dispatch fix), the TRACKED ELSEWHERE table in `QUEUE.md`, and `docs/development/kickoffs/SCHEDULER-NEXT.md` (the refresh).  
@@ -1321,9 +1325,9 @@ authority is the file named, never this one.
 - **REC-136** — land `ui-65-conclude` TOGETHER with REC-136 (it contains `783054ac`); `ui-65-conclude-surface` is SUPERSEDED (its merge dropped the held branch's QUEUE.md change) and must not be merged; the DELEGATION to RECORD below is open; no IC (UI-65 consumes IC-150/IC-153 and needs no new read).  
   `docs/development/CLAIMS.md:14380`
 - **REC-137** — `op=caseratify`'s position is DECIDED in the next bullet and BUILT by REC-137 (IC-154).  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:720`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:739`
 - **REC-139** · 2026-09-18 — §7 — 7.1 against 7.9 is RULED by Bob (2026-09-18, *"Keep project names unique"*): refusing a name tells an uninvited member only that a project with THAT name exists; `NAME_TAKEN` names nothing else (REC-139).  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:16`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:15`
 - **REC-139** — NOT BUILT, AND REPORTED AS A DESIGN GAP RATHER THAN DECIDED:** *"The plane MINTS project ids (a caller no longer chooses one)"* does not say whether a caller-supplied id for a NEW project is REFUSED or IGNORED, and REC-139's row says STOP on that.  
   `docs/development/INTERFACE-CHANGES.md:11488`
 - **REC-140** — CORRECTED at their sites with dated reasons, never exempted: `project-sight.test.mjs` §6 (the KNOWN `EXISTS` pin, now the refusal and byte-identical to a never-minted id; its control re-run, every arm AS DECLARED), `project-disclosure.test.mjs` §4, `ratify-authority.test.mjs` (REC-140's, control re-run AS…  
@@ -1338,14 +1342,16 @@ authority is the file named, never this one.
   `docs/development/INTERFACE-CHANGES.md:12102`
 - **REC-145** — REC-145 pinned as built is DECIDED and asserted as a C-22.12 refusal; L4/L5 NEW, the project gate on the tick and close as the run's own principal meets it after leaving.  
   `docs/development/INTERFACE-CHANGES.md:12104`
+- **REC-151** · 2026-09-21 — RULED 2026-09-21 by BOB #23, so this is no longer only the builder's reading: that range is SPENT FOR GOOD.** The opaque minter never draws an id the counter issued, used or not, on the `op=purge` comment's rule that an identifier which has existed names one object and ambiguity is worse than a gap; an allocation…  
+  `docs/architecture/BIO_Membership_Architecture_v2.md:849`
 - **REC-152** · 2026-09-19 — un.mjs`; `bio-plane/test/airun-principal.test.mjs` exists on `origin/main`; `airun-projectgate.test.mjs` ARM H6 reads “(CORRECTED, REC-152 — was a DESIGN GAP pinned as built)”, so the row's corrected-never-exempted term is met; the worker's `CLAIMS.md` block reads RELEASED.  
   `docs/archive/ledgers/QUEUE-closed.md:2590`
 - **REC-153** · 2026-09-19 — SETTLED 2026-09-19 — 0, MEASURED (DIST, relayed by CONDUCT #6 at REC-153's integration; appended, the record above unchanged).** `op=stats` read with the admin credential over HTTPS, never printed, at 2026-09-19T11:45:59Z: biosmoke7 store `bio` → `aiRuns=0`, `aiRunBounds=0`, `aiRunLog=0`; store `scratch` → all 0…  
   `docs/development/MEASUREMENTS.md:17140`
 - **REC-155** · 2026-09-21 — §4 (the 4.10 block) — REC-155's seven session routes are RULED (BOB #19, 2026-09-21) and NOT BUILT: all seven still answer every session `SESSION_ROUTE_NOT_RECORDED`, and the provenance pair's bearer write stays open until the ruling's second landing.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:12`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:11`
 - **REC-155** · 2026-09-21 — 4.10 The seven ops no session reached, and no decision explained: RULED 2026-09-21 by BOB #19 (REC-155), landed by BOB #20 after re-reading each citation at the code.** `index.mjs`' `UNATTENDED_BY_DECISION` header names `provenancechain`, `provenanceroute`, `calibrate`, `calibrationsubject`, `calibrationsignal`,…  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:455`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:474`
 - **REC-155** — REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches that file) so the two do not collide.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1207`
 - **REC-155** — SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS WERE REACHABLE BY NO SESSION, AND NOBODY HAD RULED WHY — NOW RULED (§4.10): FIVE GAIN SESSION REACH, TWO ARE UNATTENDED BY DECISION.  
@@ -1358,14 +1364,24 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16064`
 - **REC-155** · 2026-09-21 — CLAIM 2026-09-21 BOB (BOB #20 — REC-155 RULED into Membership v2 §4.10, landed AHEAD of D-158; the first ruling of the BOB #19 -> BOB #20 DELEGATION) claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`.  
   `docs/development/CLAIMS.md:16258`
+- **REC-156** · 2026-09-21 — REC-156 (2026-09-21) closed the fourth: `op=memberadd`'s `by` is server-stamped too, so a proposal records its proposer's own endorsement and nobody else's, and a bearer's records none; a bearer is not refused, RULED by BOB #22 (§4.7).  
+  `docs/architecture/BIO_Membership_Architecture_v2.md:3`
+- **REC-156** — An operator's BEARER keeps reaching all four, its `by` stamped `class:admin` and endorsing for nobody (RULED by BOB #22, §4.7).  
+  `docs/architecture/BIO_Membership_Architecture_v2.md:20`
 - **REC-156** · 2026-09-21 — WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH — RULED 2026-09-21 by BOB #22** (REC-156's questions, carried by CONDUCT #10), from §4.6 and this section, verified at the code (`index.mjs`'s `by` stamp; `Store#memberAdd`).  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:263`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:262`
+- **REC-156** · 2026-09-21 — A BEARER REACHING `op=memberadd` IS NOT REFUSED — REC-156's PROVISIONAL decision, RULED 2026-09-21 by BOB #22** (*WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH*, above; this heading corrected by BOB #23, which found it still reading as open).  
+  `docs/architecture/BIO_Membership_Architecture_v2.md:430`
+- **REC-156** · 2026-09-21 — AND ADMINISTRATORS DO NOT RUN THE INSTANCE: `op=governorconfig` IS THE OPERATOR'S — RULED 2026-09-21 by BOB #23** (the REC-156 DELEGATION's item 3, carried by CONDUCT #10), read at the code (`index.mjs`'s OPS row and `SESSION_OPS`; `Store#governorAdmit`).  
+  `docs/architecture/BIO_Membership_Architecture_v2.md:448`
 - **REC-156** — (§4.7: one RULED paragraph), `docs/development/CLAIMS.md` (this block and one dated line on the REC-156 DELEGATION), `docs/DECIDED.md` (GENERATED, regenerated LAST).  
-  `docs/development/CLAIMS.md:17000`
+  `docs/development/CLAIMS.md:17007`
+- **REC-156** — NON-ADMINISTRATOR (the REC-156 DELEGATION's item 3, RULED).** Design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9, the paragraph *AND ADMINISTRATORS DO NOT RUN THE INSTANCE* (this commit).  
+  `docs/development/QUEUE.md:26`
 - **REC-157** — second-edition DELEGATION was RULED as §7.1 item 9 (BOB #19) and placed as REC-157; (c) the five session-reach ops were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0 (`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s…  
   `docs/development/CLAIMS.md:15577`
 - **REC-159** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2): CONDUCT #10's routes placed, each with its fix named** — REC-159 (REC-156's DELEGATION, items 1–2) directly before REC-155; D-438 (NARROWED to `refusal-codes.control.mjs`), M0-93 (`delegations.control.mjs`) and M0-94 (the census's UNCLASSIFIED exit) at the head of the…  
-  `docs/development/CLAIMS.md:16977`
+  `docs/development/CLAIMS.md:16984`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1751,7 +1767,7 @@ authority is the file named, never this one.
 - **M0-82** · 2026-09-21 — 2026-09-21 · BOB #19 · M0-82 NARROWED, NOT SUPERSEDED.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1151`
 - **M0-97** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): BOB #22's six inbox entries DRAINED**, each verified at its cited design and at the code — M0-97 (`decided.mjs` indexes a `decided:` field) directly after D-435, with D-341 (the same file) after it; REC-160 (`op=reevaluations` names a severed leg's status) after D-389,…  
-  `docs/development/CLAIMS.md:16985`
+  `docs/development/CLAIMS.md:16992`
 
 ## Rulings carrying no id
 
@@ -1822,13 +1838,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-10** — ⚠ SUPERSEDED BY v2, July 26 2026. DO NOT WORK FROM THIS FILE. > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said since July** — a reader who opens this document  
   `docs/architecture/BIO_Membership_Architecture_v1.md:32`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 (two of his July 26 rulings met):** *"Keep project names unique across instances."* Refusing a name therefore tells an uninvited member that a project with THAT name exists — the one thing §7.9 yields to §7.1 — and the refusal reveals nothing beyond the name the caller supplied. **BUILT…  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:748`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:767`
 - **2026-09-19** — AMENDED 2026-09-19 by BOB #17 — the gated set is the PREDICATE, and `TASK` satisfies it.** The bullet above names `CASE`, `DRAFT`, `RVG` and `PROJ`; that was the ENUMERATION made when the rule was written, not a closed set.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:774`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:793`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — a project does not own a line of inquiry.** *"Anybody can ask a question related to anything - even something also being explored in a project they're not a member of.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:842`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:865`
 - **2026-09-18** — RULED BY BOB, 2026-09-18 — EACH PROJECT CHOOSES whether it is DISCOVERABLE or HIDDEN.** *"The project's contents might be private, though the existence of the project may not be.  
-  `docs/architecture/BIO_Membership_Architecture_v2.md:891`
+  `docs/architecture/BIO_Membership_Architecture_v2.md:914`
 - CORRECTED the same day by BOB #15 — the first version said *the owner or any administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the exception"*).  
   `docs/architecture/BIO_Publication_v0_1.md:192`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
@@ -2367,6 +2383,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:16782`
 - **2026-09-21** — item 2's bearer question RULED by BOB #22, once for all four ops** (Membership v2 §4.7, *WHO PROPOSES, AND WHAT A PROPOSAL IS WORTH*): the ADMIN_TOKEN holder keeps reaching them, its `by` stamped `class:admin`, on no roster, so it endorses for nobody (§4.6); and an administrator's proposal IS their own endorsement,…  
   `docs/development/CLAIMS.md:16885`
+- **2026-09-21** — item 3 RULED by BOB #23** (Membership v2 §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE*): `governorconfig` is the OPERATOR's act — the founder's session and the ADMIN_TOKEN holder's bearer — and not an administrator's, because a host's configured appetite outranks the hosting account's…  
+  `docs/development/CLAIMS.md:16891`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

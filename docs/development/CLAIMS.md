@@ -16888,6 +16888,13 @@ on no roster, so it endorses for nobody (§4.6); and an administrator's proposal
 Items 1 and 2 PLACED on that ruling by SCHEDULER #7 as REC-159, directly before REC-155 (the same `SESSION_OPS` sets); the
 block's two state lines merged into this one. **Item 3 (`governorconfig`) is carried to BOB #23** (BOB-NEXT §3).
 
+**open as of 2026-09-21** — **item 3 RULED by BOB #23** (Membership v2 §4.9, *AND ADMINISTRATORS DO NOT RUN THE
+INSTANCE*): `governorconfig` is the OPERATOR's act — the founder's session and the ADMIN_TOKEN holder's bearer — and not
+an administrator's, because a host's configured appetite outranks the hosting account's `GOVERNOR_APPETITE_PER_MIN` and
+4.8 keeps governance off the machine. It stays in `SESSION_OPS.admin` alone. Its refusal's corrected sentence, and the two
+plane comments REC-159 makes false, are one BOB INBOX entry of 2026-09-21, to ride WITH REC-159 (the same two suites,
+one gate). Nothing in this DELEGATION waits on BOB now: that entry is SCHEDULER's to place.
+
 ## CLAIM 2026-09-21 BOB (#22) — the two BOB groups ruled: D-325 a stated LIMITATION, D-80 folded, Membership §8.1 folded, D-195 at the elicitation, D-260 and D-293 ruled, D-280 found RULED by Bob as DEC-70
 
 claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `docs/architecture/BIO_Distribution_v0_1.md`
@@ -17039,3 +17046,16 @@ claimed: 2026-09-21 by BOB #22, worktree `.claude/worktrees/bob-22`. Paths: `doc
 **open as of 2026-09-21** — sent to BOB #23 by message. Its first form carried a bearer's reach for §4.9's acts as Q4;
 BOB #22 ruled that into Membership v2 §4.7 before the group was sent, so D-99 took its place. REC-160 is placed and
 runnable either way.
+
+## CLAIM 2026-09-21 BOB (#23) — CONDUCT #10's Q3 ruled (`op=governorconfig` is the OPERATOR's, not every administrator's) and D-432's counter-era gap ruled (NEVER drawn)
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/architecture/BIO_Membership_Architecture_v2.md` (§4.9: one RULED paragraph; §4.7: the bearer paragraph's heading,
+which still read PROVISIONAL after BOB #22 ruled it; §7's D-432 bullet: one RULED sentence; front matter: the Status
+sentence and two Incomplete bullets; Contents regenerated); `docs/development/QUEUE.md` (the BOB INBOX only: one entry);
+`docs/development/CLAIMS.md` (this block and one dated line on the REC-156 DELEGATION); `docs/DECIDED.md` (GENERATED,
+regenerated LAST).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, every kickoff, and every other design document.
+
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
