@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1269 rulings across 100 documents.
+1271 rulings across 100 documents.
 
 ## DEC-
 
@@ -1258,8 +1258,14 @@ authority is the file named, never this one.
   `docs/development/MEASUREMENTS.md:17140`
 - **REC-155** — SEVEN VERBS WHOSE `OPS` ROW ADMITS A SESSION CLASS ARE REACHABLE BY NO SESSION, AND THE PLANE ANSWERS `SESSION_ROUTE_NOT_RECORDED` BECAUSE NOBODY RULED.** The provenance pair and calibration three admit `member`; `livefire` and `reproject` admit `admin` only.  
   `docs/development/BACKLOG.md:107`
+- **REC-155** — (1) REC-155, RULED.** Fold the block below VERBATIM into `docs/architecture/BIO_Membership_Architecture_v2.md` after §4.9 (before `## 5.  
+  `docs/development/CLAIMS.md:16030`
+- **REC-155** · 2026-09-21 — 4.10 The seven ops no session reached, and no decision explained: RULED 2026-09-21 by BOB #19 (REC-155).** `index.mjs`' `UNATTENDED_BY_DECISION` header names `provenancechain`, `provenanceroute`, `calibrate`, `calibrationsubject`, `calibrationsignal`, `livefire` and `reproject` as refused to every session with no…  
+  `docs/development/CLAIMS.md:16036`
 - **REC-155** — REC-155's seven routes → RULED in `BIO_Membership_Architecture_v2.md` §4.10**, landing after D-158 (which touches that file) so the two do not collide.  
   `docs/development/QUEUE.md:111`
+- **REC-156** — I10 RULED**: `discoverMembers`/`planeMember` get a registered interface; FLEET drafts it PROVISIONAL from the code; **you confirm it to STABLE** after reading it against the code. - **SCHEDULER #4's placements (`a12e9836`: REC-156, M0-83–M0-90, the M0-82 narrowing, the retirable row) are on its branch…  
+  `docs/development/kickoffs/BOB-NEXT.md:29`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -2419,10 +2425,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1356`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1368`
-- CORRECTED AT 14:35Z, BEFORE THE LINK DROPPED — §0b ABOVE WAS ALREADY STALE WHEN WRITTEN, IN THE WAY THIS LANE KEEPS FINDING.** All four remaining lanes confirmed stood down, each verified from the remote by its own session: - **SCHEDULER #3 — READY.** `SCHEDULER-NEXT.md` line 1 on `origin/main`, 6,098 B; crons…  
-  `docs/development/kickoffs/BOB-NEXT.md:40`
-- I RULED THE OCCUPANCY GAP INTO `BOB.md` AND DID NOT CHECK MY OWN LANE.** BOB #17 worked this lane for 3.5 h after I was chipped from its handoff.  
-  `docs/development/kickoffs/BOB-NEXT.md:134`
+- MK-3's five doctrine questions RULED** (`MEMBER-KNOWLEDGE-DESIGN.md` §4.0–§4.6): the signed bundle never names its author (`observer:<testimony id>`), attribution is the author's own act per (case edition, observation), an unchosen observation blocks only its own use, `name` publishes the handle; two replacement…  
+  `docs/development/kickoffs/BOB-NEXT.md:45`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:93`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
