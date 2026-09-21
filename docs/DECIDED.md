@@ -550,8 +550,6 @@ authority is the file named, never this one.
   `docs/development/BACKLOG.md:567`
 - **D-260** · 2026-09-21 — D-260 is RULED** (BOB #22, 2026-09-21; the assistant's §6, `QUEUE.md`'s BOB INBOX entry): its item 2 is DIST's, AFTER item 1 (the plane's caller, RECORD with FLEET) — install and update carry ONE organisation-principal `ai` credential as a deploy secret the way `DAEMON_TOKEN` is carried, never in the record,…  
   `docs/development/kickoffs/DIST-NEXT.md:46`
-- **D-260** — (4) D-260 RULED, placed under its own id.  
-  `docs/development/kickoffs/SCHEDULER-NEXT.md:35`
 - **D-263** · 2026-08-09 — D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED** item: D-263 (existing row, raised by M0-20).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7347`
 - **D-263** — DECLARATION IS CORRECTED, and it is D-263's arm and not mine.** Re-running the harness found it declaring A5 to FAIL when A5 now stays GREEN: the corpus grew 146 -> 198 and A5's `readable > 100` floor stopped biting.  
@@ -2625,6 +2623,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/RECORD.md:323`
 - CORRECTED with dated reasons, never exempted.  
   `docs/development/kickoffs/RECORD.md:377`
+- Other lanes insert CLAIMS blocks before or after yours, so your AMENDED lines go at the end of YOUR block, not the file's.  
+  `docs/development/kickoffs/SCHEDULER-NEXT.md:56`
 - **2026-07-28** — RULED by Bob, 2026-07-28: source addresses are NOT exempt from the canonical-identity rule.  
   `docs/development/LINK-FIDELITY.md:299`
 - **2026-07-30** — RULED by Bob, 2026-07-30, REORDERED against the earlier draft.  
