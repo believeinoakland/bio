@@ -16478,6 +16478,10 @@ group is SENT as the DELEGATION SCHEDULER (#6) -> BOB below, D-182 its fourth qu
 (narrowed to the investigative session, its consumer (3)) and D-394 (designed in framework §18.1, unbuilt) PLACED under
 their own ids. D-351 and D-311 carried with their next acts named in `SCHEDULER-NEXT.md`. 177 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 4): LED-7 batch 13** — D-389 PLACED after CAP-13 (its fix as the row analysed it;
+its open acceptance question answered by `CLAUDE.md` §2, stated on the row) and D-351 PLACED after CAP-11 (CAP-7's census,
+M-13, met its sizing condition). D-311 still carried. 175 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#6) -> BOB — **FOUR QUESTIONS, ONE EACH, from the D-339 worker's DELEGATION, CONDUCT #7's design items and LED-7 batch 11; none blocks a runnable row**
 
 Recorded here because the repository is the channel; each is also written on its row where it has one, and each stands
