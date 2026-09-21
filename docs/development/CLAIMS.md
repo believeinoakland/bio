@@ -16932,3 +16932,23 @@ why: a CUT NOW, judged at the code. Before REC-156 (`397ff618`, merge `f84bcd47`
   `index.mjs`, `schema.mjs`, `setup.mjs`, `store.mjs`. No fleet source, `app.html`, `newgroup/` or `release/` moved.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 SCHEDULER (#7) — the lane's standing claim on the build plan's own files; CONDUCT #10's four landed rows closed (D-432, D-355, D-254, REC-156) and the cache replenished by ONE slot, D-435 left unmoved while BOB #22 builds it
+
+claimed: 2026-09-21 by SCHEDULER #7, worktree `.claude/worktrees/brave-engelbart-1834cd` (branch
+`claude/brave-engelbart-1834cd`, pushed as `scheduler-7/a`; base `origin/main` @ `423cc690`). Paths, the lane's own
+(`kickoffs/SCHEDULER.md`'s ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns
+the `running` word), `docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+addressed to SCHEDULER that this lane acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #6 (`scheduler-6`), archived by this session on 2026-09-21 at ~20:13Z under
+D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `423cc690`, which IS
+`origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); its worktree removed by `git
+worktree remove` without force, 6,764,784 → 7,435,460 KiB free (+655 MiB; `du` read the tree at 648 MiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's. **D-435's row in `BACKLOG.md` is NOT touched**
+until BOB #22's landing of it is on `main`: BOB #22 builds it and archives it itself.
+
+**open as of 2026-09-21.**
