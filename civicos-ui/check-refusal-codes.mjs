@@ -155,6 +155,20 @@ const fails = [];
 const notes = [];
 const FAIL = m => fails.push(m);
 const NOTE = m => notes.push(m);
+/* M0-79 — EVERY FIGURE A RATCHET KEY GATES IS RECORDED WHERE IT IS COMPARED, so the
+   slack arm at the foot judges the SAME number the floor or ceiling judged, and a key
+   whose figure nobody recorded is a named failure rather than a gate that silently
+   has nothing to compare. `value` is the figure the ratchet is pinned to and the only
+   one it may be moved to; `working` is the working-tree figure where the guard
+   distinguishes one (D-257), printed beside it and never gated on. */
+const MEASURED = new Map();
+const MEASURE = (key, value, what, working = value) => {
+  const prior = MEASURED.get(key);
+  if (prior && prior.value !== value)
+    FAIL(`RATCHET COVERAGE — \`${key}\` was recorded TWICE, as ${prior.value} and as ${value}. One ratchet key `
+       + `is one figure; two readings under one name is the defect a shared unqualified name always is.`);
+  MEASURED.set(key, { value, what, working });
+};
 
 /* ============================================================
    THE RATCHET — measured 2026-08-07 in worktree agent-a12a5d578497244e9,
@@ -163,6 +177,19 @@ const NOTE = m => notes.push(m);
    A figure that GROWS is fine and the delta is named in the output; the
    grown rows still have to pass every arm, so growth cannot arrive
    unguarded.
+
+   CORRECTED 2026-09-21 by M0-79, never exempted, and the correction is the
+   item: "a figure that GROWS is fine" was this guard's rule for seven weeks,
+   and it is how four floors came to sit 11 to 46 below their measurement
+   (`outcomeReturns` 98 against 127, `vocabularies` 11 against 22,
+   `vocabularyTerms` 64 against 110, `untranslated` 270 against 297) while
+   every run PRINTED the gap and exited 0. The sentence was right that growth
+   arrives guarded — the grown rows still pass every arm — and wrong about the
+   FLOOR, which growth leaves behind as slack. Growth is still legitimate; its
+   floor moves IN THE SAME COMMIT, and the guard now FAILS on slack beyond the
+   bound `SLACK` (below `CEILING`) states for each key — zero for every key but
+   one, whose exemption is argued there. `SLACK` must name every FLOOR and
+   CEILING key, or the guard fails naming the one it does not.
    ============================================================ */
 /* REMEASURED 2026-08-08 (REC-71), AND THE STALENESS WAS A MEASURED DEFECT
    RATHER THAN AN UNTIDY NUMBER. PL-1 landed a fourth family and 18 rows, so the
@@ -550,6 +577,10 @@ const FLOOR = {
                        // gets switched off (VERIFICATION.md's own reason for not making `--strict`
                        // the gate yet), so this stays a COLLAPSE DETECTOR — its stated purpose, a
                        // parameter list read as a body — and `codesChecked` carries the ratchet.
+                       // M0-79, 2026-09-21: the ONE key EXEMPT from the slack gate, and the
+                       // exemption is this note's argument restated at `SLACK.bodyLines` and
+                       // printed every run — measured 4712 against this floor of 60 on
+                       // `origin/main` @ 4fac1548, deliberately, and NOT moved.
   /* D-309 2026-09-10: 55 -> 59. pristine tree printed 58, this item's 59 — so 3 of this move was PRE-EXISTING SLACK and 1 is D-309's. */
   /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): regions 59 -> 61. PRISTINE `origin/main` at 9a713f1 printed 60, this item's tree 61 — so 1 of this move was PRE-EXISTING SLACK and 1 is REC-84's. */
   /* REC-97 2026-09-14 (worktree agent-a39cfbab2c77ec9e4): regions 61 -> 67. PRISTINE `origin/main` at 173bc66 printed 66, this item's committed tree (2e5d21f) 67 — so 5 of this move was PRE-EXISTING SLACK and 1 is REC-97's (the four C-45 rows for `op=cite`'s extent and the one new region `cite > is-cite-extent`). */
@@ -677,6 +708,15 @@ const FLOOR = {
                        // COLLAPSE fails. The per-region trivial-span arm (REGION_MIN_LINES)
                        // is the tight half and this is the aggregate one; they fail for different
                        // reasons. (was 851, 724, 632, 45)
+                       // CORRECTED 2026-09-21 by M0-79, never exempted: "an ordinary edit ADDING
+                       // lines inside a governed arm still passes" was true of a one-sided floor and
+                       // is how this figure came to carry 83, 56, 226, 59 and then 695 lines of slack
+                       // (the D-309, REC-84, REC-97, REC-86 and D-270 notes above) — a collapse of up
+                       // to that many lines was invisible to the aggregate. An edit adding lines inside
+                       // a governed region now FAILS until this floor is moved to the printed figure in
+                       // the same commit (`SLACK.regionLines`, bound 0). Because a region's line count
+                       // is a property of the MERGED source, the integrator's re-read of it on the
+                       // merged tree is now enforced by the gate rather than asked for in a note.
   /* D-309 2026-09-10: 152 -> 167. pristine tree printed 165, this item's 167 — so 13 of this move was PRE-EXISTING SLACK and 2 is D-309's. */
   /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): codesChecked 167 -> 177. PRISTINE `origin/main` at 9a713f1 printed 175, this item's tree 177 — so 8 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
   /* REC-97 2026-09-14 (worktree agent-a39cfbab2c77ec9e4): codesChecked 177 -> 201. PRISTINE `origin/main` at 173bc66 printed 197, this item's committed tree (2e5d21f) 201 — so 20 of this move was PRE-EXISTING SLACK and 4 is REC-97's (the four C-45 rows for `op=cite`'s extent and the one new region `cite > is-cite-extent`). */
@@ -727,7 +767,14 @@ const FLOOR = {
   /* D-309 2026-09-10: 83 -> 84. pristine tree printed 84, this item's 84 — so 1 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
   /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): outcomeReturns 84 -> 86. PRISTINE `origin/main` at 9a713f1 printed 84, this item's tree 86 — so 0 of this move was PRE-EXISTING SLACK and 2 is REC-84's. */
   /* REC-97 2026-09-14 (worktree agent-a39cfbab2c77ec9e4): outcomeReturns 86 -> 98. PRISTINE `origin/main` at 173bc66 printed 94, this item's committed tree (2e5d21f) 98 — so 8 of this move was PRE-EXISTING SLACK and 4 is REC-97's (the four C-45 rows for `op=cite`'s extent and the one new region `cite > is-cite-extent`). */
-  outcomeReturns: 98,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
+  /* M0-79 2026-09-21 (worktree agent-a6d389a12c371468a): outcomeReturns 98 -> 127, from THIS GUARD'S OWN PRINT
+     (`arm C: THE OUTCOME WALK — 127 return-position outcome(s) read … floors 98 corpus / 319 refusals · corpus GREW by
+     29`, exit 0) on `origin/main` @ 4fac1548, which is this item's tree for every source the figure reads — M0-79 edits
+     the guard and its suites, never a governed span — so ALL 29 are PRE-EXISTING SLACK and none is M0-79's. The notes on
+     `refusalsJudged` below record three items that moved THAT floor after REC-97 set this one (REC-86, D-270, D-158),
+     each from the line that prints both floors side by side, and none moved this one. It is the slack the row was
+     written about, and the first figure the slack gate (`SLACK`, below `CEILING`) fails on when it is left behind. */
+  outcomeReturns: 127,   /* REC-76 — THE CORPUS OF ARM C'S OUTCOME WALK: return-position object
                           separating: EIGHT are `is-admission`'s own outcomes, and ONE is a return the
                           walk could never see before — `suggestVersion > is-suggest-write`'s
                           `return remember({ ...promoted, … })`, at a site that has been governed since
@@ -755,7 +802,13 @@ const FLOOR = {
                           REC-76 — the YIELD: outcomes graded as refusals rather than as declared
                           successes. Was implicitly floored at 1 (`if (!refusalsJudged)`), which
                           a walk that had lost every spelling but one would still have cleared. */
-  vocabularies: 11,    // the plane's own code->text maps a surface renders verbatim (arm E).
+  /* M0-79 2026-09-21 (worktree agent-a6d389a12c371468a): vocabularies 11 -> 22 and vocabularyTerms 64 -> 110, from THIS
+     GUARD'S OWN PRINT (`arm E: … 22 vocabularies, 110 terms across 2 modules … floors 11/64`, exit 0) on `origin/main`
+     @ 4fac1548 — M0-79 edits no vocabulary module, so ALL of both moves (11 vocabularies, 46 terms) is PRE-EXISTING
+     SLACK. Measured unchanged since SCHEDULER #3 re-measured the row on 2026-09-19 (22/110 then too): these two floors
+     sat HALF their measurement for at least two days of green runs, so a walk that lost every vocabulary this floor did
+     not know about would still have cleared it. The printed list names all 22. */
+  vocabularies: 22,    // the plane's own code->text maps a surface renders verbatim (arm E).
                        // WAS 8. REC-74 added `STANDARD_BASIS` to src/airun.mjs — the five ways a
                        // run's declared standard pair can be known, each carrying the sentence a
                        // member reads instead of the machine word. Moved IN THE SAME TURN from
@@ -764,11 +817,17 @@ const FLOOR = {
                        // measuring it, and REC-71 measured a floor with slack flipping a control
                        // from RED to GREEN.
   /* D-309 2026-09-10: 63 -> 64. pristine tree printed 64, this item's 64 — so 1 of this move was PRE-EXISTING SLACK and 0 is D-309's. */
-  vocabularyTerms: 64, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project).
+  vocabularyTerms: 110, // + REC-69's TWO `RUN_CONTEXTS` terms (inquiry, project). M0-79: 64 -> 110, see `vocabularies`.
   /* D-309 2026-09-10: 248 -> 267. pristine tree printed 268, this item's 267 — so 20 of this move was PRE-EXISTING SLACK and -1 is D-309's. */
   /* REC-84 2026-09-14 (worktree agent-ae95c3be71f5bd167): untranslated 267 -> 268. PRISTINE `origin/main` at 9a713f1 printed 268, this item's tree 268 — so 1 of this move was PRE-EXISTING SLACK and 0 is REC-84's. */
   /* RE-READ 2026-09-14 by REC-84 AFTER MERGING `origin/main` (commit 40f34e1): untranslated 268 -> 270. The figure REC-84 set an hour earlier was true of its own branch and is not true of the merged tree — the same two codes from the merge; they are NOT in reach of a surface, so `reachGap` is unmoved at its ceiling of 40 and this figure and that one move independently, which is the partition arm's whole point. Read off the merged tree's own green run, never incremented by hand. */
-  untranslated: 270,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
+  /* M0-79 2026-09-21 (worktree agent-a6d389a12c371468a): untranslated 270 -> 297, from THIS GUARD'S OWN PRINT (`arm F:
+     THE PARTITION of 297 untranslated code(s) over a census of 598 … F1=2 F2=1 F3=18 F4=103 F5=5 F6=168 · floor 270`,
+     exit 0) on `origin/main` @ 4fac1548 — every one of the 297 in the commit at HEAD, and M0-79 mints no code, so ALL 27
+     are PRE-EXISTING SLACK: codes minted without a translation since REC-84's re-read, while the census floor above was
+     moved past them (D-270's 517 -> 595) and this one was not. A partition floor 27 below its subject would have passed a
+     walk that lost sight of 27 untranslated codes, which is the empty-corpus defence this floor exists to be. */
+  untranslated: 297,   /* MOVED 246 -> 248, 2026-08-10, worktree agent-a36b6782b06f5a651 (CASE-3),
                           from arm F's own printed partition (F1=2 F2=1 F3=18 F4=94 F5=6 F6=127,
                           summing to 248). **ALL OF THIS MOVE IS PRE-EXISTING SLACK AND NONE OF IT IS
                           THIS ITEM'S** — the partition summed to 248 against a floor of 246 with
@@ -914,6 +973,80 @@ const CEILING = {
                           second copy of the thing DEC-49 exists to keep singular. So the ceiling is
                           set at the measured 4 and the pass-through is NAMED every run rather than
                           made invisible by a literal nobody needed. */
+};
+
+/* ============================================================== M0-79, 2026-09-21
+   THE SLACK BOUND OF EVERY RATCHET KEY, STATED AT THE SITE — AND A KEY WITH NO LINE
+   HERE IS A FAILURE, NOT A DEFAULT.
+
+   WHAT WAS WRONG. Every floor above failed only when its figure fell BELOW it, and a
+   figure that rose past it was printed (`GREW by N`) and passed. So each landing that
+   grew a figure and did not move its floor left slack behind, and the guard announced
+   the slack on every run and exited 0: measured on `origin/main` @ 4fac1548,
+   `outcomeReturns` 127 against 98, `vocabularies` 22 against 11, `vocabularyTerms` 110
+   against 64, `untranslated` 297 against 270. **A floor with slack is not a ratchet**
+   (REC-71's receipt: 19 codes of it turned control arm (e) from RED to GREEN, and REC-64
+   measured that SIX is enough to blind the widest matcher). A check that reports where it
+   should gate cannot fail, which CLAUDE.md §2 grades worse than a missing feature.
+
+   THE RULE. For a FLOOR key, `measured - floor` may not exceed `bound`; for a CEILING
+   key, `ceiling - measured` may not. Past it the guard FAILS naming the key, its floor
+   (or ceiling), its measured value and the bound — and the remedy is the one the notes
+   above have always given: move the figure to what THIS RUN PRINTED, in the same commit
+   as the change that moved it, and say whose growth it absorbs. Never by arithmetic.
+
+   THE BOUND IS A DESIGN CALL, MADE KEY BY KEY, and the reason is the entry's `why`:
+     - ZERO for every figure a landing moves by an edit it makes itself — which is all of
+       them but one. Each such landing is already editing the thing the figure counts, so
+       it can print the new figure and move the floor in the same turn; WORKER.md's DEC-49
+       rule has always said so, and this makes the rule a gate.
+     - EXEMPT only where this file already argues it: `bodyLines`, deliberately far below
+       its measurement since VF-2 (its FLOOR note). An exemption is a STRING with its
+       reason, printed every run beside the slack it carries — never a missing line.
+     - NO NON-ZERO BOUND IS SET TODAY. The shape allows one (`bound: n`), and the fixture
+       suite drives it, because the next figure that legitimately wobbles should be given a
+       stated tolerance here rather than an exemption or a quiet loosening elsewhere.
+
+   WHICH FIGURE IS GATED. The one each arm RECORDS with `MEASURE` where it already
+   compares the floor: the same number, never a second reading. Where the guard tells
+   the commit at HEAD from the working tree (D-257: `census`, `reach`, `r3Fed`,
+   `untranslated`), a FLOOR's slack is gated on the figure IN THE COMMIT AT HEAD, because
+   a slack failure is an instruction to move the floor and D-257's rule is that a floor
+   moves only to the figure another checkout reproduces — so a phantom file carried in by
+   `refs/stash` can never DEMAND a move to a contaminated number, which would then fail
+   every honest run. The working-tree figure is printed beside it; a difference names the
+   uncommitted file's work, to be moved WHEN that file is committed. A CEILING's slack is
+   gated on the figure the ceiling already gates (the working tree for `reachGap`): an
+   uncommitted file can only RAISE that figure, so it can hide slack for a run and never
+   invent it. (The floor-direction checks of `r3Fed` and `untranslated` read the working
+   tree, unlike `census` and `reach`, and are NOT changed here — reported as a finding.)
+
+   THE COVERAGE ARM, because the cheap way past this gate is to gate only the figures that
+   are currently equal: every FLOOR and CEILING key must have an entry here, every entry
+   must name a FLOOR or CEILING key, and every key must have a recorded figure — or the
+   guard FAILS naming the key. A new floor added without a decision here fails on the day
+   it lands.
+   ============================================================================ */
+const SLACK = {
+  families:             { bound: 0, why: "a new *_CHECKS family is minted by an edit to bio-checks.mjs, and C-22's header already charges its tax: move this floor in the same turn" },
+  rows:                 { bound: 0, why: "a row is added or removed by an edit to bio-checks.mjs, in the landing that makes it" },
+  census:               { bound: 0, why: "a code enters the census by an edit to bio-plane/src in the landing that mints it; gated on the codes in the commit at HEAD (D-257), so a phantom file cannot demand a move" },
+  reach:                { bound: 0, why: "R1, R2 and R3 each move by an edit to the catalog, app.html or a committed suite, in the landing that makes it; gated on the figure in the commit at HEAD (D-257)" },
+  r3Fed:                { bound: 0, why: "a suite starts or stops FEEDING a code in the landing that edits it (D-433: a real widening SHOULD raise this, and raising it is this move); gated on the suites in the commit at HEAD (D-257)" },
+  governedSites:        { bound: 0, why: "a `where` is written by the landing that writes or narrows the row" },
+  surfaceTables:        { bound: 0, why: "a new surface table already fails TABLE_PRODUCERS until this file pairs it, so the landing that adds one is already editing here" },
+  bodyLines:            { exempt: "DELIBERATELY NOT A RATCHET since VF-2 (its FLOOR note): it FALLS whenever a `where` is correctly narrowed from a function to a region, the work REC-71 licensed, so a floor near its measurement would fail that work and be switched off. It stays a COLLAPSE DETECTOR for a parameter list read as a body; codesChecked and regionLines carry the ratchet" },
+  regions:              { bound: 0, why: "a region is a marker pair plus a `where`, written by the landing that narrows the row" },
+  regionLines:          { bound: 0, why: "EVERY edit inside a governed region moves it, so the landing that edits there moves this floor; a region's line count is a property of the MERGED source, so the integrator re-reads it on the merged tree, which this bound now enforces (later items found 83, 56, 226, 59 and 695 lines of slack here)" },
+  codesChecked:         { bound: 0, why: "a code compared at a governed site is added or removed by the landing that writes the refusal" },
+  outcomeReturns:       { bound: 0, why: "a return-position outcome at a governed site is added or removed by the landing that writes it (the first figure this gate caught: 98 against a measured 127)" },
+  refusalsJudged:       { bound: 0, why: "an outcome graded a refusal is added or removed by the landing that writes it" },
+  vocabularies:         { bound: 0, why: "a vocabulary is added to airun.mjs or queuestate.mjs by the landing that adds it (found at 11 against 22)" },
+  vocabularyTerms:      { bound: 0, why: "a term is added by the landing that adds it (found at 64 against 110)" },
+  untranslated:         { bound: 0, why: "a code minted without a translation raises it and a translation lowers it, both in the landing that makes them; gated on the codes in the commit at HEAD (D-257)" },
+  reachGap:             { bound: 0, why: "a code in reach gains a translation or leaves reach in the landing that does it, and the ceiling falls with it in the same turn (CASE-6 found it carrying one code of slack)" },
+  unclassifiedOutcomes: { bound: 0, why: "an unclassifiable outcome is retired by the landing that retires it, and the ceiling falls with it" },
+  inheritedVerdicts:    { bound: 0, why: "an inherited verdict is retired by the landing that retires it, and the ceiling falls with it" },
 };
 
 /* A REGION'S MINIMUM SPAN. Not a style rule: it is the cheap arm against the
@@ -1110,6 +1243,7 @@ async function dec49Families() {
 }
 
 function armA(families) {
+  MEASURE("families", families.length, "DEC-49 families harvested from bio-checks.mjs (the `arm A` line)");
   if (families.length < FLOOR.families)
     FAIL(`only ${families.length} DEC-49 check families found in checks/bio-checks.mjs, floor is `
        + `${FLOOR.families}. A family that vanished took its codes' translations with it, and the `
@@ -1188,6 +1322,7 @@ function armA(families) {
     }
   }
 
+  MEASURE("rows", rows.length, "DEC-49 rows across the families (the `arm A` line)");
   if (rows.length < FLOOR.rows)
     FAIL(`${rows.length} DEC-49 rows across ${families.length} families, floor is ${FLOOR.rows}. `
        + `The reach SHRANK. A ceiling would not have seen this (REC-70: a neutered walk sat green at `
@@ -1338,6 +1473,8 @@ function armB(rows, census, surfaceTables) {
      union at 338. A fed half that FALLS means this walk stopped recognising a
      hand-off, which is a blind instrument reporting a tidy number, never an
      improvement in the surface. */
+  MEASURE("r3Fed", R3repro.size, "codes a suite in the commit at HEAD FEEDS to a surface (D-433's FED half of R3)",
+    R3.size);
   if (R3.size < FLOOR.r3Fed)
     FAIL(`R3's FED half is ${R3.size} code(s) a suite hands to a surface, floor is ${FLOOR.r3Fed}. `
        + `THE PARTITION LOST SIGHT OF A HAND-OFF — and the total reach cannot tell you, because a code `
@@ -1345,6 +1482,8 @@ function armB(rows, census, surfaceTables) {
        + `74 -> 70 with the union unmoved at 338). Establish whether a suite stopped feeding the code or `
        + `this walk stopped reading the shape, before moving this floor.`);
 
+  MEASURE("reach", reachRepro.size, "codes a surface can receive, R1 + R2 + R3 FED, in the commit at HEAD (the "
+    + "`arm B: REACH` line)", reach.size);
   if (reachRepro.size < FLOOR.reach)
     FAIL(`the reach is ${reachRepro.size} codes that are in the commit at HEAD (${reach.size} over the `
        + `working tree), floor is ${FLOOR.reach}. THE WALK LOST SIGHT — this is the `
@@ -1375,6 +1514,7 @@ function armB(rows, census, surfaceTables) {
     ],
   });
 
+  MEASURE("reachGap", gap.length, "codes in reach with no canned translation (the `arm B: RATCHET` line)");
   if (gap.length > CEILING.reachGap)
     FAIL(`${gap.length} code(s) a surface CAN RECEIVE have no canned translation; the ratchet's ceiling is `
        + `${CEILING.reachGap} and REC-64 may only ever move it DOWN. The ${gap.length - CEILING.reachGap} `
@@ -1393,7 +1533,9 @@ function armB(rows, census, surfaceTables) {
      world by being classified into neither. */
   NOTE(`arm B / D-433: R3 PARTITIONED — a suite that FEEDS a code into the surface proves reach; one `
      + `that merely ASSERTS a code arrived proves the PLANE sent it, which is not the same fact. `
-     + `FED ${R3.size} code(s) (floored) · OBSERVED-ONLY ${R3observed.size} code(s) (printed, NOT floored)`);
+     + `FED ${R3.size} code(s) (floored; ${R3repro.size} of them fed by a suite ${HEAD_SAYS}, the figure its slack `
+     + `is gated on and the one a floor may be moved to — M0-79) · OBSERVED-ONLY ${R3observed.size} code(s) `
+     + `(printed, NOT floored)`);
   for (const r of r3PerSuite)
     NOTE(`arm B / D-433:   ${r.suite}${r.committed ? "" : " (NOT in the commit at HEAD)"} — `
        + `FED ${r.fed.length}${r.fed.length ? ` [${r.fed.join(", ")}]` : ""} · `
@@ -1491,6 +1633,7 @@ function armC(rows) {
     if (w.region) claimedRegions.add(`${w.file}::${w.region}`);
   }
 
+  MEASURE("governedSites", sites.size, "spans named by the rows' `where` (the `arm C:` sites line)");
   if (sites.size < FLOOR.governedSites)
     FAIL(`${sites.size} governed sites derived from the rows' \`where\` fields, floor is `
        + `${FLOOR.governedSites}. Arm C only judges what \`where\` points it at, so a site that stopped `
@@ -1655,6 +1798,7 @@ function armC(rows) {
      reported green. A parameter list is a handful of lines; a governed function
      is not. Both the total and the per-site counts are printed, so a body that
      collapses is visible rather than inferred from a green run. */
+  MEASURE("bodyLines", bodyLines, "lines of governed span arm C read, all sites (`lines total` on the `arm C:` line)");
   if (bodyLines < FLOOR.bodyLines)
     FAIL(`arm C read only ${bodyLines} lines of governed span across ${bodiesRead} site(s), floor `
        + `is ${FLOOR.bodyLines} (${perSite.join(", ")}). A body that shrinks to a handful of lines is this `
@@ -1666,6 +1810,8 @@ function armC(rows) {
      the number of regions resolved and the lines inside them. A region that
      silently stopped resolving would otherwise just remove itself from the
      judged set — green, and asserting nothing. */
+  MEASURE("regions", regionsResolved, "narrowed REGION `where`s resolved (the `arm C:` sites line)");
+  MEASURE("regionLines", regionLines, "lines inside the governed regions (the `arm C:` sites line)");
   if (regionsResolved < FLOOR.regions)
     FAIL(`arm C resolved ${regionsResolved} region \`where\`(s), floor is ${FLOOR.regions}. A region that `
        + `stopped resolving takes its refusals out of the judged set and leaves this arm green over them.`);
@@ -1681,6 +1827,7 @@ function armC(rows) {
      `refuse(key, …)` helper (the code is a variable) or by pushing findings
      rather than returning an outcome at all. Those sites are neither passing nor
      failing on merit and this figure is how that stays visible. */
+  MEASURE("codesChecked", codesChecked, "refusal codes COMPARED against a family row (the `arm C:` sites line)");
   if (codesChecked < FLOOR.codesChecked)
     FAIL(`arm C compared only ${codesChecked} refusal code(s) against a family row, floor is `
        + `${FLOOR.codesChecked}. Lines read is not the measure — a site can be read in full and assert `
@@ -1692,6 +1839,9 @@ function armC(rows) {
      reader goes blind, and the yield collapses when the verdict rule does — and
      a walk that read every return and graded none of them would clear a corpus
      floor alone. This is REC-70's lesson stated as two numbers rather than one. */
+  MEASURE("outcomeReturns", outcomeReturnsRead, "return-position outcomes read across the governed spans (the "
+    + "`arm C: THE OUTCOME WALK` line)");
+  MEASURE("refusalsJudged", refusalsJudged, "outcomes graded as REFUSALS (the `arm C: THE OUTCOME WALK` line)");
   if (outcomeReturnsRead < FLOOR.outcomeReturns)
     FAIL(`arm C read ${outcomeReturnsRead} return-position outcome(s) across ${bodiesRead} governed span(s), `
        + `floor is ${FLOOR.outcomeReturns}. THE CORPUS COLLAPSED — the return reader stopped finding what `
@@ -1707,6 +1857,8 @@ function armC(rows) {
      can read. Scoring it zero would make it indistinguishable from a site with
      nothing to judge — which is the failure this whole item exists to close — so
      it is PRINTED by name and held under a ceiling that may only FALL. */
+  MEASURE("unclassifiedOutcomes", unclassified.length, "outcomes with no verdict this walk can read (the "
+    + "`arm C: UNCLASSIFIED` line)");
   if (unclassified.length > CEILING.unclassifiedOutcomes)
     FAIL(`${unclassified.length} return-position outcome(s) at governed sites carry NO verdict this walk can `
        + `read; the ceiling is ${CEILING.unclassifiedOutcomes} and it may only ever move DOWN. The `
@@ -1752,6 +1904,8 @@ function armC(rows) {
      coded must be VISIBLE, not absent. It is ceilinged rather than gated at zero
      because three of these are deliberate — promote's refusal handed back
      unwrapped — and a gate above the current state gets switched off. */
+  MEASURE("inheritedVerdicts", inherited.length, "outcomes taking their verdict or code from a spread (the "
+    + "`arm C: INHERITED VERDICT` line)");
   if (inherited.length > CEILING.inheritedVerdicts)
     FAIL(`${inherited.length} return-position outcome(s) at governed sites take their verdict from a `
        + `SPREAD; the ceiling is ${CEILING.inheritedVerdicts} and it may only ever move DOWN. The `
@@ -1992,6 +2146,7 @@ function armD() {
        + `${holes.length} hole(s)`);
   }
 
+  MEASURE("surfaceTables", tables.length, "surface translation tables proved total (the `arm D` line)");
   if (tables.length < FLOOR.surfaceTables)
     FAIL(`${tables.length} surface translation table(s) proved total, floor is ${FLOOR.surfaceTables}. `
        + `A table that stopped being FOUND is an arm that stopped running: this walk finds tables by `
@@ -2127,6 +2282,13 @@ function armF(census, translated, reach) {
   }
 
   const untranslated = [...census.union].filter(c => !translated.has(c)).sort();
+  /* M0-79: the same subject restricted to the codes in the commit at HEAD, which is the figure the slack gate reads
+     (see `SLACK`'s header, D-257). DERIVED FROM `untranslated` on purpose: a walk that empties the subject empties this
+     too, so nothing here can keep a blinded partition's floor quiet (refusal-partition.control.mjs arm 7 empties it).
+     The floor check just below still reads the whole subject, as it always has. */
+  const untranslatedRepro = untranslated.filter(c => census.unionRepro.has(c));
+  MEASURE("untranslated", untranslatedRepro.length, "census codes with no canned translation, in the commit at HEAD "
+    + "(arm F's subject; the `arm F: THE PARTITION` line)", untranslated.length);
   /* THE EMPTY-CORPUS DEFENCE IS THE FLOOR AND NOT A HARD ZERO CHECK, and the
      difference was measured rather than reasoned: a hard `if (!untranslated.length)`
      FAILED THE GUARD'S OWN CONFORMANT FIXTURE, where every code being translated
@@ -2175,7 +2337,8 @@ function armF(census, translated, reach) {
   NOTE(`arm F: THE PARTITION of ${untranslated.length} untranslated code(s) over a census of `
      + `${census.union.size}, in ${P.size} partitions ordered BY THE DECISION EACH NEEDS, summing exactly `
      + `(gated at zero). ${[...P.keys()].sort().map(k => `${k.slice(0, 2)}=${P.get(k).length}`).join(" ")} · `
-     + `floor ${FLOOR.untranslated}`);
+     + `floor ${FLOOR.untranslated} · ${untranslatedRepro.length} of them ${HEAD_SAYS}, the figure its slack is gated `
+     + `on and the one a floor may be moved to (M0-79)`);
   for (const [c, why] of DECLARED_UNREACHABLE)
     NOTE(`arm F: DECLARED unreachable (NOT established by this walk) — ${c}: ${why}`);
 
@@ -2276,6 +2439,8 @@ async function armE() {
       seen.push(`${name}(${entries.length})`);
     }
   }
+  MEASURE("vocabularies", vocabularies, "the plane's own text vocabularies found by shape (the `arm E` line)");
+  MEASURE("vocabularyTerms", terms, "terms across those vocabularies (the `arm E` line)");
   if (vocabularies < FLOOR.vocabularies || terms < FLOOR.vocabularyTerms)
     FAIL(`arm E found ${vocabularies} vocabularies / ${terms} terms, floors are ${FLOOR.vocabularies}/`
        + `${FLOOR.vocabularyTerms}. THE WALK LOST SIGHT: it finds vocabularies by SHAPE (an exported plain `
@@ -2299,6 +2464,8 @@ NOTE(`walk: ${"UNION (the census)".padEnd(20)} ${String(census.union.size).padSt
 /* THE FLOOR IS COMPARED AGAINST THE REPRODUCIBLE CENSUS (D-257), and that is the
    figure to move this table to. A floor moved to a contaminated run's number is
    permanently too high — the payload D-238 names. */
+MEASURE("census", census.unionRepro.size, "the plane census — refusal codes the matcher set finds in the "
+  + "bio-plane/src files in the commit at HEAD, plus the family rows (the `walk: UNION` line)", census.union.size);
 if (census.unionRepro.size < FLOOR.census)
   FAIL(`the plane census is ${census.unionRepro.size} refusal codes that are in the commit at HEAD `
      + `(${census.union.size} over the working tree), floor is ${FLOOR.census}. The WALK lost `
@@ -2333,6 +2500,99 @@ NOTE(`census gap (REPORTED, not gated — see header): ${ungoverned.length} of $
    + `${census.union.size - ungoverned.length} are translated.`);
 armF(census, translated, reach);
 
+/* ============================================================== M0-79, 2026-09-21
+   THE SLACK ARM — EVERY RATCHET KEY JUDGED IN THE DIRECTION ITS OWN ARM DOES NOT
+   LOOK, AND THE FULL SET ACCOUNTED FOR. The rule, the bounds and which figure is
+   gated are in `SLACK`'s header; this is the comparison each arm was one line from
+   making. It runs LAST so it judges the figures every arm above RECORDED, and it
+   judges nothing the arms did not record: a key with no recorded figure is a
+   failure here, never a silent pass.
+   ============================================================================ */
+const RATCHET_KEYS = (() => {
+  const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  const words = s => (typeof s === "string" ? s.trim().split(/\s+/).filter(Boolean).length : 0);
+  const keys = [...new Set([...Object.keys(FLOOR), ...Object.keys(CEILING), ...Object.keys(SLACK), ...MEASURED.keys()])];
+  const table = [];
+  let gated = 0, over = 0, unaccounted = 0;
+  const exempted = [];
+  for (const k of keys) {
+    const inF = has(FLOOR, k), inC = has(CEILING, k), s = has(SLACK, k) ? SLACK[k] : null, m = MEASURED.get(k);
+    const lose = (why) => { unaccounted++; FAIL(`RATCHET COVERAGE — \`${k}\` ${why} (M0-79: every FLOOR and CEILING key is `
+      + `gated at a slack bound stated in \`SLACK\`, or exempted there with its reason, and judged on the figure its own arm `
+      + `records — the cheap way past a slack gate is to gate only the figures that happen to be equal).`); };
+    if (inF && inC) { lose("is BOTH a FLOOR and a CEILING key, so the direction its slack is measured in is undecidable"); continue; }
+    if (!inF && !inC) {
+      lose(s ? "has a line in `SLACK` but is neither a FLOOR nor a CEILING key — a bound for a ratchet that no longer "
+             + "exists, or one deleted without its bound"
+             : "was RECORDED as a measured figure but is neither a FLOOR nor a CEILING key — a misspelt key, or a floor "
+             + "removed while its arm still reports");
+      continue;
+    }
+    const dir = inF ? "floor" : "ceiling", set = inF ? FLOOR[k] : CEILING[k];
+    if (!s) { lose(`is a ${dir} with NO SLACK BOUND STATED — nobody decided how far its measurement may run past it`); continue; }
+    if (has(s, "bound") === has(s, "exempt")) {
+      lose(`has a \`SLACK\` line carrying ${has(s, "bound") ? "BOTH a bound and an exemption" : "NEITHER a bound nor an exemption"}`
+         + " — exactly one of the two is the decision");
+      continue;
+    }
+    if (has(s, "bound") && !(Number.isInteger(s.bound) && s.bound >= 0)) {
+      lose(`has a bound of ${JSON.stringify(s.bound)}, which is not a whole number of zero or more`); continue;
+    }
+    if (has(s, "bound") && words(s.why) < 6) {
+      lose("has a bound with no stated reason (`why`, six words or more) — a bound is a design call made AT THE SITE, "
+         + "and one with no reason is a number nobody can re-examine"); continue;
+    }
+    if (has(s, "exempt") && words(s.exempt) < 6) {
+      lose("is EXEMPT with no stated reason (six words or more) — an exemption without its argument is a floor nobody "
+         + "is enforcing and nobody remembers deciding about"); continue;
+    }
+    if (typeof set !== "number" || !Number.isFinite(set)) {
+      lose(`has a ${dir} of ${JSON.stringify(set)}, which is not a number — every comparison against it is false, `
+         + `so it gates nothing in either direction`); continue;
+    }
+    if (!m) {
+      lose(`has NO RECORDED FIGURE — the arm that compares its ${dir} did not \`MEASURE\` what it measured, so neither its `
+         + `slack nor its ${dir} can be judged, and a gate with nothing to compare passes everything`); continue;
+    }
+    const slack = inF ? m.value - set : set - m.value;
+    const elsewhere = m.working !== m.value
+      ? ` · the working tree reads ${m.working}: an uncommitted file moves it, and the ${dir} moves to that figure only in `
+      + `the commit that adds the file (D-257)` : "";
+    if (has(s, "exempt")) {
+      exempted.push(k);
+      table.push(`ratchet:   ${k.padEnd(20)} ${dir.padEnd(7)} ${String(set).padStart(5)} · measured ${String(m.value).padStart(5)}`
+        + ` · slack ${String(slack).padStart(5)} · EXEMPT — ${s.exempt}${elsewhere}`);
+      continue;
+    }
+    gated++;
+    const status = slack < 0 ? `BREACHED (failed above by its own arm)`
+                 : slack > s.bound ? `SLACK BEYOND ITS BOUND — FAILS` : `gated`;
+    table.push(`ratchet:   ${k.padEnd(20)} ${dir.padEnd(7)} ${String(set).padStart(5)} · measured ${String(m.value).padStart(5)}`
+      + ` · slack ${String(slack).padStart(5)} / bound ${s.bound} · ${status}${elsewhere}`);
+    if (slack > s.bound) {
+      over++;
+      FAIL(inF
+        ? `FLOOR SLACK — \`${k}\`: floor ${set}, measured ${m.value} — ${slack} above the floor, against a stated bound of `
+          + `${s.bound} (${s.why}). A floor with slack is not a ratchet: this figure could fall by ${slack} and the guard `
+          + `would still pass, and REC-71 measured 19 codes of such slack turning a control arm from RED to GREEN. Move `
+          + `FLOOR.${k} to ${m.value} — the figure this run printed — in the same commit as the change that moved it, and `
+          + `say whose growth it absorbs (M0-79). Measured as: ${m.what}.${elsewhere}`
+        : `CEILING SLACK — \`${k}\`: ceiling ${set}, measured ${m.value} — ${slack} below the ceiling, against a stated bound `
+          + `of ${s.bound} (${s.why}). A ceiling with slack lets its subject get worse by ${slack} without failing (CASE-6 `
+          + `found \`reachGap\` carrying one). Lower CEILING.${k} to ${m.value} — the figure this run printed — in the same `
+          + `commit as the change that lowered it (M0-79). Measured as: ${m.what}.${elsewhere}`);
+    }
+  }
+  const nF = Object.keys(FLOOR).length, nC = Object.keys(CEILING).length;
+  NOTE(`ratchet: M0-79 SLACK — ${nF + nC} ratchet key(s) (${nF} floor(s), ${nC} ceiling(s)), `
+     + `${unaccounted ? `${unaccounted} NOT ACCOUNTED FOR (failed below)` : "EVERY one accounted for"}: ${gated} gated at a `
+     + `bound stated at the site, ${exempted.length} EXEMPT with its reason${exempted.length ? ` (${exempted.join(", ")})` : ""}; `
+     + `${over} carrying slack beyond its bound. Slack is measured - floor for a floor and ceiling - measured for a ceiling, `
+     + `on the figure each arm records (for a floor, the figure in the commit at HEAD where the guard tells the two apart)`);
+  for (const line of table) NOTE(line);
+  return { total: nF + nC, over, unaccounted };
+})();
+
 for (const n of notes) console.log("  " + n);
 if (fails.length) {
   for (const f of fails) console.error("FAIL: " + f);
@@ -2341,4 +2601,5 @@ if (fails.length) {
   process.exit(1);
 }
 console.log(`check-refusal-codes: every code a surface can receive carries a canned translation `
-  + `(${reach.size} in reach, ${rows.length} plane rows, ${surfaceTables.length} surface table(s) proved total)`);
+  + `(${reach.size} in reach, ${rows.length} plane rows, ${surfaceTables.length} surface table(s) proved total) · `
+  + `${RATCHET_KEYS.total} ratchet key(s), none carrying slack beyond its stated bound`);
