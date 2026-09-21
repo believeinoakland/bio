@@ -18053,3 +18053,44 @@ these branch names as a historical pointer still resolves — by the sha in this
 
 **WHAT IT CANNOT SAY.** Ancestry says each tip's commits are in `main`; it cannot say the work was integrated on purpose
 rather than carried in by a later merge, and it says nothing about the six kept, whose work is NOT in `main`.
+
+## M-88 · 2026-09-21 · M0-79 — the DEC-49 guard's floors FAIL on slack: four slack floors moved, every ratchet key covered, and a control arm that had never armed
+
+**INSTRUMENTS:** `node civicos-ui/check-refusal-codes.mjs` (exit read unpiped); `civicos-ui/test/refusal-codes.test.mjs`;
+`civicos-ui/test/refusal-codes.control.mjs`; `civicos-ui/test/refusal-partition.control.mjs`; `bio-plane/test/nc-instr-cluster.mjs`
+arms 5–7; `bio-plane/test/verdict-excluder.control.mjs`; `bio-plane/test/nc-d355.mjs` arms 0 and 6; scratch drivers in the
+worktree (the slack arm's own controls m0–m4; a control of the corrected arm 9; probes of arm 9's plant, of an untracked
+phantom suite, and of `nc-rec64.mjs`'s arms through the guard alone), each restore verified by sha256 AND bytes; `git show`
+of `4df1cd06`. Base `origin/main` `4fac1548`; branch `worktree-agent-a6d389a12c371468a`. Read 2026-09-21 by the M0-79 worker.
+
+| what | measured |
+| --- | --- |
+| the guard on the base, its own print | exit 0; every floor/measured pair: families 35/35, rows 288/288, census 598/598, reach 341/341, r3Fed 70/70, governedSites 125/125, surfaceTables 1/1, regions 109/109, regionLines 2973/2973, codesChecked 319/319, refusalsJudged 319/319 — and **outcomeReturns 98/127, vocabularies 11/22, vocabularyTerms 64/110, untranslated 270/297** (slack 29, 11, 46, 27), printed and passing; bodyLines 60/4712 (deliberate); ceilings reachGap 40/40, unclassifiedOutcomes 1/1, inheritedVerdicts 4/4 |
+| the M0-79 guard with the BASE's floors | **exit 1, four failures, each naming the key, its floor and its measured value** — the four above, nothing else |
+| the M0-79 guard, floors moved from its print | exit 0 · 19 ratchet keys (16 floors, 3 ceilings), every one accounted for: 18 gated at a bound of 0, 1 EXEMPT (`bodyLines`) · the guard 181,644 B → 204,598 B |
+| `refusal-codes.test.mjs` | 83/0 on the base; **108/0** after (ARM 11, 25 assertions); against the M0-79 guard before its fixtures were corrected: 83 with 9 FAILED (ARM 1, 7, 7c, 7d — the default fixture had no `r3Fed` floor; 9b, 9d, 10c, 10d — fixture floors below their trees' prints) |
+| the slack arm's controls, each alone (suite foot) | m0 baseline 108/0 · m1 comparison neutered 108/9, ARM 11a+11h+11j only · m2 no-bound check neutered 108/3, 11c only · m3 unrecorded-figure check neutered 108/2, 11d only · m4 bound hard-wired to 0: 108/1, 11i only |
+| `refusal-codes.control.mjs`, base | FAIL (c), (e), (r2) 35≠33, (r6) 38≠36 (D-438's); every other arm ok |
+| the same harness UNCHANGED, M0-79 guard | the same four **plus (n2) and (n3)** — the two arms this landing moves |
+| the corrected harness, M0-79 guard | FAIL exactly (c), (e), (r2), (r6); (n2), (n3) ok; precondition + 22 new (s) arms ok — each of 15 gated floors lowered by one fails naming key/floor/measured with nothing else failing; `bodyLines` lowered passes, printed EXEMPT; each of 3 ceilings raised by one fails by name; (s3a), (s4), (s5) by name · 112 restore checks, 0 failed |
+| `refusal-partition.control.mjs` | 19/19 as declared on the base; 19/19 UNCHANGED against the M0-79 guard — the surprising green; 19/19 corrected (arm 9: plant alone exit 1 on `regionLines` 2973→2975 and `outcomeReturns` 127→128 only; floors moved; exit 0; not codeless) |
+| arm 9's plant, placed where arm 9 placed it | guard reads 127 outcomes / 10 declared successes — IDENTICAL to the unplanted tree: the anchor is the line AFTER `END DEC-49 REGION is-admission` (index.mjs:5167/5168 today; 3040/3041 in `4df1cd06`, REC-79's own commit) |
+| the same plant, inside the region | 128 / 11, 319 refusals unmoved, no codeless failure — the wrapped reader grades it a success |
+| the corrected arm 9, plant moved back outside | records NOT ARMED and DISAGREES; 9b agrees; driver exit 1; restored by sha256 and bytes |
+| an untracked phantom suite feeding a code | working tree reach 342 / R3 71, HEAD 341 / 70; slack 0 on both, the working figure printed beside each — the gate did not demand a move; the guard exited 1 on the pre-existing gap CEILING (the code is untranslated), D-257's fail-safe direction |
+| `nc-instr-cluster.mjs` arms 5, 6, 7 | as declared: reach 341→341 fed 70→70 · reach 341→342 fed 70→71 · baseline guard exit 0 |
+| `verdict-excluder.control.mjs` | 13/13 as declared; guard output byte-identical where the arms require it (28,390 by the driver's own count, a string length) |
+| `refusal-codes.control.mjs`, final version (with (m1)–(m4), the slack arm's controls, as arms) | FAIL exactly (c), (e), (r2), (r6); 44 ok, among them (m1) [ARM 11a, 11h, 11j], (m2) [11c], (m3) [11d], (m4) [11i] — each the exact set declared; 120 restore checks, 0 failed |
+| `nc-d355.mjs` arms 0 and 6 | as declared: refusal-partition 19 sub-checks 0 disagreeing; a second copy of `STORE_NAME_LINE` still marks arm 9 in the preflight |
+| `nc-rec64.mjs`, arms through the guard alone | arm 1's anchor occurs 0 times in `store.mjs` (does not arm); arm 3's two regexes are the pre-D-257 wording (match: false, false); arm 4 exit 0 |
+| UI harness, M0-79 tree | exit 0 · 57 suites · `civicos-ui: all harnesses green` · provenance 57 of 57 in the commit |
+| `coverage.mjs --strict`, M0-79 tree | exit 0; register 1,552/1,552 arms · 258/258 classified · 259/259 read — no floor moved; `civicos-ui/test` 36/57 declaring · 164 arms · 11 unclassified (reported, not gated) |
+| full battery, the BASE `4fac1548` (pristine scratch checkout, run `37821.176250`) | **267/267 suites green · 16,247 assertions passing** · 690.4 s · EXCLUDES 2 untallied (`bundle`, `livefire`) · provenance 270 of 270 in the commit · exit 0 — after `waitquiet` found a quiet window |
+| full battery, M0-79 tree (run `16640.5d47e4`) | **267/267 suites green · 16,247 assertions passing** · 711.2 s · the same 2 untallied · provenance 270 of 270 in the commit · exit 0 |
+| per-suite attribution, the two logs diffed | 267 suites each side; **0 moved** — the landing touches no plane source, suite or check |
+
+**WHAT IT SAYS.** The guard printed its four slack floors on every run and passed; now the comparison each arm was one
+line from making is made, for all nineteen ratchet keys, on the figure each arm already records — and a key the slack table
+does not decide about is itself a failure, which is what caught the fixture's missing `r3Fed` floor. The gate also caught
+something the row did not ask about: a real-tree control arm (`refusal-partition` arm 9) that had planted its subject one
+line outside the governed region since the day it was written, and reported green for that reason alone.

@@ -206,6 +206,46 @@
  *   ABORTED at (n2) on `fc94b045`, so (n3)–(n6) and (z) had not run; after it,
  *   (n1)–(n6) and (z) are all green. Its (c), (e), (r2) and (r6) FAIL, exactly as
  *   on the untouched base, and are NOT D-254's (named in its report).
+ *
+ *   M0-79's, RUN 2026-09-21 by the M0-79 worker (worktree agent-a6d389a12c371468a),
+ *   base origin/main @ 4fac1548 — the guard now FAILS on slack beyond the bound its
+ *   slack table states for each FLOOR and CEILING key, and fails naming any key
+ *   that table does not decide about. Baseline 83/0 before, 108/0 after (ARM 11's
+ *   25 assertions are new). Each arm ALONE, every restore verified by sha256 AND
+ *   bytes against a per-arm pristine copy, every run reading THIS suite's foot:
+ *   (m1) THE SLACK COMPARISON NEUTERED (`if (false)` where the guard compares a
+ *        key's slack with its bound). DECLARED MUST FAIL on ARM 11a, 11h and 11j
+ *        alone. RUN: 108/9, exactly those three arms.
+ *   (m2) THE NO-BOUND COVERAGE CHECK NEUTERED (a key with no slack line skipped
+ *        silently). DECLARED MUST FAIL on ARM 11c alone. RUN: 108/3, ARM 11c only.
+ *   (m3) THE UNRECORDED-FIGURE CHECK NEUTERED. DECLARED MUST FAIL on ARM 11d
+ *        alone. RUN: 108/2, ARM 11d only.
+ *   (m4) THE BOUND HARD-WIRED TO ZERO (a stated bound no longer read) — the
+ *        over-strictness direction. DECLARED MUST FAIL on ARM 11i alone, its pair
+ *        11j held. RUN: 108/1, ARM 11i only.
+ *   (m0) the baseline, nothing armed: 108/0, the real guard exit 0.
+ *   (m1)-(m4) are ARMS OF `refusal-codes.control.mjs` as well, so a later session
+ *   re-runs them in one step rather than re-deriving the four mutations.
+ *   FIVE CORRECTED, NEVER EXEMPTED, each at its site: the default FLOOR gained
+ *   `r3Fed` (D-433 added it to the guard on 2026-09-19 and this fixture never did —
+ *   the coverage arm found it by failing ARM 1); `regionTree`'s floors, and ARM
+ *   10c's and 10d's, sat BELOW their trees' printed figures — slack, which is now a
+ *   failure — and each is the guard's own print over its tree.
+ *   AND ON THE REAL TREE (`refusal-codes.control.mjs`), before and after, arm by
+ *   arm: on 4fac1548 it FAILED (c), (e), (r2), (r6) — D-438's, untouched here — and
+ *   passed the rest. The M0-79 guard with that harness UNCHANGED failed the same four
+ *   PLUS (n2) and (n3), the two arms this landing moves: (n2) relaxed floors to 0
+ *   and ceilings to 999, which is now slack, and (n3)'s plant is one more outcome
+ *   read. Both CORRECTED at their sites — (n2) relaxes the slack half of the same
+ *   keys, (n3) moves its floor to the figure the guard printed over the plant, in
+ *   the same turn, and must then be green. A precondition and twenty-two new (s)
+ *   arms, declared from the pristine run's own ratchet table before arming (a table
+ *   read as empty fails the precondition): every one of the 16 floors
+ *   lowered by one fails naming the key, the floor and the measured value, and
+ *   nothing else — except the one EXEMPT key, which passes and says so; each of the
+ *   3 ceilings raised by one fails the same way; (s3a) the plant with its floor left
+ *   behind fails on that floor alone; (s4) a key with no slack line and (s5) a key
+ *   with no recorded figure fail by name. After: exactly (c), (e), (r2), (r6) fail.
  * ============================================================================
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
@@ -406,6 +446,15 @@ export const FIXTURE_STATUS = { running: 1, finished: 1 };
        conformant. Arm F's own comment records that a hard zero-check was tried
        first and failed exactly this arm. */
     untranslated: 0,
+    /* D-433's one, STATED — ADDED 2026-09-21 by M0-79, and its absence was this
+       fixture's own named defect: D-433 added `r3Fed` to the guard's FLOOR on
+       2026-09-19 and this default never gained it, so every fixture arm ran with
+       an `r3Fed` floor that "silently does not exist" (the sentence above). It was
+       found, not remembered: M0-79's coverage arm fails the guard naming a SLACK
+       line for a key the FLOOR table lacks, and ARM 1 went red on exactly that.
+       The default tree's one suite FEEDS one code the plane mints (its
+       `reason:` literal), so the fixture's measured figure is 1. */
+    r3Fed: 1,
   }, over.floor || {}))};`);
   guard = guard.replace(/const CEILING = \{[\s\S]*?\n\};/, `const CEILING = ${JSON.stringify(Object.assign(
     /* `inheritedVerdicts: 0` (REC-79) is STATED rather than omitted: an absent
@@ -873,10 +922,19 @@ const REGION_ROWS = (where) => ({
 });
 const REGION_WHERE = "src/fixture.mjs checkFixture > fixture-arm";
 const FN_WHERE = "src/fixture.mjs checkFixture";
+/* CORRECTED 2026-09-21 by M0-79, never exempted: this tree's floors read `census: 7`,
+   `regionLines: 3` and (by the default) `untranslated: 0`, and the tree MEASURES 8, 6
+   and 1 — `FIXTURE_UNGOVERNED` is one more code in the census and one more with no
+   translation, and the region's span is six lines. They were right in the only sense a
+   one-sided floor could check (a figure at or above its floor passed), and they were
+   SLACK, which is the state M0-79 makes the guard fail on: 9b and 9d, which must pass,
+   went red naming exactly these three. Each is now the figure the guard PRINTED over
+   this tree (`ratchet:` lines), so a region arm that must pass passes because the
+   region is right and not because its floors have room. */
 const regionTree = (over = {}) => Object.assign({
   fixtureSrc: REGION_SRC, rows: REGION_ROWS(REGION_WHERE),
-  floor: { families: 1, rows: 3, census: 7, reach: 7, governedSites: 2, surfaceTables: 1, bodyLines: 6,
-           vocabularies: 2, vocabularyTerms: 4, regions: 1, regionLines: 3, codesChecked: 3 },
+  floor: { families: 1, rows: 3, census: 8, reach: 7, governedSites: 2, surfaceTables: 1, bodyLines: 6,
+           vocabularies: 2, vocabularyTerms: 4, regions: 1, regionLines: 6, codesChecked: 3, untranslated: 1 },
 }, over);
 
 /* THE POLARITY PAIR, and it is the item itself. Same tree, same refusals, ONE
@@ -1137,14 +1195,28 @@ withTree({ fixtureSrc: withExtra(`  if (input.late) return { ok: !input.fine, ha
 });
 
 console.log("\n--- ARM 10c · the SAME computed verdict, CODED, is accepted (the inversion must not over-fire) ---");
+/* FLOORS ADDED 2026-09-21 by M0-79, a correction and never an exemption: the extra
+   return is a fourth outcome, a fourth refusal and a fourth code compared, so the
+   default floors of 3 are SLACK over this tree and M0-79 fails the guard on exactly
+   those three keys. A landing that adds a coded refusal moves its floors in the same
+   turn, and this arm now does what that landing does — the figures are the guard's own
+   print over this tree. The claim it tests (a coded computed verdict is accepted) is
+   untouched: a codeless one would still fail as CODELESS, which ARM 10b shows. */
 withTree({ fixtureSrc: withExtra(
-  `  if (input.late) return { ok: !input.fine, handle: "h", ...(input.fine ? {} : { reason: "FIXTURE_NO_ADDRESS" }) };`) }, tree => {
+  `  if (input.late) return { ok: !input.fine, handle: "h", ...(input.fine ? {} : { reason: "FIXTURE_NO_ADDRESS" }) };`),
+  floor: { outcomeReturns: 4, refusalsJudged: 4, codesChecked: 4 } }, tree => {
   const r = runGuard(tree);
   t("ARM 10c: exits 0 — a computed verdict carrying a coded refusal is exactly what DEC-49 asks for", r.exit, 0);
 });
 
 console.log("\n--- ARM 10d · a SUCCESS in an unanticipated spelling is NOT graded a refusal (over-strictness) ---");
-withTree({ fixtureSrc: withExtra(`  if (input.late) return { found: true, rows: [], more: false };`) }, tree => {
+/* FLOOR ADDED 2026-09-21 by M0-79, a correction and never an exemption: the success is
+   a fourth OUTCOME read (the corpus grows) and no refusal (the yield does not), so only
+   `outcomeReturns` is slack over this tree — which is itself the over-strictness claim
+   in figures: had the success been graded a refusal, `refusalsJudged` would have moved
+   too and failed. The figure is the guard's own print over this tree. */
+withTree({ fixtureSrc: withExtra(`  if (input.late) return { found: true, rows: [], more: false };`),
+  floor: { outcomeReturns: 4 } }, tree => {
   const r = runGuard(tree);
   /* `found: true` is REC-70's own example — the success spelling that hid 27
      ops one instrument over. A guard that graded it a refusal would demand a
@@ -1211,6 +1283,114 @@ withTree({ mutateReader: r => r.replace("function verdictOf(objText) {", "functi
     /carry NO verdict this walk can read[\s\S]*src\/fixture\.mjs:\d+ \(checkFixture\)/.test(r.out), true);
 });
 
+/* ============================================================
+   ARM 11 — M0-79: A FLOOR WITH SLACK IS NOT A RATCHET, SO SLACK FAILS.
+
+   Until 2026-09-21 every floor failed only when its figure fell below it, and a
+   figure that rose past it was PRINTED and passed — so four floors on the real
+   tree sat 11 to 46 below their measurement while every run said so and exited
+   0. The guard now judges every FLOOR and CEILING key in the direction its own
+   arm does not look, against a bound `SLACK` states at the site, and fails naming
+   any key `SLACK` does not decide about. These arms drive it both ways over the
+   fixture, every run of the UI harness; the same claims against the REAL tree
+   are `refusal-codes.control.mjs`'s (s) arms.
+   ============================================================ */
+const CODED_LATE = withExtra(`  if (input.late) return { ok: false, code: "FIXTURE_BAD_ANCHOR", detail: "late" };`);
+
+console.log("\n--- ARM 11a · a correct landing that grows three figures and moves NO floor FAILS, naming each (M0-79) ---");
+withTree({ fixtureSrc: CODED_LATE }, tree => {
+  const r = runGuard(tree);
+  /* The planted refusal is CORRECT — coded, the code a row of this site's family —
+     so the only thing wrong with the tree is the three floors it left behind. */
+  t("ARM 11a: exits 1 — the landing is right and its floors were left behind", r.exit, 1);
+  for (const k of ["outcomeReturns", "refusalsJudged", "codesChecked"])
+    t(`ARM 11a: naming \`${k}\`, its floor (3) and its measured value (4)`,
+      new RegExp(`FLOOR SLACK — \`${k}\`: floor 3, measured 4 — 1 above the floor`).test(r.out), true);
+  const failed = r.out.split("\n").filter(l => /^FAIL: /.test(l));
+  t("ARM 11a: and NOTHING else fails — three failures, every one a slack line, so the landing itself was judged correct",
+    [failed.length, failed.every(l => /^FAIL: FLOOR SLACK — /.test(l))], [3, true]);
+});
+
+console.log("\n--- ARM 11b · the SAME landing with its floors moved IN THE SAME TURN stays GREEN ---");
+withTree({ fixtureSrc: CODED_LATE, floor: { outcomeReturns: 4, refusalsJudged: 4, codesChecked: 4 } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 11b: exits 0 — a landing that moves its floors from the printed figures passes", r.exit, 0);
+  t("ARM 11b: and says no ratchet carries slack beyond its bound",
+    /none carrying slack beyond its stated bound/.test(r.out), true);
+});
+
+console.log("\n--- ARM 11c · a ratchet key with NO stated bound FAILS by name — the liar's way past is to gate only the equal ones ---");
+withTree({ mutateGuard: g => g.replace(/^  vocabularies:\s+\{ bound: [^\n]*\n/m, "") }, tree => {
+  const r = runGuard(tree);
+  t("ARM 11c: exits 1", r.exit, 1);
+  t("ARM 11c: naming the key nobody decided about",
+    /RATCHET COVERAGE — `vocabularies` is a floor with NO SLACK BOUND STATED/.test(r.out), true);
+  t("ARM 11c: and the summary counts it as NOT accounted for rather than as gated",
+    /1 NOT ACCOUNTED FOR/.test(r.out), true);
+});
+
+console.log("\n--- ARM 11d · a figure its arm stopped RECORDING FAILS by name — a gate with nothing to compare passes everything ---");
+withTree({ mutateGuard: g => g.replace(/^  MEASURE\("surfaceTables"[^\n]*\n/m, "") }, tree => {
+  const r = runGuard(tree);
+  t("ARM 11d: exits 1", r.exit, 1);
+  t("ARM 11d: naming the key whose figure nobody recorded",
+    /RATCHET COVERAGE — `surfaceTables` has NO RECORDED FIGURE/.test(r.out), true);
+});
+
+console.log("\n--- ARM 11e · a SLACK line for a key no table holds FAILS — a bound outliving its ratchet ---");
+withTree({ mutateGuard: g => g.replace(/^const SLACK = \{\n/m,
+  `const SLACK = {\n  retiredKey: { bound: 0, why: "a bound for a ratchet deleted last week and left behind" },\n`) }, tree => {
+  const r = runGuard(tree);
+  t("ARM 11e: exits 1", r.exit, 1);
+  t("ARM 11e: naming the orphaned line",
+    /RATCHET COVERAGE — `retiredKey` has a line in `SLACK` but is neither a FLOOR nor a CEILING key/.test(r.out), true);
+});
+
+console.log("\n--- ARM 11f · a bound with NO REASON FAILS — the bound is a design call stated AT THE SITE ---");
+withTree({ mutateGuard: g => g.replace(/^(  rows:\s+\{ bound: 0, why: )"[^"\n]*"/m, `$1""`) }, tree => {
+  const r = runGuard(tree);
+  t("ARM 11f: exits 1", r.exit, 1);
+  t("ARM 11f: naming the key whose bound carries no reason",
+    /RATCHET COVERAGE — `rows` has a bound with no stated reason/.test(r.out), true);
+});
+
+console.log("\n--- ARM 11g · the ONE exempt key is exempt, says why every run, and the full set is accounted for ---");
+withTree({}, tree => {
+  const r = runGuard(tree);
+  t("ARM 11g: the default tree passes with `bodyLines` far below its measurement", r.exit, 0);
+  t("ARM 11g: and prints `bodyLines` as EXEMPT with its reason, beside the slack it carries",
+    /ratchet:\s+bodyLines\s+floor\s+6 · measured\s+\d+ · slack\s+[1-9]\d* · EXEMPT — DELIBERATELY NOT A RATCHET/.test(r.out), true);
+  t("ARM 11g: and all 19 of the fixture's keys — 16 floors and 3 ceilings — are accounted for",
+    /19 ratchet key\(s\) \(16 floor\(s\), 3 ceiling\(s\)\), EVERY one accounted for: 18 gated/.test(r.out), true);
+});
+
+console.log("\n--- ARM 11h · CEILING slack FAILS too — a ceiling above its subject lets the subject get worse ---");
+withTree({ ceiling: { reachGap: 1 } }, tree => {
+  const r = runGuard(tree);
+  t("ARM 11h: exits 1", r.exit, 1);
+  t("ARM 11h: naming `reachGap`, its ceiling (1) and its measured value (0)",
+    /CEILING SLACK — `reachGap`: ceiling 1, measured 0 — 1 below the ceiling/.test(r.out), true);
+});
+
+/* THE OVER-STRICTNESS PAIR: the bound is READ, not hard-wired to zero. Same tree,
+   same unmoved floor, ONE difference — the bound stated at the site. */
+const SUCCESS_LATE = withExtra(`  if (input.late) return { found: true, rows: [], more: false };`);
+console.log("\n--- ARM 11i · OVER-STRICTNESS: one outcome of slack against a STATED bound of 1 PASSES ---");
+withTree({ fixtureSrc: SUCCESS_LATE, mutateGuard: g => g.replace(/^(  outcomeReturns:\s+\{ bound: )0,/m, "$11,") }, tree => {
+  const r = runGuard(tree);
+  t("ARM 11i: exits 0 — a non-zero bound stated at the site is honoured", r.exit, 0);
+  t("ARM 11i: and the table prints the slack against the bound it honoured",
+    /ratchet:\s+outcomeReturns\s+floor\s+3 · measured\s+4 · slack\s+1 \/ bound 1 · gated/.test(r.out), true);
+});
+console.log("\n--- ARM 11j · ...and the IDENTICAL tree under the stated bound of 0 FAILS (the pair isolates the bound) ---");
+withTree({ fixtureSrc: SUCCESS_LATE }, tree => {
+  const r = runGuard(tree);
+  t("ARM 11j: exits 1", r.exit, 1);
+  t("ARM 11j: naming `outcomeReturns` alone",
+    [/FLOOR SLACK — `outcomeReturns`: floor 3, measured 4/.test(r.out),
+     r.out.split("\n").filter(l => /^FAIL: /.test(l)).length], [true, 1]);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -1242,5 +1422,10 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `floor rather than reporting green over nothing (10g). AND SINCE D-254 the guard reads verdicts through `
   + `ONE imported reader: every fixture carries the modules the guard imports, DERIVED from its own import `
   + `statements (arm 1), and neutering the one reader's verdictOf leaves the guard unable to read any verdict `
-  + `(10h) — the import driven through the guard's own run, not only read off its source`);
+  + `(10h) — the import driven through the guard's own run, not only read off its source. AND SINCE M0-79 a floor `
+  + `with slack is a FAILURE: a correct landing that leaves its floors behind fails naming each figure, its floor and `
+  + `its measured value (11a) and the same landing with its floors moved passes (11b); a ratchet key with no stated `
+  + `bound (11c), with no recorded figure (11d), a bound for a key no table holds (11e) and a bound with no reason (11f) `
+  + `each fail by name; the one exempt key says why on every run (11g); ceiling slack fails too (11h); and a non-zero `
+  + `bound stated at the site is honoured (11i) where the identical tree under a bound of zero fails (11j)`);
 if (bad) process.exit(1);

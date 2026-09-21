@@ -30,6 +30,14 @@
  * (its anchor occurred 7 times), arms 0 and 1 as declared, arms 3-9 NEVER REACHED, and the pen
  * left behind holding 1.4 MB of pristine copies. The attributions are at arm 2's site and at
  * the pen's; the figures of record are in `MEASUREMENTS.md`.
+ *
+ * RUN 2026-09-21 by M0-79 (worktree agent-a6d389a12c371468a), three times: on `origin/main` @
+ * 4fac1548, 19/19 as declared; UNCHANGED against the M0-79 guard (slack now FAILS), 19/19 as
+ * declared — and arm 9's green was the SURPRISING one, because a success planted inside
+ * `is-admission` moves two floors that M0-79 gates. It had never been inside: see arm 9. CORRECTED
+ * and re-run: 19/19 as declared, arm 9's plant alone failing on exactly `regionLines` 2973 -> 2975
+ * and `outcomeReturns` 127 -> 128 and green once both moved. ITS OWN CONTROL, run once: the plant
+ * put back at the old anchor, arm 9 records NOT ARMED and disagrees (1 of 19), exit 1.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -265,6 +273,12 @@ const WRAPPED_READER = "        const w = /^(?:new\\s+)?[A-Za-z_$][\\w$]*(?:\\.[
 const UNTRANSLATED_WALK = "  const untranslated = [...census.union].filter(c => !translated.has(c)).sort();";
 const F6_PUT = "    else                                                 put(\"F6 out of reach, one site — needs a sentence WHEN its surface exists\", c);";
 const STORE_NAME_LINE = "    const storeName = scope.name;";
+/* ARM 9's PATCH ANCHOR, CORRECTED 2026-09-21 by M0-79 — see the arm for why. The region's END marker and the line
+   after it, as ONE needle, so the plant goes in BEFORE the marker, which is inside `is-admission`. `STORE_NAME_LINE`
+   keeps its own preflight row entry: it is the line the plant sits beside, and it is the needle `nc-d355.mjs` arm 6
+   duplicates to prove this driver's preflight refuses to arm blind. */
+const ADMISSION_END = "    /* END DEC-49 REGION is-admission */\n" + STORE_NAME_LINE;
+const FLOOR_TABLE = "const FLOOR = {";
 
 /* THE DECLARED ARMS, asserted at the foot. Arm 10 was APPENDED on 2026-09-21 (D-355) — see it. */
 const DECLARED_ARMS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -285,7 +299,8 @@ preflight("refusal-partition.control.mjs", [
   { id: "6",  anchors: [{ file: READER, needle: WRAPPED_READER }] },
   { id: "7",  anchors: [{ file: GUARD, needle: UNTRANSLATED_WALK }] },
   { id: "8",  anchors: [{ file: GUARD, needle: F6_PUT }] },
-  { id: "9",  anchors: [{ file: INDEX, needle: STORE_NAME_LINE }] },
+  { id: "9",  anchors: [{ file: INDEX, needle: STORE_NAME_LINE }, { file: INDEX, needle: ADMISSION_END },
+                        { file: GUARD, needle: FLOOR_TABLE }] },
   { id: "10", anchors: [{ file: INDEX, needle: ADMISSION_ROW }] },
 ]);
 console.log("");
@@ -447,20 +462,50 @@ announce(8, "let a code land in TWO partitions. MUST FAIL on the sum, which is g
   restore(s);
 }
 
-/* ===== ARM 9 — OVER-STRICTNESS on the widened reader. ===== */
+/* ===== ARM 9 — OVER-STRICTNESS on the widened reader. =====
+ *
+ * CORRECTED 2026-09-21 BY M0-79, NEVER EXEMPTED — AND THE ARM HAD NEVER ARMED WHAT IT SAID. It planted the wrapped
+ * success in front of `    const storeName = scope.name;`, and that line is the one AFTER `END DEC-49 REGION
+ * is-admission` — on `origin/main` today (END at index.mjs:5167, the anchor at 5168) AND in REC-79's own commit
+ * `4df1cd06` (END at 3040, the anchor at 3041). So the plant sat OUTSIDE every governed span from the day it was
+ * written, the guard never read it, and "declared 0, actual 0" was true of a tree whose governed spans were untouched.
+ * MEASURED 2026-09-21 by the M0-79 worker: at the old anchor the guard reads 127 outcomes / 10 declared successes, the
+ * same as the unplanted tree; with the same two lines placed BEFORE the END marker it reads 128 / 11 — the wrapped
+ * reader SEES the success and grades it a success, 319 refusals unmoved, no codeless failure. The claim was true; this
+ * arm never tested it.
+ *
+ * IT WAS FOUND BECAUSE M0-79 MADE A LEFT-BEHIND FLOOR A FAILURE. A plant inside the region is one more outcome read and
+ * two more region lines, so `outcomeReturns` and `regionLines` rise, and under M0-79 a landing that moves a figure moves
+ * its floor in the same turn or the guard fails. This arm stayed GREEN on the M0-79 guard — a surprising green, and
+ * the finding it pointed at is above. NOW: the plant goes inside the region; the first run must fail on EXACTLY those two
+ * figures' slack (the proof the plant is inside the span — an arm that moves no governed figure did not arm); both
+ * floors are moved to the figures THAT RUN PRINTED, as a landing would; and the second run must be GREEN with the
+ * success not reported as codeless. If the first run moves anything else, the arm records NOT ARMED and disagrees. */
 announce(9, "OVER-STRICTNESS on the reader — a wrapped SUCCESS inside the governed region.");
 console.log("        MUST **NOT** FAIL: grading a success as a refusal is the direction that floods the guard.");
+console.log("        (M0-79) The plant is one more outcome and two more region lines, so its floors move to the figures");
+console.log("        the guard prints over it, in the same turn, exactly as a landing's would.");
 {
-  const s = stash(9, INDEX);
-  patch(INDEX, STORE_NAME_LINE,
+  const s = stash(9, INDEX), sg = stash(9, GUARD);
+  patch(INDEX, ADMISSION_END,
                "    if (url.searchParams.get(\"__rec79_never\") === \"1\")\n"
              + "      return json({ ok: true, note: \"a success in return position, wrapped, inside the region\" }, 200);\n"
-             + STORE_NAME_LINE);
-  const g = await THE_GUARD();
+             + ADMISSION_END);
+  const first = await THE_GUARD();
+  /* The guard's own ratchet table: one line per key; the keys whose slack now exceeds their bound. */
+  const over = [...first.out.matchAll(/^\s*ratchet:\s+(\w+)\s+floor\s+(\d+) · measured\s+(\d+) · slack\s+\d+ \/ bound \d+ · SLACK BEYOND ITS BOUND/gm)]
+    .map((m) => ({ key: m[1], set: +m[2], measured: +m[3] }));
+  const inside = first.exit === 1 && over.map((o) => o.key).sort().join(",") === "outcomeReturns,regionLines";
+  console.log(`      the plant alone: guard exit ${first.exit} · slack beyond its bound on [${over.map((o) => `${o.key} ${o.set}->${o.measured}`).join(", ")}]`
+            + ` — ${inside ? "exactly the two figures a plant INSIDE the region moves" : "**NOT the two figures a plant inside the region moves — the arm did not arm**"}`);
+  if (inside) for (const o of over) patch(GUARD, `\n  ${o.key}: ${o.set},`, `\n  ${o.key}: ${o.measured},`);
+  const g = inside ? await THE_GUARD() : first;
   const flagged = /CODELESS REFUSAL[^\n]*is-admission/.test(g.out);
-  record(9, "the DEC-49 guard over a wrapped SUCCESS inside `is-admission`", 0, g.exit,
+  record(9, "the DEC-49 guard over a wrapped SUCCESS inside `is-admission`, its two floors moved to the printed figures", 0,
+         inside ? g.exit : "NOT ARMED (the plant moved no governed figure, or moved the wrong ones)",
          "a declared success must not be conscripted into the refusal corpus");
   record("9b", "and it is not reported as a codeless refusal", false, flagged);
+  restore(sg);
   restore(s);
 }
 

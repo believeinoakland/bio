@@ -97,9 +97,16 @@ function report(name, ok, detail) {
 function arm(name, spec, runIt, expect) {
   const edits = Array.isArray(spec) ? spec : (spec.edits || []);
   const aside = (Array.isArray(spec) ? [] : (spec.aside || []));
+  /* `touch` (M0-79, 2026-09-21): files the arm's OWN RUN writes between its phases —
+     the landing-in-the-same-turn arms read the figure the guard printed and only then
+     move the floor to it, so the edit cannot be written before arming. Each is
+     snapshotted here, restored FIRST in the `finally` with the rest, and verified by
+     hash and by every byte below. */
+  const touch = (Array.isArray(spec) ? [] : (spec.touch || []));
   const before = new Map();
   for (const e of edits) before.set(e.file, { text: fs.readFileSync(e.file, "utf8"), hash: sha(e.file) });
   for (const f of aside) before.set(f, { text: fs.readFileSync(f, "utf8"), hash: sha(f) });
+  for (const f of touch) if (!before.has(f)) before.set(f, { text: fs.readFileSync(f, "utf8"), hash: sha(f) });
 
   /* EDITS ARE APPLIED CUMULATIVELY PER FILE, and this is a CORRECTION rather
      than a detail (REC-71, 2026-08-08 — corrected, never exempted).
@@ -135,6 +142,7 @@ function arm(name, spec, runIt, expect) {
     /* RESTORE FIRST, whatever happened above. */
     for (const e of edits) fs.writeFileSync(e.file, before.get(e.file).text);
     for (const f of aside) fs.writeFileSync(f, before.get(f).text);
+    for (const f of touch) fs.writeFileSync(f, before.get(f).text);
   }
 
   const verdict = expect(result);
@@ -156,8 +164,48 @@ function arm(name, spec, runIt, expect) {
       fs.existsSync(f) && fs.readFileSync(f, "utf8").startsWith(b.text.slice(0, 200)),
       `the file is back but does not begin as it did — establish which file you are looking at`);
   }
+  for (const f of touch) {
+    if (edits.some(e => e.file === f)) continue;          // already verified above, as an edited file
+    const b = before.get(f);
+    report(`${name} — ${path.basename(f)} (written by the arm's own run) restored BY HASH`, sha(f) === b.hash, `sha differs`);
+    report(`${name} — ${path.basename(f)} (written by the arm's own run) restored BY CONTENT (every byte)`,
+      b.text.length > 1000 && fs.readFileSync(f, "utf8") === b.text,
+      `the bytes differ from the snapshot, or the snapshot was implausibly small — establish which file you are looking at`);
+  }
   return result;
 }
+
+/* ================================================================ M0-79 helpers
+   THE GUARD'S RATCHET TABLE, READ FROM ITS OWN PRINT — one `ratchet:` line per
+   FLOOR and CEILING key, with the figure it is pinned to, the measured value, the
+   slack and the bound (or EXEMPT). Every M0-79 arm below reads its figures here or
+   from the file, never from a number typed into this driver: (n2)'s typed floor
+   anchors are exactly how this harness aborted for a month (D-254's note above). */
+function ratchets(out) {
+  const table = new Map();
+  for (const x of out.matchAll(/^\s*ratchet:\s+(\w+)\s+(floor|ceiling)\s+(-?\d+) · measured\s+(-?\d+) · slack\s+(-?\d+)(?: \/ bound (\d+))?/gm))
+    table.set(x[1], { dir: x[2], set: +x[3], measured: +x[4], slack: +x[5],
+                      bound: x[6] === undefined ? null : +x[6], exempt: x[6] === undefined });
+  return table;
+}
+/* A key's `SLACK` line, read by KEY and asserted to occur exactly once. */
+function slackLine(file, key) {
+  const all = [...fs.readFileSync(file, "utf8").matchAll(new RegExp(`^  ${key}:\\s+\\{ (?:bound|exempt): [^\\n]*$`, "gm"))];
+  if (all.length !== 1)
+    throw new Error(`slackLine(${key}): ${all.length} line(s) in ${path.basename(file)}, expected exactly 1 — an arm that `
+      + `cannot find what it breaks proves nothing`);
+  return all[0][0];
+}
+/* A key's `MEASURE(...)` call, when it is written on ONE line, read by key and asserted once. */
+function measureLine(file, key) {
+  const all = [...fs.readFileSync(file, "utf8").matchAll(new RegExp(`^ *MEASURE\\("${key}",[^\\n]*\\);$`, "gm"))];
+  if (all.length !== 1)
+    throw new Error(`measureLine(${key}): ${all.length} one-line call(s) in ${path.basename(file)}, expected exactly 1`);
+  return all[0][0];
+}
+/* "  key: N," — the FIGURE a FLOOR or CEILING line holds, as a number. */
+const figureValue = (file, key) => Number(/: (\d+),$/.exec(figure(file, key))[1]);
+const failLines = out => out.split("\n").filter(l => /^FAIL: /.test(l));
 
 console.log("\n=== DEC-49 GUARD · NEGATIVE CONTROLS AGAINST THE REAL TREE ===\n");
 
@@ -446,6 +494,21 @@ arm("(n2)", [
      exist to keep out of this arm's way. MEASURED identical on the untouched base
      `fc94b045` and on D-254's tree, so it is this arm's staleness, not D-254's. */
   { file: F.guard, from: figure(F.guard, "inheritedVerdicts"), to: `  inheritedVerdicts: 999,` },
+  /* AND THE SLACK HALF OF THE SAME FIVE FIGURES — added 2026-09-21 by M0-79, a
+     correction and never an exemption, for the SAME stated reason as the four above.
+     M0-79 made the guard fail on slack as well as on a breach, so the relaxations
+     above stopped relaxing: a floor set to 0 under a measured 300-odd is slack, and a
+     ceiling of 999 over 6 is slack, and this arm came back RED on exactly those
+     (measured: `CEILING SLACK — inheritedVerdicts: ceiling 999, measured 6`, with the
+     floors beside it). Relaxing a ratchet now means relaxing BOTH halves, so each of
+     these keys' `SLACK` line is marked EXEMPT, in this arm only, with the reason — read
+     by key, never typed. The fifth, `outcomeReturns`, is the PLANT's: the planted
+     refusal is one more outcome read, which a landing would move its floor for; here it
+     is relaxed with the rest because what (n2) measures is the classifier, not the corpus. */
+  ...["refusalsJudged", "codesChecked", "unclassifiedOutcomes", "inheritedVerdicts", "outcomeReturns"].map(k => ({
+    file: F.guard, from: slackLine(F.guard, k),
+    to: `  ${k}: { exempt: "relaxed in refusal-codes.control.mjs arm (n2) ONLY — the one-vocabulary emulation and its plant move this figure, and what the arm measures is whether the PLANTED refusal is seen" },`,
+  })),
 ], guard, r => ({
   ok: r.exit === 0,
   what: "the guard exits 0 — a CODELESS refusal sits at a governed site and the one-vocabulary "
@@ -461,14 +524,39 @@ arm("(n2)", [
    `found: true` is REC-70's own example — the success spelling that hid 27 ops
    one instrument over. */
 console.log("\n(n3) A SUCCESS IN AN UNANTICIPATED SPELLING — it must NOT be graded a refusal");
-arm("(n3)", [{
-  file: F.airun,
-  from: `export function checkBound(bound) {`,
-  to: `export function checkBound(bound) {
+/* CORRECTED 2026-09-21 by M0-79, never exempted. This arm planted the success and
+   required exit 0, and M0-79 turned it RED — measured, on the M0-79 guard with this
+   harness unchanged — because the success is one more OUTCOME READ at a governed site,
+   so `outcomeReturns` rises by one and a floor left behind by a landing is now a
+   failure. The claim the arm exists for is untouched and is now made more sharply: the
+   landing moves its floor IN THE SAME TURN, from the figure the guard PRINTED over the
+   planted tree (never by adding one to the file), and the tree must then be GREEN. Had
+   the success been graded a refusal, the second run would still fail — CODELESS, and on
+   `refusalsJudged`'s slack — so exit 0 is the over-strictness claim. The first run's
+   own verdict is (s3a)'s arm, below. */
+arm("(n3)", {
+  edits: [{
+    file: F.airun,
+    from: `export function checkBound(bound) {`,
+    to: `export function checkBound(bound) {
   if (bound === "__rec76_control__") return { found: true, rows: [], more: false };`,
-}], guard, r => ({
-  ok: r.exit === 0,
-  what: "the guard exits 0 — a return that declares itself a success is not a refusal and owes no code",
+  }],
+  touch: [F.guard],
+}, () => {
+  const first = guard();
+  const o = ratchets(first.out).get("outcomeReturns");
+  if (!o) return { exit: -2, out: first.out + "\n(n3): the guard printed no `ratchet:` line for outcomeReturns" };
+  const text = fs.readFileSync(F.guard, "utf8");
+  const at = new RegExp(`^  outcomeReturns: ${o.set},`, "m");
+  if (!at.test(text)) return { exit: -2, out: `(n3): the FLOOR line for outcomeReturns does not read ${o.set}` };
+  fs.writeFileSync(F.guard, text.replace(at, `  outcomeReturns: ${o.measured},`));
+  const second = guard();
+  return { ...second, phase1: { exit: first.exit, set: o.set, measured: o.measured } };
+}, r => ({
+  ok: r.exit === 0 && !!r.phase1 && r.phase1.exit === 1 && r.phase1.measured === r.phase1.set + 1,
+  what: `the planted SUCCESS, with FLOOR.outcomeReturns moved to the figure the guard printed over it `
+      + `(${r.phase1 ? `${r.phase1.set} -> ${r.phase1.measured}` : "not read"}), exits 0 — a return that declares itself `
+      + `a success is not a refusal and owes no code, and a landing that moves its floor in the same turn stays green`,
 }));
 
 /* ---------------------------------------------------------------- (n4)
@@ -520,6 +608,118 @@ arm("(n6)", [{
   what: "the guard exits 1 on the CORPUS floor, and the printed line shows the corpus at 0 rather than "
       + "leaving a reader to infer that a green run meant anything",
 }));
+
+/* ================================================================ M0-79
+   A FLOOR WITH SLACK IS NOT A RATCHET — ARMED AGAINST THE REAL FLOOR TABLE.
+
+   Before M0-79 the guard failed a floor only on a FALL and printed a rise (`GREW by
+   N`) and passed, so four real floors sat 11 to 46 below their measurement on green
+   runs. The row's negative control is ONE sentence: drop one floor by one and the
+   guard fails BY NAME (before M0-79 it printed and passed). It is armed here for
+   EVERY key the guard ratchets, one at a time, because the cheap way past a slack gate
+   is to gate only the figures that happen to be equal — so the arm that covers one
+   key proves nothing about the other eighteen.
+
+   THE KEYS AND WHAT EACH ARM MUST DO ARE READ FROM THE PRISTINE RUN's OWN RATCHET
+   TABLE (`clean`, above) AND PRINTED BEFORE ANYTHING IS ARMED: a floor key gated at a
+   bound MUST FAIL naming the key, the lowered floor and the measured value; an EXEMPT
+   floor key MUST PASS and say it is exempt; a ceiling key raised by one MUST FAIL
+   naming the key, the raised ceiling and the measured value.
+   ================================================================ */
+const table = ratchets(clean.out);
+const floorKeys = [...table].filter(([, v]) => v.dir === "floor").map(([k]) => k);
+const ceilingKeys = [...table].filter(([, v]) => v.dir === "ceiling").map(([k]) => k);
+console.log(`\n(s) M0-79 — DECLARED BEFORE ARMING, from the pristine run's own ratchet table (${table.size} key(s)):`);
+for (const [k, v] of table)
+  console.log(`      ${k.padEnd(21)} ${v.dir.padEnd(7)} ${String(v.set).padStart(5)} · measured ${String(v.measured).padStart(5)} — `
+    + (v.dir === "ceiling" ? `raised by one, MUST FAIL naming it`
+       : v.exempt ? `EXEMPT: lowered by one, MUST PASS and print it EXEMPT` : `lowered by one, MUST FAIL naming it`));
+report("(s) PRECONDITION: the pristine ratchet table is NOT EMPTY — every key the guard ratchets, 16 floors and 3 ceilings, "
+     + "each at its measured figure but the exempt one (a table read as empty would make every arm below vacuous)",
+  floorKeys.length >= 16 && ceilingKeys.length >= 3
+    && [...table.values()].every(v => v.exempt ? v.dir === "floor" : v.slack === 0),
+  `read ${floorKeys.length} floor(s), ${ceilingKeys.length} ceiling(s): ${[...table].map(([k, v]) => `${k}=${v.slack}`).join(" ")}`);
+
+for (const k of floorKeys) {
+  const v = table.get(k), n = figureValue(F.guard, k);
+  arm(`(s1 ${k})`, [{ file: F.guard, from: figure(F.guard, k), to: `  ${k}: ${n - 1},` }], guard, r => v.exempt
+    ? { ok: r.exit === 0 && new RegExp(`ratchet:\\s+${k}\\s+floor\\s+${n - 1} · measured\\s+\\d+ · slack\\s+\\d+ · EXEMPT — `).test(r.out),
+        what: `FLOOR.${k} lowered ${n} -> ${n - 1}: EXEMPT, so the guard exits 0 and prints it EXEMPT with its reason` }
+    : { ok: r.exit === 1 && new RegExp(`FLOOR SLACK — \`${k}\`: floor ${n - 1}, measured ${n} — 1 above the floor`).test(r.out)
+          && failLines(r.out).length === 1,
+        what: `FLOOR.${k} lowered ${n} -> ${n - 1}: the guard exits 1 naming ${k}, its floor ${n - 1} and its measured `
+            + `${n}, and nothing else fails (before M0-79 this printed and passed)` });
+}
+for (const k of ceilingKeys) {
+  const n = figureValue(F.guard, k);
+  arm(`(s2 ${k})`, [{ file: F.guard, from: figure(F.guard, k), to: `  ${k}: ${n + 1},` }], guard, r => ({
+    ok: r.exit === 1 && new RegExp(`CEILING SLACK — \`${k}\`: ceiling ${n + 1}, measured ${n} — 1 below the ceiling`).test(r.out)
+      && failLines(r.out).length === 1,
+    what: `CEILING.${k} raised ${n} -> ${n + 1}: the guard exits 1 naming ${k}, its ceiling ${n + 1} and its measured ${n}, `
+        + `and nothing else fails`,
+  }));
+}
+
+/* (s3a) THE LANDING THAT LEAVES ITS FLOOR BEHIND — (n3)'s plant, the floor NOT moved.
+   DECLARED: MUST FAIL, and on exactly one line: `outcomeReturns`' slack. That the ONLY
+   failure is the floor is what says the planted success itself was judged correct;
+   (n3) above is the same landing with its floor moved in the same turn, green. */
+console.log("\n(s3a) THE LANDING THAT LEAVES ITS FLOOR BEHIND — a correct plant, the floor unmoved, fails on the floor alone");
+arm("(s3a)", [{
+  file: F.airun,
+  from: `export function checkBound(bound) {`,
+  to: `export function checkBound(bound) {
+  if (bound === "__m079_control__") return { found: true, rows: [], more: false };`,
+}], guard, r => {
+  const m = /FLOOR SLACK — `outcomeReturns`: floor (\d+), measured (\d+) — 1 above the floor/.exec(r.out);
+  return {
+    ok: r.exit === 1 && !!m && +m[2] === +m[1] + 1 && failLines(r.out).length === 1,
+    what: `the guard exits 1 naming outcomeReturns, floor ${m ? m[1] : "?"} and measured ${m ? m[2] : "?"}, and nothing `
+        + `else — the plant is correct and the floor was left behind`,
+  };
+});
+
+/* (s4) THE LIAR'S WAY PAST, ARMED: a key with no SLACK line at all. DECLARED: MUST FAIL
+   naming the key as a ratchet nobody decided about — the coverage arm is what makes
+   "gate only the figures that are currently equal" impossible to write quietly. */
+console.log("\n(s4) A RATCHET KEY WITH NO STATED BOUND — `regionLines`' SLACK line deleted");
+arm("(s4)", [{ file: F.guard, from: slackLine(F.guard, "regionLines") + "\n", to: `` }], guard, r => ({
+  ok: r.exit === 1 && /RATCHET COVERAGE — `regionLines` is a floor with NO SLACK BOUND STATED/.test(r.out)
+      && /1 NOT ACCOUNTED FOR/.test(r.out),
+  what: "the guard exits 1 naming regionLines as a floor with NO SLACK BOUND STATED, and counts it NOT accounted for",
+}));
+
+/* (s5) A FIGURE ITS ARM STOPPED RECORDING. DECLARED: MUST FAIL naming the key — a gate
+   with nothing to compare would otherwise pass everything, silently. */
+console.log("\n(s5) A FIGURE NOBODY RECORDED — `vocabularyTerms`' MEASURE call removed");
+arm("(s5)", [{ file: F.guard, from: measureLine(F.guard, "vocabularyTerms") + "\n", to: `` }], guard, r => ({
+  ok: r.exit === 1 && /RATCHET COVERAGE — `vocabularyTerms` has NO RECORDED FIGURE/.test(r.out),
+  what: "the guard exits 1 naming vocabularyTerms as a key with NO RECORDED FIGURE",
+}));
+
+/* (m1)-(m4) THE SLACK ARM'S OWN CONTROLS. The (s) arms prove the gate fires on the real
+   table; these prove `refusal-codes.test.mjs`'s ARM 11 would notice the GATE ITSELF going
+   wrong — each breaks one branch of the guard's slack arm and runs the fixture suite, and
+   the suite must fail at exactly the named fixture arms and at nothing else. DECLARED
+   before arming, each ALONE: (m1) the comparison neutered -> ARM 11a, 11h, 11j; (m2) the
+   no-bound check neutered -> ARM 11c; (m3) the unrecorded-figure check neutered -> ARM
+   11d; (m4) the bound hard-wired to zero, the over-strictness direction -> ARM 11i alone,
+   its pair 11j held. */
+const SUITE = path.join(HERE, "refusal-codes.test.mjs");
+const suiteArmsFailing = out => [...new Set([...out.matchAll(/^ {2}FAIL (ARM [^:]+):/gm)].map(x => x[1]))].sort();
+for (const [id, from, to, want] of [
+  ["(m1)", "    if (slack > s.bound) {", "    if (false) {", ["ARM 11a", "ARM 11h", "ARM 11j"]],
+  ["(m2)", "    if (!s) { lose(", "    if (!s) { continue; lose(", ["ARM 11c"]],
+  ["(m3)", "    if (!m) {\n", "    if (!m) { continue; } if (false) {\n", ["ARM 11d"]],
+  ["(m4)", "    if (slack > s.bound) {", "    if (slack > 0) {", ["ARM 11i"]],
+]) {
+  console.log(`\n${id} THE SLACK ARM BROKEN IN THE GUARD — its suite must fail at exactly ${want.join(", ")}`);
+  arm(id, [{ file: F.guard, from, to }], () => run(SUITE), r => {
+    const got = suiteArmsFailing(r.out);
+    return { ok: r.exit === 1 && got.join(",") === want.join(","),
+             what: `refusal-codes.test.mjs exits 1 failing at exactly [${want.join(", ")}] (measured [${got.join(", ")}])` };
+  });
+}
 
 /* ---------------------------------------------------------------- */
 console.log("\n(z) THE TREE IS BACK — the guard is green again over the restored tree");

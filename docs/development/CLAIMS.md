@@ -17261,3 +17261,52 @@ regenerated LAST).
 inbox entry, as D-293's was.
 
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 M0 / UI-by-path (M0-79 — the DEC-49 guard's floors FAIL on slack beyond a bound stated at the site, instead of printing it)
+
+session: WORKER spawned by CONDUCT #10, worktree `.claude/worktrees/agent-a6d389a12c371468a`, branch
+`worktree-agent-a6d389a12c371468a`, base `origin/main` @ `4fac1548` (the row read `running` there), Sparky-Air. `npm ci` in
+`bio-plane/`, `pdf-worker/`, `ocr-worker/`, each `node_modules` a REAL directory (30 / 25 / 26 entries); `df -h` 4.6 GiB free
+after.
+authority: `QUEUE.md` `### M0-79 · running` (CONDUCT #10); design `docs/development/VERIFICATION.md` (admitted for M0 by name),
+read with the guard's own FLOOR header — *"slack in a floor is not harmless: it is the floor not being a ratchet."*
+paths, BY SITE:
+  - `civicos-ui/check-refusal-codes.mjs` — **A UI-AREA PATH, CLAIMED BY PATH** (D-355's and D-254's precedent: the guard is
+    the test estate's instrument, not a member surface). Scope in it: the `FLOOR` and `CEILING` tables (the four slack floors
+    moved from the guard's own print; the headers that call growth harmless corrected, dated), ONE new table beside them
+    stating every ratchet key's slack bound or its exemption with the reason, the one-line recording of each measured figure
+    at the site that already compares it, the slack arm and its coverage assertion at the foot, and the prints of R3's and
+    arm F's figures in the commit at HEAD. **NOT** the verdict reader (`bio-plane/test/verdict-reader.mjs`, untouched), NOT
+    any arm's judging logic, NOT the matchers, NOT `regionSpan`/`functionBody`.
+  - `civicos-ui/test/refusal-codes.test.mjs` — the fixture's `FLOOR` defaults and the per-arm floors this landing makes
+    SLACK (each corrected to the fixture's own printed figure, dated, never exempted), the new slack arms, and the
+    `NEGATIVE CONTROL:` block for them. No other arm's assertion.
+  - `civicos-ui/test/refusal-codes.control.mjs` — (n2) and (n3), IF this landing moves them (corrected with a dated reason),
+    and the new real-tree slack arms. (c), (e), (r2), (r6) are D-438's (VERIFY) and are NOT touched.
+  - `civicos-ui/test/refusal-partition.control.mjs` — ONLY an arm this landing moves; none expected.
+  - `docs/development/MEASUREMENTS.md` (appended), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**NOT CLAIMED:** `bio-plane/src/**` (nothing under `src/` is edited, so no bundle rebuild is owed), `bio-plane/checks/**`,
+`bio-plane/test/**` (the reader and every plane suite), `civicos-ui/app.html`, every other UI suite,
+`docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `newgroup/**`, `release/**`.
+
+**open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-21 M0 / UI-by-path (M0-79, SECOND BLOCK — refusal-partition arm 9, found VACUOUS by M0-79's own gate)
+
+Appended rather than edited into the block above, because this register is APPEND-ONLY and the site was found after that
+block was written. session and authority as above.
+paths, BY SITE:
+  - `civicos-ui/test/refusal-partition.control.mjs` — **ARM 9 ONLY**, its anchor constant beside `STORE_NAME_LINE`, its D-331
+    preflight row, and one dated head paragraph. WHY, measured rather than argued: the block above expected no arm of this
+    driver to move, and none did — arm 9 stayed GREEN on the M0-79 guard, which is the SURPRISING result, because a success
+    planted inside `is-admission` moves `outcomeReturns` and `regionLines` and M0-79 now fails a landing that leaves them.
+    It was never inside: the plant goes in front of the line AFTER `END DEC-49 REGION is-admission`, on `origin/main` today
+    and in REC-79's own commit `4df1cd06`. The arm is corrected to plant inside the region and to move the two floors to the
+    printed figures, as a landing would. `STORE_NAME_LINE` keeps its preflight entry, so `nc-d355.mjs` arm 6 (which duplicates
+    it to prove this preflight refuses) is unaffected — `bio-plane/test/nc-d355.mjs` is NOT edited. Arms 0–8 and 10, the
+    tally (11 arms, 19 sub-checks) and the pen are untouched.
+  - `civicos-ui/test/refusal-codes.control.mjs` — CONFIRMED in scope by measurement: (n2) and (n3) went RED on the M0-79 guard
+    with the harness unchanged, so both are corrected with dated reasons; the new (s) arms are added. (c), (e), (r2), (r6)
+    stay D-438's.
+
+**open as of 2026-09-21** — OPEN while this item builds; released with the block above at integration.
