@@ -17974,3 +17974,27 @@ of Bob's own answered decisions, and it cost a real re-ask: SCHEDULER #5 routed 
 ruled it as DEC-70, and this session was one step from ruling the opposite. A gate as long as a full one cannot sit at
 the push while `main` moves every few minutes. The `node_modules` count refuted this session's own first premise for
 D-293 before it was written, which is why the ruling rests on the landing rate instead.
+
+## M-87 · 2026-09-21 · D-434: what the real plane answers to the published recipe `capture-a-document-and-ground-a-question-on-it`, as it stood and as corrected
+
+**INSTRUMENT:** `node civicos-ui/test/recipe-drive.test.mjs` — miniflare running `bio-plane/src/index.mjs` (the real
+Durable Object and SQLite), the recipe read out of `civicos-ui/app.html`'s runtime as data, each step performed as a
+signed-in member through `app.html`'s own seams (the Add surface's `addGo`; `actAsk` / `intentAsk` / `recPostR`), the
+goal read back through `op=image` and the catalog's `parseFrontmatter`. Two existing questions: one resting on nothing,
+one resting on a leg the Add surface itself captured. Its control is `node civicos-ui/test/recipe-drive.control.mjs`.
+Read 2026-09-21 by D-434's worker on `worktree-agent-a51b695c70bb123af` (base `origin/main` @ `2bd24da7`).
+
+| what | measured |
+| --- | --- |
+| the published last step (`inquiry/inquiryground`), a question resting on nothing | `op=affordances` publishes NO `inquiryground` there (its `applies` needs `basis_legs >= 1`); sent anyway, **refused `NO_BASIS`**: *"a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite what it rests on first (op=cite)…"*; the goal fails |
+| the same step, a question resting on one leg | published, reachable, **accepted** (the existing leg regrouped); all 3 steps "complete" and **the captured document is a leg of nothing**: basis `[prior]` before and after |
+| the corrected last step (`bundle/cite`, role `supports` picked from the plane's `[supports, cuts_against]`) | published on the document and the question; accepted on both; basis gains the capture and keeps every prior leg — **25/25** |
+| the control, six arms | **6/6 AS DECLARED** — old step RED 19/25 naming `NO_BASIS`; THE LIAR (grouping kept, words rewritten to match it) RED 20/25 naming `NO_BASIS` with no vocabulary line failing; half-fix (cite on the question page) RED 17/23; step deleted RED 18/20 on the GOAL; cite-then-group GREEN 30/30 |
+| the class, every step of every recipe | 10 steps across 3 recipes; 2 name an op the OPS table marks `mutating` (`add/acquire`, `bundle/cite`), both driven here; the other 8 are reads |
+
+**WHAT IT SAYS.** The record's own published path for putting a captured document under a question refused the member
+on a fresh question and silently did nothing useful on one with legs. Both halves are gone with the step on `op=cite`,
+and the liar arm shows the drive, not the words, is what catches a recipe naming the wrong act. **WHAT IT CANNOT SEE:**
+a recipe other than this one (PART 2 is not placed); a surface-level click path (the steps are performed through the
+seams the click reaches, not through rendered controls); and any recipe step whose (surface, op) pair has no binding,
+which the drive refuses to vouch for rather than guessing.

@@ -2322,8 +2322,20 @@ const RECIPES = [
         why: "The fourth level: fetch what the address serves now and record the address, the instant and the claimed issuer as three separate claims." },
       { surface: "bundle", op: "projection",
         why: "Read back what the record made of the capture before relying on it." },
-      { surface: "inquiry", op: "inquiryground",
-        why: "Ground the question on the captured document. The member performs the act; this step navigates to it." },
+      /* D-434 (2026-09-21): CORRECTED, NOT REWORDED. This step named the
+         question page's `op=inquiryground`, which groups the legs a question
+         ALREADY rests on and refuses NO_BASIS when it rests on none — so a
+         member following this recipe onto a fresh capture was refused at its
+         last step, and on a question with legs the step regrouped them and put
+         the document under nothing. Its words also carried the grouping's own
+         name, which INVESTIGATIVE-SESSION.md §0 bars from every surface. The
+         act that puts a document under a question is `op=cite`, carried on
+         the DOCUMENT's page, where the member picks the question and says
+         what the document does for its answer. `recipe-drive.test.mjs`
+         DRIVES this recipe against the real plane: a `why` that reads right
+         over the wrong op fails there, never here. */
+      { surface: "bundle", op: "cite",
+        why: "Put the captured document under the question: on the document's own page, cite it into the question and say whether it supports the answer or cuts against it. The member performs the act; this step navigates to it." },
     ],
   },
   {

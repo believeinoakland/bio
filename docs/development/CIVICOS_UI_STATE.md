@@ -50,6 +50,29 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v96, 2026-09-21 session, thread UI, D-434 PART 1 (a WORKER of CONDUCT #10). Landed on
+`worktree-agent-a51b695c70bb123af` (base `origin/main` @ `2bd24da7`). SURFACE: `app.html`'s SURFACES block, ONE
+`RECIPES` step — `capture-a-document-and-ground-a-question-on-it`'s last step, `inquiry/inquiryground` →
+`bundle/cite`, with a `why` that says what the member does there. **No screen renders a recipe today** (the wizard of
+`ASSISTANT-PILOT.md` §3 is unbuilt, `11.pilot` ABSENT), so no member saw this; the recipe is the record's own published
+account of how its acts string together, and it taught the wrong act.
+
+**What was wrong, driven rather than read.** `op=inquiryground` groups the legs a question ALREADY rests on. On a
+question resting on nothing the plane does not even publish it, and sent anyway it refuses `NO_BASIS` in its own words
+(*"Cite what it rests on first (op=cite)"*); on a question with a leg every step "completed" and the captured document
+sat under nothing. Its `why` also used the grouping's own name, which `INVESTIGATIVE-SESSION.md` §0 bars from every
+surface. `op=cite` from the document's page puts the document under the question on both.
+
+**The instrument, `civicos-ui/test/recipe-drive.test.mjs` (25 assertions).** It reads the recipe out of the runtime
+as data and PERFORMS each step against the real plane in miniflare, as a signed-in member, through `app.html`'s own
+seams: the Add surface's own `addGo` for the capture, then the document page's read and its cite act. It judges each
+step on the plane's answer and the recipe on its GOAL, read back through `op=image`, over two existing questions (one
+resting on nothing, one on a leg). Its control, `recipe-drive.control.mjs`, came back 6/6 AS DECLARED: the old step and
+THE LIAR (the grouping act with words rewritten to match it, which pass the vocabulary check) both fail naming
+`NO_BASIS`, and the split cite-then-group passes. **The class sweep found no other recipe with this defect**: 10 steps
+across 3 recipes, and every other step is a read whose op performs the read its `why` claims (`meaningrows` checked at
+the code: its `passage` arm is the content-level read). PART 2 (an arm over every step) is not placed and was not built.
+
 v95, 2026-09-19 session, thread UI, UI-72. Landed on `ui-72-refusal-translation` (base `origin/main` @ `5d6e4803`).
 SURFACE: `app.html` — `actRefusalHtml` and `intentRefusalHtml`, which between them draw **every refusal a member reads
 on an act surface** (27 call sites and 10). **A REFUSAL CARRYING THE PLANE'S CANNED `translation` NOW REACHES THE MEMBER
