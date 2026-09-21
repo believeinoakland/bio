@@ -11,6 +11,8 @@
 - §4.2 — the Focus machine is legacy: nothing produces those states; the live machine is `inquiry`, which §4 does not describe, nor `bias`.
 - §4.3 — lacks the project-name-uniqueness annotation Membership v2 §11 requires.
 - §4 — `published` left the inquiry lifecycle by the 2026-09-10 amendment (DEC-72 / CASE-4); the body text of the state machines is unrevised.
+- §4.3 — a project's citations are bounded CUMULATIVELY by the 1 MB inline limit on its `bundle.md`, not by the 10,000-item selection cap (D-38): ~12,000 edges at ~84 bytes, refused before anything is written with `CITATION_TOO_LARGE`, and `bundle.md` cannot spill to R2 because the gate compares it byte-wise against history. A stated LIMITATION, settled by decision (`MILESTONES.md`, "Deliberately not scheduled"; BOB #23, 2026-09-21).
+- §8 — an unbacked register entry is refused at RATIFY (`PLANE_MISSING_BYTES`, `PLANE_SIZE`), not at promote (D-45): `promote` verifies no bytes, so a claim about bytes that exist nowhere can sit in the working corpus until publication or `op=registeraudit`; a promote-time guard would need R2 outside promote's transaction. A stated LIMITATION, settled by decision (BOB #23, 2026-09-21).
 - §5.1 — the vocabulary text lacks `corroborates`; corrected only by the v1.5a amendment.
 - §6 — I-18 is staged ("mechanically any named identity outside the closed surface-and-AI set") despite per-member credentials in Membership v2; I-19 is drafted with no check; I-16/I-17 are stated over the retired queue and manifests.
 - §8 — C-18.2 "recorded and deliberately not entered"; the "three call sites" are the retired runtime.

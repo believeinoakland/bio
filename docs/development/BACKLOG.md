@@ -20,6 +20,46 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### M0-98 · queued — **EVERY DOCS-ONLY MOVE OF `main` RE-RUNS THE 41 DOC-FACING SUITES, AND A TOOLS-ONLY CHANGE RUNS ALL 267: THE GATE HAS NO TARGETED CLASS AND CANNOT RE-CHECK ONLY WHAT A REBASE CHANGED.** Measured 2026-09-21 in `ORCHESTRATION.md`: CONDUCT #10 re-merged ~9 times, each docs move re-running ~4 minutes of suites. Item 1 of BOB #23's four. — owner M0.
+order: directly after D-293, the same file (one file, one suite, one gate), item 1 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1; the gate half is carried in BOB #23's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`), `VERIFICATION.md` being at its reading budget.
+depends-on: none. **Take with D-293.**
+scope: a TARGETED class — a diff touching no `bio-plane/src|checks`, `civicos-ui/`, fleet, installer or package/config file runs the suites that import, spawn or MENTION a changed path (derived at run time and printed, as DOCS is), `coverage --strict` when a test file changed, and plancheck; and `--since`, which after a rebase reads the recorded verdict and re-runs only suites whose inputs intersect files changed on BOTH sides, plus plancheck. **FULL GATE PROFILE**.
+accepts-when: a tools-only diff selects its importers and the register gate; a `src/` edit beside it reads FULL; a rebase over disjoint docs commits re-runs only plancheck. How a liar passes it: selecting by exact import alone, which misses a suite reading through a computed path, so selection is by MENTION. NEGATIVE CONTROL: stage a `src/` edit with a tools edit, and the class must read FULL.
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-99 · queued — **`docs/DECIDED.md` IS A GENERATED INDEX, COMMITTED, AND 88 COMMITS TOUCHED IT ON 2026-09-21: EVERY LANE'S LANDING CONFLICTS ON A FILE NOBODY WROTE.** `tools/decided.mjs` regenerates it, the push guard refuses a stale one, and every rebase regenerates it again (`ORCHESTRATION.md`'s measurement). Item 2 of BOB #23's four. — owner M0.
+order: directly after M0-98, item 2 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 2, *a generated index is not committed*.
+depends-on: none. **Sequence after M0-97 and D-341** (the cache; the same file, `tools/decided.mjs`).
+scope: `docs/DECIDED.md` untracked and ignored; `decided.mjs` writes it on demand, and the seven tools that read it read through one freshness call; the push guard's and plancheck's staleness arms retire, their suites corrected with dated reasons, never exempted. **FULL GATE PROFILE**.
+accepts-when: a ruling edited on two branches merges with no `DECIDED.md` conflict, and `decided.mjs "<subject>"` answers from the merged corpus. How a liar passes it: keeping it committed under `merge=ours`, which hides staleness, so an arm asserts it is untracked.
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-100 · queued — **SEVERAL LANES APPEND TO ONE FILE — `CLAIMS.md`, TOUCHED BY 97 COMMITS ON 2026-09-21 — SO NEARLY EVERY RE-MERGE IS ON ITS TAIL, AND A LINE ONE LANE ADDS TO ITS OWN BLOCK CAN LAND IN ANOTHER'S.** So do `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`. Item 3 of BOB #23's four. — owner M0.
+order: directly after M0-99, item 3 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 3, *a file several lanes append to becomes one file per entry*.
+depends-on: none.
+scope: one file per NEW claim, delegation, measurement and interface-change entry; the old files frozen history plus the state lines of their open blocks; ONE reader module yields both for every reader (`plancheck`, `delegations`, `owed`, `ledger`, `decided`, `mintid` …); `CLAUDE.md` §4's claim sentence and the kickoffs corrected in the landing. **FULL GATE PROFILE**.
+accepts-when: two lanes adding entries concurrently merge with no conflict; a line one lane adds to its own block beside another lane's new entry stays in its block; every reader's counts over the frozen history are unchanged. How a liar passes it: `merge=union`, which makes CONDUCT's detached-line case SILENT, so an arm reproduces that case and asserts the line stays in its block.
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-101 · queued — **CONDUCT WRITES ONE WORD INTO SCHEDULER'S ROWS, `running`, SO TWO LANES WRITE ONE FILE, AND A LEDGER CARRY THAT TAKES ONE SIDE WHOLE REVERTS A LIVE FLIP** (twice, repaired by `8e39602a` and `830f6648`). Item 4 of BOB #23's four. — owner M0, with CONDUCT.
+order: after M0-100, which it rests on, item 4 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 4, *a lane writes only its own files*.
+depends-on: M0-100.
+scope: `running` leaves `QUEUE.md`'s rows for a CONDUCT-owned per-row record written at spawn and removed at integration; `ledger.mjs` and `refill` read it; the vocabulary lines in `kickoffs/SCHEDULER.md` and `kickoffs/CONDUCT.md` move in the landing. **FULL GATE PROFILE**.
+accepts-when: CONDUCT writes no line of `QUEUE.md` and a running row still reads `running`. How a liar passes it: writing both places, so an arm asserts one.
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
 ### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 had landed `0ca2c216`, `8e4c30c3` and `fa58ce92`; nothing noticed for hours, and `kickoffs/BOB.md` rule 4 now carries the lesson as prose. — owner M0.
 order: directly after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second, and it would have told BOB #18 at its next push (SCHEDULER #4, 2026-09-21)
 milestone: M0
@@ -179,16 +219,6 @@ depends-on: none.
 scope: extend `ledger.mjs`' invariants so a row whose `depends-on` names a CONSTRUCT is checked against `status.mjs`, failing the plan when a dependent sits above unbuilt substrate. **THE BOUND GOES IN THE ARM'S OWN OUTPUT, not only here** (BOB #17): it judges only a row that NAMES a construct, so **a row naming its substrate in PROSE is invisible to it** — the bound `corpuscheck`'s `--authority` arm states about itself. A green arm that hides its bound is read as more than it is.
 accepts-when: a row depending on a construct `status.mjs` reads ABSENT fails the plan NAMING both; one whose substrate is BUILT passes; **a row naming substrate only in prose is UNJUDGED, never passed**, with the unjudged count printed beside the verdict. How a liar passes it: judging only rows that name a construct and reporting 100%, which the unjudged count forbids. NEGATIVE CONTROL: point a row's `depends-on` at an absent construct, and the arm fails naming it.
 added: 2026-09-19 · SCHEDULER #2 (D-404's fix, ruled by BOB #17).
-
-### D-293 · queued — **THE PUSH GUARD NEVER RUNS `tools/gates.mjs`, AND NOTHING REFUSES A TREE WHOSE RECORDED VERDICT IS RED.** `tools/pushguard.mjs` runs `decided.mjs --check` and refuses a stale push, nothing more. RULED by BOB #22 (SCHEDULER #5's Q4): a push-time gate would not converge — a full gate takes ~25 minutes and `main` took 48 first-parent commits from 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes (M-85) — so the guard READS a recorded verdict. — owner M0.
-order: with the preventive instruments, after LED-9 and above D-107: it moves *gate before you push* from discipline to instrument for every lane's push, where D-107 does so for one deploy (SCHEDULER #7, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section for the half it states; the refusal's design is CARRIED in BOB #22's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293 RULED"), because that file is at its reading budget: the builder adds the refusal's one line in the landing.
-depends-on: none.
-scope: `gates.mjs` records its verdict and class keyed by the TREE it measured, only when that tree was CLEAN, untracked under the git common dir; the guard refuses a push whose tip tree carries a RED record, naming it, and says nothing when none exists. **FULL GATE PROFILE**.
-accepts-when: a RED gate then a push of that tree is refused by name; a GREEN, an unrecorded and a changed tree each pass. How a liar passes it: keying on the commit sha, which an amend of the message alone evades, so the arm amends and asserts the refusal holds. NEGATIVE CONTROL: drop the guard's lookup, and the RED-then-push arm fails by name.
-added: 2026-09-21 · SCHEDULER #7 (LED-7; BOB #22's ruling, drained this commit; keeps its `D-` id).
 
 ### D-107 · queued — **THE INSTALLER HAS NO SCRIPTED DEPLOY.** `newgroup/DEPLOY.md` documents a dashboard paste of the bundled module, which records nothing about what was deployed and gives a version assertion nowhere to live; `newgroup/scripts/` holds only `embed-release.mjs`. The plane has what this lacks: `bio-plane/scripts/deploy.mjs` will not report success until it reads the script back and hashes it against the signed asset. D-106 went unnoticed for thirteen releases in this gap. — owner DIST.
 order: with the preventive instruments, after LED-9: DIST's law reads the installer back BY HAND at every cut (`kickoffs/DIST.md` step 9: the embedded version, and `bindings: []` still empty), so nothing ships unverified today; the script moves it from discipline to instrument (SCHEDULER #6, 2026-09-21, LED-7 batch 15)
@@ -803,9 +833,9 @@ milestone: M0
 interface: none — read ops only
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` I-5 (the Session Log is append-only) — why a found entry is Bob's and is never annotated here.
 depends-on: none.
-scope: sweep the live record's Session Logs for `op=cite` entries over a `kind:"query"` selection written before REC-55's deploy, and judge each: drifted at a constant count, did not drift, or UNDETERMINED where the selection at mint is not recoverable — stated, never guessed. READ ONLY, the record's counters read before and after as the witness (CLAUDE.md §5).
 accepts-when: the sweep reports its population and each verdict with the counters unchanged; a drifted entry goes to BOB as doctrine (may an append-only record be annotated?) and nothing is written. How a liar passes it: sweeping scratch, where nothing old lives — so the store read is named, and it is the record the entries live in.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «D-207». A worker READS IT before building.
 
 ### D-92 · queued — **`op=file` WITH A MEMBER TOKEN RETURNED AN INTERMITTENT 403 UNDER SEQUENTIAL LOAD** (the live instance, July): a different bundle each pass, so not a permission boundary; a 403 reads as a refusal where a rate limit is a 429, and it nearly produced a false finding that eleven bundles had no recorded source. The row's fix — the response NAMES its cause — waits on knowing the cause. — owner VERIFY (M0).
 order: last of the live verifications, after D-207: a July observation on a plane rebuilt many times since, with no report of recurrence; a bounded measurement that names a cause or retires the claim (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
@@ -813,9 +843,9 @@ milestone: M0
 interface: none — a probe; a fix it finds is its own row
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5: *a blocker is a claim — about ONE actor, ONE form, ONE moment*. This one is from July.
 depends-on: none.
-scope: a BOUNDED live probe in the scratch namespace — `store=scratch` named on every call, swept after — driving `op=file` with a member token under sequential load over at least the row's eleven bundles; record in `MEASUREMENTS.md` whether a 403 recurs and which `index.mjs` site answered, with the serving build named. A cause found becomes a new row with its fix; none found closes this one as not reproduced at that build, stated.
 accepts-when: `MEASUREMENTS.md` carries the probe with its load, its count and the build; the row closes either way. How a liar passes it: a probe lighter than July's, so the load is stated beside the row's.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «D-92». A worker READS IT before building.
 
 ### D-59 · queued — **`contemporaneous`, THE STRONGEST LINK-FIDELITY VERDICT, HAS NEVER BEEN OBSERVED ON REAL DATA, AND MAY BE UNREACHABLE FOR MOST OF WHAT BIO CAPTURES.** It needs one set of bytes observed on both sides of a retrieval (`observations > 1` on one `captured_locators` row); on 2026-07-30 two captures of Legistar's `Legislation.aspx` twelve minutes apart gave two different hashes (per-response viewstate). No measurement since records the verdict firing (`MEASUREMENTS.md` searched 2026-09-21). — owner VERIFY.
 order: with the live verifications, after D-92: a measurement deciding whether a verdict arm earns its complexity, not a defect shipping, since `undetermined` is honest meanwhile (SCHEDULER #7, 2026-09-21, LED-7)
@@ -823,9 +853,9 @@ milestone: M3
 interface: none — a probe
 design: `docs/development/LINK-FIDELITY.md`, which defines the verdict and names the establishing routes that do not rest on byte identity: a timestamp token, a third-party archive, monitoring across the interval.
 depends-on: none.
-scope: a BOUNDED live probe in the scratch namespace, `store=scratch` named on every call and swept after: each of N named hosts' pages captured twice at an interval, recording per host whether the bytes repeat (the bracket can fire) or differ (it cannot), with the serving build named in `MEASUREMENTS.md`. Whether the bracket arm stays goes to BOB with the figure.
 accepts-when: `MEASUREMENTS.md` carries the per-host table with N, the interval and the build; the row closes either way. How a liar passes it: hosts chosen for static bytes, so the list includes the municipal ASP.NET class the row measured.
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-59's DEBT row of 2026-07-30; keeps its `D-` id).
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «D-59». A worker READS IT before building.
 
 ### M0-66 · queued — `m025-arm-anchor-witness.test.mjs` CLOSES THE COMMENTARY CLASS ON ITS LABEL HALF AND NOT ON ITS ANCHOR HALF — prose in a driver's block comment that names an anchor-bearing shape in backticks reads as a live anchor, and produced TWO … (whole text: the cut archive)
 order: M0; an instrument producing false findings (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
@@ -883,17 +913,17 @@ cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its 
 ### REC-15 · blocked
 order: blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 (SCHEDULER, first order audit, 2026-09-18)
 milestone: M10
-scope: **`op=publishpreflight` — the ceremony's ordering argument in one op. DEFERRED by DEC-33** (Bob, 2026-08-03: the publication ceremony process is deferred; publication runs through the operator for now). Trigger: Bob reopens the case-making thread. Recorded for when it wakes, so the deferral loses nothing: base scope as `BUILD-ORDER.md` §2 (REC-15) with `RECONCILED.md` §3.2's C-4 correction (`NO_SIGNERS` is INSTANCE-WIDE — the refusal detail must never say "for you", D-57); **DEC-15** — refuse `UNCLEARED_HUNCH` naming every hunch leg, in the same list as `NO_SIGNERS`, before any signature exists; **DEC-20** — only a hunch blocks publication on bias grounds; ordinary bias is DISCLOSED (the manifest SHOWN in the artifact, not merely cited) and refused on nothing; **DEC-17** — refuse `BELOW_PROJECT_STRENGTH` naming the axis; **D-158** bounds the per-member signing-key pre-flight (a signer row for a never-enrolled member reads `active` and is refused by ratify — fix at `signerAdd` write, assert the other view); §4 Q11 measured YES — `op=signerlist` + `op=whoami` make the per-member pre-flight computable client-side, an ADDITION to instance-wide `NO_SIGNERS`, not a replacement, until D-158 closes.
 behind-interface: I3
 depends-on: REC-14
 accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and `BELOW_PROJECT_STRENGTH` naming the axis, each BEFORE any signature exists, writing nothing; negative control — attach per-member wording to the instance-wide `NO_SIGNERS` and the suite fails; clear a hunch and the refusal disappears without any other state change.
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
 
 ### UI-17 · blocked
 order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
 milestone: M10
-scope: **O1 THE PUBLICATION CEREMONY — DEFERRED by DEC-33** (Bob, 2026-08-03: the process is deferred; publication runs through the operator for now; UI-17a ships in its place). Trigger: Bob reopens the case-making thread. Recorded for when it wakes: base scope as `research/RECONCILED.md` §3.1 (UI-17) — the pair shown in step 2, the C-9 picker, the Q5 re-keyed basis-leg panel (an assembly keyed on the SUBJECT is permitted; keyed on the ANSWER-SHAPE it performs generation by selection — the panel shows the case's own basis legs, the COMPLEMENT of the field's content), instance-wide `NO_SIGNERS` wording — plus **DEC-19 as amended** (publishing is IRREVERSIBLE; correction moves forward; the ceremony states this) and **DEC-13** (the subject-position stage, ordered BEFORE signing since authoring it changes the sha). D-158 bounds the per-member pre-flight.
 behind-interface: I3
 depends-on: REC-15, UI-11
 accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance reason appearing in step 3's panel fails the harness.
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.

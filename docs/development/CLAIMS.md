@@ -17158,6 +17158,20 @@ with a re-evaluation flag (the placed half); duplicate detection already folds b
 links bracket is D-59's to measure first. `kickoffs/SCHEDULER.md` gains two mechanics lines (`git grep -E` has no `\b`
 here; name the public op, never a DO path). 152 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 5): LED-7 batch S8-4** — three rows CLOSED BY THE THIRD DOOR, each limitation
+already stated in its home design and verified there: D-63 (`DOCUMENT-PROFILES.md`: the conservative default, rules only
+on measurement), D-111 (`ARCHIVE-FALLBACK.md`: the Wayback ceilings are theirs and deliberately unverified) and D-100
+(`SOURCE-ACCESS.md`: the confounded-variables lesson). 149 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 6): D-434 CLOSED and BOB #23's entry DRAINED, in one landing** — D-434 verified at
+`745aef00` by content (the recipe's last step is `op=cite`; `recipe-drive.test.mjs` drives it), marked done and archived.
+BOB #23's entry (`bb83b37e`, `ORCHESTRATION.md` "THE RECORD IS PARTITIONED BY WRITER") PLACED at the head of the plan,
+in the ruling's order: D-293 moved up from below LED-9, with M0-98 (item 1) directly after it, then M0-99, M0-100 and
+M0-101; the refill moved D-293 into the cache. The backlog then stood over its 150 KiB budget, so REC-15, UI-17, D-59,
+D-92 and D-207 are cut to their fields, their full text verbatim in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`.
+D-38 and D-45 CLOSED BY THE THIRD DOOR on BOB #23's ruling of this lane's Q2 (`33545f9f`: State Rules' front matter, §4.3
+and §8), verified there. 147 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
 
 1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
@@ -17194,7 +17208,10 @@ here; name the public op, never a DO path). 152 open DEBT rows remain.
    first (by a worker through CONDUCT if you want one), or state it as a deferral in `CLIENT-RENDERED.md` until a
    rendered capture is used as evidence?
 
-**open as of 2026-09-21** — sent to BOB #23 by message; each row carries a dated SENT note in `DEBT.md`.
+**open as of 2026-09-21** — sent to BOB #23 by message; each row carries a dated SENT note in `DEBT.md`. **BOB #23:** Q2
+RULED — D-38 and D-45 are stated LIMITATIONS in State Rules' front matter (§4.3, §8), so both leave DEBT by the third
+door; Q1 (D-162) and Q3 (D-53) are DOCTRINE and were PUT TO BOB in his conversation on 2026-09-21 — do not re-ask; Q4
+(D-55), a bounded design act whose one link is untraced, passes to BOB #24 (BOB-NEXT §3).
 
 ## CLAIM 2026-09-21 BOB (#23) — the handoff to BOB #24, written as a CHECKPOINT while live
 
@@ -17291,6 +17308,13 @@ paths, BY SITE:
 
 **open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**RELEASED 2026-09-21 by CONDUCT #10 at integration.** M0-79 LANDED in the merge `45064d8f`, pushed to `main` in the
+same landing as this line, under its own FULL gate (267/267 suites green · 16274 assertions passing · run 48633.daaac3;
+register exact 1553). RE-RUN BY THE INTEGRATOR on the merged tree: the guard exits 0 with every ratchet key at slack 0;
+`refusal-partition.control.mjs` 19/19 as declared; `refusal-codes.control.mjs` fails EXACTLY (c), (e), (r2), (r6) — D-438's
+known four, as on the base — with every (s) and (m) arm as declared. Branch `worktree-agent-a6d389a12c371468a` is deleted
+after the push is verified. The paths this block reserved are FREE.
+
 ## CLAIM 2026-09-21 M0 / UI-by-path (M0-79, SECOND BLOCK — refusal-partition arm 9, found VACUOUS by M0-79's own gate)
 
 Appended rather than edited into the block above, because this register is APPEND-ONLY and the site was found after that
@@ -17310,3 +17334,24 @@ paths, BY SITE:
     stay D-438's.
 
 **open as of 2026-09-21** — OPEN while this item builds; released with the block above at integration.
+
+**RELEASED 2026-09-21 by CONDUCT #10 at integration.** M0-79 LANDED in the merge `45064d8f`, pushed to `main` in the
+same landing as this line, under its own FULL gate (267/267 suites green · 16274 assertions passing · run 48633.daaac3;
+register exact 1553). RE-RUN BY THE INTEGRATOR on the merged tree: the guard exits 0 with every ratchet key at slack 0;
+`refusal-partition.control.mjs` 19/19 as declared; `refusal-codes.control.mjs` fails EXACTLY (c), (e), (r2), (r6) — D-438's
+known four, as on the base — with every (s) and (m) arm as declared. Branch `worktree-agent-a6d389a12c371468a` is deleted
+after the push is verified. The paths this block reserved are FREE.
+
+## CLAIM 2026-09-21 BOB (#23) — SCHEDULER #8's group routed (Q2 folded; Q1 and Q3 to Bob; Q4 to BOB #24), and BOB-NEXT final
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (front matter: two Incomplete bullets); `docs/development/CLAIMS.md`
+(this block and the SCHEDULER (#8) -> BOB DELEGATION's one state line); `docs/development/kickoffs/BOB-NEXT.md` (rewritten
+from the state measured at ~22:45Z); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#23) — BOB-NEXT: D-436's seed question added to the with-Bob list
+
+claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
+`docs/development/kickoffs/BOB-NEXT.md` (§3 item 1 (d) and one Status phrase), `docs/DECIDED.md` (GENERATED), this block.
+**released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.

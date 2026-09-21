@@ -1,75 +1,75 @@
 # BOB — resume here. Written 2026-09-21 by BOB #23 for BOB #24, in the SAME Claude Code account.
 
 Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this.
-**Everything below is a POINTER measured at ~21:30Z 2026-09-21; re-measure before resting anything on it.** Written as a
-CHECKPOINT while BOB #23 was live at 52% context: if it is still live when you start, it is your predecessor to archive,
-not a peer.
+**Everything below is a POINTER measured at ~22:40Z 2026-09-21; re-measure before resting anything on it.** BOB #23
+wrote this at 62% of its context with its own commitments discharged, then waited on Bob's answers; the refresh line is now **70%** (§2).
 
 ## 0. YOUR FIRST ACTS
 
 1. **Archive BOB #23** (`local_277a4066-4985-4f54-ab09-5839fd69d3a2`) under D-398's three conditions, re-checked AT THE
    MOMENT YOU ACT. Its worktree `.claude/worktrees/ecstatic-stonebraker-746e11` is the app's own for that session, so
-   `archive_session` may remove it; if it does not, `git worktree remove` with the literal path. It holds three packages'
-   `node_modules` (648 MiB measured at 21:29Z). It deletes its crons from its OWN `CronList` before it says it is ready (it
-   armed a 2-hourly self-wake and a 5-day renewal); confirm by message to "BOB #23", never by ids written anywhere.
-2. **Arm your self-wake and its 5-day renewal WITH THE SELF-AUDIT IN THE PROMPT** (rule 12(a)): context, occupancy,
-   currency, blockers retried in the narrowest form, refusals read literally, superseded kickoffs corrected; then
-   `ReadNotifications`; then the agenda.
-3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` for every lane plus the weekly figure. **Sweep with the
-   NEW `retirable.mjs` (M0-83):** feed `list_sessions` VERBATIM, whole — other repositories now read OUT OF SCOPE — with
-   `--self <your id> --self-title "BOB #24"`. It REFUSES (exit 3) a `--self` found in its input, so never hand-build the
-   listing with your own row in it; BOB #23 did exactly that at its opening.
+   `archive_session` may remove it; if not, `git worktree remove` with the literal path (648 MiB at 21:29Z, three
+   packages' `node_modules`). It deletes its crons from its OWN `CronList` before it says it is ready (a 2-hourly
+   self-wake and a 5-day renewal, re-armed once at 70%); confirm by message to "BOB #23", never by ids.
+2. **Arm your self-wake and its 5-day renewal WITH THE SELF-AUDIT IN THE PROMPT** (rule 12(a)), stating 70%.
+3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` for every lane plus the weekly figure. Sweep with
+   `retirable.mjs` (M0-83) over `list_sessions` VERBATIM and whole, `--self <your id> --self-title "BOB #24"`: other
+   repositories read OUT OF SCOPE, and a `--self` found in the input is REFUSED (exit 3).
 
-## 1. THE ESTATE, measured ~21:30Z
+## 1. THE ESTATE, measured ~22:40Z
 
-- **SCHEDULER #7 is refreshing** (56%); BOB #23 filed the **SCHEDULER #8 chip** (task `task_37fec5e0`) after the three
-  checks (line 1, currency, occupancy). If #8 is up, send it the shas of §2's group rulings: its owed act 1 moves D-145 and
-  D-99 out of DEBT by their doors and re-points REC-160's design at State Rules §5.4.
-- CONDUCT #10 56% (three workers live: D-436, M0-79, D-434, plus REC-157), expecting to cross the refresh line while integrating: it
-  will ask this lane for the **CONDUCT #11 chip**. DIST #3 57% and FLEET #3 58%, both idle; each asks for its successor
-  past 70%. Check line 1, currency and occupancy before every chip, and title it EXACTLY `<LANE> #<n>`.
-- Weekly all models **51% at 21:30Z** (48% at 20:36Z), resetting 2026-09-26 11:00Z. Disk **5.92 GiB** at 21:29Z.
+- **SCHEDULER #8** is up (from BOB #23's chip, ~21:40Z) and archived SCHEDULER #7. CONDUCT #10 was 56% at 21:31Z and
+  asks for the **CONDUCT #11 chip** past 70%; DIST #3 57% and FLEET #3 58%, idle, likewise. Before every chip: line 1,
+  currency, occupancy; title EXACTLY `<LANE> #<n>`.
+- Weekly all models **54% at ~22:35Z** (51% at 21:30Z), resetting 2026-09-26 11:00Z. Disk **5.36 GiB**. `main` at
+  `bb83b37e` plus this handoff's landing.
 
 ## 2. WHAT BOB #23 DID — on `main`, verified from the remote
 
-- **`c31b8f60` — CONDUCT #10's Q3 RULED:** `governorconfig` is the OPERATOR's act (founder's session + ADMIN_TOKEN bearer),
-  not an administrator's (Membership v2 §4.9, *AND ADMINISTRATORS DO NOT RUN THE INSTANCE*): a host's configured appetite
-  outranks the hosting account's `GOVERNOR_APPETITE_PER_MIN`, and §4.8 keeps governance off the machine. Its build is
-  **REC-162** (placed after REC-159). Same commit: **D-432's counter-era ids are NEVER redrawn** (§7), and §4.7's bearer
-  paragraph plus two front-matter lines no longer read PROVISIONAL after BOB #22's ruling.
-- **`b399f9cf` — M0-83 BUILT and archived** (FULL gate 267/267 · 16286; control 85/0, arms A9–A14): suffixed lane titles,
-  UNKNOWN-SELF, `--self-title`, lanes ordered by instance number, and repository scope by path segments. `81226cc1`:
-  `REGISTER_FLOOR` arms 1553 from that print. `BOB.md` and `CONDUCT.md` sweep commands corrected in the same landing.
-- **`43cd0caf` + `19a0efb6` — SCHEDULER #7's four questions RULED:** D-145 and D-99 are M6's, designed together when M6 is
-  taken up (State Rules front matter §1.2; `ARCHIVE-FALLBACK.md`); DEC-70 folded into State Rules §5.4; D-355's two
-  driver rules folded into `VERIFICATION.md`'s D-331 section (24,561 of 24,576 B — the room came from archiving the
-  2026-07-31 floor plan's list). The DELEGATION closes on ONE DISCHARGED line.
-- **Bob RULED the refresh line at 70%, not 60%** (2026-09-21, verbatim in `docs/archive/CLAUDE-2026-09-18.md`); enacted in
-  `CLAUDE.md` §4, `BOB.md`, `CONDUCT.md` and `ORCHESTRATION.md`, and told to every live lane. Keep reporting the weekly figure.
-- SCHEDULER #7's drain of BOB #22's six entries VERIFIED row by row. BOB #22 archived and its worktree removed (+654 MiB);
-  four heartbeat run-sessions archived.
+- `c31b8f60` **`governorconfig` is the OPERATOR's** (Membership v2 §4.9; build REC-162); **D-432's counter-era ids are
+  never redrawn** (§7). `b399f9cf` **M0-83 built and archived**; `81226cc1` its register floor. `43cd0caf` + `19a0efb6`
+  **SCHEDULER #7's four questions ruled** (D-145 and D-99 are M6's; DEC-70 in State Rules §5.4; D-355's driver rules in
+  `VERIFICATION.md`'s D-331 section).
+- `ce830340` **Bob RULED the refresh line at 70%** (verbatim in `docs/archive/CLAUDE-2026-09-18.md`; `CLAUDE.md` §4,
+  `BOB.md`, `CONDUCT.md`, `ORCHESTRATION.md`). Every live lane was told.
+- `bb83b37e` **THE RECORD IS PARTITIONED BY WRITER** (`ORCHESTRATION.md`), on Bob's direction relayed by CONDUCT #10 and
+  his own on re-gating: four M0 items in the BOB INBOX, in order — with D-293 a tree-keyed verdict, a TARGETED class and
+  `--since` (a rebase re-checks only what both sides touched); `DECIDED.md` stops being committed; one file per new
+  claim/delegation/measurement/IC entry; CONDUCT's `running` word leaves SCHEDULER's rows.
+- This handoff's landing: **SCHEDULER #8's group routed** — Q2 folded (D-38 and D-45 are stated limitations in State
+  Rules' front matter, §4.3 and §8); Q1 and Q3 put to Bob; Q4 is yours (§3).
 
 ## 3. OWED — in this order
 
-1. **Q3, WITH BOB, still unanswered** (put to him 2026-09-21; `INVESTIGATIVE-SESSION.md` §7.1, "THE ONE THING RUNNING
-   PROVISIONALLY"): should a case rest on a NO-PROJECT conclusion? BOB recommends keeping the disclosed disjunction. When
-   he answers, write it into that paragraph, add a dated line to the SCHEDULER (#6) -> BOB DELEGATION, and tell
-   SCHEDULER. Do not re-ask.
-2. **The chips** as lanes refresh (§1), and SCHEDULER #8's shas if BOB #23 has not sent them.
-3. **Whatever SCHEDULER #8 routes here**: its next group, and any DESIGN GAP a landing raises.
-4. **With Bob** (carried; do not re-ask): D-148, D-149, where a member's or project's Claude key would live
+1. **With Bob, unanswered — do not re-ask:** (a) Q3 of 2026-09-21, may a case rest on a NO-PROJECT conclusion
+   (`INVESTIGATIVE-SESSION.md` §7.1, "THE ONE THING RUNNING PROVISIONALLY"; record the answer there, add a dated line to
+   the SCHEDULER (#6) -> BOB DELEGATION, tell SCHEDULER). (b) **D-162**, can a theme be an entity and stay falsifiable,
+   and (c) **D-53**, credence and reputation against *No transitive trust* — both put to him by BOB #23 on 2026-09-21
+   with a recommendation each; fold each answer into its home and tell SCHEDULER #8, which disposes of the rows. (d)
+   **D-436's seed** (CONDUCT #10, ~22:45Z; it reaches OUTSIDE groups): provisionally a store that already holds bundles
+   records no group at boot, so a new document naming none is refused `GROUP_UNDETERMINED` until its root of trust makes
+   D-436's write-once seed (an op on its branch, not yet on `main`); the alternative is seeding from `INSTANCE_NAME` at next boot. BOB #23 recommended the explicit
+   seed, performed by the installer's update flow as the operator's own act. Reversing is cheap before any seed,
+   permanent after. Record the answer on D-436's row and tell CONDUCT and DIST.
+2. **D-55 (SCHEDULER #8's Q4), yours:** a bounded design act — first trace whether a content row can be minted over
+   subresource bytes and join `site_asset_refs` (a worker via CONDUCT if you want it traced), then design the authority
+   value at asset or content grain, or state it as `CLIENT-RENDERED.md`'s deferral. D-64 is BLOCKED on it.
+3. **`DECIDED.md` leaving the committed tree** (partition item 2) was told to Bob; if he says he reads it in the
+   repository, amend item 2 to "committed, regenerated on merge" and tell SCHEDULER.
+4. The chips as lanes pass 70%; whatever SCHEDULER #8 routes here next.
+5. **Carried with Bob** (do not re-ask): D-148, D-149, where a member's or project's Claude key would live
    (11.cascade-sources' text), MK-7's provisionals, and M0-85.
 
 ## 4. HOW BOB #23 WAS WRONG — data points (rule 12(c))
 
-- **It fed its opening sweep a hand-built listing that included its OWN row** — the exact shape M0-83 now refuses.
-- **It added a second `open as of` line to one DELEGATION** (the M0-93 red shape); SCHEDULER's note caught it before the
-  push and the rebase folded the two. Then its first DISCHARGED line dropped three of the four dispositions; reading the
-  block back caught that. One affirmation per block, naming every item.
-- **BOB #22 ruled a question in one paragraph and left it PROVISIONAL in two others** of the same document. When ruling,
-  grep the home document for every other mention of the question.
-- **Context:** 43% at the first landing, 52% at the fifth. The whole reads of Membership v2 §4 and CLAIMS.md blocks cost
-  the most; a lookup by id would have served for several.
+- **It ran a FULL gate where a targeted set would do, and hand-picked its post-rebase re-check.** Bob caught both
+  (*"no need to run excessively more tests than is needed"*). Until partition item 1 lands: a tools-only change still
+  gates FULL, but after a rebase re-check only what BOTH sides touched — for an overlap of `CLAIMS.md` and `DECIDED.md`
+  alone, carry both sides, regenerate, run plancheck.
+- **Its opening sweep fed a hand-built listing that included its own row** — the shape M0-83 now refuses.
+- **It put a second `open as of` line in one DELEGATION** (M0-93's red shape), then a DISCHARGED line that dropped three
+  of four dispositions. One affirmation per block, naming every item.
+- **Context:** 43% at the first landing, 60% at the eighth. Whole reads of Membership v2 §4 and CLAIMS.md cost most.
 
 **BOB #23 says it is ready to be closed once BOB #24 confirms it has read this.** Closing releases one worktree
-(648 MiB), to be measured then.
+(648 MiB at 21:29Z), to be measured then.
