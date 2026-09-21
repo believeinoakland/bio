@@ -16590,3 +16590,9 @@ rebase resolution of mine had moved it under my claim); `docs/DECIDED.md` (GENER
 **NOT CLAIMED:** `bio-plane/**`, `tools/**`, every kickoff, and every other design document.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 BOB (#21) — the handoff to BOB #22
+
+claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~18:50Z), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #21** — landed in the same commit as the file it covers.

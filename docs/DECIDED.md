@@ -424,6 +424,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/CLAIMS-2026-08.md:1544`
 - **D-182** · 2026-09-21 — `risk_tier`, RULED 2026-09-21 by BOB #21 (D-182; SCHEDULER #6's Q4): both halves, in one row.** The three tiers already carry Bob's own meanings in the mission of record (`BIO_Complete_Roadmap_v5.md` §8): **1, file freely; 2, file with caution; 3, do not file without counsel** (evidence published, filing templates…  
   `docs/architecture/BIO_Case_Making_v0_1.md:151`
+- **D-182** — D-182 is RULED** (Case Making §2): Roadmap §8's words for tiers 1–3, plus UNDETERMINED, never a default of 1.  
+  `docs/development/kickoffs/BOB-NEXT.md:46`
 - **D-184** · 2026-09-14 — the doctrine is RULED, 2026-09-14, §14.4; the lead's design status is `BIO_System_Design.md` §3 construct 10's to state and the observation's is D-184's row, and §18's row points at both** — corrected 2026-09-18 by M0-62: this bullet read *doctrine, Bob's* four days after Bob ruled it); **the claim object DESIGNED…  
   `docs/architecture/BIO_Content_Framework_v0_10.md:12`
 - **D-184** · 2026-09-14 — What is RULED (2026-09-14): the observation is evidence, authored, grade D on the member's trust, and its attribution in a published case is the attesting member's choice (`BIO_Publication_v0_1.md` §7, which says the attribution levels are ruled and have no surface).  
@@ -606,6 +608,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16531`
 - **D-339** · 2026-09-21 — CLAIM 2026-09-21 BOB (#21) — landing 2: I10's five confirmed STABLE; D-339 item 3 and D-182 RULED; D-353 closed by its stated limitation claimed: 2026-09-21 by BOB #21, worktree `.claude/worktrees/bob-21`.  
   `docs/development/CLAIMS.md:16578`
+- **D-339** — D-339 item 3 is RULED** (CAPTURE-SCALING §Job one): a reused part names its source capture, and a pre-build reuse reads UNDETERMINED.  
+  `docs/development/kickoffs/BOB-NEXT.md:45`
 - **D-343** · 2026-09-14 — It was found by a wider reading that was WITHDRAWN for precision, and it is named here so the withdrawal loses nothing.  
   `docs/archive/ledgers/DEBT-closed.md:56`
 - **D-350** — exact leg-key-set pin each, CORRECTED (never exempted) for the `content_id` D-350 adds. **NOT CLAIMED:** `civicos-ui/**` other than the guard's floor table (UI's — the affordance half is DELEGATED below), `docs/development/QUEUE.md` (CONDUCT flips the row),  
@@ -1316,8 +1320,6 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16064`
 - **REC-155** · 2026-09-21 — CLAIM 2026-09-21 BOB (BOB #20 — REC-155 RULED into Membership v2 §4.10, landed AHEAD of D-158; the first ruling of the BOB #19 -> BOB #20 DELEGATION) claimed: 2026-09-21 by BOB #20, worktree `.claude/worktrees/competent-panini-90fcc0`.  
   `docs/development/CLAIMS.md:16258`
-- **REC-155** — REC-155 RULED** into Membership v2 §4.10 (BOB #19's ruling, one example corrected at the code: a bearer caller's author stamp is `token:<class>`).  
-  `docs/development/kickoffs/BOB-NEXT.md:35`
 - **REC-157** — second-edition DELEGATION was RULED as §7.1 item 9 (BOB #19) and placed as REC-157; (c) the five session-reach ops were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0 (`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s…  
   `docs/development/CLAIMS.md:15577`
 ## UI-
@@ -2493,8 +2495,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1356`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1368`
-- Five more exports were RULED INTO I10, and FLEET landed them as 1.1.0 PROVISIONAL (`e99abfec`). - **THE PUBLICATION BLOCK**, root cause: the user-level auto-mode environment (`~/.claude/settings.json`, `autoMode.environment`) trusted only `supervised-harness-kit`, and `believeinoakland/bio` is PUBLIC and was not  
-  `docs/development/kickoffs/BOB-NEXT.md:37`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:93`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
