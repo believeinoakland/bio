@@ -16273,7 +16273,9 @@ the reverse** (a plane suite importing the guard would run the guard at import).
 - `docs/development/VERIFICATION.md` — ONE sentence in the section above, naming the reader's one home. **NOT EDITED
   in the end, measured:** the file is 24,531 B against its 24 KiB CUT budget (45 B of room, and over is a FAIL), and
   the section stays TRUE without the sentence — it never said the reader had two homes. The one home's header carries it.
-- `docs/development/DEBT.md` — ONE row this item RAISES (minted), for a defect found in the reader, with its fix named.
+- `docs/development/DEBT.md` — the rows this item RAISES, each minted and each naming its fix: **D-437** (the reader's
+  operator gap), and — AMENDED while building — **D-438** (the guard's two real-tree control harnesses had stopped
+  measuring; the arms NOT D-254's) and **D-439** (the class sweep's two unpinned copies).
 - `docs/development/MEASUREMENTS.md` (appended), `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals ONLY, and
   only if a printed figure moves), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 

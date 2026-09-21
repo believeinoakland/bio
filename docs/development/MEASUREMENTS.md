@@ -17775,3 +17775,39 @@ construction rather than by measurement.
 one that was still waking on its own cron. And a row's premise was a claim about an archive that a newer archive had
 superseded thirteen hours before the row existed — copied through a DELEGATION, a ruling and a placement, none of which
 opened the newer file. M0-82 is narrowed accordingly.
+
+## M-82 · 2026-09-21 · D-254 — REC-76's verdict reader single-homed: what moved, what stayed byte-identical, and three harnesses that had stopped measuring
+
+**INSTRUMENTS:** `cmp`, `sha256`, `wc -c`; the reader's own `fnSource` and `readerDrift`; `node civicos-ui/check-refusal-codes.mjs`
+(exit read unpiped); `bio-plane/test/verdict-excluder.control.mjs`; `civicos-ui/test/refusal-codes.control.mjs`; the full battery
+(`node scripts/battery.mjs`, its own completion line); a scratch census over `outcomeReturns` of every `bio-plane/src` file; a
+scratch column-zero function census over the instrument estate. Base `origin/main` `fc94b045`; branch
+`worktree-agent-aba246a225e641de7`; a PRISTINE scratch checkout of `fc94b045` for every "on the base" figure. Read 2026-09-21 by
+the D-254 worker.
+
+| what | measured |
+| --- | --- |
+| the guard, `civicos-ui/check-refusal-codes.mjs` | 192,237 B → 181,644 B: 246 lines of declarations and comments out, ONE import of all eight names in; exit 0 before and after, output **25,796 B, byte-identical** (`cmp`) |
+| the eight reader BODIES in `bio-plane/test/verdict-reader.mjs` | 5,208 chars, **byte-identical to BOTH pre-D-254 copies**, function by function; the file 13,799 B → 31,513 B (the guard's comments moved in, and the pin) |
+| the pin (`readerDrift`) on the D-254 tree | 1 import statement · 8 of 8 imported · 0 declared in the guard · 8 of 8 read · 5,208 chars (floor 4,000) · 31 of 31 readings (floor 31) |
+| the same pin against the PRE-D-254 guard | all 8 NOT SINGLE-HOMED (not imported, all declared locally) — the stale-merge shape, named |
+| `verdict-excluder.control.mjs` on the base | 9 of 10 AS DECLARED — (5b) typed `BARE … 39 ops`, the roster prints 40 — and **exit 0 anyway** |
+| the same harness on the D-254 tree | **13 of 13 AS DECLARED, exit 0**: (3) mb 91/1 pe 59/1 guard 0; (3m) guard exit 1 `SyntaxError: Identifier 'skipString' has already been declared`, mb 91/1 pe 59/1 naming all eight; (3c) mb 91/1 pe 58/2 (a + d), guard output byte-identical; (3b), (3d) 92/0 · 60/0 |
+| D-240's arm (3) re-run on the base | mb 91/1, **pe 58/2 — (a) AND (d)**; D-240's register recorded 58/2 and named only (a) |
+| `refusal-codes.control.mjs` on the base | FAIL (c), (e), (r2) 35≠33, (r6) 38≠36, then **ABORT at (n2)** (floor anchors `124`/`122`/`3` against `319`/`319`/`1`): (n3)–(n6) and (z) not running |
+| the same on the D-254 tree | (n1)–(n6) and (z) green — (n2) once `inheritedVerdicts` is relaxed with its other three (it tripped 6 vs 4, identically on the base); (c), (e), (r2), (r6) FAIL exactly as on the base — D-438, each with its fix named |
+| `refusal-partition.control.mjs` | ABORTS at ARM 2 on the base AND on the D-254 tree (its anchor now occurs 7× in `index.mjs`, D-438); its re-aimed ARM 6, run alone: guard exit 1, `is-admission` judged nothing — agrees |
+| `refusal-codes.test.mjs`, guard importing, fixture module list hand-kept | **46 of 80 FAILED**, every one `exit 1` with no module named (D-265's signature) |
+| the same with the list derived from the guard's imports | 83 of 83 (80 + ARM 1's derivation pin + ARM 10h's two); its four D-254 controls: t1, t3, t4 as declared first time, t2 NOT as declared first time (the suite STOPPED at ARM 10g, no foot) and as declared once re-declared |
+| UI harness, D-254 tree | exit 0, 57 suites, `civicos-ui: all harnesses green` |
+| `coverage.mjs --strict`, D-254 tree (committed) | exit 0; register 1,539/1,539 arms · 257/257 classified · 258/258 read; RUN 220/220 — no figure moved, no floor moved |
+| full battery, the BASE `fc94b045` (pristine checkout, run `63075.253deb`) | **266/266 suites green · 16,234 assertions passing** · 679.4 s · EXCLUDES 2 untallied (`bundle`, `livefire`, D-413) · provenance 269 of 269 in the commit · exit 0 — started only after `waitquiet` found a quiet window (it GAVE UP once, after 1,500 s, on a machine never quiet) |
+| full battery, D-254 tree `c681475d` (run `34445.51a45c`) | **266/266 suites green · 16,235 assertions passing** · 568.3 s · the same 2 untallied · provenance 269 of 269 in the commit · exit 0 |
+| per-suite attribution, the two logs diffed | 264 tallied suites each side; **ONE moved: `planning-hygiene` 280 → 281**, the new assertion `D-437 carries a disposition token`; `meaning-bounds` 92 and `plane-envelope` 60 unchanged (their (a) arms were rewritten, not added) |
+| D-437's census | 1,798 return-position outcomes in `bio-plane/src`; 6 properties with a depth-0 `<=`/`>=` the reader cannot see; 3 would change which property is the verdict; `a >> 2` reads `expr` |
+| the class sweep | 671 files, 829 column-zero bodies of 4+ lines: 46 bodies byte-identical in 2+ files (fixture builders, harness plumbing, UI DOM helpers); ONE shared READER among them — the skill-pack suites' `stripComments`/`quotedIn`/`literalsOf`/`flatten`/`citationResolves`; and 3 battery suites hand-keeping `REAL_MODULES = ["provenance.mjs", "residue.mjs"]` for `battery.mjs` (true today) — D-439 |
+
+**WHAT IT SAYS.** The move changed nothing the guard computes — its whole output is byte-identical — and the pin that made the
+copy safe could not survive the copy's deletion as a comparison, so it became an import pin and a behavioural one. The larger
+finding is the harnesses: three control drivers around this one guard had stopped measuring (an abort, an abort, a typed
+figure), and the one that reported a wrong arm still exited 0. None of it showed until something moved their subject.
