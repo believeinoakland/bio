@@ -16486,6 +16486,9 @@ M-13, met its sizing condition). D-311 still carried. 175 open DEBT rows remain.
 acts by the per-pair fact it names, and the machine fence it carried (`op=affordances` offers `publish` to a credential the
 store refuses by name). 174 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 6): LED-7 batch 15** — D-83 CLOSED IN FACT (FW-6 built the registry once, FW-7 the
+graded recognisers); D-107 PLACED after LED-9 (the installer's deploy is still a dashboard paste). 172 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#6) -> BOB — **FOUR QUESTIONS, ONE EACH, from the D-339 worker's DELEGATION, CONDUCT #7's design items and LED-7 batch 11; none blocks a runnable row**
 
 Recorded here because the repository is the channel; each is also written on its row where it has one, and each stands
