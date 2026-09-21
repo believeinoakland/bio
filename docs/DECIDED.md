@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1309 rulings across 100 documents.
+1311 rulings across 100 documents.
 
 ## DEC-
 
@@ -724,6 +724,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/BOB-INBOX-drained.md:1158`
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2):** also `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-436 archived as PLACED; D-260's disposition carries DS-3's and FL-6's dispatch fix), the TRACKED ELSEWHERE table in `QUEUE.md`, and `docs/development/kickoffs/SCHEDULER-NEXT.md` (the refresh).  
   `docs/development/CLAIMS.md:16245`
+- **D-438** — operator gap), and — AMENDED while building — **D-438** (the guard's two real-tree control harnesses had stopped measuring; the arms NOT D-254's) and **D-439** (the class sweep's two unpinned copies). - `docs/development/MEASUREMENTS.md` (appended), `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals ONLY,…  
+  `docs/development/CLAIMS.md:16754`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -2307,6 +2309,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:16560`
 - design pairs, CORRECTED with a dated reason (8.claim's new text cites §7.1 item 9, a third real pair; negative control: that citation dropped from the map -> exactly those two assertions fail by name; map restored and verified by hash). **NOT CLAIMED:** the rest of `bio-plane/**`, `tools/**`, every kickoff, and…  
   `docs/development/CLAIMS.md:16561`
+- AMENDED while building:** arm (5b)'s predicate too — it TYPED `BARE … 39 ops` and the roster is 40 on `main`, so it read NOT AS DECLARED on the untouched base `fc94b045` (measured on a pristine checkout); it now reads the figure from the baseline run.  
+  `docs/development/CLAIMS.md:16740`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

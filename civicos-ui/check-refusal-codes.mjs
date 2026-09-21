@@ -120,6 +120,20 @@ const PLANE = path.join(HERE, "..", "bio-plane");
    `git ls-tree HEAD` alone, which is the figure another checkout reproduces and
    the only one this table may be moved to. */
 import { readGitProvenance, repoPath, reportProvenance } from "../bio-plane/scripts/provenance.mjs";
+/* D-254 — REC-76's VERDICT READER HAS ONE HOME, AND THIS GUARD IMPORTS IT FROM THERE. The eight
+   functions arm C reads outcomes with lived in THIS file until 2026-09-21, and a byte-identical copy
+   of them lived in `bio-plane/test/verdict-reader.mjs` so two plane instruments could share them
+   (D-240) — because this file is a script that runs at the top level and ends in `process.exit`,
+   so nothing could import it. The dependency now points the other way: the reader has no side
+   effects, this guard imports it, and the copy that lived here is gone. ALL EIGHT names are bound
+   although arm C calls three, and that is deliberate: a same-name copy grown back beside this
+   import (a stale merge, a revert) is then a LOAD error rather than a quiet second reader, and
+   the plane's pin (`readerDrift`, asserted by `meaning-bounds.test.mjs` and
+   `plane-envelope.test.mjs`) fails naming any name this import stops binding or this file starts
+   declaring. The reader's reasoning moved with it; read it THERE before changing how arm C reads a
+   verdict, because a change there changes three instruments at once. */
+import { skipString, matchBrace, outcomeReturns, topLevelParts, topLevelProps, topLevelSpreads,
+         verdictKind, verdictOf } from "../bio-plane/test/verdict-reader.mjs";
 const PLANE_SRC = path.join(PLANE, "src");
 const CATALOG = path.join(PLANE, "checks", "bio-checks.mjs");
 const APP = path.join(HERE, "app.html");
@@ -1837,251 +1851,18 @@ function regionSpan(src, fnBody, region, key, site) {
   return { text, startLine: src.slice(0, start).split("\n").length };
 }
 
-/* THE REFUSAL OBJECT AROUND AN `ok: false`, by brace balance in both
- * directions.
- *
- * THIS REPLACED A FIXED 400-CHARACTER WINDOW, and the fixed window is recorded
- * rather than quietly dropped because it FAILED IN THE GENEROUS DIRECTION —
- * the one failure mode `VERIFICATION.md` exists to prevent. A codeless refusal
- * followed within 400 characters by a properly coded one read as coded: the
- * window ran past the end of its own statement and found the NEXT refusal's
- * code. Arm 3 of `test/refusal-codes.test.mjs` is that fixture, and it was RED
- * on the first run of this file's own suite. A refusal is an object literal;
- * its bounds are its braces and nothing else. */
 /* ---------------------------------------------------------------------------
- * THE OUTCOME WALK (REC-76 / D-236) — three small readers, and every one of
- * them is about SHAPE rather than about a field name.
- *
- * `outcomeReturns`  — the CORPUS: every object literal in RETURN POSITION.
- * `topLevelProps`   — its depth-0 `key: value` pairs, strings and comments skipped.
- * `verdictOf`       — the FIRST boolean-shaped one, which is the verdict.
+ * THE OUTCOME WALK'S READER IS NOT HERE ANY MORE (D-254) — it is imported, above,
+ * from `bio-plane/test/verdict-reader.mjs`, and the comments that stood here
+ * moved with it: RETURN POSITION and REC-79's wrapped form, the detail-object
+ * exclusion, the spread category, the boolean-shaped operators, and why the
+ * FIRST such property is the verdict. (The one note NOT moved was an orphan
+ * describing `objectLiteralAround`, a reader that no longer exists; its receipt
+ * — the 400-character window that failed in the generous direction — was
+ * already kept in `outcomeReturns`' own comment, and is.) What arm C DOES with
+ * a verdict — a `true` is a success, anything else a refusal owing a code, none
+ * is named — is still this file's, and is written at the arm.
  * ------------------------------------------------------------------------ */
-
-/* Skip a quoted string starting at `i`; returns the index of its closing quote. */
-function skipString(text, i) {
-  const q = text[i];
-  for (let j = i + 1; j < text.length; j++) {
-    if (text[j] === "\\") { j++; continue; }
-    if (text[j] === q) return j;
-  }
-  return text.length - 1;
-}
-
-/* The `}` matching the `{` at `open`, with strings and block comments skipped —
- * a brace inside a comment or a sentence is not a brace. */
-function matchBrace(text, open) {
-  let d = 0;
-  for (let i = open; i < text.length; i++) {
-    const c = text[i];
-    if (c === '"' || c === "'" || c === "`") { i = skipString(text, i); continue; }
-    if (c === "/" && text[i + 1] === "*") { const j = text.indexOf(CLOSE_COMMENT, i + 2); i = j < 0 ? text.length : j + 1; continue; }
-    if (c === "{") d++;
-    else if (c === "}") { d--; if (!d) return i; }
-  }
-  return -1;
-}
-
-/* RETURN POSITION, and the three forms the plane actually writes:
- *   return { … }                  — including `return (\n  { … })`
- *   return cond ? { … } : { … }   — both branches are outcomes
- *   return WRAPPER({ … }, 403)    — the outcome handed to a TRANSPORT
- *
- * THE THIRD FORM IS REC-79's, AND ITS ABSENCE WAS A BLIND SPOT THE SIZE OF THE
- * CONTROL PLANE. `src/index.mjs` answers every caller with
- * `return json({ ok: false, … }, 403)` — 77 refusals in that one shape,
- * MEASURED — and this reader stopped at the `j` of `json`, because the scan
- * below admitted only whitespace, `(` and `{` before breaking. So arm C could
- * not see a single refusal in the control plane, and no `where` could ever have
- * governed one: a region placed over the admission gate would have resolved,
- * been well-formed, been correctly nested, and reported `0 judged` — which is
- * the WRONG SPAN failure this file's own region rules exist to catch, arriving
- * through the reader instead of through the markers. It was found the way this
- * project keeps finding these: by trying to govern a real site and watching the
- * instrument report nothing to govern.
- *
- * THE RULE INVERTS RATHER THAN NAMING `json` (REC-70's lesson, and D-236's).
- * A wrapper in return position is a TRANSPORT, not a consumer: whatever object
- * it is handed is still the outcome the function hands back. So the rule is
- * positional — **the FIRST ARGUMENT of a call in return position, when that
- * argument is an object literal** — and it holds for `json(…)`, for
- * `Response.json(…)`, for `new Response(…)` and for the fourth wrapper nobody
- * has written yet. Naming `json` would have gone stale the moment a second
- * transport was written, which is exactly how a list of spellings fails.
- *
- * AND IT DOES NOT WIDEN THE DETAIL-OBJECT EXCLUSION BELOW, which is the
- * over-strictness this reader was measured into. `refusal("CODE", detail, { … })`
- * is untouched because its first argument is a STRING, not an object literal;
- * only argument ONE is ever read, so a detail object in argument two or three
- * stays outside the corpus exactly as before. MEASURED: widening this reader
- * moved the unclassified count not at all and added no site to the existing 67.
- *
- * An object literal handed to a HELPER (`refusal("CODE", detail, { … })`) is an
- * ARGUMENT and not an outcome; it is deliberately outside this corpus, because
- * grading detail objects is exactly the over-strictness that would flood the
- * guard with false sites. The helper's own call is judged separately below.
- * MEASURED before that decision: taking every object literal in the span instead
- * graded FIVE detail objects at real governed sites as refusals.
- *
- * THE BOUNDS ARE THE OBJECT'S OWN BRACES, and the receipt is kept from the
- * `objectLiteralAround` reader this replaced — which itself replaced a FIXED
- * 400-CHARACTER WINDOW that failed in the GENEROUS direction: a codeless refusal
- * followed within 400 characters by a properly coded one read as coded, because
- * the window ran past the end of its own statement and found the NEXT refusal's
- * code. Arm 3 of `test/refusal-codes.test.mjs` is that fixture and it was RED on
- * the first run of this file's own suite. */
-function outcomeReturns(text) {
-  const out = [];
-  const seen = new Set();
-  const push = (s, e) => { if (e > s && !seen.has(s)) { seen.add(s); out.push([s, e]); } };
-  for (const m of text.matchAll(/\breturn\b/g)) {
-    /* the direct form: only whitespace and opening parens may sit in front.
-       `lead` is how many of those parens there were, and it is what the
-       conditional reader below measures its own depth against. */
-    let lead = 0;
-    for (let i = m.index + 6; i < text.length; i++) {
-      const c = text[i];
-      if (/\s/.test(c)) continue;
-      if (c === "(") { lead++; continue; }
-      if (c === "{") { const e = matchBrace(text, i); if (e > 0) push(i, e); }
-      else {
-        /* THE WRAPPED FORM (REC-79) — see the header. A call in return position
-           is a transport; its FIRST argument, and only its first, is the
-           outcome. Anchored at `i` so it cannot drift past the call it read. */
-        const w = /^(?:new\s+)?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\(\s*/.exec(text.slice(i, i + 120));
-        if (w) {
-          const argAt = i + w[0].length;
-          if (text[argAt] === "{") { const e = matchBrace(text, argAt); if (e > 0) push(argAt, e); }
-        }
-      }
-      break;
-    }
-    /* the conditional form: `return cond ? { … } : { … }` — both branches are
-       outcomes. THE DEPTH TEST IS LOAD-BEARING and was added after measuring
-       what its absence cost: without it, a `pair ? { … } : null` sitting inside
-       a DETAIL ARGUMENT four calls deep was read as a returned branch and
-       reported as an outcome the walk could not classify. A branch of the
-       returned expression sits at the return's OWN depth and nowhere else. */
-    const seg = text.slice(m.index, Math.min(text.length, m.index + 6000));
-    if (!/^return\s*[^;{]{0,240}\?/.test(seg)) continue;
-    let d = 0;
-    for (let k = 6; k < seg.length; k++) {
-      const c = seg[k];
-      if (c === '"' || c === "'" || c === "`") { k = skipString(seg, k); continue; }
-      if (c === "(" || c === "[") { d++; continue; }
-      if (c === ")" || c === "]") { d--; continue; }
-      if (c === ";" && d <= lead) break;
-      if (c === "{" && d === lead && /[?:]\s*$/.test(seg.slice(Math.max(0, k - 40), k))) {
-        const e = matchBrace(seg, k);
-        if (e > 0) { push(m.index + k, m.index + e); k = e; }
-      }
-    }
-  }
-  return out.sort((a, b) => a[0] - b[0]);
-}
-
-/* The depth-0 `key: value` pairs of an object literal. Strings, block comments
- * and line comments are skipped, so a `,` or a `:` inside a member-facing
- * sentence — and this plane's refusals are full of them — does not split a
- * property. */
-function topLevelParts(objText) {
-  const parts = [];
-  let buf = "", depth = 0;
-  for (let i = 1; i < objText.length - 1; i++) {
-    const c = objText[i];
-    if (c === '"' || c === "'" || c === "`") { const j = skipString(objText, i); buf += objText.slice(i, j + 1); i = j; continue; }
-    if (c === "/" && objText[i + 1] === "*") { const j = objText.indexOf(CLOSE_COMMENT, i + 2); i = j < 0 ? objText.length : j + 1; continue; }
-    if (c === "/" && objText[i + 1] === "/") { const j = objText.indexOf("\n", i); i = j < 0 ? objText.length : j; continue; }
-    if (c === "{" || c === "[" || c === "(") depth++;
-    else if (c === "}" || c === "]" || c === ")") depth--;
-    if (c === "," && depth === 0) { parts.push(buf); buf = ""; continue; }
-    buf += c;
-  }
-  parts.push(buf);
-  return parts;
-}
-
-function topLevelProps(objText) {
-  const props = [];
-  for (const p of topLevelParts(objText)) {
-    const m = /^\s*([A-Za-z_$][\w$]*)\s*:([\s\S]*)$/.exec(p);
-    if (m) props.push({ key: m[1], value: m[2] });
-  }
-  return props;
-}
-
-/* THE SPREAD SOURCES of an object literal — `{ ...promoted, code: … }` (REC-79).
- *
- * WHY THIS IS A CATEGORY AND NOT A KIND OF "UNCLASSIFIED", and the distinction
- * is this item's whole thesis applied to its own instrument. `unclassified`
- * means THE WALK DOES NOT UNDERSTAND THIS SHAPE — a new spelling, a new place a
- * codeless refusal could hide, and rightly a ceiling that may only fall. An
- * outcome that spreads a value is a shape the walk understands PERFECTLY: its
- * verdict is INHERITED from a value that does not exist until run time. Those
- * are two different facts about the walk and lumping them together makes the
- * ceiling mean two things at once — which is exactly what this item found the
- * census doing to 248 codes.
- *
- * SO THEY ARE SEPARATED, and separating them LOWERED the unclassified ceiling
- * from 3 to 1 rather than raising anything: three of the four were spreads.
- *
- * AND THEY ARE DELIBERATELY NOT SUBJECTED TO THE CODELESS TEST. `#moveVersionState`
- * returns `{ ...promoted, act, target, version }` — promote's own refusal, code
- * and all, handed back unwrapped and on purpose, because re-stating promote's
- * rules there is the second implementation §14b.4 forbids. Demanding a LITERAL
- * code on top of an inherited one would be a fence tighter than its rule: it
- * would force a second copy of the very code the spread already carries. What
- * they get instead is to be NAMED and COUNTED every run, so a spread that starts
- * hiding a refusal nobody coded is visible rather than absent. */
-function topLevelSpreads(objText) {
-  const out = [];
-  for (const p of topLevelParts(objText)) {
-    const m = /^\s*\.\.\.\s*([A-Za-z_$][\w$]*)/.exec(p);
-    if (m) out.push(m[1]);
-  }
-  return out;
-}
-
-/* IS THIS VALUE BOOLEAN-SHAPED? The two literals, or an expression whose DEPTH-0
- * operator is one the LANGUAGE guarantees produces a boolean. That distinction is
- * the whole reason this is not a list that goes stale: `ok`, `started`, `found`,
- * `proposed`, `preview` are five field names in this plane and there will be a
- * sixth next week, but the set of boolean-producing operators is fixed by
- * JavaScript's grammar and cannot grow when somebody writes a new refusal.
- * `=>` is excluded explicitly — an arrow is not a comparison, and reading one as
- * a verdict is how the first draft of this walk graded five detail objects. */
-function verdictKind(value) {
-  const s = value.trim();
-  if (s === "true") return "true";
-  if (s === "false") return "false";
-  if (/^!/.test(s)) return "expr";
-  if (/^Boolean\s*\(/.test(s)) return "expr";
-  let d = 0;
-  for (let i = 0; i < s.length; i++) {
-    const c = s[i];
-    if (c === '"' || c === "'" || c === "`") { i = skipString(s, i); continue; }
-    if (c === "(" || c === "[" || c === "{") { d++; continue; }
-    if (c === ")" || c === "]" || c === "}") { d--; continue; }
-    if (d) continue;
-    if (c === "=" && s[i + 1] === ">") { i++; continue; }
-    if ((c === "=" || c === "!") && s[i + 1] === "=") return "expr";
-    if ((c === "<" || c === ">") && s[i - 1] !== "=" && s[i + 1] !== "=") return "expr";
-  }
-  return null;
-}
-
-/* THE VERDICT IS THE FIRST BOOLEAN-SHAPED TOP-LEVEL PROPERTY, and that ordering
- * is load-bearing rather than incidental: `{ ok: false, terminal: true }` is a
- * refusal carrying a datum, and reading ANY `true` as a success would have
- * un-judged seven of `#captureRequestConduct`'s refusals that the old one-literal
- * matcher did judge. Measured over all 60 governed sites when this landed: no
- * outcome leads with a datum. */
-function verdictOf(objText) {
-  for (const p of topLevelProps(objText)) {
-    const kind = verdictKind(p.value);
-    if (kind) return { key: p.key, kind };
-  }
-  return null;
-}
 
 /* The body of a top-level `function NAME(` / `NAME(` method.
  *

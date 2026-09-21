@@ -52,13 +52,16 @@ const CHECKS = P("bio-plane/checks/bio-checks.mjs");
 const INDEX  = P("bio-plane/src/index.mjs");
 const APP    = P("civicos-ui/app.html");
 const GUARD  = P("civicos-ui/check-refusal-codes.mjs");
+/* D-254: the guard IMPORTS REC-76's verdict reader from here, so ARM 6 — which
+   neuters the reader's WRAPPED-return form — patches THIS file now. */
+const READER = P("bio-plane/test/verdict-reader.mjs");
 
 /* The pristine copies live INSIDE this worktree — the shared scratchpad is NOT
    isolated between sessions and has already overwritten one worker's control
    harness mid-turn. */
 const KEEP = path.join(HERE, ".rec79-control-pristine");
 
-const MIN_BYTES = { [CHECKS]: 200000, [INDEX]: 300000, [APP]: 500000, [GUARD]: 60000 };
+const MIN_BYTES = { [CHECKS]: 200000, [INDEX]: 300000, [APP]: 500000, [GUARD]: 60000, [READER]: 20000 };
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
@@ -279,7 +282,7 @@ preflight("refusal-partition.control.mjs", [
   { id: "3",  anchors: [{ file: INDEX, needle: NOT_CAPABLE_SITE2 }] },
   { id: "4",  anchors: [{ file: APP, needle: APP_TRANSLATION_LINE }] },
   { id: "5",  anchors: [{ file: CHECKS, needle: C38_1_SENTENCE }] },
-  { id: "6",  anchors: [{ file: GUARD, needle: WRAPPED_READER }] },
+  { id: "6",  anchors: [{ file: READER, needle: WRAPPED_READER }] },
   { id: "7",  anchors: [{ file: GUARD, needle: UNTRANSLATED_WALK }] },
   { id: "8",  anchors: [{ file: GUARD, needle: F6_PUT }] },
   { id: "9",  anchors: [{ file: INDEX, needle: STORE_NAME_LINE }] },
@@ -401,8 +404,15 @@ console.log("        MUST **NOT** FAIL, and arm F must NOT name it in any untran
 announce(6, "neuter the WRAPPED-RETURN reader — the thing that made the control plane visible at all.");
 console.log("        MUST FAIL: `is-admission` would resolve, be well-formed, be correctly nested, and judge NOTHING.");
 {
-  const s = stash(6, GUARD);
-  patch(GUARD, WRAPPED_READER, "        const w = null;");
+  /* RE-AIMED 2026-09-21 by D-254, never exempted: `outcomeReturns` moved from the
+     guard into the ONE reader the guard imports, so this anchor no longer occurs in
+     the guard and `patch()` would throw ARM DID NOT ARM. The guard still RUNS here;
+     what it reads a return with is the reader's. FITTED AT INTEGRATION by CONDUCT #10
+     onto D-355's hoisted anchors (both branches changed this arm): the same
+     `WRAPPED_READER`, patched in READER, and D-331's preflight row for arm 6 counts it
+     THERE — left counting it in the guard, the preflight would refuse before arming. */
+  const s = stash(6, READER);
+  patch(READER, WRAPPED_READER, "        const w = null;");
   const g = await THE_GUARD();
   const zero = /judged NO refusal inside the region `is-admission`/.test(g.out);
   record(6, "the DEC-49 guard with the wrapped-return reader neutered", 1, g.exit === 0 ? 0 : 1);

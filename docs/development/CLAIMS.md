@@ -16715,3 +16715,50 @@ the sequencing note in this item's report), `docs/development/QUEUE.md` (CONDUCT
 `newgroup/**`, `release/**`, and every other suite and driver.
 
 **open as of 2026-09-21** — OPEN while this item builds; released at integration.
+
+## CLAIM 2026-09-21 VERIFY (D-254 — REC-76's verdict reader SINGLE-HOMED: the DEC-49 guard IMPORTS it, and the drift pin becomes an IMPORT pin)
+
+Worker spawned by CONDUCT #9 [3d638d] for ONE cached task, D-254 (QUEUE row read `running` on `origin/main` @
+`fc94b045`). **Own worktree** `.claude/worktrees/agent-aba246a225e641de7`, branch **`worktree-agent-aba246a225e641de7`**,
+base `origin/main` @ `fc94b045` (already current, no fast-forward owed). `npm ci` in `bio-plane/`, `pdf-worker/` and
+`ocr-worker/`, each `node_modules` a REAL DIRECTORY; `df -h` 5.8 GiB free after. Design authority:
+`docs/development/VERIFICATION.md` §"THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE", read with D-240's pin.
+Direction taken is the row's and D-240's delegation's — the guard imports `bio-plane/test/verdict-reader.mjs`, **never
+the reverse** (a plane suite importing the guard would run the guard at import). `origin/worktree-agent-a61e489de171ae6c5`
+(`9e24ef6e`) went the reverse way and is read as evidence only, not merged. Claimed BY SITE:
+
+- `civicos-ui/check-refusal-codes.mjs` — the EIGHT reader declarations (`skipString`, `matchBrace`, `outcomeReturns`,
+  `topLevelParts`, `topLevelProps`, `topLevelSpreads`, `verdictKind`, `verdictOf` — the row says six; REC-79 grew the
+  list to eight) and their doc comments, replaced by ONE import beside the existing `provenance.mjs` import and a
+  pointer comment. **NOT** `FLOOR`/`CEILING` (M0-79 is next on this file and owns the slack question), **NOT** arms
+  A–F, `functionBody`, `regionSpan` or `CLOSE_COMMENT` (still used by `regionSpan`).
+- `bio-plane/test/verdict-reader.mjs` — the whole file: the header, the guard's doc comments MOVED here so the one
+  home carries the reasoning too, and `readerDrift` re-derived as the import pin. Function BODIES unchanged.
+- `bio-plane/test/meaning-bounds.test.mjs`, `bio-plane/test/plane-envelope.test.mjs` — the `D-240 (a)` arm in each
+  (corrected, never exempted) and a D-254 `NEGATIVE CONTROL:` block at each head. Nothing else in either.
+- `bio-plane/test/verdict-excluder.control.mjs` — arms (3)/(3b), the new D-254 arms, the `P`/`MIN_BYTES` maps, the
+  summary's exit code and the header. **AMENDED while building:** arm (5b)'s predicate too — it TYPED `BARE … 39 ops`
+  and the roster is 40 on `main`, so it read NOT AS DECLARED on the untouched base `fc94b045` (measured on a pristine
+  checkout); it now reads the figure from the baseline run. Arms (0)–(2), (4), (4b), (5) and (6) untouched.
+- `civicos-ui/test/refusal-codes.test.mjs` — `buildTree`'s module copy (DERIVED from the guard's own relative imports
+  instead of a hand-kept `provenance.mjs` line — D-265's class), a `mutateReader` hook, ARM 10g re-aimed, one new arm,
+  and a D-254 `NEGATIVE CONTROL:` block. No other arm.
+- `civicos-ui/test/refusal-codes.control.mjs` — arms (n2) and (n6) ONLY: their reader edits re-aimed at the reader,
+  and (n2)'s three FLOOR anchors, which are stale on `main` and ABORT the harness before (n3)–(n6) can run.
+- `civicos-ui/test/refusal-partition.control.mjs` — ARM 6's target file only (it patches `outcomeReturns`' wrapped
+  form, which now lives in the reader).
+- `docs/development/VERIFICATION.md` — ONE sentence in the section above, naming the reader's one home. **NOT EDITED
+  in the end, measured:** the file is 24,531 B against its 24 KiB CUT budget (45 B of room, and over is a FAIL), and
+  the section stays TRUE without the sentence — it never said the reader had two homes. The one home's header carries it.
+- `docs/development/DEBT.md` — the rows this item RAISES, each minted and each naming its fix: **D-437** (the reader's
+  operator gap), and — AMENDED while building — **D-438** (the guard's two real-tree control harnesses had stopped
+  measuring; the arms NOT D-254's) and **D-439** (the class sweep's two unpinned copies).
+- `docs/development/MEASUREMENTS.md` (appended), `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals ONLY, and
+  only if a printed figure moves), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+
+**NOT CLAIMED:** `bio-plane/src/**` (nothing under `src/` is edited, so no bundle rebuild is owed),
+`bio-plane/checks/**`, `civicos-ui/app.html`, `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order),
+`docs/archive/ledgers/*` (SCHEDULER #4's standing claim — so the discharge of D-240's archived DELEGATION is asked of
+the integrator rather than written there), `newgroup/**`, `release/**`, every other suite and control.
+
+**open as of 2026-09-21** — claimed at the start of the item; the paths stay reserved until CONDUCT integrates the branch.
