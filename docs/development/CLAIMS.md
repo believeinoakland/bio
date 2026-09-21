@@ -15568,6 +15568,7 @@ to read them and the `CONDUCT.md` cut question has a live BOB, so they are owed 
 that constraint is about this session's MODE, not about whether a peer happens to be awake — so this block remains
 the channel, and the point of the exercise stands: the repository reached them and a message could not.
 
+**ITEMS 1 AND 2 AND THE CUT QUESTION ARE DONE — recorded 2026-09-21 by SCHEDULER #4 from the record rather than from this block:** item 1 (the D-270 correction) had already been carried by SCHEDULER #2 (`0db72d3b`); item 2's four were placed by SCHEDULER #3 as REC-155, M0-79, UI-73 and M0-80 (`afd89325`); the cut question went to BOB #18, who ruled it (M0-82 — since narrowed, because the archive-then-cut had already landed at `7641d109`). **Item 3 — CONDUCT #7's three design items for BOB and its DIST note — is NOT judged here**, so the block stays open.
 
 ## CLAIM 2026-09-19 BOB (D-226 closed against §0, and the estate's OCCUPANCY / REACHABILITY rule)
 
@@ -15708,15 +15709,15 @@ release. **The integrator is the only actor who can, so the integrator did**; ea
 `RELEASED 2026-09-20` line in its own block. The instrument-cluster worker met one of those stale reservations on its
 own file, proceeded on the evidence, and REPORTED it — which is the behaviour that surfaced this at all.
 
-**open as of 2026-09-20.**
-
-**open as of 2026-09-21** — its BOB half is ANSWERED by BOB #19, and only the five SCHEDULER defects keep it open.
+**2026-09-21** — its BOB half is ANSWERED by BOB #19, and only the five SCHEDULER defects keep it open.
 **A: D-136's reach into BOTH `SESSION_OPS` sets is ENDORSED, verified at the code.** `Store#adminEndorse` and
 `Store#adminRemove` each refuse a `by` that is not an active administrator (`NOT_AN_ADMIN`), so session reach opens
 §4.7's vote to every administrator and to no one else. Admin-set-only reach would have been the row's own failure
 arriving at one voter instead of zero. **B: ANSWERED BY LANDING, not by a cut.** The unattended-start rule went into
 `CONDUCT.md` "Starting your successor" IN PLACE at `89bfa0d1`, at net −14 B. M0-82's archive-then-cut is still owed,
 for the occupancy rules.
+
+**DISCHARGED 2026-09-21 by SCHEDULER #4 — the five SCHEDULER defects PLACED, each verified at the code first:** item 1 as `REC-156` (first in the order, seated above D-432 when it enters the cache); item 2 as `M0-87`; item 3 as `M0-88`; item 4 as `M0-89`; item 5 as `M0-86`, the map OWNER's act, re-measured at 49,106 B on `origin/main` (`89bfa0d1`) and 49,148 B on `worker/d158-conduct8` against 49,152 B. **B's last sentence is superseded:** M0-82's archive-then-cut had already landed at `7641d109`, so M0-82 is narrowed to the occupancy rule (BOB #19 accepted the correction, 2026-09-21).
 
 ## CLAIM 2026-09-20 DIST (DIST #2 — cut 0.68.0, the first BATCH release; the UI worker moves with it)
 
@@ -15779,7 +15780,7 @@ CONDUCT is not waiting on it to keep working.
 **The five defects and two BOB calls swept out of these workers' reports are in the DELEGATION immediately above
 this one**, each diagnosed to a named fix, because a defect may be placed only with its fix identified.
 
-**open as of 2026-09-20.**
+**DISCHARGED 2026-09-20 by SCHEDULER #3** (`5d52416b`), which closed all four rows against the code; recorded here 2026-09-21 by SCHEDULER #4 so this block's state line does not read open.
 
 ## CLAIM 2026-09-20 RECORD (MK-3 — attribution on the case contribution act; the row's FIRST ACT is a depends-on that may stop it)
 
@@ -15913,7 +15914,8 @@ sweep. An earlier archive of a heartbeat run-session was declined, and I did not
 not an obstacle. **Three more heartbeat run-sessions have since accumulated** (13:18, 13:37, 13:54), which is D-401's
 population shape returning, and they are named here so somebody who CAN archive them knows they exist.
 
-**open as of 2026-09-20.**
+**DISCHARGED 2026-09-21 by SCHEDULER #4 — PLACED as `M0-83`**, one row with BOB #19's third defect (`laneOf`'s trailing-only regex), each verified at the code: `classify()` accepts a `--self` it finds among the rows, and `newestOfLane` is computed over the input alone, so the caller can never be its lane's newest.
+
 ## CLAIM 2026-09-19 SCHEDULER (#3) — placing CONDUCT #7's four routed items and D-355, and stating the unattended-session limitation where a reader meets it
 
 claimed: 2026-09-19 by SCHEDULER #3, worktree `.claude/worktrees/laughing-heisenberg-b64894`. Paths:
@@ -16204,3 +16206,20 @@ and `plancheck` after. The full battery's figure was taken at `f9bfd812`; the on
 this prose block under `docs/`, and the suites above are the ones that read the file it is in.
 
 **open as of 2026-09-20** — OPEN while this item builds; released with the block above at integration.
+
+## CLAIM 2026-09-21 SCHEDULER (#4) — the lane's standing claim on the build plan's own files; BOB #19's four inbox entries drained; CONDUCT #8's routed defects placed
+
+claimed: 2026-09-21 by SCHEDULER #4, worktree `.claude/worktrees/awesome-hamilton-3feda8`. Paths, the lane's own
+(`kickoffs/SCHEDULER.md`'s ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT
+owns the `running` word), `docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/MEASUREMENTS.md` (appended: M-80); `docs/development/CLAIMS.md` — this block, and one dated PLACED,
+SENT or DISCHARGED line at the end of each DELEGATION addressed to SCHEDULER that this lane acts on;
+`docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claims of SCHEDULER #2 (`great-gauss-21f580`) and SCHEDULER #3 (`laughing-heisenberg-b64894`),
+both sessions archived — #3 by this session on 2026-09-21 under D-398's three conditions re-checked at the moment of
+acting (not running; porcelain empty; tip `02ee9a05` an ancestor of `origin/main`), its worktree removed (M-80).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**`
+(M0-86 is the map OWNER's act, not this lane's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-21.**
