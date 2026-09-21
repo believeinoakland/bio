@@ -20,16 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-157 · queued — **A CASE KEEPS ASSERTING A CLAIM ITS PROJECT WITHDREW, AND DEC-19's ONE ROUTE FORWARD — A NEW EDITION — IS REFUSED.** Since REC-135 (IC-166) a published case records the PROJECT's adopted claim; when the project withdraws and concludes again on another claim, `op=publish` still refuses `ALREADY_A_CASE_MEMBER`, whose pin is `#caseRelationOf(id).member` — the finding at its `bundle_sha`, which never moved. — owner RECORD.
-order: SECOND, after D-434: a correction to just-landed work (REC-135, `84a66a30`) failing in the PUBLISHED record — the case says what its project no longer stands on and cannot be corrected forward, CLAUDE.md §2's class; below D-434 only because publishing runs through the operator (DEC-33) (SCHEDULER #5, 2026-09-21)
-milestone: M10
-interface: I3 — `op=publish` succeeds where it refused; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 9 (BOB #19, 2026-09-21), which applies items 4 and 7.
-depends-on: none. REC-135 (item 4, `#caseConclusionFor`) and REC-136 (item 7, `op=withdrawconclusion`) are on `origin/main`.
-scope: `ALREADY_A_CASE_MEMBER` compares the RELATIONSHIP, as `NOT_CONCLUDED` does: a new edition is warranted when the publishing project's latest conclusion is not the one the pinned edition recorded, whether or not `bundle_sha` moved. `op=reopen` does NOT change. A project that withdrew and has not concluded again still gets `NOT_CONCLUDED`, and its last edition stands (DEC-19).
-accepts-when: REC-135's own probe path — conclude, publish, withdraw, conclude on another claim, publish — reaches a SECOND edition recording the new claim; publishing unchanged still refuses `ALREADY_A_CASE_MEMBER`. How a liar passes it: dropping the refusal, so the unchanged arm must still refuse. NEGATIVE CONTROL: pin on `bundle_sha` alone again, and the second-edition arm fails by name.
-added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
-
 ### D-435 · queued — **`owed.mjs` CAN ATTRIBUTE BUT NEVER DISCHARGE, SO EVERY LANE'S WORKLIST IS MONOTONIC.** `owedFor()` tests `OWNER_RE(lane)` against a row.s DISPOSITION, excluding only `isClosedDebtRow`, so an OPEN row that once said *ROUTED TO BOB* owes forever — however emphatically a later dated sentence in the same cell says that lane.s part is done. `owed.mjs BOB` reads 7 and **exactly 1 is known false** (D-134). — owner BOB (its own instrument).
 order: SECOND. Every lane plans from this number, including this one, and it can only grow — a worklist that cannot shrink quietly becomes a backlog of the past. Cheap, and the fix is named in the row rather than designed (SCHEDULER #3, 2026-09-20, BOB #18's inbox entry)
 milestone: M0

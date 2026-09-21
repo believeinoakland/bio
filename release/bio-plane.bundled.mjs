@@ -126,6 +126,33 @@ CREATE TABLE IF NOT EXISTS seq (
   next  INTEGER NOT NULL
 );
 
+-- D-432, Membership v2 section 7: THE OPAQUE MINTER'S MEMORY, beside the counter's.
+-- seq is why allocid never reissues an identifier that has already existed -- a
+-- purge keeps it. The gated prefixes (PROJ, CASE, DRAFT, RVG, TASK) have no counter:
+-- Store#mintOpaqueId draws their four digits from the CSPRNG, and it checked each
+-- draw only against the LIVE rows of its kind, which a purge deletes. So an id could
+-- be drawn again after a purge, and a citation of the purged object would silently
+-- resolve to the NEW one. Every id the minter hands out is recorded here, and every
+-- draw asks this table as well as the live rows.
+-- EXEMPT FROM op=purge, IN BOTH ARMS, ON SEQ'S REASONING. The standing rule that a
+-- DERIVED table is named in purge does not reach it: nothing here is derived from
+-- the corpus, and clearing it is the defect it closes. hygiene.test.mjs lists it
+-- among the purge exemptions, beside seq.
+-- Written in the minting act's own transaction, never one of its own, so an act that
+-- rolls back (the review copy's dry run of the publish gates) takes its row back with
+-- it. Seeded at every boot by Store#seedMintLedger from the live rows of each gated
+-- kind, and from the range seq says the counter issued for a prefix with no tail.
+-- READ BY NO ROUTE, and never counted or listed: a count of these ids is how many
+-- gated objects were ever minted, hidden ones included (BOB #16).
+--   source   'mint'     drawn and handed out by Store#mintOpaqueId
+--            'live'     learned at boot from a live row of its kind
+--            'counter'  learned at boot from seq, an id the counter issued before REC-151
+CREATE TABLE IF NOT EXISTS minted_ids (
+  id           TEXT PRIMARY KEY,
+  recorded_at  TEXT NOT NULL,
+  source       TEXT NOT NULL
+);
+
 -- Credentials live here rather than in Worker secrets, because a Worker cannot
 -- rewrite its own secret. ADMIN_TOKEN is a bootstrap credential used once; the
 -- real password is chosen by the operator and only its hash is stored. Losing
@@ -3772,6 +3799,7 @@ __export(bio_checks_exports, {
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
   SEARCHED_SUBJECT_SOURCES: () => SEARCHED_SUBJECT_SOURCES,
+  SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
   STATES: () => STATES,
   STRENGTH_STATES: () => STRENGTH_STATES,
   SUBJECT_POSITIONS: () => SUBJECT_POSITIONS,
@@ -11712,6 +11740,18 @@ var MEMBER_ID_CHECKS = {
     translation: "That member id is reserved. `admin` is the name this instance gives its founding administrator, and anything that checks whether someone is an administrator by name would read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id for this person."
   }
 };
+var SIGNER_ENROLMENT_CHECKS = {
+  SIGNER_MEMBER_NOT_ENROLLED: {
+    check: "C-63.1",
+    where: "src/store.mjs #signerMemberBar > is-signer-member-attesting",
+    translation: "That person has not enrolled yet. A signing key belongs to a member who has taken up their invitation and chosen a handle; until then this instance would refuse anything signed with it, so registering it now would put a key on the roster that cannot sign. Nothing was written. Send them their invitation link, and register the key once they have enrolled."
+  },
+  SIGNER_MEMBER_NOT_ACTIVE: {
+    check: "C-63.2",
+    where: "src/store.mjs #signerMemberBar > is-signer-member-attesting",
+    translation: "That member\u2019s membership is not active, so this instance would refuse anything signed with their key. Nothing was written. Reinstate the member first if they should be able to sign again."
+  }
+};
 var PROJECT_AUTHORITY_CHECKS = {
   PROJECT_ACT_NOT_A_PARTICIPANT: {
     check: "C-56.1",
@@ -13429,6 +13469,7 @@ async function openMembers(){
   $("#k-list").innerHTML = keys.length ? keys.map(x=>
     '<div class="kv"><span class="k">'+escH(x.member_id)+'</span><span class="v"><span class="mono dim">'
     + escH(String(x.key_b64).slice(0,24)) + "&hellip;</span> " + chip(x.status)
+    + (x.attests === false ? ' <span class="dim">' + escH(signerWhy(x)) + "</span>" : "")
     + ' <button class="kbtn" data-key="'+escH(x.key_b64)+'" data-to="'
     + (x.status==="revoked"?"active":"revoked") + '">'
     + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
@@ -13437,6 +13478,23 @@ async function openMembers(){
     await post("signerset", { keyB64: b.dataset.key, status: b.dataset.to }); openMembers();
   }));
 }
+/* D-158: this list renders the key's own status, which is the administrator's own
+   revocation switch and NOT whether the key can sign. A key whose member never
+   enrolled used to read active here while the instance refused everything signed
+   with it \u2014 the page telling the administrator more than the plane would honour.
+   op=signerlist now carries the derived fact and the stored one behind it, and
+   each sentence below names a STORED fact rather than a state invented to cover
+   it. The last line is the undetermined branch and says so out loud: an older
+   plane sends no attests field at all, so this renders nothing rather than
+   guessing, which is the caller-side of the same rule. */
+function signerWhy(x){
+  const w = x && x.attests_why;
+  if (w === "key_revoked") return "revoked \u2014 cannot sign";
+  if (w === "member_invited" || w === "member_proposed") return "this member has not enrolled yet, so this key cannot sign";
+  if (w === "member_revoked") return "this member has been revoked, so this key cannot sign";
+  if (w === "member_absent") return "no member on the roster holds this key, so it cannot sign";
+  return "this key cannot sign, and this copy has not been told why";
+}
 function memberWhy(res, wanted){
   const why = (res && res.reason) || "unknown";
   if (why === "BAD_MEMBER_ID") return "A member name is lowercase letters, digits and dashes, at least two characters. "
@@ -13444,6 +13502,12 @@ function memberWhy(res, wanted){
   if (why === "NO_COVER") return "Give a cover as well as a sign-in name: a label you will recognise them by. It does not have to be their real name.";
   if (why === "EXISTS") return "There is already a member with that name.";
   if (why === "NO_SUCH_MEMBER") return "There is no member by that name. Add them first, then register their key.";
+  /* D-158, on UI-72's rule: a refusal carrying the plane's OWN canned sentence
+     reaches the administrator in THAT sentence instead of as the bare code.
+     Placed AFTER the four sentences above so nothing this page already says
+     changes, and before the fallback so the next code with a translation needs
+     no edit here. */
+  if (res && typeof res.translation === "string" && res.translation) return res.translation;
   return "Refused: " + why;
 }
 $("#m-add").addEventListener("click", async ()=>{
@@ -27394,6 +27458,7 @@ var Store = class _Store extends DurableObject {
       `SELECT DISTINCT target_id FROM refs WHERE kind='supersedes'`
     ))
       this.#writeSupersededBy(r.target_id);
+    this.#seedMintLedger();
   }
   /* The projection derived from a bundle.md, using the CATALOG'S OWN parser so
      the store's view and the checker's view cannot disagree about what the
@@ -33777,8 +33842,9 @@ Subject position: ${pos} \u2014 ${just}
       signers: this.#rows(
         `SELECT s.key_b64, s.member_id FROM signers s
          JOIN members m ON m.member_id=s.member_id
-         WHERE s.status='active' AND m.status='active'`
+         WHERE ${_Store.SIGNER_ATTESTS}`
       ),
+      /* D-158: ONE predicate; this was its own inline copy. */
       priorCase: this.#one(
         `SELECT edition, completeness, bias_acknowledgement FROM published_cases
           WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`,
@@ -49973,7 +50039,10 @@ ${words}`;
    *  likely), fixed length because `BUNDLE_ID_RE` requires `\d{4}` there, and `allocId` is NOT read or
    *  stepped. Uniqueness is checked against `bundles` inside the caller's (promote's) transaction and a
    *  collision draws again; the full id includes the slug, so a collision needs the same name AND the
-   *  same draw. Null only if 64 draws all collide. */
+   *  same draw. Null only if 64 draws all collide.
+   *  D-432: `bundles` is not the only thing asked any more — the one minter also asks its own purge-exempt
+   *  ledger, so a project purged whole or by itself leaves its id spent rather than free for the next project
+   *  of the same name (`#mintOpaqueId` says why). */
   #mintProjectId(title) {
     const year = (/* @__PURE__ */ new Date()).toISOString().slice(0, 4);
     const slug = String(title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "") || "project";
@@ -49997,6 +50066,12 @@ ${words}`;
    *  never filters) and the caller-allocated bundle prefixes (INQ, ACTN, FOCUS, PROB, BIAS …), whose objects are
    *  not project bundles. ONE list: the allocid refusal and the pin in `opaque-ids.test.mjs` both read it. */
   static GATED_ID_PREFIXES = Object.freeze(["PROJ", "CASE", "DRAFT", "RVG", "TASK"]);
+  /** D-432: the gated prefixes whose mint passes NO tail — the id is `<P>-<year>-<rand>` and nothing after it — so an
+   *  id the COUNTER issued for them before REC-151 (`seq`'s `<P>-<year>` scope, `0001` up to `next`-1) is exactly an
+   *  id the opaque minter can draw, and `#seedMintLedger` records that range. PROJ and TASK carry a slug the counter's
+   *  scope never recorded, so their counter-era ids cannot be reconstructed and are not guessed at.
+   *  `mint-ledger.test.mjs` holds this list against each mint site's own tail argument. */
+  static UNTAILED_GATED_PREFIXES = Object.freeze(["CASE", "DRAFT", "RVG"]);
   /** REC-151: THE ONE OPAQUE MINTER — REC-141's draw, lifted out of `#mintProjectId` so every gated prefix takes
    *  the same step. `<prefix>-<year>-<rand><tail>`: `<rand>` is four digits from the runtime's CSPRNG
    *  (`crypto.getRandomValues`, rejection-sampled so every value 0000-9999 is equally likely), fixed length so the
@@ -50004,9 +50079,32 @@ ${words}`;
    *  and `seq` are NOT read or stepped. `taken(id)` is asked of every draw inside the caller's own synchronous act
    *  (nothing awaits between the draw and the write), and a collision draws again. Null only if 64 draws all
    *  collide; each caller answers `MINT_EXHAUSTED`, as REC-141's did.
-   *  WHAT IT CANNOT PROMISE, stated: uniqueness is against the LIVE rows `taken` reads. A whole-store `op=purge`
-   *  deletes those rows (it keeps `seq`, so the counter never reissued), so an id minted before such a purge can be
-   *  drawn again after it — REC-141's PROJ mint already had this property. D-432, with its fix. */
+   *
+   *  D-432 — AN ID THAT HAS EXISTED IS NEVER DRAWN AGAIN, PURGE OR NOT (Membership v2 §7, and the `op=purge`
+   *  comment's own rule — *"allocid must never reissue an identifier that has already existed"* — extended to the ids
+   *  that have no counter). Until this, uniqueness was against the LIVE rows `taken` reads, and a purge deletes those
+   *  rows — a whole-store purge every one of them, a single-bundle purge a project's — so an id minted before a purge
+   *  could be drawn after it, and a citation of the purged object would silently resolve to the NEW one. The counter
+   *  never could, because `purge` keeps `seq`. So every draw now asks the minter's own memory, `minted_ids`, AS WELL
+   *  AS the live rows (`spent` below is this minter's `taken`), and every id handed out is recorded there before it is
+   *  returned. The ledger is exempt from `purge` on `seq`'s reasoning — the comment above `purge` says so. The live
+   *  rows are still asked because an id can stand in one that no mint recorded; `#seedMintLedger` is how those reach
+   *  the ledger at boot.
+   *
+   *  THE WRITE IS IN THE CALLER'S TRANSACTION, NEVER ONE OF ITS OWN — whatever the calling act holds: `promote`'s for
+   *  PROJ, the review copy's always-rolled-back dry run of the publish gates for CASE — so an act that rolls back takes
+   *  its row back with it, and the ledger holds no id that never existed. An act that REFUSES after the draw without
+   *  rolling back leaves its id spent and unused: a gap, which the `purge` comment already ranks above ambiguity.
+   *  RECORDED AT THE DRAW, not at each caller's own INSERT, for a reason found by reading the CASE caller:
+   *  `publishCase` stamps the new id into every member's bytes BEFORE it writes the case document, so a publish that
+   *  refuses between the two leaves the id in the corpus and in no table its `taken` reads. And the INSERT is PLAIN,
+   *  into the ledger's PRIMARY KEY, on purpose: it cannot collide while the read above it stands, and were that read
+   *  ever lost the act would fail LOUDLY (SQLITE_CONSTRAINT) rather than hand a spent id out — measured, by the
+   *  control's `no-ledger-read` arm, which is how this second defence was found.
+   *
+   *  READ BY NO ROUTE, and never counted or listed (`mint-ledger.test.mjs` pins every read to a point lookup keyed on
+   *  one id): a count of gated ids is how many gated objects were ever minted, hidden ones included — the disclosure
+   *  the opaque suffix exists to close (BOB #16). */
   #mintOpaqueId(prefix, year, tail, taken) {
     const draw = () => {
       const u = new Uint16Array(1);
@@ -50015,11 +50113,70 @@ ${words}`;
         if (u[0] < 6e4) return String(u[0] % 1e4).padStart(4, "0");
       }
     };
+    const spent = (id) => !!this.#one(`SELECT 1 FROM minted_ids WHERE id=?`, id) || taken(id);
     for (let i = 0; i < 64; i++) {
       const id = `${prefix}-${year}-${draw()}${tail}`;
-      if (!taken(id)) return id;
+      if (spent(id)) continue;
+      this.sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'mint')`, id, (/* @__PURE__ */ new Date()).toISOString());
+      return id;
     }
     return null;
+  }
+  /* D-432: THE LIVE ROWS EACH MINT SITE'S `taken` READS, per prefix, as `[prefix, table, column]` — the seed's half of
+     two readers of one fact. `mint-ledger.test.mjs` reads every `this.#mintOpaqueId(` call and holds this list against
+     the tables and columns its `taken` asks, so a site that learns a table and a seed that does not fail there rather
+     than going quietly blind. */
+  static #MINT_LEDGER_LIVE = Object.freeze([
+    ["PROJ", "bundles", "bundle_id"],
+    ["CASE", "cases", "case_id"],
+    ["CASE", "published_cases", "case_id"],
+    ["CASE", "case_documents", "case_id"],
+    ["CASE", "published_case_members", "case_id"],
+    ["DRAFT", "case_drafts", "draft_id"],
+    ["DRAFT", "review_grants", "draft_id"],
+    ["RVG", "review_grants", "grant_id"],
+    ["TASK", "tasks", "id"]
+  ]);
+  /* D-432: WHERE THE LEDGER LEARNS THE IDS NO MINT RECORDED. It runs at the end of EVERY boot (`#migrate`), and it is
+     idempotent, because both of its sources can hold an id the ledger lacks at any boot, not only the first:
+       - LIVE: every live row of a gated kind, from the tables `#MINT_LEDGER_LIVE` names — the same ones each mint
+         site's `taken` reads. This is what keeps an id minted BEFORE the ledger existed (REC-141's and REC-151's, and a
+         counter-era id still standing) from being reissued after the next purge — and an id an older build minted, if
+         one is ever deployed back for a while.
+       - COUNTER: for a prefix whose mint passes no tail (`UNTAILED_GATED_PREFIXES`), every id `seq` says the counter
+         issued before REC-151 moved that prefix to this minter — `0001` to `next`-1, used or not, because an
+         allocation handed out is an identifier that has existed. Nothing steps those scopes now (`op=allocid` refuses
+         every gated prefix), so the range is fixed.
+     Rows already recorded are left as they are: `recorded_at` is when the ledger FIRST learned an id, `source` how.
+     COST, stated: nine INSERT OR IGNORE … SELECT statements (one per live source) and ONE for the counter — ten
+     statements whatever the store holds, each doing its work inside SQLite: the live ones in proportion to the gated
+     rows of their table, never the corpus, and the counter one in proportion to the ids the counter issued (at most
+     9,999 per untailed scope, one scope per prefix per year). No row comes back into JS and nothing is done per row
+     here. Stated because `derivation-bounds.test.mjs` grades JS loops over an unbounded `#rows(` read and cannot see
+     work inside SQL, by its own statement: this seed's first draft looped over `seq` in JS with a write per id, that
+     walk named it on the first full battery, and the counter half was rewritten as the one statement below — which is
+     also simply the better shape (ten statements rather than one per issued id). It runs at boot and no op reaches it.
+     WHAT IT CANNOT SEE, stated: an id that left every live table BEFORE this landing and that no counter recorded — a
+     PROJ or TASK counter id whose slug is gone, an opaque id minted and purged before the ledger existed, or a case id
+     a refused publish stamped into member bytes only. Nothing in the store remembers those, so nothing here can; an
+     exact reissue of one needs its slug AND its four digits again. */
+  #seedMintLedger() {
+    const at = (/* @__PURE__ */ new Date()).toISOString();
+    for (const [prefix, table, column] of _Store.#MINT_LEDGER_LIVE)
+      this.sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
+                     SELECT DISTINCT ${column}, ?, 'live' FROM ${table} WHERE ${column} GLOB ?`, at, `${prefix}-*`);
+    const scopes = _Store.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
+    const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
+    this.sql.exec(
+      `INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
+                   WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n
+                     WHERE i < (SELECT MIN(9999, COALESCE(MAX(next), 1) - 1) FROM seq WHERE ${inScope("scope")}))
+                   SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
+                     FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
+      ...scopes,
+      at,
+      ...scopes
+    );
   }
   acquireLease(bundleId, actor, ttlMs) {
     if (typeof actor !== "string" || !actor.trim())
@@ -51420,6 +51577,18 @@ ${words}`;
        that has already existed, so a purged store keeps counting from where it
        stopped. A purge that reset the counter would make identifiers ambiguous
        across the purge boundary, which is worse than a gap.
+  
+       D-432: minted_ids is NOT cleared either, in EITHER arm, and for exactly
+       seq's reason — it is the opaque minter's memory, as seq is the counter's.
+       The gated prefixes (PROJ, CASE, DRAFT, RVG, TASK) have no counter: their ids
+       are drawn at random and asked against that ledger AND the live rows of their
+       kind, and this method deletes the live rows. Clearing the ledger with them
+       would let a new object be minted at a purged object's id, and a citation of
+       the old one would then resolve to the new one without a word. CLAUDE.md's
+       rule that a DERIVED table must be named here does not reach it: nothing in
+       it is derived from the corpus, and clearing it is the defect it closes.
+       hygiene.test.mjs names it among the purge exemptions, beside seq, and
+       mint-ledger.test.mjs pins that no statement anywhere deletes from it.
   
        R2 is untouched. Registered captures are immutable and content-addressed,
        so orphaning them costs storage but cannot corrupt anything. Reclaiming
@@ -53655,11 +53824,83 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     } : {} };
   }
   /* ---- signers: the registered-key projection ---- */
+  /* D-158 — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM
+   * DISAGREEING AGAIN.
+   *
+   * WHAT WENT WRONG, measured 2026-08-02 (session BOB, `MEASUREMENTS.md`, over
+   * real `ssh-keygen` signatures through the real ratify path) and re-measured at
+   * this code on 2026-09-20: `signerList` read the `signers` table ALONE while
+   * `gateFacts` and `caseDocumentFacts` each carried THEIR OWN COPY of the
+   * question below. Two copies of a rule and a third reader that never asked it
+   * is the shape that let `op=signerlist` report `active` for a key `op=ratify`
+   * answers `SIG_UNKNOWN_KEY` — the roster claiming more than the gate grants,
+   * which is the defect class this project ranks above a missing feature.
+   *
+   * IT IS A CONSTANT RATHER THAN A HELPER because the two gate readers need it as
+   * a WHERE clause and the roster needs it as a projected column, and a helper
+   * returning rows could not serve both without one of them re-deriving it.
+   * `signer-enrolment.test.mjs` PINS THE READER COUNT EXACTLY at three and the
+   * occurrences of its text at one: no behavioural assertion anywhere can see a
+   * faithful inline copy of a rule (D-280's `#refEdgeSevered` lesson, arriving at
+   * a SQL fragment), so if you add a fourth reader that pin fails and you are
+   * meant to come and say which site you added and why. Do not relax it. */
+  static SIGNER_ATTESTS = `s.status='active' AND m.status='active'`;
+  /* D-158 — THE WRITE HALF, and WHICH WAY the two were made to agree is the
+   * decision, not a detail.
+   *
+   * The roster tells the truth; the gate is NOT relaxed. Letting the gate accept
+   * a key whose member never enrolled would WIDEN AN AUTHORITY: a signature would
+   * attest in the name of a roster slot no person has taken up, and the
+   * `attestor_member` this plane stamps on a published edition would be an
+   * attribution nobody made. That is the class D-136 closed for the §4.7 vote one
+   * act over. Membership Architecture v2 §6 is the authority — enrolment is where
+   * the person chooses their handle and their password — and §11 item 8 already
+   * says a member stopped only by the absence of a signing key is the key doing
+   * the capability's job. Narrowing a claim and widening an authority are not two
+   * spellings of one fix.
+   *
+   * TWO CODES, because there are two facts and one sentence could not be true of
+   * both. A member with no handle has NEVER ENROLLED; a member with one whose
+   * status is not `active` has been revoked or is otherwise not standing. The
+   * answer carries the STORED status and the enrolment fact beside the code, so
+   * the caller is told the state rather than a word invented to cover both.
+   *
+   * ANSWERS NULL when the member may attest, so a caller reads
+   * `const bar = …; if (bar) return bar;` and nothing else. */
+  #signerMemberBar(memberId) {
+    const m = this.#one(`SELECT member_id, status, handle FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    if (m.status === "active") return null;
+    const enrolled = typeof m.handle === "string" && m.handle !== "";
+    const refusal7 = (code, detail) => {
+      const row = SIGNER_ENROLMENT_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        memberId: m.member_id,
+        member_status: m.status,
+        enrolled
+      };
+    };
+    if (!enrolled)
+      return refusal7(
+        "SIGNER_MEMBER_NOT_ENROLLED",
+        `${m.member_id} has not enrolled: status '${m.status}', no handle chosen. op=ratify weighs a signature against the member's own standing, so a key registered now would sit on the roster as one this instance would refuse. Nothing was written.`
+      );
+    return refusal7(
+      "SIGNER_MEMBER_NOT_ACTIVE",
+      `${m.member_id} is on the roster with status '${m.status}' rather than 'active'. op=ratify weighs a signature against the member's own standing and would refuse this one. Nothing was written.`
+    );
+  }
   signerAdd({ keyB64, memberId, comment } = {}) {
     if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
       return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
-    if (!this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId))
-      return { ok: false, reason: "NO_SUCH_MEMBER" };
+    const barAdd = this.#signerMemberBar(memberId);
+    if (barAdd) return barAdd;
     this.sql.exec(
       `INSERT INTO signers (key_b64,member_id,comment,status,added) VALUES (?,?,?,'active',?)
        ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
@@ -53671,13 +53912,54 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     );
     return { ok: true, keyB64, memberId };
   }
+  /* D-158 — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN.
+   *
+   * `status` is UNTOUCHED and still means exactly what it has always meant: the
+   * administrator's own revocation switch on this key. What was missing is that
+   * the gate asks a SECOND question the roster never asked, and both were being
+   * answered in the one word `active`.
+   *
+   * So the row gains two things and HIDES NOTHING. `member_status` is the stored
+   * fact underneath — `op=memberlist` already serves it to this op's own three
+   * classes, so nothing is disclosed here that a caller could not already read.
+   * `attests` is whether `op=ratify` would accept a signature from this key right
+   * now, computed from the SAME constant the two gate readers use. Hiding the
+   * disagreeing rows instead would have made the two views agree by saying LESS
+   * than the record supports, which is a different defect and not a fix;
+   * `signer-enrolment.control.mjs`'s `roster-blind` arm drives exactly that cheat
+   * and shows the invariant assertion stays green under it.
+   *
+   * THE JOIN IS LEFT so a key whose member row is missing is REPORTED rather than
+   * dropped, and `attests_why` names a STORED fact in every branch. Its last
+   * branch is the literal `undetermined`: it is unreachable while the constant
+   * above is what it is, and it is kept because a derived reason that quietly
+   * guessed when the predicate moved would be this row's own defect one altitude
+   * up. Undetermined is first-class and gets said. */
   signerList() {
-    return { signers: this.#rows(`SELECT key_b64, member_id, comment, status, added FROM signers ORDER BY added`) };
+    return { signers: this.#rows(
+      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, m.status AS member_status,
+              CASE WHEN ${_Store.SIGNER_ATTESTS} THEN 1 ELSE 0 END AS attests
+         FROM signers s LEFT JOIN members m ON m.member_id = s.member_id
+        ORDER BY s.added`
+    ).map((r) => ({
+      key_b64: r.key_b64,
+      member_id: r.member_id,
+      comment: r.comment,
+      status: r.status,
+      added: r.added,
+      member_status: r.member_status ?? null,
+      attests: r.attests === 1,
+      attests_why: r.attests === 1 ? null : r.status !== "active" ? "key_revoked" : r.member_status === null || r.member_status === void 0 ? "member_absent" : r.member_status !== "active" ? `member_${r.member_status}` : "undetermined"
+    })) };
   }
   signerSet({ keyB64, status } = {}) {
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    if (!this.#one(`SELECT key_b64 FROM signers WHERE key_b64=?`, keyB64))
-      return { ok: false, reason: "NO_SUCH_KEY" };
+    const row = this.#one(`SELECT key_b64, member_id FROM signers WHERE key_b64=?`, keyB64);
+    if (!row) return { ok: false, reason: "NO_SUCH_KEY" };
+    if (status === "active") {
+      const barSet = this.#signerMemberBar(row.member_id);
+      if (barSet) return barSet;
+    }
     this.sql.exec(`UPDATE signers SET status=? WHERE key_b64=?`, status, keyB64);
     return { ok: true, keyB64, status };
   }
@@ -53724,8 +54006,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       signers: this.#rows(
         `SELECT s.key_b64, s.member_id FROM signers s
          JOIN members m ON m.member_id=s.member_id
-         WHERE s.status='active' AND m.status='active'`
+         WHERE ${_Store.SIGNER_ATTESTS}`
       ),
+      /* D-158: ONE predicate; this was its own inline copy. */
       /* REC-14: the two facts the catalog cannot get from the bundle — what
          THIS case asserted at its previous edition (C-21.1) and what the cases
          beneath it FROZE (C-21.2). Read here, with the rows, rather than
@@ -64982,7 +65265,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           }
           return this.login(body || {});
         },
-        memberadd: () => this.memberAdd(body || {}),
+        /* REC-156 — `memberadd`'s `by` COMES FROM THE QUERY TOO: spread the body,
+           THEN set `by`, exactly as D-136's three below and for their reason.
+           `memberAdd` writes the proposer's `admin_votes` ('add') row from it, and a
+           voter a caller can name is not a voter. The control plane stamps it (the
+           `by` stamp's `memberadd` disjunct in index.mjs); a call with no stamp gets
+           `null`, which `memberAdd` reads as NO endorsement — never the body's. */
+        memberadd: () => this.memberAdd({ ...body || {}, by: url.searchParams.get("by") }),
         enroll: () => this.enroll(body || {}),
         invitelook: () => this.inviteLook(body || {}),
         memberlist: () => this.memberList({ administer: url.searchParams.get("administer") }),
@@ -71422,7 +71711,7 @@ var index_default = {
         tokenClass: cls,
         detail: `section 4 governance is a named administrator's own act, delivered through that administrator's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token, which holds no position on the roster: it cannot be one of the administrators whose consensus \xA74.7 requires, and a vote it delivered would be attributed to whoever the caller named. Sign in as the administrator and do it there (D-136, applying D-421).`
       }, 403);
-    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
+    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || op === "memberadd")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (RUN_VERB_ACTIONS.includes(op))
       inner.searchParams.set(

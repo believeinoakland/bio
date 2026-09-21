@@ -16914,6 +16914,47 @@ why: BOB #22 ruled D-260 at `3b904ea7` (`BIO_Assistant_and_AI_Roles_v0_1.md` §6
   reads DIST-NEXT whole, so the pointer goes there; the entry and the D-260 row stay the authority.
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
 
+## CLAIM 2026-09-21 DIST (DIST #3 — cut 0.70.0, a CUT NOW: REC-156 / IC-171, the §4.7 endorsement op=memberadd let a caller forge)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+opened: 2026-09-21
+branch: `dist/cut-0.70.0` from `b83e705c` (branch until deployed and live-verified; `main`'s `release/` is the pointer)
+paths: `release/**`, `newgroup/**` (generated `src/release.mjs` and `dist/`), the version in `bio-plane/package.json`
+  and `bio-plane/wrangler.jsonc` and the same two sites in `agent-worker/`, `pdf-worker/`, `ocr-worker/`,
+  `bio-plane/test/migrate-released.test.mjs` (the `RELEASES` row for 0.69.0), `docs/development/kickoffs/DIST-NEXT.md`,
+  `docs/DECIDED.md` (GENERATED). All tags. `civicos` does NOT move: `app.html` is byte-identical at `v0.69.0` and here.
+why: a CUT NOW, judged at the code. Before REC-156 (`397ff618`, merge `f84bcd47`), `Store#memberAdd` wrote the
+  proposer's §4.7 `admin_votes` ('add') row from the caller's own `by`, and `op=memberadd` admits bearer admin and probe
+  tokens: a machine credential could record an endorsement in another administrator's name. The `by` is now
+  server-stamped, and a bearer is stamped `class:<cls>`, which no roster holds. It is IC-168's NARROWED residue. Also
+  carried, from `git log v0.69.0..b83e705c`: D-158 (IC-169, I3; the BATCH owed for 2026-09-22 folds in here) and D-432
+  (IC-170, I5 MINOR: a new `minted_ids` table, so the upgrade arm is load-bearing). Shipped-path diff: `bio-checks.mjs`,
+  `index.mjs`, `schema.mjs`, `setup.mjs`, `store.mjs`. No fleet source, `app.html`, `newgroup/` or `release/` moved.
+
+**RELEASED 2026-09-21 by DIST #3** — 0.70.0 is complete: tag `v0.70.0` = `072bb9f3` on the mainline; deployed and
+live-verified 13/13 (the DO build established by C-63.1); pointer advanced at `0a562200`; installer `837d24c8` read back
+(embed MATCH, bindings `[]`), its bundle and `DIST-NEXT.md` landed in the commit that releases this.
+
+## CLAIM 2026-09-21 SCHEDULER (#7) — the lane's standing claim on the build plan's own files; CONDUCT #10's four landed rows closed (D-432, D-355, D-254, REC-156) and the cache replenished by ONE slot, D-435 left unmoved while BOB #22 builds it
+
+claimed: 2026-09-21 by SCHEDULER #7, worktree `.claude/worktrees/brave-engelbart-1834cd` (branch
+`claude/brave-engelbart-1834cd`, pushed as `scheduler-7/a`; base `origin/main` @ `423cc690`). Paths, the lane's own
+(`kickoffs/SCHEDULER.md`'s ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns
+the `running` word), `docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+addressed to SCHEDULER that this lane acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #6 (`scheduler-6`), archived by this session on 2026-09-21 at ~20:13Z under
+D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `423cc690`, which IS
+`origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); its worktree removed by `git
+worktree remove` without force, 6,764,784 → 7,435,460 KiB free (+655 MiB; `du` read the tree at 648 MiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's. **D-435's row in `BACKLOG.md` is NOT touched**
+until BOB #22's landing of it is on `main`: BOB #22 builds it and archives it itself.
+
+**open as of 2026-09-21.**
+
 ## CLAIM 2026-09-21 CONDUCT (#10) — M-86: the 34 merged pre-PRUNE-ON-MERGE `worktree-agent-*` branches recorded name → sha, then pruned from the remote
 
 claimed: 2026-09-21 by CONDUCT #10, worktree `.claude/worktrees/conduct-10`. Paths: `docs/development/MEASUREMENTS.md`
