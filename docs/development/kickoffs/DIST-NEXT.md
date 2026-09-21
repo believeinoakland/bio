@@ -37,12 +37,16 @@ build under a DISTINCT field — is with SCHEDULER, fix named by FLEET #3. Until
 
 ## What is OWED, in order
 
-1. **Apply WHEN DIST CUTS on each self-wake.** The next candidate is **D-158 / IC-169** (I3 47.0.0 MAJOR: `op=signeradd`
-   and `signerset` refuse a non-active member; `signerlist` gains fields). **NOT on `main` at 15:30Z:** CONDUCT #9 has it
-   gate-GREEN on `90020241`, its push refused by the classifier and awaiting the operator; it will send the landing sha.
-   Carry it in no release note before that sha is an ancestor of `origin/main`. CONDUCT calls it NOT a
-   security/disclosure closing — verify that at the code yourself. **Reading of the daily bound,
-   DIST #2's and kept:** any cut spends the day's BATCH, so a BATCH is next available 2026-09-22.
+1. **A BATCH IS OWED ON 2026-09-22: 0.70.0, carrying D-158 / IC-169** (I3 47.0.0 MAJOR, BREAKING: `op=signeradd`, and
+   `op=signerset` when it activates, refuse a member who is not active — `SIGNER_MEMBER_NOT_ENROLLED` C-63.1 /
+   `SIGNER_MEMBER_NOT_ACTIVE` C-63.2; `op=signerlist` rows gain `member_status`, `attests`, `attests_why`). ON `main` since
+   2026-09-21: integration merge `9b98c3c0`, pushed at `36eaf651` (CONDUCT #9). Shipped-path diff since `v0.69.0`:
+   `bio-checks.mjs`, `setup.mjs`, `store.mjs`. **NOT a CUT NOW, judged at the code by DIST #3, not taken from CONDUCT:**
+   D-158 was the record OVERCLAIMING (`signerlist` read `active` for a never-enrolled member's key); the ratify gate
+   already refused that key — `s.status='active' AND m.status='active'` at both gate sites in 0.69.0's `store.mjs`, twice
+   in its signed bundle. Nobody could read or do anything new. **The daily bound, DIST #2's reading and kept:** any cut
+   spends the day's BATCH, and 0.69.0 spent 2026-09-21's. **Bound armed (lesson 12):** one-shot `3e2ff52f` at
+   2026-09-22 07:17 PDT; the recurring wake at 00:41 may reach it first. Either applies WHEN DIST CUTS afresh.
 2. **NEXT CUT adds 0.69.0 to the upgrade arm** (row above). `alterafter` sequence, read against the SEQUENCE and never
    against "green" (lesson 19): **135 → 169 → 186 → 203 → 220 pass / 66 fail**; expect ~237/66 with the 0.69.0 row.
 3. **DS-3 — JUDGED 2026-09-21, NARROWED, placed by SCHEDULER #4 inside D-260.** Config half LANDED at `2de6f25f`
@@ -94,7 +98,8 @@ another lane to push, build or deploy for you.** It is NOT the committed-setting
 
 - **Self-wake:** recurring `44f1ca7f` (`41 */6 * * *`, prompt *"DIST: apply WHEN DIST CUTS in kickoffs/DIST.md"*), and
   the ONE-SHOT renewal `2400b776` at **2026-09-26 09:11 PDT** that deletes it, re-arms a fresh one and the next
-  reminder (lesson 17). Armed 2026-09-21; session-only, so a successor arms its own.
+  reminder (lesson 17). Plus the BATCH-bound one-shot `3e2ff52f` (2026-09-22 07:17 PDT, owed item 1). Armed 2026-09-21;
+  all session-only, so a successor arms its own.
 - Machine Sparky-Air. Disk fell 9.7 → 6.0 GiB free (97%) during the day with four lanes gating; a gate needs ~1 GiB —
   `df -h` before any bump. This worktree is `jovial-mclaren-9af3b6`, ~800 MB of it `node_modules` (real dirs).
 - `.env`: ten keys including `BIO_RELEASE_SEED`; account `20b533579290b9b93168345edd3b7f72` confirmed by USING it.

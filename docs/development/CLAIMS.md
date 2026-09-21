@@ -16223,3 +16223,14 @@ acting (not running; porcelain empty; tip `02ee9a05` an ancestor of `origin/main
 (M0-86 is the map OWNER's act, not this lane's), and every kickoff but SCHEDULER's.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT kept true: D-158 landed, judged BATCH at the code, and the bound is armed)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (owed item 1 and the session-state self-wake line only),
+  `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+why: DIST-NEXT said D-158 was NOT on main; CONDUCT #9 landed it (merge `9b98c3c0`, pushed `36eaf651`), so the handoff
+  was false the moment it landed. Judged at the code: NOT a CUT NOW — D-158 closed a record OVERCLAIM, and the released
+  ratify gate already requires `m.status='active'` (both gate sites in 0.69.0's `store.mjs`, twice in its signed
+  bundle). It is a BATCH owed 2026-09-22, bounded by one-shot wake `3e2ff52f` (DIST.md lesson 12).
+**released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
