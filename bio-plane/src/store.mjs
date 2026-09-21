@@ -29496,6 +29496,10 @@ export class Store extends DurableObject {
         `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,expertise,created,updated)
          VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?)`,
         memberId, label, JSON.stringify(caps), expertise ?? null, now, now);
+      /* REC-156: `by` is the control plane's STAMP, relayed from the query by the
+         dispatch and never taken from the caller's body — so this row is the
+         PROPOSER'S own endorsement. The founder's session is stamped `admin`; a
+         bearer is stamped `class:<cls>`, which no roster holds, so it records none. */
       if (by && admins.includes(by))
         this.sql.exec(`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,NULL,?)`,
           memberId, by, now);
@@ -42238,7 +42242,13 @@ export class Store extends DurableObject {
           }
           return this.login(body || {});
         },
-        memberadd: () => this.memberAdd(body || {}),
+        /* REC-156 — `memberadd`'s `by` COMES FROM THE QUERY TOO: spread the body,
+           THEN set `by`, exactly as D-136's three below and for their reason.
+           `memberAdd` writes the proposer's `admin_votes` ('add') row from it, and a
+           voter a caller can name is not a voter. The control plane stamps it (the
+           `by` stamp's `memberadd` disjunct in index.mjs); a call with no stamp gets
+           `null`, which `memberAdd` reads as NO endorsement — never the body's. */
+        memberadd: () => this.memberAdd({ ...(body || {}), by: url.searchParams.get("by") }),
         enroll: () => this.enroll(body || {}),
         invitelook: () => this.inviteLook(body || {}),
         memberlist: () => this.memberList({ administer: url.searchParams.get("administer") }),

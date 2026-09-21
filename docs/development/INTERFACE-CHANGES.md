@@ -12468,3 +12468,70 @@ wrote IC-168's resolution in this file and never bumped the registry, so two rec
 The registry now carries IC-168's 46.0.0 as the Prior it always was and this change above it. **CONDUCT answers FOR
 the consumer areas, in writing, per step 3 — not as their agreement:** UI NOT-AFFECTED (it makes no call), DIST
 NOT-AFFECTED (the installer carries the plane and serves no roster of its own); RECORD owns the change and landed it.
+
+## IC-171 · I3: `op=memberadd`'s `by` is SERVER-STAMPED and no longer caller-supplied — the store relays the stamp from the query over any body copy, so a §4.7 proposal records its PROPOSER's own endorsement and nobody else's; a bearer's proposal records none, and a bearer is NOT refused (PROVISIONAL, BOB's to rule) · PROPOSED 2026-09-21 (REC-156, minted with `node tools/mintid.mjs IC` before building) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Version read off THIS TREE's `docs/development/INTERFACES.md`:
+  47.0.0** (IC-169 ACCEPTED). **Proposed as MAJOR — 47.0.0 → 48.0.0**, on the reasoning under WHY; the row names the
+  integrator as the classifier. **Read the base AT RESOLUTION.** No op, class list, `SESSION_OPS` set, response key,
+  refusal code or table is added or removed; **I5 does not move** (`admin_votes` already carried the column).
+- **Proposer:** RECORD, worker `agent-a45dec7af75234c20`, 2026-09-21, from QUEUE REC-156.
+- **Owner to land it:** `RECORD`.
+- **Consumers to answer, each MEASURED (M-84):** `UI` NOT-AFFECTED — `civicos-ui/` makes ZERO `memberadd` calls; its only
+  hits are suites, one of them `members-roster.test.mjs`' list of acts the roster must NOT offer. `DIST` NOT-AFFECTED —
+  `newgroup/` makes no call (its hits are the plane bundle it embeds), and the plane's own setup page,
+  `bio-plane/src/setup.mjs` `#m-add`, posts `memberadd` with the founder's SESSION and a body of `memberId` and `cover`
+  only: it opens no §4.7 proposal and sends no `by`. `FLEET` NOT-AFFECTED — `vf4-live-scratch.mjs` calls `memberadd`
+  live with the ADMIN bearer and sends no `by`, so its arm 2a opens the same `proposed` row, with the same empty tally,
+  before and after.
+- **Design:** `BIO_Membership_Architecture_v2.md` §4.7 (the addition rule, and the paragraph D-136 left open), read with
+  §4.9 and §4.6; the §4.7 block and the front matter are updated in the same landing.
+
+**WHAT CHANGES FOR A CALLER.** Before: `Store#memberAdd` wrote the proposer's `admin_votes` ('add') row from whatever
+`by` the caller put in the BODY, so the proposer of a third-or-later administrator could record ONE endorsement in
+another administrator's name — D-136's class in the one op BOB #17's ruling did not name. After: the control plane
+stamps `by` through the same expression that stamps the three §4.7/§4.9 acts, by its own disjunct; the store's relay
+spreads the body FIRST and then sets `by` from the query, so a body `by` can never win; and an absent stamp is read as
+NO endorsement, never as the body's. Three consequences a caller can see in `have` / `awaiting`:
+1. a `by` naming ANOTHER administrator, in the body or the query, is overwritten — the forgery closed;
+2. the FOUNDER'S session — the one session that reaches the op, `SESSION_OPS.admin` — now records its own endorsement
+   when it proposes, where before it recorded one only if it typed its own id as `by`;
+3. a BEARER's proposal records NO endorsement (`class:<cls>` is on no roster), where before a bearer could record any
+   administrator's. The proposal still OPENS and awaits every administrator's own session.
+
+**WHY PROPOSED MAJOR.** The same request now leaves a different record: a bearer caller that sent `by` to have a
+proposer's endorsement counted gets a proposal nobody has endorsed, and must endorse from a session. Nothing that
+succeeded is refused — IC-137's plainest test is not met — but an effect a caller could rely on has narrowed, so the
+conservative class is proposed and the integrator decides.
+
+**THE DECISION INSIDE THIS CHANGE, PROVISIONAL AND BOB'S TO RULE: a bearer reaching `memberadd` is NOT refused.**
+IC-168 refused the operator's bearer at the three governance ops (C-32.17). Here the stamp already removes the only thing
+a bearer's `by` could do, and what the op still does for one — the §6 invitation, §4.2's second administrator, a
+proposal awaiting every administrator — attributes no act to any administrator and sits with the ADMIN_TOKEN holder
+under §4.6. C-32.17's sentence (*"a vote it delivered would be attributed to whoever the caller named"*) would be FALSE
+at this op, which is D-270's class. **What refusing would cost, MEASURED (M-84):** 99 battery suites, 5 non-battery
+probes and measures, and FLEET's live `vf4-live-scratch.mjs` create members through a BEARER `memberadd`. **Reversing
+it costs** one disjunct on the operator fence (`is-operator-governance-act`) and a founder-session fixture (claim, then
+login) in every one of those callers.
+
+**SUITES THAT SENT `by` IN THE BODY — corrected in the same landing, never exempted, each with its reason at the site:**
+`adminvote.test.mjs`' `enrol` helper (its `by: "admin"` never reached a proposal on any path it takes, and now names
+nothing) and `membership.test.mjs`' §4.7 consensus drive (it drives the Durable Object directly, so it now writes the
+stamp in the query itself, as it already did for the three ops; run unchanged against the fixed store it failed ten
+assertions and threw before its foot). M-84 found no other caller in the tree that sends one.
+
+**NEGATIVE CONTROL, run by the builder and to be re-run at integration:** `node test/adminvote.control.mjs` (from
+`bio-plane/`) — four new arms beside D-136's seven, and D-136's `stamp-dropped` widened, declared before arming, because
+`memberadd` now shares its ONE stamp expression. RE-RUN 2026-09-21 on the builder's tree, every restore byte-identical:
+baseline 56/0 · stamp-dropped 40/16 · fence-dropped 46/10 · reach-dropped 37/19 · caps-ungated 53/3 · overstrict 37/19 ·
+classkeyed 52/4 · memberadd-disjunct-dropped 48/8 · memberadd-relay-dropped 46/10 · memberadd-relay-fallback 54/2 ·
+memberadd-overstrict 53/3 — all eleven AS DECLARED on the first run. The arm that decides the item is
+`memberadd-disjunct-dropped`, failing at the NAMED assertion *"memberadd: a body `by` naming ANOTHER administrator does
+not cast that administrator's endorsement"* and its bearer siblings while the two store-direct arms stay green;
+`memberadd-relay-fallback` is the liar only the store-direct drive can see; `memberadd-overstrict` takes down the genuine
+proposer while every forgery arm stays green. **Pre-item trace:** the new suite over the unfixed sources, 45/11 — exactly
+the eleven discriminating memberadd assertions.
+
+**WHAT IS STILL NOT CLOSED, and it is NOT this change:** `memberadd` reaches the founder's session alone, so an enrolled
+administrator cannot propose an addition or invite a member from her own session, and is refused with a sentence that
+calls the op an administrator's. Routed with its fix named by REC-156's DELEGATION in `CLAIMS.md`.

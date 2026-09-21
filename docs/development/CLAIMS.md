@@ -16462,3 +16462,30 @@ or `civicos-ui/`, and **NOT** `DIST-NEXT.md` / `CONDUCT-NEXT.md`, whose *"NOT cl
 at this landing and are named in the report for their owners rather than edited here.
 
 **open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates.
+
+## DELEGATION 2026-09-21 RECORD (REC-156 worker) -> SCHEDULER, one question -> BOB first — **AN ENROLLED ADMINISTRATOR CANNOT PERFORM §4.9'S CUSTODIAL ACTS FROM HER OWN SESSION, AND IS REFUSED WITH A SENTENCE THAT IS FALSE OF HER**
+
+Found by REC-156 while driving `op=memberadd`, read at the code on `2eaf5ebd`, and pinned as KNOWN-OPEN in
+`bio-plane/test/adminvote.test.mjs` §8f — that assertion FAILS the day this lands, by design, and is corrected then
+with a dated reason. REC-156 did not take it: it moves reach, and the row's scope is the stamp.
+
+1. **THE DEFECT.** `memberadd`, `memberset`, `signeradd`, `signerset` and `governorconfig` are `["admin","probe"]` and sit
+   in `SESSION_OPS.admin` alone (D-270's ROLE-GATED arm, pinned as a literal in `d270-refusal-truth.test.mjs`), and
+   `SESSION_OPS.admin` is the FOUNDER'S password session and nothing else — `kind` is `admin` only when
+   `sess.role === "admin"`, D-136's measurement, recorded in Membership v2 §4.7. So an ENROLLED administrator is refused
+   all five at the session gate with `SESSION_ROLE_CANNOT_REACH_OP` (C-38.7), whose sentence says the op *"is reserved to
+   an administrator of this group"* and that her role is `member` — false of her: she IS an administrator on the roster.
+   Measured in §8f: ruth, an enrolled administrator, is refused `memberadd` exactly so. Membership v2 §4.9 gives *"add a
+   member"*, *"deactivate / reactivate a member"* and *"approve signing keys"* to EVERY administrator; today they are the
+   founder's and the operator bearer's only.
+2. **THE FIX, NAMED — D-136's shape, whose one design call (§4.7: BOTH session sets, the ROSTER decides) is already
+   recorded:** give `memberadd`, `memberset`, `signeradd` and `signerset` `member` in `classes` and membership of both
+   `SESSION_OPS` sets; stamp `by` for the three that take none today (`memberset`, `signeradd`, `signerset`) as REC-156
+   stamped `memberadd`'s; and have each store method refuse a stamped `by` that is not an ACTIVE administrator, by name and
+   BEFORE any lookup (`memberCaps`' posture). `d270-refusal-truth`'s ROLE literal and `adminvote` §8f are then corrected,
+   never exempted. Whether a bearer keeps reaching them is REC-156's PROVISIONAL decision one op wider — rule it once.
+3. **-> BOB first: `governorconfig`.** It is not among §4.9's acts. Is it every administrator's, or the founder's (the
+   ADMIN_TOKEN holder's, under §4.6)? Either way its refusal must stop calling an enrolled administrator a
+   non-administrator: if it stays the founder's, `SESSION_ROLE_CANNOT_REACH_OP` must say *the founder's session* for it.
+
+**open as of 2026-09-21** — raised at REC-156's landing; nothing placed yet, and item 3 waits on BOB.

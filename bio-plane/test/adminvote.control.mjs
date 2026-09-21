@@ -23,6 +23,13 @@
  * DECLARED BEFORE ARMING — which assertions MUST fail, by label prefix; every
  * other one MUST pass. An arm whose failures differ from its declaration in
  * EITHER direction is reported NOT AS DECLARED and the harness exits 1.
+ *
+ * REC-156 (2026-09-21) ADDS FOUR ARMS for `op=memberadd`'s `by` (the suite's §8),
+ * paired the same way: `memberadd-disjunct-dropped` takes the plane's half away and
+ * the store-direct arms must stay green; `memberadd-relay-dropped` takes the store's
+ * half away and the stamp's pin must stay green; `memberadd-relay-fallback` is the
+ * liar only a store-direct drive can see; `memberadd-overstrict` refuses every voter
+ * and must take down the genuine proposer while every forgery arm stays green.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -46,6 +53,11 @@ const FENCE = `    if (GOVERNANCE_ACTIONS.includes(op) && !viaSession)`;
 const STAMP = `      inner.searchParams.set("by", viaSession ? sessMember : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`;
 const MEMBER_REACH = `                   ...GOVERNANCE_ACTIONS,\n                   /* REC-146:`;
 const CAPS_GATE = `    const admins = this.#activeAdmins();\n    if (!by || !admins.includes(by))\n      return { ok: false, reason: "NOT_AN_ADMIN", by,`;
+/* REC-156's three sites, exactly as they stand: the stamp's `memberadd` disjunct, the
+   store's relay, and `memberAdd`'s §4.7 vote write. */
+const MA_DISJUNCT = `        || op === "projectparticipants" || op === "projectownerarith"\n        || op === "memberadd")`;
+const MA_RELAY = `        memberadd: () => this.memberAdd({ ...(body || {}), by: url.searchParams.get("by") }),`;
+const MA_VOTE = `      if (by && admins.includes(by))\n        this.sql.exec(\`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,NULL,?)\`,`;
 
 const OPS3_EARLY = ["adminendorse", "adminremove", "membercaps"];
 const OPS3_LABELS = () => OPS3_EARLY.map((op) =>
@@ -86,6 +98,18 @@ const L = {
   /* §5's tally moves with the fixture: an arm in which nell never becomes an
      administrator awaits TWO rather than three. A cascade, declared as one. */
   consensusThree: "an addition is refused for want of consensus and NAMES all three",
+  /* REC-156 — `op=memberadd`'s `by` (§8). The founder's session is the one session
+     that reaches the op; the bearer pair runs once per class the OPS row admits, so
+     each prefix below matches one assertion per class. */
+  maForge: "memberadd: a body `by` naming ANOTHER administrator does not cast that administrator's endorsement",
+  maPositive: "memberadd: the signed-in administrator's proposal records the endorsement as THEM",
+  maReadBack: "memberadd, read back at the store: after gus endorses",
+  maBearer: "memberadd, the operator's `",
+  maBearerBack: "memberadd, the `",
+  maStoreNoStamp: "the STORE: a body `by` with NO stamp beside it records NO endorsement",
+  maStoreStamped: "the STORE: with a stamp beside it, the STAMP names the endorser",
+  structMaStamp: "STRUCTURE: the `by` stamp names `memberadd` in its OWN disjunct",
+  structMaRelay: "STRUCTURE: the store's `memberadd` relay spreads the body and THEN sets `by`",
 };
 const bearerLabels = (ops, classes) =>
   ops.flatMap((op) => classes.map((c) => `op=${op}, the operator's \`${c}\`-class bearer token`));
@@ -116,10 +140,18 @@ const ARMS = {
            which stays true precisely because no removal carries here. A safety
            read-back belongs on the green side of every arm that does not eject
            anybody, and declaring it to fail would have made a forged EJECTION
-           invisible. */
+           invisible.
+         · REC-156 (2026-09-21) ADDED `L.structMaStamp`, `L.maForge`, `L.maPositive`
+           and `L.maReadBack`, DECLARED BEFORE ARMING and not after a run:
+           `memberadd` now shares the ONE stamp expression this arm widens, so the
+           founder's session — a SESSION — has its typed `by=ruth` honoured and
+           ruth's endorsement recorded, exactly the defect REC-156 closes. The
+           bearer and store-direct memberadd arms stay green: a bearer is not a
+           session, and the Durable Object is not behind the stamp. */
     mustFail: [L.forgeEndorse, L.forgeTally, L.forgeNotInvited, L.forgeRemove, L.forgeCaps,
                L.mirror, L.endorsedBy, L.enrols, L.oneReal, L.caiMirror,
-               L.structStamp, L.consensusThree],
+               L.structStamp, L.consensusThree,
+               L.structMaStamp, L.maForge, L.maPositive, L.maReadBack],
   },
 
   /* (c) THE OPERATOR FENCE ALONE, neutered in place so the region's TEXT is
@@ -200,6 +232,59 @@ const ARMS = {
     file: IDX,
     edits: [[FENCE, `    if (GOVERNANCE_ACTIONS.includes(op) && [env.ADMIN_TOKEN, env.MEMBER_TOKEN].includes(url.searchParams.get("token")) /* ARMED */)`]],
     mustFail: [L.structFence, ...bearerLabels(OPS3, ["probe"])],
+  },
+
+  /* ================== REC-156 (2026-09-21) — `op=memberadd`'s `by`, four arms ==
+     Declared BEFORE ARMING, each alone, the other sites HELD OPEN. */
+
+  /* (h) THE ROW'S OWN NEGATIVE CONTROL: the `memberadd` disjunct dropped from the
+     stamp's condition and NOTHING else. The caller's query is copied into the inner
+     URL before the stamps run, so with the disjunct gone the `by=ruth` a caller typed
+     reaches the store's relay unchallenged — and the relay, which reads only the
+     query, honours it. Every plane-routed forgery arm must fail BY NAME; the two
+     store-direct arms, with no plane in front of them, must stay green, and so must
+     all of D-136's, because the three ops keep their own disjunct. */
+  "memberadd-disjunct-dropped": {
+    file: IDX,
+    edits: [[MA_DISJUNCT, `        || op === "projectparticipants" || op === "projectownerarith" /* ARMED */)`]],
+    mustFail: [L.structMaStamp, L.maForge, L.maPositive, L.maReadBack, L.maBearer, L.maBearerBack],
+  },
+
+  /* (i) THE LIAR THE ROW NAMES: stamp at the plane while the STORE honours the body —
+     the relay put back to `memberAdd(body || {})`, the stamp LEFT STANDING. The forged
+     id rides in every body, so every memberadd arm that sends one must fail, the
+     store-direct pair included; the stamp's own structural pin must stay green, which
+     is what shows the two halves are independent. */
+  "memberadd-relay-dropped": {
+    file: STORE,
+    edits: [[MA_RELAY, `        memberadd: () => this.memberAdd(body || {}) /* ARMED */,`]],
+    mustFail: [L.structMaRelay, L.maForge, L.maPositive, L.maReadBack, L.maBearer, L.maBearerBack,
+               L.maStoreNoStamp, L.maStoreStamped],
+  },
+
+  /* (j) THE SUBTLER LIAR, and the reason §8e exists: the relay PREFERS the stamp and
+     FALLS BACK to the body when the query carries none. Through the plane the stamp
+     is always there, so EVERY op-level arm must stay green; only the store-direct
+     drive with no stamp can see it — plus the relay's structural pin, whose text the
+     arm edits. */
+  "memberadd-relay-fallback": {
+    file: STORE,
+    edits: [[MA_RELAY, `        memberadd: () => this.memberAdd({ ...(body || {}), by: url.searchParams.get("by") ?? (body || {}).by /* ARMED */ }),`]],
+    mustFail: [L.structMaRelay, L.maStoreNoStamp],
+  },
+
+  /* (k) OVER-STRICTNESS, REQUIRED: the store records NO proposer's endorsement at all
+     — the "fix" that closes a forgery by dropping every voter. The vote write is
+     disabled in place and nothing else moves: every arm about a FORGED or a BEARER
+     `by` must stay green (nobody is recorded, so no forgery lands), while the genuine
+     proposer's own endorsement, its read-back and the stamped store drive must FAIL —
+     the only thing that tells a fence refusing a forged voter from one refusing every
+     voter. */
+  "memberadd-overstrict": {
+    file: STORE,
+    edits: [[MA_VOTE, MA_VOTE.replace("if (by && admins.includes(by))",
+      "if (false /* ARMED */ && by && admins.includes(by))")]],
+    mustFail: [L.maPositive, L.maReadBack, L.maStoreStamped],
   },
 };
 

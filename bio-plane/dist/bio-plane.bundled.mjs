@@ -65134,7 +65134,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           }
           return this.login(body || {});
         },
-        memberadd: () => this.memberAdd(body || {}),
+        /* REC-156 — `memberadd`'s `by` COMES FROM THE QUERY TOO: spread the body,
+           THEN set `by`, exactly as D-136's three below and for their reason.
+           `memberAdd` writes the proposer's `admin_votes` ('add') row from it, and a
+           voter a caller can name is not a voter. The control plane stamps it (the
+           `by` stamp's `memberadd` disjunct in index.mjs); a call with no stamp gets
+           `null`, which `memberAdd` reads as NO endorsement — never the body's. */
+        memberadd: () => this.memberAdd({ ...body || {}, by: url.searchParams.get("by") }),
         enroll: () => this.enroll(body || {}),
         invitelook: () => this.inviteLook(body || {}),
         memberlist: () => this.memberList({ administer: url.searchParams.get("administer") }),
@@ -71574,7 +71580,7 @@ var index_default = {
         tokenClass: cls,
         detail: `section 4 governance is a named administrator's own act, delivered through that administrator's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token, which holds no position on the roster: it cannot be one of the administrators whose consensus \xA74.7 requires, and a vote it delivered would be attributed to whoever the caller named. Sign in as the administrator and do it there (D-136, applying D-421).`
       }, 403);
-    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith")
+    if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || op === "memberadd")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (RUN_VERB_ACTIONS.includes(op))
       inner.searchParams.set(
