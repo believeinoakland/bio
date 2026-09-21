@@ -16426,3 +16426,39 @@ item is also written ON ITS ROW where it has one. None blocks a runnable row; ea
 **NEXT GROUP, not asked yet:** D-325's residue — a stated limitation, or work? CLAUDE.md §5 states it; no design home does.
 
 **open as of 2026-09-21.**
+
+## CLAIM 2026-09-21 RECORD (REC-156 — `op=memberadd`'s `by` is stamped by the SERVER, and the store reads only the stamp: a §4.7 proposal records its proposer's own endorsement and nobody else's)
+
+Worker spawned by CONDUCT #9 [3d638d]. **Own worktree** `.claude/worktrees/agent-a45dec7af75234c20`, branch
+**`worktree-agent-a45dec7af75234c20`**, base `origin/main` @ `2eaf5ebd` (the row read `running` there). `npm ci` in
+`bio-plane/`, `pdf-worker/` and `ocr-worker/`, each `node_modules` a REAL DIRECTORY (30 / 25 / 26 entries); `df -h`
+5.3 GiB free after. Design authority: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 (the addition rule
+D-136 enacted, and its "WHAT IS NOT CLOSED" paragraph), read with §4.9 and §4.6. Ids minted with the allocator:
+IC-171, M-84. Claimed BY SITE, because D-432's worker is live in `store.mjs` (the opaque-id minter and a new table):
+
+- `bio-plane/src/index.mjs` — **by SITE:** (1) the closing *"NOT `memberadd`/`memberset`"* sentence of the comment
+  above `GOVERNANCE_ACTIONS` (comment only; the array does NOT move); (2) the `by` stamp — its condition gains ONE
+  disjunct, `op === "memberadd"`, and one comment paragraph above it. **NOT** the operator fence region
+  `is-operator-governance-act`, **NOT** `SESSION_OPS`, **NOT** the OPS table, **NOT** any class list.
+- `bio-plane/src/store.mjs` — **by SITE:** (1) the `memberadd:` entry of the Durable Object's dispatch table (the
+  relay: spread the body, then set `by` from the query) and a comment above it; (2) inside `memberAdd`, a comment above
+  the §4.7 vote write — no code change there. **NOT** `memberCaps`, `adminEndorse`, `adminRemove`, **NOT** the
+  opaque-id minter, any table, the schema or `purge`.
+- `bio-plane/dist/` (the rebuilt bundle).
+- `bio-plane/test/adminvote.test.mjs` (the header, §2's `enrol` body, §8 rewritten, the NEGATIVE CONTROL line) and
+  `bio-plane/test/adminvote.control.mjs` (new arms; `stamp-dropped`'s declaration widened, with the reason).
+- `bio-plane/test/membership.test.mjs` — the ONE `add(...)` in the §4.7 consensus block, corrected to the query stamp.
+- `bio-plane/scripts/coverage.mjs` — the `REGISTER_FLOOR` figures, from the print only.
+- `docs/architecture/construct-status.json` (`1.admin-floor`: its text SHRINKS, two probes added),
+  `docs/architecture/BIO_System_Design.md` (§3 rendered by `node tools/status.mjs --write` and by nothing else),
+  `docs/architecture/BIO_Membership_Architecture_v2.md` (one Status sentence, the §4.7 Incomplete bullet, §4.7's
+  "WHAT IS NOT CLOSED" paragraph).
+- `docs/development/INTERFACE-CHANGES.md` (IC-171, appended), `docs/development/MEASUREMENTS.md` (M-84, appended).
+- `docs/development/CLAIMS.md` — this block, and one DELEGATION below it. `docs/DECIDED.md` — GENERATED, regenerated LAST.
+
+**NOT** `docs/development/QUEUE.md` (CONDUCT's `running` word, SCHEDULER's order), **NOT**
+`docs/development/INTERFACES.md` (the version bump and the resolution are CONDUCT's), **NOT** `newgroup/`, `release/`
+or `civicos-ui/`, and **NOT** `DIST-NEXT.md` / `CONDUCT-NEXT.md`, whose *"NOT closed: op=memberadd"* pointers go stale
+at this landing and are named in the report for their owners rather than edited here.
+
+**open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates.
