@@ -17172,6 +17172,11 @@ D-92 and D-207 are cut to their fields, their full text verbatim in `docs/archiv
 D-38 and D-45 CLOSED BY THE THIRD DOOR on BOB #23's ruling of this lane's Q2 (`33545f9f`: State Rules' front matter, §4.3
 and §8), verified there. 147 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 7): LED-7 batch S8-5 and a CHECKPOINT** — D-71 CLOSED IN FACT (`readings`
+persisted and `reading_refs` indexed by entity reference, FW-5). BOB #23's ruling that `BACKLOG.md`'s budget stays 150
+KiB, cut from the bottom of the order, recorded in `kickoffs/SCHEDULER.md`; `kickoffs/SCHEDULER-NEXT.md` rewritten as a
+CHECKPOINT for SCHEDULER #9 while live. 146 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
 
 1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
