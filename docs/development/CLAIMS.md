@@ -16675,3 +16675,43 @@ before the ledger existed). The parking paragraph in `3.census`'s note is replac
 review BY MEANING leads that note, re-reviewed against the two non-BUILT claims that landed after its base
 (`11.cascade-sources`, `12.accept`). `node tools/status.mjs --write` then `--check`: 88 claims, 251 probes, 0 drift; the
 map reads 40,370 B against its 49,152 B budget.
+
+## CLAIM 2026-09-21 M0 / UI-by-path (D-355 — two control drivers red on a green `main`, the pen that leaks, and the census's `arms: ?`)
+
+session: WORKER spawned by CONDUCT #9 [3d638d], worktree `.claude/worktrees/agent-a9a513c0906ae3b3e`, branch
+`worktree-agent-a9a513c0906ae3b3e`, base `origin/main` @ `fc94b045`, Sparky-Air. `npm ci` in `bio-plane/`,
+`pdf-worker/`, `ocr-worker/`, each `node_modules` a REAL directory (30 / 25 / 26 entries), `df -h` 6.8 GiB free.
+authority: `QUEUE.md` `### D-355 · running` (CONDUCT #9), design `docs/development/VERIFICATION.md` (admitted for M0 by
+name) — its negative-control register and the driver law (D-331, D-333): a control is evidence only when it FAILS at a
+named assertion.
+paths, BY SITE:
+  - `civicos-ui/test/refusal-partition.control.mjs` — **A UI-AREA PATH (`kickoffs/UI.md`: `civicos-ui/**`), CLAIMED BY
+    PATH.** WHY AN M0 ITEM EDITS IT: it is REC-79's negative-control DRIVER, not a member surface — test estate, which is
+    M0's ground and why `VERIFICATION.md` is this row's authority; D-355's row places the fix with M0 because both
+    drivers' items (REC-79, M0-18) are landed and nobody else holds them. Scope in it: arm 2 re-aimed and attributed at
+    its site, one appended arm driving that attribution, D-331's preflight, the arm tally declared and asserted, and
+    the pen removed on every exit. `app.html`, `check-refusal-codes.mjs` and every UI suite are NOT edited.
+  - `bio-plane/test/provenance-floor.control.mjs` — M0-18's driver: arms 2a/2b, 3 and 6-stage-1 re-aimed and
+    attributed at their sites; the arm roster asserted at the foot.
+  - `bio-plane/test/m025-arm-census.mjs` — the arm-announcement reading ONLY: a fallback that reads the register's own
+    ENUMERATION grammar (`control-register.mjs` `countEnumerations`) when no line matches the union; its report line.
+  - `bio-plane/test/nc-d355.mjs` — NEW, this item's control driver.
+  - `bio-plane/test/admission-gate.test.mjs`, `identity-claims.test.mjs`, `planning-hygiene.test.mjs`,
+    `machine-fences.test.mjs` — COMMENTS ONLY (each `NEGATIVE CONTROL:` declaration: a dated re-run note, and in
+    admission-gate arm (2)'s superseded description and its never-existing driver path corrected). No assertion moves.
+  - `bio-plane/test/skillsequencing.control.mjs` — **SK-4's driver (SKILL's area), CLAIMED BY PATH, its FIRST HEAD LINE
+    and one dated note ONLY.** WHY AN M0 ITEM EDITS IT: this item's census fallback reads the driver's `(n)` announcements
+    for the first time and holds its head (`SIX ARMS`) against a run that also announces `(0) BASELINE` — D-343's shape,
+    whose precedent (M0-29) corrected such heads across areas once no live claim held them; none does (FLEET's 2026-09-14
+    claim on its arm-3 anchor is released). No arm, anchor or edit moves; landing the census red on a cause already
+    diagnosed would be the D-330 condition this row exists to remove.
+  - `.gitignore` — the `.rec79-control-pristine/` and `.nc-d355-pen/` pens, never listed; and, found by the class sweep
+    and listed as a MITIGATION ONLY, `nc-rec95.mjs`'s and `nc-rec129.mjs`'s pens (REC-121's precedent for REC-90/104).
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, and only to figures a green run PRINTS.
+  - `docs/development/MEASUREMENTS.md` (appended), this block, `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**NOT CLAIMED:** `bio-plane/src/**` (nothing under `src/` is edited, so no bundle rebuild is owed),
+`bio-plane/checks/**`, `civicos-ui/app.html`, `civicos-ui/check-refusal-codes.mjs` (D-254's worker is live in it — see
+the sequencing note in this item's report), `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order),
+`newgroup/**`, `release/**`, and every other suite and driver.
+
+**open as of 2026-09-21** — OPEN while this item builds; released at integration.

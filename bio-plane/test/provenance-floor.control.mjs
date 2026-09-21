@@ -105,6 +105,12 @@ const GITSHIM         = path.join(HERE, ".m0-18-gitshim");
 const sha = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex");
 
 let failures = 0, checks = 0;
+/* THE ARM ROSTER, asserted at the foot (D-355, 2026-09-21). Every arm id that actually RAN is pushed
+   here; the foot fails naming any declared arm that did not run and any that ran undeclared. The
+   cheapest way past a red arm is to delete it, and a deleted arm leaves no failing check behind — this
+   is the check it leaves. `6 stage 1` is announced twice (a heading, then the arm) and counted once. */
+const DECLARED_ARMS = ["0", "1", "2a", "2b", "3", "4", "5", "6-stage-1", "6a", "6b", "7", "8a", "8b"];
+const RAN = [];
 const report = (name, ok, detail) => {
   checks++;
   if (ok) console.log(`  ok   ${name}`);
@@ -139,6 +145,7 @@ const tally = (out) => {
    printed and floored. */
 function arm(name, { edits = [], writes = [], aside = [], run }) {
   console.log(`\n--- ARM ${name}`);
+  RAN.push(name.split(" ")[0]);
   fs.mkdirSync(PRISTINE, { recursive: true });
   const touched = [...new Set([...edits.map((e) => e.file), ...aside])];
   const copies = new Map();
@@ -203,6 +210,7 @@ console.log("M0-18 · provenance floors — negative controls\n"
 
 /* ---- (0) BASELINE --------------------------------------------------------- */
 console.log("\n--- ARM 0 · BASELINE (no patch)");
+RAN.push("0");
 const BASE = {};
 for (const [k, f] of [["identity", F.identity], ["dec49", F.dec49], ["planning", F.planning],
                       ["fences", F.fences], ["bounds", F.bounds], ["opclaims", F.opclaimsT],
@@ -223,7 +231,7 @@ const PHANTOM_BODY = `/* M0-18 control phantom. Written by test/provenance-floor
    COUNTED. That is the whole point of the arm. */
 export const zzM0d18Phantom = () => "the member decided";
 `;
-arm("1 · a phantom in src/ is NAMED, and the reproducible figures HOLD", {
+const ARM1 = arm("1 · a phantom in src/ is NAMED, and the reproducible figures HOLD", {
   writes: [{ file: PHANTOM_SRC, text: PHANTOM_BODY }],
   run() {
     const id = runSuite(F.identity), d49 = runSuite(F.dec49);
@@ -243,22 +251,48 @@ arm("1 · a phantom in src/ is NAMED, and the reproducible figures HOLD", {
 });
 
 /* ---- (2) THE DECISIVE PAIR ------------------------------------------------ */
+/* RE-AIMED 2026-09-21 BY D-355, NEVER EXEMPTED — THE FLOOR IS NOW READ FROM ARM 1, NEVER TYPED.
+ *
+ * As written (M0-18, `57dd36c8`, merged `f2d70204` on 2026-08-09) both arms set the floor to the
+ * literal 28, and 28 WAS the contaminated count that day: 27 `.mjs` files of `src/` + `checks/` in the
+ * commit, plus this file's one phantom. At `bb0e10bd` (2026-08-10 10:34 -0700, the SK-2 merge, which
+ * added `src/skilldoctrine.mjs`) the COMMITTED corpus itself reached 28, so from that merge on the
+ * M0-18 spelling met the floor with NO help from the phantom and 2a PASSED where it declared FAIL.
+ * A CORPUS GROWTH, not a behaviour move: the reproducible-floor mechanism was right the whole time,
+ * and the committed corpus is 33 of 33 on 2026-09-21 (M0-29 met the same red at `e9ba393` on
+ * 2026-09-14, "55 of 58"). The number 28 was right when it was written, and it is kept here for that.
+ *
+ * WHAT THE PAIR MEANS HAS NOT MOVED: a floor ONE ABOVE THE REPRODUCIBLE CORPUS — exactly the count a
+ * single phantom produces — must fail in the M0-18 spelling and pass in the pre-M0-18 one. Arm 1
+ * MEASURES that count with the same phantom present, so the floor is taken from it; it cannot decay as
+ * `src/` grows, and if arm 1 measured nothing both arms say NOT ARMED rather than guessing a figure. */
 const NEW_SPELLING = "FILES_REPRO.length >= 24, true);";
 const OLD_SPELLING_HINT = "files.length >= 24";
-arm("2a · a floor at the CONTAMINATED count FAILS in the M0-18 spelling", {
+const CONTAMINATED = ARM1 && Number.isFinite(ARM1.contaminated) && Number.isFinite(ARM1.repro)
+  && ARM1.contaminated === ARM1.repro + 1 ? ARM1.contaminated : null;
+console.log(`\n    the pair's floor, READ from arm 1: ${CONTAMINATED === null
+  ? `NONE — arm 1 measured ${JSON.stringify(ARM1)}, which is not one phantom over the reproducible corpus`
+  : `${CONTAMINATED} (the reproducible corpus ${ARM1.repro}, plus the one phantom)`}`);
+if (CONTAMINATED === null) {
+  report("2a · ARMED — a contaminated count one above the reproducible corpus was measured by arm 1", false,
+    `arm 1 returned ${JSON.stringify(ARM1)}; a pair with no measured floor is an arm that did not arm`);
+  report("2b · ARMED — a contaminated count one above the reproducible corpus was measured by arm 1", false,
+    `arm 1 returned ${JSON.stringify(ARM1)}; a pair with no measured floor is an arm that did not arm`);
+}
+if (CONTAMINATED !== null) arm("2a · a floor at the CONTAMINATED count FAILS in the M0-18 spelling", {
   writes: [{ file: PHANTOM_SRC, text: PHANTOM_BODY }],
-  edits: [{ file: F.identity, from: NEW_SPELLING, to: "FILES_REPRO.length >= 28, true);" }],
+  edits: [{ file: F.identity, from: NEW_SPELLING, to: `FILES_REPRO.length >= ${CONTAMINATED}, true);` }],
   run() {
     const r = runSuite(F.identity), tl = tally(r.out);
-    report("2a · FAILS, because 27 files are in the commit and 28 were walked — the floor is the "
+    report(`2a · FAILS, because ${CONTAMINATED - 1} files are in the commit and ${CONTAMINATED} were walked — the floor is the `
       + `reproducible figure and cannot be met by an arrival (${tl.pass} pass, ${tl.fail} fail)`,
       r.exit !== 0 && tl.fail > 0, `exit ${r.exit}, tally ${tl.pass}/${tl.fail} — expected a FAILURE`);
     return tl;
   },
 });
-arm("2b · the SAME floor PASSES in the pre-M0-18 spelling — the git backing is the difference", {
+if (CONTAMINATED !== null) arm("2b · the SAME floor PASSES in the pre-M0-18 spelling — the git backing is the difference", {
   writes: [{ file: PHANTOM_SRC, text: PHANTOM_BODY }],
-  edits: [{ file: F.identity, from: NEW_SPELLING, to: "files.length >= 28, true);" }],
+  edits: [{ file: F.identity, from: NEW_SPELLING, to: `files.length >= ${CONTAMINATED}, true);` }],
   run() {
     const r = runSuite(F.identity), tl = tally(r.out);
     report("2b · PASSES over the contaminated walk — this is the state M0-18 removed, and a floor moved "
@@ -270,6 +304,7 @@ arm("2b · the SAME floor PASSES in the pre-M0-18 spelling — the git backing i
 
 /* ---- (3) GIT SHIMMED TO FAIL ---------------------------------------------- */
 console.log("\n--- ARM 3 · git shimmed to exit 1");
+RAN.push("3");
 fs.mkdirSync(GITSHIM, { recursive: true });
 fs.writeFileSync(path.join(GITSHIM, "git"), "#!/bin/sh\nexit 1\n");
 fs.chmodSync(path.join(GITSHIM, "git"), 0o755);
@@ -277,8 +312,32 @@ try {
   const env = { PATH: `${GITSHIM}:${process.env.PATH}` };
   for (const [k, f] of [["identity", F.identity], ["planning", F.planning], ["bounds", F.bounds], ["fences", F.fences]]) {
     const r = runSuite(f, env), tl = tally(r.out);
-    report(`3 · ${k} stays GREEN with git unavailable (${tl.pass} pass, ${tl.fail} fail)`,
-      r.exit === 0 && tl.fail === 0, `exit ${r.exit}, tally ${tl.pass}/${tl.fail}`);
+    /* RE-AIMED 2026-09-21 BY D-355 FOR `planning` ONLY, NEVER EXEMPTED — A SUITE GROWTH, DATED.
+       "stays GREEN" was the right proxy on 2026-08-09: nothing in planning-hygiene needed git except
+       M0-18's own walk, and that walk degrades to UNVERIFIED. The suite then GREW four assertions that
+       RUN `tools/plancheck.mjs --local` and read its report — two at `ff26024f` (2026-09-14 17:52 -0700,
+       M0-30's row-design check) and two at `e88dcaeb` (2026-09-16 20:57 -0400, M0-37's delegation
+       register) — and plancheck reads git BY DESIGN. With git shimmed those four fail and nothing else
+       does: measured 2026-09-21 with this very shim, 276 pass, 4 fail, all four labels opening
+       `plancheck`. M0-29 met the first two at `e9ba393` (2026-09-14). The arm's SUBJECT is M0-18's walk,
+       so the check is now what that walk owes: every assertion planning FAILS without git reads
+       plancheck's own output, and there are no other failures — a failure in the walk itself would
+       carry any other label and fail this. Over-strictness: if plancheck ever answers without git and
+       those four pass, this still passes. Identity, bounds and fences carry no such dependency and still
+       owe a fully GREEN run. */
+    if (k === "planning") {
+      const failedLabels = [...r.out.matchAll(/^ {2}FAIL {2}(.+)$/gm)].map((m) => m[1].trim());
+      const foreign = failedLabels.filter((l) => !/^plancheck\b/.test(l));
+      report(`3 · planning's M0-18 walk stays GREEN with git unavailable — its only failures are assertions that `
+        + `READ tools/plancheck.mjs, which needs git by design (${tl.pass} pass, ${tl.fail} fail · `
+        + `${failedLabels.length - foreign.length} plancheck-reading, ${foreign.length} other)`,
+        tl.pass > 0 && tl.fail === failedLabels.length && foreign.length === 0,
+        `tally ${tl.pass}/${tl.fail}, named failures ${failedLabels.length}, OTHER failures: `
+        + `${JSON.stringify(foreign).slice(0, 300)}`);
+    } else {
+      report(`3 · ${k} stays GREEN with git unavailable (${tl.pass} pass, ${tl.fail} fail)`,
+        r.exit === 0 && tl.fail === 0, `exit ${r.exit}, tally ${tl.pass}/${tl.fail}`);
+    }
     report(`3 · ${k} says UNVERIFIED`, /UNVERIFIED/.test(r.out), "no UNVERIFIED in the output");
     /* D-257's ARM 3 CAME BACK WRONG AND FOUND A DEFECT IN THE FIX RATHER THAN IN
        THE ARM: the label still read "in the commit at HEAD (unverified)", a
@@ -343,6 +402,25 @@ arm("5 · a phantom carrying a REAL FINDING still REDS its suite — the sweep d
  */
 console.log("\n--- ARM 6 stage 1 · remove BOTH committed pinners and learn the codes from the instrument");
 const PINNERS = [F.shadowed, path.join(HERE, "shadowed-refusals.control.mjs")];
+/* The pinners' text, read BEFORE they are moved, so stage 1 can ask whether each learned code is one
+   THEY pinned. Read, never typed: this file must still contain no quoted refusal code (see above). */
+const PINNER_TEXT = PINNERS.map((p) => fs.readFileSync(p, "utf8"));
+/* RE-AIMED 2026-09-21 BY D-355, NEVER EXEMPTED — A MOVE IN THE SUBJECT'S CORPUS, DATED.
+ *
+ * The literal `>= 8` was REC-78's count of pins on M0-18's day, and it was right then. At `ae0ae418`
+ * (2026-09-10 13:16 -0700, the CASE-5 merge) `publish` in `store.mjs` was rewritten so that no identity
+ * word stands in the 300-character window machine-fences reads in front of `EDITION_NOT_INCREMENTED`;
+ * that code left the identity-shadowing class (it had been `publish`, shadows 6), and only SEVEN of
+ * REC-78's eight pins stayed load-bearing. The arm armed PERFECTLY — machine-fences RED 48/1 naming
+ * seven codes, measured 2026-09-21 (M0-29 met the same at `e9ba393` on 2026-09-14) — and failed ONLY
+ * its literal. Not a lost pin: the code is still pinned by REC-78's suite; the instrument no longer
+ * asks for it, and it is not an identity guard in any case.
+ *
+ * THE COUNT IS NOT RE-TYPED AS SEVEN, which would decay the same way. Stage 1 now asserts what its own
+ * title says — the set is NOT EMPTY — and the CAUSAL half: every code it learned is one a pinner this
+ * arm moved aside actually quotes. COMPLETENESS is 6b's to prove, and 6b does: with a phantom supplying
+ * EXACTLY the learned codes, the unpinned set must read EMPTY, which it cannot if stage 1 learned too
+ * few. So the three stages together still pin the whole set, and none of them carries a number. */
 const LEARNED = arm("6-stage-1 · with every committed pin removed, the set is NOT empty", {
   aside: PINNERS,
   run() {
@@ -350,10 +428,13 @@ const LEARNED = arm("6-stage-1 · with every committed pin removed, the set is N
     const m = r.out.match(/NO suite pins at all[\s\S]*?got\s+(\[[^\]]*\])/);
     let codes = [];
     try { codes = m ? JSON.parse(m[1]) : []; } catch { codes = []; }
+    const unowned = codes.filter((c) => !PINNER_TEXT.some((s) => s.includes(`"${c}"`)));
     report(`6-stage-1 · machine-fences goes RED and NAMES the codes that lost their pin `
-      + `(${codes.length} code(s): ${codes.join(", ") || "NONE — the arm did not arm"})`,
-      r.exit !== 0 && tl.fail > 0 && codes.length >= 8,
-      `exit ${r.exit}, tally ${tl.pass}/${tl.fail}, parsed ${codes.length} code(s)`);
+      + `(${codes.length} code(s): ${codes.join(", ") || "NONE — the arm did not arm"}), `
+      + `every one of them quoted by a pinner this arm moved aside`,
+      r.exit !== 0 && tl.fail > 0 && codes.length >= 1 && unowned.length === 0,
+      `exit ${r.exit}, tally ${tl.pass}/${tl.fail}, parsed ${codes.length} code(s), `
+      + `not quoted by either moved pinner: ${JSON.stringify(unowned)}`);
     return codes;
   },
 }) || [];
@@ -447,6 +528,16 @@ arm("8b · the SAME directory REDS op-claims under the pre-M0-18 named list", {
     return tl;
   },
 });
+
+/* ---- the arm roster (D-355) ---------------------------------------------- */
+{
+  const missing = DECLARED_ARMS.filter((a) => RAN.filter((x) => x === a).length !== 1);
+  const extra = RAN.filter((a) => !DECLARED_ARMS.includes(a));
+  report(`the arm roster ran as declared — ${RAN.length} arm(s) run of ${DECLARED_ARMS.length} declared `
+    + `(${DECLARED_ARMS.join(", ")})`,
+    missing.length === 0 && extra.length === 0,
+    `declared but not run exactly once: [${missing.join(", ")}] · run but undeclared: [${extra.join(", ")}]`);
+}
 
 /* ---- the foot ------------------------------------------------------------- */
 try { fs.rmSync(PRISTINE, { recursive: true, force: true }); } catch {}

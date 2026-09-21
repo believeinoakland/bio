@@ -8,7 +8,12 @@
    TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
    THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
    spelled an `op=` token that op-claims then read as a real claim. Recorded at their
-   sites in the control, not smoothed. */
+   sites in the control, not smoothed.
+   RE-RUN 2026-09-21 by D-355: 55 of 58 before any edit. ARM 6 stage 1 learned SEVEN codes where its literal said at
+   least eight: at `ae0ae418` (2026-09-10, CASE-5) this file's 300-character identity window stopped reading
+   `EDITION_NOT_INCREMENTED` in `publish` as an identity refusal, so seven of REC-78's eight pins stay load-bearing
+   here. Stage 1 now asserts the set is non-empty and owned by the moved pinners, and 6b proves it complete.
+   After: 59 of 59 control checks as declared, exit 0. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/machine-fences.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3's, PL-4's and PL-11's precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad, and every restore is verified BY sha256 AND BY CONTENT.
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a75c0395e77e7eaed, every one behaving as declared, baseline 45/0 before each. Figures below are MEASURED.
    (1) NEUTER THE PREDICATE — `isMachineStamp` returns false in checks/bio-checks.mjs — and ALL TWELVE complete-payload arms FAIL NAMING THE MACHINE REFUSAL, not a payload complaint -> 15 pass, 30 FAIL. **AND HERE IS WHAT THE COMPLETE PAYLOAD BOUGHT, WHICH IS MORE THAN THE ITEM PREDICTED: TEN OF THE TWELVE ACTS THEN WENT ALL THE WAY THROUGH.** The machine RELEASED a collected document to `verified`, CONCLUDED a question, REOPENED one, PUBLISHED a case at edition 1, MOVED an action, wrote a CORRESPONDENCE entry at ord 0, DIVIDED a question into two children, GROUPED a basis, SET THE GROUP'S REQUIRED EVIDENTIARY STRENGTH (`author: token:ai` in the row, read back), and ACCEPTED a reading. Under PL-11's payloads the same edit produced ONE success and eleven payload complaints; under these it produces ten. **THE TWO THAT DID NOT: `taskforward` and `taskresolve`, both answering `NOT_YOURS` — REC-4's assignee fence catching what the machine fence let past.** Those two verbs are the only pair in the family with a SECOND independent fence behind the first, and nobody knew that until the arm was run with a payload good enough to reach it.

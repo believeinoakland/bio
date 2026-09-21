@@ -8,7 +8,11 @@
    TWO ARMS CAME BACK WRONG FIRST AND BOTH FOUND DEFECTS IN THE HARNESS RATHER THAN IN
    THE SUBJECT — the harness pinned the very refusal codes its arm was about to test, and
    spelled an `op=` token that op-claims then read as a real claim. Recorded at their
-   sites in the control, not smoothed. */
+   sites in the control, not smoothed.
+   RE-RUN 2026-09-21 by D-355: 55 of 58 before any edit. ARM 2a on this file PASSED where it declared FAIL, because
+   the committed corpus here reached 28 files at `bb0e10bd` (2026-08-10) and 28 was the arm's literal floor. It now
+   reads the contaminated count from arm 1's own measurement, the old number kept at the arm's site as right when
+   written. After: 59 of 59 control checks as declared, exit 0. */
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/identity-claims.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it (PL-3, PL-4, PL-11, REC-73 precedent). THE HARNESS LIVES INSIDE THIS WORKTREE and never in a shared scratchpad; every restore is verified BY sha256 AND BY `cmp` against a pristine per-arm copy named uniquely for its arm.
    AND THE FIRST THING THIS DECLARATION OWES IS THE REASON THE ORDINARY ARM IS WORTHLESS HERE: **REC-65's DIFF IS COMMENTS. A behavioural arm cannot fail no matter what this item writes** — delete every corrected sentence and all 124 suites stay green, which is exactly the property that let six false comments stand for months. So the arms below break the CLAIM ITSELF and the INSTRUMENT that reads it, and only arm (5) touches behaviour at all.
    ALL FIVE ARMS RUN 2026-08-08 IN WORKTREE agent-a8c89d200faa387fe, EACH ALONE with the others held open, BASELINE 31/0 RE-MEASURED BEFORE AND AFTER EVERY ARM, every restore verified by sha256 AND by `cmp` against a per-arm pristine copy. FOUR behaved as declared; ONE did not, and it is reported rather than smoothed. Figures below are MEASURED, not predicted.

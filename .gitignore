@@ -140,6 +140,19 @@
 # that runs every driver makes that a certainty rather than a risk.
 _m025/
 .m025-anchor-harness/
+# D-355's pens, each on its OWN line for the reason the note at `.rec84-control-pristine/` gives.
+# REC-79's driver (`civicos-ui/test/refusal-partition.control.mjs`) wrote `.rec79-control-pristine/` on
+# EVERY run from 2026-08-09 and never removed it, clean exit or red, and the pen was never listed here —
+# it is the pen in the `check-firing` incident this block's note records. Since D-355 the driver removes
+# each copy by name as its restore verifies and an exit hook removes the rest on every exit; SIGKILL
+# cannot be caught, which is what this line is for. `.nc-d355-pen/` is `bio-plane/test/nc-d355.mjs`'s own.
+.rec79-control-pristine/
+.nc-d355-pen/
+# FOUND BY D-355's CLASS SWEEP, 2026-09-21, and listed here as a MITIGATION ONLY, on REC-121's precedent
+# for REC-90's and REC-104's pens: `bio-plane/test/nc-rec95.mjs` and `bio-plane/test/nc-rec129.mjs` each
+# create a pen, never remove it, and had no line here. Removing them on exit is their owners' fix.
+.rec95-control-pristine/
+.rec129-harness/
 
 # CAP-7's pen, named for its item for the same reason every one above it is. The
 # Drive-link count streams ~1.4 GB of Oakland assets through this directory and
