@@ -18383,3 +18383,11 @@ and `docs/development/STORE-AS-CACHE.md` (their D-164 lines marked closed; STORE
 `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER
 (#11) -> BOB DELEGATION's answer paragraph); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 BOB (#26) — Bob ruled D-148 and D-149: a fee quote is evidence; a records request names every law that governs the agency asked (Case Making §2, BOB INBOX)
+
+claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77b`. Paths:
+`docs/architecture/BIO_Case_Making_v0_1.md` (§2: two ruled paragraphs carrying Bob's words of 2026-09-22; Status
+sentence, one Incomplete bullet, as-of date); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newest
+first); `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
