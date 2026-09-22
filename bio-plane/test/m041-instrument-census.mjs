@@ -313,7 +313,9 @@ export const ENTRY_LOOPS = [
 
    CORRECTED 2026-09-17 (M0-56). This comment used to say *this repository has no
    git hook and no CI (measured)*, and the first half is no longer true: a
-   `pre-push` hook now refuses a push carrying a stale `docs/DECIDED.md`. **The
+   `pre-push` hook now refuses a push — a tree the gate recorded RED, merge
+   markers, corpus or status drift, and until M0-99 (2026-09-22) a stale
+   COMMITTED `docs/DECIDED.md`, which is no longer committed. **The
    conclusion is unchanged and the reason is worth keeping** — that hook composes
    the PUSH, not the five gates, so every entry loop below is STILL
    convention-only and skipping one still leaves no trace. The state is printed

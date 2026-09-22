@@ -1,4 +1,12 @@
-/* decided — the ruling index, `tools/decided.mjs` (M0-97 and D-341, 2026-09-21).
+/* decided — the ruling index, `tools/decided.mjs` (M0-97 and D-341, 2026-09-21; M0-99, 2026-09-22).
+ *
+ * M0-99 — `docs/DECIDED.md` is no longer COMMITTED: 88 commits touched the generated file on 2026-09-21
+ *   and every lane's landing re-merged it. Section 8 drives the change: the index is produced on demand
+ *   through ONE freshness call (`fresh()`: absent or stale is written by rename, current is left alone),
+ *   rulings edited on two branches merge with no index conflict and the query answers from the merged
+ *   corpus (the row's acceptance, over the REAL `.gitignore`), and the liar — the index kept committed
+ *   under `merge=ours` — merges clean too, which is why the arm that catches it asserts the file is
+ *   UNTRACKED and ignored by a `.gitignore` the repository carries (`indexTracking()`, plancheck arm 2b).
  *
  * `CLAUDE.md` §1 names `node tools/decided.mjs "<subject>"` the ONE source for what has been
  * decided, so an index that cannot return a ruling it should hold, or returns one it should
@@ -18,7 +26,7 @@
  * here by `git grep` rather than by the tool, so it sees TRACKED files only; and it proves the
  * entry pass FILES every ruling entry, not that a session will phrase its question so as to hit it.
  *
- * NEGATIVE CONTROL: `node bio-plane/test/decided.control.mjs` from the repo root breaks `tools/decided.mjs` one arm at a time and each arm must turn a NAMED assertion here red
+ * NEGATIVE CONTROL: `node bio-plane/test/decided.control.mjs` from the repo root breaks `tools/decided.mjs` (or, for arm 16, the repository's `.gitignore`) one arm at a time and each arm must turn a NAMED assertion here red
  *   (1) the register-entry pass never files an entry -> "EVERY ANSWERED OR ENACTED ENTRY IS RETURNED" fails naming DEC-70, and "DEC-70 IS RETURNED" fails by name
  *   (2) MARKER lower-cased with the entry pass intact -> "LOWERCASE PROSE IS NOT A RULING" fails
  *   (3) the row's liar, the entry pass REPLACED by a lower-cased MARKER -> "THE INDEX GROWS ONLY BY THE ENTRIES IT DID NOT FILE BEFORE" fails, with the flood and the equality
@@ -35,14 +43,27 @@
  *   (14) an entry's date borrowed from the whole entry instead of `decided:` -> "AN UNDATED decided: STAYS UNDATED" fails, and DEC-73's CLI answer with it
  *   (15) an entry's FIRST answer read instead of its last -> "AN ENTRY ANSWERED TWICE IS ONE RULING, QUOTING THE LAST ANSWER" fails, and DEC-31's with it
  *   RUN 2026-09-21 by the M0-97 worker: see this item's claim block in `docs/development/CLAIMS.md` for the figures.
+ *   (16) M0-99's own: the `.gitignore` line removed -> "THE ACCEPTANCE — rulings edited on two branches MERGE WITH NO DECIDED.md CONFLICT" fails, with "...AND ITS OWN .gitignore IGNORES IT"
+ *   (17) the freshness call never writes -> "THE FRESHNESS CALL WRITES AN ABSENT INDEX" fails, and "A STALE INDEX IS REWRITTEN" with it
+ *   (18) the freshness call rewrites a current index -> "A CURRENT INDEX IS NOT REWRITTEN" fails
+ *   (19) the predicate blind to a tracked index -> "...and the predicate plancheck arm 2b reads NAMES it" fails (the liar's arm)
+ *   (20) any ignore rule counted as the repository's -> "A RULE IN .git/info/exclude IS NOT THE REPOSITORY IGNORING IT" fails
+ *   (21) a negated rule read as an ignore -> "A NEGATED RULE IS NOT AN IGNORE" fails
+ *   (22) `--check` falls through to the query -> "`--check` is RETIRED, LOUDLY" fails
+ *   (23) only the root `.gitignore` counted, the over-strictness arm's own control -> "OVER-STRICTNESS: a rule in a NESTED, committed .gitignore" fails
+ *   RUN 2026-09-22 by the M0-99 worker, all 23 arms again: 23 of 23 AS DECLARED, driver 155 pass / 0 fail, baseline and
+ *   closing 59 / 0, every restore byte-identical by sha256 and `cmp`, "the oracle ran" green under every arm; arms 16-23
+ *   failed 5, 7, 1, 1, 1, 1, 1 and 1 assertions, and arms 1-15 still fail at their named assertions after this landing.
  */
 
 import "./stdio.mjs";
+import "./sandbox.mjs";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, statSync, utimesSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { scan, registerEntries, query, render } from "../../tools/decided.mjs";
+import { scan, registerEntries, query, render, fresh, indexTracking, INDEX_PATH } from "../../tools/decided.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
@@ -54,7 +75,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want).slice(0, 600)}\n         got  ${JSON.stringify(got).slice(0, 600)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 7;
+const SECTIONS = 8;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 const cli = (...args) => {
@@ -319,6 +340,150 @@ section("7 — THE TOOL'S OWN CONTROL STILL RUNS, and covers the two new pattern
   t("`decided.mjs --control` exits 0", c.code, 0);
   t("...with its M0-97 and D-341 arms among the PASS lines",
     [/PASS {2}M0-97: /.test(c.out), /PASS {2}D-341: /.test(c.out), /FAIL/.test(c.out)], [true, true, false]);
+}
+
+/* ========================================================================== */
+section("8 — M0-99: THE INDEX IS PRODUCED ON DEMAND, AND NEVER COMMITTED");
+/* ORCHESTRATION.md §"THE RECORD IS PARTITIONED BY WRITER", rule 2. Every fixture below is a REAL
+   repository with the REAL generator copied in (it indexes the `docs/` and `CLAUDE.md` beside its
+   own `tools/`) and, unless an arm says otherwise, the REAL `.gitignore` — so a control that breaks
+   the repository's own line reaches every fixture, which is why they copy it rather than write one. */
+{
+  const SANDBOX = mkdtempSync(join(tmpdir(), "m099-"));
+  const g = (cwd, ...args) => spawnSync("git", ["-c", "user.email=m099@example.invalid", "-c", "user.name=M0-99 suite",
+    "-c", "commit.gpgsign=false", ...args], { cwd, encoding: "utf8" });
+  const REAL_IGNORE = readFileSync(join(ROOT, ".gitignore"));
+  const put = (root, rel, body) => { mkdirSync(dirname(join(root, rel)), { recursive: true }); writeFileSync(join(root, rel), body); };
+  const repo = (name, { ignore = REAL_IGNORE, files = {} } = {}) => {
+    const root = join(SANDBOX, name);
+    put(root, "tools/decided.mjs", readFileSync(TOOL));
+    put(root, "CLAUDE.md", "# fixture\n");
+    if (ignore !== null) put(root, ".gitignore", ignore);
+    for (const [rel, body] of Object.entries(files)) put(root, rel, body);
+    g(root, "init", "-q", "-b", "main");
+    return root;
+  };
+  const run = (root, ...args) => {
+    const r = spawnSync(process.execPath, [join(root, "tools/decided.mjs"), ...args], { cwd: root, encoding: "utf8" });
+    return { code: r.status, out: `${r.stdout || ""}${r.stderr || ""}` };
+  };
+  const commit = (root, msg) => { g(root, "add", "-A"); return g(root, "commit", "-q", "-m", msg); };
+  const idx = (root) => existsSync(join(root, INDEX_PATH)) ? readFileSync(join(root, INDEX_PATH), "utf8") : "";
+  const RULINGS = ["# rulings", "", "DEC-901 was RULED by the fixture: the index is produced where it is read.", "",
+    ...Array.from({ length: 8 }, (_, i) => `filler line ${i}, which neither branch touches.`), "",
+    "DEC-902 was RULED by the fixture: a generated file is not merged.", ""].join("\n");
+  /* The acceptance's two branches, each run the way a session runs them: edit rulings, run the tool,
+     `git add -A`, commit. Branch a edits one ruling and adds one; b edits the other and adds two, so
+     the two generated indexes differ in their head count as well as their rows — under a committed
+     index that is a conflict by construction, and the control that re-commits it must see one. */
+  const twoBranches = (root) => {
+    const edit = (from, to) => put(root, "docs/rulings.md", readFileSync(join(root, "docs/rulings.md"), "utf8").replace(from, to));
+    g(root, "checkout", "-q", "-b", "a");
+    edit("produced where it is read.", "produced where it is read, on the alpha branch.");
+    put(root, "docs/alpha.md", "DEC-903 was RULED by the fixture on the alpha branch alone.\n");
+    run(root); commit(root, "a: one ruling edited, one added, the tool run");
+    g(root, "checkout", "-q", "-b", "b", "main");
+    edit("a generated file is not merged.", "a generated file is not merged, on the beta branch.");
+    put(root, "docs/beta.md", "DEC-904 was RULED by the fixture on the beta branch.\n\nDEC-905 was RULED by the fixture on the beta branch too.\n");
+    run(root); commit(root, "b: one ruling edited, two added, the tool run");
+    g(root, "checkout", "-q", "a");
+    const m = g(root, "merge", "--no-edit", "b");
+    return { status: m.status, said: `${m.stdout}${m.stderr}`, unmerged: g(root, "diff", "--name-only", "--diff-filter=U").stdout.trim() };
+  };
+
+  /* ---- THIS REPOSITORY. The oracle is git, asked directly — not the predicate under test. */
+  const ls = spawnSync("git", ["ls-files", "--", INDEX_PATH], { cwd: ROOT, encoding: "utf8" });
+  const ci = spawnSync("git", ["check-ignore", "-v", "--no-index", "--", INDEX_PATH], { cwd: ROOT, encoding: "utf8" });
+  const at = spawnSync("git", ["check-attr", "merge", "--", INDEX_PATH], { cwd: ROOT, encoding: "utf8" });
+  t("THE REAL REPOSITORY DOES NOT TRACK docs/DECIDED.md — `git ls-files` lists nothing (the liar keeps it committed under merge=ours)",
+    [ls.status, ls.stdout.trim()], [0, ""]);
+  t("...AND ITS OWN .gitignore IGNORES IT — git names the root `.gitignore` as the rule's source, never a per-clone exclude",
+    [ci.status, /^\.gitignore:\d+:docs\/DECIDED\.md\t/.test(ci.stdout)], [0, true]);
+  t("...and no merge driver is attached to it — `git check-attr merge` reads unspecified",
+    [at.status, at.stdout.trim()], [0, `${INDEX_PATH}: merge: unspecified`]);
+  const it = indexTracking();
+  t("...and `indexTracking()`, the predicate plancheck arm 2b reads, agrees with the oracle",
+    [it.tracked, it.ignored, it.undetermined], [false, true, false]);
+
+  /* ---- THE ONE FRESHNESS CALL, driven through the CLI of a fixture, where absent, current and stale
+     can each be arranged without touching this repository. */
+  const F = repo("fresh", { files: { "docs/rulings.md": "# rulings\n\nDEC-901 was RULED by the fixture: the first subject stands.\n" } });
+  commit(F, "the corpus, committed; the index never is");
+  const P = join(F, INDEX_PATH);
+  const r1 = run(F);
+  t("THE FRESHNESS CALL WRITES AN ABSENT INDEX — the CLI says so, and the file holds the corpus's ruling",
+    [r1.code, / · absent, written$/m.test(r1.out), idx(F).includes("the first subject stands")], [0, true, true]);
+  if (existsSync(P)) utimesSync(P, new Date(2001, 0, 1), new Date(2001, 0, 1));
+  const bytes0 = idx(F), mtime0 = existsSync(P) ? statSync(P).mtimeMs : -1;
+  const r2 = run(F);
+  t("A CURRENT INDEX IS NOT REWRITTEN — its bytes AND its mtime stay, so a tree that has not moved is not touched",
+    [r2.code, / · already current, not rewritten$/m.test(r2.out), idx(F) === bytes0, existsSync(P) && statSync(P).mtimeMs === mtime0], [0, true, true, true]);
+  put(F, "docs/later.md", "DEC-906 was RULED by the fixture after the index was written: the later subject.\n");
+  const r3 = run(F);
+  t("A STALE INDEX IS REWRITTEN — the ruling added after it was written is in what the next reader gets",
+    [r3.code, / · stale, written$/m.test(r3.out), idx(F).includes("the later subject")], [0, true, true]);
+  const st = g(F, "status", "--porcelain", "--ignored", "--untracked-files=all").stdout;
+  t("...BY RENAME: no temporary file is left beside it, and the index reads IGNORED, never untracked",
+    [/DECIDED\.md\.tmp/.test(st), /^!! docs\/DECIDED\.md$/m.test(st), /^\?\? docs\/DECIDED\.md$/m.test(st)], [false, true, false]);
+  const chk = run(F, "--check");
+  t("`--check` is RETIRED, LOUDLY — exit 2 naming M0-99; never 0, and never answered as a query",
+    [chk.code, /RETIRED \(M0-99/.test(chk.out), /No RULING/.test(chk.out)], [2, true, false]);
+  /* This repository, in process: the one call leaves the working copy CURRENT, and what it returns is
+     the index of the corpus this suite read at its head. It may write the (ignored) copy here. */
+  const here = fresh();
+  t("ON THIS REPOSITORY, after the one call the working copy is CURRENT and is the index of the corpus the suite read",
+    [fresh({ write: false }).state, here.body === render(ROWS, REGISTER)], ["current", true]);
+
+  /* ---- THE ACCEPTANCE, the row's own words: a ruling edited on two branches merges with no
+     DECIDED.md conflict, and `decided.mjs "<subject>"` answers from the merged corpus. */
+  const A = repo("accept", { files: { "docs/rulings.md": RULINGS } });
+  run(A); commit(A, "base: two rulings, the tool run as a session runs it");
+  const am = twoBranches(A);
+  t("THE ACCEPTANCE — rulings edited on two branches MERGE WITH NO DECIDED.md CONFLICT, each branch having run the tool",
+    [am.status, am.unmerged, /DECIDED/.test(am.said)], [0, "", false]);
+  t("...and no commit on either branch, nor the merge, carries the index",
+    [g(A, "log", "--all", "--format=%h", "--", INDEX_PATH).stdout.trim(), g(A, "ls-files", "--", INDEX_PATH).stdout.trim()], ["", ""]);
+  const qa = run(A, "produced where it is read, on the alpha branch"), qb = run(A, "not merged, on the beta branch"), q5 = run(A, "DEC-905");
+  t("...and `decided.mjs \"<subject>\"` ANSWERS FROM THE MERGED CORPUS — both edited rulings, and one only the other branch added",
+    [/\nDEC-901 /.test(qa.out), /\nDEC-902 /.test(qb.out), /\nDEC-905 /.test(q5.out)], [true, true, true]);
+  const after = run(A);
+  t("...and the copy the merge left behind was STALE, and the ONE freshness call brings it to the merged corpus",
+    [/ · stale, written$/m.test(after.out), ["on the alpha branch", "on the beta branch", "DEC-904", "DEC-905"].every((s) => idx(A).includes(s))],
+    [true, true]);
+
+  /* ---- THE LIAR, DRIVEN: the same two branches with the index COMMITTED under `merge=ours`. */
+  const L = repo("liar", { ignore: "node_modules/\n", files: { ".gitattributes": `${INDEX_PATH} merge=ours\n`, "docs/rulings.md": RULINGS } });
+  g(L, "config", "merge.ours.driver", "true");
+  run(L); commit(L, "base: the index COMMITTED, under merge=ours");
+  const lm = twoBranches(L);
+  t("THE LIAR MERGES CLEAN TOO — `merge=ours` keeps one side's committed index, so 'no conflict' alone cannot tell it from the fix",
+    [lm.status, lm.unmerged], [0, ""]);
+  const lt = indexTracking({ repo: L });
+  t("...and the predicate plancheck arm 2b reads NAMES it: TRACKED, and not ignored by any .gitignore the repository carries",
+    [lt.tracked, lt.ignored, lt.undetermined], [true, false, false]);
+  const kept = g(L, "show", `HEAD:${INDEX_PATH}`).stdout;
+  t("...and the index it kept is STALE: the merged corpus holds a ruling the committed copy does not",
+    [kept.length > 200, kept.includes("DEC-905"), /\nDEC-905 /.test(run(L, "DEC-905").out)], [true, false, true]);
+
+  /* ---- THE PREDICATE'S EDGES: what counts as the repository ignoring it. */
+  const X = repo("exclude", { ignore: null, files: { "docs/rulings.md": RULINGS } });
+  commit(X, "no .gitignore at all");
+  put(X, ".git/info/exclude", `${INDEX_PATH}\n`);
+  const xt = indexTracking({ repo: X });
+  t("A RULE IN .git/info/exclude IS NOT THE REPOSITORY IGNORING IT — one clone's exclude travels to nobody",
+    [xt.tracked, xt.ignored, String(xt.rule).startsWith(".git/info/exclude")], [false, false, true]);
+  const N = repo("nested", { ignore: null, files: { "docs/.gitignore": "DECIDED.md\n", "docs/rulings.md": RULINGS } });
+  commit(N, "the rule in a nested, committed .gitignore");
+  t("OVER-STRICTNESS: a rule in a NESTED, committed .gitignore IS the repository ignoring it — a spelling this item did not use",
+    [indexTracking({ repo: N }).ignored], [true]);
+  const G = repo("negated", { ignore: `${INDEX_PATH}\n!${INDEX_PATH}\n`, files: { "docs/rulings.md": RULINGS } });
+  commit(G, "a negated rule");
+  t("A NEGATED RULE IS NOT AN IGNORE — git reports it as the match of a path it does NOT ignore",
+    indexTracking({ repo: G }).ignored, false);
+  t("OUTSIDE A REPOSITORY the predicate is UNDETERMINED, and says so — never read as either answer",
+    indexTracking({ repo: SANDBOX }).undetermined, true);
+
+  rmSync(SANDBOX, { recursive: true, force: true });
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);

@@ -25,9 +25,9 @@
  * before anything was armed — the "anchor occurred twice" class, met on the first draft.
  *
  * DECLARED BEFORE ARMING — what MUST hold and what MUST NOT:
- *   BASE  nothing armed          -> `--check` exit 0 (the committed index is current) AND
- *                                   `--control` exit 0. The row that tells six-arms-working
- *                                   from six-arms-broken.
+ *   BASE  nothing armed          -> the tool's freshness call, run a second time, reports the
+ *                                   index ALREADY CURRENT, AND `--control` exit 0. The row that
+ *                                   tells six-arms-working from six-arms-broken.
  *   A1    the plant alone, tool AS COMMITTED
  *                                -> the planted sentence yields **0** rows. A line of prose
  *                                   naming `DECIDED.md` beside an id is not a ruling.
@@ -63,8 +63,16 @@
  * closes, so "8 of 8 by id" was true only because of D-341. A6 now pins the seven by id and the
  * eighth by its SENTENCE, as an id-less row quoting `DECIDED.md`. A sentence survives line moves,
  * and the id that went is the one D-341 exists to remove.
+ *
+ * BASE AND A5 CORRECTED 2026-09-22 by the M0-99 worker, never exempted. BASE asserted `--check` exit 0,
+ * "the committed index is current", and A5 read "the committed index": both were true while
+ * `docs/DECIDED.md` was COMMITTED. M0-99 took it out of every commit and retired `--check` (it exits 2
+ * now, saying so), so a fresh checkout holds no index at all — and this driver's arms COPY the index as
+ * a pristine before arming, which threw on a missing file. So the driver now produces the index through
+ * the tool's ONE freshness call (the CLI with no argument) before anything arms, and BASE asks that call
+ * a second time and requires `already current, not rewritten` — the property `--check` used to answer.
  */
-import { readFileSync, writeFileSync, copyFileSync, statSync, mkdtempSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, statSync, mkdtempSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -175,11 +183,15 @@ console.log(`nc-m034 — D-367's marker clause, driven in both directions. pen $
 {
   const n = readFileSync(TOOL, "utf8").split(ANCHOR).length - 1;
   say(n === 1, `ANCHOR VALIDATED BEFORE ANY ARM — the regex tail occurs exactly once in tools/decided.mjs (${n})`);
+  /* M0-99: the index is produced here, through the one freshness call, before any arm copies it. */
+  const made = run([]);
+  say(made.code === 0 && existsSync(INDEX), `THE INDEX IS PRODUCED BEFORE ANY ARM — the freshness call exits ${made.code} and ${INDEX.replace(ROOT + "/", "")} ${existsSync(INDEX) ? "exists" : "DOES NOT EXIST"}`);
 }
 
 armed("BASE", [], () => {}, () => {
-  const chk = run(["--check"]);
-  say(chk.code === 0, `BASE  the committed index is CURRENT (\`--check\` exit ${chk.code})`);
+  const again = run([]);
+  say(again.code === 0 && /already current, not rewritten/.test(again.out),
+    `BASE  the index is CURRENT — the freshness call, asked again, exits ${again.code} and leaves it alone: ${/already current, not rewritten/.test(again.out) ? "yes" : "NO"}`);
   const ctl = run(["--control"]);
   say(ctl.code === 0, `BASE  the tool's own \`--control\` exits ${ctl.code}`);
 });
@@ -216,7 +228,7 @@ armed("A5", [], () => {}, () => {
   const hit = phantomBullets(idx), count = rulingCount(idx);
   say(hit.length === 0, `A5  of the eight rows D-367 names, ${hit.length} still quote \`DECIDED.md\`${hit.length ? ": " + hit.join(", ") : ""} — declared 0`);
   say(!idlessPhantom(idx), `A5  ...and REC-85's sentence mints no id-less row either — declared none (${idlessPhantom(idx) ? "ONE FOUND" : "none"})`);
-  say(count > 850, `A5  the corpus is FLOORED, not emptied — the committed index holds ${count} rulings (floor 850)`);
+  say(count > 850, `A5  the corpus is FLOORED, not emptied — the index the freshness call produced holds ${count} rulings (floor 850)`);
 });
 
 /* CORRECTED 2026-09-21 — see A6's correction in the head: the old assertion was `hit.length === 8`, true only

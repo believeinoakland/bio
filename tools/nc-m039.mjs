@@ -336,10 +336,15 @@ rmSync(SCRATCH, { recursive: true, force: true });
   try {
     git(["worktree", "add", "--detach", WT, "HEAD"]);
     /* the worktree is a checkout of HEAD; this item's uncommitted edits are carried in by
-       hand so the arm runs against what is actually being shipped */
-    for (const f of ["tools/mintid.mjs", "tools/attribution.mjs", "tools/plancheck.mjs",
-                     "docs/development/QUEUE.md", "docs/development/INTERFACE-CHANGES.md",
-                     "docs/DECIDED.md"])
+       hand so the arm runs against what is actually being shipped.  `docs/DECIDED.md` was
+       carried too until M0-99 (2026-09-22): `plancheck` then failed on an index the carried
+       prose had staled.  The index is no longer committed and `plancheck` no longer reads its
+       staleness, so there is nothing to carry — the scratch checkout ignores it like any other.
+       `tools/decided.mjs` IS carried now, for the rule this list exists for: `plancheck` (arm 2b)
+       and `attribution.mjs` (`--census`) import it, so a carried importer beside a stale copy of
+       what it imports would measure a tree that is shipped nowhere. */
+    for (const f of ["tools/mintid.mjs", "tools/attribution.mjs", "tools/plancheck.mjs", "tools/decided.mjs",
+                     "docs/development/QUEUE.md", "docs/development/INTERFACE-CHANGES.md"])
       if (existsSync(join(REPO, f))) cpSync(join(REPO, f), join(WT, f));
 
     const target = join(WT, "docs/development/MEASUREMENTS.md");

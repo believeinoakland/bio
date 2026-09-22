@@ -423,29 +423,42 @@ if (register) {
   }
 }
 
-/* ------------------------------------------- 2b. THE DECIDED INDEX IS CURRENT
+/* ------------------------------------------- 2b. THE DECIDED INDEX IS OUT OF THE COMMITTED TREE (M0-99)
 
-   `docs/DECIDED.md` is GENERATED from every ruling in the corpus (tools/decided.mjs),
-   and it exists because a session cannot read the 565k tokens its kickoff demands and so
-   re-asks questions the record already answered — 88% of which are ruled somewhere other
-   than `DECISIONS.md`. An index that silently falls behind the corpus is worse than none:
-   it answers, and it answers with what was true last week. So the drift is a GATE, on the
-   same reasoning `check-versions` gates version stamps — a prose claim about the corpus
-   is exactly what the Mechanical Verification Law says will not stay true on its own. */
+   `docs/DECIDED.md` is GENERATED from every ruling in the corpus (tools/decided.mjs), and it
+   exists because a session cannot read the 565k tokens its kickoff demands and so re-asks
+   questions the record already answered.  UNTIL 2026-09-22 THIS ARM FAILED ON A STALE COPY,
+   and that was right while the index was COMMITTED: a stale committed copy answers a session's
+   question with last week's ruling.  M0-99 took the index out of the committed tree
+   (`ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER", rule 2) — it is produced on demand
+   through `decided.mjs`'s one freshness call — so no commit can carry a stale copy, and the
+   staleness arm retired with the thing it guarded.
+
+   WHAT REPLACES IT IS THE LIAR'S ARM, NOT NOTHING.  Keeping the file committed under `merge=ours`
+   would stop the conflicts and hide the staleness, and `.gitignore` does not apply to a tracked
+   file, so a merge that keeps a pre-M0-99 branch's copy re-tracks it with no word from git.  This
+   arm FAILS on a TRACKED copy, and on an index the repository's own `.gitignore` does not ignore.
+   The predicate is `decided.mjs`'s `indexTracking()`, so the gate, the suite and the tool read one
+   answer. */
 
 {
-  const { scan } = await import("./decided.mjs").catch(() => ({ scan: null }));
-  if (!scan) {
-    warn(`decided.mjs could not be loaded — the DECIDED index is UNVERIFIED this run.`);
+  const { indexTracking } = await import("./decided.mjs").catch(() => ({ indexTracking: null }));
+  if (!indexTracking) {
+    warn(`decided.mjs could not be loaded — whether docs/DECIDED.md is out of the committed tree is UNVERIFIED this run.`);
   } else {
-    try {
-      execSync(`${JSON.stringify(process.execPath)} ${JSON.stringify(join(ROOT, "tools/decided.mjs"))} --check`,
-        { cwd: ROOT, stdio: "pipe" });
-      notes.push(`decided index: current`);
-    } catch {
-      fail(`STALE — docs/DECIDED.md does not match the corpus it indexes.\n`
-         + `        Run \`node tools/decided.mjs\` and commit the result. A stale index does not\n`
-         + `        fail quietly; it answers a session's question with last week's ruling.`);
+    const it = indexTracking({ repo: ROOT });
+    if (it.undetermined) {
+      warn(`docs/DECIDED.md's tracking is UNDETERMINED — git did not answer (${it.why}).`);
+    } else {
+      if (it.tracked)
+        fail(`TRACKED — docs/DECIDED.md is in the index; it is generated on demand and never committed (M0-99).\n`
+           + `        A merge that kept a pre-M0-99 branch's copy, or \`git add -A\` over that modify/delete\n`
+           + `        conflict, re-tracks it silently. Run \`git rm --cached docs/DECIDED.md\` and commit.`);
+      if (!it.ignored)
+        fail(`NOT IGNORED — the repository's .gitignore does not ignore docs/DECIDED.md`
+           + `${it.rule ? ` (the rule that matched: ${it.rule})` : ""}.\n`
+           + `        Without that line the next \`git add -A\` commits the generated index again.`);
+      if (!it.tracked && it.ignored) notes.push(`decided index: out of the committed tree (${it.rule})`);
     }
   }
 }
@@ -469,21 +482,15 @@ if (register) {
           + `\n        Update docs/architecture/construct-status.json to what the code says, then --write.`);
 }
 
-/* ------------------------------------------- 2c. AND THE SAME CHECK, ARMED AT THE PUSH (M0-56)
+/* ------------------------------------------- 2c. THE PUSH GUARD, ARMED BY THIS GATE (M0-56, D-406, D-293)
 
-   ARM 2b ABOVE IS CORRECT AND IS UNTOUCHED.  It caught all five of the occurrences that
-   rowed M0-56, and a row that mechanises a remedy while softening its detector has traded
-   a loud defect for a silent one.  Nothing here makes 2b quieter.
-
-   WHAT 2b CANNOT DO IS FIRE LATE ENOUGH.  It runs when a session runs plancheck, which is
-   before the commit — and the index is stale again after (1) any later prose edit, or (2)
-   a REBASE that lands a peer's rulings underneath a freshly generated index.  **Cause (2)
-   is not forgetting: the corpus changed while this session touched nothing**, so no amount
-   of care reaches it and no gate that runs before the commit can see it.  CONDUCT #2 wrote
-   the correct rule mid-session and then broke it twice more.
-
-   So the check is ALSO armed at the push, where it is after the last rebase by construction.
-   `tools/pushguard.mjs` carries the argument, the alternatives it beat, and its limits.
+   `tools/pushguard.mjs` runs at the push, the one moment that is after the last rebase: it
+   refuses a push whose tip tree `gates.mjs` recorded RED (D-293), one carrying merge markers,
+   one whose design corpus fails `corpuscheck`, and one whose construct status disagrees with
+   the code.  M0-56 built it for a fifth refusal — a stale COMMITTED `docs/DECIDED.md`, which a
+   rebase could stale under a correct index with nobody touching anything — and that refusal
+   retired on 2026-09-22 with the committed index (M0-99, arm 2b above).  The file carries the
+   argument, the alternatives it beat, and its limits.
 
    THIS WRITES `.git/hooks/pre-push` AND SAYS SO BELOW.  It is NOT the gate mutating the tree
    it is measuring — that objection is what killed the regenerating-gate candidate, and it is
@@ -494,17 +501,22 @@ if (register) {
 {
   const pg = await import("./pushguard.mjs").catch(() => null);
   if (!pg) {
-    warn(`pushguard.mjs could not be loaded — the push-time DECIDED guard is NOT armed this run.`);
+    warn(`pushguard.mjs could not be loaded — the push guard is NOT armed this run.`);
   } else {
     const r = pg.install({ repo: ROOT });
     if (r.action === "installed" || r.action === "replaced") {
       notes.push(`push guard: ${r.action.toUpperCase()} — WROTE ${r.path} (in .git/, not in the working tree)`);
     } else if (r.action === "current") {
       notes.push(`push guard: armed at ${r.path}`);
+    } else if (r.action === "newer") {
+      /* A NEWER hook of OURS is armed — `install()` left it alone rather than downgrade it — so it is
+         a note, never "NOT armed". Until M0-99 this fell to the warning below and told a checkout
+         older than the hook that its pushes were unguarded, which was false. */
+      notes.push(`push guard: armed at ${r.path} by a NEWER hook (v${r.installedVersion}), left alone — this checkout is older than the hook`);
     } else {
       warn(`push guard NOT armed — ${r.reason}.\n`
-         + `        A push carrying a stale docs/DECIDED.md will not be refused in this clone,\n`
-         + `        so the rebase case (a peer's rulings landing under a fresh index) is open.`);
+         + `        A push of a tree the gate recorded RED, or one carrying merge markers or design-corpus\n`
+         + `        or construct-status drift, will not be refused in this clone.`);
     }
 
     /* D-406. THE HOOK ALONE IS NOT THE GUARD.  It is installed once for the whole clone
@@ -631,7 +643,7 @@ if (conduct && inbox && !/INBOX/.test(conduct))
    2026-07-30, then 46 days unreferenced by the orientation set and never saying what it
    lacked, while the construct it owned went undesigned. `tools/corpuscheck.mjs` is the
    enforcement (docs/architecture/CORPUS-STANDARD.md is the standard); a governed document
-   that drifts FAILS here, the way a stale DECIDED index does, because a front matter that
+   that drifts FAILS here, the way a stale COMMITTED ruling index did until M0-99, because a front matter that
    is allowed to rot answers a reader with last month's completeness. */
 
 {

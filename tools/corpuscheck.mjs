@@ -11,7 +11,7 @@
    saying what it lacked, while the content construct it owned went undesigned.
 
    The standard is docs/architecture/CORPUS-STANDARD.md. This tool is its enforcement, run by
-   plancheck, so drift FAILS the gate the way a stale DECIDED index does.
+   plancheck, so drift FAILS the gate the way a stale COMMITTED ruling index did until M0-99.
 
    THE FRONT MATTER GRAMMAR (checked, not described):
 

@@ -100,6 +100,9 @@ import { readFileSync, statSync, readdirSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+/* M0-99: the ruling index's ONE freshness call, used by `--census` alone. Importing it scans
+   nothing; `decided.mjs` acts only when run as the CLI (its entry guard). */
+import { fresh } from "./decided.mjs";
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -112,7 +115,7 @@ const ROOTS = ["docs", "bio-plane/src", "bio-plane/checks", "bio-plane/test", "b
 /* EXCLUDED, each with the reason it is excluded — see "what it does NOT" above. */
 export const EXCLUDED = [
   { path: "docs/archive/", why: "closed history; the archive is where finished work goes and is not corrected in place" },
-  { path: "docs/DECIDED.md", why: "GENERATED from the corpus — a finding here belongs against the line it quotes, which this arm already reads" },
+  { path: "docs/DECIDED.md", why: "GENERATED from the corpus — a finding here belongs against the line it quotes, which this arm already reads. Never committed since M0-99, but this walk reads the WORKING TREE, where the tool writes it on demand" },
   { path: "docs/development/CLAIMS.md", why: "APPEND-ONLY by its own rules: a released block is history and may not be edited in place, so a finding here has no fix the rules permit. Reported by --census, never gated" },
   { path: "bio-plane/dist/", why: "a built artifact; its source is in the corpus" },
   { path: "newgroup/src/release.mjs", why: "a BUILT BUNDLE checked in as one string literal — every binding in it is a copy of a comment this arm already reads at its source, so grading it counts one fact twice" },
@@ -380,6 +383,12 @@ function main(argv) {
       if (st.isDirectory()) { for (const n of readdirSync(p).sort()) walk(join(p, n), rel ? `${rel}/${n}` : n); return; }
       if (/\.(mjs|js|md|html)$/.test(p) && !rel.includes("node_modules/")) list.push(rel);
     };
+    /* M0-99, 2026-09-22: the ruling index is no longer committed, so this working tree holds
+       whatever copy was last produced here — none in a fresh checkout, a stale one after any
+       prose edit. It is produced through `decided.mjs`'s ONE freshness call before it is read,
+       so the census counts the index of the corpus it reports on, and never reads a missing
+       file as an empty one. */
+    fresh();
     for (const e of EXCLUDED) {
       if (e.path === "node_modules") continue;
       walk(join(REPO_ROOT, e.path.replace(/\/$/, "")), e.path.replace(/\/$/, ""));

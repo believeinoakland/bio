@@ -36,11 +36,13 @@
  * commit the broken guard had let land — so every refusal is now read from the guard's own text and pushed to a
  * ref of its own; and the first run of arm 4 broke the mid-run arm through SELECTION (no suite selected, so the
  * dirtying battery step never ran), so that arm now runs `--full`.
+ * RE-RUN 2026-09-22 by the M0-99 worker, after the fixture stopped copying `decided.mjs` and regenerating the index
+ * before each commit: all thirteen as declared again, driver 96 pass / 0 fail, baseline and closing 62 / 0.
  *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote
  * would be a real refusal of a real push. So every arm builds a REAL repository under the battery's
- * own temp ground — the REAL `gates.mjs`, `pushguard.mjs` and `decided.mjs` copied in, the REAL hook
+ * own temp ground — the REAL `gates.mjs` and `pushguard.mjs` copied in (and, until M0-99, `decided.mjs`), the REAL hook
  * installed the way `plancheck` installs it, a REAL bare remote — and stubs only the four gates the
  * gate RUNS (battery, coverage, the UI harness, plancheck), each of which logs what it was asked to
  * run and exits as the arm tells it. The verdict, the record, the refusal and the selection are the
@@ -155,13 +157,16 @@ const FILES = {
   ".gitignore": "node_modules/\n",
 };
 const put = (root, rel, body) => { mkdirSync(dirname(join(root, rel)), { recursive: true }); writeFileSync(join(root, rel), body); };
-const regen = (root) => spawnSync(process.execPath, [join(root, "tools/decided.mjs")], { cwd: root, encoding: "utf8" });
-/* Every commit regenerates the index first, so the guard's DECIDED arm is never the refusal an arm sees. */
-const commitAll = (root, msg) => { regen(root); git(["add", "-A"], root); return git([...ID, "commit", "-q", "-m", msg], root); };
+/* CORRECTED 2026-09-22 (M0-99), never exempted. Every commit here used to regenerate `docs/DECIDED.md`
+   first and commit it, so the guard's index arm was never the refusal an arm saw; and the fixture carried
+   the REAL `decided.mjs` for that step. M0-99 retired that arm and took the index out of every commit, so
+   the regeneration guarded against a refusal that no longer exists — and committing the index in a
+   fixture would model the very shape M0-99 removed. Both go: the fixture carries the two tools it tests. */
+const commitAll = (root, msg) => { git(["add", "-A"], root); return git([...ID, "commit", "-q", "-m", msg], root); };
 
 function fixture(name) {
   const root = join(SANDBOX, name);
-  for (const f of ["gates.mjs", "pushguard.mjs", "decided.mjs"]) put(root, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
+  for (const f of ["gates.mjs", "pushguard.mjs"]) put(root, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
   /* the estate's ONE lexer, which the gate reads imported files through, and what it imports */
   for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
     put(root, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
@@ -213,8 +218,8 @@ const batteryOf = (g) => ((g.plan || "").match(/battery \[([^\]]*)\]/) || [, ""]
 section("THE FIXTURE — a real repository, the real tools, a real remote, the real hook");
 const F = fixture("main-fx");
 {
-  t("the fixture carries the REAL gates.mjs, pushguard.mjs and decided.mjs",
-    ["gates.mjs", "pushguard.mjs", "decided.mjs"].every((f) =>
+  t("the fixture carries the REAL gates.mjs and pushguard.mjs",
+    ["gates.mjs", "pushguard.mjs"].every((f) =>
       readFileSync(join(F.root, "tools", f)).equals(readFileSync(join(REPO, "tools", f)))), true);
   t("the fixture's origin/main exists, so the gate measures a real diff",
     out1(["rev-parse", "--verify", "--quiet", "origin/main"], F.root).length, 40);
