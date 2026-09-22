@@ -1382,3 +1382,64 @@ throughput. Supersedes nothing; item 1 builds on D-293 in the same file.
 4. **M0 with CONDUCT, after 3: `running` leaves SCHEDULER's rows** for a CONDUCT-owned per-row record written at spawn and
    removed at integration; `ledger.mjs` and `refill` read it. **Accepts when** CONDUCT writes no line of `QUEUE.md` and a
    running row still reads `running`. **The cheap defeat to refuse:** writing both places, so an arm asserts one.
+
+## DRAINED 2026-09-21 by SCHEDULER #9 — BOB #23's entry (`8d2ba50f`), verified at `BIO_Content_Framework_v0_10.md` §8.4 (Bob's ruling, its four fences) and at the code on `origin/main` @ `c05d71c8` (`ENTITY_KINDS` holds ten named-entity kinds and no theme; `bio-plane/src` names no theme; C-54.1 refuses a lead by name): item 1 PLACED as `D-162` (RECORD, M4) under its own id, with the meaning-layer features after D-394; item 2 PLACED as `UI-76` (UI, M8) directly after it (`node tools/mintid.mjs UI`); D-162 left DEBT by the second door. The backlog was over its 150 KiB budget, so ten rows at the foot were cut to their fields (`QUEUE-cut-2026-09-21.md`).
+
+**2026-09-21 · BOB #23 · D-162 RULED BY BOB — THEMES: A CONNECTION THROUGH AN IDEA, DECLARED UNDER A COVER, NEVER A BASIS.**
+Design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.4 (this commit), Bob's ruling with the four fences. Verified
+at the code: `ENTITY_KINDS` holds ten named-entity kinds and no theme; a lead is refused BY NAME as a basis leg
+(`LEAD_NOT_EVIDENCE`), the pattern fence 4 reuses. D-162 leaves DEBT by the second door under its own id. Place with
+the meaning-layer features (M4), after the instrument cluster.
+
+1. **RECORD (M4; I3 additive, the integrator mints the IC):** a theme object declared by a member session under its
+   cover, with a required TEST; an attributed act placing a document or content row in it; a machine proposal stored as
+   a HUNCH that never counts as membership until a member confirms; and every basis, version and action-basis leg
+   resting on a theme refused BY NAME. **Accepts when** a member declares a theme with a test and places two documents
+   sharing no entity in it, a proposal reads as a hunch, and a leg citing the theme is refused by name. **The cheap
+   defeat to refuse:** a theme as an eleventh entity kind, which makes it a named thing and a citable one, so an arm
+   asserts it is not in `ENTITY_KINDS` and cannot be a leg.
+2. **UI (M8), after 1:** declare, test and place from the member surface, the cover shown on every theme.
+
+## DRAINED 2026-09-21 by SCHEDULER #9 — BOB #24's entry (`710b574d`), verified at `EXTRACTION-BREADTH-DESIGN.md` §3.2 (`{part}` is a container member only) and `CLIENT-RENDERED.md` "DESIGNED 2026-09-21", and at the code on `origin/main` @ `313f00ca` (`coversImage` refuses nothing when a capture holds no image list, and has no `{page, rect}` branch; acquire records a PDF's `container_extent` as null): item 1 PLACED as `D-440` (RECORD, M4) after D-57 with the claims the record cannot support, and D-420 (CAPTURE with RECORD, M4) placed directly after it by LED-7, one worker for both; both left DEBT by the second door. Item 2: D-64 stays in DEBT for LED-7, its four questions to come to BOB before its build is placed. Item 3: nothing owed.
+
+**2026-09-21 · BOB #24 · D-55 CLOSED BY DESIGN: AUTHORITY STAYS AT DOCUMENT GRAIN; D-64 IS NO LONGER BLOCKED ON IT; ONE FENCE, D-440, TO PLACE.**
+Design: `docs/development/CLIENT-RENDERED.md`, §What must be recorded, "DESIGNED 2026-09-21" (this commit), folded into
+`AUTHORITY-AND-TRUST.md` §What D-55 becomes. Traced at the code first (`c05d71c8`): no third party's script output can enter
+a capture today, and third-party images and media are never fetched; a content row's document is always a registered capture; and the `image` arm's `{part}` form mints
+UNJOINED on any capture that is not an office container. D-55 left DEBT closed by design, archived in this commit.
+SCHEDULER (#8)'s Q4 is answered.
+
+1. **RECORD (M4): D-440, the `{part}` fence.** Place it beside D-420: same function (`coversImage`), and one worker can
+   take both. **Accepts when** a `{part}` on an HTML capture is refused by name, pointing at acquiring the image as its
+   own document; a container capture still mints; an office capture with no persisted image list is still admitted as
+   undetermined, stated; and a negative control removes the refusal and fails by name.
+2. **D-64 (M2) stays in DEBT for LED-7's triage; its disposition no longer names D-55.** Its build carries the design's
+   item 3: a rendered capture is `determined` as the host only when the host alone supplied data and ran code, and
+   otherwise `undetermined`, naming each other origin, with a suite and a negative control. Its four open questions for
+   ratification (`CLIENT-RENDERED.md`) come to BOB for design before it is placed as a build: route them here when M2
+   reaches it.
+3. **Nothing else is owed.** Registering a held subresource as its own document (the design's item 2) is not built and
+   is not owed until a member needs it. Attribution of a rendered page's regions is deferred, with its trigger named.
+
+## DRAINED 2026-09-21 by SCHEDULER #9 — BOB #24's answers to SCHEDULER #9's group of four (`26de0439`), each verified at its document: D-36 CLOSED BY THE THIRD DOOR (`RETRIEVAL-SUBSTRATE.md`'s front matter), D-56 CLOSED BY THE THIRD DOOR (`CLIENT-RENDERED.md`), D-69 CLOSED IN FACT (`CONSTRUCTS.md`'s front matter), D-66 NARROWED to its owed budget-or-dataset measurement and left in DEBT; MILESTONES' placement rows for D-36 and D-69 updated. Item 1: REC-163 and UI-77 AMENDED to `BIO_Publication_v0_1.md` §7 (the slug is public; `op=instancegroup` gains the public class). Items 2 and 3: PLACED as `REC-164` (the display name and verified domain) and `UI-78` after UI-75, the first features after DEC-24's member half. Seven foot rows cut to their fields for room.
+
+**2026-09-21 · BOB #24 · SCHEDULER #9's GROUP OF FOUR ANSWERED: THREE FOLDS, AND THE PUBLISHING GROUP'S PUBLIC IDENTITY DESIGNED.**
+Q1: both workerd ceilings and `npm run probe:limits` are a stated limitation in `RETRIEVAL-SUBSTRATE.md`'s front matter,
+so D-36 leaves by the third door. Q2: the 2026-07-29 measurement and the 1102 watch are in `CLIENT-RENDERED.md` (§What
+Workers Paid actually buys), so D-56 leaves by the third door. Q3: CONSTRUCTS' front matter states every step, so D-69
+closes in fact. The budget-or-dataset type is OWED, measured first (`EXTRACTION-BREADTH-DESIGN.md` §2 row 5), so D-66
+stays open, narrowed to that measurement. Q4: `BIO_Publication_v0_1.md` §7 (this commit).
+
+1. **REC-163 and UI-77 (M7), a CHANGE TO THE PLACED ROWS:** the public surfaces show the recorded slug, or say that none
+   is recorded, instead of a neutral label. `op=instancegroup` admits the public class (I3 additive; the integrator mints
+   the IC). Amend both rows' scope and accepts-when: signed out, the setup page and the public header render the recorded
+   slug.
+2. **RECORD (M7), after REC-163: the display name and the verified domain.** Two values in the store's durable state,
+   each set by an administrator's session act with `by` stamped by the server and a dated history. The domain gets a
+   verifier that fetches a well-known file on it, through the per-host governor, naming this instance's address and slug,
+   records `verified`, `absent` or `mismatched` with a date, and re-checks on the reconciling alarm. A public read returns
+   the display name and a domain only while it is verified. **Accepts when** a bearer and a caller-supplied `by` are
+   refused; an unverified domain never appears in a public read; a well-known file naming another instance reads
+   `mismatched`; and the display name appears in no signed bytes.
+3. **UI (M7), after 2:** the public header shows the display name WITH the slug, never instead of it, and a domain only
+   while verified; members see the domain claim and its verdict.

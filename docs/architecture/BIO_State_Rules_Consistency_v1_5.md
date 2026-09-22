@@ -1,6 +1,6 @@
 # Believe in Oakland
 
-**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. DEC-70's severance rule is folded into §5.4, and D-145's cross-instance addressing is stated as M6's (BOB #23, 2026-09-21). Amended 2026-09-21 (D-436, provisional, IC-172): §3.1's `group` is ONE recorded value per instance, written once — at the store's first boot from the slug the installer bound, or by the root of trust's one seed on a store that predates it — stamped into every document the plane creates, and never a literal or a deploy-time var; see the amendment at the foot. as of 2026-09-21.
+**Status** · The data-store rules every implementation writes against: the id grammar, bundle anatomy, the universal frontmatter core, per-type schemas and state machines, the closed relationship vocabulary, cascade semantics, the invariant set I-1…I-20, the violation-to-repair mapping and the Mechanical Verification Law. "Working Document, v1.5, July 2026", "Ratified July 20, 2026 on the operator's word." Partially complete and partly historical, by its own 2026-08-10 banner: **the store this document describes is not the store that was built** — read §1, §2.4 and §2.6 as history; everything from §3 on is SHAPE and RULES, which transferred to the plane's `schema.mjs`, `store.mjs` and `bio-checks.mjs`. Amended in place three times (v1.5a vocabulary, the bias cross-reference, DEC-72's `published` amendment of 2026-09-10). Where this and `docs/BIO_DATAPLANE_STATE.md` disagree about what exists, the dataplane state is the system, and the check catalog is the authority for the edge set. Amended 2026-09-18: `concluded` is read for a project's relationship with an inquiry (INVESTIGATIVE-SESSION.md §7.1). The information ladder is ONE-WAY and gains no `verified -> collected` edge (BOB #17, 2026-09-19, D-203/D-200): a verification resting on a weaker check is STATED beside the state, never reverted. DEC-70's severance rule is folded into §5.4, and D-145's cross-instance addressing is stated as M6's (BOB #23, 2026-09-21). Amended 2026-09-21 (D-436, IC-172; decision (b)'s premise RULED BY BOB, (a) and (c) the BOB lane's mechanism): §3.1's `group` is ONE recorded value per instance, written once — at the store's first boot from the slug the installer bound, or by the root of trust's one seed on a store that predates it — stamped into every document the plane creates, and never a literal or a deploy-time var; see the amendment at the foot. as of 2026-09-21.
 
 **Place in the system** · Owns construct 3 of `BIO_System_Design.md` §3 (the record): bundle shape and the rules the plane checks. `BIO_Intake_Doctrine_v1_1.md` defers to it for shape; `BIO_Membership_Architecture_v2.md` builds on its §4.3 and §5.1–5.3; the intake provenance register and I-18 realise the intake doctrine inside it. README calls it "the most operationally load-bearing document in the corpus."
 
@@ -8,7 +8,7 @@
 - §1 — the folder layout is the retired substrate's; history per the banner.
 - §1.2 — an id is unique within ONE instance, so nothing addressed by id survives leaving it and two instances' ids collide (D-145). Cross-instance addressing is M6's (`MILESTONES.md`), designed WITH D-99's WARC and Memento interchange, because an export carries an id-addressed graph; no shape is chosen until M6 is taken up (BOB #23, 2026-09-21). Content-hash citation, the row's third candidate, is the one the record's doctrine already leans to (identity is canonical, the address a comment).
 - §2 — the state/record split and description-as-truth transferred; §2.4 convergent promotion, §2.5's gated deletion mechanics and §2.6 the pending-package queue are history, and the PENDING/PROMOTING transients no longer exist.
-- §3.1 — the core field list is stated; where the `group` value comes from was unstated until the 2026-09-21 amendment at the foot (D-436), whose three decisions Bob RULED on 2026-09-21 (§3.1), and what a group named wrongly in bytes that are already signed can become is not designed.
+- §3.1 — the core field list is stated; where the `group` value comes from was unstated until the 2026-09-21 amendment at the foot (D-436), whose three decisions are settled — decision (b)'s premise RULED BY BOB on 2026-09-21, decisions (a) and (c) decided by the BOB lane at integration (§3.1) — and what a group named wrongly in bytes that are already signed can become is not designed.
 - §4.2 — the Focus machine is legacy: nothing produces those states; the live machine is `inquiry`, which §4 does not describe, nor `bias`.
 - §4.3 — lacks the project-name-uniqueness annotation Membership v2 §11 requires.
 - §4 — `published` left the inquiry lifecycle by the 2026-09-10 amendment (DEC-72 / CASE-4); the body text of the state machines is unrevised.
@@ -590,13 +590,16 @@ visuals: \[\] \# description-as-truth entries when visuals exist
 The per-type extension (Section 4) follows the core in the same
 frontmatter block.
 
-**THE `group` VALUE, AND WHAT CAME BEFORE IT (D-436; RULED BY BOB 2026-09-21).** `group` is the producing group's slug:
+**THE `group` VALUE, AND WHAT CAME BEFORE IT (D-436, 2026-09-21).** `group` is the producing group's slug:
 one value in the store's durable state, written once — at a store's first boot from the installer's instance name, or
 once by the root of trust — and never a deploy-time value, because it lands in signed bytes. A store that already held
 bundles before D-436 records none until its root of trust sets it, and a new document naming no group is refused
-meanwhile. **No migration and no automatic setting is owed for those stores:** Bob, 2026-09-21, *"everything captured
-so far is for testing purposes only"*; at the MVP release the record *"will be thrown out (or at least not copied over
-to the instance running a real release)"*, so nothing recorded before it binds the design.
+meanwhile. That much is MECHANISM: BOB #19's design call on D-436's row, built as decisions (a)–(c) of the amendment at
+this document's foot and accepted as built by the BOB lane. **What Bob RULED on 2026-09-21 is what came before: no
+migration and no automatic setting is owed for those stores.** His words: *"everything captured so far is for testing
+purposes only"*; at the MVP release the record *"will be thrown out (or at least not copied over
+to the instance running a real release)"*, so nothing recorded before it binds the design. The slug is PUBLIC, and a group may add a display name in its own words
+and a domain shown only while verified: `BIO_Publication_v0_1.md` §7 (BOB #24, 2026-09-21).
 
 ### 3.2 The dual-audience encoding
 
@@ -1699,9 +1702,11 @@ places, as a trimmed-argument default in two and unconditionally in three (a mem
 promote meta, and a fork), and composed into new documents by the instance's own setup page. True of the instance that
 wrote it and false of every instance `newgroup` installs — a sovereign group's record naming the wrong producer in its
 own signed bytes. D-436's own row made the design call; this amendment records how it was built, and the three
-decisions the build had to make — each made PROVISIONALLY by the D-436 worker (2026-09-21; IC-172), and all three
-**RULED BY BOB the same day** as §3.1's paragraph *"THE `group` VALUE, AND WHAT CAME BEFORE IT"* states them (recorded
-by BOB #23; reconciled here at integration by CONDUCT #11, because the two texts met only in the merge).
+decisions the build had to make — each made PROVISIONALLY by the D-436 worker (2026-09-21; IC-172). None is provisional
+now, and two authorities settled them: decision (b)'s premise, that no migration and no automatic setting is owed for a
+store that predates the value, was **RULED BY BOB** on 2026-09-21 (§3.1); decisions (a) and (c) are mechanism,
+**DECIDED by the BOB lane** at integration the same day (BOB #23 accepted them as built). The merge first read all three
+as Bob's; BOB #24 corrected the attribution on 2026-09-21, and IC-172's resolution carries the same split.
 
 **THE RULE.** An instance's producing group is ONE value in its store (`instance_group`, one row, WRITTEN ONCE — no
 statement updates or deletes it, and `op=purge` leaves it). Every default and every stamp reads it and nothing else:

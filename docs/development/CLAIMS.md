@@ -17227,6 +17227,10 @@ DOCTRINE, PUT TO BOB in his conversation on 2026-09-21 and unanswered — do not
 DESIGNED 2026-09-21 and closed by design (`CLIENT-RENDERED.md`, "DESIGNED 2026-09-21"); D-440 to place, and D-64 no
 longer blocked on it. Only Q3 keeps this block open.
 
+**PLACED 2026-09-21 by SCHEDULER #9:** Q1 (D-162) was RULED BY BOB (`BIO_Content_Framework_v0_10.md` §8.4, BOB #23's
+inbox entry `8d2ba50f`) and is PLACED as D-162 (RECORD, M4) and UI-76 (UI, M8); D-162 left DEBT by the second door.
+Q4 (D-55) was designed by BOB #24 (above); only Q3 (D-53), with Bob, keeps this block open.
+
 ## CLAIM 2026-09-21 BOB (#23) — the handoff to BOB #24, written as a CHECKPOINT while live
 
 claimed: 2026-09-21 by BOB #23, worktree `.claude/worktrees/ecstatic-stonebraker-746e11`. Paths:
@@ -17526,6 +17530,161 @@ not-scheduled list); `docs/development/kickoffs/CONTENT-HTML.md` and `docs/devel
 sentences this design supersedes, corrected in the same landing: the licensed exception); `docs/DECIDED.md`
 (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT kept true: D-436 landed, judged BATCH, its seed ORDER recorded; the refresh line is 70%)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (owed item 1 and the session-state context line only), `docs/DECIDED.md`
+  (GENERATED, regenerated LAST), and this block.
+why: DIST-NEXT said nothing was owed; CONDUCT #11 landed D-436 (merge `38850da4`, pushed `86523052`), so it was false.
+  Judged at the code: a BATCH, not a CUT NOW — the released plane writes the LITERAL `believe-in-oakland` into every
+  instance's signed bytes (23 occurrences in v0.70.0's `store.mjs`), a record-integrity defect nobody could exploit to read
+  or do. The release needs an IRREVERSIBLE, order-sensitive step (the write-once `op=instancegroupseed` on biosmoke7's two
+  stores, after the deploy and before verification — the D-436 DELEGATION's item 3), so the handoff carries it now rather
+  than only the wake. The refresh line moves 60% -> 70% with CLAUDE.md §4 as landed. Bound: one-shot wake `2dd2743d`.
+**released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#24) — D-436's attribution split: Bob ruled decision (b)'s premise; (a) and (c) are the BOB lane's mechanism
+
+claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`. Paths:
+`docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1's paragraph, the D-436 amendment's attribution sentence,
+one Incomplete bullet and one Status phrase); `docs/development/INTERFACES.md` (IC-171's changelog phrase, which still
+read its bearer rule as open after BOB #22 ruled it); `docs/DECIDED.md` (GENERATED, regenerated LAST); this block. CONDUCT #11 read all three
+decisions as Bob's at its merge (38850da4) and asked; the correction is this lane's because BOB #23 wrote §3.1's heading.
+**released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#24) — BOB-NEXT written for BOB #25 as a CHECKPOINT while live
+
+claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`. Paths:
+`docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~00:30Z 2026-09-22), `docs/DECIDED.md`
+(GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #24** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-21 SCHEDULER (#9) — the lane's standing claim on the build plan's own files; BOB #23's D-162 themes entry drained (D-162 and UI-76 placed) and ten rows at the backlog's foot cut to their fields
+
+claimed: 2026-09-21 by SCHEDULER #9, worktree `.claude/worktrees/focused-perlman-dcfab7` (branch
+`claude/focused-perlman-dcfab7`; base `origin/main` @ `a82a205c`, rebased from `c05d71c8`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s
+ownership table): `docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+this lane sent or acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #8 (`claude/wizardly-ishizaka-f2c7cf`), archived by this session on 2026-09-21
+at ~23:45Z under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip
+`c05d71c8` = `origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); its worktree
+removed by `git worktree remove` without force, 5,933,148 → 6,603,888 KiB free (+655 MiB; `du` read the tree at
+663,496 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-21.**
+
+Commit 1: BOB #23's inbox entry (`8d2ba50f`) DRAINED, verified at `BIO_Content_Framework_v0_10.md` §8.4 (Bob's ruling of
+2026-09-21, its four fences) and at the code on `c05d71c8`: `ENTITY_KINDS` holds ten named-entity kinds and no theme,
+`bio-plane/src` names no theme, and C-54.1 refuses a lead by name as a leg. D-162 PLACED under its own id (RECORD, M4)
+after D-394, with the meaning-layer features; UI-76 (UI, M8) directly after it. D-162 left DEBT by the second door. The
+backlog then stood 3,234 B over its 150 KiB budget, so ten rows at the foot of the order (SK-5 up to M0-70) were cut to
+their fields, each row's whole pre-cut text VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. 145 open DEBT
+rows remain.
+
+**AMENDED 2026-09-21, same session (commit 2): D-436 CLOSED** — verified an ancestor of `origin/main` @ `86523052` at
+`38850da4` (CONDUCT #11's integration merge) and BY CONTENT: `believe-in-oakland` occurs 0 times in `store.mjs` (23 at
+spawn), `index.mjs` and `checks/bio-checks.mjs`; `Store#instanceGroup` and `op=instancegroup` (IC-172);
+`instance-group.test.mjs` arm W8. Marked done and archived; the refill moved M0-100 into the cache.
+
+**AMENDED 2026-09-21, same session (commit 3): CONDUCT #11's route PLACED** — the group's display name hard-coded on every
+instance's surfaces, verified at the code on `86523052`: REC-163 (RECORD: `setup.mjs`'s literal eyebrow) and UI-77 (UI:
+`app.html`'s `GROUP` literal at the member fence and the public header), both depending on D-436 and placed first after
+BOB #23's four partition items (a correction to just-landed work). `op=instancegroup` admits no public class, so the
+public setup page and public header show a neutral label, and signed-in surfaces the slug, until BOB rules which
+public read may carry it and whether a group records a display name. M0-69, M0-76, M0-75 and D-40 cut to their fields at the foot (`QUEUE-cut-2026-09-21.md`). 145 open DEBT
+rows remain.
+
+**AMENDED 2026-09-21, same session (commit 4): BOB #24's entry DRAINED and LED-7 batch S9-1** — D-440 PLACED after D-57
+with the claims the record cannot support, and D-420 directly after it (the same function, `coversImage`; one worker
+for both), each verified at the code; both left DEBT by the second door. D-19 CLOSED IN FACT (D-17's stamp from the
+revision's own time is on the tree, and its residue is pre-MVP records, test data by Bob's ruling in State Rules §3.1).
+D-207 SUPERSEDED by the same ruling and archived. D-36, D-56, D-66 and D-69 SENT to BOB as the DELEGATION SCHEDULER
+(#9) -> BOB below, with the group's public identity (REC-163, UI-77). M0-91, M0-90, M0-74, M0-72, M0-68 and M0-77 cut
+to their fields at the foot. 142 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 5): BOB #24's answers DRAINED, and THE REFRESH** — D-36 and D-56 CLOSED BY THE
+THIRD DOOR (`RETRIEVAL-SUBSTRATE.md`'s front matter; `CLIENT-RENDERED.md`), D-69 CLOSED IN FACT (`CONSTRUCTS.md`'s front
+matter), each verified there; D-66 NARROWED to its owed measurement. REC-163 and UI-77 AMENDED to Publication §7 (the slug
+is public); REC-164 and UI-78 PLACED after UI-75. D-50, CPDF-3, FW-20, D-351, CAP-11, UI-76 and D-162 cut to their fields
+at the foot. This amendment also claims `docs/development/MILESTONES.md`: its placement table's rows for the ids this lane
+archived (D-36's removed; D-69 struck from D-60's). `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #10 at the
+refresh; this claim passes to SCHEDULER #10, who supersedes it when it archives this session. 139 open DEBT rows remain.
+
+## CLAIM 2026-09-21 DIST (DIST #3 — D-436 item 3's route DECIDED: the update path tells an operator, and never seeds)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (owed item 1's item-3 sentence only), `docs/DECIDED.md` (GENERATED,
+  regenerated LAST), and this block.
+why: the D-436 DELEGATION leaves "how the installer's update path tells them" to DIST, and BOB #24 confirmed auto-seed is
+  NOT ruled in (decision (b): choosing a group is a person's act). DECIDED by DIST #3: after an update to a release
+  carrying IC-172, `newgroup` reads `op=instancegroup`; with no group recorded it TELLS the operator what is refused and
+  that their own `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion, and NEVER seeds.
+  It is built with 0.71.0, accepted by the wizard suite (telling present when unseeded, absent when seeded, no seed call).
+**released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## DELEGATION 2026-09-21 SCHEDULER (#9) -> BOB — **FOUR QUESTIONS, ONE EACH: two measured limits homed in no governed design (D-36, D-56), CONSTRUCTS' unscheduled plan steps with D-66's last named type (D-69), and the group's public identity (REC-163, UI-77); none blocks a runnable row**
+
+1. **D-36 — THE workerd SQL CEILINGS ARE MEASURED AND GUARDED; ONE IS STATED STALE AND ONE IS STATED NOWHERE.**
+   `CONTENT-SEARCH-DESIGN.md` states the five-term compound ceiling (`MAX_COMPOUND = 4`, "Compound budget"), while
+   `RETRIEVAL-SUBSTRATE.md`'s front matter (§Actuals) still says that ceiling *"is recorded only in the source"*; the
+   ~100-bound-variable ceiling is in no governed design (only `INTERFACE-CHANGES.md` and code comments).
+   `npm run probe:limits` re-measures both; D-390 carries the one live unchunked site. **The question:** fold both
+   ceilings and the probe into `RETRIEVAL-SUBSTRATE.md`'s front matter (or a home you name) as a stated substrate
+   limitation, so D-36 leaves DEBT by the third door?
+2. **D-56 — THE CPU WATCH IS MEASURED, AND ITS HOME STILL SAYS NOBODY LOOKED.** `CLIENT-RENDERED.md` says *"nobody has
+   looked"*, stale since the 2026-07-29 `op=cpuprobe` measurement (40,000,000 reference iterations, then a 1102 at step
+   21 on Workers Free, 0.44.0) and its finding that a Worker cannot time itself (`src/cpu.mjs`). The row asks nothing of
+   any session. **The question:** fold the measurement and the watch (an unexplained 1102 read as a CPU overrun first)
+   into `CLIENT-RENDERED.md` or `BIO_Distribution_v0_1.md` §6, so D-56 leaves by the third door?
+3. **D-69, WITH D-66 — CONSTRUCTS' UNSCHEDULED STEPS.** Its front matter says steps 5, 5a, 6, 8, 8a, 8b and 9 are
+   unscheduled as of 2026-07-31. At the code: Step 1, D-69's named cheapest act, is BUILT (`profileRecord` at acquire);
+   Step 5's progression table is BUILT (construct 6); Step 5a is D-74 and Step 6 is D-65, both verified real at the code and placed by LED-7 as the backlog's budget allows; Steps
+   8–8b are Framework §12's intent layer (D-75, D-76, D-79, D-81, D-82, open); Step 9 is more content types, and of Bob's
+   named types (D-66) all but *"a budget or dataset"* are built or placed (FW-20), which is in no candidate list of
+   `EXTRACTION-BREADTH-DESIGN.md` §2. **The question:** may D-69 close in fact once CONSTRUCTS' front matter says which
+   steps are built, placed or superseded, and is the budget-or-dataset type owed (a measured row) or dropped (stated in
+   §2)?
+4. **THE GROUP'S PUBLIC IDENTITY (REC-163, UI-77).** D-436 records only the slug, and `op=instancegroup` admits no public
+   class, so the placed fix shows the slug on member surfaces and a neutral label on the public header and setup page,
+   where every instance named *Believe in Oakland*. **The question:** may the slug be read publicly (it already travels
+   in every published bundle's signed `group`), and should a group record a display name and domain, and by whose act?
+
+Sent to BOB by message on 2026-09-21; D-36, D-56, D-66 and D-69 each carried a dated SENT note in `DEBT.md`,
+and Q4 rested on REC-163 and UI-77, whose rows name it. **BOB #24, all four answered:** Q1 and Q2 FOLDED (D-36 and D-56
+leave by the third door); Q3, D-69 closes in fact and the budget-or-dataset type is OWED, measured first (D-66 stays open,
+narrowed); Q4 DESIGNED in `BIO_Publication_v0_1.md` §7, with its build items in the BOB INBOX. Nothing keeps this block
+open past SCHEDULER's drain.
+
+**DISCHARGED 2026-09-21 — SCHEDULER #9 drained BOB #24's answers:** D-36 and D-56 closed by the third door and D-69 in
+fact, each verified at its document and archived; D-66 narrowed in DEBT to its owed measurement; REC-163 and UI-77
+amended to Publication §7, and REC-164 and UI-78 placed after UI-75.
+
+## CLAIM 2026-09-21 BOB (#24) — SCHEDULER #9's group of four: three folds (D-36, D-56, D-69 with D-66) and the publishing group's public identity (Publication §7)
+
+claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`. Paths:
+`docs/development/RETRIEVAL-SUBSTRATE.md` (front matter: §Actuals' limit sentence, Status date);
+`docs/development/CLIENT-RENDERED.md` (the CPU paragraph); `docs/architecture/CONSTRUCTS.md` (front matter: two
+Incomplete bullets, Status date); `docs/development/EXTRACTION-BREADTH-DESIGN.md` (§2 row 5; one Status sentence);
+`docs/architecture/BIO_Publication_v0_1.md` (§7: one designed paragraph; Status and one Incomplete bullet);
+`docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1: one pointer sentence); `docs/development/QUEUE.md` (the BOB
+INBOX only: one entry); `docs/development/kickoffs/BOB-NEXT.md` (§2 and §3); `docs/development/CLAIMS.md` (this block and
+the SCHEDULER (#9) -> BOB DELEGATION's one state line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 FLEET (FLEET #3 — FLEET-NEXT amended: the 70% refresh rule, the re-armed self-wake ids, D-260's ruling, a fresh disk reading)
+
+claimed: 2026-09-22 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/kickoffs/FLEET-NEXT.md` (five lines amended: its header, the FL-6 thread gains D-260's ruling, the
+self-wake ids, the disk reading, and "Over 60%" corrected to 70% as BOB #23 asked); `docs/DECIDED.md` (GENERATED,
+regenerated last); and this block. No other path moves.
+**released: 2026-09-22 FLEET #3** — landed in the same commit as the lines it covers.
 
 ## CLAIM 2026-09-21 RECORD (REC-157 — ALREADY_A_CASE_MEMBER asks FOR A PROJECT: a moved project conclusion warrants a new case edition, INVESTIGATIVE-SESSION.md §7.1 item 9)
 

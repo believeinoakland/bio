@@ -38,7 +38,22 @@ already held 13 members of July probe residue (`d41-sf72-*` and others, not DIST
 
 ## What is OWED, in order
 
-1. **Apply WHEN DIST CUTS on each self-wake.** Nothing is owed now: `main` = the 0.70.0 cut plus docs.
+1. **A BATCH IS OWED ON 2026-09-22: 0.71.0, carrying D-436 / IC-172** (I3 49.0.0 MAJOR, I5 1.24.0 MINOR: the producing
+   group becomes ONE recorded value per store, table `instance_group`, written once). ON `main` since 2026-09-21 (merge
+   `38850da4`, pushed `86523052`, CONDUCT #11). **BATCH, not CUT NOW, judged at the code by DIST #3:** the released plane
+   writes the LITERAL `believe-in-oakland` into every instance's signed bytes (23 occurrences in v0.70.0's `store.mjs`), a
+   record-integrity defect, not something a stranger, credential or wrong member could read or do. BOB #19 placed it
+   *"ahead of any release a new group installs"*. **THE ORDER, from the DELEGATION to DIST in `CLAIMS.md` (D-436, items
+   1–4) — irreversible, so read it there first:** deploy; then IMMEDIATELY, before any live verification, seed
+   biosmoke7's TWO stores with `op=instancegroupseed` (ADMIN_TOKEN as `token=`, POST `{"slug":"believe-in-oakland"}`),
+   `bio` AND `store=scratch`, verifying each with `op=instancegroup` (source `seed`, recorded_by `token:admin`). It is
+   WRITE-ONCE on the real record, and biosmoke7's group is NOT its worker name. Until seeded, `testify`, setup saves and
+   livefire's canary answer C-64.1 by design. Then live-verify. **Item 3's route, DECIDED by DIST #3** (BOB #24: auto-seed
+   is NOT ruled in, nothing open for BOB): `newgroup`'s update path, after an update to a release carrying IC-172, reads
+   `op=instancegroup`; if no group is recorded it TELLS the operator what is refused and that their own
+   `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion — saying it may DIFFER from the group's slug, with biosmoke7 as
+   the example (BOB #24's wording care: no doctrine conflict, DEC-69's guiding voice) — and NEVER seeds. Build it with
+   0.71.0; it is accepted when the wizard suite shows the telling on an unseeded fixture, absent on a seeded one, and no seed call. **Bound (lesson 12):** one-shot wake `2dd2743d`, 2026-09-22 00:07 PDT.
 2. **NEXT CUT adds 0.70.0 to the upgrade arm** (row above). `alterafter`, read against the SEQUENCE (lesson 19):
    **135 → 169 → 186 → 203 → 220 → 237 pass / 66 fail**; expect ~254/66 with the 0.70.0 row.
 3. **DS-3 — JUDGED 2026-09-21, NARROWED into D-260.** Config half LANDED at `2de6f25f`; nothing hands agent-worker
@@ -87,7 +102,8 @@ the path of `rm`, or the target of `mv`/`cp` — bypass still halts on it. Write
 - **Self-wake:** recurring `44f1ca7f` (`41 */6 * * *`, *"DIST: apply WHEN DIST CUTS in kickoffs/DIST.md"*) and the
   ONE-SHOT renewal `2400b776` at **2026-09-26 09:11 PDT** (lesson 17). The BATCH-bound one-shot `3e2ff52f` was DELETED —
   0.70.0 carried D-158. All session-only, so a successor arms its own.
-- **Context ~57% at this rewrite** — DIST #3 refreshes at the next wake if over 60% (CLAUDE.md §4).
+- **Context ~59% at this edit** — the refresh line is now **70%** (CLAUDE.md §4, Bob 2026-09-21, raising his 60%).
+  Plus the BATCH-bound one-shot `2dd2743d` above (session-only, like every wake here).
 - Machine Sparky-Air; disk 4.6 GiB free (98%) at the 0.70.0 gate's end — `df -h` before any bump.
   This worktree is `jovial-mclaren-9af3b6`, ~800 MB of it `node_modules` (real dirs).
 - `.env`: ten keys including `BIO_RELEASE_SEED`; account `20b533579290b9b93168345edd3b7f72` confirmed by USING it.

@@ -308,8 +308,16 @@ the external limit precisely, which is the right thing to measure.
 The CPU line is the underexamined one, recorded as D-56. Capture hashes every
 subresource with SHA-256 in the Worker and serialises manifests of hundreds of
 entries. Cloudflare reports the average Worker uses about 2.2 ms; ours does real
-work and nobody has looked. Unlike the subrequest limit, a CPU overrun has no
-distinguishable error to calibrate against.
+work, and it was MEASURED on 2026-07-29 (biosmoke7, Workers Free, 0.44.0): `op=cpuprobe` ran
+20 steps of 2,000,000 reference iterations, 40,000,000 in all, and the isolate was killed during
+step 21 with HTTP 503 `error code: 1102`, so the ceiling enforced there was not the documented
+10 ms. The heaviest real capture measured, a news front page, did 49 compute calls over 16.97 MB.
+A Worker CANNOT TIME ITSELF, because Cloudflare freezes `Date.now()` during synchronous execution,
+so work is counted in calls and bytes and the ceiling in reference iterations (`src/cpu.mjs`).
+**STATED AS A WATCH (D-56; BOB #24, 2026-09-21):** unlike the subrequest limit, a CPU overrun kills
+the isolate with no catchable error and nothing recorded, so an unexplained 1102, or a capture that
+fails only on large inputs, is read as a CPU overrun first. Workers Paid, which DEC-42 made a
+requirement, raises the ceiling and leaves the failure's shape unchanged.
 
 Costs beyond the $5 monthly minimum: 10 million requests and 30 million CPU-ms
 are included, then $0.30 per additional million requests and $0.02 per additional

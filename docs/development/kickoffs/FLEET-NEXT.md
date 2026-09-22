@@ -1,6 +1,6 @@
 # FLEET — resume here. Written 2026-09-21 by FLEET #3 (standing lane) as a CHECKPOINT while live
 
-FLEET #3 is LIVE; this is a checkpoint written at 54% context, not a stand-down. If FLEET #3 still answers, it holds
+FLEET #3 is LIVE; this is a checkpoint written at 54% context and amended at 59%, not a stand-down. If FLEET #3 still answers, it holds
 the lane; if it does not, this is the state. Read `CLAUDE.md`, then `kickoffs/FLEET.md` IN FULL (its 2026-09-21
 stand-up section carries today's corrections), then this. **Every fact below was MEASURED at the time given. Each is
 a POINTER: re-measure it.**
@@ -41,6 +41,9 @@ Claims held: NONE, each released in the commit that used it. Workers spawned: no
   It is landed in `BACKLOG.md`; the row now opens "NOTHING READS BACK WHAT BUILD". Nothing is owed by FLEET.
 - **FL-6** waits on **D-260** (the plane's caller does not exist), not on DS-3, whose config half landed at
   `2de6f25f`. QUEUE's tracked-elsewhere cells now say so. Nothing in FLEET is runnable until D-260 lands a caller.
+  **D-260 has been ruled** in its home, `BIO_Assistant_and_AI_Roles_v0_1.md` §6 (BOB #22, `3b904ea7`): an instance may
+  hold one organisation-principal `ai` credential and resumes only the runs it opened. The caller is a RECORD-with-FLEET
+  item in the BOB INBOX for SCHEDULER to place, and I8 leaves PROVISIONAL when it lands. FLEET's share arrives as a row.
 - **A deploy dry-run for DIST**: not asked of this session. If DIST asks FLEET to run one, DECLINE: a peer satisfying
   a permission decision made about another session is the work-around, not a favour.
 - **Owed**: `node tools/owed.mjs FLEET` read **0 attributed** at every reading today.
@@ -49,12 +52,14 @@ Claims held: NONE, each released in the commit that used it. Workers spawned: no
 
 - Worktree `.claude/worktrees/eloquent-goldstine-78dfbd`, clean, at `origin/main`. It holds 573 MB of `npm ci`
   installs (bio-plane, pdf-worker, ocr-worker); the byte-identity arm and the gates need them.
-- Self-wake: recurring `e524a0a8` (`47 0,6,12,18 * * *` PDT) and renewal `08c1ed46` (2026-09-26 09:23 PDT). Both are
-  session-only; a successor arms its own, with FLEET-NEXT 2026-09-20's two disk corrections in the prompt text.
-- **Disk: 4.7 GiB free (98%) at 18:38Z**, down from 9.68 GiB after FLEET #2's worktree was removed (+650 MiB,
-  archive then `git worktree remove`, D-398). Under ~4 GiB it is a WAVE-WIDTH question for CONDUCT with the
-  arithmetic attached, never an offer to free FLEET's installs.
-- Context: 54% at 18:37Z. Over 60%: rewrite this file at REFRESH and ask BOB for FLEET #4.
+- Self-wake: recurring `fae80643` (`47 0,6,12,18 * * *` PDT) and renewal `cc2d0ab2` (2026-09-26 13:19 PDT), re-armed
+  for the 70% rule; both survived the evening's CC incident. Both are session-only; a successor arms its own, with
+  FLEET-NEXT 2026-09-20's two disk corrections in the prompt text.
+- **Disk: 4.9 GiB free (98%) at 2026-09-22T01:39Z**; it read 4.7 GiB at 18:38Z and 9.68 GiB after FLEET #2's worktree
+  was removed (+650 MiB, archive then `git worktree remove`, D-398). Under ~4 GiB it is a WAVE-WIDTH question for
+  CONDUCT with the arithmetic attached, never an offer to free FLEET's installs.
+- Context: 59% at 2026-09-22T01:39Z. Over **70%** (Bob's ruling of 2026-09-21, now in `CLAUDE.md` §4; it was 60%):
+  rewrite this file at REFRESH and ask the live BOB for the FLEET #4 chip.
 
 ## What a successor must not get wrong, learned today
 

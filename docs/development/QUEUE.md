@@ -22,40 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-21 · BOB #24 · D-55 CLOSED BY DESIGN: AUTHORITY STAYS AT DOCUMENT GRAIN; D-64 IS NO LONGER BLOCKED ON IT; ONE FENCE, D-440, TO PLACE.**
-Design: `docs/development/CLIENT-RENDERED.md`, §What must be recorded, "DESIGNED 2026-09-21" (this commit), folded into
-`AUTHORITY-AND-TRUST.md` §What D-55 becomes. Traced at the code first (`c05d71c8`): no third party's script output can enter
-a capture today, and third-party images and media are never fetched; a content row's document is always a registered capture; and the `image` arm's `{part}` form mints
-UNJOINED on any capture that is not an office container. D-55 left DEBT closed by design, archived in this commit.
-SCHEDULER (#8)'s Q4 is answered.
-
-1. **RECORD (M4): D-440, the `{part}` fence.** Place it beside D-420: same function (`coversImage`), and one worker can
-   take both. **Accepts when** a `{part}` on an HTML capture is refused by name, pointing at acquiring the image as its
-   own document; a container capture still mints; an office capture with no persisted image list is still admitted as
-   undetermined, stated; and a negative control removes the refusal and fails by name.
-2. **D-64 (M2) stays in DEBT for LED-7's triage; its disposition no longer names D-55.** Its build carries the design's
-   item 3: a rendered capture is `determined` as the host only when the host alone supplied data and ran code, and
-   otherwise `undetermined`, naming each other origin, with a suite and a negative control. Its four open questions for
-   ratification (`CLIENT-RENDERED.md`) come to BOB for design before it is placed as a build: route them here when M2
-   reaches it.
-3. **Nothing else is owed.** Registering a held subresource as its own document (the design's item 2) is not built and
-   is not owed until a member needs it. Attribution of a rendered page's regions is deferred, with its trigger named.
-
-**2026-09-21 · BOB #23 · D-162 RULED BY BOB — THEMES: A CONNECTION THROUGH AN IDEA, DECLARED UNDER A COVER, NEVER A BASIS.**
-Design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.4 (this commit), Bob's ruling with the four fences. Verified
-at the code: `ENTITY_KINDS` holds ten named-entity kinds and no theme; a lead is refused BY NAME as a basis leg
-(`LEAD_NOT_EVIDENCE`), the pattern fence 4 reuses. D-162 leaves DEBT by the second door under its own id. Place with
-the meaning-layer features (M4), after the instrument cluster.
-
-1. **RECORD (M4; I3 additive, the integrator mints the IC):** a theme object declared by a member session under its
-   cover, with a required TEST; an attributed act placing a document or content row in it; a machine proposal stored as
-   a HUNCH that never counts as membership until a member confirms; and every basis, version and action-basis leg
-   resting on a theme refused BY NAME. **Accepts when** a member declares a theme with a test and places two documents
-   sharing no entity in it, a proposal reads as a hunch, and a leg citing the theme is refused by name. **The cheap
-   defeat to refuse:** a theme as an eleventh entity kind, which makes it a named thing and a citable one, so an arm
-   asserts it is not in `ENTITY_KINDS` and cannot be a leg.
-2. **UI (M8), after 1:** declare, test and place from the member surface, the cover shown on every theme.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
@@ -69,16 +35,6 @@ depends-on: LED-6
 scope: as §3 states, EXCEPT the actor — batches of ~20 rows driven by SCHEDULER ITSELF (Bob, 2026-09-19: *"Scheduler should be actively involved in moving debt rows into the build plan (in the proper order)."*), never spawned into a development slot. **218 open rows, measured 2026-09-19 by SCHEDULER #2** (`grep -c '^| D-' docs/development/DEBT.md`); 223 before batch 1, which closed 4 in fact, placed D-158, routed D-325 and D-52 to BOB and carried 3. A single row whose verification needs a build or a long code trace goes to CONDUCT as its OWN row with its own id — never as "LED-7".
 accepts-when: as §3 states it.
 added: 2026-09-18 · CONDUCT #5 (BOB #15's inbox entry of that date).
-
-### D-436 · running — **SPAWNED 2026-09-21 by CONDUCT #10. NOT LANDED, CHECKED BY CONTENT at spawn: on `origin/main` @ `b83e705c`, `believe-in-oakland` occurs 23 times in `bio-plane/src/store.mjs` (`grep -a -c`). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE PLANE STAMPS A LITERAL PRODUCING GROUP, `believe-in-oakland`, SO A SOVEREIGN GROUP'S RECORD NAMES THE WRONG PRODUCER IN ITS OWN SIGNED BYTES.** `store.mjs` defaults a bundle's `group` to that literal wherever frontmatter carries none (18 fallbacks, 2 trimmed-argument defaults, 1 in `index.mjs`), and three sites stamp it UNCONDITIONALLY: `testify`'s `bundle.md` frontmatter, its promote `meta`, and project creation. The plane holds no group identity at all; the installer already knows the slug, which is the worker name. — owner RECORD, with DIST.
-order: SECOND, after REC-156 and AHEAD of any release a new group installs (BOB #19, 2026-09-21): signed bytes cannot be corrected once published, so on a newly installed instance this falsehood becomes permanent (SCHEDULER #4, 2026-09-21)
-milestone: M7
-interface: I3 and I5 — the durable group value and its first-bootstrap write; the integrator mints and classifies the IC. DIST passes the slug the installer already holds.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (the core field `group`: the producing group's slug, which travels with the bundle), with the design call made in D-436's own row (`node tools/ledger.mjs find D-436`).
-depends-on: none.
-scope: the slug becomes ONE value in the Durable Object's durable state, written once at the instance's first bootstrap from the slug the installer holds; every default and every stamp reads it; a bundle's `group` is never a literal. **Never a deploy-time var:** it appears in signed bytes, so a redeploy must not be able to change it silently.
-accepts-when: an install under a second slug writes no `believe-in-oakland` into any bundle it writes. How a liar passes it: a value re-read from a deploy var, so the arm changes the var and asserts the value did not move. NEGATIVE CONTROL: restore one literal, and the arm fails by name.
-added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
 
 ### REC-157 · running — **SPAWNED 2026-09-21 by CONDUCT #11, AFTER D-436 LANDED (the same file, `store.mjs`). NOT LANDED, CHECKED BY CONTENT at spawn: on the tree this flip lands in (`origin/main` @ `c05d71c8` with D-436's merge `38850da4`), `op=publish`'s refusal `ALREADY_A_CASE_MEMBER` still pins on `#caseRelationOf(id).member` — the finding at its `bundle_sha` (`grep -a`, `bio-plane/src/store.mjs`). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **A CASE KEEPS ASSERTING A CLAIM ITS PROJECT WITHDREW, AND DEC-19's ONE ROUTE FORWARD — A NEW EDITION — IS REFUSED.** Since REC-135 (IC-166) a published case records the PROJECT's adopted claim; when the project withdraws and concludes again on another claim, `op=publish` still refuses `ALREADY_A_CASE_MEMBER`, whose pin is `#caseRelationOf(id).member` — the finding at its `bundle_sha`, which never moved. — owner RECORD.
 order: SECOND, after D-434: a correction to just-landed work (REC-135, `84a66a30`) failing in the PUBLISHED record — the case says what its project no longer stands on and cannot be corrected forward, CLAUDE.md §2's class; below D-434 only because publishing runs through the operator (DEC-33) (SCHEDULER #5, 2026-09-21)
@@ -110,7 +66,7 @@ scope: the row's FIX: the joiner stops at a heading line (`^#`) or a blank line.
 accepts-when: a regenerated `docs/DECIDED.md` carries no `## CLAIM` text inside any ruling, and a hand-wrapped ruling still quotes whole. How a liar passes it: stopping at every line break, so the wrapped-ruling arm must pass. NEGATIVE CONTROL: an arm appends a claim after a trailing `released:` line; drop the stop, and it fails by name.
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-341's DEBT row of 2026-09-14; keeps its `D-` id).
 
-### M0-81 · running — **SPAWNED 2026-09-21 by CONDUCT #11. NOT LANDED, CHECKED BY CONTENT at spawn: on the tree this flip lands in (`origin/main` @ `c05d71c8` with D-436's merge `38850da4`), no tool under `tools/` judges lane occupancy (`git grep -l -i occupan -- tools/` returns nothing). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
+### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
 order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
 milestone: M0
 interface: none
@@ -139,6 +95,16 @@ design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs
 depends-on: none. **Sequence after M0-97 and D-341** (the cache; the same file, `tools/decided.mjs`).
 scope: `docs/DECIDED.md` untracked and ignored; `decided.mjs` writes it on demand, and the seven tools that read it read through one freshness call; the push guard's and plancheck's staleness arms retire, their suites corrected with dated reasons, never exempted. **FULL GATE PROFILE**.
 accepts-when: a ruling edited on two branches merges with no `DECIDED.md` conflict, and `decided.mjs "<subject>"` answers from the merged corpus. How a liar passes it: keeping it committed under `merge=ours`, which hides staleness, so an arm asserts it is untracked.
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-100 · queued — **SEVERAL LANES APPEND TO ONE FILE — `CLAIMS.md`, TOUCHED BY 97 COMMITS ON 2026-09-21 — SO NEARLY EVERY RE-MERGE IS ON ITS TAIL, AND A LINE ONE LANE ADDS TO ITS OWN BLOCK CAN LAND IN ANOTHER'S.** So do `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`. Item 3 of BOB #23's four. — owner M0.
+order: directly after M0-99, item 3 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 3, *a file several lanes append to becomes one file per entry*.
+depends-on: none.
+scope: one file per NEW claim, delegation, measurement and interface-change entry; the old files frozen history plus the state lines of their open blocks; ONE reader module yields both for every reader (`plancheck`, `delegations`, `owed`, `ledger`, `decided`, `mintid` …); `CLAUDE.md` §4's claim sentence and the kickoffs corrected in the landing. **FULL GATE PROFILE**.
+accepts-when: two lanes adding entries concurrently merge with no conflict; a line one lane adds to its own block beside another lane's new entry stays in its block; every reader's counts over the frozen history are unchanged. How a liar passes it: `merge=union`, which makes CONDUCT's detached-line case SILENT, so an arm reproduces that case and asserts the line stays in its block.
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates

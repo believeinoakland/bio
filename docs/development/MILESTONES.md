@@ -591,7 +591,6 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-19 migrated `created` times | RECORD | M6 |
 | D-32 retrieval path cost | RECORD | M5 |
 | D-33 sort tiebreak unproven at runtime | RECORD | M0 |
-| D-36 workerd ceiling class | RECORD | M5 |
 | D-39 empty POST body | RECORD | M7 |
 | D-40 illegal `criticality` in fixtures | CONDUCT | M0 |
 | D-42 burner invitations half built | RECORD | M7 |
@@ -601,7 +600,7 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-185 free-tier frugality now defends limits no supported instance runs under (DEC-42) | CAPTURE · DIST | M7 · settle with D-54 |
 | D-57 self-reference reported as a change | CAPTURE | M3 |
 | D-59 `contemporaneous` never observed | CAPTURE | M3 |
-| D-60 / D-69 docprofile unadopted | FRAMEWORK → CAPTURE | M3 |
+| D-60 docprofile unadopted | FRAMEWORK → CAPTURE | M3 |
 | D-61 unattended writer can take a lease · DONE (REC-2) | RECORD | M1 · done |
 | D-62 `setup.mjs` omits `content_hash` | RECORD | M7 |
 | D-63 unmeasured stacks | FRAMEWORK | M2 |
