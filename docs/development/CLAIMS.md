@@ -19116,3 +19116,24 @@ edited, so no bundle rebuild is owed.
 **released: 2026-09-22 by the M0-117 worker** — built, gated GREEN (class TARGETED) on tree `21fb148f` (109/109 suites,
 7,429 assertions, 0 skipped) and pushed on `worktree-agent-a7c6ab7d2c6d998af` at `38ca894c`; the paths stay reserved
 until CONDUCT integrates.
+
+## CLAIM 2026-09-22 M0 (M0-114 — a gate's verdict lives in one clone's git directory: the gates run on GitHub's machines and the verdict is a check on the commit)
+
+session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-114 (wave 4), worktree `.claude/worktrees/agent-a7a5246aa91f3c230`,
+branch `worktree-agent-a7a5246aa91f3c230`, from `origin/main` @ `df9eb9f9` (cloud).
+authority: `QUEUE.md` `### M0-114 · running` (read on `origin/coord` @ `a5ef1c62`); design `TREE-SHARING.md` §3 as revised
+by §4, with `VERIFICATION.md` (admitted for M0 by name).
+paths, BY SITE:
+  - `.github/workflows/gates.yml` (NEW) — pushed on THIS branch only until the measurement is in `MEASUREMENTS.md`; its
+    trigger never names `main`.
+  - `tools/pushguard.mjs` — the CHECK-READING arm ONLY: new functions that read a commit's GitHub check and fold it into
+    the verdict, and their one call site in `run`; the in-process control's arms for them. `readRuns`, `effectiveVerdict`,
+    `gateVerdictCheck`'s local-record half and the `main` refusal arm (M0-111's) are NOT touched.
+  - `bio-plane/test/` — one NEW suite for the check-reading arm, its control line; `bio-plane/scripts/coverage.mjs`
+    `REGISTER_FLOOR` ONLY and only to printed figures.
+  - `docs/development/MEASUREMENTS.md` (one entry APPENDED), `docs/development/TREE-SHARING.md` §3 (an "As built" line),
+    `docs/architecture/construct-status.json` if a construct moves, this block.
+**NOT CLAIMED:** `tools/gates.mjs` (M0-116's), `tools/ledger.mjs` (M0-119's), `docs/development/QUEUE.md` (CONDUCT's),
+`tools/coord.mjs`, `tools/plancheck.mjs`. Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
