@@ -133,8 +133,12 @@ extended to whole FILES, in build order:
    source (`CLAUDE.md` §1), so nothing merges it and the push guard stops refusing it as stale.
 3. **A file several lanes append to becomes one file per entry.** New CLAIM, DELEGATION, measurement and interface-change
    entries are each their own file; the old files are frozen history plus the state lines of blocks still open; one
-   reader module yields both, and any single-file view is generated.
+   reader module yields both, and any single-file view is generated. **NARROWED 2026-09-22 by BOB #27** to
+   `MEASUREMENTS.md` and `INTERFACE-CHANGES.md` (M0-100): claims and delegations move to `coord` with
+   `TREE-SHARING.md` change 1, whose anchored write keeps each line in its own block (§1 there).
 4. **A lane writes only its own files:** CONDUCT's `running` word leaves SCHEDULER's rows for a CONDUCT-owned record.
+   **SUPERSEDED 2026-09-22 by BOB #27** (M0-101): the word becomes an anchored write on `coord` (`TREE-SHARING.md` §1),
+   which ends the two-writers conflict without moving it.
 
 Until each lands: SCHEDULER batches its docs landings to one per wake and holds `main` while CONDUCT lands (live
 2026-09-21); appends at a tail are resolved by carrying both sides, each line kept in its own block.

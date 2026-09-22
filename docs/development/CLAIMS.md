@@ -18574,6 +18574,8 @@ the move, NEW; §5 the rest of the program by pointer, NEW); `docs/development/k
 §9.2 the memory seed); `docs/archive/account-memory-2026-09-22.md` (NEW: the account's memory, verbatim, one redaction);
 `docs/development/kickoffs/BOB-NEXT.md` (rewritten early, so an abrupt switch finds a current handoff);
 `docs/development/CLAIMS.md` (this block; BOB #26's DISCHARGED line moved into the SCHEDULER (#12) DELEGATION it closes);
+`docs/development/ORCHESTRATION.md` ("THE RECORD IS PARTITIONED BY WRITER": rule 3 NARROWED, rule 4 SUPERSEDED — rule 6, a
+change corrects what it supersedes in the same turn);
 `docs/DECIDED.md` (GENERATED, LAST).
 why: Bob, 2026-09-22 ~15:06Z, in BOB #27's conversation: *"Make sure that the process changes being made to improve
 productivity are fully recorded, as there'll be a transition at some point today that will involve both to cloud-based CC
