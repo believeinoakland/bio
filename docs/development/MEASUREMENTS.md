@@ -18376,3 +18376,35 @@ three. **Eight gate runs in 41 minutes are too few to say whether the discard ra
 claimed.** Nor can it be re-measured this way after the move to cloud Claude Code: a gate record lives in one clone's git
 directory and a cloud session starts with none. The git half of the instrument — which landings touch the shared files —
 re-measures anywhere; the gate half waits for M0-114's first cloud figures.
+
+## M-99 · 2026-09-22 · BOB #28 — the first cloud session: what a fresh container lacks, what its network admits, and the first FULL gate there
+
+**INSTRUMENTS:** session `session_01B49LNsE5y9cUtTYUj5Vvab` (cloud Claude Code, Bob's second account; environment
+kind `anthropic_cloud`), on `origin/main` @ `6ee96532` and this lane's `4de98ba7`, clocks read with `date -u`
+(18:07Z–18:37Z). `node -v`; `git rev-parse --is-shallow-repository`; `df -h .`, `free -g`, `nproc`; `curl` through the
+session's egress proxy with no credential, per host; each key USED against its service, never printed; the session tools
+by calling them; `node tools/gates.mjs --full` on a clean tree, its wall time by `date -u +%s` around it.
+
+| what | measured |
+| --- | --- |
+| node | v22.22.2 on PATH (v20, v21 also under `/opt`); `plancheck` crashed in `owed.mjs`: `SyntaxError: Invalid regular expression … (?i:…) … Invalid group`. v26.10.0 from nodejs.org then read `0 fail` |
+| the clone | shallow, 178 commits reachable, 6 graft points dated 2026-09-21; `plancheck`: **29 fail**, each *"Status says as of … but the file last changed 2026-09-21"*. `git fetch --unshallow` (2.5 s): 3,170 commits, **0 fail, 4 warn** (the four standing WARNs) |
+| `npm ci` | exit 0 in `bio-plane/` (27 entries), `pdf-worker/` (23), `ocr-worker/` (24), `newgroup/` (27); none a symlink |
+| `ssh-keygen` | absent. The first `--full` run (stopped, not a baseline: `ssh-keygen` was installed while it ran) SKIPPED 8 suites *"ssh-keygen not on PATH"* and FAILED `caseobject.test.mjs` on `spawnSync ssh-keygen ENOENT`. `apt-get update && apt-get install openssh-client`: OpenSSH 9.6p1 |
+| the id ledger | `.git/bio-idalloc` absent (nothing had minted in this clone). The clean `--full` run FAILED one arm, `mintid.test.mjs` *the REAL ledger's filesystem honours the exclusive create*: `scopeOf()` reads `PROBE_UNWRITABLE`, *the ledger directory could not be written (ENOENT)*; `exclusivityProbe` does not create its root, the mint does |
+| machine | 252 GB filesystem, 30 GB free at start; 15 GiB memory; 4 cores |
+| egress, REFUSED (proxy CONNECT 403) | `api.cloudflare.com`, `dash.cloudflare.com`, `biosmoke7.believeinoakland.workers.dev`, `believeinoakland.workers.dev`, `freetsa.org`, `www.oaklandca.gov`, `oakland.legistar.com`, `web.archive.org` |
+| egress, admitted | `api.github.com` 200, `registry.npmjs.org` 200, `nodejs.org` 307, `api.anthropic.com` 404, the Ubuntu mirrors |
+| node's `fetch` | `wrangler whoami`: *"fetch failed"*, with and without `NODE_USE_ENV_PROXY=1` — the host is refused either way; the variable is the proxy's documented remedy for node's own fetch |
+| the ten keys | all set in the environment, no `.env`. `GITHUB_TOKEN`: HTTP 200 on the repository, `push` and `admin` true. `BIO_RELEASE_SEED`: a signature made with it in namespace `bio-seedcheck` verifies under `ssh-keygen -Y verify` against `RELEASE.json`'s signer (key `SHA256:H55x38rB…`), and the published plane `sig` verifies over the published asset. `CF_ACCT`, `CLOUDFLARE_ACCOUNT_ID` equal the pinned account. `CF_TOKEN`, `CLOUDFLARE_API_TOKEN`, `BIO_INSTANCE`, `BIO_MEMBER_TOKEN`, `BIO_ADMIN_TOKEN`: UNCONFIRMED, their hosts refused. `BIO_RATIFY_SEED`: a well-formed key, public half unequal to the release signer's |
+| session tools | called: `list_sessions` (20 rows, all this account's, every one but this ARCHIVED; the old account's absent), `get_session` (`context_usage` 120,214 of 1,000,000 at ~18:14Z; `rate_limit_info` the five-hour window only). Present in the tool list, not called: `archive_session`, `create_session`, `send_later`, `create_trigger`, `CronCreate`, `SendMessage`, `ListAgents`, `spawn_task`. Absent: `get_usage` |
+| GitHub Actions | `actions/workflows` 0, `actions/runs` 0 (HTTP 200); `actions/permissions` HTTP 403 *"Access to this GitHub Actions path is not permitted through this proxy."* |
+| the FULL gate | `--full` on `4de98ba7` (tree `1904e460`), 18:19:15Z–18:37:17Z: **1,082 s**. Battery 974.3 s, **272/273 suites green · 16,575 assertions passing**, 2 untallied, 0 skipped; FAILED `mintid.test.mjs` alone (the id-ledger row); coverage `--strict`, `civicos-ui` (all harnesses) and `plancheck --local` ok; recorded RED (D-293). Beside it, DIST's 0.71.0 cut on the Mac: 269/269 · 16,413, the battery ~16 min when run alone (M0-106's row) |
+
+**WHAT IT SAYS.** A cloud container differs from the Mac in five ways that each broke an instrument before it was
+found (the fifth, the id ledger, cost a whole gate run), and all five are now repaired by one committed SessionStart
+hook (37 s from cold on a fresh depth-50 clone). The network is the one gap no session can close: every Cloudflare host and the live instance are refused, so DIST's deploys,
+every read of what is live and `CLAUDE.md` §5's live verification are SUSPENDED until the environment's network setting
+admits them. A lone full gate costs what it cost on the Mac, about 18 minutes with the battery 16: the cloud neither speeds nor slows one. What it removes is two lanes' batteries on one CPU, which made DIST's 0.71.0 gate take ~2.5 hours; a CONDUCT's own workers still share its container. **Not measured here:** whether `CronCreate` survives a container's reclaim; whether a push to
+`main` is accepted until this landing's own push (NEW-MACHINE §0.1 records it); the weekly budget, which no tool here
+exposes.

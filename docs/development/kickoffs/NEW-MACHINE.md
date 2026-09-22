@@ -5,7 +5,7 @@ stopping on token budget. **Its audience is the FIRST BOB SESSION on the new mac
 hands it over by pasting §7's block. Everything here was measured on the outgoing machine rather
 than recalled; where a figure could drift, the command that re-measures it is given instead.
 **Brought current 2026-09-22 by BOB #27 for Bob's move to cloud Claude Code under his second
-account: §0 first.**
+account, and MEASURED there by BOB #28 the same day: §0 first.**
 
 **HOW BOB WORKS, AND IT IS NOT A PREFERENCE — IT IS THE OPERATING MODEL.** Bob enters no shell
 commands, edits no files, and applies no diffs. **If something must be done on the machine, the
@@ -38,11 +38,8 @@ UNMEASURED, and says which.**
 3. **At Bob's order:** each lane deletes its own crons, stops its workers and says so; BOB disables the heartbeat task,
    archives what has finished, confirms every lane stopped (`CLAUDE.md` §4), and gives Bob §7's block.
 
-**What a cloud session starts WITHOUT.** Each is the premise of a rule; until measured there, that rule is SUSPENDED and
-the handoff says so — never silently skipped:
-- **The desktop's session tools** — `list_sessions`, `get_usage` of another session, `archive_session`, `ListAgents`,
-  the spawn chip (UNMEASURED there). D-398's archive of a predecessor, `occupancy.mjs`, `retirable.mjs`, BOB's opening
-  sweep and the 70% measure of OTHER lanes rest on them.
+**What a cloud session starts WITHOUT — MEASURED 2026-09-22 by BOB #28 (§0.1 below; `MEASUREMENTS.md` M-99).** Each was
+the premise of a rule; a rule whose premise is still missing is SUSPENDED and the handoff says so, never skipped silently.
 - **Replies:** it receives a cross-session message and cannot send one (the vendor's `SendMessage` description). The
   repository is the channel (`TREE-SHARING.md` §4).
 - **The heartbeat and the self-wakes.** The heartbeat is this Mac's scheduled task, its definition verbatim at
@@ -58,8 +55,6 @@ the handoff says so — never silently skipped:
 - **The id ledger:** `mintid` allocates by exclusive create in the old clone's `.git`; a fresh clone takes its floor from
   the corpus on `main` alone, so an id minted on the Mac and carried only on an unmerged branch (IC-175, on REC-166's
   branch) can be minted twice. Reuse it when the branch resumes; `node tools/mintid.mjs --list` before minting.
-- **The push guard,** until `node tools/plancheck.mjs` has run once (it installs the untracked `.git/hooks/pre-push`);
-  **every gate record** (per clone, D-293); the three packages' `node_modules` (§4); node's major, 26, pinned by nothing.
 
 **BOB'S OWN ACTS, in plain words (given to him by BOB #27 at the stand-down, ~17:10Z):** sign in to claude.ai with the
 second Max 20x account; open Claude Code on the web and connect GitHub with access to `believeinoakland/bio`; set up the
@@ -67,9 +62,28 @@ cloud environment for that repository with internet access and the ten keys as e
 Mac's `.env` himself — a session never handles a value); start a cloud session on the repository and paste §7's block;
 then paste each lane prompt BOB #28 writes him, one new cloud session each; and archive the old account's BOB #27.
 
-**The first BOB there measures each of these before resting a rule on it**, records the answers in this section with the
-date, corrects `CLAUDE.md` §4, §6 and §8 where they assume the Mac, and stands the lanes up in §6's order. Where there is
-no chip, BOB writes each lane's paste block into its own handoff and Bob starts the session from it.
+**Done by BOB #28, the first BOB there:** each premise measured (§0.1), `CLAUDE.md` §4, §6 and §8 brought to the cloud,
+and the lanes' paste blocks given to Bob in §6's order (kept at `docs/archive/lane-paste-blocks-2026-09-22.md`).
+
+### §0.1 MEASURED 2026-09-22 by BOB #28 in the first cloud session (the instruments and figures: `MEASUREMENTS.md` M-99)
+
+**The committed SessionStart hook now supplies what a fresh container lacked** (`.claude/hooks/session-start.sh`,
+`.claude/README.md`; 37 s from cold): node 26, full history, `npm ci` in the four packages, `ssh-keygen`, the id
+ledger's directory, `NODE_USE_ENV_PROXY=1`. It does not run `plancheck`, which every lane runs first and which arms the push guard.
+
+| premise | measured | so |
+| --- | --- | --- |
+| node | **v22** by default; `owed.mjs`'s `(?i:…)` regexes crashed `plancheck` | the hook installs v26 first on PATH |
+| the clone | **shallow, 50 commits**: 29 false front-matter FAILs, every file dated by the boundary commit | the hook unshallows; 0 fail |
+| packages · `ssh-keygen` | `npm ci` clean in all four (`newgroup/` is DIST's); `ssh-keygen` ABSENT (8 signature suites SKIP, `caseobject` FAILs) | the hook installs both |
+| the id ledger | `.git/bio-idalloc` absent until a first mint: `mintid.test.mjs`'s O_EXCL arm FAILS, so a fresh clone's first full gate is RED | the hook creates it; the tool's fix is routed |
+| machine | 30 GB free, 15 GiB, 4 cores, ONE session per container | two lanes' batteries no longer share a CPU |
+| the full gate | on `4de98ba7`, 18:19Z–18:37Z: **1,082 s wall**; the battery 974 s at **272/273 suites · 16,575 assertions**, 0 skipped; its one red the id-ledger arm (row above); coverage, UI and `plancheck` green | M0-114 leaves `blocked` (BOB INBOX) |
+| a push to `main` | **accepted**: this landing's own push of `HEAD:main`, verified with `git ls-remote origin main` | |
+| **the network** | the proxy REFUSES every Cloudflare host, every `*.workers.dev` (biosmoke7, the members), `freetsa.org` and the Oakland and archive sites; admits GitHub, npm, nodejs.org, Anthropic, Ubuntu | **SUSPENDED until Bob's environment setting admits Cloudflare: DIST's deploys and live reads, `CLAUDE.md` §5's live verification; FLEET's `/version` is UNDETERMINED, never "down"** |
+| the ten keys | all are environment variables, no `.env`. Confirmed by use: `GITHUB_TOKEN`, `BIO_RELEASE_SEED`, both account ids. The Cloudflare and instance keys: present, UNCONFIRMED (hosts refused) | DIST's code reads `process.env`; six live helpers read only `.env` (routed, BOB INBOX) |
+| session tools | called: `list_sessions` (this account's only), `get_session` (any session's `context_usage`). Listed, not called: `archive_session`, `create_session`, `send_later`, routines, `CronCreate`, `SendMessage`, `ListAgents`, `spawn_task`. ABSENT: `get_usage` and the WEEKLY figure | the 70% measure is `get_session`; a self-wake is `send_later`; only Bob can read the weekly budget |
+| Actions | 0 workflows, 0 runs; `actions/permissions` refused by this proxy, not GitHub | enablement UNDETERMINED |
 
 ---
 
@@ -238,31 +252,10 @@ missing, the plancheck and gate results, and whether the memory seed and setting
 
 ## 7. THE PASTE BLOCK — hand this to the first BOB session in the new account
 
-The CURRENT block is the one `BOB-NEXT.md` §0 names. For the move of 2026-09-22 it is below, exactly as BOB #27 gave it to
-Bob at the stand-down: paste it into a new cloud session on the repository under the second account (on a bare machine,
-§6a's bootstrap comes first). BOB #16's block for the 2026-09-19 switch is in git history.
-
-```
-Kickoff: session BOB #28 for BIO / CivicOS — the architecture lane and the LEAD, and the FIRST session of development under Bob's second Max 20x account, in cloud Claude Code. The previous account stood down on Bob's order on 2026-09-22 (about 16:45Z to 17:10Z): BOB #27 stopped and archived every lane, and all work is on origin. Keep this session's title EXACTLY "BOB #28".
-
-GATE — run first; if it fails, STOP and say so:
-  git fetch origin
-  git show origin/main:docs/development/kickoffs/BOB-NEXT.md | head -1
-It MUST read exactly: # BOB — resume here. Written 2026-09-22 by BOB #27 for BOB #28, the first BOB under Bob's second account in cloud Claude Code.
-
-READ, each file WHOLE, from origin/main, in this order: docs/development/kickoffs/NEW-MACHINE.md (§0 FIRST), CLAUDE.md, docs/development/kickoffs/BOB.md, docs/architecture/BIO_System_Design.md, then docs/development/kickoffs/BOB-NEXT.md. Trust origin/main over any document, this prompt included. Look things up, never recall them: node tools/status.mjs <topic>, node tools/decided.mjs "<subject>", node tools/owed.mjs BOB, node tools/ledger.mjs find <ID>. You have no memory of earlier sessions; the old account's memory is carried whole in docs/archive/account-memory-2026-09-22.md.
-
-FIRST ACTS, in order (NEW-MACHINE §0 and BOB-NEXT §0):
-1. Confirm the old account is stopped: origin/main has not moved since the stand-down except by your own lanes.
-2. Run `node tools/plancheck.mjs` BEFORE ANY PUSH: it installs the push guard a fresh clone lacks.
-3. Measure this environment and record each answer in NEW-MACHINE §0 with the date: which session tools exist (listing sessions, reading another session's context, archiving, messaging, scheduling), `npm ci` in bio-plane/, pdf-worker/ and ocr-worker/ (none a symlink), node's major (the project uses 26), disk and memory, the FULL gate's wall time and pass count (M0-114 waits on it), and — with your first real landing, never a test push — whether a push to main is accepted. A rule whose premise is missing is SUSPENDED and said so in your handoff, never skipped silently.
-4. The secrets, Bob's option C: the ten keys should be environment variables here. Confirm each by USING it (`npx wrangler whoami` must report account 20b533579290b9b93168345edd3b7f72), never print a value, and name any that is absent so Bob can add it in the environment's settings.
-5. Stand the lanes up in NEW-MACHINE §6's order — SCHEDULER #14, CONDUCT #14, DIST #5, FLEET #4 — each from its own -NEXT.md: check that handoff's line 1, then write that lane's complete kickoff prompt for Bob to paste into a new cloud session on this repository, one at a time.
-
-BOB'S RULINGS BIND FIRST: "The goal is BIO work; process is overhead" (CLAUDE.md §2); "Never queue a gate behind another lane's" (§6); and lane contention is "a very significant drag … perhaps 1/2 the work being done in lanes overall is wasted and redone" (Bob, 2026-09-22) — its fix (M0-110, the coord branch; M0-111, one lander; M0-116, the gate's selection; TREE-SHARING.md) heads the plan. One account develops at a time.
-
-HOW BOB WORKS: he runs no commands and applies no diffs. Do it, script it, or name the single smallest act only he can take, in plain words. Bring him only doctrine, priority, risk carrying his name and effects on people outside the project, each once. Never end a turn on a question nobody is present to read.
-```
+The CURRENT block is the one `BOB-NEXT.md` §0 names. The block for the move of 2026-09-22, exactly as BOB #27 gave it to
+Bob and BOB #28 was started from, is in git history at `6ee96532` (`git show 6ee96532:docs/development/kickoffs/NEW-MACHINE.md`);
+BOB #16's for the 2026-09-19 switch before it. The four lane blocks BOB #28 gave Bob are
+`docs/archive/lane-paste-blocks-2026-09-22.md`. On a bare machine, §6a's bootstrap comes first.
 
 ## 9. Seeding the new account — memory and settings
 

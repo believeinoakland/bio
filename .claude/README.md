@@ -48,14 +48,16 @@ classifier judges each call) rather than re-enumerating commands.
 
 `hooks/session-start.sh` runs at every session start where `CLAUDE_CODE_REMOTE=true`
 and does nothing on a Mac. A cloud session starts in a fresh container that
-differs from the machine this project was built on in four measured ways
-(BOB #28, 2026-09-22, `NEW-MACHINE.md` §0), each of which broke an instrument:
-node 22 instead of 26 (`owed.mjs`'s `(?i:…)` regexes crash `plancheck`), a
-SHALLOW clone (git-dated checks misread 29 front-matter dates as FAILs), no
-`node_modules`, and no stock `ssh-keygen` (the signature suites SKIP). The hook
-installs node 26 under `/opt/node26`, unshallows, runs `npm ci` in the four
-packages with lockfiles, installs `openssh-client`, and exports
-`NODE_USE_ENV_PROXY=1` so node's own fetch uses the egress proxy. It is
-idempotent, touches no tracked file and no secret, and takes ~40 s from cold.
-It does NOT run `plancheck` (~45 s): every lane runs it first, and that run
-installs the push guard.
+differs from the machine this project was built on in five measured ways
+(BOB #28, 2026-09-22, `NEW-MACHINE.md` §0.1, `MEASUREMENTS.md` M-99), each of
+which broke an instrument: node 22 instead of 26 (`owed.mjs`'s `(?i:…)`
+regexes crash `plancheck`), a SHALLOW clone (git-dated checks misread 29
+front-matter dates as FAILs), no `node_modules`, no stock `ssh-keygen` (the
+signature suites SKIP), and no id-ledger directory (`mintid.test.mjs`'s O_EXCL
+probe FAILS, so a fresh clone's first full gate is RED). The hook installs
+node 26 under `/opt/node26`, unshallows, creates `<git-common-dir>/bio-idalloc`,
+runs `npm ci` in the four packages with lockfiles, installs `openssh-client`,
+and exports `NODE_USE_ENV_PROXY=1` so node's own fetch uses the egress proxy.
+It is idempotent, touches no tracked file and no secret, and takes ~40 s from
+cold. It does NOT run `plancheck` (~45 s): every lane runs it first, and that
+run installs the push guard.

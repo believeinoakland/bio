@@ -4,7 +4,8 @@ A process document (`CORPUS-STANDARD.md` §6). **RULED BY BOB 2026-09-22: *"Yes 
 changes below, as BOB #26 put them to him that day. Designed here by BOB #26; **NOT BUILT**. Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
 **Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
-questions answered in §1 (M0-99, M0-100, M0-101); §5 points at the rest of the same day's program. Status as of 2026-09-22.
+questions answered in §1 (M0-99, M0-100, M0-101), and M0-110's builder's four answered there by BOB #28 the same day;
+§5 points at the rest of the same day's program. Status as of 2026-09-22.
 
 ## Why: measured on 2026-09-22
 
@@ -61,6 +62,33 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   write, and the two-writers conflict it existed for is gone), and **M0-100 NARROWS** to `MEASUREMENTS.md` and
   `INTERFACE-CHANGES.md`, which stay on `main`, where two `land/*` branches' tail appends still collide inside change 2's
   train.
+- **The builder's four questions, RULED 2026-09-22 by BOB #28** (M0-110's stand-down report,
+  `origin/conduct13/standdown-reports:M0-110.md`; each read at the code):
+  1. **The archive ledgers move with the live ones: the WHOLE `docs/archive/ledgers/` directory.** `tools/ledger.mjs`
+     writes `QUEUE-closed.md` and `DEBT-closed.md` in the act that edits the live file (`archive`; WORK-PIPELINE §2 step
+     1), and SCHEDULER's drains and cuts write `BOB-INBOX-drained.md` and `QUEUE-cut-*.md` in the commit that edits the
+     live files (`3f949ed0`, `4e52aee8`, `359e4020` each carry both, with `MILESTONES.md`). Left on `main`,
+     one act would span two branches, and a `done` flip without its archive is what P2 refuses. They are the history of
+     the state, written by the same act, so they are state; the frozen August rolls go with them, so `ledger.mjs`'s
+     `archiveFiles` and `findId` read one family on one branch. This widens the list above, which named only live files.
+  2. **A check of a ledger's CONTENT leaves the battery; a check of a tool's BEHAVIOUR stays.** A gate record is keyed by
+     `main`'s tree (D-293), so after the cutover a suite that judges the LIVE rows judges `coord`, which no `main` record
+     settles: a `coord` write could turn it red with `main` unmoved. Each such suite splits by its subject. Arms that run a
+     tool against PLANTED ledgers (the controls in `rowdesign`, `delegations`, `debt-floor`, `ledger`, `pipeline-readers`,
+     `m041-instrument-census`, `corpuscheck`) stay in the battery. Arms that judge the live rows (`planning-hygiene`'s
+     live-register arms, `corpuscheck` §5, the live reads in `op-claims` and `pipeline-readers`) move into the ledger
+     checks the write command runs before it pushes, so a `coord` write that breaks one is REFUSED, and `plancheck` runs
+     the same checks against `origin/coord`. The builder names each moved arm and its new home; none is dropped.
+     NEGATIVE CONTROL: a write that plants a closed row in the cache is refused by name, and `main`'s battery is unmoved.
+  3. **`MILESTONES.md` splits at this section's line.** Its ladder (each rung and what the capability means) describes
+     the system and stays on `main`. Its `## Placement: everything open, and where it now sits` table is a per-row
+     disposition that the debt fold rewrites (every one of 2026-09-22's eight touches): state, so it moves to `coord` as
+     `docs/development/PLACEMENT.md`, with a pointer where it stood. It repeats each placed row's own `milestone:` line,
+     so LED-7's closing landing retires it once every open item carries that line.
+  4. **The heartbeat is not redirected; a replacement would be.** Its skill lived on the old Mac and was disabled at the
+     stand-down (`kickoffs/NEW-MACHINE.md` §0); `docs/archive/conduct-heartbeat-SKILL-2026-09-19.md` is a dated copy and
+     stays verbatim. A cloud replacement, if one is built, is one more reader in the list above and reads through the
+     read command.
 - **Every reader follows the files**: `plancheck`, `ledger.mjs`, `owed.mjs`, `decided.mjs`, `gates.mjs`' suite derivation,
   the push guard (it stops judging `DECIDED.md` on `main`), the heartbeat's skill, and a worker reading its row
   (*from `origin/main`* becomes *from `origin/coord`*). `plancheck` keeps its cross-checks by reading both branches: a
@@ -102,7 +130,8 @@ Bob, 2026-09-22, to BOB #27: *"there'll be a transition at some point today that
 to using the second Max 20X account of mine"*, with the instruction that these changes be fully recorded first. The move
 itself — what must happen before it, and what a cloud session starts without — is `kickoffs/NEW-MACHINE.md` §0. This
 section records what it changes in THIS design. **Every claim about the cloud here is either the vendor's own tool
-description, read 2026-09-22, or UNMEASURED, and says which;** the first session there measures before building on it.
+description, read 2026-09-22, or UNMEASURED, and says which;** the first session there measured them the same day
+(BOB #28: `kickoffs/NEW-MACHINE.md` §0.1, `MEASUREMENTS.md` M-99), and those figures govern where they differ.
 
 - **Change 1 gains weight and stays first.** A cloud session RECEIVES a cross-session message but cannot SEND one back
   (the vendor's `SendMessage` description), and the desktop's session tools and scheduled tasks are not known to exist

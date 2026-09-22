@@ -1,82 +1,63 @@
-# BOB — resume here. Written 2026-09-22 by BOB #27 for BOB #28, the first BOB under Bob's second account in cloud Claude Code.
+# BOB — resume here. Written 2026-09-22 by BOB #28 for BOB #29, in cloud Claude Code under Bob's second account.
 
-Read `kickoffs/NEW-MACHINE.md` **§0 FIRST** — what a cloud session starts without, and what to measure before resting any
-rule on it — then `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, then this. Written at
-the stand-down Bob ordered at ~16:45Z (clock read 16:49Z) 2026-09-22; everything below is a POINTER measured then —
-re-measure before acting on a line.
+Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, `kickoffs/NEW-MACHINE.md` §0 and
+§0.1 (what this environment is, MEASURED), then this. Everything below is a POINTER measured at writing; re-measure.
 
 ## 0. YOUR FIRST ACTS
 
-1. **Confirm the OLD account is stopped** — two accounts developing at once is the one failure nothing catches. BOB #27
-   stood every lane of it down and confirmed each (§1); `origin/main` not moving since, and Bob's word, confirm it from
-   where you are. **BOB #27 itself was left idle with no wake, for Bob to close.**
-2. **Run `node tools/plancheck.mjs` BEFORE ANY PUSH**: a fresh clone has no push guard until plancheck installs it.
-3. **Measure your environment** (NEW-MACHINE §0's list) and record each answer there with the date: the session tools,
-   cross-session replies, scheduled routines and `CronCreate`, `npm ci` in the three packages, node's major (26), disk and
-   memory, the FULL gate's time and pass count (M0-114 unblocks on it), and — with your first real landing — whether a
-   push to `main` is accepted. **The secrets, Bob's option C:** all ten keys should be environment variables here; confirm
-   each by USING it (`wrangler whoami` must report `20b533579290b9b93168345edd3b7f72`), never print one, and name any absent.
-4. **Stand the lanes up in NEW-MACHINE §6's order** — SCHEDULER #14, CONDUCT #14, DIST #5, FLEET #4 — each from its own
-   `-NEXT.md`, each written for a cloud successor with no memory. Where there is no chip, write each lane's paste block and
-   Bob starts it. **If M0-110 (the `coord` branch) has landed, every handoff lives on `origin/coord`**: read line 1 there.
+1. **Confirm BOB #28 is stopped**: `list_sessions`, and its self-wake gone — `list_triggers` shows none of its
+   `send_later` one-shots pending (it names them in its last commit). Then archive it under D-398's three conditions.
+2. **The SessionStart hook** gave you node 26, full history, the four packages, `ssh-keygen` and the id ledger's
+   directory: confirm `node -v` and `git rev-parse --is-shallow-repository` before trusting any instrument. Then
+   `node tools/plancheck.mjs` BEFORE ANY PUSH: it arms the push guard, which a fresh clone lacks.
+3. **Your context is `get_session`'s `context_usage`**; refresh past 70%. Your self-wake is `send_later` (it survives the
+   container; `CronCreate` is session-only, its survival UNMEASURED).
+4. **If M0-110 has landed, every handoff lives on `origin/coord`**: read line 1 there.
 
-## 1. THE ESTATE AT THE STAND-DOWN (old account, Sparky-Air)
+## 1. THE ESTATE (measured 18:37Z)
 
-| lane | last session here | stopped and archived | its handoff on `origin/main`, line 1 |
-| --- | --- | --- | --- |
-| SCHEDULER | #13 | ~17:03Z | `ccfd7c35` — *# SCHEDULER-NEXT — the resume for SCHEDULER #14, in the cloud …* |
-| CONDUCT | #13 | ~17:08Z | `47f22c06` — *# CONDUCT-NEXT — the resume prompt for CONDUCT #14, in cloud Claude Code under Bob's second account* |
-| DIST | #4 | ~16:58Z | `034ce1bc` — *# DIST — resume here. Written 2026-09-22 by DIST #4 for DIST #5, who may run in the CLOUD …* |
-| FLEET | #3 | ~16:53Z | `d6198bfe` — *# FLEET — resume here. Written 2026-09-22 by FLEET #3 … for a successor that may open in the cloud …* |
-| BOB | #27 | left idle, no wake, for Bob to close | this file |
+| lane | handoff line 1 on `origin/main` | stood up |
+| --- | --- | --- |
+| SCHEDULER #14 | `ccfd7c35` | paste block given to Bob ~18:38Z (`docs/archive/lane-paste-blocks-2026-09-22.md`); whether he started it: `list_sessions` |
+| CONDUCT #14 | `47f22c06` | the same |
+| DIST #5 | `034ce1bc` | given; useful only once the network admits Cloudflare (§2) |
+| FLEET #4 | `d6198bfe` | given; nothing owed to it (`owed.mjs FLEET`) |
 
-- **Work in flight, saved on its own branches (CONDUCT-NEXT §2 and §4 carry the detail):** REC-166 on
-  `worktree-agent-a1707ddf948cd5c29` (`cd046a8e`; its claim block unreleased), REC-165 on
-  `worktree-agent-a085d980f98329517` (`187075ea`); M0-107 and M0-110 pushed nothing (their measured designs are in the
-  four workers' reports, `origin/conduct13/standdown-reports`, a ROOT commit — read it, never merge it).
-- **IDS MINTED ON THE MAC:** `mintid`'s ledger lived in the old clone's `.git`; a fresh clone takes its floor from the
-  corpus on `main` alone, so an id minted there but carried only on an unmerged branch — **IC-175, on REC-166's branch** —
-  can be minted a second time. Reuse it when that branch resumes; check `node tools/mintid.mjs --list` before minting.
-- **Design gaps CONDUCT #13's workers reported, for this lane:** M0-110 — (a) whether the ARCHIVE ledgers also move to
-  `coord` (TREE-SHARING §1 names only the live ones), (b) a suite that reads a live ledger will read `coord`, so a
-  `main`-keyed gate record no longer settles it, (c) `MILESTONES.md` holds debt-row STATE, (d) the heartbeat's skill
-  reads `CONDUCT-NEXT` from `origin/main`; REC-165 — INVESTIGATIVE-SESSION §11 item 5 rule 1 is silent on whether a
-  suggestion's target question must lie inside its run's context; M0-107 — VERIFICATION.md says nothing of a timeout's
-  outcome. And for SCHEDULER to drive before placing: `capturerequest` credits another member's run (REC-165's find).
+The old account's sessions are invisible from here; BOB #27 (idle there, no wake) is Bob's to close.
 
-- **Weekly all models 83%** at ~16:10Z on the old account, resetting 2026-09-26 11:00Z; the new account's is yours to read.
-- **The heartbeat task** (`conduct-heartbeat`, the old account's Mac): DISABLED at the stand-down. Its definition is
-  verbatim in `docs/archive/conduct-heartbeat-SKILL-2026-09-19.md`; a cloud replacement waits on measuring routines.
+## 2. WHAT BOB #28 DID — on `main`, each verified from the remote
 
-## 2. WHAT BOB #27 DID — on `main`, each verified from the remote
-
-- **Bob's order of ~15:06Z, the productivity changes fully recorded before the move:** TREE-SHARING §4 (what the cloud
-  changes in each change) and §5 (the whole program by pointer); NEW-MACHINE §0, §7 and §9.2; this account's memory carried
-  whole into `docs/archive/account-memory-2026-09-22.md`. Bob's **option C** (~15:48Z): all ten keys in the one cloud
-  environment (NEW-MACHINE §0).
-- **Bob, ~15:40Z, on lane contention** ("perhaps 1/2 the work … wasted and redone"): MEASURED (M-97: 24 of 59 recorded gate
-  runs discarded; M-98: the shared files left most landings after M0-99 and the claim rule; the discard rate not yet
-  measurable). Ruled at once: no claim block for a one-commit edit (`CLAUDE.md` §4). M0-110's first stage beside M0-99;
-  M0-116 (the gate's selection) diagnosed and placed.
-- **Ruled at the code:** REC-163's gap (only the slug is public; Publication §7); M0-109's (WORK-PIPELINE §3); SCHEDULER
-  #13's four LED-7 questions — D-150 (Publication §3 rule 11), D-147 (Case Making §2), D-128 (Framework §8.2, the declared
-  flow append-only), D-159/D-165 (door 3 extended). Three rows wait in the BOB INBOX for the cloud SCHEDULER.
+- **The environment, measured** (M-99; NEW-MACHINE §0.1): node 22, a shallow clone, no packages, no `ssh-keygen`, no
+  id-ledger directory — each broke an instrument; all five repaired by the committed hook (`.claude/hooks/session-start.sh`).
+- **The network REFUSES every Cloudflare host and `*.workers.dev`**: DIST's deploys, every live read and `CLAUDE.md` §5's
+  live verification are SUSPENDED. Bob was asked ONCE to change the environment's network setting (the single act only
+  he can take). When it changes: `npx wrangler whoami` (with `NODE_USE_ENV_PROXY=1`) must name
+  `20b533579290b9b93168345edd3b7f72`, then confirm the instance keys by one read-only scratch call, and lift the
+  suspension in NEW-MACHINE §0.1.
+- **The ten keys**: all environment variables; `GITHUB_TOKEN` and `BIO_RELEASE_SEED` confirmed by use; the rest wait on
+  the network.
+- **The full gate**: on `4de98ba7`, 18:19Z–18:37Z: **1,082 s wall**; the battery 974 s at **272/273 suites · 16,575 assertions**, 0 skipped; its one red the id-ledger arm (row above); coverage, UI and `plancheck` green.
+- **Six builder questions answered in their homes**: M0-110's four (`TREE-SHARING.md` §1), REC-165's
+  (`INVESTIGATIVE-SESSION.md` §11 item 5, "Rule 1's target"), M0-107's (the BOB INBOX, written into `VERIFICATION.md`
+  by M0-107's landing). Two defects routed with their fixes named (the `.env`-only live helpers; `mintid`'s probe).
+- **`CLAUDE.md` §4, §6, §8** brought to the cloud, net-zero within its budget.
 
 ## 3. OWED — in this order
 
-1. **The move:** NEW-MACHINE §0's measurements, recorded; `CLAUDE.md` §4, §6 and §8 corrected where they assume the Mac.
-2. **The contention fix stays the head of the plan** (Bob, ~15:40Z): M0-110 (coord; its cutover is CONDUCT's at
-   integration, with every `origin/main:…-NEXT.md` gate corrected — the row's `owed-at-integration`), M0-111, M0-116;
-   M0-114 unblocks on your first cloud gate figures, and only if they still favour a runner does Bob get the Actions
-   question. Re-measure M-97/M-98's git half after coord lands and tell Bob what it removed.
-3. **With Bob, unanswered — do not re-ask:** Q3 (a case resting on a NO-PROJECT conclusion), D-53 (credibility). **Carried,
-   not yet asked:** whether an unresolved objection to a case's exclusion statement travels with the published case
-   (Publication §3 rule 11) — bring it when M10's ceremony is designed. Also where a member's or project's Claude key
-   would live, MK-7's provisionals, M0-85.
+1. **The network**: lift the suspension the day Bob's setting changes (§2), and tell DIST (its 0.72.0 batch is owed no
+   earlier than 2026-09-23 04:00Z).
+2. **The contention fix stays the head of the plan** (Bob, ~15:40Z): M0-110, M0-111, M0-116; M0-114 now placeable.
+   In the cloud the machine half of contention is gone (one container per session); re-measure M-97/M-98's git half after
+   `coord` lands and tell Bob what it removed.
+3. **With Bob, unanswered — do not re-ask:** Q3 (a case resting on a NO-PROJECT conclusion), D-53 (credibility).
+   **Carried, not yet asked:** whether an unresolved objection to a case's exclusion statement travels with the published
+   case (Publication §3 rule 11) — bring it when M10's ceremony is designed; where a member's or project's Claude key would
+   live; MK-7's provisionals; M0-85.
+4. `node tools/owed.mjs BOB` read 0 attributed at writing (12 open residues attributed to nobody).
 
-## 4. HOW BOB #27 WAS WRONG — data points (rule 12(c))
+## 4. HOW BOB #28 WAS WRONG — data points (rule 12(c))
 
-- Wrote clock times into the record from estimates ("~16:10Z", "~16:45Z", "16:05Z") without reading the clock; the real
-  times were ~15:40Z and ~15:48Z, and one copied into DIST-NEXT through a message. Read `date -u` before writing a time.
-- Archived a heartbeat run from its `list_sessions` row before `list_task_runs` confirmed it (it was the finished run).
-- `echo ===` in this zsh fails as `== not found` (the `=cmd` expansion): quote a string that starts with `=`.
+- Installed `ssh-keygen` while a gate ran: the run measured a machine that changed under it, and was discarded (CLAUDE.md
+  §6). Finish every environment change before the first gate.
+- Read `wrangler`'s *"fetch failed"* as a proxy-configuration fault and retried with `NODE_USE_ENV_PROXY=1` before
+  probing the host: `curl` named the proxy's 403 at once. Probe the host first; a client's generic error names no cause.

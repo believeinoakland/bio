@@ -101,10 +101,10 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
   FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18). **A session is REFRESHED when its context is
   more than 70% full** (Bob, 2026-09-21):
-  check it with `get_usage` at every self-wake and handoff; over 70%, stop taking new work, write
+  check it with `get_usage` (cloud: `get_session`) at every self-wake and handoff; over 70%, stop taking new work, write
   your `<LANE>-NEXT.md` from the measured state, push it, verify it on the remote, and ask BOB for your successor. The
   successor archives you under D-398's three conditions. **Its self-wake expires:** a session-only `CronCreate` lasts
-  7 days, so arm with it a ONE-SHOT 5 days out that deletes it, arms a fresh one and the next one-shot.
+  7 days, so arm a ONE-SHOT 5 days out that renews it (cloud: `send_later`).
 - **Undetermined is first-class and must be STATED.** Never invent an attribution, a referent or a figure
   to get past a gate; a gate that pressures someone into inventing one is a bug in the gate.
 - **A defect you find is diagnosed until its FIX can be named**, then sent to SCHEDULER to be placed in the build plan
@@ -157,8 +157,8 @@ design, doctrine, anything for Bob → BOB) and continue.
 it; `--since` re-checks a rebase; `--explain` prints the plan. **Never queue a gate behind another lane's**
 (Bob, 2026-09-22): run yours when you need it; `waitquiet` is for timing figures. `docs/development/VERIFICATION.md` is the full process. **Do not
 change the tree while a gate is running** — the run then measures a tree that never existed. In a fresh
-worktree run `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/` first, check `df -h`, and confirm
-each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not only the exit status.
+worktree run `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/` first (the cloud's SessionStart
+hook does), check `df -h`, confirm each `node_modules` is a real directory; read the SKIP COUNT.
 
 ## 7. Traps no instrument names yet
 
@@ -181,10 +181,9 @@ each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not
 ## 8. Cloudflare and credentials
 
 Both `wrangler.jsonc` files pin `account_id`; **if wrangler ever reports an account other than
-`20b533579290b9b93168345edd3b7f72`, stop and say so.** Secrets are read from `.env` (gitignored, carried
-into worktrees by `.worktreeinclude`). A new one arrives on the clipboard —
-`printf 'X=%s\n' "$(pbpaste)" >> .env` — and is **never printed**: confirm it by using it and reporting
-what the service said. A token value published in the repo is denylisted by `tokens.mjs` and treated as NOT SET.
+`20b533579290b9b93168345edd3b7f72`, stop and say so.** Secrets are the environment's variables in the cloud
+(Bob's option C, 2026-09-22: he adds one in its settings) and `.env` on a Mac (`NEW-MACHINE.md` §4). A value is
+**never printed**: confirm it by using it and reporting what the service said. A token value published in the repo is denylisted by `tokens.mjs` and treated as NOT SET.
 
 ## 9. Where things are
 

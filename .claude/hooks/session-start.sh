@@ -3,13 +3,14 @@
 #
 # Why (BOB #28, 2026-09-22, NEW-MACHINE.md §0, each MEASURED in the first cloud session):
 # a cloud session starts from a fresh container that differs from the Mac this project was built on in
-# four ways, and each broke an instrument before it was fixed by hand:
+# five ways, and each broke an instrument before it was fixed by hand:
 #   1. node is v22; the project uses 26. `tools/owed.mjs` uses inline regex modifiers `(?i:…)`, which
 #      node 22 rejects, so `plancheck` crashed before it could judge anything.
 #   2. the clone is SHALLOW (50 commits); every check that reads a file's last change from git read the
 #      boundary commit's date, and plancheck reported 29 false front-matter FAILs.
 #   3. no `node_modules` in the four packages that carry dependencies.
 #   4. no stock `ssh-keygen`, the acceptance authority for every release signature (DIST).
+#   5. no id-ledger directory, so `mintid.test.mjs`'s O_EXCL probe reads ENOENT as a failure.
 # Also exported: NODE_USE_ENV_PROXY=1, without which node's built-in fetch ignores the egress proxy.
 #
 # Idempotent and non-interactive. Nothing here reads, prints or writes a secret, and nothing here
@@ -51,6 +52,16 @@ fi
 if [ "$(git -C "$REPO" rev-parse --is-shallow-repository 2>/dev/null)" = "true" ]; then
   say "unshallowing the clone"
   git -C "$REPO" fetch --quiet --unshallow origin || say "FAILED to unshallow — git-history checks will misread dates"
+fi
+
+# 2b · the id ledger's directory ----------------------------------------------------------------
+# `tools/mintid.mjs` allocates by exclusive create under <git-common-dir>/bio-idalloc and creates it on
+# its first mint, but its O_EXCL probe does not: in a clone that has never minted, `mintid.test.mjs`
+# reads ENOENT as "the REAL ledger's filesystem honours the exclusive create" FAILING, so the first full
+# gate is RED (BOB #28, 2026-09-22). An empty ledger is a fresh clone's true state.
+common="$(git -C "$REPO" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+if [ -n "$common" ] && [ ! -d "$common/bio-idalloc" ]; then
+  mkdir -p "$common/bio-idalloc" || say "FAILED to create the id ledger directory"
 fi
 
 # 3 · dependencies ----------------------------------------------------------------------------

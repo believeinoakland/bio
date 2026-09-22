@@ -22,6 +22,49 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-22 · BOB #28 · THE FIRST CLOUD MEASUREMENTS (M-99, `kickoffs/NEW-MACHINE.md` §0.1) — M0-114's premise is in, one defect with its fix named, and the six builder questions CONDUCT #13's wave left for BOB answered (M0-110's four, REC-165's, M0-107's).**
+
+1. **M0-114 leaves `blocked`**: its `depends-on` is met — the first cloud session's FULL gate is 1,082 s wall, the battery 974 s at 272/273 suites · 16,575 assertions, its one red the id-ledger arm (item 6) (M-99).
+   What the measurement changes in the row: each cloud lane runs in its OWN container (4 cores, 15 GiB), so two lanes'
+   batteries no longer share a CPU, the Mac's thrash behind M0-103 and M0-107; what it does NOT change is the row's own
+   subject — a verdict lives in one clone, and every cloud clone starts with none, so each lane's first gate is FULL. The
+   runner column of its three-column measurement waits on Actions, whose enablement stays UNDETERMINED from here (this
+   environment's proxy refuses `actions/permissions`; the repository has 0 workflows and 0 runs). Place by the law.
+2. **Defect, fix named: six live-verification helpers read ONLY a `.env` FILE**, and in the cloud (option C) the keys are
+   environment variables with no `.env`, so each fails before its first call: `vf4-call.mjs` (and through its
+   `loadEnv`, `vf4-live-scratch.mjs`, `vf4-suggestprobe.mjs`, `rec88-instance-census.mjs`), `vf4-bindings.mjs`,
+   `vf4-secretnames.mjs`, `ocr-composed-probe.mjs`, `ocr-moondream-probe.mjs`, `cpdf15-tesseract-runtime.probe.mjs`
+   (all `bio-plane/test/`). **Fix: each imports the loader the tree already has** — `loadEnv()` in
+   `fl1-billing-surface-check.mjs`, `process.env` first and a `.env` found upward second — and drops its own reader.
+   **Accepts when** each helper, run with the keys in the environment and no `.env`, reaches its first call. NEGATIVE
+   CONTROL: restore `vf4-call.mjs`'s file-only read, and that arm fails by name. It pays only once the network admits
+   `*.workers.dev` (M-99), so place it with that trigger; owner the area that owns `bio-plane/test/`'s live helpers.
+3. **M0-110's builder's four questions are answered in `TREE-SHARING.md` §1** (the report on
+   `origin/conduct13/standdown-reports`): the WHOLE `docs/archive/ledgers/` family moves to `coord`; a check of a
+   ledger's CONTENT leaves the battery for the write command's checks, a check of a tool's BEHAVIOUR stays; `MILESTONES.md`'s
+   placement table moves as `PLACEMENT.md` while its ladder stays; a heartbeat replacement reads through the read command.
+   Each widens the row's scope: SCHEDULER rewrites its `scope:` to point at the four bullets, and **CONDUCT briefs the
+   resuming worker to read them before building (owed at integration: a stage built to the old list is short by these)**.
+4. **REC-165's builder's question is answered in `INVESTIGATIVE-SESSION.md` §11 item 5, "Rule 1's target":** a
+   suggestion lands only inside its run's context (the context itself, or a question a project context confirmed-cites),
+   refused otherwise by a new stated code after the sight and principal checks. It widens REC-165's scope by one refusal
+   and one arm (a suggestion outside the context is refused by name; NEGATIVE CONTROL: drop the check, and that arm
+   fails by name). **CONDUCT briefs the resuming worker with it (owed at integration).** Its `op=capturerequest` find
+   stays SCHEDULER's to have driven before placing (CONDUCT-NEXT §4).
+5. **M0-107's design gap (`VERIFICATION.md` is silent on a timeout's outcome), RULED here and written into
+   `VERIFICATION.md` by M0-107's own landing, within that file's budget:** an expired budget MEASURED NOTHING, so it
+   reads NOT MEASURED naming what was not measured, never a finding and never GREEN; `ETIMEDOUT` is its only test (a
+   subject that dies by its own signal is a finding, so M0-103's "or the signal is set" is not taken); RED outranks NOT
+   MEASURED outranks GREEN; a NOT MEASURED record licenses no `--since` and meets no GREEN FULL test (M0-106). The
+   worker's eight-step design in its report stands as its plan.
+6. **Defect, fix named: every FRESH clone's first full gate is RED at `mintid.test.mjs`.** `exclusivityProbe`
+   (`tools/mintid.mjs`) writes into `<git-common-dir>/bio-idalloc` without creating it, while the mint creates it
+   (`mkdirSync(root, { recursive: true })`); so in a clone that has never minted, the arm *the REAL ledger's filesystem
+   honours the exclusive create* reads ENOENT as `PROBE_UNWRITABLE` and FAILS, and the push guard refuses the RED tree
+   (M-99). The cloud hook now creates the directory; **the tool's fix: the probe creates its root as the mint does.**
+   **Accepts when** a clone with no ledger directory passes that arm. NEGATIVE CONTROL: the suite's control (11), the
+   second create's flag `w`, still fails it by name. It unblocks a lane's push, so it sits near the head.
+
 **2026-09-22 · BOB #27 · SCHEDULER #13's FOUR LED-7 DESIGN QUESTIONS RULED — three rows to place, one door-3 extension.**
 Each ruling is in its home document, verified at the code; each row keeps its `D-` id (door 2).
 
