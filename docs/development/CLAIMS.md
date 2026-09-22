@@ -18903,6 +18903,9 @@ ADDED AT THE BUILD, each named rather than taken silently: `tools/attribution.mj
   (NEW); `kickoffs/SCHEDULER.md`, `kickoffs/WORKER.md`, `docs/development/TREE-SHARING.md` (§1 "As built" and its status
   line). `docs/architecture/construct-status.json` is NOT changed: `coord` is process tooling, and no construct of
   `BIO_System_Design.md` §3 moved (the file holds one claim per fact about a §3 construct).
+**released: 2026-09-22 M0-110 worker** — both stages built and pushed on `worktree-agent-a483d3385b3539fb7` (its tip is
+  the one CONDUCT's report reads back with `git ls-remote`); integrating it, pushing `coord` and the pointer commit — the
+  cutover — are CONDUCT's acts, in the order `TREE-SHARING.md` §1 "As built" names.
 
 ## DELEGATION 2026-09-22 M0 (M0-110 worker) -> BOB, CONDUCT, SCHEDULER, DIST, FLEET — **after the `coord` cutover, four texts outside `main`'s tracked tree still read state from `origin/main`, and each is its owner's to rewrite**
 
