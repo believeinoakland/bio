@@ -3,7 +3,8 @@
 Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then
 `docs/architecture/BIO_System_Design.md` **whole**, then this, then `QUEUE.md` and `BACKLOG.md` whole. Everything below was
 MEASURED at this landing (2026-09-22 ~16:30Z, on `origin/main` @ `81510280` plus this commit). It is a POINTER: re-measure
-before you rest anything on it. **SCHEDULER #13 is LIVE** (about 25% of its context) and rewrites this file at every
+before you rest anything on it. **SCHEDULER #13 is LIVE** (52% of its context at this landing, by `get_usage`; the
+refresh line is 70%) and rewrites this file at every
 landing, not only at its refresh, because Bob moves development to cloud Claude Code under his second account TODAY
 (`kickoffs/NEW-MACHINE.md` §0) and the switch may come without a handoff turn. **WRITTEN FOR A SUCCESSOR WITH NO MEMORY,
 POSSIBLY IN THE CLOUD:** what this says about "the Mac" (the machine check, `ps`, local worktrees, `archive_session`)
@@ -13,7 +14,7 @@ applies only if you run there; in the cloud those rules are SUSPENDED until meas
 
 - **THE ORDERING LAW** (Bob, 2026-09-22, `CLAUDE.md` §2; `kickoffs/SCHEDULER.md` step 3): product before process; a process
   row is placed only if it CUTS GATE TIME or UNBLOCKS PRODUCT, and may then sit near the head; every other process row goes
-  behind the product rows; landings are batched, ONE per wake. Bob, ~16:10Z: lane contention *"must be understood and
+  behind the product rows; landings are batched, ONE per wake. Bob, ~15:40Z (BOB #27's measured time): lane contention *"must be understood and
   fixed"* (M-97: 24 of 59 recorded gate runs discarded that day), so the tree-sharing rows stay at the head.
 - **NO CLAIM BLOCK for an edit that lands in one commit** (`CLAUDE.md` §4, BOB #27): this lane writes none for its own
   files; DELEGATION state lines stay.
@@ -62,10 +63,11 @@ applies only if you run there; in the cloud those rules are SUSPENDED until meas
 
 ## Where the lane's scripts are
 
-`origin/scheduler13/row-drafts` (never merged): `lane-scripts/` holds this landing's `place13.mjs` (placement and the
-balanced foot cut, `--place` and `--cut` separately), `land13.mjs` (the done words, the inbox drains, the DEBT doors by
-`owed.mjs`'s own predicate, the DELEGATION lines), `m0110.mjs`, `sched13.mjs`, and SCHEDULER #12's older scripts.
-`origin/scheduler12/row-drafts` keeps SCHEDULER #12's drafts and the held patch, now spent (D-148 and D-149 landed).
+`origin/scheduler13/row-drafts` (never merged, parented on SCHEDULER #12's drafts branch): `lane-scripts-13/` holds this
+landing's `place13.mjs` (placement and the balanced foot cut, `--place` and `--cut` apart), `land13.mjs` (the done words,
+the inbox drains, the DEBT doors by `owed.mjs`'s own predicate, the DELEGATION lines), `m0110.mjs`, `sched13.mjs` and
+`fix278.mjs`; `row-drafts-13/` the full drafts as placed; `lane-scripts/` SCHEDULER #12's older scripts. Each script
+reads its drafts from its own directory: copy both into a scratchpad before running, and run with the repo as argument.
 
 ## Done this session (verified on the remote)
 
