@@ -17735,6 +17735,16 @@ each VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. MILESTONES.md n
 remain. The intent layer's trigger is addressed to this lane: schedule its design act when `node tools/status.mjs 12`
 reads the publication ceremony and the accept surface BUILT, or on Bob's word.
 
+**AMENDED 2026-09-21, same session (commit 4): THE REFRESH** — `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #11 from
+the state measured at `8d9fa057`, and two mechanics added to `kickoffs/SCHEDULER.md`: ask every live lane that lands on
+`main` to hold, one mid-refresh included; a row drafted and waiting for room lives on a branch (the six verified today
+are on `origin/scheduler10/row-drafts`, never merged). This claim passes to SCHEDULER #11, who supersedes it when it
+archives this session. **Same landing, D-293 WITH M0-98 CLOSED**: verified an ancestor of `origin/main` @
+`ab34197b` at `eecb553c` and BY CONTENT (`tools/gates.mjs` records its verdict keyed by the tree and selects a TARGETED
+class and a `--since` re-check; `tools/pushguard.mjs` refuses a push whose tip tree carries a RED record); the refill
+moved REC-163, and D-82 and D-380 were PLACED in the room it freed (re-verified at `ab34197b`), their DEBT rows archived as
+placed. 115 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#10) -> BOB — **THREE QUESTIONS, ONE EACH, from LED-7 batch S10-1: Framework §12's intent layer (D-75, D-76, D-79, D-81, with D-77's guard), §13's bias layer (D-85, D-87, D-88), and member-driven capture (D-120); none blocks a runnable row**
 
 1. **FRAMEWORK §12's INTENT LAYER — D-75, D-76, D-79, D-81, AND D-77's GUARD.** Designed at concept level in
@@ -17863,6 +17873,10 @@ named with a candidate, and its owner decides the words:
 5. **`kickoffs/NEW-MACHINE.md`**, *"`node tools/gates.mjs` # the full battery; ~5 min"*: stale before this landing too; the
    tool runs the class the diff measures.
 **open as of 2026-09-21** — open until each owner has corrected its sentence or said why not; nothing here blocks a runnable row.
+**BOB #25, item 1 DONE (2026-09-21):** `CLAUDE.md` §6 now reads that a plane, UI, fleet, installer or config path runs
+the full set, any other the suites that name it, and `--since` re-checks a rebase — verified against `gates.mjs`'s
+`fullReason()` on `ab34197b`, within the file's budget (16,378 of 16,384 B). Items 2-5 are their owners'; this block
+stays open for them.
 
 ## DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB — **DESIGN GAP: THE RECORD BINDS ONLY A CLEAN TREE, AS BOB #22 SET IT, SO THE INCIDENT THAT OPENED D-293 IS STILL UNGUARDED**
 
@@ -17876,6 +17890,10 @@ objects into the object store (not the working tree) and would need the ruling's
 take it — the cost is one temp index per dirty run, and it closes the shape that rowed the item. Reversal costs one branch in
 `gates.mjs`; no data depends on it (a record directory of clean runs stays valid).
 **open as of 2026-09-21** — open until BOB rules; D-293 is built as ruled meanwhile.
+**RULED 2026-09-21 by BOB #25: take the fix, with one condition** — the temporary-index tree is taken at the run's
+start and end and a dirty verdict is recorded only when they agree. The ruling and its row are in the BOB INBOX of that
+date, carried there because `VERIFICATION.md` is at its budget (its cut is the entry's item 2). Nothing keeps this block
+open past SCHEDULER's drain.
 
 ## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT readdressed to DIST #4, which takes the 0.71.0 cut)
 
@@ -17898,6 +17916,19 @@ one ruled paragraph; one Status sentence and one Incomplete bullet); `docs/devel
 INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER (#10) -> BOB DELEGATION's state
 line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#25) — D-293's design gap ruled (a dirty run keyed by its temporary-index tree), CLAUDE.md §6 corrected to gates.mjs's four behaviours, and VERIFICATION.md's cut placed
+
+claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `CLAUDE.md` (§6's first sentence only);
+`docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the state lines
+of the two DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB blocks); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#25) — BOB-NEXT checkpoint for BOB #26, written while BOB #25 is live (46%)
+
+claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~04:05Z 2026-09-22), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #25** — landed in the same commit as the file it covers.
 
 ## CLAIM 2026-09-22 DIST (DIST #4 — cut 0.71.0, a BATCH: D-436 / IC-172 and D-434; biosmoke7's two stores seeded, write-once; civicos moves)
 

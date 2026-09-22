@@ -20,16 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-98 · blocked — **BUILT INSIDE D-293's WORKER (CONDUCT #10, 2026-09-21): never spawned alone; it closes with D-293's integration.** **EVERY DOCS-ONLY MOVE OF `main` RE-RUNS THE 41 DOC-FACING SUITES, AND A TOOLS-ONLY CHANGE RUNS ALL 267: THE GATE HAS NO TARGETED CLASS AND CANNOT RE-CHECK ONLY WHAT A REBASE CHANGED.** Measured 2026-09-21 in `ORCHESTRATION.md`: CONDUCT #10 re-merged ~9 times, each docs move re-running ~4 minutes of suites. Item 1 of BOB #23's four. — owner M0.
-order: directly after D-293, the same file (one file, one suite, one gate), item 1 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1; the gate half is carried in BOB #23's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`), `VERIFICATION.md` being at its reading budget.
-depends-on: none. **Take with D-293.**
-scope: a TARGETED class — a diff touching no `bio-plane/src|checks`, `civicos-ui/`, fleet, installer or package/config file runs the suites that import, spawn or MENTION a changed path (derived at run time and printed, as DOCS is), `coverage --strict` when a test file changed, and plancheck; and `--since`, which after a rebase reads the recorded verdict and re-runs only suites whose inputs intersect files changed on BOTH sides, plus plancheck. **FULL GATE PROFILE**.
-accepts-when: a tools-only diff selects its importers and the register gate; a `src/` edit beside it reads FULL; a rebase over disjoint docs commits re-runs only plancheck. How a liar passes it: selecting by exact import alone, which misses a suite reading through a computed path, so selection is by MENTION. NEGATIVE CONTROL: stage a `src/` edit with a tools edit, and the class must read FULL.
-added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
-
 ### M0-101 · queued — **CONDUCT WRITES ONE WORD INTO SCHEDULER'S ROWS, `running`, SO TWO LANES WRITE ONE FILE, AND A LEDGER CARRY THAT TAKES ONE SIDE WHOLE REVERTS A LIVE FLIP** (twice, repaired by `8e39602a` and `830f6648`). Item 4 of BOB #23's four. — owner M0, with CONDUCT.
 order: after M0-100, which it rests on, item 4 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
 milestone: M0
@@ -39,16 +29,6 @@ depends-on: M0-100.
 scope: `running` leaves `QUEUE.md`'s rows for a CONDUCT-owned per-row record written at spawn and removed at integration; `ledger.mjs` and `refill` read it; the vocabulary lines in `kickoffs/SCHEDULER.md` and `kickoffs/CONDUCT.md` move in the landing. **FULL GATE PROFILE**.
 accepts-when: CONDUCT writes no line of `QUEUE.md` and a running row still reads `running`. How a liar passes it: writing both places, so an arm asserts one.
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
-
-### REC-163 · queued — **EVERY INSTALLED INSTANCE'S SETUP PAGE NAMES BELIEVE IN OAKLAND AS ITS GROUP.** `bio-plane/src/setup.mjs`, served publicly at `/`, renders *"Believe in Oakland · group instance"* as a literal; D-436 made the producing group ONE recorded value (`Store#instanceGroup`, read by `op=instancegroup`) and the page does not read it. Routed by CONDUCT #11 at D-436's integration, verified at the code on `86523052`. — owner RECORD.
-order: first after BOB #23's four partition items, which Bob's direction put at the head: a correction to just-landed work (D-436), and the first page a newly installed group sees names another group (SCHEDULER #9, 2026-09-21)
-milestone: M7
-interface: I3 additive — `op=instancegroup` admits the public class (BOB #24, `BIO_Publication_v0_1.md` §7); the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the publishing group's public identity: the slug is PUBLIC, BOB #24, 2026-09-21), with `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (the `group` value, D-436).
-depends-on: D-436.
-scope: `op=instancegroup` admits the public class, and the setup page reads the recorded slug and shows it, or says that none is recorded, signed in or out. No display name or domain is invented: they are the next row's, under Publication §7.
-accepts-when: signed out, the page served at `/` renders the recorded slug and no `Believe in Oakland`, and under a store recording none it says so; a public `op=instancegroup` answers the slug. How a liar passes it: hiding the literal with CSS, so the arm reads the served bytes. NEGATIVE CONTROL: restore the literal, and the second-slug arm fails by name.
-added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs REC`).
 
 ### UI-77 · queued — **EVERY INSTANCE'S MEMBER FENCE AND PUBLIC HEADER NAME BELIEVE IN OAKLAND AS ITS GROUP.** `civicos-ui/app.html` declares `const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B" }`, rendered at `#m-grp`/`#m-idstr` and `#p-gname`/`#p-gid`/`#p-mono`, with a third literal in `#m-idstr`'s markup: a sovereign group's public page claims to be this project's. — owner UI.
 order: directly after REC-163, the same defect's surface half; the two share no file (SCHEDULER #9, 2026-09-21)
@@ -341,6 +321,16 @@ accepts-when: all eleven take their words from the ONE helper, asserted as `refu
 NEGATIVE CONTROL: restore `r.detail` at one site, and that site's arm fails by name.
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 3, verified in UI-72's own CLAIMS.md block).
 
+### D-82 · queued — **A FOCUS AN ASSISTANT SURFACED IS SHOWN EXACTLY LIKE ONE A MEMBER OPENED.** The plane stamps `surfaced_by: agent` server-side on an inquiry a machine credential creates (D-78, `index.mjs`); `civicos-ui/app.html` reads `surfaced_by` only for a derived PROPOSAL, which UI-5 marks (`proposalDerivedBadgeHtml`), and nothing marks an agent-surfaced inquiry where inquiries are listed or shown (re-read 2026-09-21). — owner UI.
+order: after UI-73, the same member-surface class: a member reads a machine's question as a colleague's judgement, which §P's accountability rule exists to prevent; a gap over built stamping, so below the refusal words already shipping wrong (SCHEDULER #10, 2026-09-21, LED-7)
+milestone: M8
+interface: I3 consumer (`surfaced_by`, stamped since D-78).
+design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"P · PROPOSAL", its accountability rule — *"what a member needs to know is that nobody has yet judged it worth asking"* — with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 8.
+depends-on: none — D-78's stamp is built.
+scope: wherever an inquiry is listed or shown — the focus list, the review queue, beside a project — one marker for `surfaced_by: agent`, from one helper, saying nobody has yet judged it worth asking. It discounts nothing and hides nothing; a member's inquiry renders as today.
+accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking by title or author text, so the fixture's two inquiries share both. NEGATIVE CONTROL: neuter the helper, and the agent-inquiry arm fails by name.
+added: 2026-09-21 · SCHEDULER #10 (LED-7; D-82's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
+
 ### D-438 · queued — **THE DEC-49 GUARD'S REAL-TREE CONTROL HARNESS `civicos-ui/test/refusal-codes.control.mjs` IS RED: FOUR ARMS FAIL THAT ARE NOT ITS SUBJECT'S.** (c) `stdio-census.test.mjs` ARM D reads the guard BY NAME, so moving the guard aside turns the harness red on an `ENOENT`; (e) its first predicate is the census sentence from before D-257; (r2) EXACTLY 33 conscripted, measured 35; (r6) EXACTLY 36, measured 38. NARROWED: its `refusal-partition` half closed with D-355 (`0e80aa8c`). — owner VERIFY.
 order: FIRST of the instrument cluster, with M0-93: a control red on a green `main` measures nothing, D-355's class, and the DEC-49 guard is what a member's refusal words rest on (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
 milestone: M0
@@ -380,6 +370,16 @@ depends-on: M0-93, D-438.
 scope: an UNCLASSIFIED driver carries the census's non-zero exit, a third extension of the same line; it is still REPORTED unclassified, never scored stale or clean. The landing states the UNCLASSIFIED population its own full census run found; each is attributed or rowed.
 accepts-when: a fixture driver exiting 1 with an unknown phrase turns the census exit 1, naming it; the population is stated. How a liar passes it: teaching the matcher the fixture's phrase, so the arm generates its phrase fresh. NEGATIVE CONTROL: drop the new disjunct, and that arm fails by name.
 added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
+
+### D-380 · queued — **ON A FRESH WORKTREE `ocr-worker`'S SUITE IS SILENTLY UNRUN WHILE THE BATTERY READS GREEN, AND ITS SKIP GIVES A REMEDY THAT CANNOT BE PERFORMED.** `ocr-worker/test/ocr-worker.test.mjs` imports `miniflare` bare with no fallback; `fleetDepSkip` (`bio-plane/scripts/battery.mjs`) tells a member to `npm ci` in its own directory or to resolve *"as agent-worker's does"*, where `npm ci` exits `EUSAGE` (no lockfile); the comment above it still calls the path *"UNREACHABLE FOR EVERY MEMBER"* (re-read 2026-09-21; M-31). — owner FLEET, with the battery's owner.
+order: with the instrument cluster, directly after M0-94: a gate reading green over a suite that did not run, M0-79's doctrine on the fleet side; below M0-94 because the `fleet:` line names the dark member on every run (SCHEDULER #10, 2026-09-21, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `MEASUREMENTS.md` M-31 §6: the two-step loader suffices for `ocr-worker`, whose only bare import is `miniflare`.
+depends-on: none.
+scope: the row's two coupled edits: (1) FLEET gives `ocr-worker`'s suite the two-step loader `agent-worker` and `pdf-worker` use (bare `import`, then `createRequire` against `bio-plane/package.json`); (2) the battery's owner corrects `fleetDepSkip` to name a working path per member, and the unreachability comment with a dated reason. **FULL GATE PROFILE**.
+accepts-when: with only `bio-plane/` installed, the battery runs every fleet suite and names no member dark; a member that truly cannot resolve is told a remedy that works for it. How a liar passes it: installing `ocr-worker/node_modules` first, so the arm removes it. NEGATIVE CONTROL: restore the bare import, and the fresh-worktree arm fails naming `ocr-worker`.
+added: 2026-09-21 · SCHEDULER #10 (LED-7; D-380's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
 
 ### M0-80 · queued — **FOUR REFUSAL CODES ARE PINNED GREEN BY ABSENCE RATHER THAN BY AGREEMENT** — the plane sends a canned `translation` for `KIND_NOT_PERSONAL` (`queue.test.mjs`), `NO_ACKNOWLEDGMENT` (`release-flow.test.mjs`), `NO_SUCH_SELECTION` (`act-dispose.test.mjs`) and `NOT_CAPABLE`, and each fixture OMITS the field, so the `detail` pin passes by not looking. Of 198 hand-written refusal fixtures in the UI estate only THIRTEEN carry a `translation` at all (M-72). — owner M0.
 order: with the instrument cluster and NOT beside UI-73, though they were routed together. A fixture narrower than the wire is a check that cannot fail — M0-78's doctrine exactly — whereas UI-73 is a surface correction. CLAUDE.md §5: an equality that costs nothing to produce is not evidence (SCHEDULER #3, 2026-09-19)

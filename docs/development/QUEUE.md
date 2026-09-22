@@ -22,6 +22,35 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-21 · BOB #25 · D-293's DESIGN GAP RULED: A DIRTY RUN IS RECORDED UNDER THE TREE `git add -A` WOULD COMMIT —
+AND `VERIFICATION.md` NEEDS A CUT, BECAUSE ITS RULINGS NO LONGER FIT IN IT.** BOB #22 keyed the record by the tree
+measured *"only when that tree was CLEAN"*; the D-293 worker built exactly that and sent the gap (CLAIMS.md, DELEGATION
+2026-09-21 M0 (D-293/M0-98 worker) -> BOB, DESIGN GAP). So the shape that opened D-293 — a gate on a dirty tree, then
+`git add -A && git commit && git push` — still pushes a RED tree unrefused. **RULED: take the worker's fix, with one
+condition.** A dirty run is keyed by the tree a TEMPORARY index writes (`GIT_INDEX_FILE=<temp> git add -A && git
+write-tree`), which is byte for byte the tree that commit publishes; the live index is never touched. The key is taken at
+the run's START and again at its END, and the verdict is recorded only when the two agree: a tree that changed under the
+gate measured a tree that never existed (`CLAUDE.md` §6), so the run records nothing and says so. **Why widening is
+sound:** the key is the exact tree a commit publishes, so a RED record refuses exactly those bytes and a GREEN one licenses
+`--since`'s narrower re-check of exactly those bytes; a commit of PART of a dirty tree finds no record and falls back to
+the ordinary gate and a silent guard — BOB #22's *"says nothing when none exists"*, never a pass it vouches for. The
+design is CARRIED here, as BOB #22's was, because `VERIFICATION.md` stands at 24,572 of its 24,576 B.
+
+1. **M0 (FULL GATE PROFILE), after D-293 (on `main` at `ab34197b`): the dirty-tree key.** `gates.mjs` computes the
+   temporary-index tree at the run's start and end and records a dirty run's verdict under it when they agree; nothing
+   else about the record or the guard moves. **Accepts when** a RED gate on a dirty tree, then `git add -A && git
+   commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN
+   dirty run then that commit passes; and a commit of part of the dirty tree passes with no record. How a liar passes:
+   keying by the LIVE index, which stages the member's files as a side effect, so an arm asserts the index is byte
+   identical before and after. NEGATIVE CONTROL: drop the dirty arm, and the RED-dirty-then-commit arm fails by name.
+2. **M0 (DOCS PROFILE), before any further ruling is folded there: cut `VERIFICATION.md` to about 22 KB.** It is in
+   `readbudget.mjs`'s `CUT` set, so a fold past 24,576 B FAILS, and rulings about verification are now being carried in
+   inbox entries that drain to an archive nobody reads whole — item 1's line, and M0-97's second specimen kind when it
+   integrates. Move history and receipts verbatim to `docs/archive/`, keep every rule, and move the arms of
+   `register-grammar.control.mjs` that quote its register block with the block; then fold item 1's line. **Accepts when**
+   the file is at most 22,528 B, every sentence the cut removes is in the archive file verbatim (moved, never lost),
+   and the register-grammar suite and its control pass.
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
@@ -66,7 +95,7 @@ scope: the row's FIX: the joiner stops at a heading line (`^#`) or a blank line.
 accepts-when: a regenerated `docs/DECIDED.md` carries no `## CLAIM` text inside any ruling, and a hand-wrapped ruling still quotes whole. How a liar passes it: stopping at every line break, so the wrapped-ruling arm must pass. NEGATIVE CONTROL: an arm appends a claim after a trailing `released:` line; drop the stop, and it fails by name.
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-341's DEBT row of 2026-09-14; keeps its `D-` id).
 
-### M0-81 · queued — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
+### M0-81 · running — **SPAWNED 2026-09-21 by CONDUCT #11 (re-flipped: its first flip in 86523052 was reverted in 11077afc for disk, before any spawn). NOT LANDED, CHECKED BY CONTENT at spawn: on `origin/main` @ `ab34197b`, no tool under `tools/` judges lane occupancy (`git grep -l -i occupan -- tools/` returns nothing). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **NOTHING CHECKS WHETHER A LANE IS ALREADY OCCUPIED BEFORE A CHIP IS FILED, AND IT COST A REAL MESSAGE.** On 2026-09-19 a second CONDUCT #8 was filed six minutes after the lane was taken; it held the name in the peer directory, and SCHEDULER #3.s three clustering instructions went to it rather than the live integrator, returning `success: true`. — owner M0.
 order: THIRD. Cheap, mechanical, and the only one of tonight.s session defects that PREVENTS rather than describes: a duplicate lane costs a wrong delivery nobody is told about (SCHEDULER #3, 2026-09-20)
 milestone: M0
 interface: none
@@ -76,16 +105,6 @@ scope: the OCCUPANCY half only — before a chip is filed, read the session list
 accepts-when: given a listing with a live session bound to a lane, the judgement REFUSES it and names the occupant; given the same listing with that session stood down, it admits. Driven from a FIXTURE listing, never the live harness. How a liar passes it: matching on title alone — so the arm feeds a session whose title differs and whose `scheduledTaskId` matches.
 NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is admitted, failing by name.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
-
-### D-293 · running — **SPAWNED 2026-09-21 by CONDUCT #10, ONE worker for D-293 WITH M0-98 (one file, one suite, one gate; SCHEDULER #8 marks M0-98 `blocked` as built inside this worker). NOT LANDED, CHECKED BY CONTENT at spawn: on `origin/main` @ `54cec171`, `tools/gates.mjs` has no TARGETED class and no `--since` (0 matches each), and `tools/pushguard.mjs`'s "verdict" mentions all concern its own corpus checks — nothing reads a gate verdict recorded by tree. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE PUSH GUARD NEVER RUNS `tools/gates.mjs`, AND NOTHING REFUSES A TREE WHOSE RECORDED VERDICT IS RED.** `tools/pushguard.mjs` runs `decided.mjs --check` and refuses a stale push, nothing more. RULED by BOB #22 (SCHEDULER #5's Q4): a push-time gate would not converge — a full gate takes ~25 minutes and `main` took 48 first-parent commits from 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes (M-85) — so the guard READS a recorded verdict. — owner M0.
-order: FIRST, with M0-98 directly below it in the same file (one file, one suite, one gate): BOB #23's entry folds its item 1 in and heads the instruments with it, the estate's throughput (Bob, via CONDUCT #10: *"This 'fake' conflict has significantly slowed down development recently"*); it was after LED-9 (SCHEDULER #8, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section for the half it states; the refusal's design is CARRIED in BOB #22's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293 RULED"), because that file is at its reading budget: the builder adds the refusal's one line in the landing.
-depends-on: none. **Take with M0-98**, whose `--since` reads this row's verdict record.
-scope: `gates.mjs` records its verdict and class keyed by the TREE it measured, only when that tree was CLEAN, untracked under the git common dir; the guard refuses a push whose tip tree carries a RED record, naming it, and says nothing when none exists. **FULL GATE PROFILE**.
-accepts-when: a RED gate then a push of that tree is refused by name; a GREEN, an unrecorded and a changed tree each pass. How a liar passes it: keying on the commit sha, which an amend of the message alone evades, so the arm amends and asserts the refusal holds. NEGATIVE CONTROL: drop the guard's lookup, and the RED-then-push arm fails by name.
-added: 2026-09-21 · SCHEDULER #7 (LED-7; BOB #22's ruling, drained this commit; keeps its `D-` id).
 
 ### M0-99 · queued — **`docs/DECIDED.md` IS A GENERATED INDEX, COMMITTED, AND 88 COMMITS TOUCHED IT ON 2026-09-21: EVERY LANE'S LANDING CONFLICTS ON A FILE NOBODY WROTE.** `tools/decided.mjs` regenerates it, the push guard refuses a stale one, and every rebase regenerates it again (`ORCHESTRATION.md`'s measurement). Item 2 of BOB #23's four. — owner M0.
 order: directly after M0-98, item 2 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
@@ -106,6 +125,16 @@ depends-on: none.
 scope: one file per NEW claim, delegation, measurement and interface-change entry; the old files frozen history plus the state lines of their open blocks; ONE reader module yields both for every reader (`plancheck`, `delegations`, `owed`, `ledger`, `decided`, `mintid` …); `CLAUDE.md` §4's claim sentence and the kickoffs corrected in the landing. **FULL GATE PROFILE**.
 accepts-when: two lanes adding entries concurrently merge with no conflict; a line one lane adds to its own block beside another lane's new entry stays in its block; every reader's counts over the frozen history are unchanged. How a liar passes it: `merge=union`, which makes CONDUCT's detached-line case SILENT, so an arm reproduces that case and asserts the line stays in its block.
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
+### REC-163 · queued — **EVERY INSTALLED INSTANCE'S SETUP PAGE NAMES BELIEVE IN OAKLAND AS ITS GROUP.** `bio-plane/src/setup.mjs`, served publicly at `/`, renders *"Believe in Oakland · group instance"* as a literal; D-436 made the producing group ONE recorded value (`Store#instanceGroup`, read by `op=instancegroup`) and the page does not read it. Routed by CONDUCT #11 at D-436's integration, verified at the code on `86523052`. — owner RECORD.
+order: first after BOB #23's four partition items, which Bob's direction put at the head: a correction to just-landed work (D-436), and the first page a newly installed group sees names another group (SCHEDULER #9, 2026-09-21)
+milestone: M7
+interface: I3 additive — `op=instancegroup` admits the public class (BOB #24, `BIO_Publication_v0_1.md` §7); the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the publishing group's public identity: the slug is PUBLIC, BOB #24, 2026-09-21), with `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (the `group` value, D-436).
+depends-on: D-436.
+scope: `op=instancegroup` admits the public class, and the setup page reads the recorded slug and shows it, or says that none is recorded, signed in or out. No display name or domain is invented: they are the next row's, under Publication §7.
+accepts-when: signed out, the page served at `/` renders the recorded slug and no `Believe in Oakland`, and under a store recording none it says so; a public `op=instancegroup` answers the slug. How a liar passes it: hiding the literal with CSS, so the arm reads the served bytes. NEGATIVE CONTROL: restore the literal, and the second-slug arm fails by name.
+added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
