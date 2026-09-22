@@ -26,7 +26,7 @@ verified it. When a lookup returns nothing, say so: *not found* is not *absent*;
 
 **Keep them true in the commit that changes the truth.** Build or remove something → update
 `construct-status.json` (the push is refused until you do). Rule on something → it goes in its home
-document, and `node tools/decided.mjs` regenerates. Close a row → `node tools/ledger.mjs archive <ID>`
+document, and `node tools/decided.mjs` finds it. Close a row → `node tools/ledger.mjs archive <ID>`
 in the same write. **State (claims, plan, debt, handoffs) is on `coord`**: `node tools/coord.mjs read`,
 `coord.mjs write`, never a `main` commit (TREE-SHARING §1).
 

@@ -194,7 +194,7 @@ anyway, `git stash push -u -m <your-id>`, capture the stash SHA at once, restore
 
 `node tools/plancheck.mjs` — 0 fail. It refuses an unpushed planning surface, an ACTIVE area with no kickoff, an item
 behind an unregistered interface, an unknown milestone, a debt row with no disposition, an unsettled decision with no
-provisional, a stale `DECIDED.md`, a governed design with stale front matter, and a kickoff over its reading budget.
+provisional, a TRACKED `DECIDED.md` (M0-99: generated on demand, never committed), a governed design with stale front matter, and a kickoff over its reading budget.
 **What it cannot check is yours:** whether an entry describes the change ACCURATELY, whether a correction is COMPLETE,
 and whether a supersession names every affected item. The instrument proves the structure; it cannot prove the prose.
 

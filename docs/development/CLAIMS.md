@@ -18829,6 +18829,8 @@ conflict at all.
 **open as of 2026-09-22** — open until M0-99 lands and each owner has corrected its sentence or said why not; nothing here blocks a runnable row.
 **Item 9 CORRECTED 2026-09-22 by SCHEDULER #13** in `kickoffs/SCHEDULER.md`: both sentences now say `docs/DECIDED.md` is not committed (M0-99) and a pre-M0-99 side's copy is dropped, so take the deletion.
 
+**DISCHARGED 2026-09-22 by BOB #28, for BOB (items 1-4):** `CLAUDE.md` §1 (*finds it*), `ORCHESTRATION.md` "Before you end a turn" (a TRACKED copy), `kickoffs/BOB.md` "Closing a turn" step 1 and rule 11 (the regenerate sentence removed). Items 10-11 stay open with DIST, FLEET and the owner of `kickoffs/SKILL.md`.
+
 **DISCHARGED 2026-09-22 by CONDUCT #12, for CONDUCT only (items 5-8):** `kickoffs/CONDUCT.md` step 6, "Mechanical conflicts"
 and "REGENERATE EVERY GENERATED INDEX LAST" corrected in the landing of M0-99 (batch 4); `kickoffs/CONDUCT-NEXT.md` rewritten in
 the same landing. Items 1-4 and 9-11 stay open with their owners.

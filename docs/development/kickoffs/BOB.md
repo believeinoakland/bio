@@ -71,8 +71,8 @@ Bob can answer sends it here, and this session carries it into his conversation.
 ## Closing a turn: the handoff is the deliverable
 
 1. **Publish, then verify from the remote.** `node tools/plancheck.mjs` before any push; the push guard
-   refuses a stale `DECIDED.md`, merge markers, a stale design-corpus date, and construct status that
-   disagrees with the code.
+   refuses a tree the gate recorded RED, merge markers, a stale design-corpus date, and construct status that
+   disagrees with the code (`DECIDED.md` is generated on demand and never committed, M0-99).
 2. **Hand the change over through the `BOB INBOX`**, newest first — SCHEDULER drains it and places each task in order.
    Name any queue item it supersedes; whether to stop a running worker is CONDUCT's call.
 3. **Correct every kickoff your change superseded, in the same turn** — the one licensed exception to
@@ -143,8 +143,7 @@ body below the inbox, and not any area's code.
       `--disallowedTools Bash Glob Grep`, arms in SIBLING directories of any key, and check the transcripts (M-65).
     - **At low disk, hand a FULL-profile change to CONDUCT on a branch** rather than installing or skipping the gate.
     - **A subagent may draft; this lane reads the draft WHOLE before publishing it** — its report is a claim.
-    - **`tools/retirable.mjs` reads STDIN.** Regenerate `docs/DECIDED.md` after the last rebase before EVERY push:
-      `QUEUE.md` and `CLAIMS.md` are in the ruling corpus. A pointer into the inbox points at a file SCHEDULER drains.
+    - **`tools/retirable.mjs` reads STDIN.** A pointer into the inbox points at a file SCHEDULER drains.
     - **Rule every lane question from the doctrine it rests on, verified at the code, in its home document, then the
       inbox** — tonight's nine rulings (D-431, §7.14, DEC-63's application, opaque ids, run principal and kind, …) each
       took one read of the code that changed the answer from the obvious one.
