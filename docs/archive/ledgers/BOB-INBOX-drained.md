@@ -1443,3 +1443,38 @@ stays open, narrowed to that measurement. Q4: `BIO_Publication_v0_1.md` §7 (thi
    `mismatched`; and the display name appears in no signed bytes.
 3. **UI (M7), after 2:** the public header shows the display name WITH the slug, never instead of it, and a domain only
    while verified; members see the domain claim and its verdict.
+
+## DRAINED 2026-09-21 by SCHEDULER #10 — BOB #25's answers to SCHEDULER #10's group of three (`37367611`), each verified at its document: D-75, D-76, D-77, D-79, D-81, D-87, D-88 and D-120 CLOSED BY THE THIRD DOOR (the Framework's front matter, §12 and §13.1; `SOURCE-ACCESS.md` item 2); item 1 PLACED as REC-165 after UI-77, verified at the code (`op=suggest` and `op=extractpropose` never apply `runPrincipalGate`); items 2 and 3 PLACED as D-85 after REC-165, keeping its id.
+
+**2026-09-21 · BOB #25 · SCHEDULER #10's GROUP OF THREE ANSWERED: TWO STATED DEFERRALS, D-85 NARROWED, AND A DEFECT
+FOUND WHILE TRACING IT.** Q1: the intent layer's objects are a stated deferral with its trigger in the Framework's
+front matter (Incomplete sections, §12), which also corrects the focus/problem sentence: D-75, D-76, D-81 and D-77 leave
+by the third door; D-79 is BUILT for derived findings (REC-6, REC-7) and its assistant half is fenced by item 2, its
+aggregation and ageing deferred to the first role whose output is a new inquiry (third door). Q2: D-85 is carried by the
+RUN (`INVESTIGATIVE-SESSION.md` §3) and stays open NARROWED to items 2 and 3, keeping its id (door 2); D-87 and D-88
+are deferred with §12's evaluator (third door). Q3: D-120 is a stated deferral in `SOURCE-ACCESS.md` item 2, trigger
+named (third door). All three items are designed in `INVESTIGATIVE-SESSION.md` §11 item 5.
+
+1. **RECORD (M9), a DEFECT in built work, FIRST of the three: a production can name a run its caller does not hold.**
+   At `ae4f42d0` `op=suggest` resolves `run` for existence alone and `op=extractpropose` checks running and mode, not
+   whose run it is; `runPrincipalGate` guards only tick and close, and `index.mjs` stamps the caller's `principal`
+   only on the three run verbs. So a version is read against another member's lens, bar, skill version and principal.
+   **Fix** (rule 1): REC-152's stamp on both ops, both apply `runPrincipalGate`, and `suggest` refuses a run that is
+   not running, as `extractpropose` already does. I3: two ops refuse what they accepted (the integrator mints the IC).
+   **Accepts when** another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` on both ops, the caller's
+   closed run is refused on `suggest`, and the caller's own running run lands from a session AND from a machine
+   credential that member minted. How a liar passes: gating one caller kind only, so both arms run. NEGATIVE CONTROL:
+   drop the gate in `suggest`, and the other-principal arm fails by name.
+2. **RECORD (M4), D-85 narrowed, after 1: an assistant opens a question only inside a run it holds** (rule 2). An `ai`
+   credential's creation of an inquiry names a running run whose principal it is; the plane records the link in an
+   instance row keyed by the new inquiry (cleared by `purge`'s whole-store and per-bundle arms), never in the signed
+   bytes, and counts it against a declared `surfaces` bound, refused when none is declared. The single-bundle
+   `op=projection` states the inquiry's run and that run's lens block; one surfaced earlier reads `not recorded`.
+   **Accepts when** a creation outside a run, in another principal's run, or past the bound is refused by name; one
+   inside lands with its row and reads the run's lens and `moved`; a member session's creation is untouched. NEGATIVE
+   CONTROL: drop the run check, and the outside-a-run arm fails by name.
+3. **RECORD (M4), D-85 narrowed, with 2: the run records the lens in force when it opened** (rule 3). `aiRunOpen` also
+   stores the effective set's `statements_sha` for the run's context, computed by the plane at the open, and the run's
+   read distinguishes `moved` (the in-force set changed since) from a handed manifest that differed at the open.
+   **Accepts when** a run handed a stale manifest reads the second and not `moved`, and a run handed the current one
+   reads `moved: false` until a statement changes and `moved: true` after.

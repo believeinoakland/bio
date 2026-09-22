@@ -17725,6 +17725,16 @@ still omits is BACKLOG D-311). SUPERSEDED: D-163, by D-164, as `BIO_Content_Fram
 ROWS whose remaining act is a placed backlog row under its own id: D-161 (REC-122) and D-154 (REC-15, blocked on DEC-33).
 MILESTONES.md: their five rows removed. 126 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 3): BOB #25's answers DRAINED** (`37367611`), each verified at its document:
+D-75, D-76, D-77, D-79, D-81, D-87, D-88 and D-120 CLOSED BY THE THIRD DOOR (the Framework's front matter, §12 and
+§13.1; `SOURCE-ACCESS.md` item 2). The inbox entry's item 1, a defect in built work verified at the code (`runPrincipalGate`
+guards only the tick and the close; `op=extractpropose` reads a run's status and mode, never its principal), PLACED as
+REC-165 after UI-77; items 2 and 3 PLACED as D-85 after REC-165, D-85 leaving DEBT by the second door. Room for both was
+made by cutting seven rows at the foot of the order to their fields (D-394, D-126, D-260, UI-71, UI-70, REC-150, REC-149),
+each VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. MILESTONES.md narrowed for these ids. 117 open DEBT rows
+remain. The intent layer's trigger is addressed to this lane: schedule its design act when `node tools/status.mjs 12`
+reads the publication ceremony and the accept surface BUILT, or on Bob's word.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#10) -> BOB — **THREE QUESTIONS, ONE EACH, from LED-7 batch S10-1: Framework §12's intent layer (D-75, D-76, D-79, D-81, with D-77's guard), §13's bias layer (D-85, D-87, D-88), and member-driven capture (D-120); none blocks a runnable row**
 
 1. **FRAMEWORK §12's INTENT LAYER — D-75, D-76, D-79, D-81, AND D-77's GUARD.** Designed at concept level in
@@ -17753,9 +17763,14 @@ MILESTONES.md: their five rows removed. 126 open DEBT rows remain.
    design it now (M1), or state it in `SOURCE-ACCESS.md` as deferred behind the archive fallback, naming the trigger
    that brings it forward?
 
-**open as of 2026-09-21.**
+Sent to BOB by message on 2026-09-21; each of the nine rows carries a dated SENT note in `DEBT.md`. **BOB #25, all three
+answered (`37367611`):** Q1 and Q2 are stated deferrals in the Framework's front matter, with the trigger that schedules
+them, and D-85 narrows to two designed items; Q3 is a stated deferral in `SOURCE-ACCESS.md` item 2; and tracing D-85 found
+a defect in built work, designed in `INVESTIGATIVE-SESSION.md` §11 item 5 rule 1.
 
-Sent to BOB by message on 2026-09-21; each of the nine rows carries a dated SENT note in `DEBT.md`.
+**DISCHARGED 2026-09-21 — SCHEDULER #10 drained BOB #25's answers:** D-75, D-76, D-77, D-79, D-81, D-87, D-88 and D-120
+closed by the third door, each verified at its document and archived; the defect PLACED as REC-165 after UI-77 and D-85
+PLACED after it under its own id.
 **BOB #25, all three answered, each traced at the code (`ae4f42d0`):** Q1, the intent layer's objects are a STATED
 DEFERRAL with its trigger in the Framework's front matter (Incomplete sections, §12), which also corrects the
 focus/problem sentence (Part I is frozen, so not in place): D-75, D-76, D-81 and D-77 leave by the third door; D-79 is

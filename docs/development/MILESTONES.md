@@ -606,7 +606,6 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-63 unmeasured stacks | FRAMEWORK | M2 |
 | D-64 client-rendered capture | CAPTURE | M2 · its build and `CLIENT-RENDERED.md`'s four open questions (D-55 closed 2026-09-21) |
 | D-65 monitoring contracts unconsumed | FRAMEWORK → CAPTURE | M1 · M3 |
-| D-120 member-driven egress diversity (DEC-1) | CAPTURE | M1 |
 | D-66 unmeasured content types | FRAMEWORK | M2 |
 | D-67 connections discarded | FRAMEWORK | M4 |
 | D-68 seven vocabularies | FRAMEWORK | M3 · **blocks M3, M4** |
@@ -614,13 +613,11 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-72 connections have no grade | FRAMEWORK | M4 |
 | D-73 pair vs chain | FRAMEWORK | M4 |
 | D-74 Oakland shared identifiers | FRAMEWORK | M4 |
-| D-75 / D-76 objectives, aspirations, satisfaction | FRAMEWORK · RECORD | M4 |
 | D-78 / D-82 `surfaced_by`, and showing it | RECORD · UI | M7 |
-| D-79 aggregation and ageing | FRAMEWORK | M4 |
-| D-80 / D-81 aspiration contact, pursuit record | FRAMEWORK | M4 |
+| D-80 aspiration contact | FRAMEWORK | M4 |
 | D-83 subject registry = entity axis | FRAMEWORK | M4 |
 | D-84 `object_type: bias` missing | RECORD | M4 |
-| D-85 / D-86 / D-87 / D-88 bias manifest, debt, decay, measure | FRAMEWORK | M4 |
+| D-85 / D-86 an assistant question inside its run, and bias debt's producer | RECORD | M4 |
 | D-92 `op=file` 403 under load | RECORD | M7 |
 | D-93 suite crashes, `sshsig` runs short | CONDUCT | M0 |
 | D-99 WARC / Memento | RECORD | M6 |
@@ -764,10 +761,11 @@ together with `DEBT.md`).
 These are knowledge, not backlog. They stay in `DEBT.md` with that disposition and no
 milestone claims them:
 
-- **D-1** root of trust · **D-53** reputation and credence · **D-77** the bias invariant's guard —
-  doctrine, and none of them blocks anything scheduled. **D-89 and D-90 left on 2026-09-21** (LED-7 batch
-  S10-1): their doctrine is written in `BIO_Content_Framework_v0_10.md` §13.1 and invariant 8, so they
-  closed in fact; D-77's guard (CONSTRUCTS Step 8b) went to BOB with §12's intent layer.
+- **D-1** root of trust · **D-53** reputation and credence — doctrine, and neither blocks anything
+  scheduled. **D-89 and D-90 left on 2026-09-21** (LED-7 batch S10-1): their doctrine is written in
+  `BIO_Content_Framework_v0_10.md` §13.1 and invariant 8, so they closed in fact. **D-77 left the same day by
+  the third door** (BOB #25): its guard is invariant 7 as the acceptance of the intent layer's first row,
+  deferred with that layer in the Framework's front matter.
   D-53's "blocks S-11 step 5" is stale: bulk release shipped in 0.34.0.
 - **D-55** is NOT in this list any more. Its doctrine was already ruled; only its
   shape was open, and the shape decided provisionally under M2 above was settled on
