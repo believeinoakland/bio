@@ -1,6 +1,6 @@
 # BIO Intake Doctrine
 
-**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. as of 2026-09-14.
+**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name, and that refusal is not built.** as of 2026-09-22.
 
 **Place in the system** · Owns construct 2 of `BIO_System_Design.md` §3 (intake, capture and provenance) and half of construct 10 (standing intent): "the State Rules specification governs bundle shape; this doctrine governs admission to the store." `BIO_State_Rules_Consistency_v1_5.md` realises it as the intake provenance register, I-18's ratification fence and drafted I-19; `BIO_Membership_Architecture_v2.md` §1 borrows its who-issued/how-captured split; the plane's C-18 rules and the sweep floor cite it.
 
@@ -13,7 +13,7 @@
 - §3c — bag ingestion "built when the first bag is produced or consumed".
 - §4 and §4a — daemon-centred; the retention posture "deferred until forced"; "today the client authenticates the group, not the person" predates Membership v2 §6.
 - §6 and §9 — the daemon rung and the endpoint version are the retired runtime.
-- §8 — the collected-to-retired edge is "deliberately left unforced".
+- §8 — the collected-to-retired edge is "deliberately left unforced"; and the store's refusal of a second registration of one capture under another bundle (D-179, ruled 2026-09-22) is NOT BUILT — `op=promote` still moves the register row silently, fenced only for an authored observation (C-53.8).
 - §10 — "open, with decision criteria … Decided at first sweep ratification".
 - §Sections not yet forced — member intake, received work products, extraction standards, the acquisition second draft.
 
@@ -626,6 +626,25 @@ attention on material the group has already judged. Everything stays at
 collected because the state machine has no collected-to-retired edge;
 whether one should exist is deliberately left unforced until the volume
 of dispositioned material makes the answer real.
+
+**RULED 2026-09-22 by BOB #26 (D-179, SCHEDULER #11's Q4): at the store, ONE CAPTURE, ONE HOME —
+the ORIGINAL's.** The register is keyed by the bytes (`INTERFACES.md` I1 §1: `capture_sha` is the
+identity of the bytes across the whole system), and the ring-once rule above lands the
+corroboration on the original's register. Bob's ruling of 2026-07-30 says the same of the whole
+record (`LINK-FIDELITY.md`, *a re-capture of a document the record already holds is the NORMAL
+case*): identical content is corroboration on ONE register entry and never two, and a
+confirmation is an OBSERVATION in `captured_locators`, never a bundle. The store did the
+opposite: `op=promote` UPSERTs `register.bundle_id` on the `capture_sha` key, so registering held
+bytes under a second bundle silently MOVED the row to the newcomer, and only an authored
+observation was fenced (C-53.8). A compound key `(capture_sha, bundle_id)` is refused: it would
+make one content two review items, and the version chain at an address (PL-10) and every read
+that asks which bundle holds a capture rest on the one home. So a promote that would register
+bytes already registered under ANOTHER bundle that still exists is REFUSED BY NAME, and the
+refusal tells the member the document is already in the record, naming the holding bundle only
+to a caller who may see it (D-15); the new address's observation, which `op=acquire` records
+before any promote, is the corroboration. A re-registration under the SAME bundle (a revision)
+is unchanged, and bytes whose home was purged register afresh. NOT BUILT; the build is the BOB
+INBOX's entry of 2026-09-22.
 
 # 9. Creation authority boundaries (added v1.1)
 

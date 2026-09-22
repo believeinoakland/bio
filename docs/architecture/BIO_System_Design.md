@@ -218,7 +218,7 @@ system's completeness statement at the capability altitude, and each rung maps o
 | M1 | the instance keeps its own record current, unattended | 10, 14 |
 | M2 | every document class Oakland publishes can become evidence | 2, 5 |
 | M3 | the record knows what it holds | 5 |
-| M4 | the record connects what it holds | 4, 6 — **D-164 is this rung's open primitive** |
+| M4 | the record connects what it holds | 4, 6 — **D-164, this rung's primitive, CLOSED 2026-09-22** (BOB #26; built: `node tools/status.mjs 4`) |
 | M5 | the record can be searched over its content, not only its notes | 4, 9 |
 | M6 | the record can be left, mirrored and outlived | 3, 15 |
 | M7 | a group can install and run it honestly | 15 |
