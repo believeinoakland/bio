@@ -1460,3 +1460,13 @@ than no gate.** Today `node tools/gates.mjs` runs `--strict` in the full set (`C
 Three fragments, verbatim, each a pointer whose target is looked up by id: the DEC-49 section's lineage
 `(REC-70, M0-14, CPDF-9, REC-76; D-240 holds two more).` (now `(REC-76, D-240).`); the fleet section's
 `(Fleet coverage: VF-1, above.)`; and the first-run section's `Receipts archived (D-40).`
+
+## Cut 2026-09-21 by the D-293/M0-98 worker (CONDUCT #10's spawn) — room for D-293's refusal line in the push-guard section
+
+From "### D-406 — ONE HOOK, EVERY WORKTREE, BUT THE SCRIPT RESOLVED PER-WORKTREE", the subsection that followed it,
+verbatim (its rule stays in place, folded into the D-406 paragraph as one sentence):
+
+### THE ACCEPTANCE INSTRUMENT WAS WRONG FIRST, AND THAT IS THE MORE USEFUL FINDING
+
+**A coverage claim about a shared mechanism must drive the artifact that is installed, never a model of
+it** — execute the installed hook with cwd set to each worktree and read what it says.

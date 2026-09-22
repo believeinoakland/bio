@@ -12,9 +12,13 @@
  *
  *   1. THE CHANGE CLASS IS MEASURED, NEVER DECLARED. The diff (committed vs the
  *      upstream base, plus anything uncommitted) is classified from its paths.
- *      One non-docs path — code, tools, tests, config, anything — and the class
- *      is FULL. Unknown or unclassifiable state is FULL. The narrow profile can
- *      only be reached by a diff that is entirely prose under docs/.
+ *      One path in the plane, the UI, the fleet, the installer or a package/config
+ *      file and the class is FULL. Unknown or unclassifiable state is FULL — and
+ *      that now includes a checkout with no merge-base against `origin/main`,
+ *      which until M0-98 was read as "nothing committed" and could narrow to DOCS.
+ *      The narrow DOCS profile is reached only by a diff that is entirely prose
+ *      under docs/; the TARGETED profile (M0-98, below) by any other diff that
+ *      touches none of those five.
  *
  *   2. THE DOC-FACING SUITE SET IS DERIVED AT RUN TIME, NEVER LISTED. A suite is
  *      doc-facing iff its source (or its sibling .control.mjs) mentions `docs/`.
@@ -25,56 +29,219 @@
  *   3. plancheck ALWAYS runs (as --local mid-turn; the bare run is owed after
  *      the push — publication is the handoff gate's half).
  *
+ * ---- D-293 (BOB #22's ruling): THE VERDICT IS RECORDED, KEYED BY THE TREE. ----
+ * The push guard (`tools/pushguard.mjs`) never RUNS this tool — a push-time gate
+ * would not converge (M-85) — so the gate leaves its verdict where the guard can
+ * READ it: after every run over a tree that was CLEAN when the run began AND when
+ * it ended (and was the same tree at both ends — a run across a change measured a
+ * tree that never existed), one run file lands under
+ * `<git common dir>/bio-gates/`, untracked and shared by every worktree, keyed by
+ * `HEAD^{tree}` and carrying the verdict, the class and every step with the units
+ * it re-ran. A dirty tree's run is NOT recorded, and says so. The record's key,
+ * path and verdict rule are the guard's module, imported here, so the writer and
+ * the reader cannot drift apart.
+ *
+ * ---- M0-98 (BOB #23's item 1): A TARGETED CLASS, AND `--since`. ----
+ * TARGETED: a diff that touches no plane (`bio-plane/src|checks`, the plane's
+ * shipped build, and whatever the plane imports from outside `bio-plane/` —
+ * DERIVED, today `docprofile/`), no `civicos-ui/`, no fleet member (DERIVED from
+ * `fleet-member.json`), no installer (`newgroup/`, `release/`) and no
+ * package/config file runs the units that IMPORT, SPAWN or MENTION a changed path,
+ * `coverage --strict` when a test file changed, and plancheck. The selection is
+ * derived at run time and PRINTED with each unit's reason, as DOCS's is. A "unit"
+ * is a plane or fleet suite (run through the battery by name), a UI suite, a UI
+ * harness check, or `coverage --strict`.
+ *
+ * SELECTION IS BY MENTION, NOT BY IMPORT, and that is the defeat the row names: an
+ * import-only selector misses a suite that reads through a COMPUTED path
+ * (`join(REPO, "tools", name + ".mjs")`). A unit mentions a changed path when any
+ * file it reads — its source, its sibling control, every `tools/*.mjs` and
+ * `scripts/*.mjs` the unit names, and their relative imports, transitively — IS
+ * that path, or contains its basename, or its stem as a quoted token, or WALKS its
+ * directory: a file that enumerates directories (`readdirSync`, `ls-files` …) and
+ * names the parent's last segment or any ancestor's repo-relative path as a quoted
+ * token (`join(REPO, "tools")`), or a unit's own file enumerating the directory it
+ * sits in (`readdirSync(DIR)`). REACH, stated: the plane's runtime code is
+ * not read (it cannot read a repository file at run time; its dependencies are
+ * imports inside the FULL set); a path assembled at run time from pieces none of
+ * which is its name, its stem or its directory is invisible; a comment naming a
+ * path counts (over-selection, the safe direction). CONDUCT's integration batches
+ * stay FULL (`ORCHESTRATION.md`, THE RECORD IS PARTITIONED BY WRITER, rule 1).
+ *
+ * `--since [<rev>]` (default ORIG_HEAD): after a rebase, read the recorded verdict
+ * of <rev>'s tree — it must be GREEN — and re-run only the units that read a path
+ * changed on BOTH sides: one the measured branch changed (merge-base..<rev>) AND
+ * one that differs between the measured tree and this one (<rev>..HEAD); plus
+ * plancheck. BOTH SIDES means the unit reads something from each — a unit whose
+ * suite moved upstream while the tool it tests moved here re-runs even though no
+ * single file changed on both sides, because that pairing was never measured
+ * anywhere. A side carrying a FULL-class path is taken to be read by EVERY unit
+ * (MENTION cannot see who reads the runtime), so a plane merge gated FULL and then
+ * rebased over docs re-runs the readers of those docs; both sides carrying one is
+ * FULL. No GREEN record, a dirty tree, or an unresolvable <rev>: the ordinary
+ * classification runs instead, and says why.
+ *
  * Usage:
- *   node tools/gates.mjs            classify the change, run the right profile
- *   node tools/gates.mjs --full     force the full four gates
- *   node tools/gates.mjs --explain  classify and print the plan; run nothing
+ *   node tools/gates.mjs                  classify the change, run the right profile
+ *   node tools/gates.mjs --full           force the full four gates
+ *   node tools/gates.mjs --explain        classify and print the plan; run nothing
+ *   node tools/gates.mjs --since [<rev>]  after a rebase: re-check only what both sides touched
  *
  * Exit: 0 all gates green · 1 a gate failed or the state could not be classified.
  *
  * NEGATIVE CONTROL (run it when you touch the classifier): stage one whitespace
  * edit in bio-plane/src/store.mjs alongside a docs edit and confirm the class
  * reads FULL; drop it and confirm DOCS. Recorded 2026-08-10, both directions.
+ * RE-RUN 2026-09-21 by the D-293/M0-98 worker over this rewrite, in a scratch clone
+ * of this tree (`--explain`): both directions held — FULL naming
+ * `bio-plane/src/store.mjs`, then DOCS.
+ * NEGATIVE CONTROL for the record, the refusal, TARGETED and `--since`:
+ * `node bio-plane/test/gates.control.mjs`, which arms this file and
+ * `tools/pushguard.mjs` one arm at a time against `bio-plane/test/gates.test.mjs`.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
+import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { appendRun, readRuns, effectiveVerdict } from "./pushguard.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sh = (cmd, args) =>
-  execFileSync(cmd, args, { cwd: REPO, encoding: "utf-8" }).trim();
+  execFileSync(cmd, args, { cwd: REPO, encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+const tryGit = (args) => { try { return sh("git", args); } catch { return null; } };
 
-const FORCE_FULL = process.argv.includes("--full");
-const EXPLAIN = process.argv.includes("--explain");
+const ARGV = process.argv.slice(2);
+const FORCE_FULL = ARGV.includes("--full");
+const EXPLAIN = ARGV.includes("--explain");
+const SINCE_AT = ARGV.indexOf("--since");
+const SINCE = SINCE_AT < 0 ? null
+  : (ARGV[SINCE_AT + 1] && !ARGV[SINCE_AT + 1].startsWith("--") ? ARGV[SINCE_AT + 1] : "ORIG_HEAD");
+const short = (x) => String(x || "").slice(0, 8);
+
+/* ---- 0 · the tree this run measures (D-293) ---------------------------- */
+const statusNow = () => tryGit(["status", "--porcelain", "--untracked-files=normal"]);
+const treeNow = () => tryGit(["rev-parse", "--verify", "--quiet", "HEAD^{tree}"]);
+const START = { head: tryGit(["rev-parse", "--verify", "--quiet", "HEAD"]), tree: treeNow(), status: statusNow() };
+const CLEAN_AT_START = START.status === "" && !!START.tree;
 
 /* ---- 1 · what changed, measured ---------------------------------------- */
-let base = "";
-try { base = sh("git", ["merge-base", "HEAD", "origin/main"]); } catch { /* fall through */ }
-let changed = new Set();
-try {
-  if (base) for (const f of sh("git", ["diff", "--name-only", base, "HEAD"]).split("\n")) if (f) changed.add(f);
-  // Uncommitted work, tracked and untracked, without parsing porcelain columns.
-  for (const f of sh("git", ["diff", "--name-only", "HEAD"]).split("\n")) if (f) changed.add(f);
-  for (const f of sh("git", ["ls-files", "--others", "--exclude-standard"]).split("\n")) if (f) changed.add(f);
-} catch (e) {
-  console.error(`gates: cannot read the diff (${e.message}) — refusing to narrow; class is FULL.`);
-  changed = null;
+const listDiff = (args) => {
+  const out = tryGit(["diff", "--name-only", "--no-renames", ...args]);
+  return out === null ? null : out.split("\n").filter(Boolean);
+};
+const untrackedNow = () => {
+  const out = tryGit(["ls-files", "--others", "--exclude-standard"]);
+  return out === null ? null : out.split("\n").filter(Boolean);
+};
+const base = tryGit(["merge-base", "HEAD", "origin/main"]);
+let changed = null;
+let unreadable = "";
+if (!base) unreadable = "no merge-base with origin/main, so the committed diff cannot be measured";
+else {
+  /* --no-renames: a rename is reported as BOTH of its paths, or a suite still naming the old one
+     would never be selected. */
+  const committed = listDiff([base, "HEAD"]);
+  const working = listDiff(["HEAD"]);
+  const untracked = untrackedNow();
+  if (committed === null || working === null || untracked === null) unreadable = "a git read failed";
+  else changed = new Set([...committed, ...working, ...untracked]);
 }
 
 const isDocsPath = (p) =>
   p.startsWith("docs/") &&
   (p.endsWith(".md") || p.endsWith(".html") || p.endsWith(".svg"));
 
+/* ---- 1b · what is FULL, derived where it can be (M0-98) ----------------- */
+const isFile = (abs) => { try { return statSync(abs).isFile(); } catch { return false; } };
+const listDir = (abs) => { try { return readdirSync(abs).sort(); } catch { return []; } };
+const repoRel = (abs) => relative(REPO, abs).split(sep).join("/");
+const readJSON = (abs) => { try { return JSON.parse(readFileSync(abs, "utf8")); } catch { return null; } };
+
+/* The fleet is whatever carries a manifest — the same discovery the battery and coverage use. */
+const FLEET = listDir(REPO).filter((d) => !d.startsWith(".") && isFile(join(REPO, d, "fleet-member.json")))
+  .map((d) => ({ dir: d, meta: readJSON(join(REPO, d, "fleet-member.json")) || {} }));
+
+const IMPORT_RE = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)["'`](\.{1,2}\/[^"'`\n]+)["'`]/g;
+const URL_RE = /new URL\(\s*["'`](\.{1,2}\/[^"'`\n]+\.(?:mjs|js|cjs))["'`]\s*,\s*import\.meta\.url/g;
+
+/* What the plane imports from OUTSIDE `bio-plane/src|checks` is plane code too (docprofile/ is
+   read by `src/index.mjs`). Walked by import from both roots; a file reached outside `bio-plane/`
+   makes its whole top-level directory plane code, one reached inside `bio-plane/` only itself. */
+const PLANE_ROOTS = ["bio-plane/src/", "bio-plane/checks/"];
+const PLANE_SHIPPED = ["bio-plane/dist/", "bio-plane/public/"];
+const planeForeign = (() => {
+  const roots = new Set(), files = new Set(), seen = new Set();
+  const stack = [];
+  const walk = (dirAbs) => {
+    for (const n of listDir(dirAbs)) {
+      const abs = join(dirAbs, n);
+      if (isFile(abs)) { if (/\.(?:mjs|js)$/.test(n)) stack.push(abs); }
+      else if (!n.startsWith(".") && n !== "node_modules") walk(abs);
+    }
+  };
+  for (const r of PLANE_ROOTS) walk(join(REPO, r));
+  while (stack.length) {
+    const f = stack.pop();
+    if (seen.has(f)) continue;
+    seen.add(f);
+    let src = "";
+    try { src = readFileSync(f, "utf8"); } catch { continue; }
+    for (const m of src.matchAll(IMPORT_RE)) {
+      const t = resolve(dirname(f), m[1]);
+      const rel = repoRel(t);
+      if (rel.startsWith("..") || !isFile(t)) continue;
+      if (PLANE_ROOTS.some((r) => rel.startsWith(r))) continue;
+      if (rel.startsWith("bio-plane/")) files.add(rel);
+      else roots.add(`${rel.split("/")[0]}/`);
+      stack.push(t);
+    }
+  }
+  return { roots: [...roots].sort(), files: [...files].sort() };
+})();
+
+const UI_ROOT = "civicos-ui/";
+const INSTALLER_ROOTS = ["newgroup/", "release/"];
+const PACKAGE_FILES = new Set(["package.json", "package-lock.json", "npm-shrinkwrap.json", "wrangler.jsonc",
+  "wrangler.json", "wrangler.toml", "fleet-member.json", ".npmrc", ".nvmrc", ".node-version",
+  "tsconfig.json", "jsconfig.json"]);
+
+/* Why a path forces FULL, or null. A root-level dotfile or dot-directory (`.gitignore`,
+   `.worktreeinclude`, `.env.example`, `.claude/`) is configuration: it changes what git tracks
+   or how every session runs, which no suite's source names. */
+function fullReason(p) {
+  if (PLANE_ROOTS.some((r) => p.startsWith(r))) return "the plane";
+  if (PLANE_SHIPPED.some((r) => p.startsWith(r))) return "the plane's shipped build";
+  if (planeForeign.files.includes(p) || planeForeign.roots.some((r) => p.startsWith(r))) return "code the plane imports";
+  if (p.startsWith(UI_ROOT)) return "the UI";
+  if (FLEET.some((m) => p.startsWith(`${m.dir}/`))) return "a fleet member";
+  if (INSTALLER_ROOTS.some((r) => p.startsWith(r))) return "the installer";
+  if (PACKAGE_FILES.has(basename(p))) return "a package/config file";
+  if (p.startsWith(".")) return "a package/config file";
+  return null;
+}
+/* Runtime code: its text is not scanned for mentions and its imports are not followed. */
+const isRuntime = (p) => PLANE_ROOTS.some((r) => p.startsWith(r)) || PLANE_SHIPPED.some((r) => p.startsWith(r))
+  || planeForeign.files.includes(p) || planeForeign.roots.some((r) => p.startsWith(r))
+  || FLEET.some((m) => p.startsWith(`${m.dir}/src/`) || p.startsWith(`${m.dir}/dist/`))
+  || p.startsWith("newgroup/src/") || p.startsWith("newgroup/dist/");
+const isTestFile = (p) => /(?:^|\/)test\//.test(p) || /\.(?:test|control)\.mjs$/.test(p);
+
+/* ---- 1c · the class ----------------------------------------------------- */
+function classify(paths) {
+  if (paths.length === 0) return { cls: "DOCS", why: "empty diff — nothing beyond prose can have moved" };
+  if (paths.every(isDocsPath)) return { cls: "DOCS", why: `${paths.length} path(s), all prose under docs/` };
+  const hits = paths.map((p) => [p, fullReason(p)]).filter(([, r]) => r);
+  if (hits.length)
+    return { cls: "FULL", why: `${hits[0][1]} in the diff: ${hits[0][0]}${hits.length > 1 ? ` (+${hits.length - 1} more)` : ""}` };
+  return { cls: "TARGETED",
+           why: `${paths.length} path(s), none in the plane, the UI, the fleet, the installer or a package/config file` };
+}
+
 let cls = "FULL";
 let why = "forced";
-if (!FORCE_FULL && changed) {
-  if (changed.size === 0) { cls = "DOCS"; why = "empty diff — nothing beyond prose can have moved"; }
-  else {
-    const nonDocs = [...changed].filter((p) => !isDocsPath(p));
-    if (nonDocs.length === 0) { cls = "DOCS"; why = `${changed.size} path(s), all prose under docs/`; }
-    else { cls = "FULL"; why = `non-docs path in the diff: ${nonDocs[0]}${nonDocs.length > 1 ? ` (+${nonDocs.length - 1} more)` : ""}`; }
-  }
+if (!FORCE_FULL) {
+  if (!changed) why = `${unreadable} — refusing to narrow`;
+  else ({ cls, why } = classify([...changed]));
 }
 
 /* ---- 2 · the doc-facing suite set, derived ------------------------------ */
@@ -117,36 +284,321 @@ function docFacing(dir) {
 const planeDoc = docFacing("bio-plane/test");
 const uiDoc = docFacing("civicos-ui/test");
 
-/* ---- 3 · the plan ------------------------------------------------------- */
-const run = (label, cmd, args, opts = {}) => {
-  console.log(`\n=== gates · ${label}: ${cmd} ${args.join(" ")}`);
-  const r = spawnSync(cmd, args, { cwd: opts.cwd ?? REPO, stdio: "inherit" });
-  return r.status === 0;
+/* ---- 2b · the units, and what each one reads (M0-98) --------------------- */
+const isSuite = (f) => f.endsWith(".test.mjs");
+const topsOf = (dirAbs, f) => {
+  const ctrl = join(dirAbs, f.replace(/\.test\.mjs$/, ".control.mjs"));
+  return isFile(ctrl) ? [join(dirAbs, f), ctrl] : [join(dirAbs, f)];
 };
+const UNITS = (() => {
+  const u = [];
+  const planeDir = join(REPO, "bio-plane/test");
+  for (const f of listDir(planeDir).filter(isSuite))
+    u.push({ id: `plane:${f}`, kind: "plane", name: f, filter: f, tops: topsOf(planeDir, f) });
+  for (const m of FLEET) {
+    const td = join(REPO, m.dir, m.meta.testDir || "test");
+    for (const f of listDir(td).filter(isSuite))
+      u.push({ id: `fleet:${m.dir}/${f}`, kind: "fleet", name: `${m.dir}/${f}`, filter: `${m.dir}/${f}`, tops: topsOf(td, f) });
+  }
+  const uiDir = join(REPO, "civicos-ui/test");
+  for (const f of listDir(uiDir).filter(isSuite))
+    u.push({ id: `ui:${f}`, kind: "ui", name: f, tops: topsOf(uiDir, f) });
+  /* The harness's checks are the ones its runner RUNS, read from the runner rather than listed. */
+  let runner = "";
+  try { runner = readFileSync(join(uiDir, "run.mjs"), "utf8"); } catch { /* no UI harness here */ }
+  for (const m of new Set([...runner.matchAll(/["'`]\.\.\/(check-[\w.-]+\.mjs)["'`]/g)].map((x) => x[1])))
+    if (isFile(join(REPO, "civicos-ui", m))) u.push({ id: `uicheck:${m}`, kind: "uicheck", name: m, tops: [join(REPO, "civicos-ui", m)] });
+  const cov = join(REPO, "bio-plane/scripts/coverage.mjs");
+  if (isFile(cov)) u.push({ id: "coverage", kind: "coverage", name: "coverage --strict", tops: [cov] });
+  return u;
+})();
 
+const textMemo = new Map();
+const textOf = (abs) => {
+  if (!textMemo.has(abs)) { let s = null; try { s = readFileSync(abs, "utf8"); } catch { /* gone */ } textMemo.set(abs, s); }
+  return textMemo.get(abs);
+};
+const TOOL_RE = /\btools\/([\w.-]+\.mjs)\b/g;
+const SCRIPT_RE = /\bscripts\/([\w.-]+\.mjs)\b/g;
+/* [file, how it is reached]: "import" for a relative import or a `new URL(…, import.meta.url)`
+   module, "name" for a tool or script the UNIT ITSELF names (only a unit's own files are read for
+   names — a tool naming another tool in prose is not evidence that it runs it). */
+function edges(abs, top) {
+  const src = textOf(abs) || "";
+  const out = new Map();
+  for (const m of src.matchAll(IMPORT_RE)) out.set(resolve(dirname(abs), m[1]), "import");
+  for (const m of src.matchAll(URL_RE)) out.set(resolve(dirname(abs), m[1]), "import");
+  if (top) {
+    /* The plane's `scripts/` and the unit's own package's `scripts/` are both tried, and only a
+       file that exists is followed. */
+    const pkg = repoRel(abs).split("/")[0];
+    const named = (p) => { if (!out.has(p)) out.set(p, "name"); };
+    for (const m of src.matchAll(TOOL_RE)) named(join(REPO, "tools", m[1]));
+    for (const m of src.matchAll(SCRIPT_RE)) { named(join(REPO, "bio-plane/scripts", m[1])); named(join(REPO, pkg, "scripts", m[1])); }
+  }
+  return [...out].filter(([p]) => isFile(p));
+}
+const closureMemo = new Map();
+function closure(unit) {
+  if (closureMemo.has(unit.id)) return closureMemo.get(unit.id);
+  const seen = new Map();
+  const stack = unit.tops.map((t) => [t, "self"]);
+  for (const t of unit.tops) stack.push(...edges(t, true));
+  while (stack.length) {
+    const [f, how] = stack.pop();
+    if (seen.has(f)) continue;
+    seen.set(f, how);
+    if (isRuntime(repoRel(f)) && !unit.tops.includes(f)) continue;
+    for (const e of edges(f, false)) if (!seen.has(e[0])) stack.push(e);
+  }
+  closureMemo.set(unit.id, seen);
+  return seen;
+}
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const tokenRe = (tok) => new RegExp(`["'\`/]${esc(tok)}/?["'\`]`);
+const probeMemo = new Map();
+function probesFor(p) {
+  if (probeMemo.has(p)) return probeMemo.get(p);
+  const base = basename(p);
+  const stem = base.includes(".") ? base.slice(0, base.lastIndexOf(".")) : base;
+  const parts = p.split("/").slice(0, -1);
+  const dirs = [];
+  for (let i = parts.length; i >= 1; i--) dirs.push(parts.slice(0, i).join("/"));
+  /* [the directory it stands for, the token, its quoted-token regex]: every ancestor by its
+     repo-relative path, and the parent by its last segment too (`join(ROOT, "test")`). */
+  const dirProbes = dirs.map((d) => [d, d, tokenRe(d)]);
+  if (parts.length > 1) { const seg = parts[parts.length - 1]; dirProbes.push([parts.join("/"), seg, tokenRe(seg)]); }
+  const probe = { base, stem, stemRe: stem ? tokenRe(stem) : null, dirProbes };
+  probeMemo.set(p, probe);
+  return probe;
+}
+/* A token is tested with a plain `includes` first and its quoted-token regex only on a hit, and
+   each (file, token) answer is kept: a `--since` over a large docs move asks hundreds of paths of
+   the same few hundred files, and nearly every token appears in nearly none of them. */
+const tokenMemo = new Map();
+function hasToken(abs, s, tok, re) {
+  const key = `${abs}\0${tok}`;
+  if (!tokenMemo.has(key)) tokenMemo.set(key, s.includes(tok) && re.test(s));
+  return tokenMemo.get(key);
+}
+/* A WALK needs a walker: a directory token in a file that never enumerates a directory is a path
+   being BUILT, and a built path that reaches the changed file names it (basename or stem) and is
+   caught above. Without this, every `join(REPO, "bio-plane", …)` read as a walk of bio-plane/ and a
+   one-suite edit selected 258 units (measured 2026-09-21, before this line). */
+const DISCOVERY_RE = /\b(?:readdirSync|readdir|opendirSync|opendir|globSync)\s*\(|["'`]ls-(?:files|tree)["'`]|\bgit\s+(?:ls-files|ls-tree|grep)\b|["'`]grep["'`]/;
+const walkerMemo = new Map();
+const isWalker = (abs, s) => { if (!walkerMemo.has(abs)) walkerMemo.set(abs, DISCOVERY_RE.test(s)); return walkerMemo.get(abs); };
+function fileHit(abs, p, own = false) {
+  const s = textOf(abs);
+  if (!s) return null;
+  const pr = probesFor(p);
+  if (s.includes(pr.base)) return `names ${pr.base}`;
+  if (pr.stemRe && hasToken(abs, s, pr.stem, pr.stemRe)) return `names "${pr.stem}"`;
+  if (!isWalker(abs, s)) return null;
+  for (const [d, tok, re] of pr.dirProbes) if (hasToken(abs, s, tok, re)) return `walks ${d}/`;
+  /* A unit's OWN file that enumerates a directory and sits in the changed path's directory walks
+     its own directory (`readdirSync(DIR)` over `bio-plane/test/` is how the census suites read
+     every suite). Only a unit's own files: a shared tool enumerating something else would drag
+     in every unit that imports it. */
+  if (own && dirname(abs) === dirname(join(REPO, p))) return `walks its own directory, ${repoRel(dirname(abs))}/`;
+  return null;
+}
+/* Does this unit read the path? The reason, or null. */
+function reads(unit, p) {
+  const cl = closure(unit);
+  const abs = join(REPO, p);
+  if (unit.tops.includes(abs)) return "is the changed file";
+  if (cl.has(abs)) return cl.get(abs) === "name" ? "names it as a tool or script it runs" : "imports it";
+  for (const f of cl.keys()) {
+    const own = unit.tops.includes(f);
+    if (isRuntime(repoRel(f)) && !own) continue;
+    const h = fileHit(f, p, own);
+    if (h) return `${h} in ${repoRel(f)}`;
+  }
+  return null;
+}
+/* Every unit (of `among`, default all) reading any of `paths`, with its first reason. */
+function selectReaders(paths, among = UNITS) {
+  const out = new Map();
+  for (const unit of among) {
+    for (const p of paths) {
+      const r = reads(unit, p);
+      if (r) { out.set(unit.id, { unit, why: `${p}: ${r}` }); break; }
+    }
+  }
+  return out;
+}
+
+/* ---- 2c · TARGETED, and --since --------------------------------------- */
+let selection = null;      // Map id -> { unit, why }
+let sinceInfo = null;
+let sinceNote = "";
+
+function targetedSelection(paths) {
+  const sel = selectReaders(paths);
+  if (paths.some((p) => p.startsWith("docs/"))) {
+    for (const f of planeDoc) if (!sel.has(`plane:${f}`))
+      sel.set(`plane:${f}`, { unit: UNITS.find((u) => u.id === `plane:${f}`), why: "doc-facing, and a docs/ path changed" });
+    for (const f of uiDoc) if (!sel.has(`ui:${f}`))
+      sel.set(`ui:${f}`, { unit: UNITS.find((u) => u.id === `ui:${f}`), why: "doc-facing, and a docs/ path changed" });
+  }
+  const testChange = paths.find(isTestFile);
+  const cov = UNITS.find((u) => u.id === "coverage");
+  if (testChange && cov && !sel.has("coverage")) sel.set("coverage", { unit: cov, why: `a test file changed: ${testChange}` });
+  for (const [id, v] of sel) if (!v.unit) sel.delete(id);
+  return sel;
+}
+
+if (SINCE && !FORCE_FULL) {
+  const fallback = (reason) => { sinceNote = `--since ${SINCE} cannot narrow — ${reason}; the ordinary classification runs instead`; };
+  const oldCommit = tryGit(["rev-parse", "--verify", "--quiet", `${SINCE}^{commit}`]);
+  const oldTree = oldCommit ? tryGit(["rev-parse", "--verify", "--quiet", `${oldCommit}^{tree}`]) : null;
+  if (!oldCommit || !oldTree) fallback(`it does not name a commit`);
+  else if (!CLEAN_AT_START) fallback(`the working tree is not clean, and --since re-checks a COMMITTED tree`);
+  else {
+    const rec = readRuns({ repo: REPO, tree: oldTree });
+    const eff = effectiveVerdict(rec.runs);
+    const forkPoint = tryGit(["merge-base", oldCommit, "HEAD"]);
+    if (eff.verdict !== "GREEN")
+      fallback(eff.verdict === "RED" ? `the tree ${short(oldTree)} of ${SINCE} is recorded RED`
+        : `no verdict is recorded for the tree ${short(oldTree)} of ${SINCE}`
+          + `${rec.unreadable.length ? ` (${rec.unreadable.length} record file(s) unreadable)` : ""}`);
+    else if (!forkPoint) fallback(`${SINCE} shares no history with HEAD`);
+    else {
+      const mine = listDiff([forkPoint, oldCommit]);
+      const moved = listDiff([oldCommit, "HEAD"]);
+      if (mine === null || moved === null) fallback("a git read failed");
+      else {
+        const recordedClass = (eff.last && eff.last.class) || "?";
+        sinceInfo = { commit: oldCommit, tree: oldTree, recordedClass, mine: mine.length, moved: moved.length };
+        const head = `re-checking ${short(oldCommit)} (tree ${short(oldTree)}, recorded GREEN, class ${recordedClass}): `
+          + `${mine.length} path(s) on your side, ${moved.length} moved since`;
+        /* A FULL-class path is RUNTIME, and which units read the runtime is exactly what MENTION
+           cannot see — so a side carrying one is taken to be read by EVERY unit, and the pairing
+           reduces to the readers of the OTHER side. Both sides carrying one is FULL. This is what
+           makes `--since` useful to an integration batch: a plane merge gated FULL once, rebased
+           over docs, re-runs the readers of those docs, not the battery. */
+        const mineFull = mine.find((p) => fullReason(p));
+        const movedFull = moved.find((p) => fullReason(p));
+        if (mineFull && movedFull) {
+          cls = "FULL";
+          why = `--since ${SINCE}: BOTH sides touch runtime (${mineFull}; ${movedFull}), and every unit may read both`;
+        } else if (mineFull) {
+          cls = "SINCE";
+          selection = selectReaders(moved);
+          why = `${head}; your side touches ${fullReason(mineFull)} (${mineFull}), which every unit may read, `
+            + "so the units reading what moved re-run";
+        } else if (movedFull) {
+          cls = "SINCE";
+          selection = selectReaders(mine);
+          why = `${head}; the other side moved ${fullReason(movedFull)} (${movedFull}), which every unit may read, `
+            + "so the units reading your side re-run";
+        } else {
+          cls = "SINCE";
+          const mineReaders = selectReaders(mine);
+          const movedReaders = selectReaders(moved, [...mineReaders.values()].map((v) => v.unit));
+          selection = new Map();
+          for (const [id, v] of mineReaders) {
+            const w = movedReaders.get(id);
+            if (w) selection.set(id, { unit: v.unit, why: `${v.why} · AND ${w.why}` });
+          }
+          why = `${head}; units reading BOTH re-run`;
+        }
+      }
+    }
+  }
+}
+if (cls === "TARGETED") selection = targetedSelection([...changed]);
+
+/* ---- 3 · the plan ------------------------------------------------------- */
+/* The battery's own filter rule, mirrored so the RECORD names what the battery actually ran:
+   `scripts/battery.mjs` keeps a plane suite whose FILE NAME includes a filter and a fleet suite
+   whose `<member>/<file>` label does. Filters are FULL file names, never stems — a stem ran
+   suites nobody selected (39 derived doc-facing suites ran as 41, measured 2026-09-21). */
+const batteryRuns = (filters) => UNITS.filter((u) => (u.kind === "plane" || u.kind === "fleet")
+  && filters.some((x) => u.filter.includes(x))).map((u) => u.id);
+
+const STEPS = [];
+const plancheckStep = { label: "plancheck --local", units: ["plancheck"], cmd: "node", args: ["tools/plancheck.mjs", "--local"] };
+if (cls === "FULL") {
+  STEPS.push({ label: "battery (all)", units: ["plane:*", "fleet:*"], cmd: "npm", args: ["run", "test:battery"], cwd: join(REPO, "bio-plane") });
+  STEPS.push({ label: "coverage --strict", units: ["coverage"], cmd: "node", args: ["scripts/coverage.mjs", "--strict"], cwd: join(REPO, "bio-plane") });
+  STEPS.push({ label: "civicos-ui (all)", units: ["ui:*"], cmd: "node", args: ["civicos-ui/test/run.mjs"] });
+} else if (cls === "DOCS") {
+  if (planeDoc.length)
+    STEPS.push({ label: "battery (doc-facing)", units: batteryRuns(planeDoc), cmd: "node", args: ["scripts/battery.mjs", ...planeDoc], cwd: join(REPO, "bio-plane"), names: planeDoc });
+  for (const f of uiDoc)
+    STEPS.push({ label: `ui (doc-facing) ${f}`, units: [`ui:${f}`], cmd: "node", args: [join("civicos-ui/test", f)] });
+} else {
+  const picked = [...selection.values()].map((v) => v.unit);
+  const suites = picked.filter((u) => u.kind === "plane" || u.kind === "fleet").map((u) => u.filter);
+  if (suites.length)
+    STEPS.push({ label: `battery (${cls === "SINCE" ? "both sides" : "selected"})`, units: batteryRuns(suites), cmd: "node", args: ["scripts/battery.mjs", ...suites], cwd: join(REPO, "bio-plane"), names: suites });
+  if (picked.some((u) => u.kind === "coverage"))
+    STEPS.push({ label: "coverage --strict", units: ["coverage"], cmd: "node", args: ["scripts/coverage.mjs", "--strict"], cwd: join(REPO, "bio-plane") });
+  for (const u of picked.filter((x) => x.kind === "ui"))
+    STEPS.push({ label: `ui ${u.name}`, units: [u.id], cmd: "node", args: [join("civicos-ui/test", u.name)] });
+  for (const u of picked.filter((x) => x.kind === "uicheck"))
+    STEPS.push({ label: `ui check ${u.name}`, units: [u.id], cmd: "node", args: [join("civicos-ui", u.name)] });
+}
+/* --local skips the publication checks: gates runs MID-TURN, before commit+push,
+   and a dirty planning surface is the expected state then. The bare plancheck is
+   still owed AFTER the push — it is the handoff gate, not this one. */
+STEPS.push(plancheckStep);
+
+if (sinceNote) console.log(`gates: ${sinceNote}`);
 console.log(`gates: change class ${cls} — ${why}`);
 if (cls === "DOCS")
   console.log(`gates: doc-facing suites derived fresh — plane [${planeDoc.join(", ")}] · ui [${uiDoc.join(", ")}]`);
+if (cls === "TARGETED" || cls === "SINCE") {
+  console.log(`gates: FULL is derived too — plane imports from outside bio-plane/: [${planeForeign.roots.join(", ")}]`
+    + `${planeForeign.files.length ? ` + [${planeForeign.files.join(", ")}]` : ""} · fleet: [${FLEET.map((m) => m.dir).join(", ")}]`);
+  console.log(`gates: ${cls} selection derived fresh — ${selection.size} unit(s) of ${UNITS.length} ${cls === "SINCE" ? "read a path changed on BOTH sides" : "import, spawn or mention a changed path"}:`);
+  for (const { unit, why: w } of selection.values()) console.log(`gates:   ${unit.id}  <- ${w}`);
+  console.log("gates: REACH — a unit's source, control, the tools/scripts it names and their relative imports; "
+    + "not the plane's runtime code, and not a path assembled at run time from pieces none of which is its name, stem or directory.");
+}
+const planLabel = (s) => (s.names ? `${s.label.split(" (")[0]} [${s.names.join(", ")}]` : s.label);
+console.log(`gates: plan — ${STEPS.map(planLabel).join(" · ")}`);
+console.log(CLEAN_AT_START
+  ? `gates: record — the tree ${short(START.tree)} is CLEAN, so this run's verdict ${EXPLAIN ? "would be" : "will be"} recorded under the git common dir (D-293)`
+  : `gates: record — the tree is NOT clean (${START.status === null ? "status unreadable" : `${START.status.split("\n").filter(Boolean).length} path(s)`}), so this run's verdict will NOT be recorded (D-293)`);
 
 if (EXPLAIN) process.exit(0);
 
-let green = true;
-if (cls === "FULL") {
-  green = run("battery (all)", "npm", ["run", "test:battery"], { cwd: join(REPO, "bio-plane") }) && green;
-  green = run("coverage --strict", "node", ["scripts/coverage.mjs", "--strict"], { cwd: join(REPO, "bio-plane") }) && green;
-  green = run("civicos-ui (all)", "node", ["civicos-ui/test/run.mjs"]) && green;
-} else {
-  // battery.mjs positional args are name filters; pass the derived doc-facing names.
-  const planeFilters = planeDoc.map((f) => f.replace(/\.test\.mjs$/, ""));
-  green = run("battery (doc-facing)", "node", ["scripts/battery.mjs", ...planeFilters], { cwd: join(REPO, "bio-plane") }) && green;
-  for (const f of uiDoc)
-    green = run(`ui (doc-facing) ${f}`, "node", [join("civicos-ui/test", f)]) && green;
+const results = [];
+for (const s of STEPS) {
+  console.log(`\n=== gates · ${s.label}: ${s.cmd} ${s.args.join(" ")}`);
+  const r = spawnSync(s.cmd, s.args, { cwd: s.cwd ?? REPO, stdio: "inherit" });
+  results.push({ label: s.label, units: s.units, ok: r.status === 0 });
 }
-// --local skips the publication checks: gates runs MID-TURN, before commit+push,
-// and a dirty planning surface is the expected state then. The bare plancheck is
-// still owed AFTER the push — it is the handoff gate, not this one.
-green = run("plancheck --local", "node", ["tools/plancheck.mjs", "--local"]) && green;
+const green = results.every((r) => r.ok);
 
 console.log(`\ngates: ${green ? "GREEN" : "RED"} · class ${cls}`);
+
+/* ---- 4 · the record (D-293) ------------------------------------------- */
+{
+  const endTree = treeNow();
+  const endStatus = statusNow();
+  if (!CLEAN_AT_START) {
+    console.log(`gates: NOT RECORDED — the tree was not clean when the run began; a verdict binds only a clean tree (D-293)`);
+  } else if (endStatus !== "" || endTree !== START.tree) {
+    console.log(`gates: NOT RECORDED — the tree changed while the gate ran (`
+      + `${endTree !== START.tree ? `HEAD's tree ${short(START.tree)} -> ${short(endTree)}` : `${String(endStatus || "").split("\n").filter(Boolean).length} path(s) dirty at the end`}`
+      + `), so this run measured a tree that never existed (D-293)`);
+  } else {
+    let w;
+    try {
+      w = appendRun({ repo: REPO, run: {
+        tree: START.tree, verdict: green ? "GREEN" : "RED", class: cls, why, head: START.head, base: base || null,
+        at: new Date().toISOString(), worktree: REPO, since: sinceInfo,
+        steps: results.map(({ label, units, ok }) => ({ label, units, ok })),
+      } });
+    } catch (e) { w = { ok: false, reason: `the record could not be written (${e.message})` }; }
+    console.log(w.ok
+      ? `gates: RECORDED ${green ? "GREEN" : "RED"} for tree ${short(START.tree)} (class ${cls}) — ${w.path}; the push guard reads it (D-293)`
+      : `gates: NOT RECORDED — ${w.reason}`);
+  }
+}
 if (green) console.log("gates: after you push, run `node tools/plancheck.mjs` bare — the publication half runs there.");
 process.exit(green ? 0 : 1);

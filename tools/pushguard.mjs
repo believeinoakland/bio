@@ -180,10 +180,37 @@
  * Undetermined is first-class here and is STATED.  A guard that said *current*
  * over a tree it had not actually checked would be this project's own
  * costs-nothing-equality defect wearing a green tick.
+ *
+ * ------------------------------------------------------------------ D-293: THE GATE'S VERDICT, READ BY TREE
+ *
+ * This guard never RUNS `tools/gates.mjs`, and that is RULED rather than an omission (BOB #22,
+ * SCHEDULER #5's Q4): a full gate takes ~25 minutes and `main` took 48 first-parent commits from
+ * 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes (M-85), so a push-time gate would rebase
+ * and re-gate without converging.  What was missing was the other half: nothing refused a push
+ * of a tree the gate had ALREADY measured RED.  So `gates.mjs` records its verdict, keyed by the
+ * TREE it measured and only when that tree was CLEAN, under the git common dir (`bio-gates/`,
+ * one file per run, beside `bio-idalloc` — untracked, shared by every worktree); and `run()`
+ * refuses a push whose tip tree carries a RED record, naming it, and says nothing when none
+ * exists.  The record's key, path, reader, writer and verdict rule live HERE, in this file, and
+ * `gates.mjs` imports them: one rule, one module, so the writer and the reader cannot disagree
+ * about what a key is.  (Here and not in a module of its own because the clone-wide copy of this
+ * script in the common dir must stay SELF-CONTAINED — a copy importing a sibling it does not
+ * have would refuse every push from every checkout that falls back to it.)
+ *
+ * HOW A LIAR PASSES IT: keying on the COMMIT sha.  An amend of the message alone makes a new
+ * commit over the same tree, and a commit-keyed record would read it as never measured.  The
+ * key is the tree; `gates.test.mjs` amends and asserts the refusal holds.
+ *
+ * WHAT IT CANNOT SEE, stated: a tree gated while the working tree was DIRTY is not recorded at
+ * all (the ruled scope), so gating a dirty tree and then committing exactly what was measured
+ * pushes unrefused — the shape of the 2026-08-10 incident that rowed D-293, left open by the
+ * ruling and raised as its DESIGN GAP; a record lives in ONE clone; `--no-verify` skips it; and
+ * the record directory is pruned oldest-first past `RECORD_CAP` files, after which a pruned RED
+ * reads as unrecorded.
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync, chmodSync, renameSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, chmodSync, renameSync, unlinkSync, readdirSync, mkdirSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 import { realpathSync } from "node:fs";
@@ -413,6 +440,136 @@ export function commonDir({ repo = REPO } = {}) {
   return isAbsolute(common) ? common : join(repo, common);
 }
 
+/* ------------------------------------------------------------------ THE VERDICT RECORD (D-293)
+ *
+ * ONE FILE PER RUN, NEVER A FILE PER TREE THAT RUNS APPEND TO.  Up to eight worktrees gate at
+ * once and two of them can sit on the same tree; a read-modify-write of one shared file would
+ * lose a run to the race, and the run it loses could be the RED.  A run file's name is
+ * `<tree>.<epoch ms, 13 digits>.<pid>.json`, unique by construction, written by RENAME
+ * (`writeAtomic`), so a reader sees a whole run or none.  Nothing here writes the working tree.
+ *
+ * THE KEY IS THE TREE (`<rev>^{tree}`), NEVER THE COMMIT — see "HOW A LIAR PASSES IT" above. */
+export const RECORD_DIR = "bio-gates";
+export const RECORD_VERSION = 1;
+export const RECORD_CAP = 2000;
+const RECORD_NAME = /^([0-9a-f]{40}|[0-9a-f]{64})\.(\d{13})\.(\d+)\.json$/;
+
+export function recordDir({ repo = REPO } = {}) {
+  const c = commonDir({ repo });
+  return c ? join(c, RECORD_DIR) : null;
+}
+
+export function treeOf(rev, { repo = REPO } = {}) {
+  return git(["rev-parse", "--verify", "--quiet", `${rev}^{tree}`], repo) || null;
+}
+
+/* Every run recorded for ONE tree, oldest first.  A file that will not parse, or parses into
+   something that is not a run for this tree, is returned in `unreadable` — NAMED, never read as
+   absent: an unreadable record and no record are different findings. */
+export function readRuns({ repo = REPO, tree, dir = null } = {}) {
+  const d = dir || recordDir({ repo });
+  const out = { runs: [], unreadable: [], dir: d };
+  if (!d || !tree || !existsSync(d)) return out;
+  let names = [];
+  try { names = readdirSync(d); } catch (e) { out.unreadable.push(`${d} (${e.message})`); return out; }
+  for (const n of names) {
+    const m = RECORD_NAME.exec(n);
+    if (!m || m[1] !== tree) continue;
+    const file = join(d, n);
+    try {
+      const r = JSON.parse(readFileSync(file, "utf8"));
+      if (r && r.tree === tree && (r.verdict === "GREEN" || r.verdict === "RED") && Array.isArray(r.steps))
+        out.runs.push({ ...r, file, stamp: Number(m[2]) });
+      else out.unreadable.push(file);
+    } catch { out.unreadable.push(file); }
+  }
+  out.runs.sort((a, b) => a.stamp - b.stamp || a.file.localeCompare(b.file));
+  return out;
+}
+
+/* Write one run.  `run` carries at least { tree, verdict, class, steps: [{ label, units, ok }] }.
+   Pruned oldest-first past `cap` files, and ONLY files whose names this module writes. */
+export function appendRun({ repo = REPO, run, now = Date.now(), cap = RECORD_CAP } = {}) {
+  const d = recordDir({ repo });
+  if (!d) return { ok: false, reason: "git could not name a common directory" };
+  if (!run || !RECORD_NAME.test(`${run.tree}.${"0".repeat(13)}.0.json`))
+    return { ok: false, reason: `not a tree sha: ${run && run.tree}` };
+  mkdirSync(d, { recursive: true });
+  const path = join(d, `${run.tree}.${String(now).padStart(13, "0")}.${process.pid}.json`);
+  writeAtomic(path, `${JSON.stringify({ v: RECORD_VERSION, ...run }, null, 1)}\n`);
+  let pruned = 0;
+  try {
+    const names = readdirSync(d).filter((n) => RECORD_NAME.test(n))
+      .sort((a, b) => Number(RECORD_NAME.exec(a)[2]) - Number(RECORD_NAME.exec(b)[2]));
+    for (const n of names.slice(0, Math.max(0, names.length - cap))) {
+      try { unlinkSync(join(d, n)); pruned++; } catch { /* a sibling pruned it first */ }
+    }
+  } catch { /* pruning is housekeeping; the run is already written */ }
+  return { ok: true, path, pruned };
+}
+
+/* A step's UNITS say what it re-ran: `plane:<suite>`, `fleet:<member>/<suite>`, `ui:<suite>`,
+   `uicheck:<check>`, `coverage`, `plancheck`, and the wildcards `plane:*`, `fleet:*`, `ui:*`
+   (the whole UI harness, its checks included). */
+export function unitCovers(have, want) {
+  if (have === want) return true;
+  if (have === "ui:*") return want.startsWith("ui:") || want.startsWith("uicheck:");
+  if (have.endsWith(":*")) return want.startsWith(have.slice(0, -1));
+  return false;
+}
+
+/* THE VERDICT OF A TREE IS NOT ITS LAST RUN.  A RED stays RED until what FAILED has been re-run
+   GREEN on the same tree: a failing step opens its units, a passing step closes every open unit
+   it covers, and a GREEN FULL run — which re-ran everything the gate knows — closes all.  So a
+   flaky suite re-run green clears, and a NARROWER class cannot clear a WIDER failure (a TARGETED
+   run over two suites does not answer a battery that failed as a whole). */
+export function effectiveVerdict(runs) {
+  if (!runs || !runs.length) return { verdict: null, open: [], redRuns: [], last: null };
+  const open = new Map();
+  for (const r of runs) {
+    if (r.verdict === "GREEN" && r.class === "FULL") { open.clear(); continue; }
+    let failed = 0;
+    for (const s of r.steps || []) {
+      const units = Array.isArray(s.units) && s.units.length ? s.units : [`step:${s.label}`];
+      if (s.ok) { for (const u of [...open.keys()]) if (units.some((h) => unitCovers(h, u))) open.delete(u); }
+      else { failed++; for (const u of units) open.set(u, r); }
+    }
+    /* A RED naming no failing step is a verdict with no cause attached; only a GREEN FULL run
+       answers it. */
+    if (r.verdict === "RED" && !failed) open.set(`run:${r.stamp}`, r);
+  }
+  return { verdict: open.size ? "RED" : "GREEN", open: [...open.keys()],
+           redRuns: [...new Set(open.values())], last: runs[runs.length - 1] };
+}
+
+/* The refs a push offers on the hook's stdin, deletions dropped (a deletion publishes no tree). */
+export function pushedRefs(stdin) {
+  const out = [];
+  for (const line of String(stdin || "").split("\n")) {
+    const [localRef, localSha, remoteRef] = line.trim().split(/\s+/);
+    if (!localRef || !localSha || /^0+$/.test(localSha)) continue;
+    out.push({ localRef, localSha, remoteRef: remoteRef || null });
+  }
+  return out;
+}
+
+/* THE LOOKUP: every pushed tip's TREE, against the record.  It speaks only for the refs offered —
+   a push offering none publishes nothing to refuse. */
+export function gateVerdictCheck({ repo = REPO, stdin = "" } = {}) {
+  const dir = recordDir({ repo });
+  const red = [], green = [], unreadable = [];
+  for (const r of pushedRefs(stdin)) {
+    const tree = treeOf(r.localSha, { repo });
+    if (!tree) continue;
+    const got = readRuns({ repo, tree, dir });
+    unreadable.push(...got.unreadable);
+    const eff = effectiveVerdict(got.runs);
+    if (eff.verdict === "RED") red.push({ ...r, tree, eff });
+    else if (eff.verdict === "GREEN") green.push({ ...r, tree, eff });
+  }
+  return { ok: red.length === 0, red, green, unreadable, dir };
+}
+
 /* ------------------------------------------------------------------ installCopy — D-406
  *
  * THE CLONE-WIDE COPY.  `install()` puts ONE hook where git reads hooks for every worktree;
@@ -585,9 +742,49 @@ export function refsNotHead(stdin, headSha) {
   return out;
 }
 
+/* ------------------------------------------------------------------ the D-293 refusal's text
+ *
+ * It NAMES the record — ref, commit, tree, class, when, what still fails, the file — because a
+ * refusal a reader cannot trace to its evidence is one they will learn to route around. */
+export function gateRefusal(gv) {
+  const s8 = (x) => String(x || "").slice(0, 8);
+  const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "",
+    "  THE GATE RECORDED THIS TREE RED (D-293). `node tools/gates.mjs` measured the tree this push",
+    "  would publish, on a clean checkout, and it did not pass:", ""];
+  for (const r of gv.red) {
+    L.push(`      ${r.localRef} -> commit ${s8(r.localSha)}, tree ${s8(r.tree)}`);
+    for (const run of r.eff.redRuns.slice(0, 3)) {
+      const failed = (run.steps || []).filter((s) => !s.ok).map((s) => s.label).join("; ") || "no step named";
+      L.push(`      RED · class ${run.class || "?"} · ${run.at || "?"} · measured at commit ${s8(run.head)}`
+           + `${run.worktree ? ` in ${run.worktree}` : ""}`);
+      L.push(`      failed: ${failed}`);
+      if (run.file) L.push(`      record: ${run.file}`);
+    }
+    L.push(`      still open: ${r.eff.open.slice(0, 12).join(", ")}${r.eff.open.length > 12 ? ` (+${r.eff.open.length - 12} more)` : ""}`);
+    L.push("");
+  }
+  L.push("  The record is keyed by the TREE, not the commit, so amending the message or re-committing",
+         "  the same content does not clear it. To clear it:",
+         "    - fix what failed and commit: a changed tree carries no verdict until it is gated; or",
+         "    - re-run `node tools/gates.mjs` on a clean checkout of THIS tree: a GREEN run that re-runs",
+         "      what failed clears the record (a narrower class cannot clear a wider failure).", "");
+  return L.join("\n");
+}
+
 /* ------------------------------------------------------------------ the hook body */
 function run(stdin) {
   const repo = git(["rev-parse", "--show-toplevel"], process.cwd()) || REPO;
+  /* D-293 FIRST: it reads only the pushed commits' trees and the record, never the working tree,
+     so nothing a session has left uncommitted can confound it.  A failure to READ the record is
+     reported as UNDETERMINED below and never refuses: a guard that blocked every push over its
+     own I/O error would be switched off within a day. */
+  let gv;
+  try { gv = gateVerdictCheck({ repo, stdin }); }
+  catch (e) { gv = { ok: true, red: [], green: [], unreadable: [`the gate record (${e.message})`] }; }
+  if (!gv.ok) {
+    process.stderr.write(gateRefusal(gv) + "\n");
+    return 1;
+  }
   const v = check({ repo });
   const dirty = corpusDirty({ repo });
   const head = git(["rev-parse", "HEAD"], repo);
@@ -671,6 +868,13 @@ function run(stdin) {
              + " — not HEAD, and the index was read from the working tree");
   }
   if (v.kind === "absent") notes.push("the generator is absent, so nothing was verified");
+  /* D-293: a GREEN record is SAID; no record says nothing (the ruled shape); an unreadable one is
+     UNDETERMINED, in those words. */
+  for (const g of gv.green)
+    notes.push(`gate verdict GREEN recorded for ${g.localRef}'s tree ${g.tree.slice(0, 8)} (class ${g.eff.last.class || "?"})`);
+  if (gv.unreadable.length)
+    notes.push(`${gv.unreadable.length} gate record file(s) UNREADABLE, so the gate verdict is UNDETERMINED for this push: `
+             + gv.unreadable.slice(0, 3).join(", "));
   const tail = notes.length ? ` (${notes.join("; ")})` : "";
   process.stderr.write(`${HOOK_MARKER}: docs/DECIDED.md current; no merge markers; design corpus current; construct status agrees with the code${tail}\n`);
   return 0;
@@ -746,6 +950,30 @@ function control() {
   arm(c1.action === c2.action && c1.path === c2.path, "installCopy is idempotent (two dry runs agree)");
   arm(!!c1.path && c1.path.endsWith(COPY_NAME), "the copy lands in the common dir under its bio-* name");
 
+  /* ---------------------------------------------------------------- D-293 arms, in-process.
+   * The END-TO-END refusal — a real gate, a real record, a real push — is `gates.test.mjs`'s;
+   * these pin the verdict rule itself over synthetic runs. */
+  const step = (label, units, ok) => ({ label, units, ok });
+  const runOf = (verdict, cls, steps, stamp) => ({ verdict, class: cls, steps, stamp });
+  arm(effectiveVerdict([]).verdict === null, "no run is NO verdict, not GREEN");
+  arm(effectiveVerdict([runOf("RED", "TARGETED", [step("battery", ["plane:a.test.mjs"], false)], 1),
+                        runOf("GREEN", "TARGETED", [step("battery", ["plane:a.test.mjs"], true)], 2)]).verdict === "GREEN",
+      "a failing suite re-run GREEN on the same tree clears its RED");
+  arm(effectiveVerdict([runOf("RED", "FULL", [step("battery (all)", ["plane:*", "fleet:*"], false)], 1),
+                        runOf("GREEN", "TARGETED", [step("battery", ["plane:a.test.mjs"], true)], 2)]).verdict === "RED",
+      "a NARROWER GREEN cannot clear a WIDER failure");
+  arm(effectiveVerdict([runOf("RED", "TARGETED", [step("battery", ["plane:a.test.mjs"], false)], 1),
+                        runOf("GREEN", "FULL", [step("battery (all)", ["plane:*", "fleet:*"], true)], 2)]).verdict === "GREEN",
+      "a GREEN FULL run clears everything");
+  arm(effectiveVerdict([runOf("GREEN", "FULL", [step("battery (all)", ["plane:*"], true)], 1),
+                        runOf("RED", "TARGETED", [step("plancheck --local", ["plancheck"], false)], 2)]).verdict === "RED",
+      "a RED after a GREEN is RED — the latest failure is not forgiven by an earlier pass");
+  arm(effectiveVerdict([runOf("RED", "FULL", [], 1)]).verdict === "RED", "a RED naming no failing step is still RED");
+  arm(unitCovers("ui:*", "uicheck:check-semantics.mjs") && unitCovers("plane:*", "plane:x.test.mjs")
+      && !unitCovers("plane:x.test.mjs", "plane:*"), "wildcards cover their members and never the reverse");
+  arm(pushedRefs(`refs/heads/x ${"0".repeat(40)} refs/heads/x ${"b".repeat(40)}\nrefs/heads/y ${"c".repeat(40)} refs/heads/y ${"0".repeat(40)}`).length === 1,
+      "a deletion offers no tree to refuse; a push does");
+
   console.log(bad ? `\n${bad} FAILED` : "\nall control arms pass");
   return bad ? 1 : 0;
 }
@@ -792,6 +1020,7 @@ if (!IS_CLI) {
   console.log(`corpus    : ${corpusDirty() ? "DIRTY in the working tree (a push verdict would be UNDETERMINED)" : "clean against the tree"}`);
   console.log("");
   console.log("  --install   write the pre-push hook AND the clone-wide copy (idempotent; writes to .git/, never to the tree)");
-  console.log("  --run       the hook body; refuses a push whose docs/DECIDED.md is stale");
+  console.log("  --run       the hook body; refuses a push whose tip tree the gate recorded RED (D-293),");
+  console.log("              or whose docs/DECIDED.md is stale, or that carries merge markers or corpus/status drift");
   console.log("  --control   the negative-control arms");
 }
