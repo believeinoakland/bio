@@ -1,6 +1,6 @@
 import { SCHEMA } from "./schema.mjs";
 import { livefire } from "./livefire.mjs";
-import { SETUP_HTML } from "./setup.mjs";
+import { setupPage } from "./setup.mjs";
 import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
 import { runGate, runCaseGate, GATE_VERSION } from "./gate.mjs";
@@ -493,14 +493,22 @@ const OPS = {
      be able to see that one happened even though they cannot cause it. */
   exportlog:           { classes: ["admin", "member", "probe"], mutating: false },
   /* D-436 / IC-172 — THE INSTANCE'S PRODUCING GROUP (State Rules v1.5 §3.1), the one value every bundle this
-     instance writes names as its `group`. The READ is open to every class that reads the record: it answers
-     what the store records, and when it records nothing it says so. The SEED is the other half of decision (b):
+     instance writes names as its `group`. The READ is open to every class that reads the record, AND SINCE
+     REC-163 (IC-174) TO THE PUBLIC: `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21) rules THE SLUG
+     PUBLIC — it travels in every published bundle's signed `group` and names the worker, so a stranger learns
+     nothing the group has not already published or served. `classes: null` is how this table says public (there
+     is deliberately no public CLASS — see the header above), so the op answers through its own handler in the
+     unauthenticated branch: a stranger is told the slug, or that none is recorded, and NOTHING ELSE — when and by
+     which act it was recorded are not published anywhere, and §7 rules only the slug; a caller whose credential
+     the admission gate would admit (a machine class in its namespace, a session, an agent credential in scope)
+     is answered the whole row exactly as before. It answers what the store records, and when it records nothing
+     it says so. The SEED is the other half of decision (b):
      a store that already held documents when the value arrived records nothing at boot, and is given its group
      by this act, once. RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN
      CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO
      SESSION OF ANY ROLE REACHES IT: it is named in no SESSION_OPS set, and UNATTENDED_BY_DECISION cites this
      row, so a session is told which credential the verb is addressed to rather than an invented reason. */
-  instancegroup:       { classes: ["admin", "member", "probe"], mutating: false },
+  instancegroup:       { classes: null,                         mutating: false },
   instancegroupseed:   { classes: ["admin"],                    mutating: true  },
   /* Section 8.2. classes: null, because published-record reconstruction requires
      NOTHING: the hashes are public and verifiable by any stranger without this
@@ -2841,6 +2849,10 @@ function resolveSession(sess) {
   };
 }
 
+/* REC-163 (IC-174): beside the viewer, `cls` — the class this caller would carry through the admission gate: the
+   machine class, `ai`, or a session's kind spelled exactly as the gate spells it (`sess.role === "admin"`). The
+   public op=instancegroup names it on a credentialed answer, as that answer did when it came through the gate. The
+   three callers before it read only `viewer` and `silent`. */
 async function caseReader(url, env, storeName) {
   const t = url.searchParams.get("token");
   if (!t) return { viewer: "" };
@@ -2848,7 +2860,7 @@ async function caseReader(url, env, storeName) {
   if (cls) {
     const scope = scopeFor(cls, url);
     const inScope = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
-    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "" };
+    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "", cls };
   }
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   if (AI_TOKEN_SHAPE.test(t)) {
@@ -2856,16 +2868,29 @@ async function caseReader(url, env, storeName) {
     if (!aOut.answered) return { silent: "aicredentiallook" };
     const cred = aOut.result?.found ? aOut.result.credential : null;
     const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
-    return { viewer: scoped && !scoped.error ? scoped.viewer : "" };
+    return { viewer: scoped && !scoped.error ? scoped.viewer : "", cls: "ai" };
   }
   if (/^[0-9a-f]{64}$/.test(t)) {
     const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: resolveSession(sess).viewer };
+    return { viewer: resolveSession(sess).viewer, cls: sess.role === "admin" ? "admin" : "member" };
   }
   return { viewer: "" };
+}
+
+/* REC-163 / IC-174 — THE PUBLIC READ OF THE PRODUCING GROUP, ONE READER FOR THE TWO SURFACES THAT SHOW IT TO A
+   STRANGER: op=instancegroup's public arm and the setup page served at `/`. `BIO_Publication_v0_1.md` §7 point 1:
+   the slug is PUBLIC. It asks the store's `instanceGroupPublic`, which selects nothing but the slug through the one
+   reader every stamp uses, so the page, the op and the bytes of every document this store creates name ONE group.
+   Answers `doAnswer`'s `{ answered, result }`, and a silence is the caller's to state AS a silence. An instance with
+   no store binding at all cannot be asked, and that is a silence too: the page it serves must still be served. */
+async function publicInstanceGroup(env, storeName) {
+  let stub = null;
+  try { stub = env.STORE.get(env.STORE.idFromName(storeName)); } catch { stub = null; }
+  if (!stub) return { answered: false, result: undefined };
+  return doAnswer(stub.fetch("http://do/instancegrouppublic"));
 }
 
 const json = (o, status = 200) =>
@@ -4426,9 +4451,15 @@ export default {
                      "access-control-allow-origin": "*" } });
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
+    /* REC-163 / IC-174: the page names whose record this is — the group ITS record records, read when the page is
+       SERVED, through the one public read (`publicInstanceGroup`), pinned to `bio`: the instance's own record, as
+       op=verify's is. `setupPage` puts the slug in the served bytes, or says in words that none is recorded, or —
+       when the record did not answer — says THAT, never "none" and never a name. `no-store`, because the bytes now
+       carry a fact the record can change: a page kept from before a seed would go on saying none is recorded. */
     if (req.method === "GET" && !url.pathname.startsWith("/api")
         && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
-      return new Response(SETUP_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
+      return new Response(setupPage(await publicInstanceGroup(env, "bio")),
+        { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
@@ -4518,6 +4549,37 @@ export default {
         const out = await doAnswer(stub.fetch(new Request("http://do/publishedmanifest")));
         if (!out.answered) return storeSilent("publishedmanifest");
         return json({ ok: true, result: out.result }, 200);
+      }
+
+      /* ===== REC-163 / IC-174: op=instancegroup — THE PRODUCING GROUP, AND ITS SLUG IS PUBLIC ================
+         `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21). WHO ASKS DECIDES WHICH PROJECTION, NEVER
+         WHETHER:
+           - a caller holding a credential the admission gate would admit to this read — a machine class in its
+             own namespace, a session, an agent credential in scope — is answered the store's WHOLE ROW, provenance
+             included, exactly as before this item. `caseReader` decides it, the one resolver of "who is asking"
+             this branch already has, asked about the store this read addresses;
+           - anybody else is answered the PUBLIC projection — the slug, or the statement that none is recorded,
+             and nothing else — through `publicInstanceGroup`, the read the setup page makes too.
+         WHICH STORE: the namespace a machine credential is confined to or names (`scopeFor`'s rule, so a probe
+         naming nothing still reads `scratch`), and for every other caller `store=scratch` when named and `bio`
+         otherwise, the invitation ops' rule — the slug is the same public fact either way. The answer says which
+         store answered. A SILENCE IS A SILENCE (REC-52): never "no group is recorded", on either arm. */
+      if (op === "instancegroup") {
+        const held = url.searchParams.get("token");
+        const heldCls = held ? await classify(held, env) : null;
+        const heldScope = heldCls ? scopeFor(heldCls, url) : null;
+        const igStore = heldScope && !heldScope.error ? heldScope.name
+          : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
+        const igReader = await caseReader(url, env, igStore);
+        if (igReader.silent) return storeSilent(igReader.silent);
+        if (igReader.viewer) {
+          const igOut = await doAnswer(env.STORE.get(env.STORE.idFromName(igStore)).fetch("http://do/instancegroup"));
+          if (!igOut.answered) return storeSilent("instancegroup");
+          return json({ ok: true, result: igOut.result, store: igStore, tokenClass: igReader.cls }, 200);
+        }
+        const pubOut = await publicInstanceGroup(env, igStore);
+        if (!pubOut.answered) return storeSilent("instancegroup");
+        return json({ ok: true, result: pubOut.result, store: igStore }, 200);
       }
 
       /* ============================================================         REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
