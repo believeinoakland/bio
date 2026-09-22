@@ -218,4 +218,17 @@ rmSync(PEN, { recursive: true, force: true });
 console.log(`\npen removed: ${PEN}`);
 process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
 
-/* MEASURED — filled in from the first run below. */
+/* MEASURED 2026-09-22 by the REC-166 worker (`node test/current-shared-question.control.mjs` from `bio-plane/`,
+   worktree `.claude/worktrees/agent-ad40113081815cd8f`, pushed as `worktree-agent-a1707ddf948cd5c29` at ad8492d9). All five
+   anchors LIVE at the preflight; every label fragment present in the suite; every restore sha256 MATCH, content IDENTICAL
+   and cmp SAME — `store.mjs` 2,789,608 bytes (sha256 88e98613feda2d84…), far over the 1,000-byte floor.
+
+     baseline  18 pass, 0 fail    AS DECLARED
+     (a)       10 pass, 8 fail    AS DECLARED  the question's promotion restored: both pins, byte-identical, both flag
+                                               arms, both fence arms, the unpublished make-current
+     (b)       16 pass, 2 fail    AS DECLARED  the liar: the two receipt arms alone; every pin, flag and fence arm green
+     (c)       12 pass, 6 fail    AS DECLARED  the refused fix (b): the flag arms stay GREEN while pins and fences fail
+     (d)       18 pass, 0 fail    AS DECLARED  over-strictness: the project's sentence re-worded, green
+
+   EVERY ARM AS DECLARED ON THE FIRST RUN. Arm (c) is the one worth reading: `op=caseflags` reads clean over a plane that
+   still unpins the case, which is exactly why §7 refuses fix (b) and why the pin and fence arms sit beside the flag arm. */

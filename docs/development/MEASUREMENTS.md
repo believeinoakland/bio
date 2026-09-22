@@ -18408,3 +18408,33 @@ every read of what is live and `CLAUDE.md` §5's live verification are SUSPENDED
 admits them. A lone full gate costs what it cost on the Mac, about 18 minutes with the battery 16: the cloud neither speeds nor slows one. What it removes is two lanes' batteries on one CPU, which made DIST's 0.71.0 gate take ~2.5 hours; a CONDUCT's own workers still share its container. **Not measured here:** whether `CronCreate` survives a container's reclaim; whether a push to
 `main` is accepted until this landing's own push (NEW-MACHINE §0.1 records it); the weekly budget, which no tool here
 exposes.
+
+## M-100 · 2026-09-22 · REC-166 — a project's make-current no longer moves a pinned finding; and a SECOND project's `op=publish` still does
+
+**INSTRUMENTS:** worker spawned by CONDUCT #14 (cloud Claude Code, 4 cores shared with three other workers), branch
+`worktree-agent-a1707ddf948cd5c29` on `origin/main` @ `de40aa56`. Every act through the control plane of a Miniflare
+plane booted from `bio-plane/src/` (one admin member, a real ssh-keygen ratification). Suites run ALONE, output to files:
+`node test/case-edition-conclusion.test.mjs`, `current.test.mjs`, `versionstate.test.mjs`,
+`current-shared-question.test.mjs`; controls `node test/current-shared-question.control.mjs` and
+`node test/case-edition-conclusion.control.mjs`; the lead by a one-off probe (the new suite's fixture to its section 1,
+then the lead's acts), kept outside the repository.
+
+| what | measured |
+| --- | --- |
+| baseline, untouched plane (`de40aa56` + the claim) | `case-edition-conclusion` 36/0, `current` 63/0, `versionstate` 89/0 — the predecessor's figures on `3bbcb6e1`, re-measured equal |
+| after fix (a) | `case-edition-conclusion` **34/2**: exactly §9's two arms, which asserted the make-current MOVED the bytes; corrected with a dated reason → 36/0. `current` 63/0 and `versionstate` 89/0 unchanged |
+| the new suite | `current-shared-question` 18/0. Control: baseline 18/0 · (a) question's promotion restored **10/8** (both pin arms, byte-identical, both flag arms, both fence arms, the unpublished make-current) · (b) liar, no `Reason:` **16/2** (both receipt arms alone) · (c) refused fix (b) **12/6** (pins and fences fail, flag arms stay GREEN) · (d) project sentence re-worded **18/0**; every arm AS DECLARED, every restore sha256 MATCH / content IDENTICAL / cmp SAME at 2,789,608 B |
+| REC-157's control re-run | baseline 36/0 · (a) **20/16** (was 21/15: §9 now reached by the comparison arm (a) closes) · (b) 26/10 · (c) 33/3 · (d) 35/1 · (e) 33/3 · (f) 35/1; all AS DECLARED |
+| **THE LEAD** — A publishes and ratifies case X over Q; B (another project, citing Q) stands on the other reading, concludes, and `op=publish`es Q with `newCase: true` | B's publish **ok**, a new case, edition 1. **Immediately after that PREPARE, before any ratification:** Q is **no longer at case X's pin**, and `op=caseflags&case=X` holds **1 outstanding flag**, `projects_owing` = A — the other project's case, flagged by B's act. (Without `newCase`, B's publish is refused `CASE_BELONGS_TO_ANOTHER_PROJECT`, the case identity derived from X.) |
+
+**WHAT IT SAYS.** Fix (a) closes the make-current path: no project's stance moves a pinned finding's bytes, and no case is
+flagged by one. **The same class survives on the publication path, measured:** `publishCase()` stamps the case's fields into
+every member finding's own bytes (`case_id`, `case_project`, `case_roles`, … — IC-66's recorded remainder), so project B
+PREPARING a publication of a finding moves its `bundle_sha`, unpins project A's ratified case X and raises a revision flag A
+owes — one team's act silently moving another team's published pin, §7's forbidden shape. **Fix, named for routing:** the
+case facts leave the finding's bytes and are committed from the signed CASE document (the CASE-5b case-level ceremony that now
+exists), so `op=publish` does not promote a member finding and a finding's ratification signs bytes the publication did not
+move. It changes what a member signs, so it is routed to BOB before SCHEDULER. **Not measured here:** what B's own
+ratification then does (the probe's own fence check republished A's case in between, so B's ratify read `RATIFY_STALE`, an
+artifact of the probe, not a finding); whether the same stamp moves a finding pinned by the SAME project's other case; live,
+because the network refuses Cloudflare (UNDETERMINED).

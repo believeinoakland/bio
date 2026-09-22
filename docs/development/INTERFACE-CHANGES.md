@@ -12991,3 +12991,53 @@ the slug (when it was recorded, by which act, by whom), which Publication §7 po
 withheld it from the public answer (DESIGN GAP, to BOB #27 — RULED 2026-09-22 by BOB #27 at the code: only the slug is public
 and the builder's projection stands, Publication §7 point 1); and `newgroup/src/index.mjs`'s sentence that the op answers
 credentials only, with whether an update should now read the op (REC-163's DELEGATION to DIST).
+
+## IC-175 · I3: `op=versioncurrent&project=` WRITES ONLY THE PROJECT — the shared question is no longer rewritten or promoted by a make-current (its `bundle_sha`, `last_updated` and Session Log stay as they were); the project's own `| Stands on |` Session Log entry, written in the same promotion as the pointer, gains a `Reason:` line when the member gave one; the receipt is unchanged · PROPOSED 2026-09-22 (REC-166; MINTED 2026-09-22 by the CONDUCT #13 worker with `node tools/mintid.mjs IC` BEFORE building, on the old Mac's ledger, and REUSED by CONDUCT #14's cloud worker, which did not re-mint) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (branch `worktree-agent-a1707ddf948cd5c29`, base
+  `origin/main` @ `de40aa56`): 49.2.0, IC-174's resolution. Proposed MAJOR — 49.2.0 → 50.0.0. Read the base AT RESOLUTION**, by
+  this file's own rule.
+  **Why MAJOR, on IC-25's rule that a refusal where none stood before is breaking WHATEVER the measured impact:** the act's own
+  answer is byte-unchanged, but what FOLLOWS it changes. Before, a make-current on a finding a case pins moved the finding's
+  bytes, so the finding stopped being a pinned member: `op=versionreject` / `versionaccept` / `versionconsider` /
+  `versionrevert` on it were then admitted, and `op=publish` with an unchanged conclusion minted a new edition by the bytes
+  route. After, the finding stays pinned, so those acts are refused `PUBLISHED_CANNOT_MOVE_VERSION`, `op=inquirydivide` /
+  `op=inquiryground` stay fenced, and an unchanged republish is refused `ALREADY_A_CASE_MEMBER`. Each of those admissions was the
+  defect INVESTIGATIVE-SESSION §7 (BOB #25) rules out — a stance unpinning a case — but each is a refusal where none stood.
+  **The argument for MINOR, stated so CONDUCT can weigh it:** no consumer triggers any of these sequences (below), and the
+  admissions depended on a write §7 forbids, so no caller could rely on them in good faith.
+- **Proposer:** RECORD, REC-166 worker (CONDUCT #14's resume of CONDUCT #13's worker), 2026-09-22.
+- **Owner to land it:** `RECORD`
+- **Design:** `docs/development/INVESTIGATIVE-SESSION.md` §7, *"A PROJECT'S MAKE-CURRENT WRITES NOTHING ON THE SHARED
+  QUESTION"* (BOB #25, 2026-09-22), fix (a). Fix (b) is refused there and not built.
+- **Consumers to answer, MEASURED** (every tracked file under `civicos-ui/`, `agent-worker/`, `newgroup/src/`, `tools/`,
+  `pdf-worker/`, `ocr-worker/` and `docprofile/`, 225 files, grepped for `versioncurrent`, `Version current`, `Stands on`,
+  `Reason:` and `caseflags`, `newgroup/src/release.mjs` excluded as the embedded last CUT): **`Version current` 0 hits ·
+  `Stands on` 0 · `caseflags` 0 · `Reason:` 0 outside vendored bundles.** `UI` — NOT BROKEN: `civicos-ui/app.html`'s stance
+  surface (`stanceSend`) sends `versioncurrent` with `target`, `version`, `project` and NO reason, keeps the receipt (unchanged)
+  and re-reads `op=basisversions&project=` afterwards; nothing reads the question's Session Log line this removes. The UI's
+  own suites name the op in a fixture (`conclude-reading.test.mjs`) and a header comment (`notifications.test.mjs`) only.
+  `agent-worker` — NOT-AFFECTED (0 hits; a machine credential is refused the act, `MACHINE_CANNOT_MOVE_VERSION`, unchanged).
+  `tools/`, `pdf-worker`, `ocr-worker`, `docprofile` — 0 hits. `DIST` — `newgroup/src/release.mjs` embeds the last CUT plane,
+  NOT a consumer; it carries the old write until the next cut.
+
+**THE SHAPE.** `#moveVersionState(act="current", …)` runs every guard it ran before (the machine-identity refusal, the viewer
+gate, the reading located, `VERSION_REASON_MALFORMED`, `VERSION_NOT_ACCEPTED`, `VERSION_CURRENT_NO_PROJECT`,
+`VERSION_CURRENT_UNRELATED`, the joined-project authority) and its preview is unchanged; then, instead of rewriting and
+promoting the question and only after that the project, it calls `#setProjectCurrentVersion(projectRow, target, vname, who,
+when, why)` and returns the same receipt. That ONE promotion writes the pointer (`current_versions[]`, unchanged), the
+project's `last_updated` and its `### Session <when> | Stands on | <who>` entry with `Trigger:` and `Changes:` as before plus,
+when a reason was given, `Reason: <why>`. The question's Session Log `Changes:` expression lost its `current` branch (only
+`hide` has no state move now). Accept, reject, consider, revert and hide are byte-for-byte the same path as before.
+
+**THE WIRE.** `op=versioncurrent`'s receipt keys and values are unchanged (`ok, act, target, version, from, to, moves_state,
+hidden, reason, author, at, weight, affirmed, project`). What moves is the RECORD: the question's `bundle_sha`,
+`last_updated`, Session Log and revision count no longer move on a make-current; `op=caseflags` no longer gains a flag for any
+case pinning the question from one; the project's revision carries the reason. **No I5 IC:** no table, no column.
+
+**MEASURED** (`bio-plane/test/current-shared-question.test.mjs`, 18/0; its control, four arms and a baseline, all AS
+DECLARED — restoring the question's promotion 10/8, the liar 16/2, the refused fix (b) 12/6, over-strictness 18/0;
+`case-edition-conclusion.test.mjs` §9 CORRECTED with a dated reason, 36/0, its six-arm control re-run all AS DECLARED with
+arm (a) at 20/16, one more than REC-157's 21/15 because §9 is now reached by the comparison arm (a) closes). **The class
+sweep's LEAD, measured through the ops and ROUTED, not changed here:** a SECOND project's `op=publish` of a finding another
+project's case pins moves that finding's bytes — see `MEASUREMENTS.md` M-100.

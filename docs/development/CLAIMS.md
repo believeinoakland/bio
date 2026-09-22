@@ -18880,6 +18880,13 @@ session: WORKER spawned by CONDUCT #13 (wave 1), worktree `.claude/worktrees/age
 `worktree-agent-a1707ddf948cd5c29`, base `origin/main` @ `3bbcb6e1` (the row read `running` there), Sparky-Air. `npm ci` in
 `bio-plane/`, `pdf-worker/` and `ocr-worker/`, each exit 0 read unpiped and each `node_modules` a REAL DIRECTORY (30 / 25 / 26
 entries); `df -h` 7.2 GiB free before the installs, 4.9 GiB after.
+session (RESUMED 2026-09-22): WORKER spawned by CONDUCT #14 in cloud Claude Code (4 cores shared with three workers),
+worktree `.claude/worktrees/agent-ad40113081815cd8f`, cut from `origin/main` @ `de40aa56` (the row read `running` there with
+CONDUCT #14's RESUMED sentence), this branch merged in (`cd046a8e`, CLAIMS.md both sides kept, `git grep -c "^<<<<<<<"` empty)
+and pushed back under `worktree-agent-a1707ddf948cd5c29` as a fast-forward. `npm ci` exit 0 in all three directories, each
+`node_modules` a REAL DIRECTORY (27 / 23 / 24 entries); `df -h` 27 GiB free before, 26 GiB after. IC-175 REUSED, not re-minted.
+Suites this landing made wrong, named by running them: `case-edition-conclusion.test.mjs` §9 (34/2 → corrected, 36/0) and its
+control's §9 label and arm (a)'s declaration — both already in scope below; `current` and `versionstate` unmoved.
 authority: `QUEUE.md` `### REC-166 · running` (CONDUCT #13); design `docs/development/INVESTIGATIVE-SESSION.md` §7, the ruling
 "A PROJECT'S MAKE-CURRENT WRITES NOTHING ON THE SHARED QUESTION" (BOB #25, 2026-09-22), fix (a); fix (b) is refused there and is
 not built. IC-175 minted with `node tools/mintid.mjs IC` BEFORE building. Claimed BY SITE:

@@ -327,4 +327,17 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
    through today's ops, since the writer always writes the row, so no arm breaks that half
    and `publish.test.mjs`'s "the store agrees" arm (a no-project, post-REC-135 edition) is
    the nearest behavioural cover; and no arm touches `op=reopen`, which this item does not
-   change. */
+   change.
+
+   RE-RUN 2026-09-22 by the REC-166 worker (worktree `.claude/worktrees/agent-ad40113081815cd8f`, pushed as
+   `worktree-agent-a1707ddf948cd5c29`), after REC-166 made a make-current write only the project and §9 was CORRECTED to
+   the conclusion route. `store.mjs` 2,789,608 bytes (sha256 88e98613feda2d84…), `affordances.mjs` 148,243 bytes; every
+   restore MATCH / IDENTICAL / SAME; all anchors live:
+
+     baseline  36 pass, 0 fail    AS DECLARED
+     (a)       20 pass, 16 fail   AS DECLARED  §9's route arm now among the failures (declared MUST FAIL)
+     (b)       26 pass, 10 fail   AS DECLARED
+     (c)       33 pass, 3 fail    AS DECLARED
+     (d)       35 pass, 1 fail    AS DECLARED
+     (e)       33 pass, 3 fail    AS DECLARED
+     (f)       35 pass, 1 fail    AS DECLARED  */
