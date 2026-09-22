@@ -579,7 +579,7 @@ authority is the file named, never this one.
 - **D-260** — RULED by BOB #22 (SCHEDULER #5's Q3): an instance may hold ONE organisation-principal `ai` credential and resumes ONLY the runs it opened. — owner RECORD with FLEET, then DIST.  
   `docs/development/BACKLOG.md:626`
 - **D-260** · 2026-09-21 — D-260 is RULED** (BOB #22, 2026-09-21; the assistant's §6, `QUEUE.md`'s BOB INBOX entry): its item 2 is DIST's, AFTER item 1 (the plane's caller, RECORD with FLEET) — install and update carry ONE organisation-principal `ai` credential as a deploy secret the way `DAEMON_TOKEN` is carried, never in the record,…  
-  `docs/development/kickoffs/DIST-NEXT.md:46`
+  `docs/development/kickoffs/DIST-NEXT.md:57`
 - **D-263** · 2026-08-09 — D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED** item: D-263 (existing row, raised by M0-20).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7347`
 - **D-263** — DECLARATION IS CORRECTED, and it is D-263's arm and not mine.** Re-running the harness found it declaring A5 to FAIL when A5 now stays GREEN: the corpus grew 146 -> 198 and A5's `readable > 100` floor stopped biting.  
@@ -2662,7 +2662,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-21** — — RELEASES, NOT WITHDRAWN. ## What is LIVE (measured 2026-09-21 ~20:21Z, deployments API at 100%)  
   `docs/development/kickoffs/DIST-NEXT.md:18`
 - `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only. ## UNDETERMINED, held open — do not let a neighbouring green line convert it  
-  `docs/development/kickoffs/DIST-NEXT.md:52`
+  `docs/development/kickoffs/DIST-NEXT.md:63`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  

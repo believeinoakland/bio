@@ -17526,3 +17526,16 @@ not-scheduled list); `docs/development/kickoffs/CONTENT-HTML.md` and `docs/devel
 sentences this design supersedes, corrected in the same landing: the licensed exception); `docs/DECIDED.md`
 (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT kept true: D-436 landed, judged BATCH, its seed ORDER recorded; the refresh line is 70%)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (owed item 1 and the session-state context line only), `docs/DECIDED.md`
+  (GENERATED, regenerated LAST), and this block.
+why: DIST-NEXT said nothing was owed; CONDUCT #11 landed D-436 (merge `38850da4`, pushed `86523052`), so it was false.
+  Judged at the code: a BATCH, not a CUT NOW — the released plane writes the LITERAL `believe-in-oakland` into every
+  instance's signed bytes (23 occurrences in v0.70.0's `store.mjs`), a record-integrity defect nobody could exploit to read
+  or do. The release needs an IRREVERSIBLE, order-sensitive step (the write-once `op=instancegroupseed` on biosmoke7's two
+  stores, after the deploy and before verification — the D-436 DELEGATION's item 3), so the handoff carries it now rather
+  than only the wake. The refresh line moves 60% -> 70% with CLAUDE.md §4 as landed. Bound: one-shot wake `2dd2743d`.
+**released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
