@@ -18999,3 +18999,7 @@ paths, BY SITE:
 edited, so no bundle rebuild is owed.
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+**released: 2026-09-22 by the M0-117 worker** — built, gated GREEN (class TARGETED) on tree `21fb148f` (109/109 suites,
+7,429 assertions, 0 skipped) and pushed on `worktree-agent-a7c6ab7d2c6d998af` at `38ca894c`; the paths stay reserved
+until CONDUCT integrates.
