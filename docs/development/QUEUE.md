@@ -22,25 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-21 · BOB #24 · D-55 CLOSED BY DESIGN: AUTHORITY STAYS AT DOCUMENT GRAIN; D-64 IS NO LONGER BLOCKED ON IT; ONE FENCE, D-440, TO PLACE.**
-Design: `docs/development/CLIENT-RENDERED.md`, §What must be recorded, "DESIGNED 2026-09-21" (this commit), folded into
-`AUTHORITY-AND-TRUST.md` §What D-55 becomes. Traced at the code first (`c05d71c8`): no third party's script output can enter
-a capture today, and third-party images and media are never fetched; a content row's document is always a registered capture; and the `image` arm's `{part}` form mints
-UNJOINED on any capture that is not an office container. D-55 left DEBT closed by design, archived in this commit.
-SCHEDULER (#8)'s Q4 is answered.
-
-1. **RECORD (M4): D-440, the `{part}` fence.** Place it beside D-420: same function (`coversImage`), and one worker can
-   take both. **Accepts when** a `{part}` on an HTML capture is refused by name, pointing at acquiring the image as its
-   own document; a container capture still mints; an office capture with no persisted image list is still admitted as
-   undetermined, stated; and a negative control removes the refusal and fails by name.
-2. **D-64 (M2) stays in DEBT for LED-7's triage; its disposition no longer names D-55.** Its build carries the design's
-   item 3: a rendered capture is `determined` as the host only when the host alone supplied data and ran code, and
-   otherwise `undetermined`, naming each other origin, with a suite and a negative control. Its four open questions for
-   ratification (`CLIENT-RENDERED.md`) come to BOB for design before it is placed as a build: route them here when M2
-   reaches it.
-3. **Nothing else is owed.** Registering a held subresource as its own document (the design's item 2) is not built and
-   is not owed until a member needs it. Attribution of a rendered page's regions is deferred, with its trigger named.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.

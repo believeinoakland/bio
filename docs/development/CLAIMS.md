@@ -17601,6 +17601,14 @@ public setup page and public header show a neutral label, and signed-in surfaces
 public read may carry it and whether a group records a display name. M0-69, M0-76, M0-75 and D-40 cut to their fields at the foot (`QUEUE-cut-2026-09-21.md`). 145 open DEBT
 rows remain.
 
+**AMENDED 2026-09-21, same session (commit 4): BOB #24's entry DRAINED and LED-7 batch S9-1** — D-440 PLACED after D-57
+with the claims the record cannot support, and D-420 directly after it (the same function, `coversImage`; one worker
+for both), each verified at the code; both left DEBT by the second door. D-19 CLOSED IN FACT (D-17's stamp from the
+revision's own time is on the tree, and its residue is pre-MVP records, test data by Bob's ruling in State Rules §3.1).
+D-207 SUPERSEDED by the same ruling and archived. D-36, D-56, D-66 and D-69 SENT to BOB as the DELEGATION SCHEDULER
+(#9) -> BOB below, with the group's public identity (REC-163, UI-77). M0-91, M0-90, M0-74, M0-72, M0-68 and M0-77 cut
+to their fields at the foot. 142 open DEBT rows remain.
+
 ## CLAIM 2026-09-21 DIST (DIST #3 — D-436 item 3's route DECIDED: the update path tells an operator, and never seeds)
 
 session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
@@ -17612,3 +17620,33 @@ why: the D-436 DELEGATION leaves "how the installer's update path tells them" to
   that their own `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion, and NEVER seeds.
   It is built with 0.71.0, accepted by the wizard suite (telling present when unseeded, absent when seeded, no seed call).
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## DELEGATION 2026-09-21 SCHEDULER (#9) -> BOB — **FOUR QUESTIONS, ONE EACH: two measured limits homed in no governed design (D-36, D-56), CONSTRUCTS' unscheduled plan steps with D-66's last named type (D-69), and the group's public identity (REC-163, UI-77); none blocks a runnable row**
+
+1. **D-36 — THE workerd SQL CEILINGS ARE MEASURED AND GUARDED; ONE IS STATED STALE AND ONE IS STATED NOWHERE.**
+   `CONTENT-SEARCH-DESIGN.md` states the five-term compound ceiling (`MAX_COMPOUND = 4`, "Compound budget"), while
+   `RETRIEVAL-SUBSTRATE.md`'s front matter (§Actuals) still says that ceiling *"is recorded only in the source"*; the
+   ~100-bound-variable ceiling is in no governed design (only `INTERFACE-CHANGES.md` and code comments).
+   `npm run probe:limits` re-measures both; D-390 carries the one live unchunked site. **The question:** fold both
+   ceilings and the probe into `RETRIEVAL-SUBSTRATE.md`'s front matter (or a home you name) as a stated substrate
+   limitation, so D-36 leaves DEBT by the third door?
+2. **D-56 — THE CPU WATCH IS MEASURED, AND ITS HOME STILL SAYS NOBODY LOOKED.** `CLIENT-RENDERED.md` says *"nobody has
+   looked"*, stale since the 2026-07-29 `op=cpuprobe` measurement (40,000,000 reference iterations, then a 1102 at step
+   21 on Workers Free, 0.44.0) and its finding that a Worker cannot time itself (`src/cpu.mjs`). The row asks nothing of
+   any session. **The question:** fold the measurement and the watch (an unexplained 1102 read as a CPU overrun first)
+   into `CLIENT-RENDERED.md` or `BIO_Distribution_v0_1.md` §6, so D-56 leaves by the third door?
+3. **D-69, WITH D-66 — CONSTRUCTS' UNSCHEDULED STEPS.** Its front matter says steps 5, 5a, 6, 8, 8a, 8b and 9 are
+   unscheduled as of 2026-07-31. At the code: Step 1, D-69's named cheapest act, is BUILT (`profileRecord` at acquire);
+   Step 5's progression table is BUILT (construct 6); Step 5a is D-74 and Step 6 is D-65, both verified real at the code and placed by LED-7 as the backlog's budget allows; Steps
+   8–8b are Framework §12's intent layer (D-75, D-76, D-79, D-81, D-82, open); Step 9 is more content types, and of Bob's
+   named types (D-66) all but *"a budget or dataset"* are built or placed (FW-20), which is in no candidate list of
+   `EXTRACTION-BREADTH-DESIGN.md` §2. **The question:** may D-69 close in fact once CONSTRUCTS' front matter says which
+   steps are built, placed or superseded, and is the budget-or-dataset type owed (a measured row) or dropped (stated in
+   §2)?
+4. **THE GROUP'S PUBLIC IDENTITY (REC-163, UI-77).** D-436 records only the slug, and `op=instancegroup` admits no public
+   class, so the placed fix shows the slug on member surfaces and a neutral label on the public header and setup page,
+   where every instance named *Believe in Oakland*. **The question:** may the slug be read publicly (it already travels
+   in every published bundle's signed `group`), and should a group record a display name and domain, and by whose act?
+
+**open as of 2026-09-21** — sent to BOB by message; D-36, D-56, D-66 and D-69 each carry a dated SENT note in `DEBT.md`,
+and Q4 rests on REC-163 and UI-77, whose rows name it.

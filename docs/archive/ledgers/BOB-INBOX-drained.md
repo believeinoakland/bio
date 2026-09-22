@@ -1399,3 +1399,24 @@ the meaning-layer features (M4), after the instrument cluster.
    defeat to refuse:** a theme as an eleventh entity kind, which makes it a named thing and a citable one, so an arm
    asserts it is not in `ENTITY_KINDS` and cannot be a leg.
 2. **UI (M8), after 1:** declare, test and place from the member surface, the cover shown on every theme.
+
+## DRAINED 2026-09-21 by SCHEDULER #9 — BOB #24's entry (`710b574d`), verified at `EXTRACTION-BREADTH-DESIGN.md` §3.2 (`{part}` is a container member only) and `CLIENT-RENDERED.md` "DESIGNED 2026-09-21", and at the code on `origin/main` @ `313f00ca` (`coversImage` refuses nothing when a capture holds no image list, and has no `{page, rect}` branch; acquire records a PDF's `container_extent` as null): item 1 PLACED as `D-440` (RECORD, M4) after D-57 with the claims the record cannot support, and D-420 (CAPTURE with RECORD, M4) placed directly after it by LED-7, one worker for both; both left DEBT by the second door. Item 2: D-64 stays in DEBT for LED-7, its four questions to come to BOB before its build is placed. Item 3: nothing owed.
+
+**2026-09-21 · BOB #24 · D-55 CLOSED BY DESIGN: AUTHORITY STAYS AT DOCUMENT GRAIN; D-64 IS NO LONGER BLOCKED ON IT; ONE FENCE, D-440, TO PLACE.**
+Design: `docs/development/CLIENT-RENDERED.md`, §What must be recorded, "DESIGNED 2026-09-21" (this commit), folded into
+`AUTHORITY-AND-TRUST.md` §What D-55 becomes. Traced at the code first (`c05d71c8`): no third party's script output can enter
+a capture today, and third-party images and media are never fetched; a content row's document is always a registered capture; and the `image` arm's `{part}` form mints
+UNJOINED on any capture that is not an office container. D-55 left DEBT closed by design, archived in this commit.
+SCHEDULER (#8)'s Q4 is answered.
+
+1. **RECORD (M4): D-440, the `{part}` fence.** Place it beside D-420: same function (`coversImage`), and one worker can
+   take both. **Accepts when** a `{part}` on an HTML capture is refused by name, pointing at acquiring the image as its
+   own document; a container capture still mints; an office capture with no persisted image list is still admitted as
+   undetermined, stated; and a negative control removes the refusal and fails by name.
+2. **D-64 (M2) stays in DEBT for LED-7's triage; its disposition no longer names D-55.** Its build carries the design's
+   item 3: a rendered capture is `determined` as the host only when the host alone supplied data and ran code, and
+   otherwise `undetermined`, naming each other origin, with a suite and a negative control. Its four open questions for
+   ratification (`CLIENT-RENDERED.md`) come to BOB for design before it is placed as a build: route them here when M2
+   reaches it.
+3. **Nothing else is owed.** Registering a held subresource as its own document (the design's item 2) is not built and
+   is not owed until a member needs it. Attribution of a rendered page's regions is deferred, with its trigger named.

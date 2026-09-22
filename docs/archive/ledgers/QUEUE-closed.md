@@ -2836,3 +2836,13 @@ depends-on: none.
 scope: the slug becomes ONE value in the Durable Object's durable state, written once at the instance's first bootstrap from the slug the installer holds; every default and every stamp reads it; a bundle's `group` is never a literal. **Never a deploy-time var:** it appears in signed bytes, so a redeploy must not be able to change it silently.
 accepts-when: an install under a second slug writes no `believe-in-oakland` into any bundle it writes. How a liar passes it: a value re-read from a deploy var, so the arm changes the var and asserts the value did not move. NEGATIVE CONTROL: restore one literal, and the arm fails by name.
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
+
+### D-207 · superseded — **SUPERSEDED 2026-09-21 by Bob's ruling of that day, applied by SCHEDULER #9 (LED-7 batch S9-1): every record made before the MVP release is test data and is not carried into a real release (`BIO_State_Rules_Consistency_v1_5.md` §3.1), so a sweep of the pre-REC-55 Session Log entries measures nothing a real record will hold, and the doctrine it could raise (may an append-only record be annotated?) has no subject. REC-55 fixed the drift forward and is on every serving build.** — **A SESSION LOG ENTRY THAT `op=cite` WROTE OVER A SELECTION THAT SWAPPED AT A CONSTANT COUNT, BEFORE REC-55, IS SILENT ABOUT THE** … (whole text: the cut archive)
+order: with the live verifications, after VF-7: a READ that bounds a possible over-claim in the record; the population is fixed — REC-55 is on every serving build — so waiting does not grow it (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
+milestone: M0
+interface: none — read ops only
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with … (whole text: the cut archive)
+depends-on: none.
+accepts-when: the sweep reports its population and each verdict with the counters unchanged; a drifted entry goes to BOB as doctrine (may an append-only record be annotated?) and nothing is … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
+cut: cut to its fields (SCHEDULER #8, 2026-09-21) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-207» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.

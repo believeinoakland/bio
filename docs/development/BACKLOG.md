@@ -170,6 +170,26 @@ scope: the row's fix — `resolveLinks` recognises a pick whose `capture_sha` is
 accepts-when: a self-linking page's self-link reads the self-reference basis, with no *changed* sentence and no doubled hash; a genuine two-capture bracket still reads *changed*. How a liar passes it: dropping the self-link from the answer, so the arm asserts it is still listed and counted. NEGATIVE CONTROL: remove the self-reference test, and the self-link arm fails by name at the *changed* sentence.
 added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-2; D-57's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 
+### D-440 · queued — **THE `image` ARM'S `{part}` FORM MINTS ON ANY CAPTURE THAT IS NOT AN OFFICE CONTAINER, NAMING BYTES THE DOCUMENT DOES NOT HOLD.** `coversImage` (`checks/bio-checks.mjs`) admits a `{part}` whenever the capture holds no image list, which is every HTML, PDF, text and data capture, and `mintContent` writes the row stating nothing (traced by BOB #24; re-read at the code 2026-09-21). — owner RECORD.
+order: with the claims the record cannot support, after D-57 and above D-390: a content row naming bytes its document does not hold, minted silently, CLAUDE.md §2's class; D-420 directly after it, the same function (BOB #24: *"one worker can take both"*) (SCHEDULER #9, 2026-09-21)
+milestone: M4
+interface: I3 — a new refusal on the image arm; the integrator mints and classifies the IC.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 (*"`{part}` is a member of a CONTAINER's own bytes, and nothing else"*, which names this fence) and §3.4, with `docs/development/CLIENT-RENDERED.md` "DESIGNED 2026-09-21" (an image served beside a page is its own document).
+depends-on: none.
+scope: the row's named fix: `contentContextFor` tells the checker whether the capture is an office container, from its content type; the image arm refuses a `{part}` on any other capture BY NAME, saying an image served beside a page is its own document to acquire and cite whole; an office capture with no persisted image list keeps its undetermined admission, stated.
+accepts-when: a `{part}` on an HTML capture is refused by name, pointing at acquiring the image; a container capture still mints; an office capture with no persisted list is admitted as undetermined, stated. How a liar passes it: refusing every `{part}`, so the container arm must mint. NEGATIVE CONTROL: remove the refusal, and the HTML arm fails by name.
+added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, drained this commit; D-440's DEBT row; keeps its `D-` id).
+
+### D-420 · queued — **AN `image {page, rect}` ROW IS BOUNDED BY THE PAGE SET AND NOT BY WHAT THE PAGE PAINTS.** A rectangle where a PDF page paints no image mints as an `image` row: acquire persists no image list for a PDF (its `container_extent` is null, `index.mjs`), and `coversImage` has no `{page, rect}` branch; only the crop refuses it, `NO_IMAGE_AT_RECT` (`pdf-worker/src/imagecrop.mjs`) (re-read at the code 2026-09-21). — owner CAPTURE, with RECORD.
+order: directly after D-440, the same function and one worker for both (BOB #24): a KIND overclaim the crop already catches, so below D-440's silent mint (SCHEDULER #9, 2026-09-21, LED-7 batch S9-1)
+milestone: M4
+interface: I1 (a PDF reading's container extent gains its images) and I3 (a new refusal); the integrator mints and classifies the ICs.
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 (the `image` reference's `{page, rect}` form; `covers` refuses from the container's own extent, by name) and §3.3 item 2 (a PDF's image objects and their painted rectangles, CPDF-18).
+depends-on: none — CPDF-18's `structure().images` is built.
+scope: the row's named fix: acquire persists `structure().images` as `container_extent.images` for a PDF (absent for a capture acquired before, stated as CAP-12 states an empty level), and `coversImage` gains the page-form branch: refuse a rect that no persisted placement equals, and ADMIT when the list is absent.
+accepts-when: a rect where the page paints no image is refused by name at the mint; a rect equal to a persisted placement mints; a PDF acquired before the change is admitted with its absence stated. How a liar passes it: a tolerance so wide any rect matches, so the no-image arm uses a rect far from every placement. NEGATIVE CONTROL: drop the page-form branch, and the no-image arm fails by name.
+added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry; LED-7 batch S9-1; D-420's DEBT row of 2026-09-18; keeps its `D-` id).
+
 ### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE CEILING — AGAINST D-36's MEASURED workerd CEILING OF ABOUT 100.** The `subject IN (${marks})` inside `__REC91_AXIS_LIST__` (`store.mjs`) is built from `pageCut`; REC-109 held it at `cap` rather than doubling it. It has never fired because no fixture or instance has held ~100 captures with a content-level row, and every other guarded site chunks at 64. — owner RECORD.
 order: after D-57: a read that must say WHICH absence is true fails outright on the first instance past ~100 content captures; below D-389, REC-160 and D-57 because it fails LOUDLY rather than claiming what the record cannot support (SCHEDULER #8, 2026-09-21, LED-7 S8-1 and S8-2)
 milestone: M3
@@ -740,65 +760,65 @@ scope: a catalog check over a handed corpus naming every pair of projects whose 
 accepts-when: a fixture corpus with two projects differing only in case and spacing is reported by name; distinct names pass; a deactivated collider is still reported. How a liar passes it: a second normaliser that agrees on the fixture, so the check imports `projectNameKey`. NEGATIVE CONTROL: compare raw titles instead of the key, and the case-and-spacing arm fails by name.
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
 
-### M0-77 · queued — **`tools/mintid.mjs`' MAIN-GUARD COMPARES `resolve(process.argv[1])` WITH `import.meta.url`, WHICH NODE REALPATHS — so `mintid` invoked through a SYMLINKED path (macOS's temp dir is one) silently runs NOTHING and EXITS 0: a costs-nothing green in the id allocator every lane uses.** Found by M0-73's worker, routed by CONDUCT #6, 2026-09-19; fix named. A CLASS: SCHEDULER measured 25 `.mjs` files that read both `process.argv[1]` and `import.meta.url` (a candidate list, not a verdict — some may already realpath). — owner M0.
+### M0-77 · queued — **`tools/mintid.mjs`' MAIN-GUARD COMPARES `resolve(process.argv[1])` WITH `import.meta.url`, WHICH NODE REALPATHS — so `mintid`** … (whole text: the cut archive)
 order: first of the queued M0 rows: a silent exit 0 in the id allocator every lane uses is a costs-nothing green (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — tools' entry guards
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): *verify by the positive artifact, never the absence of an error*; an exit 0 that ran nothing is the class it names.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): *verify by the positive artifact, never … (whole text: the cut archive)
 depends-on: none.
-scope: `mintid.mjs` compares `realpathSync(process.argv[1])` with `fileURLToPath(import.meta.url)`; SWEEP the class (`git grep -l 'process.argv\[1\]' -- '*.mjs' | xargs grep -l import.meta.url`), fixing each guard of the same shape and listing every file judged with its verdict. `newgroup/**` is out of bounds: any hit there is reported to DIST, not edited.
-accepts-when: `mintid` run through a symlinked path prints its MINTED line and exits 0, and one run through a path that is not the script exits non-zero or prints nothing BY DESIGN, stated; every swept file's verdict is in the landing; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: a guard removed entirely (always runs), which breaks importing the module — so an arm IMPORTS each fixed tool and asserts its main did not run. NEGATIVE CONTROL: restore `resolve()` in `mintid`, and the symlinked-path arm fails by name.
+accepts-when: `mintid` run through a symlinked path prints its MINTED line and exits 0, and one run through a path that is not the script exits non-zero or prints nothing BY DESIGN, stated … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (M0-73's worker's finding via CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-77» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### M0-68 · queued — **`bio-plane/test/vf4-live-scratch.mjs` ARM 4b-ii STILL ASSERTS D-323's REFUSAL, and D-323 is CLOSED: against any current plane it fails 4 assertions for the fix working, not for a regression.** Measured by FLEET on biosmoke7 at 0.58.0 with the VF-4 live-scratch instrument, 2026-09-19, routed by CONDUCT #5. A superseded test is CORRECTED, never exempted. — owner M0 (the test estate).
+### M0-68 · queued — **`bio-plane/test/vf4-live-scratch.mjs` ARM 4b-ii STILL ASSERTS D-323's REFUSAL, and D-323 is CLOSED: against any current plane** … (whole text: the cut archive)
 order: M0, right after the battery tally: an instrument asserting a closed defect fails against every current plane — a correction to a superseded test (SCHEDULER, 2026-09-18)
 milestone: M0 (background lane, holds no slot)
 interface: none — a live-scratch instrument's arm; no plane source moves
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with the file's own DATED NOTE of 2026-09-13 (D-323), which names the two choices: RE-PIN arm 4b-ii to `level-empty-<reporting level>` and say so, dated, in the note; or RETIRE it to `agent-worker/test/wire-vocabulary.test.mjs`, whose W8 block already drives the same question locally.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with the file's own DATED NOTE of … (whole text: the cut archive)
 depends-on: none (D-323 done).
-scope: make the choice the note hands "whoever re-runs this", state why at the site, and keep MEASUREMENTS.md M-8's figures exactly as measured at 0.57.0 (the arm's history is a measurement of record). If re-pinned, the over-strictness arm moves with it.
-accepts-when: arm 4b-ii passes against the current plane with the new spelling asserted and NO refusal, or is retired with W8 named as its successor; the dated note records which, and why; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: deleting the four assertions, so the row requires the NEW spelling to be ASSERTED (or W8 named) rather than the old one removed. NEGATIVE CONTROL: restore the colon spelling in `emptyLevelCandidates` on a scratch tree, and the re-pinned arm (or W8) fails naming it.
+accepts-when: arm 4b-ii passes against the current plane with the new spelling asserted and NO refusal, or is retired with W8 named as its successor; the dated note records which, and why … (whole text: the cut archive)
 added: 2026-09-18 · SCHEDULER (FLEET's measurement of 2026-09-19, routed by CONDUCT #5; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-68» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### M0-72 · queued — **`mergecarry.control.mjs` ARM 5 REPORTS A FALSE FAIL: its declared mustFail name "the register is the three the sweep found" no longer exists — `mergecarry.test.mjs` renamed the assertion to "…the register is the FIVE the sweeps found, not a longer list" when KNOWN_HISTORICAL_DROPS grew.** The arm ARMS and the suite goes red correctly; only the name is stale. Measured by BOB #16 on 2026-09-19. — owner M0.
+### M0-72 · queued — **`mergecarry.control.mjs` ARM 5 REPORTS A FALSE FAIL: its declared mustFail name "the register is the three the sweep found" no** … (whole text: the cut archive)
 order: M0; a negative control reporting a false FAIL, with M0-68's class of test corrections (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — a control driver
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name).
 depends-on: none.
-scope: update arm 5's mustFail entry (`bio-plane/test/mergecarry.control.mjs`, near its line 168) to the current assertion name, with a dated reason; re-run the control.
-accepts-when: `node bio-plane/test/mergecarry.control.mjs` reads all 7 arms AS DECLARED; the control leaves the tree byte-identical; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: a mustFail name loosened to a substring that matches any assertion, so the name must be the full current one.
+accepts-when: `node bio-plane/test/mergecarry.control.mjs` reads all 7 arms AS DECLARED; the control leaves the tree byte-identical; `node tools/plancheck.mjs --local` then BARE. How a liar … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (BOB #16's message; the fix was named).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-72» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### M0-74 · queued — **`bio-plane/test/curated-producer.probe.mjs` FAILS 9/1 ON `main`: it reads the severance check from `#restsOnLive`'s definition, and D-267 moved that check into `#refEdgeSevered`.** The probe is not in the battery, which is why `main` stays green. Measured by CONDUCT #6 and re-measured by SCHEDULER, 2026-09-19 (`curated-producer sweep: 9 pass, 1 fail`). — owner M0.
+### M0-74 · queued — **`bio-plane/test/curated-producer.probe.mjs` FAILS 9/1 ON `main`: it reads the severance check from `#restsOnLive`'s** … (whole text: the cut archive)
 order: M0; a probe failing on main for a moved check, with the other instrument corrections (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — a probe's source read
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-267 (`node tools/ledger.mjs find D-267`), which moved the check.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-267 (`node tools/ledger.mjs` … (whole text: the cut archive)
 depends-on: none.
-scope: point the probe's source read (its `src.indexOf("  #restsOnLive(id) {")` near line 273) at `#refEdgeSevered`'s definition, with a dated comment saying why the old read was right when written; take the DEFINITION, never the first mention, as the existing comment requires.
-accepts-when: `node bio-plane/test/curated-producer.probe.mjs` from `bio-plane/` reads 10 pass, 0 fail; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: widening the read to any mention of either name, so the read must anchor on the definition line. NEGATIVE CONTROL: rename `#refEdgeSevered` on a scratch copy, and the probe fails by name.
+accepts-when: `node bio-plane/test/curated-producer.probe.mjs` from `bio-plane/` reads 10 pass, 0 fail; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: widening the read … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (CONDUCT #6's report; fix named; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### M0-90 · queued — **MK-1's PUBLISH PROBE CANNOT DRIVE ITS PATH 3, the `op=caseratify` route C-53.12 fences.** Its fixture concludes without naming a reading's claim, so `op=conclude` refuses `NO_CLAIM` (REC-124/REC-136, §7.1), `op=publish` then refuses `NOT_CONCLUDED`, and the path never runs. MK-3's worker made it print DEAD rather than clean (`bio-plane/test/mk1-publish-probe.mjs`); the route stays unmeasured by the instrument built to measure it. C-53.12 itself is asserted in the battery (`testify.test.mjs`, `testimonyaxis.test.mjs`). — owner M0.
+### M0-90 · queued — **MK-1's PUBLISH PROBE CANNOT DRIVE ITS PATH 3, the `op=caseratify` route C-53.12 fences.** Its fixture concludes without naming … (whole text: the cut archive)
 order: with M0-74, the probe corrections: a probe path that cannot run, now stated rather than hidden; the measurement a lifted fence will need (SCHEDULER #4, 2026-09-21; MK-3's report, CONDUCT-NEXT §4)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §Incomplete, which MK-3 confirmed at the artifact.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with … (whole text: the cut archive)
 depends-on: none.
-scope: the fixture adopts a named reading's claim at `op=conclude`, so PATH 3 drives `op=publish` then `op=caseratify` and reads the fence's answer.
-accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that never reached ratify, so the DEAD detector stays. NEGATIVE CONTROL: drop the claim, and PATH 3 prints DEAD by name.
+accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` refuses a present `content_id` that is not a string (REC-84, `47ec7cbd`): the case where an unquoted all-digit id parses as an integer and the leg would silently become a whole-document citation. The two suites that reach the refusal feed a malformed STRING (`"not-an-id"`), never a number. — owner M0.
+### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` … (whole text: the cut archive)
 order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite can watch it fail; read with D-362 (`node tools/ledger.mjs find D-362`).
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite … (whole text: the cut archive)
 depends-on: none.
-scope: one arm that drives an unquoted all-digit `content_id` THROUGH THE FRONTMATTER PARSE into C-2.8 and asserts the refusal by name — D-362's measured path: `parseScalar` coerces `/^-?\d+$/` to a number before anything reads it. Suites: `content-extent-leg.test.mjs` or `cite-extent.test.mjs`, the worker's choice, stated.
-accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a number, so the arm starts from `bundle.md` text. NEGATIVE CONTROL: treat a non-string `content_id` as absent again, and the arm fails by name.
+accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-91» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### D-40 · queued — **AN INFORMATION FIXTURE STILL WRITES `criticality: "notable"`, WHICH C-2.7 REFUSES, THOUGH ITS ROW SAID IT WAS FIXED.** … (whole text: the cut archive)
 order: with the probe corrections, after M0-91: a fixture non-conformant for a reason unrelated to what it measures, and a template a later session can copy; no suite is wrong today (SCHEDULER #7, 2026-09-21, LED-7)
@@ -856,16 +876,6 @@ design: `docs/development/SCHEDULER.md` §"The mechanism, and how the next consu
 depends-on: **the next plane deploy through `deploy.mjs`** (DIST's next cut — D-297's release is the likely carrier)
 accepts-when: (on the deploy landing) both first activations measured and recorded with the serving build named; the first armed tick attributed to the scoped class; `op=audit` clean after … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «VF-7» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### D-207 · queued — **A SESSION LOG ENTRY THAT `op=cite` WROTE OVER A SELECTION THAT SWAPPED AT A CONSTANT COUNT, BEFORE REC-55, IS SILENT ABOUT THE** … (whole text: the cut archive)
-order: with the live verifications, after VF-7: a READ that bounds a possible over-claim in the record; the population is fixed — REC-55 is on every serving build — so waiting does not grow it (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
-milestone: M0
-interface: none — read ops only
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with … (whole text: the cut archive)
-depends-on: none.
-accepts-when: the sweep reports its population and each verdict with the counters unchanged; a drifted entry goes to BOB as doctrine (may an append-only record be annotated?) and nothing is … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
-cut: cut to its fields (SCHEDULER #8, 2026-09-21) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-207» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### D-92 · queued — **`op=file` WITH A MEMBER TOKEN RETURNED AN INTERMITTENT 403 UNDER SEQUENTIAL LOAD** (the live instance, July): a different … (whole text: the cut archive)
 order: last of the live verifications, after D-207: a July observation on a plane rebuilt many times since, with no report of recurrence; a bounded measurement that names a cause or retires the claim (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
