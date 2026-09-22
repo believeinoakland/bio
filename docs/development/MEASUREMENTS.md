@@ -18185,3 +18185,34 @@ the same reading (REC-135's own probe), or withdrawing on a question also conclu
 make-current after publication, was never refused, because `op=versioncurrent` writes one project's stance into the SHARED
 question's bytes — the same write that raises a revision flag on every case pinning the finding. Two findings are routed rather
 than built: that write (to BOB) and the ratification of a preparation after its project withdrew (to SCHEDULER).
+
+## M-91 · 2026-09-21 · M0-97 + D-341 — the ruling index before and after: 1,383 rows → 1,455, the 72 answered or enacted decision-register entries each filed under its own id, and no quote crossing into another block
+
+**INSTRUMENTS:** `tools/decided.mjs` as it stood on `86523052` (copied verbatim from `origin/main` into the worktree's
+own runs directory) against this branch's `tools/decided.mjs`, both over the SAME corpus in the same tree, compared row
+by row keyed on the `file:line` pointer every row carries; `git grep` over the register's own headings as the oracle;
+`bio-plane/test/decided.test.mjs` (38 assertions); `bio-plane/test/decided.control.mjs` (fifteen arms plus a baseline);
+`bio-plane/test/nc-m034.mjs`, re-run. Base `origin/main` `86523052`; branch `worktree-agent-aff9fd704ee856d24`. Read
+2026-09-21 by the M0-97 + D-341 worker.
+
+| what | measured |
+| --- | --- |
+| rows in the index | 1,383 across 103 documents on the base → 1,455 across 103: 1,383 from the marker scan, 72 from decision-register entries |
+| answered or enacted register headings, by `git grep` | 72: 17 in `DECISIONS.md`, 55 in `docs/archive/ledgers/DECISIONS-2026-08.md`; 2 deferred (DEC-2, DEC-25); 0 open; 0 unclassified |
+| of those, returned by `decided.mjs "DEC-n"` from INSIDE their own entry | 0 of 72 on the base → 72 of 72, the printed equality |
+| `decided.mjs "severance"` | base: 7 rows (DEC-29, DEC-72 twice, D-293, three with no id), never DEC-70 → 12 rows, among them DEC-70's own entry at `DECISIONS.md:342` dated 2026-09-10, and the D-280 closure at `DEBT-closed.md:144` |
+| `decided.mjs "DEC-2"` | base: 63 rows about DEC-20 to DEC-29, a prefix substring → the entry named `deferred` at `DECISIONS.md:380`, "No ruling is FILED under DEC-2", then the 2 rows that mention DEC-2 as a whole id |
+| DEC-31, deferred on 2026-08-03 and answered on 2026-09-17 in one entry | filed once, quoting the 2026-09-17 answer and dated 2026-09-17; reading its first `response:` would have filed a deferral with the old date |
+| DEC-73, whose `decided:` names no date | filed undated; the date is never borrowed from `raised:` |
+| D-341: marker rows whose quote changed | 68, every one a PREFIX of its old quote (0 not); 0 rows lost, 0 added; 9 ids changed — 7 had been borrowed from the next paragraph or block (IC-20 from the next IC's heading, UI-61 from a DELEGATION header, M0-27, C-22.9, IC-25, REC-22, UI-65) and 2 plausibly named the ruling's own block (REC-100, REC-114) |
+| D-341: quotes carrying another block's heading | 14 → 0; `## CLAIM` inside a ruling 1 → 0 (IC-82 at `CLAIMS.md:3596`) |
+| the row's literal fix, measured before it was narrowed | a bare `^#` or ANY blank line as the stop changed 130 quotes and dropped 6 rows: 63 changes were TITLES (a heading, or a line ending in a colon) whose content is the paragraph beneath them — 4 IC status headings fell under the 25-character floor alone, 2 repeated titles fell to the text dedup — and heading rulings lost the id their section opens with (DEC-1 at `SOURCE-ACCESS.md:218`, DEC-6 at `BIO_Declared_Bias_v0_1.md:176`); separately, 10 prose lines open on `#` and a session number |
+| search contexts that do not hold their own line | 130 of 1,383 → 0; additive, the old window kept and the matched line added when the 4,000-character cut bites |
+| lines opening on a title-case marker word | 36, of which 1 is filed → D-441, not fixed here: `**Settled by:**` labels OPEN questions |
+
+**CONTROLS.** `decided.control.mjs`: fifteen arms, each alone, every one failing its declared assertion by name with the
+suite reaching its foot and the oracle's assertion green; 15 of 15 restores byte-identical (sha256 + `cmp` + a 20,000 B
+floor); 88 pass, 0 fail. Its first run found the SUITE wrong twice, never the subject: a fixture that filed a ruling under
+the id its arm asked about, and a `rows.find(...).line` that threw with no entry rows (both corrected, dated, in the suite).
+`nc-m034.mjs` A6 read 7 of 8 after D-341 and is corrected, never exempted: the eighth phantom still returns, id-less,
+because its REC-85 id had been borrowed across a blank line — D-341's defect.
