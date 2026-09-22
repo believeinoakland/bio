@@ -18355,3 +18355,24 @@ between runs — BOB #27's one docs landing took three rebases and four gate run
 one `TREE-SHARING.md` names: nearly every landing carries `CLAIMS.md` and the generated `DECIDED.md`, so both sides of
 nearly every rebase share them and a `--since` re-check cannot narrow. Re-measure with the same instrument after M0-99
 lands and after the interim claim rule of this date (`ORCHESTRATION.md`), to show what each removed.
+
+## M-98 · 2026-09-22 · BOB #27 — the first 41 minutes after M0-99 and the claim rule: the shared files leave most landings; the discard rate is not yet measurable
+
+**INSTRUMENTS:** M-97's, over 2026-09-22 16:09:05Z (M0-99 on `main` at `81510280`; the claim rule on `main` since `db848fff`,
+15:57Z) to 16:50:47Z (clock read), against `origin/main` at `359e4020`; each landing's paths from `git diff-tree -m
+--first-parent`, and the three touching `CLAIMS.md` read commit by commit.
+
+| what | M-97 (00:00Z–~15:45Z) | this window (41 min) |
+| --- | --- | --- |
+| recorded gate runs · measured a tree that never landed | 59 · 24 (41%) | 8 · 3 (38%) |
+| first-parent landings on `main` | 52 | 6 |
+| of them touching `CLAIMS.md` | 45 (87%) | 3 (50%): a DELEGATION block (`359e4020`), DELEGATION state lines with a standing claim's release (`4e52aee8`), a worker's claim release (`81510280`) — each a kind the rule keeps |
+| of them touching `docs/DECIDED.md` | 46 (88%) | 1: `81510280`, the commit that untracked it |
+| of them touching `QUEUE.md` | 29 | 2 |
+
+**WHAT IT SAYS.** The two files nearly every rebase shared have left most landings, which is what lets a `--since`
+re-check narrow: this lane's first landing after them re-ran 93 units with no rebase, where each before needed two or
+three. **Eight gate runs in 41 minutes are too few to say whether the discard rate moved: it is NOT MEASURED here, and not
+claimed.** Nor can it be re-measured this way after the move to cloud Claude Code: a gate record lives in one clone's git
+directory and a cloud session starts with none. The git half of the instrument — which landings touch the shared files —
+re-measures anywhere; the gate half waits for M0-114's first cloud figures.

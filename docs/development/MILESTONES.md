@@ -491,7 +491,9 @@ records what was sent and what returned, and its non-response is itself a findin
 destroys the prior attestation) · D-150 (the completeness claim) · D-130's record half ·
 D-147 / D-148 (the records-request lifecycle and the fee quote as evidence) ·
 `AUDIENCES.md` H4/H5 (threshold and exclusions travel in-band).
-**Areas:** RECORD, UI. **Depends on:** M9.
+**Areas:** RECORD, UI. **Depends on:** M9. **Watched here** (LED-7's door 3, BOB #27, 2026-09-22): when M10 has run with
+a real group, re-read D-159 (how many legs are ungraded and why — `op=versionstrength`'s `ungraded[]`) and D-165 (whether
+members answer S11's backward question by hand); each is stated with its trigger in `BIO_Case_Making_v0_1.md`'s front matter.
 
 > **The investigative session's publication half (IS-8) lands HERE — see the DEC-60
 > placement note under M9, 2026-08-07.** The published bundle carrying the claim's

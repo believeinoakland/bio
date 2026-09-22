@@ -9,9 +9,9 @@
 - §Naming: three names for three phases, and the type name question — DEC-72 rules a case is a PRODUCTION of a project, not a phase; the open → concluded → published states are superseded.
 - §Division: one inquiry becomes two or more — items 3 and 5 were written for case-as-phase; re-read under DEC-72.
 - §What a CLAIM is, and why it is a field rather than an object — "`inquiry_basis` does not exist in the schema" is false; "Awaiting Bob" and "DEC-32 remains open" are stale (decided 2026-08-04); the contradiction question is open. **The threshold argument's SECOND LEG was CORRECTED 2026-09-17 (REC-117) and the section is current on it:** *the falsifier is REQUIRED* was overruled by Bob — `NO_FALSIFIER` is a condition a member may override, stated and attributed, including in the published record — so the leg is REPLACED by *the falsifier is ACCOUNTED FOR* rather than struck, because it was one of three carrying the argument and striking it would have left an argument that no longer closes with nothing saying so. Shipped in the plane (`op=conclude` `no_falsifier=1`, `falsifier_override_by`/`_at`, C-2.8's three outcomes, `op=publishedcase`'s `authored.falsifier_override`).
-- §THE ACTION PLAN — "not yet in the review document"; S11's backward question (D-165) deferred; DEC-25 deferred with its provisional; "Ten surfaces are specified today" is dated.
+- §THE ACTION PLAN — "not yet in the review document"; S11's backward question (D-165) deferred, trigger: S11 exists and members are answering the backward question by hand (Bob, 2026-08-03; `MILESTONES.md` M10 watches it); DEC-25 deferred with its provisional; "Ten surfaces are specified today" is dated.
 - §CONTRADICTION — Q14 ANSWERED 2026-09-17 in doctrine and in two of its three cases; the IRRECONCILABLE PAIR is NOT designed and needs the claim object, which is Bob's. IDENTIFY / PRESENT / RESOLVE are specified as separable mechanisms and NONE is built; the acceptance test for IDENTIFY is its over-strictness arm. IDENTIFY's inputs are DESIGNED at level 2 (`CONTRADICTION-IDENTIFY-DESIGN.md`, 2026-09-19); PRESENT and RESOLVE are not, and follow its first measurement.
-- §R1 — the residual laundering hazard is D-159, open · WATCH.
+- §R1 — the residual laundering hazard is D-159: deferred, trigger: M10 has run with a real group — then read `op=versionstrength`'s `ungraded[]` ratio and each leg's reason (`MILESTONES.md` M10 watches it).
 - §Open questions this pass must answer — the heading is duplicated in one line; of eight questions only Q7 is marked answered though Q1, Q2 and Q4 were answered in the body; never reconciled.
 
 **Contents**
@@ -185,6 +185,21 @@ quote (above) is read against it by a member. `cpra_request` already names one l
 written with it stands unchanged and counts as its member's statement that the CPRA governs, and nothing else
 is inferred from it; whether the kinds gain a law-neutral records request is the builder's to propose through
 the interface protocol.
+
+**THE RECORDS-REQUEST LIFECYCLE, DESIGNED 2026-09-22 by BOB #27 (D-147, on SCHEDULER #13's LED-7 question), on the
+pattern of D-148 and bound by D-149.** Each stage after the request is its OWN correspondence entry naming the entry it
+answers or follows, so the lifecycle reads as a chain of dated entries and `awaiting_response` stops hiding it. A `sent`
+entry may be the request, a fee-waiver request, an appeal (naming the decision it appeals) or a court filing; a
+`received` entry may be an acknowledgement, a fee estimate (D-148's QUOTE), a fee-waiver decision, an extension notice,
+a production (partial or final, naming the documents it delivered), a denial (whole or partial, the exemptions cited
+as the body cited them), or an appeal or court decision. A decision carries its OUTCOME in a closed vocabulary
+(granted · denied · partial · reversed · affirmed · none stated), as the body gave it. **The clock is never encoded**
+(D-149: the plane encodes no law's rules): a member may state on an entry the date by which the NEXT stage is due and
+the citation it comes from — one of the action's D-149 citations — and with none stated the due date is UNDETERMINED.
+The plane derives only what costs nothing to invent: the time elapsed between entries, and that a stated due date
+passed with no answering entry — D-128's declared-versus-observed flow measured on our own request. No reversal rate or
+response shape is assumed (the row's FY2024 figures vary by an order of magnitude between agencies). NOT BUILT: a
+RECORD row at M10 after D-148, whose entry grammar it extends (BOB INBOX, 2026-09-22).
 
 `awaiting_response`, `## Correspondence` and `counterparty` are unmistakably
 **outward-facing**: a records request, a letter to a council member, a complaint, a

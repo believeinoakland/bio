@@ -44,6 +44,7 @@
     - [Legitimate skips need an exception document](#legitimate-skips-need-an-exception-document)
     - [Junction checks](#junction-checks)
     - [Progressions are threaded by entities](#progressions-are-threaded-by-entities)
+    - [The declared flow, and its revisions — D-128, RULED 2026-09-22 by BOB #27 (SCHEDULER #13's LED-7 question)](#the-declared-flow-and-its-revisions-d-128-ruled-2026-09-22-by-bob-27-scheduler-13s-led-7-question)
   - [8.3 Identifier spaces, and where grade collapses](#83-identifier-spaces-and-where-grade-collapses)
   - [8.4 Themes: a connection through an IDEA — RULED BY BOB 2026-09-21 (D-162), Part I's one amendment since approval](#84-themes-a-connection-through-an-idea-ruled-by-bob-2026-09-21-d-162-part-is-one-amendment-since-approval)
   - [9.1 The workload this is meant to remove](#91-the-workload-this-is-meant-to-remove)
@@ -857,6 +858,23 @@ flowchart LR
     class M1,M2,M3,P1,P2,P3,P4,P5,P6,P7,P8,P9 ok
     class Q1,Q2 ask
 ```
+
+### The declared flow, and its revisions — D-128, RULED 2026-09-22 by BOB #27 (SCHEDULER #13's LED-7 question)
+
+Bob, 2026-08-01: *"differentiating between how things are supposed to flow and how they really flow (and the
+implications of those differences)."* A progression definition IS the declared flow — the group's claim about how a
+body ought to behave, authored and dated; its instances are the observed flow; and two shapes of their difference are
+BUILT, the missing predecessor and the overdue successor (`node tools/status.mjs progression`). **At the code the declared
+flow cannot evolve: `op=progressiondefine` UPSERTS** (`store.mjs`: `progression_defs` `ON CONFLICT … DO UPDATE`, and the
+stages deleted and rewritten), so a group's earlier understanding disappears silently and a finding read against it loses
+its basis — the record keeping less than it held, and a correction that moves nothing forward (DEC-19). **Placed now
+(door 2, keeping D-128's id):** a definition is APPEND-ONLY. A revision writes a new version carrying its author, date
+and BASIS — where the declared flow comes from, as the member's statement and a citation, the anatomy exception documents
+already carry — the prior version stands and reads back, and an instance read and each finding name the version they
+were read against. **Deferred, with its trigger:** the third shape, a stage observed OUT OF ORDER, needs each placed
+document's OWN date (threading and capture times are not it); it is designed when a placed document carries one — a
+doctype reader's extracted date or a member's stated date with its source — and scoping a definition to an institution
+waits on the same use. Home: this section.
 
 ## 8.3 Identifier spaces, and where grade collapses
 

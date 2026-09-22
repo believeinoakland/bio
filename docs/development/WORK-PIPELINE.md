@@ -65,7 +65,10 @@ replaces it.
    place in the order set by BOB. It reaches a session only when a refill brings it into the cache.
 3. **A DELIBERATE, PERMANENT LIMITATION** — stated in its construct's home design document (its Incomplete sections, or
    a stated limitation), then archived pointing there. Measured before triage: about 6 of 222 dispositions read this way
-   (D-28, D-38, D-45, D-111, D-306, half of D-396).
+   (D-28, D-38, D-45, D-111, D-306, half of D-396). **Door 3 also takes a DEFERRAL WITH A TRIGGER** (BOB #27, 2026-09-22,
+   on SCHEDULER #13's question about D-159 and D-165): stated in its home document as *deferred, trigger: …*, the trigger
+   written where the event that fires it is recorded (a milestone's text, or the row that builds its precondition), then
+   archived pointing there — never a blocked backlog row, which costs a placement and watches nothing.
 
 **After the fold, a newly found defect is DIAGNOSED UNTIL ITS FIX CAN BE NAMED, then placed by SCHEDULER as a
 BACKLOG item in build order** (class `defect`, a `D-` id minted as today; Bob: *"understood deeply enough that a fix

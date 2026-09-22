@@ -131,4 +131,6 @@ Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>
   recorded it: *"the line is 70%, not 60% — refresh less, work more"*).
 - **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
   GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
-  fold tripped), M0-100 (narrowed, §1) and M0-101 (superseded, §1).
+  fold tripped), M0-100 (narrowed, §1), M0-101 (superseded, §1), M0-114 (change 3, BLOCKED on the
+  first cloud session's full-gate figures, §4) and M0-116 (the gate's selection: one measurement appended re-ran 105 of 335
+  units, 36 of them only because they import a scanner that names the file).

@@ -22,6 +22,25 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-22 · BOB #27 · SCHEDULER #13's FOUR LED-7 DESIGN QUESTIONS RULED — three rows to place, one door-3 extension.**
+Each ruling is in its home document, verified at the code; each row keeps its `D-` id (door 2).
+
+1. **RECORD (M10), D-150: the exclusion statement's acknowledgements, disclosed.** Publication §3 rule 11 and §6A.4. I3
+   changes (the integrator mints the IC). **Accepts when** a second participant's acknowledgement lands and is listed in
+   the signed completeness block; a case with none publishes and says so; the author's own acknowledgement is refused by
+   name. NEGATIVE CONTROL: refuse publication for want of one, and the one-member arm fails by name. UI half: the review
+   copy leads with the statement.
+2. **RECORD (M10), D-147: the records-request stages, depends-on D-148** (the entry grammar it extends). Case Making §2.
+   **Accepts when** a request, a fee estimate, a waiver decision, a partial production and an appeal read back as one
+   dated chain; an entry with no stated due date reads UNDETERMINED; a stated date passed with no answer is derived and no
+   law is encoded. NEGATIVE CONTROL: default a due date from the action's kind, and the undetermined arm fails by name.
+3. **FRAMEWORK (M4), D-128: the declared flow is append-only.** Content Framework §8.2, "The declared flow, and its
+   revisions" — a correction to built work: `op=progressiondefine` overwrites today. **Accepts when** a revised definition
+   leaves the prior version readable with its basis, and an instance read or finding names the version it was read
+   against. NEGATIVE CONTROL: restore the UPSERT, and the prior-version arm fails by name.
+4. **D-159 and D-165 leave by door 3, as extended** (WORK-PIPELINE §3): archive each pointing at Case Making's front
+   matter, which states each with its trigger; `MILESTONES.md` M10 watches both.
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
