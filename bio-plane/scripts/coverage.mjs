@@ -1354,7 +1354,11 @@ const REGISTER_FLOOR = {
      declaration states the ten arms (1)–(10) `test/gates.control.mjs` runs, all AS DECLARED, with a dated RAN token.
      Nothing FELL. ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in the FLEET
      block far below. */
-  arms: 1576,
+  /* MOVED AGAIN 2026-09-21 by the same worker, 1576 -> 1577 ONLY, from the `--strict` print on its committed tree
+     `e4f4caa7`, exit 0 unpiped: `REGISTER FLOOR  arms 1577/1576 · classified 260/260 · corpus (suites read) 261/261 ·
+     GREW by 1 arm(s)`, `floor 223/223 reproducible` — the arrival is arm (11) of `test/gates.test.mjs`'s own
+     declaration (the unsound `--since`, found and closed in the same item). Nothing FELL. */
+  arms: 1577,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.
