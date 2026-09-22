@@ -54,7 +54,10 @@ process.on("exit", (code) => {
     console.log(`  exit ${code}: tools/decided.mjs restored from memory — sha256 ${sha(fs.readFileSync(TOOL)) === DIGEST ? "match" : "**MISMATCH**"}`);
   }
   for (const p of WRITTEN) { try { fs.rmSync(p, { force: true }); } catch {} }
-  try { if (fs.existsSync(PEN) && fs.readdirSync(PEN).length === 0) fs.rmdirSync(PEN); } catch {}
+  /* `rmdirSync` alone, never a listing first: it refuses a non-empty directory, so a copy kept after a
+     failed restore stays as evidence — and `hygiene.test.mjs` fails any new `readdirSync` walk by name
+     (it failed this driver's first draft: "every walk of this class is GUARDED or NAMED"). */
+  try { if (fs.existsSync(PEN)) fs.rmdirSync(PEN); } catch {}
   console.log(`decided.control pen: ${fs.existsSync(PEN) ? `REMAINS at ${PEN}` : "absent"} · exit ${code}`);
 });
 let CURRENT = null;
