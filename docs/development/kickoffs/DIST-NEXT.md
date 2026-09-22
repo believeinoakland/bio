@@ -30,6 +30,19 @@ CUTS, the `latest` pointer mechanism and its LESSONS are the process. This file 
   so at the cut ask whether that is an AUTHORITY closing (CUT NOW) — moot while nothing can deploy. MAJOR on I3: before
   the cut, `civicos-ui/app.html` CALLS `op=versioncurrent` (unchanged since `v0.71.0` at 22:09Z): check its handling of the new
   refusal before the cut (lesson 6); no fleet member's source names the op (grep, 22:09Z).
+- **23:05Z: A CUT NOW IS OWED AND BLOCKED.** CONDUCT #14 named it (one-shot trigger): **REC-165, IC-176 (I3 MAJOR
+  51.0.0), integrated at `9cf59056`, an AUTHORITY closing** — `op=suggest`/`op=extractpropose` now take only a RUNNING
+  run the caller holds (`AI_RUN_NOT_PRINCIPAL`, `SUGGEST_RUN_NOT_RUNNING`, `SUGGEST_OUTSIDE_RUN_CONTEXT`); before it, a
+  caller holding another member's run id could have a version read against that member's lens. Verified at the code:
+  the two SUGGEST_ codes are in origin/main's `store.mjs` and in NO file of `v0.71.0`'s `bio-plane/src`, so the defect is
+  LIVE on biosmoke7 — and those codes are the lesson-18 positive arm. Also since v0.71.0: REC-167 (`ff90ab07`, a
+  record-integrity closing: `op=caseratify` refuses a stale preparation). agent-worker's one suggest site is affected
+  by the context half (CONDUCT: a model-written target outside the context is now refused; SCHEDULER holds it) — so
+  agent-worker's SOURCE, not only its label, is to be re-read at the cut (IC-130: it ships with the plane). Same merge
+  carries M0-107: a timeouts-only gate run records NOT MEASURED and licenses no `--since`. Wake re-test 23:05Z: still
+  REFUSED. **Routed to BOB #28** by one-shot trigger `trig_012cNf34is3fAiqykLQanPd7` (23:08Z): the one act is Bob's —
+  admit `api.cloudflare.com` and `*.workers.dev` in environment `env_01KzVwgH7Xye2XSEBvsbAPFN`. DIST cuts at the first
+  wake that is admitted, the batch bound no longer applying.
 - **Self-wake:** routine `trig_014p69w2WQz7jfSkYeg4XHSF`, cron `0 4,10,16,22 * * *` UTC (the server anchors it to minute
   :08), firing into this session. A routine does not carry `CronCreate`'s 7-day expiry (vendor's description, unmeasured);
   re-read `list_triggers` at each wake. It fires first at 22:08Z; the first wake past the batch bound is 04:08Z.
