@@ -19184,3 +19184,27 @@ paths, BY SITE:
 `docs/development/QUEUE.md` (CONDUCT's).
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-22 M0 (M0-119 — the backlog's budget moves the TAIL, never cuts a row: `BACKLOG-LATER.md` is the same order's tail, and every reader reads the two files as one order)
+
+session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-119 (wave 4), worktree `.claude/worktrees/agent-a632fff2ea62a3014`,
+branch `worktree-agent-a632fff2ea62a3014`, from `origin/main` @ `df9eb9f9` (cloud).
+authority: `QUEUE.md` `### M0-119 · running` (read on `origin/coord` @ `a5ef1c62`); design `WORK-PIPELINE.md` §2, *"When
+`BACKLOG.md` is over its budget, the tail moves, not the head"* (BOB #28), with `VERIFICATION.md` (admitted for M0 by name).
+paths, BY SITE:
+  - `tools/ledger.mjs` — the `LATER` ledger, `PIPELINE`, `BUDGET`, the rebalance (new functions), `pipelineRows`,
+    `ledgerAudit`, `pipelineInvariants`, `selectRefill`, `refill`, `describeViolation`, the CLI.
+  - `tools/coord.mjs` — `MOVED_FILES` (the new state file), the `status` intent's default files, and the rebalance run
+    after a write's intents (with a `--rebalance` intent). No ledger check is removed.
+  - `tools/mintid.mjs` — the corpus lists that name `BACKLOG.md` ONLY (each gains the tail); `tools/rowdesign.mjs`
+    `planRows` (a `later` injection); `tools/plancheck.mjs` §2's printed counts and §10(b)'s state-path pattern ONLY.
+  - `bio-plane/test/ledger.test.mjs`, `ledger.control.mjs`, `pipeline-readers.test.mjs`, `pipeline-readers.control.mjs`,
+    `coord.test.mjs` — the tail's arms and every assertion the tail supersedes (corrected with a dated comment).
+    `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY and only to printed figures.
+  - `docs/development/WORK-PIPELINE.md` §1–§2 (the table and an "As built" line), `TREE-SHARING.md` §1 (the list of
+    state files), this block. `BACKLOG.md` and `BACKLOG-LATER.md` on `coord` are NOT written by this worker: the data act
+    is handed to CONDUCT for integration.
+**NOT CLAIMED:** `tools/gates.mjs` and `bio-plane/scripts/op-claims.mjs` (M0-116's), `tools/pushguard.mjs` (M0-111's,
+M0-114's), `docs/development/QUEUE.md` (CONDUCT's). Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
