@@ -17877,6 +17877,8 @@ named with a candidate, and its owner decides the words:
 5. **`kickoffs/NEW-MACHINE.md`**, *"`node tools/gates.mjs` # the full battery; ~5 min"*: stale before this landing too; the
    tool runs the class the diff measures.
 **open as of 2026-09-21** — open until each owner has corrected its sentence or said why not; nothing here blocks a runnable row.
+
+**open as of 2026-09-22** — item 1 (CLAUDE.md §6) corrected by BOB #25 at `5a807b8a`; item 4 (`kickoffs/CONDUCT.md`) corrected by CONDUCT #11 in its handoff landing; items 2, 3 and 5 stay open with their owners.
 **BOB #25, item 1 DONE (2026-09-21):** `CLAUDE.md` §6 now reads that a plane, UI, fleet, installer or config path runs
 the full set, any other the suites that name it, and `--since` re-checks a rebase — verified against `gates.mjs`'s
 `fullReason()` on `ab34197b`, within the file's budget (16,378 of 16,384 B). Items 2-5 are their owners'; this block

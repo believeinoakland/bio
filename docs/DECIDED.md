@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1410 rulings across 103 documents.
+1411 rulings across 104 documents.
 
 ## DEC-
 
@@ -634,6 +634,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16469`
 - **D-293** — D-293's design gap RULED** (a dirty run keyed by its temporary-index tree, taken at start and end) and **`VERIFICATION.md`'s cut placed** (both in the BOB INBOX, undrained at writing); **`CLAUDE.md` §6** corrected to `gates.mjs`'s four behaviours (16,378 of 16,384 B). - Archived BOB #24 (worktree removed, +663 MiB)…  
   `docs/development/kickoffs/BOB-NEXT.md:33`
+- **D-293** — D-293's design gap is RULED (BOB INBOX; CLAUDE.md §6 corrected). - **Owners of `kickoffs/SKILL.md`, `SCHEDULER.md`, `NEW-MACHINE.md`:** D-293's stale-gate-sentence DELEGATION items 2, 3, 5. ## 5.  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:73`
 - **D-293** · 2026-09-21 — 2026-09-21 · BOB #25 · D-293's DESIGN GAP RULED: A DIRTY RUN IS RECORDED UNDER THE TREE `git add -A` WOULD COMMIT — AND `VERIFICATION.md` NEEDS A CUT, BECAUSE ITS RULINGS NO LONGER FIT IN IT.** BOB #22 keyed the record by the tree measured *"only when that tree was CLEAN"*; the D-293 worker built exactly that and…  
   `docs/development/QUEUE.md:25`
 - **D-302** · 2026-09-10 — ct pin reds on every added paragraph, while this population is FIVE hand-written sentences in append-only history and a SETTLED IC, so the exact figure is the honest ratchet — `LEDGER`'s own argument for holding counts exactly.  
@@ -2494,7 +2496,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-21** — AMENDED 2026-09-21, same session (commit 4): THE REFRESH** — `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #11 from the state measured at `8d9fa057`, and two mechanics added to `kickoffs/SCHEDULER.md`: ask every live lane that lands on `main` to hold, one mid-refresh included; a row drafted and waiting for…  
   `docs/development/CLAIMS.md:17742`
 - **2026-09-21** — RULED 2026-09-21 by BOB #25: take the fix, with one condition** — the temporary-index tree is taken at the run's start and end and a dirty verdict is recorded only when they agree.  
-  `docs/development/CLAIMS.md:17897`
+  `docs/development/CLAIMS.md:17899`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
