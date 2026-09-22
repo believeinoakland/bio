@@ -18391,3 +18391,40 @@ claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77
 sentence, one Incomplete bullet, as-of date); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newest
 first); `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 RECORD (REC-163 — the setup page and a PUBLIC `op=instancegroup` show the recorded slug, or say that none is recorded: Publication §7 point 1)
+
+Worker spawned by CONDUCT #12. **Own worktree** `.claude/worktrees/agent-a1e1ea8fd9d66c92a`, branch
+**`worktree-agent-a1e1ea8fd9d66c92a`**, base `origin/main` @ `0ce7447b` (fast-forwarded from `9d330478`, docs only; the row
+reads `running` there). `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`, each exit 0 and each `node_modules` a REAL
+DIRECTORY; `df -h` 6.4 GiB free before the installs, 5.8 GiB after. Design authority: `docs/architecture/BIO_Publication_v0_1.md`
+§7 point 1 (BOB #24) with `BIO_State_Rules_Consistency_v1_5.md` §3.1 (D-436). IC-174 minted with `node tools/mintid.mjs IC`
+BEFORE building. Claimed BY SITE:
+
+- `bio-plane/src/index.mjs` — (1) the `instancegroup` OPS row and its comment; (2) ONE new `op === "instancegroup"` handler in
+  the `classes: null` branch, before the `bootstrap` fall-through; (3) the `GET /` route, which renders the page with the
+  group read at serve time; (4) `caseReader` — it also returns the class it resolved (an added field; its three callers
+  read only `viewer` and `silent`); (5) ONE new helper beside `caseReader`, the public read both surfaces use; (6) the
+  `setup.mjs` import line.
+- `bio-plane/src/store.mjs` — `instanceGroup()`'s none-recorded sentence moved into ONE static constant (its answer
+  byte-identical); ONE new method `instanceGroupPublic()` beside it, reading through `#producingGroup()` only; ONE new
+  Durable Object route `instancegrouppublic` beside `instancegroup`'s.
+- `bio-plane/src/setup.mjs` — the eyebrow line (the literal) and ONE new exported renderer before the `SETUP_HTML` literal.
+- `bio-plane/test/group-public.test.mjs` and `bio-plane/test/group-public.control.mjs` — both NEW.
+- `bio-plane/test/gate-reads.test.mjs` — the UNGATED `instancegroup` entry's reason text only.
+- Suites a correct landing makes wrong — named in a SECOND block once the battery names them, each corrected with a dated
+  reason, never exempted; and any control driver whose anchor these edits move.
+- `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` — FLOOR FIGURES ONLY, from their own print.
+- `bio-plane/dist/` (the rebuilt bundle). `.gitignore` (one pen line, `.rec163-runs/`).
+- `docs/architecture/BIO_Publication_v0_1.md` (front matter: Status sentence, the §7 Incomplete bullet, as-of date; ONE dated
+  "Built" paragraph at §7's foot), `docs/architecture/construct-status.json` (a NEW claim `13.group-identity`; and ONE clause
+  of `15.group-telling`'s text — "op=instancegroup answers only a credential" — which this landing makes false, corrected in
+  the same commit that makes it false, with a DELEGATION to DIST below for the source comment it cites),
+  `docs/architecture/BIO_System_Design.md` (RENDERED by `node tools/status.mjs --write`, never hand-edited),
+  `docs/development/INTERFACE-CHANGES.md` (IC-174, appended), `docs/development/MEASUREMENTS.md` (at most one appended entry,
+  id from `node tools/mintid.mjs M`), `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT** `docs/development/QUEUE.md`, **NOT** `docs/development/INTERFACES.md` (CONDUCT's at resolution), **NOT** `newgroup/**`,
+**NOT** `release/**`, **NOT** `civicos-ui/app.html` (its `GROUP` literal is UI-77's, queued directly after this row).
+
+**open as of 2026-09-22** — OPEN while this item builds; CONDUCT integrates and resolves IC-174.
