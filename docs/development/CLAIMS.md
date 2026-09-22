@@ -11384,7 +11384,11 @@ widening is not what was intended, it is one condition in one file and reversing
 nothing; the recommendation is to keep it, because the literal reading is quiet over exactly
 the loss REC-91 was.
 
-**open as of 2026-09-16** — raised today by M0-48 and NOT discharged: the closure ruling on D-288 is BOB #12's, and it has said it will read item 2's landing off `main` rather than take a report for it. **Recorded by CONDUCT #1 at integration because M0-37's delegation arm FAILED this block by name** — the SECOND time today that arm has caught a delegation arriving through a merge with no state line, and the first time it has caught one from its OWN WAVE. M0-37 and M0-48 were live at the same moment and neither could see the other; the arm landed hours earlier and is now auditing a sibling it never met. **Two paths in this block are STALE and are corrected here rather than in the worker's own words: the predicate shipped as `tools/strandedwork.mjs`, not `strandedbranches.mjs`** (the worker renamed it — a branch cannot see uncommitted work) **and it is `plancheck` SECTION 9, not 8** — M0-37 and M0-48 each independently claimed a section 8, which is the id-collision shape arriving in a section NUMBER, resolved at the merge by keeping both arms and renumbering the later one.
+**Held open from 2026-09-16 until the discharge below** — raised that day by M0-48 and NOT then discharged: the closure ruling on D-288 is BOB #12's, and it has said it will read item 2's landing off `main` rather than take a report for it. **Recorded by CONDUCT #1 at integration because M0-37's delegation arm FAILED this block by name** — the SECOND time today that arm has caught a delegation arriving through a merge with no state line, and the first time it has caught one from its OWN WAVE. M0-37 and M0-48 were live at the same moment and neither could see the other; the arm landed hours earlier and is now auditing a sibling it never met. **Two paths in this block are STALE and are corrected here rather than in the worker's own words: the predicate shipped as `tools/strandedwork.mjs`, not `strandedbranches.mjs`** (the worker renamed it — a branch cannot see uncommitted work) **and it is `plancheck` SECTION 9, not 8** — M0-37 and M0-48 each independently claimed a section 8, which is the id-collision shape arriving in a section NUMBER, resolved at the merge by keeping both arms and renumbering the later one.
+**DISCHARGED 2026-09-21 by BOB #25:** BOB #12 closed D-288 on 2026-09-16 after driving the arm, and M0-49 built item 3
+(prune-on-merge) on 2026-09-17, so D-288 was closed in full, but the row was never archived and this block never discharged.
+D-288 is archived now (`docs/archive/ledgers/DEBT-closed.md`), its head cell updated, and its one residue-shaped quote
+pointed at this block, which keeps it verbatim. The reachability reading the block recommends stands. Nothing keeps it open.
 
 ## CLAIM 2026-09-16 M0 (M0-48 — AMENDMENT: the row was corrected FOUR times while running, the unit moved from BRANCH to WORKTREE, and the files are renamed)
 session: m048-stranded-branches (worktree agent-a0c3609704dee7166)
@@ -17929,3 +17933,11 @@ of the two DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB blocks); `docs/D
 claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
 (rewritten from the state measured at ~04:05Z 2026-09-22), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-21 BOB #25** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-21 BOB (#25) — D-288 archived, closed in full since 2026-09-17 (M0-49 built item 3), and M0-48's delegation discharged
+
+claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/DEBT.md` and
+`docs/archive/ledgers/DEBT-closed.md` (the D-288 move, by `node tools/ledger.mjs archive D-288`, after its head cell and one
+quoted residue phrase were updated); `docs/development/CLAIMS.md` (this block and the DELEGATION 2026-09-16 M0 (M0-48) ->
+BOB block's discharge line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
