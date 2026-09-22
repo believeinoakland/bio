@@ -664,7 +664,7 @@ and handed to CONDUCT through the BOB INBOX.
 | D-125 a member's personal mute of a FINDING (DEC-10's (b)/(c)) | RECORD | M8 · PLACED 2026-09-22 in `BACKLOG.md` on BOB #26's ruling |
 | D-126 ~30 notification generators, no catalogue, no classes | RECORD · UI | M8 · REC-20 |
 | **D-127 case-making is undesigned, and it is what the system is for** | RECORD · UI | **M9 · M10** — the rungs this pass adds |
-| D-128 declared-versus-observed flow is the analytic product | FRAMEWORK · RECORD | M4 · consequence half M10 (REC-24) |
+| D-128 declared-versus-observed flow is the analytic product | FRAMEWORK · RECORD | M4 · consequence half M10 (REC-24) · PLACED 2026-09-22 in `BACKLOG.md` on BOB #27's ruling (the declared flow append-only) |
 | D-129 `undetermined` conflates *cannot determine* and *positively none* | RECORD | M8 · a field beside the reason |
 | D-130 `counterparty: to be named` passes C-2.10 | RECORD · UI | M7 · REC-23 CLOSED (rendering half UI-19; ADD_TYPES absence UI-15 — corrected 2026-08-04, the row had said UI-15 for the rendering while QUEUE/BUILD-ORDER say UI-19) |
 | D-131 a raw NUL byte makes `store.mjs` invisible to `grep` | RECORD | M0 · REC-27 |
@@ -679,10 +679,10 @@ and handed to CONDUCT through the BOB INBOX.
 | D-144 re-ratifying destroys the previous attestation | RECORD | M10 · settled by DEC-12 |
 | D-145 bundle ids are per-instance, so nothing survives leaving | RECORD | M6 |
 | D-146 nine intent-layer write ops have no caller | UI | M8 · UI-13 |
-| D-147 `action` models a records request as one round trip | RECORD | M10 · REC-24 must read it before shipping the state machine |
+| D-147 `action` models a records request as one round trip | RECORD | M10 · REC-24 must read it before shipping the state machine · PLACED 2026-09-22 in `BACKLOG.md` on BOB #27's design |
 | D-148 a fee quote is EVIDENCE, not an administrative obstacle | RECORD | M10 · with D-147 · PLACED 2026-09-22 in `BACKLOG.md` on Bob's ruling (BOB #26) |
 | D-149 the design is jurisdiction-blind | RECORD · FRAMEWORK | M10 · needs a design pass, not an item · PLACED 2026-09-22 in `BACKLOG.md` on Bob's ruling (BOB #26) |
-| D-150 the completeness claim, externally validated | RECORD · UI | M10 · REC-14 |
+| D-150 the completeness claim, externally validated | RECORD · UI | M10 · REC-14 · PLACED 2026-09-22 in `BACKLOG.md` on BOB #27's ruling |
 | D-151 a machine credential can resolve an unassigned task (DEC-7) | RECORD | M8 · REC-28 |
 | D-155 a project declares the strength its work requires (DEC-17) | RECORD · UI | M10 · REC-14, REC-15, UI-18 |
 
@@ -698,9 +698,9 @@ together with `DEBT.md`).
 | item | area | milestone |
 | --- | --- | --- |
 | D-158 a never-enrolled member's key reads `active` on signerlist | RECORD | M10 · REC-15/UI-17 pre-flight |
-| D-159 an ungraded leg costs a conclusion nothing | RECORD | M10 · WATCH — re-raise after a real group runs |
+| D-159 an ungraded leg costs a conclusion nothing | RECORD | M10 · WATCH — re-raise after a real group runs · ARCHIVED 2026-09-22 by door 3, the trigger watched above |
 | D-162 connections run through NAMED things; ideas cannot connect | FRAMEWORK | M4 · DOCTRINE (Bob) — a DEC at the entity axis |
-| D-165 what each action kind requires is unmodelled | RECORD | M10 · deferred with a trigger |
+| D-165 what each action kind requires is unmodelled | RECORD | M10 · deferred with a trigger · ARCHIVED 2026-09-22 by door 3, the trigger watched above |
 | D-166 the CPDF-5 corpus URLs went stale | CONTENT-PDF | M1 · re-locate the corpus |
 | D-167 Tier-1 text trips the `client_rendered` stack test | FRAMEWORK | M3 · next stack-axis item |
 | D-168 `op=cite` is type-only, so RETIRED is citable | RECORD | M9 · bounds REC-11/UI-20 |

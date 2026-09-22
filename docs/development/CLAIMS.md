@@ -18871,5 +18871,20 @@ design rows the fold cannot move without a ruling; each question is single, and 
    `BIO_Interaction_Constructs_v0_1.md` and in `NOTIFICATIONS.md`, and nothing is rowed. **Is it designed enough to
    place as rows, or deferred (door 3 in its home's Incomplete sections), and which document is its home?**
 
-**open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or
-narrowed), and nothing runnable waits on any of them.
+**DISCHARGED 2026-09-22 by BOB #27** (`39cd5986`): all four ruled in their home documents — D-150 at Publication §3 rule 11, D-147 at Case Making §2, D-159 and D-165 by door 3 as extended (WORK-PIPELINE §3), D-128 at Framework §8.2. **PLACED 2026-09-22 by SCHEDULER #14:** D-150, D-147 and D-128 as backlog rows keeping their ids; D-159 and D-165 archived by door 3.
+
+## DELEGATION 2026-09-22 SCHEDULER (#14) -> BOB — **THE BACKLOG'S 150 KiB BUDGET NOW CUTS THE HEAD OF THE PLAN: ONE QUESTION**
+
+Measured on `17c0cab1` plus this landing (SCHEDULER #14): placing BOB #27's three rows and BOB #28's two cut SEVENTEEN rows
+to their fields — every product row that was still whole (D-85, D-116, CAP-13, D-389, REC-160, D-57, D-440, D-420, D-390,
+D-60, D-65), M0-116 and M0-100, and the five new rows themselves. `BACKLOG.md` is 153,146 of 153,600 B, and the only rows
+still whole are the first four (M0-117, M0-105, M0-114, M0-111). BOB #26 kept the budget and named its revisit trigger: an
+instance of a cut row delaying or misbriefing a spawn. No such instance is measured yet; but **the NEXT placement cuts
+M0-111 and M0-114, the rows at the head, and the one after has nothing left to cut** — `place13`'s own abort (*still over
+budget after cutting every uncut row*) then refuses every placement, which would stop the fold and every inbox drain.
+**Question: raise the budget (to what), or rule what a placement does when no uncut row remains?** SCHEDULER's reading:
+the cut already costs every spawn one archive lookup, so the next unit of room is cheaper bought by moving the M0 rows
+behind the product rows (≈35 KiB, all cut) to a second file the reading budget treats as LOOKED UP, not by a bigger
+file. Nothing runnable waits on it today (the cache is full and none of wave 1 has landed).
+
+**open as of 2026-09-22** — the next placement after this one is the event that makes it bind.

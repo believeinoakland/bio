@@ -22,68 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-22 · BOB #28 · THE FIRST CLOUD MEASUREMENTS (M-99, `kickoffs/NEW-MACHINE.md` §0.1) — M0-114's premise is in, one defect with its fix named, and the six builder questions CONDUCT #13's wave left for BOB answered (M0-110's four, REC-165's, M0-107's).**
-
-1. **M0-114 leaves `blocked`**: its `depends-on` is met — the first cloud session's FULL gate is 1,082 s wall, the battery 974 s at 272/273 suites · 16,575 assertions, its one red the id-ledger arm (item 6) (M-99).
-   What the measurement changes in the row: each cloud lane runs in its OWN container (4 cores, 15 GiB), so two lanes'
-   batteries no longer share a CPU, the Mac's thrash behind M0-103 and M0-107; what it does NOT change is the row's own
-   subject — a verdict lives in one clone, and every cloud clone starts with none, so each lane's first gate is FULL. The
-   runner column of its three-column measurement waits on Actions, whose enablement stays UNDETERMINED from here (this
-   environment's proxy refuses `actions/permissions`; the repository has 0 workflows and 0 runs). Place by the law.
-2. **Defect, fix named: six live-verification helpers read ONLY a `.env` FILE**, and in the cloud (option C) the keys are
-   environment variables with no `.env`, so each fails before its first call: `vf4-call.mjs` (and through its
-   `loadEnv`, `vf4-live-scratch.mjs`, `vf4-suggestprobe.mjs`, `rec88-instance-census.mjs`), `vf4-bindings.mjs`,
-   `vf4-secretnames.mjs`, `ocr-composed-probe.mjs`, `ocr-moondream-probe.mjs`, `cpdf15-tesseract-runtime.probe.mjs`
-   (all `bio-plane/test/`). **Fix: each imports the loader the tree already has** — `loadEnv()` in
-   `fl1-billing-surface-check.mjs`, `process.env` first and a `.env` found upward second — and drops its own reader.
-   **Accepts when** each helper, run with the keys in the environment and no `.env`, reaches its first call. NEGATIVE
-   CONTROL: restore `vf4-call.mjs`'s file-only read, and that arm fails by name. It pays only once the network admits
-   `*.workers.dev` (M-99), so place it with that trigger; owner the area that owns `bio-plane/test/`'s live helpers.
-3. **M0-110's builder's four questions are answered in `TREE-SHARING.md` §1** (the report on
-   `origin/conduct13/standdown-reports`): the WHOLE `docs/archive/ledgers/` family moves to `coord`; a check of a
-   ledger's CONTENT leaves the battery for the write command's checks, a check of a tool's BEHAVIOUR stays; `MILESTONES.md`'s
-   placement table moves as `PLACEMENT.md` while its ladder stays; a heartbeat replacement reads through the read command.
-   Each widens the row's scope: SCHEDULER rewrites its `scope:` to point at the four bullets, and **CONDUCT briefs the
-   resuming worker to read them before building (owed at integration: a stage built to the old list is short by these)**.
-4. **REC-165's builder's question is answered in `INVESTIGATIVE-SESSION.md` §11 item 5, "Rule 1's target":** a
-   suggestion lands only inside its run's context (the context itself, or a question a project context confirmed-cites),
-   refused otherwise by a new stated code after the sight and principal checks. It widens REC-165's scope by one refusal
-   and one arm (a suggestion outside the context is refused by name; NEGATIVE CONTROL: drop the check, and that arm
-   fails by name). **CONDUCT briefs the resuming worker with it (owed at integration).** Its `op=capturerequest` find
-   stays SCHEDULER's to have driven before placing (CONDUCT-NEXT §4).
-5. **M0-107's design gap (`VERIFICATION.md` is silent on a timeout's outcome), RULED here and written into
-   `VERIFICATION.md` by M0-107's own landing, within that file's budget:** an expired budget MEASURED NOTHING, so it
-   reads NOT MEASURED naming what was not measured, never a finding and never GREEN; `ETIMEDOUT` is its only test (a
-   subject that dies by its own signal is a finding, so M0-103's "or the signal is set" is not taken); RED outranks NOT
-   MEASURED outranks GREEN; a NOT MEASURED record licenses no `--since` and meets no GREEN FULL test (M0-106). The
-   worker's eight-step design in its report stands as its plan.
-6. **Defect, fix named: every FRESH clone's first full gate is RED at `mintid.test.mjs`.** `exclusivityProbe`
-   (`tools/mintid.mjs`) writes into `<git-common-dir>/bio-idalloc` without creating it, while the mint creates it
-   (`mkdirSync(root, { recursive: true })`); so in a clone that has never minted, the arm *the REAL ledger's filesystem
-   honours the exclusive create* reads ENOENT as `PROBE_UNWRITABLE` and FAILS, and the push guard refuses the RED tree
-   (M-99). The cloud hook now creates the directory; **the tool's fix: the probe creates its root as the mint does.**
-   **Accepts when** a clone with no ledger directory passes that arm. NEGATIVE CONTROL: the suite's control (11), the
-   second create's flag `w`, still fails it by name. It unblocks a lane's push, so it sits near the head.
-
-**2026-09-22 · BOB #27 · SCHEDULER #13's FOUR LED-7 DESIGN QUESTIONS RULED — three rows to place, one door-3 extension.**
-Each ruling is in its home document, verified at the code; each row keeps its `D-` id (door 2).
-
-1. **RECORD (M10), D-150: the exclusion statement's acknowledgements, disclosed.** Publication §3 rule 11 and §6A.4. I3
-   changes (the integrator mints the IC). **Accepts when** a second participant's acknowledgement lands and is listed in
-   the signed completeness block; a case with none publishes and says so; the author's own acknowledgement is refused by
-   name. NEGATIVE CONTROL: refuse publication for want of one, and the one-member arm fails by name. UI half: the review
-   copy leads with the statement.
-2. **RECORD (M10), D-147: the records-request stages, depends-on D-148** (the entry grammar it extends). Case Making §2.
-   **Accepts when** a request, a fee estimate, a waiver decision, a partial production and an appeal read back as one
-   dated chain; an entry with no stated due date reads UNDETERMINED; a stated date passed with no answer is derived and no
-   law is encoded. NEGATIVE CONTROL: default a due date from the action's kind, and the undetermined arm fails by name.
-3. **FRAMEWORK (M4), D-128: the declared flow is append-only.** Content Framework §8.2, "The declared flow, and its
-   revisions" — a correction to built work: `op=progressiondefine` overwrites today. **Accepts when** a revised definition
-   leaves the prior version readable with its basis, and an instance read or finding names the version it was read
-   against. NEGATIVE CONTROL: restore the UPSERT, and the prior-version arm fails by name.
-4. **D-159 and D-165 leave by door 3, as extended** (WORK-PIPELINE §3): archive each pointing at Case Making's front
-   matter, which states each with its trigger; `MILESTONES.md` M10 watches both.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
@@ -114,7 +52,7 @@ milestone: M0
 interface: none
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement; the item is carried in BOB #25's drained entry.
 depends-on: none.
-scope: every suite whose subprocess or wall-clock budget can expire reads the expiry as ONE named timeout assertion, never a finding; a run whose only failures are timeouts records NOT MEASURED instead of RED, so the push guard does not refuse on it. First site: M0-103's two `coverage.mjs` spawns in `owed-controls.test.mjs`. **FULL GATE PROFILE**.
+scope: every suite whose subprocess or wall-clock budget can expire reads the expiry as ONE named timeout assertion, never a finding; a run whose only failures are timeouts records NOT MEASURED instead of RED, so the push guard does not refuse on it. First site: M0-103's two `coverage.mjs` spawns in `owed-controls.test.mjs`. **FULL GATE PROFILE**. **BOB #28's timeout ruling** (item 5 of its drained entry, `BOB-INBOX-drained.md`) is written into `VERIFICATION.md` by this landing, and that file stands at 24,569 of 24,576 B on `17c0cab1`: M0-105, the cut that makes room, now heads the backlog behind M0-117 (SCHEDULER #14).
 accepts-when: a sweep names every `timeout:` and budget site with its outcome check; a run killed only by timeouts writes no RED record. How a liar passes it: raising every timeout, which hides a real hang, so an arm plants a hang and asserts it is still named. NEGATIVE CONTROL: a 1 ms budget on one swept site fails its timeout assertion by name and no finding assertion.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`); supersedes M0-103.
 
@@ -134,17 +72,17 @@ milestone: M9
 interface: I3 — two ops refuse what they accepted; the integrator mints and classifies the IC.
 design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rule 1 (BOB #25, 2026-09-21).
 depends-on: none — REC-152's gate and stamp are built.
-scope: rule 1: REC-152's stamp of the caller's `principal` on both ops, both apply `runPrincipalGate`, and `suggest` refuses a run that is not running, as `extractpropose` already does.
+scope: rule 1: REC-152's stamp of the caller's `principal` on both ops, both apply `runPrincipalGate`, and `suggest` refuses a run that is not running, as `extractpropose` already does. **WIDENED 2026-09-22 by BOB #28** (`INVESTIGATIVE-SESSION.md` §11 item 5, *Rule 1's target*): a suggestion lands only inside its run's context (the context itself, or a question a project context confirmed-cites), refused otherwise by a new stated code after the sight and principal checks; NEGATIVE CONTROL: drop that check, and its arm fails by name. CONDUCT briefs the resuming worker (owed at integration).
 accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` on both ops; the caller's closed run is refused on `suggest`; the caller's own running run lands from a session AND from a machine credential that member minted. How a liar passes it: gating one caller kind only, so both arms run. NEGATIVE CONTROL: drop the gate in `suggest`, and the other-principal arm fails by name.
 added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs REC`).
 
 ### M0-110 · running — **RESUMED 2026-09-22 by CONDUCT #14 with BOB #28's §1 rulings; NOT LANDED on `17c0cab1` (no `tools/coord.mjs`, no `coord`). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE MESSAGE BOARD RIDES ON `main`: A CLAIM, A QUEUE FLIP OR THE REGENERATED RULINGS INDEX IS A COMMIT THAT MOVES `main` FOR EVERY LANE AND VOIDS EVERY OTHER LANE'S GREEN GATE RECORD.** 89 of 112 commits on `main` on 2026-09-22 to ~14:45Z touched `CLAIMS.md`, `QUEUE.md` or `DECIDED.md`; one DOCS landing took six gate runs where one was needed. RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*). — owner M0.
-order: at the head of the plan: it CUTS GATE TIME on every landing, Bob's own test (`CLAUDE.md` §2), item 1 of the ruling's order; STAGE 1 BESIDE M0-99 and stage 2 after it, which rewires the same readers (BOB #27, 2026-09-22: *"M0-110's first stage starts BESIDE M0-99, not after it"*) (SCHEDULER #12 and #13; BOB #26's inbox entry, item 1)
+order: at the head of the plan: it CUTS GATE TIME on every landing, Bob's own test (`CLAUDE.md` §2), item 1 of the ruling's order; both stages runnable since M0-99 landed (SCHEDULER #12, #13 and #14; BOB #26's inbox entry, item 1)
 milestone: M0
 interface: none — no op or wire shape moves; the integrator classifies.
 design: `docs/development/TREE-SHARING.md` §1 (the message board leaves `main`: a `coord` branch), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none for STAGE 1 (new files only); STAGE 2 waits for M0-99 (BOB #27, 2026-09-22), which is DONE (CONDUCT #12's batch 4).
-scope: as §1. STAGE 1, beside M0-99, NEW FILES ONLY: measure per-path churn on `main` and name each file moved or kept against §1's line; the one write command (fetch, edit without a checkout, the ledger arms, push, retry on a non-fast-forward, each edit an intent anchored to a block) and the one read command against `origin/coord`, with their suite. STAGE 2, after M0-99: the state files move to `coord` and every reader is redirected; ONE migration landing leaves a pointer at each old path and corrects `CLAUDE.md` §1's table and every kickoff naming a moved file. **FULL GATE PROFILE**.
+depends-on: none — M0-99, which STAGE 2 waited on, is DONE (CONDUCT #12's batch 4).
+scope: as §1. STAGE 1, beside M0-99, NEW FILES ONLY: measure per-path churn on `main` and name each file moved or kept against §1's line; the one write command (fetch, edit without a checkout, the ledger arms, push, retry on a non-fast-forward, each edit an intent anchored to a block) and the one read command against `origin/coord`, with their suite. STAGE 2, after M0-99: the state files move to `coord` and every reader is redirected; ONE migration landing leaves a pointer at each old path and corrects `CLAUDE.md` §1's table and every kickoff naming a moved file. **FULL GATE PROFILE**. **WIDENED 2026-09-22 by BOB #28:** read `TREE-SHARING.md` §1, *The builder's four questions*, before building; CONDUCT briefs the resuming worker (owed at integration).
 accepts-when: a claim, a queue flip and a handoff each land on `coord` without moving `main`; every reader answers as it did from `main`; a `main` gate record survives a `coord` write; a new block and a line into an existing block, written concurrently, leave the line in its block (BOB #27: each retry re-applies the edit as an intent anchored to a block heading). NEGATIVE CONTROL: point one reader back at `main`'s old path, and its suite fails by name.
 owed-at-integration: BOB #27, 2026-09-22: every gate reading a `-NEXT.md` line 1 from `origin/main` (NEW-MACHINE §6-§7, BOB.md, lane openings, chips) reads `origin/coord` in the migration commit; an arm fails on any left. CONDUCT tells BOB at cutover.
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1; `node tools/mintid.mjs M0`).
