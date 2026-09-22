@@ -303,12 +303,17 @@ t("and no prose attributes an op to a method the dispatch table does not route i
    and a fall is a real event somebody should read — which is the identical argument
    `LEDGER` makes for holding its own counts exactly rather than as a ceiling. The
    label prints both figures, so a legitimate move is a one-line edit and the number
-   to write is already on screen. */
+   to write is already on screen.
+   MOVED 5 -> 3 ON 2026-09-22 BY M0-110, FROM THE PRINTED FIGURE, AND IT IS NOT SLACK: two of the five sentences sit
+   in STATE files (`docs/archive/ledgers/QUEUE-2026-08.md` and one more in the archive family), which left `main` for
+   the branch `coord`; this walk no longer sweeps state (BOB #28's ruling 2), and those two are judged by the coord
+   write's ledger check LC-op-claims, which runs this same `sweep()` over the state texts. The population did not
+   fall; it was partitioned, and the two halves together still hold all five. */
 t(`the attribution half found real routing claims to check — a grammar matching `
 + `nothing would pass this vacuously — counted over the corpus another checkout `
 + `REPRODUCES (${result.attributionsRepro.length} of ${result.attributions.count} `
 + `attribution(s), ${HEAD_SAYS})`,
-  result.attributionsRepro.length >= 5, true);
+  result.attributionsRepro.length >= 3, true);
 
 console.log("\n--- 4. the ledger is held EXACTLY, and every entry can expire ---");
 t("no ledger entry has drifted: each registered (file,name) appears exactly as many "
@@ -436,7 +441,10 @@ t("the walk reaches bio-plane source, bio-plane tests, docs/development, the "
   [rels.has("bio-plane/src/store.mjs"), rels.has("bio-plane/src/index.mjs"),
    rels.has("bio-plane/test/case-opened.test.mjs"),
    rels.has("docs/development/INTERFACE-CHANGES.md"),
-   rels.has("docs/development/QUEUE.md"),
+   /* CORRECTED 2026-09-22 by M0-110: this read `QUEUE.md`, which is STATE and left `main` for `coord`; the walk
+      no longer sweeps state (the ledger check does), so the planning-document half of the reach is asked of a
+      planning document that stays on `main`. The question — does the walk reach the planning prose — is unchanged. */
+   rels.has("docs/development/ORCHESTRATION.md"),
    [...rels].some((r) => r.startsWith("docs/development/kickoffs/")),
    [...rels].some((r) => r.startsWith("newgroup/")),
    rels.has("civicos-ui/app.html")],

@@ -21,6 +21,11 @@ narrative. `DEBT.md` 504 KB holding 222 open rows averaging 2.3 KB. No session c
 | `docs/development/BACKLOG.md` — **everything still to do** | every open item NOT in the cache, in the order it will be processed (top = next), `blocked` rows included with what unblocks them | ≤ 150 KB; a row ≤ 2 KB | **WHOLE, by SCHEDULER at every replenish and when ordering** (corrected 2026-09-19 by BOB #16: it read CONDUCT, before SCHEDULER existed); by id otherwise |
 | `docs/archive/ledgers/QUEUE-closed*.md` — **what has been done** | every `done` / `superseded` row, verbatim, as it stood when it closed | unbounded | **LOOKED UP** (`node tools/ledger.mjs find <ID>`) |
 
+**All three live on the branch `coord`, not `main`, since M0-110** (`TREE-SHARING.md` §1): each is read with
+`node tools/coord.mjs read <path>` and changed with `node tools/coord.mjs write`, whose intents (a status word, a row
+placed before or after another, archive, refill) are re-applied to the fresh tip, and whose ledger checks — the
+invariants below among them — refuse a write that breaks one. "The same commit" below is ONE such write.
+
 A row is FIELDS, not narrative: id · state · title (one line) · milestone · interface · design (a SECTION) ·
 depends-on (ids) · owner · accepts-when (one paragraph) · why it is here in the order (one line). Reasoning, receipts
 and history belong in the design document the row cites, or in the archive.
@@ -31,9 +36,9 @@ and history belong in the design document the row cites, or in the archive.
 the steps below say CONDUCT refills or gates the plan, read SCHEDULER: the lane was created after this section was
 first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 
-1. **An item completes →** its row leaves the cache for the archive in the SAME commit as its `done` flip
-   (`node tools/ledger.mjs archive <ID>` — LED-5, unchanged).
-2. **Refill, same commit →** the next runnable rows move from the top of `BACKLOG.md` into the cache until it holds 8
+1. **An item completes →** its row leaves the cache for the archive in the SAME write as its `done` flip
+   (`node tools/ledger.mjs archive <ID>` — LED-5; `coord.mjs write --status <ID> done --archive <ID>`).
+2. **Refill, same write →** the next runnable rows move from the top of `BACKLOG.md` into the cache until it holds 8
    (or the backlog has nothing runnable), and are DELETED from the backlog as they move (`node tools/ledger.mjs refill`).
    A `blocked` row is skipped, never moved; it stays where the order put it.
 3. **New work arrives →** BOB writes it into the BOB INBOX with its place in the order; SCHEDULER gates it (the design is
@@ -42,7 +47,7 @@ first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 4. **The order and the files are SCHEDULER's; BOB supplies designs and brings Bob's priority calls.** BOB re-orders by an inbox entry naming the new order,
    checked against `node tools/status.mjs` (nothing before what it rests on).
 
-**The invariants, each a `plancheck` arm (FAIL):** every open id is in EXACTLY ONE of the cache and the backlog; no
+**The invariants, each a `plancheck` arm and a coord write's ledger check (FAIL):** every open id is in EXACTLY ONE of the cache and the backlog; no
 closed id is in either; the cache holds ≤ 8 rows and no `blocked` row; every cache row's `depends-on` is met; both files
 are within budget.
 

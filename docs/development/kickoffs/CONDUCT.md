@@ -6,7 +6,7 @@ the reading budget); every receipt behind the rules below is kept verbatim in `d
 and `node tools/decided.mjs` still finds its rulings.
 
 **Read, in order:** `CLAUDE.md`, this file, `kickoffs/SCHEDULER.md`, `docs/architecture/BIO_System_Design.md` (the construct
-map, whole), then `kickoffs/CONDUCT-NEXT.md` from `origin/main`.
+map, whole), then `node tools/coord.mjs read docs/development/kickoffs/CONDUCT-NEXT.md`.
 The coordination skill is `ORCHESTRATION.md`, "COMMUNICATING A CHANGE" — read it before a change another session must know
 about. Workers follow `kickoffs/WORKER.md`; point every brief at it.
 
@@ -25,7 +25,7 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
 
 ## Opening a CONDUCT session
 
-1. **Fetch, and confirm your handoff is on the remote** (`CONDUCT-NEXT.md` line 1 names you). Trust `origin/main` over it.
+1. **Fetch, and confirm your handoff is on the remote** (its line 1, read from `coord`, names you). Trust the remote over it.
 2. **Integrate your predecessor's live workers first, then archive it** (D-401). Workers are SUBAGENTS of the session
    that spawned them — archiving it stops them mid-item and their reports arrive THERE. Wait until each branch is on the
    remote with a `released:` line (or `isRunning` reads false), integrate from the PUSHED branches, then re-check D-398's
@@ -35,7 +35,7 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
    `ps` is stale: `unlock` only after re-verifying CLEAN and ANCESTOR. Never touch a live pid's lock, or another session's
    Remote Control.
 3. **Arm your self-wake** — `CronCreate`, cron `7,27,47 * * * *`, recurring, prompt: *if a worker is live or you are
-   mid-integration, do nothing; otherwise fetch, read the cache on `origin/main`, integrate what finished, run the
+   mid-integration, do nothing; otherwise fetch, read the cache on `coord`, integrate what finished, run the
    retirement sweep, and fill slots if the cache allows — or say in one line why not.* Verify by `CronList` and record the
    id in your first report. It expires in 7 days, so also arm the ONE-SHOT reminder 5 days out that deletes it, arms a
    fresh one and arms the next reminder (`CLAUDE.md` §4). The `conduct-heartbeat` scheduled task no longer messages you
@@ -48,25 +48,25 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
 
 0. **The plan is SCHEDULER's.** You read the cache; you do not write it except the one word. (Until 2026-09-18 this step
    drained the BOB INBOX; that is now SCHEDULER's.)
-1. **Fill slots.** Read `QUEUE.md` on `origin/main`. **Budget: EIGHT concurrent workers, at most FIVE touching
+1. **Fill slots.** Read `QUEUE.md` on `coord`. **Budget: EIGHT concurrent workers, at most FIVE touching
    `store.mjs`, `bio-checks.mjs` or `index.mjs`** (`ORCHESTRATION.md` "Concurrency" — read it rather than the number you
    remember); spend the rest on items whose PATHS ARE DISJOINT. For each free slot, take the top runnable cached task
    (`queued`, every `depends-on` done) and:
    - **Check it is not already landed, by its CONTENT**: `git cat-file -e origin/main:<a file it adds>`, or grep a symbol
      it adds. A ledger grep returning nothing is not evidence — ask what it cost that query to return nothing.
-   - **Its row exists on `origin/main`** and names the governed design document and SECTION that is its authority
+   - **Its row exists on `coord`** and names the governed design document and SECTION that is its authority
      (`CORPUS-STANDARD.md` §4.7). Never brief against a row that lives only on an unmerged branch; a row with no design
      pointer goes back to SCHEDULER/BOB as missing design, never spawned against the ledger.
-   - **Flip it `running` with its spawn sentence, gate, PUSH, then spawn.** A worker reads its row from the remote; a
-     flip in your tree is a flip nobody sees. Flip a cohort in ONE edit and read back `grep -c '· running'` against the
-     number you are about to spawn. The spawn sentence carries the falsification clause: *"Falsify rather than believe: a
+   - **Flip it `running` with its spawn sentence — `coord.mjs write --status <ID> running --note "…"`, which pushes —
+     then spawn.** A worker reads its row from the remote. Flip a cohort in ONE write (`--intents`) and read back the
+     `· running` count against the number you are about to spawn. The spawn sentence carries the falsification clause: *"Falsify rather than believe: a
      live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is
      UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the
      absence alone."*
    - **Before a spawn, a bare `cd` into the repository in its own command** — the working directory reverts between turns
      and a subshell `cd` does not move it; a spawn from outside the repository fails.
-   - **Confirm the spawn started** (`ListAgents` or the tool's own result). **If it failed, revert the flip and push in the
-     same minute** — otherwise the queue claims live workers that do not exist.
+   - **Confirm the spawn started** (`ListAgents` or the tool's own result). **If it failed, revert the flip (a coord write) in
+     the same minute** — otherwise the queue claims live workers that do not exist.
    - **The brief is self-contained** and says: read `CLAUDE.md`, `kickoffs/WORKER.md`, the area kickoff and the design
      SECTION before the code; `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/` first (INCLUDING UI briefs — the UI
      harness drives plane suites), check `df -h`, `node_modules` real directories; **take every id with
@@ -225,12 +225,12 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
   ITS landing — **then run the suites where they MEET**: two green branches were red together.
 - **Mechanical conflicts are scriptable, the rest are not:** `docs/DECIDED.md` from a pre-M0-99 branch = the deletion; `bio-plane/dist/`
   = ours + `build-plane.mjs`; REGISTER_FLOOR = main's key + both sides' comments, re-read from `--strict` on the
-  COMMITTED merge; CLAIMS/MEASUREMENTS/INTERFACE-CHANGES = keep both. Everything else: read BOTH sides.
+  COMMITTED merge; MEASUREMENTS/INTERFACE-CHANGES = keep both; a state file = main's POINTER, the branch's block carried by `coord.mjs write`. Everything else: read BOTH sides.
 - **`Dropped-from-branch:` trailers sit in the LAST paragraph with `Co-Authored-By`.** A placement or archiving BEATS a
   branch that merely CARRIED the old row (verify byte-identical to the merge base first); one that MODIFIED it goes back
   to SCHEDULER — the modification is evidence the close was wrong.
-- Check `MERGE_HEAD` before committing a re-made merge. **Flip in a throwaway `--detach origin/main` worktree** while
-  your tree is mid-gate. Stop spawning before one more worker's cost crosses the line, not when the meter reaches it.
+- Check `MERGE_HEAD` before committing a re-made merge. A flip is a coord write, so it never waits on
+  your tree's gate. Stop spawning before one more worker's cost crosses the line, not when the meter reaches it.
 - **`main` CAN MOVE FASTER THAN YOUR GATE RUNS** — a battery is 550–650s and `main` moved TWENTY-ONE times inside one
   integration — so re-gating from scratch on every move NEVER CONVERGES. **Name the DELTA and classify it**
   (`gates.mjs --since <measured commit>` once that tree RECORDED GREEN: it re-runs the units reading BOTH sides and

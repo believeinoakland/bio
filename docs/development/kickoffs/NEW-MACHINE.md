@@ -34,7 +34,7 @@ UNMEASURED, and says which.**
 1. **Every commit that exists only on this Mac is pushed**, since a cloud session starts from what `origin` holds.
    `plancheck`'s NEVER PUSHED arm names them. A tree carrying a RED record cannot be pushed on any ref; push its patch
    (SCHEDULER #12 did, as `origin/scheduler12/row-drafts`).
-2. **Each `<LANE>-NEXT.md` is on `origin/main`, written for a reader with NO memory** and possibly none of the tools below.
+2. **Each `<LANE>-NEXT.md` is on the remote (`origin/coord` since M0-110), written for a reader with NO memory** and possibly none of the tools below.
 3. **At Bob's order:** each lane deletes its own crons, stops its workers and says so; BOB disables the heartbeat task,
    archives what has finished, confirms every lane stopped (`CLAUDE.md` §4), and gives Bob §7's block.
 
@@ -209,7 +209,8 @@ CONDUCT's tooling, not by hand.**
 1. **BOB first** — §7's block. It confirms the old account is STOPPED, recreates the machine-local machinery, and reads
    `BOB-NEXT.md`.
 2. **SCHEDULER, then CONDUCT, then DIST, then FLEET** — the five STANDING lanes (`ORCHESTRATION.md` "Roles"), each started
-   by a chip BOB files and Bob clicks, each gated on its own `-NEXT.md` line 1 being on `origin/main` and on
+   by a chip BOB files and Bob clicks, each gated on its own `-NEXT.md` line 1 being on `origin/coord` (read it with
+   `node tools/coord.mjs read docs/development/kickoffs/<LANE>-NEXT.md`; `TREE-SHARING.md` §1) and on
    `node tools/occupancy.mjs` ADMITTING it (`kickoffs/BOB.md` rule 1). SCHEDULER first: it
    owns the order of the plan, and CONDUCT fills slots from its cache.
 3. **Workers are CONDUCT's**, one per cached task, worktree-isolated (`kickoffs/WORKER.md`).
@@ -255,7 +256,10 @@ missing, the plancheck and gate results, and whether the memory seed and setting
 The CURRENT block is the one `BOB-NEXT.md` §0 names. The block for the move of 2026-09-22, exactly as BOB #27 gave it to
 Bob and BOB #28 was started from, is in git history at `6ee96532` (`git show 6ee96532:docs/development/kickoffs/NEW-MACHINE.md`);
 BOB #16's for the 2026-09-19 switch before it. The four lane blocks BOB #28 gave Bob are
-`docs/archive/lane-paste-blocks-2026-09-22.md`. On a bare machine, §6a's bootstrap comes first.
+`docs/archive/lane-paste-blocks-2026-09-22.md`. On a bare machine, §6a's bootstrap comes first. **Those blocks predate
+the `coord` cutover (M0-110) and are kept verbatim as a record:** each gate in
+them that shows a `-NEXT.md` from `origin/main` reads the one-line POINTER after it — a block given to Bob after the cutover gates on
+`node tools/coord.mjs read docs/development/kickoffs/<LANE>-NEXT.md | head -1` instead, and reads the plan the same way.
 
 ## 9. Seeding the new account — memory and settings
 

@@ -63,7 +63,9 @@ import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, statSync, 
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { scan, registerEntries, query, render, fresh, indexTracking, INDEX_PATH } from "../../tools/decided.mjs";
+import { scan, registerEntries, query, render, fresh, indexTracking, INDEX_PATH, corpus } from "../../tools/decided.mjs";
+import { isMovedPath } from "../../tools/coord.mjs";
+import { relative, sep } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
@@ -87,19 +89,48 @@ const cli = (...args) => {
 const FIX = join(ROOT, "docs/development/DECISIONS.md");
 const over = (text, opts) => scan([FIX], () => text, opts);
 
-/* The real corpus, read ONCE, with every register entry the tool saw. */
+/* The real corpus, read ONCE, with every register entry the tool saw.
+   CORRECTED 2026-09-22 by M0-110 (TREE-SHARING.md §1; BOB #28's ruling 2). The corpus holds the STATE files — CLAIMS.md
+   (154 of the index's rulings), the ledgers, the August decision register — which live on the branch `coord` after the
+   cutover, where `decided.mjs` reads them through the coord layer. A battery suite that judged the index over their
+   LIVE text would judge `coord`, which no `main` gate record settles: one coord write could turn this suite red with
+   `main` unmoved. So the STATE half of the corpus is read here from a PINNED tree — `de40aa56`, the `main` M0-110 was
+   built from, when every state file was still on it — and the rest from the working tree as before. Every arm below
+   asks what it always asked, of the same volume of real rulings, and none of it moves when a lane writes to `coord`.
+   A state file the pinned tree lacks (a shallow clone) is SKIPPED and the oracle's floor then fails by name — never a
+   silent pass. The live, moving state is `decided.mjs`'s own business (it reads through the layer); the index over it
+   is not judged by the battery. */
+const STATE_PIN = "de40aa56";
+const pinCache = new Map();
+const atPin = (rel) => {
+  if (!pinCache.has(rel)) { const r = spawnSync("git", ["show", `${STATE_PIN}:${rel}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 28 }); pinCache.set(rel, r.status === 0 ? r.stdout : null); }
+  return pinCache.get(rel);
+};
+const relOf = (abs) => relative(ROOT, abs).split(sep).join("/");
+const PINNED_STATE = (() => { const r = spawnSync("git", ["ls-tree", "-r", "--name-only", STATE_PIN, "--", "docs"], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 26 });
+  return (r.status === 0 ? r.stdout.split("\n").filter(Boolean) : []).filter((f) => isMovedPath(f) && /\.(md|html)$/.test(f)); })();
+const CORPUS = [...corpus().filter((f) => !isMovedPath(relOf(f))), ...PINNED_STATE.map((f) => join(ROOT, f))];
+const READ = (f) => { const rel = relOf(f); return isMovedPath(rel) ? (atPin(rel) ?? "") : readFileSync(f, "utf8"); };
 const REGISTER = [];
-const ROWS = scan(undefined, undefined, { sink: REGISTER });
-const BEFORE = scan(undefined, undefined, { entries: false });
-const lineOf = (() => { const c = {}; return (f, n) => (c[f] ??= readFileSync(join(ROOT, f), "utf8").split("\n"))[n - 1]; })();
+const ROWS = scan(CORPUS, READ, { sink: REGISTER });
+const BEFORE = scan(CORPUS, READ, { entries: false });
+const lineOf = (() => { const c = {}; return (f, n) => (c[f] ??= READ(join(ROOT, f)).split("\n"))[n - 1]; })();
 
 /* ========================================================================== */
 section("1 — M0-97: EVERY ANSWERED OR ENACTED REGISTER ENTRY IS FILED UNDER ITS OWN ID");
 {
   /* THE ORACLE IS THE FILE'S OWN HEADINGS, read by `git grep` — not by the tool's parser. */
-  const g = spawnSync("git", ["grep", "-n", "-E", "^#{1,6} DEC-[0-9]+ · ", "--", "docs", "CLAUDE.md"], { cwd: ROOT, encoding: "utf8" });
-  t("the oracle ran (git grep exit 0 — a search that failed returns no headings, which would pass everything)", g.status, 0);
-  const heads = (g.stdout || "").trim().split("\n").filter(Boolean).map((l) => {
+  /* M0-110: `main`'s files by `git grep` (the state files excluded — they are pointers after the cutover), and the
+     pinned state files by `git grep` AT THE PIN, whose lines print as `<pin>:<path>:<n>:` and are read back without the
+     pin. Still git's own search, never the tool's parser. */
+  const EXCL = [":(exclude)docs/development/CLAIMS.md", ":(exclude)docs/development/QUEUE.md", ":(exclude)docs/development/BACKLOG.md",
+                ":(exclude)docs/development/DEBT.md", ":(exclude)docs/development/PLACEMENT.md", ":(exclude)docs/archive/ledgers",
+                ":(exclude)docs/development/kickoffs/*-NEXT.md"];
+  const g = spawnSync("git", ["grep", "-n", "-E", "^#{1,6} DEC-[0-9]+ · ", "--", "docs", "CLAUDE.md", ...EXCL], { cwd: ROOT, encoding: "utf8" });
+  const gp = spawnSync("git", ["grep", "-n", "-E", "^#{1,6} DEC-[0-9]+ · ", STATE_PIN, "--", ...PINNED_STATE], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 26 });
+  t("the oracle ran (git grep exit 0 — a search that failed returns no headings, which would pass everything)", [g.status, gp.status], [0, 0]);
+  const heads = [(g.stdout || "").trim(), (gp.stdout || "").trim().split("\n").map((l) => l.startsWith(`${STATE_PIN}:`) ? l.slice(STATE_PIN.length + 1) : l).join("\n")]
+    .join("\n").split("\n").filter(Boolean).map((l) => {
     const m = /^([^:]+):(\d+):#{1,6} (DEC-\d+) · (.*)$/.exec(l);
     return m && { file: m[1], line: +m[2], id: m[3], status: m[4] };
   }).filter(Boolean);
@@ -116,7 +147,7 @@ section("1 — M0-97: EVERY ANSWERED OR ENACTED REGISTER ENTRY IS FILED UNDER IT
   /* "Quotes it" is judged against the entry's own BYTES, whitespace collapsed — not against the
      tool's parse of them — so a row that summarised, or quoted a neighbour, fails here. */
   const flat = (s) => s.replace(/\s+/g, " ");
-  const segment = (h) => { const L = readFileSync(join(ROOT, h.file), "utf8").split("\n"); return flat(L.slice(h.line - 1, Math.min(L.length, next(h) - 1)).join(" ")); };
+  const segment = (h) => { const L = READ(join(ROOT, h.file)).split("\n"); return flat(L.slice(h.line - 1, Math.min(L.length, next(h) - 1)).join(" ")); };
   const returned = [], missing = [];
   for (const h of ruling) {
     const { filed, hits } = query(h.id, ROWS);
@@ -357,6 +388,9 @@ section("8 — M0-99: THE INDEX IS PRODUCED ON DEMAND, AND NEVER COMMITTED");
   const repo = (name, { ignore = REAL_IGNORE, files = {} } = {}) => {
     const root = join(SANDBOX, name);
     put(root, "tools/decided.mjs", readFileSync(TOOL));
+    /* CORRECTED 2026-09-22 by M0-110: `decided.mjs` imports `coord.mjs` (the corpus is read through the coord layer),
+       so a copy carried alone cannot load — the fixture would measure a broken import, not the rule. Carried with it. */
+    put(root, "tools/coord.mjs", readFileSync(join(ROOT, "tools/coord.mjs")));
     put(root, "CLAUDE.md", "# fixture\n");
     if (ignore !== null) put(root, ".gitignore", ignore);
     for (const [rel, body] of Object.entries(files)) put(root, rel, body);
@@ -430,9 +464,14 @@ section("8 — M0-99: THE INDEX IS PRODUCED ON DEMAND, AND NEVER COMMITTED");
     [chk.code, /RETIRED \(M0-99/.test(chk.out), /No RULING/.test(chk.out)], [2, true, false]);
   /* This repository, in process: the one call leaves the working copy CURRENT, and what it returns is
      the index of the corpus this suite read at its head. It may write the (ignored) copy here. */
+  /* CORRECTED 2026-09-22 by M0-110: "the corpus the suite read" is the PINNED state half above, and `fresh()` reads the
+     LIVE corpus through the coord layer, so the equality is asked of the tool's own live scan — the property is
+     unchanged: the one call writes exactly the index of the corpus as the tool reads it now. */
   const here = fresh();
+  const liveRegister = [];
+  const liveRows = scan(undefined, undefined, { sink: liveRegister });
   t("ON THIS REPOSITORY, after the one call the working copy is CURRENT and is the index of the corpus the suite read",
-    [fresh({ write: false }).state, here.body === render(ROWS, REGISTER)], ["current", true]);
+    [fresh({ write: false }).state, here.body === render(liveRows, liveRegister)], ["current", true]);
 
   /* ---- THE ACCEPTANCE, the row's own words: a ruling edited on two branches merges with no
      DECIDED.md conflict, and `decided.mjs "<subject>"` answers from the merged corpus. */

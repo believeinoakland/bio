@@ -17,7 +17,7 @@ answers are right there."*
 | what has been DECIDED | every ruling in the corpus, indexed | `node tools/decided.mjs "<subject>"` |
 | what a lane OWES | the ledgers' dispositions | `node tools/owed.mjs <LANE>` |
 | a ledger row by id (D-, REC-, IC-, M-…) | the live ledger or its archive | `node tools/ledger.mjs find <ID>` |
-| what is RUNNABLE next, in order | `docs/development/QUEUE.md` | read the open rows |
+| what is RUNNABLE next, in order | `QUEUE.md` on `coord` | `node tools/coord.mjs read docs/development/QUEUE.md` |
 
 **A claim about the state of the system, the plan or a decision is not made until one of these has
 answered it.** A sentence in a handoff, a kickoff or a peer's message is a POINTER to where to look,
@@ -27,7 +27,8 @@ verified it. When a lookup returns nothing, say so: *not found* is not *absent*;
 **Keep them true in the commit that changes the truth.** Build or remove something → update
 `construct-status.json` (the push is refused until you do). Rule on something → it goes in its home
 document, and `node tools/decided.mjs` regenerates. Close a row → `node tools/ledger.mjs archive <ID>`
-in the same commit.
+in the same write. **State (claims, plan, debt, handoffs) is on `coord`**: `node tools/coord.mjs read`,
+`coord.mjs write`, never a `main` commit (TREE-SHARING §1).
 
 **THE READING BUDGET (Bob, 2026-09-18: every session must be able to read the record it needs IN FULL,
 not scan it).** A file is either READ WHOLE or LOOKED UP, never half of each. Read whole: this file, your
@@ -95,9 +96,9 @@ design, doctrine, anything for Bob → BOB) and continue.
   it was removed on purpose — **do not rebuild it**; if you think one is needed, say so and let Bob rule.
 - **A change is made when it is committed AND pushed**, and verified from the REMOTE. Run
   `node tools/plancheck.mjs` before any handoff.
-- **Claim your area in `docs/development/CLAIMS.md` before an edit that spans landings** — a claim released in its own
-  commit reserves nothing and collides on every rebase, so write none (BOB #27, 2026-09-22; M-97); do not edit another
-  area's paths (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`. Work in your own worktree.
+- **Claim your area in `CLAIMS.md` before an edit that spans landings**, and write none for one landing (BOB #27;
+  M-97); do not edit another area's paths (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`.
+  Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
   FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18). **A session is REFRESHED when its context is
   more than 70% full** (Bob, 2026-09-21):
@@ -194,10 +195,10 @@ Both `wrangler.jsonc` files pin `account_id`; **if wrangler ever reports an acco
 | `bio-plane/test/` | the battery |
 | `newgroup/` | the installer — out of bounds without an explicit instruction |
 | `docs/architecture/BIO_System_Design.md` | the construct map; §3's state column is rendered from `construct-status.json` |
-| `docs/development/QUEUE.md` | the cache of the next tasks, in order (SCHEDULER owns it; CONDUCT flips `running`) |
+| `QUEUE.md` on `coord` | the next tasks in order (SCHEDULER owns it; CONDUCT flips `running`) |
 | `docs/development/WORK-PIPELINE.md` | how work moves: backlog → cache → archive |
 | `docs/development/MILESTONES.md` | the capability ladder |
 | `docs/development/ORCHESTRATION.md` | how lanes communicate — read "COMMUNICATING A CHANGE" before a change another session must know about |
-| `docs/development/kickoffs/` | each lane's instructions and its `-NEXT.md` handoff |
+| `docs/development/kickoffs/` | each lane's instructions |
 | `release/` | the signed artifact and `RELEASE.json` |
 | `docs/archive/` | finished work, and the reasoning behind every rule here |

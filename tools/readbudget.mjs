@@ -26,6 +26,8 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+/* M0-110: the handoffs (`*-NEXT.md`) live on `coord` after the cutover — listed and measured through the layer. */
+import { listState, readState } from "./coord.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -54,7 +56,7 @@ export function readSet(root = ROOT) {
   for (const f of READ_WHOLE_DOCS) if (existsSync(join(root, f))) out.push({ file: f, key: "kickoff", budget: BUDGET.kickoff });
   if (existsSync(join(root, MAP))) out.push({ file: MAP, key: "map", budget: BUDGET.map });
   if (existsSync(kdir))
-    for (const f of readdirSync(kdir).sort()) {
+    for (const f of listState(root, "docs/development/kickoffs")) {
       if (!f.endsWith(".md") || f === "README.md") continue;
       const key = f.endsWith("-NEXT.md") ? "next" : "kickoff";
       out.push({ file: `docs/development/kickoffs/${f}`, key, budget: BUDGET[key] });
@@ -65,13 +67,13 @@ export function readSet(root = ROOT) {
 export function check(root = ROOT, { budget = BUDGET, cut = CUT } = {}) {
   const over = [];
   for (const r of readSet(root)) {
-    const p = join(root, r.file);
-    if (!existsSync(p)) continue;
+    const text = readState(root, r.file);
+    if (text === null) continue;
     /* ONE assignment of a file to its budget: readSet's KEY, looked up in the budget passed in (so a control can lower
        it). This line used to recompute the class from the filename, a second spelling that gave every file outside
        CLAUDE.md / kickoffs its kickoff budget whatever readSet said (found 2026-09-19 when the map was added). */
     const b = budget[r.key];
-    const bytes = readFileSync(p).length;
+    const bytes = Buffer.byteLength(text, "utf8");
     if (bytes > b) over.push({ file: r.file, bytes, budget: b,
                                verdict: cut.has(r.file) ? "FAIL" : "WARN" });
   }

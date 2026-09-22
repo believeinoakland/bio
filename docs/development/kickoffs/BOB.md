@@ -7,7 +7,8 @@ room where Bob's own decisions are brought and recorded. Cut to its budget 2026-
 `docs/archive/BOB-kickoff-2026-09-18.md`, and `node tools/decided.mjs` still finds its rulings.
 
 **Read, in order:** `CLAUDE.md`, this file, `docs/architecture/BIO_System_Design.md` (the construct map, whole), then
-`kickoffs/BOB-NEXT.md` from `origin/main`. The
+`node tools/coord.mjs read docs/development/kickoffs/BOB-NEXT.md` (state lives on the branch `coord`; every write
+to it — the inbox, a claim, a handoff — is `node tools/coord.mjs write`, `TREE-SHARING.md` §1). The
 coordination skill is `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE".
 
 ## What this session does
@@ -30,7 +31,7 @@ Bob can answer sends it here, and this session carries it into his conversation.
 
 ## Opening a BOB session
 
-1. **Fetch, and confirm your handoff is on the remote** (`BOB-NEXT.md` line 1 names you as successor).
+1. **Fetch, and confirm your handoff is on the remote** (`BOB-NEXT.md` line 1, read from `coord`, names you as successor).
 2. **Archive your predecessor — the successor's act, ruled by Bob 2026-09-17, needing nobody's click.**
    Find it with `list_sessions`. **Re-check D-398's three conditions AT THE MOMENT YOU ACT:** `isRunning`
    false; its worktree `git status --porcelain` EMPTY; its tip an ANCESTOR of `origin/main`. If any fails,
@@ -165,14 +166,14 @@ body below the inbox, and not any area's code.
 2026-09-19). A chip's gate tests that `<LANE>-NEXT.md` line 1 NAMES the successor. **It cannot test whether the file
 is CURRENT**, and an hours-old handoff passes it cleanly while handing a successor a world that has moved — CONDUCT's
 sat at a version written while it was blocked behind a gate that had since lifted, describing a stalled estate that no
-longer existed. **Run `git log -1 --format='%h %cI' origin/main -- <that file>` and satisfy yourself the timestamp is
-recent against `origin/main`'s tip before you file.** The lane writing the handoff is the only thing between a
+longer existed. **Run `git fetch origin coord` and `git log -1 --format='%h %cI' origin/coord -- <that file>`, and satisfy
+yourself the timestamp is recent against `origin/coord`'s tip before you file.** The lane writing the handoff is the only thing between a
 successor and a stale world; this check is the only thing between that lane and an honest mistake. It belongs to
 whoever FILES the chip, which is this lane.
 
 **AND ASK THE TWO QUESTIONS NO DOCUMENT CAN ANSWER: IS THE LANE OCCUPIED, AND CAN IT HEAR YOU?** Ruled
 2026-09-19 by BOB #18 from three failures inside one hour, all of one root. A chip's gate tests ADDRESSING
-(line 1 names the successor) and, since `38f5b370`, CURRENCY (the handoff's timestamp against `origin/main`).
+(line 1 names the successor) and, since `38f5b370`, CURRENCY (the handoff's timestamp against `origin/coord`).
 **Both are properties of a DOCUMENT. Occupancy and reachability are properties of the ESTATE, and no amount of
 rigour in a handoff can reach them.**
 
@@ -208,7 +209,7 @@ rigour in a handoff can reach them.**
    **AND RELEASING THE NAME DOES NOT MAKE THE INCUMBENT REACHABLE — it converts a SILENT misroute into a
    LOUD failure, which is strictly better and is not delivery.** Rule 2 is PROSPECTIVE: it fixes the NEXT
    integrator, so a lane already running unattended stays deaf for the rest of its life and the record on
-   `origin/main` is the only channel to it. Verified 2026-09-19 after the duplicate released the name: the
+   the remote (`coord`) is the only channel to it. Verified 2026-09-19 after the duplicate released the name: the
    incumbent was STILL absent from all 48 peers.
 4. **AND A HANDOFF IS NOT A STAND-DOWN — VERIFY THE PREDECESSOR *STOPPED*, NOT MERELY THAT IT *WROTE*.** Measured
    on THIS lane, 2026-09-20, hours after rules 1-3 were landed here: BOB #17 wrote `BOB-NEXT.md` naming its
@@ -237,7 +238,7 @@ still read.
 
 **Spawning a missing area session is this lane's act, and the mechanism is the chip** (Bob, 2026-09-10):
 ensure the area's kickoff exists, then file a `spawn_task` chip whose prompt is a SELF-CONTAINED paste
-block — read `CLAUDE.md`, then the kickoff, fetch, verify state from `origin/main`, claim before editing —
+block — read `CLAUDE.md`, then the kickoff, fetch, verify state with `node tools/coord.mjs read`, claim before editing —
 and Bob clicks once. A saturating session is replaced the same way: it writes its `<AREA>-NEXT.md` first,
 and the chip refuses to work if that handoff is absent from the remote. **Title a lane's chip EXACTLY `<LANE> #<n>`:**
 the heartbeat's STEP 0 matches that form and nothing else (`retirable.mjs`'s `laneOf` also reads a suffixed title since M0-83) — a task titled `CONDUCT #8

@@ -206,7 +206,9 @@ number" into a corpus file**; the tool caught its own debt row poisoning its own
 
 ## Boundaries
 
-- **Claim your paths in `docs/development/CLAIMS.md` BEFORE editing.**
+- **Claim your paths in `docs/development/CLAIMS.md` BEFORE editing.** It lives on the branch `coord` (M0-110): append
+  the block with `node tools/coord.mjs write -m "<why>" --append docs/development/CLAIMS.md <file>`, and later add its
+  `released:` line INTO that block with `--line docs/development/CLAIMS.md "<its heading>" <file>` — never a commit.
 - **Do not edit another area's paths.** Append a DELEGATION and continue.
 - **A DELEGATION YOU RAISE CARRIES ITS STATE ON A LINE OF ITS OWN, DATED, OR `plancheck`
   FAILS (M0-37, 2026-09-16).** Write `**open as of YYYY-MM-DD** — <why it is open>` under the

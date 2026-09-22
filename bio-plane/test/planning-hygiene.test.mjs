@@ -83,7 +83,10 @@
    the same assertion FAILS, and nothing else. (HO) the same 19 rows under the corrected floor -> GREEN, the
    over-strictness arm, which also isolates HC's variable. RUN 2026-09-22 by the M0-109 worker, driver exit 0, 62 pass /
    0 fail, every restore byte-identical; this suite per arm: baseline 180/0 judging 101 live rows, HE 78/1 judging 0,
-   HC 97/1 judging 19, HO 98/0 judging 19. */
+   HC 97/1 judging 19, HO 98/0 judging 19.
+   SUPERSEDED 2026-09-22 BY M0-110, AND KEPT AS THE RECORD: §1's live read and its floor left this suite for `coord.mjs`'
+   ledger check LC-debt-token (BOB #28's ruling 2); `debt-floor.control.mjs` was re-pointed there (arms TL and TC), and
+   its run of record is on `coord.test.mjs`' NEGATIVE CONTROL line. */
 /* Planning-drift hygiene: the M0-6 gate, on D-113's precedent.
  *
  * The repository is the channel between sessions (CLAUDE.md). The PLAN is how a
@@ -130,9 +133,8 @@ import { spawnSync } from "node:child_process";
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-/* LED-2 — a closed id's lookup is the ARCHIVER's, so a `QUEUED <ID>` naming a row that
-   `tools/ledger.mjs archive` has moved still resolves (M-57 breakage 3). */
-import { archivedQueueIds } from "../../tools/ledger.mjs";
+/* M0-110: the live-row arms of this suite left the battery for `tools/coord.mjs`' ledger checks (see below). */
+import { debtTokenAudit } from "../../tools/ledger.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 const REPO = join(DIR, "..", "..");            // bio-plane/test -> repo root
@@ -181,50 +183,55 @@ const HEAD_SAYS = PROV.inHead === null
 
 /* ------------------------------------------------------------------ inventory */
 
-const queue = read(join(DEV, "QUEUE.md"));
-const debt = read(join(DEV, "DEBT.md"));
-
-/* The queue ids, read out of QUEUE.md's own item headings (`### <ID> · <state>`)
-   rather than hand-listed, so an id renamed there is seen here without a second
-   edit — the same reason coverage.mjs reads the OPS table from source. */
-/* CORRECTED 2026-09-19 by SCHEDULER at LED-6's migration: the set was read from QUEUE.md ALONE, which
-   was the whole plan until the split. Now QUEUE.md is the cache (at most 8 rows) and every other open
-   row is in BACKLOG.md, so a reader of QUEUE.md alone would score every backlog id as a DANGLING
-   reference — D-430's class (a reader that does not follow the rows into the backlog). Both live files
-   of the queue grammar are read. */
-const backlogText = existsSync(join(DEV, "BACKLOG.md")) ? read(join(DEV, "BACKLOG.md")) : "";
-const QUEUE_IDS = new Set(
-  [...(queue + "\n" + backlogText).matchAll(/^###\s+([A-Z][A-Z0-9]*-\d+)\s+·/gm)].map((m) => m[1]));
-t("QUEUE.md and BACKLOG.md together declare a non-trivial set of item ids", QUEUE_IDS.size >= 10, true);
+/* MOVED 2026-09-22 by M0-110 (TREE-SHARING.md §1; BOB #28's ruling 2), NOT DROPPED. This inventory read the LIVE
+   `QUEUE.md`, `BACKLOG.md` and `DEBT.md` from the working tree, and three sections below judged those live rows. After
+   the cutover the three files live on the branch `coord` and each old path here is a one-line pointer: a gate record
+   is keyed by `main`'s tree (D-293), so a battery arm judging the live rows would judge `coord`, which no `main` record
+   settles — a coord write could turn this suite red with `main` unmoved. Each live-row arm is now an arm of
+   `coord.mjs`' `ledgerChecks`, which every coord write runs before it pushes (a write that breaks one is REFUSED) and
+   `plancheck` runs against the coord view:
+     "QUEUE.md and BACKLOG.md together declare a non-trivial set of item ids"  -> LC-queued-refs (a non-vacuity floor)
+     §1 "every one of N DEBT rows carries a disposition token", its floor       -> LC-debt-token
+     §2 "every QUEUED reference names an existing queue item", its two floors   -> LC-queued-refs
+     §4 "every OPEN plan row names a governed design…", "…state recognised"     -> LC-row-design
+     §5 "the walk finds a real register", "every DELEGATION block … dated"     -> LC-delegations
+   What stays is BEHAVIOUR: each rule driven on a fixture, and each mechanism shown to be in the loop. The arm list is
+   pinned below, so a moved arm cannot silently disappear from `coord.mjs`. */
+const COORD_SRC = read(join(REPO, "tools/coord.mjs"));
+const MOVED_ARMS = ["LC-queued-refs", "LC-debt-token", "LC-row-design", "LC-delegations"];
+t("every live-row arm this suite gave up is an arm of coord.mjs' ledger checks (none dropped)",
+  MOVED_ARMS.filter((id) => !COORD_SRC.includes(`await arm("${id}"`)), []);
 
 /* --------------------------------------- 1. every open DEBT row has a token */
 /* The exact predicate plancheck.mjs enforces, ported so a session that runs only
    the battery gets the identical gate. A row is fine if its LAST cell begins with
    a disposition token OR reads as resolved. */
-console.log("\n--- every open DEBT row carries a disposition token ---");
+console.log("\n--- every open DEBT row carries a disposition token (the rule, on a fixture) ---");
 {
-  const TOKEN = /\|\s*(M\d+|DOCTRINE|ACCEPTED|WATCH|SUPERSEDED|NOT OURS|BOB's)/;
-  const RESOLVED = /\|\s*(fixed|resolved|closed|guarded|amended|measured)/i;
+  /* CORRECTED 2026-09-22 by M0-110: this section PORTED plancheck's inline predicate and ran it over the LIVE DEBT.md.
+     The predicate is now ONE function, `ledger.mjs`' `debtTokenAudit`, which plancheck §2 and the coord ledger check
+     LC-debt-token both call; the live run is LC-debt-token's. Here the rule is driven on a fixture, each edge a row. */
+  const FIXD = [
+    "| D-1 | gap | 2026-09-18 | a milestone token | M3 · open |",
+    "| D-2 | gap | 2026-09-18 | doctrine | DOCTRINE — held as a standing rule |",
+    "| D-3 | gap | 2026-09-18 | a resolved verb, lower case | closed 2026-09-18 by the fixture |",
+    "| D-4 | gap | 2026-09-18 | NO token and NO resolution | open, and nobody said where it goes |",
+    "| D-5 | gap | 2026-09-18 | not ours | NOT OURS — the City's |",
+    "| D-6 | gap | 2026-09-18 | a pipe \\| in the body | BOB's call |",
+  ].join("\n");
+  const fa = debtTokenAudit(FIXD);
+  t("the fixture parses as six DEBT rows", fa.rows, 6);
+  t("exactly the row with no token and no resolved verb fails, by id — and the token is read from the LAST cell",
+    fa.bad.map((b) => b.id), ["D-4"]);
+  const PC = read(join(REPO, "tools/plancheck.mjs"));
+  t("ONE predicate: plancheck §2 and the coord ledger check both call debtTokenAudit, and plancheck spells no TOKEN of its own",
+    [/debtTokenAudit\(/.test(PC), /debtTokenAudit\(/.test(COORD_SRC), /const TOKEN = /.test(PC)], [true, true, false]);
   const rows = [];
-  for (const line of debt.split("\n")) {
-    if (!/^\|\s*D-\d+\s*\|/.test(line)) continue;
-    const id = (line.match(/^\|\s*(D-\d+)/) || [])[1];
-    const tail = line.replace(/\s+$/, "");
-    const i = tail.lastIndexOf("|", tail.length - 2);
-    const status = i >= 0 ? tail.slice(i).replace(/^\|\s*|\s*\|$/g, "").trim() : "";
-    const ok = TOKEN.test(`| ${status}`) || RESOLVED.test(`| ${status}`);
-    rows.push({ id, ok, status });
-  }
   /* CORRECTED 2026-09-22 by M0-109, not exempted — the same defect as `ledger.test.mjs` §3's floor, found by that item's
      class sweep: `>= 20` measured the ledger's SIZE where this check needs only NON-VACUITY, and LED-7's fold drains
      DEBT.md on purpose (WORK-PIPELINE.md §3), so at 19 rows the fold's own progress would have failed every gate here.
      ZERO rows still FAILS HERE BY NAME: when LED-7 archives DEBT.md whole (once empty), that same landing re-points or
      retires this check, and it is never left to pass over nothing. */
-  t("DEBT.md has debt rows to check", rows.length > 0, true);
-  const bad = rows.filter((r) => !r.ok).map((r) => `${r.id} found:"${r.status.slice(0, 40)}"`);
-  t(`every one of ${rows.length} DEBT rows carries a disposition token`, bad, []);
-  /* Name each row so a break points at the exact D-number, not just a count. */
-  for (const r of rows) t(`${r.id} carries a disposition token`, r.ok, true);
 }
 
 /* ---------------------------- 2. every QUEUED <ID> reference names a real item */
@@ -233,23 +240,19 @@ console.log("\n--- every open DEBT row carries a disposition token ---");
    text is excluded — an angle-bracketed placeholder is not a reference. */
 console.log("\n--- every QUEUED <ID> cross-reference names a real queue item ---");
 {
-  const refs = [];
-  for (const { file, body } of allDocs()) {
-    for (const m of body.matchAll(/\bQUEUED\s+(?:as\s+)?([A-Z][A-Z0-9]*-\d+)\b/g))
-      refs.push({ file, id: m[1] });
-  }
-  t("there is at least one concrete QUEUED reference to check", refs.length >= 1, true);
-  /* CORRECTED 2026-09-18 (LED-2), not exempted: the rule was "names an existing queue item" and
-     the id set was the LIVE headings only, which was the same thing while every closed id kept a
-     heading in the live register. Once `tools/ledger.mjs` moves closed rows out, a reference to a
-     `done` item (all three live ones today: FW-6, CAP-4 twice) would read as dangling although
-     the item exists — M-57 measured exactly that break. The set is now live ∪ the ledger archive,
-     read by the archiver's own lookup; an id in NEITHER still fails. */
-  const ARCHIVED_IDS = archivedQueueIds({ repo: REPO });
-  t("the ledger archive yields queue ids (else the archive-aware lookup is vacuous)", ARCHIVED_IDS.size >= 10, true);
-  const dangling = refs.filter((r) => !QUEUE_IDS.has(r.id) && !ARCHIVED_IDS.has(r.id))
-    .map((r) => `${r.id} in ${r.file.slice(REPO.length + 1)}`);
-  t(`every QUEUED reference (${refs.length}) names an existing queue item`, dangling, []);
+  /* MOVED 2026-09-22 by M0-110 — see the inventory note: this section's live run is LC-queued-refs, whose walk is
+     `coord.mjs`' `queuedRefs` (docs/development and docs/architecture, through the coord layer). Kept here: the
+     reference grammar, on a fixture — and the live walk is left as a count only, never a verdict. */
+  const REF = /\bQUEUED\s+(?:as\s+)?([A-Z][A-Z0-9]*-\d+)\b/g;
+  t("the reference grammar reads `QUEUED X-1` and `QUEUED as X-2`, and not the `QUEUED <ID>` template",
+    [..."a QUEUED ZZ-1 and QUEUED as ZZ-2, never QUEUED <ID>".matchAll(REF)].map((m) => m[1]), ["ZZ-1", "ZZ-2"]);
+  t("coord.mjs' walk uses this same grammar", COORD_SRC.includes(String.raw`/\bQUEUED\s+(?:as\s+)?([A-Z][A-Z0-9]*-\d+)\b/g`), true);
+}
+{
+  /* LED-2's correction (2026-09-18) stands, at its new site: LC-queued-refs resolves a reference against live ∪ the
+     ledger archive through `archivedQueueIds`, so a reference to an archived `done` item does not read as dangling. */
+  t("LC-queued-refs resolves against the archive too (LED-2's correction, kept at the new site)",
+    /archivedQueueIds\(\{ repo \}\)/.test(COORD_SRC), true);
 }
 
 /* --------------------------- 3. every order-of-work item carries a marker */
@@ -501,17 +504,13 @@ console.log("\n--- every open queue row names the design it builds from (CORPUS-
      lister, so these labels said "QUEUE.md" of a set that now includes BACKLOG.md. Relabelled, not
      re-asserted; the backlog half is driven by fixtures in `pipeline-readers.test.mjs`. The
      cheap-and-early copy of the plancheck gate. */
+  /* MOVED 2026-09-22 by M0-110: "the plan has open rows to judge", "every OPEN plan row … names a governed design"
+     and "every plan row's state is one this rule recognises" judged the LIVE plan — LC-row-design now. The live
+     reading below is kept only as the other side of plancheck's figure (the two readers must agree); it is not a
+     verdict on the rows. */
   const LIVE = rowDesignAudit({ repo: REPO });
-  console.log(`  queue design pointers: ${LIVE.open.length} open row(s) judged of ${LIVE.rows.length} `
-    + `(cache ${LIVE.cacheRows}, backlog ${LIVE.backlogRows}), `
-    + `${LIVE.skipped.length} closed, ${LIVE.unknownState.length} unrecognised state(s), `
-    + `${LIVE.findings.length} naming no design`);
-  t("the plan has open rows to judge (a totality assertion over an empty corpus proves nothing)",
-    LIVE.open.length >= 5, true);
-  t("every OPEN plan row (QUEUE.md ∪ BACKLOG.md) names a governed design, an IC, or an explicitly routed gap",
-    LIVE.findings.map((f) => `${f.id} (${f.file}:${f.line})`), []);
-  t("every plan row's state is one this rule recognises — an unrecognised state is NAMED, "
-  + "never silently unjudged", LIVE.unknownState.map((r) => `${r.id} · ${r.state} (${r.file})`), []);
+  console.log(`  queue design pointers (read, not judged here): ${LIVE.open.length} open row(s) of ${LIVE.rows.length} `
+    + `(cache ${LIVE.cacheRows}, backlog ${LIVE.backlogRows})`);
 
   /* THE MECHANISM IS IN THE LOOP. `plancheck` is what CONDUCT runs before every push, and a
      check that lives only in this battery would not reach the act that writes a row. Grepping
@@ -525,9 +524,11 @@ console.log("\n--- every open queue row names the design it builds from (CORPUS-
     ((pc.stdout || "").match(/queue design pointers: (\d+) open row\(s\) judged of (\d+)/) || []).slice(1, 3),
     [String(LIVE.open.length), String(LIVE.rows.length)]);
   /* `openRows` is exported and driven directly so a future refactor cannot quietly stop
-     parsing the file that QUEUE_IDS above is read from. */
+     parsing the grammar. CORRECTED 2026-09-22 by M0-110: over the fixture above, not the live
+     cache and backlog (which are on `coord` after the cutover). */
+  const FIX_IDS = new Set([...FIX.matchAll(/^###\s+([A-Z][A-Z0-9]*-\d+)\s+·/gm)].map((m) => m[1]));
   t("the row parser agrees with this suite's own heading scan on the id set",
-    openRows(queue + "\n" + backlogText).length >= QUEUE_IDS.size, true);
+    [FIX_IDS.size, openRows(FIX).length >= FIX_IDS.size - 1], [11, true]);
 }
 
 /* ---------------- 5. every DELEGATION block in CLAIMS.md states its own state, DATED */
@@ -652,12 +653,10 @@ console.log("\n--- every DELEGATION in CLAIMS.md states its own state, dated (M0
   console.log(`  delegation register: ${LIVE.corpus} block(s) — ${LIVE.discharged.length} discharged, `
     + `${LIVE.affirmed.length} affirmed open, ${LIVE.stale.length} stale, ${LIVE.silent.length} silent, `
     + `${LIVE.undated.length} undated (threshold ${LIVE.threshold}d)`);
-  /* PRINT THE CORPUS AND FLOOR IT. A matcher that stops matching reports a clean register,
-     and three headline totality assertions in this project have passed over an EMPTY corpus. */
-  t(`the walk finds a real register — ${LIVE.corpus} block(s), floor ${CORPUS_FLOOR}`,
-    LIVE.corpus >= CORPUS_FLOOR, true);
-  t("every DELEGATION block in CLAIMS.md states its own state, dated",
-    LIVE.findings.map((f) => `CLAIMS.md:${f.b.line} ${f.kind}`), []);
+  /* MOVED 2026-09-22 by M0-110: the floor over the LIVE register and "every DELEGATION block in CLAIMS.md states its
+     own state, dated" are LC-delegations now (CLAIMS.md lives on `coord`); CORPUS_FLOOR is the same constant there.
+     The live reading is kept only as the other side of plancheck's figure below. */
+  t("LC-delegations carries the corpus floor, the one constant", /a\.corpus < CORPUS_FLOOR/.test(COORD_SRC), true);
 
   /* THE MECHANISM IS IN THE LOOP. Section 4's reasoning exactly: a check that lives only in
      this battery never reaches the act that writes a delegation. Grepping plancheck's TEXT is

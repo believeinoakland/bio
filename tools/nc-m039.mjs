@@ -343,7 +343,10 @@ rmSync(SCRATCH, { recursive: true, force: true });
        `tools/decided.mjs` IS carried now, for the rule this list exists for: `plancheck` (arm 2b)
        and `attribution.mjs` (`--census`) import it, so a carried importer beside a stale copy of
        what it imports would measure a tree that is shipped nowhere. */
+    /* M0-110: `coord.mjs` and `ledger.mjs` join the list for the same rule — every importer above reads the state
+       through `coord.mjs`, and `mintid.mjs` imports `ledger.mjs`. */
     for (const f of ["tools/mintid.mjs", "tools/attribution.mjs", "tools/plancheck.mjs", "tools/decided.mjs",
+                     "tools/coord.mjs", "tools/ledger.mjs",
                      "docs/development/QUEUE.md", "docs/development/INTERFACE-CHANGES.md"])
       if (existsSync(join(REPO, f))) cpSync(join(REPO, f), join(WT, f));
 

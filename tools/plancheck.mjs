@@ -31,6 +31,10 @@ import { readFileSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+/* M0-110: the state files live on the branch `coord` after the cutover. Every read below goes through the coord
+   layer — a file that is its one-line pointer answers with coord's copy — so each arm judges the same rows it
+   judged when they sat on `main` (TREE-SHARING.md §1: "plancheck keeps its cross-checks by reading both branches"). */
+import { readState } from "./coord.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DEV = join(ROOT, "docs/development");
@@ -39,7 +43,7 @@ const LOCAL_ONLY = process.argv.includes("--local");
 const fails = [], warns = [], notes = [];
 const fail = (m) => fails.push(m);
 const warn = (m) => warns.push(m);
-const read = (p) => { try { return readFileSync(join(ROOT, p), "utf8"); } catch { return null; } };
+const read = (p) => readState(ROOT, p);
 const sh = (c) => { try { return execSync(c, { cwd: ROOT, encoding: "utf8" }).trim(); } catch { return null; } };
 
 /* ------------------------------------------ 0. UNRESOLVED MERGE MARKERS
@@ -204,18 +208,12 @@ if (queue && register) {
 
 if (debt) {
   /* Every OPEN row carries a disposition token, or it is invisible work — which is
-     how a standing ruling went two design revisions with nothing scheduling it. */
-  const TOKEN = /\|\s*(M\d+|DOCTRINE|ACCEPTED|WATCH|SUPERSEDED|NOT OURS|BOB's)/;
-  const RESOLVED = /\|\s*(fixed|resolved|closed|guarded|amended|measured)/i;
-  const bad = [];
-  for (const line of debt.split("\n")) {
-    if (!/^\|\s*D-\d+\s*\|/.test(line)) continue;
-    const tail = line.replace(/\s+$/, "");
-    const i = tail.lastIndexOf("|", tail.length - 2);
-    const status = i >= 0 ? tail.slice(i).replace(/^\|\s*|\s*\|$/g, "").trim() : "";
-    if (TOKEN.test(`| ${status}`) || RESOLVED.test(`| ${status}`)) continue;
-    bad.push({ id: (line.match(/^\|\s*(D-\d+)/) || [])[1], status });
-  }
+     how a standing ruling went two design revisions with nothing scheduling it.
+     M0-110: the predicate is `ledger.mjs`' `debtTokenAudit`, the ONE copy this arm, the
+     coord write's ledger checks and the battery's fixture arms all read (it was inline here
+     and PORTED into `planning-hygiene`; two copies of one rule is D-302's shape). */
+  const { debtTokenAudit } = await import("./ledger.mjs");
+  const { bad } = debtTokenAudit(debt);
   if (bad.length) {
     /* Show what was FOUND and the exact shape expected. The first row to trip this
        was written by a session that had placed the item correctly and described the
@@ -1086,6 +1084,75 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
       warn(`${a.treeFailed.length} worktree(s) could not be read for uncommitted changes, so\n`
          + `        the third window is UNKNOWN for them: ${a.treeFailed.join(", ")}`);
     if (a.exposed.length) warn(strandedMessage(a));
+  }
+}
+
+/* ------------------------------------------- 10. THE STATE LIVES ON `coord` (M0-110)
+
+   TREE-SHARING.md §1: the state files moved to the branch `coord`, and each old path on `main` holds a ONE-LINE
+   pointer (`tools/coord.mjs`' `pointerText`). Three arms:
+     (a) ONCE ANY POINTER IS ON THIS TREE, EVERY STATE PATH IN IT IS EXACTLY ITS POINTER. A merge of a branch cut before
+         the cutover can restore a state file's CONTENT over its pointer (a modify/delete-shaped conflict resolved the
+         wrong way, or `git add -A` over it); every reader would then read that stale copy as the truth, because the
+         pointer is the switch. So a restored file fails here BY NAME, as a hand-edited pointer does.
+     (b) NO `origin/main:<state path>` IS LEFT IN THE TRACKED TREE (BOB #27's owed act on the row): a gate or an
+         opening that reads a handoff's line 1 there reads the pointer after the cutover, and every such gate fails
+         open. History under `docs/archive/` is exempt — it is kept verbatim — and so are the state files
+         themselves (a lane's own handoff is its own to rewrite, on `coord`).
+     (c) THE LEDGER CHECKS THAT LEFT THE BATTERY (BOB #28's ruling 2) run here against the coord view: the arms no
+         section above already runs. `coord.mjs write` runs every one of them before it pushes. */
+{
+  const C = await import("./coord.mjs").catch((e) => ({ loadError: e }));
+  if (!C.ledgerChecks) {
+    fail(`COORD LAYER UNLOADABLE — tools/coord.mjs could not be imported (${C.loadError?.message || "no ledgerChecks"}),\n`
+       + `        so no reader can follow a state file to coord. An unrun gate is not a passing one.`);
+  } else {
+    const tracked = (sh("git ls-files") || "").split("\n").filter(Boolean);
+    const statePaths = tracked.filter(C.isMovedPath);
+    const pointers = statePaths.filter((p) => { const t = (() => { try { return readFileSync(join(ROOT, p), "utf8"); } catch { return null; } })(); return C.isPointer(t); });
+    const w = C.whereReads(ROOT);
+    if (pointers.length) {
+      const wrong = statePaths.filter((p) => { try { return readFileSync(join(ROOT, p), "utf8") !== C.pointerText(p); } catch { return true; } });
+      if (wrong.length)
+        fail(`STATE FILE ON MAIN IS NOT ITS POINTER — ${wrong.length} of ${statePaths.length} state path(s) on this tree carry\n`
+           + `        something other than the exact one-line pointer, so every reader takes that copy as the truth\n`
+           + `        (the pointer is the switch). A merge restored content, or a pointer was edited by hand. Restore each\n`
+           + `        with the text \`tools/coord.mjs\` pointerText() gives, and put any real change through \`coord.mjs write\`:\n`
+           + wrong.slice(0, 12).map((p) => `          ${p}`).join("\n"));
+      if (!w.sha)
+        fail(`COORD NOT READABLE — this tree is switched to \`${w.ref}\` and that ref does not resolve here, so every\n`
+           + `        state file reads as ABSENT. \`git fetch origin coord\` (an unreadable ledger is not an empty one).`);
+      notes.push(`coord: this tree is SWITCHED — ${pointers.length} pointer(s); state read from ${w.from}`);
+    } else {
+      const remoteCoord = sh(`git rev-parse --verify --quiet ${C.DEFAULT_REF}`);
+      if (remoteCoord)
+        warn(`COORD EXISTS AND THIS TREE STILL CARRIES THE STATE FILES — \`${C.DEFAULT_REF}\` resolves (${remoteCoord.slice(0, 8)})\n`
+           + `        but ${C.SWITCH_FILE} here is not its pointer: this checkout predates the cutover. Rebase onto\n`
+           + `        origin/main before writing state; a state edit made here lands on the wrong branch.`);
+      notes.push(`coord: this tree is NOT switched — state read from the working tree`);
+    }
+    /* (b) — the pattern is BUILT so this file does not match itself. */
+    const ORIGIN_MAIN = "origin" + "/main:";
+    const stateRef = new RegExp(ORIGIN_MAIN.replace("/", "\\/") + String.raw`[^\s\x60'")]*(?:CLAIMS\.md|QUEUE\.md|BACKLOG\.md|DEBT\.md|PLACEMENT\.md|-NEXT\.md|archive\/ledgers\/)`);
+    const left = [];
+    for (const f of tracked) {
+      /* `MEASUREMENTS.md` is exempt as the archive is: a figure's record quotes the instrument AS IT WAS RUN, and
+         rewriting a dated instrument line would falsify the record (a figure lands with what it measured). */
+      if (f.startsWith("docs/archive/") || f === "docs/development/MEASUREMENTS.md" || C.isMovedPath(f)
+          || !/\.(md|mjs|js|sh|json|html)$/.test(f)) continue;
+      const body = (() => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return null; } })();
+      if (body === null || !body.includes(ORIGIN_MAIN)) continue;
+      body.split("\n").forEach((l, i) => { if (stateRef.test(l)) left.push(`${f}:${i + 1}`); });
+    }
+    if (left.length)
+      fail(`A STATE FILE READ FROM origin/main — ${left.length} place(s) read a state file at \`${ORIGIN_MAIN}…\`, which after\n`
+         + `        the cutover is the one-line pointer, so the gate or opening that reads it fails open (BOB #27; M0-110).\n`
+         + `        Read it with \`node tools/coord.mjs read <path>\` (coord once it exists, main before):\n`
+         + left.slice(0, 12).map((x) => `          ${x}`).join("\n"));
+    /* (c) */
+    const r = await C.ledgerChecks({ repo: ROOT, only: ["LC-markers", "LC-queued-refs", "LC-debt-agreement", "LC-undecided-route", "LC-op-claims", "LC-strays", "LC-owed-agreement"] });
+    for (const a of r.arms) for (const f of a.fails) fail(`LEDGER CHECK ${a.id} (${a.title}; moved from ${a.from}) — ${f}`);
+    notes.push(`coord ledger checks: ${r.arms.map((a) => `${a.id} ${a.fails.length ? "FAIL" : "pass"}${a.note ? ` (${a.note})` : ""}`).join(", ")}`);
   }
 }
 

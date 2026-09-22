@@ -49,7 +49,10 @@
    ledger, so LE is the arm that catches the liar. RUN 2026-09-22 by the M0-109 worker, driver exit 0, 62 pass / 0 fail,
    every restore byte-identical; this suite per arm: baseline 158/0 judging 101 live rows, LE 157/1 judging 0, LC 157/1
    judging 100, LO 158/0 judging 100, LO1 158/0 judging 1, LL 157/0 judging 0. Run on this file's code as committed;
-   this block and the wording of §3's comment were written after it. */
+   this block and the wording of §3's comment were written after it.
+   SUPERSEDED 2026-09-22 BY M0-110, AND KEPT AS THE RECORD: §3's live read and its floor left this suite for `coord.mjs`'
+   ledger check LC-debt-agreement (BOB #28's ruling 2), and `debt-floor.control.mjs` was re-pointed there — its arms now
+   patch `tools/coord.mjs` and read `coord.test.mjs` §8; the run of record is on that suite's NEGATIVE CONTROL line. */
 
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -179,8 +182,13 @@ section("2 — THE FULL MIGRATION, SIMULATED ON A COPY OF THE REAL LEDGERS: ever
                          return r.status === 0 ? r.stdout : null; };
   const files = ["docs/development/QUEUE.md", "docs/development/DEBT.md", "docs/development/DECISIONS.md",
                  "docs/archive/IS-BUILD-PLAN.md", "docs/architecture/construct-status.json",
-                 /* the archive family through the ARCHIVER's own lister, not a second walk (hygiene's walk census) */
-                 ...Object.values(L.LEDGERS).flatMap((l) => L.archiveFiles(l, { repo: REPO }))];
+                 /* the archive family through the ARCHIVER's own family patterns, over the PINNED tree's own listing.
+                    CORRECTED 2026-09-22 by M0-110: this listed the archive directory of the WORKING TREE, whose files
+                    are one-line pointers to `coord` after the cutover; the pinned tree is the input, so its own
+                    listing is the list — the same files, read from history, and no read of the live state. */
+                 ...(() => { const r = spawnSync("git", ["-C", REPO, "ls-tree", "--name-only", `${PRE_MIGRATION}:${L.ARCHIVE_DIR}`], { encoding: "utf8" });
+                             const names = r.status === 0 ? r.stdout.split("\n").filter(Boolean) : [];
+                             return [...new Set(Object.values(L.LEDGERS).flatMap((l) => names.filter((n) => l.family.test(n)).sort().map((n) => `${L.ARCHIVE_DIR}/${n}`)))]; })()];
   for (const f of files) { const x = atPin(f); if (x === null) continue; mkdirSync(dirname(join(root, f)), { recursive: true }); writeFileSync(join(root, f), x); }
   /* CORRECTED 2026-09-18 by LED-6: the pinned tree predates the BACKLOG, which the archiver now requires to be
      readable, so the copy gets an EMPTY one — exactly the state LED-6 created on the real tree. And the snapshot
@@ -293,10 +301,14 @@ section("3 — CLOSED IS DEFINED ONCE: a QUEUE row by its `done`/`superseded` st
   const o = owedFor("ZZZNOTALANE", { reader: (p) => (p.endsWith("DEBT.md") ? DEBT([pipeRow, residuePipe]) : "") });
   t("...so owed now SEES a residue on a row with a pipe in its body, and skips the closed one", o.items.map((i) => i.id), ["D-8"]);
 
-  /* The agreement over the REAL live DEBT.md, read not written: a row owed lists is never archivable. */
-  const debt = readFileSync(join(REPO, "docs/development/DEBT.md"), "utf8");
-  const rows = L.debtRows(debt);
-  console.log(`  the agreement reads ${rows.length} row(s) of DEBT.md`);   /* the corpus, printed: M0-109's control reads it */
+  /* MOVED 2026-09-22 by M0-110 (BOB #28's ruling 2), NOT DROPPED: the agreement over the REAL live DEBT.md — its
+     non-vacuity floor, "no real DEBT row declaring a residue reads closed" and "no row owed lists for ANY lane is one
+     the archiver would move" — judged the LIVE rows, which live on the branch `coord` after the cutover, where no
+     `main` gate record settles them. They are `tools/coord.mjs`' ledger check LC-debt-agreement, which every coord
+     write runs before it pushes and `plancheck` runs against the coord view; `coord.test.mjs` §8 drives its floor
+     both ways, and `debt-floor.control.mjs` was re-pointed there. What stays here is the rule's BEHAVIOUR, above, on
+     fixtures. M0-109's record below is the history of these assertions at their old site. */
+  const rows = [];
   /* CORRECTED 2026-09-22 by M0-109, not exempted: this floor read `rows.length > 100`, which measured the ledger's SIZE
      where the arm needs only its NON-VACUITY. LED-7's fold drains DEBT.md ON PURPOSE (WORK-PIPELINE.md §3: every open
      row leaves by one of three doors, and the file is archived whole once empty), so the old floor turned the fold's
@@ -306,10 +318,11 @@ section("3 — CLOSED IS DEFINED ONCE: a QUEUE row by its `done`/`superseded` st
      LED-7 archives DEBT.md whole, this arm reads the ARCHIVE instead, re-pointed in that same landing — never deleted.
      Deleting this line is how a liar passes an empty ledger: no other assertion in this suite sees one (arm LL of the
      M0-109 control, declared at the head of this file). */
-  t("the real DEBT.md has rows (else the agreement is vacuous)", rows.length > 0, true);
-  t("no real DEBT row declaring a residue reads closed", rows.filter((r) => RESIDUE_RE.test(r.disposition) && r.closed).map((r) => r.id), []);
-  const owedIds = new Set(["BOB", "CONDUCT", "DIST", "ZZZNOTALANE"].flatMap((lane) => owedFor(lane, { repo: REPO }).items.map((i) => i.id)));
-  t("no row owed lists for ANY lane is one the archiver would move", rows.filter((r) => r.closed && owedIds.has(r.id)).map((r) => r.id), []);
+  const C = await import("../../tools/coord.mjs");
+  const src = readFileSync(join(REPO, "tools/coord.mjs"), "utf8");
+  t("the live agreement is a ledger check now — LC-debt-agreement is an arm of coord.mjs, with its floor, reading owed for every lane",
+    [/await arm\("LC-debt-agreement"/.test(src), /if \(!rows\.length\) return \{ fails:/.test(src), /\["BOB", "CONDUCT", "DIST", "ZZZNOTALANE"\]/.test(src), typeof C.ledgerChecks],
+    [true, true, true, "function"]);
 }
 
 /* ========================================================================================== */
@@ -412,11 +425,13 @@ section("8 — THROUGH THE GATE ITSELF: `plancheck --local` runs the three arms 
   t("it printed the depends-on arm's own note", /note\s+depends-on: \d+ dependency id\(s\) checked/.test(out), true);
   t("it printed the ledger size note", /note\s+ledger sizes: QUEUE \d+ B/.test(out), true);
   t("no LEDGER arm failed to load or arm", /LEDGER GATE UNLOADABLE|LEDGER ARM CANNOT ARM/.test(out), false);
-  t("no depends-on is unresolved on the real tree", /DEPENDS-ON DOES NOT RESOLVE/.test(out), false);
+  /* MOVED 2026-09-22 by M0-110 (BOB #28's ruling 2): "no depends-on is unresolved on the real tree", "P1 and P2 do
+     not fire on the real ledgers" and "no arming row is superseded" judged the LIVE rows, which are on `coord` after
+     the cutover. They are `coord.mjs`' ledger check LC-ledger (every coord write runs it before the push; plancheck
+     runs the same arms, §2h). This section keeps what it is FOR: the gate RUNS the arms and prints their notes. */
   /* LED-6 */
   t("it printed the pipeline note, all five invariants named", /note\s+pipeline: cache \d+ row\(s\), backlog \d+ row\(s\); P1 \w+, P2 \w+, P3 \w+, P4 \w+, P5 \w+/.test(out), true);
-  t("P1 and P2 do not fire on the real ledgers (they hold now, so they are FAIL arms)", /PIPELINE INVARIANT P[12]/.test(out), false);
-  t("no arming row is superseded (the LED-4 arm that could never arm)", /SUPERSEDED and so can never be/.test(out), false);
+
 }
 
 /* ========================================================================================== */
@@ -599,19 +614,23 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
 section("12 — LED-6 OVER THE REAL LEDGERS: P1 and P2 hold on the cache and backlog as they stand; and a SIMULATED "
       + "split of the real rows (running in the cache, every other open row in the backlog, in order) refills conserving");
 {
-  const a = L.ledgerAudit({ repo: REPO });
-  t("the real cache and backlog are readable, so the pipeline was scored", a.pipeline !== null, true);
-  const P = a.pipeline || { arms: { P1: { violations: [1] }, P2: { violations: [1] } }, cacheRows: 0, backlogRows: 0 };
-  console.log(`  real pipeline: cache ${P.cacheRows} row(s), backlog ${P.backlogRows} row(s); `
-    + Object.entries(P.arms).map(([k, x]) => `${k} ${x.violations.length}`).join(", "));
-  t("the real cache holds rows (else P1 and P2 pass over nothing)", P.cacheRows + P.backlogRows > 5, true);
-  t("P1 holds on the real ledgers", P.arms.P1.violations, []);
-  t("P2 holds on the real ledgers", P.arms.P2.violations, []);
-
+  /* CORRECTED 2026-09-22 by M0-110 (BOB #28's ruling 2). "P1 holds on the real ledgers" and "P2 holds on the real
+     ledgers" judged the LIVE rows, which live on the branch `coord` after the cutover; they are LC-ledger in
+     `coord.mjs`' ledger checks now (every coord write runs them before its push). And the simulated split below read
+     its input from the WORKING TREE's ledgers, which after the cutover are one-line pointers — so, as §2 already does,
+     it now reads the real rows from a PINNED tree: `de40aa56`, the `main` this item was built from (cache 8 rows,
+     backlog 117). The subject is unchanged — refill over real rows conserves — and it no longer moves when a lane
+     writes to `coord`. A file the pinned tree lacks is skipped, never faked. */
+  const STATE_PIN = "de40aa56";
+  const pinned = (f) => { const r = spawnSync("git", ["-C", REPO, "show", `${STATE_PIN}:${f}`], { encoding: "utf8", maxBuffer: 1 << 28 }); return r.status === 0 ? r.stdout : null; };
+  const pinArchive = (() => { const r = spawnSync("git", ["-C", REPO, "ls-tree", "--name-only", `${STATE_PIN}:${L.ARCHIVE_DIR}`], { encoding: "utf8" });
+                              return (r.status === 0 ? r.stdout.split("\n").filter(Boolean) : []).filter((n) => L.LEDGERS.QUEUE.family.test(n)).map((n) => `${L.ARCHIVE_DIR}/${n}`); })();
   const root = mkdtempSync(join(tmpdir(), "ledger-split-"));
-  const copy = (f) => { const p = join(REPO, f); if (!existsSync(p)) return; mkdirSync(dirname(join(root, f)), { recursive: true }); copyFileSync(p, join(root, f)); };
+  const copy = (f) => { const x = pinned(f); if (x === null) return; mkdirSync(dirname(join(root, f)), { recursive: true }); writeFileSync(join(root, f), x); };
   for (const f of [L.LEDGERS.QUEUE.live, L.LEDGERS.BACKLOG.live, L.LEDGERS.DEBT.live, "docs/archive/IS-BUILD-PLAN.md",
-                   "docs/architecture/construct-status.json", ...L.archiveFiles(L.LEDGERS.QUEUE, { repo: REPO })]) copy(f);
+                   "docs/architecture/construct-status.json", ...pinArchive]) copy(f);
+  const P = L.ledgerAudit({ repo: root }).pipeline || { cacheRows: 0, backlogRows: 0 };
+  console.log(`  pinned pipeline (${STATE_PIN}): cache ${P.cacheRows} row(s), backlog ${P.backlogRows} row(s)`);
   const cache0 = read(root, L.LEDGERS.QUEUE.live), backlog0 = read(root, L.LEDGERS.BACKLOG.live);
   const lines = cache0.split("\n");
   const leave = L.queueRows(cache0).filter((r) => r.open && r.state !== "running");

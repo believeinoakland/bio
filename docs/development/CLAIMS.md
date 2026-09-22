@@ -19013,3 +19013,56 @@ drive a case ratification or a withdrawal ran `36/36 suites green` before any co
 SKIP 0; coverage `--strict` and `civicos-ui` green; `plancheck --local` 0 fail); IC-177 PROPOSED for CONDUCT to resolve at
 integration; C-65 and M-103 minted. The DEC-49 guard's `regionLines` includes this item's 13-line region
 `ratifyCaseDocument > is-caseratify-conclusion-moved` — a property of the MERGED source, re-read at integration.
+
+## CLAIM 2026-09-22 M0 (M0-110 — the message board leaves `main`: a `coord` branch — BOTH stages, resumed from CONDUCT #13's stood-down worker)
+
+session: WORKER spawned by CONDUCT #14 (cloud Claude Code), worktree `.claude/worktrees/agent-a483d3385b3539fb7`, branch
+`worktree-agent-a483d3385b3539fb7`, base `origin/main` @ `de40aa56` (the row reads `### M0-110 · running` with CONDUCT #14's
+RESUMED sentence there). `npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each exit 0 and a real directory; `df -h` 28 GiB free.
+authority: `QUEUE.md` `### M0-110 · running`; design `docs/development/TREE-SHARING.md` §1 with BOB #28's four rulings in it;
+the predecessor's plan `origin/conduct13/standdown-reports:M0-110.md`, re-verified at the code.
+paths: `tools/coord.mjs` (NEW: churn, read, write, migrate, the pointer-reading layer and the ledger checks),
+  `bio-plane/test/coord.test.mjs` and `bio-plane/test/coord.control.mjs` (NEW); every reader redirected through the layer —
+  `tools/ledger.mjs`, `tools/plancheck.mjs`, `tools/owed.mjs`, `tools/decided.mjs`, `tools/delegations.mjs`,
+  `tools/readbudget.mjs`, `tools/mintid.mjs`, `tools/rowdesign.mjs`, `tools/rowsubstrate.mjs`, `tools/occupancy.mjs`,
+  `tools/retirable.mjs`, `tools/pushguard.mjs`, `tools/gates.mjs` (only if its derivation needs it),
+  `bio-plane/scripts/op-claims.mjs`; the battery suites whose LIVE-row arms move into the write command's checks
+  (`planning-hygiene`, `corpuscheck`, `op-claims`, `pipeline-readers`, and any other the sweep names, each named in the
+  landing); `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` only, from the printed figures, if moved);
+  `docs/development/TREE-SHARING.md` §1, `CLAUDE.md` §1 and §9, `docs/development/MILESTONES.md` (the placement table
+  leaves as `PLACEMENT.md` in the migration only), `docs/development/WORK-PIPELINE.md`, `docs/development/ORCHESTRATION.md`,
+  every kickoff naming a moved file or reading a `-NEXT.md` line 1 from `origin/main` (BOB #27's owed list),
+  `docs/architecture/construct-status.json`, `docs/development/MEASUREMENTS.md` (appends only), this block.
+NOT CLAIMED: `QUEUE.md`'s rows (CONDUCT's word, SCHEDULER's order); the `coord` branch itself — its creation and the
+  cutover are CONDUCT's act; `newgroup/**`.
+ADDED AT THE BUILD, each named rather than taken silently: `tools/attribution.mjs` (its corpus walk and reader through
+  the layer); `tools/nc-m039.mjs` (its carry list gains `coord.mjs` and `ledger.mjs`); `bio-plane/scripts/op-claims.mjs`
+  (its walk skips state; `sweep({ files })`; `LEDGER_STATE`/`LEDGER_MAIN`); `bio-plane/test/decided.test.mjs`,
+  `pushguard.test.mjs` (a copied `decided.mjs` now carries `coord.mjs`), `m041-instrument-census.control.mjs` (arm 2's
+  subject moved to `MILESTONES.md`), `debt-floor.control.mjs` (re-pointed at the floors' new site), `coord.control.mjs`
+  (NEW); `kickoffs/SCHEDULER.md`, `kickoffs/WORKER.md`, `docs/development/TREE-SHARING.md` (§1 "As built" and its status
+  line). `docs/architecture/construct-status.json` is NOT changed: `coord` is process tooling, and no construct of
+  `BIO_System_Design.md` §3 moved (the file holds one claim per fact about a §3 construct).
+**released: 2026-09-22 M0-110 worker** — both stages built and pushed on `worktree-agent-a483d3385b3539fb7` (its tip is
+  the one CONDUCT's report reads back with `git ls-remote`); integrating it, pushing `coord` and the pointer commit — the
+  cutover — are CONDUCT's acts, in the order `TREE-SHARING.md` §1 "As built" names.
+
+## DELEGATION 2026-09-22 M0 (M0-110 worker) -> BOB, CONDUCT, SCHEDULER, DIST, FLEET — **after the `coord` cutover, four texts outside `main`'s tracked tree still read state from `origin/main`, and each is its owner's to rewrite**
+
+M0-110 moves the state files to the branch `coord` (TREE-SHARING.md §1) and corrects every tracked reader on `main`
+(`plancheck` §10 fails any `origin/main:<state path>` left outside `docs/archive/` and `MEASUREMENTS.md`). Four texts it
+does not correct, each named with its fix:
+1. **BOB — the CONDUCT heartbeat's skill** (ruling 4). It lives outside the repository (`~/.claude/scheduled-tasks/
+   conduct-heartbeat/`, on the old Mac, disabled at the stand-down); its dated copy
+   `docs/archive/conduct-heartbeat-SKILL-2026-09-19.md` stays verbatim. It reads `origin/main:…/CONDUCT-NEXT.md` and greps
+   `QUEUE.md` from `main`. **Fix:** a cloud replacement, if one is built, reads both with `node tools/coord.mjs read <path>`.
+2. **BOB — the four lane paste blocks** (`docs/archive/lane-paste-blocks-2026-09-22.md`, kept verbatim): each gates on
+   `git show origin/main:<…>-NEXT.md | head -1`, which reads the one-line pointer after the cutover. **Fix:** the next
+   block given to Bob gates on `node tools/coord.mjs read docs/development/kickoffs/<LANE>-NEXT.md | head -1` (NEW-MACHINE
+   §7 now says so).
+3. **Every lane — its own `-NEXT.md`** (now on `coord`): CONDUCT-NEXT's opening (`git show origin/main:…CONDUCT-NEXT.md`,
+   `…QUEUE.md | grep`), SCHEDULER-NEXT's and FLEET-NEXT's "on `origin/main`" readings of state. **Fix:** at its next
+   handoff write each lane reads state with `coord.mjs read` and writes the handoff with `coord.mjs write --replace`.
+4. **SCHEDULER — `QUEUE.md`'s own header** (line 13: *"a worker reads its own row from `origin/main`"*), a state file this
+   item may not edit (the rows and their prose are CONDUCT's word and SCHEDULER's order). **Fix:** *"from `coord`"*.
+**open as of 2026-09-22** — raised with M0-110's landing; each item closes when its owner's text reads `coord`.

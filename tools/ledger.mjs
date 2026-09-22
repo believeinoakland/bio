@@ -125,6 +125,9 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { debtDisposition, isClosedDebtRow } from "./owed.mjs";
+/* M0-110: every state file is read through the coord layer — the pointer is the switch (`tools/coord.mjs`). A leaf
+   module (node built-ins only), so importing it adds no cycle. */
+import { readState, listState, isSwitched } from "./coord.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const ARCHIVE_DIR = "docs/archive/ledgers";
@@ -223,6 +226,26 @@ export function debtRows(text) {
 
 export const rowsOf = (ledger, text) => (ledger.grammar === "DEBT" ? debtRows(text) : queueRows(text));
 
+/** THE DISPOSITION-TOKEN RULE over a DEBT ledger's text: every `| D-n |` row's LAST cell begins with a disposition
+    token or reads as resolved. `plancheck` §2 held this inline and `planning-hygiene` §1 ported it; M0-110 moved the
+    live-row judgement into `coord.mjs`' ledger checks, so the predicate is written ONCE, here, for all of them. */
+export const DEBT_TOKEN = /\|\s*(M\d+|DOCTRINE|ACCEPTED|WATCH|SUPERSEDED|NOT OURS|BOB's)/;
+export const DEBT_RESOLVED = /\|\s*(fixed|resolved|closed|guarded|amended|measured)/i;
+export function debtTokenAudit(text) {
+  const bad = [];
+  let rows = 0;
+  for (const line of text.split("\n")) {
+    if (!/^\|\s*D-\d+\s*\|/.test(line)) continue;
+    rows++;
+    const tail = line.replace(/\s+$/, "");
+    const i = tail.lastIndexOf("|", tail.length - 2);
+    const status = i >= 0 ? tail.slice(i).replace(/^\|\s*|\s*\|$/g, "").trim() : "";
+    if (DEBT_TOKEN.test(`| ${status}`) || DEBT_RESOLVED.test(`| ${status}`)) continue;
+    bad.push({ id: (line.match(/^\|\s*(D-\d+)/) || [])[1], status });
+  }
+  return { rows, bad };
+}
+
 /* ----------------------------------------------------------------------- conservation */
 
 /** Per-id occurrence counts over several texts of one ledger. */
@@ -265,12 +288,24 @@ export function linesConserved(liveBefore, liveAfter, blocks) {
 
 /* -------------------------------------------------------------------------- the reads */
 
-const readRel = (repo, rel) => { try { return readFileSync(join(repo, rel), "utf8"); } catch { return null; } };
+/* CORRECTED 2026-09-22 by M0-110: this read the working tree's file, which after the cutover is the one-line pointer
+   to `coord` — every row would have read as absent. `readState` answers with the coord copy when the file is the
+   pointer, and with the file itself otherwise (a planted fixture, or `main` before the cutover). */
+const readRel = (repo, rel) => readState(repo, rel);
+
+/* THE WRITERS REFUSE A SWITCHED TREE. After the cutover the live files on `main` are pointers, and a write here would
+   put content back over them on the wrong branch. The CLI routes `archive` and `refill` through `coord.mjs write`,
+   which runs this same code inside a materialised coord tree. */
+function refuseSwitched(repo, act) {
+  if (isSwitched(repo))
+    throw refusal("STATE_ON_COORD", `${act} writes the ledgers, which live on the branch coord since M0-110 — `
+      + `run \`node tools/ledger.mjs ${act}\` (it writes through \`node tools/coord.mjs write\` on a switched tree).`);
+}
 
 /** Every archive file of a ledger's family (the August roll included), relative paths, sorted. */
 export function archiveFiles(ledger, { repo = ROOT } = {}) {
-  let names = [];
-  try { names = readdirSync(join(repo, ARCHIVE_DIR)); } catch { return []; }
+  /* M0-110: the family is listed through the coord layer — a roll created on `coord` has no pointer on `main`. */
+  const names = listState(repo, ARCHIVE_DIR);
   return names.filter((n) => ledger.family.test(n)).sort().map((n) => `${ARCHIVE_DIR}/${n}`);
 }
 
@@ -404,6 +439,7 @@ export function planMove(ledger, id, live, archive) {
     archive, each ledger's move verified from disk on its own. Refused, with nothing written, when
     the id is live nowhere or closed nowhere. */
 export function archiveId(id, { repo = ROOT, dryRun = false } = {}) {
+  if (!dryRun) refuseSwitched(repo, "archive");
   const live = {};
   for (const ledger of ledgersFor(id)) {
     const t = readRel(repo, ledger.live);
@@ -432,7 +468,7 @@ const L_HEADER = (ledger) => ARCHIVE_HEADER[ledger.grammar];
 function archiveIn(ledger, id, { repo, dryRun }) {
   const livePath = join(repo, ledger.live), archPath = join(repo, ledger.archive);
   const live = readRel(repo, ledger.live);
-  const archive = existsSync(archPath) ? readFileSync(archPath, "utf8") : null;
+  const archive = readRel(repo, ledger.archive);
   const plan = planMove(ledger, id, live, archive);
   /* The rest of the ledger's archive family, read so the check is over live ∪ ALL archive. */
   const others = archiveFiles(ledger, { repo }).filter((f) => f !== ledger.archive)
@@ -752,6 +788,7 @@ export function refillConserved({ cache, backlog, archives, newCache, newBacklog
 /** Move the next runnable rows backlog -> cache (WORK-PIPELINE §2 step 2). Refused, nothing
     written, when either file cannot be read or the move would not conserve. */
 export function refill({ repo = ROOT, dryRun = false, cacheRows = CACHE_ROWS } = {}) {
+  if (!dryRun) refuseSwitched(repo, "refill");
   const cachePath = join(repo, LEDGERS.QUEUE.live), backlogPath = join(repo, LEDGERS.BACKLOG.live);
   const cache = readRel(repo, LEDGERS.QUEUE.live), backlog = readRel(repo, LEDGERS.BACKLOG.live);
   for (const [t, l] of [[cache, LEDGERS.QUEUE], [backlog, LEDGERS.BACKLOG]])
@@ -790,6 +827,22 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const dryRun = rest.includes("--dry-run");
   const ids = rest.filter((a) => !a.startsWith("--"));
   const usage = () => { console.error("usage: ledger.mjs archive <ID> [<ID> ...] [--dry-run] | refill [--dry-run] | find <ID> | invariants | audit"); process.exit(2); };
+  /* M0-110: on a switched tree the ledgers live on `coord`, so the two WRITING commands run as ONE coord write —
+     re-applied to the fresh tip on a non-fast-forward, with the ledger checks before the push. */
+  if ((cmd === "archive" || cmd === "refill") && isSwitched(ROOT) && !dryRun) {
+    if (cmd === "archive" && !ids.length) usage();
+    const { write, CoordError } = await import("./coord.mjs");
+    const intents = cmd === "archive" ? ids.map((id) => ({ op: "archive", id })) : [{ op: "refill" }];
+    try {
+      const r = await write({ intents, message: cmd === "archive" ? `ledger: archive ${ids.join(" ")}` : "ledger: refill the cache" });
+      console.log(`${r.status}${r.commit ? ` ${r.commit.slice(0, 8)}` : ""} on coord — ${cmd} ${ids.join(" ")} (${(r.changed || []).join(", ") || "nothing changed"})`);
+      process.exit(0);
+    } catch (e) {
+      if (!(e instanceof CoordError)) throw e;
+      console.error(`REFUSED ${cmd} [${e.code}]: ${e.message}`);
+      process.exit(1);
+    }
+  }
   if (cmd === "archive") {
     if (!ids.length) usage();
     let moved = 0, refused = 0;
@@ -812,6 +865,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     process.exit(refused ? 1 : 0);
   } else if (cmd === "find") {
     if (ids.length !== 1) usage();
+    if (isSwitched(ROOT)) { const { freshen } = await import("./coord.mjs"); freshen(ROOT); }
     const f = findId(ids[0]);
     if (!f.length) { console.log(`${ids[0]}: not found in the cache, the backlog, the live DEBT ledger or any archive file`); process.exit(1); }
     for (const x of f) console.log(`${x.id} · ${x.state} · ${x.ledger} ${x.where} · ${x.file}:${x.line}`);
