@@ -18978,3 +18978,24 @@ Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
 
 **released: 2026-09-22 by the M0-107 worker** — built, gated GREEN FULL on tree `68711d65` (274/274 suites, 16,686
 assertions, 0 skipped) and pushed on `worktree-agent-a61477d96c4e0ec36`; the paths stay reserved until CONDUCT integrates.
+
+## CLAIM 2026-09-22 M0 (M0-117 — `scopeOf` creates the live id ledger before probing it, so a fresh clone's first gate is not RED at `mintid.test.mjs`)
+
+session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-117, worktree `.claude/worktrees/agent-a7c6ab7d2c6d998af`, branch
+`worktree-agent-a7c6ab7d2c6d998af`, from `origin/main` @ `bee3bdf4` (cloud).
+authority: `QUEUE.md` `### M0-117 · running` (read on `origin/main` @ `bee3bdf4`); design `VERIFICATION.md` (admitted for M0
+by name); the RED measured in `MEASUREMENTS.md` M-99.
+paths, BY SITE:
+  - `tools/mintid.mjs` — `scopeOf` ONLY: the `mkdirSync(root, { recursive: true })` before the probe, and its
+    `LEDGER_UNWRITABLE` refusal. `exclusivityProbe` is NOT touched (its missing-directory refusal is an asserted arm), and
+    nothing else in the file (M0-110 edits it through a reading layer).
+  - `bio-plane/test/mintid.test.mjs` — one no-ledger arm in the D-242 section (a fresh `git init` repository with no
+    `bio-idalloc`, its scope taken through the TOOL, never a pre-created fixture) and the NEGATIVE CONTROL block's new arm.
+  - `bio-plane/test/mintid-freshclone.control.mjs` (NEW) — the control driver: a throwaway `git clone` into the OS temp dir
+    with no ledger, arms (11) and (17) each alone, restored by sha256 and `cmp`.
+  - `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY, and only to figures a committed `--strict` run PRINTS.
+  - this block.
+**NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT's), everything else under `tools/`. Nothing under `bio-plane/src/` is
+edited, so no bundle rebuild is owed.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
