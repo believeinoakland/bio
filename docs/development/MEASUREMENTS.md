@@ -18408,3 +18408,31 @@ every read of what is live and `CLAUDE.md` §5's live verification are SUSPENDED
 admits them. A lone full gate costs what it cost on the Mac, about 18 minutes with the battery 16: the cloud neither speeds nor slows one. What it removes is two lanes' batteries on one CPU, which made DIST's 0.71.0 gate take ~2.5 hours; a CONDUCT's own workers still share its container. **Not measured here:** whether `CronCreate` survives a container's reclaim; whether a push to
 `main` is accepted until this landing's own push (NEW-MACHINE §0.1 records it); the weekly budget, which no tool here
 exposes.
+
+## M-102 · 2026-09-22 · M0-110 — the main-churn figure: how many of the day's landings touched ONLY state, and so would not have moved `main`
+
+**INSTRUMENT:** `node tools/coord.mjs churn --until 2026-09-23T00:00:00Z` on `origin/main` @ `de40aa56` (M0-110's
+worktree, cloud session), since 2026-09-22T00:00Z. A LANDING is a first-parent commit of `main`, judged by its diff
+against its first parent; a STATE file is `coord.mjs`' `isMovedPath` — `CLAIMS.md`, `QUEUE.md`, `BACKLOG.md`,
+`DEBT.md`, `PLACEMENT.md`, every `kickoffs/*-NEXT.md` and the whole `docs/archive/ledgers/` family (BOB #28's ruling 1).
+
+| population | count |
+| --- | --- |
+| non-merge commits on `main` | 131 |
+| landings (first-parent) | 73 |
+| landings touching ONLY state files | **14** |
+| ...touching only state and `docs/DECIDED.md` (committed until M0-99 took it off `main` the same day) | **16** |
+| ...touching only state, `DECIDED.md` and `MILESTONES.md` (an UPPER bound: only its placement table leaves) | 3 |
+| landings touching state AND other files | 37 |
+| landings touching no state file | 3 |
+
+Per path (non-merge commits): `CLAIMS.md` 76, `docs/DECIDED.md` 62, `QUEUE.md` 33, `BACKLOG.md` 18, `MEASUREMENTS.md`
+16 (stays), `DEBT.md` 15, `BOB-NEXT.md` 14, `SCHEDULER-NEXT.md` 13, `DEBT-closed.md` 13, `coverage.mjs` 13 (stays),
+`DIST-NEXT.md` 10, `MILESTONES.md` 10, `QUEUE-cut-2026-09-22.md` 8, `BOB-INBOX-drained.md` 8, `QUEUE-closed.md` 8.
+
+**WHAT IT SAYS.** With `DECIDED.md` already untracked (M0-99), **30 of the day's 73 landings (41%) would not have
+moved `main` at all** after the cutover — at most 33 (45%) counting the placement table's touches. The other 37 that
+touched state still move `main` for their product half, but no longer carry the tail-append conflicts on `CLAIMS.md`
+that cost BOB #26's landing six gate runs (TREE-SHARING §"Why"). It is a figure about ONE day's shape, not a forecast:
+a day heavier in product landings moves `main` more. **Not measured:** the gate runs this would have saved — a count
+of avoided rebases needs the runs M-97 could not see either.

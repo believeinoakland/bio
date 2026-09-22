@@ -27,8 +27,8 @@
  * THE WRITE IS AN INTENT, NEVER A TEXTUAL MERGE (BOB #27, 2026-09-22, on SCHEDULER #12's question). `write` fetches
  * `coord`, materialises its tree beside `main`'s `docs/` in a temporary directory (NOT a checkout: no `.git`, no
  * index of the repository's), applies each intent — append a block at the end of a file; add lines at the end of the
- * block under a named heading; set a row's status word; replace a whole handoff; archive a closed id; refill the
- * cache — runs the LEDGER CHECKS against the result, builds the commit through a TEMPORARY INDEX, and pushes
+ * block under a named heading; set a row's status word; replace or delete a row by its id; insert a row before or
+ * after another; replace a whole handoff; archive a closed id; refill the cache — runs the LEDGER CHECKS against the result, builds the commit through a TEMPORARY INDEX, and pushes
  * `<sha>:refs/heads/coord` WITHOUT force. A non-fast-forward is not a conflict to resolve: it re-fetches and
  * RE-APPLIES THE INTENTS to the new tip, so two lanes' appends never conflict and a line added to block X lands in
  * block X whatever was appended meanwhile. That is the receipt BOB #27 named: a merge of two tail appends put BOB
@@ -287,6 +287,47 @@ export function addLine(text, anchor, add) {
 
 export const ROW_STATES = ["queued", "running", "blocked", "done", "superseded"];
 
+/** A plan row's span: from its `### <ID> · <state>` heading to the next heading of level 1–3 (the ledger's own
+    grammar), trailing blank lines left outside it. Exactly one, or refused. */
+function rowSpan(lines, id) {
+  const esc = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const head = new RegExp(`^###\\s+${esc}\\s+·\\s+[A-Za-z-]+`);
+  const hits = lines.map((l, i) => (head.test(l) ? i : -1)).filter((i) => i >= 0);
+  if (!hits.length) throw refusal("ROW_NOT_FOUND", `no row headed \`### ${id} · <state>\`.`);
+  if (hits.length > 1) throw refusal("ROW_AMBIGUOUS", `${hits.length} rows are headed ${id}.`);
+  const start = hits[0];
+  let end = start + 1;
+  while (end < lines.length && !/^#{1,3}\s/.test(lines[end])) end++;
+  let last = end - 1;
+  while (last > start && lines[last].trim() === "") last--;
+  return { start, end: last + 1 };
+}
+
+/** Replace a whole row (heading to its last non-blank line) with `block`; an EMPTY block deletes it. Anchored to the
+    row's id in the text it is applied to, so a row another lane moved or edited meanwhile is found where it now is. */
+export function replaceRow(text, id, block) {
+  if (text === null) throw refusal("FILE_ABSENT", `no row ${id}: the file does not exist.`);
+  const lines = text.split("\n");
+  const { start, end } = rowSpan(lines, id);
+  const body = block.replace(/\n+$/, "");
+  const out = body ? [...lines.slice(0, start), ...body.split("\n"), ...lines.slice(end)]
+                   : [...lines.slice(0, start), ...lines.slice(end).slice(lines[end] !== undefined && lines[end].trim() === "" && start > 0 && lines[start - 1].trim() === "" ? 1 : 0)];
+  return out.join("\n");
+}
+
+/** Insert a row block BEFORE or AFTER the row `id` (the plan's order is file position, WORK-PIPELINE §1), separated by
+    one blank line. */
+export function insertRow(text, where, id, block) {
+  if (!["before", "after"].includes(where)) throw refusal("BAD_POSITION", `insert takes "before" or "after", not ${where}.`);
+  if (text === null) throw refusal("FILE_ABSENT", `no row ${id}: the file does not exist.`);
+  const lines = text.split("\n");
+  const { start, end } = rowSpan(lines, id);
+  const body = block.replace(/^\n+|\n+$/g, "").split("\n");
+  return (where === "before"
+    ? [...lines.slice(0, start), ...body, "", ...lines.slice(start)]
+    : [...lines.slice(0, end), "", ...body, ...lines.slice(end)]).join("\n");
+}
+
 /** Set a plan row's status word — `### <ID> · <word>` — and, with a note, the rest of its heading. */
 export function setStatus(text, id, state, note = null) {
   if (!ROW_STATES.includes(state)) throw refusal("UNKNOWN_STATE", `\`${state}\` is not a row state (${ROW_STATES.join(", ")}).`);
@@ -311,6 +352,8 @@ async function applyIntent(dir, it) {
     case "append": wr(need(it.file), appendBlock(rd(it.file), it.text)); return;
     case "line": wr(need(it.file), addLine(rd(it.file), it.under, it.text)); return;
     case "replace": wr(need(it.file), withNL(it.text)); return;
+    case "row": wr(need(it.file), replaceRow(rd(it.file), it.id, it.text ?? "")); return;
+    case "insert": wr(need(it.file), insertRow(rd(it.file), it.where, it.id, it.text)); return;
     case "status": {
       const files = it.file ? [need(it.file)] : ["docs/development/QUEUE.md", "docs/development/BACKLOG.md"];
       const holders = files.filter((f) => { const t = rd(f); return t !== null && new RegExp(`^###\\s+${it.id.replace(/[-]/g, "\\-")}\\s+·`, "m").test(t); });
@@ -753,6 +796,8 @@ function usage(code = 2) {
     "           --line <path> <heading> <textfile|->    lines at the end of the block under that heading",
     "           --status <ID> <state> [--note <text>]   a plan row's status word (and the rest of its heading)",
     "           --replace <path> <textfile|->           the whole file (a lane's own handoff)",
+    "           --row <path> <ID> <textfile|->          a plan row's whole block (an empty file deletes the row)",
+    "           --insert <path> before|after <ID> <textfile|->   a new row placed by the row it follows or precedes",
     "           --archive <ID>                          node tools/ledger.mjs archive, inside the write",
     "           --refill                                node tools/ledger.mjs refill, inside the write",
     "           --intents <json-file>                   an array of {op, file, text, under, id, state, note}",
@@ -781,6 +826,8 @@ async function cli(argv) {
       if (a === "--append") { intents.push({ op: "append", file: rest[i + 1], text: textOf(rest[i + 2]) }); i += 2; }
       else if (a === "--line") { intents.push({ op: "line", file: rest[i + 1], under: rest[i + 2], text: textOf(rest[i + 3]) }); i += 3; }
       else if (a === "--replace") { intents.push({ op: "replace", file: rest[i + 1], text: textOf(rest[i + 2]) }); i += 2; }
+      else if (a === "--row") { intents.push({ op: "row", file: rest[i + 1], id: rest[i + 2], text: textOf(rest[i + 3]) }); i += 3; }
+      else if (a === "--insert") { intents.push({ op: "insert", file: rest[i + 1], where: rest[i + 2], id: rest[i + 3], text: textOf(rest[i + 4]) }); i += 4; }
       else if (a === "--status") {
         const it = { op: "status", id: rest[i + 1], state: rest[i + 2] }; i += 2;
         if (rest[i + 1] === "--note") { it.note = rest[i + 2]; i += 2; }

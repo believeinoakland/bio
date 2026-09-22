@@ -6,7 +6,8 @@ plan being correct, places each new task where it belongs, and moves a task COND
 next one into the cache. **A STANDING LANE** (`CLAUDE.md` §4): its session stays alive, is never archived for idleness,
 and is refreshed only when its context is too full. Read `CLAUDE.md`, then this, then `docs/architecture/BIO_System_Design.md` (the construct map, whole — placing a task
 needs it), then `kickoffs/SCHEDULER-NEXT.md` if it
-exists. The pipeline's design is `docs/development/WORK-PIPELINE.md`; read it whole. The coordination skill is
+exists. **This lane's files live on the branch `coord`** (`TREE-SHARING.md` §1, M0-110): read each with
+`node tools/coord.mjs read <path>`, change it with `node tools/coord.mjs write` — never a commit on `main`. The pipeline's design is `docs/development/WORK-PIPELINE.md`; read it whole. The coordination skill is
 `docs/development/ORCHESTRATION.md`, "COMMUNICATING A CHANGE". Claim in `docs/development/CLAIMS.md` before editing
 anything outside the files below.
 
@@ -50,9 +51,9 @@ names.
    identified and properly added (in the correct order) in the build plan"*). A symptom without a diagnosed fix goes back
    to whoever found it; one whose fix needs design goes to BOB, and returns as designed tasks. There is no other list.
 5. **When CONDUCT reports a task complete** (by `SendMessage`, naming the task and its integration sha): verify the sha is
-   on `origin/main` and the row's work is there, then in ONE commit mark it `done`, archive it, and replenish — the next
+   on `origin/main` and the row's work is there, then in ONE coord write mark it `done`, archive it, and replenish — the next
    runnable tasks from the top of the backlog into the cache until it holds 8, deleted from the backlog as they move. A
-   `blocked` task is never moved into the cache. (`ledger.mjs` REFUSES any move that does not conserve the id multiset of cache, backlog and archive — read its refusal, never work around it.) Push, verify from the remote, and tell CONDUCT what entered the cache.
+   `blocked` task is never moved into the cache. (`ledger.mjs` REFUSES any move that does not conserve the id multiset of cache, backlog and archive — read its refusal, never work around it.) The write pushes and reads back from the remote; tell CONDUCT what entered the cache.
 6. **Keep the cache ahead of CONDUCT.** It holds 8; CONDUCT runs about 3 at once. If the cache holds fewer than 4
    runnable tasks, that is this lane's failure, and a replenish is owed now — never make CONDUCT wait.
 7. **Re-check the order** whenever something lands that changes what is BUILT (`node tools/status.mjs --check`, and each
@@ -61,7 +62,7 @@ names.
 
 **Wake:** at session start arm a recurring self-wake with `CronCreate` (every 30 minutes; prompt *"SCHEDULER: run the
 loop in kickoffs/SCHEDULER.md"*); CONDUCT's completion messages and BOB's inbox entries also wake it. When nothing is
-owed, end the turn with one line saying so. **Resolving a rebase conflict in `QUEUE.md`: carry upstream's hunks onto yours, never take one side whole** — taking SCHEDULER's side once reverted CONDUCT's `running` flips under live workers (`8e39602a`). **Never end a turn on a question nobody is present to read** — route it by
+owed, end the turn with one line saying so. **A plan edit is never a textual merge:** a coord write re-applies its intents to the fresh tip, so CONDUCT's `running` flips survive it — taking one side whole once reverted them under live workers (`8e39602a`). **Never end a turn on a question nobody is present to read** — route it by
 `SendMessage` and continue.
 
 ## The first work this lane owns
@@ -88,16 +89,17 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
 
 ## Mechanics learned by SCHEDULER #1 (2026-09-18/19) — durable, read before your first commit
 
-- **A completion is ONE commit:** flip the row `done` with its landing sha verified (`git merge-base --is-ancestor <sha>
-  origin/main`), `node tools/ledger.mjs archive <ID>`, then `node tools/ledger.mjs refill` (it moves only `queued` rows
-  whose depends-on are MET, and skips the rest with a reason), then `node tools/ledger.mjs invariants` (0 armed FAIL).
-- **A new row** is written at its place in `BACKLOG.md` by hand (the tools move rows OUT of the backlog, never into it),
-  with an `order:` line saying why it is there. The order IS file position: cache first, then backlog top to bottom.
-- **Every rebase that touches `QUEUE.md`/`BACKLOG.md`:** list upstream's hunks (`git diff <merge-base> origin/main --
-  <file>`), carry them onto yours, and run the carry under `set -e` with the push as a SEPARATE step after you compare
-  the `running` rows with `origin/main`. Chaining `…; git push` once published a failed carry and reverted CONDUCT's
-  flips twice (`12983f6f`, `60180168`; repaired `8e39602a`, `830f6648`). `docs/DECIDED.md` is not committed (M0-99,
-  2026-09-22): a pre-M0-99 side's copy is dropped, so take the deletion (corrected by SCHEDULER #13).
+- **A completion is ONE coord write:** with its landing sha verified (`git merge-base --is-ancestor <sha> origin/main`),
+  `node tools/coord.mjs write -m "<ID> done (<sha>)" --status <ID> done --archive <ID> --refill` — the refill moves only
+  `queued` rows whose depends-on are MET and skips the rest with a reason, and the write's ledger checks refuse it if an
+  armed invariant would fail (P1–P5 among them), naming the arm. `node tools/ledger.mjs invariants` reads the result.
+- **A new row** is PLACED at its position with `--insert docs/development/BACKLOG.md before|after <ID> <file>` (the
+  tools move rows OUT of the backlog, never into it), with an `order:` line saying why it is there; a row is re-worded or
+  withdrawn with `--row <path> <ID> <file>` (an empty file deletes it). The order IS file position: cache first, then
+  backlog top to bottom. Several acts that must land together are ONE write (`--intents <json>`).
+- **The carry rule this list held until M0-110 is retired with the textual merge it guarded:** plan edits no longer ride
+  a rebase (`12983f6f`, `60180168`; repaired `8e39602a`, `830f6648` — the receipts it was written for). A branch cut
+  before the cutover that edited a state file carries its intent over as a coord write, never its text.
 - **A row's `design:` must name a governed home.** A ruling that lives only in the BOB INBOX is not one: place the row,
   and ask BOB to fold the ruling first (D-431, M0-69 were placed this way and folded within the hour).
 - **A peer's message is a pointer.** Verify ids and shas (BOB once named M0-67 for the open M0-65); a defect is placed

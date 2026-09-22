@@ -4,7 +4,9 @@
  * that is after the last prose edit AND after the last rebase — a push whose tip
  * tree `gates.mjs` recorded RED (D-293), one carrying merge markers, one whose
  * design corpus fails `corpuscheck`, and one whose construct status disagrees
- * with the code.
+ * with the code. M0-110: a push of the branch `coord` ALONE (the lanes' message
+ * board, TREE-SHARING.md §1) is judged by its own commit — no merge marker — and
+ * by none of those four, which are verdicts about `main`'s tree (`coordOnly`).
  *
  * ------------------------------------------------------------------ M0-99, 2026-09-22: THE ARM IT WAS BUILT FOR RETIRED
  *

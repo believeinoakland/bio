@@ -18895,3 +18895,31 @@ paths: `tools/coord.mjs` (NEW: churn, read, write, migrate, the pointer-reading 
   `docs/architecture/construct-status.json`, `docs/development/MEASUREMENTS.md` (appends only), this block.
 NOT CLAIMED: `QUEUE.md`'s rows (CONDUCT's word, SCHEDULER's order); the `coord` branch itself — its creation and the
   cutover are CONDUCT's act; `newgroup/**`.
+ADDED AT THE BUILD, each named rather than taken silently: `tools/attribution.mjs` (its corpus walk and reader through
+  the layer); `tools/nc-m039.mjs` (its carry list gains `coord.mjs` and `ledger.mjs`); `bio-plane/scripts/op-claims.mjs`
+  (its walk skips state; `sweep({ files })`; `LEDGER_STATE`/`LEDGER_MAIN`); `bio-plane/test/decided.test.mjs`,
+  `pushguard.test.mjs` (a copied `decided.mjs` now carries `coord.mjs`), `m041-instrument-census.control.mjs` (arm 2's
+  subject moved to `MILESTONES.md`), `debt-floor.control.mjs` (re-pointed at the floors' new site), `coord.control.mjs`
+  (NEW); `kickoffs/SCHEDULER.md`, `kickoffs/WORKER.md`, `docs/development/TREE-SHARING.md` (§1 "As built" and its status
+  line). `docs/architecture/construct-status.json` is NOT changed: `coord` is process tooling, and no construct of
+  `BIO_System_Design.md` §3 moved (the file holds one claim per fact about a §3 construct).
+
+## DELEGATION 2026-09-22 M0 (M0-110 worker) -> BOB, CONDUCT, SCHEDULER, DIST, FLEET — **after the `coord` cutover, four texts outside `main`'s tracked tree still read state from `origin/main`, and each is its owner's to rewrite**
+
+M0-110 moves the state files to the branch `coord` (TREE-SHARING.md §1) and corrects every tracked reader on `main`
+(`plancheck` §10 fails any `origin/main:<state path>` left outside `docs/archive/` and `MEASUREMENTS.md`). Four texts it
+does not correct, each named with its fix:
+1. **BOB — the CONDUCT heartbeat's skill** (ruling 4). It lives outside the repository (`~/.claude/scheduled-tasks/
+   conduct-heartbeat/`, on the old Mac, disabled at the stand-down); its dated copy
+   `docs/archive/conduct-heartbeat-SKILL-2026-09-19.md` stays verbatim. It reads `origin/main:…/CONDUCT-NEXT.md` and greps
+   `QUEUE.md` from `main`. **Fix:** a cloud replacement, if one is built, reads both with `node tools/coord.mjs read <path>`.
+2. **BOB — the four lane paste blocks** (`docs/archive/lane-paste-blocks-2026-09-22.md`, kept verbatim): each gates on
+   `git show origin/main:<…>-NEXT.md | head -1`, which reads the one-line pointer after the cutover. **Fix:** the next
+   block given to Bob gates on `node tools/coord.mjs read docs/development/kickoffs/<LANE>-NEXT.md | head -1` (NEW-MACHINE
+   §7 now says so).
+3. **Every lane — its own `-NEXT.md`** (now on `coord`): CONDUCT-NEXT's opening (`git show origin/main:…CONDUCT-NEXT.md`,
+   `…QUEUE.md | grep`), SCHEDULER-NEXT's and FLEET-NEXT's "on `origin/main`" readings of state. **Fix:** at its next
+   handoff write each lane reads state with `coord.mjs read` and writes the handoff with `coord.mjs write --replace`.
+4. **SCHEDULER — `QUEUE.md`'s own header** (line 13: *"a worker reads its own row from `origin/main`"*), a state file this
+   item may not edit (the rows and their prose are CONDUCT's word and SCHEDULER's order). **Fix:** *"from `coord`"*.
+**open as of 2026-09-22** — raised with M0-110's landing; each item closes when its owner's text reads `coord`.

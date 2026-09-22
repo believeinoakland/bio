@@ -57,6 +57,10 @@ const git = (cwd, ...args) => {
 const gitTry = (cwd, ...args) => spawnSync("git", args, { cwd, encoding: "utf8" });
 const ident = (dir) => { git(dir, "config", "user.name", "coord fixture"); git(dir, "config", "user.email", "coord@fixture.invalid"); git(dir, "config", "commit.gpgsign", "false"); };
 const code = async (fn) => { try { await fn(); return "NO REFUSAL"; } catch (e) { return e.code || String(e.message).slice(0, 80); } };
+/* A write the suite EXPECTS to land, refused, is a FAILED assertion downstream — never an uncaught throw that ends the
+   suite before its foot and hides every arm after it (the size-floor arms of debt-floor.control found exactly that). */
+const tryWrite = async (opts) => { try { return await C.write(opts); }
+  catch (e) { return { status: `REFUSED ${e.code || "?"}`, error: String(e.message).slice(0, 200), changed: [], attempts: [], commit: null, pushOutput: "" }; } };
 
 /* ------------------------------------------------------------------------------------ the fixture */
 
@@ -104,7 +108,9 @@ const answers = (repo) => {
     findArchived: L.findId("ZZ-0", { repo }).map((f) => `${f.where} ${f.file} ${f.state}`),
     rows: L.pipelineRows({ repo }).rows.map((r) => `${r.id}·${r.state}·${r.where}`),
     archived: [...L.archivedQueueIds({ repo })].sort(),
-    audit: (() => { const a = L.ledgerAudit({ repo }); return { unreadable: a.unreadable, closed: a.closedLive, p: Object.fromEntries(Object.entries(a.pipeline.arms).map(([k, v]) => [k, v.violations.length])) }; })(),
+    /* A reader that reads the pointer finds no pipeline at all: that is a DIFFERENT ANSWER, never a crash — a
+       TypeError here would end the suite before its foot and hide every other arm (WORKER.md's receipt). */
+    audit: (() => { const a = L.ledgerAudit({ repo }); return { unreadable: a.unreadable, closed: a.closedLive, p: a.pipeline ? Object.fromEntries(Object.entries(a.pipeline.arms).map(([k, v]) => [k, v.violations.length])) : "UNREAD" }; })(),
     owed: (() => { const o = owedFor("BOB", { repo }); return { unreadable: o.unreadable.filter((u) => !/DECISIONS/.test(u)), items: o.items.map((i) => i.id) }; })(),
     delegations: (() => { const a = delegationAudit({ repo, git: false, today: TODAY }); return [a.corpus, a.findings.length]; })(),
     handoffs: RB.readSet(repo).filter((r) => r.key === "next").map((r) => r.file),
@@ -172,16 +178,16 @@ section("§3 A CLAIM, A QUEUE FLIP AND A HANDOFF EACH LAND ON coord WITHOUT MOVI
 const mainAt = () => gitTry(A, "ls-remote", "--heads", "origin", "main").stdout.split(/\s/)[0];
 const coordAt = () => gitTry(A, "ls-remote", "--heads", "origin", "coord").stdout.split(/\s/)[0];
 const main0 = mainAt();
-const claim = await C.write({ repo: A, message: "claim: ZZ-A takes a path", intents: [
+const claim = await tryWrite({ repo: A, message: "claim: ZZ-A takes a path", intents: [
   { op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-A (a lane's claim)\n\npaths: `a/path`\n" }] });
 t("the claim is PUSHED and read back from the remote", [claim.status, claim.changed, coordAt() === claim.commit], ["pushed", ["docs/development/CLAIMS.md"], true]);
 t("...and main did not move", mainAt(), main0);
-const flip = await C.write({ repo: A, message: "ZZ-1 running", intents: [{ op: "status", id: "ZZ-1", state: "running", note: "flipped by the fixture" }] });
+const flip = await tryWrite({ repo: A, message: "ZZ-1 running", intents: [{ op: "status", id: "ZZ-1", state: "running", note: "flipped by the fixture" }] });
 t("the queue flip lands", [flip.status, flip.changed], ["pushed", ["docs/development/QUEUE.md"]]);
 t("...main did not move", mainAt(), main0);
 C.resetCoordCache(); git(A, "fetch", "-q", "origin");
-t("the row reads `running`, with its note, through the reader", [L.findId("ZZ-1", { repo: A })[0].state, /flipped by the fixture/.test(C.readState(A, "docs/development/QUEUE.md"))], ["running", true]);
-const hand = await C.write({ repo: A, message: "LANE #3's handoff", intents: [
+t("the row reads `running`, with its note, through the reader", [(L.findId("ZZ-1", { repo: A })[0] || { state: "ABSENT" }).state, /flipped by the fixture/.test(C.readState(A, "docs/development/QUEUE.md"))], ["running", true]);
+const hand = await tryWrite({ repo: A, message: "LANE #3's handoff", intents: [
   { op: "replace", file: "docs/development/kickoffs/LANE-NEXT.md", text: "LANE #3 — the next handoff, line 1\n" },
   { op: "replace", file: "docs/development/kickoffs/NEWLANE-NEXT.md", text: "NEWLANE #1 — a lane's first handoff\n" }] });
 t("the handoff lands, a new lane's included", [hand.status, hand.changed.sort()],
@@ -192,13 +198,13 @@ t("another lane reads line 1 of the handoff through the read command", C.readRem
 t("a handoff CREATED on coord (no pointer on main) is seen by the kickoffs' readers",
   RB.readSet(B).filter((r) => r.key === "next").map((r) => r.file).sort(),
   ["docs/development/kickoffs/LANE-NEXT.md", "docs/development/kickoffs/NEWLANE-NEXT.md"]);
-t("an unchanged intent is not a commit", (await C.write({ repo: A, message: "again", intents: [{ op: "status", id: "ZZ-1", state: "running", note: "flipped by the fixture" }] })).status, "unchanged");
+t("an unchanged intent is not a commit", (await tryWrite({ repo: A, message: "again", intents: [{ op: "status", id: "ZZ-1", state: "running", note: "flipped by the fixture" }] })).status, "unchanged");
 
 /* ============================================================================================ */
 section("§4 A MAIN GATE RECORD SURVIVES A coord WRITE (D-293: the record is keyed by main's tree)");
 const mainTree = git(A, "rev-parse", "origin/main^{tree}");
 PG.appendRun({ repo: A, run: { tree: mainTree, verdict: "GREEN", class: "FULL", head: git(A, "rev-parse", "origin/main"), steps: [{ label: "battery", units: ["plane:*"], ok: true }] } });
-await C.write({ repo: A, message: "one more note", intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-C (a later note)\n\npaths: `c`\n" }] });
+await tryWrite({ repo: A, message: "one more note", intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-C (a later note)\n\npaths: `c`\n" }] });
 git(A, "fetch", "-q", "origin");
 t("after the coord write, origin/main's tree is the tree the record was written for",
   git(A, "rev-parse", "origin/main^{tree}"), mainTree);
@@ -210,14 +216,14 @@ section("§5 CONCURRENT: a new block and a line into an existing block both land
 const ANCHOR = "## CLAIM 2026-09-22 ZZ-C (a later note)";
 git(B, "fetch", "-q", "origin");
 let raced = false;
-const wA = await C.write({ repo: A, message: "a line into ZZ-C's block", intents: [{ op: "line", file: "docs/development/CLAIMS.md", under: ANCHOR, text: "**released: 2026-09-22 ZZ-C** — LINE-FROM-A" }],
+const wA = await tryWrite({ repo: A, message: "a line into ZZ-C's block", intents: [{ op: "line", file: "docs/development/CLAIMS.md", under: ANCHOR, text: "**released: 2026-09-22 ZZ-C** — LINE-FROM-A" }],
   beforePush: async ({ attempt }) => {
     if (attempt !== 1) return;
     raced = true;
-    const wB = await C.write({ repo: B, message: "a new block from B", intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-B (a new block, landed first)\n\nBODY-FROM-B\n" }] });
+    const wB = await tryWrite({ repo: B, message: "a new block from B", intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-B (a new block, landed first)\n\nBODY-FROM-B\n" }] });
     t("B's new block landed while A was between its commit and its push", wB.status, "pushed");
   } });
-t("A's first push was REFUSED as a non-fast-forward, and its second landed", [raced, wA.status, wA.attempts.length, wA.attempts[0].status !== 0], [true, "pushed", 2, true]);
+t("A's first push was REFUSED as a non-fast-forward, and its second landed", [raced, wA.status, wA.attempts.length, (wA.attempts[0] || { status: 0 }).status !== 0], [true, "pushed", 2, true]);
 git(A, "fetch", "-q", "origin"); C.resetCoordCache();
 const claims = C.readState(A, "docs/development/CLAIMS.md");
 const blockOf = (heading) => { const ls = claims.split("\n"); const i = ls.indexOf(heading); let e = i + 1; while (e < ls.length && !/^#{1,2} /.test(ls[e])) e++; return i < 0 ? null : ls.slice(i, e).join("\n"); };
@@ -235,7 +241,7 @@ const planted = await (async () => { try { await C.write({ repo: A, message: "pl
 t("§6 the planted closed row is REFUSED", planted, "LEDGER_CHECK_FAILED");
 t("...by name: the arm and the invariant", [/LC-ledger/.test(refusedMsg), /P2 ZZ-9 · done/.test(refusedMsg)], [true, true]);
 t("...coord did not move and main did not move", [coordAt(), mainAt()], [c0, m0]);
-const dry = await C.write({ repo: A, message: "dry", dryRun: true, intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-D (dry)\n\nx\n" }] });
+const dry = await tryWrite({ repo: A, message: "dry", dryRun: true, intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-D (dry)\n\nx\n" }] });
 t("a dry run applies and checks, and pushes nothing", [dry.status, coordAt()], ["dry-run", c0]);
 
 /* ============================================================================================ */
@@ -246,11 +252,18 @@ t("an ambiguous anchor is refused", await code(() => C.write({ repo: A, message:
 t("a status on a row that is not there is refused", await code(() => C.write({ repo: A, message: "x", intents: [{ op: "status", id: "ZZ-77", state: "done" }] })), "ROW_NOT_FOUND");
 t("a state word that is not a state is refused", await code(() => C.write({ repo: A, message: "x", intents: [{ op: "status", id: "ZZ-1", state: "finished" }] })), "UNKNOWN_STATE");
 t("a write with no message is refused", await code(() => C.write({ repo: A, message: "", intents: [{ op: "status", id: "ZZ-1", state: "done" }] })), "NO_MESSAGE");
-const arch = await C.write({ repo: A, message: "ZZ-1 done, archived in the same commit", intents: [{ op: "status", id: "ZZ-1", state: "done" }, { op: "archive", id: "ZZ-1" }] });
+const arch = await tryWrite({ repo: A, message: "ZZ-1 done, archived in the same commit", intents: [{ op: "status", id: "ZZ-1", state: "done" }, { op: "archive", id: "ZZ-1" }] });
 git(A, "fetch", "-q", "origin"); C.resetCoordCache();
 t("a done flip and its archive land as ONE coord commit (P2 would refuse the flip alone)",
   [arch.status, arch.changed.sort(), L.findId("ZZ-1", { repo: A }).map((f) => `${f.where} ${f.state}`)],
   ["pushed", ["docs/archive/ledgers/QUEUE-closed.md", "docs/development/QUEUE.md"], ["archive done"]]);
+const backlogIds = () => { git(A, "fetch", "-q", "origin"); C.resetCoordCache(); return L.pipelineRows({ repo: A }).rows.filter((r) => r.where === "backlog").map((r) => r.id); };
+const ins = await tryWrite({ repo: A, message: "place ZZ-4 ahead of ZZ-3", intents: [{ op: "insert", file: "docs/development/BACKLOG.md", where: "before", id: "ZZ-3", text: ROW("ZZ-4", "queued") }] });
+t("a new row is PLACED by the row it precedes — the plan's order is file position (SCHEDULER's act)", [ins.status, backlogIds()], ["pushed", ["ZZ-4", "ZZ-3"]]);
+const edited = await tryWrite({ repo: A, message: "ZZ-4 re-worded", intents: [{ op: "row", file: "docs/development/BACKLOG.md", id: "ZZ-4", text: ROW("ZZ-4", "queued", "order: re-placed by the fixture\n") }] });
+t("...a row is REPLACED whole by its id", [edited.status, /order: re-placed by the fixture/.test(C.readState(A, "docs/development/BACKLOG.md"))], ["pushed", true]);
+const del = await tryWrite({ repo: A, message: "ZZ-4 withdrawn", intents: [{ op: "row", file: "docs/development/BACKLOG.md", id: "ZZ-4", text: "" }] });
+t("...and DELETED by its id", [del.status, backlogIds()], ["pushed", ["ZZ-3"]]);
 t("the flip ALONE is refused by P2", await code(() => C.write({ repo: A, message: "x", intents: [{ op: "status", id: "ZZ-2", state: "done" }] })), "LEDGER_CHECK_FAILED");
 /* A remote that has never had a coord: the estate before the cutover. */
 const NOCOORD = join(base, "nocoord.git"); git(base, "init", "-q", "--bare", "-b", "main", NOCOORD); git(SEED, "push", "-q", NOCOORD, "main:main");
@@ -267,7 +280,7 @@ t("the push guard reads a push of coord ALONE as coord-only, and a push naming m
    PG.coordOnly("")], [true, false, false]);
 PG.install({ repo: A }); PG.installCopy({ repo: A });
 writeFileSync(join(A, "README.md"), "UNCOMMITTED DRIFT in the lane's own tree\n");
-const hooked = await C.write({ repo: A, message: "a note through the hook", intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-E (through the hook)\n\nx\n" }] });
+const hooked = await tryWrite({ repo: A, message: "a note through the hook", intents: [{ op: "append", file: "docs/development/CLAIMS.md", text: "## CLAIM 2026-09-22 ZZ-E (through the hook)\n\nx\n" }] });
 t("through the REAL hook a coord note lands from a DIRTY lane tree, and the guard says it judged it coord-only",
   [hooked.status, /a coord-only push/.test(hooked.pushOutput)], ["pushed", true]);
 const mk = "<".repeat(7);

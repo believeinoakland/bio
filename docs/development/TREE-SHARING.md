@@ -1,7 +1,8 @@
 # Sharing the tree: the message board off `main`, landing in batches, gates off the laptop
 
 A process document (`CORPUS-STANDARD.md` §6). **RULED BY BOB 2026-09-22: *"Yes to all 3 recommendations"*** — the three
-changes below, as BOB #26 put them to him that day. Designed here by BOB #26; **NOT BUILT**. Until each change lands, the
+changes below, as BOB #26 put them to him that day. Designed here by BOB #26. **Change 1 is BUILT by M0-110** (§1 "As
+built"; live from CONDUCT's cutover); **changes 2 and 3 are NOT BUILT**. Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
 **Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
 questions answered in §1 (M0-99, M0-100, M0-101), and M0-110's builder's four answered there by BOB #28 the same day;
@@ -99,6 +100,27 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
   answers as it did from `main`, a `main` gate record survives a `coord` write, and a new block and a line into an
   existing block, written concurrently, both land with the line in its own block. NEGATIVE CONTROL: point one reader
   back at `main`'s old path, and its suite fails by name; make the write a textual merge, and the in-block arm fails.
+- **As built (M0-110, 2026-09-22) — `tools/coord.mjs`, its suite `bio-plane/test/coord.test.mjs`, its control
+  `coord.control.mjs`.** What moved is `isMovedPath` there: the four live files, every `kickoffs/*-NEXT.md`, the whole
+  `docs/archive/ledgers/` family and `PLACEMENT.md` (rulings 1 and 3). **The pointer is the switch:** each old path on
+  `main` holds a one-line `COORD-POINTER:` file, and `readState` answers a pointer with `origin/coord`'s copy
+  (`BIO_COORD_REF` names another ref), so every reader — `ledger`, `plancheck`, `owed`, `decided`, `delegations`,
+  `readbudget`, `mintid`, `attribution`, `rowdesign`/`rowsubstrate` through the lister, `op-claims` — reads the same
+  code before and after the cutover, and a planted fixture as itself. `occupancy.mjs` and `retirable.mjs` read no state
+  file (read at the code); `gates.mjs`' derivation reads no state CONTENT and is unchanged. **Writes:** `coord.mjs
+  write` with intents (append a block; a line under a block's heading; a row's status word; a row replaced, deleted, or
+  inserted before/after another; a handoff replaced; `archive`; `refill`), re-applied on every retry through a
+  temporary index, pushed without force; `ledger.mjs archive|refill` route through it on a switched tree. **Ruling 2's
+  moved arms are `ledgerChecks`** — LC-markers, LC-debt-token, LC-queued-refs, LC-row-design, LC-strays,
+  LC-owed-agreement, LC-plan-fields, LC-delegations, LC-ledger, LC-debt-agreement, LC-undecided-route, LC-op-claims,
+  LC-handoff-budget — each naming the suite it left; a write runs all and is refused by name, `plancheck` §10 runs those
+  no other section runs. **Plancheck §10** also fails a switched `main` whose state path is not exactly its pointer, and
+  any `origin/main:<state path>` left in the tracked tree outside the archive and `MEASUREMENTS.md`. **The push guard**
+  judges a push of `coord` alone by its own commit (no merge marker) and skips `main`'s checks. **The cutover** is
+  `coord.mjs migrate`: `coord` as a ROOT commit of the state files from the integration HEAD (fixed dates: re-runs agree)
+  and `main`'s pointer commit on it, pushed coord-first by CONDUCT. **Not built:** a `carry <branch>` command (a branch
+  cut before the cutover carries its state additions by hand, as `coord.mjs write` intents); the heartbeat's cloud
+  replacement (ruling 4).
 
 ### 2 · One lane lands on `main`, in batches
 

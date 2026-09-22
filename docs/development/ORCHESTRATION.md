@@ -68,12 +68,21 @@ untracked one cannot even be found. Two corollaries, each paid for:
 | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only knowledge; a defect goes to SCHEDULER only with its fix named |
 | tell a LIVE session something now | **`SendMessage`** to that lane — **NEVER to an UNATTENDED one; it cannot receive** | an ACCELERATOR, pointing at what to re-read; the state in the repository is the authority |
 
+**THE BOARD IS THE BRANCH `coord`** (`TREE-SHARING.md` §1, built by M0-110). The state channels above — the BOB INBOX
+and the plan (`QUEUE.md`, `BACKLOG.md`), `CLAIMS.md`, `DEBT.md`, every `-NEXT.md` and the ledgers' archive — live on
+`coord`, not `main`: **read** with `node tools/coord.mjs read <path>`, **written** with `node tools/coord.mjs write`
+(an INTENT — append a block, add a line under a block's heading, set a row's status word, replace your own handoff,
+archive, refill — re-applied to the fresh tip if another lane wrote first, never a textual merge). A write runs the
+ledger checks before it pushes and is REFUSED by name when it would break one; it never moves `main`, so it voids no
+lane's gate record. `main` keeps a one-line pointer at each old path, and `plancheck` fails a `main` that carries
+state again.
+
 **AN UNATTENDED SESSION CANNOT BE MESSAGED AT ALL, IN EITHER DIRECTION — AND THE LANE EVERY COMPLETION REPORT
 FLOWS THROUGH IS ONE** (SCHEDULER #3 and CONDUCT #8, independently, 2026-09-19; M-74). A session stood up by a
 SCHEDULED TASK has no inbox and appears in NO peer’s `ListAgents`. A send to its session id is refused —
 *“session … is unattended (a scheduled-task run or dispatched session); messages can’t be delivered there”* — and it
 cannot send one out either. **The last clause of the row above is what saves the design: the state in the repository
-IS the authority.** So what such a lane must know goes onto the ROW it reads from `origin/main`, never only into a
+IS the authority.** So what such a lane must know goes onto the ROW it reads from `coord` (`coord.mjs read`), never only into a
 message — and its silence is never agreement.
 
 **AND A NAME IS NOT AN ADDRESS.** SCHEDULER #3’s first send to `CONDUCT #8` returned `success: true` and landed on a
@@ -134,11 +143,11 @@ extended to whole FILES, in build order:
 3. **A file several lanes append to becomes one file per entry.** New CLAIM, DELEGATION, measurement and interface-change
    entries are each their own file; the old files are frozen history plus the state lines of blocks still open; one
    reader module yields both, and any single-file view is generated. **NARROWED 2026-09-22 by BOB #27** to
-   `MEASUREMENTS.md` and `INTERFACE-CHANGES.md` (M0-100): claims and delegations move to `coord` with
-   `TREE-SHARING.md` change 1, whose anchored write keeps each line in its own block (§1 there).
+   `MEASUREMENTS.md` and `INTERFACE-CHANGES.md` (M0-100): claims and delegations moved to `coord` with
+   `TREE-SHARING.md` change 1 (M0-110), whose anchored write keeps each line in its own block (§1 there).
 4. **A lane writes only its own files:** CONDUCT's `running` word leaves SCHEDULER's rows for a CONDUCT-owned record.
-   **SUPERSEDED 2026-09-22 by BOB #27** (M0-101): the word becomes an anchored write on `coord` (`TREE-SHARING.md` §1),
-   which ends the two-writers conflict without moving it.
+   **SUPERSEDED 2026-09-22 by BOB #27** (M0-101): the word is an anchored write on `coord` (`TREE-SHARING.md` §1;
+   `coord.mjs write --status <ID> running`), which ends the two-writers conflict without moving it.
 
 Until each lands: SCHEDULER batches its docs landings to one per wake and holds `main` while CONDUCT lands (live
 2026-09-21); appends at a tail are resolved by carrying both sides, each line kept in its own block. **And from
