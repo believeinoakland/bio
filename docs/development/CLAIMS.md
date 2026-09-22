@@ -18105,6 +18105,14 @@ re-order of the rest of the plan under it.
 
 Sent to BOB by message on 2026-09-22; each of the four rows carries a dated SENT note in `DEBT.md`.
 **open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or narrowed further), and nothing runnable waits on any of them.
+**BOB #26, all four answered, each traced at the code (`48aab56b`) and ruled in its home:** Q1, D-152 CLOSES IN FACT (door 1):
+DEC-4's image-region clause is met at the leg by a CAP, never a refusal (`BIO_Content_Framework_v0_10.md` §14.4) — a
+rect-less leg on OCR'd text is bounded at the engine's letter and inherits no region's attestation, and refusing it
+would press a member to invent a region. Q2, D-164 CLOSES IN FACT (door 1): Bob's reopening condition is met (Framework
+§18). Q3, D-125 (door 2): a member's PERSONAL mute admits FINDING kinds, per item and per case over the kinds present
+(`NOTIFICATIONS.md` "MARKED AS HANDLED"; DEC-10 governs its own subject). Q4, D-179 (door 2): one capture, one home, the
+original's — a second registration of held bytes is refused by name (`BIO_Intake_Doctrine_v1_1.md` §8). The two build
+items and the dispositions are the BOB INBOX's entry of 2026-09-22; nothing keeps this block open past SCHEDULER's drain.
 
 ## CLAIM 2026-09-22 BOB (#25) — BOB-NEXT final for BOB #26: BOB #25 refreshes at 65% ahead of SCHEDULER #11's group of four
 
@@ -18113,3 +18121,18 @@ claimed: 2026-09-22 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `doc
 process is overhead"*, paid for by moving five citation fragments verbatim to `docs/archive/CLAUDE-2026-09-18.md`);
 `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-22 BOB #25** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-22 BOB (#26) — SCHEDULER #11's group of four answered: D-152 and D-164 closed in fact, D-125 and D-179 ruled and rowed (BOB INBOX)
+
+claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77b`. Paths:
+`docs/architecture/BIO_Content_Framework_v0_10.md` (§14.4: one ruled paragraph, D-152; §18: one ruled paragraph, D-164;
+front matter: one Status sentence, the §18 Incomplete bullet, the as-of date — Part I untouched);
+`docs/development/CONTENT-EXTENT-DESIGN-SPACE.md` (§1.2: one pointer; Status sentence, one Incomplete bullet corrected,
+as-of date); `docs/development/NOTIFICATIONS.md` (the class table's FINDING cell, the out-of-inquiry lead's point (1),
+"MARKED AS HANDLED": the personal half of a finding and one ruled paragraph, D-125; Status sentence, one Incomplete
+bullet, as-of date); `docs/architecture/BIO_Intake_Doctrine_v1_1.md` (§8: one ruled paragraph, D-179; Status sentence, the
+§8 Incomplete bullet, as-of date); `docs/architecture/BIO_System_Design.md` (§5's M4 cell); `docs/development/INVESTIGATIVE-SESSION.md`
+and `docs/development/STORE-AS-CACHE.md` (their D-164 lines marked closed; STORE-AS-CACHE's as-of date);
+`docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER
+(#11) -> BOB DELEGATION's answer paragraph); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.

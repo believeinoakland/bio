@@ -9,7 +9,7 @@
 - §11 item 5 — RULED (BOB #25, 2026-09-21) and NOT BUILT: `op=suggest` still accepts any existing run and `op=extractpropose` any running one, whoever holds it; an `ai` credential still creates an inquiry outside any run, with no lens and no bound; and a run records only the manifest it was handed. The three items are in the BOB INBOX of that date.
 - §12 (c) — D-195's shared-origin disclosure at the member's own elicitation is RULED (BOB #22, 2026-09-21) and NOT BUILT: no read yet computes independence over a partition before it is written, and UI-27's read-back shows none.
 - §14c — options graded 2026-08-06; option A LANDED (PL-8, the MEANING arm) while D-222's debt row still reads open; stage C (content-grain search) sits in Part II §18, not queued.
-- §THE READ SURFACE HAS A HOLE — the two-route measurement is partly stale; D-164, the "second precondition", REOPENED 2026-09-15 and still unbuilt, so versions still compose document-grain legs. **NARROWED 2026-09-19 by BOB #18 (at D-226's closing), in two halves that must not be collapsed:** the leg REFERENT is built — `inquiry_basis.content_id` and `inquiry_basis_version_legs.content_id` both exist and are indexed (REC-82 / IC-83), verified by name at the schema — and D-164's open row is now a DESIGN row for Part II §18, not that build. **Whether the version COMPOSITION PATH actually reads those columns or still composes at document grain was NOT verified here and is stated UNDETERMINED rather than inherited from the column's existence** — a present column is not a reader that uses it, which is the same substrate-is-not-dependent error in its commonest form. Whoever next touches §2 drives that path and settles it.
+- §THE READ SURFACE HAS A HOLE — **D-164 CLOSED 2026-09-22 (BOB #26, `BIO_Content_Framework_v0_10.md` §18): what this bullet says of its open row is history; the composition-path question at its end is this document's and stays UNDETERMINED.** The two-route measurement is partly stale; D-164, the "second precondition", REOPENED 2026-09-15 and still unbuilt, so versions still compose document-grain legs. **NARROWED 2026-09-19 by BOB #18 (at D-226's closing), in two halves that must not be collapsed:** the leg REFERENT is built — `inquiry_basis.content_id` and `inquiry_basis_version_legs.content_id` both exist and are indexed (REC-82 / IC-83), verified by name at the schema — and D-164's open row is now a DESIGN row for Part II §18, not that build. **Whether the version COMPOSITION PATH actually reads those columns or still composes at document grain was NOT verified here and is stated UNDETERMINED rather than inherited from the column's existence** — a present column is not a reader that uses it, which is the same substrate-is-not-dependent error in its commonest form. Whoever next touches §2 drives that path and settles it.
 - §What the session sees — the bias object is BUILT (PL-12) and D-220's version join landed (PL-10); the text still says UNBUILDABLE TODAY.
 - §The fence — `capture_requests` BUILT (PL-4); the `[BOB-4]` provisional is superseded by DEC-52 final (§19's F9 says so; the paragraph is not rewritten).
 - §Which Claude account — DS-3 and FL-6 (cascade config and runtime) are closed rows; D-218 MEASURED 2026-08-08 — the text still says "to MEASURE".
@@ -131,7 +131,8 @@ section below and on every IS item's build:
   edge carries it* — is CLOSED at the code, verified BY NAME rather than through a
   status line: `inquiry_basis.content_id` and `inquiry_basis_version_legs.content_id`,
   both present and indexed (REC-82 / IC-83). **D-164 ITSELF STAYS OPEN on a different
-  and broader question** — REOPENED 2026-09-15 as a DESIGN row for the six pieces Part II
+  and broader question** [CLOSED 2026-09-22 by BOB #26: the six pieces are designed and Bob's
+  condition is met, Framework §18] — REOPENED 2026-09-15 as a DESIGN row for the six pieces Part II
   §18 lists as undesigned as of 2026-09-15, not as the leg-referent build it began as (that
   list is §18's claim and is cited here, not re-asserted). *Substrate built is not
   dependent built*, and this is that law's mirror: an open row ABOVE a landed piece is
@@ -491,8 +492,11 @@ another team's work on the shared inquiry, that is surfaced too. **Both are FIND
 slugs in `queuestate.mjs`'s vocabulary, not `N-<n>` ids** — verified: no N-number exists
 anywhere in source; the live vocabulary is slugs (`QUEUE_FINDING_KINDS`), `classOfKind` is
 the fence, and the store refuses unknown kinds at the mint (D-213's corrected close
-condition). FINDING, not CONDITION, deliberately: a condition is personally mutable, and
-one member could silently mute what a team must see.
+condition). FINDING, not CONDITION, deliberately: it may become evidence and leaves a team's
+list only by an authored act. A member's PERSONAL mute hides it from that member alone (DEC-10,
+ruled for findings 2026-09-22 by BOB #26, `NOTIFICATIONS.md` "MARKED AS HANDLED"), so no one
+member can silently mute what a team must see (this read *a condition is personally mutable*, as
+if a finding could not be).
 
 **Open verification:** if sharing turns out to mean something stronger in the data model than
 the edge-based association found here — one stance that every referencing project must

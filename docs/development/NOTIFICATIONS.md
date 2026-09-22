@@ -1,6 +1,6 @@
 # Notifications: the catalogue, the classes, and the item contract
 
-**Status** · The notification catalogue, the three classes and the item contract, written 2026-08-01 (session BOB) at Bob's direction and carrying four of his rulings of that day verbatim (FINDING as the substrate of case-making, OBLIGATION as the civic system's own flows, CONDITION as the signal layer with three dispositions, and one queue with three homes); one line was corrected in place on 2026-08-05 (the bias-debt entry, per DEC-20 / D-188). PARTIALLY COMPLETE: the doctrine is settled and BUILT, the catalogue is a real registry, and MOST OF THE GENERATORS IT INVENTORIES DO NOT EXIST — which is the correct direction and is stated here so it is not inferred. **What of the queue content is built, measured 2026-09-14.** The QUEUE SURFACE is **[BUILT]** and was built FIRST, as `MILESTONES.md` M8's build order requires (*"the queue first — attention layer, sharpest gap, plane half ships"*): `op=queue`, `op=tasks` and `op=queuemute` on the plane (REC-20, REC-21) and `SURFACES["queue"]` in `civicos-ui/app.html` (UI-1, UI-14, UI-45, UI-55). The CATALOGUE is **[BUILT]** as machine-readable state rather than as prose — `bio-plane/src/queuestate.mjs` carries **35 kinds** (11 CONDITION, 6 OBLIGATION, 18 FINDING) under the catalogue's own SLUGS, `classOfKind` is the one class lookup, and `store.mjs` refuses at the MINT any CONDITION kind the file does not name. **The GENERATORS are 9 of those 35**: six are annotated `LIVE:` at their entry (`authority-undetermined`; `missing_predecessor` and `overdue_successor`; `out-of-inquiry-lead`; `stance-changed-here-not-elsewhere`; `new-version-arrived-from-another-team`) and three CONDITION kinds are derived on read by `op=queue` (`governor-holding-host`, `partial-capture-outstanding`, `capture-completed-unattended`), the file's own header stating that the other EIGHT conditions have none — so **26 of the 35 entries below are [DESIGNED-not-built]**, and D-126 stands open. The THREE CLASSES are **[BUILT]** and enforced, not remembered: the mute fence refuses a FINDING by class rather than by list, driven in `bio-plane/test/current.test.mjs`. The ITEM CONTRACT is **[BUILT]** but for its id: rule 1 (options come from the producer) is asserted structurally — UI-45 §1 pins that the surface holds NO per-kind wording table and names no kind slug at all — rules 2, 3 and 4 hold, and the `kind` field carries a SLUG because no `N-<n>` has ever been allocated, exactly as §What this does not settle intends. The HANDLED SCOPES are all three **[BUILT]**: obligation resolved through `op=taskresolve`/`taskforward` (record state), finding adopted/deferred/dismissed through `op=proposedispose` (authored, with author and reason), condition acknowledged or muted through `op=queuemute` (personal, and per-KIND rather than all-or-nothing since UI-55). The **per-item weight is [DESIGNED-not-built]**: the plane's act catalogue publishes `refuse`, `report` and `single` and no `per-item` weight exists anywhere in `bio-plane/src/`; UI-55's ARM 4d re-measures `op=proposedispose`, `op=taskresolve` and `op=taskforward` every run and goes RED the day one of them accepts a set. Of the three HOMES beyond the queue, the case is **[BUILT]** (D-127 designed and built through the IS plan, `BIO_System_Design.md` §3 construct 8), the institution's flow model is **[DESIGNED-not-built]** (D-128, M4, open) and the signal history is **[ABSENT]**. as of 2026-09-17.
+**Status** · The notification catalogue, the three classes and the item contract, written 2026-08-01 (session BOB) at Bob's direction and carrying four of his rulings of that day verbatim (FINDING as the substrate of case-making, OBLIGATION as the civic system's own flows, CONDITION as the signal layer with three dispositions, and one queue with three homes); one line was corrected in place on 2026-08-05 (the bias-debt entry, per DEC-20 / D-188). PARTIALLY COMPLETE: the doctrine is settled and BUILT, the catalogue is a real registry, and MOST OF THE GENERATORS IT INVENTORIES DO NOT EXIST — which is the correct direction and is stated here so it is not inferred. **What of the queue content is built, measured 2026-09-14.** The QUEUE SURFACE is **[BUILT]** and was built FIRST, as `MILESTONES.md` M8's build order requires (*"the queue first — attention layer, sharpest gap, plane half ships"*): `op=queue`, `op=tasks` and `op=queuemute` on the plane (REC-20, REC-21) and `SURFACES["queue"]` in `civicos-ui/app.html` (UI-1, UI-14, UI-45, UI-55). The CATALOGUE is **[BUILT]** as machine-readable state rather than as prose — `bio-plane/src/queuestate.mjs` carries **35 kinds** (11 CONDITION, 6 OBLIGATION, 18 FINDING) under the catalogue's own SLUGS, `classOfKind` is the one class lookup, and `store.mjs` refuses at the MINT any CONDITION kind the file does not name. **The GENERATORS are 9 of those 35**: six are annotated `LIVE:` at their entry (`authority-undetermined`; `missing_predecessor` and `overdue_successor`; `out-of-inquiry-lead`; `stance-changed-here-not-elsewhere`; `new-version-arrived-from-another-team`) and three CONDITION kinds are derived on read by `op=queue` (`governor-holding-host`, `partial-capture-outstanding`, `capture-completed-unattended`), the file's own header stating that the other EIGHT conditions have none — so **26 of the 35 entries below are [DESIGNED-not-built]**, and D-126 stands open. The THREE CLASSES are **[BUILT]** and enforced, not remembered: the mute fence refuses a FINDING by class rather than by list, driven in `bio-plane/test/current.test.mjs`. **A member's PERSONAL mute of a FINDING — DEC-10's (b) per item and (c) per case over the kinds present — was RULED 2026-09-22 by BOB #26 (D-125) and is NOT BUILT: until it lands that fence still refuses one, and "MARKED AS HANDLED" below states the ruling.** The ITEM CONTRACT is **[BUILT]** but for its id: rule 1 (options come from the producer) is asserted structurally — UI-45 §1 pins that the surface holds NO per-kind wording table and names no kind slug at all — rules 2, 3 and 4 hold, and the `kind` field carries a SLUG because no `N-<n>` has ever been allocated, exactly as §What this does not settle intends. The HANDLED SCOPES are all three **[BUILT]**: obligation resolved through `op=taskresolve`/`taskforward` (record state), finding adopted/deferred/dismissed through `op=proposedispose` (authored, with author and reason), condition acknowledged or muted through `op=queuemute` (personal, and per-KIND rather than all-or-nothing since UI-55). The **per-item weight is [DESIGNED-not-built]**: the plane's act catalogue publishes `refuse`, `report` and `single` and no `per-item` weight exists anywhere in `bio-plane/src/`; UI-55's ARM 4d re-measures `op=proposedispose`, `op=taskresolve` and `op=taskforward` every run and goes RED the day one of them accepts a set. Of the three HOMES beyond the queue, the case is **[BUILT]** (D-127 designed and built through the IS plan, `BIO_System_Design.md` §3 construct 8), the institution's flow model is **[DESIGNED-not-built]** (D-128, M4, open) and the signal history is **[ABSENT]**. as of 2026-09-22.
 
 **Place in the system** · A level-2 design with TWO homes, and the split is real rather than bookkeeping. Its primary level-1 home is `docs/architecture/BIO_Interaction_Constructs_v0_1.md` — construct 12 of `BIO_System_Design.md` §3, member surfaces — which defines the QUEUE construct and, in its own Place, *"hands queue content to `docs/development/NOTIFICATIONS.md`"*: that document says what a member LEARNS, this one says what the system may PUT there. It also serves construct 10 (standing intent and monitoring), where `BIO_System_Design.md` §3 lists it beside `SCHEDULER.md`, because most of its generators are clock- and monitoring-driven and the alarm that fires them is construct 14's. Its catalogue is enacted in `bio-plane/src/queuestate.mjs` and rendered by `civicos-ui/app.html`'s `__NOTIFICATIONS_START__` block; `SCHEDULER.md` is the alarm model it shares ground with, and the two must not grow separate kind vocabularies. It closes the ad-hoc-event-strings half of D-68 and is the design of record for D-126.
 
@@ -10,6 +10,7 @@
 - §Applying a handler to a selection — the third weight is designed and unbuilt. `bio-plane/src/affordances.mjs` publishes `refuse`, `report` and `single`; there is no `per-item`, and the three acts a queue selection would use each take one key.
 - §What the three classes actually ARE — records that case-making (D-127) and the declared-versus-observed delta (D-128) were NOT DESIGNED ANYWHERE when this was written. D-127 has since been designed and built; D-128 is still open at M4. Neither correction is in the body.
 - §Presented and treated differently — the three homes beyond the queue: the case exists, the institution's flow model does not, and the signal history has no surface and no item.
+- §MARKED AS HANDLED — a member's PERSONAL mute of a FINDING (DEC-10's (b) per item, keyed on the finding's stable identity, and (c) per case over the kinds present) is RULED 2026-09-22 (D-125) and NOT BUILT; `queuestate.mjs` refuses a FINDING by class until it lands.
 - §What this does not settle — still unsettled, all three: transport is in-app only and email would re-raise the F5 threat; which CONDITIONs earn an item is per-generator and answered for three of eleven; the N-number allocation has not begun.
 
 **Contents**
@@ -142,7 +143,7 @@ already sorts things by what the record may claim and by who must act.
 
 | class | what it is | who acts | leaves the list when |
 | --- | --- | --- | --- |
-| **FINDING** | something true about the world or the record that may become evidence | anyone who can judge it | adopted, deferred or dismissed — an authored RECORD act, with its author and reason |
+| **FINDING** | something true about the world or the record that may become evidence | anyone who can judge it | adopted, deferred or dismissed — an authored RECORD act, with its author and reason. A member may also stop being NOTIFIED of it, PERSONALLY (DEC-10; ruled for findings 2026-09-22), which leaves only that member's own feed |
 | **OBLIGATION** | something a named person must do for the record to proceed | its assignee, or whoever it is forwarded to | resolved — record state, so it leaves EVERYONE's list |
 | **CONDITION** | a fact about our own machinery, not about the world | usually nobody | acknowledged or muted — PERSONAL only; the condition persists |
 
@@ -212,8 +213,12 @@ what exists to be numbered. Class in brackets.
   `[FINDING]` (D-213, answered 2026-08-06 by Bob as DEC-60's remaining hole; **LIVE** from
   PL-15: `store.mjs #findingsOutOfInquiryLead`, slug `out-of-inquiry-lead`).
   Three things about it are the whole entry and none of them is optional:
-  **(1)** it is a FINDING and not a CONDITION — a condition is personally mutable, and one
-  member could otherwise silently mute a lead the team must see;
+  **(1)** it is a FINDING and not a CONDITION — it may become evidence and leaves the TEAM's
+  list only by an authored act, where a condition is only acknowledged; a member's PERSONAL
+  mute (DEC-10, ruled for findings 2026-09-22) hides it from that member alone and is stated
+  in their feed, so no member can silently take a lead from the team (this read *a condition
+  is personally mutable, and one member could otherwise silently mute a lead the team must
+  see*, which a per-member mute never could, corrected by BOB #26);
   **(2)** its `case` set derives from the ancestors of the inquiry the evidence BEARS ON,
   never from the ancestors of the inquiry the run was working — filing it under the run's
   own question is precisely the mistake that made it homeless;
@@ -317,13 +322,31 @@ wrong would let one member's inbox hygiene erase a finding for the group:
 
 - **OBLIGATION resolved** → record state. It leaves EVERYONE's list.
 - **FINDING adopted / deferred / dismissed** → an authored record act, carrying its
-  author and reason. It leaves the list and stays in the record.
+  author and reason. It leaves the list and stays in the record. **And PERSONALLY, a member
+  may stop being NOTIFIED of it** (DEC-10's (b) and (c), ruled for findings 2026-09-22, NOT
+  BUILT): that leaves only that member's own feed, which states the suppression; it writes no
+  disposition, moves no other member's list and leaves `op=proposals` untouched.
 - **CONDITION acknowledged or muted** → PERSONAL only. It leaves that member's list;
   the condition persists and another member still sees it.
 
 **Nothing is deleted from the record in any of the three cases — the word is HANDLED, and its scope is stated.** This is the
 muting-is-personal / dismissing-is-a-record-act rule stated per class, and it is the
 rule most likely to be lost when someone implements a delete button.
+
+**RULED 2026-09-22 by BOB #26 (D-125, SCHEDULER #11's Q3): a member's PERSONAL mute admits FINDING
+kinds.** DEC-10 is Bob's ruling on exactly this subject: the overdue notice must offer (a) remind me
+again at a further increment, (b) stop notifying me about this one, (c) stop notifying me about that
+group — *"muting is per member"* — and the finding stands. The fence that refused a FINDING
+(`queuestate.mjs` `MUTE_REFUSAL_DETAIL`: *muting it would let one member's inbox hygiene erase the
+group's question*) guarded the right hazard with the wrong key: a mute keyed on the MEMBER removes
+nothing from anyone else's list, and a finding leaves the team's list only by the authored
+disposition, which a mute never writes. So a FINDING is muted personally — (b) per item, keyed on
+the finding's stable identity (the key its disposition already uses), and (c) per case over the
+kinds present when the mute is made, so a new kind surfaces again — and the member's own feed states
+what it suppresses. An OBLIGATION stays unmutable (a named person must act, and `tasks` carries no
+per-member mute); a CONDITION is unchanged. DEC-10's session note keyed the group on the
+connection's axes; Bob's amendment of the same day made the CASE the aggregation key, so (c) is per
+case. The build is the BOB INBOX's entry of 2026-09-22.
 
 ## What this does not settle
 
