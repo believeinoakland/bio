@@ -1,106 +1,105 @@
-# CONDUCT-NEXT — the resume prompt for CONDUCT #12, in THIS Claude Code account
+# CONDUCT-NEXT — the resume prompt for CONDUCT #13, in THIS Claude Code account
 
-> **WRITTEN BY CONDUCT #11 on 2026-09-22 (UTC) at ~67% context — a REFRESH (CLAUDE.md §4, the 70% line), not a
-> stand-down.** ONE batch is MERGED AND PUSHED BUT NOT LANDED (§2.1), and ONE worker is live UNDER CONDUCT #11 (§2.2): its
-> report arrives in CONDUCT #11's session, which forwards it to you verbatim and writes nothing. **Verify every line; where
-> the tree disagrees, the tree is right.**
->
-> ```
-> git fetch origin
-> node tools/plancheck.mjs                                   # expect 0 fail
-> git show origin/main:docs/development/QUEUE.md | grep -E '· running'
-> git ls-remote --heads origin | grep -E 'worktree-agent|conduct11/'   # a surviving agent branch MEANS unintegrated work
-> ```
->
-> **LINE 1 NAMES YOUR SUCCESSOR BY NUMBER** — yours must read `for CONDUCT #13`. **ARM YOUR SELF-WAKE FIRST**
-> (`7,27,47 * * * *` + the 5-day renewal); mine, `8d7dfcab` and `dcf1cc57`, are deleted at this refresh.
+> **A CHECKPOINT, written by CONDUCT #12 on 2026-09-22 (UTC) while it is LIVE (~64% context)** — so the lane
+> survives Bob's move, TODAY, to cloud-based Claude Code on his second account (BOB #27 records the move in
+> `kickoffs/NEW-MACHINE.md` and `TREE-SHARING.md` §4). **Assume you have NO memory of this session, and possibly none
+> of its tools**: `list_sessions`, `SendMessage` replies, `CronCreate` and scheduled tasks, `Agent` worktrees and this
+> Mac's disk may not exist where you run. **The repository is the channel**: everything below is on `origin` and is
+> checked by the commands in §1, not by recall. Where the tree disagrees with a line here, the tree is right.
 
-## 1. WHAT LANDED (merge → on main; each IC resolved and its registry bumped IN THE SAME LANDING)
+## 1. RE-MEASURE BEFORE ACTING
 
-| item | merge | on main | interface | what |
-| --- | --- | --- | --- | --- |
-| D-436 | `38850da4` | `86523052` | IC-172: I3 MAJOR 49.0.0, I5 MINOR 1.24.0 | the producing group is ONE recorded value per store; DIST #4 cut 0.71.0 and deployed, seeded and live-verified `biosmoke7` |
-| D-293 + M0-98 | `eecb553c` | `ab34197b` | none | the gate records its verdict by TREE; the push guard refuses a RED record; TARGETED class and `--since` |
-| M0-81's flip | — | `9233748a` | — | re-flipped `running` once D-293 freed the disk (first flip `86523052`, reverted `11077afc` before any spawn) |
+```
+git fetch origin
+git show origin/main:docs/development/kickoffs/CONDUCT-NEXT.md | head -1   # names YOU, CONDUCT #13
+node tools/plancheck.mjs                                                     # expect 0 fail
+git show origin/main:docs/development/QUEUE.md | grep -E '· running'
+git ls-remote --heads origin | grep -E 'worktree-agent|conduct'            # a surviving agent branch MEANS unintegrated work
+node tools/status.mjs <topic> · node tools/decided.mjs "<subject>" · node tools/owed.mjs CONDUCT
+```
 
-Every control I was owed, re-run by me on the merged tree, AS DECLARED: instance-group 13/13; refusal-codes fails exactly
-D-438's known four; refusal-partition 19/19; gates.control 96/0; pushguard --control all pass. CONDUCT #10 is ARCHIVED
-(D-398 re-checked 02:17Z; its CronList empty by its own reading); its worktree and D-293's are removed.
+Read WHOLE: `CLAUDE.md`, `kickoffs/CONDUCT.md`, this file, the open rows of `QUEUE.md`. `TREE-SHARING.md` is RULED but
+NOT BUILT: until each of its three changes lands, `CLAUDE.md`'s rules stand as written (§4's push lines included).
 
-## 2. TAKE THIS FIRST
+## 2. WHAT LANDED THIS SESSION (each verified from the remote; merge shas are ancestors of `origin/main`)
 
-**2.1 LAND BATCH 2 — REC-157 + M0-97/D-341, merged and PUSHED on `conduct11/batch2` @ `c1a00cdc`, NOT GATED.** Merges
-`2927a985` (REC-157, IC-173) and `5b39170d` (M0-97 + D-341) onto `9233748a`; `e356b2c6` moved REGISTER_FLOOR to the batch's
-own print (1600 / 262 / 263 / run 225, exact); `c1a00cdc` resolved IC-173 MINOR (I3 49.0.0 → 49.1.0, INTERFACES.md carries
-it) and RELEASED the three claim blocks. REC-157's control was re-run by me on `e356b2c6`: every row AS DECLARED, identical to
-the builder's. M0-97's `decided.control` is the builder's 88/0 — NOT re-run (the claim block says so and why).
-**Its FULL gate was STOPPED by me at 08:10Z** — the machine thrashed (swap 5 of 6 GB, load 5; two lanes' gates at once;
-suites at 20–36 min; `case-authority` threw `fetch failed` under load). A killed run records no verdict. To land:
-1. `git fetch`; check out `conduct11/batch2`; `git merge origin/main` — since `9233748a`: BOB #25's `beae2ad7`, `0b7328bc`,
-   SCHEDULER #10's `464c2779` (docs), and **DIST #4's 0.71.0 pointer, ON MAIN at `06832aff`** (release/RELEASE.json 0.71.0;
-   its FULL gate GREEN alone; main's register prints 1583 vs 1579 — with the batch's 1600, re-read: expect 1604).
-   Carry both sides; regenerate `docs/DECIDED.md`.
-2. Run ONE FULL gate ALONE, announced: ask SCHEDULER #11, BOB, FLEET and DIST to start no battery until you land.
-3. Push the branch, then `HEAD:main`; verify by `ls-remote`. PRUNE `worktree-agent-a976bfb0c6dec2bdb`,
-   `worktree-agent-aff9fd704ee856d24` and `conduct11/batch2`; `git worktree remove` both agent worktrees (literal paths).
-4. Tell SCHEDULER #11 (REC-157 and M0-97 + D-341, with the landing sha; D-341 was built NARROWER than its literal fix —
-   M-91) and BOB #25 (REC-157's questions, §4).
+| item | merge | landing | what |
+| --- | --- | --- | --- |
+| REC-157 | `0862b663` | `9d330478` | ALREADY_A_CASE_MEMBER compares the project's relationship; IC-173 MINOR, I3 49.1.0 |
+| M0-97 + D-341 | `a3fc7581` | `9d330478` | decided.mjs files every answered register entry; the joiner stops at a heading or blank line |
+| M0-81 | `3cad2084` | `9d330478` | `tools/occupancy.mjs`, the lane-occupancy judgement |
+| REC-163 | `09bed92a` | batch 3 (this file's landing) | the setup page and a PUBLIC `op=instancegroup` show the recorded slug; IC-174 MINOR, I3 49.2.0 |
+| M0-109 | `1a5bc9cb` | batch 3 (this file's landing) | the DEBT floors (`ledger`, `planning-hygiene`) become `> 0` |
 
-**2.2 M0-81 — BUILT AND PUSHED, `worktree-agent-a95fe61454bcdcdc2` @ `d14a88bc`** (ls-remote; `tools/occupancy.mjs`, its
-suite 65/0 and control 18 arms 113/0; REGISTER_FLOOR moved on its own branch). At 12:31Z I told it to REPORT WITH ITS FULL
-GATE UNRUN: fold it INTO batch 2 and land all three under ONE FULL gate run alone. Its report reaches you from CONDUCT #11
-by SendMessage. **Archive CONDUCT #11** (`local_5ddacbf6`) only AFTER that report is forwarded, under D-398 re-checked when you act, having
-confirmed by SendMessage to "CONDUCT #11" that its CronList reads empty. My worktree holds nothing unpushed.
+Batch 2's chain was RE-MADE at landing (same trees) to add two `Dropped-from-branch:` trailers `mergecarry` required;
+the old -> new sha mapping is under M0-81's release in `CLAIMS.md`, and the old chain survives on the archive branch
+`conduct12/batch2-pre-trailer` (and `conduct11/batch2`). Every gate: FULL or `--since` a GREEN FULL record, GREEN.
 
-## 3. WHAT IS NEXT, and what bounds it
+**Remote branches that are NOT unintegrated work** (so §1's `ls-remote` does not send you chasing them): the six
+non-ancestor agent branches CONDUCT #10 kept (M-86: `a249f668`, `a61e489d`, `a6de3e82`, `a9e7e017`, `aa383f4f`, `aafee895`;
+audited by content 2026-09-22 — three landed by another route, two superseded, and UI-43's is UI-74's evidence); and the
+local-only branches pushed for the cloud move: `conduct6/batch3`, `conduct6/batch3-old`, `conduct10/flips-2`,
+`conduct11/batch2`, `conduct12/batch2-pre-trailer`, `ui-65-conclude-surface`.
 
-- **Cache** (SCHEDULER #11's; verify): M0-99 (DECIDED.md stops being committed — runnable once batch 2 is on main),
-  M0-100 (after M0-99; it rewrites readers incl. `decided.mjs`), REC-163 (the setup page's group label; D-436 landed),
-  M0-103 (placed by SCHEDULER #10: owed-controls' 120 s coverage timeout reds under load), LED-7 (SCHEDULER's own).
-- **MEMORY, NOT ONLY DISK, BOUNDS THE WAVE NOW.** Disk ran 3.4–6.0 GiB (lane churn moves it ±1 GiB an hour); swap ran 5 of 6
-  GB with ~6 Claude sessions, Chrome and one battery. Two batteries at once turned a 12-minute gate into hours. Measure
-  `df -h` AND `sysctl vm.swapusage` before a spawn; run your gates alone, announced.
-- `rm -rf` is DENIED; the harness's `/private/tmp/claude-501` (edit-diff cache, archived sessions' temp) is the operator's.
+## 3. LIVE AT THIS CHECKPOINT
 
-## 4. OWED, EACH WITH ITS ACTOR
+- **M0-99** (`docs/DECIDED.md` untracked, generated on demand) — worker spawned 2026-09-22 ~14:10Z, branch
+  `worktree-agent-a4c0b07abb6d8ae16` (verify its tip with `ls-remote`). **BOB #27 RULED: land it AS PLACED** (compatible
+  with TREE-SHARING §1). If its worker's session is gone, integrate from the PUSHED branch: read its claim block in
+  `CLAIMS.md` (`released:` means it finished on purpose); a branch with no report is UNDETERMINED — read it, run its
+  gate yourself. Its report was asked to state how a branch cut before it resolves `docs/DECIDED.md` (modify/delete:
+  take the deletion) — apply that at every later integration.
+- **M0-100** waits for M0-99 (the same readers); it returns to the cache at SCHEDULER's refill after M0-99 lands.
+- **SLOTS I FREED AND DID NOT REFILL, on purpose:** REC-163 and M0-109 landed; I spawned no REC-166 / M0-107 / REC-165 into
+  their slots, because a worker is a SUBAGENT of the session that spawns it (D-401), this session is retired by Bob's cloud
+  move today, and its context stood at 64% against the 70% line. **They are YOUR first spawns**, in §4's order.
 
-- **CONDUCT (you):** §2.1 and §2.2.
-- **SCHEDULER #11:** close REC-157 and M0-97 + D-341 on the landing sha; place D-441 (DEBT row, fix named); REC-157's
-  DELEGATION (ratify-after-withdraw commits a stale conclusion — fix named: `ratifyCaseDocument` asks `#caseConclusionFor`
-  with the same comparison and refuses by a new code).
-- **BOB #25:** REC-157's make-current question (should a project's make-current write into the shared question's bytes?)
-  and its no-project corner (rides with REC-135's item-8 question); M0-97's second-specimen line for VERIFICATION.md (after
-  the VERIFICATION.md cut BOB placed). D-293's design gap is RULED (BOB INBOX; CLAUDE.md §6 corrected).
-- **Owners of `kickoffs/SKILL.md`, `SCHEDULER.md`, `NEW-MACHINE.md`:** D-293's stale-gate-sentence DELEGATION items 2, 3, 5.
+## 4. THE CACHE, AND THE ORDER (SCHEDULER #12's; verify on `origin/main`)
 
-## 5. THE TRAPS THIS SESSION PAID FOR — receipts against me
+M0-106 is DIST's own act (DIST landed it at `4f7efed0`; SCHEDULER closes it). Then yours, as the machine allows:
+**M0-107** (a timeout is never a finding; FULL), **REC-166** (a project's make-current writes nothing on the shared
+question; depends on REC-157, landed), **REC-165** (a production cannot name a run its caller does not hold). Next in the
+backlog: **REC-167** (ratify-after-withdraw), **UI-77** (unblocked by REC-163). Bob's law for the order (`CLAUDE.md` §2):
+product before process tooling; no process row unless it cuts gate time or unblocks product; batch landings.
 
-1. **zsh does not split an unquoted `$VAR`.** A doc-facing run fed `$PLANE` ran ONE filter, printed `no suites matched`
-   and exited 1 in 19 s — it measured nothing. Use `${=VAR}`, and read the battery's own completion line.
-2. **A worker dies on ONE failed API request (529/500) or a 600 s stall.** Resume by SendMessage to its agent id. If it holds
-   UNCOMMITTED work, preserve it verbatim as a WIP commit on ITS branch and push — the push guard then wants `docs/DECIDED.md`
-   regenerated by the BRANCH's own generator. Bob's trigger (via BOB #24) for a Fable respawn: two consecutive deaths with
-   no new pushed commit between them.
-3. **The permission layer refused `git push origin HEAD:main` once (bypass unchanged).** I did not retry it in any other
-   form; the operator approved the identical retry. It also refused a compound command with a shell variable in
-   `git worktree remove` and a `git branch -D`: literal paths and `-d` only.
-4. **Two branches that both move REGISTER_FLOOR's `classified`/`corpus`/`run` by the same +1 merge SILENTLY as one.** Re-read
-   EVERY key from `--strict` on the committed merge, not only the key git flagged.
-5. **A DEBT conflict whose HEAD side is empty** meant main REMOVED a row (D-440, placed in BACKLOG) that an older branch still
-   carried as context. Take only the branch's NEW rows; verify BACKLOG / DEBT / DEBT-closed counts.
-6. **`--since <gated commit>` is the partition rule as a tool** — use it for every docs-only re-merge after a FULL gate.
-7. **`waitquiet` guards only the runs that call it**; a gate started beside a running one thrashes both. Announce yours.
+## 5. OWED, EACH WITH ITS ACTOR
 
-## 6. THE MACHINE
+- **SCHEDULER #12:** close REC-163 and M0-109 on their merge shas; M0-109's DELEGATION (three instances of its class,
+  fixes named — MOST URGENT: `corpuscheck.test.mjs` §5 requires D-388 live in `DEBT.md`, so the LED-7 batch that moves
+  D-388 reds every gate); its held D-148/D-149 drain may land once M0-109 is on `main`.
+- **BOB #27:** REC-163's DESIGN GAP (Publication §7 point 1 rules the slug public, silent on the rest of the row), folded
+  in Publication's front matter — rule it at the code; M0-109's DESIGN GAP (`WORK-PIPELINE.md` §3's LED-7 retarget list
+  omits both suites and the archiver's 10,000 B floor); BOB #26's discharge line misplaced in DIST #4's M0-106 block
+  (`CLAIMS.md`), BOB's to move.
+- **DIST:** REC-163's DELEGATION (`newgroup/src/index.mjs` says the op answers credentials only). DIST recorded 0.72.0 as a
+  batch owed for REC-157 (IC-173), no earlier than 2026-09-23 04:00Z; REC-163 (IC-174) is a further plane change — what the
+  cut carries is DIST's call, and DIST was told of both.
 
-Disk **5.9 GiB** and swap **4.97 of 6.1 GB** at 08:36Z. **THE HOST SLEEPS** (pmset: Maintenance Sleep 10:30Z, 11:35Z,
-12:19Z — a closed lid; keep-awake is ON but prevents idle sleep only): a gate's wall time is not only contention. Worktrees: the main checkout (never remove), mine
-(`peaceful-heisenberg-272653`), the batch's two finished agent worktrees (`agent-a976bfb0c6dec2bdb`,
-`agent-aff9fd704ee856d24` — remove after §2.1 lands), M0-81's (`agent-a95fe61454bcdcdc2`, live), and the standing lanes' own
-(`bob-25`, `scheduler-10`, `eloquent-goldstine-78dfbd`, `dist-4`). `conduct-heartbeat` skipped its runs 05:10–07:11Z
-(BOB #25 measured; cause undetermined; the operator's task, unchanged by me).
+## 6. THE TRAPS THIS SESSION PAID FOR — receipts against me
 
-## 7. WHAT I DID NOT DO
+1. **A merge that keeps main's generated `docs/DECIDED.md` whole fails `mergecarry`** (via `strandedwork.test.mjs`'s
+   plancheck arm) unless the merge's LAST paragraph carries `Dropped-from-branch:`. Regenerate it INSIDE the merge commit.
+   An unlanded merge without it can only be RE-MADE (`git commit-tree`, same tree; push under a NEW branch name; repoint
+   every in-tree citation of the old shas). `KNOWN_HISTORICAL_DROPS` is graded over `origin/main` and cannot help first.
+2. **The gate records its verdict by TREE**; a RED record refuses every commit with that tree. A gate already known RED
+   for a HISTORY reason: stop it (by PID, verified gone) before it records. After a GREEN FULL record, a docs-only move of
+   `main` is `gates.mjs --since <that commit>` — tens of units, not the battery.
+3. **A worker folded into a batch with its FULL gate unrun lands an unmet census**: hygiene's walk census named M0-81's
+   control driver (`readdirSync` of its own pen). Every brief now says: name or guard any walk; ignore your pens.
+4. **Never type a full sha from memory**: resolve it (`git rev-parse <short>`). A push of an invented sha failed as "the
+   remote end hung up".
+5. **Disk on the Mac**: `git prune-packed` returned ~380 MiB of loose objects already in packs, safely (fsck clean); your
+   own `node_modules` are regenerable (`npm ci`, seconds). A worker's scratch checkout INSIDE its worktree
+   (`.m099-baseline`) is walked by the estate's censuses — keep scratch checkouts as SIBLINGS.
 
-I closed, archived and reordered no row (SCHEDULER's); I deployed nothing (DIST's); I touched neither `newgroup/` nor
-`release/`. I did not land batch 2 (§2.1) and did not re-run M0-97's `decided.control`.
+## 7. THE MACHINE AND THE STANDING LANES
+
+On the Mac at this checkpoint: disk ~4.4 GiB, swap ~6.2 GB of 7.2 GB, 8 GiB RAM — MEMORY bounds the wave (about three
+workers). In the cloud, measure before you spawn. Standing lanes at this checkpoint: BOB #27, SCHEDULER #12, DIST #4,
+FLEET #3. My self-wake (`CronCreate` `7,27,47 * * * *` + a 5-day renewal) dies with this session; if `CronCreate` does not
+exist where you run, you are driven by your operator's prompts — say so in your first report. Line 1 of YOUR handoff
+names CONDUCT #14.
+
+## 8. WHAT I DID NOT DO
+
+I closed, archived and reordered no row; I deployed nothing; I touched neither `newgroup/` nor `release/`.

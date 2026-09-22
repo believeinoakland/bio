@@ -18618,6 +18618,13 @@ and `.gitignore`. Nothing under `bio-plane/src/` is edited, so no bundle rebuild
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**RELEASED 2026-09-22 by CONDUCT #12 at integration.** M0-109 LANDED in the merge `1a5bc9cb` (batch 3, after REC-163 at
+`09bed92a`), pushed to `main` in the same landing as this line under the batch's gate. RE-RUN BY THE INTEGRATOR on the
+committed merge: `debt-floor.control.mjs` 62 pass, 0 fail, 8 arms run of 8 declared, every arm as the builder declared;
+`ledger.test.mjs`, `planning-hygiene.test.mjs` and `DEBT.md` hashed identical before and after. REGISTER_FLOOR unmoved
+(1632 / 264 / 265 / run 227, read on `1a5bc9cb`). Branch `worktree-agent-a5f529717cbad6022` is deleted from the remote after
+the push is verified. The paths this block reserved are FREE; its DELEGATION to SCHEDULER stays OPEN.
+
 ## DELEGATION 2026-09-22 M0 (M0-109 worker) -> SCHEDULER — **the fold's own progress trips three more readers of the live DEBT.md that `WORK-PIPELINE.md` §3 does not name; each fix is named, and one reddens every gate in whichever batch moves D-388**
 
 M0-109's class sweep read every reader of the live `docs/development/DEBT.md` in the battery and the tools (M-96 carries the
