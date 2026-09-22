@@ -78,7 +78,7 @@ import { join } from "node:path";
    file's top level touches these bindings: `SOURCES.queue` and `.backlog` are GETTERS for that reason. */
 import { LEDGERS, PIPELINE, pipelineRows } from "./ledger.mjs";
 /* M0-110: DEBT.md lives on `coord` after the cutover; the default reader goes through the coord layer. */
-import { readState } from "./coord.mjs";
+import { readState, isSwitched, freshen } from "./coord.mjs";
 
 export const ROOT = join(new URL("..", import.meta.url).pathname);
 
@@ -306,6 +306,8 @@ export function owedMessage(o) {
 }
 
 if (process.argv[1] && process.argv[1].endsWith("owed.mjs")) {
+  /* M0-110: a lookup a session acts on reads the REMOTE's state — fetch `coord` first on a switched tree. */
+  if (isSwitched(ROOT)) freshen(ROOT);
   /* A FLAG IS NOT A LANE NAME. `--lane=CONDUCT` was swallowed as the lane itself and returned
      the nonexistent-lane answer — a second way to get a confident wrong number, found in the
      same pass (CONDUCT #3, 2026-09-17). */

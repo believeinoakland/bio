@@ -160,7 +160,7 @@ import { fileURLToPath } from "node:url";
 /* M0-110: the state files (CLAIMS.md, the ledgers, the handoffs) live on `coord` after the cutover, and 154 of the
    corpus's rulings sit in CLAIMS.md alone — the walk and the reads go through the coord layer (the pointer is the
    switch), or the index would silently lose every ruling recorded there. */
-import { walkState, readState } from "./coord.mjs";
+import { walkState, readState, isSwitched, freshen } from "./coord.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 /* The index's path, repo-relative, exported so a caller names it from here rather than
@@ -653,6 +653,8 @@ function control() {
  */
 const IS_CLI = process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1]);
 const arg = IS_CLI ? process.argv[2] : "--module";
+/* M0-110: an answer a session acts on is read from the REMOTE's state — fetch `coord` first on a switched tree. */
+if (IS_CLI && isSwitched(REPO)) freshen(REPO);
 
 if (!IS_CLI) {
   /* imported for `scan` — do nothing */

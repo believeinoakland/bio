@@ -49,7 +49,10 @@
    ledger, so LE is the arm that catches the liar. RUN 2026-09-22 by the M0-109 worker, driver exit 0, 62 pass / 0 fail,
    every restore byte-identical; this suite per arm: baseline 158/0 judging 101 live rows, LE 157/1 judging 0, LC 157/1
    judging 100, LO 158/0 judging 100, LO1 158/0 judging 1, LL 157/0 judging 0. Run on this file's code as committed;
-   this block and the wording of §3's comment were written after it. */
+   this block and the wording of §3's comment were written after it.
+   SUPERSEDED 2026-09-22 BY M0-110, AND KEPT AS THE RECORD: §3's live read and its floor left this suite for `coord.mjs`'
+   ledger check LC-debt-agreement (BOB #28's ruling 2), and `debt-floor.control.mjs` was re-pointed there — its arms now
+   patch `tools/coord.mjs` and read `coord.test.mjs` §8; the run of record is on that suite's NEGATIVE CONTROL line. */
 
 import "./stdio.mjs";
 import "./sandbox.mjs";

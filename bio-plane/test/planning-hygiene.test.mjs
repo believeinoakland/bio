@@ -83,7 +83,10 @@
    the same assertion FAILS, and nothing else. (HO) the same 19 rows under the corrected floor -> GREEN, the
    over-strictness arm, which also isolates HC's variable. RUN 2026-09-22 by the M0-109 worker, driver exit 0, 62 pass /
    0 fail, every restore byte-identical; this suite per arm: baseline 180/0 judging 101 live rows, HE 78/1 judging 0,
-   HC 97/1 judging 19, HO 98/0 judging 19. */
+   HC 97/1 judging 19, HO 98/0 judging 19.
+   SUPERSEDED 2026-09-22 BY M0-110, AND KEPT AS THE RECORD: §1's live read and its floor left this suite for `coord.mjs`'
+   ledger check LC-debt-token (BOB #28's ruling 2); `debt-floor.control.mjs` was re-pointed there (arms TL and TC), and
+   its run of record is on `coord.test.mjs`' NEGATIVE CONTROL line. */
 /* Planning-drift hygiene: the M0-6 gate, on D-113's precedent.
  *
  * The repository is the channel between sessions (CLAUDE.md). The PLAN is how a

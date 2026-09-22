@@ -136,7 +136,7 @@ import { ARCHIVE_TARGETS } from "./ledger.mjs";
 /* M0-110: the queue, backlog, debt, claims and archive corpora live on `coord` after the cutover. Every read and walk
    of a corpus goes through the coord layer — the pointer is the switch — or each floor would read the one-line
    pointer and fall to zero, which is the DANGEROUS direction for an allocator (it re-issues ids). */
-import { readState, walkState } from "./coord.mjs";
+import { readState, walkState, isSwitched, freshen } from "./coord.mjs";
 
 /* A corpus file's text as a reader sees it (absolute paths inside the repo are read by their relative path). Throws
    when absent, as `readFileSync` did, so every caller's `missing` bookkeeping is unchanged. */
@@ -1285,5 +1285,8 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url)))
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+  /* M0-110: the floors read the corpora on `coord` — fetch it first, or a stale ref could re-issue an id. */
+  if (isSwitched(REPO_ROOT)) freshen(REPO_ROOT);
   process.exit(main(process.argv.slice(2)));
+}
