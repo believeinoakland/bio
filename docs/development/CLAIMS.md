@@ -17978,3 +17978,13 @@ ADMIT only."* M0-82 (CONDUCT's fallback start, owner CONDUCT) is sequenced after
      leaves a lane with no live session between the predecessor's archive and the successor's start.
    - reversal cost: one line of `tools/occupancy.mjs`, and arm (g) of its suite is the pin to move; no data depends on it.
 **open as of 2026-09-22** — open until BOB names the command in rule 1 (or says why not) and rules the reading; nothing here blocks a runnable row.
+3. **THE CLASS SWEEP (2026-09-22): three places in the kickoffs stand up a lane session, and ONE more is BOB's.** A grep of
+   `docs/development/kickoffs/`, `CLAUDE.md` and `ORCHESTRATION.md` for every chip filing, `spawn_task`,
+   `create_scheduled_task`/`run_scheduled_task` and successor start: `BOB.md` (this delegation), `CONDUCT.md` "Starting
+   your successor" (its no-BOB fallback, already rowed as M0-82, owner CONDUCT), and **`NEW-MACHINE.md`'s bootstrap
+   prompt, step (6), which files the SCHEDULER, CONDUCT, DIST and FLEET chips "each gated on its -NEXT.md line 1" —
+   ADDRESSING ONLY.** Candidate: *"…each gated on its -NEXT.md line 1 and on `node tools/occupancy.mjs` ADMITTING it."*
+   And one outside the repository, named and never changed: the operator's `conduct-8` task is still ENABLED (manual)
+   and titled `CONDUCT #8 (BIO) — integrator lane`. Re-run today it would stand up a second integrator under a stale
+   number, and this judgement would read that session as a predecessor of any later CONDUCT chip, never an occupant.
+**open as of 2026-09-22** — items 1-3 open until BOB answers each; nothing here blocks a runnable row.
