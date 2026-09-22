@@ -296,6 +296,12 @@ process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
      (e)       33 pass, 3 fail    AS DECLARED  the prepared edition not asked (1 + 2 cascade)
      (f)       35 pass, 1 fail    AS DECLARED  the affordance back on !case_member alone
 
+   RE-RUN THE SAME DAY after the subject changed — the affordance walk's condition re-spelled
+   so it no longer duplicated `caselifecycle.control.mjs` arm (c)'s anchor (`store.mjs` now
+   2,786,693 bytes, sha256 51ba61e243d4dc00…): all seven rows AS DECLARED with IDENTICAL figures.
+   The walk sits under arm (f)'s surface and under every "surface OFFERS / does NOT offer"
+   assertion, so a re-spelling that changed its behaviour would have moved them.
+
    EVERY ARM AS DECLARED ON THE FIRST RUN, the declaration checked as a TOTAL. That is
    recorded as a fact and not as a comfort: the declarations were written AFTER measuring
    the suite against the UNTOUCHED plane (19/17), which is where this item's one surprise
