@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* M0-81's NEGATIVE CONTROL DRIVER — seventeen arms plus a baseline — over `tools/occupancy.mjs` and the suite that
+/* M0-81's NEGATIVE CONTROL DRIVER — eighteen arms plus a baseline — over `tools/occupancy.mjs` and the suite that
  * drives it, `bio-plane/test/occupancy.test.mjs`.
  *
  *   node bio-plane/test/occupancy.control.mjs          (from the repo root: the baseline, then every arm)
@@ -27,13 +27,17 @@
  *   A8   the chip's own instance admitted (`>=` read as `>`) -> the incident is admitted; a stale chip still refuses
  *   A9   a truncated listing believed -> the listing at its limit ADMITS; the undeclared limit still does not
  *   A10  the task listing not required -> the array-only listing ADMITS; the truncated one still does not
- *   A11  a runs list cut at a limit believed -> the ten-run list ADMITS; the missing-runs gap still holds
+ *   A11  a BARE runs list cut at a limit believed -> the ten-run array ADMITS; a list short of its totalRuns still does not
  *   A12  the lane compared by case -> `Conduct #12` is admitted; the incident still refuses
  *   A13  what cannot be classified, not named -> the prose mention vanishes; the heartbeat verdict holds
  *   A14  a gap outranks an occupant -> the every-gap occupant reads UNDETERMINED; the incident still refuses
  *   A15  OVER-STRICTNESS, a get_session record not read as unlinked -> the records fixture reads UNDETERMINED
  *   A16  OVER-STRICTNESS, the title read LOOSELY (contains the lane's word) -> the heartbeats hold CONDUCT
  *   A17  OVER-STRICTNESS, a lane's tasks read by task-id PREFIX -> conduct-heartbeat's sessions hold CONDUCT
+ *   A18  list_task_runs' totalRuns ignored -> a list short of its total ADMITS; the bare-array limit still does not
+ *
+ * A18 AND A11's NEW ANCHOR ARRIVED WITH A MEASUREMENT (M-93): `list_task_runs` prints an OBJECT whose `totalRuns`
+ * proves its runs complete, where the judgement's first draft read a bare array and guessed from its length.
  *
  * A16 AND A17 WERE ADDED AFTER THE FIRST RUN, AND THE REASON IS A FINDING ABOUT THE SUITE, NOT THE SUBJECT: on the
  * fifteen-arm run of 2026-09-21 the heartbeat assertion fell ONLY as collateral — under A7 through a CONDUCT #11
@@ -181,11 +185,11 @@ const ARMS = [
     mustBreak: "without the task listing the verdict is UNDETERMINED",
     mustNotBreak: ["a listing at its limit is UNDETERMINED"] },
 
-  { id: "A11", title: "a runs list CUT AT A LIMIT believed",
-    from: `    if (k !== undefined && !RUN_LIMITS.has(k)) continue;`,
-    to: `    if (k !== undefined) continue;`,
+  { id: "A11", title: "a BARE runs list CUT AT A LIMIT believed",
+    from: `r.total !== null ? r.read >= r.total : !RUN_LIMITS.has(r.read)`,
+    to: `r.total !== null ? r.read >= r.total : true`,
     mustBreak: "a runs list cut at list_task_runs' default is UNDETERMINED",
-    mustNotBreak: ["a lane task with no runs passed, over list_sessions rows, is UNDETERMINED"] },
+    mustNotBreak: ["a runs list short of its totalRuns is UNDETERMINED"] },
 
   { id: "A12", title: "the lane compared BY CASE",
     from: `export const laneKey = (title) => laneOf({ title: str(title) }).toUpperCase();`,
@@ -224,8 +228,14 @@ const ARMS = [
       laneTasks.set(t.taskId,`,
     mustBreak: "a heartbeat run-session does not hold the CONDUCT lane, by title or by its task",
     mustNotBreak: ["the incident's duplicate CONDUCT #8 is REFUSED"] },
+
+  { id: "A18", title: "list_task_runs' totalRuns IGNORED — a runs list short of its total believed",
+    from: `r.total !== null ? r.read >= r.total : !RUN_LIMITS.has(r.read)`,
+    to: `r.total !== null ? true : !RUN_LIMITS.has(r.read)`,
+    mustBreak: "a runs list short of its totalRuns is UNDETERMINED",
+    mustNotBreak: ["a runs list cut at list_task_runs' default is UNDETERMINED"] },
 ];
-const DECLARED_ARMS = 17;
+const DECLARED_ARMS = 18;
 
 const RUNNING = ONLY ? ARMS.filter((a) => a.id === ONLY) : ARMS;
 if (ONLY && !RUNNING.length) { console.log(`** no arm '${ONLY}' — the arms are ${ARMS.map((a) => a.id).join(", ")}`); process.exit(2); }

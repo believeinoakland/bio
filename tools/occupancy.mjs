@@ -75,8 +75,8 @@
  * and fewer rows came back, because `list_sessions` keeps the MOST RECENTLY ACTIVE rows (its default is 20) and an
  * idle lane holder, overtaken by three heartbeat run-sessions an hour, is the first row to fall off; (2) the
  * scheduled-task listing, so the lane's tasks are KNOWN (an empty one is a finding: no task can bind the lane);
- * (3) for each lane task, its runs (not cut at `list_task_runs`' default 10 or maximum 50) or every live row's own
- * `get_session` record.
+ * (3) for each lane task, its runs shown complete by the `totalRuns` that `list_task_runs` prints beside them (a bare
+ * runs array is read too, and one exactly 10 or 50 long is taken as cut), or every live row's own `get_session` record.
  *
  * WHAT IT CANNOT SEE, stated rather than left to be found:
  *   - A title naming the lane in a form `laneOf` does not read (a word before the lane, or no `#<n>` after it) is
@@ -86,6 +86,9 @@
  *   - A task whose title does not name the lane is its task only when declared (`--task`).
  *   - One instant: a session started after the listing was read. Re-run immediately before filing — the incident's
  *     window was six minutes.
+ *   - The CALLER: `list_sessions` never lists the session that calls it (nor, for a subagent, the session hosting
+ *     it — measured 2026-09-21, M-93). A chip's filer is another lane, or the predecessor below the chip's number, so
+ *     this costs nothing on the path it serves; a session judging a chip for its OWN instance would not see itself.
  *   - Whether an occupant can HEAR a message (rule 2, reachability). Occupancy only.
  *   - Another repository's session titled with this lane REFUSES too, with its cwd printed: whether two
  *     repositories share one peer directory is UNDETERMINED here, and refusing is the safe reading of that.
@@ -95,8 +98,9 @@
  *
  *   node tools/occupancy.mjs --chip "CONDUCT #12" --limit 200 [--task <id>]... < listing.json
  *
- * stdin: `list_sessions`' JSON array as printed, or `{ "sessions": [...], "tasks": [...list_scheduled_tasks...],
- * "runs": { "<taskId>": [...list_task_runs...] } }`. Exit 0 ADMIT, 1 REFUSE, 3 UNDETERMINED, 2 a usage error.
+ * stdin: `list_sessions`' JSON array as printed, or `{ "sessions": <list_sessions>, "tasks": <list_scheduled_tasks>,
+ * "runs": { "<taskId>": <list_task_runs for that task> } }`, each value exactly as the tool printed it. Exit 0 ADMIT,
+ * 1 REFUSE, 3 UNDETERMINED, 2 a usage error.
  *
  * NEGATIVE CONTROL: `node bio-plane/test/occupancy.control.mjs` from the repo root; the suite is
  * `bio-plane/test/occupancy.test.mjs`.
@@ -107,8 +111,10 @@ import { laneOf, instanceOf } from "./retirable.mjs";
 export const ADMIT = "ADMIT", REFUSE = "REFUSE", UNDETERMINED = "UNDETERMINED";
 export const EXIT = Object.freeze({ ADMIT: 0, REFUSE: 1, UNDETERMINED: 3, USAGE: 2 });
 
-/* `list_task_runs`' schema says default 10, maximum 50 — a vendor's claim, labelled as theirs. A runs list exactly
-   that long may have been cut, so it is not evidence that no older run is live. */
+/* `list_task_runs`' schema says default 10, maximum 50 — a vendor's claim, labelled as theirs. A BARE runs list
+   exactly that long may have been cut, so it is not evidence that no older run is live. The tool's own output says
+   more than its schema: it prints an OBJECT, `{ taskId, taskDeleted, totalRuns, runs: [...] }` (measured 2026-09-21,
+   M-93), and `totalRuns` PROVES a list complete, so the limits are only the fallback for a bare array. */
 export const RUN_LIMITS = new Set([10, 50]);
 
 /* A usage error is its own type, so a library caller cannot mistake it for a verdict. */
@@ -178,10 +184,19 @@ export function judge({ chip, sessions, limit = null, tasks = null, runs = null,
     }
   });
   const runsRead = new Map();
-  for (const [taskId, list] of Object.entries(runs || {})) {
+  for (const [taskId, printed] of Object.entries(runs || {})) {
     if (!laneTasks.has(taskId)) { notes.push(`runs were passed for task ${taskId}, which is not this lane's — ignored`); continue; }
-    if (!Array.isArray(list)) throw new UsageError(`runs["${taskId}"] must be list_task_runs' array`);
-    runsRead.set(taskId, list.length);
+    let list, total = null;
+    if (Array.isArray(printed)) list = printed;
+    else if (isObject(printed) && Array.isArray(printed.runs)) {
+      if (typeof printed.taskId === "string" && printed.taskId !== taskId)
+        throw new UsageError(`runs["${taskId}"] holds list_task_runs' output for task ${printed.taskId}`);
+      list = printed.runs;
+      if (Number.isInteger(printed.totalRuns)) total = printed.totalRuns;
+      if (printed.taskDeleted === true) notes.push(`task ${taskId} is DELETED: it starts nothing new, and its live runs still hold`);
+    }
+    else throw new UsageError(`runs["${taskId}"] must be list_task_runs' output, verbatim, or its runs array`);
+    runsRead.set(taskId, { read: list.length, total });
     for (const r of list.filter(isObject)) {
       if (typeof r.session_id !== "string") continue;
       const e = evidenceFor(r.session_id, { title: r.title, lastActivityAt: r.last_activity_at });
@@ -238,14 +253,17 @@ export function judge({ chip, sessions, limit = null, tasks = null, runs = null,
                    remedy: "pass list_scheduled_tasks' output as \"tasks\"" });
   const allLinkageRead = rows.filter((s) => isLive(s.isArchived)).every(linkageRead);
   for (const t of laneTasks.values()) {
-    const k = runsRead.get(t.taskId);
-    if (k !== undefined && !RUN_LIMITS.has(k)) continue;      // its runs are the evidence
+    const r = runsRead.get(t.taskId);
+    const complete = r !== undefined && (r.total !== null ? r.read >= r.total : !RUN_LIMITS.has(r.read));
+    if (complete) continue;                                   // its runs are the evidence
     if (allLinkageRead) continue;                             // every live row's own linkage was read
-    if (k !== undefined)
-      missing.push({ gap: `task ${t.taskId}'s runs came back ${k} long, a list_task_runs limit, so a live run older `
-                       + "than these is not seen",
-                     remedy: k < 50 ? `re-read list_task_runs("${t.taskId}") with limit 50`
-                                    : "pass each live session's get_session record" });
+    if (r !== undefined)
+      missing.push({ gap: r.total !== null
+                       ? `task ${t.taskId}'s runs came back ${r.read} of ${r.total}, so a live run among the rest is not seen`
+                       : `task ${t.taskId}'s runs came back ${r.read} long, a list_task_runs limit, so a live run older `
+                         + "than these is not seen",
+                     remedy: r.read < 50 ? `re-read list_task_runs("${t.taskId}") with limit 50`
+                                         : "pass each live session's get_session record" });
     else
       missing.push({ gap: `task ${t.taskId}${t.title ? ` ('${t.title}')` : ""} binds this lane, and nothing passed says `
                        + "which sessions it stood up — list_sessions does not print scheduledTaskId",
@@ -306,9 +324,9 @@ export function render(res) {
     L.push(`TASKS MENTIONING THE LANE, NOT ITS TASKS — ${res.taskMentions.join(", ")}`);
   for (const g of res.missing) L.push(`NOT SHOWN — ${g.gap}. ${g.remedy}.`);
   for (const x of res.notes) L.push(`NOTE — ${x}`);
+  const runsLine = (r) => (r === undefined ? "" : `, ${r.read}${r.total !== null ? ` of ${r.total}` : ""} run(s) read`);
   L.push(`LANE TASKS — ${res.laneTasks.length ? res.laneTasks.map((t) => `${t.taskId} (${t.title ? `'${t.title}', ` : ""}`
-    + `instance ${t.instance ?? "unreadable"}, ${t.source}${res.counts.runsRead[t.taskId] !== undefined
-      ? `, ${res.counts.runsRead[t.taskId]} run(s) read` : ""})`).join("; ")
+    + `instance ${t.instance ?? "unreadable"}, ${t.source}${runsLine(res.counts.runsRead[t.taskId])})`).join("; ")
     : res.counts.tasks === null ? "UNKNOWN (no task listing passed)" : "none: no scheduled task names this lane"}`);
   L.push(`BOUND — this verdict covers the ${res.counts.rows} session row(s) passed (${res.counts.live} live)`
     + `${res.limit ? ` under limit ${res.limit}` : ""}, ${res.counts.tasks === null ? "no task listing" : `${res.counts.tasks} scheduled task(s)`},`

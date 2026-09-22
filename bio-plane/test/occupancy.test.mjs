@@ -18,31 +18,34 @@
  * `list_task_runs` entry carries `session_id` and `archived`. The task ids are the estate's real two, `conduct-8`
  * (the operator's; its definition lives outside this repository) and `conduct-heartbeat`.
  *
- * NEGATIVE CONTROL: RUN 2026-09-21 by the M0-81 worker, `node bio-plane/test/occupancy.control.mjs` from the repo root
- * — seventeen arms plus a baseline, each armed ALONE against `tools/occupancy.mjs` held in memory, every restore
- * verified by sha256 AND `cmp` against the arm's own copy with the byte count floored; driver exit 0, 107 pass / 0 fail;
- * baseline and closing suite 61 pass / 0 fail; subject sha256 6aeb5888… before and after. Every arm failed at its
+ * NEGATIVE CONTROL: RUN 2026-09-22 by the M0-81 worker, `node bio-plane/test/occupancy.control.mjs` from the repo root
+ * — eighteen arms plus a baseline, each armed ALONE against `tools/occupancy.mjs` held in memory, every restore
+ * verified by sha256 AND `cmp` against the arm's own copy with the byte count floored; driver exit 0, 113 pass / 0 fail;
+ * baseline and closing suite 65 pass / 0 fail; subject sha256 ebdb4fcf… before and after. Every arm failed at its
  * declared assertion and spared its declared isolation assertion; suite tallies under each arm in brackets.
- *   (a) the occupancy test dropped, the row's own control -> the duplicate-CONDUCT fixture is admitted and "the incident's duplicate CONDUCT #8 is REFUSED" fails by name [39 / 22]
- *   (b) the scheduledTaskId route dropped -> "a session a task stood up under ANOTHER title is REFUSED by its scheduledTaskId" fails, the runs route holding [59 / 2]
- *   (c) the runs route dropped -> "REFUSED as a run of its task" fails, the scheduledTaskId route holding [56 / 5]
- *   (d) the lane's tasks no longer read from the task listing -> the liar is admitted while the incident's title still refuses [48 / 13]
- *   (e) the title half dropped -> "a chip-filed duplicate, bound by title alone, is REFUSED" fails, the runs route holding [42 / 19]
- *   (f) OVER-STRICTNESS, an archive not honoured -> "the same listing with that session stood down ADMITS" fails [53 / 8]
- *   (g) OVER-STRICTNESS, the predecessor exemption dropped -> "a live PREDECESSOR does not hold the lane" fails [47 / 14]
- *   (h) the chip's own instance admitted, `>=` read as `>` -> the incident is admitted while a stale chip still refuses [43 / 18]
- *   (i) a truncated listing believed -> "a listing at its limit is UNDETERMINED" fails alone [60 / 1]
- *   (j) the task listing not required -> "without the task listing the verdict is UNDETERMINED" fails [58 / 3]
- *   (k) a runs list cut at a limit believed -> "a runs list cut at list_task_runs' default is UNDETERMINED" fails [59 / 2]
- *   (l) the lane compared by case -> "a lane title in another CASE still holds the lane" fails [59 / 2]
- *   (m) the MENTIONS dropped -> the prose mention and the prefixed blind spot go unnamed [57 / 4]
- *   (n) a gap outranks an occupant -> "an occupant REFUSES even when every gap is open" fails alone [60 / 1]
- *   (o) OVER-STRICTNESS, a get_session record not read as unlinked -> "get_session records for every live row cover the task half" fails [59 / 2]
- *   (p) OVER-STRICTNESS, the title read loosely -> "a heartbeat run-session does not hold the CONDUCT lane" fails [47 / 14]
- *   (q) OVER-STRICTNESS, a lane's tasks read by task-id prefix -> the same heartbeat assertion fails [49 / 12]
- * A FINDING ABOUT THE SUITE, recorded rather than smoothed: on the first run, fifteen arms, the heartbeat assertion fell
+ *   (a) the occupancy test dropped, the row's own control -> the duplicate-CONDUCT fixture is admitted and "the incident's duplicate CONDUCT #8 is REFUSED" fails by name [43 / 22]
+ *   (b) the scheduledTaskId route dropped -> "a session a task stood up under ANOTHER title is REFUSED by its scheduledTaskId" fails, the runs route holding [63 / 2]
+ *   (c) the runs route dropped -> "REFUSED as a run of its task" fails, the scheduledTaskId route holding [60 / 5]
+ *   (d) the lane's tasks no longer read from the task listing -> the liar is admitted while the incident's title still refuses [49 / 16]
+ *   (e) the title half dropped -> "a chip-filed duplicate, bound by title alone, is REFUSED" fails, the runs route holding [46 / 19]
+ *   (f) OVER-STRICTNESS, an archive not honoured -> "the same listing with that session stood down ADMITS" fails [57 / 8]
+ *   (g) OVER-STRICTNESS, the predecessor exemption dropped -> "a live PREDECESSOR does not hold the lane" fails [51 / 14]
+ *   (h) the chip's own instance admitted, `>=` read as `>` -> the incident is admitted while a stale chip still refuses [47 / 18]
+ *   (i) a truncated listing believed -> "a listing at its limit is UNDETERMINED" fails alone [64 / 1]
+ *   (j) the task listing not required -> "without the task listing the verdict is UNDETERMINED" fails [62 / 3]
+ *   (k) a BARE runs list cut at a limit believed -> "a runs list cut at list_task_runs' default is UNDETERMINED" fails, the totalRuns check holding [63 / 2]
+ *   (l) the lane compared by case -> "a lane title in another CASE still holds the lane" fails [63 / 2]
+ *   (m) the MENTIONS dropped -> the prose mention and the prefixed blind spot go unnamed [61 / 4]
+ *   (n) a gap outranks an occupant -> "an occupant REFUSES even when every gap is open" fails alone [64 / 1]
+ *   (o) OVER-STRICTNESS, a get_session record not read as unlinked -> "get_session records for every live row cover the task half" fails [63 / 2]
+ *   (p) OVER-STRICTNESS, the title read loosely -> "a heartbeat run-session does not hold the CONDUCT lane" fails [51 / 14]
+ *   (q) OVER-STRICTNESS, a lane's tasks read by task-id prefix -> the same heartbeat assertion fails [52 / 13]
+ *   (r) list_task_runs' totalRuns ignored -> "a runs list short of its totalRuns is UNDETERMINED" fails alone [64 / 1]
+ * TWO FINDINGS, recorded rather than smoothed. On the first run (2026-09-21, fifteen arms) the heartbeat assertion fell
  * only as collateral (under (g) through a predecessor sharing its fixture, under (o) through the get_session route), so
- * no arm had shown it catches a heartbeat read AS the lane. Its fixture was isolated, and (p) and (q) were added.
+ * no arm had shown it catches a heartbeat read AS the lane: its fixture was isolated, and (p) and (q) added. And the
+ * judgement's first draft read `list_task_runs` as a bare array, which the tool does not print (M-93): it now reads the
+ * printed object and its `totalRuns`, (r) was added, (k)'s anchor moved, and every arm was re-run on the changed subject.
  */
 
 import "./stdio.mjs";
@@ -86,6 +89,9 @@ const task = (taskId, title, description, schedule = "Manual only") =>
   ({ taskId, title, description, path: `(fixture)/scheduled-tasks/${taskId}/SKILL.md`, schedule, enabled: true });
 const run = (id, title, { archived = false, status = "running", start = at(0) } = {}) =>
   ({ session_id: id, title, status, started_at: start, last_activity_at: start, archived });
+/* `list_task_runs`' output as it PRINTS it (M-93): an object around the runs, whose `totalRuns` proves them complete. */
+const taskRuns = (taskId, runs, { total = runs.length, deleted = false } = {}) =>
+  ({ taskId, taskDeleted: deleted, totalRuns: total, runs });
 
 const HEARTBEAT_TASK = task("conduct-heartbeat", "CONDUCT heartbeat (BIO)",
   "Watchdog for the integrator lane: judges whether a CONDUCT session exists, and reports.",
@@ -106,15 +112,15 @@ const incident = ({ taskSession = {}, form = listed } = {}) => [
   form({ id: ID.c7, title: "CONDUCT #7", last: at(-40) }),
   form({ id: ID.c6, title: "CONDUCT #6", archived: true, last: at(-600) }),
 ];
-const RUNS_LIVE = { "conduct-8": [run(ID.c8task, "CONDUCT #8")] };
-const RUNS_DOWN = { "conduct-8": [run(ID.c8task, "CONDUCT #8", { archived: true, status: "succeeded" })] };
+const RUNS_LIVE = { "conduct-8": taskRuns("conduct-8", [run(ID.c8task, "CONDUCT #8")]) };
+const RUNS_DOWN = { "conduct-8": taskRuns("conduct-8", [run(ID.c8task, "CONDUCT #8", { archived: true, status: "succeeded" })]) };
 const ids = (list) => list.map((o) => o.sessionId).sort();
 
 /* ========================================================================== */
 section("1 — THE INCIDENT, REFUSED: `CONDUCT #8` filed after the conduct-8 task had stood CONDUCT #8 up");
 {
   t("the fixture corpus is non-empty: seven incident rows, two tasks", [incident().length, TASKS.length], [7, 2]);
-  console.log(`  fixture corpus: incident ${incident().length} rows · tasks ${TASKS.length} · runs ${RUNS_LIVE["conduct-8"].length}`);
+  console.log(`  fixture corpus: incident ${incident().length} rows · tasks ${TASKS.length} · runs ${RUNS_LIVE["conduct-8"].runs.length}`);
   const r = judge({ chip: "CONDUCT #8", sessions: incident(), limit: 200, tasks: TASKS, runs: RUNS_LIVE });
   t("the incident's duplicate CONDUCT #8 is REFUSED", r.verdict, REFUSE);
   t("...and the occupant is NAMED: the session the conduct-8 task stood up", ids(r.occupants), [ID.c8task]);
@@ -164,7 +170,7 @@ section("3 — THE LIAR: a title that differs and a scheduledTaskId that matches
   t("...naming it, bound by scheduledTaskId conduct-8 at the task's own instance",
     viaRecord.occupants.map((o) => [o.sessionId, o.bindings, o.instance]), [[ID.c8task, ["scheduledTaskId conduct-8"], 8]]);
   const viaRuns = judge({ chip: "CONDUCT #8", limit: 200, tasks: TASKS, sessions: incident({ taskSession: retitled }),
-                          runs: { "conduct-8": [run(ID.c8task, "BIO integrator lane")] } });
+                          runs: { "conduct-8": taskRuns("conduct-8", [run(ID.c8task, "BIO integrator lane")]) } });
   t("...and REFUSED as a run of its task where the listing cannot print scheduledTaskId", viaRuns.verdict, REFUSE);
   t("...naming it, bound as a run of task conduct-8", viaRuns.occupants.map((o) => [o.sessionId, o.bindings]),
     [[ID.c8task, ["a run of task conduct-8"]]]);
@@ -269,6 +275,19 @@ section("7 — UNDETERMINED: the verdict never claims more than its input could 
   t("...and one cut at its maximum names get_session instead",
     judge({ ...base, limit: 200, runs: { "conduct-8": oldRuns(50) } }).missing.some((g) => /get_session record/.test(g.remedy)),
     true);
+  /* The tool's own output carries `totalRuns` (M-93), which PROVES a list complete — so the same ten runs admit when
+     the total says ten, and a list short of its total is a gap whatever its length. */
+  t("a runs list whose totalRuns says it is whole is complete, even at ten",
+    judge({ ...base, limit: 200, runs: { "conduct-8": taskRuns("conduct-8", oldRuns(10)) } }).verdict, ADMIT);
+  const short = judge({ ...base, limit: 200, runs: { "conduct-8": taskRuns("conduct-8", oldRuns(3), { total: 7 }) } });
+  t("a runs list short of its totalRuns is UNDETERMINED",
+    [short.verdict, short.missing.some((g) => /came back 3 of 7/.test(g.gap))], [UNDETERMINED, true]);
+  let wrongTask = null;
+  try { judge({ ...base, limit: 200, runs: { "conduct-8": taskRuns("conduct-heartbeat", []) } }); } catch (e) { wrongTask = e.code; }
+  t("list_task_runs' output filed under ANOTHER task's id is a usage error, never read", wrongTask, "OCCUPANCY_USAGE");
+  t("a DELETED lane task is noted: it starts nothing new, and its live runs still hold",
+    judge({ ...base, limit: 200, runs: { "conduct-8": taskRuns("conduct-8", [], { deleted: true }) } }).notes
+      .some((x) => /task conduct-8 is DELETED/.test(x)), true);
   const records = judge({ ...base, limit: 200, runs: null, sessions: [detailed({ id: ID.d4, title: "DIST #4" }),
     detailed({ id: ID.hb1, title: "CONDUCT heartbeat (BIO)", task: "conduct-heartbeat" })] });
   t("get_session records for every live row cover the task half without runs", records.verdict, ADMIT);
