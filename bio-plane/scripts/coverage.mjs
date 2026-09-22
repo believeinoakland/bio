@@ -1411,7 +1411,7 @@ const REGISTER_FLOOR = {
      git merged the identical key line SILENTLY as one. RE-READ from `--strict` on the COMMITTED merge 508a7bc8, exit 0
      unpiped: `REGISTER FLOOR  arms 1642/1632 · classified 264/264 · corpus (suites read) 265/265 · GREW by 10 arm(s)`,
      `floor 227/227 reproducible`. The one key moves; the other three were already exact. Never added by hand. */
-  arms: 1647,   /* M0-107, 2026-09-22: moved to the figure its committed --strict run PRINTED (1647/1642, GREW by 5) */
+  arms: 1651,   /* M0-107, 2026-09-22: moved to the figure its committed --strict run PRINTED (1651/1647, GREW by 4) */
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.
