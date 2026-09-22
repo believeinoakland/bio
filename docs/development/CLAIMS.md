@@ -17526,3 +17526,35 @@ not-scheduled list); `docs/development/kickoffs/CONTENT-HTML.md` and `docs/devel
 sentences this design supersedes, corrected in the same landing: the licensed exception); `docs/DECIDED.md`
 (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 RECORD (REC-157 — ALREADY_A_CASE_MEMBER asks FOR A PROJECT: a moved project conclusion warrants a new case edition, INVESTIGATIVE-SESSION.md §7.1 item 9)
+
+Worker spawned by CONDUCT #11. **Own worktree** `.claude/worktrees/agent-a976bfb0c6dec2bdb`, branch
+**`worktree-agent-a976bfb0c6dec2bdb`**, base `origin/main` @ `86523052` (the row read `running` there; D-436 present,
+`instance_group` in `schema.mjs`). `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/`, each exit 0 read unpiped and
+each `node_modules` a REAL DIRECTORY; `df -h` 5.6 GiB free before the installs, 3.4 GiB after with other batteries live.
+Design authority: `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 9 (BOB #19), applying items 4 and 7. IC-173
+minted with `node tools/mintid.mjs IC` BEFORE building. Claimed BY SITE:
+
+- `bio-plane/src/store.mjs` — **by SITE:** (1) `publishCase()` — the `ALREADY_A_CASE_MEMBER` site only (the
+  `#caseRelationOf(id).member` test, its return, the `prepared.push` beside it) and the per-finding `written.push`
+  (one additive field); (2) `static #caseDocumentText` — the `case_conclusions` row lines MOVED into ONE new static
+  renderer beside it, output byte-identical; (3) NEW private helpers immediately after `#caseConclusionFor`: the reader
+  of what a pinned edition RECORDED and the comparison; (4) NEW beside `#concludedForJoinedProjectOf`: the affordance
+  walk that asks the same comparison; (5) the facts block serving `op=affordances` — ONE new fact beside
+  `concluded_for_project`. `op=reopen`, `#caseRelationOf` and every OTHER reader of the case relation are NOT touched.
+- `bio-plane/src/affordances.mjs` — the `publish` entry's `!f.case_member` clause and its comment, only.
+- `bio-plane/test/case-edition-conclusion.test.mjs` and `bio-plane/test/case-edition-conclusion.control.mjs` — both NEW.
+- Suites a correct landing makes wrong — named in a SECOND block once the battery has named them, each corrected with a
+  dated reason, never exempted; and any control driver whose anchor these edits move.
+- `bio-plane/scripts/coverage.mjs` and `civicos-ui/check-refusal-codes.mjs` — FLOOR FIGURES ONLY, from their own print.
+- `bio-plane/dist/` (the rebuilt bundle).
+- `docs/development/INVESTIGATIVE-SESSION.md` (front matter and ONE dated "Built" paragraph under §7.1),
+  `docs/architecture/construct-status.json` (`8.claim`'s text and one probe), `docs/architecture/BIO_System_Design.md`
+  (RENDERED by `node tools/status.mjs --write`, never hand-edited), `docs/development/INTERFACE-CHANGES.md` (IC-173,
+  appended), `docs/development/MEASUREMENTS.md` (one appended entry), `docs/DECIDED.md` (GENERATED, regenerated LAST).
+
+**NOT** `docs/development/QUEUE.md`, **NOT** `docs/development/INTERFACES.md` (CONDUCT's at resolution), **NOT**
+`newgroup/**`, **NOT** `release/**`, **NOT** `civicos-ui/app.html`.
+
+**open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates and resolves IC-173.
