@@ -18953,3 +18953,5 @@ display name is shown WITH it, never instead), consuming IC-174 (`op=instancegro
 
 **NOT** `docs/development/QUEUE.md`, **NOT** `bio-plane/**`, **NOT** `newgroup/**`, **NOT** `civicos-ui/README.md` or
 `civicos-ui/NEXT_SESSION_PROMPT.md` (swept and reported, not edited unless the sweep finds one served).
+
+**released: 2026-09-22 UI-77 worker (CONDUCT #14, wave 2)** — built on `worktree-agent-a40f17095e235d716` at `4262bb08` (tree `c4df87ef`, `node tools/gates.mjs` GREEN FULL: 274/274 suites green · 16591 assertions passing, 2 untallied suites excluded; `civicos-ui: all harnesses green`, 59 suites). Also touched, named by the gate: `civicos-ui/check-refusal-codes.mjs` `r3Fed` floor 70 -> 71 from its printed figure. No IC (a consumer of IC-174, no shape changed).
