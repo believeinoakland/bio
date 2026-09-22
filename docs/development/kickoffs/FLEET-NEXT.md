@@ -1,4 +1,4 @@
-# FLEET — resume here. Written 2026-09-22 by FLEET #3 (standing lane) at REFRESH, for a successor that may open in the cloud under Bob's second account
+# FLEET — resume here. Written 2026-09-22 by FLEET #4 (standing lane, cloud, Bob's second account) at stand-up; FLEET #3's refresh text below is kept and re-measured
 
 Bob, 2026-09-22 (relayed by BOB #27): the estate moves TODAY to cloud-based Claude Code under a second Max account.
 This file assumes its reader has NO memory, NO `.env`, and perhaps no `list_sessions`, no `SendMessage` replies and
@@ -13,17 +13,18 @@ measured at the time given: re-measure it.**
 2. `docs/development/kickoffs/FLEET.md` IN FULL, the area's law. Its 2026-09-21 stand-up section holds this lane's
    corrections; read that before believing any older sentence in the file.
 3. This file, then the open rows of `docs/development/QUEUE.md`.
-4. `node tools/owed.mjs FLEET`. It read 0 attributed at every reading from 2026-09-21 to 2026-09-22T14:17Z.
+4. `node tools/owed.mjs FLEET`. It read 0 attributed at every reading from 2026-09-21 to 2026-09-22T20:07Z (FLEET #4).
 
-## The fleet, measured
+## The fleet, measured (FLEET #4, 2026-09-22 ~20:10Z, cloud container, `origin/main` `17c0cab1`)
 
-| what | reading | when |
+| what | reading | instrument |
 | --- | --- | --- |
-| members' `/version` | `0.71.0`, all three | 2026-09-22T08:36Z |
-| plane `biosmoke7` | `0.71.0` at `/version` and at `op=bootstrap`. Both are the ROUTING ISOLATE's `env.VERSION`; bootstrap proves only that the DO answered | 08:36Z |
-| main's labels | `release/RELEASE.json` and every member `package.json` read `0.71.0` | 14:17Z |
-| staleness | 33 figures, **0 drift**, 2 unreadable (pdf-worker's vendored `unpdf`, absent without an install) | `0a53dc5c` |
-| member bytes | identical at all 13 tags v0.59.0 … v0.71.0: `a7e5f590…`, `b26dee19…`, `0d99f5d0…` | — |
+| members' `/version` | **UNDETERMINED**: the cloud proxy refuses `*.workers.dev` (`CONNECT tunnel failed, response 403`). Last reading that reached them: `0.71.0`, all three, 2026-09-22T08:36Z (FLEET #3) | `curl` |
+| plane `biosmoke7` | **UNDETERMINED**, same refusal. Even when reachable, both fields are the ROUTING ISOLATE's `env.VERSION` | `curl` |
+| main's labels | `release/RELEASE.json` reads `0.71.0`; latest tag `v0.71.0` | `git` |
+| staleness | **23 checked, 0 drift, 0 unreadable**: the SessionStart hook's install makes pdf-worker's vendored `unpdf` readable here | the one-liner below |
+| committed guard | `fleetbundles.test.mjs`: **87 pass, 0 fail, 0 skipped**, exit 0 read unpiped, byte-identity arm run for all three members and the plane | `node --test` |
+| member bytes | `dist/` artifact = manifest = `release/` copy = `RELEASE.json`: `a7e5f590…`, `b26dee19…`, `0d99f5d0…` | `sha256sum` |
 
 ## Commands that answer the questions; none needs a secret
 
@@ -62,6 +63,15 @@ measured at the time given: re-measure it.**
 - Disk and the ~4 GiB rule are facts about Sparky-Air. In the cloud, measure the environment you actually have.
 - Everything FLEET #3 landed is on `origin/main`: `790ad66a`, `d660d29e`, `86725fb8`, `e99abfec`, `89ff4592`,
   `1f59f394`, `7a8b81d6`, and this refresh.
+
+## FLEET #4, cloud session `session_01YB9VgJtjiXwQ5vtx4fLvRB`
+
+- Opened 2026-09-22T20:05Z; kickoff gate passed on FLEET #3's header; `node -v` v26.10.0; context measured with
+  `get_session` well under 70%.
+- Nothing owed, nothing of FLEET's in the cache: D-260 is `queued` in `BACKLOG.md`, outside `QUEUE.md`'s cache.
+- Self-wake: one `send_later`, trigger `trig_01XwSgb6C3S5376zGgWDAfqL`, fires 2026-09-23T10:00Z (after DIST's 0.72.0
+  cut can first land). Each firing re-arms the next one; a successor finds it with `list_triggers`.
+- Lands by pushing `HEAD:main` (NEW-MACHINE §0.1 measured it accepted), mirrored to its session branch.
 
 ## Carried from the old account's memory, which will not travel
 

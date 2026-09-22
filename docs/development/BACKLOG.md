@@ -20,15 +20,35 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-114 · blocked — **A GATE'S VERDICT LIVES IN ONE CLONE'S GIT DIRECTORY, SO NO OTHER SESSION CAN READ IT: a lane re-gates a tree another already gated, and a cloud session starts with no record at all.** RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*): the gates run on GitHub's machines and the verdict is a check on the commit. — owner M0.
-order: beside M0-110 and ahead of M0-111, the design's order (*"Change 3 is independent and starts with its measurement beside change 1"*; change 2 *"is cheapest once change 3 carries its gate"*); BLOCKED because §4 takes away its Mac-memory premise and it *"waits for the first cloud measurement"* (BOB #27, 2026-09-22) (SCHEDULER #13; BOB #26's inbox entry, item 2)
+### M0-117 · queued — **EVERY FRESH CLONE'S FIRST FULL GATE IS RED AT `mintid.test.mjs`: `scopeOf` PROBES THE LIVE LEDGER WITHOUT CREATING IT.** `scopeOf` (`tools/mintid.mjs`) hands `<git-common-dir>/bio-idalloc` to `exclusivityProbe`, which writes into it without creating it, while the mint creates it first; in a clone that has never minted, the arm *the REAL ledger's filesystem honours the exclusive create* reads `PROBE_UNWRITABLE` and the push guard refuses the RED tree (M-99). — owner M0.
+order: FIRST of the backlog: it refuses a lane's push on any clone that has never minted, and the cloud hook's `mkdir` covers only a cloud container; the smallest row that unblocks a push (Bob, 2026-09-22, `CLAUDE.md` §2: no process row unless it cuts gate time or unblocks product) (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 6)
 milestone: M0
-interface: none — no op or wire shape moves.
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a directory never created is no verdict on a filesystem.
+depends-on: none.
+scope: `scopeOf` creates the live root as the mint does before probing it, a failure to create answering `LEDGER_UNWRITABLE` as the mint's does. **NOT the probe itself** (corrected at the code by SCHEDULER #14: BOB #28's entry says *"the probe creates its root"*, but `mintid.test.mjs`'s next arm asserts that `exclusivityProbe` on a missing directory is a `PROBE_UNWRITABLE` refusal, and that arm stays).
+accepts-when: a clone with no ledger directory passes the live-ledger arm, and the missing-directory arm stays green. NEGATIVE CONTROL: the suite's control (11), the second create's flag `w`, still fails it by name; dropping `scopeOf`'s create fails the live-ledger arm in a clone with no ledger.
+added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 6, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT** … (whole text: the cut archive)
+order: MOVED to the head by SCHEDULER #14 (2026-09-22): M0-107, running, must fold BOB #28's timeout ruling into `VERIFICATION.md` *"within that file's budget"*, and the file stands at 24,569 of 24,576 B (measured on `17c0cab1`), so this cut now unblocks a row that CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); M0-97, its dependency, is done. It stood directly after M0-104, behind the product rows (SCHEDULER #11 on BOB #25's word)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and … (whole text: the cut archive)
+depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
+accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### M0-114 · queued — **A GATE'S VERDICT LIVES IN ONE CLONE'S GIT DIRECTORY, SO NO OTHER SESSION CAN READ IT: a lane re-gates a tree another already gated, and a cloud session starts with no record at all.** RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*): the gates run on GitHub's machines and the verdict is a check on the commit. — owner M0.
+order: beside M0-110 and ahead of M0-111, the design's order (*"Change 3 is independent and starts with its measurement beside change 1"*; change 2 *"is cheapest once change 3 carries its gate"*); it *"waits for the first cloud measurement"* (BOB #27), which BOB #28 recorded (M-99), so runnable (SCHEDULER #13 and #14; BOB #26's inbox entry, item 2)
+milestone: M0
+interface: none.
 design: `docs/development/TREE-SHARING.md` §3 (the gates run on GitHub's machines) as revised by §4, with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: the first cloud session's FULL gate time and pass count, recorded in `kickoffs/NEW-MACHINE.md` §0 by the first BOB there (its FIRST ACTS, item 3); independent of M0-110.
-scope: FIRST the measurement: the FULL battery's wall time and pass count on a GitHub runner, on the Mac and in a cloud session; every suite needing a secret or the network, named; the monthly minutes at M0-111's cadence. Whether Actions is enabled is UNDETERMINED (0 workflow runs; `actions/permissions` refused this token); Bob's acts go to BOB once with the figures, only if they still favour a runner (§4). Then the workflow, the check, and the push guard reading it. **FULL GATE PROFILE**.
+depends-on: none — met 2026-09-22 (`kickoffs/NEW-MACHINE.md` §0.1): the first cloud FULL gate, 1,082 s wall, 272/273 suites · 16,575 assertions.
+scope: FIRST the measurement, the FULL battery's wall time and pass count on a GitHub runner, on the Mac and in the cloud (that column is in); every suite needing a secret or the network, named; the monthly minutes at M0-111's cadence. A verdict still lives in one clone and every cloud clone starts with none (BOB #28). Actions' enablement stays UNDETERMINED (0 workflows; `actions/permissions` refused); Bob's acts go to BOB with the figures, only if they favour a runner (§4). Then the workflow, the check, and the push guard reading it. **FULL GATE PROFILE**.
 accepts-when: the three-column measurement is in `MEASUREMENTS.md` before any workflow lands; a `land/*` push gets a check whose verdict the push guard reads, and a red check refuses the push. NEGATIVE CONTROL: break one suite on a branch, and the check reads red at that suite.
-added: 2026-09-22 · SCHEDULER #13 (BOB #26's inbox entry, item 2, on BOB #27's §4; `node tools/mintid.mjs M0`).
+added: 2026-09-22 · SCHEDULER #13 (BOB #26's entry, item 2; `mintid`); unblocked by SCHEDULER #14 (BOB #28's entry, item 1).
 
 ### M0-111 · queued — **EVERY LANE LANDS ON `main` ITSELF, SO `main` MOVES UNDER EVERY GATE AND EACH LANDING REBASES AND RE-GATES.** RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*): lanes and workers push `land/<lane>/<topic>` branches only, and CONDUCT lands them on a cadence in one integration branch with one gate. — owner CONDUCT, with M0.
 order: directly after M0-110, which it depends on: the notes lanes trade need `coord` before `main` stops carrying them (TREE-SHARING, the order of the three changes); it cuts gate time, Bob's own test (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 3)
@@ -40,135 +60,135 @@ scope: as §2: CONDUCT merges every waiting `land/*` branch onto `main` in one i
 accepts-when: two lanes' `land/*` branches land in one train with one gate record, and a lane's direct push to `main` is refused by name. NEGATIVE CONTROL: drop the guard's `main` arm, and the refusal arm fails by name.
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 3; `node tools/mintid.mjs M0`).
 
-### M0-116 · queued — **A LANDING THAT TOUCHES ONLY `MEASUREMENTS.md` RE-RUNS A THIRD OF THE BATTERY.** `gates.mjs --since 81510280` over three docs selected 105 of 335 units: 36 only because they import `op-claims.mjs`, whose corpus list names `MEASUREMENTS.md` as a string, and about 30 because the suite's OWN file mentions it, mostly in comments; `gates.mjs` blanks comments in an imported file and reads a unit's own files whole (BOB #27, measured 2026-09-22 ~16:25Z). — owner M0.
+### M0-116 · queued — **A LANDING THAT TOUCHES ONLY `MEASUREMENTS.md` RE-RUNS A THIRD OF THE BATTERY.** `gates.mjs --since 81510280` over three docs … (whole text: the cut archive)
 order: directly after M0-111, where BOB #27 placed it (*"after M0-110 and M0-111, which take the ledgers off both sides first"*), ahead of M0-100 because it pays on every measurement landing: it CUTS GATE TIME, Bob's own test (`CLAUDE.md` §2) (SCHEDULER #13, 2026-09-22; BOB #27's defect, its fix named)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects nothing; with `ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1 (only the suites whose inputs a change touches re-run).
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects … (whole text: the cut archive)
 depends-on: none.
-scope: the fix BOB #27 named: (1) `op-claims.mjs`' scanned-corpus list moves to a module that only its scanner and `op-claims.test.mjs` import, so its importers stop inheriting the corpus as input; (2) `gates.mjs` reads a unit's OWN files as code too, comments blanked by the same lexer (`walkfloor.mjs` `stripComments`, strings kept, since a path is a string).
-accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it (`op-claims.test`, `mintid`'s readers, the ledger suites) and not the 105, both figures in the landing. NEGATIVE CONTROL (BOB #27's): a suite that reads `MEASUREMENTS.md` through a string path stays selected.
+accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it (`op-claims.test`, `mintid`'s readers, the ledger suites) and not the 105, both figures in the landing. NEGATIVE … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #13 (BOB #27's defect, verified at the code on `81510280`; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-116» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### M0-100 · queued — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two `land/*` branches' tail appends still collide inside the integrator's merge.** `CLAIMS.md`, the row's first subject, moves to `coord` (M0-110), whose anchored writes keep a line in its own block. Item 3 of BOB #23's four. — owner M0.
+### M0-100 · queued — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two** … (whole text: the cut archive)
 order: after M0-110 and M0-111, where BOB #27 placed it on narrowing: the collision it removes exists only inside M0-111's train (SCHEDULER #12, 2026-09-22)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 3, *a file several lanes append to becomes one file per entry*, narrowed by BOB #27 (`TREE-SHARING.md` §1).
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` … (whole text: the cut archive)
 depends-on: M0-111.
-scope: one file per NEW measurement and interface-change entry; the old files frozen history; ONE reader module yields both for every reader of the two (`plancheck`, `mintid` and the rest). **FULL GATE PROFILE**.
-accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it: `merge=union`, which hides a displaced line, so an arm asserts each entry is whole in its own file.
+accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-85 · queued — **AN ASSISTANT CAN OPEN A QUESTION OUTSIDE ANY RUN IT HOLDS, AND A RUN KEEPS ONLY THE LENS IT WAS HANDED.** NARROWED by BOB #25 to §11 item 5's rules 2 and 3: no row links an inquiry an `ai` credential creates to a run, and `aiRunOpen` stores the manifest it is handed, so `moved` cannot tell a changed lens from a stale one (re-read 2026-09-21). — owner RECORD.
+### D-85 · queued — **AN ASSISTANT CAN OPEN A QUESTION OUTSIDE ANY RUN IT HOLDS, AND A RUN KEEPS ONLY THE LENS IT WAS HANDED.** NARROWED by BOB #25 to … (whole text: the cut archive)
 order: directly after REC-165, the same fence one act further (BOB #25: *"after 1"*); a gap in the assistant's fence, not a false attribution (SCHEDULER #10, 2026-09-21)
 milestone: M4
 interface: I3 and I5 — a refusal, an instance row and a run field; the integrator mints and classifies the ICs.
 design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rules 2 and 3 (BOB #25, 2026-09-21), with §3 (the run carries the lens).
 depends-on: REC-165 (the same gate).
-scope: rule 2: an `ai` credential's inquiry names a running run whose principal it is; the link is an instance row keyed by the inquiry, cleared by both `purge` arms and never in signed bytes, counted against a declared `surfaces` bound; `op=projection` states its run and lens, `not recorded` for older ones. Rule 3: `aiRunOpen` also stores the plane-computed `statements_sha`, and the run's read tells `moved` from a stale hand.
-accepts-when: a creation outside a run, in another principal's run or past the bound is refused by name; one inside lands with its row and reads the lens and `moved`; a member's is untouched; a stale-handed run reads stale, not `moved`. NEGATIVE CONTROL: drop the run check, and the outside-a-run arm fails by name.
+accepts-when: a creation outside a run, in another principal's run or past the bound is refused by name; one inside lands with its row and reads the lens and `moved`; a member's is … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, items 2 and 3; D-85's DEBT row of 2026-07-30; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-116 · queued — **NOTHING READS BACK WHAT BUILD THE PLANE'S DURABLE OBJECT, OR ANY FLEET MEMBER, ACTUALLY SERVES.** The installer verifies the plane's ROUTING ISOLATE only: `verifyUpdate` reads `op=bootstrap`, whose `version` is that isolate's `env.VERSION`, with the DO's `bootstrapState` spread after it and carrying no build; each member is uploaded with a version and never asked what it answers. — owner DIST.
+### D-116 · queued — **NOTHING READS BACK WHAT BUILD THE PLANE'S DURABLE OBJECT, OR ANY FLEET MEMBER, ACTUALLY SERVES.** The installer verifies the … (whole text: the cut archive)
 order: after D-254, above features: a group can run a stale DO or member with nothing reporting it — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19; NARROWED by FLEET #3 and verified at the code by SCHEDULER #4, 2026-09-21: `vf4-live-scratch.mjs` stores the isolate's value as `plane_durable_object`)
 milestone: M7
-interface: I3 — ONE additive IC: `op=bootstrap`'s reply gains the DO's own build under a DISTINCT field; the op's field pin moves in the same commit.
-design: `docs/architecture/BIO_Distribution_v0_1.md` §8, the fleet's version authority, with CLAUDE.md §5: *a deploy verified is not a build serving*.
+interface: I3 — ONE additive IC: `op=bootstrap`'s reply gains the DO's own build under a DISTINCT field; the … (whole text: the cut archive)
+design: `docs/architecture/BIO_Distribution_v0_1.md` §8, the fleet's version authority, with CLAUDE.md §5: *a … (whole text: the cut archive)
 depends-on: none. DS-2 built the BUILD-side authority; this is the RUNTIME half.
-scope: (1) the DO reports its own build under a field that is NEVER `version` — a later spread would REPLACE the isolate's reading — and `verifyUpdate` requires both and names the one that lags; VF-4's DO arm reads it. (2) each member is read back THROUGH THE BINDING after install and deploy (D-115's surviving requirement).
-accepts-when: a DO or member whose build differs from the routing isolate's is NAMED, and the install or update does not report success. How a liar passes it: filling the DO field from the isolate's env, so two values agree for free. NEGATIVE CONTROL: copy `env.VERSION` into the DO field in the handler, and the arm fails by name.
+accepts-when: a DO or member whose build differs from the routing isolate's is NAMED, and the install or update does not report success. How a liar passes it: filling the DO field from the … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id); narrowed 2026-09-21.
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-116» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### CAP-13 · queued — **A REUSED PART SAYS IT WAS SEEN *"across N documents on this host"*, AND N COUNTS CAPTURES: every re-capture of a changed page inflates it, and one page captured twice meets the two-document reuse floor ALONE.** `siteAssets` and `siteChrome` (`store.mjs`) count `DISTINCT primary_sha`; two comments still state the stability gate 0.40.0 refused (`schema.mjs` above `site_assets`; `index.mjs` before `siteKnown`). — owner CAPTURE.
+### CAP-13 · queued — **A REUSED PART SAYS IT WAS SEEN *"across N documents on this host"*, AND N COUNTS CAPTURES: every re-capture of a changed page** … (whole text: the cut archive)
 order: after D-116, above the ledger tooling: CLAUDE.md §2's class — a figure the record cannot support, in content-addressed manifests nothing corrects, on monitoring's normal path; below D-116 because it concerns FURNITURE and the fetch-honesty fields are right (SCHEDULER #6, 2026-09-21; D-339 worker's items 1–2, verified at the code)
 milestone: M2
-interface: none expected — no op exposes `siteassets` or `sitechrome`; `reused_seen_in_documents` keeps its name and type, only its VALUE becomes true (the integrator classifies).
-design: `docs/development/CAPTURE-SCALING.md` §Job one, reuse condition 3 — *"an asset only one page references is that page's own"* — which also states this defect.
+interface: none expected — no op exposes `siteassets` or `sitechrome`; `reused_seen_in_documents` keeps its … (whole text: the cut archive)
+design: `docs/development/CAPTURE-SCALING.md` §Job one, reuse condition 3 … (whole text: the cut archive)
 depends-on: none.
-scope: count distinct primary ADDRESSES (`captured_locators.address_norm` where `capture_sha = primary_sha`) in both readers — a query, not a schema change. D-58 writes the locator unconditionally but in a swallowing `try`, and older captures may lack one: say what such a primary counts as, never drop it silently. Reword the two comments to recency of fetch, and the two that say a re-capture cannot inflate the count. **FULL GATE PROFILE**.
-accepts-when: one page captured twice with changed bytes reads 1 document and is NOT reused; two pages sharing a stylesheet read 2 and are; the manifest's N equals the page count. How a liar passes it: a byte-identical re-capture, which never moved the count. NEGATIVE CONTROL: count `primary_sha` again, and the changed-bytes arm fails by name.
+accepts-when: one page captured twice with changed bytes reads 1 document and is NOT reused; two pages sharing a stylesheet read 2 and are; the manifest's N equals the page count. How a liar … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CAP`).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «CAP-13» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-389 · queued — **ON A FULL RAW FETCH `op=frontier` PUBLISHES `truncated: false`, A COVERAGE CLAIM THE READER CANNOT SUPPORT, IN ALL THREE ARMS.** Each arm over-fetches `R` raw rows (`(cap + 1) * 2` at document and content, `* 3` at meaning), gates them and cuts at `cap`; when the fetch comes back FULL, rows beyond it were never read, yet a gated list of `cap` or fewer reads complete. Raised by REC-109; `observation-content.test.mjs` arm G5 names this row. — owner RECORD.
+### D-389 · queued — **ON A FULL RAW FETCH `op=frontier` PUBLISHES `truncated: false`, A COVERAGE CLAIM THE READER CANNOT SUPPORT, IN ALL THREE** … (whole text: the cut archive)
 order: after CAP-13, above the ledger tooling: CLAUDE.md §2's class, in the read that must say WHICH absence is true. The row's open question — is `true` more often acceptable? — §2 answers: a coverage claim the method did not establish is not made, and fail-safe is the direction (SCHEDULER #6, 2026-09-21, LED-7 batch 13)
 milestone: M3
 interface: I3 — `truncated` reads `true` on a full raw fetch at all three arms; the integrator mints and classifies the IC.
-design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers), which compute `truncated` from what the viewer may read.
+design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the … (whole text: the cut archive)
 depends-on: none.
-scope: ONE disjunct, `raw.length === R` (the supply was not exhausted), in the ONE over-fetch the three arms share — never per arm, the mirror-and-drift class this row was raised to avoid. The row's analysis stands: it leaks nothing, since an entitled viewer on a full fetch already reads `true`. Arm G5 moves in the same commit with a dated reason.
-accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. How a liar passes it: fixing one arm, so the fixture drives all three. NEGATIVE CONTROL: drop the disjunct, and the full-fetch arm fails by name at each level.
+accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. How a liar passes it: fixing one … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-389» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### REC-160 · queued — **`op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS.** `Store#reevaluations` reads legs from `inquiry_basis`, which drops `status`, and its edition cause says *"this leg rests on edition N"* for every leg, so a withdrawn leg is described as support. `#refEdgeSevered` is the one predicate, and `restingOn` already publishes a status from it. — owner RECORD.
+### REC-160 · queued — **`op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS.** `Store#reevaluations` reads legs from … (whole text: the cut archive)
 order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
 milestone: M9
 interface: I3 additive — the integrator mints the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §5.4 (cascade semantics: an upstream re-distribution sets a re-evaluation obligation on every dependent), DEC-70's home since BOB #23 folded it there (`43cd0caf`, 2026-09-21): *a read of the obligation marks which legs are severed and never describes one as resting on its target (REC-160)*; *the connection INFORMS, never binds*.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §5.4 (cascade semantics: an upstream … (whole text: the cut archive)
 depends-on: none. D-280 closed; nothing is superseded.
-scope: each obligation leg carries `status` (`severed` or `confirmed`) from `#refEdgeSevered(bundle, target)`, and a severed leg's edition detail says the withdrawn leg NAMED edition N rather than resting on it. The obligation still fires (DEC-70) and derives nothing from strength; an unrecorded or unrecognised `status` reads `confirmed`.
-accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed leg out, which reverses DEC-70, so `d280-strengthbar.test.mjs` SITE (c) stays green. NEGATIVE CONTROL: drop the status, and the severed-leg arm fails by name.
+accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-160» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-57 · queued — **`resolveLinks` TELLS A MEMBER THAT A SELF-LINKED PAGE'S TARGET *CHANGED*, NAMING ONE CAPTURE TWICE AS THE BRACKET.** A page linking to itself (every Legistar calendar does) finds its own capture as both `before` and `after` — its `first_retrieved` and `last_retrieved` equal the source's retrieval instant — so the `before && after` arm returns `undetermined` with the basis *"the target changed somewhere between the captures bracketing this document's retrieval"*. The verdict is defensible; the BASIS is false, and the UI renders the plane's words verbatim. — owner RECORD.
+### D-57 · queued — **`resolveLinks` TELLS A MEMBER THAT A SELF-LINKED PAGE'S TARGET *CHANGED*, NAMING ONE CAPTURE TWICE AS THE BRACKET.** A page … (whole text: the cut archive)
 order: after REC-160, with the read-time claims the record cannot support (CLAUDE.md §2's class): a fabricated sentence about a source, on every self-linking municipal page; below REC-160 because the verdict it carries is right (SCHEDULER #8, 2026-09-21, LED-7 batch S8-2)
 milestone: M3
 interface: I3 — a fourth BASIS on `op=links&capture=`, never a fourth verdict; the integrator mints and classifies the IC.
-design: `docs/development/LINK-FIDELITY.md`, which defines the verdicts and what each basis may claim, with `BIO_Intake_Doctrine_v1_1.md` (link fidelity is construct 2's).
+design: `docs/development/LINK-FIDELITY.md`, which defines the verdicts and what each basis may claim, with … (whole text: the cut archive)
 depends-on: none.
-scope: the row's fix — `resolveLinks` recognises a pick whose `capture_sha` is `sourceCapture` and states a SELF-REFERENCE basis; and, the same defect one step wider, a `before` and `after` that are ONE capture never read as *changed*. The UI keeps rendering the plane's words.
-accepts-when: a self-linking page's self-link reads the self-reference basis, with no *changed* sentence and no doubled hash; a genuine two-capture bracket still reads *changed*. How a liar passes it: dropping the self-link from the answer, so the arm asserts it is still listed and counted. NEGATIVE CONTROL: remove the self-reference test, and the self-link arm fails by name at the *changed* sentence.
+accepts-when: a self-linking page's self-link reads the self-reference basis, with no *changed* sentence and no doubled hash; a genuine two-capture bracket still reads *changed*. How a liar … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-2; D-57's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-57» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-440 · queued — **THE `image` ARM'S `{part}` FORM MINTS ON ANY CAPTURE THAT IS NOT AN OFFICE CONTAINER, NAMING BYTES THE DOCUMENT DOES NOT HOLD.** `coversImage` (`checks/bio-checks.mjs`) admits a `{part}` whenever the capture holds no image list, which is every HTML, PDF, text and data capture, and `mintContent` writes the row stating nothing (traced by BOB #24; re-read at the code 2026-09-21). — owner RECORD.
+### D-440 · queued — **THE `image` ARM'S `{part}` FORM MINTS ON ANY CAPTURE THAT IS NOT AN OFFICE CONTAINER, NAMING BYTES THE DOCUMENT DOES NOT** … (whole text: the cut archive)
 order: with the claims the record cannot support, after D-57 and above D-390: a content row naming bytes its document does not hold, minted silently, CLAUDE.md §2's class; D-420 directly after it, the same function (BOB #24: *"one worker can take both"*) (SCHEDULER #9, 2026-09-21)
 milestone: M4
 interface: I3 — a new refusal on the image arm; the integrator mints and classifies the IC.
-design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 (*"`{part}` is a member of a CONTAINER's own bytes, and nothing else"*, which names this fence) and §3.4, with `docs/development/CLIENT-RENDERED.md` "DESIGNED 2026-09-21" (an image served beside a page is its own document).
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 … (whole text: the cut archive)
 depends-on: none.
-scope: the row's named fix: `contentContextFor` tells the checker whether the capture is an office container, from its content type; the image arm refuses a `{part}` on any other capture BY NAME, saying an image served beside a page is its own document to acquire and cite whole; an office capture with no persisted image list keeps its undetermined admission, stated.
-accepts-when: a `{part}` on an HTML capture is refused by name, pointing at acquiring the image; a container capture still mints; an office capture with no persisted list is admitted as undetermined, stated. How a liar passes it: refusing every `{part}`, so the container arm must mint. NEGATIVE CONTROL: remove the refusal, and the HTML arm fails by name.
+accepts-when: a `{part}` on an HTML capture is refused by name, pointing at acquiring the image; a container capture still mints; an office capture with no persisted list is admitted as … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, drained this commit; D-440's DEBT row; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-440» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-420 · queued — **AN `image {page, rect}` ROW IS BOUNDED BY THE PAGE SET AND NOT BY WHAT THE PAGE PAINTS.** A rectangle where a PDF page paints no image mints as an `image` row: acquire persists no image list for a PDF (its `container_extent` is null, `index.mjs`), and `coversImage` has no `{page, rect}` branch; only the crop refuses it, `NO_IMAGE_AT_RECT` (`pdf-worker/src/imagecrop.mjs`) (re-read at the code 2026-09-21). — owner CAPTURE, with RECORD.
+### D-420 · queued — **AN `image {page, rect}` ROW IS BOUNDED BY THE PAGE SET AND NOT BY WHAT THE PAGE PAINTS.** A rectangle where a PDF page paints … (whole text: the cut archive)
 order: directly after D-440, the same function and one worker for both (BOB #24): a KIND overclaim the crop already catches, so below D-440's silent mint (SCHEDULER #9, 2026-09-21, LED-7 batch S9-1)
 milestone: M4
 interface: I1 (a PDF reading's container extent gains its images) and I3 (a new refusal); the integrator mints and classifies the ICs.
-design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 (the `image` reference's `{page, rect}` form; `covers` refuses from the container's own extent, by name) and §3.3 item 2 (a PDF's image objects and their painted rectangles, CPDF-18).
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 (the `image` reference's `{page, rect}` form … (whole text: the cut archive)
 depends-on: none — CPDF-18's `structure().images` is built.
-scope: the row's named fix: acquire persists `structure().images` as `container_extent.images` for a PDF (absent for a capture acquired before, stated as CAP-12 states an empty level), and `coversImage` gains the page-form branch: refuse a rect that no persisted placement equals, and ADMIT when the list is absent.
-accepts-when: a rect where the page paints no image is refused by name at the mint; a rect equal to a persisted placement mints; a PDF acquired before the change is admitted with its absence stated. How a liar passes it: a tolerance so wide any rect matches, so the no-image arm uses a rect far from every placement. NEGATIVE CONTROL: drop the page-form branch, and the no-image arm fails by name.
+accepts-when: a rect where the page paints no image is refused by name at the mint; a rect equal to a persisted placement mints; a PDF acquired before the change is admitted with its absence … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry; LED-7 batch S9-1; D-420's DEBT row of 2026-09-18; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-420» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE CEILING — AGAINST D-36's MEASURED workerd CEILING OF ABOUT 100.** The `subject IN (${marks})` inside `__REC91_AXIS_LIST__` (`store.mjs`) is built from `pageCut`; REC-109 held it at `cap` rather than doubling it. It has never fired because no fixture or instance has held ~100 captures with a content-level row, and every other guarded site chunks at 64. — owner RECORD.
+### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE** … (whole text: the cut archive)
 order: after D-57: a read that must say WHICH absence is true fails outright on the first instance past ~100 content captures; below D-389, REC-160 and D-57 because it fails LOUDLY rather than claiming what the record cannot support (SCHEDULER #8, 2026-09-21, LED-7 S8-1 and S8-2)
 milestone: M3
 interface: none — the answer's shape does not move; the integrator classifies.
-design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers), with D-36's measured ceiling (`node tools/ledger.mjs find D-36`).
+design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the … (whole text: the cut archive)
 depends-on: none. **Sequence after D-389** (the same method's page cut, `store.mjs` `#frontierContent`).
-scope: chunk the subject list at 64, each chunk's rows merged into the one `indexState` map; a fixture of 200+ subjects driven through `op=frontier&level=content`; then SWEEP every `IN` list built from a `limit`-bounded page, `#frontierMeaning` first, chunking each or stating its bound, every site listed with its verdict. **FULL GATE PROFILE**.
-accepts-when: a 200-subject page answers every row's index state, equal to the same rows read one chunk at a time; the sweep's list is in the landing. How a liar passes it: a fixture under 100 subjects, which never meets the ceiling, so its count is asserted above it. NEGATIVE CONTROL: restore the single unchunked `IN`, and the 200-subject arm fails by name.
+accepts-when: a 200-subject page answers every row's index state, equal to the same rows read one chunk at a time; the sweep's list is in the landing. How a liar passes it: a fixture under … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-1; D-390's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-390» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-60 · queued — **`op=monitor` COMPARES RAW BYTES, SO A LEGISTAR PAGE READS `modified` ON EVERY TICK AND MONITORING REPORTS NOTHING.** It compares the fetched bytes' hash with the capture's `sha256`, then writes `source_status: modified` and raises the re-evaluation flag; `op=acquire` already records the evidentiary digest (FW-4) and C-18.3 folds by it. ASP.NET reissues `__VIEWSTATE` per response: 31% of the bytes, nothing changed (2026-07-30). — owner RECORD.
+### D-60 · queued — **`op=monitor` COMPARES RAW BYTES, SO A LEGISTAR PAGE READS `modified` ON EVERY TICK AND MONITORING REPORTS NOTHING.** It compares … (whole text: the cut archive)
 order: after D-390, above CAP-14: M1's monitoring is noise on the class of page Oakland publishes on; below the claims the record cannot support because the design grades a change reported that did not happen as the cheaper error (DOCUMENT-PROFILES.md, "Three digests") (SCHEDULER #8, 2026-09-21, LED-7 S8-3)
 milestone: M1
 interface: I3 — `op=monitor` names the comparison it made; the integrator mints and classifies the IC.
-design: `docs/development/DOCUMENT-PROFILES.md` §"Three digests, not one" — *evidentiary … answers "has the substance changed?", which is what monitoring asks* — with `BIO_Content_Framework_v0_10.md` §5.
+design: `docs/development/DOCUMENT-PROFILES.md` §"Three digests, not one" — *evidentiary … answers … (whole text: the cut archive)
 depends-on: none — FW-4's digests are built.
-scope: monitoring compares the EVIDENTIARY digest when the baseline recorded one as determined and the fetched bytes normalise under the same handler with certainty, through acquire's one function; otherwise raw, and the answer says which. Substance unchanged writes no `modified` and raises no flag. `resolveLinks`' bracket is NOT in scope: D-59 measures it first.
-accepts-when: two fetches differing only in `__VIEWSTATE` read `unchanged`, compared evidentiary, with no flag raised; a real text change reads `modified`; a baseline with no determined digest compares raw and says so. How a liar passes it: normalising everything, so the real-change arm must read `modified`. NEGATIVE CONTROL: compare raw again, and the viewstate arm fails by name.
+accepts-when: two fetches differing only in `__VIEWSTATE` read `unchanged`, compared evidentiary, with no flag raised; a real text change reads `modified`; a baseline with no determined … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #8 (LED-7 S8-3; D-60's DEBT row, traced at the code; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-60» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-65 · queued — **MONITORING NEVER CALLS THE MONITORING CONTRACTS: `op=monitor` compares raw SHA-256 on every kind of document alike and keeps no dated confirmation.** docprofile's one entry point, `assess(before, after, ctx)` (`docprofile/pipeline.mjs`), grades a change per content type; the plane imports six names from docprofile (`index.mjs`), and nothing calls `assess` or `events.mjs` (re-read 2026-09-21). — owner RECORD.
+### D-65 · queued — **MONITORING NEVER CALLS THE MONITORING CONTRACTS: `op=monitor` compares raw SHA-256 on every kind of document alike and keeps no** … (whole text: the cut archive)
 order: directly after D-60, the same op: D-60 stops the raw-byte noise, this makes monitoring say WHAT changed for the type and keep the negative result; a gap, not an over-claim (SCHEDULER #10, 2026-09-21, LED-7)
 milestone: M3
 interface: I3 — `op=monitor` answers with the layer it stopped at and graded events; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6 (*"One public function"*; identical bytes are *"a CONFIRMATION, stored as evidence"*; the contract *"sets the expected check frequency"*), with `docs/architecture/CONSTRUCTS.md` Step 6 and `docs/development/OBSERVATION-LOG-DESIGN.md` §4.1 (the monitor's sweep).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §6 (*"One public function"*; identical bytes are … (whole text: the cut archive)
 depends-on: D-60 (the comparison this extends).
-scope: `op=monitor` asks `assess` through the capture's handler and content type, answers with its trail and graded events, and writes each look to the observation log as §4.1 states. REC-26's per-document `monitor_frequency` stays the authored choice; a document stating none takes its type's contract, and the answer says which.
-accepts-when: a calendar that lost a meeting inside its window reads `removed` as an `event`, a moved window reads `routine`, and an unchanged tick writes a dated `PRESENT unchanged` observation. How a liar passes it: grading every change an `event`, so the moved-window arm must read `routine`. NEGATIVE CONTROL: bypass `assess`, and the removed-meeting arm fails by name.
+accepts-when: a calendar that lost a meeting inside its window reads `removed` as an `event`, a moved window reads `routine`, and an unchanged tick writes a dated `PRESENT unchanged` … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-65's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-65» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### D-169 · queued — **A DISPOSED INTAKE INQUIRY IS WRITTEN WITHOUT THE `disposition_reason` C-2.8 REQUIRES.** `dispose` sets it with … (whole text: the cut archive)
 order: after D-65, first of the silent record defects on built paths: the record holds a bundle its own catalogue rejects, CLAUDE.md §2's class; D-171 and D-179 follow, the honesty batch BOB #26 placed together (SCHEDULER #12, 2026-09-22, LED-7)
@@ -199,6 +219,16 @@ depends-on: none — C-53.8's fence is built.
 accepts-when: held bytes promoted under a second bundle are refused and the first bundle's register row is byte-identical after; a revision re-registering its own bytes lands; a caller who … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1, drained this commit; D-179's DEBT row; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-179» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### D-128 · queued — **`op=progressiondefine` UPSERTS, SO A GROUP'S EARLIER DECLARED FLOW DISAPPEARS SILENTLY AND A FINDING READ AGAINST IT LOSES ITS** … (whole text: the cut archive)
+order: a correction to built work, directly after the honesty batch (D-169, D-171, D-179): the record keeping less than it held, silently, CLAUDE.md §2's class; BOB #27: *"a correction to built work: `op=progressiondefine` overwrites today"* (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 3)
+milestone: M4
+interface: I3 and I5 — a definition's versions, and the version an instance read and a finding name; the … (whole text: the cut archive)
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.2, "The declared flow, and its revisions" (BOB #27, 2026-09-22).
+depends-on: none — progressions and their two findings are built (`node tools/status.mjs progression`).
+accepts-when: a revised definition leaves the prior version readable with its basis, and an instance read or a finding names the version it was read against. How a liar passes it: a history … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 3, drained this commit; D-128's DEBT row of 2026-08-01; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-128» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### CAP-14 · queued — **A REUSED PART DOES NOT NAME THE CAPTURE ITS BYTES CAME FROM.** The manifest records WHEN (`reused_from_fetched_at`), not WHICH … (whole text: the cut archive)
 order: after D-389 and behind CAP-13, the same reuse machinery and files, one worker at a time; below CAP-13 because it adds provenance the record omits rather than correcting a figure it overstates (SCHEDULER #6, 2026-09-21; the D-339 worker's item 3, ruled)
@@ -500,6 +530,16 @@ accepts-when: an exported copy carries the quartet on every page byte-equal to t
 added: 2026-09-19 · SCHEDULER (same entry, item 8).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
+### D-150 · queued — **THE EXCLUSION STATEMENT IS CHECKED BY NOBODY BUT ITS AUTHOR, AND THE SIGNED CASE DOCUMENT DOES NOT SAY SO.** REC-14 built the … (whole text: the cut archive)
+order: with the M10 publication path, directly after UI-69 and before D-148: what a published case says about its own completeness, disclosed; designed and NOT BUILT, so a feature below the corrections (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 1)
+milestone: M10
+interface: I3 — the acknowledgement act and the completeness block's list; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 11 and §6A.4 (BOB #27, 2026-09-22).
+depends-on: none — REC-14's statement and REC-126's review-copy grant are built.
+accepts-when: a second participant's acknowledgement lands and is listed in the signed completeness block; a case with none publishes and says so; the author's own acknowledgement is refused … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 1, drained this commit; D-150's DEBT row of 2026-08-01; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
 ### D-148 · queued — **A FEE QUOTE IS EVIDENCE, AND THE RECORD HOLDS ONE ONLY AS PROSE: a `received` correspondence entry cannot carry the amount, the** … (whole text: the cut archive)
 order: with the M10 case path, after UI-69: the action a case justifies, CivicOS's fourth verb, a feature over built substrate; D-149 directly after it, both beside D-147 as BOB #26 placed them (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
 milestone: M10
@@ -519,6 +559,16 @@ depends-on: none — `action` is built.
 accepts-when: a member's list lands and reads back; an action with none reads undetermined, never federal; a machine credential's list is refused by name. How a liar passes it: a citation … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 2; D-149's DEBT row; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### D-147 · queued — **A RECORDS REQUEST IS ONE ROUND TRIP: `awaiting_response` HIDES THE FEE ESTIMATE, THE WAIVER DECISION, A PARTIAL PRODUCTION AND** … (whole text: the cut archive)
+order: directly after D-149, on D-148's entry grammar, which it extends (BOB #27: *"depends-on D-148"*), the M10 action path (SCHEDULER #14, 2026-09-22; BOB #27's inbox entry, item 2)
+milestone: M10
+interface: I3 and I5 — correspondence entry kinds, a closed outcome vocabulary and a stated due date; the … (whole text: the cut archive)
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, *THE RECORDS-REQUEST LIFECYCLE* (BOB #27, 2026-09-22), bound by D-149.
+depends-on: D-148 (the entry grammar it extends); D-149 (a stated due date names one of the action's citations).
+accepts-when: a request, a fee estimate, a waiver decision, a partial production and an appeal read back as one dated chain; an entry with no stated due date reads UNDETERMINED; a stated … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #14 (BOB #27's inbox entry, item 2, drained this commit; D-147's DEBT row of 2026-08-01; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-147» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### REC-149 · queued — **DISCOVERABLE OR HIDDEN (Membership v2 §7 item 7.14), 1 of 4: the OWNER's recorded setting (append-only, latest wins, no** … (whole text: the cut archive)
 order: Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first (SCHEDULER, 2026-09-19)
@@ -716,16 +766,6 @@ depends-on: none — D-293 is on `main`.
 accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-104» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT** … (whole text: the cut archive)
-order: directly after M0-104, whose line it folds, behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; SCHEDULER #11 on BOB #25's word)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and … (whole text: the cut archive)
-depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
-accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 … (whole text: the cut archive)
 order: behind the product rows, first of the session-hygiene instruments (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: a detector neither cuts gate time nor unblocks product; SCHEDULER #12); after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second (SCHEDULER #4, 2026-09-21)
@@ -976,6 +1016,16 @@ depends-on: none.
 accepts-when: `mintid` run through a symlinked path prints its MINTED line and exits 0, and one run through a path that is not the script exits non-zero or prints nothing BY DESIGN, stated … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (M0-73's worker's finding via CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-77» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-118 · queued — **SIX LIVE-VERIFICATION HELPERS READ THE KEYS ONLY FROM A `.env` FILE, SO IN THE CLOUD, WHERE THE KEYS ARE ENVIRONMENT VARIABLES** … (whole text: the cut archive)
+order: first of the live verifications, directly before M0-68, M0-69 and M0-70, which run through `vf4-call.mjs`' loader; it pays only once the cloud's network admits `*.workers.dev` (M-99), so it neither cuts gate time nor unblocks product today and sits behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 2)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `CLAUDE.md` §8: secrets are the … (whole text: the cut archive)
+depends-on: none — `loadEnv()` in `fl1-billing-surface-check.mjs` reads `process.env` first and a `.env` found upward second.
+accepts-when: each helper, run with the keys in the environment and no `.env`, reaches its first call. NEGATIVE CONTROL: restore `vf4-call.mjs`' file-only read, and that arm fails by name.
+added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-118» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### M0-68 · queued — **`bio-plane/test/vf4-live-scratch.mjs` ARM 4b-ii STILL ASSERTS D-323's REFUSAL, and D-323 is CLOSED: against any current plane** … (whole text: the cut archive)
 order: M0, right after the battery tally: an instrument asserting a closed defect fails against every current plane — a correction to a superseded test (SCHEDULER, 2026-09-18)

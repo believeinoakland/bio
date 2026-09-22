@@ -67,6 +67,7 @@ untracked one cannot even be found. Two corollaries, each paid for:
 | change a shape another area builds against | **`INTERFACE-CHANGES.md`** protocol | PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED |
 | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only knowledge; a defect goes to SCHEDULER only with its fix named |
 | tell a LIVE session something now | **`SendMessage`** to that lane — **NEVER to an UNATTENDED one; it cannot receive** | an ACCELERATOR, pointing at what to re-read; the state in the repository is the authority |
+| tell a lane something now, **IN THE CLOUD** | **a one-shot trigger into its session**: `create_trigger` with `persistent_session_id` = the lane's session id (from `list_sessions`) and `run_once_at` the next whole minute; open the prompt with `From <LANE> #<n> (<your session id>)` | measured 2026-09-22 (BOB #28; `kickoffs/NEW-MACHINE.md` §0.1): delivered as a new turn in 1-2 min, and a reply comes back the same way. `SendMessage` reaches NO other cloud session (each is its own machine; `ListAgents` lists none). The same ACCELERATOR rule: the repository stays the authority |
 
 **THE BOARD IS THE BRANCH `coord`** (`TREE-SHARING.md` §1, built by M0-110). The state channels above — the BOB INBOX
 and the plan (`QUEUE.md`, `BACKLOG.md`), `CLAIMS.md`, `DEBT.md`, every `-NEXT.md` and the ledgers' archive — live on
