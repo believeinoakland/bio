@@ -97,6 +97,25 @@
  * refutation made to fire: a parser that refuses everything unfamiliar passes every
  * refusal arm above and makes the tool unusable, and without this arm nothing notices.
  *
+ * ARM (17) IS M0-117's, added 2026-09-22, and its driver is `bio-plane/test/mintid-freshclone.control.mjs`, because the
+ * defect it closes is INVISIBLE IN ANY CHECKOUT THAT HAS EVER MINTED: `scopeOf` probed `<git-common-dir>/bio-idalloc`
+ * without creating it, so the live-ledger arm was green wherever an id had been taken and RED on the first gate of every
+ * fresh clone (M-99). The driver `git clone`s this repository into the OS temp dir (no ledger, asserted), overlays this
+ * tree's working copies of the tool and this suite, and runs THIS SUITE IN THE CLONE, removing the clone's ledger before
+ * every arm. (17) in `scopeOf` drop the `mkdirSync(r, { recursive: true })` -> in a clone with NO ledger "the REAL
+ * ledger's filesystem honours the exclusive create" FAILS reading PROBE_UNWRITABLE (ENOENT) — M-99's RED, reproduced on
+ * demand — with the three M0-117 fresh-clone arms, and NOTHING ELSE: "a ledger directory that cannot be written is a
+ * REFUSAL" (the probe's own missing-directory refusal) stays green, because the fix is in `scopeOf`, never the probe.
+ * The driver also runs (11) in the clone, an over-strictness arm (the ledger ALREADY present -> GREEN: the create is
+ * idempotent) and THE LIAR (the create dropped AND the ledger pre-created by the harness -> the live arm PASSES and only
+ * the fresh-clone arms fail, which is why the no-ledger arm below runs the TOOL in a new repository and never a
+ * pre-created fixture). RUN 2026-09-22 by the M0-117 worker in worktree agent-a7c6ab7d2c6d998af, each arm ALONE in a
+ * fresh clone, the clone's tool restored by sha256 AND `cmp` at 80,379 bytes (4cbe8c01...): baseline 117 pass, 0 fail;
+ * (17) 113 pass, 4 FAIL as declared; (11) 87 pass, 30 FAIL — the three named arms AND 27 more, WIDER THAN THE 2026-08-08
+ * DECLARATION of (11) says: `mint` now probes before it takes, so every mint in the suite refuses EXCL_NOT_HONOURED (the
+ * fail-closed path, recorded rather than smoothed); over-strictness 117 pass, 0 fail; liar 114 pass, 3 FAIL, the live arm
+ * PASSING; the driver 55 pass, 0 fail, 4 arms run of 4.
+ *
  * RUN 2026-09-17 in worktree agent-a49aa3914466cfa1e, EACH ARM ALONE, restored by cp-back
  * from a pristine copy and verified by sha256 AND `cmp` at 76,331 bytes (9f0c9e75...),
  * never by `git checkout --`. Baseline 113 pass, 0 fail, 12/12 sections.
@@ -147,7 +166,7 @@
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
-import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync, readdirSync, chmodSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync, readdirSync, chmodSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -594,6 +613,37 @@ section("D-242 · the guarantee is PROBED and PRINTED, never implied");
   const gone = exclusivityProbe(join(SANDBOX, "no-such-dir-at-all"));
   t("a ledger directory that cannot be written is a REFUSAL with a code, not a throw",
     [gone.ok, gone.reason], [false, "PROBE_UNWRITABLE"]);
+
+  /* M0-117, 2026-09-22 — A CLONE THAT HAS NEVER MINTED. The live arm above passed on
+     every machine where something had already minted, and was RED on the first gate of
+     every fresh clone (M-99): `scopeOf` probed `<git-common-dir>/bio-idalloc` without
+     creating it. This arm builds the fresh state rather than assuming it — a NEW git
+     repository with no ledger — and takes its scope through the TOOL, with no
+     BIO_IDALLOC_DIR, so the directory can only come from `scopeOf` itself. Creating it
+     here, in the test, would pass on this machine and leave every other clone RED. */
+  {
+    const fresh = join(SANDBOX, "fresh-clone");
+    mkdirSync(fresh, { recursive: true });
+    execFileSync("git", ["init", "-q", fresh], { stdio: "ignore" });
+    const freshLedger = ledgerRoot({ repo: fresh, env: {} });
+    const before = existsSync(freshLedger);
+    console.log(`  fresh clone ledger ${freshLedger} · present before the scope: ${before}`);
+    t("the fixture is a clone that has NEVER minted: its git dir holds no bio-idalloc", [Boolean(freshLedger), before], [true, false]);
+    const freshScope = scopeOf({ repo: fresh, env: {} });
+    t("a clone with NO ledger directory still reads its filesystem honouring the exclusive create",
+      [freshScope.ledger === freshLedger, freshScope.exclusive.ok, freshScope.exclusive.reason], [true, true, undefined]);
+    t("...because `scopeOf` created the ledger, as the mint does",
+      existsSync(freshLedger), true);
+    /* A path that cannot be created (its parent is a FILE, which refuses even as root)
+       answers the mint's code, never a throw. */
+    const blocker = join(SANDBOX, "a-file-not-a-dir");
+    writeFileSync(blocker, "x");
+    let blocked;
+    try { blocked = scopeOf({ root: join(blocker, "bio-idalloc"), env: {} }).exclusive; }
+    catch (e) { blocked = { ok: null, reason: `THREW ${e.code || e.message}` }; }
+    t(`a ledger that cannot be CREATED is a refusal with the mint's code (${blocked.reason})`,
+      [blocked.ok, blocked.reason], [false, "LEDGER_UNWRITABLE"]);
+  }
 
   /* DRIVEN, not reasoned about: an unwritable ledger must make `mint` REFUSE rather
      than throw. It threw in the first draft, because the namespace mkdir ran before
