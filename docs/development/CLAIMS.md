@@ -19160,3 +19160,27 @@ paths, BY SITE:
 `docs/development/QUEUE.md` (CONDUCT's). Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-22 M0 (M0-116 — a MEASUREMENTS.md-only landing re-runs a third of the battery: the op-claims ledger leaves the module its importers inherit, and gates reads a unit's own files as code)
+
+session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-116 (wave 4), worktree `.claude/worktrees/agent-a13a769db4127c711`,
+branch `worktree-agent-a13a769db4127c711`, from `origin/main` @ `df9eb9f9` (cloud).
+authority: `QUEUE.md` `### M0-116 · running` (read on `origin/coord` @ `a5ef1c62`), the row's full text under «M0-116» in
+`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`; design `VERIFICATION.md` (admitted for M0 by name) with `ORCHESTRATION.md`
+§"THE RECORD IS PARTITIONED BY WRITER" rule 1.
+paths, BY SITE:
+  - `bio-plane/scripts/op-claims-ledger.mjs` (NEW) — the MAIN half of the op-claims ledger (every entry whose file is on
+    `main`), imported only by `bio-plane/test/op-claims.test.mjs`, which runs the whole-tree scan.
+  - `bio-plane/scripts/op-claims.mjs` — the `LEDGER` block and its `LEDGER_STATE`/`LEDGER_MAIN` exports, and `sweep()`'s
+    `ledger` default ONLY. Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
+  - `tools/gates.mjs` — the SELECTION code only: `fileHit` (and the REACH comments/printed line beside it). The
+    verdict/record code M0-107 changed is NOT touched.
+  - `bio-plane/test/op-claims.test.mjs`, `bio-plane/test/gates.test.mjs` (+ its control if an arm is added),
+    `bio-plane/test/hygiene.test.mjs` (a comment whose premise the move changes), `bio-plane/test/walkfigure.control.mjs`
+    (one fixture importing `LEDGER` from op-claims.mjs), `bio-plane/scripts/walkfloor.mjs` (header example comment only).
+  - `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY, and only to figures a committed `--strict` run PRINTS.
+  - `docs/development/MEASUREMENTS.md` (one entry APPENDED), this block.
+**NOT CLAIMED:** `tools/coord.mjs`, `tools/pushguard.mjs` (M0-114/M0-111), `tools/ledger.mjs` (M0-119),
+`docs/development/QUEUE.md` (CONDUCT's).
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
