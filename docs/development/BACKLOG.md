@@ -170,35 +170,35 @@ scope: `op=monitor` asks `assess` through the capture's handler and content type
 accepts-when: a calendar that lost a meeting inside its window reads `removed` as an `event`, a moved window reads `routine`, and an unchanged tick writes a dated `PRESENT unchanged` observation. How a liar passes it: grading every change an `event`, so the moved-window arm must read `routine`. NEGATIVE CONTROL: bypass `assess`, and the removed-meeting arm fails by name.
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-65's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 
-### D-169 · queued — **A DISPOSED INTAKE INQUIRY IS WRITTEN WITHOUT THE `disposition_reason` C-2.8 REQUIRES.** `dispose` sets it with `Store.#setScalar`, which replaces a key and silently adds none, and `setup.mjs`'s `mdFor` writes no such line for an inquiry; `dispose` calls `promote` directly, so the bundle lands failing its own catalogue and only an audit finds it (re-read on `7c967f09`). — owner RECORD.
+### D-169 · queued — **A DISPOSED INTAKE INQUIRY IS WRITTEN WITHOUT THE `disposition_reason` C-2.8 REQUIRES.** `dispose` sets it with … (whole text: the cut archive)
 order: after D-65, first of the silent record defects on built paths: the record holds a bundle its own catalogue rejects, CLAUDE.md §2's class; D-171 and D-179 follow, the honesty batch BOB #26 placed together (SCHEDULER #12, 2026-09-22, LED-7)
 milestone: M7
 interface: none expected — the bytes gain the line C-2.8 already requires; the integrator classifies.
-design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"J · JUSTIFIED TRANSITION" (*disposition of a focus to deferred or dismissed, which C-2.8 requires a reason for*).
+design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"J · JUSTIFIED TRANSITION" (*disposition of a … (whole text: the cut archive)
 depends-on: none — `Store.#setOrAddScalar` is built (the conclude path uses it).
-scope: `dispose` writes the reason with `#setOrAddScalar`; a suite arm creates an inquiry through intake, disposes it, and runs the catalogue over the result.
-accepts-when: an intake-created inquiry, deferred and dismissed, passes C-2.8 with its reason in the bytes; a member-created one disposes byte-identically to today. How a liar passes it: a hand-built fixture already carrying the line, which never meets `mdFor`, so the arm creates it through intake. NEGATIVE CONTROL: restore `#setScalar` at the site, and the intake arm fails by name at C-2.8.
+accepts-when: an intake-created inquiry, deferred and dismissed, passes C-2.8 with its reason in the bytes; a member-created one disposes byte-identically to today. How a liar passes it: a … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #12 (LED-7; D-169's DEBT row of 2026-08-03, verified at the code; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-169» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-171 · queued — **`#revisionKind` NAMES A REVISION'S WRITER BY A CALLER'S KEY: C-20.1's writer lookup breaks a tie on `created` with `snap_key DESC`, a lexical sort over an opaque caller-chosen key, not the store's write order.** REC-32's derivation of the same latest entry breaks it with `rowid DESC` and says why at its site (`store.mjs`, re-read on `7c967f09`). — owner RECORD.
+### D-171 · queued — **`#revisionKind` NAMES A REVISION'S WRITER BY A CALLER'S KEY: C-20.1's writer lookup breaks a tie on `created` with** … (whole text: the cut archive)
 order: directly after D-169, the same honesty batch (its DEBT row: beside D-169); a wrong writer needs two manifest entries sharing one `created`, so it follows the defect every intake disposal meets (SCHEDULER #12, 2026-09-22, LED-7)
 milestone: M7
 interface: none — the answer's shape does not move; the integrator classifies.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, mechanical-writer conformance, C-20.1), with REC-32's `rowid DESC` at its site as the precedent.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, mechanical-writer conformance … (whole text: the cut archive)
 depends-on: none.
-scope: `#revisionKind` orders by `created DESC, rowid DESC`, as REC-32's derivation does, and the two sites say they agree.
-accepts-when: two manifest entries sharing `created`, the later written with the lexically smaller `snap_key`, read the LATER one's writer. How a liar passes it: a fixture whose later write also has the larger key, which never tells the orders apart, so the arm's keys run against write order. NEGATIVE CONTROL: restore `snap_key DESC`, and that arm fails by name.
+accepts-when: two manifest entries sharing `created`, the later written with the lexically smaller `snap_key`, read the LATER one's writer. How a liar passes it: a fixture whose later write … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #12 (LED-7; D-171's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-171» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-179 · queued — **ONE CAPTURE, ONE HOME: A SECOND REGISTRATION OF HELD BYTES SILENTLY MOVES THE REGISTER ROW.** `register.capture_sha` is the table's primary key (`schema.mjs`) and the promote write UPSERTs `bundle_id` on it (`store.mjs`, re-read on `7c967f09`), so registering a capture under a second bundle moves it; only an authored capture is refused (C-53.8). RULED by BOB #26: refused BY NAME. — owner RECORD.
+### D-179 · queued — **ONE CAPTURE, ONE HOME: A SECOND REGISTRATION OF HELD BYTES SILENTLY MOVES THE REGISTER ROW.** `register.capture_sha` is the … (whole text: the cut archive)
 order: directly after D-171, beside D-169 and D-171 as BOB #26 placed it: a silent move of the record's provenance row, CLAUDE.md §2's class (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
 milestone: M7
 interface: I3 — `op=promote` refuses what it accepted; the integrator mints and classifies the IC.
 design: `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §8 (one capture, one home, the original's; BOB #26, 2026-09-22).
 depends-on: none — C-53.8's fence is built.
-scope: at `promote`, before any write, a register entry whose `capture_sha` is registered under ANOTHER bundle that still exists is refused, C-53.8 generalised to every capture; the refusal names the holder only to a caller who may see it (D-15). The same bundle re-registering is unchanged; a purged home's bytes register afresh; a fixture registering one sha under two bundles is corrected with its reason. Not reached, and not rowed: a digest-level duplicate across bundles.
-accepts-when: held bytes promoted under a second bundle are refused and the first bundle's register row is byte-identical after; a revision re-registering its own bytes lands; a caller who cannot see the holder is told no bundle. NEGATIVE CONTROL: drop the refusal, and the first-bundle-unchanged arm fails by name.
+accepts-when: held bytes promoted under a second bundle are refused and the first bundle's register row is byte-identical after; a revision re-registering its own bytes lands; a caller who … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1, drained this commit; D-179's DEBT row; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-179» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### CAP-14 · queued — **A REUSED PART DOES NOT NAME THE CAPTURE ITS BYTES CAME FROM.** The manifest records WHEN (`reused_from_fetched_at`), not WHICH … (whole text: the cut archive)
 order: after D-389 and behind CAP-13, the same reuse machinery and files, one worker at a time; below CAP-13 because it adds provenance the record omits rather than correcting a figure it overstates (SCHEDULER #6, 2026-09-21; the D-339 worker's item 3, ruled)
@@ -579,6 +579,16 @@ depends-on: none.
 accepts-when: a selection of three where one item drifted leaves exactly that one listed with its reason and clears the other two, through the ops and on the surface. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-126» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-134 · queued — **NO SURFACE PERFORMS §4.9's CUSTODIAL ACTS: `memberadd`, `memberset`, `signeradd` and `signerset` have ZERO call sites in** … (whole text: the cut archive)
+order: with the M8 features after D-126, a surface over built ops; BOB #17 ordered it behind D-136's fence (*"a member surface over an act whose voter the caller can name is a SECOND path to a forgeable vote"*), which is built, and BOB #18 discharged BOB's half; it rests on REC-159's session reach (SCHEDULER #13, 2026-09-22, LED-7 batch S13-1)
+milestone: M8
+interface: I3 consumer (the four ops, reachable from an enrolled administrator's session once REC-159 lands).
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each custodial act is EVERY … (whole text: the cut archive)
+depends-on: REC-159 (the four ops reach an enrolled administrator's session).
+accepts-when: against the real plane, the founder's and an enrolled administrator's sessions each perform all four, attributed to them; a member's session renders none of the four. How a … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #13 (LED-7 batch S13-1; D-134's DEBT row of 2026-08-01, BOB #17's order and BOB #18's discharge; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-134» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### D-74 · queued — **OAKLAND'S SHARED IDENTIFIER SPACES HAVE NEVER BEEN MEASURED, SO EVERY PROGRESSION CROSSING ITS SYSTEMS COLLAPSES TO GRADE C.** … (whole text: the cut archive)
 order: first of the M4 product rows, after D-126: a MEASUREMENT comes before anything built on it, and §8.3 calls it *"one of the highest-value pieces of measurement this project can do"*; a gap, not an over-claim (SCHEDULER #10, 2026-09-21, LED-7)

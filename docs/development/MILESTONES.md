@@ -666,7 +666,7 @@ and handed to CONDUCT through the BOB INBOX.
 | D-129 `undetermined` conflates *cannot determine* and *positively none* | RECORD | M8 · a field beside the reason |
 | D-130 `counterparty: to be named` passes C-2.10 | RECORD · UI | M7 · REC-23 CLOSED (rendering half UI-19; ADD_TYPES absence UI-15 — corrected 2026-08-04, the row had said UI-15 for the rendering while QUEUE/BUILD-ORDER say UI-19) |
 | D-131 a raw NUL byte makes `store.mjs` invisible to `grep` | RECORD | M0 · REC-27 |
-| D-134 the BALLOT act is complete, tested and unreachable | UI | M8 · UI-16 |
+| D-134 the administrator WRITE surface: §4.9's four custodial acts have no UI call site | UI | M8 · PLACED 2026-09-22 in `BACKLOG.md` (LED-7), after D-126, resting on REC-159 |
 | D-135 the viewer gate is stamped on compiled query paths only | RECORD | M7 · REC-25 |
 | D-136 three governance ops absent from `SESSION_OPS` | UI · RECORD | M8 · UI-16 |
 | D-137 the D-113 check is blind to eight hand-created tables | RECORD | M0 · REC-27 |
@@ -682,9 +682,7 @@ and handed to CONDUCT through the BOB INBOX.
 | D-149 the design is jurisdiction-blind | RECORD · FRAMEWORK | M10 · needs a design pass, not an item · PLACED 2026-09-22 in `BACKLOG.md` on Bob's ruling (BOB #26) |
 | D-150 the completeness claim, externally validated | RECORD · UI | M10 · REC-14 |
 | D-151 a machine credential can resolve an unassigned task (DEC-7) | RECORD | M8 · REC-28 |
-| D-153 AUDIENCES H4/H6 are the workflow, not hazards (DEC-13) | RECORD · UI | M10 · REC-14, REC-24, UI-17 |
 | D-155 a project declares the strength its work requires (DEC-17) | RECORD · UI | M10 · REC-14, REC-15, UI-18 |
-| D-156 "audience" names two things — reader of a case vs user type (DEC-17) | — | M10 · a documentation pass, no code |
 
 **The backfill, 2026-08-07 (session BOB).** The tables above stopped at D-156 while
 `DEBT.md` had reached D-224 — roughly fifty rows had accumulated outside them, against

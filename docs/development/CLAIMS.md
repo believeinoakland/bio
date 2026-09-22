@@ -18844,3 +18844,32 @@ why: DIST-NEXT told a cloud DIST #5 that the secrets' home was Bob's open decisi
   a question already answered. It now finds the keys as environment variables, confirms each by USING it (`wrangler
   whoami` must report the pinned account), and never prints a value.
 **released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.
+
+## DELEGATION 2026-09-22 SCHEDULER (#13) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S13-1: D-150's check on the completeness statement, D-147's request lifecycle, D-159 and D-165's door, D-128's flow model**
+
+LED-7 batch S13-1 (SCHEDULER #13, verified on `8ec66c57`) closed D-153 and D-156 in fact and placed D-134. These four rows are
+design rows the fold cannot move without a ruling; each question is single, and each answer disposes of its row.
+
+1. **D-150 — the completeness statement's CHECK (M10, `BIO_Publication_v0_1.md`).** The authored exclusion statement is
+   BUILT (REC-14, with its computed `searched` section). The row, from external evidence (the catch in the SBI and Rolling
+   Stone reviews was a second person with standing, overruled), says the field is necessary and NOT sufficient: *"Do not
+   build the field and call the problem solved."* It names two candidates: a second member's acknowledgement of the
+   statement before publication, or the statement as the thing a reviewer is specifically asked to attack (the review
+   copy, DEC-31, is built on the plane). **Which, or both, and designed where (Publication §3 or §6A)?**
+2. **D-147 — the records-request LIFECYCLE (M10, `BIO_Case_Making_v0_1.md` §2).** `action` runs planned, active,
+   awaiting_response, resolved or abandoned; the row names four decision points with their own clocks (the fee estimate,
+   the fee-waiver decision and the stages after). BOB #26 kept it a design row beside D-148 and D-149, placed today, whose
+   quote revision chain lands each later stage as its own entry. **Design it now in §2, or state it deferred with a
+   trigger in Case Making's Incomplete sections?**
+3. **D-159 and D-165 — two DEFERRALS WITH TRIGGERS (M10, `BIO_Case_Making_v0_1.md`).** D-159 (an ungraded leg costs a
+   conclusion nothing: WATCH until a real group has run M10) and D-165 (what each action kind requires is unmodelled:
+   deferred until S11 exists and members answer the backward question by hand). Case Making's front matter states both,
+   D-159 as *"open · WATCH"*. **Door 3 (archived pointing at the front matter, which BOB rewords from open to deferred
+   with its trigger, so the two records agree) or door 2 (a blocked backlog row each, carrying its trigger)?** SCHEDULER
+   recommends door 3: a blocked row costs about 1 KiB of a full backlog, and every placement now cuts the next rows to run.
+4. **D-128 — THE FLOW MODEL (M4).** The declared-versus-observed delta is named in Case Making (*"THE FLOW MODEL"*), in
+   `BIO_Interaction_Constructs_v0_1.md` and in `NOTIFICATIONS.md`, and nothing is rowed. **Is it designed enough to
+   place as rows, or deferred (door 3 in its home's Incomplete sections), and which document is its home?**
+
+**open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or
+narrowed), and nothing runnable waits on any of them.

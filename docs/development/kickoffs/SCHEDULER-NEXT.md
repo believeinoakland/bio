@@ -2,8 +2,8 @@
 
 Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then
 `docs/architecture/BIO_System_Design.md` **whole**, then this, then `QUEUE.md` and `BACKLOG.md` whole. Everything below was
-MEASURED at this landing (2026-09-22 ~16:30Z, on `origin/main` @ `81510280` plus this commit). It is a POINTER: re-measure
-before you rest anything on it. **SCHEDULER #13 is LIVE** (52% of its context at this landing, by `get_usage`; the
+MEASURED at this landing (2026-09-22 ~16:45Z, on `origin/main` @ `8ec66c57` plus this commit). It is a POINTER: re-measure
+before you rest anything on it. **SCHEDULER #13 is LIVE** (58% of its context at this landing, by `get_usage`; the
 refresh line is 70%) and rewrites this file at every
 landing, not only at its refresh, because Bob moves development to cloud Claude Code under his second account TODAY
 (`kickoffs/NEW-MACHINE.md` §0) and the switch may come without a handoff turn. **WRITTEN FOR A SUCCESSOR WITH NO MEMORY,
@@ -21,18 +21,18 @@ applies only if you run there; in the cloud those rules are SUSPENDED until meas
 - **Cache (8):** LED-7 (this lane's own act, never a worker slot) · M0-106 (DIST's own act: its WITNESS at the 0.72.0 cut) ·
   M0-107 · REC-166 · REC-165 · M0-110 (the `coord` branch, SPLIT by BOB #27: stage 1 new files only; stage 2 waited for
   M0-99, now DONE) · REC-167 · UI-77. CONDUCT #13's first spawns, per its CONDUCT-NEXT: REC-166, M0-107, REC-165, M0-110.
-- **Backlog (115), top:** M0-114 (`blocked`: the gates on GitHub's machines, TREE-SHARING §3–§4, until the first cloud
+- **Backlog (117), top:** M0-114 (`blocked`: the gates on GitHub's machines, TREE-SHARING §3–§4, until the first cloud
   session's FULL gate time and pass count are in NEW-MACHINE §0) · M0-111 (landing in batches, `depends-on` M0-110) · M0-116
   (a `MEASUREMENTS.md`-only landing re-runs a third of the battery: BOB #27's defect, its fix named, runnable now) · M0-100
   (`depends-on` M0-111) · D-85 · D-116 · CAP-13 · D-389 · REC-160 · D-57 · the M1-M7 corrections · the M8 corrections
   (REC-159, REC-162, REC-155, REC-158, D-311, UI-73, D-82, D-125) · D-278 (M9, placed this landing) · COFF-13 · D-52 … D-178 ·
   the features (UI-74 first; D-148 and D-149 after UI-69) · then BEHIND THE PRODUCT ROWS the process rows (M0-104 …), the
   ledger tooling with M0-115 after LED-9, the instrument cluster, the older M0 rows, the four blocked rows at the foot.
-- **`BACKLOG.md` is 153,012 B of 153,600** (150 KiB, KEPT by BOB #26: revisit only on an instance of a spawn delayed or
+- **`BACKLOG.md` is 153,243 B of 153,600** (150 KiB, KEPT by BOB #26: revisit only on an instance of a spawn delayed or
   misbriefed by a cut row). Every uncut row is now at the TOP: this landing's foot cut reached D-311, REC-158, REC-155,
-  REC-162, REC-159, D-54 and CAP-14, so EVERY PLACEMENT NOW CUTS THE NEXT ROWS TO RUN; each is VERBATIM in
+  REC-162, REC-159, D-54 and CAP-14 (and batch S13-1 D-179, D-171 and D-169), so EVERY PLACEMENT NOW CUTS THE NEXT ROWS TO RUN; each is VERBATIM in
   `QUEUE-cut-2026-09-22.md`. If a cut row ever delays or misbriefs a spawn, that instance goes to BOB (the budget's trigger).
-- **DEBT.md: 98 open rows.** The floor that stopped the fold is gone (M0-109). **D-388 moves only after M0-115 lands**
+- **DEBT.md: 95 open rows.** The floor that stopped the fold is gone (M0-109). **D-388 moves only after M0-115 lands**
   (`corpuscheck.test.mjs` §5 reads the literal `| D-388 |` line; WORK-PIPELINE §3).
 - **BOB INBOX: EMPTY.**
 - **Ids:** mintid gave M0-114 and M0-115 because this lane's own done text named the next M0 number before it was minted,
@@ -49,12 +49,14 @@ applies only if you run there; in the cloud those rules are SUSPENDED until meas
 3. **M0-114** leaves `blocked` when NEW-MACHINE §0 records the first cloud session's FULL gate time and pass count.
 4. **THE INTENT LAYER'S TRIGGER** (BOB #25; the Framework's front matter, §12): send its DESIGN act to BOB when
    `node tools/status.mjs 12.publish` and `12.accept` read BUILT. Both ABSENT at this landing.
-5. **LED-7, one landing per wake, batched.** Oldest first after the defects: D-175 (a ±2 assertion drift on an
+5. **LED-7, one landing per wake, batched.** Batch S13-1 landed: D-153 and D-156 CLOSED IN FACT, D-134 PLACED (UI, after
+   D-126, on REC-159); D-150, D-147, D-159 with D-165, and D-128 SENT TO BOB as one group of four (SCHEDULER (#13)'s
+   DELEGATION in `CLAIMS.md`): apply each answer when it lands. Next, oldest first: D-175 (a ±2 assertion drift on an
    unmodified tree, 2026-08-04: needs two battery runs, so a worker via CONDUCT or a process row behind the product
-   rows), D-128 and D-129 (design rows: BOB, in a group of three or four), D-134 (routed to BOB with D-136 on 2026-09-19;
-   read its answer first), D-147 (the request lifecycle, a design row beside D-148 and D-149), D-150, D-153, D-156,
-   D-159, D-165. D-121 and D-124 are COLLIDED ids (LED-8); D-64's four questions are BOB's; D-53 is with Bob; D-388 waits
-   on M0-115. The fold's CLOSING landing retargets WORK-PIPELINE §3's list (BOB #27 added M0-109's items 2 and 3).
+   rows), D-129 (a design row, `undetermined`'s two claims, widened by `STORE-AS-CACHE.md`: the next group to BOB), then
+   the rows after D-165. D-121 and D-124 are COLLIDED ids (LED-8); D-64's four questions are BOB's; D-53 is with Bob;
+   D-388 waits on M0-115. The fold's CLOSING landing retargets WORK-PIPELINE §3's list (BOB #27 added M0-109's items 2
+   and 3).
 6. **HELD under the law (process rows that pay nothing), not placed:** the retirable control's declared arm count (the
    draft `row-drafts/M0-108.md` on `origin/scheduler12/row-drafts`; its id is minted, so keep it out of the corpus unless
    you place it); D-441 (`decided.mjs` blind to title-case ruling markers; in `DEBT.md`, its fix named).
@@ -76,7 +78,8 @@ ONE landing: REC-163, M0-109 and M0-99 CLOSED, each by content; all three BOB IN
 (TREE-SHARING item 2), D-278 placed after D-125 with group (1) closed in fact, D-148 and D-149 placed after UI-69; M0-115
 placed (M0-109's DELEGATION item 1); M0-116 placed after M0-111 (BOB #27's gate-selection defect, verified at the code);
 M0-110 split into its two stages (BOB #27); the refill moved M0-110, REC-167 and UI-77; eleven rows cut to their fields; `kickoffs/SCHEDULER.md`'s two `DECIDED.md` sentences corrected (M0-99's DELEGATION
-item 9) and four durable mechanics added from SCHEDULER #12's handoff.
+item 9) and four durable mechanics added from SCHEDULER #12's handoff (`8ec66c57`). Then LED-7 batch S13-1: D-153 and
+D-156 closed in fact, D-134 placed, four questions to BOB.
 
 ## Your first acts
 
