@@ -17719,6 +17719,22 @@ D-79, D-81 (Q1), D-85, D-87, D-88 (Q2), D-120 (Q3). VERIFIED AT THE CODE AND WAI
 the landing that follows the next completion. MILESTONES.md: the rows for D-91, D-113 and D-123 removed, and the
 not-scheduled list corrected for D-89 and D-90. 131 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 2): LED-7 batch S10-2**, every row read at the code on `18d50de5`. CLOSED
+IN FACT: D-132 (UI-15, `d397ab5b`, declared `ADD_TICKS`) and D-139 (REC-19, `d22db7b8`, built `op=affordances`; what it
+still omits is BACKLOG D-311). SUPERSEDED: D-163, by D-164, as `BIO_Content_Framework_v0_10.md` §18 states. CLOSED AS DEBT
+ROWS whose remaining act is a placed backlog row under its own id: D-161 (REC-122) and D-154 (REC-15, blocked on DEC-33).
+MILESTONES.md: their five rows removed. 126 open DEBT rows remain.
+
+**AMENDED 2026-09-21, same session (commit 3): BOB #25's answers DRAINED** (`37367611`), each verified at its document:
+D-75, D-76, D-77, D-79, D-81, D-87, D-88 and D-120 CLOSED BY THE THIRD DOOR (the Framework's front matter, §12 and
+§13.1; `SOURCE-ACCESS.md` item 2). The inbox entry's item 1, a defect in built work verified at the code (`runPrincipalGate`
+guards only the tick and the close; `op=extractpropose` reads a run's status and mode, never its principal), PLACED as
+REC-165 after UI-77; items 2 and 3 PLACED as D-85 after REC-165, D-85 leaving DEBT by the second door. Room for both was
+made by cutting seven rows at the foot of the order to their fields (D-394, D-126, D-260, UI-71, UI-70, REC-150, REC-149),
+each VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. MILESTONES.md narrowed for these ids. 117 open DEBT rows
+remain. The intent layer's trigger is addressed to this lane: schedule its design act when `node tools/status.mjs 12`
+reads the publication ceremony and the accept surface BUILT, or on Bob's word.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#10) -> BOB — **THREE QUESTIONS, ONE EACH, from LED-7 batch S10-1: Framework §12's intent layer (D-75, D-76, D-79, D-81, with D-77's guard), §13's bias layer (D-85, D-87, D-88), and member-driven capture (D-120); none blocks a runnable row**
 
 1. **FRAMEWORK §12's INTENT LAYER — D-75, D-76, D-79, D-81, AND D-77's GUARD.** Designed at concept level in
@@ -17747,9 +17763,23 @@ not-scheduled list corrected for D-89 and D-90. 131 open DEBT rows remain.
    design it now (M1), or state it in `SOURCE-ACCESS.md` as deferred behind the archive fallback, naming the trigger
    that brings it forward?
 
-**open as of 2026-09-21.**
+Sent to BOB by message on 2026-09-21; each of the nine rows carries a dated SENT note in `DEBT.md`. **BOB #25, all three
+answered (`37367611`):** Q1 and Q2 are stated deferrals in the Framework's front matter, with the trigger that schedules
+them, and D-85 narrows to two designed items; Q3 is a stated deferral in `SOURCE-ACCESS.md` item 2; and tracing D-85 found
+a defect in built work, designed in `INVESTIGATIVE-SESSION.md` §11 item 5 rule 1.
 
-Sent to BOB by message on 2026-09-21; each of the nine rows carries a dated SENT note in `DEBT.md`.
+**DISCHARGED 2026-09-21 — SCHEDULER #10 drained BOB #25's answers:** D-75, D-76, D-77, D-79, D-81, D-87, D-88 and D-120
+closed by the third door, each verified at its document and archived; the defect PLACED as REC-165 after UI-77 and D-85
+PLACED after it under its own id.
+**BOB #25, all three answered, each traced at the code (`ae4f42d0`):** Q1, the intent layer's objects are a STATED
+DEFERRAL with its trigger in the Framework's front matter (Incomplete sections, §12), which also corrects the
+focus/problem sentence (Part I is frozen, so not in place): D-75, D-76, D-81 and D-77 leave by the third door; D-79 is
+BUILT for derived findings (REC-6, REC-7) and its assistant half is fenced by `INVESTIGATIVE-SESSION.md` §11 item 5, its
+aggregation and ageing deferred to their producer (third door). Q2, D-85 is carried by the RUN (§3 ruled it) and stays
+open NARROWED to the BOB INBOX's items 2 and 3 (door 2); D-87 and D-88 are deferred with §12's evaluator (third door).
+Q3, D-120 is a STATED DEFERRAL in `SOURCE-ACCESS.md` item 2 with its trigger (third door). Tracing D-85 found a DEFECT in
+built work — a production can name a run its caller does not hold — designed in §11 item 5 and placed FIRST in the
+inbox entry. Nothing keeps this block open past SCHEDULER's drain.
 
 ## CLAIM 2026-09-21 BOB (#24) — BOB-NEXT final: BOB #24 refreshes at ~62% ahead of SCHEDULER #10's group of three
 
@@ -17784,6 +17814,18 @@ no bundle rebuild is owed), `bio-plane/test/pushguard.test.mjs` (kept green uned
 
 **open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**RELEASED 2026-09-21 by CONDUCT #11 at integration.** D-293 WITH M0-98 LANDED in the merge `eecb553c` (onto origin/main
+`d4398c8b`), pushed to `main` in the same landing as this line, under its own FULL gate on that merge (269/269 suites
+green · 16373 assertions passing · run 46781.814148, the two untallied suites `bundle` and `livefire` as on every base;
+coverage `--strict` register exact 1579/1579 · 260/260 · 261/261; UI harness 58/58; plancheck 0 fail) — and RECORDED GREEN
+by its own new record for tree `5ce68571`. RE-RUN BY THE INTEGRATOR on the merged tree, not taken from the report:
+`node bio-plane/test/gates.control.mjs` 96 pass / 0 fail, every arm armed and failing at its declared assertion, closing
+suite 62/0; `node tools/pushguard.mjs --control` all arms pass; both sources hashed identical before and after. Its report
+reached CONDUCT #11 through CONDUCT #10, which is archived (D-398 re-checked at 02:17Z). Branches
+`worktree-agent-aa5a3d09efb0f2f8c-r2` (the landed line), `worktree-agent-aa5a3d09efb0f2f8c` (the superseded claim commit)
+and `d293-backup-0145` (CONDUCT #10's pre-rebase backup) are deleted from the remote after the push is verified. The paths
+this block reserved are FREE; its two DELEGATIONs (five stale gate sentences; the DESIGN GAP, sent to BOB #25) stay OPEN.
+
 ## CLAIM 2026-09-21 M0 (D-293 WITH M0-98, SECOND BLOCK — one more path, found while fitting the budget)
 
 Appended rather than edited into the block above, because this register is APPEND-ONLY. session and authority as above.
@@ -17793,6 +17835,9 @@ heading, on BOB #23's precedent for the same file. Its rule stays in `VERIFICATI
 sentence. MEASURED: `VERIFICATION.md` 24,568 B -> 24,572 B against its 24,576 B budget; `readbudget` 0 failing.
 
 **open as of 2026-09-21** — OPEN with the block above; released with it at integration.
+
+**RELEASED 2026-09-21 by CONDUCT #11 at integration**, with the block above: D-293 WITH M0-98 LANDED in the merge
+`eecb553c`. The paths this block reserved are FREE.
 
 ## DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB, and the lanes owning `kickoffs/SKILL.md`, `SCHEDULER.md` and `CONDUCT.md` — **FIVE SENTENCES THAT DESCRIBE `gates.mjs`'s CLASSES AS DOCS-OR-FULL, WHICH THIS LANDING MAKES FALSE**
 
@@ -17831,3 +17876,25 @@ objects into the object store (not the working tree) and would need the ruling's
 take it — the cost is one temp index per dirty run, and it closes the shape that rowed the item. Reversal costs one branch in
 `gates.mjs`; no data depends on it (a record directory of clean runs stays valid).
 **open as of 2026-09-21** — open until BOB rules; D-293 is built as ruled meanwhile.
+
+## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT readdressed to DIST #4, which takes the 0.71.0 cut)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (line 1, one summary line under it, and the session-state lines only),
+  `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+why: DIST #3 is at 62% and 0.71.0 (D-436's irreversible seed, plus D-434 moving `app.html`, so `civicos` moves) costs ~15%.
+  BOB #24 agreed that the cut goes to a fresh DIST #4, and that the seed does not run in a session crossing 70%; the
+  successor chip's gate reads DIST-NEXT's line 1 for the successor it names, so line 1 now names DIST #4. The fallback
+  if DIST #4 is not up by 00:07: DIST #3 cuts and stops at "deployed, not seeded, not pointed" if over 70% before the seed.
+**released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#25) — SCHEDULER #10's group of three: two stated deferrals (Framework §12/§13.1, SOURCE-ACCESS item 2), D-85 narrowed, and a run-binding defect (INVESTIGATIVE-SESSION §11 item 5)
+
+claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths:
+`docs/architecture/BIO_Content_Framework_v0_10.md` (front matter only: one Status sentence and the Incomplete bullets
+for §12, §13 and §13.1 — Part I's text is frozen and not touched); `docs/development/INVESTIGATIVE-SESSION.md` (§11:
+one ruled paragraph; one Status sentence and one Incomplete bullet); `docs/development/SOURCE-ACCESS.md` (item 2 of the
+2026-07-31 ruling's list; Status sentence, one Incomplete bullet, as-of date); `docs/development/QUEUE.md` (the BOB
+INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER (#10) -> BOB DELEGATION's state
+line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.

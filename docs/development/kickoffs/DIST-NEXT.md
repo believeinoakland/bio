@@ -1,4 +1,6 @@
-# DIST — resume here. Rewritten 2026-09-21 by DIST #3 after cutting, deploying, live-verifying and POINTING 0.69.0 and 0.70.0, two CUT NOWs.
+# DIST — resume here. Written 2026-09-21 by DIST #3 for DIST #4, in the SAME Claude Code account.
+
+**DIST #3 cut, deployed, live-verified and POINTED 0.69.0 and 0.70.0, two CUT NOWs, and hands 0.71.0 to DIST #4.**
 
 Read `CLAUDE.md`, then `kickoffs/DIST.md` IN FULL. Its **WHEN DIST CUTS**, the **`latest` pointer mechanism** and the
 **LESSONS** are the process; this file is only the state, MEASURED 2026-09-21 ~20:40Z. Re-measure before acting on
@@ -102,8 +104,13 @@ the path of `rm`, or the target of `mv`/`cp` — bypass still halts on it. Write
 - **Self-wake:** recurring `44f1ca7f` (`41 */6 * * *`, *"DIST: apply WHEN DIST CUTS in kickoffs/DIST.md"*) and the
   ONE-SHOT renewal `2400b776` at **2026-09-26 09:11 PDT** (lesson 17). The BATCH-bound one-shot `3e2ff52f` was DELETED —
   0.70.0 carried D-158. All session-only, so a successor arms its own.
-- **Context ~59% at this edit** — the refresh line is now **70%** (CLAUDE.md §4, Bob 2026-09-21, raising his 60%).
-  Plus the BATCH-bound one-shot `2dd2743d` above (session-only, like every wake here).
+- **Context 62% at this edit** — the refresh line is **70%** (CLAUDE.md §4, Bob 2026-09-21, raising his 60%). A cut of
+  0.71.0's size costs ~15%, so it goes to a FRESH DIST #4 (BOB #24: the irreversible seed does not run in a session that
+  crosses 70% mid-release). DIST #3 holds the BATCH-bound one-shot `2dd2743d` and DELETES it when DIST #4 confirms it is
+  up; if DIST #4 is not up by 00:07, DIST #3 runs the cut, checks context BEFORE the seed, and stops at
+  "deployed, not seeded, not pointed" if it is over 70% there. DIST #4: arm your own wakes (lesson 17).
+- **0.71.0 also carries D-434** (`b911392f`, a `civicos-ui` recipe fix judged BATCH), and it moves `app.html`: the UI worker
+  `civicos` MOVES with this release (gate step 12: UI harness, build from the tag, deploy, `/build` == app.html's sha).
 - Machine Sparky-Air; disk 4.6 GiB free (98%) at the 0.70.0 gate's end — `df -h` before any bump.
   This worktree is `jovial-mclaren-9af3b6`, ~800 MB of it `node_modules` (real dirs).
 - `.env`: ten keys including `BIO_RELEASE_SEED`; account `20b533579290b9b93168345edd3b7f72` confirmed by USING it.

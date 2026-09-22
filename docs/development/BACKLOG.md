@@ -60,6 +60,26 @@ scope: the member fence and the public header read `op=instancegroup` and show t
 accepts-when: signed out and in, against a plane recording a second slug, both surfaces show it and none renders `Believe in Oakland` or `believeinoakland.org`. How a liar passes it: a CSS-hidden literal, so the arm reads the DOM's text. NEGATIVE CONTROL: restore the `GROUP` literal, and the no-literal arm fails by name.
 added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs UI`).
 
+### REC-165 · queued — **A PRODUCTION CAN NAME A RUN ITS CALLER DOES NOT HOLD.** `op=suggest` resolves `run` for existence alone and `op=extractpropose` checks running and mode, never whose run it is (`store.mjs`); `runPrincipalGate` guards only the tick and the close, so a version is read against another member's lens, bar, skill version and principal (traced by BOB #25; re-read 2026-09-21). — owner RECORD.
+order: directly after UI-77, with the corrections to built work: an attribution the record cannot support, in REC-152's fence, CLAUDE.md §2's class; below REC-163 and UI-77, which every installed instance's public page shows, because this needs a signed-in caller holding another run's id (SCHEDULER #10, 2026-09-21)
+milestone: M9
+interface: I3 — two ops refuse what they accepted; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rule 1 (BOB #25, 2026-09-21).
+depends-on: none — REC-152's gate and stamp are built.
+scope: rule 1: REC-152's stamp of the caller's `principal` on both ops, both apply `runPrincipalGate`, and `suggest` refuses a run that is not running, as `extractpropose` already does.
+accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` on both ops; the caller's closed run is refused on `suggest`; the caller's own running run lands from a session AND from a machine credential that member minted. How a liar passes it: gating one caller kind only, so both arms run. NEGATIVE CONTROL: drop the gate in `suggest`, and the other-principal arm fails by name.
+added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs REC`).
+
+### D-85 · queued — **AN ASSISTANT CAN OPEN A QUESTION OUTSIDE ANY RUN IT HOLDS, AND A RUN KEEPS ONLY THE LENS IT WAS HANDED.** NARROWED by BOB #25 to §11 item 5's rules 2 and 3: no row links an inquiry an `ai` credential creates to a run, and `aiRunOpen` stores the manifest it is handed, so `moved` cannot tell a changed lens from a stale one (re-read 2026-09-21). — owner RECORD.
+order: directly after REC-165, the same fence one act further (BOB #25: *"after 1"*); a gap in the assistant's fence, not a false attribution (SCHEDULER #10, 2026-09-21)
+milestone: M4
+interface: I3 and I5 — a refusal, an instance row and a run field; the integrator mints and classifies the ICs.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rules 2 and 3 (BOB #25, 2026-09-21), with §3 (the run carries the lens).
+depends-on: REC-165 (the same gate).
+scope: rule 2: an `ai` credential's inquiry names a running run whose principal it is; the link is an instance row keyed by the inquiry, cleared by both `purge` arms and never in signed bytes, counted against a declared `surfaces` bound; `op=projection` states its run and lens, `not recorded` for older ones. Rule 3: `aiRunOpen` also stores the plane-computed `statements_sha`, and the run's read tells `moved` from a stale hand.
+accepts-when: a creation outside a run, in another principal's run or past the bound is refused by name; one inside lands with its row and reads the lens and `moved`; a member's is untouched; a stale-handed run reads stale, not `moved`. NEGATIVE CONTROL: drop the run check, and the outside-a-run arm fails by name.
+added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, items 2 and 3; D-85's DEBT row of 2026-07-30; keeps its `D-` id).
+
 ### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 had landed `0ca2c216`, `8e4c30c3` and `fa58ce92`; nothing noticed for hours, and `kickoffs/BOB.md` rule 4 now carries the lesson as prose. — owner M0.
 order: directly after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second, and it would have told BOB #18 at its next push (SCHEDULER #4, 2026-09-21)
 milestone: M0
@@ -633,65 +653,65 @@ scope: the export affordance UI-68 withheld, every rendered page carrying the qu
 accepts-when: an exported copy carries the quartet on every page byte-equal to the plane's; the statement renders at the act and nowhere else. NEGATIVE CONTROL: drop the quartet from one page, and the per-page arm fails. `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE.
 added: 2026-09-19 · SCHEDULER (same entry, item 8).
 
-### REC-149 · queued — **DISCOVERABLE OR HIDDEN (Membership v2 §7 item 7.14), 1 of 4: the OWNER's recorded setting (append-only, latest wins, no record = HIDDEN); `#inSight` answers three levels at the ONE predicate; EXISTENCE only for a discoverable project to a member outside it; the DIRECTORY read; `viewerPredicate` NOT changed.** — owner RECORD.
+### REC-149 · queued — **DISCOVERABLE OR HIDDEN (Membership v2 §7 item 7.14), 1 of 4: the OWNER's recorded setting (append-only, latest wins, no** … (whole text: the cut archive)
 order: Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 (an IC minted with `node tools/mintid.mjs IC`), I5 for the setting's table
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14 (Bob's ruling of 2026-09-18; decided by BOB #16, 2026-09-19).
 depends-on: REC-138 (done; `Store#inSight`) — CHECK AT THE CODE at spawn.
-scope: as item 7.14: at EXISTENCE every act but the request is refused POSITIONALLY with a new code carrying id and name only; every existing project boots HIDDEN.
-accepts-when: through the ops, a hidden project is byte-identical to a nonexistent one at the directory, the request and every act (REC-138's suites green UNEDITED); an uninvited member's record reads, search, backlinks and run reports never show a discoverable project's contents; a predecessor's store boots with every project HIDDEN. How a liar passes it: widening `viewerPredicate` passes the directory arm and leaks contents. NEGATIVE CONTROL: widen it, and a contents arm fails by name. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
+accepts-when: through the ops, a hidden project is byte-identical to a nonexistent one at the directory, the request and every act (REC-138's suites green UNEDITED); an uninvited member's … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 1).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### REC-150 · queued — **DISCOVERABLE OR HIDDEN, 2 of 4: THE REQUEST TO JOIN — ask (one open per member per project, optional comment), withdraw, owner GRANT (writes `invited`) or DECLINE (recorded), visible to the requester, owners and administrators only, LAPSED when the project goes hidden; administrators and the founder answer none.** — owner RECORD.
+### REC-150 · queued — **DISCOVERABLE OR HIDDEN, 2 of 4: THE REQUEST TO JOIN — ask (one open per member per project, optional comment), withdraw** … (whole text: the cut archive)
 order: after REC-149, whose EXISTENCE level it needs (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 (an IC minted with `node tools/mintid.mjs IC`)
-design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14 and §7.4 (a grant is an invitation; the requester joins by the checkbox); C-56's positional check.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14 and §7.4 (a grant is an invitation … (whole text: the cut archive)
 depends-on: REC-149.
-scope: the lifecycle as item 7.14 states it.
-accepts-when: a grant leaves the requester `invited` and NOT `joined`; a lapsed requester reads their own request and nothing else about the project; an administrator's grant is refused. NEGATIVE CONTROL: let a grant write `joined`, and the invited-not-joined arm fails. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
+accepts-when: a grant leaves the requester `invited` and NOT `joined`; a lapsed requester reads their own request and nothing else about the project; an administrator's grant is refused. … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 2).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-150» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### UI-70 · queued — **DISCOVERABLE OR HIDDEN, 3 of 4: the create and fork forms ASK, with neither preselected, and cannot submit without the choice; the project's owner sees and changes the setting (others read-only).** — owner UI.
+### UI-70 · queued — **DISCOVERABLE OR HIDDEN, 3 of 4: the create and fork forms ASK, with neither preselected, and cannot submit without the choice** … (whole text: the cut archive)
 order: after REC-149, and after UI-66 on the same forms (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 consumer (REC-149's IC)
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14, with DEC-69 (forced, at the act).
 depends-on: REC-149; and the create and fork forms as UI-66 leaves them (same forms — one worker at a time).
-scope: as the design says.
-accepts-when: the harness cannot submit a create or fork without the choice, and nothing is preselected; the owner changes the setting and a non-owner sees it read-only. How a liar passes it: a form that submits without the choice and gets HIDDEN from the plane silently, so the harness asserts the submit is impossible. NEGATIVE CONTROL: preselect HIDDEN, and the nothing-preselected arm fails. `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE.
+accepts-when: the harness cannot submit a create or fork without the choice, and nothing is preselected; the owner changes the setting and a non-owner sees it read-only. How a liar passes … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 3).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-70» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### UI-71 · queued — **DISCOVERABLE OR HIDDEN, 4 of 4: the directory; the request button and comment; the owner's queue of open requests with grant and decline; the requester's own requests and their states.** — owner UI.
+### UI-71 · queued — **DISCOVERABLE OR HIDDEN, 4 of 4: the directory; the request button and comment; the owner's queue of open requests with grant** … (whole text: the cut archive)
 order: after REC-149 and REC-150 (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 consumer (REC-149's and REC-150's ICs)
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 item 7.14.
 depends-on: REC-149 and REC-150.
-scope: as the design says, rendering the plane's answers verbatim.
-accepts-when: the harness requests, the owner grants, the requester sees `invited` and joins by the checkbox, all against the real plane; a hidden project never appears in the directory. NEGATIVE CONTROL: render a hidden project from a cached list, and the directory arm fails. `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE.
+accepts-when: the harness requests, the owner grants, the requester sees `invited` and joins by the checkbox, all against the real plane; a hidden project never appears in the directory. … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 4).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-71» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-260 · queued — **A WOKEN RUN IS NOT RE-ENTERED: FL-4's wake has nothing to consume it.** When the daemon completes a capture a run waited on, the plane holds the run's lease, logs that the daemon answered and stamps `run_woken_at`; nothing dispatches the run, because `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`. RULED by BOB #22 (SCHEDULER #5's Q3): an instance may hold ONE organisation-principal `ai` credential and resumes ONLY the runs it opened. — owner RECORD with FLEET, then DIST.
+### D-260 · queued — **A WOKEN RUN IS NOT RE-ENTERED: FL-4's wake has nothing to consume it.** When the daemon completes a capture a run waited on … (whole text: the cut archive)
 order: a feature after the rows Bob's priorities ordered (UI-71), above D-126: FL-4's wake and DS-3's and FL-6's halves are BUILT and inert until this caller exists, and I8 leaves PROVISIONAL when it lands (SCHEDULER #7, 2026-09-21)
 milestone: M9
 interface: I8 (leaves PROVISIONAL); the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260 paragraph; the deploy half, `docs/architecture/BIO_Distribution_v0_1.md` §6's bullet. A member-principal run's non-resumption is the stated limitation there.
+design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260 paragraph; the deploy half … (whole text: the cut archive)
 depends-on: none — FL-4, `instanceClaudeToken` (`src/tokens.mjs`, DS-3 `2de6f25f`) and FL-6's member half are on `main`.
-scope: (1) RECORD with FLEET: FL-4's wake dispatches a woken run to `agent-worker` with the organisation credential ONLY when its stamped principal equals the run's `principal_plane`, and otherwise logs that it did not; the dispatch hands `claude_accounts` its instance level. (2) DIST, after 1: install and update carry that credential as a secret, as `DAEMON_TOKEN` is, never in the record, denylisted by `tokens.mjs` on publication.
-accepts-when: a run the instance credential opened resumes after its capture completes; a member's run is not dispatched and says so. How a liar passes it: dispatching every woken run and leaning on REC-152 to refuse the tick, so the arm asserts the member's run is never DISPATCHED.
+accepts-when: a run the instance credential opened resumes after its capture completes; a member's run is not dispatched and says so. How a liar passes it: dispatching every woken run and … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; BOB #22's ruling, drained this commit; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-260» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### D-126 · queued — **THE `per-item` WEIGHT IS DESIGNED AND UNBUILT, SO A QUEUE SELECTION CANNOT BE HANDLED AS A SET.** `bio-plane/src/affordances.mjs` publishes `refuse` (5), `report` (1) and `single` (14) and no `per-item` (re-measured 2026-09-21), and the three acts a selection would use each take one key. The rest of what D-126 asked for is BUILT: the three classes, the 35-kind registry, the item contract, the handled-scopes. — owner RECORD, then UI.
+### D-126 · queued — **THE `per-item` WEIGHT IS DESIGNED AND UNBUILT, SO A QUEUE SELECTION CANNOT BE HANDLED AS A SET.** … (whole text: the cut archive)
 order: a feature, after the rows Bob's priorities ordered (UI-71 closes his 2026-09-18 ruling), before the M4/M2 product rows because the queue surface is built and UI-55's ARM 4d already watches for it (SCHEDULER #5, 2026-09-21)
 milestone: M4; the surface half M8
 interface: I3 — the weight vocabulary and the acts' set form; the integrator mints and classifies the IC.
-design: `docs/development/NOTIFICATIONS.md` §Applying a handler to a selection: *"each item independently succeeds or is RETAINED WITH A REASON"*, the reasons being named refusals in the plane's own words.
+design: `docs/development/NOTIFICATIONS.md` §Applying a handler to a selection … (whole text: the cut archive)
 depends-on: none.
-scope: ONE row in two halves, BOB #19's decomposition. RECORD publishes `per-item` and lets `op=proposedispose`, `op=taskresolve` and `op=taskforward` take a set, each item succeeding or retained with its reason; then UI applies a handler to a selection and keeps each retained item listed with that reason. **UI-55's ARM 4d (`civicos-ui/test/member-respect.test.mjs`) goes RED the day an act takes a set, BY DESIGN:** correct it with a dated reason, never exempt it. The 26 unbuilt generators stay under their own rows.
-accepts-when: a selection of three where one item drifted leaves exactly that one listed with its reason and clears the other two, through the ops and on the surface. How a liar passes it: all-or-nothing relabelled, so the mixed-outcome arm is required. NEGATIVE CONTROL: refuse the whole set on one failure, and that arm fails by name.
+accepts-when: a selection of three where one item drifted leaves exactly that one listed with its reason and clears the other two, through the ops and on the surface. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-126» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### REC-122 · queued — D-161's LAST ACT: A MEMBER CHOOSES THE ON-POINT PAIR OF A CONNECTION (Bob's 2026-09-14 refinement, §5.4) — the act that turns REC-120's honest UNDETERMINED into a definite answer where a member has established which mention is to the point.
 order: runnable product work (M4, D-161's last act); REC-120 is done; not on BOB #14's list, which governs only rows added after it (SCHEDULER, first order audit, 2026-09-18)
@@ -702,15 +722,15 @@ depends-on: REC-120 (DONE — `determining_pair.selection`, `pair_rule` and C-49
 accepts-when: in M-51's fixture a member choosing the p.9 mention makes a p.9 citation answer REACHED with that grade and a p.2 citation answer outside, through the ops; with no choice made every REC-120 answer is byte-identical; a machine credential cannot choose (refused by name); a choice cannot name a mention the document does not carry; `DEBT.md` D-161 CLOSED; construct-status updated if a claim moves (`node tools/status.mjs --check` then … (whole text: the cut archive)
 cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «REC-122». A worker READS IT before building.
 
-### D-394 · queued — **A MEMBER WHOSE CASE RESTS ON A PASSAGE IS NEVER TOLD A NEWER VERSION OF ITS DOCUMENT EXISTS.** A refreshed capture's content rows relate to the old ones by nothing. Framework §18.1 splits the question: *a newer version exists* is answerable TODAY with certainty (`op=versionchain`); *which passage survives* is a candidate at best. Re-extraction of the SAME bytes is built and correct (REC-82). — owner RECORD.
+### D-394 · queued — **A MEMBER WHOSE CASE RESTS ON A PASSAGE IS NEVER TOLD A NEWER VERSION OF ITS DOCUMENT EXISTS.** A refreshed capture's content … (whole text: the cut archive)
 order: with the M4 product rows, after REC-122: a gap and not an over-claim (§18.1 says so, which is why no instrument catches it), resting on built substrate — the chain (PL-10) and REC-82's carry (SCHEDULER #6, 2026-09-21, LED-7 batch 12)
 milestone: M4
 interface: I3 — a read-time answer the builder names; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 — lazily at READ, never at capture; an answer about a PAIR attached to nothing persistent; extent-match *"a SUFFICIENT signal for a candidate and never as evidence of identity"*, UNDETERMINED where it fails.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1 — lazily at READ, never at capture; an answer … (whole text: the cut archive)
 depends-on: none — `op=versionchain` and REC-82 are built.
-scope: as §18.1 — where a cited content row's document has a newer capture at its address, the read says so with certainty and offers the extent-match candidate or UNDETERMINED; NOTHING is written, so a proposal cannot be mistaken for a re-pointing.
-accepts-when: a leg citing a passage whose address gained a newer capture reads *a newer version exists* with its candidate or UNDETERMINED; leg, content row and edge are byte-identical before and after; a single-version document says nothing. How a liar passes it: persisting the candidate, so an arm asserts no table grew. NEGATIVE CONTROL: drop the chain lookup, and the newer-version arm fails by name.
+accepts-when: a leg citing a passage whose address gained a newer capture reads *a newer version exists* with its candidate or UNDETERMINED; leg, content row and edge are byte-identical … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-394» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### D-162 · queued — **A CONNECTION RUNS ONLY THROUGH A NAMED THING, SO TWO DOCUMENTS ABOUT ONE IDEA CANNOT BE CONNECTED. RULED BY BOB (2026-09-21)** … (whole text: the cut archive)
 order: with the meaning-layer features (M4), after the instrument cluster, as BOB #23 placed it; after D-394, since a NEW construct follows the rows completing built ones (REC-122 finishes D-161; D-394 reads the built chain) (SCHEDULER #9, 2026-09-21)

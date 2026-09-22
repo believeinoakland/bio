@@ -1,6 +1,6 @@
 # Source access: why oaklandca.gov refused us, measured
 
-**Status** · A measurement record and the rulings that followed it, rewritten 2026-07-30 to replace a version whose central claim was wrong, amended 2026-08-07 (DEC-47's access-parity amendment) and closed on its allowlist arm 2026-07-31. The measurements are the reason the document exists and they stand. [BUILT] at plane 0.58.0: the one legible user-agent, now composed in `checks/bio-checks.mjs` as `civicosUserAgent` with `index.mjs:122` delegating to it (PL-4), the resolving contact URL that D-94's nine-rung ladder proved load-bearing, the per-host governor, and — since PL-4/BOB-3 — the member-browser UA delegation this document's body still frames as held in reserve: permitted for publicly available documents, read only from a `capture_requests` row the drain has already judged and never from a request body (`index.mjs:122-129`, `schema.mjs:2245`). [ABSENT]: egress diversity, which is the point of D-120 — a member-driven capture path now exists and its fetches still leave from Cloudflare's shared egress. The 2026-07-31 allowlist ruling is settled and the ask is CLOSED, not held. as of 2026-09-14.
+**Status** · A measurement record and the rulings that followed it, rewritten 2026-07-30 to replace a version whose central claim was wrong, amended 2026-08-07 (DEC-47's access-parity amendment) and closed on its allowlist arm 2026-07-31. The measurements are the reason the document exists and they stand. [BUILT] at plane 0.58.0: the one legible user-agent, now composed in `checks/bio-checks.mjs` as `civicosUserAgent` with `index.mjs:122` delegating to it (PL-4), the resolving contact URL that D-94's nine-rung ladder proved load-bearing, the per-host governor, and — since PL-4/BOB-3 — the member-browser UA delegation this document's body still frames as held in reserve: permitted for publicly available documents, read only from a `capture_requests` row the drain has already judged and never from a request body (`index.mjs:122-129`, `schema.mjs:2245`). [ABSENT]: egress diversity, which is the point of D-120 — a member-driven capture path now exists and its fetches still leave from Cloudflare's shared egress. It is a STATED DEFERRAL behind the archive fallback, with its trigger (item 2 of the 2026-07-31 ruling's list; BOB #25, 2026-09-21). The 2026-07-31 allowlist ruling is settled and the ask is CLOSED, not held. as of 2026-09-21.
 
 **Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It owns one question for the whole system — on what terms a source admits this instance — and it is where the measurements behind D-94, D-100 and D-120 live; `MEASUREMENTS.md` holds the full ladder. Its 2026-07-31 ruling is what promotes `ARCHIVE-FALLBACK.md` to the primary resilience mechanism and what puts member-driven egress beside it, and the doctrine it defends — BIO does not disguise its requests — is `CLAUDE.md`'s stance applied to the wire.
 
@@ -8,7 +8,7 @@
 - §What is reachable now — a 2026-07-30 table, never re-measured. Admission still rests on `CivicOS` not being recognised by Akamai's bot directory, which this document says plainly is not a position; the table is therefore a fact about that day and not a statement about today.
 - §The fix, and why it is not durable — the site it names is stale: the string is no longer composed in `bio-plane/src/userAgent()` but in `checks/bio-checks.mjs`, so the Durable Object's capture-request drain can check the agent it is about to cause to be sent rather than a second copy of it (PL-4) — which is this section's own "two bare tokens that did not agree" defect closed one layer down.
 - §Open — stale as a list of open items: two of its three were answered in the update written the same day, and the third, telling the City, was CLOSED by the ruling at the foot of this document.
-- §the allowlist is NOT a viable mechanism — its "What this promotes" list was stale in both limbs and **item 1 was CORRECTED IN PLACE on 2026-09-14 (M0-27)**: the archive fallback said *"and IDLE. Nothing invokes it (QUEUE `CAP-3`)"*, and CAP-3 has since landed the monitoring consumer that invokes it. **Item 2 keeps this section on the list**: egress diversity is still [ABSENT] (D-120), though the member-driven capture path and its UA delegation now exist — so what is missing is the EGRESS, not the path, and item 2's bare "Not built" does not say which.
+- §the allowlist is NOT a viable mechanism — its "What this promotes" list was stale in both limbs and **item 1 was CORRECTED IN PLACE on 2026-09-14 (M0-27)**: the archive fallback said *"and IDLE. Nothing invokes it (QUEUE `CAP-3`)"*, and CAP-3 has since landed the monitoring consumer that invokes it. **Item 2 keeps this section on the list**: egress diversity is still [ABSENT] (D-120), though the member-driven capture path and its UA delegation now exist — so what is missing is the EGRESS, not the path — which item 2 now says, as a STATED DEFERRAL with its trigger (BOB #25, 2026-09-21).
 
 **Contents**
 - [The measurement](#the-measurement)
@@ -278,6 +278,20 @@ are admitted because Akamai does not recognise `CivicOS`, and that will change.
    mechanism.
 2. **Egress diversity via the member-driven capture path** — many member addresses
    rather than one Cloudflare egress. Not built.
+   **A STATED DEFERRAL, 2026-09-21 (BOB #25, SCHEDULER #10's Q3, D-120), behind item 1.** What exists is
+   the member-driven capture PATH: a capture request filed under a member's session or a run (PL-4),
+   drained by the plane with the member-browser UA for a publicly available document (the DEC-47
+   amendment above). What does not exist is a fetch that leaves from a MEMBER'S OWN NETWORK, and that is
+   D-120. **Trigger:** a monitored public document the record cannot hold because the source refuses the
+   plane's own fetch — a refusal `op=sourcereach` attributes to the source, never one our own governor
+   made (D-104) — AND the archive fallback serves no copy of it. Until one is measured, item 1 is the
+   resilience mechanism and member egress buys nothing it does not. **The design act, when triggered,
+   answers three questions and brings two of them to Bob:** how a member's device makes the fetch and hands
+   the bytes over; what a hop attests when the plane did not make the fetch — the member attests it, and
+   what grade such bytes may reach is doctrine; and what a member's own address, presented to a body we
+   expect to view us as hostile, costs that member — an effect on people outside the project. A member's
+   firsthand OBSERVATION (`op=testify`, `MEMBER-KNOWLEDGE-DESIGN.md` §2–§4) is a different construct and
+   settles none of the three.
 
 **What does NOT change: BIO does not disguise its requests.** That position stands and
 is not weakened by expecting hostility. A system whose product is the trustworthiness
