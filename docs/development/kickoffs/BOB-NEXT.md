@@ -1,61 +1,56 @@
-# BOB — resume here. Written 2026-09-22 by BOB #26 for BOB #27, in the SAME Claude Code account.
+# BOB — resume here. Written 2026-09-22 by BOB #27 for BOB #28, in this account or as the first BOB of the NEW one.
 
-Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this.
-**Everything below is a POINTER measured at ~14:55Z 2026-09-22; re-measure before resting anything on it.** BOB #26
-refreshed at ~66%, at the boundary where no further design act fit before the 70% line (Bob, 2026-09-22: *the line is
-70%, not 60% — refresh less, work more*).
+Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this. **If you open
+under Bob's second account or in a cloud session, read `kickoffs/NEW-MACHINE.md` §0 FIRST**: it names what your
+environment may lack and what to measure before resting any rule on it. Written EARLY, at ~15:45Z 2026-09-22, so that an
+abrupt switch finds a current handoff; everything below is a POINTER measured then — re-measure before acting on a line.
 
 ## 0. YOUR FIRST ACTS
 
-1. **Archive BOB #26** (`local_3e73133b-d42a-4763-849a-f67a40d15686`) under D-398's three conditions, re-checked AT THE
-   MOMENT YOU ACT, after confirming by message to "BOB #26" that its OWN `CronList` is empty (never by ids). Its worktree
-   `.claude/worktrees/fervent-curran-99f77b` is app-made; if the archive leaves it (it holds `bio-plane/node_modules`,
-   ~210 MiB), `git worktree remove` it by that literal path, disk measured before and after.
-2. Arm your self-wake and its 5-day renewal WITH THE SELF-AUDIT IN THE PROMPT (rule 12(a)), stating 70%.
-3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` per lane plus the weekly figure; sweep finished
-   `conduct-heartbeat` runs with `list_task_runs` and archive the `succeeded` ones by id.
-4. Chips now go through `node tools/occupancy.mjs` (`BOB.md` rule 1, since `84dd441f`): file on ADMIT only.
+- **In THIS account (the Sparky-Air desktop):** archive BOB #27 (`local_f129be68-8170-4989-a79d-f069d4b7bb2f`) under
+  D-398's three conditions re-checked AT THE MOMENT YOU ACT, after confirming by message to "BOB #27" that its OWN
+  `CronList` is empty (never by ids). Its worktree `.claude/worktrees/bob-27` was made by `git worktree add`, not the app,
+  so remove it by that literal path, disk measured before and after. Then `BOB.md`'s opening, 70% line, chips on ADMIT.
+- **Under the NEW account or in the cloud:** `NEW-MACHINE.md` §0 and §7's block are your first acts. Confirm THIS account
+  is stopped (`origin/main` not moving, and Bob's word) before any lane act.
 
-## 1. THE ESTATE, measured ~14:55Z
+## 1. THE ESTATE, measured ~15:10Z
 
-- **Live lanes:** CONDUCT #12 (54%; REC-163's and M0-109's workers running), SCHEDULER #12 (60%; up ~13:30Z), DIST #4
-  (61%; a 0.72.0 BATCH owed no earlier than 2026-09-23 04:00Z), FLEET #3 (67%; asks for FLEET #4 at 70%).
-- **Weekly all models 80%** at ~14:54Z (64% at 02:21Z, 73% at 12:51Z, 76% at 14:02Z, 79% at 14:48Z), resetting
-  2026-09-26 11:00Z. Reported to Bob; do not project it — report it and let him judge the pace.
-- Disk ~5.8 GiB free. The machine (8 GiB, ~5.4 of 6 GiB swap in use) stays the ceiling until TREE-SHARING change 3.
+- **Live lanes:** CONDUCT #12 (58%; batch 3 = REC-163 + M0-109; M0-99's worker live), SCHEDULER #12 (60%), DIST #4 (61%;
+  a 0.72.0 BATCH owed no earlier than 2026-09-23 04:00Z), FLEET #3 (67%; writing FLEET-NEXT for a cloud successor).
+- **Weekly all models 80%** at 15:05Z (5-hour 39%), resetting 2026-09-26 11:00Z. Reported, not projected.
+- Disk 4.3 GiB free after BOB #26's worktree was removed (+292,964 KiB).
 
-## 2. WHAT BOB #26 DID — on `main`, each verified from the remote
+## 2. WHAT BOB #27 DID — on `main`, verified from the remote
 
-- `7c967f09` SCHEDULER #11's group of four: D-152 (the OCR region at the leg is a CAP, never a refusal; Framework §14.4)
-  and D-164 (Bob's reopening condition met; Framework §18) closed in fact; D-125 (a member's PERSONAL mute admits FINDING
-  kinds; `NOTIFICATIONS.md`) and D-179 (one capture, one home — the original's; Intake Doctrine §8) ruled and rowed.
-- `0ce7447b` **Bob's D-148 and D-149**: a fee quote is EVIDENCE; a records request names EVERY law that governs the AGENCY
-  asked, by citation (`BIO_Case_Making_v0_1.md` §2). Bob was told once that federal FOIA covers federal agencies only;
-  he did not object. SCHEDULER #12 holds that entry's drain until M0-109 (a `ledger.test` floor) lands.
-- `84dd441f` D-278 ruled per group (`INTERFACES.md` I3, PROVISIONAL; group (1) was already coded by REC-79); M0-81
-  answered (`BOB.md` rule 1 names `tools/occupancy.mjs`; a live session below the chip's number is its predecessor); the
-  REC-157, M0-81 and SCHEDULER (#12) DELEGATIONs discharged. SCHEDULER #12's two ordering questions DECIDED by message
-  (keep the 150 KiB backlog budget; over-claim corrections stay ahead of M8-M10) and recorded by it.
-- THIS LANDING: **BOB'S RULING — *"Yes to all 3 recommendations"*** — designed in `docs/development/TREE-SHARING.md`:
-  the message board leaves `main` for a `coord` branch, one lane lands on `main` in batches, the gates run on GitHub's
-  machines. It also SETTLED *"DECIDED.md leaving the committed tree"*: it leaves `main`. Three items in the BOB INBOX.
+- **Bob, ~15:06Z, in this lane's conversation:** *"Make sure that the process changes being made to improve productivity
+  are fully recorded, as there'll be a transition at some point today that will involve both to cloud-based CC and to
+  using the second Max 20X account of mine."* Recorded in one landing: `TREE-SHARING.md` §4 (what the cloud changes in
+  each change: change 1 gains weight, change 2's refusal has no home until measured, change 3 loses its Mac premise) and
+  §5 (the whole program by pointer); `NEW-MACHINE.md` §0 (before the stand-down; what a cloud session starts without),
+  §7 (the paste block for the first BOB there) and §9.2; the account memory carried whole into
+  `docs/archive/account-memory-2026-09-22.md`. Every lane told to push what exists only on this Mac and to write its
+  handoff for a no-memory successor: SCHEDULER pushed its held drain as a patch; DIST and FLEET hold nothing local-only.
+- **Decided at the design:** M0-99 lands as placed (`DECIDED.md` untracked on every branch; TREE-SHARING §1); a `coord`
+  write is an INTENT re-applied to the fresh tip, anchored to a block; so M0-101 is superseded and M0-100 narrows to
+  `MEASUREMENTS.md` and `INTERFACE-CHANGES.md` (SCHEDULER #12 places both).
+- BOB #26's DISCHARGED line moved into the SCHEDULER (#12) DELEGATION it closes (M0-100's receipt). FLEET #3's report
+  that I10's five exports were never confirmed was checked and withdrawn: `b6a14392` landed it on 2026-09-21.
 
 ## 3. OWED — in this order
 
-1. **TREE-SHARING is the estate's biggest lever and it is yours to steer:** answer the builders' design questions at the
-   code, fold each answer into `TREE-SHARING.md`, and bring Bob the GitHub Actions enablement (and any spending limit)
-   ONCE, when M0 has the three figures §3 names. Correct `CLAUDE.md` and the kickoffs as each change lands (the builder's
-   landing does it; check that it did).
-2. **With Bob, unanswered — do not re-ask:** Q3 (a case resting on a NO-PROJECT conclusion), D-53 (credibility).
+1. **The move.** When Bob orders the stand-down, the BOB of the day runs `NEW-MACHINE.md` §0's list and gives Bob §7's
+   block; the first BOB in the new environment measures §0's list and records the answers there.
+2. **With Bob — asked ONCE by BOB #27, ~15:50Z; do not re-ask:** which secrets may live in a cloud environment. The
+   recommendation given: the environment every lane and worker uses holds none (no code of theirs reads one); DIST's cut
+   stays where the release seed is, or uses an environment of its own. His answer, if given, goes into `NEW-MACHINE.md` §0.
+3. **TREE-SHARING is yours to steer:** answer the builders at the code and fold each answer in; Bob's GitHub Actions acts
+   come to him once, with §3's figures, now including a cloud-session column (§4).
+4. **REC-163's design gap:** Publication §7 point 1 rules the group slug public and is silent on the rest of
+   `op=instancegroup`'s row; CONDUCT sends the block once batch 3 is on `main`. Rule it at the code, in Publication §7.
+5. **With Bob, unanswered — do not re-ask:** Q3 (a case resting on a NO-PROJECT conclusion), D-53 (credibility).
    **Carried:** where a member's or project's Claude key would live, MK-7's provisionals, M0-85.
-3. Anything a lane routes here by message or DELEGATION; `owed.mjs BOB` lists D-148 and D-149 until SCHEDULER archives
-   them (ruled; nothing is owed on them).
 
-## 4. HOW BOB #26 WAS WRONG — data points (rule 12(c))
+## 4. HOW BOB #27 WAS WRONG — data points (rule 12(c))
 
-- **Probed a tool with `--help`:** `gates.mjs` has no help flag, so it started a real gate, with its output through a
-  pipe. Read a tool's usage from its header, never by probing flags.
-- **Took a carried row's re-measure at face value:** SCHEDULER #12 wrote that D-278's five groups all stood; the code
-  showed group (1) coded since 2026-08-09. A re-measure in a row is a claim like any other.
-- **One docs landing cost six gate runs** because `main` moved five times under it — the waste that TREE-SHARING now
-  answers. Until it lands, push the moment a gate is green: fetch, compare the base, push the branch, push `main` bare.
+- `echo ===` in this zsh fails as `== not found` (the `=cmd` expansion): quote any string that starts with `=`.
