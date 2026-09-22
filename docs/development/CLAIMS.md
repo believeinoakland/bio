@@ -17546,6 +17546,8 @@ paths, BY SITE:
   - `bio-plane/test/nc-m034.mjs` — ONLY an arm this landing moves, corrected with a dated reason, never exempted.
   - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` only, moved from the instrument's print.
   - `docs/development/MEASUREMENTS.md` (one appended section), `docs/DECIDED.md` (GENERATED, regenerated LAST), this block.
+  - `docs/development/DEBT.md` — ONE appended row, D-441 (minted by `mintid`), the class sweep's residue: rulings whose
+    marker word opens a line in title case. Added to this block at the build rather than taken silently.
 **NOT CLAIMED:** `tools/pushguard.mjs` and `tools/gates.mjs` (D-293's live worker), `tools/plancheck.mjs`,
 `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `docs/development/DECISIONS.md` (read, never written),
 `bio-plane/src/**` (nothing under `src/` moves, so no bundle rebuild is owed), `newgroup/**`, `release/**`.
