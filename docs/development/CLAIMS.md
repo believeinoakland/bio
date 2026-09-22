@@ -17757,3 +17757,77 @@ claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`
 `docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~02:05Z 2026-09-22), `docs/DECIDED.md`
 (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-21 BOB #24** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-21 M0 (D-293 WITH M0-98 — the gate records its verdict by TREE, the push guard refuses a RED record, and a TARGETED class plus `--since`)
+
+session: WORKER spawned 2026-09-21 ~23:30Z by CONDUCT #10 for D-293 with M0-98 (one file set, one suite, one gate), worktree
+`.claude/worktrees/agent-aa5a3d09efb0f2f8c`, branch `worktree-agent-aa5a3d09efb0f2f8c`, from `origin/main` @ `a4630aa1`.
+authority: `QUEUE.md` `### D-293 · running`; `BACKLOG.md` `### M0-98` (it read `queued`, not `blocked`, on `a4630aa1`); design
+`VERIFICATION.md` (the push-guard section), BOB #22's D-293 entry and BOB #23's entry in `BOB-INBOX-drained.md`, and
+`ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1.
+paths, BY SITE:
+  - `tools/gates.mjs` — the verdict record (written only for a CLEAN tree, keyed by the tree), the TARGETED class, `--since`,
+    and the header's reach statements. Its existing NEGATIVE CONTROL (src + docs reads FULL, docs alone DOCS) is kept true.
+  - `tools/pushguard.mjs` — the record's ONE module (path, key, reader, writer, effective verdict) and the refusal of a push
+    whose tip tree carries a RED record, in `run()`. The pre-push SHIM is NOT changed and `HOOK_VERSION` stays 2: the shim's
+    behaviour is untouched, so no hook in the shared common dir is rewritten by this landing.
+  - `bio-plane/test/gates.test.mjs` (NEW, the one suite) and `bio-plane/test/gates.control.mjs` (NEW, its driver).
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, moved to the figures this item's own green `--strict` run PRINTS.
+  - `docs/development/VERIFICATION.md` — the push-guard section only: the refusal's one line, paid for by tightening that
+    section's own prose (the file is at its reading budget: 24,568 of 24,576 B measured at spawn).
+  - `.gitignore` — one pen line, `.d293-harness/`, named for the item like every pen above it.
+  - `docs/development/MEASUREMENTS.md` (appended, if a figure is quoted), `docs/DECIDED.md` (GENERATED, regenerated LAST), and
+    this block with its DELEGATIONS.
+**NOT CLAIMED:** `CLAUDE.md` §6 and the kickoffs whose gate sentences this landing makes stale (DELEGATED below, each with its
+replacement), `docs/development/QUEUE.md`, `docs/development/BACKLOG.md`, `bio-plane/src/**` (nothing under `src/` is edited, so
+no bundle rebuild is owed), `bio-plane/test/pushguard.test.mjs` (kept green unedited), `newgroup/**`, `release/**`.
+
+**open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-21 M0 (D-293 WITH M0-98, SECOND BLOCK — one more path, found while fitting the budget)
+
+Appended rather than edited into the block above, because this register is APPEND-ONLY. session and authority as above.
+paths: `docs/archive/VERIFICATION-2026-09-19.md` — APPENDED ONLY: the one subsection this landing folds out of
+`VERIFICATION.md`'s push-guard section ("THE ACCEPTANCE INSTRUMENT WAS WRONG FIRST…", two lines), verbatim, under a dated
+heading, on BOB #23's precedent for the same file. Its rule stays in `VERIFICATION.md`, folded into the D-406 paragraph as one
+sentence. MEASURED: `VERIFICATION.md` 24,568 B -> 24,572 B against its 24,576 B budget; `readbudget` 0 failing.
+
+**open as of 2026-09-21** — OPEN with the block above; released with it at integration.
+
+## DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB, and the lanes owning `kickoffs/SKILL.md`, `SCHEDULER.md` and `CONDUCT.md` — **FIVE SENTENCES THAT DESCRIBE `gates.mjs`'s CLASSES AS DOCS-OR-FULL, WHICH THIS LANDING MAKES FALSE**
+
+When D-293 with M0-98 lands, `tools/gates.mjs` prints FOUR classes — DOCS (all prose under `docs/`), FULL (any path in the
+plane, the plane's shipped build or what it imports, `civicos-ui/`, a fleet member, `newgroup/` or `release/`, or a
+package/config file or root dotfile), TARGETED (any other diff: the suites that import, spawn or mention a changed path,
+`coverage --strict` when a test file changed, and plancheck), and SINCE (`--since [<rev>]`, after a rebase: the units reading
+a path from BOTH sides, plus plancheck, over a GREEN record of `<rev>`'s tree). A worker does not edit these files; each is
+named with a candidate, and its owner decides the words:
+1. **BOB — `CLAUDE.md` §6**, *"any other path runs the full set (battery, `scripts/coverage.mjs --strict`, the UI harness,
+   `plancheck`)"*: now true only of the five FULL categories. Candidate, inside the file's 30 B of headroom only if paid for:
+   *"a plane, UI, fleet, installer or package path runs all four gates; any other runs the suites that name it (TARGETED);
+   `--since` re-checks a rebase"*.
+2. **`kickoffs/SKILL.md` §Verification**, *"ONE non-docs path and it runs the full four"*: a tools or test path now runs
+   TARGETED.
+3. **`kickoffs/SCHEDULER.md` (Gates)**, *"any `bio-plane/test` edit makes it FULL (~13 min)"*: now TARGETED — the suites
+   reading that file, the suites walking `bio-plane/test/`, and `coverage --strict`.
+4. **`kickoffs/CONDUCT.md`**, *"Name the DELTA and classify it … docs-only → re-run what prose moves; any code path → the
+   full set"*: `gates.mjs --since <measured commit>` now does this mechanically once the measured tree's gate RECORDED
+   GREEN (a clean tree), and narrower — a plane merge rebased over docs re-runs the readers of those docs (measured
+   2026-09-21 at M-90: 14 units over a design-doc move, 24 over a `QUEUE.md`, `MEASUREMENTS.md` or `CLAIMS.md` move),
+   not the 41 doc-facing suites; and it RE-CHECKS any commit made after the measured gate rather than trusting it.
+5. **`kickoffs/NEW-MACHINE.md`**, *"`node tools/gates.mjs` # the full battery; ~5 min"*: stale before this landing too; the
+   tool runs the class the diff measures.
+**open as of 2026-09-21** — open until each owner has corrected its sentence or said why not; nothing here blocks a runnable row.
+
+## DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB — **DESIGN GAP: THE RECORD BINDS ONLY A CLEAN TREE, AS BOB #22 SET IT, SO THE INCIDENT THAT OPENED D-293 IS STILL UNGUARDED**
+
+BOB #22's ruling: `gates.mjs` records its verdict *"only when that tree was CLEAN"*. Built exactly so. The 2026-08-10 incident
+that opened D-293 (the closed debt row, `DEBT-closed.md`) was a gate run on a DIRTY tree — `gates.mjs … | tail -3`, then
+`git add -A && git commit && git push` — so the tree it measured was the tree the commit published, and a clean-only record
+never sees it: that sequence pushes unrefused today, exactly as it did then (the push guard's index-staleness arm now catches
+the particular defect it carried, not the shape). **The fix, if Bob wants it:** key a dirty run by the tree `git add -A` would
+write — `GIT_INDEX_FILE=<temp> git add -A && git write-tree` — which is byte-for-byte the tree such a commit pushes; it writes
+objects into the object store (not the working tree) and would need the ruling's "only when CLEAN" relaxed. **Recommendation:**
+take it — the cost is one temp index per dirty run, and it closes the shape that rowed the item. Reversal costs one branch in
+`gates.mjs`; no data depends on it (a record directory of clean runs stays valid).
+**open as of 2026-09-21** — open until BOB rules; D-293 is built as ruled meanwhile.

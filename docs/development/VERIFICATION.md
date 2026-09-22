@@ -347,7 +347,9 @@ instrument whether it can be skipped without trace**; REQUIRED and merely EXISTI
 `docs/DECIDED.md` is generated from every ruling, so any prose edit stales it (`plancheck` arm 2b fails).
 A rebase can stale it under a correct index, after every gate has run, so the guard is a `pre-push` hook
 (M0-56): **it runs `decided.mjs --check` and REFUSES a stale push; it never regenerates** (a gate that
-edits its subject cannot say whether the tree was correct). When refused: regenerate, commit, push. `plancheck` installs the hook on every run; it writes only `.git/hooks/pre-push` (untracked).
+edits its subject cannot say whether the tree was correct). When refused: regenerate, commit, push. `plancheck` installs it every run, writing only `.git/hooks/pre-push` (untracked). **It also
+refuses a push whose tip TREE `gates.mjs` recorded RED** (D-293): a CLEAN run's verdict, keyed by the
+tree, in `<git-common-dir>/bio-gates/`; no record, no word.
 
 ### THE LIMIT, STATED RATHER THAN IMPLIED CLOSED
 
@@ -360,9 +362,5 @@ gets a verdict about the TREE and is told so; a ref whose sha is not HEAD is nam
 it landed** — and a missing guard looks exactly like a passing one. The hook tries the worktree's
 `tools/pushguard.mjs`, then `<git-common-dir>/bio-pushguard.mjs`. Every write to shared machinery is an
 atomic rename; `install()` refuses to downgrade. Remaining limits: a clone covered only after some worktree
-has run `plancheck`; a cache that can lag the tracked script.
-
-### THE ACCEPTANCE INSTRUMENT WAS WRONG FIRST, AND THAT IS THE MORE USEFUL FINDING
-
-**A coverage claim about a shared mechanism must drive the artifact that is installed, never a model of
-it** — execute the installed hook with cwd set to each worktree and read what it says.
+has run `plancheck`; a cache that can lag the tracked script. **A claim about a shared mechanism drives
+the installed artifact, never a model of it** (run the hook in each worktree).

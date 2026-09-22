@@ -18120,3 +18120,41 @@ updates `group_id` after a creation — but every one of them still had to hand 
 NOT NULL before the conflict arm; the literal was the value it was handed. The three stamps and the setup page's composer
 were the live defect: they put the literal into the BYTES. The arm that no behavioural assertion can see is the most
 instructive one — a literal restored at a call site (b) is healed by the creation stamp, so only the source census fails.
+
+## M-90 · 2026-09-21 · D-293 with M0-98 — what the gate now selects, what `--since` re-runs, and the record and refusal driven end to end
+
+**INSTRUMENTS:** `node tools/gates.mjs --explain` over a scratch LOCAL CLONE of this branch inside its gitignored pen (the
+clone's OWN `origin/main` pinned to `313f00ca` plus the branch's tools, so each scenario's diff is exactly the path(s)
+named; the shared `origin/main` never touched); `.d293-harness/since-scenario.mjs` (a real commit on each side, the
+clone's `origin/main` moved to the other side as a fetch moves it, a real `git rebase`, then `gates.mjs --since ORIG_HEAD
+--explain` over a GREEN record written through `pushguard.mjs`'s own `appendRun`); `bio-plane/test/gates.test.mjs` and
+`bio-plane/test/gates.control.mjs`; the full gate on this branch's committed tree `0b0e62a4`; the battery over the 124
+suites that tree could REACH, run on a pristine `313f00ca` in the scratch clone. Read 2026-09-21 by the D-293/M0-98
+worker. EVERY SELECTION FIGURE BELOW IS THE FINAL RULE'S (`50b98dba`: imported files read as code, comments blanked; the
+other side's prose bounded by DOCS); the figures the refinements replaced are kept where they are the reason.
+
+| what | measured |
+| --- | --- |
+| DOCS before this landing, `docs/development/QUEUE.md` alone (at `a4630aa1`) | 39 suites DERIVED doc-facing; the battery RAN 41 — stem filters over-matched `mint-ledger` and `shadowed-refusals`; full file names run 40 (`mint-ledger.test.mjs` still contains `ledger.test.mjs`) |
+| TARGETED — `tools/gates.mjs` + `tools/pushguard.mjs` (330 units at `313f00ca`, as are all rows below) | 14 (FULL: 268 suites + coverage + the UI harness) |
+| TARGETED — `tools/retirable.mjs` alone; `tools/bundle-docprofile.mjs` alone | 14; 14 — the tool's own suite and the suites WALKING `tools/` in code (`check-firing`, the planning suites through `attribution`/`mintid`, …); no coverage (it reads nothing under `tools/`) |
+| TARGETED — `tools/retirable.mjs` + `bio-plane/test/retirable.test.mjs` (M0-83's shape) | 83, `coverage --strict` among them; 258 under the first draft, whose WALK rule took any `join(REPO, "bio-plane", …)` for a walk |
+| TARGETED — the same plus a `MEASUREMENTS.md` entry (a worker's usual landing) | 130 — the doc-facing set joins, as it must for unmeasured prose |
+| TARGETED — `bio-plane/scripts/control-register.mjs`; `bio-plane/scripts/battery.mjs` | 59; 75 (322 while imported helpers were read with their comments: `sandbox.mjs` cites the battery) |
+| TARGETED — `bio-plane/test/sandbox.mjs`; `CLAUDE.md`; `tools/decided.mjs`; `docs/architecture/construct-status.json` | 268 (every suite imports it); 98; 55; 48 |
+| FULL — `bio-plane/src/store.mjs` + `tools/retirable.mjs`; `docprofile/registry.mjs` | FULL (the plane); FULL (code the plane imports, DERIVED from `src/index.mjs`'s import) |
+| `--since`, a tools change rebased over one docs commit | 10 units — the planning suites read both `tools/` (walks) and `docs/` (through `plancheck`/`decided`) |
+| `--since`, a PLANE change gated FULL, rebased over one docs commit | 24 over `QUEUE.md`, `MEASUREMENTS.md` or `CLAIMS.md` · 14 over a design doc — against the 41 doc-facing suites re-run today; before the DOCS bound on the other side's prose: 55 over `QUEUE.md`, 79 over `MEASUREMENTS.md` |
+| `--since`, the other side NOT on `origin/main` (rebased onto a local ref) | its paths read as UNEXPLAINED and re-run as TARGETED: 47 instead of 10 — over-selection, the safe direction |
+| `--since`, a commit added on top of a GREEN tree, no rebase (the first `--since` re-ran NOTHING of it) | its readers re-run as TARGETED would; this branch's own final re-check over `0b0e62a4`: 147 units for its 6 post-gate paths (`tools/gates.mjs`, the suite, its control, `coverage.mjs`, `CLAIMS.md`, `MEASUREMENTS.md`) |
+| `--explain` wall clock, the widest scenario | 0.64 s |
+| `gates.test.mjs` | 62 pass / 0 fail · ~16 s |
+| `gates.control.mjs` | 13 arms plus a baseline, ALL AS DECLARED · 96 pass / 0 fail · 229 s · every restore byte-identical (sha256 + `cmp` + size); an earlier run's D-331 preflight REFUSED TO ARM anything over one stale anchor, as designed |
+| full gate, committed tree `0b0e62a4` (tree `72ae46df`), class FULL | **269/269 suites green · 16,382 assertions passing** · EXCLUDES 2 untallied (`bundle`, `livefire`) · 682.0 s · run `84840.31e823` · provenance 272 of 272 in the commit · `coverage --strict` exit 0 (register 1576/1576) · UI harness `all harnesses green` (58 suites) · `plancheck --local` 0 fail · **RECORDED GREEN** under the common dir's `bio-gates/` |
+| per-suite attribution, the 124 suites `0b0e62a4` could reach, pristine `313f00ca` vs `0b0e62a4` | 122 IDENTICAL · `hygiene` 927 → 929 (its per-suite rules over the new suite) · `mintid` 112 + 1 FAIL → 113 pass: the FAIL is the INSTRUMENT's — the base ran in a separate clone whose common dir holds no id ledger, so "the REAL ledger's filesystem honours the exclusive create" cannot hold there · plus `gates.test.mjs` 57 (new; 62 at the final tree) |
+
+**WHAT IT SAYS.** A tools-only change now runs ~5% of the battery, and what it drops neither imports, spawns, names nor
+walks what changed. `--since` turns CONDUCT's re-merge over a docs move from the 41 doc-facing suites into the 14–24 that
+read the moved prose, and it RE-CHECKS, rather than trusts, anything the other side does not explain. Two refinements
+were forced by measuring this landing itself — prose in shared helpers read as reads, and an unsound first `--since` — and
+each carries a control arm.
