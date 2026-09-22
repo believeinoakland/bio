@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1405 rulings across 102 documents.
+1406 rulings across 102 documents.
 
 ## DEC-
 
@@ -399,7 +399,7 @@ authority is the file named, never this one.
 - **D-117** — 2 · STALE RECORD CORRECTED BY THIS SWEEP (already pushed, batch 1) `VERIFICATION.md`'s floor table (0/42 → measured 105/105 suites declaring negative controls) · D-117 resolved (coverage.mjs gates the fleet under `--strict`) · D-213's close  
   `docs/archive/IS-SWEEP-2026-08-07.md:138`
 - **D-118** — RULED (D-118, DEC-42) | | version authority; signing and namespaces; byte-verification; the rollout wait; the account pin | BUILT and asserted (D-106, D-108, `deploy.mjs`, the wizard suite) | | the installer: OAuth, plan probe, buckets, plane and fleet uploaded and verified, `bindings: []` | BUILT and verified…  
-  `docs/architecture/BIO_Distribution_v0_1.md:108`
+  `docs/architecture/BIO_Distribution_v0_1.md:118`
 - **D-118** · 2026-07-31 — Workers Paid is an optimisation and never a requirement (RULED), and the sovereign installer puts instances into other groups' accounts, most of which will be Free.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:75`
 - **D-118** — Workers Paid is an optimisation and never a requirement (RULED), and the installer puts instances into other groups' accounts, most of them Free.  
@@ -589,7 +589,7 @@ authority is the file named, never this one.
 - **D-260** · 2026-09-21 — §6 — D-260 is RULED (BOB #22, 2026-09-21; `BIO_Assistant_and_AI_Roles_v0_1.md` §6): an instance may hold ONE organisation-principal `ai` credential as a deploy secret, and it resumes only the runs that credential opened.  
   `docs/architecture/BIO_Distribution_v0_1.md:12`
 - **D-260** · 2026-09-21 — RULED 2026-09-21 (D-260; the assistant's §6), NOT BUILT: the deploy carries no such secret yet | | WARC/Memento interchange; capture-byte custody at scale | M6's absorbed debt (D-99; the R2 growth question) — not designed | | the front page a group sees; the wizard saying what an absent member costs | built as…  
-  `docs/architecture/BIO_Distribution_v0_1.md:115`
+  `docs/architecture/BIO_Distribution_v0_1.md:125`
 - **D-260** · 2026-09-21 — 2026-09-21 · BOB #22 · D-260 RULED — AN INSTANCE MAY HOLD ONE ORGANISATION-PRINCIPAL `ai` CREDENTIAL AND RESUMES ONLY THE RUNS IT OPENED (SCHEDULER (#5)'s Q3).** Design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260 paragraph (this commit); the deploy half is `BIO_Distribution_v0_1.md` §6's…  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1277`
 - **D-260** — RULED by BOB #22 (SCHEDULER #5's Q3): an instance may hold ONE organisation-principal `ai` credential and resumes ONLY the runs it opened. — owner RECORD with FLEET, then DIST.  
@@ -2487,6 +2487,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:17462`
 - **2026-09-21** — AMENDED 2026-09-21, same session (commit 2): LED-7 batch S10-2**, every row read at the code on `18d50de5`.  
   `docs/development/CLAIMS.md:17722`
+- Item 3's route, DECIDED by DIST #3, is REFINED: `op=instancegroup` answers admin, member and probe only (`index.mjs`, its OPS row) and an update holds no instance credential, so `newgroup` tells from the version it reads before the upload, conditionally when that is unknown, and never seeds or reads.  
+  `docs/development/CLAIMS.md:17922`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

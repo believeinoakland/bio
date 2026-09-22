@@ -51,6 +51,9 @@ const edit = (file, needle, replacement) => {
    exactly one of the two. */
 const FIRST_PASS = "    addColumns();\n\n    /* REC-104: `content.chain_kind`";
 const SECOND_PASS = "    /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */\n    addColumns();";
+/* D-436's first-boot witness (DIST #4, 2026-09-22): the ONE line that decides whether this boot is the
+   store's birth, and so whether INSTANCE_NAME is recorded as its producing group. */
+const FIRST_BOOT = "    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;";
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes arms-working from arms-broken",
@@ -76,6 +79,17 @@ const ARMS = {
       + "      const h = [...this.sql.exec(`PRAGMA table_info(${tb})`)].map((r) => r.name);\n"
       + "      if (h.length && !h.includes(col)) this.sql.exec(`ALTER TABLE ${tb} ADD COLUMN ${col} ${d}`);\n"
       + "    }\n\n    /* REC-104: `content.chain_kind`") },
+
+  firstbootalways: { files: [STORE],
+    label: "(E) D-436's DECISION (b) broken: the first-boot witness forced TRUE, so a store a released plane "
+         + "wrote records the bound INSTANCE_NAME at the current plane's boot — the worker name, where a group's "
+         + "slug belongs, on a record the seed can then never correct",
+    apply: () => edit(STORE, FIRST_BOOT, "    const firstBoot = true;") },
+
+  firstbootnever: { files: [STORE],
+    label: "(F) D-436's DECISION (a) broken: the first-boot witness forced FALSE, so a store BORN on the current "
+         + "plane records nothing — the positive half, which keeps (E)'s absence from passing for free",
+    apply: () => edit(STORE, FIRST_BOOT, "    const firstBoot = false;") },
 };
 
 const want = process.argv[2];
@@ -146,7 +160,7 @@ for (const name of order) {
 }
 
 console.log("\n=== SUMMARY ===");
-for (const r of results) console.log(`  ${r.arm.padEnd(13)} ${r.tally}   (${r.failed} named failure(s); engine: ${r.named.join(", ") || "none"})`);
+for (const r of results) console.log(`  ${r.arm.padEnd(15)} ${r.tally}   (${r.failed} named failure(s); engine: ${r.named.join(", ") || "none"})`);
 rmSync(PEN, { recursive: true, force: true });
 console.log(`\npen removed: ${PEN}`);
 
@@ -156,4 +170,16 @@ console.log(`\npen removed: ${PEN}`);
      alterafter    migrate-released: 135 pass, 66 fail   engine: no such column: content_id — as declared
      nosecondpass  migrate-released: 176 pass, 25 fail   engine: no such column: schema_id — as declared
      percolumn     migrate-released: 201 pass, 0 fail    the over-strictness arm PASSES — as declared
-   The declarations are in the suite's own NEGATIVE CONTROL header. */
+   The declarations are in the suite's own NEGATIVE CONTROL header.
+
+   MEASURED 2026-09-22 by DIST #4 (worktree dist-4, the 0.71.0 cut: 13 RELEASES rows, 0.70.0 added, and the
+   D-436 boot arm), from this driver's own printed SUMMARY, every restore sha256 MATCH / content IDENTICAL:
+     baseline        migrate-released: 357 pass, 0 fail    engine: none — as declared
+     alterafter      migrate-released: 279 pass, 78 fail   engine: no such column: content_id — as declared
+     nosecondpass    migrate-released: 317 pass, 40 fail   engine: no such column: schema_id
+     percolumn       migrate-released: 357 pass, 0 fail    the over-strictness arm PASSES
+     firstbootalways migrate-released: 321 pass, 36 fail   the 36 D-436 assertions ALONE — as declared
+     firstbootnever  migrate-released: 356 pass, 1 fail    the D-436 POSITIVE arm ALONE — as declared
+   The alterafter SEQUENCE (DIST.md lesson 19): 135 -> 169 -> 186 -> 203 -> 220 -> 237 pass / 66 fail, then
+   254/66 with the 0.70.0 row by arithmetic and 279/78 with the D-436 assertions measured — the step in the
+   FAIL count is the six bricked stores failing the two new assertions, not a change in what bricks. */

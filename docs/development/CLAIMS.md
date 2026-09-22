@@ -17898,3 +17898,28 @@ one ruled paragraph; one Status sentence and one Incomplete bullet); `docs/devel
 INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER (#10) -> BOB DELEGATION's state
 line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — cut 0.71.0, a BATCH: D-436 / IC-172 and D-434; biosmoke7's two stores seeded, write-once; civicos moves)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4`, Sparky-Air
+opened: 2026-09-22
+branch: `dist/cut-0.71.0` from `ab34197b` (branch until deployed and live-verified; `main`'s `release/` is the pointer)
+paths: `release/**`; `newgroup/**` (`src/index.mjs`, D-436 item 3's telling; `test/wizard.test.mjs`, its arms; the
+  generated `src/release.mjs` and `dist/`); the version in `bio-plane/package.json` and `bio-plane/wrangler.jsonc` and the
+  same two sites in `agent-worker/`, `pdf-worker/`, `ocr-worker/`; `bio-plane/test/migrate-released.test.mjs` (the
+  `RELEASES` row for 0.70.0, and the D-436 boot arm) and `bio-plane/test/migrate-released.control.mjs` (two arms);
+  `docs/architecture/construct-status.json` (claim `15.group-telling`), `docs/architecture/BIO_System_Design.md`
+  (RENDERED), `docs/architecture/BIO_Distribution_v0_1.md` (§5: one dated paragraph; one Status sentence);
+  `docs/development/kickoffs/DIST-NEXT.md`; this block, and one dated DISCHARGED line at the foot of the D-436 (worker)
+  -> DIST DELEGATION; `docs/DECIDED.md` (GENERATED, regenerated LAST). All tags. `civicos` MOVES (`app.html`, D-434).
+why: a BATCH, judged at the code: `git log v0.70.0..ab34197b` over the shipped paths is D-436 (IC-172: I3 49.0.0 MAJOR,
+  I5 1.24.0 MINOR, the producing group one recorded value per store) and D-434 (`app.html`'s recipe cites); no security
+  or disclosure closing. Its IRREVERSIBLE step is the DELEGATION's item 3, the seed of biosmoke7's `bio` and `scratch`
+  stores `believe-in-oakland`. biosmoke7 binds `INSTANCE_NAME="biosmoke7"` (the deployments API, 2026-09-22), so a store
+  that recorded at the deploy's boot would carry its WORKER name for good; IC-172 names what its suite cannot see, "no
+  pre-D-436 build is cut", and every `RELEASES` row is one, so the upgrade arm now binds the name and asserts each
+  released store records nothing at the current plane's boot, beside a positive arm on a fresh store (controls (e) and
+  (f), each as declared). Item 3's route, DECIDED by DIST #3, is REFINED: `op=instancegroup` answers admin, member and
+  probe only (`index.mjs`, its OPS row) and an update holds no instance credential, so `newgroup` tells from the version
+  it reads before the upload, conditionally when that is unknown, and never seeds or reads.
+**open as of 2026-09-22.**
