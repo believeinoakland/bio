@@ -1311,10 +1311,27 @@ export const ACTS = [
      and `concluded_for_project` adds the project's own. `=== true` is the whole
      of the three-valued handling: a machine-class credential answers null there,
      does not widen, and keeps its own fence (MACHINE_CANNOT_PUBLISH). */
+  /* REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9, 2026-09-21: `!f.case_member`
+     IS NO LONGER THE WHOLE OF THE MEMBERSHIP HALF EITHER. It is the affordance-layer
+     half of publishCase()'s ALREADY_A_CASE_MEMBER, and that refusal now asks the
+     RELATIONSHIP too: a finding a case pins at its current bytes may still take a
+     new edition when a joined project's conclusion has moved since every edition
+     pinning those bytes (a withdrawal, then a conclusion on another reading, never
+     moves the finding's bytes). Without this disjunct the store would accept that
+     edition and the surface would never offer it — REC-142's defect shape, the
+     route reachable by the raw op and by no member (Q12/DEC-8).
+     A DISJUNCTION AND NOT A REPLACEMENT, REC-135's reason: `!f.case_member` still
+     offers every finding no case pins, and `edition_warranted_for_project` is asked
+     only of the ones a case does. `=== true` is the whole of the three-valued
+     handling, as above: a null never widens. `case_member` itself is unchanged and
+     so is every other act derived from it — reopen, dispose, inquiryground and
+     inquirydivide ask whether these BYTES are frozen in a case, which a moved
+     conclusion does not change. */
   { id: "publish", label: "Publish (author the case)", weight: "single", types: ["inquiry"],
     applies: (f, ty) => ty === "inquiry"
                      && (f.current_state === "concluded" || f.concluded_for_project === true)
-                     && !f.case_member && f.project_owner !== false },
+                     && (!f.case_member || f.edition_warranted_for_project === true)
+                     && f.project_owner !== false },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
      `single`, conclude's precedent: one question is divided at a time.

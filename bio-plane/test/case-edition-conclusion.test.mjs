@@ -1,0 +1,546 @@
+/* NEGATIVE CONTROL: RUN BY `test/case-edition-conclusion.control.mjs` (a `.control.mjs`, not discovered by the battery, because it EDITS src/ while it runs). Each arm is armed ALONE, restored by cp from a per-arm pristine copy and verified by sha256 AND cmp; the declared and the measured figures are on that driver. PENDING THE FIRST RUN — the figures are recorded on the driver's foot and here when it has run.
+ * ========================================================================= */
+/* REC-157 — A MOVED PROJECT CONCLUSION WARRANTS A NEW CASE EDITION
+ * (INVESTIGATIVE-SESSION.md §7.1 item 9, BOB #19 2026-09-21, applying items 4
+ * and 7; DEC-12 and DEC-19.)
+ *
+ * WHAT WAS WRONG, measured by REC-135 through the ops and re-driven here: a
+ * published case records the PROJECT's adopted claim (REC-135, IC-166), and a
+ * project's conclusion is written on the PROJECT (REC-124), so it can move while
+ * the finding's bytes never do. `op=publish`'s ALREADY_A_CASE_MEMBER compared
+ * the finding's `bundle_sha` alone, so a case went on asserting a claim its
+ * project had withdrawn and DEC-19's one route forward (item 7: "the case's next
+ * edition carries it") could not be travelled; `op=reopen` is correctly
+ * ILLEGAL_TRANSITION there, since the shared question never left `open`.
+ *
+ * WHAT THIS SUITE FOUND BEFORE IT CHECKED ANYTHING, and it shapes every arm below:
+ * `op=versioncurrent` WRITES INTO THE SHARED QUESTION'S OWN BYTES. Making a reading
+ * current promotes the INQUIRY (a Session Log line naming the project's new stance)
+ * before it writes the project's pointer, so it MOVES the finding's `bundle_sha`.
+ * Measured on the untouched plane (`origin/main` 86523052): conclude, publish,
+ * withdraw, MAKE THE OTHER READING CURRENT, conclude, publish — and the second
+ * edition PUBLISHES, because the make-current unpinned the finding and the
+ * membership refusal was never asked. So a second-edition arm built that way
+ * passes over the defect for the wrong reason. EVERY second-edition arm here is
+ * therefore built so the finding's bytes are EXACTLY the pin when it publishes,
+ * and says so in a DISCRIMINATOR assertion: the project already stands on the
+ * reading it re-concludes on (its pointer moved BEFORE the edition that pins the
+ * bytes), or it re-concludes on the same reading (REC-135's own probe). Section 9
+ * drives the bytes route once, to keep the two routes told apart.
+ *
+ * HOW A LIAR PASSES THIS SUITE, stated before what it checks: DROP THE REFUSAL.
+ * Every second-edition arm then passes, because an act that refuses nothing
+ * publishes everything. So the UNCHANGED arm — publish again when nothing has
+ * moved — is driven BESIDE every second-edition arm, and it must still refuse by
+ * name, naming the edition that already records the conclusion. The second liar
+ * is cheaper: mint the edition and record SOMETHING. So the arms assert the new
+ * edition records the NEW claim word for word, that the WITHDRAWN claim is absent
+ * from it, and that the earlier edition still stands and still says what it said.
+ *
+ * WHAT IS DRIVEN, every act through the control plane as a member, every
+ * ratified edition signed with a real ssh-keygen signature:
+ *  1. EDITION 1. A project concludes on reading A, then moves its pointer to
+ *     reading B (the team looks at B while it stands on its conclusion A), and
+ *     publishes: the case records claim A. Ratified.
+ *  2. THE UNCHANGED ARM. Publishing again is refused ALREADY_A_CASE_MEMBER naming
+ *     edition 1; the surface does not offer it; `op=reopen` is still
+ *     ILLEGAL_TRANSITION — the shared object's act, unchanged by item 9.
+ *  3. THE WITHDRAWAL. Refused NOT_CONCLUDED (withdrew, not never-concluded), and
+ *     edition 1 stands, still recording the withdrawn claim as the history it is.
+ *  4. THE SECOND EDITION. The project concludes on reading B, which it already
+ *     stands on. The finding's bytes are EXACTLY edition 1's pin, and still the
+ *     surface offers `publish`, the act mints edition 2 of the SAME case, says why,
+ *     and records claim B; edition 1 stands beside it.
+ *  5. THE UNCHANGED ARM, AGAIN, naming edition 2.
+ *  6. REC-135'S OWN PROBE: withdraw and conclude again on the SAME reading, with a
+ *     new falsifier. A conclusion is a dated, authored act and the case records
+ *     its falsifier, so edition 3 is warranted and records the new one.
+ *  7. THE PREPARED WINDOW. The same comparison against an UNRATIFIED edition:
+ *     unchanged is refused naming it `prepared`; a moved conclusion publishes.
+ *  8. THE NO-PROJECT CORNER, RUNNING PROVISIONALLY. A question also concluded in
+ *     its own bytes: a project concludes it for itself, publishes, withdraws.
+ *     REC-135's provisional no-project disjunct admits the next publication, and
+ *     this item asks the SAME answer, so an edition is warranted — and it must
+ *     DISCLOSE that it rests on the no-project relationship and must not carry the
+ *     withdrawn claim. Unchanged after it is refused, by the pin.
+ *  9. THE BYTES ROUTE, told apart: a make-current AFTER publication moves the
+ *     finding's bytes, the membership refusal is never asked, and the act's answer
+ *     carries no `edition_warranted` — which is how a caller tells the routes apart.
+ *
+ * WHAT IT CANNOT SEE, stated rather than left for the next reader: the sharing
+ * edge is hand-authored into `references[]` (REC-72's open finding); two
+ * conclusion acts identical in content, author and SECOND read as one (the
+ * record's timestamps are second-grained), so no arm re-concludes identically and
+ * expects an edition; no arm reads the published CONTAINER bytes
+ * (`casesign`/`publishedcase` own them); and arm 8's outcome is REC-135's open
+ * question to BOB (whether a no-project conclusion admits a case at all) seen from
+ * this item's side — if BOB rules the strict reading, arm 8's publication becomes
+ * NOT_CONCLUDED and is corrected here.
+ * ========================================================================= */
+import "./stdio.mjs";
+import "./sandbox.mjs";
+import { Miniflare } from "miniflare";
+import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { execFileSync, spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+import { ratifyCase } from "./caseceremony.mjs";
+
+if (spawnSync("ssh-keygen", ["-Q"]).error) {
+  console.log("\n--- case-edition-conclusion ---");
+  console.log("  SKIP  entire suite — ssh-keygen is not on PATH");
+  console.log("case-edition-conclusion.test.mjs: SKIPPED — ssh-keygen not on PATH; a SECOND EDITION exists only "
+    + "once the first is ratified, and ratification is a real bio-ratify signature");
+  process.exit(0);
+}
+
+const DIR = dirname(fileURLToPath(import.meta.url));
+const SRC = (f) => join(DIR, "..", "src", f);
+
+let pass = 0, fail = 0;
+const t = (label, got, want) => {
+  const ok = JSON.stringify(got) === JSON.stringify(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  ok ? pass++ : fail++;
+};
+const sha = (v) => createHash("sha256").update(v).digest("hex");
+const enc = encodeURIComponent;
+
+const mf = new Miniflare({
+  modules: true, modulesRoot: "/", scriptPath: SRC("index.mjs"),
+  script: readFileSync(SRC("index.mjs"), "utf8"),
+  modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+  durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"],
+  /* INSTANCE_NAME IS BOUND because every install binds it (D-436, IC-172): a store
+     records its producing group from it at its FIRST BOOT, and a creation on a
+     store recording none is refused GROUP_UNDETERMINED (C-64.1). The fixture
+     pattern is D-436's own, in `publish.test.mjs` and `caseproduction.test.mjs`. */
+  bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-r157", MEMBER_TOKEN: "mem-r157",
+              PROBE_TOKEN: "prb-r157", DAEMON_TOKEN: "dmn-r157", VERSION: "0.70.0",
+              GOVERNOR_APPETITE_PER_MIN: "600000" },
+});
+const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
+const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
+const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
+  { method: "POST", body: JSON.stringify(body ?? {}) })).json());
+/* A FIXTURE FAILURE ENDS THE RUN WITH A TALLY, NEVER A BARE THROW — a control arm
+   that breaks the subject can make a fixture step refuse, and a suite that died
+   before its own foot reads as a clean count to anything that only checks an
+   exit status (`caselifecycle.test.mjs`'s receipt). */
+const bail = async (what, r) => {
+  t(`FIXTURE: ${what}`, [r?.ok === true, r?.reason ?? null], [true, null]);
+  console.log(`\ncase-edition-conclusion.test.mjs: ${pass} pass, ${fail} fail`);
+  await mf.dispose();
+  process.exit(1);
+};
+const must = async (what, r) => { if (!r || r.ok !== true) await bail(what, r); return r; };
+
+/* ---- the member, the signing key, the ceremony ---- */
+const dir = mkdtempSync(join(tmpdir(), "rec157-"));
+execFileSync("ssh-keygen", ["-t", "ed25519", "-N", "", "-C", "iris", "-f", join(dir, "iris"), "-q"]);
+const keyB64 = readFileSync(join(dir, "iris.pub"), "utf8").trim().split(/\s+/)[1];
+const signRatify = (bundleId, bundleSha) => {
+  const f = join(dir, `stmt-${Math.random().toString(36).slice(2)}`);
+  writeFileSync(f, `bio-ratify ${bundleId} ${bundleSha}\n`);
+  execFileSync("ssh-keygen", ["-Y", "sign", "-f", join(dir, "iris"), "-n", "bio-ratify", f],
+    { stdio: ["ignore", "ignore", "ignore"] });
+  return readFileSync(f + ".sig", "utf8");
+};
+const enrol = async (memberId, role, caps) => {
+  const add = await POST("op=memberadd&token=adm-r157",
+    { memberId, cover: `cover for ${memberId}`, role, capabilities: caps });
+  if (!add?.ok) await bail(`memberadd ${memberId}`, add);
+  const en = await POST("op=enroll", { invite: add.invite, handle: memberId, password: `${memberId}-passphrase-1` });
+  if (!en?.ok) await bail(`enroll ${memberId}`, en);
+  const lg = await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-passphrase-1` });
+  if (!lg?.token) await bail(`login ${memberId}`, lg);
+  return lg.token;
+};
+/* ONE member creates, owns and joins every project and signs every edition —
+   the member and the finding are held fixed so that what moves between two
+   publications is only what the arm moves. */
+const IRIS = await enrol("iris", "admin", ["contribute", "publish"]);
+await must("register iris's signing key",
+  await POST("op=signeradd&token=adm-r157", { keyB64, memberId: "iris", comment: "iris laptop" }));
+
+/* ------------------------------------------------------------- DOCUMENTS */
+const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
+const scalar = (k, v) => v === null ? [`    ${k}: null`]
+  : v === undefined ? [] : typeof v === "boolean" ? [`    ${k}: ${v}`]
+  : [`    ${k}: "${String(v)}"`];
+const versionLines = (versions) => {
+  const rows = versions.map((v) => ['  - name: "' + v.name + '"',
+    ...scalar("description", v.description), ...scalar("relationship", "and"),
+    ...scalar("state", "suggested"),
+    ...scalar("derived_from", null), ...scalar("hidden", false),
+    ...scalar("claim", v.claim), ...scalar("author", "iris"), ...scalar("at", NOW)].join("\n"));
+  const grounds = versions.flatMap((v) => (v.grounds ?? []).map((g) =>
+    ['  - version: "' + v.name + '"', ...scalar("ground", g),
+     ...scalar("asserted_by", "iris"), ...scalar("at", NOW)].join("\n")));
+  const legs = versions.flatMap((v) => (v.legs ?? []).map((l) =>
+    ['  - version: "' + v.name + '"', ...scalar("target", l.target),
+     ...scalar("role", "supports"), ...scalar("ground", l.ground),
+     ...scalar("grade", "B"), ...scalar("grade_axis", "capture"),
+     ...scalar("grade_source", "capture")].join("\n")));
+  return ["basis_versions:", ...rows,
+          ...(grounds.length ? ["basis_version_grounds:", ...grounds] : []),
+          ...(legs.length ? ["basis_version_legs:", ...legs] : [])];
+};
+const inquiryMd = (id, { title, versions = [], basis = [] } = {}) => ["---",
+  `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "${title}"`,
+  "current_state: open", "prior_state: null",
+  `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "produced_by:", "  mode: agent", "  capability_tier: high",
+  "group: believe-in-oakland",
+  ...(basis.length ? ["references:", ...basis.flatMap((b) => [`  - target: ${b}`,
+      "    rel: cites", "    status: confirmed"])] : ["references: []"]),
+  "state_history: []", "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+  "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
+  "recheck_triggers:", "  - text: Revisit after the next budget cycle",
+  "    description: The adopted budget may restate the transfer basis.",
+  ...(basis.length ? ["basis:", ...basis.flatMap((b) => [`  - target: ${b}`, "    role: supports"])] : []),
+  ...versionLines(versions),
+  "---", "", "## Question", "", "Did it?", "", "## What It Rests On", "",
+  "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
+  `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
+  "## Review Notes", ""].join("\n");
+const infoMd = (id) => ["---",
+  `id: ${id}`, "object_type: information", "schema: information@1",
+  `title: "Info ${id}"`, "current_state: collected", "prior_state: null",
+  `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "produced_by:", "  mode: agent", "  capability_tier: high",
+  "group: believe-in-oakland", "references: []", "state_history: []",
+  "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+  "visuals: []", "---", "", "## Summary", "", "A captured document.", "",
+  "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+/* NO `required_strength`: an ABSENT bar gates nothing (DEC-72), and a declared
+   bar would put a second refusal in front of the one under test. */
+const projectMd = (title, cites) => ["---",
+  "object_type: project", "schema: project@1", `title: "${title}"`,
+  "current_state: investigating", "prior_state: null",
+  `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "produced_by:", "  mode: agent", "  capability_tier: high",
+  "group: believe-in-oakland",
+  ...(cites.length
+    ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
+    : ["references: []"]),
+  "state_history: []", "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+  "visuals: []", 'objective: "Decide whether to refer this to the auditor."',
+  "---", "", "## Thesis Summary", "", "A project.", "", "## Open Questions", "",
+  "## Ruled Out", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+
+let snapSeq = 0;
+const promote = async (id, text, type) => POST(`op=promote&token=${IRIS}`, {
+  bundleId: id, base: null,
+  snapKey: `${id}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+  files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+  register: type === "information"
+    ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }] : [],
+  meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+          current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER } });
+/* A project's id is MINTED by the plane (REC-141) and its creator becomes its
+   OWNER and a JOINED participant in the same write. */
+const createProject = async (label, text) => {
+  const r = await POST(`op=promote&token=${IRIS}`, {
+    base: null, snapKey: `${label}-${String(++snapSeq)}-${sha(String(snapSeq)).slice(0, 6)}`,
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${label}`,
+            current_state: "investigating", created: NOW, last_updated: LATER } });
+  if (!r?.ok || typeof r.bundleId !== "string") await bail(`create project ${label}`, r);
+  return r.bundleId;
+};
+const bundleRow = async (id) => (await GET(`op=list&token=${IRIS}&limit=1000`))
+  ?.bundles?.find((b) => b.bundle_id === id) ?? null;
+
+const LEDGER = "INFO-2026-4157-ledger", MINUTES = "INFO-2026-4157-minutes", AUDIT = "INFO-2026-4157-audit";
+for (const d of [LEDGER, MINUTES, AUDIT]) await must(`promote ${d}`, await promote(d, infoMd(d), "information"));
+
+const CLAIM_A = "The transfer followed the process the council adopted in 2024.";
+const CLAIM_B = "The transfer bypassed the council vote the adopted process requires.";
+const VA = { name: "paper trail", claim: CLAIM_A,
+  description: "The ledger and the minutes together show the transfer was authorised.",
+  grounds: ["paper trail"],
+  legs: [{ target: LEDGER, ground: "paper trail" }, { target: MINUTES, ground: "paper trail" }] };
+const VB = { name: "the audit", claim: CLAIM_B,
+  description: "The audit shows the transfer happened without the required vote.",
+  grounds: ["the audit"], legs: [{ target: AUDIT, ground: "the audit" }] };
+
+const Q = "INQ-2026-4157-transfer";          /* sections 1-6: the probe path */
+const QP = "INQ-2026-4157-prepared";         /* section 7: the unratified window */
+const QN = "INQ-2026-4157-no-project";       /* section 8: concluded in its own bytes too */
+const QB = "INQ-2026-4157-bytes-route";      /* section 9: the make-current route */
+for (const [id, title] of [[Q, "Did the sewer fund transfer follow the adopted process?"],
+                           [QP, "Was the vote recorded?"], [QN, "Was the ledger reconciled?"],
+                           [QB, "Was the contract advertised?"]])
+  await must(`promote ${id}`, await promote(id, inquiryMd(id, { title, versions: [VA, VB], basis: [LEDGER] }), "inquiry"));
+
+const A = await createProject("oversight", projectMd("Oversight", [Q]));
+const P = await createProject("prepared", projectMd("Prepared", [QP]));
+const N = await createProject("noproject", projectMd("No project", [QN]));
+const C = await createProject("bytes", projectMd("Bytes", [QB]));
+
+const accept = async (target, version) =>
+  POST(`op=versionaccept&token=${IRIS}&target=${enc(target)}&version=${enc(version)}`
+     + `&reason=${enc("the evidence holds")}`, {});
+for (const id of [Q, QP, QN, QB]) for (const v of [VA, VB]) await must(`accept ${v.name} on ${id}`, await accept(id, v.name));
+const makeCurrent = async (project, target, version) =>
+  POST(`op=versioncurrent&token=${IRIS}&target=${enc(target)}&version=${enc(version)}&project=${enc(project)}`, {});
+/* A FALSIFIER IS STATED ON EVERY CONCLUSION, never overridden (REC-135's reason). */
+const FALSIFIER = "a council minute showing the vote was never taken";
+const concludeFor = async (project, target, falsifier = FALSIFIER) =>
+  POST(`op=conclude&token=${IRIS}&falsifier=${enc(falsifier)}&target=${enc(target)}&project=${enc(project)}`, {});
+const withdraw = async (project, target, reason) =>
+  POST(`op=withdrawconclusion&token=${IRIS}&target=${enc(target)}&project=${enc(project)}&reason=${enc(reason)}`, {});
+
+/* EVERY AUTHORED FIELD IS FRESH PER PUBLICATION. C-21.1 refuses a completeness
+   statement, justification, exclusion list or bias acknowledgement carried
+   forward byte-identical from the case's previous RATIFIED edition, and that
+   refusal is not this item's — so each call states its own, numbered. */
+let pubSeq = 0;
+const publish = async (project, target) => {
+  const n = ++pubSeq;
+  return POST(`op=publish&token=${IRIS}`, {
+    project, scope: `Whether the record answers ${target}.`,
+    targets: [target], roles: { [target]: "load_bearing" },
+    statement: `This case does not cover the 2025 transfers (publication ${n}).`,
+    subjectPosition: "sought_no_answer",
+    subjectJustification: `The subject was asked and declined to comment (publication ${n}).`,
+    biasAcknowledgement: `The publishing project is funded by a party with an interest (publication ${n}).`,
+    excluded: [{ target: null, description: `The 2025 transfers (publication ${n})`, reason: "Out of scope." }] });
+};
+/* THE CEREMONY: the case document first (it writes the roster and the pins),
+   then the finding on its own bytes — the order `op=publish`'s own `next:` names. */
+const ratifyAll = async (pub) => {
+  await ratifyCase(async (q, b) => POST(q, b), pub, { dir, key: "iris", token: IRIS });
+  for (const f of pub.findings || []) {
+    const r = await POST(`op=ratify&token=${IRIS}`,
+      { bundleId: f.target, expectedSha: f.bundleSha, sig: signRatify(f.target, f.bundleSha) });
+    if (!r?.ok) await bail(`ratify ${f.target}`, r);
+  }
+};
+const caseDoc = async (caseId, edition) => {
+  const d = await GET(`op=casedocument&token=${IRIS}&case=${enc(caseId ?? "none")}&edition=${edition}`);
+  const text = String(d?.text ?? "");
+  return { text, row: ((parseFrontmatter(text).data || {}).case_conclusions || [])[0] || {} };
+};
+const offersPublish = async (target) =>
+  ((await GET(`op=affordances&token=${IRIS}&target=${enc(target)}`))?.acts || []).some((a) => a.id === "publish");
+const warrantOf = (pub) => (pub?.findings || [])[0]?.edition_warranted || null;
+
+/* =======================================================================
+   1. EDITION 1 — concluded on reading A, the pointer already on B.
+   ======================================================================= */
+console.log("\n--- 1. edition 1: A concludes on reading A, moves its pointer to B, and publishes ---");
+
+await must("A stands on reading A", await makeCurrent(A, Q, VA.name));
+await must("A concludes on it", await concludeFor(A, Q));
+/* THE POINTER MOVES BEFORE THE EDITION, and the reason is the finding in this
+   suite's header: a make-current writes into the SHARED question's bytes. Moved
+   here, it is inside the bytes edition 1 pins, so nothing after edition 1 moves
+   them. Making a reading current is not concluding on it — A still stands on its
+   conclusion A, and edition 1 must record exactly that. */
+await must("A moves its pointer to reading B, still standing on its conclusion A", await makeCurrent(A, Q, VB.name));
+const pub1 = await publish(A, Q);
+t("A publishes edition 1 of a new case", [pub1?.ok, pub1?.edition, typeof pub1?.caseId], [true, 1, "string"]);
+if (pub1?.ok !== true) await bail("edition 1 publishes", pub1);
+await ratifyAll(pub1);
+const CASE = pub1.caseId, PIN1 = pub1.bundleSha;
+const doc1 = await caseDoc(CASE, 1);
+t("edition 1 records A's CONCLUSION — reading A and claim A — not its pointer",
+  [doc1.row.relationship, doc1.row.project, doc1.row.version, doc1.row.claim], ["project", A, VA.name, CLAIM_A]);
+
+/* =======================================================================
+   2. THE UNCHANGED ARM, BEFORE ANYTHING MOVES.
+   ======================================================================= */
+console.log("\n--- 2. nothing has moved: publishing again is refused, and op=reopen is unchanged ---");
+
+const same1 = await publish(A, Q);
+t("UNCHANGED: publishing again with nothing moved is REFUSED ALREADY_A_CASE_MEMBER — the arm a liar who "
++ "drops the refusal cannot pass",
+  [same1?.ok, same1?.reason], [false, "ALREADY_A_CASE_MEMBER"]);
+t("and the refusal names the edition that ALREADY records this conclusion, and the relationship it asked",
+  [same1?.recorded_by, same1?.relationship, same1?.project],
+  [[{ case_id: CASE, edition: 1, state: "ratified" }], "project", A]);
+t("the surface agrees: `publish` is NOT offered on the case member (DEC-8)", await offersPublish(Q), false);
+const reopen = await GET(`op=reopen&token=${IRIS}&target=${enc(Q)}&reason=${enc("probe: is reopen still the shared act")}`);
+t("op=reopen DOES NOT CHANGE: on a question whose own state never left `open` it is still "
++ "ILLEGAL_TRANSITION — the shared object's act, not the project's (REC-136, item 9)",
+  [reopen?.ok, reopen?.reason], [false, "ILLEGAL_TRANSITION"]);
+
+/* =======================================================================
+   3. THE WITHDRAWAL — refused NOT_CONCLUDED, and the last edition stands.
+   ======================================================================= */
+console.log("\n--- 3. a project that withdrew and has not concluded again cannot publish; edition 1 stands ---");
+
+await must("A withdraws its conclusion", await withdraw(A, Q, "the audit contradicts the minutes"));
+const afterWd = await publish(A, Q);
+t("a project that WITHDREW is refused NOT_CONCLUDED — the gate asked first, WITHDREW not NEVER-CONCLUDED",
+  [afterWd?.ok, afterWd?.reason, afterWd?.why], [false, "NOT_CONCLUDED", "project_withdrew_its_conclusion"]);
+const doc1b = await caseDoc(CASE, 1);
+t("and edition 1 STANDS, still recording the claim A withdrew — history, never edited (DEC-19)",
+  [doc1b.text.length > 0, doc1b.text === doc1.text, doc1b.row.claim], [true, true, CLAIM_A]);
+t("the surface does not offer `publish` to a project that stands on no conclusion", await offersPublish(Q), false);
+
+/* =======================================================================
+   4. THE SECOND EDITION — the conclusion moved, the bytes did not.
+   ======================================================================= */
+console.log("\n--- 4. A concludes on reading B: the bytes never moved, and a SECOND EDITION is warranted ---");
+
+const cB = await must("A concludes on reading B, which it already stands on", await concludeFor(A, Q));
+t("(fixture) A's new conclusion adopts claim B and does NOT move the shared question",
+  [cB?.version, cB?.claim?.text, cB?.inquiry_moved], [VB.name, CLAIM_B, false]);
+const rowQ = await bundleRow(Q);
+t("THE DISCRIMINATOR: the finding's bytes are EXACTLY edition 1's pin and its own state is still `open` — "
++ "only the RELATIONSHIP moved, which is the whole of item 9",
+  [typeof PIN1, rowQ?.bundle_sha === PIN1, rowQ?.current_state], ["string", true, "open"]);
+t("the surface now OFFERS `publish` on the case member — the act and the surface agree (DEC-8)",
+  await offersPublish(Q), true);
+const pub2 = await publish(A, Q);
+t("A publishes a SECOND EDITION of the SAME case — the route REC-135 measured as unreachable",
+  [pub2?.ok, pub2?.caseId === CASE, pub2?.edition, pub2?.reason ?? null], [true, true, 2, null]);
+const why2 = warrantOf(pub2);
+t("and the act SAYS why: the publishing project's conclusion moved since the edition pinning these bytes, "
++ "which recorded claim A",
+  [why2?.because, (why2?.pinned_editions || []).map((e) => [e.case_id, e.edition, e.state, e.recorded?.claim])],
+  ["the_publishing_projects_conclusion_moved", [[CASE, 1, "ratified", CLAIM_A]]]);
+if (pub2?.ok === true) await ratifyAll(pub2);
+const doc2 = await caseDoc(CASE, 2);
+t("edition 2 RECORDS THE NEW CLAIM: A's relationship, reading B, claim B verbatim",
+  [doc2.row.relationship, doc2.row.project, doc2.row.version, doc2.row.claim_state, doc2.row.claim],
+  ["project", A, VB.name, "adopted", CLAIM_B]);
+t("and the WITHDRAWN claim is nowhere in edition 2 — a case that recorded 'the claim' could have written either",
+  [doc2.text.length > 0, doc2.text.includes(CLAIM_A)], [true, false]);
+const doc1c = await caseDoc(CASE, 1);
+t("edition 1 STILL STANDS beside it, byte for byte what was signed (DEC-19: the record of the reversal)",
+  [doc1c.text === doc1.text, doc1c.row.claim], [true, CLAIM_A]);
+
+/* =======================================================================
+   5. THE UNCHANGED ARM, AFTER THE SECOND EDITION.
+   ======================================================================= */
+console.log("\n--- 5. after edition 2, publishing unchanged is refused again ---");
+
+const same2 = await publish(A, Q);
+t("UNCHANGED AFTER EDITION 2: refused ALREADY_A_CASE_MEMBER, naming edition 2 as the one recording this "
++ "conclusion — beside the second-edition arm, so dropping the refusal fails here",
+  [same2?.ok, same2?.reason, same2?.recorded_by],
+  [false, "ALREADY_A_CASE_MEMBER", [{ case_id: CASE, edition: 2, state: "ratified" }]]);
+t("and the surface stops offering it again", await offersPublish(Q), false);
+
+/* =======================================================================
+   6. REC-135'S OWN PROBE — the SAME reading, concluded again.
+   ======================================================================= */
+console.log("\n--- 6. REC-135's own probe: withdraw and conclude again on the SAME reading, with a new falsifier ---");
+
+const PIN2 = pub2?.bundleSha ?? null;
+await must("A withdraws its conclusion B", await withdraw(A, Q, "the audit was provisional"));
+const NEW_FALSIFIER = "the final audit report finding the vote was taken";
+await must("A concludes on reading B AGAIN, naming a different falsifier", await concludeFor(A, Q, NEW_FALSIFIER));
+const rowQ2 = await bundleRow(Q);
+t("(discriminator) the finding's bytes are still exactly edition 2's pin",
+  [typeof PIN2, rowQ2?.bundle_sha === PIN2], ["string", true]);
+const pub3 = await publish(A, Q);
+t("a conclusion re-taken after a withdrawal is a NEW dated, authored act, and the case records its "
++ "falsifier — so edition 3 is warranted over the same claim",
+  [pub3?.ok, pub3?.caseId === CASE, pub3?.edition], [true, true, 3]);
+if (pub3?.ok === true) await ratifyAll(pub3);
+const doc3 = await caseDoc(CASE, 3);
+t("and edition 3 records claim B with the NEW falsifier",
+  [doc3.row.claim, doc3.row.falsifier], [CLAIM_B, NEW_FALSIFIER]);
+const same3 = await publish(A, Q);
+t("UNCHANGED AFTER EDITION 3: refused again, naming edition 3",
+  [same3?.ok, same3?.reason, same3?.recorded_by],
+  [false, "ALREADY_A_CASE_MEMBER", [{ case_id: CASE, edition: 3, state: "ratified" }]]);
+
+/* =======================================================================
+   7. THE PREPARED WINDOW — the same comparison against an UNRATIFIED edition.
+   ======================================================================= */
+console.log("\n--- 7. the unratified window: the same comparison, asked of a preparation ---");
+
+await must("P stands on reading A", await makeCurrent(P, QP, VA.name));
+await must("P concludes on it", await concludeFor(P, QP));
+await must("P moves its pointer to reading B before publishing", await makeCurrent(P, QP, VB.name));
+const prep1 = await publish(P, QP);
+t("(fixture) P publishes and does NOT ratify", [prep1?.ok, prep1?.edition], [true, 1]);
+const prepSame = await publish(P, QP);
+t("UNCHANGED IN THE WINDOW: refused ALREADY_A_CASE_MEMBER, naming the PREPARED edition that records it",
+  [prepSame?.ok, prepSame?.reason, prepSame?.recorded_by],
+  [false, "ALREADY_A_CASE_MEMBER", [{ case_id: prep1?.caseId ?? null, edition: 1, state: "prepared" }]]);
+await must("P withdraws", await withdraw(P, QP, "the vote record was amended"));
+await must("P concludes on reading B, which it already stands on", await concludeFor(P, QP));
+const rowQP = await bundleRow(QP);
+t("(discriminator) the finding's bytes are exactly the preparation's pin",
+  [typeof prep1?.bundleSha, rowQP?.bundle_sha === prep1?.bundleSha], ["string", true]);
+const prep2 = await publish(P, QP);
+t("a MOVED conclusion in the window publishes, and the act names the preparation it moved from",
+  [prep2?.ok, (warrantOf(prep2)?.pinned_editions || []).map((e) => [e.state, e.recorded?.claim])],
+  [true, [["prepared", CLAIM_A]]]);
+const prepDoc = await caseDoc(prep2?.caseId, prep2?.edition ?? 1);
+t("and the new preparation records claim B", [prepDoc.row.relationship, prepDoc.row.claim], ["project", CLAIM_B]);
+
+/* =======================================================================
+   8. THE NO-PROJECT CORNER — running provisionally on REC-135's disjunct.
+   ======================================================================= */
+console.log("\n--- 8. a question ALSO concluded in its own bytes: the withdrawal's next edition DISCLOSES whose ---");
+
+await must("QN is concluded in its own bytes with no project, adopting reading A",
+  await GET(`op=conclude&token=${IRIS}&target=${enc(QN)}&version=${enc(VA.name)}`
+    + `&conclusion=${enc("The ledger was reconciled.")}&falsifier=${enc(FALSIFIER)}`));
+await must("N stands on reading B", await makeCurrent(N, QN, VB.name));
+await must("N concludes it FOR ITSELF on reading B (REC-142's project arm)", await concludeFor(N, QN));
+const npub1 = await publish(N, QN);
+t("(fixture) N publishes on its OWN conclusion", [npub1?.ok, npub1?.edition], [true, 1]);
+if (npub1?.ok !== true) await bail("N's edition 1 publishes", npub1);
+await ratifyAll(npub1);
+const ndoc1 = await caseDoc(npub1.caseId, 1);
+t("(fixture) N's edition 1 records N's own claim B", [ndoc1.row.relationship, ndoc1.row.claim], ["project", CLAIM_B]);
+await must("N withdraws", await withdraw(N, QN, "the audit was not final"));
+const rowQN = await bundleRow(QN);
+t("(discriminator) the finding's bytes are exactly edition 1's pin", rowQN?.bundle_sha === npub1.bundleSha, true);
+const npub2 = await publish(N, QN);
+t("PROVISIONAL (REC-135's no-project disjunct admits it, and this item asks the SAME answer): N's next "
++ "edition is WARRANTED, since what it would record is not what edition 1 recorded",
+  [npub2?.ok, npub2?.caseId === npub1.caseId, npub2?.edition], [true, true, 2]);
+if (npub2?.ok === true) await ratifyAll(npub2);
+const ndoc2 = await caseDoc(npub1.caseId, 2);
+t("and it DISCLOSES that it rests on the NO-PROJECT relationship, never on N — the withdrawn claim B is "
++ "not carried forward as N's",
+  [ndoc2.row.relationship, ndoc2.row.project, ndoc2.row.claim, ndoc2.text.includes(CLAIM_B),
+   ndoc2.text.includes("AT LEAST ONE MEMBER ENTERED THIS CASE ON A CONCLUSION THAT IS NOT THIS PROJECT'S OWN")],
+  ["no_project", null, CLAIM_A, false, true]);
+const nSame = await publish(N, QN);
+t("UNCHANGED AFTER IT: refused ALREADY_A_CASE_MEMBER — the no-project conclusion is compared BY THE PIN",
+  [nSame?.ok, nSame?.reason, nSame?.recorded_by],
+  [false, "ALREADY_A_CASE_MEMBER", [{ case_id: npub1.caseId, edition: 2, state: "ratified" }]]);
+
+/* =======================================================================
+   9. THE BYTES ROUTE, TOLD APART.
+   ======================================================================= */
+console.log("\n--- 9. a make-current AFTER publication moves the bytes: the membership refusal is never asked ---");
+
+await must("C stands on reading A", await makeCurrent(C, QB, VA.name));
+await must("C concludes on it", await concludeFor(C, QB));
+const bpub1 = await publish(C, QB);
+if (bpub1?.ok !== true) await bail("C's edition 1 publishes", bpub1);
+await ratifyAll(bpub1);
+await must("C withdraws", await withdraw(C, QB, "the advertisement was re-dated"));
+await must("C moves its pointer to reading B AFTER publication", await makeCurrent(C, QB, VB.name));
+await must("C concludes on it", await concludeFor(C, QB));
+const rowQB = await bundleRow(QB);
+t("the make-current WROTE INTO THE SHARED QUESTION'S BYTES: the finding is no longer at edition 1's pin",
+  [typeof bpub1.bundleSha, rowQB?.bundle_sha === bpub1.bundleSha], ["string", false]);
+const bpub2 = await publish(C, QB);
+t("so the edition publishes by the BYTES route — and carries no `edition_warranted`, because the "
++ "membership refusal was never asked: that absence is how a caller tells the two routes apart",
+  [bpub2?.ok, bpub2?.edition, warrantOf(bpub2)], [true, 2, null]);
+
+console.log(`\ncase-edition-conclusion.test.mjs: ${pass} pass, ${fail} fail`);
+await mf.dispose();
+process.exit(fail ? 1 : 0);
