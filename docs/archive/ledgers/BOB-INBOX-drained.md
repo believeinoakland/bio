@@ -1594,3 +1594,65 @@ each keeping its id:** items 2 and 1. Both are product corrections and neither w
    `op=proposals` still carry F and no disposition row exists; A's case mute of `overdue_successor` suppresses that case's
    overdue items and a NEW kind there still reaches A; an OBLIGATION mute is refused by name. NEGATIVE CONTROL: key the
    item mute by case alone, and the B-feed arm fails by name.
+
+## DRAINED 2026-09-22 by SCHEDULER #13 — BOB #26's TREE-SHARING entry (`336e9f82`), verified at `TREE-SHARING.md` §1–§4 on `81510280`: item 1 PLACED as M0-110 and item 3 as M0-111 by SCHEDULER #12 (`50e91494`); item 2 PLACED as M0-114, BLOCKED on the first cloud session's FULL gate time and pass count (`kickoffs/NEW-MACHINE.md` §0), BOB #27's call on §4 (`d0e75a16`): *"it waits for the first cloud measurement"*; beside M0-110 and ahead of M0-111, the design's order of the three changes. M0-110 split into two stages the same day (BOB #27; TREE-SHARING, their order).
+
+**2026-09-22 · BOB #26 · BOB RULED THE THREE TREE-SHARING CHANGES — *"Yes to all 3 recommendations"* — designed in
+`docs/development/TREE-SHARING.md`.** Process rows that pay for themselves in gate time, Bob's own test (`CLAUDE.md` §2):
+today one DOCS landing took six gate runs where one was needed, because `main` moved five times under it. Order is the
+design's: item 1 with item 2's measurement beside it, then item 3. The ruling also settles *"DECIDED.md leaving the
+committed tree"*, which was with Bob: it leaves `main` (item 1). Each landing corrects every rule and kickoff its change
+supersedes, `CLAUDE.md` §1's table and §4's push lines included.
+
+1. **M0, at the head: the `coord` branch** (TREE-SHARING §1). First act, per-path churn on `main` measured; then the state
+   files move to `coord`, one write command and one read command against `origin/coord`, every reader redirected, and one
+   migration landing leaves a pointer at each old path. Accepts when, and NEGATIVE CONTROL, as §1 states them.
+2. **M0, beside item 1: the gates on GitHub's machines** (§3). First act, the measurement: runner wall time and pass count
+   against the Mac's, the suites that need a secret or the network, the minutes at the batch cadence. Then the workflow and
+   the push guard's check arm. Bob's acts, enabling Actions and any spending limit, go to BOB with those figures, once.
+3. **CONDUCT with M0, after item 1: landing in batches** (§2). `land/*` branches; CONDUCT's train on a cadence with one
+   gate; the push guard refuses a direct push to `main`. `depends-on` item 1.
+
+## DRAINED 2026-09-22 by SCHEDULER #13 — BOB #26's D-278 entry (`84dd441f`), verified at `INTERFACES.md` I3's Answers bullet and at the code on `81510280`: group (1) CLOSED IN FACT (`NOT_AUTHENTICATED`, C-38.1, the admission gate in `index.mjs`, REC-79 at `4df1cd06`); group (3) a stated design exception; item 1 PLACED as D-278 (RECORD, M9) after D-125 and before COFF-13, keeping its id; its DEBT row archived as placed, SCHEDULER #12's carry note (*all five groups stand*) corrected for (1). The entry's `d270-reach.test.mjs` is `d270-refusal-truth.test.mjs` on `main`; the row names the latter.
+
+**2026-09-22 · BOB #26 · D-278 RULED, ONE DETERMINATION PER GROUP (SCHEDULER #12's DELEGATION, item 3).** Written into
+`INTERFACES.md` I3 "Answers" as PROVISIONAL, traced at `0ce7447b`. Group (1), `unauthenticated`, CLOSES IN FACT: REC-79
+coded it on 2026-08-09 (`NOT_AUTHENTICATED`, C-38.1, the admission gate in `index.mjs`), so the row's first group was
+stale when it was carried. Group (3), the method 405s, is a stated design exception, not a code. The rest is one build
+item, door 2, keeping D-278's id.
+
+1. **RECORD (M9), D-278: code the codeless refusals, in the row's own order (4), (5), (2).** (4) one DEC-49 row for the
+   storage 503s of `capture`, `pdfstructure`, `acquire` and `attest`, translated for whoever installed the copy; (5) one
+   row for `unknown op`, with `error: "unknown op"` byte-identical; (2) the argument complaints of `verify`,
+   `publishedbytes`, `publishedcase` and `knock` take C-61.1 through `requiredArgument`, and the three
+   bootstrap-credential complaints of `claim` take installation rows like (4), their sentences saying no more than today's. Every site keeps `error`
+   beside the new `reason`; I3 gains the reasons (the integrator mints the IC). **Accepts when** each site answers its
+   `reason`, check and translation with `error` unchanged; `civicos-ui`'s `queueAbsent` still tells an older plane
+   apart; `preauth-vocabulary.test.mjs` stays green; `d270-reach.test.mjs`'s naming of group (2) is corrected to the
+   coded state, never exempted. NEGATIVE CONTROL: strip the `unknown op` site's code, and its arm fails by name.
+
+## DRAINED 2026-09-22 by SCHEDULER #13 — BOB #26's D-148/D-149 entry (`0ce7447b`), verified at `BIO_Case_Making_v0_1.md` §2 (both rulings, with Bob's words) and at the code on `81510280` (`node tools/status.mjs 8.action`: BUILT; C-2.10 in the catalogue): item 1 PLACED as D-148 and item 2 as D-149, after UI-69 with the M10 case path, each keeping its id, from SCHEDULER #12's held drafts (`origin/scheduler12/row-drafts`), re-verified; their DEBT rows archived as placed; D-147 stays a design row in `DEBT.md`.
+
+**2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT
+GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told
+the same day that the layers follow the AGENCY asked (federal FOIA governs federal agencies only). Each row leaves DEBT by
+door 2, keeping its id; both sit at M10 with D-147, which they do not close — D-147's lifecycle stays a design row, and
+the quote's revision chain is shaped so each later stage lands as its own entry. Both are product; neither waits on
+anything unbuilt (the action and its correspondence are BUILT, `node tools/status.mjs 8`).
+
+1. **RECORD (M10), D-148: the fee quote, a structured correspondence entry.** A `received` entry may carry a QUOTE: the
+   amount and currency as quoted, the stated basis verbatim, and the `sent` entry it answers; a later entry may name the
+   quote it revises (a waiver is a revision to zero, and both entries stand). Its grammar sits at C-2.10 beside the
+   correspondence arms; `promote` projects it from the bytes into an indexed table that `purge` clears in both arms, and
+   a read returns quotes by counterparty and by the request answered. I3 and I5 change (the integrator mints the ICs).
+   The record states no finding about a quote. **Accepts when** a quote projects and reads back by counterparty and by
+   request; a revision to zero keeps both entries; a quote answering no `sent` entry, or with an amount that is not a
+   number, is refused by name; an action with no quote reads byte-identical before and after. NEGATIVE CONTROL: drop the
+   projection from the per-bundle purge, and the purge arm fails by name.
+2. **RECORD (M10), D-149: the laws that govern a records request, by citation.** A records-request action carries a
+   list of citations, each with its level (federal, state or local), set by a member's authored act; a machine credential
+   is refused by name, and a machine PROPOSAL, if built, is labelled machine work. An empty list reads UNDETERMINED with
+   its sentence, never a default; the plane encodes no law's rules; `cpra_request` actions read unchanged. **Accepts
+   when** a member's list lands and reads back; an action with none reads undetermined, never federal; a machine
+   credential's list is refused. NEGATIVE CONTROL: default an empty list to a federal citation, and the undetermined arm
+   fails by name.

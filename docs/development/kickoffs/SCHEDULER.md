@@ -96,8 +96,8 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
 - **Every rebase that touches `QUEUE.md`/`BACKLOG.md`:** list upstream's hunks (`git diff <merge-base> origin/main --
   <file>`), carry them onto yours, and run the carry under `set -e` with the push as a SEPARATE step after you compare
   the `running` rows with `origin/main`. Chaining `…; git push` once published a failed carry and reverted CONDUCT's
-  flips twice (`12983f6f`, `60180168`; repaired `8e39602a`, `830f6648`). `docs/DECIDED.md` conflicts are regenerated,
-  never merged; the push guard refuses a stale one.
+  flips twice (`12983f6f`, `60180168`; repaired `8e39602a`, `830f6648`). `docs/DECIDED.md` is not committed (M0-99,
+  2026-09-22): a pre-M0-99 side's copy is dropped, so take the deletion (corrected by SCHEDULER #13).
 - **A row's `design:` must name a governed home.** A ruling that lives only in the BOB INBOX is not one: place the row,
   and ask BOB to fold the ruling first (D-431, M0-69 were placed this way and folded within the hour).
 - **A peer's message is a pointer.** Verify ids and shas (BOB once named M0-67 for the open M0-65); a defect is placed
@@ -154,7 +154,7 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
   Strip comments (or read each hit at its site) before a count becomes a disposition.
 
 - **A LEDGER REBASE CONFLICT IS THE `QUEUE.md` TRAP, IN EVERY LEDGER — AND CHECK THE ROW LENGTHS AFTERWARDS.** Carry
-  upstream's hunks onto yours and never take one side whole; `docs/DECIDED.md` is regenerated, never merged. This bit
+  upstream's hunks onto yours and never take one side whole; `docs/DECIDED.md` is not committed (M0-99): take the deletion. This bit
   `DEBT.md` on 2026-09-19: one side had rewritten two dispositions (D-182 458 → 946 chars, D-199 4044 → 4784) while the
   other had only archived a third row, so taking the archiving side whole would have reverted both rewrites.
   **A reverted row looks exactly like a row you kept** — the id is present, the state is plausible, and nothing fails.
@@ -189,6 +189,22 @@ owed, end the turn with one line saying so. **Resolving a rebase conflict in `QU
 - **DO NOT ASK LANES TO HOLD `main` FOR YOUR GATE — SUPERSEDED 2026-09-22 by Bob's ruling** (`CLAUDE.md` §6: *never queue a gate behind another lane's*; lanes must not back up behind long runs). SCHEDULER #9's practice (ask CONDUCT, BOB and DIST to hold until "landed") queued their landings behind gates that now take an hour or more on this machine, and it failed anyway: BOB #25's push crossed SCHEDULER #11's ask. Gate a CLEAN, committed tree so its verdict records; if `main` moved, fetch, rebase onto a PINNED sha, run `gates.mjs --since <measured commit>`, and push the rebased commit under a NEW branch name.
 - **A ROW DRAFTED AND WAITING FOR ROOM LIVES ON A BRANCH, NEVER ONLY IN A SCRATCHPAD** (SCHEDULER #10, 2026-09-21): `git mktree` and `git commit-tree`, pushed to `scheduler<N>/row-drafts` and never merged, named in the NEXT file; a successor reads each row with `git show` and re-verifies it before placing.
 - **CUTTING TO FIELDS, MECHANICALLY** (SCHEDULER #9, 27 rows in four passes, 2026-09-21): from the bottom, skipping a row this session already cut, archive the row's WHOLE pre-cut text under «ID», each line `> `-prefixed, FIRST; then truncate the heading to ~150 characters, milestone, interface, design and depends-on to ~110 and accepts-when to ~190, each ending `… (whole text: the cut archive)`, never inside a quoted §"anchor" and with `**` and backticks balanced; drop scope and narrative lines; keep `order:` and `added:` whole. Assert the ids and every `order:` line unchanged and every removed line present in the archive before writing either file.
+
+- **THE PUSH GUARD REFUSES A COMMIT WHOSE TREE CARRIES A RED GATE RECORD, ON ANY REF** (SCHEDULER #12, 2026-09-22): a
+  drafts-branch push of it is refused too. Park work from a RED tree as a `format-patch` on a drafts branch, and read a
+  push's result before any reset (a chained reset once left a commit recoverable only from the reflog).
+- **`mintid.test` FAILS WHEN A CORPUS FILE NAMES AN ID ABOVE ITS NAMESPACE'S HIGHEST ALLOCATION SITE** (a `### <ID> ·`
+  heading, a `| D-n |` row, an `## M-n ·` entry; SCHEDULER #12): mint only what you place in the same landing, and draft
+  a row under a placeholder id until then.
+- **A ROW OR A SUITE CITED ON `main` CAN EXIST ONLY ON AN UNMERGED BRANCH** (SCHEDULER #12 and #13, 2026-09-22): `main`
+  cited D-278 seven times while its row lived on `484ed359`, and BOB #26's ruling names `d270-reach.test.mjs`, which
+  `main` holds as `d270-refusal-truth.test.mjs`. `ledger.mjs find` answering "not found" and `git ls-files` are the
+  checks: carry the row verbatim, and name the file `main` has.
+- **THE LANE'S SCRIPTS LIVE ON A DRAFTS BRANCH, NEVER ON `main`** (`origin/scheduler<N>/row-drafts`, `lane-scripts/`):
+  the placement with the balanced foot cut, the DEBT doors, the inbox drain. A held landing is REGENERATED on the current
+  tree by its scripts, never applied as a stale patch. **A landing's order** (SCHEDULER #13): the `done` words and
+  `archive` each; place the new rows WITHOUT cutting; `refill`; THEN cut the foot to budget, since a cut before the
+  refill spends a product row's text on bytes the refill frees; then the drains, the DEBT doors, and `archive` those.
 
 ## Checks before every push
 

@@ -18471,6 +18471,7 @@ NARROWED to its witness at the 0.72.0 cut (its text landed at `4f7efed0`, verifi
 fields. The held D-148/D-149 drain is on `origin/scheduler12/row-drafts` as a patch, beside the scripts; the local branch
 is deleted. `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #13, for a successor with no memory and possibly no Mac.
 This claim passes to SCHEDULER #13, who supersedes it when it archives this session.
+**released 2026-09-22 by SCHEDULER #13**, which archived SCHEDULER #12 under D-398's three conditions and writes no successor claim: the lane's own files need none (`kickoffs/SCHEDULER.md`), and a claim released in its own commit is written by no one (`CLAUDE.md` §4, BOB #27).
 
 ## DELEGATION 2026-09-22 SCHEDULER (#12) -> BOB — **THREE ITEMS: the backlog's 150 KiB budget (owed since SCHEDULER #11), whether Bob's *M8-M10* orders the product rows among themselves, and D-278's five determinations (a design routing); the first two provisional and cheap to reverse**
 
@@ -18508,6 +18509,7 @@ Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
 **Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them `CLAUDE.md` §2's over-claim rule decides). Both were already running; nothing moved. Item 3 accepted by BOB #26 for its next landing.
 **DISCHARGED 2026-09-22** — item 3 ANSWERED by BOB #26 (the BOB INBOX entry of that date, D-278 ruled per group: (1) closed in fact, (3) a stated design exception, the rest one RECORD M9 row keeping D-278's id). Its drain waits for M0-109 with D-148/D-149's; SCHEDULER #13 owes it (`kickoffs/SCHEDULER-NEXT.md` item 2).
 **DISCHARGED 2026-09-22 by BOB #26:** item 3 answered — D-278 ruled per group in `INTERFACES.md` I3 "Answers"
+**PLACED 2026-09-22 by SCHEDULER #13:** D-278 as one RECORD M9 row keeping its id, after D-125 and before COFF-13; its DEBT row archived as placed, group (1) recorded CLOSED IN FACT.
 (PROVISIONAL): (1) was already coded by REC-79 (`NOT_AUTHENTICATED`, C-38.1); (3), the 405s, stay codeless by design; (4),
 (5) and (2) are coded with `error` kept beside the new reason — one RECORD item, the BOB INBOX's D-278 entry of
 2026-09-22, door 2 keeping D-278's id. *(Moved here 2026-09-22 by BOB #27 from inside DIST #4's M0-106
@@ -18663,6 +18665,7 @@ order:
 
 **open as of 2026-09-22** — item 1 is owed ahead of the LED-7 batch that moves D-388; items 2 and 3 with LED-7's closing
 landing. Nothing runnable waits on any of them today.
+**PLACED 2026-09-22 by SCHEDULER #13:** item 1 as M0-115 (`BACKLOG.md`, behind the product rows with the ledger tooling after LED-9, since D-388 is a question with BOB and moves only when it rules; its order line says it lands first); items 2 and 3 are LED-7's CLOSING landing's, in `WORK-PIPELINE.md` §3's retarget list since BOB #27 folded them, and pointed at from LED-7's cache row.
 
 ## CLAIM 2026-09-22 DIST (DIST #4 — DIST-NEXT rewritten for a successor with no memory and no .env: Bob's move to cloud-based Claude Code and his second account)
 
@@ -18824,6 +18827,7 @@ reports the path as `goneOnMain` (a WARN naming the lines, never a FAIL), so no 
 it; `plancheck` arm 2b is the check that the deletion was taken. A branch that did NOT modify the file merges without a
 conflict at all.
 **open as of 2026-09-22** — open until M0-99 lands and each owner has corrected its sentence or said why not; nothing here blocks a runnable row.
+**Item 9 CORRECTED 2026-09-22 by SCHEDULER #13** in `kickoffs/SCHEDULER.md`: both sentences now say `docs/DECIDED.md` is not committed (M0-99) and a pre-M0-99 side's copy is dropped, so take the deletion.
 
 **DISCHARGED 2026-09-22 by CONDUCT #12, for CONDUCT only (items 5-8):** `kickoffs/CONDUCT.md` step 6, "Mechanical conflicts"
 and "REGENERATE EVERY GENERATED INDEX LAST" corrected in the landing of M0-99 (batch 4); `kickoffs/CONDUCT-NEXT.md` rewritten in

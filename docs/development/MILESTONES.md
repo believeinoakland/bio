@@ -678,8 +678,8 @@ and handed to CONDUCT through the BOB INBOX.
 | D-145 bundle ids are per-instance, so nothing survives leaving | RECORD | M6 |
 | D-146 nine intent-layer write ops have no caller | UI | M8 · UI-13 |
 | D-147 `action` models a records request as one round trip | RECORD | M10 · REC-24 must read it before shipping the state machine |
-| D-148 a fee quote is EVIDENCE, not an administrative obstacle | RECORD | M10 · with D-147 |
-| D-149 the design is jurisdiction-blind | RECORD · FRAMEWORK | M10 · needs a design pass, not an item |
+| D-148 a fee quote is EVIDENCE, not an administrative obstacle | RECORD | M10 · with D-147 · PLACED 2026-09-22 in `BACKLOG.md` on Bob's ruling (BOB #26) |
+| D-149 the design is jurisdiction-blind | RECORD · FRAMEWORK | M10 · needs a design pass, not an item · PLACED 2026-09-22 in `BACKLOG.md` on Bob's ruling (BOB #26) |
 | D-150 the completeness claim, externally validated | RECORD · UI | M10 · REC-14 |
 | D-151 a machine credential can resolve an unassigned task (DEC-7) | RECORD | M8 · REC-28 |
 | D-153 AUDIENCES H4/H6 are the workflow, not hazards (DEC-13) | RECORD · UI | M10 · REC-14, REC-24, UI-17 |

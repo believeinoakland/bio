@@ -22,62 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-22 · BOB #26 · BOB RULED THE THREE TREE-SHARING CHANGES — *"Yes to all 3 recommendations"* — designed in
-`docs/development/TREE-SHARING.md`.** Process rows that pay for themselves in gate time, Bob's own test (`CLAUDE.md` §2):
-today one DOCS landing took six gate runs where one was needed, because `main` moved five times under it. Order is the
-design's: item 1 with item 2's measurement beside it, then item 3. The ruling also settles *"DECIDED.md leaving the
-committed tree"*, which was with Bob: it leaves `main` (item 1). Each landing corrects every rule and kickoff its change
-supersedes, `CLAUDE.md` §1's table and §4's push lines included.
-
-1. **M0, at the head: the `coord` branch** (TREE-SHARING §1). First act, per-path churn on `main` measured; then the state
-   files move to `coord`, one write command and one read command against `origin/coord`, every reader redirected, and one
-   migration landing leaves a pointer at each old path. Accepts when, and NEGATIVE CONTROL, as §1 states them.
-2. **M0, beside item 1: the gates on GitHub's machines** (§3). First act, the measurement: runner wall time and pass count
-   against the Mac's, the suites that need a secret or the network, the minutes at the batch cadence. Then the workflow and
-   the push guard's check arm. Bob's acts, enabling Actions and any spending limit, go to BOB with those figures, once.
-3. **CONDUCT with M0, after item 1: landing in batches** (§2). `land/*` branches; CONDUCT's train on a cadence with one
-   gate; the push guard refuses a direct push to `main`. `depends-on` item 1.
-
-**2026-09-22 · BOB #26 · D-278 RULED, ONE DETERMINATION PER GROUP (SCHEDULER #12's DELEGATION, item 3).** Written into
-`INTERFACES.md` I3 "Answers" as PROVISIONAL, traced at `0ce7447b`. Group (1), `unauthenticated`, CLOSES IN FACT: REC-79
-coded it on 2026-08-09 (`NOT_AUTHENTICATED`, C-38.1, the admission gate in `index.mjs`), so the row's first group was
-stale when it was carried. Group (3), the method 405s, is a stated design exception, not a code. The rest is one build
-item, door 2, keeping D-278's id.
-
-1. **RECORD (M9), D-278: code the codeless refusals, in the row's own order (4), (5), (2).** (4) one DEC-49 row for the
-   storage 503s of `capture`, `pdfstructure`, `acquire` and `attest`, translated for whoever installed the copy; (5) one
-   row for `unknown op`, with `error: "unknown op"` byte-identical; (2) the argument complaints of `verify`,
-   `publishedbytes`, `publishedcase` and `knock` take C-61.1 through `requiredArgument`, and the three
-   bootstrap-credential complaints of `claim` take installation rows like (4), their sentences saying no more than today's. Every site keeps `error`
-   beside the new `reason`; I3 gains the reasons (the integrator mints the IC). **Accepts when** each site answers its
-   `reason`, check and translation with `error` unchanged; `civicos-ui`'s `queueAbsent` still tells an older plane
-   apart; `preauth-vocabulary.test.mjs` stays green; `d270-reach.test.mjs`'s naming of group (2) is corrected to the
-   coded state, never exempted. NEGATIVE CONTROL: strip the `unknown op` site's code, and its arm fails by name.
-
-**2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT
-GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told
-the same day that the layers follow the AGENCY asked (federal FOIA governs federal agencies only). Each row leaves DEBT by
-door 2, keeping its id; both sit at M10 with D-147, which they do not close — D-147's lifecycle stays a design row, and
-the quote's revision chain is shaped so each later stage lands as its own entry. Both are product; neither waits on
-anything unbuilt (the action and its correspondence are BUILT, `node tools/status.mjs 8`).
-
-1. **RECORD (M10), D-148: the fee quote, a structured correspondence entry.** A `received` entry may carry a QUOTE: the
-   amount and currency as quoted, the stated basis verbatim, and the `sent` entry it answers; a later entry may name the
-   quote it revises (a waiver is a revision to zero, and both entries stand). Its grammar sits at C-2.10 beside the
-   correspondence arms; `promote` projects it from the bytes into an indexed table that `purge` clears in both arms, and
-   a read returns quotes by counterparty and by the request answered. I3 and I5 change (the integrator mints the ICs).
-   The record states no finding about a quote. **Accepts when** a quote projects and reads back by counterparty and by
-   request; a revision to zero keeps both entries; a quote answering no `sent` entry, or with an amount that is not a
-   number, is refused by name; an action with no quote reads byte-identical before and after. NEGATIVE CONTROL: drop the
-   projection from the per-bundle purge, and the purge arm fails by name.
-2. **RECORD (M10), D-149: the laws that govern a records request, by citation.** A records-request action carries a
-   list of citations, each with its level (federal, state or local), set by a member's authored act; a machine credential
-   is refused by name, and a machine PROPOSAL, if built, is labelled machine work. An empty list reads UNDETERMINED with
-   its sentence, never a default; the plane encodes no law's rules; `cpra_request` actions read unchanged. **Accepts
-   when** a member's list lands and reads back; an action with none reads undetermined, never federal; a machine
-   credential's list is refused. NEGATIVE CONTROL: default an empty list to a federal citation, and the undetermined arm
-   fails by name.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
@@ -88,39 +32,9 @@ milestone: M0 (process, Bob's direction 2026-09-18: *"those debts should be appr
 interface: none
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with `docs/development/WORK-PIPELINE.md` §3, which carries LED-7's design and accepts-when.
 depends-on: LED-6
-scope: as §3 states, EXCEPT the actor — batches of ~20 rows driven by SCHEDULER ITSELF (Bob, 2026-09-19: *"Scheduler should be actively involved in moving debt rows into the build plan (in the proper order)."*), never spawned into a development slot. **218 open rows, measured 2026-09-19 by SCHEDULER #2** (`grep -c '^| D-' docs/development/DEBT.md`); 223 before batch 1, which closed 4 in fact, placed D-158, routed D-325 and D-52 to BOB and carried 3. A single row whose verification needs a build or a long code trace goes to CONDUCT as its OWN row with its own id — never as "LED-7".
+scope: as §3 states, EXCEPT the actor — batches of ~20 rows driven by SCHEDULER ITSELF (Bob, 2026-09-19: *"Scheduler should be actively involved in moving debt rows into the build plan (in the proper order)."*), never spawned into a development slot. **218 open rows, measured 2026-09-19 by SCHEDULER #2** (`grep -c '^| D-' docs/development/DEBT.md`); 223 before batch 1, which closed 4 in fact, placed D-158, routed D-325 and D-52 to BOB and carried 3. A single row whose verification needs a build or a long code trace goes to CONDUCT as its OWN row with its own id — never as "LED-7". **OWED FROM M0-109's DELEGATION** (`CLAIMS.md`, 2026-09-22; SCHEDULER #13): the batch that moves D-388 waits on M0-115 (item 1); the CLOSING landing's retargets are §3's list, which BOB #27 widened to items 2 and 3 the same day.
 accepts-when: as §3 states it.
 added: 2026-09-18 · CONDUCT #5 (BOB #15's inbox entry of that date).
-
-### M0-99 · running — **SPAWNED 2026-09-22 by CONDUCT #12, after batch 2 landed M0-97 + D-341 (the same file, `tools/decided.mjs`) at 9d330478; SCHEDULER #12 kept this row at the cache head under CLAUDE.md §2 (it cuts gate time on every landing, M-94). NOT LANDED, CHECKED BY CONTENT at spawn: on the tree this flip lands in (`origin/main` @ `9d330478`), `docs/DECIDED.md` is still TRACKED (`git ls-tree` lists it) and `.gitignore` names it nowhere. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`docs/DECIDED.md` IS A GENERATED INDEX, COMMITTED, AND 88 COMMITS TOUCHED IT ON 2026-09-21: EVERY LANE'S LANDING CONFLICTS ON A FILE NOBODY WROTE.** `tools/decided.mjs` regenerates it, the push guard refuses a stale one, and every rebase regenerates it again (`ORCHESTRATION.md`'s measurement). Item 2 of BOB #23's four. — owner M0.
-order: kept at the head under Bob's ruling of 2026-09-22 (`CLAUDE.md` §2: no process row unless it cuts gate time or unblocks product) because it CUTS GATE TIME: 142 of the 209 commits on `main` in the 24 h to 13:30Z 2026-09-22 touched `docs/DECIDED.md` (M-94), so both sides of nearly every rebase carry it, `gates.mjs --since` re-runs its readers, and the push guard refuses a stale copy (SCHEDULER #12; placed by SCHEDULER #8 as item 2 of BOB #23's four)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 2, *a generated index is not committed*.
-depends-on: none. **Sequence after M0-97 and D-341** (the cache; the same file, `tools/decided.mjs`).
-scope: `docs/DECIDED.md` untracked and ignored; `decided.mjs` writes it on demand, and the seven tools that read it read through one freshness call; the push guard's and plancheck's staleness arms retire, their suites corrected with dated reasons, never exempted. **FULL GATE PROFILE**.
-accepts-when: a ruling edited on two branches merges with no `DECIDED.md` conflict, and `decided.mjs "<subject>"` answers from the merged corpus. How a liar passes it: keeping it committed under `merge=ours`, which hides staleness, so an arm asserts it is untracked.
-added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
-
-### M0-109 · running — **SPAWNED 2026-09-22 by CONDUCT #12, as its OWN worker rather than with M0-99 (so the floor lands in minutes, not with M0-99's FULL change). NOT LANDED, CHECKED BY CONTENT at spawn: on the tree this flip lands in (`origin/main` @ `b089c584`), `bio-plane/test/ledger.test.mjs` line 286 still asserts `rows.length > 100` while `docs/development/DEBT.md` holds 101 rows. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **`bio-plane/test/ledger.test.mjs` FLOORS THE LIVE `DEBT.md` AT MORE THAN 100 ROWS, SO THE DEBT FOLD'S OWN PROGRESS REDS THE GATE.** Its agreement arm asserts *"the real DEBT.md has rows (else the agreement is vacuous)"* as `rows.length > 100`. LED-7 took the ledger to 99 open rows on 2026-09-22, and SCHEDULER #12's DOCS gate read RED on that arm alone (tree `635ded3c`, run `83089.94bae0`: 42/43 suites); at today's 101 rows the next closure reds it again. — owner M0.
-order: in the cache, in M0-100's slot while CONDUCT holds M0-100 for M0-99: it UNBLOCKS PRODUCT — while the floor stands no DEBT row can leave by any door, and the fold that feeds product rows into the plan stops (Bob, 2026-09-22, `CLAUDE.md` §2: a process row that unblocks product may sit at the head); a one-line correction, so CONDUCT may brief it with M0-99's worker if that brief reaches the ledger suites (SCHEDULER #12)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and this arm's subject is the owed/ledger agreement, not the ledger's size; with `CLAUDE.md` §5: *correct superseded tests, never exempt them*.
-depends-on: none.
-scope: the non-vacuity floor becomes `rows.length > 0` while `DEBT.md` holds rows, corrected at the site with a dated comment saying why 100 was wrong (the fold was always meant to drain the ledger); the arm's two real assertions (no residue row reads closed; no owed row is archivable) are unchanged. When LED-7 archives `DEBT.md` whole the arm reads the archive, and the site says so. **TARGETED GATE PROFILE** (`bio-plane/test`).
-accepts-when: the suite passes over today's live ledger and would over any non-empty one; an EMPTY ledger fails the floor by name. How a liar passes it: deleting the floor, so the empty-ledger arm must fail. NEGATIVE CONTROL: restore `> 100`, and the suite fails at the floor by name on a ledger of 100 rows or fewer.
-added: 2026-09-22 · SCHEDULER #12 (found by its own DOCS gate; `node tools/mintid.mjs M0`).
-
-### REC-163 · running — **SPAWNED 2026-09-22 by CONDUCT #12, flipped in the landing of batch 2 (REC-157, M0-97 + D-341, M0-81). NOT LANDED, CHECKED BY CONTENT at spawn: on the tree this flip lands in (the landing of batch 2 onto `origin/main` @ `48aab56b`), `bio-plane/src/setup.mjs` line 103 still renders the literal `Believe in Oakland &middot; group instance`, and `op=instancegroup` still admits only `admin`, `member` and `probe` (`bio-plane/src/index.mjs` line 503). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **EVERY INSTALLED INSTANCE'S SETUP PAGE NAMES BELIEVE IN OAKLAND AS ITS GROUP.** `bio-plane/src/setup.mjs`, served publicly at `/`, renders *"Believe in Oakland · group instance"* as a literal; D-436 made the producing group ONE recorded value (`Store#instanceGroup`, read by `op=instancegroup`) and the page does not read it. Routed by CONDUCT #11 at D-436's integration, verified at the code on `86523052`. — owner RECORD.
-order: first after BOB #23's four partition items, which Bob's direction put at the head: a correction to just-landed work (D-436), and the first page a newly installed group sees names another group (SCHEDULER #9, 2026-09-21)
-milestone: M7
-interface: I3 additive — `op=instancegroup` admits the public class (BOB #24, `BIO_Publication_v0_1.md` §7); the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the publishing group's public identity: the slug is PUBLIC, BOB #24, 2026-09-21), with `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (the `group` value, D-436).
-depends-on: D-436.
-scope: `op=instancegroup` admits the public class, and the setup page reads the recorded slug and shows it, or says that none is recorded, signed in or out. No display name or domain is invented: they are the next row's, under Publication §7.
-accepts-when: signed out, the page served at `/` renders the recorded slug and no `Believe in Oakland`, and under a store recording none it says so; a public `op=instancegroup` answers the slug. How a liar passes it: hiding the literal with CSS, so the arm reads the served bytes. NEGATIVE CONTROL: restore the literal, and the second-slug arm fails by name.
-added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs REC`).
 
 ### M0-106 · queued — **NARROWED 2026-09-22 by SCHEDULER #12: the TEXT landed at `4f7efed0` (`kickoffs/DIST.md` step 1: a GREEN FULL record for the tree released, else `gates.mjs --since`, the battery only when neither exists), verified on `origin/main`. What remains is the WITNESS, at the next cut (0.72.0, owed no earlier than 2026-09-23 04:00Z): its step 1 names the record it relied on and runs no battery. DIST reports the cut commit and that line; then close.** **DIST's RELEASE GATE RE-RUNS THE WHOLE BATTERY ON MERGED `main`, CALLING IT *"a tree nobody has tested"* (`kickoffs/DIST.md`), WHICH IS FALSE WHEREVER THAT EXACT TREE ALREADY CARRIES A GREEN FULL RECORD** (D-293 keys the record by tree). DIST #4's 0.71.0 gate took ~2.5 h here for a battery that runs in ~16 min. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob's ruling, 2026-09-22, `CLAUDE.md` §2: *The goal is BIO work; process is overhead*: no process row unless it cuts gate time or unblocks product); DIST's own act, never a worker slot (moved by SCHEDULER #11 on BOB #25's word, 2026-09-22)
@@ -161,6 +75,36 @@ depends-on: none — REC-152's gate and stamp are built.
 scope: rule 1: REC-152's stamp of the caller's `principal` on both ops, both apply `runPrincipalGate`, and `suggest` refuses a run that is not running, as `extractpropose` already does.
 accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` on both ops; the caller's closed run is refused on `suggest`; the caller's own running run lands from a session AND from a machine credential that member minted. How a liar passes it: gating one caller kind only, so both arms run. NEGATIVE CONTROL: drop the gate in `suggest`, and the other-principal arm fails by name.
 added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs REC`).
+
+### M0-110 · queued — **THE MESSAGE BOARD RIDES ON `main`: A CLAIM, A QUEUE FLIP OR THE REGENERATED RULINGS INDEX IS A COMMIT THAT MOVES `main` FOR EVERY LANE AND VOIDS EVERY OTHER LANE'S GREEN GATE RECORD.** 89 of 112 commits on `main` on 2026-09-22 to ~14:45Z touched `CLAIMS.md`, `QUEUE.md` or `DECIDED.md`; one DOCS landing took six gate runs where one was needed. RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*). — owner M0.
+order: at the head of the plan: it CUTS GATE TIME on every landing, Bob's own test (`CLAUDE.md` §2), item 1 of the ruling's order; STAGE 1 BESIDE M0-99 and stage 2 after it, which rewires the same readers (BOB #27, 2026-09-22: *"M0-110's first stage starts BESIDE M0-99, not after it"*) (SCHEDULER #12 and #13; BOB #26's inbox entry, item 1)
+milestone: M0
+interface: none — no op or wire shape moves; the integrator classifies.
+design: `docs/development/TREE-SHARING.md` §1 (the message board leaves `main`: a `coord` branch), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none for STAGE 1 (new files only); STAGE 2 waits for M0-99 (BOB #27, 2026-09-22), which is DONE (CONDUCT #12's batch 4).
+scope: as §1. STAGE 1, beside M0-99, NEW FILES ONLY: measure per-path churn on `main` and name each file moved or kept against §1's line; the one write command (fetch, edit without a checkout, the ledger arms, push, retry on a non-fast-forward, each edit an intent anchored to a block) and the one read command against `origin/coord`, with their suite. STAGE 2, after M0-99: the state files move to `coord` and every reader is redirected; ONE migration landing leaves a pointer at each old path and corrects `CLAUDE.md` §1's table and every kickoff naming a moved file. **FULL GATE PROFILE**.
+accepts-when: a claim, a queue flip and a handoff each land on `coord` without moving `main`; every reader answers as it did from `main`; a `main` gate record survives a `coord` write; a new block and a line into an existing block, written concurrently, leave the line in its block (BOB #27: each retry re-applies the edit as an intent anchored to a block heading). NEGATIVE CONTROL: point one reader back at `main`'s old path, and its suite fails by name.
+added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1; `node tools/mintid.mjs M0`).
+
+### REC-167 · queued — **A CASE PREPARED BY `op=publish` AND RATIFIED AFTER ITS PROJECT WITHDREW THE CONCLUSION IT RECORDS STILL COMMITS: THE SIGNED EDITION STATES A CONCLUSION NOBODY HOLDS.** Measured by REC-157 (M-92): P concludes, `op=publish` prepares edition 1 recording P's claim, P withdraws, then `op=caseratify` and `op=ratify` both succeed, while `op=basisversions` shows P on no conclusion. Pre-existing since REC-135. — owner RECORD.
+order: FIRST of the backlog, behind REC-166 in the cache: the signed, published record claiming a conclusion its project withdrew, CLAUDE.md §2's worst class, on the path REC-157 just corrected (SCHEDULER #12, 2026-09-22; REC-157's DELEGATION)
+milestone: M10
+interface: I3 — `op=caseratify` refuses what it accepted, by a new code; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 4 (*`NOT_CONCLUDED` at `op=caseratify` reads the publishing project's relationship*) and item 9's comparison, asked of an unratified preparation.
+depends-on: none — REC-135 and REC-157 are on `main`.
+scope: `ratifyCaseDocument` asks, per roster member, what `op=publish` asks: `#caseConclusionFor` on the document's `case_project` is concluded AND is the conclusion the document RECORDS (`#editionsRecordingConclusion`, applied to the one document signed); otherwise a new code with a canned translation (DEC-49) names what moved and the route, publish again.
+accepts-when: M-92's path is refused by the new code and nothing is signed; after concluding again on another claim, the OLD preparation is refused too, while publishing again and ratifying the new edition succeeds; an unchanged conclusion ratifies as today. How a liar passes it: checking concluded-ness alone, which the conclude-again arm defeats. NEGATIVE CONTROL: drop the comparison, and that arm fails by name.
+added: 2026-09-22 · SCHEDULER #12 (REC-157's DELEGATION to SCHEDULER, placed this commit; `node tools/mintid.mjs REC`).
+
+### UI-77 · queued — **EVERY INSTANCE'S MEMBER FENCE AND PUBLIC HEADER NAME BELIEVE IN OAKLAND AS ITS GROUP.** `civicos-ui/app.html` declares `const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B" }`, rendered at `#m-grp`/`#m-idstr` and `#p-gname`/`#p-gid`/`#p-mono`, with a third literal in `#m-idstr`'s markup: a sovereign group's public page claims to be this project's. — owner UI.
+order: directly after REC-163, the same defect's surface half; the two share no file (SCHEDULER #9, 2026-09-21)
+milestone: M7
+interface: I3 consumer (`op=instancegroup`, public since REC-163).
+design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the slug is PUBLIC; a display name is shown WITH it, never instead), with DEC-69: a surface invents nothing.
+depends-on: REC-163 (the public read).
+scope: the member fence and the public header read `op=instancegroup` and show the recorded slug, or say that none is recorded; the display-name, domain and monogram literals go.
+accepts-when: signed out and in, against a plane recording a second slug, both surfaces show it and none renders `Believe in Oakland` or `believeinoakland.org`. How a liar passes it: a CSS-hidden literal, so the arm reads the DOM's text. NEGATIVE CONTROL: restore the `GROUP` literal, and the no-literal arm fails by name.
+added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs UI`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
