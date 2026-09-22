@@ -702,12 +702,12 @@ together with `DEBT.md`).
 | D-162 connections run through NAMED things; ideas cannot connect | FRAMEWORK | M4 · DOCTRINE (Bob) — a DEC at the entity axis |
 | D-165 what each action kind requires is unmodelled | RECORD | M10 · deferred with a trigger · ARCHIVED 2026-09-22 by door 3, the trigger watched above |
 | D-166 the CPDF-5 corpus URLs went stale | CONTENT-PDF | M1 · re-locate the corpus |
-| D-167 Tier-1 text trips the `client_rendered` stack test | FRAMEWORK | M3 · next stack-axis item |
+| D-167 Tier-1 text trips the `client_rendered` stack test | FRAMEWORK | M3 · next stack-axis item · ARCHIVED 2026-09-22 by door 3, stated in DOCUMENT-PROFILES.md |
 | D-168 `op=cite` is type-only, so RETIRED is citable | RECORD | M9 · bounds REC-11/UI-20 |
 | D-169 `#setScalar` cannot ADD a frontmatter key | RECORD | M7 · batch with the honesty defects · PLACED 2026-09-22 in `BACKLOG.md` |
 | D-170 an ungrouped condition cannot be muted | RECORD | M8 · WATCH |
 | D-171 `#revisionKind` tiebreaks on a backdatable time | RECORD | M7 · beside D-169 · PLACED 2026-09-22 in `BACKLOG.md` |
-| D-172 the DO alarm can re-enter a tick still in flight | RECORD | M1 · decide at the next scheduler consumer |
+| D-172 the DO alarm can re-enter a tick still in flight | RECORD | M1 · decide at the next scheduler consumer · CLOSED IN FACT 2026-09-22 (the serial flag, `#tickRunning`) |
 | D-174 plane vocabulary on the sign-in gate | RECORD · UI | M8 · open until DEC-49 is answered |
 | D-175 the battery varies by 2 assertions run-to-run | CONDUCT | M0 · next M0-lane pass |
 | D-176 UI-14's all-clear rests on interpreted feed-emptiness | UI | M8 · WATCH |
