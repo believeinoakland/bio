@@ -1,78 +1,96 @@
-# SCHEDULER-NEXT — the resume for SCHEDULER #12 (written 2026-09-22 by SCHEDULER #11 at its refresh)
+# SCHEDULER-NEXT — the resume for SCHEDULER #13 (written 2026-09-22 by SCHEDULER #12 at its refresh)
 
-**BROUGHT TO THE STATE OF SCHEDULER #12's FIRST LANDING (2026-09-22, ~14:30Z) by SCHEDULER #12, still live; line 1
-unchanged for the chip's gate. When #12 refreshes, it rewrites line 1 for #13.** Read `CLAUDE.md`, then
-`kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then `docs/architecture/BIO_System_Design.md`
-**whole**, then this, then `QUEUE.md` and `BACKLOG.md` whole. Everything below is a POINTER measured at this landing:
-re-measure before you rest anything on it. The refresh line is **70%** (`CLAUDE.md` §4).
+Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then
+`docs/architecture/BIO_System_Design.md` **whole**, then this, then `QUEUE.md` and `BACKLOG.md` whole. Everything below was
+MEASURED at this landing (2026-09-22 ~15:30Z). It is a POINTER: re-measure before you rest anything on it. I refreshed at
+~68% (the line is 70%, `CLAUDE.md` §4). **WRITTEN FOR A SUCCESSOR WITH NO MEMORY, POSSIBLY IN THE CLOUD:** Bob ordered a
+move to cloud-based Claude Code and a second account on 2026-09-22 (BOB #27). What this file says about "the Mac" — the
+machine check, `ps`, `npm ci` sizes, local worktrees — applies only if you run there; everything else is in the repository.
 
-## The plan, as it stands
+## The plan, as I left it
 
-- **Cache (8):** LED-7 (this lane's own act) · M0-99 (CONDUCT #12 is flipping it `running`) · M0-109 (`ledger.test.mjs`'s
-  live-DEBT floor of 100, which reds the gate at the fold's next closure; in M0-100's slot) · REC-163 (`running`) · M0-106
-  (DIST's own act, never a worker slot) · M0-107 · REC-166 · REC-165.
-- **Backlog (111), in the order Bob's ruling of 2026-09-22 set** (`CLAUDE.md` §2: *The goal is BIO work; process is
-  overhead*; `kickoffs/SCHEDULER.md` step 3): M0-100 first (held by CONDUCT for M0-99), then REC-167 (ratify-after-withdraw, REC-157's DELEGATION); UI-77 (waits
-  on REC-163); D-85; the M1-M7 corrections (D-116 … D-60, D-65, D-169, D-171, D-179, CAP-14, D-54); the M8 corrections
-  (REC-159 … D-82, D-125); COFF-13, D-52, D-84, D-220, D-182, D-178; then the features, UI-74's accept ceremony first;
-  then, BEHIND THE PRODUCT ROWS, M0-104, M0-105 and 24 process rows in their prior order (M0-101, the session-hygiene
-  instruments, the reading-budget rows, the ledger tooling, the instrument cluster D-438 … M0-96), then the older M0 rows
-  and the four blocked rows. M0-99 and M0-100 stayed at the head because they CUT GATE TIME (M-94, M-90).
-- **`BACKLOG.md` is 153,134 B of 153,600.** Every process row at the foot is now CUT to its fields, and D-66 and D-86 were
-  cut on arrival, so THE NEXT PLACEMENT CUTS PRODUCT ROWS from the foot up. BOB #26 RULED the budget stays (a larger
-  read-whole file is the wrong direction); revisit only with an instance of a spawn delayed or misbriefed by a cut row.
-- **DEBT.md: 101 open rows, and NO ROW MAY LEAVE until M0-109 lands** (at 100 the floor reds every gate). **BOB INBOX:
-  ONE ENTRY, HELD** — BOB #26's D-148/D-149 (Bob's rulings; RECORD, M10, after UI-69 beside D-147). Its drain is
-  COMMITTED on the local branch `scheduler12-held-d148-d149` (`fe7be641`, un-pushable while its tree's record is RED):
-  when M0-109 is on `main`, rebase that commit and land it.
+- **THE ORDERING LAW** (Bob, 2026-09-22, `CLAUDE.md` §2; `kickoffs/SCHEDULER.md` step 3): product rows before process
+  tooling; a process row is placed only if it CUTS GATE TIME or UNBLOCKS PRODUCT, and may then sit near the head; every
+  other process row goes behind the product rows; landings are batched. Within product: a record over-claim before a
+  feature (`CLAUDE.md` §2), corrections to just-landed work before new work. BOB #26 confirmed both (keep this order).
+- **Cache (8):** LED-7 (this lane's own act, never a worker slot) · M0-99 (`running`) · M0-109 (`running`: the ledger.test
+  floor, below) · REC-163 (`running`; CONDUCT's batch 3 was landing it) · M0-106 (DIST's own act, NARROWED to its witness at
+  the 0.72.0 cut) · M0-107 · REC-166 · REC-165.
+- **Backlog (113), top:** M0-110 (`coord`, TREE-SHARING §1, `depends-on` M0-99) · M0-111 (landing in batches, §2,
+  `depends-on` M0-110) · M0-100 (NARROWED by BOB #27 to `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`, `depends-on` M0-111)
+  · REC-167 (ratify after a withdrawal commits a stale claim; M10, first product row) · UI-77 · D-85 · the M1-M7
+  corrections · the M8 corrections · COFF-13 … D-178 · the features (UI-74 first; D-148/D-149 will join after UI-69) · then,
+  BEHIND THE PRODUCT ROWS, M0-104, M0-105, the process rows in their prior order, the older M0 rows, the four blocked rows.
+- **`BACKLOG.md` is ~153,550 B of 153,600** (budget 150 KiB KEPT, BOB #26: revisit only with an instance of a spawn delayed
+  or misbriefed by a cut row). Every process row at the foot is cut; EVERY PLACEMENT NOW CUTS PRODUCT ROWS from the foot.
+- **DEBT.md: 101 open rows. NO DEBT ROW MAY LEAVE UNTIL M0-109 IS ON `main`:** `bio-plane/test/ledger.test.mjs` floors the
+  live ledger at `rows.length > 100`, so at 100 every gate reads RED (it did: tree `635ded3c`, 42/43).
+- **BOB INBOX — three entries, none drained:** (1) TREE-SHARING (Bob's *"Yes to all 3"*): items 1 and 3 PLACED as M0-110
+  and M0-111; item 2 (gates on GitHub's machines) WAITS for BOB #27's `TREE-SHARING.md` §4 (the cloud removes its
+  Mac-memory premise); drain the entry once item 2 is placed. (2) D-278 RULED per group. (3) D-148/D-149 RULED.
 
 ## Owed acts, in order
 
-1. **CONDUCT's next completions** — REC-163 and M0-99: ONE commit each batch (sha an ancestor of `origin/main`, the work
-   read at the code), `done`, `ledger.mjs archive`, `refill`, invariants; tell CONDUCT what entered.
-2. **BOB #26's next landing** brings (a) D-148 and D-149, ruled by Bob (a fee quote is EVIDENCE; every records law
-   governing the agency asked applies, layered), as a BOB INBOX entry: RECORD, M10, beside D-147, door 2 keeping their
-   ids — D-147 likely rides with them; (b) D-278's determinations per group (item 3 of the DELEGATION SCHEDULER (#12) ->
-   BOB): place each designed row in order.
-3. **THE INTENT LAYER'S TRIGGER** (BOB #25; the Framework's front matter, §12): send its DESIGN act to BOB when
-   `node tools/status.mjs 12` reads the publication ceremony and the accept surface BUILT. Unmet.
-4. **LED-7, one landing per wake, batched.** Next, oldest first after the defects: D-175 (two assertions varying run to run,
-   measured in August on a quarter of today's battery: a worker measures, or it narrows), D-128, D-129, D-134, D-147 (with
-   D-148/D-149), D-150, D-153, D-156, D-159, D-165. D-121 and D-124 are COLLIDED ids (LED-8); D-64's four questions are
-   BOB's; D-53 is with Bob.
-5. **HELD under Bob's ruling — process rows that pay nothing — not placed:** the retirable control's head declares
-   fourteen arms where `ARMS` runs fifteen (CONDUCT #11's route; draft on `origin/scheduler12/row-drafts`, its M0 id minted
-   and unplaced — NEVER name that id in the corpus before its row exists: `mintid.test` fails a prose-driven floor);
-   D-441 (M0-97's sweep: title-case ruling markers `decided.mjs` cannot see; in `DEBT.md`, fix named). Place either only
-   if it comes to cut gate time or unblock product.
-6. **Not rowed, SCHEDULER's call (BOB #26):** a DIGEST-level duplicate across bundles (different raw bytes, one
-   evidentiary digest), `LINK-FIDELITY.md` "The work, in order" step 5's cross-bundle check in `op=audit`. A gap with a
-   design: place it when its turn comes, after the D-179 it sits beside.
+1. **CONDUCT's completions** (REC-163; M0-109 if it rode in batch 3; M0-99): ONE commit per batch — the landing sha an
+   ancestor of `origin/main` AND the row's work read at the code, `done`, `node tools/ledger.mjs archive <ID>`,
+   `node tools/ledger.mjs refill`, `node tools/ledger.mjs invariants`; tell CONDUCT what entered.
+2. **Once M0-109 is on `main`, drain both held entries in ONE landing:**
+   - **D-148/D-149:** its drain is `origin/scheduler12/row-drafts:held/d148-d149-drain.patch` (a `format-patch` of my
+     commit `fe7be641`, which the push guard refuses on any ref because its tree carries that RED record). Regenerate it
+     on the current tree rather than applying the stale patch: `lane-scripts/place2.mjs` (D-148 after UI-69, D-149 after
+     D-148; the drafts are in the patch), `lane-scripts/drain2.mjs` (the entry to `BOB-INBOX-drained.md`, both DEBT
+     dispositions, MILESTONES), then `ledger.mjs archive D-148` and `D-149`.
+   - **D-278:** BOB #26's entry: group (1) `unauthenticated` CLOSES IN FACT (REC-79's `NOT_AUTHENTICATED`, C-38.1) — MY
+     carry note on its DEBT row says *all five groups stand*, which was WRONG for (1) (I grepped single-line refusals and
+     took (1) from the row): correct it in the archived disposition; group (3) the 405s is a stated design exception;
+     place ONE row, RECORD M9, keeping D-278's id, as the entry's item 1 states it (before COFF-13, with the refusal
+     class), then archive its DEBT row as placed.
+3. **TREE-SHARING item 2** when §4 is on `main`: place it as its design then says, and drain the entry.
+4. **M0-106:** close when DIST reports the 0.72.0 cut commit and its step-1 line naming the GREEN FULL record it relied on.
+5. **THE INTENT LAYER'S TRIGGER** (BOB #25; the Framework's front matter, §12): send its DESIGN act to BOB when
+   `node tools/status.mjs 12` reads `12.publish` and `12.accept` BUILT. Unmet at this landing.
+6. **LED-7, one landing per wake, batched, after M0-109:** oldest first after the defects — D-175, D-128, D-129, D-134,
+   D-147 (the request lifecycle, a design row beside D-148/D-149), D-150, D-153, D-156, D-159, D-165. D-121 and D-124 are
+   COLLIDED ids (LED-8); D-64's four questions are BOB's; D-53 is with Bob.
+7. **HELD under the law (process rows that pay nothing), not placed:** the retirable control's head declares fourteen arms
+   where `ARMS` runs fifteen (the one drafted row in `row-drafts/` on the drafts branch; its id is minted — keep it out of
+   the corpus unless you place it); D-441 (`decided.mjs` blind to title-case ruling markers; in `DEBT.md`, fix named).
+8. **Not rowed, SCHEDULER's call (BOB #26):** a DIGEST-level duplicate across bundles, `LINK-FIDELITY.md` "The work, in
+   order" step 5's cross-bundle check in `op=audit`; place it beside D-179 when its turn comes.
 
-## Done this session (verified on the remote at landing)
+## Mechanics this session paid for — none of them live anywhere but here and the drafts branch
 
-Archived SCHEDULER #11 (D-398's three conditions at 13:27Z; its CronList empty by its own reply; worktree removed,
-+667 MiB). THE RE-ORDER under Bob's ruling (24 process rows behind the product rows; M-94). D-278, a PHANTOM row cited
-seven times on `main` and living only on an unmerged branch, carried VERBATIM. CONDUCT #12's batch 2 closed (REC-157,
-M0-97, D-341, M0-81). BOB #26's entry drained (D-152 and D-164 closed in fact; D-179, D-125 placed). LED-7's waiting
-rows placed (D-65, D-169, D-171, D-178, D-74, D-86, D-66) and REC-157's DELEGATION as REC-167. BOB #26 answered both
-questions of the re-order: keep 150 KiB, keep the product order (over-claims before features, `CLAUDE.md` §2).
+1. **The push guard refuses a commit whose tree carries a RED gate record, on ANY ref**, and reads the working tree's
+   `DECIDED.md` even for a drafts-branch push. Park work from a RED tree as a patch on a drafts branch; check a push's
+   result before any reset (I chained one and recovered the commit only from the reflog).
+2. **`mintid.test` fails when a corpus file names an id above the namespace's highest allocation site** (a `### <ID> ·`
+   heading, a `| D-n |` row, a `## M-n ·` entry). Mint only what you place in the same landing.
+3. **Cutting to fields is scripted:** `lane-scripts/place.mjs` inserts drafted rows after anchors and cuts from the foot to
+   the budget, keeping backticks, quotes and §"anchors" balanced and closing an open bold (a cut inside a quoted section
+   name once broke an anchor). The other scripts: `reorder.mjs`, `debtclose.mjs` (door 1 or 2, the prior disposition moved
+   verbatim, the read-back checked with `owed.mjs`'s `isClosedDebtRow`), `drain.mjs`, `swap.mjs`, `carryclaims.mjs`
+   (both sides of a tail-append conflict in `CLAIMS.md` or `MEASUREMENTS.md`, upstream first), `resolvedone.mjs`.
+4. **Every rebase of `QUEUE.md` carries CONDUCT's `running` words**: compare the `running` rows with `origin/main` before
+   you push. A row archived on your side and flipped upstream keeps your removal and takes the flip on the next row.
+5. **A row cited on `main` can live only on an unmerged branch** (D-278 did): `ledger.mjs find` says "not found"; carry it
+   verbatim and route what it needs.
+6. **Read a gate only from its completion line** (`N/N suites green · M assertions passing`, then `gates: GREEN|RED`);
+   the wrapper's exit status is not the gate's.
 
-## The traps this session paid for
+## Done this session (verified on the remote)
 
-1. **A minted id named before its row exists reds `mintid.test`** (`no live floor is driven by prose`), in ANY corpus
-   file. Mint only what you will place in the same landing, or never write the id down.
-2. **A cut can land inside a quoted section name** (`the section "THE DEC-49 …`), breaking the anchor a design line
-   cites. The cut must keep backticks, quotes and §"anchors" balanced and close an open bold; the scripts that did this
-   are on `origin/scheduler12/row-drafts` under `lane-scripts/` (never merged).
-3. **A row cited on `main` can live only on an unmerged branch** (D-278): `ledger.mjs find` answers "not found"; carry it
-   verbatim from the branch and route what it needs.
-4. **Three batteries at once put swap at 6.8 of 8 GB**: I waited, bounded, for `main` to move and the batteries to drain
-   rather than start a fourth — then gated once over the rebase.
+Archived SCHEDULER #11 (D-398's three conditions, its CronList empty by its own reply). THE RE-ORDER (24 process rows
+behind the product rows; M-94). D-278 carried. CONDUCT #12's batch 2 closed (REC-157, M0-97, D-341, M0-81). BOB #26's
+group of four drained (D-152, D-164 closed in fact; D-179, D-125 placed); seven LED-7 rows placed; REC-167 placed. M0-109
+placed for the floor. TREE-SHARING items 1 and 3 placed as M0-110 and M0-111; M0-101 SUPERSEDED and M0-100 NARROWED (BOB
+#27); M0-106 NARROWED to its witness.
 
-## Your first acts (a successor's)
+## Your first acts
 
-`git fetch origin`; confirm line 1 on `origin/main`. `npm ci` in the three packages (check `df -h`). Arm the self-wake
-(every 30 minutes, off :00/:30) and its 5-day renewal. Archive SCHEDULER #12 under D-398's three conditions re-checked
-at the moment you act, after its own CronList reads empty by message. Then `node tools/ledger.mjs invariants`, then the
-owed acts.
+`git fetch origin`; confirm line 1 of this file on `origin/main`. On the Mac: `scutil --get LocalHostName` must print
+Sparky-Air, and `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/` (check `df -h`); in the cloud, the same `npm ci`.
+Arm the self-wake (every 30 minutes, off :00/:30) and its 5-day renewal. SCHEDULER #12 (session
+`local_af0e4d84-b9d6-4f2d-95db-3a08c8da97ba`, worktree `.claude/worktrees/festive-agnesi-eb5410`, branch
+`claude/festive-agnesi-eb5410`) deletes both its crons before stopping: archive it under D-398's three conditions
+re-checked at the moment you act, after its own CronList reads empty by message — or, if you cannot reach the Mac's
+sessions, say so to BOB, who can. Then `node tools/ledger.mjs invariants`, then the owed acts.
