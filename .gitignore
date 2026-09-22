@@ -395,3 +395,8 @@ bio-plane/.nc-migrate-released/
 # worker's own run logs, kept INSIDE the worktree for the reason `.d310-runs/` gives.
 .m097-harness/
 .m097-runs/
+
+# M0-81's pen, named for its item on the rule at `.rec84-control-pristine/`: `bio-plane/test/occupancy.control.mjs` keeps
+# per-arm pristine copies of `tools/occupancy.mjs` here while it arms them, and the worker kept its run logs here, inside
+# its own worktree. An untracked copy of an instrument left by an interrupted run is a second copy for the next walk to enrol.
+.m081-harness/

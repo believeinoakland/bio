@@ -1380,6 +1380,15 @@ const REGISTER_FLOOR = {
      arms (1)–(15) `test/decided.control.mjs` runs, all AS DECLARED, with a dated RUN token. No other declaration
      moved. Nothing FELL. ONE KEY SET, grepped after writing: `^  arms:` matches TWICE in this file, here and in the
      FLEET block far below. */
+  /* [M0-81] 2026-09-21: MOVED 1579 -> 1596, classified 260 -> 261, corpus 261 -> 262, run 223 -> 224, ALL FOUR from
+     this item's own `--strict` print on its COMMITTED tree `ad5151a2`, exit 0 unpiped (`REGISTER FLOOR  arms
+     1596/1579 · classified 261/260 · corpus (suites read) 262/261 · GREW by 17 arm(s)`, `floor 224/223
+     reproducible · GREW by 1`) — never added by hand. One new suite, `test/occupancy.test.mjs`, whose declaration
+     states seventeen arms (a)-(q), each RUN by `test/occupancy.control.mjs`. ONE KEY SET. Nothing FELL. */
+  /* [M0-81] 2026-09-22: AND 1596 -> 1597 ONLY, same worker, from the `--strict` print on its committed tree
+     `c0e1714a`, exit 0 unpiped (`REGISTER FLOOR  arms 1597/1596 · classified 261/261 · corpus (suites read)
+     262/262 · GREW by 1 arm(s)`, `floor 224/224 reproducible`) — arm (r) of the same declaration (list_task_runs'
+     totalRuns, found by driving the judgement over the live listing, M-93). Nothing FELL. */
   arms: 1600,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
