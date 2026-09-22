@@ -50,7 +50,7 @@
   // package.json's `version` are the member's two declaring sites and
   // `bio-plane/test/resolveversion.test.mjs` refuses a tree where they and the
   // authority disagree — in BOTH directions.
-  "vars": { "VERSION": "0.70.0" },
+  "vars": { "VERSION": "0.71.0" },
 
   // CPU. CPDF-15 MEASURED 10,400.6 cpu_ms per page at 300 dpi on this engine and
   // model (34.7% of the 30 s Workers Paid ceiling, 1,040x the Free one), so this
