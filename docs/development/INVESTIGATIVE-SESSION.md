@@ -838,7 +838,12 @@ question that project confirmed-cites; anything else is refused by a new stated 
 C-number the builder's), checked AFTER the sight and principal checks, so a target the caller cannot see still answers
 as absent. Work on another question opens a run over it, as rule 1 already says of an interactive session.
 `op=extractpropose` names no target question (it proposes a reading of captured content, which no run's context
-bounds) and this rule does not touch it. The builder measures `agent-worker`'s one `suggest` site (`index.mjs`,
+bounds) and this rule does not touch it. **`op=capturerequest` — RULED 2026-09-22 by BOB #28, on the M0-110 worker's measurement (a member
+files a request under another member's run, and the request row credits that run's principals):** rule 1 applies to it
+— a request that names a run is a production of that run, so it names a RUNNING run whose PRINCIPAL is the caller, by
+the same stamp, the same sight check first and `runPrincipalGate`. Rule 1's target does not: a request names an
+address, not a question, and what the record holds is instance-wide. A request naming no run is the member's own and is
+untouched. The builder measures `agent-worker`'s one `suggest` site (`index.mjs`,
 `submit`) against the rule: a candidate aimed outside its run's context is a finding, never an exemption.
 
 No production carries its own copy of the manifest: that would be a second place to state one fact (D-21), able to

@@ -46,6 +46,18 @@ first written. SCHEDULER **replenishes** the cache; CONDUCT **fills slots**.
 closed id is in either; the cache holds ≤ 8 rows and no `blocked` row; every cache row's `depends-on` is met; both files
 are within budget.
 
+**WHEN `BACKLOG.md` IS OVER ITS BUDGET, THE TAIL MOVES, NOT THE HEAD — RULED 2026-09-22 by BOB #28 on SCHEDULER #14's
+question (its DELEGATION in `CLAIMS.md`).** Cutting rows to their fields cut the rows about to be spawned (seventeen at
+one placement, every product row still whole) and runs out, while LED-7 folds ~95 debt rows into this file. So: (1) no
+placement cuts a row; rows already cut stay as they are. (2) The order continues past `BACKLOG.md` into
+`docs/development/BACKLOG-LATER.md`, the SAME order's tail, LOOKED UP, never read whole, unbounded: a placement that
+puts `BACKLOG.md` over budget moves whole rows from its FOOT to the head of `BACKLOG-LATER.md`, and a refill promotes
+rows back from that head as room frees. (3) Every reader of the backlog (`ledger.mjs` find, refill and the invariants,
+`plancheck`'s pipeline arms, `owed.mjs`, the design and substrate checks, `mintid`'s floor) reads the two files as one
+sequence, and "exactly one place" spans all three. (4) It is a new state file, so it rides with M0-110's family to
+`coord`: its row is placed after M0-110's cutover. **Until it is built**, `BACKLOG.md`'s budget is 200 KiB
+(SCHEDULER sets it in `ledger.mjs`) and no new cut is made.
+
 ## 3. DEBT.md FOLDS INTO THE BUILD PLAN, and is retired as a live file
 
 Bob, 2026-09-18: *"those debts should be appropriately folded into the build plan so that those debts are retired - in

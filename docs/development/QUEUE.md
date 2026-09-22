@@ -22,6 +22,23 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-22 · BOB #28 · D-442 DESIGNED, OP=CAPTUREREQUEST RULED, AND THE BACKLOG'S OVERFLOW RULED — three placements.**
+
+1. **RECORD (M10), D-442: publishing writes nothing on a member finding.** `BIO_Publication_v0_1.md` §3 rule 12 carries the
+   fix, its accepts-when and its NEGATIVE CONTROL; D-442 keeps its id (door 2). **Place it FIRST of the product
+   corrections**: one project's act silently moves another project's published pins, REC-166's class on the publication
+   path. I3 changes; the integrator mints the IC.
+2. **RECORD (M9): `op=capturerequest` takes rule 1** (`INVESTIGATIVE-SESSION.md` §11 item 5, the paragraph after "Rule 1's
+   target"): the stamp, the sight check and `runPrincipalGate` when a request names a run. **Accepts when** another
+   principal's running run is refused `AI_RUN_NOT_PRINCIPAL`, the caller's own lands, and a request naming no run is
+   unchanged. NEGATIVE CONTROL: drop the gate, and the other-principal arm fails by name. Directly after REC-165, whose
+   fix it reuses: **if REC-165's worker is still open, CONDUCT may brief it in (owed at integration); otherwise a row.**
+3. **M0: the backlog's tail file** (`WORK-PIPELINE.md` §2, "When `BACKLOG.md` is over its budget, the tail moves"): a
+   placement moves whole rows from `BACKLOG.md`'s foot to `BACKLOG-LATER.md`, a refill promotes them back, and every
+   reader reads both as one order. **Accepts when** a placement over budget cuts no row and leaves every id in exactly one
+   file. NEGATIVE CONTROL: point one reader at `BACKLOG.md` alone, and its arm fails by name. `depends-on` M0-110 (a new
+   state file rides to `coord`). **Until built, SCHEDULER raises the budget to 200 KiB in `ledger.mjs` and cuts nothing.**
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.

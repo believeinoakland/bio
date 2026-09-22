@@ -18887,7 +18887,7 @@ the cut already costs every spawn one archive lookup, so the next unit of room i
 behind the product rows (≈35 KiB, all cut) to a second file the reading budget treats as LOOKED UP, not by a bigger
 file. Nothing runnable waits on it today (the cache is full and none of wave 1 has landed).
 
-**open as of 2026-09-22** — the next placement after this one is the event that makes it bind.
+**DISCHARGED 2026-09-22 by BOB #28**: `WORK-PIPELINE.md` §2, *"When `BACKLOG.md` is over its budget, the tail moves, not the head"* — no further cuts; the order's tail continues in `BACKLOG-LATER.md`, looked up; 200 KiB until that is built.
 
 ## CLAIM 2026-09-22 RECORD (REC-166 — a project's make-current writes nothing on the shared question: `op=versioncurrent` promotes only the PROJECT, whose one promotion carries the pointer and the receipt, INVESTIGATIVE-SESSION.md §7 fix (a))
 
