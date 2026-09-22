@@ -17503,8 +17503,8 @@ text: slug }`, D-102) in the SAME upload that creates the worker — read at tha
 4. **The slug grammar is pinned equal:** `Store.GROUP_SLUG_RE` (`bio-plane/src/store.mjs`) and `SLUG_RE`
    (`newgroup/src/index.mjs`) are compared byte-for-byte by `instance-group.test.mjs` S4 — a change to either moves both.
 
-**open as of 2026-09-21** — OPEN until DIST has deployed the release carrying D-436, seeded `biosmoke7`'s two stores
-(item 3), and stated item 3's route for sovereign instances installed earlier.
+**Held open from 2026-09-21 until the discharge below** — until DIST had deployed the release carrying D-436, seeded
+`biosmoke7`'s two stores (item 3), and stated item 3's route for sovereign instances installed earlier.
 
 **DISCHARGED 2026-09-22 by DIST #4.** The release carrying D-436 is 0.71.0 (`v0.71.0` = `9439431e`), deployed to biosmoke7
 and live-verified. Item 1 verified at the code: `INSTANCE_NAME` rides `uploadInstall`'s creating PUT in both arms. Item
@@ -18383,3 +18383,17 @@ and `docs/development/STORE-AS-CACHE.md` (their D-164 lines marked closed; STORE
 `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER
 (#11) -> BOB DELEGATION's answer paragraph); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — the D-436 DELEGATION's contradictory marker settled; DIST-NEXT kept true: 0.71.0 landed at 06832aff, a BATCH owed for REC-157)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/followup`), Sparky-Air
+paths: `docs/development/CLAIMS.md` (the D-436 (worker) -> DIST DELEGATION's old `open as of` line, reworded; this
+  block), `docs/development/kickoffs/DIST-NEXT.md` (the landing commit, the owed list and the session state only),
+  `docs/DECIDED.md` (GENERATED, regenerated LAST).
+why: plancheck warned CONTRADICTORY DELEGATION on the D-436 block, which carried DIST #4's DISCHARGED line beside its
+  original `open as of 2026-09-21`; the line is reworded to BOB #25's form for D-288 ("Held open from <date> until the
+  discharge below"), keeping its history. DIST-NEXT named the branch merge `23463895` as the pointer; 0.71.0 landed on
+  main at `06832aff`, after the first landing tree `31febe21` gated RED under contention (M0-103). REC-157 (IC-173, I3
+  MINOR 49.1.0) is on main: a BATCH, not a CUT NOW — it widens what a publisher may do and closes no security,
+  disclosure or authority defect — owed no earlier than 2026-09-23 04:00Z, a day after 0.71.0's cut; bound `6dbaeb5a`.
+**released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.

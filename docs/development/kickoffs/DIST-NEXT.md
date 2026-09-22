@@ -10,7 +10,8 @@ of it — a figure is about the tree and the moment it was taken on, and a deplo
 
 - **BATCH** (no security or disclosure closing): **D-436 / IC-172** (I3 49.0.0 MAJOR, I5 1.24.0 MINOR: the producing
   group is ONE recorded value per store, table `instance_group`, written once) and **D-434** (`app.html`'s recipe step
-  cites; `civicos` MOVED). Tag `v0.71.0` = `9439431e` (object `5390d5bd`); pointer merge `23463895`. Members'
+  cites; `civicos` MOVED). Tag `v0.71.0` = `9439431e` (object `5390d5bd`); LANDED on main at `06832aff` (the first
+  landing tree `31febe21` gated RED under two batteries' contention, M0-103; the re-merged `f9350a06` GREEN alone). Members'
   artifacts byte-identical to 0.70.0's (`a7e5f590` / `0d99f5d0` / `b26dee19`): they moved their VERSION label only.
 - **THE SEED — irreversible, done, never to be repeated** (a second is refused C-64.3). The deploy's boot recorded
   NOTHING on either store (read BEFORE seeding: the new `op=instancegroup` answered `group: null`). Then scratch, then
@@ -52,19 +53,26 @@ July probe residue, not DIST's, so `op=purge` is not used.
 
 ## What is OWED, in order
 
-1. **Nothing on 0.71.0.** WHEN DIST CUTS continues on the self-wake: `git log v0.71.0..origin/main` against the rows.
+1. **A BATCH is owed no earlier than 2026-09-23 04:00Z (a day after 0.71.0's cut): 0.72.0, carrying REC-157 / IC-173**
+   (I3 MINOR 49.1.0: `op=publish`'s ALREADY_A_CASE_MEMBER compares the relationship, so a moved project conclusion takes a
+   new case edition). It WIDENS what a publisher may do — NAME it in the landing report. Not a CUT NOW: no security,
+   disclosure or authority defect (CONDUCT #12 concurs). Main's record: FULL GREEN for tree `0a2b5b64` (`f25d43b3`),
+   `--since` GREEN for `9bf659a4` (`9d330478`). Bound `6dbaeb5a` at 2026-09-22 21:07 PDT; a cut that would cross 70% goes
+   to DIST #5. **M0-106** (DIST's, head of the backlog): the gate's step 1 may rest on a GREEN FULL record of the tree
+   released or on `gates.mjs --since` — write it into `DIST.md` when CONDUCT routes it.
 2. **NEXT CUT adds 0.71.0 to the upgrade arm** (row above). `alterafter`, read against the SEQUENCE (lesson 19):
    135 → 169 → 186 → 203 → 220 → 237 pass / 66 fail, then **279 / 78** at 0.71.0 — the step is the D-436 assertions
    (+2 per migrated store; the six bricked 0.58.0-written stores fail both), nothing new bricks. Each release row now
    adds **19** (17 + the two D-436 assertions): expect **298 / 78** with the 0.71.0 row; baseline 376 / 0.
-3. **The coverage REGISTER FLOOR reads 1583 against 1579** ("GREW by 4" — this cut's declared control arms; strict
-   passed). The floor's owner raises it at integration; CONDUCT was told.
+3. **RESOLVED: the coverage REGISTER FLOOR** read 1583 against 1579 after 0.71.0 (its declared control arms); CONDUCT
+   #12's batch 2 re-read it; MEASURED by DIST #4 on `9d330478`'s tree: EXACT, arms 1622/1622 · classified 263/263.
 4. **D-260 item 2** (DIST #3's handoff, not re-measured): DIST's deploy half — one organisation-principal `ai`
    credential carried as a deploy secret the way `DAEMON_TOKEN` is — comes AFTER the plane's caller lands. Look up its
    placement (`ledger.mjs find D-260`) before acting.
 5. **Sent to BOB, not DIST's to edit:** `BIO_Distribution_v0_1.md` §4 still says the fleet reaches a sovereign group
    only when Bob deploys the installer — superseded by Bob's standing permission (DIST deployed `newgroup` at every cut
-   since 0.66.0), and its front matter's §4 Incomplete bullet says the same.
+   since 0.66.0). BOB #25 is correcting it: the §4 Incomplete bullet is gone (`032d1ce1`); at `9d330478` §4's body
+   sentence and the Status clause still say it.
 6. **Carried, NOT re-verified:** tags v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline (`9ed18019`);
    `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only.
 
@@ -97,9 +105,10 @@ INFO-2026-0099-auditor-report-feb-2022, -0100-acfr-fy2023-24-fund-statements, -0
 ## Session state
 
 - **Self-wake:** recurring `b9dd7809` (`23 */6 * * *`, WHEN DIST CUTS, opening with `get_usage` against 70%) and the
-  ONE-SHOT renewal `541fd1f1` at **2026-09-26 20:53 PDT** (lesson 17); armed 2026-09-21 ~20:50 PDT. The batch bound
-  `b0ef4512` (00:07 PDT 2026-09-22) finds the cut complete. All session-only: a successor arms its own.
-- **Context ~46% at this edit**; the refresh line is 70% (CLAUDE.md §4).
+  ONE-SHOT renewal `541fd1f1` at **2026-09-26 20:53 PDT** (lesson 17); armed 2026-09-21 ~20:50 PDT. The 0.72.0 batch
+  bound is `6dbaeb5a` (2026-09-22 21:07 PDT). All session-only: a successor arms its own.
+- **Context ~57% at this edit**; the refresh line is 70% (CLAUDE.md §4). Bob ruled 2026-09-22 (CLAUDE.md §6): never
+  queue a gate behind another lane's — run yours when you need it.
 - Machine Sparky-Air; disk ~4 GiB free at the cut — `df -h` before any bump. Worktree `.claude/worktrees/dist-4`
   (made by `git worktree add`, so it has NO `.env`: DIST #4 read the main checkout's `.env` by absolute path through a
   scratchpad `withenv.mjs`, never copying it). Baton reads `holder: DIST`. Account `20b53357…` confirmed by USING it.
