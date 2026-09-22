@@ -1,13 +1,13 @@
 # Authority, delegated trust, and who answers the question
 
-**Status** · The record of Bob's 2026-07-30 CAPTURE rulings on authority and delegated trust, extended by his 2026-07-31 ruling on what publication actually requires. RULED sections are settled and are not re-litigated. **The preamble's "Nothing here is BUILT yet" had been false since 0.54.0 — the staleness this front matter exists to catch — and M0-27 CORRECTED IT IN PLACE on 2026-09-14.** Measured against `bio-plane/src` at plane 0.58.0: the three-valued authority record (`authority` / `authority_state` / `authority_basis`, `index.mjs:5289-5295`), the `provenance_chain` of hops the plane builds and never accepts from a caller, the two-hop grade-C archive chain, the `via` column on `captured_locators` (`schema.mjs:460-470`), the producer/consumer task split (`task_queue` / `tasks`, `schema.mjs:527-577`) with `op=taskdrain` / `taskforward` / `taskresolve` and a drain consumer on the reconciling alarm, the three-consecutive-failures-or-fourteen-days threshold (`store.mjs:28021`), and the publication fence in its 2026-07-31 shape (C-18.9, `bio-checks.mjs:1689-1727`) are all [BUILT]. Two things are [ABSENT]: MECHANICAL determination of authority, and the per-origin sub-document attribution D-55's surviving case needs. Complete as a record of the rulings; incomplete as a description of the system, per the list below. as of 2026-09-14.
+**Status** · The record of Bob's 2026-07-30 CAPTURE rulings on authority and delegated trust, extended by his 2026-07-31 ruling on what publication actually requires. RULED sections are settled and are not re-litigated. **The preamble's "Nothing here is BUILT yet" had been false since 0.54.0 — the staleness this front matter exists to catch — and M0-27 CORRECTED IT IN PLACE on 2026-09-14.** Measured against `bio-plane/src` at plane 0.58.0: the three-valued authority record (`authority` / `authority_state` / `authority_basis`, `index.mjs:5289-5295`), the `provenance_chain` of hops the plane builds and never accepts from a caller, the two-hop grade-C archive chain, the `via` column on `captured_locators` (`schema.mjs:460-470`), the producer/consumer task split (`task_queue` / `tasks`, `schema.mjs:527-577`) with `op=taskdrain` / `taskforward` / `taskresolve` and a drain consumer on the reconciling alarm, the three-consecutive-failures-or-fourteen-days threshold (`store.mjs:28021`), and the publication fence in its 2026-07-31 shape (C-18.9, `bio-checks.mjs:1689-1727`) are all [BUILT]. Two things are [ABSENT]: MECHANICAL determination of authority, and per-origin attribution of a rendered page's REGIONS, which D-55's design of 2026-09-21 DEFERRED as a refinement because the surviving case no longer needs it (§What D-55 becomes). Complete as a record of the rulings; incomplete as a description of the system, per the list below. as of 2026-09-21.
 
 **Place in the system** · A level-2 design. `BIO_System_Design.md` §3 lists it as the level-2 design serving construct 1, **membership and authority**, whose level-1 home is `BIO_Membership_Architecture_v2.md`; its subject matter belongs equally to construct 2, **intake, capture and provenance**, home `BIO_Intake_Doctrine_v1_1.md`, which is where the capture-side doctrine it rules is folded. It is upstream of two of CAPTURE's other designs: `ARCHIVE-FALLBACK.md` consumes its transitive-trust ruling and `CLIENT-RENDERED.md` records that its three-valued ruling SUPERSEDED D-55's block on rendered capture. Its closing fence is enacted as C-18.9 in `bio-plane/checks/bio-checks.mjs`, and `DEC-42` and D-52 bear on the inbox half.
 
 **Incomplete sections** ·
 - §RULED: authority is three-valued — its first clause, *"where the determination can be made mechanically, authority is assigned during capture"*, is [ABSENT]. Nothing in `bio-plane/src` derives authority; `index.mjs:5291-5295` marks `determined` only when a caller asserted one and otherwise writes the basis *"no mechanical determination is implemented"*, so every capture with no assertion is undetermined by construction rather than by finding.
 - §RULED: undetermined authority goes to a todo list — the task record is [BUILT] and is transport-agnostic as this section requires; what does not exist is any transport at all (D-52, no notification channel), so the load-bearing *"might later BE email"* parenthesis has never been tested against a second surface.
-- §What D-55 becomes — still the live frontier rather than a closed narrowing: D-55 is open and BLOCKS D-64, per-origin sub-document attribution is [ABSENT], and rendered capture, which this document unblocks in doctrine, is not built (`CLIENT-RENDERED.md`).
+- §What D-55 becomes — CLOSED BY DESIGN on 2026-09-21: the surviving case is designed at document grain in `CLIENT-RENDERED.md` ("DESIGNED 2026-09-21") and is [DESIGNED-not-built], with one fence, D-440. Rendered capture, which this document unblocks in doctrine, is not built (D-64, no longer blocked on D-55). Attribution of a rendered page's regions to origins is DEFERRED as a refinement.
 
 **Contents**
 - [The problem this replaces](#the-problem-this-replaces)
@@ -224,6 +224,20 @@ barred from publication until resolved. What survives is the genuinely deferred
 case, which is the day BIO wants to treat a third party's script output as
 evidence in its own right. That still needs per-origin sub-document attribution
 and still shares a wall with D-53.
+
+**CLOSED BY DESIGN 2026-09-21 (BOB #24). The surviving case does not need
+per-origin sub-document attribution, and it no longer shares a wall with D-53.**
+A third party's output that is evidence is ACQUIRED as its own document, and
+attributed at document grain under the three-valued rule above. A rendered
+capture's content authority is set by this document's own rule, *follow the
+data*: it is `determined` as the host only when the host alone supplied the
+render's data and ran its code; otherwise it is `undetermined`, with a dated
+basis naming each other origin. The mechanism, the trace at the code it rests on,
+and its one fence (D-440) are in `CLIENT-RENDERED.md`, §What must be recorded,
+"DESIGNED 2026-09-21". Attribution of a rendered page's REGIONS to the origins
+that produced them stays DEFERRED as a refinement. It awaits a `dom` extent
+producer and a renderer that attributes nodes to requests, and when it comes it
+corrects no record.
 
 ## RULED 2026-07-31: what publication actually requires
 

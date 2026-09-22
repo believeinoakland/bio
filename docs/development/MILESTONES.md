@@ -143,7 +143,7 @@ part re-fetched and its outcome (confirmed / changed / unavailable) recorded.
 
 **Absorbs:** D-91 phase 2, now restructured by the topology decision below · D-118
 (service bindings on Free are unmeasured and the tiering rests on them) · D-64
-client-rendered (D-55's shape decided below) · `CAPTURE-SCALING.md` item 6 — post-hoc
+client-rendered (D-55's shape decided below, and settled 2026-09-21) · `CAPTURE-SCALING.md` item 6 — post-hoc
 reuse verification and re-fetch at ratification, **DECIDED 2026-07-31 under Bob's
 delegation and queued as CAP-4**; the mandatory-ness is this project's decision rather
 than a ruling of his, and is labelled that way · D-54 (the installer does not detect
@@ -176,7 +176,8 @@ the Workers plan) · D-63 / D-66
 > use; the protocol file does not exist yet, by design, and writing it is part of the
 > work rather than a surprise halfway through.
 **Depends on:** the PDF half on a Free-tier measurement (D-118); the rendered half on
-D-55, and **D-55 is less blocked than its row says** — see below.
+its own build and `CLIENT-RENDERED.md`'s four open questions. **D-55 CLOSED BY DESIGN on
+2026-09-21** — see below.
 
 > **D-55, unblocked as far as it can honestly be, 2026-07-31.** The row reads as an
 > open doctrine question and it is not: **Bob already RULED the doctrine** — content
@@ -196,6 +197,13 @@ D-55, and **D-55 is less blocked than its row says** — see below.
 > of a third-party origin. That is a provisional design decision, recorded so
 > CONTENT-HTML can be scoped; it does not authorise treating a rendered capture as
 > evidence, which still waits on the capture path itself.
+>
+> **SETTLED 2026-09-21 by BOB #24, and D-55 CLOSED BY DESIGN** (`CLIENT-RENDERED.md`,
+> "DESIGNED 2026-09-21"). The shape above is kept and refined in two points: origins are
+> recorded by AXIS, data (`render.data`) and code (`render.third_party_executed`), after
+> Bob's two axes of 2026-07-30; and the RENDERED artifact carries its own content
+> authority, `determined` as the host only when the host alone supplied data and ran
+> code, so the shell's authority is never read as covering another origin's output.
 
 > **The topology decision, 2026-07-31 (Bob).** Heavy, dependency-laden functions move
 > OUT of the plane into dedicated single-purpose Workers called over service
@@ -597,7 +605,7 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-61 unattended writer can take a lease · DONE (REC-2) | RECORD | M1 · done |
 | D-62 `setup.mjs` omits `content_hash` | RECORD | M7 |
 | D-63 unmeasured stacks | FRAMEWORK | M2 |
-| D-64 client-rendered capture | CAPTURE | M2 · blocked on D-55 |
+| D-64 client-rendered capture | CAPTURE | M2 · its build and `CLIENT-RENDERED.md`'s four open questions (D-55 closed 2026-09-21) |
 | D-65 monitoring contracts unconsumed | FRAMEWORK → CAPTURE | M1 · M3 |
 | D-120 member-driven egress diversity (DEC-1) | CAPTURE | M1 |
 | D-66 unmeasured content types | FRAMEWORK | M2 |
@@ -636,7 +644,7 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | ARCHIVE-FALLBACK · per-document cadence by volatility | RECORD · CAPTURE | M1 |
 | ARCHIVE-FALLBACK · Memento rather than Wayback | RECORD | M6 |
 | LINK-FIDELITY steps 6–8 · objective type, cascade planting, re-resolution | RECORD · CAPTURE | M4 |
-| CLIENT-RENDERED · rendered grade and method vocabulary | CAPTURE | M2 · needs D-55 |
+| CLIENT-RENDERED · rendered grade and method vocabulary | CAPTURE | M2 · an open question for ratification in `CLIENT-RENDERED.md` |
 | CONSTRUCTS Steps 0–5a | FRAMEWORK | M3 · M4 |
 | CONSTRUCTS Steps 6–8b | FRAMEWORK · UI | M4 |
 | ~~no scheduler exists~~ BUILT 2026-08-01 — one DO alarm, FIVE consumers | RECORD | M1 · landed |
@@ -769,7 +777,8 @@ milestone claims them:
   **D-90** the bias invariants — doctrine, and none of them blocks anything scheduled.
   D-53's "blocks S-11 step 5" is stale: bulk release shipped in 0.34.0.
 - **D-55** is NOT in this list any more. Its doctrine was already ruled; only its
-  shape was open, and the shape is decided provisionally under M2 above.
+  shape was open, and the shape decided provisionally under M2 above was settled on
+  2026-09-21, when D-55 closed by design (`CLIENT-RENDERED.md`).
 - **D-45** unbacked register entry at promote, **D-38** the citation ceiling — settled
   by decision, default is to leave them.
 - **D-56** CPU headroom, **D-70** the third axis, **D-100** the retired plane's egress lesson —

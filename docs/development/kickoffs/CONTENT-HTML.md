@@ -38,9 +38,11 @@ uncontested body of work.
    The ruling is that JS-rendered content IS the content and must be captured at
    the SAME GRADE. That needs the Browser Rendering path — which PRODUCES bytes
    and provenance, i.e. it is CAPTURE (the I1 producer side), not structure from
-   bytes. And D-64 is "blocked behind D-55 (per-origin authority for a rendered
-   capture) for anything carrying third-party script output." So the headline item
-   is neither this area's layer nor currently unblocked.
+   bytes. D-64 WAS "blocked behind D-55 (per-origin authority for a rendered
+   capture) for anything carrying third-party script output"; D-55 CLOSED BY DESIGN
+   on 2026-09-21 (`CLIENT-RENDERED.md`, "DESIGNED 2026-09-21"), and D-64 now waits on
+   its own build and that document's four open questions. So the headline item is
+   not this area's layer, and it is not yet buildable.
 
 Net: CONTENT-HTML has almost no path of its own today. Standing a session on it
 now would mostly generate delegations into CAPTURE and FRAMEWORK — which is the
@@ -58,8 +60,11 @@ Candidate independent slices, none to be started before Bob picks one:
   a document outline (headings/sections/element-reference tree) that FRAMEWORK
   consumes as I2, genuinely separate from CAPTURE's link partitions. Whether such
   a layer is real work or a rename of what exists needs an ARCH boundary cut.
-- **Nothing yet, until D-55 unblocks the Browser Rendering path**, at which point
-  D-64 becomes a real CAPTURE+CONTENT-HTML pairing.
+- **Nothing yet, until `CLIENT-RENDERED.md`'s four open questions are settled and
+  the Browser Rendering path is built** (D-55 no longer blocks it: closed by design,
+  2026-09-21), at which point D-64 becomes a real CAPTURE+CONTENT-HTML pairing. That
+  design names what this area would own: a `dom` extent producer, which is the
+  trigger for attributing a rendered page's regions to the origins that produced them.
 
 ## If a session does start here
 
