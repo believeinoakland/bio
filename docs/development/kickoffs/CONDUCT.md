@@ -160,9 +160,9 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
 6. **Run `node tools/plancheck.mjs` before every push and get it to 0 fail.** It runs `tools/corpuscheck.mjs`: a landing
    that changes a construct moves its home document's body and front matter in the same commit (`CORPUS-STANDARD.md` §4),
    a worker's design gap is folded into that document's Incomplete sections, and `node tools/corpuscheck.mjs --write
-   <file>` regenerates a Contents. `docs/DECIDED.md` is guarded at the push by a hook (M0-56): if it refuses, run
-   `node tools/decided.mjs`, commit, push again — it fires after a rebase lands a peer's rulings under a correct index.
-   `docs/DECIDED.md` conflicts at nearly every merge: take either side, then regenerate it; never hand-merge a generated file.
+   <file>` regenerates a Contents. `docs/DECIDED.md` is generated on demand and never committed (M0-99).
+   A branch cut before M0-99 that changed it merges as modify/delete: take the deletion (`git rm docs/DECIDED.md`), never
+   `git add -A` over it, which re-tracks it and fails `plancheck` arm 2b.
 7. **Escalate to Bob ONLY genuine decisions** — doctrine, priority, risk carrying his name, effects on people outside the
    project — and only through BOB (`CLAUDE.md` §3). A turn that edits area code has stopped being CONDUCT: spawn a worker.
 
@@ -223,7 +223,7 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
   by `SendMessage`, and is VERIFIED at the merge.
 - **Batch finished items under ONE gate**, ordered deliberately (security first), each IC resolved on the base as read at
   ITS landing — **then run the suites where they MEET**: two green branches were red together.
-- **Mechanical conflicts are scriptable, the rest are not:** `docs/DECIDED.md` = either side + regenerate; `bio-plane/dist/`
+- **Mechanical conflicts are scriptable, the rest are not:** `docs/DECIDED.md` from a pre-M0-99 branch = the deletion; `bio-plane/dist/`
   = ours + `build-plane.mjs`; REGISTER_FLOOR = main's key + both sides' comments, re-read from `--strict` on the
   COMMITTED merge; CLAIMS/MEASUREMENTS/INTERFACE-CHANGES = keep both. Everything else: read BOTH sides.
 - **`Dropped-from-branch:` trailers sit in the LAST paragraph with `Co-Authored-By`.** A placement or archiving BEATS a
@@ -236,7 +236,7 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
   (`gates.mjs --since <measured commit>` once that tree RECORDED GREEN: it re-runs the units reading BOTH sides and
   re-checks later commits; runtime on both sides → the full set, earlier figure DISCARDED). A completion line names the commit it measured; if that is not what you
   push, say which commits it did not cover.
-- **REGENERATE EVERY GENERATED INDEX LAST** (`CLAUDE.md` is one of `decided.mjs`'s two ROOTS), and **READ A RED'S
+- **REGENERATE EVERY GENERATED INDEX LAST** (a Contents, the status render), and **READ A RED'S
   ASSERTION, not the cause a handoff predicted** — 261/261 then 260/261 on prose alone, at the arm a handoff blamed on an
   unpushed branch; it was a STALE index. Same suite, same assertion, different cause.
 

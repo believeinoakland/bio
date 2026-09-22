@@ -18746,6 +18746,13 @@ named in a DELEGATION), `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**RELEASED 2026-09-22 by CONDUCT #12 at integration.** M0-99 LANDED in the merge `508a7bc8` (batch 4, onto `origin/main` @
+`53bc7b3c`), pushed to `main` in the same landing as this line under the batch's gate. `docs/DECIDED.md`'s modify/delete
+conflict was resolved by TAKING THE DELETION, as the item rules. REGISTER_FLOOR re-read on the committed merge: both sides had
+moved `arms` to 1632, which merged silently; the print read 1642 and the key moved. Branch
+`worktree-agent-a4c0b07abb6d8ae16` is deleted from the remote after the push is verified. The paths this block reserved are
+FREE; its DELEGATION stays OPEN for the owners other than CONDUCT.
+
 **BUILT ON THE BRANCH, NOT INTEGRATED (the worker's figures; CONDUCT re-reads them on the merged tree).** `.gitignore`
 names the index and it left the git index; `tools/decided.mjs` gained the one freshness call `fresh()` (absent or stale
 written by rename, current left alone) and the predicate `indexTracking()`; `--check` exits 2, retired. `plancheck` arm 2b
@@ -18817,3 +18824,7 @@ reports the path as `goneOnMain` (a WARN naming the lines, never a FAIL), so no 
 it; `plancheck` arm 2b is the check that the deletion was taken. A branch that did NOT modify the file merges without a
 conflict at all.
 **open as of 2026-09-22** — open until M0-99 lands and each owner has corrected its sentence or said why not; nothing here blocks a runnable row.
+
+**DISCHARGED 2026-09-22 by CONDUCT #12, for CONDUCT only (items 5-8):** `kickoffs/CONDUCT.md` step 6, "Mechanical conflicts"
+and "REGENERATE EVERY GENERATED INDEX LAST" corrected in the landing of M0-99 (batch 4); `kickoffs/CONDUCT-NEXT.md` rewritten in
+the same landing. Items 1-4 and 9-11 stay open with their owners.

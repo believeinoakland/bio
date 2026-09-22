@@ -1,6 +1,6 @@
 # CONDUCT-NEXT — the resume prompt for CONDUCT #13, in THIS Claude Code account
 
-> **A CHECKPOINT, written by CONDUCT #12 on 2026-09-22 (UTC) while it is LIVE (~64% context)** — so the lane
+> **THE REFRESH, written by CONDUCT #12 on 2026-09-22 (UTC) at ~70% context, after batch 4 landed** — so the lane
 > survives Bob's move, TODAY, to cloud-based Claude Code on his second account (BOB #27 records the move in
 > `kickoffs/NEW-MACHINE.md` and `TREE-SHARING.md` §4). **Assume you have NO memory of this session, and possibly none
 > of its tools**: `list_sessions`, `SendMessage` replies, `CronCreate` and scheduled tasks, `Agent` worktrees and this
@@ -28,8 +28,9 @@ NOT BUILT: until each of its three changes lands, `CLAUDE.md`'s rules stand as w
 | REC-157 | `0862b663` | `9d330478` | ALREADY_A_CASE_MEMBER compares the project's relationship; IC-173 MINOR, I3 49.1.0 |
 | M0-97 + D-341 | `a3fc7581` | `9d330478` | decided.mjs files every answered register entry; the joiner stops at a heading or blank line |
 | M0-81 | `3cad2084` | `9d330478` | `tools/occupancy.mjs`, the lane-occupancy judgement |
-| REC-163 | `09bed92a` | batch 3 (this file's landing) | the setup page and a PUBLIC `op=instancegroup` show the recorded slug; IC-174 MINOR, I3 49.2.0 |
-| M0-109 | `1a5bc9cb` | batch 3 (this file's landing) | the DEBT floors (`ledger`, `planning-hygiene`) become `> 0` |
+| REC-163 | `09bed92a` | `53bc7b3c` | the setup page and a PUBLIC `op=instancegroup` show the recorded slug; IC-174 MINOR, I3 49.2.0 |
+| M0-109 | `1a5bc9cb` | `53bc7b3c` | the DEBT floors (`ledger`, `planning-hygiene`) become `> 0` |
+| M0-99 | `508a7bc8` | batch 4 (this file's landing) | `docs/DECIDED.md` generated on demand, NEVER committed; staleness arms retired |
 
 Batch 2's chain was RE-MADE at landing (same trees) to add two `Dropped-from-branch:` trailers `mergecarry` required;
 the old -> new sha mapping is under M0-81's release in `CLAIMS.md`, and the old chain survives on the archive branch
@@ -41,17 +42,13 @@ audited by content 2026-09-22 — three landed by another route, two superseded,
 local-only branches pushed for the cloud move: `conduct6/batch3`, `conduct6/batch3-old`, `conduct10/flips-2`,
 `conduct11/batch2`, `conduct12/batch2-pre-trailer`, `ui-65-conclude-surface`.
 
-## 3. LIVE AT THIS CHECKPOINT
+## 3. LIVE AT THIS REFRESH: NOTHING
 
-- **M0-99** (`docs/DECIDED.md` untracked, generated on demand) — worker spawned 2026-09-22 ~14:10Z, branch
-  `worktree-agent-a4c0b07abb6d8ae16` (verify its tip with `ls-remote`). **BOB #27 RULED: land it AS PLACED** (compatible
-  with TREE-SHARING §1). If its worker's session is gone, integrate from the PUSHED branch: read its claim block in
-  `CLAIMS.md` (`released:` means it finished on purpose); a branch with no report is UNDETERMINED — read it, run its
-  gate yourself. Its report was asked to state how a branch cut before it resolves `docs/DECIDED.md` (modify/delete:
-  take the deletion) — apply that at every later integration.
-- **After M0-99** (SCHEDULER #12's refresh, `50e91494`): **M0-110** (the `coord` branch, TREE-SHARING §1) heads the backlog
-  and depends on M0-99; **M0-111** (landing in batches, §2) follows it; **M0-100**, NARROWED by BOB #27 to
-  `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`, sits after M0-111; M0-101 is SUPERSEDED by `coord`.
+- **No worker is live and no row reads `running` for CONDUCT** (verify: §1's grep). M0-99 LANDED in batch 4 as BOB #27
+  ruled. **Its rule binds every later integration:** a branch cut before M0-99 that changed `docs/DECIDED.md` merges as a
+  modify/delete conflict — TAKE THE DELETION (`git rm docs/DECIDED.md`), never `git add -A` over it (`plancheck` arm 2b).
+- **M0-110** (the `coord` branch, TREE-SHARING §1) heads the backlog and is RUNNABLE NOW (it depended on M0-99);
+  **M0-111** (landing in batches, §2) follows it; **M0-100**, NARROWED by BOB #27 to `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`, sits after M0-111; M0-101 is SUPERSEDED by `coord`.
 - **SLOTS I FREED AND DID NOT REFILL, on purpose:** REC-163 and M0-109 landed; I spawned no REC-166 / M0-107 / REC-165 into
   their slots, because a worker is a SUBAGENT of the session that spawns it (D-401), this session is retired by Bob's cloud
   move today, and its context stood at 64% against the 70% line. **They are YOUR first spawns**, in §4's order.
@@ -80,7 +77,8 @@ product before process tooling; no process row unless it cuts gate time or unblo
 
 ## 6. THE TRAPS THIS SESSION PAID FOR — receipts against me
 
-1. **A merge that keeps main's generated `docs/DECIDED.md` whole fails `mergecarry`** (via `strandedwork.test.mjs`'s
+1. **(Since M0-99 the index is never committed; the lesson holds for ANY path a merge keeps whole.)** **A merge that kept
+   main's generated `docs/DECIDED.md` whole failed `mergecarry`** (via `strandedwork.test.mjs`'s
    plancheck arm) unless the merge's LAST paragraph carries `Dropped-from-branch:`. Regenerate it INSIDE the merge commit.
    An unlanded merge without it can only be RE-MADE (`git commit-tree`, same tree; push under a NEW branch name; repoint
    every in-tree citation of the old shas). `KNOWN_HISTORICAL_DROPS` is graded over `origin/main` and cannot help first.
@@ -99,7 +97,7 @@ product before process tooling; no process row unless it cuts gate time or unblo
 
 On the Mac at this checkpoint: disk ~4.4 GiB, swap ~6.2 GB of 7.2 GB, 8 GiB RAM — MEMORY bounds the wave (about three
 workers). In the cloud, measure before you spawn. Standing lanes at this checkpoint: BOB #27, SCHEDULER #12, DIST #4,
-FLEET #3. My self-wake (`CronCreate` `7,27,47 * * * *` + a 5-day renewal) dies with this session; if `CronCreate` does not
+FLEET #3. My self-wake (`CronCreate` `7,27,47 * * * *` + a 5-day renewal) is DELETED at this refresh; if `CronCreate` does not
 exist where you run, you are driven by your operator's prompts — say so in your first report. Line 1 of YOUR handoff
 names CONDUCT #14.
 
