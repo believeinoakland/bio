@@ -28336,17 +28336,35 @@ export class Store extends DurableObject {
                   slug, new Date().toISOString());
   }
 
+  /* What a store recording no group SAYS, in ONE copy: the credentialed read and the public read (REC-163) both answer
+     with it, so the two cannot come to mean different things by "none recorded". The words are D-436's, unchanged. */
+  static NO_GROUP_RECORDED = "no producing group is recorded for this store. A store records it once: at its first boot, "
+    + "from the slug its installer bound, or — on a store that already held documents when the value "
+    + "arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must "
+    + "name its producing group is given no default: a caller's own statement of its group is kept "
+    + "as the caller's, and a write stating none is refused.";
+
   /** op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
   instanceGroup() {
     const r = this.#one(`SELECT slug, recorded_at, source, recorded_by FROM instance_group WHERE id=1`);
     if (r) return { ok: true, group: r.slug, recorded_at: r.recorded_at, source: r.source,
                     recorded_by: r.recorded_by ?? null };
     return { ok: true, group: null, recorded_at: null, source: null, recorded_by: null,
-             detail: "no producing group is recorded for this store. A store records it once: at its first boot, "
-                   + "from the slug its installer bound, or — on a store that already held documents when the value "
-                   + "arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must "
-                   + "name its producing group is given no default: a caller's own statement of its group is kept "
-                   + "as the caller's, and a write stating none is refused." };
+             detail: Store.NO_GROUP_RECORDED };
+  }
+
+  /** REC-163 / IC-174 — op=instancegroup's PUBLIC projection, and the setup page's read of whose record this is.
+   *  `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21): THE SLUG IS PUBLIC — it travels in every published
+   *  bundle's signed `group` and names the worker, so a stranger reading it learns nothing the group has not already
+   *  published or served. That justification holds for the SLUG and for nothing else in the row: when the value was
+   *  recorded, by which act and by whom are not published anywhere, and §7 does not rule them public. So this reads
+   *  the slug through `#producingGroup()` — THE ONE READER every stamp uses, so the page, the op and the bytes of
+   *  every document this store creates cannot name three different groups — and selects nothing else: a later edit
+   *  of the control plane cannot spread a provenance field onto the public wire, because none arrives there. With
+   *  nothing recorded it says so, in the credentialed read's own words. */
+  instanceGroupPublic() {
+    const slug = this.#producingGroup();
+    return slug ? { ok: true, group: slug } : { ok: true, group: null, detail: Store.NO_GROUP_RECORDED };
   }
 
   /** op=instancegroupseed: DECISION (b), the root of trust's one act. The control plane stamps `author`. */
@@ -42743,6 +42761,10 @@ export class Store extends DurableObject {
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
            query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
         instancegroup: () => this.instanceGroup(),
+        /* REC-163 / IC-174: the PUBLIC projection — the slug, or the statement that none is recorded, and nothing
+           else (Publication §7 point 1). Read by the control plane for a caller holding no credential, and for the
+           setup page it serves at `/`. */
+        instancegrouppublic: () => this.instanceGroupPublic(),
         instancegroupseed: () => this.instanceGroupSeed({ ...(body || {}), author: url.searchParams.get("author") }),
         login: async () => {
           /* A member login is refused unless the member is active, so

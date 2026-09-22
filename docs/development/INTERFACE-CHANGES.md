@@ -12898,3 +12898,74 @@ affordances.mjs hashed identical before and after. CONDUCT answers FOR the consu
 offering `publish` exactly where the store now accepts it). **NOT closed by it, and routed:** ratify-after-withdraw commits a
 stale conclusion (REC-157's DELEGATION to SCHEDULER, fix named); whether a project's make-current should write into the shared
 question's bytes at all, and the no-project corner (both to BOB #25).
+
+## IC-174 · I3: `op=instancegroup` ADMITS THE PUBLIC CLASS — a caller holding no credential is answered the recorded slug, or that none is recorded, and NOTHING ELSE (`{ ok, group }` / `{ ok, group: null, detail }`, with the answering `store`); every credential the admission gate admitted is answered byte-identically as before; and the setup page served at `/` carries the recorded group in its served bytes · PROPOSED 2026-09-22 (REC-163, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (branch `worktree-agent-a1e1ea8fd9d66c92a`,
+  base `origin/main` @ `0ce7447b`): 49.1.0, IC-173's resolution. Proposed MINOR, ADDITIVE — 49.1.0 → 49.2.0. Read the base AT
+  RESOLUTION**, by this file's own rule.
+  **Why MINOR, by IC-25's test — nothing that answered before is refused or changes meaning:** MEASURED, not argued
+  (`.rec163-runs/measure-envelope.mjs` in the worker's pen: the untouched plane and this branch booted side by side, every
+  caller shape asked, the timestamp masked, the WHOLE response compared): the admin token, the admin token naming
+  `store=scratch`, the member token, the probe token naming nothing and naming `store=scratch` are answered
+  **byte-identically** — status, body, `store` and `tokenClass`; a member SESSION and an AGENT credential are answered the
+  whole row with `tokenClass` `member` / `ai` on both planes (`group-public.test.mjs` C4, C6, passing on both). What CHANGES is
+  only what was a REFUSAL: no credential (401 `NOT_AUTHENTICATED`), an unrecognised credential (401), the daemon credential
+  (403 `CLASS_FORBIDDEN`) and a probe naming `store=bio` (403 `SCOPE_REFUSED`) are now answered 200 with the public
+  projection. **The one argument for MAJOR, stated so CONDUCT can weigh it rather than find it:** a consumer that read one of
+  those four refusals as a fact about the caller's credential (IC-118's shape) would now be told the slug instead. MEASURED: no
+  consumer calls the op at all (below).
+- **Proposer:** RECORD, REC-163 worker, 2026-09-22, spawned by CONDUCT #12.
+- **Owner to land it:** `RECORD`
+- **Design:** `docs/architecture/BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21: the slug is PUBLIC), over
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (D-436, the `group` value).
+- **Consumers to answer, MEASURED** (every TRACKED file under `civicos-ui/` (96), `agent-worker/` (23), `pdf-worker/` (21),
+  `ocr-worker/` (20), `tools/` (43) and `newgroup/src/` (4), 207 files, searched for `instancegroup`): **`civicos-ui` 0 hits ·
+  `agent-worker` 0 · `pdf-worker` 0 · `ocr-worker` 0 · `tools/` 0 · `newgroup/src/index.mjs` 4 (a comment and the update
+  notice's text; no call) · `newgroup/src/release.mjs` 13 (the embedded 0.71.0 plane).**
+  `UI` — NOT BROKEN, and the consumer this exists for: UI-77 (queued directly after this row) makes the member UI's public
+  header read this op signed out, which the op could not answer before. `DIST` — `newgroup/src/index.mjs` CALLS the op nowhere
+  (its `none` probe in `15.group-telling` stays green) but its comment states that the op "answers the admin, member and probe
+  classes only", and `15.group-telling`'s text gave that as the reason an update tells from the rule rather than reading —
+  both made false by this IC. The construct-status clause is corrected in this landing (the same commit that makes it false);
+  the source comment and the design choice it carries (an update may now READ the group, credential-free) are DIST's, in
+  REC-163's DELEGATION to DIST. `newgroup/src/release.mjs` embeds the last CUT plane (0.71.0) and is not a consumer; it carries
+  the credentialed-only op until the next cut.
+
+**THE SHAPE.** `OPS.instancegroup` is `{ classes: null, mutating: false }` — `classes: null` is how the table says public; there
+is deliberately no public CLASS (`index.mjs`'s header). Its handler sits in the unauthenticated branch, before `bootstrap`'s
+fall-through. It resolves the caller with `caseReader` — the one resolver of "who is asking" that branch already has, which now
+also returns the class it resolved — against the store the read addresses: a machine credential's namespace by `scopeFor` (so a
+probe naming nothing still reads `scratch`), anybody else's `store=scratch` when named and `bio` otherwise. A credential in scope
+gets the Durable Object's `instancegroup` route, unchanged, in the gate's old envelope (`ok`, `result`, `store`, `tokenClass`).
+Anybody else gets the NEW Durable Object route `instancegrouppublic` (`Store#instanceGroupPublic`), which reads the slug through
+`#producingGroup()` — the one reader every stamp uses — and selects NOTHING ELSE, so no later edit of the control plane can
+spread a provenance field onto the public wire. With nothing recorded both routes say so in ONE sentence
+(`Store.NO_GROUP_RECORDED`, D-436's words moved into a constant, byte-identical). A store that does not answer is
+`STORE_DID_NOT_ANSWER` at 502 on either arm (REC-52), never `group: null`.
+
+**THE WIRE, PUBLIC ARM.** `{ ok: true, result: { ok: true, group: "<slug>" }, store }`, or
+`{ ok: true, result: { ok: true, group: null, detail: "no producing group is recorded for this store. …" }, store }`. No
+`recorded_at`, `source`, `recorded_by` or `tokenClass`: §7 point 1's reason — the slug is already published and served —
+covers the slug and nothing else, and when and by which act it was recorded are published nowhere. **DESIGN GAP (reported, not
+decided):** §7 does not say whether that provenance is public; this IC withholds it from the public and keeps it for every
+credential, which is the direction a later ruling can widen in one line.
+
+**THE PAGE (not an op, named here because it is the other consumer-visible change).** `GET /` renders the setup page per
+request with ONE group line read from `bio` through the same public read (`publicInstanceGroup`): the slug in the served
+bytes (`data-group="recorded"`), "No group is recorded for this copy yet" (`none`), or — when the record does not answer —
+"This copy could not read its group just now" (`unread`), never "none" and never a name. The template's own line is the
+unread line. The response gains `cache-control: no-store`, because its bytes now carry a fact the record can change. The line
+sits outside every section the page's script switches between, so it reads the same signed in or out.
+
+**No I5 IC:** no table, no column. One Durable Object route added (`instancegrouppublic`), which no `op=` names.
+
+**NEGATIVE CONTROL** (`node test/group-public.control.mjs` from `bio-plane/`, every arm on a COPY of `src/`, real sources hashed
+before and after, untouched): ALL TEN ROWS AS DECLARED, twice — baseline 26/0 · literal-restored (THE ROW'S CONTROL: the
+template's line put back) 13/13, every page arm failing by name with THE SECOND-SLUG ARM (P2) among them and every op arm
+green · css-hidden (the liar, the name built at run time) 24/2, P1b and P2b alone while the page READS right ·
+static-page 20/6 · silence-as-none 25/1 (P4) · op-public-refused 17/9 · public-gets-provenance 21/5 · op-silence-as-none 25/1
+(G6) · page-reads-scratch 24/2 · over-strict 26/0. On the UNTOUCHED plane the suite reads 6/20 — the passes are the matcher's
+reach, P7, and the four credentialed arms C1, C2, C4, C6, which is the additivity measured from the other side.
+
+**FOR CONDUCT at integration:** resolve this IC and move I3 in `INTERFACES.md`; re-run the control; UI-77 is unblocked by it.

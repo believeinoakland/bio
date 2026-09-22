@@ -12401,6 +12401,19 @@ var FIRST_STATE_JSON = JSON.stringify(
   Object.fromEntries(Object.entries(STATES).map(([t, s]) => [t, s.legal[0]]))
 );
 var HEADINGS_JSON = JSON.stringify(HEADINGS);
+var escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+var GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">This copy could not read its group just now</p>';
+function groupLine(read) {
+  const r = read && read.answered === true && read.result && read.result.ok === true ? read.result : null;
+  if (r && typeof r.group === "string" && r.group)
+    return '<p class="eyebrow" id="instance-group" data-group="recorded"><span class="slug">' + escGroup(r.group) + "</span> &middot; group instance</p>";
+  if (r && r.group === null)
+    return '<p class="eyebrow" id="instance-group" data-group="none">No group is recorded for this copy yet</p>';
+  return GROUP_LINE_UNREAD;
+}
+function setupPage(read) {
+  return SETUP_HTML.replace(GROUP_LINE_UNREAD, () => groupLine(read));
+}
 var SETUP_HTML = `<!doctype html>
 <html lang="en">
 <head>
@@ -12422,6 +12435,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
 main{max-width:640px;margin:0 auto;padding:56px 22px 80px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--verdigris);margin:0 0 14px}
+.eyebrow .slug{text-transform:none;letter-spacing:.04em}
 h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(28px,4.2vw,38px);
   line-height:1.1;margin:0 0 16px;letter-spacing:-.01em}
 h2{font-family:Georgia,serif;font-weight:600;font-size:20px;margin:28px 0 10px}
@@ -12477,7 +12491,7 @@ table.rec tr.row:hover td{background:#F6F7F2}
 </head>
 <body>
 <main>
-<p class="eyebrow">Believe in Oakland &middot; group instance</p>
+${GROUP_LINE_UNREAD}
 
 <section id="s-loading" class="on">
   <h1>One moment</h1>
@@ -52278,6 +52292,9 @@ ${words}`;
       (/* @__PURE__ */ new Date()).toISOString()
     );
   }
+  /* What a store recording no group SAYS, in ONE copy: the credentialed read and the public read (REC-163) both answer
+     with it, so the two cannot come to mean different things by "none recorded". The words are D-436's, unchanged. */
+  static NO_GROUP_RECORDED = "no producing group is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or \u2014 on a store that already held documents when the value arrived \u2014 by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing group is given no default: a caller's own statement of its group is kept as the caller's, and a write stating none is refused.";
   /** op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
   instanceGroup() {
     const r = this.#one(`SELECT slug, recorded_at, source, recorded_by FROM instance_group WHERE id=1`);
@@ -52294,8 +52311,21 @@ ${words}`;
       recorded_at: null,
       source: null,
       recorded_by: null,
-      detail: "no producing group is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or \u2014 on a store that already held documents when the value arrived \u2014 by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing group is given no default: a caller's own statement of its group is kept as the caller's, and a write stating none is refused."
+      detail: _Store.NO_GROUP_RECORDED
     };
+  }
+  /** REC-163 / IC-174 — op=instancegroup's PUBLIC projection, and the setup page's read of whose record this is.
+   *  `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21): THE SLUG IS PUBLIC — it travels in every published
+   *  bundle's signed `group` and names the worker, so a stranger reading it learns nothing the group has not already
+   *  published or served. That justification holds for the SLUG and for nothing else in the row: when the value was
+   *  recorded, by which act and by whom are not published anywhere, and §7 does not rule them public. So this reads
+   *  the slug through `#producingGroup()` — THE ONE READER every stamp uses, so the page, the op and the bytes of
+   *  every document this store creates cannot name three different groups — and selects nothing else: a later edit
+   *  of the control plane cannot spread a provenance field onto the public wire, because none arrives there. With
+   *  nothing recorded it says so, in the credentialed read's own words. */
+  instanceGroupPublic() {
+    const slug = this.#producingGroup();
+    return slug ? { ok: true, group: slug } : { ok: true, group: null, detail: _Store.NO_GROUP_RECORDED };
   }
   /** op=instancegroupseed: DECISION (b), the root of trust's one act. The control plane stamps `author`. */
   instanceGroupSeed({ slug = null, author = null } = {}) {
@@ -65703,6 +65733,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
            query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
         instancegroup: () => this.instanceGroup(),
+        /* REC-163 / IC-174: the PUBLIC projection — the slug, or the statement that none is recorded, and nothing
+           else (Publication §7 point 1). Read by the control plane for a caller holding no credential, and for the
+           setup page it serves at `/`. */
+        instancegrouppublic: () => this.instanceGroupPublic(),
         instancegroupseed: () => this.instanceGroupSeed({ ...body || {}, author: url.searchParams.get("author") }),
         login: async () => {
           const role = body?.role || "admin";
@@ -66331,14 +66365,22 @@ var OPS = {
      be able to see that one happened even though they cannot cause it. */
   exportlog: { classes: ["admin", "member", "probe"], mutating: false },
   /* D-436 / IC-172 — THE INSTANCE'S PRODUCING GROUP (State Rules v1.5 §3.1), the one value every bundle this
-     instance writes names as its `group`. The READ is open to every class that reads the record: it answers
-     what the store records, and when it records nothing it says so. The SEED is the other half of decision (b):
+     instance writes names as its `group`. The READ is open to every class that reads the record, AND SINCE
+     REC-163 (IC-174) TO THE PUBLIC: `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21) rules THE SLUG
+     PUBLIC — it travels in every published bundle's signed `group` and names the worker, so a stranger learns
+     nothing the group has not already published or served. `classes: null` is how this table says public (there
+     is deliberately no public CLASS — see the header above), so the op answers through its own handler in the
+     unauthenticated branch: a stranger is told the slug, or that none is recorded, and NOTHING ELSE — when and by
+     which act it was recorded are not published anywhere, and §7 rules only the slug; a caller whose credential
+     the admission gate would admit (a machine class in its namespace, a session, an agent credential in scope)
+     is answered the whole row exactly as before. It answers what the store records, and when it records nothing
+     it says so. The SEED is the other half of decision (b):
      a store that already held documents when the value arrived records nothing at boot, and is given its group
      by this act, once. RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN
      CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO
      SESSION OF ANY ROLE REACHES IT: it is named in no SESSION_OPS set, and UNATTENDED_BY_DECISION cites this
      row, so a session is told which credential the verb is addressed to rather than an invented reason. */
-  instancegroup: { classes: ["admin", "member", "probe"], mutating: false },
+  instancegroup: { classes: null, mutating: false },
   instancegroupseed: { classes: ["admin"], mutating: true },
   /* Section 8.2. classes: null, because published-record reconstruction requires
      NOTHING: the hashes are public and verifiable by any stranger without this
@@ -68222,7 +68264,7 @@ async function caseReader(url, env, storeName) {
   if (cls) {
     const scope = scopeFor(cls, url);
     const inScope = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
-    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "" };
+    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "", cls };
   }
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   if (AI_TOKEN_SHAPE.test(t)) {
@@ -68230,16 +68272,26 @@ async function caseReader(url, env, storeName) {
     if (!aOut.answered) return { silent: "aicredentiallook" };
     const cred = aOut.result?.found ? aOut.result.credential : null;
     const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
-    return { viewer: scoped && !scoped.error ? scoped.viewer : "" };
+    return { viewer: scoped && !scoped.error ? scoped.viewer : "", cls: "ai" };
   }
   if (/^[0-9a-f]{64}$/.test(t)) {
     const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: resolveSession(sess).viewer };
+    return { viewer: resolveSession(sess).viewer, cls: sess.role === "admin" ? "admin" : "member" };
   }
   return { viewer: "" };
+}
+async function publicInstanceGroup(env, storeName) {
+  let stub = null;
+  try {
+    stub = env.STORE.get(env.STORE.idFromName(storeName));
+  } catch {
+    stub = null;
+  }
+  if (!stub) return { answered: false, result: void 0 };
+  return doAnswer(stub.fetch("http://do/instancegrouppublic"));
 }
 var json = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), null, 1), {
   status,
@@ -68838,7 +68890,10 @@ var index_default = {
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
-      return new Response(SETUP_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
+      return new Response(
+        setupPage(await publicInstanceGroup(env, "bio")),
+        { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
+      );
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const spec = OPS[op];
@@ -68896,6 +68951,22 @@ var index_default = {
         const out2 = await doAnswer(stub2.fetch(new Request("http://do/publishedmanifest")));
         if (!out2.answered) return storeSilent("publishedmanifest");
         return json({ ok: true, result: out2.result }, 200);
+      }
+      if (op === "instancegroup") {
+        const held = url.searchParams.get("token");
+        const heldCls = held ? await classify(held, env) : null;
+        const heldScope = heldCls ? scopeFor(heldCls, url) : null;
+        const igStore = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
+        const igReader = await caseReader(url, env, igStore);
+        if (igReader.silent) return storeSilent(igReader.silent);
+        if (igReader.viewer) {
+          const igOut = await doAnswer(env.STORE.get(env.STORE.idFromName(igStore)).fetch("http://do/instancegroup"));
+          if (!igOut.answered) return storeSilent("instancegroup");
+          return json({ ok: true, result: igOut.result, store: igStore, tokenClass: igReader.cls }, 200);
+        }
+        const pubOut = await publicInstanceGroup(env, igStore);
+        if (!pubOut.answered) return storeSilent("instancegroup");
+        return json({ ok: true, result: pubOut.result, store: igStore }, 200);
       }
       if (op === "caseflags") {
         const q = new URLSearchParams();

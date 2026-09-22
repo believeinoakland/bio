@@ -10,6 +10,10 @@
  * The one-time password may arrive in the URL FRAGMENT from the wizard
  * handover. Fragments never leave the browser, and the page strips the hash
  * immediately so it cannot linger in the address bar or history entry.
+ *
+ * REC-163: the page is no longer served byte-for-byte as built. Its one line
+ * saying whose record this is carries the record's own producing group, read
+ * when the page is served — see `setupPage` below.
  */
 
 import { STATES, HEADINGS, deriveInquiryTitle } from "../checks/bio-checks.mjs";
@@ -23,6 +27,42 @@ import { STATES, HEADINGS, deriveInquiryTitle } from "../checks/bio-checks.mjs";
 const FIRST_STATE_JSON = JSON.stringify(
   Object.fromEntries(Object.entries(STATES).map(([t, s]) => [t, s.legal[0]])));
 const HEADINGS_JSON = JSON.stringify(HEADINGS);
+
+/* REC-163 / IC-174 — WHOSE RECORD THIS IS, STATED ON THE PAGE AND READ FROM THE RECORD.
+ *
+ * THE DEFECT. This page opened with one group's name written in as a literal: true of the instance it was written for
+ * and false of every instance `newgroup` installs, so a sovereign group's front door, served publicly at `/`, claimed
+ * to be another group's. D-436 made the producing group ONE recorded value (State Rules §3.1), and BOB #24 ruled what
+ * a stranger may be shown (`BIO_Publication_v0_1.md` §7 point 1): THE SLUG IS PUBLIC. So the page carries the recorded
+ * slug, or says that none is recorded, and invents nothing beside it. A display name and a verified domain are later
+ * rows (§7 points 2 and 3), and nothing here may stand in for either — not even a slug dressed up in capitals.
+ *
+ * THE MECHANISM. The control plane reads the group when it SERVES the page (index.mjs's `GET /` route hands
+ * `setupPage` the public read's answer), so the statement is in the served BYTES, signed in or out: the line sits
+ * above every section the script switches between, and the script never touches it. THREE states, and the difference
+ * between the last two is the one that matters most:
+ *   recorded — the slug as the record holds it, in its own case (the eyebrow's capitals are not applied to it);
+ *   none     — the record answered and records no group: said in words, never a blank and never a default;
+ *   unread   — the record did NOT answer: said as that, and never as "none" (REC-52 — a silence is not an absence).
+ * The TEMPLATE carries the unread line, so a page served without a read says it did not read, and names nobody. */
+const escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">'
+  + "This copy could not read its group just now</p>";
+/** The group line for ONE read of the record — `{ answered, result }`, as the control plane's `doAnswer` returns it.
+ *  Only an answer that says `group: null` is "none"; anything the line cannot read as an answer is "unread". */
+export function groupLine(read) {
+  const r = read && read.answered === true && read.result && read.result.ok === true ? read.result : null;
+  if (r && typeof r.group === "string" && r.group)
+    return '<p class="eyebrow" id="instance-group" data-group="recorded"><span class="slug">'
+      + escGroup(r.group) + "</span> &middot; group instance</p>";
+  if (r && r.group === null)
+    return '<p class="eyebrow" id="instance-group" data-group="none">No group is recorded for this copy yet</p>';
+  return GROUP_LINE_UNREAD;
+}
+/** The page as served: the template, its unread line replaced by what one read of the record said. */
+export function setupPage(read) {
+  return SETUP_HTML.replace(GROUP_LINE_UNREAD, () => groupLine(read));
+}
 
 export const SETUP_HTML = `<!doctype html>
 <html lang="en">
@@ -45,6 +85,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
 main{max-width:640px;margin:0 auto;padding:56px 22px 80px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--verdigris);margin:0 0 14px}
+.eyebrow .slug{text-transform:none;letter-spacing:.04em}
 h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(28px,4.2vw,38px);
   line-height:1.1;margin:0 0 16px;letter-spacing:-.01em}
 h2{font-family:Georgia,serif;font-weight:600;font-size:20px;margin:28px 0 10px}
@@ -100,7 +141,7 @@ table.rec tr.row:hover td{background:#F6F7F2}
 </head>
 <body>
 <main>
-<p class="eyebrow">Believe in Oakland &middot; group instance</p>
+${GROUP_LINE_UNREAD}
 
 <section id="s-loading" class="on">
   <h1>One moment</h1>

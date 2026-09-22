@@ -18266,3 +18266,33 @@ judge which process rows cut gate time under Bob's ruling of that day (`CLAUDE.m
 re-runs their readers every time: 24 units over one of these ledgers against 14 over a design document (M-90). M0-99 and
 M0-100 take those two paths off both sides, which is gate time cut on every landing; M0-101 takes only CONDUCT's
 `running` word off `QUEUE.md`, which a quarter as many commits carry and BOB and SCHEDULER still write. It says nothing about how long any one re-check takes on a loaded machine.
+
+## M-95 · 2026-09-22 · REC-163 — whose group the setup page names, and what op=instancegroup answers each caller, before and after the slug became public
+
+Instruments: `bio-plane/test/group-public.test.mjs` run from `bio-plane/` against the branch's `src/` and, with
+`GROUP_PUBLIC_SRC` pointed at `git archive 1611bdbf bio-plane/src bio-plane/checks docprofile` extracted inside the worktree,
+against the UNTOUCHED plane (`1611bdbf`'s code is `0ce7447b`'s and `f25d43b3`'s, byte for byte); `node
+test/group-public.control.mjs`; a side-by-side probe booting both planes and asking `op=instancegroup` as ten caller shapes,
+the whole response compared with `recorded_at` masked (`.rec163-runs/measure-envelope.mjs`, the worker's pen); a census of
+TRACKED files naming `instancegroup` (`.rec163-runs/consumers.mjs`); `node scripts/battery.mjs` over the 28 suites this item
+can reach, before and after; `node scripts/coverage.mjs --strict`; `node civicos-ui/test/run.mjs`.
+
+| measured | untouched plane | this branch |
+| --- | --- | --- |
+| the page served at `/`, signed out, on a store recording `oak-town` | opens with ONE group's display name as a literal, whatever the store records; no line reads the record | the group line carries `oak-town` in the served bytes; no spelling of the old name anywhere in the response |
+| the same on a store recording NO group, and on a store that does NOT ANSWER | the same literal, both times | "No group is recorded for this copy yet" (`data-group="none"`) · "This copy could not read its group just now" (`unread`), the page still served at 200 |
+| `op=instancegroup` as the admin token, admin + `store=scratch`, the member token, the probe token, probe + `store=scratch` | the whole row, `store` and `tokenClass` | **byte-identical** (status and body) |
+| … as no credential, an unrecognised 64-hex token, the daemon token, probe + `store=bio` | 401 `NOT_AUTHENTICATED` · 401 · 403 `CLASS_FORBIDDEN` · 403 `SCOPE_REFUSED` | 200 `{ ok, result: { ok, group }, store }` — the slug, and nothing else |
+| … as a member SESSION and as an AGENT credential (suite arms C4, C6) | the whole row, `tokenClass` `member` / `ai` | the same |
+| `group-public.test.mjs`, 26 assertions | **6 pass / 20 fail** — the passes are the matcher's reach, P7, and the four credentialed arms | **26 / 0** |
+| `node test/group-public.control.mjs`, nine arms and a baseline | — | ALL AS DECLARED, twice (25 and 26 assertions): baseline 26/0 · literal restored 13/13 (P2, the second-slug arm, among them) · CSS-hidden liar 24/2 · static page 20/6 · silence as none, page 25/1 · public class withdrawn 17/9 · provenance to the public 21/5 · silence as none, wire 25/1 · page reads scratch 24/2 · over-strict 26/0; real sources hashed identical before and after |
+| tracked files naming `instancegroup` outside `bio-plane/` | `civicos-ui` 0 of 96 · `agent-worker` 0 of 23 · `pdf-worker` 0 of 21 · `ocr-worker` 0 of 20 · `tools/` 0 of 43 · `newgroup/src/index.mjs` 4 (a comment and the update notice's text; no call) · `newgroup/src/release.mjs` 13 (the embedded 0.71.0 plane) | unchanged — no consumer calls the op |
+| the 28 suites this item can reach | `28/28 suites green · 2771 assertions passing` · run `95846.b2213a` on `1611bdbf` | `29/29 suites green · 2800 assertions passing` · run `16400.e95da2` on `66eab6a1`; per suite: `group-public` +26 (new), `hygiene` +3 (934 → 937, the new suite's three census rows); every other suite identical |
+| the rest of the gate | `coverage --strict` exit 0 at arms 1622 · classified 263 · corpus 264 · run 226 | `coverage --strict` exit 0, register GREW to 1632 · 264 · 265 · 227 on `fd9b091f`, the floor moved to exactly that print; `civicos-ui/test/run.mjs` exit 0, 58/58 |
+| the FULL gate (`node tools/gates.mjs`, class FULL) | `272/272 suites green · 16551 assertions passing` (EXCLUDES 2 untallied: `bundle`, `livefire`), CONDUCT #12's run `54883.3f4576` on `f25d43b3`, whose code is this base's byte for byte | GREEN, recorded for tree `c7bc0724` (`fa6ea542`, origin/main `b089c584` merged in, docs only): `273/273 suites green · 16570 assertions passing` (EXCLUDES the same 2), run `66209.79090f`, provenance 276 of 276 in the commit; `coverage --strict` exact at 1632 · 264 · 265 · 227; UI harness green; `plancheck --local` 0 fail. Per suite against the baseline: `group-public` +26 (new), `hygiene` +3, `planning-hygiene` −10 — origin/main's own: 180 on `b089c584`'s own tree, run in a scratch checkout, as on this merge |
+
+**WHAT IT SAYS.** The row's defect was exactly where it was measured: one literal line in the one page every installed copy
+serves, with nothing reading the record. The public class is additive in the strict sense — every caller the gate admitted
+receives the same bytes, and only four refusals became answers. What a stranger receives is narrower than what a credential
+receives, on §7's own reason for making the slug public: it is already published and served, and the row's provenance is
+neither.

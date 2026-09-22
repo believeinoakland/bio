@@ -1230,10 +1230,14 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     governorstate: "per-HOST fetch accounting; names no bundle.",
     signerlist: "the active signer set; names no bundle.",
     exportlog: "who exported and when — an export can never happen silently; names no bundle.",
-    /* D-436, 2026-09-21. Classified by the item that adds it. */
+    /* D-436, 2026-09-21. Classified by the item that adds it. EXTENDED 2026-09-22 by REC-163 (IC-174), which made
+       the op PUBLIC (`classes: null`) on BIO_Publication_v0_1.md §7 point 1 — the classification is unchanged and
+       its reason is only stronger, so the entry gains the second half rather than moving. */
     instancegroup: "HOLDS NO CORPUS MATERIAL: the instance's ONE producing-group slug (D-436) — the name every "
       + "document this store writes carries in its own bytes, and the worker's own hostname besides. No bundle id, "
-      + "no row a viewer predicate could filter, and nothing a hidden project could leak through.",
+      + "no row a viewer predicate could filter, and nothing a hidden project could leak through. AND PUBLIC since "
+      + "REC-163 (Publication §7 point 1): a caller with no credential is answered the slug alone, which every "
+      + "published bundle's signed `group` already carries, and never the row's provenance.",
     progression: "a progression DEFINITION: a member's constitutive claim about how an institution "
       + "ought to behave. It names stages, not documents.",
     proposals: "the DERIVED findings feed. Aggregated per (progression, stage) over entities and "
