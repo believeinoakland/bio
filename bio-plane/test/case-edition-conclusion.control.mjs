@@ -280,4 +280,36 @@ rmSync(PEN, { recursive: true, force: true });
 console.log(`\npen removed: ${PEN}`);
 process.exit(results.every((r) => r.verdict === "AS DECLARED") ? 0 : 1);
 
-/* MEASURED — PENDING THE FIRST RUN. */
+/* MEASURED 2026-09-21 by the REC-157 worker (`node test/case-edition-conclusion.control.mjs`
+   from `bio-plane/`, worktree `.claude/worktrees/agent-a976bfb0c6dec2bdb`, branch
+   `worktree-agent-a976bfb0c6dec2bdb` at 1e56c1c8 + the docs-only merge fa37d5ec). All six
+   anchors LIVE at the preflight; every label fragment present in the suite; EVERY RESTORE
+   sha256 MATCH, content IDENTICAL and cmp SAME — `store.mjs` 2,786,423 bytes (sha256
+   75e457ffe6e98e7f…), `affordances.mjs` 148,243 bytes (c06cc7ae2fa85841…), both far over the
+   1,000-byte floor.
+
+     baseline  36 pass, 0 fail    AS DECLARED
+     (a)       21 pass, 15 fail   AS DECLARED  pin on bundle_sha alone again
+     (b)       26 pass, 10 fail   AS DECLARED  the refusal dropped (6 declared + 4 declared cascade)
+     (c)       33 pass, 3 fail    AS DECLARED  the claim compared instead of the act
+     (d)       35 pass, 1 fail    AS DECLARED  the no-project pin ignored
+     (e)       33 pass, 3 fail    AS DECLARED  the prepared edition not asked (1 + 2 cascade)
+     (f)       35 pass, 1 fail    AS DECLARED  the affordance back on !case_member alone
+
+   EVERY ARM AS DECLARED ON THE FIRST RUN, the declaration checked as a TOTAL. That is
+   recorded as a fact and not as a comfort: the declarations were written AFTER measuring
+   the suite against the UNTOUCHED plane (19/17), which is where this item's one surprise
+   was found and paid for — `op=versioncurrent` writes into the SHARED question's bytes, so
+   the first draft's second-edition arm passed on the untouched plane for the wrong reason
+   (the make-current had unpinned the finding). Each second-edition arm now carries a
+   DISCRIMINATOR asserting the bytes are exactly the pin, and arm (a) is what shows those
+   discriminators doing their work: the second-edition arms fail BY NAME under it while
+   every discriminator before them passes.
+
+   WHAT NO ARM HERE CAN SEE, stated so the next reader does not have to test it: an edition
+   that recorded NO conclusion (every edition before REC-135, every one before the case
+   document) — the comparator's "compare by the pin" branch for it cannot be constructed
+   through today's ops, since the writer always writes the row, so no arm breaks that half
+   and `publish.test.mjs`'s "the store agrees" arm (a no-project, post-REC-135 edition) is
+   the nearest behavioural cover; and no arm touches `op=reopen`, which this item does not
+   change. */
