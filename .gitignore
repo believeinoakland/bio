@@ -417,3 +417,10 @@ bio-plane/.nc-migrate-released/
 # tool's one freshness call, `fresh()`. This line does NOT apply to a tracked file, so a merge that keeps a pre-M0-99
 # branch's copy re-tracks it silently: `plancheck` arm 2b fails on a tracked copy, naming the fix (`git rm --cached`).
 docs/DECIDED.md
+
+# REC-165's pens, each on its own line on the standing rule at `.rec84-control-pristine/`: `.rec165-runs/` holds the
+# worker's run logs, kept INSIDE the worktree for the reason `.d310-runs/` gives; `.rec165-control-pristine/` is where
+# `bio-plane/test/nc-rec165.mjs` keeps its per-arm pristine copy of `src/store.mjs` while an arm is armed. An untracked
+# copy of a plane source left behind by an interrupted run is a second author for the next walk to enrol.
+.rec165-runs/
+.rec165-control-pristine/
