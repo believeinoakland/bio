@@ -12812,3 +12812,72 @@ splits the attribution there in its own landing.
 named by M0-79's slack gate on the merged tree. `REGISTER_FLOOR` read exact on the committed merge (arms 1566/1566,
 classified 259/259, corpus 260/260) and did not move. **NOT closed by it:** what a document already SIGNED under a wrong
 producer can become — no correcting act is designed (the amendment says so, dated).
+
+## IC-173 · I3: `op=publish`'s `ALREADY_A_CASE_MEMBER` COMPARES THE RELATIONSHIP — a finding a case pins at its current bytes may take a NEW EDITION when the publishing project's conclusion is not the one any edition pinning those bytes recorded; the refusal gains `project`, `relationship` and `recorded_by`; a warranted edition's per-finding answer gains `edition_warranted`; `op=affordances` offers `publish` on the same comparison · PROPOSED 2026-09-21 (REC-157, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (branch `worktree-agent-a976bfb0c6dec2bdb`,
+  base `origin/main` @ `86523052`, `7a8b81d6` merged in, docs-only): 49.0.0, IC-172's resolution. Proposed MINOR, ADDITIVE —
+  49.0.0 → 49.1.0. Read the base AT RESOLUTION**, by this file's own rule.
+  **Why MINOR, by IC-25's test — nothing that answered before is refused or changes meaning:** the refusal condition only
+  NARROWS. It fired whenever the finding was pinned at its current bytes; it now fires when the finding is pinned AND an edition
+  pinning those bytes already records the conclusion this act would record. Every publication that succeeded before still
+  succeeds; some that were refused now succeed; nothing that succeeded is refused. The code keeps its NAME and its meaning —
+  "there is nothing here a new edition would say differently" — and says it truthfully again now that a case records a
+  conclusion (IC-166). **The one argument for MAJOR, stated so CONDUCT can weigh it rather than find it:** a consumer that read
+  `ALREADY_A_CASE_MEMBER` as "this finding is pinned in some case" would now be wrong without changing a line (IC-118's shape).
+  MEASURED: no consumer reads the code at all (below), and `op=affordances`' `case_member` fact is not on the wire.
+- **Proposer:** RECORD, REC-157 worker, 2026-09-21, spawned by CONDUCT #11.
+- **Owner to land it:** `RECORD`
+- **Design:** `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 9 (BOB #19, 2026-09-21), applying items 4 and 7.
+- **Consumers to answer, MEASURED** (every tracked file under `civicos-ui/`, `agent-worker/`, `newgroup/src/` and `tools/`,
+  165 files, grepped for `ALREADY_A_CASE_MEMBER`, `recorded_by`, `edition_warranted`, `edition_warranted_for_project`,
+  `concluded_for_project`, `case_conclusions`, `caseDocument`, `op=publish` and the `publish` act id): **`ALREADY_A_CASE_MEMBER`
+  0 hits · `recorded_by` 0 · `edition_warranted` 0 · `case_conclusions` 0.** `UI` — NOT BROKEN, and the consumer this exists for:
+  `civicos-ui/app.html` renders `publish` from `op=affordances` (its publication entry never calls `op=publish` itself), so a
+  member whose project re-concluded now SEES the act where the store newly accepts it — without the affordance half the route
+  would be reachable by the raw op and by no member (REC-142's defect shape). `agent-worker` — NOT-AFFECTED: `publish` appears only
+  in a test's list of mutating op names. `tools/` — 0 hits. `DIST` — `newgroup/src/release.mjs` embeds the last CUT plane (it
+  names the code inside the released bundle), NOT a consumer; it carries the old condition until the next cut.
+
+**THE SHAPE.** `publishCase()`, per member, after the NOT_CONCLUDED gate has answered `conc` (`#caseConclusionFor` for the
+publishing project, unchanged): `rel = #caseRelationOf(id)` exactly as before; when `rel.member`, the new
+`#editionsRecordingConclusion(id, rel, conc)` reads, for every ratified edition pinning the finding's CURRENT sha
+(`rel.pinned`, across every case) and for the unratified preparation pinning it (`rel.prepared`), that edition's
+`case_conclusions` row for the member, and asks whether it records the conclusion `conc` would record. `ALREADY_A_CASE_MEMBER`
+fires only when at least one does. The comparison, per relationship: a PROJECT conclusion matches only a `project` row carrying
+the same ENTRY — `project`, `version`, `claim_state`, `claim`, `falsifier`, `falsifier_override_by`, `falsifier_override_at`,
+`concluded_by`, `concluded_at` (a conclusion is a dated, authored act, §7.1 item 1; one re-taken after a withdrawal is a new
+act) — both rows rendered by ONE writer, `#caseConclusionRowLines` (the case document's rows, moved there byte for byte, so
+`CASE_DOCUMENT_FORMAT` and every document's bytes are unchanged) and read back by the one parser. A NO-PROJECT conclusion is
+compared BY THE PIN: it matches a `no_project` row, or an edition that recorded no conclusion at all (before REC-135), because
+that conclusion lives in the very bytes the edition pins.
+
+**THE WIRE.** `ALREADY_A_CASE_MEMBER` keeps its code and `target` / `from`, and gains `project`, `relationship` (the
+relationship this act asked) and `recorded_by: [{ case_id, edition, state: "ratified"|"prepared" }]` — the editions that already
+record the conclusion; its `detail` names both routes to a new edition (withdraw and conclude again; or reopen, work, conclude).
+A successful `op=publish` over a finding that WAS a case member carries, on that finding's entry in `findings[]`,
+`edition_warranted: { because: "the_publishing_projects_conclusion_moved", pinned_editions: [{ case_id, edition, state,
+recorded }] }`, `recorded` being `{ relationship, project, version, claim_state, claim, concluded_by, concluded_at }` or null
+for an edition that recorded none; the key is ABSENT on every other publication, which is how a caller tells the two routes to
+a new edition apart. `op=affordances` offers `publish` when `(!case_member || edition_warranted_for_project === true)` beside
+its existing conditions — a new positional fact, three-valued exactly as `concluded_for_project` (null for a non-inquiry and
+for a caller with no roster position, so a machine credential's act set is byte-unchanged), true when a project the caller has
+joined, can see and that live-cites the question is concluded for it and no edition pinning the bytes records that conclusion.
+Facts are not on the wire; only the act's appearance is.
+
+**No I5 IC:** no table, no column. The case documents are read from `case_documents.text`, which already holds them.
+
+**MEASURED, AND IT BEARS ON THE ROW'S PREMISE — for BOB through the DELEGATION in `CLAIMS.md`:** `op=versioncurrent` promotes the
+SHARED question (a Session Log line) before writing the project's pointer, so a project that moves its pointer AFTER publishing
+moves the finding's `bundle_sha`; on the untouched plane the row's literal probe path (withdraw, make the other reading current,
+conclude, publish) already reached a second edition by that BYTES route. This IC changes the paths where the bytes do NOT move —
+a re-conclusion on a reading the project already stood on, on the same reading (REC-135's own probe), and a withdrawal on a
+question also concluded in its own bytes — each driven in `bio-plane/test/case-edition-conclusion.test.mjs` with a
+discriminator asserting the bytes are exactly the pin (19/17 on the untouched plane, 36/0 here; six-arm control, all as
+declared).
+
+**ONE OUTCOME RUNS PROVISIONALLY, and it is REC-135's open question seen from this side, not a new one:** on a question ALSO
+concluded in its own bytes, a project that withdrew is admitted by REC-135's no-project disjunct, and this comparison — asked of
+the SAME answer — then warrants an edition recording the NO-PROJECT relationship, DISCLOSED in the signed bytes as not the
+project's own. Item 9's sentence says a project that withdrew "cannot publish an edition (NOT_CONCLUDED)". If BOB rules item 8
+strictly, the disjunct goes and this becomes NOT_CONCLUDED with no change here (arm 8 of the suite is corrected then).

@@ -15428,12 +15428,28 @@ var ACTS = [
      and `concluded_for_project` adds the project's own. `=== true` is the whole
      of the three-valued handling: a machine-class credential answers null there,
      does not widen, and keeps its own fence (MACHINE_CANNOT_PUBLISH). */
+  /* REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9, 2026-09-21: `!f.case_member`
+     IS NO LONGER THE WHOLE OF THE MEMBERSHIP HALF EITHER. It is the affordance-layer
+     half of publishCase()'s ALREADY_A_CASE_MEMBER, and that refusal now asks the
+     RELATIONSHIP too: a finding a case pins at its current bytes may still take a
+     new edition when a joined project's conclusion has moved since every edition
+     pinning those bytes (a withdrawal, then a conclusion on another reading, never
+     moves the finding's bytes). Without this disjunct the store would accept that
+     edition and the surface would never offer it — REC-142's defect shape, the
+     route reachable by the raw op and by no member (Q12/DEC-8).
+     A DISJUNCTION AND NOT A REPLACEMENT, REC-135's reason: `!f.case_member` still
+     offers every finding no case pins, and `edition_warranted_for_project` is asked
+     only of the ones a case does. `=== true` is the whole of the three-valued
+     handling, as above: a null never widens. `case_member` itself is unchanged and
+     so is every other act derived from it — reopen, dispose, inquiryground and
+     inquirydivide ask whether these BYTES are frozen in a case, which a moved
+     conclusion does not change. */
   {
     id: "publish",
     label: "Publish (author the case)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f2, ty) => ty === "inquiry" && (f2.current_state === "concluded" || f2.concluded_for_project === true) && !f2.case_member && f2.project_owner !== false
+    applies: (f2, ty) => ty === "inquiry" && (f2.current_state === "concluded" || f2.concluded_for_project === true) && (!f2.case_member || f2.edition_warranted_for_project === true) && f2.project_owner !== false
   },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
@@ -28669,6 +28685,18 @@ var Store = class _Store extends DurableObject {
         const who = this.#positionalMember(viewer, identity);
         return who === null ? null : this.#concludedForJoinedProjectOf(b.bundle_id, viewer, who);
       })(),
+      /* REC-157 / §7.1 item 9: WHETHER A PROJECT THIS CALLER HAS JOINED COULD PUBLISH A NEW
+         EDITION OF A FINDING A CASE ALREADY PINS — its conclusion having moved since every
+         edition pinning these bytes. `concluded_for_project`'s shape exactly, one line up,
+         and THREE-VALUED for its reason: null on a target that is not an inquiry and for a
+         caller with no roster position, whose published act set is therefore byte-unchanged.
+         The rule that consumes it is `publish`'s entry in the act catalogue, which widens on
+         `=== true` and never narrows on a null. */
+      edition_warranted_for_project: (() => {
+        if (normalizeType(b.object_type) !== "inquiry") return null;
+        const who = this.#positionalMember(viewer, identity);
+        return who === null ? null : this.#editionWarrantedForJoinedProjectOf(b.bundle_id, viewer, who, b.current_state);
+      })(),
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
       rested_on: {
         working: rested.confirmed.length,
@@ -31814,6 +31842,121 @@ Claim: ${f2.claim}
       }
     };
   }
+  /* ===== REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9 (BOB #19, 2026-09-21) —
+   * WHICH CASE EDITIONS PINNING THESE BYTES ALREADY RECORD THE CONCLUSION THIS ACT
+   * WOULD RECORD? THE ONE COMPARISON `publishCase()`'s ALREADY_A_CASE_MEMBER AND THE
+   * `publish` AFFORDANCE (`#editionWarrantedForJoinedProjectOf`) BOTH ASK.
+   *
+   * WHY IT EXISTS. `ALREADY_A_CASE_MEMBER` used to compare the finding's BYTES alone
+   * (`#caseRelationOf`'s pin), which answered "would a new edition say anything
+   * different" correctly only while a case recorded nothing but those bytes. Since
+   * REC-135 (IC-166) an edition also records the conclusion it rests on — WHOSE, on
+   * which reading, with the claim verbatim — and a project's conclusion lives on the
+   * PROJECT, so it moves while the finding's bytes do not. Item 9: *"a new edition is
+   * warranted when the publishing project's latest conclusion is not the one the
+   * pinned edition recorded, whether or not `bundle_sha` moved. The refusal compares
+   * the RELATIONSHIP, exactly as `NOT_CONCLUDED` does."*
+   *
+   * WHAT IS ASKED. `rel` is `#caseRelationOf(bundleId)` as the caller holds it; `conc`
+   * is `#caseConclusionFor`'s CONCLUDED answer — in publishCase() the very object the
+   * case document will record, carried on `prepared` and never re-read. The editions
+   * are every RATIFIED edition whose roster pins this finding at its CURRENT sha
+   * (`rel.pinned`, across every case: DEC-72 clause 6 lets a finding serve many) and
+   * the unratified preparation that pins it (`rel.prepared`). An edition pinning an
+   * OLDER version is not asked: the finding moved since, and the pin already says so.
+   *
+   * WHAT "ALREADY RECORDS IT" MEANS, per the relationship this act would record:
+   *   - THE PROJECT'S OWN conclusion: the edition's row names the relationship
+   *     `project` and the same ENTRY of that project's history — the project, the
+   *     reading, the claim state, the claim verbatim, the falsifier or its stated
+   *     override, who concluded and when. A conclusion is a dated, authored ACT (§7.1
+   *     item 1), so one re-taken after a withdrawal is a different conclusion even
+   *     where it adopts the same claim, and the history already says so (DEC-19).
+   *     Both rows come from `#caseConclusionRowLines` and back through the one
+   *     parser, so they are compared in ONE spelling.
+   *   - THE NO-PROJECT relationship (a question concluded in its own bytes, §7.1 item
+   *     5): the edition's row says `no_project`, OR it recorded no conclusion at all
+   *     (every edition before REC-135, and every one before the case document
+   *     existed). Here the comparison IS THE PIN, not the fields: that conclusion is
+   *     written in the finding's own bytes and this edition pins exactly those bytes,
+   *     so it is the same conclusion by hash. An edition that recorded nothing rested
+   *     on the question's own `concluded` state — the gate before REC-135 read nothing
+   *     else — which is this relationship in these bytes. Comparing FIELDS here would
+   *     let a later rewording of the READER (`#noProjectConclusionOf`) warrant an
+   *     edition of bytes nobody moved, which is the liar's direction.
+   *   - ANYTHING ELSE an edition recorded — another relationship, another project's
+   *     row, a value this plane does not write — is not this conclusion.
+   *
+   * WHAT IT CANNOT SEE, stated so the next reader does not have to test it:
+   *   - two conclusion acts identical in content, author AND second (the record's
+   *     timestamps are second-grained) are indistinguishable in the record and read as
+   *     one; a new edition would then record byte-identical rows, so the refusal's own
+   *     sentence stays true of what the case would say;
+   *   - a reading NAME the frontmatter grammar coerces (`null`, a bare number) is
+   *     compared AS COERCED on both sides, one writer and one parser, so equal inputs
+   *     stay equal — the coercion is REC-135's unquoted `version:` field, unchanged;
+   *   - a case document with no readable text counts as recording NOTHING, which then
+   *     compares by the pin as above. */
+  static #CONCLUSION_ENTRY_FIELDS = [
+    "project",
+    "version",
+    "claim_state",
+    "claim",
+    "falsifier",
+    "falsifier_override_by",
+    "falsifier_override_at",
+    "concluded_by",
+    "concluded_at"
+  ];
+  #editionsRecordingConclusion(bundleId, rel, conc) {
+    const editions = [
+      ...(rel && Array.isArray(rel.pinned) ? rel.pinned : []).map((p) => ({ case_id: p.case_id, edition: Number(p.edition), state: "ratified" })),
+      ...rel && rel.prepared ? [{ case_id: rel.prepared.case_id, edition: Number(rel.prepared.edition), state: "prepared" }] : []
+    ];
+    const want = _Store.#conclusionRowParsed(bundleId, conc);
+    const pinned = [];
+    for (const e of editions) {
+      const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, e.case_id, e.edition);
+      const rows = d && typeof d.text === "string" ? (parseFrontmatter(d.text).data || {}).case_conclusions : null;
+      const had = Array.isArray(rows) ? rows.find((r) => r && typeof r === "object" && String(r.target ?? "") === String(bundleId)) || null : null;
+      pinned.push({
+        ...e,
+        recorded: _Store.#recordedConclusionSummary(had),
+        same: _Store.#sameRecordedConclusion(had, want)
+      });
+    }
+    return { same: pinned.filter((e) => e.same), pinned };
+  }
+  /* What a NEW edition would record for this member, rendered by the one writer and
+     read back by the one parser — the same path an edition's own row took. */
+  static #conclusionRowParsed(bundleId, c) {
+    const text = ["---", "case_conclusions:", ..._Store.#caseConclusionRowLines(bundleId, c), "---", ""].join("\n");
+    const rows = (parseFrontmatter(text).data || {}).case_conclusions;
+    return Array.isArray(rows) && rows[0] && typeof rows[0] === "object" ? rows[0] : null;
+  }
+  static #sameRecordedConclusion(had, want) {
+    if (!want) return false;
+    const relOf = (r) => r && typeof r.relationship === "string" ? r.relationship : null;
+    const hadRel = relOf(had);
+    if (want.relationship === "no_project") return hadRel === "no_project" || hadRel === null;
+    if (want.relationship !== "project" || hadRel !== "project") return false;
+    const v = (x) => x === void 0 || x === null ? null : String(x);
+    return _Store.#CONCLUSION_ENTRY_FIELDS.every((k) => v(had[k]) === v(want[k]));
+  }
+  /* What an edition RECORDED, for the act's answer — null where it recorded nothing. */
+  static #recordedConclusionSummary(had) {
+    if (!had || typeof had.relationship !== "string") return null;
+    const v = (x) => x === void 0 || x === null || x === "" ? null : String(x);
+    return {
+      relationship: had.relationship,
+      project: v(had.project),
+      version: v(had.version),
+      claim_state: v(had.claim_state),
+      claim: v(had.claim),
+      concluded_by: v(had.concluded_by),
+      concluded_at: v(had.concluded_at)
+    };
+  }
   /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7 (BOB #15, 2026-09-18) —
    * A PROJECT WITHDRAWS ITS CONCLUSION, and the withdrawal is a dated, authored
    * act that APPENDS to the relationship's history. It never deletes and never
@@ -32981,15 +33124,24 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
              met; what the rule says is unchanged. */
           detail: "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md \xA77.1 item 4). " + (conc.why === "question_not_case_bearing" ? `This question is ${b.current_state}, and a case cannot be asserted over one the group has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ` : conc.why === "project_withdrew_its_conclusion" ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; \xA77.1 item 7 \u2014 the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project=${proj}). ` : conc.why === "project_stance_undetermined" ? `${proj}'s latest entry about this question names an act this plane does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ` : `${proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (\xA77.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project=${proj}&version=<reading>). `) + (conc.concluded_elsewhere.length ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) \u2014 information, never this project's stance (\xA77.1 item 8). ` : "") + "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72)."
         };
-      if (this.#caseRelationOf(id).member)
+      const rel = this.#caseRelationOf(id);
+      const recorded = rel.member ? this.#editionsRecordingConclusion(id, rel, conc) : null;
+      if (recorded && recorded.same.length)
         return {
           ok: false,
           reason: "ALREADY_A_CASE_MEMBER",
           target: id,
           from: b.current_state,
-          detail: "this finding is already a member of a published case at the version it stands at now, so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one from bytes nobody revised would make the edition number a count of publish calls rather than a record of what changed. Reopen it (op=reopen), work it, conclude it again, and publish that \u2014 which is the route DEC-12 built and the one that leaves a reader able to see what moved."
+          project: proj,
+          relationship: conc.relationship,
+          recorded_by: recorded.same.map((e) => ({
+            case_id: e.case_id,
+            edition: e.edition,
+            state: e.state
+          })),
+          detail: "this finding is already a member of a published case at the version it stands at now, and that edition already records the conclusion this act would record (the publishing project's relationship, its reading and its claim \u2014 INVESTIGATIVE-SESSION.md \xA77.1 item 9), so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one that says what an edition already says would make the edition number a count of publish calls rather than a record of what changed. Two routes lead to a new edition, and each leaves a reader able to see what moved: the project withdraws its conclusion and concludes again (op=withdrawconclusion, then op=conclude&project=), or the finding is reopened (op=reopen), worked, concluded again and published \u2014 the route DEC-12 built."
         };
-      prepared.push({ id, b, fm, text: liveMd.content, conclusion: conc });
+      prepared.push({ id, b, fm, text: liveMd.content, conclusion: conc, warrant: recorded });
     }
     const roleMap = roles && typeof roles === "object" && !Array.isArray(roles) ? roles : null;
     if (roles != null && !roleMap)
@@ -33305,6 +33457,22 @@ Subject position: ${pos} \u2014 ${just}
            would have to guess which members the bar was actually
            asked of, and it was asked of none of them but these. */
         role: (memberRoles.find((m) => m.target === target2) || {}).role ?? null,
+        /* REC-157 / §7.1 item 9: WHY AN EDITION WAS MINTED OVER BYTES A CASE
+           ALREADY PINS — present ONLY when this finding was a case member at
+           its current version as the act began, which is exactly when the
+           refusal above was asked and answered "the conclusion moved". It names
+           every edition that pinned these bytes and what each RECORDED, so the
+           act's own answer says what moved rather than leaving a caller to
+           infer it from an edition number (DEC-12: a record of what changed). */
+        ...p.warrant ? { edition_warranted: {
+          because: "the_publishing_projects_conclusion_moved",
+          pinned_editions: p.warrant.pinned.map((e) => ({
+            case_id: e.case_id,
+            edition: e.edition,
+            state: e.state,
+            recorded: e.recorded
+          }))
+        } } : {},
         /* REC-17 / DEC-12: a newer EDITION surfaces the re-evaluation
                                 obligation on everything whose basis names this FINDING and
                                 RECOMPUTES NOTHING on the member's behalf — a leg keeps citing
@@ -33548,25 +33716,14 @@ Subject position: ${pos} \u2014 ${just}
          `claim_state: undetermined` IS A FIRST-CLASS ANSWER and is never an
          empty claim. A conclusion written before §7.1 item 6 names no reading, so
          WHICH claim was concluded cannot be established from the record — the
-         document says so, with the reason, rather than publishing a blank. */
+         document says so, with the reason, rather than publishing a blank.
+         REC-157: the row's lines are written by `#caseConclusionRowLines`, MOVED
+         there byte for byte, because `op=publish` must now also ask what a new
+         edition WOULD record and compare it with what an edition DID record — and
+         a second spelling of these twelve lines would be the one place the two
+         could come apart. */
       "case_conclusions:",
-      ...roster.flatMap((m) => {
-        const c = concOf.get(m) || null;
-        return [
-          `  - target: ${m}`,
-          `    relationship: ${c ? c.relationship : "null"}`,
-          `    project: ${c && c.project ? c.project : "null"}`,
-          `    version: ${c && c.version ? c.version : "null"}`,
-          `    claim_state: ${c && c.claim ? c.claim.state : "null"}`,
-          `    claim: "${_Store.#fmSafe(c && c.claim && c.claim.text ? c.claim.text : "")}"`,
-          `    claim_detail: "${_Store.#fmSafe(c && c.claim && c.claim.detail ? c.claim.detail : "")}"`,
-          `    falsifier: "${_Store.#fmSafe(c && c.falsifier ? c.falsifier : "")}"`,
-          `    falsifier_override_by: ${c && c.falsifier_override ? c.falsifier_override.by : "null"}`,
-          `    falsifier_override_at: "${_Store.#fmSafe(c && c.falsifier_override ? c.falsifier_override.at : "")}"`,
-          `    concluded_by: ${c && c.by ? c.by : "null"}`,
-          `    concluded_at: "${_Store.#fmSafe(c && c.at ? c.at : "")}"`
-        ];
-      }),
+      ...roster.flatMap((m) => _Store.#caseConclusionRowLines(m, concOf.get(m) || null)),
       "completeness:",
       `  statement: "${_Store.#fmSafe(statement)}"`,
       `  subject_position: ${position}`,
@@ -33702,6 +33859,29 @@ Subject position: ${pos} \u2014 ${just}
       ""
     ];
     return fm.join("\n") + body.join("\n");
+  }
+  /* REC-135 / REC-157 — ONE MEMBER'S ROW OF `case_conclusions`, THE ONE WRITER OF IT.
+     MOVED HERE BYTE FOR BYTE from `#caseDocumentText` (REC-135 wrote it inline) and
+     changed in nothing: the document calls this for every roster member, and
+     `#editionsRecordingConclusion` calls it to render what a NEW edition would
+     record so the comparison is between two rows written by one function and
+     read back by one parser — never between a row and a hand-copied idea of one.
+     `c` null writes the row a member with no recorded conclusion gets. */
+  static #caseConclusionRowLines(m, c) {
+    return [
+      `  - target: ${m}`,
+      `    relationship: ${c ? c.relationship : "null"}`,
+      `    project: ${c && c.project ? c.project : "null"}`,
+      `    version: ${c && c.version ? c.version : "null"}`,
+      `    claim_state: ${c && c.claim ? c.claim.state : "null"}`,
+      `    claim: "${_Store.#fmSafe(c && c.claim && c.claim.text ? c.claim.text : "")}"`,
+      `    claim_detail: "${_Store.#fmSafe(c && c.claim && c.claim.detail ? c.claim.detail : "")}"`,
+      `    falsifier: "${_Store.#fmSafe(c && c.falsifier ? c.falsifier : "")}"`,
+      `    falsifier_override_by: ${c && c.falsifier_override ? c.falsifier_override.by : "null"}`,
+      `    falsifier_override_at: "${_Store.#fmSafe(c && c.falsifier_override ? c.falsifier_override.at : "")}"`,
+      `    concluded_by: ${c && c.by ? c.by : "null"}`,
+      `    concluded_at: "${_Store.#fmSafe(c && c.at ? c.at : "")}"`
+    ];
   }
   /** REC-96 / D-196 / IC-112 — THE CASE'S OWN SUBJECTS, GATHERED DOWNWARD.
    *
@@ -52549,6 +52729,34 @@ ${words}`;
       if (!p || normalizeType(p.object_type) !== "project") continue;
       if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
       if (this.#conclusionOf(pid, inquiryId, viewer)) return true;
+    }
+    return false;
+  }
+  /* REC-157 / §7.1 item 9 — COULD A PROJECT THIS CALLER HAS JOINED PUBLISH A NEW EDITION OF A
+   * FINDING A CASE ALREADY PINS? `#concludedForJoinedProjectOf`'s walk, asked the two questions
+   * `publishCase()` asks of the project a caller names, through the SAME two readers: the
+   * relationship must be CONCLUDED (`#caseConclusionFor`, the NOT_CONCLUDED gate's one reader),
+   * and no edition pinning these bytes may already record that conclusion
+   * (`#editionsRecordingConclusion`, the ALREADY_A_CASE_MEMBER comparison). One reader per
+   * question, so the act this fact fronts and the refusal cannot disagree (DEC-8).
+   *
+   * ONLY A CASE MEMBER IS WALKED. A finding no case pins at its current version is offered
+   * `publish` by `!case_member` already, so the walk would add cost and nothing else; it answers
+   * false there, and the predicate never reads it because its first disjunct holds.
+   *
+   * IT IS A FACT AND NEVER A RULE, `concluded_for_project`'s posture exactly: it says SOME joined
+   * project could publish a new edition, not that THIS caller may publish for THAT project
+   * (D-311's per-pair question), and the act still refuses on its own terms. */
+  #editionWarrantedForJoinedProjectOf(inquiryId, viewer, memberId, currentState) {
+    const rel = this.#caseRelationOf(inquiryId);
+    if (!rel.member) return false;
+    for (const pid of this.#citesInto(inquiryId).confirmed) {
+      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
+      if (!p || normalizeType(p.object_type) !== "project") continue;
+      if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
+      const conc = this.#caseConclusionFor(pid, inquiryId, viewer, currentState);
+      if (conc.state === "concluded" && !this.#editionsRecordingConclusion(inquiryId, rel, conc).same.length)
+        return true;
     }
     return false;
   }
