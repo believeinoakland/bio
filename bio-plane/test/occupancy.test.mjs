@@ -18,7 +18,31 @@
  * `list_task_runs` entry carries `session_id` and `archived`. The task ids are the estate's real two, `conduct-8`
  * (the operator's; its definition lives outside this repository) and `conduct-heartbeat`.
  *
- * NEGATIVE CONTROL: DECLARED AT BIRTH, NOT YET RUN — the driver is `node bio-plane/test/occupancy.control.mjs`.
+ * NEGATIVE CONTROL: RUN 2026-09-21 by the M0-81 worker, `node bio-plane/test/occupancy.control.mjs` from the repo root
+ * — seventeen arms plus a baseline, each armed ALONE against `tools/occupancy.mjs` held in memory, every restore
+ * verified by sha256 AND `cmp` against the arm's own copy with the byte count floored; driver exit 0, 107 pass / 0 fail;
+ * baseline and closing suite 61 pass / 0 fail; subject sha256 6aeb5888… before and after. Every arm failed at its
+ * declared assertion and spared its declared isolation assertion; suite tallies under each arm in brackets.
+ *   (a) the occupancy test dropped, the row's own control -> the duplicate-CONDUCT fixture is admitted and "the incident's duplicate CONDUCT #8 is REFUSED" fails by name [39 / 22]
+ *   (b) the scheduledTaskId route dropped -> "a session a task stood up under ANOTHER title is REFUSED by its scheduledTaskId" fails, the runs route holding [59 / 2]
+ *   (c) the runs route dropped -> "REFUSED as a run of its task" fails, the scheduledTaskId route holding [56 / 5]
+ *   (d) the lane's tasks no longer read from the task listing -> the liar is admitted while the incident's title still refuses [48 / 13]
+ *   (e) the title half dropped -> "a chip-filed duplicate, bound by title alone, is REFUSED" fails, the runs route holding [42 / 19]
+ *   (f) OVER-STRICTNESS, an archive not honoured -> "the same listing with that session stood down ADMITS" fails [53 / 8]
+ *   (g) OVER-STRICTNESS, the predecessor exemption dropped -> "a live PREDECESSOR does not hold the lane" fails [47 / 14]
+ *   (h) the chip's own instance admitted, `>=` read as `>` -> the incident is admitted while a stale chip still refuses [43 / 18]
+ *   (i) a truncated listing believed -> "a listing at its limit is UNDETERMINED" fails alone [60 / 1]
+ *   (j) the task listing not required -> "without the task listing the verdict is UNDETERMINED" fails [58 / 3]
+ *   (k) a runs list cut at a limit believed -> "a runs list cut at list_task_runs' default is UNDETERMINED" fails [59 / 2]
+ *   (l) the lane compared by case -> "a lane title in another CASE still holds the lane" fails [59 / 2]
+ *   (m) the MENTIONS dropped -> the prose mention and the prefixed blind spot go unnamed [57 / 4]
+ *   (n) a gap outranks an occupant -> "an occupant REFUSES even when every gap is open" fails alone [60 / 1]
+ *   (o) OVER-STRICTNESS, a get_session record not read as unlinked -> "get_session records for every live row cover the task half" fails [59 / 2]
+ *   (p) OVER-STRICTNESS, the title read loosely -> "a heartbeat run-session does not hold the CONDUCT lane" fails [47 / 14]
+ *   (q) OVER-STRICTNESS, a lane's tasks read by task-id prefix -> the same heartbeat assertion fails [49 / 12]
+ * A FINDING ABOUT THE SUITE, recorded rather than smoothed: on the first run, fifteen arms, the heartbeat assertion fell
+ * only as collateral (under (g) through a predecessor sharing its fixture, under (o) through the get_session route), so
+ * no arm had shown it catches a heartbeat read AS the lane. Its fixture was isolated, and (p) and (q) were added.
  */
 
 import "./stdio.mjs";
@@ -173,11 +197,15 @@ section("5 — OVER-STRICTNESS: a predecessor, a heartbeat, another lane and a p
     listed({ id: ID.s10, title: "SCHEDULER #10" }), listed({ id: ID.f3, title: "FLEET #3" }) ] });
   t("a live PREDECESSOR does not hold the lane against its successor's chip", r.verdict, ADMIT);
   t("...and every live predecessor is NAMED for the successor to retire", ids(r.predecessors), [ID.c10, ID.c11].sort());
-  t("...and other lanes' live sessions are neither occupants nor mentions", [r.occupants.length, r.mentions.length], [0, 0]);
+  const others = [ID.d4, ID.b25, ID.s10, ID.f3];
+  t("...and other lanes' live sessions are neither occupants nor mentions",
+    [...r.occupants, ...r.predecessors].filter((o) => others.includes(o.sessionId)).length + r.mentions.length, 0);
+  /* Heartbeats and ANOTHER lane only, with the lane task's runs passed: nothing here leans on the predecessor rule or
+     on the get_session route, so the only thing that can make this REFUSE is a heartbeat read as the lane. */
   const beats = Array.from({ length: 30 }, (_, i) => detailed({ id: `local_fixture-heartbeat-${i}`,
     title: "CONDUCT heartbeat (BIO)", task: "conduct-heartbeat", last: at(-20 * i) }));
-  const hb = judge({ chip: "CONDUCT #12", limit: 200, tasks: TASKS,
-                     sessions: [...beats, detailed({ id: ID.c11, title: "CONDUCT #11" })] });
+  const hb = judge({ chip: "CONDUCT #12", limit: 200, tasks: TASKS, runs: { "conduct-8": [] },
+                     sessions: [...beats, detailed({ id: ID.d4, title: "DIST #4" })] });
   t("a heartbeat run-session does not hold the CONDUCT lane, by title or by its task", hb.verdict, ADMIT);
   t("...and all thirty are NAMED on one MENTIONS line, with the task whose title they carry", hb.mentions,
     [{ title: "CONDUCT heartbeat (BIO)", count: 30, taskId: "conduct-heartbeat", shadows: false }]);
@@ -213,8 +241,9 @@ section("6 — REFUSE: a successor already up, an instance nobody can read, and 
 /* ========================================================================== */
 section("7 — UNDETERMINED: the verdict never claims more than its input could show");
 {
+  /* Another lane's row only: every verdict below turns on what the input could SHOW, never on a binding. */
   const base = { chip: "CONDUCT #12", tasks: TASKS, runs: { "conduct-8": [] },
-                 sessions: [listed({ id: ID.c11, title: "CONDUCT #11" })] };
+                 sessions: [listed({ id: ID.d4, title: "DIST #4" })] };
   const noLimit = judge({ ...base });
   t("without --limit the verdict is UNDETERMINED",
     [noLimit.verdict, noLimit.missing.some((g) => /limit was not declared/.test(g.gap))], [UNDETERMINED, true]);
@@ -240,7 +269,7 @@ section("7 — UNDETERMINED: the verdict never claims more than its input could 
   t("...and one cut at its maximum names get_session instead",
     judge({ ...base, limit: 200, runs: { "conduct-8": oldRuns(50) } }).missing.some((g) => /get_session record/.test(g.remedy)),
     true);
-  const records = judge({ ...base, limit: 200, runs: null, sessions: [detailed({ id: ID.c11, title: "CONDUCT #11" }),
+  const records = judge({ ...base, limit: 200, runs: null, sessions: [detailed({ id: ID.d4, title: "DIST #4" }),
     detailed({ id: ID.hb1, title: "CONDUCT heartbeat (BIO)", task: "conduct-heartbeat" })] });
   t("get_session records for every live row cover the task half without runs", records.verdict, ADMIT);
   t("...because a get_session record is READ even where it prints no scheduledTaskId, and a list_sessions row is not",
@@ -249,8 +278,10 @@ section("7 — UNDETERMINED: the verdict never claims more than its input could 
   t("a row that is not a session object is UNDETERMINED, because it could be the holder",
     [junk.verdict, junk.missing.some((g) => /not session objects/.test(g.gap))], [UNDETERMINED, true]);
   const everyGap = judge({ chip: "CONDUCT #12", sessions: [listed({ id: ID.c12, title: "CONDUCT #12" })] });
-  t("an occupant REFUSES even when every gap is open: one holder is enough",
-    [everyGap.verdict, everyGap.missing.length >= 2], [REFUSE, true]);
+  t("the every-gap fixture really leaves the limit AND the task listing open",
+    [/limit was not declared/, /list_scheduled_tasks/].map((re) => everyGap.missing.some((g) => re.test(`${g.gap} ${g.remedy}`))),
+    [true, true]);
+  t("an occupant REFUSES even when every gap is open: one holder is enough", everyGap.verdict, REFUSE);
 }
 
 /* ========================================================================== */

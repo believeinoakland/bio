@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* M0-81's NEGATIVE CONTROL DRIVER — fifteen arms plus a baseline — over `tools/occupancy.mjs` and the suite that
+/* M0-81's NEGATIVE CONTROL DRIVER — seventeen arms plus a baseline — over `tools/occupancy.mjs` and the suite that
  * drives it, `bio-plane/test/occupancy.test.mjs`.
  *
  *   node bio-plane/test/occupancy.control.mjs          (from the repo root: the baseline, then every arm)
@@ -32,6 +32,15 @@
  *   A13  what cannot be classified, not named -> the prose mention vanishes; the heartbeat verdict holds
  *   A14  a gap outranks an occupant -> the every-gap occupant reads UNDETERMINED; the incident still refuses
  *   A15  OVER-STRICTNESS, a get_session record not read as unlinked -> the records fixture reads UNDETERMINED
+ *   A16  OVER-STRICTNESS, the title read LOOSELY (contains the lane's word) -> the heartbeats hold CONDUCT
+ *   A17  OVER-STRICTNESS, a lane's tasks read by task-id PREFIX -> conduct-heartbeat's sessions hold CONDUCT
+ *
+ * A16 AND A17 WERE ADDED AFTER THE FIRST RUN, AND THE REASON IS A FINDING ABOUT THE SUITE, NOT THE SUBJECT: on the
+ * fifteen-arm run of 2026-09-21 the heartbeat assertion fell ONLY as collateral — under A7 through a CONDUCT #11
+ * predecessor sharing its fixture, and under A15 through the get_session route — so no arm had ever shown that it
+ * catches a heartbeat read AS the lane. Its fixture now holds heartbeats and another lane alone, and these two arms
+ * are the two design shortcuts that would make it fail: both were considered and rejected when the judgement was
+ * written.
  *
  * MUST NOT fail in any arm: the fixture-corpus assertion, which is downstream of nothing in the subject; an arm that
  * takes it down has perturbed a second variable.
@@ -201,8 +210,22 @@ const ARMS = [
     to: `  ;`,
     mustBreak: "get_session records for every live row cover the task half without runs",
     mustNotBreak: ["a session a task stood up under ANOTHER title is REFUSED by its scheduledTaskId"] },
+
+  { id: "A16", title: "OVER-STRICTNESS: the title read LOOSELY — any title containing the lane's word binds",
+    from: `    if (laneKey(s.title) === lane) { e.bindings.push(`,
+    to: `    if (str(s.title).toUpperCase().includes(lane)) { e.bindings.push(`,
+    mustBreak: "a heartbeat run-session does not hold the CONDUCT lane, by title or by its task",
+    mustNotBreak: ["the incident's duplicate CONDUCT #8 is REFUSED"] },
+
+  { id: "A17", title: "OVER-STRICTNESS: a lane's tasks read by task-id PREFIX — conduct-heartbeat taken for the lane's",
+    from: `    if (laneKey(t.title) === lane)
+      laneTasks.set(t.taskId,`,
+    to: `    if (laneKey(t.title) === lane || t.taskId.toUpperCase().startsWith(lane + "-"))
+      laneTasks.set(t.taskId,`,
+    mustBreak: "a heartbeat run-session does not hold the CONDUCT lane, by title or by its task",
+    mustNotBreak: ["the incident's duplicate CONDUCT #8 is REFUSED"] },
 ];
-const DECLARED_ARMS = 15;
+const DECLARED_ARMS = 17;
 
 const RUNNING = ONLY ? ARMS.filter((a) => a.id === ONLY) : ARMS;
 if (ONLY && !RUNNING.length) { console.log(`** no arm '${ONLY}' — the arms are ${ARMS.map((a) => a.id).join(", ")}`); process.exit(2); }
