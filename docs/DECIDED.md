@@ -18,7 +18,7 @@ nothing was decided — the same rule the record applies to sparse levels everyw
 else. Each entry QUOTES its source and points at it; the authority is the file named,
 never this one.
 
-1511 rulings across 107 documents.
+1514 rulings across 107 documents.
 72 of them are decision-register entries, each filed under its own id from its
 `decided:` field and quoting its `response:`; a row showing the entry's status is one of them.
 
@@ -595,7 +595,7 @@ never this one.
 - **D-148** · 2026-09-22 — A FEE QUOTE IS EVIDENCE, RULED BY BOB 2026-09-22 (D-148):** *"Yes, a price quote is evidence"* — about the body that quoted it, not an obstacle to the request.  
   `docs/architecture/BIO_Case_Making_v0_1.md:160`
 - **D-148** · 2026-09-22 — 2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told the same day that the layers follow the AGENCY asked (federal FOIA governs…  
-  `docs/development/QUEUE.md:25`
+  `docs/development/QUEUE.md:41`
 - **D-149** · 2026-09-22 — A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT, RULED BY BOB 2026-09-22 (D-149):** *"ALL records laws apply.  
   `docs/architecture/BIO_Case_Making_v0_1.md:172`
 - **D-151** — ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`, `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine callers are DISTINGUISHABLE.  
@@ -773,7 +773,11 @@ never this one.
 - **D-271** · 2026-08-09 — The CHECK's sentence is CORRECTED at its site with the measurement, never exempted.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:117`
 - **D-278** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 4): THE REFRESH** — `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #12 from the state measured at `381427e4`, with CONDUCT #12's batch (merged at `conduct12/batch2` @ `049da926`, its FULL gate running) and its route D-278 (a phantom row: cited on `main`, its DEBT row…  
-  `docs/development/CLAIMS.md:18312`
+  `docs/development/CLAIMS.md:18317`
+- **D-278** · 2026-09-22 — PROVISIONAL, RULED 2026-09-22 by BOB #26 (D-278): the refusals that still answer only `error`, one determination per group, verified at `0ce7447b`.** (4) the CAPABILITY complaints (503, `capture`, `pdfstructure`, `acquire`, `attest`: no evidence storage bound) are CODED — one row, a fact about the INSTALLATION…  
+  `docs/development/INTERFACES.md:537`
+- **D-278** · 2026-09-22 — 2026-09-22 · BOB #26 · D-278 RULED, ONE DETERMINATION PER GROUP (SCHEDULER #12's DELEGATION, item 3).** Written into `INTERFACES.md` I3 "Answers" as PROVISIONAL, traced at `0ce7447b`.  
+  `docs/development/QUEUE.md:25`
 - **D-280** — — the code it fixed is removed with the composition — and its row now says so above its own report; the work was correct for the model that existed, and its controls are the record of what that model did, including that a WITHDRAWN project was TIGHTENING a bar on a document it had left, which is part of why the…  
   `docs/archive/ledgers/BOB-INBOX-drained.md:592`
 - **D-282** · 2026-08-09 — THE THRESHOLD THIS ROW NAMED UNDETERMINED IS NOW BISECTED, AND THE ROW'S MODEL OF IT WAS TOO SIMPLE — CORRECTED HERE.** For a SINGLE write it is the pipe buffer exactly: 65,573 bytes survive and 65,580 do not, and every partial arrival observed is an exact multiple of **65,536**.  
@@ -807,7 +811,7 @@ never this one.
 - **D-293** — Q4 RULED NO: the guard never runs `gates.mjs` (M-85's landing rate), which `VERIFICATION.md`'s push-guard section already states; its named fix, refusing a tree whose recorded verdict is RED, is carried by the D-293 inbox entry until built, because that file is at its reading budget and its register block is quoted…  
   `docs/development/CLAIMS.md:16469`
 - **D-293** · 2026-09-22 — mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6).  
-  `docs/development/CLAIMS.md:18307`
+  `docs/development/CLAIMS.md:18312`
 - **D-293** · 2026-09-17 — `5a807b8a` D-293's design gap RULED (a dirty run keyed by its temporary-index tree); CLAUDE.md §6's gate classes. - `0b7328bc` D-288 archived (closed in full since 2026-09-17); M0-48's five-day-old delegation discharged. - `032d1ce1` **BOB'S RULING ON THE RECORD — "Never queue a gate behind another lane's"…  
   `docs/development/kickoffs/BOB-NEXT.md:34`
 - **D-293** — D-293's design gap is RULED (BOB INBOX; CLAUDE.md §6 corrected). - **Owners of `kickoffs/SKILL.md`, `SCHEDULER.md`, `NEW-MACHINE.md`:** D-293's stale-gate-sentence DELEGATION items 2, 3, 5.  
@@ -1089,7 +1093,7 @@ never this one.
 - **IC-83** — its (1) and (2); IC-83 as AMENDED at REC-82's landing.  
   `docs/development/CLAIMS.md:5018`
 - **IC-83** · 2026-09-14 — CHANGING — IC-83 ACCEPTED 2026-09-14 (protocol step 4): the 1.10.0 shape keeps working; nothing NEW is built against the old or the new shape until REC-82 lands the table and writer; SETTLED (STABLE again) when REC-82 and REC-83 have landed and the two `content_id` columns are NOT NULL.  
-  `docs/development/INTERFACES.md:673`
+  `docs/development/INTERFACES.md:686`
 - **IC-84** — interface: I3 — `op=cite` gains optional extent fields (additive); its OWN IC minted at spawn; IC-84's SETTLED follows this landing plus UI-61's re-confirmation design: IC-84 as RESOLVED and amended (the grammar the leg meets: `extent_kind` + per-arm fields OR `content_id`, never both, absent = the whole document);…  
   `docs/archive/ledgers/QUEUE-closed.md:947`
 - **IC-84** — So IC-84's SETTLED is NOT owed on this landing alone**, because its RESOLUTION recorded UI as answering that the composer emits `extent` per leg, and that half is outstanding.  
@@ -1617,7 +1621,7 @@ never this one.
 - **REC-157** — second-edition DELEGATION was RULED as §7.1 item 9 (BOB #19) and placed as REC-157; (c) the five session-reach ops were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0 (`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s…  
   `docs/development/CLAIMS.md:15581`
 - **REC-157** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes nothing on the shared question; `store.mjs` promotes the inquiry first),…  
-  `docs/development/CLAIMS.md:18300`
+  `docs/development/CLAIMS.md:18305`
 - **REC-159** — PLACED as REC-159, directly before REC-155; a bearer's reach RULED by BOB #22 into Membership v2 §4.7 (the ADMIN_TOKEN holder is not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and…  
   `docs/development/CLAIMS.md:16890`
 - **REC-159** — not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and its build PLACED as REC-162 directly after REC-159.  
@@ -2021,7 +2025,7 @@ never this one.
 - **M0-103** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 5): DIST #4's route PLACED** — M0-103 (`owed-controls.test.mjs` reads a subprocess timeout as a finding, a false RED the push guard now enforces), verified at the code (its two spawns carry `timeout: 120_000` and nothing reads `ETIMEDOUT` or a signal), FIRST of the…  
   `docs/development/CLAIMS.md:17761`
 - **M0-103** — (a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107 and archived.  
-  `docs/development/CLAIMS.md:18305`
+  `docs/development/CLAIMS.md:18310`
 - **M0-103** — M0-103; REC-157 RULED (a project's make-current writes nothing on the shared question, `INVESTIGATIVE-SESSION.md` §7); M0-97's second specimen added to VERIFICATION's cut; Distribution §4 and System Design §6 corrected (DIST deploys the installer; nothing waits on Bob).  
   `docs/development/kickoffs/BOB-NEXT.md:38`
 - **M0-106** · 2026-09-22 — imeout outcome): item 1 PLACED as `M0-106` (DIST's own kickoff) and item 2 as `M0-107`, both where M0-103 stood; M0-103 SUPERSEDED by M0-107, which takes its fix to its class and names its two spawns as the first site.  
@@ -2682,11 +2686,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-21** — RULED 2026-09-21 by BOB #25: take the fix, with one condition** — the temporary-index tree is taken at the run's start and end and a dirty verdict is recorded only when they agree.  
   `docs/development/CLAIMS.md:17917`
 - Item 3's route, DECIDED by DIST #3, is REFINED: `op=instancegroup` answers admin, member and probe only (`index.mjs`, its OPS row) and an update holds no instance credential, so `newgroup` tells from the version it reads before the upload, conditionally when that is unknown, and never seeds or reads.  
-  `docs/development/CLAIMS.md:18149`
+  `docs/development/CLAIMS.md:18150`
+- "file on ADMIT only", with M-93's reason; (2) the reading is RULED as recommended and written into rule 1 — a live session bound BELOW the chip's number is its predecessor, named and never refused; (3) `NEW-MACHINE.md` gates its chips on the same command, in both places it files them.  
+  `docs/development/CLAIMS.md:18258`
 - **2026-09-22** — AMENDED 2026-09-22, same session (commit 5): BOB'S RULING APPLIED TO THIS SESSION'S PLACEMENTS** — Bob, 2026-09-22 (`CLAUDE.md` §2, `48aab56b`): *The goal is BIO work; process is overhead*.  
-  `docs/development/CLAIMS.md:18318`
+  `docs/development/CLAIMS.md:18323`
 - **2026-09-22** — Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them…  
-  `docs/development/CLAIMS.md:18493`
+  `docs/development/CLAIMS.md:18498`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
