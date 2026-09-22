@@ -141,7 +141,11 @@ extended to whole FILES, in build order:
    which ends the two-writers conflict without moving it.
 
 Until each lands: SCHEDULER batches its docs landings to one per wake and holds `main` while CONDUCT lands (live
-2026-09-21); appends at a tail are resolved by carrying both sides, each line kept in its own block.
+2026-09-21); appends at a tail are resolved by carrying both sides, each line kept in its own block. **And from
+2026-09-22 (BOB #27, on Bob's words that day and M-97: 24 of 59 recorded gate runs discarded), NO CLAIM BLOCK is
+written for an edit that lands in one commit** — claimed and released together, it reserves nothing and collides on
+every rebase (`CLAUDE.md` §4). A ruling goes to its home document and the reasoning to the commit message; DELEGATIONs,
+their state lines, and claims that span landings (a worker's item, a multi-landing edit) stay.
 
 ### The failure modes, with their receipts
 

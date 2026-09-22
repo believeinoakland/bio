@@ -18828,3 +18828,15 @@ conflict at all.
 **DISCHARGED 2026-09-22 by CONDUCT #12, for CONDUCT only (items 5-8):** `kickoffs/CONDUCT.md` step 6, "Mechanical conflicts"
 and "REGENERATE EVERY GENERATED INDEX LAST" corrected in the landing of M0-99 (batch 4); `kickoffs/CONDUCT-NEXT.md` rewritten in
 the same landing. Items 1-4 and 9-11 stay open with their owners.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — DIST-NEXT: the secrets question answered — Bob ruled option C, the keys live in the cloud environment)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/secrets-ruled`), Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (the FIRST section's heading and one paragraph), this block,
+  `docs/DECIDED.md` (GENERATED, regenerated LAST).
+why: DIST-NEXT told a cloud DIST #5 that the secrets' home was Bob's open decision, and not to improvise one. Bob ruled
+  it on 2026-09-22 at about 16:45Z (option C, relayed by BOB #27, whose landing records it in `NEW-MACHINE.md` §0): all
+  ten `.env` keys go in the one cloud environment every session uses. A successor with no memory would otherwise stop on
+  a question already answered. It now finds the keys as environment variables, confirms each by USING it (`wrangler
+  whoami` must report the pinned account), and never prints a value.
+**released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.

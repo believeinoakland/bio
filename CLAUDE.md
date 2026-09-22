@@ -95,16 +95,16 @@ design, doctrine, anything for Bob → BOB) and continue.
   it was removed on purpose — **do not rebuild it**; if you think one is needed, say so and let Bob rule.
 - **A change is made when it is committed AND pushed**, and verified from the REMOTE. Run
   `node tools/plancheck.mjs` before any handoff.
-- **Claim your area in `docs/development/CLAIMS.md` before editing**; do not edit another area's paths
-  (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`. Work in your own worktree.
+- **Claim your area in `docs/development/CLAIMS.md` before an edit that spans landings** — a claim released in its own
+  commit reserves nothing and collides on every rebase, so write none (BOB #27, 2026-09-22; M-97); do not edit another
+  area's paths (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`. Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
   FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18). **A session is REFRESHED when its context is
   more than 70% full** (Bob, 2026-09-21):
-  check your own with `get_usage` at every self-wake and every handoff boundary; over 70%, stop taking new work, write
+  check it with `get_usage` at every self-wake and handoff; over 70%, stop taking new work, write
   your `<LANE>-NEXT.md` from the measured state, push it, verify it on the remote, and ask BOB for your successor. The
-  successor archives you under D-398's three conditions. BOB measures every live session at its own opening, so a lane
-  that stops checking is still caught. **Its self-wake expires:** a session-only `CronCreate` lasts 7 days, so when
-  you arm it, also arm a ONE-SHOT reminder 5 days out that deletes it, arms a fresh one, and arms the next reminder.
+  successor archives you under D-398's three conditions. **Its self-wake expires:** a session-only `CronCreate` lasts
+  7 days, so arm with it a ONE-SHOT 5 days out that deletes it, arms a fresh one and the next one-shot.
 - **Undetermined is first-class and must be STATED.** Never invent an attribution, a referent or a figure
   to get past a gate; a gate that pressures someone into inventing one is a bug in the gate.
 - **A defect you find is diagnosed until its FIX can be named**, then sent to SCHEDULER to be placed in the build plan

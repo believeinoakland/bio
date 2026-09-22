@@ -19,13 +19,22 @@ questions answered in §1 (M0-99, M0-100, M0-101); §5 points at the rest of the
   rulings index) is a commit, so it moves `main` for every lane; a gate record is keyed by the exact tree (D-293), so every
   move voids every other lane's green result, and each lane rebases and re-gates. On an 8 GiB machine the re-gates also
   compete for memory (the ceiling BOB #25 reported).
+- **What it costs, measured (M-97, BOB #27, 2026-09-22 00:00Z–16:05Z):** 24 of 59 recorded gate runs (41%) measured a
+  tree that never reached `main`, the BOB lane 13 of its 18; 45 of 52 landings carried `CLAIMS.md` and 46 the generated
+  `DECIDED.md`, 8 product source. It undercounts: a killed or dirty-tree run writes no record, and the rebasing between
+  runs is not measured at all. Bob, the same day: *"perhaps 1/2 the work being done in lanes overall is wasted and
+  redone because of this contention"* — and it *"must be understood and fixed."*
 
 ## The three changes, and their order
 
 **Change 1 first**: change 2 moves every landing onto a cadence, and the notes lanes trade — CONDUCT's `running` word
 above all, which must be visible before its worker spawns — cannot wait for a cadence, so they need their own channel
 before `main` stops carrying them. **Change 3 is independent** and starts with its measurement beside change 1.
-**Change 2 follows change 1**, and is cheapest once change 3 carries its gate.
+**Change 2 follows change 1**, and is cheapest once change 3 carries its gate. **Built as M0-110 (change 1) and M0-111
+(change 2), with M0-99 before them** (SCHEDULER #12's placement). **M0-110's first stage starts BESIDE M0-99, not after
+it** (BOB #27, 2026-09-22, on Bob's words): the per-path churn measurement and the write and read commands with their
+suite are new files that M0-99 does not touch; moving the files and redirecting the readers waits for M0-99. Until they
+land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim block, batched landings.
 
 ### 1 · The message board leaves `main`: a `coord` branch
 

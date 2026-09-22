@@ -12988,5 +12988,6 @@ op-silence-as-none 25/1 · page-reads-scratch 24/2 · over-strict 26/0 — ident
 `store.mjs` and the suite hashed identical before and after. CONDUCT answers FOR the consumer areas, in writing: NOT-AFFECTED
 (no consumer calls the op; UI-77, next in the plan, is the first). **NOT closed by it, and routed:** the rest of the row beyond
 the slug (when it was recorded, by which act, by whom), which Publication §7 point 1 does not rule public, so the builder
-withheld it from the public answer (DESIGN GAP, to BOB #27); and `newgroup/src/index.mjs`'s sentence that the op answers
+withheld it from the public answer (DESIGN GAP, to BOB #27 — RULED 2026-09-22 by BOB #27 at the code: only the slug is public
+and the builder's projection stands, Publication §7 point 1); and `newgroup/src/index.mjs`'s sentence that the op answers
 credentials only, with whether an update should now read the op (REC-163's DELEGATION to DIST).
