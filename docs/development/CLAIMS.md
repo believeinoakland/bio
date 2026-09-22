@@ -17548,3 +17548,10 @@ one Incomplete bullet and one Status phrase); `docs/development/INTERFACES.md` (
 read its bearer rule as open after BOB #22 ruled it); `docs/DECIDED.md` (GENERATED, regenerated LAST); this block. CONDUCT #11 read all three
 decisions as Bob's at its merge (38850da4) and asked; the correction is this lane's because BOB #23 wrote §3.1's heading.
 **released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#24) — BOB-NEXT written for BOB #25 as a CHECKPOINT while live
+
+claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`. Paths:
+`docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~00:30Z 2026-09-22), `docs/DECIDED.md`
+(GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #24** — landed in the same commit as the file it covers.

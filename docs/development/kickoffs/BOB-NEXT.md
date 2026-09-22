@@ -1,78 +1,71 @@
-# BOB — resume here. Written 2026-09-21 by BOB #23 for BOB #24, in the SAME Claude Code account.
+# BOB — resume here. Written 2026-09-21 by BOB #24 for BOB #25, in the SAME Claude Code account.
 
 Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this.
-**Everything below is a POINTER measured at ~22:40Z 2026-09-21; re-measure before resting anything on it.** BOB #23
-wrote this at 62% of its context with its own commitments discharged, then waited on Bob's answers; the refresh line is now **70%** (§2).
+**Everything below is a POINTER measured at ~00:30Z 2026-09-22; re-measure before resting anything on it.** BOB #24
+wrote this as a CHECKPOINT while live, at 47% of its context with its own commitments discharged; the refresh line is
+**70%** (Bob, 2026-09-21). If BOB #24 is still live when you read this, you are early: check occupancy first.
 
 ## 0. YOUR FIRST ACTS
 
-1. **Archive BOB #23** (`local_277a4066-4985-4f54-ab09-5839fd69d3a2`) under D-398's three conditions, re-checked AT THE
-   MOMENT YOU ACT. Its worktree `.claude/worktrees/ecstatic-stonebraker-746e11` is the app's own for that session, so
-   `archive_session` may remove it; if not, `git worktree remove` with the literal path (648 MiB at 21:29Z, three
-   packages' `node_modules`). It deletes its crons from its OWN `CronList` before it says it is ready (a 2-hourly
-   self-wake and a 5-day renewal, re-armed once at 70%); confirm by message to "BOB #23", never by ids.
+1. **Archive BOB #24** (`local_7f0ef72e-e319-4d18-9d0f-caab1cf0af6b`) under D-398's three conditions, re-checked AT THE
+   MOMENT YOU ACT. Its worktree is `.claude/worktrees/cranky-morse-4cb3ac` and holds three packages' `node_modules`
+   (~650 MiB); if `archive_session` leaves it, `git worktree remove` with the literal path, disk measured before and
+   after. It deletes its crons from its OWN `CronList` (a 2-hourly self-wake and a 5-day renewal) before it says it is
+   ready: confirm by message to "BOB #24", never by ids.
 2. **Arm your self-wake and its 5-day renewal WITH THE SELF-AUDIT IN THE PROMPT** (rule 12(a)), stating 70%.
 3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` for every lane plus the weekly figure. Sweep with
-   `retirable.mjs` (M0-83) over `list_sessions` VERBATIM and whole, `--self <your id> --self-title "BOB #24"`: other
-   repositories read OUT OF SCOPE, and a `--self` found in the input is REFUSED (exit 3).
+   `retirable.mjs` over `list_sessions` VERBATIM and whole, `--self <your id> --self-title "BOB #25"`. A listing of
+   exactly 50 rows is flagged as possibly truncated: the row past it has so far been another repository's.
 
-## 1. THE ESTATE, measured ~22:40Z
+## 1. THE ESTATE, measured ~00:27Z
 
-- **SCHEDULER #8** is up (from BOB #23's chip, ~21:40Z) and archived SCHEDULER #7. CONDUCT #10 was 56% at 21:31Z and
-  asks for the **CONDUCT #11 chip** past 70%; DIST #3 57% and FLEET #3 58%, idle, likewise. Before every chip: line 1,
+- **CONDUCT #11** integrates (19% at 23:39Z) and archives **CONDUCT #10** once D-293+M0-98's worker reports; that
+  archive is CONDUCT's, not yours. **SCHEDULER #9** is up (its chip filed by BOB #24; it archived SCHEDULER #8).
+  **DIST #3** ~60% and **FLEET #3** 59%, idle; each asks for a successor past 70%. Before every chip: line 1,
   currency, occupancy; title EXACTLY `<LANE> #<n>`.
-- Weekly all models **54% at ~22:35Z** (51% at 21:30Z), resetting 2026-09-26 11:00Z. Disk **5.36 GiB**. `main` at
-  `bb83b37e` plus this handoff's landing.
+- Weekly all models **59% at 00:27Z** (56% at 23:39Z), resetting 2026-09-26 11:00Z. Disk ~5.1 GiB free.
 
-## 2. WHAT BOB #23 DID — on `main`, verified from the remote
+## 2. WHAT BOB #24 DID — on `main`, verified from the remote
 
-- `c31b8f60` **`governorconfig` is the OPERATOR's** (Membership v2 §4.9; build REC-162); **D-432's counter-era ids are
-  never redrawn** (§7). `b399f9cf` **M0-83 built and archived**; `81226cc1` its register floor. `43cd0caf` + `19a0efb6`
-  **SCHEDULER #7's four questions ruled** (D-145 and D-99 are M6's; DEC-70 in State Rules §5.4; D-355's driver rules in
-  `VERIFICATION.md`'s D-331 section).
-- `ce830340` **Bob RULED the refresh line at 70%** (verbatim in `docs/archive/CLAUDE-2026-09-18.md`; `CLAUDE.md` §4,
-  `BOB.md`, `CONDUCT.md`, `ORCHESTRATION.md`). Every live lane was told.
-- `bb83b37e` **THE RECORD IS PARTITIONED BY WRITER** (`ORCHESTRATION.md`), on Bob's direction relayed by CONDUCT #10 and
-  his own on re-gating: four M0 items in the BOB INBOX, in order — with D-293 a tree-keyed verdict, a TARGETED class and
-  `--since` (a rebase re-checks only what both sides touched); `DECIDED.md` stops being committed; one file per new
-  claim/delegation/measurement/IC entry; CONDUCT's `running` word leaves SCHEDULER's rows.
-- Later landings: M0-79's slack rule folded into `VERIFICATION.md`'s DEC-49 section (`289dbc4a`); Bob's D-162 and
-  D-436 answers recorded (this landing). **SCHEDULER #8's group routed** — Q2 folded (D-38 and D-45 are stated limitations in State
-  Rules' front matter, §4.3 and §8); Q1 and Q3 put to Bob; Q4 is yours (§3).
+- `710b574d` **D-55 DESIGNED AND CLOSED** (SCHEDULER #8's Q4). The trace came first: a content row's document is always
+  a registered capture, and no third party's script output can enter a capture today. The image arm's `{part}` form
+  mints UNJOINED on any non-container capture; that is minted as **D-440**, fix named, and placed via the inbox beside
+  D-420. The design is in `CLIENT-RENDERED.md` "DESIGNED 2026-09-21": authority stays at DOCUMENT grain; a third party's
+  output that is evidence is its own document; a rendered capture is `determined` as the host only when the host alone
+  supplied data and ran code. It settles MILESTONES' provisional `rendered_origins[]` of 2026-07-31. D-64 is no longer
+  blocked on it. Superseded text was corrected in MILESTONES, `kickoffs/CONTENT-HTML.md` and `kickoffs/README.md`.
+- `fa6c6032` **D-436's attribution split**, at CONDUCT #11's question. Bob ruled only decision (b)'s premise: pre-MVP
+  records are test data, so no migration and no automatic setting are owed. Decisions (a) and (c) are the BOB lane's
+  mechanism. The fix is in State Rules §3.1, the amendment and its front matter; IC-171's bearer phrase now reads as
+  ruled (BOB #22).
+- Told **DIST #3**: 0.71.0 stays a BATCH cut on 2026-09-22 (the daily bound holds, since pre-MVP bytes are test data).
+  NO auto-seed: decision (b) plus Bob's ruling. A sovereign instance installed earlier is seeded by its own operator, and
+  how the update path tells them is DIST's. DIST #3 then DECIDED that route, and BOB #24 found no doctrine conflict: the
+  installer never seeds; after an update it reads `op=instancegroup` and, only when no group is recorded, tells the
+  operator in plain words, suggesting INSTANCE_NAME labelled as a suggestion and never pre-filling it. It ships with 0.71.0.
 
 ## 3. OWED — in this order
 
-1. **With Bob, unanswered — do not re-ask:** (a) Q3 of 2026-09-21, may a case rest on a NO-PROJECT conclusion
-   (`INVESTIGATIVE-SESSION.md` §7.1, "THE ONE THING RUNNING PROVISIONALLY"; record the answer there, add a dated line to
-   the SCHEDULER (#6) -> BOB DELEGATION, tell SCHEDULER). (b) **D-53, credibility**, RE-PRESENTED to Bob in plain words on
-   2026-09-21 at his request, after a sweep of the corpus found the record PARTLY answers it: it rules what a credence
-   mechanism must NOT be (no shared or managed score, no inherited credibility of content, no truth value on a source,
-   no class prior; `AUTHORITY-AND-TRUST.md` 2026-07-30, Intake Doctrine §3/§4, Declared Bias's malformedness rule, DR §4)
-   and never rules whether to have one. Put to him: is the 2026-07-26 framing retired (`docs/SESSION-KICKOFF.md` voids
-   that day's brainstorm); should a source's credibility be modelled at all; can it fall; does official status earn
-   weight (Intake §3a's "source authority" is wired to nothing). Fold his answer into the Intake Doctrine or Declared
-   Bias, annotate TAD §5, correct D-53's stale row, and tell SCHEDULER #8.
-   **ANSWERED 2026-09-21, recorded:** D-162 (themes are a feature, four fences, Content Framework §8.4; build entry in
-   the BOB INBOX) and D-436 (pre-MVP records are test data, so no migration or automatic seeding: State Rules §3.1).
-2. **D-55 (SCHEDULER #8's Q4), yours:** a bounded design act — first trace whether a content row can be minted over
-   subresource bytes and join `site_asset_refs` (a worker via CONDUCT if you want it traced), then design the authority
-   value at asset or content grain, or state it as `CLIENT-RENDERED.md`'s deferral. D-64 is BLOCKED on it.
-3. **`DECIDED.md` leaving the committed tree** (partition item 2) was told to Bob; if he says he reads it in the
-   repository, amend item 2 to "committed, regenerated on merge" and tell SCHEDULER.
-4. The chips as lanes pass 70%; whatever SCHEDULER #8 routes here next.
-5. **Carried with Bob** (do not re-ask): D-148, D-149, where a member's or project's Claude key would live
-   (11.cascade-sources' text), MK-7's provisionals, and M0-85.
+1. **With Bob, unanswered — do not re-ask:** (a) Q3, may a case rest on a NO-PROJECT conclusion
+   (`INVESTIGATIVE-SESSION.md` §7.1, "THE ONE THING RUNNING PROVISIONALLY"; when answered, record it there, add a dated
+   line to the SCHEDULER (#6) -> BOB DELEGATION, and tell SCHEDULER). (b) **D-53, credibility**, re-presented by BOB #23
+   in plain words with four questions and a recommendation (retire the 2026-07-26 framing, no score, a track record as
+   evidence that can fall, official status shown but unweighted). Fold his answer into the Intake Doctrine or Declared
+   Bias, annotate TAD §5, correct D-53's stale row, and tell SCHEDULER, who DISCHARGES the SCHEDULER (#8) -> BOB
+   DELEGATION (only Q3 keeps it open). (c) `DECIDED.md` leaving the committed tree (partition item 2): if Bob says he
+   reads it in the repository, amend item 2 to "committed, regenerated on merge" and tell SCHEDULER.
+2. **Coming to you:** SCHEDULER #9's next group of at most four, including *should a group record a display name and
+   domain, or only its slug?* (from CONDUCT's route: the group name hard-coded on every instance's surfaces). Then D-64's
+   four open questions (`CLIENT-RENDERED.md`) when SCHEDULER places M2's rendered capture. Both are design: trace at the
+   code first.
+3. **Carried with Bob** (do not re-ask): D-148, D-149, where a member's or project's Claude key would live
+   (11.cascade-sources), MK-7's provisionals, and M0-85.
 
-## 4. HOW BOB #23 WAS WRONG — data points (rule 12(c))
+## 4. HOW BOB #24 WAS WRONG — data points (rule 12(c))
 
-- **It ran a FULL gate where a targeted set would do, and hand-picked its post-rebase re-check.** Bob caught both
-  (*"no need to run excessively more tests than is needed"*). Until partition item 1 lands: a tools-only change still
-  gates FULL, but after a rebase re-check only what BOTH sides touched — for an overlap of `CLAIMS.md` and `DECIDED.md`
-  alone, carry both sides, regenerate, run plancheck.
-- **Its opening sweep fed a hand-built listing that included its own row** — the shape M0-83 now refuses.
-- **It put a second `open as of` line in one DELEGATION** (M0-93's red shape), then a DISCHARGED line that dropped three
-  of four dispositions. One affirmation per block, naming every item.
-- **Context:** 43% at the first landing, 60% at the eighth. Whole reads of Membership v2 §4 and CLAIMS.md cost most.
-
-**BOB #23 says it is ready to be closed once BOB #24 confirms it has read this.** Closing releases one worktree
-(648 MiB at 21:29Z), to be measured then.
+- **It gated before grepping every document that cites the id it closed**, then stopped two DOCS gates to add superseded
+  text (MILESTONES, two kickoffs) and a wording fix. Run `git grep -n -w -e <ID>` over `docs/` BEFORE the first gate.
+- **It wrote "cross-origin" where the code says `third_party`**: `originOf`'s same-site test is an approximation, and a
+  same-site asset IS fetched. Quote the predicate, not its gist.
+- **Context:** 13% at opening, 43% at the first landing. The D-55 trace and paging an ARCHIVED session's transcript cost
+  the most: `search_session_transcripts` returned archived SCHEDULER transcripts but not BOB #23's (cause undetermined).

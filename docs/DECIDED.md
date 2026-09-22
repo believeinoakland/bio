@@ -2651,8 +2651,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1369`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1381`
-- **2026-09-18** — Bob RULED the refresh line at 70%** (verbatim in `docs/archive/CLAUDE-2026-09-18.md`; `CLAUDE.md` §4, `BOB.md`, `CONDUCT.md`, `ORCHESTRATION.md`).  
-  `docs/development/kickoffs/BOB-NEXT.md:33`
+- DIST #3 then DECIDED that route, and BOB #24 found no doctrine conflict: the installer never seeds; after an update it reads `op=instancegroup` and, only when no group is recorded, tells the operator in plain words, suggesting INSTANCE_NAME labelled as a suggestion and never pre-filling it.  
+  `docs/development/kickoffs/BOB-NEXT.md:43`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
