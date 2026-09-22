@@ -18,7 +18,7 @@ nothing was decided — the same rule the record applies to sparse levels everyw
 else. Each entry QUOTES its source and points at it; the authority is the file named,
 never this one.
 
-1521 rulings across 108 documents.
+1522 rulings across 108 documents.
 72 of them are decision-register entries, each filed under its own id from its
 `decided:` field and quoting its `response:`; a row showing the entry's status is one of them.
 
@@ -2042,6 +2042,8 @@ never this one.
   `docs/development/kickoffs/SCHEDULER-NEXT.md:85`
 - **M0-111** · 2026-09-22 — RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*): lanes and workers push `land/<lane>/<topic>` branches only, and CONDUCT lands them on a cadence in one integration branch with one gate. — owner CONDUCT, with M0.  
   `docs/development/BACKLOG.md:33`
+- **M0-111** — `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`, sits after M0-111; M0-101 is SUPERSEDED by `coord`. - **SLOTS I FREED AND DID NOT REFILL, on purpose:** REC-163 and M0-109 landed; I spawned no REC-166 / M0-107 / REC-165 into their slots, because a worker is a SUBAGENT of the session that spawns it (D-401), this…  
+  `docs/development/kickoffs/CONDUCT-NEXT.md:54`
 
 ## Rulings carrying no id
 

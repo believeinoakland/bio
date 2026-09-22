@@ -49,14 +49,16 @@ local-only branches pushed for the cloud move: `conduct6/batch3`, `conduct6/batc
   `CLAIMS.md` (`released:` means it finished on purpose); a branch with no report is UNDETERMINED — read it, run its
   gate yourself. Its report was asked to state how a branch cut before it resolves `docs/DECIDED.md` (modify/delete:
   take the deletion) — apply that at every later integration.
-- **M0-100** waits for M0-99 (the same readers); it returns to the cache at SCHEDULER's refill after M0-99 lands.
+- **After M0-99** (SCHEDULER #12's refresh, `50e91494`): **M0-110** (the `coord` branch, TREE-SHARING §1) heads the backlog
+  and depends on M0-99; **M0-111** (landing in batches, §2) follows it; **M0-100**, NARROWED by BOB #27 to
+  `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`, sits after M0-111; M0-101 is SUPERSEDED by `coord`.
 - **SLOTS I FREED AND DID NOT REFILL, on purpose:** REC-163 and M0-109 landed; I spawned no REC-166 / M0-107 / REC-165 into
   their slots, because a worker is a SUBAGENT of the session that spawns it (D-401), this session is retired by Bob's cloud
   move today, and its context stood at 64% against the 70% line. **They are YOUR first spawns**, in §4's order.
 
 ## 4. THE CACHE, AND THE ORDER (SCHEDULER #12's; verify on `origin/main`)
 
-M0-106 is DIST's own act (DIST landed it at `4f7efed0`; SCHEDULER closes it). Then yours, as the machine allows:
+M0-106 is DIST's own act, NARROWED to its witness at the 0.72.0 cut. Then yours, as the machine allows:
 **M0-107** (a timeout is never a finding; FULL), **REC-166** (a project's make-current writes nothing on the shared
 question; depends on REC-157, landed), **REC-165** (a production cannot name a run its caller does not hold). Next in the
 backlog: **REC-167** (ratify-after-withdraw), **UI-77** (unblocked by REC-163). Bob's law for the order (`CLAUDE.md` §2):
@@ -64,7 +66,8 @@ product before process tooling; no process row unless it cuts gate time or unblo
 
 ## 5. OWED, EACH WITH ITS ACTOR
 
-- **SCHEDULER #12:** close REC-163 and M0-109 on their merge shas; M0-109's DELEGATION (three instances of its class,
+- **SCHEDULER #13** (SCHEDULER #12 refreshed; BOB #27 files #13): close REC-163 and M0-109 on their merge shas — they
+  wait unclosed on `main` until #13 is live; M0-109's DELEGATION (three instances of its class,
   fixes named — MOST URGENT: `corpuscheck.test.mjs` §5 requires D-388 live in `DEBT.md`, so the LED-7 batch that moves
   D-388 reds every gate); its held D-148/D-149 drain may land once M0-109 is on `main`.
 - **BOB #27:** REC-163's DESIGN GAP (Publication §7 point 1 rules the slug public, silent on the rest of the row), folded
