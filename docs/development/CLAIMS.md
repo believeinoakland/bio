@@ -18391,3 +18391,44 @@ claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77
 sentence, one Incomplete bullet, as-of date); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newest
 first); `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 M0 (M0-99 — `docs/DECIDED.md` stops being committed: produced on demand through one freshness call, and the push guard's and plancheck's staleness arms retire)
+
+session: WORKER spawned by CONDUCT #12, worktree `.claude/worktrees/agent-a4c0b07abb6d8ae16`, branch
+`worktree-agent-a4c0b07abb6d8ae16`, base `origin/main` @ `7f28fe8c` (the row reads `### M0-99 · running` there), Sparky-Air.
+`npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each exit 0 and each `node_modules` a real directory; `df -h` 4.2 GiB
+free after the installs; swap 6.6 of 7.2 GB in use at spawn.
+authority: `QUEUE.md` `### M0-99 · running` (CONDUCT #12); design `docs/development/VERIFICATION.md` (admitted for M0 by
+name) with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 2, *a generated index is not
+committed*. `tools/decided.mjs` carries M0-97 and D-341 on this base (the batch 2 merge `a3fc7581` is an ancestor).
+paths, BY SITE:
+  - `.gitignore` — the line `docs/DECIDED.md` with its reason, and this worker's pens: `.m099-runs/` (run logs),
+    `.m099-harness/` (the new driver's pristine copies), `.m099-baseline/` (a scratch checkout of the base, for the baseline).
+  - `docs/DECIDED.md` — removed from the index (`git rm --cached`); the working copy stays, generated and ignored.
+  - `tools/decided.mjs` — a new exported freshness call (the index as the corpus renders it now, written only when the
+    file is absent or differs, by rename), a new exported predicate for "untracked, and ignored by the repository's own
+    `.gitignore`", the CLI's write path through the freshness call, `--check` retired, `render()`'s head prose, and the
+    header comments. `MARKER`, `scan()`, `statementAround()`, `corpus()`, `registerEntries()` and `query()` are NOT touched.
+  - `tools/plancheck.mjs` — arm 2b (the staleness arm retires; the index-is-untracked-and-ignored arm replaces it) and
+    arm 2c's comment and messages. `tools/pushguard.mjs` — `check()`, `STALE_SIGNATURE` and the staleness branch of `run()`
+    retire, with the success line, `--control`'s arms for them, the CLI's index line and the comments. `shim()` and
+    `HOOK_VERSION`, D-293's lookup, the marker, corpus and status arms are NOT touched.
+  - `tools/ledger.mjs` — the regeneration after `archive` and `refill`, and its header sentence. `tools/attribution.mjs` —
+    `--census` reads the index through the freshness call; the `why` of its exclusion. `tools/nc-m039.mjs` — stops carrying
+    the index into its scratch worktree.
+  - `bio-plane/test/decided.test.mjs` (a new section and its control lines), `bio-plane/test/decided.control.mjs` (new arms;
+    `.gitignore` becomes its second subject), `bio-plane/test/pushguard.test.mjs` (the retired arm's assertions corrected
+    with dated reasons, the end-to-end push re-based on a refusal the guard still makes), `bio-plane/test/pushguard.control.mjs`
+    (NEW, its driver), `bio-plane/test/gates.test.mjs` (the fixture's per-commit regeneration), `bio-plane/test/op-claims.test.mjs`
+    (the index produced through the freshness call before the walk), `bio-plane/test/nc-m034.mjs` (BASE, and the index
+    produced before any arm copies it), `bio-plane/test/m041-instrument-census.mjs` (one comment).
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` only, from the instrument's print. `bio-plane/test/hygiene.test.mjs`
+    only if its walk census names a walk this item adds.
+  - `docs/development/VERIFICATION.md` — §"THE FIRST ENTRY LOOP THIS ESTATE COMPOSES", no larger than it is (the file is in
+    `readbudget`'s CUT at 24,572 of 24,576 B). `docs/development/MEASUREMENTS.md` (appends only), this block, and the
+    DELEGATION blocks this item raises.
+**NOT CLAIMED:** `CLAUDE.md`, `docs/development/ORCHESTRATION.md` and every kickoff (their owners', each stale sentence
+named in a DELEGATION), `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `bio-plane/src/**` (nothing under
+`src/` moves, so no bundle rebuild is owed), `newgroup/**`, `release/**`, `docs/architecture/**`.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
