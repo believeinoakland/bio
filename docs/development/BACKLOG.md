@@ -20,15 +20,35 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-100 · queued — **SEVERAL LANES APPEND TO ONE FILE — `CLAIMS.md`, TOUCHED BY 97 COMMITS ON 2026-09-21 — SO NEARLY EVERY RE-MERGE IS ON ITS TAIL, AND A LINE ONE LANE ADDS TO ITS OWN BLOCK CAN LAND IN ANOTHER'S.** So do `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`. Item 3 of BOB #23's four. — owner M0.
-order: FIRST of the backlog, out of the cache while CONDUCT holds it for M0-99 (the same readers), its slot lent to M0-109 (SCHEDULER #12); at the head with M0-99 for the same reason, measured larger: 169 of those 209 commits touched `CLAIMS.md` and 29 suites name it or `DECIDED.md` (M-94), and a `--since` pairing over one of these ledgers re-runs 24 units against 14 over a design document (M-90); its tail's fake conflicts are what Bob named as having *significantly slowed down development* (BOB #23's entry) (SCHEDULER #12; placed by SCHEDULER #8 as item 3)
+### M0-110 · queued — **THE MESSAGE BOARD RIDES ON `main`: A CLAIM, A QUEUE FLIP OR THE REGENERATED RULINGS INDEX IS A COMMIT THAT MOVES `main` FOR EVERY LANE AND VOIDS EVERY OTHER LANE'S GREEN GATE RECORD.** 89 of 112 commits on `main` on 2026-09-22 to ~14:45Z touched `CLAIMS.md`, `QUEUE.md` or `DECIDED.md`; one DOCS landing took six gate runs where one was needed. RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*). — owner M0.
+order: FIRST of the backlog: it CUTS GATE TIME on every landing, Bob's own test (`CLAUDE.md` §2), item 1 of the ruling's order; after M0-99, which rewires the same readers (BOB #27: M0-99 lands as placed) (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
+milestone: M0
+interface: none — no op or wire shape moves; the integrator classifies.
+design: `docs/development/TREE-SHARING.md` §1 (the message board leaves `main`: a `coord` branch), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: M0-99.
+scope: as §1: FIRST measure per-path churn on `main` and name each file moved or kept against §1's line; then the state files move to `coord`, with one write command (fetch, edit without a checkout, the ledger arms, push, retry on a non-fast-forward) and one read command against `origin/coord`; every reader redirected; ONE migration landing leaves a pointer at each old path and corrects `CLAUDE.md` §1's table and every kickoff naming a moved file. **FULL GATE PROFILE**.
+accepts-when: a claim, a queue flip and a handoff each land on `coord` without moving `main`; every reader answers as it did from `main`; a `main` gate record survives a `coord` write; a new block and a line into an existing block, written concurrently, leave the line in its block (BOB #27: each retry re-applies the edit as an intent anchored to a block heading). NEGATIVE CONTROL: point one reader back at `main`'s old path, and its suite fails by name.
+added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1; `node tools/mintid.mjs M0`).
+
+### M0-111 · queued — **EVERY LANE LANDS ON `main` ITSELF, SO `main` MOVES UNDER EVERY GATE AND EACH LANDING REBASES AND RE-GATES.** RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*): lanes and workers push `land/<lane>/<topic>` branches only, and CONDUCT lands them on a cadence in one integration branch with one gate. — owner CONDUCT, with M0.
+order: directly after M0-110, which it depends on: the notes lanes trade need `coord` before `main` stops carrying them (TREE-SHARING, the order of the three changes); it cuts gate time, Bob's own test (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 3)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 3, *a file several lanes append to becomes one file per entry*.
-depends-on: none.
-scope: one file per NEW claim, delegation, measurement and interface-change entry; the old files frozen history plus the state lines of their open blocks; ONE reader module yields both for every reader (`plancheck`, `delegations`, `owed`, `ledger`, `decided`, `mintid` …); `CLAUDE.md` §4's claim sentence and the kickoffs corrected in the landing. **FULL GATE PROFILE**.
-accepts-when: two lanes adding entries concurrently merge with no conflict; a line one lane adds to its own block beside another lane's new entry stays in its block; every reader's counts over the frozen history are unchanged. How a liar passes it: `merge=union`, which makes CONDUCT's detached-line case SILENT, so an arm reproduces that case and asserts the line stays in its block.
-added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+design: `docs/development/TREE-SHARING.md` §2 (one lane lands on `main`, in batches), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: M0-110.
+scope: as §2: CONDUCT merges every waiting `land/*` branch onto `main` in one integration branch, gates ONCE on the union class, pushes `main` and deletes the landed refs, returning a conflicting or red branch to its lane by name; nobody else pushes `main`, enforced by the push guard; a release lands through the same train. **FULL GATE PROFILE**.
+accepts-when: two lanes' `land/*` branches land in one train with one gate record, and a lane's direct push to `main` is refused by name. NEGATIVE CONTROL: drop the guard's `main` arm, and the refusal arm fails by name.
+added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 3; `node tools/mintid.mjs M0`).
+
+### M0-100 · queued — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two `land/*` branches' tail appends still collide inside the integrator's merge.** `CLAIMS.md`, the row's first subject, moves to `coord` (M0-110), whose anchored writes keep a line in its own block. Item 3 of BOB #23's four. — owner M0.
+order: after M0-110 and M0-111, where BOB #27 placed it on narrowing: the collision it removes exists only inside M0-111's train (SCHEDULER #12, 2026-09-22)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 3, *a file several lanes append to becomes one file per entry*, narrowed by BOB #27 (`TREE-SHARING.md` §1).
+depends-on: M0-111.
+scope: one file per NEW measurement and interface-change entry; the old files frozen history; ONE reader module yields both for every reader of the two (`plancheck`, `mintid` and the rest). **FULL GATE PROFILE**.
+accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it: `merge=union`, which hides a displaced line, so an arm asserts each entry is whole in its own file.
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
 
 ### REC-167 · queued — **A CASE PREPARED BY `op=publish` AND RATIFIED AFTER ITS PROJECT WITHDREW THE CONCLUSION IT RECORDS STILL COMMITS: THE SIGNED EDITION STATES A CONCLUSION NOBODY HOLDS.** Measured by REC-157 (M-92): P concludes, `op=publish` prepares edition 1 recording P's claim, P withdraws, then `op=caseratify` and `op=ratify` both succeed, while `op=basisversions` shows P on no conclusion. Pre-existing since REC-135. — owner RECORD.
 order: FIRST of the backlog, behind REC-166 in the cache: the signed, published record claiming a conclusion its project withdrew, CLAUDE.md §2's worst class, on the path REC-157 just corrected (SCHEDULER #12, 2026-09-22; REC-157's DELEGATION)
@@ -260,26 +280,25 @@ scope: the row's own fix: one per-pair fact, `#isProjectOwner(target, viewer)` �
 accepts-when: each roster act is offered exactly where its store act succeeds, pair by pair; a machine credential is offered nothing its class is refused. How a liar passes it: reusing D-310's fact, so an owner of project A must not be offered `projectinvite` on B. NEGATIVE CONTROL: swap in D-310's fact, and the cross-project arm fails by name.
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 14; keeps its `D-` id).
 
-### UI-73 · queued — **ELEVEN MEMBER-FACING SITES STILL READ A REFUSAL'S RAW `detail` INSTEAD OF ITS CANNED TRANSLATION** — `teach()`, `queueReason`, `planeSaid`, the finder's per-subject errors, the release / attest / capture receipts, the proposal pre-flight, the forward picker, the leg pre-flight's `subj-how`, and `INTENT_VOCAB.words`. UI-72 landed the two renderers and `refusalWords(r)`; this is its named remainder. — owner UI.
+### UI-73 · queued — **ELEVEN MEMBER-FACING SITES STILL READ A REFUSAL'S RAW `detail` INSTEAD OF ITS CANNED TRANSLATION** — `teach()`, `queueReason` … (whole text: the cut archive)
 order: a CORRECTION TO JUST-LANDED WORK, which outranks new work: UI-72 shipped the helper and eleven sites still bypass it, so a member meets machine vocabulary at the moment they are told no — the failure DEC-49 exists to close (SCHEDULER #3, 2026-09-19)
 milestone: M8
 interface: none — the helper exists; no code, wire shape or catalogue row moves.
-design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it — every condition has a named code and a canned translation. UI-72's own citation, unchanged.
+design: DEC-49 (`node tools/decided.mjs "DEC-49"`) as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` … (whole text: the cut archive)
 depends-on: none. UI-72 landed at `02e7c537`.
-scope: each site reads `refusalWords(r)` instead of `r.detail`. **IT IS NOT ONE EDIT AND THE ROW REFUSES TO BE TREATED AS ONE:** `teach()` is pinned by `civicos-ui/test/preauth-vocabulary.test.mjs`' DEC-49 SUBJECT arm, whose FIGURES MOVE when the gate's rendered sentence changes — so this row carries that arm's re-read and re-pin as its own work rather than leaving the battery to discover it.
-accepts-when: all eleven take their words from the ONE helper, asserted as `refusal-translation-surface.test.mjs` already asserts the two renderers; the SUBJECT arm re-pinned to figures a green run printed, with the movement STATED. How a liar passes it: re-pinning the arm to whatever it now reads — so the re-pin names the old and new figures and why they moved.
-NEGATIVE CONTROL: restore `r.detail` at one site, and that site's arm fails by name.
+accepts-when: all eleven take their words from the ONE helper, asserted as `refusal-translation-surface.test.mjs` already asserts the two renderers; the SUBJECT arm re-pinned to figures a … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 3, verified in UI-72's own CLAIMS.md block).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-73» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-82 · queued — **A FOCUS AN ASSISTANT SURFACED IS SHOWN EXACTLY LIKE ONE A MEMBER OPENED.** The plane stamps `surfaced_by: agent` server-side on an inquiry a machine credential creates (D-78, `index.mjs`); `civicos-ui/app.html` reads `surfaced_by` only for a derived PROPOSAL, which UI-5 marks (`proposalDerivedBadgeHtml`), and nothing marks an agent-surfaced inquiry where inquiries are listed or shown (re-read 2026-09-21). — owner UI.
+### D-82 · queued — **A FOCUS AN ASSISTANT SURFACED IS SHOWN EXACTLY LIKE ONE A MEMBER OPENED.** The plane stamps `surfaced_by: agent` server-side on … (whole text: the cut archive)
 order: after UI-73, the same member-surface class: a member reads a machine's question as a colleague's judgement, which §P's accountability rule exists to prevent; a gap over built stamping, so below the refusal words already shipping wrong (SCHEDULER #10, 2026-09-21, LED-7)
 milestone: M8
 interface: I3 consumer (`surfaced_by`, stamped since D-78).
-design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"P · PROPOSAL", its accountability rule — *"what a member needs to know is that nobody has yet judged it worth asking"* — with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 8.
+design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"P · PROPOSAL", its accountability rule … (whole text: the cut archive)
 depends-on: none — D-78's stamp is built.
-scope: wherever an inquiry is listed or shown — the focus list, the review queue, beside a project — one marker for `surfaced_by: agent`, from one helper, saying nobody has yet judged it worth asking. It discounts nothing and hides nothing; a member's inquiry renders as today.
-accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking by title or author text, so the fixture's two inquiries share both. NEGATIVE CONTROL: neuter the helper, and the agent-inquiry arm fails by name.
+accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-82's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### D-125 · queued — **A MEMBER CANNOT MUTE A FINDING FOR THEMSELVES, SO DEC-10's (b) AND (c) CANNOT REACH THE OVERDUE SUCCESSOR THEY WERE RULED** … (whole text: the cut archive)
 order: last of the M8 corrections, after D-82: DEC-10's ruled act is missing rather than anything claimed falsely, so below the rows that correct what a member is told (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
@@ -677,16 +696,6 @@ depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds
 accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-105» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-101 · queued — **CONDUCT WRITES ONE WORD INTO SCHEDULER'S ROWS, `running`, SO TWO LANES WRITE ONE FILE, AND A LEDGER CARRY THAT TAKES ONE SIDE** … (whole text: the cut archive)
-order: behind the product rows, the first of the process rows Bob's ruling moved there, each in its prior relative order (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead* — no process row unless it cuts gate time or unblocks product): it takes only CONDUCT's `running` word off `QUEUE.md`, which BOB and SCHEDULER still write and a quarter as many commits carry as `CLAIMS.md` (M-94), so the gate time it cuts is small; after M0-100, which it rests on (SCHEDULER #12, 2026-09-22; placed by SCHEDULER #8)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` … (whole text: the cut archive)
-depends-on: M0-100.
-accepts-when: CONDUCT writes no line of `QUEUE.md` and a running row still reads `running`. How a liar passes it: writing both places, so an arm asserts one.
-added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-101» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 … (whole text: the cut archive)
 order: behind the product rows, first of the session-hygiene instruments (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead*: a detector neither cuts gate time nor unblocks product; SCHEDULER #12); after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second (SCHEDULER #4, 2026-09-21)
