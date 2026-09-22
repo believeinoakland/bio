@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1392 rulings across 104 documents.
+1395 rulings across 104 documents.
 
 ## DEC-
 
@@ -585,7 +585,7 @@ authority is the file named, never this one.
 - **D-260** — RULED by BOB #22 (SCHEDULER #5's Q3): an instance may hold ONE organisation-principal `ai` credential and resumes ONLY the runs it opened. — owner RECORD with FLEET, then DIST.  
   `docs/development/BACKLOG.md:636`
 - **D-260** · 2026-09-21 — D-260 is RULED** (BOB #22, 2026-09-21; the assistant's §6, `QUEUE.md`'s BOB INBOX entry): its item 2 is DIST's, AFTER item 1 (the plane's caller, RECORD with FLEET) — install and update carry ONE organisation-principal `ai` credential as a deploy secret the way `DAEMON_TOKEN` is carried, never in the record,…  
-  `docs/development/kickoffs/DIST-NEXT.md:57`
+  `docs/development/kickoffs/DIST-NEXT.md:61`
 - **D-263** · 2026-08-09 — D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED** item: D-263 (existing row, raised by M0-20).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7347`
 - **D-263** — DECLARATION IS CORRECTED, and it is D-263's arm and not mine.** Re-running the harness found it declaring A5 to FAIL when A5 now stays GREEN: the corpus grew 146 -> 198 and A5's `readable > 100` floor stopped biting.  
@@ -802,6 +802,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16245`
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2): D-436 CLOSED** — verified an ancestor of `origin/main` @ `86523052` at `38850da4` (CONDUCT #11's integration merge) and BY CONTENT: `believe-in-oakland` occurs 0 times in `store.mjs` (23 at spawn), `index.mjs` and `checks/bio-checks.mjs`; `Store#instanceGroup` and…  
   `docs/development/CLAIMS.md:17591`
+- **D-436** · 2026-09-21 — CLAIM 2026-09-21 DIST (DIST #3 — D-436 item 3's route DECIDED: the update path tells an operator, and never seeds) session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air paths: `docs/development/kickoffs/DIST-NEXT.md` (owed item 1's item-3 sentence only), `docs/DECIDED.md`…  
+  `docs/development/CLAIMS.md:17604`
 - **D-438** — operator gap), and — AMENDED while building — **D-438** (the guard's two real-tree control harnesses had stopped measuring; the arms NOT D-254's) and **D-439** (the class sweep's two unpinned copies). - `docs/development/MEASUREMENTS.md` (appended), `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals ONLY,…  
   `docs/development/CLAIMS.md:16796`
 ## IC-
@@ -962,8 +964,12 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:14996`
 - **IC-165** · 2026-09-19 — `TASK`'s gating is RULED CORRECT by BOB #17 (`63926201`, 2026-09-19) and STAYS.** It was raised as a question at this resolution — Membership v2 §7 enumerated CASE/DRAFT/RVG/PROJ — and BOB answered that the rule is the PREDICATE preceding that list (*every prefix whose objects a read withholds from some caller*),…  
   `docs/development/INTERFACE-CHANGES.md:12061`
+- **IC-172** — DECIDED by DIST #3: after an update to a release carrying IC-172, `newgroup` reads `op=instancegroup`; with no group recorded it TELLS the operator what is refused and that their own `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion, and NEVER seeds. It is built with 0.71.0,…  
+  `docs/development/CLAIMS.md:17610`
 - **IC-172** · 2026-09-21 — A bearer is NOT refused (provisional at acceptance; RULED by BOB #22 on 2026-09-21, `BIO_Membership_Architecture_v2.md` §4).  
   `docs/development/INTERFACES.md:508`
+- **IC-172** — Item 3's route, DECIDED by DIST #3** (BOB #24: auto-seed is NOT ruled in, nothing open for BOB): `newgroup`'s update path, after an update to a release carrying IC-172, reads `op=instancegroup`; if no group is recorded it TELLS the operator what is refused and that their own `op=instancegroupseed` settles it, may…  
+  `docs/development/kickoffs/DIST-NEXT.md:51`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -2680,7 +2686,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-21** — — RELEASES, NOT WITHDRAWN. ## What is LIVE (measured 2026-09-21 ~20:21Z, deployments API at 100%)  
   `docs/development/kickoffs/DIST-NEXT.md:18`
 - `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only. ## UNDETERMINED, held open — do not let a neighbouring green line convert it  
-  `docs/development/kickoffs/DIST-NEXT.md:63`
+  `docs/development/kickoffs/DIST-NEXT.md:67`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  
   `docs/development/kickoffs/DIST.md:23`
 - **2026-09-18** — — RULED BY BOB 2026-09-18: *"The release may be deployed, obviously.  

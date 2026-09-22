@@ -48,8 +48,12 @@ already held 13 members of July probe residue (`d41-sf72-*` and others, not DIST
    biosmoke7's TWO stores with `op=instancegroupseed` (ADMIN_TOKEN as `token=`, POST `{"slug":"believe-in-oakland"}`),
    `bio` AND `store=scratch`, verifying each with `op=instancegroup` (source `seed`, recorded_by `token:admin`). It is
    WRITE-ONCE on the real record, and biosmoke7's group is NOT its worker name. Until seeded, `testify`, setup saves and
-   livefire's canary answer C-64.1 by design. Then live-verify; then state item 3's route for sovereign instances
-   installed earlier, unless BOB rules auto-seed. **Bound (lesson 12):** one-shot wake `2dd2743d`, 2026-09-22 00:07 PDT.
+   livefire's canary answer C-64.1 by design. Then live-verify. **Item 3's route, DECIDED by DIST #3** (BOB #24: auto-seed
+   is NOT ruled in, nothing open for BOB): `newgroup`'s update path, after an update to a release carrying IC-172, reads
+   `op=instancegroup`; if no group is recorded it TELLS the operator what is refused and that their own
+   `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion — saying it may DIFFER from the group's slug, with biosmoke7 as
+   the example (BOB #24's wording care: no doctrine conflict, DEC-69's guiding voice) — and NEVER seeds. Build it with
+   0.71.0; it is accepted when the wizard suite shows the telling on an unseeded fixture, absent on a seeded one, and no seed call. **Bound (lesson 12):** one-shot wake `2dd2743d`, 2026-09-22 00:07 PDT.
 2. **NEXT CUT adds 0.70.0 to the upgrade arm** (row above). `alterafter`, read against the SEQUENCE (lesson 19):
    **135 → 169 → 186 → 203 → 220 → 237 pass / 66 fail**; expect ~254/66 with the 0.70.0 row.
 3. **DS-3 — JUDGED 2026-09-21, NARROWED into D-260.** Config half LANDED at `2de6f25f`; nothing hands agent-worker

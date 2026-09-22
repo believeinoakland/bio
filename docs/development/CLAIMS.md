@@ -17600,3 +17600,15 @@ BOB #23's four partition items (a correction to just-landed work). `op=instanceg
 public setup page and public header show a neutral label, and signed-in surfaces the slug, until BOB rules which
 public read may carry it and whether a group records a display name. M0-69, M0-76, M0-75 and D-40 cut to their fields at the foot (`QUEUE-cut-2026-09-21.md`). 145 open DEBT
 rows remain.
+
+## CLAIM 2026-09-21 DIST (DIST #3 — D-436 item 3's route DECIDED: the update path tells an operator, and never seeds)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (owed item 1's item-3 sentence only), `docs/DECIDED.md` (GENERATED,
+  regenerated LAST), and this block.
+why: the D-436 DELEGATION leaves "how the installer's update path tells them" to DIST, and BOB #24 confirmed auto-seed is
+  NOT ruled in (decision (b): choosing a group is a person's act). DECIDED by DIST #3: after an update to a release
+  carrying IC-172, `newgroup` reads `op=instancegroup`; with no group recorded it TELLS the operator what is refused and
+  that their own `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion, and NEVER seeds.
+  It is built with 0.71.0, accepted by the wizard suite (telling present when unseeded, absent when seeded, no seed call).
+**released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
