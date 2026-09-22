@@ -331,6 +331,16 @@ scope: wherever an inquiry is listed or shown — the focus list, the review que
 accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking by title or author text, so the fixture's two inquiries share both. NEGATIVE CONTROL: neuter the helper, and the agent-inquiry arm fails by name.
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-82's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 
+### M0-103 · queued — **`owed-controls.test.mjs` READS A SUBPROCESS TIMEOUT AS A FINDING, AND SINCE D-293 THAT FALSE RED BLOCKS A PUSH.** Its two `scripts/coverage.mjs` spawns carry `timeout: 120_000` and nothing reads the spawn's own outcome, so a child killed under load fails A13 (*"the sweep NAMES undeclared suites"*) and A13b (*"--strict still EXITS 0"*). DIST #4's 0.71.0 gate went RED 268/269 on those two beside a concurrent battery (2026-09-22). — owner M0.
+order: first of the instrument cluster, before D-438: since D-293 the push guard refuses a tree recorded RED, so a load-induced false RED costs a FULL re-run, where D-438's red control blocks nothing (SCHEDULER #10, 2026-09-22)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement.
+depends-on: none.
+scope: check the spawn's outcome first: when `error.code` is `ETIMEDOUT` or `signal` is set fail ONE assertion naming the timeout, never the two finding sentences; raise the budget toward the battery's per-suite scale.
+accepts-when: a run whose child times out fails the timeout assertion by name and neither finding assertion; a run whose child completes reads as today. NEGATIVE CONTROL: a 1 ms timeout fails the new assertion by name and neither finding assertion.
+added: 2026-09-22 · SCHEDULER #10 (DIST #4's route, verified at the code; `node tools/mintid.mjs M0`).
+
 ### D-438 · queued — **THE DEC-49 GUARD'S REAL-TREE CONTROL HARNESS `civicos-ui/test/refusal-codes.control.mjs` IS RED: FOUR ARMS FAIL THAT ARE NOT ITS SUBJECT'S.** (c) `stdio-census.test.mjs` ARM D reads the guard BY NAME, so moving the guard aside turns the harness red on an `ENOENT`; (e) its first predicate is the census sentence from before D-257; (r2) EXACTLY 33 conscripted, measured 35; (r6) EXACTLY 36, measured 38. NARROWED: its `refusal-partition` half closed with D-355 (`0e80aa8c`). — owner VERIFY.
 order: FIRST of the instrument cluster, with M0-93: a control red on a green `main` measures nothing, D-355's class, and the DEC-49 guard is what a member's refusal words rest on (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
 milestone: M0
@@ -603,45 +613,45 @@ accepts-when: an opinion lands as a case element with its attribution and is ref
 NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — the refusal removed → an opinion lands as a leg and the arm FAILS. **Liar:** an opinion stored as a low-grade leg — the design refuses it as a leg at all.
 added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
 
-### M0-71 · queued — **CONTRADICTION'S IDENTIFY, 2 of 3: THE FIXTURE AND THE FIRST MEASUREMENT, BEFORE ANYTHING A MEMBER SEES — §7's corpus, the false-conflict rate and recall, and the THRESHOLD recorded.** A candidate judgement is measured OFF-RECORD (no table write). — owner M0 / VERIFY.
+### M0-71 · queued — **CONTRADICTION'S IDENTIFY, 2 of 3: THE FIXTURE AND THE FIRST MEASUREMENT, BEFORE ANYTHING A MEMBER SEES — §7's corpus, the** … (whole text: the cut archive)
 order: the measurement IDENTIFY's judgement must pass, BEFORE anything a member sees; after REC-146 (SCHEDULER, 2026-09-19)
 milestone: M0 (VERIFY; the acceptance test of item 3 is this item's over-strictness arm)
 interface: none — a fixture, a harness and a measurement
 design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §7 (the over-strictness arm, its corpus and its three negative controls) and §9 item 2.
 depends-on: REC-146.
-scope: build §7's labelled corpus (precision, world in both of Bob's shapes, record, unrelated) and the harness over REC-146's pairs; measure a candidate judgement off-record; record the false-conflict rate, recall and the THRESHOLD in `MEASUREMENTS.md` with the corpus size.
-accepts-when: `MEASUREMENTS.md` carries the figures with date, instrument and corpus size; §7's three negative controls run and recorded (a disabled or always-`world` judgement FAILS the gate by name; an empty record returns case (a)); `node tools/plancheck.mjs --local` then BARE.
+accepts-when: `MEASUREMENTS.md` carries the figures with date, instrument and corpus size; §7's three negative controls run and recorded (a disabled or always-`world` judgement FAILS the … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 2).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-71» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### REC-147 · blocked — **CONTRADICTION'S IDENTIFY, 3 of 3: THE JUDGEMENT AND THE CANDIDATE TABLE — §5's five labels as labelled machine work through ONE append site; §8's row, state `proposed`, idempotent over unchanged referents. ONLY IF M0-71's gate is met.** — owner RECORD + the investigative session's skill. Reads `blocked` until M0-71 records a threshold the judgement meets.
+### REC-147 · blocked — **CONTRADICTION'S IDENTIFY, 3 of 3: THE JUDGEMENT AND THE CANDIDATE TABLE — §5's five labels as labelled machine work through** … (whole text: the cut archive)
 order: blocked on M0-71's measured gate (SCHEDULER, 2026-09-19)
 milestone: M9
 interface: I3 and I5 (a table; ICs minted with `node tools/mintid.mjs IC`)
 design: `docs/development/CONTRADICTION-IDENTIFY-DESIGN.md` §5 (the judgement and its vocabulary), §8 (where a candidate lives) and §9 item 3.
 depends-on: M0-71, AND its measured gate met — a threshold missed is the finding, and this row then goes back to BOB.
-scope: as §5 and §8; PRESENT and RESOLVE are NOT in scope (BOB's next design act, after M0-71's first measurement).
-accepts-when: M0-71's gate passes on the built judgement; a re-run over unchanged referents writes nothing new; every row names both referents and versions, the key, the run, the label and reason. NEGATIVE CONTROL: two append sites, and the one-site arm fails. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
+accepts-when: M0-71's gate passes on the built judgement; a re-run over unchanged referents writes nothing new; every row names both referents and versions, the key, the run, the label and … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 3).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-147» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### UI-68 · queued — **THE REVIEW-COPY SURFACES, WITHOUT EXPORT: draft (the project's editors), read (owner/participants, and recipients by secret), grant and revoke (the owner), comment at both doors — the plane rendered verbatim, and NO export, download or print-to-file affordance.** Discharges the in-instance half of REC-126's DELEGATION to UI. — owner UI.
+### UI-68 · queued — **THE REVIEW-COPY SURFACES, WITHOUT EXPORT: draft (the project's editors), read (owner/participants, and recipients by secret)** … (whole text: the cut archive)
 order: BOB #14's item 8 (13.review-copy), its in-instance surfaces; the plane half is built (SCHEDULER, 2026-09-19)
 milestone: M10
 interface: I3 consumer (REC-126's IC-145/IC-146)
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A (front matter and §6A.3), with the REC-126 → UI DELEGATION in `CLAIMS.md` and its REC-133 addendum, which specify the four surfaces. Verified by BOB #16 (2026-09-19): not Program B's.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A (front matter and §6A.3), with the REC-126 → UI … (whole text: the cut archive)
 depends-on: REC-126 (done) — CHECK AT THE CODE at spawn.
-scope: the delegation's four surfaces; nothing leaves the instance from the UI.
-accepts-when: the harness drafts, grants, reads by secret, comments and revokes against the real plane, and a revoked secret reads nothing. How a liar passes it: a hidden export path (a print stylesheet, a blob link), so the harness asserts NO such affordance exists. NEGATIVE CONTROL: add a download link, and the no-export arm fails by name. `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE.
+accepts-when: the harness drafts, grants, reads by secret, comments and revokes against the real plane, and a revoked secret reads nothing. How a liar passes it: a hidden export path (a … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (BOB #16 inbox "THREE DESIGNS AT THEIR HOMES", item 6).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-68» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### REC-148 · queued — **`op=reviewcopy` CARRIES DEC-31's IN-BAND QUARTET: a SHA-256 over the canonical bytes it answers, its date, its author, and both threshold floors (the project's `required_strength`, both axes) — the SAME quantity the published container's header renders.** Measured by BOB #16: today it carries a date and an author and no hash and no floors. — owner RECORD.
+### REC-148 · queued — **`op=reviewcopy` CARRIES DEC-31's IN-BAND QUARTET: a SHA-256 over the canonical bytes it answers, its date, its author, and** … (whole text: the cut archive)
 order: DEC-31's in-band quartet, before any review copy leaves the instance (SCHEDULER, 2026-09-19)
 milestone: M10
 interface: I3 additive (an IC minted with `node tools/mintid.mjs IC`)
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A (§6A.3 point 2 and the DEC-31 in-band rule), and BOB.md rule 7 (a comparison names its quantity).
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A (§6A.3 point 2 and the DEC-31 in-band rule), and … (whole text: the cut archive)
 depends-on: REC-126 (done) — CHECK AT THE CODE at spawn.
-scope: add the hash and both floors beside the date and author, computed by the one function the published header uses.
-accepts-when: for one case edition, the review copy's quartet and the published container's header agree field for field, proved by the SAME function; the hash changes when one byte of the answer does. How a liar passes it: a second hasher over a differently-canonicalised body agrees on the fixture and drifts, so the suite asserts ONE function. NEGATIVE CONTROL: canonicalise differently in one place, and the agreement arm fails. Battery green own-baseline by its COMPLETION LINE; `node scripts/coverage.mjs --strict` exit read UNPIPED; `node tools/plancheck.mjs --local` then BARE.
+accepts-when: for one case edition, the review copy's quartet and the published container's header agree field for field, proved by the SAME function; the hash changes when one byte of the … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 7).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-148» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### UI-69 · queued — **EXPORT OF A REVIEW COPY carrying the quartet in-band on every page, with §6A.3 point 2 said AT the act: what leaves cannot be revoked; the grant can.** — owner UI.
 order: after UI-68 and REC-148: export only once the quartet travels with it (SCHEDULER, 2026-09-19)
@@ -649,9 +659,9 @@ milestone: M10
 interface: I3 consumer (REC-148's IC)
 design: `docs/architecture/BIO_Publication_v0_1.md` §6A.3 point 2.
 depends-on: UI-68 and REC-148.
-scope: the export affordance UI-68 withheld, every rendered page carrying the quartet; the statement at the act, once (DEC-69).
-accepts-when: an exported copy carries the quartet on every page byte-equal to the plane's; the statement renders at the act and nowhere else. NEGATIVE CONTROL: drop the quartet from one page, and the per-page arm fails. `node civicos-ui/test/run.mjs` from the repo root, unpiped, exit 0; `node tools/plancheck.mjs --local` then BARE.
+accepts-when: an exported copy carries the quartet on every page byte-equal to the plane's; the statement renders at the act and nowhere else. NEGATIVE CONTROL: drop the quartet from one … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (same entry, item 8).
+cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### REC-149 · queued — **DISCOVERABLE OR HIDDEN (Membership v2 §7 item 7.14), 1 of 4: the OWNER's recorded setting (append-only, latest wins, no** … (whole text: the cut archive)
 order: Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first (SCHEDULER, 2026-09-19)
