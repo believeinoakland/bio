@@ -1,0 +1,9 @@
+### D-148 · queued — **A FEE QUOTE IS EVIDENCE, AND THE RECORD HOLDS ONE ONLY AS PROSE: a `received` correspondence entry cannot carry the amount, the currency, the stated basis or the request it answers, so quotes cannot be compared across bodies or over time.** RULED by Bob, 2026-09-22; the action and its correspondence are BUILT (`node tools/status.mjs 8`). — owner RECORD.
+order: with the M10 case path, after UI-69: the action a case justifies, CivicOS's fourth verb, a feature over built substrate; D-149 directly after it, both beside D-147 as BOB #26 placed them (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
+milestone: M10
+interface: I3 and I5 — a quote grammar on correspondence and an indexed table; the integrator mints and classifies the ICs.
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A FEE QUOTE IS EVIDENCE*, Bob's ruling of 2026-09-22).
+depends-on: none — `action` and its correspondence are built.
+scope: a `received` entry may carry a QUOTE — amount and currency as quoted, the stated basis verbatim, and the `sent` entry it answers; a later entry may name the quote it revises (a waiver is a revision to zero, both entries standing). Its grammar sits at C-2.10 beside the correspondence arms; `promote` projects it into an indexed table `purge` clears in both arms; a read returns quotes by counterparty and by request. The record states no finding about a quote.
+accepts-when: a quote projects and reads back by counterparty and by request; a revision to zero keeps both entries; a quote answering no `sent` entry, or whose amount is not a number, is refused by name; an action with no quote reads byte-identical. NEGATIVE CONTROL: drop the projection from the per-bundle purge, and the purge arm fails by name.
+added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 1; D-148's DEBT row; keeps its `D-` id).
