@@ -18873,3 +18873,38 @@ design rows the fold cannot move without a ruling; each question is single, and 
 
 **open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or
 narrowed), and nothing runnable waits on any of them.
+
+## CLAIM 2026-09-22 RECORD (REC-166 — a project's make-current writes nothing on the shared question: `op=versioncurrent` promotes only the PROJECT, whose one promotion carries the pointer and the receipt, INVESTIGATIVE-SESSION.md §7 fix (a))
+
+session: WORKER spawned by CONDUCT #13 (wave 1), worktree `.claude/worktrees/agent-a1707ddf948cd5c29`, branch
+`worktree-agent-a1707ddf948cd5c29`, base `origin/main` @ `3bbcb6e1` (the row read `running` there), Sparky-Air. `npm ci` in
+`bio-plane/`, `pdf-worker/` and `ocr-worker/`, each exit 0 read unpiped and each `node_modules` a REAL DIRECTORY (30 / 25 / 26
+entries); `df -h` 7.2 GiB free before the installs, 4.9 GiB after.
+authority: `QUEUE.md` `### REC-166 · running` (CONDUCT #13); design `docs/development/INVESTIGATIVE-SESSION.md` §7, the ruling
+"A PROJECT'S MAKE-CURRENT WRITES NOTHING ON THE SHARED QUESTION" (BOB #25, 2026-09-22), fix (a); fix (b) is refused there and is
+not built. IC-175 minted with `node tools/mintid.mjs IC` BEFORE building. Claimed BY SITE:
+
+- `bio-plane/src/store.mjs` — **by SITE:** (1) `#moveVersionState` — its WRITE half only, after BEAT 2's preview return: the
+  `current` act leaves before the inquiry is rewritten or promoted, the inquiry's Session Log `Changes:` expression loses its
+  `current` branch, and the tail's second write goes (it moves up); every guard above the preview is untouched; (2)
+  `#setProjectCurrentVersion` — gains the authored reason and ONE `Reason:` line in the entry it already writes. Nothing else in
+  the file.
+- `bio-plane/test/current-shared-question.test.mjs` and `bio-plane/test/current-shared-question.control.mjs` — both NEW.
+- `bio-plane/test/case-edition-conclusion.test.mjs` (section 9 and the header sentences that state the old write as present
+  fact) and `bio-plane/test/case-edition-conclusion.control.mjs` (its section-9 fragment and the arms' declarations of it) —
+  CORRECTED with a dated reason, never exempted: section 9 measured the bytes route this item removes.
+- Suites a correct landing makes wrong — named in a SECOND block once the battery has named them, each corrected with a dated
+  reason; and any control driver whose anchor these edits move.
+- `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` figures ONLY, from its own print.
+- `bio-plane/dist/` (the rebuilt bundle). `.gitignore` — ONE line, the new control driver's pen.
+- `docs/development/INVESTIGATIVE-SESSION.md` (front matter and ONE dated "Built" paragraph under §7),
+  `docs/architecture/construct-status.json` (`8.claim`'s text, note and probes), `docs/architecture/BIO_System_Design.md`
+  (RENDERED by `node tools/status.mjs --write`, never hand-edited), `docs/development/INTERFACE-CHANGES.md` (IC-175, appended),
+  `docs/development/MEASUREMENTS.md` (one appended entry, its id minted).
+
+**NOT** `docs/development/QUEUE.md` or `BACKLOG.md`, **NOT** `docs/DECIDED.md` (generated, never committed), **NOT**
+`docs/development/INTERFACES.md` (CONDUCT's at resolution), **NOT** `newgroup/**`, **NOT** `release/**`, **NOT**
+`civicos-ui/app.html`, and NOT the regions REC-165 (the AI-run gate on suggest/extractpropose) and REC-167
+(`ratifyCaseDocument`) hold.
+
+**open as of 2026-09-22** — OPEN while this item builds; CONDUCT integrates and resolves IC-175.
