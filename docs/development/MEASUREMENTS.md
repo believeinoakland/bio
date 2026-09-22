@@ -18323,3 +18323,31 @@ purpose makes it false on a schedule nobody wrote down: §3's sat one closure fr
 still fail by name at zero, which makes the fold's last act visible rather than leaving a gate to delete. The byte floor is the
 same shape one level down, and it is the fold's real endgame: `WORK-PIPELINE.md` §3 says the file *"is archived whole once
 empty"*, and the archiver cannot make it empty. Routed with named fixes (M0-109's DELEGATION to SCHEDULER, `CLAIMS.md`).
+
+## M-97 · 2026-09-22 · BOB #27 — how much gate work the lanes' contention discards: 24 of 59 recorded gate runs measured a tree that never reached `main`
+
+**INSTRUMENTS:** every gate record under `.git/bio-gates/` whose `at` falls in 2026-09-22 00:00Z–16:05Z (D-293 writes one per
+finished run on a clean tree, keyed by the TREE it measured), each record's `tree` tested for membership in the set of
+trees of every commit reachable from `origin/main` `8e2c146c` since 00:00Z (`git log --format=%T`); a record whose tree is
+in no such commit measured work that never landed. Landings: `git log --first-parent` over the same window, each commit's
+paths from `git diff-tree -m --first-parent`. Read by BOB #27 on Bob's words of ~16:10Z (below).
+
+| what | measured |
+| --- | --- |
+| recorded gate runs in the window | 59 |
+| of them, the measured tree LANDED on `main` | 35 |
+| of them, the measured tree NEVER landed — discarded after `main` moved and the lane rebased | **24 (41%)** |
+| BOB #26 · BOB #25 · SCHEDULER #12 · workers · BOB #27 (runs → discarded) | 11 → 7 · 4 → 4 · 5 → 3 · 7 → 5 · 3 → 2 |
+| DIST #4 · CONDUCT #12 · FLEET #3 (runs → discarded) | 9 → 0 · 7 → 2 · 1 → 0 |
+| first-parent landings on `main` | 52 |
+| of them touching `CLAIMS.md` · `DECIDED.md` · `QUEUE.md` · product source | 45 · 46 · 29 · 8 |
+
+**WHAT IT SAYS.** Bob, 2026-09-22, to BOB #27: *"the conflict between lanes is a very significant drag and productivity
+that must be understood and fixed. I would suggest that perhaps 1/2 the work being done in lanes overall is wasted and
+redone because of this contention."* The part this instrument can see agrees: two in five recorded gate runs were thrown
+away, and the lanes that land docs most often discard most (the BOB lane 13 of 18). **It UNDERCOUNTS:** a killed run
+and a run on a dirty tree write no record, and it sees none of the rebasing, conflict resolution and re-gating LABOUR
+between runs — BOB #27's one docs landing took three rebases and four gate runs, one of them stopped. The cause is the
+one `TREE-SHARING.md` names: nearly every landing carries `CLAIMS.md` and the generated `DECIDED.md`, so both sides of
+nearly every rebase share them and a `--since` re-check cannot narrow. Re-measure with the same instrument after M0-99
+lands and after the interim claim rule of this date (`ORCHESTRATION.md`), to show what each removed.

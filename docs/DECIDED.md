@@ -2025,7 +2025,7 @@ never this one.
 - **M0-101** · 2026-09-22 — SUPERSEDED 2026-09-22 by BOB #27** (M0-101): the word becomes an anchored write on `coord` (`TREE-SHARING.md` §1), which ends the two-writers conflict without moving it.  
   `docs/development/ORCHESTRATION.md:140`
 - **M0-101** — So M0-101 is SUPERSEDED by this change** (the `running` word becomes an anchored write, and the two-writers conflict it existed for is gone), and **M0-100 NARROWS** to `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`, which stay on `main`, where two `land/*` branches' tail appends still collide inside change 2's train.  
-  `docs/development/TREE-SHARING.md:51`
+  `docs/development/TREE-SHARING.md:60`
 - **M0-103** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 5): DIST #4's route PLACED** — M0-103 (`owed-controls.test.mjs` reads a subprocess timeout as a finding, a false RED the push guard now enforces), verified at the code (its two spawns carry `timeout: 120_000` and nothing reads `ETIMEDOUT` or a signal), FIRST of the…  
   `docs/development/CLAIMS.md:17761`
 - **M0-103** — (a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107 and archived.  
