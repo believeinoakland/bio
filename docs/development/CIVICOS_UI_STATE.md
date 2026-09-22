@@ -50,6 +50,39 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v97, 2026-09-22 session, thread UI, UI-77 (a WORKER of CONDUCT #14, wave 2). Landed on
+`worktree-agent-a40f17095e235d716` (base `origin/main` @ `14ffdbcf`), in the commit that carries this entry. SURFACE: the
+member fence (`#m-grp`, `#m-idstr`) and the public header (`#p-gname`, `#p-gid`, `#p-mono`) — every instance's, since
+`newgroup` installs this file into every group's account.
+
+**What was wrong.** `const GROUP` declared one group's display name, domain and monogram, and both surfaces painted it;
+the domain stood a third time in `#m-idstr`'s markup. A sovereign group's public page claimed to be this project's.
+
+**What it does now.** Both surfaces read `op=instancegroup` (public since REC-163, IC-174) — the fence through the
+member's own credential via `recR`, the header holding nothing via `apiQ` — and show one of three states, the setup
+page's own: the recorded SLUG; *"No group is recorded for this copy yet"*; or, when the record does not answer (a 502, an
+older plane refusing a stranger, a transport failure, the preview shell), *"This copy could not read its group just
+now"* — never "none" for a silence. The markup carries the could-not-read line. The monogram is the slug's first
+character; `#p-gid` (the domain) is empty because Publication §7 point 3 shows a domain only while verified and none is.
+The state is named `silent`, not `unread`: `member-respect.test.mjs` ARM 3b bans "unread" as a diligence phrase, and it
+was right to fire on the first spelling.
+
+**Driven against the real plane**, `civicos-ui/test/group-surface.test.mjs` (45 assertions): a plane recording a second
+slug, signed out and signed in through the real `boot()`; a plane recording none; three silences; the preview. The
+no-literal arms read the DOM's TEXT (textContent and innerHTML, hidden or not), so a CSS-hidden literal fails them.
+NEGATIVE CONTROL `group-surface.control.mjs`, 5/5 AS DECLARED: the `GROUP` literal restored RED 10/45 naming both DOM-text
+no-literal arms; the CSS-hidden liar RED 31/45 with the source census GREEN (it cannot see a name built at run time; the
+DOM arm did); silence-as-none RED 41/45; over-strictness GREEN.
+
+**Suites corrected, never exempted:** `auth-surface` (the published space reaches `instancegroup` as well as the
+manifest, both credential-free), `publishedcase` (five credential-free ops, not four), `preauth-vocabulary` (`apiQ`'s
+callers four, not three; its mock answers `instancegroup` through `say`; `#p-gid` leaves the walked surfaces — the report
+moved 22 surfaces → 21 and 47,841 → 47,761 characters, every term row character-identical).
+
+**Not done, and where it lives.** The display name and the verified domain (§7 points 2 and 3) are not built. `app.html`
+still WRITES the slug `believe-in-oakland` into every document it composes (`mdFor` and three `meta.group` keys) — a
+write path, the D-436 worker's open DELEGATION to UI in `CLAIMS.md`, not this row's display.
+
 v96, 2026-09-21 session, thread UI, D-434 PART 1 (a WORKER of CONDUCT #10). Landed on
 `worktree-agent-a51b695c70bb123af` (base `origin/main` @ `2bd24da7`). SURFACE: `app.html`'s SURFACES block, ONE
 `RECIPES` step — `capture-a-document-and-ground-a-question-on-it`'s last step, `inquiry/inquiryground` →
