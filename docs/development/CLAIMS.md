@@ -18930,3 +18930,26 @@ not built. IC-175 minted with `node tools/mintid.mjs IC` BEFORE building. Claime
 (`ratifyCaseDocument`) hold.
 
 **released: 2026-09-22 REC-166 worker (CONDUCT #14's resume)** — built on `worktree-agent-a1707ddf948cd5c29` at `51ac4c61` (tree `1ec0d45c`, `node tools/gates.mjs` GREEN FULL: 274/274 suites green · 16597 assertions passing); IC-175 PROPOSED for CONDUCT to resolve at integration.
+
+## CLAIM 2026-09-22 UI (UI-77 — the member fence and the public header read `op=instancegroup` and show the recorded slug, or say that none is recorded; the `GROUP` literal goes: Publication §7 point 1)
+
+session: WORKER spawned by CONDUCT #14 (wave 2) in cloud Claude Code, worktree `.claude/worktrees/agent-a40f17095e235d716`,
+branch `worktree-agent-a40f17095e235d716`, base `origin/main` @ `14ffdbcf` (the row read `running` there with CONDUCT #14's
+SPAWNED sentence). `npm ci` exit 0 in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each `node_modules` a REAL DIRECTORY; `df -h`
+25 GiB free. UI harness baseline on this base: 58 suites, `civicos-ui: all harnesses green`, exit 0.
+authority: `QUEUE.md` `### UI-77 · running`; design `docs/architecture/BIO_Publication_v0_1.md` §7 point 1 (the slug is PUBLIC; a
+display name is shown WITH it, never instead), consuming IC-174 (`op=instancegroup`, public). Claimed BY SITE:
+
+- `civicos-ui/app.html` — **by SITE:** (1) the `#work` masthead's `#m-grp` span and the fence's `#m-idstr` div (their static
+  text only); (2) the `#pub` masthead's `#p-mono`, `#p-gname`, `#p-gid` (their static text only); (3) the `const GROUP` line
+  beside `setInterval(buildCheck…)`, replaced by the group reader; (4) the two `GROUP.` lines each in `previewShell` and
+  `boot`, and the three in `enterPublished`. NOT any `/*__…_START__*/` marked region's other contents, NOT `SURFACES`, NOT
+  the transports (`api`, `rec`, `recPost`) — the reader goes through the existing seams `recR` and `apiQ`.
+- `civicos-ui/test/group-surface.test.mjs` and `civicos-ui/test/group-surface.control.mjs` — both NEW.
+- Existing UI suites the landing makes wrong (named once the harness names them), each corrected with a dated reason.
+- `docs/architecture/BIO_Publication_v0_1.md` (front matter and §7's dated BUILT paragraph), `docs/architecture/construct-status.json`
+  (the clause naming UI-77, if one does), `docs/architecture/BIO_System_Design.md` (RENDERED by `node tools/status.mjs --write`),
+  `docs/development/CIVICOS_UI_STATE.md` (one prepended entry).
+
+**NOT** `docs/development/QUEUE.md`, **NOT** `bio-plane/**`, **NOT** `newgroup/**`, **NOT** `civicos-ui/README.md` or
+`civicos-ui/NEXT_SESSION_PROMPT.md` (swept and reported, not edited unless the sweep finds one served).
