@@ -1126,10 +1126,10 @@ never this one.
   `docs/development/INTERFACE-CHANGES.md:12061`
 - **IC-172** — DECIDED by DIST #3: after an update to a release carrying IC-172, `newgroup` reads `op=instancegroup`; with no group recorded it TELLS the operator what is refused and that their own `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion, and NEVER seeds. It is built with 0.71.0,…  
   `docs/development/CLAIMS.md:17626`
-- **IC-172** · 2026-09-21 — A bearer is NOT refused (provisional at acceptance; RULED by BOB #22 on 2026-09-21, `BIO_Membership_Architecture_v2.md` §4).  
-  `docs/development/INTERFACES.md:508`
 - **IC-172** — Item 3's route, DECIDED by DIST #3** (BOB #24: auto-seed is NOT ruled in, nothing open for BOB): `newgroup`'s update path, after an update to a release carrying IC-172, reads `op=instancegroup`; if no group is recorded it TELLS the operator what is refused and that their own `op=instancegroupseed` settles it, may…  
   `docs/development/kickoffs/DIST-NEXT.md:53`
+- **IC-173** · 2026-09-21 — A bearer is NOT refused (provisional at acceptance; RULED by BOB #22 on 2026-09-21, `BIO_Membership_Architecture_v2.md` §4).  
+  `docs/development/INTERFACES.md:508`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
