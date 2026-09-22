@@ -33988,8 +33988,9 @@ export class Store extends DurableObject {
          AND NEVER DELETES — the version stays in the record and stays queryable,
          so nothing the published bytes assert has moved. Fencing a display
          setting would be a rule wider than the ruling it enforces.
-         `current` is §7's PROJECT stance and its second write lands on the
-         PROJECT bundle, not on the finding's claims; it also requires `from ===
+         `current` is §7's PROJECT stance and its ONLY write lands on the
+         PROJECT bundle (REC-166, 2026-09-22: it no longer promotes the finding
+         at all), not on the finding's claims; it also requires `from ===
          "accepted"`, so it can only point at a reading the record already stood
          on. What a project says it stands on is not what the finding says.
        Fencing either would be an undeclared interface change wearing the costume
@@ -34213,6 +34214,25 @@ export class Store extends DurableObject {
     };
     if (preview) return { ...receipt, preview: true, would: act, wrote: false };
 
+    /* REC-166 / INVESTIGATIVE-SESSION §7, "A PROJECT'S MAKE-CURRENT WRITES NOTHING ON THE
+       SHARED QUESTION" (BOB #25, 2026-09-22), fix (a). MAKE-CURRENT's ONE write, and it
+       lands on the PROJECT because that is whose stance it is: the pointer AND its receipt
+       (`last_updated`, the Session Log line, the authored reason) go into the project's own
+       bytes in ONE promotion, and the INQUIRY IS NOT PROMOTED AT ALL. Until 2026-09-22 this
+       act promoted the question first (a Session Log line reading "reading '<v>' is what P
+       stands on"), which moved the finding's `bundle_sha` for a change that is not a change
+       to the finding: every case pinning it stopped pinning its current version (CASE-4's
+       fences fell away) and `#flagCasesOnRevision` flagged every such case, another
+       project's included — one team's decision silently moving another team's, which §7
+       forbids. Fix (b), exempting the flag, is REFUSED there: it leaves the pin moving.
+       Accept, reject, consider, revert and hide still write the question below, because
+       they change the version block every project reads. */
+    if (act === "current") {
+      const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when, why);
+      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
+      return receipt;
+    }
+
     text = Store.#setVersionField(text, vname, "state", to === null ? from : to);
     if (to !== null) {
       /* The three attribution fields move TOGETHER with the state, always: a
@@ -34245,8 +34265,7 @@ export class Store extends DurableObject {
       `### Session ${when} | Version ${act} | ${who}\n`
       + `Trigger: op=version${act} on ${target}\n`
       + `Changes: reading '${vname}' ${to === null
-          ? (act === "hide" ? `${hidden ? "hidden from" : "returned to"} the display`
-                            : `is what ${projectId} stands on`)
+          ? `${hidden ? "hidden from" : "returned to"} the display`
           : `${from} to ${to}`}.\n`
       + (why ? `Reason: ${why}\n` : ""));
 
@@ -34268,21 +34287,15 @@ export class Store extends DurableObject {
               criticality: fm.criticality ?? null },
     });
     if (!promoted.ok) return { ...promoted, act, target, version: vname };
-
-    /* MAKE-CURRENT's second write, and it lands on the PROJECT because that is
-       whose stance it is. A second promotion rather than a field on the inquiry:
-       §7 is explicit that the pointer is project-authored and dated, and putting
-       it on the shared question would be the one thing the section forbids. */
-    if (act === "current") {
-      const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when);
-      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
-    }
     return receipt;
   }
 
   /* The make-current pointer's ONE writer, paired with `#currentVersionOf`, its
-     ONE reader. §7's field: project-authored, DATED, never a settings row. */
-  #setProjectCurrentVersion(projectRow, inquiryId, vname, who, when) {
+     ONE reader. §7's field: project-authored, DATED, never a settings row. Since
+     REC-166 (2026-09-22) it is also the act's ONLY write: the receipt the question
+     used to carry — including the member's authored reason — is written HERE, in the
+     project's own Session Log entry, in the same promotion as the pointer. */
+  #setProjectCurrentVersion(projectRow, inquiryId, vname, who, when, why = "") {
     const pid = projectRow.bundle_id;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
     if (!md || md.content === null) {
@@ -34303,7 +34316,8 @@ export class Store extends DurableObject {
     text = Store.#appendSessionLog(text,
       `### Session ${when} | Stands on | ${who}\n`
       + `Trigger: op=versioncurrent on ${inquiryId}\n`
-      + `Changes: this project now stands on reading '${vname}' of ${inquiryId}.\n`);
+      + `Changes: this project now stands on reading '${vname}' of ${inquiryId}.\n`
+      + (why ? `Reason: ${why}\n` : ""));
     const carried = [];
     for (const r of this.sql.exec(
       `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, pid))
