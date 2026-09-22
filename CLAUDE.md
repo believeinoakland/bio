@@ -97,7 +97,7 @@ design, doctrine, anything for Bob → BOB) and continue.
   (append a DELEGATION); interfaces change only through `INTERFACE-CHANGES.md`. Work in your own worktree.
 - **Only DIST cuts plane releases**, from a green `main`. **The standing lanes — CONDUCT, BOB, DIST,
   FLEET, SCHEDULER — are never archived for idleness** (Bob, 2026-09-18). **A session is REFRESHED when its context is
-  more than 70% full** (Bob, 2026-09-21, raising his 60% of 2026-09-18; receipt in the archive named in §1):
+  more than 70% full** (Bob, 2026-09-21):
   check your own with `get_usage` at every self-wake and every handoff boundary; over 70%, stop taking new work, write
   your `<LANE>-NEXT.md` from the measured state, push it, verify it on the remote, and ask BOB for your successor. The
   successor archives you under D-398's three conditions. BOB measures every live session at its own opening, so a lane
@@ -154,7 +154,8 @@ design, doctrine, anything for Bob → BOB) and continue.
 
 `node tools/gates.mjs` classifies the diff: prose under `docs/` runs the doc-facing suites plus
 `plancheck`; a plane, UI, fleet, installer or config path runs the full set; any other, the suites that name
-it; `--since` re-checks a rebase; `--explain` prints the plan. `docs/development/VERIFICATION.md` is the full process. **Do not
+it; `--since` re-checks a rebase; `--explain` prints the plan. **Never queue a gate behind another lane's**
+(Bob, 2026-09-22): run yours when you need it; `waitquiet` is for timing figures. `docs/development/VERIFICATION.md` is the full process. **Do not
 change the tree while a gate is running** — the run then measures a tree that never existed. In a fresh
 worktree run `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/` first, check `df -h`, and confirm
 each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not only the exit status.
@@ -164,8 +165,7 @@ each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not
 - **Commit messages via a heredoc (`git commit -F -`)** — never `-m` with backticks, never `printf` (a `%` truncates it, exit 0).
 - **`git add -A` after a merge marks a conflicted file resolved WITH ITS MARKERS IN IT, and makes
   `git diff --diff-filter=U` read EMPTY** — the verification is disabled by the act it verifies, and a check that
-  cannot fail is worse than none. Cost CONDUCT #7 a battery on 2026-09-19 (260/263) on a GENERATED file it had not
-  read. **Check the FILES, not the index: `git grep -c "^<<<<<<<"`, before the gate** — the push guard catches
+  cannot fail is worse than none. **Check the FILES, not the index: `git grep -c "^<<<<<<<"`, before the gate** — the push guard catches
   markers only after ten minutes of measuring an unsound tree.
 - **`git checkout -- <file>` restores HEAD and discards your work.** To undo a control arm, `cp` the file
   aside and back, then verify by hash.

@@ -233,8 +233,8 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
   your tree is mid-gate. Stop spawning before one more worker's cost crosses the line, not when the meter reaches it.
 - **`main` CAN MOVE FASTER THAN YOUR GATE RUNS** — a battery is 550–650s and `main` moved TWENTY-ONE times inside one
   integration — so re-gating from scratch on every move NEVER CONVERGES. **Name the DELTA and classify it**
-  (`git diff --name-only <measured tree>...HEAD`, `gates.mjs --explain`): docs-only → re-run what prose moves; any code
-  path → the full set, earlier figure DISCARDED. A completion line names the commit it measured; if that is not what you
+  (`gates.mjs --since <measured commit>` once that tree RECORDED GREEN: it re-runs the units reading BOTH sides and
+  re-checks later commits; runtime on both sides → the full set, earlier figure DISCARDED). A completion line names the commit it measured; if that is not what you
   push, say which commits it did not cover.
 - **REGENERATE EVERY GENERATED INDEX LAST** (`CLAUDE.md` is one of `decided.mjs`'s two ROOTS), and **READ A RED'S
   ASSERTION, not the cause a handoff predicted** — 261/261 then 260/261 on prose alone, at the arm a handoff blamed on an

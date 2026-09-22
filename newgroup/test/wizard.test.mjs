@@ -54,6 +54,13 @@
  * "DAEMON_TOKEN missing" rather than throwing — D-93 guarded inside a control).
  * BOTH RUN 2026-09-14, `newgroup/src/index.mjs` restored byte-identically after
  * each (sha256 a0f6cf1b…, verified by hash both times).
+ *
+ * NEGATIVE CONTROL (D-436 item 3, DIST #4, 2026-09-22), DECLARED BEFORE ARMING and measured with the 0.71.0
+ * embed: (N1) `groupNotice` returns "" -> 141 passed, 5 failed: the four CROSSING telling assertions (why, the
+ * refused code, the act, the suggestion) and the unknown-version arm's CONDITIONAL one; (N2) `groupUnrecorded`
+ * answers "certain" whatever ran before -> 145 passed, 1 failed: PAST THE LINE, told where nothing is owed;
+ * (N3) the update calls op=instancegroupseed -> 143 passed, 3 failed: each arm's "never seeds". ALL AS DECLARED,
+ * `newgroup/src/index.mjs` restored byte-identically after each (sha256 12e67385…, verified by hash).
  */
 import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
@@ -938,6 +945,94 @@ console.log("\n--- update: replacing a version with itself is not a success ---"
   t("the outcome says nothing changed", body.includes("Nothing changed"), true);
   t("and does not claim an update happened", /<b>Updated (from|to)/.test(body), false);
   t("and says what to check instead", body.includes("newer release has actually been published"), true);
+  t("D-436: a no-op update tells nothing about the producing group", body.includes("op=instancegroupseed"), false);
+  globalThis.fetch = realFetch;
+}
+
+/* ---- D-436 (IC-172), item 3 of the DELEGATION to DIST: an update TELLS the one act it leaves, and never
+   does it. Added by DIST #4, 2026-09-22 (the 0.71.0 cut). A copy that ran a release before FIRST_GROUP_RELEASE
+   records no producing group after the update (decision (b)), and only its root of trust may record one; the
+   installer holds no instance credential, so it neither seeds nor even asks op=instancegroup — it tells from
+   the version it read before the upload. Each arm asserts that no call touched op=instancegroup at all. ---- */
+console.log("\n--- update: D-436 — the one act an update leaves to the operator is told, never done ---");
+const semverCmp = (a, b) => { const A = a.split(".").map(Number), B = b.split(".").map(Number);
+  for (let i = 0; i < 3; i++) if (A[i] !== B[i]) return A[i] - B[i]; return 0; };
+const groupCalls = (calls) => calls.filter((c) => /op=instancegroup/.test(c.u)).map((c) => `${c.method} ${c.u}`);
+t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES the line the arms are about",
+  semverCmp(RELEASE_VERSION, "0.71.0") >= 0, true);
+{
+  disarm();
+  const { cookie, state } = await begin("cross-town", "update");
+  const calls = script([
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G1", name: "Cross" }]) },
+    { m: (u) => u.includes("/scripts/cross-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/cross-town") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "cx" }) },
+    { m: (u) => u.includes("cross-town.cx.workers.dev/api/?op=bootstrap"), f: midUpdate("0.70.0", RELEASE_VERSION) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`Updated from 0.70.0 to ${RELEASE_VERSION}`), true);
+  t("and it TELLS the one act left to the operator, saying why from the version it read",
+    [body.includes("One thing this update does not do for you"), body.includes("Your copy ran 0.70.0 before this update")],
+    [true, true]);
+  t("naming what is refused until it is done, and by which code", body.includes("GROUP_UNDETERMINED"), true);
+  t("naming the act that settles it — the root of trust's seed, for the record AND for scratch",
+    [body.includes("op=instancegroupseed"), body.includes("store=scratch"), body.includes("ADMIN_TOKEN")], [true, true, true]);
+  t("the installed name is offered as a SUGGESTION, with the example of a copy whose group is not its worker name",
+    [body.includes("A suggestion, not a default"), body.includes("cross-town"), body.includes("biosmoke7"), body.includes("believe-in-oakland")],
+    [true, true, true, true]);
+  t("and it NEVER seeds, nor asks op=instancegroup (it holds no credential that could)", groupCalls(calls), []);
+  t("no token in output", body.includes(TOK), false);
+  globalThis.fetch = realFetch;
+}
+{
+  armWith(relPubLine);
+  const fleetSig = await signFleet([memberEntry]);
+  const { cookie, state } = await begin("past-town", "update");
+  const calls = script([
+    ...REL({ manifest: () => jres(fleetManifest([memberEntry], { fleetSig })),
+             asset: () => new Response(repoSrc2) }),
+    { m: (u) => u.endsWith("/release/probe-member.bundled.mjs"), f: () => new Response(memberSrc) },
+    { m: (u) => u.endsWith("/release/probe-member/assets/x.wasm"), f: () => new Response(wasmBytes) },
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G2", name: "Past" }]) },
+    { m: (u) => u.includes("/scripts/past-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/past-town") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/probe-member") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "pt" }) },
+    { m: (u) => u.includes("past-town.pt.workers.dev/api/?op=bootstrap"), f: midUpdate(RELEASE_VERSION, FLEET_VER) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t(`PAST THE LINE (${RELEASE_VERSION} -> ${FLEET_VER}): the update lands`, body.includes(`Updated from ${RELEASE_VERSION} to ${FLEET_VER}`), true);
+  t("and tells NOTHING about the producing group: the update that crossed the line told it, or the copy recorded it at first boot",
+    [body.includes("One thing this update does not do for you"), body.includes("op=instancegroupseed")], [false, false]);
+  t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
+  globalThis.fetch = realFetch;
+  disarm();
+}
+{
+  disarm();
+  const { cookie, state } = await begin("fog-town", "update");
+  let n = 0;
+  const calls = script([
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "G3", name: "Fog" }]) },
+    { m: (u) => u.includes("/scripts/fog-town/settings"), f: () => cfok({ existing: true }) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/scripts/fog-town") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "fg" }) },
+    /* The copy does not answer BEFORE the upload (so its version is unknown), and answers the new one after. */
+    { m: (u) => u.includes("fog-town.fg.workers.dev/api/?op=bootstrap"),
+      f: () => n++ === 0 ? new Response("unavailable", { status: 503 }) : jres({ ok: true, version: RELEASE_VERSION }) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`Updated to ${RELEASE_VERSION}`), true);
+  t("and the telling is CONDITIONAL, saying the installer could not read what ran before — undetermined, stated",
+    [body.includes("could not read which version your copy ran"), body.includes("op=instancegroupseed")], [true, true]);
+  t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
   globalThis.fetch = realFetch;
 }
 

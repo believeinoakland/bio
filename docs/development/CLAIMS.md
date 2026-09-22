@@ -11384,7 +11384,11 @@ widening is not what was intended, it is one condition in one file and reversing
 nothing; the recommendation is to keep it, because the literal reading is quiet over exactly
 the loss REC-91 was.
 
-**open as of 2026-09-16** — raised today by M0-48 and NOT discharged: the closure ruling on D-288 is BOB #12's, and it has said it will read item 2's landing off `main` rather than take a report for it. **Recorded by CONDUCT #1 at integration because M0-37's delegation arm FAILED this block by name** — the SECOND time today that arm has caught a delegation arriving through a merge with no state line, and the first time it has caught one from its OWN WAVE. M0-37 and M0-48 were live at the same moment and neither could see the other; the arm landed hours earlier and is now auditing a sibling it never met. **Two paths in this block are STALE and are corrected here rather than in the worker's own words: the predicate shipped as `tools/strandedwork.mjs`, not `strandedbranches.mjs`** (the worker renamed it — a branch cannot see uncommitted work) **and it is `plancheck` SECTION 9, not 8** — M0-37 and M0-48 each independently claimed a section 8, which is the id-collision shape arriving in a section NUMBER, resolved at the merge by keeping both arms and renumbering the later one.
+**Held open from 2026-09-16 until the discharge below** — raised that day by M0-48 and NOT then discharged: the closure ruling on D-288 is BOB #12's, and it has said it will read item 2's landing off `main` rather than take a report for it. **Recorded by CONDUCT #1 at integration because M0-37's delegation arm FAILED this block by name** — the SECOND time today that arm has caught a delegation arriving through a merge with no state line, and the first time it has caught one from its OWN WAVE. M0-37 and M0-48 were live at the same moment and neither could see the other; the arm landed hours earlier and is now auditing a sibling it never met. **Two paths in this block are STALE and are corrected here rather than in the worker's own words: the predicate shipped as `tools/strandedwork.mjs`, not `strandedbranches.mjs`** (the worker renamed it — a branch cannot see uncommitted work) **and it is `plancheck` SECTION 9, not 8** — M0-37 and M0-48 each independently claimed a section 8, which is the id-collision shape arriving in a section NUMBER, resolved at the merge by keeping both arms and renumbering the later one.
+**DISCHARGED 2026-09-21 by BOB #25:** BOB #12 closed D-288 on 2026-09-16 after driving the arm, and M0-49 built item 3
+(prune-on-merge) on 2026-09-17, so D-288 was closed in full, but the row was never archived and this block never discharged.
+D-288 is archived now (`docs/archive/ledgers/DEBT-closed.md`), its head cell updated, and its one residue-shaped quote
+pointed at this block, which keeps it verbatim. The reachability reading the block recommends stands. Nothing keeps it open.
 
 ## CLAIM 2026-09-16 M0 (M0-48 — AMENDMENT: the row was corrected FOUR times while running, the unit moved from BRANCH to WORKTREE, and the files are renamed)
 session: m048-stranded-branches (worktree agent-a0c3609704dee7166)
@@ -17502,6 +17506,15 @@ text: slug }`, D-102) in the SAME upload that creates the worker — read at tha
 **open as of 2026-09-21** — OPEN until DIST has deployed the release carrying D-436, seeded `biosmoke7`'s two stores
 (item 3), and stated item 3's route for sovereign instances installed earlier.
 
+**DISCHARGED 2026-09-22 by DIST #4.** The release carrying D-436 is 0.71.0 (`v0.71.0` = `9439431e`), deployed to biosmoke7
+and live-verified. Item 1 verified at the code: `INSTANCE_NAME` rides `uploadInstall`'s creating PUT in both arms. Item
+2 needs no act. Item 3: the deploy's boot recorded nothing on either store (read before seeding); `bio` and `scratch`
+then seeded `believe-in-oakland`, source `seed`, recorded_by `token:admin` (2026-09-22T04:26:11Z), each verified with
+`op=instancegroup`; and the route for a sovereign instance installed earlier is BUILT — its update path TELLS the operator
+and never seeds (construct `15.group-telling`; told from the version read before the upload, because
+`op=instancegroup` needs a credential an update does not hold). Item 4 holds (S4 green in the gate). The UI DELEGATION
+below is now actionable: its precondition, the seed of biosmoke7, holds.
+
 ## DELEGATION 2026-09-21 RECORD (D-436 worker) -> UI — **`civicos-ui/app.html` still composes the old literal producing group; since D-436 it is inert wherever a group is recorded, and it is owed out**
 
 `mdFor` writes a literal `group:` line into every new document's bytes (the `"group: believe-in-oakland"` entry of its
@@ -17745,6 +17758,13 @@ class and a `--since` re-check; `tools/pushguard.mjs` refuses a push whose tip t
 moved REC-163, and D-82 and D-380 were PLACED in the room it freed (re-verified at `ab34197b`), their DEBT rows archived as
 placed. 115 open DEBT rows remain.
 
+**AMENDED 2026-09-22, same session (commit 5): DIST #4's route PLACED** — M0-103 (`owed-controls.test.mjs` reads a
+subprocess timeout as a finding, a false RED the push guard now enforces), verified at the code (its two spawns carry
+`timeout: 120_000` and nothing reads `ETIMEDOUT` or a signal), FIRST of the instrument cluster before D-438. Room made by
+cutting five more rows at the foot to their fields (UI-69, REC-148, UI-68, REC-147, M0-71), each VERBATIM in
+`docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. SCHEDULER-NEXT brought to this state, its line 1 unchanged for the chip's
+gate. 114 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#10) -> BOB — **THREE QUESTIONS, ONE EACH, from LED-7 batch S10-1: Framework §12's intent layer (D-75, D-76, D-79, D-81, with D-77's guard), §13's bias layer (D-85, D-87, D-88), and member-driven capture (D-120); none blocks a runnable row**
 
 1. **FRAMEWORK §12's INTENT LAYER — D-75, D-76, D-79, D-81, AND D-77's GUARD.** Designed at concept level in
@@ -17873,6 +17893,8 @@ named with a candidate, and its owner decides the words:
 5. **`kickoffs/NEW-MACHINE.md`**, *"`node tools/gates.mjs` # the full battery; ~5 min"*: stale before this landing too; the
    tool runs the class the diff measures.
 **open as of 2026-09-21** — open until each owner has corrected its sentence or said why not; nothing here blocks a runnable row.
+
+**open as of 2026-09-22** — item 1 (CLAUDE.md §6) corrected by BOB #25 at `5a807b8a`; item 4 (`kickoffs/CONDUCT.md`) corrected by CONDUCT #11 in its handoff landing; items 2, 3 and 5 stay open with their owners.
 **BOB #25, item 1 DONE (2026-09-21):** `CLAUDE.md` §6 now reads that a plane, UI, fleet, installer or config path runs
 the full set, any other the suites that name it, and `--since` re-checks a rebase — verified against `gates.mjs`'s
 `fullReason()` on `ab34197b`, within the file's budget (16,378 of 16,384 B). Items 2-5 are their owners'; this block
@@ -18084,3 +18106,60 @@ because the machine never went quiet (two lanes' batteries for 45 minutes), and 
 destructive or security-sensitive one. Branch `worktree-agent-aff9fd704ee856d24` (two of its commits are CONDUCT #11's
 verbatim preservation after two API-529 terminations) is deleted from the remote after the push is verified. The paths this
 block reserved are FREE.
+
+## CLAIM 2026-09-21 BOB (#25) — BOB-NEXT checkpoint for BOB #26, written while BOB #25 is live (46%)
+
+claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~04:05Z 2026-09-22), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #25** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-21 BOB (#25) — D-288 archived, closed in full since 2026-09-17 (M0-49 built item 3), and M0-48's delegation discharged
+
+claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/DEBT.md` and
+`docs/archive/ledgers/DEBT-closed.md` (the D-288 move, by `node tools/ledger.mjs archive D-288`, after its head cell and one
+quoted residue phrase were updated); `docs/development/CLAIMS.md` (this block and the DELEGATION 2026-09-16 M0 (M0-48) ->
+BOB block's discharge line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — cut 0.71.0, a BATCH: D-436 / IC-172 and D-434; biosmoke7's two stores seeded, write-once; civicos moves)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4`, Sparky-Air
+opened: 2026-09-22
+branch: `dist/cut-0.71.0` from `ab34197b` (branch until deployed and live-verified; `main`'s `release/` is the pointer)
+paths: `release/**`; `newgroup/**` (`src/index.mjs`, D-436 item 3's telling; `test/wizard.test.mjs`, its arms; the
+  generated `src/release.mjs` and `dist/`); the version in `bio-plane/package.json` and `bio-plane/wrangler.jsonc` and the
+  same two sites in `agent-worker/`, `pdf-worker/`, `ocr-worker/`; `bio-plane/test/migrate-released.test.mjs` (the
+  `RELEASES` row for 0.70.0, and the D-436 boot arm) and `bio-plane/test/migrate-released.control.mjs` (two arms);
+  `docs/architecture/construct-status.json` (claim `15.group-telling`), `docs/architecture/BIO_System_Design.md`
+  (RENDERED), `docs/architecture/BIO_Distribution_v0_1.md` (§5: one dated paragraph; one Status sentence);
+  `docs/development/kickoffs/DIST-NEXT.md`; this block, and one dated DISCHARGED line at the foot of the D-436 (worker)
+  -> DIST DELEGATION; `docs/DECIDED.md` (GENERATED, regenerated LAST). All tags. `civicos` MOVES (`app.html`, D-434).
+why: a BATCH, judged at the code: `git log v0.70.0..ab34197b` over the shipped paths is D-436 (IC-172: I3 49.0.0 MAJOR,
+  I5 1.24.0 MINOR, the producing group one recorded value per store) and D-434 (`app.html`'s recipe cites); no security
+  or disclosure closing. Its IRREVERSIBLE step is the DELEGATION's item 3, the seed of biosmoke7's `bio` and `scratch`
+  stores `believe-in-oakland`. biosmoke7 binds `INSTANCE_NAME="biosmoke7"` (the deployments API, 2026-09-22), so a store
+  that recorded at the deploy's boot would carry its WORKER name for good; IC-172 names what its suite cannot see, "no
+  pre-D-436 build is cut", and every `RELEASES` row is one, so the upgrade arm now binds the name and asserts each
+  released store records nothing at the current plane's boot, beside a positive arm on a fresh store (controls (e) and
+  (f), each as declared). Item 3's route, DECIDED by DIST #3, is REFINED: `op=instancegroup` answers admin, member and
+  probe only (`index.mjs`, its OPS row) and an update holds no instance credential, so `newgroup` tells from the version
+  it reads before the upload, conditionally when that is unknown, and never seeds or reads.
+**open as of 2026-09-22.**
+
+**RELEASED 2026-09-22 by DIST #4** — 0.71.0 is complete: tag `v0.71.0` = `9439431e` (gate GREEN on its tree `dadd0b5f`,
+recorded); deployed in the fleet's order, agent-worker first; biosmoke7's two stores seeded and verified; live-verified
+12/12 with the DO build established on both stores; `op=audit` at D-200's ten; `civicos` moved (`/build` = the tag's
+app.html); installer `62a59e41` read back (embed MATCH, bindings `[]`); pointer advanced at `23463895`. Its bundle and
+`DIST-NEXT.md` land in the commit that releases this.
+
+## CLAIM 2026-09-22 BOB (#25) — gates run far more than they need to on a machine that swaps: cut the work, do not queue it (BOB INBOX); BOB-NEXT brought current; REC-157's make-current question ruled (INVESTIGATIVE-SESSION §7)
+
+claimed: 2026-09-22 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/QUEUE.md` (the BOB INBOX only:
+two entries); `docs/development/INVESTIGATIVE-SESSION.md` (§7: one ruled paragraph; one Status sentence and one Incomplete
+bullet); `docs/development/kickoffs/BOB-NEXT.md` (the checkpoint brought to ~08:30Z); `CLAUDE.md` (§6: Bob's ruling of
+2026-09-22 against queueing gates, paid for by moving two receipts from §4 and §7 to `docs/archive/CLAUDE-2026-09-18.md`,
+which gains them verbatim); `docs/architecture/BIO_Distribution_v0_1.md` (§4's row and Incomplete bullet) and
+`docs/architecture/BIO_System_Design.md` (§6: the installer is deployed by DIST, not waiting on Bob; 0.71.0);
+`docs/development/INVESTIGATIVE-SESSION.md` (as-of date); `docs/DECIDED.md` (GENERATED,
+regenerated LAST), and this block.
+**released: 2026-09-22 BOB #25** — landed in the same commit as the text it covers.
