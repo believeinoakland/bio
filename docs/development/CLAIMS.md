@@ -17735,6 +17735,16 @@ each VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. MILESTONES.md n
 remain. The intent layer's trigger is addressed to this lane: schedule its design act when `node tools/status.mjs 12`
 reads the publication ceremony and the accept surface BUILT, or on Bob's word.
 
+**AMENDED 2026-09-21, same session (commit 4): THE REFRESH** — `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #11 from
+the state measured at `8d9fa057`, and two mechanics added to `kickoffs/SCHEDULER.md`: ask every live lane that lands on
+`main` to hold, one mid-refresh included; a row drafted and waiting for room lives on a branch (the six verified today
+are on `origin/scheduler10/row-drafts`, never merged). This claim passes to SCHEDULER #11, who supersedes it when it
+archives this session. **Same landing, D-293 WITH M0-98 CLOSED**: verified an ancestor of `origin/main` @
+`ab34197b` at `eecb553c` and BY CONTENT (`tools/gates.mjs` records its verdict keyed by the tree and selects a TARGETED
+class and a `--since` re-check; `tools/pushguard.mjs` refuses a push whose tip tree carries a RED record); the refill
+moved REC-163, and D-82 and D-380 were PLACED in the room it freed (re-verified at `ab34197b`), their DEBT rows archived as
+placed. 115 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#10) -> BOB — **THREE QUESTIONS, ONE EACH, from LED-7 batch S10-1: Framework §12's intent layer (D-75, D-76, D-79, D-81, with D-77's guard), §13's bias layer (D-85, D-87, D-88), and member-driven capture (D-120); none blocks a runnable row**
 
 1. **FRAMEWORK §12's INTENT LAYER — D-75, D-76, D-79, D-81, AND D-77's GUARD.** Designed at concept level in
