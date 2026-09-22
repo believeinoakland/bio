@@ -1,0 +1,9 @@
+### D-134 · queued — **NO SURFACE PERFORMS §4.9's CUSTODIAL ACTS: `memberadd`, `memberset`, `signeradd` and `signerset` have ZERO call sites in `civicos-ui/app.html`, so an administrator's governance WRITE surface is absent while its read surface is present.** The ballot half is reachable (UI-16); `governorconfig` is the operator's act (BOB #23), not in scope (re-read on `8ec66c57`). — owner UI.
+order: with the M8 features after D-126, a surface over built ops; BOB #17 ordered it behind D-136's fence (*"a member surface over an act whose voter the caller can name is a SECOND path to a forgeable vote"*), which is built, and BOB #18 discharged BOB's half; it rests on REC-159's session reach (SCHEDULER #13, 2026-09-22, LED-7 batch S13-1)
+milestone: M8
+interface: I3 consumer (the four ops, reachable from an enrolled administrator's session once REC-159 lands).
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each custodial act is EVERY administrator's), with `docs/architecture/BIO_Interaction_Constructs_v0_1.md`'s ACT construct and DEC-69 (capability absent, never greyed).
+depends-on: REC-159 (the four ops reach an enrolled administrator's session).
+scope: the four acts from an administrator's session, each through the ACT construct's pre-flight and receipt, attributed to the signed-in administrator; absent, never greyed, for a member. The ceremony is UI's ground (BOB #17), built from the constructs the design already names.
+accepts-when: against the real plane, the founder's and an enrolled administrator's sessions each perform all four, attributed to them; a member's session renders none of the four. How a liar passes it: rendering every act and letting the plane refuse, so the member arm reads the DOM. NEGATIVE CONTROL: drop one act's call, and its arm fails by name.
+added: 2026-09-22 · SCHEDULER #13 (LED-7 batch S13-1; D-134's DEBT row of 2026-08-01, BOB #17's order and BOB #18's discharge; keeps its `D-` id).
