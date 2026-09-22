@@ -132,15 +132,18 @@ appends a DELEGATION entry in `CLAIMS.md`.
 
 ## The gate: what must be true before anything is distributed
 
-Regression testing is a REQUIREMENT, and DIST runs it itself rather than
-trusting that the contributing area ran it. This is not distrust of the area; it
-is that `main` after a merge is a tree nobody has tested, and that tree is what
-ships. Two areas can each land green and produce a red `main`.
+Regression testing is a REQUIREMENT, and DIST establishes it itself rather than
+trusting that the contributing area ran it: two areas can each land green and
+produce a red `main`, and the merged tree is what ships. Since D-293 every gate's
+verdict is RECORDED BY TREE, so the question is whether THIS tree was tested.
 
 In order, and all of it on the merged `main`:
 
-1. **`cd bio-plane && npm test`** — the entire battery, every suite, zero
-   failures. Not the suites the change touched.
+1. **The merged tree's verdict** (M0-106, 2026-09-22): a GREEN FULL record for the
+   tree being released (`.git/bio-gates/<tree>.*.json`), NAMED in the cut commit;
+   else `node tools/gates.mjs --since <the newest commit whose tree carries one>`;
+   the whole battery (`cd bio-plane && npm test`, zero failures) only when neither
+   exists. The bumped cut tree's own gate (lesson 20) always runs.
 2. **`cd newgroup && npm test`** — the installer's own suite, which includes the
    D-106 guard that the embedded plane version matches `package.json`.
 3. **`node test/hygiene.test.mjs` is part of (1)** and is the cheap early
@@ -168,7 +171,8 @@ In order, and all of it on the merged `main`:
    `bindings: []` is still empty. That empty binding set is a structural
    security guarantee, not a detail.
 10. **Advance the pointer:** merge `dist/cut-X.Y.Z` into `main` and push. The TAG was already made on the branch, BEFORE
-    the deploy (the mechanism below); the merge puts it on the mainline. Never before the live check.
+    the deploy (the mechanism below); the merge puts it on the mainline. Never before the live check. If `main`
+    moved, re-merge and re-check with `gates.mjs --since <the cut commit>`, never a fresh battery (0.71.0's took 2.4 h).
 11. **Add the release to the upgrade arm:** a row `["X.Y.Z", "<the commit whose release/ holds it>"]` in
     `bio-plane/test/migrate-released.test.mjs`'s `RELEASES`, in the NEXT cut. A release absent from that table is never
     tested as an upgrade source (REC-143's worker, 2026-09-19).

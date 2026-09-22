@@ -18030,7 +18030,8 @@ it moves their pins and their revision obligations)? **Candidate fixes, for BOB 
 PROJECT's own Session Log and the inquiry is not promoted by a project-arm make-current (the conclusion act's discipline); (b) keep
 the line but exempt a stance-only promotion from `#flagCasesOnRevision` (a narrower fix that leaves the pin moving). REC-157 built
 neither: its scope is the refusal, and both change what `op=versioncurrent` writes.
-**open as of 2026-09-21** — OPEN until BOB rules and, if a fix is ruled, SCHEDULER places it.
+**DISCHARGED 2026-09-22 by BOB #26:** ruled by BOB #25 (`032d1ce1`: a project's make-current writes nothing on the
+shared question, `INVESTIGATIVE-SESSION.md` §7) and placed by SCHEDULER #11 as REC-166 (`381427e4`), `depends-on` REC-157.
 
 ## DELEGATION 2026-09-21 RECORD (REC-157 worker) -> SCHEDULER — **a case PREPARED by `op=publish` and RATIFIED after its project WITHDREW the conclusion it records still commits: the signed edition records a conclusion that no longer stood at signing**
 
@@ -18243,7 +18244,7 @@ ADMIT only."* M0-82 (CONDUCT's fallback start, owner CONDUCT) is sequenced after
    - recommendation: keep the reading. The incident was a chip for the instance that already existed; the alternative
      leaves a lane with no live session between the predecessor's archive and the successor's start.
    - reversal cost: one line of `tools/occupancy.mjs`, and arm (g) of its suite is the pin to move; no data depends on it.
-**open as of 2026-09-22** — open until BOB names the command in rule 1 (or says why not) and rules the reading; nothing here blocks a runnable row.
+**ANSWERED 2026-09-22 by BOB #26** — see the DISCHARGED line at the foot of this block.
 3. **THE CLASS SWEEP (2026-09-22): three places in the kickoffs stand up a lane session, and ONE more is BOB's.** A grep of
    `docs/development/kickoffs/`, `CLAUDE.md` and `ORCHESTRATION.md` for every chip filing, `spawn_task`,
    `create_scheduled_task`/`run_scheduled_task` and successor start: `BOB.md` (this delegation), `CONDUCT.md` "Starting
@@ -18253,7 +18254,11 @@ ADMIT only."* M0-82 (CONDUCT's fallback start, owner CONDUCT) is sequenced after
    And one outside the repository, named and never changed: the operator's `conduct-8` task is still ENABLED (manual)
    and titled `CONDUCT #8 (BIO) — integrator lane`. Re-run today it would stand up a second integrator under a stale
    number, and this judgement would read that session as a predecessor of any later CONDUCT chip, never an occupant.
-**open as of 2026-09-22** — items 1-3 open until BOB answers each; nothing here blocks a runnable row.
+**DISCHARGED 2026-09-22 by BOB #26**, all three: (1) `kickoffs/BOB.md` rule 1 now names the command, its input and
+"file on ADMIT only", with M-93's reason; (2) the reading is RULED as recommended and written into rule 1 — a live
+session bound BELOW the chip's number is its predecessor, named and never refused; (3) `NEW-MACHINE.md` gates its
+chips on the same command, in both places it files them. The `conduct-8` task is the operator's and was told to Bob
+by BOB #25 on 2026-09-22; not repeated.
 
 ## CLAIM 2026-09-22 SCHEDULER (#11) — the lane's standing claim on the build plan's own files; BOB #25's D-293 entry drained (M0-104, M0-105) and LED-7 batch S11-1
 
@@ -18492,6 +18497,43 @@ M0-99), M0-100 first of the backlog; room by four foot cuts (D-74, UI-75, D-178,
 Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
 **Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them `CLAUDE.md` §2's over-claim rule decides). Both were already running; nothing moved. Item 3 accepted by BOB #26 for its next landing.
 **open as of 2026-09-22** — item 3 only: D-278's determinations, which BOB #26 rules per group; nothing runnable waits on it.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — M0-106: the release gate's step 1 rests on the tree's RECORD, and the whole battery runs only when none answers)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/m0-106`), Sparky-Air
+paths: `docs/development/kickoffs/DIST.md` (the gate's opening paragraph, step 1, and one clause of step 10),
+  `docs/development/kickoffs/DIST-NEXT.md` (the M0-106 sentence only), this block, `docs/DECIDED.md` (GENERATED, LAST).
+why: M0-106, routed to DIST as its own act (CONDUCT #12, SCHEDULER #12's routing). The kickoff called merged `main` "a
+  tree nobody has tested", which is false wherever that exact tree carries a GREEN FULL record: D-293 keys every verdict
+  by TREE. Step 1 now takes that record, NAMED in the cut commit, or `gates.mjs --since <the newest commit whose tree
+  carries one>`, and runs the whole battery only when neither exists; the bumped cut tree's own gate always runs. Step
+  10's landing re-merge is re-checked `--since` the cut commit, never by a fresh battery: 0.71.0's took 2.4 h.
+  Accepted at the next cut, which must name the record it relied on (0.72.0: `f25d43b3`, tree `0a2b5b64`).
+**released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.
+
+**DISCHARGED 2026-09-22 by BOB #26:** item 3 answered — D-278 ruled per group in `INTERFACES.md` I3 "Answers"
+(PROVISIONAL): (1) was already coded by REC-79 (`NOT_AUTHENTICATED`, C-38.1); (3), the 405s, stay codeless by design; (4),
+(5) and (2) are coded with `error` kept beside the new reason — one RECORD item, the BOB INBOX's D-278 entry of
+2026-09-22, door 2 keeping D-278's id.
+
+## CLAIM 2026-09-22 BOB (#26) — D-278 ruled per group (I3, BOB INBOX); M0-81 answered (BOB.md rule 1 names `tools/occupancy.mjs`, the predecessor reading ruled, NEW-MACHINE.md gated); REC-157 delegation discharged
+
+claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77b`. Paths: `docs/development/INTERFACES.md`
+(I3 "Answers": one PROVISIONAL paragraph, D-278); `docs/development/kickoffs/BOB.md` ("Spawning and retiring lanes",
+rule 1: the check named, the reading ruled); `docs/development/kickoffs/NEW-MACHINE.md` (its two chip lines gated on the
+same command); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newest first); `docs/development/CLAIMS.md`
+(this block, and DISCHARGED lines on the REC-157, M0-81 and SCHEDULER (#12) DELEGATIONs to BOB); `docs/DECIDED.md`
+(GENERATED, LAST).
+**released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 BOB (#26) — Bob ruled the three tree-sharing changes (TREE-SHARING.md, BOB INBOX); BOB-NEXT final for BOB #27 at ~66%
+
+claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77b`. Paths: `docs/development/TREE-SHARING.md`
+(NEW, a process document: Bob's ruling of 2026-09-22 and its design); `docs/architecture/CORPUS-STANDARD.md` (§6: its row
+in the process-document table; one Status sentence and the as-of date); `docs/development/QUEUE.md` (the BOB INBOX only:
+one entry, newest first); `docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~14:55Z);
+`docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
 
 ## CLAIM 2026-09-22 M0 (M0-109 — the ledger suite's non-vacuity floor stops measuring the ledger's SIZE: `rows.length > 100` becomes `> 0`, with the one other size floor on the live DEBT.md the class sweep found)
 

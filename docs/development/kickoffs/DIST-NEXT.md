@@ -58,8 +58,8 @@ July probe residue, not DIST's, so `op=purge` is not used.
    new case edition). It WIDENS what a publisher may do — NAME it in the landing report. Not a CUT NOW: no security,
    disclosure or authority defect (CONDUCT #12 concurs). Main's record: FULL GREEN for tree `0a2b5b64` (`f25d43b3`),
    `--since` GREEN for `9bf659a4` (`9d330478`). Bound `6dbaeb5a` at 2026-09-22 21:07 PDT; a cut that would cross 70% goes
-   to DIST #5. **M0-106** (DIST's, head of the backlog): the gate's step 1 may rest on a GREEN FULL record of the tree
-   released or on `gates.mjs --since` — write it into `DIST.md` when CONDUCT routes it.
+   to DIST #5. **M0-106 is WRITTEN** (`DIST.md` gate step 1): main's newest GREEN FULL record is `f25d43b3` (tree
+   `0a2b5b64`), so 0.72.0's step 1 is `gates.mjs --since f25d43b3`, NAMED in the cut commit — never a fresh battery.
 2. **NEXT CUT adds 0.71.0 to the upgrade arm** (row above). `alterafter`, read against the SEQUENCE (lesson 19):
    135 → 169 → 186 → 203 → 220 → 237 pass / 66 fail, then **279 / 78** at 0.71.0 — the step is the D-436 assertions
    (+2 per migrated store; the six bricked 0.58.0-written stores fail both), nothing new bricks. Each release row now

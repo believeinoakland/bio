@@ -22,6 +22,38 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-22 · BOB #26 · BOB RULED THE THREE TREE-SHARING CHANGES — *"Yes to all 3 recommendations"* — designed in
+`docs/development/TREE-SHARING.md`.** Process rows that pay for themselves in gate time, Bob's own test (`CLAUDE.md` §2):
+today one DOCS landing took six gate runs where one was needed, because `main` moved five times under it. Order is the
+design's: item 1 with item 2's measurement beside it, then item 3. The ruling also settles *"DECIDED.md leaving the
+committed tree"*, which was with Bob: it leaves `main` (item 1). Each landing corrects every rule and kickoff its change
+supersedes, `CLAUDE.md` §1's table and §4's push lines included.
+
+1. **M0, at the head: the `coord` branch** (TREE-SHARING §1). First act, per-path churn on `main` measured; then the state
+   files move to `coord`, one write command and one read command against `origin/coord`, every reader redirected, and one
+   migration landing leaves a pointer at each old path. Accepts when, and NEGATIVE CONTROL, as §1 states them.
+2. **M0, beside item 1: the gates on GitHub's machines** (§3). First act, the measurement: runner wall time and pass count
+   against the Mac's, the suites that need a secret or the network, the minutes at the batch cadence. Then the workflow and
+   the push guard's check arm. Bob's acts, enabling Actions and any spending limit, go to BOB with those figures, once.
+3. **CONDUCT with M0, after item 1: landing in batches** (§2). `land/*` branches; CONDUCT's train on a cadence with one
+   gate; the push guard refuses a direct push to `main`. `depends-on` item 1.
+
+**2026-09-22 · BOB #26 · D-278 RULED, ONE DETERMINATION PER GROUP (SCHEDULER #12's DELEGATION, item 3).** Written into
+`INTERFACES.md` I3 "Answers" as PROVISIONAL, traced at `0ce7447b`. Group (1), `unauthenticated`, CLOSES IN FACT: REC-79
+coded it on 2026-08-09 (`NOT_AUTHENTICATED`, C-38.1, the admission gate in `index.mjs`), so the row's first group was
+stale when it was carried. Group (3), the method 405s, is a stated design exception, not a code. The rest is one build
+item, door 2, keeping D-278's id.
+
+1. **RECORD (M9), D-278: code the codeless refusals, in the row's own order (4), (5), (2).** (4) one DEC-49 row for the
+   storage 503s of `capture`, `pdfstructure`, `acquire` and `attest`, translated for whoever installed the copy; (5) one
+   row for `unknown op`, with `error: "unknown op"` byte-identical; (2) the argument complaints of `verify`,
+   `publishedbytes`, `publishedcase` and `knock` take C-61.1 through `requiredArgument`, and the three
+   bootstrap-credential complaints of `claim` take installation rows like (4), their sentences saying no more than today's. Every site keeps `error`
+   beside the new `reason`; I3 gains the reasons (the integrator mints the IC). **Accepts when** each site answers its
+   `reason`, check and translation with `error` unchanged; `civicos-ui`'s `queueAbsent` still tells an older plane
+   apart; `preauth-vocabulary.test.mjs` stays green; `d270-reach.test.mjs`'s naming of group (2) is corrected to the
+   coded state, never exempted. NEGATIVE CONTROL: strip the `unknown op` site's code, and its arm fails by name.
+
 **2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT
 GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told
 the same day that the layers follow the AGENCY asked (federal FOIA governs federal agencies only). Each row leaves DEBT by
