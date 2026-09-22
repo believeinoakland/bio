@@ -17990,3 +17990,15 @@ recorded); deployed in the fleet's order, agent-worker first; biosmoke7's two st
 12/12 with the DO build established on both stores; `op=audit` at D-200's ten; `civicos` moved (`/build` = the tag's
 app.html); installer `62a59e41` read back (embed MATCH, bindings `[]`); pointer advanced at `23463895`. Its bundle and
 `DIST-NEXT.md` land in the commit that releases this.
+
+## CLAIM 2026-09-22 BOB (#25) — gates run far more than they need to on a machine that swaps: cut the work, do not queue it (BOB INBOX); BOB-NEXT brought current; REC-157's make-current question ruled (INVESTIGATIVE-SESSION §7)
+
+claimed: 2026-09-22 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/QUEUE.md` (the BOB INBOX only:
+two entries); `docs/development/INVESTIGATIVE-SESSION.md` (§7: one ruled paragraph; one Status sentence and one Incomplete
+bullet); `docs/development/kickoffs/BOB-NEXT.md` (the checkpoint brought to ~08:30Z); `CLAUDE.md` (§6: Bob's ruling of
+2026-09-22 against queueing gates, paid for by moving two receipts from §4 and §7 to `docs/archive/CLAUDE-2026-09-18.md`,
+which gains them verbatim); `docs/architecture/BIO_Distribution_v0_1.md` (§4's row and Incomplete bullet) and
+`docs/architecture/BIO_System_Design.md` (§6: the installer is deployed by DIST, not waiting on Bob; 0.71.0);
+`docs/development/INVESTIGATIVE-SESSION.md` (as-of date); `docs/DECIDED.md` (GENERATED,
+regenerated LAST), and this block.
+**released: 2026-09-22 BOB #25** — landed in the same commit as the text it covers.

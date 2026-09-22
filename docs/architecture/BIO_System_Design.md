@@ -8,7 +8,7 @@
 - §3 — the STATE column is now RENDERED from `construct-status.json` and verified against the code at every push (2026-09-18); it replaced a hand reading of 2026-09-14 that three independent reads found wrong in both directions, mostly calling BUILT things absent. **What it still cannot say:** a probe proves a named thing is PRESENT, or ABSENT under the names searched — never that it WORKS (the battery's job), and an absence is only as good as the names tried. Three claims rest on the code's own statement of an absence (5.reextract, 8.contradiction, 9.internet) and say so.
 - §4 — the class diagram shows the 14 constructs that have relationships drawn; construct 10 (standing intent and monitoring) is folded into Capture and Operations there and is not a separate class until Bob confirms the inventory.
 - §5 — the capability ladder is summarised by pointer; per-milestone state is not restated here because `MILESTONES.md` is its authority and a copy would drift.
-- §6 — the runtime shape names what is deployed on the project's instance; a sovereign group's instance differs (no fleet until Bob's gate, D-297) and the differences are listed, not designed.
+- §6 — the runtime shape names what is deployed on the project's instance; a sovereign group's instance differs (it gets the fleet only through the installer DIST deploys) and the differences are listed, not designed.
 
 **Contents**
 - [1. Purpose — the path, and the stance](#1-purpose-the-path-and-the-stance)
@@ -228,7 +228,7 @@ system's completeness statement at the capability altitude, and each rung maps o
 
 ## 6. The runtime shape
 
-What is deployed on the project's own instance at 0.58.0 (`release/RELEASE.json`;
+What is deployed on the project's own instance at 0.71.0 (`release/RELEASE.json`;
 `bio-plane/wrangler.jsonc`):
 
 - **`bio-plane`** — the Worker (`src/index.mjs`, the control plane and the OPS table) and
@@ -243,9 +243,9 @@ What is deployed on the project's own instance at 0.58.0 (`release/RELEASE.json`
   plane and members uploaded and byte-verified, the front page.
 - **`docprofile/`** — the recogniser library the plane bundles (`tools/bundle-docprofile.mjs`).
 
-A sovereign group's instance differs today in one measured way: it receives no fleet
-until Bob's gate clears (D-297 closed; deployment is his click), so its tier-3 branch is the
-honest `else` — nothing is claimed about a scan's text. Several instances in one account
+A sovereign group's instance receives the fleet through the installer, which embeds the signed
+release and installs the fleet (D-297) and which DIST deploys at every cut under Bob's standing
+permission of 2026-09-18 (CORRECTED 2026-09-22 by BOB #25: this said the fleet waited on Bob's click). Several instances in one account
 collide on bucket and fleet names today; the plan to partition them structurally is
 `MULTI-INSTANCE-ISOLATION.md`, sequenced after the member surfaces. `BIO_Distribution_v0_1.md` is the
 construct's home and describes the topology, the release, the fleet and the installer once.

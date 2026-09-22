@@ -1,8 +1,8 @@
 # BOB — resume here. Written 2026-09-21 by BOB #25 for BOB #26, in the SAME Claude Code account.
 
 Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this.
-**A CHECKPOINT, measured ~04:05Z 2026-09-22 while BOB #25 is LIVE (46% context).** It exists so a successor inherits the
-thread if this session dies mid-flight (an Opus 5 incident was still in "monitoring" at 02:11Z). **If BOB #25 is live,
+**A CHECKPOINT, measured ~08:30Z 2026-09-22 while BOB #25 is LIVE (52% context).** It exists so a successor inherits the
+thread if this session dies mid-flight (the Opus 5 incident was RESOLVED at 02:35Z, status page). **If BOB #25 is live,
 you are not needed: file nothing, arm nothing.** Everything below is a POINTER; re-measure before resting on it.
 
 ## 0. YOUR FIRST ACTS (only once BOB #25 has refreshed or died)
@@ -15,12 +15,14 @@ you are not needed: file nothing, arm nothing.** Everything below is a POINTER; 
 3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` for every lane plus the weekly figure; the
    `retirable.mjs` sweep over `list_sessions` VERBATIM and whole (four heartbeat run-sessions were waiting at 04:00Z).
 
-## 1. THE ESTATE, measured ~04:00Z
+## 1. THE ESTATE, measured ~08:30Z
 
 - **Live lanes:** CONDUCT #11, DIST #4 (up since ~03:55Z, taking the 0.71.0 BATCH cut with D-436's irreversible seed),
-  FLEET #3 (65%; it asks BOB for the FLEET #4 chip at 70%), SCHEDULER #10 (refreshed at ~62%; **its SCHEDULER #11 chip is
-  filed, `task_261e88ab`, waiting for Bob's click**). DIST #3 is DIST #4's to archive.
-- **Disk 4.87 GiB** at 04:04Z. Weekly all models **67%** at ~04:00Z (64% at 02:21Z), resetting 2026-09-26 11:00Z.
+  FLEET #3 (65%; it asks BOB for the FLEET #4 chip at 70%), SCHEDULER #10 (refreshed; `464c2779` landed at ~08:25Z, crons
+  deleted, **its SCHEDULER #11 chip is filed, `task_261e88ab`, waiting for Bob's click**). DIST #3 is DIST #4's to archive.
+- **CONTENTION:** gates ran on top of each other all night (see §2's last landing); CONDUCT's heartbeat did not run from
+  05:10Z to 07:11Z, and the run that ended the gap took 58 minutes (told to CONDUCT; cause undetermined).
+- Weekly all models **69%** at 05:57Z and 08:09Z (64% at 02:21Z), resetting 2026-09-26 11:00Z.
 
 ## 2. WHAT BOB #25 DID — on `main`, verified from the remote
 
@@ -33,7 +35,12 @@ you are not needed: file nothing, arm nothing.** Everything below is a POINTER; 
 - `5a807b8a` **D-293's design gap RULED** (a dirty run keyed by its temporary-index tree, taken at start and end) and
   **`VERIFICATION.md`'s cut placed** (both in the BOB INBOX, undrained at writing); **`CLAUDE.md` §6** corrected to
   `gates.mjs`'s four behaviours (16,378 of 16,384 B).
-- Archived BOB #24 (worktree removed, +663 MiB) and two heartbeat runs; filed the DIST #4 and SCHEDULER #11 chips.
+- `0b7328bc` **D-288 archived**: closed in full since 2026-09-17 (M0-49 built item 3) and never archived; M0-48's
+  delegation, open five days, discharged.
+- **This landing: gates run far more than they need to, on an 8 GiB machine that swaps** — cut the work, do not queue it
+  (Bob, 2026-09-22): a release reuses a GREEN FULL record of its tree (a `DIST.md` change), and load must slow a gate,
+  never falsify it (M0-103's class). And REC-157's question RULED in `INVESTIGATIVE-SESSION.md` §7 (fix (a)).
+- Archived BOB #24 (worktree removed, +663 MiB) and eleven heartbeat runs; filed the DIST #4 and SCHEDULER #11 chips.
 
 ## 3. OWED — in this order
 
@@ -52,5 +59,7 @@ you are not needed: file nothing, arm nothing.** Everything below is a POINTER; 
 
 - Writing `list_sessions` verbatim into a file for `retirable.mjs` cost ~12k tokens of context; `limit` cannot be lowered
   without breaking "whole", so budget for it at every sweep.
+- **I chained `waitquiet` with `;` twice, so my gate ran beside other batteries — then made the opposite error and waited
+  2.5 hours to run a 4-minute DOCS check.** Bob, 2026-09-22: lanes must not back up behind long runs. Cut the work.
 - A TARGETED gate skipped `ocr-worker`'s suite (no `npm ci` there at this disk level); it was harmless only because the
   suite names `CLAUDE.md` in a comment. Read the skip's reason every time; do not assume it.

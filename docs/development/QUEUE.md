@@ -22,6 +22,48 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-22 · BOB #25 · REC-157'S DELEGATION RULED: A PROJECT'S MAKE-CURRENT WRITES NOTHING ON THE SHARED QUESTION — AND
+M0-97'S SECOND SPECIMEN JOINS `VERIFICATION.md`'S CUT.** The delegation sits on `conduct11/batch2` and reaches `main` with
+CONDUCT #12's landing of it; the ruling is in `INVESTIGATIVE-SESSION.md` §7 (this commit).
+
+1. **RECORD (M10), after REC-157 lands: `op=versioncurrent`'s project arm writes only the project.** Its receipt — the
+   `last_updated` and the Session Log line *reading '<v>' is what P stands on* — moves into the promotion that writes P's
+   pointer, and the inquiry is not promoted by it. Accept, reject, hide and their siblings still promote the inquiry.
+   **Accepts when**, after a project-arm make-current, the inquiry's `bundle_sha` is unchanged, `op=caseflags` names no
+   case for it, a published case pinning the finding keeps CASE-4's fences, and P's Session Log carries the line; and
+   `op=versionaccept` still moves the inquiry. How a liar passes: dropping the receipt with the promotion, so an arm
+   asserts the line in P's bytes. NEGATIVE CONTROL: restore the inquiry promotion, and the `bundle_sha`-unchanged arm
+   fails by name.
+2. **An amendment to the cut placed as item 2 of BOB #25's D-293 entry (still undrained above):** with the cut, fold
+   M0-97's second specimen into `VERIFICATION.md`'s section *DOES THE CITATION RESOLVE TO THE ACTOR THE SENTENCE NAMES?*
+   — since M0-97 a quoted register entry (a `### DEC-n` heading followed by a `decided:` line) is filed as a ruling from
+   ANY corpus file, so a quote of one outside `DECISIONS.md` is a phantom-ruling specimen beside the marker words, and
+   M0-97's suite already fails such a row by name.
+
+**2026-09-22 · BOB #25 · GATES RUN FAR MORE THAN THEY NEED TO, ON A MACHINE THAT SWAPS — CUT THE WORK, DO NOT QUEUE IT
+(Bob, 2026-09-22: lanes must not back up behind long runs, and massive suite sets run only when necessary).** Measured
+2026-09-22 ~12:30Z: this machine has 8 GiB of RAM with 4.96 of 6 GiB swap in use and a load average near 5.5 while
+several sessions and batteries run, so a gate runs 4-10x slow — DIST #4's FULL release gate took about 2.5 hours for a
+battery that runs in roughly 16 minutes, SCHEDULER #10's DOCS gate 1h27m, BOB #25's 853.9 s against 234.0 s. Load also
+FALSIFIES: DIST #4's gate read RED on `owed-controls` A13/A13b beside a concurrent battery (M0-103), and since D-293 a
+false RED is recorded and refuses the push. Making every gate wait for quiet was considered and REFUSED: it queues the
+same work behind the longest run, which is the backup Bob named. Two items, before M0-103, which becomes item 2's first
+instance:
+
+1. **DIST (a `kickoffs/DIST.md` change, this lane's to rule and DIST's to write): step 1 re-runs the entire battery on
+   merged `main` because *"main after a merge is a tree nobody has tested"* — false wherever `main`'s exact tree already
+   carries a GREEN FULL record (D-293 keys the record by tree).** Step 1 becomes: a GREEN FULL record for the tree being
+   released, or `gates.mjs --since <the newest commit whose tree carries one>` (M0-98), and the entire battery only when
+   neither exists; the version bump's own check stays. **Accepts when** a release from a tree with a GREEN FULL record
+   runs no battery and names the record it relied on, and a release from an unrecorded tree runs the battery as today.
+2. **M0 (FULL GATE PROFILE): load makes a gate SLOWER, never WRONG — M0-103's fix taken to its class.** Every suite whose
+   subprocess or wall-clock budget can expire reads the expiry as ONE named timeout assertion, never as a finding, and a
+   run whose only failures are timeouts records NOT MEASURED instead of RED, so the push guard does not refuse on it.
+   **Accepts when** a sweep of the battery names every `timeout:` and budget site and each has its outcome check; a run
+   killed only by timeouts writes no RED record. How a liar passes: raising every timeout, which hides a real hang, so
+   an arm plants a hang and asserts it is still named. NEGATIVE CONTROL: a 1 ms budget on one swept site fails its
+   timeout assertion by name and no finding assertion.
+
 **2026-09-21 · BOB #25 · D-293's DESIGN GAP RULED: A DIRTY RUN IS RECORDED UNDER THE TREE `git add -A` WOULD COMMIT —
 AND `VERIFICATION.md` NEEDS A CUT, BECAUSE ITS RULINGS NO LONGER FIT IN IT.** BOB #22 keyed the record by the tree
 measured *"only when that tree was CLEAN"*; the D-293 worker built exactly that and sent the gap (CLAIMS.md, DELEGATION

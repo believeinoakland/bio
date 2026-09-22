@@ -8,7 +8,6 @@
 - §6 rung 6 — the scratch sweep taking scratch IDENTITY is DECIDED (BOB #16, 2026-09-19) and NOT BUILT: today `op=purge` clears the record tables only (row M0-69).
 - §6 rung 6 — no credential can be bound to the scratch namespace for its whole life: a stated LIMITATION (D-325; BOB #22, 2026-09-21). Only PROBE is confined, so this rung's no-write guarantee is the per-call `store=scratch` plus the witness, never a plane fence.
 - §7 — multi-instance isolation is planned, not built, and no queue row exists; the collision table and ordering constraints live in `MULTI-INSTANCE-ISOLATION.md` and are pointed at, not restated.
-- §4 — the fleet reaches a sovereign group only when Bob deploys the installer that carries it (D-297's last act); until then a group's instance takes the honest branch and this section says what that costs.
 - §6 — D-260 is RULED (BOB #22, 2026-09-21; `BIO_Assistant_and_AI_Roles_v0_1.md` §6): an instance may hold ONE organisation-principal `ai` credential as a deploy secret, and it resumes only the runs that credential opened. Carrying that secret through install and update, as `DAEMON_TOKEN` is carried, is this construct's half, and it is NOT BUILT.
 
 **Contents**
@@ -119,7 +118,7 @@ Today several instances in one account collide on bucket names, plane and member
 | version authority; signing and namespaces; byte-verification; the rollout wait; the account pin | BUILT and asserted (D-106, D-108, `deploy.mjs`, the wizard suite) |
 | the installer: OAuth, plan probe, buckets, plane and fleet uploaded and verified, `bindings: []` | BUILT and verified (D-297 closed; DIST-2/3/4 done) |
 | the fleet: three members, bundles guarded byte-identical, deployed one at a time | BUILT (FL-6, FL-9, FL-10); 0.58.0 deployed on the project's instance |
-| the fleet reaching a sovereign group | WAITS on Bob's click (the installer deploy) |
+| the fleet reaching a sovereign group | BUILT and DEPLOYED: DIST deploys the installer, which embeds the signed release and installs the fleet, at every cut under Bob's standing permission of 2026-09-18 — every cut since 0.66.0 (0.71.0: embed MATCH, `bindings: []`) |
 | multi-instance isolation | PLANNED NOT BUILT; sequenced after Program B |
 | DS-1 (installer installs the fleet), DS-2 (version authority spans the fleet), DS-3 (account cascade configuration) | rows not marked done in the build-plan table; DS-1 and DS-2 are satisfied by D-297's closing and owe their rows' reconciliation |
 | an instance-held `ai` credential; a woken run re-entered | RULED 2026-09-21 (D-260; the assistant's §6), NOT BUILT: the deploy carries no such secret yet |
