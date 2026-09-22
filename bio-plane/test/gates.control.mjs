@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 12 arms plus a baseline — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 13 arms plus a baseline — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -50,6 +50,9 @@
  *                                                     helper … does NOT select that suite" FAILS.
  *                                                     MUST NOT: the helper naming the tool in CODE
  *                                                     is still selected.
+ *   G13 the other side's prose read UNBOUNDED by   -> "...and NOT a suite that only CITES the moved
+ *       DOCS in a `--since` pairing                   note" FAILS. MUST NOT: the doc-facing reader
+ *                                                     still re-runs; disjoint docs still plancheck.
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -195,8 +198,8 @@ const ARMS = [
 
   { id: "G8", title: "BOTH SIDES read as the SAME FILE changed on both — the liar for `--since`",
     patches: [{ file: GATES,
-      from: "            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit), exact);",
-      to: "            const upReaders = readersOf(mine.filter((p) => upstream.includes(p)), [...mineReaders.values()].map((v) => v.unit), exact);" }],
+      from: "            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit), theirs);",
+      to: "            const upReaders = readersOf(mine.filter((p) => upstream.includes(p)), [...mineReaders.values()].map((v) => v.unit), theirs);" }],
     mustBreak: "a unit reading BOTH sides re-runs",
     mustNotBreak: ["a rebase over DISJOINT docs commits re-runs ONLY plancheck"] },
 
@@ -213,6 +216,14 @@ const ARMS = [
       to: "  if (true) return textOf(abs);" }],
     mustBreak: "a path named only in the COMMENT of a helper a suite imports does NOT select that suite",
     mustNotBreak: ["...and a suite whose imported HELPER names the tool in CODE is selected", "a tools-only diff reads TARGETED"] },
+
+  { id: "G13", title: "the other side's prose read UNBOUNDED by DOCS — a re-merge wider than the move itself",
+    patches: [{ file: GATES,
+      from: "          const theirs = { docs: \"cap\" }, yours = { docs: \"fine\" };",
+      to: "          const theirs = { docs: \"fine\" }, yours = { docs: \"fine\" };" }],
+    mustBreak: "...and NOT a suite that only CITES the moved note in its own prose",
+    mustNotBreak: ["a plane change gated FULL, rebased over docs, re-runs the READERS of those docs",
+                   "a rebase over DISJOINT docs commits re-runs ONLY plancheck"] },
 
   { id: "G9", title: "the register gate dropped — no coverage when a test file changed",
     patches: [{ file: GATES,

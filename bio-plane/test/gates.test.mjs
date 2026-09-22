@@ -1,10 +1,10 @@
 /* D-293 WITH M0-98 — THE GATE'S VERDICT, RECORDED BY TREE AND REFUSED AT THE PUSH; AND THE TARGETED
  * CLASS WITH `--since`. One file set (`tools/gates.mjs`, `tools/pushguard.mjs`), one suite, one gate.
  *
- * NEGATIVE CONTROL: RAN 2026-09-21 by the D-293/M0-98 worker, driver `test/gates.control.mjs` (twelve arms plus a
- * baseline), each arm ALONE against pristine copies restored by sha256 AND `cmp` AND a byte floor; baseline
- * 61 pass / 0 fail, closing 61 / 0, the driver 89 pass / 0 fail (its D-331 preflight refused to arm ANYTHING on
- * the run before, when the comment-blind refactor had moved arm 4's anchor — the driver law doing its job) —
+ * NEGATIVE CONTROL: RAN 2026-09-21 by the D-293/M0-98 worker, driver `test/gates.control.mjs` (thirteen arms plus
+ * a baseline), each arm ALONE against pristine copies restored by sha256 AND `cmp` AND a byte floor; baseline
+ * 62 pass / 0 fail, closing 62 / 0, the driver 96 pass / 0 fail (its D-331 preflight refused to arm ANYTHING on
+ * an earlier run, when the comment-blind refactor had moved arm 4's anchor — the driver law doing its job) —
  *   (1) the guard's lookup dropped, BOB #22's own control -> "a RED gate then a push of that tree is REFUSED" FAILS
  *       by name, with the amend, other-worktree, narrower-GREEN and GREEN-note arms; an unrecorded, a GREEN, a changed
  *       tree and a GREEN re-run each still push;
@@ -24,7 +24,9 @@
  *   (11) a change made after the gate read as the other side's -> "a commit made AFTER the gate is re-checked"
  *       FAILS; disjoint docs and both-sides hold;
  *   (12) an imported helper read WITH its comments -> the helper-COMMENT arm FAILS (the suite is selected over a
- *       path its helper only cites in prose); the helper-CODE arm holds.
+ *       path its helper only cites in prose); the helper-CODE arm holds;
+ *   (13) the other side's prose read unbounded by DOCS in a `--since` pairing -> the CITES arm FAILS (a suite
+ *       that only names the moved note in its own prose re-runs); the doc-facing reader still re-runs.
  * THE ELEVENTH ARM EXISTS BECAUSE THE FIRST `--since` WAS UNSOUND, found while measuring this item's own landing:
  * it read EVERY difference from the measured tree as the other side's already-gated change, so a commit added
  * on top of a GREEN tree re-ran nothing of its own. The difference the other side does not explain is now
@@ -131,6 +133,8 @@ const FILES = {
     `process.exit(readdirSync(join(REPO, "tools")).length > 0 ? 0 : 1);`, ""].join("\n"),
   /* a doc-facing suite */
   "bio-plane/test/prose.test.mjs": `// reads docs/notes/a.md\nprocess.exit(0);\n`,
+  /* a suite whose own prose CITES a note by its bare name and reads no prose at all — NOT doc-facing */
+  "bio-plane/test/cites.test.mjs": `// the a.md note explains this suite's shape; the suite reads nothing\nprocess.exit(0);\n`,
   /* two suites through a shared HELPER: one helper names a tool only in a COMMENT, the other in CODE */
   "bio-plane/test/helper-prose.mjs": `/* this helper's prose cites tools/lonely.mjs and reads nothing */\nexport const h = 1;\n`,
   "bio-plane/test/helped.test.mjs": `import { h } from "./helper-prose.mjs";\nprocess.exit(h === 1 ? 0 : 1);\n`,
@@ -440,7 +444,9 @@ section("M0-98 · --since — after a rebase, only what BOTH sides touched, plus
   rebase("since-plane");
   const pl = gates(F.root, ["--since", "--explain"]);
   t("a plane change gated FULL, rebased over docs, re-runs the READERS of those docs, not the battery",
-    [pl.cls, batteryOf(pl)], ["SINCE", ["prose.test.mjs"]]);
+    [pl.cls, pl.units.includes("plane:prose.test.mjs")], ["SINCE", true]);
+  t("...and NOT a suite that only CITES the moved note in its own prose — the other side's prose is bounded by DOCS",
+    [pl.units.includes("plane:cites.test.mjs"), batteryOf(pl)], [false, ["prose.test.mjs"]]);
 }
 
 /* ========================================================================== */

@@ -457,16 +457,25 @@ let selection = null;      // Map id -> { unit, why }
 let sinceInfo = null;
 let sinceNote = "";
 
-/* THE READERS OF A SET OF PATHS, by MENTION — docs paths included. `docsNet` adds DOCS's own doc-facing
-   set whenever a docs/ path is among them, so an UNMEASURED prose change (TARGETED, or what changed since a
-   gate) is never checked more narrowly than DOCS would check it. The `--since` pairing reads the OTHER
-   side's prose, which was gated where it landed, without that net: there only the interaction is owed,
-   and that precision is what makes a re-merge over a docs move cheaper than the doc-facing set. */
+/* THE READERS OF A SET OF PATHS, by MENTION — docs paths included — with DOCS's own doc-facing set (the
+   rule this estate already trusts for prose) as the BOUND on a docs/ path, on whichever side keeps it safe:
+     "net" — an UNMEASURED prose change (TARGETED, or what changed since a gate) also brings in every
+             doc-facing unit: prose is never checked more narrowly than DOCS checks it;
+     "cap" — the OTHER side's prose in a `--since` pairing, gated where it landed, is read only by the
+             doc-facing units that name it: the interaction is never checked more widely than DOCS would
+             check the move itself. Without the cap, suites whose own prose cites a ledger (`MEASUREMENTS.md`,
+             `QUEUE.md`) made a re-merge over a docs move WIDER than the 41 it replaces (79 and 55, measured
+             2026-09-21, before this line); REACH, stated: the cap inherits DOCS's own blind spot, a suite
+             reading prose only through `bio-plane/scripts/`;
+     "fine" — mention alone (your own side, in a pairing). */
 const DOC_FACING = new Set([...planeDoc.map((f) => `plane:${f}`), ...uiDoc.map((f) => `ui:${f}`)]);
-function readersOf(paths, among = UNITS, { docsNet = true } = {}) {
-  const out = selectReaders(paths, among);
+function readersOf(paths, among = UNITS, { docs: docsMode = "net" } = {}) {
   const docs = paths.filter((p) => p.startsWith("docs/"));
-  if (docsNet && docs.length) for (const unit of among)
+  const rest = paths.filter((p) => !p.startsWith("docs/"));
+  const out = selectReaders(docsMode === "cap" ? rest : paths, among);
+  if (docs.length && docsMode === "cap")
+    for (const [id, v] of selectReaders(docs, among.filter((u) => DOC_FACING.has(u.id)))) if (!out.has(id)) out.set(id, v);
+  if (docs.length && docsMode === "net") for (const unit of among)
     if (!out.has(unit.id) && DOC_FACING.has(unit.id))
       out.set(unit.id, { unit, why: `doc-facing, and ${docs[0]}${docs.length > 1 ? ` (+${docs.length - 1} more)` : ""} changed` });
   return out;
@@ -536,12 +545,12 @@ if (SINCE && !FORCE_FULL) {
         } else {
           cls = "SINCE";
           let pairing;
-          const exact = { docsNet: false };
-          if (mineFull) pairing = readersOf(upstream, UNITS, exact);
-          else if (upFull) pairing = readersOf(mine, UNITS, exact);
+          const theirs = { docs: "cap" }, yours = { docs: "fine" };
+          if (mineFull) pairing = readersOf(upstream, UNITS, theirs);
+          else if (upFull) pairing = readersOf(mine, UNITS, yours);
           else {
-            const mineReaders = readersOf(mine, UNITS, exact);
-            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit), exact);
+            const mineReaders = readersOf(mine, UNITS, yours);
+            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit), theirs);
             pairing = new Map();
             for (const [id, v] of mineReaders) {
               const w = upReaders.get(id);
