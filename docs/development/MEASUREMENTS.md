@@ -18216,3 +18216,32 @@ floor); 88 pass, 0 fail. Its first run found the SUITE wrong twice, never the su
 the id its arm asked about, and a `rows.find(...).line` that threw with no entry rows (both corrected, dated, in the suite).
 `nc-m034.mjs` A6 read 7 of 8 after D-341 and is corrected, never exempted: the eighth phantom still returns, id-less,
 because its REC-85 id had been borrowed across a blank line — D-341's defect.
+
+## M-93 · 2026-09-22 · M0-81 — what the harness prints about a session's lane, and today's estate through the occupancy judgement
+
+**INSTRUMENTS:** the session harness's own read-only tools, each called by the M0-81 worker with nothing written, archived,
+run or renamed: `list_sessions` (limit 8 with archived, ~04:14Z; then limit 60, live only, ~05:32Z), `get_session` on two
+of its rows, `list_scheduled_tasks`, and `list_task_runs("conduct-8", limit 50)`, 2026-09-22 UTC (2026-09-21 PDT). The
+tools' schema text is the VENDOR's claim and is labelled so. The live judgement ran `node tools/occupancy.mjs` over a
+transcription of the limit-60 listing kept in the worker's gitignored pen: every row, the fields the judgement reads.
+
+| what | measured |
+| --- | --- |
+| a `list_sessions` row | `sessionId`, `title`, `cwd`, `branch` (worktree sessions only), `isArchived`, `isRunning`, `lastActivityAt`, `group`, `link`, `remoteControlActive` — **no `scheduledTaskId` and no `createdAt`** on any row read, heartbeat run-sessions included |
+| `get_session` on a heartbeat run-session | `"scheduledTaskId": "conduct-heartbeat"`, with `createdAt`, `model`, `originCwd`, `isRemote`, `fastMode`, `remoteControlState` |
+| `get_session` on a chip-started lane session (`BOB #25`) | the same record with **no `scheduledTaskId` key at all** (omitted, not null), and `parentSessionId`, `detached` |
+| `list_scheduled_tasks` | two tasks, each with its own `title`: `conduct-heartbeat` (`CONDUCT heartbeat (BIO)`, every 20 min) and `conduct-8` (`CONDUCT #8 (BIO) — integrator lane`, manual only, last run 2026-09-20T00:56Z) |
+| `list_task_runs("conduct-8")` | **an OBJECT**, `{ taskId, taskDeleted, totalRuns, runs }` (its schema text describes only the runs), holding ONE run: the CONDUCT #8 incumbent `local_60a6515d…`, `succeeded`, `archived: true`, `totalRuns: 1` |
+| the caller | absent from its own listing, and for a subagent so is its host: CONDUCT #11, this worker's host, is in no row |
+| the live listing, limit 60 | 44 rows, all live: 6 in this repository (`DIST #4`, `BOB #25`, `SCHEDULER #10`, `FLEET #3`, one `CONDUCT heartbeat (BIO)`), 38 in two other repositories, none of them titled with a lane of this estate |
+| the judgement over it, `--limit 60` | `CONDUCT #12` ADMIT (the conduct-8 incumbent RELEASED, the heartbeat a named MENTION); `DIST #4` REFUSE, naming DIST #4's session as a DUPLICATE; `BOB #26` and `SCHEDULER #11` ADMIT, each live predecessor named; the 38 other rows neither occupants nor mentions |
+| `occupancy.test.mjs` · `occupancy.control.mjs` | 65 pass / 0 fail · eighteen arms plus a baseline, all as declared, 113 pass / 0 fail, every restore byte-identical (sha256 + `cmp` + size), subject sha256 `ebdb4fcf…` before and after |
+| baseline battery, this branch's claim commit `0e830757` | 269/269 suites green · 16,357 assertions passing · EXCLUDES 2 untallied (`bundle`, `livefire`) · 1221.9 s · run `90254.612af9` · provenance 272 of 272 in the commit |
+
+**WHAT IT SAYS.** `kickoffs/BOB.md` rule 1's binding has two halves, and the harness prints them in different places: a
+raw `list_sessions` listing can prove a binding BY TITLE and can never disprove one BY TASK. A task's sessions are found
+through its runs, one call per lane task, whose `totalRuns` proves them whole; with neither runs nor `get_session`
+records the judgement says UNDETERMINED, never a title-only ADMIT. A lane's task is recognised by its OWN title under
+`retirable`'s `laneOf`, which separates `conduct-8` from `conduct-heartbeat` without guessing at id spellings. The first
+draft read `list_task_runs` as a bare array, the schema's picture of it; driving the judgement over the live listing is
+what found the object, and the fixtures now carry the printed shape.
