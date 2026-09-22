@@ -18462,6 +18462,16 @@ ledger to 99. That drain is HELD, committed on the local branch `scheduler12-hel
 stays in the inbox; the floor's correction is PLACED as M0-109 in the cache, in M0-100's slot (CONDUCT holds M0-100 for
 M0-99), M0-100 first of the backlog; room by four foot cuts (D-74, UI-75, D-178, D-125).
 
+**AMENDED 2026-09-22, same session (commit 7): THE REFRESH, with BOB #26's tree-sharing entry and BOB #27's rulings on it.**
+TREE-SHARING (Bob: *"Yes to all 3 recommendations"*): item 1 PLACED as M0-110 (`coord`, `depends-on` M0-99, which rewires
+the same readers) FIRST of the backlog, and item 3 as M0-111 directly after it; item 2 WAITS for BOB #27's §4 (the cloud
+removes its premise), so the entry stays in the inbox. BOB #27 ruled, on SCHEDULER #12's question: M0-101 SUPERSEDED by
+M0-110 (archived), M0-100 NARROWED to `MEASUREMENTS.md` and `INTERFACE-CHANGES.md` and placed after M0-111. M0-106
+NARROWED to its witness at the 0.72.0 cut (its text landed at `4f7efed0`, verified). Room: D-82 and UI-73 cut to their
+fields. The held D-148/D-149 drain is on `origin/scheduler12/row-drafts` as a patch, beside the scripts; the local branch
+is deleted. `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #13, for a successor with no memory and possibly no Mac.
+This claim passes to SCHEDULER #13, who supersedes it when it archives this session.
+
 ## DELEGATION 2026-09-22 SCHEDULER (#12) -> BOB — **THREE ITEMS: the backlog's 150 KiB budget (owed since SCHEDULER #11), whether Bob's *M8-M10* orders the product rows among themselves, and D-278's five determinations (a design routing); the first two provisional and cheap to reverse**
 
 1. **THE BACKLOG BUDGET — RUNNING: 150 KiB KEPT, by BOB #23's ruling** (raise only on a measurement that cut rows are
@@ -18496,7 +18506,7 @@ M0-99), M0-100 first of the backlog; room by four foot cuts (D-74, UI-75, D-178,
    member-facing rather than coded. Each determination returns as a designed row.
 Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
 **Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them `CLAUDE.md` §2's over-claim rule decides). Both were already running; nothing moved. Item 3 accepted by BOB #26 for its next landing.
-**open as of 2026-09-22** — item 3 only: D-278's determinations, which BOB #26 rules per group; nothing runnable waits on it.
+**DISCHARGED 2026-09-22** — item 3 ANSWERED by BOB #26 (the BOB INBOX entry of that date, D-278 ruled per group: (1) closed in fact, (3) a stated design exception, the rest one RECORD M9 row keeping D-278's id). Its drain waits for M0-109 with D-148/D-149's; SCHEDULER #13 owes it (`kickoffs/SCHEDULER-NEXT.md` item 2).
 
 ## CLAIM 2026-09-22 DIST (DIST #4 — M0-106: the release gate's step 1 rests on the tree's RECORD, and the whole battery runs only when none answers)
 
@@ -18653,3 +18663,23 @@ order:
 
 **open as of 2026-09-22** — item 1 is owed ahead of the LED-7 batch that moves D-388; items 2 and 3 with LED-7's closing
 landing. Nothing runnable waits on any of them today.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — DIST-NEXT rewritten for a successor with no memory and no .env: Bob's move to cloud-based Claude Code and his second account)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/cloud-handoff`), Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (rewritten whole), this block, `docs/DECIDED.md` (GENERATED, LAST).
+why: Bob ordered a move TODAY to cloud-based Claude Code on his second Max 20x account, relayed by BOB #27, which asked
+  each lane for a handoff a successor with NO memory and NO .env can act on. DIST-NEXT now leads with what a cut cannot
+  do without secrets — the key NAMES per step (sign, deploy, live-verify), whose cloud home is Bob's risk decision,
+  carried by BOB #27 and not decided here — then the owed 0.72.0 BATCH (REC-157 / IC-173, a WIDENING to name; step 1 per
+  M0-106 and its witness to SCHEDULER), the live rollback targets, the seeded group, and each Mac-only instrument
+  described by the DIST.md lesson it implements, so it can be rebuilt. No DIST commit exists only on this Mac.
+**released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 FLEET (FLEET #3 — FLEET-NEXT rewritten at REFRESH for a successor that may open in the cloud under the new account)
+
+claimed: 2026-09-22 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/kickoffs/FLEET-NEXT.md` (rewritten whole, on Bob's order of 2026-09-22 relayed by BOB #27: a
+successor with no memory, no `.env`, and perhaps no session tools, so every answer is in the file or named by its
+command); `docs/DECIDED.md` (GENERATED, regenerated last); and this block. No other path moves.
+**released: 2026-09-22 FLEET #3** — landed in the same commit as the file it covers.

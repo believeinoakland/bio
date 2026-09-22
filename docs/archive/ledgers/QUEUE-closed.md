@@ -2917,3 +2917,13 @@ scope: the OCCUPANCY half only — before a chip is filed, read the session list
 accepts-when: given a listing with a live session bound to a lane, the judgement REFUSES it and names the occupant; given the same listing with that session stood down, it admits. Driven from a FIXTURE listing, never the live harness. How a liar passes it: matching on title alone — so the arm feeds a session whose title differs and whose `scheduledTaskId` matches.
 NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is admitted, failing by name.
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
+
+### M0-101 · superseded — **SUPERSEDED 2026-09-22 by M0-110 (BOB #27, TREE-SHARING §1): `running` becomes an anchored `coord` write, and the two-writers-one-file conflict this row existed for is gone.** **CONDUCT WRITES ONE WORD INTO SCHEDULER'S ROWS, `running`, SO TWO LANES WRITE ONE FILE, AND A LEDGER CARRY THAT TAKES ONE SIDE** … (whole text: the cut archive)
+order: behind the product rows, the first of the process rows Bob's ruling moved there, each in its prior relative order (Bob, 2026-09-22, `CLAUDE.md` §2: *process is overhead* — no process row unless it cuts gate time or unblocks product): it takes only CONDUCT's `running` word off `QUEUE.md`, which BOB and SCHEDULER still write and a quarter as many commits carry as `CLAIMS.md` (M-94), so the gate time it cuts is small; after M0-100, which it rests on (SCHEDULER #12, 2026-09-22; placed by SCHEDULER #8)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` … (whole text: the cut archive)
+depends-on: M0-100.
+accepts-when: CONDUCT writes no line of `QUEUE.md` and a running row still reads `running`. How a liar passes it: writing both places, so an arm asserts one.
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-101» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
