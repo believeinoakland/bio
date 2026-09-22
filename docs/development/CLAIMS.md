@@ -18873,3 +18873,17 @@ design rows the fold cannot move without a ruling; each question is single, and 
 
 **open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or
 narrowed), and nothing runnable waits on any of them.
+
+## CLAIM 2026-09-22 RECORD (REC-165 — a production names only a RUNNING run its caller holds, and a suggestion lands only inside that run's context)
+
+session: CONDUCT #14's worker (cloud), worktree `agent-a6e92d28647553f52`, pushing branch `worktree-agent-a085d980f98329517`
+  (resumed from CONDUCT #13's stood-down worker, whose plan is that branch's first commit message)
+paths: `bio-plane/src/index.mjs` (the REC-152 principal-stamp condition only); `bio-plane/src/store.mjs` (`suggestVersion`'s
+  is-suggest-shape region, `extractPropose`'s run checks, the `suggest:` and `extractpropose:` routes — NOT
+  `#moveVersionState`, which REC-166 holds); `bio-plane/src/airun.mjs` (`runPrincipalGate`'s detail);
+  `bio-plane/checks/bio-checks.mjs` (the new rows and AI_RUN_NOT_PRINCIPAL's `where`); `bio-plane/dist/`; the suites a
+  correct landing corrects under `bio-plane/test/` and a new `rec165` suite with its control; `civicos-ui/check-refusal-codes.mjs`
+  and `bio-plane/scripts/coverage.mjs` (floors only); `docs/development/INTERFACE-CHANGES.md` (one IC row);
+  `docs/architecture/construct-status.json`; `docs/development/INVESTIGATIVE-SESSION.md` (front matter only).
+why: QUEUE row REC-165, INVESTIGATIVE-SESSION.md §11 item 5 rule 1 and its target (BOB #25, BOB #28).
+**open as of 2026-09-22** — building.
