@@ -18886,4 +18886,5 @@ paths: `bio-plane/src/index.mjs` (the REC-152 principal-stamp condition only); `
   and `bio-plane/scripts/coverage.mjs` (floors only); `docs/development/INTERFACE-CHANGES.md` (one IC row);
   `docs/architecture/construct-status.json`; `docs/development/INVESTIGATIVE-SESSION.md` (front matter only).
 why: QUEUE row REC-165, INVESTIGATIVE-SESSION.md §11 item 5 rule 1 and its target (BOB #25, BOB #28).
-**open as of 2026-09-22** — building.
+**released: 2026-09-22 REC-165 worker (CONDUCT #14)** — built and pushed on `worktree-agent-a085d980f98329517` (IC-176);
+  integration is CONDUCT's. `corpuscheck.test.mjs` was also corrected (its pinned pair list gained §11 item 5's pair).
