@@ -18700,3 +18700,120 @@ why: Bob, 2026-09-22 ~15:06Z, in BOB #27's conversation: *"Make sure that the pr
 productivity are fully recorded, as there'll be a transition at some point today that will involve both to cloud-based CC
 and to using the second Max 20X account of mine."*
 **released: 2026-09-22 BOB #27** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 M0 (M0-99 — `docs/DECIDED.md` stops being committed: produced on demand through one freshness call, and the push guard's and plancheck's staleness arms retire)
+
+session: WORKER spawned by CONDUCT #12, worktree `.claude/worktrees/agent-a4c0b07abb6d8ae16`, branch
+`worktree-agent-a4c0b07abb6d8ae16`, base `origin/main` @ `7f28fe8c` (the row reads `### M0-99 · running` there), Sparky-Air.
+`npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each exit 0 and each `node_modules` a real directory; `df -h` 4.2 GiB
+free after the installs; swap 6.6 of 7.2 GB in use at spawn.
+authority: `QUEUE.md` `### M0-99 · running` (CONDUCT #12); design `docs/development/VERIFICATION.md` (admitted for M0 by
+name) with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 2, *a generated index is not
+committed*. `tools/decided.mjs` carries M0-97 and D-341 on this base (the batch 2 merge `a3fc7581` is an ancestor).
+paths, BY SITE:
+  - `.gitignore` — the line `docs/DECIDED.md` with its reason, and this worker's pens: `.m099-runs/` (run logs),
+    `.m099-harness/` (the new driver's pristine copies), `.m099-baseline/` (a scratch checkout of the base, for the baseline).
+  - `docs/DECIDED.md` — removed from the index (`git rm --cached`); the working copy stays, generated and ignored.
+  - `tools/decided.mjs` — a new exported freshness call (the index as the corpus renders it now, written only when the
+    file is absent or differs, by rename), a new exported predicate for "untracked, and ignored by the repository's own
+    `.gitignore`", the CLI's write path through the freshness call, `--check` retired, `render()`'s head prose, and the
+    header comments. `MARKER`, `scan()`, `statementAround()`, `corpus()`, `registerEntries()` and `query()` are NOT touched.
+  - `tools/plancheck.mjs` — arm 2b (the staleness arm retires; the index-is-untracked-and-ignored arm replaces it) and
+    arm 2c's comment and messages. `tools/pushguard.mjs` — `check()`, `STALE_SIGNATURE` and the staleness branch of `run()`
+    retire, with the success line, `--control`'s arms for them, the CLI's index line and the comments. `shim()` and
+    `HOOK_VERSION`, D-293's lookup, the marker, corpus and status arms are NOT touched.
+  - `tools/ledger.mjs` — the regeneration after `archive` and `refill`, and its header sentence. `tools/attribution.mjs` —
+    `--census` reads the index through the freshness call; the `why` of its exclusion. `tools/nc-m039.mjs` — stops carrying
+    the index into its scratch worktree.
+  - `bio-plane/test/decided.test.mjs` (a new section and its control lines), `bio-plane/test/decided.control.mjs` (new arms;
+    `.gitignore` becomes its second subject), `bio-plane/test/pushguard.test.mjs` (the retired arm's assertions corrected
+    with dated reasons, the end-to-end push re-based on a refusal the guard still makes), `bio-plane/test/pushguard.control.mjs`
+    (NEW, its driver), `bio-plane/test/gates.test.mjs` (the fixture's per-commit regeneration), `bio-plane/test/op-claims.test.mjs`
+    (the index produced through the freshness call before the walk), `bio-plane/test/nc-m034.mjs` (BASE, and the index
+    produced before any arm copies it), `bio-plane/test/m041-instrument-census.mjs` (one comment).
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` only, from the instrument's print. `bio-plane/test/hygiene.test.mjs`
+    only if its walk census names a walk this item adds.
+  - `docs/development/VERIFICATION.md` — §"THE FIRST ENTRY LOOP THIS ESTATE COMPOSES", no larger than it is (the file is in
+    `readbudget`'s CUT at 24,572 of 24,576 B). `docs/development/MEASUREMENTS.md` (appends only), this block, and the
+    DELEGATION blocks this item raises.
+  - ADDED AT THE BUILD, each named here rather than taken silently: `tools/corpuscheck.mjs` (ONE comment, whose analogy
+    "the way a stale DECIDED index does" this landing makes false); and `.gitignore`'s `.m099-baseline/` line comes out
+    again — CONDUCT #12 asked that scratch checkouts live OUTSIDE a worker's worktree (a nested checkout is a phantom for
+    the walkers), so the baseline checkout was moved to a sibling, `.claude/worktrees/m099-baseline`, and removed at the end.
+**NOT CLAIMED:** `CLAUDE.md`, `docs/development/ORCHESTRATION.md` and every kickoff (their owners', each stale sentence
+named in a DELEGATION), `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `bio-plane/src/**` (nothing under
+`src/` moves, so no bundle rebuild is owed), `newgroup/**`, `release/**`, `docs/architecture/**`.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+**BUILT ON THE BRANCH, NOT INTEGRATED (the worker's figures; CONDUCT re-reads them on the merged tree).** `.gitignore`
+names the index and it left the git index; `tools/decided.mjs` gained the one freshness call `fresh()` (absent or stale
+written by rename, current left alone) and the predicate `indexTracking()`; `--check` exits 2, retired. `plancheck` arm 2b
+now fails on a TRACKED or un-ignored index; the push guard's index arm and `check()` are gone. READERS, counted by what
+READS the file rather than what names it — seven before: `decided.mjs --check`, `plancheck` 2b and the guard's `check()`
+(through it), `attribution.mjs --census`, `nc-m039.mjs` (it copied the file), `nc-m034.mjs`, and `op-claims`' walk, whose
+suite asserted the file's presence. Now four read through `fresh()` (the CLI, `op-claims.test.mjs`, `--census`, `nc-m034`)
+and three read nothing (`plancheck`, the guard, `nc-m039`). `ledger.mjs` and `m035-refiter-census.mjs` NAME it and do not
+read it: the first wrote it after a move (retired), the second excludes it by path before reading.
+LIVE, on this repository: two local branches off `f4ff1ea6` each edited a real ruling (ORCHESTRATION.md:118,
+MILESTONES.md:183) and ran the tool; the merge exited 0 with no index conflict, no commit carried the index, and
+`decided.mjs "<phrase>"` returned both rulings from the merged corpus; the copy left behind read `stale, written` on the
+next call. The branches were deleted.
+GATE, FULL, on `f4ff1ea6` (tree `0ad1b342`, RECORDED GREEN): battery `272/272 suites green · 16564 assertions passing ·
+EXCLUDES 2 untallied suite(s)` (`bundle`, `livefire`), 923.3 s, run `11973.df05af`, provenance 275 of 275 in the commit,
+no skips; the true baseline, a checkout of `7f28fe8c`, `272/272 · 16551`, run `74100.eb29ae`. Per suite: decided +21
+(section 8), pushguard 86 -> 77 (the retired arm's assertions went with it; its register arms rose 5 -> 7), hygiene +1, 269
+unchanged. `coverage.mjs --strict` exit 0: OPS 197/197, CHECKS 356/356, register 1632/263/264, RUN 226. UI harness green.
+`plancheck`: 1 fail, UNPUSHED (a worker branch), 5 warns, all inherited.
+CONTROLS: `decided.control.mjs` 23/23 as declared, 155/0 (arm 16 re-run on the committed `.gitignore`: 13/0);
+`pushguard.control.mjs` (new) 7/7, 56/0 — its arm 2 found a suite read that threw, since guarded; `gates.control.mjs`
+re-run 13/13, 96/0; `op-claims.control.mjs` re-run 6/6; `op-claims.test.mjs`'s freshness arm 34/1 armed, 35/0 restored;
+`nc-m034.mjs` 0 failing, 11 restores byte-identical, its pen now removed on exit.
+
+## DELEGATION 2026-09-22 M0 (M0-99 worker) -> BOB, CONDUCT, SCHEDULER, DIST, FLEET and the owner of `kickoffs/SKILL.md` — **ELEVEN SENTENCES THAT TELL A SESSION TO COMMIT, MERGE OR REGENERATE `docs/DECIDED.md`, WHICH M0-99's LANDING MAKES FALSE**
+
+When M0-99 lands, `docs/DECIDED.md` is ignored by `.gitignore` and in no commit; `node tools/decided.mjs` writes it for the
+working tree it runs in (the freshness call `fresh()`: absent or stale is rewritten, current is left alone), and a query
+answers from the corpus itself. `decided.mjs --check` exits 2 saying it is retired; `plancheck` arm 2b no longer fails on
+a stale copy but on a TRACKED or un-ignored one; the push guard no longer reads the index at all. A worker does not edit
+these files, so each sentence is named here with a candidate, and its owner decides the words:
+1. **BOB — `CLAUDE.md` §1**, *"Rule on something → it goes in its home document, and `node tools/decided.mjs`
+   regenerates."*: nothing is regenerated in the commit any more. Candidate, 3 B shorter (the file is at 16,378 of
+   16,384 B): *"... and `node tools/decided.mjs` finds it."*
+2. **BOB — `docs/development/ORCHESTRATION.md` §"Before you end a turn"**, *"It refuses ... a stale `DECIDED.md`"*: it
+   refuses a TRACKED `DECIDED.md` now. §"THE RECORD IS PARTITIONED BY WRITER" rule 2 becomes true at this landing and needs
+   nothing.
+3. **BOB — `kickoffs/BOB.md` "Closing a turn" step 1**, *"the push guard refuses a stale `DECIDED.md`, merge markers, ..."*:
+   it refuses a tree the gate recorded RED, merge markers, a stale design-corpus date and construct-status drift.
+4. **BOB — `kickoffs/BOB.md` rules**, *"Regenerate `docs/DECIDED.md` after the last rebase before EVERY push: `QUEUE.md` and
+   `CLAIMS.md` are in the ruling corpus."*: nothing to regenerate; the sentence can go.
+5. **CONDUCT — `kickoffs/CONDUCT.md` step 6**, *"`docs/DECIDED.md` is guarded at the push by a hook (M0-56): if it refuses,
+   run `node tools/decided.mjs`, commit, push again ... `docs/DECIDED.md` conflicts at nearly every merge: take either side,
+   then regenerate it"*: candidate — *"`docs/DECIDED.md` is generated on demand and never committed (M0-99). A branch cut
+   before M0-99 that changed it merges as a modify/delete conflict: take the deletion (`git rm docs/DECIDED.md`), never
+   `git add -A` over it, which re-tracks it and fails `plancheck` arm 2b."*
+6. **CONDUCT — `kickoffs/CONDUCT.md` "Mechanical conflicts"**, *"`docs/DECIDED.md` = either side + regenerate"*: candidate
+   *"`docs/DECIDED.md` (a pre-M0-99 branch) = the deletion"*.
+7. **CONDUCT — `kickoffs/CONDUCT.md`**, *"REGENERATE EVERY GENERATED INDEX LAST (`CLAUDE.md` is one of `decided.mjs`'s two
+   ROOTS)"*: the rule still holds for the Contents and the construct-status render; its parenthesis names the one index that
+   is no longer committed.
+8. **CONDUCT — `kickoffs/CONDUCT-NEXT.md`**, *"Carry both sides; regenerate `docs/DECIDED.md`."*, and *"the push guard then
+   wants `docs/DECIDED.md` regenerated by the BRANCH's own generator"*: the second stays true only of a branch cut before
+   M0-99 (its own tracked guard still has the arm).
+9. **SCHEDULER — `kickoffs/SCHEDULER.md`**, *"`docs/DECIDED.md` conflicts are regenerated, never merged; the push guard
+   refuses a stale one."* and *"`docs/DECIDED.md` is regenerated, never merged."*: candidate *"`docs/DECIDED.md` is not
+   committed (M0-99); a pre-M0-99 side's copy is dropped: take the deletion."*
+10. **DIST — `kickoffs/DIST.md` lesson 20**, *"WRITE THE CLAIM BEFORE THE FINAL `decided.mjs` REGENERATION"* and its order
+   *"claim → `node tools/decided.mjs`"*: a claim can no longer stale a committed index, so the lesson's cause is gone; its
+   last point — the tree that gets TAGGED must be the tree that was MEASURED — stands without it.
+11. **FLEET — `kickoffs/FLEET-NEXT.md` step 5**, *"regenerate DECIDED.md, never hand-merge it"*; and **the owner of
+   `kickoffs/SKILL.md`**, *"and `docs/DECIDED.md` for anything already ruled"*: a fresh checkout holds no such file — ask
+   `node tools/decided.mjs "<subject>"`, or run the tool first.
+**THE ACT FOR CONDUCT AT EVERY INTEGRATION THAT FOLLOWS M0-99, stated with its actor rather than implied:** a branch cut
+before the landing that modified `docs/DECIDED.md` merges as a modify/delete conflict (main deleted, the branch modified).
+Resolve it by TAKING THE DELETION — `git rm docs/DECIDED.md` — then run `node tools/decided.mjs` if the working copy is
+wanted; never keep the branch's copy and never `git add -A` over the conflict, which re-tracks it. `mergecarry` then
+reports the path as `goneOnMain` (a WARN naming the lines, never a FAIL), so no `Dropped-from-branch:` trailer is owed for
+it; `plancheck` arm 2b is the check that the deletion was taken. A branch that did NOT modify the file merges without a
+conflict at all.
+**open as of 2026-09-22** — open until M0-99 lands and each owner has corrected its sentence or said why not; nothing here blocks a runnable row.

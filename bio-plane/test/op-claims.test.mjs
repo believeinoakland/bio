@@ -100,6 +100,7 @@ import {
   sweep, readDispatch, corpus, mentionsIn, routeOf, opReaching,
   generatedReason, LEDGER, PLANNED_OPS, REPO,
 } from "../scripts/op-claims.mjs";
+import { fresh } from "../../tools/decided.mjs";   /* M0-99: the ruling index's ONE freshness call */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -167,6 +168,15 @@ t("and the wrong-level answer names the op that DOES reach that path",
    separate walks in this repository this week reported a beautiful clean verdict
    over an empty corpus, twice inside the instrument built to prevent it. */
 console.log("\n--- 2. the corpus, PRINTED, and asserted non-trivial ---");
+/* M0-99, 2026-09-22: `docs/DECIDED.md` is no longer COMMITTED, so a working tree holds it only once
+   something has asked for it — never in a fresh checkout. The generated-artifact assertion below is
+   about this walk recognising the index BY ITS BANNER, so the index is produced first through the ONE
+   freshness call every reader of it makes, rather than the assertion depending on whether this
+   checkout happened to run the tool. */
+/* NEGATIVE CONTROL (M0-99, run 2026-09-22 by the M0-99 worker): the index moved aside, as a fresh checkout
+   has it, and the `fresh();` line below deleted -> "EVERY generated artifact is excluded" FAILS, 34 pass / 1 fail,
+   exit 1; with the line, over the same absent index, 35 / 0. Restored by cp-back, sha256 and `cmp` identical. */
+fresh();
 const result = sweep();
 console.log(`  M0-12 CORPUS: ${result.files} files, ${result.chars} chars scanned; `
   + `${result.mentions} op= mentions over ${result.names.count} distinct names; `

@@ -1400,6 +1400,13 @@ const REGISTER_FLOOR = {
      floor 227/226 reproducible · GREW by 1`), provenance 281 of 281 in the commit at HEAD — never added by hand. One
      new suite, `test/group-public.test.mjs`, whose declaration states ten rows (a)-(j), each RUN by
      `test/group-public.control.mjs`. ONE KEY SET. Nothing FELL. */
+
+  /* [M0-99] 2026-09-22: MOVED 1622 -> 1632 ONLY, from this item's own `--strict` print on its COMMITTED tree `e6cad0fd`,
+     exit 0 unpiped (`REGISTER FLOOR  arms 1632/1622 · classified 263/263 · corpus (suites read) 264/264 · GREW by 10
+     arm(s)`, `226 RUN (dated token) … floor 226/226 reproducible`) — never added by hand. The cause: `decided.test.mjs`'s
+     declaration grew from 15 arms to 23, arms (16)-(23) run by `test/decided.control.mjs`, and `pushguard.test.mjs`'s
+     was re-declared at 7, arms (1)-(7) run by the new `test/pushguard.control.mjs` (it was 5, declared against the
+     retired `check()`). No suite added; classified, corpus and run unmoved. Nothing FELL. ONE KEY SET. */
   arms: 1632,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).

@@ -1,8 +1,26 @@
 #!/usr/bin/env node
 /**
- * pushguard.mjs — M0-56. The `docs/DECIDED.md` index is checked AT THE PUSH,
- * which is the only moment that is after the last prose edit AND after the last
- * rebase.
+ * pushguard.mjs — M0-56's pre-push hook. It refuses, AT THE PUSH — the only moment
+ * that is after the last prose edit AND after the last rebase — a push whose tip
+ * tree `gates.mjs` recorded RED (D-293), one carrying merge markers, one whose
+ * design corpus fails `corpuscheck`, and one whose construct status disagrees
+ * with the code.
+ *
+ * ------------------------------------------------------------------ M0-99, 2026-09-22: THE ARM IT WAS BUILT FOR RETIRED
+ *
+ * M0-56 built this file to refuse a push carrying a STALE `docs/DECIDED.md`.  That
+ * arm retired when the index left the committed tree (`ORCHESTRATION.md` §"THE
+ * RECORD IS PARTITIONED BY WRITER", rule 2): the index is produced on demand by
+ * `tools/decided.mjs`'s one freshness call, `.gitignore` names it, and no commit
+ * carries a copy that could be stale — so there is nothing left at the push for a
+ * staleness arm to refuse, and a guard that went on running the generator would
+ * cost every push a full corpus scan to check nothing.  What guards the index now
+ * is that it stays OUT of the committed tree: `plancheck` arm 2b, through
+ * `decided.mjs`'s `indexTracking()`.  The sections from "why" to "WHAT IT CHECKS"
+ * below are the RECORD of the arm as M0-56 built it, kept because the four arms
+ * that remain rest on the same argument — why a hook, why it never regenerates,
+ * why it installs itself from `plancheck` — and because a reader asking why the
+ * hook exists deserves the receipt rather than a summary.
  *
  * ------------------------------------------------------------------ why
  *
@@ -46,21 +64,21 @@
  *     It would close the cause that care already reaches and miss the cause that
  *     care cannot.
  *
- *   - A `plancheck` ARM THAT REGENERATES INTO A TEMP FILE AND DIFFS.  **THIS IS
- *     NOT A CANDIDATE, BECAUSE IT ALREADY EXISTS** — `plancheck.mjs` arm 2b shells
- *     `decided.mjs --check` and fails with *Run `node tools/decided.mjs`*.  It is
- *     what caught all five occurrences.  It is CORRECT, it is UNTOUCHED by this
- *     file, and M0-56 forbids weakening it.  The defect M0-56 rows is not that
- *     the detector is missing; it is that the detector fires at a moment the
- *     session can still invalidate, and five times it did.
+ *   - A `plancheck` ARM THAT REGENERATES INTO A TEMP FILE AND DIFFS.  **THIS WAS
+ *     NOT A CANDIDATE, BECAUSE IT ALREADY EXISTED** — `plancheck.mjs` arm 2b shelled
+ *     `decided.mjs --check` and failed with *Run `node tools/decided.mjs`* (until
+ *     M0-99 retired it with the committed index).  It was what caught all five
+ *     occurrences, and M0-56 forbade weakening it.  The defect M0-56 rowed was not
+ *     that the detector was missing; it was that the detector fired at a moment the
+ *     session could still invalidate, and five times it did.
  *
  *   - A `pre-push` HOOK.  The only shape whose moment is after the last rebase.
  *     TAKEN.
  *
  * ------------------------------------------------------------------ IT REFUSES. IT DOES NOT REGENERATE.
  *
- * The hook runs `decided.mjs --check` and REFUSES a stale push, naming the
- * command.  It never writes `docs/DECIDED.md` and never writes anything else in
+ * As built, the hook ran `decided.mjs --check` and REFUSED a stale push, naming
+ * the command.  It never wrote `docs/DECIDED.md`, and it still writes nothing in
  * the working tree.  Three reasons, in order of weight:
  *
  *   - **A HOOK THAT REGENERATED WOULD NOT FIX THE PUSH ANYWAY.**  By the time a
@@ -145,30 +163,24 @@
  *     `git rev-parse --show-toplevel` at push time instead, and carries no
  *     absolute path at all.  Asserted by name.
  *
- * ------------------------------------------------------------------ HOW A LIAR PASSES THIS, STATED BEFORE WHAT IT CHECKS
+ * ------------------------------------------------------------------ HOW A LIAR PASSED THE RETIRED ARM
  *
- * The cheapest green is a mechanism that REGENERATES UNCONDITIONALLY AND NEVER
- * REPORTS.  It would pass every arm about staleness, always, and would hide a
- * genuinely broken generator behind its own success.  This file cannot lie that
- * way — it never regenerates — but the property that keeps it honest has to be
- * checked directly rather than inferred from the shape:
- *
- *   **A BROKEN GENERATOR MUST BE DISTINGUISHABLE FROM A STALE INDEX.**  Both exit
- *   non-zero.  A guard that reported them identically would tell a session to run
- *   `decided.mjs` when running `decided.mjs` is the thing that is broken, and the
- *   session would loop.  So `check()` returns `stale` ONLY on `decided.mjs
- *   --check`'s own STALE line, and returns `generator-failed` — carrying the
- *   tool's real output — for every other non-zero exit.  Both REFUSE; they refuse
- *   naming different things.  `--control` drives both.
+ * The cheapest green was a mechanism that REGENERATED UNCONDITIONALLY AND NEVER
+ * REPORTED: it would pass every arm about staleness and hide a broken generator
+ * behind its own success.  So `check()` told a BROKEN GENERATOR (`generator-failed`,
+ * carrying the tool's own output) from a STALE INDEX (`stale`, on `--check`'s own
+ * STALE line) — a guard that conflated them would have sent a session to run the
+ * tool that was broken.  M0-99 retired `check()` with the arm; a broken generator is
+ * now the battery's to catch (`decided.test.mjs` imports it), never a push's.
  *
  * ------------------------------------------------------------------ WHAT IT CHECKS, AND WHAT IT CANNOT
  *
- * `decided.mjs --check` reads the WORKING TREE.  A push sends COMMITS.  Those are
- * the same thing only when the corpus is clean against HEAD, which is the normal
- * state at push time and is CHECKED rather than assumed:
+ * The marker scan, `corpuscheck` and `status.mjs --check` read the WORKING TREE.  A
+ * push sends COMMITS.  Those are the same thing only when the tree is clean against
+ * HEAD, which is the normal state at push time and is CHECKED rather than assumed:
  *
- *   - Corpus clean against HEAD (`git diff HEAD --quiet -- docs CLAUDE.md`): the
- *     tree check IS a HEAD check, and the verdict is exact.
+ *   - Corpus clean against HEAD (`git status --porcelain -- docs CLAUDE.md`): the
+ *     tree check IS a HEAD check for the prose those arms read.
  *   - Corpus DIRTY: the verdict describes the tree, not the commits.  Reported as
  *     UNDETERMINED with respect to the push, in those words.  It does not refuse:
  *     a session with unrelated uncommitted notes under `docs/` has done nothing
@@ -309,7 +321,22 @@ export const COPY_NAME = "bio-pushguard.mjs";
  * behaviour differs from its reviewed source is the worse of the two.
  *
  * It STILL degrades open when neither source exists, and still SAYS SO — a guard that
- * silently waved a push through would be the unearned-absence class this estate is pointed at. */
+ * silently waved a push through would be the unearned-absence class this estate is pointed at.
+ *
+ * ------------------------------------------------------------------ M0-99: THE SHIM IS LEFT BYTE-IDENTICAL, ON PURPOSE
+ *
+ * Its third comment line still says the hook refuses a stale `docs/DECIDED.md`.  That is
+ * true of every checkout whose commit predates M0-99 — the shim runs the PUSHING worktree's
+ * own script, and theirs still has the arm — and false of every checkout after it.  Changing
+ * one byte of the text means one of two costs, measured at the code rather than guessed:
+ * at the SAME `HOOK_VERSION`, every `plancheck` run in an older checkout rewrites the shared
+ * hook back (`install()` replaces our own hook when its bytes differ) and every run in a newer
+ * one rewrites it forward — a flapping hook in the one file every worktree shares; at a
+ * HIGHER version, `install()` in an older checkout answers `newer`, which that checkout's
+ * `plancheck` reports as "push guard NOT armed", a false warning in every lane until each
+ * carries this landing.  The comment is corrected at the next change that bumps the shim for
+ * its BEHAVIOUR, once the older checkouts have gone (and this `plancheck` now reports `newer`
+ * as armed, so that bump warns nobody who carries M0-99). */
 export function shim() {
   return [
     "#!/bin/sh",
@@ -610,35 +637,14 @@ export function installCopy({ repo = REPO, dryRun = false } = {}) {
   return { ok: true, action: "installed", path };
 }
 
-/* ------------------------------------------------------------------ check
+/* ------------------------------------------------------------------ check — RETIRED BY M0-99, 2026-09-22
  *
- * The verdict, and the reason it has FOUR values rather than two is the liar
- * paragraph above: `stale` and `generator-failed` both exit non-zero from
- * `decided.mjs --check`, and a guard that conflated them would send a session to run
- * the very tool that is broken.
- */
-export const STALE_SIGNATURE = "is STALE";
-
-export function check({ repo = REPO, run = null } = {}) {
-  const gen = join(repo, "tools/decided.mjs");
-  if (!existsSync(gen)) {
-    return { ok: true, kind: "absent",
-             message: `tools/decided.mjs is not present in ${repo} — the index is UNVERIFIED for this push.` };
-  }
-  const r = run ? run(gen) : spawnSync(process.execPath, [gen, "--check"],
-    { cwd: repo, encoding: "utf8" });
-  const out = `${r.stdout || ""}${r.stderr || ""}`;
-  if (r.status === 0) return { ok: true, kind: "current", message: "docs/DECIDED.md matches the corpus." };
-  if (out.includes(STALE_SIGNATURE)) {
-    return { ok: false, kind: "stale", output: out,
-             message: "docs/DECIDED.md is STALE — the corpus carries rulings the index does not." };
-  }
-  /* NOT stale — the GENERATOR ITSELF FAILED.  Named separately and carrying its own
-     output, because "run decided.mjs" is useless advice when decided.mjs is what broke. */
-  return { ok: false, kind: "generator-failed", output: out,
-           message: `tools/decided.mjs --check did not run (exit ${r.status}). The GENERATOR failed, `
-                  + `not the index — regenerating will not help until it is fixed.` };
-}
+ * `check()` ran `decided.mjs --check` and returned `current`, `stale`, `generator-failed` or
+ * `absent`; `run()` refused on the middle two.  It is removed rather than left uncalled: an
+ * exported checker nothing calls is a mechanism believed on its existence, and the next reader
+ * would wire it back in.  The index is no longer committed, so no push carries a copy to be
+ * stale (`plancheck` arm 2b guards that it stays out of the committed tree instead), and
+ * `decided.mjs --check` itself now exits 2 saying it is retired. */
 
 /* ------------------------------------------------ THE SINGLE SOURCE OF TRUTH FOR WHAT IS BUILT
  *
@@ -713,10 +719,12 @@ export function corpusCheck({ repo = REPO, run = null } = {}) {
 
 /* ------------------------------------------------------------------ scope of the verdict
  *
- * Whether the working tree the check read is the same thing as the commits being
- * pushed.  See "WHAT IT CHECKS, AND WHAT IT CANNOT".  `docs` and `CLAUDE.md` are
- * `decided.mjs`'s own ROOTS — the corpus it scans — so a change anywhere else cannot
- * stale the index and is deliberately not consulted. */
+ * Whether the working tree the checks read is the same thing as the commits being
+ * pushed.  See "WHAT IT CHECKS, AND WHAT IT CANNOT".  `docs` and `CLAUDE.md` are the
+ * prose corpus.  Until M0-99 they were chosen as `decided.mjs`'s ROOTS, because the
+ * index arm read them; that arm is retired, and the scope is kept because `corpuscheck`
+ * — the design-corpus arm — reads its documents under `docs/` from the working tree,
+ * so a dirty corpus still makes this verdict a verdict about the TREE. */
 export const CORPUS_PATHS = ["docs", "CLAUDE.md"];
 
 export function corpusDirty({ repo = REPO } = {}) {
@@ -785,50 +793,12 @@ function run(stdin) {
     process.stderr.write(gateRefusal(gv) + "\n");
     return 1;
   }
-  const v = check({ repo });
+  /* M0-99, 2026-09-22: THE INDEX ARM THAT STOOD HERE IS RETIRED.  It ran `decided.mjs --check`
+     and refused a push whose committed `docs/DECIDED.md` was stale; the index is no longer
+     committed, so no push carries one (the retired `check()` note above). */
   const dirty = corpusDirty({ repo });
   const head = git(["rev-parse", "HEAD"], repo);
   const strays = refsNotHead(stdin, head);
-
-  if (!v.ok) {
-    const L = [];
-    L.push("");
-    L.push(`  PUSH REFUSED — ${HOOK_MARKER}`);
-    L.push("");
-    L.push(`  ${v.message}`);
-    L.push("");
-    if (v.kind === "stale") {
-      L.push("  Run this, commit the result, and push again:");
-      L.push("");
-      L.push("      node tools/decided.mjs");
-      L.push("");
-      /* THIS GUARD CANNOT TELL THE TWO CAUSES APART AND MUST NOT PRETEND TO.  It compares
-         an index to a corpus; it has no idea whether you edited prose after regenerating
-         or a rebase landed a peer's rulings underneath you.  An earlier draft of this
-         message asserted the rebase, and driving cause (1) caught it telling a true story
-         about the wrong event — the record claiming more than it can support, in the
-         message of the mechanism built to stop exactly that. */
-      L.push("  IT CAN FIRE WITH GREEN GATES, AND THIS MESSAGE CANNOT TELL YOU WHICH CASE");
-      L.push("  YOU ARE IN — it compares an index to a corpus and sees only that they differ:");
-      L.push("");
-      L.push("    - you regenerated, then edited more prose; or");
-      L.push("    - you regenerated, then REBASED, and a peer's commit landed new rulings");
-      L.push("      underneath a correct index. NOTHING YOU DID MADE IT STALE.");
-      L.push("");
-      L.push("  The second is why this check is at the push: it is the only moment that is");
-      L.push("  after the last rebase, and no gate before the commit can see it.");
-    } else {
-      L.push("  This is NOT a stale index and regenerating will not clear it.");
-      L.push("  The generator's own output:");
-      L.push("");
-      for (const ln of (v.output || "").split("\n")) if (ln.trim()) L.push(`      ${ln}`);
-    }
-    L.push("");
-    L.push(`  \`plancheck\` would fail on this too. Pushing it turns \`main\` RED.`);
-    L.push("");
-    process.stderr.write(L.join("\n") + "\n");
-    return 1;
-  }
 
   const mk = markerCheck({ repo });
   if (!mk.ok) {
@@ -865,9 +835,9 @@ function run(stdin) {
   }
   if (strays.length) {
     notes.push(`did NOT speak for ${strays.map((s) => `${s.ref}@${s.sha}`).join(", ")}`
-             + " — not HEAD, and the index was read from the working tree");
+             + " — not HEAD, and the checks read the working tree");
   }
-  if (v.kind === "absent") notes.push("the generator is absent, so nothing was verified");
+  if (cc.kind === "absent") notes.push("tools/corpuscheck.mjs is absent, so the design corpus was not verified");
   /* D-293: a GREEN record is SAID; no record says nothing (the ruled shape); an unreadable one is
      UNDETERMINED, in those words. */
   for (const g of gv.green)
@@ -876,7 +846,8 @@ function run(stdin) {
     notes.push(`${gv.unreadable.length} gate record file(s) UNREADABLE, so the gate verdict is UNDETERMINED for this push: `
              + gv.unreadable.slice(0, 3).join(", "));
   const tail = notes.length ? ` (${notes.join("; ")})` : "";
-  process.stderr.write(`${HOOK_MARKER}: docs/DECIDED.md current; no merge markers; design corpus current; construct status agrees with the code${tail}\n`);
+  /* M0-99: the line no longer opens `docs/DECIDED.md current` — nothing here reads the index. */
+  process.stderr.write(`${HOOK_MARKER}: no merge markers; design corpus current; construct status agrees with the code${tail}\n`);
   return 0;
 }
 
@@ -891,24 +862,16 @@ function control() {
   let bad = 0;
   const arm = (ok, label) => { if (!ok) bad++; console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}`); };
 
-  const fake = (status, stdout = "", stderr = "") => () => ({ status, stdout, stderr });
-
-  arm(check({ run: fake(0, "DECIDED.md is current\n") }).kind === "current",
-      "exit 0 is `current`");
-
-  const stale = check({ run: fake(1, "", "FAIL  docs/DECIDED.md is STALE — run `node tools/decided.mjs`\n") });
-  arm(stale.kind === "stale" && stale.ok === false, "the generator's own STALE line is `stale`, and refuses");
-
-  /* THE ARM THIS CONTROL EXISTS FOR.  A broken generator also exits 1.  If this
-     returned `stale` the guard would tell a session to run the tool that is broken. */
-  const broke = check({ run: fake(1, "", "SyntaxError: Unexpected token '}'\n") });
-  arm(broke.kind === "generator-failed" && broke.ok === false,
-      "a generator that exits 1 WITHOUT the STALE line is `generator-failed`, not `stale`");
-  arm((broke.output || "").includes("SyntaxError"),
-      "a broken generator's OWN output is carried, so the failure is visible rather than translated");
-
-  arm(check({ run: fake(127, "", "node: command not found\n") }).kind === "generator-failed",
-      "a non-1 non-zero exit is `generator-failed`");
+  /* M0-99, 2026-09-22: the five arms that stood here drove `check()` — `current`, `stale`, a
+     broken generator read as `generator-failed` and carrying its own output — and they went
+     with it.  What replaces them pins the RETIREMENT: the hook body runs no ruling-index
+     generator at all.  A structural pin, cheap by design; the behaviour — a rebase that lands a
+     peer's ruling PUSHES — is driven through a real push in `pushguard.test.mjs`. */
+  /* Comments stripped first: the body NAMES the retired arm in a comment, and a pin that read
+     prose would fail on the note recording the retirement. */
+  const body = String(run).replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  arm(body.length > 500 && !/decided\.mjs|\bcheck\s*\(/.test(body),
+      "M0-99: the hook body consults no ruling-index generator — the retired staleness arm is gone, not idle");
 
   /* The shim must carry no absolute path, or one hook file would validate the
      installing worktree on behalf of every other one. */
@@ -1012,15 +975,13 @@ if (!IS_CLI) {
   const h = hooksDir();
   const r = install({ dryRun: true });
   const c = installCopy({ dryRun: true });
-  const v = check();
   console.log(`hooks dir : ${h.dir || "(none)"}  [${h.source}]`);
   console.log(`pre-push  : ${r.action}${r.reason ? ` — ${r.reason}` : ""}`);
   console.log(`copy      : ${c.action}${c.path ? ` — ${c.path}` : ""}${c.reason ? ` — ${c.reason}` : ""}`);
-  console.log(`index     : ${v.kind} — ${v.message}`);
   console.log(`corpus    : ${corpusDirty() ? "DIRTY in the working tree (a push verdict would be UNDETERMINED)" : "clean against the tree"}`);
   console.log("");
   console.log("  --install   write the pre-push hook AND the clone-wide copy (idempotent; writes to .git/, never to the tree)");
   console.log("  --run       the hook body; refuses a push whose tip tree the gate recorded RED (D-293),");
-  console.log("              or whose docs/DECIDED.md is stale, or that carries merge markers or corpus/status drift");
+  console.log("              or that carries merge markers or design-corpus/construct-status drift");
   console.log("  --control   the negative-control arms");
 }

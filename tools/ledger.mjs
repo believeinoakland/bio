@@ -89,8 +89,11 @@
  * it and `KNOWN_COLLISIONS` stays exact (M-57 breakage 2, fixed at the check rather than by keeping
  * pairs together).
  *
- * `DECIDED.md` is regenerated after a real move (`decided.mjs` scans `docs/archive/`; M-57 measured
- * 0 of 1,080 rulings lost, re-attributed or re-dated by a whole-row move). `DEBT.md` may not fall
+ * The ruling index needs nothing after a move: `decided.mjs` scans `docs/archive/` (M-57 measured
+ * 0 of 1,080 rulings lost, re-attributed or re-dated by a whole-row move), and since M0-99
+ * (2026-09-22) its `docs/DECIDED.md` is produced on demand and never committed, so the regeneration
+ * this CLI ran after `archive` and `refill`, and the "commit it in the SAME commit" it printed, are
+ * retired — a move no longer owes a generated file anything. `DEBT.md` may not fall
  * below 10,000 bytes (`nc-m039.mjs` plants into it). Neither live file is renamed (`mergecarry`
  * keys a declared drop on `docs/development/DEBT.md`).
  *
@@ -782,11 +785,6 @@ export function refill({ repo = ROOT, dryRun = false, cacheRows = CACHE_ROWS } =
 
 /* ---------------------------------------------------------------------------------- CLI */
 
-function regenerateDecided(repo) {
-  const r = spawnSync(process.execPath, [join(repo, "tools/decided.mjs")], { cwd: repo, encoding: "utf8" });
-  return r.status;
-}
-
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [cmd, ...rest] = process.argv.slice(2);
   const dryRun = rest.includes("--dry-run");
@@ -811,11 +809,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
         console.error(`REFUSED ${id} [${e.code}]: ${e.message}`);
       }
     }
-    if (moved && !dryRun) {
-      const s = regenerateDecided(ROOT);
-      console.log(`DECIDED.md regenerated (decided.mjs exit ${s}) — commit it in the SAME commit as the move.`);
-      if (s !== 0) process.exit(1);
-    }
     process.exit(refused ? 1 : 0);
   } else if (cmd === "find") {
     if (ids.length !== 1) usage();
@@ -837,11 +830,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     if (!r.moved.length) console.log(`nothing moved — ${r.room ? "the backlog has nothing runnable" : "the cache is full"}`);
     else console.log(`${r.moved.length} row(s) ${dryRun ? "would move" : "moved"} · id multiset of cache ∪ backlog ∪ archive conserved`
       + (dryRun ? " (planned)" : " (read back from disk)"));
-    if (r.written) {
-      const s = regenerateDecided(ROOT);
-      console.log(`DECIDED.md regenerated (decided.mjs exit ${s}) — commit it in the SAME commit as the refill.`);
-      if (s !== 0) process.exit(1);
-    }
   } else if (cmd === "invariants") {
     const a = ledgerAudit();
     if (!a.pipeline) { console.log(`UNKNOWN — could not read ${a.unreadable.join(", ")}. An unreadable ledger is not an empty one.`); process.exit(1); }
