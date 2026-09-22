@@ -421,3 +421,7 @@ docs/DECIDED.md
 # REC-166 (2026-09-22): `bio-plane/test/current-shared-question.control.mjs`'s pen — it edits src/ and keeps per-arm
 # pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
 bio-plane/.nc-rec166/
+
+# REC-167 (2026-09-22): `bio-plane/test/caseratify-conclusion.control.mjs`'s pen — it edits src/ and keeps per-arm
+# pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
+bio-plane/.nc-caseratify-conclusion/

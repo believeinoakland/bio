@@ -452,6 +452,8 @@ import { MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS } from "../checks/bio-checks.
 import { PROJECT_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-137 / C-57: a case ratification is signed by an OWNER of the publishing project (DEC-72 cl. 5). */
 import { CASE_AUTHORITY_CHECKS } from "../checks/bio-checks.mjs";
+/* REC-167 / C-65: a case document is signed only while its project still stands on the conclusion it records. */
+import { CASE_CONCLUSION_CHECKS } from "../checks/bio-checks.mjs";
 /* D-431 / C-58.2, C-58.3: what op=ratify may publish outside a pinned finding (BIO_Publication_v0_1.md §3 rule 2). */
 import { RATIFY_SCOPE_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-141 / C-59: the plane mints project ids; a caller-supplied one is refused with one answer. */
@@ -9344,6 +9346,65 @@ export class Store extends DurableObject {
                        + `same number would leave a reader unable to say who stood behind what they read. `
                        + `Publish a new edition instead.` };
       }
+      /* ===== REC-167 / INVESTIGATIVE-SESSION.md §7.1 items 4 and 9 — THE CONCLUSION A PREPARATION
+         RECORDS MUST STILL BE THE ONE ITS PROJECT STANDS ON WHEN IT IS SIGNED ======================
+         WHAT WAS WRONG, measured by REC-157 (M-92): a project concludes, `op=publish` prepares an edition
+         whose document RECORDS that conclusion (REC-135, `case_conclusions:`), the project WITHDRAWS, and
+         this committer still signed the document — the published edition then asserted, as the project's,
+         a conclusion the project had given up before anybody signed. Nothing here re-asked the
+         relationship: `op=publish` asked it once, at preparation, and the window after is exactly where a
+         project's conclusion can move while the finding's bytes and this document do not.
+         SO THIS ASKS, PER ROSTER MEMBER, WHAT `op=publish` ASKS, through the SAME two readers and never a
+         copy of either: (1) `#caseConclusionFor` — is the question concluded FOR THE DOCUMENT'S PUBLISHING
+         PROJECT (the NOT_CONCLUDED gate's one reader), and (2) `#editionsRecordingConclusion` applied to
+         THIS ONE DOCUMENT as the preparation — is that conclusion the one the document RECORDS (item 9's
+         comparison: a project conclusion compared as the dated, authored ENTRY; a no-project one by the
+         pin). Concluded-ness ALONE would pass a project that withdrew and concluded again on another
+         claim — the document would then sign claim A for a project standing on claim B — so both are asked.
+         THE VIEWER IS THE SIGNER, who `#caseAuthority` just established is an OWNER of the project, so the
+         project's own record is in sight; an owner cannot be told a project it owns "never concluded"
+         for want of sight.
+         ASKED AFTER THE RETRY, deliberately: a ratified edition answers forever (DEC-19 — its conclusion is
+         history once signed), so a byte-identical retry of an edition that already stands still reports
+         `existed`, and this question is asked only of a document about to be signed. ASKED BEFORE ANY
+         WRITE, inside the transaction, so a refusal commits nothing. The route is item 9's: publish again,
+         and the new document records what the project stands on now (REC-157 made that edition reachable). */
+      const concViewer = attestorMember ? `member:${attestorMember}` : null;
+      const moved = [];
+      for (const m of roster) {
+        const bm = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, m);
+        const conc = this.#caseConclusionFor(project, m, concViewer, bm ? bm.current_state : null);
+        const rec = this.#editionsRecordingConclusion(m, { pinned: [], prepared: { case_id: id, edition: ed } }, conc);
+        if (conc.state === "concluded" && rec.same.length) continue;
+        moved.push({ target: m, recorded: rec.pinned.length ? rec.pinned[0].recorded : null,
+                     now: conc.state === "concluded"
+                       ? { state: "concluded", relationship: conc.relationship, project: conc.project,
+                           version: conc.version ?? null, claim: conc.claim ? conc.claim.text ?? null : null,
+                           concluded_by: conc.by ?? null, concluded_at: conc.at ?? null }
+                       : { state: "not_concluded", relationship: conc.relationship, project: conc.project,
+                           why: conc.why, stance: conc.stance ?? null } });
+      }
+      if (moved.length) {
+        const refusal = (code, detail) => {
+          const row = CASE_CONCLUSION_CHECKS[code];
+          return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+                   caseId: id, edition: ed, project, moved };
+        };
+        /* DEC-49 REGION is-caseratify-conclusion-moved */
+        return refusal("CASE_CONCLUSION_MOVED",
+          `case ${id} edition ${ed}'s document records, for ${moved.map((x) => x.target).join(", ")}, a `
+          + `conclusion ${project} no longer stands on: `
+          + moved.map((x) => `${x.target} — ${x.now.state === "concluded"
+              ? `${project} now stands on a DIFFERENT conclusion (reading '${x.now.version ?? "(unnamed)"}', `
+                + `the ${x.now.relationship === "no_project" ? "no-project" : "project's own"} relationship)`
+              : `${project} stands on no conclusion (${x.now.why})`}`).join("; ")
+          + `. A signed edition records the conclusion it rests on (INVESTIGATIVE-SESSION.md §7.1 item 4), so `
+          + `signing this one would publish a conclusion nobody holds. Publish the case again from the project `
+          + `(op=publish) — the new document records what the project stands on now (§7.1 item 9) — and sign `
+          + `that. Nothing was committed.`);
+        /* END DEC-49 REGION is-caseratify-conclusion-moved */
+      }
+      /* ===== END REC-167 ================================================================ */
       const now = new Date().toISOString();
       /* CASE-2's INVARIANT, UNCHANGED AND NOW ASKED ONCE. A case does not change
          hands between editions (DEC-72): the bar is read from the publishing
