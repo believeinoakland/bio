@@ -53,13 +53,13 @@ re-measure before acting on a line.
    M-97's instrument after each and tell Bob what it removed. Answer the builders at the code, fold into TREE-SHARING.
 1. **The move.** When Bob orders the stand-down, the BOB of the day runs `NEW-MACHINE.md` §0's list and gives Bob §7's
    block; the first BOB in the new environment measures §0's list and records the answers there.
-2. **With Bob — asked ONCE by BOB #27, ~15:50Z; do not re-ask:** which secrets may live in a cloud environment. The
-   recommendation given: the environment every lane and worker uses holds none (no code of theirs reads one); DIST's cut
-   stays where the release seed is, or uses an environment of its own. His answer, if given, goes into `NEW-MACHINE.md` §0.
+2. **ANSWERED by Bob, ~16:45Z: option C** — all ten keys in the one cloud environment every session uses (*"C - I see
+   no practical downside"*; recorded in `NEW-MACHINE.md` §0). He places the values himself; BOB offered to put `.env` on
+   his clipboard, never displayed, when he sets the environment up. DIST #4 told.
 3. **TREE-SHARING is yours to steer:** answer the builders at the code and fold each answer in; Bob's GitHub Actions acts
    come to him once, with §3's figures, now including a cloud-session column (§4).
-4. **REC-163's design gap:** Publication §7 point 1 rules the group slug public and is silent on the rest of
-   `op=instancegroup`'s row; CONDUCT sends the block once batch 3 is on `main`. Rule it at the code, in Publication §7.
+4. **Ruled, nothing owed:** REC-163's design gap (Publication §7 point 1: only the slug is public; the builder's projection
+   stands) and M0-109's (WORK-PIPELINE §3 names every reader LED-7's closing landing retargets; SCHEDULER places the fixes).
 5. **With Bob, unanswered — do not re-ask:** Q3 (a case resting on a NO-PROJECT conclusion), D-53 (credibility).
    **Carried:** where a member's or project's Claude key would live, MK-7's provisionals, M0-85.
 

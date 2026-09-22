@@ -18,7 +18,7 @@ nothing was decided — the same rule the record applies to sparse levels everyw
 else. Each entry QUOTES its source and points at it; the authority is the file named,
 never this one.
 
-1528 rulings across 108 documents.
+1531 rulings across 108 documents.
 72 of them are decision-register entries, each filed under its own id from its
 `decided:` field and quoting its `response:`; a row showing the entry's status is one of them.
 
@@ -625,7 +625,7 @@ never this one.
 - **D-164** · 2026-09-14 — D-164 design-space study, RULED 2026-09-14 in Bob's framing: the transcription is authored text whose fidelity is undetermined and stated until a second member attests it, so fidelity rises through people and never through a machine's confidence in itself.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1615`
 - **D-164** · 2026-09-14 — RULED 2026-09-14; no surface (Program B) | | the catalogue of standards by audience and output act | OWED (§5.5 of the D-164 study); does not exist | | certification and persistence divergences | unmade | | addressed delivery | RULED 2026-09-17 (§6A) — the review copy's PLANE HALF BUILT (REC-126); its surface…  
-  `docs/architecture/BIO_Publication_v0_1.md:286`
+  `docs/architecture/BIO_Publication_v0_1.md:292`
 - **D-164** · 2026-09-14 — Bob RULED 2026-09-14 that the record never moves an authored edge's target without a member's act, even when the passage is byte-identical — folded into Part II §14.4/§18 and the D-164 study §5.8; it shapes the D-164 IC when it arrives (act 6).  
   `docs/archive/ledgers/BOB-INBOX-drained.md:815`
 - **D-164** · 2026-09-21 — M4 · SUPERSEDED 2026-09-21 by D-164, by LED-7 batch S10-2 (SCHEDULER #10): `BIO_Content_Framework_v0_10.md` §18 states that D-164 *supersedes the three rows that saw the same gap from three sides*, this row's *a citation cannot point inside a document* among them, because the primitive must be solved once or it…  
@@ -1543,7 +1543,7 @@ never this one.
 - **REC-126** · 2026-09-18 — §6A — the review copy is RULED and DESIGNED, and its PLANE HALF IS BUILT (REC-126, IC-145/IC-146, 2026-09-18): the draft case, the grant with its hashed per-grant read secret, revocation, the edition binding, the comment, and the missing-list taken from the publish gates' own refusal — see §4.  
   `docs/architecture/BIO_Publication_v0_1.md:10`
 - **REC-126** · 2026-09-17 — RULED 2026-09-17 (§6A) — the review copy's PLANE HALF BUILT (REC-126); its surface delegated to UI; the in-band rule binding on any export | | the completeness statement's search record | DESIGNED (`OBSERVATION-LOG-DESIGN.md` §6, D-196); not built | | risk tiers | half-built and dishonest (D-182) | | the directory…  
-  `docs/architecture/BIO_Publication_v0_1.md:289`
+  `docs/architecture/BIO_Publication_v0_1.md:295`
 - **REC-126** · 2026-09-18 — DECIDED by BOB #14, as an application of the publication fence already ruled (no new doctrine):** an UNSIGNED case document answers ONLY to members with standing in the owning project (and, once REC-126 exists, a live review-copy grant holder); **everyone else gets EXACTLY the answer a case that does not exist…  
   `docs/archive/ledgers/QUEUE-closed.md:248`
 - **REC-127** · 2026-09-18 — AMENDED 2026-09-18 by REC-127 — §4.2's `cap` FILTER HAS THE SAME THREE ANSWERS, under `IC-138` on I3; the sibling REC-121 measured is CLOSED.** A `cited_as = 'bytes'` row has no transcription, so there is no derivation step for a cap to be the weakest of and its `derivation_cap` is NULL BY MEANING.  
@@ -1630,6 +1630,8 @@ never this one.
   `docs/development/BACKLOG.md:243`
 - **REC-162** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 6): BOB #23's entry DRAINED** — `governorconfig`'s refusal PLACED as REC-162, back to back after REC-159; the REC-156 DELEGATION DISCHARGED, every item placed or ruled.  
   `docs/development/CLAIMS.md:17006`
+- **REC-163** · 2026-09-22 — REC-163's design gap (the rest of `op=instancegroup`'s row beyond the slug) is RULED in point 1 (BOB #27, 2026-09-22): only the slug is public; the worker's projection stands.  
+  `docs/architecture/BIO_Publication_v0_1.md:11`
 - **REC-163** · 2026-09-21 — Item 1: REC-163 and UI-77 AMENDED to `BIO_Publication_v0_1.md` §7 (the slug is public; `op=instancegroup` gains the public class).  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1424`
 - **REC-163** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): CONDUCT #11's route PLACED** — the group's display name hard-coded on every instance's surfaces, verified at the code on `86523052`: REC-163 (RECORD: `setup.mjs`'s literal eyebrow) and UI-77 (UI: `app.html`'s `GROUP` literal at the member fence and the public header),…  
@@ -1653,7 +1655,7 @@ never this one.
 - **UI-16** · 2026-08-04 — status: WITHDRAWN 2026-08-04 by UI-16 — nothing consumes it any more, and RECORD should not build it.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:418`
 - **UI-18** — RULED and BUILT | | the case as a production, its document, its signing ceremony, the published projection, the public verify surface | BUILT (CASE arc; UI-18, UI-35–40) | | the ceremony (UI-17) and the preflight (REC-15) | DEFERRED (DEC-33) — UI-18 has landed; the second clause is unmet by measurement; reopens…  
-  `docs/architecture/BIO_Publication_v0_1.md:283`
+  `docs/architecture/BIO_Publication_v0_1.md:289`
 - **UI-18** — plus the `@media print{…}` rules whose selectors that region uses), civicos-ui/test/publishedcase.test.mjs (the suite, CORRECTED at UI-18's single-inquiry pins with dated reasons and never exempted), civicos-ui/check-mock-envelope.mjs (ONLY the one FLAT_OPS evidence string for `publishedcase`, which quotes a return…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1469`
 - **UI-20** — wn `citingObjectType`), civicos-ui/test/finder.test.mjs (NEW — this item's harness), civicos-ui/test/cite-act.test.mjs (CORRECTED, never exempted, dated: UI-20's measured surface gaps (iii') are CLOSED by this item, so the two assertions that pinned them are corrected to their opposite with the reason),…  
@@ -2899,6 +2901,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INTERFACE-CHANGES.md:12807`
 - **2026-09-21** — CORRECTED BEFORE THE PUSH by CONDUCT #11 on BOB #24's word: this paragraph first said Bob ruled all three, and so do the two State Rules sentences this merge reconciled; BOB #24 splits the attribution there in its own landing.  
   `docs/development/INTERFACE-CHANGES.md:12808`
+- **2026-09-22** — withheld it from the public answer (DESIGN GAP, to BOB #27 — RULED 2026-09-22 by BOB #27 at the code: only the slug is public and the builder's projection stands, Publication §7 point 1); and `newgroup/src/index.mjs`'s sentence that the op answers credentials only, with whether an update should now read the op…  
+  `docs/development/INTERFACE-CHANGES.md:12991`
 - the FACT OF PUBLICATION, never the credibility of the content (RULED, `AUTHORITY-AND-TRUST.md`).  
   `docs/development/INTERFACES.md:190`
 - **2026-09-22** — §7 — a project's make-current writing nothing on the shared question is RULED (BOB #25, 2026-09-22) and NOT BUILT: `op=versioncurrent&project=` still promotes the inquiry before the pointer.  
@@ -2963,8 +2967,10 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/DIST.md:269`
 - CORRECTED: `op=bootstrap` never read the DO's build.** The handler writes `version: env.VERSION` from the isolate that routed the request, then spreads the DO's reply, which is `bootstrapState` (`claimed`, `rearmed`, `consumedAt`) and nothing more.  
   `docs/development/kickoffs/FLEET.md:264`
+- **2026-09-22** — RULED BY BOB 2026-09-22, to BOB #27 (option C of three): all ten keys go into the ONE cloud environment every session uses** — *"C - I see no practical downside"* — after the risk was put to him once (the release seed signs what every installed copy accepts).  
+  `docs/development/kickoffs/NEW-MACHINE.md:54`
 - **2026-09-16** — RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather than by an instrument.** He stands development down in one account — the BOB session retires itself and every lane and worker under it — and only once that account confirms everything is stopped does he open the other…  
-  `docs/development/kickoffs/NEW-MACHINE.md:101`
+  `docs/development/kickoffs/NEW-MACHINE.md:104`
 - `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  
   `docs/development/kickoffs/RECORD.md:323`
 - CORRECTED with dated reasons, never exempted.  
@@ -3106,6 +3112,6 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-07-29** — RULED by Bob, 2026-07-29. Continuing a capture must know what has already been captured; parts may have to be obtained from the host again, and that is refilling the cache rather than rewriting the record.  
   `docs/development/UI-PLAN.md:346`
 - **2026-09-19** — CORRECTED 2026-09-19 by BOB #16 at LED-6's close:** this clause first said `tools/readbudget.mjs` adds `QUEUE.md` to the read-whole set; it does NOT, because `ledger.mjs`'s P5 already produces the cache's budget and a second producer of one quantity is the defect `BOB.md` rule 7 names.  
-  `docs/development/WORK-PIPELINE.md:95`
+  `docs/development/WORK-PIPELINE.md:101`
 - **2026-07-27** — Bulk release, S-11 step 5: BOB DECIDED IN THE 2026-07-27 SESSION THAT IT WILL BE BUILT.** His use case: a collection of 20 or 100 job applications of interest to a project, where per-document release is tedium without protection.  
   `docs/SESSION-KICKOFF.md:142`

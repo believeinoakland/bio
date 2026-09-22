@@ -70,8 +70,14 @@ replaces it.
 **After the fold, a newly found defect is DIAGNOSED UNTIL ITS FIX CAN BE NAMED, then placed by SCHEDULER as a
 BACKLOG item in build order** (class `defect`, a `D-` id minted as today; Bob: *"understood deeply enough that a fix
 can be identified and properly added (in the correct order) in the build plan"*; a fix that needs design goes to BOB
-first) — there is no second list for work to wait in. `DEBT.md` is archived whole once empty; `owed.mjs`, `plancheck`'s
-disposition arm and `ledger.mjs` are retargeted to the backlog in the same item, and `CLAUDE.md` §4's *write it in
+first) — there is no second list for work to wait in. **`DEBT.md` cannot be emptied row by row** (M0-109's sweep, M-96:
+`ledger.mjs`'s `DEBT_FLOOR_BYTES`, 10,000 B, refuses any archive leaving less, and an empty file is 3,174 B), so LED-7's
+CLOSING landing archives the last rows with the file and, in that landing, retargets every reader of the live file:
+`owed.mjs`, `plancheck`'s disposition arm and `ledger.mjs` to the backlog; `DEBT_FLOOR_BYTES` retired with
+`nc-m039.mjs`'s arm 2 re-pointed at the backlog; `ledger.test.mjs` §3 at the archive and `planning-hygiene.test.mjs` §1
+re-pointed or retired — both fail by name at zero rows, on purpose. And AHEAD of the batch that moves D-388,
+`corpuscheck.test.mjs` §5 reads D-388 through `ledger.mjs`'s `findId`, open in the live DEBT, the cache or the backlog
+(BOB #27, 2026-09-22, folding M0-109's DELEGATION to SCHEDULER, which places the fixes); these readers move and `CLAUDE.md` §4's *write it in
 DEBT.md* changes to the backlog in LED-7's own landing, not before. **Performed in batches of ~20 rows by SCHEDULER itself** (Bob,
 2026-09-19: *"Scheduler should be actively involved in moving debt rows into the build plan (in the proper order)"* —
 corrected by BOB #16; this read *by workers under CONDUCT*), each row verified at the code, with a worker through CONDUCT

@@ -51,7 +51,10 @@ the handoff says so — never silently skipped:
 - **The account's memory** — carried whole into `docs/archive/account-memory-2026-09-22.md` (§9.2).
 - **`.env`** (§4's key names). Only DIST's code reads a secret (`git grep -w` outside the tests, 2026-09-22: the deploy
   scripts read the Cloudflare keys, `release-assemble` the release seed), and DIST also needs stock `ssh-keygen`.
-  **Which secret may live in a cloud environment is Bob's decision (risk carrying his name), put to him once by BOB #27.**
+  **RULED BY BOB 2026-09-22, to BOB #27 (option C of three): all ten keys go into the ONE cloud environment every
+  session uses** — *"C - I see no practical downside"* — after the risk was put to him once (the release seed signs what
+  every installed copy accepts). He places the values himself; a value is never typed into a conversation or the
+  repository, and a session confirms a key by USING it (`wrangler whoami` reports the pinned account), never by printing it.
 - **The push guard,** until `node tools/plancheck.mjs` has run once (it installs the untracked `.git/hooks/pre-push`);
   **every gate record** (per clone, D-293); the three packages' `node_modules` (§4); node's major, 26, pinned by nothing.
 
