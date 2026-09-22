@@ -20,16 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-117 · queued — **EVERY FRESH CLONE'S FIRST FULL GATE IS RED AT `mintid.test.mjs`: `scopeOf` PROBES THE LIVE LEDGER WITHOUT CREATING IT.** `scopeOf` (`tools/mintid.mjs`) hands `<git-common-dir>/bio-idalloc` to `exclusivityProbe`, which writes into it without creating it, while the mint creates it first; in a clone that has never minted, the arm *the REAL ledger's filesystem honours the exclusive create* reads `PROBE_UNWRITABLE` and the push guard refuses the RED tree (M-99). — owner M0.
-order: FIRST of the backlog: it refuses a lane's push on any clone that has never minted, and the cloud hook's `mkdir` covers only a cloud container; the smallest row that unblocks a push (Bob, 2026-09-22, `CLAUDE.md` §2: no process row unless it cuts gate time or unblocks product) (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 6)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a directory never created is no verdict on a filesystem.
-depends-on: none.
-scope: `scopeOf` creates the live root as the mint does before probing it, a failure to create answering `LEDGER_UNWRITABLE` as the mint's does. **NOT the probe itself** (corrected at the code by SCHEDULER #14: BOB #28's entry says *"the probe creates its root"*, but `mintid.test.mjs`'s next arm asserts that `exclusivityProbe` on a missing directory is a `PROBE_UNWRITABLE` refusal, and that arm stays).
-accepts-when: a clone with no ledger directory passes the live-ledger arm, and the missing-directory arm stays green. NEGATIVE CONTROL: the suite's control (11), the second create's flag `w`, still fails it by name; dropping `scopeOf`'s create fails the live-ledger arm in a clone with no ledger.
-added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 6, drained this commit; `node tools/mintid.mjs M0`).
-
 ### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT** … (whole text: the cut archive)
 order: MOVED to the head by SCHEDULER #14 (2026-09-22): M0-107, running, must fold BOB #28's timeout ruling into `VERIFICATION.md` *"within that file's budget"*, and the file stands at 24,569 of 24,576 B (measured on `17c0cab1`), so this cut now unblocks a row that CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); M0-97, its dependency, is done. It stood directly after M0-104, behind the product rows (SCHEDULER #11 on BOB #25's word)
 milestone: M0
@@ -79,6 +69,16 @@ depends-on: M0-111.
 accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### REC-168 · queued — **`op=capturerequest` CREDITS ANOTHER MEMBER'S RUN: IT ACCEPTS ANY RUNNING RUN AND COPIES THAT RUN'S PRINCIPALS INTO THE REQUEST ROW.** `captureRequest` (`store.mjs`) checks only that the run is `running`, never whose it is; DRIVEN by REC-165's worker (Cora filed under Alice's run, and the row recorded principals `member:alice`; CONDUCT #14, 2026-09-22) and re-read on `14ffdbcf`. — owner RECORD.
+order: FIRST of the product rows in the backlog, directly before D-85: REC-165's defect on a third op, an attribution the record cannot support, CLAUDE.md §2's class, and above D-85's gap in the same fence (SCHEDULER #14, 2026-09-22; REC-165's stand-down finding, driven, relayed by CONDUCT #14)
+milestone: M9
+interface: I3 — the op refuses what it accepted; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rule 1 (REC-152's stamp of the caller's principal, the sight check and `runPrincipalGate`), which REC-165 applies to `suggest` and `extractpropose`.
+depends-on: none — `runPrincipalGate` and REC-152's stamp are built. Sequence after REC-165 (the same gate, `store.mjs`).
+scope: the fix named by the finding: `captureRequest` stamps the caller's principal, applies the sight check and `runPrincipalGate`, and writes the CALLER's principal, never the run's. Whether a request must also fall inside the run's context is BOB's (the context half), not in scope.
+accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` and writes no row; the caller's own running run files a row naming the caller, from a session and from a machine credential that member minted. How a liar passes it: gating one caller kind only, so both arms run. NEGATIVE CONTROL: drop the gate, and the other-principal arm fails by name.
+added: 2026-09-22 · SCHEDULER #14 (REC-165's stand-down finding, driven, via CONDUCT #14; `node tools/mintid.mjs REC`).
 
 ### D-85 · queued — **AN ASSISTANT CAN OPEN A QUESTION OUTSIDE ANY RUN IT HOLDS, AND A RUN KEEPS ONLY THE LENS IT WAS HANDED.** NARROWED by BOB #25 to … (whole text: the cut archive)
 order: directly after REC-165, the same fence one act further (BOB #25: *"after 1"*); a gap in the assistant's fence, not a false attribution (SCHEDULER #10, 2026-09-21)
