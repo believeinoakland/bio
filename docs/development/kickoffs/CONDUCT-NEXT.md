@@ -37,8 +37,8 @@ the builder's. M0-97's `decided.control` is the builder's 88/0 — NOT re-run (t
 **Its FULL gate was STOPPED by me at 08:10Z** — the machine thrashed (swap 5 of 6 GB, load 5; two lanes' gates at once;
 suites at 20–36 min; `case-authority` threw `fetch failed` under load). A killed run records no verdict. To land:
 1. `git fetch`; check out `conduct11/batch2`; `git merge origin/main` — since `9233748a`: BOB #25's `beae2ad7`, `0b7328bc`,
-   SCHEDULER #10's `464c2779` (docs), and **DIST #4's 0.71.0 pointer merge, released by me to land FIRST** (it carries
-   `release/`, `newgroup/` and 4 declared control arms: re-read the register, expect 1604 against the batch's 1600).
+   SCHEDULER #10's `464c2779` (docs), and **DIST #4's 0.71.0 pointer, ON MAIN at `06832aff`** (release/RELEASE.json 0.71.0;
+   its FULL gate GREEN alone; main's register prints 1583 vs 1579 — with the batch's 1600, re-read: expect 1604).
    Carry both sides; regenerate `docs/DECIDED.md`.
 2. Run ONE FULL gate ALONE, announced: ask SCHEDULER #11, BOB, FLEET and DIST to start no battery until you land.
 3. Push the branch, then `HEAD:main`; verify by `ls-remote`. PRUNE `worktree-agent-a976bfb0c6dec2bdb`,
@@ -46,10 +46,10 @@ suites at 20–36 min; `case-authority` threw `fetch failed` under load). A kill
 4. Tell SCHEDULER #11 (REC-157 and M0-97 + D-341, with the landing sha; D-341 was built NARROWER than its literal fix —
    M-91) and BOB #25 (REC-157's questions, §4).
 
-**2.2 M0-81 — ONE worker, spawned by me** (worktree `agent-a95fe61454bcdcdc2`, branch
-`worktree-agent-a95fe61454bcdcdc2`, remote @ `036e226a` at 08:36Z; local commits and edits beyond it). It stalled once in the
-thrashing and was resumed; it is told to hold FULL batteries until the machine is free. Integrate from its PUSHED branch.
-**Archive CONDUCT #11** (`local_5ddacbf6`) only AFTER that report is forwarded, under D-398 re-checked when you act, having
+**2.2 M0-81 — BUILT AND PUSHED, `worktree-agent-a95fe61454bcdcdc2` @ `d14a88bc`** (ls-remote; `tools/occupancy.mjs`, its
+suite 65/0 and control 18 arms 113/0; REGISTER_FLOOR moved on its own branch). At 12:31Z I told it to REPORT WITH ITS FULL
+GATE UNRUN: fold it INTO batch 2 and land all three under ONE FULL gate run alone. Its report reaches you from CONDUCT #11
+by SendMessage. **Archive CONDUCT #11** (`local_5ddacbf6`) only AFTER that report is forwarded, under D-398 re-checked when you act, having
 confirmed by SendMessage to "CONDUCT #11" that its CronList reads empty. My worktree holds nothing unpushed.
 
 ## 3. WHAT IS NEXT, and what bounds it
@@ -93,7 +93,8 @@ confirmed by SendMessage to "CONDUCT #11" that its CronList reads empty. My work
 
 ## 6. THE MACHINE
 
-Disk **5.9 GiB** and swap **4.97 of 6.1 GB** at 08:36Z. Worktrees: the main checkout (never remove), mine
+Disk **5.9 GiB** and swap **4.97 of 6.1 GB** at 08:36Z. **THE HOST SLEEPS** (pmset: Maintenance Sleep 10:30Z, 11:35Z,
+12:19Z — a closed lid; keep-awake is ON but prevents idle sleep only): a gate's wall time is not only contention. Worktrees: the main checkout (never remove), mine
 (`peaceful-heisenberg-272653`), the batch's two finished agent worktrees (`agent-a976bfb0c6dec2bdb`,
 `agent-aff9fd704ee856d24` — remove after §2.1 lands), M0-81's (`agent-a95fe61454bcdcdc2`, live), and the standing lanes' own
 (`bob-25`, `scheduler-10`, `eloquent-goldstine-78dfbd`, `dist-4`). `conduct-heartbeat` skipped its runs 05:10–07:11Z
