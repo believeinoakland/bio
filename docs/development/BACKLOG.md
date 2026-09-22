@@ -20,7 +20,7 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-98 · queued — **EVERY DOCS-ONLY MOVE OF `main` RE-RUNS THE 41 DOC-FACING SUITES, AND A TOOLS-ONLY CHANGE RUNS ALL 267: THE GATE HAS NO TARGETED CLASS AND CANNOT RE-CHECK ONLY WHAT A REBASE CHANGED.** Measured 2026-09-21 in `ORCHESTRATION.md`: CONDUCT #10 re-merged ~9 times, each docs move re-running ~4 minutes of suites. Item 1 of BOB #23's four. — owner M0.
+### M0-98 · blocked — **BUILT INSIDE D-293's WORKER (CONDUCT #10, 2026-09-21): never spawned alone; it closes with D-293's integration.** **EVERY DOCS-ONLY MOVE OF `main` RE-RUNS THE 41 DOC-FACING SUITES, AND A TOOLS-ONLY CHANGE RUNS ALL 267: THE GATE HAS NO TARGETED CLASS AND CANNOT RE-CHECK ONLY WHAT A REBASE CHANGED.** Measured 2026-09-21 in `ORCHESTRATION.md`: CONDUCT #10 re-merged ~9 times, each docs move re-running ~4 minutes of suites. Item 1 of BOB #23's four. — owner M0.
 order: directly after D-293, the same file (one file, one suite, one gate), item 1 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
 milestone: M0
 interface: none
@@ -28,16 +28,6 @@ design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs
 depends-on: none. **Take with D-293.**
 scope: a TARGETED class — a diff touching no `bio-plane/src|checks`, `civicos-ui/`, fleet, installer or package/config file runs the suites that import, spawn or MENTION a changed path (derived at run time and printed, as DOCS is), `coverage --strict` when a test file changed, and plancheck; and `--since`, which after a rebase reads the recorded verdict and re-runs only suites whose inputs intersect files changed on BOTH sides, plus plancheck. **FULL GATE PROFILE**.
 accepts-when: a tools-only diff selects its importers and the register gate; a `src/` edit beside it reads FULL; a rebase over disjoint docs commits re-runs only plancheck. How a liar passes it: selecting by exact import alone, which misses a suite reading through a computed path, so selection is by MENTION. NEGATIVE CONTROL: stage a `src/` edit with a tools edit, and the class must read FULL.
-added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
-
-### M0-99 · queued — **`docs/DECIDED.md` IS A GENERATED INDEX, COMMITTED, AND 88 COMMITS TOUCHED IT ON 2026-09-21: EVERY LANE'S LANDING CONFLICTS ON A FILE NOBODY WROTE.** `tools/decided.mjs` regenerates it, the push guard refuses a stale one, and every rebase regenerates it again (`ORCHESTRATION.md`'s measurement). Item 2 of BOB #23's four. — owner M0.
-order: directly after M0-98, item 2 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 2, *a generated index is not committed*.
-depends-on: none. **Sequence after M0-97 and D-341** (the cache; the same file, `tools/decided.mjs`).
-scope: `docs/DECIDED.md` untracked and ignored; `decided.mjs` writes it on demand, and the seven tools that read it read through one freshness call; the push guard's and plancheck's staleness arms retire, their suites corrected with dated reasons, never exempted. **FULL GATE PROFILE**.
-accepts-when: a ruling edited on two branches merges with no `DECIDED.md` conflict, and `decided.mjs "<subject>"` answers from the merged corpus. How a liar passes it: keeping it committed under `merge=ours`, which hides staleness, so an arm asserts it is untracked.
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
 
 ### M0-100 · queued — **SEVERAL LANES APPEND TO ONE FILE — `CLAIMS.md`, TOUCHED BY 97 COMMITS ON 2026-09-21 — SO NEARLY EVERY RE-MERGE IS ON ITS TAIL, AND A LINE ONE LANE ADDS TO ITS OWN BLOCK CAN LAND IN ANOTHER'S.** So do `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`. Item 3 of BOB #23's four. — owner M0.
@@ -310,6 +300,16 @@ depends-on: none. D-254 corrected (n2) at `cac06ae7`.
 scope: per arm: (c) require the harness RED only on stdio-census's read of the missing file and every refusal-judging suite GREEN over the codeless refusal; (e) take the fixture suite's ARM 5 regex as D-257 corrected it; (r2)/(r6) re-derive both counts on the current tree and NAME the two refusals that joined `promote`. Run it to its foot.
 accepts-when: the harness runs to its foot with every arm AS DECLARED, each re-declaration dated at its site. How a liar passes it: re-pinning (r2)/(r6) to whatever prints, so the two joiners are NAMED. NEGATIVE CONTROL: restore 33, and (r2) fails by name.
 added: 2026-09-21 · SCHEDULER #7 (LED-7; the D-254 worker's DEBT row; keeps its `D-` id).
+
+### M0-102 · queued — **THREE INSTRUMENTS PASS WHERE THEY SHOULD FAIL.** (1) `bio-plane/scripts/coverage.mjs`: `REGISTER_FLOOR` and `FLEET_FLOOR` refuse only a FALL, so slack there *"would never fail"* (its own note). (2) `civicos-ui/check-refusal-codes.mjs`: the floor checks of `r3Fed` and `untranslated` read the WORKING tree, unlike `census` and `reach` (D-257), so an untracked file can hide a fall. (3) `bio-plane/test/nc-rec64.mjs`: arm 1's two-line anchor occurs 0 times in `store.mjs` and arm 3's regexes predate D-257; not a `*.control.mjs`, so no census sees it. — owner M0.
+order: directly after D-438, the DEC-49 guard's controls: (3) is a control measuring nothing, D-438's class; (1) and (2) are M0-79's doctrine one file over (SCHEDULER #8, 2026-09-21; CONDUCT #10's routes)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with M0-79's `SLACK` table in the guard (`45064d8f`) and D-257's committed-tree rule at its head.
+depends-on: none — M0-79 is on `main`.
+scope: (1) the guard's `SLACK`-table shape for both floors, a bound stated per key; (2) both floor checks compare committed-tree figures, keeping arm F's wording that `refusal-partition` arm 7b pins; (3) re-anchor arm 1 on the current `NO_CONCLUSION` refusal in `conclude` and reuse ARM 5's regex in arm 3. **FULL GATE PROFILE**.
+accepts-when: slack in a coverage floor exits non-zero naming it; an untracked file cannot hide a fall of `r3Fed`; `nc-rec64.mjs` runs every arm AS DECLARED. How a liar passes it: gating only keys equal today, so every key is asserted gated or exempted. NEGATIVE CONTROL: leave a coverage floor one below its print, and the run fails by name.
+added: 2026-09-21 · SCHEDULER #8 (verified at the code; `node tools/mintid.mjs M0`).
 
 ### M0-93 · queued — **`bio-plane/test/delegations.control.mjs` IS RED ON `main`: ITS A1 AND A6 ASSUME ONE AFFIRMATION LINE PER DELEGATION BLOCK, AND THE INSTRUMENT ALLOWS SEVERAL.** `tools/delegations.mjs` judges a block by its NEWEST `open as of`; the REC-69 "unread-index roster" DELEGATION in `CLAIMS.md` carries two (2026-09-16 and -17). A1 ages only the newest, so the block cannot go STALE; A6 compares 36 re-dated LINES with 35 BLOCKS. The D-355 worker read `m037-control: 19 pass, 5 fail` (M-83). — owner M0.
 order: with D-438, first of the instrument cluster: a control red on a green `main` (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
@@ -915,7 +915,7 @@ order: blocked: DEC-33's deferral stands (the live publishing route is a human's
 milestone: M10
 behind-interface: I3
 depends-on: REC-14
-accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and `BELOW_PROJECT_STRENGTH` naming the axis, each BEFORE any signature exists, writing nothing; negative control — attach per-member wording to the instance-wide `NO_SIGNERS` and the suite fails; clear a hunch and the refusal disappears without any other state change.
+accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
 cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
 
@@ -924,6 +924,6 @@ order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
 milestone: M10
 behind-interface: I3
 depends-on: REC-15, UI-11
-accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance reason appearing in step 3's panel fails the harness.
+accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance … (whole text: the cut archive)
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
 cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.

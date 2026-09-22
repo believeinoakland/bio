@@ -17177,6 +17177,13 @@ persisted and `reading_refs` indexed by entity reference, FW-5). BOB #23's rulin
 KiB, cut from the bottom of the order, recorded in `kickoffs/SCHEDULER.md`; `kickoffs/SCHEDULER-NEXT.md` rewritten as a
 CHECKPOINT for SCHEDULER #9 while live. 146 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 8): M0-79 CLOSED and THE REFRESH** — M0-79 verified at `45064d8f` by content
+(the guard's `SLACK` table fails slack beyond its bound), marked done and archived; the refill moved M0-99. M0-98 reads
+`blocked`: CONDUCT #10 builds it inside D-293's worker, and both close at that integration. M0-102 PLACED after D-438
+(three instruments that pass where they should fail, routed by CONDUCT #10 from M0-79's report). `kickoffs/SCHEDULER-NEXT.md`
+rewritten for SCHEDULER #9 at the refresh; this claim passes to SCHEDULER #9, who supersedes it when it archives this
+session. 146 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#8) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S8-1: D-162's theme-as-entity doctrine, two settled limitations homed in no governed design (D-38, D-45), D-53's stale blockers, and D-55's bounded design act; none blocks a runnable row**
 
 1. **D-162 — CAN A THEME BE AN ENTITY AND STAY FALSIFIABLE?** Re-verified on `19a0efb6`: `ENTITY_KINDS`
@@ -17423,6 +17430,17 @@ against its budget, so the lesson lives in the code's own comments and the amend
 
 **open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates and resolves IC-172.
 
+**RELEASED 2026-09-21 by CONDUCT #11 at integration.** D-436 LANDED in the merge `38850da4` (onto origin/main
+`8d2ba50f`), pushed to `main` in the same landing as this line, under its own FULL gate on that merge (268/268 suites
+green · 16324 assertions passing · run 2488.efa62b, the two untallied suites `bundle` and `livefire` as on the worker's
+untouched baseline; coverage `--strict` register exact 1566/1566; UI harness 58/58; plancheck 0 fail). IC-172 RESOLVED:
+I3 MAJOR 48.0.0 → 49.0.0, I5 MINOR 1.23.0 → 1.24.0. RE-RUN BY THE INTEGRATOR on the merged tree, not taken from the
+report: `instance-group.control.mjs` 13/13 AS DECLARED with the builder's figures; `refusal-codes.control.mjs` fails
+EXACTLY (c), (e), (r2), (r6) — D-438's known four, as on the base — with every (s) and (m) arm as declared;
+`refusal-partition.control.mjs` 19/19 as declared. ONE floor moved at integration beyond the branch's: `outcomeReturns`
+127 → 128, named by M0-79's slack gate on the merged tree. Branch `worktree-agent-a6dd0a0a3a3a6cc10` is deleted from the
+remote after the push is verified. The paths this block reserved are FREE; its two DELEGATIONs, to DIST and to UI, stay OPEN.
+
 ## CLAIM 2026-09-21 RECORD (D-436, SECOND BLOCK — the paths battery pass one NAMED, each a suite a correct landing made wrong, or a table that must classify the new op)
 
 Appended rather than edited into the block above, because this register is APPEND-ONLY and every path below was found by
@@ -17445,6 +17463,9 @@ the first full battery on the branch (`247/268 suites green`, 21 named), not pre
 - Any control driver whose subject these corrections touch, re-run and, where its declaration moved, corrected.
 
 **open as of 2026-09-21** — OPEN while this item builds; released with the block above at integration.
+
+**RELEASED 2026-09-21 by CONDUCT #11 at integration**, with the block above: D-436 LANDED in the merge `38850da4`. The
+paths this block reserved are FREE.
 
 ## DELEGATION 2026-09-21 RECORD (D-436 worker) -> DIST — **THE INSTALLER HALF OF D-436: what `newgroup` sends, through which channel, and the ONE seed every instance installed before this release needs**
 

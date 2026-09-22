@@ -12801,8 +12801,13 @@ names no group. The DELEGATION to UI stands. DIST — affected by an ACT, not by
 instance installed before this release needs ONE seed per store, and `biosmoke7` is seeded `believe-in-oakland` for `bio`
 AND `store=scratch` AFTER THE DEPLOY AND BEFORE VERIFICATION (the DELEGATION to DIST, sent to DIST at landing). FLEET —
 NOT-AFFECTED: zero hits in `pdf-worker/src` and `ocr-worker/src`; `agent-worker` carries the literal only in test
-fixtures. **THE THREE DECISIONS, (a)–(c), ARE NO LONGER PROVISIONAL:** Bob RULED them on 2026-09-21 (State Rules §3.1,
-recorded by BOB #23); the amendment's text and its Incomplete-sections line are reconciled to the ruling in the merge.
+fixtures. **THE THREE DECISIONS, (a)–(c), ARE NO LONGER PROVISIONAL — and they are not all Bob's.** Decision (b)'s
+PREMISE was RULED BY BOB on 2026-09-21: records captured before the MVP release are test data, so no migration and no
+automatic setting is owed for a store that predates the value (State Rules §3.1 quotes him). Decisions (a), the
+first-boot source from `INSTANCE_NAME`, and (c), refuse and never default, are MECHANISM, DECIDED by the BOB lane at
+integration on 2026-09-21 (BOB #23 accepted them as built). CORRECTED BEFORE THE PUSH by CONDUCT #11 on BOB #24's word:
+this paragraph first said Bob ruled all three, and so do the two State Rules sentences this merge reconciled; BOB #24
+splits the attribution there in its own landing.
 **One floor moved at integration beyond the branch's:** `civicos-ui/check-refusal-codes.mjs` `outcomeReturns` 127 → 128,
 named by M0-79's slack gate on the merged tree. `REGISTER_FLOOR` read exact on the committed merge (arms 1566/1566,
 classified 259/259, corpus 260/260) and did not move. **NOT closed by it:** what a document already SIGNED under a wrong
