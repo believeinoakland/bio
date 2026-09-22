@@ -18914,4 +18914,4 @@ not built. IC-175 minted with `node tools/mintid.mjs IC` BEFORE building. Claime
 `civicos-ui/app.html`, and NOT the regions REC-165 (the AI-run gate on suggest/extractpropose) and REC-167
 (`ratifyCaseDocument`) hold.
 
-**open as of 2026-09-22** — OPEN while this item builds; CONDUCT integrates and resolves IC-175.
+**released: 2026-09-22 REC-166 worker (CONDUCT #14's resume)** — built on `worktree-agent-a1707ddf948cd5c29` at `51ac4c61` (tree `1ec0d45c`, `node tools/gates.mjs` GREEN FULL: 274/274 suites green · 16597 assertions passing); IC-175 PROPOSED for CONDUCT to resolve at integration.
