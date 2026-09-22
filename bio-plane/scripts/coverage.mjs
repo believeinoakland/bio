@@ -1367,7 +1367,11 @@ const REGISTER_FLOOR = {
      1596/1579 · classified 261/260 · corpus (suites read) 262/261 · GREW by 17 arm(s)`, `floor 224/223
      reproducible · GREW by 1`) — never added by hand. One new suite, `test/occupancy.test.mjs`, whose declaration
      states seventeen arms (a)-(q), each RUN by `test/occupancy.control.mjs`. ONE KEY SET. Nothing FELL. */
-  arms: 1596,
+  /* [M0-81] 2026-09-22: AND 1596 -> 1597 ONLY, same worker, from the `--strict` print on its committed tree
+     `c0e1714a`, exit 0 unpiped (`REGISTER FLOOR  arms 1597/1596 · classified 261/261 · corpus (suites read)
+     262/262 · GREW by 1 arm(s)`, `floor 224/224 reproducible`) — arm (r) of the same declaration (list_task_runs'
+     totalRuns, found by driving the judgement over the live listing, M-93). Nothing FELL. */
+  arms: 1597,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).
   // [CONDUCT #5 at REC-136's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1417/1414 · classified 241/241 · corpus (suites read) 242/242 · GREW by 3`, `floor 204/204 reproducible`, from the print; the branch's own 1410 is replaced, never added.

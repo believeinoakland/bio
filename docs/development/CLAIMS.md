@@ -17945,3 +17945,36 @@ one way), `docs/development/QUEUE.md`, `docs/development/BACKLOG.md`, `docs/deve
 task, whose definition lives OUTSIDE this repository and is the operator's: named, never changed from here.
 
 **open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## DELEGATION 2026-09-22 M0 (M0-81 worker) -> BOB — **the chip procedure's OCCUPANCY check is one command now, `node tools/occupancy.mjs`; `kickoffs/BOB.md` rule 1 should name it, names evidence that cannot show half its binding, and has one reading that needs the BOB lane's word**
+
+`kickoffs/BOB.md` "Spawning and retiring lanes", rule 1, says: `list_sessions` first, and do not file if a live session is
+bound to the lane by `scheduledTaskId` or title. M0-81 lands that judgement as a pure function a suite drives
+(`tools/occupancy.mjs`; `bio-plane/test/occupancy.test.mjs`, eighteen control arms). The procedure is BOB's, so this
+names the ONE command and leaves the words to their owner:
+
+    node tools/occupancy.mjs --chip "<LANE> #<n>" --limit <L> < listing.json
+
+`listing.json` is `{ "sessions": <list_sessions, limit L>, "tasks": <list_scheduled_tasks>, "runs": { "<id>":
+<list_task_runs(id, limit 50)> } }`, each value exactly as printed, with a `runs` entry for every task the output names
+under LANE TASKS (today only `conduct-8`, and only for CONDUCT). File the chip on exit 0 (ADMIT) and on nothing else.
+Exit 1 (REFUSE) names each occupant with its full session id: a stood-down or duplicate one is RETIRED (archived), never
+renamed, then the check re-run; a successor already up means the chip is stale. Exit 3 (UNDETERMINED) names what was not
+shown and the call that shows it. Candidate sentence for rule 1, after "…instead of after.": *"The check is `node
+tools/occupancy.mjs` (M0-81), fed `list_sessions`, `list_scheduled_tasks` and each lane task's `list_task_runs`: file on
+ADMIT only."* M0-82 (CONDUCT's fallback start, owner CONDUCT) is sequenced after M0-81 and can cite the same command.
+1. **Rule 1 names `list_sessions` as the evidence, and `list_sessions` does not print `scheduledTaskId`** (measured
+   2026-09-22, M-93): a raw listing can show a binding by title and never rule one out by task. The command's input
+   therefore adds the task listing and the lane task's runs; `get_session` on every live row is the other route.
+2. **THE READING, in `kickoffs/README.md`'s item shape** — a DESIGN GAP in rule 1, and the BOB lane's rather than Bob's:
+   it interprets a lane's ruling, which is mechanism.
+   - running now: a live session bound to the lane BELOW the chip's number is its PREDECESSOR, named and never refused;
+     at or above that number, or at none that can be read, it is an OCCUPANT.
+   - why ambiguous: rule 1 reads "do not file if a LIVE session is already bound to the lane", and the same section has
+     the successor archive its predecessor after starting — so read literally, rule 1 refuses every successor chip.
+   - the alternative: refuse on any live bound session, and require the predecessor archived before its successor's
+     chip is filed.
+   - recommendation: keep the reading. The incident was a chip for the instance that already existed; the alternative
+     leaves a lane with no live session between the predecessor's archive and the successor's start.
+   - reversal cost: one line of `tools/occupancy.mjs`, and arm (g) of its suite is the pin to move; no data depends on it.
+**open as of 2026-09-22** — open until BOB names the command in rule 1 (or says why not) and rules the reading; nothing here blocks a runnable row.
