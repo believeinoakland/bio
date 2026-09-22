@@ -49,7 +49,7 @@
  *  - It reads the token `op=<lowercase-name>` and nothing else. A claim phrased
  *    "the publish-case op" or "`Store.publishCase()` returns …" carries no token
  *    and is invisible here.
- *  - It cannot tell WHY a document names a non-op. See the LEDGER note below: that
+ *  - It cannot tell WHY a document names a non-op. See the LEDGER note (its head is in `./op-claims-ledger.mjs`): that
  *    judgment is a human's, recorded once per (file, name), and held exactly.
  *  - A dynamic name (`op=version${act}`) cannot be resolved from source. It is
  *    counted as DYNAMIC and reported, never guessed at.
@@ -460,54 +460,16 @@ export const PLANNED_OPS = [
   { op: "needs", why: "research/SB-CORE.md GAP-A3 PROPOSES it (or `whoami`) as the publisher of the NEEDS map. A proposal is not a claim that the op exists." },
 ];
 
-/* THE LEDGER. Every (file, name) where prose names something that is not an op, with
- * a human's reason and an EXACT count. A pair that is not here FAILS; a count that
- * MOVES in either direction fails and the run prints the number to write.
- *
- * Exact, not a ceiling, and the reasoning is `REGISTER_FLOOR`'s: a ceiling is not a
- * ratchet. A ledger that permitted a count to fall silently would let a real
- * correction go unrecorded and would leave slack for the next wrong sentence to
- * occupy. The cost is a one-line edit when a document legitimately changes, and the
- * failure message carries the replacement number.
- *
- * `bio-plane/**` IS DELIBERATELY ALMOST EMPTY HERE. M0-12 CORRECTED the plane's own
- * wrong-level prose rather than registering it, so the plane's corpus is clean and
- * anything new in it is a hard failure. What remains under `bio-plane/` is prose
- * whose SUBJECT is a non-op: fixtures that drive a deliberately unknown op, and
- * comments about DO paths reached past the control plane on purpose.
- */
-export const LEDGER = [
-  /* ---- bio-plane: fixtures whose whole point is an op that is not there ---- */
-  { file: "bio-plane/test/bounds.test.mjs", name: "ncsecond", n: 1, kind: "NEVER",
-    why: "a negative-control label naming a planted op that must not resolve." },
-  { file: "bio-plane/test/installer.test.mjs", name: "nonsense", n: 1, kind: "NEVER",
-    why: "the fixture that asserts an unknown op 400s rather than serving the page. The name MUST NOT exist." },
-  { file: "bio-plane/test/limits-probe.mjs", name: "sqlprobe", n: 1, kind: "NEVER",
-    why: "the probe states in terms that this op does not exist and must not: the store executes compiled statements only." },
-  { file: "bio-plane/test/repair-reachability.test.mjs", name: "unverify", n: 1, kind: "NEVER",
-    why: "arm (v) plants an op the control plane never declared, and asserts the walk fires on it as a delta." },
-  { file: "bio-plane/test/capability.test.mjs", name: "get", n: 1, kind: "NEVER",
-    why: "the recorded vacuity of an earlier control — it asked an op that does not exist, so it passed for every input." },
-
-  /* ---- bio-plane: DO paths named as ops in prose ABOUT reaching past the door ---- */
-  { file: "bio-plane/test/bias.test.mjs", name: "gatefacts", n: 1, kind: "DO-PATH",
-    why: "the comment's own subject is that this is NOT a control-plane op and a caller gets `unknown op`." },
-  { file: "bio-plane/test/machine-fences.test.mjs", name: "taskenqueue", n: 1, kind: "DO-PATH",
-    why: "the comment says there is no control-plane route and the fixture reaches past the door deliberately." },
-  { file: "bio-plane/test/inbox.test.mjs", name: "taskenqueue", n: 1, kind: "DO-PATH",
-    why: "the assertion IS that this name is not a control-plane op; the label quotes the name the caller would send." },
-
-  /* ---- civicos-ui: not this item's paths. DELEGATED, see CLAIMS.md ---- */
-  { file: "civicos-ui/app.html", name: "strength", n: 1, kind: "DO-PATH",
-    why: "UI-35's measured gap: the comment states this exists in the store's route map and is absent from OPS. Correct in substance, wrong in grammar. DELEGATED to UI." },
-  { file: "civicos-ui/app.html", name: "basis", n: 1, kind: "DO-PATH",
-    why: "same sentence as `strength` above. DELEGATED to UI." },
-
-  /* ---- docs: planning surface. Owners are elsewhere; every one DELEGATED ---- */
-  { file: "docs/BIO_DATAPLANE_STATE.md", name: "get", n: 2, kind: "NEVER",
-    why: "the historical record of the vacuous control (see capability.test.mjs). The op never existed and the record is about that." },
-  { file: "docs/SESSION-KICKOFF.md", name: "get", n: 1, kind: "NEVER",
-    why: "same historical record, carried into the kickoff." },
+/* THE LEDGER'S STATE HALF (M0-110, M0-116). The op-claims ledger is ONE ledger in TWO files, partitioned by the
+   branch its sites live on — never copied. The entries below are the ones whose file is STATE (it lives on `coord`,
+   TREE-SHARING.md §1); `tools/coord.mjs` LC-op-claims holds them against the state texts, and it reaches them here.
+   Every other entry — the MAIN half, the corpus THIS module's walk sweeps on `main` — is in
+   `./op-claims-ledger.mjs`, which ONLY `test/op-claims.test.mjs` imports (M0-116, BOB #27's fix): a ledger naming
+   `docs/` files as strings made every importer of this module — 38 units, most of them through `tools/coord.mjs` —
+   read as a reader of `MEASUREMENTS.md` to `tools/gates.mjs`, so a measurement landing re-ran them all. Which half an
+   entry belongs to is a fact about `isMovedPath`, asserted in `test/op-claims.test.mjs` for both halves; the human
+   reason and the EXACT count are the ledger's, stated at the head of `./op-claims-ledger.mjs`. */
+export const LEDGER_STATE = [
   { file: "docs/archive/ledgers/CLAIMS-2026-08.md", name: "publishcase", n: 3, kind: "DO-PATH",
     why: "REC-58's own released claim, quoting the sentence the item was raised on. Append-only history. DELEGATED to CONDUCT." },
   { file: "docs/archive/ledgers/CLAIMS-2026-08.md", name: "inboxlist", n: 1, kind: "DO-PATH",
@@ -519,76 +481,14 @@ export const LEDGER = [
     why: "a CAPTURE delegation naming a DO path as an op. DELEGATED to CAPTURE." },
   { file: "docs/archive/ledgers/CLAIMS-2026-08.md", name: "strength", n: 1, kind: "DO-PATH", why: "quotes UI-35's sentence. DELEGATED to UI." },
   { file: "docs/archive/ledgers/CLAIMS-2026-08.md", name: "basis", n: 1, kind: "DO-PATH", why: "quotes UI-35's sentence. DELEGATED to UI." },
-  { file: "docs/development/INTERFACE-CHANGES.md", name: "publishcase", n: 2, kind: "DO-PATH",
-    why: "IC-22's struck sentence AND the CORRECTION appended to it — BOTH name the op one level down. Amending a SETTLED IC is a protocol act with an owner. DELEGATED to CONDUCT." },
-  { file: "docs/development/INTERFACE-CHANGES.md", name: "inboxlist", n: 1, kind: "DO-PATH",
-    why: "an IC naming the DO path as an op. Same protocol constraint. DELEGATED to CONDUCT." },
-  { file: "docs/development/INTERFACES.md", name: "publishcase", n: 1, kind: "DO-PATH",
-    why: "the interface register naming the DO path as an op. DELEGATED to CONDUCT." },
-  { file: "docs/development/INTERFACES.md", name: "reindexnames", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/MEASUREMENTS.md", name: "publishcase", n: 2, kind: "DO-PATH",
-    why: "REC-58's measurement rows. MEASUREMENTS is a dated record of what was measured and is not rewritten. DELEGATED to CONDUCT." },
-  { file: "docs/development/MEASUREMENTS.md", name: "inboxlist", n: 1, kind: "DO-PATH", why: "as above." },
   { file: "docs/archive/ledgers/QUEUE-2026-08.md", name: "publishcase", n: 6, kind: "DO-PATH",
     why: "M0-12's OWN scope and REC-58's landed row. QUEUE.md is CONDUCT's sole-writer file. DELEGATED to CONDUCT." },
   { file: "docs/archive/ledgers/QUEUE-2026-08.md", name: "recordsourceoutcome", n: 1, kind: "DO-PATH",
     why: "a CAPTURE queue row naming a DO path as an op. DELEGATED to CONDUCT/CAPTURE." },
-  { file: "docs/development/kickoffs/CAPTURE.md", name: "recordsourceoutcome", n: 1, kind: "DO-PATH",
-    why: "the area kickoff naming a DO path as an op. DELEGATED to CAPTURE." },
   { file: "docs/archive/ledgers/DECISIONS-2026-08.md", name: "import", n: 1, kind: "NEVER",
     why: "DEC prose whose subject is that IMPORT DOES NOT EXIST. The name must stay absent."
        + " Entry followed its DEC into the 2026-08-10 ledger roll." },
-  { file: "docs/archive/research/COMPLETENESS-AUDIT.md", name: "import", n: 1, kind: "NEVER",
-    why: "the audit's finding that no import op exists. Must stay absent." },
-  { file: "docs/archive/research/COMPLETENESS-AUDIT.md", name: "restore", n: 1, kind: "NEVER",
-    why: "same finding, same sentence. Must stay absent." },
-  { file: "docs/archive/research/SB-EVIDENCE.md", name: "capturelimit", n: 1, kind: "DO-PATH",
-    why: "a research inventory of STORE routes written with an `op=` prefix. DELEGATED to RECORD/research." },
-  { file: "docs/archive/research/SB-EVIDENCE.md", name: "loadcapturesession", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/archive/research/SB-EVIDENCE.md", name: "reusedparts", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/archive/research/SB-EVIDENCE.md", name: "siteassets", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/archive/research/SB-EVIDENCE.md", name: "taskenqueue", n: 1, kind: "DO-PATH", why: "as above." },
-  /* DATA-MODEL.md's table is the single largest instance of the class in the tree:
-     a whole column documenting the store's route map with an `op=` prefix that
-     reaches none of it. Registered site by site so the extent is VISIBLE rather
-     than folded into one line, and DELEGATED whole to RECORD/research. */
-  { file: "docs/development/research/DATA-MODEL.md", name: "gatefacts", n: 1, kind: "DO-PATH", why: "DATA-MODEL's route table. DELEGATED to RECORD/research." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "setpassword", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "inboxlist", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordcapturelimit", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "capturelimit", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordsiteassets", n: 3, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "siteassets", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "sitechrome", n: 2, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "reusedparts", n: 2, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "savecapturesession", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "loadcapturesession", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordlinks", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "resolvelinks", n: 2, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "linksto", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordlinkverdict", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordcapturedlocator", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordreuseverdicts", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "reuseverdicts", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordsourceoutcome", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "governoradmit", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordruntime", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "runtimeobservations", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "recordcpuprobestep", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "cpuprobestate", n: 1, kind: "DO-PATH", why: "as above." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "taskenqueue", n: 1, kind: "DO-PATH", why: "as above." },
-  /* The two in DATA-MODEL.md that are in NEITHER table — genuine rot rather than a
-     level confusion, found by this instrument on its first run. */
-  { file: "docs/development/research/DATA-MODEL.md", name: "session", n: 1, kind: "NEVER",
-    why: "STALE: names neither an op nor a DO path. The session read is `op=whoami`. DELEGATED to RECORD/research." },
-  { file: "docs/development/research/DATA-MODEL.md", name: "wake", n: 1, kind: "NEVER",
-    why: "STALE: names neither an op nor a DO path. DELEGATED to RECORD/research." },
 ];
-/* M0-110: ONE ledger, partitioned by branch rather than copied. The entries whose file is STATE (it lives on
-   `coord`) are held by the coord write's ledger check (`tools/coord.mjs` LC-op-claims), which sweeps the state texts;
-   the rest are held by this module's own walk, which `sweep()` defaults to. */
-export const LEDGER_STATE = LEDGER.filter((e) => isMovedPath(e.file));
-export const LEDGER_MAIN = LEDGER.filter((e) => !isMovedPath(e.file));
 
 /* Attribution: a mention that says WHERE the op goes — the load-bearing half of
  * M0-12, because a check that only verified a name existed would have passed
@@ -627,8 +527,14 @@ export function mentionsIn(body) {
 
 /* ---------------------------------------------------------------- the verdict */
 
+/* M0-116: `ledger` is the ledger this walk is HELD to, and it is PASSED — never defaulted to the main half, because
+   defaulting to it means importing it, and every importer of this module then reads as a reader of every file the
+   ledger names (see `./op-claims-ledger.mjs`). The whole-tree scan passes `LEDGER_MAIN` (`test/op-claims.test.mjs`);
+   the coord check passes the state half. Omitted, it is EMPTY: nothing excused, so every ledgered site in the swept
+   population is a FINDING — the loud direction, never a quiet green. The narrow sweeps that omit it (`hygiene`,
+   `walkfigure`: `bio-plane/scripts`) hold no ledgered site. */
 export function sweep({ root = REPO, roots = null, planeDir = PLANE,
-                        ledger = LEDGER_MAIN, planned = PLANNED_OPS, files: injected = null } = {}) {
+                        ledger = [], planned = PLANNED_OPS, files: injected = null } = {}) {
   const table = readDispatch(planeDir);
   /* M0-18: `files` is the WHOLE working tree and every byte of it is swept —
      `repro`/`charsRepro` exist so the caller can FLOOR on what another checkout
