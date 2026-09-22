@@ -17757,3 +17757,14 @@ claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`
 `docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~02:05Z 2026-09-22), `docs/DECIDED.md`
 (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-21 BOB #24** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT readdressed to DIST #4, which takes the 0.71.0 cut)
+
+session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (line 1, one summary line under it, and the session-state lines only),
+  `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+why: DIST #3 is at 62% and 0.71.0 (D-436's irreversible seed, plus D-434 moving `app.html`, so `civicos` moves) costs ~15%.
+  BOB #24 agreed that the cut goes to a fresh DIST #4, and that the seed does not run in a session crossing 70%; the
+  successor chip's gate reads DIST-NEXT's line 1 for the successor it names, so line 1 now names DIST #4. The fallback
+  if DIST #4 is not up by 00:07: DIST #3 cuts and stops at "deployed, not seeded, not pointed" if over 70% before the seed.
+**released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
