@@ -2928,9 +2928,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-19** — THE MECHANISM, DECIDED BY DIST 2026-09-19: `main`'s `release/` IS THE `latest` POINTER, AND A CUT LIVES ON A BRANCH UNTIL IT IS LIVE.** Every installer, including every copy already deployed, reads `main/release/RELEASE.json` (`newgroup/src/index.mjs`, `CFG.RELEASE_LATEST`).  
   `docs/development/kickoffs/DIST.md:90`
 - goes in its `WITHDRAWN` set**, because that loop asserts the release BRICKS a 0.58.0 store.  
-  `docs/development/kickoffs/DIST.md:206`
+  `docs/development/kickoffs/DIST.md:210`
 - count is identical every time because it is bounded by `WITHDRAWN`, which a cut never touches; the PASS count rises with each release ADDED to `RELEASES`.  
-  `docs/development/kickoffs/DIST.md:265`
+  `docs/development/kickoffs/DIST.md:269`
 - CORRECTED: `op=bootstrap` never read the DO's build.** The handler writes `version: env.VERSION` from the isolate that routed the request, then spreads the DO's reply, which is `bootstrapState` (`claimed`, `rearmed`, `consumedAt`) and nothing more.  
   `docs/development/kickoffs/FLEET.md:264`
 - **2026-09-16** — RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather than by an instrument.** He stands development down in one account — the BOB session retires itself and every lane and worker under it — and only once that account confirms everything is stopped does he open the other…  

@@ -18492,3 +18492,16 @@ M0-99), M0-100 first of the backlog; room by four foot cuts (D-74, UI-75, D-178,
 Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
 **Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them `CLAUDE.md` §2's over-claim rule decides). Both were already running; nothing moved. Item 3 accepted by BOB #26 for its next landing.
 **open as of 2026-09-22** — item 3 only: D-278's determinations, which BOB #26 rules per group; nothing runnable waits on it.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — M0-106: the release gate's step 1 rests on the tree's RECORD, and the whole battery runs only when none answers)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/m0-106`), Sparky-Air
+paths: `docs/development/kickoffs/DIST.md` (the gate's opening paragraph, step 1, and one clause of step 10),
+  `docs/development/kickoffs/DIST-NEXT.md` (the M0-106 sentence only), this block, `docs/DECIDED.md` (GENERATED, LAST).
+why: M0-106, routed to DIST as its own act (CONDUCT #12, SCHEDULER #12's routing). The kickoff called merged `main` "a
+  tree nobody has tested", which is false wherever that exact tree carries a GREEN FULL record: D-293 keys every verdict
+  by TREE. Step 1 now takes that record, NAMED in the cut commit, or `gates.mjs --since <the newest commit whose tree
+  carries one>`, and runs the whole battery only when neither exists; the bumped cut tree's own gate always runs. Step
+  10's landing re-merge is re-checked `--since` the cut commit, never by a fresh battery: 0.71.0's took 2.4 h.
+  Accepted at the next cut, which must name the record it relied on (0.72.0: `f25d43b3`, tree `0a2b5b64`).
+**released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.
