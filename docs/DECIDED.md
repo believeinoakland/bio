@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1424 rulings across 104 documents.
+1425 rulings across 104 documents.
 
 ## DEC-
 
@@ -633,7 +633,7 @@ authority is the file named, never this one.
 - **D-293** — states; the refusal's design is CARRIED in BOB #22's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293 RULED"), because that file is at its reading budget: the builder adds the refusal's one line in the landing.  
   `docs/archive/ledgers/QUEUE-closed.md:2854`
 - **D-293** — dirty-tree key is CARRIED in BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293's DESIGN GAP RULED") until M0-105 folds its line.  
-  `docs/development/BACKLOG.md:27`
+  `docs/development/BACKLOG.md:836`
 - **D-293** — Q4 RULED NO: the guard never runs `gates.mjs` (M-85's landing rate), which `VERIFICATION.md`'s push-guard section already states; its named fix, refusing a tree whose recorded verdict is RED, is carried by the D-293 inbox entry until built, because that file is at its reading budget and its register block is quoted…  
   `docs/development/CLAIMS.md:16469`
 - **D-293** · 2026-09-22 — mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6).  
@@ -749,7 +749,7 @@ authority is the file named, never this one.
 - **D-391** · 2026-09-16 — WHY NEITHER IS CORRECTED HERE:** re-denominating another area's measurement from outside it is how a wrong number acquires a second author.  
   `docs/development/DEBT.md:165`
 - **D-394** · 2026-09-21 — RULED BY BOB (2026-09-21)** … (whole text: the cut archive) order: with the meaning-layer features (M4), after the instrument cluster, as BOB #23 placed it; after D-394, since a NEW construct follows the rows completing built ones (REC-122 finishes D-161; D-394 reads the built chain) (SCHEDULER #9, 2026-09-21)…  
-  `docs/development/BACKLOG.md:784`
+  `docs/development/BACKLOG.md:764`
 - **D-398** · 2026-09-17 — CORRECTED 2026-09-17 BY BOB #13, AND THE CORRECTION IS A MECHANISM THIS ROW SAYS DOES NOT EXIST: ARCHIVING THE SESSION RELEASES THE LOCK.** This row and BOB-NEXT's amendment both say the lock does not release when the process exits and becomes a stale lock nothing cleans up, so reclamation was framed as an…  
   `docs/development/DEBT.md:175`
 - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
@@ -2519,6 +2519,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:17917`
 - Item 3's route, DECIDED by DIST #3, is REFINED: `op=instancegroup` answers admin, member and probe only (`index.mjs`, its OPS row) and an update holds no instance credential, so `newgroup` tells from the version it reads before the upload, conditionally when that is unknown, and never seeds or reads.  
   `docs/development/CLAIMS.md:17988`
+- **2026-09-22** — AMENDED 2026-09-22, same session (commit 5): BOB'S RULING APPLIED TO THIS SESSION'S PLACEMENTS** — Bob, 2026-09-22 (`CLAUDE.md` §2, `48aab56b`): *The goal is BIO work; process is overhead*.  
+  `docs/development/CLAIMS.md:18071`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2764,9 +2766,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - CORRECTED with dated reasons, never exempted.  
   `docs/development/kickoffs/RECORD.md:377`
 - **2026-09-21** — `BACKLOG.md`'S BUDGET STAYS 150 KiB — RULED by BOB #23, 2026-09-21.** When a placement needs room, cut the rows FURTHEST DOWN the order to their fields (their `scope:` verbatim in the dated cut archive, `docs/archive/ledgers/QUEUE-cut-<date>.md`, each line prefixed `> `, a `cut:` line left on the row), never from…  
-  `docs/development/kickoffs/SCHEDULER.md:185`
+  `docs/development/kickoffs/SCHEDULER.md:188`
 - **2026-09-22** — DO NOT ASK LANES TO HOLD `main` FOR YOUR GATE — SUPERSEDED 2026-09-22 by Bob's ruling** (`CLAUDE.md` §6: *never queue a gate behind another lane's*; lanes must not back up behind long runs).  
-  `docs/development/kickoffs/SCHEDULER.md:186`
+  `docs/development/kickoffs/SCHEDULER.md:189`
 - **2026-07-28** — RULED by Bob, 2026-07-28: source addresses are NOT exempt from the canonical-identity rule.  
   `docs/development/LINK-FIDELITY.md:299`
 - **2026-07-30** — RULED by Bob, 2026-07-30, REORDERED against the earlier draft.  

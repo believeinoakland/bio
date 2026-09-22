@@ -18068,6 +18068,12 @@ running) and its route D-278 (a phantom row: cited on `main`, its DEBT row only 
 The one drafted row waiting for room is on `origin/scheduler11/row-drafts`, never merged. This claim passes to SCHEDULER
 #12, who supersedes it when it archives this session.
 
+**AMENDED 2026-09-22, same session (commit 5): BOB'S RULING APPLIED TO THIS SESSION'S PLACEMENTS** — Bob, 2026-09-22
+(`CLAUDE.md` §2, `48aab56b`): *The goal is BIO work; process is overhead*. On BOB #25's word, M0-106 and M0-107 (they cut
+gate time) move to the head of the backlog, and M0-104 and M0-105 (they do not) move behind the product rows, after D-50;
+`kickoffs/SCHEDULER.md` step 3 carries the ruling as the lane's ordering law, and SCHEDULER-NEXT's first owed act is the
+re-order of the rest of the plan under it.
+
 ## DELEGATION 2026-09-22 SCHEDULER (#11) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S11-1: D-152's region at the leg (DEC-4), D-164's reopening condition, D-125's personal mute of a FINDING (DEC-10), and D-179's one capture, one home; none blocks a runnable row**
 
 1. **D-152 — DEC-4's *"an OCR citation carries its image region"*, AT THE LEG.** Built on `06832aff`: the transcription

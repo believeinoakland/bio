@@ -20,25 +20,25 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push` — STILL PUSHES A RED TREE UNREFUSED, AND `--since` FINDS NO RECORD TO RE-CHECK FROM.** `tools/gates.mjs` records only when the tree was clean at the start (`CLEAN_AT_START`) and a dirty run prints *"NOT RECORDED"* (re-read on `464c2779`). — owner M0.
-order: FIRST of the queued rows, where D-293 stood (BOB #25: *"after D-293"*): a correction to just-landed work (`eecb553c`), above M0-99's new work by rule 3, and it gives `--since` a record on the commonest landing shape, Bob's throughput priority (SCHEDULER #11, 2026-09-22)
+### M0-106 · queued — **DIST's RELEASE GATE RE-RUNS THE WHOLE BATTERY ON MERGED `main`, CALLING IT *"a tree nobody has tested"* (`kickoffs/DIST.md`), WHICH IS FALSE WHEREVER THAT EXACT TREE ALREADY CARRIES A GREEN FULL RECORD** (D-293 keys the record by tree). DIST #4's 0.71.0 gate took ~2.5 h here for a battery that runs in ~16 min. — owner DIST (its own kickoff).
+order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob's ruling, 2026-09-22, `CLAUDE.md` §2: *The goal is BIO work; process is overhead*: no process row unless it cuts gate time or unblocks product); DIST's own act, never a worker slot (moved by SCHEDULER #11 on BOB #25's word, 2026-09-22)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree key is CARRIED in BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293's DESIGN GAP RULED") until M0-105 folds its line.
-depends-on: none — D-293 is on `main`.
-scope: at the run's start and end `gates.mjs` takes the tree a TEMPORARY index writes (`GIT_INDEX_FILE=<temp> git add -A && git write-tree`), byte for byte the tree that commit publishes, and records a dirty run's verdict under it when the two agree; the live index is never touched; nothing else about the record or the guard moves. **FULL GATE PROFILE**.
-accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty run then that commit passes; a commit of part of the dirty tree passes with no record. How a liar passes it: keying by the LIVE index, which stages the member's files, so an arm asserts the index byte-identical before and after. NEGATIVE CONTROL: drop the dirty arm, and the RED-dirty-then-commit arm fails by name.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `CLAUDE.md` §6's ruling of 2026-09-22; the item is carried in BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "GATES RUN FAR MORE THAN THEY NEED TO").
+depends-on: none — D-293's record and M0-98's `--since` are on `main`.
+scope: step 1 becomes: a GREEN FULL record for the tree being released, or `gates.mjs --since <the newest commit whose tree carries one>`, and the whole battery only when neither exists; the version bump's own check stays. DIST writes it; CONDUCT routes the row to DIST and briefs no worker.
+accepts-when: a release from a tree with a GREEN FULL record runs no battery and names the record it relied on; one from an unrecorded tree runs the battery as today.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
 
-### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT: such rulings are carried in inbox entries that drain to an archive nobody reads whole** (M0-104's key among them). The file is in `readbudget.mjs`'s `CUT` set, so a fold past the budget FAILS. — owner M0.
-order: directly after M0-104, whose line it folds, and before any further ruling is folded into the file (BOB #25, 2026-09-21) (SCHEDULER #11, 2026-09-22)
+### M0-107 · queued — **LOAD MAKES A GATE WRONG, NOT ONLY SLOW: a suite whose subprocess or wall-clock budget expires reads the expiry as a FINDING, and since D-293 the false RED is recorded and refuses the push.** DIST #4's 0.71.0 gate read RED on `owed-controls` A13/A13b beside a concurrent battery (M0-103, this row's first site); 57 `timeout:` sites sit in 43 suites and neither `gates.mjs` nor `battery.mjs` names a timeout outcome (re-read on `032d1ce1`). — owner M0.
+order: directly after M0-106, near the head because it CUTS GATE TIME: a load-made RED costs a FULL re-run and blocks a push (Bob's ruling, 2026-09-22, `CLAUDE.md` §2: *The goal is BIO work; process is overhead*); it supersedes M0-103 (moved by SCHEDULER #11 on BOB #25's word, 2026-09-22)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and `kickoffs/CONDUCT.md`'s cut of 2026-09-19 as the precedent; the cut is item 2 of BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`).
-depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
-scope: cut the file to about 22 KB: history and receipts move VERBATIM to `docs/archive/`, every rule stays, and the arms of `bio-plane/test/register-grammar.control.mjs` that quote its register block move with the block; then fold M0-104's line, and M0-97's second specimen into the section *DOES THE CITATION RESOLVE TO THE ACTOR THE SENTENCE NAMES?*: a quoted register entry (a `### DEC-n` heading followed by a `decided:` line) is filed as a ruling from ANY corpus file, so a quote outside `DECISIONS.md` is a phantom-ruling specimen beside the marker words. **DOCS PROFILE** (BOB #25); `gates.mjs` adds the control file's readers.
-accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar passes it: deleting rather than moving, so the check diffs the archive against the pre-cut file. NEGATIVE CONTROL: drop one sentence instead of moving it, and that check fails naming it.
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement; the item is carried in BOB #25's drained entry.
+depends-on: none.
+scope: every suite whose subprocess or wall-clock budget can expire reads the expiry as ONE named timeout assertion, never a finding; a run whose only failures are timeouts records NOT MEASURED instead of RED, so the push guard does not refuse on it. First site: M0-103's two `coverage.mjs` spawns in `owed-controls.test.mjs`. **FULL GATE PROFILE**.
+accepts-when: a sweep names every `timeout:` and budget site with its outcome check; a run killed only by timeouts writes no RED record. How a liar passes it: raising every timeout, which hides a real hang, so an arm plants a hang and asserts it is still named. NEGATIVE CONTROL: a 1 ms budget on one swept site fails its timeout assertion by name and no finding assertion.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`); supersedes M0-103.
 
 ### REC-166 · queued — **A PROJECT'S MAKE-CURRENT WRITES INTO THE SHARED QUESTION.** `op=versioncurrent&project=P` promotes the INQUIRY first (its `last_updated` and the Session Log line *reading '<v>' is what P stands on*) and only then P's pointer, so the finding's `bundle_sha` moves for no change to the finding: cases pinning it lose CASE-4's fences and `#flagCasesOnRevision` flags them all, another project's included (`store.mjs`, re-read on `032d1ce1`). — owner RECORD.
 order: first of the product corrections, directly after REC-157 lands (BOB #25): one team's act silently moving another team's published pins, which §7 forbids, CLAUDE.md §2's class; it completes REC-157's premise on every path (SCHEDULER #11, 2026-09-22)
@@ -360,26 +360,6 @@ depends-on: none — D-78's stamp is built.
 scope: wherever an inquiry is listed or shown — the focus list, the review queue, beside a project — one marker for `surfaced_by: agent`, from one helper, saying nobody has yet judged it worth asking. It discounts nothing and hides nothing; a member's inquiry renders as today.
 accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking by title or author text, so the fixture's two inquiries share both. NEGATIVE CONTROL: neuter the helper, and the agent-inquiry arm fails by name.
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-82's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
-
-### M0-106 · queued — **DIST's RELEASE GATE RE-RUNS THE WHOLE BATTERY ON MERGED `main`, CALLING IT *"a tree nobody has tested"* (`kickoffs/DIST.md`), WHICH IS FALSE WHEREVER THAT EXACT TREE ALREADY CARRIES A GREEN FULL RECORD** (D-293 keys the record by tree). DIST #4's 0.71.0 gate took ~2.5 h here for a battery that runs in ~16 min. — owner DIST (its own kickoff).
-order: first of the instrument cluster, where M0-103 stood (BOB #25: *before M0-103*), item 1 of the cut-the-work entry: a whole battery nobody needs, on a machine that swaps (Bob, 2026-09-22: massive suite sets run only when necessary); DIST's own act, never a worker slot (SCHEDULER #11, 2026-09-22)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `CLAUDE.md` §6's ruling of 2026-09-22; the item is carried in BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "GATES RUN FAR MORE THAN THEY NEED TO").
-depends-on: none — D-293's record and M0-98's `--since` are on `main`.
-scope: step 1 becomes: a GREEN FULL record for the tree being released, or `gates.mjs --since <the newest commit whose tree carries one>`, and the whole battery only when neither exists; the version bump's own check stays. DIST writes it; CONDUCT routes the row to DIST and briefs no worker.
-accepts-when: a release from a tree with a GREEN FULL record runs no battery and names the record it relied on; one from an unrecorded tree runs the battery as today.
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
-
-### M0-107 · queued — **LOAD MAKES A GATE WRONG, NOT ONLY SLOW: a suite whose subprocess or wall-clock budget expires reads the expiry as a FINDING, and since D-293 the false RED is recorded and refuses the push.** DIST #4's 0.71.0 gate read RED on `owed-controls` A13/A13b beside a concurrent battery (M0-103, this row's first site); 57 `timeout:` sites sit in 43 suites and neither `gates.mjs` nor `battery.mjs` names a timeout outcome (re-read on `032d1ce1`). — owner M0.
-order: directly after M0-106, where M0-103 stood, which it supersedes by taking its fix to its class, item 2 of BOB #25's cut-the-work entry: a gate made wrong by load costs a FULL re-run and blocks a push (SCHEDULER #11, 2026-09-22)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement; the item is carried in BOB #25's drained entry.
-depends-on: none.
-scope: every suite whose subprocess or wall-clock budget can expire reads the expiry as ONE named timeout assertion, never a finding; a run whose only failures are timeouts records NOT MEASURED instead of RED, so the push guard does not refuse on it. First site: M0-103's two `coverage.mjs` spawns in `owed-controls.test.mjs`. **FULL GATE PROFILE**.
-accepts-when: a sweep names every `timeout:` and budget site with its outcome check; a run killed only by timeouts writes no RED record. How a liar passes it: raising every timeout, which hides a real hang, so an arm plants a hang and asserts it is still named. NEGATIVE CONTROL: a 1 ms budget on one swept site fails its timeout assertion by name and no finding assertion.
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`); supersedes M0-103.
 
 ### D-438 · queued — **THE DEC-49 GUARD'S REAL-TREE CONTROL HARNESS `civicos-ui/test/refusal-codes.control.mjs` IS RED: FOUR ARMS FAIL THAT ARE NOT ITS SUBJECT'S.** (c) `stdio-census.test.mjs` ARM D reads the guard BY NAME, so moving the guard aside turns the harness red on an `ENOENT`; (e) its first predicate is the census sentence from before D-257; (r2) EXACTLY 33 conscripted, measured 35; (r6) EXACTLY 36, measured 38. NARROWED: its `refusal-partition` half closed with D-355 (`0e80aa8c`). — owner VERIFY.
 order: FIRST of the instrument cluster, with M0-93: a control red on a green `main` measures nothing, D-355's class, and the DEC-49 guard is what a member's refusal words rest on (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
@@ -848,6 +828,26 @@ depends-on: none.
 accepts-when: a fixture corpus with two projects differing only in case and spacing is reported by name; distinct names pass; a deactivated collider is still reported. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-50» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push` — STILL PUSHES A RED TREE UNREFUSED, AND `--since` FINDS NO RECORD TO RE-CHECK FROM.** `tools/gates.mjs` records only when the tree was clean at the start (`CLEAN_AT_START`) and a dirty run prints *"NOT RECORDED"* (re-read on `464c2779`). — owner M0.
+order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree key is CARRIED in BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293's DESIGN GAP RULED") until M0-105 folds its line.
+depends-on: none — D-293 is on `main`.
+scope: at the run's start and end `gates.mjs` takes the tree a TEMPORARY index writes (`GIT_INDEX_FILE=<temp> git add -A && git write-tree`), byte for byte the tree that commit publishes, and records a dirty run's verdict under it when the two agree; the live index is never touched; nothing else about the record or the guard moves. **FULL GATE PROFILE**.
+accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty run then that commit passes; a commit of part of the dirty tree passes with no record. How a liar passes it: keying by the LIVE index, which stages the member's files, so an arm asserts the index byte-identical before and after. NEGATIVE CONTROL: drop the dirty arm, and the RED-dirty-then-commit arm fails by name.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT: such rulings are carried in inbox entries that drain to an archive nobody reads whole** (M0-104's key among them). It is in `readbudget.mjs`'s `CUT` set, so a fold past the budget FAILS. — owner M0.
+order: directly after M0-104, whose line it folds, behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; SCHEDULER #11 on BOB #25's word)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and `kickoffs/CONDUCT.md`'s cut of 2026-09-19 as the precedent; the cut is item 2 of BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`).
+depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
+scope: cut the file to about 22 KB: history and receipts move VERBATIM to `docs/archive/`, every rule stays, and the arms of `bio-plane/test/register-grammar.control.mjs` that quote its register block move with the block; then fold M0-104's line, and M0-97's second specimen into the section *DOES THE CITATION RESOLVE TO THE ACTOR THE SENTENCE NAMES?*: a quoted register entry (a `### DEC-n` heading followed by a `decided:` line) is filed as a ruling from ANY corpus file, so a quote outside `DECISIONS.md` is a phantom-ruling specimen beside the marker words. **DOCS PROFILE** (BOB #25); `gates.mjs` adds the control file's readers.
+accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar passes it: deleting rather than moving, so the check diffs the archive against the pre-cut file. NEGATIVE CONTROL: drop one sentence instead of moving it, and that check fails naming it.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
 
 ### M0-77 · queued — **`tools/mintid.mjs`' MAIN-GUARD COMPARES `resolve(process.argv[1])` WITH `import.meta.url`, WHICH NODE REALPATHS — so `mintid`** … (whole text: the cut archive)
 order: first of the queued M0 rows: a silent exit 0 in the id allocator every lane uses is a costs-nothing green (SCHEDULER, 2026-09-19)

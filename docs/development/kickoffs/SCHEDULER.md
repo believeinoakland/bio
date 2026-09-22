@@ -40,7 +40,10 @@ names.
    design AT THE ARTIFACT (the section it cites covers the act being built — `BOB.md` rule 4), resolve every `depends-on`
    against `node tools/status.mjs` and the ledgers, and place it. Move the drained entry to the archive in the same commit.
 3. **Place a task where it belongs.** Nothing before what it rests on (`status.mjs` says BUILT, or the task it depends on
-   is earlier). A correction to just-landed work outranks new work. Security and disclosure defects outrank features.
+   is earlier). **Product before process — THE LANE'S LAW since Bob's ruling of 2026-09-22 (`CLAUDE.md` §2: *The goal is
+   BIO work; process is overhead*):** a product row goes ahead of process tooling; a process row is placed only if it cuts
+   gate time or unblocks product, and such a row may sit near the head; every other process row goes behind the product
+   rows; landings are batched. It supersedes any order that heads the plan with M0 instruments. A correction to just-landed work outranks new work. Security and disclosure defects outrank features.
    Record one line on the row saying WHY it is where it is. If the right place depends on doctrine or on a priority only
    Bob can set, send it to BOB, place it provisionally, and say so on the row.
 4. **A NEW DEFECT is placed only with its FIX identified** (Bob, 2026-09-18: *"understood deeply enough that a fix can be
