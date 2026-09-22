@@ -52755,8 +52755,8 @@ ${words}`;
       if (!p || normalizeType(p.object_type) !== "project") continue;
       if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
       const conc = this.#caseConclusionFor(pid, inquiryId, viewer, currentState);
-      if (conc.state !== "concluded") continue;
-      if (!this.#editionsRecordingConclusion(inquiryId, rel, conc).same.length) return true;
+      if (conc.state === "concluded" && !this.#editionsRecordingConclusion(inquiryId, rel, conc).same.length)
+        return true;
     }
     return false;
   }

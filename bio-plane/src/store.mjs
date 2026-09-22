@@ -28785,8 +28785,11 @@ export class Store extends DurableObject {
       if (!p || normalizeType(p.object_type) !== "project") continue;
       if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
       const conc = this.#caseConclusionFor(pid, inquiryId, viewer, currentState);
-      if (conc.state !== "concluded") continue;
-      if (!this.#editionsRecordingConclusion(inquiryId, rel, conc).same.length) return true;
+      /* ONE CONDITION, SPELLED WITHOUT publishCase()'s `if (conc.state !== …)` LINE: that
+         line is `caselifecycle.control.mjs` arm (c)'s anchor, and a second copy of it here
+         disarmed the arm (M0-25's witness, A5, caught it on this item's first narrow run). */
+      if (conc.state === "concluded" && !this.#editionsRecordingConclusion(inquiryId, rel, conc).same.length)
+        return true;
     }
     return false;
   }
