@@ -72,7 +72,7 @@
  * the tool's ONE freshness call (the CLI with no argument) before anything arms, and BASE asks that call
  * a second time and requires `already current, not rewritten` — the property `--check` used to answer.
  */
-import { readFileSync, writeFileSync, copyFileSync, statSync, mkdtempSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, statSync, mkdtempSync, existsSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -147,6 +147,10 @@ const rulingCount = (text) => { const m = text.match(/^(\d+) rulings across/m); 
 
 /* ---------------------------------------------------------------- arming and restoring */
 let failures = 0;
+/* THE PEN GOES ON EVERY EXIT, from an exit hook (VERIFICATION.md's driver law, D-355) — added 2026-09-22 by the
+   M0-99 worker, who found this driver leaving ~7.5 MB of pristine copies in the host temp directory on every run.
+   KEPT when any check failed, because then its copies are the evidence of what the restore compared against. */
+process.on("exit", () => { if (!failures) { try { rmSync(PEN, { recursive: true, force: true }); } catch { /* best effort */ } } });
 const say = (ok, line) => { if (!ok) failures++; console.log(`  ${ok ? "PASS" : "FAIL"}  ${line}`); };
 const rel = (f) => f.replace(ROOT + "/", "");
 
