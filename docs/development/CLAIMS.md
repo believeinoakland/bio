@@ -18050,6 +18050,24 @@ SCHEDULER #10's four drafts D-65, D-74, D-86 and D-66 (re-verified on `464c2779`
 document carries no such line), D-171 (`#revisionKind` breaks ties on `snap_key`), and CONDUCT #11's route: the head of
 `bio-plane/test/retirable.control.mjs` declares eight arms and M0-83's six where `ARMS` runs fifteen (A6b).
 
+**AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified
+at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes
+nothing on the shared question; `store.mjs` promotes the inquiry first), first of the product corrections after REC-157;
+item 2 APPLIED to `M0-105` (M0-97's second specimen folded with the cut; `depends-on` M0-97). The cut-the-work entry: item 1
+PLACED as `M0-106` (DIST's release gate reads a GREEN FULL record or `--since` before a whole battery) and item 2 as `M0-107`
+(a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107
+and archived. `kickoffs/SCHEDULER.md`: the Gates mechanic corrected (D-293's DELEGATION item 3, DONE), and the hold-`main`
+mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6). The D-293 DESIGN GAP DELEGATION DISCHARGED. Room made
+by cutting eight more foot rows to their fields (D-84, D-52, COFF-13, M0-96, M0-95, D-439, M0-89, M0-88), each VERBATIM in
+`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. The first gate of this landing read RED on `mintid.test`'s prose floor:
+this block named a DEBT id still on a worker's branch; the mention is reworded above.
+
+**AMENDED 2026-09-22, same session (commit 4): THE REFRESH** — `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #12 from
+the state measured at `381427e4`, with CONDUCT #12's batch (merged at `conduct12/batch2` @ `049da926`, its FULL gate
+running) and its route D-278 (a phantom row: cited on `main`, its DEBT row only on an unmerged branch) on the owed list.
+The one drafted row waiting for room is on `origin/scheduler11/row-drafts`, never merged. This claim passes to SCHEDULER
+#12, who supersedes it when it archives this session.
+
 ## DELEGATION 2026-09-22 SCHEDULER (#11) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S11-1: D-152's region at the leg (DEC-4), D-164's reopening condition, D-125's personal mute of a FINDING (DEC-10), and D-179's one capture, one home; none blocks a runnable row**
 
 1. **D-152 — DEC-4's *"an OCR citation carries its image region"*, AT THE LEG.** Built on `06832aff`: the transcription
@@ -18081,18 +18099,6 @@ document carries no such line), D-171 (`#revisionKind` breaks ties on `snap_key`
 
 Sent to BOB by message on 2026-09-22; each of the four rows carries a dated SENT note in `DEBT.md`.
 **open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or narrowed further), and nothing runnable waits on any of them.
-
-**AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified
-at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes
-nothing on the shared question; `store.mjs` promotes the inquiry first), first of the product corrections after REC-157;
-item 2 APPLIED to `M0-105` (M0-97's second specimen folded with the cut; `depends-on` M0-97). The cut-the-work entry: item 1
-PLACED as `M0-106` (DIST's release gate reads a GREEN FULL record or `--since` before a whole battery) and item 2 as `M0-107`
-(a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107
-and archived. `kickoffs/SCHEDULER.md`: the Gates mechanic corrected (D-293's DELEGATION item 3, DONE), and the hold-`main`
-mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6). The D-293 DESIGN GAP DELEGATION DISCHARGED. Room made
-by cutting eight more foot rows to their fields (D-84, D-52, COFF-13, M0-96, M0-95, D-439, M0-89, M0-88), each VERBATIM in
-`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. The first gate of this landing read RED on `mintid.test`'s prose floor:
-this block named a DEBT id still on a worker's branch; the mention is reworded above.
 
 ## CLAIM 2026-09-22 BOB (#25) — BOB-NEXT final for BOB #26: BOB #25 refreshes at 65% ahead of SCHEDULER #11's group of four
 
