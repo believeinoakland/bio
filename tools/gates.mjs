@@ -61,7 +61,10 @@
  * directory: a file that enumerates directories (`readdirSync`, `ls-files` …) and
  * names the parent's last segment or any ancestor's repo-relative path as a quoted
  * token (`join(REPO, "tools")`), or a unit's own file enumerating the directory it
- * sits in (`readdirSync(DIR)`). REACH, stated: the plane's runtime code is
+ * sits in (`readdirSync(DIR)`). A path under `docs/` is read by DOCS's own
+ * doc-facing set plus any unit whose OWN files name it — never by closure mention,
+ * because the helpers every suite imports cite docs files in comments, and TARGETED
+ * is never wider than DOCS for prose. REACH, stated: the plane's runtime code is
  * not read (it cannot read a repository file at run time; its dependencies are
  * imports inside the FULL set); a path assembled at run time from pieces none of
  * which is its name, its stem or its directory is invisible; a comment naming a
@@ -437,18 +440,36 @@ let selection = null;      // Map id -> { unit, why }
 let sinceInfo = null;
 let sinceNote = "";
 
-function targetedSelection(paths) {
-  const sel = selectReaders(paths);
-  if (paths.some((p) => p.startsWith("docs/"))) {
-    for (const f of planeDoc) if (!sel.has(`plane:${f}`))
-      sel.set(`plane:${f}`, { unit: UNITS.find((u) => u.id === `plane:${f}`), why: "doc-facing, and a docs/ path changed" });
-    for (const f of uiDoc) if (!sel.has(`ui:${f}`))
-      sel.set(`ui:${f}`, { unit: UNITS.find((u) => u.id === `ui:${f}`), why: "doc-facing, and a docs/ path changed" });
+/* A docs/ PATH IS READ BY THE DOC-FACING SET — DOCS's own derivation, the rule this estate already trusts
+   for prose — plus any unit whose OWN files name it or walk its directory. Not by closure MENTION: the
+   helpers every suite imports cite docs files in their comments (`stdio.mjs` names `MEASUREMENTS.md`), and
+   by closure MENTION one appended measurement read as a change to 219 suites (measured 2026-09-21, before
+   this rule). TARGETED is never wider than DOCS for the prose half of a diff. REACH, stated: DOCS's own —
+   a suite reading prose only through `bio-plane/scripts/` is not followed. */
+const DOC_FACING = new Set([...planeDoc.map((f) => `plane:${f}`), ...uiDoc.map((f) => `ui:${f}`)]);
+function ownHit(unit, p) {
+  if (unit.tops.includes(join(REPO, p))) return "is the changed file";
+  for (const t of unit.tops) { const h = fileHit(t, p, true); if (h) return `${h} in ${repoRel(t)}`; }
+  return null;
+}
+function readersOf(paths, among = UNITS) {
+  const docs = paths.filter((p) => p.startsWith("docs/"));
+  const out = selectReaders(paths.filter((p) => !p.startsWith("docs/")), among);
+  if (docs.length) for (const unit of among) {
+    if (out.has(unit.id)) continue;
+    if (DOC_FACING.has(unit.id)) {
+      out.set(unit.id, { unit, why: `doc-facing, and ${docs[0]}${docs.length > 1 ? ` (+${docs.length - 1} more)` : ""} changed` });
+      continue;
+    }
+    for (const p of docs) { const h = ownHit(unit, p); if (h) { out.set(unit.id, { unit, why: `${p}: ${h}` }); break; } }
   }
+  return out;
+}
+function targetedSelection(paths) {
+  const sel = readersOf(paths);
   const testChange = paths.find(isTestFile);
   const cov = UNITS.find((u) => u.id === "coverage");
   if (testChange && cov && !sel.has("coverage")) sel.set("coverage", { unit: cov, why: `a test file changed: ${testChange}` });
-  for (const [id, v] of sel) if (!v.unit) sel.delete(id);
   return sel;
 }
 
@@ -509,11 +530,11 @@ if (SINCE && !FORCE_FULL) {
         } else {
           cls = "SINCE";
           let pairing;
-          if (mineFull) pairing = selectReaders(upstream);
-          else if (upFull) pairing = selectReaders(mine);
+          if (mineFull) pairing = readersOf(upstream);
+          else if (upFull) pairing = readersOf(mine);
           else {
-            const mineReaders = selectReaders(mine);
-            const upReaders = selectReaders(upstream, [...mineReaders.values()].map((v) => v.unit));
+            const mineReaders = readersOf(mine);
+            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit));
             pairing = new Map();
             for (const [id, v] of mineReaders) {
               const w = upReaders.get(id);

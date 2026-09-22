@@ -191,8 +191,8 @@ const ARMS = [
 
   { id: "G8", title: "BOTH SIDES read as the SAME FILE changed on both — the liar for `--since`",
     patches: [{ file: GATES,
-      from: "            const upReaders = selectReaders(upstream, [...mineReaders.values()].map((v) => v.unit));",
-      to: "            const upReaders = selectReaders(mine.filter((p) => upstream.includes(p)), [...mineReaders.values()].map((v) => v.unit));" }],
+      from: "            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit));",
+      to: "            const upReaders = readersOf(mine.filter((p) => upstream.includes(p)), [...mineReaders.values()].map((v) => v.unit));" }],
     mustBreak: "a unit reading BOTH sides re-runs",
     mustNotBreak: ["a rebase over DISJOINT docs commits re-runs ONLY plancheck"] },
 
