@@ -1,11 +1,11 @@
 # Capturing client-rendered content
 
-**Status** · DRAFT, not ratified (its own words), written 2026-07-29 after 0.42.0 found that `oaklandca.opengov.com` serves a shell holding almost nothing. [DESIGNED-not-built], and still blocked. Measured against `bio-plane/src` at plane 0.58.0 (grepped 2026-09-14): nothing renders anything — no Browser Rendering binding, no `render.*` fields, no rendered capture, no grade or method vocabulary for one. The only built part is DETECTION: `docprofile`'s `client_rendered` recogniser, which goes first in the registry and carries a member-facing warning that what was collected is the frame and not the figures. D-64 is open and BLOCKED on D-55, whose surviving case — a third party's script output as evidence in its own right — needs the per-origin sub-document attribution that is [ABSENT]. Two of its sections are superseded in place and say so in the body: D-55 by `AUTHORITY-AND-TRUST.md`'s three-valued ruling, and the free-tier premise by DEC-42. as of 2026-09-14.
+**Status** · DRAFT, not ratified (its own words), written 2026-07-29 after 0.42.0 found that `oaklandca.opengov.com` serves a shell holding almost nothing. [DESIGNED-not-built], and not buildable until its four open questions for ratification are settled. Measured against `bio-plane/src` at plane 0.58.0 (grepped 2026-09-14): nothing renders anything — no Browser Rendering binding, no `render.*` fields, no rendered capture, no grade or method vocabulary for one. The only built part is DETECTION: `docprofile`'s `client_rendered` recogniser, which goes first in the registry and carries a member-facing warning that what was collected is the frame and not the figures. D-64 is open and no longer blocked on D-55: D-55 CLOSED on 2026-09-21 when its surviving case, a third party's output as evidence in its own right, was DESIGNED at document grain (§What must be recorded, "DESIGNED 2026-09-21"). That design is [DESIGNED-not-built], and its one fence is D-440. Two of its sections are superseded in place and say so in the body: D-55 by `AUTHORITY-AND-TRUST.md`'s three-valued ruling, and the free-tier premise by DEC-42. as of 2026-09-21.
 
 **Place in the system** · A level-2 design serving construct 2, **intake, capture and provenance**, whose level-1 home is `BIO_Intake_Doctrine_v1_1.md` (`BIO_System_Design.md` §3 names it there). It is the one capture design whose subject the plane cannot do at all, and the gap it names is a coverage gap rather than a refinement: modern government transparency portals are routinely shells. It is downstream of `AUTHORITY-AND-TRUST.md`, which unblocked it in doctrine, and of DEC-42, which removed its free-tier premise; D-191 bears on it directly, because a rendered capture offered as evidence of what a page LOOKED like is the composite whose temporal spread the record does not state.
 
 **Incomplete sections** ·
-- §Therefore: a pair, not a replacement / §What must be recorded on a rendered capture — [DESIGNED-not-built] in full. Nothing produces the second artifact, and none of the `render.*` fields listed — engine, viewport, wait condition, elapsed, requests, `third_party_executed`, `render.of` — exists in any schema or any provenance document.
+- §Therefore: a pair, not a replacement / §What must be recorded on a rendered capture — [DESIGNED-not-built] in full. Nothing produces the second artifact, and none of the `render.*` fields listed — engine, viewport, wait condition, elapsed, requests, `third_party_executed`, `render.of`, and the `render.data` that the 2026-09-21 authority rule added — exists in any schema or any provenance document. The authority rule itself is [DESIGNED-not-built]; its fence on the `image` arm is D-440, and the per-origin attribution of a rendered page's regions is DEFERRED with its trigger named.
 - §The grade: RULED — the grade is RULED and nothing implements it. There is no grade or method vocabulary for a rendered capture in the check catalog, which this document's own open questions say must be settled before any code writes one into a record.
 - §There is no collision — superseded in its premise by DEC-42 and marked as such in the body: Workers Paid IS a requirement, the installer refuses a Free account (D-185), and the free-tier figures here are history rather than a configuration anything runs under.
 - §What this changes in what is already built — written against 0.42.0 and not re-checked since. Subresource capture, link partitioning and the site asset record have all moved (`CAPTURE-FIDELITY.md`, `LINK-FIDELITY.md`, `CAPTURE-SCALING.md`), and none of the four claims here can be checked against a rendered document because none exists.
@@ -19,6 +19,7 @@
 - [Therefore: a pair, not a replacement](#therefore-a-pair-not-a-replacement)
 - [What must be recorded on a rendered capture](#what-must-be-recorded-on-a-rendered-capture)
   - [RULED: third-party output is attributed to the third party](#ruled-third-party-output-is-attributed-to-the-third-party)
+  - [DESIGNED 2026-09-21: whose authority a rendered capture carries, and why D-55 closed](#designed-2026-09-21-whose-authority-a-rendered-capture-carries-and-why-d-55-closed)
 - [There is no collision: rendering is available on the free tier](#there-is-no-collision-rendering-is-available-on-the-free-tier)
 - [What Workers Paid actually buys, for this project](#what-workers-paid-actually-buys-for-this-project)
 - [What this changes in what is already built](#what-this-changes-in-what-is-already-built)
@@ -168,6 +169,88 @@ third party's script output is itself the evidence, which still needs per-origin
 sub-document attribution. An authority-undetermined capture may be held and may
 not be PUBLISHED.
 - `render.of`: the sha256 of the served shell, so the pair is inseparable
+
+### DESIGNED 2026-09-21: whose authority a rendered capture carries, and why D-55 closed
+
+Mechanism, designed by BOB #24 under Bob's standing delegation (mechanism is the architect's), from his three
+rulings: third-party output that is evidence is recorded as that third party's (2026-07-29, above); authority follows
+the DATA and is three-valued (2026-07-30, `AUTHORITY-AND-TRUST.md`); and the publication fence sits on PROVENANCE
+authority, so content-undetermined material with a dated basis may be published (2026-07-31, the same document).
+
+**Traced first, at the code (`origin/main` `c05d71c8`): the link D-55's 2026-09-19 narrowing left open.**
+
+- **No third party's script output is in any capture today, and a page's own bytes are what its host served.**
+  `subresources.mjs` `fetchPolicy` refuses every script, image and media reference whose `originOf` origin is
+  `third_party` (`THIRD_PARTY`, recorded per reference). `originOf` compares host names, and its same-site test is an
+  approximation it states: on a shared vendor platform another organisation's asset can pass as `same_site` and be
+  fetched, but only as support for the rendition, never as the document's bytes. Scripts, frames, objects and embeds
+  are stripped from the rendition (`STRIPPED_ELEMENTS`), and nothing renders (D-64). Stylesheets, fonts and icons are
+  fetched from any origin, for layout only.
+- **A content row's document is always a registered capture** (`content.capture_sha`, the register's trust root), so
+  no row can have a subresource as its document.
+- **The `image` arm's `{part}` form CAN name a subresource's bytes, or any other 64-hex hash, on a capture that is not
+  an office container, and it mints.** `coversImage` admits a part whenever the container holds no image list, which is
+  true of every HTML capture, and `mintContent` states nothing. The part does NOT join: nothing resolves it against
+  `site_asset_refs`. That is a defect in its own right, D-440: the row claims an image in a document whose bytes do
+  not contain it.
+
+**The design.**
+
+1. **Authority stays at DOCUMENT grain. No authority value is added at asset or content grain.** An asset row is
+   rendition support, which `fetchPolicy` limits to what a faithful rendition needs. Nothing cites it as evidence, so
+   an authority on it would attribute bytes nothing may rest on. A content row inherits its capture's authority
+   through `capture_sha`. A second authority column there would be a second answer to one question. It could be set
+   honestly only by attributing a region of a rendered page to the origin that produced it, which needs a `dom` extent
+   producer (refused by name today, C-45.4) and a renderer that attributes DOM nodes to requests; neither exists. That
+   attribution is DEFERRED as a refinement: it would turn undetermined regions into determined ones, and it would
+   correct no record.
+2. **Anything served beside a page that is to be evidence is its OWN document.** That covers an image, a data payload
+   a script fetched, or a widget's output. It is acquired at its own address as its own capture, with its own
+   provenance chain whose hop names the origin that served it, its own grade, and its own content authority under the
+   three-valued rule: the issuing party when asserted, otherwise `undetermined` with a dated basis. This meets Bob's
+   2026-07-29 ruling at the grain the record already holds: a third party's output that is evidence is recorded as
+   that third party's document, never as the hosting site's. What the host served in its OWN bytes, including anything
+   it embedded server-side, is the host's publication; a claim about what the third party itself said rests on the
+   third party's document. The `image` arm's `{part}` form stays what `EXTRACTION-BREADTH-DESIGN.md` §3.2 designed: a
+   member of a container's own bytes, refused by name on any other capture (D-440). When a member needs the exact bytes
+   a page used rather than a fresh fetch, the path is to register the held subresource as its own document. Its
+   provenance hop's evidence is its `site_asset_refs` row, and the hop states whether the bytes were fetched at that
+   capture or REUSED from an earlier one (CAP-4). That is where the join belongs: evidence for a part's own hop, not
+   an address inside the page. It is not built, and it is not owed until a member needs it.
+3. **A rendered capture's content authority is set by the data rule, at document grain.** The rendered artifact of
+   the pair records:
+   - **`render.data`**, added to the list above: each DATA-bearing response the render consumed, with its address, its
+     `originOf` origin and its sha256. Data means documents, frames, fetch and XHR bodies, images, map tiles and data
+     files; it excludes code (scripts) and layout (stylesheets, fonts). It is the rule's input, and the join from the
+     composite to any payload later acquired as its own document.
+   - **`authority_state: determined`, as the served shell's authority, ONLY** when the shell's own authority is
+     determined, every `render.data` entry is `same_host`, and no script from another origin executed
+     (`render.third_party_executed` is empty).
+   - **Otherwise `undetermined`**, with a dated `authority_basis` naming each other origin and the axis it touched
+     (it supplied data, or it ran code), and the D-98 task every undetermined capture raises. A person resolves it by
+     an assertion carrying its basis. *"This viewer only drew the City's layer"* is Bob's tool case, and it is a
+     person's finding: nothing mechanical can tell a tool that drew the host's data from an origin that injected its
+     own.
+   - **Never `determined` as the host when another origin supplied data or ran code.** That is the one false
+     statement all three rulings forbid: crediting a city with a vendor's copy. `same_site` does not qualify silently,
+     because `originOf` states that it approximates, and the approximation is wrong on shared vendor platforms.
+
+   Publication follows the 2026-07-31 fence unchanged: undetermined with a dated basis may be published; undetermined
+   and silent may not.
+
+**It settles the provisional shape recorded on 2026-07-31** (`MILESTONES.md`, M2, *"D-55, unblocked as far as it can
+honestly be"*), keeping its core: attribute by ORIGIN, never by region; each origin `undetermined` unless something
+asserted it; the shell's own authority unchanged. It refines two points. First, that shape's `rendered_origins[]`
+listed each origin *that executed*, and Bob's two axes (2026-07-30) separate an origin that ran code from one that
+supplied data, so the list is kept by AXIS: `render.data` is its data half and `render.third_party_executed` its code
+half. Second, the RENDERED artifact carries its own content authority by item 3's rule, so the shell's authority can
+never be read as covering what another origin contributed.
+
+**What this closes and what it leaves.** D-55 closes, because nothing in the record waits on per-origin sub-document
+attribution. D-64 is no longer blocked on D-55. It waits on its own build and on the four open questions at the end of
+this document, and its build carries item 3's rule: a suite renders a page that draws data from a second origin and
+reads `undetermined` naming that origin, with a negative control that marks it `determined` and fails by name.
+D-440 is the fence item 2 names. Item 1's deferral is stated with its trigger; it is not an obligation.
 
 > **SUPERSEDED IN ITS PREMISE 2026-08-04 (DEC-42): Workers Paid IS now a
 > requirement**, so the collision this section resolves no longer exists in either

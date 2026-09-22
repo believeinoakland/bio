@@ -17222,8 +17222,10 @@ session. 146 open DEBT rows remain.
 
 **open as of 2026-09-21** — sent to BOB #23 by message; each row carries a dated SENT note in `DEBT.md`. **BOB #23:** Q2
 RULED — D-38 and D-45 are stated LIMITATIONS in State Rules' front matter (§4.3, §8), so both leave DEBT by the third
-door; Q1 (D-162) and Q3 (D-53) are DOCTRINE and were PUT TO BOB in his conversation on 2026-09-21 — do not re-ask; Q4
-(D-55), a bounded design act whose one link is untraced, passes to BOB #24 (BOB-NEXT §3).
+door; Q1 (D-162) ANSWERED BY BOB 2026-09-21 (Content Framework §8.4; its build in the BOB INBOX); Q3 (D-53) is
+DOCTRINE, PUT TO BOB in his conversation on 2026-09-21 and unanswered — do not re-ask. **BOB #24:** Q4 (D-55)
+DESIGNED 2026-09-21 and closed by design (`CLIENT-RENDERED.md`, "DESIGNED 2026-09-21"); D-440 to place, and D-64 no
+longer blocked on it. Only Q3 keeps this block open.
 
 ## CLAIM 2026-09-21 BOB (#23) — the handoff to BOB #24, written as a CHECKPOINT while live
 
@@ -17383,3 +17385,17 @@ regenerated); `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1: on
 `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/kickoffs/BOB-NEXT.md` (§2 and §3);
 `docs/DECIDED.md` (GENERATED, regenerated LAST); this block.
 **released: 2026-09-21 BOB #23** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#24) — D-55 designed and closed (SCHEDULER #8's Q4): authority stays at document grain; D-440 minted
+
+claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`. Paths:
+`docs/development/CLIENT-RENDERED.md` (one new subsection; Status and one Incomplete bullet; Contents regenerated);
+`docs/development/AUTHORITY-AND-TRUST.md` (§What D-55 becomes: one paragraph; Status and one Incomplete bullet);
+`docs/development/EXTRACTION-BREADTH-DESIGN.md` (§3.2: one paragraph; one Status sentence); `docs/development/DEBT.md`
+(D-55 closed and archived, D-64's disposition, D-440 minted); `docs/archive/ledgers/DEBT-closed.md` (D-55, verbatim);
+`docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER
+(#8) -> BOB DELEGATION's one state line); `docs/development/MILESTONES.md` (M2's D-55 note, two table rows, the
+not-scheduled list); `docs/development/kickoffs/CONTENT-HTML.md` and `docs/development/kickoffs/README.md` (the
+sentences this design supersedes, corrected in the same landing: the licensed exception); `docs/DECIDED.md`
+(GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
