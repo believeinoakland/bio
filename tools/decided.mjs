@@ -157,6 +157,10 @@ import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, realpat
 import { spawnSync } from "node:child_process";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+/* M0-110: the state files (CLAIMS.md, the ledgers, the handoffs) live on `coord` after the cutover, and 154 of the
+   corpus's rulings sit in CLAIMS.md alone — the walk and the reads go through the coord layer (the pointer is the
+   switch), or the index would silently lose every ruling recorded there. */
+import { walkState, readState } from "./coord.mjs";
 
 const REPO = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 /* The index's path, repo-relative, exported so a caller names it from here rather than
@@ -255,14 +259,22 @@ const NOT_A_RULING = ["open", "deferred"];
  */
 function corpus() {
   const out = [];
-  const walk = (p) => {
-    const st = statSync(p);
-    if (st.isDirectory()) { for (const n of readdirSync(p).sort()) walk(join(p, n)); return; }
-    if (/\.(md|html)$/.test(p) && p !== OUT) out.push(p);
-  };
-  for (const r of ROOTS) { const p = join(REPO, r); if (existsSync(p)) walk(p); }
+  for (const r of ROOTS) {
+    const p = join(REPO, r);
+    /* CORRECTED 2026-09-22 by M0-110: a sorted `readdirSync` walk of the working tree, which after the cutover reads
+       each state file as its one-line pointer. `walkState` is the same sorted, depth-first walk over what a reader
+       sees — coord's copy of a state file, and a coord-only file where it would sit. */
+    const files = existsSync(p) && statSync(p).isDirectory() ? walkState(REPO, r).map((f) => join(REPO, f)) : existsSync(p) ? [p] : [];
+    for (const f of files) if (/\.(md|html)$/.test(f) && f !== OUT) out.push(f);
+  }
   return out;
 }
+
+/* The default reader: through the coord layer, by repo-relative path. */
+const readCorpusFile = (f) => {
+  const t = readState(REPO, relative(REPO, f).split(sep).join("/"));
+  return t === null ? readFileSync(f, "utf8") : t;
+};
 
 /* A ruling's TEXT. The marker sits mid-prose far more often than at a line
    start, so the unit is the SENTENCE containing it rather than the line — a
@@ -336,7 +348,7 @@ export function registerEntries(lines) {
  *  before M0-97, which is what `decided.test.mjs` measures the entry pass against.
  *  `opts.sink`, when given, receives EVERY register entry seen, whatever its verdict,
  *  so a caller can name what was not filed rather than infer it from silence. */
-export function scan(files = corpus(), reader = (f) => readFileSync(f, "utf8"), opts = {}) {
+export function scan(files = corpus(), reader = readCorpusFile, opts = {}) {
   const { entries = true, sink = null } = opts;
   const out = [];
   const seen = new Set();

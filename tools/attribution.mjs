@@ -103,6 +103,9 @@ import { fileURLToPath } from "node:url";
 /* M0-99: the ruling index's ONE freshness call, used by `--census` alone. Importing it scans
    nothing; `decided.mjs` acts only when run as the CLI (its entry guard). */
 import { fresh } from "./decided.mjs";
+/* M0-110: the state files (QUEUE, BACKLOG, DEBT, the handoffs, the archive) live on `coord` after the cutover; the
+   corpus is walked and read through the coord layer, or every binding in them would silently leave the audit. */
+import { readState, walkState } from "./coord.mjs";
 
 export const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -138,9 +141,21 @@ export function corpusFiles({ repo = REPO_ROOT } = {}) {
     if (excluded(rel)) return;
     out.push(rel);
   };
-  for (const r of ROOTS) { const p = join(repo, r); if (existsSync(p)) walk(p); }
+  for (const r of ROOTS) {
+    const p = join(repo, r);
+    if (!existsSync(p)) continue;
+    /* `docs` holds the state files: walked as a reader sees it (M0-110). The code roots are walked as before. */
+    if (r === "docs") {
+      for (const f of walkState(repo, r)) if (/\.(mjs|js|md|html)$/.test(f) && !excluded(f)) out.push(f);
+      continue;
+    }
+    walk(p);
+  }
   return out;
 }
+
+/* A corpus file, read as a reader sees it; throws when absent, as `readFileSync` did. */
+const readRepo = (repo, p) => { const t = readState(repo, p); if (t === null) throw new Error(`ENOENT ${p}`); return t; };
 
 /* ------------------------------------------------------------------ the two actors
  *
@@ -254,7 +269,7 @@ export const DECISION_REGISTERS = [
 ];
 
 export function decisionActors({ repo = REPO_ROOT, read = null } = {}) {
-  const reader = read || ((p) => readFileSync(join(repo, p), "utf8"));
+  const reader = read || ((p) => readRepo(repo, p));
   let src = "";
   for (const p of DECISION_REGISTERS) { try { src += "\n" + reader(p); } catch { /* absent: nothing to add */ } }
   const out = new Map();
@@ -279,7 +294,7 @@ export function decisionActors({ repo = REPO_ROOT, read = null } = {}) {
 export function attributionAudit({ repo = REPO_ROOT, files = null, read = null, run = null,
                                    decisions = null } = {}) {
   const list = files || corpusFiles({ repo });
-  const reader = read || ((p) => readFileSync(join(repo, p), "utf8"));
+  const reader = read || ((p) => readRepo(repo, p));
   const decs = decisions || decisionActors({ repo, read });
   const commitCache = new Map();
   const resolveSha = (sha) => {

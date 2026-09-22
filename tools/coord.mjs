@@ -185,6 +185,25 @@ export function listState(repo, dir) {
   return [...names].sort();
 }
 
+/** A recursive walk of `dir` (repo-relative) as a reader should see it: each level `listState`, sorted, depth
+    first — the order a sorted `readdirSync` walk gave — so a coord-only file is visited where it would sit. A name
+    that is not on disk is a file (only a state file can be missing from the working tree). Returns relative paths. */
+export function walkState(repo, dir) {
+  const out = [];
+  const walk = (rel) => {
+    for (const n of listState(repo, rel)) {
+      const r = `${rel}/${n}`;
+      let isDir = false;
+      try { isDir = statSync(join(repo, r)).isDirectory(); } catch { isDir = false; }
+      if (isDir) walk(r); else out.push(r);
+    }
+  };
+  let top = false;
+  try { top = statSync(join(repo, dir)).isDirectory(); } catch { top = false; }
+  if (top) walk(dir);
+  return out;
+}
+
 /** The revision a `git blame` of a state file must name: the coord ref's sha on a switched tree, else none. */
 export function blameRev(repo, rel) {
   if (!isMovedPath(rel)) return null;
@@ -405,6 +424,17 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     return { fails: [...rows.filter((r) => RESIDUE_RE.test(r.disposition) && r.closed).map((r) => `${r.id} declares a residue and reads closed`),
                      ...rows.filter((r) => r.closed && owed.has(r.id)).map((r) => `${r.id} is owed by a lane and reads closed`)],
              note: `${rows.length} DEBT row(s)` };
+  });
+
+  await arm("LC-undecided-route", "corpuscheck §5 (live)", "the debt row the corpus standard routes its UNDECIDED set to is a live DEBT row", () => {
+    const std = rs("docs/architecture/CORPUS-STANDARD.md");
+    const debt = rs("docs/development/DEBT.md");
+    if (std === null || debt === null) return { fails: [`${std === null ? "CORPUS-STANDARD.md" : "DEBT.md"} could not be read`] };
+    /* The route is the one `corpuscheck.test.mjs` §5 pinned: D-388, named by the standard. Read from the standard, so a
+       re-routing there is followed rather than contradicted; the standard naming none is itself the failure. */
+    const routed = [...new Set((std.match(/\bD-388\b/g) || []))];
+    if (!routed.length) return { fails: ["CORPUS-STANDARD.md no longer names D-388, the undecided set's route — name the row that drains it"] };
+    return { fails: routed.filter((id) => !new RegExp(`^\\| ${id} \\|`, "m").test(debt)).map((id) => `${id} is named by the standard and is not a live DEBT row`) };
   });
 
   await arm("LC-handoff-budget", "plancheck §2e' (the handoffs)", "every lane handoff is within the reading budget", async () => {

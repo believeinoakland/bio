@@ -130,9 +130,23 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, rmSync, statSync } from "node:fs";
 import { hostname } from "node:os";
 import { execFileSync } from "node:child_process";
-import { dirname, join, resolve, isAbsolute } from "node:path";
+import { dirname, join, resolve, isAbsolute, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ARCHIVE_TARGETS } from "./ledger.mjs";
+/* M0-110: the queue, backlog, debt, claims and archive corpora live on `coord` after the cutover. Every read and walk
+   of a corpus goes through the coord layer — the pointer is the switch — or each floor would read the one-line
+   pointer and fall to zero, which is the DANGEROUS direction for an allocator (it re-issues ids). */
+import { readState, walkState } from "./coord.mjs";
+
+/* A corpus file's text as a reader sees it (absolute paths inside the repo are read by their relative path). Throws
+   when absent, as `readFileSync` did, so every caller's `missing` bookkeeping is unchanged. */
+function readCorpus(repo, p) {
+  const abs = isAbsolute(p) ? p : join(repo, p);
+  const rel = relative(repo, abs).split(sep).join("/");
+  const t = rel.startsWith("..") ? null : readState(repo, rel);
+  if (t !== null) return t;
+  return readFileSync(abs, "utf8");
+}
 
 /* THE DUPLICATE CHECK READS THE ARCHIVER'S FILES (LED-2, M-57 breakage 2). `allocations()` and
    `unregisteredNamespaces()` iterate a corpus RAW, so the `docs/archive/` DIRECTORY entry was a
@@ -412,6 +426,13 @@ function expandCorpus(corpus, repo) {
   for (const rel of corpus) {
     if (!rel.endsWith("/")) { out.push(rel); continue; }
     const base = isAbsolute(rel) ? rel : join(repo, rel);
+    /* M0-110: inside the repository the walk is `walkState` — the same sorted, depth-first order over what a reader
+       sees, so an archive roll created on `coord` is in the floor's corpus. Absolute paths are kept, as before. */
+    const inRepo = relative(repo, base).split(sep).join("/");
+    if (!isAbsolute(rel) && !inRepo.startsWith("..")) {
+      for (const f of walkState(repo, inRepo.replace(/\/$/, ""))) if (f.endsWith(".md")) out.push(join(repo, f));
+      continue;
+    }
     const walk = (d) => {
       let names; try { names = readdirSync(d); } catch { return; }
       for (const n of names.sort()) {
@@ -446,7 +467,7 @@ export function corpusFloor(ns, { repo = REPO_ROOT } = {}) {
   for (const rel of expandCorpus(spec.corpus, repo)) {
     const p = isAbsolute(rel) ? rel : join(repo, rel);
     let src;
-    try { src = readFileSync(p, "utf8"); } catch { missing.push(rel); continue; }
+    try { src = readCorpus(repo, p); } catch { missing.push(rel); continue; }
     let m; re.lastIndex = 0;
     while ((m = re.exec(src))) {
       seen++;
@@ -528,7 +549,7 @@ export function allocations(ns, { repo = REPO_ROOT } = {}) {
   for (const rel of allocationCorpus(spec.corpus)) {
     const p = isAbsolute(rel) ? rel : join(repo, rel);
     let src;
-    try { src = readFileSync(p, "utf8"); } catch { missing.push(rel); continue; }
+    try { src = readCorpus(repo, p); } catch { missing.push(rel); continue; }
     const re = spec.allocPattern(ns);
     re.lastIndex = 0;
     let m;
@@ -623,7 +644,7 @@ export function unregisteredNamespaces({ repo = REPO_ROOT } = {}) {
   let read = 0;
   for (const rel of allocationCorpus(QUEUE_CORPUS)) {
     let src;
-    try { src = readFileSync(join(repo, rel), "utf8"); } catch { continue; }
+    try { src = readCorpus(repo, rel); } catch { continue; }
     read++;
     for (const m of src.matchAll(ANY_ITEM_SITE())) {
       const p = m[1] ?? m[2];

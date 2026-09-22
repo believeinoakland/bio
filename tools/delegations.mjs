@@ -110,6 +110,8 @@ import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+/* M0-110: CLAIMS.md lives on `coord` after the cutover — read, and blamed, there (the pointer is the switch). */
+import { readState, blameRev } from "./coord.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const CLAIMS = "docs/development/CLAIMS.md";
@@ -212,7 +214,9 @@ export function parseBlocks(src) {
  * say UNVERIFIED and never say CLEAN. */
 export function blameDate(repo, file, line) {
   try {
-    const out = execFileSync("git", ["blame", "-L", `${line},${line}`, "--porcelain", "--", file],
+    /* On a switched tree the working file is the pointer: blame coord's commit of it instead (M0-110). */
+    const rev = blameRev(repo, file);
+    const out = execFileSync("git", ["blame", "-L", `${line},${line}`, "--porcelain", ...(rev ? [rev] : []), "--", file],
       { cwd: repo, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
     if (/^[0]{20,}/.test(out)) return null;                    /* uncommitted: not judgeable */
     const m = out.match(/^author-time (\d+)$/m);
@@ -227,7 +231,10 @@ export function blameDate(repo, file, line) {
    to a fixture would read a DIFFERENT line of the real file and answer with confidence. */
 export function delegationAudit({ repo = ROOT, src = null, today = todayISO(), git = true } = {}) {
   if (src !== null) git = false;
-  src ??= readFileSync(join(repo, CLAIMS), "utf8");
+  if (src === null) {
+    src = readState(repo, CLAIMS);
+    if (src === null) throw new Error(`${CLAIMS} could not be read (working tree or coord) — an unreadable register is not an empty one`);
+  }
   const blocks = parseBlocks(src);
 
   const discharged = [], affirmed = [], stale = [], silent = [],

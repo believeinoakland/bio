@@ -77,6 +77,8 @@ import { join } from "node:path";
    closed-DEBT predicate, below), so the import cycle is real, and harmless ONLY because nothing at this
    file's top level touches these bindings: `SOURCES.queue` and `.backlog` are GETTERS for that reason. */
 import { LEDGERS, PIPELINE, pipelineRows } from "./ledger.mjs";
+/* M0-110: DEBT.md lives on `coord` after the cutover; the default reader goes through the coord layer. */
+import { readState } from "./coord.mjs";
 
 export const ROOT = join(new URL("..", import.meta.url).pathname);
 
@@ -209,7 +211,7 @@ const rowsOf = (text, prefix) => {
 };
 
 export function owedFor(lane = "BOB", { repo = ROOT, reader = null } = {}) {
-  const read = reader || ((p) => { try { return readFileSync(join(repo, p), "utf8"); } catch { return null; } });
+  const read = reader || ((p) => readState(repo, p));
   const owner = OWNER_RE(lane);
   const discharge = DISCHARGE_RE(lane);
   const items = [], unreadable = [];
