@@ -16,7 +16,8 @@
  *    silently falls behind the thing it lists.
  *
  * So suites are DISCOVERED from the directory, every one runs, and the summary
- * names the failures. Exit code is the number of failed suites, capped at 125.
+ * names the failures. Exit code is the number of failed suites, capped at 125 and
+ * never 124, which is a run whose only failures were expired budgets: NOT MEASURED (M0-107).
  *
  *   node scripts/battery.mjs             all suites
  *   node scripts/battery.mjs search cite only suites whose name contains these
@@ -92,7 +93,7 @@
  * that can put a file into this tree without a commit, which is now known to
  * include an ordinary `git stash pop`. */
 
-import { fstatSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { fstatSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -115,6 +116,31 @@ import { reportResidue, sampleHeld, scanShared, shallowNames, sharedTempRoots } 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const filters = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const QUIET = process.argv.includes("--quiet");
+
+/* ---- M0-107 (BOB #28, 2026-09-22): AN EXPIRED BUDGET MEASURED NOTHING -------------------------
+ *
+ * A suite whose subprocess or wall-clock budget expires used to read the expiry as a FINDING, and
+ * since D-293 a false RED is RECORDED and refuses the push. The ruling: an expired budget reads NOT
+ * MEASURED, naming what was not measured — never a finding and never GREEN; `ETIMEDOUT` is its only
+ * test; RED outranks NOT MEASURED outranks GREEN. The suites say it through `test/budget.mjs`, which
+ * prints ONE marker per expiry, `TIMEOUT (M0-107) [pid <the suite's pid>]: …`, and records one FAILING
+ * assertion; this runner decides what the failures MEAN, per suite:
+ *   - markers carrying THIS suite's pid only (a suite driving a scratch battery prints its children's
+ *     output, and a child's echoed marker beside a real finding in the parent must not launder it);
+ *   - a readable fail count NO GREATER than the markers -> NOT MEASURED (every failure is an expiry);
+ *   - one failure MORE than the markers -> RED (a finding sits beside the timeouts);
+ *   - markers and NO readable fail count -> RED: a timeout cannot be told from a finding;
+ *   - markers with exit 0 -> NOT MEASURED, never green; markers, zero failures and a non-zero exit -> RED.
+ * The run: any RED -> exit the failure count (never 124); else any NOT MEASURED -> exit 124; else 0.
+ * When `$BIO_BATTERY_VERDICT` names a file the verdict is written there as JSON (for `tools/gates.mjs`,
+ * which records it), and the variable is STRIPPED from every suite's environment so a scratch battery
+ * inside a suite can never overwrite it. The marker's shape is `test/budget.mjs`'s TIMEOUT_MARKER_RE,
+ * restated here because scratch estates copy this runner without `test/`; `budget-sweep.test.mjs` pins
+ * the two equal. */
+const TIMEOUT_MARKER_RE = /^TIMEOUT \(M0-107\) \[pid (\d+)\]: (.*)$/gm;
+const VERDICT_FILE = process.env.BIO_BATTERY_VERDICT || null;
+const timeoutsOf = (out, pid) => [...String(out).matchAll(TIMEOUT_MARKER_RE)]
+  .filter((m) => Number(m[1]) === pid).map((m) => m[2]);
 
 /* ---- M0-67 / D-425: ONE LOG, ONE RUN ----------------------------------------
  *
@@ -513,7 +539,7 @@ const run = ({ cwd, rel, label }) => new Promise((resolve) => {
        suite naming an absolute path does not consult $TMPDIR at all, and two
        did; the environment decides where `os.tmpdir()` points, not where a
        string literal points. That is what the report below exists to see. */
-    env: { ...process.env, TMPDIR: RUN_TMP },
+    env: (() => { const e = { ...process.env, TMPDIR: RUN_TMP }; delete e.BIO_BATTERY_VERDICT; return e; })(),
   });
   let out = "";
   let done = false;
@@ -524,8 +550,8 @@ const run = ({ cwd, rel, label }) => new Promise((resolve) => {
   const finish = (r) => { done = true; for (const tm of timers) clearTimeout(tm); resolve(r); };
   child.stdout.on("data", (d) => { out += d; });
   child.stderr.on("data", (d) => { out += d; });
-  child.on("error", (e) => finish({ code: -1, out: String(e), ms: Date.now() - started }));
-  child.on("close", (code) => finish({ code, out, ms: Date.now() - started }));
+  child.on("error", (e) => finish({ code: -1, out: String(e), ms: Date.now() - started, pid: child.pid }));
+  child.on("close", (code) => finish({ code, out, ms: Date.now() - started, pid: child.pid }));
 });
 
 /* Assertion counts come from each suite's own tail line ("name: N pass, M fail"),
@@ -632,34 +658,48 @@ for (const entry of suites) {
      it takes one exit path that forgets its counter to start. A suite that PRINTED a
      failure is RED whatever it exited, and the disagreement is NAMED. It also beats a
      SKIPPED marker: a suite that printed failures did not merely skip. */
-  const lied = r.code === 0 && t !== null && t.fail > 0;
-  const skip = lied ? null : (r.code === 0 ? skipReason(r.out) : null) || fleetDepSkip(entry, r.out);
-  results.push({ ...r, file, fleet: entry.fleet, tally: skip ? null : t, skip, lied,
+  /* M0-107: the suite's OWN timeout markers, and what its failures therefore mean (the rules are at
+     the head of this file). `notMeasured` wins over `lied`: a suite whose every printed failure is an
+     expiry it marked did not lie about a finding, it measured nothing there. */
+  const timeouts = timeoutsOf(r.out, r.pid);
+  const notMeasured = timeouts.length > 0 && t !== null && t.fail !== null && t.fail <= timeouts.length
+    && (t.fail > 0 || r.code === 0);
+  const timeoutUnreadable = timeouts.length > 0 && !notMeasured && (t === null || t.fail === null);
+  const lied = !notMeasured && r.code === 0 && t !== null && t.fail > 0;
+  const skip = (lied || timeouts.length) ? null : (r.code === 0 ? skipReason(r.out) : null) || fleetDepSkip(entry, r.out);
+  results.push({ ...r, file, fleet: entry.fleet, tally: skip ? null : t, skip, lied, timeouts, notMeasured,
+    timeoutUnreadable, unit: entry.fleet ? `fleet:${file}` : `plane:${file}`,
     /* M0-15: the path a COMMIT would have to carry for this suite to be
        reproducible anywhere but here. Recorded per suite at the moment it RAN,
        so the provenance line below describes what was actually counted rather
        than what the directory holds afterwards. */
     repoRel: relative(REPO, join(entry.cwd, entry.rel)) });
-  const failedRun = (r.code !== 0 && !skip) || lied;
-  const status = failedRun ? "FAIL" : skip ? "skip" : "ok  ";
+  const failedRun = !notMeasured && ((r.code !== 0 && !skip) || lied || timeouts.length > 0);
+  const status = failedRun ? "FAIL" : notMeasured ? "NOTM" : skip ? "skip" : "ok  ";
   const counts = skip
     ? `SKIPPED — ${skip}`
     : t
       ? `${t.pass} pass${t.fail ? `, ${t.fail} FAIL` : ""}${t.skip ? `, ${t.skip} skipped` : ""}`
         + (lied ? ` — and EXITED 0 (D-425: counted RED)` : "")
-      : "assertions unknown";
+        + (notMeasured ? ` — NOT MEASURED (M0-107): ${timeouts.length} budget(s) EXPIRED, every failure one of them` : "")
+        + (failedRun && timeouts.length ? ` — ${timeouts.length} budget(s) expired AND ${t.fail === null ? "no fail count" : `${t.fail - timeouts.length} failure(s) more`}: RED (M0-107)` : "")
+      : "assertions unknown" + (timeoutUnreadable ? ` — ${timeouts.length} budget(s) expired and NO fail count, so a timeout cannot be told from a finding: RED (M0-107)` : "");
   console.log(`  ${status}  ${file.padEnd(34)} ${String(r.ms).padStart(6)}ms  ${counts}`);
-  if (failedRun && !QUIET) console.log(r.out.split("\n").filter((l) => /FAIL|Error|error/.test(l)).slice(0, 8).map((l) => `          ${l}`).join("\n"));
+  if ((failedRun || notMeasured) && !QUIET) {
+    for (const m of timeouts) console.log(`          TIMEOUT: ${m}`);
+    if (failedRun) console.log(r.out.split("\n").filter((l) => /FAIL|Error|error/.test(l)).slice(0, 8).map((l) => `          ${l}`).join("\n"));
+  }
 }
 
-const failed = results.filter((r) => (r.code !== 0 && !r.skip) || r.lied);
+const failed = results.filter((r) => !r.notMeasured && ((r.code !== 0 && !r.skip) || r.lied || r.timeouts.length > 0));
+const unmeasured = results.filter((r) => r.notMeasured);
 const lied = results.filter((r) => r.lied);
 const skips = results.filter((r) => r.skip);
 const partial = results.filter((r) => r.tally && r.tally.skip > 0);
 const unknown = results.filter((r) => r.tally === null && !r.skip);
 const assertions = results.reduce((n, r) => n + (r.tally ? r.tally.pass : 0), 0);
 const ms = results.reduce((n, r) => n + r.ms, 0);
-const green = results.length - failed.length - skips.length;
+const green = results.length - failed.length - skips.length - unmeasured.length;
 
 /* M0-65 / D-413: THE ASSERTION TOTAL IS A SUM OVER THE SUITES THAT PRINTED A TALLY, AND
    IT NOW SAYS SO WHEN THAT IS NOT EVERY SUITE. Until this line the only trace of a
@@ -678,6 +718,7 @@ const green = results.length - failed.length - skips.length;
 console.log(`\n${green}/${results.length} suites green · `
   + (skips.length ? `${skips.length} skipped · ` : "")
   + `${assertions} assertions passing · `
+  + (unmeasured.length ? `NOT MEASURED ${unmeasured.length} suite(s), a budget expired (M0-107) · ` : "")
   + (unknown.length ? `EXCLUDES ${unknown.length} untallied suite(s) · ` : "")
   + `${(ms / 1000).toFixed(1)}s · run ${RUN_ID}`);
 if (skips.length) console.log(`  SKIPPED (named): ${skips.map((r) => `${r.file} — ${r.skip}`).join("\n                   ")}`);
@@ -686,6 +727,11 @@ if (unknown.length) {
   console.log(`  EXCLUDED FROM THE ASSERTION TOTAL (D-413): ${unknown.length} suite(s) printed no tally, so the`
     + ` ${assertions} above counts NONE of their assertions: ${unknown.map((r) => r.file).join(", ")}`);
   console.log(`  their pass/fail IS in the suite figure; their assertions are in no figure this run prints.`);
+}
+if (unmeasured.length) {
+  console.log(`  NOT MEASURED (M0-107): ${unmeasured.map((r) => `${r.file} — ${r.timeouts.join(" | ")}`).join("\n                         ")}`);
+  console.log(`  a budget that EXPIRED measured nothing: these suites are neither GREEN nor a finding, and the`
+    + ` run is NOT MEASURED unless something above is RED (BOB #28). Re-run them on a quieter machine.`);
 }
 if (failed.length) console.log(`  FAILED: ${failed.map((r) => r.file).join(", ")}`);
 for (const r of lied) console.log(`  EXIT/TALLY DISAGREE (D-425): ${r.file} printed ${r.tally.fail} fail and exited 0`
@@ -844,4 +890,18 @@ else if (sharedLog) {
   console.log(`  every line above that does not belong to run ${RUN_ID} is another run's. Re-run into a file of its own.`);
 } else if (LOG_PATH) console.log(`log: ${LOG_PATH} holds this run alone from its header on (run ${RUN_ID}).`);
 
-process.exit(Math.min(failed.length + (leaking ? 1 : 0) + (sharedLog ? 1 : 0), 125));
+/* M0-107: RED outranks NOT MEASURED outranks GREEN. A RED run exits its failure count, capped at 125
+   and NEVER 124, which is NOT MEASURED's own code: a gate reading 124 then asks the verdict file. */
+const redCount = failed.length + (leaking ? 1 : 0) + (sharedLog ? 1 : 0);
+const verdict = redCount ? "RED" : unmeasured.length ? "NOT MEASURED" : "GREEN";
+const exitCode = redCount ? (Math.min(redCount, 125) === 124 ? 125 : Math.min(redCount, 125)) : unmeasured.length ? 124 : 0;
+if (unmeasured.length) console.log(`battery verdict: ${verdict}${redCount ? " — a finding outranks the expired budgets" : ""}`
+  + ` · ${unmeasured.length} suite(s) NOT MEASURED (M0-107) · exit ${exitCode} · run ${RUN_ID}`);
+if (VERDICT_FILE) {
+  try {
+    writeFileSync(VERDICT_FILE, `${JSON.stringify({ v: 1, run: RUN_ID, verdict, exit: exitCode, suites: results.length,
+      green, failed: failed.map((r) => r.unit), leaking, sharedLog,
+      notMeasured: unmeasured.map((r) => ({ unit: r.unit, suite: r.file, timeouts: r.timeouts })) }, null, 1)}\n`);
+  } catch (e) { console.log(`battery: could not write the verdict file ${VERDICT_FILE} (${e.message}) — the exit status stands alone`); }
+}
+process.exit(exitCode);
