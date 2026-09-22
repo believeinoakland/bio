@@ -45,12 +45,24 @@
  *                                   quoting `DECIDED.md`, and the index is still FLOORED
  *                                   above 850 rulings — an artifact was removed, not a corpus.
  *   A6    THE CLAUSE'S OWN ARM: the clause removed, nothing planted
- *                                -> all EIGHT named rows COME BACK. This is what makes the
- *                                   clause a mechanism rather than a comment, and it is the
- *                                   regression guard: delete the clause and this goes red.
+ *                                -> all EIGHT phantoms COME BACK: seven under the ids D-367
+ *                                   names, and REC-85's sentence as a row carrying NO id. This
+ *                                   is what makes the clause a mechanism rather than a comment,
+ *                                   and it is the regression guard: delete the clause and this
+ *                                   goes red.
  *
  * RESULT, 2026-09-15: all six plus BASE AS DECLARED on the first run, every restore
  * byte-identical (sha256 + `cmp` + floored byte count).
+ *
+ * A6 CORRECTED 2026-09-21 by the M0-97 + D-341 worker, never exempted. Re-run after D-341 changed
+ * the subject, it read 7 of 8 named rows, REC-85 missing. The phantom had NOT gone: with the clause
+ * removed, `CLAIMS.md`'s sentence naming `DECIDED.md` still mints its row at the same line. What
+ * went was its id. The old joiner took the next three lines across the blank line after it, into
+ * the following paragraph (`released: 2026-09-14 by the REC-85 worker`), and filed the phantom
+ * under an id borrowed from that paragraph. That borrowing is D-341's defect, which this landing
+ * closes, so "8 of 8 by id" was true only because of D-341. A6 now pins the seven by id and the
+ * eighth by its SENTENCE, as an id-less row quoting `DECIDED.md`. A sentence survives line moves,
+ * and the id that went is the one D-341 exists to remove.
  */
 import { readFileSync, writeFileSync, copyFileSync, statSync, mkdtempSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -102,6 +114,12 @@ const PHRASE = { filename: "NC PLANT ALPHA", realWithFile: "NC PLANT BETA", sent
 /* The eight rows D-367 names as the artifact — the CONTROL: absent after the fix, present
    the moment the clause is removed. */
 const NAMED = ["D-293", "D-311", "IC-82", "C-7.1", "REC-85", "UI-31", "UI-58", "UI-59"];
+/* 2026-09-21 (A6's correction, in the head): seven of the eight come back BY ID; REC-85's phantom
+   comes back as its SENTENCE with no id, because its id was borrowed across a paragraph edge. */
+const BY_ID = NAMED.filter((id) => id !== "REC-85");
+const REC85_SENTENCE = "which `plancheck` requires of any turn whose corpus edits move the ruling index";
+const idlessPhantom = (text) => text.split("\n").some((l) =>
+  /^- (?!\*\*[A-Z0-9]+-\d)/.test(l) && l.includes("DECIDED.md") && l.includes(REC85_SENTENCE));
 
 function run(args) {
   try { return { code: 0, out: execFileSync("node", ["tools/decided.mjs", ...args], { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }) }; }
@@ -197,12 +215,20 @@ armed("A5", [], () => {}, () => {
   const idx = readFileSync(INDEX, "utf8");
   const hit = phantomBullets(idx), count = rulingCount(idx);
   say(hit.length === 0, `A5  of the eight rows D-367 names, ${hit.length} still quote \`DECIDED.md\`${hit.length ? ": " + hit.join(", ") : ""} — declared 0`);
+  say(!idlessPhantom(idx), `A5  ...and REC-85's sentence mints no id-less row either — declared none (${idlessPhantom(idx) ? "ONE FOUND" : "none"})`);
   say(count > 850, `A5  the corpus is FLOORED, not emptied — the committed index holds ${count} rulings (floor 850)`);
 });
 
+/* CORRECTED 2026-09-21 — see A6's correction in the head: the old assertion was `hit.length === 8`, true only
+   while the joiner borrowed REC-85's id from the paragraph after its sentence (D-341, closed by that landing). */
 armed("A6", [INDEX, TOOL], () => { if (stripClause()) run([]); }, () => {
-  const hit = phantomBullets(readFileSync(INDEX, "utf8"));
-  say(hit.length === 8, `A6  THE CLAUSE'S OWN ARM: remove it and ${hit.length} of 8 named rows come back — declared 8 (${hit.join(", ") || "none"})`);
+  const idx = readFileSync(INDEX, "utf8");
+  const hit = phantomBullets(idx);
+  const byId = BY_ID.filter((id) => hit.includes(id));
+  const idless = idlessPhantom(idx);
+  say(byId.length === 7 && !hit.includes("REC-85") && idless,
+    `A6  THE CLAUSE'S OWN ARM: remove it and ${byId.length} of 7 rows come back under the ids D-367 names (${byId.join(", ") || "none"}), `
+    + `and REC-85's sentence comes back with NO id: ${idless ? "YES" : "NO"}${hit.includes("REC-85") ? " (but ALSO under REC-85 — an id borrowed across an edge)" : ""} — declared 7 + the id-less eighth`);
 });
 
 console.log(`\nnc-m034: ${failures} failing check(s).`);
