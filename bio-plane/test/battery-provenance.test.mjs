@@ -59,6 +59,10 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+/* M0-107: an expired budget MEASURED NOTHING — one named budget assertion per spawn, and the arm that would
+   read the expired result is SKIPPED, so the battery reads this suite NOT MEASURED, never RED. */
+import { budgetAssert } from "./budget.mjs";
+const RUN_BUDGET_MS = 60_000;
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REAL_RUNNER = join(DIR, "..", "scripts", "battery.mjs");
@@ -113,10 +117,13 @@ const drive = ({ commit = {}, stage = {}, leave = {}, dropGit = false }) => {
   for (const [rel, body] of Object.entries(leave)) put(rel, body);
   if (dropGit) rmSync(join(repo, ".git"), { recursive: true, force: true });
   const r = spawnSync(process.execPath, ["scripts/battery.mjs"],
-    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: 60_000 });
+    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: RUN_BUDGET_MS });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   rmSync(repo, { recursive: true, force: true });
-  return { out, code: r.status };
+  /* M0-107: `measured` false means this scratch run's budget EXPIRED; the arm reading it is skipped. */
+  const measured = budgetAssert(t, `run-budget: scratch estate ${corpus}`, r, RUN_BUDGET_MS,
+    `the arm that drove scratch estate ${corpus}`);
+  return { out, code: r.status , measured };
 };
 
 /* The line the report prints when it found nothing wrong, and the block it
@@ -128,69 +135,79 @@ const BASE = { "bio-plane/test/tracked.test.mjs": suiteSrc(5, false) };
 
 /* ---- (d) OVER-STRICTNESS: a committed suite, and nothing else ------------- */
 {
-  const { out, code } = drive({ commit: { ...BASE } });
+  const { out, code, measured } = drive({ commit: { ...BASE } });
+  if (measured) {
   t("(d) a committed-only tree runs green", code, 0);
   t("(d) a committed-only tree prints no NOT-IN-ANY-COMMIT block", namesBlock(out), false);
   t("(d) it still states the provenance question was ASKED and answered",
     /provenance: \d+ of \d+ discovered item\(s\) are in the commit at HEAD/.test(out), true);
   t("(d) the committed suite is never named", names(out, "bio-plane/test/tracked.test.mjs"), false);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (b) THE ARM THIS ITEM EXISTS FOR: a PASSING phantom ------------------ */
 {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     commit: { ...BASE },
     leave: { "bio-plane/test/phantom.test.mjs": suiteSrc(57, false) },
   });
+  if (measured) {
   t("(b) a passing phantom does not fail the run — which is why silence hid it", code, 0);
   t("(b) the run NAMES the phantom", names(out, "bio-plane/test/phantom.test.mjs"), true);
   t("(b) and calls it UNTRACKED", /phantom\.test\.mjs\s+\(UNTRACKED\)/.test(out), true);
   t("(b) the contaminated total (62) and the reproducible total (5) are BOTH printed",
     /62 assertions were counted above; 5 of them come from suites/.test(out), true);
   t("(b) the committed suite is still not named", names(out, "bio-plane/test/tracked.test.mjs"), false);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (c) a FAILING phantom is named too ----------------------------------- */
 {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     commit: { ...BASE },
     leave: { "bio-plane/test/phantom.test.mjs": suiteSrc(3, true) },
   });
+  if (measured) {
   t("(c) a failing phantom fails the run", code, 1);
   t("(c) and is STILL named — provenance does not depend on the result",
     names(out, "bio-plane/test/phantom.test.mjs"), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (e) staged but never committed, told apart from UNTRACKED ------------ */
 {
-  const { out } = drive({
+  const { out, measured } = drive({
     commit: { ...BASE },
     stage: { "bio-plane/test/mine.test.mjs": suiteSrc(2, false) },
   });
+  if (measured) {
   t("(e) a staged-but-uncommitted suite is named", names(out, "bio-plane/test/mine.test.mjs"), true);
   t("(e) and is distinguished from an arrival, not lumped with it",
     /mine\.test\.mjs\s+\(staged, not yet committed\)/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (f) the SECOND discovery path: an untracked fleet MANIFEST ----------- */
 {
-  const { out } = drive({
+  const { out, measured } = drive({
     commit: { ...BASE },
     leave: {
       "ghost-worker/fleet-member.json": JSON.stringify({ name: "ghost-worker" }),
       "ghost-worker/test/ghost.test.mjs": suiteSrc(9, false),
     },
   });
+  if (measured) {
   t("(f) the untracked manifest that enrolled a whole directory is named",
     names(out, "ghost-worker/fleet-member.json"), true);
   t("(f) and so is the suite it admitted", names(out, "ghost-worker/test/ghost.test.mjs"), true);
   t("(f) the manifest is identified as a manifest, not as a suite",
     /fleet-member\.json.*ghost-worker's fleet manifest/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (g) OVER-STRICTNESS: an untracked NON-suite says nothing ------------- */
 {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     commit: { ...BASE },
     leave: {
       "bio-plane/test/scratch-notes.md": "not a suite\n",
@@ -198,20 +215,24 @@ const BASE = { "bio-plane/test/tracked.test.mjs": suiteSrc(5, false) };
       "m015-harness/arm.mjs": "// a worker's own control harness\n",
     },
   });
+  if (measured) {
   t("(g) untracked NON-suite files leave the run green", code, 0);
   t("(g) and produce no NOT-IN-ANY-COMMIT block at all", namesBlock(out), false);
   t("(g) a worker's own untracked harness directory is not named",
     /m015-harness/.test(out), false);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (h) git cannot answer -> UNVERIFIED, never clean --------------------- */
 {
-  const { out } = drive({ commit: { ...BASE }, dropGit: true });
+  const { out, measured } = drive({ commit: { ...BASE }, dropGit: true });
+  if (measured) {
   t("(h) with no git to ask, the run says UNVERIFIED", /provenance: UNVERIFIED/.test(out), true);
   t("(h) and does NOT claim everything is in a commit",
     /are in the commit at HEAD/.test(out), false);
   t("(h) it says plainly that is a different claim from 'all in a commit'",
     /not the same claim as "all in a commit"/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* THE REACH ARM. Every assertion above is a DELTA over a scratch repository this
