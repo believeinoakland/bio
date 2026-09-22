@@ -18492,3 +18492,57 @@ M0-99), M0-100 first of the backlog; room by four foot cuts (D-74, UI-75, D-178,
 Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
 **Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them `CLAUDE.md` §2's over-claim rule decides). Both were already running; nothing moved. Item 3 accepted by BOB #26 for its next landing.
 **open as of 2026-09-22** — item 3 only: D-278's determinations, which BOB #26 rules per group; nothing runnable waits on it.
+
+## CLAIM 2026-09-22 M0 (M0-109 — the ledger suite's non-vacuity floor stops measuring the ledger's SIZE: `rows.length > 100` becomes `> 0`, with the one other size floor on the live DEBT.md the class sweep found)
+
+session: WORKER spawned 2026-09-22 by CONDUCT #12 for M0-109, worktree `.claude/worktrees/agent-a5f529717cbad6022`, branch
+`worktree-agent-a5f529717cbad6022`, from `origin/main` @ `2a78de85`.
+authority: `QUEUE.md` `### M0-109 · running` (read on `origin/main` @ `2a78de85`); design `VERIFICATION.md` (admitted for M0
+by name) with `CLAUDE.md` §5, *correct superseded tests, never exempt them*; the fold's endgame read from `WORK-PIPELINE.md`
+§3 (*`DEBT.md` is archived whole once empty*).
+paths, BY SITE:
+  - `bio-plane/test/ledger.test.mjs` — §3's agreement arm: the floor line ONLY (`> 100` -> `> 0`) with its dated
+    correction comment and one printed line (the row count the floor judged, which the control reads), and one NEGATIVE
+    CONTROL block for this item's arms. The arm's two real assertions are untouched.
+  - `bio-plane/test/planning-hygiene.test.mjs` — §1's floor line ONLY (`>= 20` -> `> 0`, the same defect found by this
+    item's class sweep) with its dated correction comment, and one NEGATIVE CONTROL block.
+  - `bio-plane/test/debt-floor.control.mjs` (NEW) — the control driver for both floors. Its pen `.m0109-harness/` ignores
+    itself (a `.gitignore` of `*` inside it), so no root `.gitignore` line is written: `gates.mjs` forces the FULL profile on
+    any root dotfile, and this row's profile is TARGETED.
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, and only to figures this item's committed `--strict` run PRINTS.
+  - `docs/development/CLAIMS.md` (this block and its DELEGATION to SCHEDULER), `docs/development/MEASUREMENTS.md` (M-96
+    APPENDED, the live DEBT.md against every size floor on it), `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT's word), `docs/development/DEBT.md` (SCHEDULER #12's: read, never
+written; the driver plants ledgers into the SUITES' reads, never into the file), `tools/**`, `bio-plane/test/corpuscheck.test.mjs`
+and `.gitignore`. Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## DELEGATION 2026-09-22 M0 (M0-109 worker) -> SCHEDULER — **the fold's own progress trips three more readers of the live DEBT.md that `WORK-PIPELINE.md` §3 does not name; each fix is named, and one reddens every gate in whichever batch moves D-388**
+
+M0-109's class sweep read every reader of the live `docs/development/DEBT.md` in the battery and the tools (M-96 carries the
+instrument, the figures and what the sweep cannot see). It fixed the two size floors in its own landing (`ledger.test.mjs` §3,
+`> 100`, and `planning-hygiene.test.mjs` §1, `>= 20`, both now `> 0`, each failing by name at zero rows). Three more readers
+are tripped by the fold and are NOT changed there, because each belongs to a fold act. Place each fix in the build plan in
+order:
+
+1. **`bio-plane/test/corpuscheck.test.mjs` §5** (*"the undecided set is ROUTED to an entry somebody drains"*) requires the line
+   `| D-388 |` in the LIVE DEBT.md. D-388 is open (`M0 · BOB · open`), so the batch that moves it, by any of the three doors,
+   reddens every gate exactly as M0-109's floor would have. **Fix, named:** read D-388 through `tools/ledger.mjs`'s `findId`
+   and require an OPEN row in the live DEBT, the cache or the backlog (door 2 keeps the `D-` id), so the assertion keeps its
+   meaning through the fold; D-388 archived closed while `corpuscheck`'s UNDECIDED set is non-empty then fails, correctly.
+   **Owed ahead of the batch that moves D-388.**
+2. **`tools/ledger.mjs`'s `DEBT_FLOOR_BYTES`** (10,000 B, kept for `tools/nc-m039.mjs`, which plants into the live DEBT.md)
+   refuses `DEBT_BELOW_FLOOR` on any archive leaving the file under 10,000 B. An EMPTY DEBT.md is 3,174 B (M-96), so the fold
+   can never empty the file by `ledger.mjs archive`: the last 1 to 10 rows (the largest or the smallest left last) are
+   refused, and §3's *"archived whole once empty"* cannot be reached row by row. **Fix, named:** LED-7's closing landing
+   archives the remaining rows with the file, and in the same landing retires `DEBT_FLOOR_BYTES` and re-points
+   `nc-m039.mjs`'s arm 2 (the floor's only reason) at the backlog.
+3. **`ledger.test.mjs` §3 and `planning-hygiene.test.mjs` §1**, fixed by M0-109, each FAIL BY NAME at zero rows, on purpose,
+   so the vacuous case is never green. **Owed in the landing that empties DEBT.md:** §3's agreement re-pointed at the
+   archive, and §1's disposition-token check re-pointed or retired (its rule is the DEBT ledger's own; after the fold a
+   defect is a backlog row). §3's retarget list names `owed.mjs`, `plancheck`'s disposition arm and `ledger.mjs`, and neither
+   suite nor the byte floor: a DESIGN GAP in `WORK-PIPELINE.md` §3, raised in M0-109's report for CONDUCT to fold in.
+
+**open as of 2026-09-22** — item 1 is owed ahead of the LED-7 batch that moves D-388; items 2 and 3 with LED-7's closing
+landing. Nothing runnable waits on any of them today.

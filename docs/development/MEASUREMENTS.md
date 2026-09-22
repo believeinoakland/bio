@@ -18266,3 +18266,30 @@ judge which process rows cut gate time under Bob's ruling of that day (`CLAUDE.m
 re-runs their readers every time: 24 units over one of these ledgers against 14 over a design document (M-90). M0-99 and
 M0-100 take those two paths off both sides, which is gate time cut on every landing; M0-101 takes only CONDUCT's
 `running` word off `QUEUE.md`, which a quarter as many commits carry and BOB and SCHEDULER still write. It says nothing about how long any one re-check takes on a loaded machine.
+
+## M-96 · 2026-09-22 · M0-109 — the live DEBT.md against every size floor on it: where the fold's own progress meets each one
+
+**INSTRUMENTS:** `tools/ledger.mjs`'s `debtRows` over `docs/development/DEBT.md` on `origin/main` @ `2a78de85` (each row's own
+`bytes`, which excludes its newline, and the file with every row line removed; UTF-8 lengths throughout), with `DEBT_FLOOR_BYTES` imported from the same module; the readers found by
+`git grep -n "DEBT\.md"` over `bio-plane/test/*.test.mjs`, `bio-plane/scripts/*.mjs`, `tools/*.mjs` and `civicos-ui/test/*.mjs`,
+plus every `owedFor(`, `ledgerAudit(` and `debtRows(` call in the battery, each read at its site; `/usr/bin/time -p` for one
+run of each suite. Read 2026-09-22 by the M0-109 worker. **What the sweep cannot see:** a reader reaching the ledger through
+another module without naming the file or calling one of those three functions, and anything outside the four trees named.
+
+| what | measured |
+| --- | --- |
+| the live DEBT.md | 269,642 B · 101 rows by `debtRows`, 101 by `planning-hygiene`'s row test · 0 closed |
+| the file with every row line removed, which is the size of an EMPTY DEBT.md | 3,174 B |
+| row sizes | smallest 513 B · median 2,132 B · largest 12,993 B |
+| `ledger.test.mjs` §3's non-vacuity floor before M0-109 | `> 100` rows: red at 100, one closure away |
+| `planning-hygiene.test.mjs` §1's, before M0-109 | `>= 20` rows: red at 19 |
+| `corpuscheck.test.mjs` §5 | requires the row `D-388` in the live file: red when D-388 leaves it by any door |
+| the archiver's `DEBT_FLOOR_BYTES` (refuses `DEBT_BELOW_FLOOR`) | 10,000 B, against an empty file of 3,174 B: the last 1 row (the largest left last) to 10 rows (the smallest) can never leave by `ledger.mjs archive` |
+| the same shape, closed on purpose | `ledger.test.mjs` §2's `> 100` reads the pinned pre-migration tree `9ea2eb02`, which the fold cannot move; `owed.test.mjs` §6 floors at `> 0` over all four ledgers; `ledger.test.mjs` §12's `> 5` counts the cache and backlog, which the fold adds to |
+| one run on this machine, swap 6.2 of 7.1 GiB in use | `ledger.test.mjs` 45.6 s · `planning-hygiene.test.mjs` 40.4 s wall |
+
+**WHAT IT SAYS.** A non-vacuity floor written as a SIZE is a claim about the day it was written, and a ledger drained on
+purpose makes it false on a schedule nobody wrote down: §3's sat one closure from red. Both floors now ask for one row and
+still fail by name at zero, which makes the fold's last act visible rather than leaving a gate to delete. The byte floor is the
+same shape one level down, and it is the fold's real endgame: `WORK-PIPELINE.md` §3 says the file *"is archived whole once
+empty"*, and the archiver cannot make it empty. Routed with named fixes (M0-109's DELEGATION to SCHEDULER, `CLAIMS.md`).
