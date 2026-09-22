@@ -17587,3 +17587,8 @@ after D-394, with the meaning-layer features; UI-76 (UI, M8) directly after it. 
 backlog then stood 3,234 B over its 150 KiB budget, so ten rows at the foot of the order (SK-5 up to M0-70) were cut to
 their fields, each row's whole pre-cut text VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. 145 open DEBT
 rows remain.
+
+**AMENDED 2026-09-21, same session (commit 2): D-436 CLOSED** — verified an ancestor of `origin/main` @ `86523052` at
+`38850da4` (CONDUCT #11's integration merge) and BY CONTENT: `believe-in-oakland` occurs 0 times in `store.mjs` (23 at
+spawn), `index.mjs` and `checks/bio-checks.mjs`; `Store#instanceGroup` and `op=instancegroup` (IC-172);
+`instance-group.test.mjs` arm W8. Marked done and archived; the refill moved M0-100 into the cache.
