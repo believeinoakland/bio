@@ -56,6 +56,8 @@ progressions — is substrate for that path.
   defect that makes the record claim more than it can support is worse than a missing feature.
 - **Substrate before what rests on it.** A dependent is not built until what it depends on is verified
   BUILT — by `status.mjs`, not by a row saying so.
+- **The goal is BIO work; process is overhead** (Bob, 2026-09-22): product before process tooling; no
+  process row unless it cuts gate time or unblocks product; batch landings.
 
 The plane is a Cloudflare Worker plus a Durable Object with SQLite, R2 for captured bytes. `newgroup`
 installs a sovereign instance into a group's own Cloudflare account — the distribution model, not a demo.
@@ -102,8 +104,7 @@ design, doctrine, anything for Bob → BOB) and continue.
   your `<LANE>-NEXT.md` from the measured state, push it, verify it on the remote, and ask BOB for your successor. The
   successor archives you under D-398's three conditions. BOB measures every live session at its own opening, so a lane
   that stops checking is still caught. **Its self-wake expires:** a session-only `CronCreate` lasts 7 days, so when
-  you arm it, also arm a ONE-SHOT reminder 5 days out that deletes it, arms a fresh one, and arms the next reminder
-  (FLEET's form, 2026-09-18).
+  you arm it, also arm a ONE-SHOT reminder 5 days out that deletes it, arms a fresh one, and arms the next reminder.
 - **Undetermined is first-class and must be STATED.** Never invent an attribution, a referent or a figure
   to get past a gate; a gate that pressures someone into inventing one is a bug in the gate.
 - **A defect you find is diagnosed until its FIX can be named**, then sent to SCHEDULER to be placed in the build plan
@@ -119,13 +120,12 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **An equality or an outcome that costs nothing to produce is not evidence**: two empty-body digests
   agree on nothing; our governor refusing is not the source failing; a provenance hop a caller can hand us
   is one a caller can invent. **Several documents agreeing is usually one source copied** — go to the artifact.
-- **A blocker is a claim — about ONE actor, ONE form, ONE moment, never the estate** (M-75). Verify it
+- **A blocker is a claim — about ONE actor, ONE form, ONE moment, never the estate**. Verify it
   against the code on your tree before you rest a deferral, a row or a refusal on it; one from a ledger is a
   claim about its day. Retry the NARROWEST form; name the refspec, session and hour refused.
-- **SUBSTRATE BUILT IS NOT DEPENDENT BUILT — and this is the JUDGING half of §2's building rule** (BOB #17,
-  2026-09-19; D-60, D-115, D-116, receipts archived).
+- **SUBSTRATE BUILT IS NOT DEPENDENT BUILT — and this is the JUDGING half of §2's building rule** (BOB #17, 2026-09-19).
   §2 says do not BUILD a dependent until its substrate is verified BUILT. The error that keeps being made runs the
-  other way: a row is READ as done because the thing underneath it is done. D-116 is the exhibit (archived verbatim). **When you judge a row, verify the DEPENDENT at the
+  other way: a row is READ as done because the thing underneath it is done. **When you judge a row, verify the DEPENDENT at the
   code by name; a built substrate is not evidence about it, and neither is the row.** The honest outcome is usually
   NARROWED to the one unbuilt trace, not closed — and a row closed by rounding off its unbuilt quarter is how a false
   "done" enters the record.
@@ -145,7 +145,7 @@ design, doctrine, anything for Bob → BOB) and continue.
 - **A fix verified only where you changed it is not verified.** Ask who else reads it — the gate's note,
   the suite's assertion, the row that cites it, the kickoff that quotes it — and check THERE. **And re-run the
   subject's negative control after changing it**: a suite coupled to behaviour survives a refactor that disarms the
-  control coupled to shape (M-60 Q9).
+  control coupled to shape.
 - **Verify by the positive artifact, never the absence of an error.** A full battery ends with
   `N/N suites green · M assertions passing`; a run without that line did not finish. **Never read an exit
   status through a pipe or a wrapper** — `cmd | tail` reports tail's.
@@ -176,7 +176,7 @@ each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not
   no semicolon inside an inline `--` comment; a derived table must be added to `purge`.
 - **Bound every poller** (`until <cond> || [ $SECONDS -gt N ]`); kill by PID from a table you read, never by pattern.
 - **No shell variable in an `rm`/`rmdir` path**; write the literal absolute path. Bypass still ASKS when an empty
-  variable could aim it at root (no rule or hook can pre-approve that), halting the lane. Brief workers too.
+  variable could aim it at root (no rule or hook can pre-approve that), halting the lane.
 
 ## 8. Cloudflare and credentials
 
