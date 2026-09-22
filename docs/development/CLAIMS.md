@@ -18186,6 +18186,15 @@ task, whose definition lives OUTSIDE this repository and is the operator's: name
 
 **open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**RELEASED 2026-09-22 by CONDUCT #12 at integration.** M0-81 LANDED in the merge `f54d3e5a` (batch 2, after REC-157 at
+`2927a985` and M0-97 + D-341 at `5b39170d`, with `origin/main` @ `032d1ce1` merged in at `cb8e9518`), pushed to `main` in
+the same landing as this line under the batch's ONE FULL gate. The worker's own FULL gate was NOT run (CONDUCT #11 told it
+to report with it unrun); the batch's gate is its gate. REGISTER_FLOOR re-read from `--strict` on the COMMITTED merge
+`f54d3e5a`: 1622 / 263 / 264 / run 226. Its control (`occupancy.control.mjs`, 18 arms, 113/0) is the builder's run, not
+re-run by the integrator: an instrument's control, not a destructive or security-sensitive one. Branch
+`worktree-agent-a95fe61454bcdcdc2` is deleted from the remote after the push is verified. The paths this block reserved are
+FREE; its DELEGATION to BOB stays OPEN.
+
 ## DELEGATION 2026-09-22 M0 (M0-81 worker) -> BOB — **the chip procedure's OCCUPANCY check is one command now, `node tools/occupancy.mjs`; `kickoffs/BOB.md` rule 1 should name it, names evidence that cannot show half its binding, and has one reading that needs the BOB lane's word**
 
 `kickoffs/BOB.md` "Spawning and retiring lanes", rule 1, says: `list_sessions` first, and do not file if a live session is
