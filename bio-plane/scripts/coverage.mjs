@@ -1362,6 +1362,15 @@ const REGISTER_FLOOR = {
      `REGISTER FLOOR  arms 1579/1577 · classified 260/260 · corpus (suites read) 261/261 · GREW by 2 arm(s)`,
      `floor 223/223 reproducible` — arms (12) and (13) of the same declaration (helpers read as code; the other
      side's prose bounded by DOCS). Nothing FELL. */
+  /* MOVED 2026-09-21 by REC-157 (worktree `agent-a976bfb0c6dec2bdb`, branch `worktree-agent-a976bfb0c6dec2bdb`):
+     arms 1566 -> 1572, classified 259 -> 260, corpus 260 -> 261 and run 222 -> 223, ALL FOUR IN THE SAME TURN and every
+     one taken from the figure this item's own `--strict` run PRINTED ON ITS COMMITTED TREE `b9f62ccf` (`REGISTER FLOOR
+     arms 1572/1566 · classified 260/259 · corpus (suites read) 261/260 · GREW by 6 arm(s)` and `223 RUN (dated token) …
+     floor 223/222 reproducible · GREW by 1`), exit 0 unpiped — never counted and never added by hand. The cause is ONE
+     new suite, `test/case-edition-conclusion.test.mjs`, whose declaration states the six arms (a)–(f)
+     `test/case-edition-conclusion.control.mjs` runs, all AS DECLARED, with a dated RUN token. Nothing FELL. ONE KEY SET,
+     grepped after writing: `^  arms:` matches TWICE in this file, here and in the FLEET block far below. */
+  /* CONDUCT #11, 2026-09-21, batch 2 (REC-157 + M0-97/D-341 onto main after D-293): ONE KEY SET, collapsed from both sides; the value is RE-READ from `--strict` on the COMMITTED merge, never added by hand (provisional until then). */
   arms: 1579,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).

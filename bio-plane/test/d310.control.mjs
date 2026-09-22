@@ -185,8 +185,21 @@ arm("1", "THE ITEM'S OWN ARM — THE DEC-8 DISAGREEMENT PUT BACK. Drop `&& f.pro
   + "stay green — the fence is untouched and a control that took both down would not have isolated "
   + "the pre-flight. And a MACHINE credential's published acts must be BYTE-IDENTICAL to the "
   + "baseline's, which is the byte-unchanged claim measured rather than asserted.",
-  [["affordances", `f.current_state === "concluded" && !f.case_member\n                     && f.project_owner !== false }`,
-                   `f.current_state === "concluded" && !f.case_member }`]],
+  /* RE-ANCHORED 2026-09-21 by the REC-157 worker, and the anchor had been DEAD since
+     2026-09-19: REC-135 (IC-166) rewrote the `publish` predicate's condition lines, so the
+     quote `f.current_state === "concluded" && !f.case_member …` matched ZERO times and this
+     arm threw before arming — a driver M0-25's witness cannot read (its anchors sit in a
+     nested array), so nothing said so. REC-157 moves the same predicate again (the
+     membership half gains `edition_warranted_for_project`). THE ARM IS UNCHANGED IN WHAT IT
+     BREAKS: it still drops `&& f.project_owner !== false` and nothing else; only the quote
+     moved to the lines that now carry it. RE-RUN THE SAME DAY, WHOLE DRIVER, on REC-157's
+     tree: 4 arms, 0 other than declared — arm (1) caseproduction 72/3 and affordances 86/3,
+     the machine's published acts byte-identical to the baseline (2,819 bytes); (2a) 74/1 and
+     88/1 with the machine's acts DIFFERING (2,657 bytes); (2b) 72/3; (3) 74/1 and 88/1. Every
+     restore verified by sha256, content and cmp. (The driver prints string LENGTHS as
+     "bytes": `store.mjs` is 2,786,693 bytes on disk and 2,779,039 UTF-16 units.) */
+  [["affordances", `&& (!f.case_member || f.edition_warranted_for_project === true)\n                     && f.project_owner !== false }`,
+                   `&& (!f.case_member || f.edition_warranted_for_project === true) }`]],
   [{ name: OWN,
      mustFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY", "FIXTURE GUARD: the table is not uniform"],
      mustNotFail: ["A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED",

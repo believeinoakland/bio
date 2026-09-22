@@ -18158,3 +18158,30 @@ walks what changed. `--since` turns CONDUCT's re-merge over a docs move from the
 read the moved prose, and it RE-CHECKS, rather than trusts, anything the other side does not explain. Two refinements
 were forced by measuring this landing itself — prose in shared helpers read as reads, and an unsound first `--since` — and
 each carries a control arm.
+
+## M-92 · 2026-09-21 · REC-157 — what a moved project conclusion can publish, before and after, and the make-current write that already moved the pin
+
+Instruments: `bio-plane/test/case-edition-conclusion.test.mjs` run from `bio-plane/` against the branch's `src/` and, through a
+copy of the suite whose `SRC` pointed at `git archive 86523052 bio-plane/src bio-plane/checks docprofile` extracted inside the
+worktree, against the UNTOUCHED plane; three throwaway probes (the suite's fixture with printed reads, deleted after); `node
+test/case-edition-conclusion.control.mjs`; `node scripts/battery.mjs` (baseline on the untouched tree `ed38f4b4`, whose `src/`
+is `86523052`'s). Every act driven through the control plane as a member; every edition ratified with a real ssh-keygen signature.
+
+| measured | untouched plane (`86523052`) | this branch |
+| --- | --- | --- |
+| the new suite, 36 assertions | **19 pass / 17 fail** — every arm where the finding's bytes are exactly the pin and the project's conclusion moved is REFUSED `ALREADY_A_CASE_MEMBER` (edition 2, edition 3, the prepared window, the no-project corner) | **36 / 0** |
+| the row's LITERAL probe path — conclude, publish, ratify, withdraw, `op=versioncurrent` to the other reading, conclude, publish | a SECOND EDITION PUBLISHES: the make-current moved `bundle_sha`, the finding was no longer pinned, and the membership refusal was never asked | the same, by the same bytes route; the answer carries NO `edition_warranted` |
+| what `op=versioncurrent&project=` writes | TWO promotions: the SHARED inquiry (Session Log `Version current … is what <P> stands on`, `last_updated`) and then the project's pointer | unchanged (not this item's) |
+| a make-current after publication, read back through `op=caseflags` | a REVISION FLAG is raised on the case pinning the finding (`outstanding: true`, `projects_owing: [<the owner>]`) — a pointer move reads as a revision of the finding | unchanged |
+| a case PREPARED by `op=publish`, then the project withdraws, then `op=caseratify` and `op=ratify` | BOTH SUCCEED; the ratified edition records the withdrawn conclusion as the project's (`relationship: project`, claim A) while `op=basisversions` shows the project standing on none | unchanged (routed, not fixed here) |
+| `node test/case-edition-conclusion.control.mjs`, six arms plus a baseline | — | ALL AS DECLARED, the declaration checked as a total: baseline 36/0 · (a) pin on `bundle_sha` alone 21/15 · (b) refusal dropped 26/10 · (c) claim compared instead of act 33/3 · (d) no-project pin ignored 35/1 · (e) prepared edition not asked 33/3 · (f) affordance on `!case_member` alone 35/1 |
+| full battery | `268/268 suites green · 16324 assertions passing` (EXCLUDES 2 untallied: `bundle`, `livefire`), run `85930.d28c12`, on the untouched tree `ed38f4b4` | `269/269 suites green · 16356 assertions passing` (EXCLUDES the same 2 untallied), run `71529.0bc507`, on the committed branch `19374001`, battery exit 0; per suite against the baseline: `case-edition-conclusion` +36 (new), `hygiene` +3 (the three per-suite assertions naming the new suite, read by name), `planning-hygiene` −7 (the merge of origin/main `7a8b81d6`, as below) — net +32 |
+| the rest of the gate on `19374001` | — | `coverage.mjs --strict` exit 0, register exact (arms 1572/1572, classified 260/260, corpus 261/261, run 223/223) after the floors moved; `check-refusal-codes.mjs` exit 0, 19 ratchet keys, zero slack; `civicos-ui/test/run.mjs` exit 0, 58/58 |
+| narrow set of 40 related suites (case, publish, conclusion, affordance, census and witness suites) | — | `40/40 suites green · 3250 assertions passing`; per suite against the baseline: `case-edition-conclusion` +36 (new), `hygiene` +3; `planning-hygiene` −7 is the MERGE of origin/main `7a8b81d6`, MEASURED by re-running it with origin/main's own `CLAIMS.md` in place (218 either way) |
+
+**WHAT IT SAYS.** Item 9's defect is real and narrower than its row: it lives exactly where the finding's bytes do not move —
+a project re-concluding on a reading it already stood on (its pointer moved before the edition was published), re-concluding on
+the same reading (REC-135's own probe), or withdrawing on a question also concluded in its own bytes. The path the row names, a
+make-current after publication, was never refused, because `op=versioncurrent` writes one project's stance into the SHARED
+question's bytes — the same write that raises a revision flag on every case pinning the finding. Two findings are routed rather
+than built: that write (to BOB) and the ratification of a preparation after its project withdrew (to SCHEDULER).
