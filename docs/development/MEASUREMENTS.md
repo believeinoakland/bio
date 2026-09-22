@@ -18146,7 +18146,7 @@ other side's prose bounded by DOCS); the figures the refinements replaced are ke
 | `--since`, a tools change rebased over one docs commit | 10 units — the planning suites read both `tools/` (walks) and `docs/` (through `plancheck`/`decided`) |
 | `--since`, a PLANE change gated FULL, rebased over one docs commit | 24 over `QUEUE.md`, `MEASUREMENTS.md` or `CLAIMS.md` · 14 over a design doc — against the 41 doc-facing suites re-run today; before the DOCS bound on the other side's prose: 55 over `QUEUE.md`, 79 over `MEASUREMENTS.md` |
 | `--since`, the other side NOT on `origin/main` (rebased onto a local ref) | its paths read as UNEXPLAINED and re-run as TARGETED: 47 instead of 10 — over-selection, the safe direction |
-| `--since`, a commit added on top of a GREEN tree, no rebase (the first `--since` re-ran NOTHING of it) | its readers re-run as TARGETED would; this branch's own final re-check over `0b0e62a4`: 138 units for its 5 post-gate paths |
+| `--since`, a commit added on top of a GREEN tree, no rebase (the first `--since` re-ran NOTHING of it) | its readers re-run as TARGETED would; this branch's own final re-check over `0b0e62a4`: 147 units for its 6 post-gate paths (`tools/gates.mjs`, the suite, its control, `coverage.mjs`, `CLAIMS.md`, `MEASUREMENTS.md`) |
 | `--explain` wall clock, the widest scenario | 0.64 s |
 | `gates.test.mjs` | 62 pass / 0 fail · ~16 s |
 | `gates.control.mjs` | 13 arms plus a baseline, ALL AS DECLARED · 96 pass / 0 fail · 229 s · every restore byte-identical (sha256 + `cmp` + size); an earlier run's D-331 preflight REFUSED TO ARM anything over one stale anchor, as designed |
