@@ -18437,6 +18437,30 @@ named in a DELEGATION), `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 
+**BUILT ON THE BRANCH, NOT INTEGRATED (the worker's figures; CONDUCT re-reads them on the merged tree).** `.gitignore`
+names the index and it left the git index; `tools/decided.mjs` gained the one freshness call `fresh()` (absent or stale
+written by rename, current left alone) and the predicate `indexTracking()`; `--check` exits 2, retired. `plancheck` arm 2b
+now fails on a TRACKED or un-ignored index; the push guard's index arm and `check()` are gone. READERS, counted by what
+READS the file rather than what names it — seven before: `decided.mjs --check`, `plancheck` 2b and the guard's `check()`
+(through it), `attribution.mjs --census`, `nc-m039.mjs` (it copied the file), `nc-m034.mjs`, and `op-claims`' walk, whose
+suite asserted the file's presence. Now four read through `fresh()` (the CLI, `op-claims.test.mjs`, `--census`, `nc-m034`)
+and three read nothing (`plancheck`, the guard, `nc-m039`). `ledger.mjs` and `m035-refiter-census.mjs` NAME it and do not
+read it: the first wrote it after a move (retired), the second excludes it by path before reading.
+LIVE, on this repository: two local branches off `f4ff1ea6` each edited a real ruling (ORCHESTRATION.md:118,
+MILESTONES.md:183) and ran the tool; the merge exited 0 with no index conflict, no commit carried the index, and
+`decided.mjs "<phrase>"` returned both rulings from the merged corpus; the copy left behind read `stale, written` on the
+next call. The branches were deleted.
+GATE, FULL, on `f4ff1ea6` (tree `0ad1b342`, RECORDED GREEN): battery `272/272 suites green · 16564 assertions passing ·
+EXCLUDES 2 untallied suite(s)` (`bundle`, `livefire`), 923.3 s, run `11973.df05af`, provenance 275 of 275 in the commit,
+no skips; the true baseline, a checkout of `7f28fe8c`, `272/272 · 16551`, run `74100.eb29ae`. Per suite: decided +21
+(section 8), pushguard 86 -> 77 (the retired arm's assertions went with it; its register arms rose 5 -> 7), hygiene +1, 269
+unchanged. `coverage.mjs --strict` exit 0: OPS 197/197, CHECKS 356/356, register 1632/263/264, RUN 226. UI harness green.
+`plancheck`: 1 fail, UNPUSHED (a worker branch), 5 warns, all inherited.
+CONTROLS: `decided.control.mjs` 23/23 as declared, 155/0 (arm 16 re-run on the committed `.gitignore`: 13/0);
+`pushguard.control.mjs` (new) 7/7, 56/0 — its arm 2 found a suite read that threw, since guarded; `gates.control.mjs`
+re-run 13/13, 96/0; `op-claims.control.mjs` re-run 6/6; `op-claims.test.mjs`'s freshness arm 34/1 armed, 35/0 restored;
+`nc-m034.mjs` 0 failing, 11 restores byte-identical, its pen now removed on exit.
+
 ## DELEGATION 2026-09-22 M0 (M0-99 worker) -> BOB, CONDUCT, SCHEDULER, DIST, FLEET and the owner of `kickoffs/SKILL.md` — **ELEVEN SENTENCES THAT TELL A SESSION TO COMMIT, MERGE OR REGENERATE `docs/DECIDED.md`, WHICH M0-99's LANDING MAKES FALSE**
 
 When M0-99 lands, `docs/DECIDED.md` is ignored by `.gitignore` and in no commit; `node tools/decided.mjs` writes it for the
