@@ -18873,3 +18873,32 @@ design rows the fold cannot move without a ruling; each question is single, and 
 
 **open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or
 narrowed), and nothing runnable waits on any of them.
+
+## CLAIM 2026-09-22 M0 (M0-107 — an expired timeout budget reads NOT MEASURED, never a finding; a timeouts-only run records no RED)
+
+session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-107 (RESUME of CONDUCT #13's stood-down worker, whose report on
+`origin/conduct13/standdown-reports` is the plan), worktree `.claude/worktrees/agent-a61477d96c4e0ec36`, branch
+`worktree-agent-a61477d96c4e0ec36`, from `origin/main` @ `de40aa56` (cloud).
+authority: `QUEUE.md` `### M0-107 · running` (read on `origin/main` @ `de40aa56`); design `VERIFICATION.md` (admitted for M0
+by name) with BOB #28's ruling (BOB INBOX, 2026-09-22, item 5), which this landing writes into `VERIFICATION.md`.
+paths, BY SITE:
+  - `bio-plane/test/budget.mjs` (NEW) — the one helper: `expired`, `until`, `budgetAssert`, the pid-tagged marker.
+  - the six in-gate suites with a budget site — `owed-controls`, `battery-verdict`, `battery-residue`,
+    `battery-provenance`, `coverage-provenance`, `m051-driver-census` (`.test.mjs`): each budget site's outcome check ONLY,
+    and each suite's NEGATIVE CONTROL block where this item's arms are recorded.
+  - `bio-plane/scripts/battery.mjs` — the per-suite verdict (pid-tagged markers, NOT MEASURED), the headline segment, the
+    exit code and the `$BIO_BATTERY_VERDICT` file. Nothing else in it.
+  - `tools/gates.mjs` — the step loop, the verdict line, the record block, the `--since` fallback text and the header's
+    Exit line ONLY; sections 1–2c and the plan are M0-110's to touch, not this item's.
+  - `tools/pushguard.mjs` — the verdict record ONLY: `RECORD_VERSION`, `readRuns`, `effectiveVerdict`, `gateVerdictCheck`,
+    the `--run` note for a NOT MEASURED record, and the in-process control's verdict arms.
+  - `bio-plane/test/gates.test.mjs` (the stub and one section), `bio-plane/scripts/budgetsweep.mjs` (NEW),
+    `bio-plane/test/budget-sweep.test.mjs` (NEW), `bio-plane/test/m0107-budget.control.mjs` (NEW, its pen
+    `.m0107-harness/` self-ignoring), `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY and only to printed figures.
+  - `docs/development/VERIFICATION.md` (BOB #28's ruling, within its budget), `docs/development/MEASUREMENTS.md`
+    (one entry APPENDED), this block.
+**NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT's), `tools/plancheck.mjs` and `tools/coord.mjs` (M0-110's),
+`.gitignore`, and `coverage.mjs` beyond its floor (its L2050 silent drop is a finding for SCHEDULER, not this item's).
+Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
