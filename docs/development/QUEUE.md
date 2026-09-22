@@ -115,7 +115,7 @@ NEGATIVE CONTROL: drop the occupancy test and the duplicate-CONDUCT fixture is a
 added: 2026-09-20 · SCHEDULER #3 (BOB #18's inbox entry, drained this commit).
 
 ### M0-99 · queued — **`docs/DECIDED.md` IS A GENERATED INDEX, COMMITTED, AND 88 COMMITS TOUCHED IT ON 2026-09-21: EVERY LANE'S LANDING CONFLICTS ON A FILE NOBODY WROTE.** `tools/decided.mjs` regenerates it, the push guard refuses a stale one, and every rebase regenerates it again (`ORCHESTRATION.md`'s measurement). Item 2 of BOB #23's four. — owner M0.
-order: directly after M0-98, item 2 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
+order: kept at the head under Bob's ruling of 2026-09-22 (`CLAUDE.md` §2: no process row unless it cuts gate time or unblocks product) because it CUTS GATE TIME: 142 of the 209 commits on `main` in the 24 h to 13:30Z 2026-09-22 touched `docs/DECIDED.md` (M-94), so both sides of nearly every rebase carry it, `gates.mjs --since` re-runs its readers, and the push guard refuses a stale copy (SCHEDULER #12; placed by SCHEDULER #8 as item 2 of BOB #23's four)
 milestone: M0
 interface: none
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 2, *a generated index is not committed*.
@@ -125,7 +125,7 @@ accepts-when: a ruling edited on two branches merges with no `DECIDED.md` confli
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
 
 ### M0-100 · queued — **SEVERAL LANES APPEND TO ONE FILE — `CLAIMS.md`, TOUCHED BY 97 COMMITS ON 2026-09-21 — SO NEARLY EVERY RE-MERGE IS ON ITS TAIL, AND A LINE ONE LANE ADDS TO ITS OWN BLOCK CAN LAND IN ANOTHER'S.** So do `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`. Item 3 of BOB #23's four. — owner M0.
-order: directly after M0-99, item 3 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
+order: kept at the head with M0-99 for the same reason, measured larger: 169 of those 209 commits touched `CLAIMS.md` and 29 suites name it or `DECIDED.md` (M-94), and a `--since` pairing over one of these ledgers re-runs 24 units against 14 over a design document (M-90); its tail's fake conflicts are what Bob named as having *significantly slowed down development* (BOB #23's entry) (SCHEDULER #12; placed by SCHEDULER #8 as item 3)
 milestone: M0
 interface: none
 design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 3, *a file several lanes append to becomes one file per entry*.

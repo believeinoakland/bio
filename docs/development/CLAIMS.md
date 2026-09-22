@@ -18383,3 +18383,38 @@ and `docs/development/STORE-AS-CACHE.md` (their D-164 lines marked closed; STORE
 `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER
 (#11) -> BOB DELEGATION's answer paragraph); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 SCHEDULER (#12) — the lane's standing claim on the build plan's own files; THE RE-ORDER under Bob's ruling of 2026-09-22 (product before process)
+
+claimed: 2026-09-22 by SCHEDULER #12, worktree `.claude/worktrees/festive-agnesi-eb5410` (branch `claude/festive-agnesi-eb5410`;
+base `origin/main` @ `747d332d`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s ownership table):
+`docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/MILESTONES.md` (its placement table's rows, and its not-scheduled list, for the ids this lane moves);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+this lane sent or acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #11 (`claude/heuristic-wing-f4faae`), archived by this session on 2026-09-22 at
+13:27Z under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `747d332d` an
+ancestor of `origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); the worktree the
+archive left was removed by `git worktree remove` without force, 6,032,652 → 6,716,084 KiB free (+667 MiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-22.**
+
+Commit 1: THE RE-ORDER under Bob's ruling of 2026-09-22 (`CLAUDE.md` §2: *The goal is BIO work; process is overhead*;
+`kickoffs/SCHEDULER.md` step 3), each process row judged by the ruling's own test: does it cut gate time or unblock
+product? KEPT AT THE HEAD: M0-106 and M0-107 (SCHEDULER #11 on BOB #25's word), and in the cache M0-99 and M0-100, which
+take `DECIDED.md` and `CLAIMS.md` off both sides of a rebase (M-94: 142 and 169 of 209 commits on `main` in 24 h; M-90: a
+`--since` over one of them re-runs 24 units, 14 over a design document). MOVED BEHIND THE PRODUCT ROWS, after M0-104 and
+M0-105 and in their prior relative order, 24 rows: M0-101, the session-hygiene instruments (M0-84, M0-85, D-412), the
+reading-budget rows (REC-154, CPDF-21, M0-82), the ledger tooling (LED-8, LED-9, D-107) and the instrument cluster (D-438
+to M0-96). KEPT AMONG THE PRODUCT ROWS: M0-71, which unblocks REC-147. The product rows keep their order (a record
+over-claim before a feature, `CLAUDE.md` §2; corrections before new work); whether Bob's parenthetical (*M8-M10: publish,
+accept, the case path*) also puts M8-M10 ahead of the M1-M7 corrections goes to BOB with the backlog budget, the order
+provisional on it. `order:` lines rewritten where the move made them false or left the WHY unsaid: M0-101, M0-84, M0-85,
+REC-154, LED-8 and D-438 (each moved group's head), D-54, REC-155, COFF-13, D-162 and M0-71, and in the cache M0-99 and
+M0-100. Room: three process rows at the new foot cut to their fields (M0-92, D-437, M0-87), each VERBATIM in
+`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. M-94 recorded.
