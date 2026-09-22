@@ -14,7 +14,7 @@ A cut needs these, by step (NAMES only; values never enter the repo or a message
   wrangler for `newgroup`, the deployments API): `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` (aliases `CF_TOKEN`,
   `CF_ACCT`; the account MUST be `20b533579290b9b93168345edd3b7f72` — if anything reports another, STOP and say so).
 - **LIVE-VERIFY** biosmoke7 and `op=audit`: `BIO_ADMIN_TOKEN`, `BIO_MEMBER_TOKEN`.
-**RULED by Bob, 2026-09-22 ~16:45Z (option C, relayed by BOB #27; recorded in `NEW-MACHINE.md` §0): all ten `.env`
+**RULED by Bob, 2026-09-22 ~15:48Z (option C, relayed by BOB #27; recorded in `NEW-MACHINE.md` §0): all ten `.env`
 keys live in the ONE cloud environment every session uses, placed there by Bob himself.** So find them as environment
 variables and confirm each by USING it — `wrangler whoami` must report `20b533579290b9b93168345edd3b7f72` — and never
 print a value. A key that is absent is absent: `release-assemble` refuses `[NO_SEED]`, correctly; say which, and stop.
@@ -83,9 +83,10 @@ blocked by a MULTIPART answer); bounded only: member artifacts byte-identical at
 
 ## Session state and rules met this session
 
-- DIST #4 (Mac, first account) holds session-only wakes: recurring `b9dd7809`, renewal `541fd1f1`, the 0.72.0 bound
-  `5f9ed52f` (2026-09-22 21:07 PDT). They die with it; **arm your own** (every 6 h, opening with `get_usage` against
-  70%; a 5-day renewal; a one-shot bound at the batch). DIST #4 was at ~63% context at this edit.
+- **DIST #4 WOUND DOWN on Bob's order (BOB #27, 2026-09-22 16:49Z): development moves to his second account in cloud
+  Claude Code, and the 0.72.0 cut is DIST #5's there.** DIST #4 deleted every wake in its own CronList (the recurring
+  self-wake, the 5-day renewal and the 0.72.0 bound), so none fires. **Arm your own**: every 6 h, opening with
+  `get_usage` against 70%; a 5-day renewal; a one-shot bound at the batch.
 - Every DIST branch is on the remote. Worktree `.claude/worktrees/dist-4` (Mac) holds nothing unpushed.
 - Bob, 2026-09-22 (CLAUDE.md §6): never queue a gate behind another lane's. Two batteries at once thrash this Mac (a
   630 s battery took 2784 s, and a subprocess timeout read as a RED — M0-103/M0-107).
