@@ -17552,4 +17552,32 @@ paths, BY SITE:
 `docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `docs/development/DECISIONS.md` (read, never written),
 `bio-plane/src/**` (nothing under `src/` moves, so no bundle rebuild is owed), `newgroup/**`, `release/**`.
 
+**BUILT ON THE BRANCH, NOT INTEGRATED (the worker's figures; CONDUCT re-reads them on the merged tree).**
+M0-97: `registerEntries()` and a second pass in `scan()` beside the marker scan, whose rows are identical with the pass
+on or off. A `### DEC-n` entry carrying `decided:` is ONE row under its own id, quoting its LAST `response:` and dated
+from its LAST `decided:` (the register is append-only; DEC-31 was deferred, then answered); `open` and `deferred` entries
+are not filed; an unknown status or a missing `decided:` is NAMED in the index's head (0 today). 72 of 72 answered or
+enacted entries come back from `decided.mjs "DEC-n"` from inside themselves (0 on the base); "severance" returns DEC-70's
+entry; `decided.mjs "DEC-2"` names the entry as deferred and says nothing is filed under it. D-341: the window ends at a
+markdown heading or a blank line, and a TITLE (a heading, or a line ending in a colon) keeps the paragraph beneath it;
+the row's literal stop, measured first, cut 63 title quotes, dropped 6 rows and stripped heading rulings of their ids
+(M-91). Quotes carrying another block's heading 14 → 0. Class sweep, fixed in the same function: a search context always
+holds its own line (130 → 0), and an id query matches the whole id (`DEC-2` no longer answers with DEC-20 to DEC-29).
+Routed, with the fix named: D-441.
+GATE, FULL, on `bf1e24c4`: battery `269/269 suites green · 16364 assertions passing · EXCLUDES 2 untallied suite(s)`
+(`bundle`, `livefire`: inherited), run 47056.c2e452, its own exit 0; the true baseline (the nine paths at `86523052`,
+`.gitignore` kept, which no suite reads) `267/268 · 16322`, run 94925.22dc2f, its one red `monitor-cadence.test.mjs`
+intermittent (59/0 alone, twice) and reading none of these paths. Per suite: decided +38 (new), hygiene +1 (*decided.test.mjs
+exits deterministically*), planning-hygiene +1 (*D-441 carries a disposition token*), monitor-cadence +2 (the intermittent
+pair), 265 unchanged. `coverage.mjs --strict` exit 0: OPS 197/197, CHECKS 356/356, register exact at 1581/260/261, RUN
+223. UI harness all green, exit 0. `plancheck`: 1 fail, UNPUSHED (a worker branch), and 4 warns, all inherited.
+CONTROLS: `decided.control.mjs` fifteen arms, all as declared, 88/0, 15 of 15 restores byte-identical, and its signal path
+driven (SIGTERM mid-arm: exit 130, the subject restored from memory, the pen removed); `nc-m034.mjs` A6 corrected, never
+exempted (7 by id, plus REC-85's sentence as an id-less row), 0 failing; `decided.mjs --control` 8 of 8.
+DESIGN GAP: `docs/development/VERIFICATION.md` § *DOES THE CITATION RESOLVE TO THE ACTOR THE SENTENCE NAMES?* says a
+specimen mints phantom rulings because the index reads every ruling marker. Since M0-97 the index also files any
+line-start register-entry heading followed by a `decided:` field, from ANY corpus file (the pass is keyed on shape so an
+archived register stays indexed), so a quoted register entry is a second kind of specimen. `decided.test.mjs` fails on an
+entry row outside a `DECISIONS*.md` file, by name, but the rule a writer reads does not say so.
+
 **open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
