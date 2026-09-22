@@ -124,6 +124,8 @@ const decide = (runs, notes, tree = T1) => guard.githubCheckVerdict({ slug: "o/r
   t("another check's name is not this gate's", decide([{ ...run(1, "failure", "x"), name: "lint" }], {}).state, "NONE");
   const down = guard.githubCheckVerdict({ slug: "o/r", sha: SHA, tree: T1, get: () => ({ ok: false, reason: "HTTP 403" }) });
   t("an API that cannot be read is UNDETERMINED, never refused", [down.state, down.refuse, /HTTP 403/.test(down.why)], ["UNDETERMINED", false, true]);
+  const unknown = guard.githubCheckVerdict({ slug: "o/r", sha: SHA, tree: T1, get: () => ({ ok: false, code: "422", reason: "HTTP 422" }) });
+  t("a commit GitHub has not seen (HTTP 422, the first push of it) is NONE, not UNDETERMINED", [unknown.state, unknown.refuse], ["NONE", false]);
   t("no GitHub remote is NONE", guard.githubCheckVerdict({ slug: null, sha: SHA, tree: T1 }).state, "NONE");
 }
 

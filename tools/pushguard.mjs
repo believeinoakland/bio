@@ -685,7 +685,7 @@ export function githubGet(path, { base = process.env.BIO_GITHUB_API || "https://
   const code = out.slice(nl + 1).trim();
   const body = out.slice(0, nl);
   if (r.status !== 0) return { ok: false, reason: `curl exit ${r.status}${r.stderr ? `: ${String(r.stderr).trim().slice(0, 160)}` : ""}` };
-  if (!url.startsWith("file:") && code !== "200") return { ok: false, reason: `HTTP ${code} for ${path}` };
+  if (!url.startsWith("file:") && code !== "200") return { ok: false, code, reason: `HTTP ${code} for ${path}` };
   try { return { ok: true, json: JSON.parse(body) }; }
   catch { return { ok: false, reason: `unparseable JSON for ${path}` }; }
 }
@@ -696,6 +696,9 @@ export function githubCheckVerdict({ slug, sha, tree, get = githubGet } = {}) {
   const say = (state, why, extra = {}) => ({ state, why, refuse: false, sha, tree, ...extra });
   if (!slug) return say("NONE", "no GitHub remote named origin");
   const cr = get(`repos/${slug}/commits/${sha}/check-runs`);
+  /* 422 is GitHub's "No commit found for SHA": a commit this push is about to publish for the first
+     time, which no check can have run on yet — measured live on the first push of `812df0d7`. */
+  if (!cr.ok && cr.code === "422") return say("NONE", `commit ${sha.slice(0, 8)} is not on GitHub yet, so no check has run on it`);
   if (!cr.ok) return say("UNDETERMINED", `the check runs could not be read (${cr.reason})`);
   const runs = (cr.json && Array.isArray(cr.json.check_runs) ? cr.json.check_runs : [])
     .filter((c) => c && c.name === CHECK_NAME && c.head_sha === sha);
