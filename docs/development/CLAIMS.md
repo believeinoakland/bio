@@ -18093,3 +18093,11 @@ mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6). The D-293 D
 by cutting eight more foot rows to their fields (D-84, D-52, COFF-13, M0-96, M0-95, D-439, M0-89, M0-88), each VERBATIM in
 `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. The first gate of this landing read RED on `mintid.test`'s prose floor:
 this block named a DEBT id still on a worker's branch; the mention is reworded above.
+
+## CLAIM 2026-09-22 BOB (#25) — BOB-NEXT final for BOB #26: BOB #25 refreshes at 65% ahead of SCHEDULER #11's group of four
+
+claimed: 2026-09-22 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~12:55Z); `CLAUDE.md` (§2: Bob's ruling of 2026-09-22, *"The goal is BIO work;
+process is overhead"*, paid for by moving five citation fragments verbatim to `docs/archive/CLAUDE-2026-09-18.md`);
+`docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-22 BOB #25** — landed in the same commit as the file it covers.

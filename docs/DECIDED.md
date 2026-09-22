@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1422 rulings across 104 documents.
+1423 rulings across 104 documents.
 
 ## DEC-
 
@@ -636,8 +636,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16469`
 - **D-293** · 2026-09-22 — mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6).  
   `docs/development/CLAIMS.md:18092`
-- **D-293** — D-293's design gap RULED** (a dirty run keyed by its temporary-index tree, taken at start and end) and **`VERIFICATION.md`'s cut placed** (both in the BOB INBOX, undrained at writing); **`CLAUDE.md` §6** corrected to `gates.mjs`'s four behaviours (16,378 of 16,384 B). - `0b7328bc` **D-288 archived**: closed in full…  
-  `docs/development/kickoffs/BOB-NEXT.md:35`
+- **D-293** · 2026-09-17 — `5a807b8a` D-293's design gap RULED (a dirty run keyed by its temporary-index tree); CLAUDE.md §6's gate classes. - `0b7328bc` D-288 archived (closed in full since 2026-09-17); M0-48's five-day-old delegation discharged. - `032d1ce1` **BOB'S RULING ON THE RECORD — "Never queue a gate behind another lane's"…  
+  `docs/development/kickoffs/BOB-NEXT.md:34`
 - **D-293** — D-293's design gap is RULED (BOB INBOX; CLAUDE.md §6 corrected). - **Owners of `kickoffs/SKILL.md`, `SCHEDULER.md`, `NEW-MACHINE.md`:** D-293's stale-gate-sentence DELEGATION items 2, 3, 5. ## 5.  
   `docs/development/kickoffs/CONDUCT-NEXT.md:73`
 - **D-302** · 2026-09-10 — ct pin reds on every added paragraph, while this population is FIVE hand-written sentences in append-only history and a SETTLED IC, so the exact figure is the honest ratchet — `LEDGER`'s own argument for holding counts exactly.  
@@ -1458,8 +1458,6 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:15581`
 - **REC-157** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes nothing on the shared question; `store.mjs` promotes the inquiry first),…  
   `docs/development/CLAIMS.md:18085`
-- **REC-157** — And REC-157's question RULED in `INVESTIGATIVE-SESSION.md` §7 (fix (a)). - Archived BOB #24 (worktree removed, +663 MiB) and eleven heartbeat runs; filed the DIST #4 and SCHEDULER #11 chips. ## 3.  
-  `docs/development/kickoffs/BOB-NEXT.md:42`
 - **REC-159** — PLACED as REC-159, directly before REC-155; a bearer's reach RULED by BOB #22 into Membership v2 §4.7 (the ADMIN_TOKEN holder is not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and…  
   `docs/development/CLAIMS.md:16890`
 - **REC-159** — not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and its build PLACED as REC-162 directly after REC-159.  
@@ -1870,6 +1868,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:17761`
 - **M0-103** — (a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107 and archived.  
   `docs/development/CLAIMS.md:18090`
+- **M0-103** — M0-103; REC-157 RULED (a project's make-current writes nothing on the shared question, `INVESTIGATIVE-SESSION.md` §7); M0-97's second specimen added to VERIFICATION's cut; Distribution §4 and System Design §6 corrected (DIST deploys the installer; nothing waits on Bob).  
+  `docs/development/kickoffs/BOB-NEXT.md:38`
 - **M0-106** · 2026-09-22 — imeout outcome): item 1 PLACED as `M0-106` (DIST's own kickoff) and item 2 as `M0-107`, both where M0-103 stood; M0-103 SUPERSEDED by M0-107, which takes its fix to its class and names its two spawns as the first site.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1533`
 - **M0-107** · 2026-09-22 — SUPERSEDED 2026-09-22 by M0-107** (BOB #25's cut-the-work entry, item 2: M0-103's fix taken to its class; its two `coverage.mjs` spawns are M0-107's first site).  
@@ -2725,6 +2725,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1414`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1426`
+- **2026-09-22** — RULED BY BOB 2026-09-22 — "The goal is BIO work.  
+  `docs/development/kickoffs/BOB-NEXT.md:44`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
