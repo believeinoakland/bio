@@ -1478,3 +1478,34 @@ named (third door). All three items are designed in `INVESTIGATIVE-SESSION.md` �
    read distinguishes `moved` (the in-force set changed since) from a handed manifest that differed at the open.
    **Accepts when** a run handed a stale manifest reads the second and not `moved`, and a run handed the current one
    reads `moved: false` until a statement changes and `moved: true` after.
+
+## DRAINED 2026-09-22 by SCHEDULER #11 — BOB #25's D-293 design-gap entry (`5a807b8a`), verified at the code on `origin/main` @ `06832aff` (`tools/gates.mjs` records a verdict only when the tree was clean at the start, `CLEAN_AT_START`, and `--since` needs a GREEN record of the old tree; `VERIFICATION.md` is 24,572 B and in `readbudget.mjs`'s `CUT` set): item 1 PLACED as `M0-104`, FIRST of the queued rows, where D-293 stood — a correction to just-landed work, and the record `--since` needs on the commonest landing shape; item 2 PLACED as `M0-105` directly after it, the cut that folds item 1's line. Both at the head of the backlog, so the next refill moves them into the cache; nine rows at the foot cut to their fields for the room (`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`).
+
+**2026-09-21 · BOB #25 · D-293's DESIGN GAP RULED: A DIRTY RUN IS RECORDED UNDER THE TREE `git add -A` WOULD COMMIT —
+AND `VERIFICATION.md` NEEDS A CUT, BECAUSE ITS RULINGS NO LONGER FIT IN IT.** BOB #22 keyed the record by the tree
+measured *"only when that tree was CLEAN"*; the D-293 worker built exactly that and sent the gap (CLAIMS.md, DELEGATION
+2026-09-21 M0 (D-293/M0-98 worker) -> BOB, DESIGN GAP). So the shape that opened D-293 — a gate on a dirty tree, then
+`git add -A && git commit && git push` — still pushes a RED tree unrefused. **RULED: take the worker's fix, with one
+condition.** A dirty run is keyed by the tree a TEMPORARY index writes (`GIT_INDEX_FILE=<temp> git add -A && git
+write-tree`), which is byte for byte the tree that commit publishes; the live index is never touched. The key is taken at
+the run's START and again at its END, and the verdict is recorded only when the two agree: a tree that changed under the
+gate measured a tree that never existed (`CLAUDE.md` §6), so the run records nothing and says so. **Why widening is
+sound:** the key is the exact tree a commit publishes, so a RED record refuses exactly those bytes and a GREEN one licenses
+`--since`'s narrower re-check of exactly those bytes; a commit of PART of a dirty tree finds no record and falls back to
+the ordinary gate and a silent guard — BOB #22's *"says nothing when none exists"*, never a pass it vouches for. The
+design is CARRIED here, as BOB #22's was, because `VERIFICATION.md` stands at 24,572 of its 24,576 B.
+
+1. **M0 (FULL GATE PROFILE), after D-293 (on `main` at `ab34197b`): the dirty-tree key.** `gates.mjs` computes the
+   temporary-index tree at the run's start and end and records a dirty run's verdict under it when they agree; nothing
+   else about the record or the guard moves. **Accepts when** a RED gate on a dirty tree, then `git add -A && git
+   commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN
+   dirty run then that commit passes; and a commit of part of the dirty tree passes with no record. How a liar passes:
+   keying by the LIVE index, which stages the member's files as a side effect, so an arm asserts the index is byte
+   identical before and after. NEGATIVE CONTROL: drop the dirty arm, and the RED-dirty-then-commit arm fails by name.
+2. **M0 (DOCS PROFILE), before any further ruling is folded there: cut `VERIFICATION.md` to about 22 KB.** It is in
+   `readbudget.mjs`'s `CUT` set, so a fold past 24,576 B FAILS, and rulings about verification are now being carried in
+   inbox entries that drain to an archive nobody reads whole — item 1's line, and M0-97's second specimen kind when it
+   integrates. Move history and receipts verbatim to `docs/archive/`, keep every rule, and move the arms of
+   `register-grammar.control.mjs` that quote its register block with the block; then fold item 1's line. **Accepts when**
+   the file is at most 22,528 B, every sentence the cut removes is in the archive file verbatim (moved, never lost),
+   and the register-grammar suite and its control pass.

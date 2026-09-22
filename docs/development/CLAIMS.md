@@ -18002,3 +18002,31 @@ which gains them verbatim); `docs/architecture/BIO_Distribution_v0_1.md` (§4's 
 `docs/development/INVESTIGATIVE-SESSION.md` (as-of date); `docs/DECIDED.md` (GENERATED,
 regenerated LAST), and this block.
 **released: 2026-09-22 BOB #25** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 SCHEDULER (#11) — the lane's standing claim on the build plan's own files; BOB #25's D-293 entry drained (M0-104, M0-105) and LED-7 batch S11-1
+
+claimed: 2026-09-22 by SCHEDULER #11, worktree `.claude/worktrees/heuristic-wing-f4faae` (branch `claude/heuristic-wing-f4faae`;
+base `origin/main` @ `06832aff`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s ownership table):
+`docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/MILESTONES.md` (its placement table's rows, and its not-scheduled list, for the ids this lane moves);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+this lane sent or acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #10 (`scheduler10/work`), archived by this session on 2026-09-22 at ~12:25Z
+under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `464c2779` =
+`origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); the worktree the archive
+left was removed by `git worktree remove` without force, 6,132,904 → 6,801,004 KiB free (+652 MiB; `du` read the tree
+at 663,944 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-22.**
+
+Commit 1: BOB #25's D-293 design-gap entry DRAINED, verified at the code on `06832aff` (`tools/gates.mjs` records only a
+tree clean at the start; `--since` needs a GREEN record; `VERIFICATION.md` 24,572 B, in `CUT`): item 1 PLACED as `M0-104`
+(a dirty run keyed by its temporary-index tree), FIRST of the queued rows where D-293 stood; item 2 PLACED as `M0-105`
+(`VERIFICATION.md` cut to ~22 KB, then M0-104's line folded) directly after it; ids by `node tools/mintid.mjs M0`. Room
+made by cutting nine rows at the foot to their fields (MK-5, MK-7, MK-6, UI-78, REC-164, REC-161, UI-74, D-182, D-220),
+each VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`; the entry archived verbatim in `BOB-INBOX-drained.md`.
