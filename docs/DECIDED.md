@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1400 rulings across 103 documents.
+1399 rulings across 102 documents.
 
 ## DEC-
 
@@ -2681,8 +2681,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1369`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1381`
-- DIST #3 then DECIDED that route, and BOB #24 found no doctrine conflict: the installer never seeds; after an update it reads `op=instancegroup` and, only when no group is recorded, tells the operator in plain words, suggesting INSTANCE_NAME labelled as a suggestion and never pre-filling it.  
-  `docs/development/kickoffs/BOB-NEXT.md:43`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  

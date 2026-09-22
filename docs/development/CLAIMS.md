@@ -17750,3 +17750,10 @@ not-scheduled list corrected for D-89 and D-90. 131 open DEBT rows remain.
 **open as of 2026-09-21.**
 
 Sent to BOB by message on 2026-09-21; each of the nine rows carries a dated SENT note in `DEBT.md`.
+
+## CLAIM 2026-09-21 BOB (#24) — BOB-NEXT final: BOB #24 refreshes at ~62% ahead of SCHEDULER #10's group of three
+
+claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`. Paths:
+`docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~02:05Z 2026-09-22), `docs/DECIDED.md`
+(GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #24** — landed in the same commit as the file it covers.
