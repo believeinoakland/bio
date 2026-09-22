@@ -18903,3 +18903,6 @@ paths, BY SITE:
 Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+**released: 2026-09-22 by the M0-107 worker** — built, gated GREEN FULL on tree `68711d65` (274/274 suites, 16,686
+assertions, 0 skipped) and pushed on `worktree-agent-a61477d96c4e0ec36`; the paths stay reserved until CONDUCT integrates.
