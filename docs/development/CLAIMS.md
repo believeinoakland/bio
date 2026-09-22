@@ -17899,6 +17899,9 @@ named with a candidate, and its owner decides the words:
 the full set, any other the suites that name it, and `--since` re-checks a rebase — verified against `gates.mjs`'s
 `fullReason()` on `ab34197b`, within the file's budget (16,378 of 16,384 B). Items 2-5 are their owners'; this block
 stays open for them.
+**SCHEDULER #11, item 3 DONE (2026-09-22):** `kickoffs/SCHEDULER.md`'s Gates mechanic now names the classes `gates.mjs`
+prints — DOCS, TARGETED, FULL, and `--since` after a rebase — landed with SCHEDULER #11's second drain. Items 2 and 5 stay
+with their owners.
 
 ## DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB — **DESIGN GAP: THE RECORD BINDS ONLY A CLEAN TREE, AS BOB #22 SET IT, SO THE INCIDENT THAT OPENED D-293 IS STILL UNGUARDED**
 
@@ -17911,11 +17914,13 @@ write — `GIT_INDEX_FILE=<temp> git add -A && git write-tree` — which is byte
 objects into the object store (not the working tree) and would need the ruling's "only when CLEAN" relaxed. **Recommendation:**
 take it — the cost is one temp index per dirty run, and it closes the shape that rowed the item. Reversal costs one branch in
 `gates.mjs`; no data depends on it (a record directory of clean runs stays valid).
-**open as of 2026-09-21** — open until BOB rules; D-293 is built as ruled meanwhile.
 **RULED 2026-09-21 by BOB #25: take the fix, with one condition** — the temporary-index tree is taken at the run's
 start and end and a dirty verdict is recorded only when they agree. The ruling and its row are in the BOB INBOX of that
 date, carried there because `VERIFICATION.md` is at its budget (its cut is the entry's item 2). Nothing keeps this block
 open past SCHEDULER's drain.
+**DISCHARGED 2026-09-22 — SCHEDULER #11 drained BOB #25's entry:** the dirty-tree key PLACED as `M0-104`, FIRST of the
+queued rows where D-293 stood, and the cut as `M0-105` after it (the `open as of 2026-09-21` line removed at the discharge,
+as `tools/delegations.mjs` reads a block carrying both on its open half).
 
 ## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT readdressed to DIST #4, which takes the 0.71.0 cut)
 
@@ -18237,3 +18242,97 @@ ADMIT only."* M0-82 (CONDUCT's fallback start, owner CONDUCT) is sequenced after
    and titled `CONDUCT #8 (BIO) — integrator lane`. Re-run today it would stand up a second integrator under a stale
    number, and this judgement would read that session as a predecessor of any later CONDUCT chip, never an occupant.
 **open as of 2026-09-22** — items 1-3 open until BOB answers each; nothing here blocks a runnable row.
+
+## CLAIM 2026-09-22 SCHEDULER (#11) — the lane's standing claim on the build plan's own files; BOB #25's D-293 entry drained (M0-104, M0-105) and LED-7 batch S11-1
+
+claimed: 2026-09-22 by SCHEDULER #11, worktree `.claude/worktrees/heuristic-wing-f4faae` (branch `claude/heuristic-wing-f4faae`;
+base `origin/main` @ `06832aff`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s ownership table):
+`docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/MILESTONES.md` (its placement table's rows, and its not-scheduled list, for the ids this lane moves);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+this lane sent or acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #10 (`scheduler10/work`), archived by this session on 2026-09-22 at ~12:25Z
+under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `464c2779` =
+`origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); the worktree the archive
+left was removed by `git worktree remove` without force, 6,132,904 → 6,801,004 KiB free (+652 MiB; `du` read the tree
+at 663,944 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-22.**
+
+Commit 1: BOB #25's D-293 design-gap entry DRAINED, verified at the code on `06832aff` (`tools/gates.mjs` records only a
+tree clean at the start; `--since` needs a GREEN record; `VERIFICATION.md` 24,572 B, in `CUT`): item 1 PLACED as `M0-104`
+(a dirty run keyed by its temporary-index tree), FIRST of the queued rows where D-293 stood; item 2 PLACED as `M0-105`
+(`VERIFICATION.md` cut to ~22 KB, then M0-104's line folded) directly after it; ids by `node tools/mintid.mjs M0`. Room
+made by cutting nine rows at the foot to their fields (MK-5, MK-7, MK-6, UI-78, REC-164, REC-161, UI-74, D-182, D-220),
+each VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`; the entry archived verbatim in `BOB-INBOX-drained.md`.
+
+Commit 2: LED-7 batch S11-1, every row read at the code on `06832aff`. CLOSED IN FACT: D-140 (REC-20's `op=queue`,
+`b956b6d6`, stamps each item's `class` from `classOfKind` and its `case` from its homes; REC-21 holds `queue_state`),
+D-160 (the plane, the copy and the suites say UNRATED; REC-12 done), D-133 (UI-15, `d397ab5b`, left one declaration of
+each function) and D-180 (the schema-wide inline-semicolon assertion in `bias.test.mjs`, PL-12 `43081d69`). NARROWED and
+SENT: D-152 (built but DEC-4's region at the leg) and D-125 (built but DEC-10's (b) and (c) for a FINDING). SENT: D-164
+(Bob's reopening condition) and D-179 (one capture, one home). The four questions go to BOB as one group (the DELEGATION
+below). MILESTONES.md: the four closed rows removed, D-152's and D-125's cells narrowed. 110 open DEBT rows remain.
+VERIFIED AND WAITING FOR ROOM (placed when CONDUCT #12's batch frees it): the title-case ruling gap M0-97's worker
+minted as a DEBT row (its id is named only once that row is on `main`: `mintid.test`'s prose floor),
+SCHEDULER #10's four drafts D-65, D-74, D-86 and D-66 (re-verified on `464c2779`), D-178 (the audit sweep injects no
+`publishedRegistry`, `store.mjs`), D-169 (`dispose` writes `disposition_reason` with `#setScalar`, a no-op when an intake
+document carries no such line), D-171 (`#revisionKind` breaks ties on `snap_key`), and CONDUCT #11's route: the head of
+`bio-plane/test/retirable.control.mjs` declares eight arms and M0-83's six where `ARMS` runs fifteen (A6b).
+
+## DELEGATION 2026-09-22 SCHEDULER (#11) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S11-1: D-152's region at the leg (DEC-4), D-164's reopening condition, D-125's personal mute of a FINDING (DEC-10), and D-179's one capture, one home; none blocks a runnable row**
+
+1. **D-152 — DEC-4's *"an OCR citation carries its image region"*, AT THE LEG.** Built on `06832aff`: the transcription
+   chain (C-35), a page-and-rect anchor on every OCR region (C-35.9; an anchorless region is dropped), undetermined below
+   the floor, fidelity bounding the capture grade (C-2.8), attestation scoped to its extent. A leg MAY carry
+   `extent_rect` on the `pdf-page` arm, and coverage and the ceiling are judged per region (`#contentTarget`,
+   `extentCovers`); a leg resting on OCR'd text that names no rect is NOT refused, only capped. `CONTENT-EXTENT-DESIGN-SPACE.md`
+   §1.2 calls DEC-4's sentence *the one edge shape doctrine already REQUIRES*. **The question:** is the cap the built
+   answer (D-152 then closes in fact, the cap stated as DEC-4's reading), or must such a leg be REFUSED without a page and
+   rect (one RECORD row: a C-35 refusal at the leg's write, I3 breaking for rect-less legs on OCR'd text)?
+2. **D-164 — IS BOB'S REOPENING CONDITION MET?** Bob reopened it on 2026-09-15: content understood, architected,
+   inventoried and its missing pieces designed before a build plan is written. On `06832aff`, `node tools/status.mjs 4`
+   reads 4.edge BUILT (*D-164's central gap is CLOSED*), and Framework Part II carries §14 (the model), §15 and §17 (the
+   inventories) and §18's six pieces, each now designed in its home. **The question:** does D-164 close in fact, or does
+   the reopening wait on something the record does not show?
+3. **D-125 — DEC-10's (b) AND (c) FOR THE OVERDUE FINDING.** Bob ruled that the overdue notification offers (a) remind me
+   at a further increment, (b) stop notifying me about this one, (c) stop notifying me about that group, and the entry
+   determines that *muting is personal … The finding stands; only that member's notification stops.* Built (REC-21,
+   P-87): (a), and a per-member, per-case mute of CONDITION kinds. A FINDING is refused `KIND_NOT_PERSONAL`
+   (`queuestate.mjs`: *muting it would let one member's inbox hygiene erase the group's question*), and
+   `NOTIFICATIONS.md`'s class table gives a FINDING only authored record acts. The overdue successor IS a FINDING, so
+   (b) and (c) cannot reach DEC-10's own subject. **The question:** does a member's PERSONAL mute admit FINDING kinds, per
+   item and per case as DEC-10 rules (a change to `NOTIFICATIONS.md`'s handling scope, then one RECORD row), or does the
+   class table stand, which takes DEC-10's (b) and (c) back to Bob?
+4. **D-179 — ONE CAPTURE, ONE HOME?** `register.capture_sha` is the table's PRIMARY KEY and the promote write UPSERTs
+   `bundle_id` on it, so registering a capture under a second bundle silently MOVES the row, refused only for an authored
+   capture (C-53.8). **The question:** is one capture one home (a second registration then REFUSED by name, one RECORD
+   row), or is the key missing its bundle (`(capture_sha, bundle_id)`, a schema change with its migration)?
+
+Sent to BOB by message on 2026-09-22; each of the four rows carries a dated SENT note in `DEBT.md`.
+**open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or narrowed further), and nothing runnable waits on any of them.
+
+**AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified
+at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes
+nothing on the shared question; `store.mjs` promotes the inquiry first), first of the product corrections after REC-157;
+item 2 APPLIED to `M0-105` (M0-97's second specimen folded with the cut; `depends-on` M0-97). The cut-the-work entry: item 1
+PLACED as `M0-106` (DIST's release gate reads a GREEN FULL record or `--since` before a whole battery) and item 2 as `M0-107`
+(a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107
+and archived. `kickoffs/SCHEDULER.md`: the Gates mechanic corrected (D-293's DELEGATION item 3, DONE), and the hold-`main`
+mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6). The D-293 DESIGN GAP DELEGATION DISCHARGED. Room made
+by cutting eight more foot rows to their fields (D-84, D-52, COFF-13, M0-96, M0-95, D-439, M0-89, M0-88), each VERBATIM in
+`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. The first gate of this landing read RED on `mintid.test`'s prose floor:
+this block named a DEBT id still on a worker's branch; the mention is reworded above.
+
+## CLAIM 2026-09-22 BOB (#25) — BOB-NEXT final for BOB #26: BOB #25 refreshes at 65% ahead of SCHEDULER #11's group of four
+
+claimed: 2026-09-22 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~12:55Z); `CLAUDE.md` (§2: Bob's ruling of 2026-09-22, *"The goal is BIO work;
+process is overhead"*, paid for by moving five citation fragments verbatim to `docs/archive/CLAUDE-2026-09-18.md`);
+`docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-22 BOB #25** — landed in the same commit as the file it covers.

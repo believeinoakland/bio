@@ -20,6 +20,36 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push` — STILL PUSHES A RED TREE UNREFUSED, AND `--since` FINDS NO RECORD TO RE-CHECK FROM.** `tools/gates.mjs` records only when the tree was clean at the start (`CLEAN_AT_START`) and a dirty run prints *"NOT RECORDED"* (re-read on `464c2779`). — owner M0.
+order: FIRST of the queued rows, where D-293 stood (BOB #25: *"after D-293"*): a correction to just-landed work (`eecb553c`), above M0-99's new work by rule 3, and it gives `--since` a record on the commonest landing shape, Bob's throughput priority (SCHEDULER #11, 2026-09-22)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its push-guard section; the dirty-tree key is CARRIED in BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293's DESIGN GAP RULED") until M0-105 folds its line.
+depends-on: none — D-293 is on `main`.
+scope: at the run's start and end `gates.mjs` takes the tree a TEMPORARY index writes (`GIT_INDEX_FILE=<temp> git add -A && git write-tree`), byte for byte the tree that commit publishes, and records a dirty run's verdict under it when the two agree; the live index is never touched; nothing else about the record or the guard moves. **FULL GATE PROFILE**.
+accepts-when: a RED gate on a dirty tree, then `git add -A && git commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN dirty run then that commit passes; a commit of part of the dirty tree passes with no record. How a liar passes it: keying by the LIVE index, which stages the member's files, so an arm asserts the index byte-identical before and after. NEGATIVE CONTROL: drop the dirty arm, and the RED-dirty-then-commit arm fails by name.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-105 · queued — **`docs/development/VERIFICATION.md` STANDS AT 24,572 OF ITS 24,576 B, SO A RULING ABOUT VERIFICATION CANNOT BE FOLDED INTO IT: such rulings are carried in inbox entries that drain to an archive nobody reads whole** (M0-104's key among them). The file is in `readbudget.mjs`'s `CUT` set, so a fold past the budget FAILS. — owner M0.
+order: directly after M0-104, whose line it folds, and before any further ruling is folded into the file (BOB #25, 2026-09-21) (SCHEDULER #11, 2026-09-22)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §1's reading budget and `kickoffs/CONDUCT.md`'s cut of 2026-09-19 as the precedent; the cut is item 2 of BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`).
+depends-on: M0-97 (on CONDUCT #12's batch), whose second specimen this cut folds (BOB #25, 2026-09-22).
+scope: cut the file to about 22 KB: history and receipts move VERBATIM to `docs/archive/`, every rule stays, and the arms of `bio-plane/test/register-grammar.control.mjs` that quote its register block move with the block; then fold M0-104's line, and M0-97's second specimen into the section *DOES THE CITATION RESOLVE TO THE ACTOR THE SENTENCE NAMES?*: a quoted register entry (a `### DEC-n` heading followed by a `decided:` line) is filed as a ruling from ANY corpus file, so a quote outside `DECISIONS.md` is a phantom-ruling specimen beside the marker words. **DOCS PROFILE** (BOB #25); `gates.mjs` adds the control file's readers.
+accepts-when: the file is at most 22,528 B; every sentence the cut removes is in the archive file verbatim (moved, never lost); the register-grammar suite and its control pass. How a liar passes it: deleting rather than moving, so the check diffs the archive against the pre-cut file. NEGATIVE CONTROL: drop one sentence instead of moving it, and that check fails naming it.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`).
+
+### REC-166 · queued — **A PROJECT'S MAKE-CURRENT WRITES INTO THE SHARED QUESTION.** `op=versioncurrent&project=P` promotes the INQUIRY first (its `last_updated` and the Session Log line *reading '<v>' is what P stands on*) and only then P's pointer, so the finding's `bundle_sha` moves for no change to the finding: cases pinning it lose CASE-4's fences and `#flagCasesOnRevision` flags them all, another project's included (`store.mjs`, re-read on `032d1ce1`). — owner RECORD.
+order: first of the product corrections, directly after REC-157 lands (BOB #25): one team's act silently moving another team's published pins, which §7 forbids, CLAUDE.md §2's class; it completes REC-157's premise on every path (SCHEDULER #11, 2026-09-22)
+milestone: M10
+interface: I3 — the receipt moves from the inquiry's bytes to the project's; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §7, *"A PROJECT'S MAKE-CURRENT WRITES NOTHING ON THE SHARED QUESTION"* (BOB #25, 2026-09-22), fix (a).
+depends-on: REC-157.
+scope: fix (a): the project arm writes its receipt into the PROJECT's own bytes, in the promotion that writes its pointer, and does not promote the inquiry; accept, reject, hide and their siblings still promote it. Fix (b), exempting the revision flag, is refused (§7).
+accepts-when: after a project-arm make-current the inquiry's `bundle_sha` is unchanged, `op=caseflags` names no case for it, a published case pinning the finding keeps CASE-4's fences, and P's Session Log carries the line; `op=versionaccept` still moves the inquiry. How a liar passes it: dropping the receipt with the promotion, so an arm asserts the line in P's bytes. NEGATIVE CONTROL: restore the inquiry promotion, and the `bundle_sha`-unchanged arm fails by name.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs REC`).
+
 ### M0-101 · queued — **CONDUCT WRITES ONE WORD INTO SCHEDULER'S ROWS, `running`, SO TWO LANES WRITE ONE FILE, AND A LEDGER CARRY THAT TAKES ONE SIDE WHOLE REVERTS A LIVE FLIP** (twice, repaired by `8e39602a` and `830f6648`). Item 4 of BOB #23's four. — owner M0, with CONDUCT.
 order: after M0-100, which it rests on, item 4 of the four in the ruling's order (SCHEDULER #8, 2026-09-21)
 milestone: M0
@@ -331,15 +361,25 @@ scope: wherever an inquiry is listed or shown — the focus list, the review que
 accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking by title or author text, so the fixture's two inquiries share both. NEGATIVE CONTROL: neuter the helper, and the agent-inquiry arm fails by name.
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-82's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 
-### M0-103 · queued — **`owed-controls.test.mjs` READS A SUBPROCESS TIMEOUT AS A FINDING, AND SINCE D-293 THAT FALSE RED BLOCKS A PUSH.** Its two `scripts/coverage.mjs` spawns carry `timeout: 120_000` and nothing reads the spawn's own outcome, so a child killed under load fails A13 (*"the sweep NAMES undeclared suites"*) and A13b (*"--strict still EXITS 0"*). DIST #4's 0.71.0 gate went RED 268/269 on those two beside a concurrent battery (2026-09-22). — owner M0.
-order: first of the instrument cluster, before D-438: since D-293 the push guard refuses a tree recorded RED, so a load-induced false RED costs a FULL re-run, where D-438's red control blocks nothing (SCHEDULER #10, 2026-09-22)
+### M0-106 · queued — **DIST's RELEASE GATE RE-RUNS THE WHOLE BATTERY ON MERGED `main`, CALLING IT *"a tree nobody has tested"* (`kickoffs/DIST.md`), WHICH IS FALSE WHEREVER THAT EXACT TREE ALREADY CARRIES A GREEN FULL RECORD** (D-293 keys the record by tree). DIST #4's 0.71.0 gate took ~2.5 h here for a battery that runs in ~16 min. — owner DIST (its own kickoff).
+order: first of the instrument cluster, where M0-103 stood (BOB #25: *before M0-103*), item 1 of the cut-the-work entry: a whole battery nobody needs, on a machine that swaps (Bob, 2026-09-22: massive suite sets run only when necessary); DIST's own act, never a worker slot (SCHEDULER #11, 2026-09-22)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `CLAUDE.md` §6's ruling of 2026-09-22; the item is carried in BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "GATES RUN FAR MORE THAN THEY NEED TO").
+depends-on: none — D-293's record and M0-98's `--since` are on `main`.
+scope: step 1 becomes: a GREEN FULL record for the tree being released, or `gates.mjs --since <the newest commit whose tree carries one>`, and the whole battery only when neither exists; the version bump's own check stays. DIST writes it; CONDUCT routes the row to DIST and briefs no worker.
+accepts-when: a release from a tree with a GREEN FULL record runs no battery and names the record it relied on; one from an unrecorded tree runs the battery as today.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-107 · queued — **LOAD MAKES A GATE WRONG, NOT ONLY SLOW: a suite whose subprocess or wall-clock budget expires reads the expiry as a FINDING, and since D-293 the false RED is recorded and refuses the push.** DIST #4's 0.71.0 gate read RED on `owed-controls` A13/A13b beside a concurrent battery (M0-103, this row's first site); 57 `timeout:` sites sit in 43 suites and neither `gates.mjs` nor `battery.mjs` names a timeout outcome (re-read on `032d1ce1`). — owner M0.
+order: directly after M0-106, where M0-103 stood, which it supersedes by taking its fix to its class, item 2 of BOB #25's cut-the-work entry: a gate made wrong by load costs a FULL re-run and blocks a push (SCHEDULER #11, 2026-09-22)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement; the item is carried in BOB #25's drained entry.
 depends-on: none.
-scope: check the spawn's outcome first: when `error.code` is `ETIMEDOUT` or `signal` is set fail ONE assertion naming the timeout, never the two finding sentences; raise the budget toward the battery's per-suite scale.
-accepts-when: a run whose child times out fails the timeout assertion by name and neither finding assertion; a run whose child completes reads as today. NEGATIVE CONTROL: a 1 ms timeout fails the new assertion by name and neither finding assertion.
-added: 2026-09-22 · SCHEDULER #10 (DIST #4's route, verified at the code; `node tools/mintid.mjs M0`).
+scope: every suite whose subprocess or wall-clock budget can expire reads the expiry as ONE named timeout assertion, never a finding; a run whose only failures are timeouts records NOT MEASURED instead of RED, so the push guard does not refuse on it. First site: M0-103's two `coverage.mjs` spawns in `owed-controls.test.mjs`. **FULL GATE PROFILE**.
+accepts-when: a sweep names every `timeout:` and budget site with its outcome check; a run killed only by timeouts writes no RED record. How a liar passes it: raising every timeout, which hides a real hang, so an arm plants a hang and asserts it is still named. NEGATIVE CONTROL: a 1 ms budget on one swept site fails its timeout assertion by name and no finding assertion.
+added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`); supersedes M0-103.
 
 ### D-438 · queued — **THE DEC-49 GUARD'S REAL-TREE CONTROL HARNESS `civicos-ui/test/refusal-codes.control.mjs` IS RED: FOUR ARMS FAIL THAT ARE NOT ITS SUBJECT'S.** (c) `stdio-census.test.mjs` ARM D reads the guard BY NAME, so moving the guard aside turns the harness red on an `ENOENT`; (e) its first predicate is the census sentence from before D-257; (r2) EXACTLY 33 conscripted, measured 35; (r6) EXACTLY 36, measured 38. NARROWED: its `refusal-partition` half closed with D-355 (`0e80aa8c`). — owner VERIFY.
 order: FIRST of the instrument cluster, with M0-93: a control red on a green `main` measures nothing, D-355's class, and the DEC-49 guard is what a member's refusal words rest on (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
@@ -432,125 +472,125 @@ scope: when every anchor for a cited document is unresolvable, fall back to docu
 accepts-when: a fixture row whose only anchor is a bold paragraph is UNJUDGED or judged at document level, never a finding; a row whose resolved section lacks every symbol still is one. How a liar passes it: scoring the unresolvable row covered, so the arm asserts it is not a pass either. NEGATIVE CONTROL: restore skip-then-push, and the unresolvable arm fails by name.
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 
-### M0-88 · queued — **`caseproduction.control.mjs` ARM (H) NOW DRIVES THE PARTICIPATION FENCE, NOT THE COMMIT IT DECLARES.** It forges the committed project to a literal nobody has joined, so C-56.1 refuses it at `op=caseratify` before anything commits; its original property — *the record commits an attribution no signature covers*, the dangerous case — goes untested. M0-78 corrected the arm's declaration and REPORTED the re-aim rather than taking it. — owner M0.
+### M0-88 · queued — **`caseproduction.control.mjs` ARM (H) NOW DRIVES THE PARTICIPATION FENCE, NOT THE COMMIT IT DECLARES.** It forges the committed … (whole text: the cut archive)
 order: with the instrument cluster, after M0-80: a control proving less than it declares — a second defect in a control the cluster repaired (CONDUCT #8's DELEGATION 2026-09-20 item 3; SCHEDULER #4, 2026-09-21)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a control is evidence only when it FAILS at a named assertion; read with M0-78's note at the arm.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a control is evidence only when it FAILS at a … (whole text: the cut archive)
 depends-on: none.
-scope: re-aim arm (H) at a forged project the actor HAS joined (`PROJ_OTHER`'s role), minted at run time — project ids are opaque (Membership v2 §7), so it cannot be a static literal — so the ceremony completes and §8's committed-from-bytes arm fails by name.
-accepts-when: the arm reaches the commit; §8's arm fails BY NAME while the four named act-side refusal arms stay green; the control leaves the tree byte-identical. How a liar passes it: a joined project the fixture never ratifies with, so the arm asserts the ceremony completed.
+accepts-when: the arm reaches the commit; §8's arm fails BY NAME while the four named act-side refusal arms stay green; the control leaves the tree byte-identical. How a liar passes it: a joined project … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-88» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### M0-89 · queued — **`D384_STAYS` WAS MEASURED WHILE `*eachImage` WAS INVISIBLE, so the hand-admitted compensation for the walk's helper blind spot has never judged it.** D-414 made generator methods visible to the five walks (census 109 → 110) and left `eachImage` in the CENSUS but outside the amplification CLASS: it reads one image per bundle over an unbounded scan, through `this.readImage(...)`, which the walk cannot see. — owner M0.
+### M0-89 · queued — **`D384_STAYS` WAS MEASURED WHILE `*eachImage` WAS INVISIBLE, so the hand-admitted compensation for the walk's helper blind spot*** … (whole text: the cut archive)
 order: with the instrument cluster, after M0-80: D-414's named residue (*"a row of its own and is reported rather than taken here"*, at the census in `derivation-bounds.test.mjs`); an undercount a ratchet cannot catch (CONDUCT #8's DELEGATION 2026-09-20 item 4; SCHEDULER #4, 2026-09-21)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-384 (`node tools/ledger.mjs find D-384`) and D-414's note at the census.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-384 (`node tools/ledger.mjs find` … (whole text: the cut archive)
 depends-on: none. **Same file as M0-44** — one worker at a time.
-scope: re-measure the `D384_STAYS` population with generators visible, and enrol or exclude `eachImage` with its reason; any move of the class figure is attributed, never nudged.
-accepts-when: `eachImage` carries a verdict in `D384_STAYS` or `D384_LEAVES` with its reason; the class figure is taken from a printed run, its delta attributed. How a liar passes it: a verdict with no measurement, so the entry cites the body it judged. NEGATIVE CONTROL: remove the entry, and the admitted-set arm fails naming `eachImage`.
+accepts-when: `eachImage` carries a verdict in `D384_STAYS` or `D384_LEAVES` with its reason; the class figure is taken from a printed run, its delta attributed. How a liar passes it: a verdict with no … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-89» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-439 · queued — **TWO MORE SHARED MECHANISMS ARE HAND-KEPT COPIES, NEITHER PINNED.** (1) A READER: `stripComments`, `quotedIn`, `literalsOf`, `flatten` and `citationResolves` are copied across the four `skill*.test.mjs` suites, which decide what each READS of the skill pack: REC-76's reader before D-254, unpinned. (2) A HAND-KEPT DEPENDENCY LIST: three `battery-*.test.mjs` suites carry `REAL_MODULES = ["provenance.mjs", "residue.mjs"]`, so the next relative import `battery.mjs` takes turns all three red at load, no module named (D-265's signature). — owner M0.
+### D-439 · queued — **TWO MORE SHARED MECHANISMS ARE HAND-KEPT COPIES, NEITHER PINNED.** (1) A READER: `stripComments`, `quotedIn`, `literalsOf`, … (whole text: the cut archive)
 order: after M0-89, the instrument cluster's end: copies that agree today, the drift a pin would catch, so debt and not a live defect (SCHEDULER #7, 2026-09-21; the D-254 worker via CONDUCT #10)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-254's single-homed verdict reader (`cac06ae7`) as the precedent.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with D-254's single-homed verdict reader … (whole text: the cut archive)
 depends-on: none.
-scope: (1) one shared `bio-plane/test/skill-reader.mjs` the four suites import, pinned as D-254 pins its reader; (2) `instrumentDeps("battery.mjs")` from `instrument-deps.mjs`, which already takes an entry. CANNOT SEE: an indented or arrow function, a renamed or re-commented copy.
-accepts-when: four suites import one reader, three derive their list, every suite's tally unchanged. How a liar passes it: a renamed second copy, so the pin extracts by behaviour. NEGATIVE CONTROL: add a relative import to a copy of `battery.mjs`, and the derived list carries it where the literal did not.
+accepts-when: four suites import one reader, three derive their list, every suite's tally unchanged. How a liar passes it: a renamed second copy, so the pin extracts by behaviour. NEGATIVE CONTROL: add a … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; the D-254 worker's DEBT row; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-439» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### M0-95 · queued — **34 CONTROL DRIVERS LEAVE THEIR PEN IN THE TREE WHEN A RUN FAILS: `nc-rec95.mjs` and `nc-rec129.mjs` never remove theirs, and 32 more remove it only at the foot.** An untracked pen makes `git status --porcelain` non-empty (D-398's archive condition) and rides a careless `git add -A` into a commit. From M-83's static sweep of 217 driver-shaped files, heuristic and stated so; the two pens are `.gitignore`d as a MITIGATION only. — owner M0.
+### M0-95 · queued — **34 CONTROL DRIVERS LEAVE THEIR PEN IN THE TREE WHEN A RUN FAILS: `nc-rec95.mjs` and `nc-rec129.mjs` never remove theirs, and 32** … (whole text: the cut archive)
 order: after D-439, closing the instrument cluster: residue a failed control leaves, a second variable in the next run (CLAUDE.md §5: *break only the thing*), not a false measurement (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its driver law (the D-331 section): *"Its pen goes on EVERY exit (0, 1, a throw, a signal) from an `exit` hook"* (BOB #23, `19a0efb6`), with D-355's `removePenOnExit` in `refusal-partition.control.mjs` as the precedent (M-83).
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its driver law (the D-331 section): … (whole text: the cut archive)
 depends-on: none. Sequence with M0-96: whichever lands second re-reads the first.
-scope: each pen's removal moves into an `exit` hook (a shared helper is the builder's call, stated); the builder re-derives the population rather than trusting the sweep, and lists every driver judged with its verdict. A pen is removed BY NAME, never by a variable path (CLAUDE.md §7).
-accepts-when: each fixed driver, forced to exit non-zero, leaves no pen and a clean `git status`. How a liar passes it: removing on exit 0 only, so the forced-red arm is required. NEGATIVE CONTROL: drop one driver's hook, and its forced-red arm fails by name.
+accepts-when: each fixed driver, forced to exit non-zero, leaves no pen and a clean `git status`. How a liar passes it: removing on exit 0 only, so the forced-red arm is required. NEGATIVE CONTROL: drop … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-95» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### M0-96 · queued — **TWO CONTROL DRIVERS INSTALL SIGINT/SIGTERM/SIGHUP HANDLERS OVER SYNCHRONOUS CHILDREN, SO A STOP SIGNAL WAITS FOR THE END OF THE RUN, and the driver keeps editing real sources after it is told to stop.** `bio-plane/test/independence.control.mjs` and `run-conditions.control.mjs` run their suites with `execFileSync`/`spawnSync`. Measured by the D-355 worker (M-83): a SIGTERM sent at 1.0 s ran the handler at 4.0 s, after the whole script; the handler suppresses the default kill. — owner M0.
+### M0-96 · queued — **TWO CONTROL DRIVERS INSTALL SIGINT/SIGTERM/SIGHUP HANDLERS OVER SYNCHRONOUS CHILDREN, SO A STOP SIGNAL WAITS FOR THE END OF THE** … (whole text: the cut archive)
 order: directly after M0-95, the same class, a driver's behaviour on an abnormal exit; last of the cluster, because the run still restores, late (SCHEDULER #7, 2026-09-21; D-355's route via CONDUCT #10)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its driver law (the D-331 section): *"a driver honours a signal with asynchronous children"* (BOB #23, `19a0efb6`), with D-355's asynchronous `refusal-partition.control.mjs` and `nc-d355.mjs` arm (4) (SIGTERM mid-arm: exit 143, restored, pen absent) as the precedent.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), its driver law (the D-331 section): … (whole text: the cut archive)
 depends-on: none. Sequence with M0-95.
-scope: each driver runs its children asynchronously, so its handler runs mid-arm, restores from memory and exits; nothing else in either driver moves.
-accepts-when: each driver SIGTERMed mid-arm exits promptly with its subjects byte-identical by sha256 and `cmp`. How a liar passes it: removing the handlers, so the SIGTERM arm asserts the restore. NEGATIVE CONTROL: restore the synchronous call, and the prompt-exit arm fails by name.
+accepts-when: each driver SIGTERMed mid-arm exits promptly with its subjects byte-identical by sha256 and `cmp`. How a liar passes it: removing the handlers, so the SIGTERM arm asserts the restore. … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (`node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-96» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### COFF-13 · queued — **NO FORMAT ENTRY EMITS A DECK LENGTH, so a deck whose TRAILING slides are unreadable is recorded shorter than it is — and the content row then REFUSES A TRUE CITATION of a real trailing slide as "past the deck".** D-359's named residue, rowed at its close rather than left in prose. — owner CONTENT-OFFICE.
+### COFF-13 · queued — **NO FORMAT ENTRY EMITS A DECK LENGTH, so a deck whose TRAILING slides are unreadable is recorded shorter than it is — and the** … (whole text: the cut archive)
 order: below LED-8, above the features: it refuses something TRUE — a record defect, not a gap — but errs in the CONSERVATIVE direction and reaches only decks with unreadable trailing slides, so it ranks under the defects above it (SCHEDULER #2, 2026-09-19)
 milestone: M9
 interface: I2 — a producer change on the text shape, so an IC is minted and the integrator classifies it.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §15's structure-shape row and §16's persistence paragraph, which both state this residue by name and say closing it is a producer change on I2.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §15's structure-shape row and §16's persistence paragraph, … (whole text: the cut archive)
 depends-on: none. COFF-11 (IC-100) and COFF-12 landed the producer and wire halves this completes.
-scope: a deck entry emits its own LENGTH — the slides the DECK has, not the ones the reader could open — and the wire carries it onto the persisted reading beside the slide list. The slide map is already keyed on each slide's OWN number (COFF-12), so the length is the missing fact, not a re-keying. `.odp` states an honestly NULL length if the format cannot answer, as `.ods` does for its grid.
-accepts-when: a deck whose LAST slide part is unreadable still admits a citation of that slide, and a citation past the real deck is still refused C-45.1 BY NAME with the figure in the refusal. How a liar passes it: emitting the READABLE slide count as the length, which is the defect — so the fixture's deck must have an unreadable TRAILING slide and the arm must assert the length exceeds the readable list. NEGATIVE CONTROL: emit the readable count instead, and the trailing-slide arm fails by name.
+accepts-when: a deck whose LAST slide part is unreadable still admits a citation of that slide, and a citation past the real deck is still refused C-45.1 BY NAME with the figure in the refusal. How a liar … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 7, at D-359's close; `node tools/mintid.mjs COFF`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «COFF-13» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-52 · queued — **A ROOT-OF-TRUST EXPORT NOTIFIES NO ADMINISTRATOR.** `export_log` records it and `op=exportlog` reads it, so an administrator who LOOKS finds it and one who never looks never learns. The channel exists — the queue is the in-app channel, built — and `bio-plane/src/queuestate.mjs` already catalogues the FINDING `export-performed`. No generator raises it. — owner RECORD.
+### D-52 · queued — **A ROOT-OF-TRUST EXPORT NOTIFIES NO ADMINISTRATOR.** `export_log` records it and `op=exportlog` reads it, so an administrator who … (whole text: the cut archive)
 order: security-class, first above the features: Membership v2 §8.1's promise that an export is never silent rests on this notification and only the looking half is built; below the silent defects because the export IS logged and §8.1 says so (SCHEDULER #5, 2026-09-21)
 milestone: M7
 interface: I3 — a queue item kind gains a producer; the integrator mints and classifies the IC.
-design: `docs/development/NOTIFICATIONS.md` §The catalogue (the export entry, FINDING) and §The item contract, with `BIO_Membership_Architecture_v2.md` §8.1 as the requirement. **§8.1's "no notification channel anywhere" is SUPERSEDED by BOB #19's narrowing (the channel is the queue; only TRANSPORT is Bob's, D-98); its fold into §8.1 was asked of BOB on 2026-09-21 — read the landed §8.1 first.**
+design: `docs/development/NOTIFICATIONS.md` §The catalogue (the export entry, FINDING) and §The item contract, with … (whole text: the cut archive)
 depends-on: none in code.
-scope: a generator raising `export-performed` to EVERY administrator's queue when `export_log` gains a row, its `basis` naming that row, options from the producer. It is the first generator to take an `N-<n>`, so register `N` in `tools/mintid.mjs` (absent from `--list` on 2026-09-21) — **FULL GATE PROFILE**. Email is Bob's (D-98) and out of scope.
-accepts-when: one export writes one item per administrator, each naming the `export_log` row, and a non-administrator gets none; `mintid N` mints. How a liar passes it: raising to the exporter alone, so the arm counts EVERY administrator. NEGATIVE CONTROL: drop the generator, and that arm fails by name.
+accepts-when: one export writes one item per administrator, each naming the `export_log` row, and a non-administrator gets none; `mintid N` mints. How a liar passes it: raising to the exporter alone, so … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-52» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-84 · queued — **A PUBLISHED CASE DOES NOT NAME THE BIAS LENS IT WAS HELD TO.** DEC-54 (d) and the bias design require every work product to cite its BIAS MANIFEST — the (bias bundle, revision) pairs in force and a hash of the effective set — travelling with publication. The plane computes it (`op=biasmanifest`, `statements_sha`) and pins each adoption (`bias_adoptions`), and no publication path writes it: `published_cases` holds the authored `bias_acknowledgement` and REC-44's container manifest, no lens. NARROWED: the rest of D-84 is built. — owner RECORD.
+### D-84 · queued — **A PUBLISHED CASE DOES NOT NAME THE BIAS LENS IT WAS HELD TO.** DEC-54 (d) and the bias design require every work product to cite … (whole text: the cut archive)
 order: directly after D-52, above the features: DEC-20's *disclosed* — the manifest SHOWN in the artifact — is missing from every published case, and one published without it is corrected only by a new edition (DEC-19) (SCHEDULER #6, 2026-09-21, LED-7 batch 11)
 milestone: M10
 interface: I3 — the case document gains the manifest; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" — *"The manifest is part of the evidentiary record and travels with publication"* — and §"The bias acknowledgement, authored at export", whose manifest row reads *computed and stamped by the plane*.
+design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption" … (whole text: the cut archive)
 depends-on: none — PL-12's manifest and pins are built.
-scope: at case publication the plane stamps the manifest in force for the case's project scope — its pairs and `statements_sha` — into the signed case document, FROZEN and never recomputed; the acknowledgement stays authored beside it.
-accepts-when: a case published under an adopted set names each pair and the hash; adopting a new revision afterwards leaves the published bytes identical; with nothing adopted the document says no manifest was in force. How a liar passes it: recomputing at read time, so the arm moves the lens after publishing and asserts the bytes did not move. NEGATIVE CONTROL: drop the stamp, and the named-lens arm fails by name.
+accepts-when: a case published under an adopted set names each pair and the hash; adopting a new revision afterwards leaves the published bytes identical; with nothing adopted the document says no … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 11; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-84» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-220 · queued — **THE INVESTIGATIVE SESSION READS SIXTY CAPTURES OF ONE DOCUMENT AS SIXTY DOCUMENTS.** Bob's ruling of 2026-08-06 — link a document's versions and USE that where it helps — is built as a READ: `op=versionchain` (PL-10) exposes the join, `heldMatch` consumes it (D-221, closed) and the UI renders it. `INVESTIGATIVE-SESSION.md` names the session consumer (3), and `agent-worker` calls nine plane ops, `versionchain` not among them. NARROWED to that consumer. — owner FLEET, with SKILL for the doctrine.
+### D-220 · queued — **THE INVESTIGATIVE SESSION READS SIXTY CAPTURES OF ONE DOCUMENT AS SIXTY DOCUMENTS.** Bob's ruling of 2026-08-06 — link a … (whole text: the cut archive)
 order: after D-84, above the features: a deployed machine role over-counts what the record holds — the false-coverage hazard `STORE-AS-CACHE.md` names — in work a member reads and may accept; a correction to built work (SCHEDULER #6, 2026-09-21, LED-7 batch 12)
 milestone: M9
 interface: I8 consumer of `op=versionchain` (I3, built); no shape moves unless the builder finds one.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §"What the session sees" — *"AND IT MUST READ DOCUMENT VERSIONS AS VERSIONS (D-220, Bob 2026-08-06) … The session is consumer (3) on that row."*
+design: `docs/development/INVESTIGATIVE-SESSION.md` §"What the session sees" … (whole text: the cut archive)
 depends-on: none — `op=versionchain` is built.
-scope: the run reads an address's versions through `op=versionchain` and counts a document once, its versions as versions, wherever it counts or cites held material; the skill doctrine says so. Consumer (2), monitoring per address, is UNJUDGED here: the builder checks it at spawn and states it.
-accepts-when: a fixture holding several captures of one address reads as ONE document with its versions, and a run's coverage counts it once. How a liar passes it: deduplicating by title or text, which merges different documents — so the fixture carries two different documents sharing a title. NEGATIVE CONTROL: drop the chain read, and the one-document arm fails by name.
+accepts-when: a fixture holding several captures of one address reads as ONE document with its versions, and a run's coverage counts it once. How a liar passes it: deduplicating by title or text, which … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 12; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-220» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-182 · queued — **AN ACTION NOBODY ASSESSED IS RECORDED AT `risk_tier` 1 — *FILE FREELY* — ON THE ONE FIELD THAT CARRIES LEGAL EXPOSURE.** C-2.10 admits 1, 2 and 3; nothing publishes member words for them and no undetermined value exists, so both writers keep the floor. RULED by BOB #21 (2026-09-21): both halves in one row. — owner RECORD, then UI.
+### D-182 · queued — **AN ACTION NOBODY ASSESSED IS RECORDED AT `risk_tier` 1 — *FILE FREELY* — ON THE ONE FIELD THAT CARRIES LEGAL EXPOSURE.** C-2.10 … (whole text: the cut archive)
 order: after D-220, above the features: an overclaim on the field that carries legal exposure — CLAUDE.md §2's class, in the action plan a member files from (SCHEDULER #6, 2026-09-21; ruled on SCHEDULER #6's Q4)
 milestone: M10
 interface: I3 and I5 — a new value and published words; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, *"`risk_tier`, RULED 2026-09-21 by BOB #21"*: the Roadmap §8 words (1 file freely, 2 file with caution, 3 do not file without counsel) and UNDETERMINED, as authority and counterparty gained (D-130).
+design: `docs/architecture/BIO_Case_Making_v0_1.md` §2, *"`risk_tier`, RULED 2026-09-21 by BOB #21"*: the Roadmap §8 … (whole text: the cut archive)
 depends-on: none.
-scope: `risk_tier` gains UNDETERMINED, written wherever no member stated a tier and never defaulted to 1; only a member's authored act sets 1, 2 or 3; the plane publishes the three words (REC-38's pattern) and a surface invents none. Rows already written at the default: the builder states how they read, and never back-fills an assessment nobody made.
-accepts-when: an action created with no tier reads UNDETERMINED through the ops; a member's act sets 2 and reads *file with caution*; nothing writes 1 by default. How a liar passes it: a surface rendering UNDETERMINED over a stored 1, so the arm reads the stored row. NEGATIVE CONTROL: restore the default of 1, and the no-tier arm fails by name.
+accepts-when: an action created with no tier reads UNDETERMINED through the ops; a member's act sets 2 and reads *file with caution*; nothing writes 1 by default. How a liar passes it: a surface rendering … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #6 (LED-7; ruled on its row's two options; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-182» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### UI-74 · queued — **THE ACCEPT CEREMONY IS NOT ON `main`, SO NO SURFACE LETS A MEMBER ACCEPT A MACHINE-PROPOSED READING.** The IS plan's UI-43 built it on `worktree-agent-a9e7e017d06799858` (`fd1e2aec`, 2026-08-09) and it was never integrated (D-397's third branch): `acceptCeremonyOpen`, `ACER_` and `versionaccept` occur 0 times in `origin/main:civicos-ui/app.html`, 3, 16 and 4 times on the branch (2026-09-21). — owner UI.
+### UI-74 · queued — **THE ACCEPT CEREMONY IS NOT ON `main`, SO NO SURFACE LETS A MEMBER ACCEPT A MACHINE-PROPOSED READING.** The IS plan's UI-43 … (whole text: the cut archive)
 order: the first feature, after D-52: DEC-24's member half — the machine proposes, the member concludes — has no door, and the IS plan recorded it done at 43/43; below the corrections because the status authority claims no ceremony (SCHEDULER #5, 2026-09-21)
 milestone: M9
 interface: I3 consumer (`op=versionaccept`; `op=versionstrength`'s `independence`) — both built.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §12 (a)–(b), with `docs/archive/IS-BUILD-PLAN.md`'s UI-43 row as the scope it was built to.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §12 (a)–(b), with `docs/archive/IS-BUILD-PLAN.md`'s UI-43 row as … (whole text: the cut archive)
 depends-on: none; both ops are built — CHECK AT THE CODE at spawn.
-scope: UI-43's scope RE-DERIVED on current `main` — the branch is EVIDENCE, 1,836 commits behind, never merged blind: the four beats, the falsifier read back, independent sufficiency AFFIRMED per branch before a name lands, DEC-46's lens diff in the ceremony, REC-36's withholding — PLUS D-195's shared origin, which the branch never read (`independence` 0×): the plane derives it; the ceremony shows it BEFORE the affirmation, and never refuses.
-accepts-when: an OR accept requires the per-branch affirmation; a fixture whose two parts share a capture shows that origin before it, and one with independent parts shows NONE; driven against the real plane. NEGATIVE CONTROLS: drop the affirmation, or hide the field, and each arm fails by name.
+accepts-when: an OR accept requires the per-branch affirmation; a fixture whose two parts share a capture shows that origin before it, and one with independent parts shows NONE; driven against the real … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #5 (D-397's third branch and D-195, verified at the code; `node tools/mintid.mjs UI`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### REC-161 · queued — **NOTHING COMPUTES INDEPENDENCE OVER A PARTITION A MEMBER IS STILL PROPOSING, SO D-195's SHARED ORIGIN CANNOT BE SHOWN AT THEIR OWN ELICITATION.** `Store#independenceOf` has two consumers, `op=suggest`'s check and `op=versionstrength`'s read of a STORED version; UI-27's read-back (`elicFalsifier`) prints *"Your answer fails only if ALL of these fail"* and reads no independence. — owner RECORD.
+### REC-161 · queued — **NOTHING COMPUTES INDEPENDENCE OVER A PARTITION A MEMBER IS STILL PROPOSING, SO D-195's SHARED ORIGIN CANNOT BE SHOWN AT THEIR** … (whole text: the cut archive)
 order: 1 of 2, directly after UI-74, which shows the same fact at the accept ceremony (BOB #22, 2026-09-21: SCHEDULER #5's Q1, RULED)
 milestone: M9
 interface: I3 additive — an IC.
 design: `docs/development/INVESTIGATIVE-SESSION.md` §12 clause (c) (BOB #22, 2026-09-21).
 depends-on: none — `#independenceOf` is built.
-scope: a read returning `#independenceOf` for a PROPOSED partition over an inquiry's existing legs, gated as `op=versionstrength` is, writing nothing, `checked`/`complete` as they already are.
-accepts-when: two parts sharing a capture read as sharing an origin, independent parts read clean, a one-part partition reads `checked: false`, and the answer equals `op=versionstrength`'s once the partition is written. How a liar passes it: a second derivation that agrees today, so a control swaps in a copy differing in one branch and fails by name.
+accepts-when: two parts sharing a capture read as sharing an origin, independent parts read clean, a one-part partition reads `checked: false`, and the answer equals `op=versionstrength`'s once the … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-161» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### UI-75 · queued — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two of the reasons trace to one capture.** — owner UI.
 order: 2 of 2, after REC-161; with UI-74, whichever lands second reuses the first's rendering (BOB #22, 2026-09-21)
@@ -562,56 +602,55 @@ scope: the read-back names each shared origin between the parts it lists, once, 
 accepts-when: two correlated reasons show their origin and the member's answers are written unchanged. How a liar passes it: blocking or reordering the answers on a shared origin, which turns an informing fact into a gate.
 added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs UI`).
 
-### REC-164 · queued — **A GROUP CANNOT SAY WHO IT IS BEYOND ITS SLUG: NO DISPLAY NAME AND NO VERIFIED DOMAIN ARE RECORDED OR READ.** `BIO_Publication_v0_1.md` §7 (BOB #24, 2026-09-21) designs both: a display name is the group's own words, set by an administrator, never in signed bytes and shown WITH the slug; a domain is a claim shown publicly only while a well-known-file check reads it `verified`. `bio-plane/src` records neither; the store holds the slug alone (D-436). — owner RECORD.
+### REC-164 · queued — **A GROUP CANNOT SAY WHO IT IS BEYOND ITS SLUG: NO DISPLAY NAME AND NO VERIFIED DOMAIN ARE RECORDED OR READ.** … (whole text: the cut archive)
 order: the first feature after UI-75 (DEC-24's member half first): the group's public identity, resting on REC-163's public slug read (BOB #24: *"after REC-163"*) (SCHEDULER #9, 2026-09-21)
 milestone: M7
-interface: I3 additive (the two set acts and the public read) and I5 (two durable values with dated histories); the integrator mints and classifies the ICs.
+interface: I3 additive (the two set acts and the public read) and I5 (two durable values with dated histories); the … (whole text: the cut archive)
 design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the publishing group's public identity).
 depends-on: REC-163.
-scope: two values in the store's durable state, each set by an administrator's session act with `by` stamped by the server and a dated history; a verifier that fetches a well-known file on the claimed domain through the per-host governor, naming this instance's address and slug, and records `verified`, `absent` or `mismatched` with a date, re-checked on the reconciling alarm; a public read returning the display name, and a domain only while it is verified.
-accepts-when: a bearer and a caller-supplied `by` are refused; an unverified domain never appears in a public read; a well-known file naming another instance reads `mismatched`; the display name appears in no signed bytes. How a liar passes it: verifying once at set time, so the arm changes the file and the alarm's re-check moves the verdict. NEGATIVE CONTROL: skip the verdict gate on the public read, and the unverified-domain arm fails by name.
+accepts-when: a bearer and a caller-supplied `by` are refused; an unverified domain never appears in a public read; a well-known file naming another instance reads `mismatched`; the display name appears … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, item 2, drained this commit; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-164» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### UI-78 · queued — **THE PUBLIC HEADER CANNOT SHOW A GROUP'S DISPLAY NAME OR VERIFIED DOMAIN, AND MEMBERS CANNOT SEE A DOMAIN CLAIM'S VERDICT.** REC-164's surface half (`BIO_Publication_v0_1.md` §7). — owner UI.
+### UI-78 · queued — **THE PUBLIC HEADER CANNOT SHOW A GROUP'S DISPLAY NAME OR VERIFIED DOMAIN, AND MEMBERS CANNOT SEE A DOMAIN CLAIM'S VERDICT.** … (whole text: the cut archive)
 order: directly after REC-164, which it consumes (BOB #24: *"UI (M7), after 2"*) (SCHEDULER #9, 2026-09-21)
 milestone: M7
 interface: I3 consumer (REC-164's IC).
-design: `docs/architecture/BIO_Publication_v0_1.md` §7 (a display name shown WITH the slug, never instead of it; a domain only while verified), with DEC-69: a surface invents nothing.
+design: `docs/architecture/BIO_Publication_v0_1.md` §7 (a display name shown WITH the slug, never instead of it; a … (whole text: the cut archive)
 depends-on: REC-164, UI-77.
-scope: the public header shows the display name WITH the slug, never instead of it, and a domain only while it is verified; members see the domain claim and its dated verdict.
-accepts-when: against the real plane, a group with a display name shows it beside the slug; an unverified or mismatched domain never appears on the public header, and members see its verdict. How a liar passes it: showing the display name alone, so an arm asserts the slug is still shown. NEGATIVE CONTROL: render the domain without its verdict, and the unverified-domain arm fails by name.
+accepts-when: against the real plane, a group with a display name shows it beside the slug; an unverified or mismatched domain never appears on the public header, and members see its verdict. How a liar … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, item 3, drained this commit; `node tools/mintid.mjs UI`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-78» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### MK-6 · queued — **THE AUTHORED BUNDLE NAMES NO AUTHOR** (MK-3's replacement (i), `MEMBER-KNOWLEDGE-DESIGN.md` §4.1). Today `testify` writes the author's member id into `bundle.md`'s Session Log AND into `data/provenance.json` (`author`, `provenance_chain[].who`), and a ratified bundle's files are what the published bucket receives. Every file and manifest record an authored bundle can publish must name the author as `observer:<testimony id>`, which only the register resolves. — owner RECORD.
+### MK-6 · queued — **THE AUTHORED BUNDLE NAMES NO AUTHOR** (MK-3's replacement (i), `MEMBER-KNOWLEDGE-DESIGN.md` §4.1). Today `testify` writes the … (whole text: the cut archive)
 order: replaces MK-3 (superseded 2026-09-21), directly above MK-7 and MK-5, which rest on it; BOB #19: *"Build (i) regardless"* — no published byte moves, since MK-1's fence still stands (SCHEDULER #4, 2026-09-21)
 milestone: M3 — the member's own knowledge enters the record as what it is
-interface: I3 and I5 (the authored provenance document's shape); the builder states additive or breaking, and the integrator mints the IC.
-design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §4.1 (the bundle never names its author) and §8's row for replacement (i).
+interface: I3 and I5 (the authored provenance document's shape); the builder states additive or breaking, and the … (whole text: the cut archive)
+design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §4.1 (the bundle never names its author) and §8's row for … (whole text: the cut archive)
 depends-on: MK-1 (built).
-scope: as §4.1 — every file and manifest record an authored bundle can publish carries `observer:<testimony id>` in place of the member id, and the register alone resolves it. Existing authored bundles stay fenced.
-accepts-when: a fixture case publishes an observation at `group` level and NO published part — no file, no manifest entry — contains the author's member id, handle or cover: a POPULATION arm over every published part, never a list of sites. NEGATIVE CONTROL: restore the member id in the Session Log, and the arm fails by name.
+accepts-when: a fixture case publishes an observation at `group` level and NO published part — no file, no manifest entry — contains the author's member id, handle or cover: a POPULATION arm over every … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs MK`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-6» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### MK-7 · queued — **THE ATTRIBUTION ACT, AND THEN THE LIFT OF MK-1's FENCE** (MK-3's replacement (ii), `MEMBER-KNOWLEDGE-DESIGN.md` §4.2–§4.6): an op the builder names, taken only by the observation's author, per (case edition, observation), on the draft; each edition's attribution written into the case document, derived from the act; ratification refused while any reached observation is unchosen, naming each; `name` refused for a member with no handle. **Then, as its own act, MK-1's fence (C-53.10–.12) is lifted, with a control arm per level.** Off-the-record stays a structural absence. — owner RECORD.
+### MK-7 · queued — **THE ATTRIBUTION ACT, AND THEN THE LIFT OF MK-1's FENCE** (MK-3's replacement (ii), `MEMBER-KNOWLEDGE-DESIGN.md` §4.2–§4.6): an … (whole text: the cut archive)
 order: after MK-6, which it rests on, and above MK-5, which rests on it; replaces MK-3 (superseded 2026-09-21). Two points are provisionals carried to Bob, cheap to change until built: §4.4's narrow veto and §4.6's `name` = handle (SCHEDULER #4, 2026-09-21)
 milestone: M3 — the member's own knowledge enters the record as what it is
 interface: I3 — the builder names the op and, if a design names it first, registers it in `op-claims.mjs`' `PLANNED_OPS`.
 design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §4.2–§4.6 and §8's row for replacement (ii).
 depends-on: MK-6; REC-126 (the review copy, built).
-scope: as §4.2–§4.6 and §8. The lift is its own act, taken only once the projection honours every level.
-accepts-when: through the ops, each level round-trips into the published projection exactly as chosen; nothing is prefilled; an unchosen reached observation refuses ratification BY NAME; `name` without a handle is refused; off-the-record publishes no identity by construction. NEGATIVE CONTROL: one arm per level — drop a level's handling and its arm fails by name.
+accepts-when: through the ops, each level round-trips into the published projection exactly as chosen; nothing is prefilled; an unchosen reached observation refuses ratification BY NAME; `name` without a … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (BOB #19's inbox entry, drained this commit; `node tools/mintid.mjs MK`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-7» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's and are NOT rowed.
+### MK-5 · queued — **AN OPINION IS NOT EVIDENCE — a case element with attribution, refused as a basis leg.** — owner RECORD; surfaces are Program B's … (whole text: the cut archive)
 order: rests on MK-7's attribution act — re-pointed from MK-3, superseded 2026-09-21 (`MEMBER-KNOWLEDGE-DESIGN.md` §8) (SCHEDULER, first order audit, 2026-09-18; SCHEDULER #4, 2026-09-21)
 milestone: M3 — the member's own knowledge enters the record as what it is
 interface: I3
 design: `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §6 (an opinion is not evidence)
 depends-on: MK-7 (it carries MK-7's attribution; §8 names MK-3's replacement (ii))
-scope: build §6; an opinion cited as a basis leg is refused by name (§7). **Read the design section at the artifact before building (§8's own condition).**
 accepts-when: an opinion lands as a case element with its attribution and is refused as a leg, by name, through the ops; battery green by its COMPLETION LINE.
-NEGATIVE CONTROL: recorded in the suite's own `NEGATIVE CONTROL:` line (**with the colon**) — the refusal removed → an opinion lands as a leg and the arm FAILS. **Liar:** an opinion stored as a low-grade leg — the design refuses it as a leg at all.
 added: 2026-09-18 · CONDUCT #4 (from BOB #14's inbox; MEMBER-KNOWLEDGE-DESIGN.md §8, build-order items 3 and 6.)
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «MK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### M0-71 · queued — **CONTRADICTION'S IDENTIFY, 2 of 3: THE FIXTURE AND THE FIRST MEASUREMENT, BEFORE ANYTHING A MEMBER SEES — §7's corpus, the** … (whole text: the cut archive)
 order: the measurement IDENTIFY's judgement must pass, BEFORE anything a member sees; after REC-146 (SCHEDULER, 2026-09-19)
