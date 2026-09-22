@@ -55,8 +55,17 @@ the handoff says so — never silently skipped:
   session uses** — *"C - I see no practical downside"* — after the risk was put to him once (the release seed signs what
   every installed copy accepts). He places the values himself; a value is never typed into a conversation or the
   repository, and a session confirms a key by USING it (`wrangler whoami` reports the pinned account), never by printing it.
+- **The id ledger:** `mintid` allocates by exclusive create in the old clone's `.git`; a fresh clone takes its floor from
+  the corpus on `main` alone, so an id minted on the Mac and carried only on an unmerged branch (IC-175, on REC-166's
+  branch) can be minted twice. Reuse it when the branch resumes; `node tools/mintid.mjs --list` before minting.
 - **The push guard,** until `node tools/plancheck.mjs` has run once (it installs the untracked `.git/hooks/pre-push`);
   **every gate record** (per clone, D-293); the three packages' `node_modules` (§4); node's major, 26, pinned by nothing.
+
+**BOB'S OWN ACTS, in plain words (given to him by BOB #27 at the stand-down, ~17:10Z):** sign in to claude.ai with the
+second Max 20x account; open Claude Code on the web and connect GitHub with access to `believeinoakland/bio`; set up the
+cloud environment for that repository with internet access and the ten keys as environment variables (copied from the old
+Mac's `.env` himself — a session never handles a value); start a cloud session on the repository and paste §7's block;
+then paste each lane prompt BOB #28 writes him, one new cloud session each; and archive the old account's BOB #27.
 
 **The first BOB there measures each of these before resting a rule on it**, records the answers in this section with the
 date, corrects `CLAUDE.md` §4, §6 and §8 where they assume the Mac, and stands the lanes up in §6's order. Where there is
@@ -229,33 +238,30 @@ missing, the plancheck and gate results, and whether the memory seed and setting
 
 ## 7. THE PASTE BLOCK — hand this to the first BOB session in the new account
 
-The CURRENT block is the one `BOB-NEXT.md` §0 names; this section keeps its shape. For the move of 2026-09-22 it reads as
-below: open the session in the project directory, or as a cloud session on the repository (on a bare machine, §6a's
-bootstrap comes first). BOB #16's block for the 2026-09-19 switch is in git history.
+The CURRENT block is the one `BOB-NEXT.md` §0 names. For the move of 2026-09-22 it is below, exactly as BOB #27 gave it to
+Bob at the stand-down: paste it into a new cloud session on the repository under the second account (on a bare machine,
+§6a's bootstrap comes first). BOB #16's block for the 2026-09-19 switch is in git history.
 
 ```
-Kickoff: session BOB #<n> for BIO / CivicOS — the architecture lane and the LEAD, in the Claude Code account and
-environment that now develop this repository (Bob's move of 2026-09-22: cloud Claude Code, his second Max 20x account).
-Keep this session's title exactly "BOB #<n>".
+Kickoff: session BOB #28 for BIO / CivicOS — the architecture lane and the LEAD, and the FIRST session of development under Bob's second Max 20x account, in cloud Claude Code. The previous account stood down on Bob's order on 2026-09-22 (about 16:45Z to 17:10Z): BOB #27 stopped and archived every lane, and all work is on origin. Keep this session's title EXACTLY "BOB #28".
 
-GATE: git fetch origin; git show origin/main:docs/development/kickoffs/BOB-NEXT.md | head -1 must name you as the
-successor. If it does not, STOP and say so.
+GATE — run first; if it fails, STOP and say so:
+  git fetch origin
+  git show origin/main:docs/development/kickoffs/BOB-NEXT.md | head -1
+It MUST read exactly: # BOB — resume here. Written 2026-09-22 by BOB #27 for BOB #28, the first BOB under Bob's second account in cloud Claude Code.
 
-READ, IN FULL, IN THIS ORDER, from origin/main: CLAUDE.md, docs/development/kickoffs/NEW-MACHINE.md (§0 first),
-docs/development/kickoffs/BOB.md, docs/architecture/BIO_System_Design.md, then BOB-NEXT.md. Trust origin/main over any
-document, this prompt included. Look things up, never recall them: node tools/status.mjs <topic>, node tools/decided.mjs
-"<subject>", node tools/owed.mjs BOB.
+READ, each file WHOLE, from origin/main, in this order: docs/development/kickoffs/NEW-MACHINE.md (§0 FIRST), CLAUDE.md, docs/development/kickoffs/BOB.md, docs/architecture/BIO_System_Design.md, then docs/development/kickoffs/BOB-NEXT.md. Trust origin/main over any document, this prompt included. Look things up, never recall them: node tools/status.mjs <topic>, node tools/decided.mjs "<subject>", node tools/owed.mjs BOB, node tools/ledger.mjs find <ID>. You have no memory of earlier sessions; the old account's memory is carried whole in docs/archive/account-memory-2026-09-22.md.
 
-FIRST ACTS (NEW-MACHINE.md §0): (1) confirm the OLD account is stopped — two accounts developing at once is the one thing
-Bob forbade; (2) run node tools/plancheck.mjs BEFORE ANY PUSH: it installs the push guard a fresh clone lacks; (3) measure
-what this environment has and record each answer in §0 with the date — the session tools, cross-session replies,
-scheduled routines and CronCreate, npm ci in bio-plane/, pdf-worker/ and ocr-worker/ (none a symlink), node's major, disk
-and memory, the full gate's time and pass count, and, with your FIRST REAL landing (never a test push), whether a push to
-main is accepted; a rule whose premise is missing is SUSPENDED and said so, never skipped silently; (4) measure this
-account's weekly usage and your own context; (5) stand the lanes up in §6's order. Then work BOB-NEXT §3.
+FIRST ACTS, in order (NEW-MACHINE §0 and BOB-NEXT §0):
+1. Confirm the old account is stopped: origin/main has not moved since the stand-down except by your own lanes.
+2. Run `node tools/plancheck.mjs` BEFORE ANY PUSH: it installs the push guard a fresh clone lacks.
+3. Measure this environment and record each answer in NEW-MACHINE §0 with the date: which session tools exist (listing sessions, reading another session's context, archiving, messaging, scheduling), `npm ci` in bio-plane/, pdf-worker/ and ocr-worker/ (none a symlink), node's major (the project uses 26), disk and memory, the FULL gate's wall time and pass count (M0-114 waits on it), and — with your first real landing, never a test push — whether a push to main is accepted. A rule whose premise is missing is SUSPENDED and said so in your handoff, never skipped silently.
+4. The secrets, Bob's option C: the ten keys should be environment variables here. Confirm each by USING it (`npx wrangler whoami` must report account 20b533579290b9b93168345edd3b7f72), never print a value, and name any that is absent so Bob can add it in the environment's settings.
+5. Stand the lanes up in NEW-MACHINE §6's order — SCHEDULER #14, CONDUCT #14, DIST #5, FLEET #4 — each from its own -NEXT.md: check that handoff's line 1, then write that lane's complete kickoff prompt for Bob to paste into a new cloud session on this repository, one at a time.
 
-Bring Bob only what is genuinely his, in plain words, once each; decide everything that follows from existing rulings,
-after reading the ruling itself.
+BOB'S RULINGS BIND FIRST: "The goal is BIO work; process is overhead" (CLAUDE.md §2); "Never queue a gate behind another lane's" (§6); and lane contention is "a very significant drag … perhaps 1/2 the work being done in lanes overall is wasted and redone" (Bob, 2026-09-22) — its fix (M0-110, the coord branch; M0-111, one lander; M0-116, the gate's selection; TREE-SHARING.md) heads the plan. One account develops at a time.
+
+HOW BOB WORKS: he runs no commands and applies no diffs. Do it, script it, or name the single smallest act only he can take, in plain words. Bring him only doctrine, priority, risk carrying his name and effects on people outside the project, each once. Never end a turn on a question nobody is present to read.
 ```
 
 ## 9. Seeding the new account — memory and settings

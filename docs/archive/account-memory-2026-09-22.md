@@ -1,6 +1,6 @@
 # The account memory, carried into the record — 2026-09-22
 
-Copied VERBATIM on 2026-09-22 by BOB #27 from this Claude Code account's project memory on Sparky-Air
+Copied VERBATIM on 2026-09-22 by BOB #27 (and brought current at the stand-down, ~17:15Z) from this Claude Code account's project memory on Sparky-Air
 (`~/.claude/projects/-Users-sparky-Downloads-ClaudeCodeBIO/memory/`), because Bob's move of that day — to cloud Claude Code
 and his second Max 20x account — takes development where this memory does not travel (`kickoffs/NEW-MACHINE.md` §0).
 **One redaction, marked where it stands:** the name of another project Bob runs under the same account, which
@@ -36,6 +36,7 @@ seed it from here, one file per entry; where it keeps none, this file is the mem
 - [op-claims fails branch-only ops in prose](op-claims-fails-branch-only-ops-in-prose.md) — naming an unmerged op as `op=<name>` in a planning doc reds the DOCS gate; drop the `op=` form
 - [zsh colon modifiers eat refspecs](zsh-colon-modifiers-eat-refspecs.md) — `"$c:refs/…"` applies `:r`; brace every variable before a colon: `"${c}:…"`
 - [A merge keeping a side needs a trailer](merge-keeping-a-side-needs-a-trailer.md) — mergecarry fails a merge that keeps main's DECIDED.md without `Dropped-from-branch:`; regenerate inside the merge commit; unlanded, only a re-made merge fixes it
+- [Never type a full sha from memory](never-type-a-full-sha-from-memory.md) — resolve it with `git rev-parse <short>`; an invented sha fails as "the remote end hung up"
 - [The gate record is keyed by tree](gate-record-is-keyed-by-tree.md) — a RED record refuses that tree's every commit; stop a known-RED gate before it records; a GREEN record licenses `--since`
 - [Push guard refuses a RED tree on any branch](pushguard-refuses-red-tree-on-any-branch.md) — park work with a local `git branch` first; never chain a reset after an unchecked push
 
@@ -649,3 +650,26 @@ In the Bash tool here (zsh), `grep -n X bio-plane/test/*.mjs bio-plane/bench/*.m
 **Why:** zsh's NOMATCH option errors on an unmatched glob before the command starts, unlike bash, which passes the literal through. An empty result then reads as "absent", which is the costs-nothing evidence CLAUDE.md §5 warns about.
 
 **How to apply:** search the tree with `git grep -n '<pat>' -- '<pathspec>'` (pathspecs are git's, not the shell's), or quote/verify every glob's directory exists first. Treat a search that printed `no matches found` as NOT RUN, never as "zero hits". Related: [[background-task-exit-code-is-the-wrapper]], [[worktree-isolation-guard-refuses-complex-shell]].
+
+## never-type-a-full-sha-from-memory.md
+
+---
+name: never-type-a-full-sha-from-memory
+description: "Only the short sha is ever measured; a full sha written from recall names no object — resolve it with `git rev-parse <short>` into a variable, brace it before a colon"
+metadata: 
+  node_type: memory
+  type: feedback
+  originSessionId: 684a8a4b-7e17-4416-b8eb-176d06a72caf
+  modified: 2026-09-22T16:18:16.091Z
+---
+
+When a command needs a full 40-character sha (a `push <sha>:refs/heads/<name>` refspec, a `commit-tree -p`), resolve
+it from the short sha you actually measured: `S=$(git rev-parse 963a0d72)` and use `"${S}:refs/heads/…"`. Never type
+the tail from memory.
+
+**Why:** CONDUCT #12, 2026-09-22 — pushing an archive branch with a full sha typed from recall
+(`963a0d7271d9…`; the real one was `963a0d721a14…`) failed as "the remote end hung up unexpectedly", which does not
+say "no such object". The retry with the resolved sha pushed at once.
+
+**How to apply:** any time a sha longer than the one you read appears in a command, it came from recall — resolve it
+first. Related: [[zsh-colon-modifiers-eat-refspecs]], [[gate-record-is-keyed-by-tree]].
