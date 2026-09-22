@@ -621,14 +621,12 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | D-83 subject registry = entity axis | FRAMEWORK | M4 |
 | D-84 `object_type: bias` missing | RECORD | M4 |
 | D-85 / D-86 / D-87 / D-88 bias manifest, debt, decay, measure | FRAMEWORK | M4 |
-| D-91 PDF text | CONTENT-PDF | M2 |
 | D-92 `op=file` 403 under load | RECORD | M7 |
 | D-93 suite crashes, `sshsig` runs short | CONDUCT | M0 |
 | D-99 WARC / Memento | RECORD | M6 |
 | D-107 installer scripted deploy | DIST | M7 |
 | D-109 task drain (landed) | CAPTURE | M1 |
 | D-110 stale refusal string | RECORD | M7 |
-| D-113 purge table list as a class | RECORD | M0 |
 | D-115 installer installs one Worker, not the fleet | DIST | M7 |
 | D-116 version authority across the fleet | DIST · RECORD | M7 |
 | D-117 coverage instrument blind to the fleet | CONDUCT | M0 |
@@ -637,7 +635,6 @@ every `CONSTRUCTS.md` step. Nothing forward-looking should exist outside this ta
 | pdf-worker · Tier 2 (`unpdf`) as a fleet member behind I6 | CONTENT-PDF · DIST | M2 |
 | D-121 office formats: the FORMAT registry + OOXML container | CONTENT-OFFICE (new area) | M2 · queued COFF-1..COFF-6 (BOB INBOX 2026-08-03) |
 | D-122 office formats carry latent evidence AND personal data | — | DOCTRINE · DEC-5 |
-| D-123 I2 element reference needs a per-container form | CONDUCT (answers for dormant FRAMEWORK) | M2 |
 | CAPTURE-SCALING item 6 · reuse verification + re-fetch at ratification | CAPTURE | M2 · DECIDED, queued CAP-4 |
 | CAPTURE-SCALING open · freshness window, recurrence threshold | CAPTURE | M2 (measurement first) |
 | ARCHIVE-FALLBACK · per-document cadence by volatility | RECORD · CAPTURE | M1 |
@@ -772,8 +769,10 @@ together with `DEBT.md`).
 These are knowledge, not backlog. They stay in `DEBT.md` with that disposition and no
 milestone claims them:
 
-- **D-1** root of trust · **D-53** reputation and credence · **D-77** / **D-89** /
-  **D-90** the bias invariants — doctrine, and none of them blocks anything scheduled.
+- **D-1** root of trust · **D-53** reputation and credence · **D-77** the bias invariant's guard —
+  doctrine, and none of them blocks anything scheduled. **D-89 and D-90 left on 2026-09-21** (LED-7 batch
+  S10-1): their doctrine is written in `BIO_Content_Framework_v0_10.md` §13.1 and invariant 8, so they
+  closed in fact; D-77's guard (CONSTRUCTS Step 8b) went to BOB with §12's intent layer.
   D-53's "blocks S-11 step 5" is stale: bulk release shipped in 0.34.0.
 - **D-55** is NOT in this list any more. Its doctrine was already ruled; only its
   shape was open, and the shape decided provisionally under M2 above was settled on

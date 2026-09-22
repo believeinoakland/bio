@@ -17685,3 +17685,68 @@ claimed: 2026-09-22 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-
 self-wake ids, the disk reading, and "Over 60%" corrected to 70% as BOB #23 asked); `docs/DECIDED.md` (GENERATED,
 regenerated last); and this block. No other path moves.
 **released: 2026-09-22 FLEET #3** — landed in the same commit as the lines it covers.
+
+## CLAIM 2026-09-21 SCHEDULER (#10) — the lane's standing claim on the build plan's own files; LED-7 batch S10-1: eight rows out of DEBT, six more placed as the backlog's room allows, and a group of three sent to BOB
+
+claimed: 2026-09-21 by SCHEDULER #10, worktree `.claude/worktrees/scheduler-10` (branch `scheduler10/work`; base
+`origin/main` @ `7a8b81d6`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s ownership table):
+`docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/MILESTONES.md` (its placement table's rows, and its not-scheduled list, for the ids this lane moves);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+this lane sent or acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #9 (`claude/focused-perlman-dcfab7`), archived by this session on 2026-09-22
+at ~01:37Z under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip
+`c38ca597` = `origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); the worktree the
+archive left was removed by `git worktree remove` without force, 4,069,716 → 4,738,260 KiB free (+653 MiB; `du` read the
+tree at 663,760 KiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-21.**
+
+Commit 1: LED-7 batch S10-1, every row read at the code on `7a8b81d6`. CLOSED IN FACT: D-377 (both sentences it asked for
+are on the tree since `2a18b4d6`: `kickoffs/FRAMEWORK.md` and `DOCUMENT-PROFILES.md`'s front matter), D-123 (IC-1
+ACCEPTED 2026-08-03 and built: the tagged-union `source`, all five extent arms), D-91 (links, structure, three text tiers
+and the `pdf-page` arm; the large-PDF case is I6's stated `over_envelope` bound), D-113 (`hygiene.test.mjs` fails an
+unpurged table by name), D-89 and D-90 (their doctrine is written in Framework §13.1 and invariant 8; D-90's premise
+that ordinary bias debt blocks was superseded by DEC-20). CLOSED AS DEBT ROWS whose work is a placed backlog row under
+its own id: D-376 (FW-20) and D-378 (M0-44). SENT to BOB as one group of three (the DELEGATION below): D-75, D-76, D-77,
+D-79, D-81 (Q1), D-85, D-87, D-88 (Q2), D-120 (Q3). VERIFIED AT THE CODE AND WAITING ONLY FOR ROOM in the backlog
+(574 B free): D-65, D-66, D-74, D-82 (SCHEDULER #9's four, re-read) and D-86 and D-380 (this batch); they are placed in
+the landing that follows the next completion. MILESTONES.md: the rows for D-91, D-113 and D-123 removed, and the
+not-scheduled list corrected for D-89 and D-90. 131 open DEBT rows remain.
+
+## DELEGATION 2026-09-21 SCHEDULER (#10) -> BOB — **THREE QUESTIONS, ONE EACH, from LED-7 batch S10-1: Framework §12's intent layer (D-75, D-76, D-79, D-81, with D-77's guard), §13's bias layer (D-85, D-87, D-88), and member-driven capture (D-120); none blocks a runnable row**
+
+1. **FRAMEWORK §12's INTENT LAYER — D-75, D-76, D-79, D-81, AND D-77's GUARD.** Designed at concept level in
+   `BIO_Content_Framework_v0_10.md` §12–§12.2 (Bob's rulings of 2026-07-30), unbuilt at the code on `7a8b81d6`:
+   `node tools/status.mjs 8` reads goals and aspirations ABSENT (*"an objective is a zero-leg open inquiry"*);
+   `store.mjs` names no aspiration, satisfaction condition or pursuit record (0 occurrences each); an agent-surfaced
+   inquiry is stamped (D-78) and capped per run (the `mints` bound), and nothing aggregates or ages one. D-77's guard is
+   CONSTRUCTS Step 8b, which is D-79 with D-82 (placed by this batch). §12's *This is not a new hierarchy* still names
+   `focus` and `problem` with their states, which the `inquiry` collapse superseded (CONSTRUCTS' front matter says so):
+   a correction owed in §12 by either door. **The question:** is the intent layer OWED now, to be decomposed by you into
+   designed rows and placed (after the M4 product rows?), or a STATED DEFERRAL in §12 (the third door) naming what would
+   schedule it?
+2. **FRAMEWORK §13's BIAS LAYER — D-85, D-87, D-88.** Designed at concept level in §13 and §13.1; the catalogue carries
+   `measure-decay` as a FINDING (`NOTIFICATIONS.md`, `queuestate.mjs`). At the code: a run records its lens at open
+   (`ai_runs.bias_manifest`) and `aiRunRead` computes whether it `moved`, so D-85 holds at RUN grain; an inquiry a run
+   surfaces records neither the manifest nor its run (no table links a minted bundle to the run that surfaced it).
+   Nothing accrues evidence to a pattern statement (D-87), and no statement carries a measurable form (D-88), which
+   §13.1 builds with §12's satisfaction-condition evaluator, so D-88 follows Q1. D-86, the bias-debt producer, is
+   designed end to end and placed by this batch; D-89 and D-90 closed in fact. **The question:** owed now, or a stated
+   deferral in §13.1? And for D-85: is the run's recorded lens, reached through its run, sufficient, so that only the
+   inquiry-to-run link is owed, or must each surfaced inquiry carry its own manifest?
+3. **MEMBER-DRIVEN CAPTURE — D-120.** `SOURCE-ACCESS.md` names *"Egress diversity via the member-driven capture path —
+   many member addresses rather than one Cloudflare egress. Not built."* beside the archive fallback, which is BUILT and
+   wired (CAP-3); no governed document designs how a member contributes a capture or how its provenance and grade are
+   recorded (DEC-52 permits the member-browser UA for public documents fetched in the workflow). **The question:**
+   design it now (M1), or state it in `SOURCE-ACCESS.md` as deferred behind the archive fallback, naming the trigger
+   that brings it forward?
+
+**open as of 2026-09-21.**
+
+Sent to BOB by message on 2026-09-21; each of the nine rows carries a dated SENT note in `DEBT.md`.
