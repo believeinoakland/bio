@@ -18873,3 +18873,25 @@ design rows the fold cannot move without a ruling; each question is single, and 
 
 **open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or
 narrowed), and nothing runnable waits on any of them.
+
+## CLAIM 2026-09-22 M0 (M0-110 — the message board leaves `main`: a `coord` branch — BOTH stages, resumed from CONDUCT #13's stood-down worker)
+
+session: WORKER spawned by CONDUCT #14 (cloud Claude Code), worktree `.claude/worktrees/agent-a483d3385b3539fb7`, branch
+`worktree-agent-a483d3385b3539fb7`, base `origin/main` @ `de40aa56` (the row reads `### M0-110 · running` with CONDUCT #14's
+RESUMED sentence there). `npm ci` in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each exit 0 and a real directory; `df -h` 28 GiB free.
+authority: `QUEUE.md` `### M0-110 · running`; design `docs/development/TREE-SHARING.md` §1 with BOB #28's four rulings in it;
+the predecessor's plan `origin/conduct13/standdown-reports:M0-110.md`, re-verified at the code.
+paths: `tools/coord.mjs` (NEW: churn, read, write, migrate, the pointer-reading layer and the ledger checks),
+  `bio-plane/test/coord.test.mjs` and `bio-plane/test/coord.control.mjs` (NEW); every reader redirected through the layer —
+  `tools/ledger.mjs`, `tools/plancheck.mjs`, `tools/owed.mjs`, `tools/decided.mjs`, `tools/delegations.mjs`,
+  `tools/readbudget.mjs`, `tools/mintid.mjs`, `tools/rowdesign.mjs`, `tools/rowsubstrate.mjs`, `tools/occupancy.mjs`,
+  `tools/retirable.mjs`, `tools/pushguard.mjs`, `tools/gates.mjs` (only if its derivation needs it),
+  `bio-plane/scripts/op-claims.mjs`; the battery suites whose LIVE-row arms move into the write command's checks
+  (`planning-hygiene`, `corpuscheck`, `op-claims`, `pipeline-readers`, and any other the sweep names, each named in the
+  landing); `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` only, from the printed figures, if moved);
+  `docs/development/TREE-SHARING.md` §1, `CLAUDE.md` §1 and §9, `docs/development/MILESTONES.md` (the placement table
+  leaves as `PLACEMENT.md` in the migration only), `docs/development/WORK-PIPELINE.md`, `docs/development/ORCHESTRATION.md`,
+  every kickoff naming a moved file or reading a `-NEXT.md` line 1 from `origin/main` (BOB #27's owed list),
+  `docs/architecture/construct-status.json`, `docs/development/MEASUREMENTS.md` (appends only), this block.
+NOT CLAIMED: `QUEUE.md`'s rows (CONDUCT's word, SCHEDULER's order); the `coord` branch itself — its creation and the
+  cutover are CONDUCT's act; `newgroup/**`.
