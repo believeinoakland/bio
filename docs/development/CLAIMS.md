@@ -18546,3 +18546,11 @@ why: Bob ordered a move TODAY to cloud-based Claude Code on his second Max 20x a
   M0-106 and its witness to SCHEDULER), the live rollback targets, the seeded group, and each Mac-only instrument
   described by the DIST.md lesson it implements, so it can be rebuilt. No DIST commit exists only on this Mac.
 **released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 FLEET (FLEET #3 — FLEET-NEXT rewritten at REFRESH for a successor that may open in the cloud under the new account)
+
+claimed: 2026-09-22 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/kickoffs/FLEET-NEXT.md` (rewritten whole, on Bob's order of 2026-09-22 relayed by BOB #27: a
+successor with no memory, no `.env`, and perhaps no session tools, so every answer is in the file or named by its
+command); `docs/DECIDED.md` (GENERATED, regenerated last); and this block. No other path moves.
+**released: 2026-09-22 FLEET #3** — landed in the same commit as the file it covers.
