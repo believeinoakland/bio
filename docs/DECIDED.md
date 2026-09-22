@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1383 rulings across 103 documents.
+1386 rulings across 103 documents.
 
 ## DEC-
 
@@ -87,7 +87,7 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20); vocabulary corrected 2026-08-05 (D-188, > DEC-46 (d)).  
   `docs/architecture/BIO_Design_Requirements_v2.md:456`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"a work product carrying > unsettled BIAS DEBT (its cited bias manifest differs from the current > effective set) cannot advance workproduct_state and cannot be ratified for > publication"*.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1611`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1613`
 - **DEC-20** · 2026-08-02 — — AMENDED 2026-08-02 by Bob (DEC-20); struck here 2026-08-05 (D-188).  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1694`
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
@@ -491,7 +491,7 @@ authority is the file named, never this one.
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-203** · 2026-09-19 — THE LADDER IS ONE-WAY AND GAINS NO `verified -> collected` EDGE — RULED 2026-09-19 by BOB #17 (D-203/D-200), from this section's own design rather than as a new rule.** Three things decide it.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:695`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:697`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
   `docs/archive/ledgers/QUEUE-2026-08.md:162`
 - **D-212** · 2026-08-05 — SUPERSEDED 2026-08-05 by the VERSIONS design — the question this row asked turned out not to be a record question at all.** The row went through three drafts and each was wrong in an instructive way, so the history is kept rather than deleted.  
@@ -786,10 +786,10 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:16282`
 - **D-435** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 4): BOB #22's landing met** — D-435 archived by BOB #22 (`8245cf54`), so the cache is replenished to 8 with M0-97, D-341 and M0-83 by `node tools/ledger.mjs refill`; REC-159's scope follows BOB #22's bearer ruling (§4.7); the REC-156 DELEGATION's two state lines are merged…  
   `docs/development/CLAIMS.md:16992`
-- **D-436** · 2026-09-21 — the `group` value comes from was unstated until the 2026-09-21 amendment at the foot (D-436), whose three decisions Bob RULED on 2026-09-21 (§3.1), and what a group named wrongly in bytes that are already signed can become is not designed.  
+- **D-436** · 2026-09-21 — Amended 2026-09-21 (D-436, IC-172; decision (b)'s premise RULED BY BOB, (a) and (c) the BOB lane's mechanism): §3.1's `group` is ONE recorded value per instance, written once — at the store's first boot from the slug the installer bound, or by the root of trust's one seed on a store that predates it — stamped into…  
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:3`
+- **D-436** · 2026-09-21 — unstated until the 2026-09-21 amendment at the foot (D-436), whose three decisions are settled — decision (b)'s premise RULED BY BOB on 2026-09-21, decisions (a) and (c) decided by the BOB lane at integration (§3.1) — and what a group named wrongly in bytes that are already signed can become is not designed.  
   `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:11`
-- **D-436** · 2026-09-21 — THE `group` VALUE, AND WHAT CAME BEFORE IT (D-436; RULED BY BOB 2026-09-21).** `group` is the producing group's slug: one value in the store's durable state, written once — at a store's first boot from the installer's instance name, or once by the root of trust — and never a deploy-time value, because it lands in…  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:593`
 - **D-436** · 2026-09-21 — DRAINED 2026-09-21 by SCHEDULER #4 — 2 entries from BOB #19 (MK-3 SUPERSEDED by MK-6 and MK-7, MK-5 re-pointed; D-436 PLACED second in the order); its third entry (the six answered rows) stays for the next drain  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1158`
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2):** also `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-436 archived as PLACED; D-260's disposition carries DS-3's and FL-6's dispatch fix), the TRACKED ELSEWHERE table in `QUEUE.md`, and `docs/development/kickoffs/SCHEDULER-NEXT.md` (the refresh).  
@@ -954,6 +954,8 @@ authority is the file named, never this one.
   `docs/development/CLAIMS.md:14996`
 - **IC-165** · 2026-09-19 — `TASK`'s gating is RULED CORRECT by BOB #17 (`63926201`, 2026-09-19) and STAYS.** It was raised as a question at this resolution — Membership v2 §7 enumerated CASE/DRAFT/RVG/PROJ — and BOB answered that the rule is the PREDICATE preceding that list (*every prefix whose objects a read withholds from some caller*),…  
   `docs/development/INTERFACE-CHANGES.md:12061`
+- **IC-172** · 2026-09-21 — A bearer is NOT refused (provisional at acceptance; RULED by BOB #22 on 2026-09-21, `BIO_Membership_Architecture_v2.md` §4).  
+  `docs/development/INTERFACES.md:508`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -1893,8 +1895,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/BIO_Membership_Architecture_v2.md:914`
 - CORRECTED the same day by BOB #15 — the first version said *the owner or any administrator*, and that contradicted Bob's doctrine** in `BIO_Membership_Architecture_v2.md` §4: administrators *"audit everything and direct nothing"* on a project, with ONE exception, §7.13 (*"that is the whole of the exception"*).  
   `docs/architecture/BIO_Publication_v0_1.md:192`
-- RULED BY BOB the same day** as §3.1's paragraph *"THE `group` VALUE, AND WHAT CAME BEFORE IT"* states them (recorded by BOB #23; reconciled here at integration by CONDUCT #11, because the two texts met only in the merge). **THE RULE.** An instance's producing group is ONE value in its store (`instance_group`, one…  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1703`
+- **2026-09-21** — What Bob RULED on 2026-09-21 is what came before: no migration and no automatic setting is owed for those stores.** His words: *"everything captured so far is for testing purposes only"*; at the MVP release the record *"will be thrown out (or at least not copied over to the instance running a real release)"*, so…  
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:598`
+- **2026-09-21** — RULED BY BOB** on 2026-09-21 (§3.1); decisions (a) and (c) are mechanism, **DECIDED by the BOB lane** at integration the same day (BOB #23 accepted them as built).  
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1706`
+- DECIDED by the BOB lane** at integration the same day (BOB #23 accepted them as built).  
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1707`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:11`
 - **2026-07-30** — It is the inventory that has to exist before a design document can be written honestly." One RULED marker (Bob, 2026-07-30, Step 0's scope).  
