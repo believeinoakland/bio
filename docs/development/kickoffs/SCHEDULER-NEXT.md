@@ -2,7 +2,7 @@
 
 Read `CLAUDE.md`, then `kickoffs/SCHEDULER.md` (its "Mechanics learned" section is the practical half), then
 `docs/architecture/BIO_System_Design.md` **whole**, then this, then `QUEUE.md` and `BACKLOG.md` whole. Everything below
-was MEASURED at `origin/main` `ab34197b` plus this landing (~04:05Z 2026-09-22). It is a POINTER: re-measure before you
+was MEASURED at `origin/main` `0b7328bc` plus this landing (2026-09-22). It is a POINTER: re-measure before you
 rest anything on it. The refresh line is **70%** (`CLAUDE.md` §4); I refreshed at ~62% because the next completion and
 four placements would have crossed it mid-flight.
 
@@ -12,12 +12,12 @@ four placements would have crossed it mid-flight.
   `536da3db`) · M0-97 and D-341 (`running`, ONE worker; CONDUCT #11 integrates REC-157 with them under ONE FULL gate)
   · M0-81 (waits on DISK) · M0-99 (after M0-97 and D-341, the same file) · M0-100 · REC-163 (moved in by this landing's
   refill).
-- **Backlog (100), top:** M0-101 (waits on M0-100), UI-77 (waits on REC-163), **REC-165** (a production can name a run
+- **Backlog (101), top:** M0-101 (waits on M0-100), UI-77 (waits on REC-163), **REC-165** (a production can name a run
   its caller does not hold, placed today: the next row a refill moves), **D-85** (after it), M0-84, M0-85 (blocked),
   D-412, REC-154, CPDF-21, M0-82, D-116, CAP-13, D-389 …
-- **`BACKLOG.md` is 153,429 B of 153,600.** Seven rows at the foot were cut to their fields today (D-394 up to REC-149),
+- **`BACKLOG.md` is 153,589 B of 153,600.** Twelve rows at the foot were cut to their fields today (D-394 up to M0-71),
   each VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. **Prefer placing as completions free room.**
-- **DEBT.md: 115 open rows** (139 when I opened). **BOB INBOX: empty.** The one open DELEGATION this lane sent is
+- **DEBT.md: 114 open rows** (139 when I opened). **BOB INBOX: empty.** The one open DELEGATION this lane sent is
   SCHEDULER (#8) -> BOB, which only Q3 (D-53, with Bob) keeps open.
 
 ## Owed acts, in order
@@ -46,7 +46,7 @@ four placements would have crossed it mid-flight.
 Archived SCHEDULER #9 (D-398's three conditions at the moment of acting; its CronList empty by message; worktree removed,
 +653 MiB). LED-7 S10-1 (`18d50de5`) and S10-2 (`87638b13`), and BOB #25's answers drained (`8d9fa057`): 24 rows out of
 DEBT: 8 in fact, 8 by the third door, 1 superseded, 4 onto the rows that carry their work, D-85, D-82 and D-380 placed.
-A group of three sent to BOB and answered within the hour. REC-165 placed. D-293 with M0-98 CLOSED (by content at
+A group of three sent to BOB and answered within the hour. REC-165 placed, and **M0-103** (DIST #4's route: a subprocess timeout read as a finding, a false RED the push guard now enforces) placed FIRST of the instrument cluster. D-293 with M0-98 CLOSED (by content at
 `eecb553c`; the refill moved REC-163).
 
 ## The traps this session paid for
