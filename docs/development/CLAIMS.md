@@ -17668,8 +17668,8 @@ named with a candidate, and its owner decides the words:
 4. **`kickoffs/CONDUCT.md`**, *"Name the DELTA and classify it … docs-only → re-run what prose moves; any code path → the
    full set"*: `gates.mjs --since <measured commit>` now does this mechanically once the measured tree's gate RECORDED
    GREEN (a clean tree), and narrower — a plane merge rebased over docs re-runs the readers of those docs (measured
-   2026-09-21 on this tree's content: 14 units over a design-doc move, 56 over a `QUEUE.md` move), not the 41 doc-facing
-   suites.
+   2026-09-21 at M-90: 14 units over a design-doc move, 24 over a `QUEUE.md`, `MEASUREMENTS.md` or `CLAIMS.md` move),
+   not the 41 doc-facing suites; and it RE-CHECKS any commit made after the measured gate rather than trusting it.
 5. **`kickoffs/NEW-MACHINE.md`**, *"`node tools/gates.mjs` # the full battery; ~5 min"*: stale before this landing too; the
    tool runs the class the diff measures.
 **open as of 2026-09-21** — open until each owner has corrected its sentence or said why not; nothing here blocks a runnable row.
