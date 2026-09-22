@@ -3,6 +3,8 @@
 A process document (`CORPUS-STANDARD.md` §6). **RULED BY BOB 2026-09-22: *"Yes to all 3 recommendations"*** — the three
 changes below, as BOB #26 put them to him that day. Designed here by BOB #26; **NOT BUILT**. Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
+**Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
+questions answered in §1 (M0-99, M0-100, M0-101); §5 points at the rest of the same day's program. Status as of 2026-09-22.
 
 ## Why: measured on 2026-09-22
 
@@ -28,16 +30,28 @@ before `main` stops carrying them. **Change 3 is independent** and starts with i
 ### 1 · The message board leaves `main`: a `coord` branch
 
 - **What moves.** A file moves to the branch `coord`, in this same repository, when it is STATE ABOUT THE WORK: `CLAIMS.md`,
-  `QUEUE.md`, `BACKLOG.md`, `DEBT.md`, the `kickoffs/*-NEXT.md` handoffs, and the GENERATED `docs/DECIDED.md` — which
-  settles the question *"DECIDED.md leaving the committed tree"* that was with Bob: it leaves `main`. A file stays on `main`
+  `QUEUE.md`, `BACKLOG.md`, `DEBT.md` and the `kickoffs/*-NEXT.md` handoffs. Bob's ruling also settles the question
+  *"DECIDED.md leaving the committed tree"* that was with him: the GENERATED `docs/DECIDED.md` leaves `main` (how: the
+  next bullet, which corrects BOB #26's first text, where it moved to `coord`). A file stays on `main`
   when it DESCRIBES the system, instructs a lane, or must move with the code it concerns: `CLAUDE.md`, the kickoffs, the
   design corpus, `construct-status.json`, `INTERFACES.md` and `INTERFACE-CHANGES.md` (an IC lands with its code),
   `MEASUREMENTS.md` (a figure lands with what it measured). The builder MEASURES per-path churn on `main` first and
   names any file it moves or keeps against this line.
+- **`DECIDED.md` does not move: M0-99 settles it** (BOB #27, 2026-09-22, on CONDUCT #12's question). It leaves `main` by
+  becoming untracked and generated on demand on EVERY branch (`ORCHESTRATION.md`: *a generated index is not committed*);
+  committing it on `coord` would move its churn rather than remove it. The builder of this change moves no `DECIDED.md`.
 - **The channel stays the repository** (`CLAUDE.md` §4: a change is made when it is pushed): a note is made when it is
   pushed to `origin/coord` and read from there. **A write is one command** that fetches `coord`, applies the edit without
   a working checkout, commits, runs the ledger arms of `plancheck` (seconds, not a battery), pushes, and retries on a
   non-fast-forward; **a read is one command** against `origin/coord`. No session shares a checkout (DEC-3).
+- **A write is an INTENT, re-applied to the fresh `origin/coord` tip on every retry** and anchored to a block heading —
+  append a block at the end; add a line at the end of block X; set row X's status word — **never a textual merge from a
+  stale base** (BOB #27, 2026-09-22, on SCHEDULER #12's question). That is what makes two lanes' tail appends conflict
+  free AND keeps a line in its own block; the receipt is BOB #26's DISCHARGED line, which a merge of two tail appends put
+  inside DIST #4's claim that day. **So M0-101 is SUPERSEDED by this change** (the `running` word becomes an anchored
+  write, and the two-writers conflict it existed for is gone), and **M0-100 NARROWS** to `MEASUREMENTS.md` and
+  `INTERFACE-CHANGES.md`, which stay on `main`, where two `land/*` branches' tail appends still collide inside change 2's
+  train.
 - **Every reader follows the files**: `plancheck`, `ledger.mjs`, `owed.mjs`, `decided.mjs`, `gates.mjs`' suite derivation,
   the push guard (it stops judging `DECIDED.md` on `main`), the heartbeat's skill, and a worker reading its row
   (*from `origin/main`* becomes *from `origin/coord`*). `plancheck` keeps its cross-checks by reading both branches: a
@@ -45,8 +59,9 @@ before `main` stops carrying them. **Change 3 is independent** and starts with i
 - **One migration landing** moves the files, leaves a one-line pointer at each old path, and corrects `CLAUDE.md` §1's
   table and every kickoff that names a moved file, in the same commit.
 - **Accepts when** a claim, a queue flip and a handoff each land on `coord` without moving `main`, every reader above
-  answers as it did from `main`, and a `main` gate record survives a `coord` write. NEGATIVE CONTROL: point one reader
-  back at `main`'s old path, and its suite fails by name.
+  answers as it did from `main`, a `main` gate record survives a `coord` write, and a new block and a line into an
+  existing block, written concurrently, both land with the line in its own block. NEGATIVE CONTROL: point one reader
+  back at `main`'s old path, and its suite fails by name; make the write a textual merge, and the in-block arm fails.
 
 ### 2 · One lane lands on `main`, in batches
 
@@ -71,3 +86,39 @@ before `main` stops carrying them. **Change 3 is independent** and starts with i
 - **Bob's acts, named once with those figures:** enabling Actions on `believeinoakland/bio`, and any spending limit.
 - **Accepts when** a `land/*` push gets a GitHub check whose verdict the push guard reads, and a red check refuses the
   push. NEGATIVE CONTROL: break one suite on a branch, and the check reads red at that suite.
+
+## 4 · The move to cloud Claude Code, under Bob's second account
+
+Bob, 2026-09-22, to BOB #27: *"there'll be a transition at some point today that will involve both to cloud-based CC and
+to using the second Max 20X account of mine"*, with the instruction that these changes be fully recorded first. The move
+itself — what must happen before it, and what a cloud session starts without — is `kickoffs/NEW-MACHINE.md` §0. This
+section records what it changes in THIS design. **Every claim about the cloud here is either the vendor's own tool
+description, read 2026-09-22, or UNMEASURED, and says which;** the first session there measures before building on it.
+
+- **Change 1 gains weight and stays first.** A cloud session RECEIVES a cross-session message but cannot SEND one back
+  (the vendor's `SendMessage` description), and the desktop's session tools and scheduled tasks are not known to exist
+  there (UNMEASURED). The repository is then the only channel that runs both ways: `coord` is the board for lanes that
+  cannot answer a message.
+- **Change 2 keeps its shape; where its refusal lives is UNDETERMINED.** Whether a cloud session may push `main` at all
+  is UNMEASURED. Today the refusal would live in `.git/hooks/pre-push`, which is untracked and installed only by
+  `node tools/plancheck.mjs`, so a fresh clone has NO guard until plancheck has run once. The builder measures first,
+  then names the home of the refusal: the hook, or the host's branch protection — which is also the route the train
+  takes if a cloud session cannot push `main`.
+- **Change 3 loses its first premise.** Its cause was one 8 GiB Mac's memory shared by every lane's battery; a cloud
+  session runs on its own machine (the vendor's model; its size UNMEASURED), so lanes stop competing for one. What
+  remains is a verdict recorded ON THE COMMIT: a gate record lives in one clone's git directory (D-293), so a cloud
+  session starts with none and cannot read another's. **§3's measurement gains a third column, the full battery's wall
+  time and pass count in a cloud session, and Bob's acts come to him only if the figures still favour a runner.**
+  SCHEDULER #12 holds this item's placement for this section.
+
+## 5 · The rest of the same program, by pointer
+
+Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>`, `node tools/decided.mjs "<subject>"`.
+
+- **Bob's rulings of 2026-09-22, each in its home:** *"The goal is BIO work; process is overhead"* — product before
+  process tooling, no process row unless it cuts gate time or unblocks product, batch landings (`CLAUDE.md` §2;
+  `SCHEDULER.md` step 3 orders the plan by it); *"Never queue a gate behind another lane's"* (`CLAUDE.md` §6); a session
+  refreshes past 70% of its context, not 60% (`CLAUDE.md` §4).
+- **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
+  GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
+  fold tripped), M0-100 (narrowed, §1) and M0-101 (superseded, §1).

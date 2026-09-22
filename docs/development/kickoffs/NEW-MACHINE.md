@@ -1,9 +1,11 @@
-# Standing this project up on a new machine, under a new account
+# Standing this project up on a new machine, under a new account, or in the cloud
 
 Written 2026-09-15 by session BOB #11 on the Mac Mini, at Bob's direction, as its last act before
 stopping on token budget. **Its audience is the FIRST BOB SESSION on the new machine**, and Bob
 hands it over by pasting §7's block. Everything here was measured on the outgoing machine rather
 than recalled; where a figure could drift, the command that re-measures it is given instead.
+**Brought current 2026-09-22 by BOB #27 for Bob's move to cloud Claude Code under his second
+account: §0 first.**
 
 **HOW BOB WORKS, AND IT IS NOT A PREFERENCE — IT IS THE OPERATING MODEL.** Bob enters no shell
 commands, edits no files, and applies no diffs. **If something must be done on the machine, the
@@ -16,6 +18,46 @@ SESSION to run, never for Bob to type.
 **Read in this order:** this file, then `CLAUDE.md`, then `docs/development/kickoffs/BOB.md`, then
 `docs/development/kickoffs/BOB-NEXT.md` — the outgoing session's handoff, whose §1 is the one
 piece of design work owed.
+
+---
+
+## 0. THE MOVE OF 2026-09-22 — cloud Claude Code, under Bob's second Max 20x account
+
+Bob, 2026-09-22, to BOB #27: *"there'll be a transition at some point today that will involve both to cloud-based CC and
+to using the second Max 20X account of mine"* — and the productivity changes are to be fully recorded first (their design
+and what the move changes in it: `docs/development/TREE-SHARING.md` §4–§5). It is a new ACCOUNT, so §3 governs: this
+account stands down first. And it is a new KIND of environment: a cloud session has its own machine and a fresh clone,
+and nothing of this Mac. **Every claim about the cloud here is the vendor's tool description (read 2026-09-22) or
+UNMEASURED, and says which.**
+
+**Before the stand-down, in THIS account — each lane for itself, BOB confirming:**
+1. **Every commit that exists only on this Mac is pushed**, since a cloud session starts from what `origin` holds.
+   `plancheck`'s NEVER PUSHED arm names them. A tree carrying a RED record cannot be pushed on any ref; push its patch
+   (SCHEDULER #12 did, as `origin/scheduler12/row-drafts`).
+2. **Each `<LANE>-NEXT.md` is on `origin/main`, written for a reader with NO memory** and possibly none of the tools below.
+3. **At Bob's order:** each lane deletes its own crons, stops its workers and says so; BOB disables the heartbeat task,
+   archives what has finished, confirms every lane stopped (`CLAUDE.md` §4), and gives Bob §7's block.
+
+**What a cloud session starts WITHOUT.** Each is the premise of a rule; until measured there, that rule is SUSPENDED and
+the handoff says so — never silently skipped:
+- **The desktop's session tools** — `list_sessions`, `get_usage` of another session, `archive_session`, `ListAgents`,
+  the spawn chip (UNMEASURED there). D-398's archive of a predecessor, `occupancy.mjs`, `retirable.mjs`, BOB's opening
+  sweep and the 70% measure of OTHER lanes rest on them.
+- **Replies:** it receives a cross-session message and cannot send one (the vendor's `SendMessage` description). The
+  repository is the channel (`TREE-SHARING.md` §4).
+- **The heartbeat and the self-wakes.** The heartbeat is this Mac's scheduled task, its definition verbatim at
+  `docs/archive/conduct-heartbeat-SKILL-2026-09-19.md` (body unchanged, compared 2026-09-22); the cloud's scheduled
+  "routines" (the vendor's term) and `CronCreate` in a cloud session are UNMEASURED as replacements.
+- **The account's memory** — carried whole into `docs/archive/account-memory-2026-09-22.md` (§9.2).
+- **`.env`** (§4's key names). Only DIST's code reads a secret (`git grep -w` outside the tests, 2026-09-22: the deploy
+  scripts read the Cloudflare keys, `release-assemble` the release seed), and DIST also needs stock `ssh-keygen`.
+  **Which secret may live in a cloud environment is Bob's decision (risk carrying his name), put to him once by BOB #27.**
+- **The push guard,** until `node tools/plancheck.mjs` has run once (it installs the untracked `.git/hooks/pre-push`);
+  **every gate record** (per clone, D-293); the three packages' `node_modules` (§4); node's major, 26, pinned by nothing.
+
+**The first BOB there measures each of these before resting a rule on it**, records the answers in this section with the
+date, corrects `CLAUDE.md` §4, §6 and §8 where they assume the Mac, and stands the lanes up in §6's order. Where there is
+no chip, BOB writes each lane's paste block into its own handoff and Bob starts the session from it.
 
 ---
 
@@ -77,20 +119,16 @@ to re-derive it.
 ## 4. Making the local repo
 
 **Prerequisites**, measured on the outgoing machine — match the majors, not the patches:
-`git`, `node v26.5.0`, `npm 11.17.0`. On macOS, `xcode-select --install` if `git` is absent.
+`git`, `node v26` (v26.0.0 on Sparky-Air, 2026-09-22), `npm 11`. On macOS, `xcode-select --install` if `git` is absent.
 
-**The layout matters and is not the obvious one.** A WRAPPER directory holds the clone and a
-sibling directory of worktrees, because the effective Claude settings live in the wrapper:
+**The layout is FLAT** (Sparky-Air, verified 2026-09-19; the Mac Mini's wrapper layout of 2026-09-15 is retired): the
+clone is the project directory, worktrees live under its `.claude/worktrees/`, and the committed `.claude/settings.json`
+IS the effective settings file — so a stale checkout means stale permissions. A cloud session's clone is its own.
 
-    ~/ClaudeCodeBIO/              <- the wrapper; .claude/settings.json lives HERE
-      bio/                        <- the clone (git remote origin)
-      bio-worktrees/              <- one worktree per long-lived lane
+    git clone https://github.com/believeinoakland/bio.git ~/Downloads/ClaudeCodeBIO
+    git -C ~/Downloads/ClaudeCodeBIO log --oneline -1     # confirm you have main's tip
 
-    mkdir -p ~/ClaudeCodeBIO/bio-worktrees && cd ~/ClaudeCodeBIO
-    git clone https://github.com/believeinoakland/bio.git bio
-    cd bio && git log --oneline -1          # confirm you have main's tip
-
-**Credentials.** `.env` lives in `bio/` and is gitignored; `.worktreeinclude` copies it into every
+**Credentials.** `.env` lives in the clone's root and is gitignored; `.worktreeinclude` copies it into every
 worktree at creation, which is why a worktree does not start with missing-credential failures that
 look like permission bugs. **The new machine has no `.env` and must be given one.** These keys are
 what the outgoing machine held (names only — the file is never printed, echoed or pasted into a
@@ -133,13 +171,12 @@ a wrapper command reports its own status, not the battery's.
 
 ## 5. The worktrees
 
-The lead works in its own worktree, never in the main checkout, which CONDUCT holds:
+The lead works in its own worktree, never in the main checkout (a cloud session is its own checkout):
 
-    cd ~/ClaudeCodeBIO/bio
-    git worktree add ../bio-worktrees/BOB -b bob-machine2 origin/main
+    git -C ~/Downloads/ClaudeCodeBIO worktree add .claude/worktrees/bob -b bob/<n> origin/main
 
-Create others only as lanes start (`FLEET`, and CONDUCT keeps `bio/` itself). Branch names are
-free; nothing depends on them. **Worker worktrees are created by CONDUCT's tooling, not by hand.**
+Create others only as lanes start. Branch names are free; nothing depends on them. **Worker worktrees are created by
+CONDUCT's tooling, not by hand.**
 
 ## 6. Starting the lanes, in order — CURRENT as of 2026-09-19 (BOB #16; the 2026-09-15 text is in git history)
 
@@ -166,13 +203,9 @@ Kickoff: BOOTSTRAP this project onto a NEW MACHINE under a new Claude account. B
 shell commands and does not edit files — you run everything, and when you need a secret you ask him
 to copy it to the clipboard and you read it with pbpaste, one at a time, never echoing a value.
 
-BUILD THE LAYOUT, which is a wrapper holding the clone beside a worktrees directory, because the
-effective Claude settings live in the wrapper rather than in the repo:
-  ~/ClaudeCodeBIO/bio            the clone
-  ~/ClaudeCodeBIO/bio-worktrees  one worktree per lane
-
-Clone https://github.com/believeinoakland/bio.git into ~/ClaudeCodeBIO/bio. If it asks for
-credentials, ask Bob for the GitHub token first and use it; never print it.
+THE LAYOUT IS FLAT: clone https://github.com/believeinoakland/bio.git into ~/Downloads/ClaudeCodeBIO;
+worktrees go under its .claude/worktrees/, and its committed .claude/settings.json is the effective
+one. If the clone asks for credentials, ask Bob for the GitHub token first and use it; never print it.
 
 THEN READ, before anything else: docs/development/kickoffs/NEW-MACHINE.md in full. It was written
 for you. Follow §4 exactly — the .env keys, the pbpaste flow, npm ci in bio-plane, pdf-worker AND
@@ -193,36 +226,33 @@ missing, the plancheck and gate results, and whether the memory seed and setting
 
 ## 7. THE PASTE BLOCK — hand this to the first BOB session in the new account
 
-The CURRENT block is the one `BOB-NEXT.md` §0 names; this section keeps its shape. BOB #16 gave Bob the block for the
-2026-09-19 switch in its closing report, and it reads: open the session in the project directory, then the paste block
-below, which assumes the repository exists (on a bare machine, §6a's bootstrap comes first).
+The CURRENT block is the one `BOB-NEXT.md` §0 names; this section keeps its shape. For the move of 2026-09-22 it reads as
+below: open the session in the project directory, or as a cloud session on the repository (on a bare machine, §6a's
+bootstrap comes first). BOB #16's block for the 2026-09-19 switch is in git history.
 
 ```
-Kickoff: session BOB #17 for BIO / CivicOS — the architecture lane, in the Claude Code account that now develops this
-repository. The previous account stood down on Bob's order on 2026-09-19 at 91% weekly usage; every lane saved its
-handoff and stopped. You are the LEAD.
+Kickoff: session BOB #<n> for BIO / CivicOS — the architecture lane and the LEAD, in the Claude Code account and
+environment that now develop this repository (Bob's move of 2026-09-22: cloud Claude Code, his second Max 20x account).
+Keep this session's title exactly "BOB #<n>".
 
-BEFORE ANYTHING ELSE: `git fetch origin`, and confirm your handoff: `git show origin/main:docs/development/kickoffs/BOB-NEXT.md | head -1`
-must begin `# BOB — resume here. Written 2026-09-19 by BOB #16 for the NEXT BOB`. If it does not, STOP and say so. Run
-`hostname` and say which machine you are on.
+GATE: git fetch origin; git show origin/main:docs/development/kickoffs/BOB-NEXT.md | head -1 must name you as the
+successor. If it does not, STOP and say so.
 
-READ, IN FULL, IN THIS ORDER: CLAUDE.md, docs/development/kickoffs/BOB.md, docs/architecture/BIO_System_Design.md,
-docs/development/kickoffs/NEW-MACHINE.md, then BOB-NEXT.md from origin/main. Trust origin/main over any document,
-including this prompt. Look things up rather than recall them: `node tools/status.mjs <topic>`, `node tools/decided.mjs
-"<subject>"`, `node tools/owed.mjs BOB`.
+READ, IN FULL, IN THIS ORDER, from origin/main: CLAUDE.md, docs/development/kickoffs/NEW-MACHINE.md (§0 first),
+docs/development/kickoffs/BOB.md, docs/architecture/BIO_System_Design.md, then BOB-NEXT.md. Trust origin/main over any
+document, this prompt included. Look things up, never recall them: node tools/status.mjs <topic>, node tools/decided.mjs
+"<subject>", node tools/owed.mjs BOB.
 
-YOUR FIRST ACTS are BOB-NEXT §0, in order: (1) confirm the OLD account is stopped — two accounts developing at once is the
-one thing Bob forbade; (2) verify this machine (npm ci in bio-plane/, pdf-worker/ and ocr-worker/, none a symlink, df -h,
-.env present — ask Bob to paste any missing secret via the clipboard, never print one) and that the effective
-.claude/settings.json has NO `ask` rule on a deploy command (NEW-MACHINE.md §9.1); (3) recreate the CONDUCT heartbeat
-scheduled task from docs/archive/conduct-heartbeat-SKILL-2026-09-19.md, and arm your own self-wake with its renewal;
-(4) measure this account's weekly usage (get_usage) and your context; (5) plancheck, status.mjs --check, owed.mjs BOB;
-(6) file the chips for SCHEDULER, then CONDUCT, then DIST, then FLEET, each gated on its -NEXT.md line 1 and on
-`node tools/occupancy.mjs` ADMITTING it, and tell Bob
-they are waiting. Then work BOB-NEXT §3 in order.
+FIRST ACTS (NEW-MACHINE.md §0): (1) confirm the OLD account is stopped — two accounts developing at once is the one thing
+Bob forbade; (2) run node tools/plancheck.mjs BEFORE ANY PUSH: it installs the push guard a fresh clone lacks; (3) measure
+what this environment has and record each answer in §0 with the date — the session tools, cross-session replies,
+scheduled routines and CronCreate, npm ci in bio-plane/, pdf-worker/ and ocr-worker/ (none a symlink), node's major, disk
+and memory, the full gate's time and pass count, and, with your FIRST REAL landing (never a test push), whether a push to
+main is accepted; a rule whose premise is missing is SUSPENDED and said so, never skipped silently; (4) measure this
+account's weekly usage and your own context; (5) stand the lanes up in §6's order. Then work BOB-NEXT §3.
 
-Bring Bob only what is genuinely his, in plain words he can act on, once each; decide everything that follows from
-existing rulings, after reading the ruling itself.
+Bring Bob only what is genuinely his, in plain words, once each; decide everything that follows from existing rulings,
+after reading the ruling itself.
 ```
 
 ## 9. Seeding the new account — memory and settings
@@ -232,46 +262,27 @@ loss is not evenly distributed.** Doctrine is safe: it is in `CLAUDE.md` and the
 the clone brings. What does NOT travel is the account's MEMORY and its PERMISSION SETTINGS, both of
 which live on the machine. Write both in the bootstrap session, before the first real turn.
 
-### 9.1 The permission settings — CURRENT as of 2026-09-19 (BOB #16)
+### 9.1 The permission settings — CURRENT as of 2026-09-22 (BOB #27; BOB #16's of 2026-09-19 in git history)
 
 **The committed `.claude/settings.json` in the repository is the authority** — it travels with the clone: default mode
-`bypassPermissions`, the eight `deny` rules (force-push ×3, `reset --hard`, `clean -fdx`, `rm -rf`, `sudo`, `chmod 777`),
+`bypassPermissions`, the `deny` rules (force-push and mirror in twelve spellings, `reset --hard`, `clean -fdx`, `rm -rf`,
+`sudo`, `chmod 777`; seventeen entries, counted 2026-09-22),
 and `ask` on writing `.env` ONLY. **Do NOT add `ask` rules for `deploy.mjs` or `wrangler deploy`:** an `ask` rule
 overrides bypass, and the three that §9.1 used to prescribe held 0.64.0's plane deploy for ~2 hours on 2026-09-19 after Bob
-had ruled that DIST deploys by standing permission (`CLAUDE.md` §4); Bob had them removed (`7e9ef2f9`). If the new
-machine uses a wrapper directory whose own `.claude/settings.json` governs, make it match the committed file. A
+had ruled that DIST deploys by standing permission (`CLAUDE.md` §4); Bob had them removed (`7e9ef2f9`). The layout
+is flat (§4), so the committed file governs. A
 per-machine `settings.local.json` of allow entries is harmless and need not be copied.
 
-### 9.2 The memory seed
+### 9.2 The memory seed — CURRENT as of 2026-09-22 (BOB #27)
 
-Write these into the new account's project memory, one file each with a one-line pointer in
-`MEMORY.md`. **They are working-style and project facts only.** Anything personal — other work Bob
-runs under the same account — is deliberately NOT here and must come from him, not from a shared
-repository.
-
-| memory | what it says |
-| --- | --- |
-| **how Bob works** | He enters no shell commands, edits no files, applies no diffs. Do it, script it, or name the one smallest act only he can take. Never return a settled question; when he hands a determination back, decide it, implement it, record it, and tell him what you chose. |
-| **the working directory is the wrapper** | Sessions run from `~/ClaudeCodeBIO`; the repo is `bio/`; the effective settings are the wrapper's `.claude/settings.json`. A worktree is a checkout of a COMMIT. |
-| **the persona** | GitHub `believeinoakland`, Cloudflare account `20b533579290b9b93168345edd3b7f72`. If a wrangler command ever reports a different account, stop and say so — a deploy would SUCCEED into the wrong one. |
-| **decide tactical work, don't ask** | Activation order, sequencing, mechanism, scoping and which item runs next are the session's, ruled by Bob 2026-07-31. Blocking on him is a productivity failure dressed as diligence. |
-| **publish or it never happened** | Sessions do not share a tree: commit, push, and verify from the REMOTE. Run `node tools/plancheck.mjs` before any handoff. |
-| **notation is settled** | UML `classDiagram` for structure, `stateDiagram-v2` for lifecycle, edges labelled with the act. Never mix, never hand-roll arrow semantics; two drafts were rejected for it. |
-| **the in-app browser cannot reach external origins** | It blocks pre-network on origin approval. Verify published artifacts by `WebFetch` and appearance through the local preview harness. |
-| **headless sessions are invisible to Bob** | The app hides programmatically created sessions, so he can neither see nor interrupt one. Every session he might need to reach is spawned through a chip he clicks (LIVENESS rule 6). |
-| **cross-session messages arrive stale** | A peer's report describes the tree at the moment it was written. Verify its premises from `origin/main` before acting on it. |
-| **quote heredocs with backticks** | An unquoted `<<EOF` lets the shell eat every backticked span in an edit script. Use `<<'EOF'`, and pass values through the environment. |
-| **the design corpus front-matter rule** | Every design document carries current Status / Place / Incomplete / Contents; `corpuscheck` enforces it inside `plancheck`; `BIO_System_Design.md` is the level-0 map. |
-
-**Added 2026-09-19 by BOB #16 — the old account's memory held two lessons outside this repository:** (1) *check
-`hostname` before any side-effecting step of a kickoff that names a machine* — the estate spans two machines (MiniM4 and
-Sparky-Air), and an evacuation kickoff for one was once opened on the other; (2) *carry upstream's hunks when rebasing
-`QUEUE.md`, never take one side whole* — now also in `kickoffs/SCHEDULER.md`. And the durable lessons of 2026-09-19 are in
-each kickoff (`BOB.md` rule 11, `CONDUCT.md`, `SCHEDULER.md`, `DIST.md`, `FLEET.md`), so they need no seed.
-
-**One more, and it is the newest:** *one account develops at a time, and Bob enforces it by hand —
-the lock that used to do it was removed on 2026-09-16 and must not be rebuilt. `CLAUDE.md` carries
-why.*
+**The outgoing account's memory is carried WHOLE into `docs/archive/account-memory-2026-09-22.md`**: its index and every
+entry, verbatim but for the one redaction the file states — other work Bob runs under the same account stays out of this
+public repository and must come from him. Where the new environment keeps a memory (the desktop app does), seed it from
+that file, one entry each with its pointer in `MEMORY.md`; where it keeps none between sessions (a cloud session,
+UNMEASURED), the file IS the memory, and a lane reads the entries its work touches. The 2026-09-15 seed table and BOB #16's
+two additions are in git history, and their durable lessons are in `CLAUDE.md` and the kickoffs. **Each entry is a claim
+about its day**: verify it before resting on it; several name this Mac's zsh or the desktop's tools and may not hold in
+the cloud.
 
 ### 9.3 What Bob still has to supply himself
 
