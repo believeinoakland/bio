@@ -18534,3 +18534,15 @@ in the process-document table; one Status sentence and the as-of date); `docs/de
 one entry, newest first); `docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~14:55Z);
 `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — DIST-NEXT rewritten for a successor with no memory and no .env: Bob's move to cloud-based Claude Code and his second account)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/cloud-handoff`), Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (rewritten whole), this block, `docs/DECIDED.md` (GENERATED, LAST).
+why: Bob ordered a move TODAY to cloud-based Claude Code on his second Max 20x account, relayed by BOB #27, which asked
+  each lane for a handoff a successor with NO memory and NO .env can act on. DIST-NEXT now leads with what a cut cannot
+  do without secrets — the key NAMES per step (sign, deploy, live-verify), whose cloud home is Bob's risk decision,
+  carried by BOB #27 and not decided here — then the owed 0.72.0 BATCH (REC-157 / IC-173, a WIDENING to name; step 1 per
+  M0-106 and its witness to SCHEDULER), the live rollback targets, the seeded group, and each Mac-only instrument
+  described by the DIST.md lesson it implements, so it can be rebuilt. No DIST commit exists only on this Mac.
+**released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.
