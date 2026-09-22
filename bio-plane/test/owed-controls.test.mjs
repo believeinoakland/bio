@@ -9,6 +9,7 @@
    (8) THE CLASS SWEEP IS REPORTED AND NOT GATED, and the arm proves the second half rather than asserting it. Wire the sweep into `--strict` -> the run EXITS 1 over an HONEST tree, because 23 suites in `civicos-ui/test` and `newgroup/test` declare no control today. That is the whole argument for printing the figure instead of gating on it: those directories belong to other areas, and a gate that fails honest runs gets switched off.
    ALL NINE ARMS RUN 2026-08-09 IN WORKTREE agent-a66f1cf86b51a86bd, each ALONE against a whole tree with the other defences held OPEN, each ARMING REPORTED (every patch matched exactly once), every restore sha256-EQUAL and `cmp`-IDENTICAL against a per-arm pristine copy with its byte count printed and a 2,000-byte minimum guarded. EVERY ONE BEHAVED AS DECLARED. MEASURED on the committed tree, as `EXIT · plane register · plane arms · fleet suites/declaring/arms`, against a BASELINE row that armed nothing (`0 · 135/135 · 631 · 4/4/35`): (1) `1 · 135/135 · 631 · 3/4/26` naming harness.test.mjs — THE PLANE'S FIGURES DID NOT MOVE, which is what says the hole was the fleet walk alone. (2) `1 · 135/135 · 631 · 4/4/34`, FLEET FLOOR on arms, control message silent. (3) `1 · 135/135 · 631 · 3/3/28` — note `3/3`, which without a suite floor reads GREENER than 4/4. (4) `1 · 134/134 · 622 · 4/4/35`, the ledger naming owed control 6 / PL-3 while the register's `No declared control` walk stayed SILENT, because a suite that is GONE declares nothing to nobody — the two instruments are not one thing measured twice. (5) `1 · 134/135 · 614 · 4/4/35`, both firing. (6) `1 · 135/135 · 631 · 4/4/35` on the pinned total, the outstanding CEILING silent (deleting a row LOWERS that count, which is exactly why the total is pinned at all). (7a) `0`, nothing moved. (7b) `0 · fleet 4/4/37`, the tally RISEN. (8) `1 · 135/135 · 631 · 4/4/35` — the sweep, gated, fails an honest tree. THE PROPERTY M0-9 AND M0-14 BOTH RECORDED APPLIES HERE TOO: writing this record into a declaration moves the register's own total upward, so these are DELTAS against the baseline row and an absolute must never be compared across two edits of this text.
    ONE ARM CAME BACK WRONG BEFORE ANY OF THIS AND IT IS THE FINDING WORTH CARRYING: the first version of arm (1) put the old `some()` rule back into `coverage.mjs` and this suite STAYED GREEN AT 36/0. The fix had left the member-level flag in place beside the new suite-level walk, so nothing read it any more — a second copy of a rule absorbing the control meant to prove the first, which is IS-6's C-22.4 arm at 98/98 one instrument over. The flag was DELETED rather than kept, and the arm was re-pointed at the rule that is actually load-bearing.
+   M0-107, RUN 2026-09-22 by the M0-107 worker through `test/m0107-budget.control.mjs` arm B1, the row's own control: A13's budget set to 1 ms -> this suite `46 pass, 1 fail`, the ONE failure `A13-budget` by name, A13 and A13b ABSENT from the failures (skipped, not failed), ONE marker with this suite's pid; through the battery `NOTM owed-controls.test.mjs`, exit 124, no FAILED line. Baseline 49 pass, 0 fail; restored by sha256 AND `cmp`. Arm B7 (A13's check pointed at `realRun`) -> `budget-sweep.test.mjs` names this file's site UNCHECKED.
  * ========================================================================= */
 
 /* VF-1 — THE SEVEN OWED NEGATIVE CONTROLS, AND THE REACH OF THE INSTRUMENT THAT
@@ -56,6 +57,9 @@ import { CONTROL_MARKER, MARKER_PHRASE, readControl } from "../scripts/control-r
 /* D-265: the copy list, derived from coverage.mjs own imports rather than kept
    by hand here and in coverage-provenance.test.mjs. The note at REAL records why. */
 import { instrumentDeps } from "./instrument-deps.mjs";
+/* M0-107: an expired budget MEASURED NOTHING — one named budget assertion per spawn, and the findings that
+   would read the expired result are SKIPPED, so the battery reads the suite NOT MEASURED, never RED. */
+import { budgetAssert } from "./budget.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS = join(DIR, "..", "scripts");
@@ -92,9 +96,12 @@ const t = (name, got, want) => {
 /* ==================================================================== PART A
    THE LEDGER, AGAINST THE REAL TREE. */
 
+const A_BUDGET_MS = 120_000, A13_BUDGET_MS = 120_000, B_BUDGET_MS = 60_000;   /* M0-107: each spawn's ONE budget */
 const realRun = spawnSync(process.execPath, ["scripts/coverage.mjs"],
-  { cwd: join(DIR, ".."), encoding: "utf8", timeout: 120_000 });
+  { cwd: join(DIR, ".."), encoding: "utf8", timeout: A_BUDGET_MS });
 const realOut = `${realRun.stdout || ""}${realRun.stderr || ""}`;
+const measuredA = budgetAssert(t, "A-budget: the real `coverage.mjs` run PART A reads", realRun, A_BUDGET_MS,
+  "A1-A12b, the ledger and the sweep read back from the real instrument's report");
 
 /* The report's own rows, parsed back out. `(n) ITEM STATE [suite]`. */
 const ledgerRows = [...realOut.matchAll(/^ {4}\((\d)\) (\S+) {2}(PLACED|OUTSTANDING|SUITE MISSING|SUITE DECLARES NO CONTROL)(?: {2}(\S+))?$/gm)]
@@ -112,6 +119,11 @@ t("A0 the instrument's copy list is DERIVED from its own imports, still contains
     "walkfloor.mjs"].filter((n) => !REAL.includes(n)),
    REAL_OUTSIDE],
   [true, [], []]);
+/* Parsed OUTSIDE the budget's block (M0-107): the corpus line after A13 prints it either way, and a parse
+   is no assertion — over an expired run it reads empty, and the A-budget line above says why. */
+const sweep = [...realOut.matchAll(/^ {4}(\S+\/test) {2}(\d+)\/(\d+) declaring/gm)]
+  .map((m) => ({ dir: m[1], declaring: +m[2], total: +m[3] }));
+if (measuredA) {
 t("A1 the instrument ran at all", [realRun.status, realOut.length > 0], [0, true]);
 /* THE COUNT IS THE DESIGN'S, AND IT IS ASSERTED AS SEVEN RATHER THAN AS
    `ledgerRows.length` — an assertion against the thing it is measuring passes
@@ -176,23 +188,25 @@ t("A11 FL-3/IS-9's own suite is named in the fleet register",
    directories of suites no register reads. They are REPORTED and NOT GATED — they
    belong to other areas — so what is asserted here is exactly that: named, with a
    ratio, and NOT failing the run. */
-const sweep = [...realOut.matchAll(/^ {4}(\S+\/test) {2}(\d+)\/(\d+) declaring/gm)]
-  .map((m) => ({ dir: m[1], declaring: +m[2], total: +m[3] }));
 t("A12 the sweep names the suite directories no register reads",
   sweep.map((s) => s.dir), ["civicos-ui/test", "newgroup/test"]);
 t("A12b and it prints a RATIO rather than a yes/no — a figure that can move",
   sweep.every((s) => s.total > 0 && s.declaring <= s.total), true);
+} /* end of measuredA (M0-107) */
 /* A13 IS THE NON-VACUOUS HALF. There ARE undeclared suites in those directories
    right now, and `--strict` must still pass: reporting is not gating, and a walk
    that quietly became a gate would fail every honest run until another area did
    work nobody asked it for. */
 const strictRun = spawnSync(process.execPath, ["scripts/coverage.mjs", "--strict"],
-  { cwd: join(DIR, ".."), encoding: "utf8", timeout: 120_000 });
+  { cwd: join(DIR, ".."), encoding: "utf8", timeout: A13_BUDGET_MS });
 const strictOut = `${strictRun.stdout || ""}${strictRun.stderr || ""}`;
 const quietNamed = [...strictOut.matchAll(/^ {6}NO CONTROL \((\d+)\):/gm)].map((m) => +m[1]);
+if (budgetAssert(t, "A13-budget: the real `coverage.mjs --strict` run A13 and A13b read", strictRun, A13_BUDGET_MS,
+  "A13 and A13b, whether --strict names the undeclared suites and still exits 0")) {
 t("A13 the sweep NAMES undeclared suites — the assertion is not passing over an empty list",
   quietNamed.length > 0 && quietNamed.some((n) => n > 0), true);
 t("A13b and --strict still EXITS 0: this is reported, not gated", strictRun.status, 0);
+} /* end of A13-budget (M0-107) */
 console.log(`corpus (A, sweep): ${sweep.map((s) => `${s.dir} ${s.declaring}/${s.total}`).join(" · ")}`
   + ` · ${quietNamed.reduce((a, b) => a + b, 0)} suite(s) named as declaring no control`);
 
@@ -239,10 +253,13 @@ const drive = ({ files = {}, anchor = false, strict = false } = {}) => {
   if (anchor) put("docs/archive/IS-BUILD-PLAN.md", "| VF-1 | the scratch row |\n");
   for (const [rel, body] of Object.entries(files)) put(rel, body);
   const r = spawnSync(process.execPath, ["scripts/coverage.mjs", ...(strict ? ["--strict"] : [])],
-    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: 60_000 });
+    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: B_BUDGET_MS });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   rmSync(repo, { recursive: true, force: true });
-  return { out, code: r.status };
+  /* M0-107: `measured` false means the scratch run's budget EXPIRED; the arm reading it is skipped. */
+  const measured = budgetAssert(t, `B-budget: scratch repository ${scratches}`, r, B_BUDGET_MS,
+    `the B arm that drove scratch repository ${scratches}`);
+  return { out, code: r.status, measured };
 };
 
 const MEMBER = {
@@ -262,41 +279,48 @@ const LEDGER_SUITES = {
 
 /* ---- B1: ONE SUITE OF TWO GOES QUIET. The arm the old rule could not see. --- */
 {
-  const { out } = drive({ files: { ...MEMBER,
+  const { out, measured } = drive({ files: { ...MEMBER,
     "member-a/test/loud.test.mjs": fleetSuite({ arms: 3 }),
     "member-a/test/quiet.test.mjs": fleetSuite({ declare: false }) } });
+  if (measured) {
   t("B1 the undeclared FLEET suite is NAMED", /FLEET CONTROL:.*member-a\/test\/quiet\.test\.mjs/.test(out), true);
   t("B1b the member is not credited by its sibling's declaration",
     /1\/2 SUITES declaring a negative control/.test(out), true);
   t("B1c the quiet suite is shown as NO CONTROL beside the loud one",
     [/NO CONTROL.*quiet\.test\.mjs/.test(out), / 3 arms.*loud\.test\.mjs/.test(out)], [true, true]);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- B2: OVER-STRICTNESS. Correct work in a spelling nobody anticipated. ---- */
 {
-  const { out } = drive({ files: { ...MEMBER,
+  const { out, measured } = drive({ files: { ...MEMBER,
     "member-a/test/dash.test.mjs": fleetSuite({ arms: 4, sep: "—" }),
     "member-a/test/colon.test.mjs": fleetSuite({ arms: 6 }) } });
+  if (measured) {
   t("B2 a DASH-separated declaration is a declaration", /2\/2 SUITES declaring a negative control/.test(out), true);
   t("B2b nothing is named as uncontrolled", /FLEET CONTROL:/.test(out), false);
   t("B2c both declarations' arms are counted, never one of them",
     /2\/2 SUITES declaring a negative control · 10 arms/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- B3: THE LEDGER, IN SCOPE, TRUE OF ITS TREE ---------------------------- */
 {
-  const { out } = drive({ anchor: true, files: { ...MEMBER,
+  const { out, measured } = drive({ anchor: true, files: { ...MEMBER,
     "member-a/test/m.test.mjs": fleetSuite(), ...LEDGER_SUITES } });
+  if (measured) {
   t("B3 with every named suite present the ledger raises nothing",
     /OWED CONTROLS:/.test(out), false);
   t("B3b and it says so with all four placed", /OWED CONTROLS \(VF-1\) {2}4\/7 placed and RUN/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- B4: AN OWED CONTROL LOSES ITS SUITE ----------------------------------- */
 {
   const without = { ...LEDGER_SUITES };
   delete without["bio-plane/test/suggest.test.mjs"];
-  const { out } = drive({ anchor: true, files: { ...MEMBER, "member-a/test/m.test.mjs": fleetSuite(), ...without } });
+  const { out, measured } = drive({ anchor: true, files: { ...MEMBER, "member-a/test/m.test.mjs": fleetSuite(), ...without } });
+  if (measured) {
   t("B4 the ledger names the owed control whose suite is GONE",
     /OWED CONTROLS: owed control 6 \(PL-3\) -> bio-plane\/test\/suggest\.test\.mjs: SUITE MISSING/.test(out), true);
   /* THE DISTINCTION THE ROW EXISTS FOR: the register's "No declared control"
@@ -305,28 +329,33 @@ const LEDGER_SUITES = {
      is not the same instrument as a register counting declarations. */
   t("B4b the register itself is silent about a suite that is not there",
     /No declared control/.test(out), false);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- B5: AN OWED CONTROL'S SUITE STOPS DECLARING --------------------------- */
 {
   const muted = { ...LEDGER_SUITES,
     "bio-plane/test/strengthpair.test.mjs": `/* nothing is declared here */\nconsole.log("x");\n` };
-  const { out } = drive({ anchor: true, files: { ...MEMBER, "member-a/test/m.test.mjs": fleetSuite(), ...muted } });
+  const { out, measured } = drive({ anchor: true, files: { ...MEMBER, "member-a/test/m.test.mjs": fleetSuite(), ...muted } });
+  if (measured) {
   t("B5 the ledger names the owed control whose suite went quiet",
     /OWED CONTROLS: owed control 3 \(PL-14\) -> bio-plane\/test\/strengthpair\.test\.mjs: SUITE DECLARES NO CONTROL/.test(out), true);
   t("B5b and the register catches it independently, at the suite",
     /strengthpair\.test\.mjs/.test(out.split("No declared control")[1] || ""), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- B6: OUT OF SCOPE — the ledger PRINTS and asserts nothing -------------- */
 {
-  const { out, code } = drive({ files: { ...MEMBER, "member-a/test/m.test.mjs": fleetSuite() } });
+  const { out, code, measured } = drive({ files: { ...MEMBER, "member-a/test/m.test.mjs": fleetSuite() } });
+  if (measured) {
   t("B6 with no IS-BUILD-PLAN.md the ledger asserts nothing", /OWED CONTROLS:/.test(out), false);
   t("B6b and it SAYS that is why, rather than reading as four clean rows",
     /NOT ASSERTED HERE \(no docs\/archive\/IS-BUILD-PLAN\.md/.test(out), true);
   t("B6c the table is still printed — a ledger that hides is not a ledger",
     /OWED CONTROLS \(VF-1\)/.test(out) && /DEC-44's two-finding case/.test(out), true);
   t("B6d the run is otherwise ordinary", code === 0 || code === 1, true);
+  } /* end of measured (M0-107) */
 }
 
 console.log(`corpus (B): ${scratches} scratch repositories driven through the REAL scripts/coverage.mjs`);

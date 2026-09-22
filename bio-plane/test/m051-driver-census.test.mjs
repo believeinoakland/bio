@@ -22,6 +22,10 @@
  *   I HAVE IT AND CANNOT READ IT — a driver walked, naming no suite in code (mute, prose).
  *   NOT WHERE I LOOKED — a file whose name claims a control, outside the walk (shell).
  *
+ * M0-107 (2026-09-22): this suite's budget sites each carry `budgetAssert` (`test/budget.mjs`), and the arm
+ * that would read an expired result is SKIPPED. The shape is controlled ONCE, at owed-controls' A13 site
+ * (`test/m0107-budget.control.mjs` arm B1, RUN 2026-09-22); it was NOT armed at this suite's own sites, so for
+ * them it is DECLARED-ONLY. `budget-sweep.test.mjs` fails by name if any of them loses its check.
  * NEGATIVE CONTROL: (1) restore the OLD naming test — make `hasDriver` read
  * `existsSync(test/<suite>.control.mjs)` again -> A2 FAILS BY NAME, because
  * `zulu.control.mjs` drives `beta.test.mjs` under a name the old matcher could
@@ -66,6 +70,10 @@ import { CONTROL_MARKER } from "../scripts/control-register.mjs";
    than kept by hand. Miss a module and the scratch repository throws
    ERR_MODULE_NOT_FOUND and every arm fails IN THE HARNESS. */
 import { instrumentDeps } from "./instrument-deps.mjs";
+/* M0-107: an expired budget MEASURED NOTHING — one named budget assertion for the scratch run, and every arm
+   reading it is SKIPPED on expiry, so the battery reads this suite NOT MEASURED, never RED. */
+import { budgetAssert } from "./budget.mjs";
+const RUN_BUDGET_MS = 60_000;
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS = join(DIR, "..", "scripts");
@@ -140,13 +148,13 @@ const drive = () => {
   g("add", "-A");
   g("commit", "-q", "-m", "scratch base");
   const r = spawnSync(process.execPath, ["scripts/coverage.mjs"],
-    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: 60_000 });
+    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: RUN_BUDGET_MS });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   rmSync(repo, { recursive: true, force: true });
-  return out;
+  return { out, measured: budgetAssert(t, "run-budget: the scratch census", r, RUN_BUDGET_MS, "every arm, A1-A8") };
 };
 
-const out = drive();
+const { out, measured } = drive();
 /* A driver is READ when the census prints it followed by what it drives. */
 const reads = (driver, suite) =>
   new RegExp(`^\\s+${driver.replace(/\./g, "\\.")}\\s+drives\\s+.*\\b${suite.replace(/\./g, "\\.")}`, "m").test(out);
@@ -168,6 +176,7 @@ console.log(`  census as the scratch tree read it: ${suitesWithDriver ? suitesWi
   + ` · credited: alpha=${credited("alpha.test.mjs")} beta=${credited("beta.test.mjs")}`
   + ` delta=${credited("delta.test.mjs")} gamma=${credited("gamma.test.mjs")}`);
 
+if (measured) {
 /* (A1) OVER-STRICTNESS ANCHOR, and it is `delta` rather than `alpha` on purpose.
    `delta` is credited by the SAME-NAME PATH ALONE — its sibling driver names no
    suite in code — so this arm fails the moment that path stops working, which
@@ -219,6 +228,8 @@ t("(A7) every fixture driver appears in the census by name",
 t("(A8) the census PRINTS the limit — that it establishes a driver EXISTS and cannot "
 + "establish that it RAN",
   /cannot establish that it RAN/i.test(out) && /reference is not an execution/i.test(out), true);
+
+} /* end of measured (M0-107) */
 
 console.log(`\nm051-driver-census: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

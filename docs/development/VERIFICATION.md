@@ -36,10 +36,7 @@ The rest of the 2026-07-31 table is archived; this row stays (pinned by `registe
 - **The control-plane figure is an upper bound.** Act on the exact buckets: unreached, and DO-only.
 - **An unnamed check is not an unrun check** (`conformance.test.mjs` runs them all): no assertion proves it
   FIRES on a violation (S-7).
-
-## Three defects the instruments found on first run
-
-**Correct a wrong fixture; never relax the assertion.**
+- **Correct a wrong fixture; never relax the assertion.**
 
 ## The battery runs every suite, and reports all of them
 
@@ -265,31 +262,15 @@ two disagreeing readings may both be true of different places (`strandedwork.tes
 
 The unit is the WORKTREE, not the branch: no push closes the third window.
 
-### What is exempt, and how that was wrong twice
+### Its rules, and what it cannot see
 
-A truly idle worktree (nothing past `origin/main` AND no working-tree change, both re-read every run) is
-never named. Never exempt on the tip or cache a verdict. MODIFIED and UNTRACKED are counted separately
-and printed: report the shape and let the reader judge scratch versus work.
-
-### The population, not the spelling
-
-Enumerate by what a thing IS (`git worktree list --porcelain`, plus local branches with no worktree), never
-by a naming glob, which passes its own control for the population it misses. Read the remote with
-`git ls-remote`; under `--local` the finding says it used a cache. Prune after deleting a remote branch
-(`git fetch --prune`, `kickoffs/CONDUCT.md`).
-
-### The defeat it was designed against arrived twice inside its own construction
-
-**A failed enumeration is a distinct state, never an empty one** (`walkFailed`: *says NOTHING about
-stranded work*). Shell out with `execFileSync` and an argv array. Fixtures encode SHAPES, not a snapshot.
-Each branch of a WARN path states its own precondition and cannot throw — a throw there kills every later
-check.
-
-### What it cannot see, stated rather than left to be found
-
-One clone, one machine, one instant; whether the work matters; a remote other than `origin`; an editor
-buffer or stash entry. Controls: `node bio-plane/test/strandedwork.control.mjs` — no arm touches a ref,
-a worktree or a working tree (a dirtied tree defeats a `plancheck` control).
+A truly idle worktree (nothing past `origin/main`, no working-tree change, both re-read every run) is never
+named; never exempt on the tip or cache a verdict; MODIFIED and UNTRACKED are counted apart. Enumerate by
+what a thing IS (`git worktree list --porcelain`, plus branches with no worktree), never a naming glob; read
+the remote with `git ls-remote` (`--local` says it used a cache); prune after deleting a remote branch.
+**A failed enumeration is a distinct state, never an empty one** (`walkFailed`). A WARN path cannot throw.
+Blind to: other clones, machines and instants; whether the work matters; a remote other than `origin`; an
+editor buffer or stash. Controls: `node bio-plane/test/strandedwork.control.mjs` (no arm touches a ref).
 
 ## What a queue item must satisfy before it is done
 
@@ -310,16 +291,11 @@ An item is done when:
 5. For anything destructive or security-sensitive, CONDUCT re-runs the control itself at integration
    rather than believing the worker's report.
 
-## Where the floor goes next, in order
+## Where the floor goes next, and the fleet blind spot (D-117)
 
-The 2026-07-31 plan is M0 rows in `MILESTONES.md` (its list archived). **A gate set above the current state
-fails on day one and gets switched off, which is worse than no gate.** `node tools/gates.mjs` runs
-`--strict` in the full set (`CLAUDE.md` §6); ask `coverage.mjs` for the figures.
-
-## The fleet blind spot, named before it bites (D-117)
-
-An instrument must enumerate every Worker it claims to cover and land with the first member, not after:
-an instrument that lags its subject reports a floor that describes nothing.
+The plan is M0 rows in `MILESTONES.md`. **A gate set above the current state fails on day one and gets
+switched off, which is worse than no gate.** An instrument enumerates every Worker it claims to cover and
+lands with the first member: one that lags its subject reports a floor that describes nothing.
 
 ## THE DEC-49 GUARD ASKS WHAT A REFUSAL IS IN PRINCIPLE — 2026-08-08, REC-76 (D-236)
 
@@ -356,6 +332,15 @@ arm 2b fails on a TRACKED or un-ignored copy (the `merge=ours` liar).
 
 A fresh clone is unguarded until a gate runs once in it; `--no-verify` skips the hook. A dirty corpus
 gets a verdict about the TREE and is told so; a ref whose sha is not HEAD is named as unspoken-for.
+
+### AN EXPIRED BUDGET MEASURED NOTHING (BOB #28, 2026-09-22; M0-107)
+
+It reads NOT MEASURED, naming what was not measured: never a finding, never GREEN. `ETIMEDOUT` is its ONLY
+test; a subject dying by its own signal is a finding. RED outranks NOT MEASURED outranks GREEN. A suite
+checks each budget with `bio-plane/test/budget.mjs` (`budgetAssert`, `until`: one pid-tagged marker, one
+failing assertion) and skips what the expiry left unread; the battery reads failures all so marked as NOT
+MEASURED and exits 124. `gates.mjs` records it (exit 124); the push guard never refuses it; it licenses no
+`--since` and meets no GREEN FULL test (M0-106). Every site is swept: `scripts/budgetsweep.mjs`.
 
 ### D-406 — ONE HOOK, EVERY WORKTREE, BUT THE SCRIPT RESOLVED PER-WORKTREE
 

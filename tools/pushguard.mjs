@@ -477,7 +477,11 @@ export function commonDir({ repo = REPO } = {}) {
  *
  * THE KEY IS THE TREE (`<rev>^{tree}`), NEVER THE COMMIT — see "HOW A LIAR PASSES IT" above. */
 export const RECORD_DIR = "bio-gates";
-export const RECORD_VERSION = 1;
+/* M0-107: version 2 records a third verdict, NOT MEASURED, and steps that carry `timedOut` and `unmeasured`.
+   A version-1 reader (an older guard, or the clone-wide copy) files a NOT MEASURED record as UNREADABLE and
+   says UNDETERMINED without refusing: the safe direction, measured by the M0-107 worker. */
+export const RECORD_VERSION = 2;
+export const VERDICTS = ["GREEN", "RED", "NOT MEASURED"];
 export const RECORD_CAP = 2000;
 const RECORD_NAME = /^([0-9a-f]{40}|[0-9a-f]{64})\.(\d{13})\.(\d+)\.json$/;
 
@@ -505,7 +509,7 @@ export function readRuns({ repo = REPO, tree, dir = null } = {}) {
     const file = join(d, n);
     try {
       const r = JSON.parse(readFileSync(file, "utf8"));
-      if (r && r.tree === tree && (r.verdict === "GREEN" || r.verdict === "RED") && Array.isArray(r.steps))
+      if (r && r.tree === tree && VERDICTS.includes(r.verdict) && Array.isArray(r.steps))
         out.runs.push({ ...r, file, stamp: Number(m[2]) });
       else out.unreadable.push(file);
     } catch { out.unreadable.push(file); }
@@ -550,22 +554,39 @@ export function unitCovers(have, want) {
    it covers, and a GREEN FULL run — which re-ran everything the gate knows — closes all.  So a
    flaky suite re-run green clears, and a NARROWER class cannot clear a WIDER failure (a TARGETED
    run over two suites does not answer a battery that failed as a whole). */
+/* M0-107 (BOB #28, 2026-09-22): A STEP WHOSE BUDGET EXPIRED MEASURED NOTHING. It neither opens a RED nor
+   closes one; its units (the suites the battery named, else the step's own) stay UNMEASURED until a later
+   passing step covers them or a GREEN FULL run closes all. RED outranks NOT MEASURED outranks GREEN, so a
+   tree whose only open business is unmeasured reads NOT MEASURED: never refused, never GREEN — it licenses
+   no `--since` and meets no GREEN FULL test (M0-106). */
 export function effectiveVerdict(runs) {
-  if (!runs || !runs.length) return { verdict: null, open: [], redRuns: [], last: null };
+  if (!runs || !runs.length) return { verdict: null, open: [], unmeasured: [], redRuns: [], last: null };
   const open = new Map();
+  const unmeasured = new Map();
   for (const r of runs) {
-    if (r.verdict === "GREEN" && r.class === "FULL") { open.clear(); continue; }
-    let failed = 0;
+    if (r.verdict === "GREEN" && r.class === "FULL") { open.clear(); unmeasured.clear(); continue; }
+    let failed = 0, timedOut = 0;
     for (const s of r.steps || []) {
       const units = Array.isArray(s.units) && s.units.length ? s.units : [`step:${s.label}`];
-      if (s.ok) { for (const u of [...open.keys()]) if (units.some((h) => unitCovers(h, u))) open.delete(u); }
+      if (s.timedOut) {
+        timedOut++;
+        const um = Array.isArray(s.unmeasured) && s.unmeasured.length ? s.unmeasured : units;
+        for (const u of um) unmeasured.set(u, r);
+        continue;
+      }
+      if (s.ok) {
+        for (const u of [...open.keys()]) if (units.some((h) => unitCovers(h, u))) open.delete(u);
+        for (const u of [...unmeasured.keys()]) if (units.some((h) => unitCovers(h, u))) unmeasured.delete(u);
+      }
       else { failed++; for (const u of units) open.set(u, r); }
     }
     /* A RED naming no failing step is a verdict with no cause attached; only a GREEN FULL run
-       answers it. */
+       answers it. A NOT MEASURED naming no timed-out step is the same shape one rank down. */
     if (r.verdict === "RED" && !failed) open.set(`run:${r.stamp}`, r);
+    if (r.verdict === "NOT MEASURED" && !timedOut) unmeasured.set(`run:${r.stamp}`, r);
   }
-  return { verdict: open.size ? "RED" : "GREEN", open: [...open.keys()],
+  return { verdict: open.size ? "RED" : unmeasured.size ? "NOT MEASURED" : "GREEN", open: [...open.keys()],
+           unmeasured: [...unmeasured.keys()],
            redRuns: [...new Set(open.values())], last: runs[runs.length - 1] };
 }
 
@@ -584,7 +605,7 @@ export function pushedRefs(stdin) {
    a push offering none publishes nothing to refuse. */
 export function gateVerdictCheck({ repo = REPO, stdin = "" } = {}) {
   const dir = recordDir({ repo });
-  const red = [], green = [], unreadable = [];
+  const red = [], green = [], notMeasured = [], unreadable = [];
   for (const r of pushedRefs(stdin)) {
     const tree = treeOf(r.localSha, { repo });
     if (!tree) continue;
@@ -593,8 +614,10 @@ export function gateVerdictCheck({ repo = REPO, stdin = "" } = {}) {
     const eff = effectiveVerdict(got.runs);
     if (eff.verdict === "RED") red.push({ ...r, tree, eff });
     else if (eff.verdict === "GREEN") green.push({ ...r, tree, eff });
+    /* M0-107: NOT MEASURED is SAID and never refused — the gate measured nothing there to refuse on. */
+    else if (eff.verdict === "NOT MEASURED") notMeasured.push({ ...r, tree, eff });
   }
-  return { ok: red.length === 0, red, green, unreadable, dir };
+  return { ok: red.length === 0, red, green, notMeasured, unreadable, dir };
 }
 
 /* ------------------------------------------------------------------ installCopy — D-406
@@ -842,6 +865,11 @@ function run(stdin) {
      UNDETERMINED, in those words. */
   for (const g of gv.green)
     notes.push(`gate verdict GREEN recorded for ${g.localRef}'s tree ${g.tree.slice(0, 8)} (class ${g.eff.last.class || "?"})`);
+  /* M0-107: never refused and never GREEN, in those words. */
+  for (const g of gv.notMeasured || [])
+    notes.push(`gate verdict NOT MEASURED recorded for ${g.localRef}'s tree ${g.tree.slice(0, 8)} — a budget EXPIRED`
+             + ` (M0-107), so ${g.eff.unmeasured.slice(0, 4).join(", ")}${g.eff.unmeasured.length > 4 ? ` (+${g.eff.unmeasured.length - 4} more)` : ""}`
+             + " measured nothing; not refused, and NOT GREEN: it licenses no --since");
   if (gv.unreadable.length)
     notes.push(`${gv.unreadable.length} gate record file(s) UNREADABLE, so the gate verdict is UNDETERMINED for this push: `
              + gv.unreadable.slice(0, 3).join(", "));
@@ -932,6 +960,23 @@ function control() {
                         runOf("RED", "TARGETED", [step("plancheck --local", ["plancheck"], false)], 2)]).verdict === "RED",
       "a RED after a GREEN is RED — the latest failure is not forgiven by an earlier pass");
   arm(effectiveVerdict([runOf("RED", "FULL", [], 1)]).verdict === "RED", "a RED naming no failing step is still RED");
+  /* M0-107 (BOB #28): an expired budget measured nothing. RED outranks NOT MEASURED outranks GREEN. */
+  const expiredStep = (units, unmeasured) => ({ label: "battery (all)", units, ok: false, timedOut: true, unmeasured });
+  const nm = effectiveVerdict([runOf("NOT MEASURED", "FULL",
+    [expiredStep(["plane:*", "fleet:*"], ["plane:a.test.mjs"]), step("plancheck --local", ["plancheck"], true)], 1)]);
+  arm(nm.verdict === "NOT MEASURED" && nm.open.length === 0 && nm.unmeasured.join() === "plane:a.test.mjs",
+      "a run whose only failure is an EXPIRED budget reads NOT MEASURED, opens no RED, and names the unit");
+  arm(effectiveVerdict([runOf("NOT MEASURED", "FULL", [expiredStep(["plane:*"], ["plane:a.test.mjs"])], 1),
+                        runOf("RED", "TARGETED", [step("battery", ["plane:b.test.mjs"], false)], 2)]).verdict === "RED",
+      "RED outranks NOT MEASURED");
+  arm(effectiveVerdict([runOf("NOT MEASURED", "FULL", [expiredStep(["plane:*"], ["plane:a.test.mjs"])], 1),
+                        runOf("GREEN", "TARGETED", [step("battery", ["plane:a.test.mjs"], true)], 2)]).verdict === "GREEN",
+      "an unmeasured suite re-run GREEN on the same tree is measured");
+  arm(effectiveVerdict([runOf("GREEN", "TARGETED", [step("battery", ["plane:b.test.mjs"], true)], 1),
+                        runOf("NOT MEASURED", "TARGETED", [expiredStep(["plane:a.test.mjs"], [])], 2)]).verdict === "NOT MEASURED",
+      "NOT MEASURED outranks GREEN — an unmeasured unit is never read as green");
+  arm(effectiveVerdict([runOf("NOT MEASURED", "FULL", [], 1)]).verdict === "NOT MEASURED",
+      "a NOT MEASURED naming no timed-out step is still NOT MEASURED");
   arm(unitCovers("ui:*", "uicheck:check-semantics.mjs") && unitCovers("plane:*", "plane:x.test.mjs")
       && !unitCovers("plane:x.test.mjs", "plane:*"), "wildcards cover their members and never the reverse");
   arm(pushedRefs(`refs/heads/x ${"0".repeat(40)} refs/heads/x ${"b".repeat(40)}\nrefs/heads/y ${"c".repeat(40)} refs/heads/y ${"0".repeat(40)}`).length === 1,

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 13 arms plus a baseline — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 15 arms plus a baseline (G14, G15 added by M0-107) — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -53,6 +53,12 @@
  *   G13 the other side's prose read UNBOUNDED by   -> "...and NOT a suite that only CITES the moved
  *       DOCS in a `--since` pairing                   note" FAILS. MUST NOT: the doc-facing reader
  *                                                     still re-runs; disjoint docs still plancheck.
+ *   G14 an EXPIRED BUDGET recorded GREEN (M0-107)  -> "a timeouts-only run writes NO RED record: it
+ *                                                     records NOT MEASURED" FAILS. MUST NOT: a bare
+ *                                                     124 still RED; a RED still refuses.
+ *   G15 ANY exit 124 taken as an expired budget    -> "a battery exiting 124 WITHOUT a verdict file
+ *       (M0-107)                                      … is RED" FAILS. MUST NOT: a NOT MEASURED tree
+ *                                                     still pushes; a RED still refuses.
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -234,11 +240,28 @@ const ARMS = [
 
   { id: "G10", title: "the LAST run's verdict wins — a narrower GREEN clears a wider RED",
     patches: [{ file: GUARD,
-      from: "  return { verdict: open.size ? \"RED\" : \"GREEN\", open: [...open.keys()],",
+      /* CORRECTED 2026-09-22 by M0-107, not exempted: the anchor moved when the rule gained its third verdict
+         (RED outranks NOT MEASURED outranks GREEN); the arm is the same — the LAST run's verdict wins. */
+      from: "  return { verdict: open.size ? \"RED\" : unmeasured.size ? \"NOT MEASURED\" : \"GREEN\", open: [...open.keys()],",
       to: "  return { verdict: runs[runs.length - 1].verdict, open: [...open.keys()]," }],
     mustBreak: "a NARROWER GREEN does not clear a WIDER RED",
     alsoBreak: ["the guard's own in-process control passes"],
     mustNotBreak: ["a GREEN re-run of what failed, on the same tree, CLEARS it", "a RED gate then a push of that tree is REFUSED"] },
+
+  /* M0-107 (BOB #28): the two liars for an expired budget. */
+  { id: "G14", title: "an expired budget recorded GREEN — the unmeasured tree reads measured",
+    patches: [{ file: GATES,
+      from: "const VERDICT = red ? \"RED\" : notMeasured ? \"NOT MEASURED\" : \"GREEN\";",
+      to: "const VERDICT = red ? \"RED\" : \"GREEN\";" }],
+    mustBreak: "a timeouts-only run writes NO RED record: it records NOT MEASURED",
+    mustNotBreak: ["a battery exiting 124 WITHOUT a verdict file naming a timeout is RED", "a RED gate then a push of that tree is REFUSED"] },
+
+  { id: "G15", title: "ANY exit 124 taken as an expired budget — a tool dying with 124 launders a failure",
+    patches: [{ file: GATES,
+      from: "  const timedOut = r.status === 124 && unmeasured.length > 0;",
+      to: "  const timedOut = r.status === 124;" }],
+    mustBreak: "a battery exiting 124 WITHOUT a verdict file naming a timeout is RED",
+    mustNotBreak: ["a NOT MEASURED tree is NOT refused by the push guard", "a RED gate then a push of that tree is REFUSED"] },
 ];
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */

@@ -32,6 +32,10 @@
  * reports a beautiful 100% over an empty corpus — the failure mode M0-14's
  * register floor exists to catch and M0-15's own harness fell into.
  *
+ * M0-107 (2026-09-22): this suite's budget sites each carry `budgetAssert` (`test/budget.mjs`), and the arm
+ * that would read an expired result is SKIPPED. The shape is controlled ONCE, at owed-controls' A13 site
+ * (`test/m0107-budget.control.mjs` arm B1, RUN 2026-09-22); it was NOT armed at this suite's own sites, so for
+ * them it is DECLARED-ONLY. `budget-sweep.test.mjs` fails by name if any of them loses its check.
  * NEGATIVE CONTROL: FOUR ARMS, each armed ALONE with the others held open, in
  * `test/battery-residue.control.mjs` (deliberately not a `.test.mjs`: it edits
  * real sources, so the battery must not discover it). Every restore verified by
@@ -126,6 +130,10 @@ const REAL_RUNNER = join(DIR, "..", "scripts", "battery.mjs");
    the report would agree with itself and prove nothing about what actually runs
    — M0-15's reason for copying the runner, one module further out. */
 const REAL_MODULES = ["provenance.mjs", "residue.mjs"];
+/* M0-107: an expired budget MEASURED NOTHING — one named budget assertion per spawn, and the arm that would
+   read the expired result is SKIPPED, so the battery reads this suite NOT MEASURED, never RED. */
+import { budgetAssert } from "./budget.mjs";
+const LSOF_BUDGET_MS = 10_000, RUN_BUDGET_MS = 120_000;
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -134,8 +142,11 @@ const t = (name, got, want) => {
   if (!ok) console.log(`FAIL: ${name}\n  got:  ${JSON.stringify(got)}\n  want: ${JSON.stringify(want)}`);
 };
 
-const LSOF = spawnSync("lsof", ["-v"], { encoding: "utf8", timeout: 10_000 });
-const HAVE_LSOF = !LSOF.error;
+const LSOF = spawnSync("lsof", ["-v"], { encoding: "utf8", timeout: LSOF_BUDGET_MS });
+/* M0-107: an EXPIRED probe is not an ABSENT tool — it would have skipped the HELD arms on a false reason. */
+const LSOF_MEASURED = budgetAssert(t, "lsof-budget: the `lsof -v` probe", LSOF, LSOF_BUDGET_MS,
+  "whether lsof is present, so every HELD-arm assertion that depends on it");
+const HAVE_LSOF = LSOF_MEASURED && !LSOF.error;
 
 /* A suite the scratch battery runs in milliseconds. `body` runs before the tail
    line the runner parses, which is a suite's only contract with it. */
@@ -207,7 +218,7 @@ const drive = ({ suites = {}, plant = {}, unreadableRoot = false, noLsof = false
      would blame this run for another process's files. It is `node`, so it is
      inside the `-c node` scope the HELD arm samples: the arm SEES it and must
      still decline to claim it. */
-  let holder = null;
+  let holder = null, holderMeasured = true;
   if (foreignHold) {
     const target = join(shared, foreignHold);
     const ready = join(base, "holder-ready");
@@ -215,15 +226,25 @@ const drive = ({ suites = {}, plant = {}, unreadableRoot = false, noLsof = false
       `const fs=require("fs");fs.openSync(${JSON.stringify(target)},"r");`
       + `fs.writeFileSync(${JSON.stringify(ready)},"1");setTimeout(()=>{},120000);`],
       { stdio: "ignore" });
-    if (!waitFor(ready, 10_000)) console.log("battery-residue: (j) holder never signalled ready");
+    /* M0-107: this wait is a BUDGET too. Until this item an expiry was a console line and the arm ran on
+       over a holder that might hold nothing — a pass nobody measured. Now it is the arm's own NOT MEASURED. LIMIT, stated: this wait is synchronous
+       and cannot see the holder EXIT, so a holder that died before signalling also reads as expired here —
+       it is this suite's own fixture, not the subject, and the line names the holder either way. */
+    const HOLDER_BUDGET_MS = 10_000;
+    const ready_ = waitFor(ready, HOLDER_BUDGET_MS);
+    holderMeasured = budgetAssert(t, "holder-budget: (j) the foreign holder signalling ready",
+      ready_ ? {} : { error: { code: "ETIMEDOUT" } }, HOLDER_BUDGET_MS, "arm (j), whether a foreign holder is claimed");
   }
   const r = spawnSync(process.execPath, ["scripts/battery.mjs"],
-    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: 120_000, env });
+    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: RUN_BUDGET_MS, env });
   if (holder) { try { holder.kill("SIGKILL"); } catch { /* gone already */ } }
   if (unreadableRoot) { try { chmodSync(shared, 0o700); } catch { /* best effort */ } }
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   rmSync(base, { recursive: true, force: true });
-  return { out, code: r.status, shared };
+  /* M0-107: `measured` false means this scratch battery's budget EXPIRED; the arm reading it is skipped. */
+  const measured = budgetAssert(t, `run-budget: scratch estate ${corpus}`, r, RUN_BUDGET_MS,
+    `the arm that drove scratch estate ${corpus}`);
+  return { out, code: r.status, shared, measured: measured && holderMeasured };
 };
 
 const namesBlock = (out) => /NAMED — the fenced figure above/.test(out);
@@ -239,7 +260,8 @@ const outsideLine = (out) => (out.match(/^outside the fence: .*$/m) || [""])[0];
 
 /* ---- (a) OVER-STRICTNESS: a clean shared root ---------------------------- */
 {
-  const { out, code } = drive({ suites: { "clean.test.mjs": suiteSrc(4) } });
+  const { out, code, measured } = drive({ suites: { "clean.test.mjs": suiteSrc(4) } });
+  if (measured) {
   t("(a) a clean shared root leaves the run green", code, 0);
   t("(a) the report FIRES ANYWAY — it says it looked, and where",
     /^outside the fence: 1 shared temp root\(s\) walked to depth \d+/m.test(out), true);
@@ -250,14 +272,16 @@ const outsideLine = (out) => (out.match(/^outside the fence: .*$/m) || [""])[0];
     /^ {2}HELD arm: \d+ lsof sample\(s\) covering \d+ of \d+ suite\(s\)/m.test(out), true);
   t("(a) and says so in words rather than by silence",
     /nothing outside the fence grew or arrived while this run ran/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (b) THE ARM THIS ITEM EXISTS FOR: a standing ground, green run ------- */
 {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     suites: { "clean.test.mjs": suiteSrc(4) },
     plant: { "mfp/do/-Store/metadata.sqlite": PAYLOAD, "mfp/r2/miniflare-R2BucketObject/x.sqlite": PAYLOAD },
   });
+  if (measured) {
   t("(b) a green run with residue outside the fence is STILL GREEN — the case that happened", code, 0);
   t("(b) the standing ground is NAMED", names(out, "mfp"), true);
   t("(b) it is recognised as workerd persistence", /workerd persistence/.test(out), true);
@@ -266,23 +290,26 @@ const outsideLine = (out) => (out.match(/^outside the fence: .*$/m) || [""])[0];
   t("(b) the fenced figure is explicitly scoped to $TMPDIR beside it",
     /statement about \$TMPDIR ONLY/.test(out), true);
   t("(b) its size is printed, not just its name", /mfp\s+0\.1 MB · 2 file\(s\)/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (c) a suite that writes outside the fence during the run ------------- */
 {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     suites: {
       "leaky.test.mjs": suiteSrc(7,
         `mkdirSync(join(OUTSIDE, "leaked"), { recursive: true });\n`
         + `writeFileSync(join(OUTSIDE, "leaked", "blob.bin"), "${PAYLOAD}");\n`),
     },
   });
+  if (measured) {
   t("(c) writing outside the fence does not fail the run — it is REPORTED", code, 0);
   t("(c) the arrival is NAMED", names(out, "leaked"), true);
   t("(c) and stated as APPEARED while this run ran", /APPEARED while this run ran/.test(out), true);
   t("(c) the suite it appeared under is named beside it", /suite: leaky\.test\.mjs/.test(out), true);
   t("(c) it is called a CANDIDATE and not an attribution",
     /APPEARED and CHANGED are\n\s+CANDIDATES ONLY/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (d) HELD: the only conclusive attribution ---------------------------- */
@@ -290,7 +317,7 @@ if (!HAVE_LSOF) {
   console.log("battery-residue: (d) SKIPPED — `lsof` is not available on this machine, so the HELD arm"
     + " cannot be driven. It is NOT asserted here rather than being asserted vacuously.");
 } else {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     suites: {
       "holder.test.mjs": suiteSrc(3,
         `mkdirSync(join(OUTSIDE, "held"), { recursive: true });\n`
@@ -299,16 +326,18 @@ if (!HAVE_LSOF) {
         + `const HOLD_MS = 1600;\n`),
     },
   });
+  if (measured) {
   t("(d) holding a path outside the fence does not fail the run", code, 0);
   t("(d) it is attributed to THIS RUN by a pid chain", heldRow(out), true);
   t("(d) with the pid printed", /HELD BY THIS RUN.*pid \d+/.test(out), true);
   t("(d) and the suite named", /HELD BY THIS RUN · suite: holder\.test\.mjs/.test(out), true);
   t("(d) the headline counts it", /· 1 HELD by this run/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (e) THE STATED BLIND SPOT, PINNED --------------------------------- */
 {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     suites: {
       "tidy.test.mjs": suiteSrc(2,
         `mkdirSync(join(OUTSIDE, "transient"), { recursive: true });\n`
@@ -316,11 +345,13 @@ if (!HAVE_LSOF) {
         + `rmSync(join(OUTSIDE, "transient"), { recursive: true, force: true });\n`),
     },
   });
+  if (measured) {
   t("(e) a suite that writes outside the fence and CLEANS UP leaves the run green", code, 0);
   t("(e) and leaves NOTHING named — residue is what is LEFT, and residue.mjs says so",
     names(out, "transient"), false);
   t("(e) the headline still reports a reach rather than going silent",
     /walked to depth \d+ · \d+ top-level/.test(outsideLine(out)), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (f) a root that cannot be read -> UNVERIFIED, never clean ------------ */
@@ -355,7 +386,8 @@ if (!HAVE_LSOF) {
      The delta is exactly one assertion, which is what says this is a condition
      statement and not an exemption — and it also establishes that residue.mjs
      itself is sound here, which the root run alone could not say either way. */
-  const { out } = drive({ suites: { "clean.test.mjs": suiteSrc(4) }, unreadableRoot: true });
+  const { out, measured } = drive({ suites: { "clean.test.mjs": suiteSrc(4) }, unreadableRoot: true });
+  if (measured) {
   const asRoot = typeof process.getuid === "function" && process.getuid() === 0;
   if (asRoot)
     t("(f) (running as root: a 0o000 root is still readable, so this arm cannot arm — stated rather than counted as a pass)", true, true);
@@ -363,37 +395,44 @@ if (!HAVE_LSOF) {
     t("(f) an unreadable root is reported UNVERIFIED", /UNVERIFIED for 1 root\(s\) that could not be read/.test(out), true);
     t("(f) and the figures are called a FLOOR, not a total", /the figures above are a FLOOR/.test(out), true);
   }
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (g) OVER-STRICTNESS: temp files INSIDE the fence say nothing --------- */
 {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     suites: {
       "inside.test.mjs": suiteSrc(9,
         `mkdirSync(join(tmpdir(), "miniflare-abc123"), { recursive: true });\n`
         + `writeFileSync(join(tmpdir(), "miniflare-abc123", "blob.bin"), "${PAYLOAD}");\n`),
     },
   });
+  if (measured) {
   t("(g) a suite minting temp files inside the fence produces no outside finding", namesBlock(out), false);
   t("(g) and the fenced accounting still sees them — the two halves are independent claims",
     /this run left 1 directory holding 1 miniflare sandbox INSIDE \$TMPDIR/.test(out), true);
   t("(g) which fails the run, exactly as D-186 requires and as it did before", code, 1);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (h) the fenced line says WHAT IT IS MEASURING ------------------------ */
 {
-  const { out } = drive({ suites: { "clean.test.mjs": suiteSrc(4) } });
+  const { out, measured } = drive({ suites: { "clean.test.mjs": suiteSrc(4) } });
+  if (measured) {
   t("(h) the fenced line scopes itself to $TMPDIR in its own words",
     /^temp: this run left .* INSIDE \$TMPDIR /m.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (i) lsof unavailable -> the HELD arm says UNVERIFIED ----------------- */
 {
-  const { out } = drive({ suites: { "clean.test.mjs": suiteSrc(4) }, noLsof: true });
+  const { out, measured } = drive({ suites: { "clean.test.mjs": suiteSrc(4) }, noLsof: true });
+  if (measured) {
   t("(i) with no lsof, the HELD arm reports UNVERIFIED",
     /UNVERIFIED for the HELD arm/.test(out), true);
   t("(i) and says plainly that is a different claim from 'this run held nothing'",
     /not the same claim as "this run held nothing"/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (j) THE OPPOSITE DEFECT: a FOREIGN process's residue is NOT ours -----
@@ -421,7 +460,7 @@ if (!HAVE_LSOF) {
   console.log("battery-residue: (j) SKIPPED — `lsof` is not available, so the over-attribution arm cannot"
     + " be driven. NOT asserted here rather than asserted vacuously.");
 } else {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     /* THE SUITE MUST OUTLIVE THE FIRST SAMPLE, and that is not a detail: the
        first spelling of this arm used a suite that exited in ~40 ms, so the
        battery's 60 ms `lsof` timer never fired, the HELD arm never sampled, and
@@ -432,6 +471,7 @@ if (!HAVE_LSOF) {
     plant: { "foreignmf/r2/miniflare-R2BucketObject/blob.sqlite": PAYLOAD },
     foreignHold: "foreignmf/r2/miniflare-R2BucketObject/blob.sqlite",
   });
+  if (measured) {
   t("(j) a foreign process's residue leaves the run green", code, 0);
   t("(j) THE ARM ACTUALLY LOOKED — the pid-chain arm sampled and covered the suite",
     /HELD arm: [1-9]\d* lsof sample\(s\) covering 1 of 1 suite\(s\)$/m.test(out), true);
@@ -441,6 +481,7 @@ if (!HAVE_LSOF) {
   t("(j) and the report says on what evidence, rather than leaving an absence to be read",
     /not held by any descendant of this battery in \d+ lsof sample\(s\)/.test(out), true);
   t("(j) the headline counts zero held", /· 0 HELD by this run/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (k) THE RUN'S OWN FENCE IS NOT "OUTSIDE THE FENCE" -------------------
@@ -466,7 +507,7 @@ if (!HAVE_LSOF) {
   console.log("battery-residue: (k) SKIPPED — `lsof` is not available, so the HELD half of this arm"
     + " cannot be driven. NOT asserted here rather than asserted vacuously.");
 } else {
-  const { out, code } = drive({
+  const { out, code, measured } = drive({
     fenceInsideRoot: true,
     suites: {
       /* Mints a sandbox INSIDE the fence, holds it open across a sample, and
@@ -480,6 +521,7 @@ if (!HAVE_LSOF) {
         + `setTimeout(() => rmSync(d, { recursive: true, force: true }), 600);\n`),
     },
   });
+  if (measured) {
   t("(k) correct in-fence behaviour leaves the run green", code, 0);
   t("(k) the pid-chain arm DID sample, so this arm is not passing on an absence",
     /HELD arm: [1-9]\d* lsof sample\(s\) covering 1 of 1 suite\(s\)$/m.test(out), true);
@@ -494,6 +536,7 @@ if (!HAVE_LSOF) {
   t("(k) the run's own fence is not named at all", namesBlock(out), false);
   t("(k) and it is EXCLUDED from the walk rather than merely unreported",
     /· 0 top-level entr/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* THE REACH ARM. Every assertion above is a delta over a scratch estate this

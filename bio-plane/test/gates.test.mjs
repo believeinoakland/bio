@@ -38,6 +38,12 @@
  * dirtying battery step never ran), so that arm now runs `--full`.
  * RE-RUN 2026-09-22 by the M0-99 worker, after the fixture stopped copying `decided.mjs` and regenerating the index
  * before each commit: all thirteen as declared again, driver 96 pass / 0 fail, baseline and closing 62 / 0.
+ * RE-RUN 2026-09-22 by the M0-107 worker with two arms added and G10's anchor corrected for the third verdict:
+ *   (14) an expired budget recorded GREEN -> "a timeouts-only run writes NO RED record: it records NOT MEASURED"
+ *       FAILS (with the gate's NOT MEASURED line); the bare-124 arm and the RED refusal hold;
+ *   (15) ANY exit 124 taken as an expired budget -> "a battery exiting 124 WITHOUT a verdict file naming a
+ *       timeout is RED" FAILS alone; the NOT MEASURED push and the RED refusal hold.
+ * All fifteen as declared, driver 110 pass / 0 fail, baseline and closing 74 / 0.
  *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote
@@ -79,7 +85,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 6;
+const SECTIONS = 7;   /* M0-107: +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -100,6 +106,11 @@ const stub = (name) => [
   `const name = ${JSON.stringify(name)};`,
   `if (process.env.GATES_FIXTURE_LOG) appendFileSync(process.env.GATES_FIXTURE_LOG, name + " " + process.argv.slice(2).join(" ") + "\\n");`,
   `if (name === "battery" && process.env.GATES_FIXTURE_DIRTY) writeFileSync(new URL("../../" + process.env.GATES_FIXTURE_DIRTY, import.meta.url), "dirtied mid-run\\n");`,
+  /* M0-107: the battery stub told GATES_FIXTURE_TIMEOUT=<unit> behaves as a real battery whose only failure was
+     an expired budget: it writes the verdict file the gate hands it and exits 124. GATES_FIXTURE_BARE124 exits
+     124 and writes NOTHING — a 124 the gate must not take on trust. The unit arrives by environment, as above. */
+  `if (name === "battery" && process.env.GATES_FIXTURE_TIMEOUT && process.env.BIO_BATTERY_VERDICT) { writeFileSync(process.env.BIO_BATTERY_VERDICT, JSON.stringify({ v: 1, verdict: "NOT MEASURED", exit: 124, failed: [], notMeasured: [{ unit: process.env.GATES_FIXTURE_TIMEOUT, timeouts: ["a planted expiry"] }] })); process.exit(124); }`,
+  `if (name === "battery" && process.env.GATES_FIXTURE_BARE124) process.exit(124);`,
   `process.exit(String(process.env.GATES_FIXTURE_FAIL || "").split(",").includes(name) ? 1 : 0);`,
   "",
 ].join("\n");
@@ -452,6 +463,71 @@ section("M0-98 · --since — after a rebase, only what BOTH sides touched, plus
     [pl.cls, pl.units.includes("plane:prose.test.mjs")], ["SINCE", true]);
   t("...and NOT a suite that only CITES the moved note in its own prose — the other side's prose is bounded by DOCS",
     [pl.units.includes("plane:cites.test.mjs"), batteryOf(pl)], [false, ["prose.test.mjs"]]);
+}
+
+/* ========================================================================== */
+section("M0-107 · AN EXPIRED BUDGET — recorded NOT MEASURED, never RED, never GREEN");
+{
+  /* HOW A LIAR PASSES THIS, stated first: record an expiry as GREEN (the push goes through and the tree
+     reads measured), or take ANY exit 124 as a timeout (a tool that dies with 124 launders a failure). So
+     the arms assert the record's verdict, the refusal NOT happening, `--since` refusing to narrow, and a
+     bare 124 with no verdict file read as RED. */
+  branch(F.root, "nm");
+  appendFileSync(join(F.root, "tools/widget.mjs"), "// a change whose battery runs out of time\n");
+  commitAll(F.root, "nm: a change measured under load");
+  const tree = treeAt(F.root);
+  const g = gates(F.root, [], { GATES_FIXTURE_TIMEOUT: "plane:widget.test.mjs" });
+  t("a battery step whose only failures were expired budgets makes the gate NOT MEASURED, exit 124",
+    [g.status, /^gates: NOT MEASURED · class TARGETED$/m.test(g.out)], [124, true]);
+  t("...and it NAMES the unmeasured suite", /a budget EXPIRED in 1 suite\(s\): plane:widget\.test\.mjs — NOT MEASURED \(M0-107\)/.test(g.out), true);
+  const runs = runsFor(F.root, tree);
+  const bat = runs[0] && runs[0].steps.find((s) => s.label.startsWith("battery"));
+  t("a timeouts-only run writes NO RED record: it records NOT MEASURED, the step flagged with what it did not measure",
+    [runs.length, runs[0] && runs[0].verdict, runs[0] && runs[0].v, !!(bat && bat.timedOut), bat && bat.unmeasured],
+    [1, "NOT MEASURED", 2, true, ["plane:widget.test.mjs"]]);
+  t("...and the gate SAYS it recorded NOT MEASURED", g.out.includes(`RECORDED NOT MEASURED for tree ${tree.slice(0, 8)}`), true);
+  t("the verdict rule reads the tree NOT MEASURED — not RED, not GREEN", effectiveVerdict(runsFor(F.root, tree)).verdict, "NOT MEASURED");
+
+  const p = push(F.root, "nm");
+  t("a NOT MEASURED tree is NOT refused by the push guard", [p.status, refusedByGate(p)], [0, false]);
+  t("...and the guard SAYS the verdict, never GREEN", [p.err.includes("gate verdict NOT MEASURED recorded"), p.err.includes("gate verdict GREEN")], [true, false]);
+
+  /* --since over the NOT MEASURED tree: nobody measured it, so it licenses no narrowing. */
+  const upstreamDocs = () => {
+    branch(F.root, "main", "origin/main");
+    appendFileSync(join(F.root, "docs/notes/b.md"), "moved while nm was unmeasured\n");
+    commitAll(F.root, "upstream: docs");
+    git(["push", "-q", "origin", "main"], F.root);
+    git(["fetch", "-q", "origin"], F.root);
+  };
+  upstreamDocs();
+  git(["checkout", "-q", "nm"], F.root);
+  git([...ID, "rebase", "-q", "origin/main"], F.root);
+  const s = gates(F.root, ["--since", "--explain"]);
+  t("--since over a NOT MEASURED tree falls back, and says why", [s.out.includes("is recorded NOT MEASURED"), s.cls], [true, "TARGETED"]);
+
+  /* The same tree re-gated with the budget holding: the unmeasured suite is measured, the tree GREEN. */
+  const nmTree = treeAt(F.root);
+  const again = gates(F.root, [], { GATES_FIXTURE_TIMEOUT: "plane:widget.test.mjs" });
+  t("(the rebased tree is gated NOT MEASURED first)", again.status, 124);
+  const green = gates(F.root);
+  t("an unmeasured suite re-run GREEN on the same tree reads GREEN", [green.status, effectiveVerdict(runsFor(F.root, nmTree)).verdict], [0, "GREEN"]);
+
+  /* A 124 the gate must not take on trust: no verdict file, no timeout. */
+  branch(F.root, "bare124");
+  appendFileSync(join(F.root, "tools/widget.mjs"), "// a battery that exits 124 and says nothing\n");
+  commitAll(F.root, "bare124");
+  const bare = gates(F.root, [], { GATES_FIXTURE_BARE124: "1" });
+  t("a battery exiting 124 WITHOUT a verdict file naming a timeout is RED — never NOT MEASURED",
+    [bare.status, effectiveVerdict(runsFor(F.root, treeAt(F.root))).verdict], [1, "RED"]);
+
+  /* RED outranks NOT MEASURED inside one run. */
+  branch(F.root, "nmred");
+  appendFileSync(join(F.root, "tools/widget.mjs"), "// a timeout beside a real failure\n");
+  commitAll(F.root, "nmred");
+  const both = gates(F.root, ["--full"], { GATES_FIXTURE_TIMEOUT: "plane:widget.test.mjs", GATES_FIXTURE_FAIL: "coverage" });
+  t("an expired budget BESIDE a failing gate is RED, exit 1, and the push is refused",
+    [both.status, /^gates: RED · class FULL$/m.test(both.out), refusedByGate(push(F.root, "nmred"))], [1, true, true]);
 }
 
 /* ========================================================================== */

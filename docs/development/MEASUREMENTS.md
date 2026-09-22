@@ -18438,3 +18438,25 @@ move. It changes what a member signs, so it is routed to BOB before SCHEDULER. *
 ratification then does (the probe's own fence check republished A's case in between, so B's ratify read `RATIFY_STALE`, an
 artifact of the probe, not a finding); whether the same stamp moves a finding pinned by the SAME project's other case; live,
 because the network refuses Cloudflare (UNDETERMINED).
+
+## M-101 · 2026-09-22 · M0-107 — what an expired budget looks like, where the gate has one, and what each control arm did
+
+Instrument: `node` v26.10.0 and npm 11.19.1 in the cloud container (4 cores, shared with three other workers); the M0-107
+worker's `bio-plane/scripts/budgetsweep.mjs`, `bio-plane/test/m0107-budget.control.mjs` and `bio-plane/test/gates.control.mjs`.
+
+| question | measured |
+| --- | --- |
+| an expired `spawnSync` budget | `error.code "ETIMEDOUT"`, `signal "SIGTERM"`, `status null`; `execFileSync` throws with the same code |
+| a child that SIGTERMs ITSELF | the same `signal`, NO `error` — so `ETIMEDOUT` is the only test that separates the two (BOB #28) |
+| `npm run` over a script exiting 124 | npm exits 124 — the gate's battery step keeps the code |
+| budget sites in the gate (`budgetsweep.mjs`) | corpus 781 `.mjs`, 430 in the gate (324 suites); 25 sites: 17 CHECKED (six suites), 8 LEDGERED (5 helper closures and one defect in `coverage.mjs`, the helper itself, one hand-checked blocking wait); 53 sites OUTSIDE the gate in 42 files (control drivers, `nc-*`, probes) |
+| the row's control, 1 ms on owed-controls' A13 spawn | the suite `46 pass, 1 fail`, the one failure `A13-budget`, A13/A13b skipped; the battery `NOTM`, exit 124 |
+| `m0107-budget.control.mjs`, 7 arms | 49 pass, 0 fail — every arm as declared (B2 68/11, B3 76/3, B4 76/3, B5 19/1, B6 16/4, B7 17/3) |
+| `gates.control.mjs`, 15 arms (G14, G15 new) | 110 pass, 0 fail; baseline and closing 74/0 |
+
+**WHAT IT SAYS.** Before M0-107 the gate's 13 child-process budgets and two wall-clock deadlines in six suites each read an
+expiry as a finding, and three more budget-shaped waits (battery A with none at all, the holder wait, the `lsof` probe
+reading an expiry as "absent") were invisible to a `timeout:` grep. No load-made timeout was observed in any run this
+worker made on the shared container (every budget assertion passed in every baseline). **Not measured:** a real
+load-made expiry under the full battery (none occurred); whether the 53 outside-the-gate sites' drivers misread an
+expiry (sampled by reading, not driven: `suggest.control.mjs` and `current.control.mjs` catch the thrown error and parse whatever PARTIAL output it carries, so an expiry there reads as a short tally, not as a timeout).

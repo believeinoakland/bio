@@ -31,6 +31,10 @@
  * BSD-absent `xargs` flag, compared two EMPTY files, and reported them
  * byte-identical: the sha256 of the empty string).
  *
+ * M0-107 (2026-09-22): this suite's budget sites each carry `budgetAssert` (`test/budget.mjs`), and the arm
+ * that would read an expired result is SKIPPED. The shape is controlled ONCE, at owed-controls' A13 site
+ * (`test/m0107-budget.control.mjs` arm B1, RUN 2026-09-22); it was NOT armed at this suite's own sites, so for
+ * them it is DECLARED-ONLY. `budget-sweep.test.mjs` fails by name if any of them loses its check.
  * NEGATIVE CONTROL: (0) neuter the guard — delete the `off.length` early return
  * from `reportProvenance` in scripts/provenance.mjs so nothing is ever named ->
  * arms (b) (c) (d) (e) FAIL as a DELTA with the corpus PRINTED, while (a) (f) (g)
@@ -76,6 +80,10 @@ import { CONTROL_MARKER } from "../scripts/control-register.mjs";
 /* D-265: the copy list, derived from `coverage.mjs`'s own imports rather than kept
    by hand in two places. The header below records why. */
 import { instrumentDeps } from "./instrument-deps.mjs";
+/* M0-107: an expired budget MEASURED NOTHING — one named budget assertion per spawn, and the arm that would
+   read the expired result is SKIPPED, so the battery reads this suite NOT MEASURED, never RED. */
+import { budgetAssert } from "./budget.mjs";
+const RUN_BUDGET_MS = 60_000;
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SCRIPTS = join(DIR, "..", "scripts");
@@ -159,10 +167,13 @@ const drive = ({ commit = {}, stage = {}, leave = {}, ignore = [], dropGit = fal
   if (dropGit) rmSync(join(repo, ".git"), { recursive: true, force: true });
   const status = dropGit ? null : g("status", "--porcelain").stdout;
   const r = spawnSync(process.execPath, ["scripts/coverage.mjs"],
-    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: 60_000 });
+    { cwd: join(repo, "bio-plane"), encoding: "utf8", timeout: RUN_BUDGET_MS });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   rmSync(repo, { recursive: true, force: true });
-  return { out, code: r.status, status };
+  /* M0-107: `measured` false means this scratch run's budget EXPIRED; the arm reading it is skipped. */
+  const measured = budgetAssert(t, `run-budget: scratch estate ${corpus}`, r, RUN_BUDGET_MS,
+    `the arm that drove scratch estate ${corpus}`);
+  return { out, code: r.status, status , measured };
 };
 
 const namesBlock = (out) => /NOT IN ANY COMMIT/.test(out);
@@ -186,7 +197,7 @@ const BASE = {
 
 /* ---- (a) OVER-STRICTNESS: honest work passes in silence ------------------- */
 {
-  const { out } = drive({
+  const { out, measured } = drive({
     commit: { ...BASE },
     leave: {
       "bio-plane/test/scratch-notes.md": "not a suite\n",
@@ -194,6 +205,7 @@ const BASE = {
       "m016-harness/arm.mjs": "// a worker's own control harness\n",
     },
   });
+  if (measured) {
   t("(a) a committed tree prints no NOT-IN-ANY-COMMIT block", namesBlock(out), false);
   t("(a) it still states the provenance question was ASKED and answered",
     /provenance: \d+ of \d+ discovered item\(s\) are in the commit at HEAD/.test(out), true);
@@ -203,15 +215,17 @@ const BASE = {
     [/scratch-notes/.test(out), /m016-harness/.test(out)], [false, false]);
   t("(a) and no floor is described as contaminated",
     /MOVE THE FLOOR TO THE REPRODUCIBLE FIGURES/.test(out), false);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (b) THE ARM THIS ITEM EXISTS FOR: a phantom SUITE inflates the register */
 {
   const clean = drive({ commit: { ...BASE } });
-  const { out } = drive({
+  const { out, measured } = drive({
     commit: { ...BASE },
     leave: { "bio-plane/test/phantom.test.mjs": suiteSrc(9) },
   });
+  if (measured) {
   t("(b) the run NAMES the phantom suite", names(out, "bio-plane/test/phantom.test.mjs"), true);
   t("(b) and calls it UNTRACKED", /phantom\.test\.mjs\s+\(UNTRACKED\)/.test(out), true);
   t("(b) the CONTAMINATED and REPRODUCIBLE register arms are BOTH printed, and they differ",
@@ -221,12 +235,13 @@ const BASE = {
   t("(b) and the reader is told, in the floor block, which figure to move a floor to",
     /MOVE THE FLOOR TO THE REPRODUCIBLE FIGURES AND NEVER TO THESE/.test(out), true);
   t("(b) the committed suite is still not named", names(out, "bio-plane/test/tracked.test.mjs"), false);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (c) THE LARGER HOLE: an untracked MANIFEST enrols a whole directory --- */
 {
   const clean = drive({ commit: { ...BASE } });
-  const { out } = drive({
+  const { out, measured } = drive({
     commit: { ...BASE },
     leave: {
       "ghost-worker/fleet-member.json": JSON.stringify({ name: "ghost-worker" }),
@@ -234,6 +249,7 @@ const BASE = {
       "ghost-worker/test/ghost.test.mjs": memberSuiteSrc,
     },
   });
+  if (measured) {
   t("(c) the untracked manifest is named", names(out, "ghost-worker/fleet-member.json"), true);
   t("(c) and identified as a MANIFEST, not as a suite",
     /fleet-member\.json.*ghost-worker's fleet manifest/.test(out), true);
@@ -241,15 +257,17 @@ const BASE = {
     names(out, "ghost-worker/test/ghost.test.mjs"), true);
   t("(c) the manifest really did enrol a whole directory — the fleet count ROSE",
     [fleetCount(clean.out), fleetCount(out)], [1, 2]);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (d) IGNORED, NOT UNTRACKED — the arm that proves `ls-tree` was used --- */
 {
-  const { out, status } = drive({
+  const { out, status, measured } = drive({
     commit: { ...BASE },
     ignore: ["phantom.test.mjs"],
     leave: { "bio-plane/test/phantom.test.mjs": suiteSrc(9) },
   });
+  if (measured) {
   t("(d) `git status` is EMPTY in this arm — an IGNORED file is invisible to it",
     status.trim(), "");
   t("(d) and the run NAMES the phantom anyway, because it asked the COMMIT",
@@ -259,22 +277,26 @@ const BASE = {
   t("(d) and the register figures are still split", (() => {
     const p = armsPair(out); return p && p[0] === 14 && p[1] === 5;
   })(), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (e) staged but never committed, told apart from an arrival ------------ */
 {
-  const { out } = drive({
+  const { out, measured } = drive({
     commit: { ...BASE },
     stage: { "bio-plane/test/mine.test.mjs": suiteSrc(2) },
   });
+  if (measured) {
   t("(e) a staged-but-uncommitted suite is named", names(out, "bio-plane/test/mine.test.mjs"), true);
   t("(e) and is distinguished from an arrival, not lumped with it",
     /mine\.test\.mjs\s+\(staged, not yet committed\)/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (f) git cannot answer -> UNVERIFIED, never clean ---------------------- */
 {
-  const { out } = drive({ commit: { ...BASE }, dropGit: true });
+  const { out, measured } = drive({ commit: { ...BASE }, dropGit: true });
+  if (measured) {
   t("(f) with no git to ask, the run says UNVERIFIED", /provenance: UNVERIFIED/.test(out), true);
   t("(f) and does NOT claim everything is in a commit",
     /are in the commit at HEAD/.test(out), false);
@@ -282,19 +304,22 @@ const BASE = {
     /not the same claim as "all in a commit"/.test(out), true);
   t("(f) and the floor block refuses to let a figure be quoted from it",
     /Do not move a floor from them/.test(out), true);
+  } /* end of measured (M0-107) */
 }
 
 /* ---- (g) REACH: the dotfile filter this item added to the fleet walk ------- */
 {
-  const { out } = drive({
+  const { out, measured } = drive({
     commit: {
       ...BASE,
       ".claude/worktrees/other/fleet-member.json": JSON.stringify({ name: "another-checkout" }),
       ".claude/worktrees/other/src/index.mjs": surfaceSrc,
     },
   });
+  if (measured) {
   t("(g) a manifest under a DOT directory is not enrolled — coverage now agrees with the battery",
     [fleetCount(out), /another-checkout/.test(out)], [1, false]);
+  } /* end of measured (M0-107) */
 }
 
 /* THE REACH ARM. Every assertion above is a DELTA over a scratch repository this
