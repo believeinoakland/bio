@@ -22,23 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-22 · BOB #28 · D-442 DESIGNED, OP=CAPTUREREQUEST RULED, AND THE BACKLOG'S OVERFLOW RULED — three placements.**
-
-1. **RECORD (M10), D-442: publishing writes nothing on a member finding.** `BIO_Publication_v0_1.md` §3 rule 12 carries the
-   fix, its accepts-when and its NEGATIVE CONTROL; D-442 keeps its id (door 2). **Place it FIRST of the product
-   corrections**: one project's act silently moves another project's published pins, REC-166's class on the publication
-   path. I3 changes; the integrator mints the IC.
-2. **RECORD (M9): `op=capturerequest` takes rule 1** (`INVESTIGATIVE-SESSION.md` §11 item 5, the paragraph after "Rule 1's
-   target"): the stamp, the sight check and `runPrincipalGate` when a request names a run. **Accepts when** another
-   principal's running run is refused `AI_RUN_NOT_PRINCIPAL`, the caller's own lands, and a request naming no run is
-   unchanged. NEGATIVE CONTROL: drop the gate, and the other-principal arm fails by name. Directly after REC-165, whose
-   fix it reuses: **if REC-165's worker is still open, CONDUCT may brief it in (owed at integration); otherwise a row.**
-3. **M0: the backlog's tail file** (`WORK-PIPELINE.md` §2, "When `BACKLOG.md` is over its budget, the tail moves"): a
-   placement moves whole rows from `BACKLOG.md`'s foot to `BACKLOG-LATER.md`, a refill promotes them back, and every
-   reader reads both as one order. **Accepts when** a placement over budget cuts no row and leaves every id in exactly one
-   file. NEGATIVE CONTROL: point one reader at `BACKLOG.md` alone, and its arm fails by name. `depends-on` M0-110 (a new
-   state file rides to `coord`). **Until built, SCHEDULER raises the budget to 200 KiB in `ledger.mjs` and cuts nothing.**
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
@@ -62,26 +45,6 @@ depends-on: none — D-293's record and M0-98's `--since` are on `main`.
 scope: step 1 becomes: a GREEN FULL record for the tree being released, or `gates.mjs --since <the newest commit whose tree carries one>`, and the whole battery only when neither exists; the version bump's own check stays. DIST writes it; CONDUCT routes the row to DIST and briefs no worker.
 accepts-when: a release from a tree with a GREEN FULL record runs no battery and names the record it relied on; one from an unrecorded tree runs the battery as today.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
-
-### M0-107 · running — **RESUMED 2026-09-22 by CONDUCT #14 (cloud; Agent-tool worktrees measured working), from `origin/main`, briefed with BOB #28's ruling (inbox item 5); CONDUCT #13's worker stood down at Bob's order, report on `origin/conduct13/standdown-reports`. NOT LANDED, CHECKED BY CONTENT on `17c0cab1`: no `bio-plane/test/budget.mjs`, and neither `gates.mjs` nor `battery.mjs` names NOT MEASURED. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **LOAD MAKES A GATE WRONG, NOT ONLY SLOW: a suite whose subprocess or wall-clock budget expires reads the expiry as a FINDING, and since D-293 the false RED is recorded and refuses the push.** DIST #4's 0.71.0 gate read RED on `owed-controls` A13/A13b beside a concurrent battery (M0-103, this row's first site); 57 `timeout:` sites sit in 43 suites and neither `gates.mjs` nor `battery.mjs` names a timeout outcome (re-read on `032d1ce1`). — owner M0.
-order: directly after M0-106, near the head because it CUTS GATE TIME: a load-made RED costs a FULL re-run and blocks a push (Bob's ruling, 2026-09-22, `CLAUDE.md` §2: *The goal is BIO work; process is overhead*); it supersedes M0-103 (moved by SCHEDULER #11 on BOB #25's word, 2026-09-22)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement; the item is carried in BOB #25's drained entry.
-depends-on: none.
-scope: every suite whose subprocess or wall-clock budget can expire reads the expiry as ONE named timeout assertion, never a finding; a run whose only failures are timeouts records NOT MEASURED instead of RED, so the push guard does not refuse on it. First site: M0-103's two `coverage.mjs` spawns in `owed-controls.test.mjs`. **FULL GATE PROFILE**. **BOB #28's timeout ruling** (item 5 of its drained entry, `BOB-INBOX-drained.md`) is written into `VERIFICATION.md` by this landing, and that file stands at 24,569 of 24,576 B on `17c0cab1`: M0-105, the cut that makes room, now heads the backlog behind M0-117 (SCHEDULER #14).
-accepts-when: a sweep names every `timeout:` and budget site with its outcome check; a run killed only by timeouts writes no RED record. How a liar passes it: raising every timeout, which hides a real hang, so an arm plants a hang and asserts it is still named. NEGATIVE CONTROL: a 1 ms budget on one swept site fails its timeout assertion by name and no finding assertion.
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`); supersedes M0-103.
-
-### REC-165 · running — **RESUMED 2026-09-22 by CONDUCT #14 (cloud; Agent-tool worktrees measured working), ON `worktree-agent-a085d980f98329517`, briefed with §11 item 5's *Rule 1's target* (BOB #28); CONDUCT #13's worker stood down at Bob's order, report on `origin/conduct13/standdown-reports`. NOT LANDED, CHECKED BY CONTENT on `17c0cab1`: `runPrincipalGate` has two call sites in `store.mjs`, neither on suggest nor extractpropose. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **A PRODUCTION CAN NAME A RUN ITS CALLER DOES NOT HOLD.** `op=suggest` resolves `run` for existence alone and `op=extractpropose` checks running and mode, never whose run it is (`store.mjs`); `runPrincipalGate` guards only the tick and the close, so a version is read against another member's lens, bar, skill version and principal (traced by BOB #25; re-read 2026-09-21). — owner RECORD.
-order: directly after UI-77, with the corrections to built work: an attribution the record cannot support, in REC-152's fence, CLAUDE.md §2's class; below REC-163 and UI-77, which every installed instance's public page shows, because this needs a signed-in caller holding another run's id (SCHEDULER #10, 2026-09-21)
-milestone: M9
-interface: I3 — two ops refuse what they accepted; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rule 1 (BOB #25, 2026-09-21).
-depends-on: none — REC-152's gate and stamp are built.
-scope: rule 1: REC-152's stamp of the caller's `principal` on both ops, both apply `runPrincipalGate`, and `suggest` refuses a run that is not running, as `extractpropose` already does. **WIDENED 2026-09-22 by BOB #28** (`INVESTIGATIVE-SESSION.md` §11 item 5, *Rule 1's target*): a suggestion lands only inside its run's context (the context itself, or a question a project context confirmed-cites), refused otherwise by a new stated code after the sight and principal checks; NEGATIVE CONTROL: drop that check, and its arm fails by name. CONDUCT briefs the resuming worker (owed at integration).
-accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` on both ops; the caller's closed run is refused on `suggest`; the caller's own running run lands from a session AND from a machine credential that member minted. How a liar passes it: gating one caller kind only, so both arms run. NEGATIVE CONTROL: drop the gate in `suggest`, and the other-principal arm fails by name.
-added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs REC`).
 
 ### M0-110 · running — **RESUMED 2026-09-22 by CONDUCT #14 with BOB #28's §1 rulings; NOT LANDED on `17c0cab1` (no `tools/coord.mjs`, no `coord`). Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE MESSAGE BOARD RIDES ON `main`: A CLAIM, A QUEUE FLIP OR THE REGENERATED RULINGS INDEX IS A COMMIT THAT MOVES `main` FOR EVERY LANE AND VOIDS EVERY OTHER LANE'S GREEN GATE RECORD.** 89 of 112 commits on `main` on 2026-09-22 to ~14:45Z touched `CLAIMS.md`, `QUEUE.md` or `DECIDED.md`; one DOCS landing took six gate runs where one was needed. RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*). — owner M0.
 order: at the head of the plan: it CUTS GATE TIME on every landing, Bob's own test (`CLAUDE.md` §2), item 1 of the ruling's order; both stages runnable since M0-99 landed (SCHEDULER #12, #13 and #14; BOB #26's inbox entry, item 1)
@@ -123,6 +86,26 @@ depends-on: none.
 scope: `scopeOf` creates the live root as the mint does before probing it, a failure to create answering `LEDGER_UNWRITABLE` as the mint's does. **NOT the probe itself** (corrected at the code by SCHEDULER #14: BOB #28's entry says *"the probe creates its root"*, but `mintid.test.mjs`'s next arm asserts that `exclusivityProbe` on a missing directory is a `PROBE_UNWRITABLE` refusal, and that arm stays).
 accepts-when: a clone with no ledger directory passes the live-ledger arm, and the missing-directory arm stays green. NEGATIVE CONTROL: the suite's control (11), the second create's flag `w`, still fails it by name; dropping `scopeOf`'s create fails the live-ledger arm in a clone with no ledger.
 added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 6, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-114 · queued — **A GATE'S VERDICT LIVES IN ONE CLONE'S GIT DIRECTORY, SO NO OTHER SESSION CAN READ IT: a lane re-gates a tree another already gated, and a cloud session starts with no record at all.** RULED by Bob, 2026-09-22 (*"Yes to all 3 recommendations"*): the gates run on GitHub's machines and the verdict is a check on the commit. — owner M0.
+order: beside M0-110 and ahead of M0-111, the design's order (*"Change 3 is independent and starts with its measurement beside change 1"*; change 2 *"is cheapest once change 3 carries its gate"*); it *"waits for the first cloud measurement"* (BOB #27), which BOB #28 recorded (M-99), so runnable (SCHEDULER #13 and #14; BOB #26's inbox entry, item 2)
+milestone: M0
+interface: none.
+design: `docs/development/TREE-SHARING.md` §3 (the gates run on GitHub's machines) as revised by §4, with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — met 2026-09-22 (`kickoffs/NEW-MACHINE.md` §0.1): the first cloud FULL gate, 1,082 s wall, 272/273 suites · 16,575 assertions.
+scope: FIRST the measurement, the FULL battery's wall time and pass count on a GitHub runner, on the Mac and in the cloud (that column is in); every suite needing a secret or the network, named; the monthly minutes at M0-111's cadence. A verdict still lives in one clone and every cloud clone starts with none (BOB #28). Actions' enablement stays UNDETERMINED (0 workflows; `actions/permissions` refused); Bob's acts go to BOB with the figures, only if they favour a runner (§4). Then the workflow, the check, and the push guard reading it. **FULL GATE PROFILE**.
+accepts-when: the three-column measurement is in `MEASUREMENTS.md` before any workflow lands; a `land/*` push gets a check whose verdict the push guard reads, and a red check refuses the push. NEGATIVE CONTROL: break one suite on a branch, and the check reads red at that suite.
+added: 2026-09-22 · SCHEDULER #13 (BOB #26's entry, item 2; `mintid`); unblocked by SCHEDULER #14 (BOB #28's entry, item 1).
+
+### M0-116 · queued — **A LANDING THAT TOUCHES ONLY `MEASUREMENTS.md` RE-RUNS A THIRD OF THE BATTERY.** `gates.mjs --since 81510280` over three docs … (whole text: the cut archive)
+order: directly after M0-111, where BOB #27 placed it (*"after M0-110 and M0-111, which take the ledgers off both sides first"*), ahead of M0-100 because it pays on every measurement landing: it CUTS GATE TIME, Bob's own test (`CLAUDE.md` §2) (SCHEDULER #13, 2026-09-22; BOB #27's defect, its fix named)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects … (whole text: the cut archive)
+depends-on: none.
+accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it (`op-claims.test`, `mintid`'s readers, the ledger suites) and not the 105, both figures in the landing. NEGATIVE … (whole text: the cut archive)
+added: 2026-09-22 · SCHEDULER #13 (BOB #27's defect, verified at the code on `81510280`; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-116» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
