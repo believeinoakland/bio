@@ -17923,3 +17923,25 @@ claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `CLA
 `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the state lines
 of the two DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB blocks); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 M0 (M0-81 — the lane-OCCUPANCY judgement: before a chip is filed, refuse if a live session already holds the lane, by title or by scheduled task)
+
+session: WORKER spawned 2026-09-21 (PDT; 2026-09-22 ~04:05Z) by CONDUCT #11 for M0-81, worktree
+`.claude/worktrees/agent-a95fe61454bcdcdc2`, branch `worktree-agent-a95fe61454bcdcdc2`, from `origin/main` @ `9233748a`.
+authority: `QUEUE.md` `### M0-81 · running` (read on `origin/main` @ `9233748a`); design `VERIFICATION.md` (admitted for M0
+by name), enacting BOB #18's ruling in `kickoffs/BOB.md` "Spawning and retiring lanes"; precedent `tools/retirable.mjs`
+(the JUDGEMENT in the repo where a suite drives it, the ACT in the harness).
+paths, BY SITE:
+  - `tools/occupancy.mjs` (NEW) — the judgement, a pure function over a session listing, and its CLI.
+  - `bio-plane/test/occupancy.test.mjs` (NEW, the one suite) and `bio-plane/test/occupancy.control.mjs` (NEW, its driver).
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` ONLY, moved to the figures this item's own green `--strict` run PRINTS.
+  - `.gitignore` — one pen line, `.m081-harness/`, named for the item like every pen above it.
+  - `docs/development/MEASUREMENTS.md` (appended: the harness listing shapes this judgement reads, measured), `docs/DECIDED.md`
+    (GENERATED, regenerated LAST), and this block with its DELEGATION to BOB.
+**NOT CLAIMED:** `docs/development/kickoffs/BOB.md` (the chip procedure is BOB's: DELEGATED with the one command it should
+run), `tools/retirable.mjs` (IMPORTED, not edited: its `laneOf` and `instanceOf` are reused so the estate reads a lane title
+one way), `docs/development/QUEUE.md`, `docs/development/BACKLOG.md`, `docs/development/VERIFICATION.md`, `bio-plane/src/**`
+(nothing under `src/` is edited, so no bundle rebuild is owed), `newgroup/**`, `release/**` — and the `conduct-8` scheduled
+task, whose definition lives OUTSIDE this repository and is the operator's: named, never changed from here.
+
+**open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
