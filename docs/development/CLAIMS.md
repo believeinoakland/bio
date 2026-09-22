@@ -19137,3 +19137,26 @@ paths, BY SITE:
 `tools/coord.mjs`, `tools/plancheck.mjs`. Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-22 M0 (M0-111 — every lane lands on `main` itself: lanes push `land/<lane>/<topic>`, CONDUCT lands them in one train with one gate, and the push guard refuses a lane's direct push to `main`)
+
+session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-111 (wave 4), worktree `.claude/worktrees/agent-a1898e01f099239b0`,
+branch `worktree-agent-a1898e01f099239b0`, from `origin/main` @ `df9eb9f9` (cloud).
+authority: `QUEUE.md` `### M0-111 · running` (read on `origin/coord` @ `a5ef1c62`); design `TREE-SHARING.md` §2 (with §4's
+note on where the refusal lives), with `VERIFICATION.md` (admitted for M0 by name).
+paths, BY SITE:
+  - `tools/train.mjs` (NEW) — the train: list waiting `land/*`, merge each into one integration branch from `origin/main`,
+    gate once, push `main`, delete the landed refs and report what it could not delete.
+  - `tools/pushguard.mjs` — the `main` REF ARM ONLY: new functions for it and their one call site in `run`; the in-process
+    control's arms for them. The gate-record, coord-only and working-tree arms, and M0-114's check-reading arm, are NOT
+    touched.
+  - `bio-plane/test/train.test.mjs` and `bio-plane/test/train.control.mjs` (NEW); `bio-plane/test/pushguard.test.mjs` and
+    `bio-plane/test/gates.test.mjs` ONLY where a fixture pushes `main` directly (corrected, with the reason, never
+    exempted); `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY and only to printed figures.
+  - `docs/development/kickoffs/CONDUCT.md` (the loop), `WORKER.md`, and the lane kickoffs that tell a lane to push `main`,
+    each within its budget; `docs/development/TREE-SHARING.md` §2 (an "As built" line); `docs/development/VERIFICATION.md`
+    (the guard's limit); `docs/architecture/construct-status.json` if a construct moves; this block.
+**NOT CLAIMED:** `tools/gates.mjs` (M0-116's), `tools/ledger.mjs` (M0-119's), `tools/coord.mjs`, `tools/plancheck.mjs`,
+`docs/development/QUEUE.md` (CONDUCT's). Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
