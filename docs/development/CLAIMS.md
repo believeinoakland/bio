@@ -18451,7 +18451,11 @@ after D-126, D-86 after D-394, D-66 after FW-20; REC-157's DELEGATION PLACED as 
 rows archived (placed, or in fact). Room: every uncut process row at the foot and the arriving D-66 and D-86 cut to their
 fields, each VERBATIM in `QUEUE-cut-2026-09-22.md`. HELD, not placed: the retirable control's declared count (CONDUCT
 #11's route, a process row that pays nothing; draft on `origin/scheduler12/row-drafts`) and the DEBT row M0-97's sweep
-added (process, left in `DEBT.md`).
+added (process, left in `DEBT.md`). Commit 5: THE GATE READ RED on one arm (`ledger.test.mjs`: *the real DEBT.md has rows*, floored at
+`> 100`; tree `635ded3c`, 42/43) once BOB #26's second entry (D-148, D-149) was drained on top, the fold having taken the
+ledger to 99. That drain is HELD, committed on the local branch `scheduler12-held-d148-d149` (`fe7be641`), and the entry
+stays in the inbox; the floor's correction is PLACED as M0-109 in the cache, in M0-100's slot (CONDUCT holds M0-100 for
+M0-99), M0-100 first of the backlog; room by four foot cuts (D-74, UI-75, D-178, D-125).
 
 ## DELEGATION 2026-09-22 SCHEDULER (#12) -> BOB — **THREE ITEMS: the backlog's 150 KiB budget (owed since SCHEDULER #11), whether Bob's *M8-M10* orders the product rows among themselves, and D-278's five determinations (a design routing); the first two provisional and cheap to reverse**
 

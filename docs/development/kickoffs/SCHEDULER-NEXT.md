@@ -8,11 +8,11 @@ re-measure before you rest anything on it. The refresh line is **70%** (`CLAUDE.
 
 ## The plan, as it stands
 
-- **Cache (8):** LED-7 (this lane's own act) · REC-163 (`running`, its worker live) · M0-99 (`running` by CONDUCT #12's flip,
-  landing about now) · M0-100 (CONDUCT holds it until M0-99 lands: the same readers) · M0-106 (DIST's own act, never a
-  worker slot) · M0-107 · REC-166 · REC-165.
+- **Cache (8):** LED-7 (this lane's own act) · M0-99 (CONDUCT #12 is flipping it `running`) · M0-109 (`ledger.test.mjs`'s
+  live-DEBT floor of 100, which reds the gate at the fold's next closure; in M0-100's slot) · REC-163 (`running`) · M0-106
+  (DIST's own act, never a worker slot) · M0-107 · REC-166 · REC-165.
 - **Backlog (111), in the order Bob's ruling of 2026-09-22 set** (`CLAUDE.md` §2: *The goal is BIO work; process is
-  overhead*; `kickoffs/SCHEDULER.md` step 3): REC-167 first (ratify-after-withdraw, REC-157's DELEGATION); UI-77 (waits
+  overhead*; `kickoffs/SCHEDULER.md` step 3): M0-100 first (held by CONDUCT for M0-99), then REC-167 (ratify-after-withdraw, REC-157's DELEGATION); UI-77 (waits
   on REC-163); D-85; the M1-M7 corrections (D-116 … D-60, D-65, D-169, D-171, D-179, CAP-14, D-54); the M8 corrections
   (REC-159 … D-82, D-125); COFF-13, D-52, D-84, D-220, D-182, D-178; then the features, UI-74's accept ceremony first;
   then, BEHIND THE PRODUCT ROWS, M0-104, M0-105 and 24 process rows in their prior order (M0-101, the session-hygiene
@@ -21,7 +21,10 @@ re-measure before you rest anything on it. The refresh line is **70%** (`CLAUDE.
 - **`BACKLOG.md` is 153,134 B of 153,600.** Every process row at the foot is now CUT to its fields, and D-66 and D-86 were
   cut on arrival, so THE NEXT PLACEMENT CUTS PRODUCT ROWS from the foot up. BOB #26 RULED the budget stays (a larger
   read-whole file is the wrong direction); revisit only with an instance of a spawn delayed or misbriefed by a cut row.
-- **DEBT.md: 101 open rows.** BOB INBOX: empty at this landing (BOB #26's entry drained).
+- **DEBT.md: 101 open rows, and NO ROW MAY LEAVE until M0-109 lands** (at 100 the floor reds every gate). **BOB INBOX:
+  ONE ENTRY, HELD** — BOB #26's D-148/D-149 (Bob's rulings; RECORD, M10, after UI-69 beside D-147). Its drain is
+  COMMITTED on the local branch `scheduler12-held-d148-d149` (`fe7be641`, un-pushable while its tree's record is RED):
+  when M0-109 is on `main`, rebase that commit and land it.
 
 ## Owed acts, in order
 
