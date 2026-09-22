@@ -195,18 +195,27 @@ const LF = planFieldAudit(planRows({ repo: REPO }).rows, { milestones: MILESTONE
     + `${LA.open.length} judged; ${LIVE.strays.length} row-shaped heading(s) the grammar cannot read: `
     + (LIVE.strays.map((s) => `${s.heading.slice(4, 40)} (${s.file.split("/").pop()}:${s.line})`).join("; ") || "none"));
   t("both live files were READ (an unreadable ledger is not an empty one)", LIVE.unreadable, []);
-  t("the plan has rows to judge (a totality assertion over an empty corpus proves nothing)", LIVE.rows.length >= 5, true);
+  /* MOVED 2026-09-22 by M0-110 (TREE-SHARING.md §1; BOB #28's ruling 2), NOT DROPPED. The live plan lives on the
+     branch `coord` after the cutover, and a gate record is keyed by `main`'s tree, so an arm here that JUDGED the live
+     rows would judge `coord` with no `main` record settling it. Each judgement is an arm of `coord.mjs`' ledger checks,
+     run by every coord write before its push and by plancheck against the coord view:
+       "the plan has rows to judge" (a size floor, >= 5)            -> LC-row-design's non-vacuity floor
+       "every live row, cache and backlog, names a design"          -> LC-row-design
+       "every live row state is recognised"                         -> LC-row-design
+       "every live milestone is defined and every live interface…"  -> LC-plan-fields
+       "no OPEN row hides under a heading the grammar cannot read"  -> LC-strays
+       §7 "LIVE: every plan item owed lists is a blocked row…"      -> LC-owed-agreement
+     What stays is the AGREEMENT of the readers — every reader sees the rows the lister sees — which no content can
+     turn red, and the planted-fixture arms above and below. */
+  const COORD_SRC = read("tools/coord.mjs");
+  t("every live-row judgement this suite gave up is an arm of coord.mjs' ledger checks (none dropped)",
+    ["LC-row-design", "LC-plan-fields", "LC-strays", "LC-owed-agreement"].filter((id) => !COORD_SRC.includes(`await arm("${id}"`)), []);
   t("the row-design check's rows ARE the lister's rows — same ids, same files, same lines",
     LA.rows.map((r) => `${r.id}@${r.file}:${r.line}`), LIVE.rows.map((r) => `${r.id}@${r.file}:${r.line}`));
   t("§2e's substrate check reads the same rows (the class sweep)",
     (() => { const s = substrateAudit({ repo: REPO }); return s.judged.length + s.unjudged.length; })(),
     LA.open.length);
-  t("every live row, cache and backlog, names a design", LA.findings.map((f) => `${f.id} (${f.file}:${f.line})`), []);
-  t("every live row state is recognised", LA.unknownState.map((r) => `${r.id} · ${r.state} (${r.file})`), []);
-  t("every live milestone is defined and every live interface registered",
-    [...LF.unknownMilestone, ...LF.unregisteredInterface].map((x) => `${x.id} (${x.file}:${x.line})`), []);
-  t("no OPEN row hides under a heading the grammar cannot read (it would be judged by no arm)",
-    LIVE.strays.filter((s) => !s.closed).map((s) => `${s.file}:${s.line}`), []);
+  t("the field audit reads every row the lister reads (agreement, not a verdict)", LF.rowsRead, LIVE.rows.length);
 
   /* THE MECHANISM IS IN THE LOOP: plancheck is RUN and its own report read, because grepping its
      text is satisfied by a comment. Its figures must be the lister's figures. */
@@ -283,11 +292,8 @@ console.log("\n--- 7. owed's blocked rows and mintid's DEC, IC and M floors read
     [["ZZ-50", "ZZ-51", "ZZ-53"], ["ZZ-52-1"]]);
   t("an unreadable BACKLOG is still NAMED by owed (the reader, not the lister, reads the file)",
     owedFor("BOB", { reader: (p) => (p === SOURCES.backlog ? null : (files[p] ?? null)) }).unreadable, [SOURCES.backlog]);
-  const live = owedFor("BOB", { repo: REPO });
-  const blocked = new Set(LIVE.rows.filter((r) => r.state === "blocked").map((r) => `${r.ledger} ${r.id}`));
-  t("LIVE: every plan item owed lists is a blocked row the lister reads",
-    live.items.filter((i) => i.source === "QUEUE" || i.source === "BACKLOG").map((i) => `${i.source} ${i.id}`)
-      .filter((k) => !blocked.has(k)), []);
+  /* MOVED 2026-09-22 by M0-110: the LIVE half of this agreement is LC-owed-agreement (see §5's note); the fixture
+     half above is the rule's behaviour and stays. */
 
   /* (b) mintid. A scratch repo holding ONLY a BACKLOG.md that mentions one id of each namespace: every
      other corpus file is absent (and reported `missing`), so the floor can come from nowhere else. */

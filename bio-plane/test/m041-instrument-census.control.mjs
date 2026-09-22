@@ -43,7 +43,7 @@
  *       distinguishes six-arms-broken from six-arms-working.**
  *
  *   (2) PLANTED BYPASS, GRADED NAMESPACE — a hand-picked `M0-` id the ledger never
- *       issued, written into `QUEUE.md` as a real item heading and COMMITTED.
+ *       issued, written into the queue corpus as a real item heading and COMMITTED (`QUEUE.md` until M0-110 moved the cache to `coord`; `MILESTONES.md` since — see the arm).
  *         MUST FAIL:    the census's section C reports NOT HELD >= 1 and NAMES it.
  *         MUST NOT:     no ID arm of `plancheck --local` fires — and that half is
  *                       the FINDING, not the control. The loop every session is
@@ -349,13 +349,20 @@ function commitArm({ tag, rel, anchor, replacement, expectId, declared, judge })
    file moved. The census grades an id by its `### <ID> ·` heading ANYWHERE in the
    file, so WHERE the plant lands does not change what the arm measures: it now
    follows the BOB INBOX heading, the one heading every version of the cache keeps. */
-const anchorGraded = "## BOB INBOX — append-only. BOB writes here; SCHEDULER drains it (from 2026-09-18; CONDUCT did until then).\n";
+/* CORRECTED 2026-09-22 by M0-110: the cache (`QUEUE.md`) left `main` for the branch `coord` (TREE-SHARING.md §1), so
+   this working tree holds only its one-line pointer and the inbox heading this arm quoted was no longer on `main` at
+   all — `m025-arm-anchor-witness` A4 named it at ZERO in the cutover simulation, and a commit to the pointer would
+   plant nothing the census reads. The arm is not wrong about what it measures; its SUBJECT moved. The census grades a
+   `### <ID> ·` heading ANYWHERE in the queue corpus (`mintid.mjs` QUEUE_CORPUS), and `MILESTONES.md` is in that
+   corpus and STAYS on `main` (BOB #28's ruling 3 moves only its placement table). So the plant lands in MILESTONES.md,
+   before its closing structural heading, which carries no status word and moves only when the ladder is restructured. */
+const anchorGraded = "## How this file stays true\n";
 
 commitArm({
   tag: "(2) planted bypass, GRADED namespace",
-  rel: "docs/development/QUEUE.md",
+  rel: "docs/development/MILESTONES.md",
   anchor: anchorGraded,
-  replacement: anchorGraded + "\n### M0-9001 · queued — M0-41 CONTROL ARM, a hand-picked id the ledger never issued; reverted in the same run\nmilestone: M0\ndesign: `docs/development/VERIFICATION.md`\n",
+  replacement: "### M0-9001 · queued — M0-41 CONTROL ARM, a hand-picked id the ledger never issued; reverted in the same run\nmilestone: M0\ndesign: `docs/development/VERIFICATION.md`\n\n" + anchorGraded,
   expectId: "M0-9001",
   declared: "census names M0-9001 NOT HELD; plancheck --local does NOT see the id bypass (no DUPLICATE ID / UNREGISTERED NAMESPACE arm fires) and that half is the finding. CORRECTED after the first run: the original declaration said plancheck would read 0 fail, which conflated 'plancheck cannot see the id' with 'my arm broke nothing else' — editing a corpus file stales docs/DECIDED.md and fires a DIFFERENT arm. The question is WHICH arm, never HOW MANY. REPOINTED 2026-09-17: the anchor was `M0-41 · running` and that row now reads `done`, so the arm refused to arm and the guard reported it as a finding — it is now the M0 lane's AREA HEADING, which carries no status word, and it is bound to a named `const anchor…` so the battery's own anchor-liveness check stops being blind to this driver.",
   judge: (a, p) => a.notHeld >= 1 && a.namesId("M0-9001") && p.sawId === false,

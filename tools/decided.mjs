@@ -257,7 +257,7 @@ const NOT_A_RULING = ["open", "deferred"];
  *  tool written to relieve it.  `--check` is what would have caught it later; the
  *  double-scan caught it in the first minute.
  */
-function corpus() {
+export function corpus() {
   const out = [];
   for (const r of ROOTS) {
     const p = join(REPO, r);

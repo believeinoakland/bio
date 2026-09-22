@@ -1150,7 +1150,7 @@ function ARMING_NOTE(a, arm) { return `${a.arming[arm].row} is done, so this arm
          + `        Read it with \`node tools/coord.mjs read <path>\` (coord once it exists, main before):\n`
          + left.slice(0, 12).map((x) => `          ${x}`).join("\n"));
     /* (c) */
-    const r = await C.ledgerChecks({ repo: ROOT, only: ["LC-markers", "LC-queued-refs", "LC-debt-agreement", "LC-undecided-route"] });
+    const r = await C.ledgerChecks({ repo: ROOT, only: ["LC-markers", "LC-queued-refs", "LC-debt-agreement", "LC-undecided-route", "LC-op-claims", "LC-strays", "LC-owed-agreement"] });
     for (const a of r.arms) for (const f of a.fails) fail(`LEDGER CHECK ${a.id} (${a.title}; moved from ${a.from}) — ${f}`);
     notes.push(`coord ledger checks: ${r.arms.map((a) => `${a.id} ${a.fails.length ? "FAIL" : "pass"}${a.note ? ` (${a.note})` : ""}`).join(", ")}`);
   }

@@ -750,6 +750,31 @@ export function refsNotHead(stdin, headSha) {
   return out;
 }
 
+/* ------------------------------------------------------------------ a push of `coord` ALONE (M0-110)
+ *
+ * `coord` is the lanes' message board (TREE-SHARING.md §1): a note is pushed there by `tools/coord.mjs write`,
+ * from ANY checkout, in the middle of any work. Every check below `gateVerdictCheck` reads the WORKING TREE — the
+ * markers, the design corpus, the construct status — which is a verdict about `main`'s tree and says nothing about a
+ * note. Run on a coord push, a lane with unrelated drift in its own tree would be refused a claim, which is the
+ * contention this branch exists to remove. So a push whose EVERY ref goes to `refs/heads/coord` is judged by what it
+ * publishes: no merge marker in the pushed commit's own tree (a marker is never intentional, on either branch). The
+ * ledger checks already ran inside the write, before the push. A push naming `coord` beside any other ref is
+ * judged the ordinary way, and says so. */
+export const COORD_REF = "refs/heads/coord";
+export function coordOnly(stdin) {
+  const refs = pushedRefs(stdin);
+  return refs.length > 0 && refs.every((r) => r.remoteRef === COORD_REF);
+}
+export function commitMarkerCheck({ repo = REPO, sha }) {
+  const open = "<".repeat(7), mid = "=".repeat(7), close = ">".repeat(7);
+  const r = spawnSync("git", ["grep", "-n", "-I", "-E", `^(${open} |${mid}$|${close} )`, sha], { cwd: repo, encoding: "utf8", maxBuffer: 1 << 28 });
+  /* git grep exits 1 on NO match; anything else but 0 is a grep that did not run, which is not a clean tree. */
+  if (r.status === 1) return { ok: true, marked: [] };
+  if (r.status !== 0) return { ok: false, marked: [], message: `git grep over ${String(sha).slice(0, 8)} did not run (exit ${r.status}) — UNDETERMINED, refused.` };
+  const marked = r.stdout.split("\n").filter(Boolean).map((l) => l.split(":").slice(1, 3).join(":"));
+  return { ok: false, marked, message: `UNRESOLVED MERGE MARKERS in ${marked.length} place(s) of the pushed coord commit.` };
+}
+
 /* ------------------------------------------------------------------ the D-293 refusal's text
  *
  * It NAMES the record — ref, commit, tree, class, when, what still fails, the file — because a
@@ -782,6 +807,19 @@ export function gateRefusal(gv) {
 /* ------------------------------------------------------------------ the hook body */
 function run(stdin) {
   const repo = git(["rev-parse", "--show-toplevel"], process.cwd()) || REPO;
+  if (coordOnly(stdin)) {
+    for (const r of pushedRefs(stdin)) {
+      const mk = commitMarkerCheck({ repo, sha: r.localSha });
+      if (!mk.ok) {
+        const L = ["", `  PUSH REFUSED — ${HOOK_MARKER}`, "", `  ${mk.message}`, "", ...mk.marked.slice(0, 20).map((m) => `      ${m}`), ""];
+        process.stderr.write(L.join("\n") + "\n");
+        return 1;
+      }
+    }
+    process.stderr.write(`${HOOK_MARKER}: a coord-only push (M0-110) — no merge markers in the pushed commit; `
+      + `main's checks (gate record, design corpus, construct status) do not judge a note\n`);
+    return 0;
+  }
   /* D-293 FIRST: it reads only the pushed commits' trees and the record, never the working tree,
      so nothing a session has left uncommitted can confound it.  A failure to READ the record is
      reported as UNDETERMINED below and never refuses: a guard that blocked every push over its

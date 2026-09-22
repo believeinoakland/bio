@@ -368,8 +368,14 @@ section("coverage — the hand-fed half, and the walk that audits it (M0-43)");
   t("every UNDECIDED row says what is undecided about it",
     cov.undecidedRows.filter((r) => !r.question || r.question.length < 20).map((r) => r.path), []);
   t("the UNDECIDED files are NOT silently governed", cov.undecidedRows.filter((r) => governed().includes(r.path)).map((r) => r.path), []);
-  t("the undecided set is ROUTED to an entry somebody drains, not a sentence in a report",
-    /D-388/.test(std) && /^\| D-388 \|/m.test(readFileSync(join(ROOT, "docs/development/DEBT.md"), "utf8")), true);
+  /* CORRECTED 2026-09-22 by M0-110 (BOB #28's ruling 2 names this arm): its second half read the LIVE `DEBT.md`,
+     which lives on the branch `coord` after the cutover, where no `main` gate record settles it. The half about the
+     STANDARD stays here; the half about the live row is `coord.mjs`' ledger check LC-undecided-route, which every
+     coord write runs before its push (so a write that archives D-388 while the standard still routes to it is
+     REFUSED) and plancheck runs against the coord view. */
+  t("the undecided set is ROUTED to an entry somebody drains, not a sentence in a report — the standard names it, and "
+  + "the live row is held by the coord ledger check LC-undecided-route",
+    /D-388/.test(std) && /await arm\("LC-undecided-route"/.test(readFileSync(join(ROOT, "tools/coord.mjs"), "utf8")), true);
 
   // 6. the mechanism is in the loop the readers actually run
   const pc = readFileSync(join(ROOT, "tools/plancheck.mjs"), "utf8");

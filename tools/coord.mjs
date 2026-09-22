@@ -364,7 +364,10 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     const t = rs("docs/development/DEBT.md");
     if (t === null) return { fails: ["docs/development/DEBT.md could not be read — an unreadable ledger is not an empty one"] };
     const a = debtTokenAudit(t);
-    return { fails: a.bad.map((b) => `${b.id} found: "${b.status.slice(0, 60)}"`), note: `${a.rows} DEBT row(s) read` };
+    /* NON-VACUITY, not size (M0-109's correction): zero rows is the empty-corpus pass, and it FAILS here by name.
+       When LED-7 archives DEBT.md whole, that landing re-points this arm; it is never left to pass over nothing. */
+    return { fails: [...(a.rows ? [] : ["DEBT.md has NO debt rows — a token check over nothing passes for free"]),
+                     ...a.bad.map((b) => `${b.id} found: "${b.status.slice(0, 60)}"`)], note: `${a.rows} DEBT row(s) read` };
   });
 
   await arm("LC-queued-refs", "planning-hygiene §2 (live)", "every `QUEUED <ID>` in the design and process docs names a live or archived queue row", async () => {
@@ -373,15 +376,36 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     const arch = archivedQueueIds({ repo });
     const refs = queuedRefs(repo);
     const fails = refs.filter((r) => !ids.has(r.id) && !arch.has(r.id)).map((r) => `${r.id} in ${r.file}`);
+    /* The suite's three floors, kept as NON-VACUITY (M0-109's principle; the suite floored ids at 10, a SIZE). */
+    if (!refs.length) fails.push("no concrete QUEUED reference found — the walk may be reading nothing");
+    if (!ids.size) fails.push("the cache and the backlog declare no item id");
+    if (!arch.size) fails.push("the archive yields no queue id — the archive-aware lookup would be vacuous");
     return { fails, note: `${refs.length} reference(s), ${ids.size} live id(s), ${arch.size} archived` };
   });
 
   await arm("LC-row-design", "planning-hygiene §4 (live), pipeline-readers §4 (live), plancheck §7", "every open plan row names a governed design, an IC or a routed gap", async () => {
     const { rowDesignAudit } = await import("./rowdesign.mjs");
     const a = rowDesignAudit({ repo });
-    return { fails: [...a.findings.map((f) => `${f.id} (${f.file}:${f.line}) names no design`),
+    return { fails: [...(a.open.length ? [] : ["the plan has NO open row to judge — a totality assertion over an empty corpus"]),
+                     ...a.findings.map((f) => `${f.id} (${f.file}:${f.line}) names no design`),
                      ...a.unknownState.map((r) => `${r.id} · ${r.state} (${r.file}) — an unrecognised state`)],
              note: `${a.open.length} open row(s) judged of ${a.rows.length}` };
+  });
+
+  await arm("LC-strays", "pipeline-readers §5 (live)", "no OPEN row hides under a row-shaped heading the grammar cannot read", async () => {
+    const { pipelineRows } = await import("./ledger.mjs");
+    const p = pipelineRows({ repo });
+    return { fails: p.strays.filter((x) => !x.closed).map((x) => `${x.file}:${x.line} ${x.heading.slice(0, 60)}`),
+             note: `${p.strays.length} stray heading(s), ${p.strays.filter((x) => x.closed).length} closed` };
+  });
+
+  await arm("LC-owed-agreement", "pipeline-readers §7 (live)", "every plan item owed lists is a blocked row the lister reads", async () => {
+    const { pipelineRows } = await import("./ledger.mjs");
+    const { owedFor } = await import("./owed.mjs");
+    const blocked = new Set(pipelineRows({ repo }).rows.filter((r) => r.state === "blocked").map((r) => `${r.ledger} ${r.id}`));
+    const o = owedFor("BOB", { repo });
+    return { fails: o.items.filter((i) => i.source === "QUEUE" || i.source === "BACKLOG").map((i) => `${i.source} ${i.id}`).filter((k) => !blocked.has(k))
+      .map((k) => `${k} is owed and is not a blocked row the lister reads`) };
   });
 
   await arm("LC-plan-fields", "pipeline-readers §4 (live), plancheck §2", "every plan row's milestone is defined and its interface registered", async () => {
@@ -406,6 +430,10 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     const L = await import("./ledger.mjs");
     const a = L.ledgerAudit({ repo });
     const fails = a.unreadable.map((u) => `${u} could not be read`), warns = [];
+    for (const [arm2, s2] of Object.entries(a.arming))
+      if (!s2.found) warns.push(`arm "${arm2}" is switched by ${s2.row}, which is in neither the live ledger nor its archive`);
+      else if (s2.state.split("/").every((x) => x === "superseded"))
+        fails.push(`arm "${arm2}" is switched by ${s2.row}, which is SUPERSEDED and so can never arm (ledger §8, moved)`);
     for (const [n, ids] of Object.entries(a.closedLive)) if (ids.length) (a.armed.closedLive ? fails : warns).push(`${n}: closed row(s) live — ${ids.join(", ")}`);
     for (const u of a.depends.unresolved) fails.push(`${u.id} (${u.file}:${u.line}) depends on ${u.dep}: ${u.why}`);
     for (const r of a.budget.rowsOver) warns.push(`${r.ledger} row ${r.id} is ${r.bytes} B against ${r.budget}`);
@@ -420,6 +448,7 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     const t = rs("docs/development/DEBT.md");
     if (t === null) return { fails: ["docs/development/DEBT.md could not be read"] };
     const rows = L.debtRows(t);
+    if (!rows.length) return { fails: ["DEBT.md has NO rows — the agreement is vacuous (M0-109's non-vacuity floor, moved here)"] };
     const owed = new Set(["BOB", "CONDUCT", "DIST", "ZZZNOTALANE"].flatMap((lane) => owedFor(lane, { repo }).items.map((i) => i.id)));
     return { fails: [...rows.filter((r) => RESIDUE_RE.test(r.disposition) && r.closed).map((r) => `${r.id} declares a residue and reads closed`),
                      ...rows.filter((r) => r.closed && owed.has(r.id)).map((r) => `${r.id} is owed by a lane and reads closed`)],
@@ -435,6 +464,20 @@ export async function ledgerChecks({ repo = ROOT, today = undefined, git: gitArm
     const routed = [...new Set((std.match(/\bD-388\b/g) || []))];
     if (!routed.length) return { fails: ["CORPUS-STANDARD.md no longer names D-388, the undecided set's route — name the row that drains it"] };
     return { fails: routed.filter((id) => !new RegExp(`^\\| ${id} \\|`, "m").test(debt)).map((id) => `${id} is named by the standard and is not a live DEBT row`) };
+  });
+
+  await arm("LC-op-claims", "op-claims (the state half of its walk)", "every op= claim in a state file names a real op, routes where the plane routes it, or is ledgered exactly", async () => {
+    const O = await import("../bio-plane/scripts/op-claims.mjs");
+    const files = stateFiles(repo).map((rel) => ({ rel, body: rs(rel) })).filter((f) => f.body !== null);
+    /* A ledger entry is held EXACTLY against its own file. An entry whose file this tree does not hold at all is not
+       judged as drift — it is NAMED (a planted fixture holds none of them; the real coord holds all eleven). */
+    const present = new Set(files.map((f) => f.rel));
+    const held = O.LEDGER_STATE.filter((e) => present.has(e.file));
+    const absent = [...new Set(O.LEDGER_STATE.filter((e) => !present.has(e.file)).map((e) => e.file))];
+    const r = O.sweep({ files, ledger: held });
+    return { fails: [...r.findings.map((f) => `${f.site} ${f.class}: ${f.detail}`), ...r.ledgerDrift, ...r.plannedBuilt.map((p) => `PLANNED op ${p} is BUILT`)],
+             warns: absent.map((f) => `ledgered file ${f} is not in this tree, so its entries are unjudged`),
+             note: `${files.length} state file(s), ${r.mentionsRepro} op= mention(s), ${r.attributionsRepro.length} attribution(s), ${held.length} of ${O.LEDGER_STATE.length} ledger entr(ies) held` };
   });
 
   await arm("LC-handoff-budget", "plancheck §2e' (the handoffs)", "every lane handoff is within the reading budget", async () => {
@@ -503,7 +546,9 @@ function materialise(repo, tip, base = "HEAD") {
   };
   /* `main`'s side first — the cross-checks' half (designs, INTERFACES, MILESTONES, construct status, CLAUDE.md) —
      then the coord tree over it, so every state file is coord's. `base` missing a path is not an error. */
-  extract(base, ["docs", "CLAUDE.md"]);
+  /* `git archive` fails WHOLE on a pathspec that matches nothing, so only the paths `base` has are named. */
+  const have = git(repo, ["ls-tree", "--name-only", base, "--", "docs", "CLAUDE.md"]).stdout.split("\n").filter(Boolean);
+  if (have.length && !extract(base, have)) throw refusal("MATERIALISE_FAILED", `main's side (${have.join(", ")}) could not be read from ${base}.`);
   for (const rel of mainStateFiles(dir)) rmSync(join(dir, rel), { force: true });
   extract(tip, []);
   return dir;
@@ -576,7 +621,8 @@ export async function write({ repo = ROOT, intents, message, remote = REMOTE, br
         const onRemote = (ls.stdout.split(/\s/)[0] || "").trim();
         git(repo, ["update-ref", tracking, commit]);
         resetCoordCache();
-        return { status: onRemote === commit ? "pushed" : "pushed-unverified", tip, commit, changed, attempts, onRemote };
+        return { status: onRemote === commit ? "pushed" : "pushed-unverified", tip, commit, changed, attempts, onRemote,
+                 pushOutput: `${p.stdout || ""}${p.stderr || ""}` };
       }
       const why = `${p.stdout || ""}${p.stderr || ""}`;
       if (!/non-fast-forward|fetch first|rejected|stale info|cannot lock ref/i.test(why))

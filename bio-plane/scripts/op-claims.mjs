@@ -64,6 +64,11 @@ import { dirname, join, relative, extname } from "node:path";
 import { readGitProvenance } from "./provenance.mjs";
 /* D-265: the classification this module's exported walks carry. */
 import { walkResult } from "./walkfigure.mjs";
+/* M0-110: the STATE files (CLAIMS, QUEUE, BACKLOG, DEBT, the handoffs, the archive ledgers) left `main` for the
+   branch `coord` (TREE-SHARING.md §1). Their op= claims are judged by the coord write's ledger checks — BOB #28's
+   ruling 2: a check of a ledger's CONTENT leaves the battery — so this walk, which the battery floors on, sweeps
+   `main`'s files only, and `sweep({ files })` is the one mechanism the ledger check runs over the state texts. */
+import { isMovedPath } from "../../tools/coord.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const PLANE = join(HERE, "..");
@@ -274,6 +279,7 @@ export function generatedReason(src) {
 function corpusRaw(root = REPO, roots = null) {
   const files = [];
   const skipped = [];
+  const stateSkipped = [];
   const bases = roots ? roots.map((r) => join(root, r)) : [root];
   const walk = (d) => {
     let entries;
@@ -282,6 +288,10 @@ function corpusRaw(root = REPO, roots = null) {
       /* M0-18: one rule, not a list of spellings. The full ruling is above. */
       if (skipSegment(name)) { skipped.push(relative(root, join(d, name))); continue; }
       const p = join(d, name);
+      /* M0-110: a state file is swept by the ledger checks on `coord`, never here (see the import). Before the
+         cutover it is a file on `main`, after it a one-line pointer; skipped in both, so the battery's figures
+         do not move at the cutover and a coord write cannot move them. */
+      if (isMovedPath(relative(root, p).split("\\").join("/"))) { stateSkipped.push(relative(root, p)); continue; }
       let st;
       try { st = lstatSync(p); } catch { continue; }
       if (st.isSymbolicLink()) continue;
@@ -574,6 +584,11 @@ export const LEDGER = [
   { file: "docs/development/research/DATA-MODEL.md", name: "wake", n: 1, kind: "NEVER",
     why: "STALE: names neither an op nor a DO path. DELEGATED to RECORD/research." },
 ];
+/* M0-110: ONE ledger, partitioned by branch rather than copied. The entries whose file is STATE (it lives on
+   `coord`) are held by the coord write's ledger check (`tools/coord.mjs` LC-op-claims), which sweeps the state texts;
+   the rest are held by this module's own walk, which `sweep()` defaults to. */
+export const LEDGER_STATE = LEDGER.filter((e) => isMovedPath(e.file));
+export const LEDGER_MAIN = LEDGER.filter((e) => !isMovedPath(e.file));
 
 /* Attribution: a mention that says WHERE the op goes — the load-bearing half of
  * M0-12, because a check that only verified a name existed would have passed
@@ -613,13 +628,18 @@ export function mentionsIn(body) {
 /* ---------------------------------------------------------------- the verdict */
 
 export function sweep({ root = REPO, roots = null, planeDir = PLANE,
-                        ledger = LEDGER, planned = PLANNED_OPS } = {}) {
+                        ledger = LEDGER_MAIN, planned = PLANNED_OPS, files: injected = null } = {}) {
   const table = readDispatch(planeDir);
   /* M0-18: `files` is the WHOLE working tree and every byte of it is swept —
      `repro`/`charsRepro` exist so the caller can FLOOR on what another checkout
      reproduces without narrowing what is checked. The two are deliberately
      different populations; see `corpus()`. */
-  const { files, chars, excluded, skipped, prov, repro, charsRepro } = corpusRaw(root, roots);
+  /* M0-110: `files` INJECTED ([{ rel, body }]) is the state texts the coord ledger check hands in — the same
+     judgement over a population this walk no longer reaches, never a second copy of it. */
+  const { files, chars, excluded, skipped, prov, repro, charsRepro } = injected
+    ? { files: injected, chars: injected.reduce((n, f) => n + f.body.length, 0), excluded: [], skipped: [],
+        prov: { inHead: null, headSha: null }, repro: injected, charsRepro: injected.reduce((n, f) => n + f.body.length, 0) }
+    : corpusRaw(root, roots);
 
   const plannedNames = new Set(planned.map((p) => p.op));
   const ledgerIndex = new Map(ledger.map((e) => [`${e.file} ${e.name}`, e]));

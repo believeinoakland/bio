@@ -99,6 +99,10 @@ function scratchRepo(name, { withIndex = false } = {}) {
   cpSync(join(REPO, "tools/pushguard.mjs"), join(root, "tools/pushguard.mjs"));
   if (withIndex) {
     cpSync(join(REPO, "tools/decided.mjs"), join(root, "tools/decided.mjs"));
+    /* CORRECTED 2026-09-22 by M0-110: `decided.mjs` now imports `coord.mjs` (the corpus is read through the coord
+       layer), so a copy carried alone could not load and the index was never produced — the fixture measured a
+       broken import, not the rule. What it imports is carried with it. */
+    cpSync(join(REPO, "tools/coord.mjs"), join(root, "tools/coord.mjs"));
     cpSync(join(REPO, ".gitignore"), join(root, ".gitignore"));
   }
   writeFileSync(join(root, "docs/seed.md"), "# seed\n\nDEC-1 was RULED on 2026-09-17 to exist.\n");
