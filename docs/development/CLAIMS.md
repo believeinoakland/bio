@@ -18384,6 +18384,14 @@ and `docs/development/STORE-AS-CACHE.md` (their D-164 lines marked closed; STORE
 (#11) -> BOB DELEGATION's answer paragraph); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
 
+## CLAIM 2026-09-22 BOB (#26) — Bob ruled D-148 and D-149: a fee quote is evidence; a records request names every law that governs the agency asked (Case Making §2, BOB INBOX)
+
+claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77b`. Paths:
+`docs/architecture/BIO_Case_Making_v0_1.md` (§2: two ruled paragraphs carrying Bob's words of 2026-09-22; Status
+sentence, one Incomplete bullet, as-of date); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newest
+first); `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
 ## CLAIM 2026-09-22 DIST (DIST #4 — the D-436 DELEGATION's contradictory marker settled; DIST-NEXT kept true: 0.71.0 landed at 06832aff, a BATCH owed for REC-157)
 
 session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/followup`), Sparky-Air
