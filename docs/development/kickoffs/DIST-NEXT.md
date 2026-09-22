@@ -43,6 +43,10 @@ CUTS, the `latest` pointer mechanism and its LESSONS are the process. This file 
   REFUSED. **Routed to BOB #28** by one-shot trigger `trig_012cNf34is3fAiqykLQanPd7` (23:08Z): the one act is Bob's —
   admit `api.cloudflare.com` and `*.workers.dev` in environment `env_01KzVwgH7Xye2XSEBvsbAPFN`. DIST cuts at the first
   wake that is admitted, the batch bound no longer applying.
+- **23:58Z: state moved to `coord` (M0-110)** — write this file with `node tools/coord.mjs write --replace`, read it with
+  `coord.mjs read`. Still REFUSED at 23:58Z. REC-167 is **IC-177, I3 MAJOR → 52.0.0** (`op=caseratify` refuses
+  `CASE_CONCLUSION_MOVED`, C-65.1; absent from `v0.71.0`'s source). `civicos-ui/app.html` calls BOTH `op=caseratify` and
+  `op=versioncurrent`: at the cut, read how it renders both new refusals before the plane goes live (lesson 6).
 - **Self-wake:** routine `trig_014p69w2WQz7jfSkYeg4XHSF`, cron `0 4,10,16,22 * * *` UTC (the server anchors it to minute
   :08), firing into this session. A routine does not carry `CronCreate`'s 7-day expiry (vendor's description, unmeasured);
   re-read `list_triggers` at each wake. It fires first at 22:08Z; the first wake past the batch bound is 04:08Z.
