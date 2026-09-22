@@ -18,7 +18,7 @@ nothing was decided — the same rule the record applies to sparse levels everyw
 else. Each entry QUOTES its source and points at it; the authority is the file named,
 never this one.
 
-1514 rulings across 107 documents.
+1515 rulings across 108 documents.
 72 of them are decision-register entries, each filed under its own id from its
 `decided:` field and quoting its `response:`; a row showing the entry's status is one of them.
 
@@ -595,7 +595,7 @@ never this one.
 - **D-148** · 2026-09-22 — A FEE QUOTE IS EVIDENCE, RULED BY BOB 2026-09-22 (D-148):** *"Yes, a price quote is evidence"* — about the body that quoted it, not an obstacle to the request.  
   `docs/architecture/BIO_Case_Making_v0_1.md:160`
 - **D-148** · 2026-09-22 — 2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told the same day that the layers follow the AGENCY asked (federal FOIA governs…  
-  `docs/development/QUEUE.md:41`
+  `docs/development/QUEUE.md:57`
 - **D-149** · 2026-09-22 — A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT, RULED BY BOB 2026-09-22 (D-149):** *"ALL records laws apply.  
   `docs/architecture/BIO_Case_Making_v0_1.md:172`
 - **D-151** — ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`, `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine callers are DISTINGUISHABLE.  
@@ -777,7 +777,7 @@ never this one.
 - **D-278** · 2026-09-22 — PROVISIONAL, RULED 2026-09-22 by BOB #26 (D-278): the refusals that still answer only `error`, one determination per group, verified at `0ce7447b`.** (4) the CAPABILITY complaints (503, `capture`, `pdfstructure`, `acquire`, `attest`: no evidence storage bound) are CODED — one row, a fact about the INSTALLATION…  
   `docs/development/INTERFACES.md:537`
 - **D-278** · 2026-09-22 — 2026-09-22 · BOB #26 · D-278 RULED, ONE DETERMINATION PER GROUP (SCHEDULER #12's DELEGATION, item 3).** Written into `INTERFACES.md` I3 "Answers" as PROVISIONAL, traced at `0ce7447b`.  
-  `docs/development/QUEUE.md:25`
+  `docs/development/QUEUE.md:41`
 - **D-280** — — the code it fixed is removed with the composition — and its row now says so above its own report; the work was correct for the model that existed, and its controls are the record of what that model did, including that a WITHDRAWN project was TIGHTENING a bar on a document it had left, which is part of why the…  
   `docs/archive/ledgers/BOB-INBOX-drained.md:592`
 - **D-282** · 2026-08-09 — THE THRESHOLD THIS ROW NAMED UNDETERMINED IS NOW BISECTED, AND THE ROW'S MODEL OF IT WAS TOO SIMPLE — CORRECTED HERE.** For a SINGLE write it is the pipe buffer exactly: 65,573 bytes survive and 65,580 do not, and every partial arrival observed is an exact multiple of **65,536**.  
@@ -812,8 +812,6 @@ never this one.
   `docs/development/CLAIMS.md:16469`
 - **D-293** · 2026-09-22 — mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6).  
   `docs/development/CLAIMS.md:18312`
-- **D-293** · 2026-09-17 — `5a807b8a` D-293's design gap RULED (a dirty run keyed by its temporary-index tree); CLAUDE.md §6's gate classes. - `0b7328bc` D-288 archived (closed in full since 2026-09-17); M0-48's five-day-old delegation discharged. - `032d1ce1` **BOB'S RULING ON THE RECORD — "Never queue a gate behind another lane's"…  
-  `docs/development/kickoffs/BOB-NEXT.md:34`
 - **D-293** — D-293's design gap is RULED (BOB INBOX; CLAUDE.md §6 corrected). - **Owners of `kickoffs/SKILL.md`, `SCHEDULER.md`, `NEW-MACHINE.md`:** D-293's stale-gate-sentence DELEGATION items 2, 3, 5.  
   `docs/development/kickoffs/CONDUCT-NEXT.md:73`
 - **D-302** · 2026-09-10 — ct pin reds on every added paragraph, while this population is FIVE hand-written sentences in append-only history and a SETTLED IC, so the exact figure is the honest ratchet — `LEDGER`'s own argument for holding counts exactly.  
@@ -1622,6 +1620,8 @@ never this one.
   `docs/development/CLAIMS.md:15581`
 - **REC-157** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes nothing on the shared question; `store.mjs` promotes the inquiry first),…  
   `docs/development/CLAIMS.md:18305`
+- **REC-157** — SCHEDULER #12's two ordering questions DECIDED by message (keep the 150 KiB backlog budget; over-claim corrections stay ahead of M8-M10) and recorded by it. - THIS LANDING: **BOB'S RULING — *"Yes to all 3 recommendations"*** — designed in `docs/development/TREE-SHARING.md`: the message board leaves `main` for a…  
+  `docs/development/kickoffs/BOB-NEXT.md:37`
 - **REC-159** — PLACED as REC-159, directly before REC-155; a bearer's reach RULED by BOB #22 into Membership v2 §4.7 (the ADMIN_TOKEN holder is not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and…  
   `docs/development/CLAIMS.md:16890`
 - **REC-159** — not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and its build PLACED as REC-162 directly after REC-159.  
@@ -2026,8 +2026,6 @@ never this one.
   `docs/development/CLAIMS.md:17761`
 - **M0-103** — (a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107 and archived.  
   `docs/development/CLAIMS.md:18310`
-- **M0-103** — M0-103; REC-157 RULED (a project's make-current writes nothing on the shared question, `INVESTIGATIVE-SESSION.md` §7); M0-97's second specimen added to VERIFICATION's cut; Distribution §4 and System Design §6 corrected (DIST deploys the installer; nothing waits on Bob).  
-  `docs/development/kickoffs/BOB-NEXT.md:38`
 - **M0-106** · 2026-09-22 — imeout outcome): item 1 PLACED as `M0-106` (DIST's own kickoff) and item 2 as `M0-107`, both where M0-103 stood; M0-103 SUPERSEDED by M0-107, which takes its fix to its class and names its two spawns as the first site.  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1533`
 - **M0-107** · 2026-09-22 — SUPERSEDED 2026-09-22 by M0-107** (BOB #25's cut-the-work entry, item 2: M0-103's fix taken to its class; its two `coverage.mjs` spawns are M0-107's first site).  
@@ -2909,8 +2907,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1440`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1452`
-- **2026-09-22** — RULED BY BOB 2026-09-22 — "The goal is BIO work.  
-  `docs/development/kickoffs/BOB-NEXT.md:44`
+- It also SETTLED *"DECIDED.md leaving the committed tree"*: it leaves `main`.  
+  `docs/development/kickoffs/BOB-NEXT.md:41`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
@@ -3019,6 +3017,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/ORCHESTRATION.md:118`
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
+- **2026-09-22** — 2026-09-22 · BOB #26 · BOB RULED THE THREE TREE-SHARING CHANGES — *"Yes to all 3 recommendations"* — designed in `docs/development/TREE-SHARING.md`.** Process rows that pay for themselves in gate time, Bob's own test (`CLAUDE.md` §2): today one DOCS landing took six gate runs where one was needed, because `main`…  
+  `docs/development/QUEUE.md:25`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle.  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  
@@ -3073,6 +3073,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/STORE-AS-CACHE.md:394`
 - PARTLY SUPERSEDED by the four-level correction above — kept because one half of it stands and the other half is the mistake worth seeing.**  
   `docs/development/STORE-AS-CACHE.md:667`
+- **2026-09-22** — RULED BY BOB 2026-09-22: *"Yes to all 3 recommendations"*** — the three changes below, as BOB #26 put them to him that day.  
+  `docs/development/TREE-SHARING.md:3`
 - **2026-07-30** — RULED by Bob, 2026-07-30, and it governs every rung.  
   `docs/development/UI-PLAN.md:268`
 - **2026-07-29** — RULED by Bob, 2026-07-29. Continuing a capture must know what has already been captured; parts may have to be obtained from the host again, and that is refilling the cache rather than rewriting the record.  

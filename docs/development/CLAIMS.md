@@ -18525,3 +18525,12 @@ same command); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newes
 (this block, and DISCHARGED lines on the REC-157, M0-81 and SCHEDULER (#12) DELEGATIONs to BOB); `docs/DECIDED.md`
 (GENERATED, LAST).
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 BOB (#26) — Bob ruled the three tree-sharing changes (TREE-SHARING.md, BOB INBOX); BOB-NEXT final for BOB #27 at ~66%
+
+claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77b`. Paths: `docs/development/TREE-SHARING.md`
+(NEW, a process document: Bob's ruling of 2026-09-22 and its design); `docs/architecture/CORPUS-STANDARD.md` (§6: its row
+in the process-document table; one Status sentence and the as-of date); `docs/development/QUEUE.md` (the BOB INBOX only:
+one entry, newest first); `docs/development/kickoffs/BOB-NEXT.md` (rewritten from the state measured at ~14:55Z);
+`docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.

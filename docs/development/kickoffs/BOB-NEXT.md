@@ -1,63 +1,61 @@
-# BOB — resume here. Written 2026-09-22 by BOB #25 for BOB #26, in the SAME Claude Code account.
+# BOB — resume here. Written 2026-09-22 by BOB #26 for BOB #27, in the SAME Claude Code account.
 
 Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this.
-**Everything below is a POINTER measured at ~12:55Z 2026-09-22; re-measure before resting anything on it.** BOB #25
-refreshed at 65% because SCHEDULER #11's group of four questions (LED-7 S11-1) would cross the 70% line mid-flight.
+**Everything below is a POINTER measured at ~14:55Z 2026-09-22; re-measure before resting anything on it.** BOB #26
+refreshed at ~66%, at the boundary where no further design act fit before the 70% line (Bob, 2026-09-22: *the line is
+70%, not 60% — refresh less, work more*).
 
 ## 0. YOUR FIRST ACTS
 
-1. **Archive BOB #25** (`local_babb2649-0f52-4648-abed-06229cedd06b`) under D-398's three conditions, re-checked AT THE
-   MOMENT YOU ACT, after confirming by message to "BOB #25" that its OWN `CronList` is empty (never by ids). Its worktree
-   `.claude/worktrees/bob-25` was made by hand (branch `bob25/work`, pushed as `bob25/work-5`) and holds
-   `bio-plane/node_modules` (~210 MiB): `archive_session` will not remove it, so `git worktree remove` it by that literal
-   path, disk measured before and after.
+1. **Archive BOB #26** (`local_3e73133b-d42a-4763-849a-f67a40d15686`) under D-398's three conditions, re-checked AT THE
+   MOMENT YOU ACT, after confirming by message to "BOB #26" that its OWN `CronList` is empty (never by ids). Its worktree
+   `.claude/worktrees/fervent-curran-99f77b` is app-made; if the archive leaves it (it holds `bio-plane/node_modules`,
+   ~210 MiB), `git worktree remove` it by that literal path, disk measured before and after.
 2. Arm your self-wake and its 5-day renewal WITH THE SELF-AUDIT IN THE PROMPT (rule 12(a)), stating 70%.
-3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` for every lane plus the weekly figure; sweep finished
-   heartbeat runs with `list_task_runs conduct-heartbeat` and archive the `succeeded` ones by id (cheaper than the verbatim
-   `list_sessions` file, and BOB.md step 3 sanctions it).
+3. `owed.mjs BOB`, `plancheck`, `status.mjs --check`; `get_usage` per lane plus the weekly figure; sweep finished
+   `conduct-heartbeat` runs with `list_task_runs` and archive the `succeeded` ones by id.
+4. Chips now go through `node tools/occupancy.mjs` (`BOB.md` rule 1, since `84dd441f`): file on ADMIT only.
 
-## 1. THE ESTATE, measured ~12:55Z
+## 1. THE ESTATE, measured ~14:55Z
 
-- **Live lanes:** CONDUCT #12 (up ~12:50Z; first job: land batch 2 — REC-157, M0-97/D-341, M0-81 — under one FULL gate;
-  CONDUCT #11 stays up only to forward M0-81's report), SCHEDULER #11 (gating its drain of BOB #25's D-293 entry as
-  M0-104/M0-105 plus LED-7 batch S11-1), DIST #4 (0.71.0 cut, deployed, seeded, pointed at `06832aff`; ~53%), FLEET #3
-  (65%; asks for the FLEET #4 chip at 70%).
-- **THE MACHINE IS THE CEILING.** The Mac slept with its lid closed from ~01:56 to 05:21 PDT (`pmset -g log`: Maintenance
-  Sleep stretches of 26-64 minutes, 45-second dark wakes); keep-awake prevents idle sleep only. It has 8 GiB of RAM with
-  ~5 of 6 GiB swap in use. Together they made a ~16-minute battery take 8,756 s (DIST #4's landing gate). Told to Bob.
-- Disk 5.72 GiB. Weekly all models **73%** at 12:51Z (64% at 02:21Z), resetting 2026-09-26 11:00Z.
+- **Live lanes:** CONDUCT #12 (54%; REC-163's and M0-109's workers running), SCHEDULER #12 (60%; up ~13:30Z), DIST #4
+  (61%; a 0.72.0 BATCH owed no earlier than 2026-09-23 04:00Z), FLEET #3 (67%; asks for FLEET #4 at 70%).
+- **Weekly all models 80%** at ~14:54Z (64% at 02:21Z, 73% at 12:51Z, 76% at 14:02Z, 79% at 14:48Z), resetting
+  2026-09-26 11:00Z. Reported to Bob; do not project it — report it and let him judge the pace.
+- Disk ~5.8 GiB free. The machine (8 GiB, ~5.4 of 6 GiB swap in use) stays the ceiling until TREE-SHARING change 3.
 
-## 2. WHAT BOB #25 DID — on `main`, verified from the remote
+## 2. WHAT BOB #26 DID — on `main`, each verified from the remote
 
-- `37367611` SCHEDULER #10's three questions: the intent layer and §13.1's measure are STATED DEFERRALS (Framework front
-  matter); D-120 deferred behind the archive fallback; D-85 narrowed; the run-binding defect found (now REC-165).
-- `5a807b8a` D-293's design gap RULED (a dirty run keyed by its temporary-index tree); CLAUDE.md §6's gate classes.
-- `0b7328bc` D-288 archived (closed in full since 2026-09-17); M0-48's five-day-old delegation discharged.
-- `032d1ce1` **BOB'S RULING ON THE RECORD — "Never queue a gate behind another lane's" (CLAUDE.md §6, Bob, 2026-09-22)**;
-  the throughput entry (DIST's step 1 reuses a GREEN FULL record; timeouts read NOT MEASURED, never RED) placed before
-  M0-103; REC-157 RULED (a project's make-current writes nothing on the shared question, `INVESTIGATIVE-SESSION.md` §7);
-  M0-97's second specimen added to VERIFICATION's cut; Distribution §4 and System Design §6 corrected (DIST deploys the
-  installer; nothing waits on Bob). Filed the DIST #4, SCHEDULER #11 and CONDUCT #12 chips; archived 12 heartbeat runs.
+- `7c967f09` SCHEDULER #11's group of four: D-152 (the OCR region at the leg is a CAP, never a refusal; Framework §14.4)
+  and D-164 (Bob's reopening condition met; Framework §18) closed in fact; D-125 (a member's PERSONAL mute admits FINDING
+  kinds; `NOTIFICATIONS.md`) and D-179 (one capture, one home — the original's; Intake Doctrine §8) ruled and rowed.
+- `0ce7447b` **Bob's D-148 and D-149**: a fee quote is EVIDENCE; a records request names EVERY law that governs the AGENCY
+  asked, by citation (`BIO_Case_Making_v0_1.md` §2). Bob was told once that federal FOIA covers federal agencies only;
+  he did not object. SCHEDULER #12 holds that entry's drain until M0-109 (a `ledger.test` floor) lands.
+- `84dd441f` D-278 ruled per group (`INTERFACES.md` I3, PROVISIONAL; group (1) was already coded by REC-79); M0-81
+  answered (`BOB.md` rule 1 names `tools/occupancy.mjs`; a live session below the chip's number is its predecessor); the
+  REC-157, M0-81 and SCHEDULER (#12) DELEGATIONs discharged. SCHEDULER #12's two ordering questions DECIDED by message
+  (keep the 150 KiB backlog budget; over-claim corrections stay ahead of M8-M10) and recorded by it.
+- THIS LANDING: **BOB'S RULING — *"Yes to all 3 recommendations"*** — designed in `docs/development/TREE-SHARING.md`:
+  the message board leaves `main` for a `coord` branch, one lane lands on `main` in batches, the gates run on GitHub's
+  machines. It also SETTLED *"DECIDED.md leaving the committed tree"*: it leaves `main`. Three items in the BOB INBOX.
 
 ## 3. OWED — in this order
 
-1. **RULED BY BOB 2026-09-22 — "The goal is BIO work. Process is overhead."** Product rows (M8-M10: publish, accept, the
-   case path) go ahead of M0 process tooling; no process row unless it cuts gate time or unblocks product; batch landings;
-   massive suite sets only when necessary. Measured when asked: 48 of 109 open rows were M0, and 11 of 99 commits on
-   `main` in 24 h touched product code. **On the record in `CLAUDE.md` §2** (this landing); SCHEDULER #11 was told to apply
-   it to the order and write it into `kickoffs/SCHEDULER.md`. **Apply it to this lane first:** one landing per turn, and
-   mint no process row that does not pay for itself in gate time.
-2. **SCHEDULER #11's group of four (LED-7 S11-1)** — not yet on `main` at writing; it arrives as a DELEGATION to BOB.
-3. **With Bob, unanswered — do not re-ask:** Q3 (a case resting on a NO-PROJECT conclusion; REC-157's no-project corner
-   rides with it), D-53 (credibility), `DECIDED.md` leaving the committed tree. **Carried:** D-148, D-149, where a member's
-   or project's Claude key would live, MK-7's provisionals, M0-85.
-4. **Residue with no watcher, recorded not acted on:** D-120's trigger (an archive miss is returned to the tick, never
-   recorded); a measurement was dropped as low value on Bob's throughput direction.
+1. **TREE-SHARING is the estate's biggest lever and it is yours to steer:** answer the builders' design questions at the
+   code, fold each answer into `TREE-SHARING.md`, and bring Bob the GitHub Actions enablement (and any spending limit)
+   ONCE, when M0 has the three figures §3 names. Correct `CLAUDE.md` and the kickoffs as each change lands (the builder's
+   landing does it; check that it did).
+2. **With Bob, unanswered — do not re-ask:** Q3 (a case resting on a NO-PROJECT conclusion), D-53 (credibility).
+   **Carried:** where a member's or project's Claude key would live, MK-7's provisionals, M0-85.
+3. Anything a lane routes here by message or DELEGATION; `owed.mjs BOB` lists D-148 and D-149 until SCHEDULER archives
+   them (ruled; nothing is owed on them).
 
-## 4. HOW BOB #25 WAS WRONG — data points (rule 12(c))
+## 4. HOW BOB #26 WAS WRONG — data points (rule 12(c))
 
-- **Chained `waitquiet` with `;` twice, so my gate ran beside other batteries; then overcorrected and waited 2.5 hours to
-  run a 4-minute DOCS check, and designed a queue before Bob named the cost.** The fix is less work, never a queue.
-- A post-gate one-marker edit created a CONTRADICTORY DELEGATION warning; an amended date created a corpus RED — re-run
-  plancheck after ANY post-gate edit, and read `corpuscheck` when a design document's body moved.
-- Writing `list_sessions` verbatim for `retirable.mjs` cost ~12k tokens; `list_task_runs` did the heartbeat sweep for less.
+- **Probed a tool with `--help`:** `gates.mjs` has no help flag, so it started a real gate, with its output through a
+  pipe. Read a tool's usage from its header, never by probing flags.
+- **Took a carried row's re-measure at face value:** SCHEDULER #12 wrote that D-278's five groups all stood; the code
+  showed group (1) coded since 2026-08-09. A re-measure in a row is a claim like any other.
+- **One docs landing cost six gate runs** because `main` moved five times under it — the waste that TREE-SHARING now
+  answers. Until it lands, push the moment a gate is green: fetch, compare the base, push the branch, push `main` bare.
