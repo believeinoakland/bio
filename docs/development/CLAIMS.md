@@ -17503,8 +17503,8 @@ text: slug }`, D-102) in the SAME upload that creates the worker — read at tha
 4. **The slug grammar is pinned equal:** `Store.GROUP_SLUG_RE` (`bio-plane/src/store.mjs`) and `SLUG_RE`
    (`newgroup/src/index.mjs`) are compared byte-for-byte by `instance-group.test.mjs` S4 — a change to either moves both.
 
-**open as of 2026-09-21** — OPEN until DIST has deployed the release carrying D-436, seeded `biosmoke7`'s two stores
-(item 3), and stated item 3's route for sovereign instances installed earlier.
+**Held open from 2026-09-21 until the discharge below** — until DIST had deployed the release carrying D-436, seeded
+`biosmoke7`'s two stores (item 3), and stated item 3's route for sovereign instances installed earlier.
 
 **DISCHARGED 2026-09-22 by DIST #4.** The release carrying D-436 is 0.71.0 (`v0.71.0` = `9439431e`), deployed to biosmoke7
 and live-verified. Item 1 verified at the code: `INSTANCE_NAME` rides `uploadInstall`'s creating PUT in both arms. Item
@@ -18045,7 +18045,7 @@ being signed) — and otherwise refuses by a new code (DEC-49: a canned translat
 and the route (publish again: since REC-157 a moved conclusion warrants a new edition). If SCHEDULER judges that re-asking the
 relationship at signing is a design question (REC-135 chose to record the conclusion "as it stood at publication"), route to BOB
 first. Found by REC-157's measurement; not built there (its scope is `op=publish`'s refusal).
-**open as of 2026-09-21** — OPEN until SCHEDULER places it (or BOB rules, if routed there).
+**DISCHARGED 2026-09-22** — SCHEDULER #12 PLACED it as REC-167, FIRST of the backlog: `INVESTIGATIVE-SESSION.md` §7.1 item 4 already puts `NOT_CONCLUDED` at `op=caseratify` on the publishing project's relationship and item 9's comparison is asked of an unratified preparation, so the act is designed and nothing was routed to BOB.
 
 ## CLAIM 2026-09-21 M0 (M0-97 + D-341 — the ruling index files every answered or enacted `DEC-n` entry from its `decided:` field, and its prose joiner stops at a heading or a blank line)
 
@@ -18351,7 +18351,6 @@ re-order of the rest of the plan under it.
    row), or is the key missing its bundle (`(capture_sha, bundle_id)`, a schema change with its migration)?
 
 Sent to BOB by message on 2026-09-22; each of the four rows carries a dated SENT note in `DEBT.md`.
-**open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or narrowed further), and nothing runnable waits on any of them.
 **BOB #26, all four answered, each traced at the code (`48aab56b`) and ruled in its home:** Q1, D-152 CLOSES IN FACT (door 1):
 DEC-4's image-region clause is met at the leg by a CAP, never a refusal (`BIO_Content_Framework_v0_10.md` §14.4) — a
 rect-less leg on OCR'd text is bounded at the engine's letter and inherits no region's attestation, and refusing it
@@ -18360,6 +18359,7 @@ would press a member to invent a region. Q2, D-164 CLOSES IN FACT (door 1): Bob'
 (`NOTIFICATIONS.md` "MARKED AS HANDLED"; DEC-10 governs its own subject). Q4, D-179 (door 2): one capture, one home, the
 original's — a second registration of held bytes is refused by name (`BIO_Intake_Doctrine_v1_1.md` §8). The two build
 items and the dispositions are the BOB INBOX's entry of 2026-09-22; nothing keeps this block open past SCHEDULER's drain.
+**DISCHARGED 2026-09-22** — SCHEDULER #12 drained BOB #26's entry: D-152 and D-164 CLOSED IN FACT and archived; D-179 and D-125 PLACED in `BACKLOG.md` under their own ids (D-179 after D-171, D-125 last of the M8 corrections), their DEBT rows archived as placed.
 
 ## CLAIM 2026-09-22 BOB (#25) — BOB-NEXT final for BOB #26: BOB #25 refreshes at 65% ahead of SCHEDULER #11's group of four
 
@@ -18391,6 +18391,107 @@ claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77
 sentence, one Incomplete bullet, as-of date); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newest
 first); `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — the D-436 DELEGATION's contradictory marker settled; DIST-NEXT kept true: 0.71.0 landed at 06832aff, a BATCH owed for REC-157)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/followup`), Sparky-Air
+paths: `docs/development/CLAIMS.md` (the D-436 (worker) -> DIST DELEGATION's old `open as of` line, reworded; this
+  block), `docs/development/kickoffs/DIST-NEXT.md` (the landing commit, the owed list and the session state only),
+  `docs/DECIDED.md` (GENERATED, regenerated LAST).
+why: plancheck warned CONTRADICTORY DELEGATION on the D-436 block, which carried DIST #4's DISCHARGED line beside its
+  original `open as of 2026-09-21`; the line is reworded to BOB #25's form for D-288 ("Held open from <date> until the
+  discharge below"), keeping its history. DIST-NEXT named the branch merge `23463895` as the pointer; 0.71.0 landed on
+  main at `06832aff`, after the first landing tree `31febe21` gated RED under contention (M0-103). REC-157 (IC-173, I3
+  MINOR 49.1.0) is on main: a BATCH, not a CUT NOW — it widens what a publisher may do and closes no security,
+  disclosure or authority defect — owed no earlier than 2026-09-23 04:00Z, a day after 0.71.0's cut; bound `6dbaeb5a`.
+**released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 SCHEDULER (#12) — the lane's standing claim on the build plan's own files; THE RE-ORDER under Bob's ruling of 2026-09-22 (product before process)
+
+claimed: 2026-09-22 by SCHEDULER #12, worktree `.claude/worktrees/festive-agnesi-eb5410` (branch `claude/festive-agnesi-eb5410`;
+base `origin/main` @ `747d332d`). Paths, the lane's own (`kickoffs/SCHEDULER.md`'s ownership table):
+`docs/development/QUEUE.md` (the BOB INBOX drain and the rows; CONDUCT owns the `running` word),
+`docs/development/BACKLOG.md`, `docs/archive/ledgers/*`, `docs/development/kickoffs/SCHEDULER*.md`;
+`docs/development/DEBT.md` (LED-7's dispositions and moves); `docs/development/MEASUREMENTS.md` (appends);
+`docs/development/MILESTONES.md` (its placement table's rows, and its not-scheduled list, for the ids this lane moves);
+`docs/development/CLAIMS.md` — this block, and one dated PLACED, SENT or DISCHARGED line at the end of each DELEGATION
+this lane sent or acts on; `docs/DECIDED.md` (GENERATED, regenerated LAST).
+supersedes: the standing claim of SCHEDULER #11 (`claude/heuristic-wing-f4faae`), archived by this session on 2026-09-22 at
+13:27Z under D-398's three conditions re-checked at the moment of acting (not running; porcelain empty; tip `747d332d` an
+ancestor of `origin/main`), after its own CronList read back empty by message (*"No scheduled jobs."*); the worktree the
+archive left was removed by `git worktree remove` without force, 6,032,652 → 6,716,084 KiB free (+667 MiB).
+
+**NOT CLAIMED:** `bio-plane/**`, `civicos-ui/**`, `tools/**`, `newgroup/**`, `release/**`, `docs/architecture/**` (the
+design corpus and the map are BOB's), and every kickoff but SCHEDULER's.
+
+**open as of 2026-09-22.**
+
+Commit 1: THE RE-ORDER under Bob's ruling of 2026-09-22 (`CLAUDE.md` §2: *The goal is BIO work; process is overhead*;
+`kickoffs/SCHEDULER.md` step 3), each process row judged by the ruling's own test: does it cut gate time or unblock
+product? KEPT AT THE HEAD: M0-106 and M0-107 (SCHEDULER #11 on BOB #25's word), and in the cache M0-99 and M0-100, which
+take `DECIDED.md` and `CLAIMS.md` off both sides of a rebase (M-94: 142 and 169 of 209 commits on `main` in 24 h; M-90: a
+`--since` over one of them re-runs 24 units, 14 over a design document). MOVED BEHIND THE PRODUCT ROWS, after M0-104 and
+M0-105 and in their prior relative order, 24 rows: M0-101, the session-hygiene instruments (M0-84, M0-85, D-412), the
+reading-budget rows (REC-154, CPDF-21, M0-82), the ledger tooling (LED-8, LED-9, D-107) and the instrument cluster (D-438
+to M0-96). KEPT AMONG THE PRODUCT ROWS: M0-71, which unblocks REC-147. The product rows keep their order (a record
+over-claim before a feature, `CLAUDE.md` §2; corrections before new work); whether Bob's parenthetical (*M8-M10: publish,
+accept, the case path*) also puts M8-M10 ahead of the M1-M7 corrections goes to BOB with the backlog budget, the order
+provisional on it. `order:` lines rewritten where the move made them false or left the WHY unsaid: M0-101, M0-84, M0-85,
+REC-154, LED-8 and D-438 (each moved group's head), D-54, REC-155, COFF-13, D-162 and M0-71, and in the cache M0-99 and
+M0-100. Room: three process rows at the new foot cut to their fields (M0-92, D-437, M0-87), each VERBATIM in
+`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. M-94 recorded.
+
+Commit 2: D-278 CARRIED onto `main` VERBATIM from the unmerged `worktree-agent-aafee89563a3f2d42` (`484ed359`), where
+`main` cited it seven times; re-measured on `747d332d` (all five groups stand) and its determinations routed to BOB
+(item 3 of the DELEGATION below). Commit 3: CONDUCT #12's batch 2 CLOSED — REC-157, M0-97, D-341 and M0-81 done on
+`origin/main` @ `9d330478`, each verified by content; the refill moved M0-106, M0-107, REC-166 and REC-165. Commit 4: BOB
+#26's entry DRAINED — D-152 and D-164 CLOSED IN FACT; D-179 and D-125 PLACED; LED-7's waiting rows PLACED, each re-verified
+on `7c967f09`: D-65 after D-60, D-169, D-171 and D-179 after it, D-125 last of the M8 corrections, D-178 after D-182, D-74
+after D-126, D-86 after D-394, D-66 after FW-20; REC-157's DELEGATION PLACED as REC-167, first of the backlog. Their DEBT
+rows archived (placed, or in fact). Room: every uncut process row at the foot and the arriving D-66 and D-86 cut to their
+fields, each VERBATIM in `QUEUE-cut-2026-09-22.md`. HELD, not placed: the retirable control's declared count (CONDUCT
+#11's route, a process row that pays nothing; draft on `origin/scheduler12/row-drafts`) and the DEBT row M0-97's sweep
+added (process, left in `DEBT.md`). Commit 5: THE GATE READ RED on one arm (`ledger.test.mjs`: *the real DEBT.md has rows*, floored at
+`> 100`; tree `635ded3c`, 42/43) once BOB #26's second entry (D-148, D-149) was drained on top, the fold having taken the
+ledger to 99. That drain is HELD, committed on the local branch `scheduler12-held-d148-d149` (`fe7be641`), and the entry
+stays in the inbox; the floor's correction is PLACED as M0-109 in the cache, in M0-100's slot (CONDUCT holds M0-100 for
+M0-99), M0-100 first of the backlog; room by four foot cuts (D-74, UI-75, D-178, D-125).
+
+## DELEGATION 2026-09-22 SCHEDULER (#12) -> BOB — **THREE ITEMS: the backlog's 150 KiB budget (owed since SCHEDULER #11), whether Bob's *M8-M10* orders the product rows among themselves, and D-278's five determinations (a design routing); the first two provisional and cheap to reverse**
+
+1. **THE BACKLOG BUDGET — RUNNING: 150 KiB KEPT, by BOB #23's ruling** (raise only on a measurement that cut rows are
+   re-read from the archive often enough to cost more than the budget saves). Measured on `d96dc942`: 32 of the 57
+   product rows are cut to their fields, so most of the next product spawns read their row from the archive once; the
+   18 uncut rows at the foot are process rows (32,467 B), whose cutting frees about a third of that, less than the ~10
+   verified rows waiting for room need; SCHEDULER #11 cut 17 rows to place 6. A re-read costs a worker one lookup of ~1.5
+   KB; the 50 KiB a raise to 200 KiB adds costs every SCHEDULER session that reads the file whole about as much. **The
+   alternative:** raise to 200 KiB, the cut rows restored as room allows. **Recommendation:** keep it — cutting is now
+   scripted, and a cut row keeps what ordering needs (heading, `order:`, design, depends-on). **Reversal:** one constant in
+   `tools/ledger.mjs` `BUDGET` and the preamble; nothing grows more expensive under either.
+2. **BOB #25's *"after them come M8-M10: publish, accept and the case path"* — RUNNING: the product rows keep their
+   order** (after REC-166 and REC-165: ten M1-M7 corrections — D-116, CAP-13, D-389, D-57, D-440, D-420, D-390, D-60,
+   CAP-14, D-54 — then the M8-M10 corrections, then the features, UI-74's accept ceremony first). Ambiguous because Bob's
+   recorded words (`CLAUDE.md` §2; BOB-NEXT's *Product rows (M8-M10: publish, accept, the case path) go ahead of M0 process
+   tooling*) order product against process, while the relayed sentence reads as ordering M8-M10 ahead of the M1-M7 rows.
+   **The alternative:** the seven M8-M10 corrections (REC-159, REC-162, REC-155, REC-158, D-311, UI-73, D-82) move above
+   the ten M1-M7 corrections; moving the FEATURES above them is not offered, since `CLAUDE.md` §2 puts a record
+   over-claim ahead of a missing feature. **Recommendation:** keep — seven of the ten are claims the record cannot support (D-390 fails loudly, CAP-14 adds omitted provenance, D-54 is configuration).
+   **Reversal:** file position only; the next refill takes M0-106, M0-107, REC-166 and REC-165 either way.
+
+3. **D-278 — THE CODELESS REFUSALS, A DESIGN ROUTING (its fix needs a determination per group, so it cannot be placed
+   as a build row).** Carried onto `main` in this landing VERBATIM from the unmerged `worktree-agent-aafee89563a3f2d42`
+   (`484ed359`, 2026-08-09), where `main` cited it seven times. Re-measured on `747d332d`: all five groups stand, each
+   still answering `{ ok: false, error: <sentence> }` with no code — (4) the capability 503s (`index.mjs` 5649, 5689,
+   6042, 7822), (1) `unauthenticated`, (5) `unknown op` (4436; `civicos-ui/app.html` tests `/unknown op/i` twice),
+   (3) the method 405s (4933, 6040, 7820, 7925) and (2) the pre-authentication surfaces (`verify`, `publishedbytes`,
+   `publishedcase`, `knock`, `bootstrap`). **RUNNING:** nothing over-claims — each carries a true sentence, and
+   `d270-reach.test.mjs` pins the residue. **Asked:** the determination per group, DEC-49's canned translation against
+   REC-64's non-enumeration sentence for (1) and the `error` field app.html reads for (5); the row's own order is (4),
+   (1), (5), with (2) behind whoever owns pre-authentication wording. **Recommendation:** that order, (3) stated as not
+   member-facing rather than coded. Each determination returns as a designed row.
+Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
+**Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them `CLAUDE.md` §2's over-claim rule decides). Both were already running; nothing moved. Item 3 accepted by BOB #26 for its next landing.
+**open as of 2026-09-22** — item 3 only: D-278's determinations, which BOB #26 rules per group; nothing runnable waits on it.
 
 ## CLAIM 2026-09-22 RECORD (REC-163 — the setup page and a PUBLIC `op=instancegroup` show the recorded slug, or say that none is recorded: Publication §7 point 1)
 

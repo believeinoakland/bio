@@ -18246,6 +18246,27 @@ records the judgement says UNDETERMINED, never a title-only ADMIT. A lane's task
 draft read `list_task_runs` as a bare array, the schema's picture of it; driving the judgement over the live listing is
 what found the object, and the fixtures now carry the printed shape.
 
+## M-94 · 2026-09-22 · SCHEDULER #12 — which files both sides of a rebase carry, and how little of a day's commits touch product code
+
+**INSTRUMENTS:** `git log --format=%h --since=2026-09-21T13:30Z --until=2026-09-22T13:30Z 747d332d [--no-merges] -- <path>`
+(git's default history simplification; `747d332d` was `origin/main` at 13:26Z) counted with `wc -l`; `grep -l` over the 319
+suites `bio-plane/test/*.test.mjs` and `civicos-ui/test/*.test.mjs` on the same tree. Read 2026-09-22 by SCHEDULER #12 to
+judge which process rows cut gate time under Bob's ruling of that day (`CLAUDE.md` §2).
+
+| what | measured |
+| --- | --- |
+| commits on `main` in the 24 h | 209 (162 without merges) |
+| of them touching `docs/development/CLAIMS.md` | 169 (127) |
+| of them touching `docs/DECIDED.md` | 142 (110) |
+| of them touching `docs/development/QUEUE.md` | 47 (42) |
+| non-merge commits touching product source (`bio-plane/src`, `civicos-ui`, `newgroup/src`, the three workers' `src`) | 15 of 162 |
+| suites naming `CLAIMS.md` · `DECIDED.md` · either | 28 · 2 · 29 of 319 |
+
+**WHAT IT SAYS.** Both sides of nearly every rebase carry `CLAIMS.md` and `DECIDED.md`, so a `gates.mjs --since` re-check
+re-runs their readers every time: 24 units over one of these ledgers against 14 over a design document (M-90). M0-99 and
+M0-100 take those two paths off both sides, which is gate time cut on every landing; M0-101 takes only CONDUCT's
+`running` word off `QUEUE.md`, which a quarter as many commits carry and BOB and SCHEDULER still write. It says nothing about how long any one re-check takes on a loaded machine.
+
 ## M-95 · 2026-09-22 · REC-163 — whose group the setup page names, and what op=instancegroup answers each caller, before and after the slug became public
 
 Instruments: `bio-plane/test/group-public.test.mjs` run from `bio-plane/` against the branch's `src/` and, with
