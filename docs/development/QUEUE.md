@@ -10,7 +10,7 @@ row's paths — and when none does, the row is UNDETERMINED between `queued` and
 `worktree-agent-*` branch whose commits name the item, then (2) the item's block in `CLAIMS.md` (`released:` means it
 finished on purpose); only with neither does it fall back to `queued`. `blocked`: cannot run until something outside the
 queue moves, and says what. `done` and `superseded` leave for the archive (`node tools/ledger.mjs archive <ID>`). **A
-worker reads its own row from `origin/main` before it touches anything, and STOPS if the row does not read `running`.**
+worker reads its own row from `coord` (`node tools/coord.mjs read docs/development/QUEUE.md`; M0-110, corrected by SCHEDULER #14) before it touches anything, and STOPS if the row does not read `running`.**
 
 This file's history until 2026-09-18 — its earlier preambles, the 2026-08-04 handover, the per-area narrative — is in
 `docs/archive/ledgers/QUEUE-narrative-2026-09-18.md`; drained inbox entries are in
@@ -50,7 +50,7 @@ added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this 
 order: directly after REC-163, the same defect's surface half; the two share no file (SCHEDULER #9, 2026-09-21)
 milestone: M7
 interface: I3 consumer (`op=instancegroup`, public since REC-163).
-design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the slug is PUBLIC; a display name is shown WITH it, never instead), with DEC-69: a surface invents nothing.
+design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the slug is PUBLIC; a display name is shown WITH it, never instead), with DEC-8: a surface invents nothing (re-cited 2026-09-23 by SCHEDULER #14: `decided.mjs` reads DEC-69 as not forcing a member's decision; UI-77's worker's finding).
 depends-on: REC-163 (the public read).
 scope: the member fence and the public header read `op=instancegroup` and show the recorded slug, or say that none is recorded; the display-name, domain and monogram literals go.
 accepts-when: signed out and in, against a plane recording a second slug, both surfaces show it and none renders `Believe in Oakland` or `believeinoakland.org`. How a liar passes it: a CSS-hidden literal, so the arm reads the DOM's text. NEGATIVE CONTROL: restore the `GROUP` literal, and the no-literal arm fails by name.
