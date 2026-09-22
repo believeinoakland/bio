@@ -17749,6 +17749,13 @@ class and a `--since` re-check; `tools/pushguard.mjs` refuses a push whose tip t
 moved REC-163, and D-82 and D-380 were PLACED in the room it freed (re-verified at `ab34197b`), their DEBT rows archived as
 placed. 115 open DEBT rows remain.
 
+**AMENDED 2026-09-22, same session (commit 5): DIST #4's route PLACED** — M0-103 (`owed-controls.test.mjs` reads a
+subprocess timeout as a finding, a false RED the push guard now enforces), verified at the code (its two spawns carry
+`timeout: 120_000` and nothing reads `ETIMEDOUT` or a signal), FIRST of the instrument cluster before D-438. Room made by
+cutting five more rows at the foot to their fields (UI-69, REC-148, UI-68, REC-147, M0-71), each VERBATIM in
+`docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. SCHEDULER-NEXT brought to this state, its line 1 unchanged for the chip's
+gate. 114 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#10) -> BOB — **THREE QUESTIONS, ONE EACH, from LED-7 batch S10-1: Framework §12's intent layer (D-75, D-76, D-79, D-81, with D-77's guard), §13's bias layer (D-85, D-87, D-88), and member-driven capture (D-120); none blocks a runnable row**
 
 1. **FRAMEWORK §12's INTENT LAYER — D-75, D-76, D-79, D-81, AND D-77's GUARD.** Designed at concept level in
