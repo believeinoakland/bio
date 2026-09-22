@@ -971,6 +971,11 @@ function makePlane(mode){
          `caseArm:"unknownop"`     — as above.
          `caseArm:"notpublished"`  — the STORE's own NOT_PUBLISHED, wrapped by
             index.mjs at 404. The true negative for a case. */
+    /* UI-77, 2026-09-22: the public header's group read, answered as the plane answers a stranger since REC-163
+       (IC-174) — `{ok:true, group:<slug>}` inside the control plane's envelope — with a slug that is NOT this
+       project's, through `say` so the slug is attributed to the PLANE, not to the surface. Before UI-77 the
+       header painted a literal and this op was never asked. */
+    if(op === "instancegroup") return W(say({ ok:true, group:"harbour-watch-coalition" }));
     if(op === "publishedmanifest"){
       if(opts.manifestArm === "unknownop")
         return { ok:false, status:400, json:async()=>say({ ok:false, error:UNKNOWN_OP_REFUSAL, op }) };
@@ -1459,8 +1464,13 @@ const ALL_SURFACES = [...new Set(SCENARIOS.flatMap(s => [...s.surfaces.keys()]))
    They are SURFACES in their own right — a reader watches the answer appear
    beside the hash they clicked — and they carry plane-sourced text, which is the
    whole of what this item found. */
+/* CORRECTED 2026-09-22 (UI-77), never exempted: `#p-gid` is no longer a surface. It carried a literal DOMAIN
+   (one group's, on every instance); Publication §7 point 3 shows a domain only while VERIFIED, and verification
+   is not built, so the header leaves it empty and an empty element is not something a reader reads. When a
+   verified domain is built this surface returns and this list gains it back. `#p-gname` and `#p-mono` stay:
+   they now carry the recorded slug and its first character, read from `op=instancegroup`. */
 const EXPECT_SURFACES = ["#content","#g-err","#m-grp","#m-handle","#m-idstr",
-                         "#p-gid","#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED,
+                         "#p-gname","#p-mono","#pl","#pub-body","#rail", SERVED,
                          "#v-c-" + FIND_ID, "#v-f-" + FIND_ID, "#v-man",
                          "#v-part-" + SHA.slice(0, 12), "#v-part-" + CAP.slice(0, 12),
                          "#v-refused", "#v-unreachable",
@@ -1790,8 +1800,14 @@ if(S("case-address-at-load") && !HID("case-verify")){
      + APIQ_CALLERS.join(", ") + "], each keeping its own error path rather than being routed into one "
      + "generic catch",
      /async function apiQ\(op, params\)\{\n  const j = await api\(op, null, params\|\|\{\}\);\n  return \(j && j\.result !== undefined\) \? j\.result : j;\n\}/.test(APP_SRC)
-     && APIQ_CALLERS.length === 3
-     && APIQ_CALLERS.join(",") === "publishedcase,publishedmanifest,verify");
+     /* CORRECTED 2026-09-22 (UI-77), never exempted: this pinned THREE callers. The public header's group read
+        (`readGroup`, `op=instancegroup`, public since REC-163/IC-174) is a fourth, and it keeps its OWN error
+        path exactly as this sweep requires: `groupFromAnswer` is a SHAPE test — only `{ok:true, group:<slug>}`
+        is a group and only `{ok:true, group:null}` is "none recorded", so an `ok:false` returned through this
+        non-throwing seam reads as a SILENCE, never as "none" (group-surface.test.mjs's SILENCE arms drive it).
+        The old pin was right about `apiQ` and about the discipline; its set predates the fourth public read. */
+     && APIQ_CALLERS.length === 4
+     && APIQ_CALLERS.join(",") === "instancegroup,publishedcase,publishedmanifest,verify");
 }
 
 /* AND THE NEW SCENARIO RENDERED ITS OWN SUBJECT (UI-34). The verify pane is the

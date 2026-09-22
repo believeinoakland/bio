@@ -886,8 +886,12 @@ const FLOOR = {
      code to a surface SHOULD raise it, and that is a real widening of what a member
      can meet. What must never happen silently is the fed half FALLING — that means
      the partition stopped recognising hand-offs, and a walk that lost sight reports
-     a smaller, tidier, wrong answer. */
-  r3Fed: 70,
+     a smaller, tidier, wrong answer.
+     RAISED 70 -> 71 on 2026-09-22 by UI-77, from the figure this instrument PRINTED (`measured 71`): the new
+     `group-surface.test.mjs` FEEDS `NOT_AUTHENTICATED` to the public header — the refusal an older plane (before
+     REC-163/IC-174) answers a stranger's `op=instancegroup` with — so the header can be shown saying it could not
+     read the group rather than that none is recorded. A real widening, which this floor says should raise it. */
+  r3Fed: 71,
 };
 
 /* THE OTHER HALF OF THE RATCHET. A floor catches an instrument going blind; a
