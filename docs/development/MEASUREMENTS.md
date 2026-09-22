@@ -18438,3 +18438,33 @@ move. It changes what a member signs, so it is routed to BOB before SCHEDULER. *
 ratification then does (the probe's own fence check republished A's case in between, so B's ratify read `RATIFY_STALE`, an
 artifact of the probe, not a finding); whether the same stamp moves a finding pinned by the SAME project's other case; live,
 because the network refuses Cloudflare (UNDETERMINED).
+
+## M-103 · 2026-09-22 · REC-167 — what `op=caseratify` signs after the publishing project's conclusion moves, before and after
+
+Instruments: `bio-plane/test/caseratify-conclusion.test.mjs` run from `bio-plane/`; `node test/caseratify-conclusion.control.mjs`
+(four arms plus a baseline); `node scripts/battery.mjs` over the 36 suites naming `caseratify`, `ratifyCase` or
+`withdrawconclusion` (run `563.729b32`, on `0acd78bb` + this item's uncommitted src); `civicos-ui/check-refusal-codes.mjs`;
+`scripts/coverage.mjs --strict`; `civicos-ui/test/run.mjs`. Every act driven through the control plane as a member; every
+signature a real ssh-keygen SSHSIG. Branch `worktree-agent-a33d4bac9a4ff9d3a`, base `origin/main` `14ffdbcf`. THE UNTOUCHED
+PLANE was measured as the control's arm (b) — the whole refusal dropped, byte-for-byte the region's only effect — rather than
+by an untouched checkout, because the suite imports the new catalogue row and would throw there before asserting anything.
+
+| measured | the plane as M-92 measured it (arm b) | this branch |
+| --- | --- | --- |
+| M-92's path: conclude, `op=publish` (prepared), withdraw, `op=caseratify` | COMMITS; the edition records the withdrawn claim | REFUSED `CASE_CONCLUSION_MOVED` (C-65.1, its canned translation), `moved[]` naming the member, the recorded claim and `project_withdrew_its_conclusion`; the document stays unratified, `sig_armored` null, same sha |
+| then `op=ratify` of the finding | SUCCEEDS | REFUSED `RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE` — D-431 already refuses a finding no ratified case pins, so the fix at the case reaches it; no site of its own |
+| conclude again on ANOTHER claim, then `op=caseratify` of the OLD preparation | (already signed at the row above) | REFUSED by name; `moved[].now` is `concluded`, reading B, claim B — the arm concluded-ness alone passes (arm a: 17/4, failing exactly there) |
+| publish again, `op=caseratify` of the NEW preparation, `op=ratify` | — | a fresh preparation recording claim B (a new case id: the refused one was never a case, so nothing pinned the finding); ratifies; the finding ratifies; the old preparation, still unsigned beside it, is still refused |
+| an unchanged conclusion, a make-current moved AFTER preparation | ratifies | ratifies — a pointer is not a conclusion |
+| the suite, 21 assertions | 11 / 10 (arm b) | **21 / 0** |
+| the control, declared before its first run | — | ALL AS DECLARED: baseline 21/0 · (a) comparison dropped 17/4 · (b) refusal dropped 11/10 · (c) concluded-ness dropped 21/0, declared to show no effect · (d) signer's sight dropped 14/7; every restore sha256 MATCH, content IDENTICAL, cmp SAME (`store.mjs` 2,794,793 B) |
+| narrow battery, the 36 suites that drive a case ratification or a withdrawal | — | `36/36 suites green · 1869 assertions passing`, among them `case-edition-conclusion` 36/0 (its §8 RATIFIES a `no_project` edition through this committer, the over-strictness arm for the pin comparison) |
+| DEC-49 guard | — | exit 0; nine floors moved by exactly this item's own (+1 family, +1 row, +1 code, +1 reach, +1 span, +1 region, +13 region lines, +1 compared, +1 judged), zero pre-existing slack |
+| coverage `--strict` | — | exit 0; `C-65.1` named by an assertion (357/357); register `arms 1650/1650 · classified 266/266 · corpus 267/267`, `229 RUN … floor 229/229` after the floors moved from its own print on the committed tree |
+
+**WHAT IT SAYS.** Design gap (e) is closed at the one committer where a case's facts become signed: a preparation is signed
+only while its project still stands on the conclusion it records, asked through the same two readers `op=publish` asks, so the
+act that prepares and the act that signs cannot disagree about what the project stands on. Arm (c)'s null is a measurement,
+not a dead gate: what `#caseConclusionFor` answers for a relationship that is not concluded renders as a row no recorded
+conclusion can equal, so the comparison alone already refuses a withdrawal; the explicit concluded gate is §7.1 item 4's
+question by name and the only source of the refusal's `why`.

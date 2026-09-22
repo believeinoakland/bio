@@ -18955,3 +18955,7 @@ comparison, and its front matter's design gap (e); the measured path is M-92's `
 **NOT** `docs/development/QUEUE.md` or `BACKLOG.md`, **NOT** `docs/development/INTERFACES.md`, **NOT** `newgroup/**`,
 `release/**`, `civicos-ui/app.html`, and NOT `suggestVersion`/`extractPropose`/`index.mjs`'s principal stamp (REC-165) nor
 `#moveVersionState`/`#setProjectCurrentVersion` (REC-166). D-442 is not this item's.
+
+SECOND BLOCK (2026-09-22, after the battery named them): NO existing suite was made wrong by this landing — the 36 suites that
+drive a case ratification or a withdrawal ran `36/36 suites green` before any correction; `bio-plane/scripts/coverage.mjs`
+(`REGISTER_FLOOR`, from its own print) and `civicos-ui/check-refusal-codes.mjs` (nine floors, from its own print) moved.
