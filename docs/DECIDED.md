@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1412 rulings across 104 documents.
+1411 rulings across 104 documents.
 
 ## DEC-
 
@@ -289,7 +289,7 @@ authority is the file named, never this one.
 - **D-36** — THE MEASUREMENT DECIDED THE SHAPE and is recorded in MEASUREMENTS.md with its date and its re-runnable instrument: over the ONE real captured document this repository holds, a subject name was the WHOLE label in 0 of 41 labels against 33 names taken from the document itself — so the normalised-label index answers…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1209`
 - **D-36** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 5): BOB #24's answers DRAINED, and THE REFRESH** — D-36 and D-56 CLOSED BY THE THIRD DOOR (`RETRIEVAL-SUBSTRATE.md`'s front matter; `CLIENT-RENDERED.md`), D-69 CLOSED IN FACT (`CONSTRUCTS.md`'s front matter), each verified there; D-66 NARROWED to its owed measurement.  
-  `docs/development/CLAIMS.md:17616`
+  `docs/development/CLAIMS.md:17625`
 - **D-38** — D-38 AND D-45 — TWO LIMITATIONS SETTLED BY DECISION AND HOMED IN NO GOVERNED DESIGN.** `MILESTONES.md`'s "Deliberately not scheduled" lists both (*settled by decision, default is to leave them*) and `WORK-PIPELINE.md` §3 names both as third-door rows; neither is stated in a construct's home (`MILESTONES.md` and…  
   `docs/development/CLAIMS.md:17200`
 - **D-38** · 2026-09-21 — RULED — D-38 and D-45 are stated LIMITATIONS in State Rules' front matter (§4.3, §8), so both leave DEBT by the third door; Q1 (D-162) ANSWERED BY BOB 2026-09-21 (Content Framework §8.4; its build in the BOB INBOX); Q3 (D-53) is DOCTRINE, PUT TO BOB in his conversation on 2026-09-21 and unanswered — do not re-ask.  
@@ -331,7 +331,7 @@ authority is the file named, never this one.
 - **D-73** · 2026-07-30 — RULED by Bob: the meeting-agenda-minutes sequence is ONE form of connected data, and the system must support many types of happenings and progressions, his example being need, budget request, budget approval, RFP, responses, award, signed contract.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:55`
 - **D-75** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): BOB #25's answers DRAINED** (`37367611`), each verified at its document: D-75, D-76, D-77, D-79, D-81, D-87, D-88 and D-120 CLOSED BY THE THIRD DOOR (the Framework's front matter, §12 and §13.1; `SOURCE-ACCESS.md` item 2).  
-  `docs/development/CLAIMS.md:17732`
+  `docs/development/CLAIMS.md:17741`
 - **D-78** · 2026-07-30 — RULED by Bob: an assistant may open a focus unattended, because that support is central to what BIO should offer and a focus is informative and advisory rather than committing.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:56`
 - **D-79** · 2026-08-09 — D-79: *AGE RATHER THAN VANISH … a finding that disappears is indistinguishable from one that was never made, and that rule does not relax because the finder was a machine.* `proposeDispose`'s own header: *Doctrine is SETTLED (D-79) … DECLINING IS NOT AUTHORING*, and at its validity check: *it does NOT require a gap…  
@@ -399,7 +399,7 @@ authority is the file named, never this one.
 - **D-117** — 2 · STALE RECORD CORRECTED BY THIS SWEEP (already pushed, batch 1) `VERIFICATION.md`'s floor table (0/42 → measured 105/105 suites declaring negative controls) · D-117 resolved (coverage.mjs gates the fleet under `--strict`) · D-213's close  
   `docs/archive/IS-SWEEP-2026-08-07.md:138`
 - **D-118** — RULED (D-118, DEC-42) | | version authority; signing and namespaces; byte-verification; the rollout wait; the account pin | BUILT and asserted (D-106, D-108, `deploy.mjs`, the wizard suite) | | the installer: OAuth, plan probe, buckets, plane and fleet uploaded and verified, `bindings: []` | BUILT and verified…  
-  `docs/architecture/BIO_Distribution_v0_1.md:108`
+  `docs/architecture/BIO_Distribution_v0_1.md:118`
 - **D-118** · 2026-07-31 — Workers Paid is an optimisation and never a requirement (RULED), and the sovereign installer puts instances into other groups' accounts, most of which will be Free.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:75`
 - **D-118** — Workers Paid is an optimisation and never a requirement (RULED), and the installer puts instances into other groups' accounts, most of them Free.  
@@ -455,7 +455,7 @@ authority is the file named, never this one.
 - **D-162** · 2026-09-21 — Q1 (D-162) was RULED BY BOB (`BIO_Content_Framework_v0_10.md` §8.4, BOB #23's inbox entry `8d2ba50f`) and is PLACED as D-162 (RECORD, M4) and UI-76 (UI, M8); D-162 left DEBT by the second door.  
   `docs/development/CLAIMS.md:17234`
 - **D-163** — SUPERSEDED: D-163, by D-164, as `BIO_Content_Framework_v0_10.md` §18 states.  
-  `docs/development/CLAIMS.md:17728`
+  `docs/development/CLAIMS.md:17737`
 - **D-164** · 2026-09-14 — D-164 design-space study, RULED 2026-09-14 in Bob's framing: the transcription is authored text whose fidelity is undetermined and stated until a second member attests it, so fidelity rises through people and never through a machine's confidence in itself.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1615`
 - **D-164** · 2026-09-14 — RULED 2026-09-14; no surface (Program B) | | the catalogue of standards by audience and output act | OWED (§5.5 of the D-164 study); does not exist | | certification and persistence divergences | unmade | | addressed delivery | RULED 2026-09-17 (§6A) — the review copy's PLANE HALF BUILT (REC-126); its surface…  
@@ -509,7 +509,7 @@ authority is the file named, never this one.
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
   `docs/archive/ledgers/QUEUE-2026-08.md:162`
 - **D-207** — D-207 SUPERSEDED by the same ruling and archived.  
-  `docs/development/CLAIMS.md:17612`
+  `docs/development/CLAIMS.md:17621`
 - **D-212** · 2026-08-05 — SUPERSEDED 2026-08-05 by the VERSIONS design — the question this row asked turned out not to be a record question at all.** The row went through three drafts and each was wrong in an instructive way, so the history is kept rather than deleted.  
   `docs/archive/ledgers/DEBT-closed-2026-08.md:91`
 - **D-213** · 2026-08-07 — close condition CORRECTED 2026-08-07: the code does not use N-ids.** Verified: no N-number exists anywhere in source; the live vocabulary is SLUGS in `queuestate.mjs` (`QUEUE_FINDING_KINDS` :118-134), `classOfKind` is the fence, and the store refuses unknown kinds at the mint.  
@@ -589,13 +589,11 @@ authority is the file named, never this one.
 - **D-260** · 2026-09-21 — §6 — D-260 is RULED (BOB #22, 2026-09-21; `BIO_Assistant_and_AI_Roles_v0_1.md` §6): an instance may hold ONE organisation-principal `ai` credential as a deploy secret, and it resumes only the runs that credential opened.  
   `docs/architecture/BIO_Distribution_v0_1.md:12`
 - **D-260** · 2026-09-21 — RULED 2026-09-21 (D-260; the assistant's §6), NOT BUILT: the deploy carries no such secret yet | | WARC/Memento interchange; capture-byte custody at scale | M6's absorbed debt (D-99; the R2 growth question) — not designed | | the front page a group sees; the wizard saying what an absent member costs | built as…  
-  `docs/architecture/BIO_Distribution_v0_1.md:115`
+  `docs/architecture/BIO_Distribution_v0_1.md:125`
 - **D-260** · 2026-09-21 — 2026-09-21 · BOB #22 · D-260 RULED — AN INSTANCE MAY HOLD ONE ORGANISATION-PRINCIPAL `ai` CREDENTIAL AND RESUMES ONLY THE RUNS IT OPENED (SCHEDULER (#5)'s Q3).** Design: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6, the D-260 paragraph (this commit); the deploy half is `BIO_Distribution_v0_1.md` §6's…  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1277`
 - **D-260** — RULED by BOB #22 (SCHEDULER #5's Q3): an instance may hold ONE organisation-principal `ai` credential and resumes ONLY the runs it opened. — owner RECORD with FLEET, then DIST.  
   `docs/archive/ledgers/QUEUE-cut-2026-09-21.md:403`
-- **D-260** · 2026-09-21 — D-260 is RULED** (BOB #22, 2026-09-21; the assistant's §6, `QUEUE.md`'s BOB INBOX entry): its item 2 is DIST's, AFTER item 1 (the plane's caller, RECORD with FLEET) — install and update carry ONE organisation-principal `ai` credential as a deploy secret the way `DAEMON_TOKEN` is carried, never in the record,…  
-  `docs/development/kickoffs/DIST-NEXT.md:63`
 - **D-263** · 2026-08-09 — D-263: THE DROPPED PROVENANCE SENTENCE, RECOVERED AND AMENDED** item: D-263 (existing row, raised by M0-20).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:7347`
 - **D-263** — DECLARATION IS CORRECTED, and it is D-263's arm and not mine.** Re-running the harness found it declaring A5 to FAIL when A5 now stays GREEN: the corpus grew 146 -> 198 and A5's `readable > 100` floor stopped biting.  
@@ -819,13 +817,13 @@ authority is the file named, never this one.
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2):** also `docs/development/DEBT.md` and `docs/archive/ledgers/DEBT-closed.md` (D-436 archived as PLACED; D-260's disposition carries DS-3's and FL-6's dispatch fix), the TRACKED ELSEWHERE table in `QUEUE.md`, and `docs/development/kickoffs/SCHEDULER-NEXT.md` (the refresh).  
   `docs/development/CLAIMS.md:16249`
 - **D-436** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2): D-436 CLOSED** — verified an ancestor of `origin/main` @ `86523052` at `38850da4` (CONDUCT #11's integration merge) and BY CONTENT: `believe-in-oakland` occurs 0 times in `store.mjs` (23 at spawn), `index.mjs` and `checks/bio-checks.mjs`; `Store#instanceGroup` and…  
-  `docs/development/CLAIMS.md:17595`
+  `docs/development/CLAIMS.md:17604`
 - **D-436** · 2026-09-21 — CLAIM 2026-09-21 DIST (DIST #3 — D-436 item 3's route DECIDED: the update path tells an operator, and never seeds) session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air paths: `docs/development/kickoffs/DIST-NEXT.md` (owed item 1's item-3 sentence only), `docs/DECIDED.md`…  
-  `docs/development/CLAIMS.md:17624`
+  `docs/development/CLAIMS.md:17633`
 - **D-438** — operator gap), and — AMENDED while building — **D-438** (the guard's two real-tree control harnesses had stopped measuring; the arms NOT D-254's) and **D-439** (the class sweep's two unpinned copies). - `docs/development/MEASUREMENTS.md` (appended), `bio-plane/scripts/coverage.mjs` (`REGISTER_FLOOR` numerals ONLY,…  
   `docs/development/CLAIMS.md:16800`
 - **D-440** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 4): BOB #24's entry DRAINED and LED-7 batch S9-1** — D-440 PLACED after D-57 with the claims the record cannot support, and D-420 directly after it (the same function, `coversImage`; one worker for both), each verified at the code; both left DEBT by the second door.  
-  `docs/development/CLAIMS.md:17608`
+  `docs/development/CLAIMS.md:17617`
 ## IC-
 
 - **IC-1** — per IC-1 as resolved; <w:t> text in body order; THE EVIDENTIARY CORE per DEC-5 — w:ins/w:del with author, date and the SUPERSEDED WORDING, word/comments.xml with author and date — under the shared I2 extension envelope), bio-plane/test/formats-docx.test.mjs (NEW, hermetic programmatic fixtures modelled on real…  
@@ -985,11 +983,9 @@ authority is the file named, never this one.
 - **IC-165** · 2026-09-19 — `TASK`'s gating is RULED CORRECT by BOB #17 (`63926201`, 2026-09-19) and STAYS.** It was raised as a question at this resolution — Membership v2 §7 enumerated CASE/DRAFT/RVG/PROJ — and BOB answered that the rule is the PREDICATE preceding that list (*every prefix whose objects a read withholds from some caller*),…  
   `docs/development/INTERFACE-CHANGES.md:12061`
 - **IC-172** — DECIDED by DIST #3: after an update to a release carrying IC-172, `newgroup` reads `op=instancegroup`; with no group recorded it TELLS the operator what is refused and that their own `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion, and NEVER seeds. It is built with 0.71.0,…  
-  `docs/development/CLAIMS.md:17630`
+  `docs/development/CLAIMS.md:17639`
 - **IC-172** · 2026-09-21 — A bearer is NOT refused (provisional at acceptance; RULED by BOB #22 on 2026-09-21, `BIO_Membership_Architecture_v2.md` §4).  
   `docs/development/INTERFACES.md:508`
-- **IC-172** — Item 3's route, DECIDED by DIST #3** (BOB #24: auto-seed is NOT ruled in, nothing open for BOB): `newgroup`'s update path, after an update to a release carrying IC-172, reads `op=instancegroup`; if no group is recorded it TELLS the operator what is refused and that their own `op=instancegroupseed` settles it, may…  
-  `docs/development/kickoffs/DIST-NEXT.md:53`
 ## C-
 
 - **C-2.10** — lane/test/conformance.test.mjs + bio-plane/test/ratify.test.mjs (ONLY superseded action fixtures and pinned assertions, CORRECTED with dated comments and never exempted), docs/development/CLAIMS.md (this entry)  
@@ -1467,9 +1463,9 @@ authority is the file named, never this one.
 - **REC-163** · 2026-09-21 — Item 1: REC-163 and UI-77 AMENDED to `BIO_Publication_v0_1.md` §7 (the slug is public; `op=instancegroup` gains the public class).  
   `docs/archive/ledgers/BOB-INBOX-drained.md:1424`
 - **REC-163** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): CONDUCT #11's route PLACED** — the group's display name hard-coded on every instance's surfaces, verified at the code on `86523052`: REC-163 (RECORD: `setup.mjs`'s literal eyebrow) and UI-77 (UI: `app.html`'s `GROUP` literal at the member fence and the public header),…  
-  `docs/development/CLAIMS.md:17600`
+  `docs/development/CLAIMS.md:17609`
 - **REC-163** — REC-163 and UI-77 AMENDED to Publication §7 (the slug is public); REC-164 and UI-78 PLACED after UI-75.  
-  `docs/development/CLAIMS.md:17618`
+  `docs/development/CLAIMS.md:17627`
 ## UI-
 
 - **UI-3** — ` route; (4) `navBackDo` gains one `project` arm; (5) inside the UI-3 BALLOT region, `openBallotDialog`/`doBallot` are CORRECTED for D-173 — the three ops they read were read OFF THE ENVELOPE and a store refusal arrives as a VALUE, not a throw; (6) the UI-7 MEMBERS region — `MM_OWNERSHIP_CAP`, `memberOwnership`,…  
@@ -1861,7 +1857,7 @@ authority is the file named, never this one.
 - **M0-97** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): BOB #22's six inbox entries DRAINED**, each verified at its cited design and at the code — M0-97 (`decided.mjs` indexes a `decided:` field) directly after D-435, with D-341 (the same file) after it; REC-160 (`op=reevaluations` names a severed leg's status) after D-389,…  
   `docs/development/CLAIMS.md:16989`
 - **M0-103** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 5): DIST #4's route PLACED** — M0-103 (`owed-controls.test.mjs` reads a subprocess timeout as a finding, a false RED the push guard now enforces), verified at the code (its two spawns carry `timeout: 120_000` and nothing reads `ETIMEDOUT` or a signal), FIRST of the…  
-  `docs/development/CLAIMS.md:17752`
+  `docs/development/CLAIMS.md:17761`
 
 ## Rulings carrying no id
 
@@ -2494,11 +2490,13 @@ Settled in prose without an id allocated. Cite them by file and line.
 - CORRECTED SUITES, each with a dated reason at the site and none exempted: `acquire`, `conformance`, `counterparty`, `inquiry` (the setup page's `mdFor` bytes are judged AS THE PLANE HOLDS THEM, through `withProducingGroup`, beside a pin that the page's own bytes name no group); `bundle`, `livefire`, `installer`,…  
   `docs/development/CLAIMS.md:17466`
 - **2026-09-21** — AMENDED 2026-09-21, same session (commit 2): LED-7 batch S10-2**, every row read at the code on `18d50de5`.  
-  `docs/development/CLAIMS.md:17726`
+  `docs/development/CLAIMS.md:17735`
 - **2026-09-21** — AMENDED 2026-09-21, same session (commit 4): THE REFRESH** — `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #11 from the state measured at `8d9fa057`, and two mechanics added to `kickoffs/SCHEDULER.md`: ask every live lane that lands on `main` to hold, one mid-refresh included; a row drafted and waiting for…  
-  `docs/development/CLAIMS.md:17742`
+  `docs/development/CLAIMS.md:17751`
 - **2026-09-21** — RULED 2026-09-21 by BOB #25: take the fix, with one condition** — the temporary-index tree is taken at the run's start and end and a dirty verdict is recorded only when they agree.  
-  `docs/development/CLAIMS.md:17906`
+  `docs/development/CLAIMS.md:17915`
+- Item 3's route, DECIDED by DIST #3, is REFINED: `op=instancegroup` answers admin, member and probe only (`index.mjs`, its OPS row) and an update holds no instance credential, so `newgroup` tells from the version it reads before the upload, conditionally when that is unknown, and never seeds or reads.  
+  `docs/development/CLAIMS.md:17983`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2717,8 +2715,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/kickoffs/CONTENT-PDF.md:3`
 - **2026-07-31** — (3) SUPERSEDED 2026-07-31 — text extraction is TIERED and `unpdf` never enters the plane.** This item said "measure before bundling `unpdf`".  
   `docs/development/kickoffs/CONTENT-PDF.md:129`
-- **2026-09-21** — — RELEASES, NOT WITHDRAWN. ## What is LIVE (measured 2026-09-21 ~20:21Z, deployments API at 100%)  
-  `docs/development/kickoffs/DIST-NEXT.md:20`
+- **2026-09-22** — — RELEASES, NOT WITHDRAWN. ## What is LIVE (deployments API at 100%, 2026-09-22 ~04:35Z)  
+  `docs/development/kickoffs/DIST-NEXT.md:28`
 - `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only. ## UNDETERMINED, held open — do not let a neighbouring green line convert it  
   `docs/development/kickoffs/DIST-NEXT.md:69`
 - **2026-09-18** — RULED BY BOB, 2026-09-18:** *"Don't archive DIST or FLEET sessions just because they've been idle for some period of time.  

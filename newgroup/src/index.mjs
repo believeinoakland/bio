@@ -792,6 +792,58 @@ Cloudflare sign-in is the way back in.</p>
 <div class="actions"><button id="handover" data-url="${esc(base)}/">Go to my copy and finish setup</button></div>`;
 }
 
+/* D-436 / IC-172 — THE ONE ACT AN UPDATE LEAVES TO THE OPERATOR: recording which group produces the record.
+ *
+ * A copy records its producing group ONCE: at its store's first boot, from the INSTANCE_NAME `uploadInstall`
+ * binds in the same PUT that creates the worker (so a copy installed on a release carrying IC-172 records it
+ * with nobody's act), or, for a store that already held a record when the value arrived, by one act of its
+ * root of trust, op=instancegroupseed. THIS INSTALLER NEVER PERFORMS THAT ACT (D-436's decision (b); BOB #24
+ * confirmed an automatic seed is not ruled in): which group produces a record is a person's to say, and a
+ * copy's worker name need not be its group's slug — this project's own copy is the worker `biosmoke7`, and its
+ * group is `believe-in-oakland`. So an update TELLS the operator, and never seeds.
+ *
+ * WHY IT TELLS FROM THE RULE AND NOT FROM A READ (DIST #4, 2026-09-22, refining DIST #3's route of 2026-09-21
+ * in CLAIMS.md). That route read op=instancegroup after the update. The op answers the admin, member and probe
+ * classes only (bio-plane/src/index.mjs, its OPS row), and an update holds none of them: it holds the operator's
+ * Cloudflare permission, and a copy's secrets are write-only there. What an update CAN read, with no credential,
+ * is op=bootstrap's version BEFORE the upload (`before` below) — and a copy that ran a release older than
+ * FIRST_GROUP_RELEASE records no group after this update, by the rule itself: its store already held the schema,
+ * and no older release had the op to seed it. That case is told plainly. When the version before is unknown the
+ * telling is conditional and says why. When the copy already ran FIRST_GROUP_RELEASE or later nothing is said:
+ * the update that crossed the line told it then, and a copy installed since recorded its group at first boot. */
+const FIRST_GROUP_RELEASE = "0.71.0";
+const SEMVER = /^\d+\.\d+\.\d+$/;
+function groupUnrecorded(before, releaseVersion, noop) {
+  if (noop || vcmp(releaseVersion, FIRST_GROUP_RELEASE) < 0) return null;
+  if (before === null || !SEMVER.test(String(before))) return "unknown";
+  return vcmp(before, FIRST_GROUP_RELEASE) < 0 ? "certain" : null;
+}
+function groupNotice(kind, slug, before, base) {
+  if (!kind) return "";
+  const at = base ? esc(base) : "your copy&#39;s address";
+  const why = kind === "certain"
+    ? `Your copy ran ${esc(before)} before this update, and a copy that held a record before ${FIRST_GROUP_RELEASE}
+does not know which group produces it: a copy records that once, and one that already held a record when the
+value arrived is not given a name nobody told it.`
+    : `The installer could not read which version your copy ran before this update, so it cannot tell whether this
+applies to you. It does if your copy held a record before ${FIRST_GROUP_RELEASE}: such a copy does not know which
+group produces its record, and is not given a name nobody told it.`;
+  return `<div class="notice"><p style="margin:0 0 .6em"><b>One thing this update does not do for you: record which
+group produces your record.</b></p>
+<p>${why} Until it is recorded, your copy refuses the writes that must name their producing group &mdash; testimony,
+the setup page&#39;s saves, and a new document that names none &mdash; with <span class="mono">GROUP_UNDETERMINED</span>.
+A document that states its own group is kept as it says, and nothing already in your record changes.</p>
+<p>To record it, send one request carrying your copy&#39;s ADMIN_TOKEN (the one-time password the installer showed you,
+if you kept it; otherwise put a new ADMIN_TOKEN value in your worker&#39;s settings on Cloudflare, which also starts the
+claim step over): <span class="mono">POST ${at}/api/?op=instancegroupseed&amp;token=&hellip;</span> with the body
+<span class="mono">{"slug":"your-group-slug"}</span>, then the same request with <span class="mono">&amp;store=scratch</span>
+added, for your scratch record. Each records it once and never again, so check the spelling first;
+<span class="mono">op=instancegroup</span> shows what is recorded.</p>
+<p class="small">A suggestion, not a default: this copy was installed under the name <span class="mono">${esc(slug)}</span>.
+Your group&#39;s slug may differ from it &mdash; this project&#39;s own copy is named biosmoke7, and its group is
+believe-in-oakland. The installer does not record it for you: which group produces your record is yours to say.</p></div>`;
+}
+
 async function runUpdate(emit, code, saved) {
   const slug = saved.slug;
   let token;
@@ -890,6 +942,9 @@ async function runUpdate(emit, code, saved) {
       + "minutes after an update and nothing needs fixing.");
   }
 
+  /* D-436: told, never done — see FIRST_GROUP_RELEASE above. */
+  const told = groupNotice(groupUnrecorded(before, release.version, noop), slug, before, base);
+
   emit.done(noop
     ? `<div class="notice"><p style="margin:0"><b>Nothing changed: your copy was already running ${esc(release.version)}.</b>
 The upload succeeded, but it replaced that version with the same version, so this update moved nothing.
@@ -901,6 +956,7 @@ ${confirmed ? "The new version is answering."
   : "The upload finished successfully. The address can take a few minutes to start serving the new version, so open your copy a little later and its page will show " + esc(release.version) + "."}
 Your passwords, your credentials, and everything in the record are exactly as they were.
 Updates never touch them.</p></div>`
+    + told
     + (base ? `<div class="actions"><a class="btnlink" href="${esc(base)}/">Open your copy</a></div>` : ""));
 }
 

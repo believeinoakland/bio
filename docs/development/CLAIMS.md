@@ -17506,6 +17506,15 @@ text: slug }`, D-102) in the SAME upload that creates the worker — read at tha
 **open as of 2026-09-21** — OPEN until DIST has deployed the release carrying D-436, seeded `biosmoke7`'s two stores
 (item 3), and stated item 3's route for sovereign instances installed earlier.
 
+**DISCHARGED 2026-09-22 by DIST #4.** The release carrying D-436 is 0.71.0 (`v0.71.0` = `9439431e`), deployed to biosmoke7
+and live-verified. Item 1 verified at the code: `INSTANCE_NAME` rides `uploadInstall`'s creating PUT in both arms. Item
+2 needs no act. Item 3: the deploy's boot recorded nothing on either store (read before seeding); `bio` and `scratch`
+then seeded `believe-in-oakland`, source `seed`, recorded_by `token:admin` (2026-09-22T04:26:11Z), each verified with
+`op=instancegroup`; and the route for a sovereign instance installed earlier is BUILT — its update path TELLS the operator
+and never seeds (construct `15.group-telling`; told from the version read before the upload, because
+`op=instancegroup` needs a credential an update does not hold). Item 4 holds (S4 green in the gate). The UI DELEGATION
+below is now actionable: its precondition, the seed of biosmoke7, holds.
+
 ## DELEGATION 2026-09-21 RECORD (D-436 worker) -> UI — **`civicos-ui/app.html` still composes the old literal producing group; since D-436 it is inert wherever a group is recorded, and it is owed out**
 
 `mdFor` writes a literal `group:` line into every new document's bytes (the `"group: believe-in-oakland"` entry of its
@@ -17950,3 +17959,34 @@ claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `doc
 quoted residue phrase were updated); `docs/development/CLAIMS.md` (this block and the DELEGATION 2026-09-16 M0 (M0-48) ->
 BOB block's discharge line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — cut 0.71.0, a BATCH: D-436 / IC-172 and D-434; biosmoke7's two stores seeded, write-once; civicos moves)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4`, Sparky-Air
+opened: 2026-09-22
+branch: `dist/cut-0.71.0` from `ab34197b` (branch until deployed and live-verified; `main`'s `release/` is the pointer)
+paths: `release/**`; `newgroup/**` (`src/index.mjs`, D-436 item 3's telling; `test/wizard.test.mjs`, its arms; the
+  generated `src/release.mjs` and `dist/`); the version in `bio-plane/package.json` and `bio-plane/wrangler.jsonc` and the
+  same two sites in `agent-worker/`, `pdf-worker/`, `ocr-worker/`; `bio-plane/test/migrate-released.test.mjs` (the
+  `RELEASES` row for 0.70.0, and the D-436 boot arm) and `bio-plane/test/migrate-released.control.mjs` (two arms);
+  `docs/architecture/construct-status.json` (claim `15.group-telling`), `docs/architecture/BIO_System_Design.md`
+  (RENDERED), `docs/architecture/BIO_Distribution_v0_1.md` (§5: one dated paragraph; one Status sentence);
+  `docs/development/kickoffs/DIST-NEXT.md`; this block, and one dated DISCHARGED line at the foot of the D-436 (worker)
+  -> DIST DELEGATION; `docs/DECIDED.md` (GENERATED, regenerated LAST). All tags. `civicos` MOVES (`app.html`, D-434).
+why: a BATCH, judged at the code: `git log v0.70.0..ab34197b` over the shipped paths is D-436 (IC-172: I3 49.0.0 MAJOR,
+  I5 1.24.0 MINOR, the producing group one recorded value per store) and D-434 (`app.html`'s recipe cites); no security
+  or disclosure closing. Its IRREVERSIBLE step is the DELEGATION's item 3, the seed of biosmoke7's `bio` and `scratch`
+  stores `believe-in-oakland`. biosmoke7 binds `INSTANCE_NAME="biosmoke7"` (the deployments API, 2026-09-22), so a store
+  that recorded at the deploy's boot would carry its WORKER name for good; IC-172 names what its suite cannot see, "no
+  pre-D-436 build is cut", and every `RELEASES` row is one, so the upgrade arm now binds the name and asserts each
+  released store records nothing at the current plane's boot, beside a positive arm on a fresh store (controls (e) and
+  (f), each as declared). Item 3's route, DECIDED by DIST #3, is REFINED: `op=instancegroup` answers admin, member and
+  probe only (`index.mjs`, its OPS row) and an update holds no instance credential, so `newgroup` tells from the version
+  it reads before the upload, conditionally when that is unknown, and never seeds or reads.
+**open as of 2026-09-22.**
+
+**RELEASED 2026-09-22 by DIST #4** — 0.71.0 is complete: tag `v0.71.0` = `9439431e` (gate GREEN on its tree `dadd0b5f`,
+recorded); deployed in the fleet's order, agent-worker first; biosmoke7's two stores seeded and verified; live-verified
+12/12 with the DO build established on both stores; `op=audit` at D-200's ten; `civicos` moved (`/build` = the tag's
+app.html); installer `62a59e41` read back (embed MATCH, bindings `[]`); pointer advanced at `23463895`. Its bundle and
+`DIST-NEXT.md` land in the commit that releases this.

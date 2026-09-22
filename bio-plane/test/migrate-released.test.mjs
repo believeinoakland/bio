@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: `node test/migrate-released.control.mjs [arm]` from `bio-plane/` re-runs every arm in one step. DECLARED BEFORE ARMING, then MEASURED 2026-09-18 by the REC-143 worker, every restore sha256 MATCH / content IDENTICAL: (a) `baseline` — nothing armed -> green: MEASURED 201 pass, 0 fail. (b) `alterafter` — THIS EXACT BUG: the pre-schema `addColumns()` removed, so the additive list runs only AFTER the schema, as it did in 0.59.0-0.63.0 -> every store 0.58.0 wrote (born on 0.58.0, and each of the five 0.58.0 -> withdrawn -> 0.58.0 paths) FAILS naming `no such column: content_id`; MUST NOT FAIL: section 0, section 1 (the released bytes still match their manifests), and the five stores BORN on 0.59.0-0.63.0, whose tables already carry the column. MEASURED 135 pass, 66 fail, the one engine error in any `got` line `no such column: content_id`, and NO failure outside the six 0.58.0-written stores — as declared. (c) `nosecondpass` — the post-schema `addColumns()` removed -> a FRESH store bricks (the post-schema `bundles_<col>` indexes meet a `bundles` with none of its list-only columns), so section 0's reference FAILS: MEASURED 176 pass, 25 fail, engine error `no such column: schema_id`; the three section-0 assertions, plus two per migrated store (`no table a fresh store lacks`, against the empty reference, and `op=selftest`, whose scratch store is a fresh one). The fix is two passes and each is load-bearing. (d) `percolumn` — OVER-STRICTNESS: a DIFFERENT correct fix, only the three sweep-found columns added before the schema (the per-column special case this item declined) -> MUST PASS, because the suite tests what a store does and not how `#migrate` is spelled: MEASURED 201 pass, 0 fail. FIRST RUN, RECORDED RATHER THAN SMOOTHED: the driver's engine-error scan read the WHOLE output and named `no such column: content_id` on the BASELINE — the suite's own labels on the upgrade-path REPRODUCTION assertions quote the error they reproduce. It now reads `got` lines only. */
+/* NEGATIVE CONTROL: `node test/migrate-released.control.mjs [arm]` from `bio-plane/` re-runs every arm in one step. DECLARED BEFORE ARMING, then MEASURED 2026-09-18 by the REC-143 worker, every restore sha256 MATCH / content IDENTICAL: (a) `baseline` — nothing armed -> green: MEASURED 201 pass, 0 fail. (b) `alterafter` — THIS EXACT BUG: the pre-schema `addColumns()` removed, so the additive list runs only AFTER the schema, as it did in 0.59.0-0.63.0 -> every store 0.58.0 wrote (born on 0.58.0, and each of the five 0.58.0 -> withdrawn -> 0.58.0 paths) FAILS naming `no such column: content_id`; MUST NOT FAIL: section 0, section 1 (the released bytes still match their manifests), and the five stores BORN on 0.59.0-0.63.0, whose tables already carry the column. MEASURED 135 pass, 66 fail, the one engine error in any `got` line `no such column: content_id`, and NO failure outside the six 0.58.0-written stores — as declared. (c) `nosecondpass` — the post-schema `addColumns()` removed -> a FRESH store bricks (the post-schema `bundles_<col>` indexes meet a `bundles` with none of its list-only columns), so section 0's reference FAILS: MEASURED 176 pass, 25 fail, engine error `no such column: schema_id`; the three section-0 assertions, plus two per migrated store (`no table a fresh store lacks`, against the empty reference, and `op=selftest`, whose scratch store is a fresh one). The fix is two passes and each is load-bearing. (d) `percolumn` — OVER-STRICTNESS: a DIFFERENT correct fix, only the three sweep-found columns added before the schema (the per-column special case this item declined) -> MUST PASS, because the suite tests what a store does and not how `#migrate` is spelled: MEASURED 201 pass, 0 fail. FIRST RUN, RECORDED RATHER THAN SMOOTHED: the driver's engine-error scan read the WHOLE output and named `no such column: content_id` on the BASELINE — the suite's own labels on the upgrade-path REPRODUCTION assertions quote the error they reproduce. It now reads `got` lines only. (e) `firstbootalways` and (f) `firstbootnever` — THE D-436 BOOT ARM, DECLARED BEFORE ARMING by DIST #4 on 2026-09-22, at 13 RELEASES rows (0.70.0 added) and so 18 migrated stores (13 born on a release, 5 withdrawn paths): (e) the first-boot witness forced TRUE -> every store a released plane wrote records the bound name at the current plane’s boot -> FAILS the two D-436 assertions per migrated store, 36 in all, and NOTHING ELSE: declared 321 pass, 36 fail; (f) the witness forced FALSE -> a store born on the current plane records nothing -> FAILS section 0’s D-436 POSITIVE arm ALONE: declared 356 pass, 1 fail. The other arms move by arithmetic, declared: baseline 357 pass, 0 fail (320 = 303 + the 0.70.0 row’s 17, then +1 fresh arm and +2 per migrated store); alterafter 279 pass, 78 fail (254/66 with the row, then the six 0.58.0-written stores that brick FAIL both new assertions, +12, and the other twelve and the fresh arm pass, +25). MEASURED 2026-09-22 by DIST #4 with the driver, every restore sha256 MATCH (store.mjs ceecd020…), each AS DECLARED: baseline 357 pass, 0 fail; alterafter 279/78 (the six 0.58.0-written stores, 13 assertions each, engine `no such column: content_id`); firstbootalways 321/36, the 36 D-436 assertions ALONE (18 stores x first and second boot); firstbootnever 356/1, the POSITIVE arm ALONE; and, undeclared but measured, nosecondpass 317/40 (REC-143’s structure at 18 stores — the three section-0 assertions and two per migrated store — plus the positive arm, whose fresh store bricks) and percolumn 357/0, the over-strictness arm still PASSING. */
 /* REC-143 — A STORE WRITTEN BY A RELEASED PLANE BOOTS ON THIS ONE.
  *
  * WHY THIS SUITE EXISTS. Every release from 0.59.0 to 0.63.0 BRICKED an existing
@@ -99,6 +99,11 @@ const RELEASES = [
      vote and §4.9 capability edit an operator token could forge); the commit is
      dist/cut-0.69.0's cut, whose release/ holds it. RELEASES, NOT WITHDRAWN. */
   ["0.69.0", "37d5680859f94f22623fdea1b34b99a2550c518e"],
+  /* 0.70.0: deployed and live-verified 2026-09-21 (REC-156 / IC-171, a CUT NOW: the §4.7
+     endorsement op=memberadd let a caller forge); the commit is dist/cut-0.70.0's cut, whose
+     release/ holds it. RELEASES, NOT WITHDRAWN. It is the LAST release before D-436 (IC-172),
+     so its store is the one the D-436 boot arm below most needs: a group standing on it now. */
+  ["0.70.0", "072bb9f3a414af8c4ff05ae9ddc443aa0f88454a"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
@@ -131,12 +136,25 @@ export default {
   },
 };
 `;
+/* D-436 (IC-172) — THE INSTALLER'S NAME IS BOUND, AS EVERY INSTANCE BINDS IT. Added by DIST #4 on
+   2026-09-22, the cut that ships D-436. The current plane records a store's producing group ONCE, at
+   the store's first boot, from INSTANCE_NAME (decision (a)), and a store that ALREADY held the schema
+   records NOTHING at boot even with the name bound (decision (b)) — because an instance's worker name
+   need not be its group's slug: this project's own instance is the worker `biosmoke7` and its group is
+   `believe-in-oakland`. Every released plane below ran with INSTANCE_NAME bound (it names the user
+   agent), and the deploy that ships D-436 boots every such store with it still bound. A store that
+   recorded the worker name at that boot could never be seeded with its group: the seed is write-once
+   (C-64.3). IC-172 states what its own suite cannot see — "no pre-D-436 build is cut" — and every row
+   in RELEASES is one. So the name is bound for the old planes and the current one alike, and
+   `verifyCurrent` asserts the store records nothing; section 0 asserts the positive half on a fresh
+   store, so the absence is not an artifact of the binding going unread. A worker name, not a group's. */
+const INSTANCE = "released-store-worker";
 const boot = (scriptPath, script, persist, version) => new Miniflare({
   modules: true, modulesRoot: "/", scriptPath, script,
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "ProbeStore", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ...TOK, VERSION: version },
+  bindings: { ...TOK, VERSION: version, INSTANCE_NAME: INSTANCE },
   defaultPersistRoot: persist,
 });
 const bootCurrent = (persist) =>
@@ -156,6 +174,13 @@ const client = (mf) => ({
     asJson(await mf.dispatchFetch(`http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })),
 });
 const errOf = (r) => r && (r.error || r.reason || r.code) ? String(r.error || r.reason || r.code) : null;
+/* op=instancegroup's answer, unwrapped as instance-group.test.mjs's `rP` does; null-tolerant, so a
+   store that answers nothing NAMES the assertion instead of ending the module on a TypeError. */
+const groupOf = async (c) => {
+  const r = await c.get("instancegroup", "", TOK.ADMIN_TOKEN);
+  const g = (r && typeof r === "object" && r.result && typeof r.result === "object") ? r.result : r;
+  return [g?.ok ?? null, g?.group === undefined ? errOf(g) ?? "absent" : g.group, g?.source ?? null];
+};
 
 /* The store's SHAPE: every table (with every column, hidden ones included), every
    index and every trigger, by name. SQLite's own and Cloudflare's internal tables
@@ -195,6 +220,10 @@ const infoMd = (id) => ["---",
 console.log("\n--- 0. the reference shape: a fresh store on the current plane ---");
 const freshMf = bootCurrent(mkdtempSync(join(tmpdir(), "rec143-fresh-")));
 const FRESH = await shapeOf(client(freshMf));
+/* D-436's POSITIVE half, on the one store in this suite the current plane is BORN on: its first boot
+   records the bound name. Without this, every "records NOTHING" below would pass just as well if the
+   binding never reached the store — a uniformly absent answer and a correct rule look identical. */
+const FRESH_GROUP = await groupOf(client(freshMf));
 await freshMf.dispose();
 const freshTables = Object.keys(FRESH.tables || {});
 console.log(`    fresh store: ${freshTables.length} tables, ${(FRESH.others || []).length} indexes/triggers/views`);
@@ -205,6 +234,9 @@ t("ARMED: the fresh reference is non-trivial (>= 80 tables, >= 100 indexes and t
 t("ARMED: the fresh reference carries the three indexes the sweep found on list-added columns",
   ["index:inquiry_basis_content", "index:inquiry_basis_version_legs_content", "index:reading_text_source_cal"]
     .map((n) => (FRESH.others || []).includes(n)), [true, true, true]);
+t(`D-436 POSITIVE: a store BORN on the current plane records the bound INSTANCE_NAME ('${INSTANCE}') at its first boot, `
+  + "source bootstrap — so the binding reaches the store in this harness",
+  FRESH_GROUP, [true, INSTANCE, "bootstrap"]);
 
 /* ==================================================================== 1
  * THE FIXTURES: each release's SIGNED bytes, read from git and checked against the
@@ -303,6 +335,9 @@ const verifyCurrent = async (label, persist, { DOC, text, rows }) => {
   t(`${label}: op=audit answers from the store`, au.ok !== false ? true : errOf(au), true);
   const sf = await c.get("selftest", "", TOK.PROBE_TOKEN);
   t(`${label}: op=selftest answers`, [sf.ok, sf.service], [true, "bio-plane"]);
+  t(`${label}: D-436 DECISION (b) — the store a released plane wrote records NO producing group at the current `
+    + `plane's first boot, though INSTANCE_NAME ('${INSTANCE}') is bound: only the root of trust's seed may decide it`,
+    await groupOf(c), [true, null, null]);
 
   const after = await shapeOf(c);
   const lacking = [], extra = [];
@@ -334,6 +369,8 @@ const verifyCurrent = async (label, persist, { DOC, text, rows }) => {
   const again = await c.raw("SELECT count(*) AS n FROM inquiry_basis");
   t(`${label}: a SECOND boot is clean — the store answers and holds the same rows`,
     again.ok ? again.rows[0].n : again.error, 1);
+  t(`${label}: D-436 — and a SECOND boot records no producing group either (no later boot reads the binding)`,
+    await groupOf(c), [true, null, null]);
   await mf.dispose();
 };
 
