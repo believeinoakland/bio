@@ -1722,3 +1722,22 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
    against. NEGATIVE CONTROL: restore the UPSERT, and the prior-version arm fails by name.
 4. **D-159 and D-165 leave by door 3, as extended** (WORK-PIPELINE §3): archive each pointing at Case Making's front
    matter, which states each with its trigger; `MILESTONES.md` M10 watches both.
+
+## DRAINED 2026-09-22 by SCHEDULER #14 — BOB #28's D-442 / capturerequest / overflow entry (`d88a2d3d`), verified on `5b779460`: item 1 PLACED as D-442 (RECORD, M10), first of the product corrections, at `BIO_Publication_v0_1.md` §3 rule 12; item 2 is REC-168, already placed by SCHEDULER #14 from the driven finding and rewritten to the ruled paragraph (REC-165 had integrated at `9cf59056` without it, re-read at `captureRequest`); item 3 PLACED as M0-119 after M0-111, depends-on M0-110, at `WORK-PIPELINE.md` §2, and the interim budget raised to 200 KiB in `tools/ledger.mjs` in this commit.
+
+**2026-09-22 · BOB #28 · D-442 DESIGNED, OP=CAPTUREREQUEST RULED, AND THE BACKLOG'S OVERFLOW RULED — three placements.**
+
+1. **RECORD (M10), D-442: publishing writes nothing on a member finding.** `BIO_Publication_v0_1.md` §3 rule 12 carries the
+   fix, its accepts-when and its NEGATIVE CONTROL; D-442 keeps its id (door 2). **Place it FIRST of the product
+   corrections**: one project's act silently moves another project's published pins, REC-166's class on the publication
+   path. I3 changes; the integrator mints the IC.
+2. **RECORD (M9): `op=capturerequest` takes rule 1** (`INVESTIGATIVE-SESSION.md` §11 item 5, the paragraph after "Rule 1's
+   target"): the stamp, the sight check and `runPrincipalGate` when a request names a run. **Accepts when** another
+   principal's running run is refused `AI_RUN_NOT_PRINCIPAL`, the caller's own lands, and a request naming no run is
+   unchanged. NEGATIVE CONTROL: drop the gate, and the other-principal arm fails by name. Directly after REC-165, whose
+   fix it reuses: **if REC-165's worker is still open, CONDUCT may brief it in (owed at integration); otherwise a row.**
+3. **M0: the backlog's tail file** (`WORK-PIPELINE.md` §2, "When `BACKLOG.md` is over its budget, the tail moves"): a
+   placement moves whole rows from `BACKLOG.md`'s foot to `BACKLOG-LATER.md`, a refill promotes them back, and every
+   reader reads both as one order. **Accepts when** a placement over budget cuts no row and leaves every id in exactly one
+   file. NEGATIVE CONTROL: point one reader at `BACKLOG.md` alone, and its arm fails by name. `depends-on` M0-110 (a new
+   state file rides to `coord`). **Until built, SCHEDULER raises the budget to 200 KiB in `ledger.mjs` and cuts nothing.**

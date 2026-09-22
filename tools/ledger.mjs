@@ -156,9 +156,11 @@ export const DEBT_FLOOR_BYTES = 10000;
 /* CORRECTED 2026-09-18 by LED-6 (WORK-PIPELINE §1 and §4): the cache gets 40 KiB, the old 150 KiB
    QUEUE figure MOVES to the backlog, and a backlog row gets 2 KiB. KB is read as KiB, the unit this
    file already used. */
+/* RAISED 2026-09-22 by SCHEDULER #14 to 200 KiB, BOB #28's interim ruling (WORK-PIPELINE §2, *the tail moves, not the
+   head*): the 150 KiB figure was cutting the rows next to run; it returns when M0-119's tail file lands. */
 export const BUDGET = {
   QUEUE:   { ledger: 40 * 1024,  row: 3 * 1024 },
-  BACKLOG: { ledger: 150 * 1024, row: 2 * 1024 },
+  BACKLOG: { ledger: 200 * 1024, row: 2 * 1024 },
   DEBT:    { ledger: null,       row: 3 * 1024 },
 };
 /* An arm WARNs until the row that makes it satisfiable is `done`, then FAILs — read from the
