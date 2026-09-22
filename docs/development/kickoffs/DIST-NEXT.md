@@ -23,6 +23,13 @@ CUTS, the `latest` pointer mechanism and its LESSONS are the process. This file 
   the setup page at `/` shows the slug. It **WIDENS** what a stranger may read: NAME it in the landing report beside
   IC-173. Not a CUT NOW (it closes no defect). Shipped paths since `v0.71.0`: 3 commits in `bio-plane/src`; none in
   `civicos-ui/app.html` or the members' source, so `civicos` stays and the members move their VERSION label only.
+- **22:09Z wake: still REFUSED** (same two forms). **The batch grew again:** REC-166, integrated at `67666897`
+  (`ad8492d9`): `op=versioncurrent&project=` writes ONLY the project, never the shared inquiry — **IC-175 resolved MAJOR,
+  I3 49.2.0 → 50.0.0** (sequences that succeeded after a make-current on a pinned finding are now refused). CONDUCT #14's
+  merge names it no security fix; DIST's own reading: it stops one project's act rewriting state another project reads,
+  so at the cut ask whether that is an AUTHORITY closing (CUT NOW) — moot while nothing can deploy. MAJOR on I3: before
+  the cut, `civicos-ui/app.html` CALLS `op=versioncurrent` (unchanged since `v0.71.0` at 22:09Z): check its handling of the new
+  refusal before the cut (lesson 6); no fleet member's source names the op (grep, 22:09Z).
 - **Self-wake:** routine `trig_014p69w2WQz7jfSkYeg4XHSF`, cron `0 4,10,16,22 * * *` UTC (the server anchors it to minute
   :08), firing into this session. A routine does not carry `CronCreate`'s 7-day expiry (vendor's description, unmeasured);
   re-read `list_triggers` at each wake. It fires first at 22:08Z; the first wake past the batch bound is 04:08Z.
