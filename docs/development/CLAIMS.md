@@ -17756,6 +17756,15 @@ MILESTONES.md: their five rows removed. 126 open DEBT rows remain.
 **open as of 2026-09-21.**
 
 Sent to BOB by message on 2026-09-21; each of the nine rows carries a dated SENT note in `DEBT.md`.
+**BOB #25, all three answered, each traced at the code (`ae4f42d0`):** Q1, the intent layer's objects are a STATED
+DEFERRAL with its trigger in the Framework's front matter (Incomplete sections, §12), which also corrects the
+focus/problem sentence (Part I is frozen, so not in place): D-75, D-76, D-81 and D-77 leave by the third door; D-79 is
+BUILT for derived findings (REC-6, REC-7) and its assistant half is fenced by `INVESTIGATIVE-SESSION.md` §11 item 5, its
+aggregation and ageing deferred to their producer (third door). Q2, D-85 is carried by the RUN (§3 ruled it) and stays
+open NARROWED to the BOB INBOX's items 2 and 3 (door 2); D-87 and D-88 are deferred with §12's evaluator (third door).
+Q3, D-120 is a STATED DEFERRAL in `SOURCE-ACCESS.md` item 2 with its trigger (third door). Tracing D-85 found a DEFECT in
+built work — a production can name a run its caller does not hold — designed in §11 item 5 and placed FIRST in the
+inbox entry. Nothing keeps this block open past SCHEDULER's drain.
 
 ## CLAIM 2026-09-21 BOB (#24) — BOB-NEXT final: BOB #24 refreshes at ~62% ahead of SCHEDULER #10's group of three
 
@@ -17774,3 +17783,14 @@ why: DIST #3 is at 62% and 0.71.0 (D-436's irreversible seed, plus D-434 moving 
   successor chip's gate reads DIST-NEXT's line 1 for the successor it names, so line 1 now names DIST #4. The fallback
   if DIST #4 is not up by 00:07: DIST #3 cuts and stops at "deployed, not seeded, not pointed" if over 70% before the seed.
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#25) — SCHEDULER #10's group of three: two stated deferrals (Framework §12/§13.1, SOURCE-ACCESS item 2), D-85 narrowed, and a run-binding defect (INVESTIGATIVE-SESSION §11 item 5)
+
+claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths:
+`docs/architecture/BIO_Content_Framework_v0_10.md` (front matter only: one Status sentence and the Incomplete bullets
+for §12, §13 and §13.1 — Part I's text is frozen and not touched); `docs/development/INVESTIGATIVE-SESSION.md` (§11:
+one ruled paragraph; one Status sentence and one Incomplete bullet); `docs/development/SOURCE-ACCESS.md` (item 2 of the
+2026-07-31 ruling's list; Status sentence, one Incomplete bullet, as-of date); `docs/development/QUEUE.md` (the BOB
+INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the SCHEDULER (#10) -> BOB DELEGATION's state
+line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
