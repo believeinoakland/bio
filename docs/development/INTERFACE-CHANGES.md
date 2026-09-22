@@ -13117,3 +13117,63 @@ target handling is a separate finding sent to SCHEDULER: `state.target` is never
 negative control was RE-RUN by CONDUCT at integration**, on the merged tree (below in the merge commit). **Carried, not closed:**
 `op=capturerequest` has the same shape, DRIVEN by the worker (a member files under another member's run and the row credits
 that member); the stamp, sight and gate half goes to SCHEDULER, and whether the context rule applies there is BOB's.
+
+## IC-177 · I3: `op=caseratify` REFUSES A CASE DOCUMENT WHOSE PUBLISHING PROJECT NO LONGER STANDS ON THE CONCLUSION IT RECORDS — per roster member, the question must be concluded for the document's `case_project` (`#caseConclusionFor`) AND that conclusion must be the one the document records (`#editionsRecordingConclusion`, applied to the one document signed); otherwise `CASE_CONCLUSION_MOVED` (C-65.1, a canned translation), with `moved[]` naming each member, what the document recorded and what the project stands on now, and nothing committed · PROPOSED 2026-09-22 (REC-167, minted with `node tools/mintid.mjs IC` BEFORE building) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI, the op contracts). **Base read off THIS TREE (branch `worktree-agent-a33d4bac9a4ff9d3a`, base
+  `origin/main` @ `14ffdbcf`): 50.0.0, IC-175's resolution. Proposed MAJOR — 50.0.0 → 51.0.0. Read the base AT RESOLUTION**, by
+  this file's own rule (IC-176 is held by another item and may land first).
+  **Why MAJOR, on IC-25's rule that a refusal where none stood before is breaking WHATEVER the measured impact:**
+  `op=caseratify` of a preparation whose project withdrew, or withdrew and concluded again differently, SUCCEEDED and now is
+  refused; a caller that signed such a document is now told to publish again. **The argument for MINOR, stated so CONDUCT can
+  weigh it:** every refused commit was the defect M-92 measured — a signed edition asserting, as the project's, a conclusion
+  the project did not hold at signing — and no consumer triggers the sequence (below).
+- **Proposer:** RECORD, REC-167 worker, 2026-09-22, spawned by CONDUCT #14.
+- **Owner to land it:** `RECORD`
+- **Design:** `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 4 (*`NOT_CONCLUDED` at `op=caseratify` reads the publishing
+  project's relationship*) and item 9's comparison, asked of the one document being signed; closes the front matter's design
+  gap (e).
+- **Consumers to answer, MEASURED** (every tracked file under `civicos-ui/`, `agent-worker/`, `newgroup/src/` and `tools/`, 166
+  files, grepped for `caseratify` and `CASE_CONCLUSION_MOVED`, `newgroup/src/release.mjs` excluded as the embedded last CUT):
+  **`CASE_CONCLUSION_MOVED` 0 hits · `caseratify` 2 hits, both in comments** (`civicos-ui/app.html`, and
+  `civicos-ui/test/publishedcase.test.mjs`'s header). `UI` — NOT BROKEN: no surface calls `op=caseratify` (the ceremony is a
+  signed act delivered by a member's session, not a surface control); if one is built, the refusal carries `code` and
+  `translation` from the catalogue row (DEC-49), so it renders the canned sentence and never computes one. `agent-worker` —
+  NOT-AFFECTED (0 hits; an `ai` credential is refused `MACHINE_CANNOT_RATIFY_CASE` before this runs, unchanged). `tools/` — 0
+  hits. `DIST` — the embedded last CUT carries the old behaviour until the next cut.
+
+**THE SHAPE.** `ratifyCaseDocument()`, inside its transaction, after `#caseAuthority` (owner signer, joined deliverer) and after
+the idempotent retry (`existed` for a byte-identical re-ratification of an edition that stands; `CASE_EDITION_ALREADY_RATIFIED`
+for a different signature — both unchanged, since a ratified edition is history, DEC-19) and BEFORE any write: for each member of
+the document's `case_findings`, `#caseConclusionFor(<case_project>, member, member:<signer>, <member's current_state>)` — the
+signer's sight, because `#caseAuthority` has just established the signer is an owner — and `#editionsRecordingConclusion(member,
+{ pinned: [], prepared: { case_id, edition } }, conc)`. A member passes only when `conc.state === "concluded"` AND the document's
+row for it records that conclusion (a project conclusion as the dated, authored entry; a no-project one by the pin — item 9's
+comparison unchanged). Neither reader is edited.
+
+**THE WIRE.** A new refusal on `op=caseratify` (HTTP 409, as every committer refusal there): `{ ok: false, reason:
+"CASE_CONCLUSION_MOVED", code: "CASE_CONCLUSION_MOVED", check: "C-65.1", translation, detail, caseId, edition, project, moved:
+[{ target, recorded, now }] }` — `recorded` is `#editionsRecordingConclusion`'s summary of the document's row (`{ relationship,
+project, version, claim_state, claim, concluded_by, concluded_at }`, or null for a document recording none), `now` is either `{
+state: "concluded", relationship, project, version, claim, concluded_by, concluded_at }` or `{ state: "not_concluded",
+relationship, project, why, stance }` (`why` is `#caseConclusionFor`'s: `project_withdrew_its_conclusion`,
+`project_has_never_concluded`, `project_stance_undetermined`, `question_not_case_bearing`). Nothing else moves: every other
+`op=caseratify` answer, `op=publish`, `op=ratify` and `op=casedocument` are byte-unchanged. **`op=ratify` is reached without a
+site of its own:** a finding's bytes record no case conclusion, and since D-431 (IC-161) `op=ratify` signs a finding only at a
+sha a RATIFIED case pins, so after a refused case document the finding is refused `RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE` —
+driven in the suite, not argued. **No I5 IC:** no table, no column.
+
+**MEASURED** (`bio-plane/test/caseratify-conclusion.test.mjs`, 21/0; its control, four arms and a baseline, all AS DECLARED —
+the comparison dropped 17/4 failing the conclude-again arm by name, the whole refusal dropped (the plane as M-92 measured it)
+11/10, concluded-ness dropped 21/0 as declared, the signer's sight dropped 14/7). See `MEASUREMENTS.md` M-103.
+**RESOLUTION · 2026-09-22 · ACCEPTED by CONDUCT #14 as MAJOR, BREAKING — I3 51.0.0 → 52.0.0.** Base RE-READ at resolution off
+the batch integration tree (origin/main `bee3bdf4`, REC-167 merged): **51.0.0**, IC-176's resolution at REC-165's landing
+(`5b779460`), NOT the proposal's 50.0.0. The proposal named this re-read, and it was needed. **WHY MAJOR:** `op=caseratify` of
+a preparation whose project withdrew, or concluded again on another claim, SUCCEEDED and is now refused `CASE_CONCLUSION_MOVED`
+(C-65.1) with nothing signed. A refusal where none stood is breaking (IC-25, IC-137). The MINOR argument (each refused commit
+was M-92's defect, and no consumer triggers it) is true and does not change the class. **A RECORD-INTEGRITY closing:** a signed
+edition could state, as the project's, a conclusion the project did not hold at signing (CLAUDE.md §2, the worst class). DIST
+is told. `op=ratify` needs no site of its own: since D-431 it signs only at a sha a ratified case pins, so the refused case
+refuses the finding (`RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE`), driven by the suite. **Carried, stated by the worker:** an
+UNRATIFIED case document written before REC-135 records no conclusion, and one for a project-relationship conclusion is now
+refused. How many exist in any real record is UNMEASURED (the network refuses Cloudflare).

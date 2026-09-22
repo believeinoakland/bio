@@ -427,3 +427,7 @@ bio-plane/.nc-rec166/
 # driver was written as `bio-plane/test/rec165-production-principal.control.mjs`, which patches COPIES in a temporary
 # tree and never edits a real source, so no pristine pen exists and the line is gone.
 .rec165-runs/
+
+# REC-167 (2026-09-22): `bio-plane/test/caseratify-conclusion.control.mjs`'s pen — it edits src/ and keeps per-arm
+# pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
+bio-plane/.nc-caseratify-conclusion/

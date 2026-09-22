@@ -1420,6 +1420,11 @@ const REGISTER_FLOOR = {
   /* [CONDUCT #14 at REC-165's merge onto REC-166's main] 2026-09-22: BOTH sides moved every key from the same base (REC-166 +4 arms, REC-165 +8), so git merged classified/corpus/run SILENTLY as one. RE-READ from `--strict` on the COMMITTED merge 9cf59056, exit 0 unpiped: `arms 1654/1646 · classified 266/265 · corpus (suites read) 267/266 · GREW by 8`, `floor 229/228 reproducible`. Never added by hand. */
   /* M0-107, 2026-09-22: moved to the figure its committed --strict run PRINTED (1651/1647, GREW by 4) */
   /* [CONDUCT #14 at M0-107's merge] 2026-09-22: RE-READ from `--strict` on the COMMITTED merge, exit 0 unpiped: `arms 1663/1654 · classified 267/266 · corpus (suites read) 268/267 · GREW by 9`, `floor 230/229 reproducible`. Never added by hand. */
+  /* [REC-167] 2026-09-22: MOVED arms 1646 -> 1650, classified 265 -> 266, corpus 266 -> 267, run 228 -> 229, from this
+     item's own `--strict` print on its COMMITTED tree 61edbc92, exit 0 unpiped (`REGISTER FLOOR  arms 1650/1646 · classified
+     266/265 · corpus (suites read) 267/266 · GREW by 4 arm(s)`, `229 RUN (dated token) … floor 229/228 reproducible · GREW by
+     1`) — never added by hand. One new suite, `test/caseratify-conclusion.test.mjs`, whose declaration states four arms
+     (a)-(d), each RUN by `test/caseratify-conclusion.control.mjs`. Nothing FELL. ONE KEY SET. */
   arms: 1663,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).

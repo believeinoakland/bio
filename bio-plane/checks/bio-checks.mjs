@@ -11961,6 +11961,26 @@ export const CASE_AUTHORITY_CHECKS = {
   },
 };
 
+/* REC-167 / C-65 — A CASE DOCUMENT IS SIGNED ONLY WHILE ITS PROJECT STILL STANDS ON THE CONCLUSION
+ * IT RECORDS (INVESTIGATIVE-SESSION.md §7.1 item 4: `NOT_CONCLUDED` at `op=caseratify` reads the
+ * publishing project's relationship; item 9's comparison, asked of the one document being signed).
+ * Measured before this existed (M-92, REC-157): a project concluded, `op=publish` prepared an edition
+ * whose document recorded that conclusion, the project WITHDREW, and `op=caseratify` still committed
+ * the edition — the signed record then said the project stood on a conclusion it had given up. Asked
+ * in `ratifyCaseDocument`, per roster member, after the owner-signer check and the idempotent retry
+ * and before any write: the question must be concluded for the document's project AND that
+ * conclusion must be the one the document records. The route out is item 9's: publish again. */
+export const CASE_CONCLUSION_CHECKS = {
+  CASE_CONCLUSION_MOVED: {
+    check: 'C-65.1',
+    where: 'src/store.mjs ratifyCaseDocument > is-caseratify-conclusion-moved',
+    translation: 'This case document records a conclusion its project no longer stands on: since the '
+      + 'document was prepared, the project withdrew that conclusion or concluded again differently. '
+      + 'Signing it would publish a conclusion nobody holds. Nothing was committed. Publish the case '
+      + 'again from the project, so the document records what the project stands on now, and sign that.',
+  },
+};
+
 /* REC-140 / C-58 — WHAT `op=ratify` MAY PUBLISH AT ALL (BIO_Publication_v0_1.md §3 rule 2,
  * *"Only findings that are part of a project can be published"*, as BOB #15 applied it to
  * D-429 on 2026-09-18). A PROJECT's own document is the group's thinking, not a finding: a

@@ -3768,6 +3768,7 @@ __export(bio_checks_exports, {
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
+  CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
@@ -11820,6 +11821,13 @@ var CASE_AUTHORITY_CHECKS = {
        because the same code now answers at both acts and the old sentence was false at one. */
     where: "src/store.mjs #caseAuthority > is-case-signer-owner",
     translation: "A case and each finding in it are published in the project's name, so each has to be signed by an owner of that project. This signature belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review it and sign it."
+  }
+};
+var CASE_CONCLUSION_CHECKS = {
+  CASE_CONCLUSION_MOVED: {
+    check: "C-65.1",
+    where: "src/store.mjs ratifyCaseDocument > is-caseratify-conclusion-moved",
+    translation: "This case document records a conclusion its project no longer stands on: since the document was prepared, the project withdrew that conclusion or concluded again differently. Signing it would publish a conclusion nobody holds. Nothing was committed. Publish the case again from the project, so the document records what the project stands on now, and sign that."
   }
 };
 var RATIFY_SCOPE_CHECKS = {
@@ -34836,6 +34844,54 @@ Subject position: ${pos} \u2014 ${just}
           edition: ed,
           detail: `case ${id} edition ${ed} is already ratified under a different signature. An edition is a separate document and answers forever \u2014 a second attestation over the same number would leave a reader unable to say who stood behind what they read. Publish a new edition instead.`
         };
+      }
+      const concViewer = attestorMember ? `member:${attestorMember}` : null;
+      const moved = [];
+      for (const m of roster) {
+        const bm = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, m);
+        const conc = this.#caseConclusionFor(project, m, concViewer, bm ? bm.current_state : null);
+        const rec = this.#editionsRecordingConclusion(m, { pinned: [], prepared: { case_id: id, edition: ed } }, conc);
+        if (conc.state === "concluded" && rec.same.length) continue;
+        moved.push({
+          target: m,
+          recorded: rec.pinned.length ? rec.pinned[0].recorded : null,
+          now: conc.state === "concluded" ? {
+            state: "concluded",
+            relationship: conc.relationship,
+            project: conc.project,
+            version: conc.version ?? null,
+            claim: conc.claim ? conc.claim.text ?? null : null,
+            concluded_by: conc.by ?? null,
+            concluded_at: conc.at ?? null
+          } : {
+            state: "not_concluded",
+            relationship: conc.relationship,
+            project: conc.project,
+            why: conc.why,
+            stance: conc.stance ?? null
+          }
+        });
+      }
+      if (moved.length) {
+        const refusal7 = (code, detail) => {
+          const row = CASE_CONCLUSION_CHECKS[code];
+          return {
+            ok: false,
+            reason: code,
+            code,
+            check: row.check,
+            translation: row.translation,
+            detail,
+            caseId: id,
+            edition: ed,
+            project,
+            moved
+          };
+        };
+        return refusal7(
+          "CASE_CONCLUSION_MOVED",
+          `case ${id} edition ${ed}'s document records, for ${moved.map((x) => x.target).join(", ")}, a conclusion ${project} no longer stands on: ` + moved.map((x) => `${x.target} \u2014 ${x.now.state === "concluded" ? `${project} now stands on a DIFFERENT conclusion (reading '${x.now.version ?? "(unnamed)"}', the ${x.now.relationship === "no_project" ? "no-project" : "project's own"} relationship)` : `${project} stands on no conclusion (${x.now.why})`}`).join("; ") + `. A signed edition records the conclusion it rests on (INVESTIGATIVE-SESSION.md \xA77.1 item 4), so signing this one would publish a conclusion nobody holds. Publish the case again from the project (op=publish) \u2014 the new document records what the project stands on now (\xA77.1 item 9) \u2014 and sign that. Nothing was committed.`
+        );
       }
       const now = (/* @__PURE__ */ new Date()).toISOString();
       const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);

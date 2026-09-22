@@ -18978,3 +18978,38 @@ Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
 
 **released: 2026-09-22 by the M0-107 worker** — built, gated GREEN FULL on tree `68711d65` (274/274 suites, 16,686
 assertions, 0 skipped) and pushed on `worktree-agent-a61477d96c4e0ec36`; the paths stay reserved until CONDUCT integrates.
+
+## CLAIM 2026-09-22 RECORD (REC-167 — `op=caseratify` refuses a case PREPARED by `op=publish` whose publishing project no longer stands on the conclusion the document records: `ratifyCaseDocument` asks `op=publish`'s two questions per roster member, INVESTIGATIVE-SESSION.md §7.1 items 4 and 9)
+
+session: WORKER spawned by CONDUCT #14 (wave 2) in cloud Claude Code, worktree `.claude/worktrees/agent-a33d4bac9a4ff9d3a`,
+branch `worktree-agent-a33d4bac9a4ff9d3a`, cut from `origin/main` @ `14ffdbcf` (the row read `running` there with CONDUCT #14's
+SPAWNED sentence). `npm ci` exit 0 in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each `node_modules` a REAL DIRECTORY; `df -h`
+25 GiB free. IC-177, C-65 and M-103 minted with `node tools/mintid.mjs` BEFORE building.
+authority: `QUEUE.md` `### REC-167 · running`; design `docs/development/INVESTIGATIVE-SESSION.md` §7.1 item 4 and item 9's
+comparison, and its front matter's design gap (e); the measured path is M-92's `op=caseratify` row. Claimed BY SITE:
+
+- `bio-plane/src/store.mjs` — **by SITE:** `ratifyCaseDocument` ONLY (a new region between the idempotent-retry check and the
+  first write). `#caseConclusionFor` and `#editionsRecordingConclusion` are CALLED, never edited.
+- `bio-plane/checks/bio-checks.mjs` — ONE new family `CASE_CONCLUSION_CHECKS` (C-65) appended beside `CASE_AUTHORITY_CHECKS`.
+- `bio-plane/test/caseratify-conclusion.test.mjs` and `bio-plane/test/caseratify-conclusion.control.mjs` — both NEW.
+- Suites a correct landing makes wrong — named in a SECOND block once the battery has named them, each corrected with a dated
+  reason; the DEC-49 guard's and coverage's floors (`civicos-ui/check-refusal-codes.mjs`, `bio-plane/scripts/coverage.mjs`) moved
+  ONLY to the figures they print; `bio-plane/dist/` (rebuilt); `.gitignore` if the control driver needs a pen.
+- `docs/development/INVESTIGATIVE-SESSION.md` (front matter and ONE dated "Built" paragraph under §7.1),
+  `docs/architecture/construct-status.json` (the construct's text/probes), `docs/architecture/BIO_System_Design.md` (RENDERED by
+  `node tools/status.mjs --write`), `docs/development/INTERFACE-CHANGES.md` (IC-177, appended, PROPOSED),
+  `docs/development/MEASUREMENTS.md` (M-103, appended).
+
+**NOT** `docs/development/QUEUE.md` or `BACKLOG.md`, **NOT** `docs/development/INTERFACES.md`, **NOT** `newgroup/**`,
+`release/**`, `civicos-ui/app.html`, and NOT `suggestVersion`/`extractPropose`/`index.mjs`'s principal stamp (REC-165) nor
+`#moveVersionState`/`#setProjectCurrentVersion` (REC-166). D-442 is not this item's.
+
+SECOND BLOCK (2026-09-22, after the battery named them): NO existing suite was made wrong by this landing — the 36 suites that
+drive a case ratification or a withdrawal ran `36/36 suites green` before any correction; `bio-plane/scripts/coverage.mjs`
+(`REGISTER_FLOOR`, from its own print) and `civicos-ui/check-refusal-codes.mjs` (nine floors, from its own print) moved.
+
+**released: 2026-09-22 REC-167 worker (CONDUCT #14, wave 2)** — built on `worktree-agent-a33d4bac9a4ff9d3a` at `1effc73a` (tree
+`6602969f`, `node tools/gates.mjs` GREEN FULL: `275/275 suites green · 16615 assertions passing · EXCLUDES 2 untallied suite(s)`,
+SKIP 0; coverage `--strict` and `civicos-ui` green; `plancheck --local` 0 fail); IC-177 PROPOSED for CONDUCT to resolve at
+integration; C-65 and M-103 minted. The DEC-49 guard's `regionLines` includes this item's 13-line region
+`ratifyCaseDocument > is-caseratify-conclusion-moved` — a property of the MERGED source, re-read at integration.
