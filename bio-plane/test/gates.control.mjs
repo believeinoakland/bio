@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 11 arms plus a baseline — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 12 arms plus a baseline — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -46,6 +46,10 @@
  *   G11 a change made AFTER the gate read as the   -> "a commit made AFTER the gate is re-checked"
  *       other side's (the unsound `--since`)          FAILS. MUST NOT: the disjoint-docs and the
  *                                                     both-sides arms.
+ *   G12 an imported helper read WITH its comments  -> "a path named only in the COMMENT of a
+ *                                                     helper … does NOT select that suite" FAILS.
+ *                                                     MUST NOT: the helper naming the tool in CODE
+ *                                                     is still selected.
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -162,8 +166,8 @@ const ARMS = [
 
   { id: "G4", title: "selection by IMPORT ALONE — the liar the row names",
     patches: [{ file: GATES,
-      from: "  const s = textOf(abs);\n  if (!s) return null;\n  const pr = probesFor(p);",
-      to: "  const s = textOf(abs);\n  if (!s || true) return null;\n  const pr = probesFor(p);" }],
+      from: "  const s = own ? textOf(abs) : codeOf(abs);\n  if (!s) return null;\n  const pr = probesFor(p);",
+      to: "  const s = own ? textOf(abs) : codeOf(abs);\n  if (!s || true) return null;\n  const pr = probesFor(p);" }],
     mustBreak: "SELECTION IS BY MENTION",
     alsoBreak: ["...and the suite that WALKS tools/"],
     mustNotBreak: ["...and selects its IMPORTER", "a tree that CHANGES while the gate runs is NOT recorded"] },
@@ -191,8 +195,8 @@ const ARMS = [
 
   { id: "G8", title: "BOTH SIDES read as the SAME FILE changed on both — the liar for `--since`",
     patches: [{ file: GATES,
-      from: "            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit));",
-      to: "            const upReaders = readersOf(mine.filter((p) => upstream.includes(p)), [...mineReaders.values()].map((v) => v.unit));" }],
+      from: "            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit), exact);",
+      to: "            const upReaders = readersOf(mine.filter((p) => upstream.includes(p)), [...mineReaders.values()].map((v) => v.unit), exact);" }],
     mustBreak: "a unit reading BOTH sides re-runs",
     mustNotBreak: ["a rebase over DISJOINT docs commits re-runs ONLY plancheck"] },
 
@@ -202,6 +206,13 @@ const ARMS = [
       to: "        const fresh = [];" }],
     mustBreak: "a commit made AFTER the gate is re-checked as TARGETED would",
     mustNotBreak: ["a rebase over DISJOINT docs commits re-runs ONLY plancheck", "a unit reading BOTH sides re-runs"] },
+
+  { id: "G12", title: "an imported helper read WITH its comments — prose read as a read",
+    patches: [{ file: GATES,
+      from: "  if (!stripComments) return textOf(abs);",
+      to: "  if (true) return textOf(abs);" }],
+    mustBreak: "a path named only in the COMMENT of a helper a suite imports does NOT select that suite",
+    mustNotBreak: ["...and a suite whose imported HELPER names the tool in CODE is selected", "a tools-only diff reads TARGETED"] },
 
   { id: "G9", title: "the register gate dropped — no coverage when a test file changed",
     patches: [{ file: GATES,

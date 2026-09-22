@@ -1,9 +1,10 @@
 /* D-293 WITH M0-98 — THE GATE'S VERDICT, RECORDED BY TREE AND REFUSED AT THE PUSH; AND THE TARGETED
  * CLASS WITH `--since`. One file set (`tools/gates.mjs`, `tools/pushguard.mjs`), one suite, one gate.
  *
- * NEGATIVE CONTROL: RAN 2026-09-21 by the D-293/M0-98 worker, driver `test/gates.control.mjs` (eleven arms plus a
+ * NEGATIVE CONTROL: RAN 2026-09-21 by the D-293/M0-98 worker, driver `test/gates.control.mjs` (twelve arms plus a
  * baseline), each arm ALONE against pristine copies restored by sha256 AND `cmp` AND a byte floor; baseline
- * 58 pass / 0 fail, closing 58 / 0, the driver 82 pass / 0 fail —
+ * 61 pass / 0 fail, closing 61 / 0, the driver 89 pass / 0 fail (its D-331 preflight refused to arm ANYTHING on
+ * the run before, when the comment-blind refactor had moved arm 4's anchor — the driver law doing its job) —
  *   (1) the guard's lookup dropped, BOB #22's own control -> "a RED gate then a push of that tree is REFUSED" FAILS
  *       by name, with the amend, other-worktree, narrower-GREEN and GREEN-note arms; an unrecorded, a GREEN, a changed
  *       tree and a GREEN re-run each still push;
@@ -21,7 +22,9 @@
  *   (10) the last run's verdict wins -> "a NARROWER GREEN does not clear a WIDER RED" FAILS, with the guard's own
  *       in-process control; a GREEN re-run still clears and a lone RED still refuses;
  *   (11) a change made after the gate read as the other side's -> "a commit made AFTER the gate is re-checked"
- *       FAILS; disjoint docs and both-sides hold.
+ *       FAILS; disjoint docs and both-sides hold;
+ *   (12) an imported helper read WITH its comments -> the helper-COMMENT arm FAILS (the suite is selected over a
+ *       path its helper only cites in prose); the helper-CODE arm holds.
  * THE ELEVENTH ARM EXISTS BECAUSE THE FIRST `--since` WAS UNSOUND, found while measuring this item's own landing:
  * it read EVERY difference from the measured tree as the other side's already-gated change, so a commit added
  * on top of a GREEN tree re-ran nothing of its own. The difference the other side does not explain is now
@@ -128,6 +131,11 @@ const FILES = {
     `process.exit(readdirSync(join(REPO, "tools")).length > 0 ? 0 : 1);`, ""].join("\n"),
   /* a doc-facing suite */
   "bio-plane/test/prose.test.mjs": `// reads docs/notes/a.md\nprocess.exit(0);\n`,
+  /* two suites through a shared HELPER: one helper names a tool only in a COMMENT, the other in CODE */
+  "bio-plane/test/helper-prose.mjs": `/* this helper's prose cites tools/lonely.mjs and reads nothing */\nexport const h = 1;\n`,
+  "bio-plane/test/helped.test.mjs": `import { h } from "./helper-prose.mjs";\nprocess.exit(h === 1 ? 0 : 1);\n`,
+  "bio-plane/test/helper-code.mjs": `export const TOOL = "tools/computed.mjs";\n`,
+  "bio-plane/test/helped2.test.mjs": `import { TOOL } from "./helper-code.mjs";\nprocess.exit(TOOL ? 0 : 1);\n`,
   "bio-plane/test/unrelated.test.mjs": "process.exit(0);\n",
   "civicos-ui/test/run.mjs": stub("ui-harness"),
   "civicos-ui/test/uiwidget.test.mjs": `// drives tools/widget.mjs from the UI side\n${stub("ui-uiwidget")}`,
@@ -150,6 +158,9 @@ const commitAll = (root, msg) => { regen(root); git(["add", "-A"], root); return
 function fixture(name) {
   const root = join(SANDBOX, name);
   for (const f of ["gates.mjs", "pushguard.mjs", "decided.mjs"]) put(root, `tools/${f}`, readFileSync(join(REPO, "tools", f)));
+  /* the estate's ONE lexer, which the gate reads imported files through, and what it imports */
+  for (const f of ["walkfloor.mjs", "provenance.mjs", "walkfigure.mjs"])
+    put(root, `bio-plane/scripts/${f}`, readFileSync(join(REPO, "bio-plane/scripts", f)));
   for (const [rel, body] of Object.entries(FILES)) put(root, rel, body);
   git(["init", "-q", "-b", "main"], root);
   commitAll(root, "base");
@@ -336,6 +347,13 @@ section("M0-98 · THE CLASS — TARGETED by MENTION, and what stays FULL");
   const computed = withEdits(F.root, ["tools/computed.mjs"], () => gates(F.root, ["--explain"]));
   t("SELECTION IS BY MENTION: a suite reading its tool through a COMPUTED path is selected",
     computed.units.includes("plane:computed.test.mjs"), true);
+  t("...and a suite whose imported HELPER names the tool in CODE is selected",
+    computed.units.includes("plane:helped2.test.mjs"), true);
+  const lonely = withEdits(F.root, ["tools/lonely.mjs"], () => gates(F.root, ["--explain"]));
+  t("a path named only in the COMMENT of a helper a suite imports does NOT select that suite",
+    [lonely.cls, lonely.units.includes("plane:helped.test.mjs")], ["TARGETED", false]);
+  t("...because the estate's lexer read that helper as code, and the plan says so",
+    lonely.out.includes("read as code, comments blanked"), true);
 
   const both = withEdits(F.root, ["bio-plane/src/store.mjs", "tools/widget.mjs"], () => gates(F.root, ["--explain"]));
   t("a src/ edit BESIDE a tools edit reads FULL", [both.cls, planOf(both)[0]], ["FULL", "battery (all)"]);

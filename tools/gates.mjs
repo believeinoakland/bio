@@ -61,10 +61,11 @@
  * directory: a file that enumerates directories (`readdirSync`, `ls-files` …) and
  * names the parent's last segment or any ancestor's repo-relative path as a quoted
  * token (`join(REPO, "tools")`), or a unit's own file enumerating the directory it
- * sits in (`readdirSync(DIR)`). A path under `docs/` is read by DOCS's own
- * doc-facing set plus any unit whose OWN files name it — never by closure mention,
- * because the helpers every suite imports cite docs files in comments, and TARGETED
- * is never wider than DOCS for prose. REACH, stated: the plane's runtime code is
+ * sits in (`readdirSync(DIR)`). A file a unit merely IMPORTS is read as code, its
+ * comments blanked by the estate's one lexer (`walkfloor.mjs` `stripComments`, strings
+ * kept); the unit's own files are read whole. An unmeasured `docs/` path also brings
+ * in DOCS's own doc-facing set, so TARGETED never checks prose more narrowly than DOCS
+ * does. REACH, stated: the plane's runtime code is
  * not read (it cannot read a repository file at run time; its dependencies are
  * imports inside the FULL set); a path assembled at run time from pieces none of
  * which is its name, its stem or its directory is invisible; a comment naming a
@@ -324,6 +325,21 @@ const textOf = (abs) => {
   if (!textMemo.has(abs)) { let s = null; try { s = readFileSync(abs, "utf8"); } catch { /* gone */ } textMemo.set(abs, s); }
   return textMemo.get(abs);
 };
+/* A FILE A UNIT MERELY IMPORTS IS READ AS CODE, ITS COMMENTS BLANKED — by the estate's ONE lexer
+   (`stripComments` in `bio-plane/scripts/walkfloor.mjs`, D-301: strings KEPT, since a path is a string),
+   never a second one. The helpers every suite imports cite files in their prose (`stdio.mjs` names
+   `MEASUREMENTS.md`, `provenance.mjs` names `coverage.mjs`), and read by prose, one appended measurement
+   selected 219 units and one `REGISTER_FLOOR` move ~100 (measured 2026-09-21, before this). A unit's OWN
+   files are read whole, comments included — over-selection, the safe direction. If the lexer cannot be
+   loaded, every file is read whole and the plan SAYS so. */
+let stripComments = null;
+try { ({ stripComments } = await import("../bio-plane/scripts/walkfloor.mjs")); } catch { /* read whole, and say so */ }
+const codeMemo = new Map();
+const codeOf = (abs) => {
+  if (!stripComments) return textOf(abs);
+  if (!codeMemo.has(abs)) { const s = textOf(abs); let c = s; try { c = s === null ? null : stripComments(s); } catch { /* read whole */ } codeMemo.set(abs, c); }
+  return codeMemo.get(abs);
+};
 const TOOL_RE = /\btools\/([\w.-]+\.mjs)\b/g;
 const SCRIPT_RE = /\bscripts\/([\w.-]+\.mjs)\b/g;
 /* [file, how it is reached]: "import" for a relative import or a `new URL(…, import.meta.url)`
@@ -383,7 +399,7 @@ function probesFor(p) {
    the same few hundred files, and nearly every token appears in nearly none of them. */
 const tokenMemo = new Map();
 function hasToken(abs, s, tok, re) {
-  const key = `${abs}\0${tok}`;
+  const key = `${abs}\0${s.length}\0${tok}`;
   if (!tokenMemo.has(key)) tokenMemo.set(key, s.includes(tok) && re.test(s));
   return tokenMemo.get(key);
 }
@@ -393,9 +409,10 @@ function hasToken(abs, s, tok, re) {
    one-suite edit selected 258 units (measured 2026-09-21, before this line). */
 const DISCOVERY_RE = /\b(?:readdirSync|readdir|opendirSync|opendir|globSync)\s*\(|["'`]ls-(?:files|tree)["'`]|\bgit\s+(?:ls-files|ls-tree|grep)\b|["'`]grep["'`]/;
 const walkerMemo = new Map();
-const isWalker = (abs, s) => { if (!walkerMemo.has(abs)) walkerMemo.set(abs, DISCOVERY_RE.test(s)); return walkerMemo.get(abs); };
+/* A walker ENUMERATES in code: a primitive named in a comment walks nothing. */
+const isWalker = (abs) => { if (!walkerMemo.has(abs)) walkerMemo.set(abs, DISCOVERY_RE.test(codeOf(abs) || "")); return walkerMemo.get(abs); };
 function fileHit(abs, p, own = false) {
-  const s = textOf(abs);
+  const s = own ? textOf(abs) : codeOf(abs);
   if (!s) return null;
   const pr = probesFor(p);
   if (s.includes(pr.base)) return `names ${pr.base}`;
@@ -440,29 +457,18 @@ let selection = null;      // Map id -> { unit, why }
 let sinceInfo = null;
 let sinceNote = "";
 
-/* A docs/ PATH IS READ BY THE DOC-FACING SET — DOCS's own derivation, the rule this estate already trusts
-   for prose — plus any unit whose OWN files name it or walk its directory. Not by closure MENTION: the
-   helpers every suite imports cite docs files in their comments (`stdio.mjs` names `MEASUREMENTS.md`), and
-   by closure MENTION one appended measurement read as a change to 219 suites (measured 2026-09-21, before
-   this rule). TARGETED is never wider than DOCS for the prose half of a diff. REACH, stated: DOCS's own —
-   a suite reading prose only through `bio-plane/scripts/` is not followed. */
+/* THE READERS OF A SET OF PATHS, by MENTION — docs paths included. `docsNet` adds DOCS's own doc-facing
+   set whenever a docs/ path is among them, so an UNMEASURED prose change (TARGETED, or what changed since a
+   gate) is never checked more narrowly than DOCS would check it. The `--since` pairing reads the OTHER
+   side's prose, which was gated where it landed, without that net: there only the interaction is owed,
+   and that precision is what makes a re-merge over a docs move cheaper than the doc-facing set. */
 const DOC_FACING = new Set([...planeDoc.map((f) => `plane:${f}`), ...uiDoc.map((f) => `ui:${f}`)]);
-function ownHit(unit, p) {
-  if (unit.tops.includes(join(REPO, p))) return "is the changed file";
-  for (const t of unit.tops) { const h = fileHit(t, p, true); if (h) return `${h} in ${repoRel(t)}`; }
-  return null;
-}
-function readersOf(paths, among = UNITS) {
+function readersOf(paths, among = UNITS, { docsNet = true } = {}) {
+  const out = selectReaders(paths, among);
   const docs = paths.filter((p) => p.startsWith("docs/"));
-  const out = selectReaders(paths.filter((p) => !p.startsWith("docs/")), among);
-  if (docs.length) for (const unit of among) {
-    if (out.has(unit.id)) continue;
-    if (DOC_FACING.has(unit.id)) {
+  if (docsNet && docs.length) for (const unit of among)
+    if (!out.has(unit.id) && DOC_FACING.has(unit.id))
       out.set(unit.id, { unit, why: `doc-facing, and ${docs[0]}${docs.length > 1 ? ` (+${docs.length - 1} more)` : ""} changed` });
-      continue;
-    }
-    for (const p of docs) { const h = ownHit(unit, p); if (h) { out.set(unit.id, { unit, why: `${p}: ${h}` }); break; } }
-  }
   return out;
 }
 function targetedSelection(paths) {
@@ -530,11 +536,12 @@ if (SINCE && !FORCE_FULL) {
         } else {
           cls = "SINCE";
           let pairing;
-          if (mineFull) pairing = readersOf(upstream);
-          else if (upFull) pairing = readersOf(mine);
+          const exact = { docsNet: false };
+          if (mineFull) pairing = readersOf(upstream, UNITS, exact);
+          else if (upFull) pairing = readersOf(mine, UNITS, exact);
           else {
-            const mineReaders = readersOf(mine);
-            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit));
+            const mineReaders = readersOf(mine, UNITS, exact);
+            const upReaders = readersOf(upstream, [...mineReaders.values()].map((v) => v.unit), exact);
             pairing = new Map();
             for (const [id, v] of mineReaders) {
               const w = upReaders.get(id);
@@ -599,7 +606,8 @@ if (cls === "TARGETED" || cls === "SINCE") {
     + `${planeForeign.files.length ? ` + [${planeForeign.files.join(", ")}]` : ""} · fleet: [${FLEET.map((m) => m.dir).join(", ")}]`);
   console.log(`gates: ${cls} selection derived fresh — ${selection.size} unit(s) of ${UNITS.length} ${cls === "SINCE" ? "read a path changed on BOTH sides" : "import, spawn or mention a changed path"}:`);
   for (const { unit, why: w } of selection.values()) console.log(`gates:   ${unit.id}  <- ${w}`);
-  console.log("gates: REACH — a unit's source, control, the tools/scripts it names and their relative imports; "
+  console.log("gates: REACH — a unit's source and control read whole; the tools/scripts it names and their relative imports "
+    + `read as code${stripComments ? ", comments blanked" : " — THE LEXER DID NOT LOAD, so comments count too (over-selection)"}; `
     + "not the plane's runtime code, and not a path assembled at run time from pieces none of which is its name, stem or directory.");
 }
 const planLabel = (s) => (s.names ? `${s.label.split(" (")[0]} [${s.names.join(", ")}]` : s.label);
