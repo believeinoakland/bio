@@ -22,6 +22,30 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT
+GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told
+the same day that the layers follow the AGENCY asked (federal FOIA governs federal agencies only). Each row leaves DEBT by
+door 2, keeping its id; both sit at M10 with D-147, which they do not close — D-147's lifecycle stays a design row, and
+the quote's revision chain is shaped so each later stage lands as its own entry. Both are product; neither waits on
+anything unbuilt (the action and its correspondence are BUILT, `node tools/status.mjs 8`).
+
+1. **RECORD (M10), D-148: the fee quote, a structured correspondence entry.** A `received` entry may carry a QUOTE: the
+   amount and currency as quoted, the stated basis verbatim, and the `sent` entry it answers; a later entry may name the
+   quote it revises (a waiver is a revision to zero, and both entries stand). Its grammar sits at C-2.10 beside the
+   correspondence arms; `promote` projects it from the bytes into an indexed table that `purge` clears in both arms, and
+   a read returns quotes by counterparty and by the request answered. I3 and I5 change (the integrator mints the ICs).
+   The record states no finding about a quote. **Accepts when** a quote projects and reads back by counterparty and by
+   request; a revision to zero keeps both entries; a quote answering no `sent` entry, or with an amount that is not a
+   number, is refused by name; an action with no quote reads byte-identical before and after. NEGATIVE CONTROL: drop the
+   projection from the per-bundle purge, and the purge arm fails by name.
+2. **RECORD (M10), D-149: the laws that govern a records request, by citation.** A records-request action carries a
+   list of citations, each with its level (federal, state or local), set by a member's authored act; a machine credential
+   is refused by name, and a machine PROPOSAL, if built, is labelled machine work. An empty list reads UNDETERMINED with
+   its sentence, never a default; the plane encodes no law's rules; `cpra_request` actions read unchanged. **Accepts
+   when** a member's list lands and reads back; an action with none reads undetermined, never federal; a machine
+   credential's list is refused. NEGATIVE CONTROL: default an empty list to a federal citation, and the undetermined arm
+   fails by name.
+
 **2026-09-22 · BOB #26 · SCHEDULER #11's GROUP OF FOUR ANSWERED — TWO CLOSED IN FACT, TWO BUILD ITEMS.** Each traced at
 the code on `48aab56b` and ruled in its home document. **Q1, D-152 — door 1, CLOSED IN FACT:** DEC-4's *an OCR citation
 carries its image region* is met at the leg by a CAP, never a refusal (`BIO_Content_Framework_v0_10.md` §14.4); evidence:

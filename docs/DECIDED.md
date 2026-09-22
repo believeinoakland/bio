@@ -18,7 +18,7 @@ nothing was decided — the same rule the record applies to sparse levels everyw
 else. Each entry QUOTES its source and points at it; the authority is the file named,
 never this one.
 
-1502 rulings across 106 documents.
+1506 rulings across 106 documents.
 72 of them are decision-register entries, each filed under its own id from its
 `decided:` field and quoting its `response:`; a row showing the entry's status is one of them.
 
@@ -71,7 +71,7 @@ never this one.
 - **DEC-10** · 2026-09-22 — f a FINDING (DEC-10's (b) per item, keyed on the finding's stable identity, and (c) per case over the kinds present) is RULED 2026-09-22 (D-125) and NOT BUILT; `queuestate.mjs` refuses a FINDING by class until it lands.  
   `docs/development/NOTIFICATIONS.md:13`
 - **DEC-10** — sentence goes, and `current.test.mjs`'s pin that the fence refuses a FINDING is CORRECTED with its reason (DEC-10).  
-  `docs/development/QUEUE.md:55`
+  `docs/development/QUEUE.md:79`
 - **DEC-11** · 2026-08-01 · answered — DUPLICATE of DEC-5, which Bob ANSWERED on 2026-08-01 — read that entry, not this one.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:623`
 - **DEC-12** · 2026-08-01 · answered — REVISABLE, WITH EDITIONS.** Bob, 2026-08-01: *"A closed finding can be reopened, and a published case can be revised, though when republished, the edition number must be incremented and the case treated as a separate document."* The EDITION is the part the recommendation did not have and it is what makes revisable…  
@@ -111,7 +111,7 @@ never this one.
 - **DEC-17** · 2026-08-03 — Q2 · SETTLED by DEC-17 — THE PROJECT DECLARES THE STRENGTH ITS WORK REQUIRES**, published beside the strength actually reached, with the GROUP setting the default a new project starts from (amended 2026-08-03).  
   `docs/development/research/RECONCILED.md:1413`
 - **DEC-18** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-18) — an ungraded leg is INERT, and UNRATED becomes the boundary case rather than the rule.** *"An ungraded leg doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't suspend the conclusion either."*  
-  `docs/architecture/BIO_Case_Making_v0_1.md:1060`
+  `docs/architecture/BIO_Case_Making_v0_1.md:1090`
 - **DEC-18** · 2026-08-02 · answered — AN UNGRADED LEG IS INERT, NOT UNRATING.** Bob, 2026-08-02: *"An ungraded leg doesn't contribute to a conclusion, but if there are other graded legs, then it doesn't suspend the conclusion either."* **THIS IS NOT THE BEHAVIOUR R1-h REFUSED, AND THE DISTINCTION IS THE WHOLE RULING.** What R1 forbade was grading on…  
   `docs/archive/ledgers/DECISIONS-2026-08.md:1393`
 - **DEC-19** · 2026-08-02 — CORRECTED 2026-08-02 by Bob (DEC-19). This construct was called "the irreversible signed act" and that was wrong.** *"People make mistakes or misinterpret. An attestation must be reversible to correct mistakes. (Though there may be a record of the attestation and reversal in the record.)"*  
@@ -141,7 +141,7 @@ never this one.
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:2709`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-21) — the CONCLUSION above stands; the MECHANISM below it was wrong.** Bob: *"A capture is the act of reading a document in.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:1127`
+  `docs/architecture/BIO_Case_Making_v0_1.md:1157`
 - **DEC-21** · 2026-08-02 · answered — THEY ARE NOT COMBINED — AND R2'S MECHANISM IS WRONG WHILE ITS CONCLUSION IS RIGHT.** Bob, 2026-08-02: *"A capture is the act of reading a document in.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:1514`
 - **DEC-21** · 2026-08-02 — AMENDED 2026-08-02 (Bob, DEC-21) — R2's CONCLUSION stands; its MECHANISM does not.** > *"A capture is the act of reading a document in.  
@@ -401,7 +401,7 @@ never this one.
 - **DEC-71** · 2026-08-10 · answered — SUPERSEDED BY DEC-72 — THE QUESTION DISSOLVES.** Bob's 2026-08-10 ruling makes the bar a property of the PROJECT, told to the publishing act at act time; no bar ever attaches to a finding, so no departed project's bar can linger and nothing composes across citers.  
   `docs/development/DECISIONS.md:307`
 - **DEC-72** · 2026-08-10 — AMENDED 2026-08-10 (DEC-72, Bob): the third "phase" is now its own OBJECT.** The > collapse below STANDS for inquiry and finding — one recursive object, a finding being > an inquiry that reached a conclusion.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:493`
+  `docs/architecture/BIO_Case_Making_v0_1.md:523`
 - **DEC-72** — REDESIGN, RULED BY BOB.** A notification, not a copy (ORCHESTRATION's rule, and this entry was trimmed the same day for violating it): **the ruling is DEC-72; the design, its implications, the supersession table, AND the decomposition (CASE-1 … CASE-6, all M10, IC protocol against I3/I5) are…  
   `docs/archive/ledgers/BOB-INBOX-drained.md:573`
 - **DEC-72** — SUPERSEDED THE SAME DAY BY DEC-72, AND THE WORK IS MOOT RATHER THAN WRONG — stated here rather than left for a reader to collide with.** `CASE-AS-PRODUCTION.md`'s supersession table: *"D-280's severed-citer fix — moot rather than wrong: the code it fixed is removed with the composition."* Bars never attach to…  
@@ -588,6 +588,14 @@ never this one.
   `docs/archive/research/BUILD-ORDER.md:121`
 - **D-144** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 2): LED-7 batch 11** — D-144, D-143, D-199 and D-184 CLOSED IN FACT; D-84 (narrowed to its one unbuilt trace), D-207 and D-92 PLACED under their own ids; D-182 and D-325 SENT to BOB.  
   `docs/development/CLAIMS.md:16501`
+- **D-148** · 2026-09-22 — `action` IS the impact substrate — the fee quote as evidence (D-148) and the governing laws of a records request (D-149), both RULED 2026-09-22, are NOT BUILT: a quote is still correspondence prose and an action names no law.  
+  `docs/architecture/BIO_Case_Making_v0_1.md:8`
+- **D-148** · 2026-09-22 — A FEE QUOTE IS EVIDENCE, RULED BY BOB 2026-09-22 (D-148):** *"Yes, a price quote is evidence"* — about the body that quoted it, not an obstacle to the request.  
+  `docs/architecture/BIO_Case_Making_v0_1.md:160`
+- **D-148** · 2026-09-22 — 2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told the same day that the layers follow the AGENCY asked (federal FOIA governs…  
+  `docs/development/QUEUE.md:25`
+- **D-149** · 2026-09-22 — A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT, RULED BY BOB 2026-09-22 (D-149):** *"ALL records laws apply.  
+  `docs/architecture/BIO_Case_Making_v0_1.md:172`
 - **D-151** — ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`, `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine callers are DISTINGUISHABLE.  
   `docs/archive/ledgers/DECISIONS-2026-08.md:3447`
 - **D-156** · 2026-08-02 — AMENDED 2026-08-02 by Bob, and the correction is larger than the vocabulary split:** the USER TYPE list is not one archetype.  
@@ -635,7 +643,7 @@ never this one.
 - **D-179** · 2026-09-22 — RULED 2026-09-22 by BOB #26 (D-179, SCHEDULER #11's Q4): at the store, ONE CAPTURE, ONE HOME — the ORIGINAL's.** The register is keyed by the bytes (`INTERFACES.md` I1 §1: `capture_sha` is the identity of the bytes across the whole system), and the ring-once rule above lands the corroboration on the original's…  
   `docs/architecture/BIO_Intake_Doctrine_v1_1.md:630`
 - **D-182** · 2026-09-21 — `risk_tier`, RULED 2026-09-21 by BOB #21 (D-182; SCHEDULER #6's Q4): both halves, in one row.** The three tiers already carry Bob's own meanings in the mission of record (`BIO_Complete_Roadmap_v5.md` §8): **1, file freely; 2, file with caution; 3, do not file without counsel** (evidence published, filing templates…  
-  `docs/architecture/BIO_Case_Making_v0_1.md:151`
+  `docs/architecture/BIO_Case_Making_v0_1.md:152`
 - **D-182** · 2026-09-21 — RULED by BOB #21 (2026-09-21): both halves in one row. — owner RECORD, then UI.  
   `docs/archive/ledgers/QUEUE-cut-2026-09-22.md:92`
 - **D-184** · 2026-09-14 — the doctrine is RULED, 2026-09-14, §14.4; the lead's design status is `BIO_System_Design.md` §3 construct 10's to state and the observation's is D-184's row, and §18's row points at both** — corrected 2026-09-18 by M0-62: this bullet read *doctrine, Bob's* four days after Bob ruled it); **the claim object DESIGNED…  
@@ -1163,7 +1171,7 @@ never this one.
 - **C-2.8** — PROPOSED → RESPONSES (silence is not consent) → RESOLUTION (dormant consumer: CONDUCT answers in writing) → CHANGING → CHANGED → SETTLED.  
   `docs/development/CONTENT-EXTENT-DESIGN-SPACE.md:69`
 - **C-6.3** · 2026-08-01 — CORRECTED 2026-08-01: an earlier version of this line said `supersedes` is already in `REL_VOCAB`, as if the mechanism existed.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:537`
+  `docs/architecture/BIO_Case_Making_v0_1.md:567`
 - **C-7.1** — `bio-plane/test/check-firing.test.mjs` (this item's own suite — the C-7.1 `proves()` block replaced by a pointer, the retirement block widened to be keyed by retired id, the header's SUPERSEDED note and `NEGATIVE CONTROL:` line extended).  
   `docs/archive/ledgers/CLAIMS-2026-08.md:4088`
 - **C-7.1** · 2026-08-08 — C-7.1 RETIRED — AND IT CORRECTED CONDUCT'S OWN QUEUE ROW, WHICH IS THE MOST VALUABLE THING IN THE ITEM.  
@@ -1507,9 +1515,9 @@ never this one.
 - **REC-117** · 2026-09-17 — One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about…  
   `docs/architecture/BIO_Case_Making_v0_1.md:3`
 - **REC-117** · 2026-09-17 — The threshold argument's SECOND LEG was CORRECTED 2026-09-17 (REC-117) and the section is current on it:** *the falsifier is REQUIRED* was overruled by Bob — `NO_FALSIFIER` is a condition a member may override, stated and attributed, including in the published record — so the leg is REPLACED by *the falsifier is…  
-  `docs/architecture/BIO_Case_Making_v0_1.md:10`
+  `docs/architecture/BIO_Case_Making_v0_1.md:11`
 - **REC-117** · 2026-09-17 — CORRECTED 2026-09-17 (REC-117), AND THE SECOND LEG IS REPLACED RATHER THAN STRUCK.** Bob, > ruling on `NO_FALSIFIER`: *"NO_FALSIFIER is a condition that should be surfaced.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:604`
+  `docs/architecture/BIO_Case_Making_v0_1.md:634`
 - **REC-117** — THE GAP IS THE EXACT SHAPE BOB RULED AGAINST: he asked for the condition to be SURFACED and OVERRIDABLE, and today it is overridable by the plane and invisible to the member** — which leaves the refusal's original defect half-standing, because a member who cannot find the override is still pressured toward…  
   `docs/archive/ledgers/QUEUE-closed.md:781`
 - **REC-117** · 2026-09-17 — BOB RULED THAT `NO_FALSIFIER` MUST BECOME A STATED, ATTRIBUTED, OVERRIDABLE CONDITION AND `op=conclude` STILL REFUSES OUTRIGHT — so the gate pressures a member into INVENTING a falsifier, which is the exact bug the publication fence was moved off the content axis to avoid.** — waits on nothing; owner RECORD.  
@@ -2028,19 +2036,19 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-08-10** — ⚠ SUPERSEDED IMPLEMENTATION, INHERITED FORMAT > > **Banner added 2026-08-10 (session BOB), moving into this file what > `architecture/README.md` has said about it since July and no reader of this document  
   `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md:47`
 - CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric](#4-corrected-the-administrator-is-not-an-inverted-threat-model-and-the-threat-is-symmetric) - [4a. "Less narrative" is a design constraint, and it cuts against how such tools usually…  
-  `docs/architecture/BIO_Case_Making_v0_1.md:22`
+  `docs/architecture/BIO_Case_Making_v0_1.md:23`
 - [The god-object risk, WITHDRAWN as stated and narrowed to what is real](#the-god-object-risk-withdrawn-as-stated-and-narrowed-to-what-is-real) - [Naming: three names for three phases, and the type name question](#naming-three-names-for-three-phases-and-the-type-name-question) - [Division: one inquiry becomes two or…  
-  `docs/architecture/BIO_Case_Making_v0_1.md:39`
+  `docs/architecture/BIO_Case_Making_v0_1.md:40`
 - **2026-08-10** — STATUS CORRECTED 2026-08-10 (session BOB).  
-  `docs/architecture/BIO_Case_Making_v0_1.md:72`
+  `docs/architecture/BIO_Case_Making_v0_1.md:73`
 - CORRECTED — the administrator is not an inverted threat model, and the threat is symmetric This section originally read "the administrator archetype inverts the threat model" and treated an adversarial default as the given.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:193`
+  `docs/architecture/BIO_Case_Making_v0_1.md:223`
 - The god-object risk, WITHDRAWN as stated and narrowed to what is real Bob: *"changing its name as it evolves doesn't make it god-like."* Correct, and the risk as I wrote it was over-weighted.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:478`
+  `docs/architecture/BIO_Case_Making_v0_1.md:508`
 - **2026-08-01** — RULED by Bob, 2026-08-01: `inquiry` early (NOT `focus`), `finding` once it concludes, `case` once published.** Same object, different phases, different names.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:503`
+  `docs/architecture/BIO_Case_Making_v0_1.md:533`
 - RULED by Bob: the lifecycle must include dividing into 2 or more.** Composition came free with recursion; division does not, and working through it produces four things.  
-  `docs/architecture/BIO_Case_Making_v0_1.md:528`
+  `docs/architecture/BIO_Case_Making_v0_1.md:558`
 - **2026-07-30** — " note was revised: transitive trust is accepted so long as it is disclosed (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30). - §12 — "Platform (resolved, v4)" describes the retired local-first client; the plane replaced it and the UI is built as constructs (`BIO_Interaction_Constructs_v0_1.md`). - §13…  
   `docs/architecture/BIO_Complete_Roadmap_v5.md:12`
 - **2026-09-14** — RULED: an authored edge is never re-pointed to a newer capture without a member's act (§14.4, §18); RULED: a link to a Google Drive file keeps the link and the harvest is the OpenDocument export, from which content is extracted (§16). - v0.12, 2026-09-14.  

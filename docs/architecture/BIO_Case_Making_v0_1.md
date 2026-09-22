@@ -1,10 +1,11 @@
 # Case-making: the design pass
 
-**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). **One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about what was decided, and it was load-bearing in an argument.** §CONTRADICTION's IDENTIFY is designed at level 2 (BOB #16, 2026-09-19, `CONTRADICTION-IDENTIFY-DESIGN.md`). as of 2026-09-21.
+**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). **One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about what was decided, and it was load-bearing in an argument.** §CONTRADICTION's IDENTIFY is designed at level 2 (BOB #16, 2026-09-19, `CONTRADICTION-IDENTIFY-DESIGN.md`). **§2 GAINED TWO RULINGS OF BOB'S ON 2026-09-22 (D-148, D-149), folded by BOB #26: a fee quote is EVIDENCE, and a records request names EVERY law that governs the agency asked, by citation; neither is built.** as of 2026-09-22.
 
 **Place in the system** · The reasoning behind construct 8 of `BIO_System_Design.md` §3 (intent and inquiry) **[audited 2026-09-17: the quotation below is Bob's framing of 2026-08-01 and the design has since LANDED — this document is it, and construct 8 reads built]**: "CASE-MAKING is undesigned, and it is what the whole system is for" (D-127). Its rulings feed M9 and M10; `BIO_Interaction_Constructs_v0_1.md` takes FINDING as case-making's substrate from it; the thread itself is paused behind DEC-33 until Bob reopens it.
 
 **Incomplete sections** ·
+- §2. `action` IS the impact substrate — the fee quote as evidence (D-148) and the governing laws of a records request (D-149), both RULED 2026-09-22, are NOT BUILT: a quote is still correspondence prose and an action names no law.
 - §Naming: three names for three phases, and the type name question — DEC-72 rules a case is a PRODUCTION of a project, not a phase; the open → concluded → published states are superseded.
 - §Division: one inquiry becomes two or more — items 3 and 5 were written for case-as-phase; re-read under DEC-72.
 - §What a CLAIM is, and why it is a field rather than an object — "`inquiry_basis` does not exist in the schema" is false; "Awaiting Bob" and "DEC-32 remains open" are stale (decided 2026-08-04); the contradiction question is open. **The threshold argument's SECOND LEG was CORRECTED 2026-09-17 (REC-117) and the section is current on it:** *the falsifier is REQUIRED* was overruled by Bob — `NO_FALSIFIER` is a condition a member may override, stated and attributed, including in the published record — so the leg is REPLACED by *the falsifier is ACCOUNTED FOR* rather than struck, because it was one of three carrying the argument and striking it would have left an argument that no longer closes with nothing saying so. Shipped in the plane (`op=conclude` `no_falsifier=1`, `falsifier_override_by`/`_at`, C-2.8's three outcomes, `op=publishedcase`'s `authored.falsifier_override`).
@@ -155,6 +156,35 @@ included). A surface publishes those words (REC-38's pattern) and invents none. 
 UNDETERMINED value, as authority and counterparty did (D-130), written wherever no member has stated a tier.
 Today's writers default to 1, which tells a member an action is safe to file freely when nobody assessed it:
 an overclaim on the one field that carries legal exposure. Only a member's authored act sets 1, 2 or 3.
+
+**A FEE QUOTE IS EVIDENCE, RULED BY BOB 2026-09-22 (D-148):** *"Yes, a price quote is evidence"* — about the body
+that quoted it, not an obstacle to the request. Folded by BOB #26. A quote arrives as a `received` correspondence
+entry and gains a structured QUOTE on that entry: the amount and currency as quoted, the stated basis verbatim
+(hours, rate, per page, as the body put it), and the `sent` entry it answers — the request's own text is its
+scope. Capture-or-testify is unchanged (DEC-13): the quote letter captured, or a member's account at D. A
+revision or a waiver is a LATER entry naming the quote it revises, so "dropped a $1,083 charge entirely once
+challenged" is two entries and both stand. The quotes are projected from the bytes into an indexed table that
+`purge` clears (D-21: stated once, in the document), so a read can set them side by side by counterparty and by
+request. **The record asserts only what was quoted, by whom, when, for which request.** That two requests
+sought the same records, or that a quote exceeds what the governing law allows, is a MEMBER's claim in an
+inquiry resting on those entries (DEC-24); the machine may set quotes side by side and never judges one.
+
+**A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT, RULED BY BOB 2026-09-22 (D-149):** *"ALL records laws
+apply. If a request is made in California, the both the federal and state laws apply. If there are local
+sunshine regulations, then they would apply as well."* Folded by BOB #26, with one correction told to Bob the
+same day: the layers follow the AGENCY ASKED, not where the requester stands — federal FOIA (5 U.S.C. §552)
+governs federal agencies only, a California state or local agency is governed by the California Public Records
+Act, and a city with a sunshine ordinance (Oakland's) adds its own. So a records-request action carries a LIST
+of the laws that govern the agency it is sent to — federal, state and local, every one that applies — each named
+by CITATION and set by a member's authored act; the machine may propose the list from the counterparty,
+labelled as machine work, and never sets it. An empty list is UNDETERMINED and stated, never a default (the
+design's implicit federal assumptions were wrong for Oakland on every axis D-149 lists). **The plane encodes
+no law's rules** — fees, clocks, appeals: a citation stays true when a law changes (a 2026 California bill to
+loosen the fee rules is pending) and an encoded rule goes stale silently; a member reads the law, and a fee
+quote (above) is read against it by a member. `cpra_request` already names one law in its KIND: every action
+written with it stands unchanged and counts as its member's statement that the CPRA governs, and nothing else
+is inferred from it; whether the kinds gain a law-neutral records request is the builder's to propose through
+the interface protocol.
 
 `awaiting_response`, `## Correspondence` and `counterparty` are unmistakably
 **outward-facing**: a records request, a letter to a council member, a complaint, a
