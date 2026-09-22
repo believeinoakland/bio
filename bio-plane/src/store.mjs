@@ -18565,7 +18565,9 @@ export class Store extends DurableObject {
    *  later citation of the same passage FIND this row instead of minting a
    *  second one. `mintContent` resolves the chain from the capture itself. */
   extractPropose({ run, bundleId, fn, version, cap = null, refs,
-                   proposedBy, viewer = null, at = null }) {
+                   proposedBy, viewer = null, at = null,
+                   /* REC-165: the caller's PRINCIPAL, stamped server-side (`RUN_PRODUCTION_ACTIONS`). */
+                   caller = null }) {
     /* FAIL CLOSED ON AN ABSENT STAMP — `contentMint`'s own rule one screen up,
        for its reason: the control plane stamps this and a caller cannot set it,
        so a blank here means the stamp did not run. A proposal the record cannot
@@ -18582,13 +18584,24 @@ export class Store extends DurableObject {
                      + `outside one would be a second place a machine writes, and every fence would `
                      + `have to be re-proved there` };
     const runId = run.trim();
-    const r = this.#one(`SELECT status, mode FROM ai_runs WHERE run = ?`, runId);
-    if (!r)
+    const r = this.#one(`SELECT status, mode, principal_plane FROM ai_runs WHERE run = ?`, runId);
+    /* REC-165 (§11 item 5, rule 1, BOB #25): SIGHT, THEN POSITION, THEN STATUS — the tick's order (REC-152). A
+       run whose context the viewer cannot see answers the SAME NO_SUCH_RUN a never-minted id gets, byte for
+       byte but for the id (§7.9); one whose PRINCIPAL is not the caller is refused by REC-152's gate, relayed
+       with its code. The caller is the control plane's `principal` stamp, never a field the body carries.
+       BOB #28's target rule does not reach this op: a proposed reading names no question a context bounds. */
+    if (!r || !this.#aiRunInSight(runId, viewer))
       return { ok: false, reason: "NO_SUCH_RUN", run: runId,
                detail: `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), `
                      + `naming the subject and the objective — both of which stay the member's `
                      + `(DEC-24 rule 2). The assistant may propose that a run would help; it may not `
                      + `start one` };
+    const notPrincipal = runPrincipalGate({ caller, principal: r.principal_plane,
+                                            act: "proposing a reading under a run" });
+    if (notPrincipal)
+      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail, run: runId,
+               note: "a proposed reading names a run its caller holds. Nothing was proposed or minted" };
     if (r.status !== "running")
       return { ok: false, reason: "RUN_NOT_RUNNING", run: runId, status: r.status,
                detail: `this run has ended. Its log is closed and a later production does not reopen `
@@ -34443,8 +34456,20 @@ export class Store extends DurableObject {
        be born from a run that existed, and must not die when that scratch row is
        reaped. */
     const run = String(args.run ?? "").trim();
-    const runRow = run ? this.#one(`SELECT run, status, context_type, context_id FROM ai_runs WHERE run=?`, run) : null;
-    if (!runRow)
+    const runRow = run ? this.#one(
+      `SELECT run, status, context_type, context_id, principal_plane FROM ai_runs WHERE run=?`, run) : null;
+    /* REC-165 (§11 item 5, rule 1, BOB #25) — THREE QUESTIONS OF THE RUN, IN THIS ORDER, and ALL BEFORE the F10
+       memo below, whose key carries no caller and so must never answer a caller the run is not theirs:
+       (a) SIGHT — a run whose context this viewer cannot see answers the SAME SUGGEST_NO_RUN a never-minted id
+           gets, byte for byte but for the id (§7.9: a refusal would say the run exists). `#aiRunInSight` is the
+           tick's and the close's own predicate (REC-152), so the run `op=airun` hides is the run this hides.
+       (b) POSITION — a run whose PRINCIPAL is not the caller: REC-152's gate, its refusal relayed whole. The
+           caller is the control plane's `principal` stamp (`RUN_PRODUCTION_ACTIONS`), never a field sent.
+       (c) STATUS — a run that has ended: a version is formed under a LIVE run's conditions (rule 1), so an
+           interactive session after a background run has closed opens its own run, as the member's act.
+       Then (d), BOB #28's TARGET rule, after sight and position so a hidden run still reads as absent. */
+    const runSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);
+    if (!runSeen)
       return refusal("SUGGEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is open in this store, and a version is only `
               + `interpretable against the conditions its run was formed under (§11).`
@@ -34452,6 +34477,33 @@ export class Store extends DurableObject {
               + "work that produced it, because the bias in force, the declared standard and the claim "
               + "set can all change at the drop of a hat.",
         { target, run: run || null });
+    const notPrincipal = runPrincipalGate({ caller: args.caller ?? null, principal: runRow.principal_plane,
+                                            act: "suggesting a reading under a run" });
+    /* RELAYED FIELD BY FIELD AND NEVER SPREAD: a spread would make this a return whose VERDICT the DEC-49 guard
+       cannot read (its inherited-verdict ceiling may only fall). `ok: false` is stated here; the code, check and
+       translation are the gate's own (C-22.12's literal stays at `runPrincipalGate`, REC-152's relay pattern). */
+    if (notPrincipal)
+      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail, target, run,
+               note: "a suggestion names a run its caller holds. Nothing was composed or written" };
+    if (runRow.status !== "running")
+      return refusal("SUGGEST_RUN_NOT_RUNNING",
+        `the run '${run.slice(0, 60)}' has ended, and a version is formed under a LIVE run's conditions `
+        + `(§11 item 5, rule 1): open a new run to go on working, as the member's act.`,
+        { target, run });
+    /* (d) BOB #28, 2026-09-22 — A SUGGESTION LANDS ONLY INSIDE ITS RUN'S CONTEXT: the context itself, or, for a
+       run over a PROJECT, a question that project CONFIRMED-cites (`#citesInto`, the one live-cites predicate —
+       the same set `#runContextProjects` reads the other way round). A reading of another question would be
+       read against conditions that were never that question's. */
+    const ctxId = String(runRow.context_id ?? "");
+    const inContext = target === ctxId
+      || (String(runRow.context_type) === "project" && this.#citesInto(target).confirmed.includes(ctxId));
+    if (!inContext)
+      return refusal("SUGGEST_OUTSIDE_RUN_CONTEXT",
+        `${target.slice(0, 60)} is outside the context of the run '${run.slice(0, 60)}': a run's readings `
+        + `land on its own question, or, for a run over a project, on a question that project cites. Work on `
+        + `another question opens a run over it.`,
+        { target, run });
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
@@ -42028,7 +42080,10 @@ export class Store extends DurableObject {
                                                     refs: (body || {}).refs,
                                                     at: (body || {}).at || null,
                                                     proposedBy: url.searchParams.get("proposedBy"),
-                                                    viewer: url.searchParams.get("viewer") }),
+                                                    viewer: url.searchParams.get("viewer"),
+                                                    /* REC-165: the caller's PRINCIPAL, stamped by the control
+                                                       plane (REC-152's one expression), never the body's. */
+                                                    caller: url.searchParams.get("principal") }),
         extractproposals: () => this.extractProposals({ run: url.searchParams.get("run"),
                                                         bundleId: url.searchParams.get("bundle"),
                                                         limit: url.searchParams.get("limit"),
@@ -42483,6 +42538,9 @@ export class Store extends DurableObject {
           run: (body && body.run) || url.searchParams.get("run"),
           author: url.searchParams.get("author"),
           viewer: url.searchParams.get("viewer"),
+          /* REC-165: the caller's PRINCIPAL, stamped by the control plane (REC-152's one expression) and SET
+             AFTER the body's spread, so a `caller` the body carries is overwritten rather than believed. */
+          caller: url.searchParams.get("principal"),
         }),
         /* PL-4 / IS-4. THE SPLIT BETWEEN THESE IS THE SAFETY PROPERTY, and it is
            `taskenqueue`/`taskdrain`'s split one door over: `capturerequest`

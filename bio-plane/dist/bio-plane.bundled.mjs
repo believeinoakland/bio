@@ -8803,7 +8803,8 @@ var AI_RUN_CHECKS = {
        nor the caller — and the store's `detail` names only the rule. */
   AI_RUN_NOT_PRINCIPAL: {
     check: "C-22.12",
-    where: "src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose",
+    /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
+    where: "src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose/suggestVersion/extractPropose",
     translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
   }
 };
@@ -9575,6 +9576,24 @@ var SUGGEST_CHECKS = {
     check: "C-27.4",
     where: "src/store.mjs suggestVersion > is-suggest-shape",
     translation: "Every suggestion names the piece of work that produced it, and this one named none that can be read here. What was searched, under which declared conditions, and where it stopped is what lets anyone else check a reading rather than take it on trust."
+  },
+  /* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): A VERSION IS FORMED UNDER A LIVE RUN. The
+     run is what a version is read against, and a run that has ended stopped being the conditions anything is
+     formed under. Asked AFTER sight (SUGGEST_NO_RUN for a run the caller cannot see) and position
+     (AI_RUN_NOT_PRINCIPAL, C-22.12, relayed from `runPrincipalGate`), so it is said only to the run's principal.
+     C-27.18 is a dotted member of PL-3's family, the family owner's to allocate (`tools/mintid.mjs` C). */
+  SUGGEST_RUN_NOT_RUNNING: {
+    check: "C-27.18",
+    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    translation: "The investigation this suggestion names has ended. A suggestion is read against the conditions of the investigation that produced it, and those stopped being current when it stopped, so going on means starting a new one."
+  },
+  /* REC-165, BOB #28 (2026-09-22, §11 item 5, "Rule 1's target"): A SUGGESTION LANDS ONLY INSIDE ITS RUN'S
+     CONTEXT — the context itself, or, for a run over a project, a question that project confirmed-cites. Asked
+     after sight and position, so a run the caller cannot see still answers as absent. C-27.19, the same family. */
+  SUGGEST_OUTSIDE_RUN_CONTEXT: {
+    check: "C-27.19",
+    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    translation: "This suggestion is about a question the investigation was not working on. An investigation is read against its own question, or the questions its project draws on, so work on a different question starts an investigation of that question."
   },
   SUGGEST_NAME_TAKEN: {
     check: "C-27.5",
@@ -26373,12 +26392,13 @@ function runPrincipalOf(principal) {
   const i = s.indexOf("/");
   return i < 0 ? s : s.slice(0, i);
 }
-function runPrincipalGate({ caller = null, principal = null } = {}) {
+function runPrincipalGate({ caller = null, principal = null, act = null } = {}) {
   const who = runPrincipalOf(caller), owner = runPrincipalOf(principal);
   if (who && owner && who === owner) return null;
+  const doing = typeof act === "string" && act.trim() ? act.trim() : "ticking or closing a run";
   return refusal3(
     "AI_RUN_NOT_PRINCIPAL",
-    "ticking or closing a run is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds"
+    `${doing} is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds`
   );
 }
 function finishedBound(bounds, { expired = false, offered = null } = {}) {
@@ -43301,7 +43321,9 @@ ${words}`;
     refs,
     proposedBy,
     viewer = null,
-    at = null
+    at = null,
+    /* REC-165: the caller's PRINCIPAL, stamped server-side (`RUN_PRODUCTION_ACTIONS`). */
+    caller = null
   }) {
     if (typeof proposedBy !== "string" || !proposedBy.trim())
       return {
@@ -43316,13 +43338,29 @@ ${words}`;
         detail: `EXTRACT runs in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, resumes it and checks it plane-side. A production outside one would be a second place a machine writes, and every fence would have to be re-proved there`
       };
     const runId = run.trim();
-    const r = this.#one(`SELECT status, mode FROM ai_runs WHERE run = ?`, runId);
-    if (!r)
+    const r = this.#one(`SELECT status, mode, principal_plane FROM ai_runs WHERE run = ?`, runId);
+    if (!r || !this.#aiRunInSight(runId, viewer))
       return {
         ok: false,
         reason: "NO_SUCH_RUN",
         run: runId,
         detail: `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the objective \u2014 both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would help; it may not start one`
+      };
+    const notPrincipal = runPrincipalGate({
+      caller,
+      principal: r.principal_plane,
+      act: "proposing a reading under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        run: runId,
+        note: "a proposed reading names a run its caller holds. Nothing was proposed or minted"
       };
     if (r.status !== "running")
       return {
@@ -57951,12 +57989,47 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         { target }
       );
     const run = String(args.run ?? "").trim();
-    const runRow = run ? this.#one(`SELECT run, status, context_type, context_id FROM ai_runs WHERE run=?`, run) : null;
-    if (!runRow)
+    const runRow = run ? this.#one(
+      `SELECT run, status, context_type, context_id, principal_plane FROM ai_runs WHERE run=?`,
+      run
+    ) : null;
+    const runSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);
+    if (!runSeen)
       return refusal7(
         "SUGGEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is open in this store, and a version is only interpretable against the conditions its run was formed under (\xA711).` : "pass run=<the run that composed this>: \xA711 requires every version to name the piece of work that produced it, because the bias in force, the declared standard and the claim set can all change at the drop of a hat.",
         { target, run: run || null }
+      );
+    const notPrincipal = runPrincipalGate({
+      caller: args.caller ?? null,
+      principal: runRow.principal_plane,
+      act: "suggesting a reading under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        target,
+        run,
+        note: "a suggestion names a run its caller holds. Nothing was composed or written"
+      };
+    if (runRow.status !== "running")
+      return refusal7(
+        "SUGGEST_RUN_NOT_RUNNING",
+        `the run '${run.slice(0, 60)}' has ended, and a version is formed under a LIVE run's conditions (\xA711 item 5, rule 1): open a new run to go on working, as the member's act.`,
+        { target, run }
+      );
+    const ctxId = String(runRow.context_id ?? "");
+    const inContext = target === ctxId || String(runRow.context_type) === "project" && this.#citesInto(target).confirmed.includes(ctxId);
+    if (!inContext)
+      return refusal7(
+        "SUGGEST_OUTSIDE_RUN_CONTEXT",
+        `${target.slice(0, 60)} is outside the context of the run '${run.slice(0, 60)}': a run's readings land on its own question, or, for a run over a project, on a question that project cites. Work on another question opens a run over it.`,
+        { target, run }
       );
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
@@ -64908,7 +64981,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           refs: (body || {}).refs,
           at: (body || {}).at || null,
           proposedBy: url.searchParams.get("proposedBy"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-165: the caller's PRINCIPAL, stamped by the control
+             plane (REC-152's one expression), never the body's. */
+          caller: url.searchParams.get("principal")
         }),
         extractproposals: () => this.extractProposals({
           run: url.searchParams.get("run"),
@@ -65406,7 +65482,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           kind: body && body.kind || url.searchParams.get("kind"),
           run: body && body.run || url.searchParams.get("run"),
           author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-165: the caller's PRINCIPAL, stamped by the control plane (REC-152's one expression) and SET
+             AFTER the body's spread, so a `caller` the body carries is overwritten rather than believed. */
+          caller: url.searchParams.get("principal")
         }),
         /* PL-4 / IS-4. THE SPLIT BETWEEN THESE IS THE SAFETY PROPERTY, and it is
            `taskenqueue`/`taskdrain`'s split one door over: `capturerequest`
@@ -67427,6 +67506,7 @@ var AI_RUN_ACTIONS = [
   "extractpropose"
 ];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
+var RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose"];
 var POSITIONAL_ACTS = [
   "cite",
   "sever",
@@ -72257,7 +72337,7 @@ var index_default = {
       }, 403);
     if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || op === "memberadd")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (RUN_VERB_ACTIONS.includes(op))
+    if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))
       inner.searchParams.set(
         "principal",
         viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`

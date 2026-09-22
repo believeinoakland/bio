@@ -22,7 +22,10 @@ const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 
 const REAL = ["src/index.mjs", "src/store.mjs", "src/airun.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
-const STAMP = "    if (RUN_VERB_ACTIONS.includes(op))\n      inner.searchParams.set(\"principal\",\n";
+/* RE-ANCHORED 2026-09-22 by REC-165: the stamp's condition now also names `RUN_PRODUCTION_ACTIONS` (the one
+   expression extended to op=suggest and op=extractpropose, §11 item 5 rule 1). The old anchor occurred ZERO
+   times after that landing, so this arm would have reported "did not arm" rather than measuring anything. */
+const STAMP = "    if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))\n      inner.searchParams.set(\"principal\",\n";
 const FOLD = "  return i < 0 ? s : s.slice(0, i);\n";
 const SIGHT_TICK = "    if (!this.#aiRunInSight(run, viewer)) return { run: run || null, found: false,\n";
 const SIGHT_CLOSE = "      if (!this.#aiRunInSight(run, viewer)) return { run, found: false,\n";

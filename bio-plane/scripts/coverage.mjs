@@ -1416,6 +1416,7 @@ const REGISTER_FLOOR = {
      266/265 · GREW by 4 arm(s)`, `228 RUN (dated token) … floor 228/227 reproducible · GREW by 1`) — never added by hand. One
      new suite, `test/current-shared-question.test.mjs`, whose declaration states four arms (a)-(d), each RUN by
      `test/current-shared-question.control.mjs`. Nothing FELL. ONE KEY SET. */
+  /* [REC-165] 2026-09-22: MOVED 1642 -> 1650, classified 264 -> 265, corpus 265 -> 266, run 227 -> 228, from this item's own `--strict` print (`arms 1650/1642 · classified 265/264 · corpus (suites read) 266/265 · GREW by 8 arm(s)`, `floor 228/227 reproducible`): the eight arms of rec165-production-principal.control.mjs. CONDUCT re-reads on the MERGED tree. */
   arms: 1646,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).

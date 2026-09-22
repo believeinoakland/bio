@@ -2079,11 +2079,15 @@ export function runPrincipalOf(principal) {
  *  else's run directs their work. NO EMPTY BYPASS either: a caller the control plane stamped with nothing
  *  matches nobody, which is the fail-closed direction (a run nobody may drive by hand still ends by its own
  *  lease and bounds, through the reaper, which asks nobody). */
-export function runPrincipalGate({ caller = null, principal = null } = {}) {
+export function runPrincipalGate({ caller = null, principal = null, act = null } = {}) {
   const who = runPrincipalOf(caller), owner = runPrincipalOf(principal);
   if (who && owner && who === owner) return null;
+  /* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): the run's two PRODUCTIONS ask this too, and
+     name their act so the detail says what was refused. Without `act` the sentence is REC-152's, byte for byte,
+     so the tick and the close are unchanged. The act is the caller's own site's literal, never a request field. */
+  const doing = typeof act === "string" && act.trim() ? act.trim() : "ticking or closing a run";
   return refusal("AI_RUN_NOT_PRINCIPAL",
-    "ticking or closing a run is its principal's act — the member who opened it, or a machine credential "
+    `${doing} is its principal's act — the member who opened it, or a machine credential `
     + "that member minted — and this account is not that principal (DEC-24: a run's work is attributed to "
     + "its principal). A run nobody drives ends on its own lease and bounds");
 }

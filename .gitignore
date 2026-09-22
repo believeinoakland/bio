@@ -421,3 +421,9 @@ docs/DECIDED.md
 # REC-166 (2026-09-22): `bio-plane/test/current-shared-question.control.mjs`'s pen — it edits src/ and keeps per-arm
 # pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
 bio-plane/.nc-rec166/
+# REC-165's pen, on the standing rule at `.rec84-control-pristine/`: `.rec165-runs/` holds the worker's run logs and
+# runner scripts, kept INSIDE the worktree for the reason `.d310-runs/` gives. CORRECTED 2026-09-22 by the resuming
+# worker: the stood-down worker's line here named a `.rec165-control-pristine/` pen for a driver `nc-rec165.mjs`; the
+# driver was written as `bio-plane/test/rec165-production-principal.control.mjs`, which patches COPIES in a temporary
+# tree and never edits a real source, so no pristine pen exists and the line is gone.
+.rec165-runs/

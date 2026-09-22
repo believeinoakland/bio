@@ -207,7 +207,26 @@ const RUN = "RUN-2026-0809-pl19";
     bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
   if (opened?.started !== true) throw new Error(`airunopen: ${JSON.stringify(opened)}`);
 }
-const suggest = async (body, tok) => POST(`op=suggest&token=${tok}`, { target: INQ, run: RUN, ...body });
+/* CORRECTED 2026-09-22 (REC-165, INVESTIGATIVE-SESSION.md §11 item 5 rule 1, BOB #25): every submission named
+   RUTH's run, whoever submitted it — `mem-pl19` (a token class) and none-so-blind (another member) included. That
+   was accepted only because `op=suggest` resolved the run for existence alone, the defect REC-165 closes: a
+   suggestion now names a run its CALLER holds. So each credential opens ITS OWN run over the same question and
+   the helper names the submitter's run; what the suite measures (DEC-65's licence, at both sites) is unchanged. */
+const openRun = async (tok, run) => {
+  const opened = await POST(`op=airunopen&token=${tok}`, {
+    run, contextType: "inquiry", contextId: INQ,
+    label: "PL-19 fixture — the submitter's own run", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
+  if (opened?.started !== true) throw new Error(`airunopen ${run}: ${JSON.stringify(opened)}`);
+  return run;
+};
+const RUN_OF = new Map([[RUTH, RUN],
+  ["mem-pl19", await openRun("mem-pl19", "RUN-2026-0809-pl19-machine")],
+  [NONESUCH, await openRun(NONESUCH, "RUN-2026-0809-pl19-none-so-blind")]]);
+const suggest = async (body, tok) => POST(`op=suggest&token=${tok}`,
+  { target: INQ, run: RUN_OF.get(tok) ?? RUN, ...body });
 const versionsOf = async () => GET(`op=basisversions&token=${RUTH}&id=${encodeURIComponent(INQ)}`);
 const stampsOf = (composition) => String(composition ?? "").split("\n")
   .filter((l) => l.startsWith("ground\t")).map((l) => l.split("\t")[2]);

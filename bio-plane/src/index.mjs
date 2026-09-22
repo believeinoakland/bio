@@ -1746,6 +1746,13 @@ const AI_RUN_ACTIONS = ["airunopen", "airuntick", "airunclose", "suggest", "capt
    `QUEUE_ACTIONS` and `PROJECT_ACTIONS` keep — a fourth run verb should join
    the gate by being added here, not by somebody remembering. */
 const RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
+/* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): THE RUN'S PRODUCTIONS. A production names
+   a run, and the run is what the production is READ AGAINST (its lens, bar, skill version and principal), so the
+   store asks that the run is one the CALLER holds — REC-152's `runPrincipalGate`, fed by REC-152's ONE `principal`
+   stamp expression, which this list EXTENDS and nothing else of the run verbs' does: not the `actor` stamp (PL-18
+   measured its blast radius) and not DEC-63's project gate. `capturerequest` is NOT here: rule 1 names these two
+   ops, and that door's same-class finding was routed rather than built (REC-165's report). */
+const RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose"];
 /* REC-134 / C-56: the acts that change a project and read the POSITIONAL `identity` stamp for
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
@@ -9920,8 +9927,10 @@ export default {
        principal the OPEN stamped — so both sides of that comparison must be composed by ONE expression, or
        a member and her own credential could stop being recognised as one principal by a spelling drift.
        SET, never appended: a `principal` the caller put in its own query is overwritten here, and the
-       store reads it as `caller` only from this stamp (a principal a caller can name is not one). */
-    if (RUN_VERB_ACTIONS.includes(op))
+       store reads it as `caller` only from this stamp (a principal a caller can name is not one).
+       REC-165 (§11 item 5 rule 1, BOB #25): THE SAME EXPRESSION FOR THE RUN'S TWO PRODUCTIONS, so a suggestion
+       and a proposed reading are compared with the run's principal in the one form the open stamped. */
+    if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))
       inner.searchParams.set("principal",
         viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
