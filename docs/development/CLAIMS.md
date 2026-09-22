@@ -18030,3 +18030,48 @@ tree clean at the start; `--since` needs a GREEN record; `VERIFICATION.md` 24,57
 (`VERIFICATION.md` cut to ~22 KB, then M0-104's line folded) directly after it; ids by `node tools/mintid.mjs M0`. Room
 made by cutting nine rows at the foot to their fields (MK-5, MK-7, MK-6, UI-78, REC-164, REC-161, UI-74, D-182, D-220),
 each VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`; the entry archived verbatim in `BOB-INBOX-drained.md`.
+
+Commit 2: LED-7 batch S11-1, every row read at the code on `06832aff`. CLOSED IN FACT: D-140 (REC-20's `op=queue`,
+`b956b6d6`, stamps each item's `class` from `classOfKind` and its `case` from its homes; REC-21 holds `queue_state`),
+D-160 (the plane, the copy and the suites say UNRATED; REC-12 done), D-133 (UI-15, `d397ab5b`, left one declaration of
+each function) and D-180 (the schema-wide inline-semicolon assertion in `bias.test.mjs`, PL-12 `43081d69`). NARROWED and
+SENT: D-152 (built but DEC-4's region at the leg) and D-125 (built but DEC-10's (b) and (c) for a FINDING). SENT: D-164
+(Bob's reopening condition) and D-179 (one capture, one home). The four questions go to BOB as one group (the DELEGATION
+below). MILESTONES.md: the four closed rows removed, D-152's and D-125's cells narrowed. 110 open DEBT rows remain.
+VERIFIED AND WAITING FOR ROOM (placed when CONDUCT #12's batch frees it): D-441 (its DEBT row lands with that batch),
+SCHEDULER #10's four drafts D-65, D-74, D-86 and D-66 (re-verified on `464c2779`), D-178 (the audit sweep injects no
+`publishedRegistry`, `store.mjs`), D-169 (`dispose` writes `disposition_reason` with `#setScalar`, a no-op when an intake
+document carries no such line), D-171 (`#revisionKind` breaks ties on `snap_key`), and CONDUCT #11's route: the head of
+`bio-plane/test/retirable.control.mjs` declares eight arms and M0-83's six where `ARMS` runs fifteen (A6b).
+
+## DELEGATION 2026-09-22 SCHEDULER (#11) -> BOB — **FOUR QUESTIONS, ONE EACH, from LED-7 batch S11-1: D-152's region at the leg (DEC-4), D-164's reopening condition, D-125's personal mute of a FINDING (DEC-10), and D-179's one capture, one home; none blocks a runnable row**
+
+1. **D-152 — DEC-4's *"an OCR citation carries its image region"*, AT THE LEG.** Built on `06832aff`: the transcription
+   chain (C-35), a page-and-rect anchor on every OCR region (C-35.9; an anchorless region is dropped), undetermined below
+   the floor, fidelity bounding the capture grade (C-2.8), attestation scoped to its extent. A leg MAY carry
+   `extent_rect` on the `pdf-page` arm, and coverage and the ceiling are judged per region (`#contentTarget`,
+   `extentCovers`); a leg resting on OCR'd text that names no rect is NOT refused, only capped. `CONTENT-EXTENT-DESIGN-SPACE.md`
+   §1.2 calls DEC-4's sentence *the one edge shape doctrine already REQUIRES*. **The question:** is the cap the built
+   answer (D-152 then closes in fact, the cap stated as DEC-4's reading), or must such a leg be REFUSED without a page and
+   rect (one RECORD row: a C-35 refusal at the leg's write, I3 breaking for rect-less legs on OCR'd text)?
+2. **D-164 — IS BOB'S REOPENING CONDITION MET?** Bob reopened it on 2026-09-15: content understood, architected,
+   inventoried and its missing pieces designed before a build plan is written. On `06832aff`, `node tools/status.mjs 4`
+   reads 4.edge BUILT (*D-164's central gap is CLOSED*), and Framework Part II carries §14 (the model), §15 and §17 (the
+   inventories) and §18's six pieces, each now designed in its home. **The question:** does D-164 close in fact, or does
+   the reopening wait on something the record does not show?
+3. **D-125 — DEC-10's (b) AND (c) FOR THE OVERDUE FINDING.** Bob ruled that the overdue notification offers (a) remind me
+   at a further increment, (b) stop notifying me about this one, (c) stop notifying me about that group, and the entry
+   determines that *muting is personal … The finding stands; only that member's notification stops.* Built (REC-21,
+   P-87): (a), and a per-member, per-case mute of CONDITION kinds. A FINDING is refused `KIND_NOT_PERSONAL`
+   (`queuestate.mjs`: *muting it would let one member's inbox hygiene erase the group's question*), and
+   `NOTIFICATIONS.md`'s class table gives a FINDING only authored record acts. The overdue successor IS a FINDING, so
+   (b) and (c) cannot reach DEC-10's own subject. **The question:** does a member's PERSONAL mute admit FINDING kinds, per
+   item and per case as DEC-10 rules (a change to `NOTIFICATIONS.md`'s handling scope, then one RECORD row), or does the
+   class table stand, which takes DEC-10's (b) and (c) back to Bob?
+4. **D-179 — ONE CAPTURE, ONE HOME?** `register.capture_sha` is the table's PRIMARY KEY and the promote write UPSERTs
+   `bundle_id` on it, so registering a capture under a second bundle silently MOVES the row, refused only for an authored
+   capture (C-53.8). **The question:** is one capture one home (a second registration then REFUSED by name, one RECORD
+   row), or is the key missing its bundle (`(capture_sha, bundle_id)`, a schema change with its migration)?
+
+Sent to BOB by message on 2026-09-22; each of the four rows carries a dated SENT note in `DEBT.md`.
+**open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or narrowed further), and nothing runnable waits on any of them.
