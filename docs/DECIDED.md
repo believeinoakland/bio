@@ -16,7 +16,7 @@ this file is not evidence that nothing was decided — the same rule the record 
 to sparse levels everywhere else. Each entry QUOTES its source and points at it; the
 authority is the file named, never this one.
 
-1406 rulings across 101 documents.
+1409 rulings across 102 documents.
 
 ## DEC-
 
@@ -632,6 +632,8 @@ authority is the file named, never this one.
   `docs/archive/ledgers/QUEUE-closed.md:2854`
 - **D-293** — Q4 RULED NO: the guard never runs `gates.mjs` (M-85's landing rate), which `VERIFICATION.md`'s push-guard section already states; its named fix, refusing a tree whose recorded verdict is RED, is carried by the D-293 inbox entry until built, because that file is at its reading budget and its register block is quoted…  
   `docs/development/CLAIMS.md:16465`
+- **D-293** · 2026-09-21 — 2026-09-21 · BOB #25 · D-293's DESIGN GAP RULED: A DIRTY RUN IS RECORDED UNDER THE TREE `git add -A` WOULD COMMIT — AND `VERIFICATION.md` NEEDS A CUT, BECAUSE ITS RULINGS NO LONGER FIT IN IT.** BOB #22 keyed the record by the tree measured *"only when that tree was CLEAN"*; the D-293 worker built exactly that and…  
+  `docs/development/QUEUE.md:25`
 - **D-302** · 2026-09-10 — ct pin reds on every added paragraph, while this population is FIVE hand-written sentences in append-only history and a SETTLED IC, so the exact figure is the honest ratchet — `LEDGER`'s own argument for holding counts exactly.  
   `docs/archive/ledgers/DEBT-closed.md:18`
 - **D-304** — Wider than briefed and AMENDED into the claim with reasons (the grade change forces the census arms to move or the ratchet reds on a correct estate); the cry-wolf half of the flow's scoping was narrowed only where the grade would otherwise PRINT a claim the record cannot support; **the quiet half is D-304, a row…  
@@ -2489,6 +2491,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:17722`
 - **2026-09-21** — AMENDED 2026-09-21, same session (commit 4): THE REFRESH** — `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #11 from the state measured at `8d9fa057`, and two mechanics added to `kickoffs/SCHEDULER.md`: ask every live lane that lands on `main` to hold, one mid-refresh included; a row drafted and waiting for…  
   `docs/development/CLAIMS.md:17738`
+- **2026-09-21** — RULED 2026-09-21 by BOB #25: take the fix, with one condition** — the temporary-index tree is taken at the run's start and end and a dirty verdict is recorded only when they agree.  
+  `docs/development/CLAIMS.md:17893`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
@@ -2801,6 +2805,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/ORCHESTRATION.md:118`
 - **2026-07-31** — CORRECTED 2026-07-31, and the correction is worth reading because the original was right for a premise that stopped holding.** The rule said "`ARCH` works in the MAIN checkout; area sessions work in worktrees", and its reason was that `ARCH` edits the cross-cutting registry — `CLAIMS.md`, `INTERFACES.md`, this…  
   `docs/development/PARALLELISM.md:226`
+- RULED: take the worker's fix, with one condition.** A dirty run is keyed by the tree a TEMPORARY index writes (`GIT_INDEX_FILE=<temp> git add -A && git write-tree`), which is byte for byte the tree that commit publishes; the live index is never touched.  
+  `docs/development/QUEUE.md:29`
 - place in the schema where a doctrine rule ("the RULED dedup") is enforced by the store rather than remembered by the writer, and it is the pattern §2 borrows for the inquiry lifecycle. ### The framework's intent layer (CONSTRUCTS steps 3–5)  
   `docs/development/research/DATA-MODEL.md:240`
 - `:407-420` (RULED by Bob) | | **R2** | Machine states `open → concluded → published`, neutral and machine-facing, **with the existing triage dispositions surviving as exits** | `:415-417` | | **R3** | A **basis** that may include documents AND other inquiries | `:340-347`, `:335` | | **R4** | **Strength composed as…  
