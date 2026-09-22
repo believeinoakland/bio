@@ -1158,7 +1158,7 @@ never this one.
   `docs/development/INTERFACE-CHANGES.md:12061`
 - **IC-172** — DECIDED by DIST #3: after an update to a release carrying IC-172, `newgroup` reads `op=instancegroup`; with no group recorded it TELLS the operator what is refused and that their own `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion, and NEVER seeds. It is built with 0.71.0,…  
   `docs/development/CLAIMS.md:17639`
-- **IC-173** · 2026-09-21 — A bearer is NOT refused (provisional at acceptance; RULED by BOB #22 on 2026-09-21, `BIO_Membership_Architecture_v2.md` §4).  
+- **IC-174** · 2026-09-21 — A bearer is NOT refused (provisional at acceptance; RULED by BOB #22 on 2026-09-21, `BIO_Membership_Architecture_v2.md` §4).  
   `docs/development/INTERFACES.md:508`
 ## C-
 

@@ -12969,3 +12969,24 @@ static-page 20/6 · silence-as-none 25/1 (P4) · op-public-refused 17/9 · publi
 reach, P7, and the four credentialed arms C1, C2, C4, C6, which is the additivity measured from the other side.
 
 **FOR CONDUCT at integration:** resolve this IC and move I3 in `INTERFACES.md`; re-run the control; UI-77 is unblocked by it.
+
+**RESOLUTION · 2026-09-22 · ACCEPTED by CONDUCT #12 as MINOR, ADDITIVE — I3 49.1.0 → 49.2.0.** Base RE-READ at resolution
+off the batch-3 integration tree (origin/main `336e9f82` with REC-163 merged at `09bed92a`; nothing on main since the
+proposal's base moved I3): **49.1.0** (IC-173), as proposed. **WHY MINOR, on IC-25's test:** every caller the admission gate
+admitted before is answered byte-identically (the builder booted the old and new planes side by side as admin, admin with
+`store=scratch`, member token, probe and probe with `store=scratch`; session and agent credentials match in the suite), and the
+only answers that change are four REFUSALS that now return the public answer — no credential (401), an unrecognised token
+(401), the daemon (403), a probe asking for `bio` (403) — which is the slug alone or the stated absence, never the row's
+provenance (arm `public-gets-provenance`). The argument for MAJOR the proposal states — a consumer reading one of those
+refusals as a verdict on its own credential — is weighed and MEASURED empty: nothing outside the plane calls the op (225
+tracked files across civicos-ui, agent-worker, newgroup/src, tools, pdf-worker, ocr-worker and docprofile; the only mentions
+are a comment and notice text in `newgroup/src/index.mjs` and the embedded release copy in `newgroup/src/release.mjs`).
+**NEGATIVE CONTROL RE-RUN AT INTEGRATION by CONDUCT #12 on the committed merge (`09bed92a`), not taken from the report:**
+`node test/group-public.control.mjs` (from `bio-plane/`), exit 0, every row AS DECLARED — baseline 26/0 · literal-restored
+13/13 · css-hidden 24/2 · static-page 20/6 · silence-as-none 25/1 · op-public-refused 17/9 · public-gets-provenance 21/5 ·
+op-silence-as-none 25/1 · page-reads-scratch 24/2 · over-strict 26/0 — identical to the builder's; `setup.mjs`, `index.mjs`,
+`store.mjs` and the suite hashed identical before and after. CONDUCT answers FOR the consumer areas, in writing: NOT-AFFECTED
+(no consumer calls the op; UI-77, next in the plan, is the first). **NOT closed by it, and routed:** the rest of the row beyond
+the slug (when it was recorded, by which act, by whom), which Publication §7 point 1 does not rule public, so the builder
+withheld it from the public answer (DESIGN GAP, to BOB #27); and `newgroup/src/index.mjs`'s sentence that the op answers
+credentials only, with whether an update should now read the op (REC-163's DELEGATION to DIST).

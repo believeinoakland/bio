@@ -18572,6 +18572,12 @@ BEFORE building. Claimed BY SITE:
 
 **open as of 2026-09-22** — OPEN while this item builds; CONDUCT integrates and resolves IC-174.
 
+**RELEASED 2026-09-22 by CONDUCT #12 at integration.** REC-163 LANDED in the merge `09bed92a` (batch 3, onto `origin/main` @
+`336e9f82`), pushed to `main` in the same landing as this line under the batch's gate. IC-174 RESOLVED MINOR, I3 49.1.0 → 49.2.0.
+RE-RUN BY THE INTEGRATOR on the committed merge: `group-public.control.mjs` every row AS DECLARED, identical to the builder's;
+the subjects hashed identical before and after. Branch `worktree-agent-a1e1ea8fd9d66c92a` is deleted from the remote after the
+push is verified. The paths this block reserved are FREE; its DELEGATION to DIST stays OPEN.
+
 ## DELEGATION 2026-09-22 RECORD (REC-163 worker) -> DIST — **`op=instancegroup` is PUBLIC since REC-163 (IC-174): `newgroup/src/index.mjs` says it answers "the admin, member and probe classes only", and an update's choice to TELL from the rule rather than READ rested on that**
 
 MEASURED on REC-163's branch: `newgroup/src/index.mjs`, the D-436 / IC-172 block above `FIRST_GROUP_RELEASE`, states *"The op
