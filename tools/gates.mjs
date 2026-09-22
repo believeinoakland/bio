@@ -70,12 +70,15 @@
  *
  * `--since [<rev>]` (default ORIG_HEAD): after a rebase, read the recorded verdict
  * of <rev>'s tree — it must be GREEN — and re-run only the units that read a path
- * changed on BOTH sides: one the measured branch changed (merge-base..<rev>) AND
- * one that differs between the measured tree and this one (<rev>..HEAD); plus
- * plancheck. BOTH SIDES means the unit reads something from each — a unit whose
- * suite moved upstream while the tool it tests moved here re-runs even though no
- * single file changed on both sides, because that pairing was never measured
- * anywhere. A side carrying a FULL-class path is taken to be read by EVERY unit
+ * changed on BOTH sides: YOURS (what the measured branch changed, and what this
+ * branch changes on its new base) AND THE OTHER (what `origin/main` changed between
+ * the two bases, gated where it landed); plus plancheck. BOTH SIDES means the unit
+ * reads something from each — a unit whose suite moved upstream while the tool it
+ * tests moved here re-runs even though no single file changed on both sides,
+ * because that pairing was never measured anywhere. A difference from the measured
+ * tree that the other side does not explain — a commit made after the gate, a fix
+ * made while rebasing — was measured by nobody, and its readers re-run as TARGETED
+ * would run them. A side carrying a FULL-class path is taken to be read by EVERY unit
  * (MENTION cannot see who reads the runtime), so a plane merge gated FULL and then
  * rebased over docs re-runs the readers of those docs; both sides carrying one is
  * FULL. No GREEN record, a dirty tree, or an unresolvable <rev>: the ordinary
@@ -458,51 +461,71 @@ if (SINCE && !FORCE_FULL) {
   else {
     const rec = readRuns({ repo: REPO, tree: oldTree });
     const eff = effectiveVerdict(rec.runs);
-    const forkPoint = tryGit(["merge-base", oldCommit, "HEAD"]);
+    /* The base this branch stands on now, and the base the measured commit stood on: the second is
+       taken against the FIRST, never against HEAD — for a commit added on top of the measured one,
+       merge-base(<rev>, HEAD) is <rev> itself and would read the branch's own change as upstream's. */
+    const newBase = tryGit(["merge-base", "HEAD", "origin/main"]);
+    const oldBase = newBase ? tryGit(["merge-base", oldCommit, newBase]) : null;
     if (eff.verdict !== "GREEN")
       fallback(eff.verdict === "RED" ? `the tree ${short(oldTree)} of ${SINCE} is recorded RED`
         : `no verdict is recorded for the tree ${short(oldTree)} of ${SINCE}`
           + `${rec.unreadable.length ? ` (${rec.unreadable.length} record file(s) unreadable)` : ""}`);
-    else if (!forkPoint) fallback(`${SINCE} shares no history with HEAD`);
+    else if (!newBase) fallback("no merge-base with origin/main, so the other side cannot be told from yours");
+    else if (!oldBase) fallback(`${SINCE} shares no history with origin/main`);
     else {
-      const mine = listDiff([forkPoint, oldCommit]);
-      const moved = listDiff([oldCommit, "HEAD"]);
-      if (mine === null || moved === null) fallback("a git read failed");
+      /* THE TWO SIDES. Yours is what the measured branch changed and what this branch changes now;
+         the other side is what `origin/main` changed between the two bases — gated where it landed.
+         Anything else that differs from the measured tree was made HERE after the measurement (a
+         commit on top, a fix made while rebasing), nobody has measured it, and it is re-checked as
+         TARGETED would check it — NEVER assumed measured. Reading every difference as "the other
+         side" is the unsound shape: a commit added after the gate would re-run nothing. */
+      const mineThen = listDiff([oldBase, oldCommit]);
+      const mineNow = listDiff([newBase, "HEAD"]);
+      const upstream = listDiff([oldBase, newBase]);
+      const differ = listDiff([oldCommit, "HEAD"]);
+      if ([mineThen, mineNow, upstream, differ].includes(null)) fallback("a git read failed");
       else {
+        const mine = [...new Set([...mineThen, ...mineNow])];
+        const explained = new Set(upstream);
+        const fresh = differ.filter((p) => !explained.has(p));
         const recordedClass = (eff.last && eff.last.class) || "?";
-        sinceInfo = { commit: oldCommit, tree: oldTree, recordedClass, mine: mine.length, moved: moved.length };
+        sinceInfo = { commit: oldCommit, tree: oldTree, recordedClass, mine: mine.length, upstream: upstream.length, fresh: fresh.length };
         const head = `re-checking ${short(oldCommit)} (tree ${short(oldTree)}, recorded GREEN, class ${recordedClass}): `
-          + `${mine.length} path(s) on your side, ${moved.length} moved since`;
+          + `${mine.length} path(s) on your side, ${upstream.length} on the other, ${fresh.length} changed since the gate`;
         /* A FULL-class path is RUNTIME, and which units read the runtime is exactly what MENTION
            cannot see — so a side carrying one is taken to be read by EVERY unit, and the pairing
            reduces to the readers of the OTHER side. Both sides carrying one is FULL. This is what
            makes `--since` useful to an integration batch: a plane merge gated FULL once, rebased
            over docs, re-runs the readers of those docs, not the battery. */
+        const freshFull = fresh.find((p) => fullReason(p));
         const mineFull = mine.find((p) => fullReason(p));
-        const movedFull = moved.find((p) => fullReason(p));
-        if (mineFull && movedFull) {
+        const upFull = upstream.find((p) => fullReason(p));
+        if (freshFull) {
           cls = "FULL";
-          why = `--since ${SINCE}: BOTH sides touch runtime (${mineFull}; ${movedFull}), and every unit may read both`;
-        } else if (mineFull) {
-          cls = "SINCE";
-          selection = selectReaders(moved);
-          why = `${head}; your side touches ${fullReason(mineFull)} (${mineFull}), which every unit may read, `
-            + "so the units reading what moved re-run";
-        } else if (movedFull) {
-          cls = "SINCE";
-          selection = selectReaders(mine);
-          why = `${head}; the other side moved ${fullReason(movedFull)} (${movedFull}), which every unit may read, `
-            + "so the units reading your side re-run";
+          why = `--since ${SINCE}: a change made after the gate touches ${fullReason(freshFull)} (${freshFull}), and nobody measured it`;
+        } else if (mineFull && upFull) {
+          cls = "FULL";
+          why = `--since ${SINCE}: BOTH sides touch runtime (${mineFull}; ${upFull}), and every unit may read both`;
         } else {
           cls = "SINCE";
-          const mineReaders = selectReaders(mine);
-          const movedReaders = selectReaders(moved, [...mineReaders.values()].map((v) => v.unit));
-          selection = new Map();
-          for (const [id, v] of mineReaders) {
-            const w = movedReaders.get(id);
-            if (w) selection.set(id, { unit: v.unit, why: `${v.why} · AND ${w.why}` });
+          let pairing;
+          if (mineFull) pairing = selectReaders(upstream);
+          else if (upFull) pairing = selectReaders(mine);
+          else {
+            const mineReaders = selectReaders(mine);
+            const upReaders = selectReaders(upstream, [...mineReaders.values()].map((v) => v.unit));
+            pairing = new Map();
+            for (const [id, v] of mineReaders) {
+              const w = upReaders.get(id);
+              if (w) pairing.set(id, { unit: v.unit, why: `${v.why} · AND ${w.why}` });
+            }
           }
-          why = `${head}; units reading BOTH re-run`;
+          selection = pairing;
+          for (const [id, v] of fresh.length ? targetedSelection(fresh) : new Map())
+            if (!selection.has(id)) selection.set(id, { unit: v.unit, why: `changed since the gate — ${v.why}` });
+          why = `${head}; ${mineFull ? `your side touches ${fullReason(mineFull)} (${mineFull}), which every unit may read, so the units reading the other side`
+            : upFull ? `the other side moved ${fullReason(upFull)} (${upFull}), which every unit may read, so the units reading your side`
+            : "the units reading BOTH sides"} re-run${fresh.length ? ", with every reader of what changed since the gate" : ""}`;
         }
       }
     }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 10 arms plus a baseline — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 11 arms plus a baseline — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -43,6 +43,9 @@
  *   G10 the LAST run's verdict wins                -> "a NARROWER GREEN does not clear a WIDER RED"
  *                                                     FAILS. MUST NOT: a GREEN re-run of what
  *                                                     failed still clears; a lone RED still refuses.
+ *   G11 a change made AFTER the gate read as the   -> "a commit made AFTER the gate is re-checked"
+ *       other side's (the unsound `--since`)          FAILS. MUST NOT: the disjoint-docs and the
+ *                                                     both-sides arms.
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -188,10 +191,17 @@ const ARMS = [
 
   { id: "G8", title: "BOTH SIDES read as the SAME FILE changed on both — the liar for `--since`",
     patches: [{ file: GATES,
-      from: "          const movedReaders = selectReaders(moved, [...mineReaders.values()].map((v) => v.unit));",
-      to: "          const movedReaders = selectReaders(mine.filter((p) => moved.includes(p)), [...mineReaders.values()].map((v) => v.unit));" }],
+      from: "            const upReaders = selectReaders(upstream, [...mineReaders.values()].map((v) => v.unit));",
+      to: "            const upReaders = selectReaders(mine.filter((p) => upstream.includes(p)), [...mineReaders.values()].map((v) => v.unit));" }],
     mustBreak: "a unit reading BOTH sides re-runs",
     mustNotBreak: ["a rebase over DISJOINT docs commits re-runs ONLY plancheck"] },
+
+  { id: "G11", title: "a change made AFTER the gate read as the other side's — the unsound `--since`",
+    patches: [{ file: GATES,
+      from: "        const fresh = differ.filter((p) => !explained.has(p));",
+      to: "        const fresh = [];" }],
+    mustBreak: "a commit made AFTER the gate is re-checked as TARGETED would",
+    mustNotBreak: ["a rebase over DISJOINT docs commits re-runs ONLY plancheck", "a unit reading BOTH sides re-runs"] },
 
   { id: "G9", title: "the register gate dropped — no coverage when a test file changed",
     patches: [{ file: GATES,

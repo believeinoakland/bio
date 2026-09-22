@@ -1,9 +1,9 @@
 /* D-293 WITH M0-98 — THE GATE'S VERDICT, RECORDED BY TREE AND REFUSED AT THE PUSH; AND THE TARGETED
  * CLASS WITH `--since`. One file set (`tools/gates.mjs`, `tools/pushguard.mjs`), one suite, one gate.
  *
- * NEGATIVE CONTROL: RAN 2026-09-21 by the D-293/M0-98 worker, driver `test/gates.control.mjs` (ten arms plus a
+ * NEGATIVE CONTROL: RAN 2026-09-21 by the D-293/M0-98 worker, driver `test/gates.control.mjs` (eleven arms plus a
  * baseline), each arm ALONE against pristine copies restored by sha256 AND `cmp` AND a byte floor; baseline
- * 57 pass / 0 fail, closing 57 / 0, the driver 75 pass / 0 fail —
+ * 58 pass / 0 fail, closing 58 / 0, the driver 82 pass / 0 fail —
  *   (1) the guard's lookup dropped, BOB #22's own control -> "a RED gate then a push of that tree is REFUSED" FAILS
  *       by name, with the amend, other-worktree, narrower-GREEN and GREEN-note arms; an unrecorded, a GREEN, a changed
  *       tree and a GREEN re-run each still push;
@@ -19,7 +19,13 @@
  *   (8) both sides read as the SAME FILE changed on both -> "a unit reading BOTH sides re-runs" FAILS;
  *   (9) the register gate dropped -> "selects the register gate (coverage --strict)" FAILS;
  *   (10) the last run's verdict wins -> "a NARROWER GREEN does not clear a WIDER RED" FAILS, with the guard's own
- *       in-process control; a GREEN re-run still clears and a lone RED still refuses.
+ *       in-process control; a GREEN re-run still clears and a lone RED still refuses;
+ *   (11) a change made after the gate read as the other side's -> "a commit made AFTER the gate is re-checked"
+ *       FAILS; disjoint docs and both-sides hold.
+ * THE ELEVENTH ARM EXISTS BECAUSE THE FIRST `--since` WAS UNSOUND, found while measuring this item's own landing:
+ * it read EVERY difference from the measured tree as the other side's already-gated change, so a commit added
+ * on top of a GREEN tree re-ran nothing of its own. The difference the other side does not explain is now
+ * re-checked as TARGETED would; the bases are taken against `origin/main`, never against HEAD.
  * TWO ARMS FOUND DEFECTS IN THIS SUITE BEFORE THOSE FIGURES, both fixed and both said at their sites: the first
  * run of arm 1 left the amend arm GREEN because the amended push failed as a NON-FAST-FORWARD over the pre-amend
  * commit the broken guard had let land — so every refusal is now read from the guard's own text and pushed to a
@@ -379,6 +385,17 @@ section("M0-98 · --since — after a rebase, only what BOTH sides touched, plus
   const newTree = treeAt(F.root);
   t("...and the --since run is GREEN and RECORDS the new tree",
     [dRun.status, runsFor(F.root, newTree).map((r) => r.class)], [0, ["SINCE"]]);
+
+  /* A commit made AFTER the gate, with no rebase at all: it differs from the measured tree, the other
+     side does not explain it, and nobody measured it — so it must be re-checked, never read as the
+     other side's already-gated change. */
+  mine("since-after", "tools/widget.mjs");
+  const measured = out1(["rev-parse", "HEAD"], F.root);
+  appendFileSync(join(F.root, "tools/computed.mjs"), "// a commit made after the gate\n");
+  commitAll(F.root, "since-after: a commit on top of the measured tree");
+  const af = gates(F.root, ["--since", measured, "--explain"]);
+  t("a commit made AFTER the gate is re-checked as TARGETED would, never assumed measured",
+    [af.cls, af.units.includes("plane:computed.test.mjs")], ["SINCE", true]);
 
   mine("since-both", "tools/widget.mjs");
   upstream("bio-plane/test/widget.test.mjs", "// the suite moved upstream\n");
