@@ -17923,3 +17923,9 @@ claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `CLA
 `docs/development/QUEUE.md` (the BOB INBOX only: one entry); `docs/development/CLAIMS.md` (this block and the state lines
 of the two DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB blocks); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #25** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#25) — BOB-NEXT checkpoint for BOB #26, written while BOB #25 is live (46%)
+
+claimed: 2026-09-21 by BOB #25, worktree `.claude/worktrees/bob-25`. Paths: `docs/development/kickoffs/BOB-NEXT.md`
+(rewritten from the state measured at ~04:05Z 2026-09-22), `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-21 BOB #25** — landed in the same commit as the file it covers.
