@@ -18599,7 +18599,8 @@ export class Store extends DurableObject {
     const notPrincipal = runPrincipalGate({ caller, principal: r.principal_plane,
                                             act: "proposing a reading under a run" });
     if (notPrincipal)
-      return { ...notPrincipal, reason: notPrincipal.code, run: runId,
+      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail, run: runId,
                note: "a proposed reading names a run its caller holds. Nothing was proposed or minted" };
     if (r.status !== "running")
       return { ok: false, reason: "RUN_NOT_RUNNING", run: runId, status: r.status,
@@ -34464,8 +34465,12 @@ export class Store extends DurableObject {
         { target, run: run || null });
     const notPrincipal = runPrincipalGate({ caller: args.caller ?? null, principal: runRow.principal_plane,
                                             act: "suggesting a reading under a run" });
+    /* RELAYED FIELD BY FIELD AND NEVER SPREAD: a spread would make this a return whose VERDICT the DEC-49 guard
+       cannot read (its inherited-verdict ceiling may only fall). `ok: false` is stated here; the code, check and
+       translation are the gate's own (C-22.12's literal stays at `runPrincipalGate`, REC-152's relay pattern). */
     if (notPrincipal)
-      return { ...notPrincipal, reason: notPrincipal.code, target, run,
+      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail, target, run,
                note: "a suggestion names a run its caller holds. Nothing was composed or written" };
     if (runRow.status !== "running")
       return refusal("SUGGEST_RUN_NOT_RUNNING",

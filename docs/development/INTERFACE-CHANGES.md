@@ -12991,3 +12991,57 @@ the slug (when it was recorded, by which act, by whom), which Publication §7 po
 withheld it from the public answer (DESIGN GAP, to BOB #27 — RULED 2026-09-22 by BOB #27 at the code: only the slug is public
 and the builder's projection stands, Publication §7 point 1); and `newgroup/src/index.mjs`'s sentence that the op answers
 credentials only, with whether an update should now read the op (REC-163's DELEGATION to DIST).
+
+## IC-176 · I3: `op=suggest` AND `op=extractpropose` REFUSE A RUN THEIR CALLER DOES NOT HOLD — both take REC-152's server-stamped `principal` and ask, in order, SIGHT (a run whose context the caller cannot see answers as a never-minted id: `SUGGEST_NO_RUN` / `NO_SUCH_RUN`, byte-identical but for the id), POSITION (`AI_RUN_NOT_PRINCIPAL`, C-22.12, relayed from `runPrincipalGate`) and STATUS (`op=suggest` now refuses an ended run: `SUGGEST_RUN_NOT_RUNNING`, C-27.18); and `op=suggest` lands only INSIDE its run's context — the context itself, or a question a project-context run's project confirmed-cites — else `SUGGEST_OUTSIDE_RUN_CONTEXT` (C-27.19) · PROPOSED 2026-09-22 (REC-165, minted with `node tools/mintid.mjs IC` BEFORE the entry was written) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI and fleet, the op contracts). **Base read off THIS TREE (branch
+  `worktree-agent-a085d980f98329517`, base `origin/main` @ `de40aa56`): 49.2.0, IC-174's resolution. Proposed MAJOR,
+  BREAKING — 49.2.0 → 50.0.0. Read the base AT RESOLUTION**, by this file's own rule: REC-166 (IC-175) is building in the
+  same wave.
+  **Why MAJOR, by IC-25's test — two ops REFUSE what they accepted:** a caller naming another principal's running run, an
+  ended run (`op=suggest`), a run over a context it cannot see, or (`op=suggest`) a target outside the run's context, was
+  answered `ok: true` and written; each is now refused by name and nothing is written. Measured on the unedited tree: the new
+  suite reads 13 pass / 22 fail against `de40aa56`'s sources — every refusal arm is an acceptance there.
+- **Proposer:** RECORD, REC-165 worker (CONDUCT #14, cloud), 2026-09-22, resuming CONDUCT #13's stood-down worker.
+- **Owner to land it:** `RECORD`
+- **Design:** `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rule 1 (BOB #25, 2026-09-21) and *Rule 1's target*
+  (BOB #28, 2026-09-22).
+- **Consumers to answer, MEASURED** (the tracked sources of `civicos-ui/`, `agent-worker/src`, `pdf-worker/`, `ocr-worker/`,
+  `tools/`, `newgroup/src/` and `docprofile/`, searched for `op=suggest`, `"suggest"` and `extractpropose`):
+  **`civicos-ui` 0 hits · `pdf-worker` 0 · `ocr-worker` 0 · `tools/` 0 · `docprofile` 0 · `newgroup/src/release.mjs` (the
+  embedded cut plane, not a consumer) · `agent-worker/src/index.mjs` ONE call site** (`submit`, `call("suggest", null,
+  { ...candidate, run: runId })`). **`agent-worker` — NOT BROKEN BY THE PRINCIPAL HALF:** it suggests under the SAME handed
+  credential it ticks the run with, which REC-152 (IC-165) already requires to be the run's principal; its five suites pass
+  on this tree (agent-worker 113, fanout 182, harness 227, wire-vocabulary 83, cascade 29, all 0 failed). **THE TARGET HALF,
+  MEASURED BY READING (not driven):** the member does not bound a candidate's `target` to its run's context — a model-authored
+  candidate carries whatever target the judgement gave, which the plane now refuses `SUGGEST_OUTSIDE_RUN_CONTEXT` and the
+  member routes to ADJUST (never an exemption, BOB #28); and its table-generated level-empty candidates carry
+  `target: state.target ?? null` where `state.target` is never set (not in `JUDGEABLE`, not initialised from the run read's
+  context), a PRE-EXISTING path to `SUGGEST_NO_TARGET` this IC does not change — routed to SCHEDULER in REC-165's report
+  with its fix. The fleet mock `agent-worker/test/plane-suggest.mjs` models neither the run nor the target, so the fleet
+  suites cannot see either refusal.
+
+**THE SHAPE.** `index.mjs`: `RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose"]`, and REC-152's ONE `principal` stamp
+condition becomes `RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op)` — set, never appended, so a caller's own
+`principal` is overwritten; the `actor` stamp and DEC-63's gate are NOT extended. `store.mjs`: both routes pass `caller` from
+that stamp (after the body's spread on `suggest`). `suggestVersion`, inside `is-suggest-shape` and BEFORE the F10 memo (keyed
+without a caller): sight (`#aiRunInSight`, the tick's predicate) → `runPrincipalGate` → status → context (`#citesInto`, the one
+live-cites predicate). `extractPropose`: sight → `runPrincipalGate` → `RUN_NOT_RUNNING` (unchanged) → mode. `airun.mjs`:
+`runPrincipalGate` takes an optional `act` for its `detail`; without it the sentence is REC-152's, byte for byte.
+
+**THE WIRE.** New refusals: `{ ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code, check: "C-22.12", translation, detail,
+target, run, note }` on `op=suggest` and `{ ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code, check, translation, detail, run,
+note }` on `op=extractpropose`; `SUGGEST_RUN_NOT_RUNNING` (C-27.18) and `SUGGEST_OUTSIDE_RUN_CONTEXT` (C-27.19), each
+`{ ok: false, reason, code, check, translation, detail, target, run }`. Every answer that was `ok: true` for the caller's own
+running run over its own context is unchanged.
+
+**No I5 IC:** no table, no column. No op added; no class list moves.
+
+**NEGATIVE CONTROL** (`node test/rec165-production-principal.control.mjs` from `bio-plane/`, every arm on a COPY of `src/`,
+real sources hashed before and after, untouched): ALL NINE ROWS AS DECLARED on the first run — baseline 35/0 ·
+drop-gate-suggest (THE ROW'S CONTROL) 26/9, the other-principal arms S1/S2 by name, session AND credential · drop-gate-extract
+30/5 · drop-context (BOB #28's) 31/4 · no-sight-suggest 33/2 · no-sight-extract 34/1 · sent-field 32/3 ·
+context-too-tight 34/1 · context-by-projects (over-strictness) 35/0. REC-152's `airun-principal.control.mjs` RE-ANCHORED on
+the extended stamp line and re-run: all six arms as declared at REC-152's tallies.
+
+**FOR CONDUCT at integration:** resolve this IC against the base read then, and move I3 in `INTERFACES.md`; re-run the control.

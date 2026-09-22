@@ -23,8 +23,12 @@ const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 
 const REAL = ["src/index.mjs", "src/store.mjs", "src/airun.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
-const SUGGEST_GATE = "    if (notPrincipal)\n      return { ...notPrincipal, reason: notPrincipal.code, target, run,\n";
-const EXTRACT_GATE = "    if (notPrincipal)\n      return { ...notPrincipal, reason: notPrincipal.code, run: runId,\n";
+/* The relay is written field by field (never a spread: the DEC-49 guard's inherited-verdict ceiling), so each
+   anchor is the `if` and the first line of its own return — unique to its site by the fields that follow. */
+const SUGGEST_GATE = "    if (notPrincipal)\n      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,\n"
+  + "               translation: notPrincipal.translation, detail: notPrincipal.detail, target, run,\n";
+const EXTRACT_GATE = "    if (notPrincipal)\n      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,\n"
+  + "               translation: notPrincipal.translation, detail: notPrincipal.detail, run: runId,\n";
 const SUGGEST_SIGHT = "    const runSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);\n";
 const EXTRACT_SIGHT = "    if (!r || !this.#aiRunInSight(runId, viewer))\n";
 const CONTEXT = "    const inContext = target === ctxId\n"
@@ -41,13 +45,13 @@ const ARMS = {
      and X6 (she is then told the context). S5 and F1 fail because the refused acts now WRITE. Nothing on
      op=extractpropose may move (F3 asserts both ops in one assertion, so it fails on its suggest half). */
   "drop-gate-suggest": {
-    patches: [["store.mjs", SUGGEST_GATE, "    if (false)\n      return { ...notPrincipal, reason: notPrincipal.code, target, run,\n"]],
+    patches: [["store.mjs", SUGGEST_GATE, SUGGEST_GATE.replace("if (notPrincipal)", "if (false)")]],
     mustFail: ["ARM S1 ", "ARM S2 ", "ARM S3:", "ARM S4:", "ARM S5 ", "ARM N3 ", "ARM F1 ", "ARM F3 ", "ARM X6 "],
   },
 
   /* The same gate dropped in `extractpropose`: the E arms and the forged extract arms, and nothing on suggest. */
   "drop-gate-extract": {
-    patches: [["store.mjs", EXTRACT_GATE, "    if (false)\n      return { ...notPrincipal, reason: notPrincipal.code, run: runId,\n"]],
+    patches: [["store.mjs", EXTRACT_GATE, EXTRACT_GATE.replace("if (notPrincipal)", "if (false)")]],
     mustFail: ["ARM E1 ", "ARM E2 ", "ARM E3 ", "ARM F2 ", "ARM F3 "],
   },
 
