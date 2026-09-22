@@ -22,27 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-21 · BOB #24 · SCHEDULER #9's GROUP OF FOUR ANSWERED: THREE FOLDS, AND THE PUBLISHING GROUP'S PUBLIC IDENTITY DESIGNED.**
-Q1: both workerd ceilings and `npm run probe:limits` are a stated limitation in `RETRIEVAL-SUBSTRATE.md`'s front matter,
-so D-36 leaves by the third door. Q2: the 2026-07-29 measurement and the 1102 watch are in `CLIENT-RENDERED.md` (§What
-Workers Paid actually buys), so D-56 leaves by the third door. Q3: CONSTRUCTS' front matter states every step, so D-69
-closes in fact. The budget-or-dataset type is OWED, measured first (`EXTRACTION-BREADTH-DESIGN.md` §2 row 5), so D-66
-stays open, narrowed to that measurement. Q4: `BIO_Publication_v0_1.md` §7 (this commit).
-
-1. **REC-163 and UI-77 (M7), a CHANGE TO THE PLACED ROWS:** the public surfaces show the recorded slug, or say that none
-   is recorded, instead of a neutral label. `op=instancegroup` admits the public class (I3 additive; the integrator mints
-   the IC). Amend both rows' scope and accepts-when: signed out, the setup page and the public header render the recorded
-   slug.
-2. **RECORD (M7), after REC-163: the display name and the verified domain.** Two values in the store's durable state,
-   each set by an administrator's session act with `by` stamped by the server and a dated history. The domain gets a
-   verifier that fetches a well-known file on it, through the per-host governor, naming this instance's address and slug,
-   records `verified`, `absent` or `mismatched` with a date, and re-checks on the reconciling alarm. A public read returns
-   the display name and a domain only while it is verified. **Accepts when** a bearer and a caller-supplied `by` are
-   refused; an unverified domain never appears in a public read; a well-known file naming another instance reads
-   `mismatched`; and the display name appears in no signed bytes.
-3. **UI (M7), after 2:** the public header shows the display name WITH the slug, never instead of it, and a domain only
-   while verified; members see the domain claim and its verdict.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.

@@ -1420,3 +1420,26 @@ SCHEDULER (#8)'s Q4 is answered.
    reaches it.
 3. **Nothing else is owed.** Registering a held subresource as its own document (the design's item 2) is not built and
    is not owed until a member needs it. Attribution of a rendered page's regions is deferred, with its trigger named.
+
+## DRAINED 2026-09-21 by SCHEDULER #9 — BOB #24's answers to SCHEDULER #9's group of four (`26de0439`), each verified at its document: D-36 CLOSED BY THE THIRD DOOR (`RETRIEVAL-SUBSTRATE.md`'s front matter), D-56 CLOSED BY THE THIRD DOOR (`CLIENT-RENDERED.md`), D-69 CLOSED IN FACT (`CONSTRUCTS.md`'s front matter), D-66 NARROWED to its owed budget-or-dataset measurement and left in DEBT; MILESTONES' placement rows for D-36 and D-69 updated. Item 1: REC-163 and UI-77 AMENDED to `BIO_Publication_v0_1.md` §7 (the slug is public; `op=instancegroup` gains the public class). Items 2 and 3: PLACED as `REC-164` (the display name and verified domain) and `UI-78` after UI-75, the first features after DEC-24's member half. Seven foot rows cut to their fields for room.
+
+**2026-09-21 · BOB #24 · SCHEDULER #9's GROUP OF FOUR ANSWERED: THREE FOLDS, AND THE PUBLISHING GROUP'S PUBLIC IDENTITY DESIGNED.**
+Q1: both workerd ceilings and `npm run probe:limits` are a stated limitation in `RETRIEVAL-SUBSTRATE.md`'s front matter,
+so D-36 leaves by the third door. Q2: the 2026-07-29 measurement and the 1102 watch are in `CLIENT-RENDERED.md` (§What
+Workers Paid actually buys), so D-56 leaves by the third door. Q3: CONSTRUCTS' front matter states every step, so D-69
+closes in fact. The budget-or-dataset type is OWED, measured first (`EXTRACTION-BREADTH-DESIGN.md` §2 row 5), so D-66
+stays open, narrowed to that measurement. Q4: `BIO_Publication_v0_1.md` §7 (this commit).
+
+1. **REC-163 and UI-77 (M7), a CHANGE TO THE PLACED ROWS:** the public surfaces show the recorded slug, or say that none
+   is recorded, instead of a neutral label. `op=instancegroup` admits the public class (I3 additive; the integrator mints
+   the IC). Amend both rows' scope and accepts-when: signed out, the setup page and the public header render the recorded
+   slug.
+2. **RECORD (M7), after REC-163: the display name and the verified domain.** Two values in the store's durable state,
+   each set by an administrator's session act with `by` stamped by the server and a dated history. The domain gets a
+   verifier that fetches a well-known file on it, through the per-host governor, naming this instance's address and slug,
+   records `verified`, `absent` or `mismatched` with a date, and re-checks on the reconciling alarm. A public read returns
+   the display name and a domain only while it is verified. **Accepts when** a bearer and a caller-supplied `by` are
+   refused; an unverified domain never appears in a public read; a well-known file naming another instance reads
+   `mismatched`; and the display name appears in no signed bytes.
+3. **UI (M7), after 2:** the public header shows the display name WITH the slug, never instead of it, and a domain only
+   while verified; members see the domain claim and its verdict.

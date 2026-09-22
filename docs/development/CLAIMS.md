@@ -17609,6 +17609,14 @@ D-207 SUPERSEDED by the same ruling and archived. D-36, D-56, D-66 and D-69 SENT
 (#9) -> BOB below, with the group's public identity (REC-163, UI-77). M0-91, M0-90, M0-74, M0-72, M0-68 and M0-77 cut
 to their fields at the foot. 142 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 5): BOB #24's answers DRAINED, and THE REFRESH** — D-36 and D-56 CLOSED BY THE
+THIRD DOOR (`RETRIEVAL-SUBSTRATE.md`'s front matter; `CLIENT-RENDERED.md`), D-69 CLOSED IN FACT (`CONSTRUCTS.md`'s front
+matter), each verified there; D-66 NARROWED to its owed measurement. REC-163 and UI-77 AMENDED to Publication §7 (the slug
+is public); REC-164 and UI-78 PLACED after UI-75. D-50, CPDF-3, FW-20, D-351, CAP-11, UI-76 and D-162 cut to their fields
+at the foot. This amendment also claims `docs/development/MILESTONES.md`: its placement table's rows for the ids this lane
+archived (D-36's removed; D-69 struck from D-60's). `kickoffs/SCHEDULER-NEXT.md` rewritten for SCHEDULER #10 at the
+refresh; this claim passes to SCHEDULER #10, who supersedes it when it archives this session. 139 open DEBT rows remain.
+
 ## CLAIM 2026-09-21 DIST (DIST #3 — D-436 item 3's route DECIDED: the update path tells an operator, and never seeds)
 
 session: DIST standing lane, DIST #3 [066b4f], worktree `jovial-mclaren-9af3b6`, Sparky-Air
@@ -17648,11 +17656,15 @@ why: the D-436 DELEGATION leaves "how the installer's update path tells them" to
    where every instance named *Believe in Oakland*. **The question:** may the slug be read publicly (it already travels
    in every published bundle's signed `group`), and should a group record a display name and domain, and by whose act?
 
-**open as of 2026-09-21** — sent to BOB by message; D-36, D-56, D-66 and D-69 each carry a dated SENT note in `DEBT.md`,
-and Q4 rests on REC-163 and UI-77, whose rows name it. **BOB #24, all four answered:** Q1 and Q2 FOLDED (D-36 and D-56
+Sent to BOB by message on 2026-09-21; D-36, D-56, D-66 and D-69 each carried a dated SENT note in `DEBT.md`,
+and Q4 rested on REC-163 and UI-77, whose rows name it. **BOB #24, all four answered:** Q1 and Q2 FOLDED (D-36 and D-56
 leave by the third door); Q3, D-69 closes in fact and the budget-or-dataset type is OWED, measured first (D-66 stays open,
 narrowed); Q4 DESIGNED in `BIO_Publication_v0_1.md` §7, with its build items in the BOB INBOX. Nothing keeps this block
 open past SCHEDULER's drain.
+
+**DISCHARGED 2026-09-21 — SCHEDULER #9 drained BOB #24's answers:** D-36 and D-56 closed by the third door and D-69 in
+fact, each verified at its document and archived; D-66 narrowed in DEBT to its owed measurement; REC-163 and UI-77
+amended to Publication §7, and REC-164 and UI-78 placed after UI-75.
 
 ## CLAIM 2026-09-21 BOB (#24) — SCHEDULER #9's group of four: three folds (D-36, D-56, D-69 with D-66) and the publishing group's public identity (Publication §7)
 
