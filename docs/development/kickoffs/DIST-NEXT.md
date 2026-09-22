@@ -1,117 +1,107 @@
-# DIST — resume here. Written 2026-09-21 by DIST #3 for DIST #4, in the SAME Claude Code account.
+# DIST — resume here. Rewritten 2026-09-22 by DIST #4 after cutting, deploying, SEEDING, live-verifying and POINTING 0.71.0, a BATCH.
 
-**DIST #3 cut, deployed, live-verified and POINTED 0.69.0 and 0.70.0, two CUT NOWs, and hands 0.71.0 to DIST #4.**
+**0.71.0 is complete — every gate step, and D-436's write-once seed of biosmoke7 is DONE. Nothing is owed on it.**
 
 Read `CLAUDE.md`, then `kickoffs/DIST.md` IN FULL. Its **WHEN DIST CUTS**, the **`latest` pointer mechanism** and the
-**LESSONS** are the process; this file is only the state, MEASURED 2026-09-21 ~20:40Z. Re-measure before acting on
-any of it — a figure is about the tree and the moment it was taken on, and a deployment is a fact about the ACCOUNT.
+**LESSONS** are the process; this file is only the state, MEASURED 2026-09-22 ~04:40Z. Re-measure before acting on any
+of it — a figure is about the tree and the moment it was taken on, and a deployment is a fact about the ACCOUNT.
 
-## 0.70.0 IS COMPLETE — all twelve gate steps, nothing owed on it (0.69.0 likewise, earlier the same day)
+## 0.71.0 — what it carried, and the seed
 
-- **0.69.0** (tag `37d56808`), CUT NOW for D-136 / IC-168: the §4.7 vote and §4.9 capability edit an operator token could
-  forge. It WIDENED member-session reach to `adminendorse`, `adminremove`, `membercaps` (named to BOB before the cut).
-- **0.70.0** (tag `072bb9f3`, object `5c1f13dd`), CUT NOW for **REC-156 / IC-171**: `op=memberadd` wrote the proposer's
-  §4.7 endorsement from the caller's own `by`, and bearer tokens reach it; the `by` is now server-stamped. It is
-  IC-168's NARROWED residue, so **`memberadd`'s forgery is CLOSED**. Also carried: **D-158 / IC-169** (`signeradd`
-  refuses a member who is not active, C-63.1/.2; `signerlist` gains `member_status`/`attests`/`attests_why` — judged
-  BATCH at the code, folded in here) and **D-432 / IC-170** (I5 MINOR: a new `minted_ids` table — the schema moved).
-- Pointer merge `0a562200`. Members' artifacts byte-identical to 0.68.0's (`a7e5f590` / `b26dee19` / `0d99f5d0`): both
-  releases moved their VERSION label only. `civicos` did not move in either — `app.html` unchanged since v0.68.0.
-- **For the NEXT cut's upgrade arm: `["0.70.0", "072bb9f3a414af8c4ff05ae9ddc443aa0f88454a"]`** — RELEASES, NOT WITHDRAWN.
+- **BATCH** (no security or disclosure closing): **D-436 / IC-172** (I3 49.0.0 MAJOR, I5 1.24.0 MINOR: the producing
+  group is ONE recorded value per store, table `instance_group`, written once) and **D-434** (`app.html`'s recipe step
+  cites; `civicos` MOVED). Tag `v0.71.0` = `9439431e` (object `5390d5bd`); pointer merge `23463895`. Members'
+  artifacts byte-identical to 0.70.0's (`a7e5f590` / `0d99f5d0` / `b26dee19`): they moved their VERSION label only.
+- **THE SEED — irreversible, done, never to be repeated** (a second is refused C-64.3). The deploy's boot recorded
+  NOTHING on either store (read BEFORE seeding: the new `op=instancegroup` answered `group: null`). Then scratch, then
+  bio: `believe-in-oakland` · source `seed` · recorded_by `token:admin`, at 2026-09-22T04:26:11.493Z (scratch) and
+  04:26:11.781Z (bio). biosmoke7 binds `INSTANCE_NAME="biosmoke7"` — its WORKER name, not its group — which is why the
+  boot recording nothing mattered.
+- **Guarding it, now in the gate:** `migrate-released` binds `INSTANCE_NAME` and asserts every released store records NO
+  group at the current plane's first and second boot, beside a positive arm on a fresh store; controls (e)
+  `firstbootalways` 321/36 and (f) `firstbootnever` 356/1, AS DECLARED. IC-172 had stated it could not see this.
+- **D-436 item 3's route, BUILT and refined:** `newgroup`'s update path TELLS an operator whose copy ran a release before
+  0.71.0 the root of trust's `op=instancegroupseed` (record and scratch), what is refused until then, and the installed
+  name as a SUGGESTION only (biosmoke7 / believe-in-oakland as the example) — and NEVER seeds. It decides from the
+  version read before the upload, because `op=instancegroup` answers admin/member/probe only and an update holds no
+  instance credential; an unknown version gets a conditional telling. Construct `15.group-telling`; Distribution §5.
+- **For the NEXT cut's upgrade arm: `["0.71.0", "9439431e0462522a52c46932985c3ad2eebcf1c7"]`** — RELEASES, NOT WITHDRAWN.
 
-## What is LIVE (measured 2026-09-21 ~20:21Z, deployments API at 100%)
+## What is LIVE (deployments API at 100%, 2026-09-22 ~04:35Z)
 
 | worker | serves | active version id = ROLLBACK TARGET |
 | --- | --- | --- |
-| `biosmoke7` (plane) | 0.70.0, bytes = signed `407d6b23…` | `44d1826f-6650-4171-8ee6-88f38648e87d` |
-| `agent-worker` | 0.70.0 (a LABEL) | `d93512cd-7102-4edc-8a89-463a72d6d802` |
-| `pdf-worker` | 0.70.0 (a LABEL) | `31c6ac56-4c1c-419a-9f14-ab8e86bdd616` |
-| `ocr-worker` | 0.70.0 (a LABEL) | `9742ceba-fa33-4488-850b-03151d571f77` |
-| `civicos` (UI) | build `3916f88ae780` — did NOT move | `f0c23544-6dd9-4011-918c-86e35aa03257` |
-| `newgroup` | embeds signed 0.70.0 (evaluated embed MATCH), bindings `[]` | `837d24c8-c589-453c-b168-d67e1ab96e9b` |
+| `biosmoke7` (plane) | 0.71.0, bytes = signed `d255d1a4…` (3,870,618 B), 13 bindings kept | `70a37b76-b199-418b-aac8-1867fa6df6c4` |
+| `agent-worker` | 0.71.0 (a LABEL) — deployed FIRST (IC-130) | `4caffb96-c458-4a2c-8f1f-f8c83974817d` |
+| `pdf-worker` | 0.71.0 (a LABEL) | `a99238d0-9099-429b-a4a8-7afe85ad6978` |
+| `ocr-worker` | 0.71.0 (a LABEL) | `6ad45487-931f-447f-9e56-a82fb01c3d59` |
+| `civicos` (UI) | `/build` `a13485ae…` = the tag's app.html sha | `7fe8fed0-9965-4baf-b558-b194c127e067` |
+| `newgroup` | embeds signed 0.71.0 (evaluated embed MATCH), bindings `[]` | `62a59e41-4e27-45c2-87db-c9b7a29bb4ed` |
 
-**WHICH BUILD ANSWERED.** 0.70.0's DO build IS established: `op=signeradd&store=scratch` for a never-enrolled member
-(`d41-sf72-a1`) was refused `SIGNER_MEMBER_NOT_ENROLLED` / C-63.1, raised in `store.mjs` with 0 occurrences in 0.69.0's
-bundle, and nothing was written. 0.69.0's DO build was UNDETERMINED (no safe DO-side code); that no longer matters.
-`op=bootstrap` never reads the DO's build (DIST.md lesson 18); D-116's DO half is with SCHEDULER.
+The previous targets (0.70.0): biosmoke7 `44d1826f`, agent-worker `d93512cd`, pdf-worker `31c6ac56`, ocr-worker
+`9742ceba`, civicos `f0c23544`, newgroup `837d24c8`. **Rolling the plane back does NOT unseed**: `instance_group` stays,
+and 0.70.0 ignores it.
 
-**SCRATCH RESIDUE, named and NOT swept:** member `dist3-rec156-muboxe9j` (admin, `proposed`) — REC-156's live arm. Scratch
-already held 13 members of July probe residue (`d41-sf72-*` and others, not DIST's), so `op=purge` was not used.
+**WHICH BUILD ANSWERED.** The DO build is established on BOTH stores: scratch answered `GROUP_ALREADY_RECORDED` / C-64.3
+and `GROUP_SLUG_MALFORMED` / C-64.2 (0 occurrences in 0.70.0's bundle), and bio answered the new `op=instancegroup`
+shape and took the new seed op. `op=bootstrap` never reads the DO's build (DIST.md lesson 18).
+
+**SCRATCH RESIDUE, named and NOT swept:** `INFO-2026-9436-dist4-muc6a1x0` (0.71.0's headline arm); member
+`dist3-rec156-muboxe9j` (DIST #3's); op=livefire's canary (it writes one per run). Scratch also holds 13 members of
+July probe residue, not DIST's, so `op=purge` is not used.
 
 ## What is OWED, in order
 
-1. **A BATCH IS OWED ON 2026-09-22: 0.71.0, carrying D-436 / IC-172** (I3 49.0.0 MAJOR, I5 1.24.0 MINOR: the producing
-   group becomes ONE recorded value per store, table `instance_group`, written once). ON `main` since 2026-09-21 (merge
-   `38850da4`, pushed `86523052`, CONDUCT #11). **BATCH, not CUT NOW, judged at the code by DIST #3:** the released plane
-   writes the LITERAL `believe-in-oakland` into every instance's signed bytes (23 occurrences in v0.70.0's `store.mjs`), a
-   record-integrity defect, not something a stranger, credential or wrong member could read or do. BOB #19 placed it
-   *"ahead of any release a new group installs"*. **THE ORDER, from the DELEGATION to DIST in `CLAIMS.md` (D-436, items
-   1–4) — irreversible, so read it there first:** deploy; then IMMEDIATELY, before any live verification, seed
-   biosmoke7's TWO stores with `op=instancegroupseed` (ADMIN_TOKEN as `token=`, POST `{"slug":"believe-in-oakland"}`),
-   `bio` AND `store=scratch`, verifying each with `op=instancegroup` (source `seed`, recorded_by `token:admin`). It is
-   WRITE-ONCE on the real record, and biosmoke7's group is NOT its worker name. Until seeded, `testify`, setup saves and
-   livefire's canary answer C-64.1 by design. Then live-verify. **Item 3's route, DECIDED by DIST #3** (BOB #24: auto-seed
-   is NOT ruled in, nothing open for BOB): `newgroup`'s update path, after an update to a release carrying IC-172, reads
-   `op=instancegroup`; if no group is recorded it TELLS the operator what is refused and that their own
-   `op=instancegroupseed` settles it, may SUGGEST INSTANCE_NAME labelled as a suggestion — saying it may DIFFER from the group's slug, with biosmoke7 as
-   the example (BOB #24's wording care: no doctrine conflict, DEC-69's guiding voice) — and NEVER seeds. Build it with
-   0.71.0; it is accepted when the wizard suite shows the telling on an unseeded fixture, absent on a seeded one, and no seed call. **Bound (lesson 12):** one-shot wake `2dd2743d`, 2026-09-22 00:07 PDT.
-2. **NEXT CUT adds 0.70.0 to the upgrade arm** (row above). `alterafter`, read against the SEQUENCE (lesson 19):
-   **135 → 169 → 186 → 203 → 220 → 237 pass / 66 fail**; expect ~254/66 with the 0.70.0 row.
-3. **DS-3 — JUDGED 2026-09-21, NARROWED into D-260.** Config half LANDED at `2de6f25f`; nothing hands agent-worker
-   `claude_accounts` (`AGENT_WORKER`, `claude_accounts` and a non-test `instanceClaudeToken` caller are absent from
-   `bio-plane/src`). biosmoke7 has NO `INSTANCE_CLAUDE_TOKEN` and `.env` has none. **D-260 is RULED** (BOB #22,
-   2026-09-21; the assistant's §6, `QUEUE.md`'s BOB INBOX entry): its item 2 is DIST's, AFTER item 1 (the plane's caller,
-   RECORD with FLEET) — install and update carry ONE organisation-principal `ai` credential as a deploy secret the way
-   `DAEMON_TOKEN` is carried, never in the record, denylisted by `tokens.mjs`. Look up its placement
-   (`ledger.mjs find D-260`). The member/project token surfaces are with Bob (BOB #19's recommendation).
-4. **Carried, NOT re-verified:** tags v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline (`9ed18019`);
+1. **Nothing on 0.71.0.** WHEN DIST CUTS continues on the self-wake: `git log v0.71.0..origin/main` against the rows.
+2. **NEXT CUT adds 0.71.0 to the upgrade arm** (row above). `alterafter`, read against the SEQUENCE (lesson 19):
+   135 → 169 → 186 → 203 → 220 → 237 pass / 66 fail, then **279 / 78** at 0.71.0 — the step is the D-436 assertions
+   (+2 per migrated store; the six bricked 0.58.0-written stores fail both), nothing new bricks. Each release row now
+   adds **19** (17 + the two D-436 assertions): expect **298 / 78** with the 0.71.0 row; baseline 376 / 0.
+3. **The coverage REGISTER FLOOR reads 1583 against 1579** ("GREW by 4" — this cut's declared control arms; strict
+   passed). The floor's owner raises it at integration; CONDUCT was told.
+4. **D-260 item 2** (DIST #3's handoff, not re-measured): DIST's deploy half — one organisation-principal `ai`
+   credential carried as a deploy secret the way `DAEMON_TOKEN` is — comes AFTER the plane's caller lands. Look up its
+   placement (`ledger.mjs find D-260`) before acting.
+5. **Sent to BOB, not DIST's to edit:** `BIO_Distribution_v0_1.md` §4 still says the fleet reaches a sovereign group
+   only when Bob deploys the installer — superseded by Bob's standing permission (DIST deployed `newgroup` at every cut
+   since 0.66.0), and its front matter's §4 Incomplete bullet says the same.
+6. **Carried, NOT re-verified:** tags v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline (`9ed18019`);
    `v0.59.0`–`v0.63.0` signed and WITHDRAWN — history only.
 
 ## UNDETERMINED, held open — do not let a neighbouring green line convert it
 
 **Do the bytes wrangler uploaded to the fleet members correspond to a build of the tagged source?** Lesson 7's method
 is blocked by the account returning a MULTIPART form. Bounded (not verified): member artifacts byte-identical at every
-tag v0.59.0 → v0.70.0, so only the VERSION label can diverge.
+tag v0.59.0 → v0.71.0, so only the VERSION label can diverge.
 
-## The 0.70.0 gate, for the next cut's comparison
+## The 0.71.0 gate, for the next cut's comparison
 
-267/267 suites · 16264 assertions · EXCLUDES 2 untallied (`bundle`, `livefire` — D-413) · run 85156.26be8a · tree
-fingerprint identical before and after, and equal to the committed diff. `migrate-released` 303 pass. `coverage --strict`
-REGISTER FLOOR exact 1552/1552 arms · 258/258 classified · 259/259 corpus. UI harness green. newgroup wizard 131/0.
-Signature 7/7. Trend: 264·16114 (0.68.0) → 265·16198 (0.69.0) → **267·16264 (0.70.0)**.
+`gates: GREEN · class FULL`, RECORDED for tree `dadd0b5f` (D-293): 269/269 suites · 16413 assertions · EXCLUDES 2
+untallied (`bundle`, `livefire` — D-413) · run 33910.d574b9 · tree identical before and after. `coverage --strict`
+REGISTER FLOOR 1583/1579 arms · 260/260 classified · 261/261 corpus; every M0-79 ratchet at 0 slack. UI harness green.
+`migrate-released` 357. newgroup embed 23/0, wizard 146/0 (+15; its D-436 controls N1 141/5, N2 145/1, N3 143/3, AS
+DECLARED). Signature 7/7 (C4 = 0.70.0's sig over the new bytes). Trend: 264·16114 (0.68.0) → 265·16198 (0.69.0) →
+267·16264 (0.70.0) → **269·16413 (0.71.0)**.
 
-**Live arms 13/13** (`liveprobe-0.70.0` in DIST #3's scratchpad, not committed): L2 the six bearer refusals of the
-governance ops (C-32.17); L3 the DO discriminator above; L4 REC-156 through `op=memberadd` — a bearer proposing a third
-scratch administrator while naming the active `scr-ms11znmp` as `by` got `CONSENSUS_REQUIRED` with `have=[]`; L5
-`op=whoami` answers both credentials; the real record's (`bio`) counters identical before and after.
+**Live arms 12/12** (`liveprobe-0.71.0.mjs` and `seed-0.71.0.mjs` in DIST #4's scratchpad, not committed): L2 the DO
+discriminator above; L3 a member bearer's seed `CLASS_FORBIDDEN`; L4 a scratch creation naming another group HELD naming
+`believe-in-oakland` in one `group:` line; L5 `op=livefire&store=scratch` whole, `op=whoami` both; the real record's
+counters identical before and after. **Admin `op=livefire` with no `store` runs against `bio`** (`scopeFor`) — always
+name `store=scratch`.
 
-`op=audit`: 31 checked, 21 clean, 10 withErrors, each one C-18.9 — **the ten bundle ids are identical to the baseline**
-recorded at 0.69.0: INFO-2026-0099-auditor-report-feb-2022, -0100-acfr-fy2023-24-fund-statements,
--0100-adopted-budget-fy2026-27, -0103-acfr-fy2023-24-pdf, -0104-adopted-budget-book-pdf, -0105-adopted-budget-fy13-15-csv,
--0106-acfr-fy2021-22-pdf, -0107-revenue-expenditure-reports-page, -0108-zolly-opinion, INFO-2026-5460-member-release-key-registry.
-
-## The harness refusals — one actor, one form, one moment each (M-75)
-
-2026-09-21, DIST #3, AUTO mode, each passed on its narrowest retry: the compound signing command (~14:39Z);
-`git -C <path> push` of the cut branch [Out-of-Place Publication] (~15:01Z); `git push origin v0.69.0` [same] (~15:02Z;
-`refs/tags/…` passed); the first agent-worker deploy [Production Deploy] (~15:06Z; the identical retry passed). The
-session then ran in BYPASS and the 0.70.0 cut met no refusal. **Bob's rule, via BOB #20:** never put a shell variable in
-the path of `rm`, or the target of `mv`/`cp` — bypass still halts on it. Write the literal absolute path.
+`op=audit`: 31 checked, 21 clean, 10 withErrors, each one C-18.9 — **the ten ids identical to the baseline** (lesson 15):
+INFO-2026-0099-auditor-report-feb-2022, -0100-acfr-fy2023-24-fund-statements, -0100-adopted-budget-fy2026-27,
+-0103-acfr-fy2023-24-pdf, -0104-adopted-budget-book-pdf, -0105-adopted-budget-fy13-15-csv, -0106-acfr-fy2021-22-pdf,
+-0107-revenue-expenditure-reports-page, -0108-zolly-opinion, INFO-2026-5460-member-release-key-registry.
 
 ## Session state
 
-- **Self-wake:** recurring `44f1ca7f` (`41 */6 * * *`, *"DIST: apply WHEN DIST CUTS in kickoffs/DIST.md"*) and the
-  ONE-SHOT renewal `2400b776` at **2026-09-26 09:11 PDT** (lesson 17). The BATCH-bound one-shot `3e2ff52f` was DELETED —
-  0.70.0 carried D-158. All session-only, so a successor arms its own.
-- **Context 62% at this edit** — the refresh line is **70%** (CLAUDE.md §4, Bob 2026-09-21, raising his 60%). A cut of
-  0.71.0's size costs ~15%, so it goes to a FRESH DIST #4 (BOB #24: the irreversible seed does not run in a session that
-  crosses 70% mid-release). DIST #3 holds the BATCH-bound one-shot `2dd2743d` and DELETES it when DIST #4 confirms it is
-  up; if DIST #4 is not up by 00:07, DIST #3 runs the cut, checks context BEFORE the seed, and stops at
-  "deployed, not seeded, not pointed" if it is over 70% there. DIST #4: arm your own wakes (lesson 17).
-- **0.71.0 also carries D-434** (`b911392f`, a `civicos-ui` recipe fix judged BATCH), and it moves `app.html`: the UI worker
-  `civicos` MOVES with this release (gate step 12: UI harness, build from the tag, deploy, `/build` == app.html's sha).
-- Machine Sparky-Air; disk 4.6 GiB free (98%) at the 0.70.0 gate's end — `df -h` before any bump.
-  This worktree is `jovial-mclaren-9af3b6`, ~800 MB of it `node_modules` (real dirs).
-- `.env`: ten keys including `BIO_RELEASE_SEED`; account `20b533579290b9b93168345edd3b7f72` confirmed by USING it.
-  Baton reads `holder: DIST`. Git identity pinned in the shared `.git/config`.
+- **Self-wake:** recurring `b9dd7809` (`23 */6 * * *`, WHEN DIST CUTS, opening with `get_usage` against 70%) and the
+  ONE-SHOT renewal `541fd1f1` at **2026-09-26 20:53 PDT** (lesson 17); armed 2026-09-21 ~20:50 PDT. The batch bound
+  `b0ef4512` (00:07 PDT 2026-09-22) finds the cut complete. All session-only: a successor arms its own.
+- **Context ~46% at this edit**; the refresh line is 70% (CLAUDE.md §4).
+- Machine Sparky-Air; disk ~4 GiB free at the cut — `df -h` before any bump. Worktree `.claude/worktrees/dist-4`
+  (made by `git worktree add`, so it has NO `.env`: DIST #4 read the main checkout's `.env` by absolute path through a
+  scratchpad `withenv.mjs`, never copying it). Baton reads `holder: DIST`. Account `20b53357…` confirmed by USING it.
+- DIST #3 was archived at 03:47Z under D-398's three conditions (its CronList read back empty by message first); its
+  worktree removed without force, 6.0 → 6.9 GiB free.

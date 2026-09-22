@@ -17502,6 +17502,15 @@ text: slug }`, D-102) in the SAME upload that creates the worker — read at tha
 **open as of 2026-09-21** — OPEN until DIST has deployed the release carrying D-436, seeded `biosmoke7`'s two stores
 (item 3), and stated item 3's route for sovereign instances installed earlier.
 
+**DISCHARGED 2026-09-22 by DIST #4.** The release carrying D-436 is 0.71.0 (`v0.71.0` = `9439431e`), deployed to biosmoke7
+and live-verified. Item 1 verified at the code: `INSTANCE_NAME` rides `uploadInstall`'s creating PUT in both arms. Item
+2 needs no act. Item 3: the deploy's boot recorded nothing on either store (read before seeding); `bio` and `scratch`
+then seeded `believe-in-oakland`, source `seed`, recorded_by `token:admin` (2026-09-22T04:26:11Z), each verified with
+`op=instancegroup`; and the route for a sovereign instance installed earlier is BUILT — its update path TELLS the operator
+and never seeds (construct `15.group-telling`; told from the version read before the upload, because
+`op=instancegroup` needs a credential an update does not hold). Item 4 holds (S4 green in the gate). The UI DELEGATION
+below is now actionable: its precondition, the seed of biosmoke7, holds.
+
 ## DELEGATION 2026-09-21 RECORD (D-436 worker) -> UI — **`civicos-ui/app.html` still composes the old literal producing group; since D-436 it is inert wherever a group is recorded, and it is owed out**
 
 `mdFor` writes a literal `group:` line into every new document's bytes (the `"group: believe-in-oakland"` entry of its
@@ -17954,3 +17963,9 @@ why: a BATCH, judged at the code: `git log v0.70.0..ab34197b` over the shipped p
   probe only (`index.mjs`, its OPS row) and an update holds no instance credential, so `newgroup` tells from the version
   it reads before the upload, conditionally when that is unknown, and never seeds or reads.
 **open as of 2026-09-22.**
+
+**RELEASED 2026-09-22 by DIST #4** — 0.71.0 is complete: tag `v0.71.0` = `9439431e` (gate GREEN on its tree `dadd0b5f`,
+recorded); deployed in the fleet's order, agent-worker first; biosmoke7's two stores seeded and verified; live-verified
+12/12 with the DO build established on both stores; `op=audit` at D-200's ten; `civicos` moved (`/build` = the tag's
+app.html); installer `62a59e41` read back (embed MATCH, bindings `[]`); pointer advanced at `23463895`. Its bundle and
+`DIST-NEXT.md` land in the commit that releases this.
