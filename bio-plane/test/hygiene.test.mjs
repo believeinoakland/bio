@@ -2106,6 +2106,14 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        NAME rather than flooring on a count. A phantom module deposited there can only turn S1 red, never quietly green,
        and nothing it prints is a figure anybody floors on. */
     "bio-plane/test/instance-group.test.mjs",     // src/, asserts NO module names the literal group (a ceiling at zero)
+    /* ADDED 2026-09-22 by CONDUCT #12 at M0-81's integration, AND THE RATCHET CAUGHT IT ON THE FIRST BATTERY THE ITEM
+       MET: the integration gate of batch 2 (tree cd85c88a, commit 049da926), because M0-81 was folded into the batch with
+       its own FULL gate unrun. NAMED AND NOT GUARDED: the driver's one discovery primitive in code is
+       `fs.readdirSync(PEN).length === 0` in its exit handler, an emptiness check of ITS OWN pen `.m081-harness/` before
+       `rmdirSync`. It discovers nothing, feeds no assertion and floors on nothing; a phantom deposited in the pen can only
+       leave the pen standing, which the driver's own exit line reports. Provenance would tell it something true and
+       useless. */
+    "bio-plane/test/occupancy.control.mjs",       // its own pen, read for emptiness before rmdir; discovers nothing
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2171,8 +2179,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      file(s)`) on D-436's tree, never by adding to the number in the file. The one is D-436's own suite
      (`test/instance-group.test.mjs`, named above), the only walker this item adds (its control driver copies trees and
      walks none); CONDUCT #10 recorded the census at 36 against 36 when D-432 landed, so no slack is carried out. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 37)`,
-    census.length >= 37, true);
+  /* MOVED 2026-09-22 BY CONDUCT #12 at M0-81's integration: 37 -> 38, from the figure this suite PRINTED on the batch's
+     committed tree `049da926` (`class census: 38 file(s)`, run alone after the integration gate named the walk), never by
+     adding to the number in the file. The one file that run named as NEWLY unguarded is M0-81's control driver
+     (`test/occupancy.control.mjs`, named above), so no slack is carried out. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 38)`,
+    census.length >= 38, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

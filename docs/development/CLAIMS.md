@@ -18199,6 +18199,11 @@ to report with it unrun); the batch's gate is its gate. REGISTER_FLOOR re-read f
 re-run by the integrator: an instrument's control, not a destructive or security-sensitive one. Branch
 `worktree-agent-a95fe61454bcdcdc2` is deleted from the remote after the push is verified. The paths this block reserved are
 FREE; its DELEGATION to BOB stays OPEN.
+**At integration the battery named this item's control driver as a NEW UNGUARDED WALK** (`hygiene.test.mjs`, *"every walk
+of this class is GUARDED or NAMED"*: 933 pass, 1 FAIL on the batch's committed tree `049da926`, reproduced alone): the exit
+handler's `fs.readdirSync(PEN)`, an emptiness check of its own pen. CONDUCT #12 NAMED it in the census with that reason and
+moved the REACH floor 37 -> 38 from the printed `class census: 38 file(s)` (934 pass, 0 fail after); the driver is unchanged.
+The worker's own FULL gate would have caught it on its first battery.
 
 ## DELEGATION 2026-09-22 M0 (M0-81 worker) -> BOB — **the chip procedure's OCCUPANCY check is one command now, `node tools/occupancy.mjs`; `kickoffs/BOB.md` rule 1 should name it, names evidence that cannot show half its binding, and has one reading that needs the BOB lane's word**
 
