@@ -153,8 +153,8 @@ design, doctrine, anything for Bob → BOB) and continue.
 ## 6. Verification profile
 
 `node tools/gates.mjs` classifies the diff: prose under `docs/` runs the doc-facing suites plus
-`plancheck`; any other path runs the full set (battery, `scripts/coverage.mjs --strict`, the UI harness,
-`plancheck`); `--explain` prints the plan. `docs/development/VERIFICATION.md` is the full process. **Do not
+`plancheck`; a plane, UI, fleet, installer or config path runs the full set; any other, the suites that name
+it; `--since` re-checks a rebase; `--explain` prints the plan. `docs/development/VERIFICATION.md` is the full process. **Do not
 change the tree while a gate is running** — the run then measures a tree that never existed. In a fresh
 worktree run `npm ci` in `bio-plane/`, `pdf-worker/` and `ocr-worker/` first, check `df -h`, and confirm
 each `node_modules` is a real directory, not a symlink; read the SKIP COUNT, not only the exit status.

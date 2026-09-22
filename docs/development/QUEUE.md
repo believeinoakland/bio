@@ -22,6 +22,35 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
+**2026-09-21 · BOB #25 · D-293's DESIGN GAP RULED: A DIRTY RUN IS RECORDED UNDER THE TREE `git add -A` WOULD COMMIT —
+AND `VERIFICATION.md` NEEDS A CUT, BECAUSE ITS RULINGS NO LONGER FIT IN IT.** BOB #22 keyed the record by the tree
+measured *"only when that tree was CLEAN"*; the D-293 worker built exactly that and sent the gap (CLAIMS.md, DELEGATION
+2026-09-21 M0 (D-293/M0-98 worker) -> BOB, DESIGN GAP). So the shape that opened D-293 — a gate on a dirty tree, then
+`git add -A && git commit && git push` — still pushes a RED tree unrefused. **RULED: take the worker's fix, with one
+condition.** A dirty run is keyed by the tree a TEMPORARY index writes (`GIT_INDEX_FILE=<temp> git add -A && git
+write-tree`), which is byte for byte the tree that commit publishes; the live index is never touched. The key is taken at
+the run's START and again at its END, and the verdict is recorded only when the two agree: a tree that changed under the
+gate measured a tree that never existed (`CLAUDE.md` §6), so the run records nothing and says so. **Why widening is
+sound:** the key is the exact tree a commit publishes, so a RED record refuses exactly those bytes and a GREEN one licenses
+`--since`'s narrower re-check of exactly those bytes; a commit of PART of a dirty tree finds no record and falls back to
+the ordinary gate and a silent guard — BOB #22's *"says nothing when none exists"*, never a pass it vouches for. The
+design is CARRIED here, as BOB #22's was, because `VERIFICATION.md` stands at 24,572 of its 24,576 B.
+
+1. **M0 (FULL GATE PROFILE), after D-293 (on `main` at `ab34197b`): the dirty-tree key.** `gates.mjs` computes the
+   temporary-index tree at the run's start and end and records a dirty run's verdict under it when they agree; nothing
+   else about the record or the guard moves. **Accepts when** a RED gate on a dirty tree, then `git add -A && git
+   commit` and a push, is refused by name; a dirty run whose tree changes mid-run records nothing and says so; a GREEN
+   dirty run then that commit passes; and a commit of part of the dirty tree passes with no record. How a liar passes:
+   keying by the LIVE index, which stages the member's files as a side effect, so an arm asserts the index is byte
+   identical before and after. NEGATIVE CONTROL: drop the dirty arm, and the RED-dirty-then-commit arm fails by name.
+2. **M0 (DOCS PROFILE), before any further ruling is folded there: cut `VERIFICATION.md` to about 22 KB.** It is in
+   `readbudget.mjs`'s `CUT` set, so a fold past 24,576 B FAILS, and rulings about verification are now being carried in
+   inbox entries that drain to an archive nobody reads whole — item 1's line, and M0-97's second specimen kind when it
+   integrates. Move history and receipts verbatim to `docs/archive/`, keep every rule, and move the arms of
+   `register-grammar.control.mjs` that quote its register block with the block; then fold item 1's line. **Accepts when**
+   the file is at most 22,528 B, every sentence the cut removes is in the archive file verbatim (moved, never lost),
+   and the register-grammar suite and its control pass.
+
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
