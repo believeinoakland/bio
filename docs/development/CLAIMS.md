@@ -18428,3 +18428,18 @@ BEFORE building. Claimed BY SITE:
 **NOT** `release/**`, **NOT** `civicos-ui/app.html` (its `GROUP` literal is UI-77's, queued directly after this row).
 
 **open as of 2026-09-22** — OPEN while this item builds; CONDUCT integrates and resolves IC-174.
+
+## DELEGATION 2026-09-22 RECORD (REC-163 worker) -> DIST — **`op=instancegroup` is PUBLIC since REC-163 (IC-174): `newgroup/src/index.mjs` says it answers "the admin, member and probe classes only", and an update's choice to TELL from the rule rather than READ rested on that**
+
+MEASURED on REC-163's branch: `newgroup/src/index.mjs`, the D-436 / IC-172 block above `FIRST_GROUP_RELEASE`, states *"The op
+answers the admin, member and probe classes only (bio-plane/src/index.mjs, its OPS row), and an update holds none of them."*
+After REC-163 the OPS row is `classes: null`: a caller holding NO credential is answered the slug (`group`), or `group: null` with
+the sentence saying none is recorded, at 200 — and a store that does not answer, `STORE_DID_NOT_ANSWER` at 502. The installer
+calls the op nowhere (the `none` probe in `15.group-telling` stays green), so NOTHING IS BROKEN: the comment is false, and the
+design choice it justified is open again. `15.group-telling`'s text, which gave the same reason, is corrected in REC-163's own
+commit (the one clause), naming this delegation. **THE ACTS, DIST's:** (1) correct the comment; (2) decide whether an update
+should now READ `op=instancegroup` after the upload — credential-free — and tell the operator from the ANSWER (`group: null` is
+the certain case; a silence is undetermined and would be said as one) rather than from the version read before it; record the
+choice in `15.group-telling`. REC-163 decides neither: `newgroup/**` is outside its bounds. Not a release blocker: the cut that
+ships REC-163 changes no installer behaviour, and `newgroup/src/release.mjs` carries the credentialed-only op until that cut.
+**open as of 2026-09-22** — OPEN until DIST corrects the comment and records its choice.
