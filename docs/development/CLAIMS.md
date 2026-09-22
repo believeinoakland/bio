@@ -17717,3 +17717,57 @@ minted with `node tools/mintid.mjs IC` BEFORE building. Claimed BY SITE:
 `newgroup/**`, **NOT** `release/**`, **NOT** `civicos-ui/app.html`.
 
 **open as of 2026-09-21** — OPEN while this item builds; CONDUCT integrates and resolves IC-173.
+
+## CLAIM 2026-09-21 RECORD (REC-157, SECOND BLOCK — the paths the build NAMED beyond the first block, each found by an instrument or a measurement)
+
+Appended rather than edited into the block above, because this register is APPEND-ONLY.
+
+- `bio-plane/test/d310.control.mjs` — arm (1)'s anchor ONLY, re-anchored with a dated reason: it had been DEAD since REC-135
+  (IC-166) rewrote the `publish` predicate on 2026-09-19 — a driver M0-25's witness cannot read, so nothing said so — and REC-157
+  moves the same predicate again. Whole driver re-run on this branch: 4 arms, 0 other than declared.
+- `bio-plane/src/store.mjs` — the affordance walk's condition re-spelled, because its first spelling duplicated
+  `caselifecycle.control.mjs` arm (c)'s anchor (M0-25's witness, A5); that arm re-run: 58/10, REC-135's recorded figure.
+- `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` only (arms 1566 -> 1572, classified 259 -> 260, corpus 260 -> 261,
+  run 222 -> 223), from its own print on the committed tree `b9f62ccf`.
+- `docs/development/MEASUREMENTS.md` — M-92, minted with `node tools/mintid.mjs M`.
+
+**DESIGN GAP (also in `INVESTIGATIVE-SESSION.md`'s front matter, items (d)–(f), and in the two DELEGATIONs below):** item 9's
+premise — a project concluding on another claim leaves the finding's `bundle_sha` unmoved — is FALSE whenever the project's
+pointer moves after publication, because `op=versioncurrent` writes into the shared question's own bytes.
+
+**open as of 2026-09-21** — OPEN while this item builds; released with the block above at integration.
+
+## DELEGATION 2026-09-21 RECORD (REC-157 worker) -> BOB — **`op=versioncurrent` writes ONE PROJECT's stance into the SHARED question's bytes: it moves every case pin on the finding, raises a revision flag on every case pinning it (another project's included), and is the reason item 9's premise is false on one path**
+
+MEASURED through the ops (M-92): `op=versioncurrent&project=P` performs TWO promotions — first the INQUIRY (`versionAct`'s
+BEAT 4: a Session Log line `Version current … reading '<v>' is what P stands on`, and `last_updated`), then P's pointer
+(`#setProjectCurrentVersion`). The first moves the shared finding's `bundle_sha`, so: (1) every case pinning the finding stops
+pinning its CURRENT version — the finding leaves `#caseRelationOf`, so `op=publish` publishes a new edition by the bytes route and
+CASE-4's frozen fences (divide, restructure, move version) stop applying; (2) `promote` calls `#flagCasesOnRevision`, so EVERY
+case pinning the finding is flagged revised and its owning project is listed as owing an edition (`op=caseflags`), whichever
+project moved its pointer; (3) item 9's sentence "even though the finding's `bundle_sha` never moved" is false whenever the pointer
+moved after publication. **THE CONTRAST THAT MAKES IT A QUESTION RATHER THAN A DEFECT:** `op=conclude&project=` deliberately writes
+NOTHING on the shared question (§7.1: "the project's conclusion is written on the project and nowhere else"), and `versionAct`'s
+own comment says the pointer "lands on the PROJECT because that is whose stance it is … putting it on the shared question would be
+the one thing the section forbids" — while its log line does exactly that, as prose. **THE QUESTION:** should a project's
+make-current write anything into the shared question's bytes (§7: one team's decision never silently moves another team's — here
+it moves their pins and their revision obligations)? **Candidate fixes, for BOB to choose between:** (a) the log line moves to the
+PROJECT's own Session Log and the inquiry is not promoted by a project-arm make-current (the conclusion act's discipline); (b) keep
+the line but exempt a stance-only promotion from `#flagCasesOnRevision` (a narrower fix that leaves the pin moving). REC-157 built
+neither: its scope is the refusal, and both change what `op=versioncurrent` writes.
+**open as of 2026-09-21** — OPEN until BOB rules and, if a fix is ruled, SCHEDULER places it.
+
+## DELEGATION 2026-09-21 RECORD (REC-157 worker) -> SCHEDULER — **a case PREPARED by `op=publish` and RATIFIED after its project WITHDREW the conclusion it records still commits: the signed edition records a conclusion that no longer stood at signing**
+
+MEASURED (M-92): project P concludes, `op=publish` prepares case edition 1 (unratified; its document records P's claim), P
+withdraws (`op=withdrawconclusion`, ok), then `op=caseratify` of that document SUCCEEDS and `op=ratify` of the finding SUCCEEDS; the
+committed edition records `relationship: project` and the withdrawn claim, while `op=basisversions` shows P standing on no
+conclusion. CLAUDE.md §2's worst class — the record claiming more than it can support — pre-existing since REC-135 (IC-166) made
+case documents record the conclusion, and not introduced by REC-157. **THE FIX, NAMED:** `ratifyCaseDocument` asks, per roster
+member, the same two questions `op=publish` asks — `#caseConclusionFor(<the document's case_project>, member, …)` must be concluded
+AND must be the conclusion the document RECORDS (REC-157's `#editionsRecordingConclusion` comparison, applied to the one document
+being signed) — and otherwise refuses by a new code (DEC-49: a canned translation, a string literal at its site) naming what moved
+and the route (publish again: since REC-157 a moved conclusion warrants a new edition). If SCHEDULER judges that re-asking the
+relationship at signing is a design question (REC-135 chose to record the conclusion "as it stood at publication"), route to BOB
+first. Found by REC-157's measurement; not built there (its scope is `op=publish`'s refusal).
+**open as of 2026-09-21** — OPEN until SCHEDULER places it (or BOB rules, if routed there).
