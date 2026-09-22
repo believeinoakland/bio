@@ -1,8 +1,8 @@
 # BOB — resume here. Written 2026-09-21 by BOB #24 for BOB #25, in the SAME Claude Code account.
 
 Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this.
-**Everything below is a POINTER measured at ~00:30Z 2026-09-22; re-measure before resting anything on it.** BOB #24
-wrote this as a CHECKPOINT while live, at 47% of its context with its own commitments discharged; the refresh line is
+**Everything below is a POINTER measured at ~01:15Z 2026-09-22; re-measure before resting anything on it.** BOB #24
+wrote this as a CHECKPOINT while live, at ~55% of its context with its own commitments discharged; the refresh line is
 **70%** (Bob, 2026-09-21). If BOB #24 is still live when you read this, you are early: check occupancy first.
 
 ## 0. YOUR FIRST ACTS
@@ -44,6 +44,14 @@ wrote this as a CHECKPOINT while live, at 47% of its context with its own commit
   installer never seeds; after an update it reads `op=instancegroup` and, only when no group is recorded, tells the
   operator in plain words, suggesting INSTANCE_NAME labelled as a suggestion and never pre-filling it. It ships with 0.71.0.
 
+- **SCHEDULER #9's group of four ANSWERED** (the landing after `a82a205c`). D-36 and D-56 are FOLDED as stated limits
+  (`RETRIEVAL-SUBSTRATE.md` front matter; `CLIENT-RENDERED.md`'s CPU paragraph). D-69 closes in fact now that CONSTRUCTS'
+  front matter states every step. D-66's budget-or-dataset type is OWED, measured first (`EXTRACTION-BREADTH-DESIGN.md` §2
+  row 5). The publishing group's public identity is DESIGNED in `BIO_Publication_v0_1.md` §7: the slug is public, a
+  display name is the group's own words set by an administrator, and a domain is shown only while verified. Its build
+  items and the change to REC-163 and UI-77 are in the BOB INBOX. BOB #24 also read SCHEDULER #9's D-19 closure and its
+  D-207 supersession as correct applications of Bob's pre-MVP ruling.
+
 ## 3. OWED — in this order
 
 1. **With Bob, unanswered — do not re-ask:** (a) Q3, may a case rest on a NO-PROJECT conclusion
@@ -54,10 +62,8 @@ wrote this as a CHECKPOINT while live, at 47% of its context with its own commit
    Bias, annotate TAD §5, correct D-53's stale row, and tell SCHEDULER, who DISCHARGES the SCHEDULER (#8) -> BOB
    DELEGATION (only Q3 keeps it open). (c) `DECIDED.md` leaving the committed tree (partition item 2): if Bob says he
    reads it in the repository, amend item 2 to "committed, regenerated on merge" and tell SCHEDULER.
-2. **Coming to you:** SCHEDULER #9's next group of at most four, including *should a group record a display name and
-   domain, or only its slug?* (from CONDUCT's route: the group name hard-coded on every instance's surfaces). Then D-64's
-   four open questions (`CLIENT-RENDERED.md`) when SCHEDULER places M2's rendered capture. Both are design: trace at the
-   code first.
+2. **Coming to you:** whatever SCHEDULER routes next, and D-64's four open questions (`CLIENT-RENDERED.md`) when
+   SCHEDULER places M2's rendered capture. Both are design: trace at the code first.
 3. **Carried with Bob** (do not re-ask): D-148, D-149, where a member's or project's Claude key would live
    (11.cascade-sources), MK-7's provisionals, and M0-85.
 

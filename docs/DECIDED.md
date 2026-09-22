@@ -87,7 +87,7 @@ authority is the file named, never this one.
 - **DEC-20** · 2026-08-02 — AMENDED 2026-08-02 by Bob (DEC-20); vocabulary corrected 2026-08-05 (D-188, > DEC-46 (d)).  
   `docs/architecture/BIO_Design_Requirements_v2.md:456`
 - **DEC-20** · 2026-08-05 — CORRECTED 2026-08-05 (DEC-20, D-188).** This read *"a work product carrying > unsettled BIAS DEBT (its cited bias manifest differs from the current > effective set) cannot advance workproduct_state and cannot be ratified for > publication"*.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1613`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1614`
 - **DEC-20** · 2026-08-02 — — AMENDED 2026-08-02 by Bob (DEC-20); struck here 2026-08-05 (D-188).  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:1694`
 - **DEC-20** · 2026-08-02 — (1) FACT CHECK — THERE IS NO CONTRADICTION, AND IT WAS ALREADY RULED.** DEC-20, 2026-08-02, Bob's own: *"Not all bias needs to be cleared before a piece is published.  
@@ -267,7 +267,7 @@ authority is the file named, never this one.
 - **DEC-72** — WHAT IT DECIDED.** DEC-72 clause 6 rules that a finding can serve many cases; CASE-5's suite framed lifting `FINDING_IN_ANOTHER_CASE` as *"a surface question"* and handed it to CASE-6.  
   `docs/development/MEASUREMENTS.md:9129`
 - **DEC-74** · 2026-09-14 — DECIDED 2026-09-14 by BOB #11 at Bob's delegation: not funded.** The tesseract member at cap C is the tier-3 path; the external tier is reconsidered only when an image-only document is LOAD-BEARING in a real case and C is below that project's bar — a funding request with the document and the bar attached, brought…  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:131`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:132`
 ## D-
 
 - **D-10** · 2026-08-02 — SETTLED 2026-08-02 by the design pass this question asked for (session BOB).** Not doctrine: it is an application of the assembly rule already in `BIO_Interaction_Constructs_v0_1.md:258-268`, so it needed a design pass and not a ruling.  
@@ -453,7 +453,7 @@ authority is the file named, never this one.
 - **D-164** · 2026-09-14 — D-164 design-space study, RULED 2026-09-14 in Bob's framing: the transcription is authored text whose fidelity is undetermined and stated until a second member attests it, so fidelity rises through people and never through a machine's confidence in itself.  
   `docs/architecture/BIO_Content_Framework_v0_10.md:1610`
 - **D-164** · 2026-09-14 — RULED 2026-09-14; no surface (Program B) | | the catalogue of standards by audience and output act | OWED (§5.5 of the D-164 study); does not exist | | certification and persistence divergences | unmade | | addressed delivery | RULED 2026-09-17 (§6A) — the review copy's PLANE HALF BUILT (REC-126); its surface…  
-  `docs/architecture/BIO_Publication_v0_1.md:251`
+  `docs/architecture/BIO_Publication_v0_1.md:277`
 - **D-164** · 2026-09-14 — Bob RULED 2026-09-14 that the record never moves an authored edge's target without a member's act, even when the passage is byte-identical — folded into Part II §14.4/§18 and the D-164 study §5.8; it shapes the D-164 IC when it arrives (act 6).  
   `docs/archive/ledgers/BOB-INBOX-drained.md:815`
 - **D-173** — ving app.html against the REAL plane in miniflare), civicos-ui/test/subject-view.test.mjs (ONLY the mock's reply shape, CORRECTED with a dated comment and never exempted — see D-173), docs/development/CLAIMS.md (this entry)  
@@ -497,7 +497,7 @@ authority is the file named, never this one.
 - **D-197** — (g) HAD TO BE CORRECTED MID-RUN AND IS REPORTED, NOT SMOOTHED**: the first sweep-neutering arm stayed 46/46 GREEN because with all guards removed there is no `.answered` anywhere and a whole-file region equals a scoped one — it measured nothing.  
   `docs/archive/ledgers/QUEUE-2026-08.md:2109`
 - **D-203** · 2026-09-19 — THE LADDER IS ONE-WAY AND GAINS NO `verified -> collected` EDGE — RULED 2026-09-19 by BOB #17 (D-203/D-200), from this section's own design rather than as a new rule.** Three things decide it.  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:697`
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:698`
 - **D-206** — D-206 RIDER DECIDED IN FAVOUR OF CARRYING THE DISTINCTION:** an optional `code` on the finding plus a derived `tallyDetail` beside `tally`, with `tally` not moving by one byte and `tallyDetail` absent when nothing carried a code; reasoning recorded in the code at BOTH sites, and settled by CLAUDE.md itself —…  
   `docs/archive/ledgers/QUEUE-2026-08.md:162`
 - **D-207** — D-207 SUPERSEDED by the same ruling and archived.  
@@ -621,9 +621,9 @@ authority is the file named, never this one.
 - **D-293** — Q4 RULED NO: the guard never runs `gates.mjs` (M-85's landing rate), which `VERIFICATION.md`'s push-guard section already states; its named fix, refusing a tree whose recorded verdict is RED, is carried by the D-293 inbox entry until built, because that file is at its reading budget and its register block is quoted…  
   `docs/development/CLAIMS.md:16465`
 - **D-293** · 2026-09-21 — RULED by BOB #22 (SCHEDULER #5's Q4): a push-time gate would not converge — a full gate takes ~25 minutes and `main` took 48 first-parent commits from 13:00Z on 2026-09-21, 46 of 47 gaps under 25 minutes (M-85) — so the guard READS a recorded verdict. — owner M0.  
-  `docs/development/QUEUE.md:80`
+  `docs/development/QUEUE.md:101`
 - **D-293** — states; the refusal's design is CARRIED in BOB #22's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "D-293 RULED"), because that file is at its reading budget: the builder adds the refusal's one line in the landing.  
-  `docs/development/QUEUE.md:84`
+  `docs/development/QUEUE.md:105`
 - **D-302** · 2026-09-10 — ct pin reds on every added paragraph, while this population is FIVE hand-written sentences in append-only history and a SETTLED IC, so the exact figure is the honest ratchet — `LEDGER`'s own argument for holding counts exactly.  
   `docs/archive/ledgers/DEBT-closed.md:18`
 - **D-304** — Wider than briefed and AMENDED into the claim with reasons (the grade change forces the census arms to move or the ratchet reds on a correct estate); the cry-wolf half of the flow's scoping was narrowed only where the grade would otherwise PRINT a claim the record cannot support; **the quiet half is D-304, a row…  
@@ -699,7 +699,7 @@ authority is the file named, never this one.
 - **D-358** — AMENDED at spawn: `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 is now this row's PRIMARY design authority — it is where D-358 was answered and it fixes the placement (the run, not the credential), the bound (mints are a run bound), and what an uncited machine-minted row IS (a proposal, never coverage).  
   `docs/archive/ledgers/QUEUE-closed.md:1548`
 - **D-358** · 2026-09-14 — its §7.3 answered D-358 on 2026-09-14: the role runs in DEC-62's RUN, not on the pilot's credential, whose exclusion is CORRECTED rather than lifted (the pilot is read-only and writes nothing).  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:91`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:92`
 - **D-358** · 2026-09-14 — SETTLED when a product caller exists for either op — the assistant's EXTRACT act (blocked: D-358) or UI's transcription-check surface — and confirms the shape live; CONDUCT writes it. ### AMENDED at CAP-12's landing — 2026-09-14 (the second key this entry was written to carry; the version stays **1.5.0** and the…  
   `docs/development/INTERFACE-CHANGES.md:6738`
 - **D-359** — SETTLED is NOT taken and D-359 is NOT closed.** The producer half is built; the inner bound is not live on any tree until COFF-12 lands the passthrough.  
@@ -1365,7 +1365,7 @@ authority is the file named, never this one.
 - **REC-126** · 2026-09-18 — §6A — the review copy is RULED and DESIGNED, and its PLANE HALF IS BUILT (REC-126, IC-145/IC-146, 2026-09-18): the draft case, the grant with its hashed per-grant read secret, revocation, the edition binding, the comment, and the missing-list taken from the publish gates' own refusal — see §4.  
   `docs/architecture/BIO_Publication_v0_1.md:10`
 - **REC-126** · 2026-09-17 — RULED 2026-09-17 (§6A) — the review copy's PLANE HALF BUILT (REC-126); its surface delegated to UI; the in-band rule binding on any export | | the completeness statement's search record | DESIGNED (`OBSERVATION-LOG-DESIGN.md` §6, D-196); not built | | risk tiers | half-built and dishonest (D-182) | | the directory…  
-  `docs/architecture/BIO_Publication_v0_1.md:254`
+  `docs/architecture/BIO_Publication_v0_1.md:280`
 - **REC-126** · 2026-09-18 — DECIDED by BOB #14, as an application of the publication fence already ruled (no new doctrine):** an UNSIGNED case document answers ONLY to members with standing in the owning project (and, once REC-126 exists, a live review-copy grant holder); **everyone else gets EXACTLY the answer a case that does not exist…  
   `docs/archive/ledgers/QUEUE-closed.md:248`
 - **REC-127** · 2026-09-18 — AMENDED 2026-09-18 by REC-127 — §4.2's `cap` FILTER HAS THE SAME THREE ANSWERS, under `IC-138` on I3; the sibling REC-121 measured is CLOSED.** A `cited_as = 'bytes'` row has no transcription, so there is no derivation step for a cap to be the weakest of and its `derivation_cap` is NULL BY MEANING.  
@@ -1467,7 +1467,7 @@ authority is the file named, never this one.
 - **UI-16** · 2026-08-04 — status: WITHDRAWN 2026-08-04 by UI-16 — nothing consumes it any more, and RECORD should not build it.  
   `docs/archive/ledgers/CLAIMS-2026-08.md:418`
 - **UI-18** — RULED and BUILT | | the case as a production, its document, its signing ceremony, the published projection, the public verify surface | BUILT (CASE arc; UI-18, UI-35–40) | | the ceremony (UI-17) and the preflight (REC-15) | DEFERRED (DEC-33) — UI-18 has landed; the second clause is unmet by measurement; reopens…  
-  `docs/architecture/BIO_Publication_v0_1.md:248`
+  `docs/architecture/BIO_Publication_v0_1.md:274`
 - **UI-18** — plus the `@media print{…}` rules whose selectors that region uses), civicos-ui/test/publishedcase.test.mjs (the suite, CORRECTED at UI-18's single-inquiry pins with dated reasons and never exempted), civicos-ui/check-mock-envelope.mjs (ONLY the one FLAT_OPS evidence string for `publishedcase`, which quotes a return…  
   `docs/archive/ledgers/CLAIMS-2026-08.md:1469`
 - **UI-20** — wn `citingObjectType`), civicos-ui/test/finder.test.mjs (NEW — this item's harness), civicos-ui/test/cite-act.test.mjs (CORRECTED, never exempted, dated: UI-20's measured surface gaps (iii') are CLOSED by this item, so the two assertions that pinned them are corrected to their opposite with the reason),…  
@@ -1639,7 +1639,7 @@ authority is the file named, never this one.
 - **CPDF-20** · 2026-09-14 — THE PER-PAGE TIER-2 RULE IS NO LONGER "COMPLETE AS WRITTEN" AND THE CLAIM ABOVE IS QUALIFIED RATHER THAN LEFT STANDING: it is MEASURED-AND-CORRECTED** — CPDF-20 falsified §5.2's rule against 203 pages of 28 real documents and the corrected rule is what shipped, and REC-98 then WIRED it into the plane's two call…  
   `docs/development/EXTRACTION-BREADTH-DESIGN.md:3`
 - **CPDF-20** · 2026-09-14 — Decided, AND CORRECTED 2026-09-14 BY THE MEASUREMENT THIS SECTION ASKED FOR — the original rule is kept below because what it got wrong is the useful part.** As written: *the decode with fewer undetermined characters on that page wins; a tie keeps tier 1*.  
-  `docs/development/EXTRACTION-BREADTH-DESIGN.md:123`
+  `docs/development/EXTRACTION-BREADTH-DESIGN.md:124`
 ## COFF-
 
 - **COFF-1** · 2026-09-14 — nk to a Google Drive file should keep the link and export an OpenDocument version that the content is extracted from."* RULED, folded into `BIO_Content_Framework_v0_10.md` Part II §16.  
@@ -1922,9 +1922,9 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-21** — What Bob RULED on 2026-09-21 is what came before: no migration and no automatic setting is owed for those stores.** His words: *"everything captured so far is for testing purposes only"*; at the MVP release the record *"will be thrown out (or at least not copied over to the instance running a real release)"*, so…  
   `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:598`
 - **2026-09-21** — RULED BY BOB** on 2026-09-21 (§3.1); decisions (a) and (c) are mechanism, **DECIDED by the BOB lane** at integration the same day (BOB #23 accepted them as built).  
-  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1706`
-- DECIDED by the BOB lane** at integration the same day (BOB #23 accepted them as built).  
   `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1707`
+- DECIDED by the BOB lane** at integration the same day (BOB #23 accepted them as built).  
+  `docs/architecture/BIO_State_Rules_Consistency_v1_5.md:1708`
 - **2026-07-30** — st" is REVISED: accepted so long as it is disclosed in the provenance chain (`docs/development/AUTHORITY-AND-TRUST.md`, RULED 2026-07-30); not annotated here. - §6 — sessions and execution modes are priced against a June 2026 billing change and no ruling or dataplane entry carries the Session abstraction. - §7.7 —…  
   `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md:11`
 - **2026-07-30** — It is the inventory that has to exist before a design document can be written honestly." One RULED marker (Bob, 2026-07-30, Step 0's scope).  

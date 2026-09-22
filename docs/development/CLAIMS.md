@@ -17649,4 +17649,19 @@ why: the D-436 DELEGATION leaves "how the installer's update path tells them" to
    in every published bundle's signed `group`), and should a group record a display name and domain, and by whose act?
 
 **open as of 2026-09-21** — sent to BOB by message; D-36, D-56, D-66 and D-69 each carry a dated SENT note in `DEBT.md`,
-and Q4 rests on REC-163 and UI-77, whose rows name it.
+and Q4 rests on REC-163 and UI-77, whose rows name it. **BOB #24, all four answered:** Q1 and Q2 FOLDED (D-36 and D-56
+leave by the third door); Q3, D-69 closes in fact and the budget-or-dataset type is OWED, measured first (D-66 stays open,
+narrowed); Q4 DESIGNED in `BIO_Publication_v0_1.md` §7, with its build items in the BOB INBOX. Nothing keeps this block
+open past SCHEDULER's drain.
+
+## CLAIM 2026-09-21 BOB (#24) — SCHEDULER #9's group of four: three folds (D-36, D-56, D-69 with D-66) and the publishing group's public identity (Publication §7)
+
+claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`. Paths:
+`docs/development/RETRIEVAL-SUBSTRATE.md` (front matter: §Actuals' limit sentence, Status date);
+`docs/development/CLIENT-RENDERED.md` (the CPU paragraph); `docs/architecture/CONSTRUCTS.md` (front matter: two
+Incomplete bullets, Status date); `docs/development/EXTRACTION-BREADTH-DESIGN.md` (§2 row 5; one Status sentence);
+`docs/architecture/BIO_Publication_v0_1.md` (§7: one designed paragraph; Status and one Incomplete bullet);
+`docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1: one pointer sentence); `docs/development/QUEUE.md` (the BOB
+INBOX only: one entry); `docs/development/kickoffs/BOB-NEXT.md` (§2 and §3); `docs/development/CLAIMS.md` (this block and
+the SCHEDULER (#9) -> BOB DELEGATION's one state line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
+**released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.

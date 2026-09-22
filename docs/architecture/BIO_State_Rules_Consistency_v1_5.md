@@ -598,7 +598,8 @@ meanwhile. That much is MECHANISM: BOB #19's design call on D-436's row, built a
 this document's foot and accepted as built by the BOB lane. **What Bob RULED on 2026-09-21 is what came before: no
 migration and no automatic setting is owed for those stores.** His words: *"everything captured so far is for testing
 purposes only"*; at the MVP release the record *"will be thrown out (or at least not copied over
-to the instance running a real release)"*, so nothing recorded before it binds the design.
+to the instance running a real release)"*, so nothing recorded before it binds the design. The slug is PUBLIC, and a group may add a display name in its own words
+and a domain shown only while verified: `BIO_Publication_v0_1.md` §7 (BOB #24, 2026-09-21).
 
 ### 3.2 The dual-audience encoding
 
