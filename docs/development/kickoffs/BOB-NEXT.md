@@ -3,7 +3,7 @@
 Read `CLAUDE.md`, then `kickoffs/BOB.md`, then `docs/architecture/BIO_System_Design.md` whole, then this. **If you open
 under Bob's second account or in a cloud session, read `kickoffs/NEW-MACHINE.md` §0 FIRST**: it names what your
 environment may lack and what to measure before resting any rule on it. Written EARLY, at ~15:45Z 2026-09-22, so that an
-abrupt switch finds a current handoff, and brought current at ~16:30Z; everything below is a POINTER measured then —
+abrupt switch finds a current handoff, and brought current at ~15:47Z; everything below is a POINTER measured then —
 re-measure before acting on a line.
 
 ## 0. YOUR FIRST ACTS
@@ -15,7 +15,7 @@ re-measure before acting on a line.
 - **Under the NEW account or in the cloud:** `NEW-MACHINE.md` §0 and §7's block are your first acts. Confirm THIS account
   is stopped (`origin/main` not moving, and Bob's word) before any lane act.
 
-## 1. THE ESTATE, measured ~16:30Z
+## 1. THE ESTATE, measured ~15:45Z
 
 - **Live lanes:** CONDUCT #12 (58% at 15:08Z; batch 3 = REC-163 + M0-109; M0-99's worker live); DIST #4 (61%; DIST-NEXT
   written for a cloud successor at `7351615c`; a 0.72.0 BATCH owed no earlier than 2026-09-23 04:00Z). **SCHEDULER #12**
@@ -41,7 +41,7 @@ re-measure before acting on a line.
 - BOB #26's DISCHARGED line moved into the SCHEDULER (#12) DELEGATION it closes (M0-100's receipt). FLEET #3's report
   that I10's five exports were never confirmed was checked and withdrawn: `b6a14392` landed it on 2026-09-21.
 
-- **Bob, ~16:10Z:** *"the conflict between lanes is a very significant drag and productivity that must be understood and
+- **Bob, ~15:40Z:** *"the conflict between lanes is a very significant drag and productivity that must be understood and
   fixed. I would suggest that perhaps 1/2 the work being done in lanes overall is wasted and redone because of this
   contention."* MEASURED as M-97 (24 of 59 recorded gate runs discarded; the BOB lane 13 of 18). Ruled at once: NO
   CLAIM BLOCK for an edit that lands in one commit (`CLAUDE.md` §4, `ORCHESTRATION.md`); M0-110's first stage starts
@@ -49,11 +49,11 @@ re-measure before acting on a line.
 
 ## 3. OWED — in this order
 
-0. **The contention fix is the head of everything** (Bob, 16:10Z): see M0-99 land, then M0-110 and M0-111 built; re-run
+0. **The contention fix is the head of everything** (Bob, ~15:40Z): see M0-99 land, then M0-110 and M0-111 built; re-run
    M-97's instrument after each and tell Bob what it removed. Answer the builders at the code, fold into TREE-SHARING.
 1. **The move.** When Bob orders the stand-down, the BOB of the day runs `NEW-MACHINE.md` §0's list and gives Bob §7's
    block; the first BOB in the new environment measures §0's list and records the answers there.
-2. **ANSWERED by Bob, ~16:45Z: option C** — all ten keys in the one cloud environment every session uses (*"C - I see
+2. **ANSWERED by Bob, ~15:48Z: option C** — all ten keys in the one cloud environment every session uses (*"C - I see
    no practical downside"*; recorded in `NEW-MACHINE.md` §0). He places the values himself; BOB offered to put `.env` on
    his clipboard, never displayed, when he sets the environment up. DIST #4 told.
 3. **TREE-SHARING is yours to steer:** answer the builders at the code and fold each answer in; Bob's GitHub Actions acts
@@ -66,3 +66,7 @@ re-measure before acting on a line.
 ## 4. HOW BOB #27 WAS WRONG — data points (rule 12(c))
 
 - `echo ===` in this zsh fails as `== not found` (the `=cmd` expansion): quote any string that starts with `=`.
+- **Wrote clock times into the record from estimates** ("~16:10Z", "~16:45Z", "16:05Z") without reading the clock; the
+  real times were ~15:40Z and ~15:48Z, and one copied into DIST-NEXT through a message. Read `date -u` before writing a time.
+- **Archived a heartbeat run from its `list_sessions` row** before reading `list_task_runs` (BOB.md step 3); checked after,
+  it was the finished 15:51Z run.

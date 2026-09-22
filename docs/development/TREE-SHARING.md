@@ -19,7 +19,7 @@ questions answered in §1 (M0-99, M0-100, M0-101); §5 points at the rest of the
   rulings index) is a commit, so it moves `main` for every lane; a gate record is keyed by the exact tree (D-293), so every
   move voids every other lane's green result, and each lane rebases and re-gates. On an 8 GiB machine the re-gates also
   compete for memory (the ceiling BOB #25 reported).
-- **What it costs, measured (M-97, BOB #27, 2026-09-22 00:00Z–16:05Z):** 24 of 59 recorded gate runs (41%) measured a
+- **What it costs, measured (M-97, BOB #27, 2026-09-22 00:00Z–~15:45Z):** 24 of 59 recorded gate runs (41%) measured a
   tree that never reached `main`, the BOB lane 13 of its 18; 45 of 52 landings carried `CLAIMS.md` and 46 the generated
   `DECIDED.md`, 8 product source. It undercounts: a killed or dirty-tree run writes no record, and the rebasing between
   runs is not measured at all. Bob, the same day: *"perhaps 1/2 the work being done in lanes overall is wasted and

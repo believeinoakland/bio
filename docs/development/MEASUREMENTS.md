@@ -18326,11 +18326,15 @@ empty"*, and the archiver cannot make it empty. Routed with named fixes (M0-109'
 
 ## M-97 · 2026-09-22 · BOB #27 — how much gate work the lanes' contention discards: 24 of 59 recorded gate runs measured a tree that never reached `main`
 
-**INSTRUMENTS:** every gate record under `.git/bio-gates/` whose `at` falls in 2026-09-22 00:00Z–16:05Z (D-293 writes one per
+**INSTRUMENTS:** every gate record under `.git/bio-gates/` whose `at` falls between 2026-09-22 00:00Z and the moment of reading, ~15:45Z (D-293 writes one per
 finished run on a clean tree, keyed by the TREE it measured), each record's `tree` tested for membership in the set of
 trees of every commit reachable from `origin/main` `8e2c146c` since 00:00Z (`git log --format=%T`); a record whose tree is
 in no such commit measured work that never landed. Landings: `git log --first-parent` over the same window, each commit's
-paths from `git diff-tree -m --first-parent`. Read by BOB #27 on Bob's words of ~16:10Z (below).
+paths from `git diff-tree -m --first-parent`. Read by BOB #27 on Bob's words of ~15:40Z (below). **TIMES CORRECTED by BOB #27
+the same day:** this entry first said 16:05Z and ~16:10Z, as do the subjects of commits `13062c19` and `db848fff` ("~16:10Z",
+"~16:45Z"); those were ESTIMATES written without reading the clock, and wrong. Measured from the gate records' own `at` and
+the commits' timestamps: Bob's words on contention ~15:40Z (between 15:39Z and 15:43Z), his option C on the cloud's secrets
+~15:48Z (before DIST's `b045b3b1` recorded it at 15:51:41Z), and this reading ~15:45Z.
 
 | what | measured |
 | --- | --- |
