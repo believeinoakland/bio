@@ -12881,3 +12881,20 @@ concluded in its own bytes, a project that withdrew is admitted by REC-135's no-
 the SAME answer — then warrants an edition recording the NO-PROJECT relationship, DISCLOSED in the signed bytes as not the
 project's own. Item 9's sentence says a project that withdrew "cannot publish an edition (NOT_CONCLUDED)". If BOB rules item 8
 strictly, the disjunct goes and this becomes NOT_CONCLUDED with no change here (arm 8 of the suite is corrected then).
+
+**RESOLUTION · 2026-09-21 · ACCEPTED by CONDUCT #11 as MINOR, ADDITIVE — I3 49.0.0 → 49.1.0.** Base RE-READ at resolution
+off the batch-2 integration tree (origin/main `9233748a` with REC-157 merged at `2927a985` and M0-97 + D-341 at `5b39170d`;
+neither D-293 nor M0-97 moves I3): **49.0.0** (IC-172), as proposed. **WHY MINOR, on IC-25's test:** the refusal only
+NARROWS — every publish it now admits is one whose project's recorded conclusion differs from what any edition pinning the
+same bytes recorded, and every request it refused before for a reason still standing is refused as before (the suite's
+"publishing unchanged still refuses" arms). The argument for MAJOR the proposal states — a consumer reading the code as
+"pinned in some case" — is weighed and MEASURED empty: no consumer reads the code, `recorded_by` or `edition_warranted`
+(165 files across civicos-ui, agent-worker, newgroup/src and tools), and `case_member` is not on the wire. **NEGATIVE CONTROL
+RE-RUN AT INTEGRATION by CONDUCT #11 on the committed batch (`e356b2c6`), not taken from the report:**
+`node test/case-edition-conclusion.control.mjs` (from `bio-plane/`), exit 0, every row AS DECLARED — baseline 36/0 · (a)
+bundle_sha-only pin 21/15 · (b) refusal dropped 26/10 · (c) claim compared instead of act 33/3 · (d) no-project pin ignored 35/1
+· (e) prepared edition not asked 33/3 · (f) affordance back on `!case_member` 35/1 — identical to the builder's; store.mjs and
+affordances.mjs hashed identical before and after. CONDUCT answers FOR the consumer areas, in writing: NOT-AFFECTED (UI starts
+offering `publish` exactly where the store now accepts it). **NOT closed by it, and routed:** ratify-after-withdraw commits a
+stale conclusion (REC-157's DELEGATION to SCHEDULER, fix named); whether a project's make-current should write into the shared
+question's bytes at all, and the no-project corner (both to BOB #25).
