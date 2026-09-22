@@ -18700,3 +18700,15 @@ why: Bob, 2026-09-22 ~15:06Z, in BOB #27's conversation: *"Make sure that the pr
 productivity are fully recorded, as there'll be a transition at some point today that will involve both to cloud-based CC
 and to using the second Max 20X account of mine."*
 **released: 2026-09-22 BOB #27** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 DIST (DIST #4 — DIST-NEXT: the secrets question answered — Bob ruled option C, the keys live in the cloud environment)
+
+session: DIST standing lane, DIST #4 [fc1d7d], worktree `dist-4` (branch `dist4/secrets-ruled`), Sparky-Air
+paths: `docs/development/kickoffs/DIST-NEXT.md` (the FIRST section's heading and one paragraph), this block,
+  `docs/DECIDED.md` (GENERATED, regenerated LAST).
+why: DIST-NEXT told a cloud DIST #5 that the secrets' home was Bob's open decision, and not to improvise one. Bob ruled
+  it on 2026-09-22 at about 16:45Z (option C, relayed by BOB #27, whose landing records it in `NEW-MACHINE.md` §0): all
+  ten `.env` keys go in the one cloud environment every session uses. A successor with no memory would otherwise stop on
+  a question already answered. It now finds the keys as environment variables, confirms each by USING it (`wrangler
+  whoami` must report the pinned account), and never prints a value.
+**released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.

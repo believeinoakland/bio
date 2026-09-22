@@ -6,7 +6,7 @@ and live; **a BATCH, 0.72.0, is owed** (below). Read `CLAUDE.md`, then `kickoffs
 CUTS, the `latest` pointer mechanism and its LESSONS are the process. This file is only state, MEASURED 2026-09-22
 ~15:30Z. Re-measure before acting: a deployment is a fact about the ACCOUNT.
 
-## FIRST: what you cannot do without secrets — Bob's decision, not yours
+## FIRST: the secrets a cut needs — RULED by Bob: they are in your environment
 
 A cut needs these, by step (NAMES only; values never enter the repo or a message):
 - **SIGN** (`tools/release-assemble.mjs --sign`): `BIO_RELEASE_SEED` — the supply-chain key; every installer trusts it.
@@ -14,9 +14,10 @@ A cut needs these, by step (NAMES only; values never enter the repo or a message
   wrangler for `newgroup`, the deployments API): `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` (aliases `CF_TOKEN`,
   `CF_ACCT`; the account MUST be `20b533579290b9b93168345edd3b7f72` — if anything reports another, STOP and say so).
 - **LIVE-VERIFY** biosmoke7 and `op=audit`: `BIO_ADMIN_TOKEN`, `BIO_MEMBER_TOKEN`.
-**Which of these may live in a cloud environment is a risk decision carrying Bob's name; BOB #27 carries it to him
-(DIST #4 sent the names).** Until he rules, do NOT improvise a secret's home. Without the seed, `release-assemble`
-refuses `[NO_SEED]` — correct. You can still prepare a cut branch (bump, RELEASES row, gate) and stop before signing.
+**RULED by Bob, 2026-09-22 ~16:45Z (option C, relayed by BOB #27; recorded in `NEW-MACHINE.md` §0): all ten `.env`
+keys live in the ONE cloud environment every session uses, placed there by Bob himself.** So find them as environment
+variables and confirm each by USING it — `wrangler whoami` must report `20b533579290b9b93168345edd3b7f72` — and never
+print a value. A key that is absent is absent: `release-assemble` refuses `[NO_SEED]`, correctly; say which, and stop.
 Also needed: STOCK `ssh-keygen` (the acceptance authority for every signature) and `npm ci` in `bio-plane/`,
 `pdf-worker/`, `ocr-worker/`, `newgroup/` (each `node_modules` a real directory).
 
