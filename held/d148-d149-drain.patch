@@ -1,0 +1,601 @@
+From fe7be64101116ad62384d00990b8fede582c1bd9 Mon Sep 17 00:00:00 2001
+From: Sparky <sparky@Sparky-Air.local>
+Date: Tue, 22 Sep 2026 07:06:03 -0700
+Subject: [PATCH] =?UTF-8?q?scheduler=20#12:=20BOB=20#26's=20second=20entry?=
+ =?UTF-8?q?=20DRAINED=20=E2=80=94=20Bob's=20rulings=20of=202026-09-22=20on?=
+ =?UTF-8?q?=20D-148=20(a=20fee=20quote=20is=20EVIDENCE)=20and=20D-149=20(a?=
+ =?UTF-8?q?=20records=20request=20names=20every=20law=20that=20governs=20i?=
+ =?UTF-8?q?t)=20PLACED=20after=20UI-69=20with=20the=20M10=20case=20path,?=
+ =?UTF-8?q?=20beside=20D-147;=20their=20DEBT=20rows=20archived=20as=20plac?=
+ =?UTF-8?q?ed?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Verified at BIO_Case_Making_v0_1.md §2 (both rulings folded with Bob's words) and at the code on 0ce7447b: 8.action is
+BUILT and C-2.10 carries the correspondence grammar the quote joins. The entry moved verbatim to BOB-INBOX-drained.md;
+MILESTONES.md marks both placed; D-147, the request lifecycle, stays a design row in DEBT.md. Room (150 KiB kept, BOB #26):
+seven foot cuts, the two arrivals among them — every process row at the foot was already cut, so every placement now
+cuts product rows. SCHEDULER-NEXT and this lane's claim block brought to the state. Cache 8, backlog 113, DEBT 99 open;
+`ledger.mjs invariants` 0 armed FAIL.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+---
+ docs/DECIDED.md                              | 50 ++++++------
+ docs/archive/ledgers/BOB-INBOX-drained.md    | 26 ++++++
+ docs/archive/ledgers/DEBT-closed.md          |  2 +
+ docs/archive/ledgers/QUEUE-cut-2026-09-22.md | 84 ++++++++++++++++++++
+ docs/development/BACKLOG.md                  | 54 +++++++++----
+ docs/development/CLAIMS.md                   |  5 +-
+ docs/development/DEBT.md                     |  2 -
+ docs/development/MILESTONES.md               |  4 +-
+ docs/development/QUEUE.md                    | 24 ------
+ docs/development/kickoffs/SCHEDULER-NEXT.md  | 20 ++---
+ 10 files changed, 192 insertions(+), 79 deletions(-)
+
+diff --git a/docs/DECIDED.md b/docs/DECIDED.md
+index 2bc25d48..8f8e0dcb 100644
+--- a/docs/DECIDED.md
++++ b/docs/DECIDED.md
+@@ -18,7 +18,7 @@ nothing was decided — the same rule the record applies to sparse levels everyw
+ else. Each entry QUOTES its source and points at it; the authority is the file named,
+ never this one.
+ 
+-1511 rulings across 107 documents.
++1513 rulings across 106 documents.
+ 72 of them are decision-register entries, each filed under its own id from its
+ `decided:` field and quoting its `response:`; a row showing the entry's status is one of them.
+ 
+@@ -62,14 +62,14 @@ never this one.
+   `docs/archive/ledgers/BOB-INBOX-drained.md:1591`
+ - **DEC-10** · 2026-08-01 · answered — NOTIFY, and the framing this entry rested on was WRONG at the root.  
+   `docs/archive/ledgers/DECISIONS-2026-08.md:674`
++- **DEC-10** — A MEMBER CANNOT MUTE A FINDING FOR THEMSELVES, SO DEC-10's (b) AND (c) CANNOT REACH THE OVERDUE SUCCESSOR THEY WERE RULED FOR.** `queueMute` (`store.mjs`) refuses every FINDING kind `KIND_NOT_PERSONAL` with `MUTE_REFUSAL_DETAIL`'s sentence (`queuestate.mjs`, re-read on `7c967f09`): the per-case mute covers…  
++  `docs/archive/ledgers/QUEUE-cut-2026-09-22.md:551`
+ - **DEC-10** — P-88, which is RULED by DEC-10 and MISSING**: does this instance connect to an inquiry or a project.  
+   `docs/archive/research/BUILD-ORDER.md:503`
+ - **DEC-10** · 2026-08-01 — (`DECISIONS.md:414+`), RULED 2026-08-01 | **NO.** The scan notices; nothing filters or notifies |  
+   `docs/archive/research/MACHINE-PROCESSES.md:102`
+ - **DEC-10** · 2026-08-01 — , RULED 2026-08-01 | **MISSING** — P-70 notices and nothing filters or notifies | M4 |  
+   `docs/archive/research/PROCESS-CATALOGUE.md:269`
+-- **DEC-10** — A MEMBER CANNOT MUTE A FINDING FOR THEMSELVES, SO DEC-10's (b) AND (c) CANNOT REACH THE OVERDUE SUCCESSOR THEY WERE RULED FOR.** `queueMute` (`store.mjs`) refuses every FINDING kind `KIND_NOT_PERSONAL` with `MUTE_REFUSAL_DETAIL`'s sentence (`queuestate.mjs`, re-read on `7c967f09`): the per-case mute covers…  
+-  `docs/development/BACKLOG.md:274`
+ - **DEC-10** · 2026-09-22 — A member's PERSONAL mute of a FINDING — DEC-10's (b) per item and (c) per case over the kinds present — was RULED 2026-09-22 by BOB #26 (D-125) and is NOT BUILT: until it lands that fence still refuses one, and "MARKED AS HANDLED" below states the ruling.** The ITEM CONTRACT is **[BUILT]** but for its id: rule 1…  
+   `docs/development/NOTIFICATIONS.md:3`
+ - **DEC-10** · 2026-09-22 — f a FINDING (DEC-10's (b) per item, keyed on the finding's stable identity, and (c) per case over the kinds present) is RULED 2026-09-22 (D-125) and NOT BUILT; `queuestate.mjs` refuses a FINDING by class until it lands.  
+@@ -85,7 +85,7 @@ never this one.
+ - **DEC-13** · 2026-08-03 — CORRECTED BY LATER RULINGS — read with: DEC-13 (H4/H6 are the REQUIRED workflow, not hazards); D-156 as amended by DEC-21's session (AUDIENCE = readers/consumers of a published case; USER TYPE/ARCHETYPE = the requirements sense — this file's "eight audiences" mixes both, and the same person can be both); DEC-31…  
+   `docs/archive/research/AUDIENCES.md:1`
+ - **DEC-13** · 2026-08-01 — RULED 2026-08-01 (DEC-13). AUDIENCES §7 runs `RATIFY -> CASE -> rendering -> action -> consequence` and §9 lists the pre-publication release of material among its HAZARDS — H4 (*the low-threshold rendering that escapes*) and H6 (*the embargo*). The practice literature says the ordering is inverted, and the sources…  
+-  `docs/development/DEBT.md:54`
++  `docs/development/DEBT.md:52`
+ - **DEC-14** · 2026-08-01 · answered — THE SAME STANDARD, AND UNPROVEN IS THE DEFAULT.** Bob, 2026-08-01: *"I would agree with the conclusions of ProPublica.  
+   `docs/archive/ledgers/DECISIONS-2026-08.md:965`
+ - **DEC-15** · 2026-08-01 — RULED 2026-08-01 (DEC-15), and it resolves the D1(a)-versus-D1(b) fork by showing it was a false one: an authored connection grade and an earned one are not rivals, they are two phases of the same object.  
+@@ -535,7 +535,7 @@ never this one.
+ - **D-102** · 2026-07-30 — RULED 2026-07-30: the installer wizard must PROMPT the operator for an installation name at setup, and that name becomes the INSTANCE_NAME component of the UA string.  
+   `docs/archive/ledgers/DEBT-closed-2026-08.md:65`
+ - **D-102** · 2026-08-10 — AMENDED 2026-08-10: THE DEFECT WAS RECORDED AND NEVER ENACTED, WHICH IS A DIFFERENT AND WORSE FINDING THAN UNKNOWN.** `agent-worker/wrangler.jsonc:47-50` states it in its own comment — *"for an INSTALLED instance the plane's worker name is per instance (the instance name IS the worker name, D-102), so this…  
+-  `docs/development/DEBT.md:140`
++  `docs/development/DEBT.md:138`
+ - **D-104** · 2026-08-08 — Two control declarations were CORRECTED AFTER THEIR FIRST RUN and reported as findings rather than smoothed**, including one where the rule's real value turned out to be D-104's GOVERNED split in the log rather than the refusal itself — *our politeness must not be reported as the source failing.* **`hygiene`'s…  
+   `docs/archive/ledgers/QUEUE-2026-08.md:387`
+ - **D-108** · 2026-07-31 — CORRECTED AND WIDENED 2026-07-31 while deploying 0.52.0: the original diagnosis, a Durable Object lagging a fresh Worker isolate, was too narrow.  
+@@ -595,13 +595,19 @@ never this one.
+ - **D-148** · 2026-09-22 — A FEE QUOTE IS EVIDENCE, RULED BY BOB 2026-09-22 (D-148):** *"Yes, a price quote is evidence"* — about the body that quoted it, not an obstacle to the request.  
+   `docs/architecture/BIO_Case_Making_v0_1.md:160`
+ - **D-148** · 2026-09-22 — 2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told the same day that the layers follow the AGENCY asked (federal FOIA governs…  
+-  `docs/development/QUEUE.md:25`
++  `docs/archive/ledgers/BOB-INBOX-drained.md:1600`
++- **D-148** · 2026-09-22 — RULED by Bob, 2026-09-22; the action and its correspondence are BUILT (`node tools/status.mjs 8`). — owner RECORD.  
++  `docs/archive/ledgers/QUEUE-cut-2026-09-22.md:515`
+ - **D-149** · 2026-09-22 — A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT, RULED BY BOB 2026-09-22 (D-149):** *"ALL records laws apply.  
+   `docs/architecture/BIO_Case_Making_v0_1.md:172`
++- **D-149** · 2026-09-22 — RULED by Bob, 2026-09-22: every records law governing the agency asked applies, layered by the agency's level. — owner RECORD.  
++  `docs/archive/ledgers/QUEUE-cut-2026-09-22.md:503`
++- **D-149** — BOB #26 RULED the budget stays (a larger read-whole file is the wrong direction); revisit only with an instance of a spawn delayed or misbriefed by a cut row. - **DEBT.md: 99 open rows.** BOB INBOX: empty at this landing (BOB #26's two entries drained).  
++  `docs/development/kickoffs/SCHEDULER-NEXT.md:23`
+ - **D-151** — ONE DESIGN POINT THAT IS NOT RULED ANYWHERE AND WILL BITE: does the AI act AS the member, or as a machine?** Every existing fence — `MACHINE_CANNOT_CONCLUDE`, `_RELEASE`, `_REOPEN`, `_PUBLISH`, `_CORRESPOND`, `_MOVE_ACTION`, D-151's resolve/forward refusals — assumes machine callers are DISTINGUISHABLE.  
+   `docs/archive/ledgers/DECISIONS-2026-08.md:3447`
+ - **D-156** · 2026-08-02 — AMENDED 2026-08-02 by Bob, and the correction is larger than the vocabulary split:** the USER TYPE list is not one archetype.  
+-  `docs/development/DEBT.md:58`
++  `docs/development/DEBT.md:56`
+ - **D-157** — an null; (2) the `memberlist:` line in the DO dispatch map passes `url.searchParams.get("administer")` through; (3) the CORRECTED comment beside it, which said "All admin-only at the control plane" and was one of D-157's three self-contradicting sites.  
+   `docs/archive/ledgers/CLAIMS-2026-08.md:660`
+ - **D-157** · 2026-08-02 — `test/members.test.mjs:192` asserts the current behaviour and must be CORRECTED, never exempted** (`CLAUDE.md`), with a comment saying why the old assertion was wrong.  
+@@ -683,7 +689,7 @@ never this one.
+ - **D-212** · 2026-08-05 — SUPERSEDED 2026-08-05 by the VERSIONS design — the question this row asked turned out not to be a record question at all.** The row went through three drafts and each was wrong in an instructive way, so the history is kept rather than deleted.  
+   `docs/archive/ledgers/DEBT-closed-2026-08.md:91`
+ - **D-213** · 2026-08-07 — close condition CORRECTED 2026-08-07: the code does not use N-ids.** Verified: no N-number exists anywhere in source; the live vocabulary is SLUGS in `queuestate.mjs` (`QUEUE_FINDING_KINDS` :118-134), `classOfKind` is the fence, and the store refuses unknown kinds at the mint.  
+-  `docs/development/DEBT.md:80`
++  `docs/development/DEBT.md:78`
+ - **D-215** — RULED, and this session missed it when raising D-215:** *"An assistant-surfaced focus must carry the bias manifest in force when it was surfaced… unlike a member it will not remember.  
+   `docs/archive/IS-SWEEP-2026-08-07.md:43`
+ - **D-215** — D-215(2) is therefore RULED YES for the bias component.** - **FORBIDDEN, and the design drifted toward it:** *"bias never shapes what is captured or monitored, only how conclusions are weighed"* (`Content_Framework:1283`) — the coupling is *forbidden rather than documented*. §3's "net bias" read is legitimate only…  
+@@ -723,9 +729,9 @@ never this one.
+ - **D-234** · 2026-08-08 — THE PUBLICATION QUESTION IS SETTLED: `composition` PUBLISHES THE RECORD'S BYTES**, read back from `inquiry_basis_versions` after the promotion, with `composition_of: "record"` on the answer so a consumer can tell which bytes it holds; asserted equal to what `op=basisversions` publishes for the same version.  
+   `docs/archive/ledgers/DEBT-closed-2026-08.md:103`
+ - **D-235** · 2026-08-08 — TWO SUPERSEDED PINS CORRECTED, NEVER EXEMPTED, each with why the old one was right when written:** §4's sole-output walk ran over the WHOLE METHOD and scored the answer's new `state: recorded.state` — a read-back, the opposite of what §4 forbids — as a violation, so it now walks the WRITE REGION **with the…  
+-  `docs/development/DEBT.md:87`
++  `docs/development/DEBT.md:85`
+ - **D-239** · 2026-08-08 — 23 sites CORRECTED in `bio-plane/**`, which now reads ZERO and is gated at zero.** What is OPEN is everything outside this item's paths, ledgered by `(file, name)` with an EXACT count in `LEDGER` so it cannot grow: `research/DATA-MODEL.md` **27 registrations** (a route table written with an `op=` prefix that…  
+-  `docs/development/DEBT.md:122`
++  `docs/development/DEBT.md:120`
+ - **D-242** — `docs/development/DEBT.md` D-242 and D-243 are AMENDED IN PLACE**, which is the one non-append edit here: both rows are M0-17's own residuals and this item is the one that answers them.  
+   `docs/archive/ledgers/CLAIMS-2026-08.md:4200`
+ - **D-249** · 2026-08-08 — DECIDED IT BELONGS IN A ROW OF ITS OWN RATHER THAN IN THAT ITEM, and the reason is a category difference rather than a scoping preference.  
+@@ -743,7 +749,7 @@ never this one.
+ - **D-255** — ARM C WAS CORRECTED RATHER THAN EXEMPTED, and it would otherwise have taken the whole run down.** D-255 wrote it against a tree where `columns` still existed; this item deleted it, so its anchor occurs zero times and `uniq` exits 3 — **an arm that cannot arm is worse than one that fails.** It puts the field back…  
+   `docs/development/MEASUREMENTS.md:5372`
+ - **D-257** · 2026-08-08 — THE ROW'S OWN MEASUREMENT WAS WRONG AND IS CORRECTED HERE:** it said the suite floors on `DISPATCH.size > 100` and `BODIES.size > 200`; measured, those come from a `readFileSync` of the single named path `bio-plane/src/store.mjs`, which no arrival can inflate.  
+-  `docs/development/DEBT.md:91`
++  `docs/development/DEBT.md:89`
+ - **D-258** · 2026-08-09 — WHAT DECIDED IT, and it is a measurement rather than a preference: the fact `columns`/`refs` carry is ALREADY PUBLISHED, per arm, by `op=searchfields`** — `meaningVocabulary()` emits `rows: { grain, identity, columns, refs }` off the same registry, and that is the vocabulary route surfaces actually compose from.  
+   `docs/archive/ledgers/DEBT-closed-2026-08.md:116`
+ - **D-258** · 2026-08-09 — 2026-08-09 · D-258 — DELETE OR PUBLISH, decided by measurement; and the class DECIDED rather than listed **Instrument:** `bio-plane/test/fieldread.control.mjs`, D-255's, EXTENDED — a second subject (`src/store.mjs`), a `--tripwire-sweep` that returns a VERDICT per field, a `--digest` mode, and  
+@@ -783,7 +789,7 @@ never this one.
+ - **D-284** · 2026-09-19 — `reading.text_tier` IS A DOCUMENT-LEVEL FLOOR, NOT A PER-PAGE FACT — RULED by BOB #17 (D-284).** The limitation is stated HERE because as of 2026-09-19 it was stated in no governed design at all.  
+   `docs/architecture/BIO_Content_Framework_v0_10.md:1918`
+ - **D-285** · 2026-08-09 — when the lists moved — the pin working — and was CORRECTED, never exempted, with a dated reason and a DRIVEN cross-check proving the UI family catches every seed.  
+-  `docs/development/DEBT.md:137`
++  `docs/development/DEBT.md:135`
+ - **D-288** · 2026-09-16 — 2026-09-16 · BOB #12 · D-288 IS RULED AND DECOMPOSED — THREE ITEMS, NO INTERFACE, M0.  
+   `docs/archive/ledgers/BOB-INBOX-drained.md:268`
+ - **D-288** · 2026-09-16 — THE DECISION WAS RULED 2026-09-16 by BOB #12 (mechanism, BOB's): shapes (a) AND (c), plus a PRUNING rule that turns (a)'s cost into a signal.  
+@@ -917,17 +923,17 @@ never this one.
+ - **D-389** — NOT SETTLED BY THIS BUMP, and both are rowed rather than left in a report.** **D-389** — `truncated: false` still rests on the over-fetch absorbing the fence, and that is true of ALL THREE frontier arms, so correcting one would be mirror-and-drift; the sound form and its leak analysis are in the row.  
+   `docs/development/INTERFACE-CHANGES.md:8369`
+ - **D-391** · 2026-09-16 — WHY NEITHER IS CORRECTED HERE:** re-denominating another area's measurement from outside it is how a wrong number acquires a second author.  
+-  `docs/development/DEBT.md:155`
++  `docs/development/DEBT.md:153`
+ - **D-394** · 2026-09-21 — RULED BY BOB (2026-09-21)** … (whole text: the cut archive) order: with the meaning-layer features (M4), where BOB #23 placed it (after the instrument cluster, which Bob's ruling of 2026-09-22 moved behind the product rows — SCHEDULER #12); after D-394, since a NEW construct follows the rows completing built ones…  
+-  `docs/development/BACKLOG.md:573`
++  `docs/development/BACKLOG.md:593`
+ - **D-398** · 2026-09-17 — CORRECTED 2026-09-17 BY BOB #13, AND THE CORRECTION IS A MECHANISM THIS ROW SAYS DOES NOT EXIST: ARCHIVING THE SESSION RELEASES THE LOCK.** This row and BOB-NEXT's amendment both say the lock does not release when the process exits and becomes a stale lock nothing cleans up, so reclamation was framed as an…  
+-  `docs/development/DEBT.md:165`
++  `docs/development/DEBT.md:163`
+ - **D-401** · 2026-09-17 — RULED BY BOB THE SAME DAY:** *"BOB #12 being alive is not my problem.  
+   `docs/archive/ledgers/DEBT-closed.md:120`
+ - **D-405** · 2026-09-18 — BLOCKER 2 IS NOW IN DOUBT, 2026-09-18, BOB #14 — AND PROTOCOL CHANGE (2) IS WITHDRAWN.** The *poller dead + RC on → refused* cell is confounded: this row itself records that killing the poller made CONDUCT #2 RESUME ITS TURN, so in that cell the session was mid-turn, which is a sufficient blocker on its own.  
+-  `docs/development/DEBT.md:162`
++  `docs/development/DEBT.md:160`
+ - **D-407** · 2026-09-18 — LAYER 3's CAUSE WAS MISATTRIBUTED, CORRECTED 2026-09-18 BY BOB #14 FROM THE RUN'S OWN TRANSCRIPT.** Owed item (a) blames `until`-shaped waits.  
+-  `docs/development/DEBT.md:163`
++  `docs/development/DEBT.md:161`
+ - **D-411** · 2026-09-17 — THE DESIGN QUESTION WAS RULED BY CONDUCT #3 RATHER THAN ROUTED TO BOB, AND IT WAS BRIEFED WITH ITS OWN FALSIFIER: both halves are published and the ENVELOPE SAYS WHICH IS WHICH** — `composition` keeps its authored bytes uncapped and carries a new `composition_grades: "authored"` label, while `legs[]` publishes what…  
+   `docs/archive/ledgers/DEBT-closed.md:72`
+ - **D-411** — NOT SETTLED BY THIS ITEM: D-411 / REC-119**, the sixth reader (`#versionCollections`, feeding `op=basisversions` and `op=suggest`).  
+@@ -1971,7 +1977,7 @@ never this one.
+ - **M0-33** · 2026-09-18 — M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): > order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold) > milestone: M0 (background lane, holds no slot) — the test estate's own instrument > interface: none — control drivers and the census only  
+   `docs/archive/ledgers/QUEUE-cut-2026-09-21.md:157`
+ - **M0-33** · 2026-09-18 — M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism): order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold) milestone: M0 (background lane, holds no slot) — the test estate's own instrument interface: none — control drivers and the census only  
+-  `docs/development/BACKLOG.md:1075`
++  `docs/development/BACKLOG.md:1095`
+ - **M0-34** · 2026-09-15 — `RULED by Bob` means DOCTRINE no session may revisit; a session's own name means MECHANISM a later session MAY revisit on evidence.  
+   `docs/archive/ledgers/QUEUE-closed.md:405`
+ - **M0-35** · 2026-09-16 — CLAIM AMENDED 2026-09-16 M0 (M0-35 — three paths the original block did not name) session: M0-35 worker (worktree `agent-af799694331ecc8d3`, branch `worktree-agent-af799694331ecc8d3`) **Appended rather than edited in place**, per this file's own rule.  
+@@ -2339,6 +2345,8 @@ Settled in prose without an id allocated. Cite them by file and line.
+   `docs/archive/ledgers/QUEUE-closed.md:2664`
+ - RULED by BOB #17 (`a08e137a`) to be that doctrine MECHANISED:** the arm does not JUDGE builtness, it READS the one authority on it.  
+   `docs/archive/ledgers/QUEUE-cut-2026-09-22.md:339`
++- `MUTE_REFUSAL_DETAIL`'s FINDING sentence goes; `current.test.mjs`'s pin is CORRECTED with its reason.  
++  `docs/archive/ledgers/QUEUE-cut-2026-09-22.md:557`
+ - **2026-09-15** — THE FALSIFICATION RULE, CORRECTED 2026-09-15 (CONDUCT #11, on BOB #11's argument), and the correction is worth more than the clause it fixes.** Every `running` row carries a clause telling a reader how to check the status against the world.  
+   `docs/archive/ledgers/QUEUE-narrative-2026-09-18.md:35`
+ - PROPOSED → RESPONSES → RESOLUTION → CHANGING → CHANGED → SETTLED | | record a defect, a number, or a design | **`DEBT.md` / `MEASUREMENTS.md` / the design docs** | append-only; knowledge, and an INPUT to the queue, never a rival | | wake a session that is already mid-run | **a short nudge, pointing at what to…  
+@@ -2393,8 +2401,6 @@ Settled in prose without an id allocated. Cite them by file and line.
+   `docs/development/BACKLOG.md:209`
+ - **2026-08-01** — design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"RULED 2026-08-01: the pre-flight is plane-sourced" — *see what it will refuse and why BEFORE it runs* — with the positions of `BIO_Membership_Architecture_v2.md` §7.7.  
+   `docs/development/BACKLOG.md:247`
+-- `MUTE_REFUSAL_DETAIL`'s FINDING sentence goes; `current.test.mjs`'s pin is CORRECTED with its reason.  
+-  `docs/development/BACKLOG.md:280`
+ - **2026-07-31** — STATUS CORRECTED 2026-07-31 (session BOB).  
+   `docs/development/CAPTURE-SCALING.md:33`
+ - RULED by Bob: a reused asset IS allowed in a capture that will be ratified as evidence.  
+@@ -2684,7 +2690,7 @@ Settled in prose without an id allocated. Cite them by file and line.
+ - **2026-09-22** — AMENDED 2026-09-22, same session (commit 5): BOB'S RULING APPLIED TO THIS SESSION'S PLACEMENTS** — Bob, 2026-09-22 (`CLAUDE.md` §2, `48aab56b`): *The goal is BIO work; process is overhead*.  
+   `docs/development/CLAIMS.md:18318`
+ - **2026-09-22** — Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them…  
+-  `docs/development/CLAIMS.md:18475`
++  `docs/development/CLAIMS.md:18478`
+ - §The grade: RULED — the grade is RULED and nothing implements it.  
+   `docs/development/CLIENT-RENDERED.md:9`
+ - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
+@@ -2937,8 +2943,6 @@ Settled in prose without an id allocated. Cite them by file and line.
+   `docs/development/kickoffs/RECORD.md:323`
+ - CORRECTED with dated reasons, never exempted.  
+   `docs/development/kickoffs/RECORD.md:377`
+-- BOB #26 RULED the budget stays (a larger read-whole file is the wrong direction); revisit only with an instance of a spawn delayed or misbriefed by a cut row. - **DEBT.md: 101 open rows.** BOB INBOX: empty at this landing (BOB #26's entry drained).  
+-  `docs/development/kickoffs/SCHEDULER-NEXT.md:22`
+ - **2026-09-21** — `BACKLOG.md`'S BUDGET STAYS 150 KiB — RULED by BOB #23, 2026-09-21.** When a placement needs room, cut the rows FURTHEST DOWN the order to their fields (their `scope:` verbatim in the dated cut archive, `docs/archive/ledgers/QUEUE-cut-<date>.md`, each line prefixed `> `, a `cut:` line left on the row), never from…  
+   `docs/development/kickoffs/SCHEDULER.md:188`
+ - **2026-09-22** — DO NOT ASK LANES TO HOLD `main` FOR YOUR GATE — SUPERSEDED 2026-09-22 by Bob's ruling** (`CLAUDE.md` §6: *never queue a gate behind another lane's*; lanes must not back up behind long runs).  
+diff --git a/docs/archive/ledgers/BOB-INBOX-drained.md b/docs/archive/ledgers/BOB-INBOX-drained.md
+index af2adb20..c475ebf2 100644
+--- a/docs/archive/ledgers/BOB-INBOX-drained.md
++++ b/docs/archive/ledgers/BOB-INBOX-drained.md
+@@ -1594,3 +1594,29 @@ each keeping its id:** items 2 and 1. Both are product corrections and neither w
+    `op=proposals` still carry F and no disposition row exists; A's case mute of `overdue_successor` suppresses that case's
+    overdue items and a NEW kind there still reaches A; an OBLIGATION mute is refused by name. NEGATIVE CONTROL: key the
+    item mute by case alone, and the B-feed arm fails by name.
++
++## DRAINED 2026-09-22 by SCHEDULER #12 — BOB #26's entry (`0ce7447b`), verified at `BIO_Case_Making_v0_1.md` §2 (both rulings, with Bob's words) and at the code on `0ce7447b` (`node tools/status.mjs 8`: 8.action BUILT; C-2.10 in the catalogue): item 1 PLACED as D-148 and item 2 as D-149, after UI-69 with the M10 case path, each keeping its id, their DEBT rows archived as placed; D-147 stays a design row in `DEBT.md`.
++
++**2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT
++GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told
++the same day that the layers follow the AGENCY asked (federal FOIA governs federal agencies only). Each row leaves DEBT by
++door 2, keeping its id; both sit at M10 with D-147, which they do not close — D-147's lifecycle stays a design row, and
++the quote's revision chain is shaped so each later stage lands as its own entry. Both are product; neither waits on
++anything unbuilt (the action and its correspondence are BUILT, `node tools/status.mjs 8`).
++
++1. **RECORD (M10), D-148: the fee quote, a structured correspondence entry.** A `received` entry may carry a QUOTE: the
++   amount and currency as quoted, the stated basis verbatim, and the `sent` entry it answers; a later entry may name the
++   quote it revises (a waiver is a revision to zero, and both entries stand). Its grammar sits at C-2.10 beside the
++   correspondence arms; `promote` projects it from the bytes into an indexed table that `purge` clears in both arms, and
++   a read returns quotes by counterparty and by the request answered. I3 and I5 change (the integrator mints the ICs).
++   The record states no finding about a quote. **Accepts when** a quote projects and reads back by counterparty and by
++   request; a revision to zero keeps both entries; a quote answering no `sent` entry, or with an amount that is not a
++   number, is refused by name; an action with no quote reads byte-identical before and after. NEGATIVE CONTROL: drop the
++   projection from the per-bundle purge, and the purge arm fails by name.
++2. **RECORD (M10), D-149: the laws that govern a records request, by citation.** A records-request action carries a
++   list of citations, each with its level (federal, state or local), set by a member's authored act; a machine credential
++   is refused by name, and a machine PROPOSAL, if built, is labelled machine work. An empty list reads UNDETERMINED with
++   its sentence, never a default; the plane encodes no law's rules; `cpra_request` actions read unchanged. **Accepts
++   when** a member's list lands and reads back; an action with none reads undetermined, never federal; a machine
++   credential's list is refused. NEGATIVE CONTROL: default an empty list to a federal citation, and the undetermined arm
++   fails by name.
+diff --git a/docs/archive/ledgers/DEBT-closed.md b/docs/archive/ledgers/DEBT-closed.md
+index 2307391d..473c4389 100644
+--- a/docs/archive/ledgers/DEBT-closed.md
++++ b/docs/archive/ledgers/DEBT-closed.md
+@@ -214,3 +214,5 @@ The August roll (`DEBT-closed-2026-08.md`) is a separate closed file and is neve
+ | D-179 | gap | 2026-08-04 | **register.capture_sha is a GLOBAL primary key, so registering one sha against a second bundle silently MOVES the row** — it cost REC-18's worker a debugging cycle inside another suite. Whether that is the intended semantics (one capture, one home) or a missed compound key is a store question; either way the silent move deserves a named refusal or an assertion. — PRIOR DISPOSITION, moved verbatim at the close: M7 - open · batch with the honesty-defect items (beside D-169/D-171) **SENT 2026-09-22 by SCHEDULER #11 to BOB, Q4 of a group of four (DELEGATION 2026-09-22 SCHEDULER (#11) -> BOB)**, re-verified at the code on `06832aff`: the promote write UPSERTs `bundle_id` on the `capture_sha` key, fenced only for an authored capture (C-53.8). | M7 · CLOSED 2026-09-22 AS A DEBT ROW by LED-7 (SCHEDULER #12) — PLACED as a BACKLOG task under its own id, D-179 (owner RECORD, M7), directly after D-171, ruled by BOB #26 (`BIO_Intake_Doctrine_v1_1.md` §8: one capture, one home). Verified before placing, on `7c967f09`: `register.capture_sha` is the primary key (`schema.mjs`) and the promote write upserts on it (`store.mjs`). |
+ | D-125 | gap | 2026-08-01 | **A member has no notification preferences, and DEC-10's ruling requires them.** RULED 2026-08-01: an overdue progression stage notifies the member who AUTHORED the connection between that instance and a Focus or Project, and the notification must offer three things -- remind me again at a further increment overdue, stop notifying me about this one, stop notifying me about that GROUP. The plane has no state for any of it: `tasks` carries `open`/`forwarded`/`resolved` and nothing per-member and nothing with a snooze clock. Needed: a per-member preference keyed on the thing muted, where the mute key is expressible on the axes the CONNECTION was made on (progression type, body, or Focus/Project) so a member mutes what they mean rather than a bucket the system chose; a snooze whose increment is THE STAGE'S OWN DECLARED INTERVAL rather than a new constant, since the expectation already carries the number and a second one would drift from it. **THE HAZARD, and it is the one to build against first: MUTING IS PERSONAL, DISMISSING IS A RECORD ACT, and they must never be one control.** If 'stop notifying me' also dismisses the finding, one member's inbox hygiene erases a finding for the whole group -- which is the silent disappearance the discovery-loop doctrine forbids (D-79, Step 8b). The finding stands; only that member's notification stops. NOTE the channel itself already exists: D-98's task inbox is the in-app notification channel, so D-52 ('there is no notification channel in this system at all', raised for export notification) is substantially answered by the same mechanism -- one channel, three consumers, which is the D-86 lesson applied rather than a second scheduler's worth of bugs. AMENDED 2026-08-01 (DEC-10 amendment): notifications AGGREGATE PER CASE, so the preference state is needed at TWO levels, not one -- per item and per (member, Focus/Project) group. The group entry is STANDING and ACCUMULATING rather than a stream, which removes any digest-cadence machinery: one live entry per (member, case) while it holds unhandled events, re-notifying only on a snooze increment or when something new lands after the member last looked. AND THE GROUP MUTE CARRIES ITS OWN HAZARD: it must be scoped to the KINDS PRESENT WHEN IT WAS MADE, so a genuinely new kind of event on that case surfaces again -- otherwise 'mute this case' is a permanent blindfold, which is the same silent-disappearance failure as conflating mute with dismiss, one level up. Grouping itself needs no new stored relation: `tasks.refers_to` names a bundle and the case comes from the citation edge that already exists, so the group is DERIVED from the authored connection rather than duplicated beside it. — PRIOR DISPOSITION, moved verbatim at the close: M4 - open; the inbox half M8 — NARROWED 2026-09-22 by LED-7 batch S11-1 (SCHEDULER #11) to DEC-10's own subject, and SENT to BOB, Q3 of a group of four (DELEGATION 2026-09-22 SCHEDULER (#11) -> BOB). BUILT, verified on `06832aff` (REC-21 and P-87): `queue_state` per member and case; muting is personal and never dismisses; a mute holds the kinds present when it was made, so a new kind still reaches the member; the aggregation key is the case (DEC-10's amendment); a snooze is the member's own instant with no instance constant, and a finding that keeps coming due re-notifies at its stage's declared `within_interval`. NOT BUILT: DEC-10's (b) and (c) for the overdue FINDING. `muted_kinds` admits CONDITION kinds only, and a FINDING is refused `KIND_NOT_PERSONAL` (`queuestate.mjs` `MUTE_REFUSAL_DETAIL`), where DEC-10 rules a personal stop whose finding stands. **Prior disposition, kept verbatim:** M4 - open; the inbox half M8 | M8 · CLOSED 2026-09-22 AS A DEBT ROW by LED-7 (SCHEDULER #12) — PLACED as a BACKLOG task under its own id, D-125 (owner RECORD, M8), last of the M8 corrections after D-82, ruled by BOB #26 (`NOTIFICATIONS.md` "MARKED AS HANDLED"). Verified before placing, on `7c967f09`: `queueMute` (`store.mjs`) refuses every FINDING kind `KIND_NOT_PERSONAL`. |
+ | D-178 | gap | 2026-08-04 | **op=audit's sweep injects earnedRegistry but not publishedRegistry, so C-21.1/C-21.2 never fire in an audit.** Pre-existing, surfaced by REC-18. Not closed there because adding it could fire C-21.2 across the corpus — a small separable item that should land with a corpus check first. — PRIOR DISPOSITION, moved verbatim at the close: M10 - open · small; pair with the next M10 item | M10 · CLOSED 2026-09-22 AS A DEBT ROW by LED-7 (SCHEDULER #12) — PLACED as a BACKLOG task under its own id, D-178 (owner RECORD, M10), after D-182 and above the features. Verified before placing, on `7c967f09`: the audit sweep passes `earnedRegistry` alone, so `checkInheritedLeg` finds no published target: an inherited leg reads C-2.8 and neither C-21 arm runs; the fix injects `publishedRegistryFor` after a corpus count. |
++| D-148 | design | 2026-08-01 | **A fee quote is EVIDENCE about a public body, and the design treats it as an administrative obstacle.** Sourced examples: Colorado's Secretary of State quoted **$2.1M** (69,736 projected labor hours) for election contracts; Texas DCJ quoted **$1,132,024.30** for records the state PREA office supplied for **$551.39** — **a 2,000x spread for identical records**; Nevada DETR quoted $650,000, then **dropped a $1,083 charge entirely and released the records free once challenged**, which is direct evidence the quote was not cost-based; DoD quoted **~$660 million** [MuckRock survey Dec 2023; Las Vegas Review-Journal Sept 2023; Techdirt — press and NGO sources, labelled as such]. Against that, the federal fee system collects **0.34-0.38% of what FOIA costs to run**, about **$1.54 per request**, and the State Department collected **$0.00** in FY2024 [government's own reported statistics] — **fees are a deterrent instrument, not a cost-recovery one**, and the record should be able to say so with its own captured evidence. Consequence for the design: a fee quote should be a first-class captured artifact with a comparison basis, not correspondence prose. Two identical requests priced 2,000x apart is exactly the shape BIO exists to make checkable, and today it would be a paragraph in a `## Correspondence` heading. — PRIOR DISPOSITION, moved verbatim at the close: M4 - open — **ROUTED TO BOB 2026-09-19 by LED-7 batch 4 (SCHEDULER #2).** A fee quote treated as evidence about a public body rather than as an obstacle is a DOCTRINE question about what the record holds and asserts — and the row's own figures (a 2,000x spread for identical records; a charge dropped entirely once challenged) are the argument for it. Bears on people outside the project, which is Bob's by `CLAUDE.md` §3. Not placed. **PROVISIONAL STATED 2026-09-20 by BOB #18, because an open decision must never block work (`kickoffs/README.md`) and this row carried none for 50 days:** what RUNS today is that a fee quote is CORRESPONDENCE PROSE under a `## Correspondence` heading — captured, readable, attributable, and NOT comparable; nothing puts two quotes side by side and the record asserts nothing about them. Nothing is blocked by the question staying open: no queue row depends on it. **What the delay COSTS is asymmetric and is the reason to rule it before data accumulates** — quotes captured as prose that later become first-class artifacts need re-extraction and move any citation resting on them, while a modelled artifact later abandoned drops a table and leaves the capture untouched. Carried to Bob 2026-09-20 in the `README.md` decision shape. | M10 · CLOSED 2026-09-22 AS A DEBT ROW by LED-7 (SCHEDULER #12) — PLACED as a BACKLOG task under its own id, D-148 (owner RECORD, M10), after UI-69 with the M10 case path, on Bob's ruling of 2026-09-22 folded into `BIO_Case_Making_v0_1.md` §2 (BOB #26). Verified before placing, on `0ce7447b`: the action and its correspondence are BUILT (`node tools/status.mjs 8`) and carry no quote grammar; D-147, the lifecycle, stays a design row. |
++| D-149 | defect | 2026-08-01 | **The design is jurisdiction-blind, and BIO's own jurisdiction differs from federal FOIA on every axis that matters.** Nothing in the record models WHICH access regime an `action` runs under, and the assumptions differ sharply. Federal: fee-shifting is discretionary ('the court MAY assess... substantially prevailed', 5 USC 552(a)(4)(E)), search and review fees are chargeable by requester class, and plaintiffs substantially prevailed in only **112 of 1,672 lawsuits, 6.7%** [GAO-16-667, the government auditing itself]. **California, which is Oakland and therefore BIO's actual regime**: fee-shifting is MANDATORY ('the court SHALL award court costs and reasonable attorney's fees to the requester', Gov. Code 7923.115(a)); fees are **direct duplication cost only** with no search fee and no review fee (7922.530(a)); and **redaction time is not billable at all** — *National Lawyers Guild v. City of Hayward* (2020) 9 Cal.5th 488 threw out a $2,938.58 invoice for 40.2 hours of bodycam redaction, holding that 'extraction' means retrieving responsive data, not omitting unwanted data. So in California 'it will take us 200 hours to redact this' cannot lawfully become a bill — and a design carrying federal assumptions would model a cost that does not exist here and miss a violation when one is charged. A pending 2026 California bill would loosen the fee rules [CalMatters, Mar 2026]; flag as pending, not law. — PRIOR DISPOSITION, moved verbatim at the close: M4 - open — **ROUTED TO BOB 2026-09-19 by LED-7 batch 4 (SCHEDULER #2), and it is D-148's sibling — rule them together.** The record models no access regime, while BIO's actual jurisdiction (California) differs from federal FOIA on every axis the row lists: fee-shifting MANDATORY not discretionary, direct duplication cost only, redaction time not billable. Deciding whether an `action` carries its regime is design, not a fix. Also bears on people outside the project. **PROVISIONAL STATED 2026-09-20 by BOB #18 (same reason as D-148, its sibling):** what RUNS today is that an `action` carries NO access regime and the design's implicit assumptions are federal-FOIA ones, which are wrong for Oakland on every axis this row lists. Nothing is blocked: no queue row depends on it. **The cost of waiting is NOT symmetric with D-148's** — nothing is being captured into a wrong shape, so no re-extraction accrues; the exposure is that a member could read a federal assumption as their own regime. **And one live fact makes part of this self-resolving: the row's own pending-2026-bill flag means any ENCODED rule would go stale while a CITATION would not** — which is the shape of the recommendation carried to Bob 2026-09-20. | M10 · CLOSED 2026-09-22 AS A DEBT ROW by LED-7 (SCHEDULER #12) — PLACED as a BACKLOG task under its own id, D-149 (owner RECORD, M10), after UI-69 with the M10 case path, on Bob's ruling of 2026-09-22 folded into `BIO_Case_Making_v0_1.md` §2 (BOB #26). Verified before placing, on `0ce7447b`: an action carries no citation of the laws governing the agency asked; `action` is BUILT (`node tools/status.mjs 8`). |
+diff --git a/docs/archive/ledgers/QUEUE-cut-2026-09-22.md b/docs/archive/ledgers/QUEUE-cut-2026-09-22.md
+index d8111c35..6f6d975e 100644
+--- a/docs/archive/ledgers/QUEUE-cut-2026-09-22.md
++++ b/docs/archive/ledgers/QUEUE-cut-2026-09-22.md
+@@ -485,3 +485,87 @@ The backlog's budget is 150 KiB (`BACKLOG.md`'s preamble; `node tools/ledger.mjs
+ > scope: a `bias-debt` sweep beside `overdue-scan` on the one alarm raises ONE item per run whose recorded lens `moved`, through `aiRunRead`'s comparison and never a copy, its basis naming both hashes, to recipients the builder names within the run's read gate. `moved: null` raises nothing; nothing is refused (DEC-20). The comment is corrected, dated.
+ > accepts-when: adopting a new revision after a run opened raises one item naming both hashes; an unmoved lens raises none. How a liar passes it: a second comparison in the sweep that agrees today, so a control changes the one function and the item must follow. NEGATIVE CONTROL: drop the sweep's registration, and the moved-lens arm fails by name.
+ > added: 2026-09-21 · SCHEDULER #10 (LED-7; D-86's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
++
++#### cut: D-74
++
++> ### D-74 · queued — **OAKLAND'S SHARED IDENTIFIER SPACES HAVE NEVER BEEN MEASURED, SO EVERY PROGRESSION CROSSING ITS SYSTEMS COLLAPSES TO GRADE C.** Framework §8.3 names the identifiers an institution may reuse across Legistar, its procurement portal and its finance system — a contract or purchase-order number, a project or CIP number, a resolution or ordinance number, an APN, a fund or account code — and each found in two systems raises a whole progression from C to B. `node tools/status.mjs 6` reads `6.identifier-spaces` ABSENT (re-read 2026-09-21). — owner CAPTURE.
++> order: first of the M4 product rows, after D-126: a MEASUREMENT comes before anything built on it, and §8.3 calls it *"one of the highest-value pieces of measurement this project can do"*; a gap, not an over-claim (SCHEDULER #10, 2026-09-21, LED-7)
++> milestone: M4
++> interface: none — a measurement; a shared identifier it finds is built under its own row.
++> design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.3 (*"recorded per institution the way stack measurements are recorded per host. Oakland's shared identifiers have not been measured."*), with `docs/architecture/CONSTRUCTS.md` Step 5a.
++> depends-on: none.
++> scope: for each of §8.3's five identifier classes, sample the Oakland systems that publish it and record whether one identifier value appears in two systems, with N per system, the instrument and the date, per institution as a host stack is recorded. Nothing is built: a found identifier becomes its own row, designed by BOB.
++> accepts-when: `MEASUREMENTS.md` carries a per-class table — the systems read, N per system, and found in two, found in one or not found, with an example pair where found. How a liar passes it: reading one system and calling a class absent, so every row names the systems read and an absence names what was not sampled.
++> added: 2026-09-21 · SCHEDULER #10 (LED-7; D-74's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
++
++#### cut: D-149
++
++> ### D-149 · queued — **A RECORDS REQUEST CANNOT SAY WHICH LAWS GOVERN IT: the action carries no citation of the federal, state or local records laws that apply to the agency asked, so the design reads jurisdiction-blind.** RULED by Bob, 2026-09-22: every records law governing the agency asked applies, layered by the agency's level. — owner RECORD.
++> order: directly after D-148, its sibling at M10 beside D-147 (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
++> milestone: M10
++> interface: I3 and I5 — the action's citation list; the integrator mints and classifies the ICs.
++> design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*, Bob's ruling of 2026-09-22).
++> depends-on: none — `action` is built.
++> scope: a records-request action carries a list of citations, each with its level (federal, state or local), set by a member's authored act; a machine credential is refused by name, and a machine PROPOSAL, if built, is labelled machine work. An empty list reads UNDETERMINED with its sentence, never a default; the plane encodes no law's rules; `cpra_request` actions read unchanged.
++> accepts-when: a member's list lands and reads back; an action with none reads undetermined, never federal; a machine credential's list is refused by name. How a liar passes it: a citation filled in at creation, so the empty-list arm reads the bytes. NEGATIVE CONTROL: default an empty list to a federal citation, and the undetermined arm fails by name.
++> added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 2, drained this commit; D-149's DEBT row; keeps its `D-` id).
++
++#### cut: D-148
++
++> ### D-148 · queued — **A FEE QUOTE IS EVIDENCE, AND THE RECORD HOLDS ONE ONLY AS PROSE: a `received` correspondence entry cannot carry the amount, the currency, the stated basis or the request it answers, so quotes cannot be compared across bodies or over time.** RULED by Bob, 2026-09-22; the action and its correspondence are BUILT (`node tools/status.mjs 8`). — owner RECORD.
++> order: with the M10 case path, after UI-69: the action a case justifies, CivicOS's fourth verb, a feature over built substrate; D-149 directly after it, both beside D-147 as BOB #26 placed them (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
++> milestone: M10
++> interface: I3 and I5 — a quote grammar on correspondence and an indexed table; the integrator mints and classifies the ICs.
++> design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A FEE QUOTE IS EVIDENCE*, Bob's ruling of 2026-09-22).
++> depends-on: none — `action` and its correspondence are built.
++> scope: a `received` entry may carry a QUOTE — amount and currency as quoted, the stated basis verbatim, and the `sent` entry it answers; a later entry may name the quote it revises (a waiver is a revision to zero, both entries standing). Its grammar sits at C-2.10 beside the correspondence arms; `promote` projects it into an indexed table `purge` clears in both arms; a read returns quotes by counterparty and by request. The record states no finding about a quote.
++> accepts-when: a quote projects and reads back by counterparty and by request; a revision to zero keeps both entries; a quote answering no `sent` entry, or whose amount is not a number, is refused by name; an action with no quote reads byte-identical. NEGATIVE CONTROL: drop the projection from the per-bundle purge, and the purge arm fails by name.
++> added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1, drained this commit; D-148's DEBT row; keeps its `D-` id).
++
++#### cut: UI-75
++
++> ### UI-75 · queued — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two of the reasons trace to one capture.** — owner UI.
++> order: 2 of 2, after REC-161; with UI-74, whichever lands second reuses the first's rendering (BOB #22, 2026-09-21)
++> milestone: M9
++> interface: I3 consumer (REC-161's IC).
++> design: `docs/development/INVESTIGATIVE-SESSION.md` §12 clause (c), with DEC-69: inform once, at the act.
++> depends-on: REC-161.
++> scope: the read-back names each shared origin between the parts it lists, once, before the answers are written; it prefills nothing, refuses nothing, shows no strength and no AND/OR word.
++> accepts-when: two correlated reasons show their origin and the member's answers are written unchanged. How a liar passes it: blocking or reordering the answers on a shared origin, which turns an informing fact into a gate.
++> added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs UI`).
++
++#### cut: D-178
++
++> ### D-178 · queued — **`op=audit`'S SWEEP HANDS `checkBundle` NO PUBLISHED REGISTRY: C-21.1 AND C-21.2 NEVER FIRE IN AN AUDIT, AND EVERY CORRECTLY INHERITED LEG READS AS A C-2.8 OFFENDER.** The sweep builds only `earnedRegistry` per bundle (REC-18, `store.mjs`); `checkInheritedLeg` (`bio-checks.mjs`) then finds no published target, refuses a leg stating `grade_source: 'inherited'` as one that *cannot be checked against the published record here*, and returns before either C-21 arm (re-read on `7c967f09`). — owner RECORD.
++> order: with the M10 corrections, after D-182 and above the features: the audit DIST's ladder needs clean before a version serves reports correct legs as offenders and skips the checks it exists to run, CLAUDE.md §2's class; last of them because no member reads it (SCHEDULER #12, 2026-09-22, LED-7)
++> milestone: M10
++> interface: I3 — `op=audit`'s tallies move; the integrator mints and classifies the IC.
++> design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 5 (*Inheritance is per axis*, C-21.2), with `docs/architecture/BIO_Distribution_v0_1.md` §6, rung 6 (`op=audit` clean).
++> depends-on: none — `publishedRegistryFor` is built, and the write path's gate facts already pass it.
++> scope: FIRST a corpus count of what the injection moves (inherited legs that stop reading C-2.8; C-21.1 and C-21.2 findings that appear), in `MEASUREMENTS.md`; then the sweep passes `publishedRegistryFor(bundle, targets)` beside `earnedRegistry`, as the gate facts do.
++> accepts-when: an audit over a fixture reads a correctly inherited leg clean and an own grade on a published case as C-21.2; the count is recorded before the landing. How a liar passes it: an empty registry object, which silences C-2.8 and enables nothing, so the own-grade arm must fire. NEGATIVE CONTROL: drop the injection, and the inherited-leg arm fails by name at C-2.8.
++> added: 2026-09-22 · SCHEDULER #12 (LED-7; D-178's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
++
++#### cut: D-125
++
++> ### D-125 · queued — **A MEMBER CANNOT MUTE A FINDING FOR THEMSELVES, SO DEC-10's (b) AND (c) CANNOT REACH THE OVERDUE SUCCESSOR THEY WERE RULED FOR.** `queueMute` (`store.mjs`) refuses every FINDING kind `KIND_NOT_PERSONAL` with `MUTE_REFUSAL_DETAIL`'s sentence (`queuestate.mjs`, re-read on `7c967f09`): the per-case mute covers CONDITION kinds only, and no per-ITEM mute exists. RULED by BOB #26: a member's PERSONAL mute admits FINDING kinds. — owner RECORD.
++> order: last of the M8 corrections, after D-82: DEC-10's ruled act is missing rather than anything claimed falsely, so below the rows that correct what a member is told (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
++> milestone: M8
++> interface: I5 and I3 — a derived table and `op=queuemute`'s item form; the integrator mints and classifies the ICs.
++> design: `docs/development/NOTIFICATIONS.md` "MARKED AS HANDLED" (BOB #26, 2026-09-22), DEC-10's (b) and (c).
++> depends-on: none — REC-21's per-case mute is built.
++> scope: `queueMute` admits FINDING kinds for the per-case mute, over the kinds named when it is made; a per-ITEM mute keyed on the member and the item's stable id (`FINDING::<progression>::<stage>`, `proposal_dispositions`' key), in a derived table `purge` clears. Neither writes a disposition; an OBLIGATION stays refused. `MUTE_REFUSAL_DETAIL`'s FINDING sentence goes; `current.test.mjs`'s pin is CORRECTED with its reason.
++> accepts-when: A's item mute of finding F puts F in A's `suppressed` while B's feed and `op=proposals` still carry it and no disposition row exists; A's case mute of `overdue_successor` suppresses that case's items while a NEW kind still reaches A; an OBLIGATION mute is refused by name. NEGATIVE CONTROL: key the item mute by case alone, and the B-feed arm fails by name.
++> added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 2, drained this commit; D-125's DEBT row; keeps its `D-` id).
++
++#### cut: D-82
++
++> ### D-82 · queued — **A FOCUS AN ASSISTANT SURFACED IS SHOWN EXACTLY LIKE ONE A MEMBER OPENED.** The plane stamps `surfaced_by: agent` server-side on an inquiry a machine credential creates (D-78, `index.mjs`); `civicos-ui/app.html` reads `surfaced_by` only for a derived PROPOSAL, which UI-5 marks (`proposalDerivedBadgeHtml`), and nothing marks an agent-surfaced inquiry where inquiries are listed or shown (re-read 2026-09-21). — owner UI.
++> order: after UI-73, the same member-surface class: a member reads a machine's question as a colleague's judgement, which §P's accountability rule exists to prevent; a gap over built stamping, so below the refusal words already shipping wrong (SCHEDULER #10, 2026-09-21, LED-7)
++> milestone: M8
++> interface: I3 consumer (`surfaced_by`, stamped since D-78).
++> design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"P · PROPOSAL", its accountability rule — *"what a member needs to know is that nobody has yet judged it worth asking"* — with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 8.
++> depends-on: none — D-78's stamp is built.
++> scope: wherever an inquiry is listed or shown — the focus list, the review queue, beside a project — one marker for `surfaced_by: agent`, from one helper, saying nobody has yet judged it worth asking. It discounts nothing and hides nothing; a member's inquiry renders as today.
++> accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking by title or author text, so the fixture's two inquiries share both. NEGATIVE CONTROL: neuter the helper, and the agent-inquiry arm fails by name.
++> added: 2026-09-21 · SCHEDULER #10 (LED-7; D-82's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
+diff --git a/docs/development/BACKLOG.md b/docs/development/BACKLOG.md
+index e718f8dc..db5c5dfb 100644
+--- a/docs/development/BACKLOG.md
++++ b/docs/development/BACKLOG.md
+@@ -261,25 +261,25 @@ accepts-when: all eleven take their words from the ONE helper, asserted as `refu
+ NEGATIVE CONTROL: restore `r.detail` at one site, and that site's arm fails by name.
+ added: 2026-09-19 · SCHEDULER #3 (CONDUCT #7's item 3, verified in UI-72's own CLAIMS.md block).
+ 
+-### D-82 · queued — **A FOCUS AN ASSISTANT SURFACED IS SHOWN EXACTLY LIKE ONE A MEMBER OPENED.** The plane stamps `surfaced_by: agent` server-side on an inquiry a machine credential creates (D-78, `index.mjs`); `civicos-ui/app.html` reads `surfaced_by` only for a derived PROPOSAL, which UI-5 marks (`proposalDerivedBadgeHtml`), and nothing marks an agent-surfaced inquiry where inquiries are listed or shown (re-read 2026-09-21). — owner UI.
++### D-82 · queued — **A FOCUS AN ASSISTANT SURFACED IS SHOWN EXACTLY LIKE ONE A MEMBER OPENED.** The plane stamps `surfaced_by: agent` server-side on … (whole text: the cut archive)
+ order: after UI-73, the same member-surface class: a member reads a machine's question as a colleague's judgement, which §P's accountability rule exists to prevent; a gap over built stamping, so below the refusal words already shipping wrong (SCHEDULER #10, 2026-09-21, LED-7)
+ milestone: M8
+ interface: I3 consumer (`surfaced_by`, stamped since D-78).
+-design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"P · PROPOSAL", its accountability rule — *"what a member needs to know is that nobody has yet judged it worth asking"* — with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 8.
++design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"P · PROPOSAL", its accountability rule … (whole text: the cut archive)
+ depends-on: none — D-78's stamp is built.
+-scope: wherever an inquiry is listed or shown — the focus list, the review queue, beside a project — one marker for `surfaced_by: agent`, from one helper, saying nobody has yet judged it worth asking. It discounts nothing and hides nothing; a member's inquiry renders as today.
+-accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking by title or author text, so the fixture's two inquiries share both. NEGATIVE CONTROL: neuter the helper, and the agent-inquiry arm fails by name.
++accepts-when: against the real plane, an inquiry a machine credential created shows the marker on every surface listing it, and one a member created shows none. How a liar passes it: marking … (whole text: the cut archive)
+ added: 2026-09-21 · SCHEDULER #10 (LED-7; D-82's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
++cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-82» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+ 
+-### D-125 · queued — **A MEMBER CANNOT MUTE A FINDING FOR THEMSELVES, SO DEC-10's (b) AND (c) CANNOT REACH THE OVERDUE SUCCESSOR THEY WERE RULED FOR.** `queueMute` (`store.mjs`) refuses every FINDING kind `KIND_NOT_PERSONAL` with `MUTE_REFUSAL_DETAIL`'s sentence (`queuestate.mjs`, re-read on `7c967f09`): the per-case mute covers CONDITION kinds only, and no per-ITEM mute exists. RULED by BOB #26: a member's PERSONAL mute admits FINDING kinds. — owner RECORD.
++### D-125 · queued — **A MEMBER CANNOT MUTE A FINDING FOR THEMSELVES, SO DEC-10's (b) AND (c) CANNOT REACH THE OVERDUE SUCCESSOR THEY WERE RULED** … (whole text: the cut archive)
+ order: last of the M8 corrections, after D-82: DEC-10's ruled act is missing rather than anything claimed falsely, so below the rows that correct what a member is told (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
+ milestone: M8
+ interface: I5 and I3 — a derived table and `op=queuemute`'s item form; the integrator mints and classifies the ICs.
+ design: `docs/development/NOTIFICATIONS.md` "MARKED AS HANDLED" (BOB #26, 2026-09-22), DEC-10's (b) and (c).
+ depends-on: none — REC-21's per-case mute is built.
+-scope: `queueMute` admits FINDING kinds for the per-case mute, over the kinds named when it is made; a per-ITEM mute keyed on the member and the item's stable id (`FINDING::<progression>::<stage>`, `proposal_dispositions`' key), in a derived table `purge` clears. Neither writes a disposition; an OBLIGATION stays refused. `MUTE_REFUSAL_DETAIL`'s FINDING sentence goes; `current.test.mjs`'s pin is CORRECTED with its reason.
+-accepts-when: A's item mute of finding F puts F in A's `suppressed` while B's feed and `op=proposals` still carry it and no disposition row exists; A's case mute of `overdue_successor` suppresses that case's items while a NEW kind still reaches A; an OBLIGATION mute is refused by name. NEGATIVE CONTROL: key the item mute by case alone, and the B-feed arm fails by name.
++accepts-when: A's item mute of finding F puts F in A's `suppressed` while B's feed and `op=proposals` still carry it and no disposition row exists; A's case mute of `overdue_successor` … (whole text: the cut archive)
+ added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 2, drained this commit; D-125's DEBT row; keeps its `D-` id).
++cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-125» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+ 
+ ### COFF-13 · queued — **NO FORMAT ENTRY EMITS A DECK LENGTH, so a deck whose TRAILING slides are unreadable is recorded shorter than it is — and the** … (whole text: the cut archive)
+ order: below the M8 corrections, above the features (it sat below LED-8, which Bob's ruling of 2026-09-22 moved behind the product rows — SCHEDULER #12): it refuses something TRUE — a record defect, not a gap — but errs in the CONSERVATIVE direction and reaches only decks with unreadable trailing slides, so it ranks under the defects above it (SCHEDULER #2, 2026-09-19)
+@@ -331,15 +331,15 @@ accepts-when: an action created with no tier reads UNDETERMINED through the ops;
+ added: 2026-09-21 · SCHEDULER #6 (LED-7; ruled on its row's two options; keeps its `D-` id).
+ cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-182» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+ 
+-### D-178 · queued — **`op=audit`'S SWEEP HANDS `checkBundle` NO PUBLISHED REGISTRY: C-21.1 AND C-21.2 NEVER FIRE IN AN AUDIT, AND EVERY CORRECTLY INHERITED LEG READS AS A C-2.8 OFFENDER.** The sweep builds only `earnedRegistry` per bundle (REC-18, `store.mjs`); `checkInheritedLeg` (`bio-checks.mjs`) then finds no published target, refuses a leg stating `grade_source: 'inherited'` as one that *cannot be checked against the published record here*, and returns before either C-21 arm (re-read on `7c967f09`). — owner RECORD.
++### D-178 · queued — **`op=audit`'S SWEEP HANDS `checkBundle` NO PUBLISHED REGISTRY: C-21.1 AND C-21.2 NEVER FIRE IN AN AUDIT, AND EVERY CORRECTLY** … (whole text: the cut archive)
+ order: with the M10 corrections, after D-182 and above the features: the audit DIST's ladder needs clean before a version serves reports correct legs as offenders and skips the checks it exists to run, CLAUDE.md §2's class; last of them because no member reads it (SCHEDULER #12, 2026-09-22, LED-7)
+ milestone: M10
+ interface: I3 — `op=audit`'s tallies move; the integrator mints and classifies the IC.
+-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 5 (*Inheritance is per axis*, C-21.2), with `docs/architecture/BIO_Distribution_v0_1.md` §6, rung 6 (`op=audit` clean).
++design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 5 (*Inheritance is per axis*, C-21.2), with … (whole text: the cut archive)
+ depends-on: none — `publishedRegistryFor` is built, and the write path's gate facts already pass it.
+-scope: FIRST a corpus count of what the injection moves (inherited legs that stop reading C-2.8; C-21.1 and C-21.2 findings that appear), in `MEASUREMENTS.md`; then the sweep passes `publishedRegistryFor(bundle, targets)` beside `earnedRegistry`, as the gate facts do.
+-accepts-when: an audit over a fixture reads a correctly inherited leg clean and an own grade on a published case as C-21.2; the count is recorded before the landing. How a liar passes it: an empty registry object, which silences C-2.8 and enables nothing, so the own-grade arm must fire. NEGATIVE CONTROL: drop the injection, and the inherited-leg arm fails by name at C-2.8.
++accepts-when: an audit over a fixture reads a correctly inherited leg clean and an own grade on a published case as C-21.2; the count is recorded before the landing. How a liar passes it: an … (whole text: the cut archive)
+ added: 2026-09-22 · SCHEDULER #12 (LED-7; D-178's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
++cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-178» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+ 
+ ### UI-74 · queued — **THE ACCEPT CEREMONY IS NOT ON `main`, SO NO SURFACE LETS A MEMBER ACCEPT A MACHINE-PROPOSED READING.** The IS plan's UI-43 … (whole text: the cut archive)
+ order: the first feature, after D-52: DEC-24's member half — the machine proposes, the member concludes — has no door, and the IS plan recorded it done at 43/43; below the corrections because the status authority claims no ceremony (SCHEDULER #5, 2026-09-21)
+@@ -361,15 +361,15 @@ accepts-when: two parts sharing a capture read as sharing an origin, independent
+ added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+ cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-161» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+ 
+-### UI-75 · queued — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two of the reasons trace to one capture.** — owner UI.
++### UI-75 · queued — **THE ELICITATION READ-BACK NAMES NO SHARED ORIGIN: a member affirming *"fails only if ALL of these fail"* is not told that two** … (whole text: the cut archive)
+ order: 2 of 2, after REC-161; with UI-74, whichever lands second reuses the first's rendering (BOB #22, 2026-09-21)
+ milestone: M9
+ interface: I3 consumer (REC-161's IC).
+ design: `docs/development/INVESTIGATIVE-SESSION.md` §12 clause (c), with DEC-69: inform once, at the act.
+ depends-on: REC-161.
+-scope: the read-back names each shared origin between the parts it lists, once, before the answers are written; it prefills nothing, refuses nothing, shows no strength and no AND/OR word.
+ accepts-when: two correlated reasons show their origin and the member's answers are written unchanged. How a liar passes it: blocking or reordering the answers on a shared origin, which turns an informing fact into a gate.
+ added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs UI`).
++cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+ 
+ ### REC-164 · queued — **A GROUP CANNOT SAY WHO IT IS BEYOND ITS SLUG: NO DISPLAY NAME AND NO VERIFIED DOMAIN ARE RECORDED OR READ.** … (whole text: the cut archive)
+ order: the first feature after UI-75 (DEC-24's member half first): the group's public identity, resting on REC-163's public slug read (BOB #24: *"after REC-163"*) (SCHEDULER #9, 2026-09-21)
+@@ -471,6 +471,26 @@ accepts-when: an exported copy carries the quartet on every page byte-equal to t
+ added: 2026-09-19 · SCHEDULER (same entry, item 8).
+ cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «UI-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+ 
++### D-148 · queued — **A FEE QUOTE IS EVIDENCE, AND THE RECORD HOLDS ONE ONLY AS PROSE: a `received` correspondence entry cannot carry the amount, the** … (whole text: the cut archive)
++order: with the M10 case path, after UI-69: the action a case justifies, CivicOS's fourth verb, a feature over built substrate; D-149 directly after it, both beside D-147 as BOB #26 placed them (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 1)
++milestone: M10
++interface: I3 and I5 — a quote grammar on correspondence and an indexed table; the integrator mints and classifies the ICs.
++design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A FEE QUOTE IS EVIDENCE*, Bob's ruling of 2026-09-22).
++depends-on: none — `action` and its correspondence are built.
++accepts-when: a quote projects and reads back by counterparty and by request; a revision to zero keeps both entries; a quote answering no `sent` entry, or whose amount is not a number, is … (whole text: the cut archive)
++added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1, drained this commit; D-148's DEBT row; keeps its `D-` id).
++cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-148» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
++
++### D-149 · queued — **A RECORDS REQUEST CANNOT SAY WHICH LAWS GOVERN IT: the action carries no citation of the federal, state or local records laws** … (whole text: the cut archive)
++order: directly after D-148, its sibling at M10 beside D-147 (SCHEDULER #12, 2026-09-22; BOB #26's inbox entry, item 2)
++milestone: M10
++interface: I3 and I5 — the action's citation list; the integrator mints and classifies the ICs.
++design: `docs/architecture/BIO_Case_Making_v0_1.md` §2 (*A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*, Bob's ruling of 2026-09-22).
++depends-on: none — `action` is built.
++accepts-when: a member's list lands and reads back; an action with none reads undetermined, never federal; a machine credential's list is refused by name. How a liar passes it: a citation … (whole text: the cut archive)
++added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 2, drained this commit; D-149's DEBT row; keeps its `D-` id).
++cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
++
+ ### REC-149 · queued — **DISCOVERABLE OR HIDDEN (Membership v2 §7 item 7.14), 1 of 4: the OWNER's recorded setting (append-only, latest wins, no** … (whole text: the cut archive)
+ order: Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first (SCHEDULER, 2026-09-19)
+ milestone: M8
+@@ -531,15 +551,15 @@ accepts-when: a selection of three where one item drifted leaves exactly that on
+ added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
+ cut: cut to its fields by SCHEDULER #10 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-126» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+ 
+-### D-74 · queued — **OAKLAND'S SHARED IDENTIFIER SPACES HAVE NEVER BEEN MEASURED, SO EVERY PROGRESSION CROSSING ITS SYSTEMS COLLAPSES TO GRADE C.** Framework §8.3 names the identifiers an institution may reuse across Legistar, its procurement portal and its finance system — a contract or purchase-order number, a project or CIP number, a resolution or ordinance number, an APN, a fund or account code — and each found in two systems raises a whole progression from C to B. `node tools/status.mjs 6` reads `6.identifier-spaces` ABSENT (re-read 2026-09-21). — owner CAPTURE.
++### D-74 · queued — **OAKLAND'S SHARED IDENTIFIER SPACES HAVE NEVER BEEN MEASURED, SO EVERY PROGRESSION CROSSING ITS SYSTEMS COLLAPSES TO GRADE C.** … (whole text: the cut archive)
+ order: first of the M4 product rows, after D-126: a MEASUREMENT comes before anything built on it, and §8.3 calls it *"one of the highest-value pieces of measurement this project can do"*; a gap, not an over-claim (SCHEDULER #10, 2026-09-21, LED-7)
+ milestone: M4
+ interface: none — a measurement; a shared identifier it finds is built under its own row.
+-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.3 (*"recorded per institution the way stack measurements are recorded per host. Oakland's shared identifiers have not been measured."*), with `docs/architecture/CONSTRUCTS.md` Step 5a.
++design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.3 … (whole text: the cut archive)
+ depends-on: none.
+-scope: for each of §8.3's five identifier classes, sample the Oakland systems that publish it and record whether one identifier value appears in two systems, with N per system, the instrument and the date, per institution as a host stack is recorded. Nothing is built: a found identifier becomes its own row, designed by BOB.
+-accepts-when: `MEASUREMENTS.md` carries a per-class table — the systems read, N per system, and found in two, found in one or not found, with an example pair where found. How a liar passes it: reading one system and calling a class absent, so every row names the systems read and an absence names what was not sampled.
++accepts-when: `MEASUREMENTS.md` carries a per-class table — the systems read, N per system, and found in two, found in one or not found, with an example pair where found. How a liar passes … (whole text: the cut archive)
+ added: 2026-09-21 · SCHEDULER #10 (LED-7; D-74's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
++cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+ 
+ ### REC-122 · queued — D-161's LAST ACT: A MEMBER CHOOSES THE ON-POINT PAIR OF A CONNECTION (Bob's 2026-09-14 refinement, §5.4) — the act that turns REC-120's honest UNDETERMINED into a definite answer where a member has established which mention is to the point.
+ order: runnable product work (M4, D-161's last act); REC-120 is done; not on BOB #14's list, which governs only rows added after it (SCHEDULER, first order audit, 2026-09-18)
+diff --git a/docs/development/CLAIMS.md b/docs/development/CLAIMS.md
+index beefada2..24394d78 100644
+--- a/docs/development/CLAIMS.md
++++ b/docs/development/CLAIMS.md
+@@ -18437,7 +18437,10 @@ after D-126, D-86 after D-394, D-66 after FW-20; REC-157's DELEGATION PLACED as
+ rows archived (placed, or in fact). Room: every uncut process row at the foot and the arriving D-66 and D-86 cut to their
+ fields, each VERBATIM in `QUEUE-cut-2026-09-22.md`. HELD, not placed: the retirable control's declared count (CONDUCT
+ #11's route, a process row that pays nothing; draft on `origin/scheduler12/row-drafts`) and the DEBT row M0-97's sweep
+-added (process, left in `DEBT.md`).
++added (process, left in `DEBT.md`). Commit 5: BOB #26's second entry (`0ce7447b`) DRAINED — Bob's rulings on D-148 (a fee
++quote is evidence) and D-149 (a records request names every law that governs it) PLACED after UI-69 with the M10 case
++path, beside D-147, their DEBT rows archived as placed; room by seven more foot cuts (D-74, D-149, D-148, UI-75, D-178,
++D-125, D-82). 99 open DEBT rows remain.
+ 
+ ## DELEGATION 2026-09-22 SCHEDULER (#12) -> BOB — **THREE ITEMS: the backlog's 150 KiB budget (owed since SCHEDULER #11), whether Bob's *M8-M10* orders the product rows among themselves, and D-278's five determinations (a design routing); the first two provisional and cheap to reverse**
+ 
+diff --git a/docs/development/DEBT.md b/docs/development/DEBT.md
+index 084c65ce..fbc2e7a6 100644
+--- a/docs/development/DEBT.md
++++ b/docs/development/DEBT.md
+@@ -45,8 +45,6 @@ the row. They are not resolved and should be re-read when circumstances change.
+ | D-129 | design | 2026-08-01 | **`undetermined` conflates two different claims: WE DO NOT KNOW, and THERE IS POSITIVELY NONE.** Found by the practice survey (`PRACTICE-SURVEY.md`): Wikidata distinguishes `somevalue` (unknown) from `novalue` (positively no value) as separate ASSERTED statements, and BIO blurs them under one word. The conflation is real in our own code, not theoretical — a scanned PDF with no text layer is `novalue` (there is no text to extract, permanently, a property of the document) while a PDF over the Worker envelope is `somevalue` (there IS text and we did not get it, a limitation of our run that a later run could lift). Both currently surface as text-undetermined with the difference only in a reason string. The same split is latent elsewhere: an authority nobody can establish versus a document that genuinely has no issuing authority; a link whose verdict cannot be established versus one established to have no relationship. WHY IT MATTERS BEYOND TIDINESS: the standing rule is that `undetermined` is first-class and must be STATED, and its value to a reader is that it says what we do not know — but 'we could not read this' and 'there is nothing here to read' are different claims about the world, and a member deciding whether to re-capture, escalate or move on needs to tell them apart. One is worth retrying; the other never will be. Cheapest correct shape is probably a second field beside the reason rather than a new vocabulary, but that is a design call for whoever takes it. | M2 - open **WIDENED 2026-08-04 by the archival-systems survey (`STORE-AS-CACHE.md`): the useful state set is LARGER than two, and `partial` is the state BIO most obviously lacks.** Software Heritage stores crawl outcomes explicitly as `OriginVisitStatus.status` in {`created`, `not_found`, `ongoing`, `failed`, `partial`, `full`} — so *we went to this origin at time T and it was not there* is stored DATA, never an inference from missing rows (docs.softwareheritage.org/devel/apidoc/swh.storage.interface.html). Memento (RFC 7089) goes further and makes an archived 404 a CITABLE Memento, MANDATING that a replayed 4XX/5XX carry the same status code, with CDX indexing it in `statuscode` beside the 200s. **`partial` is not hypothetical for us: it is CPDF-5's measured Tier-1-at-88% case and every over-envelope document**, both of which today collapse into the same `undetermined` as a document we never read at all. The governing finding of that survey bears directly on this row — *systems built as ARCHIVES record absence; systems built as CACHES treat absence as a transient failure to be retried* — so this row is load-bearing for the read-through-cache framing rather than tidiness. **SHARPENED AGAIN 2026-08-04 by the caching-systems survey: the principled set is FOUR states with GRADED RETENTION, and there is an AUTHORITY rule BIO already believes in another vocabulary.** RFC 2308 (*Negative Caching of DNS Queries*) separates: the name does not exist (NXDOMAIN, SOA-derived retention, *"one to three hours… work well"*, over a day *"problematic"*); exists-but-not-this-record (NODATA); **we asked and could not tell (SERVFAIL — MUST NOT be cached longer than five minutes)**; and the server was unreachable (same five-minute bound). So: `NEVER_LOOKED` / `LOOKED_ABSENT` / `LOOKED_INDETERMINATE` / `PRESENT`, plus SWH's `partial`. **An indeterminate result must never inherit a definitive lifetime** — CloudFront's error floor is 10 s, Google Cloud CDN publishes 120 s for 404/410/451 and 60 s for 405/501. HTTP encodes the same confidence split more weakly and has NO wire representation for *we have not looked*, which is exactly this row's conflation. **AND RFC 2308 §5 IS THIS PROJECT'S OWN DOCTRINE, ARRIVED AT INDEPENDENTLY IN 1998: *"Negative responses without SOA records SHOULD NOT be cached"*** — the SOA is the proof of AUTHORITY that makes a negative answer a FINDING rather than an absence of finding, so an absence with no authority attached is not recordable at all. That is *an equality that costs nothing to produce is not evidence*, applied to absence. |
+ | D-134 | gap | 2026-08-01 | **A complete, tested BALLOT act exists in the UI and nothing can reach it — and zero of the 14 admin-only ops have any UI caller at all.** VERIFIED: `civicos-ui/app.html` declares `canBallot` at 4457 and `openBallotDialog` at 4546, and neither has a call site anywhere in the file. The act has its denominator, divergence handling, pre-flight refusal and receipt — it was built to the ACT construct and exists only for its harness, while the Members screen renders the owner arithmetic with no way to act on it. The process catalogue found the general form: **not one of the fourteen admin-only ops is reachable from the UI**, an axis no earlier inventory measured, which means the entire administrator WRITE surface is absent while the read surface is present. Membership v2's section 4 and 7 governance — seven releases of enforced arithmetic — is operable only by driving the plane directly. | M8 - open — **RE-MEASURED 2026-09-19 by LED-7 batch 2 (SCHEDULER #2), AND HALF OF THIS ROW IS NOW FALSE.** The BALLOT IS REACHABLE: UI-16 landed its call site — `projectBallotGo()` calls `openBallotDialog(WORKSPACE.id, WORKSPACE.title)` at `app.html:8251`, `canBallot()` gates the button at 8265, and the region comment at 7974–7981 names this row by id. **What survives is the GENERAL claim, and its figure has moved:** the admin-only MUTATING ops are FIVE today, not fourteen — `governorconfig`, `memberadd`, `memberset`, `signeradd`, `signerset`, computed as `SESSION_OPS.admin` minus `SESSION_OPS.member` with all 17 spread constants resolved — and ZERO of the five appears anywhere in `app.html`. The administrator WRITE surface is still absent while the read surface is present. ROUTED TO BOB with D-136, its other half: WHICH of these ops gets a surface, and with what ceremony, is a design call, so this row is NOT placed — a defect is placed only with its fix named. **ANSWERED 2026-09-19 by BOB #17, and this row is ORDERED BEHIND D-136 rather than placed beside it.** D-136's fence (server-stamped `by` plus session reach, one landing) comes FIRST: a member surface over an act whose voter the caller can name is a SECOND path to a forgeable vote, so building it first makes the defect worse, not better. Once the fence lands, the surface is UI's ground and is placeable on its own. The corrected figure in this disposition — five admin-only mutating ops, zero in `app.html` — is the scope of that later item. **RE-VERIFIED AT THE CODE 2026-09-20 by BOB #18, and BOB'S HALF IS DISCHARGED — this row should stop routing here.** The BALLOT half holds, at moved coordinates: `projectBallotGo()` is `app.html:8352` and calls `openBallotDialog` at `:8354`, `canBallot()` gates the button at `:8368-8369` and is defined at `:12932` (SCHEDULER #2 cited 8251/8265 on 2026-09-19; the claim is unchanged, only the line numbers moved — cite the SYMBOL, not the line). **ONE FIGURE CORRECTED FOR PRECISION, because as written the next reader's `grep -c` refutes it:** the disposition says *ZERO of the five appears anywhere in `app.html`*, and `governorconfig` DOES appear — once, at `:1078`, inside a COMMENT about which ops flatten their response shape in `index.mjs`. **Zero of the five has a CALL SITE, which is the claim that matters and is true; *appears anywhere* is not.** A mention in prose does not make an op reachable, but a clause a later grep falsifies is how a sound row gets re-opened or distrusted whole — D-226's exact failure mode, and worth the twenty words to close. **OWNERSHIP, stated plainly so `owed.mjs` stops attributing this to BOB off a superseded *ROUTED TO BOB* sentence (D-398's own bug, same fix):** BOB #17 ANSWERED the design call on 2026-09-19 — the surface waits behind D-136's fence — and **D-136 is now RUNNING** (`QUEUE.md`, spawned by CONDUCT #8). Nothing on this row falls to the BOB lane. Its remaining act is UI's: a member surface over the five admin-only mutating ops, placeable once D-136 lands. |
+ | D-147 | design | 2026-08-01 | **The `action` object models a records request as one round trip, and the real lifecycle has at least four decision points with their own clocks and outcomes.** `action` runs `planned -> active -> awaiting_response -> resolved / abandoned`, so `awaiting_response` collapses everything between asking and getting. The externally-sourced lifecycle (see `PROBLEM-DOMAIN.md`) has distinct stages that each produce a different fact about the body: the FEE ESTIMATE, the FEE-WAIVER decision, PARTIAL PRODUCTION, the ADMINISTRATIVE APPEAL, and litigation. Each has its own clock and its own outcome vocabulary, and collapsing them loses precisely what an accountability record wants. Federal appeal adjudication averaged 96.91 days in FY2024 [DOJ OIP, government's own statistics] and appeal outcomes vary by an order of magnitude between agencies — complete reversal 9.3% at State, 17.6% at DOJ, 31.4% at DHS [computed from the three agencies' own FY2024 annual reports] — so **a design must not assume a single reversal rate or a single response shape**. This is D-128's declared-versus-actual flow with real numbers attached: the declared flow is the statutory timeline, the actual flow is what these figures describe, and the delta is the finding. | M4 - open |
+-| D-148 | design | 2026-08-01 | **A fee quote is EVIDENCE about a public body, and the design treats it as an administrative obstacle.** Sourced examples: Colorado's Secretary of State quoted **$2.1M** (69,736 projected labor hours) for election contracts; Texas DCJ quoted **$1,132,024.30** for records the state PREA office supplied for **$551.39** — **a 2,000x spread for identical records**; Nevada DETR quoted $650,000, then **dropped a $1,083 charge entirely and released the records free once challenged**, which is direct evidence the quote was not cost-based; DoD quoted **~$660 million** [MuckRock survey Dec 2023; Las Vegas Review-Journal Sept 2023; Techdirt — press and NGO sources, labelled as such]. Against that, the federal fee system collects **0.34-0.38% of what FOIA costs to run**, about **$1.54 per request**, and the State Department collected **$0.00** in FY2024 [government's own reported statistics] — **fees are a deterrent instrument, not a cost-recovery one**, and the record should be able to say so with its own captured evidence. Consequence for the design: a fee quote should be a first-class captured artifact with a comparison basis, not correspondence prose. Two identical requests priced 2,000x apart is exactly the shape BIO exists to make checkable, and today it would be a paragraph in a `## Correspondence` heading. | M4 - open — **ROUTED TO BOB 2026-09-19 by LED-7 batch 4 (SCHEDULER #2).** A fee quote treated as evidence about a public body rather than as an obstacle is a DOCTRINE question about what the record holds and asserts — and the row's own figures (a 2,000x spread for identical records; a charge dropped entirely once challenged) are the argument for it. Bears on people outside the project, which is Bob's by `CLAUDE.md` §3. Not placed. **PROVISIONAL STATED 2026-09-20 by BOB #18, because an open decision must never block work (`kickoffs/README.md`) and this row carried none for 50 days:** what RUNS today is that a fee quote is CORRESPONDENCE PROSE under a `## Correspondence` heading — captured, readable, attributable, and NOT comparable; nothing puts two quotes side by side and the record asserts nothing about them. Nothing is blocked by the question staying open: no queue row depends on it. **What the delay COSTS is asymmetric and is the reason to rule it before data accumulates** — quotes captured as prose that later become first-class artifacts need re-extraction and move any citation resting on them, while a modelled artifact later abandoned drops a table and leaves the capture untouched. Carried to Bob 2026-09-20 in the `README.md` decision shape. |
+-| D-149 | defect | 2026-08-01 | **The design is jurisdiction-blind, and BIO's own jurisdiction differs from federal FOIA on every axis that matters.** Nothing in the record models WHICH access regime an `action` runs under, and the assumptions differ sharply. Federal: fee-shifting is discretionary ('the court MAY assess... substantially prevailed', 5 USC 552(a)(4)(E)), search and review fees are chargeable by requester class, and plaintiffs substantially prevailed in only **112 of 1,672 lawsuits, 6.7%** [GAO-16-667, the government auditing itself]. **California, which is Oakland and therefore BIO's actual regime**: fee-shifting is MANDATORY ('the court SHALL award court costs and reasonable attorney's fees to the requester', Gov. Code 7923.115(a)); fees are **direct duplication cost only** with no search fee and no review fee (7922.530(a)); and **redaction time is not billable at all** — *National Lawyers Guild v. City of Hayward* (2020) 9 Cal.5th 488 threw out a $2,938.58 invoice for 40.2 hours of bodycam redaction, holding that 'extraction' means retrieving responsive data, not omitting unwanted data. So in California 'it will take us 200 hours to redact this' cannot lawfully become a bill — and a design carrying federal assumptions would model a cost that does not exist here and miss a violation when one is charged. A pending 2026 California bill would loosen the fee rules [CalMatters, Mar 2026]; flag as pending, not law. | M4 - open — **ROUTED TO BOB 2026-09-19 by LED-7 batch 4 (SCHEDULER #2), and it is D-148's sibling — rule them together.** The record models no access regime, while BIO's actual jurisdiction (California) differs from federal FOIA on every axis the row lists: fee-shifting MANDATORY not discretionary, direct duplication cost only, redaction time not billable. Deciding whether an `action` carries its regime is design, not a fix. Also bears on people outside the project. **PROVISIONAL STATED 2026-09-20 by BOB #18 (same reason as D-148, its sibling):** what RUNS today is that an `action` carries NO access regime and the design's implicit assumptions are federal-FOIA ones, which are wrong for Oakland on every axis this row lists. Nothing is blocked: no queue row depends on it. **The cost of waiting is NOT symmetric with D-148's** — nothing is being captured into a wrong shape, so no re-extraction accrues; the exposure is that a member could read a federal assumption as their own regime. **And one live fact makes part of this self-resolving: the row's own pending-2026-bill flag means any ENCODED rule would go stale while a CITATION would not** — which is the shape of the recommendation carried to Bob 2026-09-20. |
+ | D-150 | design | 2026-08-01 | **The completeness claim is VALIDATED by the strongest external evidence in the study — and the same evidence says an authored field is necessary and not sufficient.** From `PROBLEM-DOMAIN.md`: concealing exculpatory evidence appears in **44% of exonerations involving official misconduct**; Nifong scoped a report to exclude; Fujitsu edited out references to known defects; South Yorkshire amended 116 statements. **Every retained fact was true in every one of those cases** — which is precisely the failure the completeness claim targets and the reason a case is not merely a published finding. That is the clearest validation any BIO construct has received from outside the repo. BUT THE SAME SOURCES CARRY A CORRECTION: in both the SBI and Rolling Stone reviews the catch was **a second person with standing**, not a form field — and in each the person who found the gap was overruled inside the hierarchy. So the authored exclusion statement is necessary and insufficient, and the design should say so rather than let the field stand in for the check. What that implies is not settled here: candidates are a second-member acknowledgement on the exclusion statement before publication, or making the statement the thing a reviewer is specifically asked to attack rather than one field among many. Do not build the field and call the problem solved. | M10 - open · REC-14 (disposition corrected 2026-08-01 by session BOB: this row was written `M6` when the ladder had no rung above M8, and M6 is *the record can be left, mirrored and outlived* — nothing to do with a completeness claim at publication. M10 now exists and is where publication lives.) |
+ 
+ 
+diff --git a/docs/development/MILESTONES.md b/docs/development/MILESTONES.md
+index 21971dd8..99425ead 100644
+--- a/docs/development/MILESTONES.md
++++ b/docs/development/MILESTONES.md
+@@ -678,8 +678,8 @@ and handed to CONDUCT through the BOB INBOX.
+ | D-145 bundle ids are per-instance, so nothing survives leaving | RECORD | M6 |
+ | D-146 nine intent-layer write ops have no caller | UI | M8 · UI-13 |
+ | D-147 `action` models a records request as one round trip | RECORD | M10 · REC-24 must read it before shipping the state machine |
+-| D-148 a fee quote is EVIDENCE, not an administrative obstacle | RECORD | M10 · with D-147 |
+-| D-149 the design is jurisdiction-blind | RECORD · FRAMEWORK | M10 · needs a design pass, not an item |
++| D-148 a fee quote is EVIDENCE, not an administrative obstacle | RECORD | M10 · with D-147 · PLACED 2026-09-22 in `BACKLOG.md` on Bob's ruling (BOB #26) |
++| D-149 the design is jurisdiction-blind | RECORD · FRAMEWORK | M10 · needs a design pass, not an item · PLACED 2026-09-22 in `BACKLOG.md` on Bob's ruling (BOB #26) |
+ | D-150 the completeness claim, externally validated | RECORD · UI | M10 · REC-14 |
+ | D-151 a machine credential can resolve an unassigned task (DEC-7) | RECORD | M8 · REC-28 |
+ | D-153 AUDIENCES H4/H6 are the workflow, not hazards (DEC-13) | RECORD · UI | M10 · REC-14, REC-24, UI-17 |
+diff --git a/docs/development/QUEUE.md b/docs/development/QUEUE.md
+index a5721011..9a2e0f9c 100644
+--- a/docs/development/QUEUE.md
++++ b/docs/development/QUEUE.md
+@@ -22,30 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
+ 
+ BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
+ 
+-**2026-09-22 · BOB #26 · BOB RULED D-148 AND D-149: A FEE QUOTE IS EVIDENCE, AND A RECORDS REQUEST NAMES EVERY LAW THAT
+-GOVERNS IT.** Both folded, with Bob's words, into `BIO_Case_Making_v0_1.md` §2, where the `action` lives; Bob was told
+-the same day that the layers follow the AGENCY asked (federal FOIA governs federal agencies only). Each row leaves DEBT by
+-door 2, keeping its id; both sit at M10 with D-147, which they do not close — D-147's lifecycle stays a design row, and
+-the quote's revision chain is shaped so each later stage lands as its own entry. Both are product; neither waits on
+-anything unbuilt (the action and its correspondence are BUILT, `node tools/status.mjs 8`).
+-
+-1. **RECORD (M10), D-148: the fee quote, a structured correspondence entry.** A `received` entry may carry a QUOTE: the
+-   amount and currency as quoted, the stated basis verbatim, and the `sent` entry it answers; a later entry may name the
+-   quote it revises (a waiver is a revision to zero, and both entries stand). Its grammar sits at C-2.10 beside the
+-   correspondence arms; `promote` projects it from the bytes into an indexed table that `purge` clears in both arms, and
+-   a read returns quotes by counterparty and by the request answered. I3 and I5 change (the integrator mints the ICs).
+-   The record states no finding about a quote. **Accepts when** a quote projects and reads back by counterparty and by
+-   request; a revision to zero keeps both entries; a quote answering no `sent` entry, or with an amount that is not a
+-   number, is refused by name; an action with no quote reads byte-identical before and after. NEGATIVE CONTROL: drop the
+-   projection from the per-bundle purge, and the purge arm fails by name.
+-2. **RECORD (M10), D-149: the laws that govern a records request, by citation.** A records-request action carries a
+-   list of citations, each with its level (federal, state or local), set by a member's authored act; a machine credential
+-   is refused by name, and a machine PROPOSAL, if built, is labelled machine work. An empty list reads UNDETERMINED with
+-   its sentence, never a default; the plane encodes no law's rules; `cpra_request` actions read unchanged. **Accepts
+-   when** a member's list lands and reads back; an action with none reads undetermined, never federal; a machine
+-   credential's list is refused. NEGATIVE CONTROL: default an empty list to a federal citation, and the undetermined arm
+-   fails by name.
+-
+ ## THE CACHE — the next rows, in order
+ 
+ **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
+diff --git a/docs/development/kickoffs/SCHEDULER-NEXT.md b/docs/development/kickoffs/SCHEDULER-NEXT.md
+index a7843c0b..a496f19f 100644
+--- a/docs/development/kickoffs/SCHEDULER-NEXT.md
++++ b/docs/development/kickoffs/SCHEDULER-NEXT.md
+@@ -11,26 +11,25 @@ re-measure before you rest anything on it. The refresh line is **70%** (`CLAUDE.
+ - **Cache (8):** LED-7 (this lane's own act) · REC-163 (`running`, its worker live) · M0-99 (`running` by CONDUCT #12's flip,
+   landing about now) · M0-100 (CONDUCT holds it until M0-99 lands: the same readers) · M0-106 (DIST's own act, never a
+   worker slot) · M0-107 · REC-166 · REC-165.
+-- **Backlog (111), in the order Bob's ruling of 2026-09-22 set** (`CLAUDE.md` §2: *The goal is BIO work; process is
++- **Backlog (113), in the order Bob's ruling of 2026-09-22 set** (`CLAUDE.md` §2: *The goal is BIO work; process is
+   overhead*; `kickoffs/SCHEDULER.md` step 3): REC-167 first (ratify-after-withdraw, REC-157's DELEGATION); UI-77 (waits
+   on REC-163); D-85; the M1-M7 corrections (D-116 … D-60, D-65, D-169, D-171, D-179, CAP-14, D-54); the M8 corrections
+-  (REC-159 … D-82, D-125); COFF-13, D-52, D-84, D-220, D-182, D-178; then the features, UI-74's accept ceremony first;
++  (REC-159 … D-82, D-125); COFF-13, D-52, D-84, D-220, D-182, D-178; then the features, UI-74's accept ceremony first,
++  with D-148 and D-149 (Bob's rulings of 2026-09-22) after UI-69 in the M10 case path;
+   then, BEHIND THE PRODUCT ROWS, M0-104, M0-105 and 24 process rows in their prior order (M0-101, the session-hygiene
+   instruments, the reading-budget rows, the ledger tooling, the instrument cluster D-438 … M0-96), then the older M0 rows
+   and the four blocked rows. M0-99 and M0-100 stayed at the head because they CUT GATE TIME (M-94, M-90).
+-- **`BACKLOG.md` is 153,134 B of 153,600.** Every process row at the foot is now CUT to its fields, and D-66 and D-86 were
+-  cut on arrival, so THE NEXT PLACEMENT CUTS PRODUCT ROWS from the foot up. BOB #26 RULED the budget stays (a larger
++- **`BACKLOG.md` is 153,203 B of 153,600.** Every process row at the foot is CUT to its fields, and placing D-148 and
++  D-149 already cut product rows (D-74, UI-75, D-178, D-125, D-82, and both arrivals): EVERY PLACEMENT NOW CUTS PRODUCT ROWS. BOB #26 RULED the budget stays (a larger
+   read-whole file is the wrong direction); revisit only with an instance of a spawn delayed or misbriefed by a cut row.
+-- **DEBT.md: 101 open rows.** BOB INBOX: empty at this landing (BOB #26's entry drained).
++- **DEBT.md: 99 open rows.** BOB INBOX: empty at this landing (BOB #26's two entries drained).
+ 
+ ## Owed acts, in order
+ 
+ 1. **CONDUCT's next completions** — REC-163 and M0-99: ONE commit each batch (sha an ancestor of `origin/main`, the work
+    read at the code), `done`, `ledger.mjs archive`, `refill`, invariants; tell CONDUCT what entered.
+-2. **BOB #26's next landing** brings (a) D-148 and D-149, ruled by Bob (a fee quote is EVIDENCE; every records law
+-   governing the agency asked applies, layered), as a BOB INBOX entry: RECORD, M10, beside D-147, door 2 keeping their
+-   ids — D-147 likely rides with them; (b) D-278's determinations per group (item 3 of the DELEGATION SCHEDULER (#12) ->
+-   BOB): place each designed row in order.
++2. **BOB #26's next landing** brings D-278's determinations per group (item 3 of the DELEGATION SCHEDULER (#12) -> BOB):
++   place each designed row in order. (D-148 and D-149 are placed; D-147, the request lifecycle, stays a design row.)
+ 3. **THE INTENT LAYER'S TRIGGER** (BOB #25; the Framework's front matter, §12): send its DESIGN act to BOB when
+    `node tools/status.mjs 12` reads the publication ceremony and the accept surface BUILT. Unmet.
+ 4. **LED-7, one landing per wake, batched.** Next, oldest first after the defects: D-175 (two assertions varying run to run,
+@@ -52,7 +51,8 @@ Archived SCHEDULER #11 (D-398's three conditions at 13:27Z; its CronList empty b
+ +667 MiB). THE RE-ORDER under Bob's ruling (24 process rows behind the product rows; M-94). D-278, a PHANTOM row cited
+ seven times on `main` and living only on an unmerged branch, carried VERBATIM. CONDUCT #12's batch 2 closed (REC-157,
+ M0-97, D-341, M0-81). BOB #26's entry drained (D-152 and D-164 closed in fact; D-179, D-125 placed). LED-7's waiting
+-rows placed (D-65, D-169, D-171, D-178, D-74, D-86, D-66) and REC-157's DELEGATION as REC-167. BOB #26 answered both
++rows placed (D-65, D-169, D-171, D-178, D-74, D-86, D-66) and REC-157's DELEGATION as REC-167. BOB #26's second entry
++drained (D-148, D-149 placed). BOB #26 answered both
+ questions of the re-order: keep 150 KiB, keep the product order (over-claims before features, `CLAUDE.md` §2).
+ 
+ ## The traps this session paid for
+-- 
+2.45.2
+

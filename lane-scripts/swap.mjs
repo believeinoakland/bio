@@ -1,0 +1,17 @@
+import fs from "node:fs";
+const S = "/private/tmp/claude-501/-Users-sparky-Downloads-ClaudeCodeBIO--claude-worktrees-festive-agnesi-eb5410/e15ffee8-9cf9-4dcc-9683-ff5e8a62bafd/scratchpad/";
+const { queueRows } = await import(process.cwd() + "/tools/ledger.mjs");
+const p = "docs/development/QUEUE.md";
+const t = fs.readFileSync(p, "utf8");
+const r = queueRows(t).find((x) => x.id === "M0-100");
+if (!r || r.state !== "queued") throw new Error("M0-100 not queued in the cache");
+const lines = t.split("\n");
+const block = lines.slice(r.start, r.end).join("\n").replace(/\n+$/, "");
+const m109 = fs.readFileSync(S + "new-M0-109.md", "utf8").replace(/\n+$/, "");
+const before = lines.slice(0, r.start).join("\n"), after = lines.slice(r.end).join("\n");
+fs.writeFileSync(p, before + "\n" + m109 + "\n\n" + after);
+const OLD = "order: kept at the head with M0-99 for the same reason, measured larger:";
+if (block.split(OLD).length !== 2) throw new Error("M0-100 order line");
+const moved = block.replace(OLD, "order: FIRST of the backlog, out of the cache while CONDUCT holds it for M0-99 (the same readers), its slot lent to M0-109 (SCHEDULER #12); at the head with M0-99 for the same reason, measured larger:");
+fs.writeFileSync(S + "new-M0-100.md", moved + "\n");
+console.log("swapped; M0-100 block", Buffer.byteLength(moved + "\n\n"), "B");
