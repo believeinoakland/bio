@@ -18440,3 +18440,38 @@ provisional on it. `order:` lines rewritten where the move made them false or le
 REC-154, LED-8 and D-438 (each moved group's head), D-54, REC-155, COFF-13, D-162 and M0-71, and in the cache M0-99 and
 M0-100. Room: three process rows at the new foot cut to their fields (M0-92, D-437, M0-87), each VERBATIM in
 `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. M-94 recorded.
+
+## DELEGATION 2026-09-22 SCHEDULER (#12) -> BOB — **THREE ITEMS: the backlog's 150 KiB budget (owed since SCHEDULER #11), whether Bob's *M8-M10* orders the product rows among themselves, and D-278's five determinations (a design routing); the first two provisional and cheap to reverse**
+
+1. **THE BACKLOG BUDGET — RUNNING: 150 KiB KEPT, by BOB #23's ruling** (raise only on a measurement that cut rows are
+   re-read from the archive often enough to cost more than the budget saves). Measured on `d96dc942`: 32 of the 57
+   product rows are cut to their fields, so most of the next product spawns read their row from the archive once; the
+   18 uncut rows at the foot are process rows (32,467 B), whose cutting frees about a third of that, less than the ~10
+   verified rows waiting for room need; SCHEDULER #11 cut 17 rows to place 6. A re-read costs a worker one lookup of ~1.5
+   KB; the 50 KiB a raise to 200 KiB adds costs every SCHEDULER session that reads the file whole about as much. **The
+   alternative:** raise to 200 KiB, the cut rows restored as room allows. **Recommendation:** keep it — cutting is now
+   scripted, and a cut row keeps what ordering needs (heading, `order:`, design, depends-on). **Reversal:** one constant in
+   `tools/ledger.mjs` `BUDGET` and the preamble; nothing grows more expensive under either.
+2. **BOB #25's *"after them come M8-M10: publish, accept and the case path"* — RUNNING: the product rows keep their
+   order** (after REC-166 and REC-165: ten M1-M7 corrections — D-116, CAP-13, D-389, D-57, D-440, D-420, D-390, D-60,
+   CAP-14, D-54 — then the M8-M10 corrections, then the features, UI-74's accept ceremony first). Ambiguous because Bob's
+   recorded words (`CLAUDE.md` §2; BOB-NEXT's *Product rows (M8-M10: publish, accept, the case path) go ahead of M0 process
+   tooling*) order product against process, while the relayed sentence reads as ordering M8-M10 ahead of the M1-M7 rows.
+   **The alternative:** the seven M8-M10 corrections (REC-159, REC-162, REC-155, REC-158, D-311, UI-73, D-82) move above
+   the ten M1-M7 corrections; moving the FEATURES above them is not offered, since `CLAUDE.md` §2 puts a record
+   over-claim ahead of a missing feature. **Recommendation:** keep — seven of the ten are claims the record cannot support (D-390 fails loudly, CAP-14 adds omitted provenance, D-54 is configuration).
+   **Reversal:** file position only; the next refill takes M0-106, M0-107, REC-166 and REC-165 either way.
+
+3. **D-278 — THE CODELESS REFUSALS, A DESIGN ROUTING (its fix needs a determination per group, so it cannot be placed
+   as a build row).** Carried onto `main` in this landing VERBATIM from the unmerged `worktree-agent-aafee89563a3f2d42`
+   (`484ed359`, 2026-08-09), where `main` cited it seven times. Re-measured on `747d332d`: all five groups stand, each
+   still answering `{ ok: false, error: <sentence> }` with no code — (4) the capability 503s (`index.mjs` 5649, 5689,
+   6042, 7822), (1) `unauthenticated`, (5) `unknown op` (4436; `civicos-ui/app.html` tests `/unknown op/i` twice),
+   (3) the method 405s (4933, 6040, 7820, 7925) and (2) the pre-authentication surfaces (`verify`, `publishedbytes`,
+   `publishedcase`, `knock`, `bootstrap`). **RUNNING:** nothing over-claims — each carries a true sentence, and
+   `d270-reach.test.mjs` pins the residue. **Asked:** the determination per group, DEC-49's canned translation against
+   REC-64's non-enumeration sentence for (1) and the `error` field app.html reads for (5); the row's own order is (4),
+   (1), (5), with (2) behind whoever owns pre-authentication wording. **Recommendation:** that order, (3) stated as not
+   member-facing rather than coded. Each determination returns as a designed row.
+Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
+**open as of 2026-09-22** — each answer is applied by SCHEDULER in its next landing; nothing runnable waits on any of them.
