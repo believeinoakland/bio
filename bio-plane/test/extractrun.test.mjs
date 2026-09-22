@@ -712,13 +712,27 @@ t("an EMPTY proposal is refused and sent where it belongs: a run that honestly f
   ["NO_PROPOSALS", true]);
 t("a member who was never invited may not learn a document exists by proposing a reading of it — "
 + "D-15 answers an invisible bundle EXACTLY as an absent one",
+  /* CORRECTED 2026-09-22 (REC-165, INVESTIGATIVE-SESSION.md §11 item 5 rule 1, BOB #25): this arm proposed
+     under RUTH's run, which ira does not hold. That was accepted as far as the bundle check only because
+     `extractPropose` never asked whose run it was — the defect REC-165 closes — so the arm was measuring the
+     bundle gate THROUGH a hole. ira now opens HER OWN extract run (her act, her principal) and the arm asks
+     the question it was written to ask; the refusal under ruth's run is asserted beside it, naming no
+     document, so the principal gate cannot become a way to learn one exists either. */
   await (async () => {
+    const IRA_RUN = "RUN-2026-0914-ira";
+    const opened = await post("airunopen", { run: IRA_RUN, contextType: "inquiry", contextId: INQ,
+      mode: EXTRACT_RUN_MODE, principalClaude: "project", skillVersion: "investigative-session@1",
+      bounds: [{ bound: "mints", allowed: 2, unit: "passages" }], leaseMs: 600000, at: NOW }, IRA);
     const a = await post("extractpropose",
+      { run: IRA_RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
+        refs: [{ ref: "v:1", refKind: "v", refKey: "1" }] }, IRA);
+    const notHers = await post("extractpropose",
       { run: "RUN-2026-0914-second", bundleId: DOC, fn: "propose-reading", version: "0.1.0",
         refs: [{ ref: "v:1", refKind: "v", refKey: "1" }] }, IRA);
-    return a.ok === true || a.reason === "NO_SUCH_BUNDLE";
+    return [opened.started === true, a.ok === true || a.reason === "NO_SUCH_BUNDLE",
+            notHers.code, JSON.stringify(notHers).includes(DOC)];
   })(),
-  true);
+  [true, true, "AI_RUN_NOT_PRINCIPAL", false]);
 
 /* THE MODULE'S OWN PREDICATES, driven directly so a refusal that the op path
    cannot reach is still measured. `PROPOSAL_ABOVE_CEILING` is unreachable from

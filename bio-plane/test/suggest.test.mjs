@@ -313,6 +313,21 @@ const RUN = "RUN-2026-0808-pl3";
     bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
   if (opened?.started !== true) throw new Error(`airunopen: ${JSON.stringify(opened)}`);
 }
+/* CORRECTED 2026-09-22 (REC-165, INVESTIGATIVE-SESSION.md §11 item 5 rule 1, BOB #25): the machine-credential
+   arms in §2 submitted as `mem-pl3` under RUTH's run, which that credential does not hold. It was accepted only
+   because `op=suggest` resolved the run for existence alone — the defect REC-165 closes — so those arms now
+   submit under a run the MEMBER_TOKEN class opened itself (a token class is its own principal, compared whole:
+   REC-152's `runPrincipalOf`). What they measure (DEC-65's single-part licence) is unchanged. */
+const MRUN = "RUN-2026-0808-pl3-machine";
+{
+  const opened = await POST(`op=airunopen&token=mem-pl3`, {
+    run: MRUN, contextType: "inquiry", contextId: INQ,
+    label: "PL-3 fixture — the machine credential's own run", mode: "check",
+    principalClaude: "instance", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
+  if (opened?.started !== true) throw new Error(`airunopen (machine): ${JSON.stringify(opened)}`);
+}
 
 /* THE ONE SUBMITTER. Every arm below goes through this, so no arm can quietly
    differ in which parameter it sends. `token=RUTH` is a real member SESSION —
@@ -847,7 +862,7 @@ console.log("\n--- 2. the six pre-write checks, PLANE-SIDE, each driven by C-num
   const machineOnePart = drive(await suggest({ kind: "basis-version", name: "a machine composing one part",
     description: "A reading resting on a document, submitted by a credential with no member behind it.",
     relationship: "and", grounds: [{ ground: "paper trail" }],
-    legs: [{ target: LEDGER, role: "supports", ground: "paper trail" }] }, "mem-pl3"));
+    legs: [{ target: LEDGER, role: "supports", ground: "paper trail" }], run: MRUN }, "mem-pl3"));
   t("A MACHINE CREDENTIAL MAY NOW COMPOSE A SINGLE-PART READING (DEC-65 shape (b), landed by PL-19): with "
   + "exactly one part there is no maximum to take, so no member is credited with a structural claim they "
   + "did not make — and this guard is the site that FIRES FIRST, so nothing below it was reachable before",
@@ -867,7 +882,7 @@ console.log("\n--- 2. the six pre-write checks, PLANE-SIDE, each driven by C-num
     description: "A reading whose two halves are said to stand alone, submitted under a machine credential.",
     relationship: "or", grounds: [{ ground: "paper trail" }, { ground: "the audit" }],
     legs: [{ target: LEDGER, role: "supports", ground: "paper trail" },
-           { target: AUDIT, role: "supports", ground: "the audit" }] }, "mem-pl3"));
+           { target: AUDIT, role: "supports", ground: "the audit" }], run: MRUN }, "mem-pl3"));
   t("BUT TWO PARTS IS STILL REFUSED BY NAME: there the maximum is live, and choosing which legs are "
   + "separately sufficient is the authored act DEC-32 says only a member reaches. The licence has a "
   + "BOUND and this is it",
@@ -875,7 +890,7 @@ console.log("\n--- 2. the six pre-write checks, PLANE-SIDE, each driven by C-num
     [false, "SUGGEST_UNWRITABLE_STATE", 2]);
   const machineEmpty = await suggest({ kind: "level-empty", name: "a machine reporting an empty level",
     description: "We searched the meaning layer for a superseding reading and found none.",
-    relationship: "and", level: "meaning", observed_at: "observation:pl3-meaning-1" }, "mem-pl3");
+    relationship: "and", level: "meaning", observed_at: "observation:pl3-meaning-1", run: MRUN }, "mem-pl3");
   t("BUT THE KIND THAT RESTS ON NOTHING IS EXACTLY WHAT A MACHINE MAY WRITE — and that is the point of "
   + "§9's empty-level kind existing, not a hole in the fence",
     [machineEmpty.ok, machineEmpty.state, machineEmpty.kind], [true, "suggested", "level-empty"]);
@@ -967,6 +982,34 @@ console.log("\n--- 4. DEC-49: driven codes EQUAL the registry, floor and ceiling
   drive(await suggest({ kind: "not-a-kind", name: "x" }));
   drive(await suggest({ kind: "basis-version", name: "no run at all", run: "",
     description: "A reading naming no run, which §11 requires of every version." }));
+  /* REC-165 (§11 item 5 rule 1, BOB #25; its target, BOB #28): the two codes the run's own checks added. Each
+     is provoked by a run RUTH HOLDS, so neither is shadowed by the principal gate (which `rec165-production-
+     principal.test.mjs` drives, on both caller kinds). */
+  {
+    const ENDED = "RUN-2026-0808-pl3-ended", ELSEWHERE_RUN = "RUN-2026-0808-pl3-elsewhere";
+    const ELSEWHERE = "INQ-2026-3000-elsewhere";
+    await mustPromote(ELSEWHERE, inquiryMd(ELSEWHERE), "inquiry");
+    const open = (run, contextId) => POST(`op=airunopen&token=${RUTH}`, {
+      run, contextType: "inquiry", contextId, label: "REC-165 fixture", mode: "check",
+      principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+      skillVersion: "investigative-session@1", biasManifest: null,
+      bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
+    const e = await open(ENDED, INQ), o = await open(ELSEWHERE_RUN, ELSEWHERE);
+    const closed = await POST(`op=airunclose&token=${RUTH}`, { run: ENDED, bound: "completed" });
+    t("REC-165 FIXTURE: two of ruth's own runs — one over this question, then ENDED; one over ANOTHER question",
+      [e?.started, o?.started, closed?.terminated], [true, true, true]);
+    const ended = drive(await suggest({ kind: "level-empty", name: "under an ended run", run: ENDED,
+      description: "We searched the meaning layer and found nothing, under a run that has since ended.",
+      relationship: "and", level: "meaning", observed_at: "observation:rec165-ended" }));
+    const outside = drive(await suggest({ kind: "level-empty", name: "under another question's run",
+      run: ELSEWHERE_RUN,
+      description: "We searched the meaning layer and found nothing, under a run over another question.",
+      relationship: "and", level: "meaning", observed_at: "observation:rec165-outside" }));
+    t("REC-165: ruth's ENDED run is refused SUGGEST_RUN_NOT_RUNNING, and her run over ANOTHER question is refused "
+      + "SUGGEST_OUTSIDE_RUN_CONTEXT (BOB #28) — each by name, nothing written",
+      [ended.ok, ended.code, outside.ok, outside.code],
+      [false, "SUGGEST_RUN_NOT_RUNNING", false, "SUGGEST_OUTSIDE_RUN_CONTEXT"]);
+  }
   drive(await suggest({ kind: "basis-version", name: "the ledger account",
     description: "A reading whose name is already taken by another reading of this question.",
     relationship: "and" }));
@@ -1015,7 +1058,9 @@ console.log("\n--- 4. DEC-49: driven codes EQUAL the registry, floor and ceiling
       SUGGEST_LEG_UNREACHABLE: "C-27.8", SUGGEST_NAME_TAKEN: "C-27.5",
       SUGGEST_NOT_AN_INQUIRY: "C-27.2", SUGGEST_NOT_DIFFERENT: "C-27.10",
       SUGGEST_NO_RUN: "C-27.4", SUGGEST_NO_TARGET: "C-27.1",
-      SUGGEST_PAIR_DOES_NOT_COMPUTE: "C-27.9", SUGGEST_TOO_MANY_LEGS: "C-27.7",
+      SUGGEST_OUTSIDE_RUN_CONTEXT: "C-27.19",
+      SUGGEST_PAIR_DOES_NOT_COMPUTE: "C-27.9", SUGGEST_RUN_NOT_RUNNING: "C-27.18",
+      SUGGEST_TOO_MANY_LEGS: "C-27.7",
       SUGGEST_UNKNOWN_KIND: "C-27.3",
       SUGGEST_UNWRITABLE_STATE: "C-27.13" });
   t("and the FOUR no well-formed caller can provoke are NAMED rather than quietly absent — a floor that "

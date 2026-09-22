@@ -1346,9 +1346,24 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
-   REC-70's fixture run, both built above, so this adds no third corpus. */
+   REC-70's fixture run, both built above, so this adds no third corpus.
+   CORRECTED 2026-09-22 (REC-165; INVESTIGATIVE-SESSION.md §11 item 5, "Rule 1's target", BOB #28): REC-70's run
+   is over `INQ-2026-0807-bounds-runs`, and these two arms suggested onto PL-1's question under it — a reading of
+   one question under a run over another, accepted only because `op=suggest` never asked. A suggestion now lands
+   only inside its run's context, so the same machine token opens ONE run over PL-1's question for these arms;
+   the bound they measure is unchanged. */
+const PL1_RUN = "RUN-2026-0807-bounds-pl1";
+{
+  const opened = await POST(`op=airunopen&token=mem-r57`, {
+    run: PL1_RUN, contextType: "inquiry", contextId: PL1_INQ,
+    label: "PL-3 bound fixture — a run over the question the suggestions are about", mode: "check",
+    principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }], leaseMs: 600000 });
+  if (opened?.started !== true) throw new Error(`PL-3 bound fixture airunopen: ${JSON.stringify(opened)}`);
+}
 const SUGGEST_OVER = await POST("op=suggest&token=mem-r57", {
-  target: PL1_INQ, kind: "basis-version", run: R70_RUN, name: "over the bound",
+  target: PL1_INQ, kind: "basis-version", run: PL1_RUN, name: "over the bound",
   description: "A reading composed only to carry more legs than one reading may carry.",
   relationship: "and",
   legs: Array.from({ length: 121 }, () => ({ target: "INFO-2026-0001-r57", role: "supports" })),
@@ -1367,7 +1382,7 @@ t("op=suggest: a submission OVER the cap is REFUSED and the refusal PUBLISHES th
    not see. The legged path is driven under a real member session in
    test/suggest.test.mjs. */
 const SUGGEST_OK = await POST("op=suggest&token=mem-r57", {
-  target: PL1_INQ, kind: "level-empty", run: R70_RUN, name: "within the bound",
+  target: PL1_INQ, kind: "level-empty", run: PL1_RUN, name: "within the bound",
   description: "We searched the open internet for a superseding agenda and found none in this window.",
   relationship: "and", level: "internet", observed_at: `observation:r70-1`,
 });

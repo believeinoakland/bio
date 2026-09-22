@@ -6734,7 +6734,8 @@ export const AI_RUN_CHECKS = {
      nor the caller — and the store's `detail` names only the rule. */
   AI_RUN_NOT_PRINCIPAL: {
     check: 'C-22.12',
-    where: 'src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose',
+    /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
+    where: 'src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose/suggestVersion/extractPropose',
     translation: 'Only the person who started this investigation — or an AI credential they created '
       + 'for it — can continue it or end it. It is not about which projects you belong to or what '
       + 'you are allowed to do in general: an investigation nobody continues ends by itself when '
@@ -7985,6 +7986,28 @@ export const SUGGEST_CHECKS = {
     translation: 'Every suggestion names the piece of work that produced it, and this one named none '
       + 'that can be read here. What was searched, under which declared conditions, and where it '
       + 'stopped is what lets anyone else check a reading rather than take it on trust.',
+  },
+  /* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): A VERSION IS FORMED UNDER A LIVE RUN. The
+     run is what a version is read against, and a run that has ended stopped being the conditions anything is
+     formed under. Asked AFTER sight (SUGGEST_NO_RUN for a run the caller cannot see) and position
+     (AI_RUN_NOT_PRINCIPAL, C-22.12, relayed from `runPrincipalGate`), so it is said only to the run's principal.
+     C-27.18 is a dotted member of PL-3's family, the family owner's to allocate (`tools/mintid.mjs` C). */
+  SUGGEST_RUN_NOT_RUNNING: {
+    check: 'C-27.18',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'The investigation this suggestion names has ended. A suggestion is read against the '
+      + 'conditions of the investigation that produced it, and those stopped being current when it '
+      + 'stopped, so going on means starting a new one.',
+  },
+  /* REC-165, BOB #28 (2026-09-22, §11 item 5, "Rule 1's target"): A SUGGESTION LANDS ONLY INSIDE ITS RUN'S
+     CONTEXT — the context itself, or, for a run over a project, a question that project confirmed-cites. Asked
+     after sight and position, so a run the caller cannot see still answers as absent. C-27.19, the same family. */
+  SUGGEST_OUTSIDE_RUN_CONTEXT: {
+    check: 'C-27.19',
+    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    translation: 'This suggestion is about a question the investigation was not working on. An investigation '
+      + 'is read against its own question, or the questions its project draws on, so work on a different '
+      + 'question starts an investigation of that question.',
   },
   SUGGEST_NAME_TAKEN: {
     check: 'C-27.5',
