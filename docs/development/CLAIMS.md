@@ -17526,3 +17526,28 @@ not-scheduled list); `docs/development/kickoffs/CONTENT-HTML.md` and `docs/devel
 sentences this design supersedes, corrected in the same landing: the licensed exception); `docs/DECIDED.md`
 (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 M0 (M0-97 + D-341 — the ruling index files every answered or enacted `DEC-n` entry from its `decided:` field, and its prose joiner stops at a heading or a blank line)
+
+session: WORKER spawned by CONDUCT #11, worktree `.claude/worktrees/agent-aff9fd704ee856d24`, branch
+`worktree-agent-aff9fd704ee856d24`, base `origin/main` @ `86523052` (both rows read `running` there), Sparky-Air. `npm ci`
+in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each exit 0 and each `node_modules` a REAL directory (30 / 25 / 26 entries);
+`df -h` 3.4 GiB free after the installs.
+authority: `QUEUE.md` `### M0-97 · running` and `### D-341 · running` (CONDUCT #11); design `docs/development/VERIFICATION.md`
+(admitted for M0 by name) with the tool's own header, which calls the index a FLOOR.
+paths, BY SITE:
+  - `tools/decided.mjs` — `scan()` (the joiner's stop, the register-entry pass beside the marker scan, the search context
+    of a long ledger row), the query the CLI answers from (lifted into one exported function so a suite drives the same
+    code), `render()` (its header prose and the entry rows' status), `control()` (arms for the two new patterns), and the
+    header comments that describe them. `MARKER`, `statementAround()` and `corpus()` are NOT touched.
+  - `bio-plane/test/decided.test.mjs` (NEW) — the one suite, with its `NEGATIVE CONTROL:` declaration.
+  - `bio-plane/test/decided.control.mjs` (NEW) — its driver; `.gitignore` — one line each for its pen `.m097-harness/`
+    and this worker's run logs `.m097-runs/`.
+  - `bio-plane/test/nc-m034.mjs` — ONLY an arm this landing moves, corrected with a dated reason, never exempted.
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` only, moved from the instrument's print.
+  - `docs/development/MEASUREMENTS.md` (one appended section), `docs/DECIDED.md` (GENERATED, regenerated LAST), this block.
+**NOT CLAIMED:** `tools/pushguard.mjs` and `tools/gates.mjs` (D-293's live worker), `tools/plancheck.mjs`,
+`docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `docs/development/DECISIONS.md` (read, never written),
+`bio-plane/src/**` (nothing under `src/` moves, so no bundle rebuild is owed), `newgroup/**`, `release/**`.
+
+**open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
