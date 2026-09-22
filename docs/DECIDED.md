@@ -18,7 +18,7 @@ nothing was decided — the same rule the record applies to sparse levels everyw
 else. Each entry QUOTES its source and points at it; the authority is the file named,
 never this one.
 
-1516 rulings across 108 documents.
+1518 rulings across 108 documents.
 72 of them are decision-register entries, each filed under its own id from its
 `decided:` field and quoting its `response:`; a row showing the entry's status is one of them.
 
@@ -2020,6 +2020,8 @@ never this one.
   `docs/archive/ledgers/BOB-INBOX-drained.md:1151`
 - **M0-97** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): BOB #22's six inbox entries DRAINED**, each verified at its cited design and at the code — M0-97 (`decided.mjs` indexes a `decided:` field) directly after D-435, with D-341 (the same file) after it; REC-160 (`op=reevaluations` names a severed leg's status) after D-389,…  
   `docs/development/CLAIMS.md:16989`
+- **M0-101** · 2026-09-22 — SUPERSEDED 2026-09-22 by BOB #27** (M0-101): the word becomes an anchored write on `coord` (`TREE-SHARING.md` §1), which ends the two-writers conflict without moving it.  
+  `docs/development/ORCHESTRATION.md:140`
 - **M0-101** — So M0-101 is SUPERSEDED by this change** (the `running` word becomes an anchored write, and the two-writers conflict it existed for is gone), and **M0-100 NARROWS** to `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`, which stay on `main`, where two `land/*` branches' tail appends still collide inside change 2's train.  
   `docs/development/TREE-SHARING.md:51`
 - **M0-103** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 5): DIST #4's route PLACED** — M0-103 (`owed-controls.test.mjs` reads a subprocess timeout as a finding, a false RED the push guard now enforces), verified at the code (its two spawns carry `timeout: 120_000` and nothing reads `ETIMEDOUT` or a signal), FIRST of the…  
@@ -2697,6 +2699,8 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/CLAIMS.md:18323`
 - **2026-09-22** — Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them…  
   `docs/development/CLAIMS.md:18498`
+- **2026-09-22** — `docs/development/ORCHESTRATION.md` ("THE RECORD IS PARTITIONED BY WRITER": rule 3 NARROWED, rule 4 SUPERSEDED — rule 6, a change corrects what it supersedes in the same turn); `docs/DECIDED.md` (GENERATED, LAST). why: Bob, 2026-09-22 ~15:06Z, in BOB #27's conversation: *"Make sure that the process changes being…  
+  `docs/development/CLAIMS.md:18567`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  

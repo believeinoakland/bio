@@ -118,7 +118,8 @@ Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>
 - **Bob's rulings of 2026-09-22, each in its home:** *"The goal is BIO work; process is overhead"* — product before
   process tooling, no process row unless it cuts gate time or unblocks product, batch landings (`CLAUDE.md` §2;
   `SCHEDULER.md` step 3 orders the plan by it); *"Never queue a gate behind another lane's"* (`CLAUDE.md` §6); a session
-  refreshes past 70% of its context, not 60% (`CLAUDE.md` §4).
+  refreshes past 70% of its context, not 60% (`CLAUDE.md` §4; ruled 2026-09-21, and restated 2026-09-22 as BOB #26
+  recorded it: *"the line is 70%, not 60% — refresh less, work more"*).
 - **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
   GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
   fold tripped), M0-100 (narrowed, §1) and M0-101 (superseded, §1).
