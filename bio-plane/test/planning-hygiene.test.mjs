@@ -75,6 +75,15 @@
    registration was cleared with `git worktree prune` and the driver now removes only the
    copies it wrote. The subject was never in doubt, the instrument was. */
 /* NEGATIVE CONTROL: (run 2026-07-31) strip the M7 token from open DEBT row D-50 (cell -> "open") -> 2 fail (the D-50 row + the aggregate); AND strip the BUILT(FW-3) marker from CONSTRUCTS "The plan" Step 1 -> 2 fail (the Step 1 item + the aggregate); each restored, 154 pass 0 fail. */
+/* NEGATIVE CONTROL: (M0-109, run 2026-09-22) §1's non-vacuity floor, driven by `node bio-plane/test/debt-floor.control.mjs`
+   from the repo root (eight arms plus a baseline across this suite and `ledger.test.mjs`), each armed ALONE and restored
+   by sha256 AND `cmp` against its own copy. An arm replaces ONLY this suite's read of the live DEBT.md with a PLANTED
+   ledger (the file is never written) and asserts the row count this suite prints for §1. (HE) an EMPTY ledger ->
+   "DEBT.md has debt rows to check" FAILS, and nothing else does. (HC) the old `>= 20` restored over 19 planted rows ->
+   the same assertion FAILS, and nothing else. (HO) the same 19 rows under the corrected floor -> GREEN, the
+   over-strictness arm, which also isolates HC's variable. RUN 2026-09-22 by the M0-109 worker, driver exit 0, 62 pass /
+   0 fail, every restore byte-identical; this suite per arm: baseline 180/0 judging 101 live rows, HE 78/1 judging 0,
+   HC 97/1 judging 19, HO 98/0 judging 19. */
 /* Planning-drift hygiene: the M0-6 gate, on D-113's precedent.
  *
  * The repository is the channel between sessions (CLAUDE.md). The PLAN is how a
@@ -206,7 +215,12 @@ console.log("\n--- every open DEBT row carries a disposition token ---");
     const ok = TOKEN.test(`| ${status}`) || RESOLVED.test(`| ${status}`);
     rows.push({ id, ok, status });
   }
-  t("DEBT.md has debt rows to check", rows.length >= 20, true);
+  /* CORRECTED 2026-09-22 by M0-109, not exempted — the same defect as `ledger.test.mjs` §3's floor, found by that item's
+     class sweep: `>= 20` measured the ledger's SIZE where this check needs only NON-VACUITY, and LED-7's fold drains
+     DEBT.md on purpose (WORK-PIPELINE.md §3), so at 19 rows the fold's own progress would have failed every gate here.
+     ZERO rows still FAILS HERE BY NAME: when LED-7 archives DEBT.md whole (once empty), that same landing re-points or
+     retires this check, and it is never left to pass over nothing. */
+  t("DEBT.md has debt rows to check", rows.length > 0, true);
   const bad = rows.filter((r) => !r.ok).map((r) => `${r.id} found:"${r.status.slice(0, 40)}"`);
   t(`every one of ${rows.length} DEBT rows carries a disposition token`, bad, []);
   /* Name each row so a break points at the exact D-number, not just a count. */

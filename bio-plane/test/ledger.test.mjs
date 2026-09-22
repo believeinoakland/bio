@@ -37,6 +37,19 @@
  * was unmet because it was NOWHERE and the P4 assertion stayed green — fixed in section 11, and the
  * arm now also requires "...and R-5 is unmet because B-1 is OPEN".
  */
+/* NEGATIVE CONTROL: (M0-109, §3's non-vacuity floor) `node bio-plane/test/debt-floor.control.mjs` from the repo root,
+   eight arms plus a baseline across this suite and `planning-hygiene.test.mjs`, each armed ALONE and restored by sha256
+   AND `cmp` against its own copy. An arm replaces ONLY §3's read of the live DEBT.md with a PLANTED ledger (the file is
+   never written) and asserts the row count §3 prints, so a plant that never reached the floor is a finding, while every
+   other section still reads the real ledger. (LE) an EMPTY ledger -> "the real DEBT.md has rows (else the agreement is
+   vacuous)" FAILS, and nothing else does. (LC) the old `> 100` restored over 100 planted rows -> the same assertion
+   FAILS, and nothing else: the incident this item corrects. (LO) the same 100 rows under the corrected floor -> GREEN,
+   the over-strictness arm, which also isolates LC's variable. (LO1) ONE planted row, the fold's last -> GREEN. (LL) THE
+   LIAR, the floor deleted over an empty ledger -> GREEN, and that is the finding: no other assertion here sees an empty
+   ledger, so LE is the arm that catches the liar. RUN 2026-09-22 by the M0-109 worker, driver exit 0, 62 pass / 0 fail,
+   every restore byte-identical; this suite per arm: baseline 158/0 judging 101 live rows, LE 157/1 judging 0, LC 157/1
+   judging 100, LO 158/0 judging 100, LO1 158/0 judging 1, LL 157/0 judging 0. Run on this file's code as committed;
+   this block and the wording of §3's comment were written after it. */
 
 import "./stdio.mjs";
 import "./sandbox.mjs";
@@ -283,7 +296,17 @@ section("3 — CLOSED IS DEFINED ONCE: a QUEUE row by its `done`/`superseded` st
   /* The agreement over the REAL live DEBT.md, read not written: a row owed lists is never archivable. */
   const debt = readFileSync(join(REPO, "docs/development/DEBT.md"), "utf8");
   const rows = L.debtRows(debt);
-  t("the real DEBT.md has rows (else the agreement is vacuous)", rows.length > 100, true);
+  console.log(`  the agreement reads ${rows.length} row(s) of DEBT.md`);   /* the corpus, printed: M0-109's control reads it */
+  /* CORRECTED 2026-09-22 by M0-109, not exempted: this floor read `rows.length > 100`, which measured the ledger's SIZE
+     where the arm needs only its NON-VACUITY. LED-7's fold drains DEBT.md ON PURPOSE (WORK-PIPELINE.md §3: every open
+     row leaves by one of three doors, and the file is archived whole once empty), so the old floor turned the fold's
+     own progress into a red gate: at 99 rows a DOCS gate failed on this line alone, and on `main` every lane's would
+     have (recorded on M0-109's row). One row is enough for the two assertions below to judge something; ZERO rows is
+     the vacuous case and still FAILS HERE BY NAME, and that failure is the signal the fold's last act is owed: when
+     LED-7 archives DEBT.md whole, this arm reads the ARCHIVE instead, re-pointed in that same landing — never deleted.
+     Deleting this line is how a liar passes an empty ledger: no other assertion in this suite sees one (arm LL of the
+     M0-109 control, declared at the head of this file). */
+  t("the real DEBT.md has rows (else the agreement is vacuous)", rows.length > 0, true);
   t("no real DEBT row declaring a residue reads closed", rows.filter((r) => RESIDUE_RE.test(r.disposition) && r.closed).map((r) => r.id), []);
   const owedIds = new Set(["BOB", "CONDUCT", "DIST", "ZZZNOTALANE"].flatMap((lane) => owedFor(lane, { repo: REPO }).items.map((i) => i.id)));
   t("no row owed lists for ANY lane is one the archiver would move", rows.filter((r) => r.closed && owedIds.has(r.id)).map((r) => r.id), []);
