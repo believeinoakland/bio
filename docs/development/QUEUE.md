@@ -22,43 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-22 · BOB #26 · SCHEDULER #11's GROUP OF FOUR ANSWERED — TWO CLOSED IN FACT, TWO BUILD ITEMS.** Each traced at
-the code on `48aab56b` and ruled in its home document. **Q1, D-152 — door 1, CLOSED IN FACT:** DEC-4's *an OCR citation
-carries its image region* is met at the leg by a CAP, never a refusal (`BIO_Content_Framework_v0_10.md` §14.4); evidence:
-`checkEarnedLeg` bounds a leg's capture letter by `captureBound` (C-2.8, REC-88), `gradeCeiling` lets only a covering
-attestation raise a content row and `extentCovers` gives a rect-less target no region's (`textchain.mjs`), the text index
-carries `chain_kind`, and the rest SCHEDULER #11 verified on `06832aff`. A refusal would press a member to invent a region.
-**Q2, D-164 — door 1, CLOSED IN FACT:** Bob's reopening condition of 2026-09-15 is met (Framework §18): Part II reviewed by
-Bob on 2026-09-14, the six pieces designed in their homes, the primitive BUILT (`node tools/status.mjs 4`); what remains
-is REC-122, D-394 and the TRANSCRIBE surface. `BIO_System_Design.md` §5's M4 cell, `INVESTIGATIVE-SESSION.md` and
-`STORE-AS-CACHE.md` are marked; `MILESTONES.md`'s D-164 row is SCHEDULER's to move. **Q3, D-125, and Q4, D-179 — door 2,
-each keeping its id:** items 2 and 1. Both are product corrections and neither waits on anything unbuilt.
-
-1. **RECORD (M7), D-179, beside D-169/D-171: a second registration of held bytes is REFUSED BY NAME** (`BIO_Intake_Doctrine_v1_1.md`
-   §8, ruled: one capture, one home, the original's). At `promote`, before any write, a register entry whose
-   `capture_sha` is already registered under ANOTHER bundle that still exists is refused — C-53.8's authored-only fence
-   generalised to every capture. The refusal says the document is already in the record and names the holder only to a
-   caller who may see it (D-15). A re-registration under the SAME bundle is unchanged; a purged home's bytes register
-   afresh. I3: `op=promote` refuses what it accepted (the integrator mints the IC). **Accepts when** held bytes promoted
-   under a second bundle are refused and the first bundle's register row is byte-identical after; a revision
-   re-registering its own bytes lands; a caller who cannot see the holder is told no bundle. A fixture registering one
-   sha under two bundles is corrected, never exempted, with the reason. NEGATIVE CONTROL: drop the refusal, and the
-   first-bundle-unchanged arm fails by name. **Not reached, stated so it is not assumed:** a DIGEST-level duplicate
-   across bundles (different raw bytes, one evidentiary digest) — `LINK-FIDELITY.md` "The work, in order" step 5's
-   cross-bundle check in `op=audit` — is neither built nor rowed; placing it is SCHEDULER's call.
-2. **RECORD (M8, the inbox half), D-125: a member's PERSONAL mute of a FINDING** (`NOTIFICATIONS.md` "MARKED AS HANDLED",
-   ruled; DEC-10's (b) and (c)). `queueMute` admits FINDING kinds for the per-case mute (c), over the kinds named when it is
-   made, as for a condition; a per-ITEM mute (b) is added, keyed on the member and the item's stable id
-   (`FINDING::<progression>::<stage>` for a derived finding, the key `proposal_dispositions` already uses), in a derived
-   table `purge` clears. I5 and I3's `op=queuemute` gain it (the integrator mints the ICs). Neither writes a disposition;
-   the member's own feed states the suppression, as today; an OBLIGATION stays refused. `MUTE_REFUSAL_DETAIL`'s FINDING
-   sentence goes, and `current.test.mjs`'s pin that the fence refuses a FINDING is CORRECTED with its reason (DEC-10). The
-   queue surface renders the producer's options (UI-45 §1): verify it offers the act with no surface change. **Accepts
-   when** member A's item mute of finding F drops F from A's feed into A's `suppressed`, while member B's feed and
-   `op=proposals` still carry F and no disposition row exists; A's case mute of `overdue_successor` suppresses that case's
-   overdue items and a NEW kind there still reaches A; an OBLIGATION mute is refused by name. NEGATIVE CONTROL: key the
-   item mute by case alone, and the B-feed arm fails by name.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.

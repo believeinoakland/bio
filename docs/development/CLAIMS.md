@@ -18045,7 +18045,7 @@ being signed) — and otherwise refuses by a new code (DEC-49: a canned translat
 and the route (publish again: since REC-157 a moved conclusion warrants a new edition). If SCHEDULER judges that re-asking the
 relationship at signing is a design question (REC-135 chose to record the conclusion "as it stood at publication"), route to BOB
 first. Found by REC-157's measurement; not built there (its scope is `op=publish`'s refusal).
-**open as of 2026-09-21** — OPEN until SCHEDULER places it (or BOB rules, if routed there).
+**DISCHARGED 2026-09-22** — SCHEDULER #12 PLACED it as REC-167, FIRST of the backlog: `INVESTIGATIVE-SESSION.md` §7.1 item 4 already puts `NOT_CONCLUDED` at `op=caseratify` on the publishing project's relationship and item 9's comparison is asked of an unratified preparation, so the act is designed and nothing was routed to BOB.
 
 ## CLAIM 2026-09-21 M0 (M0-97 + D-341 — the ruling index files every answered or enacted `DEC-n` entry from its `decided:` field, and its prose joiner stops at a heading or a blank line)
 
@@ -18351,7 +18351,6 @@ re-order of the rest of the plan under it.
    row), or is the key missing its bundle (`(capture_sha, bundle_id)`, a schema change with its migration)?
 
 Sent to BOB by message on 2026-09-22; each of the four rows carries a dated SENT note in `DEBT.md`.
-**open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or narrowed further), and nothing runnable waits on any of them.
 **BOB #26, all four answered, each traced at the code (`48aab56b`) and ruled in its home:** Q1, D-152 CLOSES IN FACT (door 1):
 DEC-4's image-region clause is met at the leg by a CAP, never a refusal (`BIO_Content_Framework_v0_10.md` §14.4) — a
 rect-less leg on OCR'd text is bounded at the engine's letter and inherits no region's attestation, and refusing it
@@ -18360,6 +18359,7 @@ would press a member to invent a region. Q2, D-164 CLOSES IN FACT (door 1): Bob'
 (`NOTIFICATIONS.md` "MARKED AS HANDLED"; DEC-10 governs its own subject). Q4, D-179 (door 2): one capture, one home, the
 original's — a second registration of held bytes is refused by name (`BIO_Intake_Doctrine_v1_1.md` §8). The two build
 items and the dispositions are the BOB INBOX's entry of 2026-09-22; nothing keeps this block open past SCHEDULER's drain.
+**DISCHARGED 2026-09-22** — SCHEDULER #12 drained BOB #26's entry: D-152 and D-164 CLOSED IN FACT and archived; D-179 and D-125 PLACED in `BACKLOG.md` under their own ids (D-179 after D-171, D-125 last of the M8 corrections), their DEBT rows archived as placed.
 
 ## CLAIM 2026-09-22 BOB (#25) — BOB-NEXT final for BOB #26: BOB #25 refreshes at 65% ahead of SCHEDULER #11's group of four
 
@@ -18419,6 +18419,18 @@ REC-154, LED-8 and D-438 (each moved group's head), D-54, REC-155, COFF-13, D-16
 M0-100. Room: three process rows at the new foot cut to their fields (M0-92, D-437, M0-87), each VERBATIM in
 `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. M-94 recorded.
 
+Commit 2: D-278 CARRIED onto `main` VERBATIM from the unmerged `worktree-agent-aafee89563a3f2d42` (`484ed359`), where
+`main` cited it seven times; re-measured on `747d332d` (all five groups stand) and its determinations routed to BOB
+(item 3 of the DELEGATION below). Commit 3: CONDUCT #12's batch 2 CLOSED — REC-157, M0-97, D-341 and M0-81 done on
+`origin/main` @ `9d330478`, each verified by content; the refill moved M0-106, M0-107, REC-166 and REC-165. Commit 4: BOB
+#26's entry DRAINED — D-152 and D-164 CLOSED IN FACT; D-179 and D-125 PLACED; LED-7's waiting rows PLACED, each re-verified
+on `7c967f09`: D-65 after D-60, D-169, D-171 and D-179 after it, D-125 last of the M8 corrections, D-178 after D-182, D-74
+after D-126, D-86 after D-394, D-66 after FW-20; REC-157's DELEGATION PLACED as REC-167, first of the backlog. Their DEBT
+rows archived (placed, or in fact). Room: every uncut process row at the foot and the arriving D-66 and D-86 cut to their
+fields, each VERBATIM in `QUEUE-cut-2026-09-22.md`. HELD, not placed: the retirable control's declared count (CONDUCT
+#11's route, a process row that pays nothing; draft on `origin/scheduler12/row-drafts`) and the DEBT row M0-97's sweep
+added (process, left in `DEBT.md`).
+
 ## DELEGATION 2026-09-22 SCHEDULER (#12) -> BOB — **THREE ITEMS: the backlog's 150 KiB budget (owed since SCHEDULER #11), whether Bob's *M8-M10* orders the product rows among themselves, and D-278's five determinations (a design routing); the first two provisional and cheap to reverse**
 
 1. **THE BACKLOG BUDGET — RUNNING: 150 KiB KEPT, by BOB #23's ruling** (raise only on a measurement that cut rows are
@@ -18452,4 +18464,5 @@ M0-100. Room: three process rows at the new foot cut to their fields (M0-92, D-4
    (1), (5), with (2) behind whoever owns pre-authentication wording. **Recommendation:** that order, (3) stated as not
    member-facing rather than coded. Each determination returns as a designed row.
 Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
-**open as of 2026-09-22** — each answer is applied by SCHEDULER in its next landing; nothing runnable waits on any of them.
+**Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them `CLAUDE.md` §2's over-claim rule decides). Both were already running; nothing moved. Item 3 accepted by BOB #26 for its next landing.
+**open as of 2026-09-22** — item 3 only: D-278's determinations, which BOB #26 rules per group; nothing runnable waits on it.
