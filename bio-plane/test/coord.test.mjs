@@ -24,7 +24,14 @@
  * answers the same row from coord"; (W) `addLine` made a TAIL APPEND — what a textual merge of two tail appends
  * yields — instead of the anchored insertion -> FAILS at "§5 the line is in ITS OWN block"; (C) the write's ledger
  * checks skipped -> FAILS at "§6 the planted closed row is REFUSED". RESULT: recorded on the line below at the run.
- * NEGATIVE CONTROL RESULT: (pending the first run of the driver)
+ * NEGATIVE CONTROL RESULT: RUN 2026-09-22 by the M0-110 worker on `tools/coord.mjs` sha256 b533bac0… and `ledger.mjs`
+ * 1e4f5f4a…, driver exit 0, 25 pass / 0 fail, 3 of 3 arms as declared, every restore sha256- and cmp-identical: baseline
+ * 80/0; R 72/8 (§2's four answers through `readRel`, the flip read-back and the archive write among them); W 78/2 (exactly
+ * the two in-block assertions); C 74/6 (§6's three, the dry run, the P2 refusal, the hook-vs-check refusal); closing 80/0.
+ * AND M0-109's floors, moved here (§8): `node bio-plane/test/debt-floor.control.mjs`, RUN the same day on the same sha,
+ * exit 0, 33 pass / 0 fail, 4 of 4 arms as declared: TL 79/1 and AL 79/1 (each liar fails ONLY its own empty-ledger
+ * assertion); TC 59/20 and AC 58/21 (the size floors fail the one-row assertion — and AC the hundred-row one — and every
+ * small fixture write with them, the collateral the driver's head declares: a size floor fails small honest ledgers).
  */
 import "./stdio.mjs";
 import "./sandbox.mjs";
