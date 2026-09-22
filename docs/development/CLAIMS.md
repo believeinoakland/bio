@@ -18959,3 +18959,9 @@ comparison, and its front matter's design gap (e); the measured path is M-92's `
 SECOND BLOCK (2026-09-22, after the battery named them): NO existing suite was made wrong by this landing — the 36 suites that
 drive a case ratification or a withdrawal ran `36/36 suites green` before any correction; `bio-plane/scripts/coverage.mjs`
 (`REGISTER_FLOOR`, from its own print) and `civicos-ui/check-refusal-codes.mjs` (nine floors, from its own print) moved.
+
+**released: 2026-09-22 REC-167 worker (CONDUCT #14, wave 2)** — built on `worktree-agent-a33d4bac9a4ff9d3a` at `1effc73a` (tree
+`6602969f`, `node tools/gates.mjs` GREEN FULL: `275/275 suites green · 16615 assertions passing · EXCLUDES 2 untallied suite(s)`,
+SKIP 0; coverage `--strict` and `civicos-ui` green; `plancheck --local` 0 fail); IC-177 PROPOSED for CONDUCT to resolve at
+integration; C-65 and M-103 minted. The DEC-49 guard's `regionLines` includes this item's 13-line region
+`ratifyCaseDocument > is-caseratify-conclusion-moved` — a property of the MERGED source, re-read at integration.
