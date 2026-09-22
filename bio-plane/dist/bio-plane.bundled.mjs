@@ -57726,6 +57726,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       ...act === "current" ? { project: projectId } : {}
     };
     if (preview) return { ...receipt, preview: true, would: act, wrote: false };
+    if (act === "current") {
+      const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when, why);
+      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
+      return receipt;
+    }
     text = _Store.#setVersionField(text, vname, "state", to === null ? from : to);
     if (to !== null) {
       text = _Store.#setVersionField(text, vname, "state_by", who);
@@ -57745,7 +57750,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       text,
       `### Session ${when} | Version ${act} | ${who}
 Trigger: op=version${act} on ${target}
-Changes: reading '${vname}' ${to === null ? act === "hide" ? `${hidden ? "hidden from" : "returned to"} the display` : `is what ${projectId} stands on` : `${from} to ${to}`}.
+Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returned to"} the display` : `${from} to ${to}`}.
 ` + (why ? `Reason: ${why}
 ` : "")
     );
@@ -57778,15 +57783,14 @@ Changes: reading '${vname}' ${to === null ? act === "hide" ? `${hidden ? "hidden
       }
     });
     if (!promoted.ok) return { ...promoted, act, target, version: vname };
-    if (act === "current") {
-      const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when);
-      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
-    }
     return receipt;
   }
   /* The make-current pointer's ONE writer, paired with `#currentVersionOf`, its
-     ONE reader. §7's field: project-authored, DATED, never a settings row. */
-  #setProjectCurrentVersion(projectRow, inquiryId, vname, who, when) {
+     ONE reader. §7's field: project-authored, DATED, never a settings row. Since
+     REC-166 (2026-09-22) it is also the act's ONLY write: the receipt the question
+     used to carry — including the member's authored reason — is written HERE, in the
+     project's own Session Log entry, in the same promotion as the pointer. */
+  #setProjectCurrentVersion(projectRow, inquiryId, vname, who, when, why = "") {
     const pid = projectRow.bundle_id;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
     if (!md || md.content === null) {
@@ -57819,7 +57823,8 @@ Changes: reading '${vname}' ${to === null ? act === "hide" ? `${hidden ? "hidden
       `### Session ${when} | Stands on | ${who}
 Trigger: op=versioncurrent on ${inquiryId}
 Changes: this project now stands on reading '${vname}' of ${inquiryId}.
-`
+` + (why ? `Reason: ${why}
+` : "")
     );
     const carried = [];
     for (const r of this.sql.exec(

@@ -417,3 +417,7 @@ bio-plane/.nc-migrate-released/
 # tool's one freshness call, `fresh()`. This line does NOT apply to a tracked file, so a merge that keeps a pre-M0-99
 # branch's copy re-tracks it silently: `plancheck` arm 2b fails on a tracked copy, naming the fix (`git rm --cached`).
 docs/DECIDED.md
+
+# REC-166 (2026-09-22): `bio-plane/test/current-shared-question.control.mjs`'s pen — it edits src/ and keeps per-arm
+# pristine copies here; an interrupted driver must not leave them as somebody else's corpus.
+bio-plane/.nc-rec166/

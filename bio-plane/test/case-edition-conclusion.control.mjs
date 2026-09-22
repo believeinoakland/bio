@@ -31,7 +31,11 @@
  *      MUST NOT FAIL: §1, §2, §3, §4's DISCRIMINATOR and — the half worth having —
  *      §4's "surface now OFFERS" arm: the affordance still asks the comparison, so
  *      the surface offers what the act refuses, the DEC-8 disagreement this arm
- *      exposes rather than hides; §7's unchanged and discriminator arms; §9.
+ *      exposes rather than hides; §7's unchanged and discriminator arms; §9's pin arm.
+ *      CORRECTED 2026-09-22 BY REC-166: §9's ROUTE arm moved from MUST NOT FAIL to
+ *      MUST FAIL. It asserted the bytes route, which arm (a) could not touch; since
+ *      REC-166 a make-current writes only the project, §9 is reached by the
+ *      CONCLUSION comparison, and arm (a) closes exactly that comparison.
  *  (b) THE REFUSAL DROPPED — THE LIAR. MUST FAIL: every UNCHANGED arm (§2, §5, §6,
  *      §7, §8) and §2's names-the-edition arm. THE LIAR'S OWN ACT WRITES — each
  *      unchanged publication it lets through promotes the finding — so the
@@ -119,19 +123,24 @@ const S2_NAMES = "and the refusal names the edition that ALREADY records this co
 const S2_SURFACE = "the surface agrees: `publish` is NOT offered on the case member";
 const S3_WD = "a project that WITHDREW is refused NOT_CONCLUDED";
 const S1_ED1 = "A publishes edition 1 of a new case";
-const S9_ROUTE = "so the edition publishes by the BYTES route";
+/* CORRECTED 2026-09-22 BY REC-166: section 9 asserted the BYTES route ("so the edition
+   publishes by the BYTES route"), which was the defect INVESTIGATIVE-SESSION §7's BOB #25
+   ruling removed. A make-current now writes only the project, so section 9 asserts the
+   finding stays at its pin (S9_PIN) and the edition is reached by the CONCLUSION route. */
+const S9_PIN = "the make-current AFTER publication WROTE NOTHING on the shared question";
+const S9_ROUTE = "so the edition publishes by the CONCLUSION route";
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes six-arms-working from six-arms-broken",
-              apply: () => {}, mustFail: [], mustNotFail: [S1_ED1, S2_SAME, S4_SECOND, S8_SAME, S9_ROUTE] },
+              apply: () => {}, mustFail: [], mustNotFail: [S1_ED1, S2_SAME, S4_SECOND, S8_SAME, S9_PIN, S9_ROUTE] },
 
   a: { files: [STORE],
        label: "(A) PIN ON bundle_sha ALONE AGAIN — the refusal reverts to `rel.member`, the row's own named control",
        apply: () => edit(STORE, REFUSAL, REFUSAL.replace("if (recorded && recorded.same.length)", "if (rel.member)")),
        mustFail: [S4_SECOND, S4_WHY, S4_RECORDS, S4_ABSENT, S5_SAME, S5_STOPS,
                   S6_DISC, S6_WARRANTED, S6_RECORDS, S6_SAME, S7_MOVED, S7_RECORDS,
-                  S8_PROV, S8_DISCLOSES, S8_SAME],
-       mustNotFail: [S1_ED1, S2_SAME, S2_NAMES, S2_SURFACE, S3_WD, S4_DISC, S4_OFFERS, S7_SAME, S7_DISC, S9_ROUTE] },
+                  S8_PROV, S8_DISCLOSES, S8_SAME, S9_ROUTE],
+       mustNotFail: [S1_ED1, S2_SAME, S2_NAMES, S2_SURFACE, S3_WD, S4_DISC, S4_OFFERS, S7_SAME, S7_DISC, S9_PIN] },
 
   b: { files: [STORE],
        label: "(B) THE REFUSAL DROPPED — the liar, who passes every second-edition arm",
@@ -140,7 +149,7 @@ const ARMS = {
        mustFail: [S2_SAME, S2_NAMES, S5_SAME, S6_SAME, S7_SAME, S8_SAME],
        cascade: [S4_DISC, S4_WHY, S6_DISC, S7_DISC],
        mustNotFail: [S1_ED1, S3_WD, S4_SECOND, S4_RECORDS, S4_ABSENT, S6_WARRANTED, S6_RECORDS,
-                     S7_MOVED, S7_RECORDS, S8_PROV, S8_DISCLOSES, S9_ROUTE] },
+                     S7_MOVED, S7_RECORDS, S8_PROV, S8_DISCLOSES, S9_PIN, S9_ROUTE] },
 
   c: { files: [STORE],
        label: "(C) OVER-STRICTNESS — the CLAIM compared instead of the ACT, so a re-taken conclusion reads as recorded",
@@ -150,7 +159,7 @@ const ARMS = {
          "  static #CONCLUSION_ENTRY_FIELDS = [\"project\", \"version\", \"claim_state\", \"claim\"];"),
        mustFail: [S6_WARRANTED, S6_RECORDS, S6_SAME],
        mustNotFail: [S1_ED1, S2_SAME, S2_NAMES, S3_WD, S4_SECOND, S4_RECORDS, S4_OFFERS, S5_SAME, S6_DISC,
-                     S7_SAME, S7_MOVED, S8_PROV, S8_SAME, S9_ROUTE] },
+                     S7_SAME, S7_MOVED, S8_PROV, S8_SAME, S9_PIN, S9_ROUTE] },
 
   d: { files: [STORE],
        label: "(D) THE NO-PROJECT PIN IGNORED — a no-project conclusion always reads as moved (the legacy liar)",
@@ -159,7 +168,7 @@ const ARMS = {
          "    if (want.relationship === \"no_project\") return false;"),
        mustFail: [S8_SAME],
        mustNotFail: [S1_ED1, S2_SAME, S4_SECOND, S5_SAME, S6_WARRANTED, S6_SAME, S7_SAME, S7_MOVED,
-                     S8_PROV, S8_DISCLOSES, S9_ROUTE] },
+                     S8_PROV, S8_DISCLOSES, S9_PIN, S9_ROUTE] },
 
   e: { files: [STORE],
        label: "(E) THE PREPARED EDITION NOT ASKED — only ratified editions are compared",
@@ -169,7 +178,7 @@ const ARMS = {
        mustFail: [S7_SAME],
        cascade: [S7_DISC, S7_MOVED],
        mustNotFail: [S1_ED1, S2_SAME, S4_SECOND, S5_SAME, S6_WARRANTED, S6_SAME, S7_RECORDS,
-                     S8_PROV, S8_SAME, S9_ROUTE] },
+                     S8_PROV, S8_SAME, S9_PIN, S9_ROUTE] },
 
   f: { files: [AFF],
        label: "(F) THE AFFORDANCE BACK ON `!f.case_member` ALONE — the surface hides an act the store accepts (DEC-8)",
@@ -178,7 +187,7 @@ const ARMS = {
          "                     && !f.case_member"),
        mustFail: [S4_OFFERS],
        mustNotFail: [S1_ED1, S2_SAME, S2_SURFACE, S4_SECOND, S4_RECORDS, S5_SAME, S5_STOPS, S6_WARRANTED,
-                     S7_MOVED, S8_PROV, S8_SAME, S9_ROUTE] },
+                     S7_MOVED, S8_PROV, S8_SAME, S9_PIN, S9_ROUTE] },
 };
 
 const want = process.argv[2];

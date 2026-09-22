@@ -14,7 +14,10 @@
  * ILLEGAL_TRANSITION there, since the shared question never left `open`.
  *
  * WHAT THIS SUITE FOUND BEFORE IT CHECKED ANYTHING, and it shapes every arm below:
- * `op=versioncurrent` WRITES INTO THE SHARED QUESTION'S OWN BYTES. Making a reading
+ * `op=versioncurrent` WROTE INTO THE SHARED QUESTION'S OWN BYTES — CORRECTED
+ * 2026-09-22 BY REC-166: that was the defect INVESTIGATIVE-SESSION §7's BOB #25 ruling
+ * removed (fix (a)), and since REC-166 a make-current writes ONLY the project, so the
+ * paragraph below is the measurement of the plane AS IT WAS. Making a reading
  * current promotes the INQUIRY (a Session Log line naming the project's new stance)
  * before it writes the project's pointer, so it MOVES the finding's `bundle_sha`.
  * Measured on the untouched plane (`origin/main` 86523052): conclude, publish,
@@ -26,7 +29,12 @@
  * and says so in a DISCRIMINATOR assertion: the project already stands on the
  * reading it re-concludes on (its pointer moved BEFORE the edition that pins the
  * bytes), or it re-concludes on the same reading (REC-135's own probe). Section 9
- * drives the bytes route once, to keep the two routes told apart.
+ * drove the bytes route once, to keep the two routes told apart; since REC-166
+ * (2026-09-22) there is no bytes route through a make-current, and section 9 now
+ * asserts THAT: the pointer moved after publication leaves the finding at its pin,
+ * and the edition is reached by the conclusion comparison, saying so. The
+ * discriminators stay: they are what tells this item's route from any other
+ * write that moves the bytes.
  *
  * HOW A LIAR PASSES THIS SUITE, stated before what it checks: DROP THE REFUSAL.
  * Every second-edition arm then passes, because an act that refuses nothing
@@ -63,9 +71,11 @@
  *     this item asks the SAME answer, so an edition is warranted — and it must
  *     DISCLOSE that it rests on the no-project relationship and must not carry the
  *     withdrawn claim. Unchanged after it is refused, by the pin.
- *  9. THE BYTES ROUTE, told apart: a make-current AFTER publication moves the
- *     finding's bytes, the membership refusal is never asked, and the act's answer
- *     carries no `edition_warranted` — which is how a caller tells the routes apart.
+ *  9. THE MAKE-CURRENT ROUTE, CLOSED (REC-166, 2026-09-22 — this arm read "THE BYTES
+ *     ROUTE, told apart" and asserted the make-current MOVED the finding's bytes,
+ *     which was the defect §7's BOB #25 ruling removed): a make-current AFTER
+ *     publication writes nothing on the shared question, the finding stays at its
+ *     pin, and the edition is warranted by the conclusion comparison and says so.
  *
  * WHAT IT CANNOT SEE, stated rather than left for the next reader: the sharing
  * edge is hand-authored into `references[]` (REC-72's open finding); two
@@ -342,10 +352,11 @@ console.log("\n--- 1. edition 1: A concludes on reading A, moves its pointer to 
 
 await must("A stands on reading A", await makeCurrent(A, Q, VA.name));
 await must("A concludes on it", await concludeFor(A, Q));
-/* THE POINTER MOVES BEFORE THE EDITION, and the reason is the finding in this
-   suite's header: a make-current writes into the SHARED question's bytes. Moved
+/* THE POINTER MOVES BEFORE THE EDITION, and the reason was the finding in this
+   suite's header: a make-current wrote into the SHARED question's bytes. Moved
    here, it is inside the bytes edition 1 pins, so nothing after edition 1 moves
-   them. Making a reading current is not concluding on it — A still stands on its
+   them. (Since REC-166, 2026-09-22, a make-current writes only the project, so the
+   placement no longer matters to the pin; it is kept so the fixture is unchanged.) Making a reading current is not concluding on it — A still stands on its
    conclusion A, and edition 1 must record exactly that. */
 await must("A moves its pointer to reading B, still standing on its conclusion A", await makeCurrent(A, Q, VB.name));
 const pub1 = await publish(A, Q);
@@ -521,9 +532,17 @@ t("UNCHANGED AFTER IT: refused ALREADY_A_CASE_MEMBER — the no-project conclusi
   [false, "ALREADY_A_CASE_MEMBER", [{ case_id: npub1.caseId, edition: 2, state: "ratified" }]]);
 
 /* =======================================================================
-   9. THE BYTES ROUTE, TOLD APART.
+   9. THE MAKE-CURRENT ROUTE, CLOSED.
+   CORRECTED 2026-09-22 BY REC-166 (INVESTIGATIVE-SESSION §7, BOB #25, fix (a)),
+   never exempted. This section asserted that the make-current below MOVED the
+   finding's bytes and that the edition then published by the bytes route with no
+   `edition_warranted`. That assertion measured the DEFECT: a project's stance
+   written into the shared question, unpinning every case on it. With fix (a) the
+   make-current writes only the project, so the finding stays at edition 1's pin
+   and the second edition is warranted by the conclusion comparison — item 9's
+   premise, now true on this path too.
    ======================================================================= */
-console.log("\n--- 9. a make-current AFTER publication moves the bytes: the membership refusal is never asked ---");
+console.log("\n--- 9. a make-current AFTER publication writes nothing on the shared question: the conclusion route ---");
 
 await must("C stands on reading A", await makeCurrent(C, QB, VA.name));
 await must("C concludes on it", await concludeFor(C, QB));
@@ -534,12 +553,13 @@ await must("C withdraws", await withdraw(C, QB, "the advertisement was re-dated"
 await must("C moves its pointer to reading B AFTER publication", await makeCurrent(C, QB, VB.name));
 await must("C concludes on it", await concludeFor(C, QB));
 const rowQB = await bundleRow(QB);
-t("the make-current WROTE INTO THE SHARED QUESTION'S BYTES: the finding is no longer at edition 1's pin",
-  [typeof bpub1.bundleSha, rowQB?.bundle_sha === bpub1.bundleSha], ["string", false]);
+t("the make-current AFTER publication WROTE NOTHING on the shared question: the finding is still at edition 1's pin",
+  [typeof bpub1.bundleSha, rowQB?.bundle_sha === bpub1.bundleSha], ["string", true]);
 const bpub2 = await publish(C, QB);
-t("so the edition publishes by the BYTES route — and carries no `edition_warranted`, because the "
-+ "membership refusal was never asked: that absence is how a caller tells the two routes apart",
-  [bpub2?.ok, bpub2?.edition, warrantOf(bpub2)], [true, 2, null]);
+t("so the edition publishes by the CONCLUSION route — edition 2, carrying `edition_warranted`, because "
++ "the membership refusal WAS asked and the project's conclusion moved",
+  [bpub2?.ok, bpub2?.edition, warrantOf(bpub2)?.because ?? null],
+  [true, 2, "the_publishing_projects_conclusion_moved"]);
 
 console.log(`\ncase-edition-conclusion.test.mjs: ${pass} pass, ${fail} fail`);
 await mf.dispose();
