@@ -6,6 +6,27 @@ and live; **a BATCH, 0.72.0, is owed** (below). Read `CLAUDE.md`, then `kickoffs
 CUTS, the `latest` pointer mechanism and its LESSONS are the process. This file is only state, MEASURED 2026-09-22
 ~15:30Z. Re-measure before acting: a deployment is a fact about the ACCOUNT.
 
+## DIST #5, 2026-09-22 20:06Z — MEASURED in the cloud: everything but the network is in; the cut stops at the network
+
+- **In, measured:** node v26.10.0; full history (not shallow); `node_modules` a real directory in `bio-plane`,
+  `pdf-worker`, `ocr-worker`, `newgroup`; `/usr/bin/ssh-keygen`; `.git/bio-idalloc`; 29 GB free; all ten key NAMES set
+  (values unprinted). `plancheck`: 0 fail, 4 warn (none DIST's). **No `.git/bio-gates` in this clone**: no GREEN FULL
+  record here, so the cut's step 1 is the whole battery (M-99: ~1,100 s in a cloud container).
+- **REFUSED, 2026-09-22T20:06Z:** `NODE_USE_ENV_PROXY=1 npx wrangler whoami` (in `bio-plane/`) → `fetch failed`;
+  `curl https://api.cloudflare.com/client/v4/` and `https://biosmoke7.workers.dev/` → the proxy's CONNECT answered 403.
+  So the Cloudflare keys stay UNCONFIRMED, and a deploy, a rollback-target read and every live verification cannot run.
+  **Only Bob's environment network setting changes this** (admit `api.cloudflare.com` and `*.workers.dev`); DIST does
+  not route around the proxy. A signed cut is NOT made ahead of it: a tagged branch nobody can deploy offers nothing and
+  goes stale as `main` moves (lesson 11).
+- **The batch grew since DIST #4 wrote below:** `66eab6a1` **REC-163 / IC-174** (I3 49.1.0 → 49.2.0): `op=instancegroup`
+  admits the PUBLIC class — a caller with no credential is answered the recorded group slug or that none is recorded, and
+  the setup page at `/` shows the slug. It **WIDENS** what a stranger may read: NAME it in the landing report beside
+  IC-173. Not a CUT NOW (it closes no defect). Shipped paths since `v0.71.0`: 3 commits in `bio-plane/src`; none in
+  `civicos-ui/app.html` or the members' source, so `civicos` stays and the members move their VERSION label only.
+- **Self-wake:** routine `trig_014p69w2WQz7jfSkYeg4XHSF`, cron `0 4,10,16,22 * * *` UTC (the server anchors it to minute
+  :08), firing into this session. A routine does not carry `CronCreate`'s 7-day expiry (vendor's description, unmeasured);
+  re-read `list_triggers` at each wake. It fires first at 22:08Z; the first wake past the batch bound is 04:08Z.
+
 ## FIRST: the secrets a cut needs — RULED by Bob: they are in your environment
 
 A cut needs these, by step (NAMES only; values never enter the repo or a message):
