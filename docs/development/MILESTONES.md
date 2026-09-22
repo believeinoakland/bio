@@ -669,14 +669,12 @@ and handed to CONDUCT through the BOB INBOX.
 | D-129 `undetermined` conflates *cannot determine* and *positively none* | RECORD | M8 · a field beside the reason |
 | D-130 `counterparty: to be named` passes C-2.10 | RECORD · UI | M7 · REC-23 CLOSED (rendering half UI-19; ADD_TYPES absence UI-15 — corrected 2026-08-04, the row had said UI-15 for the rendering while QUEUE/BUILD-ORDER say UI-19) |
 | D-131 a raw NUL byte makes `store.mjs` invisible to `grep` | RECORD | M0 · REC-27 |
-| D-132 `ADD_TICKS` used twice, declared nowhere | UI | M8 · UI-15 |
 | D-133 two Add-surface functions declared twice | UI | M8 · UI-15 |
 | D-134 the BALLOT act is complete, tested and unreachable | UI | M8 · UI-16 |
 | D-135 the viewer gate is stamped on compiled query paths only | RECORD | M7 · REC-25 |
 | D-136 three governance ops absent from `SESSION_OPS` | UI · RECORD | M8 · UI-16 |
 | D-137 the D-113 check is blind to eight hand-created tables | RECORD | M0 · REC-27 |
 | D-138 the drift guard never reads the catalogue it claims to check | UI | M9 · UI-10 |
-| D-139 nothing publishes what may be DONE to an object | RECORD | M8 · REC-19 |
 | D-140 the queue's two organising axes are not data | RECORD | M8 · REC-20 |
 | D-141 the UI rebuilds the project-visibility leak client-side | RECORD · UI | M7 · M8 (REC-25, then UI-16/UI-21 delete the client walk) |
 | D-142 search degrades to a substring scan and looks identical | UI | M8 · UI-21 |
@@ -691,7 +689,6 @@ and handed to CONDUCT through the BOB INBOX.
 | D-151 a machine credential can resolve an unassigned task (DEC-7) | RECORD | M8 · REC-28 |
 | D-152 image-only PDFs are OCR'd, and OCR text is marked as derived (DEC-4) | CONTENT-PDF | M2 · CPDF-9 measure, CPDF-10 build |
 | D-153 AUDIENCES H4/H6 are the workflow, not hazards (DEC-13) | RECORD · UI | M10 · REC-14, REC-24, UI-17 |
-| D-154 a hunch is temporary declared bias, and is HUNCH DEBT (DEC-15; term corrected 2026-08-05 per D-188 — "bias debt" names the DISCLOSED class that does not block) | RECORD · UI | M9 · REC-11/12/15/18, UI-11/12 |
 | D-155 a project declares the strength its work requires (DEC-17) | RECORD · UI | M10 · REC-14, REC-15, UI-18 |
 | D-156 "audience" names two things — reader of a case vs user type (DEC-17) | — | M10 · a documentation pass, no code |
 
@@ -709,9 +706,7 @@ together with `DEBT.md`).
 | D-158 a never-enrolled member's key reads `active` on signerlist | RECORD | M10 · REC-15/UI-17 pre-flight |
 | D-159 an ungraded leg costs a conclusion nothing | RECORD | M10 · WATCH — re-raise after a real group runs |
 | D-160 RECONCILED says SUSPEND, the canonical word is UNRATED | RECORD | M9 · REC-12 carries it |
-| D-161 a connection's passage anchors are thrown away | RECORD | M4 · design agreed in outline |
 | D-162 connections run through NAMED things; ideas cannot connect | FRAMEWORK | M4 · DOCTRINE (Bob) — a DEC at the entity axis |
-| D-163 a citation cannot point inside a document | RECORD | M4 · folds into D-123 |
 | D-164 L3 content has no object — the content-extent primitive | RECORD | M4 · D-161/D-163/D-123 fold into it; REOPENED 2026-09-15 by Bob — design authority `BIO_Content_Framework_v0_10.md` Part II §18 |
 | D-165 what each action kind requires is unmodelled | RECORD | M10 · deferred with a trigger |
 | D-166 the CPDF-5 corpus URLs went stale | CONTENT-PDF | M1 · re-locate the corpus |
