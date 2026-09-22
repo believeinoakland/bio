@@ -179,9 +179,14 @@ rigour in a handoff can reach them.**
 1. **OCCUPANCY — check it BEFORE filing, not after.** BOB #17 filed a CONDUCT #8 chip 6m35s after the
    scheduled task `conduct-8` had already stood that lane up; the chip passed both existing tests (correctly
    addressed, and a handoff five minutes old carrying that night's landings) and produced a DUPLICATE LANE.
-   **The check: `list_sessions` first, and do not file if a LIVE session is already bound to the lane** — bound
-   meaning its `scheduledTaskId` is the lane's task id, or its title names the lane. This lane already makes
-   that call for step 3's sweep; the whole cost is reading it before filing instead of after.
+   **The check is `node tools/occupancy.mjs --chip "<LANE> #<n>" --limit <L> < listing.json` (M0-81): file on ADMIT
+   (exit 0) only.** Its input is `list_sessions` (limit L), `list_scheduled_tasks` and each lane task's
+   `list_task_runs`, each as printed — `list_sessions` alone prints no `scheduledTaskId`, so it can show a binding
+   by title and never rule one out by task (M-93). REFUSE names each occupant by session id: a stood-down or
+   duplicate one is RETIRED, never renamed, and the check re-run. UNDETERMINED names the call that settles it.
+   **A live session bound BELOW the chip's number is its PREDECESSOR, named and never refused** (BOB #26,
+   2026-09-22): read literally, "do not file if a live session is bound" refuses every successor chip, and a
+   successor is filed while its predecessor lives, then archives it.
 2. **REACHABILITY — a lane stood up UNATTENDED has no inbox at all.** Measured 2026-09-19: the live CONDUCT #8
    (`scheduledTaskId: conduct-8`, running and landing commits) answered `SendMessage` at its session id with
    *"is unattended … messages can't be delivered there"*, and was ABSENT from every peer's `ListAgents` — 48

@@ -18030,7 +18030,8 @@ it moves their pins and their revision obligations)? **Candidate fixes, for BOB 
 PROJECT's own Session Log and the inquiry is not promoted by a project-arm make-current (the conclusion act's discipline); (b) keep
 the line but exempt a stance-only promotion from `#flagCasesOnRevision` (a narrower fix that leaves the pin moving). REC-157 built
 neither: its scope is the refusal, and both change what `op=versioncurrent` writes.
-**open as of 2026-09-21** — OPEN until BOB rules and, if a fix is ruled, SCHEDULER places it.
+**DISCHARGED 2026-09-22 by BOB #26:** ruled by BOB #25 (`032d1ce1`: a project's make-current writes nothing on the
+shared question, `INVESTIGATIVE-SESSION.md` §7) and placed by SCHEDULER #11 as REC-166 (`381427e4`), `depends-on` REC-157.
 
 ## DELEGATION 2026-09-21 RECORD (REC-157 worker) -> SCHEDULER — **a case PREPARED by `op=publish` and RATIFIED after its project WITHDREW the conclusion it records still commits: the signed edition records a conclusion that no longer stood at signing**
 
@@ -18243,7 +18244,7 @@ ADMIT only."* M0-82 (CONDUCT's fallback start, owner CONDUCT) is sequenced after
    - recommendation: keep the reading. The incident was a chip for the instance that already existed; the alternative
      leaves a lane with no live session between the predecessor's archive and the successor's start.
    - reversal cost: one line of `tools/occupancy.mjs`, and arm (g) of its suite is the pin to move; no data depends on it.
-**open as of 2026-09-22** — open until BOB names the command in rule 1 (or says why not) and rules the reading; nothing here blocks a runnable row.
+**ANSWERED 2026-09-22 by BOB #26** — see the DISCHARGED line at the foot of this block.
 3. **THE CLASS SWEEP (2026-09-22): three places in the kickoffs stand up a lane session, and ONE more is BOB's.** A grep of
    `docs/development/kickoffs/`, `CLAUDE.md` and `ORCHESTRATION.md` for every chip filing, `spawn_task`,
    `create_scheduled_task`/`run_scheduled_task` and successor start: `BOB.md` (this delegation), `CONDUCT.md` "Starting
@@ -18253,7 +18254,11 @@ ADMIT only."* M0-82 (CONDUCT's fallback start, owner CONDUCT) is sequenced after
    And one outside the repository, named and never changed: the operator's `conduct-8` task is still ENABLED (manual)
    and titled `CONDUCT #8 (BIO) — integrator lane`. Re-run today it would stand up a second integrator under a stale
    number, and this judgement would read that session as a predecessor of any later CONDUCT chip, never an occupant.
-**open as of 2026-09-22** — items 1-3 open until BOB answers each; nothing here blocks a runnable row.
+**DISCHARGED 2026-09-22 by BOB #26**, all three: (1) `kickoffs/BOB.md` rule 1 now names the command, its input and
+"file on ADMIT only", with M-93's reason; (2) the reading is RULED as recommended and written into rule 1 — a live
+session bound BELOW the chip's number is its predecessor, named and never refused; (3) `NEW-MACHINE.md` gates its
+chips on the same command, in both places it files them. The `conduct-8` task is the operator's and was told to Bob
+by BOB #25 on 2026-09-22; not repeated.
 
 ## CLAIM 2026-09-22 SCHEDULER (#11) — the lane's standing claim on the build plan's own files; BOB #25's D-293 entry drained (M0-104, M0-105) and LED-7 batch S11-1
 
@@ -18390,4 +18395,13 @@ claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77
 `docs/architecture/BIO_Case_Making_v0_1.md` (§2: two ruled paragraphs carrying Bob's words of 2026-09-22; Status
 sentence, one Incomplete bullet, as-of date); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newest
 first); `docs/DECIDED.md` (GENERATED, regenerated LAST), and this block.
+**released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 BOB (#26) — D-278 ruled per group (I3, BOB INBOX); M0-81 answered (BOB.md rule 1 names `tools/occupancy.mjs`, the predecessor reading ruled, NEW-MACHINE.md gated); REC-157 delegation discharged
+
+claimed: 2026-09-22 by BOB #26, worktree `.claude/worktrees/fervent-curran-99f77b`. Paths: `docs/development/INTERFACES.md`
+(I3 "Answers": one PROVISIONAL paragraph, D-278); `docs/development/kickoffs/BOB.md` ("Spawning and retiring lanes",
+rule 1: the check named, the reading ruled); `docs/development/kickoffs/NEW-MACHINE.md` (its two chip lines gated on the
+same command); `docs/development/QUEUE.md` (the BOB INBOX only: one entry, newest first); `docs/development/CLAIMS.md`
+(this block, and DISCHARGED lines on the REC-157 and M0-81 DELEGATIONs to BOB); `docs/DECIDED.md` (GENERATED, LAST).
 **released: 2026-09-22 BOB #26** — landed in the same commit as the text it covers.

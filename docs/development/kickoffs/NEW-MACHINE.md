@@ -146,7 +146,8 @@ free; nothing depends on them. **Worker worktrees are created by CONDUCT's tooli
 1. **BOB first** — §7's block. It confirms the old account is STOPPED, recreates the machine-local machinery, and reads
    `BOB-NEXT.md`.
 2. **SCHEDULER, then CONDUCT, then DIST, then FLEET** — the five STANDING lanes (`ORCHESTRATION.md` "Roles"), each started
-   by a chip BOB files and Bob clicks, each gated on its own `-NEXT.md` line 1 being on `origin/main`. SCHEDULER first: it
+   by a chip BOB files and Bob clicks, each gated on its own `-NEXT.md` line 1 being on `origin/main` and on
+   `node tools/occupancy.mjs` ADMITTING it (`kickoffs/BOB.md` rule 1). SCHEDULER first: it
    owns the order of the plan, and CONDUCT fills slots from its cache.
 3. **Workers are CONDUCT's**, one per cached task, worktree-isolated (`kickoffs/WORKER.md`).
 4. **What keeps them running dies with a session and is recreated per account:** each standing lane's own self-wake
@@ -216,7 +217,8 @@ one thing Bob forbade; (2) verify this machine (npm ci in bio-plane/, pdf-worker
 .claude/settings.json has NO `ask` rule on a deploy command (NEW-MACHINE.md §9.1); (3) recreate the CONDUCT heartbeat
 scheduled task from docs/archive/conduct-heartbeat-SKILL-2026-09-19.md, and arm your own self-wake with its renewal;
 (4) measure this account's weekly usage (get_usage) and your context; (5) plancheck, status.mjs --check, owed.mjs BOB;
-(6) file the chips for SCHEDULER, then CONDUCT, then DIST, then FLEET, each gated on its -NEXT.md line 1, and tell Bob
+(6) file the chips for SCHEDULER, then CONDUCT, then DIST, then FLEET, each gated on its -NEXT.md line 1 and on
+`node tools/occupancy.mjs` ADMITTING it, and tell Bob
 they are waiting. Then work BOB-NEXT §3 in order.
 
 Bring Bob only what is genuinely his, in plain words he can act on, once each; decide everything that follows from

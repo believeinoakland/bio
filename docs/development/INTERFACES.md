@@ -534,6 +534,19 @@ consumers.
 - **Answers.** JSON, `{ok: …}` shaped, with a named `reason` on a refusal. A refusal
   is a structured answer and not an exception: an op that throws hands the caller a
   platform error where a BIO reason belongs (D-39).
+  **PROVISIONAL, RULED 2026-09-22 by BOB #26 (D-278): the refusals that still answer only `error`, one determination
+  per group, verified at `0ce7447b`.** (4) the CAPABILITY complaints (503, `capture`, `pdfstructure`, `acquire`,
+  `attest`: no evidence storage bound) are CODED — one row, a fact about the INSTALLATION rather than the request, its
+  translation addressed to whoever installed the copy. (5) `unknown op` (400) is CODED with `error: "unknown op"`
+  kept byte-identical, because `civicos-ui` reads it (`queueAbsent`) to tell an older plane from a refusal. (2) the
+  PRE-AUTHENTICATION surfaces are CODED without saying more than today: the argument complaints of `verify`,
+  `publishedbytes`, `publishedcase` and `knock` take C-61.1 (`REQUIRED_ARGUMENT_MISSING`, the same fact, and its
+  sentence carries no member vocabulary), and the three bootstrap-credential complaints of `claim` are installation
+  facts like (4).
+  (1) `unauthenticated` is ALREADY CODED (`NOT_AUTHENTICATED`, C-38.1, REC-79, 2026-08-09) and closes in fact. (3)
+  the METHOD complaints (405) stay codeless BY DESIGN: a surface never sends the wrong verb, and the program that
+  does needs only the sentence, which names the right one. Every coded refusal keeps its `error` beside the new
+  `reason` (D-270's pattern). Not built; the build is the BOB INBOX's entry of 2026-09-22 (the integrator mints the IC).
 - **Capability gating** applies to a SESSION and never to a machine credential: a
   token class has no member behind it and therefore holds no capabilities.
 - **Namespace.** `store=` selects the namespace; the probe class is confined to
