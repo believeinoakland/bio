@@ -20,36 +20,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-106 · queued — **DIST's RELEASE GATE RE-RUNS THE WHOLE BATTERY ON MERGED `main`, CALLING IT *"a tree nobody has tested"* (`kickoffs/DIST.md`), WHICH IS FALSE WHEREVER THAT EXACT TREE ALREADY CARRIES A GREEN FULL RECORD** (D-293 keys the record by tree). DIST #4's 0.71.0 gate took ~2.5 h here for a battery that runs in ~16 min. — owner DIST (its own kickoff).
-order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob's ruling, 2026-09-22, `CLAUDE.md` §2: *The goal is BIO work; process is overhead*: no process row unless it cuts gate time or unblocks product); DIST's own act, never a worker slot (moved by SCHEDULER #11 on BOB #25's word, 2026-09-22)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `CLAUDE.md` §6's ruling of 2026-09-22; the item is carried in BOB #25's drained entry (`docs/archive/ledgers/BOB-INBOX-drained.md`, "GATES RUN FAR MORE THAN THEY NEED TO").
-depends-on: none — D-293's record and M0-98's `--since` are on `main`.
-scope: step 1 becomes: a GREEN FULL record for the tree being released, or `gates.mjs --since <the newest commit whose tree carries one>`, and the whole battery only when neither exists; the version bump's own check stays. DIST writes it; CONDUCT routes the row to DIST and briefs no worker.
-accepts-when: a release from a tree with a GREEN FULL record runs no battery and names the record it relied on; one from an unrecorded tree runs the battery as today.
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
-
-### M0-107 · queued — **LOAD MAKES A GATE WRONG, NOT ONLY SLOW: a suite whose subprocess or wall-clock budget expires reads the expiry as a FINDING, and since D-293 the false RED is recorded and refuses the push.** DIST #4's 0.71.0 gate read RED on `owed-controls` A13/A13b beside a concurrent battery (M0-103, this row's first site); 57 `timeout:` sites sit in 43 suites and neither `gates.mjs` nor `battery.mjs` names a timeout outcome (re-read on `032d1ce1`). — owner M0.
-order: directly after M0-106, near the head because it CUTS GATE TIME: a load-made RED costs a FULL re-run and blocks a push (Bob's ruling, 2026-09-22, `CLAUDE.md` §2: *The goal is BIO work; process is overhead*); it supersedes M0-103 (moved by SCHEDULER #11 on BOB #25's word, 2026-09-22)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement; the item is carried in BOB #25's drained entry.
-depends-on: none.
-scope: every suite whose subprocess or wall-clock budget can expire reads the expiry as ONE named timeout assertion, never a finding; a run whose only failures are timeouts records NOT MEASURED instead of RED, so the push guard does not refuse on it. First site: M0-103's two `coverage.mjs` spawns in `owed-controls.test.mjs`. **FULL GATE PROFILE**.
-accepts-when: a sweep names every `timeout:` and budget site with its outcome check; a run killed only by timeouts writes no RED record. How a liar passes it: raising every timeout, which hides a real hang, so an arm plants a hang and asserts it is still named. NEGATIVE CONTROL: a 1 ms budget on one swept site fails its timeout assertion by name and no finding assertion.
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 2, drained this commit; `node tools/mintid.mjs M0`); supersedes M0-103.
-
-### REC-166 · queued — **A PROJECT'S MAKE-CURRENT WRITES INTO THE SHARED QUESTION.** `op=versioncurrent&project=P` promotes the INQUIRY first (its `last_updated` and the Session Log line *reading '<v>' is what P stands on*) and only then P's pointer, so the finding's `bundle_sha` moves for no change to the finding: cases pinning it lose CASE-4's fences and `#flagCasesOnRevision` flags them all, another project's included (`store.mjs`, re-read on `032d1ce1`). — owner RECORD.
-order: first of the product corrections, directly after REC-157 lands (BOB #25): one team's act silently moving another team's published pins, which §7 forbids, CLAUDE.md §2's class; it completes REC-157's premise on every path (SCHEDULER #11, 2026-09-22)
-milestone: M10
-interface: I3 — the receipt moves from the inquiry's bytes to the project's; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §7, *"A PROJECT'S MAKE-CURRENT WRITES NOTHING ON THE SHARED QUESTION"* (BOB #25, 2026-09-22), fix (a).
-depends-on: REC-157.
-scope: fix (a): the project arm writes its receipt into the PROJECT's own bytes, in the promotion that writes its pointer, and does not promote the inquiry; accept, reject, hide and their siblings still promote it. Fix (b), exempting the revision flag, is refused (§7).
-accepts-when: after a project-arm make-current the inquiry's `bundle_sha` is unchanged, `op=caseflags` names no case for it, a published case pinning the finding keeps CASE-4's fences, and P's Session Log carries the line; `op=versionaccept` still moves the inquiry. How a liar passes it: dropping the receipt with the promotion, so an arm asserts the line in P's bytes. NEGATIVE CONTROL: restore the inquiry promotion, and the `bundle_sha`-unchanged arm fails by name.
-added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs REC`).
-
 ### UI-77 · queued — **EVERY INSTANCE'S MEMBER FENCE AND PUBLIC HEADER NAME BELIEVE IN OAKLAND AS ITS GROUP.** `civicos-ui/app.html` declares `const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B" }`, rendered at `#m-grp`/`#m-idstr` and `#p-gname`/`#p-gid`/`#p-mono`, with a third literal in `#m-idstr`'s markup: a sovereign group's public page claims to be this project's. — owner UI.
 order: directly after REC-163, the same defect's surface half; the two share no file (SCHEDULER #9, 2026-09-21)
 milestone: M7
@@ -59,16 +29,6 @@ depends-on: REC-163 (the public read).
 scope: the member fence and the public header read `op=instancegroup` and show the recorded slug, or say that none is recorded; the display-name, domain and monogram literals go.
 accepts-when: signed out and in, against a plane recording a second slug, both surfaces show it and none renders `Believe in Oakland` or `believeinoakland.org`. How a liar passes it: a CSS-hidden literal, so the arm reads the DOM's text. NEGATIVE CONTROL: restore the `GROUP` literal, and the no-literal arm fails by name.
 added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs UI`).
-
-### REC-165 · queued — **A PRODUCTION CAN NAME A RUN ITS CALLER DOES NOT HOLD.** `op=suggest` resolves `run` for existence alone and `op=extractpropose` checks running and mode, never whose run it is (`store.mjs`); `runPrincipalGate` guards only the tick and the close, so a version is read against another member's lens, bar, skill version and principal (traced by BOB #25; re-read 2026-09-21). — owner RECORD.
-order: directly after UI-77, with the corrections to built work: an attribution the record cannot support, in REC-152's fence, CLAUDE.md §2's class; below REC-163 and UI-77, which every installed instance's public page shows, because this needs a signed-in caller holding another run's id (SCHEDULER #10, 2026-09-21)
-milestone: M9
-interface: I3 — two ops refuse what they accepted; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rule 1 (BOB #25, 2026-09-21).
-depends-on: none — REC-152's gate and stamp are built.
-scope: rule 1: REC-152's stamp of the caller's `principal` on both ops, both apply `runPrincipalGate`, and `suggest` refuses a run that is not running, as `extractpropose` already does.
-accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` on both ops; the caller's closed run is refused on `suggest`; the caller's own running run lands from a session AND from a machine credential that member minted. How a liar passes it: gating one caller kind only, so both arms run. NEGATIVE CONTROL: drop the gate in `suggest`, and the other-principal arm fails by name.
-added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs REC`).
 
 ### D-85 · queued — **AN ASSISTANT CAN OPEN A QUESTION OUTSIDE ANY RUN IT HOLDS, AND A RUN KEEPS ONLY THE LENS IT WAS HANDED.** NARROWED by BOB #25 to §11 item 5's rules 2 and 3: no row links an inquiry an `ai` credential creates to a run, and `aiRunOpen` stores the manifest it is handed, so `moved` cannot tell a changed lens from a stale one (re-read 2026-09-21). — owner RECORD.
 order: directly after REC-165, the same fence one act further (BOB #25: *"after 1"*); a gap in the assistant's fence, not a false attribution (SCHEDULER #10, 2026-09-21)
