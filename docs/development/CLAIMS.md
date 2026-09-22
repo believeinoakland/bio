@@ -17539,3 +17539,12 @@ why: DIST-NEXT said nothing was owed; CONDUCT #11 landed D-436 (merge `38850da4`
   stores, after the deploy and before verification — the D-436 DELEGATION's item 3), so the handoff carries it now rather
   than only the wake. The refresh line moves 60% -> 70% with CLAUDE.md §4 as landed. Bound: one-shot wake `2dd2743d`.
 **released: 2026-09-21 DIST #3** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-21 BOB (#24) — D-436's attribution split: Bob ruled decision (b)'s premise; (a) and (c) are the BOB lane's mechanism
+
+claimed: 2026-09-21 by BOB #24, worktree `.claude/worktrees/cranky-morse-4cb3ac`. Paths:
+`docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (§3.1's paragraph, the D-436 amendment's attribution sentence,
+one Incomplete bullet and one Status phrase); `docs/development/INTERFACES.md` (IC-171's changelog phrase, which still
+read its bearer rule as open after BOB #22 ruled it); `docs/DECIDED.md` (GENERATED, regenerated LAST); this block. CONDUCT #11 read all three
+decisions as Bob's at its merge (38850da4) and asked; the correction is this lane's because BOB #23 wrote §3.1's heading.
+**released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
