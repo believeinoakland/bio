@@ -22,6 +22,10 @@
  *   I HAVE IT AND CANNOT READ IT — a driver walked, naming no suite in code (mute, prose).
  *   NOT WHERE I LOOKED — a file whose name claims a control, outside the walk (shell).
  *
+ * M0-107 (2026-09-22): this suite's budget sites each carry `budgetAssert` (`test/budget.mjs`), and the arm
+ * that would read an expired result is SKIPPED. The shape is controlled ONCE, at owed-controls' A13 site
+ * (`test/m0107-budget.control.mjs` arm B1, RUN 2026-09-22); it was NOT armed at this suite's own sites, so for
+ * them it is DECLARED-ONLY. `budget-sweep.test.mjs` fails by name if any of them loses its check.
  * NEGATIVE CONTROL: (1) restore the OLD naming test — make `hasDriver` read
  * `existsSync(test/<suite>.control.mjs)` again -> A2 FAILS BY NAME, because
  * `zulu.control.mjs` drives `beta.test.mjs` under a name the old matcher could

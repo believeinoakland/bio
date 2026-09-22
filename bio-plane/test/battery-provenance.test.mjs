@@ -24,6 +24,10 @@
  * reports a beautiful 100% over an empty corpus — the failure mode M0-14's
  * register floor exists to catch, one instrument over.
  *
+ * M0-107 (2026-09-22): this suite's budget sites each carry `budgetAssert` (`test/budget.mjs`), and the arm
+ * that would read an expired result is SKIPPED. The shape is controlled ONCE, at owed-controls' A13 site
+ * (`test/m0107-budget.control.mjs` arm B1, RUN 2026-09-22); it was NOT armed at this suite's own sites, so for
+ * them it is DECLARED-ONLY. `budget-sweep.test.mjs` fails by name if any of them loses its check.
  * NEGATIVE CONTROL: (1) delete the `off.length` branch from scripts/battery.mjs's
  * provenance block, so an uncommitted suite runs unnamed -> arms (b) (c) (e) and
  * (f) FAIL naming the file the run counted and never mentioned. RUN 2026-08-08

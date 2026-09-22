@@ -18892,7 +18892,8 @@ paths, BY SITE:
     Exit line ONLY; sections 1–2c and the plan are M0-110's to touch, not this item's.
   - `tools/pushguard.mjs` — the verdict record ONLY: `RECORD_VERSION`, `readRuns`, `effectiveVerdict`, `gateVerdictCheck`,
     the `--run` note for a NOT MEASURED record, and the in-process control's verdict arms.
-  - `bio-plane/test/gates.test.mjs` (the stub and one section), `bio-plane/scripts/budgetsweep.mjs` (NEW),
+  - `bio-plane/test/gates.test.mjs` (the stub, one section, its control line) and `bio-plane/test/gates.control.mjs`
+    (G10's anchor corrected, G14 and G15 added), `bio-plane/scripts/budgetsweep.mjs` (NEW),
     `bio-plane/test/budget-sweep.test.mjs` (NEW), `bio-plane/test/m0107-budget.control.mjs` (NEW, its pen
     `.m0107-harness/` self-ignoring), `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY and only to printed figures.
   - `docs/development/VERIFICATION.md` (BOB #28's ruling, within its budget), `docs/development/MEASUREMENTS.md`

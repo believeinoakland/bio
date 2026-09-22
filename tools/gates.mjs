@@ -94,7 +94,11 @@
  *   node tools/gates.mjs --explain        classify and print the plan; run nothing
  *   node tools/gates.mjs --since [<rev>]  after a rebase: re-check only what both sides touched
  *
- * Exit: 0 all gates green · 1 a gate failed or the state could not be classified.
+ * Exit: 0 all gates green · 1 a gate failed or the state could not be classified · 124 NOT MEASURED:
+ * no gate failed, and a battery step's only failures were EXPIRED BUDGETS (M0-107, BOB #28). A step counts as
+ * timed out only when it exits 124 AND the verdict file the battery wrote (`$BIO_BATTERY_VERDICT`) names at
+ * least one NOT MEASURED suite; any other 124 is a failure. RED outranks NOT MEASURED outranks GREEN, and a
+ * NOT MEASURED record is never refused by the push guard, never GREEN, and licenses no `--since`.
  *
  * NEGATIVE CONTROL (run it when you touch the classifier): stage one whitespace
  * edit in bio-plane/src/store.mjs alongside a docs edit and confirm the class
@@ -107,7 +111,8 @@
  * `tools/pushguard.mjs` one arm at a time against `bio-plane/test/gates.test.mjs`.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, existsSync, statSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { appendRun, readRuns, effectiveVerdict } from "./pushguard.mjs";
@@ -504,6 +509,8 @@ if (SINCE && !FORCE_FULL) {
     const oldBase = newBase ? tryGit(["merge-base", oldCommit, newBase]) : null;
     if (eff.verdict !== "GREEN")
       fallback(eff.verdict === "RED" ? `the tree ${short(oldTree)} of ${SINCE} is recorded RED`
+        : eff.verdict === "NOT MEASURED" ? `the tree ${short(oldTree)} of ${SINCE} is recorded NOT MEASURED — a budget`
+          + ` expired, so ${eff.unmeasured.length} unit(s) were never measured, and a tree nobody measured licenses no --since (M0-107)`
         : `no verdict is recorded for the tree ${short(oldTree)} of ${SINCE}`
           + `${rec.unreadable.length ? ` (${rec.unreadable.length} record file(s) unreadable)` : ""}`);
     else if (!newBase) fallback("no merge-base with origin/main, so the other side cannot be told from yours");
@@ -627,15 +634,35 @@ console.log(CLEAN_AT_START
 
 if (EXPLAIN) process.exit(0);
 
+/* M0-107 (BOB #28): each step is handed a verdict file of its own. A battery writes its verdict there; a step
+   reads as TIMED OUT only when it exits 124 AND that file names at least one NOT MEASURED suite — so no other
+   tool's 124 (and no battery that merely exited 124 without saying why) can pass for an expired budget. */
+const VERDICT_DIR = mkdtempSync(join(tmpdir(), "bio-gates-verdict-"));
 const results = [];
-for (const s of STEPS) {
+STEPS.forEach((s, i) => {
   console.log(`\n=== gates · ${s.label}: ${s.cmd} ${s.args.join(" ")}`);
-  const r = spawnSync(s.cmd, s.args, { cwd: s.cwd ?? REPO, stdio: "inherit" });
-  results.push({ label: s.label, units: s.units, ok: r.status === 0 });
-}
-const green = results.every((r) => r.ok);
+  const vf = join(VERDICT_DIR, `step-${i}.json`);
+  const r = spawnSync(s.cmd, s.args, { cwd: s.cwd ?? REPO, stdio: "inherit", env: { ...process.env, BIO_BATTERY_VERDICT: vf } });
+  let v = null;
+  try { v = JSON.parse(readFileSync(vf, "utf8")); } catch { /* no verdict file: this step is not a battery, or it died */ }
+  const unmeasured = v && v.verdict === "NOT MEASURED" && Array.isArray(v.notMeasured)
+    ? v.notMeasured.map((x) => x && x.unit).filter(Boolean) : [];
+  const timedOut = r.status === 124 && unmeasured.length > 0;
+  results.push({ label: s.label, units: s.units, ok: r.status === 0, ...(timedOut ? { timedOut: true, unmeasured } : {}) });
+});
+try { rmSync(VERDICT_DIR, { recursive: true, force: true }); } catch { /* the OS temp sweep */ }
+const red = results.some((r) => !r.ok && !r.timedOut);
+const notMeasured = !red && results.some((r) => r.timedOut);
+const green = !red && !notMeasured;
+const VERDICT = red ? "RED" : notMeasured ? "NOT MEASURED" : "GREEN";
 
-console.log(`\ngates: ${green ? "GREEN" : "RED"} · class ${cls}`);
+console.log(`\ngates: ${VERDICT} · class ${cls}`);
+if (notMeasured) {
+  for (const r of results.filter((x) => x.timedOut))
+    console.log(`gates:   ${r.label} — a budget EXPIRED in ${r.unmeasured.length} suite(s): ${r.unmeasured.join(", ")} — NOT MEASURED (M0-107)`);
+  console.log("gates: an expired budget measured NOTHING: not RED, so the push is not refused; not GREEN, so it licenses no"
+    + " --since. Re-run the named suites (or the gate) on a quieter machine to measure them.");
+}
 
 /* ---- 4 · the record (D-293) ------------------------------------------- */
 {
@@ -651,15 +678,16 @@ console.log(`\ngates: ${green ? "GREEN" : "RED"} · class ${cls}`);
     let w;
     try {
       w = appendRun({ repo: REPO, run: {
-        tree: START.tree, verdict: green ? "GREEN" : "RED", class: cls, why, head: START.head, base: base || null,
+        tree: START.tree, verdict: VERDICT, class: cls, why, head: START.head, base: base || null,
         at: new Date().toISOString(), worktree: REPO, since: sinceInfo,
-        steps: results.map(({ label, units, ok }) => ({ label, units, ok })),
+        steps: results.map(({ label, units, ok, timedOut, unmeasured }) =>
+          ({ label, units, ok, ...(timedOut ? { timedOut, unmeasured } : {}) })),
       } });
     } catch (e) { w = { ok: false, reason: `the record could not be written (${e.message})` }; }
     console.log(w.ok
-      ? `gates: RECORDED ${green ? "GREEN" : "RED"} for tree ${short(START.tree)} (class ${cls}) — ${w.path}; the push guard reads it (D-293)`
+      ? `gates: RECORDED ${VERDICT} for tree ${short(START.tree)} (class ${cls}) — ${w.path}; the push guard reads it (D-293)`
       : `gates: NOT RECORDED — ${w.reason}`);
   }
 }
 if (green) console.log("gates: after you push, run `node tools/plancheck.mjs` bare — the publication half runs there.");
-process.exit(green ? 0 : 1);
+process.exit(green ? 0 : notMeasured ? 124 : 1);

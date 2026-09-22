@@ -31,6 +31,10 @@
  * BSD-absent `xargs` flag, compared two EMPTY files, and reported them
  * byte-identical: the sha256 of the empty string).
  *
+ * M0-107 (2026-09-22): this suite's budget sites each carry `budgetAssert` (`test/budget.mjs`), and the arm
+ * that would read an expired result is SKIPPED. The shape is controlled ONCE, at owed-controls' A13 site
+ * (`test/m0107-budget.control.mjs` arm B1, RUN 2026-09-22); it was NOT armed at this suite's own sites, so for
+ * them it is DECLARED-ONLY. `budget-sweep.test.mjs` fails by name if any of them loses its check.
  * NEGATIVE CONTROL: (0) neuter the guard — delete the `off.length` early return
  * from `reportProvenance` in scripts/provenance.mjs so nothing is ever named ->
  * arms (b) (c) (d) (e) FAIL as a DELTA with the corpus PRINTED, while (a) (f) (g)
