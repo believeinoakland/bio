@@ -19091,3 +19091,28 @@ display name is shown WITH it, never instead), consuming IC-174 (`op=instancegro
 `civicos-ui/NEXT_SESSION_PROMPT.md` (swept and reported, not edited unless the sweep finds one served).
 
 **released: 2026-09-22 UI-77 worker (CONDUCT #14, wave 2)** — built on `worktree-agent-a40f17095e235d716` at `4262bb08` (tree `c4df87ef`, `node tools/gates.mjs` GREEN FULL: 274/274 suites green · 16591 assertions passing, 2 untallied suites excluded; `civicos-ui: all harnesses green`, 59 suites). Also touched, named by the gate: `civicos-ui/check-refusal-codes.mjs` `r3Fed` floor 70 -> 71 from its printed figure. No IC (a consumer of IC-174, no shape changed).
+
+## CLAIM 2026-09-22 M0 (M0-117 — `scopeOf` creates the live id ledger before probing it, so a fresh clone's first gate is not RED at `mintid.test.mjs`)
+
+session: WORKER spawned 2026-09-22 by CONDUCT #14 for M0-117, worktree `.claude/worktrees/agent-a7c6ab7d2c6d998af`, branch
+`worktree-agent-a7c6ab7d2c6d998af`, from `origin/main` @ `bee3bdf4` (cloud).
+authority: `QUEUE.md` `### M0-117 · running` (read on `origin/main` @ `bee3bdf4`); design `VERIFICATION.md` (admitted for M0
+by name); the RED measured in `MEASUREMENTS.md` M-99.
+paths, BY SITE:
+  - `tools/mintid.mjs` — `scopeOf` ONLY: the `mkdirSync(root, { recursive: true })` before the probe, and its
+    `LEDGER_UNWRITABLE` refusal. `exclusivityProbe` is NOT touched (its missing-directory refusal is an asserted arm), and
+    nothing else in the file (M0-110 edits it through a reading layer).
+  - `bio-plane/test/mintid.test.mjs` — one no-ledger arm in the D-242 section (a fresh `git init` repository with no
+    `bio-idalloc`, its scope taken through the TOOL, never a pre-created fixture) and the NEGATIVE CONTROL block's new arm.
+  - `bio-plane/test/mintid-freshclone.control.mjs` (NEW) — the control driver: a throwaway `git clone` into the OS temp dir
+    with no ledger, arms (11) and (17) each alone, restored by sha256 and `cmp`.
+  - `bio-plane/scripts/coverage.mjs` `REGISTER_FLOOR` ONLY, and only to figures a committed `--strict` run PRINTS.
+  - this block.
+**NOT CLAIMED:** `docs/development/QUEUE.md` (CONDUCT's), everything else under `tools/`. Nothing under `bio-plane/src/` is
+edited, so no bundle rebuild is owed.
+
+**open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+**released: 2026-09-22 by the M0-117 worker** — built, gated GREEN (class TARGETED) on tree `21fb148f` (109/109 suites,
+7,429 assertions, 0 skipped) and pushed on `worktree-agent-a7c6ab7d2c6d998af` at `38ca894c`; the paths stay reserved
+until CONDUCT integrates.
