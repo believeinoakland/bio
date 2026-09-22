@@ -17592,3 +17592,11 @@ rows remain.
 `38850da4` (CONDUCT #11's integration merge) and BY CONTENT: `believe-in-oakland` occurs 0 times in `store.mjs` (23 at
 spawn), `index.mjs` and `checks/bio-checks.mjs`; `Store#instanceGroup` and `op=instancegroup` (IC-172);
 `instance-group.test.mjs` arm W8. Marked done and archived; the refill moved M0-100 into the cache.
+
+**AMENDED 2026-09-21, same session (commit 3): CONDUCT #11's route PLACED** — the group's display name hard-coded on every
+instance's surfaces, verified at the code on `86523052`: REC-163 (RECORD: `setup.mjs`'s literal eyebrow) and UI-77 (UI:
+`app.html`'s `GROUP` literal at the member fence and the public header), both depending on D-436 and placed first after
+BOB #23's four partition items (a correction to just-landed work). `op=instancegroup` admits no public class, so the
+public setup page and public header show a neutral label, and signed-in surfaces the slug, until BOB rules which
+public read may carry it and whether a group records a display name. M0-69, M0-76, M0-75 and D-40 cut to their fields at the foot (`QUEUE-cut-2026-09-21.md`). 145 open DEBT
+rows remain.

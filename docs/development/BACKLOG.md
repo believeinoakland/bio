@@ -40,6 +40,26 @@ scope: `running` leaves `QUEUE.md`'s rows for a CONDUCT-owned per-row record wri
 accepts-when: CONDUCT writes no line of `QUEUE.md` and a running row still reads `running`. How a liar passes it: writing both places, so an arm asserts one.
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
 
+### REC-163 · queued — **EVERY INSTALLED INSTANCE'S SETUP PAGE NAMES BELIEVE IN OAKLAND AS ITS GROUP.** `bio-plane/src/setup.mjs`, served publicly at `/`, renders *"Believe in Oakland · group instance"* as a literal; D-436 made the producing group ONE recorded value (`Store#instanceGroup`, read by `op=instancegroup`) and the page does not read it. Routed by CONDUCT #11 at D-436's integration, verified at the code on `86523052`. — owner RECORD.
+order: first after BOB #23's four partition items, which Bob's direction put at the head: a correction to just-landed work (D-436), and the first page a newly installed group sees names another group (SCHEDULER #9, 2026-09-21)
+milestone: M7
+interface: I3 consumer (`op=instancegroup`, IC-172).
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (the `group` value, D-436): `group` is ONE value in the store's durable state, and a store holding none records none, so a surface shows the recorded slug or says that none is recorded.
+depends-on: D-436.
+scope: the eyebrow names no group: the page is served at `/` before any session exists, so it shows a neutral label, and a signed-in session reads `op=instancegroup` and shows the slug or that none is recorded. Whether the slug may be read publicly, and whether a group records a display name, are BOB's (UI-77's same question); nothing is invented.
+accepts-when: the page served at `/` contains no `Believe in Oakland`; a signed-in founder under a second slug is shown that slug, and under none the neutral label. How a liar passes it: hiding the literal with CSS, so the arm reads the served bytes. NEGATIVE CONTROL: restore the literal, and the no-literal arm fails by name.
+added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs REC`).
+
+### UI-77 · queued — **EVERY INSTANCE'S MEMBER FENCE AND PUBLIC HEADER NAME BELIEVE IN OAKLAND AS ITS GROUP.** `civicos-ui/app.html` declares `const GROUP = { name:"Believe in Oakland", idstr:"believeinoakland.org", mono:"B" }`, rendered at `#m-grp`/`#m-idstr` and `#p-gname`/`#p-gid`/`#p-mono`, with a third literal in `#m-idstr`'s markup: a sovereign group's public page claims to be this project's. — owner UI.
+order: directly after REC-163, the same defect's surface half; the two share no file (SCHEDULER #9, 2026-09-21)
+milestone: M7
+interface: I3 consumer (`op=instancegroup`, IC-172).
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (the `group` value, D-436), with DEC-69: a surface invents nothing.
+depends-on: D-436.
+scope: the member fence reads `op=instancegroup` and shows the slug, or a neutral label naming that none is recorded; the public header shows the neutral label, since `op=instancegroup` admits no public class and which public read may carry the slug is BOB's; the display-name, domain and monogram literals go.
+accepts-when: against a plane recording a second slug the member fence shows it, no surface renders `Believe in Oakland` or `believeinoakland.org`, and the public header renders the neutral label. How a liar passes it: a CSS-hidden literal, so the arm reads the DOM's text. NEGATIVE CONTROL: restore the `GROUP` literal, and the no-literal arm fails by name.
+added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs UI`).
+
 ### M0-84 · queued — **NOTHING NOTICES WHEN A RETIRED INSTANCE OF A LANE LANDS AFTER ITS SUCCESSOR.** BOB #17 landed `aa5cc98d` (00:48) after BOB #18 had landed `0ca2c216`, `8e4c30c3` and `fa58ce92`; nothing noticed for hours, and `kickoffs/BOB.md` rule 4 now carries the lesson as prose. — owner M0.
 order: directly after M0-81, which PREVENTS what this DETECTS (BOB #19, 2026-09-21): pure git, about a second, and it would have told BOB #18 at its next push (SCHEDULER #4, 2026-09-21)
 milestone: M0
@@ -780,43 +800,43 @@ scope: one arm that drives an unquoted all-digit `content_id` THROUGH THE FRONTM
 accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a number, so the arm starts from `bundle.md` text. NEGATIVE CONTROL: treat a non-string `content_id` as absent again, and the arm fails by name.
 added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
 
-### D-40 · queued — **AN INFORMATION FIXTURE STILL WRITES `criticality: "notable"`, WHICH C-2.7 REFUSES, THOUGH ITS ROW SAID IT WAS FIXED.** The catalog's enum is `crucial` or `supporting`; `bio-plane/test/cite-scale.mjs`'s `infoMeta` has built every Information bundle with `notable` since `8c7e7178` (2026-07-25), and D-40's disposition listed that file as fixed. `retrieval-scale.mjs`, `search.test.mjs` and `selection.test.mjs` use `notable` DELIBERATELY as facet and filter DATA, and nothing at those sites says so. — owner M0.
+### D-40 · queued — **AN INFORMATION FIXTURE STILL WRITES `criticality: "notable"`, WHICH C-2.7 REFUSES, THOUGH ITS ROW SAID IT WAS FIXED.** … (whole text: the cut archive)
 order: with the probe corrections, after M0-91: a fixture non-conformant for a reason unrelated to what it measures, and a template a later session can copy; no suite is wrong today (SCHEDULER #7, 2026-09-21, LED-7)
 milestone: M0
 interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5's *break only the thing*: a fixture illegal for an unrelated reason is a second variable.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5's *break only the … (whole text: the cut archive)
 depends-on: none.
-scope: `cite-scale.mjs`'s `infoMeta` writes `supporting`; each deliberate DATA use gets a dated comment at its site saying the illegal value is facet data, never a template. No assertion moves.
-accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the facet DATA too, which rewrites assertions to fix a fixture, so those suites' tallies stay byte-identical.
+accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-40's DEBT row of 2026-07-25, re-measured; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-40» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)" segment; give each a standard tally, and the segment leaves the headline.** Suggested by M0-65's worker, routed by CONDUCT #6, 2026-09-19. **It MOVES the assertion total** — the landing states the old and new totals and attributes the delta to the two suites. — owner M0.
+### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)"** … (whole text: the cut archive)
 order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — two suites' report lines
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and `bio-plane/scripts/battery.mjs`' accepted tally forms.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and … (whole text: the cut archive)
 depends-on: M0-65 (its EXCLUDES segment and widened tally reader; in CONDUCT #6's gate).
-scope: each suite prints one tally line in an accepted form, counting the assertions it actually makes; no assertion is added to reach a number.
-accepts-when: a full battery's headline carries no EXCLUDES segment, and its assertion total rises by exactly the two suites' printed tallies, stated in the landing; `cd bio-plane && npm run test:battery` green by its COMPLETION LINE; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: a tally line printing a constant, so each tally must equal the suite's own assertion count, checked by making one assertion fail and watching the tally move. NEGATIVE CONTROL: remove one suite's tally line, and the EXCLUDES segment returns naming it.
+accepts-when: a full battery's headline carries no EXCLUDES segment, and its assertion total rises by exactly the two suites' printed tallies, stated in the landing; `cd bio-plane && npm` … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (M0-65's worker's suggestion, routed by CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### M0-76 · queued — `d280-strengthbar.control.mjs` READS NOT AS DECLARED ON EVERY RUN (arm C2 and the severedhomes arms), and D-280's site (a) — the bar read — is covered by NO arm. — owner M0.
+### M0-76 · queued — `d280-strengthbar.control.mjs` READS NOT AS DECLARED ON EVERY RUN (arm C2 and the severedhomes arms), and D-280's site (a) — the … (whole text: the cut archive)
 order: M0, with the instrument corrections; ruled by BOB #16 (SCHEDULER, 2026-09-19)
 milestone: M0 (background lane, holds no slot)
 interface: none — a control driver and one suite's arm
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name; its one-copy rule), with D-267 and D-280 (`node tools/ledger.mjs find D-267`, `D-280`) and the control's own header (2026-09-13, M0-25), which states the gap.
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name; its one-copy rule), with D-267 and D-280 … (whole text: the cut archive)
 depends-on: none.
-accepts-when: `node bio-plane/test/d280-strengthbar.control.mjs` reads EVERY arm AS DECLARED and the site-(a) arm fails by name; the control leaves the tree byte-identical; the C-6.1 finding is stated either way; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: re-declaring mustFail names to whatever now fails, so each re-declared name must be one that asserts the predicate's width in severedhomes §4.
-cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «M0-76». A worker READS IT before building.
+accepts-when: `node bio-plane/test/d280-strengthbar.control.mjs` reads EVERY arm AS DECLARED and the site-(a) arm fails by name; the control leaves the tree byte-identical; the C-6.1 … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
-### M0-69 · queued — A WHOLE-STORE PURGE OF THE SCRATCH STORE CLEARS THE IDENTITY TABLES; A PURGE OF THE RECORD STORE NEVER DOES, structurally (BOB #16, 2026-09-19). — owner M0 (the purge op's scratch behaviour; I3 behaviour at scratch only).
+### M0-69 · queued — A WHOLE-STORE PURGE OF THE SCRATCH STORE CLEARS THE IDENTITY TABLES; A PURGE OF THE RECORD STORE NEVER DOES, structurally (BOB … (whole text: the cut archive)
 order: M0, after the battery tally and M0-68: a live verification whose scratch keeps member rows stops measuring the same subject twice (SCHEDULER, 2026-09-19)
 milestone: M0 (a live verification that stops measuring the same subject twice is the verification defect)
 interface: I3 — behaviour at scratch only; an IC if the op's published answer changes (the integrator classifies)
-design: `docs/architecture/BIO_Distribution_v0_1.md` §6 rung 6, "What 'swept after' means" (BOB #16, folded at `331e3758`; the front matter lists it decided and not built), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6 rung 6, "What 'swept after' means" (BOB #16, folded … (whole text: the cut archive)
 depends-on: none in code.
-accepts-when: a scratch purge leaves every enumerated identity table empty; a record-store purge driven through the op leaves `members` byte-identical; a new member-keyed table added to the schema without joining the list FAILS the pin. How a liar passes it: a hand list of three tables, so the enumeration must be DERIVED from the schema and the pin must fail on a planted table. NEGATIVE CONTROLS: pass the flag for the record store, and the record arm fails; drop one table from the derivation, and the pin fails naming it.
-cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «M0-69». A worker READS IT before building.
+accepts-when: a scratch purge leaves every enumerated identity table empty; a record-store purge driven through the op leaves `members` byte-identical; a new member-keyed table added to the … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
 ### M0-70 · queued — **VF-4's LIVE-SCRATCH INSTRUMENT STATES ON ITS OWN OUTPUT THAT ARM 2a LEAVES A `proposed` MEMBER BY DESIGN (Membership v2 §4.7)** … (whole text: the cut archive)
 order: M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 (SCHEDULER, 2026-09-19)
