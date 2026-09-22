@@ -17899,6 +17899,9 @@ named with a candidate, and its owner decides the words:
 the full set, any other the suites that name it, and `--since` re-checks a rebase — verified against `gates.mjs`'s
 `fullReason()` on `ab34197b`, within the file's budget (16,378 of 16,384 B). Items 2-5 are their owners'; this block
 stays open for them.
+**SCHEDULER #11, item 3 DONE (2026-09-22):** `kickoffs/SCHEDULER.md`'s Gates mechanic now names the classes `gates.mjs`
+prints — DOCS, TARGETED, FULL, and `--since` after a rebase — landed with SCHEDULER #11's second drain. Items 2 and 5 stay
+with their owners.
 
 ## DELEGATION 2026-09-21 M0 (D-293/M0-98 worker) -> BOB — **DESIGN GAP: THE RECORD BINDS ONLY A CLEAN TREE, AS BOB #22 SET IT, SO THE INCIDENT THAT OPENED D-293 IS STILL UNGUARDED**
 
@@ -17911,11 +17914,13 @@ write — `GIT_INDEX_FILE=<temp> git add -A && git write-tree` — which is byte
 objects into the object store (not the working tree) and would need the ruling's "only when CLEAN" relaxed. **Recommendation:**
 take it — the cost is one temp index per dirty run, and it closes the shape that rowed the item. Reversal costs one branch in
 `gates.mjs`; no data depends on it (a record directory of clean runs stays valid).
-**open as of 2026-09-21** — open until BOB rules; D-293 is built as ruled meanwhile.
 **RULED 2026-09-21 by BOB #25: take the fix, with one condition** — the temporary-index tree is taken at the run's
 start and end and a dirty verdict is recorded only when they agree. The ruling and its row are in the BOB INBOX of that
 date, carried there because `VERIFICATION.md` is at its budget (its cut is the entry's item 2). Nothing keeps this block
 open past SCHEDULER's drain.
+**DISCHARGED 2026-09-22 — SCHEDULER #11 drained BOB #25's entry:** the dirty-tree key PLACED as `M0-104`, FIRST of the
+queued rows where D-293 stood, and the cut as `M0-105` after it (the `open as of 2026-09-21` line removed at the discharge,
+as `tools/delegations.mjs` reads a block carrying both on its open half).
 
 ## CLAIM 2026-09-21 DIST (DIST #3 — DIST-NEXT readdressed to DIST #4, which takes the 0.71.0 cut)
 
@@ -18038,7 +18043,8 @@ each function) and D-180 (the schema-wide inline-semicolon assertion in `bias.te
 SENT: D-152 (built but DEC-4's region at the leg) and D-125 (built but DEC-10's (b) and (c) for a FINDING). SENT: D-164
 (Bob's reopening condition) and D-179 (one capture, one home). The four questions go to BOB as one group (the DELEGATION
 below). MILESTONES.md: the four closed rows removed, D-152's and D-125's cells narrowed. 110 open DEBT rows remain.
-VERIFIED AND WAITING FOR ROOM (placed when CONDUCT #12's batch frees it): D-441 (its DEBT row lands with that batch),
+VERIFIED AND WAITING FOR ROOM (placed when CONDUCT #12's batch frees it): the title-case ruling gap M0-97's worker
+minted as a DEBT row (its id is named only once that row is on `main`: `mintid.test`'s prose floor),
 SCHEDULER #10's four drafts D-65, D-74, D-86 and D-66 (re-verified on `464c2779`), D-178 (the audit sweep injects no
 `publishedRegistry`, `store.mjs`), D-169 (`dispose` writes `disposition_reason` with `#setScalar`, a no-op when an intake
 document carries no such line), D-171 (`#revisionKind` breaks ties on `snap_key`), and CONDUCT #11's route: the head of
@@ -18075,3 +18081,15 @@ document carries no such line), D-171 (`#revisionKind` breaks ties on `snap_key`
 
 Sent to BOB by message on 2026-09-22; each of the four rows carries a dated SENT note in `DEBT.md`.
 **open as of 2026-09-22** — sent to BOB by message the same day; each answer disposes of its row (closed, placed or narrowed further), and nothing runnable waits on any of them.
+
+**AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified
+at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes
+nothing on the shared question; `store.mjs` promotes the inquiry first), first of the product corrections after REC-157;
+item 2 APPLIED to `M0-105` (M0-97's second specimen folded with the cut; `depends-on` M0-97). The cut-the-work entry: item 1
+PLACED as `M0-106` (DIST's release gate reads a GREEN FULL record or `--since` before a whole battery) and item 2 as `M0-107`
+(a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107
+and archived. `kickoffs/SCHEDULER.md`: the Gates mechanic corrected (D-293's DELEGATION item 3, DONE), and the hold-`main`
+mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6). The D-293 DESIGN GAP DELEGATION DISCHARGED. Room made
+by cutting eight more foot rows to their fields (D-84, D-52, COFF-13, M0-96, M0-95, D-439, M0-89, M0-88), each VERBATIM in
+`docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. The first gate of this landing read RED on `mintid.test`'s prose floor:
+this block named a DEBT id still on a worker's branch; the mention is reworded above.

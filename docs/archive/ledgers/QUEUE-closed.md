@@ -2866,3 +2866,13 @@ depends-on: none. **Take with D-293.**
 scope: a TARGETED class — a diff touching no `bio-plane/src|checks`, `civicos-ui/`, fleet, installer or package/config file runs the suites that import, spawn or MENTION a changed path (derived at run time and printed, as DOCS is), `coverage --strict` when a test file changed, and plancheck; and `--since`, which after a rebase reads the recorded verdict and re-runs only suites whose inputs intersect files changed on BOTH sides, plus plancheck. **FULL GATE PROFILE**.
 accepts-when: a tools-only diff selects its importers and the register gate; a `src/` edit beside it reads FULL; a rebase over disjoint docs commits re-runs only plancheck. How a liar passes it: selecting by exact import alone, which misses a suite reading through a computed path, so selection is by MENTION. NEGATIVE CONTROL: stage a `src/` edit with a tools edit, and the class must read FULL.
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry, drained this commit; `node tools/mintid.mjs M0`).
+
+### M0-103 · superseded — **SUPERSEDED 2026-09-22 by M0-107** (BOB #25's cut-the-work entry, item 2: M0-103's fix taken to its class; its two `coverage.mjs` spawns are M0-107's first site). **Prior state, kept as the record: queued** — **`owed-controls.test.mjs` READS A SUBPROCESS TIMEOUT AS A FINDING, AND SINCE D-293 THAT FALSE RED BLOCKS A PUSH.** Its two `scripts/coverage.mjs` spawns carry `timeout: 120_000` and nothing reads the spawn's own outcome, so a child killed under load fails A13 (*"the sweep NAMES undeclared suites"*) and A13b (*"--strict still EXITS 0"*). DIST #4's 0.71.0 gate went RED 268/269 on those two beside a concurrent battery (2026-09-22). — owner M0.
+order: first of the instrument cluster, before D-438: since D-293 the push guard refuses a tree recorded RED, so a load-induced false RED costs a FULL re-run, where D-438's red control blocks nothing (SCHEDULER #10, 2026-09-22)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a timeout is no disagreement.
+depends-on: none.
+scope: check the spawn's outcome first: when `error.code` is `ETIMEDOUT` or `signal` is set fail ONE assertion naming the timeout, never the two finding sentences; raise the budget toward the battery's per-suite scale.
+accepts-when: a run whose child times out fails the timeout assertion by name and neither finding assertion; a run whose child completes reads as today. NEGATIVE CONTROL: a 1 ms timeout fails the new assertion by name and neither finding assertion.
+added: 2026-09-22 · SCHEDULER #10 (DIST #4's route, verified at the code; `node tools/mintid.mjs M0`).
