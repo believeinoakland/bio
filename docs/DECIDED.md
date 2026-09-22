@@ -2686,7 +2686,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - **2026-09-22** — AMENDED 2026-09-22, same session (commit 5): BOB'S RULING APPLIED TO THIS SESSION'S PLACEMENTS** — Bob, 2026-09-22 (`CLAUDE.md` §2, `48aab56b`): *The goal is BIO work; process is overhead*.  
   `docs/development/CLAIMS.md:18318`
 - **2026-09-22** — Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them…  
-  `docs/development/CLAIMS.md:18479`
+  `docs/development/CLAIMS.md:18493`
 - §The grade: RULED — the grade is RULED and nothing implements it.  
   `docs/development/CLIENT-RENDERED.md:9`
 - [The grade: RULED, and the argument is Bob's](#the-grade-ruled-and-the-argument-is-bobs) - [Why the rendered DOM still needs its own method and environment recorded](#why-the-rendered-dom-still-needs-its-own-method-and-environment-recorded) - [Therefore: a pair, not a…  
