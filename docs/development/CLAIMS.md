@@ -18009,3 +18009,58 @@ and the route (publish again: since REC-157 a moved conclusion warrants a new ed
 relationship at signing is a design question (REC-135 chose to record the conclusion "as it stood at publication"), route to BOB
 first. Found by REC-157's measurement; not built there (its scope is `op=publish`'s refusal).
 **open as of 2026-09-21** — OPEN until SCHEDULER places it (or BOB rules, if routed there).
+
+## CLAIM 2026-09-21 M0 (M0-97 + D-341 — the ruling index files every answered or enacted `DEC-n` entry from its `decided:` field, and its prose joiner stops at a heading or a blank line)
+
+session: WORKER spawned by CONDUCT #11, worktree `.claude/worktrees/agent-aff9fd704ee856d24`, branch
+`worktree-agent-aff9fd704ee856d24`, base `origin/main` @ `86523052` (both rows read `running` there), Sparky-Air. `npm ci`
+in `bio-plane/`, `pdf-worker/`, `ocr-worker/`, each exit 0 and each `node_modules` a REAL directory (30 / 25 / 26 entries);
+`df -h` 3.4 GiB free after the installs.
+authority: `QUEUE.md` `### M0-97 · running` and `### D-341 · running` (CONDUCT #11); design `docs/development/VERIFICATION.md`
+(admitted for M0 by name) with the tool's own header, which calls the index a FLOOR.
+paths, BY SITE:
+  - `tools/decided.mjs` — `scan()` (the joiner's stop, the register-entry pass beside the marker scan, the search context
+    of a long ledger row), the query the CLI answers from (lifted into one exported function so a suite drives the same
+    code), `render()` (its header prose and the entry rows' status), `control()` (arms for the two new patterns), and the
+    header comments that describe them. `MARKER`, `statementAround()` and `corpus()` are NOT touched.
+  - `bio-plane/test/decided.test.mjs` (NEW) — the one suite, with its `NEGATIVE CONTROL:` declaration.
+  - `bio-plane/test/decided.control.mjs` (NEW) — its driver; `.gitignore` — one line each for its pen `.m097-harness/`
+    and this worker's run logs `.m097-runs/`.
+  - `bio-plane/test/nc-m034.mjs` — ONLY an arm this landing moves, corrected with a dated reason, never exempted.
+  - `bio-plane/scripts/coverage.mjs` — `REGISTER_FLOOR` only, moved from the instrument's print.
+  - `docs/development/MEASUREMENTS.md` (one appended section), `docs/DECIDED.md` (GENERATED, regenerated LAST), this block.
+  - `docs/development/DEBT.md` — ONE appended row, D-441 (minted by `mintid`), the class sweep's residue: rulings whose
+    marker word opens a line in title case. Added to this block at the build rather than taken silently.
+**NOT CLAIMED:** `tools/pushguard.mjs` and `tools/gates.mjs` (D-293's live worker), `tools/plancheck.mjs`,
+`docs/development/QUEUE.md` (CONDUCT's word, SCHEDULER's order), `docs/development/DECISIONS.md` (read, never written),
+`bio-plane/src/**` (nothing under `src/` moves, so no bundle rebuild is owed), `newgroup/**`, `release/**`.
+
+**BUILT ON THE BRANCH, NOT INTEGRATED (the worker's figures; CONDUCT re-reads them on the merged tree).**
+M0-97: `registerEntries()` and a second pass in `scan()` beside the marker scan, whose rows are identical with the pass
+on or off. A `### DEC-n` entry carrying `decided:` is ONE row under its own id, quoting its LAST `response:` and dated
+from its LAST `decided:` (the register is append-only; DEC-31 was deferred, then answered); `open` and `deferred` entries
+are not filed; an unknown status or a missing `decided:` is NAMED in the index's head (0 today). 72 of 72 answered or
+enacted entries come back from `decided.mjs "DEC-n"` from inside themselves (0 on the base); "severance" returns DEC-70's
+entry; `decided.mjs "DEC-2"` names the entry as deferred and says nothing is filed under it. D-341: the window ends at a
+markdown heading or a blank line, and a TITLE (a heading, or a line ending in a colon) keeps the paragraph beneath it;
+the row's literal stop, measured first, cut 63 title quotes, dropped 6 rows and stripped heading rulings of their ids
+(M-91). Quotes carrying another block's heading 14 → 0. Class sweep, fixed in the same function: a search context always
+holds its own line (130 → 0), and an id query matches the whole id (`DEC-2` no longer answers with DEC-20 to DEC-29).
+Routed, with the fix named: D-441.
+GATE, FULL, on `bf1e24c4`: battery `269/269 suites green · 16364 assertions passing · EXCLUDES 2 untallied suite(s)`
+(`bundle`, `livefire`: inherited), run 47056.c2e452, its own exit 0; the true baseline (the nine paths at `86523052`,
+`.gitignore` kept, which no suite reads) `267/268 · 16322`, run 94925.22dc2f, its one red `monitor-cadence.test.mjs`
+intermittent (59/0 alone, twice) and reading none of these paths. Per suite: decided +38 (new), hygiene +1 (*decided.test.mjs
+exits deterministically*), planning-hygiene +1 (*D-441 carries a disposition token*), monitor-cadence +2 (the intermittent
+pair), 265 unchanged. `coverage.mjs --strict` exit 0: OPS 197/197, CHECKS 356/356, register exact at 1581/260/261, RUN
+223. UI harness all green, exit 0. `plancheck`: 1 fail, UNPUSHED (a worker branch), and 4 warns, all inherited.
+CONTROLS: `decided.control.mjs` fifteen arms, all as declared, 88/0, 15 of 15 restores byte-identical, and its signal path
+driven (SIGTERM mid-arm: exit 130, the subject restored from memory, the pen removed); `nc-m034.mjs` A6 corrected, never
+exempted (7 by id, plus REC-85's sentence as an id-less row), 0 failing; `decided.mjs --control` 8 of 8.
+DESIGN GAP: `docs/development/VERIFICATION.md` § *DOES THE CITATION RESOLVE TO THE ACTOR THE SENTENCE NAMES?* says a
+specimen mints phantom rulings because the index reads every ruling marker. Since M0-97 the index also files any
+line-start register-entry heading followed by a `decided:` field, from ANY corpus file (the pass is keyed on shape so an
+archived register stays indexed), so a quoted register entry is a second kind of specimen. `decided.test.mjs` fails on an
+entry row outside a `DECISIONS*.md` file, by name, but the rule a writer reads does not say so.
+
+**open as of 2026-09-21** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.

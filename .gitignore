@@ -388,3 +388,10 @@ bio-plane/.nc-migrate-released/
 # worker kept its scratch measurements here. An untracked copy of an instrument left behind by an interrupted run
 # is a second copy for the next walk to enrol.
 .d293-harness/
+
+# M0-97's pen (`bio-plane/test/decided.control.mjs`), its own line on the standing rule at
+# `.rec84-control-pristine/`: the driver keeps a per-arm pristine copy of `tools/decided.mjs` here while an arm
+# is armed, removes each copy as its restore verifies, and removes the pen on every exit. `.m097-runs/` holds the
+# worker's own run logs, kept INSIDE the worktree for the reason `.d310-runs/` gives.
+.m097-harness/
+.m097-runs/
