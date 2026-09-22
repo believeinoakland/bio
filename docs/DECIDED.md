@@ -18,7 +18,7 @@ nothing was decided — the same rule the record applies to sparse levels everyw
 else. Each entry QUOTES its source and points at it; the authority is the file named,
 never this one.
 
-1514 rulings across 108 documents.
+1516 rulings across 108 documents.
 72 of them are decision-register entries, each filed under its own id from its
 `decided:` field and quoting its `response:`; a row showing the entry's status is one of them.
 
@@ -1620,8 +1620,6 @@ never this one.
   `docs/development/CLAIMS.md:15581`
 - **REC-157** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes nothing on the shared question; `store.mjs` promotes the inquiry first),…  
   `docs/development/CLAIMS.md:18305`
-- **REC-157** — SCHEDULER #12's two ordering questions DECIDED by message (keep the 150 KiB backlog budget; over-claim corrections stay ahead of M8-M10) and recorded by it. - THIS LANDING: **BOB'S RULING — *"Yes to all 3 recommendations"*** — designed in `docs/development/TREE-SHARING.md`: the message board leaves `main` for a…  
-  `docs/development/kickoffs/BOB-NEXT.md:37`
 - **REC-159** — PLACED as REC-159, directly before REC-155; a bearer's reach RULED by BOB #22 into Membership v2 §4.7 (the ADMIN_TOKEN holder is not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and…  
   `docs/development/CLAIMS.md:16890`
 - **REC-159** — not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and its build PLACED as REC-162 directly after REC-159.  
@@ -2022,6 +2020,8 @@ never this one.
   `docs/archive/ledgers/BOB-INBOX-drained.md:1151`
 - **M0-97** · 2026-09-21 — AMENDED 2026-09-21, same session (commit 3): BOB #22's six inbox entries DRAINED**, each verified at its cited design and at the code — M0-97 (`decided.mjs` indexes a `decided:` field) directly after D-435, with D-341 (the same file) after it; REC-160 (`op=reevaluations` names a severed leg's status) after D-389,…  
   `docs/development/CLAIMS.md:16989`
+- **M0-101** — So M0-101 is SUPERSEDED by this change** (the `running` word becomes an anchored write, and the two-writers conflict it existed for is gone), and **M0-100 NARROWS** to `MEASUREMENTS.md` and `INTERFACE-CHANGES.md`, which stay on `main`, where two `land/*` branches' tail appends still collide inside change 2's train.  
+  `docs/development/TREE-SHARING.md:51`
 - **M0-103** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 5): DIST #4's route PLACED** — M0-103 (`owed-controls.test.mjs` reads a subprocess timeout as a finding, a false RED the push guard now enforces), verified at the code (its two spawns carry `timeout: 120_000` and nothing reads `ETIMEDOUT` or a signal), FIRST of the…  
   `docs/development/CLAIMS.md:17761`
 - **M0-103** — (a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107 and archived.  
@@ -2127,6 +2127,12 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/architecture/README.md:103`
 - DECIDED and only misleading about what is READABLE, and rewriting six documents' prose to remove a name risks changing what they meant.  
   `docs/architecture/README.md:171`
+- Report what was DONE and DECIDED, never tactical state.  
+  `docs/archive/account-memory-2026-09-22.md:232`
+- **2026-09-22** — description: "Two batteries at once slow Sparky-Air (swap) and once false-REDed a clean tree; SUPERSEDED 2026-09-22 by Bob: never queue a gate behind another lane's — run it, read a timeout as NOT MEASURED"  
+  `docs/archive/account-memory-2026-09-22.md:361`
+- SUPERSEDED THE SAME DAY BY BOB'S RULING (CLAUDE.md §6):** *"Never queue a gate behind another lane's"* — run yours when you need it; `waitquiet` is for timing figures only.  
+  `docs/archive/account-memory-2026-09-22.md:373`
 - and present the areas that are NOT the paused thread, each with: what it needs DECIDED (vs what is already answered), what deciding it unblocks, and your recommendation.  
   `docs/archive/BOB-kickoff-2026-09-18.md:85`
 - NOTATION IS SETTLED: classDiagram for structure, stateDiagram-v2 for lifecycle, edges labelled with the ACT.  
@@ -2907,8 +2913,6 @@ Settled in prose without an id allocated. Cite them by file and line.
   `docs/development/INVESTIGATIVE-SESSION.md:1440`
 - **2026-08-07** — `BOB INBOX` says so and instructs CONDUCT not to schedule any of it.~~ SUPERSEDED — the hold was LIFTED by Bob 2026-08-07 and CONDUCT drained the entry and enacted this section the same day.  
   `docs/development/INVESTIGATIVE-SESSION.md:1452`
-- It also SETTLED *"DECIDED.md leaving the committed tree"*: it leaves `main`.  
-  `docs/development/kickoffs/BOB-NEXT.md:41`
 - `status.mjs` for what is BUILT, `decided.mjs` for what is RULED, `owed.mjs` for what is OWED.  
   `docs/development/kickoffs/BOB.md:94`
 - `docs/development/AUTHORITY-AND-TRUST.md` — RULED sections are settled. 7.  
@@ -2936,7 +2940,7 @@ Settled in prose without an id allocated. Cite them by file and line.
 - CORRECTED: `op=bootstrap` never read the DO's build.** The handler writes `version: env.VERSION` from the isolate that routed the request, then spreads the DO's reply, which is `bootstrapState` (`claimed`, `rearmed`, `consumedAt`) and nothing more.  
   `docs/development/kickoffs/FLEET.md:264`
 - **2026-09-16** — RULED by Bob, 2026-09-16: one account develops this repository at a time, enforced by him rather than by an instrument.** He stands development down in one account — the BOB session retires itself and every lane and worker under it — and only once that account confirms everything is stopped does he open the other…  
-  `docs/development/kickoffs/NEW-MACHINE.md:59`
+  `docs/development/kickoffs/NEW-MACHINE.md:101`
 - `op=strengthbarof&target=` IS WITHDRAWN** and refused `BAR_IS_A_PROJECT_PROPERTY`.  
   `docs/development/kickoffs/RECORD.md:323`
 - CORRECTED with dated reasons, never exempted.  

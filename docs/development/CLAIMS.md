@@ -18497,6 +18497,11 @@ M0-99), M0-100 first of the backlog; room by four foot cuts (D-74, UI-75, D-178,
 Sent to BOB #26 by message on 2026-09-22 (items 1 and 2, then item 3).
 **Items 1 and 2 ANSWERED 2026-09-22 by BOB #26 (DECIDED, sequencing being this lane's):** keep 150 KiB (a larger read-whole file is the wrong direction under Bob's ruling; revisit only on a spawn delayed or misbriefed by a cut row), and keep the order (the relayed *M8-M10* named the product rows; within them `CLAUDE.md` §2's over-claim rule decides). Both were already running; nothing moved. Item 3 accepted by BOB #26 for its next landing.
 **open as of 2026-09-22** — item 3 only: D-278's determinations, which BOB #26 rules per group; nothing runnable waits on it.
+**DISCHARGED 2026-09-22 by BOB #26:** item 3 answered — D-278 ruled per group in `INTERFACES.md` I3 "Answers"
+(PROVISIONAL): (1) was already coded by REC-79 (`NOT_AUTHENTICATED`, C-38.1); (3), the 405s, stay codeless by design; (4),
+(5) and (2) are coded with `error` kept beside the new reason — one RECORD item, the BOB INBOX's D-278 entry of
+2026-09-22, door 2 keeping D-278's id. *(Moved here 2026-09-22 by BOB #27 from inside DIST #4's M0-106
+claim, where a merge of two tail appends had put it — M0-100's receipt, found by CONDUCT #12.)*
 
 ## CLAIM 2026-09-22 DIST (DIST #4 — M0-106: the release gate's step 1 rests on the tree's RECORD, and the whole battery runs only when none answers)
 
@@ -18510,11 +18515,6 @@ why: M0-106, routed to DIST as its own act (CONDUCT #12, SCHEDULER #12's routing
   10's landing re-merge is re-checked `--since` the cut commit, never by a fresh battery: 0.71.0's took 2.4 h.
   Accepted at the next cut, which must name the record it relied on (0.72.0: `f25d43b3`, tree `0a2b5b64`).
 **released: 2026-09-22 DIST #4** — landed in the same commit as the text it covers.
-
-**DISCHARGED 2026-09-22 by BOB #26:** item 3 answered — D-278 ruled per group in `INTERFACES.md` I3 "Answers"
-(PROVISIONAL): (1) was already coded by REC-79 (`NOT_AUTHENTICATED`, C-38.1); (3), the 405s, stay codeless by design; (4),
-(5) and (2) are coded with `error` kept beside the new reason — one RECORD item, the BOB INBOX's D-278 entry of
-2026-09-22, door 2 keeping D-278's id.
 
 ## CLAIM 2026-09-22 BOB (#26) — D-278 ruled per group (I3, BOB INBOX); M0-81 answered (BOB.md rule 1 names `tools/occupancy.mjs`, the predecessor reading ruled, NEW-MACHINE.md gated); REC-157 delegation discharged
 
@@ -18554,3 +18554,18 @@ claimed: 2026-09-22 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-
 successor with no memory, no `.env`, and perhaps no session tools, so every answer is in the file or named by its
 command); `docs/DECIDED.md` (GENERATED, regenerated last); and this block. No other path moves.
 **released: 2026-09-22 FLEET #3** — landed in the same commit as the file it covers.
+
+## CLAIM 2026-09-22 BOB (#27) — the productivity changes recorded for Bob's move to cloud Claude Code under his second account (TREE-SHARING §1, §4, §5; NEW-MACHINE §0; the account memory carried into the record); a misplaced DISCHARGED line moved
+
+claimed: 2026-09-22 by BOB #27, worktree `.claude/worktrees/bob-27`. Paths: `docs/development/TREE-SHARING.md` (Status; §1:
+M0-99 settles `DECIDED.md`, the write as an anchored intent, M0-100 narrowed, M0-101 superseded, one accepts-when arm; §4
+the move, NEW; §5 the rest of the program by pointer, NEW); `docs/development/kickoffs/NEW-MACHINE.md` (title and intro;
+§0 the move, NEW; §4's layout, prerequisites and `.env` location; §5; §6a's layout; §7's paste block; §9.1's deny rules;
+§9.2 the memory seed); `docs/archive/account-memory-2026-09-22.md` (NEW: the account's memory, verbatim, one redaction);
+`docs/development/kickoffs/BOB-NEXT.md` (rewritten early, so an abrupt switch finds a current handoff);
+`docs/development/CLAIMS.md` (this block; BOB #26's DISCHARGED line moved into the SCHEDULER (#12) DELEGATION it closes);
+`docs/DECIDED.md` (GENERATED, LAST).
+why: Bob, 2026-09-22 ~15:06Z, in BOB #27's conversation: *"Make sure that the process changes being made to improve
+productivity are fully recorded, as there'll be a transition at some point today that will involve both to cloud-based CC
+and to using the second Max 20X account of mine."*
+**released: 2026-09-22 BOB #27** — landed in the same commit as the text it covers.
