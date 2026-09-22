@@ -6,7 +6,7 @@ Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` wh
 ## 0. YOUR FIRST ACTS
 
 1. **Confirm BOB #28 is stopped**: `list_sessions`, and its self-wake gone — `list_triggers` shows none of its
-   `send_later` one-shots pending (it names them in its last commit). Then archive it under D-398's three conditions.
+   `send_later` one-shots pending (BOB #28 armed `trig_018ECUvUbRiSFdGwQTMNzGQ2` for 20:40Z and re-arms at each wake: delete from `list_triggers`, never by an id copied from here). Then archive it under D-398's three conditions.
 2. **The SessionStart hook** gave you node 26, full history, the four packages, `ssh-keygen` and the id ledger's
    directory: confirm `node -v` and `git rev-parse --is-shallow-repository` before trusting any instrument. Then
    `node tools/plancheck.mjs` BEFORE ANY PUSH: it arms the push guard, which a fresh clone lacks.
@@ -36,7 +36,8 @@ The old account's sessions are invisible from here; BOB #27 (idle there, no wake
   suspension in NEW-MACHINE §0.1.
 - **The ten keys**: all environment variables; `GITHUB_TOKEN` and `BIO_RELEASE_SEED` confirmed by use; the rest wait on
   the network.
-- **The full gate**: on `4de98ba7`, 18:19Z–18:37Z: **1,082 s wall**; the battery 974 s at **272/273 suites · 16,575 assertions**, 0 skipped; its one red the id-ledger arm (row above); coverage, UI and `plancheck` green.
+- **The full gate** (NEW-MACHINE §0.1, M-99): 1,082 s, RED only at the id-ledger arm on a clone that had never minted;
+  then GREEN FULL on this landing's tree `9cc1ed7f`, 273/273 · 16,576, 1,135 s — the first GREEN FULL record in a cloud clone.
 - **Six builder questions answered in their homes**: M0-110's four (`TREE-SHARING.md` §1), REC-165's
   (`INVESTIGATIVE-SESSION.md` §11 item 5, "Rule 1's target"), M0-107's (the BOB INBOX, written into `VERIFICATION.md`
   by M0-107's landing). Two defects routed with their fixes named (the `.env`-only live helpers; `mintid`'s probe).
