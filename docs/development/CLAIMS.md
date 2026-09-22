@@ -17677,3 +17677,11 @@ Incomplete bullets, Status date); `docs/development/EXTRACTION-BREADTH-DESIGN.md
 INBOX only: one entry); `docs/development/kickoffs/BOB-NEXT.md` (§2 and §3); `docs/development/CLAIMS.md` (this block and
 the SCHEDULER (#9) -> BOB DELEGATION's one state line); `docs/DECIDED.md` (GENERATED, regenerated LAST).
 **released: 2026-09-21 BOB #24** — landed in the same commit as the text it covers.
+
+## CLAIM 2026-09-22 FLEET (FLEET #3 — FLEET-NEXT amended: the 70% refresh rule, the re-armed self-wake ids, D-260's ruling, a fresh disk reading)
+
+claimed: 2026-09-22 by FLEET #3, worktree `.claude/worktrees/eloquent-goldstine-78dfbd`. Paths:
+`docs/development/kickoffs/FLEET-NEXT.md` (five lines amended: its header, the FL-6 thread gains D-260's ruling, the
+self-wake ids, the disk reading, and "Over 60%" corrected to 70% as BOB #23 asked); `docs/DECIDED.md` (GENERATED,
+regenerated last); and this block. No other path moves.
+**released: 2026-09-22 FLEET #3** — landed in the same commit as the lines it covers.
