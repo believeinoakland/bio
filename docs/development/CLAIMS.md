@@ -17719,6 +17719,12 @@ D-79, D-81 (Q1), D-85, D-87, D-88 (Q2), D-120 (Q3). VERIFIED AT THE CODE AND WAI
 the landing that follows the next completion. MILESTONES.md: the rows for D-91, D-113 and D-123 removed, and the
 not-scheduled list corrected for D-89 and D-90. 131 open DEBT rows remain.
 
+**AMENDED 2026-09-21, same session (commit 2): LED-7 batch S10-2**, every row read at the code on `18d50de5`. CLOSED
+IN FACT: D-132 (UI-15, `d397ab5b`, declared `ADD_TICKS`) and D-139 (REC-19, `d22db7b8`, built `op=affordances`; what it
+still omits is BACKLOG D-311). SUPERSEDED: D-163, by D-164, as `BIO_Content_Framework_v0_10.md` §18 states. CLOSED AS DEBT
+ROWS whose remaining act is a placed backlog row under its own id: D-161 (REC-122) and D-154 (REC-15, blocked on DEC-33).
+MILESTONES.md: their five rows removed. 126 open DEBT rows remain.
+
 ## DELEGATION 2026-09-21 SCHEDULER (#10) -> BOB — **THREE QUESTIONS, ONE EACH, from LED-7 batch S10-1: Framework §12's intent layer (D-75, D-76, D-79, D-81, with D-77's guard), §13's bias layer (D-85, D-87, D-88), and member-driven capture (D-120); none blocks a runnable row**
 
 1. **FRAMEWORK §12's INTENT LAYER — D-75, D-76, D-79, D-81, AND D-77's GUARD.** Designed at concept level in
