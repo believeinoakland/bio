@@ -2107,7 +2107,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        and nothing it prints is a figure anybody floors on. */
     "bio-plane/test/instance-group.test.mjs",     // src/, asserts NO module names the literal group (a ceiling at zero)
     /* ADDED 2026-09-22 by CONDUCT #12 at M0-81's integration, AND THE RATCHET CAUGHT IT ON THE FIRST BATTERY THE ITEM
-       MET: the integration gate of batch 2 (tree cd85c88a, commit 049da926), because M0-81 was folded into the batch with
+       MET: the integration gate of batch 2 (tree cd85c88a, commit b2797101), because M0-81 was folded into the batch with
        its own FULL gate unrun. NAMED AND NOT GUARDED: the driver's one discovery primitive in code is
        `fs.readdirSync(PEN).length === 0` in its exit handler, an emptiness check of ITS OWN pen `.m081-harness/` before
        `rmdirSync`. It discovers nothing, feeds no assertion and floors on nothing; a phantom deposited in the pen can only
@@ -2180,7 +2180,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      (`test/instance-group.test.mjs`, named above), the only walker this item adds (its control driver copies trees and
      walks none); CONDUCT #10 recorded the census at 36 against 36 when D-432 landed, so no slack is carried out. */
   /* MOVED 2026-09-22 BY CONDUCT #12 at M0-81's integration: 37 -> 38, from the figure this suite PRINTED on the batch's
-     committed tree `049da926` (`class census: 38 file(s)`, run alone after the integration gate named the walk), never by
+     committed tree `b2797101` (`class census: 38 file(s)`, run alone after the integration gate named the walk), never by
      adding to the number in the file. The one file that run named as NEWLY unguarded is M0-81's control driver
      (`test/occupancy.control.mjs`, named above), so no slack is carried out. */
   t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 38)`,

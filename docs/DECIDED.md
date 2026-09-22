@@ -783,7 +783,7 @@ never this one.
 - **D-293** — Q4 RULED NO: the guard never runs `gates.mjs` (M-85's landing rate), which `VERIFICATION.md`'s push-guard section already states; its named fix, refusing a tree whose recorded verdict is RED, is carried by the D-293 inbox entry until built, because that file is at its reading budget and its register block is quoted…  
   `docs/development/CLAIMS.md:16469`
 - **D-293** · 2026-09-22 — mechanic SUPERSEDED by Bob's ruling of 2026-09-22 (`CLAUDE.md` §6).  
-  `docs/development/CLAIMS.md:18332`
+  `docs/development/CLAIMS.md:18339`
 - **D-293** · 2026-09-17 — `5a807b8a` D-293's design gap RULED (a dirty run keyed by its temporary-index tree); CLAUDE.md §6's gate classes. - `0b7328bc` D-288 archived (closed in full since 2026-09-17); M0-48's five-day-old delegation discharged. - `032d1ce1` **BOB'S RULING ON THE RECORD — "Never queue a gate behind another lane's"…  
   `docs/development/kickoffs/BOB-NEXT.md:34`
 - **D-293** — D-293's design gap is RULED (BOB INBOX; CLAUDE.md §6 corrected). - **Owners of `kickoffs/SKILL.md`, `SCHEDULER.md`, `NEW-MACHINE.md`:** D-293's stale-gate-sentence DELEGATION items 2, 3, 5.  
@@ -1593,7 +1593,7 @@ never this one.
 - **REC-157** — second-edition DELEGATION was RULED as §7.1 item 9 (BOB #19) and placed as REC-157; (c) the five session-reach ops were RULED in Membership v2 §4.10 (`d9cf3283`) and placed as REC-155 and REC-158; (d) the DIST note reached DIST: 0.68.0 (`49c4b400`) was cut carrying IC-55, IC-166 and IC-167, and `kickoffs/DIST.md`'s…  
   `docs/development/CLAIMS.md:15581`
 - **REC-157** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 3): BOB #25's two entries of 2026-09-22 DRAINED** (`032d1ce1`), each verified at its document and at the code on `032d1ce1`: REC-157's ruling, item 1 PLACED as `REC-166` (a project's make-current writes nothing on the shared question; `store.mjs` promotes the inquiry first),…  
-  `docs/development/CLAIMS.md:18325`
+  `docs/development/CLAIMS.md:18332`
 - **REC-159** — PLACED as REC-159, directly before REC-155; a bearer's reach RULED by BOB #22 into Membership v2 §4.7 (the ADMIN_TOKEN holder is not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and…  
   `docs/development/CLAIMS.md:16890`
 - **REC-159** — not refused; its `by` names nobody), applied to REC-159's scope; item 3 RULED by BOB #23 into §4.9 (*AND ADMINISTRATORS DO NOT RUN THE INSTANCE*: `governorconfig` is the operator's), and its build PLACED as REC-162 directly after REC-159.  
@@ -1997,7 +1997,7 @@ never this one.
 - **M0-103** · 2026-09-22 — AMENDED 2026-09-22, same session (commit 5): DIST #4's route PLACED** — M0-103 (`owed-controls.test.mjs` reads a subprocess timeout as a finding, a false RED the push guard now enforces), verified at the code (its two spawns carry `timeout: 120_000` and nothing reads `ETIMEDOUT` or a signal), FIRST of the…  
   `docs/development/CLAIMS.md:17761`
 - **M0-103** — (a timeout is one named assertion and NOT MEASURED, never a finding), both where M0-103 stood; M0-103 SUPERSEDED by M0-107 and archived.  
-  `docs/development/CLAIMS.md:18330`
+  `docs/development/CLAIMS.md:18337`
 - **M0-103** — M0-103; REC-157 RULED (a project's make-current writes nothing on the shared question, `INVESTIGATIVE-SESSION.md` §7); M0-97's second specimen added to VERIFICATION's cut; Distribution §4 and System Design §6 corrected (DIST deploys the installer; nothing waits on Bob).  
   `docs/development/kickoffs/BOB-NEXT.md:38`
 - **M0-106** · 2026-09-22 — imeout outcome): item 1 PLACED as `M0-106` (DIST's own kickoff) and item 2 as `M0-107`, both where M0-103 stood; M0-103 SUPERSEDED by M0-107, which takes its fix to its class and names its two spawns as the first site.  
