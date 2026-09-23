@@ -392,20 +392,20 @@ t("and nothing in dave's answer names the hidden capture or the project bundle h
 t("and the answer states whose chain it read (visible_to), so dave's silence is not a claim about the record",
   typeof asDave?.visible_to === "string" && /not in them/.test(asDave.visible_to), true);
 const codeOf = (r) => (r && (r.code || r.reason)) || null;
-t("neither subject: refused VERSION_NOTICE_NO_SUBJECT (C-74.1) with its translation",
+t("neither subject: refused VERSION_NOTICE_NO_SUBJECT (C-80.1) with its translation",
   [codeOf(await notice("")), (await notice(""))?.check, typeof (await notice(""))?.translation],
-  ["VERSION_NOTICE_NO_SUBJECT", "C-74.1", "string"]);
+  ["VERSION_NOTICE_NO_SUBJECT", "C-80.1", "string"]);
 t("both subjects: refused VERSION_NOTICE_NO_SUBJECT — one subject per notice",
   codeOf(await notice(`target=${INQ}&content=${cidAt(0)}`)), "VERSION_NOTICE_NO_SUBJECT");
-t("a question that does not exist, and a document id given as a question: VERSION_NOTICE_NO_INQUIRY (C-74.2)",
+t("a question that does not exist, and a document id given as a question: VERSION_NOTICE_NO_INQUIRY (C-80.2)",
   [codeOf(await notice("target=INQ-2026-3940-nosuch")), codeOf(await notice(`target=${V.M1.doc}`)),
-   (await notice("target=INQ-2026-3940-nosuch"))?.check], ["VERSION_NOTICE_NO_INQUIRY", "VERSION_NOTICE_NO_INQUIRY", "C-74.2"]);
-t("a passage that does not exist: VERSION_NOTICE_NO_CONTENT (C-74.3)",
+   (await notice("target=INQ-2026-3940-nosuch"))?.check], ["VERSION_NOTICE_NO_INQUIRY", "VERSION_NOTICE_NO_INQUIRY", "C-80.2"]);
+t("a passage that does not exist: VERSION_NOTICE_NO_CONTENT (C-80.3)",
   [codeOf(await notice(`content=${"0".repeat(64)}`)), (await notice(`content=${"0".repeat(64)}`))?.check],
-  ["VERSION_NOTICE_NO_CONTENT", "C-74.3"]);
-t("the refusal family is three rows, all C-74, each with a translation a member can read",
+  ["VERSION_NOTICE_NO_CONTENT", "C-80.3"]);
+t("the refusal family is three rows, all C-80, each with a translation a member can read",
   [Object.keys(VERSION_NOTICE_CHECKS).length,
-   Object.values(VERSION_NOTICE_CHECKS).every((r) => /^C-74\.\d+$/.test(r.check) && r.translation.length > 60)],
+   Object.values(VERSION_NOTICE_CHECKS).every((r) => /^C-80\.\d+$/.test(r.check) && r.translation.length > 60)],
   [3, true]);
 const cut = await notice(`target=${INQ}&limit=2`);
 t("THE BOUND: limit=2 answers the first two legs, publishes the 2 it applied, and says it was cut",

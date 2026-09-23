@@ -12378,7 +12378,7 @@ export const CONTRADICTION_PAIR_CHECKS = {
   },
 };
 
-/* D-394 / C-74 — THE CROSS-VERSION NOTICE'S REFUSALS
+/* D-394 / C-80 — THE CROSS-VERSION NOTICE'S REFUSALS
  * (`BIO_Content_Framework_v0_10.md` §18.1, the cross-version relation).
  *
  * THE READ TAKES EXACTLY ONE SUBJECT, and every refusal here is about the subject
@@ -12396,7 +12396,7 @@ export const VERSION_NOTICE_CHECKS = {
      and a notice answered for no citation, or for two at once, is a list the caller
      did not ask for wearing the word "notice". */
   VERSION_NOTICE_NO_SUBJECT: {
-    check: 'C-74.1',
+    check: 'C-80.1',
     where: 'src/store.mjs versionNotice > is-version-notice-subject',
     translation: 'That request did not say which citation to check. Ask about one question (target=) '
       + 'to check every passage its evidence rests on, or about one passage (content=) — one of the '
@@ -12404,14 +12404,14 @@ export const VERSION_NOTICE_CHECKS = {
   },
   /* The question named is not one this caller may read, or is not a question. */
   VERSION_NOTICE_NO_INQUIRY: {
-    check: 'C-74.2',
+    check: 'C-80.2',
     where: 'src/store.mjs versionNotice > is-version-notice-subject',
     translation: 'There is no question by that id that you can read here. A question you may not see '
       + 'answers exactly as one that does not exist, so nothing about it was checked.',
   },
   /* The passage named is not a content row this caller may read. */
   VERSION_NOTICE_NO_CONTENT: {
-    check: 'C-74.3',
+    check: 'C-80.3',
     where: 'src/store.mjs versionNotice > is-version-notice-subject',
     translation: 'There is no cited passage by that id that you can read here. A passage id exists once '
       + 'somebody has cited that part of a document; one in a project you were not invited to answers '
