@@ -582,6 +582,13 @@ whose delivered bytes are stable and whose content is absent. Contract also sets
 expected check frequency, because a delisting is time-sensitive and a regulation is
 not.
 
+**RULED 2026-09-23 by BOB #31 — WHICH FREQUENCY A MONITOR RUNS AT (SCHEDULER #17's set 1; D-65).** An address's OWN
+authored frequency governs when it has one. Otherwise the frequency is the one the contract of the address's CURRENT
+VERSION sets. The default contract intervals are **`membership` daily** (a delisting is time-sensitive) and **`substance`
+weekly**. The fallback therefore needs the contract as the tick last read it: the plane keeps each bundle's content type
+or contract from the tick (a derived value, cleared by `purge`) and falls back to the contract's default interval.
+NOT BUILT: `#monitorCadencePlan` reads only the authored frequency (D-65's worker, 2026-09-23; rowed).
+
 ## 7. Content types: what a document contains, and what its changes mean
 
 A content type is a recogniser (§4) plus three functions:
@@ -640,6 +647,14 @@ flowchart LR
 
 The two dashed edges pointing at documents the record does not hold are the framework
 at its most useful: not a gap in the record, but a dated fact about the body.
+
+**THE STATED LIMIT OF PAIRWISE CONNECTIONS (D-224; BOB #32, 2026-09-23, verified at `store.mjs` `#maxEndsForPairs`
+and MEASUREMENTS "D-224 — THE CONNECTION CURVE").** A connection is one row per PAIR of documents concerning an entity,
+so k documents make k(k−1)/2 rows. Derivation is bounded by pairs, 500 by default and 5,000 at the ceiling, and the
+document bound is the inverse of that quadratic: 32 documents at 500 pairs, 100 at 5,000. The two bounds can never
+disagree. What stays OPEN is whether pairs should be materialised at all above some k. The model is reopened when a
+single entity is concerned by more than 32 documents in a live record. Until then the bound makes the cost knowable and
+refusable; it does not decide the model.
 
 ## 8.1 Connection GRADE
 
@@ -921,6 +936,19 @@ Grade C to Grade B. **Discovering an institution's shared identifiers is therefo
 of the highest-value pieces of measurement this project can do**, and it should be
 recorded per institution the way stack measurements are recorded per host. Oakland's
 shared identifiers have not been measured.
+
+**RULED 2026-09-23 by BOB #32 — WHAT MAKES A SHARED IDENTIFIER COUNT (D-74's worker, M-119; SCHEDULER #17).**
+1. **A match counts when the REFERENT agrees in two INDEPENDENT systems.** Two publications of one source are ONE
+   system, however many documents carry the number (`CLAUDE.md` §5: several documents agreeing is usually one source
+   copied). The same string naming different things is not a match, so each space carries the check that its referent
+   agrees. **A fund code, for one, counts only when the fund NAME agrees too**, because the bare code collides with years.
+2. **A space whose FORMAT changes is ONE space with dated format ERAS** (Oakland's projects: `C######`, then `100xxxx`).
+   Each era has its own recogniser and a recorded boundary. An identifier matches across eras only through a CROSSWALK
+   that is itself a captured document with provenance, never through a pattern we infer.
+3. **Oakland's first three spaces, designed and NOT BUILT:** the PROJECT number (budget line ↔ Legistar award; the C→B
+   lever), the C.M.S. number (any citing document ↔ its Legistar matter, by `MatterEnactmentNumber`), and the fund code
+   (checked against the fund name). Measuring them needs egress to Oakland's hosts, which this cloud's proxy refuses
+   (D-453, `blocked`).
 
 ## 8.4 Themes: a connection through an IDEA — RULED BY BOB 2026-09-21 (D-162), Part I's one amendment since approval
 
