@@ -116,9 +116,15 @@ Changes: created.
 
 `;
 
+/* CORRECTED 2026-09-23 by M0-132, never exempted: this snap key's suffix was drawn from `Math.random`, and the key is
+   half of the PRIMARY KEY (bundle_id, snap_key) of `manifest` and `history`, which `promote` writes `INSERT OR
+   REPLACE`: two writes to one bundle drawing the same suffix are not refused, the second SILENTLY REPLACES the
+   first's rows, so a version the suite wrote could vanish by the draw rather than the code (`TREE-SHARING.md` §3). A
+   per-suite COUNTER cannot repeat. */
+let snapKeySeq = 0;
 const promoteRaw = (id, text, meta, base = null) => call("/promote", {
   ...(id === null ? {} : { bundleId: id }), base,
-  snapKey: `${id ?? `proj-${Date.now()}-${Math.random()}`}-${base ? Date.now() + Math.random() : "new"}`,
+  snapKey: `${id ?? `proj-${++snapKeySeq}`}-${base ? `rev${++snapKeySeq}` : "new"}`,
   author: "probe",
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta,

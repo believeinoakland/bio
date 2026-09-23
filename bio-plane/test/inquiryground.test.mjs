@@ -195,8 +195,14 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
+/* CORRECTED 2026-09-23 by M0-132, never exempted: this snap key's suffix was drawn from `Math.random`, and the key is
+   half of the PRIMARY KEY (bundle_id, snap_key) of `manifest` and `history`, which `promote` writes `INSERT OR
+   REPLACE`: two writes to one bundle drawing the same suffix are not refused, the second SILENTLY REPLACES the
+   first's rows, so a version the suite wrote could vanish by the draw rather than the code (`TREE-SHARING.md` §3). A
+   per-suite COUNTER cannot repeat. */
+let snapKeySeq = 0;
 const promote = async (id, text, type, base = null, tok = CAROL) => POST(`op=promote&token=${tok}`, {
-  bundleId: id, base, snapKey: `${id}-${base ? sha(base).slice(0, 8) : "new"}-${Math.random().toString(36).slice(2, 6)}`,
+  bundleId: id, base, snapKey: `${id}-${base ? sha(base).slice(0, 8) : "new"}-${String(++snapKeySeq).padStart(4, "0")}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   register: type === "information"
     ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]

@@ -74,10 +74,17 @@ source:
 
 ${b.body}
 `;
+/* CORRECTED 2026-09-23 by M0-132 (the same class by the CLOCK), never exempted: this snap key's suffix was
+   `Date.now()`, so two revisions of one bundle in the same millisecond drew the same key, and the key is half of the
+   PRIMARY KEY (bundle_id, snap_key) of `manifest` and `history`, which `promote` writes `INSERT OR REPLACE`: two
+   writes to one bundle drawing the same suffix are not refused, the second SILENTLY REPLACES the first's rows, so a
+   version the suite wrote could vanish by the draw rather than the code (`TREE-SHARING.md` §3). A per-suite COUNTER
+   cannot repeat. */
+let snapKeySeq = 0;
 const promote = async (b, base = null, writer = null, operation = null) => {
   const text = md(b);
   return call("/promote", {
-    bundleId: b.id, base, snapKey: `${b.id}-${base ? Date.now() : "new"}`, author: "suite",
+    bundleId: b.id, base, snapKey: `${b.id}-${base ? `rev${++snapKeySeq}` : "new"}`, author: "suite",
     writer, operation,
     files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
     meta: { object_type: b.type || "information", group: "believe-in-oakland", title: b.title,
