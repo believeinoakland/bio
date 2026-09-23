@@ -454,7 +454,7 @@ import { CONNECTION_PAIR_CHECKS, checkConnectionPairCovers,
    the version-name grammar its new reading must meet (C-25.2's own regex, so a
    name this act accepts is one op=promote accepts). */
 import { NARROW_CHECKS, extentRelation, VERSION_NAME_RE } from "../checks/bio-checks.mjs";
-/* D-126 / C-68: the PER-ITEM weight's own refusals — the SET's words, never an item's (NOTIFICATIONS.md
+/* D-126 / C-75: the PER-ITEM weight's own refusals — the SET's words, never an item's (NOTIFICATIONS.md
    §Applying a handler to a selection). An item's reason is its own act's refusal, carried verbatim. */
 import { PER_ITEM_CHECKS, TASK_ACTOR_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-87 / IC-128: TRANSCRIBE's refusals, and the digest the `typed` step
@@ -42058,7 +42058,7 @@ export class Store extends DurableObject {
     if (row.assignee === "unassigned") return null;
     if (actor === row.assignee) return null;
     if (this.#isAdminMember(actor)) return null;
-    /* DEC-49 REGION is-task-actor-fence — D-126/C-69.1: `code`, `check` and `translation` added (a queue
+    /* DEC-49 REGION is-task-actor-fence — D-126/C-76.1: `code`, `check` and `translation` added (a queue
        selection now surfaces this refusal to a member); `reason`, `detail` and the assignee are unchanged. */
     return {
       ok: false,
@@ -42194,7 +42194,7 @@ export class Store extends DurableObject {
    * dispatch map is unchanged — and without `items` each is the single-key act it was. The
    * set form is NOT a second implementation of any act: every item goes through the SAME method the
    * single form calls, so an item is accepted and refused by exactly the rules one key would be, and its
-   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-68).
+   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-75).
    *
    * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
    *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
@@ -42203,7 +42203,7 @@ export class Store extends DurableObject {
    *     `index`, `applied` or `retained`, and `applied + retained === count` by construction. A retained
    *     item carries its act's `reason` (and `code`/`translation` where that act has them).
    *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
-   *     C-68.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
+   *     C-75.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
    *     truth about the set and a caller reading `items[]` is told the truth about each item.
    *
    * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` is what the control plane stamped (the actor, the

@@ -12526,34 +12526,34 @@ function coversImagePlacement(e, container) {
 }
 var TASK_ACTOR_CHECKS = {
   NOT_YOURS: {
-    check: "C-69.1",
+    check: "C-76.1",
     where: "src/store.mjs #refuseNotYours > is-task-actor-fence",
     translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
   }
 };
 var PER_ITEM_CHECKS = {
   SET_NO_ITEMS: {
-    check: "C-68.1",
+    check: "C-75.1",
     where: "src/store.mjs #perItem > is-per-item-set-shape",
     translation: "Nothing was selected, so nothing was done. Choose at least one item and try again."
   },
   SET_TOO_LARGE: {
-    check: "C-68.2",
+    check: "C-75.2",
     where: "src/store.mjs #perItem > is-per-item-set-shape",
     translation: "That selection is larger than the record acts on at once, so nothing was done to any of it. Select fewer items and apply the action again."
   },
   SET_ITEM_MALFORMED: {
-    check: "C-68.3",
+    check: "C-75.3",
     where: "src/store.mjs #perItem > is-per-item-malformed",
     translation: "This item could not be read as an item, so it was left as it was. The rest of the selection was still acted on, one by one."
   },
   SET_ITEM_FAILED: {
-    check: "C-68.4",
+    check: "C-75.4",
     where: "src/store.mjs #perItem > is-per-item-failed",
     translation: "The record could not complete the action on this item and did not change it. It stays in your list. The rest of the selection was still acted on, one by one."
   },
   SET_ITEMS_RETAINED: {
-    check: "C-68.5",
+    check: "C-75.5",
     where: "src/store.mjs #perItem > is-per-item-retained",
     translation: "Not every selected item was handled. The ones that were have left your list; the ones that were not are still there, each with the reason the record gave for it, so you can take a different action on them."
   }
@@ -65374,7 +65374,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    * dispatch map is unchanged — and without `items` each is the single-key act it was. The
    * set form is NOT a second implementation of any act: every item goes through the SAME method the
    * single form calls, so an item is accepted and refused by exactly the rules one key would be, and its
-   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-68).
+   * reason is that act's own refusal, verbatim. This helper words only what belongs to the SET (C-75).
    *
    * WHAT IT REFUSES TO BE, and each is how a liar would pass the row:
    *   - ALL-OR-NOTHING RELABELLED. A refusal on item k does not stop item k+1; nothing here breaks out of
@@ -65383,7 +65383,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *     `index`, `applied` or `retained`, and `applied + retained === count` by construction. A retained
    *     item carries its act's `reason` (and `code`/`translation` where that act has them).
    *   - `ok: true` OVER A MIXED SET. `ok` is true only when EVERY item applied; otherwise the answer is
-   *     C-68.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
+   *     C-75.5's summary refusal WITH `items[]` beside it, so a caller reading `ok` alone is told the
    *     truth about the set and a caller reading `items[]` is told the truth about each item.
    *
    * THE SERVER'S STAMPS WIN OVER EVERY ITEM. `stamped` is what the control plane stamped (the actor, the

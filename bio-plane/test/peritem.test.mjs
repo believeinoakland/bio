@@ -6,7 +6,7 @@
  * applied; the acting member's queue cleared), block 2 (outcomes; shared `to`; the echo), block 4 (the item after
  * the malformed one), block 5 (outcomes; item 3's own disposition; READ BACK). Blocks 3, 6, 7 and 8 stayed GREEN
  * as declared. NOT AS DECLARED, and correctly: block 1's "the retained item is still listed in nate's queue" and
- * the C-68.5 summary arm stayed green — the item that stopped the set is untouched either way and a set with a
+ * the C-75.5 summary arm stayed green — the item that stopped the set is untouched either way and a set with a
  * refusal is still not ok:true, so neither can see an abort. Restored by `cp`; sha256 and `cmp` equal to the
  * pristine copy (2,910,108 bytes, arm marker count 0); suite re-run green.
  * RE-RUN 2026-09-23 AFTER THE SUBJECT MOVED (the set branch moved from the dispatch map into each act's own method,
@@ -25,10 +25,10 @@
  *     EVERY item's own outcome, with an applied item AFTER the refused one (the control above).
  *   - SILENT SKIPPING — `items[]` must carry exactly one outcome per item sent, at its own index, and the
  *     record is READ BACK after the act (op=tasks, op=proposals) so a claimed outcome is a measured one.
- *   - `ok: true` OVER A MIXED SET — a mixed set answers `ok: false` with C-68.5's summary AND `items[]`.
+ *   - `ok: true` OVER A MIXED SET — a mixed set answers `ok: false` with C-75.5's summary AND `items[]`.
  *   - A STAMP AN ITEM CAN OVERRIDE — an item naming its own actor/decider is overwritten.
  *
- * WHAT THIS CANNOT SEE: `SET_ITEM_FAILED` (C-68.4) is not driven — no act here throws on any input this
+ * WHAT THIS CANNOT SEE: `SET_ITEM_FAILED` (C-75.4) is not driven — no act here throws on any input this
  * suite can send, which is the property that code guards against losing. It is pinned structurally in
  * block 8 (the catch exists and routes to the code) and said so rather than implied.
  */
@@ -128,12 +128,12 @@ try {
   t("the retained item carries the plane's own reason and who it is with now",
     r1.items?.[1] && [r1.items[1].ok, r1.items[1].assignee, /it is with nate/.test(r1.items[1].detail || "")], [false, "nate", true]);
   t("the counts are the outcomes', not the request's", [r1.count, r1.applied, r1.retained], [3, 2, 1]);
-  t("the retained item's refusal is DEC-49-coded: C-69.1, with the canned translation a member reads",
+  t("the retained item's refusal is DEC-49-coded: C-76.1, with the canned translation a member reads",
     r1.items?.[1] && [r1.items[1].code, r1.items[1].check, typeof r1.items[1].translation === "string"],
-    ["NOT_YOURS", "C-69.1", true]);
-  t("a MIXED set is not ok:true — it is C-68.5's summary, with a canned translation",
+    ["NOT_YOURS", "C-76.1", true]);
+  t("a MIXED set is not ok:true — it is C-75.5's summary, with a canned translation",
     [r1.ok, r1.reason, r1.code, r1.check, typeof r1.translation === "string" && r1.translation.length > 20],
-    [false, "SET_ITEMS_RETAINED", "SET_ITEMS_RETAINED", "C-68.5", true]);
+    [false, "SET_ITEMS_RETAINED", "SET_ITEMS_RETAINED", "C-75.5", true]);
   const [b1, b2, b3] = [await rowOf(a1), await rowOf(a2), await rowOf(a3)];
   t("READ BACK: the two applied items are resolved in the record",
     [b1.status, b3.status, b1.history.at(-1).actor, b3.history.at(-1).actor], ["resolved", "resolved", "mona", "mona"]);
@@ -180,9 +180,9 @@ try {
   const r4 = R(await POST(`op=taskresolve&${S_nate}`, { items: [{ id: h1, actor: "mona" }], now: AT }));
   t("nate naming mona as the item's actor is still nate at the fence", outcomes(r4), [[0, "retained", "NOT_YOURS"]]);
   const r4b = R(await POST(`op=taskresolve&${S_mona}`, { items: ["not-an-item", { id: h2 }], now: AT }));
-  t("the malformed item is retained by C-68.3 and the next item is still applied", outcomes(r4b),
+  t("the malformed item is retained by C-75.3 and the next item is still applied", outcomes(r4b),
     [[0, "retained", "SET_ITEM_MALFORMED"], [1, "applied", null]]);
-  t("C-68.3 carries its check and translation", [r4b.items?.[0]?.check, typeof r4b.items?.[0]?.translation], ["C-68.3", "string"]);
+  t("C-75.3 carries its check and translation", [r4b.items?.[0]?.check, typeof r4b.items?.[0]?.translation], ["C-75.3", "string"]);
 
   /* ================================================================ 5
    * op=proposedispose as a set: shared disposition and reason, one item with a bad stage, one with an
@@ -216,12 +216,12 @@ try {
    * The SET's own refusals, before any item is tried. */
   console.log("\n--- 6 · the set's own shape ---");
   const r6a = R(await POST(`op=taskresolve&${S_mona}`, { items: [] }));
-  t("an empty set is C-68.1 and carries no items", [r6a.ok, r6a.code, r6a.check, r6a.items], [false, "SET_NO_ITEMS", "C-68.1", undefined]);
+  t("an empty set is C-75.1 and carries no items", [r6a.ok, r6a.code, r6a.check, r6a.items], [false, "SET_NO_ITEMS", "C-75.1", undefined]);
   const r6b = R(await POST(`op=taskresolve&${S_mona}`, { items: "T-1" }));
-  t("a set that is not an array is C-68.1", r6b.code, "SET_NO_ITEMS");
+  t("a set that is not an array is C-75.1", r6b.code, "SET_NO_ITEMS");
   const big = await assignTo("mona");
   const r6c = R(await POST(`op=taskresolve&${S_mona}`, { items: Array.from({ length: 101 }, () => ({ id: big })) }));
-  t("101 items is C-68.2, refused WHOLE", [r6c.ok, r6c.code, r6c.check, r6c.max, r6c.count], [false, "SET_TOO_LARGE", "C-68.2", 100, 101]);
+  t("101 items is C-75.2, refused WHOLE", [r6c.ok, r6c.code, r6c.check, r6c.max, r6c.count], [false, "SET_TOO_LARGE", "C-75.2", 100, 101]);
   t("READ BACK: no item moved", (await rowOf(big)).status, "forwarded");
 
   /* ================================================================ 7
@@ -238,7 +238,7 @@ try {
   t("set_acts publishes the three ops under per-item with the store's bound", sets, [
     ["proposedispose", "per-item", "items", 100], ["taskforward", "per-item", "items", 100], ["taskresolve", "per-item", "items", 100]]);
   const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
-  t("STRUCTURAL: a throwing item is caught and retained under C-68.4 (not driven — see header)",
+  t("STRUCTURAL: a throwing item is caught and retained under C-75.4 (not driven — see header)",
     /catch \(e\) \{\s*\/\* DEC-49 REGION is-per-item-failed \*\/\s*r = refusal\("SET_ITEM_FAILED"/.test(store), true);
 } finally {
   await mf.dispose();

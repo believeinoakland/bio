@@ -75,7 +75,7 @@ drifted one is kept with `NOT_YOURS` and "it is with nate"; two findings dismiss
 `queue-peritem.control.mjs`, every arm as declared: all-or-nothing RED 13/3, silent drop RED 14/2, N calls RED 14/2, baseline
 16/0. The harness caught one defect of this item's own before landing: the selection was pruned against a PENDING feed and
 silently emptied on every repaint; pruning now waits for an answered feed.
-A second finding, from the full harness: giving `NOT_YOURS` its canned translation (C-69.1, owed once a member can meet it)
+A second finding, from the full harness: giving `NOT_YOURS` its canned translation (C-76.1, owed once a member can meet it)
 made the retained note show the translation and drop the plane's detail naming who holds the task. The note now shows the
 detail beside the translation, verbatim, wherever the record sent both.
 

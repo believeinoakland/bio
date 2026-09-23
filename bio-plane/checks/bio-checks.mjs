@@ -13010,7 +13010,7 @@ function coversImagePlacement(e, container) {
     + `[${want.join(', ')}], the rectangle the extent names`;
 }
 
-/* D-126 / C-69 — THE TASK-ACTOR FENCE'S REFUSAL, TRANSLATED BECAUSE A MEMBER CAN NOW MEET IT.
+/* D-126 / C-76 — THE TASK-ACTOR FENCE'S REFUSAL, TRANSLATED BECAUSE A MEMBER CAN NOW MEET IT.
  *
  * `NOT_YOURS` is REC-4's fence (`store.mjs #refuseNotYours`): a member who is neither a task's assignee nor an
  * administrator may not resolve or forward it. Until D-126 no surface could receive it — `op=queue` lists a member
@@ -13020,14 +13020,14 @@ function coversImagePlacement(e, container) {
  * `detail` still names who holds it; the translation does not, because it is canned. */
 export const TASK_ACTOR_CHECKS = {
   NOT_YOURS: {
-    check: 'C-69.1',
+    check: 'C-76.1',
     where: 'src/store.mjs #refuseNotYours > is-task-actor-fence',
     translation: 'This task is not yours to act on: it is with another member now, so nothing was done to it. '
       + 'The record says below who holds it. Ask them, or an administrator, if it still needs you.',
   },
 };
 
-/* D-126 / C-68 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection).
+/* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection).
  *
  * Bob's requirement: *"select some (or all) to apply the action to. When the handler is applied to a
  * notice, it would then indicate whether that notice can be deleted from the list. If that action
@@ -13038,37 +13038,37 @@ export const TASK_ACTOR_CHECKS = {
  * to act on, an item that is not an item, an item whose act threw, and the summary that some items were
  * kept. Every retained item still carries its own act's `reason` beside this family's summary.
  *
- *   C-68.1 — no items: `items` is absent from the set form, not an array, or empty.
- *   C-68.2 — too many items: over `Store.PER_ITEM_MAX`, refused WHOLE before any item is tried.
- *   C-68.3 — one item is not an object; THAT item is retained and the others are still tried.
- *   C-68.4 — one item's act failed without a refusal (it threw); THAT item is retained and says so.
- *   C-68.5 — the summary: at least one item was retained. Carried beside `items[]`, never instead of it. */
+ *   C-75.1 — no items: `items` is absent from the set form, not an array, or empty.
+ *   C-75.2 — too many items: over `Store.PER_ITEM_MAX`, refused WHOLE before any item is tried.
+ *   C-75.3 — one item is not an object; THAT item is retained and the others are still tried.
+ *   C-75.4 — one item's act failed without a refusal (it threw); THAT item is retained and says so.
+ *   C-75.5 — the summary: at least one item was retained. Carried beside `items[]`, never instead of it. */
 export const PER_ITEM_CHECKS = {
   SET_NO_ITEMS: {
-    check: 'C-68.1',
+    check: 'C-75.1',
     where: 'src/store.mjs #perItem > is-per-item-set-shape',
     translation: 'Nothing was selected, so nothing was done. Choose at least one item and try again.',
   },
   SET_TOO_LARGE: {
-    check: 'C-68.2',
+    check: 'C-75.2',
     where: 'src/store.mjs #perItem > is-per-item-set-shape',
     translation: 'That selection is larger than the record acts on at once, so nothing was done to any of '
       + 'it. Select fewer items and apply the action again.',
   },
   SET_ITEM_MALFORMED: {
-    check: 'C-68.3',
+    check: 'C-75.3',
     where: 'src/store.mjs #perItem > is-per-item-malformed',
     translation: 'This item could not be read as an item, so it was left as it was. The rest of the '
       + 'selection was still acted on, one by one.',
   },
   SET_ITEM_FAILED: {
-    check: 'C-68.4',
+    check: 'C-75.4',
     where: 'src/store.mjs #perItem > is-per-item-failed',
     translation: 'The record could not complete the action on this item and did not change it. It stays '
       + 'in your list. The rest of the selection was still acted on, one by one.',
   },
   SET_ITEMS_RETAINED: {
-    check: 'C-68.5',
+    check: 'C-75.5',
     where: 'src/store.mjs #perItem > is-per-item-retained',
     translation: 'Not every selected item was handled. The ones that were have left your list; the ones that '
       + 'were not are still there, each with the reason the record gave for it, so you can take a '
