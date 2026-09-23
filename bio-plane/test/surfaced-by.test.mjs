@@ -30,6 +30,7 @@
  * green.
  */
 /* NEGATIVE CONTROL: neuter the D-78 stamp in index.mjs op=promote (force `want` to always "human", or delete the surfaced_by block) -> the agent-written focus records the writer's hardcoded literal `human` and the "an agent records agent" (+ "did NOT survive") assertions FAIL. RUN 2026-07-31 record-agent-3: want forced to "human" -> 2 fail; restored -> 8 pass. */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -46,13 +47,13 @@ const t = (label, got, want) => {
 };
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "t-admin-1", MEMBER_TOKEN: "t-member-1", PROBE_TOKEN: "t-probe-1", VERSION: "test" },
-});
+}));
 const GET = async (q) => (await mf.dispatchFetch("http://x/api/?" + q)).json();
 const POST = async (q, body) => (await mf.dispatchFetch("http://x/api/?" + q,
   { method: "POST", body: JSON.stringify(body) })).json();

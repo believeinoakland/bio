@@ -87,6 +87,7 @@
        ARM P5 PRINTS which columns got which, so the weaker half is visible
        rather than assumed. */
 
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
@@ -586,14 +587,14 @@ t("ARM W8b: POLARITY, over segments this arm CONSTRUCTS rather than patches — 
  *  THE RUNTIME. Everything below goes through the CONTROL PLANE.
  * ======================================================================= */
 const IDX = SRC("index.mjs");
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-rec74", MEMBER_TOKEN: "mem-rec74", PROBE_TOKEN: "prb-rec74",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const TOK = "mem-rec74";
 const POST = async (op, body, tok = TOK) => rP(await (await mf.dispatchFetch(

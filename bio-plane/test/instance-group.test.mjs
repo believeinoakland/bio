@@ -35,6 +35,7 @@
  * decision in `promote` (W1–W5 drive it from five callers), every revision keeps the group its creation wrote (W6),
  * and §0's census is what sees a literal reappear at any site. The monitor tick needs a fetch and is not driven.
  * ========================================================================= */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -78,7 +79,7 @@ const groupIn = (text) => (typeof text === "string" ? parseFrontmatter(text).dat
 /* Every Miniflare this suite builds, built here — one constructor site, one dispose per instance. */
 const live = [], trees = [];
 const planeAt = ({ name, persist = null }) => {
-  const mf = new Miniflare({
+  const mf = withSurfacingRun(new Miniflare({
     modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -86,7 +87,7 @@ const planeAt = ({ name, persist = null }) => {
     r2Buckets: ["CAPTURES", "PUBLISHED"],
     bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, PROBE_TOKEN: PRB, VERSION: "test",
                 ...(name === null ? {} : { INSTANCE_NAME: name }) },
-  });
+  }));
   live.push(mf);
   return mf;
 };

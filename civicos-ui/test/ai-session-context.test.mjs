@@ -76,6 +76,7 @@
  * wire pin and the derive-nothing pin, so the two cannot be judged by different
  * rules.
  */
+import { withSurfacingRun } from "../../bio-plane/test/surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
    this one — ONE implementation, so `bio-plane/test/tally-through-pipe.test.mjs` guards it for
@@ -115,7 +116,7 @@ catch(e){
 }
 
 const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX.pathname,
   script: fs.readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -129,7 +130,7 @@ const mf = new Miniflare({
                    plane stamps it into every creation whatever a caller says; so the store records one here, the way every
                    installed store does, and the seeds name none. The slug is deliberately no real group's. */
                 INSTANCE_NAME: "fixture-group" },
-});
+}));
 
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 /* Direct plane calls, for SEEDING and for INDEPENDENT verification only. Every

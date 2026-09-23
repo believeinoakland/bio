@@ -58,6 +58,7 @@
  * Everything runs against `src/index.mjs`'s real worker through miniflare, so a feature no caller
  * can reach fails here rather than passing at store level (D-43).
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -77,14 +78,14 @@ const t = (label, got, want) => {
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-r119", MEMBER_TOKEN: "mem-r119", PROBE_TOKEN: "prb-r119",
               AI_TOKEN: "ai-r119", VERSION: "test" },
-});
+}));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const post = async (op, body, tok = "mem-r119") => rP(await (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })).json());

@@ -25,6 +25,7 @@
  * than its rule and would push a member toward citing the whole document, which
  * claims MORE, not less.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -102,7 +103,7 @@ const NO_PAGES = pdf([{ num: 1, body: "<< /Type /Catalog >>" }]);
 const HTML = `<!doctype html><html><head><title>Council Calendar</title></head>`
   + `<body><h1>Meetings</h1><p>There is no such thing as page two of a web page.</p></body></html>`;
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -118,7 +119,7 @@ const mf = new Miniflare({
     if (u.pathname === "/calendar.html") return bin(HTML, "text/html; charset=utf-8");
     return new Response("unscripted", { status: 500 });
   },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

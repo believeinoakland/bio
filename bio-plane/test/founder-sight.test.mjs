@@ -37,6 +37,7 @@
  *       build is the control driver's `admin-bytes` arm (it needs the base
  *       sources, which a battery suite must not pin).
  * ========================================================================= */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -74,13 +75,13 @@ console.log("\n--- 0. structure — ONE resolver, and no session read spells its
 
 /* ============================================================== 1. FIXTURE */
 const ADM = "adm-rec132", MEM = "mem-rec132";
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: IDX_SRC,
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: MEM, VERSION: "test" },
-});
+}));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
@@ -323,13 +324,13 @@ console.log("\n--- 6. a member enrolled as `admin` BEFORE the reservation is REP
       [occurrences, readFileSync(storePath, "utf8").includes("if (false)\n      return refusal(\"MEMBER_ID_RESERVED\"")],
       [1, true]);
     const persist = join(root, "persist");
-    const planeAt = (idx) => new Miniflare({
+    const planeAt = (idx) => withSurfacingRun(new Miniflare({
       modules: true, modulesRoot: "/", scriptPath: idx, script: readFileSync(idx, "utf8"),
       compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
       durableObjects: { STORE: { className: "Store", useSQLite: true } },
       durableObjectsPersist: persist,
       r2Buckets: ["CAPTURES", "PUBLISHED"],
-      bindings: { ADMIN_TOKEN: ADM, VERSION: "test" } });
+      bindings: { ADMIN_TOKEN: ADM, VERSION: "test" } }));
     const on = (m) => ({
       POST: async (q, b) => rP(await (await m.dispatchFetch(`http://x/api/?${q}`,
         { method: "POST", body: JSON.stringify(b ?? {}) })).json()),

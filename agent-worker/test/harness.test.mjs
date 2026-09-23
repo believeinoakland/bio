@@ -1284,6 +1284,20 @@ console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC
     files: [{ path: "bundle.md", text: `---\nid: ${RB}\n---\n\n## Question\n\nDoes it land?\n`,
               bytes: 90, sha256: "a".repeat(64) }],
     register: [] };
+  const PROJECT_MD = ["---", "object_type: project", "current_state: forming", 'created: "2026-09-18T09:00:00Z"',
+    'last_updated: "2026-09-18T09:00:00Z"', "references: []", "---", "", "## Summary", "",
+    "The project the member token's surfacing run is opened over (REC-171).", "", "## Session Log", ""].join("\n");
+  const SURFACING_PROJECT = {
+    base: null, snapKey: "20260918T085900Z_inbox", author: "ruth",
+    meta: { object_type: "project", group: "believe-in-oakland", title: "REC-171 surfacing project",
+            current_state: "forming", created: "2026-09-18T09:00:00Z", last_updated: "2026-09-18T09:00:00Z" },
+    files: [{ path: "bundle.md", text: PROJECT_MD, bytes: PROJECT_MD.length,
+              sha256: createHash("sha256").update(PROJECT_MD).digest("hex") }],
+    register: [] };
+  const SURFACING_OPEN = { run: "RUN-2026-0918-rec171-surfacing", contextType: "project",
+    label: "REC-171: the run the context question is surfaced inside", mode: "check", principalClaude: "project",
+    principalClaudeRef: "believe-in-oakland/claude", skillVersion: "investigative-session@1", biasManifest: null,
+    bounds: [{ bound: "surfaces", allowed: 1, unit: "questions" }], leaseMs: 3600000 };
   const OPEN = { contextType: "inquiry", contextId: RB, label: "REC-100's agent-worker fixture",
     mode: "check", principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
     skillVersion: "investigative-session@1", biasManifest: null,
@@ -1298,7 +1312,14 @@ export default {
     const post = (op, b) => env.REAL.fetch("http://real/api/?op=" + op + "&token=" + T,
       { method: "POST", body: JSON.stringify(b) });
     if (!globalThis.__opened) {
-      await post("promote", ${JSON.stringify(PROMOTE)});
+      /* CORRECTED 2026-09-23 by REC-171 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30): the MEMBER
+         deploy token's creation of the context question is stamped surfaced_by: agent, so it names a running run the
+         token holds, with a surfaces bound, or the plane refuses it SURFACE_NO_RUN. The fixture used to create it
+         outside any run, which is the defect the ruling closes; it now opens that run over a project first. */
+      const proj = await (await post("promote", ${JSON.stringify(SURFACING_PROJECT)})).json();
+      await post("airunopen", { ...${JSON.stringify(SURFACING_OPEN)},
+                                contextId: (proj && proj.result ? proj.result : proj).bundleId });
+      await post("promote", { ...${JSON.stringify(PROMOTE)}, run: ${JSON.stringify(SURFACING_OPEN.run)} });
       globalThis.__opened = await (await post("airunopen", { ...${JSON.stringify(OPEN)}, run: body.run })).json();
     }
     return post("airuntick", { run: body.run, log: body.log, leaseMs: 3600000 });

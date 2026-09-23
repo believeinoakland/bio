@@ -82,6 +82,7 @@
  * verified by sha256 AND `cmp`. Declared results are in that file's header and
  * its run is recorded on the `NEGATIVE CONTROL:` line at the foot of this one.
  */
+import { withSurfacingRun } from "../../bio-plane/test/surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: shared, for its side effect. */
 import fs from "fs";
 import vm from "vm";
@@ -107,7 +108,7 @@ catch (e) {
   process.exit(1);
 }
 const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX.pathname,
   script: fs.readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -121,7 +122,7 @@ const mf = new Miniflare({
                    plane stamps it into every creation whatever a caller says; so the store records one here, the way every
                    installed store does, and the seeds name none. The slug is deliberately no real group's. */
                 INSTANCE_NAME: "fixture-group" },
-});
+}));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const GET = async (q) => (await mf.dispatchFetch(`http://x/api/?${q}`)).json();
 const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
