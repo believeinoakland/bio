@@ -3768,6 +3768,7 @@ __export(bio_checks_exports, {
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
+  CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
@@ -8803,7 +8804,8 @@ var AI_RUN_CHECKS = {
        nor the caller — and the store's `detail` names only the rule. */
   AI_RUN_NOT_PRINCIPAL: {
     check: "C-22.12",
-    where: "src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose",
+    /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
+    where: "src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose/suggestVersion/extractPropose",
     translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
   }
 };
@@ -9575,6 +9577,24 @@ var SUGGEST_CHECKS = {
     check: "C-27.4",
     where: "src/store.mjs suggestVersion > is-suggest-shape",
     translation: "Every suggestion names the piece of work that produced it, and this one named none that can be read here. What was searched, under which declared conditions, and where it stopped is what lets anyone else check a reading rather than take it on trust."
+  },
+  /* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): A VERSION IS FORMED UNDER A LIVE RUN. The
+     run is what a version is read against, and a run that has ended stopped being the conditions anything is
+     formed under. Asked AFTER sight (SUGGEST_NO_RUN for a run the caller cannot see) and position
+     (AI_RUN_NOT_PRINCIPAL, C-22.12, relayed from `runPrincipalGate`), so it is said only to the run's principal.
+     C-27.18 is a dotted member of PL-3's family, the family owner's to allocate (`tools/mintid.mjs` C). */
+  SUGGEST_RUN_NOT_RUNNING: {
+    check: "C-27.18",
+    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    translation: "The investigation this suggestion names has ended. A suggestion is read against the conditions of the investigation that produced it, and those stopped being current when it stopped, so going on means starting a new one."
+  },
+  /* REC-165, BOB #28 (2026-09-22, §11 item 5, "Rule 1's target"): A SUGGESTION LANDS ONLY INSIDE ITS RUN'S
+     CONTEXT — the context itself, or, for a run over a project, a question that project confirmed-cites. Asked
+     after sight and position, so a run the caller cannot see still answers as absent. C-27.19, the same family. */
+  SUGGEST_OUTSIDE_RUN_CONTEXT: {
+    check: "C-27.19",
+    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    translation: "This suggestion is about a question the investigation was not working on. An investigation is read against its own question, or the questions its project draws on, so work on a different question starts an investigation of that question."
   },
   SUGGEST_NAME_TAKEN: {
     check: "C-27.5",
@@ -11803,6 +11823,13 @@ var CASE_AUTHORITY_CHECKS = {
     translation: "A case and each finding in it are published in the project's name, so each has to be signed by an owner of that project. This signature belongs to someone who is not one of its owners. Nothing was committed. Ask an owner of the project to review it and sign it."
   }
 };
+var CASE_CONCLUSION_CHECKS = {
+  CASE_CONCLUSION_MOVED: {
+    check: "C-65.1",
+    where: "src/store.mjs ratifyCaseDocument > is-caseratify-conclusion-moved",
+    translation: "This case document records a conclusion its project no longer stands on: since the document was prepared, the project withdrew that conclusion or concluded again differently. Signing it would publish a conclusion nobody holds. Nothing was committed. Publish the case again from the project, so the document records what the project stands on now, and sign that."
+  }
+};
 var RATIFY_SCOPE_CHECKS = {
   RATIFY_PROJECT_BUNDLE: {
     check: "C-58.1",
@@ -12401,6 +12428,19 @@ var FIRST_STATE_JSON = JSON.stringify(
   Object.fromEntries(Object.entries(STATES).map(([t, s]) => [t, s.legal[0]]))
 );
 var HEADINGS_JSON = JSON.stringify(HEADINGS);
+var escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+var GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">This copy could not read its group just now</p>';
+function groupLine(read) {
+  const r = read && read.answered === true && read.result && read.result.ok === true ? read.result : null;
+  if (r && typeof r.group === "string" && r.group)
+    return '<p class="eyebrow" id="instance-group" data-group="recorded"><span class="slug">' + escGroup(r.group) + "</span> &middot; group instance</p>";
+  if (r && r.group === null)
+    return '<p class="eyebrow" id="instance-group" data-group="none">No group is recorded for this copy yet</p>';
+  return GROUP_LINE_UNREAD;
+}
+function setupPage(read) {
+  return SETUP_HTML.replace(GROUP_LINE_UNREAD, () => groupLine(read));
+}
 var SETUP_HTML = `<!doctype html>
 <html lang="en">
 <head>
@@ -12422,6 +12462,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
 main{max-width:640px;margin:0 auto;padding:56px 22px 80px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--verdigris);margin:0 0 14px}
+.eyebrow .slug{text-transform:none;letter-spacing:.04em}
 h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(28px,4.2vw,38px);
   line-height:1.1;margin:0 0 16px;letter-spacing:-.01em}
 h2{font-family:Georgia,serif;font-weight:600;font-size:20px;margin:28px 0 10px}
@@ -12477,7 +12518,7 @@ table.rec tr.row:hover td{background:#F6F7F2}
 </head>
 <body>
 <main>
-<p class="eyebrow">Believe in Oakland &middot; group instance</p>
+${GROUP_LINE_UNREAD}
 
 <section id="s-loading" class="on">
   <h1>One moment</h1>
@@ -15428,12 +15469,28 @@ var ACTS = [
      and `concluded_for_project` adds the project's own. `=== true` is the whole
      of the three-valued handling: a machine-class credential answers null there,
      does not widen, and keeps its own fence (MACHINE_CANNOT_PUBLISH). */
+  /* REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9, 2026-09-21: `!f.case_member`
+     IS NO LONGER THE WHOLE OF THE MEMBERSHIP HALF EITHER. It is the affordance-layer
+     half of publishCase()'s ALREADY_A_CASE_MEMBER, and that refusal now asks the
+     RELATIONSHIP too: a finding a case pins at its current bytes may still take a
+     new edition when a joined project's conclusion has moved since every edition
+     pinning those bytes (a withdrawal, then a conclusion on another reading, never
+     moves the finding's bytes). Without this disjunct the store would accept that
+     edition and the surface would never offer it — REC-142's defect shape, the
+     route reachable by the raw op and by no member (Q12/DEC-8).
+     A DISJUNCTION AND NOT A REPLACEMENT, REC-135's reason: `!f.case_member` still
+     offers every finding no case pins, and `edition_warranted_for_project` is asked
+     only of the ones a case does. `=== true` is the whole of the three-valued
+     handling, as above: a null never widens. `case_member` itself is unchanged and
+     so is every other act derived from it — reopen, dispose, inquiryground and
+     inquirydivide ask whether these BYTES are frozen in a case, which a moved
+     conclusion does not change. */
   {
     id: "publish",
     label: "Publish (author the case)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f2, ty) => ty === "inquiry" && (f2.current_state === "concluded" || f2.concluded_for_project === true) && !f2.case_member && f2.project_owner !== false
+    applies: (f2, ty) => ty === "inquiry" && (f2.current_state === "concluded" || f2.concluded_for_project === true) && (!f2.case_member || f2.edition_warranted_for_project === true) && f2.project_owner !== false
   },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
@@ -26343,12 +26400,13 @@ function runPrincipalOf(principal) {
   const i = s.indexOf("/");
   return i < 0 ? s : s.slice(0, i);
 }
-function runPrincipalGate({ caller = null, principal = null } = {}) {
+function runPrincipalGate({ caller = null, principal = null, act = null } = {}) {
   const who = runPrincipalOf(caller), owner = runPrincipalOf(principal);
   if (who && owner && who === owner) return null;
+  const doing = typeof act === "string" && act.trim() ? act.trim() : "ticking or closing a run";
   return refusal3(
     "AI_RUN_NOT_PRINCIPAL",
-    "ticking or closing a run is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds"
+    `${doing} is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds`
   );
 }
 function finishedBound(bounds, { expired = false, offered = null } = {}) {
@@ -28668,6 +28726,18 @@ var Store = class _Store extends DurableObject {
         if (normalizeType(b.object_type) !== "inquiry") return null;
         const who = this.#positionalMember(viewer, identity);
         return who === null ? null : this.#concludedForJoinedProjectOf(b.bundle_id, viewer, who);
+      })(),
+      /* REC-157 / §7.1 item 9: WHETHER A PROJECT THIS CALLER HAS JOINED COULD PUBLISH A NEW
+         EDITION OF A FINDING A CASE ALREADY PINS — its conclusion having moved since every
+         edition pinning these bytes. `concluded_for_project`'s shape exactly, one line up,
+         and THREE-VALUED for its reason: null on a target that is not an inquiry and for a
+         caller with no roster position, whose published act set is therefore byte-unchanged.
+         The rule that consumes it is `publish`'s entry in the act catalogue, which widens on
+         `=== true` and never narrows on a null. */
+      edition_warranted_for_project: (() => {
+        if (normalizeType(b.object_type) !== "inquiry") return null;
+        const who = this.#positionalMember(viewer, identity);
+        return who === null ? null : this.#editionWarrantedForJoinedProjectOf(b.bundle_id, viewer, who, b.current_state);
       })(),
       basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
       rested_on: {
@@ -31814,6 +31884,121 @@ Claim: ${f2.claim}
       }
     };
   }
+  /* ===== REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9 (BOB #19, 2026-09-21) —
+   * WHICH CASE EDITIONS PINNING THESE BYTES ALREADY RECORD THE CONCLUSION THIS ACT
+   * WOULD RECORD? THE ONE COMPARISON `publishCase()`'s ALREADY_A_CASE_MEMBER AND THE
+   * `publish` AFFORDANCE (`#editionWarrantedForJoinedProjectOf`) BOTH ASK.
+   *
+   * WHY IT EXISTS. `ALREADY_A_CASE_MEMBER` used to compare the finding's BYTES alone
+   * (`#caseRelationOf`'s pin), which answered "would a new edition say anything
+   * different" correctly only while a case recorded nothing but those bytes. Since
+   * REC-135 (IC-166) an edition also records the conclusion it rests on — WHOSE, on
+   * which reading, with the claim verbatim — and a project's conclusion lives on the
+   * PROJECT, so it moves while the finding's bytes do not. Item 9: *"a new edition is
+   * warranted when the publishing project's latest conclusion is not the one the
+   * pinned edition recorded, whether or not `bundle_sha` moved. The refusal compares
+   * the RELATIONSHIP, exactly as `NOT_CONCLUDED` does."*
+   *
+   * WHAT IS ASKED. `rel` is `#caseRelationOf(bundleId)` as the caller holds it; `conc`
+   * is `#caseConclusionFor`'s CONCLUDED answer — in publishCase() the very object the
+   * case document will record, carried on `prepared` and never re-read. The editions
+   * are every RATIFIED edition whose roster pins this finding at its CURRENT sha
+   * (`rel.pinned`, across every case: DEC-72 clause 6 lets a finding serve many) and
+   * the unratified preparation that pins it (`rel.prepared`). An edition pinning an
+   * OLDER version is not asked: the finding moved since, and the pin already says so.
+   *
+   * WHAT "ALREADY RECORDS IT" MEANS, per the relationship this act would record:
+   *   - THE PROJECT'S OWN conclusion: the edition's row names the relationship
+   *     `project` and the same ENTRY of that project's history — the project, the
+   *     reading, the claim state, the claim verbatim, the falsifier or its stated
+   *     override, who concluded and when. A conclusion is a dated, authored ACT (§7.1
+   *     item 1), so one re-taken after a withdrawal is a different conclusion even
+   *     where it adopts the same claim, and the history already says so (DEC-19).
+   *     Both rows come from `#caseConclusionRowLines` and back through the one
+   *     parser, so they are compared in ONE spelling.
+   *   - THE NO-PROJECT relationship (a question concluded in its own bytes, §7.1 item
+   *     5): the edition's row says `no_project`, OR it recorded no conclusion at all
+   *     (every edition before REC-135, and every one before the case document
+   *     existed). Here the comparison IS THE PIN, not the fields: that conclusion is
+   *     written in the finding's own bytes and this edition pins exactly those bytes,
+   *     so it is the same conclusion by hash. An edition that recorded nothing rested
+   *     on the question's own `concluded` state — the gate before REC-135 read nothing
+   *     else — which is this relationship in these bytes. Comparing FIELDS here would
+   *     let a later rewording of the READER (`#noProjectConclusionOf`) warrant an
+   *     edition of bytes nobody moved, which is the liar's direction.
+   *   - ANYTHING ELSE an edition recorded — another relationship, another project's
+   *     row, a value this plane does not write — is not this conclusion.
+   *
+   * WHAT IT CANNOT SEE, stated so the next reader does not have to test it:
+   *   - two conclusion acts identical in content, author AND second (the record's
+   *     timestamps are second-grained) are indistinguishable in the record and read as
+   *     one; a new edition would then record byte-identical rows, so the refusal's own
+   *     sentence stays true of what the case would say;
+   *   - a reading NAME the frontmatter grammar coerces (`null`, a bare number) is
+   *     compared AS COERCED on both sides, one writer and one parser, so equal inputs
+   *     stay equal — the coercion is REC-135's unquoted `version:` field, unchanged;
+   *   - a case document with no readable text counts as recording NOTHING, which then
+   *     compares by the pin as above. */
+  static #CONCLUSION_ENTRY_FIELDS = [
+    "project",
+    "version",
+    "claim_state",
+    "claim",
+    "falsifier",
+    "falsifier_override_by",
+    "falsifier_override_at",
+    "concluded_by",
+    "concluded_at"
+  ];
+  #editionsRecordingConclusion(bundleId, rel, conc) {
+    const editions = [
+      ...(rel && Array.isArray(rel.pinned) ? rel.pinned : []).map((p) => ({ case_id: p.case_id, edition: Number(p.edition), state: "ratified" })),
+      ...rel && rel.prepared ? [{ case_id: rel.prepared.case_id, edition: Number(rel.prepared.edition), state: "prepared" }] : []
+    ];
+    const want = _Store.#conclusionRowParsed(bundleId, conc);
+    const pinned = [];
+    for (const e of editions) {
+      const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, e.case_id, e.edition);
+      const rows = d && typeof d.text === "string" ? (parseFrontmatter(d.text).data || {}).case_conclusions : null;
+      const had = Array.isArray(rows) ? rows.find((r) => r && typeof r === "object" && String(r.target ?? "") === String(bundleId)) || null : null;
+      pinned.push({
+        ...e,
+        recorded: _Store.#recordedConclusionSummary(had),
+        same: _Store.#sameRecordedConclusion(had, want)
+      });
+    }
+    return { same: pinned.filter((e) => e.same), pinned };
+  }
+  /* What a NEW edition would record for this member, rendered by the one writer and
+     read back by the one parser — the same path an edition's own row took. */
+  static #conclusionRowParsed(bundleId, c) {
+    const text = ["---", "case_conclusions:", ..._Store.#caseConclusionRowLines(bundleId, c), "---", ""].join("\n");
+    const rows = (parseFrontmatter(text).data || {}).case_conclusions;
+    return Array.isArray(rows) && rows[0] && typeof rows[0] === "object" ? rows[0] : null;
+  }
+  static #sameRecordedConclusion(had, want) {
+    if (!want) return false;
+    const relOf = (r) => r && typeof r.relationship === "string" ? r.relationship : null;
+    const hadRel = relOf(had);
+    if (want.relationship === "no_project") return hadRel === "no_project" || hadRel === null;
+    if (want.relationship !== "project" || hadRel !== "project") return false;
+    const v = (x) => x === void 0 || x === null ? null : String(x);
+    return _Store.#CONCLUSION_ENTRY_FIELDS.every((k) => v(had[k]) === v(want[k]));
+  }
+  /* What an edition RECORDED, for the act's answer — null where it recorded nothing. */
+  static #recordedConclusionSummary(had) {
+    if (!had || typeof had.relationship !== "string") return null;
+    const v = (x) => x === void 0 || x === null || x === "" ? null : String(x);
+    return {
+      relationship: had.relationship,
+      project: v(had.project),
+      version: v(had.version),
+      claim_state: v(had.claim_state),
+      claim: v(had.claim),
+      concluded_by: v(had.concluded_by),
+      concluded_at: v(had.concluded_at)
+    };
+  }
   /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7 (BOB #15, 2026-09-18) —
    * A PROJECT WITHDRAWS ITS CONCLUSION, and the withdrawal is a dated, authored
    * act that APPENDS to the relationship's history. It never deletes and never
@@ -32981,15 +33166,24 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
              met; what the rule says is unchanged. */
           detail: "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md \xA77.1 item 4). " + (conc.why === "question_not_case_bearing" ? `This question is ${b.current_state}, and a case cannot be asserted over one the group has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ` : conc.why === "project_withdrew_its_conclusion" ? `${proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; \xA77.1 item 7 \u2014 the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project=${proj}). ` : conc.why === "project_stance_undetermined" ? `${proj}'s latest entry about this question names an act this plane does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ` : `${proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (\xA77.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project=${proj}&version=<reading>). `) + (conc.concluded_elsewhere.length ? `${conc.concluded_elsewhere.length} other project(s) this viewer can see HAVE concluded it (${conc.concluded_elsewhere.map((o) => o.project).join(", ")}) \u2014 information, never this project's stance (\xA77.1 item 8). ` : "") + "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72)."
         };
-      if (this.#caseRelationOf(id).member)
+      const rel = this.#caseRelationOf(id);
+      const recorded = rel.member ? this.#editionsRecordingConclusion(id, rel, conc) : null;
+      if (recorded && recorded.same.length)
         return {
           ok: false,
           reason: "ALREADY_A_CASE_MEMBER",
           target: id,
           from: b.current_state,
-          detail: "this finding is already a member of a published case at the version it stands at now, so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one from bytes nobody revised would make the edition number a count of publish calls rather than a record of what changed. Reopen it (op=reopen), work it, conclude it again, and publish that \u2014 which is the route DEC-12 built and the one that leaves a reader able to see what moved."
+          project: proj,
+          relationship: conc.relationship,
+          recorded_by: recorded.same.map((e) => ({
+            case_id: e.case_id,
+            edition: e.edition,
+            state: e.state
+          })),
+          detail: "this finding is already a member of a published case at the version it stands at now, and that edition already records the conclusion this act would record (the publishing project's relationship, its reading and its claim \u2014 INVESTIGATIVE-SESSION.md \xA77.1 item 9), so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one that says what an edition already says would make the edition number a count of publish calls rather than a record of what changed. Two routes lead to a new edition, and each leaves a reader able to see what moved: the project withdraws its conclusion and concludes again (op=withdrawconclusion, then op=conclude&project=), or the finding is reopened (op=reopen), worked, concluded again and published \u2014 the route DEC-12 built."
         };
-      prepared.push({ id, b, fm, text: liveMd.content, conclusion: conc });
+      prepared.push({ id, b, fm, text: liveMd.content, conclusion: conc, warrant: recorded });
     }
     const roleMap = roles && typeof roles === "object" && !Array.isArray(roles) ? roles : null;
     if (roles != null && !roleMap)
@@ -33305,6 +33499,22 @@ Subject position: ${pos} \u2014 ${just}
            would have to guess which members the bar was actually
            asked of, and it was asked of none of them but these. */
         role: (memberRoles.find((m) => m.target === target2) || {}).role ?? null,
+        /* REC-157 / §7.1 item 9: WHY AN EDITION WAS MINTED OVER BYTES A CASE
+           ALREADY PINS — present ONLY when this finding was a case member at
+           its current version as the act began, which is exactly when the
+           refusal above was asked and answered "the conclusion moved". It names
+           every edition that pinned these bytes and what each RECORDED, so the
+           act's own answer says what moved rather than leaving a caller to
+           infer it from an edition number (DEC-12: a record of what changed). */
+        ...p.warrant ? { edition_warranted: {
+          because: "the_publishing_projects_conclusion_moved",
+          pinned_editions: p.warrant.pinned.map((e) => ({
+            case_id: e.case_id,
+            edition: e.edition,
+            state: e.state,
+            recorded: e.recorded
+          }))
+        } } : {},
         /* REC-17 / DEC-12: a newer EDITION surfaces the re-evaluation
                                 obligation on everything whose basis names this FINDING and
                                 RECOMPUTES NOTHING on the member's behalf — a leg keeps citing
@@ -33548,25 +33758,14 @@ Subject position: ${pos} \u2014 ${just}
          `claim_state: undetermined` IS A FIRST-CLASS ANSWER and is never an
          empty claim. A conclusion written before §7.1 item 6 names no reading, so
          WHICH claim was concluded cannot be established from the record — the
-         document says so, with the reason, rather than publishing a blank. */
+         document says so, with the reason, rather than publishing a blank.
+         REC-157: the row's lines are written by `#caseConclusionRowLines`, MOVED
+         there byte for byte, because `op=publish` must now also ask what a new
+         edition WOULD record and compare it with what an edition DID record — and
+         a second spelling of these twelve lines would be the one place the two
+         could come apart. */
       "case_conclusions:",
-      ...roster.flatMap((m) => {
-        const c = concOf.get(m) || null;
-        return [
-          `  - target: ${m}`,
-          `    relationship: ${c ? c.relationship : "null"}`,
-          `    project: ${c && c.project ? c.project : "null"}`,
-          `    version: ${c && c.version ? c.version : "null"}`,
-          `    claim_state: ${c && c.claim ? c.claim.state : "null"}`,
-          `    claim: "${_Store.#fmSafe(c && c.claim && c.claim.text ? c.claim.text : "")}"`,
-          `    claim_detail: "${_Store.#fmSafe(c && c.claim && c.claim.detail ? c.claim.detail : "")}"`,
-          `    falsifier: "${_Store.#fmSafe(c && c.falsifier ? c.falsifier : "")}"`,
-          `    falsifier_override_by: ${c && c.falsifier_override ? c.falsifier_override.by : "null"}`,
-          `    falsifier_override_at: "${_Store.#fmSafe(c && c.falsifier_override ? c.falsifier_override.at : "")}"`,
-          `    concluded_by: ${c && c.by ? c.by : "null"}`,
-          `    concluded_at: "${_Store.#fmSafe(c && c.at ? c.at : "")}"`
-        ];
-      }),
+      ...roster.flatMap((m) => _Store.#caseConclusionRowLines(m, concOf.get(m) || null)),
       "completeness:",
       `  statement: "${_Store.#fmSafe(statement)}"`,
       `  subject_position: ${position}`,
@@ -33702,6 +33901,29 @@ Subject position: ${pos} \u2014 ${just}
       ""
     ];
     return fm.join("\n") + body.join("\n");
+  }
+  /* REC-135 / REC-157 — ONE MEMBER'S ROW OF `case_conclusions`, THE ONE WRITER OF IT.
+     MOVED HERE BYTE FOR BYTE from `#caseDocumentText` (REC-135 wrote it inline) and
+     changed in nothing: the document calls this for every roster member, and
+     `#editionsRecordingConclusion` calls it to render what a NEW edition would
+     record so the comparison is between two rows written by one function and
+     read back by one parser — never between a row and a hand-copied idea of one.
+     `c` null writes the row a member with no recorded conclusion gets. */
+  static #caseConclusionRowLines(m, c) {
+    return [
+      `  - target: ${m}`,
+      `    relationship: ${c ? c.relationship : "null"}`,
+      `    project: ${c && c.project ? c.project : "null"}`,
+      `    version: ${c && c.version ? c.version : "null"}`,
+      `    claim_state: ${c && c.claim ? c.claim.state : "null"}`,
+      `    claim: "${_Store.#fmSafe(c && c.claim && c.claim.text ? c.claim.text : "")}"`,
+      `    claim_detail: "${_Store.#fmSafe(c && c.claim && c.claim.detail ? c.claim.detail : "")}"`,
+      `    falsifier: "${_Store.#fmSafe(c && c.falsifier ? c.falsifier : "")}"`,
+      `    falsifier_override_by: ${c && c.falsifier_override ? c.falsifier_override.by : "null"}`,
+      `    falsifier_override_at: "${_Store.#fmSafe(c && c.falsifier_override ? c.falsifier_override.at : "")}"`,
+      `    concluded_by: ${c && c.by ? c.by : "null"}`,
+      `    concluded_at: "${_Store.#fmSafe(c && c.at ? c.at : "")}"`
+    ];
   }
   /** REC-96 / D-196 / IC-112 — THE CASE'S OWN SUBJECTS, GATHERED DOWNWARD.
    *
@@ -34622,6 +34844,54 @@ Subject position: ${pos} \u2014 ${just}
           edition: ed,
           detail: `case ${id} edition ${ed} is already ratified under a different signature. An edition is a separate document and answers forever \u2014 a second attestation over the same number would leave a reader unable to say who stood behind what they read. Publish a new edition instead.`
         };
+      }
+      const concViewer = attestorMember ? `member:${attestorMember}` : null;
+      const moved = [];
+      for (const m of roster) {
+        const bm = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, m);
+        const conc = this.#caseConclusionFor(project, m, concViewer, bm ? bm.current_state : null);
+        const rec = this.#editionsRecordingConclusion(m, { pinned: [], prepared: { case_id: id, edition: ed } }, conc);
+        if (conc.state === "concluded" && rec.same.length) continue;
+        moved.push({
+          target: m,
+          recorded: rec.pinned.length ? rec.pinned[0].recorded : null,
+          now: conc.state === "concluded" ? {
+            state: "concluded",
+            relationship: conc.relationship,
+            project: conc.project,
+            version: conc.version ?? null,
+            claim: conc.claim ? conc.claim.text ?? null : null,
+            concluded_by: conc.by ?? null,
+            concluded_at: conc.at ?? null
+          } : {
+            state: "not_concluded",
+            relationship: conc.relationship,
+            project: conc.project,
+            why: conc.why,
+            stance: conc.stance ?? null
+          }
+        });
+      }
+      if (moved.length) {
+        const refusal7 = (code, detail) => {
+          const row = CASE_CONCLUSION_CHECKS[code];
+          return {
+            ok: false,
+            reason: code,
+            code,
+            check: row.check,
+            translation: row.translation,
+            detail,
+            caseId: id,
+            edition: ed,
+            project,
+            moved
+          };
+        };
+        return refusal7(
+          "CASE_CONCLUSION_MOVED",
+          `case ${id} edition ${ed}'s document records, for ${moved.map((x) => x.target).join(", ")}, a conclusion ${project} no longer stands on: ` + moved.map((x) => `${x.target} \u2014 ${x.now.state === "concluded" ? `${project} now stands on a DIFFERENT conclusion (reading '${x.now.version ?? "(unnamed)"}', the ${x.now.relationship === "no_project" ? "no-project" : "project's own"} relationship)` : `${project} stands on no conclusion (${x.now.why})`}`).join("; ") + `. A signed edition records the conclusion it rests on (INVESTIGATIVE-SESSION.md \xA77.1 item 4), so signing this one would publish a conclusion nobody holds. Publish the case again from the project (op=publish) \u2014 the new document records what the project stands on now (\xA77.1 item 9) \u2014 and sign that. Nothing was committed.`
+        );
       }
       const now = (/* @__PURE__ */ new Date()).toISOString();
       const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
@@ -43107,7 +43377,9 @@ ${words}`;
     refs,
     proposedBy,
     viewer = null,
-    at = null
+    at = null,
+    /* REC-165: the caller's PRINCIPAL, stamped server-side (`RUN_PRODUCTION_ACTIONS`). */
+    caller = null
   }) {
     if (typeof proposedBy !== "string" || !proposedBy.trim())
       return {
@@ -43122,13 +43394,29 @@ ${words}`;
         detail: `EXTRACT runs in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, resumes it and checks it plane-side. A production outside one would be a second place a machine writes, and every fence would have to be re-proved there`
       };
     const runId = run.trim();
-    const r = this.#one(`SELECT status, mode FROM ai_runs WHERE run = ?`, runId);
-    if (!r)
+    const r = this.#one(`SELECT status, mode, principal_plane FROM ai_runs WHERE run = ?`, runId);
+    if (!r || !this.#aiRunInSight(runId, viewer))
       return {
         ok: false,
         reason: "NO_SUCH_RUN",
         run: runId,
         detail: `no run is open under ${runId}. A run begins on a MEMBER's act (op=airunopen), naming the subject and the objective \u2014 both of which stay the member's (DEC-24 rule 2). The assistant may propose that a run would help; it may not start one`
+      };
+    const notPrincipal = runPrincipalGate({
+      caller,
+      principal: r.principal_plane,
+      act: "proposing a reading under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        run: runId,
+        note: "a proposed reading names a run its caller holds. Nothing was proposed or minted"
       };
     if (r.status !== "running")
       return {
@@ -52098,6 +52386,9 @@ ${words}`;
       (/* @__PURE__ */ new Date()).toISOString()
     );
   }
+  /* What a store recording no group SAYS, in ONE copy: the credentialed read and the public read (REC-163) both answer
+     with it, so the two cannot come to mean different things by "none recorded". The words are D-436's, unchanged. */
+  static NO_GROUP_RECORDED = "no producing group is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or \u2014 on a store that already held documents when the value arrived \u2014 by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing group is given no default: a caller's own statement of its group is kept as the caller's, and a write stating none is refused.";
   /** op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
   instanceGroup() {
     const r = this.#one(`SELECT slug, recorded_at, source, recorded_by FROM instance_group WHERE id=1`);
@@ -52114,8 +52405,21 @@ ${words}`;
       recorded_at: null,
       source: null,
       recorded_by: null,
-      detail: "no producing group is recorded for this store. A store records it once: at its first boot, from the slug its installer bound, or \u2014 on a store that already held documents when the value arrived \u2014 by one act of the root of trust (op=instancegroupseed). Until then a write that must name its producing group is given no default: a caller's own statement of its group is kept as the caller's, and a write stating none is refused."
+      detail: _Store.NO_GROUP_RECORDED
     };
+  }
+  /** REC-163 / IC-174 — op=instancegroup's PUBLIC projection, and the setup page's read of whose record this is.
+   *  `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21): THE SLUG IS PUBLIC — it travels in every published
+   *  bundle's signed `group` and names the worker, so a stranger reading it learns nothing the group has not already
+   *  published or served. That justification holds for the SLUG and for nothing else in the row: when the value was
+   *  recorded, by which act and by whom are not published anywhere, and §7 does not rule them public. So this reads
+   *  the slug through `#producingGroup()` — THE ONE READER every stamp uses, so the page, the op and the bytes of
+   *  every document this store creates cannot name three different groups — and selects nothing else: a later edit
+   *  of the control plane cannot spread a provenance field onto the public wire, because none arrives there. With
+   *  nothing recorded it says so, in the credentialed read's own words. */
+  instanceGroupPublic() {
+    const slug = this.#producingGroup();
+    return slug ? { ok: true, group: slug } : { ok: true, group: null, detail: _Store.NO_GROUP_RECORDED };
   }
   /** op=instancegroupseed: DECISION (b), the root of trust's one act. The control plane stamps `author`. */
   instanceGroupSeed({ slug = null, author = null } = {}) {
@@ -52549,6 +52853,34 @@ ${words}`;
       if (!p || normalizeType(p.object_type) !== "project") continue;
       if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
       if (this.#conclusionOf(pid, inquiryId, viewer)) return true;
+    }
+    return false;
+  }
+  /* REC-157 / §7.1 item 9 — COULD A PROJECT THIS CALLER HAS JOINED PUBLISH A NEW EDITION OF A
+   * FINDING A CASE ALREADY PINS? `#concludedForJoinedProjectOf`'s walk, asked the two questions
+   * `publishCase()` asks of the project a caller names, through the SAME two readers: the
+   * relationship must be CONCLUDED (`#caseConclusionFor`, the NOT_CONCLUDED gate's one reader),
+   * and no edition pinning these bytes may already record that conclusion
+   * (`#editionsRecordingConclusion`, the ALREADY_A_CASE_MEMBER comparison). One reader per
+   * question, so the act this fact fronts and the refusal cannot disagree (DEC-8).
+   *
+   * ONLY A CASE MEMBER IS WALKED. A finding no case pins at its current version is offered
+   * `publish` by `!case_member` already, so the walk would add cost and nothing else; it answers
+   * false there, and the predicate never reads it because its first disjunct holds.
+   *
+   * IT IS A FACT AND NEVER A RULE, `concluded_for_project`'s posture exactly: it says SOME joined
+   * project could publish a new edition, not that THIS caller may publish for THAT project
+   * (D-311's per-pair question), and the act still refuses on its own terms. */
+  #editionWarrantedForJoinedProjectOf(inquiryId, viewer, memberId, currentState) {
+    const rel = this.#caseRelationOf(inquiryId);
+    if (!rel.member) return false;
+    for (const pid of this.#citesInto(inquiryId).confirmed) {
+      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
+      if (!p || normalizeType(p.object_type) !== "project") continue;
+      if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
+      const conc = this.#caseConclusionFor(pid, inquiryId, viewer, currentState);
+      if (conc.state === "concluded" && !this.#editionsRecordingConclusion(inquiryId, rel, conc).same.length)
+        return true;
     }
     return false;
   }
@@ -57488,6 +57820,11 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       ...act === "current" ? { project: projectId } : {}
     };
     if (preview) return { ...receipt, preview: true, would: act, wrote: false };
+    if (act === "current") {
+      const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when, why);
+      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
+      return receipt;
+    }
     text = _Store.#setVersionField(text, vname, "state", to === null ? from : to);
     if (to !== null) {
       text = _Store.#setVersionField(text, vname, "state_by", who);
@@ -57507,7 +57844,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       text,
       `### Session ${when} | Version ${act} | ${who}
 Trigger: op=version${act} on ${target}
-Changes: reading '${vname}' ${to === null ? act === "hide" ? `${hidden ? "hidden from" : "returned to"} the display` : `is what ${projectId} stands on` : `${from} to ${to}`}.
+Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returned to"} the display` : `${from} to ${to}`}.
 ` + (why ? `Reason: ${why}
 ` : "")
     );
@@ -57540,15 +57877,14 @@ Changes: reading '${vname}' ${to === null ? act === "hide" ? `${hidden ? "hidden
       }
     });
     if (!promoted.ok) return { ...promoted, act, target, version: vname };
-    if (act === "current") {
-      const p = this.#setProjectCurrentVersion(projectRow, target, vname, who, when);
-      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };
-    }
     return receipt;
   }
   /* The make-current pointer's ONE writer, paired with `#currentVersionOf`, its
-     ONE reader. §7's field: project-authored, DATED, never a settings row. */
-  #setProjectCurrentVersion(projectRow, inquiryId, vname, who, when) {
+     ONE reader. §7's field: project-authored, DATED, never a settings row. Since
+     REC-166 (2026-09-22) it is also the act's ONLY write: the receipt the question
+     used to carry — including the member's authored reason — is written HERE, in the
+     project's own Session Log entry, in the same promotion as the pointer. */
+  #setProjectCurrentVersion(projectRow, inquiryId, vname, who, when, why = "") {
     const pid = projectRow.bundle_id;
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
     if (!md || md.content === null) {
@@ -57581,7 +57917,8 @@ Changes: reading '${vname}' ${to === null ? act === "hide" ? `${hidden ? "hidden
       `### Session ${when} | Stands on | ${who}
 Trigger: op=versioncurrent on ${inquiryId}
 Changes: this project now stands on reading '${vname}' of ${inquiryId}.
-`
+` + (why ? `Reason: ${why}
+` : "")
     );
     const carried = [];
     for (const r of this.sql.exec(
@@ -57708,12 +58045,47 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         { target }
       );
     const run = String(args.run ?? "").trim();
-    const runRow = run ? this.#one(`SELECT run, status, context_type, context_id FROM ai_runs WHERE run=?`, run) : null;
-    if (!runRow)
+    const runRow = run ? this.#one(
+      `SELECT run, status, context_type, context_id, principal_plane FROM ai_runs WHERE run=?`,
+      run
+    ) : null;
+    const runSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);
+    if (!runSeen)
       return refusal7(
         "SUGGEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is open in this store, and a version is only interpretable against the conditions its run was formed under (\xA711).` : "pass run=<the run that composed this>: \xA711 requires every version to name the piece of work that produced it, because the bias in force, the declared standard and the claim set can all change at the drop of a hat.",
         { target, run: run || null }
+      );
+    const notPrincipal = runPrincipalGate({
+      caller: args.caller ?? null,
+      principal: runRow.principal_plane,
+      act: "suggesting a reading under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        target,
+        run,
+        note: "a suggestion names a run its caller holds. Nothing was composed or written"
+      };
+    if (runRow.status !== "running")
+      return refusal7(
+        "SUGGEST_RUN_NOT_RUNNING",
+        `the run '${run.slice(0, 60)}' has ended, and a version is formed under a LIVE run's conditions (\xA711 item 5, rule 1): open a new run to go on working, as the member's act.`,
+        { target, run }
+      );
+    const ctxId = String(runRow.context_id ?? "");
+    const inContext = target === ctxId || String(runRow.context_type) === "project" && this.#citesInto(target).confirmed.includes(ctxId);
+    if (!inContext)
+      return refusal7(
+        "SUGGEST_OUTSIDE_RUN_CONTEXT",
+        `${target.slice(0, 60)} is outside the context of the run '${run.slice(0, 60)}': a run's readings land on its own question, or, for a run over a project, on a question that project cites. Work on another question opens a run over it.`,
+        { target, run }
       );
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
@@ -64665,7 +65037,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           refs: (body || {}).refs,
           at: (body || {}).at || null,
           proposedBy: url.searchParams.get("proposedBy"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-165: the caller's PRINCIPAL, stamped by the control
+             plane (REC-152's one expression), never the body's. */
+          caller: url.searchParams.get("principal")
         }),
         extractproposals: () => this.extractProposals({
           run: url.searchParams.get("run"),
@@ -65163,7 +65538,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           kind: body && body.kind || url.searchParams.get("kind"),
           run: body && body.run || url.searchParams.get("run"),
           author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-165: the caller's PRINCIPAL, stamped by the control plane (REC-152's one expression) and SET
+             AFTER the body's spread, so a `caller` the body carries is overwritten rather than believed. */
+          caller: url.searchParams.get("principal")
         }),
         /* PL-4 / IS-4. THE SPLIT BETWEEN THESE IS THE SAFETY PROPERTY, and it is
            `taskenqueue`/`taskdrain`'s split one door over: `capturerequest`
@@ -65495,6 +65873,10 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
            query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
         instancegroup: () => this.instanceGroup(),
+        /* REC-163 / IC-174: the PUBLIC projection — the slug, or the statement that none is recorded, and nothing
+           else (Publication §7 point 1). Read by the control plane for a caller holding no credential, and for the
+           setup page it serves at `/`. */
+        instancegrouppublic: () => this.instanceGroupPublic(),
         instancegroupseed: () => this.instanceGroupSeed({ ...body || {}, author: url.searchParams.get("author") }),
         login: async () => {
           const role = body?.role || "admin";
@@ -66123,14 +66505,22 @@ var OPS = {
      be able to see that one happened even though they cannot cause it. */
   exportlog: { classes: ["admin", "member", "probe"], mutating: false },
   /* D-436 / IC-172 — THE INSTANCE'S PRODUCING GROUP (State Rules v1.5 §3.1), the one value every bundle this
-     instance writes names as its `group`. The READ is open to every class that reads the record: it answers
-     what the store records, and when it records nothing it says so. The SEED is the other half of decision (b):
+     instance writes names as its `group`. The READ is open to every class that reads the record, AND SINCE
+     REC-163 (IC-174) TO THE PUBLIC: `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21) rules THE SLUG
+     PUBLIC — it travels in every published bundle's signed `group` and names the worker, so a stranger learns
+     nothing the group has not already published or served. `classes: null` is how this table says public (there
+     is deliberately no public CLASS — see the header above), so the op answers through its own handler in the
+     unauthenticated branch: a stranger is told the slug, or that none is recorded, and NOTHING ELSE — when and by
+     which act it was recorded are not published anywhere, and §7 rules only the slug; a caller whose credential
+     the admission gate would admit (a machine class in its namespace, a session, an agent credential in scope)
+     is answered the whole row exactly as before. It answers what the store records, and when it records nothing
+     it says so. The SEED is the other half of decision (b):
      a store that already held documents when the value arrived records nothing at boot, and is given its group
      by this act, once. RECORDING THE INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN
      CREDENTIAL HELD IN THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO
      SESSION OF ANY ROLE REACHES IT: it is named in no SESSION_OPS set, and UNATTENDED_BY_DECISION cites this
      row, so a session is told which credential the verb is addressed to rather than an invented reason. */
-  instancegroup: { classes: ["admin", "member", "probe"], mutating: false },
+  instancegroup: { classes: null, mutating: false },
   instancegroupseed: { classes: ["admin"], mutating: true },
   /* Section 8.2. classes: null, because published-record reconstruction requires
      NOTHING: the hashes are public and verifiable by any stranger without this
@@ -67172,6 +67562,7 @@ var AI_RUN_ACTIONS = [
   "extractpropose"
 ];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
+var RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose"];
 var POSITIONAL_ACTS = [
   "cite",
   "sever",
@@ -68014,7 +68405,7 @@ async function caseReader(url, env, storeName) {
   if (cls) {
     const scope = scopeFor(cls, url);
     const inScope = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
-    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "" };
+    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "", cls };
   }
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   if (AI_TOKEN_SHAPE.test(t)) {
@@ -68022,16 +68413,26 @@ async function caseReader(url, env, storeName) {
     if (!aOut.answered) return { silent: "aicredentiallook" };
     const cred = aOut.result?.found ? aOut.result.credential : null;
     const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
-    return { viewer: scoped && !scoped.error ? scoped.viewer : "" };
+    return { viewer: scoped && !scoped.error ? scoped.viewer : "", cls: "ai" };
   }
   if (/^[0-9a-f]{64}$/.test(t)) {
     const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
     if (!sOut.answered) return { silent: "session" };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
-    return { viewer: resolveSession(sess).viewer };
+    return { viewer: resolveSession(sess).viewer, cls: sess.role === "admin" ? "admin" : "member" };
   }
   return { viewer: "" };
+}
+async function publicInstanceGroup(env, storeName) {
+  let stub = null;
+  try {
+    stub = env.STORE.get(env.STORE.idFromName(storeName));
+  } catch {
+    stub = null;
+  }
+  if (!stub) return { answered: false, result: void 0 };
+  return doAnswer(stub.fetch("http://do/instancegrouppublic"));
 }
 var json = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), null, 1), {
   status,
@@ -68630,7 +69031,10 @@ var index_default = {
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op"))
-      return new Response(SETUP_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
+      return new Response(
+        setupPage(await publicInstanceGroup(env, "bio")),
+        { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } }
+      );
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const spec = OPS[op];
@@ -68688,6 +69092,22 @@ var index_default = {
         const out2 = await doAnswer(stub2.fetch(new Request("http://do/publishedmanifest")));
         if (!out2.answered) return storeSilent("publishedmanifest");
         return json({ ok: true, result: out2.result }, 200);
+      }
+      if (op === "instancegroup") {
+        const held = url.searchParams.get("token");
+        const heldCls = held ? await classify(held, env) : null;
+        const heldScope = heldCls ? scopeFor(heldCls, url) : null;
+        const igStore = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
+        const igReader = await caseReader(url, env, igStore);
+        if (igReader.silent) return storeSilent(igReader.silent);
+        if (igReader.viewer) {
+          const igOut = await doAnswer(env.STORE.get(env.STORE.idFromName(igStore)).fetch("http://do/instancegroup"));
+          if (!igOut.answered) return storeSilent("instancegroup");
+          return json({ ok: true, result: igOut.result, store: igStore, tokenClass: igReader.cls }, 200);
+        }
+        const pubOut = await publicInstanceGroup(env, igStore);
+        if (!pubOut.answered) return storeSilent("instancegroup");
+        return json({ ok: true, result: pubOut.result, store: igStore }, 200);
       }
       if (op === "caseflags") {
         const q = new URLSearchParams();
@@ -71973,7 +72393,7 @@ var index_default = {
       }, 403);
     if (PROJECT_ACTIONS.includes(op) || GOVERNANCE_ACTIONS.includes(op) || op === "projectparticipants" || op === "projectownerarith" || op === "memberadd")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (RUN_VERB_ACTIONS.includes(op))
+    if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))
       inner.searchParams.set(
         "principal",
         viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`
