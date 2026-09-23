@@ -138,6 +138,11 @@ GitHub run `35819000017` read **success** (completed 04:42Z). **LANDED** on `mai
 link), so `gates.mjs` calls the tree unclean and records nothing. Gate a landing tree with REAL installs (`cp -a` from a
 checkout whose locks match, or `npm ci`).
 
+**Before pushing ANY `land/fleet/*` branch (CONDUCT #15, 2026-09-23; verified on `main` @ `41c7e0c3`):** `git merge origin/main`
+(merge, never rebase or force), gate the MERGED tree GREEN locally, then push. Since `41c7e0c3`, `gates.yml` fires
+GitHub only on `main` (Bob: one run per landed batch). But GitHub reads `on:` from the PUSHED commit, so a branch based
+before `41c7e0c3` still fires under the old `land/**` trigger, and a red run emails Bob.
+
 ## Carried from the old account's memory, which will not travel
 
 - A background task's exit code is its WRAPPER's. Read the tool's own completion line (`N/N suites green · …`).
