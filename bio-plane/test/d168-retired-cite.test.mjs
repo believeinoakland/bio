@@ -1,7 +1,8 @@
 /* NEGATIVE CONTROL: RUN 2026-09-23 (D-168 worker, worktree agent-ab0b1ebe531cb428b), each arm ALONE, restored by cp from a per-arm pristine copy and verified by sha256 AND cmp (src/store.mjs 2,858,946 B sha256 f4288f242de1…, src/affordances.mjs 149,033 B sha256 4966546525a5…); baseline 19 pass / 0 fail.
    (A) DROP THE CHECK — in src/store.mjs cite(), `if (retiredMembers.length)` -> `if (false && retiredMembers.length)`. DECLARED: every §1 arm and §3's re-cite arm fail, §2 and §4 hold. RESULT 11/8, AS DECLARED: the MEMBER arm "§1 MEMBER onto a QUESTION: a cite of RETIRED information is refused BY NAME" fails first, then the member-onto-a-case, both MACHINE CREDENTIAL arms, the mixed selection, "nothing landed", and §3's re-cite. §3's BYTE-IDENTICAL arm stays GREEN under (A), and that is correct rather than blind: a re-cite of a target the document already cites is the act's idempotent `already` partition and writes nothing either way — what (A) would let land is a NEW citation, which §1's "nothing landed" catches.
    (B) OVER-STRICT — `=== "retired"` -> `!== "collected"` (refuses the verified removed-source bundle too, the liar that reads a second axis). DECLARED: the four §2 arms fail, §1 holds. RESULT 15/4, AS DECLARED.
-   (C) THE PRE-FLIGHT — in src/affordances.mjs `cite`, `(ty === "information" && f.current_state !== "retired")` -> `(ty === "information")`. DECLARED: §4 fails alone. RESULT 18/1, AS DECLARED. */
+   (C) THE PRE-FLIGHT — in src/affordances.mjs `cite`, `(ty === "information" && f.current_state !== "retired")` -> `(ty === "information")`. DECLARED: §4 fails alone. RESULT 18/1, AS DECLARED.
+   RE-RUN 2026-09-23 by the REC-181 worker after §3's fixture was corrected (see §3's fixture note; src/store.mjs sha256 46596c65df89…, restored by cp and verified by sha256 and cmp): (A) RESULT 10/9 — every §1 arm and §3's re-cite arm fail as before, and §3's BYTE-IDENTICAL arm now fails too: the older edge onto OLD is SEVERED rather than confirmed, so a re-cite is no longer the idempotent `already` partition and (A) lets it write. Stronger than the original, not a regression. */
 /* =========================================================================
  * D-168 — A RETIRED ITEM IS NOT CITABLE.
  * State Rules & Consistency v1.5 §4.1, the paragraph *"A RETIRED ITEM IS NOT
@@ -148,8 +149,8 @@ const walk = async (id, to, sourceStatus = "unchanged") => {
 };
 
 const RET = "INFO-2026-1680-retired", GONE = "INFO-2026-1680-removed";
-const OLD = "INFO-2026-1680-older", LIVE = "INFO-2026-1680-live";
-for (const d of [RET, GONE, OLD, LIVE]) must(`promote ${d}`, await promoteAs(IRIS, d, infoMd(d), "information", "collected"));
+const OLD = "INFO-2026-1680-older", LIVE = "INFO-2026-1680-live", HELD = "INFO-2026-1680-held";
+for (const d of [RET, GONE, OLD, LIVE, HELD]) must(`promote ${d}`, await promoteAs(IRIS, d, infoMd(d), "information", "collected"));
 await walk(RET, "retired");
 await walk(GONE, "verified", "removed");
 
@@ -175,23 +176,47 @@ const cite = async (tok, target, ids, role = null) => {
 };
 const bytesOf = async (id) => (await GET(`op=image&token=${ADM}&id=${E(id)}`))["bundle.md"];
 
-/* THE OLDER LEGS, cited while OLD was still live — by the member onto a question, by the machine onto a case. */
-must("member cites OLD onto Q_OLD while live", await cite(IRIS, Q_OLD, [OLD], "supports"));
+/* THE OLDER LEGS, cited while their targets were still live — by the member onto a question, by the machine onto
+   a case.
+   CORRECTED BY REC-181 (2026-09-23). This fixture used to cite OLD from BOTH documents and then walk OLD to
+   `retired` by `op=promote` with both edges still confirmed. That walk was the defect REC-181 closed: §4.1 refuses
+   the terminal transition while a live edge cites the item (`CITED`), and `promote` now asks it as `retire` does, so
+   "a confirmed leg on a retired item" is no longer reachable through any write — it survives only in records retired
+   before the rule. The fixture now reaches only states the record can hold: the question's confirmed leg rests on
+   HELD, whose retirement is REFUSED (and leaves both documents untouched); the case's edge onto OLD is SEVERED — the
+   remedy §4.1 names — before OLD retires, so the older edge that predates the retirement is a severed one. */
+must("member cites HELD onto Q_OLD while live", await cite(IRIS, Q_OLD, [HELD], "supports"));
 must("machine cites OLD onto P_OLD while live", await cite(MTOK, P_OLD, [OLD]));
+await walk(HELD, "verified");
+await walk(OLD, "verified");
 const before = { q: sha(await bytesOf(Q_OLD)), p: sha(await bytesOf(P_OLD)) };
-await walk(OLD, "retired");
+const H1 = [{ from: "collected", to: "verified" }];
+const heldRetire = await promoteAs(IRIS, HELD,
+  infoMd(HELD, { state: "retired", prior: "verified", history: [...H1, { from: "verified", to: "retired" }] }),
+  "information", "retired", (await listed(HELD)).bundle_sha);
+const afterHeld = { q: sha(await bytesOf(Q_OLD)), p: sha(await bytesOf(P_OLD)) };
+const sOld = await POST(`op=select&token=${IRIS}`, { ids: [OLD] });
+must("sever P_OLD's edge onto OLD", await GET(`op=sever&token=${IRIS}&project=${E(P_OLD)}&handle=${sOld.handle}`
+  + `&reason=${E("superseded by a later capture")}`));
+const severed = { p: sha(await bytesOf(P_OLD)) };
+must(`${OLD} -> retired`, await promoteAs(IRIS, OLD,
+  infoMd(OLD, { state: "retired", prior: "verified", history: [...H1, { from: "verified", to: "retired" }] }),
+  "information", "retired", (await listed(OLD)).bundle_sha));
 const afterRetire = { q: sha(await bytesOf(Q_OLD)), p: sha(await bytesOf(P_OLD)) };
 
 t("FIXTURE: RET is genuinely RETIRED, walked there along collected -> verified -> retired",
   (await listed(RET))?.current_state, "retired");
-t("FIXTURE: OLD is RETIRED, AFTER a question and a case already rested on it",
-  (await listed(OLD))?.current_state, "retired");
+t("FIXTURE: OLD is RETIRED, AFTER a case cited it and severed that edge; HELD, which a question's confirmed leg "
+  + "rests on, could NOT be retired (CITED, REC-181) and is still verified",
+  [(await listed(OLD))?.current_state, heldRetire?.reason, (await listed(HELD))?.current_state],
+  ["retired", "CITED", "verified"]);
 t("FIXTURE: GONE is verified with source_status: removed — the OTHER axis, not retired",
   [(await listed(GONE))?.current_state, parseFrontmatter(await bytesOf(GONE)).data?.source_status],
   ["verified", "removed"]);
 t("FIXTURE: the catalog row exists and names its region", [ROW?.check, ROW?.where],
   ["C-33.39", "src/store.mjs cite > is-cite-retired"]);
-console.log(`  corpus: 4 information (RET retired, OLD retired after being cited, GONE removed-source, LIVE), `
+console.log(`  corpus: 5 information (RET retired, OLD retired after its citing edge was severed, HELD held verified `
+  + `by a live leg, GONE removed-source, LIVE), `
   + `2 questions, 2 cases, 2 callers (iris's session; the MEMBER_TOKEN machine credential)`);
 
 /* ================================================= §1 REFUSED BY NAME, BOTH CALLERS, BOTH ARMS */
@@ -228,14 +253,16 @@ t("§3 RE-CITING the now-retired OLD is refused by name for the member (question
   [refusedShape(await cite(IRIS, Q_OLD, [OLD], "supports"))[1], refusedShape(await cite(MTOK, P_OLD, [OLD]))[1]],
   ["RETIRED_NOT_CITABLE", "RETIRED_NOT_CITABLE"]);
 const afterRefuse = { q: sha(await bytesOf(Q_OLD)), p: sha(await bytesOf(P_OLD)) };
-t("§3 THE OLDER LEGS ARE BYTE-IDENTICAL: the question and the case citing OLD read the same sha256 before the "
-  + "retirement, after it, and after the refused re-cites",
-  [afterRetire.q === before.q, afterRefuse.q === before.q, afterRetire.p === before.p, afterRefuse.p === before.p],
-  [true, true, true, true]);
-t("§3 ... and the leg and the edge are still there, confirmed",
-  [(parseFrontmatter(await bytesOf(Q_OLD)).data?.basis ?? []).some((l) => l?.target === OLD),
+t("§3 THE OLDER LEGS ARE BYTE-IDENTICAL: the question's leg (onto HELD) reads the same sha256 before HELD's refused "
+  + "retirement, after it, after OLD's retirement and after the refused re-cites; the case (its edge onto OLD severed "
+  + "before the retirement) reads the same after the retirement and after the refused re-cites",
+  [afterHeld.q === before.q, afterRetire.q === before.q, afterRefuse.q === before.q,
+   afterHeld.p === before.p, afterRetire.p === severed.p, afterRefuse.p === severed.p],
+  [true, true, true, true, true, true]);
+t("§3 ... and the leg is still there, confirmed on HELD; the case's edge onto OLD is still there, severed",
+  [(parseFrontmatter(await bytesOf(Q_OLD)).data?.basis ?? []).some((l) => l?.target === HELD),
    (parseFrontmatter(await bytesOf(P_OLD)).data?.references ?? [])
-     .some((r) => r?.target === OLD && r?.rel === "cites" && r?.status === "confirmed")], [true, true]);
+     .some((r) => r?.target === OLD && r?.rel === "cites" && r?.status === "severed")], [true, true]);
 
 /* ========================================================== §4 THE PRE-FLIGHT AGREES (DEC-8) */
 const acts = async (id) => ((await GET(`op=affordances&token=${MTOK}&target=${E(id)}`))?.acts ?? []).map((a) => a.id);

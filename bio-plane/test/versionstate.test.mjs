@@ -197,7 +197,7 @@ const versionLines = (versions) => {
           ...(legs.length ? ["basis_version_legs:", ...legs] : [])];
 };
 const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [], versions = null,
-                         basis = [], surfacedBy = "agent" } = {}) => ["---",
+                         basis = [], surfacedBy = "human" } = {}) => ["---",  /* CORRECTED 2026-09-23 by REC-179 (C-66.5): this template's default was `agent`, but its questions are created by a member SESSION, which D-78 restamps `human` — so every later revision re-sending the template RELABELLED the question `agent`, the defect REC-179 closes (a revision now carries the value forward or is refused SURFACED_BY_REWRITTEN). The template now says what the record holds. */
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, "current_state: open", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,

@@ -1031,7 +1031,7 @@ export const GATE_MARK = "/*viewer-gate*/";
    THE FIGURE IS MEASURED, NOT CHOSEN — see `MEASUREMENTS.md` M-40 and this
    item's report. It is deliberately NOT expressed as an `IN (?)` list of
    subjects: D-36's measured workerd ceiling is about 100 BOUND VARIABLES, and
-   `#frontierContent` is already over it at its default cap (D-390). This read
+   `#frontierContent` was over it at its default cap until D-390 chunked it. This read
    joins instead, so its cost is rows and not bound variables, and raising this
    number cannot walk into that ceiling. */
 export const MEANING_AXIS_CAP = 500;

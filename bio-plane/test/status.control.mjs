@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The NEGATIVE CONTROL DRIVER for `tools/status.mjs` and `bio-plane/test/status.test.mjs` —
- * nine arms plus an opening and closing baseline.
+ * ten arms plus an opening and closing baseline.
  *
  *   node bio-plane/test/status.control.mjs        (from the repo root)
  *
@@ -109,6 +109,11 @@ const ARMS = [
     from: "    const extra = got.filter((k) => !want.includes(k)), gone",
     to:   "    const extra = [], gone",
     mustBreak: "AN EXACT KEY SET TRIPS ON A KEY ADDED UNDER A NAME NOBODY SEARCHED FOR" },
+  { id: "A10", title: "whole claim texts rendered into §3 again — the map over its reading budget, the trims come back (M0-138)",
+    from: "(by[cl.state] = by[cl.state] || []).push(firstSentence(cl.text));",
+    to:   "(by[cl.state] = by[cl.state] || []).push(cl.text);",
+    mustBreak: "THE RENDERED MAP FITS ITS READING BUDGET — docs/architecture/BIO_System_Design.md",
+    alsoBreak: "renderCell renders the first sentence, never the whole text" },
 ];
 
 for (const a of ARMS) {

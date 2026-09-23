@@ -6405,7 +6405,8 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). FIFTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (FOURTEEN until 2026-09-23, when REC-172 added
+ * and §14b.6). SIXTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (FIFTEEN until 2026-09-23, when REC-177 added
+ * C-22.16 — a bound declared at the open states a positive allowance; FOURTEEN until 2026-09-23, when REC-172 added
  * C-22.15 — a figure is spent or declared only on a bound the run HAS, named in a map or a list; TWELVE until
  * 2026-09-23, when REC-169 added
  * C-22.13 — a figure written into a run's bound is a non-negative integer — and C-22.14 — never for a bound the
@@ -6784,6 +6785,18 @@ export const AI_RUN_CHECKS = {
     where: 'src/airun.mjs checkConsume (the tick\'s map, the open\'s list, and every key in either), called from store.mjs aiRunTick and aiRunOpen',
     translation: 'The investigation named a part of its budget that does not exist, or did not say which part '
       + 'it meant. Nothing was recorded, so no budget was spent or set that nobody could account for.',
+  },
+  /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
+     ABSENT or ZERO `allowed` was opened at 0, and `finishedBound` reads 0 as NO CEILING — so the run recorded a bound
+     it did not have. Refused at the open, nothing written. Its own code and not C-22.13's: C-22.13 is a figure of the
+     wrong FORM (a string, a fraction, a negative), and 0 is a perfectly good whole number; what is wrong here is that
+     the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
+  AI_RUN_BOUND_NO_ALLOWANCE: {
+    check: 'C-22.16',
+    where: 'src/airun.mjs checkConsume (the open\'s list, its allowance arm), called from store.mjs aiRunOpen',
+    translation: 'The investigation was given a limit on part of its budget without saying how much it may use. '
+      + 'A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, '
+      + 'or leave that part out.',
   },
 };
 
@@ -11107,6 +11120,25 @@ export const CONTENT_EXTENT_CHECKS = {
       + 'would record a pointer that resolves to nothing and looks exactly like one that works. '
       + 'Cite the captured page as a whole for now.',
   },
+  /* D-440 (EXTRACTION-BREADTH-DESIGN.md section 3.2; CLIENT-RENDERED.md
+     "DESIGNED 2026-09-21"). An image's `{part}` names a media member of a
+     CONTAINER's own bytes, and a web page, a PDF or a plain file has none. It
+     is a sub-number of this family on C-45.5's rule (the family's subject is the
+     ways the record could come to point at nothing), and it is NOT C-45.1: the
+     part is not outside a list this record holds, there is no list to be outside
+     of, because the document is not the kind that embeds one. Until D-440 this
+     minted, stating nothing, whenever the capture held no image list. */
+  CONTENT_EXTENT_NOT_A_CONTAINER: {
+    check: 'C-45.11',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'This citation points at an image embedded inside the document, and this document '
+      + 'is not the kind that embeds files inside itself: it is a web page, a PDF or another plain '
+      + 'file, not a Word, Excel, PowerPoint or OpenDocument file. An image shown beside a web page '
+      + 'is a separate file the page only points at, so it is not in what this record captured of '
+      + 'the page. If that image is your evidence, capture it at its own address as its own '
+      + 'document and cite that document whole. An image drawn on a PDF page is cited by its page '
+      + 'and position instead.',
+  },
   /* REC-84 / IC-84 (1): a leg may NAME the part it rests on, instead of
      describing it. The two refusals below are the two ways that name can be
      wrong, and both are facts only the store can establish — hence a store
@@ -11184,6 +11216,26 @@ export const CONTENT_EXTENT_CHECKS = {
       + 'written into the record as it stands — it is empty, too long, or contains a quotation '
       + 'mark, a backslash, a line break or a comment mark, and those characters would silently '
       + 'reshape the document rather than appear in it. It is declined instead of mangled.',
+  },
+  /* D-420 — AN IMAGE CITED BY PAGE AND RECTANGLE WHERE THE PAGE PAINTS NO
+     IMAGE. Not C-45.1: that code is "the address is outside the container" and
+     this address is INSIDE it — the page exists and the rectangle is on it. What
+     is wrong is the KIND the row would claim: an `image` row over a region the
+     record holds as painting no image is a text-or-nothing region wearing an
+     image's name. The figure comes from the record (the placements the
+     structure op reported at acquire, EXTRACTION-BREADTH §3.3 item 2), and with
+     no figure held the citation is admitted and the absence stated. C-45.12
+     because D-440 holds C-45.11 in the same family (a sub-number of an
+     allocated family, C-45.5's precedent — no `mintid C`). */
+  CONTENT_EXTENT_NO_IMAGE_PAINTED: {
+    check: 'C-45.12',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'This citation calls a region of the page an image, and the page paints no image '
+      + 'there. When this document was captured the record listed every image each page draws and '
+      + 'where, and none sits at this address — so a row saying "an image is here" would claim '
+      + 'something the file does not show. If you meant the words in that region, cite it as a '
+      + 'region of the page; if you meant a picture, pick it from the images the record lists for '
+      + 'this page, which are named beside this refusal.',
   },
 };
 
@@ -12190,6 +12242,23 @@ export const SURFACE_CHECKS = {
       + 'allowed. Nothing was created. The investigation ends at its next step and says which limit '
       + 'stopped it.',
   },
+  /* REC-179 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30; D-78's stated intent that a revision
+     carries the value forward): `surfaced_by` records the SURFACING ACT, and that act happens once, at the
+     creation — decided there by the server (D-78's restamp, or REC-173's verified replay). Measured before this
+     existed (`0e7cc03e`): the restamp runs only on a creation and nothing compared a revision's value with the
+     current version's, so a revision relabelled an assistant's question `human` (or a member's `agent`) and
+     landed, and the rule-2 surfacing row REC-171 writes then contradicted the bytes it describes. Asked inside
+     `promote`'s transaction AFTER the compare-and-swap (the current version is then the one the revision is
+     based on) and BEFORE any write. The comparison is of the value the catalog's own parser reads out of each
+     version's `bundle.md` — a respelling of the same value lands — and an unreadable or absent value is a value:
+     a revision may not supply an origin its creation did not record, nor drop one it did. */
+  SURFACED_BY_REWRITTEN: {
+    check: 'C-66.5',
+    where: 'src/store.mjs promote > is-promote-surfaced-by',
+    translation: 'This revision changes who surfaced the question, a member or an assistant. That is recorded '
+      + 'once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the '
+      + 'value the current version carries and save the revision again.',
+  },
 };
 
 /* REC-140 / C-58 — WHAT `op=ratify` MAY PUBLISH AT ALL (BIO_Publication_v0_1.md §3 rule 2,
@@ -12642,7 +12711,24 @@ export function checkContentExtent(extent, ctx = {}) {
         return refusal("CONTENT_EXTENT_OUT_OF_RANGE",
           `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
           + `image extent names page ${e.page}`);
+      /* D-420: the page set says the page EXISTS; the record's placement list
+         says whether an image is PAINTED there. No list held (a PDF acquired
+         before D-420, a walk that did not finish, a capture that is not a PDF)
+         answers null and the row is admitted with the absence stated. */
+      const unpainted = ctx.known !== false ? coversImagePlacement(e, ctx.container) : null;
+      if (unpainted) return refusal("CONTENT_EXTENT_NO_IMAGE_PAINTED", unpainted);
     }
+    /* D-440 — A `{part}` IS A MEMBER OF A CONTAINER'S OWN BYTES, AND NOTHING
+       ELSE. Asked BEFORE the image list, because on a capture that is not a
+       container there is no list to be outside of — and until this arm, "no
+       list" was read as "no bound" and ANY 64-hex part minted on every web
+       page, PDF and text capture, naming bytes the document does not hold.
+       Refused only on the store's DETERMINATE `office: false`; an undetermined
+       kind (`null`) and the catalogue's document-only pass (`known: false`) are
+       skipped, never guessed — the arm's rule above, and the admission is
+       STATED by the store through `imagePartUndetermined` below. */
+    const notContainer = hasPart && ctx.known !== false ? partOutsideAnyContainer(ctx.container) : null;
+    if (notContainer) return refusal("CONTENT_EXTENT_NOT_A_CONTAINER", notContainer);
     const outside = hasPart ? coversImage(e, ctx.container) : null;
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
     /* TEXT READ OFF AN EMBEDDED IMAGE HAS NO CHAIN IN THIS RECORD, and the
@@ -12844,6 +12930,84 @@ function coversImage(e, container) {
   if (images.some((x) => x && typeof x.part === 'string' && x.part.toLowerCase() === want)) return null;
   return `this capture's container holds ${images.length} image(s) and none of them has the content `
     + `hash ${want.slice(0, 16)}… that the extent names`;
+}
+
+/** D-440 — an embedded image's `{part}`, against WHETHER THIS CAPTURE IS A
+ *  CONTAINER AT ALL, as the store resolved it (`container.office`, three-valued:
+ *  true, false, or null for undetermined). Returns the sentence naming why the
+ *  part cannot be in this document, or null. ONLY a determinate `false` answers:
+ *  an undetermined kind is SKIPPED, the three predicates' rule above, and stated
+ *  by `imagePartUndetermined`. A sentence rather than a refusal for the reason
+ *  those predicates give: the code stays a literal inside `is-content-extent`. */
+function partOutsideAnyContainer(container) {
+  if (!container || container.office !== false) return null;
+  const fmt = typeof container.format === 'string' && container.format ? container.format : null;
+  return `this capture is ${fmt ? `a ${fmt.slice(0, 20)} document` : 'a document'}, not an office `
+    + `container, so its own bytes hold no embedded media part and a {part} names bytes this document `
+    + `does not contain. An image served beside a page is its OWN document: acquire it at its own `
+    + `address and cite that document whole`
+    + (fmt === 'pdf' ? `. An image painted on a PDF page is addressed by its page and rect, not a part` : '');
+}
+
+/** D-440 — WHAT AN ADMITTED `{part}` COULD NOT BE CHECKED AGAINST, stated, or
+ *  null when it was checked in full. The row's rule: an office capture with no
+ *  persisted image list keeps its UNDETERMINED admission, STATED — and so does a
+ *  capture whose kind the record does not hold. `mintContent` carries this onto
+ *  its answer, because a row admitted without its bound and returned bare reads
+ *  exactly like one that was verified. Pure; reads the same `ctx` the checker
+ *  judged, so the statement cannot describe a different context. */
+export function imagePartUndetermined(extent, ctx = {}) {
+  const e = extent && typeof extent === 'object' ? extent : null;
+  if (!e || e.kind !== 'image' || e.part === undefined || e.part === null || e.part === '') return null;
+  if (!ctx || ctx.known === false) return null;
+  const c = ctx.container && typeof ctx.container === 'object' ? ctx.container : null;
+  if (!c || c.office == null)
+    return { level: 'container_kind',
+             why: `${c && typeof c.kind_why === 'string' ? c.kind_why : 'this record does not hold which kind of document this capture is'}`
+               + ` — so whether this part is a member of the document's own bytes is UNDETERMINED, `
+               + `admitted and stated rather than guessed either way` };
+  if (c.office === true && !Array.isArray(c.images))
+    return { level: 'image_list',
+             why: `this capture is an office container and this record holds no list of its embedded `
+               + `images (it was acquired before the wire carried one, or no entry itemised it), so whether `
+               + `the part is among them is UNDETERMINED, admitted and stated rather than guessed` };
+  return null;
+}
+
+/* D-420 — THE PAGE FORM'S BOUND: the images a PDF's pages PAINT, as the record
+ * holds them (`container.images` of a `container_name: 'pdf'` extent, each
+ * `{page, rect}`, written at acquire from the structure op). Returns a sentence
+ * or null, on the three predicates' rules above: the figure comes from the
+ * RECORD, and an absent figure is SKIPPED rather than refused. An EMPTY list is
+ * a MEASURED ZERO (IC-124's rule) and bounds.
+ *
+ * "EQUALS" IS THE CROP'S EQUALITY AND NOTHING LOOSER. `pdfPageImages` writes a
+ * rectangle at 1/1000 pt, and `pdf-worker/src/imagecrop.mjs` matches within
+ * exactly that step (RECT_TOL); a wider tolerance here would admit a rectangle
+ * the crop then refuses — the defect this predicate closes, back again. The
+ * corners are normalised first (`canonicalExtent`'s own order), because a
+ * rectangle written upper-right first is the same rectangle.
+ *
+ * A PAGE WITH NO RECT (`{page}` alone) names "an image on page N" and is
+ * refused only when the page paints NONE; which one of several it means is the
+ * crop's question (RECT_REQUIRED), not the address's. */
+function coversImagePlacement(e, container) {
+  if (!container || container.container_name !== 'pdf' || !Array.isArray(container.images)) return null;
+  const all = container.images;
+  const onPage = all.filter((x) => x && x.page === e.page && Array.isArray(x.rect) && x.rect.length === 4);
+  if (!(Array.isArray(e.rect) && e.rect.length === 4)) {
+    if (onPage.length) return null;
+    return `page ${e.page} of this capture paints no image — the record holds ${all.length} image `
+      + `placement(s) over the whole document, and none is on this page`;
+  }
+  const norm = (r) => [Math.min(r[0], r[2]), Math.min(r[1], r[3]), Math.max(r[0], r[2]), Math.max(r[1], r[3])];
+  const want = norm(e.rect);
+  const same = (r) => norm(r).every((v, i) => Math.abs(v - want[i]) <= 0.001 + 1e-9);
+  if (onPage.some((x) => same(x.rect))) return null;
+  const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(', ')}]`).join(' ');
+  return `page ${e.page} of this capture paints ${onPage.length} image(s)`
+    + `${onPage.length ? ` (${listed}${onPage.length > 6 ? ' …' : ''})` : ''} and none at `
+    + `[${want.join(', ')}], the rectangle the extent names`;
 }
 
 /* =========================================================================
