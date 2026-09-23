@@ -366,7 +366,7 @@ scope: send `address: t.url` in `agent-worker/src/index.mjs`; the mocks (`harnes
 accepts-when: against the mock, a run's internet-level target files a request naming its address; one sent with only `url` is refused by name. NEGATIVE CONTROL: send `url` again, and the address arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (REC-168's finding via CONDUCT #14; `node tools/mintid.mjs FL`).
 
-### D-192 · queued — **NOTHING PINS THE VIEW-TIME GUARANTEE THAT A CAPTURED PAGE RUNS NO SCRIPT: `app.html` renders captures in an `iframe` with `sandbox=""` (no `allow-*`), and no suite in either test tree asserts that attribute.** The rest of D-192's replay-attack question is answered at the code: `subresources.mjs`'s CSP is `default-src 'none'`/`script-src 'none'` (pinned in `subresources.test.mjs`), parts resolve by hash from the manifest and a missing part becomes `about:capture#unavailable`, and `sanitizeCapturedHtml` is pinned in `artifact-fetch.test.mjs`. — owner UI.
+### D-192 · running — SPAWNED 2026-09-23 ~22:40Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-192 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-192 and that session; never conclude queued from the absence alone.
 order: after REC-191: a security pin on a built guarantee, small, ahead of the process rows (SCHEDULER #17, 2026-09-23, LED-7 batch S17-1; narrowed at the code on `02603e88`)
 milestone: M2
 interface: none — an assertion and one sentence of design.
@@ -387,7 +387,7 @@ accepts-when: a run the instance credential opened resumes after its capture com
 added: 2026-09-21 · SCHEDULER #7 (LED-7; BOB #22's ruling, drained this commit; keeps its `D-` id).
 uncut: restored whole from «D-260» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-126 · queued — **THE `per-item` WEIGHT IS DESIGNED AND UNBUILT, SO A QUEUE SELECTION CANNOT BE HANDLED AS A SET.** `bio-plane/src/affordances.mjs` publishes `refuse` (5), `report` (1) and `single` (14) and no `per-item` (re-measured 2026-09-21), and the three acts a selection would use each take one key. The rest of what D-126 asked for is BUILT: the three classes, the 35-kind registry, the item contract, the handled-scopes. — owner RECORD, then UI.
+### D-126 · running — SPAWNED 2026-09-23 ~22:40Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-126 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-126 and that session; never conclude queued from the absence alone.
 order: a feature, after the rows Bob's priorities ordered (UI-71 closes his 2026-09-18 ruling), before the M4/M2 product rows because the queue surface is built and UI-55's ARM 4d already watches for it (SCHEDULER #5, 2026-09-21)
 milestone: M4; the surface half M8
 interface: I3 — the weight vocabulary and the acts' set form; the integrator mints and classifies the IC.
@@ -398,7 +398,7 @@ accepts-when: a selection of three where one item drifted leaves exactly that on
 added: 2026-09-21 · SCHEDULER #5 (BOB #19's inbox entry, drained this commit; keeps its `D-` id).
 uncut: restored whole from «D-126» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-74 · queued — **OAKLAND'S SHARED IDENTIFIER SPACES HAVE NEVER BEEN MEASURED, SO EVERY PROGRESSION CROSSING ITS SYSTEMS COLLAPSES TO GRADE C.** Framework §8.3 names the identifiers an institution may reuse across Legistar, its procurement portal and its finance system — a contract or purchase-order number, a project or CIP number, a resolution or ordinance number, an APN, a fund or account code — and each found in two systems raises a whole progression from C to B. `node tools/status.mjs 6` reads `6.identifier-spaces` ABSENT (re-read 2026-09-21). — owner CAPTURE.
+### D-74 · running — SPAWNED 2026-09-23 ~22:40Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-74 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-74 and that session; never conclude queued from the absence alone.
 order: first of the M4 product rows, after D-126: a MEASUREMENT comes before anything built on it, and §8.3 calls it *"one of the highest-value pieces of measurement this project can do"*; a gap, not an over-claim (SCHEDULER #10, 2026-09-21, LED-7)
 milestone: M4
 interface: none — a measurement; a shared identifier it finds is built under its own row.
@@ -409,7 +409,7 @@ accepts-when: `MEASUREMENTS.md` carries a per-class table — the systems read, 
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-74's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 uncut: restored whole from «D-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### REC-122 · queued — D-161's LAST ACT: A MEMBER CHOOSES THE ON-POINT PAIR OF A CONNECTION (Bob's 2026-09-14 refinement, §5.4) — the act that turns REC-120's honest UNDETERMINED into a definite answer where a member has established which mention is to the point.
+### REC-122 · running — SPAWNED 2026-09-23 ~22:40Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER REC-122 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-122 and that session; never conclude queued from the absence alone.
 order: runnable product work (M4, D-161's last act); REC-120 is done; not on BOB #14's list, which governs only rows added after it (SCHEDULER, first order audit, 2026-09-18)
 milestone: M4 — D-164, the content-extent primitive (RECORD)
 interface: I5 and I3 — its OWN IC, minted with `node tools/mintid.mjs IC` BEFORE building, against the bases as read at resolution (I5 1.18.0, I3 23.5.0 on `main` when rowed)
