@@ -711,8 +711,13 @@ ok("BUT an action with nothing authored still draws exactly one error, and it is
    && /counterparty block is missing/.test(bare.errs[0].message));
 ok("the machine writes no counterparty of its own on that path — no name, no basis, no placeholder",
    !/counterparty/.test(bare.text));
+/* CORRECTED 2026-09-23 by D-182 (BIO_Case_Making_v0_1.md §2, risk_tier, BOB #21), never exempted: this read
+   `/risk_tier: 1/`, which pinned the defect D-182 removes — the writer defaulting every action to tier 1, FILE
+   FREELY, when no member had assessed it. The arm is still asserted to exist; its tier is now the UNDETERMINED
+   the record states wherever no member stated one, and a 1 must not come back. */
 ok("and the writer still keeps its action arm, because actions already in the record are still revised",
-   /action_kind: /.test(bare.text) && /risk_tier: 1/.test(bare.text));
+   /action_kind: /.test(bare.text) && /^risk_tier: undetermined$/m.test(bare.text)
+   && !/^risk_tier:\s*1\s*$/m.test(bare.text));
 
 /* THE OVERDUE ACT'S CARRY, and the measured gap it works around. C-2.8 refuses
    a question's basis leg pointing at an ACTION ("a leg rests on information or

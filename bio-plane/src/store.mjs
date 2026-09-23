@@ -480,6 +480,8 @@ import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
    catalogue so this file holds no grade-letter literal for it. */
 import { TESTIMONY_GRADE } from "../checks/bio-checks.mjs";
+/* D-182: an action's risk tier is READ through the catalogue's own state function and its words. */
+import { RISK_TIERS, riskTierState } from "../checks/bio-checks.mjs";
 
 /* MK-1 / D-184 / IC-134 — THE TESTIMONY PATH'S KEY, AND IT IS A SYMBOL ON
    PURPOSE. `promote` honours the register's `authored` flag, and writes the
@@ -1883,7 +1885,13 @@ export class Store extends DurableObject {
       row.bundle_id);
     return {
       kind: row.action_kind ?? null,
-      risk_tier: row.action_risk_tier ?? null,
+      /* D-182: read from the stored DOCUMENT through the catalogue's own function, never defaulted. An
+         action nobody assessed reads "undetermined" — not null, which reads as "not an action", and not 1,
+         which told a member to file freely. The column `action_risk_tier` stays NULL for it, so a
+         `risk:` search matches only a tier a member stated. The words travel with the value so a surface
+         renders the plane's sentence and invents none (vocabularies.risk_tiers is the same map). */
+      risk_tier: riskTierState(fm.risk_tier),
+      risk_tier_words: RISK_TIERS[riskTierState(fm.risk_tier)] ?? null,
       counterparty_state: row.action_counterparty_state ?? null,
       resolution: row.action_resolution ?? null,
       clock_next: next,

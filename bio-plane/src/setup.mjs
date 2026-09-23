@@ -864,14 +864,16 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
      kinds, which is exactly what a page offering no kind control has been told.
      The app's intake reads the published action_kind vocabulary and lets the
      member say; this page is the installer's minimal intake and does not.
-     risk_tier stays 1 for the reason recorded beside app.html's arm: nothing
-     publishes member-facing words for tiers 2 and 3, so a chooser would be a
-     surface deciding what they MEAN.
+     risk_tier is WRITTEN undetermined (D-182, BOB #21): this page asks no
+     tier, so no member stated one, and the old default of 1 told a member the
+     action was safe to file freely when nobody had assessed it. Only a
+     member's authored act sets 1, 2 or 3; the words are the plane's, published
+     as vocabularies.risk_tiers.
      (No backticks in this comment: it lives inside the SETUP_HTML template
      literal, and a stray pair here parses fine under node --check and then
      fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
   if (type === "action") {
-    fm.push("action_kind: other","risk_tier: 1");
+    fm.push("action_kind: other","risk_tier: undetermined");
     const cp = act && act.counterparty;
     /* The state the member chose is written even when the field beside it is
        empty: a member who answered "not determined yet" and wrote nothing has

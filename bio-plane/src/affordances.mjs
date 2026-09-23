@@ -68,7 +68,7 @@
  */
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
-         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS,
+         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS,
          /* REC-43 / DEC-39. The two letters the co-attestation fence states are
             the RULE's own, imported from where the refusal that enforces it is
             computed, so the sentence a member reads and the grade the gate will
@@ -602,6 +602,13 @@ export const VOCABULARIES = {
      same direction `action_kind`, `basis_roles`, `action_basis_kinds` and
      `correspondence_directions` above already take. One array, three readers. */
   resolutions: RESOLUTIONS,
+  /* D-182 (BIO_Case_Making_v0_1.md §2, `risk_tier`, RULED by BOB #21): an action's risk tier IN WORDS — Bob's
+     three from the mission of record and the UNDETERMINED that is written wherever no member stated one. A
+     code->text map for `sufficiency_claim_states`' reason below: the sentence IS the tier's meaning, and a
+     surface holding its own copy would be the surface deciding what tier 2 means, which is why app.html's
+     arm could offer no chooser before this. Imported from `bio-checks.mjs`, where C-2.10 validates against
+     it and `riskTierState()` turns a stored value into one of its keys. One map, three readers. */
+  risk_tiers: RISK_TIERS,
   /* PL-2 / IS-2 — THE SIXTH STATE MACHINE, PUBLISHED. §6 rule 4's third
      consequence is not a nicety: without this, every surface that shows a
      version's state holds its own copy of which states exist and which moves

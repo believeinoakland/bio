@@ -3920,6 +3920,7 @@ __export(bio_checks_exports, {
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
   RESOLUTIONS: () => RESOLUTIONS,
   RFC_RESPONSE_WINDOW_PRECEDENT: () => RFC_RESPONSE_WINDOW_PRECEDENT,
+  RISK_TIERS: () => RISK_TIERS,
   ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS,
   SEARCHED_SUBJECT_SOURCES: () => SEARCHED_SUBJECT_SOURCES,
   SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS,
@@ -4004,6 +4005,7 @@ __export(bio_checks_exports, {
   rangeCorners: () => rangeCorners,
   releaseMessage: () => releaseMessage,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
+  riskTierState: () => riskTierState,
   sectionText: () => sectionText,
   sha256HexSync: () => sha256HexSync,
   signerKeysAt: () => signerKeysAt,
@@ -4338,6 +4340,16 @@ var STATES = {
 };
 STATES.problem = STATES.focus;
 var ACTION_KINDS = ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"];
+var RISK_TIERS = {
+  1: "file freely",
+  2: "file with caution",
+  3: "do not file without counsel",
+  undetermined: "not assessed: no member has stated a risk tier for this action"
+};
+function riskTierState(v) {
+  if (v === void 0 || v === null || v === "undetermined") return "undetermined";
+  return v === 1 || v === 2 || v === 3 ? v : null;
+}
 var ACTION_BASIS_KINDS = ["rests_on", "advances"];
 var CORRESPONDENCE_DIRECTIONS = ["sent", "received", "no_response"];
 var RESOLUTIONS = ["complied", "denied", "escalated", "withdrawn"];
@@ -6843,7 +6855,7 @@ function checkActionExtension(ctx, findings) {
   actionBasisFindings(fm, findings);
   correspondenceFindings(fm, findings);
   if (!ACTION_KINDS.includes(fm.action_kind)) findings.push(f("C-2.10", "error", `action_kind '${fm.action_kind}' is not in the suite`));
-  if (![1, 2, 3].includes(fm.risk_tier)) findings.push(f("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not 1, 2, or 3`));
+  if (riskTierState(fm.risk_tier) === null) findings.push(f("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(", ")}`));
   checkCounterparty(fm, findings);
   if (fm.current_state === "resolved" && !RESOLUTIONS.includes(fm.resolution)) {
     findings.push(f("C-2.10", "error", `resolved state requires resolution in: ${RESOLUTIONS.join(", ")}`));
@@ -13584,14 +13596,16 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
      kinds, which is exactly what a page offering no kind control has been told.
      The app's intake reads the published action_kind vocabulary and lets the
      member say; this page is the installer's minimal intake and does not.
-     risk_tier stays 1 for the reason recorded beside app.html's arm: nothing
-     publishes member-facing words for tiers 2 and 3, so a chooser would be a
-     surface deciding what they MEAN.
+     risk_tier is WRITTEN undetermined (D-182, BOB #21): this page asks no
+     tier, so no member stated one, and the old default of 1 told a member the
+     action was safe to file freely when nobody had assessed it. Only a
+     member's authored act sets 1, 2 or 3; the words are the plane's, published
+     as vocabularies.risk_tiers.
      (No backticks in this comment: it lives inside the SETUP_HTML template
      literal, and a stray pair here parses fine under node --check and then
      fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
   if (type === "action") {
-    fm.push("action_kind: other","risk_tier: 1");
+    fm.push("action_kind: other","risk_tier: undetermined");
     const cp = act && act.counterparty;
     /* The state the member chose is written even when the field beside it is
        empty: a member who answered "not determined yet" and wrote nothing has
@@ -15195,6 +15209,13 @@ var VOCABULARIES = {
      same direction `action_kind`, `basis_roles`, `action_basis_kinds` and
      `correspondence_directions` above already take. One array, three readers. */
   resolutions: RESOLUTIONS,
+  /* D-182 (BIO_Case_Making_v0_1.md §2, `risk_tier`, RULED by BOB #21): an action's risk tier IN WORDS — Bob's
+     three from the mission of record and the UNDETERMINED that is written wherever no member stated one. A
+     code->text map for `sufficiency_claim_states`' reason below: the sentence IS the tier's meaning, and a
+     surface holding its own copy would be the surface deciding what tier 2 means, which is why app.html's
+     arm could offer no chooser before this. Imported from `bio-checks.mjs`, where C-2.10 validates against
+     it and `riskTierState()` turns a stored value into one of its keys. One map, three readers. */
+  risk_tiers: RISK_TIERS,
   /* PL-2 / IS-2 — THE SIXTH STATE MACHINE, PUBLISHED. §6 rule 4's third
      consequence is not a nicety: without this, every surface that shows a
      version's state holds its own copy of which states exist and which moves
@@ -28401,7 +28422,13 @@ var Store = class _Store extends DurableObject {
     );
     return {
       kind: row.action_kind ?? null,
-      risk_tier: row.action_risk_tier ?? null,
+      /* D-182: read from the stored DOCUMENT through the catalogue's own function, never defaulted. An
+         action nobody assessed reads "undetermined" — not null, which reads as "not an action", and not 1,
+         which told a member to file freely. The column `action_risk_tier` stays NULL for it, so a
+         `risk:` search matches only a tier a member stated. The words travel with the value so a surface
+         renders the plane's sentence and invents none (vocabularies.risk_tiers is the same map). */
+      risk_tier: riskTierState(fm.risk_tier),
+      risk_tier_words: RISK_TIERS[riskTierState(fm.risk_tier)] ?? null,
       counterparty_state: row.action_counterparty_state ?? null,
       resolution: row.action_resolution ?? null,
       clock_next: next,
