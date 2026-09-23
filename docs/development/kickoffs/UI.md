@@ -151,7 +151,7 @@ audience is non-technical and never made to choose between technical options.
 **Close the turn with the decisions that are BOB'S, and nothing else**, in the
 shape `kickoffs/README.md` defines. Read its three tests before writing an item.
 An empty list is a real answer. At the close, rewrite ONLY this file for the
-session after; append to `DEBT.md` and `MEASUREMENTS.md`, prepend to
+session after; append to `DEBT.md`, file figures as `measurements/<id>.md`, prepend to
 `CIVICOS_UI_STATE.md`.
 
 ## Where the area's log lives, and why this file no longer holds it

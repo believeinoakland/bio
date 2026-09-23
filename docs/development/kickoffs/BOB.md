@@ -86,7 +86,7 @@ Bob can answer sends it here, and this session carries it into his conversation.
 5. **A row this lane closes leaves the ledger in the same commit**: `node tools/ledger.mjs archive <ID>`.
 
 **What this session may write:** `MILESTONES.md`, the design documents, new or PROVISIONAL entries in
-`INTERFACES.md`, appends to `DEBT.md` and `MEASUREMENTS.md`, the `BOB INBOX`, `DECISIONS.md` answers, the
+`INTERFACES.md`, appends to `DEBT.md`, measurement entries (`measurements/<id>.md`), the `BOB INBOX`, `DECISIONS.md` answers, the
 instruments it owns (`tools/status.mjs`, `owed.mjs`, `retirable.mjs`, `readbudget.mjs`), and any kickoff its
 own change superseded — claimed in `CLAIMS.md` first where another lane might be editing. **Not** the queue
 body below the inbox, and not any area's code.

@@ -1,5 +1,7 @@
 # Interface change proposals
 
+**FROZEN HISTORY since 2026-09-23 (M0-100): add nothing here.** A new interface change entry is its own file, `docs/development/interface-changes/<id>.md` (the id from `node tools/mintid.mjs IC`); a later state of an entry is appended to that entry's file. `node tools/entries.mjs` reads both in id order.
+
 Created 2026-08-01, on the first change to a STABLE interface. `PARALLELISM.md` said
 this file would be written when it was first needed and not before, on the reasoning
 that writing a protocol before anyone has felt it gets it wrong. This is that moment.
