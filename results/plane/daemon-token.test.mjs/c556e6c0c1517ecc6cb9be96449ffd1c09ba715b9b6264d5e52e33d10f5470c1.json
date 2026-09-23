@@ -1,0 +1,16 @@
+{
+ "unit": "plane:daemon-token.test.mjs",
+ "inputHash": "c556e6c0c1517ecc6cb9be96449ffd1c09ba715b9b6264d5e52e33d10f5470c1",
+ "verdict": "PASS",
+ "run": "f8355f0797555fc848dae333a4ca3d8d3a1d0704.1790184462122.9306.json",
+ "tree": "f8355f0797555fc848dae333a4ca3d8d3a1d0704",
+ "head": "7cfe949ee42c48763ef1d0256672abdfd6eb9092",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 143,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c24508e4-34b6-5866-a122-a5e731b6ee3c",
+ "at": "2026-09-23T17:27:42.142Z"
+}
