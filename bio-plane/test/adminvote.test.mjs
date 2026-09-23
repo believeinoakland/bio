@@ -1,5 +1,5 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/adminvote.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES (src/index.mjs, src/store.mjs) while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/adminvote.control.mjs [arm]`. Each arm is armed ALONE with the other two layers HELD OPEN, and restored from a uniquely-named per-arm pristine copy verified by sha256 AND byte comparison (never `git checkout --`). DECLARED BEFORE ARMING — (a) `baseline`, nothing armed: MUST be green. (b) `stamp-dropped` — THE ROW'S OWN CONTROL: the `by` stamp is WIDENED to honour a caller-sent `by` for a session (`inner.searchParams.get("by") || sessMember`), which is exactly the defect D-136 closes, with the operator fence LEFT STANDING. The three FORGERY arms MUST FAIL BY NAME — `a session caller naming ANOTHER administrator as `by` does not cast that administrator's endorsement`, `… removal vote`, `… capability edit` — and every BEARER refusal MUST stay green, which is what shows the two layers are independent rather than one layer twice. (c) `fence-dropped` — the `is-operator-governance-act` guard alone neutered (`&& false`), stamp LEFT STANDING: all nine BEARER arms MUST FAIL at their named refusals, while `and NOTHING a bearer asked for landed` MUST stay GREEN — because the stamp behind still writes `class:<cls>` and the store still refuses it, so the arm says the fence supplies the SENTENCE and the stamp supplies the REFUSAL. (d) `reach-dropped` — `...GOVERNANCE_ACTIONS` removed from the MEMBER set, the admin set left standing: this measures exactly the difference between *an administrator's session* and *the founder's session*, and every POSITIVE arm MUST FAIL by name — the half of this row that `either alone is worse than neither` names. (e) `caps-ungated` — the roster check removed from `Store#memberCaps` ALONE, the two votes keeping theirs: an ordinary member's capability edit then SUCCEEDS, so `op=membercaps: cai, an ordinary member, is refused NOT_AN_ADMIN` and its two read-backs MUST FAIL while both VOTE arms stay green. This is the arm that tells a stamp that is READ from one merely recorded. (f) `overstrict` (required) — the fence refuses EVERY caller on the three ops (scoped to them, because an unscoped `if (true)` kills the suite before its foot and refutes nothing): every BEARER arm stays green while every SESSION arm MUST FAIL, the only thing that distinguishes a fence that holds from one that refuses everybody. (g) `classkeyed` — THE LIAR THE ROW NAMES: the fence rewritten to refuse by token STRING, so the PROBE class walks straight through — its three bearer arms MUST FAIL and the STRUCTURAL pin MUST FAIL on the env binding it sees in the region. REC-156 ADDS FOUR ARMS, DECLARED BEFORE ARMING (2026-09-21), for `op=memberadd`'s `by` in §8: (h) `memberadd-disjunct-dropped` — THE ROW'S OWN CONTROL: the `memberadd` disjunct removed from the `by` stamp's condition and nothing else, so a caller's typed `by=ruth` reaches the store's relay; the founder's forgery arm `memberadd: a body `by` naming ANOTHER administrator does not cast that administrator's endorsement`, its positive and its store read-back, every bearer arm and its read-back, and the disjunct's STRUCTURAL pin MUST FAIL BY NAME, while the two store-direct arms and every D-136 arm MUST stay green. (i) `memberadd-relay-dropped` — THE LIAR THE ROW NAMES, stamping at the plane while the STORE honours the body: the relay put back to `memberAdd(body || {})` with the stamp LEFT STANDING; every memberadd arm that sends a forged body `by` MUST FAIL, the store-direct pair and the relay's pin included, and the stamp's pin MUST stay green. (j) `memberadd-relay-fallback` — the relay prefers the stamp and FALLS BACK to the body when the query has none: EVERY op-level arm MUST stay green, because the plane always stamps, and only the store-direct no-stamp arm and the relay's pin MUST FAIL — the arm that shows 8e earns its place. (k) `memberadd-overstrict` (required) — the store records NO proposer's endorsement at all: the forged and bearer arms MUST stay green, while the founder's positive, its read-back and the stamped store drive MUST FAIL. AND (b) `stamp-dropped` now also takes down the founder's memberadd forgery, positive and read-back and the disjunct's structural pin, declared, because `memberadd` shares its ONE stamp expression. RESULTS: on the line below, written from the harness's own output.
-   RESULTS, RUN 2026-09-19 in worktree `.claude/worktrees/d136-conduct8` (branch `worker/d136-conduct8`, base `ad67ff0a`), every restore byte-identical (src/index.mjs 693,372 B sha256 25f6a31c9fb8…; src/store.mjs 2,737,997 B sha256 dc665ca70cdf…): baseline 43/0 · stamp-dropped 31/12 · fence-dropped 33/10 · reach-dropped 24/19 · caps-ungated 40/3 · overstrict 24/19 · classkeyed 39/4 — ALL SEVEN AS DECLARED, no arm failed to arm. THE FIRST RUN HAD FOUR ARMS **NOT AS DECLARED** AND THAT IS RECORDED RATHER THAN SMOOTHED: every discrepancy was a finding about the DECLARATION, none about the subject, and the reasons are written at each arm. The one that mattered ran in the direction that CLOSES a defect — `and gus is still an administrator, because one vote…` was declared to fail in three arms and did not, because it is a READ-BACK that stays true exactly when no removal carries; declaring it to fail would have put a forged EJECTION on the expected side of three arms. THE PRE-ITEM TRACE (this suite run against `origin/main` @ `ad67ff0a`): the suite cannot run at all there — `GOVERNANCE_ACTIONS` does not exist, so §0's floor fails by name and the drive never starts, which is itself the measurement: the acts this file grades had no expression in the plane to grade. RE-RUN 2026-09-21 by the REC-156 worker in worktree `agent-a45dec7af75234c20` (branch `worktree-agent-a45dec7af75234c20`, base `2eaf5ebd`), every restore byte-identical (src/index.mjs 696,088 B sha256 1550bbc29836…; src/store.mjs 2,746,124 B sha256 726d56622e11…): baseline 56/0 · stamp-dropped 40/16 · fence-dropped 46/10 · reach-dropped 37/19 · caps-ungated 53/3 · overstrict 37/19 · classkeyed 52/4 · memberadd-disjunct-dropped 48/8 · memberadd-relay-dropped 46/10 · memberadd-relay-fallback 54/2 · memberadd-overstrict 53/3 — ALL ELEVEN AS DECLARED ON THE FIRST RUN, no arm failed to arm; D-136's seven moved only by the four assertions `stamp-dropped` was declared to gain. REC-156'S PRE-ITEM TRACE (this suite over the two sources at `be829dbd`, restored byte-identical): 45/11 — exactly the eleven memberadd assertions that discriminate fail by name, while the boundary, fixture, drive-floor and known-open pins stay green. AND THE MEASUREMENT BEHIND §8's CORRECTION: this suite AS D-136 LEFT IT, run over the FIXED plane, was 43/0 — the pin said to fail the day the finding closed could not see the fix.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/adminvote.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES (src/index.mjs, src/store.mjs) while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/adminvote.control.mjs [arm]`. Each arm is armed ALONE with the other two layers HELD OPEN, and restored from a uniquely-named per-arm pristine copy verified by sha256 AND byte comparison (never `git checkout --`). DECLARED BEFORE ARMING — (a) `baseline`, nothing armed: MUST be green. (b) `stamp-dropped` — THE ROW'S OWN CONTROL: the `by` stamp is WIDENED to honour a caller-sent `by` for a session (`inner.searchParams.get("by") || sessMember`), which is exactly the defect D-136 closes, with the operator fence LEFT STANDING. The three FORGERY arms MUST FAIL BY NAME — `a session caller naming ANOTHER administrator as `by` does not cast that administrator's endorsement`, `… removal vote`, `… capability edit` — and every BEARER refusal MUST stay green, which is what shows the two layers are independent rather than one layer twice. (c) `fence-dropped` — the `is-operator-governance-act` guard alone neutered (`&& false`), stamp LEFT STANDING: all nine BEARER arms MUST FAIL at their named refusals, while `and NOTHING a bearer asked for landed` MUST stay GREEN — because the stamp behind still writes `class:<cls>` and the store still refuses it, so the arm says the fence supplies the SENTENCE and the stamp supplies the REFUSAL. (d) `reach-dropped` — `...GOVERNANCE_ACTIONS` removed from the MEMBER set, the admin set left standing: this measures exactly the difference between *an administrator's session* and *the founder's session*, and every POSITIVE arm MUST FAIL by name — the half of this row that `either alone is worse than neither` names. (e) `caps-ungated` — the roster check removed from `Store#memberCaps` ALONE, the two votes keeping theirs: an ordinary member's capability edit then SUCCEEDS, so `op=membercaps: cai, an ordinary member, is refused NOT_AN_ADMIN` and its two read-backs MUST FAIL while both VOTE arms stay green. This is the arm that tells a stamp that is READ from one merely recorded. (f) `overstrict` (required) — the fence refuses EVERY caller on the three ops (scoped to them, because an unscoped `if (true)` kills the suite before its foot and refutes nothing): every BEARER arm stays green while every SESSION arm MUST FAIL, the only thing that distinguishes a fence that holds from one that refuses everybody. (g) `classkeyed` — THE LIAR THE ROW NAMES: the fence rewritten to refuse by token STRING, so the PROBE class walks straight through — its three bearer arms MUST FAIL and the STRUCTURAL pin MUST FAIL on the env binding it sees in the region. REC-156 ADDS FOUR ARMS, DECLARED BEFORE ARMING (2026-09-21), for `op=memberadd`'s `by` in §8: (h) `memberadd-disjunct-dropped` — THE ROW'S OWN CONTROL: the `memberadd` disjunct removed from the `by` stamp's condition and nothing else, so a caller's typed `by=ruth` reaches the store's relay; the founder's forgery arm `memberadd: a body `by` naming ANOTHER administrator does not cast that administrator's endorsement`, its positive and its store read-back, every bearer arm and its read-back, and the disjunct's STRUCTURAL pin MUST FAIL BY NAME, while the two store-direct arms and every D-136 arm MUST stay green. (i) `memberadd-relay-dropped` — THE LIAR THE ROW NAMES, stamping at the plane while the STORE honours the body: the relay put back to `memberAdd(body || {})` with the stamp LEFT STANDING; every memberadd arm that sends a forged body `by` MUST FAIL, the store-direct pair and the relay's pin included, and the stamp's pin MUST stay green. (j) `memberadd-relay-fallback` — the relay prefers the stamp and FALLS BACK to the body when the query has none: EVERY op-level arm MUST stay green, because the plane always stamps, and only the store-direct no-stamp arm and the relay's pin MUST FAIL — the arm that shows 8e earns its place. (k) `memberadd-overstrict` (required) — the store records NO proposer's endorsement at all: the forged and bearer arms MUST stay green, while the founder's positive, its read-back and the stamped store drive MUST FAIL. AND (b) `stamp-dropped` now also takes down the founder's memberadd forgery, positive and read-back and the disjunct's structural pin, declared, because `memberadd` shares its ONE stamp expression. REC-159 ADDS FOUR ARMS, DECLARED BEFORE ARMING (2026-09-23), for §9, the four §4.9 custodial acts from an enrolled administrator's session: (l) `custodial-stamp-dropped` — THE ROW'S OWN CONTROL, ONE OP'S STAMP DROPPED: the `memberset` relay put back to `memberSet(body || {})`, so ruth's body `by=gus` is recorded, cai (who sends none) is admitted, the admin bearer's body `by=ruth` is recorded and the store-direct stamp never arrives — every memberset arm (9b's two, 9e's memberset refusal and its nothing-landed read-back, 9f's bearer attribution, 9h) MUST FAIL BY NAME while the other three ops' arms stay green. (m) `custodial-roster-dropped` — `#custodialBar` answers null for everybody (the liar the row names: reach without the roster): the four 9e refusals, 9e's read-back and 9h MUST FAIL. (n) `custodial-reach-dropped` — `...CUSTODIAL_ACTIONS` removed from the MEMBER set: every positive §9 arm, 8f's closure and the reach pin MUST FAIL and cai is refused by the gate instead of the roster. (o) `custodial-machine-open` — the class check reads `classes` for every caller: the four MEMBER_TOKEN refusals MUST FAIL, and 9h cascades because that bearer re-activates vic. And the eleven earlier arms each widen by the §9 assertions sharing their site, declared at each arm in the harness. RESULTS: on the line below, written from the harness's own output.
+   RESULTS, RUN 2026-09-19 in worktree `.claude/worktrees/d136-conduct8` (branch `worker/d136-conduct8`, base `ad67ff0a`), every restore byte-identical (src/index.mjs 693,372 B sha256 25f6a31c9fb8…; src/store.mjs 2,737,997 B sha256 dc665ca70cdf…): baseline 43/0 · stamp-dropped 31/12 · fence-dropped 33/10 · reach-dropped 24/19 · caps-ungated 40/3 · overstrict 24/19 · classkeyed 39/4 — ALL SEVEN AS DECLARED, no arm failed to arm. THE FIRST RUN HAD FOUR ARMS **NOT AS DECLARED** AND THAT IS RECORDED RATHER THAN SMOOTHED: every discrepancy was a finding about the DECLARATION, none about the subject, and the reasons are written at each arm. The one that mattered ran in the direction that CLOSES a defect — `and gus is still an administrator, because one vote…` was declared to fail in three arms and did not, because it is a READ-BACK that stays true exactly when no removal carries; declaring it to fail would have put a forged EJECTION on the expected side of three arms. THE PRE-ITEM TRACE (this suite run against `origin/main` @ `ad67ff0a`): the suite cannot run at all there — `GOVERNANCE_ACTIONS` does not exist, so §0's floor fails by name and the drive never starts, which is itself the measurement: the acts this file grades had no expression in the plane to grade. RE-RUN 2026-09-21 by the REC-156 worker in worktree `agent-a45dec7af75234c20` (branch `worktree-agent-a45dec7af75234c20`, base `2eaf5ebd`), every restore byte-identical (src/index.mjs 696,088 B sha256 1550bbc29836…; src/store.mjs 2,746,124 B sha256 726d56622e11…): baseline 56/0 · stamp-dropped 40/16 · fence-dropped 46/10 · reach-dropped 37/19 · caps-ungated 53/3 · overstrict 37/19 · classkeyed 52/4 · memberadd-disjunct-dropped 48/8 · memberadd-relay-dropped 46/10 · memberadd-relay-fallback 54/2 · memberadd-overstrict 53/3 — ALL ELEVEN AS DECLARED ON THE FIRST RUN, no arm failed to arm; D-136's seven moved only by the four assertions `stamp-dropped` was declared to gain. REC-156'S PRE-ITEM TRACE (this suite over the two sources at `be829dbd`, restored byte-identical): 45/11 — exactly the eleven memberadd assertions that discriminate fail by name, while the boundary, fixture, drive-floor and known-open pins stay green. AND THE MEASUREMENT BEHIND §8's CORRECTION: this suite AS D-136 LEFT IT, run over the FIXED plane, was 43/0 — the pin said to fail the day the finding closed could not see the fix. RE-RUN 2026-09-23 by the REC-159 worker (cloud session, branch `land/worker/REC-159`, base `a8f6094a`), every restore byte-identical (src/index.mjs 743,212 B sha256 34e02ffdd946…; src/store.mjs 2,954,988 B sha256 15436a7091f4…): baseline 81/0 · stamp-dropped 57/24 · fence-dropped 71/10 · reach-dropped 61/20 · caps-ungated 78/3 · overstrict 61/20 · classkeyed 77/4 · memberadd-disjunct-dropped 59/22 · memberadd-relay-dropped 67/14 · memberadd-relay-fallback 79/2 · memberadd-overstrict 76/5 · custodial-stamp-dropped 75/6 · custodial-roster-dropped 75/6 · custodial-reach-dropped 63/18 · custodial-machine-open 76/5 — ALL FIFTEEN AS DECLARED. ONE FINDING ABOUT THE INSTRUMENT, RECORDED RATHER THAN SMOOTHED: on the first full run `reach-dropped` DID NOT ARM — its anchor (`...GOVERNANCE_ACTIONS,` then REC-146's comment) matched 0 times because REC-159 put `...CUSTODIAL_ACTIONS` between them, and the harness refused to arm, as it is built to; re-anchored on REC-159's comment and re-run alone: 61/20 AS DECLARED. REC-159'S PRE-ITEM TRACE (this suite over the two sources at `a8f6094a`, restored by cp and verified by sha256): 50/19 — every §9 arm fails by name, 8f's closure fails, and the `CUSTODIAL_ACTIONS` subject floor fails on the empty parse, so §9's per-op loops cannot pass vacuously over a plane without the array.
  * =========================================================================
  * D-136 — THE SECTION 4.7 VOTE AND THE SECTION 4.9 CAPABILITY EDIT BECOME
  * ACTS A PERSON CAN PERFORM AND NOBODY CAN FORGE.
@@ -415,11 +415,17 @@ console.log("\n--- 8. REC-156: `op=memberadd`'s `by` is the server's, and the st
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "latin1");
 /* 8a. STRUCTURE — the stamp and the relay, each a half without which the other is
    a mechanism believed on the strength of its existence. */
-t("STRUCTURE: the `by` stamp names `memberadd` in its OWN disjunct of the ONE condition, so the "
-+ "expression that stamps the three §4.7/§4.9 acts stamps the proposer too — never a second "
-+ "expression that could drift",
-  /if \(PROJECT_ACTIONS\.includes\(op\) \|\| GOVERNANCE_ACTIONS\.includes\(op\)[^)]*?\|\| op === "memberadd"\)\s*inner\.searchParams\.set\("by", viaSession \? sessMember/.test(IDX_SRC),
-  true);
+/* CORRECTED 2026-09-23 (REC-159), never exempted: the disjunct was `op === "memberadd"`, and REC-159
+   widened it to `CUSTODIAL_ACTIONS.includes(op)` — the four §4.9 acts, `memberadd` first among them.
+   Still ONE condition and ONE expression; the array is parsed and asserted to hold `memberadd`. */
+const custArr = IDX_SRC.match(/const CUSTODIAL_ACTIONS = (\[[^\]]*\])/);
+const CUST4 = custArr ? JSON.parse(custArr[1]) : [];
+t("STRUCTURE: the `by` stamp names `memberadd` in its OWN disjunct of the ONE condition — "
++ "`CUSTODIAL_ACTIONS`, which holds it (REC-159) — so the expression that stamps the three §4.7/§4.9 "
++ "acts stamps the proposer too, never a second expression that could drift",
+  [/if \(PROJECT_ACTIONS\.includes\(op\) \|\| GOVERNANCE_ACTIONS\.includes\(op\)[^)]*?\|\| CUSTODIAL_ACTIONS\.includes\(op\)\)\s*inner\.searchParams\.set\("by", viaSession \? sessMember/.test(IDX_SRC),
+   CUST4.includes("memberadd")],
+  [true, true]);
 t("STRUCTURE: the store's `memberadd` relay spreads the body and THEN sets `by` from the query, so a "
 + "`by` in the body can never win — D-136's shape for the three ops beside it",
   /memberadd: \(\) => this\.memberAdd\(\{ \.\.\.\(body \|\| \{\}\), by: url\.searchParams\.get\("by"\) \}\)/.test(STORE_SRC),
@@ -438,7 +444,8 @@ const DO = async (store, path, body) => {
     { method: "POST", body: JSON.stringify(body ?? {}) })).json());
 };
 
-/* 8b/8c. THE FOUNDER'S SESSION — THE ONE SESSION THAT REACHES `memberadd`. The founder is
+/* 8b/8c. THE FOUNDER'S SESSION — until REC-159 THE ONE SESSION THAT REACHED `memberadd` (every
+   administrator's now: §9). The founder is
    an ADMINISTRATOR only in a CLAIMED store (`#activeAdmins` counts `admin` where a claim was
    spent) and a claim writes `bio`, so this arm addresses `bio`, where `enrol` put ruth and
    gus too. Claimed HERE and not at the top: a claim spent before enrolment would have made
@@ -474,8 +481,16 @@ t("memberadd, read back at the store: after gus endorses, the tally names the fo
    is what moves: the proposal OPENS and records NO endorsement, because the stamp wrote
    `class:<cls>` and no roster holds that name. `scratch`, because PROBE is confined there;
    its roster is ruth, gus and nell. */
-const MA_CLASSES = (opClasses("memberadd") || []).filter((c) => BINDINGS.some((b) => b.cls === c));
-console.log(`  op=memberadd: OPS admits ${JSON.stringify(opClasses("memberadd"))}; bearer classes driven: `
+/* CORRECTED 2026-09-23 (REC-159): the bearer classes are read from the row's `machineClasses`, which
+   REC-159 added when `member` joined `classes` for an enrolled administrator's SESSION. `classes` now
+   names the member KIND a session resolves to; `machineClasses` names the bearers the op admits — the
+   same `admin` and `probe` as before. The MEMBER_TOKEN bearer is refused, driven in §9. */
+const machineClassesOf = (op) => {
+  const m = opsBody.match(new RegExp(`^\\s{2}${op}:\\s*\\{[^\\n]*?machineClasses:\\s*(\\[[^\\]]*\\])`, "m"));
+  return m ? JSON.parse(m[1]) : null;
+};
+const MA_CLASSES = (machineClassesOf("memberadd") || []).filter((c) => BINDINGS.some((b) => b.cls === c));
+console.log(`  op=memberadd: OPS machineClasses ${JSON.stringify(machineClassesOf("memberadd"))}; bearer classes driven: `
   + `${MA_CLASSES.join(", ") || "(none)"}`);
 let maDrives = 0;
 for (const cls of MA_CLASSES) {
@@ -505,7 +520,11 @@ const saul = await DO("scratch", "memberadd?by=gus",
 t("the STORE: with a stamp beside it, the STAMP names the endorser and the body's `by` is overwritten",
   [saul?.reason, saul?.have], ["CONSENSUS_REQUIRED", ["gus"]]);
 
-/* 8f. WHAT IS STILL NOT CLOSED, MEASURED AND ROUTED — and pinned so it is READ the day it is.
+/* 8f. CLOSED 2026-09-23 BY REC-159 — CORRECTED WITH ITS REASON, NEVER EXEMPTED, as the paragraph below
+   asked. The assertion pinned SESSION_ROLE_CANNOT_REACH_OP for ruth; REC-159 moved `memberadd`,
+   `memberset`, `signeradd` and `signerset` into both session sets (§9 grades all four), so ruth's
+   session now reaches the op and the store answers. The original text is kept, past tense:
+   WHAT WAS STILL NOT CLOSED, MEASURED AND ROUTED — and pinned so it is READ the day it is.
    `memberadd` reaches the FOUNDER'S session alone: an ENROLLED administrator is refused at
    the session gate before the op runs, with a sentence saying the op is reserved to an
    administrator — which ruth IS. Membership v2 §4.9 gives "add a member" to every
@@ -517,10 +536,128 @@ const ruthAdds = await POST(`op=memberadd&${RUTH}${S}`,
   { memberId: "tess", cover: "ruth's proposal", role: "member", capabilities: ["contribute"] });
 console.log(`  ruth (an ENROLLED administrator) at op=memberadd: `
   + `${JSON.stringify({ reason: ruthAdds?.reason, role: ruthAdds?.role, error: ruthAdds?.error })}`);
-t("KNOWN-OPEN, ROUTED: an enrolled administrator's session is refused `memberadd` at the session gate "
-+ "(SESSION_ROLE_CANNOT_REACH_OP) — the founder's set alone holds the op. This FAILS when the routed "
-+ "reach lands, by design",
-  [ruthAdds?.reason, ruthAdds?.role], ["SESSION_ROLE_CANNOT_REACH_OP", "member"]);
+t("CLOSED BY REC-159: an enrolled administrator's session REACHES `memberadd` and the invitation is "
++ "issued — the refusal that called the op an administrator's, to an administrator, is gone",
+  [ruthAdds?.ok, typeof ruthAdds?.invite, ruthAdds?.reason], [true, "string", undefined]);
+
+/* ============================ 9. REC-159 — §4.9's CUSTODIAL ACTS ARE EVERY ADMINISTRATOR'S
+ * `BIO_Membership_Architecture_v2.md` §4.9 gives adding a member, setting a member's status and
+ * managing signing keys to EVERY administrator; §4.7's block *"WHAT IS STILL NOT CLOSED"* named the
+ * fix and 8f above pinned the defect. REC-159 applies D-136's call again: `memberadd`, `memberset`,
+ * `signeradd` and `signerset` (`CUSTODIAL_ACTIONS`) reach BOTH session sets, their `by` is the
+ * SERVER'S stamp, and the store refuses a member-named `by` that is not an active administrator,
+ * NOT_AN_ADMIN, before it looks anything up. SCOPE AMENDED by BOB #31: `memberset`, `signeradd` and
+ * `signerset` record the stamped actor in a new `status_by` column, and a row no stamp ever touched
+ * reads `not recorded`.
+ *
+ * HOW A LIAR PASSES THE ACCEPTS-WHEN, stated before what is checked: WIDEN THE REACH WITHOUT THE
+ * ROSTER, so any member's session performs the acts; or HONOUR A SENT `by`, so an administrator's
+ * session writes somebody else's name into the record. So every positive arm below is also a FORGERY
+ * arm — ruth's session sends gus's id in the body AND the query — and the evidence is READ BACK from
+ * the record (`op=memberlist`, `op=signerlist`, the §4.7 tally), never from an echo; and an ORDINARY
+ * member drives all four with COMPLETE payloads that would succeed for an administrator, and nothing
+ * they asked for may land. `scratch`, named on every call, where ruth, gus and nell are the active
+ * administrators and cai an ordinary member. */
+console.log("\n--- 9. REC-159: an enrolled administrator performs §4.9's four acts from her own session ---");
+t("the subject, DERIVED from the source: `CUSTODIAL_ACTIONS` holds exactly the four §4.9 acts, and none "
++ "of them is in GOVERNANCE_ACTIONS (whose operator fence would refuse the bearer BOB #22 ruled keeps them)",
+  [[...CUST4].sort(), CUST4.filter((o) => OPS3.includes(o))],
+  [["memberadd", "memberset", "signeradd", "signerset"], []]);
+t("STRUCTURE: the four reach BOTH session sets — spread once into each, like GOVERNANCE_ACTIONS",
+  (IDX_SRC.match(/\.\.\.CUSTODIAL_ACTIONS,/g) || []).length, 2);
+t("STRUCTURE: each of the four rows admits the `member` KIND for a session and bounds a bearer by "
++ "`machineClasses` to the operator's `admin` and `probe`, the classes it held before",
+  Object.fromEntries(CUST4.map((o) => [o, [opClasses(o), machineClassesOf(o)]])),
+  Object.fromEntries(CUST4.map((o) => [o, [["admin", "member", "probe"], ["admin", "probe"]]])));
+const signers = async () => (await POST(`op=signerlist&token=${ADM}${S}`))?.signers || [];
+const keyRow = async (k) => (await signers()).find((r) => r.key_b64 === k) || null;
+const KEY_RUTH = "AAAAC3NzaC1lZDI1NTE5AAAAIrec159ruthregisterscai";
+const KEY_CAI = "AAAAC3NzaC1lZDI1NTE5AAAAIrec159caiasksforthis";
+
+/* 9a. memberadd — ruth invites an ordinary member, and proposes an administrator. */
+const vic = await POST(`op=memberadd&${RUTH}${S}&by=gus`,
+  { memberId: "vic", cover: "ruth's invitee", role: "member", capabilities: ["contribute"], by: "gus" });
+t("9a memberadd: ruth's own session issues an invitation — the act 8f pinned as refused",
+  [vic?.ok, typeof vic?.invite], [true, "string"]);
+const uma = await POST(`op=memberadd&${RUTH}${S}&by=gus`,
+  { memberId: "uma", cover: "ruth's proposal", role: "admin", capabilities: ["contribute"], by: "gus" });
+t("9a memberadd: ruth's proposal of an administrator records HER endorsement and not gus's, whose id "
++ "she sent in the body and the query",
+  [uma?.reason, uma?.have, (uma?.awaiting || []).includes("gus")], ["CONSENSUS_REQUIRED", ["ruth"], true]);
+const umaBack = await DO("scratch", "adminendorse?by=nell", { memberId: "uma" });
+t("9a memberadd, read back at the store: after nell endorses, the tally is ruth and nell, and gus is "
++ "still awaited — no row in gus's name was written",
+  [umaBack?.have, umaBack?.awaiting], [["nell", "ruth"], ["gus"]]);
+
+/* 9b. memberset — ruth revokes vic's invitation. */
+const vicSet = await POST(`op=memberset&${RUTH}${S}&by=gus`, { memberId: "vic", status: "revoked", by: "gus" });
+t("9b memberset: ruth's own session sets a member's status, and the answer names HER",
+  [vicSet?.ok, vicSet?.by], [true, "ruth"]);
+t("9b memberset, read back from the roster: vic is revoked and `status_by` is ruth, not the gus she sent",
+  [(await rowOf("vic"))?.status, (await rowOf("vic"))?.status_by], ["revoked", "ruth"]);
+
+/* 9c. signeradd — ruth registers a key for cai. */
+const kAdd = await POST(`op=signeradd&${RUTH}${S}&by=gus`,
+  { keyB64: KEY_RUTH, memberId: "cai", comment: "rec-159", by: "gus" });
+t("9c signeradd: ruth's own session registers a signing key, and the answer names HER",
+  [kAdd?.ok, kAdd?.by], [true, "ruth"]);
+t("9c signeradd, read back from the signer roster: the key is active and `status_by` is ruth",
+  [(await keyRow(KEY_RUTH))?.status, (await keyRow(KEY_RUTH))?.status_by], ["active", "ruth"]);
+
+/* 9d. signerset — ruth revokes that key. */
+const kSet = await POST(`op=signerset&${RUTH}${S}&by=gus`, { keyB64: KEY_RUTH, status: "revoked", by: "gus" });
+t("9d signerset: ruth's own session revokes a key, and the answer names HER",
+  [kSet?.ok, kSet?.by], [true, "ruth"]);
+t("9d signerset, read back from the signer roster: the key is revoked and `status_by` is ruth",
+  [(await keyRow(KEY_RUTH))?.status, (await keyRow(KEY_RUTH))?.status_by], ["revoked", "ruth"]);
+
+/* 9e. AN ORDINARY MEMBER, refused BY NAME at all four, with payloads that would succeed for an
+   administrator: cai invites, re-activates vic, registers a key of his own and re-activates ruth's. */
+const CAI_ASKS = {
+  memberadd: { memberId: "wes", cover: "cai's invitee", role: "member", capabilities: ["contribute"] },
+  memberset: { memberId: "vic", status: "active" },
+  signeradd: { keyB64: KEY_CAI, memberId: "cai", comment: "cai's own" },
+  signerset: { keyB64: KEY_RUTH, status: "active" },
+};
+for (const op of CUST4) {
+  const a = await POST(`op=${op}&${CAI}${S}`, CAI_ASKS[op]);
+  t(`9e op=${op}: cai, an ordinary member, is refused NOT_AN_ADMIN by the roster — not by the gate, `
+  + `and not with a sentence calling the op somebody else's`,
+    [a?.reason, a?.by], ["NOT_AN_ADMIN", "cai"]);
+}
+t("9e and NOTHING cai asked for landed: wes was never invited, vic is still revoked by ruth, cai holds no "
++ "key of his own, and ruth's revocation of the key she registered stands",
+  [await rowOf("wes"), (await rowOf("vic"))?.status, await keyRow(KEY_CAI), (await keyRow(KEY_RUTH))?.status],
+  [null, "revoked", null, "revoked"]);
+
+/* 9f. THE BEARERS. The operator's `admin` bearer keeps all four (BOB #22), recorded as the credential
+   and never as a person; the MEMBER_TOKEN bearer, which `member` in `classes` would otherwise have let
+   in, is refused exactly as it was before. */
+const bSet = await POST(`op=memberset&token=${ADM}${S}&by=ruth`, { memberId: "vic", status: "revoked", by: "ruth" });
+t("9f the operator's `admin` bearer still sets a status, and the record names the CREDENTIAL, "
++ "`class:admin`, not the ruth it sent",
+  [bSet?.ok, (await rowOf("vic"))?.status_by], [true, "class:admin"]);
+for (const op of CUST4) {
+  const a = await POST(`op=${op}&token=${TOKEN_OF.member}${S}`, CAI_ASKS[op]);
+  t(`9f op=${op}: the MEMBER_TOKEN bearer is refused CLASS_FORBIDDEN, as before REC-159 — the session `
+  + `grant is not a bearer grant`,
+    a?.reason, "CLASS_FORBIDDEN");
+}
+
+/* 9g. `not recorded`, STATED. A member whose status no stamped act has set reads it, and so does a key
+   registered with no plane in front of the store — the route that stamps nothing. */
+t("9g a member row no custodial act has touched reads `status_by: not recorded` rather than a guess",
+  (await rowOf("cai"))?.status_by, "not recorded");
+await DO("scratch", "signeradd", { keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIrec159nostamp", memberId: "cai", by: "ruth" });
+t("9g a key registered at the store with NO stamp reads `not recorded` — the body's `by` is never taken",
+  (await keyRow("AAAAC3NzaC1lZDI1NTE5AAAAIrec159nostamp"))?.status_by, "not recorded");
+
+/* 9h. THE STORE ASKS THE ROSTER ITSELF — with no plane in front of it, a stamp naming a
+   non-administrator is refused, so the reach cannot be widened by going round the plane. */
+const direct = await DO("scratch", "memberset?by=cai", { memberId: "vic", status: "active" });
+t("9h the STORE: a stamped `by` naming an ordinary member is refused NOT_AN_ADMIN before anything is "
++ "looked up, and vic stays revoked",
+  [direct?.reason, (await rowOf("vic"))?.status], ["NOT_AN_ADMIN", "revoked"]);
 
 /* DISPOSE, AND IT IS NOT HOUSEKEEPING. Without it the assertions all print, the
    tally reads clean, and the PROCESS NEVER EXITS — a suite that hangs after its

@@ -51,14 +51,26 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 /* The three sites exactly as they stand in the sources. */
 const FENCE = `    if (GOVERNANCE_ACTIONS.includes(op) && !viaSession)`;
 const STAMP = `      inner.searchParams.set("by", viaSession ? sessMember : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`;
-const MEMBER_REACH = `                   ...GOVERNANCE_ACTIONS,\n                   /* REC-146:`;
+/* RE-ANCHORED 2026-09-23 (REC-159): the member set's spread was followed by REC-146's comment; REC-159
+   put `...CUSTODIAL_ACTIONS` (with its own comment) between them, and the old anchor matched 0 times —
+   the harness refused to arm, as it is built to, and that refusal is recorded on the suite's line. */
+const MEMBER_REACH = `                   ...GOVERNANCE_ACTIONS,\n                   /* REC-159:`;
 const CAPS_GATE = `    const admins = this.#activeAdmins();\n    if (!by || !admins.includes(by))\n      return { ok: false, reason: "NOT_AN_ADMIN", by,`;
 /* REC-156's three sites, exactly as they stand: the stamp's `memberadd` disjunct, the
    store's relay, and `memberAdd`'s §4.7 vote write. */
-const MA_DISJUNCT = `        || op === "projectparticipants" || op === "projectownerarith"\n        || op === "memberadd")`;
+/* CORRECTED 2026-09-23 (REC-159): the disjunct is `CUSTODIAL_ACTIONS.includes(op)` now, which holds
+   `memberadd` with the three other §4.9 acts; arm (h) drops that disjunct, and so drops all four. */
+const MA_DISJUNCT = `        || op === "projectparticipants" || op === "projectownerarith"\n        || CUSTODIAL_ACTIONS.includes(op))`;
 const MA_RELAY = `        memberadd: () => this.memberAdd({ ...(body || {}), by: url.searchParams.get("by") }),`;
 const MA_VOTE = `      if (by && admins.includes(by))\n        this.sql.exec(\`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,NULL,?)\`,`;
 
+/* REC-159's four sites: one op's stamp (the `memberset` relay — the NEGATIVE CONTROL the row names),
+   the roster the store asks, the member-set reach, and the bearer bound. */
+const CU_SET_RELAY = `        memberset: () => this.memberSet({ ...(body || {}), by: url.searchParams.get("by") }),`;
+const CU_BAR = `  #custodialBar(by, act) {\n    if (by === null`;
+const CU_REACH = `                   ...CUSTODIAL_ACTIONS,\n                   /* REC-146:`;
+const CU_MACHINE = `    } else if (!(viaSession || !Array.isArray(spec.machineClasses) ? spec.classes : spec.machineClasses).includes(cls)) {`;
+const CUST4 = ["memberadd", "memberset", "signeradd", "signerset"];
 const OPS3_EARLY = ["adminendorse", "adminremove", "membercaps"];
 const OPS3_LABELS = () => OPS3_EARLY.map((op) =>
   `op=${op}: cai, an ordinary member, is refused NOT_AN_ADMIN`);
@@ -110,7 +122,26 @@ const L = {
   maStoreStamped: "the STORE: with a stamp beside it, the STAMP names the endorser",
   structMaStamp: "STRUCTURE: the `by` stamp names `memberadd` in its OWN disjunct",
   structMaRelay: "STRUCTURE: the store's `memberadd` relay spreads the body and THEN sets `by`",
+  /* REC-159 — §9, the four §4.9 custodial acts from an enrolled administrator's session. */
+  closed8f: "CLOSED BY REC-159",
+  c9invite: "9a memberadd: ruth's own session issues an invitation",
+  c9forgeAdd: "9a memberadd: ruth's proposal of an administrator records HER endorsement",
+  c9addBack: "9a memberadd, read back at the store",
+  c9set: "9b memberset: ruth's own session",
+  c9setBack: "9b memberset, read back",
+  c9kAdd: "9c signeradd: ruth's own session",
+  c9kAddBack: "9c signeradd, read back",
+  c9kSet: "9d signerset: ruth's own session",
+  c9kSetBack: "9d signerset, read back",
+  c9cai: (op) => `9e op=${op}: cai, an ordinary member, is refused NOT_AN_ADMIN`,
+  c9caiNothing: "9e and NOTHING cai asked for landed",
+  c9bearerAdmin: "9f the operator's `admin` bearer",
+  c9memberBearer: (op) => `9f op=${op}: the MEMBER_TOKEN bearer is refused CLASS_FORBIDDEN`,
+  c9store: "9h the STORE",
+  struct9Reach: "STRUCTURE: the four reach BOTH session sets",
 };
+/* The eight §9 arms that read WHO the record names for ruth's four acts. */
+const C9_ATTRIB = [L.c9forgeAdd, L.c9addBack, L.c9set, L.c9setBack, L.c9kAdd, L.c9kAddBack, L.c9kSet, L.c9kSetBack];
 const bearerLabels = (ops, classes) =>
   ops.flatMap((op) => classes.map((c) => `op=${op}, the operator's \`${c}\`-class bearer token`));
 const OPS3 = ["adminendorse", "adminremove", "membercaps"];
@@ -151,7 +182,10 @@ const ARMS = {
     mustFail: [L.forgeEndorse, L.forgeTally, L.forgeNotInvited, L.forgeRemove, L.forgeCaps,
                L.mirror, L.endorsedBy, L.enrols, L.oneReal, L.caiMirror,
                L.structStamp, L.consensusThree,
-               L.structMaStamp, L.maForge, L.maPositive, L.maReadBack],
+               L.structMaStamp, L.maForge, L.maPositive, L.maReadBack,
+               /* REC-159, DECLARED BEFORE ARMING: the custodial four share this ONE stamp, so ruth's
+                  typed `by=gus` is honoured at every §9 act and every attribution read-back fails. */
+               ...C9_ATTRIB],
   },
 
   /* (c) THE OPERATOR FENCE ALONE, neutered in place so the region's TEXT is
@@ -178,7 +212,7 @@ const ARMS = {
      measurement that decided this item's shape. */
   "reach-dropped": {
     file: IDX,
-    edits: [[MEMBER_REACH, "                   /* REC-146:"]],
+    edits: [[MEMBER_REACH, "                   /* REC-159:"]],
     /* WIDENED AFTER THE FIRST RUN, WITH THE REASON. `L.removeCounted` removed for
        stamp-dropped's reason (it is a read-back that STAYS true when no removal
        carries); `L.consensusThree` and `L.caiNothing` added as fixture cascades;
@@ -189,7 +223,10 @@ const ARMS = {
     mustFail: [L.structReach, L.casts, L.countedRuth, L.forgeEndorse, L.forgeTally,
                L.mirror, L.endorsedBy, L.enrols, L.forgeRemove, L.forgeCaps, L.capsLanded,
                L.oneReal, L.caiMirror, L.nothingLanded, L.consensusThree, L.caiNothing,
-               ...L.caiRefusedAny],
+               ...L.caiRefusedAny,
+               /* REC-159, DECLARED BEFORE ARMING, a fixture cascade: nell never becomes an
+                  administrator here, so her endorsement in §9a's read-back is refused. */
+               L.c9addBack],
   },
 
   /* (e) THE STAMP IS READ, NOT MERELY RECORDED. `Store#memberCaps`' roster check
@@ -220,7 +257,8 @@ const ARMS = {
     mustFail: [L.casts, L.countedRuth, L.forgeEndorse, L.forgeTally, L.mirror, L.endorsedBy,
                L.enrols, L.forgeRemove, L.forgeCaps, L.capsLanded, L.oneReal,
                L.caiMirror, L.nothingLanded, L.structFence, L.consensusThree, L.caiNothing,
-               ...L.caiRefusedAny],
+               ...L.caiRefusedAny,
+               L.c9addBack],   /* REC-159: reach-dropped's cascade — nell is never an administrator */
   },
 
   /* (g) THE LIAR THE ROW NAMES: refuse by token STRING instead of by how the
@@ -247,7 +285,12 @@ const ARMS = {
   "memberadd-disjunct-dropped": {
     file: IDX,
     edits: [[MA_DISJUNCT, `        || op === "projectparticipants" || op === "projectownerarith" /* ARMED */)`]],
-    mustFail: [L.structMaStamp, L.maForge, L.maPositive, L.maReadBack, L.maBearer, L.maBearerBack],
+    mustFail: [L.structMaStamp, L.maForge, L.maPositive, L.maReadBack, L.maBearer, L.maBearerBack,
+               /* REC-159, DECLARED BEFORE ARMING: the disjunct is the four's now, so with it gone a
+                  caller's typed `by` reaches every custodial store method — ruth's `by=gus` is taken,
+                  cai (who sends none) arrives with NO `by` and is admitted, and the admin bearer's
+                  `by=ruth` is recorded as ruth. */
+               ...C9_ATTRIB, ...CUST4.map(L.c9cai), L.c9caiNothing, L.c9bearerAdmin],
   },
 
   /* (i) THE LIAR THE ROW NAMES: stamp at the plane while the STORE honours the body —
@@ -259,7 +302,10 @@ const ARMS = {
     file: STORE,
     edits: [[MA_RELAY, `        memberadd: () => this.memberAdd(body || {}) /* ARMED */,`]],
     mustFail: [L.structMaRelay, L.maForge, L.maPositive, L.maReadBack, L.maBearer, L.maBearerBack,
-               L.maStoreNoStamp, L.maStoreStamped],
+               L.maStoreNoStamp, L.maStoreStamped,
+               /* REC-159, DECLARED BEFORE ARMING: §9's memberadd arms read the body too — ruth's
+                  proposal is recorded as gus, and cai's invitation carries no `by` and lands. */
+               L.c9forgeAdd, L.c9addBack, L.c9cai("memberadd"), L.c9caiNothing],
   },
 
   /* (j) THE SUBTLER LIAR, and the reason §8e exists: the relay PREFERS the stamp and
@@ -284,7 +330,45 @@ const ARMS = {
     file: STORE,
     edits: [[MA_VOTE, MA_VOTE.replace("if (by && admins.includes(by))",
       "if (false /* ARMED */ && by && admins.includes(by))")]],
-    mustFail: [L.maPositive, L.maReadBack, L.maStoreStamped],
+    mustFail: [L.maPositive, L.maReadBack, L.maStoreStamped,
+               L.c9forgeAdd, L.c9addBack],   /* REC-159: ruth's proposal records no endorsement either */
+  },
+  /* ================== REC-159 (2026-09-23) — the four §4.9 custodial acts, four arms ==
+     Declared BEFORE ARMING, each alone, the other sites HELD OPEN. */
+  /* (l) THE ROW'S OWN NEGATIVE CONTROL, as the spawn named it: DROP ONE OP'S STAMP. The `memberset`
+     relay put back to `memberSet(body || {})`, nothing else moved: ruth's body `by=gus` is recorded,
+     cai's body carries none and is admitted, the admin bearer's body `by=ruth` is recorded, and the
+     store-direct arm's stamp never reaches the method. Every memberset arm fails BY NAME; the other
+     three ops' arms stay green, which is what shows the stamp is per op. */
+  "custodial-stamp-dropped": {
+    file: STORE,
+    edits: [[CU_SET_RELAY, `        memberset: () => this.memberSet(body || {}) /* ARMED */,`]],
+    mustFail: [L.c9set, L.c9setBack, L.c9cai("memberset"), L.c9caiNothing, L.c9bearerAdmin, L.c9store],
+  },
+  /* (m) THE ROSTER DROPPED — `#custodialBar` answers null for everybody. The liar the row names:
+     reach widened without the roster. Every ordinary-member arm must fail and nothing else. */
+  "custodial-roster-dropped": {
+    file: STORE,
+    edits: [[CU_BAR, `  #custodialBar(by, act) {\n    if (true) return null; /* ARMED */\n    if (by === null`]],
+    mustFail: [...CUST4.map(L.c9cai), L.c9caiNothing, L.c9store],
+  },
+  /* (n) THE REACH DROPPED from the MEMBER set, the admin set left standing: an enrolled
+     administrator is back to SESSION_ROLE_CANNOT_REACH_OP — the defect itself. Every positive arm
+     fails, cai is refused by the gate rather than the roster, and everything downstream of an act
+     that never happened cascades, declared. */
+  "custodial-reach-dropped": {
+    file: IDX,
+    edits: [[CU_REACH, "                   /* REC-146:"]],
+    mustFail: [L.closed8f, L.c9invite, ...C9_ATTRIB, ...CUST4.map(L.c9cai), L.c9caiNothing,
+               L.c9bearerAdmin, L.c9store, L.struct9Reach],
+  },
+  /* (o) THE BEARER BOUND DROPPED — the class check reads `classes` for everybody, so `member` in the
+     four rows admits the MEMBER_TOKEN bearer: the widening `machineClasses` exists to prevent. Its
+     four refusals fail; its memberset re-activates vic, so §9h's read-back cascades, declared. */
+  "custodial-machine-open": {
+    file: IDX,
+    edits: [[CU_MACHINE, `    } else if (!spec.classes.includes(cls) /* ARMED */) {`]],
+    mustFail: [...CUST4.map(L.c9memberBearer), L.c9store],
   },
 };
 

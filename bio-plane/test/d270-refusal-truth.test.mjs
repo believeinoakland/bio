@@ -9,8 +9,8 @@
    declared.
    (a) BASELINE — nothing armed. MUST be green; every other arm's figure is read against it.
    (b) THE SPLIT COLLAPSED — `sessionOpGate`'s three outcomes reduced to the single
-       `MACHINE_CREDENTIAL_REQUIRED` return `main` carried before D-270. MUST FAIL naming the five
-       ROLE ops AND the omission ops BY NAME. This is the arm the row's accepts-when demands, and it
+       `MACHINE_CREDENTIAL_REQUIRED` return `main` carried before D-270. MUST FAIL naming the ROLE
+       ops (one since REC-159: `governorconfig`) AND the omission ops BY NAME. This is the arm the row's accepts-when demands, and it
        is the arm that proves this suite grades the DISTINCTION rather than the presence of a code.
    (c) THE DECLARATION EMPTIED — `UNATTENDED_BY_DECISION` set to `{}`. MUST FAIL naming `purge`,
        `cpuprobe`, `capturerequestdrain` and `taskdrain`, which would then be told an omission. This
@@ -46,6 +46,12 @@
    c RED 26/3 · d RED 27/2 · e RED 27/2 · f RED 19/10 · g RED 28/1 · h GREEN 29/0**, every armed
    file byte-identical to its per-arm pristine-of-record by sha256 AND by `cmp`, each above a
    guarded byte floor (680591 for index.mjs, 37736 for this suite).
+   RE-RUN 2026-09-23 BY THE REC-159 WORKER (branch `land/worker/REC-159`, base `a8f6094a`) after arm
+   (b)'s named ops were CORRECTED — `memberadd` and `signeradd` left the ROLE arm for both session sets,
+   so they were replaced by `governorconfig` and `provenanceroute`, declared before arming: **8/8 AS
+   DECLARED — a GREEN 33/0 · b RED 27/6 naming governorconfig and provenanceroute · c RED 30/3 ·
+   d RED 32/1 · e RED 30/3 · f RED 21/12 · g RED 32/1 · h GREEN 33/0**, every restore sha256 MATCH and
+   `cmp` clean (index.mjs 743,212 B; this suite 45,891 B).
    (h) OVER-STRICTNESS, and this file exists to survive it: a REAL site rewritten to spell its code in
        `code` with NO `reason` at all, the row IMPORTED rather than hand-copied, and an extra key the
        grader has never seen. It MUST PASS. A grader that reports correct work as a violation teaches
@@ -306,9 +312,17 @@ console.log(`    (c) OMISSION        ${OMITTED.length}: ${OMITTED.join(" ")}`);
    being re-derived into agreement with whatever the code happens to do: it is a
    literal, and it fails if an op moves between arms for any reason at all,
    including a correct one — at which point somebody comes and says which. */
-t("the ROLE-GATED arm is exactly the five D-270 measured on 2026-08-09, re-derived here 1573 "
-+ "commits later — pinned as a literal SET so a sixth arrival or a departure is looked at",
-  ROLE_OPS, ["governorconfig", "memberadd", "memberset", "signeradd", "signerset"]);
+/* CORRECTED 2026-09-23 BY REC-159, and this line failing was the line WORKING, as the paragraph above
+   says it is meant to. The five D-270 measured were `governorconfig`, `memberadd`, `memberset`,
+   `signeradd` and `signerset`. Membership v2 §4.9 gives the last four to EVERY administrator, and
+   REC-159 moved them into BOTH session sets on D-136's footing (the roster refuses a non-administrator
+   NOT_AN_ADMIN, against a stamped `by`), so they DEPARTED this arm — pinned below in the both-sets arm
+   by name. `governorconfig` stays: it is the OPERATOR's act, RULED by BOB #23 (§4.9), and the one op
+   the founder's session alone reaches. What its refusal SAYS is REC-162's item. Still a literal. */
+t("the ROLE-GATED arm is exactly the one op the FOUNDER'S session alone reaches — `governorconfig`, "
++ "the operator's (§4.9, BOB #23) — after REC-159 moved D-270's other four into both sets; pinned as "
++ "a literal SET so an arrival or a departure is looked at",
+  ROLE_OPS, ["governorconfig"]);
 /* ADDED 2026-09-19 (D-136). THE PIN ABOVE DID ITS JOB AND THIS IS WHAT IT
    CAUGHT. D-136 gave `adminendorse`, `adminremove` and `membercaps` session
    reach, and this suite went red until somebody looked at where they landed —
@@ -327,6 +341,11 @@ t("D-136's three reach BOTH session sets and are therefore in NEITHER role arm �
 + "decides them, not the gate, which is `expertiseconfirm`'s recorded posture "
 + "(BIO_Membership_Architecture_v2.md §4.7 / §4.9)",
   ["adminendorse", "adminremove", "membercaps"].filter((o) => !BOTH_SETS.includes(o)), []);
+/* ADDED 2026-09-23 (REC-159): the four that left the ROLE arm, pinned where they went, by name — so a
+   regression that dropped them from the member set fails HERE as well as re-entering the ROLE literal. */
+t("REC-159's four §4.9 custodial acts reach BOTH session sets and are in NEITHER role arm — the roster "
++ "decides them against a stamped `by` (BIO_Membership_Architecture_v2.md §4.9)",
+  ["memberadd", "memberset", "signeradd", "signerset"].filter((o) => !BOTH_SETS.includes(o)), []);
 t("and every declared op is one no session reaches — a declaration over an op a session DOES reach "
 + "would be a recorded decision contradicted by the table it sits in",
   [...DECLARED].filter((o) => !NO_SESSION.includes(o)), []);
@@ -402,14 +421,18 @@ const gateAnswer = async (op, session) => {
            check: r.check ?? null, error: r.error ?? null, detail: r.detail ?? null,
            recorded: r.recorded ?? null };
 };
-/* THE ARM-IS-REAL ASSERTION. `op=memberset` is refused to `dot` and ADMITTED for
+/* RE-POINTED 2026-09-23 (REC-159), never exempted: this pair drove `op=memberset`, which now reaches
+   BOTH sets — `dot` would pass the gate and be refused by the ROSTER, so the pair would read
+   [false, false] over a plane whose split is intact. `op=governorconfig` is the one op left in the
+   founder's set alone, so it is the op that can still tell the two KINDS apart.
+   THE ARM-IS-REAL ASSERTION. `op=governorconfig` is refused to `dot` and ADMITTED for
    `ada`: if this pair ever agrees, the two sessions are the same kind and every
    split figure below is meaningless. It is asserted as a PAIR, because either
    half alone is satisfied by a gate that refuses everybody or one that refuses
    nobody. */
 {
-  const asMember = await gateAnswer("memberset", DOT);
-  const asAdmin = await gateAnswer("memberset", ADA);
+  const asMember = await gateAnswer("governorconfig", DOT);
+  const asAdmin = await gateAnswer("governorconfig", ADA);
   t("the admin session is REALLY an administrator's — the member is refused at the gate and the "
   + "administrator is NOT, asserted as a PAIR because either half alone passes over a gate that "
   + "refuses everybody or one that refuses nobody (a split of zero was measured TWICE in 2026-08 "
@@ -609,7 +632,10 @@ console.log(`    Refusals returned as raw bytes or HTML rather than through json
 console.log(`    It is NOT a live probe: a green harness is not a serving build (D-108).`);
 t("the walk drove a real corpus — printed above and floored here, because 'no false sentence found' "
 + "over an empty drive is the blind walk this assertion exists to tell apart from a clean one",
-  [ROLE_OPS.length + NO_SESSION.length >= 15, Object.keys(argAnswers).length, unresolvedSpreads],
+  /* CORRECTED 2026-09-23 (REC-159): the floor was 15 under a measured 17; REC-159 moved four ops out of
+     the ROLE arm into both sets, which this walk does not drive through the gate, so the measured
+     corpus is 13 (1 + 12) and the floor keeps the same margin of two beneath it. */
+  [ROLE_OPS.length + NO_SESSION.length >= 11, Object.keys(argAnswers).length, unresolvedSpreads],
   [true, 3, 0]);
 
 console.log(`\n${fail === 0 ? "OK" : "FAILED"}  ${pass} pass, ${fail} fail`);

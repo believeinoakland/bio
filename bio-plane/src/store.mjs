@@ -1098,6 +1098,14 @@ export class Store extends DurableObject {
          costs nothing and proves nothing. NULL reads back as UNDETERMINED as to source, stated by `reusedParts`. */
       ["site_assets", "last_fetched_by", "TEXT"],
       ["site_asset_refs", "reused_from", "TEXT"],
+      /* REC-159 (Membership v2 §4.9, scope amended by BOB #31): WHO put a member's or a signing key's
+         status where it is -- the SERVER's stamp of the administrator whose `op=memberset`,
+         `op=signeradd` or `op=signerset` last set it, or `class:<cls>` for the operator's bearer.
+         NULLABLE AND NEVER BACK-FILLED, D-85's reasoning: a row changed before this column existed
+         recorded no actor, and there is no value a backfill could reach for that would not be
+         invented. NULL reads back as `not recorded`, stated, through `#statusBy`. */
+      ["members", "status_by", "TEXT"],
+      ["signers", "status_by", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -31249,6 +31257,30 @@ export class Store extends DurableObject {
     return claimed ? [Store.ROOT_ADMIN, ...rows] : rows;
   }
 
+  /* REC-159 — THE ROSTER ANSWERS §4.9's CUSTODIAL ACTS, and it is asked BEFORE anything is looked up,
+   * so a caller with no standing learns nothing about the member or key it named. `by` is the control
+   * plane's STAMP (`CUSTODIAL_ACTIONS` in index.mjs), relayed from the query and never from a body.
+   * THREE SHAPES AND THREE ANSWERS, each true of the caller:
+   *   - a member's id — a signed-in session: admitted only if they are an ACTIVE administrator, else
+   *     NOT_AN_ADMIN, by name, D-136's refusal at `memberCaps`;
+   *   - `class:<cls>` — the operator's bearer, which BOB #22 RULED keeps these acts; the plane's
+   *     `machineClasses` decides which classes reach here, and the record names the credential;
+   *   - absent — a route with no plane in front of it. Nothing is attributed, and the row records
+   *     `not recorded`, which is what it is.
+   * ANSWERS NULL when the act may proceed. */
+  #custodialBar(by, act) {
+    if (by === null || by === undefined || by === "") return null;
+    if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
+    if (this.#activeAdmins().includes(by)) return null;
+    return { ok: false, reason: "NOT_AN_ADMIN", by,
+             detail: `${act} is an administrator's act (4.9), and the plane stamps who is asking from the `
+                   + "signed-in session rather than taking it from the caller. This caller is not one of "
+                   + "the active administrators." };
+  }
+
+  /* REC-159: the stored actor, or the stated absence of one. */
+  static #statusBy(v) { return typeof v === "string" && v !== "" ? v : "not recorded"; }
+
   #capsOf(row) {
     try { const v = JSON.parse(row.capabilities || "[]"); return Array.isArray(v) ? v : []; }
     catch { return []; }
@@ -31383,6 +31415,9 @@ export class Store extends DurableObject {
 
   async memberAdd({ memberId, cover, name, role = "member", capabilities = null,
                     expertise = null, by = null } = {}) {
+    /* REC-159: the roster first — before the id is judged or looked up. */
+    const barAdd = this.#custodialBar(by, "adding a member");
+    if (barAdd) return barAdd;
     /* `name` is still read, because an older caller may send it, but the field
        is a cover and the response says so. */
     const label = typeof cover === "string" && cover.trim() ? cover : name;
@@ -31586,16 +31621,20 @@ export class Store extends DurableObject {
        pairing rather than leaking it. */
     const pairs = administer === true || administer === "1";
     return { members: this.#rows(
-      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, capabilities, created, updated,
+      `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, capabilities, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
        FROM members ORDER BY member_id`).map((r) => ({ ...r, capabilities: this.#capsOf(r),
+         status_by: Store.#statusBy(r.status_by),   /* REC-159: who set the status, or `not recorded` */
          /* D-51: served from `member_expertise`, not from the dead column on
             this row. Two places answering the same question, one of them never
             updated, is the shape that produces a roster nobody can trust. */
          expertise: this.expertiseList({ memberId: r.member_id }).expertise })) };
   }
 
-  memberSet({ memberId, status } = {}) {
+  memberSet({ memberId, status, by = null } = {}) {
+    /* REC-159: the roster first, before any lookup; `by` is the plane's stamp. */
+    const barSet = this.#custodialBar(by, "setting a member's status");
+    if (barSet) return barSet;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const m = this.#one(`SELECT status, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
@@ -31624,18 +31663,20 @@ export class Store extends DurableObject {
      * addition process like any other appointment. */
     const demoted = status === "active" && m.role === "admin" && m.status !== "active";
     const now = new Date().toISOString();
+    const actor = by || null;   /* REC-159: `status_by`, NULL (read `not recorded`) when nothing was stamped */
     if (demoted)
-      this.sql.exec(`UPDATE members SET status=?, role='member', updated=? WHERE member_id=?`,
-        status, now, memberId);
+      this.sql.exec(`UPDATE members SET status=?, role='member', status_by=?, updated=? WHERE member_id=?`,
+        status, actor, now, memberId);
     else
-      this.sql.exec(`UPDATE members SET status=?, updated=? WHERE member_id=?`, status, now, memberId);
+      this.sql.exec(`UPDATE members SET status=?, status_by=?, updated=? WHERE member_id=?`, status, actor, now, memberId);
     if (status === "revoked") {
       /* Revocation is immediate: live sessions die with it, and the member's
          registered keys stop attesting. */
       this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-      this.sql.exec(`UPDATE signers SET status='revoked' WHERE member_id=?`, memberId);
+      /* REC-159: the cascade is this act's too, so the keys it revokes name its actor. */
+      this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, actor, memberId);
     }
-    return { ok: true, memberId, status, ...(demoted ? { demoted: true,
+    return { ok: true, memberId, status, by: Store.#statusBy(actor), ...(demoted ? { demoted: true,
       detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: "
             + "the group voted them out under 4.7, and putting them back is an appointment, which needs "
             + "the consensus of all existing administrators like any other." } : {}) };
@@ -31709,7 +31750,10 @@ export class Store extends DurableObject {
     /* END DEC-49 REGION is-signer-member-attesting */
   }
 
-  signerAdd({ keyB64, memberId, comment } = {}) {
+  signerAdd({ keyB64, memberId, comment, by = null } = {}) {
+    /* REC-159: the roster first, before the key is judged or the member looked up. */
+    const barCust = this.#custodialBar(by, "registering a signing key");
+    if (barCust) return barCust;
     if (!keyB64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(keyB64))
       return { ok: false, reason: "BAD_KEY", detail: "expected the base64 field of an ssh-ed25519 public key" };
     /* D-158: this asked only whether the member EXISTED, where the gate asks
@@ -31719,11 +31763,11 @@ export class Store extends DurableObject {
     const barAdd = this.#signerMemberBar(memberId);
     if (barAdd) return barAdd;
     this.sql.exec(
-      `INSERT INTO signers (key_b64,member_id,comment,status,added) VALUES (?,?,?,'active',?)
+      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by) VALUES (?,?,?,'active',?,?)
        ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
-         comment=excluded.comment, status='active'`,
-      keyB64, memberId, comment ?? null, new Date().toISOString());
-    return { ok: true, keyB64, memberId };
+         comment=excluded.comment, status='active', status_by=excluded.status_by`,
+      keyB64, memberId, comment ?? null, new Date().toISOString(), by || null);
+    return { ok: true, keyB64, memberId, by: Store.#statusBy(by) };
   }
 
   /* D-158 — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN.
@@ -31751,11 +31795,12 @@ export class Store extends DurableObject {
    * up. Undetermined is first-class and gets said. */
   signerList() {
     return { signers: this.#rows(
-      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, m.status AS member_status,
+      `SELECT s.key_b64, s.member_id, s.comment, s.status, s.added, s.status_by, m.status AS member_status,
               CASE WHEN ${Store.SIGNER_ATTESTS} THEN 1 ELSE 0 END AS attests
          FROM signers s LEFT JOIN members m ON m.member_id = s.member_id
         ORDER BY s.added`).map((r) => ({
           key_b64: r.key_b64, member_id: r.member_id, comment: r.comment, status: r.status, added: r.added,
+          status_by: Store.#statusBy(r.status_by),   /* REC-159 */
           member_status: r.member_status ?? null,
           attests: r.attests === 1,
           attests_why: r.attests === 1 ? null
@@ -31766,7 +31811,10 @@ export class Store extends DurableObject {
         })) };
   }
 
-  signerSet({ keyB64, status } = {}) {
+  signerSet({ keyB64, status, by = null } = {}) {
+    /* REC-159: the roster first, before the key is looked up. */
+    const barCust = this.#custodialBar(by, "setting a signing key's status");
+    if (barCust) return barCust;
     if (!["active", "revoked"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     const row = this.#one(`SELECT key_b64, member_id FROM signers WHERE key_b64=?`, keyB64);
     if (!row) return { ok: false, reason: "NO_SUCH_KEY" };
@@ -31779,8 +31827,8 @@ export class Store extends DurableObject {
       const barSet = this.#signerMemberBar(row.member_id);
       if (barSet) return barSet;
     }
-    this.sql.exec(`UPDATE signers SET status=? WHERE key_b64=?`, status, keyB64);
-    return { ok: true, keyB64, status };
+    this.sql.exec(`UPDATE signers SET status=?, status_by=? WHERE key_b64=?`, status, by || null, keyB64);
+    return { ok: true, keyB64, status, by: Store.#statusBy(by) };
   }
 
   /* ---- ratification support: facts out, published rows in ----
@@ -44919,7 +44967,8 @@ export class Store extends DurableObject {
         enroll: () => this.enroll(body || {}),
         invitelook: () => this.inviteLook(body || {}),
         memberlist: () => this.memberList({ administer: url.searchParams.get("administer") }),
-        memberset: () => this.memberSet(body || {}),
+        /* REC-159: `memberadd`'s relay shape, for its reason — spread the body, THEN the stamp. */
+        memberset: () => this.memberSet({ ...(body || {}), by: url.searchParams.get("by") }),
         /* The membership model's member half. `memberadd`, `memberset`,
            `membercaps`, `adminendorse` and `adminremove` are admin-only at the
            control plane — section 4 governance. `memberlist` is NOT, and the
@@ -45164,9 +45213,9 @@ export class Store extends DurableObject {
         registeraudit: () => this.registerAudit(),
         /* REC-175: the digest census, read-only (see `digestCensus`). */
         digestcensus: () => this.digestCensus({ limit: url.searchParams.get("limit") }),
-        signeradd: () => this.signerAdd(body || {}),
+        signeradd: () => this.signerAdd({ ...(body || {}), by: url.searchParams.get("by") }),   /* REC-159 */
         signerlist: () => this.signerList(),
-        signerset: () => this.signerSet(body || {}),
+        signerset: () => this.signerSet({ ...(body || {}), by: url.searchParams.get("by") }),   /* REC-159 */
         /* REC-140: the ratifier's viewer, when sent, is asked for sight (`gateFacts`). */
         gatefacts: () => this.gateFacts(url.searchParams.get("id"),
           url.searchParams.has("viewer") ? url.searchParams.get("viewer") : null),
