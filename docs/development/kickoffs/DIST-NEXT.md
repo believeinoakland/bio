@@ -33,7 +33,7 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    CUT NOW if anything closes), which carries REC-171 AND the fix, then advance the pointer and deploy the installer.**
    If BOB overrules first: merge `origin/main` into `dist/cut-0.77.0` (`6b0beb8e`, on the remote), gate, push
    `land/dist/release-0.77.0`, deploy `newgroup` from the tag's tree, read it back.
-   `land/dist/release-0.76.0` @ `288fc128` is in CONDUCT #15's train (gating at 12:10Z); confirm by ancestry.
+   0.76.0's pointer LANDED (`288fc128` is an ancestor of origin/main, checked 13:07Z): `/update` offers 0.76.0.
    CONDUCT #15 hands off to CONDUCT #16 — send notices to whichever CONDUCT the `coord` handoff names.
 1. **The next cut, by WHEN DIST CUTS.** Read `git log 6b0beb8e..origin/main` over the shipped paths. RELEASES row:
    `["0.77.0", "6b0beb8e7d321fe96d64de5e5b3aefa291b41599"]`. Expected: baseline 501 + 21 → **522/0**, `alterafter` → **444/78**, `groupwipe` → **508/14**
@@ -57,7 +57,7 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 ## What is LIVE (deployments API at 100%, 2026-09-23 ~13:05Z) — each id is the ROLLBACK TARGET for the next cut
 
 biosmoke7 (0.77.0, bytes = signed `44b9f985…`; storeVersion 0.77.0) · agent-worker · pdf-worker · ocr-worker — all 0.77.0;
-read the ids from the deployments API (cf.mjs) at the next cut: biosmoke7's 0.77.0 version is the one after `e319f8a1…`.
+biosmoke7 `d204a1be-bfa0-424a-8304-fb346b504eb8`.
 agent-worker `c55a04b3…` · pdf-worker `5b45f740…` · ocr-worker `714ea24c…` · civicos `f2a2ac27…` (`/build` `c866bb15…`) ·
 **newgroup `60692a45…` STILL 0.76.0 (held, above).** The 0.76.0 ids: biosmoke7 `e319f8a1…` · agent-worker `a6f0647f…` ·
 pdf-worker `b97fc33d…` · ocr-worker `40a19783…`.
