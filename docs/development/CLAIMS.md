@@ -20008,3 +20008,15 @@ paths: bio-plane/src/index.mjs (op=acquire's format wire: the PDF branch keeps `
 why: an image {page, rect} row is bounded by the page set only (D-420, QUEUE.md on coord; EXTRACTION-BREADTH-DESIGN.md §3.2, §3.3 item 2).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+### D-82 · UI worker of CONDUCT #16 (cloud session WORKER D-82 (CONDUCT #16), branch land/worker/D-82) · 2026-09-23 — an agent-surfaced inquiry is marked wherever an inquiry is listed or shown
+
+Branch `land/worker/D-82`, base `origin/main` @ `0e5f7054`. Claimed BY SITE in `civicos-ui/app.html`: ONE NEW region
+`D-82 SURFACED-BY` (the marker helper, its one set loader and its undetermined note — new functions only), and one
+call line each in `recordRows`, `renderRecord`, `finderRowsHtml`, `runSearch`, `queueSubjectHtml`, `renderQueue`,
+`projectContentsHtml`, `openProjectWorkspace`, `openBundle` (its seals line and its `fwdRows`/`revRows` maps only) and
+`openInquiry` (its title line and `relPane` map only). NOT touched: every other marked region's markers, every
+`SURFACES` key, `proposalDerivedBadgeHtml`, and every site UI-73 claims (`errPane`, `queueReason`, `planeSaid`, …).
+Suites: `civicos-ui/test/agent-surfaced-inquiry.test.mjs` and `.control.mjs` (new), plus any suite whose pin on these
+sites moves (named at release). `docs/development/CIVICOS_UI_STATE.md` (PREPENDED). No plane change (I3 consumer).
+**open as of 2026-09-23** — claimed at the start of the item.
