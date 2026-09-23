@@ -670,15 +670,60 @@ export const CHECK_ANNOTATION_TITLE = "gate verdict";
 export const CHECK_TIMEOUT_S = 8;
 const CHECK_VERDICTS = ["GREEN", "RED", "NOT MEASURED", "UNDETERMINED"];
 
-/* One annotation message -> { verdict, tree, cls, exit, failed }, or null when it is not the grammar. */
+/* One annotation message -> { verdict, tree, cls, exit, failed, causes, unnamed }, or null when it is not the grammar.
+ *
+ * M0-127 EXTENDS FAILED= COMPATIBLY. It was a list of suite files (`FAILED=a.test.mjs b.test.mjs`), and a RED
+ * whose cause was not a suite read `FAILED=none` (tree 6ef503c4: D-186's residue check, 282/282 suites green).
+ * Each token is now `kind:detail` or, as before, a bare suite file: `plane:`/`fleet:`/`ui:` a failed suite,
+ * `residue:<path>:by=<suite>:pid=<n>`, `sharedlog:`, `notmeasured:<unit>`, `step:<name>:exit=<n>` (coverage
+ * --strict, the UI harness, plancheck, a battery that wrote no verdict), `gate:…` (a gate that recorded nothing),
+ * `unnamed:…`. `failed` keeps the flat token list every old reader reads; `causes` is each token's kind and
+ * detail, and `unnamed` is true for a RED naming no cause at all — the old writer's shape, which the new writer
+ * (`tools/gateverdict.mjs`) cannot produce. A comma still separates tokens, as it did. */
 export function parseVerdictAnnotation(message) {
   const m = /^VERDICT=(GREEN|RED|NOT MEASURED|UNDETERMINED) TREE=([0-9a-f]{40}|[0-9a-f]{64}) CLASS=(\S+) EXIT=(-?\d+)(?: WALL=(\d+)s)?(?: FAILED=(.*))?$/
     .exec(String(message || "").trim());
   if (!m || !CHECK_VERDICTS.includes(m[1])) return null;
-  const failed = (m[6] || "none").trim();
+  const failedText = (m[6] || "none").trim();
+  const failed = failedText === "none" ? [] : failedText.split(/[\s,]+/).filter(Boolean);
+  const causes = failed.map((tok) => {
+    const i = tok.indexOf(":");
+    const kind = i < 0 ? "suite" : tok.slice(0, i);
+    return { kind: ["plane", "fleet", "ui"].includes(kind) ? "suite" : kind, token: tok, detail: i < 0 ? tok : tok.slice(i + 1) };
+  });
   return { verdict: m[1], tree: m[2], cls: m[3], exit: Number(m[4]), wall: m[5] ? Number(m[5]) : null,
-           failed: failed === "none" ? [] : failed.split(/[\s,]+/).filter(Boolean) };
+           failed, causes, unnamed: m[1] === "RED" && failed.length === 0 };
 }
+
+export const tokenSafe = (x) => String(x).replace(/\s/g, "%20");
+
+/* ---- M0-127: the GATE's half of the FAILED= grammar (tools/gates.mjs prints it; tools/gateverdict.mjs carries it) --
+ * WHAT MADE A STEP NOT GREEN, as FAILED-grammar tokens: `plane:<suite>` / `fleet:<suite>` a failed suite (the
+ * battery's verdict file names it); `residue:<path>:by=<suite|UNDETERMINED>:pid=<n>` D-186's residue check, which is
+ * NOT a suite; `sharedlog:battery` D-425; `notmeasured:<unit>` M0-107; `step:<name>:exit=<n>` a step that failed with
+ * nothing finer to name (coverage --strict, the UI harness, plancheck, a battery that died before writing its
+ * verdict file). A step that is not ok ALWAYS yields at least one token, so a RED can never name nothing. `r` is the
+ * step's spawnSync result, `v` the verdict file the battery wrote for it (null for any other step). */
+export const stepName = (s) => /^battery/.test(s.label) ? "battery" : /^coverage/.test(s.label) ? "coverage--strict"
+  : /^civicos-ui/.test(s.label) ? "civicos-ui" : /^plancheck/.test(s.label) ? "plancheck" : tokenSafe(s.label.replace(/\s+/g, "-"));
+export function stepCauses(s, r, v, { timedOut = false, unmeasured = [] } = {}) {
+  if (r.status === 0) return [];
+  if (timedOut) return unmeasured.map((u) => `notmeasured:${tokenSafe(u)}`);
+  const out = [];
+  if (v && Array.isArray(v.failed)) for (const u of v.failed) if (typeof u === "string" && u) out.push(tokenSafe(u));
+  if (v && Array.isArray(v.residue)) for (const x of v.residue)
+    if (x && x.path) out.push(`residue:${tokenSafe(x.path)}:by=${tokenSafe(x.suite || "UNDETERMINED")}:pid=${x.pid ?? "unknown"}`);
+  if (v && v.leaking && !(Array.isArray(v.residue) && v.residue.length)) out.push("residue:unlisted:by=UNDETERMINED:pid=unknown");
+  if (v && v.sharedLog) out.push("sharedlog:battery");
+  const detail = r.error ? `:error=${tokenSafe(r.error.code || "spawn")}` : r.signal ? `:signal=${r.signal}` : "";
+  if (!out.length) out.push(`step:${stepName(s)}:exit=${r.status ?? "none"}${detail}${/^battery/.test(s.label) && !v ? ":no-verdict-file" : ""}`);
+  return out;
+}
+/* The gate's ONE machine line, printed whenever its verdict is not GREEN: `gates: CAUSES <token> …`. */
+export const causesLine = (results, verdict) => {
+  const causes = results.flatMap((r) => r.causes || []);
+  return `gates: CAUSES ${causes.length ? causes.join(" ") : `unnamed:${String(verdict).replace(/\s+/g, "-")}-with-no-failed-step`}`;
+};
 
 /* `owner/repo` of a GitHub remote URL, or null. */
 export function githubSlug(url) {
