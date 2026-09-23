@@ -1,0 +1,16 @@
+{
+ "unit": "plane:inquiryground.test.mjs",
+ "inputHash": "9f03f901e8c218ce7600b67f417398683402ba9e31b5aed44b704df7be36de45",
+ "verdict": "PASS",
+ "run": "f9e00b7e496e35e2d57707c2e31537c3cd00d326.1790191330272.4995.json",
+ "tree": "f9e00b7e496e35e2d57707c2e31537c3cd00d326",
+ "head": "263cab655c5c65bf8cf46aed41f6737ba4d31722",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 134,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c24508e4-34b6-5866-a122-a5e731b6ee3c",
+ "at": "2026-09-23T19:22:10.290Z"
+}
