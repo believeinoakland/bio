@@ -24,10 +24,18 @@
  *   (2) the tree comparison removed -> "a verdict for ANOTHER tree is UNDETERMINED" FAILS
  *   (3) a failed check with no verdict annotation read as RED -> "A FAILED JOB THAT RECORDED NOTHING PUSHES" FAILS
  *   (4) the call site in the hook body removed -> "A RED CHECK IS REFUSED" FAILS, and the GREEN note with it
- *   RUN 2026-09-22 by the M0-114 worker, all four AS DECLARED: baseline 39 pass / 0 fail; every anchor preflighted at
+ *   RUN 2026-09-22 by the M0-114 worker, all four AS DECLARED, and RE-RUN after the HTTP 422 arm changed the subject: baseline 40 pass / 0 fail; every anchor preflighted at
  *   exactly one match; failing counts per arm 5, 1, 3, 7 (arm (3) also fails "...did NOT reach the remote", because the
- *   no-verdict commit it refused never landed); every restore of `tools/pushguard.mjs` sha256 MATCH at 77,111 B;
- *   closing 39 / 0.
+ *   no-verdict commit it refused never landed); every restore of `tools/pushguard.mjs` sha256 MATCH at 77,450 B;
+ *   closing 40 / 0 (the first run, before that arm: 39 / 0, the same per-arm counts, at 77,111 B).
+ *   (5) the workflow's `set +e` removed -> "the gate step turns OFF errexit" FAILS. RUN 2026-09-23 by the M0-114 worker:
+ *   its FIRST run was a SURPRISING GREEN (41 / 0) — the assertion matched the step's own comment naming `set +e`; comment
+ *   lines are now stripped, and the re-run read 40 pass / 1 fail at exactly that assertion; restore sha256 MATCH, cmp SAME
+ *   at 5,026 B; closing 41 / 0.
+ *   THE LIVE CONTROL (the row's own): break one suite on a branch and the check must read red at it. Its FIRST run
+ *   (`m0114-negctl` @ c36c38c2, run 35799828324) FOUND A DEFECT IN THE WRITER: Actions runs a step as `bash -e`, so the RED
+ *   gate killed the step before the annotation, and the guard read UNDETERMINED (the safe direction: not refused, not
+ *   GREEN). The workflow now sets `set +e`; the re-run's result is in MEASUREMENTS.md M-104.
  */
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";
@@ -83,6 +91,13 @@ t("the trigger reads `land/**` and never `main` (the verdict must exist BEFORE m
   [/"land\/\*\*"/.test(pushBranches), /"main"/.test(pushBranches)], [true, false]);
 t("no secret is handed to the gate (a suite needing one is a live probe, not a gate unit)", /secrets\./.test(wf), false);
 t("the verdict comes from the gate's RECORDED line, never the exit alone", wf.includes("gates: RECORDED"), true);
+/* Actions runs a step as `bash -e`: without `set +e` before the gate, a RED gate kills the step before the annotation
+   is written, and every RED reads UNDETERMINED — found by the LIVE negative control on 2026-09-23 (run 35799828324). */
+/* Comment lines stripped: the step's own comment NAMES `set +e`, and control arm (5)'s first run passed over its removal
+   by matching that comment (a surprising green, recorded below). */
+const gateStep = wf.slice(wf.indexOf("- name: gate")).split("\n").filter((l) => !/^\s*#/.test(l)).join("\n");
+t("the gate step turns OFF errexit before running the gate, so a RED gate still writes its verdict",
+  /\bset \+e\b/.test(gateStep) && gateStep.search(/\bset \+e\b/) < gateStep.indexOf("node tools/gates.mjs"), true);
 
 /* ========================================================================== */
 section("THE DECISION, over a stubbed API — only a RED verdict for THIS tree on a FAILED check refuses");

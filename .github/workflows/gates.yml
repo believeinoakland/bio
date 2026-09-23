@@ -59,7 +59,10 @@ jobs:
         env:
           GATE_FULL: ${{ github.event_name == 'workflow_dispatch' && '--full' || '' }}
         run: |
-          set -uo pipefail
+          # `set +e` IS LOAD-BEARING: Actions runs a step as `bash -e`, so without it a RED gate (exit 1)
+          # kills the step before the verdict annotation is written, and every RED reads UNDETERMINED.
+          # Measured 2026-09-23 by M0-114's live negative control (run 35799828324).
+          set +e -uo pipefail
           log="$RUNNER_TEMP/gate.log"
           tree="$(git rev-parse 'HEAD^{tree}')"
           t0="$(date -u +%s)"
