@@ -386,12 +386,34 @@ export function carryAudit({ repo, range = null, commit = null } = {}) {
    Graded in BOTH directions over the real history, which is what makes it evidence rather
    than an exemption list. `fresh` is a drop nobody has looked at; `stale` is a registered
    drop that is no longer one, meaning somebody repaired it and the reason should go with
-   the row. Either is a FAIL for the battery copy. */
-export function historicalRegister({ repo, range = "origin/main" } = {}) {
-  const a = carryAudit({ repo, range });
+   the row. Either is a FAIL for the battery copy.
+
+   IT READS A PINNED COMMIT, NEVER A LIVE REF (M0-130, 2026-09-23; TREE-SHARING §3, "A GATE TEST
+   DEPENDS ONLY ON THE CODE"). Until then its default range was `origin/main`, so the battery's
+   verdict moved with what had LANDED rather than with the tree under test: GitHub run #20 went red
+   on `main` when a train's merge added history (4355bfd), and a worker's suite went red under a
+   tree that never changed because another checkout's fetch moved the repository-wide
+   `refs/remotes/origin/main` (CLAIMS.md, 2026-09-15, cc8187d). The register is now graded over
+   every merge reachable from REGISTER_PIN, a commit NAMED HERE: git objects are content-addressed,
+   so the range is the same set of merges in every clone and on every day, and the verdict is a
+   function of this file. WHY THIS COMMIT: `e62e08e1` was `origin/main` when M0-130 was built — the
+   train's landing of CONDUCT #16's first batch (M0-126), 752 merges, all four registered drops
+   inside it and no unregistered one (measured 2026-09-23). WHAT GRADES A MERGE AFTER THE PIN: the
+   forward half is `tools/plancheck.mjs` §2c (`carryAudit` over `origin/main..HEAD`, every push —
+   a live read by design, because it judges what is about to be PUBLISHED, never a gate unit's
+   verdict) and the train's own carry check (M0-131). THE COST, STATED: a drop that reaches `main`
+   past the pin despite both is graded by NO gate unit until the pin is moved over it — the battery
+   no longer re-sweeps landed history on every run, because a sweep of landed history is exactly a
+   verdict that moves with what landed. Moving the pin is an act in a commit, with its why here, like
+   a register row, and the move surfaces any such drop as `fresh`. */
+export const REGISTER_PIN = "e62e08e147db6faddad635182cbf74675533949e";
+
+export function historicalRegister({ repo, pin = REGISTER_PIN } = {}) {
+  const a = carryAudit({ repo, range: pin });
   const seen = new Set(a.findings.filter((f) => f.klass === "dropped").map((f) => `${f.merge}:${f.path}`));
   const known = new Set(KNOWN_HISTORICAL_DROPS.map((k) => `${k.merge}:${k.path}`));
   return {
+    pin,
     merges: a.merges.length,
     dropped: [...seen],
     fresh: [...seen].filter((k) => !known.has(k)),
