@@ -1274,9 +1274,15 @@ function listSig(list){ return list.map(b=>b.bundle_id+"|"+b.current_state+"|"+b
    for a plane that answered NOTHING), which is why UI-31 attributed it to the
    surface and why DEC-8 is not in play: nothing here translates or blanks a
    refusal the plane made. The `err.reason`/`err.error`/`err.detail` branch beside
-   it is untouched — those are the plane's words and stay verbatim. */
+   it is untouched — those are the plane's words and stay verbatim.
+   UI-73, 2026-09-23 (DEC-49): the plane's SENTENCE is now chosen by
+   `refusalWords`, the one helper every refusal a member reads goes through — a
+   canned `translation` first, `detail`/`error` behind it — rather than by
+   reading `detail` here. Still a SELECTION between things the plane sent; the
+   code stays beside it where one was sent. */
 function teach(el, err){
-  const msg = err && (err.error || err.reason || err.detail) ? [err.reason,err.error,err.detail].filter(Boolean).join(" · ") : "Could not reach the plane. If this is a local file against a remote plane, that plane must allow cross-origin reads.";
+  const words = refusalWords(err);
+  const msg = err && (words || err.reason) ? [err.reason, words].filter(Boolean).join(" · ") : "Could not reach the plane. If this is a local file against a remote plane, that plane must allow cross-origin reads.";
   el.innerHTML = esc(msg); el.classList.remove("hidden");
 }
 
@@ -1421,7 +1427,10 @@ async function signIn(){
        gate did before the plane had one: an older plane, or a refusal from some
        other layer, must not be silently blanked, and this surface has nothing
        honest to put in its place. */
-    if(!l || l.ok===false || !l.token){ teach($("#g-err"), l && l.detail ? { detail:l.detail } : (l||{})); return; }
+    /* UI-73: the sentence is either field the plane may send for a member —
+       its canned `translation` (DEC-49) or its `detail` — and `teach` picks
+       between them through `refusalWords`; the code is still withheld. */
+    if(!l || l.ok===false || !l.token){ teach($("#g-err"), l && (l.translation || l.detail) ? { translation:l.translation, detail:l.detail } : (l||{})); return; }
     PLANE.token = l.token; PLANE.session = true;
     await boot();
   }catch(e){ teach($("#g-err"), e); }
@@ -3114,6 +3123,9 @@ async function sha256Text(text){
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
 }
+/* REC-178: a file's bytes is the length of its UTF-8 encoding, never text.length (UTF-16 units). The plane
+   computes it over what it holds and stores that; this sends the same figure. */
+function utf8Len(text){ return new TextEncoder().encode(text).length; }
 function stamp(){
   const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
   let r = ""; const h = "0123456789abcdef";
@@ -3271,10 +3283,10 @@ async function blobEntry(path, sha256){
   return { ok:true, file:{ path, blobSha: sha256, sha256, bytes: c.bytes.length } };
 }
 async function docFiles(text, doc, textSha, extra){
-  const files = [{ path:"bundle.md", text, bytes:text.length, sha256:textSha }];
+  const files = [{ path:"bundle.md", text, bytes:utf8Len(text), sha256:textSha }];
   if(!doc) return files;
   const prov = JSON.stringify({ documents: [doc] }, null, 1);
-  files.push({ path:"data/provenance.json", text: prov, bytes: prov.length, sha256: await sha256Text(prov) });
+  files.push({ path:"data/provenance.json", text: prov, bytes: utf8Len(prov), sha256: await sha256Text(prov) });
   if(Array.isArray(doc.parts) && doc.parts.length){
     for(const p of doc.parts) files.push({ path:p.file, blobSha:p.sha256, sha256:p.sha256, bytes:p.bytes });
   } else {
@@ -6883,17 +6895,17 @@ async function reviseWithCapture(id, img, acq, mergedManifest){
      parts, and named as renditions rather than acquisitions, which is why
      replacing them is a refill and replacing a captured document would not be. */
   const manText = JSON.stringify(mergedManifest, null, 1);
-  const files = [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) },
+  const files = [{ path:"bundle.md", text: revised, bytes: utf8Len(revised), sha256: await sha256Text(revised) },
     /* TEXT, not a blob reference. op=image returns a blob-registered file as
        {blobSha,...} and the viewer reads the manifest with typeof === "string",
        so a manifest promoted as a blob is a manifest the viewer never sees and
        a snapshot that never renders. */
-    { path:"data/snapshot-manifest.json", text: manText, bytes: manText.length, sha256: await sha256Text(manText) }];
+    { path:"data/snapshot-manifest.json", text: manText, bytes: utf8Len(manText), sha256: await sha256Text(manText) }];
   for(const [path, v] of Object.entries(img)){
     if(path === "bundle.md" || path === "data/snapshot-manifest.json") continue;
     if(path.indexOf("_history/") === 0) continue;
     if(/\.render\.html$/.test(path)) continue;                    // superseded below
-    if(typeof v === "string") files.push({ path, text: v, bytes: v.length, sha256: await sha256Text(v) });
+    if(typeof v === "string") files.push({ path, text: v, bytes: utf8Len(v), sha256: await sha256Text(v) });
     else files.push({ path, blobSha: v.blobSha||v.sha256, sha256: v.sha256, bytes: v.bytes });
   }
   if(snap.render_file && snap.render_sha256){
@@ -9774,7 +9786,7 @@ function concludePaint(){
     const own = !on ? "" : !lp ? `<div class="subj-how">Asking the record about this leg&hellip;</div>`
       : lp.ok
         ? `<div class="subj-how">${PAIR_AXES.map(ax=>`${esc(AXIS_SHORT[ax])}: ${lp.pair[ax] && lp.pair[ax].grade ? `<span class="subj-grade g-est">Grade ${esc(lp.pair[ax].grade)}</span>` : esc(STRENGTH_STATE_WORD[lp.pair[ax] && lp.pair[ax].state] || "no state published")}`).join(" &middot; ")}</div>`
-        : (lp.refusal ? `<div class="subj-how">${esc(lp.refusal.detail || lp.refusal.error || "")}</div>` : "");
+        : (lp.refusal ? `<div class="subj-how">${esc(refusalWords(lp.refusal))}</div>` : "");
     return `<label class="dz-opt${on?" on":""}">
       <input type="checkbox" ${on?"checked":""} onchange="concludeToggle(${esc(JSON.stringify(t))})">
       <span class="dz-verb mono">${esc(t)}</span>
@@ -12037,7 +12049,7 @@ function finderSubjectsPanelHtml(s, overlapIds){
     ? `<p class="subj-note">${ents.length===1?"Subject":"Subjects"}: ${ents.map(e=>`<b>${esc((e.entity&&e.entity.label)||e.entity_id)}</b> <span class="mono">${esc(e.entity_id)}</span>`).join(", ")}${ents.length>1?" &mdash; this name is carried by more than one subject in the registry, and the record does not collapse that. Every one of them was asked.":""}</p>`
     : "";
   const errs = (s.errors||[]).length
-    ? `<div class="card" style="margin:8px 0">${(s.errors||[]).map(e=>`<div class="kv"><span class="k">${esc(e.id)}</span><span class="v plain">${esc((e.refusal&&(e.refusal.detail||e.refusal.error||e.refusal.reason))||"")}</span></div>`).join("")}</div>`
+    ? `<div class="card" style="margin:8px 0">${(s.errors||[]).map(e=>`<div class="kv"><span class="k">${esc(e.id)}</span><span class="v plain">${esc((e.refusal&&(refusalWords(e.refusal)||e.refusal.reason))||"")}</span></div>`).join("")}</div>`
     : "";
   const rows = s.documents || [];
   /* UI-48: THE BOUND `op=concerns` PUBLISHED, ONE SENTENCE PER SUBJECT.
@@ -12807,7 +12819,11 @@ async function doRelease(ids){
    translate it into "something went wrong". */
 function releaseRefusal(e){
   const head = esc([e.reason, e.error].filter(Boolean).join(" \u00b7 ") || "The plane refused.");
-  const detail = e.detail ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
+  /* UI-73: the sentence under the head is `refusalWords` (DEC-49's canned
+     translation first); when it fell through to `error`, the head already
+     carries it and it is not printed twice. */
+  const words = refusalWords(e);
+  const detail = words && words !== e.error ? `<div style="margin-top:4px">${esc(words)}</div>` : "";
   let off = "";
   if(Array.isArray(e.offenders) && e.offenders.length){
     off = `<ul class="offenders">` + e.offenders.map(o=>{
@@ -13693,10 +13709,12 @@ const QUEUE_FEEDS = [
 ];
 
 /* The PLANE'S OWN words for why it could not answer. Never composed here — the
-   reason, the detail and the error are the producer's (DEC-8). */
+   reason, the detail and the error are the producer's (DEC-8). UI-73: the
+   sentence beside the code is chosen by `refusalWords` (DEC-49's canned
+   translation first), never by reading `detail` here. */
 function queueReason(e){
   if(!e) return "";
-  return [e.reason, e.detail || e.error].filter(Boolean).join(" · ");
+  return [e.reason, refusalWords(e)].filter(Boolean).join(" · ");
 }
 /* An unregistered op answers "unknown op" (I3). That is a DIFFERENT FACT from a
    feed that failed, and the two are never collapsed. */
@@ -14458,7 +14476,10 @@ async function openForward(id){
 }
 function taskErr(id, e){
   const host = document.querySelector(`#q [data-err="${id}"]`);
-  const msg = (e && (e.reason||e.error||e.detail)) ? [e.reason,e.detail].filter(Boolean).join(" · ") : "The plane did not accept that.";
+  /* UI-73: the plane's sentence through `refusalWords` — which also stops an
+     `error`-only refusal rendering BLANK here, as the old `[reason, detail]`
+     join did while its guard admitted `error`. */
+  const msg = [e && e.reason, refusalWords(e)].filter(Boolean).join(" · ") || "The plane did not accept that.";
   if(host) host.textContent = msg;
 }
 
@@ -14978,7 +14999,10 @@ async function loadIntentVocab(force){
     const opts = a.accepted ? null : intentOptionsFrom(a.refusal.detail);
     INTENT_VOCAB.sets[name] = opts;
     INTENT_VOCAB.source[name] = opts ? "refusal" : "unavailable";
-    INTENT_VOCAB.words[name] = a.accepted ? "" : (a.refusal.detail || "");
+    /* UI-73: the SET is parsed from `detail` (the store composes it from the
+       set it enforces, and a translation does not carry it); the WORDS kept for
+       a member are `refusalWords`, like every other refusal. */
+    INTENT_VOCAB.words[name] = a.accepted ? "" : refusalWords(a.refusal);
   };
   await take("entity_kind", "entity_kinds", "entitycreate", {});
   await take("relation_kind", "relation_kinds", "relationdeclare", {});
@@ -16442,7 +16466,7 @@ async function doProposalAdopt(){
   const err = $("#ad-err"); if(err) err.classList.add("hidden");
   const pf = proposalAdoptPreflight({ kind, title, statement, canContribute: canProposalAct() });
   if(!pf.ok){
-    if(err){ err.innerHTML = `<b>This won't run yet — and nothing has been written.</b><div style="margin-top:4px">${esc(pf.refusal.detail)}</div>`; err.classList.remove("hidden"); }
+    if(err){ err.innerHTML = `<b>This won't run yet — and nothing has been written.</b><div style="margin-top:4px">${esc(refusalWords(pf.refusal))}</div>`; err.classList.remove("hidden"); }
     proposalAdoptValidate();
     return { refused:true, reason:pf.refusal.reason };
   }
@@ -16910,7 +16934,9 @@ function attestDone(id){ closeDialog(); RECORD_CACHE = null; if(id) openBundle(i
    — the same rule as release and dispose. */
 function attestRefusalHtml(e){
   const head = esc([e&&e.reason, e&&e.error].filter(Boolean).join(" · ") || "The plane refused, and stored nothing.");
-  const detail = (e&&e.detail) ? `<div style="margin-top:4px">${esc(e.detail)}</div>` : "";
+  /* UI-73: as `releaseRefusal` — `refusalWords` chooses the sentence. */
+  const words = refusalWords(e);
+  const detail = (words && words !== (e&&e.error)) ? `<div style="margin-top:4px">${esc(words)}</div>` : "";
   return `<b>${head}</b>${detail}`;
 }
 
@@ -17528,7 +17554,7 @@ async function addGo(){
       const c = await fetchCapture(snap.manifest_sha256);
       if(c.ok && c.sha === snap.manifest_sha256){
         const t = new TextDecoder().decode(c.bytes);
-        files.push({ path:"data/snapshot-manifest.json", text:t, bytes:t.length, sha256: await sha256Text(t) });
+        files.push({ path:"data/snapshot-manifest.json", text:t, bytes:utf8Len(t), sha256: await sha256Text(t) });
       }
     }
     const res = await recPostR("promote", {
@@ -17553,7 +17579,7 @@ async function addGo(){
       const fs = Array.isArray(res && res.findings) ? res.findings : [];
       addErr(fs.length
         ? `<b>The record refused this and nothing was written.</b>`
-          + fs.map(f=>`<div class="intent-ref"><div class="intent-ref-why">${esc(f.detail||f.message||"")}</div>`
+          + fs.map(f=>`<div class="intent-ref"><div class="intent-ref-why">${esc(refusalWords(f)||f.message||"")}</div>`
               + (Array.isArray(f.repairs)&&f.repairs.length
                   ? `<ul>${f.repairs.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : "")
               + (f.check?`<div class="intent-ref-code mono">${esc(f.check)}</div>`:"")+`</div>`).join("")
@@ -17933,7 +17959,10 @@ function addIncomplete(acq, outstanding, ticks){
    is passed as HTML the caller already built rather than rebuilt here, because
    only the caller knows what the object was. */
 function errPane(e, crumbHtml){
-  const msg = e && (e.error||e.reason||e.detail) ? [e.reason,e.error,e.detail].filter(Boolean).join(" · ") : "Could not reach the plane.";
+  /* UI-73, FOUND BY THE CLASS SWEEP beside `teach()` — the same line, one pane
+     over: the plane's sentence is `refusalWords`', never `detail` read here. */
+  const words = refusalWords(e);
+  const msg = e && (words || e.reason) ? [e.reason, words].filter(Boolean).join(" · ") : "Could not reach the plane.";
   return `${crumbHtml||""}<div class="teach" style="margin:8px 0">${esc(msg)}</div>`;
 }
 
@@ -19792,7 +19821,11 @@ function pubFooterHtml(c, floors){
    sentence would have been the easy fix and is exactly the edit DEC-8 forbids. */
 function planeSaid(x){
   if(!x || typeof x !== "object") return "";
-  for(const s of [x.detail, x.error, x.reason]) if(typeof s === "string" && s) return s;
+  /* UI-73: the sentence is `refusalWords`' (DEC-49's canned translation
+     first); the bare code only when the plane sent no sentence at all. */
+  const words = refusalWords(x);
+  if(typeof words === "string" && words) return words;
+  for(const s of [x.error, x.reason]) if(typeof s === "string" && s) return s;
   return "";
 }
 /* **CORRECTED 2026-08-04 — UI-37, D-195, AND THE CORRECTION IS THE WHOLE ITEM.**

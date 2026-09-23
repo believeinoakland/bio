@@ -582,8 +582,11 @@ const member = async (id, caps, role = "member") => {
 
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 /* CORRECTED 2026-09-18 (REC-141, IC-158): id null creates with NO bundleId — a project's id is MINTED. */
+/* CORRECTED 2026-09-23 (REC-176, IC-193), never exempted: the key was `<id>-rev` for EVERY revision, so each revision
+   after the first REPLACED the previous one's manifest row and history snapshot — silently, until op=promote refused a
+   held snap key (SNAP_KEY_TAKEN, C-67.1). A revision's base is unique along its chain, so the key carries it. */
 const promote = async (id, text, type, state, base = null, tok) => await post("promote", {
-  ...(id ? { bundleId: id } : {}), base, snapKey: `${id ?? type}-${base ? "rev" : "new"}`,
+  ...(id ? { bundleId: id } : {}), base, snapKey: `${id ?? type}-${base ? `rev-${String(base).slice(0, 16)}` : "new"}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
   meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
           current_state: state, created: NOW, last_updated: LATER },

@@ -9583,6 +9583,19 @@ export const ACT_SHAPE_CHECKS = {
       + 'from there never having been one. Citing it again would neither reverse that decision nor '
       + 'step around it, so putting the link back is a separate act that records its own reason.',
   },
+  /* D-168 / BOB #30, 2026-09-23 — State Rules §4.1, "A RETIRED ITEM IS NOT
+     CITABLE". A sub-number of this family, as C-33.15..19 (cite's other
+     regions) are; C-33.38 is REC-175's. The translation NAMES THE DOOR, the
+     REC-117 rule: cite what superseded it, or re-collect the source. */
+  RETIRED_NOT_CITABLE: {
+    check: 'C-33.39',
+    where: 'src/store.mjs cite > is-cite-retired',
+    translation: 'The group has retired this material, recording that it is superseded or no longer '
+      + 'stands, so a citation made now would read to everyone after you as live support nobody will '
+      + 'look at again. Cite whatever superseded it, or collect the source again as a new item and '
+      + 'cite that. A document its publisher withdrew or changed is a different thing and can still '
+      + 'be cited.',
+  },
   NO_SUCH_SELECTION: {
     check: 'C-33.20',
     where: 'src/store.mjs selectionResolve > is-selection-known',
@@ -9596,6 +9609,20 @@ export const ACT_SHAPE_CHECKS = {
     translation: 'Somebody else changed this document since you last read it, so writing now would '
       + 'quietly discard their work. Read it again, fold your change into what is there, and write '
       + 'once more.',
+  },
+  /* REC-176 (the history law, BIO_State_Rules_Consistency_v1_5.md §2.4: "History is append-only; nothing in
+     _history/ is ever modified or deleted"). `op=promote` wrote its manifest and history rows with INSERT OR
+     REPLACE keyed (bundle_id, snap_key), so a second promotion naming a key the bundle already holds silently
+     REPLACED the first promotion's rows. It now refuses that key before anything is written; a byte-identical
+     re-send of the promotion that key already names answers ok and writes nothing (§2.4's own convergent rule:
+     "the second detects the existing file and skips"). C-67 is minted (`node tools/mintid.mjs C`) rather than
+     C-33.n, because two parallel promote items took C-33 numbers the same day. */
+  SNAP_KEY_TAKEN: {
+    check: 'C-67.1',
+    where: 'src/store.mjs promote > is-promote-snapkey',
+    translation: 'This write names a history entry this document already has, and it is a different write '
+      + 'from the one recorded there. The record never rewrites its history, so nothing was written. Send it '
+      + 'again under a new history key.',
   },
   SELF_BASIS: {
     check: 'C-33.22',

@@ -215,6 +215,8 @@ and a larger batch that reads red takes longer to pin. The per-suite `failedUnit
 the second cost. **Re-measure after a day** (trains a day, branches a train, the train's gate minutes, the red-batch
 count) and widen or narrow from the figures, not from this paragraph.
 
+**ONE FULL GATE PER TRAIN, NOT ONE PER WORKER — RULED 2026-09-23 by Bob** (*"We need to cut back on gates so that this doesn't happen again"*, after 8 concurrent FULL worker gates on CONDUCT's 4 cores stalled every worker ~80 minutes; *"sustained productivity and a process that works"*). A plane change classifies FULL, so every worker was running the whole battery before its `land/*` push and the train ran it again on the union. Now a worker runs only the suites its row names — its new or changed suite, the row's NEGATIVE CONTROL, and `plancheck` — and pushes `land/*` without a FULL gate; the train's union gate is the one FULL gate, and `main` still moves only on a GREEN union, so a red GitHub run still means a real problem. On a red union the integrator names the failing unit from the per-unit record (§3a) and returns the branch whose diff it reads before any `--isolate`. **Re-measure after a day** (FULL runs per landed row; red unions and their re-gate minutes) and narrow from the figures, never on impression.
+
 **ONE GITHUB RUN PER LANDED BATCH — RULED 2026-09-23 by Bob** (*"Ok, 1 github run per batch"*, on BOB #29's
 recommendation). The workflow runs on a push to `main` alone, and `main` moves only through the train, so each run audits
 exactly one landed batch; it no longer runs on `land/*` or `integrate/*`. **Nobody waits on it:** a lane reuses its own GREEN
@@ -361,7 +363,35 @@ file from a unit's input set, and condition 2 fails that unit by name.
      a unit always RUN; it does not make its VERDICT depend only on the tree (§3).** `mergecarry`'s historical register
      read the live `origin/main` until M0-130 (2026-09-23): it now reads the merges reachable from `REGISTER_PIN`, a
      commit named with its why in `tools/mergecarry.mjs`, and a planted-ref arm proves the verdict is the same whatever
-     `origin/main` holds; it stays never-cache (it reads history by commit id, and runs plancheck). And a REUSED record
+     `origin/main` holds; it stays never-cache (it reads history by commit id, and runs plancheck).
+     **The other eleven, examined by M0-136 (2026-09-23)** — each suite, and every module it imports, grepped for
+     `spawnSync`/`execFileSync`/`execSync`/`git` and for `origin/`, `coord`, `ls-remote`, `FETCH_HEAD`, a fetch and the
+     clock; and each run with a logging `git` first on PATH, which records every git call, its directory and its
+     arguments. Five read the LIVE `origin/coord` through `tools/coord.mjs` (and `decided`'s and `mintid`'s CLIs FETCHED
+     it: 5 and 31 fetches a run); they now read `coord` at `COORD_PIN`, a commit named with its why in
+     `bio-plane/test/coordpin.mjs`, through the layer's own override (`BIO_COORD_REF`), and each carries a planted-ref
+     arm (`origin/coord` absent, at the pin, at a planted commit whose change the reader sees when read directly: one
+     verdict). **The cost, M0-130's in this form:** a `coord` state file whose shape a lane changes after the pin is
+     judged by no gate unit until the pin moves; the live state is judged where a live read is the purpose (`plancheck`,
+     the coord write's own checks). Each of the eleven carries a dated line at its site saying what it reads.
+
+     | unit | what it reads (measured) | verdict |
+     | --- | --- | --- |
+     | `decided` | `origin/coord` via `fresh()`/`scan()` and its CLI (which fetched); the state half at `STATE_PIN` | PINNED (`COORD_PIN`; `STATE_PIN` now a full id) |
+     | `mintid` | `origin/coord` (floors, register sweep; its CLI fetched); `git diff origin/main...HEAD` in one arm | PINNED; the arm's `--base` is now `HEAD` |
+     | `op-claims` | `origin/coord` via its one `fresh()`; HEAD's tree and index | PINNED |
+     | `owed` | `origin/coord` (§6's live-estate walk) | PINNED |
+     | `readbudget` | `origin/coord` (the `*-NEXT.md` handoffs) | PINNED |
+     | `retirable` | the REAL CLI: this machine's `worktree list` and this checkout's `ls-remote origin` (network); no asserted row used either | READS NONE of this checkout: the CLI now runs from a copy in a fixture with its own `origin` |
+     | `migrate-released` | `git show` at 18 commit ids named in the suite | READS NONE (pinned ids) |
+     | `register-grammar` | `0ca7640^2`, and HEAD's tree and index | READS NONE; the abbreviated id is now full |
+     | `owed-controls` | HEAD's own history (`log -1 %cs`, via `coverage.mjs`), HEAD's tree and index | HEAD-ONLY |
+     | `status` | HEAD's own history (`log -1 %as`, via `corpuscheck.mjs`), `ls-files` | HEAD-ONLY |
+     | `coverage` | HEAD's own history (`log -1 %cs`, printed and never gated), HEAD's tree and index | HEAD-ONLY |
+
+     None of the eleven had a live read that was its PURPOSE; all stay never-cache (each reads history by commit id).
+     NEGATIVE CONTROL: `bio-plane/test/coordpin.control.mjs` points each pinned suite back at `origin/coord`, and its
+     planted-ref arm fails by name. And a REUSED record
      never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
      and a RERUN of what failed also runs every never-cached unit. The train's own tree-keyed reuse (M0-122's
      `recordedGreen`) was not changed here; M0-131 made it run every never-cached unit (§2).
@@ -440,7 +470,7 @@ Their state is the ledger's, never this file's: `node tools/ledger.mjs find <ID>
   `SCHEDULER.md` step 3 orders the plan by it); *"Never queue a gate behind another lane's"* (`CLAUDE.md` §6); a session
   refreshes past 70% of its context, not 60% (`CLAUDE.md` §4; ruled 2026-09-21, and restated 2026-09-22 as BOB #26
   recorded it: *"the line is 70%, not 60% — refresh less, work more"*). **RAISED TO 80% by Bob 2026-09-23** (*"I can't see a
-  downside to increasing the context limit to 75% or 80% so as to extend session lifetimes"*; `CLAUDE.md` §4).
+  downside to increasing the context limit to 75% or 80% so as to extend session lifetimes"*; `CLAUDE.md` §4). **SET TO 75% by BOB #30 the same day, on a measurement:** the cloud environment sets `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80`, which auto-compacts at ~79% of the context `get_session` reports (BOB #30 compacted at 788,078 of 1,000,000 tokens, 18:01Z, before its 80% line), so an 80% refresh line could never be reached. The refresh line must sit BELOW the compaction point; 75% is the highest that leaves one working turn's margin. Raising the override in the environment's settings would let the line rise with it.
 - **The rows:** M0-99 (`DECIDED.md` untracked, generated on demand; §1), M0-106 (DIST's release gate reuses a tree's
   GREEN record), M0-107 (a timeout reads NOT MEASURED, never a finding), M0-109 (the ledger suite's floor that the debt
   fold tripped), M0-100 (narrowed, §1; BUILT: `ORCHESTRATION.md` rule 3), M0-101 (superseded, §1), M0-114 (change 3, BUILT: §3 "As built"; it was

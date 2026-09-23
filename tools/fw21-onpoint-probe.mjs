@@ -55,8 +55,8 @@ const promoteReading = async (captureSha, entities) => {
   const r = await post("promote", { bundleId: id, base: null,
     snapKey: `20260914T${String(200000 + bseq).slice(-6)}Z_${sha(String(bseq)).slice(0, 8)}`,
     meta: { object_type: "information", group: "believe-in-oakland", title: `Doc ${id}`, current_state: "collected", created: NOW, last_updated: LATER },
-    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
-            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }], register: [] });
+    files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md), sha256: sha(md) },
+            { path: "data/provenance.json", text: prov, bytes: Buffer.byteLength(prov), sha256: sha(prov) }], register: [] });
   if (r.ok === false) throw new Error(JSON.stringify(r).slice(0, 400)); return id;
 };
 const legMd = (id, target, page, eref) => ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
@@ -90,7 +90,7 @@ const cite = async (n, page) => {
   const id = `INQ-2026-${7490 + n}-p`;
   const q = await post("promote", { bundleId: id, base: null, snapKey: `20260914T39999${n}Z_deadbee${n}`,
     meta: { object_type: "inquiry", group: "believe-in-oakland", title: "Q", current_state: "open", created: NOW, last_updated: LATER },
-    files: [(() => { const md = legMd(id, A, page - 1, `page ${page}`); return { path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }; })()], register: [] });
+    files: [(() => { const md = legMd(id, A, page - 1, `page ${page}`); return { path: "bundle.md", text: md, bytes: Buffer.byteLength(md), sha256: sha(md) }; })()], register: [] });
   return get("connections", `content=${q.content?.[0]?.content_id}`);
 };
 const out = {};

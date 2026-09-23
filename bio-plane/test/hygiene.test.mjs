@@ -2,6 +2,7 @@
    (run 2026-08-04, M0-9) FOUR ARMS ON THE REGISTER ITSELF, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (scripts/control-register.mjs caeac36b…, scripts/coverage.mjs a5df1b87…, test/acquire.test.mjs e065c8e0…, test/hygiene.test.mjs f66974ac…, test/capture.test.mjs e71bf8b8…); whole = this suite 384 pass, register 98 of 98 at 246 arms. (a) HIDE A SUITE'S DECLARATION ENTIRELY — replace every control marker in acquire.test.mjs -> `node scripts/coverage.mjs --strict` run DIRECTLY with `$?` read unpiped EXITS 1, reports 97 of 98 and NAMES acquire.test.mjs under "No declared control"; arms 246 -> 241, exactly that suite's five. (b) TRUNCATE A MULTI-ARM BLOCK — cut this suite's own declaration from 8 lines to 5 by dropping arms (i), (ii) and (iii) -> the register reports this declaration at 6 arms instead of 9 and the total at 243 instead of 246, while --strict STAYS exit 0. That is the design and not a miss: arms are REPORTED and never gated, so the visible drop is the whole mechanism by which a shrinking control gets noticed. (c) PUT THE 60-LINE HEAD WINDOW BACK into scripts/control-register.mjs -> this suite 381 pass, 3 FAIL, and the three are exactly the window arms ("a control declared past line 60 is found", "...on the line it was actually written on", "a declaration straddling line 60 is read WHOLE"). (d) MAKE THE DETECTOR FIRST-LINE-ONLY -> this suite 377 pass, 7 FAIL, and the REAL-CORPUS arm bites alongside the fixtures: "the tree itself declares at least one MULTI-LINE control" reports []. The register's total falls to 234 arms, which is EXACTLY what the old detector reported over this same tree — so (d) reproduces the defect this item closed rather than merely resembling it. ONE PROPERTY WORTH KNOWING BEFORE THE NEXT SESSION RE-RUNS THESE: the register's arm TOTAL is a function of the declarations' own prose, so writing this record into a declaration moves the total upward — the four totals above are as measured at the moment each arm ran, and it is the DELTAS that the controls establish. Never compare an absolute total across two edits of the register's own text.
    (run 2026-08-08, M0-14/D-233) SIX ARMS ON THE ARM MATCHER, DECLARED HERE AND RUN BY `test/register.control.mjs` — deliberately NOT a `.test.mjs` because it EDITS REAL SOURCES while it runs, so the battery must not discover it (`suggest.control.mjs`'s precedent). Re-run in one step: `node test/register.control.mjs` from bio-plane/. Each arm is armed ALONE with the others held open, each DECLARES BEFORE IT RUNS what must fail AND what must not, and every restore is verified against a PRISTINE pre-arm copy by sha256 AND by content. Baseline at the moment they ran: `--strict` exit 0, 470 arms, 119 classified, corpus 120, 1 unclassified; this suite 503 pass. (1) THREE REAL ARMS DELETED — strip the ordinals from suggest.test.mjs's arms (6), (7) and (8) -> `--strict` EXITS 1, the REGISTER FLOOR fires at "467 arms stated, floor is 470", and suggest still declares a control with classified and corpus unmoved. (2) THE ARM THIS ITEM EXISTS FOR — rewrite capture.test.mjs's single transition in a marking the matcher was never taught (` ==> `) -> `--strict` EXITS 1 and NAMES capture.test.mjs as UNCLASSIFIED, unclassified 1 -> 2, and it is NOT scored zero and NOT reported as declaring no control. (2b) THE POSITIVE HALF, because naming alone would be a walk that never counts anything new — add two arms to capture.test.mjs as an ordinal list with NO arrow anywhere -> `--strict` STAYS exit 0 and the tally RISES 470 -> 472. (3) NEUTER THE WALK — make the ordinal matcher unmatchable in scripts/control-register.mjs -> this suite 499 pass, 4 FAIL naming the arrowless-corpus arm, the arrowless fixture, its delta and the max-not-sum arm; `--strict` EXITS 1 on the floor (416 arms, 117 classified) AND on newly-unclassified suites (strengthpair, suggest) — while the register still READS 120 suites, because a matcher narrowed to nothing must not report a triumphant figure over an empty corpus. (4) OVER-STRICTNESS — put prose into capture.test.mjs's declaration that MENTIONS an arm ("see (b) of the block...") without declaring one -> nothing fails and the tally does NOT move, 470 before and 470 after. (5) THE FLOOR HAS NO SLACK — remove EXACTLY ONE arm from strengthpair.test.mjs -> `--strict` EXITS 1 at 469 against a floor of 470. SIX ARMS RUN, ZERO behaved other than declared; all four touched files restored sha256 EQUAL and content IDENTICAL. THE SAME PROPERTY M0-9 RECORDED APPLIES HERE AND IS WHY THESE ARE DELTAS: writing this record into a declaration moves the total upward, so never compare an absolute total across two edits of the register's own text.
    (run 2026-08-08, REC-68) THE SCHEMA-COMMENT / VOCABULARY CORRESPONDENCE ARM, the rider D-228 came in with. It exists because CORRECTING the stale comment once is worth almost nothing: nothing stopped `inquiry_basis.grade_source` naming three sources while GRADE_SOURCES carried five, so nothing would stop the sixth. Armed ALONE, restored against a pristine pre-arm copy verified by sha256 AND `cmp`. (1) DROP A SOURCE FROM THE COMMENT — delete `| 'capture'` from schema.mjs's grade_source line -> this suite FAILS 2 naming it ("the comment names every grade source the catalogue carries" reports ["capture"], and the REACH delta reports 4 against 5); restored. (2) INVENT ONE — add `| 'guess'` -> FAILS 2 in the other direction, the invention arm reporting ["guess"], because a comment that can omit a value can also make one up. (3) NEUTER THE ARM — make the column matcher unmatchable -> the REACH delta FAILS at 0 against 5 rather than passing triumphantly over an empty list, which is the whole reason it is a delta. (4) THE `#migrate` TRAP, and it CAUGHT THE AUTHOR IN THE SAME TURN: put a semicolon back inside the comment -> FAILS naming it. This is not hypothetical — REC-68's own first draft of the comment contained `(REC-68);` and this arm is what found it, before `node --check` or the backtick scan could have.
+   (run 2026-09-23, D-423) THE GRADE_AXIS COMMENT ARM, REC-68's arm one column over: MK-2 / IC-142 made `testimony` a third axis in GRADE_AXES and schema.mjs kept documenting `grade_axis` as two-valued at three sites. The expectation is GRADE_AXES IMPORTED from checks/bio-checks.mjs, never a list typed in the suite. Eight arms, each armed ALONE, restored from a per-arm pristine copy verified by sha256 AND `cmp` with the byte count printed and a 1,000-byte floor (src/schema.mjs cc9fa603…, checks/bio-checks.mjs 020c6997…, test/hygiene.test.mjs b556fd35…). (0) `baseline` -> 1012 pass 0 fail. (1) THE ROW'S OWN — restore `'capture' | 'connection'` on inquiry_basis.grade_axis -> 1011/1, "every grade_axis comment names every axis the catalogue carries" naming `schema.mjs:1393 (column) lacks ["testimony"]`. (2) restore the prose `(capture or connection)` in inquiry_basis's block -> 1011/1, the same assertion naming `schema.mjs:1341 (prose)`. (3) INVENT — add `| 'hunch'` to inquiry_basis_version_legs.grade_axis -> 1011/1, "no grade_axis column comment names an axis the catalogue does not" naming `schema.mjs:2342 invents ["hunch"]`. (4) HOW A LIAR PASSES, refuted — append `'rumour'` to GRADE_AXES in the catalogue ALONE, no comment touched -> 1011/1 naming all three sites as lacking `rumour`, which a list hard-coded in the suite could not do. (5) NEUTER the column matcher -> 1009/3: the REACH floor fails as declared, and two more fall with it because the two column lines then drop through to the prose and unclassified paths (one has `(D-423)` after the name, the other names axes with no parenthesis), so a neutered matcher is louder than declared, not quieter. (6) UNCLASSIFIED — add a comment line `grade_axis: capture or connection only` in a shape the arm does not parse -> 1011/1 naming `schema.mjs:1347` rather than scoring it clean. (7) OVER-STRICTNESS — reorder both the column's tokens and the prose's words (testimony first) -> 1012/0, GREEN as declared. WHAT IT CANNOT SEE: an axis enumeration that does not mention `grade_axis` (the published_bundles strength prose and the strength-bar tables were swept by hand in D-423), and an INVENTED word inside prose, which is not checked because prose names other things inside a parenthesis.
    SHAPE RESTORED BY M0-9 (2026-08-04), and it is the point rather than tidying. REC-48 wrote the arms as a continuation of this block, `coverage.mjs` then reported BOTH this suite and acquire.test.mjs as declaring NO CONTROL — its detector could not read past the marker's own line — and the arms were moved into a second comment the register never saw, so the register quoted a summary while the evidence sat outside it. The detector now reads the whole block (scripts/control-register.mjs) and is itself asserted at the foot of this suite; the arms are back where they belong. A declaration ends at its comment's close or at a blank line, so keep this paragraph unbroken and it stays one declaration.
    REC-48's THREE ARMS, in full:
    (run 2026-08-04, REC-48) THE SWEEP THAT SAYS NO SURFACE SPELLS A CAPTURE GRADE LETTER, three arms, each broken ALONE, every file restored BYTE-IDENTICALLY with sha256 compared before and after (src/index.mjs 16cf4e2f..., src/store.mjs 7c1ed3aa..., src/cdx.mjs a9e5912c..., checks/bio-checks.mjs d8da7b9d...); whole = 369 pass. Each arm ALSO reports what the suite that OWNS the mutated sentence did, because that contrast is the point.
@@ -71,7 +72,7 @@ import { join } from "node:path";
    PURPOSE and are the "every existing machine refusal unchanged" half of that
    item. The two SOURCE detectors below are deliberately blind to every one of
    these values — see the block comment at the sweep. */
-import { BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, GRADE_SOURCES,
+import { BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, GRADE_SOURCES, GRADE_AXES,
          isMachineIdentity, isMachineStamp, NON_MEMBER_AUTHORS, ACTOR_CLASSES,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
          MACHINE_STAMP_PREFIXES } from "../checks/bio-checks.mjs";
@@ -511,6 +512,82 @@ console.log("\n--- the schema template is intact ---");
        is asserted at the site rather than remembered. */
     t("and no semicolon hides in it, which would truncate the CREATE TABLE",
       text.includes(";"), false);
+  }
+
+  /* D-423: THE SAME DRIFT ON THE NEIGHBOURING COLUMN. MK-2 (IC-142) made
+     `testimony` a third axis in GRADE_AXES, and schema.mjs went on documenting
+     `grade_axis` as `'capture' | 'connection'` in both leg tables and as
+     "(capture or connection)" in inquiry_basis's prose. Nothing reads a comment,
+     so nothing noticed, and a reader opening the schema to learn what the
+     column holds was told two thirds of it.
+
+     The expectation is GRADE_AXES IMPORTED FROM THE CATALOGUE, never a list
+     typed here: a hard-coded three would pass today and go stale exactly as the
+     comment did. Every `grade_axis` mention in a comment is CLASSIFIED rather
+     than matched by spelling:
+       column  a `grade_axis TEXT` declaration. Its comment is the column line
+               plus the continuation `--` lines under it, and its values are the
+               quoted tokens in it, held to GRADE_AXES in BOTH directions.
+       prose   a mention followed, on its own line, by a parenthesis. Its
+               enumeration is that balanced parenthetical (it may run over
+               several comment lines), and it must name every axis as a word.
+               Invention is not checked in prose, because prose names other
+               things inside a parenthesis, and that is stated, not hidden.
+       other   any other mention. It may not name an axis word on its own line,
+               so an enumeration in a shape this arm does not parse is reported
+               as UNCLASSIFIED rather than scored as clean. */
+  {
+    const lines = src.split("\n");
+    const isComment = (l) => /^\s*--/.test(l) || /\s--\s/.test(l);
+    const axisWords = (text) => GRADE_AXES.filter((a) => new RegExp(`\\b${a}\\b`).test(text));
+    const sites = [], unclassified = [];
+    for (let n = 0; n < lines.length; n++) {
+      const l = lines[n];
+      if (!/grade_axis/.test(l)) continue;
+      if (/^\s*grade_axis\s+TEXT/.test(l)) {
+        const block = [l];
+        for (let k = n + 1; k < lines.length && /^\s*--/.test(lines[k]); k++) block.push(lines[k]);
+        const text = block.join("\n");
+        sites.push({ at: n + 1, shape: "column", text, named: [...text.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]) });
+        continue;
+      }
+      if (!isComment(l)) continue;
+      const from = l.indexOf("grade_axis");
+      const open = l.indexOf("(", from);
+      if (open > -1) {
+        /* the balanced parenthetical, across comment lines, with each line's
+           `--` stripped so the markers are not read as text */
+        let text = "", depth = 0, k = n, i = open, done = false;
+        while (k < lines.length && !done) {
+          const body = k === n ? l : lines[k].replace(/^\s*--/, "");
+          for (; i < body.length; i++) {
+            if (body[i] === "(") depth++;
+            if (body[i] === ")" && --depth === 0) { done = true; break; }
+            text += body[i];
+          }
+          text += "\n"; k++; i = 0;
+          if (k < lines.length && !/^\s*--/.test(lines[k])) break;
+        }
+        sites.push({ at: n + 1, shape: "prose", text, named: axisWords(text) });
+        continue;
+      }
+      if (axisWords(l).length) unclassified.push(`schema.mjs:${n + 1}: ${l.trim()}`);
+    }
+    console.log(`    grade_axis comment sites: ${sites.map((x) => `${x.shape}@${x.at} ${JSON.stringify(x.named)}`).join(", ")}`);
+    /* REACH: the two leg tables and the inquiry_basis prose are the corpus as of
+       D-423. A floor, not an equality, so a fourth documented site is welcome,
+       and a matcher that finds nothing cannot pass over an empty list. */
+    t("the grade_axis arm found its sites (2 columns and 1 prose enumeration at least)",
+      sites.filter((x) => x.shape === "column").length >= 2 && sites.filter((x) => x.shape === "prose").length >= 1, true);
+    t(`every grade_axis comment names every axis the catalogue carries (${JSON.stringify(GRADE_AXES)})`,
+      sites.filter((x) => GRADE_AXES.some((a) => !x.named.includes(a)))
+           .map((x) => `schema.mjs:${x.at} (${x.shape}) lacks ${JSON.stringify(GRADE_AXES.filter((a) => !x.named.includes(a)))}`), []);
+    t("and no grade_axis column comment names an axis the catalogue does not",
+      sites.filter((x) => x.shape === "column" && x.named.some((a) => !GRADE_AXES.includes(a)))
+           .map((x) => `schema.mjs:${x.at} invents ${JSON.stringify(x.named.filter((a) => !GRADE_AXES.includes(a)))}`), []);
+    t("and no grade_axis mention names an axis in a shape the arm cannot classify", unclassified, []);
+    t("and no semicolon hides in a grade_axis column comment",
+      sites.filter((x) => x.shape === "column" && x.text.includes(";")).map((x) => `schema.mjs:${x.at}`), []);
   }
 }
 
@@ -2170,6 +2247,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        NAME rather than flooring on a count. A phantom module deposited there can only turn S1 red, never quietly green,
        and nothing it prints is a figure anybody floors on. */
     "bio-plane/test/instance-group.test.mjs",     // src/, asserts NO module names the literal group (a ceiling at zero)
+    /* ADDED 2026-09-23 by REC-176's item; the ratchet caught it on the item's first battery. NAMED AND NOT GUARDED: its
+       one walk is of ITS OWN `mkdtemp` persist root (`rec176-persist-*`, inside the sandbox `sandbox.mjs` owns), after
+       `mf.dispose()`, to find the Durable Object's SQLite file and PLANT the lost manifest rows the census must count.
+       The count it plants is asserted EXACTLY (`2`), so a phantom file can only turn that arm RED, never quietly green. */
+    "bio-plane/test/rec176-snapkey.test.mjs",     // its own mkdtemp persist root, to plant the census fixture; asserted exact
     /* ADDED 2026-09-22 by CONDUCT #12 at M0-81's integration, AND THE RATCHET CAUGHT IT ON THE FIRST BATTERY THE ITEM
        MET: the integration gate of batch 2 (tree cd85c88a, commit b2797101), because M0-81 was folded into the batch with
        its own FULL gate unrun. NAMED AND NOT GUARDED: the driver's one discovery primitive in code is
@@ -2184,6 +2266,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        unchecked `op=promote` could have written — the census fixture. The count it plants is asserted EXACTLY (`2`), so a
        phantom file can only turn that arm RED, never quietly green, and nothing it walks is a figure anybody floors on. */
     "bio-plane/test/rec175-digest.test.mjs",      // its own mkdtemp persist root, to plant the census fixture; asserted exact
+    /* NAMED 2026-09-23 by CONDUCT #16 at REC-178's integration: REC-178's worker gated only its own suites (one FULL gate per train,
+       BOB #30/#31), so this walker first met hygiene on the union — the train's gate doing its job. Same shape as rec175-digest: it walks
+       its OWN mkdtemp persist root (rec178-persist-*) to find the sqlite file its census fixture plants, and the census it reads is
+       asserted exactly; nothing it walks is a figure anybody floors on. */
+    "bio-plane/test/rec178-bytes.test.mjs",       // its own mkdtemp persist root, to plant the census fixture; asserted exact
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2257,8 +2344,14 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      14faa089 (`class census: 39 file(s)`), never by adding to the number in the file. The one is REC-175's own suite
      (`test/rec175-digest.test.mjs`, named above), the only walker the item adds. Main's own print was NOT re-taken by this item: the
      floor stood at 38 and the tree printed 39 with exactly this one walker added, so the move is this item's. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 39)`,
-    census.length >= 39, true);
+  /* MOVED 2026-09-23 BY REC-176: 38 -> 39, from the figure this suite PRINTED on the item's tree over origin/main
+     0e7cc03e, never by adding to the number in the file. The one is REC-176's own suite (`test/rec176-snapkey.test.mjs`,
+     named above), the only walker the item adds. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 41)`,
+    /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
+       rec175-digest and rec176-snapkey both walkers. */
+    /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
+    census.length >= 41, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

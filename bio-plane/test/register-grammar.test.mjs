@@ -1,5 +1,14 @@
 /* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git show of a historical merge's parent, which no
-   result key can name; traced 2026-09-23. */
+   result key can name; traced 2026-09-23.
+   READS NO LIVE REF — M0-136, 2026-09-23. What it reads: the merge `0ca7640`'s second parent by its FULL commit id
+   (`cat-file -e` and `show …^2:docs/development/VERIFICATION.md`), and HEAD's tree and index through
+   `../scripts/provenance.mjs` (`ls-tree -r HEAD`, `ls-files`, `rev-parse --short HEAD`). No `origin/*`, `coord`,
+   `FETCH_HEAD`, `ls-remote` or fetch. HOW CHECKED: this file and the modules it imports (`./stdio.mjs`,
+   `../scripts/control-register.mjs`, `../scripts/provenance.mjs`) grepped for `spawnSync`/`execFileSync`/`git` and those
+   ref tokens, and the suite run with a logging `git` first on PATH: 5 calls, those. CORRECTED the same day: the id was
+   the ABBREVIATED `0ca7640`, which git resolves against the object store — a fetch that brings in a second commit with
+   that prefix makes it ambiguous and this suite throw, a verdict moving with what was fetched (unlikely at today's
+   ~45,000 objects, never impossible). It is now the full id. No clock is read. */
 /* NEGATIVE CONTROL: (1) make `countTransitions` in scripts/control-register.mjs
  * return 0 always -> A1 and A3 FAIL with the corpus PRINTED, A2 stays GREEN
  * because an enumerated declaration never depended on arrows. (2) make
@@ -240,11 +249,11 @@ t("B2 the block states BOTH the double move AND the max() boundary that limits i
    against the REC-68 branch blob that git still holds, never against a copy kept
    here — a hand copy agrees for free, and this project has measured that five
    times including a complete hand copy of 131 op names that passed. */
-const reachable = spawnSync("git", ["cat-file", "-e", "0ca7640^2"], { cwd: REPO }).status === 0;
+const reachable = spawnSync("git", ["cat-file", "-e", "0ca7640f6d91d3dea0f8e552b7356e9eee374de2^2"], { cwd: REPO }).status === 0;
 t("B3a the REC-68 branch blob is reachable from this worktree", reachable, true);
 if (!reachable) throw new Error("0ca7640^2 unreachable — this suite cannot judge the history");
 
-const blob = spawnSync("git", ["show", "0ca7640^2:docs/development/VERIFICATION.md"],
+const blob = spawnSync("git", ["show", "0ca7640f6d91d3dea0f8e552b7356e9eee374de2^2:docs/development/VERIFICATION.md"],
   { cwd: REPO, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 }).stdout || "";
 t("B3b the branch blob was actually read (not an empty string agreeing for free)",
   blob.length > 10_000, true);

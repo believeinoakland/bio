@@ -1,5 +1,17 @@
 /* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git ls-remote origin, which no
-   result key can name; traced 2026-09-23. */
+   result key can name; traced 2026-09-23.
+   READS NO LIVE REF OF THIS CHECKOUT — M0-136, 2026-09-23. Until then sections 8 and 9 drove the REAL CLI, whose ROOT is
+   this repository, so every CLI run listed THIS machine's worktrees (`git worktree list`) and asked THIS checkout's
+   remote over the network (`git ls-remote --heads origin`): 5 of each a run, measured by a logging `git` on PATH. No
+   asserted row used either answer (their sessions sit in /tmp or at a path that does not exist), but a network read of
+   the live remote is not a gate unit's to make. The CLI now runs from a COPY inside a scratch repository with its own
+   bare `origin` (`cliHome` below), so every ref, remote and worktree it reads is the fixture's. HOW CHECKED: the suite
+   and both modules it imports (`tools/retirable.mjs`, `tools/strandedwork.mjs`) grepped for `execFileSync`/`spawnSync`/
+   `git(` and for `origin/`, `coord`, `ls-remote`, `FETCH_HEAD`, `fetch`; and the suite run with a logging `git` first on
+   PATH: after this change no git call has this checkout as its directory. The CLOCK: `classify` defaults `now` to the
+   wall clock, which the CLI arms use; their fixture sessions are dated 2026-09-01 or `NOW` minus hours and judged past
+   or under a 4h threshold that a later clock cannot reverse (`electHolders` takes the later of `now` and the clock), so
+   the verdict does not move with the date. It stays never-cache: it runs git over fixture history. */
 /* retirable — Bob's ruling of 2026-09-17 driven: *"Sessions must be cleanly retired, their work
  * saved, resources released, and the session archived every time."*
  *
@@ -83,7 +95,7 @@
 
 import "./stdio.mjs";
 import "./sandbox.mjs";
-import { mkdtempSync, writeFileSync, existsSync, chmodSync, mkdirSync } from "node:fs";
+import { mkdtempSync, writeFileSync, existsSync, chmodSync, mkdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -134,6 +146,16 @@ function linked(root, name, { commits = 0, push = null, dirty = 0 } = {}) {
   if (push) { g(path, "push", "-q", "origin", `HEAD:${push}`); g(root, "fetch", "-q", "origin"); }
   for (let i = 0; i < dirty; i++) writeFileSync(join(path, `d${i}.md`), `dirty ${i}\n`);
   return path;
+}
+/* M0-136: the CLI's home — a scratch repository with a bare origin, holding a COPY of the tool and the module it
+   imports, taken at run time (so the control driver's patched tool is the one copied). The CLI's ROOT is its own
+   location, so it lists this fixture's worktrees and asks this fixture's origin, never this checkout's. */
+function cliHome() {
+  const { work } = scratch();
+  mkdirSync(join(work, "tools"), { recursive: true });
+  for (const f of ["retirable.mjs", "strandedwork.mjs"])
+    writeFileSync(join(work, "tools", f), readFileSync(join(REPO, "tools", f)));
+  return { home: work, CLI: join(work, "tools/retirable.mjs") };
 }
 const HOUR = 3_600_000;
 const NOW = Date.parse("2026-09-17T18:00:00Z");
@@ -352,7 +374,7 @@ section("7 — THE SUMMARY SEPARATES 'HOLDING UNSAVED WORK' FROM 'NOT RETIRABLE'
    a suite that never runs the entry point cannot see a bug that lives there. */
 {
   section("8 · the verdict names what it did not judge");
-  const CLI = join(REPO, "tools/retirable.mjs");
+  const { CLI } = cliHome();   /* M0-136: never the real CLI, whose ROOT is this checkout */
   const mk = (n) => JSON.stringify(Array.from({ length: n }, (_, i) => ({
     sessionId: `local_s${String(i).padStart(4, "0")}-0000-0000-0000-000000000000`,
     title: `s${i}`, cwd: "/tmp", isArchived: false, isRunning: false,
@@ -394,10 +416,12 @@ section("7 — THE SUMMARY SEPARATES 'HOLDING UNSAVED WORK' FROM 'NOT RETIRABLE'
 {
   section("9 — M0-83: a SUFFIXED lane title, a --self found in its own input, a DECLARED caller, and "
         + "another repository's sessions");
-  const CLI = join(REPO, "tools/retirable.mjs");
+  const { home, CLI } = cliHome();   /* M0-136: never the real CLI, whose ROOT is this checkout */
   const cliRun = (rows, ...args) => spawnSync("node", [CLI, ...args], { input: JSON.stringify(rows), encoding: "utf8" });
-  /* A cwd inside THIS repository that no longer exists: in scope, and it holds nothing, so no tree is read. */
-  const HERE = join(REPO, ".claude/worktrees/__m083-no-such-tree__");
+  /* A cwd inside THE CLI'S repository that no longer exists: in scope, and it holds nothing, so no tree is read.
+     CORRECTED 2026-09-23 (M0-136), never exempted: this was inside THIS checkout, which the real CLI judged; the CLI
+     now lives in its own fixture, so "this repository" is that fixture's, and the property asked is unchanged. */
+  const HERE = join(home, ".claude/worktrees/__m083-no-such-tree__");
   const { work } = scratch();
   const wtOld = linked(work, "wt-m083");
 

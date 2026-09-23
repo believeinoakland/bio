@@ -49,12 +49,15 @@ export async function livefire(env, storeName, { capacity = false } = {}) {
   const pkgFor = async (state, rev, extra = []) => {
     const body = md(state, rev);
     return {
-      bundleId: id, snapKey: "20260723T190000Z_livefire", author: "livefire",
+      /* REC-176: ONE SNAP KEY PER PROMOTION. This was the one literal "20260723T190000Z_livefire" for every call, so
+         the canary's revision REPLACED its own creation's manifest row on every run and answered ok — the overwrite
+         op=promote now refuses (SNAP_KEY_TAKEN, C-67.1). `rev` is distinct at every call below. */
+      bundleId: id, snapKey: `20260723T190000Z_livefire_r${rev}`, author: "livefire",
       /* D-436: no `group`, which was a literal. The canary is a CREATION, so the store it lands in stamps its own
          recorded producing group into the bytes — and a store recording none refuses it by name (C-64.1), which
          this battery then reports as the first assertion failing: a true finding about that store. */
       meta: { object_type: "information", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: new Date().toISOString() },
-      files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: await sha256(body) }, ...extra],
+      files: [{ path: "bundle.md", text: body, bytes: new TextEncoder().encode(body).length, sha256: await sha256(body) }, ...extra],
       register: [],
     };
   };
@@ -83,13 +86,17 @@ export async function livefire(env, storeName, { capacity = false } = {}) {
      500 with no JSON at all; now the refusal is REPORTED, as the assertions it fails, by name. */
   const live = (await get(`image?id=${id}&viewer=class:probe`)) || {};
   assert("live state is the winning revision", /rev 3/.test(live["bundle.md"]), true);
-  assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire.md"] || ""), true);
-  assert("the verbatim promotion record is projected", "_history/promotion_20260723T190000Z_livefire.json" in live, true,
+  /* REC-176: the revision (rev 3) snapshots what it superseded under ITS OWN key, `_r3`; the creation's own record is
+     `_r1`. Both used to be the one shared key, which is how the creation's row was being replaced. */
+  assert("history holds the superseded revision", /rev 1/.test(live["_history/bundle_20260723T190000Z_livefire_r3.md"] || ""), true);
+  assert("the verbatim promotion record is projected",
+    ["_history/promotion_20260723T190000Z_livefire_r1.json", "_history/promotion_20260723T190000Z_livefire_r3.json"]
+      .every((k) => k in live), true,
     "classifyDivergence and C-20.1 both read these records; without them the checks are unreachable, not passing");
   assert("manifest projected", "_history/manifest.json" in live, true);
 
   const big = "x".repeat(1024 * 1024 + 1);
-  const overPkg = await pkgFor("verified", 6, [{ path: "big.md", text: big, bytes: big.length, sha256: await sha256(big) }]);
+  const overPkg = await pkgFor("verified", 6, [{ path: "big.md", text: big, bytes: new TextEncoder().encode(big).length, sha256: await sha256(big) }]);
   assert("oversize inline refused at the write", (await post("promote", { ...overPkg, base: sha2 })).reason, "OVERSIZE_INLINE");
 
   /* ---- the canary: a store that did nothing cannot pass this ---- */
