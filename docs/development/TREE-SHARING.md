@@ -168,6 +168,15 @@ land, `ORCHESTRATION.md`'s interim rules cut what they can: no same-commit claim
 
 ### 3 · The gates run on GitHub's machines
 
+**A RED GITHUB RUN IS AN ALARM THAT REACHES BOB — RULED 2026-09-23 by Bob** (*"I don't need any more of those github error
+emails, but I'm glad I got them so that we knew there is a problem"*). Every push rides his account, so every failed run emails
+him, and he keeps those emails on on purpose: **a red run must mean a real problem.** So: (a) a `land/*` or `integrate/*` branch
+is pushed only after its own local gate is GREEN on that tree; (b) a negative control is NEVER pushed to a branch the
+workflow triggers on — it runs locally, as every other control does (M0-114's two `m0114-negctl` runs were the last);
+(c) a check that depends on anything but the tree — live `coord` state above all — never decides the gate's verdict (the
+defect that reddened `land/conduct/batch6`'s runs 6 and 7, placed by SCHEDULER); and (d) whoever pushed a branch that
+reads red diagnoses it at once and never leaves it red.
+
 - A GitHub Actions workflow runs `node tools/gates.mjs`, in the class it derives, for each `land/*` push and each
   integration branch, and records the verdict as a check on the commit. **The push guard accepts a green check for
   HEAD's tree** as it accepts a local record today (D-293 keys both by the tree). A local gate stays the fallback.
