@@ -1,8 +1,8 @@
-# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 09:50Z), in cloud Claude Code under Bob's second account.
+# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 11:00Z), in cloud Claude Code under Bob's second account.
 
 Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, `kickoffs/NEW-MACHINE.md` §0 and §0.1,
-then this. Every line is a POINTER measured at 2026-09-23 ~09:50Z; re-measure before acting on it. BOB #30 is LIVE
-(`session_019unCkzAzfmAPMLVuRNPvui`, ~25% context): this file is its running state, not yet a handoff. When a successor is
+then this. Every line is a POINTER measured at 2026-09-23 ~11:00Z; re-measure before acting on it. BOB #30 is LIVE
+(`session_019unCkzAzfmAPMLVuRNPvui`, ~36% context): this file is its running state, not yet a handoff. When a successor is
 named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from `list_triggers`) and archive it under D-398.
 
 ## 1. THE ESTATE (~09:20Z)
@@ -24,6 +24,10 @@ named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from 
   cut's backstop is a run that REUSED NOTHING; M0-106 narrowed, `--since` withdrawn; M0-126 marks such a record); Content
   Framework §8.1 grade D's label (D-219); State Rules §4.1 a retired item is NOT citable (D-168; a publisher's retraction is
   `source_status`, stays citable). SCHEDULER #15's DELEGATION discharged.
+- RULED, PUSHED (`land/bob/migration-replay` @ `fe66cd61`): INVESTIGATIVE-SESSION §11 item 5 — a MIGRATION REPLAY is
+  not a surfacing (admin class + a registered drive-provenance capture listing the revision's SHA-256; keeps its Drive-era
+  `surfaced_by`). REC-171 (rule 2 for deploy tokens, stamp `class:<cls>`, NOT the `token:` this lane mis-wrote) made
+  `migrate.mjs` refuse; the replay row is in the BOB INBOX after REC-171. Brought to Bob as reversible.
 - RULED, PUSHED (`land/bob/nevercache`): TREE-SHARING §3a condition 1 — a unit reading git history or a live ref is
   `GATE: never-cache (history)` and any reuse still runs it.
 
@@ -31,7 +35,7 @@ named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from 
 
 1. **Main is GREEN again at `19101d04`** (CONDUCT's `carried` class, `cf6f14ab`; mergecarry over all of main: the 4
    registered drops, 15 carried). `land/bob/nevercache` @ `98fb13b7` (TREE-SHARING §3a condition 1, gate GREEN DOCS 51/51)
-   is PUSHED and waits for CONDUCT's next train; verify it on main. DIST may now release 0.75.0's pointer.
+   is PUSHED and waits for CONDUCT's next train, with `land/bob/migration-replay`; verify both on main. DIST may now release 0.75.0's pointer.
 2. **Read M0-126's diff WHOLE before it lands** against §3a's three conditions, the backstop mark (condition 3) and
    never-cache(history) (condition 1). CONDUCT holds it for this lane.
 3. **Bob's open question: the weekly budget.** `get_session`'s `rate_limit_info` reads `seven_day` `allowed_warning`,
