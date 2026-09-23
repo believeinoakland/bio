@@ -1,0 +1,16 @@
+{
+ "unit": "ui:release-flow.test.mjs",
+ "inputHash": "e867c09d631f5a5828fdf144f93b67f616ae43b332c5d932297b91ac399e99c2",
+ "verdict": "PASS",
+ "run": "9beb2c5790ca7aef574e883118891b3a95596cc6.1790181944282.6828.json",
+ "tree": "9beb2c5790ca7aef574e883118891b3a95596cc6",
+ "head": "dfe9858c89810a49422ee071c4f0bf92c0c2f297",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 4,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "db67fb37-ad41-5eea-88b6-a8f03cf14b80",
+ "at": "2026-09-23T16:45:44.295Z"
+}
