@@ -44,6 +44,15 @@
  *   (15) ANY exit 124 taken as an expired budget -> "a battery exiting 124 WITHOUT a verdict file naming a
  *       timeout is RED" FAILS alone; the NOT MEASURED push and the RED refusal hold.
  * All fifteen as declared, driver 110 pass / 0 fail, baseline and closing 74 / 0.
+ * RE-RUN 2026-09-22 by the M0-116 worker with two arms added, G4's anchor moved off the line M0-116 rewrote, and two
+ * fixtures corrected (a comment no longer stands for a read — see `prose` and `cites` in FILES):
+ *   (16) a unit's OWN files read with their comments again, BOB #27's control -> "a suite whose OWN COMMENT is its only
+ *       mention of the file is NOT selected" FAILS alone; the string-path reader is still selected;
+ *   (17) strings blanked with the comments, the LIAR (selecting nothing reads as "fewer units") -> "a suite that READS
+ *       the file through a STRING path is selected" FAILS, with the computed-path and walker arms; the comment-only
+ *       suite is still not selected. G12 now also fails the own-comment arm (it reads every file whole), as it should.
+ * All seventeen as declared, driver 123 pass / 0 fail, baseline and closing 78 / 0. On the REAL estate the same break
+ * (16) takes a MEASUREMENTS-only TARGETED plant from 85 selected units back to 109 (`MEASUREMENTS.md` M-106).
  *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote

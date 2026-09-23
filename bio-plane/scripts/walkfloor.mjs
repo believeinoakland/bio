@@ -35,7 +35,10 @@
  * A CHECK THAT CRIES WOLF GETS SWITCHED OFF.  That is `VERIFICATION.md`'s own
  * stated reason for not making `--strict` the gate yet, and crossing a module
  * boundary makes false positives much easier to produce.  The single measured
- * benign shape that decided this design is in `test/op-claims.test.mjs` itself:
+ * benign shape that decided this design is in `test/op-claims.test.mjs` itself
+ * (as it stood until 2026-09-22; M0-116 moved `LEDGER` to the non-walking
+ * `scripts/op-claims-ledger.mjs`, and the suite still floors on it beside its walk
+ * imports — the shape, and the reason for binding granularity, are unchanged):
  *
  *     import { sweep, corpus, mentionsIn, LEDGER, ... } from "../scripts/op-claims.mjs";
  *     ...

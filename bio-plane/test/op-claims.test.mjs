@@ -179,6 +179,12 @@ console.log("\n--- 2. the corpus, PRINTED, and asserted non-trivial ---");
    about this walk recognising the index BY ITS BANNER, so the index is produced first through the ONE
    freshness call every reader of it makes, rather than the assertion depending on whether this
    checkout happened to run the tool. */
+/* NEGATIVE CONTROL (M0-116, RAN 2026-09-22 by the M0-116 worker): one MAIN ledger entry (MEASUREMENTS.md · inboxlist)
+   put back into `op-claims.mjs`'s `LEDGER_STATE` -> 35 pass / 2 fail, exactly the two M0-116 arms: "the ledger is ONE
+   ledger in two halves" (53 main + 12 state, a main file among the state entries) and "op-claims.mjs, read as code, names
+   none of the 18 file(s)"; restored by cp, sha256 and `cmp` identical, 42,034 bytes. The OVER-STRICTNESS arm is live in
+   the tree and needs no plant: `op-claims.mjs` still names MEASUREMENTS.md in a COMMENT (its language-reading note),
+   and the code-read arm stays GREEN over it. */
 /* NEGATIVE CONTROL (M0-99, run 2026-09-22 by the M0-99 worker): the index moved aside, as a fresh checkout
    has it, and the `fresh();` line below deleted -> "EVERY generated artifact is excluded" FAILS, 34 pass / 1 fail,
    exit 1; with the line, over the same absent index, 35 / 0. Restored by cp-back, sha256 and `cmp` identical. */
