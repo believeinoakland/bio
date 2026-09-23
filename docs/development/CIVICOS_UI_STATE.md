@@ -50,6 +50,41 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v98, 2026-09-23 session, thread UI, UI-80 (a WORKER of CONDUCT #15). Landed on `land/worker/UI-80` (base `origin/main` @
+`95c40ed9`), in the commit that carries this entry. (UI-79 ran concurrently and may also have prepended a `v98`; the
+thread name and the row id disambiguate.) SURFACE: the working inquiry page's Strength section, and the published case
+page's supersession banner, its edition twin and its roster sentence.
+
+**What was wrong.** Since D-442 (Publication §3 rule 12, IC-179) `op=publish` writes nothing on a member finding: the
+frozen pair is stated once, in the case's signed document, one pair per case. `inquiryPair` read the finding's own
+`published_strength`, found none, and the page told a member that a published question was *"not published to this page
+yet"*, promising a pair that would never appear there. The published case page said every pair was *"signed with that
+finding's own bytes"*. For a `/2` case the case document's signature covers it.
+
+**What it does now.** The working page reads `op=publishedcase` (through `apiQ`, the credential-free seam) and, for a
+finding several cases pin, asks once per case: one block per case, headed with that case and edition, never one picked
+and never combined, each naming the signature from `frozen_from`. A case's pair is shown as the page's own only when the
+sha the case pinned is the sha the page shows (the published record is pinned to the record namespace; a probe's scratch
+record can hold the same id). A published read that does not answer is said as that, never as "not published". A legacy
+member, whose every case froze the pair into its own bytes, renders exactly as before. The case page's three sentences
+branch on `frozen_from` through one helper, `pubPairSigner`, and keep the legacy wording word for word where it is true.
+
+**Driven against the real plane**, `civicos-ui/test/case-frozen-pair.test.mjs` (24 assertions): D-442's fixture through
+the ops (two projects, two cases over one finding, real SSHSIG); the legacy half, a question in both kinds of case, the
+silence and the identity arms over a wire-shaped mock (a legacy member cannot be minted through the ops any more). On
+`origin/main`'s app.html: 9/15. NEGATIVE CONTROL, 4/4 AS DECLARED: reading `published_strength` again RED 15/9; a
+hard-coded case-document signer RED 23/1 (the both-kinds arm alone); the single banner sentence RED 23/1; re-worded
+signer GREEN 24/0.
+
+**Suites corrected, never exempted:** `inquiry-page` (its mock answers `op=publishedcase` with the store's own
+`NOT_PUBLISHED`), `preauth-vocabulary` (`apiQ`'s callers five, not four; the op set is unchanged).
+
+**Not done, and where it lives.** The published INDEX (`pubList`) still reads `op=publishedmanifest`'s
+`published[].strength`, which the ratify committer leaves null where the case documents pinning one sha disagree, with
+no `strengthUndetermined` on that op. The index then says the member has *no frozen pair on the record at all*, which is
+false. The fix needs the plane first (per-case pairs, or the undetermined flag, on `publishedmanifest`), so it is in
+UI-80's report for routing and not in this landing.
+
 v97, 2026-09-22 session, thread UI, UI-77 (a WORKER of CONDUCT #14, wave 2). Landed on
 `worktree-agent-a40f17095e235d716` (base `origin/main` @ `14ffdbcf`), in the commit that carries this entry. SURFACE: the
 member fence (`#m-grp`, `#m-idstr`) and the public header (`#p-gname`, `#p-gid`, `#p-mono`) — every instance's, since
