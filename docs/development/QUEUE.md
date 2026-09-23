@@ -36,38 +36,6 @@ scope: as §3 states, EXCEPT the actor — batches of ~20 rows driven by SCHEDUL
 accepts-when: as §3 states it.
 added: 2026-09-18 · CONDUCT #5 (BOB #15's inbox entry of that date).
 
-### M0-100 · running — **SPAWNED 2026-09-23 by CONDUCT #14, wave 6. NOT LANDED, CHECKED BY CONTENT on `30475ca6`: `docs/development/` holds one `MEASUREMENTS.md` and no per-entry measurement file. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two** … (whole text: the cut archive)
-order: after M0-110 and M0-111, where BOB #27 placed it on narrowing: the collision it removes exists only inside M0-111's train (SCHEDULER #12, 2026-09-22)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` … (whole text: the cut archive)
-depends-on: M0-111.
-accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-116 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 41c7e0c3: newgroup/src/index.mjs verifyUpdate (L540) reads op=bootstrap only. Authority: BIO_Distribution_v0_1.md §8, with CLAUDE.md §5. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: after D-254, above features: a group can run a stale DO or member with nothing reporting it — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19; NARROWED by FLEET #3 and verified at the code by SCHEDULER #4, 2026-09-21: `vf4-live-scratch.mjs` stores the isolate's value as `plane_durable_object`)
-milestone: M7
-interface: I3 — ONE additive IC: `op=bootstrap`'s reply gains the DO's own build under a DISTINCT field; the op's field pin moves in the same commit.
-design: `docs/architecture/BIO_Distribution_v0_1.md` §8, the fleet's version authority, with CLAUDE.md §5: *a deploy verified is not a build serving*.
-depends-on: none. DS-2 built the BUILD-side authority; this is the RUNTIME half.
-scope: (1) the DO reports its own build under a field that is NEVER `version` — a later spread would REPLACE the isolate's reading — and `verifyUpdate` requires both and names the one that lags; VF-4's DO arm reads it. (2) each member is read back THROUGH THE BINDING after install and deploy (D-115's surviving requirement).
-accepts-when: a DO or member whose build differs from the routing isolate's is NAMED, and the install or update does not report success. How a liar passes it: filling the DO field from the isolate's env, so two values agree for free. NEGATIVE CONTROL: copy `env.VERSION` into the DO field in the handler, and the arm fails by name.
-added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id); narrowed 2026-09-21.
-uncut: restored whole from the cut archive on entering the cache (SCHEDULER #14, 2026-09-23), so the worker reads its design here.
-
-### CAP-13 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 41c7e0c3: bio-plane/src/store.mjs still counts COUNT(DISTINCT primary_sha) FROM site_asset_refs (3 sites). Authority: CAPTURE-SCALING.md §Job one, reuse condition 3. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: after D-116, above the ledger tooling: CLAUDE.md §2's class — a figure the record cannot support, in content-addressed manifests nothing corrects, on monitoring's normal path; below D-116 because it concerns FURNITURE and the fetch-honesty fields are right (SCHEDULER #6, 2026-09-21; D-339 worker's items 1–2, verified at the code)
-milestone: M2
-interface: none expected — no op exposes `siteassets` or `sitechrome`; `reused_seen_in_documents` keeps its name and type, only its VALUE becomes true (the integrator classifies).
-design: `docs/development/CAPTURE-SCALING.md` §Job one, reuse condition 3 — *"an asset only one page references is that page's own"* — which also states this defect.
-depends-on: none.
-scope: count distinct primary ADDRESSES (`captured_locators.address_norm` where `capture_sha = primary_sha`) in both readers — a query, not a schema change. D-58 writes the locator unconditionally but in a swallowing `try`, and older captures may lack one: say what such a primary counts as, never drop it silently. Reword the two comments to recency of fetch, and the two that say a re-capture cannot inflate the count. **FULL GATE PROFILE**.
-accepts-when: one page captured twice with changed bytes reads 1 document and is NOT reused; two pages sharing a stylesheet read 2 and are; the manifest's N equals the page count. How a liar passes it: a byte-identical re-capture, which never moved the count. NEGATIVE CONTROL: count `primary_sha` again, and the changed-bytes arm fails by name.
-added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CAP`).
-uncut: restored whole from the cut archive on entering the cache (SCHEDULER #14, 2026-09-23), so the worker reads its design here.
-
 ### M0-126 · running — SPAWNED 2026-09-23 by CONDUCT #15 against TREE-SHARING.md §3a (landed 619dfa65). NOT LANDED, CHECKED BY CONTENT: no gate-results branch reader/writer in tools/ on 619dfa65. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: FIRST of the backlog (BOB #29): every landing and every lane's gate pays for it, so it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); its design landed in §3a at `619dfa65` and CONDUCT #15 spawned it on BOB's order (moved into the cache by SCHEDULER #14) (SCHEDULER #14, 2026-09-23; BOB #29's item)
 milestone: M0
@@ -109,6 +77,36 @@ depends-on: none — D-442 (rule 12) is on `main`.
 scope: each manifest entry whose pinning case documents carry differing pairs serves them per case (case id, edition, pair) or `strengthUndetermined` with its reason; a finding with one pair reads as today.
 accepts-when: a fixture finding pinned by two cases with different pairs reads both, each naming its case; a single-case finding is byte-identical. NEGATIVE CONTROL: serve the null again, and the per-case arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs REC`).
+
+### REC-171 · queued — **RULE 2 BINDS ONLY THE `ai` CREDENTIAL: AN ADMIN, MEMBER OR PROBE DEPLOY TOKEN STILL CREATES AN INQUIRY STAMPED `surfaced_by: agent` OUTSIDE ANY RUN, SO THE RECORD CLAIMS A MACHINE SURFACED IT UNDER CONDITIONS IT NEVER RECORDED.** D-85 built rule 2 for `ai` (the `cls === "ai"` condition on the stamp); BOB #30 ruled that the rule's premise is the surfacing act D-78 stamps, not the credential. Its design landed at `4355bfda` (SCHEDULER #15 unblocked it). — owner RECORD.
+order: directly after REC-169, the same D-85 fence widened (BOB #30: *"Place it directly after D-85"*; D-85 sits in the cache, so this is the first backlog place after it and the authority row that precedes it) (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
+milestone: M9
+interface: I3 — deploy-token creations are refused outside a run; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, *"Rule 2's reach"* (BOB #30, 2026-09-23, landed at `4355bfda`).
+depends-on: D-85 (it widens D-85's stamp; done).
+scope: a creation stamped `agent` names a running run whose principal is the caller (`token:<class>` for a deploy token, `runPrincipalGate` unchanged), under the `surfaces` bound, sight check, C-66.1–.4 and the `inquiry_run_surfacings` row; every non-test caller creating under a deploy token (livefire, setup scripts, `agent-worker`) moves inside a run, or is brought to BOB, never exempted.
+accepts-when: an admin-, member- and probe-token creation naming no run is refused `SURFACE_NO_RUN`; one inside the token's own running run lands with its row; a member's session creation is unchanged. NEGATIVE CONTROL: restore the `cls === "ai"` condition, and the deploy-token arms fail by name.
+added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
+### UI-81 · queued — **`pubOpen`, GIVEN A FINDING ID THAT SERVES SEVERAL CASES, SHOWS THE PLANE'S `FINDING_IN_SEVERAL_CASES` RAW UNDER "Not answered".** The code appears nowhere in `civicos-ui/` or in a `*_CHECKS` family (re-read on `cdfaea39`), so the DEC-49 guard, which knows only named codes, cannot see it; the refusal already carries the candidate `cases` (IC-74). Found by UI-80's worker (CONDUCT #15). — owner UI.
+order: directly after REC-170, the same public page: machine vocabulary shown to a stranger where the record holds the answer; before UI-82 because it needs no plane change (SCHEDULER #15, 2026-09-23)
+milestone: M10
+interface: I3 consumer (IC-74's `cases` on `FINDING_IN_SEVERAL_CASES`).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12, with DEC-49 as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it (every code a surface can receive has a translation).
+depends-on: none.
+scope: `pubOpen` offers the named cases as choices and opens the chosen one; and the code gets a translation row in its checks family, so the guard sees it.
+accepts-when: against the real plane, opening a finding two cases pin offers both and opens each; no raw code renders. NEGATIVE CONTROL: drop the translation row, and the DEC-49 guard fails naming the code.
+added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
+
+### DIST-6 · queued — **THE INSTALLER NEVER BINDS `PDF_WORKER`, `OCR_WORKER` OR `AGENT_WORKER` TO THE PLANE IT INSTALLS, SO ON A GROUP'S OWN INSTANCE THE FLEET IS UPLOADED AND UNREACHABLE.** `uploadInstall` binds the plane only its buckets and `SELF`, and `uploadUpdate` keeps whatever bindings exist (`newgroup/src/index.mjs`, re-read on `b5ce975a`); the members bind back to the plane, never the reverse. Found by D-116's worker (CONDUCT #15). — owner DIST.
+order: first of the product rows after the public-page corrections (UI-82), above D-389: a sovereign group's install silently lacks tiers 2 and 3 and the assistant member, `BIO_System_Design.md` §2's distribution model broken on the path every group takes (SCHEDULER #15, 2026-09-23)
+milestone: M7
+interface: I4 — the installed plane's bindings; the integrator classifies it.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §4 (the fleet beside the plane) and §6 (the deploy-to-serve ladder, every rung read back).
+depends-on: none — D-297's fleet install is on `main`; D-116 (reporting each member's build) lands in CONDUCT's next batch.
+scope: both functions bind the three members as service bindings, installing the members first or re-PUTting the plane after `installFleet`; an update of an instance installed without them gains them; the read-back names each binding.
+accepts-when: against the wizard's mock, an install and an update each leave the plane bound to all three members, and one whose member upload failed names the missing binding and does not report success. NEGATIVE CONTROL: drop one member's binding, and its arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (D-116's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs DIST`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

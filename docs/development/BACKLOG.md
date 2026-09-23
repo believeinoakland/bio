@@ -23,26 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-171 · blocked — **RULE 2 BINDS ONLY THE `ai` CREDENTIAL: AN ADMIN, MEMBER OR PROBE DEPLOY TOKEN STILL CREATES AN INQUIRY STAMPED `surfaced_by: agent` OUTSIDE ANY RUN, SO THE RECORD CLAIMS A MACHINE SURFACED IT UNDER CONDITIONS IT NEVER RECORDED.** D-85 built rule 2 for `ai` (the `cls === "ai"` condition on the stamp); BOB #30 ruled that the rule's premise is the surfacing act D-78 stamps, not the credential. `blocked` until its design lands. — owner RECORD.
-order: directly after REC-169, the same D-85 fence widened (BOB #30: *"Place it directly after D-85"*; D-85 sits in the cache, so this is the first backlog place after it and the authority row that precedes it) (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
-milestone: M9
-interface: I3 — deploy-token creations are refused outside a run; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, *"Rule 2's reach"* (BOB #30, 2026-09-23; on `land/bob/d85-rule2-reach` until the train lands it).
-depends-on: D-85 (it widens D-85's stamp); `land/bob/d85-rule2-reach` on `main`.
-scope: a creation stamped `agent` names a running run whose principal is the caller (`token:<class>` for a deploy token, `runPrincipalGate` unchanged), under the `surfaces` bound, sight check, C-66.1–.4 and the `inquiry_run_surfacings` row; every non-test caller creating under a deploy token (livefire, setup scripts, `agent-worker`) moves inside a run, or is brought to BOB, never exempted.
-accepts-when: an admin-, member- and probe-token creation naming no run is refused `SURFACE_NO_RUN`; one inside the token's own running run lands with its row; a member's session creation is unchanged. NEGATIVE CONTROL: restore the `cls === "ai"` condition, and the deploy-token arms fail by name.
-added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
-
-### UI-81 · queued — **`pubOpen`, GIVEN A FINDING ID THAT SERVES SEVERAL CASES, SHOWS THE PLANE'S `FINDING_IN_SEVERAL_CASES` RAW UNDER "Not answered".** The code appears nowhere in `civicos-ui/` or in a `*_CHECKS` family (re-read on `cdfaea39`), so the DEC-49 guard, which knows only named codes, cannot see it; the refusal already carries the candidate `cases` (IC-74). Found by UI-80's worker (CONDUCT #15). — owner UI.
-order: directly after REC-170, the same public page: machine vocabulary shown to a stranger where the record holds the answer; before UI-82 because it needs no plane change (SCHEDULER #15, 2026-09-23)
-milestone: M10
-interface: I3 consumer (IC-74's `cases` on `FINDING_IN_SEVERAL_CASES`).
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12, with DEC-49 as `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it (every code a surface can receive has a translation).
-depends-on: none.
-scope: `pubOpen` offers the named cases as choices and opens the chosen one; and the code gets a translation row in its checks family, so the guard sees it.
-accepts-when: against the real plane, opening a finding two cases pin offers both and opens each; no raw code renders. NEGATIVE CONTROL: drop the translation row, and the DEC-49 guard fails naming the code.
-added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
-
 ### UI-82 · queued — **THE PUBLISHED INDEX (`pubList`) TELLS A READER A FINDING HAS NO FROZEN PAIR WHERE ITS CASES DISAGREE ABOUT THE PAIR.** It reads `op=publishedmanifest`'s single `published[].strength`, null in that case (REC-170). UI-80's surface half on the index. — owner UI.
 order: directly after UI-81, on REC-170's field (SCHEDULER #15, 2026-09-23)
 milestone: M10
@@ -52,16 +32,6 @@ depends-on: REC-170.
 scope: `pubList` renders the pair per case, naming each case, or the undetermined state with its reason; one pair renders as today.
 accepts-when: against the real plane, a finding two cases pin with different pairs lists both, each with its case; none reads "no frozen pair". NEGATIVE CONTROL: read the single field again, and the per-case arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
-
-### DIST-6 · queued — **THE INSTALLER NEVER BINDS `PDF_WORKER`, `OCR_WORKER` OR `AGENT_WORKER` TO THE PLANE IT INSTALLS, SO ON A GROUP'S OWN INSTANCE THE FLEET IS UPLOADED AND UNREACHABLE.** `uploadInstall` binds the plane only its buckets and `SELF`, and `uploadUpdate` keeps whatever bindings exist (`newgroup/src/index.mjs`, re-read on `b5ce975a`); the members bind back to the plane, never the reverse. Found by D-116's worker (CONDUCT #15). — owner DIST.
-order: first of the product rows after the public-page corrections (UI-82), above D-389: a sovereign group's install silently lacks tiers 2 and 3 and the assistant member, `BIO_System_Design.md` §2's distribution model broken on the path every group takes (SCHEDULER #15, 2026-09-23)
-milestone: M7
-interface: I4 — the installed plane's bindings; the integrator classifies it.
-design: `docs/architecture/BIO_Distribution_v0_1.md` §4 (the fleet beside the plane) and §6 (the deploy-to-serve ladder, every rung read back).
-depends-on: none — D-297's fleet install is on `main`; D-116 (reporting each member's build) lands in CONDUCT's next batch.
-scope: both functions bind the three members as service bindings, installing the members first or re-PUTting the plane after `installFleet`; an update of an instance installed without them gains them; the read-back names each binding.
-accepts-when: against the wizard's mock, an install and an update each leave the plane bound to all three members, and one whose member upload failed names the missing binding and does not report success. NEGATIVE CONTROL: drop one member's binding, and its arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (D-116's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs DIST`).
 
 ### D-286 · queued — **`civicos-ui/test/ai-session-context.test.mjs` IS INTERMITTENTLY RED BY CONSTRUCTION: ITS FIXTURE IS DRAWN WITH AN UNSEEDED `Math.random()`, AND ARM D0b FAILS WHENEVER A DERIVED VALUE COLLIDES WITH A PUBLISHED ONE.** Re-read on `b5ce975a`: `INQ_ALLOWED - INQ_CONSUMED` ranges 1502–2992 and `PROJ_CONSUMED` 2003–2499, so they can be equal (the measured failure: 3354 − 1278 = 2076). D0b is right and must not be weakened; the draw is wrong. — owner M0 with UI.
 order: near the head with M0-106, after DIST-6: a result that moves with the draw, not the code, is a DEFECT by Bob's ruling of 2026-09-23 (`TREE-SHARING.md` §3, *a gate test depends only on the code*); on `main` its red is an ALARM to Bob, and under M0-126 a lucky PASS is cached, so it cuts gate time (SCHEDULER #15, 2026-09-23, LED-7)
@@ -73,12 +43,12 @@ scope: the draw rejects and redraws any fixture whose derived values (each remai
 accepts-when: the suite passes on every one of 500 consecutive runs of the draw alone; D0b still fails when a colliding fixture is forced. NEGATIVE CONTROL: force the measured collision (3354, 1278, 2076), and D0b fails by name.
 added: 2026-09-23 · SCHEDULER #15 (LED-7; D-286's DEBT row of 2026-08-10, verified at the code; keeps its `D-` id).
 
-### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", on `land/bob/s15-rulings` until the train lands it): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
+### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
 interface: none
 design: `docs/development/TREE-SHARING.md` §3a condition 3 (BOB #30, 2026-09-23), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: `land/bob/s15-rulings` on `main` (its design); M0-126 (the backstop mark); then DIST's first cut from a tree carrying a backstop record.
+depends-on: M0-126 (the backstop mark); then DIST's first cut from a tree carrying a backstop record.
 scope: DIST.md step 1 reads: a GREEN FULL backstop record (a run that reused nothing) for the exact tree, NAMED in the cut commit, else the whole battery; `--since` removed; the bumped tree's own gate stays.
 accepts-when: a cut from a tree with a backstop record runs no battery and names it; a record whose run printed any REUSED unit, or a `--since`, never satisfies a cut and the battery runs.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1; `node tools/mintid.mjs M0`); re-narrowed 2026-09-23 by SCHEDULER #15 (BOB #30's ruling).
@@ -113,12 +83,12 @@ accepts-when: a self-linking page's self-link reads the self-reference basis, wi
 added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-2; D-57's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-57» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-168 · blocked — **A MEMBER'S `op=cite` ADMITS A RETIRED INFORMATION BUNDLE, SO A CLAIM CAN REST ON WHAT THE GROUP ITSELF RETIRED, READING TO EVERY LATER MEMBER AS LIVE SUPPORT.** `op=cite` is type-only; the machine's suggest path already refuses it (`SUGGEST_LEG_UNREACHABLE`, `store.mjs`, re-read on `cdfaea39`). BOB #30 ruled it refused in the store for every caller. `blocked` until its design lands. — owner RECORD.
+### D-168 · queued — **A MEMBER'S `op=cite` ADMITS A RETIRED INFORMATION BUNDLE, SO A CLAIM CAN REST ON WHAT THE GROUP ITSELF RETIRED, READING TO EVERY LATER MEMBER AS LIVE SUPPORT.** `op=cite` is type-only; the machine's suggest path already refuses it (`SUGGEST_LEG_UNREACHABLE`, `store.mjs`, re-read on `cdfaea39`). BOB #30 ruled it refused in the store for every caller. Its design landed at `4355bfda`. — owner RECORD.
 order: with the claims the record cannot support, directly after D-57 and above D-440: support the record's own judgment withdrew, CLAUDE.md §2's class, a correction to the built cite path (SCHEDULER #15, 2026-09-23, LED-7; BOB #30's ruling)
 milestone: M9
 interface: I3 — a new refusal on `op=cite`; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1, *"A RETIRED ITEM IS NOT CITABLE"* (BOB #30, 2026-09-23; on `land/bob/s15-rulings` until the train lands it).
-depends-on: `land/bob/s15-rulings` on `main`.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1, *"A RETIRED ITEM IS NOT CITABLE"* (BOB #30, 2026-09-23, landed at `4355bfda`).
+depends-on: none — its design is on `main` (`4355bfda`).
 scope: `op=cite` onto a `retired` bundle is refused with a stated code naming the door (cite what superseded it, or re-collect the source); a `source_status: removed` bundle stays citable; a confirmed leg predating the retirement is untouched.
 accepts-when: a cite onto a retired Information bundle is refused by name for a member and a machine credential alike; one onto a `source_status: removed` bundle lands; an older leg is byte-identical. NEGATIVE CONTROL: drop the retired check from `op=cite`, and the member arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (LED-7; D-168's DEBT row of 2026-08-03; keeps its `D-` id).
@@ -324,12 +294,12 @@ accepts-when: each site answers its `reason`, check and translation with `error`
 added: 2026-09-22 · SCHEDULER #13 (BOB #26's inbox entry, item 1; D-278's DEBT row of 2026-08-09; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-278» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-219 · blocked — **A GRADE-D RESOLUTION STORES *"asserted by X with no captured basis"*, WHICH A MEMBER READS AS "NO BASIS", THOUGH `testifyResolution` REFUSES WITHOUT ONE (`NO_BASIS`).** BOB #30 corrected the design's label to *"asserted on the member's stated basis, with no captured document"*; the method string (`store.mjs`, re-read on `cdfaea39`) and two `schema.mjs` comments still carry the old wording. `blocked` until its design lands. — owner RECORD.
+### D-219 · queued — **A GRADE-D RESOLUTION STORES *"asserted by X with no captured basis"*, WHICH A MEMBER READS AS "NO BASIS", THOUGH `testifyResolution` REFUSES WITHOUT ONE (`NO_BASIS`).** BOB #30 corrected the design's label to *"asserted on the member's stated basis, with no captured document"*; the method string (`store.mjs`, re-read on `cdfaea39`) and two `schema.mjs` comments still carry the old wording. Its design landed at `4355bfda`. — owner RECORD.
 order: directly before D-423, one worker for both (the same `schema.mjs` comments): the record describing its own contents more weakly than they are, a correction to built work, below D-278 because the grade itself is right (SCHEDULER #15, 2026-09-23, LED-7; BOB #30's ruling)
 milestone: M8
 interface: I3 — the method string on NEW grade-D resolutions; the integrator classifies it.
-design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.1, *"Grade D's label — CORRECTED 2026-09-23 by BOB #30"* (on `land/bob/s15-rulings` until the train lands it).
-depends-on: `land/bob/s15-rulings` on `main`.
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §8.1, *"Grade D's label — CORRECTED 2026-09-23 by BOB #30"* (landed at `4355bfda`).
+depends-on: none — its design is on `main` (`4355bfda`).
 scope: the method string and the two `schema.mjs` comments follow §8.1's wording (no semicolon or backtick inside a `--` comment); rows already written keep theirs (D-256's shape), stated in the landing; a sweep for other "no basis" meaning "no captured basis".
 accepts-when: a new grade-D resolution's stored method reads the new wording through the op; an older row is byte-identical. NEGATIVE CONTROL: restore the old string, and the wording arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (LED-7; D-219's DEBT row of 2026-08-06; keeps its `D-` id).
@@ -1180,3 +1150,42 @@ depends-on: none.
 accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` … (whole text: the cut archive)
+order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite … (whole text: the cut archive)
+depends-on: none.
+accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-91» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-40 · queued — **AN INFORMATION FIXTURE STILL WRITES `criticality: "notable"`, WHICH C-2.7 REFUSES, THOUGH ITS ROW SAID IT WAS FIXED.** … (whole text: the cut archive)
+order: with the probe corrections, after M0-91: a fixture non-conformant for a reason unrelated to what it measures, and a template a later session can copy; no suite is wrong today (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5's *break only the … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-40's DEBT row of 2026-07-25, re-measured; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-40» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)"** … (whole text: the cut archive)
+order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — two suites' report lines
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and … (whole text: the cut archive)
+depends-on: M0-65 (its EXCLUDES segment and widened tally reader; in CONDUCT #6's gate).
+accepts-when: a full battery's headline carries no EXCLUDES segment, and its assertion total rises by exactly the two suites' printed tallies, stated in the landing; `cd bio-plane && npm` … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (M0-65's worker's suggestion, routed by CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-76 · queued — `d280-strengthbar.control.mjs` READS NOT AS DECLARED ON EVERY RUN (arm C2 and the severedhomes arms), and D-280's site (a) — the … (whole text: the cut archive)
+order: M0, with the instrument corrections; ruled by BOB #16 (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — a control driver and one suite's arm
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name; its one-copy rule), with D-267 and D-280 … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `node bio-plane/test/d280-strengthbar.control.mjs` reads EVERY arm AS DECLARED and the site-(a) arm fails by name; the control leaves the tree byte-identical; the C-6.1 … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.

@@ -3138,3 +3138,35 @@ depends-on: none — D-442 is on `main`.
 scope: the DELEGATION's three fixes: `inquiryPair` reads each case's pair from `op=publishedcase`, one per case, never picking one; the two sentences branch on `frozen_from` (`case_document` or `member_bytes`) and name the signature that covers the pair; the placeholder follows item 1. Legacy members keep working.
 accepts-when: against the real plane, a rule-12 member shows its pair per case with the case document named as the signer, and a legacy member reads as today. How a liar passes it: a hard-coded signer sentence, so a fixture holds one member of each kind. NEGATIVE CONTROL: read `published_strength` again, and the rule-12 arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (D-442's finding (a) via CONDUCT #14; `node tools/mintid.mjs UI`).
+
+### M0-100 · done — integrated at 08c0174a (train train-20260923T075310Z-23830, origin/main 8633310c); verified: docs/development/measurements/ holds one file per new entry
+order: after M0-110 and M0-111, where BOB #27 placed it on narrowing: the collision it removes exists only inside M0-111's train (SCHEDULER #12, 2026-09-22)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/development/ORCHESTRATION.md` … (whole text: the cut archive)
+depends-on: M0-111.
+accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### CAP-13 · done — integrated at adc3c312 (origin/main 8633310c); verified: store.mjs counts COUNT(DISTINCT primary_sha) FROM site_asset_refs 0 times
+order: after D-116, above the ledger tooling: CLAUDE.md §2's class — a figure the record cannot support, in content-addressed manifests nothing corrects, on monitoring's normal path; below D-116 because it concerns FURNITURE and the fetch-honesty fields are right (SCHEDULER #6, 2026-09-21; D-339 worker's items 1–2, verified at the code)
+milestone: M2
+interface: none expected — no op exposes `siteassets` or `sitechrome`; `reused_seen_in_documents` keeps its name and type, only its VALUE becomes true (the integrator classifies).
+design: `docs/development/CAPTURE-SCALING.md` §Job one, reuse condition 3 — *"an asset only one page references is that page's own"* — which also states this defect.
+depends-on: none.
+scope: count distinct primary ADDRESSES (`captured_locators.address_norm` where `capture_sha = primary_sha`) in both readers — a query, not a schema change. D-58 writes the locator unconditionally but in a swallowing `try`, and older captures may lack one: say what such a primary counts as, never drop it silently. Reword the two comments to recency of fetch, and the two that say a re-capture cannot inflate the count. **FULL GATE PROFILE**.
+accepts-when: one page captured twice with changed bytes reads 1 document and is NOT reused; two pages sharing a stylesheet read 2 and are; the manifest's N equals the page count. How a liar passes it: a byte-identical re-capture, which never moved the count. NEGATIVE CONTROL: count `primary_sha` again, and the changed-bytes arm fails by name.
+added: 2026-09-21 · SCHEDULER #6 (`node tools/mintid.mjs CAP`).
+uncut: restored whole from the cut archive on entering the cache (SCHEDULER #14, 2026-09-23), so the worker reads its design here.
+
+### D-116 · done — integrated at 5a2368fe (origin/main 8633310c); verified: the DO bootstrap route reports storeVersion
+order: after D-254, above features: a group can run a stale DO or member with nothing reporting it — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19; NARROWED by FLEET #3 and verified at the code by SCHEDULER #4, 2026-09-21: `vf4-live-scratch.mjs` stores the isolate's value as `plane_durable_object`)
+milestone: M7
+interface: I3 — ONE additive IC: `op=bootstrap`'s reply gains the DO's own build under a DISTINCT field; the op's field pin moves in the same commit.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §8, the fleet's version authority, with CLAUDE.md §5: *a deploy verified is not a build serving*.
+depends-on: none. DS-2 built the BUILD-side authority; this is the RUNTIME half.
+scope: (1) the DO reports its own build under a field that is NEVER `version` — a later spread would REPLACE the isolate's reading — and `verifyUpdate` requires both and names the one that lags; VF-4's DO arm reads it. (2) each member is read back THROUGH THE BINDING after install and deploy (D-115's surviving requirement).
+accepts-when: a DO or member whose build differs from the routing isolate's is NAMED, and the install or update does not report success. How a liar passes it: filling the DO field from the isolate's env, so two values agree for free. NEGATIVE CONTROL: copy `env.VERSION` into the DO field in the handler, and the arm fails by name.
+added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id); narrowed 2026-09-21.
+uncut: restored whole from the cut archive on entering the cache (SCHEDULER #14, 2026-09-23), so the worker reads its design here.
