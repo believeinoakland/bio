@@ -604,12 +604,14 @@ const cat = await affordances(null);
    item 7 rules APPENDS to the relationship's history. Corrected, not loosened,
    for every note above's reason; it moved by exactly the one object-directed
    op REC-136 added. */
-/* CORRECTED 2026-09-23 (CONDUCT #18 at D-149's merge onto c17-batch7): TWENTY-EIGHT — D-311's twenty-seven plus
-   D-149's `actionlaws`. Each side's count was right on its own base; the union carries both. */
-t("no target -> the whole catalogue: twenty-eight acts, each with id/label/weight/needs/mode/rung/prompt",
+/* CORRECTED 2026-09-23 (CONDUCT #18 at REC-149's merge onto c17-batch7): TWENTY-NINE — D-311's twenty-seven,
+   D-149's `actionlaws` and REC-149's `projectvisibilityset`. Each side's count was right on its own base; the union
+   carries all three. */
+t("no target -> the whole catalogue: twenty-nine acts, each with id/label/weight/needs/mode/rung/prompt",
   [cat.ok, cat.result.catalog.length,
    cat.result.catalog.every((a) => ["id", "label", "weight", "needs", "mode", "rung", "prompt"].every((k) => k in a))],
-  [true, 28, true]);
+  [true, 29, true]);
+
 /* DEC-29(b) AS AN ACCEPTANCE CLAUSE, asserted here as a string. The prompt is
    null for every act no ruling attaches one to, and where a ruling does attach
    one it is the PUBLISHED constant — so a surface that has the control
@@ -853,9 +855,13 @@ t("the four resolutions reach a caller OVER THE WIRE, exactly as the catalogue h
    enforces the position), so a roster act publishes `needs: null`. Still composed per act, never
    hand-listed: the roster set is read off `roster`-reading predicates, not typed out here. */
 const ROSTER_IDS = new Set(ACTS.filter((a) => /\broster\b/.test(String(a.applies))).map((a) => a.id));
-t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one, and a roster act names none",
+/* CORRECTED AGAIN 2026-09-23 (CONDUCT #18 at REC-149's merge): D-311's roster acts and REC-149's
+   `projectvisibilityset` each carry NO capability, for the same reason (Membership §7 governs them, and the store
+   enforces the position); each side's composition held one exception set, and the union holds both. */
+t("every act is session-reachable, and each carries the capability its own NEEDS entry names — publish rides the publication surface, not the contribute one, and a roster act and the visibility setting name none",
   cat.result.catalog.map((a) => [a.needs, a.mode]),
-  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : ROSTER_IDS.has(a.id) ? null : "contribute", "session"]));
+  cat.result.catalog.map((a) => [a.id === "publish" ? "publish" : (ROSTER_IDS.has(a.id) || a.id === "projectvisibilityset") ? null : "contribute", "session"]));
+
 /* CORRECTED BY FW-14, never exempted, and this is the pin the item MOVED rather
    than merely reworded. It read "rung is DECLARED: cite is null (no document
    assigns one — FW-14's, not ours), retire is terminal" and pinned cite's rung
