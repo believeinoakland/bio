@@ -464,12 +464,22 @@ const calls = (STORE_SRC.match(/this\.#refEdgeSevered\(/g) || []).length;
    IT STAYS EXACT RATHER THAN BECOMING A FLOOR. The paragraph above says
    relaxing it to `>=` "would retire the only tripwire D-267 left behind", and
    that argument is unaffected by a member leaving. */
-t("STRUCTURAL: the severance rule has ONE definition and FIVE callers — `#citesInto`, "
-+ "`#restsOnLive`, `#queueAncestorEdges`, and D-280's two surviving sites: `#routeTask` and "
-+ "`restingOn`. It was SIX until CASE-2 removed `#requiredStrengthFor` under DEC-72. D-267 exists "
+/* CORRECTED 2026-09-23 BY REC-160, 5 → 6, AND THE ARRIVAL IS NAMED HERE AS THE
+   PARAGRAPHS ABOVE REQUIRE. THE SITE ADDED IS `reevaluations` (op=reevaluations),
+   and it is added BECAUSE of this tripwire's own rule rather than around it: DEC-70's
+   home text (State Rules §5.4) requires the obligation read to MARK a severed leg and
+   never describe it as resting on its target, and `inquiry_basis` drops the status, so
+   the read must ask the ONE predicate — a sixth inline copy is the exact defect D-267
+   is. It asks to PUBLISH a status and never to drop the leg (DEC-70: severance
+   discharges support, never connection); `d280-strengthbar.test.mjs` §7 SITE (c) pins
+   that no `continue` rides on it, and `reevaluation.test.mjs` block 9 drives it. */
+t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `#citesInto`, "
++ "`#restsOnLive`, `#queueAncestorEdges`, D-280's two surviving sites `#routeTask` and "
++ "`restingOn`, and REC-160's `reevaluations`, which MARKS a severed leg without dropping it. It was "
++ "SIX until CASE-2 removed `#requiredStrengthFor` under DEC-72, five until REC-160. D-267 exists "
 + "because the rule had four inline implementations and a fifth reader that did not know it "
 + "existed, and NO behavioural arm can see a faithful copy",
-  [defs, calls], [1, 5]);
+  [defs, calls], [1, 6]);
 t("STRUCTURAL: and the walk no longer performs a raw unconfirmed read of either projection — both "
 + "edge kinds go through `consider`, so a future edge kind added to this method inherits the "
 + "confirmation instead of quietly reopening the defect",
