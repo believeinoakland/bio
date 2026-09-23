@@ -19962,6 +19962,7 @@ paths: bio-plane/src/store.mjs (`resolveLinks`: the verdict arms only — a self
 why: resolveLinks tells a self-linked page's target CHANGED, naming one capture twice (D-57, QUEUE.md on coord; LINK-FIDELITY.md §The three-valued verdict).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — D-57 built and pushed to land/worker/D-57 @ 4068cd49 (gate GREEN, 297/297); the paths stay reserved until CONDUCT integrates the branch.
 
 ### M0-136 · M0 worker of CONDUCT #16 (worktree agent-adefab765778910de) · 2026-09-23
 paths: bio-plane/test/coordpin.mjs (new), bio-plane/test/coordpin.control.mjs (new), bio-plane/test/{decided,mintid,op-claims,owed,readbudget,retirable,migrate-released,owed-controls,register-grammar,status}.test.mjs (a pin import + planted-ref arm, or a dated reads-none line; retirable's CLI arms into a fixture), bio-plane/scripts/coverage.mjs (a dated reads-none line only), docs/development/TREE-SHARING.md (§3a item 4: the table of eleven)
