@@ -1,5 +1,11 @@
-/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads origin/coord and pinned historical commits, which no
-   result key can name; traced 2026-09-23. */
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads `origin/coord` through the coord layer (§6's live estate) and pinned historical commits, which no
+   result key can name; traced 2026-09-23. M0-136 (2026-09-23): it no longer reads the LIVE `origin/coord` — the coord state
+   is read at `COORD_PIN` (`./coordpin.mjs`, named there with its why and its cost), and a planted-ref arm below proves the
+   verdict identical whatever `origin/coord` holds.
+   NEGATIVE CONTROL (M0-136, RUN 2026-09-23 by the M0-136 worker): `node bio-plane/test/coordpin.control.mjs owed` —
+   this suite pointed back at the live `origin/coord` (arm L1, one line after the pin's import) -> exactly two FAILs,
+   "…reads the PINNED coord commit, never a ref name" and "…is IDENTICAL whatever origin/coord holds", 49 pass / 2 fail, exit 1;
+   the pin spelled out in the suite instead (S0, over-strictness) PASSES; each restored, sha256 and `cmp` identical. */
 /* owed — D-409's predicate: what a LANE still owes, read out of the repository.
  *
  * Bob, 2026-09-17: *"This isn't just a bug in idleness, but a failure to document (in the repo)
@@ -77,6 +83,7 @@
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { owedFor, owedMessage, OWNER_RE, RESIDUE_RE, SOURCES } from "../../tools/owed.mjs";
+import { plantedCoord, assertPlanted, REPO as PIN_REPO } from "./coordpin.mjs";   /* M0-136: coord read at a PINNED commit */
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -84,7 +91,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 8;
+const SECTIONS = 9;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 
@@ -310,6 +317,16 @@ section("8 — A DISCHARGE BY NAME ENDS ONE LANE'S PART, AND ONLY THAT LANE'S (D
     [conduct.includes("D-44"), conduct.includes("D-42")], [true, false]);
   t("BOB THE PERSON DISCHARGES NOTHING — 'nothing here falls to Bob' leaves the row the BOB lane's",
     bob.includes("D-43"), true);
+}
+
+/* ========================================================================== */
+section("9 — M0-136: THE LIVE-ESTATE WALK READS THE PINNED COORD COMMIT, AND ITS VERDICT DOES NOT MOVE WITH origin/coord");
+{
+  /* §6 walks the REAL ledgers through the coord layer, and until M0-136 that meant the LIVE `origin/coord`: its "the estate does owe this lane something" was a claim about what the lanes had written that minute. The probe is §6's own call, `owedFor("BOB")`; the planted commit empties DEBT.md, which empties the list when read. */
+  const p = plantedCoord({
+    probe: `const { owedFor } = await import(${JSON.stringify(PIN_REPO + "/tools/owed.mjs")});\nconst o = owedFor("BOB");\nconsole.log(JSON.stringify({ counts: o.counts, unreadable: o.unreadable, items: o.items.map((i) => i.source + ":" + i.id) }));`,
+    plant: { "docs/development/DEBT.md": "planted by M0-136: a DEBT.md with no rows\n" } });
+  assertPlanted(t, "owed", p);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);

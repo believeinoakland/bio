@@ -1,5 +1,11 @@
-/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git ls-tree/show of historical commits in this checkout, which no
-   result key can name; traced 2026-09-23. */
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git ls-tree/show of historical commits in this checkout (the STATE half at `STATE_PIN`), which no
+   result key can name; traced 2026-09-23. M0-136 (2026-09-23): it no longer reads the LIVE `origin/coord` — the coord state
+   is read at `COORD_PIN` (`./coordpin.mjs`, named there with its why and its cost), and a planted-ref arm below proves the
+   verdict identical whatever `origin/coord` holds.
+   NEGATIVE CONTROL (M0-136, RUN 2026-09-23 by the M0-136 worker): `node bio-plane/test/coordpin.control.mjs decided` —
+   this suite pointed back at the live `origin/coord` (arm L1, one line after the pin's import) -> exactly two FAILs,
+   "…reads the PINNED coord commit, never a ref name" and "…is IDENTICAL whatever origin/coord holds", 61 pass / 2 fail, exit 1;
+   the pin spelled out in the suite instead (S0, over-strictness) PASSES; each restored, sha256 and `cmp` identical. */
 /* decided — the ruling index, `tools/decided.mjs` (M0-97 and D-341, 2026-09-21; M0-99, 2026-09-22).
  *
  * M0-99 — `docs/DECIDED.md` is no longer COMMITTED: 88 commits touched the generated file on 2026-09-21
@@ -67,6 +73,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { scan, registerEntries, query, render, fresh, indexTracking, INDEX_PATH, corpus } from "../../tools/decided.mjs";
 import { isMovedPath } from "../../tools/statepaths.mjs";   /* M0-121: the predicate's walk-free home; coord.mjs re-exports it */
+import { plantedCoord, assertPlanted, REPO as PIN_REPO } from "./coordpin.mjs";   /* M0-136: coord read at a PINNED commit */
 import { relative, sep } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -79,7 +86,7 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want).slice(0, 600)}\n         got  ${JSON.stringify(got).slice(0, 600)}`}`);
   ok ? pass++ : fail++;
 };
-const SECTIONS = 8;
+const SECTIONS = 9;
 let reached = 0;
 const section = (n) => { reached++; console.log(`\n--- ${n} ---`); };
 const cli = (...args) => {
@@ -102,7 +109,10 @@ const over = (text, opts) => scan([FIX], () => text, opts);
    A state file the pinned tree lacks (a shallow clone) is SKIPPED and the oracle's floor then fails by name — never a
    silent pass. The live, moving state is `decided.mjs`'s own business (it reads through the layer); the index over it
    is not judged by the battery. */
-const STATE_PIN = "de40aa56";
+/* CORRECTED 2026-09-23 (M0-136): the FULL id, never the 8-hex abbreviation it was — git resolves an abbreviation against
+   the object store, so a fetch bringing in a second commit or tree with that prefix would make it ambiguous and this
+   suite read nothing at the pin: a verdict moving with what was fetched (unlikely at today's ~45,000 objects, never 0). */
+const STATE_PIN = "de40aa56f5d397666228502132d56756f51ff6b9";
 const pinCache = new Map();
 const atPin = (rel) => {
   if (!pinCache.has(rel)) { const r = spawnSync("git", ["show", `${STATE_PIN}:${rel}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 28 }); pinCache.set(rel, r.status === 0 ? r.stdout : null); }
@@ -528,6 +538,16 @@ section("8 — M0-99: THE INDEX IS PRODUCED ON DEMAND, AND NEVER COMMITTED");
     indexTracking({ repo: SANDBOX }).undetermined, true);
 
   rmSync(SANDBOX, { recursive: true, force: true });
+}
+
+/* ========================================================================== */
+section("9 — M0-136: THE LIVE CORPUS IS READ AT THE PINNED COORD COMMIT, AND THE VERDICT DOES NOT MOVE WITH origin/coord");
+{
+  /* §8's in-repository arm calls `fresh()` and `scan()` over the LIVE corpus, and §6 drives the CLI, which FETCHED `origin/coord` (`freshen`) — 5 fetches a run, measured 2026-09-23 — so two reads a fetch could separate were compared. The probe is that live scan and its rendered index; the planted commit empties CLAIMS.md (154 of the index's rulings), which moves both when read. */
+  const p = plantedCoord({
+    probe: `const { createHash } = await import("node:crypto");\nconst { scan, render } = await import(${JSON.stringify(PIN_REPO + "/tools/decided.mjs")});\nconst reg = []; const rows = scan(undefined, undefined, { sink: reg });\nconsole.log(JSON.stringify({ rows: rows.length, register: reg.length, index: createHash("sha256").update(render(rows, reg)).digest("hex").slice(0, 16) }));`,
+    plant: { "docs/development/CLAIMS.md": "planted by M0-136: a CLAIMS.md with no rulings\n" } });
+  assertPlanted(t, "decided", p);
 }
 
 console.log(`\nsections reached ${reached}/${SECTIONS}`);
