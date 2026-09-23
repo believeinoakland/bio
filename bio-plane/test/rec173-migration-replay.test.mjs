@@ -52,7 +52,7 @@ import { join } from "node:path";
 /* The control driver points this at an armed COPY of the sources. */
 const SRC_DIR = process.env.REC173_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
-const { SURFACE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+const { SURFACE_CHECKS, ACT_SHAPE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -228,9 +228,16 @@ console.log("\n--- ARM N · EVERYTHING ELSE IS AN ORDINARY CREATION, REFUSED OUT
   const pkg3b = replayPkg(q3b.id, alt3b, q3b.capSha, q3b.cap);
   pkg3b.files[0].sha256 = sha(q3b.md);          // THE LIAR keeps the listed figure over altered text
   const x3b = await promote(ADMIN, pkg3b);
-  t("ARM N3b (A STALE SHA): altered text carrying the LISTED SHA-256 in its `sha256` field is refused SURFACE_NO_RUN — "
-    + "the plane computes the figure, it never takes it — and nothing landed", [...refused(x3b), await exists(q3b.id)],
-    [...NO_RUN, false]);
+  /* CORRECTED 2026-09-23 by CONDUCT #16 at REC-175's merge (IC-192), not exempted: REC-175 makes `op=promote` compute every
+     inline file's SHA-256 and refuse a supplied figure naming other bytes BEFORE anything else is asked, so this liar's
+     stale figure is now refused `FILE_DIGEST_MISMATCH` (C-33.38) at the door, not `SURFACE_NO_RUN` at the replay check.
+     The old assertion was right on its own tree (REC-173 alone) and wrong after REC-175: the refusal is EARLIER and
+     STRICTER, and "nothing landed" still holds. What this arm protects — the plane never takes the caller's figure — is
+     unchanged; ARM N3 still drives the replay check's own SHA comparison (a true digest of altered bytes). */
+  const DM = ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH;
+  t("ARM N3b (A STALE SHA): altered text carrying the LISTED SHA-256 in its `sha256` field is refused — since REC-175 at the "
+    + "door, FILE_DIGEST_MISMATCH: the plane computes the figure, it never takes it — and nothing landed",
+    [...refused(x3b), await exists(q3b.id)], [false, "FILE_DIGEST_MISMATCH", DM?.check, DM?.translation, false]);
 
   const q4 = await driveQuestion("PROB-2026-9173-member-token");
   const x4 = await promote(`token=${MEM}&store=bio`, replayPkg(q4.id, q4.md, q4.capSha, q4.cap));

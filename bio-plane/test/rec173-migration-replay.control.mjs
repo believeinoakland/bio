@@ -52,8 +52,12 @@ const ARMS = {
                  mustFail: ["ARM N4 ", "ARM N4b ", "ARM N0:"] },
   /* THE CALLER-MADE CAPTURE: a held capture that is not registered as the Drive provenance is admitted. */
   "no-register": { patches: [["index.mjs", REGISTER_CHECK, ""]], mustFail: ["ARM N5b ", "ARM N5c ", "ARM N0:"] },
-  /* THE STALE SHA: the caller's `sha256` field is trusted instead of the text's own hash. */
-  "trust-caller-sha": { patches: [["index.mjs", COMPUTED_SHA, "  const mdSha = bm.sha256;\n"]],
+  /* THE STALE SHA: the caller's `sha256` field is trusted instead of the text's own hash. CORRECTED 2026-09-23 by CONDUCT #16
+     at REC-175's merge: REC-175's door (`Store#digestFiles`, FILE_DIGEST_MISMATCH) now refuses the stale figure BEFORE the
+     replay check reads it, so disarming the replay's own hash alone showed NO EFFECT — the second cause, named. The arm
+     disarms BOTH layers so it still proves the replay path never trusts the caller's figure on its own. */
+  "trust-caller-sha": { patches: [["index.mjs", COMPUTED_SHA, "  const mdSha = bm.sha256;\n"],
+                                  ["store.mjs", "    if (digested.disagree.length)\n", "    if (false)\n"]],
                         mustFail: ["ARM N3b ", "ARM N0:"] },
   /* (b) BROKEN: D-78 restamps the verified replay — its Drive-era `surfaced_by: human` is rewritten `agent`. */
   "restamp-replay": { patches: [["index.mjs", NO_RESTAMP, "        if (b.base === null && b.meta "]], mustFail: ["ARM R1b "] },
