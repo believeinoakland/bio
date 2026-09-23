@@ -96,7 +96,7 @@ scope: on a rejected push, merge `origin/main`, re-gate with `gates.mjs --since 
 accepts-when: a train whose push is rejected once lands on the retry with one `--since` gate, not a FULL one; a recorded-GREEN branch lands with no battery run of its own tree. NEGATIVE CONTROL: drop the retry, and the moved-main arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (M0-111's finding via CONDUCT #14; `node tools/mintid.mjs M0`).
 
-### M0-100 · queued — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two** … (whole text: the cut archive)
+### M0-100 · running — **SPAWNED 2026-09-23 by CONDUCT #14, wave 6. NOT LANDED, CHECKED BY CONTENT on `30475ca6`: `docs/development/` holds one `MEASUREMENTS.md` and no per-entry measurement file. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two** … (whole text: the cut archive)
 order: after M0-110 and M0-111, where BOB #27 placed it on narrowing: the collision it removes exists only inside M0-111's train (SCHEDULER #12, 2026-09-22)
 milestone: M0
 interface: none
