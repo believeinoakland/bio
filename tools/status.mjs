@@ -196,10 +196,35 @@ export function judge({ repo = ROOT, data = null } = {}) {
   return { claims: out, data: d };
 }
 
+/* A CLAIM'S FIRST SENTENCE: up to the first `. ` outside backticks (BOB #31, 2026-09-23, M0-138). The map
+   is cut at its reading budget, and rendering every claim WHOLE made each landing that added a clause
+   push it over — so integrators trimmed claim texts to fit, cutting the source of truth to fit its
+   rendering. §3 carries the first sentence; the whole text stays in construct-status.json, served by
+   `node tools/status.mjs <n>`, which every cell names. A cut sentence ends in ` …`, so the map never
+   reads as the whole claim. Never trim a claim text to fit this rendering.
+   WHO ELSE READS THE CELL: `corpuscheck --authority` and `statussweep` read every `§N item M` citation in
+   §3 — the map citing a design item is what makes it visible — and some live only in a claim's later
+   sentences (8.claim's §7.1 items 4 and 9, found by corpuscheck.test on this item's first render). So a
+   cut carries the remainder's citations, verbatim, after the ellipsis: the authority cites what it cited. */
+const CITE = /§\s*\d+(?:\.\d+)*\s+item\s+\d+/gi;
+export function firstSentence(text) {
+  const s = String(text);
+  let tick = false;
+  for (let i = 0; i < s.length - 1; i++) {
+    if (s[i] === "`") tick = !tick;
+    else if (!tick && s[i] === "." && s[i + 1] === " ") {
+      const head = s.slice(0, i + 1);
+      const cites = [...new Set(s.slice(i + 1).match(CITE) || [])].filter((c) => !head.includes(c));
+      return head + " …" + (cites.length ? ` (also cites ${cites.join(", ")})` : "");
+    }
+  }
+  return s;
+}
+
 /* §3's state column, RENDERED. A cell never carries a pipe, so the table cannot break. */
 export function renderCell(construct) {
   const by = {};
-  for (const cl of construct.claims || []) (by[cl.state] = by[cl.state] || []).push(cl.text);
+  for (const cl of construct.claims || []) (by[cl.state] = by[cl.state] || []).push(firstSentence(cl.text));
   const parts = STATES.filter((s) => by[s]).map((s) => `**${s}:** ${by[s].join("; ")}`);
   /* A construct's DESIGN POINTER is carried through the rendering verbatim. It is not status —
      it says where the construct is designed — and other instruments read it from §3: `statussweep`
