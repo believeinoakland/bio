@@ -1127,6 +1127,15 @@ point, and at every act:
 search, citation list, reverse edge and run report of the uninvited, because those reads return CONTENTS. Existence
 reaches the uninvited through exactly one new read, the DIRECTORY, and through the positional refusal above.
 
+**RULED 2026-09-23 by BOB #32 (REC-149's gaps; SCHEDULER #17's 22:56Z questions).** (a) **A read naming a discoverable PROJECT'S
+OWN id is answered POSITIONALLY at EXISTENCE**, exactly like an act: otherwise the record would call a project the
+directory has just shown the caller nonexistent. A read naming anything INSIDE the project (a bundle, a reference, a run)
+answers exactly as it does today, because that thing's existence is contents; `viewerPredicate` stays unchanged.
+(b) **Create and fork take one optional field, `visibility` (`discoverable` or `hidden`)**, and an absent one is HIDDEN.
+A MACHINE credential never sets it: the setting is an owner's act, and an ownerless project has no owner to choose. Its
+creation is therefore HIDDEN, and a `visibility=discoverable` it sends is refused by name. An owner who arrives later
+may set it.
+
 **The directory.** One read, for a member session: the DISCOVERABLE projects the caller does not participate in —
 each project's id and name, and the state of the caller's OWN request to it if any. Nothing else. A hidden project is
 never in it, so its absence from the directory is the same answer for "hidden" and "does not exist".

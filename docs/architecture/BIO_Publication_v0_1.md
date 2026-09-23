@@ -116,6 +116,19 @@ Three consequences give the construct its shape. The record must be able to prov
     identity**. It never matches another case whose statement is byte-identical, because reading A's statement is not
     reading B's. NOT BUILT: the `/3` format, `statement_by`, and the narrowing (rowed).
 
+14. **THE BAR IS A PAIR, AND AN AXIS NOBODY SET IS NULL** (BOB #32, 2026-09-23, D-450 on SCHEDULER #17's 22:56Z questions). A project may
+    set a bar on one axis only. Both keys are always present, the unset one is `null`, and the case document says in
+    words *"no bar set on the <axis> axis"*: it never defaults a value and never omits the key. C-41.12 admits `null`,
+    and `op=strengthbar` keeps accepting a one-axis bar. Requiring both would force a member to invent a bar for an axis
+    they hold no view on, which is a gate pressuring an invention (`CLAUDE.md` §4). NOT BUILT (rowed).
+15. **Four review-copy and case-document rulings** (BOB #32, 2026-09-23, from the UI-68, REC-148 and D-148 workers' gaps):
+    (a) joined participants get a list read of a project's drafts, fenced exactly as reading one draft is, because a draft
+    reachable only by an id nobody kept is lost; (b) `op=reviewcopy` answers `newCase`, since a read that drops a field
+    an edit writes back loses it; (c) the container side of the review copy is stamped by the attestor and the
+    ratification date, and the copy carries the date of its LAST change, so a comment that moves its hash moves its date;
+    (d) a quote is read "by" the action's own counterparty name, matched EXACTLY; when nothing matches, "by" is stated as
+    undetermined, because a fuzzy match would invent an attribution. NOT BUILT (rowed).
+
 ## 4. What is built
 
 - **Who may ratify, and what (REC-137 / REC-140, IC-154 / IC-157, 2026-09-18):** `caseratify` and `ratify` of a finding a ratified case pins ask ONE helper, `Store#caseAuthority` — an OWNER of the publishing project signs (C-57.1), the founder or a JOINED member delivers (C-56.1); `ratify` refuses a project bundle by type (C-58.1); both answer a caller who cannot see the project as for one that does not exist. **Since D-431 (IC-161, 2026-09-19)** `ratify` publishes nothing outside a ratified case: a finding no ratified case pins is refused C-58.2, and any other bundle crosses only as evidence a ratified case's pinned finding rests on (`Store.publishedGraphEdges`, the published graph's own edge set), under that case's authority, else C-58.3.

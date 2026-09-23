@@ -9,7 +9,7 @@
 - §The grade: RULED — the grade is RULED and nothing implements it. There is no grade or method vocabulary for a rendered capture in the check catalog, which this document's own open questions say must be settled before any code writes one into a record.
 - §There is no collision — superseded in its premise by DEC-42 and marked as such in the body: Workers Paid IS a requirement, the installer refuses a Free account (D-185), and the free-tier figures here are history rather than a configuration anything runs under.
 - §What this changes in what is already built — written against 0.42.0 and not re-checked since. Subresource capture, link partitioning and the site asset record have all moved (`CAPTURE-FIDELITY.md`, `LINK-FIDELITY.md`, `CAPTURE-SCALING.md`), and none of the four claims here can be checked against a rendered document because none exists.
-- §Open questions for ratification — all four are still open. The fourth has a counterpart it did not have when it was written: CAP-3's monitoring consumer is now the first actor that fires captures unattended, so "whether an unattended sweep may capture a client-rendered source at all" is a live question rather than a hypothetical one.
+- §Open questions for ratification — all four RULED 2026-09-23 (BOB #31, BOB #32; see the two RULED sections before it). Was: all four are still open. The fourth has a counterpart it did not have when it was written: CAP-3's monitoring consumer is now the first actor that fires captures unattended, so "whether an unattended sweep may capture a client-rendered source at all" is a live question rather than a hypothetical one.
 
 **Contents**
 - [The ruling this proceeds from](#the-ruling-this-proceeds-from)
@@ -24,6 +24,7 @@
 - [What Workers Paid actually buys, for this project](#what-workers-paid-actually-buys-for-this-project)
 - [What this changes in what is already built](#what-this-changes-in-what-is-already-built)
   - [RULED 2026-09-23 by BOB #31: third-party scripts run, and every one is recorded (D-64; SCHEDULER #17's S17-1 Q2)](#ruled-2026-09-23-by-bob-31-third-party-scripts-run-and-every-one-is-recorded-d-64-scheduler-17s-s17-1-q2)
+  - [RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep (D-64; SCHEDULER #17's 22:56Z questions)](#ruled-2026-09-23-by-bob-32-the-method-the-primary-and-the-unattended-sweep-d-64-scheduler-17s-2256z-questions)
 - [Open questions for ratification](#open-questions-for-ratification)
 
 ---
@@ -345,6 +346,19 @@ Scripts from third parties are ALLOWED during capture, inside the capture sandbo
 capture must show what a visitor saw, and blocking scripts changes the page. The provenance names the origin of every
 script executed. A capture whose script set cannot be recorded says so: the set is `undetermined`. This settles the
 second open question below, and the attribution ruling above still governs what their output is credited to.
+
+### RULED 2026-09-23 by BOB #32: the method, the primary, and the unattended sweep (D-64; SCHEDULER #17's 22:56Z questions)
+
+1. **The method is `rendered`.** The renderer and its environment are the `render.*` fields listed above. The served
+   shell keeps its existing method.
+2. **One capture holds both artifacts, and the RENDERED document is the bundle's PRIMARY.** It is what a visitor saw,
+   and Bob's grade ruling makes it the content. The served shell is kept beside it under its own digest, as the one part
+   anyone can re-verify against the source. The manifest describes both and names the primary.
+3. **An unattended sweep MAY render**, within the instance's daily render allowance and through the host governor. When
+   the allowance is spent, the tick records the render as DEFERRED (undetermined). It never records the shell as though
+   it were the content. The member-driven render path stays.
+
+With the first ruling of 2026-09-23 above, all four open questions below are ruled.
 
 ## Open questions for ratification
 

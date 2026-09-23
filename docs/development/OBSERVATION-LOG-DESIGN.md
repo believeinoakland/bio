@@ -144,6 +144,11 @@ Rules, each a refusal in the catalogue and a control in the suite:
 
 `captured_locators.observations` keeps counting; it is a cache of this level and may be re-derived from it. The `last_verified` field `STORE-AS-CACHE.md` says HTTP obsoleted and we must own lives on the frontier view (§5), not here — it is the latest `PRESENT` row's `at`.
 
+**RULED 2026-09-23 by BOB #32 (D-65; SCHEDULER #17's 22:56Z questions): a monitor's `changed` tick CAPTURES the new bytes.** They
+become a monitor capture with its own provenance, taken through the governor, and `result_ref` names the NEW capture's
+sha. The monitor has already fetched those bytes to see the change, so discarding them would discard evidence the
+record had in hand. This supersedes pointing a `changed` row at the baseline. NOT BUILT (D-65(b)'s row).
+
 ### 4.2 The content level — the content-axis frontier
 
 This is the enumeration Part II §16's closing table calls ABSENT: *documents held but unextracted, or extracted below what is now available*. One row per extraction attempt per capture per tier:
