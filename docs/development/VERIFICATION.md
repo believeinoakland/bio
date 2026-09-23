@@ -343,6 +343,8 @@ failing assertion) and skips what the expiry left unread; the battery reads fail
 MEASURED and exits 124. `gates.mjs` records it (exit 124); the push guard never refuses it; it licenses no
 `--since` and meets no GREEN FULL test (M0-106). Every site is swept: `scripts/budgetsweep.mjs`.
 
+A unit's PASS is shared on `gate-results`, keyed by its inputs; a release runs `--full --no-reuse` (TREE-SHARING §3a).
+
 ### D-406 — ONE HOOK, EVERY WORKTREE, BUT THE SCRIPT RESOLVED PER-WORKTREE
 
 **A mechanism shipped as a file in the repository is in the loop only for checkouts made or rebased after

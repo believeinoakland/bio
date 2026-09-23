@@ -90,11 +90,23 @@
  * FULL. No GREEN record, a dirty tree, or an unresolvable <rev>: the ordinary
  * classification runs instead, and says why.
  *
+ * ---- M0-126 (TREE-SHARING.md §3a): THE SHARED, PER-UNIT RESULT RECORD. ----
+ * Every unit the plan selects is KEYED by the hash of its inputs (§2e derives the set; `tools/gateresults.mjs` hashes
+ * it with node's major and every lockfile). A unit whose key holds a PASS on the branch `gate-results` — written by ANY
+ * clone — is not run and is printed REUSED, naming the record (§3b). What runs is TRACED (`tools/gatetrace.mjs`): a
+ * read outside the key FAILS the unit by name. Each unit that passed, traced clean, on a clean tree, gets a PASS record
+ * (§4b). A unit marked `GATE: never-cache (<reason>)`, one that runs plancheck, and plancheck itself always run.
+ *
  * Usage:
  *   node tools/gates.mjs                  classify the change, run the right profile
  *   node tools/gates.mjs --full           force the full four gates
- *   node tools/gates.mjs --explain        classify and print the plan; run nothing
+ *   node tools/gates.mjs --explain        classify and print the plan (and every unit's KEY); run nothing
  *   node tools/gates.mjs --since [<rev>]  after a rebase: re-check only what both sides touched
+ *   node tools/gates.mjs --no-reuse       run every selected unit whatever `gate-results` holds (the backstop:
+ *                                         every release cut runs `--full --no-reuse`); passes are still recorded
+ *   node tools/gates.mjs --inputs <unit>  print a unit's input set (`all`: every unit's, as JSON); run nothing
+ *   BIO_GATE_RESULTS=off                  no key, no trace, no reuse, no record — the gate as before M0-126
+ *   BIO_GATE_RESULTS_REMOTE=<remote>      where `gate-results` is read and written (default `origin`)
  *
  * Exit: 0 all gates green · 1 a gate failed or the state could not be classified · 124 NOT MEASURED:
  * no gate failed, and a battery step's only failures were EXPIRED BUDGETS (M0-107, BOB #28). A step counts as
@@ -113,10 +125,10 @@
  * `tools/pushguard.mjs` one arm at a time against `bio-plane/test/gates.test.mjs`.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { readdirSync, readFileSync, existsSync, statSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readdirSync, readFileSync, existsSync, statSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir, hostname } from "node:os";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { appendRun, readRuns, effectiveVerdict } from "./pushguard.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -127,6 +139,11 @@ const tryGit = (args) => { try { return sh("git", args); } catch { return null; 
 const ARGV = process.argv.slice(2);
 const FORCE_FULL = ARGV.includes("--full");
 const EXPLAIN = ARGV.includes("--explain");
+/* M0-126 (TREE-SHARING.md §3a): `--no-reuse` runs every selected unit whatever `gate-results` holds (the FULL
+   backstop: every release cut runs `--full --no-reuse`); its passes are still recorded. `BIO_GATE_RESULTS=off` turns
+   the whole mechanism off — no key, no trace, no reuse, no record: the gate as it stood before M0-126. */
+const NO_REUSE = ARGV.includes("--no-reuse");
+const RESULTS_OFF = process.env.BIO_GATE_RESULTS === "off";
 const SINCE_AT = ARGV.indexOf("--since");
 const SINCE = SINCE_AT < 0 ? null
   : (ARGV[SINCE_AT + 1] && !ARGV[SINCE_AT + 1].startsWith("--") ? ARGV[SINCE_AT + 1] : "ORIG_HEAD");
@@ -357,7 +374,13 @@ const SCRIPT_RE = /\bscripts\/([\w.-]+\.mjs)\b/g;
 /* [file, how it is reached]: "import" for a relative import or a `new URL(…, import.meta.url)`
    module, "name" for a tool or script the UNIT ITSELF names (only a unit's own files are read for
    names — a tool naming another tool in prose is not evidence that it runs it). */
+const EDGES_MEMO = new Map();
 function edges(abs, top) {
+  const mk = `${abs}\0${top ? 1 : 0}`;
+  if (!EDGES_MEMO.has(mk)) EDGES_MEMO.set(mk, edgesOf(abs, top));
+  return EDGES_MEMO.get(mk);
+}
+function edgesOf(abs, top) {
   const src = textOf(abs) || "";
   const out = new Map();
   for (const m of src.matchAll(IMPORT_RE)) out.set(resolve(dirname(abs), m[1]), "import");
@@ -389,7 +412,11 @@ function closure(unit) {
   return seen;
 }
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const tokenRe = (tok) => new RegExp(`["'\`/]${esc(tok)}/?["'\`]`);
+const TOKEN_RE_MEMO = new Map();
+const tokenRe = (tok) => {
+  if (!TOKEN_RE_MEMO.has(tok)) TOKEN_RE_MEMO.set(tok, new RegExp(`["'\`/]${esc(tok)}/?["'\`]`));
+  return TOKEN_RE_MEMO.get(tok);
+};
 const probeMemo = new Map();
 function probesFor(p) {
   if (probeMemo.has(p)) return probeMemo.get(p);
@@ -500,6 +527,247 @@ function targetedSelection(paths) {
   return sel;
 }
 
+/* ---- 2e · M0-126: EACH UNIT'S INPUT SET, read FORWARD (TREE-SHARING.md §3a "The key") -------------------------
+   The same rule `reads(unit, p)` answers one path at a time, turned around: every repository file the unit's
+   MENTION reach covers — its closure (source, sibling control, the tools and scripts it names, their relative
+   imports), every path a closure file names by basename or by stem as a quoted token, every directory a walker
+   names (a file that enumerates, naming the directory's path, or its parent's last segment), and a unit's own
+   walker's own directory — PLUS, where MENTION is blind by construction:
+     - a doc-facing unit (DOCS's own rule, §2) takes every `docs/` path: it reads prose through tools whose paths
+       are assembled at run time;
+     - a plane or fleet unit takes the whole FULL-class runtime set (§3a): the plane's roots and shipped build, the
+       code it imports from outside `bio-plane/`, every fleet member, and `bio-plane/`'s own package/config files.
+   The universe is every TRACKED file present on disk plus every untracked, unignored one. What a unit reads that
+   this set misses is found at run time by the trace (condition 2) and FAILS the unit by name. */
+const I_MEMO = new Map();
+let UNIVERSE = null;
+function universe() {
+  if (UNIVERSE) return UNIVERSE;
+  const tracked = (tryGit(["ls-files", "-z"]) ?? "").split("\0").filter(Boolean);
+  const untracked = (tryGit(["ls-files", "-z", "--others", "--exclude-standard"]) ?? "").split("\0").filter(Boolean);
+  const paths = [...new Set([...tracked, ...untracked])].filter((p) => isFile(join(REPO, p))).sort();
+  const byBase = new Map(), byStem = new Map(), under = new Map(), inDir = new Map();
+  const push = (m, k, v) => { if (!m.has(k)) m.set(k, []); m.get(k).push(v); };
+  for (const p of paths) {
+    const pr = probesFor(p);
+    push(byBase, pr.base, p);
+    if (pr.stem) push(byStem, pr.stem, p);
+    const parts = p.split("/");
+    for (let i = 1; i < parts.length; i++) push(under, parts.slice(0, i).join("/"), p);
+    push(inDir, parts.length > 1 ? parts.slice(0, -1).join("/") : "", p);
+  }
+  UNIVERSE = { paths, set: new Set(paths), byBase, byStem, under, inDir };
+  return UNIVERSE;
+}
+/* The paths ONE file's text reaches, as `fileHit` would answer them for every path at once. */
+function forwardHits(abs, own) {
+  const key = `${abs}\0${own ? 1 : 0}`;
+  if (I_MEMO.has(key)) return I_MEMO.get(key);
+  const out = new Set();
+  const s = codeOf(abs);
+  const U = universe();
+  if (s) {
+    /* THE SAME THREE PROBES AS `fileHit`, answered for every path in one pass over the text (measured: a probe per
+       path per file cost ~12 s over the estate's 346 units; this costs well under one). A basename is a SUBSTRING
+       (`s.includes(base)`): found at each `.<ext>` in the text, by the basenames ending in that extension. A stem or
+       a directory is a QUOTED TOKEN (`tokenRe`: a quote or `/` before it, an optional `/` and a quote after it): the
+       text's every such token is collected once, from each quote backwards. */
+    const { byExt, bare } = baseIndex();
+    for (const m of s.matchAll(/\.([A-Za-z0-9_-]+)/g)) {
+      for (let n = 1; n <= m[1].length; n++) {      /* every prefix: `a.mjs` is a substring of `a.mjsx` too */
+        const cands = byExt.get(m[1].slice(0, n));
+        if (!cands) continue;
+        const end = m.index + 1 + n;
+        for (const [b, ps] of cands) if (end - b.length >= 0 && s.startsWith(b, end - b.length)) for (const p of ps) out.add(p);
+      }
+    }
+    for (const [b, ps] of bare) if (s.includes(b)) for (const p of ps) out.add(p);
+    const toks = quotedTokens(s);
+    for (const [st, ps] of U.byStem) if (toks.has(st)) for (const p of ps) out.add(p);
+    if (isWalker(abs)) {
+      for (const [d, ps] of U.under) {
+        const seg = d.slice(d.lastIndexOf("/") + 1);
+        if (toks.has(d)) for (const p of ps) out.add(p);
+        else if (d.includes("/") && toks.has(seg)) for (const p of U.inDir.get(d) || []) out.add(p);
+      }
+      if (own) for (const p of U.inDir.get(repoRel(dirname(abs))) || []) out.add(p);
+      /* A unit's OWN file, or a helper DEDICATED to it (in the closure of at most three units — `budgetsweep.mjs` is
+         `budget-sweep.test.mjs`'s instrument). A SHARED helper that can walk the root (a scanner dozens of suites import)
+         does so for whichever caller asks, and read as every importer's walk it took 96 units to the whole tree while
+         their traces read a median of 54 files (measured 2026-09-23). A shared helper's root walk that a unit does reach
+         is found by the trace and FAILS it by name — the safe direction. */
+      if ((own || importers(abs) <= 3) && walksRoot(abs, s)) for (const p of U.paths) out.add(p);
+    }
+  }
+  I_MEMO.set(key, out);
+  return out;
+}
+/* A WALK OF THE REPOSITORY ROOT names no directory at all — `walk(REPO)`, `})(REPO)`, `readdirSync(ROOT, {…})` — so the
+   token probes above cannot see it, and the trace found it (measured 2026-09-23: `bounds`, `budget-sweep` and
+   `case-opened` each read 700–800 files their MENTION set missed). A walker file that binds a name to the repository root
+   (a `const` whose value resolves, from `import.meta.url` or a name already bound, to this checkout's top) and passes
+   that name ALONE as a call's first argument walks the whole tree, so every path is its input. */
+let IMPORTERS = null;
+function importers(abs) {
+  if (!IMPORTERS) {
+    IMPORTERS = new Map();
+    for (const u of UNITS) for (const f of closure(u).keys()) IMPORTERS.set(f, (IMPORTERS.get(f) || 0) + 1);
+  }
+  return IMPORTERS.get(abs) || 0;
+}
+function walksRoot(abs, s) {
+  const bound = new Map();
+  const here = dirname(abs);
+  for (const m of s.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;\n]+)/g)) {
+    const [, name, expr] = m;
+    let at = null;
+    if (/import\.meta\.(?:url|dirname)/.test(expr)) at = here;
+    else { const id = /^\s*(?:(?:join|resolve)\(\s*)?([A-Za-z_$][\w$]*)/.exec(expr); if (id && bound.has(id[1])) at = bound.get(id[1]); }
+    if (at === null) continue;
+    const lits = [...expr.matchAll(/["'`]([^"'`\n]*)["'`]/g)].map((x) => x[1]);
+    if (lits.some((l) => !/^[./]*$/.test(l))) continue;          /* a literal naming a directory: not the root */
+    bound.set(name, resolve(at, ...lits));
+  }
+  const top = resolve(REPO);
+  for (const [name, dir] of bound) {
+    if (dir !== top) continue;
+    /* `walk(R)`, `})(R)`, `readdirSync(R, {…})` — or R as a DEFAULT (`{ repo = R }`), which a caller passing nothing
+       walks (`budgetsweep.mjs`'s `sweepBudgets()`). */
+    if (new RegExp(`\\(\\s*${esc(name)}\\s*(?:\\)|,\\s*\\{)|[\\w$]\\s*=\\s*${esc(name)}\\s*[,})]`).test(s)) return true;
+  }
+  return false;
+}
+let BASE_INDEX = null;
+function baseIndex() {
+  if (BASE_INDEX) return BASE_INDEX;
+  const byExt = new Map(), bare = [];
+  for (const [b, ps] of universe().byBase) {
+    const m = /\.([A-Za-z0-9_-]+)$/.exec(b);
+    if (!m) { bare.push([b, ps]); continue; }
+    if (!byExt.has(m[1])) byExt.set(m[1], []);
+    byExt.get(m[1]).push([b, ps]);
+  }
+  BASE_INDEX = { byExt, bare };
+  return BASE_INDEX;
+}
+/* Every X for which `tokenRe(X)` matches somewhere in s: X ends before an optional `/` and a quote, and starts after a
+   quote or a `/`; it holds no quote or newline. */
+function quotedTokens(s) {
+  const out = new Set();
+  const Q = (c) => c === 34 || c === 39 || c === 96;
+  for (let q = 0; q < s.length; q++) {
+    if (!Q(s.charCodeAt(q))) continue;
+    let j = q - 1;
+    for (const skip of [false, true]) {
+      if (skip) { if (s.charCodeAt(q - 1) !== 47) break; j = q - 2; }
+      for (let k = j; k >= 0 && j - k < 400; k--) {
+        const c = s.charCodeAt(k);
+        if (c === 10) break;
+        if (Q(c) || c === 47) { if (k < j) out.add(s.slice(k + 1, j + 1)); if (Q(c)) break; }
+      }
+    }
+  }
+  return out;
+}
+const RUNTIME_PKG = (p) => (p.startsWith("bio-plane/") && !p.slice("bio-plane/".length).includes("/") && PACKAGE_FILES.has(basename(p)));
+function runtimeSet() {
+  return universe().paths.filter((p) => {
+    const r = fullReason(p);
+    return r === "the plane" || r === "the plane's shipped build" || r === "code the plane imports" || r === "a fleet member"
+      || RUNTIME_PKG(p);
+  });
+}
+const INPUTS_MEMO = new Map();
+function inputsOf(unit) {
+  if (!INPUTS_MEMO.has(unit.id)) INPUTS_MEMO.set(unit.id, deriveInputs(unit));
+  return INPUTS_MEMO.get(unit.id);
+}
+function deriveInputs(unit) {
+  const U = universe();
+  const out = new Set();
+  const cl = closure(unit);
+  /* Runtime code is not read for mentions (§2b) — except a runtime module the unit's OWN file imports directly: the
+     suite then holds its values, and a path among them is read by the suite (measured 2026-09-23: `skillpack.test.mjs`
+     reads `docs/development/INVESTIGATIVE-SESSION.md` through `src/skillpack.mjs`'s AUTHORED_SOURCES). */
+  const direct = new Set(unit.tops.flatMap((t) => edges(t, false).filter(([, how]) => how === "import").map(([p]) => p)));
+  for (const f of cl.keys()) {
+    const r = repoRel(f);
+    if (U.set.has(r)) out.add(r);
+    const own = unit.tops.includes(f);
+    if (isRuntime(r) && !own && !direct.has(f)) continue;
+    for (const p of forwardHits(f, own)) out.add(p);
+  }
+  /* The IMPORT closure is followed THROUGH runtime code too (§2b stops there for selection): a UI suite importing
+     `bio-plane/src/x.mjs` loads everything x imports (measured 2026-09-23: 17 UI suites under-included that way). The
+     files are inputs; their text is not read for mentions. */
+  const stack = [...cl.keys()].filter((f) => isRuntime(repoRel(f)));
+  const seenRt = new Set(stack);
+  while (stack.length) {
+    const f = stack.pop();
+    const r = repoRel(f);
+    if (U.set.has(r)) out.add(r);
+    for (const [p, how] of edges(f, false)) if (how === "import" && !seenRt.has(p)) { seenRt.add(p); stack.push(p); }
+  }
+  if (DOC_FACING.has(unit.id)) for (const p of U.under.get("docs") || []) out.add(p);
+  if (unit.kind === "plane" || unit.kind === "fleet") for (const p of runtimeSet()) out.add(p);
+  /* A UI HARNESS CHECK is a check OVER the UI suites (`check-mock-envelope.mjs` re-runs every one with a probe
+     preloaded): a check whose set holds a UI suite's source takes that suite's whole input set (measured 2026-09-23:
+     the envelope check read 70 files its own MENTION set missed, every one a UI suite's input). */
+  if (unit.kind === "uicheck")
+    for (const u of UNITS) if (u.kind === "ui" && out.has(repoRel(u.tops[0]))) for (const p of inputsOf(u)) out.add(p);
+  for (const d of declaredReads(unit)) {
+    if (d === "*") for (const p of U.paths) out.add(p);
+    else if (d.endsWith("/")) for (const p of U.under.get(d.slice(0, -1)) || []) out.add(p);
+    else if (U.set.has(d)) out.add(d);
+  }
+  return out;
+}
+/* NEVER CACHED (§3a condition 1): a unit whose own source or control carries `GATE: never-cache (<reason>)`, and —
+   decided here, §3a naming plancheck alone — a unit that RUNS plancheck (its closure names `tools/plancheck.mjs`): it
+   reads what plancheck reads, the whole tree and `origin/coord`, and a verdict resting on a never-cached tool is itself
+   never cached. Measured 2026-09-23: the traces of `ledger`, `mergecarry` and `pipeline-readers` read 1,027–1,028 of
+   the tree's 1,028 files, through plancheck. */
+function neverCacheOf(u) {
+  const NEVER_RE = /GATE: never-cache \(([^)\n]+)\)/;
+  for (const t of u.tops) { const m = NEVER_RE.exec(textOf(t) || ""); if (m) return m[1]; }
+  if (closure(u).has(join(REPO, "tools/plancheck.mjs"))) return "runs tools/plancheck.mjs, which is never cached";
+  return null;
+}
+/* A UNIT MAY DECLARE WHAT MENTION CANNOT SEE (M0-126; §3a is silent on how an under-inclusion is fixed, decided here):
+   a line `GATE: reads <path> <dir/> …` in its source or control adds each repository path, each directory's every
+   file (a trailing `/`), or `*` (the whole repository), to its input set. Over-inclusion costs only a re-run. The
+   trace names what to declare; the line is read from the whole text, comments included, because it is a comment. */
+const READS_RE = /GATE: reads (.*)$/gm;
+function declaredReads(unit) {
+  const out = [];
+  for (const t of unit.tops) for (const m of (textOf(t) || "").matchAll(READS_RE)) {
+    for (const raw of m[1].replace(/\*\/.*$/, "").trim().split(/\s+/)) {
+      if (raw.startsWith("(")) break;                        /* the reason, in parentheses, ends the list */
+      const tok = raw.replace(/^`|[`,;]+$/g, "");
+      if (tok) out.push(tok);
+    }
+  }
+  return out;
+}
+
+/* `--inputs <unit>` prints one unit's input set and whether it is never cached, then stops — the instrument for an
+   UNDER-INCLUSION a gate named. `--inputs all` prints every unit's as JSON (the census M0-126 measured with). */
+const INPUTS_AT = ARGV.indexOf("--inputs");
+if (INPUTS_AT >= 0) {
+  const want = ARGV[INPUTS_AT + 1] || "all";
+  if (want === "all") {
+    const o = {};
+    for (const u of UNITS) o[u.id] = { never: neverCacheOf(u), inputs: [...inputsOf(u)].sort() };
+    console.log(JSON.stringify(o));
+  } else {
+    const u = UNITS.find((x) => x.id === want);
+    if (!u) { console.log(`gates: no unit ${want} (units are plane:<suite>, fleet:<member>/<suite>, ui:<suite>, uicheck:<check>, coverage)`); process.exit(2); }
+    const inp = [...inputsOf(u)].sort();
+    console.log(`gates: ${u.id} — ${inp.length} input(s)${neverCacheOf(u) ? `; NEVER-CACHED (${neverCacheOf(u)})` : ""}`);
+    for (const p of inp) console.log(`  ${p}`);
+  }
+  process.exit(0);
+}
 if (SINCE && !FORCE_FULL) {
   const fallback = (reason) => { sinceNote = `--since ${SINCE} cannot narrow — ${reason}; the ordinary classification runs instead`; };
   const oldCommit = tryGit(["rev-parse", "--verify", "--quiet", `${SINCE}^{commit}`]);
@@ -596,8 +864,11 @@ if (cls === "TARGETED") selection = targetedSelection([...changed]);
    passes turns the tree GREEN with no suite that already passed on it run twice. A wildcard left open
    (a leak, a shared log, a step that named nothing) or no record of this class is not narrowed. `--full`
    and `--since` are never overridden. */
-const CLASS_RANK = (c) => (c === "FULL" ? 2 : 1);
-if (CLEAN_AT_START && !FORCE_FULL && SINCE === null) {
+/* M0-126: FULLREUSE is a FULL selection some of whose units were REUSED from `gate-results` rather than run. It covers
+   what FULL covers for this shortcut, and never licenses what only a run of everything does (effectiveVerdict's
+   clear-all, the train's `--full` reuse, a release's GREEN FULL). `--no-reuse` is never answered from a record. */
+const CLASS_RANK = (c) => (c === "FULL" || c === "FULLREUSE" ? 2 : 1);
+if (CLEAN_AT_START && !FORCE_FULL && !NO_REUSE && SINCE === null) {
   const own = readRuns({ repo: REPO, tree: START.tree });
   const eff = effectiveVerdict(own.runs);
   const covering = own.runs.some((r) => CLASS_RANK(r.class) >= CLASS_RANK(cls));
@@ -660,6 +931,86 @@ if (cls === "FULL") {
   for (const u of picked.filter((x) => x.kind === "uicheck"))
     STEPS.push({ label: `ui check ${u.name}`, units: [u.id], cmd: "node", args: [join("civicos-ui", u.name)] });
 }
+/* ---- 3b · M0-126: THE PER-UNIT RESULT RECORD (TREE-SHARING.md §3a) -------------------------------------------
+   Every unit the plan would run gets a KEY — sha256 of its input set's blobs (2e), node's major and every lockfile
+   (`tools/gateresults.mjs`). A unit whose key already holds a PASS on `gate-results` (and no revocation) is NOT run
+   and is printed REUSED, naming the record; every other unit runs as planned. A unit carrying `GATE: never-cache
+   (<reason>)` in its source or control gets no key and always runs; plancheck is never cached. What runs is TRACED
+   (`tools/gatetrace.mjs`): a file read outside the unit's input set FAILS the unit by name (condition 2). Each unit
+   that passed, traced clean, on a tree clean from start to end, gets a PASS record (4b). A FULL selection runs the UI
+   harness unit by unit here, so each suite and check has a result of its own. */
+const byId = new Map(UNITS.map((u) => [u.id, u]));
+const expandUnits = (ids) => [...new Set(ids.flatMap((id) =>
+  id === "plane:*" ? UNITS.filter((u) => u.kind === "plane").map((u) => u.id)
+    : id === "fleet:*" ? UNITS.filter((u) => u.kind === "fleet").map((u) => u.id)
+      : id === "ui:*" ? UNITS.filter((u) => u.kind === "ui" || u.kind === "uicheck").map((u) => u.id)
+        : [id]))].filter((id) => byId.has(id));
+const neverCache = neverCacheOf;
+const uiStep = (u) => (u.kind === "ui"
+  ? { label: `ui ${u.name}`, units: [u.id], cmd: "node", args: [join("civicos-ui/test", u.name)] }
+  : { label: `ui check ${u.name}`, units: [u.id], cmd: "node", args: [join("civicos-ui", u.name)] });
+let GR = null;
+let grWhy = RESULTS_OFF ? "BIO_GATE_RESULTS=off" : "";
+if (!RESULTS_OFF) {
+  try { GR = await import("./gateresults.mjs"); } catch (e) { grWhy = `tools/gateresults.mjs did not load (${String(e.message).split("\n")[0]})`; }
+}
+const TRACER = join(REPO, "tools/gatetrace.mjs");
+const KEYS = new Map();          /* unit id -> { hash, inputs } | { never } */
+const REUSED = new Map();        /* unit id -> { path, record } */
+const RESULT_NOTES = [];
+let grFetch = null;
+let keyMs = 0;
+if (GR) {
+  if (cls === "FULL") {
+    const at = STEPS.findIndex((s) => s.units.includes("ui:*"));
+    if (at >= 0) STEPS.splice(at, 1, ...UNITS.filter((u) => u.kind === "ui").map(uiStep), ...UNITS.filter((u) => u.kind === "uicheck").map(uiStep));
+  }
+  const t0 = Date.now();
+  try {
+    const U = universe();
+    const blobs = GR.blobsOf({ repo: REPO, paths: U.paths });
+    const runtime = GR.runtimeOf({ paths: U.paths, blobs });
+    for (const id of expandUnits(STEPS.flatMap((s) => s.units))) {
+      const u = byId.get(id);
+      const never = neverCache(u);
+      if (never) { KEYS.set(id, { never }); continue; }
+      const inputs = inputsOf(u);
+      KEYS.set(id, { hash: GR.inputHash({ unit: id, inputs, blobs, runtime }), inputs });
+    }
+  } catch (e) { grWhy = `the unit keys could not be computed (${e.message})`; KEYS.clear(); }
+  keyMs = Date.now() - t0;
+  if (KEYS.size && !NO_REUSE) {
+    grFetch = GR.fetchResults({ repo: REPO });
+    if (!grFetch.ok) RESULT_NOTES.push(`gate-results could not be fetched from ${GR.resultsRemote()} (${grFetch.reason}) — nothing reused`);
+    else if (grFetch.absent) RESULT_NOTES.push(`${GR.resultsRemote()} holds no gate-results branch yet — nothing to reuse; this run's first PASS creates it`);
+    else {
+      const found = GR.lookup({ repo: REPO, tip: grFetch.tip, keys: [...KEYS].filter(([, k]) => k.hash).map(([id, k]) => [id, k.hash]) });
+      for (const [id, f] of found) {
+        if (f.state === "PASS") REUSED.set(id, { path: f.path, record: f.record });
+        else if (f.state === "REVOKED") RESULT_NOTES.push(`${id}: key ${KEYS.get(id).hash.slice(0, 12)} is REVOKED (${(f.revoked && f.revoked.reason) || "no reason given"})`
+          + `${f.record ? ` — its PASS was written by clone ${f.record.clone || "?"}, session ${f.record.session || "UNDETERMINED"}, run ${f.record.run || "?"}` : ""}; it runs`);
+        else if (f.state === "UNREADABLE") RESULT_NOTES.push(`${id}: the record ${f.path} is UNREADABLE (not a PASS for this unit and key) — it runs`);
+      }
+    }
+  }
+  if (REUSED.size) {
+    const next = [];
+    for (const s of STEPS) {
+      if (s.units.includes("plancheck")) { next.push(s); continue; }
+      const ids = expandUnits(s.units);
+      const left = ids.filter((id) => !REUSED.has(id));
+      if (left.length === ids.length) next.push(s);
+      else if (!left.length) continue;
+      else {
+        /* Only a battery step holds more than one unit: it runs the units left, by name. */
+        const names = left.map((id) => byId.get(id).filter);
+        next.push({ label: "battery (not reused)", units: batteryRuns(names), cmd: "node", args: ["scripts/battery.mjs", ...names], cwd: join(REPO, "bio-plane"), names });
+      }
+    }
+    STEPS.splice(0, STEPS.length, ...next);
+  }
+}
+
 /* --local skips the publication checks: gates runs MID-TURN, before commit+push,
    and a dirty planning surface is the expected state then. The bare plancheck is
    still owed AFTER the push — it is the handoff gate, not this one. */
@@ -678,6 +1029,19 @@ if (cls === "TARGETED" || cls === "SINCE" || cls === "RERUN") {
     + `read as code${stripComments ? ", comments blanked (strings kept)" : " — THE LEXER DID NOT LOAD, so comments count too (over-selection)"}; `
     + "not the plane's runtime code, and not a path assembled at run time from pieces none of which is its name, stem or directory.");
 }
+if (!GR) console.log(`gates: results (M0-126) — OFF: ${grWhy}; every selected unit runs and no per-unit record is read or written`);
+else {
+  const never = [...KEYS].filter(([, k]) => k.never);
+  console.log(`gates: results (M0-126) — ${KEYS.size} unit(s) keyed in ${keyMs} ms; ${NO_REUSE ? "--no-reuse: NOTHING reused (the backstop)"
+    : `${REUSED.size} REUSED from gate-results${grFetch && grFetch.tip ? ` @ ${short(grFetch.tip)}` : ""}`}; ${never.length} never-cached`
+    + `${isFile(TRACER) ? "" : "; THE TRACER (tools/gatetrace.mjs) IS ABSENT, so condition 2 cannot be checked and NO PASS will be written"}`);
+  for (const n of RESULT_NOTES) console.log(`gates:   ${n}`);
+  for (const [id, k] of never) console.log(`gates:   NEVER-CACHED ${id}  <- GATE: never-cache (${k.never})`);
+  for (const [id, r] of REUSED) console.log(`gates:   REUSED ${id}  <- ${r.path} (PASS on tree ${short(r.record.tree)}, `
+    + `clone ${r.record.clone || "?"}, ${r.record.at || "?"})`);
+  /* --explain names every key: the name a record, a revocation (`tools/gateresults.mjs revoke`) and a diagnosis use. */
+  if (EXPLAIN) for (const [id, k] of KEYS) if (k.hash) console.log(`gates:   KEY ${id} ${k.hash}`);
+}
 const planLabel = (s) => (s.names ? `${s.label.split(" (")[0]} [${s.names.join(", ")}]` : s.label);
 console.log(`gates: plan — ${STEPS.map(planLabel).join(" · ")}`);
 console.log(CLEAN_AT_START
@@ -691,10 +1055,47 @@ if (EXPLAIN) process.exit(0);
    tool's 124 (and no battery that merely exited 124 without saying why) can pass for an expired budget. */
 const VERDICT_DIR = mkdtempSync(join(tmpdir(), "bio-gates-verdict-"));
 const results = [];
+/* M0-126: THE TRACE. A step that runs keyed units is run with the tracer preloaded; a battery step maps each suite's top
+   file to its unit, a single-unit step names its unit. `passedUnits` collects the units a PASS may be written for. */
+const TRACING = !!GR && KEYS.size > 0 && isFile(TRACER);
+const passedUnits = new Set();
+const underIncluded = new Map();   /* unit id -> [paths read outside its key] */
+const untraced = new Set();
+let topsFile = null;
+if (TRACING) {
+  const tops = {};
+  for (const u of UNITS) if (u.kind === "plane" || u.kind === "fleet") tops[u.tops[0]] = u.id;
+  topsFile = join(VERDICT_DIR, "tops.json");
+  writeFileSync(topsFile, JSON.stringify(tops));
+}
+function readTraces(dir) {
+  const out = new Map();
+  let names = [];
+  try { names = readdirSync(dir); } catch { return out; }
+  for (const n of names) {
+    let j = null;
+    try { j = JSON.parse(readFileSync(join(dir, n), "utf8")); } catch { continue; }
+    if (!j || !j.unit || !Array.isArray(j.reads)) continue;
+    if (!out.has(j.unit)) out.set(j.unit, new Set());
+    for (const p of j.reads) out.get(j.unit).add(p);
+  }
+  return out;
+}
 STEPS.forEach((s, i) => {
   console.log(`\n=== gates · ${s.label}: ${s.cmd} ${s.args.join(" ")}`);
   const vf = join(VERDICT_DIR, `step-${i}.json`);
-  const r = spawnSync(s.cmd, s.args, { cwd: s.cwd ?? REPO, stdio: "inherit", env: { ...process.env, BIO_BATTERY_VERDICT: vf } });
+  const ran = s.units.includes("plancheck") ? [] : expandUnits(s.units);
+  const keyed = ran.filter((id) => KEYS.get(id) && KEYS.get(id).hash);
+  const traceDir = TRACING && keyed.length ? mkdtempSync(join(VERDICT_DIR, `trace-${i}-`)) : null;
+  const env = { ...process.env, BIO_BATTERY_VERDICT: vf };
+  if (traceDir) {
+    Object.assign(env, { BIO_GATE_TRACE_DIR: traceDir, BIO_GATE_TRACE_REPO: REPO,
+      NODE_OPTIONS: `${process.env.NODE_OPTIONS ? `${process.env.NODE_OPTIONS} ` : ""}--import=${pathToFileURL(TRACER).href}` });
+    delete env.BIO_GATE_TRACE_UNIT;
+    if (ran.length === 1 && s.units.length === 1 && !s.units[0].endsWith(":*")) env.BIO_GATE_TRACE_UNIT = ran[0];
+    else env.BIO_GATE_TRACE_TOPS = topsFile;
+  }
+  const r = spawnSync(s.cmd, s.args, { cwd: s.cwd ?? REPO, stdio: "inherit", env });
   let v = null;
   try { v = JSON.parse(readFileSync(vf, "utf8")); } catch { /* no verdict file: this step is not a battery, or it died */ }
   const unmeasured = v && v.verdict === "NOT MEASURED" && Array.isArray(v.notMeasured)
@@ -704,9 +1105,44 @@ STEPS.forEach((s, i) => {
      tree (2d). Not when the finding is the run's, not a suite's — a leak or a shared log keeps the whole step open. */
   const failedUnits = r.status !== 0 && !timedOut && v && v.verdict === "RED" && Array.isArray(v.failed)
     && v.failed.length && !v.leaking && !v.sharedLog ? v.failed.filter((u) => typeof u === "string" && u) : [];
-  results.push({ label: s.label, units: s.units, ok: r.status === 0, ...(timedOut ? { timedOut: true, unmeasured } : {}),
-    ...(failedUnits.length ? { failedUnits } : {}) });
+  let ok = r.status === 0;
+  /* M0-126: which units PASSED here. A battery says so in its verdict file (`passed`), never when the run's own finding
+     (a leak, a shared log) stands; a single-unit step passed when it exited 0. */
+  const passedHere = ran.length === 1 && !s.names ? (r.status === 0 ? ran : [])
+    : v && Array.isArray(v.passed) && !v.leaking && !v.sharedLog ? v.passed.filter((id) => ran.includes(id)) : [];
+  if (traceDir) {
+    /* CONDITION 2: a file read outside the unit's key FAILS the unit by name. Only paths of the repository as it stood
+       when the gate began are judged — a file a suite creates is not an input. */
+    const traces = readTraces(traceDir);
+    const U = universe();
+    for (const id of keyed) {
+      const t = traces.get(id);
+      if (!t) { untraced.add(id); continue; }
+      const miss = [...t].filter((p) => U.set.has(p) && !KEYS.get(id).inputs.has(p)).sort();
+      if (miss.length) underIncluded.set(id, miss);
+    }
+  }
+  const under = ran.filter((id) => underIncluded.has(id));
+  for (const id of under) {
+    const miss = underIncluded.get(id);
+    console.log(`gates: UNDER-INCLUSION (M0-126 condition 2) — ${id} read ${miss.length} file(s) its key does not cover: `
+      + `${miss.slice(0, 12).join(", ")}${miss.length > 12 ? ` (+${miss.length - 12} more)` : ""}. It FAILS and no PASS is written; `
+      + "declare them (`GATE: reads <path> <dir/>` in its source) or widen the derivation in tools/gates.mjs §2e.");
+  }
+  let fu = failedUnits;
+  if (under.length) {
+    if (ok) fu = under;
+    else if (failedUnits.length) fu = [...new Set([...failedUnits, ...under])];
+    ok = false;
+  }
+  for (const id of passedHere) if (!under.includes(id) && !timedOut) passedUnits.add(id);
+  results.push({ label: s.label, units: s.units, ok, ...(timedOut ? { timedOut: true, unmeasured } : {}),
+    ...(fu.length ? { failedUnits: fu } : {}) });
 });
+if (REUSED.size)
+  results.push({ label: "reused (gate-results, M0-126)", units: [...REUSED.keys()], ok: true, reused: true,
+    records: [...REUSED.values()].map((x) => x.path) });
+if (cls === "FULL" && REUSED.size) cls = "FULLREUSE";
 try { rmSync(VERDICT_DIR, { recursive: true, force: true }); } catch { /* the OS temp sweep */ }
 const red = results.some((r) => !r.ok && !r.timedOut);
 const notMeasured = !red && results.some((r) => r.timedOut);
@@ -737,13 +1173,41 @@ if (notMeasured) {
       w = appendRun({ repo: REPO, run: {
         tree: START.tree, verdict: VERDICT, class: cls, why, head: START.head, base: base || null,
         at: new Date().toISOString(), worktree: REPO, since: sinceInfo,
-        steps: results.map(({ label, units, ok, timedOut, unmeasured, failedUnits }) =>
-          ({ label, units, ok, ...(timedOut ? { timedOut, unmeasured } : {}), ...(failedUnits ? { failedUnits } : {}) })),
+        steps: results.map(({ label, units, ok, timedOut, unmeasured, failedUnits, reused, records }) =>
+          ({ label, units, ok, ...(timedOut ? { timedOut, unmeasured } : {}), ...(failedUnits ? { failedUnits } : {}),
+             ...(reused ? { reused, records } : {}) })),
       } });
     } catch (e) { w = { ok: false, reason: `the record could not be written (${e.message})` }; }
     console.log(w.ok
       ? `gates: RECORDED ${VERDICT} for tree ${short(START.tree)} (class ${cls}) — ${w.path}; the push guard reads it (D-293)`
       : `gates: NOT RECORDED — ${w.reason}`);
+    /* ---- 4b · M0-126: the PASS records, one per unit that passed, traced clean, with a key ---------------------- */
+    if (GR && KEYS.size) {
+      const clone = `${hostname()}:${tryGit(["rev-parse", "--path-format=absolute", "--git-common-dir"]) || "?"}`;
+      const session = process.env.CLAUDE_CODE_SESSION_ID || process.env.CLAUDE_SESSION_ID || process.env.BIO_SESSION || null;
+      const files = [];
+      const noTrace = !isFile(TRACER);
+      for (const id of passedUnits) {
+        const k = KEYS.get(id);
+        if (!k || !k.hash || noTrace || untraced.has(id) || underIncluded.has(id)) continue;
+        files.push({ path: GR.resultPath(id, k.hash), body: `${JSON.stringify({ unit: id, inputHash: k.hash, verdict: "PASS",
+          run: w.ok ? basename(w.path) : null, tree: START.tree, head: START.head, gateVersion: GR.GATE_VERSION,
+          keyVersion: GR.KEY_VERSION, class: cls, inputs: k.inputs.size, node: process.versions.node, clone,
+          session, at: new Date().toISOString() }, null, 1)}\n` });
+      }
+      if (untraced.size) console.log(`gates: results (M0-126) — ${untraced.size} unit(s) left NO trace (killed, or a child that dropped NODE_OPTIONS), so no PASS is written for them: ${[...untraced].slice(0, 8).join(", ")}${untraced.size > 8 ? " …" : ""}`);
+      if (noTrace) console.log("gates: results (M0-126) — NOT WRITTEN: the tracer is absent, so condition 2 was not checked");
+      else if (!files.length) console.log("gates: results (M0-126) — no new PASS to write");
+      else {
+        const a = GR.appendRecords({ repo: REPO, files,
+          message: `gate-results: ${files.length} PASS · tree ${short(START.tree)} · class ${cls}${session ? ` · session ${session}` : ""}` });
+        console.log(a.status === "pushed" || a.status === "pushed-unverified" || a.status === "unchanged"
+          ? `gates: results (M0-126) — WROTE ${a.added || 0} PASS record(s) to ${GR.resultsRemote()}/gate-results`
+            + `${a.skipped ? ` (${a.skipped} already held)` : ""}${a.created ? " — the branch was CREATED by this write" : ""}`
+            + `${a.commit ? ` @ ${short(a.commit)}` : ""}${a.status === "pushed-unverified" ? " — the remote did NOT read back that commit" : ""}`
+          : `gates: results (M0-126) — NOT WRITTEN: ${a.reason}`);
+      }
+    }
   }
 }
 if (green) console.log("gates: after you push, run `node tools/plancheck.mjs` bare — the publication half runs there.");

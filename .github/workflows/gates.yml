@@ -60,7 +60,13 @@ jobs:
 
       - name: gate
         env:
-          GATE_FULL: ${{ github.event_name == 'workflow_dispatch' && '--full' || '' }}
+          # M0-126 (TREE-SHARING §3a condition 3): THIS RUN IS THE FULL BACKSTOP on a second machine, so it runs
+          # EVERY unit, always: `--full`, and `BIO_GATE_RESULTS=off` so it neither reuses a PASS from `gate-results`
+          # nor writes one (this job has no push credential: `contents: read`). Until M0-126 it ran the DERIVED class,
+          # and on `main` the derived diff (HEAD against origin/main, the same commit) is EMPTY, so it ran DOCS — the
+          # doc-facing suites alone (read at `tools/gates.mjs` §1, 2026-09-23).
+          GATE_FULL: --full
+          BIO_GATE_RESULTS: "off"
         run: |
           # `set +e` IS LOAD-BEARING: Actions runs a step as `bash -e`, so without it a RED gate (exit 1)
           # kills the step before the verdict annotation is written, and every RED reads UNDETERMINED.
