@@ -23,6 +23,14 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
   (installer read-back: the esbuild'd `RELEASE_SOURCE` is a SINGLE-quoted literal — scan by escapes, evaluate with
   `vm.runInNewContext`, hash). Each is ~30 lines; rebuild from the lesson.
 
+## BOB'S RULING, ~17:00Z 2026-09-23 (relayed by BOB #30), SUPERSEDING every schedule below
+
+*"there don't need to be ANY releases — for security, daily, or otherwise — until I say we need a release."*
+**Cut NOTHING and deploy NOTHING until Bob asks through the BOB lane.** No daily cut; REC-175's digest census waits for
+that release too. The daily wake `trig_014p69w2WQz7jfSkYeg4XHSF` is PAUSED by BOB #30 — do not re-arm it. DIST's one
+remaining act: `land/dist/release-0.78.0` @ `183cc7df` rides CONDUCT's next train as it is. Then IDLE until a BOB trigger.
+When one comes, the sections below are the state to resume from (0.78.0 live; next RELEASES row and figures in item 1).
+
 ## What is OWED
 
 0. **`land/dist/release-0.78.0` @ `183cc7df` waits on CONDUCT #16's train** (`session_01DEAp94ny3PfWr6deFJtTaD`; tree `9beb2c57`
