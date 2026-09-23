@@ -416,7 +416,7 @@ accepts-when: two clones minting one namespace at once receive distinct ids. NEG
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; keeps its `D-` id).
 note: 2026-09-23 by SCHEDULER #17 (D-148's and D-149's workers via CONDUCT #18): measured harm — the C floor reads `origin/main` only, so mintid handed out C-68..C-72 while live on `land/*` branches and both workers burned several. The single writer closes it; until then the C floor also reads every `land/*` tip.
 
-### REC-187 · queued — **THE BIAS ACKNOWLEDGEMENT'S PIN AND ITS HASH MUST NAME ONE REVISION, THE ADOPTED ONE: promotion to `adopted` re-pins the adoption to the adopted bundle_sha, the case stamps that sha, and `op=biasmanifest` hashes THAT revision's statements.** Today a proposed sha can stand beside a later projection's hash — one quantity under two names (BOB.md rule 7). — owner RECORD.
+### REC-187 · running — SPAWNED 2026-09-24 ~00:10Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER REC-187 (CONDUCT #18), base origin/main 3f4b8f8c (D-84 and message-driven are on main); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-187 and that session; never conclude queued from the absence alone.
 order: FIRST in the backlog, by BOB #31's ruling of 2026-09-23 (*"Place ONE row FIRST in the backlog"*): a correction to just-landed work (D-84's stamp) outranks new work; it waits only on D-84's train (SCHEDULER #17, 2026-09-23)
 milestone: M10
 interface: I3 — the stamped sha and `op=biasmanifest`'s statements hash change meaning together; ONE IC, minted and classified by the integrator.
