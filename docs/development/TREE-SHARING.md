@@ -333,7 +333,11 @@ file from a unit's input set, and condition 2 fails that unit by name.
      arguments name a remote-tracking ref or a commit id, FAILS a cacheable unit by name (`HISTORY READ`) and writes no
      PASS; a git run in a fixture repository elsewhere does not count. The full traced gate of 2026-09-23 named eleven
      (`decided`, `migrate-released`, `mintid`, `op-claims`, `owed-controls`, `owed`, `readbudget`, `register-grammar`,
-     `retirable`, `status`, `coverage`); each is marked, with `mergecarry` (named by the ruling). And a REUSED record
+     `retirable`, `status`, `coverage`); each is marked, with `mergecarry` (named by the ruling). **Never-cache makes such
+     a unit always RUN; it does not make its VERDICT depend only on the tree (§3).** `mergecarry`'s historical register
+     read the live `origin/main` until M0-130 (2026-09-23): it now reads the merges reachable from `REGISTER_PIN`, a
+     commit named with its why in `tools/mergecarry.mjs`, and a planted-ref arm proves the verdict is the same whatever
+     `origin/main` holds; it stays never-cache (it reads history by commit id, and runs plancheck). And a REUSED record
      never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
      and a RERUN of what failed also runs every never-cached unit. The train's own tree-keyed reuse (M0-122's
      `recordedGreen`) is NOT changed here: M0-131 carries it.

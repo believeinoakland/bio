@@ -196,6 +196,13 @@ arm("plancheck's section 2c is pointed at a different module — the GATE, not t
   { mustFail: ["plancheck actually RUNS the carry check and reports it in its own output"],
     mustNotFail: ["the CLI exits 1 on the real drop"] });
 
+/* M0-130: the register reads the LIVE remote ref again instead of its pin — the defect GitHub run #20 on main
+   was. The planted-ref section must go red by name; the real drop arms must not move. */
+arm("the historical register reads `origin/main` again instead of its PIN",
+  [{ path: TOOL, from: `const a = carryAudit({ repo, range: pin });`, to: `const a = carryAudit({ repo, range: "origin/main" });` }],
+  { mustFail: ["the register's verdict is IDENTICAL whatever origin/main holds"],
+    mustNotFail: ["e241672's real drop is NOT carried", "the check reports exactly ONE dropped path"] });
+
 /* ========================================================================== */
 console.log("\n--- the tree is as it was found ---");
 for (const [name, p] of [["mergecarry.mjs", TOOL], ["plancheck.mjs", PLANCHECK], ["CONDUCT.md", KICKOFF]]) {
