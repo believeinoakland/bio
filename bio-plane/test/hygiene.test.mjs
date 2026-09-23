@@ -2310,10 +2310,17 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     [true, true]);
 
   /* (3) THE FALSE-POSITIVE DIRECTION, ASSERTED OVER A REAL LINE AND NOT A FIXTURE.
-     `LEDGER` is a STATIC exported array imported FROM THE SAME WALKING MODULE by
-     THE SAME SUITE, and `LEDGER.length >= 20` is a floor on it. It is not
-     walk-derived, no phantom in any directory can move it, and a detector that
-     reports it is a detector somebody switches off. */
+     `LEDGER` is a STATIC exported array, floored (`LEDGER.length >= 20`) by THE SAME
+     SUITE that imports the walking module. It is not walk-derived, no phantom in any
+     directory can move it, and a detector that reports it is a detector somebody
+     switches off. CORRECTED 2026-09-22 (M0-116): it was imported FROM the walking
+     module until then; it now comes from `scripts/op-claims-ledger.mjs`, which only
+     that suite imports, so a unit importing `op-claims.mjs` stops inheriting the files
+     the ledger names as inputs to `tools/gates.mjs`. The floor still sits in a file
+     that imports the walking module, which is the shape a module-granularity detector
+     reports — `walkfloor.control.mjs modulegrain` RAN 2026-09-22 by the M0-116 worker: AS DECLARED, walkfloor
+     40 pass / 4 fail, hygiene 946 pass / 5 fail, restore verified; `walkfigure.control.mjs overstrict`, whose
+     fixture M0-116 corrected, walkfigure 32 / 0 and hygiene 951 / 0 as declared. */
   t("a floor on a STATIC export of a walking module is NOT reported (the `LEDGER.length >= 20` shape)",
     wf.sites.some((s) => /LEDGER/.test(s.expr)), false);
 

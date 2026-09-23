@@ -18518,3 +18518,33 @@ touched state still move `main` for their product half, but no longer carry the 
 that cost BOB #26's landing six gate runs (TREE-SHARING §"Why"). It is a figure about ONE day's shape, not a forecast:
 a day heavier in product landings moves `main` more. **Not measured:** the gate runs this would have saved — a count
 of avoided rebases needs the runs M-97 could not see either.
+
+## M-106 · 2026-09-22 · M0-116 — how many units a MEASUREMENTS-only change selects, before and after, and which half of the fix moved it
+
+Instrument: `node` v26.10.0 in the cloud container (4 cores, shared with three workers); `node tools/gates.mjs --explain`
+run in a scratch `git clone` of the branch whose `origin/main` was set to its own HEAD, so the diff is ONLY the plant:
+one line appended to `docs/development/MEASUREMENTS.md`, plus an empty root file nobody names (`m0116-plant.txt`) so
+the class reads TARGETED — a MEASUREMENTS-only diff alone is class DOCS, which runs the doc-facing set and never asks
+MENTION. "Readers" are the selection lines whose first reason is `docs/development/MEASUREMENTS.md`; the rest of a
+TARGETED selection is the doc-facing set DOCS would run anyway. The readers of one path are what a `--since` pairing
+selects for it when the other side is runtime (`readersOf(mine, "fine")`), BOB #27's form. Every plant restored by
+sha256, 1,401,669 bytes, the clone clean after each.
+
+| tree | units selected (of 341) | MEASUREMENTS readers | doc-facing added |
+| --- | --- | --- | --- |
+| `df9eb9f9` (before) | 109 | 85 — 38 through `op-claims.mjs`, 29 by the unit's own files, 18 through six tools | 24 |
+| both fixes (this branch) | **85** | **60** | 25 |
+| gates fix only (op-claims as `df9eb9f9`) | 85 | 60 | 25 |
+| op-claims split only (own files read whole again, G16's patch) | 109 | 85 | 24 |
+| both fixes + op-claims NOT importing `tools/coord.mjs` (an experiment, not built) | 55 | 24 | 31 |
+| plain `--explain`, MEASUREMENTS alone (class DOCS), before and after | 44 doc-facing | — | — |
+
+**WHAT IT SAYS.** The fall from 109 to 85 is ALL the gate's half (a unit's own files read as code): 25 of the 29
+own-file readers cited a measurement only in a comment and read nothing. The op-claims half is built and measured at ZERO today, and why is
+the finding: `op-claims.mjs` imports `isMovedPath` from `tools/coord.mjs`, whose `queuedRefs` walks `docs/development/`,
+so the same 38 units still inherit a walk of MEASUREMENTS.md's directory through the module they import for a
+predicate. The remaining 60 readers are 41 through that walk, 5 through `plancheck.mjs` (a real string), 3 each through
+`pushguard.mjs` (walks `docs/`), `mintid.mjs` (its corpus names the file) and 2 each through `decided.mjs` and
+`corpuscheck.mjs`, and 4 suites whose CODE carries `measured_by: "MEASUREMENTS.md …"` labels. The experiment row is the
+named follow-up: the state-path predicate out of `coord.mjs` into a module that walks nothing takes the readers to 24.
+**Not measured:** the gate TIME saved (selection counts only); a real `--since` over a real rebase.

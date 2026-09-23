@@ -44,6 +44,15 @@
  *   (15) ANY exit 124 taken as an expired budget -> "a battery exiting 124 WITHOUT a verdict file naming a
  *       timeout is RED" FAILS alone; the NOT MEASURED push and the RED refusal hold.
  * All fifteen as declared, driver 110 pass / 0 fail, baseline and closing 74 / 0.
+ * RE-RUN 2026-09-22 by the M0-116 worker with two arms added, G4's anchor moved off the line M0-116 rewrote, and two
+ * fixtures corrected (a comment no longer stands for a read — see `prose` and `cites` in FILES):
+ *   (16) a unit's OWN files read with their comments again, BOB #27's control -> "a suite whose OWN COMMENT is its only
+ *       mention of the file is NOT selected" FAILS alone; the string-path reader is still selected;
+ *   (17) strings blanked with the comments, the LIAR (selecting nothing reads as "fewer units") -> "a suite that READS
+ *       the file through a STRING path is selected" FAILS, with the computed-path and walker arms; the comment-only
+ *       suite is still not selected. G12 now also fails the own-comment arm (it reads every file whole), as it should.
+ * All seventeen as declared, driver 123 pass / 0 fail, baseline and closing 78 / 0. On the REAL estate the same break
+ * (16) takes a MEASUREMENTS-only TARGETED plant from 85 selected units back to 109 (`MEASUREMENTS.md` M-106).
  *
  * WHY THIS SUITE DRIVES A FIXTURE AND NEVER THIS REPOSITORY. `gates.mjs` is every lane's gate and
  * `pushguard.mjs` runs on every lane's push; a refusal arranged against this repository's remote
@@ -85,7 +94,7 @@ const t = (label, got, want) => {
 };
 /* The FOOT sentinel (`mintid.test.mjs`'s): a TypeError inside an assertion ends the module while the
    tally still reads clean, so every section bumps this and the last assertion requires all of them. */
-const SECTIONS = 7;   /* M0-107: +1 */
+const SECTIONS = 8;   /* M0-107: +1; M0-116: +1 */
 let reached = 0;
 const section = (name) => { reached++; console.log(`\n--- ${name} ---`); };
 
@@ -144,10 +153,24 @@ const FILES = {
     `import { fileURLToPath } from "node:url";`,
     `const REPO = join(dirname(fileURLToPath(import.meta.url)), "../..");`,
     `process.exit(readdirSync(join(REPO, "tools")).length > 0 ? 0 : 1);`, ""].join("\n"),
-  /* a doc-facing suite */
-  "bio-plane/test/prose.test.mjs": `// reads docs/notes/a.md\nprocess.exit(0);\n`,
-  /* a suite whose own prose CITES a note by its bare name and reads no prose at all — NOT doc-facing */
-  "bio-plane/test/cites.test.mjs": `// the a.md note explains this suite's shape; the suite reads nothing\nprocess.exit(0);\n`,
+  /* a doc-facing suite.
+     CORRECTED 2026-09-22 (M0-116), never exempted: it "read" the note in a COMMENT, which stood for a read only while
+     a unit's own files were read whole; read as code, a comment reads nothing. A real reader names the path in a
+     string, which is what this fixture now does, so the --since arm below still asks what it asked. */
+  "bio-plane/test/prose.test.mjs": `const NOTE = "docs/notes/a.md";\nprocess.exit(NOTE ? 0 : 1);\n`,
+  /* a suite whose CODE CITES a note by its bare name (a label, the shape of a real suite's assertion text) and
+     reads no prose at all — NOT doc-facing.
+     CORRECTED 2026-09-22 (M0-116), never exempted: the citation was a COMMENT, which a unit's own files were read
+     whole for until M0-116; they are now read as code, so a comment cites nothing and the arm below would pass over
+     a cap that did nothing (G13 stopped breaking it). A string label is the citation MENTION still sees. */
+  "bio-plane/test/cites.test.mjs": `console.log("the a.md note explains this suite's shape; the suite reads nothing");\nprocess.exit(0);\n`,
+  /* M0-116: a data file two suites mention — one READS it through a string path, one only cites it in a comment */
+  "data/figures.txt": "M-1 42\n",
+  "bio-plane/test/figstring.test.mjs": [
+    `import { readFileSync } from "node:fs";`,
+    `const F = new URL("../../data/figures.txt", import.meta.url);`,
+    `process.exit(readFileSync(F, "utf8").length ? 0 : 1);`, ""].join("\n"),
+  "bio-plane/test/figcomment.test.mjs": `/* the figures this suite was tuned against are in figures.txt (M-1) */\nprocess.exit(0);\n`,
   /* two suites through a shared HELPER: one helper names a tool only in a COMMENT, the other in CODE */
   "bio-plane/test/helper-prose.mjs": `/* this helper's prose cites tools/lonely.mjs and reads nothing */\nexport const h = 1;\n`,
   "bio-plane/test/helped.test.mjs": `import { h } from "./helper-prose.mjs";\nprocess.exit(h === 1 ? 0 : 1);\n`,
@@ -393,6 +416,23 @@ section("M0-98 · THE CLASS — TARGETED by MENTION, and what stays FULL");
   const noBase = withEdits(F.root, ["docs/notes/a.md"], () => gates(F.root, ["--explain"]));
   git(["update-ref", "refs/remotes/origin/main", om], F.root);
   t("no merge-base with origin/main reads FULL, never DOCS", noBase.cls, "FULL");
+}
+
+/* ========================================================================== */
+section("M0-116 · A UNIT'S OWN FILES ARE READ AS CODE — a comment reads nothing, a string path still reads");
+{
+  /* BOB #27's defect: ~30 suites were selected for a MEASUREMENTS-only change because their OWN prose cites a
+     measurement. THE LIAR: selecting nothing for the file passes a naive "fewer units" check — so the suite that
+     READS it through a string path must stay selected, and G17 blanks strings to prove that arm has teeth. */
+  branch(F.root, "owncode");
+  const figs = withEdits(F.root, ["data/figures.txt"], () => gates(F.root, ["--explain"]));
+  t("a data-only diff reads TARGETED", figs.cls, "TARGETED");
+  t("a suite that READS the file through a STRING path is selected — selecting nothing is not the fix",
+    figs.units.includes("plane:figstring.test.mjs"), true);
+  t("a suite whose OWN COMMENT is its only mention of the file is NOT selected — a comment reads nothing",
+    figs.units.includes("plane:figcomment.test.mjs"), false);
+  t("...and the plan says a unit's own files are read as code",
+    figs.out.includes("a unit's source and control, the tools/scripts it names and their relative imports, all read as code, comments blanked"), true);
 }
 
 /* ========================================================================== */

@@ -206,13 +206,16 @@ ARMS.overstrict = () => {
   const rel = "d265-benign.probe.mjs";
   plant(rel,
 `/* D-265 control arm (overstrict). Planted and removed by test/walkfigure.control.mjs. */
-import { sweep, LEDGER } from "../scripts/op-claims.mjs";
+import { sweep, LEDGER_STATE } from "../scripts/op-claims.mjs";
 
 /* Imports a walking module. Never floors on the walk. Reports, and floors on a
-   STATIC export — the benign shape a module-granularity detector cries wolf on. */
+   STATIC export — the benign shape a module-granularity detector cries wolf on.
+   CORRECTED 2026-09-22 (M0-116): the static export was LEDGER, which left this
+   module for op-claims-ledger.mjs; LEDGER_STATE is a static export of the SAME
+   walking module, so the arm asks what it asked. */
 const r = sweep({ root: "${PLANE.split("\\").join("/")}", roots: ["scripts"] });
 console.log("swept " + r.files + " files over " + r.names.count + " names");
-if (LEDGER.length >= 20) console.log("the ledger is populated");
+if (LEDGER_STATE.length >= 5) console.log("the ledger is populated");
 `);
   const wfg = runSuite("walkfigure"), hyg = runSuite("hygiene");
   console.log(`    ACTUAL: walkfigure ${wfg.pass}/${wfg.fail} · hygiene ${hyg.pass}/${hyg.fail}`);

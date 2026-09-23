@@ -61,15 +61,17 @@
  * directory: a file that enumerates directories (`readdirSync`, `ls-files` …) and
  * names the parent's last segment or any ancestor's repo-relative path as a quoted
  * token (`join(REPO, "tools")`), or a unit's own file enumerating the directory it
- * sits in (`readdirSync(DIR)`). A file a unit merely IMPORTS is read as code, its
- * comments blanked by the estate's one lexer (`walkfloor.mjs` `stripComments`, strings
- * kept); the unit's own files are read whole. An unmeasured `docs/` path also brings
+ * sits in (`readdirSync(DIR)`). Every file is read as CODE, its comments blanked by the
+ * estate's one lexer (`walkfloor.mjs` `stripComments`, strings kept, since a path is a
+ * string) — a file a unit imports and, since M0-116, the unit's own source and control too;
+ * which tools and scripts a unit RUNS is still read off its whole text. An unmeasured `docs/` path also brings
  * in DOCS's own doc-facing set, so TARGETED never checks prose more narrowly than DOCS
  * does. REACH, stated: the plane's runtime code is
  * not read (it cannot read a repository file at run time; its dependencies are
  * imports inside the FULL set); a path assembled at run time from pieces none of
  * which is its name, its stem or its directory is invisible; a comment naming a
- * path counts (over-selection, the safe direction). CONDUCT's integration batches
+ * path reads nothing and selects nothing (M0-116), and a path written inside a
+ * REGEX literal is blanked with the comments (the lexer's rule). CONDUCT's integration batches
  * stay FULL (`ORCHESTRATION.md`, THE RECORD IS PARTITIONED BY WRITER, rule 1).
  *
  * `--since [<rev>]` (default ORIG_HEAD): after a rebase, read the recorded verdict
@@ -334,9 +336,14 @@ const textOf = (abs) => {
    (`stripComments` in `bio-plane/scripts/walkfloor.mjs`, D-301: strings KEPT, since a path is a string),
    never a second one. The helpers every suite imports cite files in their prose (`stdio.mjs` names
    `MEASUREMENTS.md`, `provenance.mjs` names `coverage.mjs`), and read by prose, one appended measurement
-   selected 219 units and one `REGISTER_FLOOR` move ~100 (measured 2026-09-21, before this). A unit's OWN
-   files are read whole, comments included — over-selection, the safe direction. If the lexer cannot be
-   loaded, every file is read whole and the plan SAYS so. */
+   selected 219 units and one `REGISTER_FLOOR` move ~100 (measured 2026-09-21, before this).
+   A UNIT'S OWN FILES ARE READ AS CODE TOO (M0-116, BOB #27, 2026-09-22). They were read whole, comments
+   included, on the reasoning that over-selection is the safe direction; measured, it was not safe but merely
+   expensive — about 30 suites were selected for a MEASUREMENTS-only change because their OWN prose cites a
+   measurement (`see MEASUREMENTS.md M-60`), and a comment reads nothing. A suite that READS the file does it
+   through a string (`join(REPO, "docs/development/MEASUREMENTS.md")`), which the lexer keeps. What a unit names
+   as a tool or script it RUNS (`edges`) is still read off the whole text. If the lexer cannot be loaded, every
+   file is read whole and the plan SAYS so. */
 let stripComments = null;
 try { ({ stripComments } = await import("../bio-plane/scripts/walkfloor.mjs")); } catch { /* read whole, and say so */ }
 const codeMemo = new Map();
@@ -417,7 +424,7 @@ const walkerMemo = new Map();
 /* A walker ENUMERATES in code: a primitive named in a comment walks nothing. */
 const isWalker = (abs) => { if (!walkerMemo.has(abs)) walkerMemo.set(abs, DISCOVERY_RE.test(codeOf(abs) || "")); return walkerMemo.get(abs); };
 function fileHit(abs, p, own = false) {
-  const s = own ? textOf(abs) : codeOf(abs);
+  const s = codeOf(abs);          /* M0-116: a unit's own files too — see the lexer's block above */
   if (!s) return null;
   const pr = probesFor(p);
   if (s.includes(pr.base)) return `names ${pr.base}`;
@@ -622,8 +629,8 @@ if (cls === "TARGETED" || cls === "SINCE") {
     + `${planeForeign.files.length ? ` + [${planeForeign.files.join(", ")}]` : ""} · fleet: [${FLEET.map((m) => m.dir).join(", ")}]`);
   console.log(`gates: ${cls} selection derived fresh — ${selection.size} unit(s) of ${UNITS.length} ${cls === "SINCE" ? "read a path changed on BOTH sides" : "import, spawn or mention a changed path"}:`);
   for (const { unit, why: w } of selection.values()) console.log(`gates:   ${unit.id}  <- ${w}`);
-  console.log("gates: REACH — a unit's source and control read whole; the tools/scripts it names and their relative imports "
-    + `read as code${stripComments ? ", comments blanked" : " — THE LEXER DID NOT LOAD, so comments count too (over-selection)"}; `
+  console.log("gates: REACH — a unit's source and control, the tools/scripts it names and their relative imports, all "
+    + `read as code${stripComments ? ", comments blanked (strings kept)" : " — THE LEXER DID NOT LOAD, so comments count too (over-selection)"}; `
     + "not the plane's runtime code, and not a path assembled at run time from pieces none of which is its name, stem or directory.");
 }
 const planLabel = (s) => (s.names ? `${s.label.split(" (")[0]} [${s.names.join(", ")}]` : s.label);
