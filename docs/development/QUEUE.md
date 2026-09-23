@@ -216,7 +216,7 @@ scope: (1) both ORDER BYs gain `, rowid` (write order on a tie); a sweep of `sto
 accepts-when: in a NEW suite `bio-plane/test/rec-182-created-tie.test.mjs`, through the ops: two manifest rows with an equal `created` come back from `op=export` and the gate in write order on every run; I-20 names the tie rule. NEGATIVE CONTROL (`rec-182-created-tie.control.mjs`): drop `, rowid` from one read, and its arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-171's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
 
-### REC-183 · queued — **`op=reinstate` CAN CONFIRM AN EDGE ONTO A RETIRED ITEM: `#edgeTransition` never reads the target's state, so cite, sever, retire, reinstate leaves a CONFIRMED edge on what State Rules §4.1 (D-168) makes uncitable.** Re-read on `91bcea6b`: `store.mjs` `#edgeTransition` (the reinstate/sever door) names no `current_state` and no `RETIRED_NOT_CITABLE`. — owner RECORD.
+### REC-183 · running — SPAWNED 2026-09-23 ~21:50Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER REC-183 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-183 and that session; never conclude queued from the absence alone.
 order: directly after REC-182: the retired-not-citable fence D-168 built and REC-181 closed at promote, one door further, the record claiming what §4.1 forbids (CLAUDE.md §2); a correction to just-landed work (SCHEDULER #16, 2026-09-23; REC-181's worker via CONDUCT #17)
 milestone: M9
 interface: I3 — `op=reinstate` gains the `RETIRED_NOT_CITABLE` refusal (C-33.39); the integrator classifies the IC.
@@ -226,7 +226,7 @@ scope: in `#edgeTransition`, when `to === "confirmed"`, refuse `RETIRED_NOT_CITA
 accepts-when: in a NEW suite `bio-plane/test/rec-183-reinstate-retired.test.mjs`, through `op=reinstate`: cite, sever, retire, reinstate is refused `RETIRED_NOT_CITABLE` with the edge still severed; a live target reinstates. NEGATIVE CONTROL (`rec-183-reinstate-retired.control.mjs`): drop the check, and the retired arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #16 (REC-181's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
 
-### D-443 · queued — **SEVEN `IN` LISTS IN `store.mjs` CAN STILL BIND MORE THAN D-36's ~100 VARIABLES, AND workerd REFUSES THE WHOLE READ WHEN ONE DOES.** `#contentEarned` binds up to 201 (`CONTENT_EARNED_MAX`) and feeds up to 200 ids to `#attestationsOver` and `#transcriptionsOver`; `#contentStandings`, `earnedBasisRegistry`'s union (binds twice, fails from ~50), `publishedCaseRegistryFor` and the superseded-by `MAX(last_updated)` read have no cap. Found by D-390's sweep (verdict list in `frontier-chunk.test.mjs`'s head). — owner RECORD.
+### D-443 · running — SPAWNED 2026-09-23 ~21:50Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-443 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-443 and that session; never conclude queued from the absence alone.
 order: directly after REC-183: a read that fails outright past ~100 ids refuses loudly rather than claiming what it cannot support, so it sits below the rows where the record claims too much; D-390's own precedent and suite make it one worker's afternoon (SCHEDULER #16, 2026-09-23; D-390's worker via CONDUCT #17)
 milestone: M3
 interface: none (the reads answer as before, now at any size); the integrator classifies.
@@ -236,7 +236,7 @@ scope: each list above binds ONE value, `IN (SELECT value FROM json_each(?))` wi
 accepts-when: `bio-plane/test/frontier-chunk.test.mjs` gains an arm per read, each driven through its op past 100 ids and green; `derivation-bounds.test.mjs` green. NEGATIVE CONTROL (`frontier-chunk.control.mjs`, a new arm): restore one spread `IN (?, …)`, and that read's arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (DEBT D-443, minted by D-390's worker on coord `3c0f5092`; placed by door 2, keeping its `D-` id).
 
-### D-65 · queued — **MONITORING NEVER CALLS THE MONITORING CONTRACTS: `op=monitor` compares raw SHA-256 on every kind of document alike and keeps no dated confirmation.** docprofile's one entry point, `assess(before, after, ctx)` (`docprofile/pipeline.mjs`), grades a change per content type; the plane imports six names from docprofile (`index.mjs`), and nothing calls `assess` or `events.mjs` (re-read 2026-09-21). — owner RECORD.
+### D-65 · running — SPAWNED 2026-09-23 ~21:50Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-65 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-65 and that session; never conclude queued from the absence alone.
 order: directly after D-60, the same op: D-60 stops the raw-byte noise, this makes monitoring say WHAT changed for the type and keep the negative result; a gap, not an over-claim (SCHEDULER #10, 2026-09-21, LED-7)
 milestone: M3
 interface: I3 — `op=monitor` answers with the layer it stopped at and graded events; the integrator mints and classifies the IC.
@@ -247,7 +247,7 @@ accepts-when: a calendar that lost a meeting inside its window reads `removed` a
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-65's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
 uncut: restored whole from «D-65» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### REC-164 · queued — **A GROUP CANNOT SAY WHO IT IS BEYOND ITS SLUG: NO DISPLAY NAME AND NO VERIFIED DOMAIN ARE RECORDED OR READ.** `BIO_Publication_v0_1.md` §7 (BOB #24, 2026-09-21) designs both: a display name is the group's own words, set by an administrator, never in signed bytes and shown WITH the slug; a domain is a claim shown publicly only while a well-known-file check reads it `verified`. `bio-plane/src` records neither; the store holds the slug alone (D-436). — owner RECORD.
+### REC-164 · running — SPAWNED 2026-09-23 ~21:50Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER REC-164 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-164 and that session; never conclude queued from the absence alone.
 order: the first feature after UI-75 (DEC-24's member half first): the group's public identity, resting on REC-163's public slug read (BOB #24: *"after REC-163"*) (SCHEDULER #9, 2026-09-21)
 milestone: M7
 interface: I3 additive (the two set acts and the public read) and I5 (two durable values with dated histories); the integrator mints and classifies the ICs.
