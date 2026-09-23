@@ -51374,6 +51374,7 @@ ${words}`;
           bundleId
         );
         const fmBasis = this.#basisFrontmatter(bundleId);
+        const legStatus = this.#refEdgeSevered(bundleId, t) ? "severed" : "confirmed";
         const causes = [];
         for (const c of moved.causes) causes.push(c);
         const citedEditions = [];
@@ -51389,7 +51390,7 @@ ${words}`;
                 cited_edition: cited,
                 latest_edition: moved.edition.latest,
                 latest_ratified_edition: moved.edition.latest_ratified,
-                detail: cited === null ? `this leg names no edition of ${t}, which now stands at edition ${moved.edition.latest}. A leg keeps citing the edition it names (DEC-12) and this one names none, so which edition it rests on cannot be read off the record.` : `this leg rests on edition ${cited} of ${t}, which now stands at edition ${moved.edition.latest}. Edition ${cited} keeps answering with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).`
+                detail: legStatus === "severed" ? (cited === null ? `this leg was WITHDRAWN (severed) and named no edition of ${t}, which now stands at edition ${moved.edition.latest}.` : `this leg was WITHDRAWN (severed) and named edition ${cited} of ${t}, which now stands at edition ${moved.edition.latest}.`) + ` A withdrawn leg supports nothing here: it adds nothing to strength, gates nothing and counts toward no bar. It is listed because the connection still informs a second look (DEC-70).` : cited === null ? `this leg names no edition of ${t}, which now stands at edition ${moved.edition.latest}. A leg keeps citing the edition it names (DEC-12) and this one names none, so which edition it rests on cannot be read off the record.` : `this leg rests on edition ${cited} of ${t}, which now stands at edition ${moved.edition.latest}. Edition ${cited} keeps answering with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).`
               });
           }
         }
@@ -51407,7 +51408,8 @@ ${words}`;
              rather than once per obligation. Nothing below reads `legs`. */
           legs: mine.map((l) => ({
             ...l,
-            target_edition: fmBasis[l.ord]?.target_edition ?? null
+            target_edition: fmBasis[l.ord]?.target_edition ?? null,
+            status: legStatus
           })),
           /* THE REUSED TRIPLE. `flag` is true because this answer only ever
              carries rows that have an obligation; `since` and `source` come
@@ -51507,6 +51509,9 @@ ${words}`;
           grade_axis: l.grade_axis ?? null,
           grade_source: l.grade_source ?? null,
           target_edition: l.target_edition ?? null,
+          /* REC-160 / DEC-70: `severed` only on a positive recorded
+             withdrawal; anything else reads `confirmed`. */
+          status: l.status === "severed" ? "severed" : "confirmed",
           grade_authored: l.grade ?? null,
           grade_why: res ? res.why : null
         };

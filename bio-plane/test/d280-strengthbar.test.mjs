@@ -711,13 +711,26 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
      thread then needed. WHAT THE RULING DOES NOT MOVE: a severed leg still contributes nothing
      to strength, gates nothing, and counts toward no bar — every other D-280 site stands as
      fixed. The connection INFORMS, never binds. */
-  t("SITE (c) `reevaluations` IS UNCHANGED AND NOW RULED SO — DEC-70 (Bob, 2026-09-10): the "
+  t("SITE (c) `reevaluations` STILL FIRES ON A SEVERED LEG AND IS RULED SO — it consults the predicate "
+  + "only to MARK the leg (REC-160), never to drop it — DEC-70 (Bob, 2026-09-10): the "
   + "obligation attaches to what a finding EVER rested on, because severance discharges SUPPORT "
   + "and never CONNECTION. A severed leg contributes nothing to strength and counts toward no bar, "
   + "but it stays CONNECTED, because relative contributions shift — when a strong branch later "
   + "weakens, the severed corroborating leg is exactly the thread then needed. This pin is no "
   + "longer a provisional awaiting an answer; it is the ruling's own pin",
-    /reevaluations\([\s\S]{0,2600}?#refEdgeSevered/.test(STORE_SRC), false);
+    /* CORRECTED 2026-09-23 by REC-160, NEVER EXEMPTED, AND THE OLD FORM WAS WRONG IN ONE
+       RESPECT: it pinned that `reevaluations` does not CONSULT the predicate at all, which
+       stood in for "does not FILTER on it" only while nothing needed the status. DEC-70's
+       home text (State Rules §5.4, folded by BOB #23) then required the read to MARK which
+       legs are severed and never describe one as resting on its target (REC-160) — which
+       needs the ONE predicate, consulted. What the ruling forbids is DROPPING the leg, so
+       the pin now asserts exactly that: the predicate is consulted to PUBLISH a status and
+       no `continue` rides on it. The behavioural half — a severed dependent STILL receives
+       the obligation — is driven through the op in `reevaluation.test.mjs` block 9. */
+    [/reevaluations\([\s\S]{0,5000}?this\.#refEdgeSevered\(bundleId, t\) \? "severed" : "confirmed"/.test(STORE_SRC),
+     /reevaluations\([\s\S]{0,5000}?#refEdgeSevered\([^)]*\)\)?\s*\)?\s*(continue|return)/.test(STORE_SRC),
+     /reevaluations\([\s\S]{0,6000}?legStatus === "severed"\)?\s*continue/.test(STORE_SRC)],
+    [true, false, false]);
   t("SITE (e) `#leadBasisAbsence` IS DELIBERATELY UNCHANGED, AND THE ARGUMENT IS THE PIN: it counts "
   + "basis legs to answer WAS THIS DOCUMENT MADE PART OF A CASE, and a document that was made part "
   + "of a case and then withdrawn from it WAS made part of a case. Reading a severed-only leg as "
