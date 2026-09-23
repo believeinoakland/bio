@@ -186,7 +186,13 @@ const readPipe = (repo, l) => { const t = readRel(repo, l.live); return t === nu
 export const CACHE_ROWS = 12;
 
 export const CLOSED_QUEUE_STATES = new Set(["done", "superseded"]);
-export const OPEN_QUEUE_STATES = new Set(["queued", "running", "blocked"]);
+export const OPEN_QUEUE_STATES = new Set(["queued", "running", "blocked", "integrated"]);
+/* `integrated` (SCHEDULER #16, 2026-09-23, on Bob's ruling that the cache be sized so CONDUCT never runs out of
+   runnable work): a row whose worker FINISHED and whose branch CONDUCT has integrated on a PUSHED batch, waiting only
+   for its train to land. It stays OPEN (done only when its sha is on `origin/main`), but it HOLDS NO SLOT: P3's count,
+   the refill's room and the cache's byte budget read only the rows that are not held. Measured the day it was made:
+   at 19:58Z all 12 cache rows were finished, 7 riding one train and 5 the next, and CONDUCT had nothing to spawn. */
+export const HELD_QUEUE_STATES = new Set(["integrated"]);
 export const DEBT_FLOOR_BYTES = 10000;
 
 /* THE BUDGET, AS THE ROW NAMES IT (start: QUEUE ≤ 150 KB, a row ≤ 3 KB), in KiB. DEBT's whole-
@@ -708,9 +714,10 @@ export function pipelineInvariants(cache, backlog, { repo = ROOT, claims = null,
   const P2 = [...c.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "cache", line: r.line })),
               ...b.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "backlog", line: r.line })),
               ...lt.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "tail", line: r.line }))];
-  /* P3 — ≤ CACHE_ROWS (12) rows in the cache (every row the grammar reads, whatever its state), none blocked. */
+  /* P3 — ≤ CACHE_ROWS (12) rows in the cache (every row the grammar reads but an `integrated` one), none blocked. */
   const P3 = [];
-  if (c.length > CACHE_ROWS) P3.push({ what: "rows", rows: c.length, max: CACHE_ROWS });
+  const working = c.filter((r) => !HELD_QUEUE_STATES.has(r.state));   /* an `integrated` row holds no slot */
+  if (working.length > CACHE_ROWS) P3.push({ what: "rows", rows: working.length, max: CACHE_ROWS });
   for (const r of c) if (r.state === "blocked") P3.push({ what: "blocked", id: r.id, line: r.line });
   /* P4 — every OPEN cache row's depends-on is met (a blocked one is P3's; a closed one P2's). */
   const P4 = [];
@@ -726,7 +733,9 @@ export function pipelineInvariants(cache, backlog, { repo = ROOT, claims = null,
   const P5 = [];
   for (const [ledger, text, rows] of [[LEDGERS.QUEUE, cache, c], [LEDGERS.BACKLOG, backlog, b], [LEDGERS.LATER, later ?? "", lt]]) {
     const B = BUDGET[ledger.name];
-    if (B.ledger !== null && bytes(text) > B.ledger) P5.push({ file: ledger.live, bytes: bytes(text), budget: B.ledger });
+    /* an `integrated` row's bytes are not charged to the budget: it is waiting on a landing, not read to spawn */
+    const held = rows.filter((r) => HELD_QUEUE_STATES.has(r.state)).reduce((n, r) => n + r.bytes, 0);
+    if (B.ledger !== null && bytes(text) - held > B.ledger) P5.push({ file: ledger.live, bytes: bytes(text) - held, budget: B.ledger });
     for (const r of rows) if (r.open && r.bytes > B.row)
       P5.push({ file: ledger.live, id: r.id, line: r.line, bytes: r.bytes, budget: B.row });
   }
@@ -779,7 +788,7 @@ export function selectRefill(cache, backlog, { repo = ROOT, claims = null, cache
   /* M0-119: the walk is the ONE order — the backlog, then its tail — and each row says which file it came from. */
   const c = queueRows(cache);
   const b = [...queueRows(backlog).map((r) => ({ ...r, from: "backlog" })), ...queueRows(later ?? "").map((r) => ({ ...r, from: "tail" }))];
-  const room = Math.max(0, cacheRows - c.length);
+  const room = Math.max(0, cacheRows - c.filter((r) => !HELD_QUEUE_STATES.has(r.state)).length);   /* `integrated` holds no slot */
   const inCache = new Set(c.filter((r) => r.open).map((r) => r.id));
   const take = [], skipped = [];
   for (const r of b) {
