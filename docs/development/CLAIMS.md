@@ -19469,6 +19469,7 @@ paths, BY SITE:
   - extended 2026-09-23 by the class sweep: `pubRosterHtml`'s one sentence (*"its own pair of strengths, signed on its own
     bytes"*) — the same defect class as the banner's, on the same page; and the new helper `pubPairSigner` beside the banner.
   - extended 2026-09-23: `civicos-ui/test/cite-act.test.mjs` — its catch-all mock answered the question page's new `op=publishedcase` read in the wrapped envelope the plane never sends (check-mock-envelope's D-173 arm); corrected at its site.
+released: 2026-09-23 — pushed `land/worker/UI-80` @ `773bee69` (verified by `git ls-remote`), gate GREEN · class FULL on tree `e99e7925` (283/283 suites green · 17083 assertions; civicos-ui all harnesses green; plancheck 0 fail). Merged `origin/main` @ `41c7e0c3` at CONDUCT #15's direction; main moved to `619dfa65` (DIST's release, no overlap) after the gate. The D-442 -> UI DELEGATION's three fixes are on this branch; it closes when CONDUCT integrates it. Paths stay reserved until then.
 
 ## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **START SCHEDULER #15: SCHEDULER #14 IS AT ~67% CONTEXT**
 
