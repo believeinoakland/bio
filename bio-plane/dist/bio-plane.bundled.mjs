@@ -44627,29 +44627,34 @@ ${words}`;
     const tgt = this.#themeTarget(target, note, viewer);
     if (!tgt.ok) return tgt;
     const at = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
-    this.sql.exec(
-      `INSERT OR IGNORE INTO theme_placements (theme_id, target, target_kind, bundle_id, state, grade,
-                                               proposed_by, proposed_at, proposal_note)
-       VALUES (?, ?, ?, ?, 'hunch', 'C', ?, ?, ?)`,
+    const before = this.#one(
+      `SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
       T.theme_id,
-      tgt.target,
-      tgt.kind,
-      tgt.bundleId,
-      who,
-      at,
-      tgt.note
+      tgt.target
     );
+    if (!before)
+      this.sql.exec(
+        `INSERT INTO theme_placements (theme_id, target, target_kind, bundle_id, state, grade,
+                                       proposed_by, proposed_at, proposal_note)
+         VALUES (?, ?, ?, ?, 'hunch', 'C', ?, ?, ?)`,
+        T.theme_id,
+        tgt.target,
+        tgt.kind,
+        tgt.bundleId,
+        who,
+        at,
+        tgt.note
+      );
     const row = this.#one(
       `SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
       T.theme_id,
       tgt.target
     );
-    const fresh = row.proposed_by === who && row.proposed_at === at && row.state === "hunch";
     return {
       ok: true,
       theme_id: T.theme_id,
       ...this.#placementView(row),
-      already: !fresh,
+      already: !!before,
       evidence: false,
       says: row.state === "member" ? `${tgt.target} is already a member of this theme, placed by ${row.placed_by}; the proposal changed nothing` : `${tgt.target} is PROPOSED for the theme "${T.name.slice(0, 80)}". It is a hunch \u2014 not membership \u2014 until a member checks it against the test and places it`
     };
@@ -44688,10 +44693,11 @@ ${words}`;
     if (id == null || String(id).trim() === "") {
       const g2 = viewerPredicate(viewer);
       const phrase = typeof q === "string" ? q.trim() : "";
-      const rows = g2.scope === "DENY" ? [] : this.#rows(
+      const rows = this.#rows(
         `SELECT theme_id, declared_by, name, test, at FROM themes
-          WHERE (? = '' OR instr(lower(name), lower(?)) > 0 OR instr(lower(test), lower(?)) > 0)
+          WHERE ? = 1 AND (? = '' OR instr(lower(name), lower(?)) > 0 OR instr(lower(test), lower(?)) > 0)
           ORDER BY at DESC, theme_id LIMIT ?`,
+        g2.scope === "DENY" ? 0 : 1,
         phrase,
         phrase,
         phrase,
@@ -69986,6 +69992,8 @@ var NEEDS = {
   themeplace: "contribute",
   themepropose: "contribute",
   leadread: null,
+  /* D-162: the theme read takes no capability, `leadread`'s posture; its placements are gated by the viewer. */
+  themeread: null,
   monitor: "contribute",
   cite: "contribute",
   sever: "contribute",

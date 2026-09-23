@@ -972,6 +972,13 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "caller may not read answers exactly as an absent one (LEAD_NOT_FOUND), and a look's referent the "
       + "caller can no longer see is not published — the lead discloses what a member was told and where they "
       + "went looking, which is a line of inquiry.",
+    themeread: "D-162: one THEME by id — a member's declared idea, its test, its declarer, and the documents "
+      + "and passages placed in it (members) or proposed for it (hunches) — or the list of themes, searchable. "
+      + "GATED PER PLACEMENT: a theme itself is not existence-private (framework §8.4: it may be searched, shown "
+      + "and followed), but every placement names a DOCUMENT, so the read takes the fail-closed viewer stamp beside "
+      + "op=themeplace in index.mjs and asks viewerPredicate of the placed document INSIDE the statement; a "
+      + "placement the caller cannot see is omitted with no count and no label, so the theme is no oracle for a "
+      + "document in a project the caller was never invited to. An unrecognised viewer reads no theme at all.",
     provenanceroutes: "REC-116: which documents in this instance carry a STANDING LOOKED_INDETERMINATE "
       + "marker — the roster REC-69's 2026-08-09 delegation asked for and nobody built. GATED, and the "
       + "disclosure is worth naming precisely: each row names a DOCUMENT the group holds and says the "

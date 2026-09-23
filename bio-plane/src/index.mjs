@@ -9979,13 +9979,17 @@ export default {
        `lead`'s rule one stamp up (§8.4 fence 1: declared under the member's own name, never a
        caller's field). A machine credential stamps `class:<cls>`, which the store refuses BY NAME
        for a declaration (C-74.2) and a placement (C-74.7) and RECORDS for a proposal — the hunch
-       is attributed to the credential that proposed it. The `ai` class stamps its tokenId beside
-       its class, `extractpropose`'s form, so a hunch stays attributable to the key a member minted.
-       Never the principal: `member:<id>` would label an assistant's hunch as a member's placement. */
+       is attributed to the credential that proposed it. */
     if (op === "themedeclare")
       inner.searchParams.set("declarer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (op === "themeplace")
       inner.searchParams.set("placer", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* D-162: WHO PROPOSED A PLACEMENT. Any credential may propose (the result is a hunch, graded C,
+       never membership), so the only obligation here is NAMING: a session stamps its signed-in id, a
+       machine stamps `class:<cls>`, and the `ai` class stamps its tokenId beside its class —
+       `extractpropose`'s form — so a hunch stays attributable to the exact key that proposed it.
+       Never the principal a key was minted for, which would put an assistant's hunch under a
+       person's id. */
     if (op === "themepropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember

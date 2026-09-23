@@ -19349,15 +19349,20 @@ export class Store extends DurableObject {
     const tgt = this.#themeTarget(target, note, viewer);
     if (!tgt.ok) return tgt;
     const at = new Date().toISOString().split(".")[0] + "Z";
-    this.sql.exec(
-      `INSERT OR IGNORE INTO theme_placements (theme_id, target, target_kind, bundle_id, state, grade,
-                                               proposed_by, proposed_at, proposal_note)
-       VALUES (?, ?, ?, ?, 'hunch', 'C', ?, ?, ?)`,
-      T.theme_id, tgt.target, tgt.kind, tgt.bundleId, who, at, tgt.note);
+    /* WHETHER ANYTHING STANDS THERE is read BEFORE the write, `themePlace`'s way — never inferred
+       from the row afterwards, which cannot tell a fresh hunch from the same proposer's second
+       proposal inside one second. */
+    const before = this.#one(`SELECT state FROM theme_placements WHERE theme_id = ? AND target = ?`,
+                             T.theme_id, tgt.target);
+    if (!before)
+      this.sql.exec(
+        `INSERT INTO theme_placements (theme_id, target, target_kind, bundle_id, state, grade,
+                                       proposed_by, proposed_at, proposal_note)
+         VALUES (?, ?, ?, ?, 'hunch', 'C', ?, ?, ?)`,
+        T.theme_id, tgt.target, tgt.kind, tgt.bundleId, who, at, tgt.note);
     const row = this.#one(`SELECT * FROM theme_placements WHERE theme_id = ? AND target = ?`,
                           T.theme_id, tgt.target);
-    const fresh = row.proposed_by === who && row.proposed_at === at && row.state === "hunch";
-    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row), already: !fresh, evidence: false,
+    return { ok: true, theme_id: T.theme_id, ...this.#placementView(row), already: !!before, evidence: false,
              says: row.state === "member"
                ? `${tgt.target} is already a member of this theme, placed by ${row.placed_by}; the proposal `
                  + `changed nothing`
@@ -19384,10 +19389,12 @@ export class Store extends DurableObject {
     if (id == null || String(id).trim() === "") {
       const g = viewerPredicate(viewer);
       const phrase = typeof q === "string" ? q.trim() : "";
-      const rows = g.scope === "DENY" ? [] : this.#rows(
+      /* FAIL CLOSED IN THE STATEMENT, not around it: an unrecognised viewer's `? = 1` is false, so the
+         one bounded row source is the only source and `truncated` is measured straight off it. */
+      const rows = this.#rows(
         `SELECT theme_id, declared_by, name, test, at FROM themes
-          WHERE (? = '' OR instr(lower(name), lower(?)) > 0 OR instr(lower(test), lower(?)) > 0)
-          ORDER BY at DESC, theme_id LIMIT ?`, phrase, phrase, phrase, cap + 1);
+          WHERE ? = 1 AND (? = '' OR instr(lower(name), lower(?)) > 0 OR instr(lower(test), lower(?)) > 0)
+          ORDER BY at DESC, theme_id LIMIT ?`, g.scope === "DENY" ? 0 : 1, phrase, phrase, phrase, cap + 1);
       return { ok: true, q: phrase || null, limit: cap, truncated: rows.length > cap, evidence: false,
                themes: rows.slice(0, cap).map((r) => ({ theme_id: r.theme_id, name: r.name, test: r.test,
                                                          at: r.at, ...person(r.declared_by) })) };

@@ -1337,6 +1337,12 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      tokens only. The bite, the clamp and `truncated` both ways are driven
                                      in `test/lead.test.mjs` section 7; the envelope arm is below. */
                                   "leadread",
+                                  /* D-162 / IC-231: op=themeread's BITE arms need a THEME, which only a
+                                     signed-in member can declare (C-74.2), and this suite drives machine
+                                     tokens only. The bite on both pages (the list and a theme's members), the
+                                     clamp and `truncated` both ways are driven in `test/theme.test.mjs`
+                                     section 6; the envelope arm is below. */
+                                  "themeread",
                                   /* REC-126 / IC-145: op=reviewcopy's comments and grants are read under
                                      REVIEW_LIST_MAX with a caller `limit` clamped to it. Its BITE needs a
                                      DRAFT with comments, which only a project OWNER in a session can write,
@@ -1526,6 +1532,8 @@ const answersByOp = new Map([
   ["provenanceroutes", await GET("op=provenanceroutes&token=mem-r57&limit=1")],
   /* MK-4: the envelope of a keyed read with no lead to key on — an answer object, never an array. */
   ["leadread", await GET("op=leadread&token=mem-r57&id=LEAD-2026-0918-000000000000&limit=1")],
+  /* D-162: the envelope of the theme list over a store holding none — an answer object, never an array. */
+  ["themeread", await GET("op=themeread&token=mem-r57&limit=1")],
   /* REC-126: the envelope of the review copy's read with no draft to key on — the ONE dead answer, an
      object and never an array. The bite is driven in `test/reviewcopy.test.mjs` (DRIVEN_ELSEWHERE). */
   ["reviewcopy", await GET("op=reviewcopy&token=mem-r57&draft=DRAFT-2026-0000&limit=1")],

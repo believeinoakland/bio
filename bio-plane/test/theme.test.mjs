@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (pending — recorded by `node test/nc-d162.mjs` before landing.)
+/* NEGATIVE CONTROL: RUN 2026-09-23 with `node test/nc-d162.mjs [arm]` from `bio-plane/`, ELEVEN arms, every one ALONE with the others held open, each EDITING A REAL SOURCE and restored from a uniquely-named per-arm pristine copy verified by sha256 AND cmp (bio-checks.mjs 854,596 B, store.mjs 2,923,946 B, index.mjs 735,468 B, affordances.mjs 151,127 B; all eleven restores byte-identical; never `git checkout --`). Every arm AS DECLARED: (a) `baseline` 63/0. (b) `legonly` — THE ROW'S CONTROL, C-74.1 dropped at both branches: 55/8, every BY-NAME leg arm fails (basis target, content_id, `theme:`, membership address, version leg, action basis), a bare theme still refused under the WRONG name and the `theme:` leg LANDING. Its first run ended the module at section 4c (the over-strictness promote reused the inquiry the liar had just landed, 35/9 with a throw) — the INSTRUMENT was corrected to its own id, never the arm. (c) `liar` — `theme` as an ELEVENTH ENTITY KIND: 60/3, the ENTITY_KINDS arm and the registry arm fail by name. (d) `notest` 58/5. (e) `machinedeclare` 57/6. (f) `stamp` — the declarer unstamped: 51/12. (g) `machineplace` 58/5. (h) `hunchcounts` — a proposal written as membership: 59/4. (i) `ungated` — placements read without the viewer gate: 61/2. (j) `overstrict` — C-74.1 claims anything containing "theme": 61/2. (k) `overstrictkey` — a leg refused for merely carrying a null `theme` key: 62/1.
  *
  * D-162 / IC-231 — THE THEME (`BIO_Content_Framework_v0_10.md` §8.4, Bob's ruling of
  * 2026-09-21): a connection through an IDEA, fenced four ways — declared by a MEMBER and
@@ -269,6 +269,16 @@ t("a theme that does not exist is refused (C-74.6)", [codeOf(ghostT), ghostT && 
 const ghostD = await post("themeplace", { theme: TID, target: "INFO-2026-0923-nosuchdoc" }, RUTH);
 t("a document that does not exist is refused (C-74.8)", [codeOf(ghostD), ghostD && ghostD.check],
   ["THEME_TARGET_NOT_FOUND", "C-74.8"]);
+const longNote = await post("themeplace", { theme: TID, target: DOC_C, note: "x".repeat(128 * 1024 + 1) }, RUTH);
+t("a placement note over one passage is refused rather than cut (C-74.9), and nothing is placed",
+  [codeOf(longNote), longNote && longNote.check], ["THEME_REASON_TOO_LONG", "C-74.9"]);
+/* C-74.10 IS NOT REACHABLE THROUGH THE OPS, AND THAT IS STATED RATHER THAN DRIVEN: every route to
+   op=themepropose has its proposer stamped by the control plane (a session's member, `class:<cls>`, or
+   `class:ai/<tokenId>`), so an empty proposer can only arrive at the store by a caller that bypasses the
+   stamp. The refusal is defence in depth; what is pinned here is its row, not its reach. */
+t("C-74.10 (THEME_NO_PROPOSER) is catalogued with its translation — defence in depth, NOT reachable through "
+  + "the ops, since every route stamps a proposer",
+  [THEME_CHECKS.THEME_NO_PROPOSER.check, typeof THEME_CHECKS.THEME_NO_PROPOSER.translation], ["C-74.10", "string"]);
 t("a THEME cannot be placed in a theme — its id is not a document or a passage (C-74.8)",
   codeOf(await post("themeplace", { theme: TID, target: TID }, RUTH)), "THEME_TARGET_NOT_FOUND");
 
@@ -356,9 +366,13 @@ t("and no entity carries the theme's name, while the same read finds a real enti
   [true, false, true]);
 
 console.log("\n--- 4c. OVER-STRICTNESS ---");
-await mustPromote(Q1, inquiryMd(Q1, [{ target: DOC_A }]), "inquiry");
+/* ITS OWN ID, CORRECTED on the control's first run: this promoted Q1 again, and under the `legonly` arm Q1 had
+   already LANDED (the membership-claiming leg is accepted once C-74.1 is gone), so this revision was refused
+   for an unrelated reason and the module ended here, leaving sections 4c to 7 unmeasured in that arm. */
+const Q2 = "INQ-2026-0923-themeok";
+const ok2 = await promote(Q2, inquiryMd(Q2, [{ target: DOC_A }]), "inquiry");
 t("a leg citing a DOCUMENT that is a MEMBER of the theme still lands — what a finding rests on stays content",
-  HEAD.has(Q1), true);
+  [ok2 && ok2.ok !== false, HEAD.has(Q2)], [true, true]);
 const near = []; themeLegFindings("basis[0]", { target: "INFO-2026-0923-theme-notes" }, near);
 t("a document whose id merely contains 'theme' is NOT refused as a theme", near.length, 0);
 const near2 = []; themeLegFindings("basis[0]", { target: "THEME-notes" }, near2);
@@ -404,6 +418,10 @@ t("a phrase no theme carries finds none", ((await listThemes(OTTO, "q=zzzz")).th
 const b1 = await listThemes(OTTO, "limit=1");
 t("the list is bounded and says so: limit 1 over two themes, truncated TRUE",
   [(b1.themes || []).length, b1.limit, b1.truncated], [1, 1, true]);
+const bD = await listThemes(OTTO);
+t("at the default bound: both themes, truncated FALSE, limit 200", [(bD.themes || []).length, bD.truncated, bD.limit],
+  [2, false, 200]);
+t("an over-ask is answered at the ceiling (2000), never beyond it", (await listThemes(OTTO, "limit=999999")).limit, 2000);
 const b2 = await get("themeread", `id=${TID}&limit=1`, RUTH);
 t("a theme's members are bounded and say so", [(b2 && b2.members || []).length, b2 && b2.members_truncated], [1, true]);
 
