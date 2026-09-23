@@ -258,9 +258,11 @@ CREATE TABLE IF NOT EXISTS signers (
 -- title is the ONE deliberate divergence from DATA-MODEL.md 2.4.4, so the
 -- public index is not N+1. The frozen columns after it are what the group
 -- SIGNED, kept beside the signature rather than only inside the bytes:
--- strength is BOTH frozen axis objects (never two letters -- unrated and
+-- strength is the frozen axis OBJECTS, one per axis of Store.STRENGTH_AXES --
+-- capture and connection always, and testimony only when it carries something
+-- (MK-2 / IC-142, corrected from "BOTH" by D-423) -- never letters: unrated and
 -- undetermined are different frozen facts, and C-21.2 compares per axis
--- against the right one); required is DEC-17's declared bar as it stood,
+-- against the right one. required is DEC-17's declared bar as it stood,
 -- null meaning ABSENT and gating nothing.
 --
 -- REC-44 / DEC-44 / D-187: THIS ROW IS A **FINDING**, NOT A CASE, and the
@@ -1343,8 +1345,11 @@ CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at)
 -- effect of op=cite refusing non-information members).
 --
 -- grade is NULLABLE and NULL means undetermined and STATED -- never invented
--- to pass a gate. grade_axis is the axis the grade is ON (capture or
--- connection), recorded on the leg because it is NOT derivable from
+-- to pass a gate. grade_axis is the axis the grade is ON (capture,
+-- connection or testimony -- GRADE_AXES in checks/bio-checks.mjs is the
+-- authority, and testimony joined it with MK-2 / IC-142, a leg on a member's
+-- authored bundle, graded at TESTIMONY_GRADE and no other letter), recorded
+-- on the leg because it is NOT derivable from
 -- target_type: a connection grade legitimately sits on an INFO- leg. One
 -- column, not two grade columns, because a leg asserts ONE grade for ONE
 -- reason (RECONCILED R2). grade_source is resolution (earned, REC-18's path),
@@ -1392,7 +1397,10 @@ CREATE TABLE IF NOT EXISTS inquiry_basis (
   target_type  TEXT NOT NULL,   -- 'information' | 'inquiry', denormalised for the walk
   role         TEXT NOT NULL,   -- 'supports' | 'cuts_against'
   grade        TEXT,            -- A|B|C|D, NULL = undetermined and STATED as such
-  grade_axis   TEXT,            -- 'capture' | 'connection': the axis the grade is on
+  grade_axis   TEXT,            -- 'capture' | 'connection' | 'testimony': the axis the grade is on
+                                -- GRADE_AXES in checks/bio-checks.mjs is the authority (MK-2 / IC-142)
+                                -- this line named only the first two until 2026-09-23, D-423
+                                -- hygiene.test.mjs DRIVES it against the export, as REC-68 did for grade_source
   grade_source TEXT,            -- 'resolution' | 'testimony' | 'hunch' | 'inherited' | 'capture'
                                 -- GRADE_SOURCES in checks/bio-checks.mjs is the authority (DEC-15)
                                 -- this line named only the first three until 2026-08-08, REC-68
@@ -2338,7 +2346,7 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   target_type  TEXT NOT NULL,    -- 'information' | 'inquiry' and NOTHING ELSE (D-184 / C-2.8)
   role         TEXT NOT NULL,    -- 'supports' | 'cuts_against'
   grade        TEXT,             -- A|B|C|D, NULL = undetermined and STATED as such
-  grade_axis   TEXT,             -- 'capture' | 'connection'
+  grade_axis   TEXT,             -- 'capture' | 'connection' | 'testimony' -- GRADE_AXES is the authority (D-423)
   grade_source TEXT,             -- 'resolution' | 'capture' | 'testimony' | 'hunch' | 'inherited'
   note         TEXT,
   at           TEXT,
