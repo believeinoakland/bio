@@ -240,7 +240,8 @@ Bob's requirement: a concise description, a fuller explanation with greater cont
 and a set of options with handlers behind them.
 
 ```
-{ kind:    "N-14",                    // stable catalogue id
+{ kind:    "<slug>",                  // stable slug; RULED BOB #31 2026-09-23 (D-52): kind stays the slug
+  catalogue_id: "N-14",               // the catalogue id rides BESIDE it
   class:   "finding" | "obligation" | "condition",
   subject: { bundle?, progression?, member?, host?, … },
   case:    <focus/project id> | null,  // the grouping key (DEC-10)

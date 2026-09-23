@@ -1,6 +1,6 @@
 # BIO Declared Bias, v0.1 DRAFT
 
-**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest` and the acknowledgement. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. as of 2026-09-14.
+**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest` and the acknowledgement. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. as of 2026-09-23 (BOB #31: the acknowledgement names the ADOPTED revision).
 
 **Place in the system** · Owns construct 7 of `BIO_System_Design.md` §3 (declared bias) and the subject-registry requirement, which D-83 makes the same construct as the Content Framework's entity axis. `BIO_Content_Framework_v0_10.md` §13 defers to it; `BIO_Interaction_Constructs_v0_1.md` consumes it for the TASK clock; `BIO_Case_Making_v0_1.md` for hunch debt on plan premises.
 
@@ -445,6 +445,11 @@ project's threat model.
 
 The full reasoning is at `checkCompletenessFreshness` in
 `bio-plane/checks/bio-checks.mjs`, beside the rule it discriminates from.
+
+**RULED 2026-09-23 by BOB #31 — WHICH REVISION THE ACKNOWLEDGEMENT NAMES (D-84 / PL-12).** The ADOPTED one. Promotion to
+`adopted` re-pins the adoption to the adopted bundle_sha, the case stamps that sha, and `op=biasmanifest` hashes THAT revision's
+statements — one quantity under one name, never a proposed sha beside a later projection's hash (BOB.md rule 7). Rowed first
+in the backlog; the hash change goes through one IC.
 
 ## Differential traversal and the cross-group rerun
 
