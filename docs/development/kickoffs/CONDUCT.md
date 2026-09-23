@@ -84,7 +84,7 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
      summary. If you must stop, say what will restart you and who has to do it. Slot-free lanes (measurement, test estate)
      run BESIDE the eight, never instead of them.
 
-2. **When a worker reports, and on a cadence (~30 min, or sooner when work waits) — LAND BY THE TRAIN (M0-111):**
+2. **When a worker reports:** and on a cadence (~30 min, or sooner when work waits) — **LAND BY THE TRAIN (M0-111):**
    - **`node tools/train.mjs run` IS the landing** (TREE-SHARING §2; `list` shows what waits). It fetches, merges every
      WAITING `land/*` — plus each `--branch origin/<worker branch>` — into `train/<id>` cut at `origin/main`, RETURNS a
      conflict BY NAME (aborted), audits ids on the union, gates ONCE (the union's class; `--full` forces FULL), pushes
@@ -106,7 +106,8 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
      path a merge kept byte-for-byte from main; when you deliberately take one side whole, declare it per path in the
      merge commit — `Dropped-from-branch: <path> — <why the branch's change is correctly superseded>`. An unfinishable
      sentence is the finding. Declare a rename there too; the checker cannot tell a rename from a deletion.
-   - **The train runs `mintid.mjs --audit --base origin/main` on the union** and stops on a BREAK; an id the ledger does
+   - **AFTER THE MERGE, BEFORE THE PUSH, the train runs `node tools/mintid.mjs --audit --base origin/main`** on the
+     union and stops on a BREAK; an id the ledger does
      not hold is a QUESTION you ASK the worker, never a failure (every id before 2026-08-08 is honestly unknown).
    - **Pay every correction owed at integration on a `land/conduct/<topic>` branch in the SAME train.** A worker cannot be reached
      reliably mid-run and a push does not reach its checkout; a correction that arrived while its row was `running` is
@@ -118,11 +119,12 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
      discharged or given an APPENDED dated `**open as of …**` line.
    - **A blocker a report states is a claim: grep the code it names on YOUR tree, after the merge, before it reaches a row.**
      A row's blocker is read by every session after it, including the ones deciding what not to build.
-   - **PRUNE BY ANCESTRY (M0-111, replacing D-288's prune-on-merge).** The train deletes each landed ref and VERIFIES it
-     from the remote: `DELETED` or `NOT DELETED` — the cloud proxy refuses a deletion (HTTP 403) under "Everything up-to-date". A tip that is
-     an ancestor of `origin/main` is LANDED (`train.mjs list`) and never merged again, so an undeletable ref is harmless;
-     a `land/*` or `worktree-agent-*` tip that is NOT MEANS UNINTEGRATED WORK. **Not licence to remove a worktree**
-     — that is "WHEN THE DISK FORCES YOUR HAND" below.
+   - **PRUNE-ON-MERGE (D-288 item 3), now PRUNE BY ANCESTRY (M0-111), the LAST act, after the push is verified.** The
+     train runs `git push origin --delete <ref>` per landed ref and VERIFIES it (`git ls-remote --heads origin <ref>`
+     prints nothing): `DELETED` or `NOT DELETED` — the cloud proxy refuses a deletion (HTTP 403, M-105) under
+     "Everything up-to-date". A tip that is an ancestor of `origin/main` is LANDED (`train.mjs list`) and never merged
+     again, so an undeletable ref is harmless; a `land/*` or `worktree-agent-*` tip that is NOT MEANS UNINTEGRATED WORK.
+     **THIS IS NOT LICENCE TO REMOVE THE WORKTREE** — that is "WHEN THE DISK FORCES YOUR HAND" below.
    - **Tell SCHEDULER** the task id and the train's merge sha (step 0), and read out an integration's interface changes against the
      base AT LANDING — an IC proposed on a stale base is resolved on today's.
    - **Holding a branch off `main`** when a peer ruling or a live surface says so: `--drop` it, and land it later.
