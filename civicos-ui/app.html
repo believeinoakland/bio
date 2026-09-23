@@ -3113,6 +3113,9 @@ async function sha256Text(text){
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
 }
+/* REC-178: a file's bytes is the length of its UTF-8 encoding, never text.length (UTF-16 units). The plane
+   computes it over what it holds and stores that; this sends the same figure. */
+function utf8Len(text){ return new TextEncoder().encode(text).length; }
 function stamp(){
   const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
   let r = ""; const h = "0123456789abcdef";
@@ -3270,10 +3273,10 @@ async function blobEntry(path, sha256){
   return { ok:true, file:{ path, blobSha: sha256, sha256, bytes: c.bytes.length } };
 }
 async function docFiles(text, doc, textSha, extra){
-  const files = [{ path:"bundle.md", text, bytes:text.length, sha256:textSha }];
+  const files = [{ path:"bundle.md", text, bytes:utf8Len(text), sha256:textSha }];
   if(!doc) return files;
   const prov = JSON.stringify({ documents: [doc] }, null, 1);
-  files.push({ path:"data/provenance.json", text: prov, bytes: prov.length, sha256: await sha256Text(prov) });
+  files.push({ path:"data/provenance.json", text: prov, bytes: utf8Len(prov), sha256: await sha256Text(prov) });
   if(Array.isArray(doc.parts) && doc.parts.length){
     for(const p of doc.parts) files.push({ path:p.file, blobSha:p.sha256, sha256:p.sha256, bytes:p.bytes });
   } else {
@@ -6882,17 +6885,17 @@ async function reviseWithCapture(id, img, acq, mergedManifest){
      parts, and named as renditions rather than acquisitions, which is why
      replacing them is a refill and replacing a captured document would not be. */
   const manText = JSON.stringify(mergedManifest, null, 1);
-  const files = [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) },
+  const files = [{ path:"bundle.md", text: revised, bytes: utf8Len(revised), sha256: await sha256Text(revised) },
     /* TEXT, not a blob reference. op=image returns a blob-registered file as
        {blobSha,...} and the viewer reads the manifest with typeof === "string",
        so a manifest promoted as a blob is a manifest the viewer never sees and
        a snapshot that never renders. */
-    { path:"data/snapshot-manifest.json", text: manText, bytes: manText.length, sha256: await sha256Text(manText) }];
+    { path:"data/snapshot-manifest.json", text: manText, bytes: utf8Len(manText), sha256: await sha256Text(manText) }];
   for(const [path, v] of Object.entries(img)){
     if(path === "bundle.md" || path === "data/snapshot-manifest.json") continue;
     if(path.indexOf("_history/") === 0) continue;
     if(/\.render\.html$/.test(path)) continue;                    // superseded below
-    if(typeof v === "string") files.push({ path, text: v, bytes: v.length, sha256: await sha256Text(v) });
+    if(typeof v === "string") files.push({ path, text: v, bytes: utf8Len(v), sha256: await sha256Text(v) });
     else files.push({ path, blobSha: v.blobSha||v.sha256, sha256: v.sha256, bytes: v.bytes });
   }
   if(snap.render_file && snap.render_sha256){
@@ -17470,7 +17473,7 @@ async function addGo(){
       const c = await fetchCapture(snap.manifest_sha256);
       if(c.ok && c.sha === snap.manifest_sha256){
         const t = new TextDecoder().decode(c.bytes);
-        files.push({ path:"data/snapshot-manifest.json", text:t, bytes:t.length, sha256: await sha256Text(t) });
+        files.push({ path:"data/snapshot-manifest.json", text:t, bytes:utf8Len(t), sha256: await sha256Text(t) });
       }
     }
     const res = await recPostR("promote", {

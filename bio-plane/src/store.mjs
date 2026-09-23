@@ -14732,8 +14732,8 @@ export class Store extends DurableObject {
        same digest as `blobSha`, the content address the bytes are held under (and `op=capture` refuses a PUT
        whose body does not hash to its key, `INTEGRITY`); none supplied stores `blobSha`. What is NOT checked:
        that bytes exist under that key at all (refused at RATIFY, `PLANE_MISSING_BYTES`), or that the stated
-       `bytes` count is theirs. `bytes` on an INLINE file is also not judged here — several writers send
-       `text.length`, UTF-16 units rather than UTF-8 bytes, a separate finding named in REC-175's landing.
+       `bytes` count is theirs. `bytes` on an INLINE file is not judged by THIS region: REC-178, directly
+       below, computes it from the same UTF-8 bytes and stores that (several writers sent `text.length`).
        Replay is NOT exempt: a replay's bytes are the past's, and so is their digest (migrate.mjs hashes the
        raw buffer it sends as text, and REC-173's replay door already demands the equality for bundle.md). */
     /* DEC-49 REGION is-promote-digest */
@@ -14748,6 +14748,22 @@ export class Store extends DurableObject {
                      + "address). The record stores a digest only of what it holds. Nothing was written." };
     /* END DEC-49 REGION is-promote-digest */
     files = digested.files;
+    /* ===== REC-178 — A STORED SIZE IS OF THE STORED BYTES, REC-175's rule one field over (the Mechanical
+       Verification Law, `BIO_State_Rules_Consistency_v1_5.md` §8; CLAUDE.md §2, a record claiming more than it can
+       support). An INLINE file's `bytes` is COMPUTED here as the length of the UTF-8 encoding of the string the `files`
+       row stores, by the one `Store.#inlineBytesOf`, and that is what is stored and what OVERSIZE_INLINE judges below.
+       A supplied value that differs is OVERRIDDEN, not refused, and the difference from REC-175's digest is the reason:
+       a digest that disagrees says the caller holds OTHER BYTES than it sent, so the claim is about identity and must
+       be refused; a byte count that disagrees over bytes whose digest AGREES is a unit error and nothing else — the
+       content is not in question, and the plane holds everything needed to state the true figure. Refusing it would
+       also refuse every internal act that carries a stored row forward (`bytes: r.bytes`, 42 sites) over
+       any row the census below counts as wrong, turning a misstated figure into an unwritable document. So the
+       caller's figure is never stored and never judged. A BLOB-backed file's `bytes` is NOT computed: its bytes are in
+       R2, which promote does not read (D-45; refused at RATIFY, `PLANE_SIZE`). ===== */
+    files = files.map((f) => {
+      const n = Store.#inlineBytesOf(f);
+      return n === null || f.bytes === n ? f : { ...f, bytes: n };
+    });
     /* ===== D-436 — A CREATION'S PRODUCING GROUP, decided HERE, before the transaction, because a refusal returned
        from inside `transactionSync` does not roll back what was already written (REC-141's mint writes first).
        With a recorded group, a creation is STAMPED with it (`#stampGroup`, after the mint) and the projection is
@@ -14994,8 +15010,11 @@ export class Store extends DurableObject {
       if (fenced) return fenced;
 
       for (const f of files) {
-        if (f.text !== undefined && f.text.length > INLINE_MAX)
-          return { ok: false, reason: "OVERSIZE_INLINE", path: f.path, bytes: f.text.length };
+        /* REC-178: judged in UTF-8 BYTES, the unit INLINE_MAX is stated in — never `text.length`, which counts UTF-16
+           units and admitted a non-ASCII file up to three times the limit. */
+        const inlineBytes = Store.#inlineBytesOf(f);
+        if (inlineBytes !== null && inlineBytes > INLINE_MAX)
+          return { ok: false, reason: "OVERSIZE_INLINE", path: f.path, bytes: inlineBytes };
       }
       /* A gathering queue is validated at the WRITE, not only at ratification.
          C-18.5's grammar exists because a leaked write token must be able to
@@ -28829,6 +28848,12 @@ export class Store extends DurableObject {
     if (f && typeof f.blobSha === "string" && f.blobSha) return f.blobSha.toLowerCase();
     return null;
   }
+  /* REC-178: THE ONE MEASURE of an inline file's size — the byte length of the UTF-8 encoding of the string the
+     `files.content` column stores — read by `promote` (the stored figure and OVERSIZE_INLINE) and by `digestCensus`
+     (the held figure), so the door and the census cannot disagree about what a size is. Null for a blob-backed file. */
+  static #inlineBytesOf(f) {
+    return f && typeof f.text === "string" ? new TextEncoder().encode(f.text).length : null;
+  }
   static #digestFiles(files) {
     const disagree = [];
     const out = files.map((f) => {
@@ -28851,8 +28876,9 @@ export class Store extends DurableObject {
      point: a disagreeing row is REPORTED, never rewritten — the record's history is not corrected by a read, and
      which of the two (bytes or digest) is wrong is not decidable from here. An inline row is recomputed by the one
      `#fileDigestOf`; a blob row compares its `sha256` against its `blob_sha`. `bytes` is counted beside it for inline
-     rows (UTF-8 length against the stored figure), as a SEPARATE figure: it is REC-175's named finding, not its
-     refusal. Bounded by `limit` rows listed per table (the counts are always whole). */
+     rows (UTF-8 length, by REC-178's one `#inlineBytesOf`, against the stored figure), as a SEPARATE figure: since
+     REC-178 promote stores the computed figure, so a disagreeing row is one written before it, and it is counted,
+     never rewritten. Bounded by `limit` rows listed per table (the counts are always whole). */
   digestCensus({ limit } = {}) {
     const asked = limit === undefined || limit === null || limit === "" ? NaN : Number(limit);
     const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
@@ -28867,7 +28893,7 @@ export class Store extends DurableObject {
         if (r.content !== null) out.inline++; else out.blob++;
         const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
         const bBad = r.content !== null && table === "files"
-          && Number(r.bytes) !== new TextEncoder().encode(r.content).length;
+          && Number(r.bytes) !== Store.#inlineBytesOf({ text: r.content });
         if (dBad) out.digest_disagrees++;
         if (bBad) out.bytes_disagree++;
         if ((dBad || bBad) && out.listed.length < cap)

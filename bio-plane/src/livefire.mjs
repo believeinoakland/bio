@@ -57,7 +57,7 @@ export async function livefire(env, storeName, { capacity = false } = {}) {
          recorded producing group into the bytes — and a store recording none refuses it by name (C-64.1), which
          this battery then reports as the first assertion failing: a true finding about that store. */
       meta: { object_type: "information", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: new Date().toISOString() },
-      files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: await sha256(body) }, ...extra],
+      files: [{ path: "bundle.md", text: body, bytes: new TextEncoder().encode(body).length, sha256: await sha256(body) }, ...extra],
       register: [],
     };
   };
@@ -96,7 +96,7 @@ export async function livefire(env, storeName, { capacity = false } = {}) {
   assert("manifest projected", "_history/manifest.json" in live, true);
 
   const big = "x".repeat(1024 * 1024 + 1);
-  const overPkg = await pkgFor("verified", 6, [{ path: "big.md", text: big, bytes: big.length, sha256: await sha256(big) }]);
+  const overPkg = await pkgFor("verified", 6, [{ path: "big.md", text: big, bytes: new TextEncoder().encode(big).length, sha256: await sha256(big) }]);
   assert("oversize inline refused at the write", (await post("promote", { ...overPkg, base: sha2 })).reason, "OVERSIZE_INLINE");
 
   /* ---- the canary: a store that did nothing cannot pass this ---- */
