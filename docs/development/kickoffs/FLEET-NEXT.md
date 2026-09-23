@@ -103,7 +103,9 @@ not to: it counts BLOCKED plan rows and ledger dispositions, never a `queued` ro
 `capturerequest` handlers (`harness.test.mjs`, `fanout.test.mjs`) do not model `address`. Fix: `address: t.url`, mocks
 refusing a request without a public https address, and a control arm that reverts to `url:`. Sent to SCHEDULER #14 with
 the proposal to FOLD it into FL-11: one rebuild, member bytes move once, and both are inert until D-260 because
-`AGENT_WORKER` occurs 0 times in `bio-plane/src`. Read BACKLOG for how SCHEDULER placed it.
+`AGENT_WORKER` occurs 0 times in `bio-plane/src`. **PLACED as FL-12** (owner FLEET), directly after FL-11 and before
+D-260. Its order line says ONE worker takes FL-11 and FL-12 together with one bundle rebuild (SCHEDULER #14, verified on
+`origin/coord` 2026-09-23T02:01Z). Build them as ONE landing on `land/fleet/<topic>` when they reach the cache.
 
 **Landing changed (M0-111, `c5c83dc4`):** a lane no longer pushes `main`. Push `land/fleet/<topic>` and CONDUCT's train
 (`tools/train.mjs`) lands it. The handoff and claims go to `coord` via `node tools/coord.mjs write … -m "…"`. This
