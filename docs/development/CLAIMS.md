@@ -19160,6 +19160,9 @@ paths, BY SITE:
 `docs/development/QUEUE.md` (CONDUCT's). Nothing under `bio-plane/src/` is edited, so no bundle rebuild is owed.
 
 **open as of 2026-09-22** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**widened 2026-09-23 by the M0-111 worker** — also `.claude/hooks/session-start.sh` (one step, 2c: `pushguard.mjs
+--install`, so a fresh cloud clone starts guarded; TREE-SHARING §4 asked the builder to name the refusal's home) and
+`docs/development/kickoffs/BOB.md` (its push line: a lane pushes `land/bob/<topic>`).
 
 ## CLAIM 2026-09-22 M0 (M0-116 — a MEASUREMENTS.md-only landing re-runs a third of the battery: the op-claims ledger leaves the module its importers inherit, and gates reads a unit's own files as code)
 
