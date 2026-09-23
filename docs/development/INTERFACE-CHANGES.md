@@ -13327,3 +13327,27 @@ affordance under-offers the same-project new case the act now accepts (stated, n
 base since REC-167 (`case-edition-conclusion.control` (d) and (e), `caselifecycle.control` (c): C-65.1 refuses the fixture's
 ratification, so re-aim each arm at op=publish's use of the reader). The count of legacy members carrying blocks in their own
 bytes is UNDETERMINED until counted live.
+
+## IC-180 · I3: `op=acquire`'s reuse block counts PAGES, and says when it cannot — `snapshot.reuse.not_reused[].why` gains `shared_across_documents_undetermined`, a reused part's `reused_seen_in_documents` becomes a count of distinct document addresses (no longer of primary captures), and its `detail` sentence names any earlier captures whose page the record does not name · PROPOSED 2026-09-23 (CAP-13, minted with `node tools/mintid.mjs IC` BEFORE the entry was written) — the version bump, the classification and the RESOLUTION are CONDUCT's
+
+- **Interface:** I3 (plane → UI and fleet, the op contracts), `op=acquire` with `subresources: true` — the response's
+  `snapshot.reuse` and `subresources[]`, which are also the bytes of the capture manifest. **Base read off THIS TREE
+  (`origin/main` @ `1755e57c`): 54.0.0. Proposed MINOR, ADDITIVE — 54.0.0 → 54.1.0. Read the base AT RESOLUTION.**
+- **The change.** (1) `reused_seen_in_documents` keeps its name and type; only its VALUE becomes true: distinct PAGES
+  (the primary's `captured_locators.address_norm`), where it counted distinct primary capture shas and so rose with every
+  re-capture of a changed page. (2) One NEW value in the `not_reused[].why` vocabulary, `shared_across_documents_undetermined`:
+  the asset is below the two-document floor on the pages the record can name, and captures whose page it CANNOT name (no
+  locator row: pre-D-58, or a failed locator write) could lift it over — refused rather than guessed. (3) A reused part's
+  `detail` sentence gains a parenthesis naming such captures when there are any. Nothing that answered before is refused;
+  no field is removed or renamed. A capture that used to reuse a one-page asset now fetches it — a request spent, never a
+  claim weakened.
+- **Why MINOR by IC-25's test:** no op, key or class moves; a new enum value in a reason list and a truer count.
+  **Argued the other way, for the integrator:** a consumer that branched on the closed set of `why` values would meet an
+  unknown one — measured below at zero such consumers.
+- **Proposer:** CAPTURE, CAP-13 worker (CONDUCT #15, cloud), 2026-09-23. **Owner to land it:** `CAPTURE`.
+- **Design:** `docs/development/CAPTURE-SCALING.md` §Job one, reuse condition 3.
+- **Consumers, MEASURED** (`git grep -e not_reused -e reused_seen_in_documents -e documents_undetermined` over
+  `civicos-ui agent-worker pdf-worker ocr-worker tools docprofile`, on this tree): **0 in every one.** The `siteassets` and
+  `sitechrome` store routes (which gain `documents_undetermined`) are reached by no op.
+- **Evidence:** `bio-plane/test/cap13-reuse-pages.test.mjs` (through `op=acquire`): 9 pass / 13 fail on `1755e57c`'s
+  sources, 22/22 after; its `NEGATIVE CONTROL:` line records three arms.

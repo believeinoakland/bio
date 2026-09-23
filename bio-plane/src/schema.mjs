@@ -378,7 +378,12 @@ CREATE TABLE IF NOT EXISTS capture_limits (
 --
 -- stable_since is the last time the sha CHANGED, not the last time it was seen,
 -- because "unchanged for three months" and "not looked at for three months" are
--- different facts and only the first licenses reuse.
+-- different facts. Neither licenses reuse. RECENCY OF FETCH does - last_fetched,
+-- the last time the source was actually seen serving these bytes, within the
+-- freshness window - together with a furniture kind and at least two distinct
+-- PAGES on the host (reuseDecision in subresources.mjs). A stability gate was
+-- measured live in 0.40.0 and reused nothing, so stable_since is a secondary
+-- confidence signal and keeps its own job in nav-change evidence.
 --
 -- The same table answers chrome detection. An address referenced by fifteen of
 -- fifteen captured documents on a host is the site's; one referenced by a single
@@ -402,10 +407,14 @@ CREATE TABLE IF NOT EXISTS site_assets (
 CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
 CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
 
--- One row per (asset, document). Gives an exact distinct-document count rather
--- than an incrementing counter that double-counts a re-capture, and it is what
--- makes post-hoc verification possible: when an asset's sha later changes, the
--- documents that REUSED the old bytes are exactly the rows here with reused=1.
+-- One row per (asset, primary capture). It replaces an incrementing counter, and
+-- it is what makes post-hoc verification possible: when an asset's sha later
+-- changes, the captures that REUSED the old bytes are exactly the rows here with
+-- reused=1. primary_sha is the content hash of a CAPTURE, not a page: a page
+-- whose bytes changed between two captures has two rows. So the distinct-document
+-- count joins primary_sha to captured_locators and counts document ADDRESSES
+-- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
+-- row is counted apart as undetermined rather than as a page.
 CREATE TABLE IF NOT EXISTS site_asset_refs (
   host         TEXT NOT NULL,
   address_norm TEXT NOT NULL,
@@ -551,6 +560,8 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
+-- CAP-13: the page count in siteAssets and siteChrome joins on capture_sha.
+CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sha);
 -- What the runtime was observed to COST and to ALLOW, measured rather than
 -- assumed. capture_limits holds ceilings found by being refused; this holds
 -- consumption found by measuring, which is a different kind of fact and the only
