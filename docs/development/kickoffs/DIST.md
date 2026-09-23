@@ -42,11 +42,14 @@ cut 2026-09-14; the only DIST session (2026-09-16) confirmed `main` green and cu
 for your sequencing"* to nobody, and was swept idle; by 2026-09-18 four disclosure fixes (REC-123, REC-125,
 MK-1, REC-130) sat on `main` and on no deployed plane. **So DIST decides when, by this rule, and asks nobody:**
 
-- **CUT NOW** when `main` carries any integrated change that closes a SECURITY OR DISCLOSURE defect —
+- **NO RELEASE UNTIL BOB ASKS — RULED BY BOB 2026-09-23** (*"there don't need to be ANY releases — for security, daily, or
+  otherwise — until I say we need a release"*; nobody but Bob can reach the site). DIST cuts and deploys NOTHING, and keeps no
+  wake that would, until Bob asks through the BOB lane. The two rules below are suspended with it. Nothing waits on a deploy.
+- **CUT NOW** (suspended) when `main` carries any integrated change that closes a SECURITY OR DISCLOSURE defect —
   something a stranger, a machine credential or the wrong member could read or do — that is not in the
   latest signed release. CONDUCT names such a change when it integrates it (its merge commit says so, and it
   messages DIST); DIST also checks for itself: `git log <last release tag>..origin/main` against the rows.
-- **OTHERWISE BATCH**: cut when `main` is green and differs from the latest release in any shipped path
+- **OTHERWISE BATCH** (suspended): cut when `main` is green and differs from the latest release in any shipped path
   (`bio-plane/src`, `bio-plane/checks`, a fleet member's source), at most once a day.
 - **The plane and the fleet members that consume a changed interface ship TOGETHER** (IC-130: an old
   `agent-worker` silently drops model-judged steps). DIST reads `INTERFACE-CHANGES.md` for every IC since
