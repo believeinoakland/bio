@@ -23,7 +23,7 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-159 · blocked — awaiting Bob's act: Bob approved it ~21:08Z (BOB #31), but CONDUCT #17's own session permission check refused the re-spawn (21:14Z); no worker runs. **AN ENROLLED ADMINISTRATOR IS REFUSED §4.9's CUSTODIAL ACTS FROM THEIR OWN SESSION, WITH A SENTENCE THAT IS FALSE OF THEM.** … (whole text: the cut archive)
+### REC-159 · blocked — awaiting Bob: an attended session or a permission rule — CONDUCT #17's spawn was refused [Permission Grant] 21:11Z (Bob approved the change ~21:08Z; no worker exists). REC-162 and REC-155 depend on it.
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
 interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
