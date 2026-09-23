@@ -19736,6 +19736,7 @@ paths, BY SITE:
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 amended 2026-09-23: ALSO a SECOND new helper directly above `pubList`, `pubCasePairNoteHtml` (the per-case sentence and the undetermined sentence), beside `pubCasePairOf`. Still NOT `pubOpen`.
+released: 2026-09-23 — pushed `land/worker/UI-82` @ `4b1775ab` (read back by `git ls-remote`), gate GREEN · class FULL on the merged tree `da3663c0` (origin/main @ `d89e04d1` merged; 290/290 suites green · 17393 assertions passing; civicos-ui all green; plancheck 0 fail but UNPUSHED-to-main). main moved to `b41d1edb` during the gate; `git merge-tree` against it is clean. Paths stay reserved until CONDUCT integrates.
 
 ## CLAIM 2026-09-23 RECORD (REC-172 — a run's bound is spent only on a NAMED bound, by a MAP; an allowance is a whole number; `lease` is the plane's)
 
