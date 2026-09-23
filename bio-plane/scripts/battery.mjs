@@ -418,6 +418,15 @@ const residue = () => {
   return out;
 };
 const residueBefore = residue();
+/* M0-127: WHICH SUITE LEFT IT. `residue()` above counts; it cannot say whose. M-111 could not name the suite
+   that leaked on GitHub's runner (`bio-battery-3964-*`, 282/282 green, run RED) because nothing printed a
+   suite's pid. Two attributions now, each named by its basis and never collapsed: PID — a sandbox directory
+   is named `bio-battery-<pid>-…` by `test/sandbox.mjs`, and each suite's pid is on its result line; WINDOW —
+   suites run ONE AT A TIME, so a top-level entry that first appears in RUN_TMP between one suite's spawn and
+   the next is a candidate left by that suite (a detached grandchild could write later; a window is
+   evidence about timing, the pid is evidence about the owner). */
+const ENTRIES_BEFORE = (() => { try { return new Set(readdirSync(RUN_TMP)); } catch { return new Set(); } })();
+const residueWindow = new Map(); /* top-level entry -> { file, pid } of the suite it first appeared after */
 
 /* ---- D-237: the same two questions, asked OUTSIDE the fence -----------------
  * The scan is bounded and measured (134 ms for /tmp, 170 ms for $TMPDIR at
@@ -649,6 +658,9 @@ for (const entry of suites) {
     for (const top of now) if (!shallowBefore.has(top) && !arrivalWindow.has(top)) arrivalWindow.set(top, file);
     shallowBefore = now;
   }
+  /* M0-127: one readdir, the fence's own window (see ENTRIES_BEFORE). */
+  try { for (const n of readdirSync(RUN_TMP)) if (!ENTRIES_BEFORE.has(n) && !residueWindow.has(n)) residueWindow.set(n, { file, pid: r.pid }); }
+  catch { /* RUN_TMP unreadable: the closing count says so */ }
   const t = tally(r.out);
   /* M0-67 / D-425: THE VERDICT READS THE PRINTED TALLY AS WELL AS THE EXIT STATUS.
      Until this line the verdict was the exit status ALONE: the tally below was read
@@ -684,7 +696,9 @@ for (const entry of suites) {
         + (notMeasured ? ` — NOT MEASURED (M0-107): ${timeouts.length} budget(s) EXPIRED, every failure one of them` : "")
         + (failedRun && timeouts.length ? ` — ${timeouts.length} budget(s) expired AND ${t.fail === null ? "no fail count" : `${t.fail - timeouts.length} failure(s) more`}: RED (M0-107)` : "")
       : "assertions unknown" + (timeoutUnreadable ? ` — ${timeouts.length} budget(s) expired and NO fail count, so a timeout cannot be told from a finding: RED (M0-107)` : "");
-  console.log(`  ${status}  ${file.padEnd(34)} ${String(r.ms).padStart(6)}ms  ${counts}`);
+  /* M0-127: THE SUITE'S PID, LAST on its result line so every reader of the line's head (`statusOf`, the
+     `  ok  |FAIL|skip|NOTM` prefix) is untouched. It is the key a residue directory's name carries. */
+  console.log(`  ${status}  ${file.padEnd(34)} ${String(r.ms).padStart(6)}ms  ${counts} · pid ${r.pid ?? "unknown"}`);
   if ((failedRun || notMeasured) && !QUIET) {
     for (const m of timeouts) console.log(`          TIMEOUT: ${m}`);
     if (failedRun) console.log(r.out.split("\n").filter((l) => /FAIL|Error|error/.test(l)).slice(0, 8).map((l) => `          ${l}`).join("\n"));
@@ -823,11 +837,38 @@ console.log(`temp: this run left ${residueAfter.dirs} director${residueAfter.dir
   + ` holding ${residueAfter.instances} miniflare sandbox${residueAfter.instances === 1 ? "" : "es"}`
   + ` INSIDE $TMPDIR (was ${residueBefore.dirs}/${residueBefore.instances} before the suites ran)`
   + ` · host orphans ${leakedBefore} -> ${leakedAfter}`);
+/* M0-127: EACH RESIDUE ENTRY BY PATH, AND THE SUITE THAT LEFT IT. The verdict file carries the same list, so
+   `tools/gates.mjs` and the workflow's annotation name the residue instead of reading `FAILED=none` over a RED
+   (tree 6ef503c4: 282/282 suites green, RED on this block alone, and the annotation said `FAILED=none`). */
+const residueList = !leaking ? [] : (() => {
+  let now = [];
+  try { now = readdirSync(RUN_TMP).filter((n) => !ENTRIES_BEFORE.has(n)).sort(); } catch { /* counted above */ }
+  return now.map((n) => {
+    const path = join(RUN_TMP, n);
+    let sandboxes = n.startsWith("miniflare-") ? 1 : 0;
+    try { sandboxes += readdirSync(path).filter((m) => m.startsWith("miniflare-")).length; } catch { /* a file */ }
+    const named = /^bio-battery-(\d+)-/.exec(n);
+    const byPid = named ? results.find((r) => r.pid === Number(named[1])) : null;
+    const win = residueWindow.get(n) || null;
+    const who = byPid ? { suite: byPid.file, pid: byPid.pid, basis: "pid" }
+      : win ? { suite: win.file, pid: win.pid, basis: "window" }
+      : { suite: null, pid: named ? Number(named[1]) : null, basis: "undetermined" };
+    return { path, sandboxes, ...who };
+  });
+})();
 if (leaking) {
   console.log(`  LEAKING ${residueAfter.instances - residueBefore.instances} miniflare sandbox(es) in`
     + ` ${residueAfter.dirs - residueBefore.dirs} director(ies) (D-186): ${readdirSync(RUN_TMP).slice(0, 6).join(", ")}`);
-  console.log(`  a suite left a sandbox behind — most likely one that mints temp files without`);
-  console.log(`  importing test/sandbox.mjs, which hygiene.test.mjs names by file.`);
+  for (const x of residueList)
+    console.log(`  RESIDUE (D-186): ${x.path} — ${x.sandboxes} miniflare sandbox(es) — `
+      + (x.suite ? `left by ${x.suite} (pid ${x.pid}, by ${x.basis === "pid" ? "the pid in its name" : "the window it appeared in"})`
+        : `suite UNDETERMINED (${x.pid ? `pid ${x.pid} is no suite of this run` : "no pid in its name, and it appeared in no suite's window"})`));
+  /* M0-127 CORRECTION, dated 2026-09-23: this read "most likely one that mints temp files without importing
+     test/sandbox.mjs" — true before M-111, which measured a suite that DOES import it leaking through the exit
+     sweep's race (a single `rmSync` returning normally over a tree Miniflare's unawaited `rm` was still
+     unlinking). The sweep now renames first (`sweepSandbox`, cdfaea39); both readings are stated. */
+  console.log(`  a suite left a sandbox behind — either it mints temp files without importing test/sandbox.mjs`);
+  console.log(`  (hygiene.test.mjs names such a file), or its exit sweep lost a race (M-111; sandbox.mjs sweepSandbox).`);
 } else if (leakedAfter > leakedBefore) {
   /* ---- D-237 CORRECTS THIS NOTE, AND THE CORRECTION IS THE ITEM IN MINIATURE.
      It used to read "another checkout without this fix is running a battery into
@@ -895,12 +936,20 @@ else if (sharedLog) {
 const redCount = failed.length + (leaking ? 1 : 0) + (sharedLog ? 1 : 0);
 const verdict = redCount ? "RED" : unmeasured.length ? "NOT MEASURED" : "GREEN";
 const exitCode = redCount ? (Math.min(redCount, 125) === 124 ? 125 : Math.min(redCount, 125)) : unmeasured.length ? 124 : 0;
+/* M0-127: A RED RUN SAYS WHAT IS RED, ON ONE LINE — the suites, the residue, a shared log. The headline above
+   counts SUITES, and a run can be RED with every suite green; this line is what stops that reading as GREEN. */
+if (redCount) console.log(`battery verdict: RED · `
+  + [failed.length ? `${failed.length} suite(s) FAILED: ${failed.map((r) => r.file).join(", ")}` : null,
+     leaking ? `RESIDUE (D-186): ${residueList.length ? residueList.map((x) => `${x.path} (${x.suite || "suite UNDETERMINED"})`).join(", ") : "counted but unlisted"}` : null,
+     sharedLog ? `LOG SHARED (D-425): ${LOG_PATH}` : null].filter(Boolean).join(" · ")
+  + ` · exit ${exitCode} · run ${RUN_ID}`);
 if (unmeasured.length) console.log(`battery verdict: ${verdict}${redCount ? " — a finding outranks the expired budgets" : ""}`
   + ` · ${unmeasured.length} suite(s) NOT MEASURED (M0-107) · exit ${exitCode} · run ${RUN_ID}`);
 if (VERDICT_FILE) {
   try {
     writeFileSync(VERDICT_FILE, `${JSON.stringify({ v: 1, run: RUN_ID, verdict, exit: exitCode, suites: results.length,
       green, failed: failed.map((r) => r.unit), leaking, sharedLog,
+      residue: residueList.map(({ path, sandboxes, suite, pid, basis }) => ({ path, sandboxes, suite, pid, basis })),
       notMeasured: unmeasured.map((r) => ({ unit: r.unit, suite: r.file, timeouts: r.timeouts })) }, null, 1)}\n`);
   } catch (e) { console.log(`battery: could not write the verdict file ${VERDICT_FILE} (${e.message}) — the exit status stands alone`); }
 }
