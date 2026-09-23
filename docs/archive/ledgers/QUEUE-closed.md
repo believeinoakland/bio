@@ -3008,3 +3008,23 @@ scope: as §1. STAGE 1, beside M0-99, NEW FILES ONLY: measure per-path churn on 
 accepts-when: a claim, a queue flip and a handoff each land on `coord` without moving `main`; every reader answers as it did from `main`; a `main` gate record survives a `coord` write; a new block and a line into an existing block, written concurrently, leave the line in its block (BOB #27: each retry re-applies the edit as an intent anchored to a block heading). NEGATIVE CONTROL: point one reader back at `main`'s old path, and its suite fails by name.
 owed-at-integration: BOB #27, 2026-09-22: every gate reading a `-NEXT.md` line 1 from `origin/main` (NEW-MACHINE §6-§7, BOB.md, lane openings, chips) reads `origin/coord` in the migration commit; an arm fails on any left. CONDUCT tells BOB at cutover.
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 1; `node tools/mintid.mjs M0`).
+
+### UI-77 · done — **DONE 2026-09-23: INTEGRATED by CONDUCT #14 at `f68f333c`, an ancestor of `origin/main`; verified by content by SCHEDULER #14: `civicos-ui/app.html` carries no `GROUP` literal and reads `op=instancegroup` (3 sites). Its write-path findings are UI-79.**
+order: directly after REC-163, the same defect's surface half; the two share no file (SCHEDULER #9, 2026-09-21)
+milestone: M7
+interface: I3 consumer (`op=instancegroup`, public since REC-163).
+design: `docs/architecture/BIO_Publication_v0_1.md` §7 (the slug is PUBLIC; a display name is shown WITH it, never instead), with DEC-8: a surface invents nothing (re-cited 2026-09-23 by SCHEDULER #14: `decided.mjs` reads DEC-69 as not forcing a member's decision; UI-77's worker's finding).
+depends-on: REC-163 (the public read).
+scope: the member fence and the public header read `op=instancegroup` and show the recorded slug, or say that none is recorded; the display-name, domain and monogram literals go.
+accepts-when: signed out and in, against a plane recording a second slug, both surfaces show it and none renders `Believe in Oakland` or `believeinoakland.org`. How a liar passes it: a CSS-hidden literal, so the arm reads the DOM's text. NEGATIVE CONTROL: restore the `GROUP` literal, and the no-literal arm fails by name.
+added: 2026-09-21 · SCHEDULER #9 (CONDUCT #11's route; `node tools/mintid.mjs UI`).
+
+### M0-117 · done — **DONE 2026-09-23: INTEGRATED by CONDUCT #14 at `df9eb9f9`, an ancestor of `origin/main`; verified by content by SCHEDULER #14: `scopeOf` creates the live ledger (`mkdirSync`, `LEDGER_UNWRITABLE` on failure) before `exclusivityProbe`, which keeps its missing-directory refusal.**
+order: FIRST of the backlog: it refuses a lane's push on any clone that has never minted, and the cloud hook's `mkdir` covers only a cloud container; the smallest row that unblocks a push (Bob, 2026-09-22, `CLAUDE.md` §2: no process row unless it cuts gate time or unblocks product) (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 6)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a suite is evidence only where it can disagree with its subject, and a directory never created is no verdict on a filesystem.
+depends-on: none.
+scope: `scopeOf` creates the live root as the mint does before probing it, a failure to create answering `LEDGER_UNWRITABLE` as the mint's does. **NOT the probe itself** (corrected at the code by SCHEDULER #14: BOB #28's entry says *"the probe creates its root"*, but `mintid.test.mjs`'s next arm asserts that `exclusivityProbe` on a missing directory is a `PROBE_UNWRITABLE` refusal, and that arm stays).
+accepts-when: a clone with no ledger directory passes the live-ledger arm, and the missing-directory arm stays green. NEGATIVE CONTROL: the suite's control (11), the second create's flag `w`, still fails it by name; dropping `scopeOf`'s create fails the live-ledger arm in a clone with no ledger.
+added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 6, drained this commit; `node tools/mintid.mjs M0`).

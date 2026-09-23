@@ -30,26 +30,6 @@ accepts-when: two `land/*` branches each adding a measurement land in one train 
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-442 · queued — **A SECOND PROJECT'S `op=publish` MOVES A FINDING ANOTHER PROJECT'S PUBLISHED CASE PINS.** `publishCase()` promotes every member, writing the case's completeness, exclusions, frozen strength pair and grounds, edition and a receipt into the finding's bytes, so one project's PREPARE moves the finding off another project's ratified pin and flags that case (MEASURED by REC-166's worker, `MEASUREMENTS.md` M-100). — owner RECORD.
-order: FIRST of the product corrections, ahead of REC-168 (BOB #28: *"Place it FIRST of the product corrections: one project's act silently moves another project's published pins, REC-166's class on the publication path"*) (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 1)
-milestone: M10
-interface: I3 — the case document's shape and the publish answer; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12, *PUBLISHING WRITES NOTHING ON A MEMBER FINDING* (BOB #28, 2026-09-22), (a)–(e).
-depends-on: none — REC-166 (the project arm) and CASE-5b (the case's stamps) are on `main`.
-scope: rule 12: `op=publish` promotes no member; every block the promotion wrote is stated ONCE in the case document (completeness, exclusions, per member its role, pinned sha, edition and the frozen pair and grounds, and the receipt); the case-document signature covers them; every check and reader of a moved block follows it, each named from the code; members published before keep their blocks (rule 1).
-accepts-when: project B's prepare over a finding project A's ratified case pins leaves its `bundle_sha` unmoved and flags nothing on A's case, B's ratification then succeeds, and a second case of the SAME project over the finding does the same; the case document carries every moved block. NEGATIVE CONTROL: restore the member promotion, and the unmoved-sha arm fails by name.
-added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 1, drained this commit; D-442's DEBT row, minted by CONDUCT #14; keeps its `D-` id).
-
-### REC-168 · queued — **`op=capturerequest` CREDITS ANOTHER MEMBER'S RUN: IT ACCEPTS ANY RUNNING RUN AND COPIES THAT RUN'S PRINCIPALS INTO THE REQUEST ROW.** `captureRequest` (`store.mjs`) checks only that the run is `running`, never whose it is; DRIVEN by REC-165's worker (Cora filed under Alice's run, and the row recorded principals `member:alice`; CONDUCT #14, 2026-09-22) and re-read after REC-165's integration. — owner RECORD.
-order: directly after D-442 and before D-85: REC-165's defect on a third op, an attribution the record cannot support, CLAUDE.md §2's class; BOB #28: *"Directly after REC-165, whose fix it reuses"*, which is integrated, so a row (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 2)
-milestone: M9
-interface: I3 — the op refuses what it accepted; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, the paragraph *`op=capturerequest` — RULED 2026-09-22 by BOB #28* (rule 1 applies; Rule 1's target does not).
-depends-on: none — REC-165's gate, stamp and sight check are on `main`.
-scope: when a request names a run: REC-152's stamp of the caller's principal, the sight check first, then `runPrincipalGate`, as REC-165 applies them; the row records the CALLER's principal. A request naming no run is the member's own and is untouched; no context check (a request names an address, not a question).
-accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` and writes no row; the caller's own running run lands, naming the caller; a request naming no run is unchanged. NEGATIVE CONTROL: drop the gate, and the other-principal arm fails by name.
-added: 2026-09-22 · SCHEDULER #14 (REC-165's stand-down finding, driven, via CONDUCT #14; ruled by BOB #28's inbox entry, item 2, drained this commit; `node tools/mintid.mjs REC`).
-
 ### UI-79 · queued — **THE MEMBER UI WRITES `believe-in-oakland` AS THE GROUP OF EVERY BUNDLE IT AUTHORS, ON EVERY INSTANCE.** `civicos-ui/app.html` sends `group: believe-in-oakland` in `mdFor`'s front matter and three `meta.group` keys (re-read on `a73cba2b`), where the plane stamps the instance's recorded group (D-436, IC-172); the FY glossary entry and the Add form's placeholder name Oakland too. Found by UI-77's worker (CONDUCT #14); the open D-436 → UI DELEGATION. — owner UI.
 order: directly after REC-168, with the product corrections: a sovereign group's bundles would claim this project's group, CLAUDE.md §2's class, UI-77's sibling on the write path; below D-442 and REC-168, whose defects move published pins and attribution (SCHEDULER #14, 2026-09-23; UI-77's findings, relayed by CONDUCT #14)
 milestone: M7
