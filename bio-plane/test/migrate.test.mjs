@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: (run 2026-07-31) disable the capture-vs-register hash check in migrate.mjs checkProvenance (guard `got !== want` with `false`, so a tampered capture is not detected) -> 1 assertion fails ("a capture that fails its register aborts" no longer sees PROVENANCE_MISMATCH); restored, 40 pass. */
+/* NEGATIVE CONTROL: (run 2026-07-31) disable the capture-vs-register hash check in migrate.mjs checkProvenance (guard `got !== want` with `false`, so a tampered capture is not detected) -> 1 assertion fails ("a capture that fails its register aborts" no longer sees PROVENANCE_MISMATCH); restored, 40 pass. SECOND ARM (REC-173, run 2026-09-23 on a scratch COPY of the tree, the real migrate.mjs untouched, sha256 f395782a7b75…): move the drive-provenance registration back to the LAST revision alone (buildPackages' register: i === N ? provRegister : [] — the order before this item, which registered the provenance AFTER the creation) -> 5 fail BY NAME ("the provenance capture is REGISTERED BY THE CREATION (rev 0)", "D migrated under the admin token" — PROMOTE_FAILED rev 0 SURFACE_NO_RUN, "D verifies clean", "the live question still says surfaced_by: human", "its read states not recorded (migrated from the Drive era)"); on the real tree 48 pass. */
 /* The migration replayer against a real plane instance on a live port.
  * The fixture is modeled byte-for-byte on the observed Drive store: promotion
  * records in the daemon's shape (base chain from the empty hash, per-file
@@ -132,6 +132,26 @@ put(`problems/${C}/snapshots/doc.bin.b64`, Buffer.from("tampered").toString("bas
 promo(`problems/${C}/_history/promotion_20260706T010000Z_ffff5555.json`, C, EMPTY_SHA,
   [{ name: "bundle.md", sha256: sha(c0) }], "2026-07-06T01:00:00Z");
 
+/* ---- bundle D: a Drive-era QUESTION (REC-173, BOB #30) ----
+   Surfaced in the Drive era by a member, its bytes say `surfaced_by: human`. Since REC-171 an admin token's creation
+   of a question outside a run is refused SURFACE_NO_RUN and D-78 restamps it `agent`; a MIGRATION REPLAY is the third
+   case — admitted because the creation names the registered, held drive-provenance capture whose preserved promotion
+   records list this bundle and this bundle.md SHA-256. So D must migrate CLEAN, keep `human` byte-for-byte (verifyBundle's
+   LIVE_TEXT_DIFFERS would catch a restamp), and read `not recorded (migrated from the Drive era)`. */
+const D = "PROB-2026-9004-drive-question";
+const qmd = (n, state, updated) => ["---", `id: ${D}`, "object_type: inquiry", "schema: inquiry@1",
+  `title: "Did the council vote ${n}?"`, `current_state: ${state}`, "prior_state: null",
+  'created: "2026-07-07T00:00:00Z"', `last_updated: "${updated}"`, "group: believe-in-oakland",
+  "references: []", "surfaced_by: human", "---", "", "## Question", "", `Did the council vote ${n}?`, ""].join("\n");
+const d0 = qmd(0, "open", "2026-07-07T01:00:00Z"), d1 = qmd(1, "open", "2026-07-08T01:00:00Z");
+const KD = "20260708T010000Z_abab6666";
+put(`problems/${D}/bundle.md`, d1);
+put(`problems/${D}/_history/bundle_${KD}.md`, d0);
+promo(`problems/${D}/_history/promotion_20260707T010000Z_abab5555.json`, D, EMPTY_SHA,
+  [{ name: "bundle.md", sha256: sha(d0) }], "2026-07-07T01:00:00Z", "ruth");
+promo(`problems/${D}/_history/promotion_${KD}.json`, D, sha(d0),
+  [{ name: "bundle.md", sha256: sha(d1) }], "2026-07-08T01:00:00Z", "ruth");
+
 /* ---- a store index in the observed shape ---- */
 put(`index/index.json`, JSON.stringify({ generated: "2026-07-24T00:00:00Z", version: "0.12.10", bundles: {
   [A]: { root: "information", object_type: "information", current_state: "verified", sha256: sha(a2) },
@@ -148,12 +168,17 @@ const mf = new Miniflare({
   port: 0,
 });
 const base = (await mf.ready).toString().replace(/\/$/, "");
-const client = planeClient({ url: base, token: "mem-migrate-test" });
+/* REC-173 (BOB #30): the migration runs under the ADMIN token — the root of trust, and the only class whose creation
+   of a Drive-era question can be admitted as a replay. It read `mem-migrate-test` (the member deploy token) while
+   migrate.mjs accepted `admin-or-member`, which the ruling narrows to admin; the member client is kept to show it
+   refused. */
+const client = planeClient({ url: base, token: "adm-migrate-test" });
+const memberClient = planeClient({ url: base, token: "mem-migrate-test" });
 const index = JSON.parse(readFileSync(join(ROOT, "index/index.json"), "utf8"));
 
 console.log("\n--- discovery and loading ---");
 const bundles = discoverBundles(ROOT);
-t("three bundles discovered", bundles.map((b) => b.bundleId), [A, B, C]);
+t("four bundles discovered", bundles.map((b) => b.bundleId), [A, B, C, D]);
 const loadedB = loadBundle(bundles.find((b) => b.bundleId === B).dir);
 t("twins stay through loading for reconstruction", loadedB.live.has("snapshots/capture-2026-07-05-doc.pdf.b64"), true);
 t("binary recovered from lone b64", loadedB.live.has("snapshots/only-transport.dat"), true);
@@ -222,6 +247,37 @@ let aborted = null;
 try { await migrateBundle(client, bundles[2], {}); } catch (e) { aborted = e.finding; }
 t("tampered twin aborts the bundle", aborted, "TWIN_MISMATCH");
 t("nothing landed for the aborted bundle", (await client.image(C)).result, null);
+
+console.log("\n--- a Drive-era QUESTION is a replay, not a surfacing (REC-173) ---");
+{
+  const bD = bundles.find((b) => b.bundleId === D);
+  const pk = buildPackages(D, loadBundle(bD.dir), reconstruct(loadBundle(bD.dir)),
+    reconstruct(loadBundle(bD.dir)).map((st) => [...st.entries()].map(([path, buf]) =>
+      ({ path, text: buf.toString("utf8"), bytes: buf.length, sha256: sha(buf) }))),
+    [{ path: "snapshots/x.bin", sha256: "1".repeat(64), bytes: 1, encoding: "binary" },
+     { path: "migration/drive-provenance.json", sha256: "2".repeat(64), bytes: 1, encoding: "utf8" }]);
+  t("the provenance capture is REGISTERED BY THE CREATION (rev 0) and named by it — before rev 1 is promoted",
+    [pk[0].register.map((r) => r.path), pk[0].provenanceCapture, "provenanceCapture" in pk[1]],
+    [["migration/drive-provenance.json"], "2".repeat(64), false]);
+  t("and rides the last revision too, beside the captures that exist only there",
+    pk[1].register.map((r) => r.path).sort(), ["migration/drive-provenance.json", "snapshots/x.bin"]);
+  let memberRefused = null;
+  try { await migrateBundle(memberClient, bD, { indexEntry: null }); } catch (e) { memberRefused = e.finding; }
+  t("a MEMBER-class token's replay of the question is refused (an ordinary creation, outside any run)", memberRefused, "PROMOTE_FAILED");
+  t("and nothing landed for it", (await memberClient.image(D)).result, null);
+  let rD;
+  try { rD = await migrateBundle(client, bD, {}); } catch (e) { rD = { ok: false, finding: String(e.message).slice(0, 160) }; }
+  t("D migrated under the admin token", [rD.ok, rD.promotions, rD.finding ?? null], [true, 2, null]);
+  const vD = await verifyBundle(client, bD, {});
+  t("D verifies clean — its bytes are the Drive era's, `surfaced_by: human` NOT restamped",
+    { ok: vD.ok, findings: vD.findings }, { ok: true, findings: [] });
+  const liveD = (await client.image(D)).result?.["bundle.md"];
+  t("the live question still says `surfaced_by: human`", /\nsurfaced_by: human\n/.test(String(liveD)), true);
+  const res = await fetch(`${base}/api/projection?token=adm-migrate-test&id=${encodeURIComponent(D)}`);
+  const pj = (await res.json())?.result;
+  t("its read states `not recorded (migrated from the Drive era)`, naming no run",
+    [pj?.surfaced_in?.recorded, pj?.surfaced_in?.stated, pj?.surfaced_in?.run], [false, "not recorded (migrated from the Drive era)", null]);
+}
 
 console.log("\n--- re-running converges instead of colliding ---");
 const again = await migrateBundle(client, bundles[0], { indexEntry: index.bundles[A] });

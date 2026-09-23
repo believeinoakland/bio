@@ -32,7 +32,16 @@ aborts its bundle loudly; nothing partial ever lands.
    stop moving for one full trigger interval.
 2. In the Drive web UI, download the whole `CivicOS` folder (Drive zips it).
    Upload that zip to the migration session.
-3. Run against the target instance with a member or admin token:
+3. Run against the target instance with the ADMIN token (REC-173, BOB #30: a
+   replayed Drive-era question is admitted only under the admin class, the root
+   of trust; the tool refuses any other token class before it writes). The
+   provenance capture is uploaded before any promote and registered by the
+   bundle's CREATION, which names it; the plane admits the creation of a
+   question as a replay only when that capture's preserved promotion records
+   name the bundle and list the creation's `bundle.md` SHA-256, and then keeps
+   its Drive-era `surfaced_by` and reads `surfaced_in: not recorded (migrated
+   from the Drive era)`. Anything else is an ordinary creation, refused
+   `SURFACE_NO_RUN` outside a run:
 
    ```
    node migrate/migrate.mjs --root <unzipped CivicOS dir> \

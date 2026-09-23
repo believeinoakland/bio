@@ -1909,8 +1909,17 @@ export class Store extends DurableObject {
    *  serves, so the question's read and the run's read cannot disagree. */
   async #surfacedIn(bundleId, viewer) {
     const link = this.#one(`SELECT run, principal, at FROM inquiry_run_surfacings WHERE bundle_id=?`, bundleId);
-    if (!link)
+    if (!link) {
+      /* REC-173 (§11 item 5, BOB #30, clause (c)): a question whose creation was a server-verified MIGRATION REPLAY
+         was surfaced in the Drive era, not inside a run on this plane — so no run is recorded, and the read says WHY
+         in words, never a guess. The provenance capture and the Drive promotion that listed its bytes are named. */
+      const mig = this.#one(
+        `SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`, bundleId);
+      if (mig)
+        return { recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null,
+                 migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at } };
       return { recorded: false, stated: "not recorded", run: null, lens: null };
+    }
     const read = await this.aiRunRead({ run: link.run, viewer });
     if (!read || read.found !== true || !read.session)
       return { recorded: true, run: null, by: null, at: link.at, lens: null,
@@ -14739,6 +14748,17 @@ export class Store extends DurableObject {
       if (refusedSurface) return refusedSurface;
       surfacing = { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() };
     }
+    /* REC-173 (§11 item 5, "A MIGRATION IS A REPLAY, NOT A SURFACING", BOB #30): a creation of an inquiry the control
+       plane ADMITTED as a migration replay (`migrationReplay`, its stamp — deleted first for every caller and set only
+       for the admin class over a verified drive-provenance capture) carries no `assistantPrincipal`, so the gate above
+       was not asked; the fact is recorded in the creation's own transaction below, so the question's read can say
+       WHY no run is recorded. A stamp with no capture is not one. */
+    const migration = (base === null && !surfacing && meta && typeof meta === "object"
+        && normalizeType(meta.object_type) === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
+        && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture)
+      ? { capture: pkg.migrationReplay.capture,
+          promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null }
+      : null;
     return this.ctx.storage.transactionSync(() => {
       /* REC-141: MINT, WRITE, THEN HASH. The id goes in as the first line after the opening fence; the
          bytes and their sha256 are recomputed from the written text, and THAT sha is what the files row,
@@ -16098,6 +16118,16 @@ export class Store extends DurableObject {
         surfacedIn = { run: surfacing.run, at: ts,
                        bound: { bound: "surfaces", allowed: Number(left.allowed), consumed: Number(left.consumed) } };
       }
+      /* REC-173: the migration replay's instance row, in the creation's own transaction — a replayed question cannot
+         exist without the row saying it was migrated, and a refused creation writes none. */
+      let migrated = null;
+      if (!cur && migration) {
+        const ts = new Date().toISOString();
+        this.sql.exec(
+          `INSERT INTO inquiry_migration_replays (bundle_id, capture_sha, promotion_key, at) VALUES (?,?,?,?)`,
+          bundleId, migration.capture, migration.promotion, ts);
+        migrated = { capture: migration.capture, promotion: migration.promotion, at: ts };
+      }
 
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       /* ==== CASE-4 / DEC-72: THE REVISION FLAG, RAISED AT THE MINT ============
@@ -16121,6 +16151,9 @@ export class Store extends DurableObject {
         /* D-85: present ONLY on an assistant's creation of a question, naming the run it landed inside and
            that run's `surfaces` bound after this creation — so no member's answer gains a key. */
         ...(surfacedIn ? { surfaced_in: surfacedIn } : {}),
+        /* REC-173: present ONLY on a creation admitted as a migration replay, naming the provenance capture and the
+           Drive promotion that listed its bytes — so no other caller's answer gains a key. */
+        ...(migrated ? { migration_replay: migrated } : {}),
         /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
            write path's own surface. A mechanism believed on the strength of its
            EXISTENCE rather than its behaviour is the defect this project meets
@@ -26407,6 +26440,8 @@ export class Store extends DurableObject {
          purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
          per question, under that question's gate (`op=projection`'s `surfaced_in`). */
       inquiryRunSurfacings: n("inquiry_run_surfacings"),
+      /* REC-173: the questions whose creation was a verified migration replay, counted for D-85's reason one line up. */
+      inquiryMigrationReplays: n("inquiry_migration_replays"),
       /* REC-93 / IC-92: `aiRunLog` was a count of `ai_run_log`, which no longer
          exists — `OBSERVATION-LOG-DESIGN.md` §4.4 folded it into `observations`
          and `#migrate` drops it. The key is KEPT AND RE-AIMED at the folded rows
@@ -27981,6 +28016,10 @@ export class Store extends DurableObject {
                        its run is the silent-leftover exactly. hygiene.test.mjs holds this list
                        against schema.mjs. */
                     "inquiry_run_surfacings",
+                    /* REC-173 / D-113: the migration-replay row of an inquiry whose creation was a verified Drive-era
+                       replay, keyed on the INQUIRY's `bundle_id`, for the reason the D-85 entry above gives: a row
+                       outliving its inquiry would tell the next bundle allocated that id it was migrated. BOTH arms. */
+                    "inquiry_migration_replays",
                     /*__REC91_PURGE_START__*/
                     /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX. It is a
                        PROJECTION of a capture's extracted text -- re-derivable
