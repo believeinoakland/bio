@@ -19877,6 +19877,7 @@ paths, BY SITE:
 **NOT CLAIMED:** `bio-plane/test/mergecarry.test.mjs` (M0-130), `tools/mergecarry.mjs`, `tools/plancheck.mjs`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed land/worker/M0-131 @ 1fd9797b (gate GREEN, tree 2fec07a0); paths stay reserved until CONDUCT integrates.
 
 ## CLAIM 2026-09-23 RECORD (REC-174 — `op=frontier`'s never-looked and missing lists read `truncated: true` on a FULL fetch, through D-389's one exhaustion test)
 
