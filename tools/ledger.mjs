@@ -16,14 +16,14 @@
  *
  * ------------------------------------------------------ THE WORK PIPELINE (LED-6, tool half)
  *
- * `docs/development/WORK-PIPELINE.md` §1–§2: `QUEUE.md` is the CACHE (at most 8 rows, read whole),
+ * `docs/development/WORK-PIPELINE.md` §1–§2: `QUEUE.md` is the CACHE (at most `CACHE_ROWS` = 12 rows, read whole),
  * `BACKLOG.md` is everything still to do IN ORDER (top = next), and the archive is what was done.
  * BACKLOG is a SECOND LIVE FILE OF THE QUEUE GRAMMAR, not a ledger of its own: its rows are
  * `### <ID> · <state>` rows, a closed one is archived to the SAME `QUEUE-closed.md`, and every
  * conservation check runs over cache ∪ backlog ∪ the QUEUE archive family.
  *
  * `refill` moves the next RUNNABLE rows from the top of the backlog into the cache until the cache
- * holds `CACHE_ROWS` (8) rows or the backlog has nothing runnable, and DELETES them from the
+ * holds `CACHE_ROWS` (12) rows or the backlog has nothing runnable, and DELETES them from the
  * backlog in the same act (§2 step 2). RUNNABLE, as §1 states it: state `queued`, and every
  * `depends-on` MET. MET is stricter than the gate's (c) RESOLVES: (c) accepts an OPEN row as a
  * dependency that exists; a row waiting on an open row is not runnable. A dependency is met by a
@@ -43,7 +43,7 @@
  * THE FIVE INVARIANTS (§2, each a `plancheck` arm):
  *   P1 every open id is in EXACTLY ONE of the cache and the backlog (per id, per count) — FAIL now;
  *   P2 no closed row is in either — armed by LED-3, as the closed-live arm (a) always was;
- *   P3 the cache holds ≤ 8 rows and no `blocked` row                     — armed by LED-6 done;
+ *   P3 the cache holds ≤ 12 rows and no `blocked` row                     — armed by LED-6 done;
  *   P4 every open cache row's `depends-on` is MET (above)                 — armed by LED-6 done;
  *   P5 both files within budget: cache ≤ 40 KiB and a row ≤ 3 KiB, backlog ≤ 150 KiB and a row
  *      ≤ 2 KiB (§1's table; §4 moves the old 150 KiB QUEUE budget to the backlog) — armed by LED-6.
@@ -178,7 +178,12 @@ export const PIPELINE = [LEDGERS.QUEUE, LEDGERS.BACKLOG, LEDGERS.LATER];
 /* A pipeline file's text for a reader: an OPTIONAL file that is absent reads as EMPTY and is reported absent; any
    other null stays null (unreadable). */
 const readPipe = (repo, l) => { const t = readRel(repo, l.live); return t === null && l.optional ? { text: "", absent: true } : { text: t, absent: false }; };
-export const CACHE_ROWS = 8;
+/* The cache's size (P3; the refill's fill point). 12 since 2026-09-23 (SCHEDULER #16, on Bob's ruling relayed by BOB #30:
+   *"size the cache to CONDUCT's worker capacity, not to a fixed 8 — as many runnable product rows as CONDUCT can run,
+   plus a few spare"*; CONDUCT spawns continuously, overflow in cloud sessions): 8 running and 4 spare. The bound is the
+   cache's own byte budget (BUDGET.QUEUE.ledger, 40 KiB): 8 rows and the header measured 21,079 B on coord 3dca2f40,
+   so 12 rows sit near 34 KB. More rows means raising that budget, which every session reads whole. Was 8. */
+export const CACHE_ROWS = 12;
 
 export const CLOSED_QUEUE_STATES = new Set(["done", "superseded"]);
 export const OPEN_QUEUE_STATES = new Set(["queued", "running", "blocked"]);
@@ -703,7 +708,7 @@ export function pipelineInvariants(cache, backlog, { repo = ROOT, claims = null,
   const P2 = [...c.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "cache", line: r.line })),
               ...b.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "backlog", line: r.line })),
               ...lt.filter((r) => r.closed).map((r) => ({ id: r.id, state: r.state, where: "tail", line: r.line }))];
-  /* P3 — ≤ 8 rows in the cache (every row the grammar reads, whatever its state), none blocked. */
+  /* P3 — ≤ CACHE_ROWS (12) rows in the cache (every row the grammar reads, whatever its state), none blocked. */
   const P3 = [];
   if (c.length > CACHE_ROWS) P3.push({ what: "rows", rows: c.length, max: CACHE_ROWS });
   for (const r of c) if (r.state === "blocked") P3.push({ what: "blocked", id: r.id, line: r.line });

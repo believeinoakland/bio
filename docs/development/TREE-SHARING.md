@@ -205,7 +205,9 @@ to significantly increase the batch size?"*). MEASURED from `main`'s first-paren
 13 trains landed between 05:25Z and 12:54Z, about one every 35 minutes, and 6 of them carried ONE branch (two DIST
 pointers, two BOB docs branches, a leak fix, a red-main repair). Each GitHub run read 4-5 minutes only because it ran DOCS
 (M0-126's finding); from M0-126 on it runs the whole battery, which took 14-16 minutes on the runner in M0-114's runs, and
-the train's own local gate runs per train too. So: **a train runs about every two hours and takes EVERY waiting `land/*`
+the train's own local gate runs per train too. **THE CADENCE IS FOR LANDING ONLY; SPAWNING IS CONTINUOUS** (BOB #30, 2026-09-23 16:20Z, on Bob's finding that lanes sat idle:
+the two-hour train had been read as a two-hour WAKE, and 7 of 8 runnable cache rows sat unspawned). CONDUCT wakes at least
+every ~20 minutes and on each worker's report, and refills every empty slot from the cache, with no budget cap. So: **a train runs about every two hours and takes EVERY waiting `land/*`
 branch** (lanes' docs branches and DIST's pointers included: they wait for it). Four exceptions only, each named in the
 train's commit: (1) a security fix whose release is a CUT NOW; (2) repairing a RED `main`; (3) a landing a RUNNING worker
 or a release is blocked on; (4) Bob asks. **What it costs, stated:** a finished item waits up to two hours to reach `main`,

@@ -88,7 +88,8 @@ try {
       bundleId: bundle, base: null, snapKey: `20260731T120000Z_fence_${n}`, author: "consumer",
       meta: { object_type: "information", group: "believe-in-oakland", title: "Fence fixture",
               current_state: "collected", created: AT, last_updated: AT },
-      files: [{ path: "bundle.md", text: "---\nid: " + bundle + "\n---\n", bytes: 10, sha256: sha }],
+      /* REC-175 (2026-09-23): CORRECTED, not exempted. This fixture sent a digest that is NOT the SHA-256 of the text beside it (the register capture's sha, reused), and the old op=promote stored it as given — a false digest in the fixture's own record. promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so the file sends no digest and the plane computes it from the bytes; nothing this suite asserts reads the old value. */
+      files: [{ path: "bundle.md", text: "---\nid: " + bundle + "\n---\n", bytes: 10 }],
       register: [{ sha256: sha, path: "snapshots/agenda.pdf", encoding: "binary", bytes: 10 }],
     });
     const d = (await doPost("taskdrain", { actor: "consumer", now: AT })).result;

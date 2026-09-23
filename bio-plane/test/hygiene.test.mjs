@@ -2178,6 +2178,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        leave the pen standing, which the driver's own exit line reports. Provenance would tell it something true and
        useless. */
     "bio-plane/test/occupancy.control.mjs",       // its own pen, read for emptiness before rmdir; discovers nothing
+    /* ADDED 2026-09-23 by REC-175's item; the ratchet caught it on the item's first battery, before anyone read the diff.
+       NAMED AND NOT GUARDED: its one walk is of ITS OWN `mkdtemp` persist root (`rec175-persist-*`, inside the sandbox
+       `sandbox.mjs` owns), after `mf.dispose()`, to find the Durable Object's SQLite file and PLANT the row the old
+       unchecked `op=promote` could have written — the census fixture. The count it plants is asserted EXACTLY (`2`), so a
+       phantom file can only turn that arm RED, never quietly green, and nothing it walks is a figure anybody floors on. */
+    "bio-plane/test/rec175-digest.test.mjs",      // its own mkdtemp persist root, to plant the census fixture; asserted exact
     /* `bio-plane/test/walkfigure.test.mjs` STOOD HERE FROM D-265 UNTIL 2026-09-10
        AND D-301 REMOVED IT — BY MEASURING, NOT BY DECIDING. D-265's entry said the
        file CONTAINS NO WALK AT ALL: its only discovery primitive is the word
@@ -2247,8 +2253,12 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
      committed tree `b2797101` (`class census: 38 file(s)`, run alone after the integration gate named the walk), never by
      adding to the number in the file. The one file that run named as NEWLY unguarded is M0-81's control driver
      (`test/occupancy.control.mjs`, named above), so no slack is carried out. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 38)`,
-    census.length >= 38, true);
+  /* MOVED 2026-09-23 BY REC-175: 38 -> 39, from the figure this suite PRINTED on the item's tree over origin/main
+     14faa089 (`class census: 39 file(s)`), never by adding to the number in the file. The one is REC-175's own suite
+     (`test/rec175-digest.test.mjs`, named above), the only walker the item adds. Main's own print was NOT re-taken by this item: the
+     floor stood at 38 and the tree printed 39 with exactly this one walker added, so the move is this item's. */
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 39)`,
+    census.length >= 39, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
