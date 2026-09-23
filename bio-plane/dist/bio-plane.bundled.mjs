@@ -29940,12 +29940,20 @@ var Store = class _Store extends DurableObject {
     };
   }
   /* How a revision is classified. The manifest already records who wrote a
-     revision and what operation they claimed, so a monitor tick can be told
-     apart from a member rewriting the analysis without inventing a second
-     record of the same fact. */
+       revision and what operation they claimed, so a monitor tick can be told
+       apart from a member rewriting the analysis without inventing a second
+       record of the same fact.
+  
+       "Latest" is `created DESC, rowid DESC` (D-171), the order REC-32's
+       #conditionsCaptureUnattended reads, and the two sites agree on purpose.
+       `created` is the DOCUMENT's time (promote stores meta.last_updated), so two
+       revisions can tie on it; `snap_key` is an opaque caller-chosen string whose
+       lexical order is not a clock, so a `snap_key DESC` tiebreak named the WRONG
+       writer whenever the later write carried the smaller key. `rowid` is the
+       store's own write order. */
   #revisionKind(bundleId) {
     const m = this.#one(
-      `SELECT writer, operation FROM manifest WHERE bundle_id=? ORDER BY created DESC, snap_key DESC LIMIT 1`,
+      `SELECT writer, operation FROM manifest WHERE bundle_id=? ORDER BY created DESC, rowid DESC LIMIT 1`,
       bundleId
     );
     if (!m) return { class: "unknown" };
@@ -49114,14 +49122,14 @@ ${words}`;
    *  condition here, because it is a property of the manifest and not of a
    *  reader.
    *
-   *  ORDERING, and the one place this derivation does not simply copy an
-   *  existing idiom. #revisionKind reads the latest manifest entry as
-   *  `ORDER BY created DESC, snap_key DESC`, and `created` is the DOCUMENT's own
-   *  time (promote records meta.last_updated, never the wall clock — C-12.1
-   *  depends on that). The tiebreak here is `rowid DESC`, the store's own write
-   *  order, because `snap_key` is an opaque caller-chosen string and its lexical
-   *  order is not a clock: two snapshots stamped at the same instant would
-   *  otherwise be ordered by a hash. Same first key, a truthful second one. */
+   *  ORDERING. `created` is the DOCUMENT's own time (promote records
+   *  meta.last_updated, never the wall clock — C-12.1 depends on that). The
+   *  tiebreak is `rowid DESC`, the store's own write order, because `snap_key`
+   *  is an opaque caller-chosen string and its lexical order is not a clock: two
+   *  snapshots stamped at the same instant would otherwise be ordered by a hash.
+   *  #revisionKind reads the latest manifest entry by this SAME order since
+   *  D-171 (it tiebroke on `snap_key DESC` until then, and named the wrong
+   *  writer on a tie); the two sites agree on purpose. */
   #conditionsCaptureUnattended(viewer, now, identity = null) {
     const out = [];
     const machine = `${_Store.QUEUE_MACHINE_AUTHOR_PREFIX}*`;
