@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### REC-173 · blocked — **ONCE REC-171 LANDS, `migrate.mjs` IS REFUSED ON EVERY DRIVE-ERA QUESTION: A MIGRATION REPLAY IS STAMPED `surfaced_by: agent` AND NAMES NO RUN.** BOB #30 ruled a replay is not a surfacing: an ADMIN-class creation naming a registered drive-provenance capture that lists this bundle id and this revision's `bundle.md` SHA-256 is exempt from rule 2, keeps its Drive-era `surfaced_by` (no D-78 restamp) and reads `surfaced_in: not recorded (migrated from the Drive era)`; anything else is refused as today. UNBLOCKS PRODUCT: every not-yet-migrated group. `blocked` until its design lands. — owner RECORD.
+order: FIRST of the backlog, directly after REC-171 (in the cache) as BOB #30 placed it: REC-171 makes migration refuse, and a group that cannot migrate cannot start (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
+milestone: M7
+interface: I3 — `op=promote` admits the replay; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, *"A MIGRATION IS A REPLAY, NOT A SURFACING"* (BOB #30, 2026-09-23; on `land/bob/migration-replay` until the train lands it).
+depends-on: REC-171 (it made migration refuse); `land/bob/migration-replay` on `main`.
+scope: the exemption as ruled; `migrate.mjs`'s token narrows to admin; the builder confirms the provenance capture is registered BEFORE the promote.
+accepts-when: as the paragraph states it: a replay naming a matching registered provenance capture lands keeping its Drive-era stamp and reads `not recorded (migrated from the Drive era)`; a non-admin, or a capture not listing the bundle and SHA, is refused. NEGATIVE CONTROL as the paragraph names it.
+added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+
 ### M0-132 · queued — **TWO MORE GATE SUITES DRAW FIXTURE VALUES FROM AN UNSEEDED `Math.random()` AND CAN FAIL WITH NO CODE CHANGE.** (1) `civicos-ui/test/ai-session-wire.test.mjs` (re-read on `91913d6b`): `FETCH_ALLOWED − FETCH_CONSUMED` ranges 1502–5992 and overlaps `SUBS_CONSUMED` 2003–2999, so its ARM D0b collides (1 in 2,155, measured by D-286's worker). (2) snap-key suffixes from 4–6 base36 characters of `Math.random()` (`bio-plane/test/action-loop.test.mjs` and `inquiryground.test.mjs` at 4; about 20 suites at 6) are part of the PRIMARY KEY `(bundle_id, snap_key)`, so a repeat clashes; the odds are not measured. D-286's worker's findings (CONDUCT #15). — owner M0 with UI.
 order: directly after UI-82, with D-286's class near the head: a result that moves with the draw is a DEFECT by Bob's ruling of 2026-09-23, and on `main` its red is an alarm to Bob (SCHEDULER #15, 2026-09-23)
 milestone: M0
@@ -1151,23 +1161,3 @@ depends-on: none — REC-120 is on `main`.
 scope: re-base the probe's ground check on REC-120's rule: page 2 reads UNDETERMINED with no choice made, and reaches only after the probe makes the member's on-point choice (when REC-122 exists) or states that it cannot; page 7 stays `outside`; a dated note at the site.
 accepts-when: `node tools/fw21-onpoint-probe.mjs` exits 0 on `main` with page 2 read as UNDETERMINED and page 7 `outside`, and exits 2 if page 7 is ever reached. NEGATIVE CONTROL: restore the grade-A ground check, and the probe exits 2 by name.
 added: 2026-09-23 · SCHEDULER #15 (REC-171's worker's finding via CONDUCT #15, reproduced; `node tools/mintid.mjs M0`).
-
-### M0-90 · queued — **MK-1's PUBLISH PROBE CANNOT DRIVE ITS PATH 3, the `op=caseratify` route C-53.12 fences.** Its fixture concludes without naming … (whole text: the cut archive)
-order: with M0-74, the probe corrections: a probe path that cannot run, now stated rather than hidden; the measurement a lifted fence will need (SCHEDULER #4, 2026-09-21; MK-3's report, CONDUCT-NEXT §4)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` … (whole text: the cut archive)
-order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite … (whole text: the cut archive)
-depends-on: none.
-accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-91» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.

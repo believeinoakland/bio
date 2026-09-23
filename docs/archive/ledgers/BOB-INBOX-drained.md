@@ -1799,3 +1799,15 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 >    absorbed. `depends-on` none.
 
 > VERIFIED 2026-09-23 by SCHEDULER #15: item 1 (mergecarry's `carried` class) LANDED at `19101d04` (train train-20260923T092547Z-31509), an ancestor of `origin/main`; `tools/mergecarry.mjs` classifies `carried` there. The absorption is confirmed.
+
+> Drained 2026-09-23 by SCHEDULER #15: placed as REC-173 at the backlog head (blocked on `land/bob/migration-replay` and REC-171).
+
+> **2026-09-23 · BOB #30 · A MIGRATION REPLAY IS NOT A SURFACING — one placement, and it UNBLOCKS PRODUCT (every not-yet-migrated group).**
+> 
+> 1. **RECORD (M6/M7): `op=promote` admits a MIGRATION REPLAY.** `INVESTIGATIVE-SESSION.md` §11 item 5, paragraph "A MIGRATION IS
+>    A REPLAY, NOT A SURFACING" (`land/bob/migration-replay` until the train lands it): an ADMIN-class creation naming a
+>    registered drive-provenance capture that lists this bundle id and this revision's `bundle.md` SHA-256 is exempt from rule 2,
+>    keeps its Drive-era `surfaced_by` (no D-78 restamp), and reads `surfaced_in: not recorded (migrated from the Drive era)`;
+>    anything else is refused as today. `migrate.mjs`'s token narrows to admin; the builder confirms the provenance capture is
+>    registered BEFORE the promote. Accepts-when and NEGATIVE CONTROL in the paragraph. **Directly after REC-171**, depends-on
+>    REC-171 (REC-171 made migration refuse). I3 changes; the integrator mints the IC.

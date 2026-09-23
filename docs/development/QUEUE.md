@@ -22,16 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-23 · BOB #30 · A MIGRATION REPLAY IS NOT A SURFACING — one placement, and it UNBLOCKS PRODUCT (every not-yet-migrated group).**
-
-1. **RECORD (M6/M7): `op=promote` admits a MIGRATION REPLAY.** `INVESTIGATIVE-SESSION.md` §11 item 5, paragraph "A MIGRATION IS
-   A REPLAY, NOT A SURFACING" (`land/bob/migration-replay` until the train lands it): an ADMIN-class creation naming a
-   registered drive-provenance capture that lists this bundle id and this revision's `bundle.md` SHA-256 is exempt from rule 2,
-   keeps its Drive-era `surfaced_by` (no D-78 restamp), and reads `surfaced_in: not recorded (migrated from the Drive era)`;
-   anything else is refused as today. `migrate.mjs`'s token narrows to admin; the builder confirms the provenance capture is
-   registered BEFORE the promote. Accepts-when and NEGATIVE CONTROL in the paragraph. **Directly after REC-171**, depends-on
-   REC-171 (REC-171 made migration refuse). I3 changes; the integrator mints the IC.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.
