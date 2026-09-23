@@ -19897,6 +19897,7 @@ paths, BY SITE:
 **NOT CLAIMED:** `bio-plane/src/index.mjs`, the internet arm, `QUEUE.md`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**released: 2026-09-23** — REC-174 built and pushed to `land/worker/REC-174` @ `8e7790c1` (gate GREEN, recorded, tree `21609340`: 294/294 suites · 17549 assertions); the paths stay reserved until CONDUCT integrates the branch. IC-188 PROPOSED, resolution CONDUCT's.
 
 ## CLAIM 2026-09-23 M0 (M0-134 — a suite's `finally` that exits follows a `catch` that counts; severedhomes mints its projects)
 
