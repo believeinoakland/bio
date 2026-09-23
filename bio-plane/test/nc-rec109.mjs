@@ -32,6 +32,13 @@ const MIN_BYTES = 500000;
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 /* Each arm: [file, anchor, replacement, declared]. */
+/* RE-ANCHORED 2026-09-23 BY D-389, SUBJECTS UNCHANGED. D-389 moved the content arm's raw fetch, gate, cut and
+   page claim into `#frontierPage` (the one over-fetch the three bundle arms share) and rewrote the arm's
+   `truncated` as `never.length > cap || unexplained.length > cap || latest.truncated`. Every anchor below that
+   named the old text would have been refused by the occurs-exactly-once guard at ZERO — an arm that cannot arm.
+   Each is re-pointed at the SAME subject in the new spelling: `rawflag` still reads the RAW supply against the
+   bound for the content arm alone; `fence` still drops the content gate; `missinglist` still claims over
+   `missing`; `overfetch` still narrows the content factor to `cap + 1`; `unexplained` still drops that disjunct. */
 const ARMS = {
   /* THE DEFECT ITSELF, AND THE ARM TAKES THE FLAG AND NOTHING ELSE. `page` is
      now the GATED list, so restoring D-385's semantics means going back to the
@@ -44,9 +51,9 @@ const ARMS = {
      prefix is a substring of its thirteen-space one. An arm that patched both
      would have measured two methods and reported one. */
   rawflag: [STORE,
-    "      truncated: page.length > cap || never.length > cap\n              || unexplained.length > cap,",
-    "      truncated: this.#frontierLatest(\"content\", { limit: (cap + 1) * 2, subjectKind: \"capture\" })\n"
-    + "                   .length > cap || never.length > cap\n              || unexplained.length > cap,",
+    "      truncated: never.length > cap || unexplained.length > cap\n              || latest.truncated,",
+    "      truncated: never.length > cap || unexplained.length > cap\n              || this.#frontierLatest("
+    + "\"content\", { limit: (cap + 1) * 2, subjectKind: \"capture\" }).length > cap,",
     "MUST FAIL G1 — and it must fail PRINTING BOTH COUNTS, the gated 3 and the supply 4. "
     + "MUST NOT FAIL G1c G2 G3b G4 G4b: the entitled viewer's answers do not move, which is this "
     + "item's over-strictness pair in the orthogonal direction. "
@@ -62,10 +69,12 @@ const ARMS = {
      against the ROWS. Dropping the visibility filter puts the private project's
      capture into an uninvited member's own list. */
   fence: [STORE,
-    "      .filter((r) => seen(r.subject));",
-    "      .filter((r) => true || seen(r.subject));",
+    "                                      (r) => seen(r.subject));",
+    "                                      (r) => true || seen(r.subject));",
     "MUST FAIL G0 G1 G1b G4b — the withheld capture appears BY NAME in an uninvited member's "
-    + "rows. MUST NOT FAIL G1c G4: the entitled viewer sees exactly what it saw"],
+    + "rows. MUST NOT FAIL G1c G4: the entitled viewer sees exactly what it saw. (RE-RUN 2026-09-23 "
+    + "BY D-389: ACTUAL G0 G1 G1b G4b J0 — J0 is REC-110's later arm, which asserts the uninvited "
+    + "member really IS withheld from a row, so dropping the fence fails it by construction)"],
 
   /* STRUCTURAL-ONLY, DECLARED BEFORE RUNNING. The second disjunct compares
      against `missing`, which this method SPLITS by §5.1's cause and never pages.
@@ -76,8 +85,8 @@ const ARMS = {
      or `purged` fixture, which is `#missingContentCause`'s region and not this
      row's. NAMED rather than silently scored as driven. */
   missinglist: [STORE,
-    "      truncated: page.length > cap || never.length > cap\n              || unexplained.length > cap,",
-    "      truncated: page.length > cap || missing.length > cap,",
+    "      truncated: never.length > cap || unexplained.length > cap\n              || latest.truncated,",
+    "      truncated: missing.length > cap || latest.truncated,",
     "MUST FAIL G5b, STRUCTURALLY AND ONLY STRUCTURALLY — both halves of it, since the corrected "
     + "form stops matching and the old form starts. Declared NOT behaviourally drivable on this "
     + "fixture and the reason is at the arm"],
@@ -94,18 +103,24 @@ const ARMS = {
      exists to refuse. The suite caught it behaviourally at G2 and G3b without
      being written for it. *** */
   overfetch: [STORE,
-    "    const page = this.#frontierLatest(\"content\", { limit: (cap + 1) * 2, subjectKind: \"capture\" })",
-    "    const page = this.#frontierLatest(\"content\", { limit: cap + 1, subjectKind: \"capture\" })",
+    "    const latest = this.#frontierPage(\"content\", cap, { limit: (cap + 1) * 2, subjectKind: \"capture\" },",
+    "    const latest = this.#frontierPage(\"content\", cap, { limit: cap + 1, subjectKind: \"capture\" },",
     "DECLARED: MUST FAIL G5, structurally and only structurally; behaviourally invisible at this "
     + "corpus. ACTUAL: G2 G3b G5 — THE DECLARATION WAS WRONG IN THE INFORMATIVE DIRECTION. The "
     + "over-fetch is load-bearing on the ANSWER and not only on the flag; see the note above. "
-    + "Recorded rather than smoothed"],
+    + "Recorded rather than smoothed. *** RE-RUN 2026-09-23 BY D-389: ACTUAL G1 G5, and the move is "
+    + "D-389 WORKING, not drift. At a bound of 2 the narrowed raw fetch (3) now comes back FULL over "
+    + "the supply of 4, so the short page reads `truncated: TRUE` — G2 and G3b stop catching it because "
+    + "the false-coverage answer they caught is gone. At a bound of 3 the raw fetch (4) is full at "
+    + "EXACTLY the supply, so the uninvited member reads TRUE over a complete list and G1 goes red: "
+    + "the fail-safe over-report D-389 accepts. The narrowed over-fetch now costs PRECISION, never "
+    + "a coverage lie ***"],
 
   /* THE THIRD DISJUNCT ALONE. `missing_unexplained` is cut at the bound like the
      other two lists, so a claim that omits it is the same class one list over. */
   unexplained: [STORE,
-    "              || unexplained.length > cap,",
-    "              || false,",
+    "      truncated: never.length > cap || unexplained.length > cap\n",
+    "      truncated: never.length > cap || false\n",
     "MUST FAIL G5b structurally. Declared NOT behaviourally drivable: `unexplained` is EMPTY on "
     + "this fixture, for the reason `missinglist` states"],
 };

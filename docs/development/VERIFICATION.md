@@ -1,17 +1,17 @@
 # Verification: what "tested" means here, and how it is checked
 
 Cut to the reading budget on 2026-09-19 (`CLAUDE.md` §1): this file is READ WHOLE and holds every rule a
-session follows to verify its work. The full prior text — the narrative, receipts, dated incidents and
+session follows to verify its work. The full prior text — narrative, receipts, incidents and the
 argument behind each rule — is archived verbatim at `docs/archive/VERIFICATION-2026-09-19.md`; look it up
 by subject or by the id a rule names, never read it to learn the process. `CLAUDE.md` §5–§6 state the
 discipline and win any disagreement; this file is the instruments that check it and the floors that fail.
-A figure here is dated; the instrument's printed figure is the authority over it.
+A figure here is dated; the instrument's printed figure outranks it.
 
 ## Why line coverage is not the metric, and what is
 
 Most plane suites drive `src/**` inside WORKERD through Miniflare, a process the node harness cannot
 instrument, so `NODE_V8_COVERAGE` would measure `test/` and call it coverage. **Do not report line
-coverage.** (Re-take the ratio, do not trust it: `ls bio-plane/test/*.test.mjs | wc -l` against
+coverage.** (Re-take the ratio: `ls bio-plane/test/*.test.mjs | wc -l` against
 `grep -l miniflare bio-plane/test/*.test.mjs | wc -l`.) `scripts/coverage.mjs` measures the three
 surfaces whose gaps have shipped defects instead:
 
@@ -333,7 +333,7 @@ arm 2b fails on a TRACKED or un-ignored copy (the `merge=ours` liar).
 
 A fresh clone is unguarded until a gate runs once in it; `--no-verify` skips the hook. Its `main` arm (M0-111)
 refuses a push without the train's mark, which proves a procedure, never an actor (TREE-SHARING §2). A dirty corpus
-gets a verdict about the TREE and is told so; a ref whose sha is not HEAD is named as unspoken-for.
+gets a verdict on the TREE, and is told so; a ref whose sha is not HEAD is named as unspoken-for.
 
 ### AN EXPIRED BUDGET MEASURED NOTHING (BOB #28, 2026-09-22; M0-107)
 
@@ -342,13 +342,15 @@ test; a subject dying by its own signal is a finding. RED outranks NOT MEASURED 
 checks each budget with `bio-plane/test/budget.mjs` (`budgetAssert`, `until`: one pid-tagged marker, one
 failing assertion) and skips what the expiry left unread; the battery reads failures all so marked as NOT
 MEASURED and exits 124. `gates.mjs` records it (exit 124); the push guard never refuses it; it licenses no
-`--since` and meets no GREEN FULL test (M0-106). Every site is swept: `scripts/budgetsweep.mjs`.
+`--since` and meets no GREEN FULL test (M0-106). Every site: `scripts/budgetsweep.mjs`.
+
+Unit PASSes are shared on `gate-results` by input key; a release runs `--full --no-reuse` (TREE-SHARING §3a).
 
 ### D-406 — ONE HOOK, EVERY WORKTREE, BUT THE SCRIPT RESOLVED PER-WORKTREE
 
 **A mechanism shipped as a file in the repository is in the loop only for checkouts made or rebased after
 it landed** — and a missing guard looks exactly like a passing one. The hook tries the worktree's
 `tools/pushguard.mjs`, then `<git-common-dir>/bio-pushguard.mjs`. Every write to shared machinery is an
-atomic rename; `install()` refuses to downgrade. Remaining limits: a clone covered only after some worktree
-has run `plancheck`; a cache that can lag the tracked script. **A claim about a shared mechanism drives
-the installed artifact, never a model of it** (run the hook in each worktree).
+atomic rename; `install()` refuses to downgrade. Limits: a clone is covered only once a worktree runs
+`plancheck`; the cache can lag the tracked script. **A claim about a shared mechanism drives
+the installed artifact, never a model of it** (run each worktree's hook).

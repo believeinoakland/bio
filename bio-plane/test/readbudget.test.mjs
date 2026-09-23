@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git ls-tree/show of pinned historical commits, which no
+   result key can name; traced 2026-09-23. */
 /* readbudget.test — the reading budget (`CLAUDE.md` §1; Bob, 2026-09-18).
  *
  * NEGATIVE CONTROL: RUN 2026-09-18 by BOB #15, both arms ON THE SUBJECT'S INPUTS rather than by editing

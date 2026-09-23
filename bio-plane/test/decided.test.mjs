@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git ls-tree/show of historical commits in this checkout, which no
+   result key can name; traced 2026-09-23. */
 /* decided — the ruling index, `tools/decided.mjs` (M0-97 and D-341, 2026-09-21; M0-99, 2026-09-22).
  *
  * M0-99 — `docs/DECIDED.md` is no longer COMMITTED: 88 commits touched the generated file on 2026-09-21
