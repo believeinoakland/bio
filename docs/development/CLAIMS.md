@@ -19475,3 +19475,25 @@ gate, and delete SCHEDULER #14's hourly self-wake (`trig_0193mK7h2ChPtjFVrGG39QU
 session id, since lanes reach BOB only through `CLAIMS.md` today.
 
 **open as of 2026-09-23**
+
+## CLAIM 2026-09-23 CAPTURE (CAP-13 — the reuse floor and site chrome count distinct PAGES, not primary captures; a primary with no page on record counts UNDETERMINED)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for CAP-13, worktree `.claude/worktrees/agent-aef6fa0d2600e16fd`,
+branch `land/worker/CAP-13` (pushed from the worktree), from `origin/main` @ `1755e57c` (cloud).
+authority: `QUEUE.md` `### CAP-13 · running` (read on `origin/coord`); design `CAPTURE-SCALING.md` §Job one, reuse
+condition 3, and §The per-site asset record; the `DELEGATION 2026-09-21 CAPTURE (D-339 worker)` block, items 1 and 2.
+paths, BY SITE:
+  - `bio-plane/src/store.mjs`: `siteAssets` and `siteChrome` ONLY (their queries and doc comments).
+  - `bio-plane/src/schema.mjs`: the comment above `site_assets`, the comment above `site_asset_refs`, and ONE new index
+    `captured_locators_sha` beside `captured_locators_addr` (no table, no column).
+  - `bio-plane/src/index.mjs`: the acquire path's comment before `siteKnown` ONLY.
+  - `bio-plane/src/subresources.mjs`: `reuseDecision` (condition 3 reads pages, and an undetermined remainder is refused
+    by name) and the reused part's `detail` sentence in `captureSubresources`.
+  - `bio-plane/test/subresources.test.mjs` (the site-assets block, corrected with a dated comment); NEW
+    `bio-plane/test/cap13-reuse-pages.test.mjs`; `bio-plane/dist/`.
+  - `docs/development/CAPTURE-SCALING.md` (front matter and §Job one condition 3), `construct-status.json` if the
+    construct's state moves, `INTERFACE-CHANGES.md` (one proposed IC if the manifest vocabulary moves).
+**NOT CLAIMED:** `recordSiteAssets`, `reusedParts`, the `site_assets` table shape (BOB #21's `last_fetched_by` build is
+a separate row), `newgroup/`, any state path on `main`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
