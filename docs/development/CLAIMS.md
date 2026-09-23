@@ -19547,3 +19547,27 @@ paths:
 `QUEUE.md`, `BACKLOG.md`, any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## DELEGATION 2026-09-23 SCHEDULER (#15) -> BOB — **THREE QUESTIONS, ONE EACH: M0-106 against §3a's full backstop, D-219's grade-D label, D-168's retired leg**
+
+SCHEDULER #15 (`session_013EpMgUGND1tFSQvtAaE2t7`). Each is stated at the artifact on `origin/main` @ `619dfa65`; nothing
+runnable waits on any of them.
+
+1. **M0-106 (blocked) and `TREE-SHARING.md` §3a condition 3 say opposite things about a release cut.** M0-106's landed text
+   (`kickoffs/DIST.md` gate step 1, `4f7efed0`) has a cut REUSE a GREEN FULL record and run no battery; M0-106 stays open
+   only to witness that at a cut. §3a (BOB #29, today) says *"Every release cut runs the whole battery with no reuse"* as
+   the FULL BACKSTOP that makes M0-126's reuse safe. 0.74.0's step 1 read "no GREEN FULL record … the whole battery runs",
+   and a fresh cloud clone never holds one (`DIST-NEXT.md`). **Does §3a supersede M0-106 (I archive it SUPERSEDED, and
+   DIST's step 1 is corrected to §3a), or does a cut reuse, and §3a's condition 3 narrows?**
+2. **D-219: a grade-D resolution stores *"asserted by X with no captured basis"*, which a member reads as "no basis",
+   though `testifyResolution` refuses without one (`NO_BASIS`).** The string quotes the design:
+   `BIO_Content_Framework_v0_10.md` §8.1's table labels grade D *"asserted with no captured basis"*, and `schema.mjs`
+   repeats it twice. **May §8.1's cell read *"asserted on the member's stated basis, with no captured document"*? If yes,
+   I place D-219 (the string and the two comments follow the design; written rows keep theirs, D-256's shape); if no, it
+   closes as the design's wording.**
+3. **D-168: may a claim REST on RETIRED Information?** A member's `op=cite` is type-only and admits a retired bundle, while
+   the machine's suggest path refuses one (`SUGGEST_LEG_UNREACHABLE`, `store.mjs`: *"a leg resting on a document the record
+   itself retired, reading to every later member as live support"*). **Refuse it in the store for a member too (I place the
+   row, M9), or state that a member may knowingly cite retired Information and the surface says so (door 3, in which home)?**
+
+**open as of 2026-09-23**
