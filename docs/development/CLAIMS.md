@@ -20045,3 +20045,4 @@ and `.control.mjs` (new, real plane under miniflare); `surface-registry.test.mjs
 door, C4 arms new); `preauth-vocabulary.test.mjs` if its router census moves. `docs/development/CIVICOS_UI_STATE.md`
 (PREPENDED). No plane change (I3 consumer of `op=versionaccept` and `op=versionstrength`'s `independence`).
 **open as of 2026-09-23** — claimed at the start of the item.
+released: 2026-09-23 — pushed land/worker/UI-74 @ 1bb9b846 (verified by ls-remote). Sites as claimed, PLUS `member-respect.test.mjs` (one CHOOSERS row: `acerAffirmHtml`), `docs/architecture/construct-status.json` + `BIO_System_Design.md` (12.accept ABSENT -> BUILT) and one Incomplete-sections bullet in `INVESTIGATIVE-SESSION.md` front matter. The `vrevVersionHtml` link is drawn only for the review surface's own readings (the stance surface renders those cards too). `preauth-vocabulary` did move (router census 7->8). Paths stay reserved until CONDUCT integrates the branch.
