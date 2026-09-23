@@ -290,7 +290,7 @@ accepts-when: an action created with no tier reads UNDETERMINED through the ops;
 added: 2026-09-21 · SCHEDULER #6 (LED-7; ruled on its row's two options; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-182» on entering the cache; its `order:` line is the current one.
 
-### D-178 · queued — **`op=audit`'S SWEEP HANDS `checkBundle` NO PUBLISHED REGISTRY: C-21.1 AND C-21.2 NEVER FIRE IN AN AUDIT, AND EVERY CORRECTLY INHERITED LEG READS AS A C-2.8 OFFENDER.** The sweep builds only `earnedRegistry` per bundle (REC-18, `store.mjs`); `checkInheritedLeg` (`bio-checks.mjs`) then finds no published target, refuses a leg stating `grade_source: 'inherited'` as one that *cannot be checked against the published record here*, and returns before either C-21 arm (re-read on `7c967f09`). — owner RECORD.
+### D-178 · running — SPAWNED 2026-09-23 ~21:21Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER D-178 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-178 and that session; never conclude queued from the absence alone.
 order: with the M10 corrections, after D-182 and above the features: the audit DIST's ladder needs clean before a version serves reports correct legs as offenders and skips the checks it exists to run, CLAUDE.md §2's class; last of them because no member reads it (SCHEDULER #12, 2026-09-22, LED-7)
 milestone: M10
 interface: I3 — `op=audit`'s tallies move; the integrator mints and classifies the IC.
@@ -301,7 +301,7 @@ accepts-when: an audit over a fixture reads a correctly inherited leg clean and 
 added: 2026-09-22 · SCHEDULER #12 (LED-7; D-178's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-178» on entering the cache; its `order:` line is the current one.
 
-### UI-74 · queued — **THE ACCEPT CEREMONY IS NOT ON `main`, SO NO SURFACE LETS A MEMBER ACCEPT A MACHINE-PROPOSED READING.** The IS plan's UI-43 built it on `worktree-agent-a9e7e017d06799858` (`fd1e2aec`, 2026-08-09) and it was never integrated (D-397's third branch): `acceptCeremonyOpen`, `ACER_` and `versionaccept` occur 0 times in `origin/main:civicos-ui/app.html`, 3, 16 and 4 times on the branch (2026-09-21). — owner UI.
+### UI-74 · running — SPAWNED 2026-09-23 ~21:21Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER UI-74 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/UI-74 and that session; never conclude queued from the absence alone.
 order: the first feature, after D-52: DEC-24's member half — the machine proposes, the member concludes — has no door, and the IS plan recorded it done at 43/43; below the corrections because the status authority claims no ceremony (SCHEDULER #5, 2026-09-21)
 milestone: M9
 interface: I3 consumer (`op=versionaccept`; `op=versionstrength`'s `independence`) — both built.
