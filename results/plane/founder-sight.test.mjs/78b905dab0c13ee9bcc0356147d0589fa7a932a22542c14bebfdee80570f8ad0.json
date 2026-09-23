@@ -1,0 +1,16 @@
+{
+ "unit": "plane:founder-sight.test.mjs",
+ "inputHash": "78b905dab0c13ee9bcc0356147d0589fa7a932a22542c14bebfdee80570f8ad0",
+ "verdict": "PASS",
+ "run": "18f7304bb364d76c05771e6b792b8feb9e0e410c.1790189048057.24820.json",
+ "tree": "18f7304bb364d76c05771e6b792b8feb9e0e410c",
+ "head": "bdd407cbca7610324ebda3018a071f3b4b9bd720",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 137,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c24508e4-34b6-5866-a122-a5e731b6ee3c",
+ "at": "2026-09-23T18:44:08.071Z"
+}
