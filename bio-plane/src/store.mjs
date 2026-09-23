@@ -10935,9 +10935,16 @@ export class Store extends DurableObject {
    *     run by the checker AND by promote's write path; the legs this act
    *     composes are judged there like any other, so a leg it could not compose
    *     honestly never lands.
-   *   - IT DOES NOT ASK WHAT STATE A TARGET IS IN (D-168). Permissive, exactly
-   *     as the case arm has always been: citing retired material is permitted
-   *     and therefore published.
+   *   - IT ASKS ONE THING ABOUT A TARGET'S STATE, ON BOTH ARMS, AND ONLY ONE:
+   *     whether the group RETIRED it (D-168, CORRECTED 2026-09-23; State Rules
+   *     §4.1 "A RETIRED ITEM IS NOT CITABLE", BOB #30). This line used to read
+   *     "IT DOES NOT ASK WHAT STATE A TARGET IS IN … citing retired material is
+   *     permitted", which was the defect: a claim resting on what the group
+   *     itself retired read to every later member as live support. The
+   *     refusal is RETIRED_NOT_CITABLE (C-33.39), in the store so every caller
+   *     meets it. `source_status` (unchanged | modified | removed) is NOT
+   *     asked: a publisher withdrawing a document is the other axis and stays
+   *     citable, and legs already in the record are not touched.
    *
    * `selectionResolve` shipped in 0.17.0 with no caller. This is its first, and
    * citing was chosen for it because it ADDS references rather than moving
@@ -11140,6 +11147,42 @@ export class Store extends DurableObject {
             detail: "a case rests on material, or on a question the group is asking. These members of the "
                   + "selection are neither, and the whole call is refused rather than narrowed to the ones "
                   + "that are." };
+
+    /* DEC-49 REGION is-cite-retired — D-168 / C-33.39. A RETIRED ITEM IS NOT
+       CITABLE (State Rules §4.1, BOB #30, 2026-09-23). `retired` is the GROUP's
+       authored judgment that an item is superseded or no longer stands, and
+       `retire` already refuses while a live edge cites the item (CITED); a
+       citation made AFTER the retirement is the same harm entered by the other
+       door. Asked HERE, in the store, so a member's session and a machine
+       credential meet one rule (DEC-8: never on a surface) — the suggest path's
+       CHECK 1 (SUGGEST_LEG_UNREACHABLE) asks the same question of the same
+       column.
+
+       WHAT IS NOT ASKED, and each absence is the ruling's, not an omission:
+         - `source_status`. A publisher that withdraws or changes a document is
+           the OTHER axis (`removed`, `modified`, both versions preserved,
+           potential concealment evidence) and stays citable. A fence that read
+           it would be tighter than its rule.
+         - the edges already written. This refuses a NEW citation; a leg that
+           predates the retirement is the record's history and is not rewritten.
+       The whole call is refused with the retired members named, never narrowed
+       to the rest, the same reason as every refusal above. */
+    const retiredMembers = [];
+    for (const id of sel.members) {
+      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+      if (b && normalizeType(b.object_type) === "information"
+          && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
+    }
+    if (retiredMembers.length)
+      return { ok: false, reason: "RETIRED_NOT_CITABLE", code: "RETIRED_NOT_CITABLE",
+               check: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.check,
+               translation: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.translation,
+               project, handle, offenders: retiredMembers.sort(), drift: sel.drift,
+               detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and "
+                     + "a citation made now would read to every later member as live support. Cite what "
+                     + "superseded them, or re-collect the source as a new bundle and cite that. The whole call "
+                     + "is refused rather than narrowed to the members that are not retired." };
+    /* END DEC-49 REGION is-cite-retired */
 
     const liveMd = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string")
@@ -35499,8 +35542,9 @@ export class Store extends DurableObject {
         { target, name, fields: filler }));
 
     /* CHECK 1 — EVERY LEG EXISTS AND IS REACHABLE AT ITS ADDRESS.
-       D-168 IS THE WHOLE REASON THIS IS NOT A TYPE CHECK. `op=cite` is TYPE-ONLY
-       today: it reads the id prefix and asks nothing about what is there. A
+       D-168 IS THE WHOLE REASON THIS IS NOT A TYPE CHECK. `op=cite` WAS TYPE-ONLY
+       when this was written (since D-168, 2026-09-23, it refuses a retired member
+       too — RETIRED_NOT_CITABLE, the same question of the same column). A
        type-only check here would PASS RETIRED INFORMATION — a leg resting on a
        document the record itself retired, reading to every later member as live
        support. So three questions are asked and not one: is it IN the record, is

@@ -428,6 +428,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* REC-175 (State Rules §8, 2026-09-23): op=promote refuses a supplied sha256 that is not the digest of the
        file's own bytes. D-PIN-B failed on it when it landed — the arm doing its job. */
     ["C-33.38", "FILE_DIGEST_MISMATCH"],
+    /* D-168 / BOB #30, 2026-09-23: a retired item is not citable (`cite > is-cite-retired`).
+       D-PIN-B failed naming exactly this row when it landed — the arm doing its job. C-33.38 was
+       REC-175's (FILE_DIGEST_MISMATCH), on its own branch when this was written; both are pinned since CONDUCT #16's merge. */
+    ["C-33.39", "RETIRED_NOT_CITABLE"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -515,16 +519,19 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 53 -> 54 on 2026-09-19 (D-136), FROM THE FIGURE THIS INSTRUMENT PRINTED
      ("corpus: 54 rows across 2 families" on the item's tree) and not by adding to
      the number in the file: C-32.17 OPERATOR_TOKEN_CANNOT_GOVERN. */
+  /* MOVED 54 -> 55 on 2026-09-23 (D-168), FROM THE FIGURE THIS INSTRUMENT PRINTED ("got 55" on the
+     item's tree) and not by adding to the number in the file: C-33.39 RETIRED_NOT_CITABLE. */
   /* MOVED 54 -> 55 on 2026-09-23 (REC-175), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 55 rows across 2 families" on the item's tree
      over origin/main 14faa089) and not by adding to the number in the file: C-33.38 FILE_DIGEST_MISMATCH. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one and REC-176's one — a walk that lost a family "
+    + "REC-126's one, REC-124's three, REC-136's one, D-136's one, REC-175's one, REC-176's one and D-168's one — a walk that lost a family "
     + "would run fewer arms and every one of them would still pass",
     /* MOVED 54 -> 55 on 2026-09-23 (REC-176), FROM THE FIGURE THIS INSTRUMENT PRINTED on the item's tree over
        origin/main 0e7cc03e and not by adding to the number in the file: C-67.1 SNAP_KEY_TAKEN. */
     /* MOVED 55 -> 56 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 54 -> 55 from the same base): the figure this
        instrument PRINTED on the merged tree — C-33.38 FILE_DIGEST_MISMATCH and C-67.1 SNAP_KEY_TAKEN together. */
-    rowsSeen, 56);
+    /* MOVED 56 -> 57 by CONDUCT #16 at D-168's merge (D-168 moved 54 -> 55 on its own base: C-33.39 RETIRED_NOT_CITABLE); the figure below is the one PRINTED on the merged tree. */
+    rowsSeen, 57);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

@@ -21,7 +21,6 @@
 - §8 — an inline file's `bytes` is computed at promote since REC-178 (the writers sent `text.length`, UTF-16 units), but rows written before it keep the figure they were stored with: `op=digestcensus`'s `bytes_disagree` counts them and nothing rewrites them. What a deployed instance's census reads is not known until an administrator runs it there. A blob-backed file's `bytes` is still not judged at promote (D-45; `PLANE_SIZE` at ratify).
 - §9 and §10 — obligations "binding on the bundle skill", a superseded implementation.
 - §footer — reads "Spec version 1.3, July 11, 2026"; stale.
-- §4.1 — a retired item is not citable: RULED 2026-09-23 by BOB #30 (D-168); `op=cite` does not yet refuse one for a member (NOT BUILT, a row).
 
 **Contents**
 - [State Rules & Consistency Specification](#state-rules-consistency-specification)
