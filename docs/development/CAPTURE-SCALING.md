@@ -486,9 +486,9 @@ Status per item, verified against the source on 2026-07-31.
    the reuse and says a ratified capture must re-fetch — which is item 6.)
 4. **BUILT.** `capture_limits` calibration from the `PLATFORM_LIMIT` signal already
    emitted. (`schema.mjs` `capture_limits`; first refusal recorded, rest DEFERRED.)
-5. **BUILT.** Resumable sessions. NOT optional: they are what makes the free tier a
-   supported configuration, since first captures and heavy pages exceed the ceiling
-   no matter how good reuse gets. (`capture_sessions`; `op=acquire` returns
+5. **BUILT.** Resumable sessions. NOT optional: first captures and heavy pages exceed a
+   per-request ceiling no matter how good reuse gets. (Corrected 2026-09-23 by BOB #32, D-185: this said they made
+   the free tier a supported configuration; the installer REFUSES a Free-plan account, DEC-42.) (`capture_sessions`; `op=acquire` returns
    `continuation`.)
 6. **DECIDED 2026-07-31 and QUEUED as CAP-4.** Post-hoc reuse verification from
    `site_assets`, which is free, and re-fetch of reused parts at ratification.

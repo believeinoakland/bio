@@ -1345,7 +1345,7 @@ Three properties matter here and all three are already proven:
 - **No starvation** — the reconcile keeps EVERY active consumer's wake, not only the one that
   just ran, so a fast consumer cannot shut out a slow one.
 - **Self-termination** — an idle instance carries no timer and spends nothing, which the
-  sovereign-instance distribution model needs since most instances sit on the Free tier.
+  sovereign-instance distribution model needs, because a sovereign instance pays for its own account (corrected 2026-09-23 by BOB #32, D-185: the installer REFUSES a Free-plan account, DEC-42, so no supported instance sits on the Free tier).
 - **Locality** — the consumer runs beside the DO's own SQLite, which is where a run's state
   lives anyway (§11's `capture_sessions` shape).
 

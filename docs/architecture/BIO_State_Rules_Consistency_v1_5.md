@@ -1290,6 +1290,12 @@ it is not a separate permission but a consequence of writing at all.
 
 ## 7. Violation-to-repair mapping
 
+**A STATED LIMIT OF THE REACHABILITY CHECK (D-209; BOB #32, 2026-09-23).** The repair-reachability walk
+(`repair-reachability.test.mjs`, REC-56) asks *"does the plane offer this act at this state"* ONLY where a repair names
+an edge or a destination. A repair that names an op WITHOUT directing a state move is checked for the op's EXISTENCE
+only. Closing that would need each arm's guard state extracted from its `current_state === '…'`; that is buildable, and
+it is not built.
+
 The checker never free-edits and never offers free-form fixes. Each
 violation maps to a closed set of sanctioned repairs; a human picks one;
 the repair is itself a logged, skill-mediated write. Illegal states stay
