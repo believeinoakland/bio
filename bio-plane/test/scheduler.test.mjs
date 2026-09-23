@@ -77,6 +77,12 @@
  * credential to call with (FL-3's standing delegation to RECORD, re-measured by
  * FL-4 and unchanged). So these arms prove a run SURVIVES to be resumed and is
  * TOLD that the daemon answered; they do not and cannot prove it resumed.
+ * CORRECTED 2026-09-23 by D-260, and the sentence above is kept because it was
+ * TRUE AT FL-4 and is still true OF THIS SUITE: the plane now HAS the caller
+ * (`Store#aiRunDispatch`, for a run the instance's organisation credential
+ * opened), but this fixture's runs are a member's session runs and it binds no
+ * AGENT_WORKER, so here every wake says it was NOT dispatched. The resumption is
+ * proved in `d260-resume.test.mjs`, against the real agent-worker.
  *
  * NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/scheduler.control.mjs` —
  * deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs
