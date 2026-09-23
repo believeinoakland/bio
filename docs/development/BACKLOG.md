@@ -23,36 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-121 · queued — **M0-116, NARROWED: A `MEASUREMENTS.md`-ONLY LANDING STILL SELECTS 85 UNITS, BECAUSE `op-claims.mjs` AND ~60 READERS IMPORT `tools/coord.mjs` FOR ITS STATE-PATH PREDICATE AND INHERIT WHAT IT WALKS.** M0-116's gates half landed (109 → 85, `e5c54c6a`); its op-claims split moves nothing until the predicate leaves the walking module. — owner M0.
-order: directly after M0-119, which it follows (CONDUCT #14: *"after M0-119"*), M0-116's residue, which CUTS GATE TIME on every measurement landing (SCHEDULER #14, 2026-09-23; M0-116's finding)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects nothing, and an import that walks nothing selects nothing; with `ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1.
-depends-on: M0-119.
-scope: move `MOVED_FILES`, `MOVED_DIRS`, `NEXT_RE` and `isMovedPath` (all I/O-free) out of `tools/coord.mjs` into a module that walks nothing, re-exported by `coord.mjs` and imported by `op-claims.mjs` (measured as an experiment by CONDUCT #14: 60 → 24 readers, 85 → 55 units).
-accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it and not the 85, both figures in the landing, closing M0-116's accepts-when. NEGATIVE CONTROL: import the predicate from `coord.mjs` again, and the unit-count arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (M0-116's residue via CONDUCT #14; `node tools/mintid.mjs M0`).
-
-### UI-79 · queued — **THE MEMBER UI WRITES `believe-in-oakland` AS THE GROUP OF EVERY BUNDLE IT AUTHORS, ON EVERY INSTANCE.** `civicos-ui/app.html` sends `group: believe-in-oakland` in `mdFor`'s front matter and three `meta.group` keys (re-read on `a73cba2b`), where the plane stamps the instance's recorded group (D-436, IC-172); the FY glossary entry and the Add form's placeholder name Oakland too. Found by UI-77's worker (CONDUCT #14); the open D-436 → UI DELEGATION. — owner UI.
-order: directly after REC-168, with the product corrections: a sovereign group's bundles would claim this project's group, CLAUDE.md §2's class, UI-77's sibling on the write path; below D-442 and REC-168, whose defects move published pins and attribution (SCHEDULER #14, 2026-09-23; UI-77's findings, relayed by CONDUCT #14)
-milestone: M7
-interface: I3 consumer (the plane's group stamp, IC-172).
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §3.1 (a bundle's `group` is the ONE recorded value per instance, never a literal: D-436), with DEC-8 (a surface invents nothing).
-depends-on: none — D-436's stamp is on `main`.
-scope: drop the four literals so the plane stamps the group; reword the FY glossary entry and the Add form's placeholder to name no place; correct the 11 UI suites carrying the literal, each with a dated comment saying why the old pin was wrong.
-accepts-when: against a plane recording a second slug, a bundle the UI authors carries that slug and no UI source or rendered text names `believe-in-oakland` or Oakland outside quoted record content. How a liar passes it: a different hard-coded slug, so the arm plants a second one. NEGATIVE CONTROL: restore one `meta.group` literal, and the planted-slug arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (UI-77's worker's findings (a) and (b), via CONDUCT #14; `node tools/mintid.mjs UI`).
-
-### D-85 · queued — **AN ASSISTANT CAN OPEN A QUESTION OUTSIDE ANY RUN IT HOLDS, AND A RUN KEEPS ONLY THE LENS IT WAS HANDED.** NARROWED by BOB #25 to … (whole text: the cut archive)
-order: directly after REC-165, the same fence one act further (BOB #25: *"after 1"*); a gap in the assistant's fence, not a false attribution (SCHEDULER #10, 2026-09-21)
-milestone: M4
-interface: I3 and I5 — a refusal, an instance row and a run field; the integrator mints and classifies the ICs.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rules 2 and 3 (BOB #25, 2026-09-21), with §3 (the run carries the lens).
-depends-on: REC-165 (the same gate).
-accepts-when: a creation outside a run, in another principal's run or past the bound is refused by name; one inside lands with its row and reads the lens and `moved`; a member's is … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #10 (BOB #25's inbox entry, items 2 and 3; D-85's DEBT row of 2026-07-30; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-85» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
 ### D-116 · queued — **NOTHING READS BACK WHAT BUILD THE PLANE'S DURABLE OBJECT, OR ANY FLEET MEMBER, ACTUALLY SERVES.** The installer verifies the … (whole text: the cut archive)
 order: after D-254, above features: a group can run a stale DO or member with nothing reporting it — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19; NARROWED by FLEET #3 and verified at the code by SCHEDULER #4, 2026-09-21: `vf4-live-scratch.mjs` stores the isolate's value as `plane_durable_object`)
 milestone: M7
@@ -1204,3 +1174,47 @@ design: `docs/development/VERIFICATION.md` — the test estate's own authority, 
 depends-on: none (M0-38 landed the grading and pinned the blind spot rather than fixing it)
 accepts-when: each of the seven previously-invisible claims appears in a roster the instrument prints, or is named as out of reach with its reason; **every roster the widened pattern feeds** … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-44» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism):
+order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+milestone: M0 (background lane, holds no slot) — the test estate's own instrument
+interface: none — control drivers and the census only
+design: `docs/development/VERIFICATION.md` §"A THROWING CONTROL DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING (D-331, 2026-09-14)" … (whole text: the cut archive)
+depends-on: none (M0-29 landed the sweep and its adjudication table)
+accepts-when: the census reports the sweep's tally section (0 open candidates on the estate as landed, the three retired instances listed as adjudicated); one unadjudicated candidate … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-33» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### SK-5 · blocked — RE-STATED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
+order: blocked: no plane op publishes the surface registry (SCHEDULER, first order audit, 2026-09-18)
+milestone: M9
+interface: I3 — **it needs the plane to PUBLISH the surface registry, which nothing does today; that is the** … (whole text: the cut archive)
+design: `docs/development/ASSISTANT-PILOT.md` §1 (the five-layer training pack — the **Recipes** row is this … (whole text: the cut archive)
+depends-on: a published surface registry (unbuilt). **NOT schedulable until that exists** — recorded so the … (whole text: the cut archive)
+accepts-when: (on unblocking) a recipe whose step names a surface or an op that does not exist **FAILS THE BUILD**; the pack's `absent_because` body is replaced by the layer rather than edited around.
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «SK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### UI-60 · blocked — RESTORED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
+order: blocked: waits on Bob's re-prioritisation of UI (SCHEDULER, first order audit, 2026-09-18)
+milestone: M8
+interface: none
+depends-on: Bob's re-prioritisation of UI (DEC-33's deferral and the 2026-09-15 content direction stand)
+accepts-when: the decomposition exists as rows and this pointer is marked superseded naming them.
+cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «UI-60». A worker READS IT before building.
+
+### REC-15 · blocked
+order: blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 (SCHEDULER, first order audit, 2026-09-18)
+milestone: M10
+behind-interface: I3
+depends-on: REC-14
+accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
+added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
+
+### UI-17 · blocked
+order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
+milestone: M10
+behind-interface: I3
+depends-on: REC-15, UI-11
+accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance … (whole text: the cut archive)
+added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.

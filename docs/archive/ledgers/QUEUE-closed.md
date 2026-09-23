@@ -3048,3 +3048,33 @@ depends-on: none.
 accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it (`op-claims.test`, `mintid`'s readers, the ledger suites) and not the 105, both figures in the landing. NEGATIVE … (whole text: the cut archive)
 added: 2026-09-22 · SCHEDULER #13 (BOB #27's defect, verified at the code on `81510280`; `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-116» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+### REC-168 · done — **DONE 2026-09-23: LANDED through the train at `4c2d1e88` (`land/conduct/batch6`); verified by content by SCHEDULER #14: `captureRequest` applies `runPrincipalGate` when a request names a run, IC-178 written.**
+order: directly after D-442 and before D-85: REC-165's defect on a third op, an attribution the record cannot support, CLAUDE.md §2's class; BOB #28: *"Directly after REC-165, whose fix it reuses"*, which is integrated, so a row (SCHEDULER #14, 2026-09-22; BOB #28's inbox entry, item 2)
+milestone: M9
+interface: I3 — the op refuses what it accepted; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, the paragraph *`op=capturerequest` — RULED 2026-09-22 by BOB #28* (rule 1 applies; Rule 1's target does not).
+depends-on: none — REC-165's gate, stamp and sight check are on `main`.
+scope: when a request names a run: REC-152's stamp of the caller's principal, the sight check first, then `runPrincipalGate`, as REC-165 applies them; the row records the CALLER's principal. A request naming no run is the member's own and is untouched; no context check (a request names an address, not a question).
+accepts-when: another principal's running run is refused `AI_RUN_NOT_PRINCIPAL` and writes no row; the caller's own running run lands, naming the caller; a request naming no run is unchanged. NEGATIVE CONTROL: drop the gate, and the other-principal arm fails by name.
+added: 2026-09-22 · SCHEDULER #14 (REC-165's stand-down finding, driven, via CONDUCT #14; ruled by BOB #28's inbox entry, item 2, drained this commit; `node tools/mintid.mjs REC`).
+
+### M0-114 · done — **DONE 2026-09-23: LANDED through the train at `4c2d1e88`; verified by content by SCHEDULER #14: M-104 carries the three-column FULL-gate measurement, `.github/workflows/gates.yml` runs the gate on GitHub's machines, and `tools/pushguard.mjs` reads the commit's check (`githubCheckVerdict`).**
+order: beside M0-110 and ahead of M0-111, the design's order (*"Change 3 is independent and starts with its measurement beside change 1"*; change 2 *"is cheapest once change 3 carries its gate"*); it *"waits for the first cloud measurement"* (BOB #27), which BOB #28 recorded (M-99), so runnable (SCHEDULER #13 and #14; BOB #26's inbox entry, item 2)
+milestone: M0
+interface: none.
+design: `docs/development/TREE-SHARING.md` §3 (the gates run on GitHub's machines) as revised by §4, with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — met 2026-09-22 (`kickoffs/NEW-MACHINE.md` §0.1): the first cloud FULL gate, 1,082 s wall, 272/273 suites · 16,575 assertions.
+scope: FIRST the measurement, the FULL battery's wall time and pass count on a GitHub runner, on the Mac and in the cloud (that column is in); every suite needing a secret or the network, named; the monthly minutes at M0-111's cadence. A verdict still lives in one clone and every cloud clone starts with none (BOB #28). Actions' enablement stays UNDETERMINED (0 workflows; `actions/permissions` refused); Bob's acts go to BOB with the figures, only if they favour a runner (§4). Then the workflow, the check, and the push guard reading it. **FULL GATE PROFILE**.
+accepts-when: the three-column measurement is in `MEASUREMENTS.md` before any workflow lands; a `land/*` push gets a check whose verdict the push guard reads, and a red check refuses the push. NEGATIVE CONTROL: break one suite on a branch, and the check reads red at that suite.
+added: 2026-09-22 · SCHEDULER #13 (BOB #26's entry, item 2; `mintid`); unblocked by SCHEDULER #14 (BOB #28's entry, item 1).
+
+### M0-119 · done — **DONE 2026-09-23: LANDED through the train at `4c2d1e88` (its data act ran on coord at `78b32889`); verified by content by SCHEDULER #14: `ledger.mjs` and `coord.mjs` read `BACKLOG-LATER.md` as the order's tail. Which writes may rebalance is with BOB (SCHEDULER (#14)'s DELEGATION).**
+order: directly after M0-111, the other row resting on M0-110: it UNBLOCKS PRODUCT, since every placement of a product row passes through the backlog's budget (Bob, 2026-09-22, `CLAUDE.md` §2); the interim 200 KiB budget holds until it lands (SCHEDULER #14; BOB #28's inbox entry, item 3)
+milestone: M0
+interface: none
+design: `docs/development/WORK-PIPELINE.md` §2, *"When `BACKLOG.md` is over its budget, the tail moves, not the head"* (BOB #28, 2026-09-22), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: M0-110 (a new state file rides to `coord`).
+scope: a placement over budget moves whole rows from `BACKLOG.md`'s foot to the head of `BACKLOG-LATER.md` (looked up, never read whole, unbounded); a refill promotes them back; `ledger.mjs`, the invariants, `plancheck` and every reader of the order read both files as ONE order; the budget returns to 150 KiB when it lands.
+accepts-when: a placement over budget cuts no row and leaves every id in exactly one file, in order. NEGATIVE CONTROL: point one reader at `BACKLOG.md` alone, and its arm fails by name.
+added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 3, drained this commit; `node tools/mintid.mjs M0`).
