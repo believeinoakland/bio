@@ -58,6 +58,8 @@
 # KEEP-BOTH at the REC-83 x REC-84 merge, 2026-09-14: two items each added their
 # own pen to the same anchor and the two are independent, so both lines stand.
 .rec84-control-pristine/
+# M0-134's pen (`bio-plane/test/finallyexit.control.mjs`), for the same reason: it arms six real suites.
+.m0134-control-pristine/
 # FW-17's pen (`test/nc-fw17.mjs`), its own line for the reason every line above
 # has one: the harness arms `src/store.mjs` and `src/textchain.mjs`, and an
 # interrupted run must not leave a copy of either sitting untracked where the

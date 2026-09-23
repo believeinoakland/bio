@@ -29,7 +29,8 @@
    (4) NEUTER THE ONE CHECK — delete `reportProvenance`'s naming branch in `scripts/provenance.mjs`, ONE edit in ONE module -> `coverage-provenance` 28 -> 17 pass/11 fail, `battery-provenance` 23 -> 14/9, this suite 533 -> 531/2, every corpus still PRINTED. Three callers moving on one edit is the evidence that this is ONE mechanism and not three copies. Restored, `cmp` byte-identical, sha256 acec3087…, all three back to 28/23/533.
    (4b) THE SURPRISING GREEN THAT WAS A FINDING ABOUT THE ARM. On its first run arm (4) left this suite at 533 pass, 0 fail — because arms (1)-(4) of the block below all read `classifyDiscovered`'s RETURN and none read a printed WORD, and on an honest tree the naming branch never runs, so it could have gone dark here in silence. Arm (5) of that block was added to drive the printer over a synthetic off-commit item into a captured sink; only then did this suite move.
    (5) OVER-STRICTNESS, on the real tree with NOTHING planted -> coverage 137 of 137 and this suite 154 of 154 in the commit, no NOT-IN-ANY-COMMIT block from either walk, no floor described as contaminated. Silence is the result here, not the absence of one.
-   (run 2026-09-10, D-301) THE CLASS CENSUS'S STRING-BLINDING — SIX ARMS, declared in `test/d301-census.control.mjs` and run in one step with `node test/d301-census.control.mjs [arm]`, deliberately NOT a `.test.mjs` because it edits real sources AND deposits real modules while it runs. Each armed ALONE, every other defence held OPEN, each DECLARING before it ran what must fail and what must not, every restore verified by sha256 AND by a byte compare against a uniquely-named per-arm pristine copy with the byte count printed and floored. Figures are hygiene pass/fail · walkfloor pass/fail. (a) `baseline` — nothing armed: 678/0 · 44/0, and the census prints `32 file(s)`. It is not decoration: it is what distinguishes six-arms-broken from six-arms-working. (b) `realwalk` — THE TWIN THIS ITEM CAN FAIL AT, since a matcher blinded TOO FAR reports a clean census over a real exposure and its figures are indistinguishable from a correct one's: a probe whose only primitive is a REAL call in live code must STILL be enumerated -> 677/1 · 44/0, the GUARDED-or-NAMED arm failing BY NAME, census 33. (c) `realinterp` — the over-strictness spelling nobody anticipated: the only site inside a template `${…}`, which `scripts/battery.mjs:639` and `test/ref-variance-probe.mjs:414` both really do -> 677/1 · 44/0 NAMING the probe. Without `keepInterpolations` this arm PASSES, and the census would be quietly narrower than its own stated rule while every membership figure read correct — neither live file would have left the corpus. (d) `fixture` — THE ARM THIS ITEM EXISTS FOR: a walking fixture in a template literal AND in a string, written from scratch rather than taken from the allowlist -> 678/0 · 44/0 GREEN, census still `32 file(s)`, the probe ABSENT from the corpus rather than graded harmless. (e) `before` — the SAME fixture read by the comment-only stripper this item deleted -> 677/1 · 44/0 NAMING it, census 35, which is the BEFORE state proved rather than described (the two files D-301 dropped come back in the same print). Two edits at once on purpose, and the only arm here that is: the claim is about a PAIR, so arming either half alone proves nothing about the other. (f) `neuter` — blank everything, so the census's lexer sees no code at all -> 676/2 · 42/2, the REACH arm failing at `0 walking file(s), floor 32` WITH THE CORPUS PRINTED and the stale-list arm naming all nine entries at once; D-265's arm re-proven on the moved matcher, and the row without which (d) is satisfied for free, because a census that looked at nothing would also report the probe harmless. ALL SIX AS DECLARED. **AND RE-RUNNING `walkfloor.control.mjs` WHOLE — owed, because D-301 moves that driver's subject — RETURNED ITS ARM (6) `stripper` AS `DID NOT ARM`, WHICH IS THE SHARPEST THING THIS ITEM FOUND**: that patch anchored on `strip`'s full SIGNATURE, D-301 added one option to it, so the patch matched ZERO TIMES and the arm neutered nothing while both suites read a comfortable green. Re-anchored on the function BODY, where a signature change cannot reach it, and re-run: eleven of eleven as declared. */
+   (run 2026-09-10, D-301) THE CLASS CENSUS'S STRING-BLINDING — SIX ARMS, declared in `test/d301-census.control.mjs` and run in one step with `node test/d301-census.control.mjs [arm]`, deliberately NOT a `.test.mjs` because it edits real sources AND deposits real modules while it runs. Each armed ALONE, every other defence held OPEN, each DECLARING before it ran what must fail and what must not, every restore verified by sha256 AND by a byte compare against a uniquely-named per-arm pristine copy with the byte count printed and floored. Figures are hygiene pass/fail · walkfloor pass/fail. (a) `baseline` — nothing armed: 678/0 · 44/0, and the census prints `32 file(s)`. It is not decoration: it is what distinguishes six-arms-broken from six-arms-working. (b) `realwalk` — THE TWIN THIS ITEM CAN FAIL AT, since a matcher blinded TOO FAR reports a clean census over a real exposure and its figures are indistinguishable from a correct one's: a probe whose only primitive is a REAL call in live code must STILL be enumerated -> 677/1 · 44/0, the GUARDED-or-NAMED arm failing BY NAME, census 33. (c) `realinterp` — the over-strictness spelling nobody anticipated: the only site inside a template `${…}`, which `scripts/battery.mjs:639` and `test/ref-variance-probe.mjs:414` both really do -> 677/1 · 44/0 NAMING the probe. Without `keepInterpolations` this arm PASSES, and the census would be quietly narrower than its own stated rule while every membership figure read correct — neither live file would have left the corpus. (d) `fixture` — THE ARM THIS ITEM EXISTS FOR: a walking fixture in a template literal AND in a string, written from scratch rather than taken from the allowlist -> 678/0 · 44/0 GREEN, census still `32 file(s)`, the probe ABSENT from the corpus rather than graded harmless. (e) `before` — the SAME fixture read by the comment-only stripper this item deleted -> 677/1 · 44/0 NAMING it, census 35, which is the BEFORE state proved rather than described (the two files D-301 dropped come back in the same print). Two edits at once on purpose, and the only arm here that is: the claim is about a PAIR, so arming either half alone proves nothing about the other. (f) `neuter` — blank everything, so the census's lexer sees no code at all -> 676/2 · 42/2, the REACH arm failing at `0 walking file(s), floor 32` WITH THE CORPUS PRINTED and the stale-list arm naming all nine entries at once; D-265's arm re-proven on the moved matcher, and the row without which (d) is satisfied for free, because a census that looked at nothing would also report the probe harmless. ALL SIX AS DECLARED. **AND RE-RUNNING `walkfloor.control.mjs` WHOLE — owed, because D-301 moves that driver's subject — RETURNED ITS ARM (6) `stripper` AS `DID NOT ARM`, WHICH IS THE SHARPEST THING THIS ITEM FOUND**: that patch anchored on `strip`'s full SIGNATURE, D-301 added one option to it, so the patch matched ZERO TIMES and the arm neutered nothing while both suites read a comfortable green. Re-anchored on the function BODY, where a signature change cannot reach it, and re-run: eleven of eleven as declared.
+   (run 2026-09-23, M0-134) A FINALLY-EXIT FOLLOWS A CATCH THAT COUNTS — declared in `test/finallyexit.control.mjs`, run in one step with `node test/finallyexit.control.mjs [arm]`, deliberately NOT a `.test.mjs` because it edits real suites; every restore verified by sha256 AND byte compare against a per-arm pristine copy. (a) `baseline` -> hygiene 995 pass 0 fail. (b) `nocatch` — remove severedhomes.test.mjs's catch -> hygiene 994 pass 1 fail at "every finally-exit follows a catch that counts a failure", NAMING `severedhomes.test.mjs:<line> no-catch`. (c) `emptycatch` — THE LIAR, the catch kept with an EMPTY body -> 994 pass 1 fail naming `severedhomes.test.mjs:<line> catch-does-not-count`; ITS FIRST RUN CAME BACK NOT-AS-DECLARED AND THE ARM WAS WRONG, NOT THE RULE: the arm wrote `} catch {}` before the kept `} finally {`, one brace too many, so the reader saw no catch at all and named `no-catch`; re-anchored and re-run, as declared. (d) `throw:<suite>` — a throw planted at the foot of the try of each of the SIX suites in the census -> each exits 1 printing the throw (capture-text-index 55/1, rec119-version-legs-earned 24/1, severedhomes 14/1, strengthpair 91/1, versions 78/1, versionstate 89/1). (e) `before` — the catch removed AND a throw planted, the pre-fix state -> severedhomes exits 0 reading "14 pass, 0 fail" over the throw. TEN OF TEN AS DECLARED. */
 /* Suite hygiene: the guard against a battery that wastes hours.
  *
  * Negative-control detail: remove the `.dispose()` calls from a scanned suite (scheduler.test.mjs, temporarily) so a Miniflare is built but never shut down -> 1 assertion fails ("scheduler.test.mjs disposes all 1 of its Miniflare instances"); restored, 144 pass. (An unescaped backtick in setup.mjs's SETUP_HTML template is the other subject this suite guards; the dispose scan is exercised here.)
@@ -99,6 +100,8 @@ import { sweepWalkFloors, strip as stripSource, stripToCode } from "../scripts/w
    module actually applies it. The block at the foot of the census is the argument. */
 import { declarationOf, WalkFloorError, isWalkFigure, isWalkSet } from "../scripts/walkfigure.mjs";
 import { corpus as opCorpus, sweep as opSweep } from "../scripts/op-claims.mjs";
+/* M0-134: the finally-exit reader, imported from its module so the rule has one implementation. */
+import { scanFinallyExits } from "../scripts/finallyexit.mjs";
 
 const DIR = fileURLToPath(new URL(".", import.meta.url));
 let pass = 0, fail = 0;
@@ -125,6 +128,62 @@ for (const f of suites) {
   const src = readFileSync(join(DIR, f), "utf8");
   const tail = src.slice(-400);
   t(`${f} exits deterministically`, /process\.exit\((?!1\))/.test(tail) || /process\.exit\(fail/.test(tail), true);
+}
+
+/* ---- and an exit inside a `finally` follows a catch that COUNTS (M0-134) ----
+ * The rule directly above makes every suite end on an explicit exit, and some put
+ * it INSIDE a `finally`. There a throw is a GREEN: the finally prints the tally
+ * counted so far and `process.exit(fail ? 1 : 0)` discards the pending exception.
+ * `severedhomes.test.mjs` threw PROJECT_ID_SUPPLIED at its first project from
+ * REC-141 until M0-134 and read "1 pass, 0 fail", exit 0, every battery between.
+ * So a finally-exit must follow a `catch` whose body increments a variable the
+ * exit reads (or exits non-zero itself) — an empty `catch {}`, a log-only catch and
+ * a re-throw (which the finally's exit discards) are all refused. The reader is
+ * `scripts/finallyexit.mjs`, which states what it cannot see. The census is
+ * PRINTED and FLOORED, because a detector that finds no finally-exit passes every
+ * tree; the floor is the census M0-134 measured (6 suites, 2026-09-23) and a suite
+ * that moves its exit out of its `finally` lowers it honestly — move the floor
+ * then, from the printed figure, and say why here. */
+console.log("\n--- a finally that exits follows a catch that counts the failure ---");
+{
+  const FINALLY_EXIT_FLOOR = 6;
+  const census = [], refused = [];
+  for (const f of suites) {
+    for (const r of scanFinallyExits(readFileSync(join(DIR, f), "utf8"))) {
+      census.push(`${f}:${r.line}`);
+      if (r.verdict !== "ok") refused.push(`${f}:${r.line} ${r.verdict}`);
+    }
+  }
+  console.log(`  census: ${census.length} finally-exit site(s) in ${new Set(census.map((c) => c.split(":")[0])).size} suite(s): ${census.join(", ")}`);
+  t(`every finally-exit follows a catch that counts a failure (${refused.length} refused: ${JSON.stringify(refused)})`,
+    refused, []);
+  t(`the finally-exit census read a corpus (${census.length} site(s), floor ${FINALLY_EXIT_FLOOR})`,
+    census.length >= FINALLY_EXIT_FLOOR, true);
+  /* REACH and OVER-STRICTNESS, on planted sources: a rule that recognised nothing
+     would pass every tree, and one that refused the correct shapes gets switched off. */
+  const EXIT = "} finally { await mf.dispose(); console.log(tally); process.exit(fail ? 1 : 0); }";
+  const verdictOf = (s) => scanFinallyExits(s).map((r) => r.verdict);
+  t("the reader refuses the liars: no catch, an empty catch, a log-only catch, a re-throw, and a count of a variable the exit does not read",
+    [verdictOf(`try { go(); ${EXIT}`),
+     verdictOf(`try { go(); } catch {} ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { console.log(e); } ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { throw e; } ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { other++; } ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { fail += 0; } ${EXIT.slice(2)}`)],
+    [["no-catch"], ["catch-does-not-count"], ["catch-does-not-count"], ["catch-does-not-count"],
+     ["catch-does-not-count"], ["catch-does-not-count"]]);
+  t("and accepts every honest spelling: fail++, ++fail, fail += 1, process.exit(1), process.exitCode = 1, and a `fail++` written in a string or comment does NOT count",
+    [verdictOf(`try { go(); } catch (e) { fail++; } ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { ++fail; } ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { fail += 1; } ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { process.exit(1); } ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { process.exitCode = 1; } ${EXIT.slice(2)}`),
+     verdictOf(`try { go(); } catch (e) { /* fail++ */ log("fail++"); } ${EXIT.slice(2)}`)],
+    [["ok"], ["ok"], ["ok"], ["ok"], ["ok"], ["catch-does-not-count"]]);
+  t("and is not its subject where a throw cannot become a green: an exit AFTER the finally, or a finally that exits only non-zero",
+    [verdictOf("try { go(); } finally { await mf.dispose(); }\nprocess.exit(fail ? 1 : 0);"),
+     verdictOf("try { go(); } finally { if (!same) process.exit(3); }")],
+    [[], []]);
 }
 
 /* ---- and that exit does not throw the suite's own result away --------------

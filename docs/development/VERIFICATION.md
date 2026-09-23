@@ -54,6 +54,9 @@ untallied suites and says so** (`· EXCLUDES N untallied suite(s) ·`, then a li
 - **Write every run to a file of its own.** The runner refuses (exit 3) a file another battery is writing,
   and prints `LOG SHARED (D-425)` if foreign lines appear.
 - **Match a quoted completion line's `run <id>` to its header.** Behind `| tee` the id is the only defence.
+- **A `finally` that exits discards a throw**, so it follows a `catch` that COUNTS a failure the exit reads
+  (M0-134: `severedhomes.test.mjs` read `1 pass, 0 fail` over a throw from REC-141 until M0-134). `hygiene.test.mjs` refuses
+  any other shape by name and floors its census; the reader is `scripts/finallyexit.mjs`.
 
 ### What the battery says about TEMP, and about the half it does not own (D-237)
 

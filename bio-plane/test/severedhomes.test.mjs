@@ -7,6 +7,7 @@
    (E) THE SHARED PREDICATE IS SHARED. In #citesInto, restore the old inline read (`const md = …; const entry = refs.find(…)`) so the method no longer calls #refEdgeSevered -> the rule has two implementations again. MUST FAIL: §5's structural arm, which counts the call sites off the source. MUST NOT FAIL: any behavioural arm, because a faithful copy behaves identically — WHICH IS THE WHOLE POINT. D-267 exists because a rule with four inline implementations grew a fifth reader that did not know the rule existed, and no behavioural arm anywhere could have caught that.
    (F) OVER-STRICTNESS, and these PASS rather than fail: a live citation is a home; a live basis leg is a home; a reference with NO `status:` key at all is a home; a `status:` value the predicate does not recognise is a home and NOT a withdrawal; a target spelled with surrounding whitespace is a home; and a project that severed its citation is STILL REACHABLE by every other op — op=backlinks still names it and still reports the edge as `severed`, because the historical edge is a fact the record keeps. A fence that refuses correct work is a defect in the fence, and a walk that forgot an edge existed is worse than one that kept it.
    (G) BASELINE. Every arm restored, suite re-run, full green — the row that distinguishes six-arms-broken from six-arms-working.
+   (H) (run 2026-09-23, M0-134) THIS SUITE MEASURED NOTHING FROM REC-141 UNTIL M0-134, and every arm above was unmeasurable in that window: it chose its projects' ids, was refused PROJECT_ID_SUPPLIED at the first, and with no catch before its exiting `finally` printed "1 pass, 0 fail", exit 0. Driven by `test/finallyexit.control.mjs`: `before` (catch removed, throw planted) -> exit 0, "14 pass, 0 fail" over the throw; `throw:severedhomes.test.mjs` (catch kept, throw planted) -> exit 1, "14 pass, 1 fail", the throw printed; `nocatch` -> hygiene.test.mjs fails naming this file. After the fix, all 14 assertions reached, 14 pass 0 fail on e62e08e1's store (5 callers of the severance predicate). AND ARMS (A)–(G) RE-RUN 2026-09-23, the first measurement since REC-141: (A) 11/3 · current 60/3, (B) 11/3, (C) 13/1, (C2) and (D) 14/0 green as declared, (E) 13/1, (G) 14/0 · 63/0 — but (E) first came back WRONG: the driver still expected the label "…ONE definition and THREE callers" while the structural arm really failed under its current label; the driver was corrected to the label's stable prefix and re-run, 7 arms, 0 WRONG.
  * ========================================================================= */
 /* D-267 — **A WITHDRAWN EDGE IS NOT A STEP**, and the rule is CONSUMED rather
  * than restated.
@@ -84,6 +85,11 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
+/* REC-171 (IC-186): a deploy token's `agent` question is surfaced inside a run it holds. Reached by
+   M0-134: this suite threw at its first PROJECT (REC-141) and so never promoted an inquiry after
+   REC-171 landed; once the projects were minted, its first inquiry was refused SURFACE_NO_RUN. The
+   shared fixture opens the run, as every other deploy-token inquiry suite does. */
+import { withSurfacingRun } from "./surfacing-run.mjs";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -91,7 +97,7 @@ import { createHash } from "node:crypto";
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -100,7 +106,7 @@ const mf = new Miniflare({
      raced by the alarm — queue.test.mjs's precedent, and task-fence's before it. */
   bindings: { ADMIN_TOKEN: "adm-d267", MEMBER_TOKEN: "mem-d267", PROBE_TOKEN: "prb-d267",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -167,9 +173,13 @@ const inquiryMd = (id, question, { refs = [], legs = [] } = {}) => ["---",
   `### Session ${NOW} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
 
-const projectMd = (id, refs) => ["---",
-  `id: ${id}`, "object_type: project", "schema: project@1",
-  `title: "Project ${id}"`, "current_state: forming", "prior_state: null",
+/* CORRECTED 2026-09-23 (M0-134): a project's id is MINTED by the plane since REC-141 (IC-158) — a
+   creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1), bytes carrying an `id:` line are refused
+   PROJECT_ID_IN_BYTES (C-59.2). So a CREATION's document is built with `id` null and carries no `id:`
+   line, exactly as `publishingproject.mjs`'s `projectFixtureMd` does; `name` builds the title. */
+const projectMd = (id, refs, name = id) => ["---",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
+  `title: "Project ${name}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", ...refLines(refs), "state_history: []",
@@ -188,6 +198,25 @@ const promote = async (id, text, type, state, register = []) => {
             current_state: state, created: NOW, last_updated: NOW } });
   if (!r || r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 900)}`);
   return r;
+};
+/* M0-134: MINT a project and take the id the plane RETURNS, as `makePublishingProject` does
+   (`test/publishingproject.mjs`). That fixture is not reused because its template carries
+   `references: []`, and every project here exists to carry references. From REC-141 until this row
+   the suite chose `PROJ-2026-9101-…` itself, was refused PROJECT_ID_SUPPLIED at its FIRST project, and
+   — having no `catch` before the `finally` that exits — printed "1 pass, 0 fail" and exited 0 over
+   the one assertion it had reached. */
+const mintProject = async (name, refs) => {
+  const text = projectMd(null, refs, name);
+  const r = await POST(`op=promote&token=${MACHINE}`, {
+    base: null, snapKey: `${name}-new`, author: "d267-suite",
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+    register: [],
+    meta: { object_type: "project", group: "believe-in-oakland", title: `Project ${name}`,
+            current_state: "forming", created: NOW, last_updated: NOW } });
+  if (!r || r.ok === false) throw new Error(`promote project ${name}: ${JSON.stringify(r).slice(0, 900)}`);
+  if (typeof r.bundleId !== "string" || !/^PROJ-/.test(r.bundleId))
+    throw new Error(`promote project ${name} returned no minted id: ${JSON.stringify(r).slice(0, 900)}`);
+  return r.bundleId;
 };
 
 try {
@@ -235,13 +264,9 @@ t("FIXTURE GUARD: every subject carries a real, live, UNASSIGNED obligation — 
 /* ---- the ancestors, one shape per question ------------------------------- */
 
 /* §2 — THE CITES HALF. One project drawing, one withdrawn. */
-const P_LIVE = "PROJ-2026-9101-still-drawing";
-const P_SEV = "PROJ-2026-9102-withdrawn";
-await promote(P_LIVE, projectMd(P_LIVE, [{ target: SUBJ_CITES, status: "confirmed" }]),
-  "project", "forming");
-await promote(P_SEV, projectMd(P_SEV, [{ target: SUBJ_CITES, status: "severed" },
-                                       { target: SUBJ_ONLY_SEVERED, status: "severed" }]),
-  "project", "forming");
+const P_LIVE = await mintProject("still-drawing", [{ target: SUBJ_CITES, status: "confirmed" }]);
+const P_SEV = await mintProject("withdrawn", [{ target: SUBJ_CITES, status: "severed" },
+                                              { target: SUBJ_ONLY_SEVERED, status: "severed" }]);
 
 /* §3 — THE BASIS HALF. Both inquiries carry a basis LEG on their subject; one
    still references it, the other has withdrawn the reference under the leg.
@@ -285,22 +310,13 @@ await promote(Q_SEV_ONLY, inquiryMd(Q_SEV_ONLY, "And the one nobody else rests o
        rather than decorative.
    The fourth shape — a target with SURROUNDING WHITESPACE — is here too, and it
    turned out to measure something else entirely. See its own arm below. */
-const P_NOSTATUS = "PROJ-2026-9103-no-status-key";
-const P_ODDSTATUS = "PROJ-2026-9104-unrecognised-status";
-const P_PADSTATUS = "PROJ-2026-9105-padded-status";
-const P_OTHERREL = "PROJ-2026-9106-other-relation-severed";
-const P_PADTARGET = "PROJ-2026-9107-padded-target";
-await promote(P_NOSTATUS, projectMd(P_NOSTATUS, [{ target: SUBJ_SPELLINGS, status: undefined }]),
-  "project", "forming");
-await promote(P_ODDSTATUS, projectMd(P_ODDSTATUS, [{ target: SUBJ_SPELLINGS, status: "Severed" }]),
-  "project", "forming");
-await promote(P_PADSTATUS, projectMd(P_PADSTATUS, [{ target: SUBJ_SPELLINGS, status: '"severed "' }]),
-  "project", "forming");
-await promote(P_OTHERREL, projectMd(P_OTHERREL,
+const P_NOSTATUS = await mintProject("no-status-key", [{ target: SUBJ_SPELLINGS, status: undefined }]);
+const P_ODDSTATUS = await mintProject("unrecognised-status", [{ target: SUBJ_SPELLINGS, status: "Severed" }]);
+const P_PADSTATUS = await mintProject("padded-status", [{ target: SUBJ_SPELLINGS, status: '"severed "' }]);
+const P_OTHERREL = await mintProject("other-relation-severed",
   [{ target: SUBJ_SPELLINGS, rel: "relates_to", status: "severed" },
-   { target: SUBJ_SPELLINGS, rel: "cites", status: "confirmed" }]), "project", "forming");
-await promote(P_PADTARGET, projectMd(P_PADTARGET, [{ target: `"${SUBJ_SPELLINGS} "`, status: "confirmed" }]),
-  "project", "forming");
+   { target: SUBJ_SPELLINGS, rel: "cites", status: "confirmed" }]);
+const P_PADTARGET = await mintProject("padded-target", [{ target: `"${SUBJ_SPELLINGS} "`, status: "confirmed" }]);
 
 /* ------------------------------------------------------------- the reader */
 const RUTH = await (async () => {
@@ -460,6 +476,13 @@ t("STRUCTURAL: and the walk no longer performs a raw unconfirmed read of either 
   [/consider\(r\.bundle_id, null\)/.test(STORE_SRC),
    /consider\(r\.bundle_id, "cites"\)/.test(STORE_SRC)], [true, true]);
 
+} catch (e) {
+  /* M0-134: A THROW IS A FAILURE, COUNTED AND PRINTED. Without this clause the `finally` below ran,
+     printed the tally counted so far and `process.exit(0)` DISCARDED the exception — this suite read
+     "1 pass, 0 fail" from REC-141 until M0-134. `hygiene.test.mjs` now refuses a finally-exit that does
+     not follow a catch which counts. */
+  fail++;
+  console.log(`  FAIL  THREW BEFORE THE FOOT: ${e && e.stack ? e.stack : e}`);
 } finally {
   await mf.dispose();
   /* The tally is the LAST line and the exit is EXPLICIT — `hygiene.test.mjs`
