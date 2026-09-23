@@ -29,7 +29,9 @@
  *
  * NEGATIVE CONTROL: `node civicos-ui/test/several-cases-choice.control.mjs` from the repo root — every
  * arm ALONE, each anchor matched EXACTLY ONCE, restored by cp from a per-arm pristine copy and
- * verified by sha256 AND cmp. RUN 2026-09-23 by the UI-81 worker, 12/12 AS DECLARED on its third run, against
+ * verified by sha256 AND cmp. RUN 2026-09-23 by the UI-81 worker, 13/13 AS DECLARED on its fifth run (merged onto
+ * origin/main 19101d04; arm F3 added on the fourth, the plane's caseflip.test.mjs RED 58/1 at its C-44.2 assertion
+ * alone), against
  * app.html 8d6bb395f2bafae0… (1,427,596 B), bio-checks.mjs 50055372b0b66422… (827,051 B), store.mjs 073afd840c62e702…
  * (2,835,493 B), every file IDENTICAL after. Baselines: suite 15/0, guard GREEN.
  *   (A) THE ROW'S — the C-44.2 row dropped -> guard RED, 9 failures, naming the ORPHANED REGION

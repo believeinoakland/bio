@@ -72,8 +72,8 @@ FELL 297 -> 296, the reason at the site).
 **Driven against the real plane**, `civicos-ui/test/several-cases-choice.test.mjs` (15 assertions): UI-80's fixture (two
 projects, two cases over one finding, real SSHSIG); the plane's refusal and its row; the page opened by the finding id; each
 choice CLICKED and read back from the plane's own answer for that case; a plane older than this over a wire-shaped mock.
-NEGATIVE CONTROL `several-cases-choice.control.mjs`, 12/12 AS DECLARED on its third run, the first two corrected by name in
-the suite's header: the liar (open the first case silently) RED 5/10 at NEVER PICKS and CHOICES; origin/main's three files
+NEGATIVE CONTROL `several-cases-choice.control.mjs`, 13/13 AS DECLARED, the earlier runs' wrong declarations corrected by
+name in the suite's header (and `caseflip.test.mjs` now names C-44.2 through the op, its arm F3): the liar (open the first case silently) RED 5/10 at NEVER PICKS and CHOICES; origin/main's three files
 RED 4/11; the row dropped RED in the guard naming the orphaned region (never the code — the code leaves the reach with its
 row); its translation dropped RED naming the code; the store's helper alone removed GREEN (D-262's `dec49Attach` carries the
 row to the wire).

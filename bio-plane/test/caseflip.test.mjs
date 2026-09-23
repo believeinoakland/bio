@@ -1019,7 +1019,9 @@ console.log("\n--- 6. the clauses are parsed from CASE-AS-PRODUCTION.md, not fro
     [false, "FINDING_IN_SEVERAL_CASES", [CASE, other.caseId].sort()]);
   /* UI-81 (C-44.2): the refusal a stranger meets on the published page carries its DEC-49 row — the
      code, the C-number and the canned translation, compared against the catalogue row itself rather
-     than a typed copy — so a surface can say it in words and the guard can see it. */
+     than a typed copy — so a surface can say it in words and the guard can see it. NEGATIVE CONTROL:
+     `civicos-ui/test/several-cases-choice.control.mjs` arm F3, the row's translation dropped -> this
+     suite 58 passed / 1 failed, THIS assertion alone (RUN 2026-09-23, restored by sha256 and cmp). */
   t("and that refusal carries its CODE, C-44.2 and the catalogue row's canned translation (DEC-49), "
     + "so the stranger reads a sentence instead of the code",
     [strangerAmbig.code, strangerAmbig.check,
