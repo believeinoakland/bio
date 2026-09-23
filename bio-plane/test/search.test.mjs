@@ -369,9 +369,13 @@ console.log("\n--- a hit carries full provenance and its context ---");
   t("and the projected tail", [h.schema_id, h.source_status, h.annotations_open], ["information@2", "modified", 3]);
   t("and the sha, so a caller can fetch the image without a second lookup", typeof h.bundle_sha, "string");
   t("the match is marked in a snippet", h.snippet.includes("[transferred]"), true);
-  t("and it is scored", typeof h.score, "number");
-  t("a metadata-only query returns provenance with no score",
-    (await S("q=state:collected&facets=none")).hits[0].score, null);
+  /* CORRECTED 2026-09-23 BY D-447 (Membership v2 §7.9), never exempted: these asserted a hit carries a numeric
+     `score` and a metadata-only hit `score: null`. The number was `bm25(bundles_fts)`, a statistic of the WHOLE index,
+     so it moved when a project the reader cannot see was revised (measured, project-sight §7). The answer now publishes
+     the ORDER only: no hit carries a score, ranked or not. */
+  t("and it carries NO score: the order is the answer (D-447)", "score" in h, false);
+  t("a metadata-only query returns provenance with no score key either",
+    "score" in (await S("q=state:collected&facets=none")).hits[0], false);
 }
 
 console.log("\n--- relevance is the default order, and any field overrides it ---");

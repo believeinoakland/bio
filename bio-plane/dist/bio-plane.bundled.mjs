@@ -25941,7 +25941,11 @@ function ftsExpr(node) {
   return null;
 }
 function rankExpr(atoms) {
-  if (!atoms.length) return null;
+  const parts = rankAtomList(atoms);
+  if (!parts.length) return null;
+  return parts.length === 1 ? parts[0] : "(" + parts.join(" OR ") + ")";
+}
+function rankAtomList(atoms) {
   const seen = /* @__PURE__ */ new Set(), parts = [];
   for (const a of atoms) {
     const e = ftsAtom(a);
@@ -25950,7 +25954,27 @@ function rankExpr(atoms) {
       parts.push(e);
     }
   }
-  return parts.length === 1 ? parts[0] : "(" + parts.join(" OR ") + ")";
+  return parts;
+}
+var RANK_ATOMS_MAX = 8;
+var K1 = 1.2;
+function visibleBm25({ terms, gate }) {
+  const parts = [], args = [];
+  parts.push(`vis(fid) AS MATERIALIZED (SELECT b.fts_id FROM bundles b WHERE (${gate.sql}) AND b.fts_id IS NOT NULL)`);
+  args.push(...gate.args);
+  parts.push(`nvis(n) AS (SELECT count(*) FROM vis)`);
+  const marks = (h) => `(length(${h}) - length(replace(${h}, char(1), '')))`;
+  terms.forEach((e, i) => {
+    parts.push(`df${i}(idf) AS (SELECT ln(1 + ((SELECT n FROM nvis) - count(*) + 0.5) / (count(*) + 0.5)) FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM vis))`);
+    args.push(e);
+    const hs = FTS_COLUMNS.map((_, c) => `highlight(bundles_fts, ${c}, char(1), '') AS h${c}`).join(", ");
+    parts.push(`tf${i}(fid, tf) AS (SELECT fid, ${FTS_COLUMNS.map((_, c) => marks(`h${c}`)).join(" + ")} FROM (SELECT rowid AS fid, ${hs} FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM scope)))`);
+    args.push(e);
+  });
+  const sum = terms.map((_, i) => `COALESCE((SELECT idf FROM df${i}) * tf${i}.tf * ${K1 + 1} / (tf${i}.tf + ${K1}), 0)`).join(" + ");
+  const joins = terms.map((_, i) => ` LEFT JOIN tf${i} ON tf${i}.fid = s.fid`).join("");
+  parts.push(`ranked(fid, score) AS (SELECT s.fid, -(${sum}) FROM scope s${joins})`);
+  return { parts, args };
 }
 var ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
 var MAX_COMPOUND = 4;
@@ -26087,6 +26111,10 @@ function compile({
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
   const gate = viewerPredicate(viewer);
   const rank4 = rankExpr(ctx.textAtoms);
+  const allTerms = rankAtomList(ctx.textAtoms);
+  const rankTerms = allTerms.length <= RANK_ATOMS_MAX ? allTerms : rank4 ? [rank4] : [];
+  if (allTerms.length > RANK_ATOMS_MAX)
+    ctx.warnings.push(`relevance weighs these ${allTerms.length} terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`);
   const passageMatch = ctx.passageTerms.length ? [...new Set(ctx.passageTerms)].join(" OR ") : null;
   const passageOn = (armName) => !!(armName && MEANING[armName] && MEANING[armName].ftsTable && passageMatch);
   const set = setSql(ast);
@@ -26123,8 +26151,9 @@ function compile({
     }
     const args = [...use.args, ...idArm ? idArm.args : []];
     if (withRanked && rank4) {
-      parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
-      args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank4);
+      const r = visibleBm25({ terms: rankTerms, gate });
+      parts.push(...r.parts);
+      args.push(...r.args);
     }
     return { sql: "WITH " + parts.join(",\n     "), args };
   };
@@ -26139,13 +26168,23 @@ function compile({
   }
   const cols = PROVENANCE_COLS.map((c) => `b.${c}`).join(", ");
   const joinRanked = rank4 ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
-  const scored = rank4 ? `, r.score AS score, r.snip AS snippet` : `, NULL AS score, NULL AS snippet`;
   const page = () => {
     const c = cte(true);
-    return { sql: `${c.sql}
-SELECT ${cols}${scored} FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+    if (!rank4)
+      return { sql: `${c.sql}
+SELECT ${cols}, NULL AS snippet FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
 WHERE ${gate.sql}
 ORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
+    const pcols = PROVENANCE_COLS.map((c2) => `p.${c2}`).join(", ");
+    return {
+      sql: `${c.sql}
+SELECT ${pcols}, (SELECT snippet(bundles_fts, -1, '[', ']', '\u2026', ?) FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid = p._fid) AS snippet
+FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+WHERE ${gate.sql}
+ORDER BY ${order} LIMIT ? OFFSET ?) p
+ORDER BY p._pos`,
+      args: [...c.args, Math.max(4, Math.min(64, Math.floor(snippetChars))), rank4, ...gate.args, lim, off]
+    };
   };
   const count = () => {
     const c = cte(false);

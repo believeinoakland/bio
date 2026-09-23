@@ -84,7 +84,11 @@ console.log("\n--- a bare multi-word string is AND ---");
      carries the ranking CTE, whose MATCH is a second, deliberate one. */
   const page = p.statements.page();
   t("compiled to a single MATCH for the set", (p.statements.count().sql.match(/bundles_fts MATCH/g) || []).length, 1);
-  t("plus one for the ranking", (page.sql.match(/bundles_fts MATCH/g) || []).length, 2);
+  /* CORRECTED 2026-09-23 BY D-447, never exempted: this read "plus one for the ranking" and wanted 2, because the rank
+     was ONE `bm25(bundles_fts)` over the whole index — the statistic that let a hidden project move a member's order.
+     The rank is now computed over the VIEWER'S rows (`visibleBm25`), which weighs each distinct term by its own MATCH
+     twice (how many of the viewer's rows hold it; how often this row does) and centres the snippet on a last one: 1 + 2×3 + 1. */
+  t("plus two per ranked term and one for the snippet", (page.sql.match(/bundles_fts MATCH/g) || []).length, 8);
   t("with no set intersection", page.sql.includes("INTERSECT SELECT rowid"), false);
   t("the FTS expression conjoins the terms",
     page.args.find((a) => typeof a === "string" && a.includes("sewer")),
@@ -266,7 +270,10 @@ console.log("\n--- sort: the stable tiebreak is not optional ---");
       if (!/ORDER BY [^\n]*b\.bundle_id ASC/.test(sql)) missing.push(`${f}:${d}`);
     }
   t("every sortable field in both directions ends with bundle_id ASC", missing, []);
-  const ord = (s) => s.slice(s.indexOf("ORDER BY"), s.indexOf(" LIMIT"));
+  /* CORRECTED 2026-09-23 BY D-447, never exempted: this sliced from the FIRST "ORDER BY". A ranked page now cuts its
+     snippet after the LIMIT (only the page's rows are snippeted), so the order also appears in a ROW_NUMBER() window
+     that carries it outward; the clause that orders the rows the LIMIT keeps is the one immediately before it. */
+  const ord = (s) => s.slice(s.lastIndexOf("ORDER BY", s.indexOf(" LIMIT")), s.indexOf(" LIMIT"));
   t("select-all is ordered identically to a page",
     ord(compile({ q: "sewer", viewer: M, sort: "criticality" }).statements.ids().sql),
     ord(compile({ q: "sewer", viewer: M, sort: "criticality" }).statements.page().sql));
@@ -286,7 +293,12 @@ console.log("\n--- default order is relevance where relevance exists ---");
 {
   const text = compile({ q: "sewer", viewer: M });
   t("a text query defaults to relevance", text.sort, { field: "relevance", dir: "ASC" });
-  t("and computes bm25", text.statements.page().sql.includes("bm25(bundles_fts)"), true);
+  /* CORRECTED 2026-09-23 BY D-447, never exempted: this asserted the page computes `bm25(bundles_fts)`. That function
+     reads the WHOLE index, hidden projects included, and it is the leak (project-sight §7). The page now computes
+     bm25's shape over the viewer's own rows: its statistics are counted inside `vis`, which carries the gate. */
+  t("and computes relevance over the viewer's rows, never the index-wide bm25()",
+    [text.statements.page().sql.includes("bm25(bundles_fts)"), /vis\(fid\) AS MATERIALIZED \(SELECT b\.fts_id FROM bundles b WHERE \(\/\*viewer-gate\*\//.test(text.statements.page().sql)],
+    [false, true]);
   t("with a snippet, so a hit arrives in context", text.statements.page().sql.includes("snippet(bundles_fts"), true);
   /* With no text arm there is no relevance to order by, so the fallback is the
      most recently updated first, with the same tiebreak. */
