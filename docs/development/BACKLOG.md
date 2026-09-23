@@ -213,6 +213,16 @@ scope: list every `files`/`history` row whose sha the register assigns to a DIFF
 accepts-when: a store seeded with one moved row lists that sha under both bundles; a clean store lists none; the record's counters read before and after the call are unchanged. How a liar passes it: listing every multi-bundle sha including legitimate shares, so the clean-store arm must read none. NEGATIVE CONTROL: remove the different-bundle predicate, and the "displaced row found" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs REC`).
 
+### D-64 · blocked — awaiting BOB #32: CLIENT-RENDERED.md's three open questions (the method string; which of shell and rendered document is primary; whether an unattended sweep may capture one), asked 2026-09-23 — **A CLIENT-RENDERED PAGE IS RECOGNISED AS A SHELL AND STILL CANNOT BE CAPTURED AS EVIDENCE: only detection is built (`docprofile/handlers/client-rendered.mjs`; `airun.mjs` holds a shell at LOOKED_INDETERMINATE, never PRESENT); there is no Browser Rendering binding and no rendered capture.** — owner RECORD (the binding through DIST).
+order: with the M2 capture rows, behind its substrate (BOB #31, 22:22Z: *place the capture row behind its substrate*); blocked until the three questions are ruled (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
+milestone: M2
+interface: I3 — a render arm on capture producing the pair, and the `render` provenance block; the integrator mints and classifies the IC.
+design: `docs/development/CLIENT-RENDERED.md` §"What must be recorded on a rendered capture" and §"DESIGNED 2026-09-21" item 3; third-party scripts RULED by BOB #31 (2026-09-23 22:22Z): *ALLOWED AND RECORDED inside the capture sandbox; the provenance names every script origin executed, or says undetermined.*
+depends-on: 2.capture (BUILT); the Browser Rendering binding (NOT built, part of this row); BOB's three rulings.
+scope: the render arm yields the shell (grade B, unchanged) and the rendered document joined by `render.of`, carrying engine, viewport, wait, requests, `third_party_executed` and `data`; authority `determined` only when every data origin is the page's own host. New suite `bio-plane/test/rendered-capture.test.mjs`.
+accepts-when: a rendered capture of a shell holds both artifacts and names every script origin executed, or says undetermined. NEGATIVE CONTROL: force `determined` on a page drawing data from a second origin, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-64's DEBT row of 2026-07-30; keeps its `D-` id).
+
 ### REC-191 · queued — **MONITORING SCHEDULES A BUNDLE, NOT AN ADDRESS, AND ONLY BY ITS AUTHORED FREQUENCY: sixty captures of one document are sixty schedules, and a document with no authored frequency reads `unscheduled` though `op=monitor` answered it by its contract (D-65's worker finding (a)).** `Store#monitorCadencePlan` selects `bundles WHERE monitor_enabled=1`. — owner RECORD.
 order: after REC-190, behind D-65 (running; same op and path); a gap, not an over-claim (SCHEDULER #17, 2026-09-23, CONDUCT #17 21:43Z (5) and #18 22:27Z (2), verified at the code)
 milestone: M3
@@ -1135,30 +1145,3 @@ design: `docs/development/ASSISTANT-PILOT.md` §1 (the five-layer training pack 
 depends-on: a published surface registry (unbuilt). **NOT schedulable until that exists** — recorded so the … (whole text: the cut archive)
 accepts-when: (on unblocking) a recipe whose step names a surface or an op that does not exist **FAILS THE BUILD**; the pack's `absent_because` body is replaced by the layer rather than edited around.
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «SK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### UI-60 · blocked — RESTORED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
-order: blocked: waits on Bob's re-prioritisation of UI (SCHEDULER, first order audit, 2026-09-18)
-milestone: M8
-interface: none
-depends-on: Bob's re-prioritisation of UI (DEC-33's deferral and the 2026-09-15 content direction stand)
-accepts-when: the decomposition exists as rows and this pointer is marked superseded naming them.
-cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «UI-60». A worker READS IT before building.
-narrowed: 2026-09-23 by SCHEDULER #17 (CONDUCT #17's 22:00Z finding (2), verified at c17-batch5 @ 7c4f6b5f): UI-43's version acts are DRAINED — versionaccept/reject/consider/revert by UI-74's accept ceremony, versionhide by UI-42, versioncurrent by UI-45. Residue still owed: `attesttext` (in `ACTS_AWAITING_SURFACE`, 0 hits in `app.html`), the doorbell ops `inboxget`/`inboxresolve` (0 hits), and U13, U14, expertise/licences and verified export (unchecked: no op to grep).
-
-### REC-15 · blocked
-order: blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 (SCHEDULER, first order audit, 2026-09-18)
-milestone: M10
-behind-interface: I3
-depends-on: REC-14
-accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
-added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
-cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
-
-### UI-17 · blocked
-order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
-milestone: M10
-behind-interface: I3
-depends-on: REC-15, UI-11
-accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance … (whole text: the cut archive)
-added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
-cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.
