@@ -23,16 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-176 · queued — **`op=promote` WRITES MANIFEST ROWS WITH `INSERT OR REPLACE`, SO A REPEATED `(bundle_id, snap_key)` SILENTLY OVERWRITES AN EXISTING VERSION'S ROW — NO TRACE, NO REFUSAL.** `bio-plane/src/store.mjs` (two sites, re-read on `14faa089`). M0-132's worker measured it: with key counters frozen so keys repeat, all 18 suites whose unseeded snap keys could collide stayed GREEN, so every past collision was silent. — owner RECORD.
-order: directly after REC-175 (in the cache), the same op writing what the record cannot support: history the law calls append-only is rewritten in place, CLAUDE.md §2's worst class (SCHEDULER #15, 2026-09-23; M0-132's worker via CONDUCT #15)
-milestone: M6
-interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md`, the history law (*"History is append-only; nothing in `_history/` is ever modified"*), with REC-173's migration replay (INVESTIGATIVE-SESSION §11 item 5) as the one ruled replay.
-depends-on: none. **If the builder finds a replay other than REC-173's that must re-write a key, that is BOB's to rule before building it.**
-scope: promote refuses a `snap_key` already present for the bundle by a new refusal code with its canned translation, before any write; a byte-identical re-send (same files and base) answers idempotently rather than writing; a census of any manifest row already overwritten is stated where measurable, never guessed.
-accepts-when: through the op, a second promote reusing a snap key with different content is refused by name and the first version's row is byte-identical after; an identical re-send is a no-op. NEGATIVE CONTROL: restore `INSERT OR REPLACE`, and the collision arm lands and fails by name.
-added: 2026-09-23 · SCHEDULER #15 (M0-132's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
-
 ### REC-178 · queued — **`op=promote` STORES `bytes` AS SENT, AND WRITERS SEND `text.length` (UTF-16 UNITS, NOT UTF-8 BYTES); `OVERSIZE_INLINE` JUDGES `text.length` AGAINST A BYTE LIMIT, SO A NON-ASCII FILE OVER IT PASSES.** Re-read on `14faa089` in `store.mjs` `promote`. Writers: `setup.mjs`, `app.html`, `livefire.mjs`, the monitor tick in `index.mjs`, `tools/fw21-onpoint-probe.mjs`. — owner RECORD.
 order: directly after REC-176, REC-175's `promote` fence one field over: a stored size false of the stored bytes is CLAUDE.md §2's class, and the limit it feeds admits what it exists to refuse; behind REC-176, since a lost version outweighs a misstated one (SCHEDULER #16, 2026-09-23; REC-175's worker via CONDUCT #16)
 milestone: M6
@@ -43,45 +33,6 @@ scope: promote computes each inline file's `bytes` from its UTF-8 encoding (a di
 accepts-when: through the op, a non-ASCII file over `INLINE_MAX` in UTF-8 but under it in `text.length` is refused `OVERSIZE_INLINE`, bundle byte-identical after; stored `bytes` equals the UTF-8 length. NEGATIVE CONTROL: judge `text.length` again, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (REC-175's worker via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
 
-### REC-179 · queued — **A REVISION OF AN INQUIRY CAN REWRITE ITS `surfaced_by`: D-78's server stamp runs only when `base === null`, and no check compares a revision's value with the current version's, so an agent-surfaced question can be relabelled `human` (or the reverse) by whoever edits it.** Re-read on `14faa089`: `index.mjs` `op=promote`'s D-78 restamp is gated on `b.base === null`; `store.mjs` and `bio-checks.mjs` C-2.8 check only that the value is `agent` or `human`. — owner RECORD.
-order: directly after REC-178: an attribution the record states falsely is authority-class (SCHEDULER.md step 3), and the rule-2 surfacing row REC-171 writes would then contradict the bundle it describes (SCHEDULER #16, 2026-09-23; DEBT D-121's defect row, placed by LED-7 batch S16-2)
-milestone: M7
-interface: I3 — a new refusal on `op=promote`; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, rule 2's reach (the SURFACING ACT is what `surfaced_by` records, decided at the trust boundary), with the D-78 restamp's own stated intent that a revision carries the value forward.
-depends-on: none. A replay under §11 item 5's migration paragraph (REC-173) is stated by the builder; anything it does not cover goes to BOB before building.
-scope: promote refuses a revision whose `surfaced_by` differs from the current version's by a new refusal code with its canned translation, before any write.
-accepts-when: through the op, a revision flipping `agent` to `human`, and one flipping `human` to `agent`, are each refused by name with the bundle byte-identical after; a revision keeping the value lands. NEGATIVE CONTROL: drop the comparison, and the flip arm lands and fails by name.
-added: 2026-09-23 · SCHEDULER #16 (DEBT D-121, the defect row of the two sharing that id, verified at the code; `node tools/mintid.mjs REC`).
-
-### REC-177 · blocked — **`op=airunopen` ACCEPTS A DECLARED BOUND WITH NO POSITIVE `allowed`, SO A RUN CAN OPEN UNDER A BOUND THAT STATES NO ALLOWANCE.** BOB #30 ruled a declared bound STATES its allowance: `op=airunopen` refuses one with no positive `allowed`. `blocked` until its design lands. — owner RECORD.
-order: directly after REC-172 (in the cache) as BOB #30 placed it, the same bound fence; below the record-integrity rows REC-175 and REC-176 (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
-milestone: M9
-interface: I3 — a new refusal on `op=airunopen`; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §14b item 6, *"A declared bound STATES its allowance"* (BOB #30, 2026-09-23; on `land/bob/batch-cadence` until the train lands it).
-depends-on: REC-172; `land/bob/batch-cadence` on `main`.
-accepts-when: as the paragraph states it, with its NEGATIVE CONTROL.
-added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
-
-### M0-135 · queued — **A LANE'S OWN `gates.mjs` ON A TREE ALREADY RECORDED GREEN TAKES §2d's TREE-KEYED SHORTCUT AND RUNS NO NEVER-CACHED UNIT (with `BIO_GATE_RESULTS=off`), SO A HISTORY- OR REF-READING CHECK IS SKIPPED ON A LANE'S PUSH.** M0-131 closed this for the TRAIN (`gates.mjs --never-cached` on a reused tree, so `main` is covered); a lane's gate is not. M0-131's worker's finding, verified in its report (CONDUCT #16); to be re-read at the code once M0-131 lands. — owner M0.
-order: directly after REC-176, with the gate-honesty rows: a green that skipped what can fail is a costs-nothing green, but `main` is already covered by M0-131, so it sits below the record-integrity rows (SCHEDULER #15, 2026-09-23)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3a condition 1 (never-cached units always run) and §2 (M0-122's reuse), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: M0-131 (its derived never-cached set and `--never-cached` run are reused).
-scope: §2d's shortcut on a recorded-GREEN tree behaves as `--with-never-cached`: it runs the derived never-cached set and records the tree GREEN only when they pass; the printed line says which units ran.
-accepts-when: `gates.mjs` on a recorded-GREEN tree with a planted history defect reads RED naming the never-cached unit. NEGATIVE CONTROL: restore the bare shortcut, and the planted arm reads GREEN and fails by name.
-added: 2026-09-23 · SCHEDULER #15 (M0-131's worker's finding via CONDUCT #16; `node tools/mintid.mjs M0`).
-
-### M0-136 · queued — **NEVER-CACHE MAKES A HISTORY UNIT ALWAYS RUN, NOT DEPEND ONLY ON THE TREE: WHETHER THE OTHER 11 NEVER-CACHED HISTORY READERS HAVE VERDICTS THAT MOVE WITH A LIVE REF IS UNDETERMINED.** `TREE-SHARING.md` §3a item 4 names them: decided, migrate-released, mintid, op-claims, owed-controls, owed, readbudget, register-grammar, retirable, status, coverage. M0-130 pinned `mergecarry` to `REGISTER_PIN`; its worker grepped the others only for `origin/main` (CONDUCT #16). — owner M0.
-order: directly after M0-135, the same class: a gate test depends only on the code (Bob, 2026-09-23); below M0-135 because no red has been traced to any of the eleven (SCHEDULER #15, 2026-09-23)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*) and §3a condition 1, with `docs/development/VERIFICATION.md` (admitted for M0 by name); M0-130's pin is the precedent.
-depends-on: M0-130 (its planted-ref arm and pin are the pattern).
-scope: examine each of the eleven for any read of a live ref (`origin/*`, `coord`, `ls-remote`, `FETCH_HEAD`, the current date); each that has one reads a pinned range or HEAD's own history, with a planted-ref arm; each that has none is stated as tree-and-history-only at its site; the table of eleven is in the landing. M0-130's known cost (a drop past the pin is graded by no gate unit) is stated where each pin sits.
-accepts-when: every one of the eleven either carries a planted-ref arm proving its verdict identical whatever the live ref holds, or a dated line saying it reads none. NEGATIVE CONTROL: point one pinned unit back at the live ref, and its planted-ref arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (M0-130's worker's class sweep via CONDUCT #16; `node tools/mintid.mjs M0`).
-
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
@@ -91,36 +42,6 @@ depends-on: M0-126 (the backstop mark); then DIST's first cut from a tree carryi
 scope: DIST.md step 1 reads: `gates.mjs --full --no-reuse` on the exact tree, or a record for which pushguard's `isBackstop()` (M0-126) is true, NAMED in the cut commit, else the whole battery; `--since` removed (M0-126's worker found step 1 still naming it, via CONDUCT #15); the bumped tree's own gate stays.
 accepts-when: a cut from a tree with a backstop record runs no battery and names it; a record whose run printed any REUSED unit, or a `--since`, never satisfies a cut and the battery runs.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1; `node tools/mintid.mjs M0`); re-narrowed 2026-09-23 by SCHEDULER #15 (BOB #30's ruling).
-
-### D-57 · queued — **`resolveLinks` TELLS A MEMBER THAT A SELF-LINKED PAGE'S TARGET *CHANGED*, NAMING ONE CAPTURE TWICE AS THE BRACKET.** A page … (whole text: the cut archive)
-order: after REC-160, with the read-time claims the record cannot support (CLAUDE.md §2's class): a fabricated sentence about a source, on every self-linking municipal page; below REC-160 because the verdict it carries is right (SCHEDULER #8, 2026-09-21, LED-7 batch S8-2)
-milestone: M3
-interface: I3 — a fourth BASIS on `op=links&capture=`, never a fourth verdict; the integrator mints and classifies the IC.
-design: `docs/development/LINK-FIDELITY.md`, which defines the verdicts and what each basis may claim, with … (whole text: the cut archive)
-depends-on: none.
-accepts-when: a self-linking page's self-link reads the self-reference basis, with no *changed* sentence and no doubled hash; a genuine two-capture bracket still reads *changed*. How a liar … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-2; D-57's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-57» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### D-168 · queued — **A MEMBER'S `op=cite` ADMITS A RETIRED INFORMATION BUNDLE, SO A CLAIM CAN REST ON WHAT THE GROUP ITSELF RETIRED, READING TO EVERY LATER MEMBER AS LIVE SUPPORT.** `op=cite` is type-only; the machine's suggest path already refuses it (`SUGGEST_LEG_UNREACHABLE`, `store.mjs`, re-read on `cdfaea39`). BOB #30 ruled it refused in the store for every caller. Its design landed at `4355bfda`. — owner RECORD.
-order: with the claims the record cannot support, directly after D-57 and above D-440: support the record's own judgment withdrew, CLAUDE.md §2's class, a correction to the built cite path (SCHEDULER #15, 2026-09-23, LED-7; BOB #30's ruling)
-milestone: M9
-interface: I3 — a new refusal on `op=cite`; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1, *"A RETIRED ITEM IS NOT CITABLE"* (BOB #30, 2026-09-23, landed at `4355bfda`).
-depends-on: none — its design is on `main` (`4355bfda`).
-scope: `op=cite` onto a `retired` bundle is refused with a stated code naming the door (cite what superseded it, or re-collect the source); a `source_status: removed` bundle stays citable; a confirmed leg predating the retirement is untouched.
-accepts-when: a cite onto a retired Information bundle is refused by name for a member and a machine credential alike; one onto a `source_status: removed` bundle lands; an older leg is byte-identical. NEGATIVE CONTROL: drop the retired check from `op=cite`, and the member arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (LED-7; D-168's DEBT row of 2026-08-03; keeps its `D-` id).
-
-### D-440 · queued — **THE `image` ARM'S `{part}` FORM MINTS ON ANY CAPTURE THAT IS NOT AN OFFICE CONTAINER, NAMING BYTES THE DOCUMENT DOES NOT** … (whole text: the cut archive)
-order: with the claims the record cannot support, after D-57 and above D-390: a content row naming bytes its document does not hold, minted silently, CLAUDE.md §2's class; D-420 directly after it, the same function (BOB #24: *"one worker can take both"*) (SCHEDULER #9, 2026-09-21)
-milestone: M4
-interface: I3 — a new refusal on the image arm; the integrator mints and classifies the IC.
-design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 … (whole text: the cut archive)
-depends-on: none.
-accepts-when: a `{part}` on an HTML capture is refused by name, pointing at acquiring the image; a container capture still mints; an office capture with no persisted list is admitted as … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, drained this commit; D-440's DEBT row; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-440» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### D-420 · queued — **AN `image {page, rect}` ROW IS BOUNDED BY THE PAGE SET AND NOT BY WHAT THE PAGE PAINTS.** A rectangle where a PDF page paints … (whole text: the cut archive)
 order: directly after D-440, the same function and one worker for both (BOB #24): a KIND overclaim the crop already catches, so below D-440's silent mint (SCHEDULER #9, 2026-09-21, LED-7 batch S9-1)
@@ -771,6 +692,16 @@ accepts-when: a fixture corpus with two projects differing only in case and spac
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-50» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
 
+### M0-135 · queued — **A LANE'S OWN `gates.mjs` ON A TREE ALREADY RECORDED GREEN TAKES §2d's TREE-KEYED SHORTCUT AND RUNS NO NEVER-CACHED UNIT (with `BIO_GATE_RESULTS=off`), SO A HISTORY- OR REF-READING CHECK IS SKIPPED ON A LANE'S PUSH.** M0-131 closed this for the TRAIN (`gates.mjs --never-cached` on a reused tree, so `main` is covered); a lane's gate is not. M0-131's worker's finding, verified in its report (CONDUCT #16); RE-READ 2026-09-23 by SCHEDULER #16 on `0e7cc03e` (M0-131 landed): NARROWED — with the per-unit record on (the default) §2d does not take the shortcut and the never-cached units run; the bare shortcut stands only with `BIO_GATE_RESULTS=off` (or no `tools/gateresults.mjs`) and no `--with-never-cached`. — owner M0.
+order: behind the product rows, first of the process block (moved 2026-09-23 by SCHEDULER #16): re-read at the code, the default path already runs the never-cached units, so this closes a non-default mode, neither cutting gate time nor unblocking product — Bob, 2026-09-22: *"The goal is BIO work; process is overhead"* (was: directly after REC-176, SCHEDULER #15)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3a condition 1 (never-cached units always run) and §2 (M0-122's reuse), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: M0-131 (its derived never-cached set and `--never-cached` run are reused).
+scope: with the per-unit record off, §2d's shortcut on a recorded-GREEN tree behaves as `--with-never-cached`: it runs the derived never-cached set and records the tree GREEN only when they pass; the printed line says which units ran.
+accepts-when: `gates.mjs` on a recorded-GREEN tree with a planted history defect reads RED naming the never-cached unit. NEGATIVE CONTROL: restore the bare shortcut, and the planted arm reads GREEN and fails by name.
+added: 2026-09-23 · SCHEDULER #15 (M0-131's worker's finding via CONDUCT #16; `node tools/mintid.mjs M0`).
+
 ### M0-104 · queued — **A GATE RUN ON A DIRTY TREE RECORDS NOTHING, SO D-293's OWN SHAPE — A RED GATE, THEN `git add -A && git commit && git push`** … (whole text: the cut archive)
 order: behind the product rows, the first process row after D-50 (Bob, 2026-09-22, `CLAUDE.md` §2: process is overhead; it neither cuts gate time nor unblocks product, as a commit-then-gate is recorded already); a correction to D-293 (SCHEDULER #11 on BOB #25's word)
 milestone: M0
@@ -1160,3 +1091,90 @@ depends-on: none.
 accepts-when: `node bio-plane/test/curated-producer.probe.mjs` from `bio-plane/` reads 10 pass, 0 fail; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: widening the read … (whole text: the cut archive)
 added: 2026-09-19 · SCHEDULER (CONDUCT #6's report; fix named; id minted with `node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-74» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-133 · queued — **`tools/fw21-onpoint-probe.mjs` EXITS 2 (`GROUND BROKEN`) ON `main`: ITS OWN CHECK STILL EXPECTS PAGE 2 TO READ GRADE A AND REACHING, WHICH REC-120's RULE NO LONGER GIVES.** Reproduced by SCHEDULER #15 on `91913d6b` (local, no network): page 2 reads `{"grade":null,"reaching":0,"undetermined":1}` — UNDETERMINED until a member chooses the on-point mention (REC-120; REC-122 is that choice) — so the probe's ground check fails before anything it measures counts. Already so on `4355bfda`. Found by REC-171's worker (CONDUCT #15). — owner M0 with CONTENT.
+order: with the probe corrections, directly after M0-74 (a probe failing on `main` for a moved rule, its class): a probe, never a gate unit, so it cuts no gate time and sits behind the product rows (SCHEDULER #15, 2026-09-23)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with `docs/architecture/BIO_Content_Framework_v0_10.md` §14.5 (the connection pair; REC-120's undetermined answer until a member chooses).
+depends-on: none — REC-120 is on `main`.
+scope: re-base the probe's ground check on REC-120's rule: page 2 reads UNDETERMINED with no choice made, and reaches only after the probe makes the member's on-point choice (when REC-122 exists) or states that it cannot; page 7 stays `outside`; a dated note at the site.
+accepts-when: `node tools/fw21-onpoint-probe.mjs` exits 0 on `main` with page 2 read as UNDETERMINED and page 7 `outside`, and exits 2 if page 7 is ever reached. NEGATIVE CONTROL: restore the grade-A ground check, and the probe exits 2 by name.
+added: 2026-09-23 · SCHEDULER #15 (REC-171's worker's finding via CONDUCT #15, reproduced; `node tools/mintid.mjs M0`).
+
+### M0-90 · queued — **MK-1's PUBLISH PROBE CANNOT DRIVE ITS PATH 3, the `op=caseratify` route C-53.12 fences.** Its fixture concludes without naming … (whole text: the cut archive)
+order: with M0-74, the probe corrections: a probe path that cannot run, now stated rather than hidden; the measurement a lifted fence will need (SCHEDULER #4, 2026-09-21; MK-3's report, CONDUCT-NEXT §4)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` … (whole text: the cut archive)
+order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite … (whole text: the cut archive)
+depends-on: none.
+accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-91» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-40 · queued — **AN INFORMATION FIXTURE STILL WRITES `criticality: "notable"`, WHICH C-2.7 REFUSES, THOUGH ITS ROW SAID IT WAS FIXED.** … (whole text: the cut archive)
+order: with the probe corrections, after M0-91: a fixture non-conformant for a reason unrelated to what it measures, and a template a later session can copy; no suite is wrong today (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5's *break only the … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-40's DEBT row of 2026-07-25, re-measured; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-40» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)"** … (whole text: the cut archive)
+order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — two suites' report lines
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and … (whole text: the cut archive)
+depends-on: M0-65 (its EXCLUDES segment and widened tally reader; in CONDUCT #6's gate).
+accepts-when: a full battery's headline carries no EXCLUDES segment, and its assertion total rises by exactly the two suites' printed tallies, stated in the landing; `cd bio-plane && npm` … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (M0-65's worker's suggestion, routed by CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-76 · queued — `d280-strengthbar.control.mjs` READS NOT AS DECLARED ON EVERY RUN (arm C2 and the severedhomes arms), and D-280's site (a) — the … (whole text: the cut archive)
+order: M0, with the instrument corrections; ruled by BOB #16 (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — a control driver and one suite's arm
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name; its one-copy rule), with D-267 and D-280 … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `node bio-plane/test/d280-strengthbar.control.mjs` reads EVERY arm AS DECLARED and the site-(a) arm fails by name; the control leaves the tree byte-identical; the C-6.1 … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-69 · queued — A WHOLE-STORE PURGE OF THE SCRATCH STORE CLEARS THE IDENTITY TABLES; A PURGE OF THE RECORD STORE NEVER DOES, structurally (BOB … (whole text: the cut archive)
+order: M0, after the battery tally and M0-68: a live verification whose scratch keeps member rows stops measuring the same subject twice (SCHEDULER, 2026-09-19)
+milestone: M0 (a live verification that stops measuring the same subject twice is the verification defect)
+interface: I3 — behaviour at scratch only; an IC if the op's published answer changes (the integrator classifies)
+design: `docs/architecture/BIO_Distribution_v0_1.md` §6 rung 6, "What 'swept after' means" (BOB #16, folded … (whole text: the cut archive)
+depends-on: none in code.
+accepts-when: a scratch purge leaves every enumerated identity table empty; a record-store purge driven through the op leaves `members` byte-identical; a new member-keyed table added to the … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-69» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-70 · queued — **VF-4's LIVE-SCRATCH INSTRUMENT STATES ON ITS OWN OUTPUT THAT ARM 2a LEAVES A `proposed` MEMBER BY DESIGN (Membership v2 §4.7)** … (whole text: the cut archive)
+order: M0, after M0-68 and M0-69: the same instrument file as M0-68, and its purge-after rests on M0-69 (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — the instrument `bio-plane/test/vf4-live-scratch.mjs`
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.7 (administrator consensus) and … (whole text: the cut archive)
+depends-on: M0-69 (the purge must take scratch identity) and M0-68 (SAME FILE — one worker at a time in `vf4-live-scratch.mjs`).
+accepts-when: a run's output carries the statement at arm 2a; after the run, scratch `members` reads empty; `node tools/plancheck.mjs --local` then BARE. How a liar passes it: a purge call … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (BOB #16's inbox entry, item 3; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-70» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### VF-7 · queued — CANNOT RUN until the next DIST deploy; queued now so the future act is an ITEM the deploy's integration meets, not a telling a … (whole text: the cut archive)
+order: M0 VERIFY lane, after the battery tally: it watches a credential class (DEC-43's zero), now a read-back since the 0.58.0 deploy armed it (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
+milestone: M0 (VERIFY lane, holds no slot)
+interface: none — it watches, it does not publish a shape
+design: `docs/development/SCHEDULER.md` §"The mechanism, and how the next consumer joins" (the … (whole text: the cut archive)
+depends-on: **the next plane deploy through `deploy.mjs`** (DIST's next cut — D-297's release is the likely carrier)
+accepts-when: (on the deploy landing) both first activations measured and recorded with the serving build named; the first armed tick attributed to the scoped class; `op=audit` clean after … (whole text: the cut archive)
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «VF-7» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
