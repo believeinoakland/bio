@@ -1708,6 +1708,9 @@ export const NON_ACTS = {
      on a pair until a member has judged it. An affordance rendered beside a bundle
      would offer the act before the judgement that licenses it exists. */
   contradictionpairs: "read: which of the record's own assertions are worth comparing, by the four named keys; forms candidate pairs, judges none of them and writes nothing",
+  /* D-148. Not object-directed on `contradictionpairs`' reasoning: it reads ACROSS
+     actions by counterparty, and what it returns is something to LOOK AT. */
+  actionquotes: "read: the fee quotes the record holds, by counterparty or by request, side by side; judges none of them and writes nothing",
   /* REC-87 / IC-128. TRANSCRIBE is NOT an object-directed act, on `contentmint`'s
      reason: its subject is a PORTION of a document — (document, extent) — and
      `affordanceFacts` carries no page and no region, so an applies() over those

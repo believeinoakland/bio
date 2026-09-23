@@ -4420,7 +4420,93 @@ export function correspondenceFindings(fm, findings) {
         `correspondence[${i}] carries an account with no author: testimony is somebody's, and an unattributed `
         + 'account is a claim nobody stands behind'));
     }
+    /* D-148: the QUOTE arm, one rule shared with op=actioncorrespond (quoteFindings below). */
+    for (const q of quoteFindings(entries, i)) findings.push(f('C-2.10', 'error', q.message, null, q.code));
   });
+}
+
+/** D-148 — A FEE QUOTE IS EVIDENCE (Bob, 2026-09-22; `BIO_Case_Making_v0_1.md` §2).
+ *
+ *  A `received` correspondence entry may carry a QUOTE, written as FLAT keys on
+ *  the entry because the restricted grammar has no nested map inside an array
+ *  element:
+ *
+ *    quote_amount    the amount AS QUOTED — a number, kept as the text the body
+ *                    wrote (`"1083.00"`, `"1,083.00"`), so a reader sees what was
+ *                    said and not our rounding of it
+ *    quote_currency  the currency AS QUOTED (`USD`, `$`), never inferred
+ *    quote_basis     the stated basis VERBATIM (hours, rate, per page), optional:
+ *                    absent means none was RECORDED, never that none was stated
+ *    quote_answers   the ORD of the earlier `sent` entry it answers — the request's
+ *                    own text is its scope
+ *    quote_revises   optional: the ORD of an earlier quote this one revises. A
+ *                    waiver is a revision to zero, and BOTH entries stand
+ *
+ *  THE RULE IS ONE FUNCTION and it runs at three gates, on the capture-or-testify
+ *  precedent above: the op (so a member is told before anything is written), this
+ *  catalog over the document that lands, and promote. Each finding carries its
+ *  C-72 code so the op refuses by the same name the catalog reports.
+ *
+ *  WHAT IS NOT CHECKED, on purpose: that a quote is reasonable, lawful or larger
+ *  than another. The record asserts only what was quoted, by whom, when, for which
+ *  request (DEC-24); any judgement about a quote is a member's claim in an inquiry.
+ *
+ *  A NUMBER is a decimal with an optional sign and optional thousands separators in
+ *  groups of three. A sign is allowed because the rule is "a number" and a fence
+ *  tighter than its rule is not a safer fence; `quoteValue` parses it for ordering.
+ *
+ *  @returns {{code: string, message: string}[]} */
+export const QUOTE_KEYS = ['quote_amount', 'quote_currency', 'quote_basis', 'quote_answers', 'quote_revises'];
+const QUOTE_NUMBER_RE = /^-?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$/;
+const ORD_RE = /^\d+$/;
+export function isQuoteEntry(e) {
+  return !!e && typeof e === 'object' && !Array.isArray(e)
+    && Object.keys(e).some((k) => k.startsWith('quote_'));
+}
+export function quoteValue(amount) {
+  const s = amount === null || amount === undefined ? '' : String(amount).trim();
+  return QUOTE_NUMBER_RE.test(s) ? Number(s.replace(/,/g, '')) : null;
+}
+export function quoteFindings(entries, i) {
+  const out = [];
+  const e = entries[i];
+  if (!isQuoteEntry(e)) return out;
+  if (e.direction !== 'received') {
+    out.push({ code: 'QUOTE_NOT_ON_RECEIVED', message:
+      `correspondence[${i}] carries a quote on a '${e.direction}' entry: a quote is what a body SENT BACK, so it `
+      + 'rides a received entry (D-148)' });
+    return out;
+  }
+  if (quoteValue(e.quote_amount) === null) {
+    out.push({ code: 'QUOTE_AMOUNT_NOT_A_NUMBER', message:
+      `correspondence[${i}].quote_amount '${String(e.quote_amount ?? '').slice(0, 40)}' is not a number: the `
+      + 'amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another' });
+  }
+  const cur = e.quote_currency === null || e.quote_currency === undefined ? '' : String(e.quote_currency).trim();
+  if (!cur) {
+    out.push({ code: 'QUOTE_NO_CURRENCY', message:
+      `correspondence[${i}] carries a quote with no quote_currency: the currency is recorded as quoted and is `
+      + 'never inferred' });
+  }
+  const ordOf = (v) => (v === null || v === undefined || !ORD_RE.test(String(v).trim()))
+    ? null : Number(String(v).trim());
+  const a = ordOf(e.quote_answers);
+  const sent = a !== null && a < i ? entries[a] : null;
+  if (!sent || typeof sent !== 'object' || sent.direction !== 'sent') {
+    out.push({ code: 'QUOTE_ANSWERS_NO_SENT', message:
+      `correspondence[${i}].quote_answers '${String(e.quote_answers ?? '').slice(0, 20)}' names no earlier sent `
+      + 'entry: a quote answers a request this ledger holds, and the request\'s own text is its scope' });
+  }
+  if (e.quote_revises !== undefined && e.quote_revises !== null && e.quote_revises !== '') {
+    const r = ordOf(e.quote_revises);
+    const prior = r !== null && r < i ? entries[r] : null;
+    if (!prior || typeof prior !== 'object' || prior.direction !== 'received' || !isQuoteEntry(prior)) {
+      out.push({ code: 'QUOTE_REVISES_NO_QUOTE', message:
+        `correspondence[${i}].quote_revises '${String(e.quote_revises).slice(0, 20)}' names no earlier quote: a `
+        + 'revision names the quote it revises, and both entries stand' });
+    }
+  }
+  return out;
 }
 
 /** DEC-14: what an action's recorded consequence CLAIMS, derived rather than
@@ -12375,6 +12461,61 @@ export const CONTRADICTION_PAIR_CHECKS = {
     translation: 'The record pairs assertions by named keys, and that is not one of them. Rather than '
       + 'answer from a different key and let the answer look like a complete comparison, it says so and '
       + 'names the keys it holds. Ask again with one of them, or with none at all to run every key.',
+  },
+};
+
+/* D-148 / C-72 — A FEE QUOTE IS EVIDENCE (`BIO_Case_Making_v0_1.md` §2). The refusals of the quote grammar
+ * (`quoteFindings`, which C-2.10 also reports over the document, each finding carrying the same code) and of
+ * its read. The rule lives in ONE pure function; op=actioncorrespond refuses by these names before anything is
+ * written, and op=actionquotes refuses a read that names neither axis. None of them judges a quote. */
+export const QUOTE_CHECKS = {
+  QUOTE_NOT_ON_RECEIVED: {
+    check: 'C-72.1',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'A quote is what a body sent back, so it belongs on an entry recording something received. '
+      + 'Record the reply as received and put the quote on it.',
+  },
+  QUOTE_AMOUNT_NOT_A_NUMBER: {
+    check: 'C-72.2',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'The amount is kept exactly as the body wrote it, but it has to read as a number — digits, '
+      + 'with an optional decimal part and thousands separators. Otherwise it cannot be set beside another quote.',
+  },
+  QUOTE_NO_CURRENCY: {
+    check: 'C-72.3',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'A quote records the currency the body named. The record will not assume one, so say which '
+      + 'currency the amount was quoted in.',
+  },
+  QUOTE_ANSWERS_NO_SENT: {
+    check: 'C-72.4',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'A quote answers a request, and this one names no earlier sent entry in this ledger. Record '
+      + 'the request first, then name its position as the entry this quote answers.',
+  },
+  QUOTE_REVISES_NO_QUOTE: {
+    check: 'C-72.5',
+    where: 'src/store.mjs actionCorrespond > is-quote-grammar',
+    translation: 'A revision names the earlier quote it changes, and the position given holds no quote. Both '
+      + 'the original and the revision stay on the record, so the revision has to point at a real one.',
+  },
+  QUOTE_TEXT_UNWRITABLE: {
+    check: 'C-72.6',
+    where: 'src/store.mjs actionCorrespond > is-quote-writable',
+    translation: 'The currency or the stated basis is too long, or holds a quotation mark, a backslash or a '
+      + 'line break, which the record cannot store. Shorten it or leave those characters out.',
+  },
+  QUOTE_READ_UNASKED: {
+    check: 'C-72.7',
+    where: 'src/store.mjs actionQuotes > is-quote-read-axis',
+    translation: 'Quotes are listed by the body that quoted them or by the request they answer. Name one of '
+      + 'the two — not neither, and not both at once.',
+  },
+  QUOTE_ANSWERS_NOT_AN_ORD: {
+    check: 'C-72.8',
+    where: 'src/store.mjs actionQuotes > is-quote-read-axis',
+    translation: 'A request is named by its position in the action\'s correspondence, which is a whole number '
+      + 'counted from zero. Give that number to see only the quotes answering that request.',
   },
 };
 

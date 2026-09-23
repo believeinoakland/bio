@@ -2028,6 +2028,39 @@ CREATE TABLE IF NOT EXISTS correspondence (
 CREATE INDEX IF NOT EXISTS correspondence_artifact ON correspondence(artifact_sha);
 CREATE INDEX IF NOT EXISTS correspondence_bundle ON correspondence(bundle_id);
 
+-- D-148: A FEE QUOTE IS EVIDENCE (BIO_Case_Making_v0_1.md section 2, Bob 2026-09-22).
+-- A received correspondence entry may carry a QUOTE - the amount and currency
+-- as quoted, the stated basis verbatim, and the ord of the sent entry it
+-- answers; a later quote may name the quote it revises, and a waiver is a
+-- revision to zero with BOTH entries standing. This table is a PROJECTION of
+-- those entry keys, written in promote's transaction by the same
+-- delete-then-insert as correspondence above, never a second place to state a
+-- quote (D-21). It exists so a read can set quotes side by side by
+-- counterparty and by request with an index rather than a walk of every
+-- action's bytes.
+--
+-- amount is the text AS QUOTED and value is its parse, so ordering never
+-- rewrites what the body said. counterparty is the action's own
+-- counterparty.name, denormalised at projection and NULL when the action
+-- states its counterparty undetermined - such a quote is still read by its
+-- request. The record asserts only what was quoted, by whom, when, for which
+-- request: no column here judges a quote (DEC-24). Cleared in BOTH purge arms
+-- via the TABLES list (D-113).
+CREATE TABLE IF NOT EXISTS action_quotes (
+  bundle_id    TEXT NOT NULL,   -- the action
+  ord          INTEGER NOT NULL,-- the received entry carrying the quote
+  amount       TEXT NOT NULL,   -- as quoted
+  value        REAL,            -- amount parsed, for setting side by side
+  currency     TEXT NOT NULL,   -- as quoted, never inferred
+  basis        TEXT,            -- verbatim, NULL when none was recorded
+  answers_ord  INTEGER NOT NULL,-- the sent entry it answers
+  revises_ord  INTEGER,         -- the earlier quote it revises, if any
+  counterparty TEXT,            -- the action's counterparty.name, NULL if undetermined
+  at           TEXT NOT NULL,   -- when the quote was received (authored)
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS action_quotes_counterparty ON action_quotes(counterparty);
+
 -- IS-6 / INVESTIGATIVE-SESSION.md \xA711: THE RUN IS AN OBJECT, and it is built on
 -- the capture_sessions shape above rather than on a new one \u2014 "SCRATCH, not
 -- record\u2026 a work list with an expiry": ticks, an expiry, opaque state,
@@ -3915,6 +3948,8 @@ __export(bio_checks_exports, {
   PROJECT_AUTHORITY_CHECKS: () => PROJECT_AUTHORITY_CHECKS,
   PROJECT_ID_CHECKS: () => PROJECT_ID_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
+  QUOTE_CHECKS: () => QUOTE_CHECKS,
+  QUOTE_KEYS: () => QUOTE_KEYS,
   RATIFY_SCOPE_CHECKS: () => RATIFY_SCOPE_CHECKS,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
   REQUIRED_ARGUMENT_CHECKS: () => REQUIRED_ARGUMENT_CHECKS,
@@ -3989,6 +4024,7 @@ __export(bio_checks_exports, {
   isMachineMinted: () => isMachineMinted,
   isMachineStamp: () => isMachineStamp,
   isPublicHttpsLocator: () => isPublicHttpsLocator,
+  isQuoteEntry: () => isQuoteEntry,
   isSufficiencyClaimed: () => isSufficiencyClaimed,
   isSufficiencyUnclaimed: () => isSufficiencyUnclaimed,
   leadLegFindings: () => leadLegFindings,
@@ -4001,6 +4037,8 @@ __export(bio_checks_exports, {
   parseFrontmatter: () => parseFrontmatter,
   parseSignerTimestamp: () => parseSignerTimestamp,
   parseSshSig: () => parseSshSig,
+  quoteFindings: () => quoteFindings,
+  quoteValue: () => quoteValue,
   rangeCorners: () => rangeCorners,
   releaseMessage: () => releaseMessage,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
@@ -6792,7 +6830,48 @@ function correspondenceFindings(fm, findings) {
         `correspondence[${i}] carries an account with no author: testimony is somebody's, and an unattributed account is a claim nobody stands behind`
       ));
     }
+    for (const q of quoteFindings(entries, i)) findings.push(f("C-2.10", "error", q.message, null, q.code));
   });
+}
+var QUOTE_KEYS = ["quote_amount", "quote_currency", "quote_basis", "quote_answers", "quote_revises"];
+var QUOTE_NUMBER_RE = /^-?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$/;
+var ORD_RE = /^\d+$/;
+function isQuoteEntry(e) {
+  return !!e && typeof e === "object" && !Array.isArray(e) && Object.keys(e).some((k) => k.startsWith("quote_"));
+}
+function quoteValue(amount) {
+  const s = amount === null || amount === void 0 ? "" : String(amount).trim();
+  return QUOTE_NUMBER_RE.test(s) ? Number(s.replace(/,/g, "")) : null;
+}
+function quoteFindings(entries, i) {
+  const out = [];
+  const e = entries[i];
+  if (!isQuoteEntry(e)) return out;
+  if (e.direction !== "received") {
+    out.push({ code: "QUOTE_NOT_ON_RECEIVED", message: `correspondence[${i}] carries a quote on a '${e.direction}' entry: a quote is what a body SENT BACK, so it rides a received entry (D-148)` });
+    return out;
+  }
+  if (quoteValue(e.quote_amount) === null) {
+    out.push({ code: "QUOTE_AMOUNT_NOT_A_NUMBER", message: `correspondence[${i}].quote_amount '${String(e.quote_amount ?? "").slice(0, 40)}' is not a number: the amount is recorded as quoted, and a quote whose amount cannot be read as one cannot be set beside another` });
+  }
+  const cur = e.quote_currency === null || e.quote_currency === void 0 ? "" : String(e.quote_currency).trim();
+  if (!cur) {
+    out.push({ code: "QUOTE_NO_CURRENCY", message: `correspondence[${i}] carries a quote with no quote_currency: the currency is recorded as quoted and is never inferred` });
+  }
+  const ordOf = (v) => v === null || v === void 0 || !ORD_RE.test(String(v).trim()) ? null : Number(String(v).trim());
+  const a = ordOf(e.quote_answers);
+  const sent = a !== null && a < i ? entries[a] : null;
+  if (!sent || typeof sent !== "object" || sent.direction !== "sent") {
+    out.push({ code: "QUOTE_ANSWERS_NO_SENT", message: `correspondence[${i}].quote_answers '${String(e.quote_answers ?? "").slice(0, 20)}' names no earlier sent entry: a quote answers a request this ledger holds, and the request's own text is its scope` });
+  }
+  if (e.quote_revises !== void 0 && e.quote_revises !== null && e.quote_revises !== "") {
+    const r = ordOf(e.quote_revises);
+    const prior = r !== null && r < i ? entries[r] : null;
+    if (!prior || typeof prior !== "object" || prior.direction !== "received" || !isQuoteEntry(prior)) {
+      out.push({ code: "QUOTE_REVISES_NO_QUOTE", message: `correspondence[${i}].quote_revises '${String(e.quote_revises).slice(0, 20)}' names no earlier quote: a revision names the quote it revises, and both entries stand` });
+    }
+  }
+  return out;
 }
 function consequenceState(fm) {
   const c = fm?.consequence;
@@ -12192,6 +12271,48 @@ var CONTRADICTION_PAIR_CHECKS = {
     check: "C-60.1",
     where: "src/store.mjs contradictionPairs > is-contradiction-key-unknown",
     translation: "The record pairs assertions by named keys, and that is not one of them. Rather than answer from a different key and let the answer look like a complete comparison, it says so and names the keys it holds. Ask again with one of them, or with none at all to run every key."
+  }
+};
+var QUOTE_CHECKS = {
+  QUOTE_NOT_ON_RECEIVED: {
+    check: "C-72.1",
+    where: "src/store.mjs actionCorrespond > is-quote-grammar",
+    translation: "A quote is what a body sent back, so it belongs on an entry recording something received. Record the reply as received and put the quote on it."
+  },
+  QUOTE_AMOUNT_NOT_A_NUMBER: {
+    check: "C-72.2",
+    where: "src/store.mjs actionCorrespond > is-quote-grammar",
+    translation: "The amount is kept exactly as the body wrote it, but it has to read as a number \u2014 digits, with an optional decimal part and thousands separators. Otherwise it cannot be set beside another quote."
+  },
+  QUOTE_NO_CURRENCY: {
+    check: "C-72.3",
+    where: "src/store.mjs actionCorrespond > is-quote-grammar",
+    translation: "A quote records the currency the body named. The record will not assume one, so say which currency the amount was quoted in."
+  },
+  QUOTE_ANSWERS_NO_SENT: {
+    check: "C-72.4",
+    where: "src/store.mjs actionCorrespond > is-quote-grammar",
+    translation: "A quote answers a request, and this one names no earlier sent entry in this ledger. Record the request first, then name its position as the entry this quote answers."
+  },
+  QUOTE_REVISES_NO_QUOTE: {
+    check: "C-72.5",
+    where: "src/store.mjs actionCorrespond > is-quote-grammar",
+    translation: "A revision names the earlier quote it changes, and the position given holds no quote. Both the original and the revision stay on the record, so the revision has to point at a real one."
+  },
+  QUOTE_TEXT_UNWRITABLE: {
+    check: "C-72.6",
+    where: "src/store.mjs actionCorrespond > is-quote-writable",
+    translation: "The currency or the stated basis is too long, or holds a quotation mark, a backslash or a line break, which the record cannot store. Shorten it or leave those characters out."
+  },
+  QUOTE_READ_UNASKED: {
+    check: "C-72.7",
+    where: "src/store.mjs actionQuotes > is-quote-read-axis",
+    translation: "Quotes are listed by the body that quoted them or by the request they answer. Name one of the two \u2014 not neither, and not both at once."
+  },
+  QUOTE_ANSWERS_NOT_AN_ORD: {
+    check: "C-72.8",
+    where: "src/store.mjs actionQuotes > is-quote-read-axis",
+    translation: "A request is named by its position in the action's correspondence, which is a whole number counted from zero. Give that number to see only the quotes answering that request."
   }
 };
 var INSTANCE_GROUP_CHECKS = {
@@ -32871,7 +32992,14 @@ Reason: ${why}
    * resolves to a bundle in this store writes a responds_to edge on THAT
    * document, pointing back at this action — the direction SB-OUTPUT's A10 row
    * specifies, and the reason the relation is no longer a string the vocabulary
-   * merely tolerates. Idempotent: an edge already there is not written twice. */
+   * merely tolerates. Idempotent: an edge already there is not written twice.
+   *
+   * D-148: A RECEIVED ENTRY MAY CARRY A QUOTE (`quote_amount`, `quote_currency`,
+   * `quote_basis`, `quote_answers`, `quote_revises`). The rule is the catalog's
+   * `quoteFindings`, run here over the ledger as it WOULD stand, so a member is
+   * refused by the C-72 name before anything is written, and the same function
+   * reports C-2.10 over the document that lands. An entry with no quote
+   * parameter writes exactly the bytes it wrote before D-148. */
   actionCorrespond({
     target,
     direction = "",
@@ -32880,6 +33008,11 @@ Reason: ${why}
     party = "",
     artifactSha = "",
     account = "",
+    quoteAmount = "",
+    quoteCurrency = "",
+    quoteBasis = "",
+    quoteAnswers = "",
+    quoteRevises = "",
     viewer = null,
     author = null
   } = {}) {
@@ -32940,6 +33073,37 @@ Reason: ${why}
           reason: `BAD_${name.toUpperCase()}`,
           detail: `${name} is at most ${_Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
         };
+    const quote = {};
+    for (const [k, v] of [
+      ["quote_amount", quoteAmount],
+      ["quote_currency", quoteCurrency],
+      ["quote_basis", quoteBasis],
+      ["quote_answers", quoteAnswers],
+      ["quote_revises", quoteRevises]
+    ]) {
+      const t = String(v ?? "").trim();
+      if (t) quote[k] = t;
+    }
+    const refusal7 = (code, detail, extra) => {
+      const row = QUOTE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        target,
+        detail,
+        ...extra || {}
+      };
+    };
+    for (const k of ["quote_currency", "quote_basis"])
+      if (quote[k] !== void 0 && (quote[k].length > _Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(quote[k])))
+        return refusal7(
+          "QUOTE_TEXT_UNWRITABLE",
+          `${k} is at most ${_Store.RELEASE_ACK_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`,
+          { field: k }
+        );
     const gate = viewerPredicate(viewer);
     const b = this.#one(
       `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
@@ -32984,7 +33148,8 @@ Reason: ${why}
       };
     const fm = parseFrontmatter(liveMd.content).data || {};
     const when = new Date(this.#nowMs(null)).toISOString().replace(/\.\d+Z$/, "Z");
-    const ord = (Array.isArray(fm.correspondence) ? fm.correspondence : []).length;
+    const ledgerNow = Array.isArray(fm.correspondence) ? fm.correspondence : [];
+    const ord = ledgerNow.length;
     const entryFm = {
       direction,
       at: day,
@@ -32992,11 +33157,28 @@ Reason: ${why}
       ...String(party ?? "").trim() ? { party: String(party).trim() } : {},
       ...sha ? { artifact_sha: sha } : {},
       ...acct ? { account: acct } : {},
+      ...quote,
       /* SERVER-STAMPED. Present on both arms — who put this entry on the record
          is part of the record even when the record is bytes. */
       author: who,
       recorded_at: when
     };
+    const qf = quoteFindings([...ledgerNow, entryFm], ord);
+    if (qf.length) {
+      this.sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, target, who);
+      const has = (c) => qf.find((x) => x.code === c);
+      const all = { findings: qf };
+      if (has("QUOTE_NOT_ON_RECEIVED"))
+        return refusal7("QUOTE_NOT_ON_RECEIVED", has("QUOTE_NOT_ON_RECEIVED").message, all);
+      if (has("QUOTE_AMOUNT_NOT_A_NUMBER"))
+        return refusal7("QUOTE_AMOUNT_NOT_A_NUMBER", has("QUOTE_AMOUNT_NOT_A_NUMBER").message, all);
+      if (has("QUOTE_NO_CURRENCY"))
+        return refusal7("QUOTE_NO_CURRENCY", has("QUOTE_NO_CURRENCY").message, all);
+      if (has("QUOTE_ANSWERS_NO_SENT"))
+        return refusal7("QUOTE_ANSWERS_NO_SENT", has("QUOTE_ANSWERS_NO_SENT").message, all);
+      if (has("QUOTE_REVISES_NO_QUOTE"))
+        return refusal7("QUOTE_REVISES_NO_QUOTE", has("QUOTE_REVISES_NO_QUOTE").message, all);
+    }
     let text = _Store.#spliceCorrespondence(liveMd.content, entryFm);
     if (!text)
       return {
@@ -33055,6 +33237,7 @@ Held as: ${sha ? `captured bytes ${sha.slice(0, 16)}...` : `testimony from ${who
       recorded_at: when,
       held_as: sha ? "capture" : "testimony",
       ...sha ? { artifact_sha: sha } : { account: acct },
+      ...Object.keys(quote).length ? { quote } : {},
       ...responded ? { responds_to: responded } : {},
       weight: "single"
     };
@@ -33128,6 +33311,149 @@ Changes: responds_to edge added to ${actionId}.
     });
     return p.ok ? { bundle_id: doc.bundle_id, already: false } : { bundle_id: doc.bundle_id, refused: p.reason };
   }
+  /* D-148: A FEE QUOTE IS EVIDENCE — THE READ (`BIO_Case_Making_v0_1.md` §2).
+   *
+   * Quotes set side by side by ONE axis at a time: `counterparty=` (the action's
+   * own named counterparty, matched exactly as written) or `request=` (an action,
+   * optionally `answers=` one sent entry of it). One indexed lookup each, over
+   * the `action_quotes` projection and gated by the viewer through the action.
+   *
+   * IT JUDGES NOTHING. Each row says what was quoted, by whom, when, for which
+   * request, how it is held (captured bytes or a member's account), and which
+   * later quotes revise it — a waiver is a revision to zero, and both rows are
+   * returned. Whether two requests sought the same records, or a quote exceeds
+   * what a law allows, is a member's claim in an inquiry (DEC-24), so no field
+   * here compares one quote to another.
+   *
+   * AN EMPTY ANSWER SAYS WHICH LEVEL WAS EMPTY. By request, it names how many
+   * sent and received entries the ledger holds, so "no quote" is distinguishable
+   * from "no reply". By counterparty, it says an action whose counterparty is
+   * stated undetermined is reachable only by its request. */
+  static QUOTES_MAX = 500;
+  actionQuotes({ counterparty = null, request = null, answers = null, viewer = null } = {}) {
+    const cp = String(counterparty ?? "").trim();
+    const req = String(request ?? "").trim();
+    const ans = String(answers ?? "").trim();
+    const refusal7 = (code, detail, extra) => {
+      const row = QUOTE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    if (!cp && !req || cp && req)
+      return refusal7(
+        "QUOTE_READ_UNASKED",
+        "quotes are read by counterparty= or by request= (optionally with answers=), one at a time",
+        { axes: ["counterparty", "request"] }
+      );
+    if (ans && !/^\d+$/.test(ans))
+      return refusal7(
+        "QUOTE_ANSWERS_NOT_AN_ORD",
+        "answers= is the position of a sent entry in the action's correspondence, a whole number",
+        { answers: ans.slice(0, 20) }
+      );
+    const gate = viewerPredicate(viewer);
+    const max = _Store.QUOTES_MAX;
+    let rows;
+    let absence = null;
+    if (req) {
+      const b = this.#one(
+        `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+        req,
+        ...gate.args
+      );
+      if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: req };
+      if (normalizeType(b.object_type) !== "action")
+        return { ok: false, reason: "NOT_AN_ACTION", target: req, object_type: b.object_type };
+      rows = this.#rows(
+        `SELECT q.* FROM action_quotes q WHERE q.bundle_id=?${ans ? " AND q.answers_ord=?" : ""}
+          ORDER BY q.ord LIMIT ?`,
+        req,
+        ...ans ? [Number(ans)] : [],
+        max + 1
+      );
+      if (!rows.length) {
+        const n = (d) => this.#one(
+          `SELECT COUNT(*) AS n FROM correspondence WHERE bundle_id=? AND direction=?`,
+          req,
+          d
+        ).n;
+        const sent = n("sent"), received = n("received");
+        absence = {
+          level: sent === 0 ? "no_request" : received === 0 ? "no_reply" : "no_quote",
+          sent,
+          received,
+          says: sent === 0 ? "this action's ledger records no sent entry, so nothing here could be quoted" : received === 0 ? "this action's ledger records no reply, so no quote has been received" : "this action's ledger records replies and none of them carries a quote"
+        };
+      }
+    } else {
+      rows = this.#rows(
+        `SELECT q.* FROM action_quotes q JOIN bundles b ON b.bundle_id=q.bundle_id
+          WHERE q.counterparty=? AND (${gate.sql}) ORDER BY q.bundle_id, q.ord LIMIT ?`,
+        cp,
+        ...gate.args,
+        max + 1
+      );
+      if (!rows.length)
+        absence = {
+          level: "no_quote_by_name",
+          says: "no action you may read names this counterparty and carries a quote. The name is matched exactly as written, and an action whose counterparty is stated undetermined is reachable only by its request"
+        };
+    }
+    const truncated = rows.length > max;
+    const quotes = rows.slice(0, max).map((q) => {
+      const entry = this.#one(
+        `SELECT artifact_sha, artifact_bundle_id, account, author, party FROM correspondence
+          WHERE bundle_id=? AND ord=?`,
+        q.bundle_id,
+        q.ord
+      ) || {};
+      const sent = this.#one(
+        `SELECT at, artifact_sha, account FROM correspondence WHERE bundle_id=? AND ord=?`,
+        q.bundle_id,
+        q.answers_ord
+      ) || {};
+      return {
+        action: q.bundle_id,
+        ord: q.ord,
+        at: q.at,
+        amount: q.amount,
+        value: q.value,
+        currency: q.currency,
+        basis: q.basis,
+        counterparty: q.counterparty,
+        party: entry.party ?? null,
+        held_as: entry.artifact_sha ? "capture" : "testimony",
+        ...entry.artifact_sha ? { artifact_sha: entry.artifact_sha, artifact_bundle_id: entry.artifact_bundle_id ?? null } : { account: entry.account ?? null },
+        author: entry.author ?? null,
+        answers: { ord: q.answers_ord, at: sent.at ?? null },
+        revises: q.revises_ord,
+        revised_by: this.#rows(
+          `SELECT ord FROM action_quotes WHERE bundle_id=? AND revises_ord=? ORDER BY ord`,
+          q.bundle_id,
+          q.ord
+        ).map((r) => r.ord)
+      };
+    });
+    return {
+      ok: true,
+      by: req ? "request" : "counterparty",
+      ...req ? { request: req } : { counterparty: cp },
+      ...ans ? { answers: Number(ans) } : {},
+      quotes,
+      count: quotes.length,
+      truncated,
+      max,
+      ...absence ? { absence } : {},
+      says: "the record asserts only what was quoted, by whom, when, and for which request. It sets quotes side by side and judges none of them (DEC-24)."
+    };
+  }
   /* One Session Log appender for THIS item's three writers (actionMove,
      actionCorrespond and the responds_to producer), so they cannot disagree
      about where an entry goes. It is written as a helper rather than open-coded
@@ -33164,6 +33490,14 @@ Changes: responds_to edge added to ${actionId}.
       ...e.party ? [`    party: "${e.party}"`] : [],
       ...e.artifact_sha ? [`    artifact_sha: ${e.artifact_sha}`] : [],
       ...e.account ? [`    account: "${e.account}"`] : [],
+      /* D-148: a quote's keys, each only if carried. The amount is QUOTED so the
+         parser keeps the text as the body wrote it (`1083.00` stays `1083.00`);
+         the two ords are bare tokens. */
+      ...e.quote_amount !== void 0 ? [`    quote_amount: "${e.quote_amount}"`] : [],
+      ...e.quote_currency !== void 0 ? [`    quote_currency: "${e.quote_currency}"`] : [],
+      ...e.quote_basis !== void 0 ? [`    quote_basis: "${e.quote_basis}"`] : [],
+      ...e.quote_answers !== void 0 ? [`    quote_answers: ${e.quote_answers}`] : [],
+      ...e.quote_revises !== void 0 ? [`    quote_revises: ${e.quote_revises}`] : [],
       `    author: ${e.author}`,
       `    recorded_at: "${e.recorded_at}"`
     ];
@@ -41461,6 +41795,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       this.sql.exec(`DELETE FROM action_basis WHERE bundle_id=?`, bundleId);
       this.sql.exec(`DELETE FROM correspondence WHERE bundle_id=?`, bundleId);
+      this.sql.exec(`DELETE FROM action_quotes WHERE bundle_id=?`, bundleId);
       if (normalizeType(meta.object_type) === "action" && docFmW) {
         const alegs = Array.isArray(docFmW.action_basis) ? docFmW.action_basis : [];
         for (let i = 0; i < alegs.length; i++) {
@@ -41499,6 +41834,27 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
             typeof e.account === "string" && e.account.trim() ? e.account : null,
             typeof e.author === "string" && e.author.trim() ? e.author : null,
             typeof e.recorded_at === "string" ? e.recorded_at : null
+          );
+        }
+        const cp = docFmW.counterparty;
+        const cpName = cp && typeof cp === "object" && cp.state === "named" && typeof cp.name === "string" && cp.name.trim() ? cp.name.trim() : null;
+        for (let i = 0; i < entries.length; i++) {
+          const e = entries[i];
+          if (!isQuoteEntry(e) || quoteFindings(entries, i).length) continue;
+          this.sql.exec(
+            `INSERT INTO action_quotes
+               (bundle_id,ord,amount,value,currency,basis,answers_ord,revises_ord,counterparty,at)
+             VALUES (?,?,?,?,?,?,?,?,?,?)`,
+            bundleId,
+            i,
+            String(e.quote_amount).trim(),
+            quoteValue(e.quote_amount),
+            String(e.quote_currency).trim(),
+            e.quote_basis !== void 0 && e.quote_basis !== null && String(e.quote_basis).trim() ? String(e.quote_basis) : null,
+            Number(String(e.quote_answers).trim()),
+            e.quote_revises !== void 0 && e.quote_revises !== null && String(e.quote_revises).trim() !== "" ? Number(String(e.quote_revises).trim()) : null,
+            cpName,
+            e.at != null ? String(e.at) : ""
           );
         }
       }
@@ -51625,6 +51981,8 @@ ${words}`;
          it cleared them (D-113) rather than assert it. */
       actionBasis: n("action_basis"),
       correspondence: n("correspondence"),
+      /* D-148: the fee-quote projection, counted so a purge can PROVE it took it. */
+      actionQuotes: n("action_quotes"),
       /* FW-8: the derived connections and the member-declared progression definitions,
          reported so a whole-store purge can PROVE it cleared them (D-113). */
       connections: n("connections"),
@@ -52960,6 +53318,12 @@ ${words}`;
       "correspondence",
       "bias_statements",
       "bias_adoptions",
+      /* D-148 / D-113: `action_quotes` is a projection of an action's own
+         correspondence quote keys and carries bundle_id, so it clears in
+         BOTH arms here. Left out, a purge reporting scope ALL would still
+         set a purged action's quotes beside the living ones by counterparty,
+         naming a request the record no longer holds. */
+      "action_quotes",
       /* REC-63 / D-113: the route markers are keyed on `bundle_id`, so they
          ride this list and are cleared in BOTH arms — a marker outliving the
          document it doubts would attach itself to whatever bundle was next
@@ -67254,8 +67618,21 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           party: url.searchParams.get("party"),
           artifactSha: url.searchParams.get("artifact_sha"),
           account: url.searchParams.get("account"),
+          /* D-148: the QUOTE a received entry may carry. */
+          quoteAmount: url.searchParams.get("quote_amount"),
+          quoteCurrency: url.searchParams.get("quote_currency"),
+          quoteBasis: url.searchParams.get("quote_basis"),
+          quoteAnswers: url.searchParams.get("quote_answers"),
+          quoteRevises: url.searchParams.get("quote_revises"),
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author")
+        }),
+        /* D-148: the quotes, by counterparty or by request. */
+        actionquotes: () => this.actionQuotes({
+          counterparty: url.searchParams.get("counterparty"),
+          request: url.searchParams.get("request"),
+          answers: url.searchParams.get("answers"),
+          viewer: url.searchParams.get("viewer")
         }),
         /* Retrieval. `viewer` is stamped by the control plane and is never taken
            from the caller's own parameters there; here it is simply read, and an
@@ -68355,6 +68732,11 @@ var OPS = {
      viewer, which it takes fail-closed in the stamp block below, because the pairing
      runs AS A MEMBER and pairs only what that member may see. */
   contradictionpairs: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-148: A FEE QUOTE IS EVIDENCE — the read that sets quotes side by side, by
+     counterparty or by request. A pure read on `contradictionpairs`' cut: whoever
+     may read the record may read what a body quoted. It takes the viewer
+     fail-closed in the stamp block below, because it ENUMERATES across actions. */
+  actionquotes: { classes: ["admin", "member", "probe"], mutating: false },
   dangling: { classes: ["admin", "member", "probe"], mutating: false },
   stats: { classes: ["admin", "member", "probe"], mutating: false },
   promote: { classes: ["admin", "member", "probe"], mutating: true },
@@ -69217,6 +69599,8 @@ var SESSION_OPS = {
        viewer decides what it may pair at all — the session route is the
        only one that produces a member the gate can filter by. */
     "contradictionpairs",
+    /* D-148: the fee-quote read, across actions, gated by the viewer. */
+    "actionquotes",
     /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
        word in their own name, `attesttext`'s route and reason. */
     "transcribe",
@@ -69290,6 +69674,7 @@ var SESSION_OPS = {
     "narrow",
     "narrowcandidates",
     "contradictionpairs",
+    "actionquotes",
     "transcribe",
     "transcriptionattest",
     "testify",
@@ -69382,6 +69767,9 @@ var NEEDS = {
      capability here would mean a member could be shown a question and refused the
      answer to "what else does this record say about it". */
   contradictionpairs: null,
+  /* D-148: NO CAPABILITY, on `contradictionpairs`' reasoning: reading what a body
+     quoted is READING the record, and it writes nothing. */
+  actionquotes: null,
   /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
      row and its text into the working corpus, and attesting a typing is
      `attesttext`'s act on different text — both ride `contribute`, as
@@ -74034,7 +74422,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "contradictionpairs" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "contradictionpairs" || op === "actionquotes" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`

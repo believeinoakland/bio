@@ -952,6 +952,11 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "the read compared NOTHING and that this is an outage and not a statement about the record. "
       + "NO COUNT OF THE WITHHELD IS REPORTED (op=backlinks' rule): a count of pairs a caller may not see "
       + "would say that somebody's project holds material about a subject they were never invited to.",
+    actionquotes: "D-148: the FEE QUOTES the record holds, set side by side by counterparty or by request. "
+      + "GATED: it ENUMERATES across actions when read by counterparty, so it takes the fail-closed viewer "
+      + "stamp beside op=contradictionpairs in index.mjs and joins every quote to its action through "
+      + "viewerPredicate — an action the caller may not see contributes no row, and read by request it "
+      + "answers NO_SUCH_BUNDLE exactly as an absent one. No count of withheld quotes is reported.",
     narrowcandidates: "REC-86: the machine's proposals for making ONE leg of ONE reading more specific. "
       + "GATED: it names a QUESTION and answers about the document its leg rests on, so it takes the "
       + "fail-closed viewer stamp beside op=narrow in index.mjs and answers a question the caller may not "
