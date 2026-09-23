@@ -19875,3 +19875,21 @@ paths, BY SITE:
 **NOT CLAIMED:** `bio-plane/test/mergecarry.test.mjs` (M0-130), `tools/mergecarry.mjs`, `tools/plancheck.mjs`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (REC-174 — `op=frontier`'s never-looked and missing lists read `truncated: true` on a FULL fetch, through D-389's one exhaustion test)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #16 for REC-174, worktree `.claude/worktrees/agent-a35832e4029871e04`,
+branch `land/worker/REC-174`, from `origin/main` @ `e62e08e1` (carries D-389).
+authority: `QUEUE.md` `### REC-174 · running`; design `OBSERVATION-LOG-DESIGN.md` §5 and §6, D-389's `Store#frontierPage` as precedent.
+paths, BY SITE:
+  - `bio-plane/src/store.mjs`: `#frontierPage` (the exhaustion test factored out, not duplicated), `#frontierNeverLooked`'s
+    caller in `frontier`, the `missing` fetch in `#frontierContent`, the three `missing` fetches in `#frontierMeaning`, and
+    each arm's `truncated`. NOT `#frontierInternet`, NOT `#frontierLatest`, NOT the tallies.
+  - `bio-plane/test/rec174-supplyfetch.test.mjs` (+ `.control.mjs`): new. `bio-plane/test/d389-fullfetch.test.mjs` S1 (the
+    disjunct's census, corrected with a dated reason). `bio-plane/test/derivation-bounds.test.mjs` rosters, moved from the
+    printed figures. Any observation-content/-meaning/-log arm the change moves, corrected with a dated reason.
+  - `bio-plane/dist/` (rebuilt), `docs/architecture/construct-status.json` and `OBSERVATION-LOG-DESIGN.md` front matter
+    (the as-built sentence), `docs/development/interface-changes/IC-<minted>.md` (new).
+**NOT CLAIMED:** `bio-plane/src/index.mjs`, the internet arm, `QUEUE.md`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
