@@ -2087,6 +2087,39 @@ CREATE TABLE IF NOT EXISTS correspondence (
 CREATE INDEX IF NOT EXISTS correspondence_artifact ON correspondence(artifact_sha);
 CREATE INDEX IF NOT EXISTS correspondence_bundle ON correspondence(bundle_id);
 
+-- D-148: A FEE QUOTE IS EVIDENCE (BIO_Case_Making_v0_1.md section 2, Bob 2026-09-22).
+-- A received correspondence entry may carry a QUOTE - the amount and currency
+-- as quoted, the stated basis verbatim, and the ord of the sent entry it
+-- answers; a later quote may name the quote it revises, and a waiver is a
+-- revision to zero with BOTH entries standing. This table is a PROJECTION of
+-- those entry keys, written in promote's transaction by the same
+-- delete-then-insert as correspondence above, never a second place to state a
+-- quote (D-21). It exists so a read can set quotes side by side by
+-- counterparty and by request with an index rather than a walk of every
+-- action's bytes.
+--
+-- amount is the text AS QUOTED and value is its parse, so ordering never
+-- rewrites what the body said. counterparty is the action's own
+-- counterparty.name, denormalised at projection and NULL when the action
+-- states its counterparty undetermined - such a quote is still read by its
+-- request. The record asserts only what was quoted, by whom, when, for which
+-- request: no column here judges a quote (DEC-24). Cleared in BOTH purge arms
+-- via the TABLES list (D-113).
+CREATE TABLE IF NOT EXISTS action_quotes (
+  bundle_id    TEXT NOT NULL,   -- the action
+  ord          INTEGER NOT NULL,-- the received entry carrying the quote
+  amount       TEXT NOT NULL,   -- as quoted
+  value        REAL,            -- amount parsed, for setting side by side
+  currency     TEXT NOT NULL,   -- as quoted, never inferred
+  basis        TEXT,            -- verbatim, NULL when none was recorded
+  answers_ord  INTEGER NOT NULL,-- the sent entry it answers
+  revises_ord  INTEGER,         -- the earlier quote it revises, if any
+  counterparty TEXT,            -- the action's counterparty.name, NULL if undetermined
+  at           TEXT NOT NULL,   -- when the quote was received (authored)
+  PRIMARY KEY (bundle_id, ord)
+);
+CREATE INDEX IF NOT EXISTS action_quotes_counterparty ON action_quotes(counterparty);
+
 -- IS-6 / INVESTIGATIVE-SESSION.md §11: THE RUN IS AN OBJECT, and it is built on
 -- the capture_sessions shape above rather than on a new one — "SCRATCH, not
 -- record… a work list with an expiry": ticks, an expiry, opaque state,

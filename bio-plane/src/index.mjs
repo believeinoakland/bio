@@ -820,6 +820,11 @@ const OPS = {
      viewer, which it takes fail-closed in the stamp block below, because the pairing
      runs AS A MEMBER and pairs only what that member may see. */
   contradictionpairs: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-148: A FEE QUOTE IS EVIDENCE — the read that sets quotes side by side, by
+     counterparty or by request. A pure read on `contradictionpairs`' cut: whoever
+     may read the record may read what a body quoted. It takes the viewer
+     fail-closed in the stamp block below, because it ENUMERATES across actions. */
+  actionquotes:     { classes: ["admin", "member", "probe"],     mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1945,6 +1950,8 @@ const SESSION_OPS = {
                       viewer decides what it may pair at all — the session route is the
                       only one that produces a member the gate can filter by. */
                    "contradictionpairs",
+                   /* D-148: the fee-quote read, across actions, gated by the viewer. */
+                   "actionquotes",
                    /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
                       word in their own name, `attesttext`'s route and reason. */
                    "transcribe", "transcriptionattest",
@@ -1984,6 +1991,7 @@ const SESSION_OPS = {
                    "extractproposals",
                    "narrow", "narrowcandidates",
                    "contradictionpairs",
+                   "actionquotes",
                    "transcribe", "transcriptionattest",
                    "testify",
                    "lead", "leadlook", "leadshare",
@@ -2069,6 +2077,9 @@ const NEEDS = {
      capability here would mean a member could be shown a question and refused the
      answer to "what else does this record say about it". */
   contradictionpairs: null,
+  /* D-148: NO CAPABILITY, on `contradictionpairs`' reasoning: reading what a body
+     quoted is READING the record, and it writes nothing. */
+  actionquotes: null,
   /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
      row and its text into the working corpus, and attesting a typing is
      `attesttext`'s act on different text — both ride `contribute`, as
@@ -10011,6 +10022,9 @@ export default {
            absent stamp therefore fails CLOSED to `scope: DENY`, and the answer SAYS
            it compared nothing rather than reading as a record with no conflicts. */
         || op === "contradictionpairs"
+        /* D-148: the quote read ENUMERATES across actions by counterparty, so it
+           reads only what the viewer may see and fails CLOSED on an absent stamp. */
+        || op === "actionquotes"
         /* REC-87: all three TRANSCRIBE ops name a DOCUMENT (the act) or a content
            row filed in one (the attestation and the read), so a document the
            caller was never invited to must answer exactly as one that does not
