@@ -34174,6 +34174,16 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
         detail: `the case document's searched section could not be computed: ${searched.why}. A case document publishes what was looked for beside what it claims to cover (D-196); it does not publish the claim with the record of the looking left blank.`
       };
     const conclusionRows = prepared.map((p) => ({ target: p.id, ...p.conclusion }));
+    const lens = this.#biasManifestNow({ scope: "project", scopeId: proj, viewer: "admin", limit: 1 });
+    const manifest = {
+      in_force: lens.in_force === true,
+      scope: "project",
+      scope_id: proj,
+      statements_sha: lens.in_force === true ? lens.statements_sha ?? null : null,
+      bundles: (lens.in_force === true && Array.isArray(lens.bundles) ? lens.bundles : []).map((x) => ({ bundle_id: x.bundle_id, revision: x.revision, scope: x.scope })),
+      lock_violations: Array.isArray(lens.lock_violations) ? lens.lock_violations.length : 0,
+      stated: lens.in_force === true ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed` : "no manifest was in force"
+    };
     const docText = _Store.#caseDocumentText({
       caseId: theCase,
       edition,
@@ -34194,7 +34204,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       conclusions: conclusionRows,
       /* D-442 / rule 12 (b): per member its own edition and the frozen pair and
          grounds, read at this act — stated here ONCE instead of in the member. */
-      frozen
+      frozen,
+      /* D-84: the lens in force, computed above and stated in the signed bytes. */
+      manifest
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -34264,6 +34276,9 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
          other is the collapse REC-44 spent an item undoing one altitude
          down. */
       bias_acknowledgement: back,
+      /* D-84: THE MANIFEST THE DOCUMENT CARRIES, echoed — the lens (computed) beside the
+         acknowledgement (authored), two things that travel together and are not one. */
+      bias_manifest: manifest,
       completeness: {
         statement: stmt,
         subject_position: pos,
@@ -34351,9 +34366,24 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
        Required: a case document authored without it would be the
        legacy shape, whose members carried these blocks in their
        own bytes, and nothing authors that shape any more. */
-    frozen
+    frozen,
+    /* D-84: `{ in_force, scope, scope_id, statements_sha, bundles[],
+       lock_violations, stated }`, computed by the caller for `searched`'s
+       reason (this method is pure and static; the effective set needs the
+       store). Absent is written as NOT IN FORCE with that sentence — never
+       as a blank a reader could take for an empty lens. */
+    manifest = null
   }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
+    const lens = manifest && manifest.in_force === true ? manifest : {
+      in_force: false,
+      scope: "project",
+      scope_id: project,
+      statements_sha: null,
+      bundles: [],
+      lock_violations: 0,
+      stated: "no manifest was in force"
+    };
     const frozenOf = (m) => frozen && frozen.get(m) || null;
     const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
     const fm = [
@@ -34364,6 +34394,24 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
       `case_project: ${project}`,
       `case_scope: "${_Store.#fmSafe(scope)}"`,
       `bias_acknowledgement: "${_Store.#fmSafe(bias)}"`,
+      /* D-84 — THE BIAS MANIFEST, BESIDE THE ACKNOWLEDGEMENT AND NOT INSIDE IT (DEC-46: the lens and
+         the account of what it did are two claims). A MAP OF SCALARS plus an ARRAY OF FLAT OBJECTS, the
+         `searched` / `searched_levels` arrangement, because the grammar has no map holding an array.
+         `in_force: false` carries `stated: "no manifest was in force"` and an EMPTY pair list: the two
+         are different facts from a lens with nothing in it, and the document says which. */
+      "bias_manifest:",
+      `  in_force: ${lens.in_force}`,
+      `  scope: ${lens.scope}`,
+      `  scope_id: ${lens.scope_id}`,
+      `  statements_sha: ${lens.statements_sha ?? "null"}`,
+      `  lock_violations: ${lens.lock_violations}`,
+      `  stated: "${_Store.#fmSafe(lens.stated)}"`,
+      "bias_manifest_bundles:",
+      ...lens.bundles.flatMap((x) => [
+        `  - bundle_id: ${x.bundle_id}`,
+        `    revision: ${x.revision}`,
+        `    scope: ${x.scope}`
+      ]),
       `case_findings: [${roster.join(", ")}]`,
       "case_roles:",
       ...roster.flatMap((m) => [
@@ -34572,6 +34620,19 @@ Changes: state ${b.current_state} to open. Reason: ${why}.
           ...z.grounds.map(([axis, g]) => `  - ${axis}, group '${g.ground ?? "(unnamed)"}': ${g.state === "graded" ? `grade ${g.grade}` : String(g.state).toUpperCase()}`)
         ];
       }),
+      "",
+      /* D-84 — THE MANIFEST IN PROSE, for the reason every section here is: a member reviews and
+         signs THIS. The lens is named by its pairs and its hash, as it stood at this act. */
+      "## Bias Manifest",
+      "",
+      ...lens.in_force ? [
+        `This case was produced under the bias set in force for ${lens.scope_id} when it was published, computed by the plane and frozen here. A lens adopted afterwards does not change this document: the manifest names the revisions this case was made under, not the ones in force now.`,
+        "",
+        ...lens.bundles.map((x) => `- ${x.bundle_id} (${x.scope}) at revision ${x.revision}`),
+        "",
+        `Hash of the effective statement set: ${lens.statements_sha}.`,
+        ...lens.lock_violations ? ["", `${lens.lock_violations} project override(s) named a LOCKED instance statement and were refused their effect; the instance statement stands in the set hashed above.`] : []
+      ] : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood adopted for this instance or this project. That is stated, not left blank \u2014 it is a different fact from a lens with nothing in it.`],
       "",
       "## Bias Acknowledgement",
       "",
@@ -66484,7 +66545,18 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
    *  does not exist; the bias bundles themselves go through `#bundleGate`, the
    *  same predicate every read in this file compiles. Nothing publishes how many
    *  rows the gate removed, because that count is the leak (REC-36). */
-  async biasManifest({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
+  async biasManifest(args = {}) {
+    return this.#biasManifestNow(args);
+  }
+  /* D-84 — THE SAME ANSWER, SYNCHRONOUSLY, AND THERE IS ONE BODY FOR BOTH. `op=publish` stamps the
+     manifest in force into the case document it authors, and `publishCase()` is synchronous on purpose:
+     REC-126's review copy runs it inside `transactionSync` and rolls it back, and a transaction body
+     cannot await. The only await this method ever held was the hash, and `createSha256` — the digest
+     `op=publish` already takes the case document's own sha with — is the same SHA-256 over the same
+     bytes (measured equal to `crypto.subtle`'s over a non-ASCII input before this landed; the suite
+     asserts the stamped hash equals op=biasmanifest's). A second computation of the effective set for
+     the stamp would be two spellings of the one sentence this method IS. */
+  #biasManifestNow({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
     const st = String(scope) === "project" ? "project" : "instance";
     const sid = st === "project" ? String(scopeId || "").trim() : "";
     if (st === "project" && (!sid || !this.#viewerSees(sid, viewer)))
@@ -66585,9 +66657,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       locked: s.locked === 1,
       nullifies: s.nullifies ?? null
     })).sort((x, y) => x.bundle_id.localeCompare(y.bundle_id) || x.statement_id.localeCompare(y.statement_id));
-    const statementsSha = await _Store.#sha256(JSON.stringify(
+    const statementsSha = createSha256().update(_Store.#enc.encode(JSON.stringify(
       all.map((s) => [s.bundle_id, s.statement_id, s.kind, s.subject, s.text, s.justification, s.locked])
-    ));
+    ))).hex();
     const residue = [];
     for (const a of adoptions) {
       const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, a.bundle_id);

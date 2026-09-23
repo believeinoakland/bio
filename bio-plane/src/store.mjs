@@ -8034,6 +8034,32 @@ export class Store extends DurableObject {
        re-read), so the document cannot record a conclusion the gate did not
        admit — the failure mode a second read invites. */
     const conclusionRows = prepared.map((p) => ({ target: p.id, ...p.conclusion }));
+    /* D-84 — THE BIAS MANIFEST IN FORCE, STAMPED BY THE PLANE AND FROZEN.
+       `BIO_Declared_Bias_v0_1.md` §"Bias bundles and adoption": *"The manifest is part of the
+       evidentiary record and travels with publication"*; §"The bias acknowledgement, authored at
+       export": the manifest is *computed and stamped by the plane*, the acknowledgement AUTHORED
+       beside it. So it is computed HERE, at the act that authors the document, for the case's
+       project scope (instance statements plus this project's, DEC-54), and written into the bytes the
+       signature will cover. Nothing recomputes it: `op=casedocument` serves the stored text, and a
+       lens adopted after this act moves op=biasmanifest and never these bytes.
+       READ AS THE PLANE (`admin`, the operator-internal viewer), never as the publisher. The
+       manifest is a fact about the PROJECT'S SCOPE, and the answer for a scope its reader cannot see
+       is `no manifest was in force` — a sentence that, signed into a case, would be false about the
+       project while true about the reader. The publisher is this project's owner and sees it anyway;
+       the stamp does not rest on that. `limit: 1` because the stamp needs the pairs and the hash,
+       which covers the whole set before any bound (op=biasmanifest's own rule). */
+    const lens = this.#biasManifestNow({ scope: "project", scopeId: proj, viewer: "admin", limit: 1 });
+    const manifest = {
+      in_force: lens.in_force === true,
+      scope: "project", scope_id: proj,
+      statements_sha: lens.in_force === true ? (lens.statements_sha ?? null) : null,
+      bundles: (lens.in_force === true && Array.isArray(lens.bundles) ? lens.bundles : [])
+        .map((x) => ({ bundle_id: x.bundle_id, revision: x.revision, scope: x.scope })),
+      lock_violations: Array.isArray(lens.lock_violations) ? lens.lock_violations.length : 0,
+      stated: lens.in_force === true
+        ? `the effective bias set in force for ${proj} at publication, frozen here and never recomputed`
+        : "no manifest was in force",
+    };
     const docText = Store.#caseDocumentText({
       caseId: theCase, edition, project: proj, scope: scp, bias: back, bar,
       roster: members, roles: memberRoles, pins: pinOf,
@@ -8042,6 +8068,8 @@ export class Store extends DurableObject {
       /* D-442 / rule 12 (b): per member its own edition and the frozen pair and
          grounds, read at this act — stated here ONCE instead of in the member. */
       frozen,
+      /* D-84: the lens in force, computed above and stated in the signed bytes. */
+      manifest,
     });
     const docBytes = new TextEncoder().encode(docText);
     const docSha = createSha256().update(docBytes).hex();
@@ -8103,6 +8131,9 @@ export class Store extends DurableObject {
                 other is the collapse REC-44 spent an item undoing one altitude
                 down. */
              bias_acknowledgement: back,
+             /* D-84: THE MANIFEST THE DOCUMENT CARRIES, echoed — the lens (computed) beside the
+                acknowledgement (authored), two things that travel together and are not one. */
+             bias_manifest: manifest,
              completeness: { statement: stmt, subject_position: pos, subject_justification: just,
                              author: who, at: when, excluded: rows.length },
              author: who, at: when, weight: "single",
@@ -8178,8 +8209,17 @@ export class Store extends DurableObject {
                                 Required: a case document authored without it would be the
                                 legacy shape, whose members carried these blocks in their
                                 own bytes, and nothing authors that shape any more. */
-                             frozen }) {
+                             frozen,
+                             /* D-84: `{ in_force, scope, scope_id, statements_sha, bundles[],
+                                lock_violations, stated }`, computed by the caller for `searched`'s
+                                reason (this method is pure and static; the effective set needs the
+                                store). Absent is written as NOT IN FORCE with that sentence — never
+                                as a blank a reader could take for an empty lens. */
+                             manifest = null }) {
     const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
+    const lens = manifest && manifest.in_force === true ? manifest
+      : { in_force: false, scope: "project", scope_id: project, statements_sha: null, bundles: [],
+          lock_violations: 0, stated: "no manifest was in force" };
     const frozenOf = (m) => (frozen && frozen.get(m)) || null;
     const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
     const fm = [
@@ -8190,6 +8230,23 @@ export class Store extends DurableObject {
       `case_project: ${project}`,
       `case_scope: "${Store.#fmSafe(scope)}"`,
       `bias_acknowledgement: "${Store.#fmSafe(bias)}"`,
+      /* D-84 — THE BIAS MANIFEST, BESIDE THE ACKNOWLEDGEMENT AND NOT INSIDE IT (DEC-46: the lens and
+         the account of what it did are two claims). A MAP OF SCALARS plus an ARRAY OF FLAT OBJECTS, the
+         `searched` / `searched_levels` arrangement, because the grammar has no map holding an array.
+         `in_force: false` carries `stated: "no manifest was in force"` and an EMPTY pair list: the two
+         are different facts from a lens with nothing in it, and the document says which. */
+      "bias_manifest:",
+      `  in_force: ${lens.in_force}`,
+      `  scope: ${lens.scope}`,
+      `  scope_id: ${lens.scope_id}`,
+      `  statements_sha: ${lens.statements_sha ?? "null"}`,
+      `  lock_violations: ${lens.lock_violations}`,
+      `  stated: "${Store.#fmSafe(lens.stated)}"`,
+      "bias_manifest_bundles:",
+      ...lens.bundles.flatMap((x) => [
+        `  - bundle_id: ${x.bundle_id}`,
+        `    revision: ${x.revision}`,
+        `    scope: ${x.scope}`]),
       `case_findings: [${roster.join(", ")}]`,
       "case_roles:",
       ...roster.flatMap((m) => [
@@ -8443,6 +8500,26 @@ export class Store extends DurableObject {
           ...z.grounds.map(([axis, g]) => `  - ${axis}, group '${g.ground ?? "(unnamed)"}': `
             + `${g.state === "graded" ? `grade ${g.grade}` : String(g.state).toUpperCase()}`)];
       }),
+      "",
+      /* D-84 — THE MANIFEST IN PROSE, for the reason every section here is: a member reviews and
+         signs THIS. The lens is named by its pairs and its hash, as it stood at this act. */
+      "## Bias Manifest",
+      "",
+      ...(lens.in_force
+        ? [`This case was produced under the bias set in force for ${lens.scope_id} when it was published, `
+           + "computed by the plane and frozen here. A lens adopted afterwards does not change this "
+           + "document: the manifest names the revisions this case was made under, not the ones in force now.",
+           "",
+           ...lens.bundles.map((x) => `- ${x.bundle_id} (${x.scope}) at revision ${x.revision}`),
+           "",
+           `Hash of the effective statement set: ${lens.statements_sha}.`,
+           ...(lens.lock_violations
+             ? ["", `${lens.lock_violations} project override(s) named a LOCKED instance statement and were `
+                   + "refused their effect; the instance statement stands in the set hashed above."]
+             : [])]
+        : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood `
+           + "adopted for this instance or this project. That is stated, not left blank — it is a different "
+           + "fact from a lens with nothing in it."]),
       "",
       "## Bias Acknowledgement",
       "",
@@ -43137,7 +43214,19 @@ export class Store extends DurableObject {
    *  does not exist; the bias bundles themselves go through `#bundleGate`, the
    *  same predicate every read in this file compiles. Nothing publishes how many
    *  rows the gate removed, because that count is the leak (REC-36). */
-  async biasManifest({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
+  async biasManifest(args = {}) {
+    return this.#biasManifestNow(args);
+  }
+
+  /* D-84 — THE SAME ANSWER, SYNCHRONOUSLY, AND THERE IS ONE BODY FOR BOTH. `op=publish` stamps the
+     manifest in force into the case document it authors, and `publishCase()` is synchronous on purpose:
+     REC-126's review copy runs it inside `transactionSync` and rolls it back, and a transaction body
+     cannot await. The only await this method ever held was the hash, and `createSha256` — the digest
+     `op=publish` already takes the case document's own sha with — is the same SHA-256 over the same
+     bytes (measured equal to `crypto.subtle`'s over a non-ASCII input before this landed; the suite
+     asserts the stamped hash equals op=biasmanifest's). A second computation of the effective set for
+     the stamp would be two spellings of the one sentence this method IS. */
+  #biasManifestNow({ scope = "instance", scopeId = "", viewer = null, limit = null, offset = 0 } = {}) {
     const st = String(scope) === "project" ? "project" : "instance";
     const sid = st === "project" ? String(scopeId || "").trim() : "";
     if (st === "project" && (!sid || !this.#viewerSees(sid, viewer)))
@@ -43243,8 +43332,8 @@ export class Store extends DurableObject {
        the ids alone would not move when a statement's text was rewritten under
        the same id, which is the one change a manifest must notice, because it
        is what creates bias debt. */
-    const statementsSha = await Store.#sha256(JSON.stringify(
-      all.map((s) => [s.bundle_id, s.statement_id, s.kind, s.subject, s.text, s.justification, s.locked])));
+    const statementsSha = createSha256().update(Store.#enc.encode(JSON.stringify(
+      all.map((s) => [s.bundle_id, s.statement_id, s.kind, s.subject, s.text, s.justification, s.locked])))).hex();
 
     /* DEC-54 (b): THE RESIDUE TRAVELS WITH THE MANIFEST. It is read from each
        adopted bundle's own `## What This Does Not Enforce` section — the bytes
