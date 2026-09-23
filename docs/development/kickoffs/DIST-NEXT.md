@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0-0.78.0 went live (2026-09-23 ~16:55Z).
+# DIST — resume here. Written 2026-09-23 23:45Z by DIST #5 for DIST #6 (cloud, Bob's second account), at the 75% refresh line.
 
 This file is only STATE, measured 2026-09-23 ~02:15Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
 pointer, the gate, the LESSONS) — read it whole. Re-measure before acting: a deployment is a fact about the ACCOUNT.
@@ -36,6 +36,20 @@ digest census, including `bytes_disagree`, runs on `store=bio` right after that 
 SCHEDULER, BOB), REC-176's snap-key census op, the corrected `livefire.mjs`. **DIST-7 (DIST's row)**: the installer half of
 D-54 (wrangler `limits.subrequests` 10000; `deploy.mjs` reads the limits back) — D-54 is unlanded at writing; look DIST-7
 up in the plan before building it.
+**After the release that first carries D-178** (op=audit's sweep reads the published registry; unlanded at 22:11Z): re-run
+`op=audit` on biosmoke7 with `store=bio` and record the read in a measurement file (`measurements/<id>.md`, dated, with the
+instrument). M-117 predicts NO tally change (0 basis legs there) — compare against the ten-id C-18.9 baseline.
+(CONDUCT #17 for SCHEDULER #17 and BOB #31, 22:11Z.)
+**From CONDUCT #18 (`session_01SGdcPXVjS2wofYoj3tBuKF`, 23:50Z) — still NO release asked:** main is at `a8f6094a` and more
+trains follow (c18-rulings, c17-batch7, c18-batch8). **For the release that carries c17-batch7:** MK-6 is a DISCLOSURE fix
+(a published observation no longer names the member; IC-226) — name it in the landing report; D-256 adds a read op
+`changedfromaudit` (NOT on main at writing): on the deploy that carries it, run it with `store=bio` under the admin token
+and report affected / wrong / right / undetermined (UNDETERMINED until run); FL-11/FL-12 rebuilt the agent-worker bundle,
+so MEMBER BYTES MOVE — the fleet guard and member deploys carry real changes, not a label. **For the release carrying
+D-456:** an unknown `store=` value is refused instead of resolving to the real record — every DIST instrument names
+`bio` or `scratch` (probe*.mjs already do). **DIST-8** (sweep the scratch residue that gone sessions left; CPDF-3's worker
+counted 17 bundles, 11 aiRuns and more) is in the BACKLOG (`node tools/ledger.mjs find DIST-8`), not the cache: build it
+when SCHEDULER caches it, and read `op=purge`'s reach first (it would take other lanes' residue).
 When one comes, the sections below are the state to resume from (0.78.0 live; next RELEASES row and figures in item 1).
 
 ## What is OWED
