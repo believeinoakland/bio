@@ -43,6 +43,26 @@ scope: (1) both ORDER BYs gain `, rowid` (write order on a tie); a sweep of `sto
 accepts-when: in a NEW suite `bio-plane/test/rec-182-created-tie.test.mjs`, through the ops: two manifest rows with an equal `created` come back from `op=export` and the gate in write order on every run; I-20 names the tie rule. NEGATIVE CONTROL (`rec-182-created-tie.control.mjs`): drop `, rowid` from one read, and its arm fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-171's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
 
+### REC-183 · queued — **`op=reinstate` CAN CONFIRM AN EDGE ONTO A RETIRED ITEM: `#edgeTransition` never reads the target's state, so cite, sever, retire, reinstate leaves a CONFIRMED edge on what State Rules §4.1 (D-168) makes uncitable.** Re-read on `91bcea6b`: `store.mjs` `#edgeTransition` (the reinstate/sever door) names no `current_state` and no `RETIRED_NOT_CITABLE`. — owner RECORD.
+order: directly after REC-182: the retired-not-citable fence D-168 built and REC-181 closed at promote, one door further, the record claiming what §4.1 forbids (CLAUDE.md §2); a correction to just-landed work (SCHEDULER #16, 2026-09-23; REC-181's worker via CONDUCT #17)
+milestone: M9
+interface: I3 — `op=reinstate` gains the `RETIRED_NOT_CITABLE` refusal (C-33.39); the integrator classifies the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.1 (a retired item is NOT citable, for every caller; BOB #30), with D-168's `RETIRED_NOT_CITABLE` (C-33.39) as the one refusal.
+depends-on: REC-181 (on `land/conduct/c17-batch2`).
+scope: in `#edgeTransition`, when `to === "confirmed"`, refuse `RETIRED_NOT_CITABLE` for any selected member whose `current_state` is `retired`, before any write.
+accepts-when: in a NEW suite `bio-plane/test/rec-183-reinstate-retired.test.mjs`, through `op=reinstate`: cite, sever, retire, reinstate is refused `RETIRED_NOT_CITABLE` with the edge still severed; a live target reinstates. NEGATIVE CONTROL (`rec-183-reinstate-retired.control.mjs`): drop the check, and the retired arm lands and fails by name.
+added: 2026-09-23 · SCHEDULER #16 (REC-181's worker's finding via CONDUCT #17, verified at the code; `node tools/mintid.mjs REC`).
+
+### D-443 · queued — **SEVEN `IN` LISTS IN `store.mjs` CAN STILL BIND MORE THAN D-36's ~100 VARIABLES, AND workerd REFUSES THE WHOLE READ WHEN ONE DOES.** `#contentEarned` binds up to 201 (`CONTENT_EARNED_MAX`) and feeds up to 200 ids to `#attestationsOver` and `#transcriptionsOver`; `#contentStandings`, `earnedBasisRegistry`'s union (binds twice, fails from ~50), `publishedCaseRegistryFor` and the superseded-by `MAX(last_updated)` read have no cap. Found by D-390's sweep (verdict list in `frontier-chunk.test.mjs`'s head). — owner RECORD.
+order: directly after REC-183: a read that fails outright past ~100 ids refuses loudly rather than claiming what it cannot support, so it sits below the rows where the record claims too much; D-390's own precedent and suite make it one worker's afternoon (SCHEDULER #16, 2026-09-23; D-390's worker via CONDUCT #17)
+milestone: M3
+interface: none (the reads answer as before, now at any size); the integrator classifies.
+design: `docs/development/RETRIEVAL-SUBSTRATE.md` (reads over the record), with D-36's measured ~100-variable limit and D-390's `IN (SELECT value FROM json_each(?))` as the precedent.
+depends-on: D-390 (its binding and its suite are reused; on `land/conduct/c17-batch2`).
+scope: each list above binds ONE value, `IN (SELECT value FROM json_each(?))` with `JSON.stringify(ids)`, keeping each read's row source visible to `derivation-bounds.test.mjs`.
+accepts-when: `bio-plane/test/frontier-chunk.test.mjs` gains an arm per read, each driven through its op past 100 ids and green; `derivation-bounds.test.mjs` green. NEGATIVE CONTROL (`frontier-chunk.control.mjs`, a new arm): restore one spread `IN (?, …)`, and that read's arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (DEBT D-443, minted by D-390's worker on coord `3c0f5092`; placed by door 2, keeping its `D-` id).
+
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
@@ -1147,30 +1167,3 @@ design: `docs/development/VERIFICATION.md` — the test estate's own authority, 
 depends-on: none
 accepts-when: prose in a block comment naming an anchor-bearing shape is NOT read as an anchor; a live anchor in code still is; the reach figures before and after are stated with any … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-66» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-64 · queued — M0-41's CONTROL ARM 3 NO LONGER HAS A SUBJECT:
-order: M0; a control arm proving less than it declares (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot) — an arm that measures something other than what it declares … (whole text: the cut archive)
-interface: none — `bio-plane/test/m041-instrument-census.control.mjs` (a `.control.mjs`, not discovered by the battery)
-design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
-depends-on: none
-accepts-when: the control's run reports every arm AS DECLARED, or arm 3 is RETIRED with the falsifier's measurement at the site; the planted id uses the target's real heading shape; arms 1 … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-64» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-44 · queued — FLIPPED TO `running` AND REVERTED WITHIN THE HOUR, 2026-09-17, by CONDUCT #1, and the reversal is recorded rather than silently undone.
-order: M0; seven truncated claims invisible to the bounds instrument (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot)
-interface: none — a reader's pattern and the rosters derived from it; no plane source moves
-design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
-depends-on: none (M0-38 landed the grading and pinned the blind spot rather than fixing it)
-accepts-when: each of the seven previously-invisible claims appears in a roster the instrument prints, or is named as out of reach with its reason; **every roster the widened pattern feeds** … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-44» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-33 · queued — D-353 RULED at M0-29's integration (CONDUCT #11, mechanism):
-order: M0; a third census shape (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot) — the test estate's own instrument
-interface: none — control drivers and the census only
-design: `docs/development/VERIFICATION.md` §"A THROWING CONTROL DRIVER VALIDATES EVERY ANCHOR BEFORE IT ARMS ANYTHING (D-331, 2026-09-14)" … (whole text: the cut archive)
-depends-on: none (M0-29 landed the sweep and its adjudication table)
-accepts-when: the census reports the sweep's tally section (0 open candidates on the estate as landed, the three retired instances listed as adjudicated); one unadjudicated candidate … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-33» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
