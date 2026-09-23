@@ -46,6 +46,7 @@
  * inherits these arms without touching them, and nothing here has to be
  * unwritten first. A suite that hard-coded a step name would have made CAP-10's
  * landing harder, which this item was told not to do. */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
@@ -54,14 +55,14 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-r88", MEMBER_TOKEN: "mem-r88", PROBE_TOKEN: "prb-r88",
               AI_TOKEN: "ai-r88", VERSION: "test" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

@@ -90,6 +90,7 @@
  *   7. OVER-STRICTNESS: the two pre-existing panels' walks are unchanged, and a
  *      composer opened WITHOUT a passage renders byte-identically.
  */
+import { withSurfacingRun } from "../../bio-plane/test/surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
    this one. The import is for its SIDE EFFECT and is idempotent. */
@@ -128,7 +129,7 @@ catch (e) {
   process.exit(1);
 }
 const IDX = new URL("../../bio-plane/src/index.mjs", import.meta.url);
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX.pathname,
   script: fs.readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -142,7 +143,7 @@ const mf = new Miniflare({
                    plane stamps it into every creation whatever a caller says; so the store records one here, the way every
                    installed store does, and the seeds name none. The slug is deliberately no real group's. */
                 INSTANCE_NAME: "fixture-group" },
-});
+}));
 
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;

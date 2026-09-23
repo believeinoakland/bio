@@ -20,19 +20,20 @@
  * Run after `npm ci` in bio-plane/:   node tools/fw21-onpoint-probe.mjs ; echo $?
  * Exit 0 = measured (verdict printed), 2 = the ground did not hold. It is a MEASUREMENT, not a gate: it
  * is in no battery, and it reports the defect rather than failing on it. */
+import { withSurfacingRun } from "../bio-plane/test/surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL("../bio-plane", import.meta.url));
 const { Miniflare } = await import(`${ROOT}/node_modules/miniflare/dist/src/index.js`);
 const IDX = `${ROOT}/src/index.mjs`;
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-p", MEMBER_TOKEN: "mem-p", PROBE_TOKEN: "prb-p", AI_TOKEN: "ai-p", VERSION: "test" },
-});
+}));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const post = async (op, body) => rP(await (await mf.dispatchFetch(`http://x/api/?op=${op}&token=mem-p`,

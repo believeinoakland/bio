@@ -157,8 +157,8 @@ const refused = (tag, before, after, shape) =>
     [shape.test(String(after)), after !== before, suffixOf(after) !== FORCE], [true, true, true]);
 
 let snapSeq = 0;
-const promote = async (D, id, text, objectType, state) => {
-  const r = await D.POST(`op=promote&token=${ADM}`, {
+const promote = async (D, id, text, objectType, state, tok = ADM) => {
+  const r = await D.POST(`op=promote&token=${tok}`, {
     bundleId: id, base: null,
     snapKey: `20260921T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: objectType, group: "believe-in-oakland", title: `t ${id}`,
@@ -210,7 +210,13 @@ const INFO = "INFO-2026-4325-memo", LEAD = "INQ-2026-4326-question";
 /* A finding a case can be published on: the document, the question resting on it, concluded by the member. */
 const concludedFinding = async (D, token) => {
   await promote(D, INFO, infoMd(INFO), "information", "collected");
-  await promote(D, LEAD, withAdoptableReading(inquiryMd(LEAD, "Was the transfer authorised?", INFO)), "inquiry", "open");
+  /* CORRECTED 2026-09-23 by REC-171 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30): the question
+     was created by the ADMIN deploy token outside any run, which the plane now refuses SURFACE_NO_RUN — an `agent`
+     question with no run is the record claiming a machine surfaced it under conditions it never recorded. It is the
+     concluding MEMBER's question now, created through her session: a run's fixture project here would draw a PROJ id
+     from the very sequence this suite forces, so the run-bearing route would move the subject. */
+  await promote(D, LEAD, withAdoptableReading(inquiryMd(LEAD, "Was the transfer authorised?", INFO)), "inquiry", "open",
+                token);
   const c = await D.GET(`op=conclude&token=${token}&target=${encodeURIComponent(LEAD)}`
     + `&conclusion=${encodeURIComponent(`The answer to ${LEAD} is on the memo.`)}`
     + `&falsifier=${encodeURIComponent(`An adopted resolution would overturn ${LEAD}.`)}` + adoptedVersionParam());

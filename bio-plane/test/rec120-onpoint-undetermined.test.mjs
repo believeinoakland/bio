@@ -19,6 +19,7 @@
  * WHAT IS DELIBERATELY NOT HERE: act (3), the member CHOOSING the on-point pair. It changes I5 and
  * I3 again, is RECORD + UI, and is its own row.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";               /* D-186 */
 import { Miniflare } from "miniflare";
@@ -30,14 +31,14 @@ import * as CHECKS from "../checks/bio-checks.mjs";
 const { checkConnectionMentionUnchosen, CONNECTION_PAIR_CHECKS } = CHECKS;
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-r120", MEMBER_TOKEN: "mem-r120", PROBE_TOKEN: "prb-r120",
               AI_TOKEN: "ai-r120", VERSION: "test" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

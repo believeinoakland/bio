@@ -52,6 +52,7 @@
  * grammar are REC-84's; the three unlanded `covers` arms are REC-85's. This
  * suite asserts the GRADE and the pair, which is FW-17's half.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -67,14 +68,14 @@ import { contentIdFor, checkConnectionPairCovers,
          CONNECTION_PAIR_CHECKS } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-f17", MEMBER_TOKEN: "mem-f17", PROBE_TOKEN: "prb-f17",
               AI_TOKEN: "ai-f17", VERSION: "test" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

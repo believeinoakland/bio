@@ -46,6 +46,7 @@
  *                   C-32.13.
  *   (the rest: see the TRACE TABLE block, which prints each measured outcome)
  * ========================================================================= */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -71,7 +72,7 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 const SRC_DIR = process.env.REC123_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
 const IDX_SRC = readFileSync(IDX, "utf8");
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: IDX_SRC,
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -82,7 +83,7 @@ const mf = new Miniflare({
      answers 503 here, so the act RECORDS ITS ATTEMPTS and answers NO_ATTESTATION
      — which is the handler running to its end for machine and member alike. */
   outboundService() { return new Response("tsa unavailable in the harness", { status: 503 }); },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

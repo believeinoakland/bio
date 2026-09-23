@@ -108,6 +108,7 @@
  *       is the point of keeping the pin alive through the change: an exemption
  *       would have let the next such op join a list, and a pin makes it fail.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -596,7 +597,7 @@ t("REACH IS A DELTA (dispatch): breaking the dispatch arrow shape shrinks the op
  * bound BITING and once with it NOT. The pair is the assertion.
  * ========================================================================== */
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -605,7 +606,7 @@ const mf = new Miniflare({
      raced by the alarm — task-fence.test.mjs's precedent. */
   bindings: { ADMIN_TOKEN: "adm-r57", MEMBER_TOKEN: "mem-r57", PROBE_TOKEN: "prb-r57",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
