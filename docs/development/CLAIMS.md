@@ -19982,3 +19982,9 @@ why: the image arm's {part} mints on any non-container capture (D-440, QUEUE.md 
 paths: bio-plane/src/store.mjs (`promote`: the inline `bytes` computed after REC-175's `is-promote-digest` region, nothing inside it; the OVERSIZE_INLINE measure; one static `#inlineBytesOf`, read by `digestCensus`), bio-plane/src/index.mjs (the monitor tick's files[] bytes only), bio-plane/src/setup.mjs, civicos-ui/app.html (a `utf8Len` helper and the promote writers' bytes), bio-plane/src/livefire.mjs (its two promote files' bytes only — REC-176 edits its snap key), tools/fw21-onpoint-probe.mjs, bio-plane/test/rec178-bytes.test.mjs and .control.mjs (new), bio-plane/dist/ (rebuilt), docs/development/interface-changes/ (one new IC), docs/architecture/construct-status.json and BIO_State_Rules_Consistency_v1_5.md front matter.
 why: op=promote stored `bytes` as sent (UTF-16 units) and judged OVERSIZE_INLINE on text.length (REC-178, QUEUE.md on coord; State Rules §8).
 released: 2026-09-23 — pushed land/worker/REC-178 @ 6c51ae38 (verified by ls-remote); IC-196 proposed; paths stay reserved until CONDUCT integrates the branch.
+
+### D-423 · RECORD worker of CONDUCT #16 (cloud session WORKER D-423 (CONDUCT #16), branch land/worker/D-423) · 2026-09-23
+paths: bio-plane/src/schema.mjs (comments only: the grade_axis comments on inquiry_basis and inquiry_basis_version_legs, the inquiry_basis prose block, the published_bundles strength prose), bio-plane/test/hygiene.test.mjs (one arm beside REC-68's grade_source arm, and its NEGATIVE CONTROL line), bio-plane/dist/ (rebuilt, comment-only so byte-identical)
+why: schema.mjs documents grade_axis as two-valued while GRADE_AXES carries testimony since MK-2 / IC-142 (D-423, QUEUE.md on coord; MEMBER-KNOWLEDGE-DESIGN.md §3).
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
