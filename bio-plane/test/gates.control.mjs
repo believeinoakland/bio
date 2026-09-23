@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 15 arms plus a baseline (G14, G15 added by M0-107) — over `tools/gates.mjs` and
+/* D-293/M0-98's NEGATIVE CONTROL DRIVER — 17 arms plus a baseline (G14, G15 added by M0-107; G16, G17 by M0-116) — over `tools/gates.mjs` and
  * `tools/pushguard.mjs`, each driven through `bio-plane/test/gates.test.mjs`.
  *
  *   node bio-plane/test/gates.control.mjs          (from the repo root; one arm: add its id, e.g. G1)
@@ -59,6 +59,12 @@
  *   G15 ANY exit 124 taken as an expired budget    -> "a battery exiting 124 WITHOUT a verdict file
  *       (M0-107)                                      … is RED" FAILS. MUST NOT: a NOT MEASURED tree
  *                                                     still pushes; a RED still refuses.
+ *   G16 a unit's OWN files read WITH their       -> "a suite whose OWN COMMENT is its only mention of
+ *       comments again (M0-116, BOB #27's control:  the file is NOT selected" FAILS. MUST NOT: the
+ *       break the fix, the count returns)             string-path reader is still selected.
+ *   G17 STRINGS blanked with the comments — the    -> "a suite that READS the file through a STRING
+ *       liar: selecting nothing reads as "fewer       path is selected" FAILS. MUST NOT: the
+ *       units" (M0-116)                               comment-only suite is still NOT selected.
  *
  * Every arm asserts its DOWNSTREAM failure, never merely its patch count: `hits === 1` proves a
  * patch applied, and only the named assertion proves it had an effect (M-60 Q9).
@@ -175,8 +181,10 @@ const ARMS = [
 
   { id: "G4", title: "selection by IMPORT ALONE — the liar the row names",
     patches: [{ file: GATES,
-      from: "  const s = own ? textOf(abs) : codeOf(abs);\n  if (!s) return null;\n  const pr = probesFor(p);",
-      to: "  const s = own ? textOf(abs) : codeOf(abs);\n  if (!s || true) return null;\n  const pr = probesFor(p);" }],
+      /* ANCHOR MOVED 2026-09-22 by M0-116 (the line it quotes now reads a unit's own files as code too); the arm is
+         unchanged: every MENTION returns nothing, so only an import edge can select. */
+      from: "\n  if (!s) return null;\n  const pr = probesFor(p);",
+      to: "\n  if (!s || true) return null;\n  const pr = probesFor(p);" }],
     mustBreak: "SELECTION IS BY MENTION",
     alsoBreak: ["...and the suite that WALKS tools/"],
     mustNotBreak: ["...and selects its IMPORTER", "a tree that CHANGES while the gate runs is NOT recorded"] },
@@ -262,6 +270,20 @@ const ARMS = [
       to: "  const timedOut = r.status === 124;" }],
     mustBreak: "a battery exiting 124 WITHOUT a verdict file naming a timeout is RED",
     mustNotBreak: ["a NOT MEASURED tree is NOT refused by the push guard", "a RED gate then a push of that tree is REFUSED"] },
+
+  { id: "G16", title: "a unit's OWN files read WITH their comments again — break M0-116's fix, the count returns",
+    patches: [{ file: GATES,
+      from: "  const s = codeOf(abs);          /* M0-116: a unit's own files too — see the lexer's block above */",
+      to: "  const s = own ? textOf(abs) : codeOf(abs);" }],
+    mustBreak: "a suite whose OWN COMMENT is its only mention of the file is NOT selected",
+    mustNotBreak: ["a suite that READS the file through a STRING path is selected", "a tools-only diff reads TARGETED"] },
+
+  { id: "G17", title: "STRINGS blanked with the comments — the liar: selecting nothing reads as fewer units",
+    patches: [{ file: GATES,
+      from: "try { c = s === null ? null : stripComments(s); } catch { /* read whole */ }",
+      to: "try { c = s === null ? null : stripComments(s).replace(/\"[^\"\\n]*\"/g, \"\\\"\\\"\"); } catch { /* read whole */ }" }],
+    mustBreak: "a suite that READS the file through a STRING path is selected",
+    mustNotBreak: ["a suite whose OWN COMMENT is its only mention of the file is NOT selected"] },
 ];
 
 /* ---------------------------------------------------------------- D-331: every anchor, before anything arms */

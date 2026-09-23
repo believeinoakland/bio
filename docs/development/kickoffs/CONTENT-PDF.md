@@ -168,7 +168,7 @@ registration with ARCH (ARCH answers for the dormant consumer, in writing).
 namespace — never the real record — and sweep after. A deploy verified is not a
 build serving: confirm which build answered before believing a probe (D-108).
 
-**(6) Close out.** Land tested code green on `main`; hand any plane release to
+**(6) Close out.** Land green via `land/<lane>/<topic>`; hand any plane release to
 DIST (do not bump a version, sign, tag, or run `deploy.mjs`). Append to `DEBT.md`
 (next free D-number at the moment you write; per-area IDs like `D-PDF-1` are not
 adopted until three areas are live) and `MEASUREMENTS.md`, prepend a state-doc
@@ -198,8 +198,8 @@ the trigger to promote op-contract ownership out of CAPTURE (the I3 move
 - **Measure, do not assume**; numbers live in `MEASUREMENTS.md` with date and
   instrument, and a vendor's figure is labelled as theirs.
 - **Run the negative control; correct superseded tests, never exempt them.**
-- **Fetch and rebase before pushing; never force-push `main`.** A rejected push
-  means another area landed work: reset onto the remote, re-apply, confirm theirs
+- **Push `land/<lane>/<topic>`, never `main` (the train lands it, M0-111).** A
+  returned branch means another area landed: rebase, re-apply, confirm theirs
   survived.
 - **If you ever touch `schema.mjs`** (you should not need to in phase 1): new
   tables go BEFORE the `host_governor` block, and no backticks inside the schema

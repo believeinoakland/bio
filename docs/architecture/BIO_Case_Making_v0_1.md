@@ -1,6 +1,6 @@
 # Case-making: the design pass
 
-**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). **One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about what was decided, and it was load-bearing in an argument.** §CONTRADICTION's IDENTIFY is designed at level 2 (BOB #16, 2026-09-19, `CONTRADICTION-IDENTIFY-DESIGN.md`). **§2 GAINED TWO RULINGS OF BOB'S ON 2026-09-22 (D-148, D-149), folded by BOB #26: a fee quote is EVIDENCE, and a records request names EVERY law that governs the agency asked, by citation; neither is built.** as of 2026-09-22.
+**Status** · The record of the case-making design pass: the frame in Bob's words, the observations, the collapse of focus/finding/case into one recursive INQUIRY, naming and division, what a CLAIM is, the action plan, and the R1–R4 resolutions the adversarial pass forced. "Opened 2026-08-01 (session BOB) as the D-127 design pass Bob directed … Nothing here is settled unless it says so." Its 2026-08-10 status correction rules the file non-authoritative: the collapse HAS SHIPPED, and "what is authoritative is no longer this file. It is the plane, and the rulings the pass produced — DEC-15 through DEC-32 and the R1–R4 resolutions." Superseded as design authority (by the plane, `docs/development/DECISIONS.md`, and DEC-72 for the case section); complete as the reasoning record. Read it for WHY; several body sentences are now false as written (below). **One of them was CORRECTED IN PLACE 2026-09-17 (REC-117) rather than left to the list — *the falsifier is REQUIRED* in §What a CLAIM is, which Bob overruled the same day; a non-authoritative reasoning record may carry stale sentences, but a sentence that states the OPPOSITE of a live ruling misleads a reader about what was decided, and it was load-bearing in an argument.** §CONTRADICTION's IDENTIFY is designed at level 2 (BOB #16, 2026-09-19, `CONTRADICTION-IDENTIFY-DESIGN.md`). **§2 GAINED TWO RULINGS OF BOB'S ON 2026-09-22 (D-148, D-149), folded by BOB #26: a fee quote is EVIDENCE, and a records request names EVERY law that governs the agency asked, by citation; neither is built.** as of 2026-09-23.
 
 **Place in the system** · The reasoning behind construct 8 of `BIO_System_Design.md` §3 (intent and inquiry) **[audited 2026-09-17: the quotation below is Bob's framing of 2026-08-01 and the design has since LANDED — this document is it, and construct 8 reads built]**: "CASE-MAKING is undesigned, and it is what the whole system is for" (D-127). Its rulings feed M9 and M10; `BIO_Interaction_Constructs_v0_1.md` takes FINDING as case-making's substrate from it; the thread itself is paused behind DEC-33 until Bob reopens it.
 
@@ -9,7 +9,7 @@
 - §Naming: three names for three phases, and the type name question — DEC-72 rules a case is a PRODUCTION of a project, not a phase; the open → concluded → published states are superseded.
 - §Division: one inquiry becomes two or more — items 3 and 5 were written for case-as-phase; re-read under DEC-72.
 - §What a CLAIM is, and why it is a field rather than an object — "`inquiry_basis` does not exist in the schema" is false; "Awaiting Bob" and "DEC-32 remains open" are stale (decided 2026-08-04); the contradiction question is open. **The threshold argument's SECOND LEG was CORRECTED 2026-09-17 (REC-117) and the section is current on it:** *the falsifier is REQUIRED* was overruled by Bob — `NO_FALSIFIER` is a condition a member may override, stated and attributed, including in the published record — so the leg is REPLACED by *the falsifier is ACCOUNTED FOR* rather than struck, because it was one of three carrying the argument and striking it would have left an argument that no longer closes with nothing saying so. Shipped in the plane (`op=conclude` `no_falsifier=1`, `falsifier_override_by`/`_at`, C-2.8's three outcomes, `op=publishedcase`'s `authored.falsifier_override`).
-- §THE ACTION PLAN — "not yet in the review document"; S11's backward question (D-165) deferred, trigger: S11 exists and members are answering the backward question by hand (Bob, 2026-08-03; `MILESTONES.md` M10 watches it); DEC-25 deferred with its provisional; "Ten surfaces are specified today" is dated.
+- §THE ACTION PLAN — "not yet in the review document"; S11's backward question (D-165) deferred, trigger: S11 exists and members are answering the backward question by hand (Bob, 2026-08-03; `MILESTONES.md` M10 watches it); DEC-25 deferred with its provisional; "Ten surfaces are specified today" is dated. Item 8 RULES an action is never a basis leg (D-181, BOB #29, 2026-09-23); an observed absence of a reply as a leg is deferred, trigger: a real non-response case needs the absence graded.
 - §CONTRADICTION — Q14 ANSWERED 2026-09-17 in doctrine and in two of its three cases; the IRRECONCILABLE PAIR is NOT designed and needs the claim object, which is Bob's. IDENTIFY / PRESENT / RESOLVE are specified as separable mechanisms and NONE is built; the acceptance test for IDENTIFY is its over-strictness arm. IDENTIFY's inputs are DESIGNED at level 2 (`CONTRADICTION-IDENTIFY-DESIGN.md`, 2026-09-19); PRESENT and RESOLVE are not, and follow its first measurement.
 - §R1 — the residual laundering hazard is D-159: deferred, trigger: M10 has run with a real group — then read `op=versionstrength`'s `ungraded[]` ratio and each leg's reason (`MILESTONES.md` M10 watches it).
 - §Open questions this pass must answer — the heading is duplicated in one line; of eight questions only Q7 is marked answered though Q1, Q2 and Q4 were answered in the body; never reconciled.
@@ -57,6 +57,7 @@
   - [6a · PLANNING FROM WHAT IS NOT YET ESTABLISHED — agreed, and it is not a concession](#6a-planning-from-what-is-not-yet-established-agreed-and-it-is-not-a-concession)
   - [6b · THE TWO HARD PARTS, SCOPED DOWN — 2026-08-03](#6b-the-two-hard-parts-scoped-down-2026-08-03)
   - [7 · ONE QUESTION THIS MAP DOES NOT ANSWER, and it is Bob's](#7-one-question-this-map-does-not-answer-and-it-is-bobs)
+  - [8 · AN ACTION IS NEVER A LEG OF A QUESTION'S BASIS — RULED 2026-09-23 by BOB #29 (D-181)](#8-an-action-is-never-a-leg-of-a-questions-basis-ruled-2026-09-23-by-bob-29-d-181)
 - [Resolutions forced by the adversarial pass, 2026-08-01](#resolutions-forced-by-the-adversarial-pass-2026-08-01)
   - [R1 · An UNDETERMINED leg leaves the chain UNRATED. It does not floor it and is never ignored.](#r1-an-undetermined-leg-leaves-the-chain-unrated-it-does-not-floor-it-and-is-never-ignored)
   - [R2 · Capture grade and connection grade are TWO scales and must never be composed into one number](#r2-capture-grade-and-connection-grade-are-two-scales-and-must-never-be-composed-into-one-number)
@@ -1066,6 +1067,27 @@ action's OUTCOME can become evidence (DEC-14 governs impact claims), and the gro
 position on contacting the subject is published by DEC-13. Neither requires publishing the
 deliberation. **Recommendation: keep it that way, explicitly, and make the two-bucket fence's
 default cover plans by construction rather than by a permission check.** Raised as DEC-25.
+
+### 8 · AN ACTION IS NEVER A LEG OF A QUESTION'S BASIS — RULED 2026-09-23 by BOB #29 (D-181)
+
+C-2.8 refuses an `action` as a basis leg (`bio-checks.mjs` `checkInquiryBasis`: *a leg rests on
+information or on another inquiry, nothing else*), and the overdue→finding loop carries the action
+as a `references[]` edge instead. **That is right, and it is a ruling, not a deferral.** DEC-14's
+own determination already drew the line at the write path: *promoting an outcome to an impact claim
+requires a basis leg pointing at evidence that is not our own action.* A leg is what GRADES a
+claim; an action is our own act, so a claim graded by it rests partly on something we produced —
+the costs-nothing outcome (`CLAUDE.md` §5) turned on ourselves, which is what DEC-14 forbids.
+
+What a non-response finding needs is not the action as evidence but the action as its SUBJECT.
+*"We asked on this date and nothing came back by that date"* is an OUTCOME in DEC-14's vocabulary —
+a dated fact sayable at full strength with no causal claim — and the act it is about travels as the
+edge that names it (`references[]`; a reply travels as `responds_to`, REC-24). BUILD-ORDER's
+*"an inquiry whose basis includes this action and its clock"* (archived research, O3) is superseded
+by this paragraph. **The one question left, and it is a different construct:** whether an
+observed ABSENCE of a reply — the look for a response and its `LOOKED_ABSENT`, with the authority
+that looked (`STORE-AS-CACHE.md` §ABSENCE AS DATA; D-129) — may be a basis leg. Trigger: a real
+group's non-response case needs that absence GRADED rather than stated; it is then designed as an
+observation-as-leg, never as an action-as-leg.
 
 ## Resolutions forced by the adversarial pass, 2026-08-01
 
