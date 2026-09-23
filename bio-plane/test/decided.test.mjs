@@ -110,8 +110,8 @@ const over = (text, opts) => scan([FIX], () => text, opts);
    silent pass. The live, moving state is `decided.mjs`'s own business (it reads through the layer); the index over it
    is not judged by the battery. */
 /* CORRECTED 2026-09-23 (M0-136): the FULL id, never the 8-hex abbreviation it was — git resolves an abbreviation against
-   the whole object store, so a fetch bringing in a second object with that prefix would make it ambiguous and this suite
-   read nothing at the pin: a verdict moving with what was fetched. */
+   the object store, so a fetch bringing in a second commit or tree with that prefix would make it ambiguous and this
+   suite read nothing at the pin: a verdict moving with what was fetched (unlikely at today's ~45,000 objects, never 0). */
 const STATE_PIN = "de40aa56f5d397666228502132d56756f51ff6b9";
 const pinCache = new Map();
 const atPin = (rel) => {

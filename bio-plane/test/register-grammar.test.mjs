@@ -6,9 +6,9 @@
    `FETCH_HEAD`, `ls-remote` or fetch. HOW CHECKED: this file and the modules it imports (`./stdio.mjs`,
    `../scripts/control-register.mjs`, `../scripts/provenance.mjs`) grepped for `spawnSync`/`execFileSync`/`git` and those
    ref tokens, and the suite run with a logging `git` first on PATH: 5 calls, those. CORRECTED the same day: the id was
-   the ABBREVIATED `0ca7640`, which git resolves against the whole object store — a fetch that brings in a second object
-   with that prefix makes it ambiguous and this suite throw, a verdict moving with what was fetched. It is now the full
-   id. No clock is read. */
+   the ABBREVIATED `0ca7640`, which git resolves against the object store — a fetch that brings in a second commit with
+   that prefix makes it ambiguous and this suite throw, a verdict moving with what was fetched (unlikely at today's
+   ~45,000 objects, never impossible). It is now the full id. No clock is read. */
 /* NEGATIVE CONTROL: (1) make `countTransitions` in scripts/control-register.mjs
  * return 0 always -> A1 and A3 FAIL with the corpus PRINTED, A2 stays GREEN
  * because an enumerated declaration never depended on arrows. (2) make
