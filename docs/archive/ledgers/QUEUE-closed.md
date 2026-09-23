@@ -3088,3 +3088,23 @@ depends-on: none — REC-166 (the project arm) and CASE-5b (the case's stamps) a
 scope: rule 12: `op=publish` promotes no member; every block the promotion wrote is stated ONCE in the case document (completeness, exclusions, per member its role, pinned sha, edition and the frozen pair and grounds, and the receipt); the case-document signature covers them; every check and reader of a moved block follows it, each named from the code; members published before keep their blocks (rule 1).
 accepts-when: project B's prepare over a finding project A's ratified case pins leaves its `bundle_sha` unmoved and flags nothing on A's case, B's ratification then succeeds, and a second case of the SAME project over the finding does the same; the case document carries every moved block. NEGATIVE CONTROL: restore the member promotion, and the unmoved-sha arm fails by name.
 added: 2026-09-22 · SCHEDULER #14 (BOB #28's inbox entry, item 1, drained this commit; D-442's DEBT row, minted by CONDUCT #14; keeps its `D-` id).
+
+### M0-121 · done — **DONE 2026-09-23: LANDED through the train at `41c7e0c3` (`int/c15-batch1`); verified by content by SCHEDULER #14: the state-path predicate lives in `tools/statepaths.mjs`, imported by `coord.mjs` and the suites, with its suite and control; M-110 records the unit count. It closes M0-116's accepts-when.**
+order: directly after M0-119, which it follows (CONDUCT #14: *"after M0-119"*), M0-116's residue, which CUTS GATE TIME on every measurement landing (SCHEDULER #14, 2026-09-23; M0-116's finding)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects nothing, and an import that walks nothing selects nothing; with `ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1.
+depends-on: M0-119.
+scope: move `MOVED_FILES`, `MOVED_DIRS`, `NEXT_RE` and `isMovedPath` (all I/O-free) out of `tools/coord.mjs` into a module that walks nothing, re-exported by `coord.mjs` and imported by `op-claims.mjs` (measured as an experiment by CONDUCT #14: 60 → 24 readers, 85 → 55 units).
+accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it and not the 85, both figures in the landing, closing M0-116's accepts-when. NEGATIVE CONTROL: import the predicate from `coord.mjs` again, and the unit-count arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (M0-116's residue via CONDUCT #14; `node tools/mintid.mjs M0`).
+
+### M0-122 · done — **DONE 2026-09-23: LANDED through the train at `41c7e0c3` (`land/bob/m0-122-train-retry`, BOB-built); verified by content by SCHEDULER #14: `tools/train.mjs` retries a non-fast-forward.**
+order: FIRST of the backlog: every landing now goes through the train, so both halves CUT GATE TIME on every landing (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-111's finding)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §2 (one lane lands on `main`, in batches), with `docs/development/VERIFICATION.md` (admitted for M0 by name; D-293's record keyed by tree, M0-98's `--since`).
+depends-on: none — M0-111 is on `main`.
+scope: on a rejected push, merge `origin/main`, re-gate with `gates.mjs --since <the GREEN tip>`, re-record and push, bounded; and a `land/*` tip whose tree carries a GREEN record lands without a second gate of that tree.
+accepts-when: a train whose push is rejected once lands on the retry with one `--since` gate, not a FULL one; a recorded-GREEN branch lands with no battery run of its own tree. NEGATIVE CONTROL: drop the retry, and the moved-main arm fails by name.
+added: 2026-09-23 · SCHEDULER #14 (M0-111's finding via CONDUCT #14; `node tools/mintid.mjs M0`).

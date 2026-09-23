@@ -23,26 +23,6 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### M0-126 · queued — **EVERY CLONE AND EVERY LANE RE-RUNS SUITES ANOTHER HAS ALREADY PASSED ON IDENTICAL INPUTS: THERE IS NO SHARED, PER-SUITE RESULT RECORD.** A GREEN record is keyed by a whole tree and lives in one clone (D-293); Bob's asks, 2026-09-23: *"track which suites passed so they don't run again, or those that failed so only those run"*, results shared rather than re-run. CONDUCT #14's design, adopted by BOB #29. — owner M0.
-order: FIRST of the backlog (BOB #29): every landing and every lane's gate pays for it, so it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); UNBLOCKED 2026-09-23 when `land/bob/gate-rerun-failed` reached `main` (SCHEDULER #14, 2026-09-23; BOB #29's item)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3 (the design text lands there on `land/bob/gh-once-per-batch`), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — `land/bob/gate-rerun-failed`, which touches the same files, is on `main` (`95c40ed9`, verified by ancestry by SCHEDULER #14, 2026-09-23).
-scope: a record keyed (unit, hash of its inputs: source, sibling control, transitive imports, files read, as `gates.mjs` derives per unit; a plane or fleet unit always includes the FULL runtime set), value PASS with run id and tree, on an append-only branch, one file per key; `gates.mjs` skips a unit whose key holds a PASS and prints REUSED. SAFETY, all three: a suite reading an undeclared input (clock, network, env, live coord) is NEVER-CACHED; a check FAILS when a unit reads a file its key does not cover; a FULL run at every release cut, controls kept.
-accepts-when: a second clone runs 0 suites over a tree whose units a first clone passed, and one input change re-runs exactly the units whose key moved. NEGATIVE CONTROL: drop one input from a unit's hash, and the coverage check fails by name.
-added: 2026-09-23 · SCHEDULER #14 (BOB #29's designed item; `node tools/mintid.mjs M0`).
-
-### M0-127 · queued — **A GITHUB GATE READ RED WITH EVERY SUITE GREEN, AND ITS ANNOTATION SAID `FAILED=none`.** On tree `6ef503c4` (282/282 green) two miniflare sandboxes leaked in the runner's TMPDIR (D-186's residue check), and the verdict line named no failure; a red run emails Bob as an ALARM (`TREE-SHARING.md` §3), so a red must say what is red. CONDUCT #14's finding, runner-only. — owner M0.
-order: directly after UI-80, near the head: a red that names nothing is a false-looking alarm on every runner push, and it CUTS GATE TIME to know what failed (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §3 (a red GitHub run is an alarm that reaches Bob), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none — M0-114's workflow is on `main`.
-scope: (1) the verdict line and the run's annotation name every non-suite failure (a residue check, a leak, a timeout) by what failed; (2) the leaking suite is found by the runner's residue listing and made to clean up, or its leak is stated where D-186's check reads it.
-accepts-when: a run whose only failure is a leaked sandbox reads RED naming the residue and the suite that left it, never `FAILED=none`. NEGATIVE CONTROL: plant one sandbox directory in TMPDIR, and the verdict names it by path.
-added: 2026-09-23 · SCHEDULER #14 (CONDUCT #14's runner finding; `node tools/mintid.mjs M0`).
-
 ### D-116 · queued — **NOTHING READS BACK WHAT BUILD THE PLANE'S DURABLE OBJECT, OR ANY FLEET MEMBER, ACTUALLY SERVES.** The installer verifies the … (whole text: the cut archive)
 order: after D-254, above features: a group can run a stale DO or member with nothing reporting it — CLAUDE.md §2's class, in the distribution path (SCHEDULER #2, 2026-09-19; NARROWED by FLEET #3 and verified at the code by SCHEDULER #4, 2026-09-21: `vf4-live-scratch.mjs` stores the isolate's value as `plane_durable_object`)
 milestone: M7
@@ -1203,3 +1183,38 @@ design: `docs/development/VERIFICATION.md` §"A THROWING CONTROL DRIVER VALIDATE
 depends-on: none (M0-29 landed the sweep and its adjudication table)
 accepts-when: the census reports the sweep's tally section (0 open candidates on the estate as landed, the three retired instances listed as adjudicated); one unadjudicated candidate … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-33» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### SK-5 · blocked — RE-STATED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
+order: blocked: no plane op publishes the surface registry (SCHEDULER, first order audit, 2026-09-18)
+milestone: M9
+interface: I3 — **it needs the plane to PUBLISH the surface registry, which nothing does today; that is the** … (whole text: the cut archive)
+design: `docs/development/ASSISTANT-PILOT.md` §1 (the five-layer training pack — the **Recipes** row is this … (whole text: the cut archive)
+depends-on: a published surface registry (unbuilt). **NOT schedulable until that exists** — recorded so the … (whole text: the cut archive)
+accepts-when: (on unblocking) a recipe whose step names a surface or an op that does not exist **FAILS THE BUILD**; the pack's `absent_because` body is replaced by the layer rather than edited around.
+cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «SK-5» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### UI-60 · blocked — RESTORED AT THE FIRST ORDER AUDIT (SCHEDULER, 2026-09-18):
+order: blocked: waits on Bob's re-prioritisation of UI (SCHEDULER, first order audit, 2026-09-18)
+milestone: M8
+interface: none
+depends-on: Bob's re-prioritisation of UI (DEC-33's deferral and the 2026-09-15 content direction stand)
+accepts-when: the decomposition exists as rows and this pointer is marked superseded naming them.
+cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «UI-60». A worker READS IT before building.
+
+### REC-15 · blocked
+order: blocked: DEC-33's deferral stands (the live publishing route is a human's own session); BOB #14's item 11 also places it after items 2, 5 and 6 (SCHEDULER, first order audit, 2026-09-18)
+milestone: M10
+behind-interface: I3
+depends-on: REC-14
+accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
+added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
+
+### UI-17 · blocked
+order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
+milestone: M10
+behind-interface: I3
+depends-on: REC-15, UI-11
+accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance … (whole text: the cut archive)
+added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.

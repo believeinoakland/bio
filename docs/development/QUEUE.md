@@ -46,16 +46,6 @@ scope: step 1 becomes: a GREEN FULL record for the tree being released, or `gate
 accepts-when: a release from a tree with a GREEN FULL record runs no battery and names the record it relied on; one from an unrecorded tree runs the battery as today.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1, drained this commit; `node tools/mintid.mjs M0`).
 
-### M0-122 · running — **FLIPPED 2026-09-23 by CONDUCT #14 on BOB #29's order (Bob's direct instruction, 03:15Z): BUILT BY A BOB WORKER on `land/bob/m0-122-train-retry`, NOT a CONDUCT slot; CONDUCT lands it by train when it arrives. Falsify rather than believe: if no `land/bob/m0-122-train-retry` exists on origin, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH.** **Prior state, kept as the record: queued** — **THE TRAIN HAS NO RETRY ON A NON-FAST-FORWARD, AND RE-GATES A `land/*` BRANCH'S TREE THAT ALREADY CARRIES ITS OWN GREEN RECORD.** `tools/train.mjs` fails when `main` moves under its gate (the first train lost to BOB #29's docs commit, 2026-09-23; CONDUCT #14 retried by hand, `c5c83dc4`), and gates the union even when the branch's tip tree is recorded GREEN. M0-111's finding, fix named by CONDUCT #14. — owner M0.
-order: FIRST of the backlog: every landing now goes through the train, so both halves CUT GATE TIME on every landing (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23; M0-111's finding)
-milestone: M0
-interface: none
-design: `docs/development/TREE-SHARING.md` §2 (one lane lands on `main`, in batches), with `docs/development/VERIFICATION.md` (admitted for M0 by name; D-293's record keyed by tree, M0-98's `--since`).
-depends-on: none — M0-111 is on `main`.
-scope: on a rejected push, merge `origin/main`, re-gate with `gates.mjs --since <the GREEN tip>`, re-record and push, bounded; and a `land/*` tip whose tree carries a GREEN record lands without a second gate of that tree.
-accepts-when: a train whose push is rejected once lands on the retry with one `--since` gate, not a FULL one; a recorded-GREEN branch lands with no battery run of its own tree. NEGATIVE CONTROL: drop the retry, and the moved-main arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (M0-111's finding via CONDUCT #14; `node tools/mintid.mjs M0`).
-
 ### M0-100 · running — **SPAWNED 2026-09-23 by CONDUCT #14, wave 6. NOT LANDED, CHECKED BY CONTENT on `30475ca6`: `docs/development/` holds one `MEASUREMENTS.md` and no per-entry measurement file. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **NARROWED 2026-09-22 by BOB #27 to `MEASUREMENTS.md` AND `INTERFACE-CHANGES.md`, WHICH STAY ON `main`: under M0-111's train two** … (whole text: the cut archive)
 order: after M0-110 and M0-111, where BOB #27 placed it on narrowing: the collision it removes exists only inside M0-111's train (SCHEDULER #12, 2026-09-22)
 milestone: M0
@@ -65,16 +55,6 @@ depends-on: M0-111.
 accepts-when: two `land/*` branches each adding a measurement land in one train with no conflict; every reader's counts over the frozen history are unchanged. How a liar passes it … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #8 (BOB #23's inbox entry; `node tools/mintid.mjs M0`); narrowed 2026-09-22 by BOB #27 (SCHEDULER #12).
 cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-100» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
-
-### M0-121 · running — **SPAWNED 2026-09-23 by CONDUCT #14, wave 7. NOT LANDED, CHECKED BY CONTENT: `isMovedPath` is still defined in `tools/coord.mjs` (L85) on `f05c1efd`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **M0-116, NARROWED: A `MEASUREMENTS.md`-ONLY LANDING STILL SELECTS 85 UNITS, BECAUSE `op-claims.mjs` AND ~60 READERS IMPORT `tools/coord.mjs` FOR ITS STATE-PATH PREDICATE AND INHERIT WHAT IT WALKS.** M0-116's gates half landed (109 → 85, `e5c54c6a`); its op-claims split moves nothing until the predicate leaves the walking module. — owner M0.
-order: directly after M0-119, which it follows (CONDUCT #14: *"after M0-119"*), M0-116's residue, which CUTS GATE TIME on every measurement landing (SCHEDULER #14, 2026-09-23; M0-116's finding)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a comment reads nothing, so it selects nothing, and an import that walks nothing selects nothing; with `ORCHESTRATION.md` §"THE RECORD IS PARTITIONED BY WRITER" rule 1.
-depends-on: M0-119.
-scope: move `MOVED_FILES`, `MOVED_DIRS`, `NEXT_RE` and `isMovedPath` (all I/O-free) out of `tools/coord.mjs` into a module that walks nothing, re-exported by `coord.mjs` and imported by `op-claims.mjs` (measured as an experiment by CONDUCT #14: 60 → 24 readers, 85 → 55 units).
-accepts-when: a `MEASUREMENTS.md`-only change selects the units that read it and not the 85, both figures in the landing, closing M0-116's accepts-when. NEGATIVE CONTROL: import the predicate from `coord.mjs` again, and the unit-count arm fails by name.
-added: 2026-09-23 · SCHEDULER #14 (M0-116's residue via CONDUCT #14; `node tools/mintid.mjs M0`).
 
 ### UI-79 · running — **SPAWNED 2026-09-23 by CONDUCT #14, wave 7. NOT LANDED, CHECKED BY CONTENT: `civicos-ui/app.html` names `believe-in-oakland` 4 times on `f05c1efd`. Falsify rather than believe: a live worker holds an `agent-*` worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between `queued` and done-awaiting-integration — READ THE BRANCH, and never conclude `queued` from the absence alone.** **Prior state, kept as the record: queued** — **THE MEMBER UI WRITES `believe-in-oakland` AS THE GROUP OF EVERY BUNDLE IT AUTHORS, ON EVERY INSTANCE.** `civicos-ui/app.html` sends `group: believe-in-oakland` in `mdFor`'s front matter and three `meta.group` keys (re-read on `a73cba2b`), where the plane stamps the instance's recorded group (D-436, IC-172); the FY glossary entry and the Add form's placeholder name Oakland too. Found by UI-77's worker (CONDUCT #14); the open D-436 → UI DELEGATION. — owner UI.
 order: directly after REC-168, with the product corrections: a sovereign group's bundles would claim this project's group, CLAUDE.md §2's class, UI-77's sibling on the write path; below D-442 and REC-168, whose defects move published pins and attribution (SCHEDULER #14, 2026-09-23; UI-77's findings, relayed by CONDUCT #14)
@@ -105,6 +85,26 @@ depends-on: none — D-442 is on `main`.
 scope: the DELEGATION's three fixes: `inquiryPair` reads each case's pair from `op=publishedcase`, one per case, never picking one; the two sentences branch on `frozen_from` (`case_document` or `member_bytes`) and name the signature that covers the pair; the placeholder follows item 1. Legacy members keep working.
 accepts-when: against the real plane, a rule-12 member shows its pair per case with the case document named as the signer, and a legacy member reads as today. How a liar passes it: a hard-coded signer sentence, so a fixture holds one member of each kind. NEGATIVE CONTROL: read `published_strength` again, and the rule-12 arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (D-442's finding (a) via CONDUCT #14; `node tools/mintid.mjs UI`).
+
+### M0-126 · queued — **EVERY CLONE AND EVERY LANE RE-RUNS SUITES ANOTHER HAS ALREADY PASSED ON IDENTICAL INPUTS: THERE IS NO SHARED, PER-SUITE RESULT RECORD.** A GREEN record is keyed by a whole tree and lives in one clone (D-293); Bob's asks, 2026-09-23: *"track which suites passed so they don't run again, or those that failed so only those run"*, results shared rather than re-run. CONDUCT #14's design, adopted by BOB #29. — owner M0.
+order: FIRST of the backlog (BOB #29): every landing and every lane's gate pays for it, so it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2); UNBLOCKED 2026-09-23 when `land/bob/gate-rerun-failed` reached `main` (SCHEDULER #14, 2026-09-23; BOB #29's item)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (the design text lands there on `land/bob/gh-once-per-batch`), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — `land/bob/gate-rerun-failed`, which touches the same files, is on `main` (`95c40ed9`, verified by ancestry by SCHEDULER #14, 2026-09-23).
+scope: a record keyed (unit, hash of its inputs: source, sibling control, transitive imports, files read, as `gates.mjs` derives per unit; a plane or fleet unit always includes the FULL runtime set), value PASS with run id and tree, on an append-only branch, one file per key; `gates.mjs` skips a unit whose key holds a PASS and prints REUSED. SAFETY, all three: a suite reading an undeclared input (clock, network, env, live coord) is NEVER-CACHED; a check FAILS when a unit reads a file its key does not cover; a FULL run at every release cut, controls kept.
+accepts-when: a second clone runs 0 suites over a tree whose units a first clone passed, and one input change re-runs exactly the units whose key moved. NEGATIVE CONTROL: drop one input from a unit's hash, and the coverage check fails by name.
+added: 2026-09-23 · SCHEDULER #14 (BOB #29's designed item; `node tools/mintid.mjs M0`).
+
+### M0-127 · queued — **A GITHUB GATE READ RED WITH EVERY SUITE GREEN, AND ITS ANNOTATION SAID `FAILED=none`.** On tree `6ef503c4` (282/282 green) two miniflare sandboxes leaked in the runner's TMPDIR (D-186's residue check), and the verdict line named no failure; a red run emails Bob as an ALARM (`TREE-SHARING.md` §3), so a red must say what is red. CONDUCT #14's finding, runner-only. — owner M0.
+order: directly after UI-80, near the head: a red that names nothing is a false-looking alarm on every runner push, and it CUTS GATE TIME to know what failed (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #14, 2026-09-23)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (a red GitHub run is an alarm that reaches Bob), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
+depends-on: none — M0-114's workflow is on `main`.
+scope: (1) the verdict line and the run's annotation name every non-suite failure (a residue check, a leak, a timeout) by what failed; (2) the leaking suite is found by the runner's residue listing and made to clean up, or its leak is stated where D-186's check reads it.
+accepts-when: a run whose only failure is a leaked sandbox reads RED naming the residue and the suite that left it, never `FAILED=none`. NEGATIVE CONTROL: plant one sandbox directory in TMPDIR, and the verdict names it by path.
+added: 2026-09-23 · SCHEDULER #14 (CONDUCT #14's runner finding; `node tools/mintid.mjs M0`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
