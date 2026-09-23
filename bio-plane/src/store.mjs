@@ -4,6 +4,9 @@ import { DurableObject } from "cloudflare:workers";
    checker's view cannot disagree about what the document says. */
 import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_FIELD_SETS,
          checkBundle, createSha256, isPublicHttpsLocator,
+         /* D-50: 7.1's name key is the CATALOG's one function, held below as `Store.projectNameKey`, so the
+            write path's NAME_TAKEN and the catalog's C-77 cannot disagree about what a collision is. */
+         projectNameKey,
          /* REC-10: the type mapping and the inquiry state machine come from
             the catalog, so the store's view and the checker's view cannot
             disagree (the same reason this file already imports the catalog's
@@ -32167,11 +32170,10 @@ export class Store extends DurableObject {
              owner: by, participantsCopied: 0, bundleSha: promoted.bundleSha };
   }
 
-  /** The comparison key for 7.1 project name uniqueness, in one place so the
-   *  fork check and any later write-path check cannot disagree about it. */
-  static projectNameKey(title) {
-    return String(title ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-  }
+  /** The comparison key for 7.1 project name uniqueness. D-50: this IS the catalog's `projectNameKey` (the same
+   *  function object, imported, never a copy), so `promote`'s and the fork's NAME_TAKEN and the catalog's C-77
+   *  corpus check cannot disagree about what a collision is. `test/d50-project-names.test.mjs` asserts identity. */
+  static projectNameKey = projectNameKey;
 
   /* ---- section 8: secure verified export ----
    *
