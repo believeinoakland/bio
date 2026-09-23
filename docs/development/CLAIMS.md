@@ -19568,5 +19568,6 @@ runnable waits on any of them.
    the machine's suggest path refuses one (`SUGGEST_LEG_UNREACHABLE`, `store.mjs`: *"a leg resting on a document the record
    itself retired, reading to every later member as live support"*). **Refuse it in the store for a member too (I place the
    row, M9), or state that a member may knowingly cite retired Information and the surface says so (door 3, in which home)?**
+4. **ADDED 06:55Z — a design gap from D-85's worker (`conduct14/reports:D-85.md`): rule 2 (`INVESTIGATIVE-SESSION.md` §11 item 5) names the `ai` credential; an admin, member or probe MACHINE token still creates a question stamped `surfaced_by: agent` outside any run. Does rule 2 reach every machine credential, or only `ai`?** If it reaches them, I place the fence (RECORD); if not, the section says so.
 
 **open as of 2026-09-23**
