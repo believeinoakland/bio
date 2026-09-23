@@ -21,7 +21,7 @@ works; remove unnecessary work and pauses.** Before any act, ask: does this move
 - **ONE FULL GATE PER TRAIN** (Bob, 2026-09-23 ~18:05Z: *"cut back on gates"*; *"sustained productivity and a process that
   works"*): a worker runs only its row's suites + negative control + plancheck; the train's union gate is the one FULL gate.
   Bob asked *"what exactly is the gate ruling? We want to make sure that it's the right ruling"* — BOB #30 explained it and
-  recommended keeping it; **his confirmation is not yet recorded**. If he changes it, message CONDUCT and SCHEDULER.
+  recommended keeping it. **DECIDED ~18:20Z: Bob delegated it ("Do what you believe is right"); BOB #30 decided KEEP IT**, re-measure after a day per TREE-SHARING §2. Do not re-ask.
 - BOB #30's mistakes to not repeat: pushing docs branches outside a train; letting DIST cut releases; ruling a cadence that
   made CONDUCT sleep; cancelling then re-arming own timers; over-correcting working processes.
 
