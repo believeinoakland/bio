@@ -196,7 +196,7 @@ accepts-when: two parts sharing a capture read as sharing an origin, independent
 added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «REC-161» on entering the cache; its `order:` line is the current one.
 
-### CPDF-22 · queued — **ONE SHAPE FOR "ADMITTED, BOUND NOT HELD": D-440 (IC-198) answers `undetermined: {level, why}` for an image `{part}`, while D-420 (IC-203/IC-204) answers `image_bound: {determined:false, empty_level, why}` for an image `{page, rect}` — two shapes for one statement on I5 mint answers.** `image_bound` is withdrawn before any client reads it. — owner CONTENT-PDF (D-420's paths).
+### CPDF-22 · running — SPAWNED 2026-09-23 ~21:41Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER CPDF-22 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/CPDF-22 and that session; never conclude queued from the absence alone.
 order: directly after M0-138, first of the product rows, as BOB #31 placed it: no client may read `image_bound` before it goes; after M0-138 because every train pays that tax (SCHEDULER #16, 2026-09-23; BOB #31's inbox entry, drained this commit)
 milestone: M4
 interface: I5 — `image_bound` withdrawn for `undetermined: {level, why}`, through ONE IC; the integrator mints and classifies it.
@@ -206,7 +206,7 @@ scope: every "admitted, bound not held" mint answer carries `undetermined: {leve
 accepts-when: `bio-plane/test/d420-image-page.test.mjs` reads `undetermined.level` and `undetermined.why` for a `{page, rect}` on a pre-change PDF, `d440-image-part.test.mjs` green, and `git grep -n image_bound -- bio-plane civicos-ui` returns nothing. NEGATIVE CONTROL (`nc-d420.mjs`, a new arm): restore the `image_bound` key, and D-420's suite fails by name.
 added: 2026-09-23 · SCHEDULER #16 (BOB #31's inbox entry, drained this commit; `node tools/mintid.mjs CPDF`).
 
-### REC-182 · queued — **TWO MANIFEST READS ORDER BY `created` ALONE, SO TIED ROWS COME BACK IN AN UNDEFINED ORDER: `op=export`'s `promotions` and `gateFacts`' `manifest`.** Re-read on `91bcea6b`: `store.mjs` lines 30093 and 31072 end `ORDER BY created`; D-171 made `#revisionKind` `created DESC, rowid DESC` and REC-32 the same. Harm UNDETERMINED: no consumer found that picks by position. And State Rules §6 I-20's *"immediately prior recorded snapshot"* does not say what prior means on a `created` tie. — owner RECORD.
+### REC-182 · running — SPAWNED 2026-09-23 ~21:41Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER REC-182 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-182 and that session; never conclude queued from the absence alone.
 order: directly after CPDF-22 (REC-181 is in the cache): the same class D-171 just closed (a correction to just-landed work), the record's own order undefined on a tie; below the promote-integrity rows because no consumer is known to be harmed (SCHEDULER #16, 2026-09-23; D-171's worker via CONDUCT #17)
 milestone: M6
 interface: none (an order made total, as written); the integrator classifies.
