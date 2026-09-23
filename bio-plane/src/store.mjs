@@ -190,6 +190,9 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             the canned translation are ONE ROW read from one place. */
          CONTRADICTION_PAIR_CHECKS } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
+/* D-440: the FORMAT registry's own answer to "does this format walk parts",
+   which is what makes a capture an office container (`#containerKindOf`). */
+import { getFormat } from "./formats.mjs";
 /* D-334: THE GATE'S OWN LIVENESS PREDICATE, imported rather than re-derived.
    `#monitorToken()` selects the credential the unattended consumers SPEND, and
    `classify()` in index.mjs admits a class only when this same function passes.
@@ -433,7 +436,8 @@ import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
    "what part of a document does this leg mean" is D-164's own lesson arriving
    inside the construct that exists to close it. */
 import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
-         describeExtent, contentIdFor, legContentId, contentCitedAs } from "../checks/bio-checks.mjs";
+         describeExtent, contentIdFor, legContentId, contentCitedAs,
+         imagePartUndetermined } from "../checks/bio-checks.mjs";
 /* REC-97 / IC-90: THE LEG GRAMMAR ITSELF, imported so `op=cite` can route the
    leg it is about to write through the SAME function `checkInquiryBasis` runs
    at C-2.8 and `basisVersionFindings` runs at C-25.10 — REC-84's ONE checker.
@@ -1075,6 +1079,11 @@ export class Store extends DurableObject {
          recorded nothing, and the only value a backfill could reach for is the manifest the run was HANDED,
          the very value this column exists to be compared WITH. NULL reads back as `not recorded`, stated. */
       ["ai_runs", "lens_at_open", "TEXT"],
+      /* D-440: the capture's FORMAT key, projected at promote from the provenance document's profile.
+         NULLABLE AND NEVER BACK-FILLED: a reading persisted before this column existed recorded no format,
+         and `#containerKindOf` then falls back to the reading's own `text_container` and, failing that,
+         states the kind UNDETERMINED rather than guessing it. */
+      ["readings", "capture_format", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -15618,7 +15627,7 @@ export class Store extends DurableObject {
              this loop now has to call. The shadow parsed, ran, and would have
              thrown `not a function` only on the path that reads an authored id;
              renamed rather than aliased so there is one name for one thing. */
-          let legRowId = null, legCarried = false, legMinted = false;
+          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
@@ -15640,7 +15649,8 @@ export class Store extends DurableObject {
               else if (cp.captureSha) {
                 const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
                   extent: ext, mintedBy: CONTENT_MINTED_BY_PLANE, at: meta.last_updated || null, ctx: cp.ctx });
-                if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted; }
+                if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted;
+                               legUndetermined = mint.undetermined || null; }
               }
             }
             /* The ROW is not read here. `contentRow` is a read, and a read inside
@@ -15649,7 +15659,8 @@ export class Store extends DurableObject {
                collected and resolved in ONE set-based pass after the loop. */
             if (legRowId)
               contentProjected.push({ ord: i, target: leg.target, content_id: legRowId,
-                extent_kind: ext.kind, minted: legMinted, carried: legCarried });
+                extent_kind: ext.kind, minted: legMinted, carried: legCarried,
+                ...(legUndetermined ? { undetermined: legUndetermined } : {}) });
           }
           this.sql.exec(
             `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
@@ -16393,14 +16404,28 @@ export class Store extends DurableObject {
        * direction — which is exactly the four-level rule CLAUDE.md states:
        * absence at one level is not evidence of absence at the next. */
       this.#observeReaderRun(bundleId, sha, reading, { author });
+      /* D-440 — THE CAPTURE'S FORMAT, projected from the SAME provenance document
+         the reading is, so the two cannot come from different sources. It is the
+         profile's `format.format` (COFF-1's FORMAT axis: magic bytes first, the
+         declared Content-Type second), and it exists so `contentContextFor` can
+         say whether this capture is an office container at all — the one fact
+         the image arm's `{part}` needs and no reading field carried for a page
+         read as text. A re-extraction hands no profile, so the prior value is
+         KEPT (the COALESCE): the bytes did not change, so neither did their
+         format, and a NULL written over it would un-know a fact. */
+      const prof = doc && doc.profile && typeof doc.profile === "object" ? doc.profile : null;
+      const fmtKey = prof && prof.format && typeof prof.format === "object"
+        && typeof prof.format.format === "string" && prof.format.format.trim()
+        ? prof.format.format.trim() : null;
       this.sql.exec(
-        `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
-         VALUES (?,?,?,?,?,?,?,?)`,
+        `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at,capture_format)
+         VALUES (?,?,?,?,?,?,?,?,COALESCE(?, (SELECT capture_format FROM readings WHERE capture_sha=?)))`,
         sha, bundleId,
         typeof reading.content_type === "string" ? reading.content_type : null,
         Number.isInteger(reading.reader_version) ? reading.reader_version : null,
         reading.found ? 1 : 0, entities.length,
-        JSON.stringify(reading), typeof reading.at === "string" ? reading.at : null);
+        JSON.stringify(reading), typeof reading.at === "string" ? reading.at : null,
+        fmtKey, sha);
       for (const e of entities) {
         if (!e || (e.key == null && e.kind == null)) continue;
         /* The reference exactly as the reading carries it: the reader's own
@@ -17017,10 +17042,16 @@ export class Store extends DurableObject {
    *  this row — the chain and (since D-345) the page count — and asking for the
    *  row twice would be two answers to one question waiting to disagree, which
    *  is the drift the comment on `#contentPlanFor` already names. One read,
-   *  parsed once, handed to both readers below. */
+   *  parsed once, handed to both readers below.
+   *
+   *  D-440 ADDS THE ROW'S `capture_format` TO THE SAME READ rather than a second
+   *  one, for the same reason: the container's kind and its extent are two facts
+   *  about one row, and `contentContextFor` hands both to the checker together. */
   #persistedReading(captureSha) {
-    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
-    return row ? (safeJson(row.reading) || null) : null;
+    const row = this.#one(`SELECT reading, capture_format FROM readings WHERE capture_sha=?`, captureSha);
+    return { reading: row ? (safeJson(row.reading) || null) : null,
+             captureFormat: row && typeof row.capture_format === "string" ? row.capture_format : null,
+             held: !!row };
   }
 
   /** The transcription chain the record holds for a capture, or null.
@@ -17254,10 +17285,75 @@ export class Store extends DurableObject {
    *  one-read rule extended to the third: asking for the `readings` row a second
    *  time would be two answers to one question waiting to disagree. */
   contentContextFor(captureSha) {
-    const reading = this.#persistedReading(captureSha);
+    const { reading, captureFormat, held } = this.#persistedReading(captureSha);
+    const container = this.#containerExtentForCapture(captureSha, reading);
+    /* D-440: WHETHER THIS CAPTURE IS AN OFFICE CONTAINER AT ALL, on the
+       container object the checker already reads, so the image arm's `{part}`
+       is judged against the one object that also carries the image list. */
+    Object.assign(container, this.#containerKindOf(reading, captureFormat, held));
     return { chain: this.#chainOfReading(reading),
              pageCount: this.#pageSetForCapture(captureSha, reading),
-             container: this.#containerExtentForCapture(captureSha, reading) };
+             container };
+  }
+
+  /** D-440 — IS THIS CAPTURE AN OFFICE CONTAINER, whose own bytes can hold an
+   *  embedded media part (EXTRACTION-BREADTH-DESIGN.md section 3.2: "`{part}` is
+   *  a member of a CONTAINER's own bytes, and nothing else").
+   *
+   *  THREE-VALUED, and each value is a different fact: `true` (the format
+   *  registry's entry for this capture's format WALKS PARTS — the office
+   *  entries), `false` (a registered format with no parts walk — a web page, a
+   *  PDF: an image beside a page is its own document, and one on a PDF page is
+   *  addressed by page and rect), `null` (the record does not hold which format
+   *  this capture is, STATED in `kind_why`, never guessed).
+   *
+   *  A PROPERTY OF THE REGISTRY, NEVER A LIST OF SLUGS (WORKER.md, "invert, do
+   *  not lengthen a list"): a seventh office entry registered tomorrow is a
+   *  container here with no edit, and a new non-container format is refused.
+   *
+   *  THE FORMAT COMES FROM, IN ORDER: the row's `capture_format` (the provenance
+   *  profile's FORMAT axis, projected at promote); the reading's own
+   *  `text_container` (the SAME key, carried by every reading the acquire wire
+   *  read — so a capture promoted before `capture_format` existed still
+   *  answers); and nothing else. An office `container_extent` alone (its
+   *  `levels` named by an office entry) is also an answer, because only an
+   *  office entry itemises levels.
+   *
+   *  WHAT THIS CANNOT SEE, stated: the format is what the provenance document
+   *  says, and that document is the caller's, exactly as the reading and its
+   *  image list are — this reads the record, it does not re-sniff the bytes. */
+  #containerKindOf(reading, captureFormat, held) {
+    const fromReading = reading && typeof reading === "object" && typeof reading.text_container === "string"
+      && reading.text_container.trim() ? reading.text_container.trim() : null;
+    const format = captureFormat || fromReading;
+    const source = captureFormat ? "the capture's provenance profile" : "the capture's reading";
+    if (format && format !== "undetermined") {
+      const entry = getFormat(format);
+      if (entry) {
+        const office = typeof entry.parts === "function";
+        return { format, office,
+                 kind_why: `${source} records this capture's format as ${format}, which `
+                   + (office ? "is an office container: its own bytes hold its embedded media parts"
+                             : "is not an office container: its own bytes hold no embedded media part") };
+      }
+      return { format, office: null,
+               kind_why: `${source} records this capture's format as '${format.slice(0, 40)}', which this `
+                 + `build's format registry does not know, so whether it is a container is UNDETERMINED` };
+    }
+    const ext = reading && typeof reading === "object" && reading.container_extent
+      && typeof reading.container_extent === "object" ? reading.container_extent : null;
+    if (ext && Array.isArray(ext.levels) && ext.levels.length)
+      return { format: null, office: true,
+               kind_why: "the capture's reading carries a container extent an office entry itemised, so it "
+                 + "is an office container, though no format key was recorded" };
+    return { format: null, office: null,
+             kind_why: !held
+               ? "this record holds no reading for this capture, so which format it is is UNDETERMINED"
+               : format === "undetermined"
+                 ? "the format registry could not determine this capture's format at acquire, so whether it "
+                   + "is a container is UNDETERMINED"
+                 : "this record does not hold this capture's format (it was promoted before the format was "
+                   + "projected, and its reading names no container), so whether it is a container is UNDETERMINED" };
   }
 
   /** THE WHOLE BASIS'S REFERENTS, RESOLVED ONCE — the capture each leg is about
@@ -17485,7 +17581,12 @@ export class Store extends DurableObject {
                 ? { page: extent.page, rect: extent.rect ?? null } : null),
         ctx.pageCount, mintedBy, at || new Date().toISOString(), citedAs);
     }
-    return { ok: true, content_id: id, minted: !before };
+    /* D-440: an image `{part}` admitted WITHOUT the bound it would be checked
+       against (an office container with no persisted image list, or a capture
+       whose kind the record does not hold) says so on the answer. Returned bare,
+       it read exactly like a part the record had verified is in the document. */
+    const undetermined = imagePartUndetermined(extent, ctx);
+    return { ok: true, content_id: id, minted: !before, ...(undetermined ? { undetermined } : {}) };
   }
 
   /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
@@ -17575,7 +17676,8 @@ export class Store extends DurableObject {
                                                                                 : { kind: "document" },
                                    mintedBy: mintedBy.trim(), at });
     if (!out.ok) return out;
-    return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id) };
+    return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id),
+             ...(out.undetermined ? { undetermined: out.undetermined } : {}) };
   }
 
   /* ====================================================================== *
