@@ -19716,3 +19716,19 @@ REPORTED, not fixed), `tools/mergecarry.mjs`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
 released: 2026-09-23 — pushed `land/worker/D-286` @ `cdb2e428`, read back from the remote; gate GREEN class FULL on tree `53fe4d6e` (287/287 suites green · 17263 assertions passing; civicos-ui all green). Paths stay reserved until CONDUCT integrates.
+
+## CLAIM 2026-09-23 UI (UI-82 — the published index draws a finding's frozen pair PER CASE from op=publishedmanifest's strengthByCase, or the undetermined state with its reason, never "no frozen pair")
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for UI-82, worktree `.claude/worktrees/agent-a050bf291bfa8b36c`,
+branch `land/worker/UI-82`, from `origin/main` @ `91913d6b` (carries REC-170, IC-183).
+authority: `QUEUE.md` `### UI-82 · running`; design `BIO_Publication_v0_1.md` §3 rule 12 (b)–(d), DEC-8; IC-183; IC-74.
+paths, BY SITE:
+  - `civicos-ui/app.html`: `pubList` (its per-member `findingRows` map only) and ONE new helper directly above `pubList`
+    (`pubCasePairOf`, the per-case read of a manifest row). NOT touched: `pubOpen` (UI-81's), `pubPair`, `pubPairBadges`,
+    `pubStateBadge`, `pubPairSigner`, `inquiryCasePairs`, `casePairsHtml`, any region marker or `SURFACES` key.
+  - NEW `civicos-ui/test/published-index-pair.test.mjs` (+ `.control.mjs`).
+  - `docs/development/CIVICOS_UI_STATE.md` (prepend `v101`; `v100` is UI-81's claim), `docs/architecture/BIO_Publication_v0_1.md`
+    (front matter / rule 12's As built, the index clause only), `docs/architecture/construct-status.json` if a text moves.
+**NOT CLAIMED, NOT TOUCHED:** `bio-plane/**` (REC-170's op is consumed as landed), `civicos-ui/check-refusal-codes.mjs`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
