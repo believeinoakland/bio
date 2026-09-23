@@ -968,7 +968,11 @@ reachedFoot = true;
 } catch (e) {
   /* PRINTED, NEVER SWALLOWED. A throw inside the body goes through no assertion
      at all, and a `finally` that calls `process.exit` suppresses the stack — so
-     the one thing a reader needs to act on would be the one thing not shown. */
+     the one thing a reader needs to act on would be the one thing not shown.
+     M0-134: and COUNTED. The exit below already reads `reachedFoot`, so this suite was never green on a
+     throw; the increment is here so the rule `hygiene.test.mjs` holds every finally-exit to — the catch
+     counts a failure the exit reads — is one rule with no sentinel exception. */
+  fail++;
   console.log(`
   THREW BEFORE THE FOOT: ${e && e.stack ? e.stack : e}`);
 } finally {
