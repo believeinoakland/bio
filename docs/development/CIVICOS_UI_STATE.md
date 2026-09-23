@@ -65,13 +65,13 @@ store recording none the creation is refused C-64.1 and the member reads the pla
 printed a bare code for every non-gate refusal; it now renders the plane's words, as the Add surface already did). The
 glossary and the placeholder name no place.
 
-**Driven against the real plane**, `civicos-ui/test/authored-group.test.mjs` (39 assertions): a plane recording a slug
+**Driven against the real plane**, `civicos-ui/test/authored-group.test.mjs` (40 assertions): a plane recording a slug
 PLANTED AT RANDOM per run — the Add surface (a note, a project) and the proposal adoption each author a bundle held with
 that slug in its bytes and its projection, and every group the surface SENT is the planted one or none (the liar, a
 different hard-coded slug, can only pass by sending none); a plane recording none refuses in its own words and writes
 nothing; the source census reads no literal anywhere and Oakland in CODE only at four declared recognisers. NEGATIVE
-CONTROL `authored-group.control.mjs`, 4/4 AS DECLARED: one `meta.group` restored RED 31/39 naming the SENT arm while the
-HELD arm stays green; the liar RED 32/39 with the literal census green; over-strictness GREEN.
+CONTROL `authored-group.control.mjs`, 4/4 AS DECLARED: one `meta.group` restored RED 31/40 naming the SENT arm while the
+HELD arm stays green; the liar RED 32/40 with the literal census green; over-strictness GREEN.
 
 **Suites corrected, never exempted, each with a dated comment:** the ten miniflare suites that seeded the literal
 (`ai-session-context`, `ai-session-wire`, `conclude-nofalsifier`, `conclude-reading`, `content-extent`, `intent-write`,

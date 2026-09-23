@@ -6,10 +6,10 @@
  * RED, "PLANTED-SLUG (SENT) — the proposal adoption" failing by name while "SOURCE NO-LITERAL" stays GREEN · (C)
  * OVER-STRICTNESS, a comment inside the meta -> GREEN.
  *   RUN 2026-09-23 by UI-79 against app.html b2cedae2… (1,411,534 bytes), every arm restored and verified by sha256 and
- *   `cmp`, the file IDENTICAL to pristine at the end — 4/4 AS DECLARED: BASELINE GREEN 39/39 · (A) RED 31/39, both
+ *   `cmp`, the file IDENTICAL to pristine at the end — 4/4 AS DECLARED: BASELINE GREEN 40/40 · (A) RED 31/40, both
  *   `addGo` SENT arms, SOURCE NO-LITERAL, SOURCE NO-PLACE, WRITER addGo and three NONE arms failing (on a store recording
  *   none the literal is kept as the caller's statement, so the creation is WRITTEN — the defect's own consequence) ·
- *   (B) RED 32/39, all three SENT arms, MDFOR and the three NONE arms failing, the literal census GREEN · (C) GREEN 39/39.
+ *   (B) RED 32/40, all three SENT arms, MDFOR and the three NONE arms failing, the literal census GREEN · (C) GREEN 40/40.
  */
 /* =========================================================================
  * UI-79 — THE MEMBER UI COMPOSES NO PRODUCING GROUP: A BUNDLE IT AUTHORS CARRIES THE GROUP THE INSTANCE RECORDS.
@@ -40,8 +40,15 @@
  * names no group) and not driven — it needs a captured subresource set, and a revision's `meta.group` is not read by
  * the plane at all (IC-172); a page as a browser lays it out; any served UI file but `app.html`; and a live instance
  * (Cloudflare is not reachable from this environment, so live verification is UNDETERMINED, not claimed). The comment
- * stripper does not model regular-expression literals; its corpus is printed and floored, and the Oakland lines it
- * leaves in CODE must equal the declared recogniser list exactly, so a mis-strip shows up as a count, not as silence.
+ * stripper models strings, nested template literals and regular-expression literals by a heuristic, not a parser; its
+ * corpus is printed and floored, and the Oakland lines it leaves in CODE must equal the declared recogniser list exactly,
+ * so a mis-strip shows up as a count, not as silence.
+ *
+ * A VACUOUS ARM THIS SUITE SHIPPED WITH, AND WHAT CAUGHT IT: the first full gate (tree 045580b2) went RED at
+ * `op-claims.test.mjs`, which found this file asking `op=record` — an op that does not exist. The NONE arm "the record
+ * holds no bundle" had read the refusal as an empty list and passed over nothing. It now asks `op=list` (the read the
+ * UI's own `loadRecord` makes), and the same read of the PLANTED plane must list what the drives wrote, so an answer
+ * that cannot see a write cannot read as "none".
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not discard the writer's
    own output. SHARED from the plane's test estate; census: `stdio-census.test.mjs`. */
@@ -348,9 +355,14 @@ const mfN = plane(null); planes.push(mfN);
   ok(`NONE: the member reads the plane's canned translation of C-64.1, not a bare code (rendered: "${rendered}")`,
      typeof tr === "string" && tr.length > 20 && rendered.includes(text(tr).slice(0, 60)));
   ok("NONE: nothing was opened as though written", B.OPENED.length === 0);
-  const rec = rP(await (await mfN.dispatchFetch(`http://x/api/?op=record&token=${OLIVE_N}`)).json());
-  const rows = Array.isArray(rec) ? rec : (rec && (rec.bundles || rec.rows || rec.record)) || [];
-  ok(`NONE: the record holds no bundle (read ${Array.isArray(rows) ? rows.length : JSON.stringify(rec).slice(0, 120)})`,
+  /* The record's list (op=list, the read the UI's own loadRecord makes), asked of BOTH planes: the planted one must list
+     what the drives wrote, so an answer that is not a list, or a list that cannot see a write, cannot read as "none". */
+  const listOf = async (mf, tok) => rP(await (await mf.dispatchFetch(`http://x/api/?op=list&token=${tok}`)).json());
+  const planted = await listOf(mfP, OLIVE);
+  ok(`the planted plane's op=list is a list and sees the three bundles the drives wrote (read ${Array.isArray(planted) ? planted.length : JSON.stringify(planted).slice(0, 120)})`,
+     Array.isArray(planted) && planted.length >= 3);
+  const rows = await listOf(mfN, OLIVE_N);
+  ok(`NONE: the record holds no bundle (read ${Array.isArray(rows) ? rows.length : JSON.stringify(rows).slice(0, 120)})`,
      Array.isArray(rows) && rows.length === 0);
   ok("NONE NO-PLACE: the refusal as rendered names neither the place nor the old slug",
      !PLACE_RE.test(B.surface()) && !LITERAL_RE.test(B.surface()));
