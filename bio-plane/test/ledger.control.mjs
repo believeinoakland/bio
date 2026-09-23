@@ -167,7 +167,10 @@ const ARMS = [
       "export function resolveDependency(token, { repo = ROOT, claims = null } = {}) {\n  return { ok: true, how: \"liar\" };\n"]],
     mustFail: ["(c) the unresolved dependencies"] },
   { id: "C7", title: "mintid's DUPLICATE CHECK STOPS READING THE ARCHIVE (raw iteration again)",
-    patches: [[MINTID, `const allocationCorpus = (corpus) => corpus.flatMap((rel) => (rel === "docs/archive/" ? ARCHIVE_TARGETS : [rel]));`,
+    /* REPOINTED 2026-09-23 (M0-100): the definition now takes `repo` and also expands the per-entry ledgers'
+       directories, over two lines; the arm still reverts it to RAW iteration, which is the thing it breaks. */
+    patches: [[MINTID, `const allocationCorpus = (corpus, repo = REPO_ROOT) => corpus.flatMap((rel) => (rel === "docs/archive/" ? ARCHIVE_TARGETS
+  : rel.endsWith("/") && !isAbsolute(rel) ? expandCorpus([rel], repo).map((p) => relative(repo, p).split(sep).join("/")) : [rel]));`,
       `const allocationCorpus = (corpus) => corpus;`]],
     mustFail: ["mintid's duplicate check still sees D-7 twice"] },
   { id: "C8", title: "THE ARCHIVE-AWARE LOOKUP IGNORES THE ARCHIVE",

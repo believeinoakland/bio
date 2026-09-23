@@ -259,8 +259,14 @@ console.log("\n--- 2. STRUCTURAL: no edge, no relation, no supersedes column, no
      the direction easiest to miss. */
   const indexesOn = (tbl) => [...SCHEMA_CODE.matchAll(new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS (\\w+) ON ${tbl}\\(`, "g"))].map((m) => m[1])
     .concat([...STORE_CODE.matchAll(new RegExp(`CREATE (?:UNIQUE )?INDEX IF NOT EXISTS (\\w+) ON ${tbl}\\(`, "g"))].map((m) => m[1]));
-  t("NO NEW INDEX: captured_locators still carries exactly the ONE index it has always carried",
-    indexesOn("captured_locators"), ["captured_locators_addr"]);
+  /* CORRECTED BY CAP-13 (2026-09-23), NOT EXEMPTED. This pinned the ONE index
+     `captured_locators` carried when this item landed, and its purpose was that
+     THIS item added no index. CAP-13 then added `captured_locators_sha` for its
+     own join (the reuse floor counts a primary's document ADDRESS, joined on
+     `capture_sha`), so "exactly the one" became a statement about the wrong era.
+     The set moves to the two, and it still fails on ANY further index. */
+  t("NO NEW INDEX: captured_locators carries exactly its two (this item's one, plus CAP-13's capture_sha index)",
+    indexesOn("captured_locators"), ["captured_locators_addr", "captured_locators_sha"]);
   t("NO NEW INDEX: register still carries exactly the ONE",
     indexesOn("register"), ["register_bundle"]);
 

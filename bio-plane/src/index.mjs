@@ -3166,6 +3166,50 @@ async function captureRequestArm(env, storeName, body, cls) {
 const storeSilent = (op) =>
   json({ ok: false, reason: STORE_SILENT_REASON, op, detail: STORE_SILENT_DETAIL }, 502);
 
+/* D-116 — EACH FLEET MEMBER'S BUILD, READ BACK THROUGH THE BINDING THIS PLANE ACTUALLY HOLDS.
+ *
+ * A member versions and rolls out on its own (`BIO_Distribution_v0_1.md` §4 rule 1), and an installer that uploaded
+ * one has only Cloudflare's word that it landed — never the member's, and never the PLANE's view of it, which is the
+ * one that decides whether a group's PDFs, OCR and assistant do what every description of them says (D-115). So the
+ * question is asked where it matters: over `env.<BINDING>`, `GET /version`, the route every member has served since
+ * CPDF-9 / FL-2 / CPDF-10. Each answer is the MEMBER'S OWN reply — its `name` and `version` fields, copied — and never
+ * this isolate's env.VERSION: a plane that filled these in from its own env would make every member agree for free.
+ *
+ * States, per member, each a first-class statement rather than a missing key:
+ *   SERVING   the member answered through the binding, under its own name, with `version`.
+ *   UNBOUND   this plane holds no binding by that name — the member is unreachable FROM HERE whatever the account holds.
+ *   SILENT    bound, and it did not answer a readable version within the bound (`why` says what happened).
+ *   MISNAMED  something answered through the binding, but under another name — the binding points at the wrong worker.
+ * Read only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to three workers. */
+const FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+const MEMBER_VERSION_WAIT_MS = 4000;
+async function memberVersions(env) {
+  const out = {};
+  await Promise.all(FLEET_BINDINGS.map(async ([member, binding]) => {
+    const b = env[binding];
+    if (!b || typeof b.fetch !== "function") { out[member] = { binding, state: "UNBOUND" }; return; }
+    let timer;
+    try {
+      const r = await Promise.race([
+        b.fetch(`https://${member}/version`, { method: "GET" }),
+        new Promise((_, no) => { timer = setTimeout(() => no(new Error(`no answer within ${MEMBER_VERSION_WAIT_MS} ms`)),
+                                                    MEMBER_VERSION_WAIT_MS); }),
+      ]);
+      const j = await r.json().catch(() => null);
+      if (!r.ok || !j || typeof j.version !== "string" || !j.version) {
+        out[member] = { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` };
+      } else if (j.name !== member) {
+        out[member] = { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version };
+      } else {
+        out[member] = { binding, state: "SERVING", version: j.version };
+      }
+    } catch (e) {
+      out[member] = { binding, state: "SILENT", why: String(e && e.message || e).slice(0, 200) };
+    } finally { clearTimeout(timer); }
+  }));
+  return out;
+}
+
 /* THE ADMISSION GATE'S DEC-49 FIELDS, read from the ONE row (REC-79 / C-38).
  *
  * Spread into the refusal beside a `reason` that is a STRING LITERAL at its
@@ -5326,8 +5370,15 @@ export default {
          instance was ready. */
       const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
       if (!out.answered) return storeSilent("bootstrap");
+      /* D-116 / IC (see INTERFACE-CHANGES.md): THREE BUILDS, EACH READ FROM WHERE IT RUNS. `version` is THIS routing
+         isolate's; `storeVersion` arrives inside `out.result` from the Durable Object's own env (store.mjs, the
+         `bootstrap` route) and is NEVER written here — filling it from `env.VERSION` would make the two agree for
+         free, which is exactly the lie this field exists to prevent. `memberVersions` (on `members=1` only) is each
+         fleet member's own reply through this plane's binding. */
       return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
-                    bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...out.result }, 200);
+                    bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...out.result,
+                    ...(url.searchParams.get("members") === "1" ? { memberVersions: await memberVersions(env) } : {}) },
+                  200);
     }
 
     let cls = await classify(url.searchParams.get("token"), env);
@@ -7038,9 +7089,11 @@ export default {
 
             /* What this host has served before. Bytes were always shared by
                content-addressing; FETCHES were not, and fetches are the scarce
-               thing. A stylesheet stable across the window and seen in more
-               than one document is reused at zero subrequest cost, and every
-               reuse is recorded as one. */
+               thing. A furniture asset the source was seen SERVING within the
+               freshness window, referenced by at least two distinct PAGES on the
+               host, is reused at zero subrequest cost (reuseDecision: recency of
+               fetch, not stability; a page is its document address, CAP-13), and
+               every reuse is recorded as one. */
             let baseHost = null;
             try { baseHost = new URL(res.url || locator).hostname.toLowerCase(); } catch { baseHost = null; }
             let siteKnown = {};

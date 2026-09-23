@@ -313,7 +313,9 @@ try {
 
   for (const [nc, ns, file] of [["NC6a", "DEC", "DECISIONS.md"], ["NC6b", "IC", "INTERFACE-CHANGES.md"], ["NC6c", "M", "MEASUREMENTS.md"]]) {
     console.log(`\n--- ${nc} · mintid's ${ns} corpus without BACKLOG.md (plant in place; armed ALONE) ---`);
-    const q = `"docs/development/${file}", "docs/development/QUEUE.md"`;
+    /* REPOINTED 2026-09-23 (M0-100): IC's and M's corpora name their ledger through the one reader (`entries.mjs`
+       corpus(): the frozen file and its entry directory), so the anchor is that spread; DEC's is unchanged. */
+    const q = `${ns === "DEC" ? `"docs/development/${file}"` : `...entryCorpus("${ns}")`}, "docs/development/QUEUE.md"`;
     /* REPOINTED 2026-09-22 (M0-119): the corpus now ends with the backlog's tail; the arm still drops BACKLOG.md alone. */
     arm(MINTID, `${q}, "docs/development/BACKLOG.md", "docs/development/BACKLOG-LATER.md"]`, `${q}, "docs/development/BACKLOG-LATER.md"]`);
     const f = floors();

@@ -82,7 +82,7 @@ natively, so decompressing object streams needs no dependency.
 "expensive and failure-prone" claim was a guess and was withdrawn in D-91. The
 real constraints are bundle size against the 3MB Free-worker limit and CPU against
 the measured ceiling — both numbers, both to be established before adoption, both
-into `MEASUREMENTS.md` with date and instrument.
+into `measurements/<id>.md`, dated, instrumented.
 
 ## How a session starts
 
@@ -195,7 +195,7 @@ the trigger to promote op-contract ownership out of CAPTURE (the I3 move
   decides what the content IS. Do not classify intent here.
 - **`undetermined` is first-class and must be stated**, never invented to fill a
   field. A PDF whose structure is ambiguous says so.
-- **Measure, do not assume**; numbers live in `MEASUREMENTS.md` with date and
+- **Measure, do not assume**; numbers to `measurements/<id>.md` with date and
   instrument, and a vendor's figure is labelled as theirs.
 - **Run the negative control; correct superseded tests, never exempt them.**
 - **Push `land/<lane>/<topic>`, never `main` (the train lands it, M0-111).** A

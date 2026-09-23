@@ -60,11 +60,16 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8", input, maxBuffer: 1 << 28 });
 
 /* The printed figures (see the head). */
-/* MOVED 60 -> 61 by M0-126 (2026-09-23), the figure this suite PRINTED on that tree: `61 unit(s) of 347 · 29 MEASUREMENTS
-   reader(s) · 5 through tools/coord.mjs`. The one new reader is `gateresults.test.mjs`, M0-126's own suite, which imports
-   `tools/pushguard.mjs` (it drives the guard's `gate-results` arm) and so walks `docs/` as every pushguard importer does —
-   a legitimate reader, named by the gate's own line: "walks docs/ in tools/pushguard.mjs". */
-const UNITS_CEILING = 61;
+/* MOVED 2026-09-23 by M0-100, 60 -> 61, to the figure this suite PRINTED on the merged tree (`41c7e0c3` + M0-100): the
+   one unit more is `entries.test.mjs`, which reads the frozen `MEASUREMENTS.md` by design through `tools/entries.mjs`,
+   the one reader of both ledgers (29 readers, 4 through `coord.mjs`). `mintid.test`, `owed.test` and `pipeline-readers`
+   now reach the file through `entries.mjs` instead of `mintid.mjs`'s own string — the same units, a different edge.
+   Since M0-100 a measurement is a NEW FILE (`measurements/<id>.md`), which selects 59 units by the same method.
+   MOVED AGAIN by M0-126 (2026-09-23), 61 -> 62, the figure this suite PRINTED on the merge of M0-126 with M0-100 (M0-126
+   alone printed 61 over the pre-M0-100 60): the one reader more is `gateresults.test.mjs`, M0-126's own suite, which
+   imports `tools/pushguard.mjs` (it drives the guard's `gate-results` arm) and so walks `docs/` as every pushguard
+   importer does — a legitimate reader, named by the gate's own line "walks docs/ in tools/pushguard.mjs". */
+const UNITS_CEILING = 62;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 
