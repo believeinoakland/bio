@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0 and 0.73.0 went live.
+# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0, 0.73.0 and 0.74.0 went live (2026-09-23 ~05:30Z).
 
 This file is only STATE, measured 2026-09-23 ~02:15Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
 pointer, the gate, the LESSONS) — read it whole. Re-measure before acting: a deployment is a fact about the ACCOUNT.
@@ -25,14 +25,14 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 
 ## What is OWED
 
-1. **The next cut, by WHEN DIST CUTS.** Read `git log d2568491..origin/main` over the shipped paths (CONDUCT named D-442,
-   IC-179 — publishing writes nothing on a member finding; case-document format /2 — as next to land). Its RELEASES
-   row: `["0.73.0", "d25684919e6748b92acbc080bca8dc2141273c44"]`. Expected, by arithmetic: baseline 417 + 21 → **438/0**,
-   `alterafter` → **360/78**, `groupwipe` → 432/6. MEASURE them.
-0. **`land/dist/release-0.73.0` @ `1ff56228` waits on CONDUCT's train** (its tree `ac4b3020` IS the GREEN FULL cut tree:
-   main had not moved). Confirm: `git merge-base --is-ancestor 1ff56228 origin/main`. 0.72.0's pointer LANDED at
-   `0289ec53` (train of 02:58Z; release/ and the embed byte-identical, checked by CONDUCT and by tree id).
-2. **The tags `v0.72.0` and `v0.73.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
+0. **`land/dist/release-0.74.0` @ `4e651534` waits on CONDUCT's train** (tree `ef32b9b4` GREEN FULL, 282/282 · 17066,
+   `--since cacebb12`). Confirm: `git merge-base --is-ancestor 4e651534 origin/main`. 0.73.0's pointer LANDED at
+   `95c40ed9`; 0.72.0's at `0289ec53`.
+1. **The next cut, by WHEN DIST CUTS.** Read `git log cacebb12..origin/main` over the shipped paths (nothing at 05:30Z).
+   Its RELEASES row: `["0.74.0", "cacebb12b7b42f4825238348c4f1e834e9a2c168"]` (`git rev-parse cacebb12`). Expected, by arithmetic: baseline
+   438 + 21 → **459/0**, `alterafter` → **381/78**, `groupwipe` → 453/6. MEASURE them before claiming them.
+   A cut base is `origin/main` MERGED with any still-waiting `land/dist/release-*` tip, so one landing carries both.
+2. **The tags `v0.72.0`, `v0.73.0` and `v0.74.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
    reads it; `b942d973` is on the remote) and named it to Bob as an optional web-UI act. A future cut's tag meets the
    same 403: push the branch, and let the tag follow when Bob's act or the environment allows.
    **BOB'S RULING, 2026-09-23 (TREE-SHARING §3):** every failed GitHub run emails Bob as an alarm — push a `land/*`
@@ -41,14 +41,14 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    AFTER the plane's caller lands — `node tools/ledger.mjs find D-260` first.
 4. **Carried, not re-verified:** v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline; v0.59.0–v0.63.0 WITHDRAWN.
 
-## What is LIVE (deployments API at 100%, 2026-09-23 ~04:06Z) — each id is the ROLLBACK TARGET for the next cut
+## What is LIVE (deployments API at 100%, 2026-09-23 ~05:02Z) — each id is the ROLLBACK TARGET for the next cut
 
-biosmoke7 `82e2f97c-2118-4c27-b595-c4892e7fce2b` (0.73.0, bytes = signed `0b4cdf79…`, 13 bindings as 0.72.0's) ·
-agent-worker `ef70e971-17eb-4b5a-9ab9-9c650f424c66` · pdf-worker `85b8471a-32e9-41ce-b640-c5fc7e2524e2` · ocr-worker
-`8bf4d538-1a19-415f-9673-6fc413ae9b92` · civicos `7fe8fed0-9965-4baf-b558-b194c127e067` (unchanged since 0.71.0) ·
-newgroup `642a59a5-dc29-4e74-adf7-8c80c91e961f` (embeds 0.73.0, `RELEASE_SOURCE` hashes to `0b4cdf79…`, bindings `[]`).
-The 0.72.0 ids: biosmoke7 `b7d623f4…` · agent-worker `dccd78e8…` · pdf-worker `44272240…` · ocr-worker `cd7c7c1e…` ·
-newgroup `07924f5d…`. `deploy.mjs` now KEEPS secret bindings it is not handed (`INSTANCE_CLAUDE_TOKEN` absent here).
+biosmoke7 `b9f5369c-322a-40e5-9894-26446eedc86e` (0.74.0, bytes = signed `a3d06c1d…`, 13 bindings) · agent-worker
+`db09b5ea-4cee-48d9-bdcf-6d282fcb5352` · pdf-worker `8941787f-c69c-4c38-9f74-f6952bf2f069` · ocr-worker
+`ab58f010-518b-4b80-9427-04c65cf49e9c` · civicos `7fe8fed0-9965-4baf-b558-b194c127e067` (unchanged since 0.71.0) ·
+newgroup `1ffe46f8-cb95-4b3d-8827-0aaf9eb33771` (embeds 0.74.0, `RELEASE_SOURCE` hashes to `a3d06c1d…`, bindings `[]`).
+The 0.73.0 ids: biosmoke7 `82e2f97c…` · agent-worker `ef70e971…` · pdf-worker `85b8471a…` · ocr-worker `8bf4d538…` ·
+newgroup `642a59a5…`. `deploy.mjs` KEEPS secret bindings it is not handed (`INSTANCE_CLAUDE_TOKEN` absent here).
 
 **biosmoke7's stores record their producing group `believe-in-oakland` (seed, `token:admin`, 2026-09-22T04:26:11Z), both
 `bio` and `store=scratch` — write-once, never seed again (C-64.3).** Since 0.72.0 a caller with NO credential reads the
@@ -56,6 +56,16 @@ slug (IC-174). An admin op with no `store` runs against `bio` (`scopeFor`) — a
 Scratch residue, not swept: DIST #5's `INQ-2026-9172-dist5-{a,b}-mudgvfyx` and runs `RUN-2026-0923-dist5-mudgvfyx-1..2`
 (both closed), DIST #4's `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`, livefire canaries, 13 July
 probe members (not DIST's) — so `op=purge` is not used.
+
+## The 0.74.0 figures (a CUT NOW for D-442 / IC-179 — DIST's reading: another project's publish moved a pinned finding)
+
+Cut `cacebb12` (carries 0.73.0's pointer merge). Gate GREEN FULL on `87cf824f`: **282/282 · 17056**, 1591 s (this
+container ran slower than the 0.73.0 cut's 1064 s). Trend … 278·16785 → 281·16989 → **282·17056**. Signature 7/7;
+newgroup 23/0, 146/0; migrate-released controls each at the figure predicted before arming: 438/0 · alterafter 360/78 ·
+nosecondpass 392/46 · percolumn 438/0 · firstbootalways 402/36 · firstbootnever 437/1 · groupwipe 432/6. Live 11/11
+(the REC-163 and REC-168 arms as not-broken); audit = baseline. **UNDETERMINED live:** which DO build answers — D-442
+is reachable only through a ratified case, and no write-free arm discriminates it (lesson 18).
+Scratch residue added: `INQ-2026-9172-dist5-{a,b}-mudms9h0`, run `RUN-2026-0923-dist5-mudms9h0-1` (closed).
 
 ## The 0.73.0 figures (a CUT NOW for REC-168 / IC-178; I3 53.0.0)
 
