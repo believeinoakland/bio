@@ -53655,12 +53655,7 @@ ${words}`;
   /* REC-176: THE FILE LIST A MANIFEST ROW RECORDS, parsed once for both readers (the re-send test and the census).
      An unparsable or non-array value is an EMPTY list, which `#samePromotion` treats as undetermined, never equal. */
   static #manifestFiles(filesJson) {
-    let arr;
-    try {
-      arr = JSON.parse(filesJson);
-    } catch {
-      return [];
-    }
+    const arr = safeJson(filesJson);
     return Array.isArray(arr) ? arr.filter((f2) => f2 && typeof f2 === "object") : [];
   }
   /* REC-176: IS THIS THE PROMOTION THE ROW RECORDS? Every file by name AND digest (a set: the order a caller lists

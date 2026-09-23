@@ -29339,8 +29339,9 @@ export class Store extends DurableObject {
   /* REC-176: THE FILE LIST A MANIFEST ROW RECORDS, parsed once for both readers (the re-send test and the census).
      An unparsable or non-array value is an EMPTY list, which `#samePromotion` treats as undetermined, never equal. */
   static #manifestFiles(filesJson) {
-    let arr;
-    try { arr = JSON.parse(filesJson); } catch { return []; }
+    /* Through the module's one admitted `safeJson` rather than a catch of its own (provenance-marker's swallow ratchet):
+       an unreadable row is an EMPTY list, which the re-send test treats as UNDETERMINED and refuses, never as equal. */
+    const arr = safeJson(filesJson);
     return Array.isArray(arr) ? arr.filter((f) => f && typeof f === "object") : [];
   }
   /* REC-176: IS THIS THE PROMOTION THE ROW RECORDS? Every file by name AND digest (a set: the order a caller lists

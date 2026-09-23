@@ -1,5 +1,5 @@
 /* NEGATIVE CONTROL: RUN 2026-09-23 (REC-176), nine arms and a baseline in src/store.mjs, each ALONE, each restored from a
-   uniquely-named pristine copy verified by sha256 a6d4a800… AND cmp (2867748 bytes). Baseline: 47/0.
+   uniquely-named pristine copy verified by sha256 631d4f37… AND cmp (2867953 bytes). Baseline: 47/0.
    (1) original — THE ORIGINAL DEFECT: `INSERT OR REPLACE` restored at all three statements AND the
        `is-promote-snapkey` refusal disarmed (`if (false)`) -> 23 pass, 24 FAIL, first by name "a revision with a
        correct base, reusing K1, is refused" (the collision LANDED, ok: true) and "and the WHOLE image is

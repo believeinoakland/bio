@@ -249,10 +249,17 @@ console.log("\n--- 7.11: only an OWNER deactivates or reactivates, and the rule 
     const body = `---\nid: ${id}\nobject_type: project\ncurrent_state: ${to}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-02T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
     return { text: body, to, reason, actor };
   };
+  let MOVE_SEQ = 0;
   const promoteState = async (id, to, closedReason, actor) => {
     const m = move(id, to, closedReason, actor);
+    /* CORRECTED 2026-09-23 (REC-176, IC-193), never exempted: the key named only (target, reason, actor), so the owner's
+       SECOND `investigating` move reused the first's key and REPLACED its manifest row — silently, until op=promote
+       refused a held snap key (SNAP_KEY_TAKEN, C-67.1). The key now carries a per-call sequence: the base alone is NOT
+       unique, because this lifecycle returns to byte-identical content (closed-as-resolved by dave and by a machine
+       write the same bytes), and an identical promotion under an identical key is — rightly — answered as a no-op. */
+    const base = await cur(id);
     return call("/promote", {
-      bundleId: id, base: await cur(id), snapKey: `${id}-${to}-${closedReason ?? "x"}-${actor ?? "none"}`,
+      bundleId: id, base, snapKey: `${id}-${to}-${closedReason ?? "x"}-${actor ?? "none"}-${++MOVE_SEQ}`,
       author: actor ?? "suite", actorMemberId: actor ?? undefined,
       files: [{ path: "bundle.md", text: m.text, bytes: m.text.length, sha256: sha(m.text) }],
       meta: { object_type: "project", group: "believe-in-oakland", title: id, current_state: to,
