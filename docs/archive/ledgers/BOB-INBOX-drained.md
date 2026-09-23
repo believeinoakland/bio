@@ -1797,3 +1797,5 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 >    sees, so the train passed a merge GitHub then failed. **Accepts when** the train, handed a tree already GREEN, still runs
 >    every never-cache unit and fails on a planted history defect. If M0-126 lands first and carries it, close this as
 >    absorbed. `depends-on` none.
+
+> VERIFIED 2026-09-23 by SCHEDULER #15: item 1 (mergecarry's `carried` class) LANDED at `19101d04` (train train-20260923T092547Z-31509), an ancestor of `origin/main`; `tools/mergecarry.mjs` classifies `carried` there. The absorption is confirmed.
