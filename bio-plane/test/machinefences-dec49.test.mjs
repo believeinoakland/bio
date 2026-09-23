@@ -422,6 +422,10 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* REC-136 / §7.1 item 7, 2026-09-18: a project withdraws only a conclusion
        it stands on. D-PIN-B failed on it when it landed — the arm doing its job. */
     ["C-33.37", "NOTHING_TO_WITHDRAW"],
+    /* D-168 / BOB #30, 2026-09-23: a retired item is not citable (`cite > is-cite-retired`).
+       D-PIN-B failed naming exactly this row when it landed — the arm doing its job. C-33.38 is
+       REC-175's (FILE_DIGEST_MISMATCH), on its own branch; it joins this list at its own landing. */
+    ["C-33.39", "RETIRED_NOT_CITABLE"],
   ];
   const live = FAMILIES.flatMap((f) => Object.entries(CATALOGUE[f]).map(([c, r]) => `${r.check}=${c}`)).sort();
   const pinned = PINNED.map(([n, c]) => `${n}=${c}`).sort();
@@ -509,10 +513,12 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
   /* MOVED 53 -> 54 on 2026-09-19 (D-136), FROM THE FIGURE THIS INSTRUMENT PRINTED
      ("corpus: 54 rows across 2 families" on the item's tree) and not by adding to
      the number in the file: C-32.17 OPERATOR_TOKEN_CANNOT_GOVERN. */
+  /* MOVED 54 -> 55 on 2026-09-23 (D-168), FROM THE FIGURE THIS INSTRUMENT PRINTED ("got 55" on the
+     item's tree) and not by adding to the number in the file: C-33.39 RETIRED_NOT_CITABLE. */
   t("ARM D0: the row corpus is the size REC-64 landed, plus REC-117's one row, REC-123's two, REC-125's two, "
-    + "REC-126's one, REC-124's three, REC-136's one and D-136's one — a walk that lost a family would run "
-    + "fewer arms and every one of them would still pass",
-    rowsSeen, 54);
+    + "REC-126's one, REC-124's three, REC-136's one, D-136's one and D-168's one — a walk that lost a family "
+    + "would run fewer arms and every one of them would still pass",
+    rowsSeen, 55);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

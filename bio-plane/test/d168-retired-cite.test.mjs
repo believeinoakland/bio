@@ -245,8 +245,7 @@ t("§4 op=affordances does NOT offer `cite` on a RETIRED bundle, and DOES on a r
 } catch (e) {
   console.log(`  FAIL  the suite threw before its foot: ${e && e.stack ? e.stack : e}`);
   fail++;
-} finally {
-  await mf.dispose();
 }
+await mf.dispose();
 console.log(`\nd168-retired-cite: ${pass} pass, ${fail} fail`);
-process.exitCode = fail ? 1 : 0;
+process.exit(fail ? 1 : 0);
