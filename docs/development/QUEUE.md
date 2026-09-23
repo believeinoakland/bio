@@ -545,7 +545,7 @@ scope: in `harness.mjs` `nextStep`, `adjust` with nothing adjusted and a non-emp
 accepts-when: a pass whose first candidate is dropped still writes the candidates behind it. NEGATIVE CONTROL: route the edge back to `next-pass`, and the "the rest of the pass is written" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### D-241 · queued — **`op=connections` CANNOT SAY THE DERIVATION BEHIND ITS ROWS WAS CUT: REC-95 records each derivation's extent (`#observeConnectionDerivation` writes a `level=meaning` observation, state `partial` when the bound cut it), and `connectionsFor` still answers only its own read's `truncated`.** — owner RECORD.
+### D-241 · running — SPAWNED 2026-09-23 ~23:15Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-241 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-241 and that session; never conclude queued from the absence alone.
 order: after D-50, the last of the product rows before the M0 group: a read that says less than the record knows (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M3
 interface: I3 additive — a `derivation` field on the entity arm; the integrator mints and classifies the IC.
