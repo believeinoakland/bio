@@ -150,7 +150,11 @@ v0.71.0); 0.75.0's `RELEASE.json` names `a7e5f590…`, `b26dee19…`, `0d99f5d0�
 release since v0.59.0. `main`'s `RELEASE.json` reads 0.74.0. Staleness on `main`: 23 checked, 0 drift, 0 unreadable.
 Context ~30%. Next self-wake `trig_01TGRNTEDZPx5KHRkz3ekU4C`, 2026-09-24T10:00Z (the earlier one fired and is spent).
 
-**Refresh line is 80%, not 70%** (Bob, 2026-09-23, relayed by BOB #30 at 15:05Z). `CLAUDE.md` §4 on `main` still read 70%
+**Refresh line is 75%** (BOB #31, 2026-09-23T18:19Z, superseding BOB #30's 80%): the environment sets
+`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=80`, so auto-compaction fires near 79% of the `get_session` figure. **And Bob: "cut back on
+gates".** A FLEET landing runs ONLY the suites its rows name, their negative controls and `plancheck`, never
+`gates.mjs` FULL; CONDUCT's train union gate is the one FULL gate. No releases of any kind until Bob asks.
+Earlier text:  `CLAUDE.md` §4 on `main` still read 70%
 at 15:06Z, so its home lags the ruling; BOB carries it. Peers at that time: integrator CONDUCT #16
 (`session_01DEAp94ny3PfWr6deFJtTaD`), SCHEDULER #16 (`session_01UZaSR1KRWmADuxBFYk1wY9`). Wake a peer by a one-shot
 `create_trigger` with `persistent_session_id` into its session, as CONDUCT and SCHEDULER wake this one.
