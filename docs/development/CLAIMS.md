@@ -19636,3 +19636,22 @@ paths, BY SITE:
 **NOT CLAIMED:** the ratify committer (`publish`), `#caseEditionState`, `civicos-ui/**` (UI-82's).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (REC-171 — rule 2 binds every creation D-78 stamps `surfaced_by: agent`: an admin, member or probe deploy token's inquiry creation names a running run it holds)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for REC-171, worktree `.claude/worktrees/agent-ab177e2083187aeae`,
+branch `land/worker/REC-171`, from `origin/main` @ `4355bfda` (carries D-85 and BOB #30's ruling).
+authority: `QUEUE.md` `### REC-171 · running`; design `INVESTIGATIVE-SESSION.md` §11 item 5, "Rule 2's reach" (BOB #30).
+paths, BY SITE:
+  - `bio-plane/src/index.mjs`: `op=promote`'s stamp block — the `assistantPrincipal` stamp ONLY (widened from `ai` to
+    every non-session credential, by the run verbs' expression). The D-78 restamp beside it is NOT changed.
+  - `bio-plane/src/store.mjs`: `#surfacingGate` and `promote`'s D-85 call site — COMMENTS/wording only if at all.
+  - NEW `bio-plane/test/rec171-surface-token.test.mjs` and `bio-plane/test/rec171-surface-token.control.mjs`;
+    `bio-plane/test/d85-surface-run.test.mjs` (header "cannot see" (v) corrected); any existing suite or fixture that
+    creates an inquiry under a deploy token outside a run (CORRECTED into a run or a session, named at landing);
+    `bio-plane/dist/`.
+  - `docs/development/interface-changes/` (one PROPOSED IC), `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5
+    (a BUILT line) and its front matter, `construct-status.json` if a construct's state moves.
+**NOT CLAIMED:** `aiRunTick`, `aiRunOpen`, `AI_RUN_CHECKS` / anything in `bio-checks.mjs` (REC-169's), `runPrincipalGate`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
