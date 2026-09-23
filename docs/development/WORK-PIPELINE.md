@@ -73,6 +73,14 @@ tail is an empty one, named `absent`, never `unreadable`. Readers: `findId`, `pi
 `rowsubstrate`, `plancheck` §2), `owed.mjs`, `mintid.mjs`' corpora, `ledgerAudit`. Rows already cut STAY CUT, per (1):
 nothing restores them from the cut archive.
 
+**WHICH WRITES REBALANCE — RULED 2026-09-23 by BOB #29 (M0-119's question, SCHEDULER #14's recommendation):** only a write
+that changes the plan's MEMBERSHIP OR SIZE rebalances — an `insert`, a `row` replace or delete, an `append` or `line` into
+`QUEUE.md`, `BACKLOG.md` or `BACKLOG-LATER.md`, a `refill`, an `archive`. A claim, a handoff, a DELEGATION or a status word
+never rewrites a plan file, so M0-110's partition of writers holds and a lane's claim cannot move a row it never read. As
+built, `coord.mjs write` rebalances after EVERY write; that is the correction owed (M0), and until it lands a stray
+rebalance is harmless because it conserves every row verbatim. A tree's GATE never fails on the budget either way
+(TREE-SHARING §3 (c)): the budget is enforced at the write.
+
 ## 3. DEBT.md FOLDS INTO THE BUILD PLAN, and is retired as a live file
 
 Bob, 2026-09-18: *"those debts should be appropriately folded into the build plan so that those debts are retired - in

@@ -844,8 +844,11 @@ bounds) and this rule does not touch it. **`op=capturerequest` — RULED 2026-09
 files a request under another member's run, and the request row credits that run's principals):** rule 1 applies to it
 — a request that names a run is a production of that run, so it names a RUNNING run whose PRINCIPAL is the caller, by
 the same stamp, the same sight check first and `runPrincipalGate`. Rule 1's target does not: a request names an
-address, not a question, and what the record holds is instance-wide. A request naming no run is the member's own and is
-untouched. **BUILT 2026-09-23 by REC-168 (IC-178):** `RUN_PRODUCTION_ACTIONS` gains `capturerequest`, so the door takes the one
+address, not a question, and what the record holds is instance-wide. ~~A request naming no run is the member's own and is
+untouched.~~ **CORRECTED 2026-09-23 by BOB #29 (REC-168's worker: no run-less path exists):** a request MUST
+name a run, and DEC-47 stands — the session launch is the authorisation for a fetch nobody named, so a run-less request
+names no authoriser. A member who wants an address captured captures it herself with `op=acquire` (open to `member`), an
+act she authors; `op=capturerequest` is a RUN's queue for the daemon, never a member's second door. **BUILT 2026-09-23 by REC-168 (IC-178):** `RUN_PRODUCTION_ACTIONS` gains `capturerequest`, so the door takes the one
 `principal` stamp; `captureRequest` asks sight (`#aiRunInSight`), then `runPrincipalGate`, then running; the row's plane
 principal is the caller's stamp and its Claude principal is still the run's. A request naming no run is refused as it always
 was (the door requires a run, DEC-47), and is byte-unchanged. The builder measures `agent-worker`'s one `suggest` site (`index.mjs`,
