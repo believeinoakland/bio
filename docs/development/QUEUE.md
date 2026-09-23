@@ -344,7 +344,7 @@ added: 2026-07-31 · CONDUCT
 landed:
 uncut: restored whole from «CPDF-3» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-447 · running — SPAWNED 2026-09-23 ~23:05Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-447 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-447 and that session; never conclude queued from the absence alone.
+### D-447 · integrated — finished; integrated on land/conduct/c18-d456 @ dad5def2 (IC-235 renumbered IC-238, I3 MAJOR 74.0.0; M-122; the ORDER leaked too and both are closed), waiting for its train (the security train c18-d456) — flipped by SCHEDULER #17
 order: directly after REC-187, ahead of every correction and feature: a disclosure defect outranks both (CLAUDE.md §2; the lane's law) (SCHEDULER #17, 2026-09-23; REC-149's and UI-68's workers via CONDUCT #18 22:47Z)
 milestone: M8
 interface: I3 — the search answer stops publishing raw scores; the integrator mints and classifies the IC.
@@ -385,7 +385,7 @@ scope: the entity arm reads the latest derivation observation for that entity an
 accepts-when: op=connect over more than 32 documents, then op=connections, says the derivation was cut. NEGATIVE CONTROL: remove the observation read, and that arm fails by name. New suite `bio-plane/test/d241-derivation-stated.test.mjs`.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-241's DEBT row of 2026-08-08, verified at the code on `02603e88`; keeps its `D-` id).
 
-### D-456 · running — SPAWNED 2026-09-23 ~23:30Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-456 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-456 and that session; never conclude queued from the absence alone.
+### D-456 · integrated — finished; integrated on land/conduct/c18-d456 @ f9064f56 (IC-236 renumbered IC-237, I3 MAJOR 73.0.0; C-78), waiting for its train (the security train c18-d456) — flipped by SCHEDULER #17
 order: FIRST in the backlog: a safety defect on the record itself — a live verification that believes it is in a namespace writes the real record — outranks every correction and feature (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
 milestone: M0 (a guard at the plane's front door)
 interface: I3 — one DEC-49 refusal; the integrator mints and classifies the IC.
@@ -466,6 +466,26 @@ depends-on: D-182 (`integrated` on c17-batch5); REC-189 placed earlier.
 scope: a chooser in the action intake reading the published map, `undetermined` preselected and no numeric default; `mdFor` writes `risk_tier: <n>` only when the member chose one. Extend `civicos-ui/test/add-surface.test.mjs`.
 accepts-when: a member picks tier 2 and `op=projection` reads 2 with the published words; an untouched chooser writes undetermined; the page shows only words the plane published. How a liar passes it: hard-coding the three words, so an identity arm swaps the published map and the page must follow. NEGATIVE CONTROL: default the chooser to 1, and the "an untouched chooser writes undetermined" arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
+
+### UI-86 · queued — **THE QUEUE OFFERS NO MUTE ON A FINDING, THOUGH THE PLANE NOW ACCEPTS ONE: `op=queuemute` takes FINDING kinds and the item form `{item}` (`PERSONALLY_MUTABLE_CLASSES` = CONDITION, FINDING), while `app.html`'s `queueMutableKinds` filters CONDITION only and sends only `{case, kinds}`.** Its copy (*"reaches condition kinds only"*) and `queueMuteReportHtml` are now false, and `civicos-ui/test/notifications.test.mjs` §2 still pins PL-15's superseded *"NO MUTE IS OFFERED ON A FINDING"*. — owner UI.
+order: after UI-85: a correction to just-landed work (D-125's plane half), a surface that now tells a member something untrue (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (4), verified at c17-batch4 @ 65205437)
+milestone: M8
+interface: I3 consumer (`op=queuemute`'s item form); none new.
+design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class" (BOB #26, 2026-09-22; D-170).
+depends-on: D-125 (`integrated` on c17-batch4).
+scope: FINDING kinds in the per-case control; a per-item mute sending `{item}`; the copy and the report cover item mutes and read `mute.items`; the superseded pin corrected in place with a comment saying why. Suites: `civicos-ui/test/notifications.test.mjs`, `queue.test.mjs`, `member-respect.test.mjs`.
+accepts-when: a feed holding only a lead draws a mute that reaches `op=queuemute` as `{item}` and the suppression reads under `mute.items`. How a liar passes it: offering the control without sending the item form, so the arm reads the request body. NEGATIVE CONTROL: restore the CONDITION-only filter, and the "a FINDING is offered a mute" arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
+
+### D-176 · queued — **THE QUEUE'S ALL-CLEAR RESTS ON AN INTERPRETED FEED YIELD, AND `QUEUE_SEEN` GROWS FOR THE PAGE'S LIFE: `queueFeedYield` counts only what this session saw resolve, and nothing ever deletes from `QUEUE_SEEN`.** Honest and stated in the code; no document states it. — owner UI.
+order: with the UI state hygiene, after UI-93 (SCHEDULER #17, 2026-09-23; BOB #32: *CIVICOS_UI_STATE.md is UI's file — a DELEGATION to UI to state the limit beside v46's UI-14 entry*)
+milestone: M8
+interface: none
+design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class".
+depends-on: none.
+scope: state the limit in `CIVICOS_UI_STATE.md` beside v46's UI-14 entry at UI's next landing (the build — a RECORD read of what left the queue since the last look — waits on map growth or the interpretation biting).
+accepts-when: the statement is in `CIVICOS_UI_STATE.md` beside UI-14. NEGATIVE CONTROL: `corpuscheck` or a grep arm names the missing statement.
+added: 2026-09-23 · SCHEDULER #17 (LED-7; D-176's DEBT row of 2026-08-04; keeps its `D-` id).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

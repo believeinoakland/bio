@@ -23,6 +23,46 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### D-461 · queued — **A VALID `store=scratch` IS SILENTLY IGNORED BY THE PUBLIC OPS PINNED TO `bio` (`claim`, `login`, `knock`, `bootstrap`, `verify`, `publishedmanifest` …), SO `op=knock&store=scratch` WRITES THE REAL RECORD WHILE THE CALLER BELIEVES IT IS IN SCRATCH.** D-456 refused unknown names; this is the second half of the same trap. — owner RECORD.
+order: FIRST in the backlog, as D-456 was: a live verification that names scratch and writes the real record is a safety defect on the record itself (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M0 (a guard at the plane's front door)
+interface: I3 — a second refusal on the pinned ops; the integrator mints and classifies the IC.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5: NAME `store=scratch` ON EVERY CALL; D-325).
+depends-on: D-456 (`integrated` on c18-d456).
+scope: every op pinned to `bio` refuses `store=scratch` by name (preferred), or answers `store:"bio"` on every reply; enumerate the pinned ops from the OPS table.
+accepts-when: `op=knock&store=scratch` is refused by name and `bio`'s counters are unchanged. NEGATIVE CONTROL: accept and ignore the parameter again, and the pinned-op arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-464 · queued — **A MEMBER'S `op=stats` MOVES WHEN A PROJECT THEY CANNOT SEE IS CREATED OR REVISED, AND `op=searchindexcheck`'s `counts.indexed` MOVES ON A HIDDEN CREATION: D-447's sibling class, not fixed.** Stated in Membership v2's Incomplete sections. — owner RECORD.
+order: directly after D-461: a disclosure defect, D-447's class, outranks every correction and feature (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M8
+interface: I3 — counts computed through the viewer; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Membership_Architecture_v2.md` §7 (item 7.9: a project the caller cannot see answers exactly as one that does not exist).
+depends-on: D-447 (`integrated` on c18-d456).
+scope: every count served to a class other than the operator's is computed through the caller's `viewerPredicate`. Extend `bio-plane/test/project-sight.test.mjs`.
+accepts-when: creating and revising a hidden project leaves a member's `op=stats` and `op=searchindexcheck` answers byte-identical. NEGATIVE CONTROL: count over the whole store again, and the hidden-creation arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-462 · queued — **`agent-worker`'s `STORE_SHAPE` ACCEPTS ANY TOKEN, SO A FLEET RUN CAN NAME A NAMESPACE THE PLANE NOW REFUSES (D-456) AND ONLY LEARN AT THE PLANE.** — owner FLEET.
+order: after D-464 (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M0 (the fleet's side of the same guard)
+interface: none — a fleet-side refusal.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5; D-325).
+depends-on: D-456 (`integrated` on c18-d456).
+scope: narrow `STORE_SHAPE` to `bio` or `scratch` with its own BAD_STORE refusal; correct the over-strictness arm.
+accepts-when: `store=biosmoke` is refused by the worker by name. NEGATIVE CONTROL: widen the shape again, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-463 · queued — **NO CREDENTIAL IS CONFINED TO SCRATCH FOR LIFE: the namespace binds per CALL, so an instrument that omits `store=scratch` addresses the real record (CLAUDE.md §5's stated residue: *a sticky confinement is RECORD's and is NOT built*).** — owner RECORD.
+order: after D-462, the last of the namespace guards (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M0 (a guard)
+interface: I3/I5 — a per-credential confinement; the integrator mints and classifies the IC.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5, D-325's residue).
+depends-on: D-456, D-461.
+scope: a credential may be minted confined to `scratch`; every call it makes resolves to scratch whatever it names, and a `store=bio` from it is refused by name.
+accepts-when: a confined credential writing without `store=` lands in scratch, and `bio`'s counters are unchanged. NEGATIVE CONTROL: drop the confinement, and that arm moves `bio` and fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ### REC-193 · queued — **C-41.10's AUTHOR EXCLUSION READS THE DRAFT'S LAST EDITOR, NOT THE STATEMENT'S AUTHOR: D-150's worker used the last editor PROVISIONALLY, so a participant who edited another section could be refused acknowledging a statement they did not write, and its writer admitted.** BOB #32's ruling of 2026-09-23 22:26Z (cite it until folded into Publication §3): *the statement's author is the member who wrote the statement's CURRENT BYTES.* — owner RECORD.
 order: after REC-188, the same completeness block: a correction to just-landed work (D-150) on who may attest (SCHEDULER #17, 2026-09-23)
 milestone: M10
@@ -103,16 +143,6 @@ scope: the date is the last change's; the container stamp as ruled. Extend the r
 accepts-when: a comment moves both the hash and the date. NEGATIVE CONTROL: keep the old date, and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### UI-86 · queued — **THE QUEUE OFFERS NO MUTE ON A FINDING, THOUGH THE PLANE NOW ACCEPTS ONE: `op=queuemute` takes FINDING kinds and the item form `{item}` (`PERSONALLY_MUTABLE_CLASSES` = CONDITION, FINDING), while `app.html`'s `queueMutableKinds` filters CONDITION only and sends only `{case, kinds}`.** Its copy (*"reaches condition kinds only"*) and `queueMuteReportHtml` are now false, and `civicos-ui/test/notifications.test.mjs` §2 still pins PL-15's superseded *"NO MUTE IS OFFERED ON A FINDING"*. — owner UI.
-order: after UI-85: a correction to just-landed work (D-125's plane half), a surface that now tells a member something untrue (SCHEDULER #17, 2026-09-23, CONDUCT #17's 21:43Z finding (4), verified at c17-batch4 @ 65205437)
-milestone: M8
-interface: I3 consumer (`op=queuemute`'s item form); none new.
-design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class" (BOB #26, 2026-09-22; D-170).
-depends-on: D-125 (`integrated` on c17-batch4).
-scope: FINDING kinds in the per-case control; a per-item mute sending `{item}`; the copy and the report cover item mutes and read `mute.items`; the superseded pin corrected in place with a comment saying why. Suites: `civicos-ui/test/notifications.test.mjs`, `queue.test.mjs`, `member-respect.test.mjs`.
-accepts-when: a feed holding only a lead draws a mute that reaches `op=queuemute` as `{item}` and the suppression reads under `mute.items`. How a liar passes it: offering the control without sending the item form, so the arm reads the request body. NEGATIVE CONTROL: restore the CONDITION-only filter, and the "a FINDING is offered a mute" arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (CONDUCT #17's finding; `node tools/mintid.mjs UI`).
-
 ### UI-93 · queued — **A BIAS-DEBT OBLIGATION NAMES A RUN AND THE QUEUE RENDERS NO RUN: D-86 raises an OBLIGATION whose subject is of kind `run`, and `app.html` `queueSubjectHtml` returns "" for it, so the item never says WHICH run.** The DELEGATION RECORD (D-86) -> UI of 2026-09-23 is on coord `CLAIMS.md`. — owner UI.
 order: after UI-86, the same queue surface; a correction that D-86's landing exposes (SCHEDULER #17, 2026-09-23; via CONDUCT #18 23:35Z)
 milestone: M8
@@ -132,16 +162,6 @@ depends-on: D-86 (`integrated` on c17-batch7).
 scope: the re-run discharge recording the discharging run's id and lens pins; the member's resolve with a required reason; the lens moving back stays a third discharge.
 accepts-when: a re-run under the current lens closes the obligation naming that run; one under another lens leaves it open; a resolve without a reason is refused by name. NEGATIVE CONTROL: discharge on any re-run, and the other-lens arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
-
-### D-176 · queued — **THE QUEUE'S ALL-CLEAR RESTS ON AN INTERPRETED FEED YIELD, AND `QUEUE_SEEN` GROWS FOR THE PAGE'S LIFE: `queueFeedYield` counts only what this session saw resolve, and nothing ever deletes from `QUEUE_SEEN`.** Honest and stated in the code; no document states it. — owner UI.
-order: with the UI state hygiene, after UI-93 (SCHEDULER #17, 2026-09-23; BOB #32: *CIVICOS_UI_STATE.md is UI's file — a DELEGATION to UI to state the limit beside v46's UI-14 entry*)
-milestone: M8
-interface: none
-design: `docs/development/NOTIFICATIONS.md` §"MARKED AS HANDLED — and handling has a SCOPE, which differs by class".
-depends-on: none.
-scope: state the limit in `CIVICOS_UI_STATE.md` beside v46's UI-14 entry at UI's next landing (the build — a RECORD read of what left the queue since the last look — waits on map growth or the interpretation biting).
-accepts-when: the statement is in `CIVICOS_UI_STATE.md` beside UI-14. NEGATIVE CONTROL: `corpuscheck` or a grep arm names the missing statement.
-added: 2026-09-23 · SCHEDULER #17 (LED-7; D-176's DEBT row of 2026-08-04; keeps its `D-` id).
 
 ### UI-94 · queued — **THE QUEUE CANNOT FORWARD A SELECTION: D-126 lets the plane take the set, and the member picker is per item.** — owner UI.
 order: after D-176 (SCHEDULER #17, 2026-09-23; D-126's worker via CONDUCT #18 23:47Z)
@@ -641,6 +661,16 @@ design: `docs/development/VERIFICATION.md` (measure; do not recall), for FW-20's
 depends-on: FW-20 (`integrated` on c18-batch8; M-121 lists the walk).
 scope: take the tier-3 walk documents M-121 names as agendas or minutes that read generic; establish whether the member transcribes one page per invocation and the plane keeps only the first; name the fix, or show the documents are generic.
 accepts-when: the named fix (then placed as its own row) or the refutation, recorded with date and instrument. NEGATIVE CONTROL: a two-page scanned fixture whose second page alone carries the agenda heading reads generic before the fix, or the refutation shows it read whole.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-465 · queued — **D-447's FIX COSTS SEARCH TIME: over 2,000 visible documents `q=culvert` takes 210 ms against 74 ms on `main`, because `highlight()` re-tokenises.** Measured by D-447's worker; its size at a real instance is UNDETERMINED. — owner RECORD.
+order: with the M0 measurements, behind the product rows: fix only if it matters at real size (SCHEDULER #17, 2026-09-23; D-456's and D-447's workers via CONDUCT #18 00:05Z)
+milestone: M0 (a measurement, then a fix if owed)
+interface: none unless the fix is built.
+design: `docs/development/VERIFICATION.md` (measure; do not recall).
+depends-on: D-447 (`integrated` on c18-d456).
+scope: measure the query time at a real instance's size; if it matters, compute per-term tf from an `fts5vocab` instance table instead.
+accepts-when: the figure is recorded with date, instrument and size, and either the fix brings it back or the record states why none is owed. NEGATIVE CONTROL: the measurement at 2,000 documents reproduces the 210 ms figure within tolerance.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### D-321 · queued — **NO REAL IMAGE-ONLY PAGE IN THE CORPUS CARRIES AGENDA-SHAPED TEXT, SO THE `reading_refs` JOIN OVER REAL OCR IS PROVED ONLY ON SYNTHETIC INK (`ocr-member-e2e.test.mjs`).** — owner CONTENT-PDF.
@@ -1192,23 +1222,3 @@ depends-on: none — M0-110 is done.
 scope: the control plants through a local ref named by `BIO_COORD_REF` (as `coord.test.mjs` does), never the working tree's pointer, and asserts before arming that the file it plants into is not a pointer.
 accepts-when: every PLANT arm reads AS DECLARED, each failing by name with its plant in place, and the tree is byte-identical after. NEGATIVE CONTROL: plant into the pointer again, and the new not-a-pointer assertion fails by name.
 added: 2026-09-23 · SCHEDULER #14 (M0-119's worker's finding via CONDUCT #14, verified at the code; `node tools/mintid.mjs M0`).
-
-### M0-124 · queued — **THREE CONTROL ARMS DIE ON THE BASE ITSELF SINCE REC-167: `case-edition-conclusion.control.mjs` (d) and (e) and `caselifecycle.control.mjs` (c).** C-65.1 (`CASE_CONCLUSION_MOVED`) now refuses each fixture's ratification before the arm's break is reached, so the arms fail for a reason unrelated to what they declare. D-442's worker's finding, fix named (CONDUCT #14). — owner M0.
-order: with the instrument cluster, directly after M0-123: controls that fail on an unbroken subject measure nothing, D-438's class; behind the product rows (SCHEDULER #14, 2026-09-23)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): *break only the thing* — a control that moves a second variable refutes nothing.
-depends-on: none — REC-167 is on `main`.
-scope: re-aim each arm to break only `op=publish`'s use of the conclusion reader, with a fixture whose ratification C-65.1 admits.
-accepts-when: each of the three arms reads AS DECLARED: green unbroken, failing by name when armed; the files byte-identical after. NEGATIVE CONTROL: arm each against the unbroken base, and it stays green.
-added: 2026-09-23 · SCHEDULER #14 (D-442's worker's finding via CONDUCT #14; `node tools/mintid.mjs M0`).
-
-### D-424 · queued — **`nc-mk4.mjs`'S `machinewide` ARM ANCHORS ON `gate.member == null) return false;`, WHICH NO LONGER EXISTS IN `src/`, SO BOB #14'S VISIBILITY RULING HAS NO LIVE CONTROL.** The rule moved into `Store#leadReach` at REC-129 and REC-132 (`#positionalMember`; `who == null` returns null); the arm's anchor (`bio-plane/test/nc-mk4.mjs`, re-read on `619dfa65`) matches 0 times in `bio-plane/src/`, so the arm cannot arm, and `lead.test.mjs`'s `NEGATIVE CONTROL:` line still records it as run AS DECLARED on 2026-09-18. — owner M0 with RECORD.
-order: with the instrument cluster, directly after M0-124: a control that cannot arm measures nothing, D-438's class; behind the product rows (Bob, 2026-09-22, `CLAUDE.md` §2) (SCHEDULER #15, 2026-09-23, LED-7 batch S15-1)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name): a control is evidence only when it fails at a named assertion; *break only the thing*.
-depends-on: none — REC-129 and REC-132 are on `main`.
-scope: re-point the arm at `#leadReach`'s rule (widen the machine read to unfiltered where `who == null`), assert each anchor matches exactly once before arming, re-run the arm, and re-date `lead.test.mjs`'s `NEGATIVE CONTROL:` line with the result.
-accepts-when: the `machinewide` arm reads AS DECLARED, failing by name on the member-token and organisation-key arms; the tree is byte-identical after. NEGATIVE CONTROL: restore the stale anchor, and the match-once assertion fails by name.
-added: 2026-09-23 · SCHEDULER #15 (LED-7 batch S15-1; D-424's DEBT row of 2026-09-18, verified at the code; keeps its `D-` id).
