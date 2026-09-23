@@ -13,6 +13,7 @@
    (7) **THE GENERATED-INPUT LOOP** — append one HTML comment to `tools/sign-release.html`, re-render nothing -> **55 pass, 1 FAIL, exit 1**, EXACTLY the render assertion naming the stale render; every input-hash and byte arm held, because no hashed input moved. This is the staleness class the manifest cannot see and the arm exists for.
    (8) **OVER-STRICTNESS, PLANE HALF** — a legitimate `npm run build` of the unchanged plane must leave the tree byte-identical (`git status --porcelain` empty; run after the commit, like (5a)) and the suite green at the baseline figure.
    (5) **OVER-STRICTNESS, and these must all PASS.** (a) Rebuild BOTH members from unchanged sources — a legitimately rebuilt, byte-identical bundle must still pass and the tree must be UNCHANGED afterwards (`git status --porcelain` empty). **RUN AFTER THE COMMIT, deliberately: the tree-unchanged half is only a statement about a clean tree.** (b) A docs-only change must not fail the build — `tools/gates.mjs` derives its doc-facing set from whether a suite's own source or its sibling control mentions the prose directory, and NEITHER of this pair does, so a DOCS-class run does not select this suite at all. **STATED AS THE FENCE IT IS: the DERIVATION is asserted over the real files; a full DOCS-class run of `gates.mjs` was NOT driven from this branch, because the branch's own committed diff makes every classification FULL.** (c) `node scripts/coverage.mjs --strict` exits 0, read from the process's own status.
+   ---- ARM 9 (FLEET #4 on BOB #29's diagnosis, 2026-09-23), APPENDED. **BASELINE 91 pass / 0 fail, exit 0.** (9) **THE INSTALL LAYOUT** — remove the `preserveSymlinks: true,` line from `optionsFor` in `scripts/fleet-bundle.mjs` and build through a SYMLINKED `pdf-worker/node_modules` (ambient in a worktree sharing another install; otherwise the harness parks the real directory and symlinks it) -> **84 pass, 7 FAIL, exit 1**: all four `… preserves symlinks …` recipe assertions, and pdf-worker's byte-identity, manifest-sha and comment-only assertions. agent-worker, ocr-worker and bio-plane byte arms held (none vendors from `node_modules`). Run on BOTH layouts, same tally; both restores verified by content and sha256. With the flag dropped on a REAL install (no symlink) the tally is **87 pass, 4 FAIL**, the four recipe assertions only, measured the same day: the byte arm cannot see the defect there, which is why they exist.
    ======================================================================== */
 /* THE FLEET'S BUILD GUARD (FL-9, BOB 2026-09-10, answering DIST's DELEGATION).
  *
@@ -68,7 +69,7 @@ import { join } from "node:path";
 import {
   REPO_ROOT, discoverMembers, buildMember, writeMember, verifyStatic, verifyFresh,
   freshBuildRunnable, unresolvableSpecifiers, sha256, fleetProvenance, memberPaths,
-  planeMember, assetsOf,
+  planeMember, assetsOf, optionsFor,
 } from "../scripts/fleet-bundle.mjs";
 import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../scripts/embed-signpage.mjs";
 
@@ -211,6 +212,14 @@ console.log("\n--- 2b · THE UPLOAD PARTS: a member that is not a one-part uploa
 }
 
 console.log("\n--- 3 · THE BYTE-IDENTITY ARM: a fresh build of the SOURCE against the COMMITTED artifact ---");
+/* THE INSTALL LAYOUT NEVER REACHES THE BYTES (BOB #29 and FLEET #4, 2026-09-23). esbuild names a module by its
+   RESOLVED path, so a `node_modules` that is a SYMLINK to another checkout put `../../../../home/...` into
+   pdf-worker's boundary comments and this arm read 84/3 on identical source. The flag is asserted HERE, on the
+   recipe, because a real install has no symlink and the byte arm below cannot see the defect on it: this line
+   is what fails on EVERY layout when the flag is dropped (fleetbundles.control.mjs arm 9). */
+for (const m of [...members.filter((x) => x.bundle), planeMember()])
+  t(`${m.name}: its build recipe preserves symlinks, so the install layout cannot reach the bytes`,
+    optionsFor(m).preserveSymlinks, true);
 const freshRan = [];
 for (const m of members) {
   if (!m.bundle) continue;
