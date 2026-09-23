@@ -1216,3 +1216,12 @@ depends-on: REC-14
 accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
 cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
+
+### UI-17 · blocked
+order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
+milestone: M10
+behind-interface: I3
+depends-on: REC-15, UI-11
+accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance … (whole text: the cut archive)
+added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
+cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.
