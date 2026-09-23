@@ -783,6 +783,9 @@ export const RUNG_ABSENT = {
      holds, so there is no act on the record for a rung to price. It cannot be undone either: that is WRITTEN ONCE,
      refused a second time by name (C-64.3), and stated there rather than as a rung here. */
   instancegroupseed:    { ground: "substrate", is: "records, once, the producing group every later creation is stamped with" },
+  /* REC-164: the group's display name and its domain claim — presentation of WHO publishes, never what the record says. */
+  groupnameset:         { ground: "substrate", is: "records the group's own words for itself, a presentation value in no signed bytes" },
+  groupdomainset:       { ground: "substrate", is: "records a domain CLAIM and its verdict; it moves no document, claim or grade" },
   connect:              { ground: "substrate", is: "DERIVES connections from documents already held; re-running re-derives" },
   provenancechain:      { ground: "substrate", is: "rebuilds the provenance register from what is already recorded" },
   provenanceroute:      { ground: "substrate", is: "assesses a route already captured" },
@@ -1967,6 +1970,10 @@ export const NON_ACTS = {
   membercaps: "roster governance — the subject is a member's capabilities, not a bundle (4.9)",
   adminendorse: "section 4.7 governance — the subject is a proposed administrator, not a bundle",
   adminremove: "section 4.7 governance — the subject is an administrator's standing, not a bundle",
+  /* REC-164: session-reachable through `IDENTITY_ACTIONS`, so in `NEEDS`, so named here: the subject is the group's
+     public identity (Publication §7 points 2 and 3), never a bundle. */
+  groupnameset: "the group's public display name — the subject is the instance's identity, not a bundle",
+  groupdomainset: "the group's claimed domain — the subject is the instance's identity, not a bundle",
   signeradd: "signer governance, bounded by SESSION_OPS.admin",
   signerset: "signer governance, bounded by SESSION_OPS.admin",
   governorconfig: "operator tuning of the per-host governor",
