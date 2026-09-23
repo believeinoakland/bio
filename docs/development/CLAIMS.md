@@ -19858,3 +19858,19 @@ paths, BY SITE:
 **NOT CLAIMED:** `tools/train.mjs` (M0-131), the catch/finally shape of any suite (M0-134), `tools/plancheck.mjs`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 M0 (M0-131 — the train's reused tree record still runs the never-cached units)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #16 for M0-131, worktree `.claude/worktrees/agent-a0c25bc1051c0294c`,
+branch `land/worker/M0-131`, from `origin/main` @ `e62e08e1` (carries M0-126).
+authority: `QUEUE.md` `### M0-131 · running`; design `TREE-SHARING.md` §2 (M0-122's reuse) and §3a condition 1 (BOB #30).
+paths, BY SITE:
+  - `tools/train.mjs`: `recordedGreen`/`gate` and the header's step 4; the retry's `--since` call.
+  - `tools/gates.mjs`: a new `--never-cached` flag only (argv, the class/selection it sets, the 2d shortcut's guard, the
+    usage block). NOT §2e, NOT §3b's keying, NOT the tracer.
+  - `bio-plane/test/train.test.mjs` (+ `train.control.mjs`): one new section and one new control arm.
+  - `docs/development/TREE-SHARING.md` §2's M0-122 paragraph and §3a "As built" item 10 (one sentence each);
+    `docs/architecture/construct-status.json` if the train's entry names the reuse.
+**NOT CLAIMED:** `bio-plane/test/mergecarry.test.mjs` (M0-130), `tools/mergecarry.mjs`, `tools/plancheck.mjs`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
