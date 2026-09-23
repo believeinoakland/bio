@@ -582,12 +582,12 @@ accepts-when: against the mock, a run's suggestions land inside its context and 
 added: 2026-09-23 · SCHEDULER #14 (FLEET #4's trigger; `node tools/mintid.mjs FL`).
 
 ### FL-12 · queued — **`agent-worker` SENDS `op=capturerequest`'s LOCATOR AS `url`, BUT THE PLANE READS ONLY `address`, SO EVERY FLEET INTERNET-LEVEL CAPTURE REQUEST IS REFUSED `CAPTURE_REQUEST_NOT_PUBLIC`.** `agent-worker/src/index.mjs` calls it with `{ run, target, url: t.url }` (re-read on `c5c83dc4`); the fleet mock does not model `address`. REC-168's worker's finding, fix named. — owner FLEET.
-order: directly after FL-11, before D-260: inert until D-260 dispatches runs, and every internet-level look a dispatched run asks for would be refused (SCHEDULER #14, 2026-09-23; REC-168's finding via CONDUCT #14)
+order: directly after FL-11, before D-260: inert until D-260 dispatches runs, and every internet-level look a dispatched run asks for would be refused ; ONE WORKER TAKES FL-11 AND FL-12 TOGETHER, one `agent-worker` bundle rebuild, so member bytes move once (FLEET #4, 2026-09-23) (SCHEDULER #14, 2026-09-23; REC-168's finding via CONDUCT #14)
 milestone: M9
 interface: none on the plane — the fleet member's call and its mock; the `agent-worker` bundle rebuilds at the next release (DIST's).
 design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5 (`op=capturerequest` takes rule 1; a request names an address), with `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6.
 depends-on: none — REC-168's gate is on `main` or lands before this reaches the cache.
-scope: send `address: t.url` in `agent-worker/src/index.mjs`; the fleet mock reads `address` and refuses a request without one as the plane does.
+scope: send `address: t.url` in `agent-worker/src/index.mjs`; the mocks (`harness.test.mjs` and `fanout.test.mjs`) read `address` and refuse a request without a public https address, as the plane does (FLEET #4).
 accepts-when: against the mock, a run's internet-level target files a request naming its address; one sent with only `url` is refused by name. NEGATIVE CONTROL: send `url` again, and the address arm fails by name.
 added: 2026-09-23 · SCHEDULER #14 (REC-168's finding via CONDUCT #14; `node tools/mintid.mjs FL`).
 
