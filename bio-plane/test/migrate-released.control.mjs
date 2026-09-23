@@ -53,6 +53,7 @@ const FIRST_PASS = "    addColumns();\n\n    /* REC-104: `content.chain_kind`";
 const SECOND_PASS = "    /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */\n    addColumns();";
 /* D-436's first-boot witness (DIST #4, 2026-09-22): the ONE line that decides whether this boot is the
    store's birth, and so whether INSTANCE_NAME is recorded as its producing group. */
+const GROUP_RECORD = "    if (firstBoot) this.#recordGroupAtFirstBoot();";
 const FIRST_BOOT = "    const firstBoot = [...this.sql.exec(`PRAGMA table_info(bundles)`)].length === 0;";
 
 const ARMS = {
@@ -90,6 +91,13 @@ const ARMS = {
     label: "(F) D-436's DECISION (a) broken: the first-boot witness forced FALSE, so a store BORN on the current "
          + "plane records nothing — the positive half, which keeps (E)'s absence from passing for free",
     apply: () => edit(STORE, FIRST_BOOT, "    const firstBoot = false;") },
+
+  groupwipe: { files: [STORE],
+    label: "(G) added by DIST #5 at the 0.72.0 cut, with the 0.71.0 row: the current plane ERASES a producing "
+         + "group an older plane recorded, at every boot — a store born on 0.71.0 (the first release that records "
+         + "one) loses its group on upgrade. DECLARED BEFORE ARMING: that store's two KEPT assertions FAIL and "
+         + "nothing else, 394 pass, 2 fail (section 0 boots its fresh store once, and records after the wipe)",
+    apply: () => edit(STORE, GROUP_RECORD, "    this.sql.exec(\"DELETE FROM instance_group\");\n" + GROUP_RECORD) },
 };
 
 const want = process.argv[2];
@@ -182,4 +190,17 @@ console.log(`\npen removed: ${PEN}`);
      firstbootnever  migrate-released: 356 pass, 1 fail    the D-436 POSITIVE arm ALONE — as declared
    The alterafter SEQUENCE (DIST.md lesson 19): 135 -> 169 -> 186 -> 203 -> 220 -> 237 pass / 66 fail, then
    254/66 with the 0.70.0 row by arithmetic and 279/78 with the D-436 assertions measured — the step in the
-   FAIL count is the six bricked stores failing the two new assertions, not a change in what bricks. */
+   FAIL count is the six bricked stores failing the two new assertions, not a change in what bricks.
+   MEASURED 2026-09-23 by DIST #5 (cloud clone, the 0.72.0 cut: 14 RELEASES rows, 0.71.0 added — the first
+   release that records a producing group, which falsified two premises of the suite, corrected there: op=file
+   is compared against the OLD PLANE's own answer, and a 0.71.0-born store's group is KEPT, not absent), from
+   this driver's own printed SUMMARY, store.mjs restored sha256 MATCH / content IDENTICAL after every arm:
+     baseline        migrate-released: 396 pass, 0 fail    engine: none (376 by arithmetic + 20 new ARMED)
+     alterafter      migrate-released: 318 pass, 78 fail   engine: no such column: content_id
+     nosecondpass    migrate-released: 354 pass, 42 fail   engine: no such column: schema_id
+     percolumn       migrate-released: 396 pass, 0 fail    the over-strictness arm PASSES
+     firstbootalways migrate-released: 360 pass, 36 fail   the 36 D-436 assertions of the 18 pre-0.71.0 stores ALONE
+     firstbootnever  migrate-released: 395 pass, 1 fail    the D-436 POSITIVE arm ALONE
+     groupwipe       migrate-released: 394 pass, 2 fail    the 0.71.0 store's two KEPT assertions ALONE — as declared
+   alterafter SEQUENCE: ... -> 279/78 (0.71.0's cut) -> 318/78 (the 0.71.0 row, +19 ARMED op=file and +1 ARMED
+   group arm, all on the OLD plane, so they pass under every arm): the pass count rose, so the row is exercised. */
