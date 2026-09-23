@@ -190,6 +190,21 @@ workflow triggers on — it runs locally, as every other control does (M0-114's 
 defect that reddened `land/conduct/batch6`'s runs 6 and 7, placed by SCHEDULER); and (d) whoever pushed a branch that
 reads red diagnoses it at once and never leaves it red.
 
+**ONE GITHUB RUN PER LANDED BATCH — RULED 2026-09-23 by Bob** (*"Ok, 1 github run per batch"*, on BOB #29's
+recommendation). The workflow runs on a push to `main` alone, and `main` moves only through the train, so each run audits
+exactly one landed batch; it no longer runs on `land/*` or `integrate/*`. **Nobody waits on it:** a lane reuses its own GREEN
+record, and the push guard's check arm, finding no check on a `land/*` commit, says so and never refuses. What it is FOR is
+the one thing a second machine can see: a test whose result depends on the machine. Its email to Bob is the alarm that
+`main` itself is red. The measured cost it removes: every locally-green branch re-run on a runner (~15 min a push), and
+the runner-only emails of 2026-09-23.
+
+**A GATE TEST DEPENDS ONLY ON THE CODE — RULED 2026-09-23 by Bob** (*"If a test can pass or fail because of the machine it
+ran on rather than the code, that sounds like an error in the design of the test"*). A result that moves with the machine
+is a DEFECT, diagnosed to its fix like any other, never waved through as "the environment". Anything that genuinely needs
+the outside world is a LIVE PROBE, outside the gate (§3 above). The two found that night: esbuild writing each
+dependency's RESOLVED path into the fleet bundles, so a symlinked `node_modules` changed the bytes (fix: `preserveSymlinks`,
+FLEET); and a battery suite leaking miniflare sandboxes on the runner only (D-186's race, CONDUCT).
+
 - A GitHub Actions workflow runs `node tools/gates.mjs`, in the class it derives, for each `land/*` push and each
   integration branch, and records the verdict as a check on the commit. **The push guard accepts a green check for
   HEAD's tree** as it accepts a local record today (D-293 keys both by the tree). A local gate stays the fallback.
