@@ -206,7 +206,7 @@ scope: an arm in `civicos-ui/test/artifact-fetch.test.mjs` asserting the capture
 accepts-when: the arm reads the frame's attribute from the page and is green. NEGATIVE CONTROL: change it to `sandbox="allow-scripts"`, and the new arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-1; D-192's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
 
-### D-260 · queued — **A WOKEN RUN IS NOT RE-ENTERED: FL-4's wake has nothing to consume it.** When the daemon completes a capture a run waited on, the plane holds the run's lease, logs that the daemon answered and stamps `run_woken_at`; nothing dispatches the run, because `AGENT_WORKER` and `claude_accounts` occur 0 times in `bio-plane/src`. RULED by BOB #22 (SCHEDULER #5's Q3): an instance may hold ONE organisation-principal `ai` credential and resumes ONLY the runs it opened. — owner RECORD with FLEET, then DIST.
+### D-260 · running — SPAWNED 2026-09-24 ~00:05Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-260 (CONDUCT #18), BRANCHED FROM land/conduct/c18-batch8 (which carries FL-11/12); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-260 and that session; never conclude queued from the absence alone.
 order: a feature after the rows Bob's priorities ordered (UI-71), above D-126: FL-4's wake and DS-3's and FL-6's halves are BUILT and inert until this caller exists, and I8 leaves PROVISIONAL when it lands (SCHEDULER #7, 2026-09-21)
 milestone: M9
 interface: I8 (leaves PROVISIONAL); the integrator mints and classifies the IC.
