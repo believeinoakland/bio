@@ -959,8 +959,9 @@ CREATE INDEX IF NOT EXISTS entity_aliases_entity ON entity_aliases(entity_id);
 -- own statements mean, not claiming something checkable about the world. So it sits
 -- OUTSIDE the framework's section 8.1 A-to-D connection grade, which states how a
 -- connection's provenance was ESTABLISHED. Grading a constitutive relation Grade D
--- ("asserted with no captured basis") is the category error D-83 names explicitly:
--- it is not weak evidence, it is not evidence at all. The enforcement is structural
+-- ("asserted on the member's stated basis, with no captured document") is the
+-- category error D-83 names explicitly: it is not weak evidence, it is not
+-- evidence at all. The enforcement is structural
 -- -- there is simply no field to carry a grade -- rather than a convention a later
 -- writer could forget; entityregistry.test.mjs asserts a read relation exposes none.
 -- Constitutive, member-declared, first-class; cleared by a whole-store purge (D-113).
@@ -994,8 +995,9 @@ CREATE INDEX IF NOT EXISTS entity_relations_to ON entity_relations(to_entity);
 --   C -- correspondence, not identity: a name/title matched an entity ALIAS. Plausible,
 --        NEVER presented as established, and FLAGGED for a member to confirm (an
 --        equality that costs nothing to produce is not evidence, CLAUDE.md).
---   D -- asserted with no captured basis: member TESTIMONY, recorded with an author and
---        a date. The RECOGNISER never mints a D (op=resolve produces only A/B/C); the
+--   D -- asserted on the member's stated basis, with no captured document: member
+--        TESTIMONY, recorded with an author, a date and the basis stated (D-219).
+--        The RECOGNISER never mints a D (op=resolve produces only A/B/C), the
 --        model holds it so a member can testify (op=resolvetestify), never the machine.
 -- established is derived from grade at write time -- 1 for A/B, 0 for C/D -- so a C can
 -- NEVER be read back as established (the column carries the flag structurally, not by a
@@ -47031,7 +47033,7 @@ ${words}`;
     };
     const ent = this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
-    const method = `testimony -- asserted by ${resolvedBy || "a member"} with no captured basis (framework 8.1 grade D)`;
+    const method = `testimony -- asserted by ${resolvedBy || "a member"} on the member's stated basis, with no captured document (framework 8.1 grade D)`;
     const m = this.ctx.storage.transactionSync(() => this.#upsertResolution({
       captureSha,
       bundleId: rr.bundle_id,
@@ -68789,7 +68791,8 @@ var OPS = {
      §8.1 connection grade (A source's own composite identifier, B the source's bare
      identifier in content, C name correspondence — never D, which the machine never
      mints); `resolvetestify` is the member's grade-D TESTIMONY path (an author and a
-     date, no captured basis). Both mutate and stamp resolved_by from the session below.
+     date, the member's stated basis, no captured document). Both mutate and stamp
+     resolved_by from the session below.
      `resolutions` reads a document's resolutions; `concerns` is the REVERSE INDEX —
      every document that concerns an entity, joined on entity_id, never through a
      declared relation. Both read-only; probe admitted so the surface is exercisable. */
