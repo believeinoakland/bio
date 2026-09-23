@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads fetches origin/coord and reads it, which no
+   result key can name; traced 2026-09-23. */
 /* M0-17 — AN ID THAT CANNOT BE TAKEN TWICE, DRIVEN UNDER CONCURRENCY.
  *
  * The subject is `tools/mintid.mjs`. The reason it exists is a measurement, not

@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads the merge history of origin/main, which no
+   result key can name; traced 2026-09-23. */
 /* M0-20 — A MERGE THAT SILENTLY DROPS A FILE.
  *
  * The subject is `tools/mergecarry.mjs`. The reason it exists is a measurement:
