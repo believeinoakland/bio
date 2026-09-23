@@ -19619,6 +19619,7 @@ paths (hunks kept local; M0-126 holds the rest of `gates.mjs`/`gates.yml`/batter
   - `docs/development/TREE-SHARING.md` §3 (as-built sentence), `docs/development/VERIFICATION.md` (the D-186 paragraph),
     one measurement entry.
 **open as of 2026-09-23** — OPEN while this item builds.
+amended 2026-09-23: ALSO `bio-plane/test/battery-verdict.test.mjs` (its `countOf` reader, corrected for the ` · pid N` segment, dated); `tools/pushguard.mjs` ALSO gains `tokenSafe`/`stepName`/`stepCauses`/`causesLine` directly BELOW `parseVerdictAnnotation` (the gate half of the grammar, beside its reader, because every fixture copying gates.mjs copies pushguard.mjs); `gates.mjs` imports them on ONE new import line. `battery-residue.test.mjs` NOT touched after all.
 
 ## CLAIM 2026-09-23 RECORD (REC-170 — `op=publishedmanifest` serves the frozen pair PER CASE where the pinning case documents disagree, never a bare null and never one case's pair as THE pair)
 
