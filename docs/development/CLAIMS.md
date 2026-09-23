@@ -19265,3 +19265,25 @@ paths, BY SITE:
 DELEGATION, not an edit), `tools/**` (four M0 workers), `docs/development/QUEUE.md` (CONDUCT's).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## DELEGATION 2026-09-23 SCHEDULER (#14) -> BOB — **THREE LED-7 DESIGN QUESTIONS, ONE EACH: D-129's states of `undetermined`, D-170's ungrouped mute, D-181's action leg**
+
+LED-7 (SCHEDULER #14) cannot move these three without a ruling; each answer disposes of its row. Verified on `coord` @ `c3980219`.
+
+1. **D-129 — `undetermined` conflates WE DO NOT KNOW with THERE IS POSITIVELY NONE (M2, design).** A scanned PDF with no
+   text layer and a PDF over the Worker envelope both read text-undetermined, told apart only by a reason string; the
+   row was WIDENED 2026-08-04 by `STORE-AS-CACHE.md`'s survey to a larger state set (Software Heritage's
+   `not_found`/`failed`/`partial`/`full`), with `partial` already measured (CPDF-5's Tier-1-at-88%). **Design it now —
+   in which home (State Rules, or STORE-AS-CACHE) — or state it deferred with a trigger (door 3)?**
+2. **D-170 — an UNGROUPED condition cannot be muted (M8).** `queue_state` is keyed `(member, case)`; REC-32's integration
+   accepted LEAVE IT (a pseudo-case is the invented home REC-20 refuses). D-125, now placed, builds a member's per-ITEM
+   mute (`NOTIFICATIONS.md` "MARKED AS HANDLED"). **Does D-125's item mute reach an ungrouped condition such as
+   `governor-holding-host`? If yes, D-170 closes with D-125 and I add the arm to its accepts-when; if no, door 3 with its
+   trigger (a real group reports an unsilenceable condition), stated in `NOTIFICATIONS.md`.**
+3. **D-181 — C-2.8 refuses an ACTION as a basis leg (M10).** The overdue→finding loop carries the action as a
+   `references[]` edge; the row names DEC-14's non-self rule one construct over and says the reference may simply be
+   right. Its disposition already reads as a deferral: *raise to Bob only if a real non-response case needs the leg*.
+   **Door 3 (the deferral and its trigger stated in `BIO_Case_Making_v0_1.md`'s front matter, §THE ACTION PLAN, worded by
+   BOB since it touches DEC-14), or a ruling now?**
+
+**open as of 2026-09-23** — nothing runnable waits on any of them.
