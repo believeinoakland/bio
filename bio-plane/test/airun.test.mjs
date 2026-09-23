@@ -282,12 +282,16 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
      into a run's bound is a non-negative whole number; a negative one was a refund) and C-22.14
      (`AI_RUN_BOUND_PLANE_COUNTED` — never a figure for a bound the plane counts), both facts about the run's budget,
      so the family holds FOURTEEN. `rec169-consume.test.mjs` drives both through the ops. */
-  t("ARM D1: the C-22 family is FOURTEEN C-numbers — IS-6's six, SK-1's skill-version condition, "
+  /* CORRECTED A SEVENTH TIME 2026-09-23 BY REC-172, read off this arm's own failure output in the item's gate: C-22.15
+     (`AI_RUN_BOUND_UNKNOWN` — a figure is spent or declared only on a bound the run HAS, in a map at the tick and a list
+     at the open; an unknown key and an array `consume` were skipped silently), a fact about the run's budget, so the
+     family holds FIFTEEN. `rec172-bounds.test.mjs` drives it through both ops. */
+  t("ARM D1: the C-22 family is FIFTEEN C-numbers — IS-6's six, SK-1's skill-version condition, "
     + "PL-18's project-membership gate, REC-93's two for the folded observation log, REC-153's "
-    + "context-kind check, REC-152's principal and REC-169's two budget figures",
+    + "context-kind check, REC-152's principal, REC-169's two budget figures and REC-172's unknown bound",
     codes.map((c) => AI_RUN_CHECKS[c].check).sort(),
-    ["C-22.1", "C-22.10", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.2", "C-22.3", "C-22.4", "C-22.5",
-     "C-22.6", "C-22.7", "C-22.8", "C-22.9"]);
+    ["C-22.1", "C-22.10", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.2", "C-22.3", "C-22.4",
+     "C-22.5", "C-22.6", "C-22.7", "C-22.8", "C-22.9"]);
   t("ARM D2: every code carries a CANNED TRANSLATION — an untranslated code must not exist to be sent",
     codes.filter((c) => typeof AI_RUN_CHECKS[c].translation !== "string"
                      || AI_RUN_CHECKS[c].translation.length < 40), []);
