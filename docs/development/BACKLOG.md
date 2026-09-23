@@ -183,16 +183,6 @@ scope: the set act admits project-scoped items, each resolved against its own pr
 accepts-when: a selection mixing a project-scoped finding and a condition is handled in one act. NEGATIVE CONTROL: drop the per-item project, and the mixed-selection arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-291 · queued — **TWO MEMBER-FACING SETS OF DECISIONS CAN BE REACHED ONLY ONE ITEM AT A TIME: `resolveReferences({captureSha, ref})` and `proposeDispose({progressionKey, stageKey…})` take one item, so a surface's bulk act is a client loop; `member-respect.test.mjs` ARM 4c/4d carry both.** — owner RECORD, then UI.
-order: after REC-205, with the M8 selection rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
-milestone: M8
-interface: I3 — a selection path per act; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §S "SELECTION-SCOPED ACTION — how any act goes bulk, safely" (named by BOB #32's ruling of 2026-09-23 23:30Z (cite until folded)).
-depends-on: none.
-scope: the plane's selection path for both acts under §S; the surfaces use it; strike the carry in ARM 4d.
-accepts-when: bulk and single both reach the op in one motion, and ARM 4d's carry is struck. NEGATIVE CONTROL: a client-side loop, and the one-motion arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
-
 ### D-444 · queued — **THE PROJECT OFFERS `reinstate` THAT THE STORE WILL REFUSE: the reinstate affordance's PROJECT arm keys on the count `cites_out.severed`, so a project whose only severed edges point at RETIRED items is offered the act, and REC-183's `#edgeTransition` refuses it RETIRED_NOT_CITABLE.** The worker states it at `affordances.mjs` beside the rule (*"The PROJECT arm is not narrowed"*). — owner RECORD.
 order: after UI-86: a correction to just-landed work (REC-183), an affordance that promises an act the record refuses; directly ahead of the census rows (SCHEDULER #17, 2026-09-23, REC-183's worker via CONDUCT #17, 22:09Z; verified at land/worker/REC-183 @ 27905f5d)
 milestone: M8
@@ -271,6 +261,16 @@ design: `docs/development/CONTENT-SEARCH-DESIGN.md` §4.3 (the cap, and truncati
 depends-on: D-241 (`integrated` on c18-batch8).
 scope: render `derivation.says` whenever `derivation.cut` is true or the state is not `derived`, beside the connection list. Extend the subject-view harness in `civicos-ui/test/`.
 accepts-when: a cut derivation shows its sentence; a whole one shows none. NEGATIVE CONTROL: drop the render, and the cut-set arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
+
+### UI-96 · queued — **A MEMBER WHOSE CASE RESTS ON A PASSAGE IS STILL NEVER TOLD A NEWER VERSION EXISTS: D-394 built the plane's cross-version notice (`versionnotice`, C-80; construct 4.cross-version BUILT), and 4.cross-version-ui is ABSENT: no surface shows it where a member meets a citation.** — owner UI.
+order: after UI-95: the plane half's member surface (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
+milestone: M4
+interface: I3 consumer (IC-239).
+design: `docs/architecture/BIO_Content_Framework_v0_10.md` §18.1.
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: where a citation is shown, render the notice's state as the plane states it, including "the chain could not be read"; replace 4.cross-version-ui's probe.
+accepts-when: a citation to a superseded passage shows the notice; an unread newer capture reads as not read, never as unchanged. NEGATIVE CONTROL: collapse "not read" into "unchanged", and that arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs UI`).
 
 ### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
@@ -911,6 +911,16 @@ design: `docs/development/VERIFICATION.md` (the negative-control register).
 depends-on: none.
 scope: classify the suite in `coverage.mjs`'s register, with its control or its stated reason for none.
 accepts-when: `coverage --strict` names no unclassified suite. NEGATIVE CONTROL: remove the classification, and `--strict` names the suite.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### D-466 · queued — **D-394's OFFICE EXTENT ARMS ARE UNDRIVEN BY ITS SUITE: the worker states it — the cross-version notice's office-format arms have no fixture reaching them.** — owner RECORD.
+order: with the M0 control rows, after D-459 (SCHEDULER #17, 2026-09-23; D-394's worker via CONDUCT #18)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (test through the op).
+depends-on: D-394 (`integrated` on c18-batch8).
+scope: office fixtures (docx, xlsx) driving each office extent arm of the notice.
+accepts-when: each office arm is driven and asserted. NEGATIVE CONTROL: break one office arm's extent match, and its fixture arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### D-457 · queued — **CPDF-20's PER-PAGE TIER IS SHIPPED AND UNRECORDED: `mergeTier2Text` has emitted `text.pages[].tier` since `1240af81` with no IC on I2, and Framework §16's closing table and front matter still list "a per-page rule for tier-2 replacement" ABSENT, though it is built and was watched live (D-283, M-120).** — owner CONTENT-PDF.

@@ -248,7 +248,7 @@ depends-on: REC-120 (DONE — `determining_pair.selection`, `pair_rule` and C-49
 accepts-when: in M-51's fixture a member choosing the p.9 mention makes a p.9 citation answer REACHED with that grade and a p.2 citation answer outside, through the ops; with no choice made every REC-120 answer is byte-identical; a machine credential cannot choose (refused by name); a choice cannot name a mention the document does not carry; `DEBT.md` D-161 CLOSED; construct-status updated if a claim moves (`node tools/status.mjs --check` then … (whole text: the cut archive)
 cut: this row is cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19); its full text — headline, scope, accepts-when and controls — is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-19.md` under «REC-122». A worker READS IT before building.
 
-### D-394 · running — SPAWNED 2026-09-23 ~22:55Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-394 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-394 and that session; never conclude queued from the absence alone.
+### D-394 · integrated — finished; integrated on land/conduct/c18-batch8 @ a8944e1d (IC-231 renumbered IC-239, I3 76.5.0; C-80), waiting for its train — flipped by SCHEDULER #17
 order: with the M4 product rows, after REC-122: a gap and not an over-claim (§18.1 says so, which is why no instrument catches it), resting on built substrate — the chain (PL-10) and REC-82's carry (SCHEDULER #6, 2026-09-21, LED-7 batch 12)
 milestone: M4
 interface: I3 — a read-time answer the builder names; the integrator mints and classifies the IC.
@@ -486,6 +486,16 @@ depends-on: none.
 scope: state the limit in `CIVICOS_UI_STATE.md` beside v46's UI-14 entry at UI's next landing (the build — a RECORD read of what left the queue since the last look — waits on map growth or the interpretation biting).
 accepts-when: the statement is in `CIVICOS_UI_STATE.md` beside UI-14. NEGATIVE CONTROL: `corpuscheck` or a grep arm names the missing statement.
 added: 2026-09-23 · SCHEDULER #17 (LED-7; D-176's DEBT row of 2026-08-04; keeps its `D-` id).
+
+### D-291 · queued — **TWO MEMBER-FACING SETS OF DECISIONS CAN BE REACHED ONLY ONE ITEM AT A TIME: `resolveReferences({captureSha, ref})` and `proposeDispose({progressionKey, stageKey…})` take one item, so a surface's bulk act is a client loop; `member-respect.test.mjs` ARM 4c/4d carry both.** — owner RECORD, then UI.
+order: after REC-205, with the M8 selection rows (SCHEDULER #17, 2026-09-23, LED-7 S17-4)
+milestone: M8
+interface: I3 — a selection path per act; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §S "SELECTION-SCOPED ACTION — how any act goes bulk, safely" (named by BOB #32's ruling of 2026-09-23 23:30Z (cite until folded)).
+depends-on: none.
+scope: the plane's selection path for both acts under §S; the surfaces use it; strike the carry in ARM 4d.
+accepts-when: bulk and single both reach the op in one motion, and ARM 4d's carry is struck. NEGATIVE CONTROL: a client-side loop, and the one-motion arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-4; keeps its `D-` id).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
