@@ -365,7 +365,7 @@ accepts-when: a fixture corpus with two projects differing only in case and spac
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-50's DEBT row of 2026-07-26; keeps its `D-` id).
 uncut: restored whole from «D-50» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### D-452 · queued — **ONE DROPPED CANDIDATE SWALLOWS THE REST OF ITS PASS: in `agent-worker`'s harness a candidate dropped at `adjust` routes to `next-pass`, so the level-empty candidates queued behind it are never written.** Pre-existing; found by FL-11/12's worker. — owner FLEET.
+### D-452 · running — SPAWNED 2026-09-24 ~00:12Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-452 (CONDUCT #18), BRANCHED FROM land/conduct/c18-batch8 (which carries FL-11/12); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-452 and that session; never conclude queued from the absence alone.
 order: after D-451, the same run's output (SCHEDULER #17, 2026-09-23; FL-11/12's worker via CONDUCT #18 22:51Z)
 milestone: M9
 interface: none
