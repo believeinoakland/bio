@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### REC-180 · queued — **A REFUSAL RETURNED INSIDE `promote`'s `transactionSync` AFTER A WRITE COMMITS THAT WRITE: REC-141's project-id mint runs first, so a later `NO_TITLE`, `NAME_TAKEN` or `CAS_STALE` burns a minted id with no project.** Re-read on `0e5f7054`: `store.mjs` `promote` mints via `#mintProjectId` at the head of the callback and returns `{ ok: false }` further down without throwing. And `bio-plane/test/bias.test.mjs` ARM M checks `op=list`, which could not see the landed bundle REC-176 fixed. — owner RECORD.
+order: first of the backlog: a write the record keeps after refusing the act is CLAUDE.md §2's worst class, and it corrects the site REC-176 just fixed (SCHEDULER #16, 2026-09-23; REC-176's worker via CONDUCT #16)
+milestone: M6
+interface: none expected (a refused act writes nothing); the integrator classifies.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (the Mechanical Verification Law: the record holds only what an act that landed wrote), with REC-126's `Store.#ROLLBACK` sentinel (`#reviewGates`) as the pattern.
+depends-on: REC-176 (the same callback; on `land/conduct/c16-batch6`).
+scope: (1) an `ok: false` returned from `promote`'s callback throws `Store.#ROLLBACK` carrying the refusal, and the outer catch returns it, so nothing written before it survives; then a sweep of `promote` for any other late refusal, each listed. (2) `bias.test.mjs` ARM M asserts `op=image` returns null for every id in the refused set.
+accepts-when: in a NEW suite `bio-plane/test/rec180-promote-rollback.test.mjs`, through the op: a project creation refused `NAME_TAKEN` after the mint leaves the sequence and `minted_ids` byte-identical; `bias.test.mjs` ARM M green reading `op=image`. NEGATIVE CONTROL (`rec180-promote-rollback.control.mjs`): return the refusal instead of throwing, and the mint arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (REC-176's worker's two findings via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
+
 ### M0-106 · blocked — **RE-NARROWED 2026-09-23 by SCHEDULER #15 on BOB #30's ruling (`TREE-SHARING.md` §3a condition 3, "What the cut's run is", landed at `4355bfda`): a cut may rely on a GREEN FULL record for its EXACT tree only when that record's run REUSED NOTHING (M0-126 marks such a record a backstop); the `--since` arm is WITHDRAWN.** So `kickoffs/DIST.md` gate step 1 (landed `4f7efed0`) is corrected, and the witness moves to the first cut from a tree holding a backstop record. 0.73.0 and 0.74.0 held none and ran the battery, as the ruling requires. — owner DIST (its own kickoff).
 order: near the head, ahead of the product rows because it CUTS GATE TIME (Bob, 2026-09-22, `CLAUDE.md` §2), DIST's own act and never a worker slot (SCHEDULER #11 on BOB #25's word, 2026-09-22); re-narrowed by SCHEDULER #15
 milestone: M0
@@ -1167,21 +1177,3 @@ design: `docs/development/VERIFICATION.md` — the test estate's own authority, 
 depends-on: none
 accepts-when: prose in a block comment naming an anchor-bearing shape is NOT read as an anchor; a live anchor in code still is; the reach figures before and after are stated with any … (whole text: the cut archive)
 cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-66» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-64 · queued — M0-41's CONTROL ARM 3 NO LONGER HAS A SUBJECT:
-order: M0; a control arm proving less than it declares (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot) — an arm that measures something other than what it declares … (whole text: the cut archive)
-interface: none — `bio-plane/test/m041-instrument-census.control.mjs` (a `.control.mjs`, not discovered by the battery)
-design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
-depends-on: none
-accepts-when: the control's run reports every arm AS DECLARED, or arm 3 is RETIRED with the falsifier's measurement at the site; the planted id uses the target's real heading shape; arms 1 … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-64» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-44 · queued — FLIPPED TO `running` AND REVERTED WITHIN THE HOUR, 2026-09-17, by CONDUCT #1, and the reversal is recorded rather than silently undone.
-order: M0; seven truncated claims invisible to the bounds instrument (SCHEDULER, 2026-09-18, re-ordered at the lift of the M0 hold)
-milestone: M0 (background lane, holds no slot)
-interface: none — a reader's pattern and the rosters derived from it; no plane source moves
-design: `docs/development/VERIFICATION.md` — the test estate's own authority, admitted for the M0 lane BY … (whole text: the cut archive)
-depends-on: none (M0-38 landed the grading and pinned the blind spot rather than fixing it)
-accepts-when: each of the seven previously-invisible claims appears in a roster the instrument prints, or is named as out of reach with its reason; **every roster the widened pattern feeds** … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-44» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
