@@ -574,6 +574,12 @@ function mockFetch(u, opts){
                [op === "sever" ? "severed" : "reinstated"]: moved.slice().sort() });
   }
   if(op === "whoami") return W({ member:"m_alice", session:true, capabilities:["contribute"] });
+  /* ADDED 2026-09-23 by UI-80: the question page now reads each published case's frozen pair
+     (Publication §3 rule 12) through op=publishedcase, which index.mjs answers FLAT — not in the
+     `result` envelope `W` adds — so the catch-all below would have handed the surface a shape the
+     plane never sends (check-mock-envelope's D-173 arm said so). None of these questions is in a
+     case, so the answer is the store's own true negative, flat, as the plane returns it. */
+  if(op === "publishedcase") return R({ ok:false, reason:"NOT_PUBLISHED", detail:"no published edition answers to that." });
   return W({});
 }
 
