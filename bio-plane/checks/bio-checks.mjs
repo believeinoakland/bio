@@ -12378,6 +12378,47 @@ export const CONTRADICTION_PAIR_CHECKS = {
   },
 };
 
+/* D-394 / C-74 — THE CROSS-VERSION NOTICE'S REFUSALS
+ * (`BIO_Content_Framework_v0_10.md` §18.1, the cross-version relation).
+ *
+ * THE READ TAKES EXACTLY ONE SUBJECT, and every refusal here is about the subject
+ * rather than about the answer. The answer itself is never refused: a citation whose
+ * document's version chain cannot be read is ANSWERED, with `newer: null` and the
+ * reason, because a refusal there would read as "nothing to report" to a surface
+ * that renders refusals quietly — the record knowing less than it says it does.
+ *
+ * ABSENT AND INVISIBLE ARE ONE ANSWER on both lookups, as on every gated read in
+ * this plane (`op=content`'s NO_SUCH_CONTENT, `op=narrowcandidates`'
+ * NARROW_NO_INQUIRY): a question or a passage in a project the caller was never
+ * invited to refuses byte-identically to one that does not exist. */
+export const VERSION_NOTICE_CHECKS = {
+  /* Neither subject, or both. There is no default: the notice is about a CITATION,
+     and a notice answered for no citation, or for two at once, is a list the caller
+     did not ask for wearing the word "notice". */
+  VERSION_NOTICE_NO_SUBJECT: {
+    check: 'C-74.1',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'That request did not say which citation to check. Ask about one question (target=) '
+      + 'to check every passage its evidence rests on, or about one passage (content=) — one of the '
+      + 'two, not both and not neither.',
+  },
+  /* The question named is not one this caller may read, or is not a question. */
+  VERSION_NOTICE_NO_INQUIRY: {
+    check: 'C-74.2',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'There is no question by that id that you can read here. A question you may not see '
+      + 'answers exactly as one that does not exist, so nothing about it was checked.',
+  },
+  /* The passage named is not a content row this caller may read. */
+  VERSION_NOTICE_NO_CONTENT: {
+    check: 'C-74.3',
+    where: 'src/store.mjs versionNotice > is-version-notice-subject',
+    translation: 'There is no cited passage by that id that you can read here. A passage id exists once '
+      + 'somebody has cited that part of a document; one in a project you were not invited to answers '
+      + 'exactly as one that does not exist.',
+  },
+};
+
 /* D-436 / C-64 — THE INSTANCE'S PRODUCING GROUP (BIO_State_Rules_Consistency_v1_5.md §3.1: `group` is the
  * producing group's slug and travels with every distributed copy — so it is in the SIGNED bytes). The plane
  * used to write one literal slug there, true of one instance and false of every instance `newgroup` installs.

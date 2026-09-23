@@ -3941,6 +3941,7 @@ __export(bio_checks_exports, {
   VERSION_CHAIN_CHECKS: () => VERSION_CHAIN_CHECKS,
   VERSION_MACHINE: () => VERSION_MACHINE,
   VERSION_NAME_RE: () => VERSION_NAME_RE,
+  VERSION_NOTICE_CHECKS: () => VERSION_NOTICE_CHECKS,
   VERSION_REASON_REQUIRED: () => VERSION_REASON_REQUIRED,
   VERSION_RELATIONSHIPS: () => VERSION_RELATIONSHIPS,
   VERSION_STATES: () => VERSION_STATES,
@@ -12192,6 +12193,28 @@ var CONTRADICTION_PAIR_CHECKS = {
     check: "C-60.1",
     where: "src/store.mjs contradictionPairs > is-contradiction-key-unknown",
     translation: "The record pairs assertions by named keys, and that is not one of them. Rather than answer from a different key and let the answer look like a complete comparison, it says so and names the keys it holds. Ask again with one of them, or with none at all to run every key."
+  }
+};
+var VERSION_NOTICE_CHECKS = {
+  /* Neither subject, or both. There is no default: the notice is about a CITATION,
+     and a notice answered for no citation, or for two at once, is a list the caller
+     did not ask for wearing the word "notice". */
+  VERSION_NOTICE_NO_SUBJECT: {
+    check: "C-74.1",
+    where: "src/store.mjs versionNotice > is-version-notice-subject",
+    translation: "That request did not say which citation to check. Ask about one question (target=) to check every passage its evidence rests on, or about one passage (content=) \u2014 one of the two, not both and not neither."
+  },
+  /* The question named is not one this caller may read, or is not a question. */
+  VERSION_NOTICE_NO_INQUIRY: {
+    check: "C-74.2",
+    where: "src/store.mjs versionNotice > is-version-notice-subject",
+    translation: "There is no question by that id that you can read here. A question you may not see answers exactly as one that does not exist, so nothing about it was checked."
+  },
+  /* The passage named is not a content row this caller may read. */
+  VERSION_NOTICE_NO_CONTENT: {
+    check: "C-74.3",
+    where: "src/store.mjs versionNotice > is-version-notice-subject",
+    translation: "There is no cited passage by that id that you can read here. A passage id exists once somebody has cited that part of a document; one in a project you were not invited to answers exactly as one that does not exist."
   }
 };
 var INSTANCE_GROUP_CHECKS = {
@@ -57844,6 +57867,345 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
       predecessor
     };
   }
+  /* ====================================================================== *
+   * D-394 — THE CROSS-VERSION NOTICE (BIO_Content_Framework_v0_10.md §18.1).
+   * ====================================================================== *
+   *
+   * THE GAP THIS CLOSES IS NOT AN OVERCLAIM, WHICH IS WHY NO GATE CAUGHT IT. A
+   * member's citation stays honestly pointed at the capture it was made against,
+   * and a case may rest on a passage the publisher has since revised, with the
+   * record holding BOTH captures and saying nothing. This read is the record
+   * TELLING. It answers three questions about one cited passage, and keeps them
+   * apart because collapsing them is what kept the whole thing unbuilt (§18.1's
+   * decomposition):
+   *
+   *   1. IS THERE A NEWER CAPTURE AT THIS DOCUMENT'S ADDRESS?  Answered WITH
+   *      CERTAINTY, by asking `versionChain` — the one chain lookup, PL-10's, and
+   *      no second copy of it — anchored on the row's own capture. `newer` is
+   *      three-valued: true, false, or NULL when the chain could not be read (no
+   *      address recorded for the capture, or the capture is not a version the
+   *      chain holds). **`false` is said ONLY when every chain was read**: "no
+   *      newer version" answered for a chain nobody read is the lie this read is
+   *      most exposed to, and it reads exactly like the earned silence of §18.1's
+   *      first row.
+   *   2. IS A PASSAGE AT THE SAME EXTENT IN IT?  REC-82's extent test, asked
+   *      against the newer capture as the record holds it. It is admitted as a
+   *      SUFFICIENT signal for a CANDIDATE and never as evidence of identity:
+   *      the candidate is labelled so, and nothing here says "the same passage".
+   *      Where the test cannot hold — the extent is outside the newer capture, or
+   *      the record holds no bound for it to be tested against — the answer is
+   *      UNDETERMINED with its reason, which §18.1 calls the honest and most
+   *      common answer. A bound the record does not hold is NOT a match: the
+   *      checker skips an unheld bound (a fence must not refuse what nobody
+   *      measured), and reading that skip as "it fits" would be the checker's
+   *      permissiveness turned into a claim.
+   *   3. WHAT MAY BE DONE ABOUT IT?  Nothing, by the record. Only a member's act
+   *      moves a citation (§14.4, Bob 2026-09-14), and the answer says so.
+   *
+   * IT WRITES NOTHING, AND THAT IS THE MECHANISM RATHER THAN AN OMISSION.
+   * §18.1: *the strongest guarantee that a proposal is never mistaken for a
+   * re-pointing is to make it impossible to persist one.* So no content row is
+   * minted for the candidate (an existing one is NAMED if somebody already cited
+   * that extent of the newer capture — a find, never a mint), no leg, edge or
+   * row is touched, and the answer is computed at READ against the current state
+   * of both captures, so it cannot go stale. `test/versionnotice.test.mjs`
+   * asserts every table of the store byte-identical across the read.
+   *
+   * GATED TWICE, both times through predicates that already exist: the subject
+   * (the question, or the passage) through `#viewerSees`, and the chain through
+   * `versionChain`'s own `#bundleGate` — so a newer capture filed inside a
+   * project the caller was never invited to is not in the chain this caller
+   * reads, and the answer says the chain is the one VISIBLE TO THE CALLER.
+   * ====================================================================== */
+  /** The legs one notice read answers for a question. 200 is the version chain's
+   *  own default, reused rather than a new spelling: a question resting on more
+   *  than two hundred passages is a run's walk, and `truncated` says so. */
+  static VERSION_NOTICE_LEGS_MAX = 200;
+  /** The addresses one capture is asked about. A capture seen at several
+   *  addresses has several chains (D-96: the same bytes through two routes); past
+   *  twenty the remainder is NOT asked, and the answer says so rather than
+   *  reading as all of them. */
+  static VERSION_NOTICE_ADDRESSES_MAX = 20;
+  /** The four states, with the sentence a member reads. The vocabulary travels
+   *  with the answer (PL-17), so a surface renders what the plane holds. */
+  static VERSION_NOTICE_STATES = {
+    no_newer_capture: "nothing: the version chain was read and holds nothing after this capture",
+    newer_capture_matched: "a newer version of this document exists, and a passage at the same extent is in it. That is a candidate, never the same passage: whether your citation should move is yours to decide, and only your act can move it",
+    newer_capture_undetermined: "a newer version of this document exists; whether your passage survives into it is UNDETERMINED. Nothing has moved \u2014 look at the newer version and decide",
+    chain_unread: "whether a newer version of this document exists is UNDETERMINED: the record could not read its version chain, so this is not a statement that there is none"
+  };
+  /** Does the record HOLD the bound this extent is tested against, for this
+   *  capture? Null when it does, or the sentence naming what is not held. Per
+   *  arm, on the checker's own fields — `checkContentExtent` asks only where the
+   *  record holds a figure, so a pass there is evidence only where this says the
+   *  figure was held. */
+  static #extentBoundUnheld(extent, ctx) {
+    const c = ctx && ctx.container && typeof ctx.container === "object" ? ctx.container : {};
+    const has = (v) => Array.isArray(v) && v.length > 0;
+    switch (extent.kind) {
+      case "pdf-page":
+        return Number.isInteger(ctx.pageCount) ? null : "the record holds no page set for the newer capture";
+      case "doc-para":
+        return Number.isInteger(c.paragraphs) ? null : "the record holds no paragraph count for the newer capture";
+      case "sheet-cell":
+      case "sheet-range":
+        return has(c.sheets) ? null : "the record holds no sheet list for the newer capture";
+      case "slide-shape":
+        return has(c.slides) ? null : "the record holds no slide list for the newer capture";
+      case "doc-table":
+        return Array.isArray(c.tables) ? null : "the record holds no table list for the newer capture";
+      case "image":
+        return Number.isInteger(extent.page) ? Number.isInteger(ctx.pageCount) ? null : "the record holds no page set for the newer capture" : Array.isArray(c.images) ? null : "the record holds no image list for the newer capture";
+      default:
+        return `this read cannot bound an extent of kind '${String(extent.kind).slice(0, 40)}'`;
+    }
+  }
+  /** REC-82's extent test, asked of the NEWER capture. Returns
+   *  `{ holds, reason, why, existing_content_id }`; `holds` is true only on a
+   *  positive test. Mints nothing: an existing row at that extent of that capture
+   *  is FOUND and named, and absence of one is reported as `null`. */
+  #extentTestAcross(extent, newerSha) {
+    const existing = (e) => this.#one(
+      `SELECT content_id FROM content WHERE capture_sha=? AND extent=? ORDER BY content_id LIMIT 1`,
+      newerSha,
+      canonicalExtent(e)
+    )?.content_id ?? null;
+    if (!extent || typeof extent !== "object" || typeof extent.kind !== "string")
+      return {
+        holds: false,
+        reason: "extent_unreadable",
+        existing_content_id: null,
+        why: "the cited passage's extent could not be read back from its row, so nothing was tested"
+      };
+    if (extent.kind === "document")
+      return {
+        holds: true,
+        reason: "whole_document",
+        existing_content_id: existing(extent),
+        why: "the citation is to the whole document, and a whole document is at the same extent in every version of it"
+      };
+    const ctx = this.contentContextFor(newerSha);
+    const bad = checkContentExtent(extent, ctx);
+    const said = bad ? String(bad.detail || bad.code).slice(0, 240) : "";
+    if (bad && bad.code === "CONTENT_EXTENT_OUT_OF_RANGE")
+      return {
+        holds: false,
+        reason: "outside_newer_capture",
+        existing_content_id: null,
+        why: `the newer capture does not hold this extent (${said}); the passage may have moved, been renumbered or been removed`
+      };
+    if (bad && bad.code === "CONTENT_EXTENT_NO_CHAIN")
+      return {
+        holds: false,
+        reason: "newer_capture_unread",
+        existing_content_id: null,
+        why: "nobody has read the newer capture yet, so the record holds no text of it at any extent to test against \u2014 that is a fact about this record, not about the document"
+      };
+    if (bad)
+      return {
+        holds: false,
+        reason: "not_testable",
+        existing_content_id: null,
+        why: `the extent test could not be asked of the newer capture (${bad.code}: ${said})`
+      };
+    const unheld = _Store.#extentBoundUnheld(extent, ctx);
+    if (unheld)
+      return {
+        holds: false,
+        reason: "bound_not_held",
+        existing_content_id: null,
+        why: `${unheld}, so whether this extent exists in it cannot be tested`
+      };
+    return {
+      holds: true,
+      reason: "extent_in_newer_capture",
+      existing_content_id: existing(extent),
+      why: `${describeExtent(extent)} exists in the newer capture as the record holds it`
+    };
+  }
+  /** THE ADDRESSES ONE CAPTURE WAS RETRIEVED FROM — one walk of `captured_locators`
+   *  by capture, shared by its two askers: IS-6's origin walk (`#independenceOf`) and
+   *  D-394's notice. `independence.test.mjs` pins exactly ONE such walk in this file,
+   *  and D-394 met that pin: a second spelling of the same question is where two
+   *  answers to "where did these bytes come from" would drift. DISTINCT, because the
+   *  key carries `via` (D-96) and one address seen by two routes is one address;
+   *  ordered, so a bounded answer is a stable one. */
+  #capturedAddresses(captureSha, limit) {
+    return this.#rows(
+      `SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=? ORDER BY address_norm LIMIT ?`,
+      captureSha,
+      limit
+    );
+  }
+  /** The notice for ONE content row. `row` is the stored row (extent as JSON text). */
+  #versionNoticeFor(row, viewer) {
+    const extent = safeJson(row.extent);
+    const cap = _Store.VERSION_NOTICE_ADDRESSES_MAX;
+    const addrRows = this.#capturedAddresses(row.capture_sha, cap + 1);
+    const addresses = addrRows.slice(0, cap).map((r) => r.address_norm);
+    const chains = [];
+    const newerBySha = /* @__PURE__ */ new Map();
+    for (const addr of addresses) {
+      const at = this.versionChain({ addressNorm: addr, at: row.capture_sha, limit: 1, viewer });
+      if (!at.ok) {
+        chains.push({
+          address_norm: addr,
+          read: false,
+          reason: at.reason,
+          why: "this capture is not a version the chain at this address holds for you"
+        });
+        continue;
+      }
+      const after = at.total - 1 - at.at_index;
+      let newest = null;
+      if (after > 0) {
+        const last = this.versionChain({ addressNorm: addr, limit: 1, offset: at.total - 1, viewer });
+        newest = last.ok && last.versions[0] ? last.versions[0] : null;
+      }
+      chains.push({
+        address_norm: addr,
+        read: true,
+        versions: at.total,
+        position: at.at_index,
+        newer_count: after,
+        newest: newest && {
+          capture_sha: newest.capture_sha,
+          bundle_id: newest.bundle_id,
+          first_retrieved: newest.first_retrieved
+        }
+      });
+      if (newest && !newerBySha.has(newest.capture_sha)) newerBySha.set(newest.capture_sha, newest);
+    }
+    const read = chains.filter((c) => c.read);
+    const allRead = addresses.length > 0 && read.length === addresses.length && addrRows.length <= cap;
+    const newer = newerBySha.size > 0 ? true : allRead ? false : null;
+    const candidates = [...newerBySha.values()].map((v) => {
+      const test = this.#extentTestAcross(extent, v.capture_sha);
+      return {
+        capture_sha: v.capture_sha,
+        bundle_id: v.bundle_id,
+        first_retrieved: v.first_retrieved,
+        extent: test.holds ? extent : null,
+        matched: test.holds,
+        reason: test.reason,
+        why: test.why,
+        existing_content_id: test.existing_content_id,
+        candidate_only: true,
+        identity: "not_established",
+        says: test.holds ? "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same passage; extent-match is a sufficient signal for a candidate and never evidence of identity" : "UNDETERMINED: " + test.why
+      };
+    });
+    const state = newer === true ? candidates.length && candidates.every((c) => c.matched) ? "newer_capture_matched" : "newer_capture_undetermined" : newer === false ? "no_newer_capture" : "chain_unread";
+    const unread = !addresses.length ? "the record holds no address this capture was retrieved from, so its version chain cannot be read" : addrRows.length > cap ? `this capture was seen at more than ${cap} addresses and only ${cap} were asked` : "at least one address's version chain does not hold this capture for you";
+    return {
+      content_id: row.content_id,
+      capture_sha: row.capture_sha,
+      bundle_id: row.bundle_id,
+      extent_kind: row.extent_kind,
+      ref: row.ref,
+      state,
+      newer,
+      chain_read: newer === false ? true : read.length > 0,
+      chains,
+      addresses_asked: addresses.length,
+      addresses_truncated: addrRows.length > cap,
+      candidates,
+      /* §18.1's first row: silence is earned only where the chain was read. */
+      says: state === "no_newer_capture" ? null : _Store.VERSION_NOTICE_STATES[state],
+      why: state === "no_newer_capture" ? "every version chain this capture sits on was read and holds nothing after it" : state === "chain_unread" ? unread : null
+    };
+  }
+  /** op=versionnotice — D-394. One question (`target=`: every live-basis leg that
+   *  rests on a passage) or one passage (`content=`). A READ that writes nothing.
+   *  `limit` bounds the legs answered for a question; it is CLAMPED to
+   *  [1, VERSION_NOTICE_LEGS_MAX] and the applied figure is what is published
+   *  (REC-57's discipline), with `truncated` saying whether legs were left out. */
+  versionNotice({ target = null, content = null, limit = null, viewer = null } = {}) {
+    const refusal7 = (code, detail, extra) => {
+      const row = VERSION_NOTICE_CHECKS[code];
+      return {
+        ok: false,
+        reason: code,
+        code,
+        check: row.check,
+        translation: row.translation,
+        detail,
+        ...extra || {}
+      };
+    };
+    const tgt = String(target ?? "").trim();
+    const cid = String(content ?? "").trim();
+    const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref`;
+    let legs = [], rows = [], truncated = false, inquiry = null;
+    if (tgt && cid || !tgt && !cid)
+      return refusal7(
+        "VERSION_NOTICE_NO_SUBJECT",
+        tgt ? "pass target=<INQ-\u2026> OR content=<content id>, not both: a notice is about one subject." : "pass target=<INQ-\u2026> (every passage a question rests on) or content=<content id> (one passage)."
+      );
+    if (tgt) {
+      const b = this.#one(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id=?`, tgt);
+      if (!b || normalizeType(b.object_type) !== "inquiry" || !this.#viewerSees(b.bundle_id, viewer))
+        return refusal7(
+          "VERSION_NOTICE_NO_INQUIRY",
+          `no question by the id '${tgt.slice(0, 60)}' is readable here. A question you may not see answers exactly as one that does not exist.`,
+          { target: tgt }
+        );
+      inquiry = b.bundle_id;
+    } else {
+      const r = this.#one(`SELECT ${ROW_COLS} FROM content WHERE content_id=?`, cid);
+      if (!r || !this.#viewerSees(r.bundle_id, viewer))
+        return refusal7(
+          "VERSION_NOTICE_NO_CONTENT",
+          `no cited passage by the id '${cid.slice(0, 80)}' is readable here.`,
+          { content: cid }
+        );
+      rows = [r];
+    }
+    const max = Math.max(1, Math.min(
+      _Store.VERSION_NOTICE_LEGS_MAX,
+      Math.floor(Number(limit) || _Store.VERSION_NOTICE_LEGS_MAX)
+    ));
+    if (inquiry) {
+      const page = this.#rows(
+        `SELECT b.ord AS ord, b.target_id AS target, b.content_id AS content_id
+           FROM inquiry_basis b WHERE b.bundle_id=? ORDER BY b.ord LIMIT ?`,
+        inquiry,
+        max + 1
+      );
+      truncated = page.length > max;
+      legs = page.slice(0, max);
+      const ids = [...new Set(legs.map((l) => l.content_id).filter(Boolean))];
+      rows = ids.length ? this.#rows(
+        `SELECT ${ROW_COLS} FROM content WHERE content_id IN (${ids.map(() => "?").join(",")}) LIMIT ?`,
+        ...ids,
+        ids.length
+      ) : [];
+    }
+    const byId = new Map(rows.map((r) => [r.content_id, this.#versionNoticeFor(r, viewer)]));
+    const notices = inquiry ? legs.map((l) => l.content_id && byId.has(l.content_id) ? { ord: l.ord, target: l.target, ...byId.get(l.content_id) } : {
+      ord: l.ord,
+      target: l.target,
+      content_id: null,
+      state: "not_asked",
+      newer: null,
+      says: null,
+      why: "this leg rests on no cited passage (it cites another question, or a document this record holds no bytes of), so there is no capture whose newer versions could be asked about"
+    }) : [...byId.values()];
+    return {
+      ok: true,
+      target: inquiry,
+      content: inquiry ? null : cid,
+      notices,
+      count: notices.length,
+      limit: inquiry ? max : 1,
+      truncated,
+      states: _Store.VERSION_NOTICE_STATES,
+      wrote: false,
+      proposal_only: true,
+      visible_to: "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",
+      says: "a notice, computed now and stored nowhere. A newer version is stated with certainty where the version chain was read; a passage at the same extent in it is a CANDIDATE, never the same passage; nothing was moved, minted or written, and only a member's act can re-point a citation."
+    };
+  }
   /* PL-1's own bound. 200/1000 is `op=versionchain`'s pair reused rather than a
      thirteenth spelling invented, and the KIND is the same: a KEYED lookup (one
      inquiry, not a query) whose answer is a list. 200 is generous against the
@@ -58092,11 +58454,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
         if (caps.length > OMAX2) complete = false;
         for (const r of caps.slice(0, OMAX2)) {
           out.add(`capture:${r.capture_sha}`);
-          const addrs = this.#rows(
-            `SELECT address_norm FROM captured_locators WHERE capture_sha=? LIMIT ?`,
-            r.capture_sha,
-            OMAX2 + 1
-          );
+          const addrs = this.#capturedAddresses(r.capture_sha, OMAX2 + 1);
           if (addrs.length > OMAX2) complete = false;
           for (const l of addrs.slice(0, OMAX2)) out.add(`address:${l.address_norm}`);
         }
@@ -66850,6 +67208,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            the seam op=links already uses for the same reason. `viewer` is
            stamped by the control plane and an absent one compiles to the deny
            predicate, so this fails closed like every other gated read. */
+        /* D-394: THE CROSS-VERSION NOTICE. A READ: `viewer` is the control
+           plane's stamp, and both subjects are gated through it. */
+        versionnotice: () => this.versionNotice({
+          target: url.searchParams.get("target"),
+          content: url.searchParams.get("content"),
+          limit: url.searchParams.get("limit"),
+          viewer: url.searchParams.get("viewer")
+        }),
         versionchain: () => this.versionChain({
           addressNorm: url.searchParams.get("address"),
           at: url.searchParams.get("at"),
@@ -68391,6 +68757,12 @@ var OPS = {
      a bundle per version, so a member must not be able to learn from a version
      chain what op=list would not tell them. */
   versionchain: { classes: ["admin", "member", "probe"], mutating: false },
+  /* D-394 — THE CROSS-VERSION NOTICE (framework §18.1): does a newer capture exist at
+     the address of a document a citation rests on, and is a passage at the same extent
+     in it. A pure READ on `versionchain`'s class cut, because it IS that chain asked
+     from a citation's side; it writes nothing, so there is no act to fence. `viewer`
+     is stamped below, fail-closed, like the chain it reads. */
+  versionnotice: { classes: ["admin", "member", "probe"], mutating: false },
   /* PL-1 / IS-1: THE BASIS VERSIONS OF ONE INQUIRY — every alternative account
      of the evidence for a question, with its ground partition, the AND/OR
      relationship it states, the derivation edge it came along, and the run that
@@ -69217,6 +69589,9 @@ var SESSION_OPS = {
        viewer decides what it may pair at all — the session route is the
        only one that produces a member the gate can filter by. */
     "contradictionpairs",
+    /* D-394: THE CROSS-VERSION NOTICE — shown where a member meets a
+       citation, so the session route is the one it must reach. */
+    "versionnotice",
     /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
        word in their own name, `attesttext`'s route and reason. */
     "transcribe",
@@ -69290,6 +69665,7 @@ var SESSION_OPS = {
     "narrow",
     "narrowcandidates",
     "contradictionpairs",
+    "versionnotice",
     "transcribe",
     "transcriptionattest",
     "testify",
@@ -69382,6 +69758,9 @@ var NEEDS = {
      capability here would mean a member could be shown a question and refused the
      answer to "what else does this record say about it". */
   contradictionpairs: null,
+  /* D-394: NO CAPABILITY, on `op=content`'s reasoning — asking whether the document a
+     citation rests on has a newer version is READING the record, and it writes nothing. */
+  versionnotice: null,
   /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
      row and its text into the working corpus, and attesting a typing is
      `attesttext`'s act on different text — both ride `contribute`, as
@@ -74034,7 +74413,7 @@ var index_default = {
          reader (DEC-17) — only the names are withheld. */
       "strengthbarof"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "contradictionpairs" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "biasmanifest" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "narrow" || op === "narrowcandidates" || op === "contradictionpairs" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "leadlook" || op === "leadread" || op === "leadshare" || PROJECT_ACTIONS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`

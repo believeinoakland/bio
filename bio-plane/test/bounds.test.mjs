@@ -566,7 +566,11 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    map below. */
   /* MOVED 35 -> 36 on 2026-09-18 by REC-126, from the figure this walk PRINTED: op=reviewcopy,
      born with its bound as a named constant beside `LIMIT ?` (REVIEW_LIST_MAX). */
-  OPS.size, 36);
+  /* MOVED 36 -> 37 on 2026-09-23 by D-394, taken from THIS ARM'S OWN FAILURE OUTPUT (`want 36 / got
+     37`): op=versionnotice, the cross-version notice — a KEYED read (one question) whose answer is one
+     notice per leg, capped by VERSION_NOTICE_LEGS_MAX beside `LIMIT ?`, its constants BELOW nothing
+     that could absorb them. DRIVEN in the map below. */
+  OPS.size, 37);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -958,6 +962,34 @@ const PL1_INQ = "INQ-2026-0807-bounds-pl1";
             current_state: "open", created: NOW, last_updated: NOW } });
   if (r?.ok === false) throw new Error(`PL-1 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
 }
+/* D-394 — the cross-version notice's fixture: ONE question resting on TWO documents, so a
+   cap of 1 on the legs it answers has something to cut. */
+const D394_INQ = "INQ-2026-0807-bounds-d394";
+{
+  const md = ["---", `id: ${D394_INQ}`, "object_type: inquiry", "schema: inquiry@1",
+    `title: "Does the agenda rest on a newer version?"`, "current_state: open", "prior_state: null",
+    `created: ${NOW}`, `last_updated: ${NOW}`, "produced_by:", "  mode: assisted",
+    "  capability_tier: session", "group: believe-in-oakland",
+    "references:", ...[1, 2].flatMap((i) => [`  - target: INFO-2026-000${i}-r57`, "    rel: cites",
+                                              "    status: confirmed"]),
+    "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false",
+    "  since: null", "  source: null", "visuals: []", "surfaced_by: agent",
+    'disposition_reason: ""', "recheck_triggers:", "  - text: Revisit next cycle",
+    "    description: The next agenda may restate it.",
+    "basis:", ...[1, 2].flatMap((i) => [`  - target: INFO-2026-000${i}-r57`, "    role: supports"]),
+    "---", "", "## Question", "", "Does the agenda rest on a newer version?", "",
+    "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+    "## Session Log", "", "## Review Notes", ""].join("\n");
+  const r = await POST("op=promote&token=mem-r57", {
+    bundleId: D394_INQ, base: null, snapKey: `${D394_INQ}-new`, author: "r57",
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: D394_INQ,
+            current_state: "open", created: NOW, last_updated: NOW } });
+  if (r?.ok === false) throw new Error(`D-394 fixture promote: ${JSON.stringify(r).slice(0, 600)}`);
+}
+t("FIXTURE ARMS THE TRAP: one question rests on TWO documents, so op=versionnotice's cap of 1 has "
++ "something to cut",
+  (await GET(`op=versionnotice&token=mem-r57&target=${D394_INQ}&limit=200`)).count, 2);
 t("FIXTURE ARMS THE TRAP: one inquiry carries THREE alternative accounts of its evidence, so "
 + "op=basisversions' cap of 1 has something to cut",
   (await GET(`op=basisversions&token=mem-r57&id=${PL1_INQ}&limit=5000`)).total, 3);
@@ -1049,6 +1081,14 @@ const DRIVEN = [
      in `op=readingname`'s vocabulary — `limit` beside `truncated` — because it
      is the same kind of read: a KEYED lookup (an address, not a query) whose
      answer is a list. No spelling is minted for it. */
+  /* D-394, 2026-09-23: the cross-version notice, one notice per leg of ONE question. It answers
+     in `op=versionchain`'s vocabulary — `limit` beside `truncated` — because it is that chain asked
+     from a citation's side, and its 200 is the chain's own default reused. */
+  { op: "versionnotice", bite: 1, whole: 200,
+    drive: (n) => GET(`op=versionnotice&token=mem-r57&target=${D394_INQ}&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether every passage the question rests on was checked for a newer version or only the "
+        + "first N — and a notice silently cut reads as 'nothing newer' for the legs it never asked about" },
   { op: "versionchain", bite: 1, whole: 5000,
     drive: (n) => GET(`op=versionchain&token=mem-r57&address=${encodeURIComponent(VC_ADDR)}&limit=${n}`),
     more: (a) => a.truncated, says: "`truncated`",
