@@ -99,7 +99,7 @@ accepts-when: a drive through the op shows a severed leg `status: "severed"` wit
 added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 uncut: restored whole from the cut archive on entering the cache (SCHEDULER #15, 2026-09-23), so the worker reads its design here.
 
-### REC-173 · queued — **ONCE REC-171 LANDS, `migrate.mjs` IS REFUSED ON EVERY DRIVE-ERA QUESTION: A MIGRATION REPLAY IS STAMPED `surfaced_by: agent` AND NAMES NO RUN.** BOB #30 ruled a replay is not a surfacing: an ADMIN-class creation naming a registered drive-provenance capture that lists this bundle id and this revision's `bundle.md` SHA-256 is exempt from rule 2, keeps its Drive-era `surfaced_by` (no D-78 restamp) and reads `surfaced_in: not recorded (migrated from the Drive era)`; anything else is refused as today. UNBLOCKS PRODUCT: every not-yet-migrated group. Its design landed at `80c5fb3f`. — owner RECORD.
+### REC-173 · running — SPAWNED 2026-09-23 12:19Z by CONDUCT #15 (handed off; relays this worker's report to CONDUCT #16). NOT LANDED as read on b41d1edb: migrate.mjs still refused SURFACE_NO_RUN (REC-171). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: FIRST of the backlog, directly after REC-171 (in the cache) as BOB #30 placed it: REC-171 makes migration refuse, and a group that cannot migrate cannot start (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
 milestone: M7
 interface: I3 — `op=promote` admits the replay; the integrator mints and classifies the IC.
