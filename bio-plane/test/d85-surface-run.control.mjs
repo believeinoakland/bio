@@ -50,7 +50,10 @@ const NO_BOUND = "    if (!bound || !(Number(bound.allowed) > 0))\n      return 
 const NO_BOUND_OFF = "    if (false)\n      return refusal(\"SURFACE_NO_BOUND\",\n";
 const CAP = "    if (Number(bound.consumed) >= Number(bound.allowed))\n      return refusal(\"SURFACE_BOUND_REACHED\",\n";
 const CAP_OFF = "    if (false)\n      return refusal(\"SURFACE_BOUND_REACHED\",\n";
-const STAMP = "        if (!viaSession && cls === \"ai\") b.assistantPrincipal = `${aiCred.principal}/${aiCred.tokenId}`;\n";
+/* CORRECTED 2026-09-23 by REC-171: the stamp is now set for EVERY non-session caller (BOB #30, rule 2's reach), so its
+   anchor is the two-line form; removing it still removes the `ai` credential's stamp, which is this arm's subject. */
+const STAMP = "        if (!viaSession)\n"
+  + "          b.assistantPrincipal = cls === \"ai\" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;\n";
 const STAMP_OFF = "        /* the stamp removed by the control */\n";
 const DELETE = "        delete b.assistantPrincipal;\n";
 const DELETE_OFF = "        /* the delete removed by the control */\n";

@@ -98,6 +98,7 @@
  *     this item's report — NAMED, not silently skipped.
  *   IT CANNOT see a second isolate. One store, one Durable Object.
  * ========================================================================= */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -109,7 +110,7 @@ const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
 const INDEX_SRC = readFileSync(IDX, "utf8");
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: INDEX_SRC,
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -122,7 +123,7 @@ const mf = new Miniflare({
      group. 'believe-in-oakland' is this project's own group, the one these fixtures' documents already name. */
   bindings: { INSTANCE_NAME: "believe-in-oakland", ADMIN_TOKEN: "adm-d280", MEMBER_TOKEN: "mem-d280", PROBE_TOKEN: "prb-d280",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

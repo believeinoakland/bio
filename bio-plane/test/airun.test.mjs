@@ -42,6 +42,7 @@
  * a scheduler entry point no control-plane op reaches — which is the point of
  * it.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -64,14 +65,14 @@ const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.
 const INDEX_SRC = readFileSync(IDX, "utf8");
 const AIRUN_SRC = readFileSync(fileURLToPath(new URL("../src/airun.mjs", import.meta.url)), "utf8");
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-is6", MEMBER_TOKEN: "mem-is6", PROBE_TOKEN: "prb-is6",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

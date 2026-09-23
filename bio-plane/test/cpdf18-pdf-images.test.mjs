@@ -30,6 +30,7 @@
  *      reason, and Tier 1's text over the same fixture is byte-identical to the
  *      pristine tree (the tokenizer option is off for the text walk).
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282 */
 import "./sandbox.mjs";               /* D-186 */
 import { Miniflare } from "miniflare";
@@ -175,7 +176,7 @@ t("legistar-73550 (three pages of text, a signature drawn as vectors) paints NO 
 
 /* ===================== 2. THE ROW MINTS FROM THE STRUCTURE OP ============ */
 console.log("\n--- 2. op=acquire -> op=pdfstructure -> op=promote -> op=content ---");
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -188,7 +189,7 @@ const mf = new Miniflare({
     if (u.pathname === "/images.pdf") return new Response(IMAGES_PDF, { headers: { "content-type": "application/pdf" } });
     return new Response("unscripted", { status: 500 });
   },
-});
+}));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const post = async (op, body, tok = "mem-cpdf18") => rP(await (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })).json());

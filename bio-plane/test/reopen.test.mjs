@@ -47,6 +47,7 @@
  *   both gates — while a REPLAYED historical row is still admitted, because
  *   the record has to be able to hold its own past.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -62,13 +63,13 @@ import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.m
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const AFF_SRC_PATH = fileURLToPath(new URL("../src/affordances.mjs", import.meta.url));
 const STORE_SRC_PATH = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-rec31", MEMBER_TOKEN: "mem-rec31", PROBE_TOKEN: "prb-rec31", VERSION: "test" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -526,13 +527,13 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
     writeFileSync(storePath, patchedStore);
 
     const tmpIdx = join(dir, "bio-plane/src/index.mjs");
-    const mf2 = new Miniflare({
+    const mf2 = withSurfacingRun(new Miniflare({
       modules: true, modulesRoot: "/", scriptPath: tmpIdx, script: readFileSync(tmpIdx, "utf8"),
       compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
       durableObjects: { STORE: { className: "Store", useSQLite: true } },
       r2Buckets: ["CAPTURES", "PUBLISHED"],
       bindings: { ADMIN_TOKEN: "adm-x", MEMBER_TOKEN: "mem-x", PROBE_TOKEN: "prb-x", VERSION: "test" },
-    });
+    }));
     const G2 = async (q) => (await mf2.dispatchFetch(`http://x/api/?${q}`)).json();
     const P2 = async (q, b) => (await mf2.dispatchFetch(`http://x/api/?${q}`,
       { method: "POST", body: JSON.stringify(b ?? {}) })).json();

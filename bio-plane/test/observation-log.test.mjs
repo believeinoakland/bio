@@ -286,6 +286,7 @@
  * the file — corrected here rather than left, since a header that miscounts its
  * own contents is the cheapest possible version of this suite's whole subject.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -318,14 +319,14 @@ const SHA_B = "b".repeat(64);
 const T0 = "2026-09-14T09:00:00Z";
 const at = (plus) => new Date(Date.parse(T0) + plus).toISOString().split(".")[0] + "Z";
 
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: TOK, PROBE_TOKEN: "prb-rec93",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -1645,14 +1646,14 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
         [occurrences, readFileSync(storePath, "utf8").includes(LEGACY)], [1, true]);
 
       const persist = join(root, "persist");
-      const planeAt = (idx) => new Miniflare({
+      const planeAt = (idx) => withSurfacingRun(new Miniflare({
         modules: true, modulesRoot: "/", scriptPath: idx, script: readFileSync(idx, "utf8"),
         compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
         durableObjects: { STORE: { className: "Store", useSQLite: true } },
         durableObjectsPersist: persist,
         r2Buckets: ["CAPTURES", "PUBLISHED"],
         bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: TOK, PROBE_TOKEN: "prb-rec93",
-                    VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" } });
+                    VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" } }));
       const on = (m) => ({
         POST: async (q, b) => rP(await (await m.dispatchFetch(`http://x/api/?${q}`,
           { method: "POST", body: JSON.stringify(b ?? {}) })).json()),

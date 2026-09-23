@@ -189,6 +189,7 @@
  * pretend to make it — the residual roster is PRINTED every run and ratcheted, so a NEW
  * member of the class fails the build even though the walk cannot grade the old ones.
  */
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -1264,14 +1265,14 @@ t("REACH: THE FAILURE MODE NAMED — over that same empty corpus, `the three nam
  * LIVE — the three reads driven through their real route.
  * ========================================================================== */
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const mf = new Miniflare({
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-r60", MEMBER_TOKEN: "mem-r60", PROBE_TOKEN: "prb-r60",
               VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
-});
+}));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
@@ -1554,8 +1555,11 @@ t("RIDER: AND THAT IS THE LICENCE — the bare arm is COMPLETE. It returns every
 + "exception goes with it",
   /* CORRECTED 2026-09-19 by REC-153: 4 -> 5, because the REC-70 run above now runs over a QUESTION this
      suite promotes (an unheld context id is refused as absent, BOB #16). The assertion is the EQUALITY of
-     the two arms; the number is the fixture's size and moved with it. */
-  [Array.isArray(listBare) ? listBare.length : "NOT AN ARRAY", listPaged.total], [5, 5]);
+     the two arms; the number is the fixture's size and moved with it.
+     CORRECTED 2026-09-23 by REC-171: 5 -> 6, for the same reason in the other direction — that question is
+     created by the member TOKEN, which now surfaces it inside a run it holds (`surfacing-run.mjs`, BOB #30), and
+     the run is over a project the token created: one more real row, in both arms alike. */
+  [Array.isArray(listBare) ? listBare.length : "NOT AN ARRAY", listPaged.total], [6, 6]);
 t("RIDER: the two defects are SEPARATE, and this is what decides it. op=projection's corpus arm "
 + "APPLIED a bound and published none (dishonest); this arm applies none at all (honest but "
 + "unbounded) — so the paged arm publishes a bound and the bare arm has none to publish",
