@@ -120,6 +120,19 @@ var CONTROL_FLOW = {
   }
 };
 var FIRST_STEP = "gate-mode";
+function runContextTarget(session) {
+  const ctx = session && typeof session === "object" ? session.context : null;
+  const type = ctx && typeof ctx.type === "string" ? ctx.type : null;
+  const id = ctx && ctx.id != null && String(ctx.id).trim() !== "" ? String(ctx.id).trim() : null;
+  if (!id) return { target: null, basis: "UNDETERMINED: the run read published no context id" };
+  if (type === "project")
+    return {
+      target: null,
+      basis: "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the run read does not publish that set; a candidate names its own target, never the project id"
+    };
+  if (type === "inquiry") return { target: id, basis: "the run's context question" };
+  return { target: null, basis: `UNDETERMINED: the run's context kind ${JSON.stringify(type)} is not one this member reads` };
+}
 function emptyLevelCandidates(state, target) {
   const reports = Array.isArray(state?.reports) ? state.reports : [];
   const out = [];
@@ -319,7 +332,7 @@ var JUDGEABLE = [
   "governed",
   "condition"
 ];
-var NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store"];
+var NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"];
 function applyJudgement(state, judgement) {
   const j = judgement && typeof judgement === "object" ? judgement : {};
   const overreach = Object.keys(j).filter((k) => NOT_JUDGEABLE.includes(k));
@@ -695,9 +708,12 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   const budget = {};
   for (const b of Array.isArray(session.budget) ? session.budget : [])
     budget[String(b.bound)] = { allowed: Number(b.allowed) || 0, consumed: Number(b.consumed) || 0 };
+  const seeded = runContextTarget(session);
   let state = {
     step: FIRST_STEP,
     mode: session.mode,
+    target: seeded.target,
+    targetBasis: seeded.basis,
     pass: 0,
     maxPasses: Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES,
     resumedFrom,
@@ -837,6 +853,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     ended,
     logged,
     submitted,
+    /* FL-11: the question this run's readings default to, and WHY — published so a reader can check it
+       against the run's context rather than take it on this member's word. */
+    target: { id: state.target ?? null, basis: state.targetBasis ?? null },
     refusals,
     adjusted,
     verbatimResubmits,
@@ -903,7 +922,7 @@ async function performStep(call, state, runId) {
         const r = planeAnswer(await call(
           "capturerequest",
           null,
-          { run: runId, target: t.target ?? null, url: t.url ?? null }
+          { run: runId, target: t.target ?? state.target ?? null, address: t.url ?? null }
         ), "capturerequest");
         if (r.silent) return { silent: r.silent };
         if (r.refused) acqRefused.push(r.refused);
@@ -969,8 +988,10 @@ async function performStep(call, state, runId) {
       }
       const body = held.result ?? {};
       const names = new Set((Array.isArray(body.versions) ? body.versions : []).map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
-      const queue = (state.candidates || []).filter((c) => c && !names.has(String(c.name ?? "")));
-      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; ${queue.length} survived`;
+      const aimedHere = (c) => (c.target ?? state.target ?? null) === (state.target ?? null);
+      const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
+      const queue = (state.candidates || []).filter((c) => c && (!aimedHere(c) || !names.has(String(c.name ?? ""))));
+      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; ${queue.length} survived` + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
       out.state = { ...state, queue };
       return out;
     }
@@ -978,7 +999,11 @@ async function performStep(call, state, runId) {
       const queue = [...state.queue || []];
       const candidate = queue.shift();
       if (!candidate) return out;
-      const res = await call("suggest", null, { ...candidate, run: runId });
+      const res = await call(
+        "suggest",
+        null,
+        { ...candidate, target: candidate.target ?? state.target ?? null, run: runId }
+      );
       if (!res.reached) return { silent: res };
       const answer = res.body?.result ?? res.body ?? {};
       if (res.status === 200 && res.body?.ok === true && answer.wrote !== false) {
@@ -1169,6 +1194,9 @@ async function handleRun(req, env) {
     adjusted: drive.adjusted,
     verbatim_resubmits: drive.verbatimResubmits,
     resumed_from: drive.resumedFrom,
+    /* FL-11: the question this run's readings default to, and WHY (`runContextTarget`) — published so a
+       reader can check it against the run's context rather than take it on this member's word. */
+    target: drive.target,
     /* FL-5 / IS-9(a) ON THE WIRE. `fanout.contracts` is exactly what each
        sub-session was handed — the party protected by §14's fence can be read
        from outside instead of trusting this member's own summary of itself.
