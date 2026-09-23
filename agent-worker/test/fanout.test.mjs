@@ -765,12 +765,11 @@ console.log("\n--- B6b · D-324: THE MOCK REFUSES A KIND THE RECORD DOES NOT HOL
   const out = await (await runOp(mf, { ...base, judgements: [
     { targets: [] }, { reports: goodReturns },
     /* THE LEGAL ONE FIRST, DELIBERATELY. A refused candidate routes to `adjust`
-       and, unanswered, is DROPPED — and the run then closes rather than working
-       the rest of the queue, so an illegal candidate placed first would leave
-       the legal one unsubmitted and this arm could not tell "the mock refused
-       the right one" from "the mock refused everything". Measured, not
-       reasoned: with the order reversed the sibling assertion below reads
-       `got []`. */
+       and, unanswered, is DROPPED. Until D-452 (2026-09-24) the run then closed
+       rather than working the rest of the queue, so an illegal candidate placed
+       first left the legal one unsubmitted (measured: `got []` with the order
+       reversed). D-452 made a drop drop ONE candidate; the order is kept so this
+       arm reads the legal one landing AHEAD of the refusal, as it always has. */
     { candidates: [{ kind: "basis-version", name: "v0", description: "what the reports support" },
                    { kind: "new-version", name: "v1", description: "what the reports support" }] }, {},
     /* the adjust row: the model cannot answer a closed-set refusal, so the
@@ -791,8 +790,13 @@ console.log("\n--- B6b · D-324: THE MOCK REFUSES A KIND THE RECORD DOES NOT HOL
      the right thing rather than refusing everything — the arm that stops a mock
      being "corrected" into a fixture that says no to everything, which is the
      same defect as saying yes to everything pointed the other way. */
-  t("while the legal candidate ahead of it in the queue LANDED",
-    st.suggested.map((s) => s.name), ["v0"]);
+  /* CORRECTED 2026-09-24 (D-452), AND THE OLD EXPECTATION WAS THE DEFECT RATHER THAN A STALE FIGURE. It read
+     `["v0"]`: the table-made `level-empty-content` candidate (the one level `goodReturns` reports absent) is
+     queued BEHIND the dropped `v1`, and the old `adjust` row ended the pass at the drop, so §9's instrument was
+     silently never written — and this assertion pinned that loss as correct. It now lands too, exactly once. */
+  t("while the legal candidate ahead of it in the queue LANDED — and the level-empty one BEHIND the dropped "
+    + "candidate landed too (D-452: a drop drops one candidate, not the pass)",
+    st.suggested.map((s) => s.name), ["v0", `level-empty-${REPORTING_LEVEL.content}`]);
   await mf.dispose();
 }
 

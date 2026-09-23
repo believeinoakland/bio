@@ -284,6 +284,12 @@ function nextStep(state) {
       return { step: "next-pass", why: "every candidate this pass formed has been written or dropped" };
     }
     case "adjust": {
+      const queue = s.queue || [];
+      if (!s.adjusted && queue.length)
+        return {
+          step: "submit",
+          why: `the refusal could not be answered by changing the submission, so the candidate is DROPPED and never resent (that would climb PL-3's \`repeats\` counter); ${queue.length} candidate(s) behind it in this pass are still written, one at a time`
+        };
       if (!s.adjusted)
         return {
           step: "next-pass",

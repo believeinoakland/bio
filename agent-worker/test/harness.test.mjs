@@ -58,6 +58,9 @@
    (T1) FL-11 — THE SEEDING DROPPED. `state.target` no longer seeded from the run's context -> FT1, FT1b, FT1c, FT3 (C-27.1 fires before the principal gate, the plane's order), FT4 and B6's four level-empty suggestions must FAIL BY NAME, with fanout FL-12b; FT0 (the mock driven directly), FT1d/FT1e, FT2 and fanout FL-12a must HOLD.
    (T2) FL-12 — THE LOCATOR SENT AS `url` AGAIN -> FT4 (the ADDRESS arm), FT4b, FT4c and fanout FL-12b must FAIL BY NAME; FT0d/FT0e, fanout FL-12a and every FL-11 arm must HOLD.
    T1 AND T2 RUN 2026-09-23 BY THE FL-11+FL-12 WORKER, each armed ALONE on `src/index.mjs`, restores verified sha256 + cmp; baseline harness 246/0, fanout 184/0. T2 AS DECLARED first run: harness 243/3, fanout 183/1. **T1 CAME BACK NOT AS DECLARED FIRST, AND IT WAS THE DECLARATION:** it named FT3 and fanout FL-12b as MUST-NOT, and both failed — a target-less suggestion is refused C-27.1 before the principal gate is asked (the plane's own order), and a request's target defaults to the run's, so both are COUPLED to the seeding. Corrected and re-run: harness 226/20, fanout 177/7, AS DECLARED. The twenty include every older arm asserting a suggestion LANDS (B4, B8, B9) — the strict mock now sees the pre-FL-11 member wherever it suggests, which the permissive mock never could. H4's patch moved with `target` joining NOT_JUDGEABLE and was re-run: 241/4, AS DECLARED.
+   (D1) D-452 — THE DEFECT RESTORED: `adjust` with nothing adjusted and a non-empty queue routes back to `next-pass` -> B5b's `D-452: the rest of the pass is written` must FAIL BY NAME, with the sent-exactly-once, drop-went-to-submit and counts-what-it-wrote D-452 arms, A3's `with candidates queued behind it goes on to submit the REST` and fanout B6b's legal-candidate-LANDED arm (its level-empty candidate sits behind a drop, and that assertion pinned the loss until D-452 corrected it); `D-452: the DROPPED candidate was sent ONCE and never landed`, `D-452: nothing was resent verbatim`, B4, B5, B6, A3's NOTHING-behind-it arm and every FT arm must HOLD.
+   (D2) D-452 — THE LIAR'S FIX: the dropped candidate RE-QUEUED behind the rest (`src/index.mjs` `adjust`) -> `D-452: the DROPPED candidate was sent ONCE and never landed`, `D-452: nothing was resent verbatim` and B5's called-ONCE arm must FAIL BY NAME, COUPLED FT1d/FT2d/FT3 (each drives a refusal) declared; `D-452: the rest of the pass is written` must HOLD — the reason the sent-once arm exists.
+   D1 AND D2 RUN 2026-09-24 BY THE D-452 WORKER on land/conduct/c18-batch8 @ b0962be0, each armed ALONE, restores verified sha256 + cmp; baseline harness 255/0 with the fix. D1 AS DECLARED first run: harness 250/5; re-run with fanout B6b added to its declaration: harness 250/5 · fanout 183/1, AS DECLARED. T1 and T2 re-run over the new arms, AS DECLARED: T1 harness 233/22 · fanout 177/7, T2 252/3 · 183/1. fanout.control 9/10 and wire-vocabulary.control clean over the corrected fanout B6b; fanout F9's one miss is the same pre-existing coverage exit. **D2 CAME BACK NOT AS DECLARED FIRST, AND IT WAS THE ARM:** re-queued at the HEAD it is a verbatim-retry loop that starves the queue, so the rest-of-pass arm failed too (243/12) — not the liar the row names. Re-armed at the TAIL: 246/9, AS DECLARED. H3 re-run under the fix (its drop arm now reads A3's NOTHING-behind-it assertion, the old one having asserted the defect): 251/4, AS DECLARED. The whole driver, 25 arms: 24 AS DECLARED; H10's harness and member suites 0 FAIL, its `coverage --strict` exit 1 PRE-EXISTING at b0962be0 (C-73.2..C-73.5 never named), not this item's.
    FULL PER-ARM DETAIL IS IN `test/harness.control.mjs`'s own header.
    D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. **RE-MEASURED 2026-08-09 BY D-276: this suite's baseline moved 194/0 to 199/0** and the figures above went stale with it; under those arms this suite reads 192/7, 198/1 and 197/2 respectively.
  * ========================================================================= */
@@ -234,9 +237,18 @@ console.log("\n--- A3 · F10: a refusal routes to ADJUST, never to a verbatim re
 
   const adjusted = { step: "adjust", mode: "check", pass: 0, maxPasses: 3, adjusted: true, queue: [{ name: "a" }] };
   t("an ADJUSTED submission may re-enter `submit`", nextStep(adjusted).step, "submit");
-  t("an UNADJUSTED one drops the candidate instead", nextStep({ ...adjusted, adjusted: false }).step, "next-pass");
-  t("and says why in the record's terms, naming PL-3's counter",
-    /repeats/.test(nextStep({ ...adjusted, adjusted: false }).why), true);
+  /* CORRECTED 2026-09-24 (D-452), AND THE OLD ASSERTION WAS WRONG RATHER THAN OLD. It read "an UNADJUSTED
+     one drops the candidate instead" and expected `next-pass` from a state whose queue still held `a` — so it
+     asserted that one dropped candidate ends the PASS, which is the defect: every candidate queued behind the
+     dropped one (the table-made level-empty ones included) was never written. A drop drops ONE candidate. The
+     dropped one is already off the queue (`submit` shifted it), so `submit` here writes the rest, never it. */
+  const dropped = { ...adjusted, adjusted: false };
+  t("an UNADJUSTED one with candidates queued behind it goes on to `submit` the REST", nextStep(dropped).step, "submit");
+  t("an UNADJUSTED one with NOTHING behind it ends the pass", nextStep({ ...dropped, queue: [] }).step, "next-pass");
+  t("and a missing queue is read as empty, not as a reason to write", nextStep({ ...dropped, queue: undefined }).step,
+    "next-pass");
+  t("and says why in the record's terms, naming PL-3's counter — whether or not anything is behind it",
+    [/repeats/.test(nextStep(dropped).why), /repeats/.test(nextStep({ ...dropped, queue: [] }).why)], [true, true]);
 
   console.log("\n  -- `adjustedFrom` answers by the BYTES, and key order is not a change --");
   t("identical objects are not an adjustment", adjustedFrom({ a: 1, b: 2 }, { a: 1, b: 2 }), false);
@@ -984,6 +996,55 @@ console.log("\n--- B5 · F10's other half: an unanswerable refusal DROPS the can
   await mf.dispose();
 }
 
+console.log("\n--- B5b · D-452: a DROPPED candidate drops ONE candidate — the rest of the pass is written ---");
+{
+  /* THE DEFECT, THROUGH THE OP. `adjust` with nothing adjusted went to `next-pass` whatever was queued behind
+     it, so the FIRST unanswerable refusal of a pass swallowed every candidate after it — the table-made
+     level-empty ones included, which is §9's instrument silently not written. HOW A LIAR PASSES A WEAKER ARM:
+     writing only the NEXT candidate, or re-queuing the dropped one. So this counts EVERY name behind the
+     dropped one, requires each written EXACTLY ONCE, and requires the dropped one sent once and never landed. */
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-1",
+                     refuse: { v1: "SUGGEST_UNWRITABLE_STATE" } });
+  const lookedAbsent = LEVELS.slice(0, 2);
+  const out = await (await runOp(mf, {
+    ...base,
+    judgements: [
+      { targets: [] },
+      { reports: lookedAbsent.map((l, i) => ({ level: l, state: "LOOKED_ABSENT", observed_at: `log:${i + 1}` })) },
+      { candidates: [
+        { kind: "basis-version", name: "v1", description: "the reading this run composed, which the plane refuses" },
+        { kind: "basis-version", name: "v2", description: "a second reading queued behind the refused one" },
+        { kind: "basis-version", name: "v3", description: "a third reading queued behind the refused one" }] },
+      {},
+      /* THE SAME BYTES HANDED BACK: unanswerable, so `v1` is DROPPED (B5's case, with a queue behind it). */
+      { submission: { kind: "basis-version", name: "v1",
+                      description: "the reading this run composed, which the plane refuses" } },
+    ],
+  })).json();
+  const st = await mockState(mf);
+  const behind = ["v2", "v3", ...lookedAbsent.map((l) => `level-empty-${REPORTING_LEVEL[l]}`)];
+  const count = (names) => (want) => names.filter((n) => n === want).length;
+  const sentN = count(st.log.filter((l) => l.op === "suggest").map((l) => String(l.body?.name ?? "")));
+  const landedN = count(st.suggested.map((x) => String(x.name)));
+  t("B5b: the fixture is what it claims — the dropped candidate is FIRST and four stand behind it",
+    [st.log.find((l) => l.op === "suggest")?.body?.name ?? null, behind.length,
+     (out.trace || []).some((x) => x.step === "submit" && x.to === "adjust")], ["v1", 4, true]);
+  t("D-452: the rest of the pass is written — EVERY candidate behind the dropped one landed EXACTLY ONCE",
+    behind.map((n) => `${n}×${landedN(n)}`), behind.map((n) => `${n}×1`));
+  t("D-452: …and each was SENT exactly once, so no candidate behind it was retried either",
+    behind.map((n) => `${n}×${sentN(n)}`), behind.map((n) => `${n}×1`));
+  t("D-452: the DROPPED candidate was sent ONCE and never landed — not re-queued, not resent",
+    [sentN("v1"), landedN("v1")], [1, 0]);
+  t("D-452: the drop went on to `submit` and not to `next-pass`, and it was not an adjustment",
+    [(out.trace || []).some((x) => x.step === "adjust" && x.to === "submit"),
+     (out.trace || []).some((x) => x.step === "adjust" && x.to === "next-pass"), out.adjusted],
+    [true, false, 0]);
+  t("D-452: nothing was resent verbatim, so PL-3's `repeats` counter never moved",
+    [out.verbatim_resubmits, st.repeats], [0, [0]]);
+  t("D-452: the run counts what it wrote — four, the refused one not among them", out.submitted, 4);
+  await mf.dispose();
+}
+
 console.log("\n--- B6 · THE EMPTY RUN (VF-1's owed control 7): proposes NOTHING, emits §9's kind ---");
 {
   /* An inquiry the evidence does not support. The model reports that it looked
@@ -1324,10 +1385,11 @@ console.log("\n--- FT1 · FL-11: a run over a QUESTION seeds its target, and its
     ],
   })).json();
   const st = await mockState(mf);
-  /* THE OUTSIDE-THE-CONTEXT READING IS A SEPARATE RUN, AND THAT IS A MEASURED FACT ABOUT THE TABLE: a
-     candidate dropped at `adjust` routes to `next-pass`, so the rest of that pass's queue is never
-     written (`nextStep`'s `adjust` row). Put in one run with the level-empty candidate, it swallowed it.
-     Reported with its fix by FL-11 rather than changed here. */
+  /* THE OUTSIDE-THE-CONTEXT READING IS A SEPARATE RUN. It was one because of a measured fact about the
+     table: a candidate dropped at `adjust` routed to `next-pass`, so the rest of that pass's queue was never
+     written, and put in one run with the level-empty candidate it swallowed it. Reported with its fix by
+     FL-11 and FIXED by D-452 (B5b above is its arm); the runs stay separate so FT1d/FT1e read one refusal
+     in isolation. */
   const mfOut = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-FL11" });
   const outOut = await (await runOp(mfOut, {
     ...base,
