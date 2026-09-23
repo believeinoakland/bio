@@ -41,6 +41,7 @@ design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON TH
 depends-on: none.
 scope: the arm reads a FIXED, stated range (the merges up to a pinned commit, named at the site) or HEAD's own first-parent history, never a remote ref; the M0-126 input set then covers what it reads.
 accepts-when: the arm's verdict on one tree is identical whatever `origin/main` holds (driven with a planted remote ref carrying a dropped-edit merge). NEGATIVE CONTROL: read `origin/main` again, and the planted-ref arm fails by name.
+narrowed: 2026-09-23 by SCHEDULER #15 on CONDUCT #15's report: under BOB #30's ruling a history-reading unit is never-cache, which answers the reuse half (M0-131); re-read this row's residue once M0-126 and `land/bob/nevercache` land.
 added: 2026-09-23 · SCHEDULER #15 (CONDUCT #15's report of run #20; `node tools/mintid.mjs M0`).
 
 ### M0-131 · queued — **THE TRAIN LANDS A MERGE UNGATED WHENEVER ITS TREE IS RECORDED GREEN (M0-122's reuse), THOUGH THE MERGE ADDS HISTORY THAT HISTORY-READING CHECKS JUDGE.** `recordedGreen` in `tools/train.mjs` (re-read on `4355bfda`) returns the tree's record and the train prints *"NO GATE RUN"*; a tree record says nothing about the merge commit's new history, so run #20's red (`mergecarry`) reached `main` through it. CONDUCT #15's finding. — owner M0.
@@ -48,7 +49,7 @@ order: directly after M0-130, the same red: M0-130 makes `mergecarry` depend on 
 milestone: M0
 interface: none
 design: `docs/development/TREE-SHARING.md` §2 (M0-122's reuse: *"a union whose TREE this clone's D-293 record already holds GREEN … lands with no gate run"*) and §3 (a red on `main` is an alarm), with `docs/development/VERIFICATION.md` (admitted for M0 by name).
-depends-on: none. **Interacts with M0-126** (running; BOB is ruling on its reuse): the builder reads M0-126's landed shape first and builds on it.
+depends-on: none. **Carries BOB #30's inbox item 2 of 2026-09-23** (a REUSED tree record still runs the never-cache units; TREE-SHARING §3a condition 1 as BOB #30 ruled it: a unit reading git history or a live ref is `GATE: never-cache (history)`, on `land/bob/nevercache` until it lands). If M0-126 lands carrying it, this row closes as ABSORBED.
 scope: on a reused tree record the train still runs the history-reading checks (`mergecarry`, `plancheck`'s carry arm, any unit that reads commits rather than the tree) on the union before pushing; the set is derived, not hand-listed, or stated at the site.
 accepts-when: a union whose tree is recorded GREEN but whose merge drops a carried edit is refused by the train naming the check. NEGATIVE CONTROL: skip the history checks on reuse, and that arm lands the bad merge and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (CONDUCT #15's report of run #20; `node tools/mintid.mjs M0`).
@@ -1180,13 +1181,3 @@ depends-on: none.
 accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-40's DEBT row of 2026-07-25, re-measured; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-40» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)"** … (whole text: the cut archive)
-order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
-milestone: M0 (background lane, holds no slot)
-interface: none — two suites' report lines
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and … (whole text: the cut archive)
-depends-on: M0-65 (its EXCLUDES segment and widened tally reader; in CONDUCT #6's gate).
-accepts-when: a full battery's headline carries no EXCLUDES segment, and its assertion total rises by exactly the two suites' printed tallies, stated in the landing; `cd bio-plane && npm` … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER (M0-65's worker's suggestion, routed by CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.

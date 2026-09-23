@@ -22,23 +22,6 @@ them up (`node tools/ledger.mjs find <ID>`), do not read them whole.
 
 BOB appends a designed item, a correction or an order change here, with its intended place; SCHEDULER gates it at its cited design section and its depends-on, places it, and moves the drained entry to `docs/archive/ledgers/BOB-INBOX-drained.md` in the same commit.
 
-**2026-09-23 · BOB #30 · MAIN'S FIRST FALSE RED (GitHub run #20, 4355bfda) — two M0 placements, both CUT GATE TIME and keep the alarm honest.**
-
-1. **M0: `mergecarry` gains a `carried` class.** A merge that keeps main's blob is `dropped` today even when main's blob
-   already HOLDS the branch's change (4355bfd re-merged a branch batch4 had carried; every added line on main, every removed
-   line gone). Fix: before `klass = "dropped"` in `carryAudit`, test whether the branch's patch (`git diff <base> <Pk> --
-   <path>`) applies IN REVERSE cleanly to M's blob; if so the class is `carried`, counted and never failed. MEASURED by BOB #30
-   (08:38Z): both 4355bfd paths contained; `e241672` `civicos-ui/check-refusal-codes.mjs` NOT contained. **Accepts when**
-   4355bfd reads `carried` and CONDUCT #15's two interim `KNOWN_HISTORICAL_DROPS` rows for it go `stale` and are removed in
-   the same commit. NEGATIVE CONTROL: the registered real drops stay `dropped`, and forcing the containment test false turns
-   4355bfd red by name. Directly after M0-126.
-2. **M0: a REUSED tree record still runs the never-cache units** (TREE-SHARING §3a condition 1, ruled today: a unit reading
-   git history or a live ref — origin/main, origin/coord, merge ancestry, ls-remote — is `GATE: never-cache (history)`).
-   M0-122's `recordedGreen` reused a tree's GREEN for the 4355bfd merge, and `mergecarry.test` judges HISTORY, which no tree key
-   sees, so the train passed a merge GitHub then failed. **Accepts when** the train, handed a tree already GREEN, still runs
-   every never-cache unit and fails on a planted history defect. If M0-126 lands first and carries it, close this as
-   absorbed. `depends-on` none.
-
 ## THE CACHE — the next rows, in order
 
 **The next rows of the build plan, in order** (`docs/development/WORK-PIPELINE.md` §1): those `running`, then the next runnable `queued` rows, at most 8 in all. The order CONTINUES at the top of `docs/development/BACKLOG.md`. SCHEDULER replenishes this section with `node tools/ledger.mjs refill` as rows complete; CONDUCT flips a row here `queued` → `running` before its spawn. Each row's `order:` line says why it is where it is. A row marked `cut:` names where its full text sits; a worker reads that before building.

@@ -1778,3 +1778,22 @@ Each ruling is in its home document, verified at the code; each row keeps its `D
 >    `cls === "ai"` condition on the stamp, and the deploy-token arms fail by name. The builder moves every non-test caller
 >    (livefire, setup scripts, `agent-worker`) inside a run, or brings the one that cannot be here. **Place it directly after
 >    D-85**, depends-on D-85 (it widens D-85's stamp). I3 changes; the integrator mints the IC. The id is SCHEDULER's to mint.
+
+> Drained 2026-09-23 by SCHEDULER #15: item 1 ABSORBED by CONDUCT #15's main-red repair, `land/conduct/mergecarry-4355bfd` @ `cf6f14ab` (gating when drained; SCHEDULER #15 verifies the `carried` class on `main` when its merge sha is reported, and re-places item 1 if it does not land); item 2 CARRIED by M0-131 (closes as absorbed if M0-126 carries it); M0-130 narrowed.
+
+> **2026-09-23 · BOB #30 · MAIN'S FIRST FALSE RED (GitHub run #20, 4355bfda) — two M0 placements, both CUT GATE TIME and keep the alarm honest.**
+> 
+> 1. **M0: `mergecarry` gains a `carried` class.** A merge that keeps main's blob is `dropped` today even when main's blob
+>    already HOLDS the branch's change (4355bfd re-merged a branch batch4 had carried; every added line on main, every removed
+>    line gone). Fix: before `klass = "dropped"` in `carryAudit`, test whether the branch's patch (`git diff <base> <Pk> --
+>    <path>`) applies IN REVERSE cleanly to M's blob; if so the class is `carried`, counted and never failed. MEASURED by BOB #30
+>    (08:38Z): both 4355bfd paths contained; `e241672` `civicos-ui/check-refusal-codes.mjs` NOT contained. **Accepts when**
+>    4355bfd reads `carried` and CONDUCT #15's two interim `KNOWN_HISTORICAL_DROPS` rows for it go `stale` and are removed in
+>    the same commit. NEGATIVE CONTROL: the registered real drops stay `dropped`, and forcing the containment test false turns
+>    4355bfd red by name. Directly after M0-126.
+> 2. **M0: a REUSED tree record still runs the never-cache units** (TREE-SHARING §3a condition 1, ruled today: a unit reading
+>    git history or a live ref — origin/main, origin/coord, merge ancestry, ls-remote — is `GATE: never-cache (history)`).
+>    M0-122's `recordedGreen` reused a tree's GREEN for the 4355bfd merge, and `mergecarry.test` judges HISTORY, which no tree key
+>    sees, so the train passed a merge GitHub then failed. **Accepts when** the train, handed a tree already GREEN, still runs
+>    every never-cache unit and fails on a planted history defect. If M0-126 lands first and carries it, close this as
+>    absorbed. `depends-on` none.
