@@ -11080,6 +11080,25 @@ export const CONTENT_EXTENT_CHECKS = {
       + 'would record a pointer that resolves to nothing and looks exactly like one that works. '
       + 'Cite the captured page as a whole for now.',
   },
+  /* D-440 (EXTRACTION-BREADTH-DESIGN.md section 3.2; CLIENT-RENDERED.md
+     "DESIGNED 2026-09-21"). An image's `{part}` names a media member of a
+     CONTAINER's own bytes, and a web page, a PDF or a plain file has none. It
+     is a sub-number of this family on C-45.5's rule (the family's subject is the
+     ways the record could come to point at nothing), and it is NOT C-45.1: the
+     part is not outside a list this record holds, there is no list to be outside
+     of, because the document is not the kind that embeds one. Until D-440 this
+     minted, stating nothing, whenever the capture held no image list. */
+  CONTENT_EXTENT_NOT_A_CONTAINER: {
+    check: 'C-45.11',
+    where: 'checks/bio-checks.mjs checkContentExtent > is-content-extent',
+    translation: 'This citation points at an image embedded inside the document, and this document '
+      + 'is not the kind that embeds files inside itself: it is a web page, a PDF or another plain '
+      + 'file, not a Word, Excel, PowerPoint or OpenDocument file. An image shown beside a web page '
+      + 'is a separate file the page only points at, so it is not in what this record captured of '
+      + 'the page. If that image is your evidence, capture it at its own address as its own '
+      + 'document and cite that document whole. An image drawn on a PDF page is cited by its page '
+      + 'and position instead.',
+  },
   /* REC-84 / IC-84 (1): a leg may NAME the part it rests on, instead of
      describing it. The two refusals below are the two ways that name can be
      wrong, and both are facts only the store can establish — hence a store
@@ -12616,6 +12635,17 @@ export function checkContentExtent(extent, ctx = {}) {
           `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the `
           + `image extent names page ${e.page}`);
     }
+    /* D-440 — A `{part}` IS A MEMBER OF A CONTAINER'S OWN BYTES, AND NOTHING
+       ELSE. Asked BEFORE the image list, because on a capture that is not a
+       container there is no list to be outside of — and until this arm, "no
+       list" was read as "no bound" and ANY 64-hex part minted on every web
+       page, PDF and text capture, naming bytes the document does not hold.
+       Refused only on the store's DETERMINATE `office: false`; an undetermined
+       kind (`null`) and the catalogue's document-only pass (`known: false`) are
+       skipped, never guessed — the arm's rule above, and the admission is
+       STATED by the store through `imagePartUndetermined` below. */
+    const notContainer = hasPart && ctx.known !== false ? partOutsideAnyContainer(ctx.container) : null;
+    if (notContainer) return refusal("CONTENT_EXTENT_NOT_A_CONTAINER", notContainer);
     const outside = hasPart ? coversImage(e, ctx.container) : null;
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
     /* TEXT READ OFF AN EMBEDDED IMAGE HAS NO CHAIN IN THIS RECORD, and the
@@ -12817,6 +12847,48 @@ function coversImage(e, container) {
   if (images.some((x) => x && typeof x.part === 'string' && x.part.toLowerCase() === want)) return null;
   return `this capture's container holds ${images.length} image(s) and none of them has the content `
     + `hash ${want.slice(0, 16)}… that the extent names`;
+}
+
+/** D-440 — an embedded image's `{part}`, against WHETHER THIS CAPTURE IS A
+ *  CONTAINER AT ALL, as the store resolved it (`container.office`, three-valued:
+ *  true, false, or null for undetermined). Returns the sentence naming why the
+ *  part cannot be in this document, or null. ONLY a determinate `false` answers:
+ *  an undetermined kind is SKIPPED, the three predicates' rule above, and stated
+ *  by `imagePartUndetermined`. A sentence rather than a refusal for the reason
+ *  those predicates give: the code stays a literal inside `is-content-extent`. */
+function partOutsideAnyContainer(container) {
+  if (!container || container.office !== false) return null;
+  const fmt = typeof container.format === 'string' && container.format ? container.format : null;
+  return `this capture is ${fmt ? `a ${fmt.slice(0, 20)} document` : 'a document'}, not an office `
+    + `container, so its own bytes hold no embedded media part and a {part} names bytes this document `
+    + `does not contain. An image served beside a page is its OWN document: acquire it at its own `
+    + `address and cite that document whole`
+    + (fmt === 'pdf' ? `. An image painted on a PDF page is addressed by its page and rect, not a part` : '');
+}
+
+/** D-440 — WHAT AN ADMITTED `{part}` COULD NOT BE CHECKED AGAINST, stated, or
+ *  null when it was checked in full. The row's rule: an office capture with no
+ *  persisted image list keeps its UNDETERMINED admission, STATED — and so does a
+ *  capture whose kind the record does not hold. `mintContent` carries this onto
+ *  its answer, because a row admitted without its bound and returned bare reads
+ *  exactly like one that was verified. Pure; reads the same `ctx` the checker
+ *  judged, so the statement cannot describe a different context. */
+export function imagePartUndetermined(extent, ctx = {}) {
+  const e = extent && typeof extent === 'object' ? extent : null;
+  if (!e || e.kind !== 'image' || e.part === undefined || e.part === null || e.part === '') return null;
+  if (!ctx || ctx.known === false) return null;
+  const c = ctx.container && typeof ctx.container === 'object' ? ctx.container : null;
+  if (!c || c.office == null)
+    return { level: 'container_kind',
+             why: `${c && typeof c.kind_why === 'string' ? c.kind_why : 'this record does not hold which kind of document this capture is'}`
+               + ` — so whether this part is a member of the document's own bytes is UNDETERMINED, `
+               + `admitted and stated rather than guessed either way` };
+  if (c.office === true && !Array.isArray(c.images))
+    return { level: 'image_list',
+             why: `this capture is an office container and this record holds no list of its embedded `
+               + `images (it was acquired before the wire carried one, or no entry itemised it), so whether `
+               + `the part is among them is UNDETERMINED, admitted and stated rather than guessed` };
+  return null;
 }
 
 /* =========================================================================

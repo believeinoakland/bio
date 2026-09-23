@@ -772,7 +772,16 @@ CREATE TABLE IF NOT EXISTS readings (
   found          INTEGER NOT NULL DEFAULT 0,
   entity_count   INTEGER NOT NULL DEFAULT 0,
   reading        TEXT NOT NULL,
-  at             TEXT
+  at             TEXT,
+  -- D-440 (EXTRACTION-BREADTH-DESIGN.md section 3.2). The capture's FORMAT key as
+  -- its provenance document's profile recorded it (detectFormat, magic bytes
+  -- first and the declared Content-Type second), projected at op=promote from the
+  -- SAME data/provenance.json the reading is. It answers one question, asked by
+  -- contentContextFor: is this capture an office container, whose own bytes can
+  -- hold an embedded media part. NULLABLE AND NEVER BACK-FILLED: NULL means the
+  -- provenance document carried no format, and the reader falls back to the
+  -- reading's own text_container, then states the kind UNDETERMINED.
+  capture_format TEXT
 );
 CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- The entity-reference index: one row per entity a reading carries, keyed by the
@@ -3961,6 +3970,7 @@ __export(bio_checks_exports, {
   divisionDisclosureFindings: () => divisionDisclosureFindings,
   ed25519Verify: () => ed25519Verify,
   extentRelation: () => extentRelation,
+  imagePartUndetermined: () => imagePartUndetermined,
   inquiryQuestionOf: () => inquiryQuestionOf,
   isBoilerplate: () => isBoilerplate,
   isCaseMemberBytes: () => isCaseMemberBytes,
@@ -11457,6 +11467,19 @@ var CONTENT_EXTENT_CHECKS = {
     where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
     translation: "Citing a region of a web page is not something this record can do yet. Nothing in it produces the addresses that would make such a citation checkable, so accepting one would record a pointer that resolves to nothing and looks exactly like one that works. Cite the captured page as a whole for now."
   },
+  /* D-440 (EXTRACTION-BREADTH-DESIGN.md section 3.2; CLIENT-RENDERED.md
+     "DESIGNED 2026-09-21"). An image's `{part}` names a media member of a
+     CONTAINER's own bytes, and a web page, a PDF or a plain file has none. It
+     is a sub-number of this family on C-45.5's rule (the family's subject is the
+     ways the record could come to point at nothing), and it is NOT C-45.1: the
+     part is not outside a list this record holds, there is no list to be outside
+     of, because the document is not the kind that embeds one. Until D-440 this
+     minted, stating nothing, whenever the capture held no image list. */
+  CONTENT_EXTENT_NOT_A_CONTAINER: {
+    check: "C-45.11",
+    where: "checks/bio-checks.mjs checkContentExtent > is-content-extent",
+    translation: "This citation points at an image embedded inside the document, and this document is not the kind that embeds files inside itself: it is a web page, a PDF or another plain file, not a Word, Excel, PowerPoint or OpenDocument file. An image shown beside a web page is a separate file the page only points at, so it is not in what this record captured of the page. If that image is your evidence, capture it at its own address as its own document and cite that document whole. An image drawn on a PDF page is cited by its page and position instead."
+  },
   /* REC-84 / IC-84 (1): a leg may NAME the part it rests on, instead of
      describing it. The two refusals below are the two ways that name can be
      wrong, and both are facts only the store can establish — hence a store
@@ -12300,6 +12323,8 @@ function checkContentExtent(extent, ctx = {}) {
           `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the image extent names page ${e.page}`
         );
     }
+    const notContainer = hasPart && ctx.known !== false ? partOutsideAnyContainer(ctx.container) : null;
+    if (notContainer) return refusal("CONTENT_EXTENT_NOT_A_CONTAINER", notContainer);
     const outside = hasPart ? coversImage(e, ctx.container) : null;
     if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
     if (hasPart && citedAs === "text")
@@ -12385,6 +12410,28 @@ function coversImage(e, container) {
   const want = String(e.part).trim().toLowerCase();
   if (images.some((x) => x && typeof x.part === "string" && x.part.toLowerCase() === want)) return null;
   return `this capture's container holds ${images.length} image(s) and none of them has the content hash ${want.slice(0, 16)}\u2026 that the extent names`;
+}
+function partOutsideAnyContainer(container) {
+  if (!container || container.office !== false) return null;
+  const fmt = typeof container.format === "string" && container.format ? container.format : null;
+  return `this capture is ${fmt ? `a ${fmt.slice(0, 20)} document` : "a document"}, not an office container, so its own bytes hold no embedded media part and a {part} names bytes this document does not contain. An image served beside a page is its OWN document: acquire it at its own address and cite that document whole` + (fmt === "pdf" ? `. An image painted on a PDF page is addressed by its page and rect, not a part` : "");
+}
+function imagePartUndetermined(extent, ctx = {}) {
+  const e = extent && typeof extent === "object" ? extent : null;
+  if (!e || e.kind !== "image" || e.part === void 0 || e.part === null || e.part === "") return null;
+  if (!ctx || ctx.known === false) return null;
+  const c = ctx.container && typeof ctx.container === "object" ? ctx.container : null;
+  if (!c || c.office == null)
+    return {
+      level: "container_kind",
+      why: `${c && typeof c.kind_why === "string" ? c.kind_why : "this record does not hold which kind of document this capture is"} \u2014 so whether this part is a member of the document's own bytes is UNDETERMINED, admitted and stated rather than guessed either way`
+    };
+  if (c.office === true && !Array.isArray(c.images))
+    return {
+      level: "image_list",
+      why: `this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed`
+    };
+  return null;
 }
 var CONNECTION_PAIR_CHECKS = {
   /* THE FORGED PAIR. A pair whose recorded position is NOT inside the extent
@@ -27692,7 +27739,12 @@ var Store = class _Store extends DurableObject {
          the plane at that instant. NULLABLE AND NEVER BACK-FILLED: a run opened before this column existed
          recorded nothing, and the only value a backfill could reach for is the manifest the run was HANDED,
          the very value this column exists to be compared WITH. NULL reads back as `not recorded`, stated. */
-      ["ai_runs", "lens_at_open", "TEXT"]
+      ["ai_runs", "lens_at_open", "TEXT"],
+      /* D-440: the capture's FORMAT key, projected at promote from the provenance document's profile.
+         NULLABLE AND NEVER BACK-FILLED: a reading persisted before this column existed recorded no format,
+         and `#containerKindOf` then falls back to the reading's own `text_container` and, failing that,
+         states the kind UNDETERMINED rather than guessing it. */
+      ["readings", "capture_format", "TEXT"]
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -40958,7 +41010,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         for (let i = 0; i < basisLegs.length; i++) {
           const leg = basisLegs[i];
           if (typeof leg.target !== "string") continue;
-          let legRowId = null, legCarried = false, legMinted = false;
+          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
@@ -40982,6 +41034,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                 if (mint.ok) {
                   legRowId = mint.content_id;
                   legMinted = mint.minted;
+                  legUndetermined = mint.undetermined || null;
                 }
               }
             }
@@ -40992,7 +41045,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                 content_id: legRowId,
                 extent_kind: ext.kind,
                 minted: legMinted,
-                carried: legCarried
+                carried: legCarried,
+                ...legUndetermined ? { undetermined: legUndetermined } : {}
               });
           }
           this.sql.exec(
@@ -41457,9 +41511,11 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     });
     const extraction = this.#observeExtraction(bundleId, sha, reading, { author });
     this.#observeReaderRun(bundleId, sha, reading, { author });
+    const prof = doc && doc.profile && typeof doc.profile === "object" ? doc.profile : null;
+    const fmtKey = prof && prof.format && typeof prof.format === "object" && typeof prof.format.format === "string" && prof.format.format.trim() ? prof.format.format.trim() : null;
     this.sql.exec(
-      `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
-         VALUES (?,?,?,?,?,?,?,?)`,
+      `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at,capture_format)
+         VALUES (?,?,?,?,?,?,?,?,COALESCE(?, (SELECT capture_format FROM readings WHERE capture_sha=?)))`,
       sha,
       bundleId,
       typeof reading.content_type === "string" ? reading.content_type : null,
@@ -41467,7 +41523,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       reading.found ? 1 : 0,
       entities.length,
       JSON.stringify(reading),
-      typeof reading.at === "string" ? reading.at : null
+      typeof reading.at === "string" ? reading.at : null,
+      fmtKey,
+      sha
     );
     for (const e of entities) {
       if (!e || e.key == null && e.kind == null) continue;
@@ -42064,10 +42122,18 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  this row — the chain and (since D-345) the page count — and asking for the
    *  row twice would be two answers to one question waiting to disagree, which
    *  is the drift the comment on `#contentPlanFor` already names. One read,
-   *  parsed once, handed to both readers below. */
+   *  parsed once, handed to both readers below.
+   *
+   *  D-440 ADDS THE ROW'S `capture_format` TO THE SAME READ rather than a second
+   *  one, for the same reason: the container's kind and its extent are two facts
+   *  about one row, and `contentContextFor` hands both to the checker together. */
   #persistedReading(captureSha) {
-    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
-    return row ? safeJson(row.reading) || null : null;
+    const row = this.#one(`SELECT reading, capture_format FROM readings WHERE capture_sha=?`, captureSha);
+    return {
+      reading: row ? safeJson(row.reading) || null : null,
+      captureFormat: row && typeof row.capture_format === "string" ? row.capture_format : null,
+      held: !!row
+    };
   }
   /** The transcription chain the record holds for a capture, or null.
    *  ONE source (`readings.reading.text_source`), the same one `attestText` and
@@ -42246,11 +42312,72 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
    *  one-read rule extended to the third: asking for the `readings` row a second
    *  time would be two answers to one question waiting to disagree. */
   contentContextFor(captureSha) {
-    const reading = this.#persistedReading(captureSha);
+    const { reading, captureFormat, held } = this.#persistedReading(captureSha);
+    const container = this.#containerExtentForCapture(captureSha, reading);
+    Object.assign(container, this.#containerKindOf(reading, captureFormat, held));
     return {
       chain: this.#chainOfReading(reading),
       pageCount: this.#pageSetForCapture(captureSha, reading),
-      container: this.#containerExtentForCapture(captureSha, reading)
+      container
+    };
+  }
+  /** D-440 — IS THIS CAPTURE AN OFFICE CONTAINER, whose own bytes can hold an
+   *  embedded media part (EXTRACTION-BREADTH-DESIGN.md section 3.2: "`{part}` is
+   *  a member of a CONTAINER's own bytes, and nothing else").
+   *
+   *  THREE-VALUED, and each value is a different fact: `true` (the format
+   *  registry's entry for this capture's format WALKS PARTS — the office
+   *  entries), `false` (a registered format with no parts walk — a web page, a
+   *  PDF: an image beside a page is its own document, and one on a PDF page is
+   *  addressed by page and rect), `null` (the record does not hold which format
+   *  this capture is, STATED in `kind_why`, never guessed).
+   *
+   *  A PROPERTY OF THE REGISTRY, NEVER A LIST OF SLUGS (WORKER.md, "invert, do
+   *  not lengthen a list"): a seventh office entry registered tomorrow is a
+   *  container here with no edit, and a new non-container format is refused.
+   *
+   *  THE FORMAT COMES FROM, IN ORDER: the row's `capture_format` (the provenance
+   *  profile's FORMAT axis, projected at promote); the reading's own
+   *  `text_container` (the SAME key, carried by every reading the acquire wire
+   *  read — so a capture promoted before `capture_format` existed still
+   *  answers); and nothing else. An office `container_extent` alone (its
+   *  `levels` named by an office entry) is also an answer, because only an
+   *  office entry itemises levels.
+   *
+   *  WHAT THIS CANNOT SEE, stated: the format is what the provenance document
+   *  says, and that document is the caller's, exactly as the reading and its
+   *  image list are — this reads the record, it does not re-sniff the bytes. */
+  #containerKindOf(reading, captureFormat, held) {
+    const fromReading = reading && typeof reading === "object" && typeof reading.text_container === "string" && reading.text_container.trim() ? reading.text_container.trim() : null;
+    const format = captureFormat || fromReading;
+    const source = captureFormat ? "the capture's provenance profile" : "the capture's reading";
+    if (format && format !== "undetermined") {
+      const entry = getFormat(format);
+      if (entry) {
+        const office = typeof entry.parts === "function";
+        return {
+          format,
+          office,
+          kind_why: `${source} records this capture's format as ${format}, which ` + (office ? "is an office container: its own bytes hold its embedded media parts" : "is not an office container: its own bytes hold no embedded media part")
+        };
+      }
+      return {
+        format,
+        office: null,
+        kind_why: `${source} records this capture's format as '${format.slice(0, 40)}', which this build's format registry does not know, so whether it is a container is UNDETERMINED`
+      };
+    }
+    const ext = reading && typeof reading === "object" && reading.container_extent && typeof reading.container_extent === "object" ? reading.container_extent : null;
+    if (ext && Array.isArray(ext.levels) && ext.levels.length)
+      return {
+        format: null,
+        office: true,
+        kind_why: "the capture's reading carries a container extent an office entry itemised, so it is an office container, though no format key was recorded"
+      };
+    return {
+      format: null,
+      office: null,
+      kind_why: !held ? "this record holds no reading for this capture, so which format it is is UNDETERMINED" : format === "undetermined" ? "the format registry could not determine this capture's format at acquire, so whether it is a container is UNDETERMINED" : "this record does not hold this capture's format (it was promoted before the format was projected, and its reading names no container), so whether it is a container is UNDETERMINED"
     };
   }
   /** THE WHOLE BASIS'S REFERENTS, RESOLVED ONCE — the capture each leg is about
@@ -42470,7 +42597,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         citedAs
       );
     }
-    return { ok: true, content_id: id, minted: !before };
+    const undetermined = imagePartUndetermined(extent, ctx);
+    return { ok: true, content_id: id, minted: !before, ...undetermined ? { undetermined } : {} };
   }
   /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
    *  as an ACT a credential performs rather than as a side effect of promotion.
@@ -42558,7 +42686,13 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       at
     });
     if (!out.ok) return out;
-    return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id) };
+    return {
+      ok: true,
+      minted: out.minted,
+      capture_sha: sha,
+      ...this.contentRow(out.content_id),
+      ...out.undetermined ? { undetermined: out.undetermined } : {}
+    };
   }
   /* ====================================================================== *
    * REC-87 / IC-127 / IC-128 — TRANSCRIBE (Bob's 5.2).
