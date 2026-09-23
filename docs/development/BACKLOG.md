@@ -33,6 +33,16 @@ scope: promote refuses a `snap_key` already present for the bundle by a new refu
 accepts-when: through the op, a second promote reusing a snap key with different content is refused by name and the first version's row is byte-identical after; an identical re-send is a no-op. NEGATIVE CONTROL: restore `INSERT OR REPLACE`, and the collision arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-132's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
 
+### REC-178 · queued — **`op=promote` STORES `bytes` AS SENT, AND WRITERS SEND `text.length` (UTF-16 UNITS, NOT UTF-8 BYTES); `OVERSIZE_INLINE` JUDGES `text.length` AGAINST A BYTE LIMIT, SO A NON-ASCII FILE OVER IT PASSES.** Re-read on `14faa089` in `store.mjs` `promote`. Writers: `setup.mjs`, `app.html`, `livefire.mjs`, the monitor tick in `index.mjs`, `tools/fw21-onpoint-probe.mjs`. — owner RECORD.
+order: directly after REC-176, REC-175's `promote` fence one field over: a stored size false of the stored bytes is CLAUDE.md §2's class, and the limit it feeds admits what it exists to refuse; behind REC-176, since a lost version outweighs a misstated one (SCHEDULER #16, 2026-09-23; REC-175's worker via CONDUCT #16)
+milestone: M6
+interface: I3 — the plane computes `bytes`; `OVERSIZE_INLINE` judges UTF-8 bytes; the integrator mints the IC.
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` (bundle anatomy; the Mechanical Verification Law), with `CLAUDE.md` §5; REC-175's digest check is the precedent.
+depends-on: REC-175 (same site; on `land/conduct/c16-batch5`).
+scope: promote computes each inline file's `bytes` from its UTF-8 encoding (a differing supplied value refused or overridden, stated) and judges `OVERSIZE_INLINE` on it; the writers send UTF-8 length or none; a census of stored rows whose `bytes` disagrees is stated in the landing, never rewritten.
+accepts-when: through the op, a non-ASCII file over `INLINE_MAX` in UTF-8 but under it in `text.length` is refused `OVERSIZE_INLINE`, bundle byte-identical after; stored `bytes` equals the UTF-8 length. NEGATIVE CONTROL: judge `text.length` again, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #16 (REC-175's worker via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
+
 ### REC-177 · blocked — **`op=airunopen` ACCEPTS A DECLARED BOUND WITH NO POSITIVE `allowed`, SO A RUN CAN OPEN UNDER A BOUND THAT STATES NO ALLOWANCE.** BOB #30 ruled a declared bound STATES its allowance: `op=airunopen` refuses one with no positive `allowed`. `blocked` until its design lands. — owner RECORD.
 order: directly after REC-172 (in the cache) as BOB #30 placed it, the same bound fence; below the record-integrity rows REC-175 and REC-176 (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
 milestone: M9
@@ -1160,13 +1170,3 @@ depends-on: none.
 accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` … (whole text: the cut archive)
-order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
-milestone: M0
-interface: none
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite … (whole text: the cut archive)
-depends-on: none.
-accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-91» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
