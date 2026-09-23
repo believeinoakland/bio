@@ -20013,6 +20013,7 @@ paths: bio-plane/src/index.mjs (op=acquire's format wire: the PDF branch keeps `
 why: an image {page, rect} row is bounded by the page set only (D-420, QUEUE.md on coord; EXTRACTION-BREADTH-DESIGN.md §3.2, §3.3 item 2).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed land/worker/D-420 @ 16a160dc (verified by ls-remote); IC-203 (I1) and IC-204 (I3) proposed; C-45.12 (D-440 holds C-45.11); NEGATIVE CONTROL nc-d420.mjs four arms AS DECLARED; paths stay reserved until CONDUCT integrates the branch.
 
 ### D-82 · UI worker of CONDUCT #16 (cloud session WORKER D-82 (CONDUCT #16), branch land/worker/D-82) · 2026-09-23 — an agent-surfaced inquiry is marked wherever an inquiry is listed or shown
 
