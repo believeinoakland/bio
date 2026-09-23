@@ -73,7 +73,7 @@ workers mint in separate clones — ALWAYS grep the batch for the proposed id be
   over main 0e5f7054. Batch7 = M0-136, D-57 (IC-194), REC-176 (IC-193 MAJOR), REC-178 (IC-196 MAJOR), D-168 (IC-199, renumbered),
   D-423, UI-73 → I3 63.0.0. (c16-batch6 is SUPERSEDED by batch7 — same trees, REC-178's merge re-messaged with its carried-path
   trailers; drop batch6 and batch3.) When it lands: sha to SCHEDULER (those 7 done; REC-180, REC-181 then enter the cache); DIST at
-  the daily cut (≥ 2026-09-24 ~17:00Z): REC-176's snap-key census op + op=digestcensus incl. bytes_disagree, and the corrected livefire.mjs.
+  the daily cut (≥ 2026-09-24 ~17:00Z): REC-176's snap-key census op + REC-175's digestcensus incl. bytes_disagree, and the corrected livefire.mjs.
 - **FINISHED, NOT YET INTEGRATED — yours, onto a batch on the landed main:** REC-179 @ 263cab65 (IC-197 MAJOR; authority path:
   re-run its control; its report names D-78's first-line restamp bypass and the late-refusal class for SCHEDULER), D-440 @ 729203da
   (IC-198, I5 capture_format; C-45.11), D-420 @ 16a160dc (IC-203 I1, IC-204 I3; C-45.12; collides textually with D-440 in the image
