@@ -1,0 +1,16 @@
+{
+ "unit": "plane:caseflip.test.mjs",
+ "inputHash": "19ad9f9c01089c9aa8d82a6cc5e87dc3c78faa71666040b4096c272b5cad3dc0",
+ "verdict": "PASS",
+ "run": "4e5416b19f6e96d93df4f3b0eb3f53fa87e45f73.1790183232093.16390.json",
+ "tree": "4e5416b19f6e96d93df4f3b0eb3f53fa87e45f73",
+ "head": "17ca056f78a037ae2a18963ab060e3031ad86d70",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "TARGETED",
+ "inputs": 302,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "443fe973-cbc2-5671-bad2-e5e5166cd198",
+ "at": "2026-09-23T17:07:12.108Z"
+}
