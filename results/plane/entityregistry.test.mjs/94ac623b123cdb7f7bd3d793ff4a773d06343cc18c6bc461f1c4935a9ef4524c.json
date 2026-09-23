@@ -1,0 +1,16 @@
+{
+ "unit": "plane:entityregistry.test.mjs",
+ "inputHash": "94ac623b123cdb7f7bd3d793ff4a773d06343cc18c6bc461f1c4935a9ef4524c",
+ "verdict": "PASS",
+ "run": "f0bae02f74c5fdd61e3d70e5a73ae8ca431bdcc8.1790195237619.2009.json",
+ "tree": "f0bae02f74c5fdd61e3d70e5a73ae8ca431bdcc8",
+ "head": "2c643343e2b50ac08e0b4e796f576fed3b893d53",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULL",
+ "inputs": 132,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "ffc4493e-8331-5939-a462-92342e20b891",
+ "at": "2026-09-23T20:27:17.629Z"
+}
