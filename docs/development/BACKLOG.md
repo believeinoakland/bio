@@ -163,6 +163,16 @@ scope: a review-copy `*_CHECKS` family in `bio-checks.mjs` with DEC-49 regions a
 accepts-when: the refusal-code census reads every one of the eleven as translated. NEGATIVE CONTROL: drop one code's region, and the census arm names it.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
+### D-450 · queued — **A PROJECT WHOSE BAR DECLARES ONE AXIS CAN PUBLISH AND CAN NEVER BE SIGNED: `publishCase` admits it (*an unset axis gates nothing*), `#caseDocumentText` freezes the unset axis as null, and C-41.12 (`checkCaseDocument`'s `required_strength` arm) demands both axes A–D when the bar is declared, so `op=ratify` answers GATE_REFUSED.** Found by REC-148's worker; reported, not re-measured by SCHEDULER. — owner RECORD.
+order: after D-448: a correction to just-landed work (REC-148) that strands a publishable case unsigned (SCHEDULER #17, 2026-09-23; via CONDUCT #18 22:48Z (3a))
+milestone: M10
+interface: none — a check's admitted values.
+design: `docs/architecture/BIO_Publication_v0_1.md` §"the bar" (DEC-72: `required_strength` is the project's) and §3 rule 12. PROVISIONAL on the fix's side: the worker recommends C-41.12 admitting null for an unset axis, matching `#projectBar` and `publishCase`; if the bar is ruled a PAIR that may not leave an axis unset, the fix is instead to refuse a one-axis bar at `op=strengthbar` — asked of BOB #32, 2026-09-23.
+depends-on: REC-148 (`integrated` on c17-batch7).
+scope: the one fix BOB confirms, applied at the check (or at the declaration), so what publishes can be signed. Extend `bio-plane/test/caseproduction.test.mjs`.
+accepts-when: a one-axis bar either publishes and ratifies, or is refused at declaration — never publishes unsignable. NEGATIVE CONTROL: restore the both-axes demand (or the declaration's admission), and the one-axis arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
 ### REC-192 · queued — **A STORED VERSION'S INDEPENDENCE CAN ONLY BE READ BESIDE ITS STRENGTH PAIR: `op=versionstrength` is the one read of it, so DEC-32 clause 5 (*the structure is authored before the strength is shown*) holds only because UI-74's page drops the pair it fetched.** BOB #31's ruling of 2026-09-23 22:22Z (cite it until folded): *a read returns `independence` on its own, so clause 5's separation is structural at the wire.* — owner RECORD.
 order: after D-256: a correction to just-landed work (UI-74, REC-161) that moves a doctrine from a page's choice into the wire (SCHEDULER #17, 2026-09-23)
 milestone: M9
@@ -1143,12 +1153,3 @@ depends-on: REC-14
 accepts-when: (on waking) as `BUILD-ORDER.md` §2 (REC-15) plus — preflight reports `UNCLEARED_HUNCH` naming each hunch leg and … (whole text: the cut archive)
 added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
 cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «REC-15». A worker READS IT before building.
-
-### UI-17 · blocked
-order: blocked: rests on REC-15 (SCHEDULER, first order audit, 2026-09-18)
-milestone: M10
-behind-interface: I3
-depends-on: REC-15, UI-11
-accepts-when: (on waking) as `RECONCILED.md` §3.1 (UI-17), including the Q5 negative control — any prior deferral/dismissal/severance … (whole text: the cut archive)
-added: 2026-08-01 · BOB · deferred 2026-08-03 per DEC-33
-cut: this row is cut to its fields (SCHEDULER #8, 2026-09-21, the backlog's 150 KiB budget); its full text, scope included, is VERBATIM in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md` under «UI-17». A worker READS IT before building.
