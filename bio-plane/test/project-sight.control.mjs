@@ -26,7 +26,7 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "project-sight.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/store.mjs", "src/query.mjs"].map((f) => join(PLANE, f));   /* query.mjs since D-447 */
 const before = REAL.map(digest);
 
 const SIGHT_LINE = "if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);";
@@ -98,6 +98,40 @@ const ARMS = {
     patches: [["index.mjs", "        delete b.actorViewer;\n        b.actorViewer = viaSession ? sessViewer",
                "        delete b.actorViewer;\n        if (false) b.actorViewer = viaSession ? sessViewer"]],
     mustFail: ["olga — op=promote", "the FOUNDER's session", "JOINED: iris revises", "the ADMIN token still revises it"],
+  },
+
+  /* D-447 — THE BRIEF'S CONTROL: the raw index-wide `bm25(bundles_fts)` PUBLISHED again as `score`, the order left
+     computed over the viewer's rows. Every answer carrying a hit moves by digest; select-all `ids` and the selection's
+     order carry no number and must NOT move — which is what says the arm broke the one thing. */
+  "publish-raw-bm25": {
+    patches: [["query.mjs", "  parts.push(`ranked(fid, score) AS (SELECT s.fid, -(${sum}) FROM scope s${joins})`);",
+               "  parts.push(`rawbm(fid, raw) AS (SELECT rowid AS fid, bm25(bundles_fts) AS raw FROM bundles_fts WHERE bundles_fts MATCH ?)`);\n  args.push(terms.length === 1 ? terms[0] : `(${terms.join(\" OR \")})`);\n  parts.push(`ranked(fid, score, raw) AS (SELECT s.fid, -(${sum}), (SELECT raw FROM rawbm WHERE rawbm.fid = s.fid) FROM scope s${joins})`);"],
+              ["query.mjs", "FROM (SELECT ${cols}, s.fid AS _fid,", "FROM (SELECT ${cols}, r.raw AS _raw, s.fid AS _fid,"],
+              ["query.mjs", "SELECT ${pcols}, (SELECT snippet(", "SELECT ${pcols}, p._raw AS score, (SELECT snippet("]],
+    mustFail: ["MOVES NOTHING: op=search&q=culvert (status", "MOVES NOTHING: op=search&q=levy (status",
+               "MOVES NOTHING: op=search&q=culvert OR levy (status", "MOVES NOTHING: op=search&q=culvert levy (status",
+               "MOVES NOTHING: op=search&q=culvert OR levy&sort=relevance", "MOVES NOTHING: op=search&q=culvert OR levy&limit=1",
+               "NO SCORE IS PUBLISHED"],
+  },
+
+  /* D-447 — THE ORDER ARM: no score published, but the ORDER taken from the index-wide bm25 again. The brief's
+     question — does order alone leak — answered by the suite: the orders that flip under the hidden revision
+     (`culvert OR levy`, its descending, its second page, select-all, the selection) must fail; single-hit and
+     single-term orders that do not flip on this fixture stay green. */
+  "order-by-index-bm25": {
+    patches: [["query.mjs", "  parts.push(`ranked(fid, score) AS (SELECT s.fid, -(${sum}) FROM scope s${joins})`);",
+               "  parts.push(`rawbm(fid, raw) AS (SELECT rowid AS fid, bm25(bundles_fts) AS raw FROM bundles_fts WHERE bundles_fts MATCH ?)`);\n  args.push(terms.length === 1 ? terms[0] : `(${terms.join(\" OR \")})`);\n  parts.push(`ranked(fid, score) AS (SELECT s.fid, (SELECT raw FROM rawbm WHERE rawbm.fid = s.fid) FROM scope s${joins})`);"]],
+    mustFail: ["MOVES NOTHING: op=search&q=culvert OR levy (status", "MOVES NOTHING: op=search&q=culvert OR levy&mode=ids",
+               "MOVES NOTHING: op=search&q=culvert OR levy&sort=relevance", "MOVES NOTHING: op=search&q=culvert OR levy&limit=1",
+               "MOVES NOTHING: the order of a query selection's members"],
+  },
+
+  /* D-447 OVER-STRICTNESS: the term frequencies taken over the viewer's WHOLE visible set rather than the query's
+     scope — correct work in a spelling the suite did not anticipate (more rows highlighted, the same order). */
+  "tf-over-vis": {
+    patches: [["query.mjs", "FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM scope)))`);",
+               "FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM vis)))`);"]],
+    mustFail: [],
   },
 
   /* OVER-STRICTNESS: the same sight question asked through the store's OTHER spelling of it,

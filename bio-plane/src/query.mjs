@@ -14,7 +14,9 @@
  * substrate document and must not drift:
  *   - A bare multi-word string means AND, ranked by relevance.
  *   - When an AND query returns nothing, the caller is offered the OR reading.
- *   - Default order is relevance, which is bm25.
+ *   - Default order is relevance, which is bm25 — computed over what the VIEWER can
+ *     see and never over the whole index, and published as an ORDER, never as a
+ *     score (D-447: `visibleBm25` below says why).
  *   - Every sort compiles to ORDER BY <field> <dir>, bundle_id ASC. Without the
  *     stable tiebreak, paging is WRONG on any field with ties, not merely
  *     inconsistent: a row can appear on two pages or on none.
@@ -1788,10 +1790,68 @@ function ftsExpr(node) {
    computed from: bm25 should score the words the member asked for, and a
    negation contributes nothing to how well a row matches. */
 function rankExpr(atoms) {
-  if (!atoms.length) return null;
+  const parts = rankAtomList(atoms);
+  if (!parts.length) return null;
+  return parts.length === 1 ? parts[0] : "(" + parts.join(" OR ") + ")";
+}
+/* The distinct positive atoms, each an FTS5 expression — the TERMS relevance weighs one by one. */
+function rankAtomList(atoms) {
   const seen = new Set(), parts = [];
   for (const a of atoms) { const e = ftsAtom(a); if (!seen.has(e)) { seen.add(e); parts.push(e); } }
-  return parts.length === 1 ? parts[0] : "(" + parts.join(" OR ") + ")";
+  return parts;
+}
+
+/* ---------------------------------------------------------------------------
+ * D-447 — RELEVANCE IS COMPUTED OVER WHAT THE VIEWER CAN SEE, AND ONLY ITS ORDER IS PUBLISHED.
+ *
+ * WHAT WAS WRONG, measured at the op before this changed (`project-sight.test.mjs` §7, MEASUREMENTS M-for D-447):
+ * the rank was `bm25(bundles_fts)`, and FTS5's bm25 reads the WHOLE index — its IDF counts every row holding a
+ * term and its length norm averages every row, hidden projects' rows included. So a member watching their own results
+ * could watch a project they were never invited to change (Membership v2 §7.9: *"Not its existence"*). Every visible
+ * hit's published `score` moved when a hidden project was revised, and so did the ORDER — of the page, of select-all
+ * `ids` (which carries no number at all) and of a query selection's members. Dropping the score alone would have left
+ * the order leaking, so the order is what this computes over the viewer's set.
+ *
+ * THE FORMULA, every input one the viewer can see: for each distinct positive atom t,
+ *   idf(t) = ln(1 + (N - n(t) + 0.5) / (n(t) + 0.5))   N, n(t) counted over `vis` — the rows THIS viewer's gate passes
+ *   tf(t, d) = the phrase instances of t that FTS5's own `highlight()` marks in d, over every indexed column
+ *   score(d) = -Σ_t idf(t) · tf·(k1+1) / (tf + k1),   k1 = 1.2 (FTS5's own)
+ * Negated so ascending is best-first, the order `bm25()` had. TWO DEPARTURES FROM bm25, stated rather than hidden:
+ *   - NO LENGTH NORMALISATION (b = 0). bm25's needs the average row length, which is a corpus statistic, and FTS5
+ *     exposes no per-row token count to SQL; a length averaged over the viewer's rows would mean reading every
+ *     visible row's text on every search. Saturation (k1) still stops a long row winning by repetition alone.
+ *   - `ln(1 + …)` rather than FTS5's clamped `ln(…)`, so a term in most of the viewer's rows weighs little rather
+ *     than a constant 1e-6 that erases the difference between terms.
+ * MORE THAN `RANK_ATOMS_MAX` DISTINCT TERMS are weighed as ONE term (the OR of them all) — each term costs a MATCH
+ * and a bound argument, and the statement's variable ceiling (D-36) is shared with the set and the gate. Said in
+ * the answer's `warnings`, never silently.
+ * NO SCORE IS PUBLISHED, EVEN THIS ONE (IC for D-447): a hit's place in `hits` IS the order, and it carries its snippet.
+ * `snippet()` needs no statistics — FTS5 picks the fragment by the row's own phrase hits — and the §7 digest over
+ * the whole answer is what says so, not this comment.
+ * ------------------------------------------------------------------------- */
+export const RANK_ATOMS_MAX = 8;
+const K1 = 1.2;
+function visibleBm25({ terms, gate }) {
+  const parts = [], args = [];
+  /* `vis` is the viewer's own index: every indexed row the gate passes. The gate is the ONE compiled predicate,
+     interpolated (a use, not a mint — the mint-site count stays at three). */
+  parts.push(`vis(fid) AS MATERIALIZED (SELECT b.fts_id FROM bundles b WHERE (${gate.sql}) AND b.fts_id IS NOT NULL)`);
+  args.push(...gate.args);
+  parts.push(`nvis(n) AS (SELECT count(*) FROM vis)`);
+  const marks = (h) => `(length(${h}) - length(replace(${h}, char(1), '')))`;
+  terms.forEach((e, i) => {
+    parts.push(`df${i}(idf) AS (SELECT ln(1 + ((SELECT n FROM nvis) - count(*) + 0.5) / (count(*) + 0.5)) `
+             + `FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM vis))`);
+    args.push(e);
+    const hs = FTS_COLUMNS.map((_, c) => `highlight(bundles_fts, ${c}, char(1), '') AS h${c}`).join(", ");
+    parts.push(`tf${i}(fid, tf) AS (SELECT fid, ${FTS_COLUMNS.map((_, c) => marks(`h${c}`)).join(" + ")} `
+             + `FROM (SELECT rowid AS fid, ${hs} FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid IN (SELECT fid FROM scope)))`);
+    args.push(e);
+  });
+  const sum = terms.map((_, i) => `COALESCE((SELECT idf FROM df${i}) * tf${i}.tf * ${K1 + 1} / (tf${i}.tf + ${K1}), 0)`).join(" + ");
+  const joins = terms.map((_, i) => ` LEFT JOIN tf${i} ON tf${i}.fid = s.fid`).join("");
+  parts.push(`ranked(fid, score) AS (SELECT s.fid, -(${sum}) FROM scope s${joins})`);
+  return { parts, args };
 }
 
 /* ---------------------------------------------------------------------------
@@ -1981,6 +2041,11 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
 
   const gate = viewerPredicate(viewer);
   const rank = rankExpr(ctx.textAtoms);
+  /* D-447: the terms relevance weighs, each over the viewer's own rows (`visibleBm25`). */
+  const allTerms = rankAtomList(ctx.textAtoms);
+  const rankTerms = allTerms.length <= RANK_ATOMS_MAX ? allTerms : (rank ? [rank] : []);
+  if (allTerms.length > RANK_ATOMS_MAX)
+    ctx.warnings.push(`relevance weighs these ${allTerms.length} terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`);
   /* REC-92 — the ONE expression the `rows=passage` projection matches and
      snippets on, OR'd over every `passage:` selector this query compiled.
      OR AND NOT AND, and that is a decision about what a member means rather
@@ -2097,9 +2162,9 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     }
     const args = [...use.args, ...(idArm ? idArm.args : [])];
     if (withRanked && rank) {
-      parts.push(`ranked(fid, score, snip) AS (SELECT rowid AS fid, bm25(bundles_fts) AS score, `
-               + `snippet(bundles_fts, -1, '[', ']', '\u2026', ?) AS snip FROM bundles_fts WHERE bundles_fts MATCH ?)`);
-      args.push(Math.max(4, Math.min(64, Math.floor(snippetChars))), rank);
+      const r = visibleBm25({ terms: rankTerms, gate });
+      parts.push(...r.parts);
+      args.push(...r.args);
     }
     return { sql: "WITH " + parts.join(",\n     "), args };
   };
@@ -2120,12 +2185,22 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
 
   const cols = PROVENANCE_COLS.map((c) => `b.${c}`).join(", ");
   const joinRanked = rank ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
-  const scored = rank ? `, r.score AS score, r.snip AS snippet` : `, NULL AS score, NULL AS snippet`;
-
   const page = () => {
     const c = cte(true);
-    return { sql: `${c.sql}\nSELECT ${cols}${scored} FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
-                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
+    if (!rank)
+      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
+                  + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
+    /* D-447: the snippet and NOT the score — the answer publishes the ORDER relevance produced, never its number.
+       The snippet is cut for the PAGE's rows only, after the order and the LIMIT: `snippet()` re-reads a row's text,
+       and cutting one for every match measured ~65 ms of a 2,000-match search (MEASUREMENTS M-121). It needs no
+       statistics, so where it is cut changes nothing a viewer can compare. */
+    const pcols = PROVENANCE_COLS.map((c2) => `p.${c2}`).join(", ");
+    return { sql: `${c.sql}\nSELECT ${pcols}, (SELECT snippet(bundles_fts, -1, '[', ']', '\u2026', ?) FROM bundles_fts `
+                + `WHERE bundles_fts MATCH ? AND rowid = p._fid) AS snippet\n`
+                + `FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos `
+                + `FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}\n`
+                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?) p\nORDER BY p._pos`,
+             args: [...c.args, Math.max(4, Math.min(64, Math.floor(snippetChars))), rank, ...gate.args, lim, off] };
   };
   const count = () => {
     const c = cte(false);

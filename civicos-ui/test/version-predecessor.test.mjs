@@ -539,8 +539,12 @@ for(const [op, meth] of DISPATCH){
   if(!BODIES.has(meth)){ UNJUDGED_OPS.push(op); continue; }
   if(reachesCompile(meth)) RANKED.set(op, meth);
 }
+/* CORRECTED 2026-09-23 BY D-447, never exempted: the second half read /bm25\(bundles_fts\)/. The plane no longer calls
+   that function — it read the WHOLE index, so a hidden project could move a member's order (Membership v2 §7.9) — and
+   after the change the old pattern was satisfied only by query.mjs's COMMENT recording that it used to. A text pin met
+   by prose is D-160's shape. The rank's builder is now `visibleBm25(`, called in code; relevance is still the order. */
 ok("SWEEP INSTRUMENT: the relevance order is the PLANE'S OWN statement, read out of query.mjs rather than assumed here",
-   /Default order is relevance, which is bm25/.test(QUERY) && /bm25\(bundles_fts\)/.test(QUERY));
+   /Default order is relevance, which is bm25/.test(QUERY) && /=\s*visibleBm25\(\{/.test(QUERY));
 ok(`SWEEP INSTRUMENT: the dispatch yields a real roster — ${DISPATCH.size} ops mapped onto ${BODIES.size} method segments, ${RANKED.size} of them relevance-ordered`,
    DISPATCH.size > 100 && BODIES.size > 200 && RANKED.size >= 1);
 ok("SWEEP INSTRUMENT: and op=search is in it, found through the plane's source and not named into it here",
