@@ -177,7 +177,7 @@ console.log("\n--- ARM D · THE REFUND: a principal that spent its last question
     [first?.ok, await boundOf(BRUN.run, "surfaces")], [true, [1, 1]]);
   const before = await witness(BRUN.run);
   const refund = parse(await tick(AK, { run: BRUN.run, consume: { surfaces: -1 } }));
-  t("ARM D1 (THE REFUND, BY NAME): `consume: { surfaces: -1 }` is refused AI_RUN_CONSUME_INVALID with the "
+  t("ARM D1 (THE REFUND, BY NAME): `consume: { surfaces: -1 }` is refused AI_RUN_CONSUME_INVALID, C-22.13, with the "
     + "catalogue's translation", refusedAs(refund), WANT("AI_RUN_CONSUME_INVALID"));
   t("ARM D2 (NOTHING WRITTEN): the run's bound rows, ticks, lease and log are byte-identical after",
     await witness(BRUN.run), before);
@@ -227,7 +227,7 @@ console.log("\n--- ARM P · A BOUND THE PLANE COUNTS is not the caller's to spen
   const before = await witness(PRUN.run);
   const p1 = parse(await tick(ALICE, { run: PRUN.run, consume: { surfaces: 1 } }));
   const p2 = parse(await tick(AK, { run: PRUN.run, consume: { mints: 2 } }));
-  t("ARM P1: `consume: { surfaces: 1 }` is refused AI_RUN_BOUND_PLANE_COUNTED — the plane counts a question when it "
+  t("ARM P1: `consume: { surfaces: 1 }` is refused AI_RUN_BOUND_PLANE_COUNTED, C-22.14 — the plane counts a question when it "
     + "lands, and a caller's figure would make the bound say questions were opened that were not",
     refusedAs(p1), WANT("AI_RUN_BOUND_PLANE_COUNTED"));
   t("ARM P2: `consume: { mints: 2 }` from the credential is refused the same way", refusedAs(p2),
