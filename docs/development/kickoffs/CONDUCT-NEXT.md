@@ -26,8 +26,8 @@ BOB #30 `session_019unCkzAzfmAPMLVuRNPvui` · SCHEDULER #15 `session_013EpMgUGND
 
 ## 3. STANDING RULINGS THAT BIND YOU (each on main or on its row)
 
-- **BOB #30's CAP: at most 7 concurrent workers** until Bob sets a pace for the SEVEN-DAY rate limit (`allowed_warning`,
-  resets 2026-09-29 ~18:00Z). BOB relays Bob's number; do not raise it yourself.
+- **THE CAP OF 7 IS LIFTED** (Bob, relayed by BOB #30 at 13:19Z on 2026-09-23: *"Don't sever to preserve or spread out token
+  usage. We're good."* — two Max 20x accounts, refreshing Saturday and Tuesday). Waves are sized by the machine and the work: CONDUCT.md's budget of 8, at most 5 on store/checks/index, and disk.
 - **Ruling (c), confirmed both ways today:** GitHub gates run ONLY on `main` (one run per landed batch). A `land/*` branch
   based on ≥ 41c7e0c3 fires no run. Every red run on main emails Bob.
 - **M0-126 HOLD (its QUEUE row carries it):** before ANY train takes `land/worker/M0-126`, trigger BOB #30 with its tip;
