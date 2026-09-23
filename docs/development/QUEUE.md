@@ -97,7 +97,7 @@ scope: both functions bind the three members as service bindings, installing the
 accepts-when: against the wizard's mock, an install and an update each leave the plane bound to all three members, and one whose member upload failed names the missing binding and does not report success. NEGATIVE CONTROL: drop one member's binding, and its arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (D-116's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs DIST`).
 
-### D-286 · queued — RETURNED 2026-09-23 08:17Z by CONDUCT #15: spawned 08:15Z as an 8th worker, then stopped within two minutes under BOB #30's hold (concurrency not above 7 until Bob sets a pace for the seven-day limit). It left no claim, no commit, no branch (verified: CLAIMS on coord, the worktree's HEAD = 4355bfda, no land/worker/D-286). Runnable again when a slot frees under the cap.
+### D-286 · running — SPAWNED 2026-09-23 09:15Z by CONDUCT #15 (the 7th worker under BOB #30's cap, REC-169's worker having finished). NOT LANDED, CHECKED BY CONTENT on 4355bfda: ai-session-context.test.mjs L162-163 draw with unseeded Math.random(). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: near the head with M0-106, after DIST-6: a result that moves with the draw, not the code, is a DEFECT by Bob's ruling of 2026-09-23 (`TREE-SHARING.md` §3, *a gate test depends only on the code*); on `main` its red is an ALARM to Bob, and under M0-126 a lucky PASS is cached, so it cuts gate time (SCHEDULER #15, 2026-09-23, LED-7)
 milestone: M0
 interface: none
