@@ -31057,6 +31057,18 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
     }
     return { confirmed, frozen, severed, all: [...confirmed, ...frozen] };
   }
+  /* REC-181: RETIREMENT'S ONE CITATION PREDICATE, shared by `retire` and by
+   * `promote`'s transition into `retired`. §4.1 of State Rules v1.5 (BOB #30):
+   * a retired item is not citable, and the terminal transition refuses while a
+   * live edge cites it (`CITED`). `retire` asked it; `promote` — the ONE write
+   * path, which `retire` itself calls — did not, so a caller holding
+   * `contribute` could walk verified -> retired by `op=promote` with live legs
+   * still resting on the item, the state retire exists to refuse. Both doors
+   * now ask THIS, so they cannot answer differently. */
+  static RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire.";
+  #retirementCitedBy(id) {
+    return this.#citesInto(id).confirmed;
+  }
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
    *
    * Heavier than step 3's disposition for one structural reason: `retired` is
@@ -31121,7 +31133,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         illegal.push({ id, from: b.current_state });
         continue;
       }
-      const citedBy = this.#citesInto(id).confirmed;
+      const citedBy = this.#retirementCitedBy(id);
       if (citedBy.length) cited.push({ id, citedBy });
     }
     if (notInfo.length)
@@ -31144,7 +31156,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         ok: false,
         reason: "CITED",
         offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
-        detail: "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire."
+        detail: _Store.RETIRE_CITED_DETAIL
       };
     const when = (/* @__PURE__ */ new Date()).toISOString().replace(/\.\d+Z$/, "Z");
     const retired = [];
@@ -40580,6 +40592,17 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       }
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
+      if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired") && (cur ? cur.object_type : normalizeType(meta.object_type)) === "information") {
+        const citedBy = this.#retirementCitedBy(bundleId);
+        if (citedBy.length)
+          return {
+            ok: false,
+            reason: "CITED",
+            to: "retired",
+            offenders: [{ id: bundleId, citedBy }],
+            detail: _Store.RETIRE_CITED_DETAIL
+          };
+      }
       const testimony = pkg[TESTIMONY_PATH] || null;
       const fenced = this.#testimonyFence(bundleId, files, register2, testimony);
       if (fenced) return fenced;

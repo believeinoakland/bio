@@ -4804,6 +4804,21 @@ export class Store extends DurableObject {
     return { confirmed, frozen, severed, all: [...confirmed, ...frozen] };
   }
 
+  /* REC-181: RETIREMENT'S ONE CITATION PREDICATE, shared by `retire` and by
+   * `promote`'s transition into `retired`. §4.1 of State Rules v1.5 (BOB #30):
+   * a retired item is not citable, and the terminal transition refuses while a
+   * live edge cites it (`CITED`). `retire` asked it; `promote` — the ONE write
+   * path, which `retire` itself calls — did not, so a caller holding
+   * `contribute` could walk verified -> retired by `op=promote` with live legs
+   * still resting on the item, the state retire exists to refuse. Both doors
+   * now ask THIS, so they cannot answer differently. */
+  static RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects "
+    + "pointing at retired material, which C-6.2 treats as an error whose remedy is to "
+    + "sever the edge with a reason. Sever first, then retire.";
+  #retirementCitedBy(id) {
+    return this.#citesInto(id).confirmed;
+  }
+
   /* S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
    *
    * Heavier than step 3's disposition for one structural reason: `retired` is
@@ -4858,7 +4873,7 @@ export class Store extends DurableObject {
       /* Live citations only, through the ONE #citesInto predicate (shared with
          op=affordances, which publishes retire's availability from it): a
          severed edge is a recorded decision to stop relying and does not block. */
-      const citedBy = this.#citesInto(id).confirmed;
+      const citedBy = this.#retirementCitedBy(id);
       if (citedBy.length) cited.push({ id, citedBy });
     }
     if (notInfo.length)
@@ -4873,9 +4888,7 @@ export class Store extends DurableObject {
                      + "retired has nowhere further to go, because retired is terminal." };
     if (cited.length)
       return { ok: false, reason: "CITED", offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "these are still cited by live edges. Retiring them would leave those Projects "
-                     + "pointing at retired material, which C-6.2 treats as an error whose remedy is to "
-                     + "sever the edge with a reason. Sever first, then retire." };
+               detail: Store.RETIRE_CITED_DETAIL };
 
     const when = new Date().toISOString().replace(/\.\d+Z$/, "Z");
     const retired = [];
@@ -15068,6 +15081,21 @@ export class Store extends DurableObject {
       if (cur && cur.bundle_sha !== base)
         return { ok: false, reason: "CAS_STALE", expected: cur.bundle_sha, got: base };
       /* END DEC-49 REGION is-promote-cas */
+
+      /* REC-181: A TRANSITION INTO `retired` ASKS RETIRE'S OWN QUESTION, here and before any
+         write (a refusal returned from inside `transactionSync` does not roll back). `op=retire`
+         refuses `CITED` while a live edge cites the item; `promote` is the write path it runs
+         through, and a caller naming `current_state: retired` directly reached the same terminal
+         state without the question (State Rules v1.5 §4.1, BOB #30). The same predicate, the same
+         code and the same offenders' shape. Only a move INTO retired: an edit of an item ALREADY
+         retired changes no state, and a leg that predates this rule stays untouched (D-168 §3). */
+      if (meta.current_state === "retired" && (!cur || cur.current_state !== "retired")
+          && (cur ? cur.object_type : normalizeType(meta.object_type)) === "information") {
+        const citedBy = this.#retirementCitedBy(bundleId);
+        if (citedBy.length)
+          return { ok: false, reason: "CITED", to: "retired", offenders: [{ id: bundleId, citedBy }],
+                   detail: Store.RETIRE_CITED_DETAIL };
+      }
 
       /* MK-1 / D-184 — THE AUTHORED FLAG'S FENCE, HERE AND BEFORE THE FIRST
          WRITE. `promote` is the ONE write path, so a document can only claim to
