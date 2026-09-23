@@ -19759,6 +19759,7 @@ paths, BY SITE:
     §14b.6 and its front matter; `construct-status.json` if a text moves.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed `land/worker/REC-172` @ `f24751d1`, read back from the remote (git ls-remote); gate GREEN class FULL on tree `097c522e` (merged with origin/main a13667ee: 292/292 suites green · 17484 assertions passing; coverage --strict, civicos-ui, DEC-49 guard green; plancheck --local 0 fail). IC-188 PROPOSED. Paths stay reserved until CONDUCT integrates.
 
 ## CLAIM 2026-09-23 RECORD (D-389 — `op=frontier`'s `truncated` reads `true` on a FULL raw fetch, at the ONE over-fetch the three bundle arms share)
 
