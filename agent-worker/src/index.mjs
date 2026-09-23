@@ -121,7 +121,7 @@ const PLANE_ORIGIN = "http://plane"; /* a binding ignores the host; this names t
  * only through the op is a table nobody can exhaust. */
 import {
   CONTROL_FLOW, FIRST_STEP, LEVELS, BUDGET_BOUNDS, MEANING_ARM,
-  nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates,
+  nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates, runContextTarget,
 } from "./harness.mjs";
 
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
@@ -348,9 +348,17 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   for (const b of Array.isArray(session.budget) ? session.budget : [])
     budget[String(b.bound)] = { allowed: Number(b.allowed) || 0, consumed: Number(b.consumed) || 0 };
 
+  /* FL-11 (§11 item 5, RULE 1'S TARGET, BOB #28) — THE RUN'S TARGET IS SEEDED HERE, FROM THE RUN'S OWN
+     CONTEXT AS THE RECORD HOLDS IT, and never from the request body or a judgement (`target` is
+     NOT_JUDGEABLE). Before FL-11 nothing set it, so the empty-level candidates and dedup's read went out
+     naming no question and the plane refused every table-made suggestion. `runContextTarget` says why it
+     holds what it holds; a project run's target is UNDETERMINED there and stated, never the project id. */
+  const seeded = runContextTarget(session);
+
   let state = {
     step: FIRST_STEP,
     mode: session.mode,
+    target: seeded.target, targetBasis: seeded.basis,
     pass: 0,
     maxPasses: Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES,
     resumedFrom,
@@ -523,6 +531,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
 
   return {
     mode: state.mode, trace, passes: state.pass, ended, logged, submitted,
+    /* FL-11: the question this run's readings default to, and WHY — published so a reader can check it
+       against the run's context rather than take it on this member's word. */
+    target: { id: state.target ?? null, basis: state.targetBasis ?? null },
     refusals, adjusted, verbatimResubmits, resumedFrom, logRefused, presentUnbacked,
     /* FL-5's FACTS, PUBLISHED RATHER THAN HELD. FL-3 computed the fence's answer
        into a local nobody could read and asserted it by grepping a note — which
@@ -692,8 +703,15 @@ async function performStep(call, state, runId) {
          D-276 pointing the other way. */
       const acqRefused = [];
       for (const t of fetches) {
+        /* FL-12 — THE LOCATOR IS `address`, THE ONE FIELD THE PLANE READS (`captureRequest`:
+           `String(args.address ?? "")`, then `isPublicHttpsLocator`). This sent `url`, which the plane
+           never reads, so every request a run filed was refused `CAPTURE_REQUEST_NOT_PUBLIC` (C-28.2)
+           naming "(none)" — measured by REC-168. The judgement's own field stays `url` (the model's
+           vocabulary); the WIRE's is `address`. And the question a request is accountable to defaults
+           to the run's target (FL-11's class, one call over): a request naming none is refused
+           `CAPTURE_REQUEST_NOT_AN_INQUIRY`. */
         const r = planeAnswer(await call("capturerequest", null,
-          { run: runId, target: t.target ?? null, url: t.url ?? null }), "capturerequest");
+          { run: runId, target: t.target ?? state.target ?? null, address: t.url ?? null }), "capturerequest");
         if (r.silent) return { silent: r.silent };
         /* Already ANSWER-checked before D-276 — routed through `planeAnswer` so
            every refusal this member publishes carries the same three fields
@@ -876,9 +894,15 @@ async function performStep(call, state, runId) {
       const body = held.result ?? {};
       const names = new Set((Array.isArray(body.versions) ? body.versions : [])
         .map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
-      const queue = (state.candidates || []).filter((c) => c && !names.has(String(c.name ?? "")));
+      /* FL-11: the read above is of the RUN's target, so it can only rule on candidates aimed THERE. A
+         candidate naming another question was compared against nothing and says so — it survives to the
+         plane, which bounds it — rather than being filtered against another question's versions. */
+      const aimedHere = (c) => (c.target ?? state.target ?? null) === (state.target ?? null);
+      const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
+      const queue = (state.candidates || []).filter((c) => c && (!aimedHere(c) || !names.has(String(c.name ?? ""))));
       out.note = `${proposed} candidate(s) compared against ${names.size} on the record; `
-               + `${queue.length} survived`;
+               + `${queue.length} survived`
+               + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
       out.state = { ...state, queue };
       return out;
     }
@@ -891,7 +915,11 @@ async function performStep(call, state, runId) {
       const queue = [...(state.queue || [])];
       const candidate = queue.shift();
       if (!candidate) return out;
-      const res = await call("suggest", null, { ...candidate, run: runId });
+      /* FL-11: a candidate that names no target lands on the RUN's (`runContextTarget`); one that names
+         its own keeps it, and the plane bounds it (SUGGEST_OUTSIDE_RUN_CONTEXT, C-27.19) — this member
+         does not pre-judge that refusal, it routes it to ADJUST like any other. */
+      const res = await call("suggest", null,
+        { ...candidate, target: candidate.target ?? state.target ?? null, run: runId });
       if (!res.reached) return { silent: res };
       const answer = res.body?.result ?? res.body ?? {};
       if (res.status === 200 && res.body?.ok === true && answer.wrote !== false) {
@@ -1121,6 +1149,9 @@ async function handleRun(req, env) {
     adjusted: drive.adjusted,
     verbatim_resubmits: drive.verbatimResubmits,
     resumed_from: drive.resumedFrom,
+    /* FL-11: the question this run's readings default to, and WHY (`runContextTarget`) — published so a
+       reader can check it against the run's context rather than take it on this member's word. */
+    target: drive.target,
 
     /* FL-5 / IS-9(a) ON THE WIRE. `fanout.contracts` is exactly what each
        sub-session was handed — the party protected by §14's fence can be read

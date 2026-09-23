@@ -55,6 +55,9 @@
    (E2) THE OTHER DIRECTION OF THE PAIRING — the `extract` row REMOVED while `DEPLOYMENT_SEQUENCE.order` still names it -> this suite's row-EXISTS and NOT-DEPLOYED-YET arms must FAIL (extract is an unknown word again) AND skillsequencing ARM B3 (recorded, not in the table) and ARM B4 (the partition lost a member); the CHECK, investigate and unknown-word arms must HOLD. MEASURED: harness 217/4 · skillsequencing 25/2, AS DECLARED.
    (E3) OVER-STRICTNESS — the landed state IS the arm: `extract` present and NOT deployed, `order` `["check","investigate","extract"]` -> harness 221/0, skillsequencing 27/0 (B3 and B4 GREEN with three modes in both rosters, which is the move arm (4) of skillsequencing's own declaration exists to make impossible to do silently), fleetbundles GREEN over the rebuilt member and plane bundles.
    E1–E3 RUN 2026-09-14 IN WORKTREE bio-worktrees/FLEET, baseline harness 221/0 and skillsequencing 27/0 before each arm, every restore verified sha256 + cmp. The gate's `why` is DERIVED FROM THE TABLE since this landing, so "not deployed yet" (a known row) and "no mode this table knows" (an unknown word) are two stated facts — asserted in A6 in both directions, and read with `?.` so a deleted row FAILS an arm instead of killing the suite (the H2/H9 class, met again by design rather than by surprise).
+   (T1) FL-11 — THE SEEDING DROPPED. `state.target` no longer seeded from the run's context -> FT1, FT1b, FT1c, FT3 (C-27.1 fires before the principal gate, the plane's order), FT4 and B6's four level-empty suggestions must FAIL BY NAME, with fanout FL-12b; FT0 (the mock driven directly), FT1d/FT1e, FT2 and fanout FL-12a must HOLD.
+   (T2) FL-12 — THE LOCATOR SENT AS `url` AGAIN -> FT4 (the ADDRESS arm), FT4b, FT4c and fanout FL-12b must FAIL BY NAME; FT0d/FT0e, fanout FL-12a and every FL-11 arm must HOLD.
+   T1 AND T2 RUN 2026-09-23 BY THE FL-11+FL-12 WORKER, each armed ALONE on `src/index.mjs`, restores verified sha256 + cmp; baseline harness 246/0, fanout 184/0. T2 AS DECLARED first run: harness 243/3, fanout 183/1. **T1 CAME BACK NOT AS DECLARED FIRST, AND IT WAS THE DECLARATION:** it named FT3 and fanout FL-12b as MUST-NOT, and both failed — a target-less suggestion is refused C-27.1 before the principal gate is asked (the plane's own order), and a request's target defaults to the run's, so both are COUPLED to the seeding. Corrected and re-run: harness 226/20, fanout 177/7, AS DECLARED. The twenty include every older arm asserting a suggestion LANDS (B4, B8, B9) — the strict mock now sees the pre-FL-11 member wherever it suggests, which the permissive mock never could. H4's patch moved with `target` joining NOT_JUDGEABLE and was re-run: 241/4, AS DECLARED.
    FULL PER-ARM DETAIL IS IN `test/harness.control.mjs`'s own header.
    D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. **RE-MEASURED 2026-08-09 BY D-276: this suite's baseline moved 194/0 to 199/0** and the figures above went stale with it; under those arms this suite reads 192/7, 198/1 and 197/2 respectively.
  * ========================================================================= */
@@ -85,6 +88,8 @@ import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
    `new-version` fixtures were all green over submissions a deployed plane
    refuses (VF-4, live at 0.57.0, MEASUREMENTS M-8). */
 import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
+/* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
+import { captureRequestBranch } from "./plane-capturerequest.mjs";
 import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
 /* FL-8 / IC-67 — THE PLANE'S STATUS KEYING, TAKEN FROM THE PLANE INSTEAD OF
    REPRODUCED HERE, AND THE CORRECTION IS A MEASURED DEFECT RATHER THAN A TIDY-UP.
@@ -566,6 +571,9 @@ const STATUS_BY_BOUND = Object.fromEntries(
 const PLANE_MOCK = `
 const STATUS_BY_BOUND = ${JSON.stringify(STATUS_BY_BOUND)};
 const MUTATING = new Set(["purge","promote","airunopen","airuntick","airunclose","suggest","capturerequest"]);
+/* FL-11: THE RUN'S CONTEXT, ONE EXPRESSION — what \`op=airun\` publishes and what \`op=suggest\` bounds by are
+   the same object, so the mock cannot publish one context and judge against another. */
+const runCtx = (CFG) => ({ type: CFG.contextType || "inquiry", id: CFG.target || "INQ-1" });
 const canon = (v) => {
   if (v === null || typeof v !== "object") return JSON.stringify(v ?? null);
   if (Array.isArray(v)) return "[" + v.map(canon).join(",") + "]";
@@ -584,6 +592,7 @@ export default {
     if (url.pathname === "/__mock/state")
       return Response.json({ record: S.record, log: S.log, runlog: S.runlog, budget: S.budget,
                              status: S.status, ended: S.ended, suggested: S.suggested, spawns: S.spawns,
+                             requests: S.requests || [], bvIds: S.bvIds || [],
                              repeats: [...S.refusals.values()].map((r) => r.repeats) });
     const op = url.searchParams.get("op") || "";
     const token = url.searchParams.get("token") || "";
@@ -599,7 +608,7 @@ export default {
     if (op === "airun")
       return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, session: {
         id: url.searchParams.get("run"), mode: CFG.mode || "check", status: S.status,
-        context: { type: "inquiry", id: CFG.target || "INQ-1" },
+        context: runCtx(CFG),
         max_passes: CFG.maxPasses || 1,
         budget: Object.entries(S.budget).map(([bound, b]) => ({ bound, allowed: b.allowed, consumed: b.consumed, unit: null })),
       } }, store });
@@ -615,12 +624,14 @@ export default {
          store.mjs writes it as one: a field acquires a value the first time
          somebody thinks they are being helpful. */
       return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, half: "search",
-        payload: { run: url.searchParams.get("run"), context: { type: "inquiry", id: CFG.target || "INQ-1" },
+        payload: { run: url.searchParams.get("run"), context: runCtx(CFG),
                    mode: CFG.mode || "check", skill: "pack-1.0.0", standard_pair: null, budget: [] } } });
     }
 
     ${meaningRowsBranch("CFG.meaningRows || []")}
 
+    /* FL-11: WHICH question dedup compared against is recorded, so an arm can see the run's target arrive. */
+    if (op === "basisversions") (S.bvIds = S.bvIds || []).push(url.searchParams.get("id"));
     if (op === "basisversions")
       return Response.json({ ok: true, result: { id: url.searchParams.get("id"),
         versions: (CFG.heldVersions || []).map((n) => ({ name: n })), limit: 50, truncated: false } });
@@ -665,10 +676,10 @@ export default {
       return Response.json({ ok: true, result: { terminated: true, bound, condition: null } });
     }
 
-    if (op === "capturerequest")
-      return Response.json({ ok: true, result: { request: "REQ-" + S.log.length, state: "queued" } });
+    ${captureRequestBranch({ run: { principal: "CFG.runPrincipal || " + JSON.stringify(AIK), status: "S.status" } })}
 
-    ${suggestBranch({ f10: true })}
+    ${suggestBranch({ f10: true, run: { context: "runCtx(CFG)", cites: "(CFG.cites || [])",
+                                        principal: "CFG.runPrincipal || " + JSON.stringify(AIK), status: "S.status" } })}
     return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
   },
 };
@@ -1242,6 +1253,174 @@ console.log("\n--- B12 · OVER-STRICTNESS: correct work in a spelling the guard 
   }
   t("two identical runs produce the identical trace", traces[0], traces[1]);
   t("and the trace actually went somewhere", (traces[0] || []).length > 5, true);
+}
+
+/* ============================================================================
+ * FL-11 / FL-12 — THE RUN'S TARGET AND THE REQUEST'S ADDRESS, AGAINST A MOCK THAT REFUSES THE WAY THE PLANE
+ * DOES (INVESTIGATIVE-SESSION.md §11 item 5: rule 1's target, BOB #28; the `op=capturerequest` paragraph).
+ *
+ * HOW A LIAR PASSES THESE ARMS, AND WHY IT CANNOT: a mock that accepts anything. Until FL-11/FL-12 both
+ * mocks answered `wrote: true` to a suggestion naming no target, another question or another principal's
+ * run, and `queued` to a capture request whose locator sat in a field the plane never reads — so the
+ * member's two defects (no `state.target`, `url` for `address`) were invisible to every fleet suite while
+ * the real plane refused every such call. The mock's `op=suggest` and `op=capturerequest` branches are now
+ * DERIVED from the plane (`plane-suggest.mjs`, `plane-capturerequest.mjs`: codes, C-numbers, translations,
+ * `isPublicHttpsLocator`'s own source, `runPrincipalGate` itself) and REFUSE BY NAME in the plane's order.
+ * FT0 below drives the mock DIRECTLY with each wrong call, so a green here is not a mock saying yes.
+ * NEGATIVE CONTROL: `test/harness.control.mjs` T1 (drop the seeding) and T2 (send `url` again).
+ * ========================================================================== */
+console.log("\n--- FT0 · FL-11/FL-12: the mock itself REFUSES by name what the plane refuses ---");
+{
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-FL11" });
+  const mock = await mf.getWorker("plane-mock");
+  const ask = async (op, body, token = AIK) =>
+    (await (await mock.fetch(`http://plane/?op=${op}&store=scratch&token=${token}`,
+      { method: "POST", body: JSON.stringify(body) })).json()).result ?? {};
+  const good = { kind: "basis-version", name: "v1", description: "a reading the record does not hold yet", run: "run-1" };
+  const codes = [
+    (await ask("suggest", { ...good })).code,
+    (await ask("suggest", { ...good, target: "PROJ-FL11" })).code,
+    (await ask("suggest", { ...good, target: "INQ-ELSEWHERE" })).code,
+    (await ask("suggest", { ...good, target: "INQ-FL11" }, "aik-" + "c".repeat(64))).code,
+    (await ask("suggest", { ...good, target: "INQ-FL11", run: "" })).code,
+  ];
+  t("FT0 (FL-11): the suggest mock refuses no target, a project id, a question outside the run's context, "
+    + "another principal and no run — each by the PLANE's code",
+    codes, ["SUGGEST_NO_TARGET", "SUGGEST_NOT_AN_INQUIRY", "SUGGEST_OUTSIDE_RUN_CONTEXT",
+            "AI_RUN_NOT_PRINCIPAL", "SUGGEST_NO_RUN"]);
+  const outside = await ask("suggest", { ...good, target: "INQ-ELSEWHERE" });
+  t("FT0b (FL-11): …and SUGGEST_OUTSIDE_RUN_CONTEXT carries the catalog's C-number and translation, not a lookalike",
+    [outside.check, outside.translation, outside.wrote], [WIRE_CHECKS.SUGGEST_OUTSIDE_RUN_CONTEXT.check,
+     WIRE_CHECKS.SUGGEST_OUTSIDE_RUN_CONTEXT.translation, false]);
+  const inside = await ask("suggest", { ...good, target: "INQ-FL11" });
+  t("FT0c (over-strictness): the same suggestion aimed at the run's own question, by its principal, LANDS",
+    inside.wrote, true);
+  const req = { run: "run-1", target: "INQ-FL11" };
+  const creq = [
+    (await ask("capturerequest", { ...req, url: "https://example.org/minutes" })).code,
+    (await ask("capturerequest", { ...req, address: "http://example.org/minutes" })).code,
+    (await ask("capturerequest", { ...req, address: "https://example.org/minutes" }, "aik-" + "c".repeat(64))).code,
+    (await ask("capturerequest", { ...req, address: "https://example.org/minutes", run: "" })).code,
+  ];
+  t("FT0d (FL-12): the capture-request mock refuses a locator sent as `url`, a non-https address, another "
+    + "principal and no run — each by the PLANE's code (C-28.2 for the first two)",
+    creq, ["CAPTURE_REQUEST_NOT_PUBLIC", "CAPTURE_REQUEST_NOT_PUBLIC", "AI_RUN_NOT_PRINCIPAL", "CAPTURE_REQUEST_NO_RUN"]);
+  t("FT0e (over-strictness): a public https `address` under the caller's own running run is QUEUED",
+    (await ask("capturerequest", { ...req, address: "https://example.org/minutes" })).state, "queued");
+  await mf.dispose();
+}
+
+console.log("\n--- FT1 · FL-11: a run over a QUESTION seeds its target, and its readings land inside it ---");
+{
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-FL11" });
+  const out = await (await runOp(mf, {
+    ...base,
+    judgements: [
+      { targets: [] },
+      { reports: [{ level: "internet", state: "LOOKED_ABSENT", observed_at: "log:4" }] },
+      { candidates: [
+        { kind: "basis-version", name: "untargeted", description: "a reading composed with no target of its own" }] },
+      {},
+    ],
+  })).json();
+  const st = await mockState(mf);
+  /* THE OUTSIDE-THE-CONTEXT READING IS A SEPARATE RUN, AND THAT IS A MEASURED FACT ABOUT THE TABLE: a
+     candidate dropped at `adjust` routes to `next-pass`, so the rest of that pass's queue is never
+     written (`nextStep`'s `adjust` row). Put in one run with the level-empty candidate, it swallowed it.
+     Reported with its fix by FL-11 rather than changed here. */
+  const mfOut = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-FL11" });
+  const outOut = await (await runOp(mfOut, {
+    ...base,
+    judgements: [{ targets: [] }, { reports: [] },
+                 { candidates: [{ kind: "basis-version", name: "elsewhere", target: "INQ-ELSEWHERE",
+                                  description: "a reading aimed at a question the run was not working on" }] },
+                 {}],
+  })).json();
+  const stOut = await mockState(mfOut);
+  t("FT1 (FL-11): the run publishes its target as the context question, and says why",
+    [out.target?.id ?? null, out.target?.basis ?? null], ["INQ-FL11", "the run's context question"]);
+  t("FT1b (FL-11): dedup read `op=basisversions` under the RUN's target, never under an empty id",
+    st.bvIds, ["INQ-FL11"]);
+  t("FT1c (FL-11): the table-made level-empty candidate AND the untargeted reading LANDED on the run's question",
+    st.suggested.map((x) => `${x.name}@${x.target}`).sort(),
+    ["level-empty-internet@INQ-FL11", "untargeted@INQ-FL11"]);
+  const outsideRef = (outOut.refusals || []).filter((r) => r.at === "suggest");
+  t("FT1d (FL-11): the reading aimed OUTSIDE the context was refused by the plane's name and routed to ADJUST, "
+    + "never retried verbatim, and nothing landed",
+    [outsideRef.map((r) => r.code), outsideRef.map((r) => r.plane?.check ?? null), outOut.verbatim_resubmits,
+     (outOut.trace || []).some((x) => x.step === "submit" && x.to === "adjust"), stOut.suggested],
+    [["SUGGEST_OUTSIDE_RUN_CONTEXT"], [WIRE_CHECKS.SUGGEST_OUTSIDE_RUN_CONTEXT.check], 0, true, []]);
+  t("FT1e (FL-11): …and dedup SAID it did not compare the candidate aimed elsewhere",
+    /1 named a question other than the run's target and were NOT compared/.test(
+      outOut.trace?.find((x) => x.step === "dedup")?.note ?? ""), true);
+  await mfOut.dispose();
+  await mf.dispose();
+}
+
+console.log("\n--- FT2 · FL-11: a run over a PROJECT never lands on the project id ---");
+{
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "PROJ-FL11", contextType: "project",
+                     cites: ["INQ-CITED"] });
+  const out = await (await runOp(mf, {
+    ...base,
+    judgements: [
+      { targets: [] },
+      { reports: [{ level: "internet", state: "LOOKED_ABSENT", observed_at: "log:4" }] },
+      { candidates: [{ kind: "basis-version", name: "cited", target: "INQ-CITED",
+                       description: "a reading of a question the project confirmed-cites" }] },
+      {},
+    ],
+  })).json();
+  const st = await mockState(mf);
+  t("FT2 (FL-11): a project run's target is UNDETERMINED and STATED — never the project id",
+    [out.target && "id" in out.target ? out.target.id : "(absent)", /^UNDETERMINED/.test(out.target?.basis ?? "")],
+    [null, true]);
+  t("FT2b (FL-11): no call this run made named the project as a suggestion's target",
+    st.log.filter((l) => l.op === "suggest" && l.body?.target === "PROJ-FL11").length, 0);
+  t("FT2c (FL-11): a reading aimed at a question the project confirmed-cites LANDS",
+    st.suggested.map((x) => `${x.name}@${x.target}`), ["cited@INQ-CITED"]);
+  t("FT2d (FL-11): the table-made level-empty candidate, which has no question to land on, is refused by the "
+    + "PLANE's words (SUGGEST_NO_TARGET) rather than invented a target",
+    (out.refusals || []).filter((r) => r.at === "suggest").map((r) => r.code), ["SUGGEST_NO_TARGET"]);
+  await mf.dispose();
+}
+
+console.log("\n--- FT3 · FL-11: the principal gate reaches the suggestion, through the op ---");
+{
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-FL11",
+                     runPrincipal: "aik-" + "d".repeat(64) });
+  const out = await (await runOp(mf, {
+    ...base,
+    judgements: [{ targets: [] }, { reports: [] },
+                 { candidates: [{ kind: "basis-version", name: "v1", description: "a reading under another's run" }] },
+                 {}],
+  })).json();
+  const st = await mockState(mf);
+  t("FT3 (FL-11): a suggestion under a run whose principal is not the caller is refused AI_RUN_NOT_PRINCIPAL "
+    + "(C-22.12) and nothing lands",
+    [(out.refusals || []).filter((r) => r.at === "suggest").map((r) => `${r.code}/${r.plane?.check}`), st.suggested],
+    [["AI_RUN_NOT_PRINCIPAL/C-22.12"], []]);
+  await mf.dispose();
+}
+
+console.log("\n--- FT4 · FL-12: an internet-level target files a request naming its ADDRESS ---");
+{
+  const mf = newMf({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-FL12" });
+  const out = await (await runOp(mf, {
+    ...base,
+    judgements: [{ targets: [{ level: "internet", url: "https://example.org/council/minutes" },
+                             { level: "internet", url: "http://localhost/admin" }] },
+                 { reports: [] }, { candidates: [] }, {}],
+  })).json();
+  const st = await mockState(mf);
+  t("FT4 (FL-12, the ADDRESS arm): the public locator was QUEUED, named by `address`, under the run's target",
+    st.requests, [{ run: base.run_id, target: "INQ-FL12", address: "https://example.org/council/minutes" }]);
+  t("FT4b (FL-12): no request body carried the locator in `url`, the field the plane never reads",
+    st.log.filter((l) => l.op === "capturerequest" && l.body && "url" in l.body).length, 0);
+  t("FT4c (FL-12): the non-public locator was refused by the plane's name and C-number, and published",
+    (out.refusals || []).filter((r) => r.at === "capturerequest").map((r) => `${r.code}/${r.check}`),
+    ["CAPTURE_REQUEST_NOT_PUBLIC/C-28.2"]);
+  await mf.dispose();
 }
 
 /* ========================================================================= *

@@ -410,6 +410,38 @@ export const CONTROL_FLOW = {
 
 export const FIRST_STEP = "gate-mode";
 
+/** FL-11 (INVESTIGATIVE-SESSION.md §11 item 5, RULE 1'S TARGET, BOB #28) — THE QUESTION A RUN'S
+ *  READINGS LAND ON, TAKEN FROM THE RUN'S OWN CONTEXT AND NEVER FROM THE CALLER.
+ *
+ *  The plane refuses a suggestion outside its run's context (`SUGGEST_OUTSIDE_RUN_CONTEXT`, C-27.19,
+ *  REC-165): the context itself, or, for a run over a PROJECT, a question that project confirmed-cites.
+ *  Until FL-11 this member never set `state.target` at all, so every table-made level-empty candidate
+ *  went out `target: null` and was refused `SUGGEST_NO_TARGET`, and `dedup` read `op=basisversions`
+ *  under `id=""` — a comparison against no question, written down as a comparison.
+ *
+ *  A RUN OVER A QUESTION: the target IS the context id — the only question inside the context.
+ *
+ *  A RUN OVER A PROJECT: NEVER the project id (a project is not an inquiry, and the plane refuses it
+ *  `SUGGEST_NOT_AN_INQUIRY`). Its readings land on a question the project CONFIRMED-cites, and the run read
+ *  does not publish that set (`aiRunRead` answers `context: { type, id }`). This member does NOT re-derive
+ *  `#citesInto` from a project's bytes — a second implementation of the one live-cites predicate is the
+ *  drift REC-19 removed — and does not pick one of several. So a project run's target is UNDETERMINED and
+ *  STATED: its candidates carry their own target, which the plane bounds, and a table-made candidate with
+ *  none is refused by the plane in its own words. `basis` says which of these is true, so the run's output
+ *  never implies a target it does not hold. */
+export function runContextTarget(session) {
+  const ctx = session && typeof session === "object" ? session.context : null;
+  const type = ctx && typeof ctx.type === "string" ? ctx.type : null;
+  const id = ctx && ctx.id != null && String(ctx.id).trim() !== "" ? String(ctx.id).trim() : null;
+  if (!id) return { target: null, basis: "UNDETERMINED: the run read published no context id" };
+  if (type === "project")
+    return { target: null,
+             basis: "UNDETERMINED: a run over a project lands on a question the project confirmed-cites, and the "
+                  + "run read does not publish that set; a candidate names its own target, never the project id" };
+  if (type === "inquiry") return { target: id, basis: "the run's context question" };
+  return { target: null, basis: `UNDETERMINED: the run's context kind ${JSON.stringify(type)} is not one this member reads` };
+}
+
 /** §9's EMPTY-LEVEL KIND, DERIVED BY THE TABLE AND NEVER BY THE MODEL.
  *
  *  THE OWED CONTROL THIS EXISTS FOR (VF-1's seventh, the objective's own): feed
@@ -766,7 +798,10 @@ export function stepLog(state, decision) {
  * judgement that tries to set `maxPasses`. */
 export const JUDGEABLE = ["targets", "reports", "candidates", "queue", "adjusted", "submission",
                           "level", "observed", "governed", "condition"];
-export const NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store"];
+/* FL-11: `target` joins them. The question a run's readings land on is the run's CONTEXT (`runContextTarget`),
+   the record's and never the model's; a judgement naming it was silently dropped before, which told the caller
+   nothing. A candidate still names its own target — that is the candidate's field, and the plane bounds it. */
+export const NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"];
 
 export function applyJudgement(state, judgement) {
   const j = judgement && typeof judgement === "object" ? judgement : {};

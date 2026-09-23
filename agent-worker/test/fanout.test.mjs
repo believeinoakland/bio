@@ -37,6 +37,7 @@
    (F7) A REFUSED RETURN MUST NOT BECOME AN ABSENCE. Let a refused report through to the working set -> the undetermined-not-empty arm must FAIL.
    (F8) SUB-SESSIONS SHARE NO STATE. Hand every level the same contract object -> the per-level and no-shared-identity arms must FAIL; the return contract must HOLD.
    (F9) OVER-STRICTNESS, nothing broken, and these must PASS.
+   (FL-12) THE ADDRESS ARM. Its control is `test/harness.control.mjs` T2 (send `url` again), which drives this suite too: FL-12b must FAIL BY NAME and FL-12a (the mock alone) must HOLD. RUN 2026-09-23: fanout 183/1, AS DECLARED; under T1 (FL-11's seeding dropped) this suite reads 177/7 — every arm where the parent writes a suggestion, and FL-12b, whose request target defaults to the run's.
    FULL PER-ARM DETAIL AND THE MEASURED FIGURES ARE IN `test/fanout.control.mjs`'s own header.
    D-276's five arms are NOT restated here and are NOT counted here: they belong to `test/agent-worker.control.mjs`, which drives THIS suite as well as its own, and they are enumerated once in `test/agent-worker.test.mjs`'s declaration. Naming them again here would inflate the fleet's arm count with a cross-reference — measured, at the moment of writing this sentence. The one that concerns this file is the world-as-it-shipped arm: with a fixture that says yes to everything, every BEHAVIOURAL assertion here passes over a call the real plane refuses, and the only thing that sees it is the single assertion here that reads the plane's registry instead of the mock. This suite's baseline moved 172 to 175 with D-276.
  * ========================================================================= */
@@ -67,6 +68,8 @@ import { versionReadBranches } from "./plane-versions.mjs";
    description, which is why its two `level-empty:<level>` assertions below were
    green over a candidate the deployed plane refuses BASIS_REFUSED / C-25.2. */
 import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
+/* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
+import { captureRequestBranch } from "./plane-capturerequest.mjs";
 import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
 
 let pass = 0, fail = 0;
@@ -474,7 +477,8 @@ export default {
     const S = globalThis.__S;
     const url = new URL(req.url);
     if (url.pathname === "/__mock/state")
-      return Response.json({ log: S.log, runlog: S.runlog, spawns: S.spawns, suggested: S.suggested });
+      return Response.json({ log: S.log, runlog: S.runlog, spawns: S.spawns, suggested: S.suggested,
+                             requests: S.requests || [] });
     const op = url.searchParams.get("op") || "";
     let body = null;
     if (req.method === "POST") { try { body = await req.json(); } catch { body = null; } }
@@ -528,9 +532,9 @@ export default {
     }
     if (op === "airunclose")
       return Response.json({ ok: true, result: { terminated: true, bound: (body && body.bound) || null } });
-    if (op === "capturerequest")
-      return Response.json({ ok: true, result: { request: "REQ-1", state: "queued" } });
-    ${suggestBranch({ f10: false })}
+    ${captureRequestBranch({ run: { principal: JSON.stringify(AIK), status: '"running"' } })}
+    ${suggestBranch({ f10: false, run: { context: '({ type: "inquiry", id: "INQ-1" })', cites: "[]",
+                                         principal: JSON.stringify(AIK), status: '"running"' } })}
     return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
   },
 };
@@ -840,6 +844,27 @@ console.log("\n--- B8 · OVER-STRICTNESS through the op: legal fan-outs must run
     t(`${label} -> accepted`, [res.status, out.ok, out.reports_refused], [200, true, []]);
     await mf.dispose();
   }
+}
+
+console.log("\n--- FL-12 · the fan-out's internet level files its request by ADDRESS, and the mock refuses `url` ---");
+{
+  /* FL-12: this mock answered `queued` to ANY capture-request body, so the member's `url` (a field the plane
+     never reads) was invisible here. The branch is now derived from the plane (`plane-capturerequest.mjs`)
+     and refuses by name; the first assertion drives it directly so the second is not a mock saying yes.
+     NEGATIVE CONTROL: `test/harness.control.mjs` T2 (send `url` again) — this arm fails by name. */
+  const mf = newMf({});
+  const mock = await mf.getWorker("plane-mock");
+  const direct = (await (await mock.fetch(`http://plane/?op=capturerequest&store=scratch&token=${AIK}`,
+    { method: "POST", body: JSON.stringify({ run: "run-1", target: "INQ-1", url: "https://example.org/a" }) })).json()).result ?? {};
+  t("FL-12a: a request carrying its locator only as `url` is refused CAPTURE_REQUEST_NOT_PUBLIC (C-28.2) by the mock, as by the plane",
+    [direct.code, direct.check], ["CAPTURE_REQUEST_NOT_PUBLIC", "C-28.2"]);
+  const out = await (await runOp(mf, { ...base,
+    judgements: [{ targets: [{ level: "internet", url: "https://example.org/a" }] }, { reports: goodReturns }, {}, {}] })).json();
+  const st = await mockState(mf);
+  t("FL-12b (the ADDRESS arm): the run's internet-level target was QUEUED, named by `address`, under the run's question",
+    [st.requests, (out.refusals || []).filter((r) => r.at === "capturerequest")],
+    [[{ run: base.run_id, target: "INQ-1", address: "https://example.org/a" }], []]);
+  await mf.dispose();
 }
 
 console.log(`\nfanout: ${pass} passed, ${fail} failed`);

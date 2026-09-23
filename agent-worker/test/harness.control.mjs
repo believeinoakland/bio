@@ -7,7 +7,8 @@
  * THE FAMILIES, so a reader can hold the count against the run without reading
  * to the foot: **H1-H10** are FL-3's own arms (H10 is the over-strictness arm);
  * **F1-F4** are FL-8's, on the launch gate's vocabulary; **G1-G5** are D-323 and
- * D-324's, on a gate-refused run's STATUS. 19 announcements, driven.
+ * D-324's, on a gate-refused run's STATUS; **T1-T2** are FL-11's and FL-12's (2026-09-23), on the run's
+ * target and the capture request's `address`. 21 announcements, driven.
  *
  * TALLY DECLARED HERE 2026-09-14 (M0-29, D-343), AND THE OLD SENTENCE IS KEPT
  * RATHER THAN CORRECTED, BECAUSE IT WAS NEVER WRONG. The only arm count this
@@ -423,8 +424,8 @@ arm({
   mustFail: "the per-field overreach arm for `maxPasses`, by name, AND the through-the-op JUDGEMENT_OVERREACH arm",
   mustNot: "the budget arms — the two are different mechanisms and this is what shows it",
   file: HARNESS,
-  find: `export const NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store"];`,
-  replace: `export const NOT_JUDGEABLE = ["pass", "step", "budget", "mode", "bound", "run", "store"];`,
+  find: `export const NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"];`,
+  replace: `export const NOT_JUDGEABLE = ["pass", "step", "budget", "mode", "bound", "run", "store", "target"];`,
   run: () => {
     const r = runHarness();
     const named = anyFailed(r, /judgement setting `maxPasses` is REFUSED|JUDGEMENT_OVERREACH|the field is named/);
@@ -841,6 +842,67 @@ arm({
       observed: `harness ${rh.pass}/${rh.fail} FAIL · airun ${air.pass}/${air.fail} FAIL`
         + ` · the mock's own arms objected: ${objected} · the table arm and the plane held: ${held}`,
       asDeclared: rh.ran && objected && held,
+    };
+  },
+});
+
+/* ============================================================================
+ * SECTION T — FL-11 AND FL-12: THE RUN'S TARGET AND THE REQUEST'S ADDRESS (2026-09-23).
+ * Each arm breaks ONE line of `src/index.mjs` and nothing else; the mocks are untouched, and they are what
+ * refuses — derived from the plane, so a green under an arm would be a mock saying yes.
+ * ========================================================================== */
+const runFanout = () => runNamed("fanout.test.mjs", "fanout");
+
+arm({
+  id: "T1", subject: "FL-11 — THE SEEDING DROPPED: the run never takes its context as its target",
+  what: "`state.target` is no longer seeded from `runContextTarget(session)` at the open — the member as it was "
+    + "before FL-11, where nothing set it",
+  mustFail: "harness FT1 (the published target), FT1b (dedup's read under the run's target), FT1c (the level-empty "
+    + "and untargeted readings land), FT3 (a target-less suggestion is refused C-27.1 BEFORE the principal gate is "
+    + "reached, the plane's order), FT4 and fanout FL-12b (a request's target defaults to the run's), and B6's four "
+    + "level-empty suggestions — each BY NAME, refused by the mock's SUGGEST_NO_TARGET / CAPTURE_REQUEST_NOT_AN_INQUIRY. "
+    + "Every older arm that asserts a suggestion LANDS fails with them (B4, B8, B9, fanout's parent-writes arms): the "
+    + "strict mock now sees the pre-FL-11 member everywhere it suggests, which is the point",
+  mustNot: "FT0 (the mock refuses on its own, driven directly), FT1d/FT1e (a reading aimed outside is still refused "
+    + "and still not compared), FT2 (a project run never had a target) and the fanout suite's FL-12a (the mock alone)",
+  file: DRIVER,
+  find: `    target: seeded.target, targetBasis: seeded.basis,`,
+  replace: `    targetBasis: seeded.basis,`,
+  run() {
+    const rh = runHarness();
+    const rf = runFanout();
+    const failedAsDeclared = [/^FT1 \(FL-11\)/, /^FT1b /, /^FT1c /, /^FT3 /, /^FT4 \(FL-12/, /FOUR level-empty suggestions/]
+      .every((re) => anyFailed(rh, re)) && anyFailed(rf, /^FL-12b /);
+    const held = !anyFailed(rh, /^FT0|^FT1d |^FT1e |^FT2/) && !anyFailed(rf, /^FL-12a/);
+    return {
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by `
+        + `name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
+      asDeclared: rh.ran && rf.ran && failedAsDeclared && held,
+    };
+  },
+});
+
+arm({
+  id: "T2", subject: "FL-12 — THE LOCATOR SENT AS `url` AGAIN, the field the plane never reads",
+  what: "`op=capturerequest`'s body names the locator `url` instead of `address` — the member as it was before FL-12",
+  mustFail: "harness FT4 (the ADDRESS arm: the public locator is queued by `address`), FT4b (no body carries `url`), "
+    + "FT4c (exactly ONE refusal — with `url` the public locator is refused too) and fanout FL-12b (the fan-out's "
+    + "ADDRESS arm) — each BY NAME, the mock answering CAPTURE_REQUEST_NOT_PUBLIC",
+  mustNot: "FT0d/FT0e and fanout FL-12a (the mock refuses `url` and queues `address` when driven directly), and every "
+    + "FL-11 arm (FT1*, FT2*, FT3) — the suggestion path shares no field with the request",
+  file: DRIVER,
+  find: `{ run: runId, target: t.target ?? state.target ?? null, address: t.url ?? null }), "capturerequest");`,
+  replace: `{ run: runId, target: t.target ?? state.target ?? null, url: t.url ?? null }), "capturerequest");`,
+  run() {
+    const rh = runHarness();
+    const rf = runFanout();
+    const failedAsDeclared = [/^FT4 \(FL-12/, /^FT4b /, /^FT4c /].every((re) => anyFailed(rh, re))
+      && anyFailed(rf, /^FL-12b /);
+    const held = !anyFailed(rh, /^FT0|^FT1|^FT2|^FT3 /) && !anyFailed(rf, /^FL-12a/);
+    return {
+      observed: `harness ${rh.pass}/${rh.fail} FAIL · fanout ${rf.pass}/${rf.fail} FAIL · the declared arms failed by `
+        + `name: ${failedAsDeclared} · the MUST-NOT arms held: ${held}`,
+      asDeclared: rh.ran && rf.ran && failedAsDeclared && held,
     };
   },
 });
