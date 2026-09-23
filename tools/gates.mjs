@@ -118,6 +118,7 @@ import { tmpdir } from "node:os";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { appendRun, readRuns, effectiveVerdict } from "./pushguard.mjs";
+import { stepCauses, causesLine } from "./pushguard.mjs"; /* M0-127: a RED names every cause */
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const sh = (cmd, args) =>
@@ -705,7 +706,7 @@ STEPS.forEach((s, i) => {
   const failedUnits = r.status !== 0 && !timedOut && v && v.verdict === "RED" && Array.isArray(v.failed)
     && v.failed.length && !v.leaking && !v.sharedLog ? v.failed.filter((u) => typeof u === "string" && u) : [];
   results.push({ label: s.label, units: s.units, ok: r.status === 0, ...(timedOut ? { timedOut: true, unmeasured } : {}),
-    ...(failedUnits.length ? { failedUnits } : {}) });
+    ...(failedUnits.length ? { failedUnits } : {}), causes: stepCauses(s, r, v, { timedOut, unmeasured }) });
 });
 try { rmSync(VERDICT_DIR, { recursive: true, force: true }); } catch { /* the OS temp sweep */ }
 const red = results.some((r) => !r.ok && !r.timedOut);
@@ -714,6 +715,13 @@ const green = !red && !notMeasured;
 const VERDICT = red ? "RED" : notMeasured ? "NOT MEASURED" : "GREEN";
 
 console.log(`\ngates: ${VERDICT} · class ${cls}`);
+/* M0-127: A VERDICT THAT IS NOT GREEN NAMES WHAT MADE IT SO — one line per failed step, then ONE machine line,
+   `gates: CAUSES <token> …`, which `tools/gateverdict.mjs` carries into the GitHub annotation's FAILED=. */
+if (!green) {
+  for (const r of results.filter((x) => !x.ok))
+    console.log(`gates:   ${r.label} — ${r.timedOut ? "NOT MEASURED" : "RED"}: ${r.causes.join(" ")}`);
+  console.log(causesLine(results, VERDICT));
+}
 if (notMeasured) {
   for (const r of results.filter((x) => x.timedOut))
     console.log(`gates:   ${r.label} — a budget EXPIRED in ${r.unmeasured.length} suite(s): ${r.unmeasured.join(", ")} — NOT MEASURED (M0-107)`);
