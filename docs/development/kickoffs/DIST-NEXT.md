@@ -1,4 +1,4 @@
-# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0-0.76.0 went live (2026-09-23 ~12:05Z).
+# DIST — resume here. Written 2026-09-23 by DIST #5 (cloud, Bob's second account), after 0.72.0-0.77.0 went live (2026-09-23 ~13:10Z).
 
 This file is only STATE, measured 2026-09-23 ~02:15Z. The process is `kickoffs/DIST.md` (WHEN DIST CUTS, the `latest`
 pointer, the gate, the LESSONS) — read it whole. Re-measure before acting: a deployment is a fact about the ACCOUNT.
@@ -25,11 +25,19 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
 
 ## What is OWED
 
-0. **`land/dist/release-0.76.0` @ `288fc128` waits on CONDUCT #15's train** (tree `b178380e` GREEN FULL 290/290 · 17414,
-   `--since 4494f725`). Confirm: `git merge-base --is-ancestor 288fc128 origin/main`. 0.75.0's pointer LANDED (f48b9e91).
-1. **The next cut, by WHEN DIST CUTS.** Read `git log 4494f725..origin/main` over the shipped paths. RELEASES row:
-   `["0.76.0", "4494f725e017b557336902012b263c49b29afe5e"]`. Expected: baseline 480 + 21 → **501/0**, `alterafter` → **423/78**, `groupwipe` → **489/12**
-   (six group-recording stores, 0.71.0-0.76.0). Measure.
+0. **0.77.0 is LIVE on biosmoke7 but its POINTER and the INSTALLER are HELD — DIST's decision, told to BOB #30 (12:30Z),
+   overrulable by "advance 0.77.0 now".** REC-171 makes `bio-plane/migrate/migrate.mjs` refuse SURFACE_NO_RUN per inquiry
+   until REC-173 (BOB's migration-replay ruling) is built, so a group offered 0.77.0 (by `/update` through `main`'s
+   `release/`, or by a fresh install through `newgroup`'s embed) could half-import. So: no `land/dist/release-0.77.0`
+   push, and `newgroup` stays deployed at 0.76.0 (`60692a45`). **When REC-173 is on main: cut 0.78.0 (a batch, or a
+   CUT NOW if anything closes), which carries REC-171 AND the fix, then advance the pointer and deploy the installer.**
+   If BOB overrules first: merge `origin/main` into `dist/cut-0.77.0` (`6b0beb8e`, on the remote), gate, push
+   `land/dist/release-0.77.0`, deploy `newgroup` from the tag's tree, read it back.
+   `land/dist/release-0.76.0` @ `288fc128` is in CONDUCT #15's train (gating at 12:10Z); confirm by ancestry.
+   CONDUCT #15 hands off to CONDUCT #16 — send notices to whichever CONDUCT the `coord` handoff names.
+1. **The next cut, by WHEN DIST CUTS.** Read `git log 6b0beb8e..origin/main` over the shipped paths. RELEASES row:
+   `["0.77.0", "6b0beb8e7d321fe96d64de5e5b3aefa291b41599"]`. Expected: baseline 501 + 21 → **522/0**, `alterafter` → **444/78**, `groupwipe` → **508/14**
+   (seven group-recording stores, 0.71.0-0.77.0). Measure.
    A cut base is `origin/main` MERGED with any still-waiting release merge. Before pushing any `land/*` branch: merge
    `origin/main`, gate the MERGED tree GREEN, then push.
    **civicos moves whenever `sha256(app.html)` ≠ the live `/build`** — compare at the cut, never from memory
@@ -37,7 +45,7 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    **WHICH BUILD ANSWERS is now readable live (D-116, since 0.76.0):** `op=bootstrap&members=1` (no credential) answers
    `version`, `storeVersion` (the DO's own) and each member's `SERVING` version — use it in every landing report.
    **`op=airuntick` answers `ticked`, not `ok`** (the 0.76.0 probe's first run misread it; see the lessons below).
-2. **The tags `v0.72.0`-`v0.76.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
+2. **The tags `v0.72.0`-`v0.77.0` are not on the remote** (above) — NOT CARRIED: BOB #29 (02:52Z) judged it non-blocking (nothing
    reads it; `b942d973` is on the remote) and named it to Bob as an optional web-UI act. A future cut's tag meets the
    same 403: push the branch, and let the tag follow when Bob's act or the environment allows.
    **BOB'S RULING, 2026-09-23 (TREE-SHARING §3):** every failed GitHub run emails Bob as an alarm — push a `land/*`
@@ -46,14 +54,13 @@ State files live on `coord` (M0-110): read with `node tools/coord.mjs read <path
    AFTER the plane's caller lands — `node tools/ledger.mjs find D-260` first.
 4. **Carried, not re-verified:** v0.56.0/v0.57.0 never pushed; `v0.58.0` off the mainline; v0.59.0–v0.63.0 WITHDRAWN.
 
-## What is LIVE (deployments API at 100%, 2026-09-23 ~11:30Z) — each id is the ROLLBACK TARGET for the next cut
+## What is LIVE (deployments API at 100%, 2026-09-23 ~13:05Z) — each id is the ROLLBACK TARGET for the next cut
 
-biosmoke7 `e319f8a1-2317-4903-80eb-7c02377f1258` (0.76.0, bytes = signed `5f4391db…`; storeVersion 0.76.0) · agent-worker
-`a6f0647f-ea82-4e06-80cb-6afa2507b110` · pdf-worker `b97fc33d-8e0f-4d62-b163-ed604859528b` · ocr-worker
-`40a19783-bf0f-4139-9129-c90dfcc43f72` · civicos `f2a2ac27-9735-4c74-9e51-9dd44921135d` (`/build` `c866bb15…`) · newgroup
-`60692a45-4cd8-4bf1-823b-344d495e5c65` (embeds 0.76.0, `RELEASE_SOURCE` → `5f4391db…`, bindings `[]`).
-The 0.75.0 ids: biosmoke7 `008160e1…` · agent-worker `513f2283…` · pdf-worker `2eb300be…` · ocr-worker `faf10470…` ·
-newgroup `e3ec9bd1…`.
+biosmoke7 (0.77.0, bytes = signed `44b9f985…`; storeVersion 0.77.0) · agent-worker · pdf-worker · ocr-worker — all 0.77.0;
+read the ids from the deployments API (cf.mjs) at the next cut: biosmoke7's 0.77.0 version is the one after `e319f8a1…`.
+agent-worker `c55a04b3…` · pdf-worker `5b45f740…` · ocr-worker `714ea24c…` · civicos `f2a2ac27…` (`/build` `c866bb15…`) ·
+**newgroup `60692a45…` STILL 0.76.0 (held, above).** The 0.76.0 ids: biosmoke7 `e319f8a1…` · agent-worker `a6f0647f…` ·
+pdf-worker `b97fc33d…` · ocr-worker `40a19783…`.
 
 **biosmoke7's stores record their producing group `believe-in-oakland` (seed, `token:admin`, 2026-09-22T04:26:11Z), both
 `bio` and `store=scratch` — write-once, never seed again (C-64.3).** Since 0.72.0 a caller with NO credential reads the
@@ -61,6 +68,17 @@ slug (IC-174). An admin op with no `store` runs against `bio` (`scopeFor`) — a
 Scratch residue, not swept: DIST #5's `INQ-2026-9172-dist5-{a,b}-mudgvfyx` and runs `RUN-2026-0923-dist5-mudgvfyx-1..2`
 (both closed), DIST #4's `INFO-2026-9436-dist4-muc6a1x0`, member `dist3-rec156-muboxe9j`, livefire canaries, 13 July
 probe members (not DIST's) — so `op=purge` is not used.
+
+## The 0.77.0 figures (a CUT NOW for REC-171 / IC-186; I3 58.0.0; pointer and installer HELD)
+
+Cut `6b0beb8e` (carries 0.76.0's pointer merge). Gate GREEN FULL on `60f8f720`: **291/291 · 17466**, 1574 s. Signature 7/7;
+newgroup 23/0, 184/0; migrate-released 501/0 · 423/78 · 449/52 · 501/0 · 465/36 · 500/1 · 489/12, each as predicted.
+Live: D-116 reads version, storeVersion and every member 0.77.0; probe 8/8 — a deploy token's inquiry naming no run
+→ SURFACE_NO_RUN (0.76.0 accepted exactly that at 11:30Z), the `surfaced_by: human` liar refused alike, one naming its
+running run accepted and spending one `surfaces`; `bio` witness unchanged; audit = baseline. **REC-171 changes what a
+DIST probe may set up:** an admin can no longer promote an inquiry without a run — open the run over an EXISTING scratch
+question (probe77 used `INQ-2026-9172-dist5-a-mue0uvwj`). Scratch residue added: `INQ-2026-9172-dist5-c-mue45ibs`, run
+`RUN-2026-0923-dist5-mue45ibs-1` (closed).
 
 ## The 0.76.0 figures (a CUT NOW for REC-169 / IC-184; carries D-116, REC-170, DIST-6; I3 57.0.0)
 
