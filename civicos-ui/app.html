@@ -1501,7 +1501,8 @@ async function boot(){
      when it is not. */
   if(!publishedRouteFromHash() && !routeFromHash() && !projectRouteFromHash()
      && !actionRouteFromHash() && !aiSessionRouteFromHash()
-     && !versionReviewRouteFromHash() && !stanceRouteFromHash()) go("queue", true);
+     && !versionReviewRouteFromHash() && !stanceRouteFromHash()
+     && !acceptCeremonyRouteFromHash()) go("queue", true);
 }
 
 /* ---------- rail, shaped from whoami ---------- */
@@ -2279,6 +2280,20 @@ const SURFACES = {
     levels: ["meaning"],
     acts: ["versionhide"],
     reads: ["basisversions", "affordances"],
+  },
+
+  /* UI-74 (UI-43's scope re-derived) · THE ACCEPT CEREMONY. The four
+     member-side transitions over one reading, each owing §6 rule 4's four beats.
+     A place of its own because it carries a step the record cannot supply
+     until the member gives it — the affirmation, per set of reasons, sent with
+     the accept — and D-195's shared origin is shown before that step.
+     `versioncurrent` is UI-45's; `versionhide` is UI-42's. */
+  "accept-ceremony": {
+    routes: ["hash:accept"],
+    purpose: "One reading of one question's evidence, acted on: adopted, turned down, set aside with a reason, or put back where nobody had acted on it. The record is asked what the act would do before it is done; where the reading is filed as several sets of reasons each offered as carrying the answer on its own, the page first shows what the record traced about whether those sets rest on the same material, then asks the member to say so about each set before it will put their name on the reading; and what the reading comes to is not shown until after that.",
+    levels: ["meaning"],
+    acts: ["versionaccept", "versionreject", "versionconsider", "versionrevert"],
+    reads: ["basisversions", "affordances", "airun", "versionstrength"],
   },
 
   /* UI-45 · §7's stance, and it is a SECOND surface over one read rather than a
@@ -20152,6 +20167,20 @@ async function aiSessionRead(ctx){
   return (ans && ans.session) || null;
 }
 
+/* THE DATA DOOR (UI-74, carried from UI-43's branch). The accept ceremony needs
+   a run's RECORDED CONDITIONS — its lens (DEC-46) and its principal — and is no
+   running-session surface: it renders no status, ticks, budget or transcript.
+   So it reaches the run through this door, which calls `aiSessionRead` here (the
+   one `op=airun` call stays in this block, ARM C1) and hands back the record's
+   own values with NO MARKUP, leaving the rendering with the surface that owns
+   the screen. `null` for a run this credential cannot open. */
+async function aiSessionConditions(runId){
+  const s = await aiSessionRead({ session: runId });
+  if(!s) return null;
+  return { id: s.id, context: s.context, principal: s.principal,
+           bias: s.bias, standard: s.standard };
+}
+
 /* THE DEVICE-LOCAL TRANSCRIPT (DEC-61). Never the plane. */
 function aiSessionTranscript(id, store){
   const S = store || (typeof localStorage !== "undefined" ? localStorage : null);
@@ -21232,6 +21261,14 @@ function vrevVersionHtml(v, focusName){
     + (bound ? '<div class="teach" style="margin:6px 0 0">' + esc(bound) + '</div>' : "")
     + '<div class="subj-how">' + esc(vrevDecision(v)) + '</div>'
     + '<div class="subj-how">' + esc(vrevOrigin(v)) + '</div>'
+    /* UI-74's ONE LINE INSIDE UI-42's BLOCK: the link to the ceremony. It
+       carries no act — choosing the act is the ceremony's beat one. Drawn only
+       when `v` IS one of the review surface's own readings (object identity):
+       the stance surface renders these cards too, and a `VREV` left over from
+       an earlier visit would otherwise name the wrong question. */
+    + ((VREV && vrevList().includes(v))
+        ? '<div class="subj-how"><a onclick="acceptCeremonyOpen(' + esc(JSON.stringify(String(VREV.inquiry)))
+          + ',' + esc(JSON.stringify(String(v.name))) + ')">Act on this reading</a></div>' : "")
     + '</div>';
 }
 
@@ -21413,6 +21450,576 @@ function versionReviewRouteFromHash(){
 }
 try{ window.addEventListener("hashchange", ()=>{ if(!VREV_HASH_LOCK) versionReviewRouteFromHash(); }); }catch(_){}
 /*__VERSION_REVIEW_END__*/
+
+/*__ACCEPT_CEREMONY_START__*/
+/* ============================================================
+   UI-74 · THE ACCEPT CEREMONY — THE FOUR BEATS ON EVERY TRANSITION, THE DERIVED
+   FALSIFIER BACK IN PLAIN WORDS, THE SHARED ORIGIN SHOWN, AND THE AFFIRMATION
+   BEFORE A NAME LANDS.
+
+   Re-derived on current `main` from UI-43's stranded branch (evidence, never
+   merged). `INVESTIGATIVE-SESSION.md` §12 (a)–(b) is the design; §6 rule 4 is
+   the four beats: *"choose · see what will be refused BEFORE it runs · author
+   the reason · receipt"*.
+
+     BEAT 1 — CHOOSE. The reading is named in the address; the ACT is chosen here
+       from what the plane published. No default act, no default reading.
+     BEAT 2 — SEE WHAT WILL BE REFUSED BEFORE IT RUNS. `preview=1` is the acts'
+       own parameter: every guard runs and nothing is written. This page asks and
+       renders; it composes no prediction (DEC-8). One argument builder serves the
+       preview and the act, so the two cannot come to ask different questions.
+     BEAT 3 — AUTHOR THE REASON. Never prefilled. WHICH acts need one is not
+       held here — the plane refuses without it, in its own words.
+     BEAT 4 — RECEIPT. The act's own answer, and the reading re-read.
+
+   ---- THE KEYSTONE (DEC-32 clause 4; §12 (b))
+
+   A reading filed as more than one set of reasons, each offered as carrying the
+   answer on its own, claims more than the same reasons kept together — the
+   arithmetic takes the STRONGEST set. Accepting it puts a member's name over
+   that claim, so this page will not offer the accept until the member has said
+   so about EACH set: one control per set, none prefilled, the send control
+   ABSENT until all are said, `acerSend` refusing as a second defence, and the
+   plane refusing `VERSION_AFFIRMATION_INCOMPLETE` as the third (D-271). What the
+   member said is SENT — `affirmed=` names every set by the record's own label,
+   on the wire only; the label never reaches the markup (DEC-32 clause 1), so the
+   controls are keyed by position and the labels are looked up at the send.
+   Required on every accept of a multi-set reading, machine-composed or not: the
+   act carrying the name is the same act either way.
+
+   ---- D-195: THE SHARED ORIGIN, DERIVED BY THE PLANE AND SHOWN BEFORE THE
+        AFFIRMATION — AND NEVER A REFUSAL (§12 (a))
+
+   `op=versionstrength` publishes `independence` — `Store#independenceOf`,
+   recomputed on the read rather than replayed from the write (IC-52). UI-43's
+   branch could only say *nobody looked*; the plane now looks, so this page shows
+   what it found, in the reading's own card, ABOVE the affirmation: which sets
+   rest on the same document, the same captured copy or the same address, or
+   that it traced them and found none shared, or that it could not finish. It
+   informs and binds nothing: the affirmation is still offered and the accept
+   still goes through. Derived informs, authored binds.
+
+   THE ORDERING RULE (DEC-32 clause 5) SURVIVES THIS, AND HOW IS THE POINT.
+   `independence` rides on the op that also answers the arithmetic, so asking it
+   before the affirmation fetches a pair. `acerOriginsRead` KEEPS `independence`
+   AND NOTHING ELSE — the pair is dropped at the fetch, never stored in `ACER`,
+   so no code path can draw it; the arithmetic is asked AGAIN, and only, from
+   `acerStrengthShow` after the affirmation. A shared origin is a provenance fact
+   and not a grade (§12 (c)), so showing it first does not break the keystone.
+
+   ---- DEC-46: THE LENS DIFF IN THE FLOW, ABOVE THE CONTROL, THREE-VALUED.
+   ---- REC-36: A READING COMPOSED BY A RUN THIS CREDENTIAL CANNOT OPEN LOSES
+        THE ACCEPT CONTROL AND KEEPS THE OTHER THREE, and the page says why.
+   ---- DEC-32 clause 1 / D-226: no analyst word. The falsifier stems and the
+        state sentences are UI-42's constants, reused; the plane's axis
+        `detail` is never rendered (it carries the forbidden vocabulary).
+   ============================================================ */
+
+/* { inquiry, version, act, affirmed:{i:true}, reason, bound, versions[], acts[],
+     run, runAsked, origins, originsAsked, strength, strengthAsked, preview,
+     receipt, refusal, refusalAct, err, busy } */
+let ACER = null;
+let ACER_HASH_LOCK = false;
+
+/* THE FOUR ACTS THIS SURFACE HOSTS, BY WIRE NAME ONLY. Labels and prompts come
+   from `op=affordances`. `versionhide` is UI-42's, `versioncurrent` UI-45's. */
+const ACER_ACTS = ["versionaccept", "versionreject", "versionconsider", "versionrevert"];
+/* THE ONE ACT THE KEYSTONE GUARDS, held once so its sites cannot come apart. */
+const ACER_KEYSTONE_ACT = "versionaccept";
+
+const ACER_AFFIRM_OFFER =
+  "This reading is filed as more than one set of reasons, and each set is offered as carrying the answer "
++ "on its own. That is a stronger claim than the same reasons kept together, so this page asks you to say "
++ "it about each set before it will put your name on the reading.";
+const ACER_AFFIRM_LIMIT =
+  "What you say here is sent with your acceptance: the record keeps, under your name, which sets you said "
++ "carry the answer on their own. What any reader can check afterwards is the reasons in each set.";
+
+/* D-129 at this surface: NOT FOUND and DID NOT LOOK are different facts. */
+const ACER_ORIGINS_UNTOLD =
+  "The record did not tell this page whether these sets of reasons rest on the same material further "
++ "back. That is not the same as being told they do not.";
+const ACER_ORIGINS_REACH =
+  "The record traces this through the documents themselves, the captured copies of them, and the "
++ "addresses they were fetched from. Two documents that came from one place by some other route are "
++ "beyond what it can see.";
+const ACER_ORIGINS_WEIGH =
+  "This does not stop you. It is here so that you weigh it before you say each set carries the answer "
++ "on its own.";
+
+/* THE ONE DOOR FOR THE READING — UI-42's, called rather than re-asked. */
+async function acerRead(inquiryId){ return versionReviewRead(inquiryId); }
+
+function acerList(){ return (ACER && Array.isArray(ACER.versions)) ? ACER.versions : []; }
+function acerVersion(){
+  if(!ACER) return null;
+  const n = String(ACER.version || "");
+  return acerList().find(v => v && String(v.name) === n) || null;
+}
+/* The sets, named by their members — UI-42's helper, reused. */
+function acerSets(v){ return vrevSets(v); }
+/* The record's own labels, in the order `vrevSets` walks them. They leave this
+   block ONLY on the wire, in `affirmed=`, and in no markup. */
+function acerSetKeys(v){
+  const out = [];
+  for(const l of vrevLegs(v)){
+    const k = (typeof l.ground === "string" && l.ground.trim()) ? l.ground.trim() : "";
+    if(k && !out.includes(k)) out.push(k);
+  }
+  return out;
+}
+/* THE KEYSTONE'S TRIGGER, a property of the READING, the plane's own predicate
+   (more than one declared set) and never of who composed it. */
+function acerNeedsAffirmation(v, act){
+  return act === ACER_KEYSTONE_ACT && acerSetKeys(v).length >= 2;
+}
+function acerAffirmedAll(v, act){
+  if(!acerNeedsAffirmation(v, act)) return true;
+  const done = (ACER && ACER.affirmed) ? ACER.affirmed : {};
+  return acerSetKeys(v).every((_, i) => done[i] === true);
+}
+/* A set named for a member: its position and the reasons in it. */
+function acerSetName(v, label){
+  const i = acerSetKeys(v).indexOf(String(label == null ? "" : label).trim());
+  if(i < 0) return "a set of reasons this page did not receive";
+  const names = (acerSets(v)[i] || []).join(", ");
+  return "set " + (i + 1) + (names ? " (" + names + ")" : "");
+}
+
+function acerComposer(v){
+  const run = (v && typeof v.run === "string" && v.run.trim()) ? v.run.trim() : "";
+  const by = String((v && v.author) || "").trim();
+  if(!run)
+    return "Composed by " + (by || "somebody the record does not name") + ".";
+  return "Composed by a run of the assistant, working for "
+       + (by || "somebody the record does not name")
+       + ". A run may put an account of the evidence forward and may never adopt one.";
+}
+
+/* REC-36. The reading names its run; asked for and answered nothing, the run
+   sits where this credential cannot see. "" when it does not bite. */
+function acerBeyondGate(v){
+  if(!ACER || !ACER.runAsked) return "";
+  const run = (v && typeof v.run === "string" && v.run.trim()) ? v.run.trim() : "";
+  if(!run) return "";
+  if(ACER.run) return "";
+  return "This reading was composed by a run the record will not open for you. Whatever the run worked "
+       + "over, you cannot see it from here — so this page does not offer to put your name on this "
+       + "reading. You can still turn it down, set it aside, or put it back where nobody had acted on "
+       + "it: those say what the record SHOWS, and none of them stands over evidence you have not seen.";
+}
+function acerPrincipalLine(){
+  const s = ACER && ACER.run;
+  if(!s) return "";
+  const p = (s.principal && typeof s.principal === "object") ? s.principal : {};
+  const plane = String(p.plane || "").trim();
+  if(!plane) return "The record does not name what this run was acting as.";
+  return plane.indexOf("class:") === 0
+    ? "This run was acting for the group as a whole rather than for any one member."
+    : "This run was acting for one member of the group, and the record names them: " + plane + ".";
+}
+
+/* DEC-46's LENS DIFF, from the plane's own three-part answer, three-valued. */
+function acerLensHtml(){
+  const s = ACER && ACER.run;
+  if(!s) return "";
+  const b = (s.bias && typeof s.bias === "object") ? s.bias : null;
+  if(!b) return "";
+  if(b.in_force !== true)
+    return '<div class="card" style="margin:0 0 10px" data-acer="lens"><div class="kv"><span class="k">The lens it was composed under</span>'
+      + '<span class="v plain">' + esc(String(b.stated || "the record says nothing about it")) + '</span></div></div>';
+  const rec = (b.manifest && typeof b.manifest === "object") ? b.manifest : {};
+  const now = (b.now && typeof b.now === "object") ? b.now : {};
+  const verdict = b.moved === true
+    ? "IT HAS MOVED. What the record stands under now is not what this reading was composed under, so what "
+      + "the reading weighed and what you would be adopting it under are two different things."
+    : b.moved === false
+      ? "It has not moved. What this reading was composed under is what stands now."
+      : "It is not known whether it moved: one of the two sides has nothing to compare, and this page says "
+      + "that rather than reporting it as unchanged.";
+  return '<div class="card" style="margin:0 0 10px" data-acer="lens">'
+    + '<div class="kv"><span class="k">The lens it was composed under</span><span class="v plain">' + esc(verdict) + '</span></div>'
+    + '<div class="subj-how">As recorded for the run: ' + esc(String(rec.statements_sha || "nothing recorded")) + '</div>'
+    + '<div class="subj-how">As the record stands now, in the run&rsquo;s own setting and as far as this credential can see it: '
+    + esc(now.in_force === true ? String(now.statements_sha || "recorded without anything to compare") : "nothing in force") + '</div>'
+    + '<div class="teach" style="margin:6px 0 0">This compares the run&rsquo;s own recorded lens against what stands now where the run was made. '
+    + 'It is not a comparison against a lens of your own: the record holds none for a member.</div>'
+    + '</div>';
+}
+
+function acerFalsifier(v){ return vrevComposition(v); }
+
+/* ONE ORIGIN THE PLANE NAMED, in words. Every prefix `#independenceOf` writes is
+   classified; anything else is shown as the record gave it, never dropped. */
+function acerOriginWords(o){
+  const s = String(o == null ? "" : o);
+  const at = s.indexOf(":");
+  const kind = at > 0 ? s.slice(0, at) : "", val = at > 0 ? s.slice(at + 1) : s;
+  if(kind === "bundle")  return "the same document, " + val;
+  if(kind === "capture") return "the same captured copy, fingerprint " + val;
+  if(kind === "address") return "the same address, " + val;
+  return "something the record names as " + s;
+}
+/* D-195, RENDERED FROM THE PLANE'S DERIVATION. Four states and no fifth: not
+   told, shared (named), traced-and-none, and could-not-finish. Nothing here
+   refuses and nothing here grades. */
+function acerOriginsHtml(v){
+  if(acerSetKeys(v).length < 2) return "";
+  const ind = ACER && ACER.origins;
+  if(!ind || typeof ind !== "object" || ind.checked !== true)
+    return '<div class="teach" style="margin:6px 0 0" data-acer="origins-untold">' + esc(ACER_ORIGINS_UNTOLD) + '</div>';
+  const shared = Array.isArray(ind.shared) ? ind.shared.filter(p => p && typeof p === "object") : [];
+  const cut = ind.complete === false
+    ? '<div class="subj-how">The record stopped tracing at its own limit of ' + esc(String(ind.limit ?? "an unstated number"))
+      + ' per step, so there may be more than it says here.</div>' : "";
+  if(!shared.length){
+    if(ind.complete === false)
+      return '<div class="teach" style="margin:6px 0 0" data-acer="origins-undetermined">The record began tracing whether '
+        + 'these sets rest on the same material further back and could not finish, so it cannot say whether they do.'
+        + cut + '</div>';
+    return '<div class="subj-how" data-acer="origins-none">The record traced where the material behind each set came '
+      + 'from and found none of it shared between them. ' + esc(ACER_ORIGINS_REACH) + '</div>';
+  }
+  return '<div class="card" style="margin:6px 0 0" data-acer="origins-shared">'
+    + '<div class="kv"><span class="k">Rests on the same material</span><span class="v plain">'
+    + 'The record traced where the material behind each set came from, and some of it is shared.</span></div>'
+    + shared.map(p => '<div class="subj-how" data-acer="origin">' + esc(acerSetName(v, p.a)) + ' shares material with '
+        + esc(acerSetName(v, p.b)) + ': '
+        + esc((Array.isArray(p.through) ? p.through : []).map(acerOriginWords).join("; ") || "material the record did not name")
+        + '.</div>').join("")
+    + cut
+    + '<div class="teach" style="margin:6px 0 0">' + esc(ACER_ORIGINS_WEIGH) + ' ' + esc(ACER_ORIGINS_REACH) + '</div>'
+    + '</div>';
+}
+
+/* THE AFFIRMATION, ONE CONTROL PER SET, BY POSITION, NOTHING PREFILLED. */
+function acerAffirmHtml(v){
+  if(!ACER || !acerNeedsAffirmation(v, ACER.act)) return "";
+  const keys = acerSetKeys(v);
+  const sets = acerSets(v);
+  const done = ACER.affirmed || {};
+  const rows = keys.map((k, i) => {
+    const names = (sets[i] || []).join(", ") || "nothing this answer carries";
+    return '<div class="card" style="margin:0 0 10px">'
+      + '<div class="kv"><span class="k">Set ' + (i + 1) + ' carries the answer on its own</span><span class="v plain">'
+      + esc(names) + '</span></div>'
+      + (done[i] === true
+          ? '<div class="intent-ok">You have said these carry it on their own.</div>'
+          : '<button class="btn" onclick="acerAffirm(' + i + ')">'
+            + 'Yes &mdash; these carry the answer on their own</button>')
+      + '</div>';
+  }).join("");
+  return '<h2 class="sec" data-acer="affirm">What you are being asked to say</h2>'
+    + '<p class="subj-note">' + esc(ACER_AFFIRM_OFFER) + '</p>'
+    + rows
+    + '<p class="teach">' + esc(ACER_AFFIRM_LIMIT) + '</p>';
+}
+
+/* BEAT 2's RENDERING. The plane answered; nothing here decided. */
+function acerPreviewHtml(){
+  const p = ACER && ACER.preview;
+  if(!p) return '<div class="empty">Ask the record what this act would do before you do it. '
+    + 'It runs every check and writes nothing.</div>';
+  if(p.ok === false) return actRefusalHtml(p);
+  return '<div class="intent-ok">The record ran every check and wrote nothing. It would move this reading '
+    + (p.moves_state === false
+        ? 'without changing what state it is in'
+        : 'from ' + esc(String(p.from || "no recorded state")) + ' to ' + esc(String(p.to || "no recorded state")))
+    + ', and it says so having tried, not having predicted.</div>';
+}
+
+/* THE ARITHMETIC, LAST AND ONLY ON ASKING. State, letter and the reason that
+   sets it — never the axis `detail`. The `filter` line is rendered verbatim. */
+function acerAxisHtml(axis, a){
+  if(!a || typeof a !== "object") return "";
+  const w = (a.weakest && typeof a.weakest === "object") ? a.weakest : null;
+  return '<div class="card" style="margin:0 0 10px">'
+    + '<div class="kv"><span class="k">' + esc(axis) + '</span><span class="v plain">'
+    + esc(String(a.state || "not stated")) + (a.grade ? " " + esc(String(a.grade)) : "") + '</span></div>'
+    + (w ? '<div class="subj-how">Set by ' + esc(String(w.target_id || "a reason the record does not name")) + '.</div>' : "")
+    + '</div>';
+}
+/* WHEN THE ARITHMETIC MAY BE OFFERED AT ALL. A reading with one set: whenever.
+   A reading with several: only once the member has chosen to adopt it and said
+   what they say about every set — keyed on the READING and not on the act, so
+   choosing some other act (or none) is not a way to see the number first.
+   UI-43's branch keyed this on the act alone and offered the arithmetic on
+   arrival, before any act was chosen; this suite's ordering arm caught it. */
+function acerStrengthOpen(v){
+  if(!ACER || !v) return false;
+  if(acerSetKeys(v).length < 2) return true;
+  return ACER.act === ACER_KEYSTONE_ACT && acerAffirmedAll(v, ACER.act);
+}
+function acerStrengthHtml(v){
+  if(!ACER) return "";
+  if(!acerStrengthOpen(v)) return "";
+  if(!ACER.strengthAsked)
+    return '<h2 class="sec">What this reading comes to</h2>'
+      + '<p class="subj-note">Not asked for yet, and deliberately: the record is asked what this reading '
+      + 'comes to only after you have read what it rests on and said what you are saying about it.</p>'
+      + '<button class="btn" onclick="acerStrengthShow()">Ask the record what this reading comes to</button>';
+  const s = ACER.strength;
+  if(!s) return '<h2 class="sec">What this reading comes to</h2>'
+    + '<div class="empty">The record did not answer that here.</div>';
+  if(s.ok === false) return '<h2 class="sec">What this reading comes to</h2>' + actRefusalHtml(s);
+  const pair = (s.pair && typeof s.pair === "object") ? s.pair : {};
+  return '<h2 class="sec" data-acer="strength">What this reading comes to</h2>'
+    + '<p class="count-line">' + esc(String(s.filter || "")) + '</p>'
+    + acerAxisHtml("How well the material behind it was captured", pair.capture)
+    + acerAxisHtml("How well it is connected to the question", pair.connection)
+    + (s.legs_complete === false
+        ? '<p class="teach">The record holds more reasons for this reading than this answer carried, so '
+          + 'everything above is over the ones that arrived.</p>'
+        : "")
+    + '<p class="teach">These are separate measurements over different things. The record refuses to reduce '
+    + 'them to one figure, and neither does this page.</p>';
+}
+
+function acerReceiptHtml(){
+  const r = ACER && ACER.receipt;
+  if(!r) return "";
+  return '<div class="intent-ok" data-acer="receipt">The record recorded this. Reading <span class="mono">'
+    + esc(String(r.version || "")) + '</span> '
+    + (r.moves_state === false
+        ? 'was acted on without its state changing'
+        : 'moved from ' + esc(String(r.from || "no recorded state")) + ' to ' + esc(String(r.to || "no recorded state")))
+    + ', by ' + esc(String(r.author || r.by || "an unnamed member")) + ' on ' + esc(String(r.at || "an unrecorded date"))
+    + (Array.isArray(r.affirmed) && r.affirmed.length
+        ? '. It keeps, under your name, that each of its ' + r.affirmed.length + ' sets carries the answer on its own'
+        : '')
+    + (r.reason ? '. Your reason was recorded with it: ' + esc(String(r.reason)) : '')
+    + '. The record also wrote this into the question&rsquo;s own document, so the act is in the record and '
+    + 'not only in this answer.</div>';
+}
+
+/* ------------------------------------------------------------- THE WHOLE PAGE */
+function acceptCeremonyHtml(){
+  if(!ACER) return "";
+  const crumb = recordCrumb(ACER.inquiry, " &rsaquo; acting on one reading");
+  if(ACER.err) return errPane(ACER.err, crumb);
+  if(ACER.refusal) return crumb + actRefusalHtml(ACER.refusal);
+  if(ACER.busy && !acerVersion())
+    return crumb + '<div class="empty">Reading what the record holds for this question.</div>';
+  const v = acerVersion();
+  if(!v)
+    return crumb + '<div class="empty">No reading by that name answers here for this question. That is the '
+      + 'same answer the record gives for a reading it does not hold and for one this credential may not '
+      + 'see, and the two are the same answer on purpose.</div>';
+
+  const acts = (ACER.acts || []).filter(a => a && ACER_ACTS.includes(a.id));
+  const withheld = acerBeyondGate(v);
+  const chosen = ACER.act ? acts.find(a => a.id === ACER.act) : null;
+  /* Q12: a capability not held is ABSENT, never greyed. The one act held back
+     is held back for REC-36's reason, and the page SAYS so. */
+  const offerable = acts.filter(a => !(withheld && a.id === ACER_KEYSTONE_ACT));
+  const chooser = '<h2 class="sec" data-acer="chooser">What you mean to do</h2>'
+    + (offerable.length
+        ? offerable.map(a =>
+            '<div class="card" style="margin:0 0 10px"><div class="kv"><span class="k">'
+            + esc(String(a.label || "")) + '</span><span class="v plain">'
+            + (ACER.act === a.id ? "chosen" : '<a onclick="acerChoose(' + esc(JSON.stringify(a.id)) + ')">choose this</a>')
+            + '</span></div>'
+            + (a.prompt ? '<div class="subj-how">' + esc(String(a.prompt)) + '</div>' : "")
+            + '</div>').join("")
+        : '<div class="empty">The record publishes nothing you may do to this reading from here.</div>')
+    + (withheld ? '<div class="teach">' + esc(withheld) + '</div>' : "");
+
+  const body = !chosen ? "" :
+      acerAffirmHtml(v)
+    + '<h2 class="sec">What would happen</h2>'
+    + '<button class="btn" onclick="acerPreview()">Ask the record what this would do</button>'
+    + acerPreviewHtml()
+    + '<h2 class="sec">Why</h2>'
+    + '<p class="subj-note">Nothing is filled in here and nothing is suggested. Where the record requires a '
+    + 'reason it refuses without one and says so in its own words.</p>'
+    + '<textarea class="txt" id="acer-why" rows="3" onchange="acerReason(this.value)"></textarea>'
+    + (acerAffirmedAll(v, ACER.act)
+        ? '<div class="intent-pf"><button class="btn" id="acer-go" onclick="acerSend()"' + (ACER.busy ? " disabled" : "") + '>'
+          + esc(String(chosen.label || "")) + '</button></div>'
+        : '<p class="subj-note">Say the above about each set of reasons and this page will offer the control.</p>')
+    + acerReceiptHtml()
+    + (ACER.refusalAct ? actRefusalHtml(ACER.refusalAct) : "");
+
+  const bound = vrevLegBound(v);
+  return crumb
+    + '<div class="trow"><h1 class="rec">Acting on one reading</h1></div>'
+    + '<p class="lede"><span class="mono">' + esc(ACER.inquiry) + '</span></p>'
+    + credentialSentence(PLANE.me)
+    + '<h2 class="sec">The reading in front of you</h2>'
+    + '<div class="card" style="margin:0 0 10px">'
+    +   '<div class="kv"><span class="k">Reading</span><span class="v plain mono">' + esc(String(v.name)) + '</span></div>'
+    +   '<div class="subj-how">' + esc(vrevText(v.description)) + '</div>'
+    +   '<div class="subj-how">Rests on: ' + esc(vrevLegList(v)) + '</div>'
+    +   (acerFalsifier(v) ? '<div class="subj-how">' + esc(acerFalsifier(v)) + '</div>' : "")
+    +   (bound ? '<div class="teach" style="margin:6px 0 0">' + esc(bound) + '</div>' : "")
+    +   '<div class="subj-how">' + esc(vrevDecision(v)) + '</div>'
+    +   '<div class="subj-how">' + esc(acerComposer(v)) + '</div>'
+    +   (acerPrincipalLine() ? '<div class="subj-how">' + esc(acerPrincipalLine()) + '</div>' : "")
+    /* D-195, ABOUT THE READING AND ON THE PAGE FROM ARRIVAL — above the chooser
+       and therefore above the affirmation, which is §12 (b)'s order. */
+    +   acerOriginsHtml(v)
+    + '</div>'
+    + (ACER.bound || "")
+    + acerLensHtml()
+    + chooser
+    + body
+    + acerStrengthHtml(v);
+}
+
+function acceptCeremonyPaint(){
+  const el = (typeof $ === "function") ? $("#content") : null;
+  if(!el) return;
+  el.innerHTML = acceptCeremonyHtml();
+}
+
+/* BEAT 1. Choosing another act clears everything downstream of the choice. */
+function acerChoose(id){
+  if(!ACER) return;
+  const next = String(id == null ? "" : id);
+  if(!ACER_ACTS.includes(next)) return;
+  ACER.act = next; ACER.preview = null; ACER.receipt = null; ACER.refusalAct = null;
+  ACER.affirmed = {}; ACER.strength = null; ACER.strengthAsked = false;
+  acceptCeremonyPaint();
+}
+function acerAffirm(at){
+  if(!ACER) return;
+  const v = acerVersion();
+  const i = Number(at);
+  if(!v || !(i >= 0) || i >= acerSetKeys(v).length) return;
+  ACER.affirmed = { ...(ACER.affirmed || {}), [i]: true };
+  acceptCeremonyPaint();
+}
+function acerReason(v){ if(ACER) ACER.reason = String(v == null ? "" : v); }
+
+async function acerPreview(){
+  if(!ACER || ACER.busy || !ACER.act) return;
+  ACER.busy = true; ACER.preview = null; acceptCeremonyPaint();
+  const a = await actAsk(ACER.act, acerActParams(true));
+  ACER.preview = a.accepted ? (a.result || null) : (a.refusal || null);
+  ACER.busy = false;
+  acceptCeremonyPaint();
+}
+/* ONE ARGUMENT BUILDER FOR THE PREVIEW AND THE ACT. `affirmed` carries the
+   record's own labels for exactly the sets the member said, by position — so a
+   set not said is not sent, and the plane's refusal is what an incomplete
+   affirmation meets if this page's own gates were ever bypassed. */
+function acerActParams(preview){
+  const why = String((ACER && ACER.reason) || "").trim();
+  const v = acerVersion();
+  const said = (v && acerNeedsAffirmation(v, ACER.act))
+    ? acerSetKeys(v).filter((_, i) => ACER.affirmed && ACER.affirmed[i] === true) : [];
+  return { target: ACER.inquiry, version: ACER.version,
+           ...(said.length ? { affirmed: said.join(",") } : {}),
+           ...(why ? { reason: why } : {}),
+           ...(preview ? { preview: "1" } : {}) };
+}
+async function acerSend(){
+  if(!ACER || ACER.busy || !ACER.act) return;
+  const v = acerVersion();
+  /* THE KEYSTONE'S SECOND DEFENCE: a control merely not drawn is one another
+     code path can reach. */
+  if(v && !acerAffirmedAll(v, ACER.act)) return;
+  ACER.busy = true; ACER.receipt = null; ACER.refusalAct = null;
+  acceptCeremonyPaint();
+  const a = await actAsk(ACER.act, acerActParams(false));
+  if(a.accepted) ACER.receipt = a.result || null;
+  else ACER.refusalAct = a.refusal || null;
+  ACER.busy = false;
+  await acceptCeremonyLoad();
+}
+
+/* THE ARITHMETIC IS ASKED HERE, after the affirmation, on asking. The state set
+   is NAMED when the reading is not in the op's default state. */
+async function acerStrengthShow(){
+  if(!ACER || ACER.busy) return;
+  const v = acerVersion();
+  if(!acerStrengthOpen(v)) return;
+  ACER.busy = true; ACER.strengthAsked = true; ACER.strength = null;
+  acceptCeremonyPaint();
+  const st = String(v.state || "").trim();
+  const a = await actAsk("versionstrength",
+    { id: ACER.inquiry, version: String(v.name),
+      ...(st && st !== "accepted" ? { states: st } : {}) });
+  ACER.strength = a.accepted ? (a.result || null) : (a.refusal || null);
+  ACER.busy = false;
+  acceptCeremonyPaint();
+}
+
+/* D-195's READ, AND IT KEEPS ONE FIELD. The op also answers the pair; the pair
+   is dropped HERE, at the fetch, so nothing before the affirmation can draw it
+   (DEC-32 clause 5). Asked in the reading's own state, because the op refuses a
+   reading outside the state set it counts. `null` on any refusal — which the
+   page renders as NOT TOLD, never as clean. */
+async function acerOriginsRead(v){
+  const st = String((v && v.state) || "").trim();
+  const a = await actAsk("versionstrength",
+    { id: ACER.inquiry, version: String(v.name), ...(st ? { states: st } : {}) });
+  const ind = a.accepted && a.result && typeof a.result === "object" ? a.result.independence : null;
+  return (ind && typeof ind === "object") ? ind : null;
+}
+
+async function acceptCeremonyLoad(){
+  if(!ACER) return;
+  ACER.busy = true;
+  acceptCeremonyPaint();
+  const [read, actsR] = await Promise.all([
+    acerRead(ACER.inquiry).then(r => r || null, e => { ACER.err = e; return null; }),
+    actsFor(ACER.inquiry).then(r => r, () => ({ ok:false, acts:[] })),
+  ]);
+  const answer = read ? read.answer : null;
+  ACER.bound = read ? read.bound : "";
+  if(answer && answer.ok === false){ ACER.refusal = answer; ACER.versions = []; }
+  else if(answer){
+    ACER.refusal = null;
+    ACER.versions = Array.isArray(answer.versions)
+      ? answer.versions.filter(v => v && typeof v === "object") : [];
+  }
+  ACER.acts = (actsR && actsR.ok) ? actsR.acts : [];
+  const v = acerVersion();
+  /* THE RUN, THROUGH THE RUNNING-SESSION BLOCK'S DATA DOOR. `runAsked` is what
+     tells "did not ask" from "asked and was answered nothing". */
+  const run = (v && typeof v.run === "string" && v.run.trim()) ? v.run.trim() : "";
+  if(run){ ACER.run = await aiSessionConditions(run); ACER.runAsked = true; }
+  else { ACER.run = null; ACER.runAsked = false; }
+  /* D-195, asked only where there is something to trace between. */
+  if(v && acerSetKeys(v).length >= 2){ ACER.origins = await acerOriginsRead(v); ACER.originsAsked = true; }
+  else { ACER.origins = null; ACER.originsAsked = false; }
+  ACER.busy = false;
+  acceptCeremonyPaint();
+}
+
+async function acceptCeremonyOpen(inquiryId, versionName){
+  const id = String(inquiryId == null ? "" : inquiryId).trim();
+  const nm = String(versionName == null ? "" : versionName).trim();
+  if(!id || !nm) return;
+  ACER = { inquiry:id, version:nm, act:null, affirmed:{}, reason:"", bound:"",
+           versions:[], acts:[], run:null, runAsked:false, origins:null, originsAsked:false,
+           strength:null, strengthAsked:false,
+           preview:null, receipt:null, refusal:null, refusalAct:null, err:null, busy:true };
+  ACER_HASH_LOCK = true;
+  try{ location.hash = "#accept/" + encodeURIComponent(id) + "/" + encodeURIComponent(nm); }catch(_){}
+  ACER_HASH_LOCK = false;
+  await acceptCeremonyLoad();
+}
+
+/* `#accept/<INQ-…>/<name>` NAMES BOTH, because beat 1 has no default reading;
+   the act is NOT in the address, because choosing it is the beat. A reading's
+   name is free text, so the segment is percent-encoded. Re-entering on the
+   address already shown does not rebuild `ACER` — that would discard the
+   affirmation, the one state the record cannot reconstruct. */
+function acceptCeremonyRouteFromHash(){
+  let h = "";
+  try{ h = String((typeof location !== "undefined" && location.hash) || ""); }catch(_){ h = ""; }
+  const m = /^#accept\/([^/]+)\/([^/]+)$/.exec(h);
+  if(!m) return false;
+  let inq = "", name = "";
+  try{ inq = decodeURIComponent(m[1]); name = decodeURIComponent(m[2]); }catch(_){ return false; }
+  if(ACER && ACER.inquiry === inq && String(ACER.version || "") === name) return true;
+  acceptCeremonyOpen(inq, name);
+  return true;
+}
+try{ window.addEventListener("hashchange", ()=>{ if(!ACER_HASH_LOCK) acceptCeremonyRouteFromHash(); }); }catch(_){}
+/*__ACCEPT_CEREMONY_END__*/
 
 /*__NOTIFICATIONS_START__*/
 /* ============================================================
