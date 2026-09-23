@@ -47,8 +47,10 @@
  *   .odp  → `pptx.mjs`'s shape.  structure(): {ok, container:"odp",
  *           slides:<int>, links, counts, evidentiary, notes};
  *           text(): {ok, container:"odp", document, slides:[{slide, ref,
- *           part, hidden, text}], speakerNotes:[{slide, ref, part, hidden,
- *           text}], undetermined, counts:{chars, notesChars, undetermined}}.
+ *           part, hidden, shapes, text}], speakerNotes:[{slide, ref, part,
+ *           hidden, text}], deckLength:<int|null> (COFF-13; null when the
+ *           body was not read), undetermined, counts:{chars, notesChars,
+ *           undetermined}}.
  *           Element references are IC-1's `slide-shape`, built by IMPORTING
  *           `slideShapeRef` from `pptx.mjs`.
  *
@@ -1337,9 +1339,13 @@ function odpText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
+  /* COFF-13: `deckLength` is NULL on both branches that did not read the body —
+     the deck lives only in content.xml, so a format that has not read it
+     cannot answer, and the null is a statement rather than a zero. */
   if (parts.guard) {
     return {
       ok: true, container: "odp", document: null, slides: [], speakerNotes: [],
+      deckLength: null,
       undetermined: [parts.guard],
       counts: { chars: 0, notesChars: 0, undetermined: 1 },
     };
@@ -1349,6 +1355,7 @@ function odpText(parts) {
     const stated = parts.undetermined.find((u) => u.part === CONTENT_PART && u.why !== "outside_content_xml_not_read");
     return {
       ok: true, container: "odp", document: null, slides: [], speakerNotes: [],
+      deckLength: null,
       undetermined: [{ reason: "main_part_unreadable", part: CONTENT_PART, why: stated?.why ?? "no_office_presentation_body" }],
       counts: { chars: 0, notesChars: 0, undetermined: 1 },
     };
@@ -1356,7 +1363,8 @@ function odpText(parts) {
   const styles = automaticStyles(parts.contentXml);
   const slides = [];
   const speakerNotes = [];
-  for (const page of deckOf(body, styles)) {
+  const deck = deckOf(body, styles);
+  for (const page of deck) {
     const walked = walkPage(page.xml);
     const text = walked.shapes.map((s) => s.text).filter((t) => t.length).join("\n");
     /* COFF-11 / IC-100 / D-359 — the slide's shape COUNT, which `walkPage` has
@@ -1382,6 +1390,12 @@ function odpText(parts) {
   const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
   return {
     ok: true, container: "odp", document, slides, speakerNotes,
+    /* COFF-13 — THE DECK'S OWN LENGTH, on pptx.mjs's key. Every `<draw:page>`
+       lives in the one content.xml, so once the body is read no slide can be
+       unreadable on its own and the length EQUALS the slide list — emitted
+       anyway, so the wire reads one key from every deck entry rather than
+       inferring it from which entry answered. */
+    deckLength: deck.length,
     undetermined: [],
     counts: { chars: document.length, notesChars, undetermined: 0 },
   };

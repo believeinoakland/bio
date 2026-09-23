@@ -566,11 +566,17 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    map below. */
   /* MOVED 35 -> 36 on 2026-09-18 by REC-126, from the figure this walk PRINTED: op=reviewcopy,
      born with its bound as a named constant beside `LIMIT ?` (REVIEW_LIST_MAX). */
-  /* MOVED 36 -> 37 on 2026-09-23 by D-162, from THIS ARM'S OWN FAILURE OUTPUT (`want 36 / got 37`):
+  /* MOVED 36 -> 37 on 2026-09-23 by REC-161, from THIS ARM'S OWN FAILURE OUTPUT (`want 36 / got 37`),
+     never by adding one: op=partitionindependence, the independence of a PROPOSED partition over a
+     question's reasons (INVESTIGATIVE-SESSION.md §12 clause (c)). Its bound is versionstrength's kind —
+     not the caller's, and it REFUSES rather than cuts: `BASIS_VERSION_LEGS_MAX` over the question's
+     reasons, because a partition checked over a truncated basis could pass as covering reasons it never
+     saw. DRIVEN below with the refusal arm, and carried in DRIVEN_ELSEWHERE for versionstrength's reason. */
+  /* MOVED 37 -> 38 on 2026-09-23 by D-162, from THIS ARM'S OWN FAILURE OUTPUT on the tree merged with REC-161 (`want 37 / got 38`):
      op=themeread, a theme's members and hunches and the list of themes, capped by
      THEME_READ_LIMIT_DEFAULT/MAX declared BELOW the method (REC-116's finding). Its bite is driven in
      `test/theme.test.mjs` section 6 (DRIVEN_ELSEWHERE) and its envelope in the map below. */
-  OPS.size, 37);
+  OPS.size, 38);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1353,7 +1359,11 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      and this suite drives machine tokens only — so the bite, the clamp and
                                      `comments_truncated` both ways are driven in `test/reviewcopy.test.mjs`
                                      section 6, in this file's loop shape. */
-                                  "reviewcopy"]);
+                                  "reviewcopy",
+                                  /* REC-161: op=partitionindependence takes NO `limit` from the caller —
+                                     versionstrength's reason: a caller has no business asking for HALF a
+                                     partition. Its bound REFUSES (C-71.7) and is driven below. */
+                                  "partitionindependence"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1451,6 +1461,15 @@ t("op=versionstrength: and the bound it applies is a CONSTANT this walk can see,
 + "op=basisversions rather than a second figure that could drift from it",
   [/BASIS_VERSION_LEGS_MAX = \d+/.test(SRC_STORE),
    (SRC_STORE.match(/Store\.BASIS_VERSION_LEGS_MAX/g) || []).length >= 2], [true, true]);
+/* ----------------------------------------------- REC-161's ARM (§12 clause (c)).
+   The proposed-partition read's bound REFUSES and PUBLISHES itself, against the SAME PL-1 fixture
+   inquiry, so this adds no corpus. More groups than a written reading may hold is refused by name. */
+const PI_OVER = await GET(`op=partitionindependence&token=mem-r57&id=${PL1_INQ}`
+  + `&partition=${encodeURIComponent(JSON.stringify(Array.from({ length: 501 }, (_, k) => [k])))}`);
+t("op=partitionindependence: a partition OVER the bound is REFUSED and the refusal PUBLISHES the bound, "
++ "shared with op=versionstrength's legs constant rather than a second figure that could drift",
+  [PI_OVER.ok, PI_OVER.code, PI_OVER.limit, /BASIS_VERSION_LEGS_MAX = 500\b/.test(SRC_STORE)],
+  [false, "PARTITION_INDEPENDENCE_TOO_MANY_LEGS", 500, true]);
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -1489,6 +1508,9 @@ const answersByOp = new Map([
      re-driven safely; it is carried the same way as its neighbours so the
      roster reads as one list rather than as two conventions. */
   ["versionstrength", VS],
+  /* REC-161: driven above (its refusing bound) and REUSED here — the envelope is an object on the
+     refusal as on the answer. */
+  ["partitionindependence", PI_OVER],
   /* CPDF-10: driven HERE, plainly, for exactly the one thing this map is for —
      the ENVELOPE SHAPE. The bite/`truncated` arms need a corpus of transcribed
      documents and attestations, which lives in `test/textchain.test.mjs`; the

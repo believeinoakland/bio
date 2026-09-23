@@ -351,8 +351,11 @@ for (const arr of store.matchAll(/_STATES\s*=\s*\[([^\]]*)\]/g))
 // literals the store writes or gates on
 for (const w of store.matchAll(/current_state\s*[!=]==?\s*"([a-z_]+)"/g)) planeStates.add(w[1]);
 for (const w of store.matchAll(/#setScalar\([^,]+,\s*"current_state",\s*"([a-z_]+)"\)/g)) planeStates.add(w[1]);
-for (const w of store.matchAll(/to_state:\s*"([a-z_]+)"/g)) planeStates.add(w[1]);
-for (const w of store.matchAll(/from_state:\s*"([a-z_]+)"/g)) planeStates.add(w[1]);
+/* CORRECTED 2026-09-23 by CONDUCT #17 at c17-batch5, not exempted: without a word boundary these two read
+   CAP-14's `reused_from_state: "undetermined"` (a reuse's provenance state, not a lifecycle state) as a
+   from_state and demanded a semantics row for it. The key is anchored so only a real transition field reads. */
+for (const w of store.matchAll(/\bto_state:\s*"([a-z_]+)"/g)) planeStates.add(w[1]);
+for (const w of store.matchAll(/\bfrom_state:\s*"([a-z_]+)"/g)) planeStates.add(w[1]);
 const planeCrit = new Set();
 for (const w of store.matchAll(/criticality\s*[!=]==?\s*"([a-z_]+)"/g)) planeCrit.add(w[1]);
 

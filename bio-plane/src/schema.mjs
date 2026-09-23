@@ -404,6 +404,7 @@ CREATE TABLE IF NOT EXISTS site_assets (
   last_fetched TEXT NOT NULL,
   stable_since TEXT NOT NULL,
   changes      INTEGER NOT NULL DEFAULT 0,
+  last_fetched_by TEXT,
   PRIMARY KEY (host, address_norm)
 );
 CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
@@ -417,6 +418,17 @@ CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
 -- count joins primary_sha to captured_locators and counts document ADDRESSES
 -- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
 -- row is counted apart as undetermined rather than as a page.
+--
+-- CAP-14 (CAPTURE-SCALING.md, Job one, RULED 2026-09-21 by BOB #21): a reused
+-- part names the capture whose FETCH served its bytes. site_assets.last_fetched_by
+-- is the primary capture sha whose fetch set last_fetched, written beside it on
+-- every fetched observation and never moved by a reuse. A reusing capture's row
+-- here keeps it as reused_from, taken from the capture's own observation so the
+-- manifest and the store cannot disagree, and reusedParts reads it from THIS row,
+-- never from site_assets, whose value a later fetch moves. Both are NULLABLE and
+-- NEVER BACK-FILLED: a reuse recorded before the build is UNDETERMINED as to its
+-- source, and matching a ref row at against last_fetched would prove nothing
+-- (both whole seconds, and a ref row is overwritten in place).
 CREATE TABLE IF NOT EXISTS site_asset_refs (
   host         TEXT NOT NULL,
   address_norm TEXT NOT NULL,
@@ -424,6 +436,7 @@ CREATE TABLE IF NOT EXISTS site_asset_refs (
   at           TEXT NOT NULL,
   reused       INTEGER NOT NULL DEFAULT 0,
   sha256       TEXT NOT NULL,
+  reused_from  TEXT,
   PRIMARY KEY (host, address_norm, primary_sha)
 );
 CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);
@@ -952,8 +965,9 @@ CREATE INDEX IF NOT EXISTS entity_aliases_entity ON entity_aliases(entity_id);
 -- own statements mean, not claiming something checkable about the world. So it sits
 -- OUTSIDE the framework's section 8.1 A-to-D connection grade, which states how a
 -- connection's provenance was ESTABLISHED. Grading a constitutive relation Grade D
--- ("asserted with no captured basis") is the category error D-83 names explicitly:
--- it is not weak evidence, it is not evidence at all. The enforcement is structural
+-- ("asserted on the member's stated basis, with no captured document") is the
+-- category error D-83 names explicitly: it is not weak evidence, it is not
+-- evidence at all. The enforcement is structural
 -- -- there is simply no field to carry a grade -- rather than a convention a later
 -- writer could forget; entityregistry.test.mjs asserts a read relation exposes none.
 -- Constitutive, member-declared, first-class; cleared by a whole-store purge (D-113).
@@ -987,8 +1001,9 @@ CREATE INDEX IF NOT EXISTS entity_relations_to ON entity_relations(to_entity);
 --   C -- correspondence, not identity: a name/title matched an entity ALIAS. Plausible,
 --        NEVER presented as established, and FLAGGED for a member to confirm (an
 --        equality that costs nothing to produce is not evidence, CLAUDE.md).
---   D -- asserted with no captured basis: member TESTIMONY, recorded with an author and
---        a date. The RECOGNISER never mints a D (op=resolve produces only A/B/C); the
+--   D -- asserted on the member's stated basis, with no captured document: member
+--        TESTIMONY, recorded with an author, a date and the basis stated (D-219).
+--        The RECOGNISER never mints a D (op=resolve produces only A/B/C), the
 --        model holds it so a member can testify (op=resolvetestify), never the machine.
 -- established is derived from grade at write time -- 1 for A/B, 0 for C/D -- so a C can
 -- NEVER be read back as established (the column carries the flag structurally, not by a
@@ -1176,6 +1191,39 @@ CREATE TABLE IF NOT EXISTS progression_stages (
   PRIMARY KEY (progression_key, stage_key)
 );
 CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progression_key);
+-- D-128 (framework 8.2, The declared flow and its revisions, BOB #27 2026-09-22): a definition is
+-- APPEND-ONLY. The two tables above are the CURRENT version, the one every instance and finding
+-- is derived against, and these two hold EVERY version ever declared, never updated and never
+-- deleted but by a whole-store purge. A revision writes version N+1 carrying its author, date and
+-- BASIS (the member's statement and a citation, the anatomy an exception document carries); the
+-- prior version stands and reads back through op=progression with version=N. A definition
+-- declared before D-128 has no rows here -- the store reads it as version 1 with its basis NOT
+-- RECORDED, and its first revision writes that version here first, verbatim from the tables above.
+-- basis_statement and basis_citation are NULL when the declaring member stated none, which only a
+-- FIRST version may do; a revision is refused without both.
+CREATE TABLE IF NOT EXISTS progression_def_versions (
+  progression_key TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  label           TEXT NOT NULL,
+  note            TEXT,
+  declared_by     TEXT,
+  at              TEXT,
+  basis_statement TEXT,
+  basis_citation  TEXT,
+  PRIMARY KEY (progression_key, version)
+);
+CREATE TABLE IF NOT EXISTS progression_stage_versions (
+  progression_key TEXT NOT NULL,
+  version         INTEGER NOT NULL,
+  stage_key       TEXT NOT NULL,
+  stage_no        INTEGER NOT NULL,
+  label           TEXT,
+  after_stage     TEXT,
+  cardinality     TEXT NOT NULL,
+  within_interval TEXT,
+  required        TEXT NOT NULL,
+  PRIMARY KEY (progression_key, version, stage_key)
+);
 -- CONSTRUCTS Step 5, SLICE B (FW-9): a PROGRESSION INSTANCE -- an actual N-stage chain of
 -- REAL captured documents threaded through a definition's stages by a THREADING ENTITY (a
 -- contract number, a project id, a fund). Framework 8.2: "an instance of a progression is
@@ -1503,6 +1551,24 @@ CREATE TABLE IF NOT EXISTS queue_state (
 );
 CREATE INDEX IF NOT EXISTS queue_state_member ON queue_state(member_id);
 CREATE INDEX IF NOT EXISTS queue_state_case ON queue_state(case_id);
+-- D-125 (DEC-10 (b), RULED 2026-09-22 by BOB #26) and D-170 (BOB #29, 2026-09-23):
+-- the PER-ITEM personal mute. One row is one member choosing not to be told
+-- about ONE queue item, keyed on the item's own stable id (the id op=queue
+-- publishes: FINDING::<progression>::<stage> is the key proposal_dispositions
+-- already uses, and CONDITION::governor-holding-host::<host> names the host).
+-- It is keyed on the MEMBER, so it moves no other member's list, and it writes
+-- no disposition: a finding leaves the team's list only by the authored act.
+-- item_class is FINDING or CONDITION and never OBLIGATION -- the fence is at
+-- the ONE write (store.mjs queueMute) for queue_state's reason. It is personal
+-- state, not corpus-derived, and it is keyed on no bundle id, so it clears in
+-- the whole-store purge arm only (D-113).
+CREATE TABLE IF NOT EXISTS queue_item_mutes (
+  member_id   TEXT NOT NULL,
+  item_id     TEXT NOT NULL,
+  item_class  TEXT NOT NULL,
+  muted_at    TEXT NOT NULL,
+  PRIMARY KEY (member_id, item_id)
+);
 -- REC-14 / C-9: what a published case says it does NOT cover. A projection of
 -- the completeness_excluded[] block in bundle.md, exactly as inquiry_basis is
 -- of basis[] -- the BYTES make the assertion storable and signable, and only

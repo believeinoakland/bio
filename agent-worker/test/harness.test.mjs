@@ -501,10 +501,14 @@ console.log("\n--- A9 · query-never-load: the ops are PINNED, and every one is 
   /* FLOOR AND CEILING BOTH, exactly as FL-2 pinned `{whoami}`. A call this
      member gains is a call somebody decided to give it, and a call it loses is
      visible too. */
-  t("the pinned op set is exactly these nine",
+  /* CORRECTED 2026-09-23 by D-220, never exempted: this read "exactly these nine" over a list of TEN. D-220 gives
+     the member two READS, `search` and `versionchain` — the `collect` row resolves each citation to its document
+     through the record's own version chain (INVESTIGATIVE-SESSION.md §3, consumer (3)), so a document is counted
+     ONCE with its versions. Both are non-mutating in the plane's table, which the two arms above hold. */
+  t("the pinned op set is exactly these twelve",
     Object.keys(PLANE_OPS).sort(),
     ["airun", "airunclose", "airunlog", "airunspawn", "airuntick",
-     "basisversions", "capturerequest", "meaningrows", "suggest", "whoami"].sort());
+     "basisversions", "capturerequest", "meaningrows", "search", "suggest", "versionchain", "whoami"].sort());
   t("every op the DRIVER actually names is in the pinned set",
     [...new Set([...WORKER_CODE.matchAll(/call\(\s*"([a-z]+)"/g)].map((m) => m[1]),
       )].filter((op) => !PLANE_OPS[op]), []);

@@ -10,7 +10,7 @@
 - §2 — the state/record split and description-as-truth transferred; §2.4 convergent promotion, §2.5's gated deletion mechanics and §2.6 the pending-package queue are history, and the PENDING/PROMOTING transients no longer exist.
 - §2.4 — a manifest row an `INSERT OR REPLACE` overwrote before REC-176 is NOT recoverable from the store and is not reconstructed; `op=snapkeycensus` counts the promotions a bundle's manifest lost (and states a lost CREATION row as undetermined, since a store predating the creation row shows the same). What a deployed instance's census reads is not known until an administrator runs it there; which key collided is recorded nowhere.
 - §3.1 — the core field list is stated; where the `group` value comes from was unstated until the 2026-09-21 amendment at the foot (D-436), whose three decisions are settled — decision (b)'s premise RULED BY BOB on 2026-09-21, decisions (a) and (c) decided by the BOB lane at integration (§3.1) — and what a group named wrongly in bytes that are already signed can become is not designed.
-- §4.1 — `op=reinstate` of a severed edge onto an item ALREADY retired is not refused, so a confirmed edge onto a retired item can still be re-entered by that door (found by REC-181, 2026-09-23; sent to SCHEDULER). A confirmed edge onto a retired item that predates REC-181 survives in the record and is not swept.
+- §4.1 — `op=reinstate` of a severed edge onto an item ALREADY retired is not refused, so a confirmed edge onto a retired item can still be re-entered by that door (found by REC-181, 2026-09-23; sent to SCHEDULER). A confirmed edge onto a retired item that predates REC-181 survives in the record and is not swept. The withdrawal door for a question's leg is a new basis version, not a sever (ruled below, BOB #31).
 - §4.2 — the Focus machine is legacy: nothing produces those states; the live machine is `inquiry`, which §4 does not describe, nor `bias`.
 - §4.3 — lacks the project-name-uniqueness annotation Membership v2 §11 requires.
 - §4 — `published` left the inquiry lifecycle by the 2026-09-10 amendment (DEC-72 / CASE-4); the body text of the state machines is unrevised.
@@ -469,6 +469,13 @@ archive as a promotion record.
 History is append-only; nothing in \_history/ is ever modified or
 deleted.
 
+**RULED 2026-09-23 by BOB #31 — A WRONG SENTENCE ALREADY WRITTEN STAYS AS WRITTEN; THE READ CORRECTS IT (D-256; S17-1
+Q3).** A stored string is a fact about when it was written (D-219's precedent). The bundles whose bodies name an earlier
+capture chosen before D-221 are not rewritten. No revision is appended to them either: a machine writing an "authored"
+correction onto a member's bundle is exactly what the fences forbid. `op=versionchain` answers the predecessor from the
+chain, and the enumeration of the affected set sorts each one as provably wrong, provably right or undetermined, and
+reports the three counts separately (rowed).
+
 ### 2.5 Accretive store and gated deletion
 
 Material is added, not removed. Deletion is exceptional and requires all
@@ -728,6 +735,12 @@ both versions preserved, flagged as potential concealment evidence), never `reti
 `source_status: removed` bundle lands, and a confirmed leg that predates the retirement is untouched. NEGATIVE CONTROL:
 drop the retired check from `op=cite`, and the member arm fails by name.
 
+**WITHDRAWING A CITATION BEFORE A RETIREMENT — RULED 2026-09-23 by BOB #31 (REC-181's worker's question).** The terminal
+transition refuses while a LIVE edge cites the item, so the citation goes first — by the door its kind has. A project's
+edge is a relationship and is SEVERED (`op=sever`). A question's leg is part of its versioned basis, so it is withdrawn by an
+authored NEW BASIS VERSION without that leg (`op=promote` of the question), append-only, the old version kept. No
+question-leg sever op is owed. Then the item retires.
+
 source_status is an independent axis maintained by change detection: a
 verified item whose source changes becomes source_status: modified with
 both versions preserved in snapshots/ and a change record appended; a
@@ -866,7 +879,7 @@ action_kind: cpra_request \# extensible suite: cpra_request \|
 grand_jury \| controller_referral \| public_comment \| media \|
 litigation_support \| other
 
-risk_tier: 1 \# 1 \| 2 \| 3, from the evidence-package classification
+risk_tier: undetermined \# 1 \| 2 \| 3 \| undetermined, from the evidence-package classification; undetermined wherever no member stated one (D-182)
 
 clock:
 
@@ -1276,6 +1289,12 @@ because the write-completeness law makes it inseparable from any update;
 it is not a separate permission but a consequence of writing at all.
 
 ## 7. Violation-to-repair mapping
+
+**A STATED LIMIT OF THE REACHABILITY CHECK (D-209; BOB #32, 2026-09-23).** The repair-reachability walk
+(`repair-reachability.test.mjs`, REC-56) asks *"does the plane offer this act at this state"* ONLY where a repair names
+an edge or a destination. A repair that names an op WITHOUT directing a state move is checked for the op's EXISTENCE
+only. Closing that would need each arm's guard state extracted from its `current_state === '…'`; that is buildable, and
+it is not built.
 
 The checker never free-edits and never offers free-form fixes. Each
 violation maps to a closed set of sanctioned repairs; a human picks one;

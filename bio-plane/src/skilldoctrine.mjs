@@ -440,6 +440,35 @@ export const CLAUSES = [
       + "makes a version current. This clause exists so the skill READS consistently with the "
       + "fence, and it enforces none of it.",
   },
+  {
+    /* D-220 (Bob, 2026-08-06), consumer (3): §3's "AND IT MUST READ DOCUMENT VERSIONS AS
+       VERSIONS". The COUNT is not this clause's: the run's `collect` row reads each cited
+       item's document through `op=versionchain` and publishes `holdings` keyed on the
+       record's own address (agent-worker `documentHoldings`). This clause is how the
+       model READS and WRITES about what it holds, which no check refuses. */
+    id: "versions-are-versions",
+    area: "absence",
+    judges: ["what each level's reports mean"],
+    decides:
+      "Read the captures of one address as VERSIONS of one document, never as separate documents. "
+      + "When you say what the record holds, count the document once and name its versions as its "
+      + "history; a document seen many times is not better covered than one seen once, only better "
+      + "dated. Two items that share a title or a text are not thereby one document — the record's "
+      + "address says which document a capture is, and where no captured version is held at an "
+      + "address, the item is itself and is said to be.",
+    defers: [],
+    enforced_by: [],
+    unenforced_because:
+      "the count a run publishes is CODE and is not this clause: the fleet member resolves every "
+      + "citation through op=versionchain and groups by the address the record answers with, so its "
+      + "published coverage counts a document once whatever the model writes. What no check can reach "
+      + "is the model's own prose about coverage — a description that calls sixty captures sixty "
+      + "sources is refused by nothing, which is why this is stated as judgement.",
+    why:
+      "§3 (D-220, Bob 2026-08-06): a run that counts every capture as a document has a distorted "
+      + "picture of what the record holds — the false-coverage hazard STORE-AS-CACHE.md names, "
+      + "arriving at the document level, making an inquiry look better covered than it is.",
+  },
 ];
 
 /* =========================================================================

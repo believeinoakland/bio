@@ -1169,6 +1169,16 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "naming somebody else's project cannot be used to learn what they stand on. Nothing publishes how "
       + "many rows any gate removed, because that count is the leak, and if inquiries are ever "
       + "compartmented this op inherits it with no edit.",
+    /* REC-161 / §12 clause (c), 2026-09-23: independence over a PROPOSED partition. Classified here by
+       the item that adds it, on op=versionstrength's precedent and with the same honest bound stated. */
+    partitionindependence: "REC-161: A PARTITION NAMES THE QUESTION AND EVERY DOCUMENT ITS REASONS REST "
+      + "ON, and says which of them share an upstream source, so it is gated at the inquiry through "
+      + "#bundleGate — the one compilation point — ONCE, BEFORE any reason is read. A question the caller "
+      + "may not see refuses IDENTICALLY to one that does not exist (both C-71.2, same sentence), driven "
+      + "byte-for-byte in partitionindependence.test.mjs ARM F3. As with op=versionstrength the "
+      + "participation arm cannot bite on an inquiry today (viewerPredicate filters PROJECT bundles, "
+      + "Membership 7.9), so what the gate buys HERE is the fail-closed arm; if inquiries are ever "
+      + "compartmented this op inherits it with no edit.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */

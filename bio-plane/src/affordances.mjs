@@ -68,7 +68,7 @@
  */
 
 import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
-         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS,
+         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS,
          /* REC-43 / DEC-39. The two letters the co-attestation fence states are
             the RULE's own, imported from where the refusal that enforces it is
             computed, so the sentence a member reads and the grade the gate will
@@ -602,6 +602,13 @@ export const VOCABULARIES = {
      same direction `action_kind`, `basis_roles`, `action_basis_kinds` and
      `correspondence_directions` above already take. One array, three readers. */
   resolutions: RESOLUTIONS,
+  /* D-182 (BIO_Case_Making_v0_1.md §2, `risk_tier`, RULED by BOB #21): an action's risk tier IN WORDS — Bob's
+     three from the mission of record and the UNDETERMINED that is written wherever no member stated one. A
+     code->text map for `sufficiency_claim_states`' reason below: the sentence IS the tier's meaning, and a
+     surface holding its own copy would be the surface deciding what tier 2 means, which is why app.html's
+     arm could offer no chooser before this. Imported from `bio-checks.mjs`, where C-2.10 validates against
+     it and `riskTierState()` turns a stored value into one of its keys. One map, three readers. */
+  risk_tiers: RISK_TIERS,
   /* PL-2 / IS-2 — THE SIXTH STATE MACHINE, PUBLISHED. §6 rule 4's third
      consequence is not a nicety: without this, every surface that shows a
      version's state holds its own copy of which states exist and which moves
@@ -1305,7 +1312,12 @@ export const ACTS = [
      record permits the move, not that this caller's parameters will pass — while
      no longer saying it to somebody for whom NO parameter could succeed. The
      per-pair question (may this viewer publish for THIS project) is a different
-     fact and a different item, D-311, argued at NON_ACTS' roster rows below. */
+     fact and a different item, D-311, argued at NON_ACTS' roster rows below.
+     D-311, 2026-09-23: A MACHINE IS NOW WITHHELD `publish`, AND NOT BY THIS CLAUSE. The null above
+     still does not narrow here; `deriveActs` withholds every act in `MACHINE_REFUSALS` from a caller
+     the store states `actor_is_machine`, because `publishCase()` refuses that class BY NAME
+     (MACHINE_CANNOT_PUBLISH) whatever its position. Two rules, two places — which is what this
+     paragraph asked for — and the machine's is now published instead of discovered at the act. */
   /* REC-135 / INVESTIGATIVE-SESSION.md §7.1 item 4, 2026-09-19: `concluded` IS
      ASKED OF A RELATIONSHIP, SO THE STATE WORD IS NO LONGER THE WHOLE OF IT.
      `op=conclude&project=` writes the project's adoption onto the PROJECT and
@@ -1657,7 +1669,80 @@ export const ACTS = [
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0)
                      || (ty === "project" && f.cites_out.severed > 0 && f.project_participant !== false) },
+  /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
+     They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
+     existed (its argument is kept, as history, at NON_ACTS' participation block). It exists now:
+     the store states `f.roster` — the caller's position IN THIS PROJECT, asked of the `by` stamp
+     the roster acts themselves receive — and each predicate below is its own act's refusal
+     stated as a condition, never D-310's "owner of SOME project":
+       projectinvite      NOT_THE_OWNER            (`projectInvite`)   -> owner of THIS project
+       projectjoin        NOT_INVITED              (`projectJoin`)     -> any participation row
+       projectleave       NOT_A_PARTICIPANT/NOT_JOINED (`projectLeave`) -> state `joined`
+       projectremove      NOT_THE_OWNER            (`projectRemove`)   -> owner of THIS project
+       projectowneradd    NOT_THE_OWNER            (`projectOwnerAdd`) -> owner of THIS project
+       projectownerremove NOT_THE_OWNER, LAST_OWNER (`projectOwnerRemove`) -> owner, and the
+                          one-owner floor clear (a one-owner project refuses EVERY parameter)
+       projectownerrescue ADMIN_ONLY, NO_OWNERS, OWNERS_ARE_ACTIVE (`#rescueRefusal`) -> open
+     `projectremove` IS AN OWNER'S, NOT AN ADMINISTRATOR'S: Membership Architecture v2 §7.7
+     REVERSED v1.4, and the store has refused a non-owner since. D-311's own row and D-310's
+     argument both said "an ADMINISTRATOR's" — the v1.4 reading; each predicate here is derived
+     from the refusal its op RAISES, which is what caught it.
+     `projectjoin` IS OFFERED TO EVERY PARTICIPANT, joined ones included: `projectJoin` refuses only
+     a caller with no participation row, and a joined participant's join SUCCEEDS (a leaving one's
+     withdraws the request, 7.6). Withholding it there would be a fence tighter than its rule.
+     WHAT THESE DO NOT SAY is what turns on a PARAMETER — the handle named, its status, the reason,
+     the 7.10 votes still owed (CONSENSUS_REQUIRED, VOTES_SHORT) — the release precedent: the
+     record permits the move, not that this caller's parameters will pass.
+     `=== true` EVERYWHERE, and it is the shape an ADDITION takes: `f.roster` is null when no
+     position could be asked (a DO-internal call, a non-project target), and an undetermined
+     position must not publish an act. A bearer's `by` is `class:<cls>`, which holds no row, so a
+     machine credential is offered none of the seven — each of which its class is refused.
+     Weight `single`, conclude's precedent: one project's roster at a time, no set to apply. */
+  { id: "projectinvite", label: "Invite a member to this project", weight: "single", types: ["project"],
+    applies: (f, ty) => ty === "project" && f.roster?.owner === true },
+  { id: "projectjoin", label: "Join this project", weight: "single", types: ["project"],
+    applies: (f, ty) => ty === "project" && typeof f.roster?.state === "string" },
+  { id: "projectleave", label: "Ask to leave this project", weight: "single", types: ["project"],
+    applies: (f, ty) => ty === "project" && f.roster?.state === "joined" },
+  { id: "projectremove", label: "Remove a participant", weight: "single", types: ["project"],
+    applies: (f, ty) => ty === "project" && f.roster?.owner === true },
+  { id: "projectowneradd", label: "Add an owner", weight: "single", types: ["project"],
+    applies: (f, ty) => ty === "project" && f.roster?.owner === true },
+  { id: "projectownerremove", label: "Remove an owner (with a reason)", weight: "single", types: ["project"],
+    applies: (f, ty) => ty === "project" && f.roster?.owner === true && f.roster?.owner_floor_clear === true },
+  { id: "projectownerrescue", label: "Add an owner to a project whose owners are all inactive (with a reason)",
+    weight: "single", types: ["project"],
+    applies: (f, ty) => ty === "project" && f.roster?.rescue_open === true },
 ];
+
+/* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
+ * method answers — `!who || isMachineIdentity(who)` on the author stamp, REC-46's one predicate,
+ * which fires whatever the object's state. `deriveActs` withholds these when the store states
+ * `actor_is_machine === true`: before this, a `class:` credential was offered `publish` (and every
+ * act below) and refused at the act, the pre-flight disagreeing with the act (DEC-8).
+ * DECLARED HERE AND DRIVEN, `weight`'s precedent: `d311-roster-affordances.test.mjs` performs every
+ * act in ACTS with a machine credential and holds this map to the codes that come back, BOTH
+ * directions — an act refused by a MACHINE_* code and absent here fails by name, and so does an
+ * entry the store no longer answers. `withdrawconclusion` enters `conclude()` after its machine
+ * fence and answers conclude's code. NOT here, because the store refuses no machine at them:
+ * `retire`, `dispose`, `cite`, `sever`, `reinstate`. */
+export const MACHINE_REFUSALS = {
+  release:            "MACHINE_CANNOT_RELEASE",
+  conclude:           "MACHINE_CANNOT_CONCLUDE",
+  withdrawconclusion: "MACHINE_CANNOT_CONCLUDE",
+  reopen:             "MACHINE_CANNOT_REOPEN",
+  publish:            "MACHINE_CANNOT_PUBLISH",
+  inquirydivide:      "MACHINE_CANNOT_DIVIDE",
+  inquiryground:      "MACHINE_CANNOT_GROUND",
+  actionmove:         "MACHINE_CANNOT_MOVE_ACTION",
+  actioncorrespond:   "MACHINE_CANNOT_CORRESPOND",
+  versionaccept:      "MACHINE_CANNOT_MOVE_VERSION",
+  versionreject:      "MACHINE_CANNOT_MOVE_VERSION",
+  versionconsider:    "MACHINE_CANNOT_MOVE_VERSION",
+  versionrevert:      "MACHINE_CANNOT_MOVE_VERSION",
+  versioncurrent:     "MACHINE_CANNOT_MOVE_VERSION",
+  versionhide:        "MACHINE_CANNOT_MOVE_VERSION",
+};
 
 /* Every op in NEEDS that is NOT an object-directed act, with the reason — so
  * the totality check can tell "deliberately not an affordance" from "someone
@@ -1861,13 +1946,14 @@ export const NON_ACTS = {
          pairing it with a narrowing behind one IC row would make neither
          reviewable. IC-75 carries the narrowing alone, which is what lets a
          consumer answer it. */
-  projectinvite: "participation: roster act, position-enforced by the store",
-  projectjoin: "participation: roster act, position-enforced by the store",
-  projectleave: "participation: roster act, position-enforced by the store",
-  projectremove: "participation: roster act, position-enforced by the store",
-  projectowneradd: "participation: roster act, position-enforced by the store",
-  projectownerremove: "participation: roster act, position-enforced by the store",
-  projectownerrescue: "participation: roster act, position-enforced by the store",
+  /* ── D-311, 2026-09-23 · THE SEVEN LEFT THIS TABLE, on the per-pair fact (2) asked for, and are
+        ACTS now (the roster block at the foot of ACTS). The argument above is KEPT as the record
+        of why they waited, with two corrections stated rather than smoothed: (3)'s "`projectremove`
+        is an ADMINISTRATOR's (… 7.7 … gives removal to administrators alone …)" is v1.4's 7.7,
+        which Membership Architecture v2 REVERSED — the store refuses a non-OWNER (`projectRemove`,
+        NOT_THE_OWNER) and the act is derived from that refusal; and (4)'s pairing worry is met by
+        the addition and the machine narrowing each being stated on its own (the report's IC
+        proposal carries both halves, classified apart). */
   projectfork: "creates a NEW project; gated on the create_projects shape, not on the source object's state",
   /* Identity, roster and operator surface. */
   expertisedeclare: "a member's own declaration, not a corpus act",
@@ -1879,9 +1965,13 @@ export const NON_ACTS = {
      session reach put them in the capability table, and every key there is an
      ACT or a NAMED non-act. They are NON_ACTS for `memberadd`'s reason exactly —
      their subject is a MEMBER and the roster, never a bundle, so there is no
-     strip beside an object for them to appear on. D-311 decided the seven roster
+     strip beside an object for them to appear on. D-310 decided the seven roster
      acts STAY non-acts; these three are the same argument and nothing about
-     making them reachable by a person changes what they act ON. */
+     making them reachable by a person changes what they act ON.
+     CORRECTED 2026-09-23 by D-311, which folded the seven in: the sentence named
+     D-311 as the item that DECIDED they stay, and D-311 is the item that moved
+     them. The argument for THESE three is unchanged — their subject is a MEMBER,
+     where the seven's subject is a PROJECT, a bundle with a strip. */
   membercaps: "roster governance — the subject is a member's capabilities, not a bundle (4.9)",
   adminendorse: "section 4.7 governance — the subject is a proposed administrator, not a bundle",
   adminremove: "section 4.7 governance — the subject is an administrator's standing, not a bundle",
@@ -1937,7 +2027,7 @@ export const NON_ACTS = {
      bundle". It offers candidates a member picks a resolve out of; the ACT is
      op=resolve, which is already a named non-act keyed by capture sha. */
   readingname: "read: which captured documents' readings name a registered subject (framework §8.1's grade-C tier), keyed by entity — the candidate list op=resolve is chosen from, never an act on an object",
-  queuemute: "personal state, keyed (member, case): a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
+  queuemute: "personal state, keyed (member, case) over the kinds named or (member, item) by the item's own id: a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
   queuesnooze: "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)",
   /* IS-6. The three run verbs are NOT acts on a bundle and must not appear on
      one, which is why they are named here rather than added to ACTS. A run is
@@ -2003,5 +2093,8 @@ export const ACT_IDS = new Set(ACTS.map((a) => a.id));
  * facts the store read, so a suite can hold it to the store's own refusals. */
 export function deriveActs(facts) {
   const ty = normalizeType(facts.object_type);
-  return ACTS.filter((a) => a.applies(facts, ty));
+  /* D-311: a machine is withheld what its class is refused — on a STATED true only; a null
+     (no author stamp was sent) narrows nothing, D-310's three-valued shape. */
+  const machine = facts.actor_is_machine === true;
+  return ACTS.filter((a) => a.applies(facts, ty) && !(machine && a.id in MACHINE_REFUSALS));
 }

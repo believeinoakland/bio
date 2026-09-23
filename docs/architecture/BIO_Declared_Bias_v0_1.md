@@ -1,13 +1,13 @@
 # BIO Declared Bias, v0.1 DRAFT
 
-**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest` and the acknowledgement. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. as of 2026-09-14.
+**Status** · The doctrine of bias as a declared, justified, first-class construct: three statement kinds, bundles and adoption, the subject registry and the masking safeguards, bias debt versus HUNCH DEBT, the authored acknowledgement at export, differential traversal and the cross-group rerun. Titled "v0.1 DRAFT, drafted July 27, 2026, from Bob's proposal"; its header's "nothing here is ratified doctrine, no check exists, no code implements it" is now false — it carries three RULED markers (DEC-6 and DEC-15 of 2026-08-01, DEC-46 of 2026-08-04, built by REC-47), one AMENDED (DEC-20) and one STRUCK sentence (D-188), and the plane carries `object_type: bias`, `op=biasmanifest`, the acknowledgement, and — since D-84 (2026-09-23) — the manifest stamped into every newly published case document. Partially complete: a v0.1 body with dated rulings layered in place and a header never re-dated. Read the "READ THIS FIRST" banner in the hunch section before anything else — bias debt and HUNCH DEBT mean opposite things for publication and the body once said otherwise. as of 2026-09-23 (BOB #31: the acknowledgement names the ADOPTED revision).
 
 **Place in the system** · Owns construct 7 of `BIO_System_Design.md` §3 (declared bias) and the subject-registry requirement, which D-83 makes the same construct as the Content Framework's entity axis. `BIO_Content_Framework_v0_10.md` §13 defers to it; `BIO_Interaction_Constructs_v0_1.md` consumes it for the TASK clock; `BIO_Case_Making_v0_1.md` for hunch debt on plan premises.
 
 **Incomplete sections** ·
 - §header — "no check exists, no code implements it" is stale; the bias type, the manifest op and the acknowledgement exist.
 - §Statement anatomy — the subject lists are superseded; both defer to the registry vocabulary (RULED 2026-08-01).
-- §Bias bundles and adoption — "The manifest waits on `object_type: bias` (D-84)"; the plane now carries both while the debt row still reads open — one record is stale.
+- §Bias bundles and adoption — the manifest now travels with publication (D-84, 2026-09-23): stamped into the signed case document and frozen. Still open: the case-document gate does not REQUIRE the manifest block (a /2 document authored before D-84 carries none), and a manifest's `revision` is the pin `op=biasadopt` takes while the set stands at `proposed`, so it can name bytes older than the adopted head.
 - §Integration with the epistemics ladder — the mechanical binding is a stated prerequisite; no ruling, no op.
 - §Bias debt, and HUNCH DEBT — says `op=publishpreflight` "exists"; it is deferred with REC-15 behind DEC-33; the sequencing paragraph predates PL-12.
 - §Differential traversal and the cross-group rerun and §Sequencing — regrade and rerun are prose only; "Not a build order"; no op exists.
@@ -21,6 +21,7 @@
 - [Bias bundles and adoption](#bias-bundles-and-adoption)
   - [RULED 2026-08-01: the subject vocabulary is the registry's, and the malformedness rule is the constraint](#ruled-2026-08-01-the-subject-vocabulary-is-the-registrys-and-the-malformedness-rule-is-the-constraint)
 - [Integration with the epistemics ladder](#integration-with-the-epistemics-ladder)
+  - [RULED 2026-09-23 by BOB #31: there is no credence ledger (D-53; S17-1 Q1)](#ruled-2026-09-23-by-bob-31-there-is-no-credence-ledger-d-53-s17-1-q1)
 - [Bias debt, and HUNCH DEBT](#bias-debt-and-hunch-debt)
   - [RULED 2026-08-01: a HUNCH is temporary declared bias, and it is HUNCH DEBT](#ruled-2026-08-01-a-hunch-is-temporary-declared-bias-and-it-is-hunch-debt)
 - [The bias acknowledgement, authored at export](#the-bias-acknowledgement-authored-at-export)
@@ -236,6 +237,14 @@ humans apply by hand, evidence items need source attribution the system can
 match, which anchored citations were already going to carry (an evidence item
 is an anchored selection within a document, attributed to a source).
 
+### RULED 2026-09-23 by BOB #31: there is no credence ledger (D-53; S17-1 Q1)
+
+BIO keeps no credence, reputation or trust SCORE for a source or a piece of content, whether it is computed or authored,
+shared or a group's own. A score like that is a prior against a class of actor, and the stance refuses one: bad actors
+are identified by EVIDENCE. What a member brings is declared here as bias, and evidence accrues to it. S-11 step 5 is
+re-scoped to *show the findings the record holds ABOUT a source*. Those findings are evidence, each with its own grade.
+That read becomes a row only if S-11 is scheduled. **Bob may overrule this; it was put to him on 2026-09-23.**
+
 ## Bias debt, and HUNCH DEBT
 
 > **READ THIS FIRST — the two terms are not the same and the difference decides
@@ -405,8 +414,13 @@ bar. Nothing reads which bias is named; nothing refuses a case for carrying one.
 | the bias **MANIFEST** | the lens itself — bundle ids, revisions, a hash of the effective statement set | **computed and stamped** by the plane |
 | the bias **ACKNOWLEDGEMENT** | the publisher's account of what that lens did to *this edition's* findings | **AUTHORED** by the member, in the ceremony |
 
-Only the acknowledgement is built today. The manifest waits on `object_type:
-bias` (D-84), without which there is no bundle to compute one from.
+**BOTH ARE BUILT (D-84, 2026-09-23).** `op=publish` computes the manifest in
+force for the case's project scope — each (bias bundle id, revision) pair and
+`statements_sha` over the whole effective set — and stamps it into the case
+document before its hash is taken (`bias_manifest`, `bias_manifest_bundles`, and
+`## Bias Manifest` in the body). The signature freezes it: nothing recomputes it,
+so a lens adopted afterwards moves `op=biasmanifest` and never a published case.
+With nothing adopted the document says *no manifest was in force*.
 
 **The rules, as shipped:**
 
@@ -445,6 +459,11 @@ project's threat model.
 
 The full reasoning is at `checkCompletenessFreshness` in
 `bio-plane/checks/bio-checks.mjs`, beside the rule it discriminates from.
+
+**RULED 2026-09-23 by BOB #31 — WHICH REVISION THE ACKNOWLEDGEMENT NAMES (D-84 / PL-12).** The ADOPTED one. Promotion to
+`adopted` re-pins the adoption to the adopted bundle_sha, the case stamps that sha, and `op=biasmanifest` hashes THAT revision's
+statements — one quantity under one name, never a proposed sha beside a later projection's hash (BOB.md rule 7). Rowed first
+in the backlog; the hash change goes through one IC.
 
 ## Differential traversal and the cross-group rerun
 

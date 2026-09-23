@@ -1,6 +1,6 @@
 # Spreadsheets, word-processing and presentation documents
 
-**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. as of 2026-09-14.
+**Status** · RESEARCH of 2026-07-31 (session BOB, at Bob's direction) that became the plan of record for the FORMAT axis, and the axis it argues for is now [BUILT] END TO END by COFF-1..7: the registry with HTML and PDF moved onto it (`bio-plane/src/formats.mjs` — the one place a format is known, and the D-70 test that framework §4's cost table is real), the dependency-free OOXML container reader (`ooxml.mjs`), and DOCX, XLSX and PPTX entries carrying I2 structure with per-container element references, text, and the DEC-5 evidentiary envelope. **The document's own preamble said "Nothing here is built" — the single most misleading line in it — and M0-27 CORRECTED IT IN PLACE on 2026-09-14; the preamble now states the axis as built and names the command that counts the registry.** COMPLETE as the argument — every architectural claim it makes was exercised and none was overturned — and SUPERSEDED IN FOUR PLACES by things that happened after it: DEC-5 ruled the risk it raises, IC-1 landed the interface change it predicts in a shape it does not anticipate, and COFF-6's census answered both of its open empirical questions (the size bound, and legacy/ODF prevalence). What the axis still does NOT extract is stated below rather than left derivable. as of 2026-09-23.
 
 **Place in the system** · A level-2 design serving construct 5 of `BIO_System_Design.md` §3, *document profile and the extraction substrate*, whose level-1 home is `BIO_Content_Framework_v0_10.md` **Part I**; §3 row 5 lists this document beside `DOCUMENT-PROFILES.md` as the two level-2 designs under it, and Part II §16 places the format entries in the extraction process as built ("delegated to format entries and members"). It is the FORMAT axis — framework §4's third axis, the one D-70 said had never been exercised — so it is also the evidence for a claim the framework makes about itself. Interfaces: it created I7 (the registry entry shape) and it drove IC-1 against I2, the element reference union that legs, connections and citations will share. What depends on it: `formats.mjs`, `ooxml.mjs`, `docx.mjs`, `formats-xlsx.mjs`, `pptx.mjs`, and `CONTENT-EXTENT-DESIGN-SPACE.md`, which treats IC-1's union as D-164's per-container leaf.
 
@@ -116,6 +116,18 @@ accountability value is:
 it does for PDF: CAPTURE extracts structure and hands FRAMEWORK a parsed tree;
 FRAMEWORK decides what is evidentiary. A formula is structure; whether a formula
 matters is content.
+
+**DESIGNED 2026-09-23 by BOB #32 — THE ENVELOPE AS CONTENT (D-124, the 2026-07-31 row).** Tracked-change authors and
+text, comments, core properties and speaker notes are extracted today, but they are never projected or indexed
+(`textUnitsFor` names the gap against CONTENT-SEARCH-DESIGN §4.1). Under DEC-5 (*surface it all*) they become content:
+a NINTH extent kind, `envelope`, addressing one item by its part and element reference, with the item's kind
+(`tracked-change`, `comment`, `core-property`, `speaker-note`) as a field. It carries the capture's grade, because these
+are the publisher's own bytes. Its `cited_as` distinguishes it from the body, and the passage arm indexes its text
+LABELLED as envelope, so a search hit never presents a reviewer's comment as the document's text. Adding the kind is a
+change to the content extent census and goes through an IC. NOT BUILT (RECORD, rowed).
+**The restricted-material deferral (D-124, the 2026-08-01 row) is CLOSED as a STATED LIMITATION.** The deferral stays
+stated in this document's front matter. Nothing in the code could detect its trigger, so a row that stays open is a
+claim nobody can discharge.
 
 ## The risk that comes with it, and it is Bob's
 

@@ -293,8 +293,21 @@ const run = async () => {
   const walkStrings = (v) => {
     if (typeof v === "string") { terms.add(v); return; }
     if (Array.isArray(v)) { v.forEach(walkStrings); return; }
-    if (v && typeof v === "object") for (const [k, val] of Object.entries(v)) { terms.add(k); walkStrings(val); }
+    if (v && typeof v === "object") for (const [k, val] of Object.entries(v)) {
+      if (!/^\d+$/.test(k)) terms.add(k);
+      walkStrings(val);
+    }
   };
+  /* CORRECTED 2026-09-23 (c17-unionfix), not exempted: D-182 published `vocabularies.risk_tiers`, the first
+     vocabulary KEYED BY NUMERALS (1, 2, 3 -> their words). The walk added the keys as terms, so the corpus held
+     "1" and ARM B2a failed on `DOCTRINE_EDITION = "1"` — the pack's AUTHORED edition, which no vocabulary
+     supplies. A digit-only key is an ordinal, not a word a pack could copy. The WORDS it maps to are still in
+     the corpus (ARM B1d asserts it over the published map), so a copied tier map still fails B2a on its words. */
+  walkStrings({ probe: { 1: "ORDINAL_PROBE_WORD" } });
+  t("ARM B1c: a digit-only vocabulary KEY is not a term, and the word it maps to IS — "
+    + "the one arm the risk_tiers correction depends on",
+    [terms.has("1"), terms.has("ORDINAL_PROBE_WORD")], [false, true]);
+  terms.clear();
   walkStrings(published.vocabularies);
   for (const a of pubActs) { terms.add(a.id); if (a.label) terms.add(a.label); }
   for (const k of Object.keys(OBSERVATION_STATES)) terms.add(k);
@@ -303,6 +316,9 @@ const run = async () => {
   for (const k of Object.keys(RUN_ENDINGS)) terms.add(k);
   for (const f of fences) terms.add(f.code);
   const CORPUS = [...terms];
+  const tierWords = Object.values(published?.vocabularies?.risk_tiers || {});
+  t("ARM B1d: and the published risk_tiers WORDS are in the corpus (numeral keys out, words in)",
+    [tierWords.length >= 4, tierWords.every((w) => terms.has(w))], [true, true]);
   const found = quotedIn(PACK_SRC, CORPUS);
   console.log(`  corpus: ${CORPUS.length} sourced terms, scanned against ${found.literals} string `
             + `literals in src/skillpack.mjs (comments removed)`);

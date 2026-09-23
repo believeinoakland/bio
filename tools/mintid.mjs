@@ -289,6 +289,15 @@ export const NAMESPACES = {
           family *declaration*, which is a different read from this one. */
        allocIsUnique: false,
        allocNotUnique: "a family's dotted members each repeat the family number by design (C-7.1, C-7.2), so a repeated match is the normal shape rather than a second allocation" },
+  /* Registered 2026-09-23 by D-52, the first generator to take one (NOTIFICATIONS.md §The catalogue:
+     "Ids are allocated when a generator is built … the way C-numbers are"). The allocation site is
+     `QUEUE_KIND_IDS` in `queuestate.mjs`, a `"<slug>": "N-<n>"` row, and that file is the WHOLE corpus
+     on purpose: NOTIFICATIONS.md's item contract carries a worked example id, and a prose corpus would
+     read it as an allocation and skip every number beneath it (the prose-driven floor IC and CASE
+     already carry). */
+  N: { kind: "code", what: "notification kinds in the queue catalogue (NOTIFICATIONS.md; the kind's slug stays its `kind`)",
+       corpus: ["bio-plane/src/queuestate.mjs"], ceiling: 999,
+       allocPattern: () => /^\s*"[a-z0-9_-]+":\s*"N-(\d+)"/gm, allocIsUnique: true },
 
   /* (ii) prose-referenced */
   D: { kind: "prose", what: "debt rows",

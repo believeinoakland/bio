@@ -203,10 +203,12 @@ arm("1", "THE ITEM'S OWN ARM — THE DEC-8 DISAGREEMENT PUT BACK. Drop `&& f.pro
   [{ name: OWN,
      mustFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY", "FIXTURE GUARD: the table is not uniform"],
      mustNotFail: ["A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED",
-                   "OVER-STRICTNESS: a MACHINE credential's answer does not narrow"] },
+                   "D-311: a MACHINE credential is withheld `publish` by the MACHINE rule"] },
    { name: AFF,
      mustFail: ["and it is the ONLY act that consults the position"],
-     mustNotFail: ["the seven roster acts are still NON_ACTS"] }],
+     /* CORRECTED 2026-09-23 by D-311: this label read "the seven roster acts are still NON_ACTS";
+        D-311 folded them in and inverted the pin, so the fragment follows the new label. */
+     mustNotFail: ["the seven roster acts are ACTS now"] }],
   { machine: "same" });
 
 /* ============================== (2a) OVER-STRICTNESS — THE UNDETERMINED CASE NARROWED */
@@ -218,12 +220,21 @@ arm("2a", "OVER-STRICTNESS, AND THE HEADLINE STAYS GREEN THROUGH IT — `!== fal
   + "identity nothing can move is free); affordances' `narrows on a STATED false and on nothing "
   + "else` MUST fail; the agreement property MUST stay green.",
   [["affordances", "&& f.project_owner !== false }", "&& f.project_owner === true }"]],
+  /* CORRECTED 2026-09-23 by D-311, never exempted — the arm is unchanged, its DECLARATION moved.
+     It declared caseproduction's machine arm MUST fail and the machine bytes MUST DIFFER, because
+     under `=== true` a machine (null owner fact) lost `publish`. D-311 withholds `publish` from a
+     machine by a DIFFERENT rule (MACHINE_REFUSALS: the store refuses the class by name), so the
+     machine never holds it to lose: the op-reachable half of this over-strictness is now
+     UNOBSERVABLE through any caller (every caller the plane answers with a null owner fact is a
+     machine), and what still catches `=== true` is the predicate's truth table in
+     affordances.test.mjs — declared here. The byte probe keeps its own control in arm (4) below,
+     which MOVES the bytes. */
   [{ name: OWN,
-     mustFail: ["OVER-STRICTNESS: a MACHINE credential's answer does not narrow"],
-     mustNotFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY"] },
+     mustNotFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY",
+                   "D-311: a MACHINE credential is withheld `publish` by the MACHINE rule"] },
    { name: AFF,
      mustFail: ["narrows on a STATED false and on nothing else"] }],
-  { machine: "differs" });
+  { machine: "same" });
 
 /* ================================== (2b) OVER-STRICTNESS — THE OWNER LOSES THE OFFER */
 arm("2b", "OVER-STRICTNESS, THE OTHER DIRECTION — the fact answers `false` for every member, so an "
@@ -235,7 +246,7 @@ arm("2b", "OVER-STRICTNESS, THE OTHER DIRECTION — the fact answers `false` for
              ".some((p) => p && false)"]],
   [{ name: OWN,
      mustFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY", "FIXTURE GUARD: the table is not uniform"],
-     mustNotFail: ["OVER-STRICTNESS: a MACHINE credential's answer does not narrow",
+     mustNotFail: ["D-311: a MACHINE credential is withheld `publish` by the MACHINE rule",
                    "A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED"] }],
   { machine: "same" });
 
@@ -255,6 +266,19 @@ arm("3", "DEC-69 — THE NARROWED ANSWER TURNED INTO A NAG. The `publish` act gr
      mustNotFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY"] },
    { name: AFF,
      mustFail: ["every act that carries a PROMPT carries its own published wording"] }]);
+
+/* ============================== (4) D-311 — THE MACHINE RULE DROPPED: THE BYTE PROBE'S OWN CONTROL */
+arm("4", "D-311's MACHINE RULE DROPPED — `deriveActs` stops withholding MACHINE_REFUSALS, the state "
+  + "D-311 found. DECLARED: caseproduction's D-311 machine arm MUST fail and the machine's published "
+  + "acts MUST DIFFER from the baseline — which is what makes the byte-identity under (1), (2a) and "
+  + "(2b) a measurement rather than a free equality; the DEC-8 agreement property MUST stay green "
+  + "(members are untouched by a machine rule).",
+  [["affordances", "ACTS.filter((a) => a.applies(facts, ty) && !(machine && a.id in MACHINE_REFUSALS));",
+                   "ACTS.filter((a) => a.applies(facts, ty) && (machine || true));"]],
+  [{ name: OWN,
+     mustFail: ["D-311: a MACHINE credential is withheld `publish` by the MACHINE rule"],
+     mustNotFail: ["THE DEC-8 AGREEMENT, AS ONE PROPERTY"] }],
+  { machine: "differs" });
 
 console.log(`\n${armsRun} arm(s) run, ${armsWrong} came back other than declared.`);
 rmSync(PEN, { recursive: true, force: true });

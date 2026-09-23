@@ -185,7 +185,7 @@ arm("(2c) THE MISFILING HALF, WHICH (2) AND (2b) CANNOT REACH. Mint the real, ca
   ["op=queue ANSWERS — the mint admitted every item it was handed",
    "op=queue carries exactly one out-of-inquiry lead"],
   ["the slug exists and classOfKind answers FINDING",
-   "a member CANNOT mute it"]);
+   "a member MAY mute it for themselves"]);
 
 /* ============ (3) THE SWEEP — TWO DEFENCES DOWN, DELIBERATELY ============ */
 
@@ -287,15 +287,16 @@ arm("(7) THE CLASS IS DOCTRINE AND NOT A LABEL. Move the slug from QUEUE_FINDING
    ["queuestate", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
                   `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",\n  "out-of-inquiry-lead":         "moved by leadslug.control.mjs arm 7",`]],
   ["the slug exists and classOfKind answers FINDING",
-   /* THE HARM, NAMED. If the class moves and nothing else changes, op=queuemute
-      starts ACCEPTING a mute on a real lead — one member silencing what a team
-      must see, with nothing in the record about who did it or why. */
-   "a member CANNOT mute it",
+   /* CORRECTED 2026-09-23 by D-125: "a member CANNOT mute it" was declared here
+      as THE HARM, and BOB #26 ruled the personal mute of a FINDING lawful — so
+      the mute arm no longer tells the classes apart and is declared
+      MUST-NOT-FAIL below; the class arm carries this half alone. */
    /* AND THE MINT CATCHES IT ANYWAY, which is the second half of the arm: the
       producer still mints FINDING, so KIND_MISCLASSED fires and the feed
       refuses rather than publishing an item whose class and catalogue disagree. */
    "op=queue ANSWERS — the mint admitted every item it was handed"],
-  ["a lead naming a DOCUMENT is refused by name (C-28.14)"]);
+  ["a lead naming a DOCUMENT is refused by name (C-28.14)",
+   "a member MAY mute it for themselves"]);
 
 /* ===================== (8) THE OVER-STRICTNESS ARM ======================= */
 

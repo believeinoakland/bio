@@ -1,6 +1,6 @@
 # BIO Intake Doctrine
 
-**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name, and that refusal is not built.** as of 2026-09-22.
+**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name — BUILT 2026-09-23 (D-179: `op=promote` refuses it before any write, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13).** as of 2026-09-23.
 
 **Place in the system** · Owns construct 2 of `BIO_System_Design.md` §3 (intake, capture and provenance) and half of construct 10 (standing intent): "the State Rules specification governs bundle shape; this doctrine governs admission to the store." `BIO_State_Rules_Consistency_v1_5.md` realises it as the intake provenance register, I-18's ratification fence and drafted I-19; `BIO_Membership_Architecture_v2.md` §1 borrows its who-issued/how-captured split; the plane's C-18 rules and the sweep floor cite it.
 
@@ -13,7 +13,7 @@
 - §3c — bag ingestion "built when the first bag is produced or consumed".
 - §4 and §4a — daemon-centred; the retention posture "deferred until forced"; "today the client authenticates the group, not the person" predates Membership v2 §6.
 - §6 and §9 — the daemon rung and the endpoint version are the retired runtime.
-- §8 — the collected-to-retired edge is "deliberately left unforced"; and the store's refusal of a second registration of one capture under another bundle (D-179, ruled 2026-09-22) is NOT BUILT — `op=promote` still moves the register row silently, fenced only for an authored observation (C-53.8).
+- §8 — the collected-to-retired edge is "deliberately left unforced"; and a digest-level duplicate across bundles (the same content in different bytes) is not reached by the one-home refusal, which asks the bytes (D-179's scope, not rowed).
 - §10 — "open, with decision criteria … Decided at first sweep ratification".
 - §Sections not yet forced — member intake, received work products, extraction standards, the acquisition second draft.
 
@@ -643,8 +643,10 @@ bytes already registered under ANOTHER bundle that still exists is REFUSED BY NA
 refusal tells the member the document is already in the record, naming the holding bundle only
 to a caller who may see it (D-15); the new address's observation, which `op=acquire` records
 before any promote, is the corroboration. A re-registration under the SAME bundle (a revision)
-is unchanged, and bytes whose home was purged register afresh. NOT BUILT; the build is the BOB
-INBOX's entry of 2026-09-22.
+is unchanged, and bytes whose home was purged register afresh. BUILT 2026-09-23 by D-179: `op=promote`
+refuses it before any write (`#testimonyFence > is-register-home`, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13),
+driven through the op by `bio-plane/test/d179onehome.test.mjs`, which reads the first bundle's register row
+back from the store and finds it byte-identical after the refusal.
 
 # 9. Creation authority boundaries (added v1.1)
 

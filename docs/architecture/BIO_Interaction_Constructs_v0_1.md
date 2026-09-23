@@ -265,6 +265,15 @@ support — the failure this product is organised against, appearing in the inte
 An act whose pre-flight is a good guess is worse than an act with no pre-flight, because the
 member learns to trust it.
 
+**BUILT FURTHER 2026-09-23 (D-311): the publication now covers WHO is asking, pair by pair.**
+`op=affordances` publishes the seven project roster acts (invite, join, leave, remove, owner-add,
+owner-remove, the 7.13 rescue), each derived from the refusal its own op raises over the caller's
+position IN THAT PROJECT — never "owns some project" — and it withholds from a machine credential
+every act the store refuses its class by name (`MACHINE_REFUSALS`). Before this, a machine was
+offered `publish`, `conclude` and eleven other acts it would be refused, which is the good guess this
+section calls worse than no pre-flight. What still turns on a parameter (a handle, a reason, the
+7.10 votes) is said only at the act, as before; `node tools/status.mjs 12.act-preflight`.
+
 ### What would falsify this
 
 If the first three capabilities built into the ACT construct each need a bespoke

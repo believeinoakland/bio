@@ -569,10 +569,22 @@ ok("WALK 2 REACH: it matches exactly two published ADDRESS SHAPES — found ["
 
    Asserted rather than asserted-by-comment: the two pins below check both halves
    of that classification for THIS router as well. */
-ok("WALK 2 REACH: the script declares exactly the seven routers this walk has classified — found ["
-   + ROUTE_FNS.join(", ") + "] (an eighth must be classified as pre-auth or not before this passes)",
-   ROUTE_FNS.length === 7
-   && ["actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
+/* CORRECTED A FOURTH TIME 2026-09-23 BY UI-74, seven -> EIGHT, and the old
+   assertion was RIGHT to fail: `acceptCeremonyRouteFromHash` arrived with the
+   accept ceremony and this arm stopped it arriving UNCLASSIFIED.
+
+     `acceptCeremonyRouteFromHash` is POST-AUTHENTICATION. It is asked inside
+     `boot()`'s router chain and NOWHERE at the top level, so
+     `#accept/<INQ-…>/<name>` resolves for nobody holding nothing. Its reads
+     (`basisversions`, `affordances`, `airun`, `versionstrength`) are
+     admin/member/probe and its four acts are session-mode, so it adds no
+     member-facing pre-auth vocabulary.
+
+   The two pins below check both halves for THIS router as well. */
+ok("WALK 2 REACH: the script declares exactly the eight routers this walk has classified — found ["
+   + ROUTE_FNS.join(", ") + "] (a ninth must be classified as pre-auth or not before this passes)",
+   ROUTE_FNS.length === 8
+   && ["acceptCeremonyRouteFromHash","actionRouteFromHash","aiSessionRouteFromHash","projectRouteFromHash",
        "publishedRouteFromHash","routeFromHash","stanceRouteFromHash",
        "versionReviewRouteFromHash"].every(f => ROUTE_FNS.includes(f)));
 {
@@ -611,6 +623,15 @@ ok("WALK 2 REACH: the script declares exactly the seven routers this walk has cl
      SCRIPT.indexOf("/*__NOTIFICATIONS_END__*/") > 0 && NTAIL.length > 100);
   ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #stands/<PROJ-…>/<INQ-…> resolves for nobody holding nothing",
      !NTAIL.includes("stanceRouteFromHash()"));
+  /* UI-74's router, the same two halves; the slice starts at the END of the
+     accept-ceremony block, where its own `hashchange` registration ends. */
+  ok("WALK 2 CLASSIFICATION: acceptCeremonyRouteFromHash is asked INSIDE boot(), which is what makes it post-authentication",
+     !!BOOTCHAIN && BOOTCHAIN[0].includes("acceptCeremonyRouteFromHash()"));
+  const ATAIL = SCRIPT.slice(SCRIPT.indexOf("/*__ACCEPT_CEREMONY_END__*/"));
+  ok("WALK 2 REACH: the accept-ceremony block's END marker was found — a slice that missed it would make the pin below pass over nothing",
+     SCRIPT.indexOf("/*__ACCEPT_CEREMONY_END__*/") > 0 && ATAIL.length > 100);
+  ok("WALK 2 CLASSIFICATION: and it is NOT asked at the top level before the gate — so #accept/<INQ-…>/<name> resolves for nobody holding nothing",
+     !ATAIL.includes("acceptCeremonyRouteFromHash()"));
 }
 ok("WALK 2 REACH: and app.html asks the published router at the TOP LEVEL, outside boot()",
    /\n\s*if\(\/\^#\(published[\s\S]{0,80}publishedRouteFromHash\(\);?\n?\}catch/.test(SCRIPT)
