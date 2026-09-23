@@ -1,0 +1,16 @@
+{
+ "unit": "ui:meaning-arms.test.mjs",
+ "inputHash": "5c3a347e3a8a2d5e9ed7b49fefea282b6515379c9aec7d9ea9e173e11511c638",
+ "verdict": "PASS",
+ "run": "1f5fabf657629f1fff2d55e55baf53f2ce91c66f.1790191708168.14433.json",
+ "tree": "1f5fabf657629f1fff2d55e55baf53f2ce91c66f",
+ "head": "729203da8c22dd8ae7b583ffd29a0ee99da31dd4",
+ "gateVersion": "M0-126.1",
+ "keyVersion": 1,
+ "class": "FULLREUSE",
+ "inputs": 73,
+ "node": "26.10.0",
+ "clone": "vm:/home/user/bio/.git",
+ "session": "c24508e4-34b6-5866-a122-a5e731b6ee3c",
+ "at": "2026-09-23T19:28:28.187Z"
+}
