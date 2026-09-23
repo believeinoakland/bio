@@ -19695,3 +19695,19 @@ paths, BY SITE:
 **NOT CLAIMED, NOT TOUCHED:** `release/**`, `newgroup/src/release.mjs` (signed; DIST cuts), `newgroup/scripts/`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 UI (D-286 — the ai-session-context fixture draws from ranges PROVEN disjoint, so D0b cannot fail by the draw)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for D-286, worktree `.claude/worktrees/agent-a4159bf9b2ec2ebd8`,
+branch `land/worker/D-286`, from `origin/main` @ `4355bfda`.
+authority: `QUEUE.md` `### D-286 · running`; design `TREE-SHARING.md` §3 ("A GATE TEST DEPENDS ONLY ON THE CODE") with
+`VERIFICATION.md`.
+paths, BY SITE:
+  - `civicos-ui/test/ai-session-context.test.mjs`: the fixture draw (THE FIXTURE VALUES block), its header paragraph
+    "WHY EVERY FIXTURE VALUE IS DRAWN AT RUNTIME", the `NEGATIVE CONTROL:` line, and ONE new arm beside ARM D0b.
+    NOT touched: ARM D0b itself, ARM D's derivation list, ARM D1/D2, every other arm.
+  - NEW `civicos-ui/test/ai-session-fixture.mjs` (the draw and its disjointness proof, importable by a harness).
+**NOT CLAIMED, NOT TOUCHED:** `civicos-ui/app.html`, `civicos-ui/test/ai-session-wire.test.mjs` (a sibling unseeded draw is
+REPORTED, not fixed), `tools/mergecarry.mjs`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
