@@ -19444,6 +19444,7 @@ paths, BY SITE:
 **NOT CLAIMED:** `agent-worker/`, `civicos-ui/` (measured, not edited unless a harness reads a new code), `newgroup/`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — D-85 BUILT on branch `worktree-agent-a09e49cc337fc2200` @ `c5032e51` (read back from `git ls-remote`), merged with origin/main `619dfa65`; full gate on the clean committed tree 284/284 suites green · 17154 assertions passing; IC-181 PROPOSED, C-66 minted. The paths stay reserved until CONDUCT integrates the branch.
 
 ## CLAIM 2026-09-23 UI (UI-80 — a member published under Publication §3 rule 12 shows each case's frozen pair on its working page, and the published case page names the signature that covers the pair)
 
