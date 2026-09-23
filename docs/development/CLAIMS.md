@@ -19305,3 +19305,25 @@ LED-7 (SCHEDULER #14) cannot move these three without a ruling; each answer disp
    BOB since it touches DEC-14), or a ruling now?**
 
 **open as of 2026-09-23** — nothing runnable waits on any of them.
+
+## DELEGATION 2026-09-23 RECORD (D-442 worker) -> UI — **a member published under Publication §3 rule 12 carries no frozen pair in its own bytes: the working inquiry page's `inquiryPair` reads nothing for it, and two sentences on the published case page are now false for a `/2` case**
+
+D-442 (branch `worktree-agent-af1478b0c650efa08`, IC-179 proposed) builds `BIO_Publication_v0_1.md` §3 rule 12: `op=publish`
+writes nothing on a member finding, and the case document (`bio-case-document/2`) states each member's edition, frozen pair
+(`case_strength`) and grounds (`case_strength_grounds`). The plane's readers follow the block (`op=publishedcase`'s
+`findings[].strength`/`grounds`/`frozen_from`, the container, `op=excludedby`). Three texts in `civicos-ui/app.html` do not,
+and each is UI's (not edited by D-442, which holds no UI claim):
+1. **`inquiryPair(fmj)`** (the working inquiry page's ONE seam for the frozen pair) reads the finding's own
+   `published_strength`. For a member published under rule 12 it finds none and renders the named gap ("not published to this
+   page yet") for a finding that IS published. **Fix:** read the pair per case from `op=publishedcase&id=<finding>` (each
+   `findings[]` row carries `strength` and `frozen_from`), or say which case each pair belongs to — a finding in two cases now
+   has two frozen pairs, one per case, and the seam must not pick one. Legacy members (their bytes carry the block) keep working.
+2. **The published case page's supersession sentence** — *"Every strength shown on this page is the frozen pair of the FINDING
+   it is printed beside … signed with that finding's own bytes"* — and its edition twin (*"the numbers signed with that finding's
+   bytes"*). For a `/2` case the pair is signed with the CASE DOCUMENT, and the finding's own signature covers the finding as
+   its project concluded it. **Fix:** branch on `findings[].frozen_from` (`case_document` | `member_bytes`) and say which
+   signature covers the pair.
+3. **The working page's placeholder** (*"It is shown here once a case is set down and published, where it is frozen with the
+   edition it belongs to"*): for a rule-12 member it is never shown there. **Fix:** with item 1.
+**open as of 2026-09-23** — raised with D-442; it closes when UI's surface reads a rule-12 member's pair from the case it is
+frozen in and says which signature covers it.
