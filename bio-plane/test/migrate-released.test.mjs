@@ -113,6 +113,9 @@ const RELEASES = [
      RUNNING run its caller holds); the commit is dist/cut-0.72.0's cut, whose release/ holds it. RELEASES,
      NOT WITHDRAWN. It records a producing group at a store's first boot, as 0.71.0 does. */
   ["0.72.0", "b942d97308195a644f5c2ecb3ba79967ce7548ef"],
+  /* 0.73.0: deployed and live-verified 2026-09-23 (REC-168 / IC-178, a CUT NOW: op=capturerequest names a run
+     its caller holds); the commit is dist/cut-0.73.0's cut, whose release/ holds it. RELEASES, NOT WITHDRAWN. */
+  ["0.73.0", "d25684919e6748b92acbc080bca8dc2141273c44"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
