@@ -69570,6 +69570,35 @@ async function sha256Hex5(v) {
   const b = await crypto.subtle.digest("SHA-256", typeof v === "string" ? new TextEncoder().encode(v) : v);
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
+var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+function profilesAsText(ct, total, multipart) {
+  return !multipart && total <= PROFILE_TEXT_MAX && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
+}
+async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart) {
+  const digestCertain = !!profileBytes && stackId.handler.textual === true && stackId.confidence === CONFIDENCE.CERTAIN;
+  if (!digestCertain)
+    return {
+      determined: false,
+      rendition: null,
+      evidentiary: null,
+      basis: profileBytes ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined` : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`
+    };
+  const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex5 });
+  if (dg.identity !== sha)
+    return {
+      determined: false,
+      rendition: null,
+      evidentiary: null,
+      basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted"
+    };
+  return {
+    determined: true,
+    rendition: dg.rendition,
+    evidentiary: dg.evidentiary,
+    boundary_missed: !!dg.boundary_missed,
+    basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`
+  };
+}
 async function classify(token, env) {
   if (!token) return null;
   if (token === env.ADMIN_TOKEN && await liveToken(env.ADMIN_TOKEN)) return "admin";
@@ -72267,9 +72296,8 @@ var index_default = {
           }
         }
       }
-      const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
       let profileText = "", profileBytes = null;
-      if (!multipart && total <= PROFILE_TEXT_MAX && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "")) {
+      if (profilesAsText(ct, total, multipart)) {
         try {
           const pobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
           if (pobj) {
@@ -72333,33 +72361,7 @@ var index_default = {
           { retrieved, resolved: res2.url || null, detected: profile.format }
         );
       }
-      const digestCertain = !!profileBytes && stackId.handler.textual === true && stackId.confidence === CONFIDENCE.CERTAIN;
-      if (digestCertain) {
-        const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex5 });
-        if (dg.identity !== sha) {
-          profile.digests = {
-            determined: false,
-            rendition: null,
-            evidentiary: null,
-            basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted"
-          };
-        } else {
-          profile.digests = {
-            determined: true,
-            rendition: dg.rendition,
-            evidentiary: dg.evidentiary,
-            boundary_missed: !!dg.boundary_missed,
-            basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`
-          };
-        }
-      } else {
-        profile.digests = {
-          determined: false,
-          rendition: null,
-          evidentiary: null,
-          basis: profileBytes ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined` : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`
-        };
-      }
+      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart);
       let reading;
       let textUnits = null, textUnitsOverBound = 0;
       const canRead = !!profileText && typeof docType.type.parse === "function";
@@ -72920,15 +72922,16 @@ var index_default = {
           reason: "NO_LOCATOR",
           detail: "monitoring needs a public https locator in source.locator"
         }, 409);
-      let baseline = null;
+      let baseline = null, baselineProfile = null;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
         const match = (reg.documents || []).find((d) => d && d.locator === locator);
         baseline = match?.capture?.sha256 || null;
+        baselineProfile = match && match.profile && typeof match.profile === "object" ? match.profile : null;
       } catch {
       }
       const checked = (/* @__PURE__ */ new Date()).toISOString().split(".")[0] + "Z";
-      let status = null, note = null, seen = null;
+      let status = null, note = null, seen = null, compared = null, comparedBasis = null;
       try {
         const g = await governedFetch(env, env.STORE.get(env.STORE.idFromName(storeName)), locator, "monitor");
         if (g.refusedByGovernor)
@@ -72950,12 +72953,52 @@ var index_default = {
           const d = await crypto.subtle.digest("SHA-256", bytes);
           seen = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
           if (!baseline) note = "no captured baseline to compare against; recorded the check only";
-          else if (seen === baseline) {
-            status = "unchanged";
-            note = "the source still serves the captured bytes";
-          } else {
-            status = "modified";
-            note = "the source no longer serves the captured bytes";
+          else {
+            const bd = baselineProfile && baselineProfile.digests;
+            if (!bd || bd.determined !== true || typeof bd.evidentiary !== "string" || !bd.evidentiary)
+              comparedBasis = "the captured baseline recorded no determined evidentiary digest, so the raw bytes were compared";
+            else {
+              const ct = res2.headers.get("content-type");
+              const asText2 = profilesAsText(ct, bytes.length, false);
+              const headers = {};
+              for (const [hk, hv] of res2.headers) headers[hk.toLowerCase()] = hv;
+              const profCtx = {
+                headers,
+                locator,
+                content_type: ct || null,
+                text: asText2 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : ""
+              };
+              const stackId = identify(profCtx);
+              const fresh = await substanceDigests(asText2 ? bytes : null, stackId, profCtx, seen, false);
+              if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
+                comparedBasis = `the fetched bytes identify as ${stackId.handler.key} v${stackId.handler.version} but the baseline was normalised under ${baselineProfile.handler} v${baselineProfile.handler_version}, so the raw bytes were compared`;
+              else if (!fresh.determined)
+                comparedBasis = `the fetched bytes' substance digest is undetermined (${fresh.basis}), so the raw bytes were compared`;
+              else {
+                compared = "evidentiary";
+                comparedBasis = `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
+                if (fresh.evidentiary !== bd.evidentiary) {
+                  status = "modified";
+                  note = "the substance of the source differs from the capture";
+                } else if (seen === baseline) {
+                  status = "unchanged";
+                  note = "the source still serves the captured bytes";
+                } else {
+                  status = "unchanged";
+                  note = fresh.rendition === bd.rendition ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture" : "the substance is unchanged; machinery or furniture around it differs from the capture";
+                }
+              }
+            }
+            if (compared !== "evidentiary") {
+              compared = "raw";
+              if (seen === baseline) {
+                status = "unchanged";
+                note = "the source still serves the captured bytes";
+              } else {
+                status = "modified";
+                note = "the source no longer serves the captured bytes";
+              }
+            }
           }
         }
       } catch (e) {
@@ -73006,7 +73049,7 @@ var index_default = {
       let text = out.join("\n");
       if (!/^\s+last_checked:/m.test(text) && /^monitoring:/m.test(text))
         text = text.replace(/^monitoring:/m, "monitoring:\n  last_checked: " + checked);
-      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + "\n";
+      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + (compared ? ` (compared ${compared})` : "") + "\n";
       const at = text.indexOf("## Session Log");
       if (at < 0) text += "\n## Session Log\n\n" + entry;
       else {
@@ -73068,6 +73111,10 @@ var index_default = {
         note,
         baseline,
         seen,
+        /* D-60: WHICH comparison the status rests on — "evidentiary" or "raw", null
+           when none was made (no baseline, or the source did not answer) — and why. */
+        compared,
+        compared_basis: comparedBasis,
         reeval_raised: flags,
         ...promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail },
         note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
