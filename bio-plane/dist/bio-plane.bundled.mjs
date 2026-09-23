@@ -8858,6 +8858,25 @@ var AI_RUN_CHECKS = {
     /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
     where: "src/airun.mjs runPrincipalGate, called from store.mjs aiRunTick/aiRunClose/suggestVersion/extractPropose",
     translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
+  },
+  /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
+     wrote `consumed + Number(v)` for any figure, so the run's own principal could REFUND a bound its member set
+     (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
+     whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
+     is a CLOSE naming no bound, this is a figure no bound can hold. */
+  AI_RUN_CONSUME_INVALID: {
+    check: "C-22.13",
+    where: "src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen",
+    translation: "The investigation reported spending an amount that is not a whole number of zero or more. A budget is only ever used up, one whole step at a time, so nothing was recorded for this step."
+  },
+  /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
+     counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
+     is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
+     number. A zero claims nothing and is not refused. */
+  AI_RUN_BOUND_PLANE_COUNTED: {
+    check: "C-22.14",
+    where: "src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen",
+    translation: "This part of the investigation's budget is counted by the record itself as the work lands \u2014 passages marked citable, questions opened \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
   }
 };
 var AI_RUNS_CONTEXT_CHECKS = {
@@ -26445,6 +26464,27 @@ function checkBound(bound) {
     "AI_RUN_BOUND_UNNAMED",
     `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; endings: ${Object.keys(RUN_ENDINGS).join(", ")} (\xA714b.6)`
   );
+}
+var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
+function checkConsume(entries, { seed = false } = {}) {
+  for (const [k, v] of Array.isArray(entries) ? entries : []) {
+    const b = String(k);
+    if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) continue;
+    if (seed && v == null) continue;
+    if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
+      return refusal3(
+        "AI_RUN_CONSUME_INVALID",
+        `'${b}' was given ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, and a count never goes down (\xA714b.6). Nothing was written`,
+        { bound: b }
+      );
+    if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
+      return refusal3(
+        "AI_RUN_BOUND_PLANE_COUNTED",
+        `'${b}' is counted by the plane as the run's work lands, never by the caller (\xA711 item 5 rule 2, SK-8), so a figure sent for it could only disagree with the count. Nothing was written`,
+        { bound: b }
+      );
+  }
+  return null;
 }
 var PROJECT_GATE_GROUNDS = {
   /* No member is behind this caller at all — a machine credential. The gate is
@@ -62428,6 +62468,16 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         translation: badSkill.translation,
         note: badSkill.detail
       };
+    const badSeed = checkConsume((Array.isArray(bounds) ? bounds : []).filter((b) => b && typeof b === "object").map((b) => [String(b.bound), b.consumed]), { seed: true });
+    if (badSeed)
+      return {
+        run,
+        started: false,
+        code: badSeed.code,
+        check: badSeed.check,
+        translation: badSeed.translation,
+        note: badSeed.detail
+      };
     const lensNow = await this.biasManifest({
       scope: String(contextType) === "project" ? "project" : "instance",
       scopeId: String(contextType) === "project" ? String(contextId) : "",
@@ -62487,7 +62537,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           run,
           String(b.bound),
           Number(b.allowed) || 0,
-          Number(b.consumed) || 0,
+          b.consumed == null ? 0 : b.consumed,
+          /* REC-169: judged above */
           b.unit == null ? null : String(b.unit)
         );
       }
@@ -62583,6 +62634,20 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         bound: row.stopped_bound,
         note: "this run has ended; its log is closed and a later tick does not reopen it"
       };
+    const badConsume = checkConsume(Object.entries(consume && typeof consume === "object" ? consume : {}));
+    if (badConsume)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row.status,
+        code: badConsume.code,
+        check: badConsume.check,
+        translation: badConsume.translation,
+        detail: badConsume.detail,
+        bound: badConsume.bound,
+        note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. Nothing was appended and no budget was spent"
+      };
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _Store.AI_RUN_LEASE_MS;
     const refused = [];
     let appended = 0;
@@ -62599,8 +62664,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
           run,
           k,
-          Number(v) || 0,
-          Number(v) || 0
+          v,
+          v
         );
       }
       this.sql.exec(
