@@ -204,7 +204,7 @@ widened: 2026-09-23 by SCHEDULER #14 on BOB #29's ruling (D-170 folded in): A's 
 added: 2026-09-22 · SCHEDULER #12 (BOB #26's inbox entry, item 2, drained this commit; D-125's DEBT row; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #12 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-125» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
-### D-278 · running — SPAWNED 2026-09-23 20:53Z by CONDUCT #17 from the BACKLOG as a cloud worker (session 'WORKER <ID> (CONDUCT #17)'), under BOB #31's 20:51Z ruling; recorded here by SCHEDULER #16 so no refill places it twice. A worker finds this row with ledger.mjs find.
+### D-278 · integrated — finished; land/worker/D-278 @ e5e6d6e3 integrated on land/conduct/c17-batch3 @ d93d29c4, waiting for its train — flipped by SCHEDULER #16
 order: after D-125 and before COFF-13, with the refusal class (UI-73, REC-159, REC-162): every site's `error` is TRUE today, so it follows the rows correcting what a member is told falsely; above COFF-13 because group (4) meets every copy installed without storage (SCHEDULER #13, 2026-09-22; BOB #26's inbox entry, item 1)
 milestone: M9
 interface: I3 — the reasons join the vocabulary, `error` kept beside each; the integrator mints and classifies the IC.
@@ -311,6 +311,16 @@ scope: UI-43's scope RE-DERIVED on current `main` — the branch is EVIDENCE, 1,
 accepts-when: an OR accept requires the per-branch affirmation; a fixture whose two parts share a capture shows that origin before it, and one with independent parts shows NONE; driven against the real plane. NEGATIVE CONTROLS: drop the affirmation, or hide the field, and each arm fails by name.
 added: 2026-09-21 · SCHEDULER #5 (D-397's third branch and D-195, verified at the code; `node tools/mintid.mjs UI`).
 uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «UI-74» on entering the cache; its `order:` line is the current one.
+
+### REC-161 · queued — **NOTHING COMPUTES INDEPENDENCE OVER A PARTITION A MEMBER IS STILL PROPOSING, SO D-195's SHARED ORIGIN CANNOT BE SHOWN AT THEIR** … (whole text: the cut archive)
+order: 1 of 2, directly after UI-74, which shows the same fact at the accept ceremony (BOB #22, 2026-09-21: SCHEDULER #5's Q1, RULED)
+milestone: M9
+interface: I3 additive — an IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §12 clause (c) (BOB #22, 2026-09-21).
+depends-on: none — `#independenceOf` is built.
+accepts-when: two parts sharing a capture read as sharing an origin, independent parts read clean, a one-part partition reads `checked: false`, and the answer equals `op=versionstrength`'s once the … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
+cut: cut to its fields by SCHEDULER #11 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «REC-161» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
