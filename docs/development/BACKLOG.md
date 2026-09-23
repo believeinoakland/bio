@@ -54,6 +54,16 @@ scope: DIST.md step 1 reads: `gates.mjs --full --no-reuse` on the exact tree, or
 accepts-when: a cut from a tree with a backstop record runs no battery and names it; a record whose run printed any REUSED unit, or a `--since`, never satisfies a cut and the battery runs.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1; `node tools/mintid.mjs M0`); re-narrowed 2026-09-23 by SCHEDULER #15 (BOB #30's ruling).
 
+### REC-174 · queued — **`op=frontier`'S NEVER-LOOKED AND MISSING LISTS HAVE THE FULL-FETCH HOLE D-389 CLOSED FOR `looked`: WHEN A FETCH COMES BACK FULL, `never` AND `unexplained` CAN READ AT OR UNDER THE CAP AND REPORT `truncated: false` WHILE MORE ROWS EXIST.** Document arm: `#frontierNeverLooked((cap + 1) * 2)`, then gated (`bio-plane/src/store.mjs`, re-read on `b41d1edb`); content: `missing` at `(cap + 1) * 2`, gated, then split by cause; meaning: three lists at `cap + 1` with no over-fetch, gated, then split. Found by D-389's worker (CONDUCT #15). — owner RECORD.
+order: directly before D-57 and after D-389 (in the cache), the same coverage claim in the same read, CLAUDE.md §2's class: a list saying it is complete when the reader could not see its end (SCHEDULER #15, 2026-09-23)
+milestone: M3
+interface: I3 — `truncated` reads `true` on a full fetch of these lists; the integrator mints and classifies the IC.
+design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers), with D-389's landed exhaustion disjunct as the precedent.
+depends-on: D-389 (its disjunct in `Store#frontierPage` is reused).
+scope: route every never-looked and missing fetch through D-389's exhaustion disjunct, OR-ed into each arm's `truncated`; the meaning arm's three lists gain the same over-fetch.
+accepts-when: a fixture whose never-looked or missing supply exceeds the fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. NEGATIVE CONTROL: drop the disjunct from one arm, and that arm's fixture fails by name.
+added: 2026-09-23 · SCHEDULER #15 (D-389's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
+
 ### D-57 · queued — **`resolveLinks` TELLS A MEMBER THAT A SELF-LINKED PAGE'S TARGET *CHANGED*, NAMING ONE CAPTURE TWICE AS THE BRACKET.** A page … (whole text: the cut archive)
 order: after REC-160, with the read-time claims the record cannot support (CLAUDE.md §2's class): a fabricated sentence about a source, on every self-linking municipal page; below REC-160 because the verdict it carries is right (SCHEDULER #8, 2026-09-21, LED-7 batch S8-2)
 milestone: M3
@@ -1161,22 +1171,3 @@ depends-on: none.
 accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #7 (LED-7; D-40's DEBT row of 2026-07-25, re-measured; keeps its `D-` id).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-40» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)"** … (whole text: the cut archive)
-order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
-milestone: M0 (background lane, holds no slot)
-interface: none — two suites' report lines
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and … (whole text: the cut archive)
-depends-on: M0-65 (its EXCLUDES segment and widened tally reader; in CONDUCT #6's gate).
-accepts-when: a full battery's headline carries no EXCLUDES segment, and its assertion total rises by exactly the two suites' printed tallies, stated in the landing; `cd bio-plane && npm` … (whole text: the cut archive)
-added: 2026-09-19 · SCHEDULER (M0-65's worker's suggestion, routed by CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
-cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
-
-### M0-76 · queued — `d280-strengthbar.control.mjs` READS NOT AS DECLARED ON EVERY RUN (arm C2 and the severedhomes arms), and D-280's site (a) — the … (whole text: the cut archive)
-order: M0, with the instrument corrections; ruled by BOB #16 (SCHEDULER, 2026-09-19)
-milestone: M0 (background lane, holds no slot)
-interface: none — a control driver and one suite's arm
-design: `docs/development/VERIFICATION.md` (admitted for M0 by name; its one-copy rule), with D-267 and D-280 … (whole text: the cut archive)
-depends-on: none.
-accepts-when: `node bio-plane/test/d280-strengthbar.control.mjs` reads EVERY arm AS DECLARED and the site-(a) arm fails by name; the control leaves the tree byte-identical; the C-6.1 … (whole text: the cut archive)
-cut: cut to its fields (LED-6 step (3), SCHEDULER, 2026-09-19) and again by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-76» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
