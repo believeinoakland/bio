@@ -63,7 +63,7 @@
  * effect take that one too; D-282 was found by a control arm, not by the battery.
  */
 import "./stdio.mjs";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -89,8 +89,32 @@ export const sweepSandbox = () => {
   if (swept) return;
   swept = true;
   /* Synchronous on purpose. The whole defect is an asynchronous removal losing
-     a race with process exit; an async sweep here would reproduce it. */
-  try { rmSync(SANDBOX, { recursive: true, force: true, maxRetries: 3 }); } catch { /* orphan sweep gets it */ }
+     a race with process exit; an async sweep here would reproduce it.
+
+     2026-09-23, GitHub run 35815539592 (282/282 green, RED on "LEAKING 2 miniflare
+     sandbox(es) in 1 director(ies): bio-battery-3964-eIXKeF"): THE SENTENCE ABOVE
+     WAS HALF TRUE. This sweep is synchronous, but the removal it races is not
+     gone: `Miniflare#dispose()` has already STARTED `fs.promises.rm` on its
+     `miniflare-*` directory, and its queued unlinks keep running on libuv's
+     threadpool while this listener blocks the main thread. When one of them
+     deletes an entry under `rmSync`'s walk, `rmSync` RETURNS NORMALLY WITH THE TREE
+     STILL THERE — no throw, so the catch below never saw it. MEASURED on node
+     26.10.0: the old single `rmSync`, driven by a child that imports this module,
+     builds two miniflare-shaped trees, fires dispose()'s exact `rm` on each and
+     exits, left 21 directories holding 35 sandboxes in 300 endings, the leaked
+     shape exactly the runner's (`bio-battery-<pid>-*: [miniflare-…, miniflare-…]`).
+     THE FIX TAKES THE TREE OUT FROM UNDER THE RACE instead of out-running it: a
+     `rename` is atomic, every queued removal addresses the OLD path and fails
+     ENOENT harmlessly, and at most the few syscalls already inside the kernel can
+     still touch the moved tree — so the removal is repeated until the tree is
+     verified GONE, never read as gone from the absence of a throw. The moved name
+     keeps the `bio-battery-<pid>-` prefix, so the battery's orphan sweep still
+     attributes it if even this fails. Same driver, this sweep: 0 of 300. */
+  let target = SANDBOX;
+  try { renameSync(SANDBOX, `${SANDBOX}-swept`); target = `${SANDBOX}-swept`; } catch { /* gone already, or unmovable: sweep in place */ }
+  for (let i = 0; i < 5 && existsSync(target); i++) {
+    try { rmSync(target, { recursive: true, force: true, maxRetries: 3 }); } catch { /* next pass; the orphan sweep after that */ }
+  }
 };
 
 process.on("exit", sweepSandbox);
