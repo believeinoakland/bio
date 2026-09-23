@@ -20026,3 +20026,4 @@ call line each in `recordRows`, `renderRecord`, `finderRowsHtml`, `runSearch`, `
 Suites: `civicos-ui/test/agent-surfaced-inquiry.test.mjs` and `.control.mjs` (new), plus any suite whose pin on these
 sites moves (named at release). `docs/development/CIVICOS_UI_STATE.md` (PREPENDED). No plane change (I3 consumer).
 **open as of 2026-09-23** — claimed at the start of the item.
+released: 2026-09-23 — pushed land/worker/D-82 @ 803556f6 (verified by ls-remote). Sites as claimed, except `queueSubjectHtml` and `renderQueue` were NOT touched: op=queue names no question as a subject today (measured), so nothing there to mark. No other suite's pin moved. Paths stay reserved until CONDUCT integrates the branch.
