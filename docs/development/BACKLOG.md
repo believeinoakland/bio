@@ -23,13 +23,14 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-159 · blocked — awaiting Bob: permission check refused the membership-op authority change (its worker, 2026-09-23; nothing pushed). REC-162 and REC-155 depend on it.
+### REC-159 · running — APPROVED by Bob ~21:08Z (BOB #31); CONDUCT #17 re-spawns it 2026-09-23 (the earlier worker's permission check refused the membership-op authority change; code only, no live instance). **AN ENROLLED ADMINISTRATOR IS REFUSED §4.9's CUSTODIAL ACTS FROM THEIR OWN SESSION, WITH A SENTENCE THAT IS FALSE OF THEM.** … (whole text: the cut archive)
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
 interface: I3 — four ops gain session reach and three a stamped `by`; the integrator mints and classifies the IC.
 design: `docs/architecture/BIO_Membership_Architecture_v2.md` §4.9 (each act is EVERY administrator's) and … (whole text: the cut archive)
 depends-on: none. D-136 and REC-156 are on `main`.
 accepts-when: an enrolled administrator performs all four from their session, attributed to them; a member is refused by name. How a liar passes it: widening the class without the roster … (whole text: the cut archive)
+scope-amended: + memberset/signeradd/signerset record the server-stamped actor in a new `by` column; existing rows read `not recorded` (BOB #31 21:08Z; attribution lives in the record). The accepts-when gains an arm per op through the op, and its NEGATIVE CONTROL drops one op's stamp.
 added: 2026-09-21 · SCHEDULER #7 (REC-156's DELEGATION; `node tools/mintid.mjs REC`).
 
 ### REC-162 · queued — **A FOUNDER-ONLY OP'S REFUSAL CALLS AN ENROLLED ADMINISTRATOR A NON-ADMINISTRATOR.** Five ops sit in `SESSION_OPS.admin` and … (whole text: the cut archive)
