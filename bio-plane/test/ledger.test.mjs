@@ -413,12 +413,12 @@ section("7 — THE GATE'S THREE ARMS, on fixtures: (a) closed-live, (b) budget, 
   t("(b) an open row over 3 KiB is named, with its size", a.budget.rowsOver.map((r) => r.id), ["H-14"]);
   /* CORRECTED 2026-09-18 by LED-6 (WORK-PIPELINE §1, §4): the cache's budget is 40 KiB and the old 150 KiB
      figure moved to the BACKLOG. The 100 KiB case is the one that tells the two budgets apart. */
-  t("(b) a small QUEUE is under its 40 KiB budget", a.budget.ledgers.find((x) => x.ledger === "QUEUE").over, false);
+  t("(b) a small QUEUE is under its cache budget", a.budget.ledgers.find((x) => x.ledger === "QUEUE").over, false);
   const big = fixture({ queue: Q("I-1", "queued") + "prose\n".repeat(26000) + ARMS, debt: DEBT([]) });
   t("(b) a QUEUE over 150 KiB is over budget", L.ledgerAudit({ repo: big }).budget.ledgers.find((x) => x.ledger === "QUEUE").over, true);
   const mid = fixture({ queue: Q("I-2", "queued") + "prose\n".repeat(17000) + ARMS, backlog: Q("I-3", "queued") + "prose\n".repeat(17000), debt: DEBT([]) });
   const midA = L.ledgerAudit({ repo: mid }).budget.ledgers;
-  t("(b) a ~100 KiB QUEUE is OVER the cache's 40 KiB, and a ~100 KiB BACKLOG is UNDER its 150 KiB",
+  t("(b) a ~100 KiB QUEUE is OVER the cache's budget, and a ~100 KiB BACKLOG is UNDER its 150 KiB",
     [midA.find((x) => x.ledger === "QUEUE").over, midA.find((x) => x.ledger === "BACKLOG").over], [true, false]);
 
   const armedRoot = fixture({ queue: Q("J-1", "done") + Q("LED-4", "queued"), debt: DEBT([]),
@@ -628,7 +628,9 @@ section("11 — LED-6: THE FIVE INVARIANTS (WORK-PIPELINE §2), each with a PLAN
   const row = (id, n) => `### ${id} · queued — a row\ndepends-on: none\nscope: ${"x".repeat(n)}\n\n`;
   t("P5 CATCHES a backlog row over 2 KiB", v(inv(cleanCache, cleanBacklog + row("B-5", 2600)), "P5").map((x) => x.id), ["B-5"]);
   t("P5 (over-strictness) passes a 2.5 KiB CACHE row — the cache's row budget is 3 KiB", v(inv(cleanCache + row("R-9", 2600), cleanBacklog), "P5"), []);
-  t("P5 CATCHES a cache over 40 KiB", v(inv(cleanCache + "## prose, not a row\n" + "prose line\n".repeat(4000), cleanBacklog), "P5").map((x) => x.file), ["docs/development/QUEUE.md"]);
+  /* CORRECTED 2026-09-23 by SCHEDULER #16: the cache budget moved 40 -> 48 KiB (BOB #31), and a 44 KB plant is under it;
+     the plant now exceeds the budget BY CONSTRUCTION, and the label names no figure that can drift. */
+  t("P5 CATCHES a cache over its budget", v(inv(cleanCache + "## prose, not a row\n" + "prose line\n".repeat(Math.ceil(L.BUDGET.QUEUE.ledger / 11) + 100), cleanBacklog), "P5").map((x) => x.file), ["docs/development/QUEUE.md"]);
   t("P5 (over-strictness) passes a 100 KiB backlog — the backlog's budget is 150 KiB",
     v(inv(cleanCache, cleanBacklog + "## prose\n" + "prose line\n".repeat(9000)), "P5"), []);
   const odd = inv(cleanCache + dep("R-10", "parked", "none"), cleanBacklog);
