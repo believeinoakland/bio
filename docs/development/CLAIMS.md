@@ -19419,6 +19419,7 @@ paths, BY SITE:
 **NOT CLAIMED:** `tools/gates.mjs` (read, not edited), any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+**released: 2026-09-23** — built and PUSHED on `worktree-agent-adeead91b1dad5478` @ `499644a0` (read back by `git ls-remote`), from `origin/main` @ `f05c1efd`; FULL gate GREEN (283/283 suites green · 17035 assertions passing · 0 SKIP), recorded for tree `4c3e2d9a`. A MEASUREMENTS-only change: 88 → 59 units (60 with the new suite), readers 62 → 27 (M-110). Awaiting CONDUCT's integration; the paths stay reserved until then.
 
 ## CLAIM 2026-09-23 RECORD (D-85 — an assistant opens a question only inside a run it holds; a run records the lens in force at its open)
 
