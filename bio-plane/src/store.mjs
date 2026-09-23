@@ -324,7 +324,9 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
    Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
 import { runPrincipalGate } from "./airun.mjs";
 /* REC-169: a figure written into a run's bound is a non-negative integer and never a plane-counted bound's — decided
-   once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives. */
+   once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives.
+   REC-172: the tick hands it its `consume` whole (`map: true` — a MAP of named bounds) and the open its `bounds`
+   whole (`list: true` — a LIST of named bounds, each allowance a whole number): still the one rule, in one place. */
 import { checkConsume } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
@@ -39401,9 +39403,12 @@ export class Store extends DurableObject {
                translation: badSkill.translation, note: badSkill.detail };
     /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
        `ai_run_bounds`, and `Number(b.consumed) || 0` let a run OPEN already refunded (`consumed: -10`) or seed a
-       bound the plane counts. The same check the tick asks (`checkConsume`), with an absent seed meaning none spent. */
-    const badSeed = checkConsume((Array.isArray(bounds) ? bounds : []).filter((b) => b && typeof b === "object")
-      .map((b) => [String(b.bound), b.consumed]), { seed: true });
+       bound the plane counts. The same check the tick asks (`checkConsume`), with an absent seed meaning none spent.
+       REC-172 (§14b.6) — AND THE DECLARATION ITSELF, before the seed: a `bounds` that is not a list, an entry that is
+       not an object or names no bound (C-22.15), a `lease` entry (C-22.14 — the plane decides it), and an `allowed`
+       that is not a whole number of zero or more (C-22.13). Each was DROPPED or COERCED below (`continue`, and
+       `Number(b.allowed) || 0`), so a member who declared a ceiling could get a run without it, or one they never set. */
+    const badSeed = checkConsume(bounds, { list: true });
     if (badSeed)
       return { run, started: false, code: badSeed.code, check: badSeed.check,
                translation: badSeed.translation, note: badSeed.detail };
@@ -39458,7 +39463,8 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
            ON CONFLICT(run, bound) DO NOTHING`,
-          run, String(b.bound), Number(b.allowed) || 0, b.consumed == null ? 0 : b.consumed,   /* REC-169: judged above */
+          run, String(b.bound), b.allowed == null ? 0 : b.allowed,    /* REC-172: judged above; absent is 0, as ever */
+          b.consumed == null ? 0 : b.consumed,   /* REC-169: judged above */
           b.unit == null ? null : String(b.unit));
       }
     });
@@ -39557,7 +39563,10 @@ export class Store extends DurableObject {
        whole tick: nothing appended, nothing spent, the lease not extended. A clamp would answer `ticked: true` over
        a spend that did not happen. Asked AFTER sight, position, the project gate and status, so a caller who may
        not drive the run learns nothing about the figures' rule, and an ended run's tick stays its stated no-op. */
-    const badConsume = checkConsume(Object.entries(consume && typeof consume === "object" ? consume : {}));
+    /* REC-172 (§14b.6) — AND THE MAP ITSELF: a `consume` that is not a map (an ARRAY above all — vf4 sent one for its
+       whole life) or a key naming no bound was SKIPPED by the loop below, answering `ticked: true` over a spend that
+       did not happen (C-22.15); `lease` is the plane's to decide (C-22.14). */
+    const badConsume = checkConsume(consume, { map: true });
     if (badConsume)
       return { run, ticked: false, found: true, status: row.status,
                code: badConsume.code, check: badConsume.check,

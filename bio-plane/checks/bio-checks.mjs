@@ -6405,7 +6405,9 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). FOURTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (TWELVE until 2026-09-23, when REC-169 added
+ * and §14b.6). FIFTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (FOURTEEN until 2026-09-23, when REC-172 added
+ * C-22.15 — a figure is spent or declared only on a bound the run HAS, named in a map or a list; TWELVE until
+ * 2026-09-23, when REC-169 added
  * C-22.13 — a figure written into a run's bound is a non-negative integer — and C-22.14 — never for a bound the
  * plane counts; TEN until 2026-09-19, when REC-153 added
  * C-22.11 — the run's context is the kind it says it is — and REC-152 added C-22.12 — the run's PRINCIPAL as the
@@ -6748,22 +6750,40 @@ export const AI_RUN_CHECKS = {
      (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
      whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
      is a CLOSE naming no bound, this is a figure no bound can hold. */
+  /* REC-172, 2026-09-23: ALSO the member's `allowed` at the open (it was written `Number(x) || 0`, so `-1`, `1.5` and
+     `"3"` became a declaration nobody made). One code for both halves of a bound's figure — the rule is the same whole
+     number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
   AI_RUN_CONSUME_INVALID: {
     check: 'C-22.13',
     where: 'src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen',
-    translation: 'The investigation reported spending an amount that is not a whole number of zero or more. '
-      + 'A budget is only ever used up, one whole step at a time, so nothing was recorded for this step.',
+    translation: 'The investigation gave an amount for its budget that is not a whole number of zero or more. '
+      + 'A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step.',
   },
   /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
      counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
      is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
      number. A zero claims nothing and is not refused. */
+  /* REC-172, 2026-09-23: ALSO `lease` (`PLANE_DECIDED_BOUNDS`), at the tick and as a declaration at the open, and
+     for ANY figure including zero. Same rationale — the plane decides it, off the clock — so the same code; the
+     translation now names the lease beside the counts. */
   AI_RUN_BOUND_PLANE_COUNTED: {
     check: 'C-22.14',
     where: 'src/airun.mjs checkConsume, called from store.mjs aiRunTick and aiRunOpen',
-    translation: 'This part of the investigation\'s budget is counted by the record itself as the work lands — '
-      + 'passages marked citable, questions opened — so the investigation cannot report it, up or down. Nothing '
-      + 'was recorded for this step.',
+    translation: 'This part of the investigation\'s budget is kept by the record itself — passages marked citable '
+      + 'and questions opened are counted as the work lands, and whether the investigation is still alive is read '
+      + 'off the clock — so the investigation cannot report it, up or down. Nothing was recorded for this step.',
+  },
+  /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
+     that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
+     spent nothing, so a caller believed it counted work the record never held (the live instrument vf4 sent an array
+     for its whole life). The open DROPPED an entry naming no bound, so a member who declared `fetchs: 3` got a run
+     with no fetch ceiling. Its own code and not C-22.13's: the figure may be perfectly good; what is wrong is that it
+     names nothing the run has, and the remedy (spell the bound, send a map) differs. */
+  AI_RUN_BOUND_UNKNOWN: {
+    check: 'C-22.15',
+    where: 'src/airun.mjs checkConsume (the tick\'s map, the open\'s list, and every key in either), called from store.mjs aiRunTick and aiRunOpen',
+    translation: 'The investigation named a part of its budget that does not exist, or did not say which part '
+      + 'it meant. Nothing was recorded, so no budget was spent or set that nobody could account for.',
   },
 };
 

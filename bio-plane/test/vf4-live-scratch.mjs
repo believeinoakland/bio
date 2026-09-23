@@ -1,5 +1,16 @@
 #!/usr/bin/env node
-/* DATED NOTE, 2026-09-23, ADDED BY D-116 — THE DO ARM READ THE WRONG FIELD, AND NOW READS THE RIGHT ONE.
+/* DATED NOTE, 2026-09-23, ADDED BY REC-172 — THIS INSTRUMENT'S FETCHES WERE NEVER COUNTED, AND NOW ARE.
+ *
+ * The phase-4 loop's `op=airuntick` sent `consume: [{ bound: "fetches", amount: 1 }]` — an ARRAY. The plane read a
+ * consume as a map and skipped every key that named no bound; an array's keys are positions (`"0"`), so every tick
+ * answered `ticked: true` and spent NOTHING: the run's `fetches` bound read 0 however many steps ran, and any figure
+ * this file recorded about the budget is a figure of an unspent one. Since REC-172 (C-22.15) the plane REFUSES such a
+ * consume by name, so the tick now sends `consume: { fetches: 1 }`, and the `ticked` counter reads the RESULT's
+ * `ticked` rather than the envelope's `ok` (a refused tick answers inside an `ok: true` envelope — D-276's class, and
+ * it would have counted every refused tick as landed). Those two lines are the ONLY edits below this note.
+ * `rec172-bounds.test.mjs` ARM V reads this file's tick body off its source and sends it through the op.
+ *
+ * DATED NOTE, 2026-09-23, ADDED BY D-116 — THE DO ARM READ THE WRONG FIELD, AND NOW READS THE RIGHT ONE.
  *
  * Phase 0 and the closing build read recorded `plane_durable_object` from `op=bootstrap`'s `version`. That field was
  * ALWAYS the ROUTING isolate's env.VERSION (FLEET #3, 2026-09-21; `kickoffs/DIST.md` lesson 18): the DO's answer was
@@ -483,9 +494,9 @@ while (steps < 60) {
   trace.push({ step: state.step, to: decision.step, note: note_ });
   /* §14b.6 LOG-ALWAYS, through the plane's own producer. */
   const tick = await op("airuntick", { token: ADMIN,
-    body: { run: RUN, log: [H.stepLog(state, decision)], consume: [{ bound: "fetches", amount: 1 }] } });
+    body: { run: RUN, log: [H.stepLog(state, decision)], consume: { fetches: 1 } } });
   planeCalls++;
-  if (tick.status === 200 && tick.body?.ok === true) ticked += 1;
+  if (tick.status === 200 && tick.body?.ok === true && R(tick).ticked === true) ticked += 1;
   else if (steps === 1) console.log(`  op=airuntick answered ${tick.status}: ${tick.raw.slice(0, 300)}`);
   if (decision.step === "close") {
     const cl = await op("airunclose", { token: ADMIN, body: { run: RUN, bound: decision.bound || "completed" } });
