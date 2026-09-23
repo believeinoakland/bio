@@ -18044,18 +18044,18 @@ export class Store extends DurableObject {
       .filter((c) => typeof c === "string" && c))];
     const by = new Map();
     if (!ids.length) return { by, truncated: false };
-    const marks = ids.map(() => "?").join(",");
+    /* D-443: every list here is bound as ONE json_each value, never one variable per id — D-36's ~100
+       ceiling refuses the whole read past it, and `#contentEarned` hands this up to 200 ids. */
     const rows = this.#rows(
       `SELECT content_id, transcriber, at, text_sha256 FROM transcriptions
-        WHERE content_id IN (${marks}) LIMIT ?`, ...ids, ids.length);
+        WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length);
     if (!rows.length) return { by, truncated: false };
     for (const r of rows) by.set(r.content_id, { ...r, attestations: [] });
     const cap = Math.min(Store.TEXT_SOURCE_LIMIT_DEFAULT * rows.length, Store.TEXT_SOURCE_LIMIT_MAX);
-    const txMarks = rows.map(() => "?").join(",");
     const page = this.#rows(
       `SELECT content_id, attestor, at, note FROM transcription_attestations
-        WHERE content_id IN (${txMarks}) ORDER BY content_id, at, attestor LIMIT ?`,
-      ...rows.map((r) => r.content_id), cap + 1);
+        WHERE content_id IN (SELECT value FROM json_each(?)) ORDER BY content_id, at, attestor LIMIT ?`,
+      JSON.stringify(rows.map((r) => r.content_id)), cap + 1);
     for (const a of page.slice(0, cap)) by.get(a.content_id).attestations.push(a);
     return { by, truncated: page.length > cap };
   }
@@ -19584,13 +19584,14 @@ export class Store extends DurableObject {
    *  The ids are already in hand, so there is nothing to scan for. */
   #contentStandings(rows) {
     const ids = [...new Set(rows.map((r) => r.content_id))];
-    const marks = ids.map(() => "?").join(",");
     const by = new Map();
     /* Hoisted out of the for-header for the reason recorded at `promote`'s own
-       prior-content read: a scan in a loop header reads as a scan per row. */
+       prior-content read: a scan in a loop header reads as a scan per row.
+       D-443: ONE json_each value — a basis's legs are bounded by no cap, and one variable per id is
+       refused by workerd past ~100 (D-36), which failed the whole `op=promote`. */
     const found = this.#rows(
       `SELECT content_id, extent_kind, extent, minted_by, stale FROM content
-        WHERE content_id IN (${marks})`, ...ids);
+        WHERE content_id IN (SELECT value FROM json_each(?))`, JSON.stringify(ids));
     for (const r of found) by.set(r.content_id, r);
     for (const r of rows) {
       const row = by.get(r.content_id);
@@ -19807,12 +19808,12 @@ export class Store extends DurableObject {
       .filter((c) => typeof c === "string" && c))];
     const by = new Map();
     if (!ids.length) return { by, truncated: false };
-    const marks = ids.map(() => "?").join(",");
     const cap = Math.min(Store.TEXT_SOURCE_LIMIT_DEFAULT * ids.length, Store.TEXT_SOURCE_LIMIT_MAX);
+    /* D-443: the captures as ONE json_each value (D-36; `#contentEarned` hands up to 200). */
     const page = this.#rows(
       `SELECT capture_sha, attestor, at, extent_kind, extent_page, extent_rect, chain
-         FROM text_attestations WHERE capture_sha IN (${marks})
-        ORDER BY capture_sha, at, attestor LIMIT ?`, ...ids, cap + 1);
+         FROM text_attestations WHERE capture_sha IN (SELECT value FROM json_each(?))
+        ORDER BY capture_sha, at, attestor LIMIT ?`, JSON.stringify(ids), cap + 1);
     for (const a of page.slice(0, cap)) {
       if (!by.has(a.capture_sha)) by.set(a.capture_sha, []);
       by.get(a.capture_sha).push(a);
@@ -19979,11 +19980,11 @@ export class Store extends DurableObject {
       .filter((c) => typeof c === "string" && c))].slice(0, Store.CONTENT_EARNED_MAX);
     const out = {};
     if (!ids.length) return out;
-    const marks = ids.map(() => "?").join(",");
+    /* D-443: ONE json_each value. The cut above is 200, and 201 variables is past D-36's ceiling. */
     const rows = this.#rows(
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain,
               derivation_cap, page_count, minted_by, at, stale, cited_as
-         FROM content WHERE content_id IN (${marks}) LIMIT ?`, ...ids, ids.length);
+         FROM content WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length);
     if (!rows.length) return out;
     const atts = this.#attestationsOver(rows.map((r) => r.capture_sha));
     /* REC-87: the typings among these rows, with their own attestations — two
@@ -22786,7 +22787,6 @@ export class Store extends DurableObject {
               + `subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the `
               + `document is.`;
     }
-    const marks = ids.map(() => "?").join(",");
     /* THE CAPTURE RECORD IS BOTH PLACES A CAPTURE LANDS, and asking only one of
        them would earn nothing for half the corpus. `register` holds the captures
        a promotion REGISTERED against a bundle's files; `readings` holds the ones
@@ -22830,10 +22830,12 @@ export class Store extends DurableObject {
     for (const r of this.#rows(
       `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain,
               (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored FROM (
-         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${marks})
+         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
          UNION
-         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${marks})
-       ) u LEFT JOIN reading_text_source ts ON ts.capture_sha = u.capture_sha`, ...ids, ...ids)) {
+         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (SELECT value FROM json_each(?))
+       ) u LEFT JOIN reading_text_source ts ON ts.capture_sha = u.capture_sha`,
+      /* D-443: the list is bound TWICE, so one variable per id failed from ~50 targets (D-36). */
+      JSON.stringify(ids), JSON.stringify(ids))) {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
         perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0 });
@@ -27266,9 +27268,10 @@ export class Store extends DurableObject {
     let supersededBy = null;
     if (sup.length) {
       supersededBy = sup.map((id) => visible(id));
+      /* D-443: ONE json_each value — a question's successors are bounded by no cap (D-36). */
       const when = this.#one(
-        `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (${sup.map(() => "?").join(",")})`,
-        ...sup);
+        `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`,
+        JSON.stringify(sup));
       causes.push({ source: "supersession", since: (when && when.m) || row.last_updated,
                     detail: `${targetId} has been superseded. The question it asked is carried forward by `
                           + `what supersedes it, and a leg naming ${targetId} was not re-pointed by that `
@@ -33276,11 +33279,11 @@ export class Store extends DurableObject {
   publishedCaseRegistryFor(caseIds = []) {
     const ids = [...new Set((Array.isArray(caseIds) ? caseIds : [caseIds]).filter(Boolean))];
     if (!ids.length) return {};
-    const marks = ids.map(() => "?").join(",");
     const reg = {};
+    /* D-443: ONE json_each value, `publishedRegistryFor`'s precedent above (D-36). */
     for (const r of this.#rows(
       `SELECT case_id, edition, scope, completeness, bias_acknowledgement, ratified_at FROM published_cases
-       WHERE case_id IN (${marks}) AND ratified_at IS NOT NULL ORDER BY case_id, edition`, ...ids)) {
+       WHERE case_id IN (SELECT value FROM json_each(?)) AND ratified_at IS NOT NULL ORDER BY case_id, edition`, JSON.stringify(ids))) {
       const e = reg[r.case_id] || (reg[r.case_id] = { latest: 0, editions: {} });
       e.editions[String(r.edition)] = {
         edition: r.edition, scope: r.scope ?? null, ratified_at: r.ratified_at,
