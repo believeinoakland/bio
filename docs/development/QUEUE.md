@@ -37,16 +37,6 @@ accepts-when: a second clone runs 0 suites over a tree whose units a first clone
 added: 2026-09-23 · SCHEDULER #14 (BOB #29's designed item; `node tools/mintid.mjs M0`).
 owed-at-integration (BOB #30; recorded by CONDUCT #15): BOB READ land/worker/M0-126 @ d47af600 and said LAND (11:34Z) — the hold is LIFTED. At the merge: (a) correct TREE-SHARING §3a "As built" item 10 to say the train's tree-keyed reuse is "correct only where no never-cached unit is in scope; M0-131"; (b) it overlaps M0-127 (landed d89e04d1) in tools/gates.mjs, the battery verdict file and gates.yml's gate step — read BOTH sides; re-read the statepaths ceiling. BOB corrects DIST.md's --since after it lands.
 
-### REC-171 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 4355bfda: store.mjs (≈L14572) sets the assistantPrincipal run stamp for an ai credential ONLY. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: directly after REC-169, the same D-85 fence widened (BOB #30: *"Place it directly after D-85"*; D-85 sits in the cache, so this is the first backlog place after it and the authority row that precedes it) (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
-milestone: M9
-interface: I3 — deploy-token creations are refused outside a run; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, *"Rule 2's reach"* (BOB #30, 2026-09-23, landed at `4355bfda`).
-depends-on: D-85 (it widens D-85's stamp; done).
-scope: a creation stamped `agent` names a running run whose principal is the caller (`token:<class>` for a deploy token, `runPrincipalGate` unchanged), under the `surfaces` bound, sight check, C-66.1–.4 and the `inquiry_run_surfacings` row; every non-test caller creating under a deploy token (livefire, setup scripts, `agent-worker`) moves inside a run, or is brought to BOB, never exempted.
-accepts-when: an admin-, member- and probe-token creation naming no run is refused `SURFACE_NO_RUN`; one inside the token's own running run lands with its row; a member's session creation is unchanged. NEGATIVE CONTROL: restore the `cls === "ai"` condition, and the deploy-token arms fail by name.
-added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
-
 ### UI-81 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 4355bfda: FINDING_IN_SEVERAL_CASES appears 0 times in civicos-ui/app.html. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after REC-170, the same public page: machine vocabulary shown to a stranger where the record holds the answer; before UI-82 because it needs no plane change (SCHEDULER #15, 2026-09-23)
 milestone: M10
@@ -108,6 +98,16 @@ scope: each obligation leg carries `status` (`severed` or `confirmed`) from `#re
 accepts-when: a drive through the op shows a severed leg `status: "severed"` with wording that claims no support, and a confirmed leg unchanged. How a liar passes it: filtering the severed leg out, which reverses DEC-70, so `d280-strengthbar.test.mjs` SITE (c) stays green. NEGATIVE CONTROL: drop the status, and the severed-leg arm fails by name.
 added: 2026-09-21 · SCHEDULER #7 (BOB #22's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 uncut: restored whole from the cut archive on entering the cache (SCHEDULER #15, 2026-09-23), so the worker reads its design here.
+
+### REC-173 · queued — **ONCE REC-171 LANDS, `migrate.mjs` IS REFUSED ON EVERY DRIVE-ERA QUESTION: A MIGRATION REPLAY IS STAMPED `surfaced_by: agent` AND NAMES NO RUN.** BOB #30 ruled a replay is not a surfacing: an ADMIN-class creation naming a registered drive-provenance capture that lists this bundle id and this revision's `bundle.md` SHA-256 is exempt from rule 2, keeps its Drive-era `surfaced_by` (no D-78 restamp) and reads `surfaced_in: not recorded (migrated from the Drive era)`; anything else is refused as today. UNBLOCKS PRODUCT: every not-yet-migrated group. Its design landed at `80c5fb3f`. — owner RECORD.
+order: FIRST of the backlog, directly after REC-171 (in the cache) as BOB #30 placed it: REC-171 makes migration refuse, and a group that cannot migrate cannot start (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
+milestone: M7
+interface: I3 — `op=promote` admits the replay; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §11 item 5, *"A MIGRATION IS A REPLAY, NOT A SURFACING"* (BOB #30, 2026-09-23, landed at `80c5fb3f`).
+depends-on: REC-171 (it made migration refuse; done at `ac4bdaae`).
+scope: the exemption as ruled; `migrate.mjs`'s token narrows to admin; the builder confirms the provenance capture is registered BEFORE the promote.
+accepts-when: as the paragraph states it: a replay naming a matching registered provenance capture lands keeping its Drive-era stamp and reads `not recorded (migrated from the Drive era)`; a non-admin, or a capture not listing the bundle and SHA, is refused. NEGATIVE CONTROL as the paragraph names it.
+added: 2026-09-23 · SCHEDULER #15 (BOB #30's inbox entry, drained this commit; `node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
