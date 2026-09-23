@@ -34,13 +34,10 @@ cache. Never flip a row `done`, archive it, or reorder the plan yourself. If the
    of every agent worktree it spawned** — the archive does not always release them (D-398). A lock whose pid is not in
    `ps` is stale: `unlock` only after re-verifying CLEAN and ANCESTOR. Never touch a live pid's lock, or another session's
    Remote Control.
-3. **Arm your self-wake** — `CronCreate`, cron `7,27,47 * * * *`, recurring, prompt: *if a worker is live or you are
-   mid-integration, do nothing; otherwise fetch, read the cache on `coord`, integrate what finished, run the
-   retirement sweep, and fill slots if the cache allows — or say in one line why not.* Verify by `CronList` and record the
-   id in your first report. It expires in 7 days, so also arm the ONE-SHOT reminder 5 days out that deletes it, arms a
-   fresh one and arms the next reminder (`CLAUDE.md` §4). The `conduct-heartbeat` scheduled task no longer messages you
-   (its mode differs from yours, so its messages were held unread); it only watches for what no session can report about
-   itself — no integrator, or one idle with runnable work three runs in a row, which means your self-wake is not armed.
+3. **NO TIMERS OF YOUR OWN — WORK MOVES BY MESSAGE** (Bob, 2026-09-23 ~20:28Z: only BOB keeps timers). You are woken by
+   SCHEDULER's "rows entered", a worker's done report, a train's result, or BOB, and you act IN THAT TURN: every done report
+   ends in a spawn of the next cached row, or in a one-line `CONDUCT idle: <why>` trigger to BOB. A train is one-shot event work.
+   Never `fire_trigger` a routine to reach a session: it starts a NEW session (measured 2026-09-23 20:10Z).
 4. **Measure your context** (`get_usage`) at every self-wake and every handoff boundary; over 75%, refresh (`CLAUDE.md` §4).
 5. **Tell BOB and SCHEDULER you are up**, by `SendMessage`.
 
@@ -211,10 +208,9 @@ at once (D-405). A stood-down session that receives a late report MESSAGES its s
 
 - **A BOB ruling landing on a RUNNING row** goes ON the row as an `owed-at-integration:` FIELD line, is sent to the worker
   by `SendMessage`, and is VERIFIED at the merge.
-- **Spawn continuously; land every ~two hours** (BOB #30, 2026-09-23: wake at least every ~20 min and on each worker's report,
-  refilling every empty slot from the cache). **AT SESSION START, ARM THREE RECURRING `create_trigger` WAKES INTO YOUR OWN
-  SESSION at `5 * * * *`, `25 * * * *`, `45 * * * *`** (the platform's minimum interval is one hour), each: refill slots, never
-  a train; the train keeps its own ~2-hourly trigger. A CONDUCT with only a train trigger sleeps between trains, which Bob found. **Batch finished items under ONE train, about every TWO HOURS** (TREE-SHARING §2, BOB #30 2026-09-23: every waiting `land/*`
+- **Spawn continuously, as separate cloud sessions** (`create_session`, one row each: ~10 min against 2 h+ for local
+  workers on 4 cores, measured 2026-09-23); at most ~4 gates in your own container. Only SCHEDULER writes the plan: your
+  two words are `queued`→`running` and `running`→`integrated` (Bob, 2026-09-23 20:57Z). **Batch finished items under ONE train, about every TWO HOURS** (TREE-SHARING §2, BOB #30 2026-09-23: every waiting `land/*`
   rides it; only a CUT-NOW security fix, a red-`main` repair, a landing a running worker or release is blocked on, or Bob, gets
   its own train, named in its commit), each IC resolved on the base as read at
   ITS landing — **then run the suites where they MEET**: two green branches were red together.

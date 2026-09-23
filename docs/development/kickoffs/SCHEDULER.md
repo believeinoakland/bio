@@ -60,9 +60,10 @@ names.
    landed row's construct): a task whose dependency just landed may move up; a task whose design was superseded goes to
    BOB.
 
-**Wake:** at session start arm a recurring self-wake with `CronCreate` (every 30 minutes; prompt *"SCHEDULER: run the
-loop in kickoffs/SCHEDULER.md"*); CONDUCT's completion messages and BOB's inbox entries also wake it. When nothing is
-owed, end the turn with one line saying so. **A plan edit is never a textual merge:** a coord write re-applies its intents to the fresh tip, so CONDUCT's `running` flips survive it — taking one side whole once reverted them under live workers (`8e39602a`). **Never end a turn on a question nobody is present to read** — route it by
+**Wake: by MESSAGE only — no timers of your own** (Bob, 2026-09-23 ~20:28Z: only BOB keeps timers). CONDUCT's
+train-landed and row-integrated messages and BOB's triggers wake you; replenish IN THAT TURN and trigger CONDUCT with what
+entered. If you cannot keep 4 runnable rows queued, trigger BOB: `SCHEDULER cannot fill: <why>`. You are the ONLY lane that
+writes the plan (Bob, 20:57Z). Never `fire_trigger` a routine. When nothing is owed, end the turn with one line saying so. **A plan edit is never a textual merge:** a coord write re-applies its intents to the fresh tip, so CONDUCT's `running` flips survive it — taking one side whole once reverted them under live workers (`8e39602a`). **Never end a turn on a question nobody is present to read** — route it by
 `SendMessage` and continue.
 
 ## The first work this lane owns
