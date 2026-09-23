@@ -19776,6 +19776,7 @@ paths, BY SITE:
 **NOT CLAIMED:** anything REC-171 or REC-172 claim (`promote`, `#surfacingGate`, `aiRunOpen`, `aiRunTick`).
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+released: 2026-09-23 — pushed `land/worker/D-389` @ `469b5775` (read back by `git ls-remote`), merged with `origin/main` @ `d89e04d1`, gated GREEN FULL on tree `26898b8c` (291/291 suites · 17,406 assertions; UI all harnesses green; plancheck 0 fail). Paths as claimed: `store.mjs` NEW `#frontierPage` + the looked-page fetch/claim in `frontier`, `#frontierContent`, `#frontierMeaning`; NEW `d389-fullfetch.test.mjs` / `.control.mjs`; `observation-content` G5/G5b, `derivation-bounds` truncation rosters, `nc-rec109.mjs` anchors — each moved with a dated reason; `dist/`; IC-187 PROPOSED; `OBSERVATION-LOG-DESIGN.md` front matter. Control: all four arms AS DECLARED (nodisjunct B1 B2 B3 B4 S1; onearm B1 B3 B4 S1 with B2 green; overstrict C1–C3 S1). OWED BY CONDUCT: classify and resolve IC-187 on I3; re-run `node test/d389-fullfetch.control.mjs all` at integration. Residual reported with its fix: the never-looked/missing lists carry the same full-fetch shape.
 
 ## CLAIM 2026-09-23 RECORD (REC-160 — `op=reevaluations` marks a SEVERED leg and never says it RESTS ON its target)
 
