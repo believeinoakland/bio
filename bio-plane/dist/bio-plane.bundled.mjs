@@ -3684,7 +3684,7 @@ rev ${rev}
          recorded producing group into the bytes — and a store recording none refuses it by name (C-64.1), which
          this battery then reports as the first assertion failing: a true finding about that store. */
       meta: { object_type: "information", title: "livefire", current_state: state, created: "2026-01-01T00:00:00Z", last_updated: (/* @__PURE__ */ new Date()).toISOString() },
-      files: [{ path: "bundle.md", text: body, bytes: body.length, sha256: await sha256(body) }, ...extra],
+      files: [{ path: "bundle.md", text: body, bytes: new TextEncoder().encode(body).length, sha256: await sha256(body) }, ...extra],
       register: []
     };
   };
@@ -3714,7 +3714,7 @@ rev ${rev}
   );
   assert("manifest projected", "_history/manifest.json" in live, true);
   const big = "x".repeat(1024 * 1024 + 1);
-  const overPkg = await pkgFor("verified", 6, [{ path: "big.md", text: big, bytes: big.length, sha256: await sha256(big) }]);
+  const overPkg = await pkgFor("verified", 6, [{ path: "big.md", text: big, bytes: new TextEncoder().encode(big).length, sha256: await sha256(big) }]);
   assert("oversize inline refused at the write", (await post("promote", { ...overPkg, base: sha2 })).reason, "OVERSIZE_INLINE");
   assert(
     "canary nonce survived the round trip",
@@ -13384,6 +13384,9 @@ const sha256Text = async (text)=>{
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
 };
+/* REC-178: a file's bytes is the length of its UTF-8 encoding, never text.length (UTF-16 units). The plane
+   computes it over what it holds and stores that; this sends the same figure. */
+const utf8Len = (text)=> new TextEncoder().encode(text).length;
 const stamp = ()=>{
   const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
   let r = ""; const h = "0123456789abcdef";
@@ -13477,10 +13480,10 @@ const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
    that exists in the bundle, so the document is registered as a blob reference
    and the register entry names the same path. */
 async function docFiles(text, doc, textSha){
-  const files = [{ path:"bundle.md", text, bytes:text.length, sha256:textSha }];
+  const files = [{ path:"bundle.md", text, bytes:utf8Len(text), sha256:textSha }];
   if (!doc) return files;
   const prov = JSON.stringify({ documents: [doc] }, null, 1);
-  files.push({ path:"data/provenance.json", text: prov, bytes: prov.length,
+  files.push({ path:"data/provenance.json", text: prov, bytes: utf8Len(prov),
                sha256: await sha256Text(prov) });
   if (Array.isArray(doc.parts) && doc.parts.length) {
     /* A parted document has no single file: each part is registered separately
@@ -13686,7 +13689,7 @@ async function carryForward(id, exclude){
   const out = [];
   for (const [path, v] of Object.entries(img)){
     if (path === exclude || path.indexOf("_history/") === 0) continue;
-    if (typeof v === "string") out.push({ path, text: v, bytes: v.length, sha256: await sha256Text(v) });
+    if (typeof v === "string") out.push({ path, text: v, bytes: utf8Len(v), sha256: await sha256Text(v) });
     else out.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
   }
   return out;
@@ -13710,7 +13713,7 @@ $("#e-save").addEventListener("click", async ()=>{
       bundleId: EDIT_ID, base: lease.result.base, snapKey: stamp(), author: WHO,
       meta: { object_type: fmv.object_type, title: fmv.title || EDIT_ID,
               current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
-      files: [{ path:"bundle.md", text: revised, bytes: revised.length, sha256: await sha256Text(revised) },
+      files: [{ path:"bundle.md", text: revised, bytes: utf8Len(revised), sha256: await sha256Text(revised) },
               ...(await carryForward(EDIT_ID, "bundle.md"))],
       register: [],
     });
@@ -40381,6 +40384,10 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         detail: "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ") + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written."
       };
     files = digested.files;
+    files = files.map((f2) => {
+      const n = _Store.#inlineBytesOf(f2);
+      return n === null || f2.bytes === n ? f2 : { ...f2, bytes: n };
+    });
     let groupStamp = null, createdGroup = null;
     if (base === null) {
       const recorded = this.#producingGroup();
@@ -40478,8 +40485,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       const fenced = this.#testimonyFence(bundleId, files, register2, testimony);
       if (fenced) return fenced;
       for (const f2 of files) {
-        if (f2.text !== void 0 && f2.text.length > INLINE_MAX)
-          return { ok: false, reason: "OVERSIZE_INLINE", path: f2.path, bytes: f2.text.length };
+        const inlineBytes = _Store.#inlineBytesOf(f2);
+        if (inlineBytes !== null && inlineBytes > INLINE_MAX)
+          return { ok: false, reason: "OVERSIZE_INLINE", path: f2.path, bytes: inlineBytes };
       }
       const gj = pkg.replay ? null : files.find((f2) => f2.path === "data/gathering.json");
       if (gj && typeof gj.text === "string") {
@@ -53066,6 +53074,12 @@ ${words}`;
     if (f2 && typeof f2.blobSha === "string" && f2.blobSha) return f2.blobSha.toLowerCase();
     return null;
   }
+  /* REC-178: THE ONE MEASURE of an inline file's size — the byte length of the UTF-8 encoding of the string the
+     `files.content` column stores — read by `promote` (the stored figure and OVERSIZE_INLINE) and by `digestCensus`
+     (the held figure), so the door and the census cannot disagree about what a size is. Null for a blob-backed file. */
+  static #inlineBytesOf(f2) {
+    return f2 && typeof f2.text === "string" ? new TextEncoder().encode(f2.text).length : null;
+  }
   static #digestFiles(files) {
     const disagree = [];
     const out = files.map((f2) => {
@@ -53091,8 +53105,9 @@ ${words}`;
      point: a disagreeing row is REPORTED, never rewritten — the record's history is not corrected by a read, and
      which of the two (bytes or digest) is wrong is not decidable from here. An inline row is recomputed by the one
      `#fileDigestOf`; a blob row compares its `sha256` against its `blob_sha`. `bytes` is counted beside it for inline
-     rows (UTF-8 length against the stored figure), as a SEPARATE figure: it is REC-175's named finding, not its
-     refusal. Bounded by `limit` rows listed per table (the counts are always whole). */
+     rows (UTF-8 length, by REC-178's one `#inlineBytesOf`, against the stored figure), as a SEPARATE figure: since
+     REC-178 promote stores the computed figure, so a disagreeing row is one written before it, and it is counted,
+     never rewritten. Bounded by `limit` rows listed per table (the counts are always whole). */
   digestCensus({ limit } = {}) {
     const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
     const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
@@ -53105,7 +53120,7 @@ ${words}`;
         if (r.content !== null) out.inline++;
         else out.blob++;
         const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
-        const bBad = r.content !== null && table === "files" && Number(r.bytes) !== new TextEncoder().encode(r.content).length;
+        const bBad = r.content !== null && table === "files" && Number(r.bytes) !== _Store.#inlineBytesOf({ text: r.content });
         if (dBad) out.digest_disagrees++;
         if (bBad) out.bytes_disagree++;
         if ((dBad || bBad) && out.listed.length < cap)
@@ -72780,7 +72795,7 @@ var index_default = {
           carried.push({
             path: path2,
             text: v,
-            bytes: v.length,
+            bytes: new TextEncoder().encode(v).length,
             sha256: [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("")
           });
         } else carried.push({ path: path2, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
@@ -72813,7 +72828,7 @@ var index_default = {
            the worst thing in this system, and the shape of promote made it the
            DEFAULT behaviour of a careless caller. */
         files: [
-          { path: "bundle.md", text, bytes: text.length, sha256: textSha },
+          { path: "bundle.md", text, bytes: new TextEncoder().encode(text).length, sha256: textSha },
           ...carried
         ],
         register: []
