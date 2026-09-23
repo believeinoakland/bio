@@ -19732,3 +19732,25 @@ paths, BY SITE:
 **NOT CLAIMED, NOT TOUCHED:** `bio-plane/**` (REC-170's op is consumed as landed), `civicos-ui/check-refusal-codes.mjs`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 RECORD (REC-172 — a run's bound is spent only on a NAMED bound, by a MAP; an allowance is a whole number; `lease` is the plane's)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for REC-172, worktree `.claude/worktrees/agent-ad79857cb007927b7`,
+branch `land/worker/REC-172`, from `origin/main` @ `91913d6b` (carries REC-169).
+authority: `QUEUE.md` `### REC-172 · running`; design `INVESTIGATIVE-SESSION.md` §14b item 6.
+paths, BY SITE:
+  - `bio-plane/src/airun.mjs`: `checkConsume`, `PLANE_COUNTED_BOUNDS`' neighbourhood (a new `PLANE_DECIDED_BOUNDS`), and a
+    new pure `checkBoundsDeclared` beside them. NOT `runPrincipalGate`, NOT `finishedBound`.
+  - `bio-plane/src/store.mjs`: `aiRunOpen` (REC-169's seed-check block and the `ai_run_bounds` insert loop) and
+    `aiRunTick` (REC-169's consume-check block and the upsert loop) ONLY. NOT promote, NOT `#surfacingGate` (REC-171's).
+  - `bio-plane/checks/bio-checks.mjs`: `AI_RUN_CHECKS` — one new C-22 row, C-22.13/C-22.14's translation/where, the
+    C-22 header count.
+  - NEW `bio-plane/test/rec172-bounds.test.mjs` + `bio-plane/test/rec172-bounds.control.mjs`;
+    `bio-plane/test/rec169-consume.test.mjs` (its "cannot see" (iv) corrected); `bio-plane/test/vf4-live-scratch.mjs`
+    (the tick's `consume`, dated note); `bio-plane/dist/`.
+  - `civicos-ui/check-refusal-codes.mjs` floors (from printed figures only); `bio-plane/scripts/coverage.mjs`
+    REGISTER_FLOOR (printed figures only) if it moves.
+  - one NEW `docs/development/interface-changes/IC-*.md` (PROPOSED); `docs/development/INVESTIGATIVE-SESSION.md`
+    §14b.6 and its front matter; `construct-status.json` if a text moves.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
