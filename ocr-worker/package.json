@@ -2,7 +2,7 @@
   "name": "ocr-worker",
   "private": true,
   "type": "module",
-  "version": "0.75.0",
+  "version": "0.76.0",
   "scripts": {
     "build": "node scripts/build.mjs",
     "embed:tesslib": "node scripts/build.mjs --embed-only",
