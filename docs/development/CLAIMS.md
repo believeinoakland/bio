@@ -19382,3 +19382,23 @@ paths, BY SITE:
 wrong for the new paths), any state path on `main`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 UI (UI-79 — the member UI composes no producing group: the plane stamps the instance's recorded one on every bundle the UI authors)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #14 for UI-79 (wave 7), worktree `.claude/worktrees/agent-af35e02341617dc41`,
+branch `worktree-agent-af35e02341617dc41`, from `origin/main` @ `f05c1efd` (cloud).
+authority: `QUEUE.md` `### UI-79 · running` (read on `origin/coord` @ `2b2868c5`); design `BIO_State_Rules_Consistency_v1_5.md`
+§3.1 and its D-436 amendment, with DEC-8; IC-172; the `DELEGATION 2026-09-21 RECORD (D-436 worker) -> UI` block (whose
+precondition, biosmoke7 seeded, DIST #4 discharged on 2026-09-22).
+paths, BY SITE:
+  - `civicos-ui/app.html` — ONLY: `mdFor`'s front-matter array (its `group:` entry); the three `meta` objects carrying a
+    `group` key (the supporting-files revision near `object_type: fm.object_type`, and the two creation paths building
+    `meta` beside `mdFor`); the `GLOSSARY` entry `"FY"`; the Add form's `#a-auth` placeholder. NOT any region marker, any
+    `SURFACES` key, the recogniser regions (their Oakland-measured heuristics are left, stated in the release), UI-77's
+    `#m-grp`/`#m-idstr` fence, or D-442's case-page texts.
+  - `civicos-ui/test/*.test.mjs` — the suites carrying the literal as fixture data, each corrected at its site with a dated
+    comment; NEW `civicos-ui/test/authored-group.test.mjs` (+ its `NEGATIVE CONTROL:` line) and its entry in `run.mjs`.
+  - `docs/development/CIVICOS_UI_STATE.md` — one prepended entry.
+**NOT CLAIMED:** `bio-plane/**`, `newgroup/**`, `civicos-ui/worker.template.mjs`, any state path on `main`.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
