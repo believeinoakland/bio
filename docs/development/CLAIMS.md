@@ -19655,3 +19655,24 @@ paths, BY SITE:
 **NOT CLAIMED:** `aiRunTick`, `aiRunOpen`, `AI_RUN_CHECKS` / anything in `bio-checks.mjs` (REC-169's), `runPrincipalGate`.
 
 **open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
+
+## CLAIM 2026-09-23 UI (UI-81 — the published case page, handed a finding id several cases pin, offers those cases as choices and never picks; `FINDING_IN_SEVERAL_CASES` gets its canned translation, C-44.2)
+
+session: WORKER spawned 2026-09-23 by CONDUCT #15 for UI-81, worktree `.claude/worktrees/agent-a306ff29faf082ef3`,
+branch `land/worker/UI-81`, from `origin/main` @ `4355bfda`.
+authority: `QUEUE.md` `### UI-81 · running`; design `BIO_Publication_v0_1.md` §3 rule 12, DEC-49 as
+`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10 restates it; IC-74 (the refusal's `cases[]`).
+paths, BY SITE:
+  - `civicos-ui/app.html`: `pubOpen` (its refusal branch) and ONE new helper directly above it (`pubSeveralCasesHtml`).
+    NOT touched: `inquiryCasePairs`, `casePairsHtml`, `pubList`, `pubPaint`, `pubCaseHtml`, any region marker or `SURFACES` key.
+  - `bio-plane/checks/bio-checks.mjs`: `CASE_DERIVATION_CHECKS` ONLY (one new row, C-44.2, and its header's paragraph).
+    NOT touched: every other family (REC-169 and REC-171 add refusals elsewhere in this file).
+  - `bio-plane/src/store.mjs`: `#resolveOneCase`'s refusal return ONLY, wrapped in a DEC-49 REGION
+    `is-finding-in-several-cases` and built through the file's existing `refusal` helper; `bio-plane/dist/`.
+  - `civicos-ui/check-refusal-codes.mjs`: the `FLOOR` values this row moves, from the guard's printed figures.
+  - NEW `civicos-ui/test/several-cases-choice.test.mjs` (+ its control); bio-plane suites pinning this refusal's key set,
+    only if they move (corrected, never exempted).
+  - `docs/development/CIVICOS_UI_STATE.md` (prepend `v100`), one NEW `docs/development/interface-changes/IC-*.md`,
+    `docs/architecture/BIO_Publication_v0_1.md` (front matter / rule 12's As built), `construct-status.json` if a text moves.
+
+**open as of 2026-09-23** — OPEN while this item builds; the paths stay reserved until CONDUCT integrates the branch.
