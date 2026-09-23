@@ -109,45 +109,49 @@ scope: when `promote` moves an Information item INTO `retired`, it runs `retire`
 accepts-when: in a NEW suite `bio-plane/test/rec-181-promote-retire.test.mjs`, through the op: a promote retiring a cited verified item is refused `CITED` with the bundle byte-identical after; an uncited one retires. NEGATIVE CONTROL (`rec-181-promote-retire.control.mjs`): skip the check, and the cited arm lands and fails by name.
 added: 2026-09-23 · SCHEDULER #16 (D-168's worker's finding via CONDUCT #16, verified at the code; `node tools/mintid.mjs REC`).
 
-### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE** … (whole text: the cut archive)
+### D-390 · queued — **`#frontierContent`'S INDEX-STATE READ BINDS ONE VARIABLE PER SUBJECT ON THE PAGE, UP TO `cap` — 200 BY DEFAULT, 2,000 AT THE CEILING — AGAINST D-36's MEASURED workerd CEILING OF ABOUT 100.** The `subject IN (${marks})` inside `__REC91_AXIS_LIST__` (`store.mjs`) is built from `pageCut`; REC-109 held it at `cap` rather than doubling it. It has never fired because no fixture or instance has held ~100 captures with a content-level row, and every other guarded site chunks at 64. — owner RECORD.
 order: after D-57: a read that must say WHICH absence is true fails outright on the first instance past ~100 content captures; below D-389, REC-160 and D-57 because it fails LOUDLY rather than claiming what the record cannot support (SCHEDULER #8, 2026-09-21, LED-7 S8-1 and S8-2)
 milestone: M3
 interface: none — the answer's shape does not move; the integrator classifies.
-design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the … (whole text: the cut archive)
+design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the readers), with D-36's measured ceiling (`node tools/ledger.mjs find D-36`).
 depends-on: none. **Sequence after D-389** (the same method's page cut, `store.mjs` `#frontierContent`).
-accepts-when: a 200-subject page answers every row's index state, equal to the same rows read one chunk at a time; the sweep's list is in the landing. How a liar passes it: a fixture under … (whole text: the cut archive)
+scope: chunk the subject list at 64, each chunk's rows merged into the one `indexState` map; a fixture of 200+ subjects driven through `op=frontier&level=content`; then SWEEP every `IN` list built from a `limit`-bounded page, `#frontierMeaning` first, chunking each or stating its bound, every site listed with its verdict. **FULL GATE PROFILE**.
+accepts-when: a 200-subject page answers every row's index state, equal to the same rows read one chunk at a time; the sweep's list is in the landing. How a liar passes it: a fixture under 100 subjects, which never meets the ceiling, so its count is asserted above it. NEGATIVE CONTROL: restore the single unchunked `IN`, and the 200-subject arm fails by name.
 added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-1; D-390's DEBT row of 2026-09-16, verified at the code; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-390» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-390» on entering the cache; its `order:` line is the current one.
 
-### D-60 · queued — **`op=monitor` COMPARES RAW BYTES, SO A LEGISTAR PAGE READS `modified` ON EVERY TICK AND MONITORING REPORTS NOTHING.** It compares … (whole text: the cut archive)
+### D-60 · queued — **`op=monitor` COMPARES RAW BYTES, SO A LEGISTAR PAGE READS `modified` ON EVERY TICK AND MONITORING REPORTS NOTHING.** It compares the fetched bytes' hash with the capture's `sha256`, then writes `source_status: modified` and raises the re-evaluation flag; `op=acquire` already records the evidentiary digest (FW-4) and C-18.3 folds by it. ASP.NET reissues `__VIEWSTATE` per response: 31% of the bytes, nothing changed (2026-07-30). — owner RECORD.
 order: after D-390, above CAP-14: M1's monitoring is noise on the class of page Oakland publishes on; below the claims the record cannot support because the design grades a change reported that did not happen as the cheaper error (DOCUMENT-PROFILES.md, "Three digests") (SCHEDULER #8, 2026-09-21, LED-7 S8-3)
 milestone: M1
 interface: I3 — `op=monitor` names the comparison it made; the integrator mints and classifies the IC.
-design: `docs/development/DOCUMENT-PROFILES.md` §"Three digests, not one" — *evidentiary … answers … (whole text: the cut archive)
+design: `docs/development/DOCUMENT-PROFILES.md` §"Three digests, not one" — *evidentiary … answers "has the substance changed?", which is what monitoring asks* — with `BIO_Content_Framework_v0_10.md` §5.
 depends-on: none — FW-4's digests are built.
-accepts-when: two fetches differing only in `__VIEWSTATE` read `unchanged`, compared evidentiary, with no flag raised; a real text change reads `modified`; a baseline with no determined … (whole text: the cut archive)
+scope: monitoring compares the EVIDENTIARY digest when the baseline recorded one as determined and the fetched bytes normalise under the same handler with certainty, through acquire's one function; otherwise raw, and the answer says which. Substance unchanged writes no `modified` and raises no flag. `resolveLinks`' bracket is NOT in scope: D-59 measures it first.
+accepts-when: two fetches differing only in `__VIEWSTATE` read `unchanged`, compared evidentiary, with no flag raised; a real text change reads `modified`; a baseline with no determined digest compares raw and says so. How a liar passes it: normalising everything, so the real-change arm must read `modified`. NEGATIVE CONTROL: compare raw again, and the viewstate arm fails by name.
 added: 2026-09-21 · SCHEDULER #8 (LED-7 S8-3; D-60's DEBT row, traced at the code; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-60» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-60» on entering the cache; its `order:` line is the current one.
 
-### D-169 · queued — **A DISPOSED INTAKE INQUIRY IS WRITTEN WITHOUT THE `disposition_reason` C-2.8 REQUIRES.** `dispose` sets it with … (whole text: the cut archive)
+### D-169 · queued — **A DISPOSED INTAKE INQUIRY IS WRITTEN WITHOUT THE `disposition_reason` C-2.8 REQUIRES.** `dispose` sets it with `Store.#setScalar`, which replaces a key and silently adds none, and `setup.mjs`'s `mdFor` writes no such line for an inquiry; `dispose` calls `promote` directly, so the bundle lands failing its own catalogue and only an audit finds it (re-read on `7c967f09`). — owner RECORD.
 order: after D-65, first of the silent record defects on built paths: the record holds a bundle its own catalogue rejects, CLAUDE.md §2's class; D-171 and D-179 follow, the honesty batch BOB #26 placed together (SCHEDULER #12, 2026-09-22, LED-7)
 milestone: M7
 interface: none expected — the bytes gain the line C-2.8 already requires; the integrator classifies.
-design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"J · JUSTIFIED TRANSITION" (*disposition of a … (whole text: the cut archive)
+design: `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §"J · JUSTIFIED TRANSITION" (*disposition of a focus to deferred or dismissed, which C-2.8 requires a reason for*).
 depends-on: none — `Store.#setOrAddScalar` is built (the conclude path uses it).
-accepts-when: an intake-created inquiry, deferred and dismissed, passes C-2.8 with its reason in the bytes; a member-created one disposes byte-identically to today. How a liar passes it: a … (whole text: the cut archive)
+scope: `dispose` writes the reason with `#setOrAddScalar`; a suite arm creates an inquiry through intake, disposes it, and runs the catalogue over the result.
+accepts-when: an intake-created inquiry, deferred and dismissed, passes C-2.8 with its reason in the bytes; a member-created one disposes byte-identically to today. How a liar passes it: a hand-built fixture already carrying the line, which never meets `mdFor`, so the arm creates it through intake. NEGATIVE CONTROL: restore `#setScalar` at the site, and the intake arm fails by name at C-2.8.
 added: 2026-09-22 · SCHEDULER #12 (LED-7; D-169's DEBT row of 2026-08-03, verified at the code; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-169» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-169» on entering the cache; its `order:` line is the current one.
 
-### D-171 · queued — **`#revisionKind` NAMES A REVISION'S WRITER BY A CALLER'S KEY: C-20.1's writer lookup breaks a tie on `created` with** … (whole text: the cut archive)
+### D-171 · queued — **`#revisionKind` NAMES A REVISION'S WRITER BY A CALLER'S KEY: C-20.1's writer lookup breaks a tie on `created` with `snap_key DESC`, a lexical sort over an opaque caller-chosen key, not the store's write order.** REC-32's derivation of the same latest entry breaks it with `rowid DESC` and says why at its site (`store.mjs`, re-read on `7c967f09`). — owner RECORD.
 order: directly after D-169, the same honesty batch (its DEBT row: beside D-169); a wrong writer needs two manifest entries sharing one `created`, so it follows the defect every intake disposal meets (SCHEDULER #12, 2026-09-22, LED-7)
 milestone: M7
 interface: none — the answer's shape does not move; the integrator classifies.
-design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, mechanical-writer conformance … (whole text: the cut archive)
+design: `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §6 (I-20, mechanical-writer conformance, C-20.1), with REC-32's `rowid DESC` at its site as the precedent.
 depends-on: none.
-accepts-when: two manifest entries sharing `created`, the later written with the lexically smaller `snap_key`, read the LATER one's writer. How a liar passes it: a fixture whose later write … (whole text: the cut archive)
+scope: `#revisionKind` orders by `created DESC, rowid DESC`, as REC-32's derivation does, and the two sites say they agree.
+accepts-when: two manifest entries sharing `created`, the later written with the lexically smaller `snap_key`, read the LATER one's writer. How a liar passes it: a fixture whose later write also has the larger key, which never tells the orders apart, so the arm's keys run against write order. NEGATIVE CONTROL: restore `snap_key DESC`, and that arm fails by name.
 added: 2026-09-22 · SCHEDULER #12 (LED-7; D-171's DEBT row of 2026-08-04, verified at the code; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #13 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-171» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-171» on entering the cache; its `order:` line is the current one.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
