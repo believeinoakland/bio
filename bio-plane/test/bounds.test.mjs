@@ -566,7 +566,11 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
    map below. */
   /* MOVED 35 -> 36 on 2026-09-18 by REC-126, from the figure this walk PRINTED: op=reviewcopy,
      born with its bound as a named constant beside `LIMIT ?` (REVIEW_LIST_MAX). */
-  OPS.size, 36);
+  /* MOVED 36 -> 37 on 2026-09-23 by D-162, from THIS ARM'S OWN FAILURE OUTPUT (`want 36 / got 37`):
+     op=themeread, a theme's members and hunches and the list of themes, capped by
+     THEME_READ_LIMIT_DEFAULT/MAX declared BELOW the method (REC-116's finding). Its bite is driven in
+     `test/theme.test.mjs` section 6 (DRIVEN_ELSEWHERE) and its envelope in the map below. */
+  OPS.size, 37);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
