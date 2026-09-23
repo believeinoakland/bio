@@ -18570,3 +18570,34 @@ remote that exits 0 and keeps the ref). **The probe ref is still on the remote**
 act for a session whose credential the proxy lets delete, or for the host's UI. **Not measured:** whether any cloud
 session can delete a ref (one session, one hour, one refspec), and whether the 403 is the proxy's policy or GitHub's
 (the proxy's own README, `/root/.ccr/README.md`, files a 403 as an organization policy denial: not retried).
+
+## M-107 · 2026-09-23 · REC-168 — whose run a capture request names, and whose principal its row records, before and after
+
+Instruments: `bio-plane/test/rec168-capturerequest-principal.test.mjs` run from `bio-plane/` (every act through the control
+plane, from member sessions and from `ai` credentials those members minted); the same suite pointed (`REC168_SRC`) at a
+`git archive` of `7b4d3942`'s `bio-plane/src` + `checks` for the BEFORE column; `node test/rec168-capturerequest-principal.control.mjs`
+(eleven rows, each on a COPY of `src/`); `civicos-ui/check-refusal-codes.mjs`; `scripts/coverage.mjs --strict`. Branch
+`worktree-agent-a960b19c9e4696303`, base `origin/main` `7b4d3942`.
+
+| measured | `7b4d3942` (before) | this branch |
+| --- | --- | --- |
+| cora (session), cora's credential, gus (admin) file under alice's RUNNING run | each ACCEPTED; a row written naming `member:alice` | each refused `AI_RUN_NOT_PRINCIPAL` (C-22.12, its translation); no row |
+| pia (in no project) files under alice's run over a project she cannot see | ACCEPTED; a row written | byte-identical to a never-minted run id (`CAPTURE_REQUEST_NO_RUN`) |
+| alice's credential files under the run alice's SESSION opened | row names `member:alice` (the run's copy) | row names `member:alice/alice-agent` (the caller) |
+| alice's session files under the run her CREDENTIAL opened | row names `member:alice/alice-agent` | row names `member:alice` |
+| a request naming no run, from a session, a credential, another member | `CAPTURE_REQUEST_NO_RUN`, DEC-47's words | byte-identical store answer, unchanged |
+| cora asks for an address alice already requested under alice's run | the STANDING row echoed to cora, alice's principals on it | refused; the standing row is never echoed |
+| the suite, 30 assertions | 14 / 16 | **30 / 0** |
+| the control, declared before its first run | — | ALL AS DECLARED after two declarations were corrected at the first run (the arms right): baseline 30/0 · drop-gate 18/12 · gate-sessions-only 24/6 · gate-credentials-only 20/10 · no-stamp 19/11 · no-sight 29/1 · record-run-principal 27/3 · sent-field-query 27/3 · sent-field-body 26/4 · exact-match 26/4 · sight-by-row 30/0; real sources untouched (store.mjs 2,803,630 B `7aa1e7b9…`) |
+| REC-165's control on this tree | — | all nine arms AS DECLARED at REC-165's tallies (its anchors still unique) |
+| DEC-49 guard | — | exit 0; four floors moved by exactly this item's own (regionLines +29, codesChecked +1, outcomeReturns +1, refusalsJudged +2), zero pre-existing slack |
+| coverage `--strict` | — | exit 0; register `arms 1680/1680 · classified 270/270 · corpus 271/271`, `floor 232/232` after the floors moved from the print on committed `07fd7ee0` |
+
+**WHAT IT SAYS.** The door credited a request to whoever held the run it named, not to whoever asked: three accounts that were
+not alice wrote rows alice's name stood behind, and a member who could not see a project could file under a run over it. The
+second half is quieter and just as much a record defect: even for the run's own principal, the row named the run's OPENING
+credential rather than the account that asked, so a member's session and her agent were indistinguishable in the queue.
+**The `no-stamp` arm is the finding worth carrying:** the stamp is not only what SUPPLIES the caller, it is what OVERWRITES a
+`principal` the caller forged into its own query — without it, cora's forged `principal=member:alice` reaches the store and is
+believed (F1-F3 fail). **NOT MEASURED:** live (Cloudflare refused from this container); the drain's attribution is asserted on
+the READ, which calls the same one composer.

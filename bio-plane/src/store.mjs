@@ -35553,7 +35553,22 @@ export class Store extends DurableObject {
     const runRow = run
       ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run)
       : null;
-    if (!runRow || runRow.status !== "running")
+    /* REC-168 (INVESTIGATIVE-SESSION.md §11 item 5, the `op=capturerequest` paragraph, BOB #28, 2026-09-22): A
+       REQUEST THAT NAMES A RUN IS A PRODUCTION OF THAT RUN, so it names a RUNNING run whose PRINCIPAL is the caller.
+       Until this landed the door asked only `running`, never whose, and copied the run's principals onto the row —
+       so a member could file a request under another member's run and the record credited that member with it.
+       REC-165's three questions, in REC-165's order:
+       (a) SIGHT — a run whose context this viewer cannot see answers exactly as a never-minted id does, byte for
+           byte but for the id (§7.9: a refusal would say the run exists). `#aiRunInSight` is the tick's, the
+           close's and `op=suggest`'s own predicate, so the run `op=airun` hides is the run this hides.
+       (b) POSITION — REC-152's `runPrincipalGate`, the caller being the control plane's `principal` stamp
+           (`RUN_PRODUCTION_ACTIONS`), never a field sent; its refusal relayed field by field.
+       (c) STATUS — the run is running; the pre-existing refusal, unchanged in code and words.
+       Rule 1's TARGET is NOT asked: a request names an address, not a question (BOB #28). A request naming NO run
+       is refused below exactly as before — the door has always required one (DEC-47), so there is no run-less
+       request for this rule to reach, and nothing about that arm moved. */
+    const requestRunSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);
+    if (!requestRunSeen)
       return refusal("CAPTURE_REQUEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
               + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
@@ -35561,6 +35576,20 @@ export class Store extends DurableObject {
             : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation "
               + "(DEC-47), and a request naming no session names no authorisation.",
         { run: run || null });
+    const notPrincipal = runPrincipalGate({ caller: args.caller ?? null, principal: runRow.principal_plane,
+                                            act: "requesting a capture under a run" });
+    /* RELAYED FIELD BY FIELD AND NEVER SPREAD (REC-165's relay: a spread is a return whose VERDICT the DEC-49
+       guard cannot read). The code, check and translation are the gate's own (C-22.12's literal stays there). */
+    if (notPrincipal)
+      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail, run,
+               note: "a capture request names a run its caller holds. Nothing was requested or written" };
+    if (runRow.status !== "running")
+      return refusal("CAPTURE_REQUEST_NO_RUN",
+        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
+        + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
+        + `live session is a fetch nothing authorised.`,
+        { run });
 
     const address = String(args.address ?? "").trim();
     if (!isPublicHttpsLocator(address))
@@ -35642,7 +35671,13 @@ export class Store extends DurableObject {
 
     /* BOTH PRINCIPALS ARE COPIED FROM THE RUN AND NEVER FROM THE CALLER — a
        caller that could name its own principals could name somebody else's —
-       AND THEY ARE NOT JUDGED HERE. The first draft of this door refused an
+       AND THEY ARE NOT JUDGED HERE.
+       CORRECTED 2026-09-23 BY REC-168 (BOB #28): the PLANE principal is now the CALLER's, as the control plane
+       STAMPED it — still never a field the caller sent. The run's copy could name somebody other than who asked
+       (the defect this item closes), and after the gate above the stamp is the run's principal in the one form
+       REC-152 compares, spelled as the account that asked (a member's session or the credential she minted,
+       D-199 (4)'s composite kept). The CLAUDE principal is still the run's: it is the account the run's budget is
+       paid from, which the request does not choose. The first draft of this door refused an
        incomplete attribution at the write as well as at the drain, and DRIVING
        THE FAMILY EXPOSED THAT AS A DEFECT: with identical predicates at both
        points, the door's refusal makes the DRAIN'S unreachable, so one of the
@@ -35659,6 +35694,8 @@ export class Store extends DurableObject {
        the row unvalidated, and the drain turns away what it cannot honour. */
     const purpose = String(args.purpose ?? "").trim();
     const uaMode = String(args.ua_mode ?? args.uaMode ?? "civicos").trim();
+    /* REC-168: the stamp the gate above passed, trimmed as the gate reads it. */
+    const callerPlane = String(args.caller ?? "").trim();
 
     const nowMs = args.at ? Date.parse(args.at) : Date.now();
     const now = Store.#aiIso(nowMs);
@@ -35688,12 +35725,12 @@ export class Store extends DurableObject {
          principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry)
        VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?)`,
       request, run, target, address, host, purpose, uaMode,
-      runRow.principal_plane, runRow.principal_claude,
+      callerPlane, runRow.principal_claude,
       now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS), lead || null);
     return { ok: true, request, run, target, address, host, purpose, ua_mode: uaMode,
              lead_inquiry: lead || null,
              state: "requested", requested: true, already: false,
-             principals: { plane: runRow.principal_plane, claude: runRow.principal_claude },
+             principals: { plane: callerPlane, claude: runRow.principal_claude },
              detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
                    + "this queue, and DEC-47's conduct rules are applied there." };
   }
@@ -42611,6 +42648,10 @@ export class Store extends DurableObject {
         capturerequest: () => this.captureRequest({
           ...(body || {}),
           viewer: url.searchParams.get("viewer"),
+          /* REC-168: the caller's PRINCIPAL, stamped by the control plane (REC-152's one expression, via
+             `RUN_PRODUCTION_ACTIONS`) and SET AFTER the body's spread, so a `caller` the body carries is
+             overwritten rather than believed. */
+          caller: url.searchParams.get("principal"),
         }),
         capturerequestdrain: () => this.captureRequestDrain(body || {}),
         capturerequestdraining: () => this.captureRequestDraining(

@@ -631,10 +631,15 @@ console.log("\n--- 9. over-strictness: a fence that refuses correct work is a de
      session) and it is INCOMPLETE against D-199 (4): the act the agent actually
      performed is attributed to its principal without saying which of that
      principal's credentials performed it. Asserted as it IS rather than as the
-     brief expected, and delegated. */
-  t("the request's plane principal is the RUN's, which under the investigative scope is the "
-  + "MEMBER who opened it — the credential identity does not reach it (finding, delegated)",
-    req?.principals?.plane, "member:ruth");
+     brief expected, and delegated.
+     CORRECTED 2026-09-23 BY REC-168 (INVESTIGATIVE-SESSION.md §11 item 5, the `op=capturerequest` paragraph,
+     BOB #28): the finding above is CLOSED rather than exempted. The request row now records the CALLER's
+     principal as the control plane stamped it (REC-152's one expression) — so the credential that asked is named,
+     composite and all, and the run it asked under is one its principal (ruth) holds. The old assertion pinned the
+     run's copy, which is exactly how a member could be credited with a request somebody else filed. */
+  t("the request's plane principal is the CALLER's stamp — ruth's principal AND the credential identity that "
+  + "asked (REC-168 closes the D-199 (4) finding this assertion used to pin)",
+    req?.principals?.plane, "member:ruth/investigator");
 
   /* AND THE COMPOSITE STAMP IS DRIVEN WHERE IT DOES APPLY, so the mechanism is
      proved rather than assumed absent: a credential whose RECORD declares

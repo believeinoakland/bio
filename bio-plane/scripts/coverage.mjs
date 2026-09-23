@@ -1430,6 +1430,11 @@ const REGISTER_FLOOR = {
   /* [M0-116] 2026-09-22: MOVED 1670 -> 1672 from this item's own `--strict` print on its COMMITTED tree 5c936246, exit 0 unpiped: `arms 1672/1670 · classified 269/269 · corpus (suites read) 270/270 · GREW by 2 arm(s)`, `floor 231/231 reproducible`. The arrival is gates.test.mjs's (16) and (17). Never added by hand. */
   /* [M0-111] 2026-09-23: MOVED from this item's own `--strict` print on its COMMITTED branch (base `df9eb9f9`), exit 0 unpiped: `arms 1674/1670 · classified 270/269 · corpus (suites read) 271/270 · GREW by 4`, `floor 232/231 reproducible · GREW by 1`. One new suite, `train.test.mjs`, declaring four arms (1)-(4), RUN by `train.control.mjs`. Nothing FELL. A figure true of THIS branch; CONDUCT re-reads it on the merge. */
   /* [CONDUCT #14 at M0-111's merge onto M0-116] 2026-09-23: RE-READ from `--strict` on the COMMITTED merge, exit 0 unpiped: `arms 1676/1672 · classified 270/270 · corpus 271/271 · GREW by 4`, `floor 232/232`. M0-116 moved arms +2 and M0-111 +4 from one base; the other keys were already exact. Never added by hand. */
+  /* [REC-168] 2026-09-23: MOVED arms 1670 -> 1680, classified 269 -> 270, corpus 270 -> 271, run 231 -> 232, from this
+     item's own `--strict` print on its COMMITTED tree 07fd7ee0, exit 0 unpiped (`REGISTER FLOOR  arms 1680/1670 · classified
+     270/269 · corpus (suites read) 271/270 · GREW by 10 arm(s)`, `232 RUN (dated token) … floor 232/231 reproducible · GREW by
+     1`) — never added by hand. One new suite, `test/rec168-capturerequest-principal.test.mjs`, whose declaration states the
+     control's rows, each RUN by `test/rec168-capturerequest-principal.control.mjs`. Nothing FELL. ONE KEY SET. */
   arms: 1676,
   // [CONDUCT #5 at REC-139's merge] 2026-09-18: re-read on the COMMITTED merged tree — `arms 1427/1419 · classified 243/242 · corpus (suites read) 244/243 · GREW by 8`, `floor 206/205 reproducible` (project-disclosure), from the print.
   // [REC-139] 2026-09-18: MOVED 1414 -> 1422, classified 241 -> 242, corpus 242 -> 243, run 204 -> 205, from this item's own `--strict` print on its committed tree f500a03f (`arms 1422/1414 · classified 242/241 · corpus (suites read) 243/242 · GREW by 8 arm(s)`, `floor 205/204 reproducible`) — the arrival is project-disclosure.test.mjs (8 rows, (a)-(h)).

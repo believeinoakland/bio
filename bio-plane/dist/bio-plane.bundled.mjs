@@ -58776,11 +58776,34 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     };
     const run = String(args.run ?? "").trim();
     const runRow = run ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run) : null;
-    if (!runRow || runRow.status !== "running")
+    const requestRunSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);
+    if (!requestRunSeen)
       return refusal7(
         "CAPTURE_REQUEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
         { run: run || null }
+      );
+    const notPrincipal = runPrincipalGate({
+      caller: args.caller ?? null,
+      principal: runRow.principal_plane,
+      act: "requesting a capture under a run"
+    });
+    if (notPrincipal)
+      return {
+        ok: false,
+        reason: notPrincipal.code,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        run,
+        note: "a capture request names a run its caller holds. Nothing was requested or written"
+      };
+    if (runRow.status !== "running")
+      return refusal7(
+        "CAPTURE_REQUEST_NO_RUN",
+        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
+        { run }
       );
     const address = String(args.address ?? "").trim();
     if (!isPublicHttpsLocator(address))
@@ -58843,6 +58866,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       );
     const purpose = String(args.purpose ?? "").trim();
     const uaMode = String(args.ua_mode ?? args.uaMode ?? "civicos").trim();
+    const callerPlane = String(args.caller ?? "").trim();
     const nowMs = args.at ? Date.parse(args.at) : Date.now();
     const now = _Store.#aiIso(nowMs);
     const request = String(args.request ?? "").trim() || `CR-${now.replace(/[-:TZ]/g, "")}-${_Store.#rand(6)}`;
@@ -58882,7 +58906,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       host,
       purpose,
       uaMode,
-      runRow.principal_plane,
+      callerPlane,
       runRow.principal_claude,
       now,
       now,
@@ -58902,7 +58926,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       state: "requested",
       requested: true,
       already: false,
-      principals: { plane: runRow.principal_plane, claude: runRow.principal_claude },
+      principals: { plane: callerPlane, claude: runRow.principal_claude },
       detail: "requested. This instance does not fetch on a caller's timing: the daemon drains this queue, and DEC-47's conduct rules are applied there."
     };
   }
@@ -65550,7 +65574,11 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
            capture-request arm asks so it can admit the drain and nobody else. */
         capturerequest: () => this.captureRequest({
           ...body || {},
-          viewer: url.searchParams.get("viewer")
+          viewer: url.searchParams.get("viewer"),
+          /* REC-168: the caller's PRINCIPAL, stamped by the control plane (REC-152's one expression, via
+             `RUN_PRODUCTION_ACTIONS`) and SET AFTER the body's spread, so a `caller` the body carries is
+             overwritten rather than believed. */
+          caller: url.searchParams.get("principal")
         }),
         capturerequestdrain: () => this.captureRequestDrain(body || {}),
         capturerequestdraining: () => this.captureRequestDraining(
@@ -67562,7 +67590,7 @@ var AI_RUN_ACTIONS = [
   "extractpropose"
 ];
 var RUN_VERB_ACTIONS = ["airunopen", "airuntick", "airunclose"];
-var RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose"];
+var RUN_PRODUCTION_ACTIONS = ["suggest", "extractpropose", "capturerequest"];
 var POSITIONAL_ACTS = [
   "cite",
   "sever",
