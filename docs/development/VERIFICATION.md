@@ -57,7 +57,8 @@ untallied suites and says so** (`· EXCLUDES N untallied suite(s) ·`, then a li
 
 ### What the battery says about TEMP, and about the half it does not own (D-237)
 
-The runner fences each suite in its own `$TMPDIR` and fails on residue inside it (D-186). **That figure is
+The runner fences each suite in its own `$TMPDIR` and fails on residue inside it (D-186), naming each by path and
+the suite that left it (M0-127: a RED names its causes). **That figure is
 about the fence, not the estate.** The outside-the-fence report never fails a run and grades evidence
 three ways, never collapsed: **HELD** (a pid chain — the only state allowed to say *this run*),
 **APPEARED/CHANGED** (a candidate), **PRE-EXISTING**. The failing guard is `hygiene.test.mjs`'s

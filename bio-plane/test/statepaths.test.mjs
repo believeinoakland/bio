@@ -60,7 +60,11 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8", input, maxBuffer: 1 << 28 });
 
 /* The printed figures (see the head). */
-const UNITS_CEILING = 60;
+/* MOVED 60 -> 61 on 2026-09-23 by M0-127, from the figure this suite PRINTED (`61 unit(s) of 350`): the one new
+   reader is M0-127's new suite `plane:gateverdict.test.mjs`, which imports `tools/pushguard.mjs` (the FAILED= grammar's
+   reader) and so "walks docs/ in tools/pushguard.mjs" — the same reach `pushguard-check.test.mjs` already had. A
+   legitimately added unit, not drift; `coord.mjs`'s reach (the subject here) is unchanged at 5. */
+const UNITS_CEILING = 61;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

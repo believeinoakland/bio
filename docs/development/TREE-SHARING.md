@@ -227,6 +227,14 @@ FLEET); and a battery suite leaking miniflare sandboxes on the runner only (D-18
   **Not built / limits:** it reads the checks of the COMMIT, so a different commit with the same tree finds none; it
   reads the `origin` remote's repository; the integration branch's prefix `integrate/**` is this landing's guess at
   M0-111's name, and that landing names the real one here.
+- **A RED NAMES WHAT IS RED (M0-127, 2026-09-23; measured in `MEASUREMENTS.md` M-112).** The run on tree `6ef503c4` read
+  RED with 282/282 suites green and `FAILED=none`: the red was D-186's residue check, which is not a suite. The annotation
+  is now composed by `tools/gateverdict.mjs` from the gate's log, and its FAILED= names every cause as a token —
+  `plane:`/`fleet:` a suite, `residue:<path>:by=<suite>:pid=<n>`, `step:<coverage--strict|civicos-ui|plancheck|…>:exit=<n>`,
+  `notmeasured:`, `sharedlog:`, `gate:no-record:…` for a gate that died — read from the gate's own `gates: CAUSES` line
+  (`tools/pushguard.mjs` `stepCauses`), and reads `none` ONLY on GREEN. The battery's result line carries each suite's
+  pid, so a residue names the suite that left it. **Not exercised:** the Actions runner itself; the writer is driven
+  locally on real gate logs (`bio-plane/test/gateverdict.test.mjs`).
 
 ### 3a · The shared, per-suite result record (M0-126) — DESIGNED 2026-09-23 by BOB #29, adopting CONDUCT #14's proposal
 
