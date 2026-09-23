@@ -1,7 +1,7 @@
-# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 12:22Z), in cloud Claude Code under Bob's second account.
+# BOB — resume here. Written 2026-09-23 by BOB #30 (running; refreshed at 13:20Z), in cloud Claude Code under Bob's second account.
 
 Read `CLAUDE.md`, `kickoffs/BOB.md`, `docs/architecture/BIO_System_Design.md` whole, `kickoffs/NEW-MACHINE.md` §0 and §0.1,
-then this. Every line is a POINTER measured at 2026-09-23 ~12:22Z; re-measure before acting on it. BOB #30 is LIVE
+then this. Every line is a POINTER measured at 2026-09-23 ~13:20Z; re-measure before acting on it. BOB #30 is LIVE
 (`session_019unCkzAzfmAPMLVuRNPvui`, ~47% context): this file is its running state, not yet a handoff. When a successor is
 named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from `list_triggers`) and archive it under D-398.
 
@@ -42,9 +42,11 @@ named on line 1, confirm BOB #30 stopped (its `send_later` self-wakes gone from 
    `kickoffs/DIST.md` release step 1 (drop `--since`; `gates.mjs --full --no-reuse`, or an `isBackstop()` record for the exact
    tree), and TREE-SHARING "As built" item 10 if CONDUCT did not (the train's tree reuse is NOT correct for never-cached units;
    M0-131). `nevercache` LANDED at `d89e04d1`; `migration-replay` rides batch7.
-3. **Bob's open question: the weekly budget.** `get_session`'s `rate_limit_info` reads `seven_day` `allowed_warning`,
-   reset 2026-09-29 18:00Z (no percentage). Recommended 3 concurrent workers; CONDUCT holds at 7 (added none) until he
-   answers. Relay his number by trigger.
+3. **The weekly budget — RULED BY BOB 2026-09-23 ~13:15Z:** *"I have 2 Max 20x accounts. The other one refreshes early
+   Saturday morning, whereas this one refreshes early Tuesday. Don't sever to preserve or spread out token usage. We're
+   good."* No worker cap, no throttling for the weekly budget; an `allowed_warning` is NOT brought to Bob again. Relayed to
+   CONDUCT #16 (cap of 7 lifted). OWED: fold into `kickoffs/BOB.md` opening step 4 with the DIST.md correction (one landing).
+   STILL OPEN with Bob, brought once: migrated questions keep their Drive-era `surfaced_by` (INVESTIGATIVE-SESSION §11 item 5).
 4. Carried from BOB #29, unchanged: M0-127 (CONDUCT's); the three leftover refs (`m0114-negctl`, `m0114-negctl-2`,
    `land/worker/m0-111-delete-probe`) need a GitHub-side delete — brought to Bob once, 06:47Z; the v0.72–0.74 tags — do not
    re-ask; M-97/M-98's git half; the hook's `CLAUDE_ENV_FILE` appends; Q3, D-53 unanswered, do not re-ask.
