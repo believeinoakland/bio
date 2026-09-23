@@ -206,7 +206,7 @@ const promote = async (id, objectType) => {
             current_state: objectType === "project" ? "forming" : "open",
             created: T0, last_updated: T0 },
     files: [{ path: "bundle.md", text: mint ? `---\n---\n\n## Question\n\nfixture\n` : `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`,
-              bytes: 40, sha256: SHA }],
+              bytes: 40 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA, which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
     register: [],
   });
   if (!r || r.ok === false || !r.bundleId) throw new Error(`fixture promote ${id}: ${JSON.stringify(r).slice(0, 400)}`);
