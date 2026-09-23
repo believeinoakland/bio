@@ -3981,6 +3981,7 @@ __export(bio_checks_exports, {
   divisionDisclosureFindings: () => divisionDisclosureFindings,
   ed25519Verify: () => ed25519Verify,
   extentRelation: () => extentRelation,
+  imagePageUndetermined: () => imagePageUndetermined,
   imagePartUndetermined: () => imagePartUndetermined,
   inquiryQuestionOf: () => inquiryQuestionOf,
   isBoilerplate: () => isBoilerplate,
@@ -3995,6 +3996,7 @@ __export(bio_checks_exports, {
   legContentId: () => legContentId,
   legExtent: () => legExtent,
   legHasAuthoredExtent: () => legHasAuthoredExtent,
+  mintUndetermined: () => mintUndetermined,
   normalizeRootKey: () => normalizeRootKey,
   normalizeType: () => normalizeType,
   parseAllowedSigners: () => parseAllowedSigners,
@@ -12506,6 +12508,16 @@ function imagePartUndetermined(extent, ctx = {}) {
       why: `this capture is an office container and this record holds no list of its embedded images (it was acquired before the wire carried one, or no entry itemised it), so whether the part is among them is UNDETERMINED, admitted and stated rather than guessed`
     };
   return null;
+}
+function imagePageUndetermined(extent, ctx = {}) {
+  const e = extent && typeof extent === "object" ? extent : null;
+  if (!e || e.kind !== "image" || !Number.isInteger(e.page)) return null;
+  const c = ctx && ctx.container && typeof ctx.container === "object" ? ctx.container : null;
+  if (!c || typeof c.page_images_why !== "string" || !c.page_images_why) return null;
+  return { level: "page_images", why: c.page_images_why };
+}
+function mintUndetermined(extent, ctx = {}) {
+  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx);
 }
 function coversImagePlacement(e, container) {
   if (!container || container.container_name !== "pdf" || !Array.isArray(container.images)) return null;
@@ -41262,7 +41274,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         for (let i = 0; i < basisLegs.length; i++) {
           const leg = basisLegs[i];
           if (typeof leg.target !== "string") continue;
-          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null, legImageBound = null;
+          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
@@ -41287,7 +41299,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                   legRowId = mint.content_id;
                   legMinted = mint.minted;
                   legUndetermined = mint.undetermined || null;
-                  legImageBound = mint.image_bound || null;
                 }
               }
             }
@@ -41299,8 +41310,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
                 extent_kind: ext.kind,
                 minted: legMinted,
                 carried: legCarried,
-                ...legUndetermined ? { undetermined: legUndetermined } : {},
-                ...legImageBound ? { image_bound: legImageBound } : {}
+                ...legUndetermined ? { undetermined: legUndetermined } : {}
               });
           }
           this.sql.exec(
@@ -42843,19 +42853,8 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         citedAs
       );
     }
-    const undetermined = imagePartUndetermined(extent, ctx);
-    const imageBound = extent && extent.kind === "image" && Number.isInteger(extent.page) && ctx.container && ctx.container.page_images_why ? {
-      determined: false,
-      empty_level: "the images this capture's pages paint",
-      why: ctx.container.page_images_why
-    } : null;
-    return {
-      ok: true,
-      content_id: id,
-      minted: !before,
-      ...undetermined ? { undetermined } : {},
-      ...imageBound ? { image_bound: imageBound } : {}
-    };
+    const undetermined = mintUndetermined(extent, ctx);
+    return { ok: true, content_id: id, minted: !before, ...undetermined ? { undetermined } : {} };
   }
   /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
    *  as an ACT a credential performs rather than as a side effect of promotion.
@@ -42948,8 +42947,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       minted: out.minted,
       capture_sha: sha,
       ...this.contentRow(out.content_id),
-      ...out.undetermined ? { undetermined: out.undetermined } : {},
-      ...out.image_bound ? { image_bound: out.image_bound } : {}
+      ...out.undetermined ? { undetermined: out.undetermined } : {}
     };
   }
   /* ====================================================================== *

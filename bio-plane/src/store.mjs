@@ -437,7 +437,7 @@ import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
    inside the construct that exists to close it. */
 import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
          describeExtent, contentIdFor, legContentId, contentCitedAs,
-         imagePartUndetermined } from "../checks/bio-checks.mjs";
+         mintUndetermined } from "../checks/bio-checks.mjs";
 /* REC-97 / IC-90: THE LEG GRAMMAR ITSELF, imported so `op=cite` can route the
    leg it is about to write through the SAME function `checkInquiryBasis` runs
    at C-2.8 and `basisVersionFindings` runs at C-25.10 — REC-84's ONE checker.
@@ -15933,7 +15933,7 @@ export class Store extends DurableObject {
              this loop now has to call. The shadow parsed, ran, and would have
              thrown `not a function` only on the path that reads an authored id;
              renamed rather than aliased so there is one name for one thing. */
-          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null, legImageBound = null;
+          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
@@ -15956,7 +15956,7 @@ export class Store extends DurableObject {
                 const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
                   extent: ext, mintedBy: CONTENT_MINTED_BY_PLANE, at: meta.last_updated || null, ctx: cp.ctx });
                 if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted;
-                               legUndetermined = mint.undetermined || null; legImageBound = mint.image_bound || null; }
+                               legUndetermined = mint.undetermined || null; }
               }
             }
             /* The ROW is not read here. `contentRow` is a read, and a read inside
@@ -15966,8 +15966,7 @@ export class Store extends DurableObject {
             if (legRowId)
               contentProjected.push({ ord: i, target: leg.target, content_id: legRowId,
                 extent_kind: ext.kind, minted: legMinted, carried: legCarried,
-                ...(legUndetermined ? { undetermined: legUndetermined } : {}),
-                ...(legImageBound ? { image_bound: legImageBound } : {}) });
+                ...(legUndetermined ? { undetermined: legUndetermined } : {}) });
           }
           this.sql.exec(
             `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
@@ -17872,22 +17871,14 @@ export class Store extends DurableObject {
                 ? { page: extent.page, rect: extent.rect ?? null } : null),
         ctx.pageCount, mintedBy, at || new Date().toISOString(), citedAs);
     }
-    /* D-440: an image `{part}` admitted WITHOUT the bound it would be checked
-       against (an office container with no persisted image list, or a capture
-       whose kind the record does not hold) says so on the answer. Returned bare,
-       it read exactly like a part the record had verified is in the document. */
-    const undetermined = imagePartUndetermined(extent, ctx);
-    /* D-420: A PAGE-FORM IMAGE ADMITTED WITHOUT THE PAINTED-IMAGE BOUND SAYS SO.
-       The checker admits it because the record holds no placement list to test
-       it against (`#containerExtentForCapture` names which absence), and an
-       admission that said nothing would read as "an image is painted here". */
-    const imageBound = extent && extent.kind === "image" && Number.isInteger(extent.page)
-        && ctx.container && ctx.container.page_images_why
-      ? { determined: false, empty_level: "the images this capture's pages paint",
-          why: ctx.container.page_images_why }
-      : null;
-    return { ok: true, content_id: id, minted: !before, ...(undetermined ? { undetermined } : {}),
-             ...(imageBound ? { image_bound: imageBound } : {}) };
+    /* D-440 / D-420 / CPDF-22: AN IMAGE ADMITTED WITHOUT THE BOUND IT WOULD BE
+       CHECKED AGAINST SAYS SO, in ONE shape (BOB #31). A `{part}` on an office
+       container with no persisted image list, or on a capture whose kind the
+       record does not hold; a `{page}` on a capture whose painted-image list is
+       not held (`#containerExtentForCapture` names which absence). Returned
+       bare, either read exactly like an address the record had verified. */
+    const undetermined = mintUndetermined(extent, ctx);
+    return { ok: true, content_id: id, minted: !before, ...(undetermined ? { undetermined } : {}) };
   }
 
   /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
@@ -17978,8 +17969,7 @@ export class Store extends DurableObject {
                                    mintedBy: mintedBy.trim(), at });
     if (!out.ok) return out;
     return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id),
-             ...(out.undetermined ? { undetermined: out.undetermined } : {}),
-             ...(out.image_bound ? { image_bound: out.image_bound } : {}) };
+             ...(out.undetermined ? { undetermined: out.undetermined } : {}) };
   }
 
   /* ====================================================================== *

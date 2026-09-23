@@ -12974,6 +12974,31 @@ export function imagePartUndetermined(extent, ctx = {}) {
   return null;
 }
 
+/** CPDF-22 (BOB #31, 2026-09-23) — D-420'S PAGE FORM IN THE SAME SHAPE. An image
+ *  `{page}` (with or without a rect) admitted because the record holds no list of
+ *  the images this capture's pages PAINT — a PDF acquired before D-420, a walk that
+ *  did not finish, a capture that is not a PDF — states it as `{level:
+ *  'page_images', why}`. The sentence is the store's (`page_images_why`, naming
+ *  which absence), so the statement cannot describe a different context than the
+ *  one the checker judged. Null when the list was held and checked. */
+export function imagePageUndetermined(extent, ctx = {}) {
+  const e = extent && typeof extent === 'object' ? extent : null;
+  if (!e || e.kind !== 'image' || !Number.isInteger(e.page)) return null;
+  const c = ctx && ctx.container && typeof ctx.container === 'object' ? ctx.container : null;
+  if (!c || typeof c.page_images_why !== 'string' || !c.page_images_why) return null;
+  return { level: 'page_images', why: c.page_images_why };
+}
+
+/** CPDF-22 — ONE SHAPE FOR "ADMITTED, BOUND NOT HELD" on every mint answer
+ *  (BOB #31, 2026-09-23): `undetermined: {level, why}`, the record's UNDETERMINED
+ *  primitive (BIO_System_Design §3, construct 12). D-420's second shape for the
+ *  same statement is WITHDRAWN (one IC, I3); `mintContent` asks this and nothing
+ *  else. A `{part}` and a `{page}` are exclusive address forms, so at most one of
+ *  the two answers. */
+export function mintUndetermined(extent, ctx = {}) {
+  return imagePartUndetermined(extent, ctx) || imagePageUndetermined(extent, ctx);
+}
+
 /* D-420 — THE PAGE FORM'S BOUND: the images a PDF's pages PAINT, as the record
  * holds them (`container.images` of a `container_name: 'pdf'` extent, each
  * `{page, rect}`, written at acquire from the structure op). Returns a sentence
