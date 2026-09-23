@@ -74,26 +74,10 @@ jobs:
           t1="$(date -u +%s)"
           cat "$log"
           # THE VERDICT IS THE GATE'S OWN RECORD LINE (D-293: a clean run over one tree), never the exit alone.
-          rec="$(grep -E '^gates: RECORDED (GREEN|RED|NOT MEASURED) for tree ' "$log" | tail -1 || true)"
-          verdict=UNDETERMINED
-          case "$rec" in
-            "gates: RECORDED GREEN "*) verdict=GREEN ;;
-            "gates: RECORDED RED "*) verdict=RED ;;
-            "gates: RECORDED NOT MEASURED "*) verdict="NOT MEASURED" ;;
-          esac
-          cls="$(printf '%s\n' "$rec" | sed -n 's/.*(class \([A-Z]*\)).*/\1/p')"
-          done_line="$(grep -E 'suites green|suites? .*(FAILED|failed)' "$log" | tail -1 || true)"
-          failed="$(grep -E '^  FAILED: ' "$log" | sed 's/^  FAILED: //' | paste -sd' ' - || true)"
-          echo "::notice title=gate verdict::VERDICT=${verdict} TREE=${tree} CLASS=${cls:-?} EXIT=${rc} WALL=$((t1 - t0))s FAILED=${failed:-none}"
-          {
-            echo "### gate: ${verdict} · class ${cls:-?} · tree ${tree}"
-            echo ""
-            echo "exit ${rc} · wall $((t1 - t0)) s · $(date -u -d "@$t0" +%FT%TZ) to $(date -u -d "@$t1" +%FT%TZ)"
-            echo ""
-            echo "${done_line:-no battery completion line}"
-            echo ""
-            echo "FAILED: ${failed:-none}"
-          } >> "$GITHUB_STEP_SUMMARY"
-          if [ "$verdict" = GREEN ]; then exit 0; fi
-          if [ "$rc" = 0 ]; then exit 1; fi
-          exit "$rc"
+          # M0-127: the annotation (and the step summary) is composed by `tools/gateverdict.mjs` from this log, so a
+          # suite drives the same logic on planted logs; FAILED= names EVERY cause — a suite, D-186's residue (by path
+          # and the suite that left it), coverage --strict, the UI harness, plancheck, a gate that died — and reads
+          # `none` only on GREEN (tree 6ef503c4 read RED with 282/282 suites green and `FAILED=none`). It exits 0 on
+          # GREEN only; if it cannot run, the step fails with no annotation, which the guard reads UNDETERMINED.
+          node tools/gateverdict.mjs --log "$log" --tree "$tree" --exit "$rc" --t0 "$t0" --t1 "$t1"
+          exit $?
