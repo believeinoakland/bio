@@ -572,6 +572,10 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      not the caller's, and it REFUSES rather than cuts: `BASIS_VERSION_LEGS_MAX` over the question's
      reasons, because a partition checked over a truncated basis could pass as covering reasons it never
      saw. DRIVEN below with the refusal arm, and carried in DRIVEN_ELSEWHERE for versionstrength's reason. */
+  /* MOVED 36 -> 37 on 2026-09-23 by D-256, from THIS ARM'S OWN FAILURE OUTPUT (`want 36 / got 37`), never by
+     adding: op=changedfromaudit, born with its bound as named constants (CHANGED_FROM_AUDIT_LIMIT_DEFAULT/_MAX,
+     op=versionchain's pair reused) declared BELOW the method on REC-116's finding. It bounds a listing by
+     `slice`, biasManifest's shape, because the three totals must be counted over every affected bundle. */
   OPS.size, 37);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
@@ -1353,7 +1357,14 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                   /* REC-161: op=partitionindependence takes NO `limit` from the caller —
                                      versionstrength's reason: a caller has no business asking for HALF a
                                      partition. Its bound REFUSES (C-71.7) and is driven below. */
-                                  "partitionindependence"]);
+                                  "partitionindependence",
+                                  /* D-256: op=changedfromaudit bounds its LISTING under
+                                     CHANGED_FROM_AUDIT_LIMIT_MAX (its three totals are always whole).
+                                     Its BITE needs bodies carrying addGo's changed-from sentence at
+                                     addresses with a version chain, which is `versionchain.test.mjs`'s
+                                     sixty-version fixture — so the bite, the clamp, `truncated` and total
+                                     paging are driven there in section 15; the envelope arm is below. */
+                                  "changedfromaudit"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1551,6 +1562,10 @@ const answersByOp = new Map([
   /* REC-126: the envelope of the review copy's read with no draft to key on — the ONE dead answer, an
      object and never an array. The bite is driven in `test/reviewcopy.test.mjs` (DRIVEN_ELSEWHERE). */
   ["reviewcopy", await GET("op=reviewcopy&token=mem-r57&draft=DRAFT-2026-0000&limit=1")],
+  /* D-256: the envelope of the changed-from audit over a store holding no such sentence — an object with its
+     totals, never an array. Admin-fenced, so the admin token. The bite is driven in `test/versionchain.test.mjs`
+     section 15 (DRIVEN_ELSEWHERE). */
+  ["changedfromaudit", await GET("op=changedfromaudit&token=adm-r57&limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "
