@@ -1835,6 +1835,7 @@ export const NON_ACTS = {
   /* D-148. Not object-directed on `contradictionpairs`' reasoning: it reads ACROSS
      actions by counterparty, and what it returns is something to LOOK AT. */
   actionquotes: "read: the fee quotes the record holds, by counterparty or by request, side by side; judges none of them and writes nothing",
+  versionnotice: "read: whether the document a citation rests on has a newer version at its address, and whether a passage at the same extent is in it — a candidate or UNDETERMINED; moves nothing and writes nothing (D-394)",
   /* REC-87 / IC-128. TRANSCRIBE is NOT an object-directed act, on `contentmint`'s
      reason: its subject is a PORTION of a document — (document, extent) — and
      `affordanceFacts` carries no page and no region, so an applies() over those

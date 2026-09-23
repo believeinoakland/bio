@@ -884,6 +884,12 @@ const OPS = {
      a bundle per version, so a member must not be able to learn from a version
      chain what op=list would not tell them. */
   versionchain: { classes: ["admin", "member", "probe"],         mutating: false },
+  /* D-394 — THE CROSS-VERSION NOTICE (framework §18.1): does a newer capture exist at
+     the address of a document a citation rests on, and is a passage at the same extent
+     in it. A pure READ on `versionchain`'s class cut, because it IS that chain asked
+     from a citation's side; it writes nothing, so there is no act to fence. `viewer`
+     is stamped below, fail-closed, like the chain it reads. */
+  versionnotice: { classes: ["admin", "member", "probe"],        mutating: false },
   /* PL-1 / IS-1: THE BASIS VERSIONS OF ONE INQUIRY — every alternative account
      of the evidence for a question, with its ground partition, the AND/OR
      relationship it states, the derivation edge it came along, and the run that
@@ -1983,6 +1989,9 @@ const SESSION_OPS = {
                    "contradictionpairs",
                    /* D-148: the fee-quote read, across actions, gated by the viewer. */
                    "actionquotes",
+                   /* D-394: THE CROSS-VERSION NOTICE — shown where a member meets a
+                      citation, so the session route is the one it must reach. */
+                   "versionnotice",
                    /* REC-87: TRANSCRIBE and the attestation of a typing — a person's
                       word in their own name, `attesttext`'s route and reason. */
                    "transcribe", "transcriptionattest",
@@ -2024,6 +2033,7 @@ const SESSION_OPS = {
                    "connectionchoose",
                    "contradictionpairs",
                    "actionquotes",
+                   "versionnotice",
                    "transcribe", "transcriptionattest",
                    "testify",
                    "lead", "leadlook", "leadshare",
@@ -2116,6 +2126,9 @@ const NEEDS = {
   /* D-148: NO CAPABILITY, on `contradictionpairs`' reasoning: reading what a body
      quoted is READING the record, and it writes nothing. */
   actionquotes: null,
+  /* D-394: NO CAPABILITY, on `op=content`'s reasoning — asking whether the document a
+     citation rests on has a newer version is READING the record, and it writes nothing. */
+  versionnotice: null,
   /* REC-87: NO FIFTH CAPABILITY TOKEN. Typing a portion's text writes a content
      row and its text into the working corpus, and attesting a typing is
      `attesttext`'s act on different text — both ride `contribute`, as
@@ -10013,6 +10026,11 @@ export default {
            same predicate, so hidden and absent are one answer; and it fails
            closed on an absent stamp, like every op in this list. */
         || op === "versionchain"
+        /* D-394: the notice names the question or passage asked about AND the
+           newer version it found, so both are gated: the subject through
+           `#viewerSees` and the chain through `versionChain`'s own gate. Fails
+           closed on an absent stamp, like the chain it reads. */
+        || op === "versionnotice"
         /* PL-1 / IS-1: a version set names its INQUIRY and every bundle its legs
            rest on, so an inquiry the caller was never invited to must answer
            exactly as one with no versions and as one that does not exist. The

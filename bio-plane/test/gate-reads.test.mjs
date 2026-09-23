@@ -969,7 +969,15 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "see exactly as an absent one (NARROW_NO_INQUIRY), before any leg or candidate is read. The "
       + "candidates are drawn only from the capture that one leg already rests on, so a caller who can "
       + "see the question can already read that leg's document; nothing wider is reached.",
-    transcription: "REC-87: one member's TYPING of a portion of a document, by content id — its text, who "
+    versionnotice: "D-394: whether the document a citation rests on has a NEWER version at its address, and "
+      + "whether a passage at the same extent is in it (framework section 18.1). GATED TWICE: the subject — a "
+      + "question or a passage — through Store#viewerSees, refused byte-identically to an absent one "
+      + "(VERSION_NOTICE_NO_INQUIRY, VERSION_NOTICE_NO_CONTENT); and the chain through op=versionchain's own "
+      + "#bundleGate, by CALLING that method rather than copying its join, so a newer version filed in a "
+      + "project the caller was never invited to is not in the chain this caller reads. It takes the "
+      + "fail-closed viewer stamp beside op=versionchain in index.mjs. The answer names a newer capture's "
+      + "bundle only when versionChain would have named it to this caller. It writes nothing.",
+    transcription:"REC-87: one member's TYPING of a portion of a document, by content id — its text, who "
       + "typed it and who attested it. GATED: the typing is filed in a DOCUMENT, so it takes the fail-closed "
       + "viewer stamp beside op=transcribe and op=transcriptionattest in index.mjs and answers a typing in a "
       + "document the caller may not see exactly as an absent one (TRANSCRIPTION_NOT_FOUND). The id is a hash "

@@ -451,3 +451,5 @@ bio-plane/.nc-d442/
 .coff13-control-pristine/
 # FW-20's pen (`civicos-ui/test/nc-fw20.mjs`), same rule as the pens above.
 .fw20-pen/
+# D-394's pen, on the standing rule at `.rec84-control-pristine/`: `test/nc-d394.mjs` keeps its per-arm pristine copies here.
+.d394-control-pristine/

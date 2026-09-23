@@ -11,6 +11,7 @@
 - §16 — the Google Drive paragraphs are SILENT on the one thing CAP-8 measured that matters most: the export is Google's conversion at fetch time and the conversion is NOT reproducible — three consecutive exports of one unchanged document produced three distinct `capture_sha` (D-351, MEASUREMENTS.md 2026-09-14 §4) — which puts C-18.3's corroboration fold and `resolveLinks`' identity bracket out of reach for Drive material; a design that makes the export the harvest owes a sentence about what that costs the record (a DESIGN GAP reported by CAP-8, folded here at integration, unwritten).
 - §16 — the closing table's ABSENT row: table and image extraction, the AI EXTRACT role, read-time re-extraction to tier 3 (D-319), the per-page tier-2 rule (D-283), the content-axis frontier — each with a design as of 2026-09-14 (`EXTRACTION-BREADTH-DESIGN.md`; the frontier in `OBSERVATION-LOG-DESIGN.md` §4.2) and none built — **except IMAGE extraction, built for office containers by FW-19 and for PDF pages by CPDF-18 on 2026-09-18 (table extraction on PDF measured NO-GO, M-55; office tables built by FW-19), and except the AI EXTRACT role, whose PLANE half SK-7 built on 2026-09-14** (the door, the label and the fence; no assistant calls it, so the role's own row in §16's closing table reads PARTLY BUILT rather than ABSENT). **CORRECTED 2026-09-18 by CPDF-19: read-time re-extraction to tier 3 (D-319) is BUILT, opt-in behind `op=pdfstructure&ocr=1`, exactly as `EXTRACTION-BREADTH-DESIGN.md` §5.1 decided** — this bullet listed it as unbuilt. The §16 table body is the as-built snapshot at the shas it names and is not rewritten; this bullet is where its ABSENT row is corrected for D-319. (The per-page tier-2 rule and the content-axis frontier have since landed too — CPDF-20/REC-98 and REC-94 — and this worker did not re-verify their standing beyond noting it; the owner of this document re-reads the row.)
 - §18 — **D-164 CLOSED 2026-09-22 (BOB #26): Bob's reopening condition is met, and §18's body says how.** Six pieces "named here, designed nowhere in this document": the content object and extent-carrying edge (D-164 — **DESIGNED 2026-09-14 in `CONTENT-EXTENT-DESIGN-SPACE.md` §6 under Bob's rulings §5.1–5.8, contracted as IC-83, and PARTLY BUILT: REC-82 landed the table and the writer on two arms, REC-83 the reads at content grain, and REC-84 the extent-carrying EDGE — the frontmatter grammar at both leg grains and the version-leg writer; and REC-85 the other three arms, which also MEASURED that the container extent those arms compare against is persisted nowhere (D-354); and REC-86 (2026-09-18, IC-123) the member's NARROW act at the plane — a new basis version one leg narrower, the old retained, chosen from machine proposals labelled as machine work — with the UI affordance and narrowing a LIVE-basis leg still unbuilt**); content-grain search, the general observation log and extraction breadth (**each DESIGNED 2026-09-14 by BOB #11** in `docs/development/CONTENT-SEARCH-DESIGN.md`, `OBSERVATION-LOG-DESIGN.md` and `EXTRACTION-BREADTH-DESIGN.md`, decomposed into the BOB INBOX; their build state is `node tools/status.mjs 5` and `9`'s to say, and this bullet read *none built* until 2026-09-22); homes for the member's lead and firsthand observation (**the doctrine is RULED, 2026-09-14, §14.4; the lead's design status is `BIO_System_Design.md` §3 construct 10's to state and the observation's is D-184's row, and §18's row points at both** — corrected 2026-09-18 by M0-62: this bullet read *doctrine, Bob's* four days after Bob ruled it); **the claim object DESIGNED 2026-08-03 in `BIO_Case_Making_v0_1.md` — a FIELD of an inquiry, not an object — with only the standards-by-audience catalogue still owed, and that is RESEARCH rather than design (corrected 2026-09-17 by M0-57; this bullet and §18's row both read *doctrine, Bob's* for six weeks after the design existed, and a session told Bob the class was undesigned on the strength of them). `BIO_System_Design.md` §3 construct 8 is the single authority on that status; §18 now points at it.**
+- §18.1 — **the cross-version relation's PROPOSED half is BUILT AT THE PLANE, 2026-09-23 (D-394, IC-239)**: `op=versionnotice` states a newer capture at a cited document's address with certainty where the version chain was read, and offers the extent-match CANDIDATE or UNDETERMINED with its reason, writing nothing (`node tools/status.mjs 4.cross-version`). NOT built: the member surface that shows it where the member meets the citation (4.cross-version-ui, ABSENT); the office extent arms are reached by the same checker and are UNDRIVEN by its suite; and the section's own open question — whether the notice reaches a member whose case is already PUBLISHED — is still undecided. The build added one state the design's table does not list, *the chain could not be read*, recorded under §18.1's "As built".
 - §19 — two owners' acts remain rowed (CPDF-17): the schema comments that should cite Part II, and the stale self-descriptions in the plane and the type registry.
 - §11 — seven declared bends; the first (documents that are not pages) has partly arrived with the non-text path and the OCR member, and Part I's text is frozen by design, so the bend is not updated in place.
 - §1.1 — "entities that outlive documents" named as the primary missing capability; the entity axis is since built at document grain (Part II §15).
@@ -84,7 +85,7 @@
   - [16. How content is extracted today](#16-how-content-is-extracted-today)
   - [17. How content is organized and reached](#17-how-content-is-organized-and-reached)
   - [18. The central gap, and the six pieces to design](#18-the-central-gap-and-the-six-pieces-to-design)
-    - [18.1 THE CROSS-VERSION RELATION — D-394 DESIGNED, 2026-09-17](#181-the-cross-version-relation-d-394-designed-2026-09-17)
+    - [18.1 THE CROSS-VERSION RELATION — D-394 DESIGNED, 2026-09-17; PLANE HALF BUILT, 2026-09-23](#181-the-cross-version-relation-d-394-designed-2026-09-17-plane-half-built-2026-09-23)
   - [19. Where this document is the authority, and who defers to it](#19-where-this-document-is-the-authority-and-who-defers-to-it)
   - [Appendix A · The evidence, as measured at `origin/main` `51d128a`](#appendix-a-the-evidence-as-measured-at-originmain-51d128a)
     - [A.1 The rulings](#a1-the-rulings)
@@ -2097,7 +2098,8 @@ of the six pieces below is designed in its home. The build came after, and the p
 (`node tools/status.mjs 4`: basis and version legs carry a `content_id`, `op=cite` accepts one, and
 a connection keeps its determining reference pair). What remains of content is rowed work, not
 this gap: the ON-POINT choice for a connection (REC-122), the cross-version relation (D-394,
-§18.1), and the TRANSCRIBE surface (4.transcribe-ui, delegated to UI).
+§18.1 — its plane half BUILT 2026-09-23, its member surface not), and the TRANSCRIBE surface
+(4.transcribe-ui, delegated to UI).
 
 **Its twin is the claim.** Nothing in this framework has modelled a claim since v0.1; the
 ownership ladder names L7 with no owner; a claim needs a standard of proof, which is
@@ -2116,7 +2118,7 @@ The pieces to be designed, named here and designed nowhere in this document:
 | 5 | **homes for the member's lead and firsthand observation** | D-194 and D-184, designed together. **This row POINTS rather than restates: `BIO_System_Design.md` §3 construct 10 is the single authority on the design status of the member's LEAD** (Bob, 2026-09-17), **and D-184's row in `DEBT.md` carries the FIRSTHAND-OBSERVATION half, which no §3 row states** — this cell restated the lead's status beside the map until 2026-09-18 (M0-62). What is RULED, and binds whichever home is built (§14.4, 2026-09-14): the observation is evidence, authored, grade D on the member's trust; its attribution in a published case is the attesting member's choice among the group, the project, the member's cover, or the member by name, and an off-the-record source's anonymity is valid | the architect, under the ruling; Program B |
 | 6 | **the claim object** | **DESIGNED 2026-08-03 in `BIO_Case_Making_v0_1.md`, §What a CLAIM is, and why it is a field rather than an object** — a claim is a FIELD of an inquiry, not an object, and concluding is the inquiry ADOPTING it as its answer. **This row POINTS rather than restates: `BIO_System_Design.md` §3 construct 8 is the single authority on that status** (Bob, 2026-09-17), and this cell said *designed nowhere* for six weeks after the design existed — on the strength of which a session told Bob the claim class was undesigned. Bob's direction of 2026-09-14, confirmed against the record: the burden of proof attaches to the PRODUCTION and is set by the project's bar and the audience's needs, so no separate claim object is required for it to vary; the research owed is the catalogue of standards by audience and output act | the architect; Program B |
 
-### 18.1 THE CROSS-VERSION RELATION — D-394 DESIGNED, 2026-09-17
+### 18.1 THE CROSS-VERSION RELATION — D-394 DESIGNED, 2026-09-17; PLANE HALF BUILT, 2026-09-23
 
 **§18's ruling below says the correspondence is *proposed and never applied*. The never-applied
 half was ruled and built; THE PROPOSED HALF WAS DESIGNED NOWHERE**, measured 2026-09-17: zero
@@ -2184,6 +2186,26 @@ correspondence would be worth less and could mislead a published case.
 Whether the notice also reaches a member whose case is already PUBLISHED, and through what surface,
 is a publication question and is not settled here. Nothing above changes §14.4, the row's identity,
 or the rule that an authored edge moves only by a member's act.
+
+#### As built — 2026-09-23 (D-394, IC-239)
+
+`op=versionnotice` (`Store#versionNotice`) answers for one question's cited passages (`target=`) or one
+passage (`content=`). WHETHER a newer capture exists is asked of `op=versionchain`'s own method, anchored
+on the content row's capture, at every address that capture was retrieved from — never a second copy of
+the chain. The candidate is REC-82's extent test (`checkContentExtent`) asked of the NEWEST capture, and
+admitted as a match only where the record HOLDS the bound the test compares against: the checker skips a
+bound nobody measured, and reading that skip as a fit would turn a fence's permissiveness into a claim.
+Nothing is minted; a content row that somebody already cited at that extent of the newer capture is NAMED.
+The suite (`test/versionnotice.test.mjs`) hashes every table of the store across the reads.
+
+**Two facts the table above does not separate, and the build keeps apart.** (1) *The chain could not be
+read* — the capture has no recorded address, or is not a version the chain holds for this caller — is a
+FOURTH state, `chain_unread`, with `newer: null`: it is not the first row's earned silence, and answering
+"no newer capture" there would be the record claiming more than it read. (2) Within UNDETERMINED, *the
+extent is outside the newer capture* (the passage may have moved) is a fact about the DOCUMENT, while
+*nobody has read the newer capture* is a fact about US; the notice names which. A newer version inside a
+project the caller was never invited to is not in the chain that caller reads, so the answer says the
+chains are the ones visible to the caller.
 
 ---
 
