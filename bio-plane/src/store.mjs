@@ -29760,6 +29760,7 @@ export class Store extends DurableObject {
    *  endpoint: working material is never consulted, so there is nothing to leak,
    *  exactly as op=verify already works. */
   publishedManifest() {
+    const byCase = this.#frozenPairsByCase();
     return { ok: true, scope: "published",
       /* REC-49, and it is CONDUCT's determination enacted rather than a
          convenience: EVERY RATIFIED FINDING CARRIES ITS OWN FROZEN PAIR HERE,
@@ -29784,9 +29785,32 @@ export class Store extends DurableObject {
         `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.attestor_key,
                 p.gate_version, p.strength, p.required
          FROM published_bundles p ORDER BY p.bundle_id, p.edition`)
-        .map((r) => ({ ...r,
-          strength: r.strength ? JSON.parse(r.strength) : null,
-          required: r.required ? JSON.parse(r.required) : null })),
+        .map((r) => {
+          const row = { ...r,
+            strength: r.strength ? JSON.parse(r.strength) : null,
+            required: r.required ? JSON.parse(r.required) : null };
+          /* ===== REC-170 / BIO_Publication_v0_1.md §3 rule 12 (b)–(d), with IC-74: WHERE THE
+             RATIFIED CASE DOCUMENTS PINNING THESE BYTES STATE DIFFERENT FROZEN PAIRS, THE ROW
+             SERVES EVERY CASE'S PAIR, EACH NAMED BY ITS CASE, AND NO SCALAR. ======================
+             `published_bundles.strength` is written ONCE, at the member's FIRST ratification
+             (`ON CONFLICT … DO NOTHING`), so on b5ce975a this row told a stranger one of two false
+             things: a BARE NULL where the documents already disagreed at that ratification (the
+             committer's `strengthUndetermined`, which reached op=ratify's answer and nothing
+             else), or — measured by rec170-manifest-pair.test.mjs, and worse — THE FIRST CASE'S
+             PAIR where a later case froze another, one case's reading served as THE pair (IC-74:
+             a finding in several cases answers every case, never one). Rule 12 (b) makes the pair
+             a fact about ONE case's reading of the finding at that sha, so where two readings
+             differ the scalar is null and SAYS why (`strengthUndetermined`, a reason code, the
+             `production` sentence's rule that a null is never left to be read), and
+             `strengthByCase` carries each ratified case edition's own pair as its document states
+             it — the same `#caseDocMemberFrozen` read op=publishedcase serves.
+             WHERE THE DOCUMENTS AGREE, OR ONE CASE PINS THE FINDING, NOTHING HERE RUNS and the row
+             is byte-identical to what it was: an added key on an agreeing row would be a flag
+             that is not true. */
+          const pinned = byCase.get(`${r.bundle_id}\u0000${r.bundle_sha}`);
+          if (!pinned || new Set(pinned.map((p) => JSON.stringify(p.strength))).size < 2) return row;
+          return { ...row, strength: null, strengthUndetermined: "CASES_DISAGREE", strengthByCase: pinned };
+        }),
       /* REC-44: the CASES, beside the findings rather than instead of them. The
          findings are what carry a signature and a frozen pair; the case is what
          carries the container's manifest, its own hash and the scope. A
@@ -29865,7 +29889,13 @@ export class Store extends DurableObject {
                + "composing its members' pairs into one letter would be a claim the evidence does not "
                + "support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET "
                + "RATIFIED: it has no pair because nothing has been signed for it, which is a state of the "
-               + "record and not a gap in this answer.",
+               + "record and not a gap in this answer. "
+               /* REC-170: the one null on a finding row that is not "nothing was signed". */
+               + "Since the frozen pair is stated in each CASE's document (a case's reading of the finding at "
+               + "that hash), a finding several cases pin may carry several pairs: where their documents "
+               + "disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and "
+               + "`strengthByCase` lists every ratified case edition's own pair, named by its case and "
+               + "edition. None of them is the finding's pair; each is that case's.",
       detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this "
             + "instance's cooperation or continued existence. Nothing unpublished appears, by construction: "
             + "this reads the published projection and never the working corpus." };
@@ -31235,6 +31265,43 @@ export class Store extends DurableObject {
     return { edition: eds.length === 1 ? eds[0] : null,
              strength: pairs.length === 1 && seen[0].strength.length ? seen[0].strength : null,
              strengthUndetermined: pairs.length > 1 };
+  }
+
+  /* REC-170 / BIO_Publication_v0_1.md §3 rule 12 (b): EVERY RATIFIED CASE EDITION'S OWN FROZEN PAIR
+     FOR EVERY PINNED SHA, keyed `bundle_id NUL bundle_sha`, for `publishedManifest`. One set-based read
+     of the pins, then `#caseDocMemberFrozen` (the one parser of the per-case facts) once per case edition
+     that pins a sha SEVERAL editions pin — a sha pinned by one edition has nothing to disagree with, so
+     its document is never opened here. EVERY ratified edition counts, not only a case's latest: each is
+     a separate signed document that stated its own reading of those bytes. A LEGACY (/1) document states
+     no pair of its own (its members carried theirs, rule 12 (e)) and is left out rather than read as an
+     empty pair — which is also where this reader is blind: a /1 reading does not join the comparison. */
+  #frozenPairsByCase() {
+    const pins = this.#rows(
+      `SELECT m.case_id, m.edition, m.bundle_id, m.version_sha FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.version_sha IS NOT NULL
+        ORDER BY m.bundle_id, m.version_sha, m.case_id, m.edition`);
+    const groups = new Map();
+    for (const p of pins) {
+      const k = `${p.bundle_id}\u0000${p.version_sha}`;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(p);
+    }
+    const docs = new Map();
+    const out = new Map();
+    for (const [k, ps] of groups) {
+      if (ps.length < 2) continue;
+      const stated = [];
+      for (const p of ps) {
+        const dk = `${p.case_id}\u0000${Number(p.edition)}`;
+        if (!docs.has(dk)) docs.set(dk, this.#caseDocMemberFrozen(p.case_id, Number(p.edition)));
+        const row = docs.get(dk) ? docs.get(dk).get(p.bundle_id) : null;
+        if (row && row.version_sha === p.version_sha)
+          stated.push({ case_id: p.case_id, edition: Number(p.edition), strength: row.strength });
+      }
+      out.set(k, stated);
+    }
+    return out;
   }
 
   /* REC-44: what a case edition is, and whether it is COMPLETE. One place, so
