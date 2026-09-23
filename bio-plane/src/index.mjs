@@ -1048,6 +1048,13 @@ const OPS = {
   reviewrevoke:   { classes: ["admin", "member", "probe"],           mutating: true  },
   reviewcopy:     { classes: null,                                   mutating: false },
   reviewcomment:  { classes: null,                                   mutating: true  },
+  /* D-150 / BIO_Publication_v0_1.md §3 rule 11: THE EXCLUSION STATEMENT'S ACKNOWLEDGEMENT.
+     UNGATED on `reviewcomment`'s reasoning and through its two doors, because one of the two
+     people rule 11 names — a review-copy recipient — holds no credential of this instance, only
+     the grant's read secret. A member acknowledges with an ordinary session, of a draft or of an
+     unsigned case document; the store asks the POSITION (a joined participant, not the author).
+     `mutating: true`: it writes a row. It gates nothing, and nothing gates on it. */
+  statementack:   { classes: null,                                   mutating: true  },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
   publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
@@ -5104,11 +5111,16 @@ export default {
          argument — at ONE status, so revoked, never-issued, malformed, a draft
          that does not exist and a draft the caller cannot see are the same bytes.
          The inner URL is built from nothing of the caller's but `draft`. */
-      if (op === "reviewcopy" || op === "reviewcomment") {
+      /* D-150: `statementack` takes these two doors, and a member may name an unsigned case
+         document (`case` + `edition`) in place of a draft. */
+      if (op === "reviewcopy" || op === "reviewcomment" || op === "statementack") {
         const bySecret = url.searchParams.has("secret");
         const q = new URLSearchParams();
         const draftParam = (url.searchParams.get("draft") || "").trim();
         if (draftParam) q.set("draft", draftParam);
+        if (op === "statementack" && !bySecret)
+          for (const k of ["case", "edition"])
+            if (url.searchParams.get(k)) q.set(k, (url.searchParams.get(k) || "").trim());
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
         if (bySecret) {
           q.set("bySecret", "1");
