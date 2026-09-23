@@ -474,7 +474,8 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [], legs 
   "group: believe-in-oakland", ...refLines(refs), "state_history: []",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
-  "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
+  /* CORRECTED 2026-09-23 by REC-179 (C-66.5): this template said `surfaced_by: agent`, but its questions are created by a member SESSION, which D-78 restamps `human` — so every later revision re-sending the template RELABELLED the question `agent`, the defect REC-179 closes (a revision now carries the value forward or is refused SURFACED_BY_REWRITTEN). The template now says what the record holds. */
+  "visuals: []", "surfaced_by: human", 'disposition_reason: ""',
   "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
   ...(subject ? [`subject_entity: ${subject}`] : []),

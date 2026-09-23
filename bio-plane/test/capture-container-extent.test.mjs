@@ -887,8 +887,18 @@ t("an HTML capture still acquires, and nothing ever tried to itemise a container
   ["container_extent" in html.reading, html.reading.container_extent], [false, undefined]);
 
 const pdfdoc = (await acquire("/one.pdf")).document;
-t("a PDF the wire READ carries the key, NULL — the wire ran and no entry itemised a container",
-  ["container_extent" in pdfdoc.reading, pdfdoc.reading.container_extent], [true, null]);
+/* CORRECTED 2026-09-23 BY D-420, NOT EXEMPTED. This assertion read `[true, null]`
+   — "the wire ran and no entry itemised a container" — and that was TRUE of every
+   PDF until D-420, because nothing persisted what a PDF's pages paint; it was also
+   the defect D-420 closes (an `image {page, rect}` row bounded by the page set
+   alone). A PDF now carries ONE level, `images`, and this 1-page text-only PDF's
+   list is a MEASURED ZERO, never null. The key-present half of the claim — which
+   is what this section is about — is unchanged; the NULL form now belongs to a PDF
+   acquired before D-420, driven in `d420-image-page.test.mjs`. */
+t("a PDF the wire READ carries the key — since D-420 its ONE level, `images`, here a MEASURED "
+  + "EMPTY list (a text-only page paints no image), never null",
+  ["container_extent" in pdfdoc.reading, pdfdoc.reading.container_extent],
+  [true, { container: "pdf", levels: ["images"], images: [] }]);
 t("the two absences are distinguishable, which is the point of carrying the key",
   ("container_extent" in html.reading) === ("container_extent" in pdfdoc.reading), false);
 

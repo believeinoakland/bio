@@ -50,6 +50,33 @@
 > UI-59's release; the consequence is that "every UI item has an entry" is a weaker
 > claim than "every surface change has an entry", and only the first is true here.
 
+v103, 2026-09-23 session, thread UI, D-82 (a WORKER of CONDUCT #16, cloud session). Landed on `land/worker/D-82` (base
+`origin/main` @ `0e5f7054`), in the commit that carries this entry. (UI-73 ran beside this item and took `v102`, so
+CONDUCT #17 renumbered this entry `v103` at c17-batch1.) SURFACES: the record list, the finder's Questions scope, a project's contents, the
+cited-by rows of a document page and of a question page, a question's own page, and the record page opened on a question.
+
+**What was wrong.** D-78 has the plane stamp `surfaced_by: agent` on every question whose creation did not come through a
+member's session, and `human` on a member's. Nothing a member sees read that stamp on a QUESTION (UI-5's
+`proposalDerivedBadgeHtml` reads it only for a derived finding), so a question a machine opened was listed and shown exactly
+like a colleague's judgement: the failure Interaction Constructs §P's accountability rule names.
+
+**What it does now.** One helper, `surfacedByAgentHtml`, draws one marker, *"Raised by a machine · nobody has yet judged it
+worth asking"*, beside a question whose record says `agent`, and nothing beside any other. It discounts nothing and hides
+nothing; a member's question renders as before. A question's own page and the record page read the value from the
+question's own front matter. No list read carries the field, so each list surface asks the record ONE `op=search` question,
+`type:inquiry fm:surfaced_by=agent` in ids mode (the `fm:` grammar line `op=searchfields` publishes); where that read fails
+or comes back short of its own total, the rows it did not name stay unmarked and the list says once that an unmarked
+question is not thereby a member's. No plane change; no code is shown (DEC-49 guard unchanged, 356 in reach).
+
+**Driven against the real plane**, `civicos-ui/test/agent-surfaced-inquiry.test.mjs` (34 assertions): one question opened
+by a deploy token inside its run (REC-171's fixture), one by a member's session, the same title, text, author and
+references, each sending the OPPOSITE `surfaced_by` claim, so the plane's stamp is what is read back. On every surface both
+rows are present, the machine's carries the marker and the member's carries none; a failed set read marks nobody and says
+so. NEGATIVE CONTROL `agent-surfaced-inquiry.control.mjs`, 6/6 AS DECLARED: the helper neutered RED 27/7 (every AGENT arm);
+the liar marking every question RED 26/8 (every MEMBER arm); the set ignoring the stamp RED 24/10; the undetermined note
+dropped RED 33/1; over-strictness GREEN. NOT A SURFACE HERE, measured: `op=queue` names no question as a subject today and
+the Review screen lists documents only.
+
 v102, 2026-09-23 session, thread UI, UI-73 (a WORKER of CONDUCT #16). Landed on `land/worker/UI-73` (base `origin/main` @
 `0e5f7054`), in the commit that carries this entry. SURFACE: `app.html` — every member-facing refusal reader OUTSIDE
 `actRefusalHtml` / `intentRefusalHtml`. **A REFUSAL CARRYING DEC-49'S CANNED `translation` NOW REACHES THE MEMBER IN THAT

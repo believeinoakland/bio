@@ -767,7 +767,16 @@ CREATE TABLE IF NOT EXISTS readings (
   found          INTEGER NOT NULL DEFAULT 0,
   entity_count   INTEGER NOT NULL DEFAULT 0,
   reading        TEXT NOT NULL,
-  at             TEXT
+  at             TEXT,
+  -- D-440 (EXTRACTION-BREADTH-DESIGN.md section 3.2). The capture's FORMAT key as
+  -- its provenance document's profile recorded it (detectFormat, magic bytes
+  -- first and the declared Content-Type second), projected at op=promote from the
+  -- SAME data/provenance.json the reading is. It answers one question, asked by
+  -- contentContextFor: is this capture an office container, whose own bytes can
+  -- hold an embedded media part. NULLABLE AND NEVER BACK-FILLED: NULL means the
+  -- provenance document carried no format, and the reader falls back to the
+  -- reading's own text_container, then states the kind UNDETERMINED.
+  capture_format TEXT
 );
 CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- The entity-reference index: one row per entity a reading carries, keyed by the

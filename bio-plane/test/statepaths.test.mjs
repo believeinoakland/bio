@@ -73,7 +73,12 @@ const git = (args, cwd, input) => spawnSync("git", args, { cwd, encoding: "utf8"
    new readers are present on the merged tree, M0-127's `gateverdict.test.mjs` and M0-126's `gateresults.test.mjs`, each
    importing `tools/pushguard.mjs` and so walking docs/. The figure below is the one this suite PRINTED on the merge.
    M0-126's own note, kept: `gateresults.test.mjs` drives the guard's `gate-results` arm — a legitimate reader. */
-const UNITS_CEILING = 63;
+/* MOVED AGAIN 2026-09-23 by CONDUCT #17 at c17-batch1 (63 -> 64), from the figure this suite PRINTED on the merged tree
+   (`64 unit(s) of 373 selected · 31 MEASUREMENTS reader(s) · 4 through tools/coord.mjs`); main @ 91bcea6b prints 63.
+   The one new unit, found by diffing the selected lists of the two trees: D-82's `ui:agent-surfaced-inquiry.test.mjs`,
+   selected as "doc-facing, and docs/development/MEASUREMENTS.md changed" — a legitimately added doc-facing UI suite,
+   not a reader of the ledger (the reader list is identical, 31 on both) and not reach through `coord.mjs`. */
+const UNITS_CEILING = 64;
 const THROUGH_COORD_CEILING = 5;
 const UNITS_FLOOR = 300;          /* the unit corpus (345 at `f05c1efd`): a selector narrowed to nothing is not a pass */
 

@@ -541,7 +541,17 @@ console.log("\n--- I. the class: reads whose failure is swallowed, pinned as a r
      `op=publish`, and the only thing caught is the rollback this method threw
      itself. It is the class's shape by syntax and not by meaning, which is why
      it is admitted here with its reason rather than rewritten to hide from the walk. */
-  const CEILING = 27;
+  /* MOVED 27 -> 28 AT INTEGRATION by CONDUCT #17 (2026-09-23, c17-batch2), FROM THE FIGURE THIS WALK PRINTED on the
+     merged tree (main 91bcea6b prints 27; REC-180's branch alone prints 28, every other item on the batch 27), and the
+     new site was LOOKED AT: REC-180's `promote`, whose callback `act` throws `Store.#ROLLBACK` with the refusal held
+     beside it, and whose catch returns THAT refusal and re-throws everything else (`if (e !== Store.#ROLLBACK ||
+     !refused) throw e`). It is REC-126's `#reviewGates` shape, admitted above, one function over: THE CLASS'S REMEDY,
+     NOT AN INSTANCE OF IT. Nothing the plane could not establish is smoothed into a normal-looking answer: the caller
+     reads the very refusal the act returned, and the only thing the catch changes is that the refused act's writes
+     (REC-141's mint in `minted_ids`) are undone. WHY IT IS A CATCH AT ALL: the Durable Object's SQL API rolls back
+     only on a throw. The worker, gating its own suites only (Bob, 2026-09-23), could not see this walk; the union
+     gate is where it fires, which is why it is resolved here. */
+  const CEILING = 28;
   t(`swallowed reads in store.mjs are at or below the ratchet (${found.length} of ${CEILING})`,
     found.length <= CEILING, true);
 
