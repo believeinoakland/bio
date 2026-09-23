@@ -3809,6 +3809,39 @@ CREATE TABLE IF NOT EXISTS project_visibility (
 CREATE INDEX IF NOT EXISTS project_visibility_project ON project_visibility(project_id, seq);
 -- =========================================================================
 
+-- D-86 (NOTIFICATIONS.md, The catalogue: a re-run owed after a lens change, an OBLIGATION, DISCLOSED and never
+-- blocking, DEC-20, with BIO_Content_Framework_v0_10.md section 13): the BIAS DEBT a run carries once the lens it
+-- was formed under has moved. ONE ROW PER RUN, keyed by the run and nothing else, so the sweep is idempotent by
+-- construction: a second alarm tick finds the row and writes nothing new. Written ONLY by the bias-debt consumer
+-- on the one alarm, from the answer aiRunRead publishes (its bias block: moved, moved_basis, the two hashes) and
+-- never from a second comparison. lens_then is the side the comparison was against (the lens at the open for a
+-- recorded open, else the manifest the run was handed), lens_now the lens at the sweep, NULL where none is in
+-- force. cleared_at is set, never a DELETE, when a later sweep reads moved false again: the obligation leaves the
+-- queue and the row keeps what was observed. recipients is a JSON array of member ids, each one checked through
+-- the run's own read gate at the sweep. A run is purged only by the whole-store arm, which takes this with it.
+CREATE TABLE IF NOT EXISTS bias_debts (
+  run           TEXT PRIMARY KEY,
+  context_type  TEXT NOT NULL,
+  context_id    TEXT NOT NULL,
+  moved_basis   TEXT,
+  lens_then     TEXT,
+  lens_now      TEXT,
+  recipients    TEXT NOT NULL,
+  raised        TEXT NOT NULL,
+  observed      TEXT NOT NULL,
+  cleared_at    TEXT
+);
+-- D-86: the sweep's own place in its work. fingerprint is the lens-input fingerprint the LAST COMPLETE sweep read
+-- (every adoption with its bundle's current sha and state), so an alarm with no lens change asks nothing of any
+-- run. target and cursor carry a sweep that spans several ticks, restarted from the top when the lens moves again.
+CREATE TABLE IF NOT EXISTS bias_debt_sweeps (
+  k            TEXT PRIMARY KEY,
+  fingerprint  TEXT,
+  target       TEXT,
+  cursor       TEXT NOT NULL DEFAULT '',
+  at           TEXT NOT NULL
+);
+
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and
 -- recorded, following the pattern capture_limits proved for the subrequest
