@@ -19,6 +19,7 @@
 - §Published cases — IS-8/PL-16 RESHAPED by DEC-72 (a case is a production, CASE-1..6); the "no case-level bar" assumption is overtaken; DEC-33's ceremony still deferred.
 - §What is NOT settled — items 3, 3a, 7, 8 and 9 all since answered or landed; the list is history.
 - §11 — item 5, rule 2's REACH, RULED 2026-09-23 by BOB #30 (D-85's builder's question): rule 2 binds every creation D-78 stamps `surfaced_by: agent`, not the `ai` class alone. D-85 built it for `ai`; ~~the admin, member and probe deploy tokens are NOT BUILT (a row, placed after D-85)~~ BUILT 2026-09-23 by REC-171 (IC-186, `bio-plane/test/rec171-surface-token.test.mjs`, nine-arm control): `op=promote`'s stamp is set for every non-session caller, `class:<cls>` for a deploy token. STILL OPEN, brought to BOB rather than exempted (the ruling's own instruction): `bio-plane/migrate/migrate.mjs` replays a Drive mirror's questions under a deploy token and cannot honestly name a run (a replayed question was not surfaced by a run opened today), so a migration of any inquiry is now refused `SURFACE_NO_RUN` — and D-78 already restamps a migrated member's question `agent`, which predates this item.
+- §11 — item 5, a MIGRATION REPLAY is not a surfacing: RULED 2026-09-23 by BOB #30 (REC-171's finding); NOT BUILT (a row).
 - §Decomposition — every IS-n superseded by a named PL/FL row and all 43 landed; the C-number allocation promise is discharged in `bio-checks.mjs`, not recorded here.
 - §The final Claude Code comparison — F10 built (FL-3), F9 never rewritten, F11 open.
 - §What a SUGGESTION is — the five kinds are built (PL-3); D-324 (VF-4) found `new-version` is not one of the five, unrecorded here.
@@ -890,6 +891,30 @@ and the UI promote under a member SESSION; `agent-worker/src` holds no `promote`
 inside a run (`bio-plane/test/surfacing-run.mjs`, which every corrected suite's fixture uses). `bio-plane/migrate/migrate.mjs`
 CANNOT be — it replays questions surfaced in the Drive era, and a run opened today would record a lens and objective they
 were never formed under — and is brought here as a finding (Incomplete sections).
+
+**A MIGRATION IS A REPLAY, NOT A SURFACING — RULED 2026-09-23 by BOB #30, on REC-171's finding.** The stamp above is
+`class:<cls>` (`MACHINE_CLASS_PREFIX`), the run verbs' own; this lane's BOB INBOX entry and messages wrote `token:<class>`, which is
+not the code's spelling (REC-171's control showed it would break every landing), and the code's form stands. REC-171 found that
+`bio-plane/migrate/migrate.mjs` replays Drive-era questions through `op=promote` under a deploy token and so is now refused
+`SURFACE_NO_RUN` for every inquiry. Neither answer offered fits. A RUN would invent a lens nobody held, and a MEMBER
+ATTESTATION would invent an author: the question was surfaced in the Drive era by whoever surfaced it there, and the plane is
+carrying that record forward, not witnessing a new act. And D-78's `agent` restamp was already FALSE on this path, because it
+told every later reader that a machine surfaced a member's question. So a migration is a THIRD case, admitted by what the
+server can check rather than by what the caller says. A creation is a MIGRATION REPLAY when (1) it arrives under the
+ADMIN class (the root of trust; `migrate.mjs`'s `admin-or-member` narrows to admin), and (2) it names a registered
+drive-provenance capture already in the record whose preserved promotion records name this bundle id and list this
+revision's `bundle.md` SHA-256. That check proves the bytes are the Drive era's, not the caller's. A replay (a) is exempt
+from rule 2, since no surfacing happens on this plane; (b) keeps the `surfaced_by` its Drive-era bytes carry and is NOT
+restamped by D-78, because a server-verified replay of recorded bytes is not a caller's assertion; and (c) reads
+`surfaced_in: not recorded (migrated from the Drive era)`, never a guess, rule 2's own wording for a question surfaced
+before it. Any creation failing (1) or (2) is an ordinary creation, and rule 2 and D-78 apply unchanged, so the door
+cannot be used to skip a run. What remains is stated, not hidden: the drive-provenance capture is itself uploaded by the
+root of trust, whose honesty the record does not model (Membership §DEC-2, deferred). **Accepts when** a replay naming
+its provenance capture lands with its Drive-era `surfaced_by` and the migration suite migrates clean; one naming no capture,
+a capture for another bundle or a SHA-256 the capture does not list is refused `SURFACE_NO_RUN` as today; and a
+member-class token is refused. NEGATIVE CONTROL: drop the SHA-256 check, and the arm replaying altered bytes fails by
+name. The builder verifies `migrate.mjs` registers the provenance capture BEFORE it promotes the bundle, and reorders if
+not.
 
 No production carries its own copy of the manifest: that would be a second place to state one fact (D-21), able to
 disagree with the run it came from.
