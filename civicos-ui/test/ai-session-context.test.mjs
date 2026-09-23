@@ -10,7 +10,11 @@
        (5b) put the same computation on the INDICATOR itself -> **3 FAIL / 74 pass here** — D1 naming the computed percentage for EACH window separately, and D2 (a percent sign at all, by any route) — plus `ai-session-wire` ARM S5 again, from the other direction.
    (6) POLARITY was confirmed on every pin: GREEN with the tree intact FIRST, then RED with the defect, never the reverse. ARMS B2, A4, C5, P5 and O are the in-suite polarity arms and run on every pass.
    (7) OVER-STRICTNESS, IN-SUITE AND ON EVERY RUN: ARM O drives a run whose status is a word nobody here wrote (`mid-flight-and-unlabelled`) and requires it to render AND to reach the dot — a surface that only accepted the three statuses the plane publishes today would break the day a fourth arrived, and it would break SILENTLY.
-   (8) A FINDING FROM RUNNING A CONTROL, not from review: the first draft drove the "may not see" half with the MEMBER CLASS TOKEN and ARM A went RED AGAINST CORRECT BEHAVIOUR. `store.mjs`'s `#bundleGate` documents that a machine credential is DELIBERATELY NOT FILTERED (*"machine: not filtered"*), so the class token saw CAROL's project run and the two absences were not two absences. A real enrolled member (DAVE) is the only credential that can show a real withholding, and the suite says so at his declaration. */
+   (8) A FINDING FROM RUNNING A CONTROL, not from review: the first draft drove the "may not see" half with the MEMBER CLASS TOKEN and ARM A went RED AGAINST CORRECT BEHAVIOUR. `store.mjs`'s `#bundleGate` documents that a machine credential is DELIBERATELY NOT FILTERED (*"machine: not filtered"*), so the class token saw CAROL's project run and the two absences were not two absences. A real enrolled member (DAVE) is the only credential that can show a real withholding, and the suite says so at his declaration.
+   (9) D-286 — THE DRAW, RUN 2026-09-23 by the D-286 worker, each arm ALONE through this suite, the file copied aside and restored by copy, every restore verified by sha256 AND cmp (suite d70ca33f3463… as it stood BEFORE this entry was written into it, fixture module b26431196514…). Clean tree: 80 pass, 0 fail.
+       (9a) FORCE THE MEASURED COLLISION: pin INQ_ALLOWED 3354, INQ_CONSUMED 1278, PROJ_CONSUMED 2076 at `const BUDGETS` -> **1 FAIL / 79 pass: ARM D0b by name** (`inquiry fetches remainder` = 2076, the project's published consumption). D0c stays GREEN, correctly: the RULE that draws fixtures is sound; only this fixture was forced.
+       (9b) PUT THE OLD OVERLAPPING RANGES BACK in `ai-session-fixture.mjs` (PROJ_ALLOWED 5001..5999, PROJ_CONSUMED 2003..2499) -> **2 FAIL / 78 pass: ARM D0c(i)** naming both overlaps (inquiry remainder vs PROJ_CONSUMED, project remainder vs INQ_ALLOWED) — deterministic, on EVERY run — and ARM D0c(ii) with 1 of 500 draws colliding (that half is draw-dependent: the old ranges collide once in 578 draws, measured over 2,000,000).
+       (9c) THE LIAR — pin the draw to one lucky fixture (`R` answers lo + 1) -> **1 FAIL / 79 pass: ARM D0c(iii)**, 1 of 500 draws distinct; D0b stays GREEN, which is exactly why a pinned fixture needs an arm of its own. */
 /* ai-session-context.test.mjs — UI-49.
  *
  * THE ITEM IN ONE SENTENCE: `INVESTIGATIVE-SESSION.md` §14a promises that *any
@@ -59,6 +63,11 @@
  * when it was written. The ranges are four-digit and DISJOINT BY ASSERTION
  * (ARM D0b), because UI-47's first draft had a remainder collide with a
  * published `ticks` and an arm failed against correct behaviour.
+ * CORRECTED 2026-09-23 BY D-286: "disjoint by assertion" was only HALF true —
+ * D0b ASSERTED it of each fixture, but nothing made the RANGES disjoint, so the
+ * draw could still produce a colliding fixture and D0b went red by chance. The
+ * ranges now live in `ai-session-fixture.mjs` with an interval PROOF at that
+ * site, and ARM D0c re-computes the proof and runs 500 draws on every pass.
  *
  * ---- AND THE MATCHER IS BOUNDARY-AWARE ----
  *
@@ -158,20 +167,25 @@ const CAROL = await member("carol", ["contribute", "create_projects"]);
    only credential that can show a real withholding. */
 const DAVE = await member("dave", ["contribute"]);
 
-/* ---- THE FIXTURE VALUES, DRAWN AT RUNTIME. See the header. ---- */
-const R = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+/* ---- THE FIXTURE VALUES, DRAWN AT RUNTIME. See the header. ----
+   CORRECTED 2026-09-23 BY D-286, never exempted: the old draw was WRONG BY CONSTRUCTION. It took PROJ_ALLOWED from
+   5001..5999 and PROJ_CONSUMED from 2003..2499, so the inquiry's REMAINDER (1502..2992) could equal the project's
+   consumption and the project's remainder (2502..3996) could equal the inquiry's allowance — and ARM D0b, correctly,
+   went RED whenever it did (measured: 3354, 1278, 2076). The suite's verdict moved with the DRAW, not the code, which
+   `TREE-SHARING.md` §3 rules a defect. The budgets now come from `ai-session-fixture.mjs`, whose ranges are PROVEN
+   disjoint from every derivation ARM D looks for (the proof is at that site and ARM D0c re-computes it every run).
+   The draw is STILL random every run; D0b is unchanged. */
+import { drawBudgets, collisions as drawCollisions, rangeProof, RANGES } from "./ai-session-fixture.mjs";
 const tag = () => Math.random().toString(36).slice(2, 10);
-const INQ_ALLOWED   = R(3001, 3999);
-const INQ_CONSUMED  = R(1007, 1499);
-const PROJ_ALLOWED  = R(5001, 5999);
-const PROJ_CONSUMED = R(2003, 2499);
-const OTHER_ALLOWED = R(8001, 8999);
+const BUDGETS = drawBudgets(Math.random);
+const { INQ_ALLOWED, INQ_CONSUMED, PROJ_ALLOWED, PROJ_CONSUMED, OTHER_ALLOWED } = BUDGETS;
 const LABEL_INQ   = `label-${tag()}`;
 const LABEL_PROJ  = `label-${tag()}`;
 const LABEL_OTHER = `label-${tag()}`;
 const LABEL_DONE  = `label-${tag()}`;
 console.log(`  fixture drawn at runtime — inquiry run ${INQ_CONSUMED}/${INQ_ALLOWED} '${LABEL_INQ}', `
   + `project run ${PROJ_CONSUMED}/${PROJ_ALLOWED} '${LABEL_PROJ}', elsewhere '${LABEL_OTHER}', ended '${LABEL_DONE}'`);
+console.log(`  (to reproduce a failure, pin exactly these budgets: ${JSON.stringify(BUDGETS)})`);
 console.log(`  (a literal in app.html cannot match a value that did not exist when it was written)`);
 
 /* ---- seed: two inquiries every member can see, and ONE PROJECT CAROL OWNS ---- */
@@ -597,6 +611,26 @@ console.log("\n--- ARM D · no percentage, no remainder, computed by no route, o
   eq("ARM D0b (instrument): no derivation this arm looks for COLLIDES with a value the record actually published — "
      + "a collision would make D1 unable to tell a forbidden derivation from a published figure",
      collisions.map(c => c[0]), []);
+  /* ARM D0c (D-286, 2026-09-23) — THE DRAW CANNOT MAKE D0b RED. D0b judges ONE fixture; this arm judges the RULE that
+     draws them, so a verdict can no longer move with the draw. (i) The interval proof in `ai-session-fixture.mjs`,
+     re-computed, not quoted. (ii) 500 fresh draws through the same collision predicate: zero may collide. (iii) THE
+     LIAR'S ARM: those 500 draws must be (nearly) all DIFFERENT, and the draw must answer its range ends for the ends of
+     `rand` — so "fixing" D0b by pinning one lucky fixture forever fails here by name. The floor 490 of 500 is not a
+     tolerance for flakiness: over ~2.4e14 possible fixtures the chance of even ONE repeat in 500 is ~5e-10. */
+  const PROOF = rangeProof();
+  eq("ARM D0c(i): the fixture's ranges are PROVEN disjoint — no remainder or percent ARM D derives can equal a figure "
+     + "the draw publishes, for ANY draw", PROOF.faults, []);
+  const draws = Array.from({ length: 500 }, () => drawBudgets(Math.random));
+  const colliding = draws.filter(f => drawCollisions(f).length);
+  eq("ARM D0c(ii): 500 fresh draws of the fixture, zero collide", colliding.length, 0);
+  const distinct = new Set(draws.map(f => JSON.stringify(f))).size;
+  const ends = [drawBudgets(() => 0), drawBudgets(() => 0.9999999999)];
+  ok(`ARM D0c(iii): the fixture stays RANDOM — ${distinct} of 500 draws distinct (floor 490), and the draw spans its `
+     + `ranges (rand 0 -> every low end, rand ~1 -> every high end), so no fixture is pinned`,
+     distinct >= 490 && Object.keys(RANGES).every(k => ends[0][k] === RANGES[k][0] && ends[1][k] === RANGES[k][1]));
+  console.log(`  ARM D0c: proof over ${Object.keys(PROOF.derived).length} derived intervals x ${Object.keys(RANGES).length} `
+    + `published ranges, ${PROOF.faults.length} fault(s); 500 draws, ${colliding.length} colliding, ${distinct} distinct; `
+    + `this run's own fixture collides on: ${JSON.stringify(drawCollisions(BUDGETS))}`);
   for(const [what, value] of derived)
     for(const [wname, out] of [["the inquiry window", PANELS.inquiry], ["the project workspace", PANELS.project]])
       ok(`ARM D1: ${wname} does not compute the ${what} (${value}) — both figures are published separately and a `
