@@ -75,15 +75,17 @@ scope: examine each of the eleven for any read of a live ref (`origin/*`, `coord
 accepts-when: every one of the eleven either carries a planted-ref arm proving its verdict identical whatever the live ref holds, or a dated line saying it reads none. NEGATIVE CONTROL: point one pinned unit back at the live ref, and its planted-ref arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (M0-130's worker's class sweep via CONDUCT #16; `node tools/mintid.mjs M0`).
 
-### D-57 · queued — **`resolveLinks` TELLS A MEMBER THAT A SELF-LINKED PAGE'S TARGET *CHANGED*, NAMING ONE CAPTURE TWICE AS THE BRACKET.** A page … (whole text: the cut archive)
+### D-57 · queued — **`resolveLinks` TELLS A MEMBER THAT A SELF-LINKED PAGE'S TARGET *CHANGED*, NAMING ONE CAPTURE TWICE AS THE BRACKET.** A page linking to itself (every Legistar calendar does) finds its own capture as both `before` and `after` — its `first_retrieved` and `last_retrieved` equal the source's retrieval instant — so the `before && after` arm returns `undetermined` with the basis *"the target changed somewhere between the captures bracketing this document's retrieval"*. The verdict is defensible; the BASIS is false, and the UI renders the plane's words verbatim. — owner RECORD.
 order: after REC-160, with the read-time claims the record cannot support (CLAUDE.md §2's class): a fabricated sentence about a source, on every self-linking municipal page; below REC-160 because the verdict it carries is right (SCHEDULER #8, 2026-09-21, LED-7 batch S8-2)
 milestone: M3
 interface: I3 — a fourth BASIS on `op=links&capture=`, never a fourth verdict; the integrator mints and classifies the IC.
-design: `docs/development/LINK-FIDELITY.md`, which defines the verdicts and what each basis may claim, with … (whole text: the cut archive)
+design: `docs/development/LINK-FIDELITY.md`, which defines the verdicts and what each basis may claim, with `BIO_Intake_Doctrine_v1_1.md` (link fidelity is construct 2's).
 depends-on: none.
-accepts-when: a self-linking page's self-link reads the self-reference basis, with no *changed* sentence and no doubled hash; a genuine two-capture bracket still reads *changed*. How a liar … (whole text: the cut archive)
+scope: the row's fix — `resolveLinks` recognises a pick whose `capture_sha` is `sourceCapture` and states a SELF-REFERENCE basis; and, the same defect one step wider, a `before` and `after` that are ONE capture never read as *changed*. The UI keeps rendering the plane's words.
+accepts-when: a self-linking page's self-link reads the self-reference basis, with no *changed* sentence and no doubled hash; a genuine two-capture bracket still reads *changed*. How a liar passes it: dropping the self-link from the answer, so the arm asserts it is still listed and counted. NEGATIVE CONTROL: remove the self-reference test, and the self-link arm fails by name at the *changed* sentence.
 added: 2026-09-21 · SCHEDULER #8 (LED-7 batch S8-2; D-57's DEBT row of 2026-07-30, verified at the code; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-57» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-57» on entering the cache; re-read on `0e7cc03e`: still open.
 
 ### D-168 · queued — **A MEMBER'S `op=cite` ADMITS A RETIRED INFORMATION BUNDLE, SO A CLAIM CAN REST ON WHAT THE GROUP ITSELF RETIRED, READING TO EVERY LATER MEMBER AS LIVE SUPPORT.** `op=cite` is type-only; the machine's suggest path already refuses it (`SUGGEST_LEG_UNREACHABLE`, `store.mjs`, re-read on `cdfaea39`). BOB #30 ruled it refused in the store for every caller. Its design landed at `4355bfda`. — owner RECORD.
 order: with the claims the record cannot support, directly after D-57 and above D-440: support the record's own judgment withdrew, CLAUDE.md §2's class, a correction to the built cite path (SCHEDULER #15, 2026-09-23, LED-7; BOB #30's ruling)
@@ -95,15 +97,17 @@ scope: `op=cite` onto a `retired` bundle is refused with a stated code naming th
 accepts-when: a cite onto a retired Information bundle is refused by name for a member and a machine credential alike; one onto a `source_status: removed` bundle lands; an older leg is byte-identical. NEGATIVE CONTROL: drop the retired check from `op=cite`, and the member arm fails by name.
 added: 2026-09-23 · SCHEDULER #15 (LED-7; D-168's DEBT row of 2026-08-03; keeps its `D-` id).
 
-### D-440 · queued — **THE `image` ARM'S `{part}` FORM MINTS ON ANY CAPTURE THAT IS NOT AN OFFICE CONTAINER, NAMING BYTES THE DOCUMENT DOES NOT** … (whole text: the cut archive)
+### D-440 · queued — **THE `image` ARM'S `{part}` FORM MINTS ON ANY CAPTURE THAT IS NOT AN OFFICE CONTAINER, NAMING BYTES THE DOCUMENT DOES NOT HOLD.** `coversImage` (`checks/bio-checks.mjs`) admits a `{part}` whenever the capture holds no image list, which is every HTML, PDF, text and data capture, and `mintContent` writes the row stating nothing (traced by BOB #24; re-read at the code 2026-09-21). — owner RECORD.
 order: with the claims the record cannot support, after D-57 and above D-390: a content row naming bytes its document does not hold, minted silently, CLAUDE.md §2's class; D-420 directly after it, the same function (BOB #24: *"one worker can take both"*) (SCHEDULER #9, 2026-09-21)
 milestone: M4
 interface: I3 — a new refusal on the image arm; the integrator mints and classifies the IC.
-design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 … (whole text: the cut archive)
+design: `docs/development/EXTRACTION-BREADTH-DESIGN.md` §3.2 (*"`{part}` is a member of a CONTAINER's own bytes, and nothing else"*, which names this fence) and §3.4, with `docs/development/CLIENT-RENDERED.md` "DESIGNED 2026-09-21" (an image served beside a page is its own document).
 depends-on: none.
-accepts-when: a `{part}` on an HTML capture is refused by name, pointing at acquiring the image; a container capture still mints; an office capture with no persisted list is admitted as … (whole text: the cut archive)
+scope: the row's named fix: `contentContextFor` tells the checker whether the capture is an office container, from its content type; the image arm refuses a `{part}` on any other capture BY NAME, saying an image served beside a page is its own document to acquire and cite whole; an office capture with no persisted image list keeps its undetermined admission, stated.
+accepts-when: a `{part}` on an HTML capture is refused by name, pointing at acquiring the image; a container capture still mints; an office capture with no persisted list is admitted as undetermined, stated. How a liar passes it: refusing every `{part}`, so the container arm must mint. NEGATIVE CONTROL: remove the refusal, and the HTML arm fails by name.
 added: 2026-09-21 · SCHEDULER #9 (BOB #24's inbox entry, drained this commit; D-440's DEBT row; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-440» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
+
+uncut: 2026-09-23 by SCHEDULER #16, restored WHOLE from `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` «D-440» on entering the cache; re-read on `0e7cc03e`: still open.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
