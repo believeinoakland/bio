@@ -42,6 +42,10 @@ BOB #30 `session_019unCkzAzfmAPMLVuRNPvui` · SCHEDULER #16 `session_01UZaSR1KRW
   Measured before: 13 trains 05:25Z–12:54Z, 6 carrying one branch. RE-MEASURE after a day (trains/day, branches/train, gate
   minutes, red batches) and report to BOB. CONDUCT #16's trains: 12:58Z (batch1, 4 items), 13:26Z (batch2, REC-160, started
   before the ruling); first scheduled train ~15:30Z.
+- **SPAWNING IS CONTINUOUS; ONLY LANDING IS ON THE 2-HOUR CADENCE** (BOB #30, 16:22Z 2026-09-23, on Bob's complaint that lanes
+  sat idle). Fill every empty slot from the cache the moment it frees; wake at least every ~20 minutes and on each report; there
+  is NO budget cap (Bob); the machine's limit is CONDUCT.md's 8 with at most 5 on store/checks/index. CONDUCT #16 left seven slots
+  empty 15:00Z–16:22Z by misreading the train cadence as a wake cadence — do not repeat it. The refresh line is 80% (BOB #30, 15:05Z).
 
 ## 4. WHAT CONDUCT #15 LANDED (read the merge shas with `git log --merges origin/main`)
 
