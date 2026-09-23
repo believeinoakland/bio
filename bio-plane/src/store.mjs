@@ -297,7 +297,7 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
          CONTENT_EVIDENCE_IS_ONE_SIDED, causesNotRuledOut,
          /* REC-129 / IC-143: the internet level's sidedness and its empty-answer ladder. */
          INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES,
-         readerRunObservation, resolutionObservation, derivationObservation,
+         readerRunObservation, resolutionObservation, derivationObservation, derivationStatement,
          /* REC-96 / D-196 / IC-112: THE COMPLETENESS STATEMENT'S `searched`
             SECTION, decided in `airun.mjs` for the reason every vocabulary above
             is — this file gathers the subjects the CASE names and asks what
@@ -22319,11 +22319,32 @@ export class Store extends DurableObject {
        connection with one visible end and one invisible one still says what it
        says, and names only the end it may. */
     const keep = this.#bundleRedactor(viewer);
+    /* D-241 — THE DERIVATION'S EXTENT, beside the read's. `truncated` above is whether THIS
+       PAGE was cut at `limit`; it says nothing about whether the derivation that WROTE the
+       rows was cut at its pair bound, and a cut derivation read at the ceiling came back
+       `truncated: false` over part of the set. REC-95's row per derivation already records
+       that (`partial`), so the entity arm reads the LATEST one — one hit on the
+       `observation_log_frontier` index — and `derivationStatement` in `airun.mjs` says what
+       it means. No row is never published bare: §5.1's cause decides between never derived,
+       pre-log and undetermined. Ungated for the reason the meaning frontier's entity fetch
+       gives: an entity is not gated. The capture arm spans many entities and publishes
+       nothing here; its derivation is read per entity. */
+    const derivation = entityId
+      ? (() => {
+          const obs = this.#one(
+            `SELECT at, state, detail FROM observation_log
+              WHERE level = 'meaning' AND subject_kind = 'entity' AND subject = ?
+              ORDER BY seq DESC LIMIT 1`, entityId);
+          if (obs) return derivationStatement(obs);
+          const ent = this.#one(`SELECT at FROM entities WHERE entity_id = ?`, entityId);
+          return derivationStatement(null, this.#missingMeaningCause("entity", entityId, ent ? ent.at : null));
+        })()
+      : undefined;
     return { ok: true, entity_id: entityId, capture_sha: captureSha, count: rows.length,
              connections: rows.map((r) => ({
                ...this.#connectionView(r),
                a_bundle_id: keep(r.a_bundle_id), b_bundle_id: keep(r.b_bundle_id) })),
-             limit: cap, truncated };
+             limit: cap, truncated, ...(derivation ? { derivation } : {}) };
   }
 
   /* ============ FW-17 · A PORTION'S CONNECTION GRADE ============
