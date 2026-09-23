@@ -47,26 +47,6 @@ scope: (1) the verdict line (`.github/workflows/gates.yml`'s `FAILED=` and the g
 accepts-when: a run whose only failure is a leaked sandbox reads RED naming the residue and the suite that left it, never `FAILED=none`. NEGATIVE CONTROL: plant one sandbox directory in TMPDIR, and the verdict names it by path.
 added: 2026-09-23 · SCHEDULER #14 (CONDUCT #14's runner finding; `node tools/mintid.mjs M0`); narrowed 2026-09-23 by SCHEDULER #15 (CONDUCT #15's report).
 
-### REC-169 · running — SPAWNED 2026-09-23 by CONDUCT #15 (depends-on D-85: landed b5ce975a). NOT LANDED, CHECKED BY CONTENT: store.mjs still upserts `consumed = consumed + ?` (2 sites) on b5ce975a. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: first of the product rows, directly after M0-127: an authority defect on a bound the plane enforces (security outranks features, SCHEDULER.md step 3), live since D-85 made `surfaces` a plane-counted bound (SCHEDULER #15, 2026-09-23; D-85's worker via CONDUCT #15)
-milestone: M4
-interface: I3 — a new refusal on `op=airuntick`; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §14b item 6, *A RUN IS BOUNDED, AND THE BOUND IS RECORDED*, with §11 item 5 rule 2 (the `surfaces` bound).
-depends-on: D-85 (its `surfaces` bound, integrating now).
-scope: refuse a `consume` value that is not a non-negative integer, by name, before any write; decide at the code whether a bound the PLANE counts (`surfaces`, and any other it increments itself) may be consumed by the caller at all, and refuse it if not, stating which in the landing.
-accepts-when: driven through the op, a negative, a fractional and a non-numeric delta are each refused by name and the bound rows are byte-identical after; a positive integer delta still lands. NEGATIVE CONTROL: drop the check, and the negative-delta arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (D-85's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
-
-### REC-170 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED as far as read: publishedmanifest per-case pair absent on b5ce975a; NOTE index.mjs L9248 already spreads strengthUndetermined somewhere — the worker establishes WHICH op. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: directly after REC-169, first of the public-page corrections: a published page saying the record lacks what it holds, CLAUDE.md §2's class, UI-80's sibling on the index; UI-82 follows on the surface (SCHEDULER #15, 2026-09-23)
-milestone: M10
-interface: I3 — `op=publishedmanifest` gains the per-case pair; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d) (the pair is stated once, in the case document, per case), with IC-74 (a finding in several cases answers every case, never one).
-depends-on: none — D-442 (rule 12) is on `main`.
-scope: each manifest entry whose pinning case documents carry differing pairs serves them per case (case id, edition, pair) or `strengthUndetermined` with its reason; a finding with one pair reads as today.
-accepts-when: a fixture finding pinned by two cases with different pairs reads both, each naming its case; a single-case finding is byte-identical. NEGATIVE CONTROL: serve the null again, and the per-case arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs REC`).
-
 ### REC-171 · running — SPAWNED 2026-09-23 by CONDUCT #15. NOT LANDED, CHECKED BY CONTENT on 4355bfda: store.mjs (≈L14572) sets the assistantPrincipal run stamp for an ai credential ONLY. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: directly after REC-169, the same D-85 fence widened (BOB #30: *"Place it directly after D-85"*; D-85 sits in the cache, so this is the first backlog place after it and the authority row that precedes it) (SCHEDULER #15, 2026-09-23; BOB #30's inbox entry)
 milestone: M9
@@ -87,16 +67,6 @@ scope: `pubOpen` offers the named cases as choices and opens the chosen one; and
 accepts-when: against the real plane, opening a finding two cases pin offers both and opens each; no raw code renders. NEGATIVE CONTROL: drop the translation row, and the DEC-49 guard fails naming the code.
 added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
 
-### DIST-6 · running — SPAWNED 2026-09-23 by CONDUCT #15 as a WORKER (DIST keeps deploy; no release cut or deploy in this row). NOT LANDED, CHECKED BY CONTENT on 4355bfda: newgroup/src/index.mjs uploadInstall bindings (L280) carry no PDF_WORKER/OCR_WORKER/AGENT_WORKER. Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
-order: first of the product rows after the public-page corrections (UI-82), above D-389: a sovereign group's install silently lacks tiers 2 and 3 and the assistant member, `BIO_System_Design.md` §2's distribution model broken on the path every group takes (SCHEDULER #15, 2026-09-23)
-milestone: M7
-interface: I4 — the installed plane's bindings; the integrator classifies it.
-design: `docs/architecture/BIO_Distribution_v0_1.md` §4 (the fleet beside the plane) and §6 (the deploy-to-serve ladder, every rung read back).
-depends-on: none — D-297's fleet install is on `main`; D-116 (reporting each member's build) lands in CONDUCT's next batch.
-scope: both functions bind the three members as service bindings, installing the members first or re-PUTting the plane after `installFleet`; an update of an instance installed without them gains them; the read-back names each binding.
-accepts-when: against the wizard's mock, an install and an update each leave the plane bound to all three members, and one whose member upload failed names the missing binding and does not report success. NEGATIVE CONTROL: drop one member's binding, and its arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (D-116's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs DIST`).
-
 ### D-286 · running — SPAWNED 2026-09-23 09:15Z by CONDUCT #15 (the 7th worker under BOB #30's cap, REC-169's worker having finished). NOT LANDED, CHECKED BY CONTENT on 4355bfda: ai-session-context.test.mjs L162-163 draw with unseeded Math.random(). Falsify rather than believe: a live worker holds an agent-* worktree with a claim on the paths its scope names; if none does, this row is UNDETERMINED between queued and done-awaiting-integration — READ THE BRANCH, and never conclude queued from the absence alone.
 order: near the head with M0-106, after DIST-6: a result that moves with the draw, not the code, is a DEFECT by Bob's ruling of 2026-09-23 (`TREE-SHARING.md` §3, *a gate test depends only on the code*); on `main` its red is an ALARM to Bob, and under M0-126 a lucky PASS is cached, so it cuts gate time (SCHEDULER #15, 2026-09-23, LED-7)
 milestone: M0
@@ -106,6 +76,36 @@ depends-on: none.
 scope: the draw rejects and redraws any fixture whose derived values (each remainder, sum or ratio D1 looks for) equal a published value, or draws from ranges proven disjoint, stated at the site; D0b unchanged; the drawn values are printed so a failure is reproducible.
 accepts-when: the suite passes on every one of 500 consecutive runs of the draw alone; D0b still fails when a colliding fixture is forced. NEGATIVE CONTROL: force the measured collision (3354, 1278, 2076), and D0b fails by name.
 added: 2026-09-23 · SCHEDULER #15 (LED-7; D-286's DEBT row of 2026-08-10, verified at the code; keeps its `D-` id).
+
+### REC-172 · queued — **A RUN'S BOUNDS STILL ACCEPT WHAT REC-169 REFUSES ONE DOOR OVER: `op=airuntick` SILENTLY SKIPS A `consume` KEY THAT NAMES NO BOUND AND A `consume` SENT AS AN ARRAY, `aiRunOpen` STORES `Number(x) || 0` AS AN ALLOWANCE, AND `lease` CAN BE "CONSUMED".** Re-read on `4355bfda`: the tick's loop `continue`s on a non-`RUN_BOUNDS` key, so `bio-plane/test/vf4-live-scratch.mjs`, which sends `consume: [{ bound: "fetches", amount: 1 }]`, has NEVER had a fetch counted; `aiRunOpen` writes `Number(b.allowed) || 0` and `Number(b.consumed) || 0`, so a negative, fractional or string allowance is stored; `lease` sits in `RUN_BOUNDS` though the plane decides it. REC-169's worker's three findings (CONDUCT #15). — owner RECORD.
+order: first of the backlog (REC-171 is cached), the same bound fence REC-169 closes on the tick: an allowance or consumption the plane cannot trust is authority-class (SCHEDULER.md step 3); (3) is low and rides the same worker (SCHEDULER #15, 2026-09-23)
+milestone: M4
+interface: I3 — new C-22 refusals on `op=airuntick` and `op=airunopen`; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §14b item 6, *A RUN IS BOUNDED, AND THE BOUND IS RECORDED*.
+depends-on: REC-169 (its `checkConsume` shape is reused).
+scope: (1) refuse a non-object `consume` and an unknown key by a new C-22 code; `vf4-live-scratch.mjs` sends `{ fetches: 1 }`, with a dated note; (2) `aiRunOpen` applies `checkConsume`'s shape to `allowed` and `consumed`; (3) `lease` is refused as a consumable, with C-22.14's rationale (the plane decides it).
+accepts-when: through the ops, an array `consume`, an unknown key, a negative or fractional allowance and a `lease` consumption are each refused by name with the bound rows byte-identical; vf4's fetch is counted. NEGATIVE CONTROL: restore the `continue` on an unknown key, and that arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (REC-169's worker's findings via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
+
+### UI-82 · queued — **THE PUBLISHED INDEX (`pubList`) TELLS A READER A FINDING HAS NO FROZEN PAIR WHERE ITS CASES DISAGREE ABOUT THE PAIR.** It reads `op=publishedmanifest`'s single `published[].strength`, null in that case (REC-170). UI-80's surface half on the index. — owner UI.
+order: directly after UI-81, on REC-170's field (SCHEDULER #15, 2026-09-23)
+milestone: M10
+interface: I3 consumer (REC-170's IC).
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d), with DEC-8 (a surface invents nothing).
+depends-on: REC-170.
+scope: `pubList` renders the pair per case, naming each case, or the undetermined state with its reason; one pair renders as today.
+accepts-when: against the real plane, a finding two cases pin with different pairs lists both, each with its case; none reads "no frozen pair". NEGATIVE CONTROL: read the single field again, and the per-case arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
+
+### D-389 · queued — **ON A FULL RAW FETCH `op=frontier` PUBLISHES `truncated: false`, A COVERAGE CLAIM THE READER CANNOT SUPPORT, IN ALL THREE** … (whole text: the cut archive)
+order: after CAP-13, above the ledger tooling: CLAUDE.md §2's class, in the read that must say WHICH absence is true. The row's open question — is `true` more often acceptable? — §2 answers: a coverage claim the method did not establish is not made, and fail-safe is the direction (SCHEDULER #6, 2026-09-21, LED-7 batch 13)
+milestone: M3
+interface: I3 — `truncated` reads `true` on a full raw fetch at all three arms; the integrator mints and classifies the IC.
+design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the … (whole text: the cut archive)
+depends-on: none.
+accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. How a liar passes it: fixing one … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-389» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 

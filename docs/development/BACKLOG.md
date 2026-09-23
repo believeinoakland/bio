@@ -23,25 +23,15 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
-### REC-172 · queued — **A RUN'S BOUNDS STILL ACCEPT WHAT REC-169 REFUSES ONE DOOR OVER: `op=airuntick` SILENTLY SKIPS A `consume` KEY THAT NAMES NO BOUND AND A `consume` SENT AS AN ARRAY, `aiRunOpen` STORES `Number(x) || 0` AS AN ALLOWANCE, AND `lease` CAN BE "CONSUMED".** Re-read on `4355bfda`: the tick's loop `continue`s on a non-`RUN_BOUNDS` key, so `bio-plane/test/vf4-live-scratch.mjs`, which sends `consume: [{ bound: "fetches", amount: 1 }]`, has NEVER had a fetch counted; `aiRunOpen` writes `Number(b.allowed) || 0` and `Number(b.consumed) || 0`, so a negative, fractional or string allowance is stored; `lease` sits in `RUN_BOUNDS` though the plane decides it. REC-169's worker's three findings (CONDUCT #15). — owner RECORD.
-order: first of the backlog (REC-171 is cached), the same bound fence REC-169 closes on the tick: an allowance or consumption the plane cannot trust is authority-class (SCHEDULER.md step 3); (3) is low and rides the same worker (SCHEDULER #15, 2026-09-23)
-milestone: M4
-interface: I3 — new C-22 refusals on `op=airuntick` and `op=airunopen`; the integrator mints and classifies the IC.
-design: `docs/development/INVESTIGATIVE-SESSION.md` §14b item 6, *A RUN IS BOUNDED, AND THE BOUND IS RECORDED*.
-depends-on: REC-169 (its `checkConsume` shape is reused).
-scope: (1) refuse a non-object `consume` and an unknown key by a new C-22 code; `vf4-live-scratch.mjs` sends `{ fetches: 1 }`, with a dated note; (2) `aiRunOpen` applies `checkConsume`'s shape to `allowed` and `consumed`; (3) `lease` is refused as a consumable, with C-22.14's rationale (the plane decides it).
-accepts-when: through the ops, an array `consume`, an unknown key, a negative or fractional allowance and a `lease` consumption are each refused by name with the bound rows byte-identical; vf4's fetch is counted. NEGATIVE CONTROL: restore the `continue` on an unknown key, and that arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (REC-169's worker's findings via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
-
-### UI-82 · queued — **THE PUBLISHED INDEX (`pubList`) TELLS A READER A FINDING HAS NO FROZEN PAIR WHERE ITS CASES DISAGREE ABOUT THE PAIR.** It reads `op=publishedmanifest`'s single `published[].strength`, null in that case (REC-170). UI-80's surface half on the index. — owner UI.
-order: directly after UI-81, on REC-170's field (SCHEDULER #15, 2026-09-23)
-milestone: M10
-interface: I3 consumer (REC-170's IC).
-design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d), with DEC-8 (a surface invents nothing).
-depends-on: REC-170.
-scope: `pubList` renders the pair per case, naming each case, or the undetermined state with its reason; one pair renders as today.
-accepts-when: against the real plane, a finding two cases pin with different pairs lists both, each with its case; none reads "no frozen pair". NEGATIVE CONTROL: read the single field again, and the per-case arm fails by name.
-added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs UI`).
+### M0-132 · queued — **TWO MORE GATE SUITES DRAW FIXTURE VALUES FROM AN UNSEEDED `Math.random()` AND CAN FAIL WITH NO CODE CHANGE.** (1) `civicos-ui/test/ai-session-wire.test.mjs` (re-read on `91913d6b`): `FETCH_ALLOWED − FETCH_CONSUMED` ranges 1502–5992 and overlaps `SUBS_CONSUMED` 2003–2999, so its ARM D0b collides (1 in 2,155, measured by D-286's worker). (2) snap-key suffixes from 4–6 base36 characters of `Math.random()` (`bio-plane/test/action-loop.test.mjs` and `inquiryground.test.mjs` at 4; about 20 suites at 6) are part of the PRIMARY KEY `(bundle_id, snap_key)`, so a repeat clashes; the odds are not measured. D-286's worker's findings (CONDUCT #15). — owner M0 with UI.
+order: directly after UI-82, with D-286's class near the head: a result that moves with the draw is a DEFECT by Bob's ruling of 2026-09-23, and on `main` its red is an alarm to Bob (SCHEDULER #15, 2026-09-23)
+milestone: M0
+interface: none
+design: `docs/development/TREE-SHARING.md` §3 (*"A GATE TEST DEPENDS ONLY ON THE CODE"*), with `docs/development/VERIFICATION.md` (admitted for M0 by name); D-286's fix as landed is the precedent.
+depends-on: D-286 (its interval proof is reused; landing in CONDUCT's next train).
+scope: (1) D-286's interval proof plus a D0c: disjoint ranges (e.g. FETCH_ALLOWED 3001–3999, SUBS_CONSUMED 4003–4499, SUBS_ALLOWED 9001–9973), the proof checked against every published value; (2) a per-suite counter suffix for every snap key built from `Math.random`, swept by one grep and listed in the landing.
+accepts-when: the wire suite passes 500 consecutive draws and fails by name on a forced collision; no suite builds a snap key from `Math.random`. NEGATIVE CONTROL: restore one overlapping range, and D0c fails by name.
+added: 2026-09-23 · SCHEDULER #15 (D-286's worker's findings via CONDUCT #15, verified at the code; `node tools/mintid.mjs M0`).
 
 ### M0-130 · queued — **`bio-plane/test/mergecarry.test.mjs`'S HISTORICAL-REGISTER ARM GRADES THE MERGES OF LIVE `origin/main`, SO ITS VERDICT MOVES WITH WHAT HAS LANDED, NOT WITH THE TREE UNDER TEST.** `historicalRegister({ repo })` walks `origin/main`'s merges (the arm prints *"N merge(s) in origin/main"*, re-read on `4355bfda`) and floors the finding rate over them; run #20 on `main` went RED on it (`FAILED=mergecarry.test.mjs`) when a train's merge added history. CONDUCT #15's finding, fix named by the M0-126 worker. — owner M0.
 order: first of the gate-honesty rows, directly after UI-82: a red on `main` emails Bob as an ALARM and this one came from history, not code — Bob's ruling of 2026-09-23, *a gate test depends only on the code*; it cuts gate time (SCHEDULER #15, 2026-09-23)
@@ -73,16 +63,6 @@ depends-on: M0-126 (the backstop mark); then DIST's first cut from a tree carryi
 scope: DIST.md step 1 reads: a GREEN FULL backstop record (a run that reused nothing) for the exact tree, NAMED in the cut commit, else the whole battery; `--since` removed; the bumped tree's own gate stays.
 accepts-when: a cut from a tree with a backstop record runs no battery and names it; a record whose run printed any REUSED unit, or a `--since`, never satisfies a cut and the battery runs.
 added: 2026-09-22 · SCHEDULER #11 (BOB #25's inbox entry, item 1; `node tools/mintid.mjs M0`); re-narrowed 2026-09-23 by SCHEDULER #15 (BOB #30's ruling).
-
-### D-389 · queued — **ON A FULL RAW FETCH `op=frontier` PUBLISHES `truncated: false`, A COVERAGE CLAIM THE READER CANNOT SUPPORT, IN ALL THREE** … (whole text: the cut archive)
-order: after CAP-13, above the ledger tooling: CLAUDE.md §2's class, in the read that must say WHICH absence is true. The row's open question — is `true` more often acceptable? — §2 answers: a coverage claim the method did not establish is not made, and fail-safe is the direction (SCHEDULER #6, 2026-09-21, LED-7 batch 13)
-milestone: M3
-interface: I3 — `truncated` reads `true` on a full raw fetch at all three arms; the integrator mints and classifies the IC.
-design: `docs/development/OBSERVATION-LOG-DESIGN.md` §5 (the frontier is a view over the log) and §6 (the … (whole text: the cut archive)
-depends-on: none.
-accepts-when: a fixture whose raw supply exceeds the over-fetch reads `truncated: true` at every arm for every viewer; an exhausted supply reads as before. How a liar passes it: fixing one … (whole text: the cut archive)
-added: 2026-09-21 · SCHEDULER #6 (LED-7 batch 13; keeps its `D-` id).
-cut: cut to its fields by SCHEDULER #14 (2026-09-22, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-389» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md`. A worker READS IT before building.
 
 ### REC-160 · queued — **`op=reevaluations` SAYS A SEVERED LEG *RESTS ON* ITS TARGET AND PUBLISHES NO STATUS.** `Store#reevaluations` reads legs from … (whole text: the cut archive)
 order: after D-389, above CAP-14: a support claim the record cannot make, CLAUDE.md §2's class, in the read that tells a member what to re-examine (SCHEDULER #7, 2026-09-21; BOB #22's inbox entry)
@@ -1171,3 +1151,33 @@ depends-on: none.
 accepts-when: `node bio-plane/test/mk1-publish-probe.mjs` prints PATH 3 driven, with C-53.12's refusal code, and no DEAD ARM line for it. How a liar passes it: a path reported driven that … (whole text: the cut archive)
 added: 2026-09-21 · SCHEDULER #4 (`node tools/mintid.mjs M0`).
 cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-90» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-91 · queued — **NO SUITE FEEDS C-2.8 A NON-STRING `content_id`, SO THE ARM THAT CLOSED D-362 HAS NEVER BEEN DRIVEN.** `checkLegExtentGrammar` … (whole text: the cut archive)
+order: with the M0 instrument corrections (M0-74, M0-90): a fix with no arm is one refactor from being undone, and what it guards is a SILENT drop (SCHEDULER #5, 2026-09-21)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name) — a check is evidence only where a suite … (whole text: the cut archive)
+depends-on: none.
+accepts-when: the leg is refused BY NAME at C-2.8 with the parse in the path, and the existing string arms stay green. How a liar passes it: a hand-built leg whose `content_id` is already a … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #5 (LED-7 batch 10, D-362's instrument; `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-91» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### D-40 · queued — **AN INFORMATION FIXTURE STILL WRITES `criticality: "notable"`, WHICH C-2.7 REFUSES, THOUGH ITS ROW SAID IT WAS FIXED.** … (whole text: the cut archive)
+order: with the probe corrections, after M0-91: a fixture non-conformant for a reason unrelated to what it measures, and a template a later session can copy; no suite is wrong today (SCHEDULER #7, 2026-09-21, LED-7)
+milestone: M0
+interface: none
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), with CLAUDE.md §5's *break only the … (whole text: the cut archive)
+depends-on: none.
+accepts-when: `cite-scale.mjs` builds only conformant Information (C-2.7 passes over its bundles), and each of the three data sites carries its comment. How a liar passes it: changing the … (whole text: the cut archive)
+added: 2026-09-21 · SCHEDULER #7 (LED-7; D-40's DEBT row of 2026-07-25, re-measured; keeps its `D-` id).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «D-40» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.
+
+### M0-75 · queued — **`bundle.test.mjs` AND `livefire.test.mjs` PRINT NO TALLY LINE, so every battery headline carries M0-65's "EXCLUDES 2 untallied suite(s)"** … (whole text: the cut archive)
+order: M0; M0-65 is ON MAIN (5a6d5913), so runnable: retires its EXCLUDES segment (SCHEDULER, 2026-09-19)
+milestone: M0 (background lane, holds no slot)
+interface: none — two suites' report lines
+design: `docs/development/VERIFICATION.md` (admitted for M0 by name), read with D-413 (closed by M0-65) and … (whole text: the cut archive)
+depends-on: M0-65 (its EXCLUDES segment and widened tally reader; in CONDUCT #6's gate).
+accepts-when: a full battery's headline carries no EXCLUDES segment, and its assertion total rises by exactly the two suites' printed tallies, stated in the landing; `cd bio-plane && npm` … (whole text: the cut archive)
+added: 2026-09-19 · SCHEDULER (M0-65's worker's suggestion, routed by CONDUCT #6; id minted with `node tools/mintid.mjs M0`).
+cut: cut to its fields by SCHEDULER #9 (2026-09-21, the backlog's 150 KiB budget); the row as it stood before this cut is VERBATIM under «M0-75» in `docs/archive/ledgers/QUEUE-cut-2026-09-21.md`. A worker READS IT before building.

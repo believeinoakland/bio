@@ -3170,3 +3170,33 @@ scope: (1) the DO reports its own build under a field that is NEVER `version` �
 accepts-when: a DO or member whose build differs from the routing isolate's is NAMED, and the install or update does not report success. How a liar passes it: filling the DO field from the isolate's env, so two values agree for free. NEGATIVE CONTROL: copy `env.VERSION` into the DO field in the handler, and the arm fails by name.
 added: 2026-09-19 · SCHEDULER #2 (LED-7 batch 3; keeps its `D-` id); narrowed 2026-09-21.
 uncut: restored whole from the cut archive on entering the cache (SCHEDULER #14, 2026-09-23), so the worker reads its design here.
+
+### REC-169 · done — integrated at caf8a5c0 (train train-20260923T101907Z-26873, origin/main 91913d6b); verified: store.mjs carries checkConsume
+order: first of the product rows, directly after M0-127: an authority defect on a bound the plane enforces (security outranks features, SCHEDULER.md step 3), live since D-85 made `surfaces` a plane-counted bound (SCHEDULER #15, 2026-09-23; D-85's worker via CONDUCT #15)
+milestone: M4
+interface: I3 — a new refusal on `op=airuntick`; the integrator mints and classifies the IC.
+design: `docs/development/INVESTIGATIVE-SESSION.md` §14b item 6, *A RUN IS BOUNDED, AND THE BOUND IS RECORDED*, with §11 item 5 rule 2 (the `surfaces` bound).
+depends-on: D-85 (its `surfaces` bound, integrating now).
+scope: refuse a `consume` value that is not a non-negative integer, by name, before any write; decide at the code whether a bound the PLANE counts (`surfaces`, and any other it increments itself) may be consumed by the caller at all, and refuse it if not, stating which in the landing.
+accepts-when: driven through the op, a negative, a fractional and a non-numeric delta are each refused by name and the bound rows are byte-identical after; a positive integer delta still lands. NEGATIVE CONTROL: drop the check, and the negative-delta arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (D-85's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs REC`).
+
+### REC-170 · done — integrated at 45fa3bd7 (origin/main 91913d6b); verified: store.mjs serves strengthByCase
+order: directly after REC-169, first of the public-page corrections: a published page saying the record lacks what it holds, CLAUDE.md §2's class, UI-80's sibling on the index; UI-82 follows on the surface (SCHEDULER #15, 2026-09-23)
+milestone: M10
+interface: I3 — `op=publishedmanifest` gains the per-case pair; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §3 rule 12 (b)–(d) (the pair is stated once, in the case document, per case), with IC-74 (a finding in several cases answers every case, never one).
+depends-on: none — D-442 (rule 12) is on `main`.
+scope: each manifest entry whose pinning case documents carry differing pairs serves them per case (case id, edition, pair) or `strengthUndetermined` with its reason; a finding with one pair reads as today.
+accepts-when: a fixture finding pinned by two cases with different pairs reads both, each naming its case; a single-case finding is byte-identical. NEGATIVE CONTROL: serve the null again, and the per-case arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (UI-80's worker's finding via CONDUCT #15; `node tools/mintid.mjs REC`).
+
+### DIST-6 · done — integrated at 353b3035 (origin/main 91913d6b); verified: newgroup/src/index.mjs names PDF_WORKER
+order: first of the product rows after the public-page corrections (UI-82), above D-389: a sovereign group's install silently lacks tiers 2 and 3 and the assistant member, `BIO_System_Design.md` §2's distribution model broken on the path every group takes (SCHEDULER #15, 2026-09-23)
+milestone: M7
+interface: I4 — the installed plane's bindings; the integrator classifies it.
+design: `docs/architecture/BIO_Distribution_v0_1.md` §4 (the fleet beside the plane) and §6 (the deploy-to-serve ladder, every rung read back).
+depends-on: none — D-297's fleet install is on `main`; D-116 (reporting each member's build) lands in CONDUCT's next batch.
+scope: both functions bind the three members as service bindings, installing the members first or re-PUTting the plane after `installFleet`; an update of an instance installed without them gains them; the read-back names each binding.
+accepts-when: against the wizard's mock, an install and an update each leave the plane bound to all three members, and one whose member upload failed names the missing binding and does not report success. NEGATIVE CONTROL: drop one member's binding, and its arm fails by name.
+added: 2026-09-23 · SCHEDULER #15 (D-116's worker's finding via CONDUCT #15, verified at the code; `node tools/mintid.mjs DIST`).
