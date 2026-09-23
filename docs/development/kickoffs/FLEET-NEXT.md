@@ -19,8 +19,8 @@ measured at the time given: re-measure it.**
 
 | what | reading | instrument |
 | --- | --- | --- |
-| members' `/version` | **UNDETERMINED**: the cloud proxy refuses `*.workers.dev` (`CONNECT tunnel failed, response 403`). Last reading that reached them: `0.71.0`, all three, 2026-09-22T08:36Z (FLEET #3) | `curl` |
-| plane `biosmoke7` | **UNDETERMINED**, same refusal. Even when reachable, both fields are the ROUTING ISOLATE's `env.VERSION` | `curl` |
+| members' `/version` | **`0.71.0`, all three** (ocr `engine_loaded: true`, tesseract-wasm 0.11.0), three samples each, 2026-09-23T01:27Z, after Bob admitted Cloudflare (BOB #29). From 20:10Z to 01:24Z the proxy refused `*.workers.dev` and these read UNDETERMINED | `curl` |
+| plane `biosmoke7` | **`0.71.0`** at `/version` (three samples) and at `op=bootstrap&store=scratch`, 01:27Z. Both are the ROUTING ISOLATE's `env.VERSION`; bootstrap proves only that the DO answered | `curl` |
 | main's labels | `release/RELEASE.json` reads `0.71.0`; latest tag `v0.71.0` | `git` |
 | staleness | **23 checked, 0 drift, 0 unreadable**: the SessionStart hook's install makes pdf-worker's vendored `unpdf` readable here | the one-liner below |
 | committed guard | `fleetbundles.test.mjs`: **87 pass, 0 fail, 0 skipped**, exit 0 read unpiped, byte-identity arm run for all three members and the plane | `node --test` |
