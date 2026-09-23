@@ -228,6 +228,54 @@ FLEET); and a battery suite leaking miniflare sandboxes on the runner only (D-18
   reads the `origin` remote's repository; the integration branch's prefix `integrate/**` is this landing's guess at
   M0-111's name, and that landing names the real one here.
 
+### 3a · The shared, per-suite result record (M0-126) — DESIGNED 2026-09-23 by BOB #29, adopting CONDUCT #14's proposal
+
+**Why.** Bob, 2026-09-23: *"track either which suites have passed so that they don't run again, or track those tests that
+have failed so that only those run"*, and a shared record in preference to a second machine (*"that seems much better than
+getting github involved"*). Today a result is keyed by a whole TREE and lives in one clone (D-293): one changed file voids every
+suite's result, and a lane's GREEN is invisible to the integrator, who re-runs it. One mechanism answers both halves.
+
+**The key.** A result belongs to a UNIT (a plane or fleet suite, a UI suite, a UI check, `coverage`) and to the HASH OF ITS
+INPUTS: sha256 over the sorted list of `(path, git blob sha)` for every file the unit can read, plus the runtime it ran under
+(node's major version and the sha256 of every `package-lock.json` in the tree). The input set is the one `gates.mjs` already
+derives per unit for TARGETED and `--since` (the unit's source, its sibling control, the tools and scripts it names and their
+transitive imports, and the files it MENTIONS), and **for a plane or fleet unit it always includes the whole FULL-class runtime
+set** (`bio-plane/src/`, `bio-plane/checks/`, the plane's foreign roots, each fleet member's source), because MENTION cannot see
+what the runtime reads. A unit whose inputs did not change has the same key on any branch, any merge and any clone.
+
+**The record.** A PASS only — a failure is never cached, so it simply runs again. One small JSON file per key,
+`results/<unit>/<input-hash>.json`, on an APPEND-ONLY branch `gate-results`: `{unit, inputHash, verdict: "PASS", run, tree,
+head, gateVersion, clone, session, at}`. Writing a new key only ADDS a file, so two writers never conflict; a rejected push
+re-fetches and re-applies, as `coord.mjs write` does. Any clone reads it with one fetch. It is state about the WORK, never
+product, and it never touches `main`.
+
+**The reuse rule.** `gates.mjs` computes each selected unit's key; a unit whose key already holds a PASS is NOT run and is
+printed REUSED, naming the record; every other unit runs, and each one that passes writes its record. So a failed suite re-runs
+(it has no PASS), a suite whose inputs moved re-runs (new key), and a suite that passed anywhere, on identical inputs, runs
+nowhere again. The train reads the same records. It supersedes the tree-keyed reuse (`gates.mjs` §2d and M0-122's
+`recordedGreen`), which stays correct until this lands.
+
+**Three conditions, each REQUIRED.**
+1. **NEVER-CACHED units.** A unit that reads anything outside its declared inputs — the clock, the network, the environment's
+   secrets, live `coord` state (tonight's red) — carries a `GATE: never-cache (<reason>)` line in its source and always runs.
+   `plancheck` is never cached.
+2. **UNDER-INCLUSION FAILS.** Over-inclusion only costs a re-run; under-inclusion reuses a stale PASS and is the defect. So each
+   unit, when it RUNS, is traced (a node `--import` hook recording every repository file it opens or imports); a file read that
+   is not in the unit's input set FAILS the unit by name, and no PASS is written for it.
+3. **A FULL BACKSTOP.** Every release cut runs the whole battery with no reuse, and the one GitHub run per landed batch on
+   `main` runs everything on a second machine. The negative controls stay.
+
+**What a liar's record would look like, and why it is tolerable.** A PASS file for a key whose unit never ran, or ran red. It
+is indistinguishable from an honest one where it sits: the record proves a PROCEDURE, never an actor (§2, "The mark, and its
+limit"), and a session could write one only on purpose, which the kickoffs forbid. Its damage is bounded: the record names the
+run, tree, clone and session that wrote it; the FULL run at each release cut and the GitHub run on `main` re-run every unit
+with no reuse, so a false PASS that hid a real failure turns `main` red and emails Bob; the key is then REVOKED (a
+`revoked/<unit>/<input-hash>.json` beside it, which the reader honours), and its writer is named from the record.
+
+**Accepts when** a second clone gates a tree whose units a first clone passed and runs 0 of them (all REUSED), one input
+change re-runs exactly the units whose key moved, and a never-cached unit runs every time. **NEGATIVE CONTROL:** drop one
+file from a unit's input set, and condition 2 fails that unit by name.
+
 ## 4 · The move to cloud Claude Code, under Bob's second account
 
 Bob, 2026-09-22, to BOB #27: *"there'll be a transition at some point today that will involve both to cloud-based CC and
