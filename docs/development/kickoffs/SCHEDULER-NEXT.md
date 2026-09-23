@@ -1,58 +1,19 @@
-# SCHEDULER-NEXT — the resume for SCHEDULER #17, in the cloud (written 2026-09-23 by SCHEDULER #16 at its refresh)
+# SCHEDULER-NEXT — the resume for SCHEDULER #18 (written 2026-09-23 ~23:06Z by SCHEDULER #17, session_014MckoGTYSjDfckPqTKUpAp, at ~38% context)
 
-Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coord`. Measured at ~21:44Z: `origin/main` @ `02603e88`,
-`coord` @ `baab484f`, context ~72%. A POINTER: re-measure before resting on it.
+Read `CLAUDE.md`, `kickoffs/SCHEDULER.md`, then this, then `QUEUE.md` from `coord`. A POINTER: re-measure before resting on any of it.
 
-## How the lane runs now (Bob's rulings of 2026-09-23, via BOB #30/#31)
+## How the lane runs (Bob's rulings of 2026-09-23)
+- No timers. Wake on messages. Lane-to-lane = one-shot `create_trigger` with `persistent_session_id`, `run_once_at` ONE minute out (compute it with `date -u -d '+1 min'`; twice I typed a later minute by hand and had to `update_trigger`). Never `fire_trigger`.
+- Peers: **BOB #32** `session_01HhTF36TQSDaFr9RAxfFnKX`; **CONDUCT #18** `session_01SGdcPXVjS2wofYoj3tBuKF`. No DIST session is visible to this lane: relay DIST's work through CONDUCT.
+- Cache 16 at 48 KiB (`CACHE_ROWS` 16) is on `land/scheduler16/integrated` @ `6ea0d504`, NOT yet on `main` (no train has landed since `02603e88`; trains wait on c17-unionfix and c18-batch7fix). Until it lands, write coord with THAT branch's tools (a worktree at `/home/user/s17wt`). Once on main, use main's.
+- CONDUCT reports `integrated` / findings; I verify the batch branch holds the merge (`git log origin/land/conduct/<batch>`), flip, `--refill`, restore refilled CUT rows whole from `QUEUE-cut-2026-09-{19,21,22}.md` (script pattern: take the «ID» block, strip `> `, keep the current `order:`, append `uncut:`), and trigger CONDUCT. A whole row over 3072 B stays cut (REC-122 did).
+- **DEBT.md ONLY SHRINKS** (BOB #31, 22:09Z): a new defect is `mintid D` and placed directly as a plan row. LED-7 batch per turn with room; report the count to BOB. When DEBT.md reaches 0, tell BOB at once.
+- DEBT dispositions: `--swap` the whole table line (new disposition leads CLOSED …; the prior disposition moves verbatim into the item cell; no `|` in the text), then `--archive <ID>`, one `--intents` write. VERIFICATION.md cites pass the design check only for milestone M0 rows.
 
-- **No timers.** Only BOB keeps timers; this lane wakes on messages. BOB deleted SCHEDULER #16's wakes: arm none.
-- **Work moves by message.** In the SAME turn rows enter the cache, `create_trigger` CONDUCT #17 (`session_01RQQSvvqhRfYC4PH1nBZQob`),
-  `run_once_at` ONE minute out, naming them. If you cannot fill, one line to BOB #31 (`session_0124NEAbkH3D4rkivNhZtJ8X`):
-  "SCHEDULER cannot fill: <why>". Never `fire_trigger` a routine to reach a session.
-- **Only SCHEDULER writes the plan pipeline.** CONDUCT writes no row; it tells you, you write.
-- **`integrated`** (on main since `af1ffa3f`): when CONDUCT reports a row finished and on a PUSHED batch, flip it `integrated` and
-  `--refill` in the same write. Integrated rows hold no slot, no bytes; they close (`done` + archive) only when their train's sha is
-  on `origin/main`, verified by content.
-- **Cache target: 12 active + at least 4 queued** (Bob). `CACHE_ROWS` is 12 on main; **16 at 48 KiB** (BOB #31's ruling) is
-  `land/scheduler16/integrated` @ `6ea0d504`, GREEN (tree `edbd78c5`), pushed, awaiting CONDUCT's next train. When it lands, refill to
-  16 in the same turn and trigger CONDUCT. Until then, say "cannot fill (4 spare)" to BOB if asked.
-- **Every row placed names its suite and NEGATIVE CONTROL** in accepts-when (a worker's whole gate is those plus plancheck). Refresh past
-  75% context (auto-compaction ~79%).
-- **Refill moves only `queued` rows.** A `running` row sitting in the backlog is moved in by hand (`--row` delete + `--insert`). A
-  refilled row that is CUT is restored whole from `QUEUE-cut-2026-09-22.md` with an `uncut:` line (the python in this session's
-  scratch did it; the pattern: take the archived block, keep the current `order:`, append `uncut:`).
-- **Never run coord writes with tools from an ungated branch checkout** — I did once (a 16-row refill under 12-row tools) and undid it.
-
-## OWED FIRST — CONDUCT #17's findings of 21:43Z, not yet placed (verify each at the code, mint, place with suite + control)
-
-- (2) D-84: C-41 does not REQUIRE `bias_manifest`. Fix: a C-41 arm gated on `bio-case-document/3`, or on a measured zero of unsigned /2
-  documents without it. RECORD.
-- (3) D-125, test debt (predates D-125; on clean 91bcea6b): `current.control.mjs` arm 7 stays green (no longer bites `#dispositionOf`),
-  arm 8 refuses to arm (anchor occurs twice in store.mjs). Fix: re-anchor arm 8 on a unique span, re-point arm 7. M0, behind product.
-- (4) D-125, UI: the queue mute control should offer the item form and FINDING kinds; `notifications.test` §2 still pins "NO MUTE IS
-  OFFERED ON A FINDING".
-- (5) D-220: monitoring does not read versions as versions (no monitoring path calls `versionChain`; `#conditionBundlesForHost` counts
-  no documents); the consumer numbering disagrees across §3, D-220's ledger row and its QUEUE row.
-- (6) D-179: a live store may hold one capture under two bundles from before the fence, and no census op exists (DIST/RECORD); a
-  digest-level duplicate across bundles is not rowed.
-- (1) and (7) went to BOB #31 at 21:44Z (bias adoption pin; notification `kind` slug vs N-id): place a row on each ruling.
-- The cache's integrated rows now also include D-84, D-125, D-179, D-220 (c17-batch4 @ 65205437, which carries batch3's six). D-52 is
-  `running` again (a fix session: its DEC-49 guard failed). Queued at 21:44Z: CPDF-22, REC-182, REC-183, D-443, D-65, REC-164 (some may
-  be spawned). The train on batch4 + scheduler16 @ 6ea0d504 (16 rows) + land/bob/message-driven started ~21:38Z: on its landing,
-  verify every integrated row by content, done + archive, refill to 16, trigger CONDUCT.
-
-## State
-
-- **Cache (~21:38Z):** running D-179, D-125, CAP-14, D-52, D-84, D-220, D-182, D-178, UI-74, REC-161; queued CPDF-22, REC-182;
-  integrated D-219, D-54, D-128, D-278, COFF-13, D-311 (all on `land/conduct/c17-batch3` @ a8066053, waiting for its train). When it
-  lands: verify each by content, done + archive, refill, trigger CONDUCT. D-311's note carries its worker's correction (projectremove is
-  refused to any non-owner, not an administrator's act).
-- **Backlog head, in order:** REC-159 (`blocked`: Bob approved ~21:08Z; CONDUCT's permission check refused its spawn; awaits Bob
-  starting its worker himself), REC-162, REC-155 (depend on REC-159), REC-183, D-443, UI-83, REC-184, UI-84, REC-185, REC-186 (BOB #31's
-  two Membership §7 rulings; cite his 21:37Z message until he folds them), DIST-7, M0-106 (blocked), D-65, … UI-83/REC-184/UI-84/REC-185/
-  REC-186/DIST-7 wait on c17-batch3. NOT placed: D-311's worker's UI suggestion (roster acts read from op=affordances) — weigh it.
-- **Owed by BOB:** fold into home documents the two rulings drained this session (M0-138 landed; CPDF-22's design line still cites the
-  drained inbox entry).
-- **LED-7:** 67 open DEBT rows; batches S16-1..S16-3 closed D-393, D-400, D-403, D-407, D-296, D-251 and placed D-121's defect (REC-179,
-  done) and D-443. One batch per quiet wake when BOB says the lanes are quiet.
-- **Local scratch:** `/tmp/claude-0/s16/` held the scripts; nothing there is needed.
+## State at ~23:06Z (coord fb74a4eb)
+- DEBT.md: 32 open (67 at my start). Batches S17-1 and S17-2 done. Held for BOB: both D-124 rows (id collision — hand move), D-176, D-209, D-224 (limits to STATE). D-320 carries D-244's rotation note.
+- Integrated, awaiting trains (verify each by content on main, then `done` + archive): D-179 D-128 D-54 D-311 D-125 D-278 D-219 COFF-13 (batch3/4); D-52 D-84 D-220 D-182 D-178 CAP-14 UI-74 REC-161 (batch4/5); REC-182 CPDF-22 REC-183 D-65 D-443 M0-71 MK-6 (batch6); REC-164 D-150 D-148 REC-148 D-149 D-192 UI-68 FL-11 FL-12 D-74 REC-122 (batch7).
+- Running: REC-149 (returned to its worker), D-126 D-394 D-86 D-162 CAP-11 FW-20 D-256 CPDF-3 D-447. Queued: D-260 (held behind FL-11/12 on main), D-351 (behind CAP-11), D-66 (behind FW-20), D-50, D-452, D-241.
+- Backlog head: REC-187, D-447→cache, REC-188 (widened: /3 carries bias manifest + acknowledgement list), REC-193, REC-194, UI-89, UI-90, REC-195, REC-189, UI-85, UI-86, D-444, D-445, D-256→cache, REC-192, UI-88, D-448, D-450, D-451, D-454, UI-91, D-242 (moved up), REC-190, D-64 (blocked), D-453 (blocked: egress), REC-191, REC-159 (blocked on Bob) …
+- Owed by BOB (asked 22:56Z, 23:03Z, 23:06Z): D-450's fix side; D-64's three questions; capture-on-`changed`; REC-149's §7.14 (a)(b); UI-68 drafts list and `newCase`; REC-148 §6A.3 author/date; D-148 counterparty; `records_request` kind; D-209/D-224/D-176 statements; inquiry-grain acts; D-124 ×2; D-74's three recognisers + §8.3 gap; egress to Oakland hosts; front-matter corrections (INVESTIGATIVE-SESSION §14c and §3, CAPTURE-SCALING item 5); RECORD.md over budget.
+- When `land/bob/rulings-0923b` @ 78a6d772 lands: re-point rows citing BOB #31/#32 messages to the folded sections (BOB #32, 22:44Z list: Framework §6 frequency; Publication §3 rule 13; §7 point 3; CLIENT-RENDERED RULED; CONTRADICTION §7; INVESTIGATIVE §12; State Rules §2.4; Declared Bias no-credence).
