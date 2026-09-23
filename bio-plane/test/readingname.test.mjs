@@ -602,9 +602,10 @@ await dcall("/promote", {
   bundleId: "INFO-2026-0099-direct", base: null, snapKey: "direct-1", author: "r36",
   meta: { object_type: "information", group: "believe-in-oakland", title: "direct",
           current_state: "collected", created: NOW, last_updated: NOW },
+  /* REC-175 (2026-09-23): CORRECTED, not exempted. This fixture sent a digest that is NOT the SHA-256 of the text beside it (sha("x") and sha("y"): digests of OTHER strings), and the old op=promote stored it as given — a false digest in the fixture's own record. promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so the file sends no digest and the plane computes it from the bytes; nothing this suite asserts reads the old value. */
   files: [{ path: "bundle.md", text: bundleMd("INFO-2026-0099-direct", "information"),
-            bytes: 1, sha256: sha("x") },
-          { path: "data/provenance.json", bytes: 1, sha256: sha("y"),
+            bytes: 1 },
+          { path: "data/provenance.json", bytes: 1,
             text: JSON.stringify({ documents: [{ capture: { sha256: sha("direct"), encoding: "binary", bytes: 10 },
               reading: { content_type: "meeting_agenda", reader_version: 1, found: true, at: NOW,
                 entities: [{ ref: "legislation:26-0912", kind: "legislation", key: "26-0912",

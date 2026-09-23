@@ -10575,6 +10575,15 @@ var ACT_SHAPE_CHECKS = {
     where: "src/store.mjs promote > is-promote-files",
     translation: "This write would remove files the previous revision had, and it does not say it means to. Carry them forward, or name them for deletion on purpose \u2014 losing part of a document by omission is not something the record will do quietly."
   },
+  /* REC-175 (the Mechanical Verification Law, BIO_State_Rules_Consistency_v1_5.md §8: a stored digest is of the
+     stored bytes). `op=promote` wrote the caller's `sha256` for every file, and took bundle.md's as the bundle's
+     head, without computing either; it now computes each inline file's digest over its UTF-8 bytes (a blob's is
+     its content address) and refuses a supplied value naming another, before anything is written. */
+  FILE_DIGEST_MISMATCH: {
+    check: "C-33.38",
+    where: "src/store.mjs promote > is-promote-digest",
+    translation: "A fingerprint sent with this write does not match the file it was sent with, so the record would have stored a fingerprint of something it does not hold. Nothing was written. Send the file again with its own fingerprint, or with none and the record will compute it."
+  },
   NO_ALIAS: {
     check: "C-33.25",
     where: "src/store.mjs addEntityAlias > is-alias-named",
@@ -40359,6 +40368,19 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         );
     }
     if (!bundleId && !creatingProject || !Array.isArray(files) || !meta) return { ok: false, reason: "MALFORMED", detail: "bundleId, files and meta are required" };
+    const digested = _Store.#digestFiles(files);
+    if (digested.disagree.length)
+      return {
+        ok: false,
+        reason: "FILE_DIGEST_MISMATCH",
+        code: "FILE_DIGEST_MISMATCH",
+        check: ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH.check,
+        translation: ACT_SHAPE_CHECKS.FILE_DIGEST_MISMATCH.translation,
+        paths: digested.disagree.map((d) => d.path),
+        files: digested.disagree,
+        detail: "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ") + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written."
+      };
+    files = digested.files;
     let groupStamp = null, createdGroup = null;
     if (base === null) {
       const recorded = this.#producingGroup();
@@ -53031,6 +53053,80 @@ ${words}`;
       translation: row.translation,
       act,
       detail
+    };
+  }
+  /* REC-175: THE ONE COMPUTATION of what a promoted file's digest IS, read by `promote` before any write and by
+     `digestCensus` over what is already held, so the check at the door and the census of the past cannot disagree
+     about what a disagreement is. An inline file is hashed over `new TextEncoder().encode(text)` — the UTF-8 bytes
+     of the string the `files.content` column stores, never a normalised copy (no trimming, no line-ending fold).
+     A blob-backed file's digest is its content address, `blobSha`. Returns the files with every digest the
+     computed lowercase value, and each file whose SUPPLIED value named another digest. */
+  static #fileDigestOf(f2) {
+    if (f2 && typeof f2.text === "string") return createSha256().update(new TextEncoder().encode(f2.text)).hex();
+    if (f2 && typeof f2.blobSha === "string" && f2.blobSha) return f2.blobSha.toLowerCase();
+    return null;
+  }
+  static #digestFiles(files) {
+    const disagree = [];
+    const out = files.map((f2) => {
+      const computed = _Store.#fileDigestOf(f2);
+      if (computed === null) return f2;
+      const supplied = f2.sha256;
+      if (supplied === void 0 || supplied === null) return { ...f2, sha256: computed };
+      if (typeof supplied !== "string" || supplied.toLowerCase() !== computed) {
+        disagree.push({
+          path: f2.path ?? null,
+          kind: typeof f2.text === "string" ? "inline" : "blob",
+          supplied: typeof supplied === "string" ? supplied : String(supplied),
+          computed
+        });
+        return f2;
+      }
+      return supplied === computed ? f2 : { ...f2, sha256: computed };
+    });
+    return { files: out, disagree };
+  }
+  /* REC-175: THE CENSUS OF THE PAST — every row already HELD whose stored digest disagrees with its own stored
+     content, over the live image (`files`) and the append-only snapshots (`history`). READ-ONLY, and that is the
+     point: a disagreeing row is REPORTED, never rewritten — the record's history is not corrected by a read, and
+     which of the two (bytes or digest) is wrong is not decidable from here. An inline row is recomputed by the one
+     `#fileDigestOf`; a blob row compares its `sha256` against its `blob_sha`. `bytes` is counted beside it for inline
+     rows (UTF-8 length against the stored figure), as a SEPARATE figure: it is REC-175's named finding, not its
+     refusal. Bounded by `limit` rows listed per table (the counts are always whole). */
+  digestCensus({ limit } = {}) {
+    const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked) ? asked : 50, 500));
+    const walk = (table) => {
+      const out = { rows: 0, inline: 0, blob: 0, digest_disagrees: 0, bytes_disagree: 0, listed: [] };
+      for (const r of this.sql.exec(table === "files" ? `SELECT bundle_id, path, content, blob_sha, bytes, sha256 FROM files` : `SELECT bundle_id, snap_key, path, content, blob_sha, NULL AS bytes, sha256 FROM history`)) {
+        out.rows++;
+        const f2 = r.content !== null ? { text: r.content } : { blobSha: r.blob_sha };
+        const computed = _Store.#fileDigestOf(f2);
+        if (r.content !== null) out.inline++;
+        else out.blob++;
+        const dBad = computed !== null && String(r.sha256 ?? "").toLowerCase() !== computed;
+        const bBad = r.content !== null && table === "files" && Number(r.bytes) !== new TextEncoder().encode(r.content).length;
+        if (dBad) out.digest_disagrees++;
+        if (bBad) out.bytes_disagree++;
+        if ((dBad || bBad) && out.listed.length < cap)
+          out.listed.push({
+            bundle_id: r.bundle_id,
+            ...r.snap_key ? { snap_key: r.snap_key } : {},
+            path: r.path,
+            stored: r.sha256,
+            computed,
+            ...bBad ? { bytes_stored: r.bytes } : {},
+            digest: dBad ? "disagrees" : "agrees"
+          });
+      }
+      return out;
+    };
+    return {
+      ok: true,
+      files: walk("files"),
+      history: walk("history"),
+      rewritten: 0,
+      note: "read-only: a disagreeing row is reported and never rewritten. history holds no bytes column, so its bytes are not judged."
     };
   }
   /* A CREATED document names THIS instance's group in its own bytes, whatever the caller wrote — D-78's rule for
@@ -67127,6 +67223,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
           by: url.searchParams.get("by")
         }),
         registeraudit: () => this.registerAudit(),
+        /* REC-175: the digest census, read-only (see `digestCensus`). */
+        digestcensus: () => this.digestCensus({ limit: url.searchParams.get("limit") }),
         signeradd: () => this.signerAdd(body || {}),
         signerlist: () => this.signerList(),
         signerset: () => this.signerSet(body || {}),
@@ -68015,6 +68113,11 @@ var OPS = {
      live instance stop being a plausible story and become a measured one.
      Admin, because the register is intake provenance for the working corpus. */
   registeraudit: { classes: ["admin", "probe"], mutating: false },
+  /* REC-175: the digest census — every row already held (the live image and the history) whose stored sha256
+     disagrees with its own stored bytes, counted and listed, NEVER rewritten. The method a deployed instance runs
+     to learn whether `op=promote`'s old unchecked digest left a false one behind. Admin and probe, as
+     `registeraudit` beside it: it is an audit of the working corpus, and it lists paths. */
+  digestcensus: { classes: ["admin", "probe"], mutating: false },
   /* CONSTRUCTS Step 3 (FW-5): the reading persisted at promote. `reading` reads
      one captured document's reading (entities + document facts) by its capture
      sha; `readingref` is the reverse index — which documents' readings carry a
@@ -73472,7 +73575,9 @@ var index_default = {
                 break;
               }
             }
-            if (changed) {
+            const sentSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
+            const sentOk = bm.sha256 === void 0 || bm.sha256 === null || typeof bm.sha256 === "string" && bm.sha256.toLowerCase() === sentSha;
+            if (changed && sentOk) {
               bm.text = lines.join("\n");
               const bytes = new TextEncoder().encode(bm.text);
               bm.bytes = bytes.length;

@@ -1282,7 +1282,7 @@ console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC
     meta: { object_type: "inquiry", group: "believe-in-oakland", title: "does the step log land?",
             current_state: "open", created: "2026-09-18T09:00:00Z", last_updated: "2026-09-18T09:00:00Z" },
     files: [{ path: "bundle.md", text: `---\nid: ${RB}\n---\n\n## Question\n\nDoes it land?\n`,
-              bytes: 90, sha256: "a".repeat(64) }],
+              bytes: 90 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: "a".repeat(64), which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
     register: [] };
   const PROJECT_MD = ["---", "object_type: project", "current_state: forming", 'created: "2026-09-18T09:00:00Z"',
     'last_updated: "2026-09-18T09:00:00Z"', "references: []", "---", "", "## Summary", "",

@@ -9604,6 +9604,17 @@ export const ACT_SHAPE_CHECKS = {
       + 'means to. Carry them forward, or name them for deletion on purpose — losing part of a '
       + 'document by omission is not something the record will do quietly.',
   },
+  /* REC-175 (the Mechanical Verification Law, BIO_State_Rules_Consistency_v1_5.md §8: a stored digest is of the
+     stored bytes). `op=promote` wrote the caller's `sha256` for every file, and took bundle.md's as the bundle's
+     head, without computing either; it now computes each inline file's digest over its UTF-8 bytes (a blob's is
+     its content address) and refuses a supplied value naming another, before anything is written. */
+  FILE_DIGEST_MISMATCH: {
+    check: 'C-33.38',
+    where: 'src/store.mjs promote > is-promote-digest',
+    translation: 'A fingerprint sent with this write does not match the file it was sent with, so the record '
+      + 'would have stored a fingerprint of something it does not hold. Nothing was written. Send the file '
+      + 'again with its own fingerprint, or with none and the record will compute it.',
+  },
   NO_ALIAS: {
     check: 'C-33.25',
     where: 'src/store.mjs addEntityAlias > is-alias-named',
