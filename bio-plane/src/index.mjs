@@ -7598,6 +7598,12 @@ export default {
            about this document on this pass — and it stays null until an entry
            that actually itemises a container answers. */
         let wired = null, wiredTier = null, pageCount = null, containerExtent = null;
+        /* D-420: what `structure()` answered about the images a PDF's pages
+           PAINT, `{ images, why }`, kept from the one call that produced it and
+           read at the container-extent site below. `null` means the structure
+           op never answered for this capture, which is a different fact from a
+           walk that answered NULL. */
+        let pdfPaints = null;
         /* CPDF-10: the chain this text's provenance will be recorded as, built
            up as the wire actually walks it rather than labelled at the end. It
            starts empty and is null until a text surface answers, so a document
@@ -7656,6 +7662,11 @@ export default {
                      zero is NOT a page count — it is a document with no pages
                      the structure reader could order — and it stays null. */
                   if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
+                  /* D-420: the image list rides the STRUCTURE object, not
+                     `text`, so the Tier-2 and Tier-3 replacements of `i2text`
+                     below cannot drop it (pdfstructure.mjs's CPDF-18 note). */
+                  pdfPaints = { images: Array.isArray(st.images) ? st.images : null,
+                                why: typeof st.imagesWhy === "string" ? st.imagesWhy : null };
                   if (env.PDF_WORKER && needsTier2(i2text)) {
                     try {
                       const r = await env.PDF_WORKER.fetch("https://pdf-worker/structure", {
@@ -7960,6 +7971,41 @@ export default {
                   };
                 }
               }
+              if (!containerExtent && pdfPaints && fmt === "pdf") {
+                /* D-420 / EXTRACTION-BREADTH §3.2, §3.3 item 2 — A PDF'S CONTAINER
+                   EXTENT IS THE IMAGES ITS PAGES PAINT. Until this branch a PDF
+                   stored `container_extent: null`, so an `image {page, rect}`
+                   citation was bounded by the page set alone and a rectangle
+                   where nothing is painted minted as an image row; only the crop
+                   refused it (NO_IMAGE_AT_RECT). The list is READ from the
+                   structure op's own answer and never re-walked.
+                   *
+                   * ONE LEVEL, `images`, AND IC-124's ABSENCE RULE: an EMPTY list
+                   * is a MEASURED ZERO (every page walked, none painted an image)
+                   * and bounds; NULL is a walk that did not finish, carried with
+                   * the producer's reason, and bounds nothing.
+                   *
+                   * EXHAUSTIVE OR NULL, the `imagesOf` rule above: one placement
+                   * this wire cannot read as `{page, rect}` makes the whole list
+                   * undetermined, because dropping it would let the checker
+                   * refuse a true citation of that image as unpainted.
+                   *
+                   * ONLY `page` AND `rect` ARE KEPT. They are the address
+                   * (`canonicalExtent` takes page + rect); name, filters and
+                   * dimensions are the structure op's to serve, not the record's
+                   * to bound on. */
+                const placements = Array.isArray(pdfPaints.images)
+                    && pdfPaints.images.every((x) => x && Number.isInteger(x.page) && x.page >= 0
+                      && Array.isArray(x.rect) && x.rect.length === 4
+                      && x.rect.every((n) => typeof n === "number" && Number.isFinite(n)))
+                  ? pdfPaints.images.map((x) => ({ page: x.page, rect: x.rect.slice() }))
+                  : null;
+                containerExtent = {
+                  container: "pdf", levels: ["images"], images: placements,
+                  ...(placements ? {} : { images_why: pdfPaints.why
+                    || "a placement the structure op reported could not be read as {page, rect}" }),
+                };
+              }
               /* REC-91's units, by `textUnitsFor` (CPDF-19: one rule for both paths). */
               { const u = textUnitsFor(i2text); textUnits = u.textUnits; textUnitsOverBound = u.textUnitsOverBound; }
               if (i2text) wired = readText(i2text, { headers: profHeaders,
@@ -8061,8 +8107,11 @@ export default {
            * KEY ABSENT: nothing ever tried to itemise this document's container
            * — an HTML page read as text at intake, where this wire never ran.
            * PRESENT AND NULL: the wire RAN and no entry itemised a container at
-           * all — a PDF, whose I2 text carries no sheet, paragraph or slide
-           * list, and a primary the wire could not read. AN OBJECT: an entry
+           * all — a primary the wire could not read, and (until D-420) every
+           * PDF. CORRECTED IN PLACE 2026-09-23 BY D-420: a PDF whose structure op
+           * answered now stores ONE level, `images`, the rectangles its pages
+           * paint, so a PDF acquired BEFORE D-420 is the one that holds NULL
+           * here and the store states that absence. AN OBJECT: an entry
            * answered, `levels` names what this container itemises and each named
            * level is either the figure or NULL, undetermined and stated.
            * No absence stands in for another, and none of them is a zero.

@@ -1945,6 +1945,16 @@ export function checkConsume(entries, { seed = false, allowance = false, map = f
         `'${b}' is decided by the plane — a run's lease lapses on the clock, read by the reaper, and nothing spends it `
         + `(§14b.6) — so no figure for it, not even a zero, is the caller's to send or a member's to declare. `
         + `Nothing was written`, { bound: b });
+    /* REC-177 (§14b item 6, BOB #30) — A DECLARED BOUND STATES ITS ALLOWANCE. An `allowed` that is ABSENT (undefined
+       or null) or ZERO was let through here and stored as 0, which `finishedBound` reads as NO CEILING: the run
+       recorded a bound it did not have. So at the open it is refused, before the figure's form is judged — a bound
+       the run does not want is simply not declared, and `0` stays "no ceiling" only for a bound nobody declared (the
+       tick's upsert). A present figure of the wrong form (a string, a fraction, a negative) stays C-22.13's, below. */
+    if (allowance && (v == null || v === 0))
+      return refusal("AI_RUN_BOUND_NO_ALLOWANCE",
+        `'${b}' was declared with ${v == null ? "no `allowed`" : "`allowed: 0`"}: a declared bound states how much the `
+        + "run may spend, a whole number of one or more, and a bound the run is not held to is left out of `bounds` "
+        + "(§14b item 6). A zero allowance would be read as no ceiling at all. Nothing was written", { bound: b });
     if (seed && v == null) continue;
     if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
       return refusal("AI_RUN_CONSUME_INVALID",

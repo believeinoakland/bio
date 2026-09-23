@@ -190,6 +190,9 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             the canned translation are ONE ROW read from one place. */
          CONTRADICTION_PAIR_CHECKS } from "../checks/bio-checks.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
+/* D-440: the FORMAT registry's own answer to "does this format walk parts",
+   which is what makes a capture an office container (`#containerKindOf`). */
+import { getFormat } from "./formats.mjs";
 /* D-334: THE GATE'S OWN LIVENESS PREDICATE, imported rather than re-derived.
    `#monitorToken()` selects the credential the unattended consumers SPEND, and
    `classify()` in index.mjs admits a class only when this same function passes.
@@ -433,7 +436,8 @@ import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
    "what part of a document does this leg mean" is D-164's own lesson arriving
    inside the construct that exists to close it. */
 import { CONTENT_EXTENT_CHECKS, checkContentExtent, legExtent, canonicalExtent,
-         describeExtent, contentIdFor, legContentId, contentCitedAs } from "../checks/bio-checks.mjs";
+         describeExtent, contentIdFor, legContentId, contentCitedAs,
+         imagePartUndetermined } from "../checks/bio-checks.mjs";
 /* REC-97 / IC-90: THE LEG GRAMMAR ITSELF, imported so `op=cite` can route the
    leg it is about to write through the SAME function `checkInquiryBasis` runs
    at C-2.8 and `basisVersionFindings` runs at C-25.10 — REC-84's ONE checker.
@@ -1075,6 +1079,11 @@ export class Store extends DurableObject {
          recorded nothing, and the only value a backfill could reach for is the manifest the run was HANDED,
          the very value this column exists to be compared WITH. NULL reads back as `not recorded`, stated. */
       ["ai_runs", "lens_at_open", "TEXT"],
+      /* D-440: the capture's FORMAT key, projected at promote from the provenance document's profile.
+         NULLABLE AND NEVER BACK-FILLED: a reading persisted before this column existed recorded no format,
+         and `#containerKindOf` then falls back to the reading's own `text_container` and, failing that,
+         states the kind UNDETERMINED rather than guessing it. */
+      ["readings", "capture_format", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -15083,7 +15092,7 @@ export class Store extends DurableObject {
       /* END DEC-49 REGION is-promote-cas */
 
       /* REC-181: A TRANSITION INTO `retired` ASKS RETIRE'S OWN QUESTION, here and before any
-         write (a refusal returned from inside `transactionSync` does not roll back). `op=retire`
+         write (asked first, so a refusal writes nothing; REC-180's rollback is the net under it). `op=retire`
          refuses `CITED` while a live edge cites the item; `promote` is the write path it runs
          through, and a caller naming `current_state: retired` directly reached the same terminal
          state without the question (State Rules v1.5 §4.1, BOB #30). The same predicate, the same
@@ -15095,6 +15104,44 @@ export class Store extends DurableObject {
         if (citedBy.length)
           return { ok: false, reason: "CITED", to: "retired", offenders: [{ id: bundleId, citedBy }],
                    detail: Store.RETIRE_CITED_DETAIL };
+      }
+
+      /* REC-179 / C-66.5 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
+         FORWARD. The field records the SURFACING ACT, decided once at the trust boundary on the creation (D-78's
+         restamp; REC-173's verified replay keeps the Drive era's), and the restamp runs only there — so without this
+         a revision relabelled the question and REC-171's surfacing row then contradicted the bytes it describes.
+         Asked of every revision of a bundle whose CURRENT version is an inquiry, after the compare-and-swap (so
+         `cur` is the version this revision is based on) and before any write. Both sides are read by the catalog's
+         own parser, never a line scan a caller can step around, so a respelling of the same value lands and a
+         different value is refused in EITHER direction. An absent field and an unreadable document are values
+         too: a revision may not supply an origin its creation did not record, nor drop one it did. `replay` is not
+         an exemption — it is a caller's assertion (`index.mjs` verifies only a CREATION as a replay, REC-173). */
+      if (cur && base !== null && normalizeType(cur.object_type) === "inquiry") {
+        const surfacedOf = (text) => {
+          if (typeof text !== "string") return "unreadable";
+          /* No catch: the catalog's parser does not throw on a string — a document it cannot read comes back
+             `data: null` with its C-2.1 finding, and that is stated here as `unreadable` (provenance-marker's
+             swallowed-read ratchet counts a catch, and this one would catch nothing). */
+          const fm = parseFrontmatter(text).data;
+          if (!fm || typeof fm !== "object") return "unreadable";
+          return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
+        };
+        const heldMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
+        const nextMd = files.find((f) => f && f.path === "bundle.md");
+        const was = surfacedOf(heldMd ? heldMd.content : null);
+        const now = surfacedOf(nextMd ? nextMd.text : null);
+        /* The C-66 family's own helper shape (`#surfacingGate`'s), shadowing the project-id one in this block only. */
+        const refusal = (code, detail, extra) => {
+          const row = SURFACE_CHECKS[code];
+          return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+        };
+        /* DEC-49 REGION is-promote-surfaced-by */
+        if (was !== now)
+          return refusal("SURFACED_BY_REWRITTEN",
+            `the current version of ${bundleId} records surfaced_by ${was}, and this revision records ${now}. Who `
+            + `surfaced a question is recorded once, at its creation; a revision carries it forward unchanged. `
+            + `Nothing was written.`, { bundleId, current: was, revision: now });
+        /* END DEC-49 REGION is-promote-surfaced-by */
       }
 
       /* MK-1 / D-184 — THE AUTHORED FLAG'S FENCE, HERE AND BEFORE THE FIRST
@@ -15886,7 +15933,7 @@ export class Store extends DurableObject {
              this loop now has to call. The shadow parsed, ran, and would have
              thrown `not a function` only on the path that reads an authored id;
              renamed rather than aliased so there is one name for one thing. */
-          let legRowId = null, legCarried = false, legMinted = false;
+          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null, legImageBound = null;
           const cp = contentPlan.get(i);
           if (cp && cp.isInfo) {
             const ext = cp.extent;
@@ -15908,7 +15955,8 @@ export class Store extends DurableObject {
               else if (cp.captureSha) {
                 const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
                   extent: ext, mintedBy: CONTENT_MINTED_BY_PLANE, at: meta.last_updated || null, ctx: cp.ctx });
-                if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted; }
+                if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted;
+                               legUndetermined = mint.undetermined || null; legImageBound = mint.image_bound || null; }
               }
             }
             /* The ROW is not read here. `contentRow` is a read, and a read inside
@@ -15917,7 +15965,9 @@ export class Store extends DurableObject {
                collected and resolved in ONE set-based pass after the loop. */
             if (legRowId)
               contentProjected.push({ ord: i, target: leg.target, content_id: legRowId,
-                extent_kind: ext.kind, minted: legMinted, carried: legCarried });
+                extent_kind: ext.kind, minted: legMinted, carried: legCarried,
+                ...(legUndetermined ? { undetermined: legUndetermined } : {}),
+                ...(legImageBound ? { image_bound: legImageBound } : {}) });
           }
           this.sql.exec(
             `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
@@ -16616,14 +16666,28 @@ export class Store extends DurableObject {
        * direction — which is exactly the four-level rule CLAUDE.md states:
        * absence at one level is not evidence of absence at the next. */
       this.#observeReaderRun(bundleId, sha, reading, { author });
+      /* D-440 — THE CAPTURE'S FORMAT, projected from the SAME provenance document
+         the reading is, so the two cannot come from different sources. It is the
+         profile's `format.format` (COFF-1's FORMAT axis: magic bytes first, the
+         declared Content-Type second), and it exists so `contentContextFor` can
+         say whether this capture is an office container at all — the one fact
+         the image arm's `{part}` needs and no reading field carried for a page
+         read as text. A re-extraction hands no profile, so the prior value is
+         KEPT (the COALESCE): the bytes did not change, so neither did their
+         format, and a NULL written over it would un-know a fact. */
+      const prof = doc && doc.profile && typeof doc.profile === "object" ? doc.profile : null;
+      const fmtKey = prof && prof.format && typeof prof.format === "object"
+        && typeof prof.format.format === "string" && prof.format.format.trim()
+        ? prof.format.format.trim() : null;
       this.sql.exec(
-        `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at)
-         VALUES (?,?,?,?,?,?,?,?)`,
+        `INSERT OR REPLACE INTO readings (capture_sha,bundle_id,content_type,reader_version,found,entity_count,reading,at,capture_format)
+         VALUES (?,?,?,?,?,?,?,?,COALESCE(?, (SELECT capture_format FROM readings WHERE capture_sha=?)))`,
         sha, bundleId,
         typeof reading.content_type === "string" ? reading.content_type : null,
         Number.isInteger(reading.reader_version) ? reading.reader_version : null,
         reading.found ? 1 : 0, entities.length,
-        JSON.stringify(reading), typeof reading.at === "string" ? reading.at : null);
+        JSON.stringify(reading), typeof reading.at === "string" ? reading.at : null,
+        fmtKey, sha);
       for (const e of entities) {
         if (!e || (e.key == null && e.kind == null)) continue;
         /* The reference exactly as the reading carries it: the reader's own
@@ -17240,10 +17304,16 @@ export class Store extends DurableObject {
    *  this row — the chain and (since D-345) the page count — and asking for the
    *  row twice would be two answers to one question waiting to disagree, which
    *  is the drift the comment on `#contentPlanFor` already names. One read,
-   *  parsed once, handed to both readers below. */
+   *  parsed once, handed to both readers below.
+   *
+   *  D-440 ADDS THE ROW'S `capture_format` TO THE SAME READ rather than a second
+   *  one, for the same reason: the container's kind and its extent are two facts
+   *  about one row, and `contentContextFor` hands both to the checker together. */
   #persistedReading(captureSha) {
-    const row = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha);
-    return row ? (safeJson(row.reading) || null) : null;
+    const row = this.#one(`SELECT reading, capture_format FROM readings WHERE capture_sha=?`, captureSha);
+    return { reading: row ? (safeJson(row.reading) || null) : null,
+             captureFormat: row && typeof row.capture_format === "string" ? row.capture_format : null,
+             held: !!row };
   }
 
   /** The transcription chain the record holds for a capture, or null.
@@ -17449,9 +17519,38 @@ export class Store extends DurableObject {
                  + "that figure, or no slide's part in it could be read — D-359), so a slide "
                  + "past the deck is bounded and a shape within a known slide is not");
     if (!held) missing.push("the container's own extent — no sheet list, paragraph count or "
-                          + "slide list was persisted for this capture");
+                          + "slide list was persisted for this capture, and, if it is a PDF, no "
+                          + "list of the images its pages paint (a PDF acquired before D-420 "
+                          + "carries none)");
+    /* D-420 — WHICH CONTAINER, AND FOR A PDF WHETHER THE PAINTED-IMAGE LIST IS
+       HELD. `container_name` is the entry's own `container` string as the wire
+       stored it (null when nothing was stored), and the checker's `{page, rect}`
+       bound reads a list ONLY when this names a PDF: an office container's
+       `images` are media parts with no page, and bounding a page-form citation
+       by them would refuse every one. `page_images_why` is the sentence stated
+       beside a page-form image the record ADMITS without that bound — a PDF
+       acquired before D-420 (`container_extent` null), a walk that did not
+       finish (`images_why`), or a capture that is not a PDF at all — so an
+       admission is never silent about what it was not checked against. */
+    const containerName = held && typeof held.container === "string" ? held.container : null;
+    const pdfImages = containerName === "pdf" && images ? images : null;
+    const pageImagesWhy = pdfImages ? null
+      : containerName === "pdf"
+        ? `this record holds no list of the images the pages of capture `
+          + `${String(captureSha).slice(0, 12)}… paint — the structure op's walk did not finish `
+          + `(${held && typeof held.images_why === "string" ? held.images_why.slice(0, 120) : "no reason recorded"}) — `
+          + `so whether an image is painted at this address is UNDETERMINED and stated, not refused`
+        : held
+          ? `capture ${String(captureSha).slice(0, 12)}… is itemised as a ${containerName || "container"} `
+            + `and not as a PDF, so this record holds no list of images painted on its pages and `
+            + `whether an image is painted at this address is UNDETERMINED and stated, not refused`
+          : `this record holds no list of the images the pages of capture ${String(captureSha).slice(0, 12)}… `
+            + `paint — a PDF acquired before D-420 persisted none, and nothing was persisted at all for `
+            + `a capture no format entry itemised — so whether an image is painted at this address is `
+            + `UNDETERMINED and stated, not refused. Re-acquiring the document records the list`;
     return {
       sheets, paragraphs, slides, tables, images,
+      container_name: containerName, page_images_why: pageImagesWhy,
       held: !!(sheets || paragraphs !== null || slides || tables || images),
       empty_level: missing.length ? missing.join("; ") : null,
       why: missing.length
@@ -17477,10 +17576,75 @@ export class Store extends DurableObject {
    *  one-read rule extended to the third: asking for the `readings` row a second
    *  time would be two answers to one question waiting to disagree. */
   contentContextFor(captureSha) {
-    const reading = this.#persistedReading(captureSha);
+    const { reading, captureFormat, held } = this.#persistedReading(captureSha);
+    const container = this.#containerExtentForCapture(captureSha, reading);
+    /* D-440: WHETHER THIS CAPTURE IS AN OFFICE CONTAINER AT ALL, on the
+       container object the checker already reads, so the image arm's `{part}`
+       is judged against the one object that also carries the image list. */
+    Object.assign(container, this.#containerKindOf(reading, captureFormat, held));
     return { chain: this.#chainOfReading(reading),
              pageCount: this.#pageSetForCapture(captureSha, reading),
-             container: this.#containerExtentForCapture(captureSha, reading) };
+             container };
+  }
+
+  /** D-440 — IS THIS CAPTURE AN OFFICE CONTAINER, whose own bytes can hold an
+   *  embedded media part (EXTRACTION-BREADTH-DESIGN.md section 3.2: "`{part}` is
+   *  a member of a CONTAINER's own bytes, and nothing else").
+   *
+   *  THREE-VALUED, and each value is a different fact: `true` (the format
+   *  registry's entry for this capture's format WALKS PARTS — the office
+   *  entries), `false` (a registered format with no parts walk — a web page, a
+   *  PDF: an image beside a page is its own document, and one on a PDF page is
+   *  addressed by page and rect), `null` (the record does not hold which format
+   *  this capture is, STATED in `kind_why`, never guessed).
+   *
+   *  A PROPERTY OF THE REGISTRY, NEVER A LIST OF SLUGS (WORKER.md, "invert, do
+   *  not lengthen a list"): a seventh office entry registered tomorrow is a
+   *  container here with no edit, and a new non-container format is refused.
+   *
+   *  THE FORMAT COMES FROM, IN ORDER: the row's `capture_format` (the provenance
+   *  profile's FORMAT axis, projected at promote); the reading's own
+   *  `text_container` (the SAME key, carried by every reading the acquire wire
+   *  read — so a capture promoted before `capture_format` existed still
+   *  answers); and nothing else. An office `container_extent` alone (its
+   *  `levels` named by an office entry) is also an answer, because only an
+   *  office entry itemises levels.
+   *
+   *  WHAT THIS CANNOT SEE, stated: the format is what the provenance document
+   *  says, and that document is the caller's, exactly as the reading and its
+   *  image list are — this reads the record, it does not re-sniff the bytes. */
+  #containerKindOf(reading, captureFormat, held) {
+    const fromReading = reading && typeof reading === "object" && typeof reading.text_container === "string"
+      && reading.text_container.trim() ? reading.text_container.trim() : null;
+    const format = captureFormat || fromReading;
+    const source = captureFormat ? "the capture's provenance profile" : "the capture's reading";
+    if (format && format !== "undetermined") {
+      const entry = getFormat(format);
+      if (entry) {
+        const office = typeof entry.parts === "function";
+        return { format, office,
+                 kind_why: `${source} records this capture's format as ${format}, which `
+                   + (office ? "is an office container: its own bytes hold its embedded media parts"
+                             : "is not an office container: its own bytes hold no embedded media part") };
+      }
+      return { format, office: null,
+               kind_why: `${source} records this capture's format as '${format.slice(0, 40)}', which this `
+                 + `build's format registry does not know, so whether it is a container is UNDETERMINED` };
+    }
+    const ext = reading && typeof reading === "object" && reading.container_extent
+      && typeof reading.container_extent === "object" ? reading.container_extent : null;
+    if (ext && Array.isArray(ext.levels) && ext.levels.length)
+      return { format: null, office: true,
+               kind_why: "the capture's reading carries a container extent an office entry itemised, so it "
+                 + "is an office container, though no format key was recorded" };
+    return { format: null, office: null,
+             kind_why: !held
+               ? "this record holds no reading for this capture, so which format it is is UNDETERMINED"
+               : format === "undetermined"
+                 ? "the format registry could not determine this capture's format at acquire, so whether it "
+                   + "is a container is UNDETERMINED"
+                 : "this record does not hold this capture's format (it was promoted before the format was "
+                   + "projected, and its reading names no container), so whether it is a container is UNDETERMINED" };
   }
 
   /** THE WHOLE BASIS'S REFERENTS, RESOLVED ONCE — the capture each leg is about
@@ -17708,7 +17872,22 @@ export class Store extends DurableObject {
                 ? { page: extent.page, rect: extent.rect ?? null } : null),
         ctx.pageCount, mintedBy, at || new Date().toISOString(), citedAs);
     }
-    return { ok: true, content_id: id, minted: !before };
+    /* D-440: an image `{part}` admitted WITHOUT the bound it would be checked
+       against (an office container with no persisted image list, or a capture
+       whose kind the record does not hold) says so on the answer. Returned bare,
+       it read exactly like a part the record had verified is in the document. */
+    const undetermined = imagePartUndetermined(extent, ctx);
+    /* D-420: A PAGE-FORM IMAGE ADMITTED WITHOUT THE PAINTED-IMAGE BOUND SAYS SO.
+       The checker admits it because the record holds no placement list to test
+       it against (`#containerExtentForCapture` names which absence), and an
+       admission that said nothing would read as "an image is painted here". */
+    const imageBound = extent && extent.kind === "image" && Number.isInteger(extent.page)
+        && ctx.container && ctx.container.page_images_why
+      ? { determined: false, empty_level: "the images this capture's pages paint",
+          why: ctx.container.page_images_why }
+      : null;
+    return { ok: true, content_id: id, minted: !before, ...(undetermined ? { undetermined } : {}),
+             ...(imageBound ? { image_bound: imageBound } : {}) };
   }
 
   /** SK-7 / framework Part II 14.4 (Bob's 5.7) — MARKING A PASSAGE AS CITABLE,
@@ -17798,7 +17977,9 @@ export class Store extends DurableObject {
                                                                                 : { kind: "document" },
                                    mintedBy: mintedBy.trim(), at });
     if (!out.ok) return out;
-    return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id) };
+    return { ok: true, minted: out.minted, capture_sha: sha, ...this.contentRow(out.content_id),
+             ...(out.undetermined ? { undetermined: out.undetermined } : {}),
+             ...(out.image_bound ? { image_bound: out.image_bound } : {}) };
   }
 
   /* ====================================================================== *
@@ -39999,7 +40180,9 @@ export class Store extends DurableObject {
        REC-172 (§14b.6) — AND THE DECLARATION ITSELF, before the seed: a `bounds` that is not a list, an entry that is
        not an object or names no bound (C-22.15), a `lease` entry (C-22.14 — the plane decides it), and an `allowed`
        that is not a whole number of zero or more (C-22.13). Each was DROPPED or COERCED below (`continue`, and
-       `Number(b.allowed) || 0`), so a member who declared a ceiling could get a run without it, or one they never set. */
+       `Number(b.allowed) || 0`), so a member who declared a ceiling could get a run without it, or one they never set.
+       REC-177 (§14b item 6, BOB #30) — AND AN ENTRY THAT STATES NO ALLOWANCE (`allowed` absent or 0, C-22.16): it was
+       opened at 0, which `finishedBound` reads as no ceiling, so the run recorded a bound it did not have. */
     const badSeed = checkConsume(bounds, { list: true });
     if (badSeed)
       return { run, started: false, code: badSeed.code, check: badSeed.check,
@@ -40055,7 +40238,7 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
            ON CONFLICT(run, bound) DO NOTHING`,
-          run, String(b.bound), b.allowed == null ? 0 : b.allowed,    /* REC-172: judged above; absent is 0, as ever */
+          run, String(b.bound), b.allowed,    /* REC-177: judged above, a whole number of one or more (C-22.16); the old `absent is 0` default was the no-ceiling path */
           b.consumed == null ? 0 : b.consumed,   /* REC-169: judged above */
           b.unit == null ? null : String(b.unit));
       }
