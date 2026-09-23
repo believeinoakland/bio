@@ -10553,6 +10553,15 @@ var ACT_SHAPE_CHECKS = {
     where: "src/store.mjs cite > is-cite-severed",
     translation: "Somebody already recorded a decision to cut this dependency, which is different from there never having been one. Citing it again would neither reverse that decision nor step around it, so putting the link back is a separate act that records its own reason."
   },
+  /* D-168 / BOB #30, 2026-09-23 — State Rules §4.1, "A RETIRED ITEM IS NOT
+     CITABLE". A sub-number of this family, as C-33.15..19 (cite's other
+     regions) are; C-33.38 is REC-175's. The translation NAMES THE DOOR, the
+     REC-117 rule: cite what superseded it, or re-collect the source. */
+  RETIRED_NOT_CITABLE: {
+    check: "C-33.39",
+    where: "src/store.mjs cite > is-cite-retired",
+    translation: "The group has retired this material, recording that it is superseded or no longer stands, so a citation made now would read to everyone after you as live support nobody will look at again. Cite whatever superseded it, or collect the source again as a new item and cite that. A document its publisher withdrew or changed is a different thing and can still be cited."
+  },
   NO_SUCH_SELECTION: {
     check: "C-33.20",
     where: "src/store.mjs selectionResolve > is-selection-known",
@@ -15836,8 +15845,10 @@ var ACTS = [
   },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
        guards are type-only on both: any information bundle may be cited (cite
-       checks the member's TYPE and nothing about state — citing retired material
-       is permitted and therefore published), and any citing object may cite.
+       checks the member's TYPE and, since D-168, ONE fact about state: a RETIRED
+       one is refused, so it is not published on one — see the entry below; this
+       sentence said "citing retired material is permitted" until 2026-09-23),
+       and any citing object may cite.
        Deriving a narrower answer here than the op gives would be this file
        inventing a rule the plane does not enforce.
   
@@ -16036,7 +16047,11 @@ var ACTS = [
     label: "Cite material into a case or a question",
     weight: "report",
     types: ["information", "project", "inquiry"],
-    applies: (f2, ty) => ty === "information" || ty === "project" && f2.project_participant !== false || ty === "inquiry"
+    /* D-168 (2026-09-23, State Rules §4.1, BOB #30): a RETIRED Information bundle is not
+       citable and the store refuses RETIRED_NOT_CITABLE for every caller, so the act is not
+       offered on one — offering it would be the pre-flight disagreeing with the refusal it
+       fronts (DEC-8). `source_status` is not read: a removed or modified source stays citable. */
+    applies: (f2, ty) => ty === "information" && f2.current_state !== "retired" || ty === "project" && f2.project_participant !== false || ty === "inquiry"
   },
   /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
        side: some CASE holds a live cites edge to it. From the case's own side:
@@ -36808,9 +36823,16 @@ ${lines.join("\n")}
    *     run by the checker AND by promote's write path; the legs this act
    *     composes are judged there like any other, so a leg it could not compose
    *     honestly never lands.
-   *   - IT DOES NOT ASK WHAT STATE A TARGET IS IN (D-168). Permissive, exactly
-   *     as the case arm has always been: citing retired material is permitted
-   *     and therefore published.
+   *   - IT ASKS ONE THING ABOUT A TARGET'S STATE, ON BOTH ARMS, AND ONLY ONE:
+   *     whether the group RETIRED it (D-168, CORRECTED 2026-09-23; State Rules
+   *     §4.1 "A RETIRED ITEM IS NOT CITABLE", BOB #30). This line used to read
+   *     "IT DOES NOT ASK WHAT STATE A TARGET IS IN … citing retired material is
+   *     permitted", which was the defect: a claim resting on what the group
+   *     itself retired read to every later member as live support. The
+   *     refusal is RETIRED_NOT_CITABLE (C-33.39), in the store so every caller
+   *     meets it. `source_status` (unchanged | modified | removed) is NOT
+   *     asked: a publisher withdrawing a document is the other axis and stays
+   *     citable, and legs already in the record are not touched.
    *
    * `selectionResolve` shipped in 0.17.0 with no caller. This is its first, and
    * citing was chosen for it because it ADDS references rather than moving
@@ -36934,6 +36956,24 @@ ${lines.join("\n")}
         drift: sel.drift,
         citable: ["information", "inquiry"],
         detail: "a case rests on material, or on a question the group is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are."
+      };
+    const retiredMembers = [];
+    for (const id of sel.members) {
+      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+      if (b && normalizeType(b.object_type) === "information" && String(b.current_state ?? "").trim() === "retired") retiredMembers.push(id);
+    }
+    if (retiredMembers.length)
+      return {
+        ok: false,
+        reason: "RETIRED_NOT_CITABLE",
+        code: "RETIRED_NOT_CITABLE",
+        check: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.check,
+        translation: ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE.translation,
+        project,
+        handle,
+        offenders: retiredMembers.sort(),
+        drift: sel.drift,
+        detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new bundle and cite that. The whole call is refused rather than narrowed to the members that are not retired."
       };
     const liveMd = this.#one(`SELECT content, sha256 FROM files WHERE bundle_id=? AND path='bundle.md'`, project);
     if (!liveMd || typeof liveMd.content !== "string")
