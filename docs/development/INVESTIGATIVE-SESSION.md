@@ -20,6 +20,7 @@
 - §What is NOT settled — items 3, 3a, 7, 8 and 9 all since answered or landed; the list is history.
 - §11 — item 5, rule 2's REACH, RULED 2026-09-23 by BOB #30 (D-85's builder's question): rule 2 binds every creation D-78 stamps `surfaced_by: agent`, not the `ai` class alone. D-85 built it for `ai`; ~~the admin, member and probe deploy tokens are NOT BUILT (a row, placed after D-85)~~ BUILT 2026-09-23 by REC-171 (IC-186, `bio-plane/test/rec171-surface-token.test.mjs`, nine-arm control): `op=promote`'s stamp is set for every non-session caller, `class:<cls>` for a deploy token. STILL OPEN, brought to BOB rather than exempted (the ruling's own instruction): `bio-plane/migrate/migrate.mjs` replays a Drive mirror's questions under a deploy token and cannot honestly name a run (a replayed question was not surfaced by a run opened today), so a migration of any inquiry is now refused `SURFACE_NO_RUN` — and D-78 already restamps a migrated member's question `agent`, which predates this item.
 - §11 — item 5, a MIGRATION REPLAY is not a surfacing: RULED 2026-09-23 by BOB #30 (REC-171's finding); NOT BUILT (a row).
+- §14b — item 6, a declared bound states its allowance: RULED 2026-09-23 by BOB #30 (REC-172's finding); NOT BUILT (a row).
 - §Decomposition — every IS-n superseded by a named PL/FL row and all 43 landed; the C-number allocation promise is discharged in `bio-checks.mjs`, not recorded here.
 - §The final Claude Code comparison — F10 built (FL-3), F9 never rewritten, F11 open.
 - §What a SUGGESTION is — the five kinds are built (PL-3); D-324 (VF-4) found `new-version` is not one of the five, unrecorded here.
@@ -1410,6 +1411,17 @@ an allowance a member declares; the run spends it. So a figure the caller writes
 REFUND, driven before the fix: a run that had spent its one `surfaces` ticked `-1` and opened a second question — and a
 bound the plane counts as the work lands (`mints`, `surfaces`: `airun.mjs PLANE_COUNTED_BOUNDS`) takes no figure from the
 caller at all (`AI_RUN_BOUND_PLANE_COUNTED`, C-22.14). One bad figure refuses the whole tick; nothing is written.
+
+**A declared bound STATES its allowance — RULED 2026-09-23 by BOB #30, on REC-172's builder's finding.** `op=airunopen`
+accepts `{bound: "fetches"}` with no `allowed`, opens it at 0, and `finishedBound` reads 0 as NO CEILING: the run records
+a bound it does not have, which is the one thing this item exists to prevent (a record claiming more than it holds). So a
+declared bound with an absent, non-numeric or non-positive `allowed` is REFUSED at the open, by a stated code (its name and
+C-number the builder's), and nothing is written; a bound the run does not want is simply not declared. `0` stays the
+internal "no ceiling" reading only for a bound NOT declared; no declaration can reach it. **Accepts when** `{bound:
+"fetches"}` and `{bound: "fetches", allowed: 0}` are each refused by name, `{bound: "fetches", allowed: 3}` opens with a
+ceiling of 3, and a run declaring no `fetches` bound is unchanged. NEGATIVE CONTROL: drop the check, and both refusal arms
+fail by name. The builder lists every caller that declares a bound (agent-worker, the skill pack, the suites) and corrects
+any that omits its allowance.
 
 ### 7 · PARTIAL RESULTS SURVIVE
 
