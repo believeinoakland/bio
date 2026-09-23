@@ -268,6 +268,46 @@ function uploadForm(meta, source) {
    report exists to name. */
 const selfBinding = (slug) => ({ type: "service", name: "SELF", service: slug });
 
+/* DIST-6 — THE PLANE IS BOUND TO THE FLEET MEMBERS INSTALLED BESIDE IT (`BIO_Distribution_v0_1.md` §2, §4).
+ *
+ * Until DIST-6 both upload paths below bound the plane its buckets, its secrets and SELF and NOTHING ELSE, so on a
+ * group's own copy `installFleet` uploaded pdf-worker, ocr-worker and agent-worker and the plane could reach none of
+ * them: tier-2/3 extraction and the assistant member did nothing there (found by D-116's worker, 2026-09-23; D-116's
+ * verify step read each member UNBOUND). The binding NAMES are the plane's own (`FLEET_BINDINGS` in
+ * `bio-plane/src/index.mjs` — the wizard suite pins the two tables equal, read from the plane's source); the TARGET is
+ * the script name `installFleet` uploads each member under (`m.member`), never the plane's slug and never a name in a
+ * file. A member absent from this table (a release naming a member the plane does not call) is uploaded and not bound.
+ *
+ * THE ORDER, and the evidence it rests on. Cloudflare REFUSES an upload whose service binding names a worker that does
+ * not exist — measured here, not read in a vendor page: `tools/deploy-fleet.mjs` records the refusal
+ * ("Service binding 'PLANE' references Worker 'bio-plane' which was not found [code: 10143]"), measured 2026-08-10
+ * and re-measured 2026-09-10. And agent-worker's own manifest binds PLANE -> the plane's slug. So the fleet and the
+ * plane bind EACH OTHER, and neither can be uploaded first holding a binding to the other on a fresh account: members
+ * first would be refused on agent-worker's PLANE exactly as the plane-first upload would be refused on AGENT_WORKER.
+ * The order that needs no assumption about binding to a missing worker is therefore THREE acts:
+ *   1. the plane, bound only to the members the account ALREADY holds (`membersPresent`; none on a fresh account);
+ *   2. the members (`installFleet`), whose PLANE binding now resolves;
+ *   3. the plane RE-PUT, bound to every member now present (`bindMembers`) — only when step 2 added one.
+ * Step 1 binding what already exists is what keeps an UPDATE from un-binding a working copy's members for the
+ * duration of the update, or for good when the fleet step cannot run (the repository unreachable): `service` is not
+ * in `keep_bindings`, so a member not restated in a PUT is a member dropped. */
+export const MEMBER_BINDINGS = Object.freeze({ "agent-worker": "AGENT_WORKER", "pdf-worker": "PDF_WORKER",
+                                               "ocr-worker": "OCR_WORKER" });
+const memberBindings = (members = []) => Object.entries(MEMBER_BINDINGS)
+  .filter(([member]) => members.includes(member))
+  .map(([member, name]) => ({ type: "service", name, service: member }));
+
+/* Which bindable members this account already holds. A lookup that fails for any reason other than "not found" is
+   read as NOT PRESENT for this PUT — binding a worker whose existence is unestablished is the refusal above — and
+   step 3 binds whatever step 2 then uploads. */
+async function membersPresent(token, acct) {
+  const present = [];
+  for (const member of Object.keys(MEMBER_BINDINGS)) {
+    try { if (await scriptExists(token, acct, member)) present.push(member); } catch { /* unestablished: not bound */ }
+  }
+  return present;
+}
+
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
    the script the same PUT creates, and nothing here can prove Cloudflare accepts
    that self-reference without a real install, which is deploy-gated. So the
@@ -302,6 +342,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
+      /* DIST-6: the members this account already holds (none on a fresh account — see MEMBER_BINDINGS). */
+      ...memberBindings(opts.members),
     ],
     /* SQLite backend is the irreversible choice, made correctly, once. */
     migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
@@ -316,7 +358,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
    is supplied fresh. No migrations field, because the Store class already
    exists and its storage backend never changes. Updates therefore cannot
    touch passwords or the record, and the success page says so. */
-async function uploadUpdate(token, acct, slug, withR2, release) {
+async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
   /* When the account's storage is available the update binds it explicitly,
      which quietly completes any copy installed before storage became a
      requirement. When it is not, the update proceeds the old way, keeping
@@ -343,7 +385,13 @@ async function uploadUpdate(token, acct, slug, withR2, release) {
          next update arms them with no action from the operator. Unlike the
          INSTANCE_NAME case there is nothing cosmetic about it: an instance
          without this binding never re-checks a source it was asked to monitor. */
-      selfBinding(slug),
+      /* `opts.noSelf` only on the install's step-3 re-PUT of a copy whose install already had SELF refused
+         (runInstall's retry): that re-PUT restates exactly what the install achieved plus the members, so a SELF
+         refusal cannot also cost the copy its members. An update never passes it. */
+      ...(opts.noSelf ? [] : [selfBinding(slug)]),
+      /* DIST-6: the fleet members, by the same healing shape as SELF — an update of a copy installed without them
+         gains them (step 3 of the order at MEMBER_BINDINGS), and one that has them keeps them (step 1). */
+      ...memberBindings(opts.members),
       /* DIST-2: bound on UPDATE as well, same healing shape as SELF above — an
          instance installed before the daemon class existed has no DAEMON_TOKEN
          and keep_bindings cannot create what was never there, so without this
@@ -356,7 +404,7 @@ async function uploadUpdate(token, acct, slug, withR2, release) {
          cannot restate values it never sees. An explicit binding replacing the
          kept one of the same name is the API's contract; the next gated real
          update run is where that is read back rather than trusted. */
-      { type: "secret_text", name: "DAEMON_TOKEN", text: rand(32) },
+      { type: "secret_text", name: "DAEMON_TOKEN", text: opts.daemon || rand(32) },
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -503,6 +551,32 @@ async function installFleet(emit, token, acct, slug, release) {
   return { done, left };
 }
 
+/* DIST-6, step 3 of the order at MEMBER_BINDINGS: RE-PUT the plane bound to every bindable member now present — those
+   bound at step 1 and those `installFleet` just uploaded. The re-PUT takes the UPDATE's shape on both paths (no
+   `migrations`, the group's passwords and the Durable Object kept by `keep_bindings`), because that is the shape
+   already proven against an existing script on every update; an install's own shape would restate its `v1` migration
+   against a script that already carries it, which nothing here has established Cloudflare accepts. Nothing to add ->
+   no PUT. A refusal DEGRADES, never fails the act: the members stay installed, the step is marked, and the verify step
+   names each member the plane cannot reach (servingVerdict) — never a success over it. */
+async function bindMembers(emit, token, acct, slug, release, already, fleet, opts) {
+  const want = Object.keys(MEMBER_BINDINGS)
+    .filter((m) => already.includes(m) || (fleet?.done || []).includes(m));
+  const added = want.filter((m) => !already.includes(m));
+  if (added.length === 0) return { bound: already, unbound: [] };
+  emit.step("bind", "Connecting your copy to its capability workers");
+  try {
+    await uploadUpdate(token, acct, slug, opts.withR2, release,
+      { members: want, daemon: opts.daemon, noSelf: opts.noSelf });
+    emit.ok("bind", "Your copy is connected to " + added.join(", ") + ".");
+    return { bound: want, unbound: [] };
+  } catch (e) {
+    emit.no("bind", "The capability workers were installed, but connecting your copy to them was refused ("
+      + added.join(", ") + "). Your copy works without them; running the updater on this copy connects them. "
+      + "(Cloudflare said: " + e.message + ")");
+    return { bound: already, unbound: added };
+  }
+}
+
 async function ensureSubdomain(token, acct, slug) {
   let sub = null;
   try { sub = (await cf(token, `/accounts/${acct}/workers/subdomain`))?.subdomain || null; }
@@ -561,13 +635,22 @@ export function reportsBuilds(source) {
   return typeof source === "string" && BUILD_FIELDS.every((f) => new RegExp("\\b" + f + "\\b").test(source));
 }
 
-function servingVerdict(j, want, installed, capable) {
+/* DIST-6: `failed` is the members the fleet step could NOT upload ({member, why}). A member the plane binds whose upload
+   failed is named here whatever the plane answers, because the plane's own reading of it (UNBOUND, or a previous
+   build) cannot say that THIS act tried and failed — and on a release that cannot report members it is the only
+   place the failure reaches the verdict. A member the plane does not bind is named at the fleet step and not here. */
+const failedLags = (failed = []) => failed.filter((l) => l && l.member in MEMBER_BINDINGS)
+  .map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${MEMBER_BINDINGS[l.member]}`
+    + ` connection to use (${l.why})`);
+
+function servingVerdict(j, want, installed, capable, failed = []) {
   const lags = [];
   if (!j || typeof j !== "object") {
-    lags.push("your copy's address did not answer");
+    lags.push("your copy's address did not answer", ...failedLags(failed));
     return { confirmed: false, lags, capable };
   }
   if (j.version !== want) lags.push(`your copy's address answers ${j.version ? j.version : "with no version"}`);
+  lags.push(...failedLags(failed));
   if (!capable) return { confirmed: lags.length === 0, lags, capable };
   if (!("storeVersion" in j)) lags.push("your copy's record store has not reported its version, so it is still running a release from before this one");
   else if (j.storeVersion === null) lags.push("your copy's record store cannot say which version it runs");
@@ -591,12 +674,12 @@ function servingVerdict(j, want, installed, capable) {
   return { confirmed: lags.length === 0, lags, capable };
 }
 
-async function verifyServing(base, want, installed, capable, tries = 5) {
+async function verifyServing(base, want, installed, capable, failed = [], tries = 5) {
   let last = null;
   for (let i = 0; i < tries; i++) {
     let j = null;
     try { j = await (await fetch(`${base}/api/?op=bootstrap&members=1`)).json(); } catch {}
-    last = servingVerdict(j, want, installed, capable);
+    last = servingVerdict(j, want, installed, capable, failed);
     if (last.confirmed) return last;
     if (i < tries - 1) await new Promise((res) => setTimeout(res, 2500));
   }
@@ -772,8 +855,11 @@ async function runInstall(emit, code, saved) {
   const secrets = { boot: rand(32), member: rand(32), probe: rand(32), daemon: rand(32) };
   emit.ok("gen");
 
+  /* DIST-6, step 1: bind only the members this account already holds (see MEMBER_BINDINGS for the order). */
+  const present = await membersPresent(token, acct.id);
+  let selfRefused = false;
   emit.step("install", "Installing the software into your account");
-  try { await uploadInstall(token, acct.id, slug, secrets, release); emit.ok("install"); }
+  try { await uploadInstall(token, acct.id, slug, secrets, release, { members: present }); emit.ok("install"); }
   catch (e) {
     /* An install carries a service binding to the script this very upload
        creates. That self-reference cannot be rehearsed here — the only way to
@@ -784,8 +870,9 @@ async function runInstall(emit, code, saved) {
        never installed is not. Same doctrine as the storage arm of the update:
        an install is never refused over something it can complete later. */
     let degraded = false;
-    try { await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true }); degraded = true; }
+    try { await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present }); degraded = true; }
     catch { /* the original refusal is the one worth reporting */ }
+    selfRefused = degraded;
     if (!degraded) {
       emit.no("install");
       return emit.fail("The software did not install",
@@ -801,6 +888,11 @@ async function runInstall(emit, code, saved) {
   /* IC-82/D-297: the fleet rides the same act. Per-member degradation lives
      inside installFleet — it never fails the install. */
   const fleet = await installFleet(emit, token, acct.id, slug, release);
+  /* DIST-6, step 3: the plane re-PUT bound to every member now present. The buckets exist (the r2 step refuses the
+     install otherwise), the DAEMON_TOKEN restated is the one just generated, and SELF is restated only if the
+     install kept it. */
+  await bindMembers(emit, token, acct.id, slug, release, present, fleet,
+    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused });
 
   emit.step("addr", "Turning on your web address");
   let base;
@@ -826,9 +918,11 @@ async function runInstall(emit, code, saved) {
   const capable = reportsBuilds(release.source);
   /* An install has always taken the selftest as its "answers"; a release that cannot report builds adds nothing to
      read, so the verdict is the selftest's plus the stated undetermined remainder — no new refusal is invented. */
+  /* DIST-6: a bindable member whose upload failed is a lag on either branch, never a success over it. */
+  const failed = fleet?.left || [];
   const verdict = !st ? null
-    : capable ? await verifyServing(base, release.version, fleet?.done || [], capable)
-    : { confirmed: true, lags: [], capable: false };
+    : capable ? await verifyServing(base, release.version, fleet?.done || [], capable, failed)
+    : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
   if (st && verdict.confirmed) emit.ok("verify", capable ? undefined : "Your copy answers. " + UNDETERMINED_BUILDS);
   else if (st) emit.no("verify", "Your copy answers, but not every part is running " + release.version + " yet");
   else emit.no("verify");
@@ -986,7 +1080,10 @@ async function runUpdate(emit, code, saved) {
     : before
       ? `Updating the software from ${before} to ${release.version}`
       : `Updating the software to ${release.version}`);
-  try { await uploadUpdate(token, acct.id, slug, withR2, release); emit.ok("up"); }
+  /* DIST-6, step 1: restate the members the account already holds, so the update never un-binds a working copy's
+     members — not for its duration, and not for good when the fleet step below cannot run. */
+  const present = await membersPresent(token, acct.id);
+  try { await uploadUpdate(token, acct.id, slug, withR2, release, { members: present }); emit.ok("up"); }
   catch (e) {
     emit.no("up");
     return emit.fail("The update was refused",
@@ -998,6 +1095,8 @@ async function runUpdate(emit, code, saved) {
      act, and this is what heals a copy installed before the fleet existed
      (the SELF-binding precedent, now for whole workers). */
   const fleet = await installFleet(emit, token, acct.id, slug, release);
+  /* DIST-6, step 3: this is what gives a copy installed WITHOUT member bindings its bindings. */
+  await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
 
   emit.step("addr", "Finding your copy's address");
   let base = null;
@@ -1014,7 +1113,7 @@ async function runUpdate(emit, code, saved) {
   let verdict = null;
   if (base) {
     emit.step("verify", "Checking the new version answers");
-    verdict = await verifyServing(base, release.version, fleet?.done || [], capable);
+    verdict = await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || []);
     if (verdict.confirmed) emit.ok("verify", capable ? undefined : "Your copy's address answers " + release.version
       + ". " + UNDETERMINED_BUILDS);
     else emit.no("verify", "Not every part of your copy is running " + release.version + " yet. That is normal for a "
