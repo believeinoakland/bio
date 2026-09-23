@@ -23,6 +23,16 @@ performed by hand by the lane that owns the plan.
 
 ## Rows
 
+### REC-187 · queued — **THE BIAS ACKNOWLEDGEMENT'S PIN AND ITS HASH MUST NAME ONE REVISION, THE ADOPTED ONE: promotion to `adopted` re-pins the adoption to the adopted bundle_sha, the case stamps that sha, and `op=biasmanifest` hashes THAT revision's statements.** Today a proposed sha can stand beside a later projection's hash — one quantity under two names (BOB.md rule 7). — owner RECORD.
+order: FIRST in the backlog, by BOB #31's ruling of 2026-09-23 (*"Place ONE row FIRST in the backlog"*): a correction to just-landed work (D-84's stamp) outranks new work; it waits only on D-84's train (SCHEDULER #17, 2026-09-23)
+milestone: M10
+interface: I3 — the stamped sha and `op=biasmanifest`'s statements hash change meaning together; ONE IC, minted and classified by the integrator.
+design: `docs/architecture/BIO_Declared_Bias_v0_1.md` §"The bias acknowledgement, authored at export" — BOB #31's ruling *"WHICH REVISION THE ACKNOWLEDGEMENT NAMES (D-84 / PL-12). The ADOPTED one."* (on `land/bob/message-driven` @ 58f6d4ed, riding the current train; a worker reads it there until it is on `main`).
+depends-on: D-84 (its case stamp; `integrated` on c17-batch4, done when that train lands).
+scope: re-pin at promotion to `adopted`; the case document stamps the adopted bundle_sha; `op=biasmanifest` computes `statements_sha` from exactly that revision's statements. Extend `bio-plane/test/d84-case-manifest.test.mjs` (or `bias.test.mjs`).
+accepts-when: the stamped statements hash equals a hash recomputed from exactly the stamped sha's bytes, across a propose → adopt → later-propose sequence. How a liar passes it: hashing the latest projection, so the arm proposes a newer revision after adoption and recomputes from the stamped sha alone. NEGATIVE CONTROL: pin the proposed sha, and the equality arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (BOB #31's ruling, 21:43Z/21:48Z; `node tools/mintid.mjs REC`).
+
 ### REC-159 · blocked — awaiting Bob: an attended session or a permission rule — CONDUCT #17's spawn was refused [Permission Grant] 21:11Z (Bob approved the change ~21:08Z; no worker exists). REC-162 and REC-155 depend on it.
 order: directly before REC-155, on the same `SESSION_OPS` sets and `d270-refusal-truth`'s ROLE literal: a false refusal shipping to a real administrator outranks a determination owed (SCHEDULER #7, 2026-09-21; REC-156's DELEGATION via CONDUCT #10)
 milestone: M8
