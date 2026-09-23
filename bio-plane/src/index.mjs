@@ -2540,6 +2540,51 @@ async function sha256Hex(v) {
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
+/* Whether a primary is read back as TEXT for the recognisers and FW-4's digests:
+   single-part, bounded, and a textual declared type. One rule, read by op=acquire
+   when it records a capture and by op=monitor when it compares one (D-60), so the
+   two cannot disagree about which bytes were eligible to be normalised. */
+const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+function profilesAsText(ct, total, multipart) {
+  return !multipart && total <= PROFILE_TEXT_MAX
+    && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
+}
+
+/* CONSTRUCTS Step 2 (FW-4) — THE ONE FUNCTION that decides whether a document's
+   normalised digests can be trusted to assert sameness, and computes them when they
+   can. Moved here verbatim out of op=acquire (D-60) because op=monitor asks the same
+   question of the bytes it fetches, and a second copy of the gate would be two
+   spellings of one boundary. `profileBytes` is null when the bytes were not read as
+   text; `sha` is the identity the bytes must hash to. Returns the `profile.digests`
+   object acquire records: `determined` true only under a CERTAIN textual handler
+   whose read-back bytes hash to `sha`, and null digests otherwise, never invented. */
+async function substanceDigests(profileBytes, stackId, profCtx, sha, multipart) {
+  const digestCertain = !!profileBytes && stackId.handler.textual === true
+    && stackId.confidence === CONFIDENCE.CERTAIN;
+  if (!digestCertain)
+    return {
+      determined: false, rendition: null, evidentiary: null,
+      basis: profileBytes
+        ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined`
+        : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`,
+    };
+  const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex });
+  /* The bytes read back are not the bytes registered. An equality asserted on the
+     wrong bytes is worse than none, so refuse to claim a digest rather than store
+     one computed from something else (CLAUDE.md: an equality that costs nothing to
+     produce is not evidence). */
+  if (dg.identity !== sha)
+    return { determined: false, rendition: null, evidentiary: null,
+      basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted" };
+  return {
+    determined: true,
+    rendition: dg.rendition,
+    evidentiary: dg.evidentiary,
+    boundary_missed: !!dg.boundary_missed,
+    basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`,
+  };
+}
+
 /* REC-33 / DEC-37. THE FOURTH CLASS, and what it is a class OF.
  *
  * Bob, 2026-08-04: "Sounds like we need a daemon token" — and the NAME is the
@@ -7311,10 +7356,8 @@ export default {
          recognisers can read, so it is HONESTLY left unread (text ""), which lands
          it on the conservative handler and the generic type rather than a guess.
          Even then the headers and the address still carry signal. */
-      const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
       let profileText = "", profileBytes = null;
-      if (!multipart && total <= PROFILE_TEXT_MAX
-          && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "")) {
+      if (profilesAsText(ct, total, multipart)) {
         try {
           const pobj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
           /* The raw bytes are kept, not just the decoded text: FW-4's digests()
@@ -7435,34 +7478,10 @@ export default {
          merely-likely or unrecognised document records its normalised digests
          ABSENT (null), never a fabricated value, and the sweep must never treat two
          absents as equal. */
-      const digestCertain = !!profileBytes && stackId.handler.textual === true
-        && stackId.confidence === CONFIDENCE.CERTAIN;
-      if (digestCertain) {
-        const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex });
-        if (dg.identity !== sha) {
-          /* The bytes read back are not the bytes registered. An equality asserted
-             on the wrong bytes is worse than none, so refuse to claim a digest
-             rather than store one computed from something else (CLAUDE.md: an
-             equality that costs nothing to produce is not evidence). */
-          profile.digests = { determined: false, rendition: null, evidentiary: null,
-            basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted" };
-        } else {
-          profile.digests = {
-            determined: true,
-            rendition: dg.rendition,
-            evidentiary: dg.evidentiary,
-            boundary_missed: !!dg.boundary_missed,
-            basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha`,
-          };
-        }
-      } else {
-        profile.digests = {
-          determined: false, rendition: null, evidentiary: null,
-          basis: profileBytes
-            ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined`
-            : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined`,
-        };
-      }
+      /* D-60: the gate and the computation are `substanceDigests`, the ONE function
+         op=monitor also calls, so the digest a capture records and the digest a
+         monitor tick compares it with are produced by the same rule. */
+      profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart);
 
       /* 2026-09-14, REC-81: every citation into the content framework in this file
          names a SECTION rather than a line. The line numbers they carried went stale
@@ -8404,15 +8423,16 @@ export default {
       /* The baseline is whatever the provenance register says was captured from
          this locator. Without one there is nothing to compare against, and the
          tick says so rather than guessing at a status. */
-      let baseline = null;
+      let baseline = null, baselineProfile = null;
       try {
         const reg = JSON.parse(img["data/provenance.json"] || "{}");
         const match = (reg.documents || []).find((d) => d && d.locator === locator);
         baseline = match?.capture?.sha256 || null;
+        baselineProfile = (match && match.profile && typeof match.profile === "object") ? match.profile : null;
       } catch { /* C-14.3 reports unparsable JSON; monitoring just has no baseline */ }
 
       const checked = new Date().toISOString().split(".")[0] + "Z";
-      let status = null, note = null, seen = null;
+      let status = null, note = null, seen = null, compared = null, comparedBasis = null;
       try {
         /* D-95: a monitor tick is a document fetch and paces like one. A
            governed refusal is a tick outcome with a name, not an error: the
@@ -8430,8 +8450,50 @@ export default {
           const d = await crypto.subtle.digest("SHA-256", bytes);
           seen = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
           if (!baseline) note = "no captured baseline to compare against; recorded the check only";
-          else if (seen === baseline) { status = "unchanged"; note = "the source still serves the captured bytes"; }
-          else { status = "modified"; note = "the source no longer serves the captured bytes"; }
+          else {
+            /* D-60 — MONITORING ASKS "HAS THE SUBSTANCE CHANGED?" (DOCUMENT-PROFILES.md,
+               "Three digests, not one"), and on an ASP.NET page the raw bytes answer
+               "yes" on every fetch because __VIEWSTATE is rebuilt per render. So the
+               EVIDENTIARY digest is compared — but only when BOTH sides earned one: the
+               baseline's register row recorded it as `determined`, and the fetched bytes
+               normalise under the SAME handler (key and version) with certainty, through
+               `substanceDigests`, the one function op=acquire recorded the baseline's
+               with. Anything short of that compares RAW, the conservative direction the
+               failure asymmetry requires, and the answer says which comparison it made
+               and why. */
+            const bd = baselineProfile && baselineProfile.digests;
+            if (!bd || bd.determined !== true || typeof bd.evidentiary !== "string" || !bd.evidentiary)
+              comparedBasis = "the captured baseline recorded no determined evidentiary digest, so the raw bytes were compared";
+            else {
+              const ct = res.headers.get("content-type");
+              const asText = profilesAsText(ct, bytes.length, false);
+              const headers = {};
+              for (const [hk, hv] of res.headers) headers[hk.toLowerCase()] = hv;
+              const profCtx = { headers, locator, content_type: ct || null,
+                                text: asText ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "" };
+              const stackId = identify(profCtx);
+              const fresh = await substanceDigests(asText ? bytes : null, stackId, profCtx, seen, false);
+              if (stackId.handler.key !== baselineProfile.handler || stackId.handler.version !== baselineProfile.handler_version)
+                comparedBasis = `the fetched bytes identify as ${stackId.handler.key} v${stackId.handler.version} but the baseline was normalised under ${baselineProfile.handler} v${baselineProfile.handler_version}, so the raw bytes were compared`;
+              else if (!fresh.determined)
+                comparedBasis = `the fetched bytes' substance digest is undetermined (${fresh.basis}), so the raw bytes were compared`;
+              else {
+                compared = "evidentiary";
+                comparedBasis = `the evidentiary digests were compared, both normalised under ${stackId.handler.key} v${stackId.handler.version} (certain)`;
+                if (fresh.evidentiary !== bd.evidentiary) { status = "modified"; note = "the substance of the source differs from the capture"; }
+                else if (seen === baseline) { status = "unchanged"; note = "the source still serves the captured bytes"; }
+                else { status = "unchanged";
+                       note = fresh.rendition === bd.rendition
+                         ? "the substance is unchanged; only machinery the source rebuilds on every visit differs from the capture"
+                         : "the substance is unchanged; machinery or furniture around it differs from the capture"; }
+              }
+            }
+            if (compared !== "evidentiary") {
+              compared = "raw";
+              if (seen === baseline) { status = "unchanged"; note = "the source still serves the captured bytes"; }
+              else { status = "modified"; note = "the source no longer serves the captured bytes"; }
+            }
+          }
         }
       } catch (e) {
         note = "the source could not be reached: " + String(e && e.message || e).slice(0, 90);
@@ -8462,7 +8524,8 @@ export default {
 
       /* The Session Log is the one body surface a mechanical writer may add to,
          and C-13.2 requires an entry whenever last_updated moves. */
-      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked") + "\n";
+      const entry = "### Session " + checked + "\n\nMonitor tick: " + (note || "checked")
+        + (compared ? ` (compared ${compared})` : "") + "\n";
       const at = text.indexOf("## Session Log");
       if (at < 0) text += "\n## Session Log\n\n" + entry;
       else {
@@ -8518,6 +8581,9 @@ export default {
       return json({
         ok: !!promoted.result?.ok,
         checked, status, note, baseline, seen,
+        /* D-60: WHICH comparison the status rests on — "evidentiary" or "raw", null
+           when none was made (no baseline, or the source did not answer) — and why. */
+        compared, compared_basis: comparedBasis,
         reeval_raised: flags,
         ...(promoted.result?.ok ? { revision: promoted.result.bundleSha } : { reason: promoted.result?.reason, detail: promoted.result?.detail }),
         note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
