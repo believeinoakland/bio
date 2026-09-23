@@ -70,8 +70,26 @@
  * same seven lag arms. ALL AS DECLARED, `newgroup/src/index.mjs` restored byte-identically after each (sha256
  * e8773248…, verified by sha256 AND byte compare). The plane half's controls are in
  * `bio-plane/test/d116-serving-builds.test.mjs`.
+ *
+ * NEGATIVE CONTROL (DIST-6, 2026-09-23), DECLARED BEFORE ARMING, each arm ALONE, baseline 184/184: (A1) today's main
+ * (`newgroup/src/index.mjs` at 4355bfda) -> 169 passed, 15 failed: every DIST-6 binding, SERVING, done and naming arm,
+ * the first failure the PIN (`MEMBER_BINDINGS` absent) and then "INSTALL: the plane is bound to EACH member" — and NONE
+ * of the 164 older arms; (A2) DROP ONE member's binding (ocr-worker filtered out of `memberBindings`) -> 174/10, each
+ * failure naming OCR_WORKER null / ocr-worker UNBOUND; (A3) THE LIAR, every binding named right and pointing at the
+ * PLANE ITSELF -> 174/10, the targets named by binding and each member read MISNAMED, the page not "running" and the
+ * update not "Updated"; (A4) the liar pointing every binding at pdf-worker -> 174/10, likewise; (A5) the ORDER — the
+ * install's first plane upload binds all three before they exist -> 181/3, the fake account's 10143 refusal NAMED
+ * ("bind-town:AGENT_WORKER->agent-worker") and SELF lost. A5 FAILED NARROWER THAN DECLARED (the install arms were
+ * declared to fail): the install's SELF-retry re-uploads with only the members present, so it RECOVERS the order
+ * defect at the cost of SELF — recorded, not smoothed; (A6) a failed member upload not named at verify -> 182/2, both
+ * "missing binding NAMED" arms (the install reads "Your copy is running." over a failed ocr-worker); (A7) the update's
+ * first upload restates no member -> 180/4, the kept-bindings arm and the D-297-population arms. `newgroup/src/index.mjs`
+ * restored after each by cp from a per-arm pristine copy and verified by sha256 AND byte compare (83b6af0d…).
  */
 import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
+/* DIST-6 reads MEMBER_BINDINGS off the namespace, so a tree without the export fails its PIN by name rather than
+   refusing to link the whole suite. */
+import * as NG from "../src/index.mjs";
 import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
@@ -1207,6 +1225,166 @@ async function d116Install(slug, reply) {
     [false, true]);
   t("and the credentials are still handed over — a lag never costs a group its only sight of them",
     [lag.includes('id=\\"out-member\\"'), lag.includes('id=\\"out-probe\\"')], [true, true]);
+}
+
+/* ---- DIST-6: THE INSTALLED PLANE IS BOUND TO THE MEMBERS INSTALLED BESIDE IT ---------------------------------------
+   Added 2026-09-23 (DIST-6 worker). Until DIST-6 neither upload path bound PDF_WORKER / OCR_WORKER / AGENT_WORKER, so a
+   group's copy held its members uploaded and unreachable. The D-116 arms above serve a CANNED `memberVersions`; these
+   do not. Here the account is a small STATEFUL fake: it keeps every script uploaded, applies `keep_bindings` by type
+   (so a service binding not restated is DROPPED, as the update's comment says it is), REFUSES a PUT whose service
+   binding names a worker the account does not hold (code 10143 — the rule `tools/deploy-fleet.mjs` records as measured
+   2026-08-10 / 2026-09-10, which forces the order), and answers `op=bootstrap&members=1` the way the plane's
+   `memberVersions` does, DERIVED from the bindings the plane was last uploaded with: no binding -> UNBOUND; a binding
+   to a member script -> that script's own name and VERSION (so a binding to the wrong worker reads MISNAMED); a binding
+   to nothing -> SILENT. The binding names are read from the PLANE'S SOURCE (`FLEET_BINDINGS`), never restated here.
+   HOW A LIAR WOULD PASS: a binding named right and pointing anywhere but the member — every arm below asserts each
+   binding's TARGET by name, and the fake plane reads such a binding MISNAMED, so the verify step names it too. */
+console.log("\n--- DIST-6: the installed plane is bound to every member installed beside it, on install AND update ---");
+const planeSrcText = readFileSync(new URL("../../bio-plane/src/index.mjs", import.meta.url), "utf8");
+const PLANE_FLEET = (() => { const m = planeSrcText.match(/const FLEET_BINDINGS = (\[[^;]*\]);/);
+  return m ? JSON.parse(m[1]) : []; })();
+t("PIN: the plane's FLEET_BINDINGS was read from its source (three members, else this section tests nothing)",
+  PLANE_FLEET.length, 3);
+t("PIN: the installer binds each member under the SAME name the plane reads it by (bio-plane FLEET_BINDINGS)",
+  Object.fromEntries(PLANE_FLEET), NG.MEMBER_BINDINGS ? { ...NG.MEMBER_BINDINGS } : null);
+const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {};";
+const repoSha6 = await shaHex(repoSrc6);
+const sig6 = await signAsset(new TextEncoder().encode(repoSrc6));
+const fleet6 = PLANE_FLEET.map(([member]) => ({ ...memberEntry, member, asset: `${member}.bundled.mjs`,
+  services: member === "agent-worker" ? [{ binding: "PLANE", service: "bio-plane" }] : [],
+  parts: member === "ocr-worker" ? memberEntry.parts : [] }));
+const fleetSig6 = await signAsset(new TextEncoder().encode(fleetStatement({ version: FLEET_VER,
+  plane: { sha256: repoSha6, bytes: repoSrc6.length, asset: "bio-plane.bundled.mjs" }, members: fleet6 })), NS_FLEET);
+const manifest6 = { version: FLEET_VER, sha256: repoSha6, bytes: repoSrc6.length, asset: "bio-plane.bundled.mjs",
+                    sig: sig6, fleet: fleet6, fleetSig: fleetSig6 };
+/* One stateful account. `pre` is what the account holds before the act: { [script]: bindings[] }. */
+async function dist6(slug, { mode = "install", pre = {}, manifest = manifest6, broken = null } = {}) {
+  armWith(relPubLine);
+  const realTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (fn) => realTimeout(fn, 0);
+  const acct = new Map(Object.entries(pre));
+  const refused = [], planePuts = [];
+  const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
+  const answerMembers = () => {
+    const pb = acct.get(slug) || [];
+    return Object.fromEntries(PLANE_FLEET.map(([member, binding]) => {
+      const b = pb.find((x) => x.type === "service" && x.name === binding);
+      if (!b) return [member, { binding, state: "UNBOUND" }];
+      if (!acct.has(b.service)) return [member, { binding, state: "SILENT", why: "no such worker" }];
+      if (b.service !== member) return [member, { binding, state: "MISNAMED", name: b.service, version: verOf(acct.get(b.service)) }];
+      return [member, { binding, state: "SERVING", version: verOf(acct.get(b.service)) }];
+    }));
+  };
+  const putScript = async (u, init) => {
+    const name = u.split("/workers/scripts/")[1];
+    const meta = JSON.parse(await init.body.get("metadata").text());
+    const explicit = meta.bindings || [];
+    for (const b of explicit) if (b.type === "service" && b.service !== name && !acct.has(b.service)) {
+      refused.push(`${name}:${b.name}->${b.service}`);
+      return cferr(`Service binding '${b.name}' references Worker '${b.service}' which was not found`, 400, 10143);
+    }
+    const kept = (acct.get(name) || []).filter((b) => (meta.keep_bindings || []).includes(b.type)
+      && !explicit.some((x) => x.name === b.name));
+    acct.set(name, [...explicit, ...kept]);
+    if (name === slug) planePuts.push(acct.get(slug));
+    return cfok({ id: name });
+  };
+  const { cookie, state } = await begin(slug, mode);
+  const calls = script([
+    ...REL({ manifest: () => jres(manifest), asset: () => new Response(repoSrc6) }),
+    ...PLANE_FLEET.map(([member]) => ({ m: (u) => u.endsWith(`/release/${member}.bundled.mjs`),
+      f: () => member === broken ? new Response("gone", { status: 404 }) : new Response(memberSrc) })),
+    { m: (u) => u.endsWith("/release/ocr-worker/assets/x.wasm"), f: () => new Response(wasmBytes) },
+    { m: (u) => u === CFG.TOKEN, f: () => jres({ access_token: TOK }) },
+    { m: (u) => u.endsWith("/accounts"), f: () => cfok([{ id: "B6", name: "Bound" }]) },
+    { m: (u, mth) => u.endsWith("/scripts/bio-plan-probe") && mth === "PUT", f: () => cfok({}) },
+    { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "DELETE", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET",
+      f: (u) => acct.has(u.split("/workers/scripts/")[1].split("/")[0]) ? cfok({}) : cferr("not found", 404) },
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
+    { m: (u, mth) => u.endsWith(`/scripts/${slug}/subdomain`) && mth === "POST", f: () => cfok({}) },
+    { m: (u, mth) => u.endsWith("/workers/subdomain") && mth === "GET", f: () => cfok({ subdomain: "b6" }) },
+    { m: (u) => u.includes(`${slug}.b6.workers.dev/api/?op=bootstrap`), f: () => {
+      const v = verOf(acct.get(slug)) || "0.1.0";
+      return jres({ ok: true, version: v, storeVersion: v, memberVersions: answerMembers() }); } },
+    { m: (u) => u.startsWith(`https://${slug}.b6.workers.dev/`), f: () => jres({ ok: true, bindings: { STORE: true } }) },
+  ]);
+  const body = await (await callback(`code=C&state=${state}`, cookie)).text();
+  globalThis.setTimeout = realTimeout;
+  globalThis.fetch = realFetch;
+  disarm();
+  const last = acct.get(slug) || [];
+  const svc = (name) => last.find((b) => b.type === "service" && b.name === name)?.service ?? null;
+  return { body, calls, refused, planePuts, members: answerMembers(), svc,
+           targets: Object.fromEntries(PLANE_FLEET.map(([m, b]) => [b, svc(b)])) };
+}
+const RIGHT = Object.fromEntries(PLANE_FLEET.map(([m, b]) => [b, m]));
+const states = (mv) => Object.fromEntries(Object.entries(mv).map(([m, s]) => [m, s.state]));
+const ALL_SERVING = Object.fromEntries(PLANE_FLEET.map(([m]) => [m, "SERVING"]));
+const planeBase = (slug) => [{ type: "durable_object_namespace", name: "STORE", class_name: "Store" },
+  { type: "plain_text", name: "VERSION", text: "0.1.0" }, { type: "secret_text", name: "ADMIN_TOKEN", text: "a" },
+  { type: "service", name: "SELF", service: slug }];
+const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
+{
+  const r = await dist6("bind-town");
+  t("INSTALL: the plane is bound to EACH member, each binding targeting that member's own script (by name)",
+    r.targets, RIGHT);
+  t("INSTALL: read back through the plane's bindings, every member is SERVING — where today's main reads each UNBOUND",
+    states(r.members), ALL_SERVING);
+  t("INSTALL: nothing was refused for binding a worker the account did not yet hold (the 10143 order)", r.refused, []);
+  t("INSTALL ORDER: the first plane upload binds no member (none exists yet), the last binds all three",
+    [r.planePuts.length, r.planePuts[0]?.some((b) => Object.values(RIGHT).includes(b.service)) ?? null],
+    [2, false]);
+  t("INSTALL: the plane's other bindings survive the re-PUT (STORE, the secrets, SELF, R2)",
+    ["STORE", "ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN", "SELF", "CAPTURES", "PUBLISHED"]
+      .map((n) => (r.planePuts.at(-1) || []).some((b) => b.name === n)), Array(8).fill(true));
+  t("INSTALL: the DAEMON_TOKEN restated by the re-PUT is the one the install generated, not a second value",
+    r.planePuts[0]?.find((b) => b.name === "DAEMON_TOKEN")?.text === r.planePuts.at(-1)?.find((b) => b.name === "DAEMON_TOKEN")?.text,
+    true);
+  t("INSTALL: the page reports the copy running, and says it was connected",
+    [r.body.includes("Your copy is running."), r.body.includes("Your copy is connected to")], [true, true]);
+}
+{
+  const r = await dist6("unbound-town", { mode: "update", pre: { "unbound-town": planeBase("unbound-town") } });
+  t("UPDATE of a copy installed WITHOUT members: it gains a binding to each, by name", r.targets, RIGHT);
+  t("UPDATE (no members before): every member reads SERVING through the plane", states(r.members), ALL_SERVING);
+  t("UPDATE (no members before): reported done, every part confirmed",
+    [r.body.includes(`Updated from 0.1.0 to ${FLEET_VER}`), r.refused], [true, []]);
+}
+{
+  /* The population D-297's installer left: members uploaded, plane bound to none of them. */
+  const pre = { "orphan-town": planeBase("orphan-town"),
+    ...Object.fromEntries(PLANE_FLEET.map(([m]) => [m, oldMember])) };
+  const r = await dist6("orphan-town", { mode: "update", pre });
+  t("UPDATE of a copy whose members exist UNBOUND (D-297's installs): bound to each, by name", r.targets, RIGHT);
+  t("UPDATE (members existed): the FIRST plane upload already binds them (they exist), so no re-PUT is needed",
+    [r.planePuts.length, PLANE_FLEET.every(([, b]) => r.planePuts[0]?.some((x) => x.name === b))], [1, true]);
+  t("UPDATE (members existed): every member reads SERVING the new release", states(r.members), ALL_SERVING);
+}
+{
+  /* A bound copy whose update cannot run the fleet step (the release names no signed fleet): it must KEEP its bindings,
+     because `service` is not kept by keep_bindings and a member not restated is a member dropped. */
+  const pb = [...planeBase("kept-town"), ...PLANE_FLEET.map(([m, b]) => ({ type: "service", name: b, service: m }))];
+  const pre = { "kept-town": pb, ...Object.fromEntries(PLANE_FLEET.map(([m]) => [m, oldMember])) };
+  const r = await dist6("kept-town", { mode: "update", pre, manifest: { ...manifest6, fleet: [], fleetSig: undefined } });
+  t("UPDATE with no fleet step: a copy's existing member bindings are KEPT, each to its member", r.targets, RIGHT);
+}
+{
+  const r = await dist6("broken-ocr", { broken: "ocr-worker" });
+  t("INSTALL, ocr-worker's upload FAILED: the two members that installed are bound, OCR_WORKER is not (never to nothing)",
+    r.targets, { ...RIGHT, OCR_WORKER: null });
+  t("and nothing was refused: no binding to a worker that is not there", r.refused, []);
+  t("and the page NAMES the missing binding and does NOT report the copy running",
+    [r.body.includes("ocr-worker could not be installed, so your copy has no OCR_WORKER connection"),
+     r.body.includes("Your copy is running.")], [true, false]);
+}
+{
+  const r = await dist6("broken-agent-up", { mode: "update", broken: "agent-worker",
+    pre: { "broken-agent-up": planeBase("broken-agent-up") } });
+  t("UPDATE, agent-worker's upload FAILED: AGENT_WORKER unbound, the missing binding NAMED, the update NOT reported done",
+    [r.svc("AGENT_WORKER"), r.body.includes("agent-worker could not be installed, so your copy has no AGENT_WORKER connection"),
+     /<b>Updated (from|to)/.test(r.body)], [null, true, false]);
 }
 
 console.log(`\nwizard: ${pass} passed, ${fail} failed`);

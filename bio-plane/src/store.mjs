@@ -323,6 +323,9 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
 /* REC-152: tick and close are the run's PRINCIPAL's acts — the positional half, decided once in `airun.mjs`.
    Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
 import { runPrincipalGate } from "./airun.mjs";
+/* REC-169: a figure written into a run's bound is a non-negative integer and never a plane-counted bound's — decided
+   once in `airun.mjs`, asked by the tick and by the open's seed. Its own line, for the reason REC-152's gives. */
+import { checkConsume } from "./airun.mjs";
 /* CPDF-10: the transcription provenance chain, IMPORTED and never restated.
    This file projects a chain into columns and records attestations against it;
    it holds no copy of what a chain may claim, which engine weakens what, or who
@@ -29760,6 +29763,7 @@ export class Store extends DurableObject {
    *  endpoint: working material is never consulted, so there is nothing to leak,
    *  exactly as op=verify already works. */
   publishedManifest() {
+    const byCase = this.#frozenPairsByCase();
     return { ok: true, scope: "published",
       /* REC-49, and it is CONDUCT's determination enacted rather than a
          convenience: EVERY RATIFIED FINDING CARRIES ITS OWN FROZEN PAIR HERE,
@@ -29784,9 +29788,32 @@ export class Store extends DurableObject {
         `SELECT p.bundle_id, p.edition, p.title, p.bundle_sha, p.ratified_at, p.attestor_key,
                 p.gate_version, p.strength, p.required
          FROM published_bundles p ORDER BY p.bundle_id, p.edition`)
-        .map((r) => ({ ...r,
-          strength: r.strength ? JSON.parse(r.strength) : null,
-          required: r.required ? JSON.parse(r.required) : null })),
+        .map((r) => {
+          const row = { ...r,
+            strength: r.strength ? JSON.parse(r.strength) : null,
+            required: r.required ? JSON.parse(r.required) : null };
+          /* ===== REC-170 / BIO_Publication_v0_1.md §3 rule 12 (b)–(d), with IC-74: WHERE THE
+             RATIFIED CASE DOCUMENTS PINNING THESE BYTES STATE DIFFERENT FROZEN PAIRS, THE ROW
+             SERVES EVERY CASE'S PAIR, EACH NAMED BY ITS CASE, AND NO SCALAR. ======================
+             `published_bundles.strength` is written ONCE, at the member's FIRST ratification
+             (`ON CONFLICT … DO NOTHING`), so on b5ce975a this row told a stranger one of two false
+             things: a BARE NULL where the documents already disagreed at that ratification (the
+             committer's `strengthUndetermined`, which reached op=ratify's answer and nothing
+             else), or — measured by rec170-manifest-pair.test.mjs, and worse — THE FIRST CASE'S
+             PAIR where a later case froze another, one case's reading served as THE pair (IC-74:
+             a finding in several cases answers every case, never one). Rule 12 (b) makes the pair
+             a fact about ONE case's reading of the finding at that sha, so where two readings
+             differ the scalar is null and SAYS why (`strengthUndetermined`, a reason code, the
+             `production` sentence's rule that a null is never left to be read), and
+             `strengthByCase` carries each ratified case edition's own pair as its document states
+             it — the same `#caseDocMemberFrozen` read op=publishedcase serves.
+             WHERE THE DOCUMENTS AGREE, OR ONE CASE PINS THE FINDING, NOTHING HERE RUNS and the row
+             is byte-identical to what it was: an added key on an agreeing row would be a flag
+             that is not true. */
+          const pinned = byCase.get(`${r.bundle_id}\u0000${r.bundle_sha}`);
+          if (!pinned || new Set(pinned.map((p) => JSON.stringify(p.strength))).size < 2) return row;
+          return { ...row, strength: null, strengthUndetermined: "CASES_DISAGREE", strengthByCase: pinned };
+        }),
       /* REC-44: the CASES, beside the findings rather than instead of them. The
          findings are what carry a signature and a frozen pair; the case is what
          carries the container's manifest, its own hash and the scope. A
@@ -29865,7 +29892,13 @@ export class Store extends DurableObject {
                + "composing its members' pairs into one letter would be a claim the evidence does not "
                + "support. A member named in caseMembers with no row in published[] is DECLARED AND NOT YET "
                + "RATIFIED: it has no pair because nothing has been signed for it, which is a state of the "
-               + "record and not a gap in this answer.",
+               + "record and not a gap in this answer. "
+               /* REC-170: the one null on a finding row that is not "nothing was signed". */
+               + "Since the frozen pair is stated in each CASE's document (a case's reading of the finding at "
+               + "that hash), a finding several cases pin may carry several pairs: where their documents "
+               + "disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and "
+               + "`strengthByCase` lists every ratified case edition's own pair, named by its case and "
+               + "edition. None of them is the finding's pair; each is that case's.",
       detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this "
             + "instance's cooperation or continued existence. Nothing unpublished appears, by construction: "
             + "this reads the published projection and never the working corpus." };
@@ -31235,6 +31268,43 @@ export class Store extends DurableObject {
     return { edition: eds.length === 1 ? eds[0] : null,
              strength: pairs.length === 1 && seen[0].strength.length ? seen[0].strength : null,
              strengthUndetermined: pairs.length > 1 };
+  }
+
+  /* REC-170 / BIO_Publication_v0_1.md §3 rule 12 (b): EVERY RATIFIED CASE EDITION'S OWN FROZEN PAIR
+     FOR EVERY PINNED SHA, keyed `bundle_id NUL bundle_sha`, for `publishedManifest`. One set-based read
+     of the pins, then `#caseDocMemberFrozen` (the one parser of the per-case facts) once per case edition
+     that pins a sha SEVERAL editions pin — a sha pinned by one edition has nothing to disagree with, so
+     its document is never opened here. EVERY ratified edition counts, not only a case's latest: each is
+     a separate signed document that stated its own reading of those bytes. A LEGACY (/1) document states
+     no pair of its own (its members carried theirs, rule 12 (e)) and is left out rather than read as an
+     empty pair — which is also where this reader is blind: a /1 reading does not join the comparison. */
+  #frozenPairsByCase() {
+    const pins = this.#rows(
+      `SELECT m.case_id, m.edition, m.bundle_id, m.version_sha FROM published_case_members m
+         JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+        WHERE m.version_sha IS NOT NULL
+        ORDER BY m.bundle_id, m.version_sha, m.case_id, m.edition`);
+    const groups = new Map();
+    for (const p of pins) {
+      const k = `${p.bundle_id}\u0000${p.version_sha}`;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(p);
+    }
+    const docs = new Map();
+    const out = new Map();
+    for (const [k, ps] of groups) {
+      if (ps.length < 2) continue;
+      const stated = [];
+      for (const p of ps) {
+        const dk = `${p.case_id}\u0000${Number(p.edition)}`;
+        if (!docs.has(dk)) docs.set(dk, this.#caseDocMemberFrozen(p.case_id, Number(p.edition)));
+        const row = docs.get(dk) ? docs.get(dk).get(p.bundle_id) : null;
+        if (row && row.version_sha === p.version_sha)
+          stated.push({ case_id: p.case_id, edition: Number(p.edition), strength: row.strength });
+      }
+      out.set(k, stated);
+    }
+    return out;
   }
 
   /* REC-44: what a case edition is, and whether it is COMPLETE. One place, so
@@ -39336,6 +39406,14 @@ export class Store extends DurableObject {
     if (badSkill)
       return { run, started: false, code: badSkill.code, check: badSkill.check,
                translation: badSkill.translation, note: badSkill.detail };
+    /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
+       `ai_run_bounds`, and `Number(b.consumed) || 0` let a run OPEN already refunded (`consumed: -10`) or seed a
+       bound the plane counts. The same check the tick asks (`checkConsume`), with an absent seed meaning none spent. */
+    const badSeed = checkConsume((Array.isArray(bounds) ? bounds : []).filter((b) => b && typeof b === "object")
+      .map((b) => [String(b.bound), b.consumed]), { seed: true });
+    if (badSeed)
+      return { run, started: false, code: badSeed.code, check: badSeed.check,
+               translation: badSeed.translation, note: badSeed.detail };
     /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 3, BOB #25): THE LENS IN FORCE AT THIS INSTANT, computed by
        the PLANE, beside the manifest the run was HANDED. The handed one is stored verbatim below and nothing is
        derived from it; this is the call `#biasForRun` makes for the run's context (a project's scope for a run
@@ -39387,7 +39465,7 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
            ON CONFLICT(run, bound) DO NOTHING`,
-          run, String(b.bound), Number(b.allowed) || 0, Number(b.consumed) || 0,
+          run, String(b.bound), Number(b.allowed) || 0, b.consumed == null ? 0 : b.consumed,   /* REC-169: judged above */
           b.unit == null ? null : String(b.unit));
       }
     });
@@ -39480,6 +39558,19 @@ export class Store extends DurableObject {
       return { run, found: true, ticked: false, status: row.status,
                bound: row.stopped_bound,
                note: "this run has ended; its log is closed and a later tick does not reopen it" };
+    /* REC-169 (§14b.6; §11 item 5 rule 2) — THE FIGURES ARE JUDGED WHOLE, BEFORE ANYTHING IS WRITTEN. The loop below
+       used to write `Number(v) || 0` for every bound named, so the run's own principal could send `surfaces: -1`
+       after its last question and open another — a REFUND of a bound its member set. One bad figure refuses the
+       whole tick: nothing appended, nothing spent, the lease not extended. A clamp would answer `ticked: true` over
+       a spend that did not happen. Asked AFTER sight, position, the project gate and status, so a caller who may
+       not drive the run learns nothing about the figures' rule, and an ended run's tick stays its stated no-op. */
+    const badConsume = checkConsume(Object.entries(consume && typeof consume === "object" ? consume : {}));
+    if (badConsume)
+      return { run, ticked: false, found: true, status: row.status,
+               code: badConsume.code, check: badConsume.check,
+               translation: badConsume.translation, detail: badConsume.detail, bound: badConsume.bound,
+               note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. "
+                   + "Nothing was appended and no budget was spent" };
 
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : Store.AI_RUN_LEASE_MS;
     const refused = [];
@@ -39497,7 +39588,7 @@ export class Store extends DurableObject {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
            ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
-          run, k, Number(v) || 0, Number(v) || 0);
+          run, k, v, v);   /* REC-169: judged above — a non-negative safe integer, on a bound the caller counts */
       }
       this.sql.exec(
         `UPDATE ai_runs SET updated = ?, expires = ?, ticks = ticks + 1${state == null ? "" : ", state = ?"}

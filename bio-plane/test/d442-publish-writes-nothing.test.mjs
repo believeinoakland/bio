@@ -407,6 +407,10 @@ t("Q's own bytes carry NONE of the blocks (so a reader left on them would read n
   const pm = await GET("op=publishedmanifest");
   const row = (pm?.published || []).find((r) => r.bundle_id === Q && r.edition === 1) || {};
   const fmX = parseFrontmatter(String((await caseDoc(CASE_X, 1))?.text || "")).data || {};
+  /* REC-170, 2026-09-23: this reads X's pair ONLY because every case here froze the SAME pair for Q
+     (one sha, nothing beneath it moved). Where the pinning documents DISAGREE the row serves no scalar
+     and each case's pair per case — rec170-manifest-pair.test.mjs drives that; "the first
+     ratification's" is not a rule the manifest keeps, and read as one it was IC-74's forbidden pick. */
   t("op=publishedmanifest's finding row carries the frozen pair case X's document stated (the first ratification's)",
     JSON.stringify((row.strength || []).map((a) => a.axis)) !== "[]"
       && JSON.stringify(row.strength) === JSON.stringify(strip((fmX.case_strength || []).filter((r) => r.target === Q))),
