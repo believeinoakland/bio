@@ -3,7 +3,8 @@
 A process document (`CORPUS-STANDARD.md` §6). **RULED BY BOB 2026-09-22: *"Yes to all 3 recommendations"*** — the three
 changes below, as BOB #26 put them to him that day. Designed here by BOB #26. **Change 1 is BUILT by M0-110** (§1 "As
 built"; live from CONDUCT's cutover); **change 2 is BUILT by M0-111** (§2 "As built"; live from the train that lands
-it); **change 3 is BUILT by M0-114** (§3 "As built"). Until each change lands, the
+it); **change 3 is BUILT by M0-114** (§3 "As built"), and its per-suite result record **by M0-126** (§3a "As
+built"). Until each change lands, the
 rules in `CLAUDE.md` stand as written, and the landing that builds a change corrects every rule and kickoff it supersedes.
 **Revised 2026-09-22 by BOB #27** for Bob's move to cloud Claude Code under his second account (§4), with three builders'
 questions answered in §1 (M0-99, M0-100, M0-101), and M0-110's builder's four answered there by BOB #28 the same day;
@@ -309,6 +310,86 @@ with no reuse, so a false PASS that hid a real failure turns `main` red and emai
 **Accepts when** a second clone gates a tree whose units a first clone passed and runs 0 of them (all REUSED), one input
 change re-runs exactly the units whose key moved, and a never-cached unit runs every time. **NEGATIVE CONTROL:** drop one
 file from a unit's input set, and condition 2 fails that unit by name.
+
+- **As built (M0-126, 2026-09-23) — `tools/gateresults.mjs` (the key, the branch's reader and writer, revocation),
+  `tools/gatetrace.mjs` (the tracer), `tools/gates.mjs` §2e (each unit's input set), §3b (key, reuse, trace) and §4b
+  (the PASS records), the `gate-results` arm of `tools/pushguard.mjs`, and `.github/workflows/gates.yml`'s gate step;
+  the suite `bio-plane/test/gateresults.test.mjs` and its control `gateresults.control.mjs`.** A unit whose key holds a
+  PASS prints `REUSED <unit> <- results/…` and is not run; the D-293 run record carries a `reused` step naming each
+  record. `--explain` prints every `KEY`. `node tools/gateresults.mjs revoke <unit> <hash> --reason "…"` revokes.
+  **Decided here where the design was silent (M0-126's builder):**
+  1. **The branch is CREATED by the first write**: a remote with no `gate-results` gets a ROOT commit, pushed without
+     force; nothing ever deletes a ref or a file (a revocation is an added file). The results remote is `origin`, or
+     `$BIO_GATE_RESULTS_REMOTE`.
+  2. **The key hashes each input's CURRENT content** (the index's blob where the working file is unmodified, `git
+     hash-object` otherwise), with the key version and the unit's name; so reuse works on a dirty tree, but a PASS is
+     WRITTEN only under D-293's condition: the tree clean when the gate began and ended, and the same tree.
+  3. **The input set (§2e; `gates.mjs --inputs <unit>` prints it)** is the MENTION rule read forward — closure,
+     basename, quoted stem, walked directory, a unit's own directory walk — plus, each found by the trace over the
+     whole estate (below): the IMPORT closure followed THROUGH runtime code (17 UI suites import plane modules); the
+     mentions in a runtime module the unit imports directly (`skillpack`); every `docs/` path for a doc-facing unit
+     (DOCS's own rule); for a plane or fleet unit, the plane's roots and shipped build, its foreign imports, every
+     fleet member and `bio-plane/`'s own package/config files; the WHOLE tree for a unit whose own file, or a helper
+     in at most three units' closures, walks the repository ROOT (`walk(REPO)`, `})(REPO)`, `{ repo = REPO }`), which
+     no token names (`bounds`, `budget-sweep`, `case-opened` read 700–800 files their MENTION set missed; a SHARED
+     helper that can walk the root is not taken as every importer's walk — that took 96 units to the whole tree over a
+     median of 54 files read); every UI suite's inputs for a UI check over those suites (`check-mock-envelope`); and
+     any `GATE: reads <path> <dir/> *` line in the unit's source or control — how an under-inclusion is FIXED when the
+     derivation cannot see it (`status.test.mjs` carries `GATE: reads *`: it runs pushguard's checks over the tree).
+     **Measured 2026-09-23 (`measurements/M-113.md`):** every unit of the estate run under the tracer: 346 of 347
+     traced; the first derivation under-included 20 of them, the final one **0** (and 11 history readers, marked); input sets 3 to 1,032 files, median
+     136. The same FULL gate run twice on one tree: 2,056 s running everything, then **488 s with 338 units REUSED** and
+     only the 12 never-cached units and plancheck run.
+  4. **History (BOB #30's ruling on condition 1, applied here):** a unit whose verdict reads this checkout's GIT HISTORY or
+     a LIVE REF is never cached and carries `GATE: never-cache (history)`. The tracer ENFORCES it: a `git` child run over
+     this checkout whose subcommand walks history or a remote (log, rev-list, merge-base, ls-remote, fetch, …), or whose
+     arguments name a remote-tracking ref or a commit id, FAILS a cacheable unit by name (`HISTORY READ`) and writes no
+     PASS; a git run in a fixture repository elsewhere does not count. The full traced gate of 2026-09-23 named eleven
+     (`decided`, `migrate-released`, `mintid`, `op-claims`, `owed-controls`, `owed`, `readbudget`, `register-grammar`,
+     `retirable`, `status`, `coverage`); each is marked, with `mergecarry` (named by the ruling). And a REUSED record
+     never answers for a never-cached unit: with the per-unit record on, §2d's tree-keyed GREEN shortcut is not taken,
+     and a RERUN of what failed also runs every never-cached unit. The train's own tree-keyed reuse (M0-122's
+     `recordedGreen`) is NOT changed here: M0-131 carries it.
+     **Never cached** also covers a unit whose closure names `tools/plancheck.mjs`: it reads what plancheck reads (the
+     whole tree and `origin/coord`); `ledger`, `mergecarry` and `pipeline-readers` traced 1,027–1,028 of 1,028 files
+     that way. 12 units today, and the rule is coarse on purpose: `gates`, `train` and `gateresults` name the path only
+     to plant a stub in a fixture, and still always run (about 70 s together).
+  5. **The trace** (`NODE_OPTIONS=--import`, every node process of a step) records module loads and content reads
+     (read/open/copy/cp, all forms). A battery step, even of one suite, attributes each process by its entry file
+     (the runner is nobody's read); a UI suite, UI check or coverage step is its unit. A gate run inside a traced unit
+     (a suite driving a fixture's gate) drops the outer tracer, and a fixture must drop `BIO_GATE_RESULTS*` too — found
+     when this suite, run inside a real gate, wrote its fixture's records to the outer gate's results remote. A read of a path the tree held when the gate began, outside the unit's key, FAILS
+     the unit by name, opens it in the D-293 record, and writes no PASS. A unit that left no trace (killed, or a child
+     that dropped `NODE_OPTIONS`) gets no PASS. **Reach, stated:** reads by non-node children (git, workerd, a shell)
+     — so `git show`/`git clone` of this repository, and `origin/coord` read through git — are invisible; directory
+     listings are recorded and not judged; existence and stat checks are not seen.
+  6. **Which units passed** is the battery verdict file's new `passed` list (never when the run's own finding, a leak
+     or a shared log, stands), or a single-unit step's exit 0. A RED gate still records the PASSes of the units that
+     passed, so a failure re-runs alone in every clone.
+  7. **A FULL selection with any unit reused is recorded as class `FULLREUSE`**: it never clears a tree whole in
+     `effectiveVerdict`, never satisfies the train's `--full` reuse or a release's GREEN FULL record. **The backstop
+     mark (BOB #30's correction to condition 3):** every D-293 run record now says `backstop: true|false`, true only for
+     a class-FULL run that REUSED NOTHING and used no `--since`, and the gate prints `BACKSTOP` or `NOT A BACKSTOP —
+     <why>`; `pushguard.mjs` `isBackstop(run)` is the one reader — GREEN, class FULL, `backstop: true`, no `since`, and
+     no `reused` step — so a run that reused ONE unit, a hand-edited record that still carries its reused step, and a
+     record from before the field all read NOT a backstop. A FULL selection runs the UI harness unit by unit (each
+     suite and check has its own result) while the record is on.
+  8. **The backstop**: `--no-reuse` runs every selected unit and still records its passes — every release cut runs
+     `gates.mjs --full --no-reuse`. `BIO_GATE_RESULTS=off` is the gate as it stood before (no key, no trace, no read,
+     no write). The GitHub run on `main` now runs `--full` with the record off. **CONTRADICTION FOUND AT THE CODE:**
+     until this landing that run gated the DERIVED class, and on `main` the derived diff (HEAD against `origin/main`,
+     one commit) is empty, so it ran DOCS — the doc-facing suites only — not "everything" as the paragraph above says.
+  9. **Append-only is enforced at the push**: the guard's `gate-results` arm (a push of that ref alone) passes only a
+     commit that descends from the remote tip and ADDS `results/…` or `revoked/…` files; a modify, a stray path, a
+     rewritten history or a deletion is refused by name. `main`'s checks do not judge it, as for `coord`.
+  10. **The tree-keyed reuse stays as a local fast path** (§2d, M0-122's `recordedGreen`): correct only where no
+      never-cached unit is in scope (M0-131), and cheaper than keying; the per-unit record supersedes it as the shared
+      mechanism. (Corrected at integration by CONDUCT #16 on BOB #30's order, 2026-09-23: "still correct" was not — a
+      tree-identical reuse skips a unit that reads history, the 4355bfda class.)
+  **Not built:** a concurrent-writer race driven in the suite (the writer re-fetches and re-applies on a rejected push,
+  as `coord.mjs write` does, and the suite does not force the race); an automatic trigger that revokes a key when the
+  backstop reads RED (a person runs `revoke`, naming the unit the backstop named); DIST's release step (`DIST.md`)
+  still names `--since` as an alternative to the whole battery, which §3a's condition 3 now forbids — DIST's to change.
 
 ## 4 · The move to cloud Claude Code, under Bob's second account
 

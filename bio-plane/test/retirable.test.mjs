@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads git ls-remote origin, which no
+   result key can name; traced 2026-09-23. */
 /* retirable — Bob's ruling of 2026-09-17 driven: *"Sessions must be cleanly retired, their work
  * saved, resources released, and the session archived every time."*
  *

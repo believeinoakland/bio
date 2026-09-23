@@ -10220,6 +10220,21 @@ var CASE_DERIVATION_CHECKS = {
     check: "C-44.1",
     where: "src/store.mjs publishCase > case-identity-derivation",
     translation: "This publication did not say which case it is. The findings you are publishing already serve more than one published case, and a finding is allowed to serve many \u2014 so the record cannot work out from them alone whether you are publishing a further edition of one of those cases or starting a new case that rests on the same work. Nothing has been published and nothing has changed. Say which case this is, or say that it is a new one, and publish again."
+  },
+  /* UI-81 (2026-09-23) — D-309's OTHER HALF, the READ, given its row. `op=publishedcase` handed a
+     finding id that several cases pin refuses and names every case (IC-74), because each case is
+     its own artifact and serving one would choose for the reader. That refusal reached the
+     published case page — the one page a stranger reads — with no code and no translation, and no
+     row here named it, so the DEC-49 guard could not see it (R1 misses it; R2 misses it because
+     the surface keys on the refusal's `cases[]`, not on the code). A ROW IN THIS FAMILY rather than
+     a new one: the condition is clause 6's ambiguity at the read where C-44.1 is the same
+     ambiguity at the act, and `#resolveOneCase` already sits in the file whose `refusal` helper
+     reads this table. The translation says what a reader of either surface can do — choose — and
+     names no screen, because every caller of `#resolveOneCase` answers with it. */
+  FINDING_IN_SEVERAL_CASES: {
+    check: "C-44.2",
+    where: "src/store.mjs #resolveOneCase > is-finding-in-several-cases",
+    translation: "This finding is part of more than one published case file. Each case file is its own publication, with its own scope and its own statement of what it covers, so the record will not pick one of them for you. Nothing is wrong with the finding. Choose the case file you mean, and it opens with this finding in it."
   }
 };
 var MACHINE_FENCE_CHECKS = {
@@ -51374,6 +51389,7 @@ ${words}`;
           bundleId
         );
         const fmBasis = this.#basisFrontmatter(bundleId);
+        const legStatus = this.#refEdgeSevered(bundleId, t) ? "severed" : "confirmed";
         const causes = [];
         for (const c of moved.causes) causes.push(c);
         const citedEditions = [];
@@ -51389,7 +51405,7 @@ ${words}`;
                 cited_edition: cited,
                 latest_edition: moved.edition.latest,
                 latest_ratified_edition: moved.edition.latest_ratified,
-                detail: cited === null ? `this leg names no edition of ${t}, which now stands at edition ${moved.edition.latest}. A leg keeps citing the edition it names (DEC-12) and this one names none, so which edition it rests on cannot be read off the record.` : `this leg rests on edition ${cited} of ${t}, which now stands at edition ${moved.edition.latest}. Edition ${cited} keeps answering with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).`
+                detail: legStatus === "severed" ? (cited === null ? `this leg was WITHDRAWN (severed) and named no edition of ${t}, which now stands at edition ${moved.edition.latest}.` : `this leg was WITHDRAWN (severed) and named edition ${cited} of ${t}, which now stands at edition ${moved.edition.latest}.`) + ` A withdrawn leg supports nothing here: it adds nothing to strength, gates nothing and counts toward no bar. It is listed because the connection still informs a second look (DEC-70).` : cited === null ? `this leg names no edition of ${t}, which now stands at edition ${moved.edition.latest}. A leg keeps citing the edition it names (DEC-12) and this one names none, so which edition it rests on cannot be read off the record.` : `this leg rests on edition ${cited} of ${t}, which now stands at edition ${moved.edition.latest}. Edition ${cited} keeps answering with its own signature and its own frozen strength; nothing here follows the case forward on your behalf (DEC-12).`
               });
           }
         }
@@ -51407,7 +51423,8 @@ ${words}`;
              rather than once per obligation. Nothing below reads `legs`. */
           legs: mine.map((l) => ({
             ...l,
-            target_edition: fmBasis[l.ord]?.target_edition ?? null
+            target_edition: fmBasis[l.ord]?.target_edition ?? null,
+            status: legStatus
           })),
           /* THE REUSED TRIPLE. `flag` is true because this answer only ever
              carries rows that have an obligation; `since` and `source` come
@@ -51507,6 +51524,9 @@ ${words}`;
           grade_axis: l.grade_axis ?? null,
           grade_source: l.grade_source ?? null,
           target_edition: l.target_edition ?? null,
+          /* REC-160 / DEC-70: `severed` only on a positive recorded
+             withdrawal; anything else reads `confirmed`. */
+          status: l.status === "severed" ? "severed" : "confirmed",
           grade_authored: l.grade ?? null,
           grade_why: res ? res.why : null
         };
@@ -56170,14 +56190,12 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const sole = this.#soleCase(rows);
     if (sole) return { ok: true, pick: sole };
     const cases = [...new Set(rows.map((x) => x.case_id))].sort();
-    return {
-      ok: false,
-      reason: "FINDING_IN_SEVERAL_CASES",
+    return refusal6("FINDING_IN_SEVERAL_CASES", {
       target: bundleId,
       cases,
       memberships: rows.map((x) => ({ case_id: x.case_id, edition: x.edition })),
       detail: `${bundleId} is a published finding of ${cases.length} cases (${cases.join(", ")}). A finding can serve many cases (DEC-72 clause 6), and each case is its own artifact with its own scope and completeness assertion \u2014 so this read cannot choose one for you. Ask again naming the case you mean.`
-    };
+    });
   }
   /* CASE-5 / DEC-72: WHICH CASE EDITION A SET OF PUBLISHED BYTES BELONGS TO,
        RESOLVED BY THE HASH RATHER THAN BY A NUMBER.
@@ -61002,6 +61020,41 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       limit
     );
   }
+  /** D-389 — THE ONE OVER-FETCH THE THREE BUNDLE ARMS SHARE, and the one place
+   *  their `looked` page is gated, cut and CLAIMED. The document, content and
+   *  meaning arms each fetch `limit` raw rows — `(cap + 1) * 2`, or `* 3` at
+   *  meaning — because §6's row-whole fence drops rows BEFORE the cut (REC-109),
+   *  then cut the gated list at `cap`. Each arm used to do that itself, and each
+   *  computed its own `truncated` from the gated list alone.
+   *
+   *  THE DISJUNCT, AND WHY IT IS A CLAIM ABOUT COVERAGE: when the raw fetch
+   *  comes back FULL (`raw.length === limit`) the supply was NOT exhausted —
+   *  rows beyond it were never fetched and their visibility is unknown. A viewer
+   *  the fence narrowed to `cap` or fewer then read `truncated: false`, which says
+   *  the list is complete when the reader never looked past the fetch. CLAUDE.md
+   *  §2: sparse is normal, so a coverage flag must never read false where the
+   *  reader cannot know. Fail-safe is the direction (SCHEDULER #6, D-389's order).
+   *  A supply of EXACTLY `limit` rows also reads true — the one over-report this
+   *  accepts rather than a second fetch to rule it out.
+   *
+   *  IT LEAKS NOTHING: an entitled viewer on a full fetch already reads `true`
+   *  (every raw row passes, so the gated list exceeds `cap`), so on a full fetch
+   *  every viewer reads the same bit. The withheld count is still not published.
+   *
+   *  ONE DISJUNCT HERE AND NEVER PER ARM — three copies is the mirror-and-drift
+   *  class the row was raised to avoid, and `d389-fullfetch.test.mjs` S1 counts
+   *  it. `#frontierInternet` is NOT a caller and is not in the class: it gates
+   *  INSIDE its statement, so its `cap + 1` fetch is already exact. The
+   *  never-looked / missing lists each arm fetches beside this page are NOT
+   *  routed here (D-389's scope is this one over-fetch). */
+  #frontierPage(level, cap, { limit, subjectKind = null }, gate) {
+    const raw = this.#frontierLatest(level, { limit, subjectKind });
+    const gated = raw.filter(gate);
+    return {
+      page: gated.slice(0, cap),
+      truncated: gated.length > cap || raw.length === limit
+    };
+  }
   /** §5: *`last_verified` is the latest `PRESENT` row's `at`; source unreachable
    *  since is the earliest `LOOKED_INDETERMINATE` after it.* `STORE-AS-CACHE.md`
    *  says HTTP obsoleted `last_verified` and that we must own it — this is where
@@ -61247,9 +61300,14 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
       return owner ? visible(owner.bundle_id) !== null : false;
     };
-    const page = this.#frontierLatest("content", { limit: (cap + 1) * 2, subjectKind: "capture" }).filter((r) => seen(r.subject));
+    const latest = this.#frontierPage(
+      "content",
+      cap,
+      { limit: (cap + 1) * 2, subjectKind: "capture" },
+      (r) => seen(r.subject)
+    );
     const drift = this.#calDriftFor(null);
-    const pageCut = page.slice(0, cap);
+    const pageCut = latest.page;
     const indexState = /* @__PURE__ */ new Map();
     {
       const subjects = [...new Set(pageCut.map((r) => r.subject).filter((v) => typeof v === "string" && v))];
@@ -61363,8 +61421,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          over-fetch being wide enough to absorb the fence. That is true of all
          three arms of this reader and is raised as its own row — it is a property
          of the over-fetch mechanism and fixing it in one arm of three would be
-         the mirror-and-drift class. */
-      truncated: page.length > cap || never.length > cap || unexplained.length > cap,
+         the mirror-and-drift class. **CLOSED 2026-09-23 BY D-389, AT THE SHARED
+         OVER-FETCH:** `latest.truncated` is `#frontierPage`'s, which reads a FULL
+         raw fetch as truncated for every viewer, so `false` no longer rests on the
+         room being enough. */
+      /* D-389: the page's claim is `latest.truncated`, written LAST so the claims this method
+         still makes itself stay in the spelling `derivation-bounds.test.mjs` can grade. */
+      truncated: never.length > cap || unexplained.length > cap || latest.truncated,
       looked,
       /* REC-107 SWEPT THE CLASS RATHER THAN THE REPORTED SITE. The defect was rowed
          against the MEANING level, and this arm had it too: `missing_unexplained`
@@ -61711,8 +61774,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       const owner = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ? LIMIT 1`, sha);
       return owner ? visible(owner.bundle_id) !== null : false;
     };
-    const rows = this.#frontierLatest("meaning", { limit: (cap + 1) * 3 });
-    const gated = rows.filter((r) => {
+    const latest = this.#frontierPage("meaning", cap, { limit: (cap + 1) * 3 }, (r) => {
       if (r.subject_kind === "capture") return captureSeen(r.subject);
       if (r.subject_kind === "reference")
         return r.authority ? captureSeen(r.authority) : false;
@@ -61739,7 +61801,7 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
       ran_and_found_nothing: r.state === "LOOKED_ABSENT",
       ...this.#frontierVerification("meaning", r.subject_kind, r.subject)
     });
-    const looked = gated.slice(0, cap).map(view);
+    const looked = latest.page.map(view);
     const missing = [];
     for (const r of this.#rows(
       `SELECT g.capture_sha AS subject, g.bundle_id AS bundle_id, g.registered AS entered
@@ -61820,7 +61882,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          the collections it cuts, and is the model. NEITHER BRANCH COULD HAVE SEEN THIS:
          REC-95 wrote the method and M0-38 wrote the grader, in parallel, each green
          alone — the merge is the only place the two met. */
-      truncated: gated.length > cap || never.length > cap,
+      truncated: never.length > cap || latest.truncated,
+      /* D-389: the page's claim is `#frontierPage`'s */
       looked,
       /* REC-107: `not_ruled_out` IS TOTAL ACROSS BOTH LISTS, and that is the point
          rather than symmetry. A field present on the rows a reader distrusts and
@@ -62069,8 +62132,13 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
         note: `there is no ${level} level of the frontier. This is NOT an empty frontier: this reader does not read a level called ${level}, which is a different fact from having looked and found nothing. The levels are document, content, meaning and internet (REC-93, REC-94, REC-95, REC-129)`
       };
     const seenRow = this.#frontierDocumentVisible(viewer);
-    const page = this.#frontierLatest("document", { limit: (cap + 1) * 2, subjectKind: "address" }).filter(seenRow);
-    const looked = page.slice(0, cap).map((r) => ({
+    const latest = this.#frontierPage(
+      "document",
+      cap,
+      { limit: (cap + 1) * 2, subjectKind: "address" },
+      seenRow
+    );
+    const looked = latest.page.map((r) => ({
       subject: r.subject,
       subject_kind: r.subject_kind,
       state: r.state,
@@ -62119,7 +62187,8 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
          `truncated` computed from the raw supply would be true exactly when
          the gate dropped enough rows, which is a one-bit count of what was
          withheld, and the count is the leak. */
-      truncated: page.length > cap || never.length > cap,
+      truncated: never.length > cap || latest.truncated,
+      /* D-389: the page's claim is `#frontierPage`'s */
       looked,
       never_looked: never.slice(0, cap),
       tally,

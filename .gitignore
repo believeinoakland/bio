@@ -388,6 +388,9 @@ bio-plane/.nc-migrate-released/
 # worker kept its scratch measurements here. An untracked copy of an instrument left behind by an interrupted run
 # is a second copy for the next walk to enrol.
 .d293-harness/
+# M0-126's pen (`bio-plane/test/gateresults.control.mjs`), same rule: per-arm pristine copies of `tools/gates.mjs`,
+# `tools/gateresults.mjs` and `tools/pushguard.mjs` while an arm is live.
+.m0126-harness/
 
 # M0-97's pen (`bio-plane/test/decided.control.mjs`), its own line on the standing rule at
 # `.rec84-control-pristine/`: the driver keeps a per-arm pristine copy of `tools/decided.mjs` here while an arm

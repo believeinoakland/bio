@@ -1,3 +1,5 @@
+/* GATE: never-cache (history) — M0-126, BOB #30 (TREE-SHARING §3a condition 1): its verdict reads origin/coord and pinned historical commits, which no
+   result key can name; traced 2026-09-23. */
 /* owed — D-409's predicate: what a LANE still owes, read out of the repository.
  *
  * Bob, 2026-09-17: *"This isn't just a bug in idleness, but a failure to document (in the repo)
