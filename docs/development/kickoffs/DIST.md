@@ -140,11 +140,10 @@ verdict is RECORDED BY TREE, so the question is whether THIS tree was tested.
 
 In order, and all of it on the merged `main`:
 
-1. **The merged tree's verdict** (M0-106, 2026-09-22): a GREEN FULL record for the
-   tree being released (`.git/bio-gates/<tree>.*.json`), NAMED in the cut commit;
-   else `node tools/gates.mjs --since <the newest commit whose tree carries one>`;
-   the whole battery (`cd bio-plane && npm test`, zero failures) only when neither
-   exists. The bumped cut tree's own gate (lesson 20) always runs.
+1. **The merged tree's verdict — the BACKSTOP** (M0-106, NARROWED 2026-09-23 by BOB #30; TREE-SHARING §3a condition 3):
+   a GREEN record for the EXACT tree being released that `pushguard.mjs` `isBackstop()` accepts (class FULL, `backstop:
+   true`, nothing REUSED, no `--since`), NAMED in the cut commit; else `node tools/gates.mjs --full --no-reuse`. Never
+   `--since`, and never a FULLREUSE record: a cut is the run that reuses nothing. The bumped cut tree's own gate (lesson 20) always runs.
 2. **`cd newgroup && npm test`** — the installer's own suite, which includes the
    D-106 guard that the embedded plane version matches `package.json`.
 3. **`node test/hygiene.test.mjs` is part of (1)** and is the cheap early
