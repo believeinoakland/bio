@@ -93,16 +93,6 @@ scope: a proposal of citations and levels for an action, stored apart from the m
 accepts-when: a proposal is read labelled machine work, and the action's list is unchanged until the member acts. NEGATIVE CONTROL: let the proposal write the list, and the "the list is the member's" arm fails by name. New suite `bio-plane/test/rec195-laws-proposal.test.mjs`.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### REC-198 · queued — **NO OP LISTS A PROJECT'S DRAFTS: every `case_drafts` read is keyed by `draft_id`, so a draft whose id is lost is a lost draft.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *a list read of a project's drafts, fenced exactly like reading one draft (joined participants).* — owner RECORD.
-order: after REC-195, the review-copy block (SCHEDULER #17, 2026-09-23; UI-68's worker)
-milestone: M10
-interface: I3 additive — one read; the integrator mints and classifies the IC.
-design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #32's ruling of 2026-09-23 23:08Z (cite until folded).
-depends-on: none.
-scope: the list read, joined participants only. Extend the review-copy suite (`bio-plane/test/reviewcopy*.test.mjs`).
-accepts-when: a joined participant lists every draft of the project; an uninvited caller reads the fence's answer. NEGATIVE CONTROL: drop the fence, and the uninvited arm fails by name.
-added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
-
 ### UI-92 · queued — **THE WORKSPACE CANNOT SHOW A PROJECT'S DRAFTS.** REC-198's list, rendered. — owner UI.
 order: directly after REC-198 (SCHEDULER #17, 2026-09-23)
 milestone: M10
@@ -793,6 +783,16 @@ depends-on: none.
 scope: the marker admits a title-case label arm; `**Settled by:**` stays unfiled. Extend `tools/decided.test.mjs`.
 accepts-when: the three missed rulings are found. NEGATIVE CONTROL: remove the label arm, and those rulings go unfiled by name.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-3; keeps its `D-` id).
+
+### D-457 · queued — **CPDF-20's PER-PAGE TIER IS SHIPPED AND UNRECORDED: `mergeTier2Text` has emitted `text.pages[].tier` since `1240af81` with no IC on I2, and Framework §16's closing table and front matter still list "a per-page rule for tier-2 replacement" ABSENT, though it is built and was watched live (D-283, M-120).** — owner CONTENT-PDF.
+order: with the M0 record-hygiene rows, after D-441: a record that says less than is built (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
+milestone: M0 (the record of what is built)
+interface: I2 additive MINOR — filed by CONTENT-PDF, resolved by CONDUCT.
+design: `docs/development/VERIFICATION.md` (the construct record is checked against the code), for `docs/architecture/BIO_Content_Framework_v0_10.md` §16.
+depends-on: none.
+scope: file the I2 IC for `tier`; correct §16's table and front matter; add a construct-5 claim in `construct-status.json` probing `export function mergeTier2Text(` in `textchain.mjs`.
+accepts-when: `node tools/status.mjs 5` reads the per-page rule BUILT by its probe, and I2 documents `tier`. NEGATIVE CONTROL: rename the probed function, and the status check fails naming the claim.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
 ### UI-87 · queued — **THE ANALYST-VOCABULARY GATE FIRES ON PLAIN ENGLISH: `civicos-ui/test/analyst-vocabulary.mjs`'s `BANNED` connective rule `(AND|OR)\s+(of|…|set|sets)` carries `/i`, so "reason 1 and set 2" and "two or more sets" fail as analyst jargon.** Measured with node (CONDUCT #17, re-measured by SCHEDULER #17 on c17-batch5 @ 7c4f6b5f); the file's other connective rules are case-sensitive and its own header, finding (i), says a case-insensitive `AND` fires on correct English. — owner UI.
 order: after M0-139, among the verification rows: a gate that refuses correct member copy pushes surface authors toward worse words, so it goes ahead of pure process tooling (SCHEDULER #17, 2026-09-23, CONDUCT #17's 22:00Z finding (4))

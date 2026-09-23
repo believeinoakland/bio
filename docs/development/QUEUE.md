@@ -335,7 +335,7 @@ accepts-when: a member's list lands and reads back; an action with none reads un
 added: 2026-09-22 · SCHEDULER #12 drafted it; SCHEDULER #13 placed it, re-verified on `8e2c146c` (BOB #26's inbox entry, item 2; D-149's DEBT row; keeps its `D-` id).
 uncut: restored whole from «D-149» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### REC-149 · running — SPAWNED 2026-09-23 ~21:57Z by CONDUCT #17 as a SEPARATE CLOUD SESSION titled WORKER REC-149 (CONDUCT #17); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-149 and that session; never conclude queued from the absence alone.
+### REC-149 · integrated — finished; integrated on land/conduct/c17-batch7 @ 55805a82 (IC-231 re-resolved: I3 76.0.0 MAJOR, I5 3.2.0), waiting for its train — flipped by SCHEDULER #17
 order: Bob's 2026-09-18 ruling (DISCOVERABLE/HIDDEN), after BOB #14's listed items; the plane half first (SCHEDULER, 2026-09-19)
 milestone: M8
 interface: I3 (an IC minted with `node tools/mintid.mjs IC`), I5 for the setting's table
@@ -503,7 +503,7 @@ accepts-when: `MEASUREMENTS.md` carries the class's count with its interval besi
 added: 2026-09-21 · SCHEDULER #10 (LED-7; D-66's DEBT row, narrowed by BOB #24 on SCHEDULER #9's Q3; keeps its `D-` id).
 uncut: restored whole from «D-66» in `docs/archive/ledgers/QUEUE-cut-2026-09-22.md` as it entered the cache (SCHEDULER #17, 2026-09-23); its current `order:` kept.
 
-### CPDF-3 · running — SPAWNED 2026-09-23 ~23:00Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER CPDF-3 (CONDUCT #18); gate = its own live verification in a scratch namespace, swept, and plancheck. Falsify rather than believe: read the branch land/worker/CPDF-3 and that session; never conclude queued from the absence alone.
+### CPDF-3 · integrated — finished; integrated on land/conduct/c17-batch7 @ 1be3be37 (M-120: op=pdfstructure WORKS live; a fresh Oakland fetch UNDETERMINED, egress refused), waiting for its train — flipped by SCHEDULER #17
 order: unblocked at this audit (its deploy blocker is false); an M2 live verification, after the product rows above (SCHEDULER, first order audit, 2026-09-18)
 milestone: M2
 design: `docs/architecture/BIO_Content_Framework_v0_10.md` §16 "How content is extracted today" (the I2 structure shape `op=pdfstructure` answers), with `docs/development/INTERFACES.md` I1/I2.
@@ -554,6 +554,26 @@ depends-on: none — REC-95's observation is built.
 scope: the entity arm reads the latest derivation observation for that entity and publishes `derivation {state, at, documents}`, `null` stated as never derived; no schema column (supersedes the row's first proposal).
 accepts-when: op=connect over more than 32 documents, then op=connections, says the derivation was cut. NEGATIVE CONTROL: remove the observation read, and that arm fails by name. New suite `bio-plane/test/d241-derivation-stated.test.mjs`.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-241's DEBT row of 2026-08-08, verified at the code on `02603e88`; keeps its `D-` id).
+
+### D-456 · queued — **ANY `store=` VALUE OTHER THAN `scratch` SILENTLY ADDRESSES THE REAL RECORD: `scopeFor` (`index.mjs`) confines only the PROBE class and returns `bio` for every other name, so `op=stats&store=biosmoke-pdf` answered `store:"bio"`, and a brief or a typo naming a namespace writes production.** Read at the code on `02603e88`. — owner RECORD.
+order: FIRST in the backlog: a safety defect on the record itself — a live verification that believes it is in a namespace writes the real record — outranks every correction and feature (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
+milestone: M0 (a guard at the plane's front door)
+interface: I3 — one DEC-49 refusal; the integrator mints and classifies the IC.
+design: `docs/development/VERIFICATION.md` (CLAUDE.md §5's *NAME `store=scratch` ON EVERY CALL*; D-325's scope rule).
+depends-on: none.
+scope: `scopeFor` refuses any `store=` value other than `bio` or `scratch` with a named refusal for every class; correct `kickoffs/CONTENT-PDF.md` step (5) and `PARALLELISM.md`'s "one instance per area", which name namespaces that do not exist. Extend the scope suite (`bio-plane/test/*scope*.test.mjs`).
+accepts-when: `store=biosmoke-pdf` is refused by name for admin, member and probe; `bio` and `scratch` answer as today. NEGATIVE CONTROL: restore the fall-through to `bio`, and the unknown-namespace arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
+
+### REC-198 · queued — **NO OP LISTS A PROJECT'S DRAFTS: every `case_drafts` read is keyed by `draft_id`, so a draft whose id is lost is a lost draft.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *a list read of a project's drafts, fenced exactly like reading one draft (joined participants).* — owner RECORD.
+order: after REC-195, the review-copy block (SCHEDULER #17, 2026-09-23; UI-68's worker)
+milestone: M10
+interface: I3 additive — one read; the integrator mints and classifies the IC.
+design: `docs/architecture/BIO_Publication_v0_1.md` §6A.4, with BOB #32's ruling of 2026-09-23 23:08Z (cite until folded).
+depends-on: none.
+scope: the list read, joined participants only. Extend the review-copy suite (`bio-plane/test/reviewcopy*.test.mjs`).
+accepts-when: a joined participant lists every draft of the project; an uninvited caller reads the fence's answer. NEGATIVE CONTROL: drop the fence, and the uninvited arm fails by name.
+added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
 ## TRACKED ELSEWHERE — open plan rows whose ids another file allocates
 
