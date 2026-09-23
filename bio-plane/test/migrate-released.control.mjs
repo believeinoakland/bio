@@ -214,4 +214,7 @@ console.log(`\npen removed: ${PEN}`);
    MEASURED 2026-09-23 by DIST #5 at the 0.75.0 cut (17 rows, 0.74.0 added), every restore sha256 MATCH: baseline 459/0 ·
    alterafter 381/78 · nosecondpass 411/48 · percolumn 459/0 · firstbootalways 423/36 · firstbootnever 458/1 · groupwipe
    451/8 — two KEPT assertions per group-recording store, now four (0.71.0-0.74.0); the handoff's "453/6" was an
-   arithmetic slip, and the measured figure is the structure's. alterafter SEQUENCE: … 339/78 → 360/78 → 381/78. */
+   arithmetic slip, and the measured figure is the structure's. alterafter SEQUENCE: … 339/78 → 360/78 → 381/78.
+   MEASURED 2026-09-23 by DIST #5 at the 0.76.0 cut (18 rows, 0.75.0 added), each at the figure predicted before arming,
+   every restore sha256 MATCH: baseline 480/0 · alterafter 402/78 · nosecondpass 430/50 · percolumn 480/0 ·
+   firstbootalways 444/36 · firstbootnever 479/1 · groupwipe 470/10. alterafter SEQUENCE: … 360/78 → 381/78 → 402/78. */
