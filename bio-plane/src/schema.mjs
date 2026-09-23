@@ -404,6 +404,7 @@ CREATE TABLE IF NOT EXISTS site_assets (
   last_fetched TEXT NOT NULL,
   stable_since TEXT NOT NULL,
   changes      INTEGER NOT NULL DEFAULT 0,
+  last_fetched_by TEXT,
   PRIMARY KEY (host, address_norm)
 );
 CREATE INDEX IF NOT EXISTS site_assets_host ON site_assets(host);
@@ -417,6 +418,17 @@ CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
 -- count joins primary_sha to captured_locators and counts document ADDRESSES
 -- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
 -- row is counted apart as undetermined rather than as a page.
+--
+-- CAP-14 (CAPTURE-SCALING.md, Job one, RULED 2026-09-21 by BOB #21): a reused
+-- part names the capture whose FETCH served its bytes. site_assets.last_fetched_by
+-- is the primary capture sha whose fetch set last_fetched, written beside it on
+-- every fetched observation and never moved by a reuse. A reusing capture's row
+-- here keeps it as reused_from, taken from the capture's own observation so the
+-- manifest and the store cannot disagree, and reusedParts reads it from THIS row,
+-- never from site_assets, whose value a later fetch moves. Both are NULLABLE and
+-- NEVER BACK-FILLED: a reuse recorded before the build is UNDETERMINED as to its
+-- source, and matching a ref row at against last_fetched would prove nothing
+-- (both whole seconds, and a ref row is overwritten in place).
 CREATE TABLE IF NOT EXISTS site_asset_refs (
   host         TEXT NOT NULL,
   address_norm TEXT NOT NULL,
@@ -424,6 +436,7 @@ CREATE TABLE IF NOT EXISTS site_asset_refs (
   at           TEXT NOT NULL,
   reused       INTEGER NOT NULL DEFAULT 0,
   sha256       TEXT NOT NULL,
+  reused_from  TEXT,
   PRIMARY KEY (host, address_norm, primary_sha)
 );
 CREATE INDEX IF NOT EXISTS site_asset_refs_doc ON site_asset_refs(primary_sha);

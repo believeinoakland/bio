@@ -909,11 +909,21 @@ export async function captureSubresources({
           /* The honesty fields. A reader must never be led to believe a byte was
              verified against the source during THIS capture when it was not. */
           fetched_this_capture: false,
+          /* CAP-14 (CAPTURE-SCALING.md §Job one, RULED 2026-09-21 by BOB #21): the
+             capture whose FETCH served these bytes, so a reader can follow them to
+             the fetch that saw them served. null when the record names none (a
+             fetch recorded before the build): UNDETERMINED as to source, never
+             inferred from timestamps. */
+          reused_from: known.last_fetched_by || null,
           reused_from_fetched_at: known.last_fetched,
           reused_stable_since: known.stable_since,
           reused_seen_in_documents: known.documents,
           detail: `not fetched during this capture: the source was seen serving these exact bytes at `
-                + `${known.last_fetched}, across ${known.documents} documents on this host`
+                + `${known.last_fetched}`
+                + (known.last_fetched_by
+                    ? ` by capture ${known.last_fetched_by}`
+                    : ` by a capture the record does not name (undetermined)`)
+                + `, across ${known.documents} documents on this host`
                 + (known.documents_undetermined
                     ? ` (and ${known.documents_undetermined} earlier capture${known.documents_undetermined === 1 ? "" : "s"} `
                       + `whose page the record does not name, counted as undetermined)`
@@ -922,7 +932,8 @@ export async function captureSubresources({
         byUrl.set(cls.url, rec);
         if (!bySha.has(known.sha256)) bySha.set(known.sha256, rec);
         siteObservations.push({ address: cls.url, address_norm: normalizeAddress(cls.url),
-                                sha256: known.sha256, kind: item.kind, reused: true });
+                                sha256: known.sha256, kind: item.kind, reused: true,
+                                reused_from: known.last_fetched_by || null });
         /* A reused stylesheet still needs its own url() targets resolved, so the
            bytes are read back and followed exactly as a fetched one would be. */
         if ((item.kind === "stylesheet" || known.content_type === "text/css") && item.depth < CSS_MAX_DEPTH && readBack) {
@@ -1111,8 +1122,9 @@ export async function captureSubresources({
     reuse: { reused, fetched: fetched.length - reused, not_reused: noReuse,
              fresh_window_ms: reuseFreshWindowMs, min_documents: reuseMinDocuments,
              note: "entries with fetched_this_capture:false were NOT fetched during this capture; "
-                 + "their bytes come from an earlier fetch of the same address on this host, named in "
-                 + "reused_from_fetched_at. A capture ratified as evidence must re-fetch them." },
+                 + "their bytes come from an earlier fetch of the same address on this host, made by the "
+                 + "capture named in reused_from (null: not recorded, undetermined) at reused_from_fetched_at. "
+                 + "A capture ratified as evidence must re-fetch them." },
     outstanding: deferred,
     platform: {
       limited: platformHit,
