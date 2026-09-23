@@ -555,7 +555,7 @@ scope: the entity arm reads the latest derivation observation for that entity an
 accepts-when: op=connect over more than 32 documents, then op=connections, says the derivation was cut. NEGATIVE CONTROL: remove the observation read, and that arm fails by name. New suite `bio-plane/test/d241-derivation-stated.test.mjs`.
 added: 2026-09-23 · SCHEDULER #17 (LED-7 S17-2; D-241's DEBT row of 2026-08-08, verified at the code on `02603e88`; keeps its `D-` id).
 
-### D-456 · queued — **ANY `store=` VALUE OTHER THAN `scratch` SILENTLY ADDRESSES THE REAL RECORD: `scopeFor` (`index.mjs`) confines only the PROBE class and returns `bio` for every other name, so `op=stats&store=biosmoke-pdf` answered `store:"bio"`, and a brief or a typo naming a namespace writes production.** Read at the code on `02603e88`. — owner RECORD.
+### D-456 · running — SPAWNED 2026-09-23 ~23:30Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-456 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-456 and that session; never conclude queued from the absence alone.
 order: FIRST in the backlog: a safety defect on the record itself — a live verification that believes it is in a namespace writes the real record — outranks every correction and feature (SCHEDULER #17, 2026-09-23; CPDF-3's worker via CONDUCT #18 23:12Z)
 milestone: M0 (a guard at the plane's front door)
 interface: I3 — one DEC-49 refusal; the integrator mints and classifies the IC.
@@ -565,7 +565,7 @@ scope: `scopeFor` refuses any `store=` value other than `bio` or `scratch` with 
 accepts-when: `store=biosmoke-pdf` is refused by name for admin, member and probe; `bio` and `scratch` answer as today. NEGATIVE CONTROL: restore the fall-through to `bio`, and the unknown-namespace arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs D`).
 
-### REC-198 · queued — **NO OP LISTS A PROJECT'S DRAFTS: every `case_drafts` read is keyed by `draft_id`, so a draft whose id is lost is a lost draft.** BOB #32's ruling of 2026-09-23 23:08Z (cite until folded): *a list read of a project's drafts, fenced exactly like reading one draft (joined participants).* — owner RECORD.
+### REC-198 · running — SPAWNED 2026-09-23 ~23:30Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER REC-198 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/REC-198 and that session; never conclude queued from the absence alone.
 order: after REC-195, the review-copy block (SCHEDULER #17, 2026-09-23; UI-68's worker)
 milestone: M10
 interface: I3 additive — one read; the integrator mints and classifies the IC.
@@ -575,7 +575,7 @@ scope: the list read, joined participants only. Extend the review-copy suite (`b
 accepts-when: a joined participant lists every draft of the project; an uninvited caller reads the fence's answer. NEGATIVE CONTROL: drop the fence, and the uninvited arm fails by name.
 added: 2026-09-23 · SCHEDULER #17 (`node tools/mintid.mjs REC`).
 
-### D-242 · queued — **`mintid`'s EXCLUSIVE CREATE IS EXCLUSIVE AGAINST NOTHING NOW THAT EVERY WORKER IS ITS OWN CLOUD CLONE: the row's WATCH trigger (a worker running outside one Mac's worktrees) has fired, and only the floor read from `origin/coord` stands between two concurrent mints.** `ORCHESTRATION.md` §"TAKING AN ID" still describes the one-clone scope. — owner M0 (tools).
+### D-242 · running — SPAWNED 2026-09-23 ~23:30Z by CONDUCT #18 as a SEPARATE CLOUD SESSION titled WORKER D-242 (CONDUCT #18); gate = its own suites, control and plancheck. Falsify rather than believe: read the branch land/worker/D-242 and that session; never conclude queued from the absence alone.
 order: MOVED UP 2026-09-23 by SCHEDULER #17 to follow the corrections at the head: it now costs product cycles (3 IC-222s, IC-228, IC-224, C-68, 2 M-117s burned in one day across cloud workers), so it cuts integration time; M0-120, its audit half, follows later (SCHEDULER #17, 2026-09-23, LED-7 S17-2)
 milestone: M0
 interface: none
