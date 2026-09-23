@@ -19168,6 +19168,11 @@ paths, BY SITE:
 **widened 2026-09-23 by the M0-111 worker** — also `docs/development/MEASUREMENTS.md` (M-105 APPENDED: the cloud proxy's
 answer to a ref deletion push, measured). The probe ref `land/worker/m0-111-delete-probe` (at `df9eb9f9`, an ancestor of
 `origin/main`) is LEFT ON THE REMOTE because the proxy refused its deletion (HTTP 403); it reads LANDED by ancestry.
+**released: 2026-09-23 by the M0-111 worker** — built, gated GREEN FULL on tree `f95c993d` (279/279 suites, 16,782
+assertions, no suite skipped; coverage --strict, the UI harness and plancheck --local green) and pushed on
+`worktree-agent-a1898e01f099239b0` at `e1af5b64`, verified by `ls-remote`; the paths stay reserved until CONDUCT
+integrates. **Land it with the train itself** (`node tools/train.mjs run --branch origin/worktree-agent-a1898e01f099239b0`
+from a clean worktree): once this guard is in the pushing tree, a hand-made `HEAD:main` push is refused.
 
 ## CLAIM 2026-09-22 M0 (M0-116 — a MEASUREMENTS.md-only landing re-runs a third of the battery: the op-claims ledger leaves the module its importers inherit, and gates reads a unit's own files as code)
 
